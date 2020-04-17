@@ -1,5 +1,15 @@
 # For victor
 
+## Prerequisites
+
+This project makes use of our fork of Corda. You will need to install that version to your local Maven repo like so:
+```bash
+$ git clone https://github.com/ingzkp/corda
+$ cd corda
+$ git checkout feature/merkle-digest-service
+$ ./gradlew install installDist
+```
+
 ## Tests to use:
 
 `com.ing.zknotary.notary.transactions.VictorsSerializeProveVerifyTest`
