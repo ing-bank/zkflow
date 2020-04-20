@@ -1,8 +1,8 @@
 package com.ing.zknotary.notary.flows
 
 import com.ing.zknotary.common.transactions.ZKFilteredTransaction
-import com.ing.zknotary.common.zkp.DefaultZKConfig
 import com.ing.zknotary.common.zkp.ZKConfig
+import com.ing.zknotary.notary.ZKNotaryService
 import net.corda.core.KeepForDJVM
 import net.corda.core.crypto.SecureHash
 import net.corda.core.flows.FlowSession
@@ -11,7 +11,6 @@ import net.corda.core.flows.NotaryError
 import net.corda.core.identity.Party
 import net.corda.core.internal.notary.NotaryInternalException
 import net.corda.core.internal.notary.NotaryServiceFlow
-import net.corda.core.internal.notary.SinglePartyNotaryService
 import net.corda.core.node.NetworkParameters
 import net.corda.core.serialization.CordaSerializable
 import net.corda.core.transactions.ContractUpgradeFilteredTransaction
@@ -21,13 +20,13 @@ import java.time.Duration
 // TODO: find out how to inject the ZKConfig
 class ZKNotaryServiceFlow(
     otherSideSession: FlowSession,
-    service: SinglePartyNotaryService,
+    service: ZKNotaryService,
     etaThreshold: Duration,
-    private val zkConfig: ZKConfig = DefaultZKConfig
-) :
-    NotaryServiceFlow(otherSideSession, service, etaThreshold) {
+    private val zkConfig: ZKConfig
+) : NotaryServiceFlow(otherSideSession, service, etaThreshold) {
+
     init {
-        if (service.services.networkParameters.minimumPlatformVersion < 5) {
+        if (service.services.networkParameters.minimumPlatformVersion < 6) {
             throw IllegalStateException("The ZKNotaryService is compatible with Corda version 5 or greater")
         }
     }
@@ -57,6 +56,7 @@ class ZKNotaryServiceFlow(
 
     override fun verifyTransaction(requestPayload: NotarisationPayload) {
         val tx = requestPayload.coreTransaction
+
         try {
             when (tx) {
                 is ZKFilteredTransaction -> {

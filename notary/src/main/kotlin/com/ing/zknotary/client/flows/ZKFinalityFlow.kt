@@ -2,7 +2,6 @@ package com.ing.zknotary.client.flows
 
 import co.paralleluniverse.fibers.Suspendable
 import com.ing.zknotary.common.zkp.ZKConfig
-import com.ing.zknotary.common.zkp.DefaultZKConfig
 import net.corda.core.crypto.isFulfilledBy
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
@@ -43,7 +42,7 @@ class ZKFinalityFlow private constructor(
     val transaction: SignedTransaction,
     override val progressTracker: ProgressTracker,
     private val sessions: Collection<FlowSession>,
-    private val zkConfig: ZKConfig = DefaultZKConfig
+    private val zkConfig: ZKConfig
 ) : FlowLogic<SignedTransaction>() {
 
     /**
@@ -58,7 +57,7 @@ class ZKFinalityFlow private constructor(
         transaction: SignedTransaction,
         sessions: Collection<FlowSession>,
         progressTracker: ProgressTracker = tracker(),
-        zkConfig: ZKConfig = DefaultZKConfig
+        zkConfig: ZKConfig
     ) : this(transaction, progressTracker, sessions, zkConfig)
 
     companion object {

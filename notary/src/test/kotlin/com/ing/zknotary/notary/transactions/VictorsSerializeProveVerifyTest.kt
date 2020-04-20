@@ -2,7 +2,7 @@ package com.ing.zknotary.notary.transactions
 
 import com.ing.zknotary.common.serializer.VictorsZKInputSerializer
 import com.ing.zknotary.common.zkp.ZincProverCLI
-import com.ing.zknotary.common.zkp.ZincVerifierCLI
+import com.ing.zknotary.common.zkp.ZincZKVerifierCLI
 import net.corda.core.crypto.sign
 import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
@@ -29,13 +29,13 @@ class VictorsSerializeProveVerifyTest {
             val sigAlice = alice.keyPair.sign(wtx.id).bytes
 
             // Check out JsonZKInputSerializer for reference
-            val witness = VictorsZKInputSerializer.serializeWitness(ltx, listOf(sigAlice))
-            val instance = VictorsZKInputSerializer.serializeInstance(wtx.id)
+            val witness = VictorsZKInputSerializer(services).serializeWitness(ltx, listOf(sigAlice))
+            val instance = VictorsZKInputSerializer(services).serializeInstance(wtx.id)
 
-            val proof = ZincProverCLI("/path/to/prover/key").prove(witness, instance)
+            val proof = ZincProverCLI(services).prove(witness, instance)
 
             // No assertions required: this throws an exception on verification failure
-            ZincVerifierCLI("/path/to/verifier/key").verify(proof, instance)
+            ZincZKVerifierCLI(services).verify(proof, instance)
         }
     }
 }

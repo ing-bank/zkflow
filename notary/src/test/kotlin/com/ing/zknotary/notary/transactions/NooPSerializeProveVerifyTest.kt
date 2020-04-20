@@ -1,8 +1,8 @@
 package com.ing.zknotary.notary.transactions
 
 import com.ing.zknotary.common.serializer.NoopZKInputSerializer
-import com.ing.zknotary.common.zkp.NoopProver
-import com.ing.zknotary.common.zkp.NoopVerifier
+import com.ing.zknotary.common.zkp.NoopZKProver
+import com.ing.zknotary.common.zkp.NoopZKVerifier
 import net.corda.core.crypto.sign
 import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
@@ -29,12 +29,12 @@ class NooPSerializeProveVerifyTest {
 
             val sigAlice = alice.keyPair.sign(wtx.id).bytes
 
-            val witness = NoopZKInputSerializer.serializeWitness(ltx, listOf(sigAlice))
-            val instance = NoopZKInputSerializer.serializeInstance(wtx.id)
+            val witness = NoopZKInputSerializer(MockServices()).serializeWitness(ltx, listOf(sigAlice))
+            val instance = NoopZKInputSerializer(MockServices()).serializeInstance(wtx.id)
 
-            val proof = NoopProver().prove(witness, instance)
+            val proof = NoopZKProver(MockServices()).prove(witness, instance)
 
-            NoopVerifier().verify(proof, instance)
+            NoopZKVerifier(MockServices()).verify(proof, instance)
         }
     }
 }
