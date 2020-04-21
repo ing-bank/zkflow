@@ -6,12 +6,12 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.ptr.IntByReference
 import com.sun.jna.ptr.PointerByReference
-import net.corda.core.node.ServiceHub
+import net.corda.core.node.AppServiceHub
 import net.corda.core.node.services.CordaService
 import net.corda.core.serialization.SingletonSerializeAsToken
 
 @CordaService
-class ZincProverNative(val serviceHub: ServiceHub) : SingletonSerializeAsToken(), Prover {
+class ZincProverNative(val serviceHub: AppServiceHub) : SingletonSerializeAsToken(), Prover {
     override fun prove(witness: ByteArray, instance: ByteArray): Proof {
         val proverKeyPath: String = serviceHub.getAppContext().config.getString("proverKeyPath")
 

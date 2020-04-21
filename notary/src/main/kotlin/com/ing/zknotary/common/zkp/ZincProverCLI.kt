@@ -1,11 +1,11 @@
 package com.ing.zknotary.common.zkp
 
-import net.corda.core.node.ServiceHub
+import net.corda.core.node.AppServiceHub
 import net.corda.core.node.services.CordaService
 import net.corda.core.serialization.SingletonSerializeAsToken
 
 @CordaService
-class ZincProverCLI(val serviceHub: ServiceHub) : SingletonSerializeAsToken(), Prover {
+class ZincProverCLI(val serviceHub: AppServiceHub) : SingletonSerializeAsToken(), Prover {
     override fun prove(witness: ByteArray, instance: ByteArray): Proof {
         val proverKeyPath: String = serviceHub.getAppContext().config.getString("proverKeyPath")
 
