@@ -17,4 +17,3 @@ internal class NoopZKVerifier(val serviceHub: AppServiceHub) : SingletonSerializ
         // No exception is success
     }
 }
-

@@ -15,4 +15,3 @@ class ZincZKVerifierCLI(val serviceHub: AppServiceHub) : SingletonSerializeAsTok
         // if (result != 1) throw ZKProofVerificationException("ZK Proof verification failed: reason understandably not given. ;-)")
     }
 }
-

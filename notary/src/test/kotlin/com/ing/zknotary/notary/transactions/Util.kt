@@ -31,4 +31,3 @@ fun LedgerDSL<TestTransactionDSLInterpreter, TestLedgerDSLInterpreter>.moveTests
 
     return wtx
 }
-

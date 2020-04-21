@@ -15,4 +15,3 @@ class ZincProverCLI(val serviceHub: AppServiceHub) : SingletonSerializeAsToken()
         return Proof(ByteArray(0))
     }
 }
-

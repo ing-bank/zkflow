@@ -23,6 +23,5 @@ class ZKFilteredTransaction(val proof: Proof, private val ftx: FilteredTransacti
         ftx.checkAllComponentsVisible(ComponentGroupEnum.TIMEWINDOW_GROUP)
         ftx.checkAllComponentsVisible(ComponentGroupEnum.REFERENCES_GROUP)
         ftx.checkAllComponentsVisible(ComponentGroupEnum.PARAMETERS_GROUP)
-
     }
 }

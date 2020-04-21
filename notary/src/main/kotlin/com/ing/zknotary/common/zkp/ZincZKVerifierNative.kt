@@ -37,4 +37,3 @@ class ZincZKVerifierNative(val serviceHub: AppServiceHub) : SingletonSerializeAs
         }
     }
 }
-

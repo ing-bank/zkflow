@@ -4,7 +4,6 @@ import com.ing.zknotary.client.flows.ZKFinalityFlow
 import com.ing.zknotary.common.contracts.TestContract
 import com.ing.zknotary.common.contracts.TestContract.Companion.PROGRAM_ID
 import com.ing.zknotary.common.flows.getCordaServiceFromConfig
-import com.ing.zknotary.common.serializer.JsonZKInputSerializer
 import com.ing.zknotary.common.serializer.NoopZKInputSerializer
 import com.ing.zknotary.common.zkp.NoopZKProver
 import com.ing.zknotary.common.zkp.NoopZKVerifier

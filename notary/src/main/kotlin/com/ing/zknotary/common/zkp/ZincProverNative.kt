@@ -50,4 +50,3 @@ class ZincProverNative(val serviceHub: AppServiceHub) : SingletonSerializeAsToke
         }
     }
 }
-

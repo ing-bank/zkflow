@@ -1,14 +1,12 @@
 package com.ing.zknotary.notary
 
 import com.ing.zknotary.common.flows.getCordaServiceFromConfig
-import com.ing.zknotary.common.serializer.ZKInputSerializer
 import com.ing.zknotary.common.zkp.ZKConfig
 import com.ing.zknotary.notary.flows.ZKNotaryServiceFlow
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
 import net.corda.core.internal.notary.SinglePartyNotaryService
 import net.corda.core.schemas.MappedSchema
-import net.corda.core.serialization.SerializeAsToken
 import net.corda.core.utilities.seconds
 import net.corda.node.services.api.ServiceHubInternal
 import net.corda.node.services.transactions.NodeNotarySchema
