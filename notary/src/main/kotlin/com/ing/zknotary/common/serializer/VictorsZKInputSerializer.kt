@@ -1,10 +1,14 @@
 package com.ing.zknotary.common.serializer
 
 import net.corda.core.crypto.SecureHash
+import net.corda.core.node.AppServiceHub
+import net.corda.core.node.services.CordaService
+import net.corda.core.serialization.SingletonSerializeAsToken
 import net.corda.core.serialization.serialize
 import net.corda.core.transactions.LedgerTransaction
 
-object VictorsZKInputSerializer : ZKInputSerializer {
+@CordaService
+class VictorsZKInputSerializer(val serviceHub: AppServiceHub) : SingletonSerializeAsToken(), ZKInputSerializer {
     // FIXME: should be turned into proper serialization of any tx generic data structure
     override fun serializeWitness(tx: LedgerTransaction, signatures: List<ByteArray>): ByteArray {
         var witness = ByteArray(0) // Or perhaps this should be JSON?

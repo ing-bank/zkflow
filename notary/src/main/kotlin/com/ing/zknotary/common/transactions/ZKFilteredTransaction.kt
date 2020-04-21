@@ -1,8 +1,6 @@
 package com.ing.zknotary.common.transactions
 
-import com.ing.zknotary.common.serializer.VictorsZKInputSerializer
 import com.ing.zknotary.common.zkp.Proof
-import com.ing.zknotary.common.zkp.ZincVerifierNative
 import net.corda.core.KeepForDJVM
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.crypto.SecureHash

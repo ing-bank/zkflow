@@ -3,7 +3,6 @@ package com.ing.zknotary.flows
 import co.paralleluniverse.fibers.Suspendable
 import com.ing.zknotary.client.flows.ZKFinalityFlow
 import com.ing.zknotary.client.flows.ZKNotaryFlow
-import com.ing.zknotary.common.zkp.DefaultZKConfig
 import com.ing.zknotary.common.zkp.ZKConfig
 import net.corda.core.contracts.ContractState
 import net.corda.core.crypto.TransactionSignature
@@ -25,7 +24,7 @@ import kotlin.reflect.jvm.javaConstructor
 // This custom ZK notary client flow does not check the validity the transaction here as normal in NotaryFlow.Client,
 // because that would fail: the tx is invalid on purpose, so that we can confirm that the notary rejects or doesn't reject an invalid tx.
 // Other than that, it is an unmodified copy of NotaryFlow.Client.
-class ZKNonTxCheckingNotaryClientFlow(private val stx: SignedTransaction) : ZKNotaryFlow(stx) {
+class ZKNonTxCheckingNotaryClientFlow(private val stx: SignedTransaction, zkConfig: ZKConfig) : ZKNotaryFlow(stx, zkConfig) {
     @Suspendable
     @Throws(NotaryException::class)
     override fun call(): List<TransactionSignature> {
@@ -56,7 +55,7 @@ class NonTxCheckingNotaryClientFlow(private val stx: SignedTransaction) : Notary
 class ZKMoveFlow(
     private val stx: SignedTransaction,
     private val newOwner: Party,
-    private val zkConfig: ZKConfig = DefaultZKConfig
+    private val zkConfig: ZKConfig
 ) : FlowLogic<SignedTransaction>() {
 
     @Suspendable

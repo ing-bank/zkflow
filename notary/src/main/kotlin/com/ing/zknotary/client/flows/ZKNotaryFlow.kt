@@ -3,7 +3,6 @@ package com.ing.zknotary.client.flows
 import co.paralleluniverse.fibers.Suspendable
 import com.ing.zknotary.common.transactions.ZKFilteredTransaction
 import com.ing.zknotary.common.zkp.ZKConfig
-import com.ing.zknotary.common.zkp.DefaultZKConfig
 import net.corda.core.contracts.StateRef
 import net.corda.core.contracts.TimeWindow
 import net.corda.core.crypto.SecureHash
@@ -30,7 +29,7 @@ import java.util.function.Predicate
 
 open class ZKNotaryFlow(
     private val stx: SignedTransaction,
-    private val zkConfig: ZKConfig = DefaultZKConfig
+    private val zkConfig: ZKConfig
 ) : NotaryFlow.Client(stx) {
 
     @Suspendable

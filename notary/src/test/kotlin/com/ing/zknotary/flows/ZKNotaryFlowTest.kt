@@ -3,9 +3,16 @@ package com.ing.zknotary.flows
 import com.ing.zknotary.client.flows.ZKFinalityFlow
 import com.ing.zknotary.common.contracts.TestContract
 import com.ing.zknotary.common.contracts.TestContract.Companion.PROGRAM_ID
+import com.ing.zknotary.common.flows.getCordaServiceFromConfig
+import com.ing.zknotary.common.serializer.JsonZKInputSerializer
+import com.ing.zknotary.common.serializer.NoopZKInputSerializer
+import com.ing.zknotary.common.zkp.NoopZKProver
+import com.ing.zknotary.common.zkp.NoopZKVerifier
+import com.ing.zknotary.common.zkp.ZKConfig
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
+import net.corda.core.node.ServiceHub
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.utilities.getOrThrow
@@ -41,17 +48,23 @@ class ZKNotaryFlowTest {
         mockNet = MockNetwork(
             MockNetworkParameters(
                 cordappsForAllNodes = listOf(
-                    findCordapp("com.ing.zknotary.notary"),
-                    findCordapp("com.ing.zknotary.common.contracts")
+                    findCordapp("com.ing.zknotary.common.contracts").withConfig(
+                        mapOf(
+                            "zkpSerializer" to NoopZKInputSerializer::class.qualifiedName!!,
+                            "zkpVerifier" to NoopZKVerifier::class.qualifiedName!!,
+                            "zkpProver" to NoopZKProver::class.qualifiedName!!
+                        )
+                    )
                 ),
                 notarySpecs = listOf(
                     MockNetworkNotarySpec(
                         name = CordaX500Name("Custom Notary", "Amsterdam", "NL"),
                         className = "com.ing.zknotary.notary.ZKNotaryService",
                         validating = false
+                        // Here we should be able to add NotaryConfig.extraConfig that is passed on all the way to the construction of the NotaryService.
                     )
                 ),
-                networkParameters = testNetworkParameters(minimumPlatformVersion = 5)
+                networkParameters = testNetworkParameters(minimumPlatformVersion = 6)
             )
         )
         aliceNode = mockNet.createPartyNode(ALICE_NAME)
@@ -107,7 +120,8 @@ class ZKNotaryFlowTest {
         val createdStateAndRef = runCreateTx(aliceNode, alice).coreTransaction.outRef<TestContract.TestState>(0)
         val stx = aliceNode.services.signInitialTransaction(buildContractViolatingMoveTx(createdStateAndRef, bob))
 
-        val notaryFuture = aliceNode.startFlow(ZKNonTxCheckingNotaryClientFlow(stx))
+        val notaryFuture = aliceNode.startFlow(ZKNonTxCheckingNotaryClientFlow(stx, loadZKConfig(aliceNode.services)))
+
         mockNet.runNetwork()
         val notarySignedTx = notaryFuture.getOrThrow()
         val signers = notarySignedTx.map { it.by }
@@ -122,7 +136,18 @@ class ZKNotaryFlowTest {
         newOwner: Party
     ): SignedTransaction {
         val stx = node.services.signInitialTransaction(tx)
-        val moveFuture = node.startFlow(ZKMoveFlow(stx, newOwner))
+        val moveFuture = node.startFlow(
+            ZKMoveFlow(
+                stx,
+                newOwner,
+                ZKConfig(
+                    prover = node.services.getCordaServiceFromConfig("zkpProver"),
+                    verifier = node.services.getCordaServiceFromConfig("zkpVerifier"),
+                    serializer = node.services.getCordaServiceFromConfig("zkpSerializer")
+                )
+
+            )
+        )
         mockNet.runNetwork()
         return moveFuture.getOrThrow()
     }
@@ -158,12 +183,20 @@ class ZKNotaryFlowTest {
         val future = ownerNode.startFlow(
             ZKFinalityFlow(
                 stx,
-                emptyList()
+                emptyList(),
+                zkConfig = loadZKConfig(ownerNode.services)
+
             )
         )
         mockNet.runNetwork()
         return future.getOrThrow()
     }
+
+    private fun loadZKConfig(serviceHub: ServiceHub) = ZKConfig(
+        prover = serviceHub.getCordaServiceFromConfig("zkpProver"),
+        verifier = serviceHub.getCordaServiceFromConfig("zkpVerifier"),
+        serializer = serviceHub.getCordaServiceFromConfig("zkpSerializer")
+    )
 
     private fun buildCreateTx(owner: Party): TransactionBuilder {
         return TransactionBuilder(notary)
