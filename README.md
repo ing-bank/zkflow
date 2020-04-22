@@ -1,14 +1,14 @@
-# For victor
-
 ## Prerequisites
 
 This project makes use of our fork of Corda. You will need to install that version to your local Maven repo like so:
 ```bash
 $ git clone https://github.com/ingzkp/corda
 $ cd corda
-$ git checkout feature/merkle-digest-service
+$ git checkout ing-fork
 $ ./gradlew install installDist
 ```
+
+> The branch `ing-fork` contains a version of corda that is based on the latest version of Corda and where all our proposed PRs to Corda are already merged.
 
 ## Tests to use:
 
