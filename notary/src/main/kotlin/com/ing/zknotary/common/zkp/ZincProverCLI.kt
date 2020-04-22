@@ -7,7 +7,7 @@ import net.corda.core.serialization.SingletonSerializeAsToken
 @CordaService
 class ZincProverCLI(val serviceHub: AppServiceHub) : SingletonSerializeAsToken(), Prover {
     override fun prove(witness: ByteArray, instance: ByteArray): Proof {
-        val proverKeyPath: String = serviceHub.getAppContext().config.getString("proverKeyPath")
+        // val proverKeyPath: String = serviceHub.getAppContext().config.getString("proverKeyPath")
 
         // write witness to file
         // write instance to file
