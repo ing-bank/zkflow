@@ -1,5 +1,6 @@
 package com.ing.zknotary.common.contracts
 
+import java.util.Random
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.CommandAndState
 import net.corda.core.contracts.CommandData
@@ -8,7 +9,6 @@ import net.corda.core.contracts.ContractClassName
 import net.corda.core.contracts.OwnableState
 import net.corda.core.identity.AbstractParty
 import net.corda.core.transactions.LedgerTransaction
-import java.util.Random
 
 class TestContract : Contract {
     companion object {

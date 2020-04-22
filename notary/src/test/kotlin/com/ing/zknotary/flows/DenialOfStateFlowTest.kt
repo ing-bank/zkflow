@@ -2,6 +2,9 @@ package com.ing.zknotary.flows
 
 import com.ing.zknotary.common.contracts.TestContract
 import com.ing.zknotary.common.contracts.TestContract.Companion.PROGRAM_ID
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertTrue
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.PrivacySalt
 import net.corda.core.contracts.StateAndRef
@@ -36,9 +39,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
-import kotlin.test.assertTrue
 
 class DenialOfStateFlowTest {
     private lateinit var mockNet: MockNetwork

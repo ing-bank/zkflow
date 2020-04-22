@@ -3,6 +3,7 @@ package com.ing.zknotary.notary.flows
 import com.ing.zknotary.common.transactions.ZKFilteredTransaction
 import com.ing.zknotary.common.zkp.ZKConfig
 import com.ing.zknotary.notary.ZKNotaryService
+import java.time.Duration
 import net.corda.core.KeepForDJVM
 import net.corda.core.crypto.SecureHash
 import net.corda.core.flows.FlowSession
@@ -15,7 +16,6 @@ import net.corda.core.node.NetworkParameters
 import net.corda.core.serialization.CordaSerializable
 import net.corda.core.transactions.ContractUpgradeFilteredTransaction
 import net.corda.core.transactions.NotaryChangeWireTransaction
-import java.time.Duration
 
 // TODO: find out how to inject the ZKConfig
 class ZKNotaryServiceFlow(

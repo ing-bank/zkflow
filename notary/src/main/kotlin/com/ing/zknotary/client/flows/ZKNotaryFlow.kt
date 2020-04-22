@@ -3,6 +3,7 @@ package com.ing.zknotary.client.flows
 import co.paralleluniverse.fibers.Suspendable
 import com.ing.zknotary.common.transactions.ZKFilteredTransaction
 import com.ing.zknotary.common.zkp.ZKConfig
+import java.util.function.Predicate
 import net.corda.core.contracts.StateRef
 import net.corda.core.contracts.TimeWindow
 import net.corda.core.crypto.SecureHash
@@ -25,7 +26,6 @@ import net.corda.core.transactions.ReferenceStateRef
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.WireTransaction
 import net.corda.core.utilities.UntrustworthyData
-import java.util.function.Predicate
 
 open class ZKNotaryFlow(
     private val stx: SignedTransaction,

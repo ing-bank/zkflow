@@ -8,6 +8,10 @@ import com.ing.zknotary.common.serializer.NoopZKInputSerializer
 import com.ing.zknotary.common.zkp.NoopZKProver
 import com.ing.zknotary.common.zkp.NoopZKVerifier
 import com.ing.zknotary.common.zkp.ZKConfig
+import java.time.Duration
+import java.time.Instant
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
@@ -28,10 +32,6 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Test
-import java.time.Duration
-import java.time.Instant
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 class ZKNotaryFlowTest {
     private lateinit var mockNet: MockNetwork

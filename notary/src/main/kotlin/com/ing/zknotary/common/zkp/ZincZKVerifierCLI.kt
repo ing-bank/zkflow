@@ -7,7 +7,7 @@ import net.corda.core.serialization.SingletonSerializeAsToken
 @CordaService
 class ZincZKVerifierCLI(val serviceHub: AppServiceHub) : SingletonSerializeAsToken(), ZKVerifier {
     override fun verify(proof: Proof, instance: ByteArray) {
-        val verifierKeyPath: String = serviceHub.getAppContext().config.getString("proverKeyPath")
+        // val verifierKeyPath: String = serviceHub.getAppContext().config.getString("proverKeyPath")
 
         // write proof to file
         // write instance to file
