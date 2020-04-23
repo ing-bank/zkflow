@@ -28,9 +28,6 @@ jobs:
 
       - name: Build with Gradle
         run: ./gradlew build
-
-      - name: Upload to Github
-        uses: actions/upload-artifact@v1
-        with:
-          name: ZKNotary SDK
-          path: build/libs
+        env:
+          GITHUB_USERNAME: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
