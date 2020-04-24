@@ -1,3 +1,5 @@
+![ZK Notary SDK CI](https://github.com/ingzkp/zk-notary/workflows/ZK%20Notary%20SDK%20CI/badge.svg?branch=master)
+
 ## Prerequisites
 
 This project makes use of our fork of Corda maintained here: https://github.com/ingzkp/corda/tree/ing-fork

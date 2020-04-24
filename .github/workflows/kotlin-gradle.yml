@@ -27,7 +27,7 @@ jobs:
           restore-keys: ${{ runner.os }}-gradle
 
       - name: Build with Gradle
-        run: ./gradlew build --build-cache --stacktrace --parallel
+        run: ./gradlew assemble --build-cache --stacktrace --parallel
         env:
           GITHUB_USERNAME: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
