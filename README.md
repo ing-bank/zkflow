@@ -1,14 +1,21 @@
 ## Prerequisites
 
-This project makes use of our fork of Corda. You will need to install that version to your local Maven repo like so:
+This project makes use of our fork of Corda maintained here: https://github.com/ingzkp/corda/tree/ing-fork
+This fork is based on the latest version of Corda and will have all our proposed PRs to Corda already merged.
+The artifacts for our fork are deployed to Github Packages and this project is aware of that and will be able to find Corda dependencies there
+
+If you want to make changes to our fork (please consult with Matthijs first), you can do the following:
 ```bash
 $ git clone https://github.com/ingzkp/corda
 $ cd corda
 $ git checkout ing-fork
-$ ./gradlew install installDist
+$ git checkout -b feature/foobar
 ```
+Then make you changes in your branch and create a PR. Please note that if you want to make these change available through
+Github Packages, that you should also bump the Corda patch version (`cordaVersion`) in the file `constants.properties`.
+Normally we would just use a SNAPSHOT version for this, but unfortunately Github Packages does not properly support this at this time.
+That means we will just have to bump the version when we introduce a feature that we want to make available.
 
-> The branch `ing-fork` contains a version of corda that is based on the latest version of Corda and where all our proposed PRs to Corda are already merged.
 
 ## Tests to use:
 

@@ -101,3 +101,11 @@ plantUml {
     render input: 'docs/**/*.puml', output: "docs/build", format: 'png', withMetadata: false
 }
 
+tasks.withType(Test) {
+    def cores = Runtime.runtime.availableProcessors()
+    maxParallelForks = cores.intdiv(2) ?: 1
+    logger.info("Using $cores cores to run $maxParallelForks test forks.")
+}
+
+
+
