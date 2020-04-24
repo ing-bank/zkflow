@@ -19,13 +19,13 @@ class ZKNotaryService(override val services: ServiceHubInternal, override val no
         PersistentUniquenessProvider(services.clock, services.database, services.cacheFactory, ::signTransaction)
 
     /**
-     * By loading this on ::start, we enforce valid config.
+     * By loading this on construction, we enforce valid config.
      * This prevents runtime exceptions on bad config.
      */
     private val zkConfig = ZKConfig(
         prover = services.getCordaServiceFromConfig("zkpProver"),
         verifier = services.getCordaServiceFromConfig("zkpVerifier"),
-        serializer = services.getCordaServiceFromConfig("zkpSerializer")
+        serializationFactoryService = services.getCordaServiceFromConfig("zkpSerializationFactoryService")
     )
 
     init {

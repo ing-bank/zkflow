@@ -1,11 +1,14 @@
 package com.ing.zknotary.client.flows
 
 import co.paralleluniverse.fibers.Suspendable
-import com.ing.zknotary.common.transactions.ZKFilteredTransaction
+import com.ing.zknotary.common.states.ZKReferenceStateRef
+import com.ing.zknotary.common.states.ZKStateRef
+import com.ing.zknotary.common.transactions.ZKProverTransaction
+import com.ing.zknotary.common.transactions.ZKVerifierTransaction
 import com.ing.zknotary.common.zkp.ZKConfig
 import java.util.function.Predicate
-import net.corda.core.contracts.StateRef
 import net.corda.core.contracts.TimeWindow
+import net.corda.core.crypto.BLAKE2s256DigestService
 import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.TransactionSignature
 import net.corda.core.flows.FlowSession
@@ -19,10 +22,10 @@ import net.corda.core.flows.NotaryFlow
 import net.corda.core.identity.Party
 import net.corda.core.internal.NetworkParametersStorage
 import net.corda.core.internal.notary.generateSignature
+import net.corda.core.serialization.serialize
 import net.corda.core.transactions.ContractUpgradeWireTransaction
 import net.corda.core.transactions.NetworkParametersHash
 import net.corda.core.transactions.NotaryChangeWireTransaction
-import net.corda.core.transactions.ReferenceStateRef
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.WireTransaction
 import net.corda.core.utilities.UntrustworthyData
@@ -63,29 +66,32 @@ open class ZKNotaryFlow(
         val ctx = stx.coreTransaction
         val tx = when (ctx) {
             is ContractUpgradeWireTransaction -> ctx.buildFilteredTransaction()
-            is WireTransaction -> buildZKFilteredTransaction(stx, notaryParty)
+            is WireTransaction -> buildVerifierTransaction(stx, notaryParty)
             else -> ctx
         }
         session.send(NotarisationPayload(tx, signature))
         return receiveResultOrTiming(session)
     }
 
-    private fun buildZKFilteredTransaction(stx: SignedTransaction, notaryParty: Party): ZKFilteredTransaction {
-        val wtx = stx.coreTransaction as WireTransaction
+    private fun buildVerifierTransaction(stx: SignedTransaction, notaryParty: Party): ZKVerifierTransaction {
+        val ltx = stx.toLedgerTransaction(serviceHub, checkSufficientSignatures = false)
 
-        val ftx = wtx.buildFilteredTransaction(Predicate {
-            it is StateRef || it is ReferenceStateRef || it is TimeWindow || it == notaryParty || it is NetworkParametersHash
+        // TODO: inject these serializationFactoryService and DigestService as part of ZKConfig
+        val ptx = ZKProverTransaction(
+            ltx,
+            zkConfig.serializationFactoryService,
+            BLAKE2s256DigestService
+        )
+
+        val vtx = ptx.buildVerifierTransaction(Predicate {
+            it is ZKStateRef || it is ZKReferenceStateRef || it is TimeWindow || it == notaryParty || it is NetworkParametersHash
         })
 
-        // TODO: create custom sigs, because we need a different scheme, and also it sigs of the additional merkle root and not of SignableData
-        val signatures = stx.sigs.map { it.bytes }
+        val proof =
+            zkConfig.prover.prove(ptx.serialize(zkConfig.serializationFactoryService.factory).bytes, ptx.id.bytes)
 
-        val witness = zkConfig.serializer.serializeWitness(wtx.toLedgerTransaction(serviceHub), signatures)
-        val instance = zkConfig.serializer.serializeInstance(wtx.id)
-
-        // TODO: inject the prover
-        val proof = zkConfig.prover.prove(witness, instance)
-        return ZKFilteredTransaction(proof, ftx)
+        // TODO: create payload with vtx and proof, but for now only send vtx
+        return vtx
     }
 
     /****************************************************
