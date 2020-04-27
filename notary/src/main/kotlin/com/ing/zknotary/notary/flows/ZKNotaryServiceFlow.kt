@@ -1,82 +1,158 @@
 package com.ing.zknotary.notary.flows
 
+import co.paralleluniverse.fibers.Suspendable
+import com.ing.zknotary.common.states.ZKStateRef
 import com.ing.zknotary.common.transactions.ZKVerifierTransaction
 import com.ing.zknotary.common.zkp.ZKConfig
+import com.ing.zknotary.notary.ZKNotarisationPayload
+import com.ing.zknotary.notary.ZKNotarisationRequest
 import com.ing.zknotary.notary.ZKNotaryService
 import java.time.Duration
-import net.corda.core.KeepForDJVM
 import net.corda.core.crypto.SecureHash
+import net.corda.core.crypto.TransactionSignature
+import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
-import net.corda.core.flows.NotarisationPayload
+import net.corda.core.flows.NotarisationRequestSignature
+import net.corda.core.flows.NotarisationResponse
 import net.corda.core.flows.NotaryError
+import net.corda.core.flows.NotaryException
+import net.corda.core.flows.WaitTimeUpdate
 import net.corda.core.identity.Party
+import net.corda.core.internal.IdempotentFlow
+import net.corda.core.internal.checkParameterHash
 import net.corda.core.internal.notary.NotaryInternalException
-import net.corda.core.internal.notary.NotaryServiceFlow
-import net.corda.core.node.NetworkParameters
-import net.corda.core.serialization.CordaSerializable
-import net.corda.core.transactions.ContractUpgradeFilteredTransaction
-import net.corda.core.transactions.NotaryChangeWireTransaction
+import net.corda.core.internal.notary.UniquenessProvider
+import net.corda.core.utilities.unwrap
 
 // TODO: find out how to inject the ZKConfig
 class ZKNotaryServiceFlow(
-    otherSideSession: FlowSession,
-    service: ZKNotaryService,
-    etaThreshold: Duration,
+    val otherSideSession: FlowSession,
+    val service: ZKNotaryService,
+    private val etaThreshold: Duration,
     private val zkConfig: ZKConfig
-) : NotaryServiceFlow(otherSideSession, service, etaThreshold) {
+) : FlowLogic<Void?>(), IdempotentFlow {
+    companion object {
+        // TODO: Determine an appropriate limit and also enforce in the network parameters and the transaction builder.
+        private const val maxAllowedStatesInTx = 10_000
+    }
 
     init {
         if (service.services.networkParameters.minimumPlatformVersion < 6) {
-            throw IllegalStateException("The ZKNotaryService is compatible with Corda version 5 or greater")
+            throw IllegalStateException("The ZKNotaryService is compatible with Corda version 6 or greater")
         }
     }
 
-    override fun extractParts(requestPayload: NotarisationPayload): TransactionParts {
-        val tx = requestPayload.coreTransaction
-        return when (tx) {
-            // is ZKVerifierTransaction -> TransactionParts(
-            //     tx.id,
-            //     tx.inputs,
-            //     tx.timeWindow,
-            //     tx.notary,
-            //     tx.references,
-            //     networkParametersHash = tx.networkParametersHash
-            // )
-            is ContractUpgradeFilteredTransaction,
-            is NotaryChangeWireTransaction -> TransactionParts(
-                tx.id,
+    @Suspendable
+    override fun call(): Void? {
+        val requestPayload = otherSideSession.receive<ZKNotarisationPayload>().unwrap { it }
+        val tx = requestPayload.transaction
+        logger.info("Received a notarisation request for Tx [${tx.id}] from [${otherSideSession.counterparty.name}]")
+
+        val commitStatus = try {
+            validateTransactionSize(tx)
+            validateNotary(tx)
+            validateRequestSignature(tx, requestPayload.requestSignature)
+
+            /**
+             * In our case this goes *before* verification, because due to ZKP,
+             * tx verification is slower than persistence and dependent on tx size
+             */
+            handleBackPressure(tx)
+
+            verifyTransaction(requestPayload)
+
+            service.commitStates(
                 tx.inputs,
-                null,
-                tx.notary,
-                networkParametersHash = tx.networkParametersHash
+                tx.id,
+                otherSideSession.counterparty,
+                requestPayload.requestSignature,
+                tx.timeWindow,
+                tx.references
             )
-            else -> throw UnexpectedTransactionTypeException(tx)
+        } catch (e: NotaryInternalException) {
+            logger.error("Error notarising transaction ${tx.id}", e.error)
+            // Any exception that's not a NotaryInternalException is assumed to be an unexpected internal error
+            // that is not relayed back to the client.
+            throw NotaryException(e.error, tx.id)
+        }
+
+        if (commitStatus is UniquenessProvider.Result.Success) {
+            // TODO: Why do we let the UniquenessProvider sign tx? Why not just let that return and sign the tx here?
+            sendSignedResponse(tx.id, commitStatus.signature)
+        } else {
+            val error =
+                java.lang.IllegalStateException("Request that failed uniqueness reached signing code! Ignoring.")
+            throw NotaryException(NotaryError.General(error))
+        }
+        return null
+    }
+
+    private fun handleBackPressure(tx: ZKVerifierTransaction) {
+        val eta = service.getEstimatedWaitTime(tx.inputs.size + tx.references.size + tx.outputs.size)
+        // We don't have to check if counterparty can handle backpressure because we already require
+        // platform version >= MIN_PLATFORM_VERSION_FOR_BACKPRESSURE_MESSAGE anyway
+        if (eta > etaThreshold) {
+            otherSideSession.send(WaitTimeUpdate(eta))
         }
     }
 
-    override fun verifyTransaction(requestPayload: NotarisationPayload) {
-        val tx = requestPayload.coreTransaction
+    /** Verifies that the correct notarisation request was signed by the counterparty. */
+    private fun validateRequestSignature(tx: ZKVerifierTransaction, signature: NotarisationRequestSignature) {
+        val request = ZKNotarisationRequest(tx.inputs, tx.id)
+        val requestingParty = otherSideSession.counterparty
+        request.verifySignature(signature, requestingParty)
+    }
+
+    private fun validateTransactionSize(tx: ZKVerifierTransaction) {
+        try {
+            checkMaxStateCount(tx.inputs + tx.references + tx.outputs)
+        } catch (e: Exception) {
+            throw NotaryInternalException(NotaryError.TransactionInvalid(e))
+        }
+    }
+
+    private fun validateNotary(tx: ZKVerifierTransaction) {
+        try {
+            tx.notary ?: throw IllegalArgumentException("Transaction does not specify a notary.")
+            checkTxNotaryIsMe(tx.notary)
+            /**
+             * Not calling [checkParameterHash] anymore: that same operation is already done by [checkNotaryWhitelisted]
+             */
+            checkNotaryWhitelisted(tx.notary, tx.networkParametersHash)
+        } catch (e: Exception) {
+            throw NotaryInternalException(NotaryError.TransactionInvalid(e))
+        }
+    }
+
+    @Suspendable
+    private fun sendSignedResponse(txId: SecureHash, signature: TransactionSignature) {
+        logger.info("Transaction [$txId] successfully notarised, sending signature back to [${otherSideSession.counterparty.name}]")
+        otherSideSession.send(NotarisationResponse(listOf(signature)))
+    }
+
+    /** Check if transaction is intended to be signed by this notary. */
+    @Suspendable
+    private fun checkTxNotaryIsMe(notary: Party) {
+        require(notary.owningKey == service.notaryIdentityKey) {
+            "The notary specified on the transaction: [$notary] does not match the notary service's identity: [${service.notaryIdentityKey}] "
+        }
+    }
+
+    /** Checks whether the number of input states is too large. */
+    private fun checkMaxStateCount(states: List<ZKStateRef>) {
+        require(states.size < maxAllowedStatesInTx) {
+            "A transaction cannot have more than $maxAllowedStatesInTx " +
+                "inputs or references, received: ${states.size}"
+        }
+    }
+
+    private fun verifyTransaction(requestPayload: ZKNotarisationPayload) {
+        val tx = requestPayload.transaction
 
         try {
-            when (tx) {
-                // is ZKVerifierTransaction -> {
-                //     tx.verify()
-                //     // TODO: the instance should be the additional Merkle root
-                //     val instance = zkConfig.serializer.serializeInstance(tx.id)
-                //     zkConfig.verifier.verify(tx.proof, instance)
-                //
-                //     val notary = tx.notary
-                //         ?: throw IllegalArgumentException("Transaction does not specify a notary.")
-                //     checkNotaryWhitelisted(notary, tx.networkParametersHash)
-                // }
-                is ContractUpgradeFilteredTransaction -> {
-                    checkNotaryWhitelisted(tx.notary, tx.networkParametersHash)
-                }
-                is NotaryChangeWireTransaction -> {
-                    checkNotaryWhitelisted(tx.newNotary, tx.networkParametersHash)
-                }
-                else -> throw UnexpectedTransactionTypeException(tx)
-            }
+            tx.verify()
+            // TODO: verify the zkp
+            // zkConfig.verifierService.verify()
         } catch (e: Exception) {
             throw NotaryInternalException(NotaryError.TransactionInvalid(e))
         }
@@ -91,22 +167,10 @@ class ZKNotaryServiceFlow(
         val attachedParameters = serviceHub.networkParametersService.lookup(attachedParameterHash)
             ?: throw IllegalStateException("Unable to resolve network parameters from hash: $attachedParameterHash")
 
-        checkInWhitelist(attachedParameters, notary)
-    }
-
-    private fun checkInWhitelist(networkParameters: NetworkParameters, notary: Party) {
-        val notaryWhitelist = networkParameters.notaries.map { it.identity }
+        val notaryWhitelist = attachedParameters.notaries.map { it.identity }
 
         check(notary in notaryWhitelist) {
             "Notary specified by the transaction ($notary) is not on the network parameter whitelist: ${notaryWhitelist.joinToString()}"
         }
     }
-
-    @KeepForDJVM
-    @CordaSerializable
-    class UnexpectedTransactionTypeException(tx: Any) : IllegalArgumentException(
-        "Received unexpected transaction type: " +
-            "${tx::class.java.simpleName}, expected ${ZKVerifierTransaction::class.java.simpleName}, " +
-            "${ContractUpgradeFilteredTransaction::class.java.simpleName} or ${NotaryChangeWireTransaction::class.java.simpleName}"
-    )
 }

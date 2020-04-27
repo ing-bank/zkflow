@@ -5,7 +5,7 @@ import net.corda.core.KeepForDJVM
 import net.corda.core.serialization.CordaSerializable
 import net.corda.core.serialization.SerializeAsToken
 
-interface ZKVerifier : SerializeAsToken {
+interface ZKVerifierService : SerializeAsToken {
     @Throws(ZKProofVerificationException::class)
     fun verify(proof: Proof, instance: ByteArray)
 }

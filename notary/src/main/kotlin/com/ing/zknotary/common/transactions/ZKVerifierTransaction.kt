@@ -105,7 +105,7 @@ class ZKVerifierTransaction(
     companion object {
 
         @JvmStatic
-        fun buildFilteredTransaction(
+        fun fromZKProverTransaction(
             zkProverTransaction: ZKProverTransaction,
             filtering: Predicate<Any>
         ): ZKVerifierTransaction {

@@ -16,7 +16,7 @@ import net.corda.core.serialization.serialize
 import net.corda.core.transactions.LedgerTransaction
 
 /**
- * This should also include signatures
+ * TODO: This should also include signatures
  */
 class ZKProverTransaction(
     val inputs: List<ZKStateAndRef<ContractState>>,
@@ -86,8 +86,8 @@ class ZKProverTransaction(
     /**
      * Build filtered transaction using provided filtering functions.
      */
-    fun buildVerifierTransaction(filtering: Predicate<Any>): ZKVerifierTransaction =
-        ZKVerifierTransaction.buildFilteredTransaction(this, filtering)
+    fun toZKVerifierTransaction(filtering: Predicate<Any>): ZKVerifierTransaction =
+        ZKVerifierTransaction.fromZKProverTransaction(this, filtering)
 
     override fun equals(other: Any?): Boolean {
         if (other is ZKProverTransaction) {
