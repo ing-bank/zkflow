@@ -1,6 +1,6 @@
 package com.ing.zknotary.notary.flows
 
-import com.ing.zknotary.common.transactions.ZKFilteredTransaction
+import com.ing.zknotary.common.transactions.ZKVerifierTransaction
 import com.ing.zknotary.common.zkp.ZKConfig
 import com.ing.zknotary.notary.ZKNotaryService
 import java.time.Duration
@@ -34,14 +34,14 @@ class ZKNotaryServiceFlow(
     override fun extractParts(requestPayload: NotarisationPayload): TransactionParts {
         val tx = requestPayload.coreTransaction
         return when (tx) {
-            is ZKFilteredTransaction -> TransactionParts(
-                tx.id,
-                tx.inputs,
-                tx.timeWindow,
-                tx.notary,
-                tx.references,
-                networkParametersHash = tx.networkParametersHash
-            )
+            // is ZKVerifierTransaction -> TransactionParts(
+            //     tx.id,
+            //     tx.inputs,
+            //     tx.timeWindow,
+            //     tx.notary,
+            //     tx.references,
+            //     networkParametersHash = tx.networkParametersHash
+            // )
             is ContractUpgradeFilteredTransaction,
             is NotaryChangeWireTransaction -> TransactionParts(
                 tx.id,
@@ -59,16 +59,16 @@ class ZKNotaryServiceFlow(
 
         try {
             when (tx) {
-                is ZKFilteredTransaction -> {
-                    tx.verify()
-                    // TODO: the instance should be the additional Merkle root
-                    val instance = zkConfig.serializer.serializeInstance(tx.id)
-                    zkConfig.verifier.verify(tx.proof, instance)
-
-                    val notary = tx.notary
-                        ?: throw IllegalArgumentException("Transaction does not specify a notary.")
-                    checkNotaryWhitelisted(notary, tx.networkParametersHash)
-                }
+                // is ZKVerifierTransaction -> {
+                //     tx.verify()
+                //     // TODO: the instance should be the additional Merkle root
+                //     val instance = zkConfig.serializer.serializeInstance(tx.id)
+                //     zkConfig.verifier.verify(tx.proof, instance)
+                //
+                //     val notary = tx.notary
+                //         ?: throw IllegalArgumentException("Transaction does not specify a notary.")
+                //     checkNotaryWhitelisted(notary, tx.networkParametersHash)
+                // }
                 is ContractUpgradeFilteredTransaction -> {
                     checkNotaryWhitelisted(tx.notary, tx.networkParametersHash)
                 }
@@ -106,7 +106,7 @@ class ZKNotaryServiceFlow(
     @CordaSerializable
     class UnexpectedTransactionTypeException(tx: Any) : IllegalArgumentException(
         "Received unexpected transaction type: " +
-            "${tx::class.java.simpleName}, expected ${ZKFilteredTransaction::class.java.simpleName}, " +
+            "${tx::class.java.simpleName}, expected ${ZKVerifierTransaction::class.java.simpleName}, " +
             "${ContractUpgradeFilteredTransaction::class.java.simpleName} or ${NotaryChangeWireTransaction::class.java.simpleName}"
     )
 }

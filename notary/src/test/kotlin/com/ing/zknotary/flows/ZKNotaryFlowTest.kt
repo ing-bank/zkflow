@@ -4,7 +4,7 @@ import com.ing.zknotary.client.flows.ZKFinalityFlow
 import com.ing.zknotary.common.contracts.TestContract
 import com.ing.zknotary.common.contracts.TestContract.Companion.PROGRAM_ID
 import com.ing.zknotary.common.flows.getCordaServiceFromConfig
-import com.ing.zknotary.common.serializer.NoopZKInputSerializer
+import com.ing.zknotary.common.serializer.ZKJsonSerializationFactoryService
 import com.ing.zknotary.common.zkp.NoopZKProver
 import com.ing.zknotary.common.zkp.NoopZKVerifier
 import com.ing.zknotary.common.zkp.ZKConfig
@@ -33,6 +33,7 @@ import org.junit.Before
 import org.junit.Ignore
 import org.junit.Test
 
+@Ignore("Can be enabled after https://github.com/ingzkp/zk-notary/issues/14")
 class ZKNotaryFlowTest {
     private lateinit var mockNet: MockNetwork
     private lateinit var notaryNode: StartedMockNode
@@ -49,7 +50,7 @@ class ZKNotaryFlowTest {
                 cordappsForAllNodes = listOf(
                     findCordapp("com.ing.zknotary.common.contracts").withConfig(
                         mapOf(
-                            "zkpSerializer" to NoopZKInputSerializer::class.qualifiedName!!,
+                            "zkpSerializationFactoryService" to ZKJsonSerializationFactoryService::class.qualifiedName!!,
                             "zkpVerifier" to NoopZKVerifier::class.qualifiedName!!,
                             "zkpProver" to NoopZKProver::class.qualifiedName!!
                         )
@@ -142,7 +143,7 @@ class ZKNotaryFlowTest {
                 ZKConfig(
                     prover = node.services.getCordaServiceFromConfig("zkpProver"),
                     verifier = node.services.getCordaServiceFromConfig("zkpVerifier"),
-                    serializer = node.services.getCordaServiceFromConfig("zkpSerializer")
+                    serializationFactoryService = node.services.getCordaServiceFromConfig("zkpSerializationFactoryService")
                 )
 
             )
@@ -194,7 +195,7 @@ class ZKNotaryFlowTest {
     private fun loadZKConfig(serviceHub: ServiceHub) = ZKConfig(
         prover = serviceHub.getCordaServiceFromConfig("zkpProver"),
         verifier = serviceHub.getCordaServiceFromConfig("zkpVerifier"),
-        serializer = serviceHub.getCordaServiceFromConfig("zkpSerializer")
+        serializationFactoryService = serviceHub.getCordaServiceFromConfig("zkpSerializationFactoryService")
     )
 
     private fun buildCreateTx(owner: Party): TransactionBuilder {
