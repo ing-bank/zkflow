@@ -12,7 +12,6 @@ import net.corda.core.crypto.BLAKE2s256DigestService
 import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.TransactionSignature
 import net.corda.core.flows.FlowSession
-import net.corda.core.flows.NotarisationPayload
 import net.corda.core.flows.NotarisationRequest
 import net.corda.core.flows.NotarisationRequestSignature
 import net.corda.core.flows.NotarisationResponse
@@ -69,7 +68,8 @@ open class ZKNotaryFlow(
             is WireTransaction -> buildVerifierTransaction(stx, notaryParty)
             else -> ctx
         }
-        session.send(NotarisationPayload(tx, signature))
+        // TODO: re-enable this when this flow is refactored to use the ZKProverTransaction
+        // session.send(ZKNotarisationPayload(tx, signature))
         return receiveResultOrTiming(session)
     }
 
@@ -83,12 +83,12 @@ open class ZKNotaryFlow(
             BLAKE2s256DigestService
         )
 
-        val vtx = ptx.buildVerifierTransaction(Predicate {
+        val vtx = ptx.toZKVerifierTransaction(Predicate {
             it is ZKStateRef || it is ZKReferenceStateRef || it is TimeWindow || it == notaryParty || it is NetworkParametersHash
         })
 
         val proof =
-            zkConfig.prover.prove(ptx.serialize(zkConfig.serializationFactoryService.factory).bytes, ptx.id.bytes)
+            zkConfig.proverService.prove(ptx.serialize(zkConfig.serializationFactoryService.factory).bytes, ptx.id.bytes)
 
         // TODO: create payload with vtx and proof, but for now only send vtx
         return vtx

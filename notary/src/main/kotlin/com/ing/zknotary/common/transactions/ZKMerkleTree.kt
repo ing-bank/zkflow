@@ -38,7 +38,7 @@ interface TransactionMerkleTree {
 }
 
 class ZKMerkleTree(
-    zkwtx: ZKProverTransaction,
+    ptx: ZKProverTransaction,
     /**
      * For serialization of the leaves before hashing
      */
@@ -47,19 +47,20 @@ class ZKMerkleTree(
     val nodeDigestService: DigestService
 ) : TransactionMerkleTree {
     val componentGroups: List<ComponentGroup>
-    private val privacySalt: PrivacySalt = zkwtx.privacySalt
+    private val privacySalt: PrivacySalt = ptx.privacySalt
 
     init {
         // construct the componentGroups based on our custom serialization
         componentGroups = buildComponentGroups(
-            zkwtx.inputs.map { it.ref },
-            zkwtx.outputs.map { it.ref },
-            zkwtx.commands,
-            zkwtx.attachments,
-            zkwtx.notary,
-            zkwtx.timeWindow,
-            zkwtx.references.map { it.ref },
-            zkwtx.networkParametersHash
+            ptx.inputs.map { it.ref },
+            ptx.outputs.map { it.ref },
+            ptx.commands,
+            ptx.attachments,
+            ptx.notary,
+            ptx.timeWindow,
+            ptx.references.map { it.ref },
+            ptx.networkParametersHash,
+            serializationFactoryService
         )
     }
 
@@ -70,79 +71,80 @@ class ZKMerkleTree(
     companion object {
         fun computeComponentHash(nonce: SecureHash, component: OpaqueBytes, digestService: DigestService): SecureHash =
             digestService.hash(nonce.bytes + component.bytes)
-    }
 
-    private fun buildComponentGroups(
-        inputs: List<ZKStateRef>,
-        outputs: List<ZKStateRef>,
-        commands: List<Command<*>>,
-        attachments: List<SecureHash>,
-        notary: Party?,
-        timeWindow: TimeWindow?,
-        references: List<ZKStateRef>,
-        networkParametersHash: SecureHash?
-    ): List<ComponentGroup> {
-        val serialize = { value: Any, _: Int -> value.serialize(serializationFactoryService.factory) }
+        private fun buildComponentGroups(
+            inputs: List<ZKStateRef>,
+            outputs: List<ZKStateRef>,
+            commands: List<Command<*>>,
+            attachments: List<SecureHash>,
+            notary: Party?,
+            timeWindow: TimeWindow?,
+            references: List<ZKStateRef>,
+            networkParametersHash: SecureHash?,
+            serializationFactoryService: SerializationFactoryService
+        ): List<ComponentGroup> {
+            val serialize = { value: Any, _: Int -> value.serialize(serializationFactoryService.factory) }
 
-        val componentGroupMap: MutableList<ComponentGroup> = mutableListOf()
-        if (inputs.isNotEmpty()) componentGroupMap.add(
-            ComponentGroup(
-                ComponentGroupEnum.INPUTS_GROUP.ordinal,
-                inputs.lazyMapped(serialize)
+            val componentGroupMap: MutableList<ComponentGroup> = mutableListOf()
+            if (inputs.isNotEmpty()) componentGroupMap.add(
+                ComponentGroup(
+                    ComponentGroupEnum.INPUTS_GROUP.ordinal,
+                    inputs.lazyMapped(serialize)
+                )
             )
-        )
-        if (references.isNotEmpty()) componentGroupMap.add(
-            ComponentGroup(
-                ComponentGroupEnum.REFERENCES_GROUP.ordinal,
-                references.lazyMapped(serialize)
+            if (references.isNotEmpty()) componentGroupMap.add(
+                ComponentGroup(
+                    ComponentGroupEnum.REFERENCES_GROUP.ordinal,
+                    references.lazyMapped(serialize)
+                )
             )
-        )
-        if (outputs.isNotEmpty()) componentGroupMap.add(
-            ComponentGroup(
-                ComponentGroupEnum.OUTPUTS_GROUP.ordinal,
-                outputs.lazyMapped(serialize)
+            if (outputs.isNotEmpty()) componentGroupMap.add(
+                ComponentGroup(
+                    ComponentGroupEnum.OUTPUTS_GROUP.ordinal,
+                    outputs.lazyMapped(serialize)
+                )
             )
-        )
-        // Adding commandData only to the commands group. Signers are added in their own group.
-        if (commands.isNotEmpty()) componentGroupMap.add(
-            ComponentGroup(
-                ComponentGroupEnum.COMMANDS_GROUP.ordinal,
-                commands.map { it.value }.lazyMapped(serialize)
+            // Adding commandData only to the commands group. Signers are added in their own group.
+            if (commands.isNotEmpty()) componentGroupMap.add(
+                ComponentGroup(
+                    ComponentGroupEnum.COMMANDS_GROUP.ordinal,
+                    commands.map { it.value }.lazyMapped(serialize)
+                )
             )
-        )
-        if (attachments.isNotEmpty()) componentGroupMap.add(
-            ComponentGroup(
-                ComponentGroupEnum.ATTACHMENTS_GROUP.ordinal,
-                attachments.lazyMapped(serialize)
+            if (attachments.isNotEmpty()) componentGroupMap.add(
+                ComponentGroup(
+                    ComponentGroupEnum.ATTACHMENTS_GROUP.ordinal,
+                    attachments.lazyMapped(serialize)
+                )
             )
-        )
-        if (notary != null) componentGroupMap.add(
-            ComponentGroup(
-                ComponentGroupEnum.NOTARY_GROUP.ordinal,
-                listOf(notary).lazyMapped(serialize)
+            if (notary != null) componentGroupMap.add(
+                ComponentGroup(
+                    ComponentGroupEnum.NOTARY_GROUP.ordinal,
+                    listOf(notary).lazyMapped(serialize)
+                )
             )
-        )
-        if (timeWindow != null) componentGroupMap.add(
-            ComponentGroup(
-                ComponentGroupEnum.TIMEWINDOW_GROUP.ordinal,
-                listOf(timeWindow).lazyMapped(serialize)
+            if (timeWindow != null) componentGroupMap.add(
+                ComponentGroup(
+                    ComponentGroupEnum.TIMEWINDOW_GROUP.ordinal,
+                    listOf(timeWindow).lazyMapped(serialize)
+                )
             )
-        )
-        // Adding signers to their own group. This is required for command visibility purposes: a party receiving
-        // a FilteredTransaction can now verify it sees all the commands it should sign.
-        if (commands.isNotEmpty()) componentGroupMap.add(
-            ComponentGroup(
-                ComponentGroupEnum.SIGNERS_GROUP.ordinal,
-                commands.map { it.signers }.lazyMapped(serialize)
+            // Adding signers to their own group. This is required for command visibility purposes: a party receiving
+            // a FilteredTransaction can now verify it sees all the commands it should sign.
+            if (commands.isNotEmpty()) componentGroupMap.add(
+                ComponentGroup(
+                    ComponentGroupEnum.SIGNERS_GROUP.ordinal,
+                    commands.map { it.signers }.lazyMapped(serialize)
+                )
             )
-        )
-        if (networkParametersHash != null) componentGroupMap.add(
-            ComponentGroup(
-                ComponentGroupEnum.PARAMETERS_GROUP.ordinal,
-                listOf(networkParametersHash).lazyMapped(serialize)
+            if (networkParametersHash != null) componentGroupMap.add(
+                ComponentGroup(
+                    ComponentGroupEnum.PARAMETERS_GROUP.ordinal,
+                    listOf(networkParametersHash).lazyMapped(serialize)
+                )
             )
-        )
-        return componentGroupMap
+            return componentGroupMap
+        }
     }
 
     /**

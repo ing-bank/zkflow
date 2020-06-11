@@ -3,6 +3,7 @@ package com.ing.zknotary.common.states
 import com.ing.zknotary.common.serializer.SerializationFactoryService
 import net.corda.core.KeepForDJVM
 import net.corda.core.contracts.ContractState
+import net.corda.core.contracts.StateAndRef
 import net.corda.core.crypto.DigestService
 import net.corda.core.crypto.SecureHash
 import net.corda.core.serialization.CordaSerializable
@@ -32,4 +33,11 @@ data class ZKReferenceStateRef(val zkStateRef: ZKStateRef)
 
 fun ContractState.toZKStateRef(serializationFactoryService: SerializationFactoryService, digestService: DigestService): ZKStateRef {
     return ZKStateRef(this, serializationFactoryService.factory, digestService)
+}
+
+fun StateAndRef<ContractState>.toZKStateRef(
+    serializationFactoryService: SerializationFactoryService,
+    digestService: DigestService
+): ZKStateRef {
+    return state.data.toZKStateRef(serializationFactoryService, digestService)
 }

@@ -5,8 +5,8 @@ import com.ing.zknotary.common.contracts.TestContract
 import com.ing.zknotary.common.contracts.TestContract.Companion.PROGRAM_ID
 import com.ing.zknotary.common.flows.getCordaServiceFromConfig
 import com.ing.zknotary.common.serializer.ZKJsonSerializationFactoryService
-import com.ing.zknotary.common.zkp.NoopZKProver
-import com.ing.zknotary.common.zkp.NoopZKVerifier
+import com.ing.zknotary.common.zkp.NoopZKVerifierService
+import com.ing.zknotary.common.zkp.NoopZKZKProverService
 import com.ing.zknotary.common.zkp.ZKConfig
 import java.time.Duration
 import java.time.Instant
@@ -51,8 +51,8 @@ class ZKNotaryFlowTest {
                     findCordapp("com.ing.zknotary.common.contracts").withConfig(
                         mapOf(
                             "zkpSerializationFactoryService" to ZKJsonSerializationFactoryService::class.qualifiedName!!,
-                            "zkpVerifier" to NoopZKVerifier::class.qualifiedName!!,
-                            "zkpProver" to NoopZKProver::class.qualifiedName!!
+                            "zkpVerifier" to NoopZKVerifierService::class.qualifiedName!!,
+                            "zkpProver" to NoopZKZKProverService::class.qualifiedName!!
                         )
                     )
                 ),
@@ -141,8 +141,8 @@ class ZKNotaryFlowTest {
                 stx,
                 newOwner,
                 ZKConfig(
-                    prover = node.services.getCordaServiceFromConfig("zkpProver"),
-                    verifier = node.services.getCordaServiceFromConfig("zkpVerifier"),
+                    proverService = node.services.getCordaServiceFromConfig("zkpProver"),
+                    verifierService = node.services.getCordaServiceFromConfig("zkpVerifier"),
                     serializationFactoryService = node.services.getCordaServiceFromConfig("zkpSerializationFactoryService")
                 )
 
@@ -193,8 +193,8 @@ class ZKNotaryFlowTest {
     }
 
     private fun loadZKConfig(serviceHub: ServiceHub) = ZKConfig(
-        prover = serviceHub.getCordaServiceFromConfig("zkpProver"),
-        verifier = serviceHub.getCordaServiceFromConfig("zkpVerifier"),
+        proverService = serviceHub.getCordaServiceFromConfig("zkpProver"),
+        verifierService = serviceHub.getCordaServiceFromConfig("zkpVerifier"),
         serializationFactoryService = serviceHub.getCordaServiceFromConfig("zkpSerializationFactoryService")
     )
 

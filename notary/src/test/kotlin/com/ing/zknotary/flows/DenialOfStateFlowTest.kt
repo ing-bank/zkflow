@@ -38,8 +38,10 @@ import net.corda.testing.node.internal.findCordapp
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.After
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
 
+@Ignore("Can be enabled if you want to show how a denial of state attack works with normal Corda. Should fail with ZKP Notary.")
 class DenialOfStateFlowTest {
     private lateinit var mockNet: MockNetwork
     private lateinit var notaryNode: StartedMockNode
