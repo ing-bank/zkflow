@@ -3,8 +3,6 @@ package com.ing.zknotary.common.transactions
 import com.ing.zknotary.common.serializer.SerializationFactoryService
 import com.ing.zknotary.common.states.ZKReferenceStateRef
 import com.ing.zknotary.common.states.ZKStateRef
-import java.security.PublicKey
-import java.util.function.Predicate
 import net.corda.core.KeepForDJVM
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.ComponentGroupEnum
@@ -28,6 +26,8 @@ import net.corda.core.transactions.FilteredTransactionVerificationException
 import net.corda.core.transactions.NetworkParametersHash
 import net.corda.core.transactions.WireTransaction
 import net.corda.core.utilities.OpaqueBytes
+import java.security.PublicKey
+import java.util.function.Predicate
 
 @KeepForDJVM
 @CordaSerializable
@@ -322,7 +322,8 @@ class ZKVerifierTransaction(
                             component,
                             componentGroupLeafDigestService
                         )
-                    })
+                    }
+                )
             ) {
                 "Visible components in group $groupIndex cannot be verified against their partial Merkle tree"
             }
@@ -369,13 +370,15 @@ class ZKVerifierTransaction(
         } else {
             visibilityCheck(group.groupIndex < groupHashes.size) { "There is no matching component group hash for group ${group.groupIndex}" }
             val groupPartialRoot = groupHashes[group.groupIndex]
-            val groupFullRoot = MerkleTree.getMerkleTree(group.components.mapIndexed { index, component ->
-                ZKMerkleTree.computeComponentHash(
-                    group.nonces[index],
-                    component,
-                    componentGroupLeafDigestService
-                )
-            }).hash
+            val groupFullRoot = MerkleTree.getMerkleTree(
+                group.components.mapIndexed { index, component ->
+                    ZKMerkleTree.computeComponentHash(
+                        group.nonces[index],
+                        component,
+                        componentGroupLeafDigestService
+                    )
+                }
+            ).hash
             visibilityCheck(groupPartialRoot == groupFullRoot) { "Some components for group ${group.groupIndex} are not visible" }
             // Verify the top level Merkle tree from groupHashes.
             visibilityCheck(MerkleTree.getMerkleTree(groupHashes).hash == id) {

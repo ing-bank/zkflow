@@ -4,9 +4,6 @@ import co.paralleluniverse.fibers.Suspendable
 import com.ing.zknotary.client.flows.ZKFinalityFlow
 import com.ing.zknotary.client.flows.ZKNotaryFlow
 import com.ing.zknotary.common.zkp.ZKConfig
-import kotlin.reflect.KClass
-import kotlin.reflect.KVisibility
-import kotlin.reflect.jvm.javaConstructor
 import net.corda.core.contracts.ContractState
 import net.corda.core.crypto.TransactionSignature
 import net.corda.core.flows.CollectSignatureFlow
@@ -20,6 +17,9 @@ import net.corda.core.flows.ReceiveFinalityFlow
 import net.corda.core.flows.SignTransactionFlow
 import net.corda.core.identity.Party
 import net.corda.core.transactions.SignedTransaction
+import kotlin.reflect.KClass
+import kotlin.reflect.KVisibility
+import kotlin.reflect.jvm.javaConstructor
 
 // This custom ZK notary client flow does not check the validity the transaction here as normal in NotaryFlow.Client,
 // because that would fail: the tx is invalid on purpose, so that we can confirm that the notary rejects or doesn't reject an invalid tx.

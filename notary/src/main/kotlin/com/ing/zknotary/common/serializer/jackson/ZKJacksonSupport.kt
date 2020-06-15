@@ -20,12 +20,6 @@ import com.fasterxml.jackson.databind.deser.std.NumberDeserializers
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.KotlinModule
-import java.math.BigDecimal
-import java.security.cert.CertPath
-import java.security.cert.CertificateFactory
-import java.security.cert.X509Certificate
-import java.util.Date
-import javax.security.auth.x500.X500Principal
 import net.corda.client.jackson.JacksonSupport
 import net.corda.client.jackson.internal.CordaModule
 import net.corda.client.jackson.internal.ToStringSerialize
@@ -37,6 +31,12 @@ import net.corda.core.internal.isStatic
 import net.corda.core.internal.kotlinObjectInstance
 import net.corda.core.internal.uncheckedCast
 import org.bouncycastle.asn1.x509.KeyPurposeId
+import java.math.BigDecimal
+import java.security.cert.CertPath
+import java.security.cert.CertificateFactory
+import java.security.cert.X509Certificate
+import java.util.Date
+import javax.security.auth.x500.X500Principal
 
 object ZKJacksonSupport {
     @JvmStatic
@@ -52,14 +52,18 @@ object ZKJacksonSupport {
             enable(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS)
             disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
 
-            registerModule(JavaTimeModule().apply {
-                addSerializer(Date::class.java, DateSerializer)
-            })
+            registerModule(
+                JavaTimeModule().apply {
+                    addSerializer(Date::class.java, DateSerializer)
+                }
+            )
             registerModule(ZKCordaModule())
             registerModule(CordaModule())
-            registerModule(KotlinModule().apply {
-                setDeserializerModifier(KotlinObjectDeserializerModifier)
-            })
+            registerModule(
+                KotlinModule().apply {
+                    setDeserializerModifier(KotlinObjectDeserializerModifier)
+                }
+            )
 
             addMixIn(BigDecimal::class.java, BigDecimalMixin::class.java)
             addMixIn(X500Principal::class.java, X500PrincipalMixin::class.java)
@@ -144,7 +148,8 @@ object ZKJacksonSupport {
                 writeObjectField("subjectUniqueID", value.subjectUniqueID)
                 writeObjectField(
                     "keyUsage",
-                    value.keyUsage?.asList()?.mapIndexedNotNull { i, flag -> if (flag) keyUsages[i] else null })
+                    value.keyUsage?.asList()?.mapIndexedNotNull { i, flag -> if (flag) keyUsages[i] else null }
+                )
                 writeObjectField("extendedKeyUsage", value.extendedKeyUsage?.map { keyPurposeIds[it] ?: it })
                 jsonObject("basicConstraints") {
                     val isCa = value.basicConstraints != -1
@@ -152,7 +157,8 @@ object ZKJacksonSupport {
                     if (isCa) {
                         writeObjectField(
                             "pathLength",
-                            value.basicConstraints.let { if (it != Int.MAX_VALUE) it else null })
+                            value.basicConstraints.let { if (it != Int.MAX_VALUE) it else null }
+                        )
                     }
                 }
                 writeObjectField("subjectAlternativeNames", value.subjectAlternativeNames)

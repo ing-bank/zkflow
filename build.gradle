@@ -81,7 +81,7 @@ allprojects {
 
     spotless {
         kotlin {
-            ktlint()
+            ktlint('0.37.1')
         }
     }
 

@@ -5,9 +5,6 @@ import com.ing.zknotary.common.flows.getCordaServiceFromConfig
 import com.ing.zknotary.common.states.ZKStateRef
 import com.ing.zknotary.common.zkp.ZKConfig
 import com.ing.zknotary.notary.flows.ZKNotaryServiceFlow
-import java.security.PublicKey
-import java.time.Duration
-import java.util.concurrent.CompletableFuture
 import net.corda.core.contracts.TimeWindow
 import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.SignatureMetadata
@@ -27,6 +24,9 @@ import net.corda.core.utilities.seconds
 import net.corda.node.services.api.ServiceHubInternal
 import net.corda.node.services.transactions.NodeNotarySchema
 import net.corda.node.services.transactions.PersistentUniquenessProvider
+import java.security.PublicKey
+import java.time.Duration
+import java.util.concurrent.CompletableFuture
 
 open class ZKNotaryService(final override val services: ServiceHubInternal, override val notaryIdentityKey: PublicKey) :
     NotaryService() {
