@@ -48,7 +48,8 @@ class ZKMerkleTreeTest {
             val ptx = ZKProverTransaction(
                 ltx,
                 serializationFactoryService,
-                BLAKE2s256DigestService
+                BLAKE2s256DigestService,
+                BLAKE2s256DigestService // Should become Pedersen hash when available
             )
 
             val json = ptx.serialize(serializationFactoryService.factory)
