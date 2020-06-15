@@ -6,9 +6,6 @@ import com.ing.zknotary.common.states.ZKStateAndRef
 import com.ing.zknotary.common.states.ZKStateRef
 import com.ing.zknotary.notary.transactions.createTestsState
 import com.ing.zknotary.notary.transactions.moveTestsState
-import java.nio.ByteBuffer
-import java.util.function.Predicate
-import kotlin.test.assertEquals
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.StateRef
@@ -26,6 +23,9 @@ import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
 import net.corda.testing.node.ledger
 import org.junit.Test
+import java.nio.ByteBuffer
+import java.util.function.Predicate
+import kotlin.test.assertEquals
 
 class ZKMerkleTreeTest {
     private val alice = TestIdentity.fresh("alice")
@@ -78,9 +78,11 @@ class ZKMerkleTreeTest {
 
             val proof = MockProof(witness, proverInstance)
 
-            val vtx = ptx.toZKVerifierTransaction(Predicate {
-                it is ZKStateRef || it is ZKReferenceStateRef || it is TimeWindow || it == ptx.notary || it is NetworkParametersHash
-            })
+            val vtx = ptx.toZKVerifierTransaction(
+                Predicate {
+                    it is ZKStateRef || it is ZKReferenceStateRef || it is TimeWindow || it == ptx.notary || it is NetworkParametersHash
+                }
+            )
             assertEquals(ptx.id, vtx.id)
             val amqp = vtx.serialize()
 
@@ -88,9 +90,11 @@ class ZKMerkleTreeTest {
             assertEquals(vtx, deserializedVtx)
 
             // Next, we have to confirm that the visible parts of ftx and vtx match:
-            val ftx = wtx.buildFilteredTransaction(Predicate {
-                it is StateRef || it is ReferenceStateRef || it is TimeWindow || it == ptx.notary || it is NetworkParametersHash
-            })
+            val ftx = wtx.buildFilteredTransaction(
+                Predicate {
+                    it is StateRef || it is ReferenceStateRef || it is TimeWindow || it == ptx.notary || it is NetworkParametersHash
+                }
+            )
 
             /****************************************************
              * Verifier: receives FilteredTransaction (ftx) with extra payload: ZKVerifierTransaction (vtx) and proof

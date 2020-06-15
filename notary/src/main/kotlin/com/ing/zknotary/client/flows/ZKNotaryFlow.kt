@@ -6,7 +6,6 @@ import com.ing.zknotary.common.states.ZKStateRef
 import com.ing.zknotary.common.transactions.ZKProverTransaction
 import com.ing.zknotary.common.transactions.ZKVerifierTransaction
 import com.ing.zknotary.common.zkp.ZKConfig
-import java.util.function.Predicate
 import net.corda.core.contracts.TimeWindow
 import net.corda.core.crypto.BLAKE2s256DigestService
 import net.corda.core.crypto.SecureHash
@@ -28,6 +27,7 @@ import net.corda.core.transactions.NotaryChangeWireTransaction
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.WireTransaction
 import net.corda.core.utilities.UntrustworthyData
+import java.util.function.Predicate
 
 open class ZKNotaryFlow(
     private val stx: SignedTransaction,
@@ -83,9 +83,11 @@ open class ZKNotaryFlow(
             BLAKE2s256DigestService
         )
 
-        val vtx = ptx.toZKVerifierTransaction(Predicate {
-            it is ZKStateRef || it is ZKReferenceStateRef || it is TimeWindow || it == notaryParty || it is NetworkParametersHash
-        })
+        val vtx = ptx.toZKVerifierTransaction(
+            Predicate {
+                it is ZKStateRef || it is ZKReferenceStateRef || it is TimeWindow || it == notaryParty || it is NetworkParametersHash
+            }
+        )
 
         val proof =
             zkConfig.proverService.prove(ptx.serialize(zkConfig.serializationFactoryService.factory).bytes, ptx.id.bytes)

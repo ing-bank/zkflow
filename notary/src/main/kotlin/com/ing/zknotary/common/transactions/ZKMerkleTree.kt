@@ -2,7 +2,6 @@ package com.ing.zknotary.common.transactions
 
 import com.ing.zknotary.common.serializer.SerializationFactoryService
 import com.ing.zknotary.common.states.ZKStateRef
-import java.nio.ByteBuffer
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.PrivacySalt
@@ -15,6 +14,7 @@ import net.corda.core.internal.lazyMapped
 import net.corda.core.serialization.serialize
 import net.corda.core.transactions.ComponentGroup
 import net.corda.core.utilities.OpaqueBytes
+import java.nio.ByteBuffer
 
 interface TransactionMerkleTree {
     val root: SecureHash

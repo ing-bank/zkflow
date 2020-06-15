@@ -7,7 +7,6 @@ import com.ing.zknotary.common.zkp.ZKConfig
 import com.ing.zknotary.notary.ZKNotarisationPayload
 import com.ing.zknotary.notary.ZKNotarisationRequest
 import com.ing.zknotary.notary.ZKNotaryService
-import java.time.Duration
 import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.TransactionSignature
 import net.corda.core.flows.FlowLogic
@@ -23,6 +22,7 @@ import net.corda.core.internal.checkParameterHash
 import net.corda.core.internal.notary.NotaryInternalException
 import net.corda.core.internal.notary.UniquenessProvider
 import net.corda.core.utilities.unwrap
+import java.time.Duration
 
 // TODO: find out how to inject the ZKConfig
 class ZKNotaryServiceFlow(
