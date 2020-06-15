@@ -30,7 +30,10 @@ class ZKCordaModule : SimpleModule("corda-core") {
 
         context.setMixInAnnotations(ZKProverTransaction::class.java, ZKProverTransactionMixin::class.java)
         context.setMixInAnnotations(SerializationFactory::class.java, SerializationFactoryMixin::class.java)
-        context.setMixInAnnotations(SerializationFactoryService::class.java, SerializationFactoryServiceMixin::class.java)
+        context.setMixInAnnotations(
+            SerializationFactoryService::class.java,
+            SerializationFactoryServiceMixin::class.java
+        )
         context.setMixInAnnotations(DigestService::class.java, DigestServiceMixin::class.java)
     }
 }
@@ -54,7 +57,8 @@ private class ZKProverTransactionSerializer : JsonSerializer<ZKProverTransaction
                 value.networkParametersHash,
                 value.attachments,
                 value.serializationFactoryService,
-                value.digestService
+                value.componentGroupLeafDigestService,
+                value.nodeDigestService
             )
         )
     }
@@ -74,7 +78,8 @@ private class ZKProverTransactionDeserializer : JsonDeserializer<ZKProverTransac
             wrapper.networkParametersHash,
             wrapper.attachments,
             wrapper.serializationFactoryService,
-            wrapper.digestService
+            wrapper.componentGroupLeafDigestService,
+            wrapper.nodeDigestService
         )
     }
 }
@@ -93,7 +98,9 @@ private class ZKProverTransactionJson(
     @get:JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
     val serializationFactoryService: SerializationFactoryService,
     @get:JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
-    val digestService: DigestService
+    val componentGroupLeafDigestService: DigestService,
+    @get:JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
+    val nodeDigestService: DigestService
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true, value = ["factory", "serviceHub", "token"])

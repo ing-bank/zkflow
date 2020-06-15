@@ -3,7 +3,6 @@ package com.ing.zknotary.common.transactions
 import com.ing.zknotary.common.serializer.SerializationFactoryService
 import com.ing.zknotary.common.states.ZKStateAndRef
 import com.ing.zknotary.common.states.toZKStateAndRef
-import java.util.function.Predicate
 import net.corda.core.DeleteForDJVM
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.ContractState
@@ -14,6 +13,7 @@ import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.Party
 import net.corda.core.serialization.serialize
 import net.corda.core.transactions.LedgerTransaction
+import java.util.function.Predicate
 
 /**
  * TODO: This should also include signatures
@@ -30,25 +30,28 @@ class ZKProverTransaction(
     val attachments: List<SecureHash>,
 
     /**
-     * Used for serialization of the merkle tree leaves
+     * Used for serialization of the merkle tree leaves and for ZKStateRefs
      */
     val serializationFactoryService: SerializationFactoryService,
 
-    /**
-     * Digest services for the merkle tree
-     * TODO: split this into two:componentGroupLeafDigestService and nodeDigestService
-     */
-    val digestService: DigestService
+    val componentGroupLeafDigestService: DigestService,
+    val nodeDigestService: DigestService = componentGroupLeafDigestService
 ) : NamedByZKMerkleTree {
 
     constructor(
         ltx: LedgerTransaction,
         serializationFactoryService: SerializationFactoryService,
-        digestService: DigestService
+        componentGroupLeafDigestService: DigestService,
+        nodeDigestService: DigestService = componentGroupLeafDigestService
     ) : this(
-        inputs = ltx.inputs.map { it.toZKStateAndRef(serializationFactoryService, digestService) },
-        outputs = ltx.outputs.map { it.toZKStateAndRef(serializationFactoryService, digestService) },
-        references = ltx.references.map { it.toZKStateAndRef(serializationFactoryService, digestService) },
+        inputs = ltx.inputs.map { it.toZKStateAndRef(serializationFactoryService, componentGroupLeafDigestService) },
+        outputs = ltx.outputs.map { it.toZKStateAndRef(serializationFactoryService, componentGroupLeafDigestService) },
+        references = ltx.references.map {
+            it.toZKStateAndRef(
+                serializationFactoryService,
+                componentGroupLeafDigestService
+            )
+        },
         commands = ltx.commands.map { Command(it.value, it.signers) },
         notary = ltx.notary,
         timeWindow = ltx.timeWindow,
@@ -68,7 +71,9 @@ class ZKProverTransaction(
         // Then we can make sure that if the tx verifies with that key, all is well?
         attachments = ltx.attachments.map { it.id },
         serializationFactoryService = serializationFactoryService,
-        digestService = digestService
+
+        componentGroupLeafDigestService = componentGroupLeafDigestService,
+        nodeDigestService = nodeDigestService
     )
 
     val id by lazy { merkleTree.root }
@@ -78,8 +83,8 @@ class ZKProverTransaction(
         ZKMerkleTree(
             this,
             serializationFactoryService = serializationFactoryService,
-            componentGroupLeafDigestService = digestService,
-            nodeDigestService = digestService
+            componentGroupLeafDigestService = componentGroupLeafDigestService,
+            nodeDigestService = nodeDigestService
         )
     }
 
