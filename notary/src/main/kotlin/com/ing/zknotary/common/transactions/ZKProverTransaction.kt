@@ -11,6 +11,7 @@ import net.corda.core.contracts.TimeWindow
 import net.corda.core.crypto.DigestService
 import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.Party
+import net.corda.core.node.services.AttachmentId
 import net.corda.core.serialization.serialize
 import net.corda.core.transactions.LedgerTransaction
 import java.util.function.Predicate
@@ -27,7 +28,7 @@ class ZKProverTransaction(
     val timeWindow: TimeWindow?,
     val privacySalt: PrivacySalt,
     val networkParametersHash: SecureHash?,
-    val attachments: List<SecureHash>,
+    val attachments: List<AttachmentId>,
 
     /**
      * Used for serialization of the merkle tree leaves and for ZKStateRefs

@@ -72,7 +72,7 @@ class ZKMerkleTree(
         fun computeComponentHash(nonce: SecureHash, component: OpaqueBytes, digestService: DigestService): SecureHash =
             digestService.hash(nonce.bytes + component.bytes)
 
-        private fun buildComponentGroups(
+        fun buildComponentGroups(
             inputs: List<ZKStateRef>,
             outputs: List<ZKStateRef>,
             commands: List<Command<*>>,
