@@ -1,25 +1,20 @@
 package com.ing.zknotary.common.transactions
 
-import com.ing.zknotary.common.serializer.ZKJsonSerializationFactory
-import com.ing.zknotary.common.serializer.ZKJsonSerializationFactoryService
-import com.ing.zknotary.common.states.ZKReferenceStateRef
-import com.ing.zknotary.common.states.ZKStateRef
+import com.ing.zknotary.common.serializer.ZincSerializationFactory
+import com.ing.zknotary.common.serializer.ZincSerializationFactoryService
 import com.ing.zknotary.common.zkp.ZincWitness
 import com.ing.zknotary.notary.transactions.createTestsState
 import com.ing.zknotary.notary.transactions.moveTestsState
-import net.corda.core.contracts.TimeWindow
 import net.corda.core.crypto.BLAKE2s256DigestService
 import net.corda.core.crypto.Crypto
 import net.corda.core.crypto.sign
 import net.corda.core.serialization.deserialize
 import net.corda.core.serialization.serialize
-import net.corda.core.transactions.NetworkParametersHash
 import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
 import net.corda.testing.node.ledger
 import org.junit.Before
 import org.junit.Test
-import java.util.function.Predicate
 import kotlin.test.assertEquals
 
 class SerializationTest {
@@ -32,7 +27,7 @@ class SerializationTest {
     )
 
     private lateinit var ptx: ZKProverTransaction
-    private lateinit var vtx: ZKVerifierTransaction
+    private lateinit var vtx: ZKVerifierTransactionSimplified
     private lateinit var sigAlice: ByteArray
 
     @Before
@@ -44,7 +39,7 @@ class SerializationTest {
             // Build a ZKProverTransaction
             ptx = ZKProverTransactionFactory.create(
                 wtx.toLedgerTransaction(ledgerServices),
-                ZKJsonSerializationFactoryService(),
+                ZincSerializationFactoryService(),
                 componentGroupLeafDigestService = BLAKE2s256DigestService,
                 nodeDigestService = BLAKE2s256DigestService // Should become Pedersen hash when available
             )
@@ -53,11 +48,7 @@ class SerializationTest {
             sigAlice = alice.keyPair.private.sign(ptx.id.bytes).bytes
 
             // build filtered ZKVerifierTransaction
-            vtx = ptx.toZKVerifierTransaction(
-                Predicate {
-                    it is ZKStateRef || it is ZKReferenceStateRef || it is TimeWindow || it == ptx.notary || it is NetworkParametersHash
-                }
-            )
+            vtx = ptx.toZKVerifierTransactionSimplified()
         }
     }
 
@@ -66,7 +57,7 @@ class SerializationTest {
         ledgerServices.ledger {
             // Serialize for transport to Zinc
             val witness = ZincWitness(ptx, listOf(sigAlice))
-            val json = witness.serialize(ZKJsonSerializationFactory)
+            val json = witness.serialize(ZincSerializationFactory)
             println(String(json.bytes))
             // TODO: do checks on JSON to confirm it is acceptable for Zinc
         }
@@ -74,7 +65,9 @@ class SerializationTest {
 
     @Test
     fun `VerifierTransaction from ProverTransaction has same Merkle root`() {
-        assertEquals(ptx.id, vtx.id)
+        ledgerServices.ledger {
+            assertEquals(ptx.id, vtx.id)
+        }
     }
 
     @Test
@@ -93,7 +86,7 @@ class SerializationTest {
             val vtxAmqp = vtx.serialize()
             val deserializedVtx = vtxAmqp.deserialize()
             assertEquals(vtx, deserializedVtx)
-            vtx.verify()
+            // TODO: vtx.verify()
         }
     }
 }
