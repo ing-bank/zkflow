@@ -30,7 +30,7 @@ interface TransactionMerkleTree {
      * If any of the groups is an empty list or a null object, then [SecureHash.allOnesHash] is used as its hash.
      * Also, [privacySalt] is not a Merkle tree leaf, because it is already "inherently" included via the component nonces.
      *
-     * It is possible to have the leafs of ComponentGroups use a different hash function than the nodes of the merkle trees.
+     * It is possible to have the leaves of ComponentGroups use a different hash function than the nodes of the merkle trees.
      * This allows optimisation in choosing a leaf hash function that is better suited to arbitrary length inputs and a node function
      * that is suited to fixed length inputs.
      */

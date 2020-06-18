@@ -15,20 +15,36 @@ import net.corda.core.serialization.CordaSerializable
 @CordaSerializable
 class ZKProverTransaction(
     val inputs: List<ZKStateAndRef<ContractState>>,
+    /**
+     * Because a ZKStateRef is a representation of the contents of a state, and no longer a pointer to
+     * a previous transaction output, outputs are also ZKStateAndRefs, like inputs and references.
+     */
     val outputs: List<ZKStateAndRef<ContractState>>,
     val references: List<ZKStateAndRef<ContractState>>,
     val commands: List<Command<*>>,
     val notary: Party?,
     val timeWindow: TimeWindow?,
     val privacySalt: PrivacySalt,
+
+    /**
+     * Decide how to handle the networkparameters. Simplest it to use the hash only
+     * since the verifier will also have the hash, but we will need to possibly use the contents for verification logic?
+     * The non-validating notary receives the hash as part of the normal ftx and checks the platform version and notary.
+     * For now, we will not need the other parameters for verification yet. When we do, we will need to supply both the
+     * Parameters and their hash to the verification circuit and ensure that they are the same. Then the hash is part of
+     * the instance, so the verifier is convinced that all is linked. Then we can use the parameters in verification logic.
+     * In standard Corda, the hash is: SHA256(cordaSerialize(NetworkParameters)), where cordaSerialize is the standard Corda
+     * AMQP serialization.
+     */
     val networkParametersHash: SecureHash?,
+
+    // For now we ignore attachment contents inside the circuit. We might want to use them for attaching some circuit identifier or even the verifier key.
     val attachments: List<AttachmentId>,
 
     /**
      * Used for serialization of the merkle tree leaves and for ZKStateRefs
      */
     val serializationFactoryService: SerializationFactoryService,
-
     val componentGroupLeafDigestService: DigestService,
     val nodeDigestService: DigestService = componentGroupLeafDigestService
 ) : NamedByZKMerkleTree {
