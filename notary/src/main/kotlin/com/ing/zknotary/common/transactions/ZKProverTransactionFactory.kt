@@ -15,7 +15,7 @@ class ZKProverTransactionFactory {
             componentGroupLeafDigestService: DigestService,
             nodeDigestService: DigestService = componentGroupLeafDigestService
         ): ZKProverTransaction {
-            require(ltx.notary != null) {"A notary must always be set on a ZKProverTransaction"}
+            require(ltx.notary != null) { "A notary must always be set on a ZKProverTransaction" }
 
             return ZKProverTransaction(
                 inputs = ltx.inputs.map {

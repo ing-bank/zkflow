@@ -3,7 +3,6 @@ package com.ing.zknotary.common.transactions
 import com.ing.zknotary.common.serializer.SerializationFactoryService
 import com.ing.zknotary.common.states.ZKStateRef
 import net.corda.core.contracts.ComponentGroupEnum
-import net.corda.core.contracts.PrivacySalt
 import net.corda.core.contracts.TimeWindow
 import net.corda.core.crypto.DigestService
 import net.corda.core.crypto.MerkleTree
@@ -13,7 +12,6 @@ import net.corda.core.internal.lazyMapped
 import net.corda.core.serialization.serialize
 import net.corda.core.transactions.ComponentGroup
 import net.corda.core.utilities.OpaqueBytes
-import java.nio.ByteBuffer
 
 class ZKPartialMerkleTree(
     vtx: ZKVerifierTransactionSimplified
