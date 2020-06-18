@@ -32,3 +32,6 @@ fun ZKProverTransaction.prettyPrint(): String {
  */
 fun ZKProverTransaction.toZKVerifierTransaction(filtering: Predicate<Any>): ZKVerifierTransaction =
     ZKVerifierTransaction.fromZKProverTransaction(this, filtering)
+
+fun ZKProverTransaction.toZKVerifierTransactionSimplified(): ZKVerifierTransactionSimplified =
+    ZKVerifierTransactionSimplified.fromZKProverTransaction(this)

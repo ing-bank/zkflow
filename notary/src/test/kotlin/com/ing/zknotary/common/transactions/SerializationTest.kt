@@ -32,7 +32,7 @@ class SerializationTest {
     )
 
     private lateinit var ptx: ZKProverTransaction
-    private lateinit var vtx: ZKVerifierTransaction
+    private lateinit var vtx: ZKVerifierTransactionSimplified
     private lateinit var sigAlice: ByteArray
 
     @Before
@@ -53,11 +53,7 @@ class SerializationTest {
             sigAlice = alice.keyPair.private.sign(ptx.id.bytes).bytes
 
             // build filtered ZKVerifierTransaction
-            vtx = ptx.toZKVerifierTransaction(
-                Predicate {
-                    it is ZKStateRef || it is ZKReferenceStateRef || it is TimeWindow || it == ptx.notary || it is NetworkParametersHash
-                }
-            )
+            vtx = ptx.toZKVerifierTransactionSimplified()
         }
     }
 
@@ -74,7 +70,9 @@ class SerializationTest {
 
     @Test
     fun `VerifierTransaction from ProverTransaction has same Merkle root`() {
-        assertEquals(ptx.id, vtx.id)
+        ledgerServices.ledger {
+            assertEquals(ptx.id, vtx.id)
+        }
     }
 
     @Test
@@ -93,7 +91,7 @@ class SerializationTest {
             val vtxAmqp = vtx.serialize()
             val deserializedVtx = vtxAmqp.deserialize()
             assertEquals(vtx, deserializedVtx)
-            vtx.verify()
+            // TODO: vtx.verify()
         }
     }
 }
