@@ -41,7 +41,7 @@ class ZKMerkleTreeTest {
             val ltx = wtx.toLedgerTransaction(ledgerServices)
             val serializationFactoryService = ZKJsonSerializationFactoryService()
 
-            val ptx = ZKProverTransaction(
+            val ptx = ZKProverTransactionFactory.create(
                 ltx,
                 serializationFactoryService,
                 componentGroupLeafDigestService = BLAKE2s256DigestService,

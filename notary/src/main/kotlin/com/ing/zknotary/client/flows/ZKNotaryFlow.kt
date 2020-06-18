@@ -3,7 +3,7 @@ package com.ing.zknotary.client.flows
 import co.paralleluniverse.fibers.Suspendable
 import com.ing.zknotary.common.states.ZKReferenceStateRef
 import com.ing.zknotary.common.states.ZKStateRef
-import com.ing.zknotary.common.transactions.ZKProverTransaction
+import com.ing.zknotary.common.transactions.ZKProverTransactionFactory
 import com.ing.zknotary.common.transactions.ZKVerifierTransaction
 import com.ing.zknotary.common.zkp.ZKConfig
 import net.corda.core.contracts.TimeWindow
@@ -77,7 +77,7 @@ open class ZKNotaryFlow(
         val ltx = stx.toLedgerTransaction(serviceHub, checkSufficientSignatures = false)
 
         // TODO: inject these serializationFactoryService and DigestService as part of ZKConfig
-        val ptx = ZKProverTransaction(
+        val ptx = ZKProverTransactionFactory.create(
             ltx,
             zkConfig.serializationFactoryService,
             BLAKE2s256DigestService
