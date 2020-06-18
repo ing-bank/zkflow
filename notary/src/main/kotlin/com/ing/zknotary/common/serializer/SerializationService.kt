@@ -21,9 +21,7 @@ class ZKJsonSerializationFactoryService() : SingletonSerializeAsToken(), Seriali
 }
 
 @CordaService
-class ZincSerializationFactoryService() :
-    SingletonSerializeAsToken(),
-    SerializationFactoryService {
+class ZincSerializationFactoryService() : SingletonSerializeAsToken(), SerializationFactoryService {
 
     // For CordaService. We don't need the serviceHub anyway in this Service
     constructor(serviceHub: AppServiceHub?) : this()
