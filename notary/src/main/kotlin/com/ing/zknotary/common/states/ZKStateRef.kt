@@ -27,4 +27,3 @@ fun ContractState.toZKStateRef(
 ): ZKStateRef {
     return ZKStateRef(digestService.hash(this.serialize(serializationFactoryService.factory).bytes))
 }
-
