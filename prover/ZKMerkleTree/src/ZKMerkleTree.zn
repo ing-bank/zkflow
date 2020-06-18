@@ -1,0 +1,454 @@
+//
+// Merkle tree library
+//
+//** This part of the code copied from ComponentGroups.zn since Zinc doesn't support mod command in non-main files
+//** It should be deleted once Zinc provides the support for file system
+//*****BEGIN
+//number of elements in each component group
+const N_INPUTS:u16 = 2; 
+const N_OUTPUTS:u16 = 2;
+const N_REFERENCES:u16 = 2; 
+const N_SIGNERS:u16 = 2;
+const N_COMMANDS:u16 = 1;
+
+const PUBKEY_BYTES:u16 = 44;
+const PUBKEY_BITS:u16 = (8 as u16) * PUBKEY_BYTES;
+
+const HASH_BYTES:u16 = 32;
+const HASH_BITS:u16 = (8 as u16) * HASH_BYTES;
+
+const INT32_BITS:u16 = 32; 
+const INT128_BITS:u16 = 128;
+
+//Number of bits for each component group
+const INPUT_BITS:u16 = HASH_BITS;
+const REFERENCE_BITS:u16 = HASH_BITS;
+const OUTPUT_BITS:u16 = PUBKEY_BITS + PUBKEY_BITS + INT32_BITS;
+const SIGNER_BITS:u16 = PUBKEY_BITS; 
+const COMMAND_BITS:u16 = INT32_BITS; 
+
+type PubKey = [u8; PUBKEY_BYTES];
+type PrivacySalt = [bool; HASH_BITS]; 
+type ComponentGroupHash = [u8; HASH_BYTES]; //For now we use SHA256 to compute component group hashes - should be replaced with Pedersen!
+
+struct InputGroup {
+    groupElements: [[bool; INPUT_BITS]; N_INPUTS],
+    groupHash: [bool;HASH_BITS],  
+}
+
+struct OutputGroup {
+    groupElements: [[bool; OUTPUT_BITS]; N_OUTPUTS],
+    groupHash: [bool;HASH_BITS],  
+}
+
+struct ReferenceGroup{
+    groupElements: [[bool; REFERENCE_BITS]; N_REFERENCES],
+    groupHash: [bool;HASH_BITS],      
+}
+
+struct CommandDataGroup {
+    groupElements: [bool; INT32_BITS],
+    groupHash: [bool;HASH_BITS],  
+}
+
+struct CommandSignerGroup {
+    groupElements: [[bool; PUBKEY_BITS]; N_SIGNERS],
+    groupHash: [bool;HASH_BITS],  
+}
+
+struct ComponentGroup{
+    inputs: InputGroup,
+    outputs: OutputGroup,
+    commandData: CommandDataGroup,  
+    references: ReferenceGroup,
+    commandSigners: CommandSignerGroup,
+}
+//*****END
+
+enum ComponentGroupEnum {
+    INPUTS_GROUP = 0 ,
+    OUTPUTS_GROUP = 1,
+    COMMANDS_GROUP = 2,
+    ATTACHMENTS_GROUP = 3,
+    NOTARY_GROUP = 4,
+    TIMEWINDOW_GROUP = 5,
+    SIGNERS_GROUP = 6,
+    REFERENCES_GROUP = 7,
+    PARAMETERS_GROUP = 8,
+}
+
+use std::crypto::sha256; //This will be replaced with Blake2s
+use std::crypto::pedersen;
+use std::array::truncate;
+
+use std::convert::to_bits;
+use std::convert::from_bits_field;
+
+
+const NODE_DIGEST_SIZE:u16 = 256; // size of field
+const INTEGER_LENGTH:u16 = 32; 
+const NODES:u8 =  9;
+
+type NodeDigest = [bool; NODE_DIGEST_SIZE];
+type BlakeDigest = [bool; HASH_BITS];
+type PedersenDigest = field;
+
+//Although we have odd number of component groups (5), to prevent errors in compilation we set it as an even number (6). 
+const NUM_COMPONENT_GROUPS:u8 = 6; 
+const TREE_DEPTH:u8 = 3; 
+
+/**
+* Method to compute a nonce based on privacySalt, component group index and component internal index.
+* @param privacySalt a PrivacySalt
+* @param groupIndex the fixed index (ordinal) of this component group.
+* @param internalIndex the internal index of this object in its corresponding components list.
+* @return H(privacySalt || groupIndex || internalIndex))
+*/
+fn computeNonce(privacySalt: PrivacySalt, groupIndex: u32, internalIndex: u32) -> BlakeDigest
+{
+    let mut nonce = [false; HASH_BITS + INTEGER_LENGTH + INTEGER_LENGTH];  
+    
+    for i in 0..HASH_BITS
+    {
+        nonce[i] = privacySalt[i]; 
+    }
+
+    let groupIndex_bits = to_bits(groupIndex);
+    let internalIndex_bits = to_bits(internalIndex);
+    for i in 0..INTEGER_LENGTH
+    {
+        nonce[HASH_BITS + (i as u16)] = groupIndex_bits[i]; 
+        nonce[HASH_BITS + INTEGER_LENGTH + (i as u16)] = internalIndex_bits[i]; 
+    }
+    sha256(nonce)  
+}
+
+/**
+* Method to compute the leaf hashes for each item in component groups using BLAKE2s hash function.
+* @param zkptx prover transaction that contains components and also a privacy salt which is used in the computation of nonce.
+* @return H(nonce || component_i) for each component item
+* NOTE: Since Pedersen hash achieves collision-resistance on fixed size messages, we truncate the BLAKE2s hash digest to 254 
+* (which is the size of a field element) to assure consistency and security on the upper levels of the Merkle tree. 
+*/
+fn computeLeafHash(zkptx:(ComponentGroup, PrivacySalt)) -> [NodeDigest;NODES]
+{
+    let mut componentLeafHashes:[NodeDigest; NODES] = [[false;NODE_DIGEST_SIZE]; NODES];
+    let mut index:u16 = 0; 
+ 
+    //inputs
+    for i  in (0 as u32)..(N_INPUTS as u32) 
+    {
+        //compute nonce
+        let mut nonce = computeNonce(zkptx.1, ComponentGroupEnum::INPUTS_GROUP as u32, i as u32);
+        let mut message:[bool; HASH_BITS + INPUT_BITS] = [false; HASH_BITS + INPUT_BITS];
+ 
+        //message = nonce || input
+        for j in 0..HASH_BITS {
+            message[j] = nonce[j]; 
+        }
+        for j in 0..INPUT_BITS {
+            message[HASH_BITS + j] = zkptx.0.inputs.groupElements[i][j]; 
+        }
+
+        let digest = sha256(message);
+        for j in 0..NODE_DIGEST_SIZE {
+            componentLeafHashes[(index as u32) + i][j] = digest[j];  
+        }
+        
+    }
+    index += N_INPUTS; 
+
+    //outputs
+    for i  in (0 as u32)..(N_OUTPUTS as u32) 
+    {
+        //compute nonce
+        let mut nonce = computeNonce(zkptx.1, ComponentGroupEnum::OUTPUTS_GROUP as u32, i as u32); 
+        let mut message:[bool; HASH_BITS + OUTPUT_BITS] = [false; HASH_BITS + OUTPUT_BITS];
+        
+        //message = nonce || input
+        for j in 0..HASH_BITS {
+            message[j] = nonce[j]; 
+        }
+        for j in 0..OUTPUT_BITS {
+            message[HASH_BITS + j] = zkptx.0.outputs.groupElements[i][j]; 
+        }
+
+        let digest = sha256(message);
+        for j in 0..NODE_DIGEST_SIZE {
+            componentLeafHashes[(index as u32) + i][j] = digest[j];  
+        }
+    
+    }
+    index += N_OUTPUTS;
+
+    //commandData
+    for i  in (0 as u32)..(N_COMMANDS as u32) 
+    {
+        //compute nonce
+        let mut nonce = computeNonce(zkptx.1, ComponentGroupEnum::COMMANDS_GROUP as u32, i as u32); 
+        let mut message:[bool; HASH_BITS + COMMAND_BITS] = [false; HASH_BITS + COMMAND_BITS];
+        
+        //message = nonce || input
+        for j in 0..HASH_BITS {
+            message[j] = nonce[j]; 
+        }
+        for j in 0..COMMAND_BITS {
+            message[HASH_BITS + j] = zkptx.0.commandData.groupElements[j]; 
+        }
+ 
+        let digest = sha256(message);
+        for j in 0..NODE_DIGEST_SIZE {
+            componentLeafHashes[(index as u32) + i][j] = digest[j];  
+        }
+    }
+    index += N_COMMANDS;
+
+    //references
+    for i  in (0 as u32)..(N_REFERENCES as u32) 
+    {
+        //compute nonce
+        let mut nonce = computeNonce(zkptx.1, ComponentGroupEnum::REFERENCES_GROUP as u32, i as u32); 
+        let mut message:[bool; HASH_BITS + REFERENCE_BITS] = [false; HASH_BITS + REFERENCE_BITS];
+        
+        //message = nonce || input
+        for j in 0..HASH_BITS {
+            message[j] = nonce[j]; 
+        }
+        for j in 0..REFERENCE_BITS {
+            message[HASH_BITS + j] = zkptx.0.references.groupElements[i][j]; 
+        }
+  
+        let digest = sha256(message);
+        for j in 0..NODE_DIGEST_SIZE {
+            componentLeafHashes[(index as u32) + i][j] = digest[j];  
+        }
+        
+    }
+    index += N_REFERENCES;
+
+    //commandSigners
+    for i  in (0 as u32)..(N_SIGNERS as u32) 
+    {
+        //compute nonce
+        let mut nonce = computeNonce(zkptx.1, ComponentGroupEnum::SIGNERS_GROUP as u32, i as u32); 
+        let mut message:[bool; HASH_BITS + SIGNER_BITS] = [false; HASH_BITS + SIGNER_BITS];
+        
+        //message = nonce || input
+        for j in 0..HASH_BITS {
+            message[j] = nonce[j]; 
+        }
+        for j in 0..SIGNER_BITS {
+            message[HASH_BITS + j] = zkptx.0.commandSigners.groupElements[i][j]; 
+        }
+ 
+        let digest = sha256(message);
+        for j in 0..NODE_DIGEST_SIZE {
+            componentLeafHashes[(index as u32) + i][j] = digest[j];  
+        }
+        
+    }
+    index += N_SIGNERS;
+
+    componentLeafHashes
+}
+
+/**
+* Method to compute root of each component subtree. 
+* @param groupHashes the root of each component subtree in the form of PedersenDigest.
+* @return ZKId - the root of the Merkle tree 
+* NOTE: The current implemenation of this function assumes there are 5 component groups which are 
+* inputs, outputs, commandData, commandSigners, and references
+* If the number of component groups changes the function needs to be updated.
+*/
+fn computeComponentGroupHash(componentLeafHashes:[NodeDigest;NODES]) -> [NodeDigest;NUM_COMPONENT_GROUPS]
+{  
+    //let mut componentGroupHashes = [from_bits_field([false; NODE_DIGEST_SIZE]); NUM_COMPONENT_GROUPS]; 
+    let mut componentGroupHashes = [[false; NODE_DIGEST_SIZE]; NUM_COMPONENT_GROUPS];//THIS IS TEMPORARY 
+    
+    let mut data = [false; NODE_DIGEST_SIZE  + NODE_DIGEST_SIZE]; //concatenate two child nodes
+    let padding_bits:[bool; NODE_DIGEST_SIZE] = [false; NODE_DIGEST_SIZE];
+    
+    let mut leafInd:u16 = 0; 
+    let mut groupInd:u8 = 0; 
+
+    //inputs - this implementation assumes that the number of inputs is 2
+    for i in (0 as u16)..(NODE_DIGEST_SIZE as u16) {
+        data[i] = componentLeafHashes[leafInd][i];
+        data[(NODE_DIGEST_SIZE as u16) + i] = componentLeafHashes[leafInd + (1 as u16)][i];
+    }
+    //let mut digest = pedersen(data);
+    //componentGroupHashes[index] = digest.0; //Take only x-coordinate as hash digest (as in Zcash spec JubJub Extractor, p.69)
+    let mut digest = sha256(data); //THIS IS TEMPORARY 
+    for i in 0..NODE_DIGEST_SIZE { //THIS IS TEMPORARY
+        componentGroupHashes[groupInd][i] = digest[i];
+    } 
+    leafInd += N_INPUTS; 
+    groupInd += 1; 
+
+
+    //outputs - this implementation assumes that the number of outputs is 2
+    for i in (0 as u16)..(NODE_DIGEST_SIZE as u16) {
+        data[i] = componentLeafHashes[leafInd][i];
+        data[(NODE_DIGEST_SIZE as u16) + i] = componentLeafHashes[leafInd + (1 as u16)][i];
+    }
+    //digest = pedersen(data);
+    //componentGroupHashes[index] = digest.0; 
+    digest = sha256(data); //THIS IS TEMPORARY 
+    for i in 0..NODE_DIGEST_SIZE { //THIS IS TEMPORARY
+        componentGroupHashes[groupInd][i] = digest[i];
+    } 
+    leafInd += N_OUTPUTS; 
+    groupInd += 1; 
+
+    //commandData - this implementation assumes that the number of commandData is 1
+    for i in (0 as u16)..(NODE_DIGEST_SIZE as u16) {
+        data[i] = componentLeafHashes[leafInd][i];
+        data[(NODE_DIGEST_SIZE as u16) + i] = padding_bits[i];
+    }
+    //digest = pedersen(data);
+    //componentGroupHashes[index] = digest.0; 
+    digest = sha256(data); //THIS IS TEMPORARY 
+    for i in 0..NODE_DIGEST_SIZE { //THIS IS TEMPORARY
+        componentGroupHashes[groupInd][i] = digest[i];
+    } 
+    leafInd += N_COMMANDS; 
+    groupInd += 1; 
+
+    //references - this implementation assumes that the number of references is 2
+    for i in (0 as u16)..(NODE_DIGEST_SIZE as u16) {
+        data[i] = componentLeafHashes[leafInd][i];
+        data[(NODE_DIGEST_SIZE as u16) + i] = componentLeafHashes[leafInd + (1 as u16)][i];
+    }
+    //digest = pedersen(data);
+    //componentGroupHashes[index] = digest.0; 
+    digest = sha256(data); //THIS IS TEMPORARY 
+    for i in 0..NODE_DIGEST_SIZE { //THIS IS TEMPORARY
+        componentGroupHashes[groupInd][i] = digest[i];
+    }
+    leafInd += N_REFERENCES; 
+    groupInd += 1;
+
+    //commandSigners - this implementation assumes that the number of references is 2
+    for i in (0 as u16)..(NODE_DIGEST_SIZE as u16) {
+        data[i] = componentLeafHashes[leafInd][i];
+        data[(NODE_DIGEST_SIZE as u16) + i] = componentLeafHashes[leafInd + (1 as u16)][i];
+    }
+    //digest = pedersen(data);
+    //componentGroupHashes[index] = digest.0; 
+    digest = sha256(data); //THIS IS TEMPORARY 
+    for i in 0..NODE_DIGEST_SIZE { //THIS IS TEMPORARY
+        componentGroupHashes[groupInd][i] = digest[i];
+    }  
+
+    componentGroupHashes
+}
+
+/**
+* Method to compute the root of merkle root, ZKId, from componentGroupHashes. 
+* @param groupHashes the root of each component subtree in the form of PedersenDigest.
+* @return ZKId - the root of the Merkle tree 
+* NOTE: The current implemenation of this function assumes there are 5 component groups which are 
+* inputs, outputs, commandData, commandSigners, and references
+* If the number of component groups changes the function needs to be updated.
+*/
+fn computeMerkleRoot(componentGroupHashes:[NodeDigest; NUM_COMPONENT_GROUPS]) -> BlakeDigest
+{
+    let mut nodesLevel1 = [[false; NODE_DIGEST_SIZE]; (NUM_COMPONENT_GROUPS/2)+1];
+    for i in 0..(NUM_COMPONENT_GROUPS/2)
+    {
+        let mut data = [false; NODE_DIGEST_SIZE + NODE_DIGEST_SIZE];
+        //let left_bits = to_bits(componentGroupHashes[2*i]);
+        //let right_bits = to_bits(componentGroupHashes[2*i+1]);
+        for j in (0 as u16)..(NODE_DIGEST_SIZE as u16) {
+            data[j] = componentGroupHashes[2*i][j]; //left_bits[j];                                     //THIS IS TEMPORARY 
+            data[(NODE_DIGEST_SIZE as u16) + j] = componentGroupHashes[2*i + 1][j]; //right_bits[j];    //THIS IS TEMPORARY 
+        }
+        //let digest = pedersen(data);
+        //nodesLevel1[i] = digest.0;
+        let digest = sha256(data); //THIS IS TEMPORARY 
+        for j in 0..NODE_DIGEST_SIZE { //THIS IS TEMPORARY
+            nodesLevel1[i][j] = digest[j];
+        }
+    }
+    
+    let mut nodesLevel2 = [[false; NODE_DIGEST_SIZE]; (NUM_COMPONENT_GROUPS/4)+1];
+    for i in 0..(NUM_COMPONENT_GROUPS/4 + 1)
+    {
+        let mut data = [false; NODE_DIGEST_SIZE + NODE_DIGEST_SIZE];
+        //let left_bits = to_bits(nodesLevel1[i]);
+        //let right_bits = to_bits(nodesLevel1[i+1]);
+        for j in (0 as u16)..(NODE_DIGEST_SIZE as u16) {
+            data[j] = nodesLevel1[2*i][j];       //left_bits[j];                                     //THIS IS TEMPORARY 
+            data[(NODE_DIGEST_SIZE as u16) + j] = nodesLevel1[2*i+1][j];  //right_bits[j];           //THIS IS TEMPORARY 
+        }
+        //let digest = pedersen(data);
+        //nodesLevel2[i] = digest.0;
+        let mut digest = sha256(data); //THIS IS TEMPORARY 
+        for j in 0..NODE_DIGEST_SIZE { //THIS IS TEMPORARY
+            nodesLevel2[i][j] = digest[j];
+        }
+    }
+
+    let mut nodesLevel3 = [[false; NODE_DIGEST_SIZE]; (NUM_COMPONENT_GROUPS/8)+1];
+    for i in 0..(NUM_COMPONENT_GROUPS/8 + 1)
+    {
+        let mut data = [false; NODE_DIGEST_SIZE + NODE_DIGEST_SIZE];
+        //let left_bits = to_bits(nodesLevel2[i]);
+        //let right_bits = to_bits(nodesLevel2[i+1]);
+        for j in (0 as u16)..(NODE_DIGEST_SIZE as u16) {
+            data[j] = nodesLevel2[2*i][j];   //left_bits[j];                                      //THIS IS TEMPORARY 
+            data[(NODE_DIGEST_SIZE as u16) + j] = nodesLevel2[2*i+1][j]; //right_bits[j];         //THIS IS TEMPORARY
+        }
+        //let digest = pedersen(data);
+        //nodesLevel3[i] = digest.0;
+        let mut digest = sha256(data); //THIS IS TEMPORARY 
+        for j in 0..NODE_DIGEST_SIZE { //THIS IS TEMPORARY
+            nodesLevel3[i][j] = digest[j];
+        }
+    }
+
+    nodesLevel3[0]
+}
+
+
+fn validateGroupHash(computed:NodeDigest, received:[bool;HASH_BITS]) -> bool
+{
+    let mut isEqual = true; 
+
+    for i in 0..HASH_BITS{
+        if (computed[i] != received[i]){
+            isEqual = false;
+        }
+    }
+    
+    isEqual
+}
+
+/**
+* Method to build the Merkle tree and compute its root ZKId. 
+* @param zkptx prover transaction that contains components and also a privacy salt which is used in the computation of nonce.
+* @return ZKId - the root of the Merkle tree  
+*/
+fn buildMerkleTree(zkptx:(ComponentGroup, PrivacySalt)) -> BlakeDigest //PedersenDigest
+{    
+    let componentGroupHashes = computeComponentGroupHash(computeLeafHash(zkptx));
+
+    //Validate component hashes
+    let validateInput = validateGroupHash(componentGroupHashes[0], zkptx.0.inputs.groupHash); 
+    assert!(validateInput == true, "Failed computation: The computed input group hash does not match the received group hash.");
+
+    let validateOutput = validateGroupHash(componentGroupHashes[1], zkptx.0.outputs.groupHash); 
+    assert!(validateOutput == true, "Failed computation: The computed output group hash does not match the received group hash.");
+
+    let validateCommand = validateGroupHash(componentGroupHashes[2], zkptx.0.commandData.groupHash); 
+    assert!(validateCommand == true, "Failed computation: The computed commandData group hash does not match the received group hash.");
+
+    let validateReference = validateGroupHash(componentGroupHashes[3], zkptx.0.references.groupHash); 
+    assert!(validateReference == true, "Failed computation: The computed reference group hash does not match the received group hash.");
+
+    let validateSigners = validateGroupHash(componentGroupHashes[4], zkptx.0.commandSigners.groupHash); 
+    assert!(validateSigners == true, "Failed computation: The computed commandSigners group hash does not match the received group hash.");
+
+
+    computeMerkleRoot(componentGroupHashes)
+}
