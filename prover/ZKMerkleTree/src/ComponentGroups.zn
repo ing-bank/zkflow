@@ -1,0 +1,248 @@
+use std::convert::to_bits; 
+
+//number of elements in each component group
+const N_INPUTS:u16 = 2; 
+const N_OUTPUTS:u16 = 2;
+const N_REFERENCES:u16 = 2; 
+const N_SIGNERS:u16 = 2;
+const N_COMMANDS:u16 = 1;
+
+const PUBKEY_BYTES:u16 = 44;
+const PUBKEY_BITS:u16 = (8 as u16) * PUBKEY_BYTES;
+
+const HASH_BYTES:u16 = 32;
+const HASH_BITS:u16 = (8 as u16) * HASH_BYTES;
+
+const INT32_BITS:u16 = 32; 
+const INT128_BITS:u16 = 128;
+
+//Number of bits for each component group
+const INPUT_BITS:u16 = HASH_BITS;
+const REFERENCE_BITS:u16 = HASH_BITS;
+const OUTPUT_BITS:u16 = PUBKEY_BITS + PUBKEY_BITS + INT32_BITS;
+const SIGNER_BITS:u16 = PUBKEY_BITS; 
+const COMMAND_BITS:u16 = INT32_BITS; 
+
+type PubKey = [u8; PUBKEY_BYTES];
+type PrivacySalt = [bool; HASH_BITS]; 
+type ComponentGroupHash = [u8; HASH_BYTES]; //For now we use SHA256 to compute component group hashes - should be replaced with Pedersen!
+
+enum CommandData {
+    CREATE = 0,
+    MOVE = 1,
+}
+
+
+struct Owner{
+    owningKey: PubKey,
+}
+
+struct Data {
+    owner: Owner,
+    value: i32,
+}
+
+struct Notary {
+    owningKey: [u8; PUBKEY_BYTES],
+}
+
+struct State {
+    data: Data,
+    notary: Notary,
+}
+
+struct Ref {
+    id: [u8;HASH_BYTES],
+}
+
+struct StateRef {
+    state: State,
+    ref: Ref
+}
+
+struct Command {
+    data: CommandData,
+    signers: [PubKey; N_SIGNERS],
+}
+
+struct Inputs {
+    value: [StateRef; N_INPUTS],
+    groupHash: ComponentGroupHash, 
+}
+
+struct Outputs {
+    value: [StateRef; N_OUTPUTS],
+    groupHash: ComponentGroupHash,
+}
+
+struct References {
+    value: [StateRef; N_REFERENCES],
+    groupHash: ComponentGroupHash,
+}
+
+struct Commands {
+    value: Command, 
+    dataGroupHash: ComponentGroupHash,
+    signerGroupHash: ComponentGroupHash,
+}
+
+struct ZKProverTransaction {
+    inputs: Inputs,
+    outputs: Outputs,
+    references: References,
+    commands: Commands,  
+    privacySalt: [u8; HASH_BYTES],
+}
+
+struct InputGroup {
+    groupElements: [[bool; INPUT_BITS]; N_INPUTS],
+    groupHash: [bool;HASH_BITS],  
+}
+
+struct OutputGroup {
+    groupElements: [[bool; OUTPUT_BITS]; N_OUTPUTS],
+    groupHash: [bool;HASH_BITS],  
+}
+
+struct ReferenceGroup{
+    groupElements: [[bool; REFERENCE_BITS]; N_REFERENCES],
+    groupHash: [bool;HASH_BITS],      
+}
+
+struct CommandDataGroup {
+    groupElements: [bool; INT32_BITS],
+    groupHash: [bool;HASH_BITS],  
+}
+
+struct CommandSignerGroup {
+    groupElements: [[bool; PUBKEY_BITS]; N_SIGNERS],
+    groupHash: [bool;HASH_BITS],  
+}
+
+struct ComponentGroup{
+    inputs: InputGroup,
+    outputs: OutputGroup,
+    commandData: CommandDataGroup,  
+    references: ReferenceGroup,
+    commandSigners: CommandSignerGroup,
+}
+
+
+fn convertHashToBits(value:[u8;HASH_BYTES]) -> [bool; HASH_BITS]
+{
+    let mut hashDigest_bits = [false; HASH_BITS];
+
+    for i in (0 as u16) .. HASH_BYTES{
+        let hd_bits = to_bits(value[i]);
+        for j in (0 as u16) .. (8 as u16) {
+            hashDigest_bits[(8 as u16)* i + j] = hd_bits[j];
+        }
+    }
+    hashDigest_bits 
+}
+
+fn convertInputsToBits(value:[StateRef; N_INPUTS]) -> [[bool; INPUT_BITS]; N_INPUTS]
+{
+    let mut result = [[false; INPUT_BITS]; N_INPUTS];
+
+    for i in 0.. N_INPUTS { 
+        for j in (0 as u16)..((INPUT_BITS/(8 as u16)) as u16) {
+            let id_bits = to_bits(value[i].ref.id[j]);
+            for k in (0 as u16)..(8 as u16) {
+                result[i][(8 as u16) * j + k]  = id_bits[k];
+            }
+        } 
+    }  
+    result  
+}
+
+fn convertOutputsToBits(value:[StateRef; N_OUTPUTS]) -> [[bool; OUTPUT_BITS]; N_OUTPUTS]
+{
+    let mut result = [[false; OUTPUT_BITS]; N_OUTPUTS];
+
+    for i in 0.. N_OUTPUTS { 
+        //output_bits = dataOwner_owningKey || notary_owningKey || value
+        for j in (0 as u16)..PUBKEY_BYTES {
+            let owner_bits = to_bits(value[i].state.data.owner.owningKey[j]);
+            let notary_bits = to_bits(value[i].state.notary.owningKey[j]);
+            for k in (0 as u16)..(8 as u16) {
+                result[i][(8 as u16) * j + k]  = owner_bits[k];
+                result[i][PUBKEY_BITS + (8 as u16) * j + k]  = notary_bits[k];
+            }
+        } 
+        let value_bits = to_bits(value[i].state.data.value);
+        for j in (0 as u16)..INT32_BITS {
+            result[i][(2 as u16) * PUBKEY_BITS + j ]  = value_bits[j];
+        }
+    }  
+    result  
+}
+
+fn convertReferencesToBits(value:[StateRef; N_REFERENCES]) -> [[bool; REFERENCE_BITS]; N_REFERENCES]
+{
+    let mut result = [[false; REFERENCE_BITS]; N_REFERENCES];
+
+    for i in 0.. N_REFERENCES { 
+        for j in (0 as u16)..((REFERENCE_BITS/(8 as u16)) as u16) {
+            let id_bits = to_bits(value[i].ref.id[j]);
+            for k in (0 as u16)..(8 as u16) {
+                result[i][(8 as u16) * j + k]  = id_bits[k];
+            }
+        } 
+    }  
+    result  
+}
+
+fn convertCommandDataToBits(value:CommandData) -> [bool; COMMAND_BITS]
+{
+    to_bits(value as u32) 
+}
+
+fn convertCommandSignersToBits(value:[PubKey; N_SIGNERS]) -> [[bool; SIGNER_BITS]; N_SIGNERS]
+{
+    let mut result = [[false; SIGNER_BITS];N_SIGNERS];
+
+    for i in 0 .. N_SIGNERS {
+        for j in 0 .. (SIGNER_BITS/ (8 as u16)){
+            let commandSigner_bits = to_bits(value[i][j]);
+            for k in (0 as u16)..(8 as u16) {
+                result[i][(8 as u16) * j + k]  = commandSigner_bits[k];
+            }
+        }
+    }   
+
+    result  
+}
+
+fn buildComponentGroups(zkptx:ZKProverTransaction) -> (ComponentGroup, PrivacySalt)
+{
+    (
+        ComponentGroup {
+        inputs: InputGroup{
+                groupElements: convertInputsToBits(zkptx.inputs.value),
+                groupHash: convertHashToBits(zkptx.inputs.groupHash),
+            },
+
+        outputs: OutputGroup{
+                groupElements: convertOutputsToBits(zkptx.outputs.value),
+                groupHash: convertHashToBits(zkptx.outputs.groupHash),
+            },
+
+        commandData: CommandDataGroup{
+                groupElements: convertCommandDataToBits(zkptx.commands.value.data),
+                groupHash: convertHashToBits(zkptx.commands.dataGroupHash),
+            }, 
+
+        references: ReferenceGroup{
+                groupElements: convertReferencesToBits(zkptx.references.value),
+                groupHash: convertHashToBits(zkptx.references.groupHash),
+            },        
+
+        commandSigners: CommandSignerGroup{
+                groupElements: convertCommandSignersToBits(zkptx.commands.value.signers),
+                groupHash: convertHashToBits(zkptx.commands.signerGroupHash),
+            }, 
+        },
+        convertHashToBits(zkptx.privacySalt)
+    )
+}

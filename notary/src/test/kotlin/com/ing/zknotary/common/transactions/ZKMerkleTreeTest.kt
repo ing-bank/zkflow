@@ -1,27 +1,21 @@
 package com.ing.zknotary.common.transactions
 
 import com.ing.zknotary.common.serializer.ZKJsonSerializationFactoryService
-import com.ing.zknotary.common.states.ZKReferenceStateRef
-import com.ing.zknotary.common.states.ZKStateRef
+import com.ing.zknotary.common.serializer.ZincSerializationFactoryService
 import com.ing.zknotary.notary.transactions.createTestsState
 import com.ing.zknotary.notary.transactions.moveTestsState
-import net.corda.core.contracts.StateRef
-import net.corda.core.contracts.TimeWindow
 import net.corda.core.crypto.BLAKE2s256DigestService
 import net.corda.core.crypto.Crypto
 import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.sign
-import net.corda.core.serialization.deserialize
 import net.corda.core.serialization.serialize
-import net.corda.core.transactions.NetworkParametersHash
-import net.corda.core.transactions.ReferenceStateRef
 import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
 import net.corda.testing.node.ledger
 import org.junit.Test
+import java.io.File
+import java.nio.file.Paths
 import java.security.PublicKey
-import java.util.function.Predicate
-import kotlin.test.assertEquals
 
 class ZKMerkleTreeTest {
     private val alice = TestIdentity.fresh("alice", Crypto.EDDSA_ED25519_SHA512)
@@ -39,7 +33,7 @@ class ZKMerkleTreeTest {
             verifies()
 
             val ltx = wtx.toLedgerTransaction(ledgerServices)
-            val serializationFactoryService = ZKJsonSerializationFactoryService()
+            val serializationFactoryService = ZincSerializationFactoryService()
 
             val ptx = ZKProverTransactionFactory.create(
                 ltx,
@@ -54,50 +48,9 @@ class ZKMerkleTreeTest {
             val json = ptx.serialize(serializationFactoryService.factory)
             println(String(json.bytes))
 
-            val witness = MockWitness(
-                ptx,
-                listOf(sigAlice)
-            )
-
-            val proverInstance = MockInstance(
-                ptx.id
-            )
-
-            val proof = MockProof(witness, proverInstance)
-
-            val vtx = ptx.toZKVerifierTransaction(
-                Predicate {
-                    it is ZKStateRef || it is ZKReferenceStateRef || it is TimeWindow || it == ptx.notary || it is NetworkParametersHash
-                }
-            )
-            assertEquals(ptx.id, vtx.id)
-            val amqp = vtx.serialize()
-
-            val deserializedVtx = amqp.deserialize()
-            assertEquals(vtx, deserializedVtx)
-
-            // Next, we have to confirm that the visible parts of ftx and vtx match:
-            val ftx = wtx.buildFilteredTransaction(
-                Predicate {
-                    it is StateRef || it is ReferenceStateRef || it is TimeWindow || it == ptx.notary || it is NetworkParametersHash
-                }
-            )
-
-            /****************************************************
-             * Verifier: receives FilteredTransaction (ftx) with extra payload: ZKVerifierTransaction (vtx) and proof
-             ****************************************************/
-            vtx.verify()
-            ftx.verify()
-
-            assertEquals(vtx.timeWindow, ftx.timeWindow)
-            assertEquals(vtx.notary, ftx.notary)
-            assertEquals(vtx.networkParametersHash, ftx.networkParametersHash)
-
-            val verifierInstance = MockInstance(
-                zkId = vtx.id
-            )
-
-            proof.verify(verifierInstance)
+            val cwd = System.getProperty("user.dir")
+            val circuitWd = Paths.get("$cwd/../prover/ZKMerkleTree").normalize().toString()
+            File("$circuitWd/data/witness.json").writeText(String(json.bytes))
         }
     }
 
