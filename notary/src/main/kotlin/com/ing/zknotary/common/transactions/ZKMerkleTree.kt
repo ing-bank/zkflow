@@ -151,7 +151,6 @@ class ZKMerkleTree(
      * For each component group: the root hashes of the sub Merkle tree for that component group
      *
      * If a group's Merkle root is allOnesHash, it is a flag that denotes this group is empty (if list) or null (if single object)
-     * in the wire transaction.
      */
     internal val groupHashes: List<SecureHash> by lazy {
         val componentGroupHashes = mutableListOf<SecureHash>()

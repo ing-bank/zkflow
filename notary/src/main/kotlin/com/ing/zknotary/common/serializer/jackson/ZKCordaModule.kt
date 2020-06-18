@@ -90,7 +90,7 @@ private class ZKProverTransactionJson(
     val outputs: List<ZKStateAndRef<ContractState>>,
     val references: List<ZKStateAndRef<ContractState>>,
     val commands: List<Command<*>>,
-    val notary: Party?,
+    val notary: Party,
     val timeWindow: TimeWindow?,
     val privacySalt: PrivacySalt,
     val networkParametersHash: SecureHash?,
