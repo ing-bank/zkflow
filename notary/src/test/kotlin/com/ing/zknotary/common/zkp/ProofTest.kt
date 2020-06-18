@@ -1,6 +1,6 @@
 package com.ing.zknotary.common.zkp
 
-import com.ing.zknotary.common.serializer.ZKJsonSerializationFactoryService
+import com.ing.zknotary.common.serializer.ZincSerializationFactoryService
 import com.ing.zknotary.common.transactions.ZKProverTransaction
 import com.ing.zknotary.common.transactions.ZKProverTransactionFactory
 import com.ing.zknotary.notary.transactions.createTestsState
@@ -35,7 +35,7 @@ class ProofTest {
             // Build a ZKProverTransaction
             ptx = ZKProverTransactionFactory.create(
                 wtx.toLedgerTransaction(ledgerServices),
-                ZKJsonSerializationFactoryService(),
+                ZincSerializationFactoryService(),
                 componentGroupLeafDigestService = BLAKE2s256DigestService,
                 nodeDigestService = BLAKE2s256DigestService // Should become Pedersen hash when available
             )
@@ -44,6 +44,7 @@ class ProofTest {
             sigAlice = alice.keyPair.private.sign(ptx.id.bytes).bytes
         }
     }
+
     @Test
     fun `Quick prove that ZKProverTransaction satisfies Zinc circuit logic`() {
         ledgerServices.ledger {

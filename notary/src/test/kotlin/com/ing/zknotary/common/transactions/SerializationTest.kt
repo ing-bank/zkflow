@@ -1,26 +1,20 @@
 package com.ing.zknotary.common.transactions
 
-import com.ing.zknotary.common.serializer.ZKJsonSerializationFactory
-import com.ing.zknotary.common.serializer.ZKJsonSerializationFactoryService
+import com.ing.zknotary.common.serializer.ZincSerializationFactory
 import com.ing.zknotary.common.serializer.ZincSerializationFactoryService
-import com.ing.zknotary.common.states.ZKReferenceStateRef
-import com.ing.zknotary.common.states.ZKStateRef
 import com.ing.zknotary.common.zkp.ZincWitness
 import com.ing.zknotary.notary.transactions.createTestsState
 import com.ing.zknotary.notary.transactions.moveTestsState
-import net.corda.core.contracts.TimeWindow
 import net.corda.core.crypto.BLAKE2s256DigestService
 import net.corda.core.crypto.Crypto
 import net.corda.core.crypto.sign
 import net.corda.core.serialization.deserialize
 import net.corda.core.serialization.serialize
-import net.corda.core.transactions.NetworkParametersHash
 import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
 import net.corda.testing.node.ledger
 import org.junit.Before
 import org.junit.Test
-import java.util.function.Predicate
 import kotlin.test.assertEquals
 
 class SerializationTest {
@@ -63,7 +57,7 @@ class SerializationTest {
         ledgerServices.ledger {
             // Serialize for transport to Zinc
             val witness = ZincWitness(ptx, listOf(sigAlice))
-            val json = witness.serialize(ZKJsonSerializationFactory)
+            val json = witness.serialize(ZincSerializationFactory)
             println(String(json.bytes))
             // TODO: do checks on JSON to confirm it is acceptable for Zinc
         }

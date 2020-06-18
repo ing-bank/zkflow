@@ -4,7 +4,7 @@ import com.ing.zknotary.client.flows.ZKFinalityFlow
 import com.ing.zknotary.common.contracts.TestContract
 import com.ing.zknotary.common.contracts.TestContract.Companion.PROGRAM_ID
 import com.ing.zknotary.common.flows.getCordaServiceFromConfig
-import com.ing.zknotary.common.serializer.ZKJsonSerializationFactoryService
+import com.ing.zknotary.common.serializer.ZincSerializationFactoryService
 import com.ing.zknotary.common.zkp.NoopZKVerifierService
 import com.ing.zknotary.common.zkp.NoopZKZKProverService
 import com.ing.zknotary.common.zkp.ZKConfig
@@ -50,7 +50,7 @@ class ZKNotaryFlowTest {
                 cordappsForAllNodes = listOf(
                     findCordapp("com.ing.zknotary.common.contracts").withConfig(
                         mapOf(
-                            "zkpSerializationFactoryService" to ZKJsonSerializationFactoryService::class.qualifiedName!!,
+                            "zkpSerializationFactoryService" to ZincSerializationFactoryService::class.qualifiedName!!,
                             "zkpVerifier" to NoopZKVerifierService::class.qualifiedName!!,
                             "zkpProver" to NoopZKZKProverService::class.qualifiedName!!
                         )

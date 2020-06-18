@@ -1,6 +1,6 @@
 package com.ing.zknotary.common.zkp
 
-import com.ing.zknotary.common.serializer.ZKJsonSerializationFactoryService
+import com.ing.zknotary.common.serializer.ZincSerializationFactoryService
 import com.ing.zknotary.common.transactions.ZKMerkleTree
 import com.ing.zknotary.common.transactions.ZKProverTransaction
 import net.corda.core.crypto.BLAKE2s256DigestService
@@ -27,7 +27,7 @@ class MockProof(
         // build Merkle tree with serialized components and compare root with instance.zkId
         val tree = ZKMerkleTree(
             witness.transaction,
-            serializationFactoryService = ZKJsonSerializationFactoryService(),
+            serializationFactoryService = ZincSerializationFactoryService(),
             componentGroupLeafDigestService = BLAKE2s256DigestService,
             nodeDigestService = BLAKE2s256DigestService // Should become Pedersen hash when available
         )
