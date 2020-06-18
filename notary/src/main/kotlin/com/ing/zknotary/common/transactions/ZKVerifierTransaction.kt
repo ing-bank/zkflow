@@ -38,12 +38,7 @@ class ZKVerifierTransaction(
     val id by lazy { merkleTree.root }
 
     val merkleTree by lazy {
-        ZKPartialMerkleTree(
-            this,
-            serializationFactoryService,
-            componentGroupLeafDigestService,
-            nodeDigestService
-        )
+        ZKPartialMerkleTree(this)
     }
 
     override fun hashCode(): Int = id.hashCode()

@@ -1,7 +1,7 @@
 package com.ing.zknotary.common.zkp
 
 import com.ing.zknotary.common.serializer.ZincSerializationFactoryService
-import com.ing.zknotary.common.transactions.ZKMerkleTree
+import com.ing.zknotary.common.transactions.ZKFullMerkleTree
 import com.ing.zknotary.common.transactions.ZKProverTransaction
 import net.corda.core.crypto.BLAKE2s256DigestService
 import net.corda.core.crypto.Crypto
@@ -25,12 +25,7 @@ class MockProof(
         // TODO: Do platform checks from TransactionVerifierServiceInternal.kt:44 that can't be done outside proof
 
         // build Merkle tree with serialized components and compare root with instance.zkId
-        val tree = ZKMerkleTree(
-            witness.transaction,
-            serializationFactoryService = ZincSerializationFactoryService(),
-            componentGroupLeafDigestService = BLAKE2s256DigestService,
-            nodeDigestService = BLAKE2s256DigestService // Should become Pedersen hash when available
-        )
+        val tree = ZKFullMerkleTree(witness.transaction)
 
         // confirm tree.root == instance.zkId
         require(tree.root == instance.zkId)

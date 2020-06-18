@@ -9,7 +9,7 @@ import net.corda.core.KeepForDJVM
 @KeepForDJVM
 interface NamedByZKMerkleTree {
     /**
-     * A [ZKMerkleTree] that identifies this transaction.
+     * A [ZKFullMerkleTree] that identifies this transaction.
      */
-    val merkleTree: ZKMerkleTree
+    val merkleTree: ZKFullMerkleTree
 }

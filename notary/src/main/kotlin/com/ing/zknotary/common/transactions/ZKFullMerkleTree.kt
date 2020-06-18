@@ -2,7 +2,9 @@ package com.ing.zknotary.common.transactions
 
 import com.ing.zknotary.common.serializer.SerializationFactoryService
 import com.ing.zknotary.common.states.ZKStateRef
+import net.corda.core.contracts.Command
 import net.corda.core.contracts.ComponentGroupEnum
+import net.corda.core.contracts.PrivacySalt
 import net.corda.core.contracts.TimeWindow
 import net.corda.core.crypto.DigestService
 import net.corda.core.crypto.MerkleTree
@@ -12,43 +14,47 @@ import net.corda.core.internal.lazyMapped
 import net.corda.core.serialization.serialize
 import net.corda.core.transactions.ComponentGroup
 import net.corda.core.utilities.OpaqueBytes
+import java.nio.ByteBuffer
 
-class ZKPartialMerkleTree(
-    vtx: ZKVerifierTransaction
-) : AbstractZKMerkleTree(buildComponentGroups(vtx), vtx.componentGroupLeafDigestService, vtx.nodeDigestService) {
-    override val groupHashes: List<SecureHash> by lazy {
-        val componentGroupHashes = mutableListOf<SecureHash>()
-        // Even if empty and not used, we should at least send oneHashes for each known
-        // or received but unknown (thus, bigger than known ordinal) component groups.
-        for (i in 0..componentGroups.map { it.groupIndex }.max()!!) {
-            val root = groupsMerkleRoots[i] ?: vtx.groupHashes[i]
-            componentGroupHashes.add(root)
-        }
-        componentGroupHashes
+class ZKFullMerkleTree(
+    ptx: ZKProverTransaction
+) : AbstractZKMerkleTree(buildComponentGroups(ptx), ptx.componentGroupLeafDigestService, ptx.nodeDigestService) {
+
+    override val componentNonces: Map<Int, List<SecureHash>> by lazy {
+        componentGroups.map { group ->
+            group.groupIndex to group.components.mapIndexed { componentIndex, _ ->
+                componentGroupLeafDigestService.hash(
+                    ptx.privacySalt.bytes + ByteBuffer.allocate(8)
+                        .putInt(group.groupIndex).putInt(componentIndex).array()
+                )
+            }
+        }.toMap()
     }
 
-
-    override val componentNonces: Map<Int, List<SecureHash>> = vtx.componentNonces
-
     companion object {
-        fun buildComponentGroups(vtx: ZKVerifierTransaction): List<ComponentGroup> {
+        fun buildComponentGroups(ptx: ZKProverTransaction): List<ComponentGroup> {
+            // construct the componentGroups based on our custom serialization
             return buildComponentGroups(
-                vtx.inputs,
-                vtx.outputs,
-                vtx.references,
-                vtx.notary,
-                vtx.timeWindow,
-                vtx.networkParametersHash,
-                vtx.serializationFactoryService
+                ptx.inputs.map { it.ref },
+                ptx.outputs.map { it.ref },
+                ptx.commands,
+                ptx.attachments,
+                ptx.notary,
+                ptx.timeWindow,
+                ptx.references.map { it.ref },
+                ptx.networkParametersHash,
+                ptx.serializationFactoryService
             )
         }
 
         private fun buildComponentGroups(
             inputs: List<ZKStateRef>,
             outputs: List<ZKStateRef>,
-            references: List<ZKStateRef>,
+            commands: List<Command<*>>,
+            attachments: List<SecureHash>,
             notary: Party?,
             timeWindow: TimeWindow?,
+            references: List<ZKStateRef>,
             networkParametersHash: SecureHash?,
             serializationFactoryService: SerializationFactoryService
         ): List<ComponentGroup> {
@@ -73,6 +79,19 @@ class ZKPartialMerkleTree(
                     outputs.lazyMapped(serialize)
                 )
             )
+            // Adding commandData only to the commands group. Signers are added in their own group.
+            if (commands.isNotEmpty()) componentGroupMap.add(
+                ComponentGroup(
+                    ComponentGroupEnum.COMMANDS_GROUP.ordinal,
+                    commands.map { it.value }.lazyMapped(serialize)
+                )
+            )
+            if (attachments.isNotEmpty()) componentGroupMap.add(
+                ComponentGroup(
+                    ComponentGroupEnum.ATTACHMENTS_GROUP.ordinal,
+                    attachments.lazyMapped(serialize)
+                )
+            )
             if (notary != null) componentGroupMap.add(
                 ComponentGroup(
                     ComponentGroupEnum.NOTARY_GROUP.ordinal,
@@ -83,6 +102,14 @@ class ZKPartialMerkleTree(
                 ComponentGroup(
                     ComponentGroupEnum.TIMEWINDOW_GROUP.ordinal,
                     listOf(timeWindow).lazyMapped(serialize)
+                )
+            )
+            // Adding signers to their own group. This is required for command visibility purposes: a party receiving
+            // a FilteredTransaction can now verify it sees all the commands it should sign.
+            if (commands.isNotEmpty()) componentGroupMap.add(
+                ComponentGroup(
+                    ComponentGroupEnum.SIGNERS_GROUP.ordinal,
+                    commands.map { it.signers }.lazyMapped(serialize)
                 )
             )
             if (networkParametersHash != null) componentGroupMap.add(
