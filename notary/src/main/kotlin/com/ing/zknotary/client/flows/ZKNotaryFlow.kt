@@ -5,6 +5,7 @@ import com.ing.zknotary.common.states.ZKReferenceStateRef
 import com.ing.zknotary.common.states.ZKStateRef
 import com.ing.zknotary.common.transactions.ZKProverTransactionFactory
 import com.ing.zknotary.common.transactions.ZKVerifierTransaction
+import com.ing.zknotary.common.transactions.toZKVerifierTransaction
 import com.ing.zknotary.common.zkp.ZKConfig
 import net.corda.core.contracts.TimeWindow
 import net.corda.core.crypto.BLAKE2s256DigestService
