@@ -1,6 +1,7 @@
 package com.ing.zknotary.common.transactions
 
 import com.ing.zknotary.common.serializer.ZKJsonSerializationFactoryService
+import com.ing.zknotary.common.serializer.ZincSerializationFactoryService
 import com.ing.zknotary.common.states.ZKReferenceStateRef
 import com.ing.zknotary.common.states.ZKStateRef
 import com.ing.zknotary.notary.transactions.createTestsState
@@ -19,6 +20,8 @@ import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
 import net.corda.testing.node.ledger
 import org.junit.Test
+import java.io.File
+import java.nio.file.Paths
 import java.security.PublicKey
 import java.util.function.Predicate
 import kotlin.test.assertEquals
@@ -39,7 +42,7 @@ class ZKMerkleTreeTest {
             verifies()
 
             val ltx = wtx.toLedgerTransaction(ledgerServices)
-            val serializationFactoryService = ZKJsonSerializationFactoryService()
+            val serializationFactoryService = ZincSerializationFactoryService()
 
             val ptx = ZKProverTransactionFactory.create(
                 ltx,
@@ -53,6 +56,10 @@ class ZKMerkleTreeTest {
 
             val json = ptx.serialize(serializationFactoryService.factory)
             println(String(json.bytes))
+
+            val cwd = System.getProperty("user.dir")
+            val circuitWd = Paths.get("$cwd/../prover/ZKMerkleTree").normalize().toString()
+            File("$circuitWd/data/witness.json").writeText(String(json.bytes))
 
             val witness = MockWitness(
                 ptx,
