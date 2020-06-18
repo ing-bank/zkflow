@@ -27,7 +27,7 @@ class SerializationTest {
     )
 
     private lateinit var ptx: ZKProverTransaction
-    private lateinit var vtx: ZKVerifierTransactionSimplified
+    private lateinit var vtx: ZKVerifierTransaction
     private lateinit var sigAlice: ByteArray
 
     @Before
@@ -48,7 +48,7 @@ class SerializationTest {
             sigAlice = alice.keyPair.private.sign(ptx.id.bytes).bytes
 
             // build filtered ZKVerifierTransaction
-            vtx = ptx.toZKVerifierTransactionSimplified()
+            vtx = ptx.toZKVerifierTransaction()
         }
     }
 

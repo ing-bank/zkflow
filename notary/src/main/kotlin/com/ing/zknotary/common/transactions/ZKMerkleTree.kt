@@ -72,7 +72,7 @@ class ZKMerkleTree(
         fun computeComponentHash(nonce: SecureHash, component: OpaqueBytes, digestService: DigestService): SecureHash =
             digestService.hash(nonce.bytes + component.bytes)
 
-        fun buildComponentGroups(
+        private fun buildComponentGroups(
             inputs: List<ZKStateRef>,
             outputs: List<ZKStateRef>,
             commands: List<Command<*>>,
@@ -200,7 +200,11 @@ class ZKMerkleTree(
     val componentHashes: Map<Int, List<SecureHash>> by lazy {
         componentGroups.map { group ->
             group.groupIndex to group.components.mapIndexed { componentIndex, component ->
-                computeComponentHash(componentNonces[group.groupIndex]!![componentIndex], component, componentGroupLeafDigestService)
+                computeComponentHash(
+                    componentNonces[group.groupIndex]!![componentIndex],
+                    component,
+                    componentGroupLeafDigestService
+                )
             }
         }.toMap()
     }

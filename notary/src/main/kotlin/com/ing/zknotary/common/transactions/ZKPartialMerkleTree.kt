@@ -14,7 +14,13 @@ import net.corda.core.transactions.ComponentGroup
 import net.corda.core.utilities.OpaqueBytes
 
 class ZKPartialMerkleTree(
-    vtx: ZKVerifierTransactionSimplified
+    vtx: ZKVerifierTransaction,
+    /**
+     * For serialization of the leaves before hashing
+     */
+    val serializationFactoryService: SerializationFactoryService,
+    val componentGroupLeafDigestService: DigestService,
+    val nodeDigestService: DigestService
 ) : TransactionMerkleTree {
     val componentGroups: List<ComponentGroup>
 
@@ -33,13 +39,13 @@ class ZKPartialMerkleTree(
 
     override val root: SecureHash get() = tree.hash
 
-    override val tree: MerkleTree by lazy { MerkleTree.getMerkleTree(groupHashes, vtx.nodeDigestService) }
+    override val tree: MerkleTree by lazy { MerkleTree.getMerkleTree(groupHashes, nodeDigestService) }
 
     companion object {
         fun computeComponentHash(nonce: SecureHash, component: OpaqueBytes, digestService: DigestService): SecureHash =
             digestService.hash(nonce.bytes + component.bytes)
 
-        fun buildComponentGroups(
+        private fun buildComponentGroups(
             inputs: List<ZKStateRef>,
             outputs: List<ZKStateRef>,
             references: List<ZKStateRef>,
@@ -116,8 +122,8 @@ class ZKPartialMerkleTree(
         componentHashes.map { (groupIndex: Int, componentHashesInGroup: List<SecureHash>) ->
             groupIndex to MerkleTree.getMerkleTree(
                 componentHashesInGroup,
-                vtx.nodeDigestService,
-                vtx.componentGroupLeafDigestService
+                nodeDigestService,
+                componentGroupLeafDigestService
             ).hash
         }.toMap()
     }
@@ -130,13 +136,14 @@ class ZKPartialMerkleTree(
      * etc.
      * Thus, all of the nonces are "independent" in the sense that knowing one or some of them, you can learn nothing about the rest.
      */
-    val componentNonces: Map<Int, List<SecureHash>> by lazy {
-        componentGroups.map { group ->
-            group.groupIndex to group.components.mapIndexed { componentIndex, _ ->
-                vtx.componentNonces[group.groupIndex]!![componentIndex]
-            }
-        }.toMap()
-    }
+    val componentNonces: Map<Int, List<SecureHash>> = vtx.componentNonces
+    // val componentNonces: Map<Int, List<SecureHash>> by lazy {
+    //     componentGroups.map { group ->
+    //         group.groupIndex to group.components.mapIndexed { componentIndex, _ ->
+    //             vtx.componentNonces[group.groupIndex]!![componentIndex]
+    //         }
+    //     }.toMap()
+    // }
 
     /**
      * The hash for every transaction component, per component group. These will be used to build the full Merkle tree.
@@ -147,7 +154,7 @@ class ZKPartialMerkleTree(
                 computeComponentHash(
                     componentNonces[group.groupIndex]!![componentIndex],
                     component,
-                    vtx.componentGroupLeafDigestService
+                    componentGroupLeafDigestService
                 )
             }
         }.toMap()
