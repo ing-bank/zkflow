@@ -1,7 +1,7 @@
 package com.ing.zknotary.common.transactions
 
 import net.corda.core.DeleteForDJVM
-import java.util.function.Predicate
+import net.corda.core.contracts.ComponentGroupEnum
 
 @DeleteForDJVM
 fun ZKProverTransaction.prettyPrint(): String {
@@ -27,11 +27,32 @@ fun ZKProverTransaction.prettyPrint(): String {
     return buf.toString()
 }
 
-/**
- * Build filtered transaction using provided filtering functions.
- */
-fun ZKProverTransaction.toZKVerifierTransaction(filtering: Predicate<Any>): ZKVerifierTransaction =
-    ZKVerifierTransaction.fromZKProverTransaction(this, filtering)
+fun ZKProverTransaction.toZKVerifierTransaction(): ZKVerifierTransaction {
+    val componentNonces = this.merkleTree.componentNonces.filterKeys {
+        it in listOf(
+            ComponentGroupEnum.INPUTS_GROUP.ordinal,
+            ComponentGroupEnum.OUTPUTS_GROUP.ordinal,
+            ComponentGroupEnum.REFERENCES_GROUP.ordinal,
+            ComponentGroupEnum.NOTARY_GROUP.ordinal,
+            ComponentGroupEnum.TIMEWINDOW_GROUP.ordinal,
+            ComponentGroupEnum.PARAMETERS_GROUP.ordinal
+        )
+    }
 
-fun ZKProverTransaction.toZKVerifierTransactionSimplified(): ZKVerifierTransactionSimplified =
-    ZKVerifierTransactionSimplified.fromZKProverTransaction(this)
+    return ZKVerifierTransaction(
+        this.inputs.map { it.ref },
+        this.outputs.map { it.ref },
+        this.references.map { it.ref },
+
+        this.notary,
+        this.timeWindow,
+        this.networkParametersHash,
+
+        this.serializationFactoryService,
+        this.componentGroupLeafDigestService,
+        this.nodeDigestService,
+
+        this.merkleTree.groupHashes,
+        componentNonces
+    )
+}

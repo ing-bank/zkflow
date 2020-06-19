@@ -150,7 +150,7 @@ class ZKNotaryServiceFlow(
         val tx = requestPayload.transaction
 
         try {
-            tx.verify()
+            // TODO: enable tx.verify()
             // TODO: verify the zkp
             // zkConfig.verifierService.verify()
         } catch (e: Exception) {

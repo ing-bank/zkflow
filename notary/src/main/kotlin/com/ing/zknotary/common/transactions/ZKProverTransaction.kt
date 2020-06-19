@@ -53,12 +53,7 @@ class ZKProverTransaction(
 
     /** This additional merkle root is represented by the root hash of a Merkle tree over the transaction components. */
     override val merkleTree by lazy {
-        ZKMerkleTree(
-            this,
-            serializationFactoryService = serializationFactoryService,
-            componentGroupLeafDigestService = componentGroupLeafDigestService,
-            nodeDigestService = nodeDigestService
-        )
+        ZKFullMerkleTree(this)
     }
 
     override fun hashCode(): Int = id.hashCode()
