@@ -74,25 +74,23 @@ fun MutableList<ComponentGroup>.addTimeWindowGroup(
     )
 }
 
-fun MutableList<ComponentGroup>.addCommandsGroup(
-    commands: List<Command<*>>,
+fun MutableList<ComponentGroup>.addCommandGroup(
+    command: Command<*>,
     serializer: (Any, Int) -> SerializedBytes<Any>
 ) {
     // TODO: is it still necessary to split this for filtering purposes like in standard Corda?
-    if (commands.isNotEmpty()) {
-        this.add(
-            ComponentGroup(
-                ComponentGroupEnum.COMMANDS_GROUP.ordinal,
-                commands.map { it.value }.lazyMapped(serializer)
-            )
+    this.add(
+        ComponentGroup(
+            ComponentGroupEnum.COMMANDS_GROUP.ordinal,
+            listOf(command.value).lazyMapped(serializer)
         )
-        this.add(
-            ComponentGroup(
-                ComponentGroupEnum.SIGNERS_GROUP.ordinal,
-                commands.map { it.signers }.lazyMapped(serializer)
-            )
+    )
+    this.add(
+        ComponentGroup(
+            ComponentGroupEnum.SIGNERS_GROUP.ordinal,
+            listOf(command.signers).lazyMapped(serializer)
         )
-    }
+    )
 }
 
 fun MutableList<ComponentGroup>.addNetWorkParametersHashGroup(
