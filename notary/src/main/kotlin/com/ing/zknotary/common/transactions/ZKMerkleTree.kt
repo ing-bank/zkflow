@@ -1,12 +1,10 @@
 package com.ing.zknotary.common.transactions
 
 import net.corda.core.contracts.ComponentGroupEnum
-import net.corda.core.contracts.PrivacySalt
 import net.corda.core.crypto.DigestService
 import net.corda.core.crypto.MerkleTree
 import net.corda.core.crypto.SecureHash
 import net.corda.core.transactions.ComponentGroup
-import java.nio.ByteBuffer
 
 interface TransactionMerkleTree {
     val root: SecureHash

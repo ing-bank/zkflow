@@ -1,9 +1,7 @@
 package com.ing.zknotary.common.zkp
 
-import com.ing.zknotary.common.serializer.ZincSerializationFactoryService
 import com.ing.zknotary.common.transactions.ZKFullMerkleTree
 import com.ing.zknotary.common.transactions.ZKProverTransaction
-import net.corda.core.crypto.BLAKE2s256DigestService
 import net.corda.core.crypto.Crypto
 import net.corda.core.crypto.SecureHash
 import java.security.PublicKey
