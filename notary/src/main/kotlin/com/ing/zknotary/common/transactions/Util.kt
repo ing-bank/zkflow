@@ -18,7 +18,7 @@ fun ZKProverTransaction.prettyPrint(): String {
     addComponentList(buf, "REFS", references)
     addComponentList(buf, "INPUTS", inputs)
     addComponentList(buf, "OUTPUTS", outputs)
-    addComponentList(buf, "COMMANDS", commands)
+    buf.appendln(" - COMMAND:  $command")
     addComponentList(buf, "ATTACHMENT HASHES", attachments)
 
     if (networkParametersHash != null) {

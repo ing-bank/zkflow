@@ -25,7 +25,7 @@ class ComponentGroupsFactory {
                 addInputsGroup(ptx.inputs.map { it.ref }, serializer)
                 addReferencesGroup(ptx.references.map { it.ref }, serializer)
                 addOutputsGroup(ptx.outputs.map { it.ref }, serializer)
-                addCommandsGroup(ptx.commands, serializer)
+                addCommandGroup(ptx.command, serializer)
                 addAttachmentsGroup(ptx.attachments, serializer)
                 addNotaryGroup(ptx.notary, serializer)
                 addTimeWindowGroup(ptx.timeWindow, serializer)

@@ -16,6 +16,7 @@ class ZKProverTransactionFactory {
             nodeDigestService: DigestService = componentGroupLeafDigestService
         ): ZKProverTransaction {
             require(ltx.notary != null) { "A notary must always be set on a ZKProverTransaction" }
+            require(ltx.commands.size == 1) { "There must be exactly one command on a ZKProverTransactions" }
 
             return ZKProverTransaction(
                 inputs = ltx.inputs.map {
@@ -36,7 +37,7 @@ class ZKProverTransactionFactory {
                         componentGroupLeafDigestService
                     )
                 },
-                commands = ltx.commands.map { Command(it.value, it.signers) },
+                command = ltx.commands.map { Command(it.value, it.signers) }.single(),
                 notary = ltx.notary!!,
                 timeWindow = ltx.timeWindow,
                 privacySalt = ltx.privacySalt,

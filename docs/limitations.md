@@ -6,4 +6,4 @@
 * All states in a transaction must belong to one contract and circuit
 * All transactions require a notary: 
     * otherwise outputs will not be in the accumulator and can't be used as inputs.
-    * 
+* We leak the contract and command information to the verifier, because we use one circuit per contract command for performance reasons, and because the verifier must know which circuit (verifier key) to use.

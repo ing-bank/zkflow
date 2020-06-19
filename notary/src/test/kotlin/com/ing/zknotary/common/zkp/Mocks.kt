@@ -30,7 +30,7 @@ class MockProof(
 
         // Check all required signatures are present
         require(
-            witness.transaction.commands.flatMap { it.signers }.all { signatureExists(it, instance.zkId.bytes) }
+            witness.transaction.command.signers.all { signatureExists(it, instance.zkId.bytes) }
         )
 
         // TODO: Verify contract business logic

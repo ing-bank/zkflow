@@ -82,8 +82,7 @@ private class ZincMixinSerializer : JsonSerializer<ZKProverTransaction>() {
         )
 
         // Only one command is expected.
-        assert(value.commands.isNotEmpty())
-        val command = value.commands.first()
+        val command = value.command
         val participantsSize = extractDim("N_SIGNERS", content)
         assert(participantsSize != null)
         val commandsGroup = CommandGroup(command, participantsSize!!, value.componentGroupLeafDigestService, value.privacySalt)

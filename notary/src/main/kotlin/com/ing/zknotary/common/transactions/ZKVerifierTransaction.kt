@@ -15,6 +15,10 @@ class ZKVerifierTransaction(
     val outputs: List<ZKStateRef>,
     val references: List<ZKStateRef>,
 
+    // TODO: we should add some information that the verifier can use to select the correct verifier key?
+    // Or do we just attach the hash of the verifier key?
+    // With that they can select the correct key, and also know which circuit they are verifiying.
+
     val notary: Party,
     val timeWindow: TimeWindow?,
     val networkParametersHash: SecureHash?,
