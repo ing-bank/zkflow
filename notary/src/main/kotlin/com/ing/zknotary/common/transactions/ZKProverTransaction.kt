@@ -103,6 +103,7 @@ class ZKProverTransaction(
         }
 
         private val fillerZKStateAndRef by lazy {
+            // TODO, assumption is made that one of these is not empty
             val someState = when {
                 _inputs.isNotEmpty() -> _inputs.first().state.data
                 _outputs.isNotEmpty() -> _outputs.first().state.data

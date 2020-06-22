@@ -42,7 +42,6 @@ class ZKProverTransactionFactory {
                     ltx.references.size <= componentPadding.getOrDefault(
                         ComponentGroupEnum.REFERENCES_GROUP, ltx.references.size - 1))
 
-                // TODO: what if inputs are empty? it's not possible then to construct empty states
                 "Inputs must implement ZKContractState" using ltx.inputs.all { it.state.data is ZKContractState }
                 "Outputs must implement ZKContractState" using ltx.outputs.all { it.data is ZKContractState }
                 "References must implement ZKContractState" using ltx.references.all { it.state.data is ZKContractState }
