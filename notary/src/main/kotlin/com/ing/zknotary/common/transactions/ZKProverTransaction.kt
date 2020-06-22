@@ -3,9 +3,10 @@ package com.ing.zknotary.common.transactions
 import com.ing.zknotary.common.serializer.SerializationFactoryService
 import com.ing.zknotary.common.states.ZKStateAndRef
 import net.corda.core.contracts.Command
-import net.corda.core.contracts.ContractState
+import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.PrivacySalt
 import net.corda.core.contracts.TimeWindow
+import net.corda.core.contracts.TransactionState
 import net.corda.core.crypto.DigestService
 import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.Party
@@ -14,13 +15,13 @@ import net.corda.core.serialization.CordaSerializable
 
 @CordaSerializable
 class ZKProverTransaction(
-    val inputs: List<ZKStateAndRef<ContractState>>,
+    val inputs: List<ZKStateAndRef>,
     /**
      * Because a ZKStateRef is a representation of the contents of a state, and no longer a pointer to
      * a previous transaction output, outputs are also ZKStateAndRefs, like inputs and references.
      */
-    val outputs: List<ZKStateAndRef<ContractState>>,
-    val references: List<ZKStateAndRef<ContractState>>,
+    val outputs: List<ZKStateAndRef>,
+    val references: List<ZKStateAndRef>,
     val command: Command<*>,
     val notary: Party,
     val timeWindow: TimeWindow?,

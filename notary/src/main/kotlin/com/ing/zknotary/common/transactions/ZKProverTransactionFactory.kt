@@ -20,19 +20,19 @@ class ZKProverTransactionFactory {
 
             return ZKProverTransaction(
                 inputs = ltx.inputs.map {
-                    it.toZKStateAndRef(
+                    (it as StateAndRef<ZKContractState>).toZKStateAndRef(
                         serializationFactoryService,
                         componentGroupLeafDigestService
                     )
                 },
                 outputs = ltx.outputs.map {
-                    it.toZKStateAndRef(
+                    (it as TransactionState<ZKContractState>).toZKStateAndRef(
                         serializationFactoryService,
                         componentGroupLeafDigestService
                     )
                 },
                 references = ltx.references.map {
-                    it.toZKStateAndRef(
+                    (it as StateAndRef<ZKContractState>).toZKStateAndRef(
                         serializationFactoryService,
                         componentGroupLeafDigestService
                     )
