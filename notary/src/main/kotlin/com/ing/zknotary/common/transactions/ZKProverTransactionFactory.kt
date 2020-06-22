@@ -24,7 +24,6 @@ class ZKProverTransactionFactory {
             requireThat {
                 "A notary must always be set on a ZKProverTransaction" using (ltx.notary != null)
                 "There must be exactly one command on a ZKProverTransactions" using (ltx.commands.size == 1)
-                "Command must contain exactly two signers" using (ltx.commands.first().signers.size == 2)
 
                 "Size of Inputs group must be defined with a positive number" using (
                     componentPadding.getOrDefault(ComponentGroupEnum.INPUTS_GROUP, -1) > 0)
@@ -34,16 +33,19 @@ class ZKProverTransactionFactory {
                     componentPadding.getOrDefault(ComponentGroupEnum.REFERENCES_GROUP, -1) > 0)
 
                 "Inputs' size exceeds quantity accepted by ZK circuit" using (
-                    ltx.inputs.size > componentPadding.getOrDefault(ComponentGroupEnum.INPUTS_GROUP, ltx.inputs.size - 1))
+                    ltx.inputs.size <= componentPadding.getOrDefault(
+                        ComponentGroupEnum.INPUTS_GROUP, ltx.inputs.size - 1))
                 "Outputs' size exceeds quantity accepted by ZK circuit" using (
-                    ltx.outputs.size > componentPadding.getOrDefault(ComponentGroupEnum.OUTPUTS_GROUP, ltx.outputs.size - 1))
+                    ltx.outputs.size <= componentPadding.getOrDefault(
+                        ComponentGroupEnum.OUTPUTS_GROUP, ltx.outputs.size - 1))
                 "References' size exceeds quantity accepted by ZK circuit" using (
-                    ltx.references.size > componentPadding.getOrDefault(ComponentGroupEnum.REFERENCES_GROUP, ltx.references.size - 1))
+                    ltx.references.size <= componentPadding.getOrDefault(
+                        ComponentGroupEnum.REFERENCES_GROUP, ltx.references.size - 1))
 
                 // TODO: what if inputs are empty? it's not possible then to construct empty states
-                "ContractState must implement ZKContractState" using (ltx.inputs.all { it is ZKContractState } &&
-                        ltx.outputs.all { it is ZKContractState })
-
+                "Inputs must implement ZKContractState" using ltx.inputs.all { it.state.data is ZKContractState }
+                "Outputs must implement ZKContractState" using ltx.outputs.all { it.data is ZKContractState }
+                "References must implement ZKContractState" using ltx.references.all { it.state.data is ZKContractState }
             }
 
             return ZKProverTransaction(
@@ -81,7 +83,8 @@ class ZKProverTransactionFactory {
         val DEFAULT_PADDING = mapOf(
             ComponentGroupEnum.INPUTS_GROUP to 2,
             ComponentGroupEnum.OUTPUTS_GROUP to 2,
-            ComponentGroupEnum.REFERENCES_GROUP to 2
+            ComponentGroupEnum.REFERENCES_GROUP to 2,
+            ComponentGroupEnum.SIGNERS_GROUP to 2
         )
     }
 }
