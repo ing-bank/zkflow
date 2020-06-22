@@ -12,7 +12,6 @@ import com.ing.zknotary.common.transactions.ZKProverTransaction
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.ComponentGroupEnum
-import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.PrivacySalt
 import net.corda.core.contracts.TransactionState
 import net.corda.core.crypto.DigestService
@@ -61,7 +60,7 @@ private class ZincMixinSerializer : JsonSerializer<ZKProverTransaction>() {
         assert(inputsSize != null)
         val inputsGroup = Group(
             ComponentGroupEnum.INPUTS_GROUP,
-            value.inputs.constrain(inputsSize!!, ZKPrimitive.ZKStateAndRef),
+            value.padded.inputs.constrain(inputsSize!!, ZKPrimitive.ZKStateAndRef),
             value.componentGroupLeafDigestService, value.privacySalt
         )
 
@@ -69,7 +68,7 @@ private class ZincMixinSerializer : JsonSerializer<ZKProverTransaction>() {
         assert(outputsSize != null)
         val outputsGroup = Group(
             ComponentGroupEnum.OUTPUTS_GROUP,
-            value.outputs.constrain(outputsSize!!, ZKPrimitive.ZKStateAndRef),
+            value.padded.outputs.constrain(outputsSize!!, ZKPrimitive.ZKStateAndRef),
             value.componentGroupLeafDigestService, value.privacySalt
         )
 
@@ -77,7 +76,7 @@ private class ZincMixinSerializer : JsonSerializer<ZKProverTransaction>() {
         assert(referencesSize != null)
         val referencesGroup = Group(
             ComponentGroupEnum.REFERENCES_GROUP,
-            value.references.constrain(referencesSize!!, ZKPrimitive.ZKStateAndRef),
+            value.padded.references.constrain(referencesSize!!, ZKPrimitive.ZKStateAndRef),
             value.componentGroupLeafDigestService, value.privacySalt
         )
 
@@ -85,7 +84,7 @@ private class ZincMixinSerializer : JsonSerializer<ZKProverTransaction>() {
         val command = value.command
         val participantsSize = extractDim("N_SIGNERS", content)
         assert(participantsSize != null)
-        val commandsGroup = CommandGroup(command, participantsSize!!, value.componentGroupLeafDigestService, value.privacySalt)
+        val commandsGroup = CommandGroup(command, value.padded.signers, participantsSize!!, value.componentGroupLeafDigestService, value.privacySalt)
 
         val leaves = listOf(
             inputsGroup.groupHash, outputsGroup.groupHash,
@@ -127,9 +126,9 @@ private class ZincMixinSerializer : JsonSerializer<ZKProverTransaction>() {
 }
 
 private class ZincJson(
-    val inputs: Group<Status<ZKStateAndRef<ContractState>>>,
-    val outputs: Group<Status<ZKStateAndRef<ContractState>>>,
-    val references: Group<Status<ZKStateAndRef<ContractState>>>,
+    val inputs: Group<Status<ZKStateAndRef>>,
+    val outputs: Group<Status<ZKStateAndRef>>,
+    val references: Group<Status<ZKStateAndRef>>,
     val commands: CommandGroup,
     val privacySalt: PrivacySalt
 )
@@ -147,7 +146,7 @@ class Group<T> (componentGroup: ComponentGroupEnum, val value: List<T>, digestSe
             val empty = SecureHash.zeroHash.bytes
             val l = value.map {
                 when (it) {
-                    is Status.Defined<*> -> (it.value as ZKStateAndRef<ContractState>).ref.id.bytes
+                    is Status.Defined<*> -> (it.value as ZKStateAndRef).ref.id.bytes
                     is Status.Undefined<*> -> empty
                     else -> throw Error("Unreachable")
                 }
@@ -159,10 +158,12 @@ class Group<T> (componentGroup: ComponentGroupEnum, val value: List<T>, digestSe
             val l = value.map {
                 when (it) {
                     is Status.Defined<*> -> {
-                        val zkStateAndRef = it.value as ZKStateAndRef<TestContract.TestState>
-                        zkStateAndRef.state.data.owner.owningKey.encoded +
-                            zkStateAndRef.state.notary.owningKey.encoded +
-                            ByteBuffer.allocate(4).putInt(zkStateAndRef.state.data.value).array()
+                        val state = (it.value as ZKStateAndRef).state
+                        val data = state.data as TestContract.TestState
+                        val notary = state.notary
+
+                        data.owner.owningKey.encoded + notary.owningKey.encoded +
+                            ByteBuffer.allocate(4).putInt(data.value).array()
                     }
                     is Status.Undefined<*> -> empty
                     else -> throw Error("Unreachable")
@@ -196,7 +197,7 @@ class Group<T> (componentGroup: ComponentGroupEnum, val value: List<T>, digestSe
     }
 }
 
-class CommandGroup(command: Command<*>, participantsSize: Int, digestService: DigestService, privacySalt: PrivacySalt) {
+class CommandGroup(command: Command<*>, signers: List<PublicKey>, participantsSize: Int, digestService: DigestService, privacySalt: PrivacySalt) {
     data class Cmd(val data: Int, val signers: List<Status<PublicKey>>)
     val value: Cmd
 
@@ -211,7 +212,7 @@ class CommandGroup(command: Command<*>, participantsSize: Int, digestService: Di
             else -> throw Error("Unsupported command")
         }
 
-        value = Cmd(cmdData, command.signers.constrain(participantsSize, ZKPrimitive.PublicKey))
+        value = Cmd(cmdData, signers.constrain(participantsSize, ZKPrimitive.PublicKey))
 
         dataGroupHash = run {
             val unique = ByteBuffer.allocate(8).putInt(ComponentGroupEnum.COMMANDS_GROUP.ordinal).putInt(0).array()
@@ -286,7 +287,7 @@ sealed class Status<T>(val primitive: ZKPrimitive) {
     fun serialize(gen: JsonGenerator) {
         if (primitive == ZKPrimitive.ZKStateAndRef) {
             when (this) {
-                is Defined -> gen.writeObject(this.value as ZKStateAndRef<ContractState>)
+                is Defined -> gen.writeObject(this.value as ZKStateAndRef)
                 is Undefined -> ZKPrimitive.ZKStateAndRef.default(gen)
             }
         } else if (primitive == ZKPrimitive.PublicKey) {
