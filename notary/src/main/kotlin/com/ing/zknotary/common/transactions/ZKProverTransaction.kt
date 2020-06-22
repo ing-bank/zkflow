@@ -14,6 +14,7 @@ import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.Party
 import net.corda.core.node.services.AttachmentId
 import net.corda.core.serialization.CordaSerializable
+import java.security.PublicKey
 
 @CordaSerializable
 class ZKProverTransaction(
@@ -56,27 +57,11 @@ class ZKProverTransaction(
      */
     val componentPadding: Map<ComponentGroupEnum, Int>
 ) : NamedByZKMerkleTree {
-
     val id by lazy { merkleTree.root }
 
-    val padded = object {
-        val inputs by lazy {
-            this@ZKProverTransaction
-                .inputs
-                .pad(componentPadding[ComponentGroupEnum.INPUTS_GROUP] ?: error("Expected a positive number"))
-        }
-        val outputs by lazy {
-            this@ZKProverTransaction
-                .outputs
-                .pad(componentPadding[ComponentGroupEnum.OUTPUTS_GROUP] ?: error("Expected a positive number"))
-        }
-
-        val references by lazy {
-            this@ZKProverTransaction
-                .references
-                .pad(componentPadding[ComponentGroupEnum.REFERENCES_GROUP] ?: error("Expected a positive number"))
-        }
-    }
+    val padded = Padded(
+        _inputs = inputs, _outputs = outputs, _signers = command.signers,
+        _references = references, _padding = componentPadding)
 
     /** This additional merkle root is represented by the root hash of a Merkle tree over the transaction components. */
     override val merkleTree by lazy {
@@ -86,14 +71,56 @@ class ZKProverTransaction(
     override fun hashCode(): Int = id.hashCode()
     override fun toString() = prettyPrint()
     override fun equals(other: Any?) = if (other !is ZKProverTransaction) false else (this.id == other.id)
+
+    data class Padded(
+        private val _inputs: List<ZKStateAndRef>,
+        private val _outputs: List<ZKStateAndRef>,
+        private val _signers: List<PublicKey>,
+        private val _references: List<ZKStateAndRef>,
+        private val _padding: Map<ComponentGroupEnum, Int>) {
+
+        val inputs by lazy {
+            _inputs.pad(
+                _padding[ComponentGroupEnum.INPUTS_GROUP] ?: error("Expected a positive number"),
+                fillerZKStateAndRef)
+        }
+        val outputs by lazy {
+            _outputs.pad(
+                _padding[ComponentGroupEnum.OUTPUTS_GROUP] ?: error("Expected a positive number"),
+                fillerZKStateAndRef)
+        }
+
+        val references by lazy {
+            _references.pad(
+                _padding[ComponentGroupEnum.REFERENCES_GROUP] ?: error("Expected a positive number"),
+                fillerZKStateAndRef)
+        }
+
+        val signers by lazy {
+            _signers.pad(
+                _padding[ComponentGroupEnum.SIGNERS_GROUP] ?: error("Expected a positive number"),
+                ZKNulls.NULL_PUBLIC_KEY)
+        }
+
+        private val fillerZKStateAndRef by lazy {
+            val someState = when {
+                _inputs.isNotEmpty() -> _inputs.first().state.data
+                _outputs.isNotEmpty() -> _outputs.first().state.data
+                _references.isNotEmpty() -> _references.first().state.data
+                else -> error("very very bad")
+            }
+
+            val emptyState = someState.empty()
+            val emptyTxState = TransactionState(emptyState, notary = ZKNulls.NULL_PARTY)
+            ZKStateAndRef(emptyTxState, ZKStateRef.empty())
+        }
+    }
 }
 
-fun List<ZKStateAndRef>.pad(size: Int) = List(size) {
-    if (it < this.size)
+fun <T> List<T>.pad(n: Int, default: T) = List(n) {
+    if (it < size)
         this[it]
     else {
-        val emptyState = this.first().state.data.empty()
-        val emptyTxState = TransactionState(emptyState, notary = ZKNulls.NULL_PARTY)
-        ZKStateAndRef(emptyTxState, ZKStateRef.empty())
+       default
     }
 }
