@@ -1,8 +1,13 @@
 package com.ing.zknotary.common.transactions
 
 import com.ing.zknotary.common.serializer.SerializationFactoryService
+import com.ing.zknotary.common.states.ZKContractState
 import com.ing.zknotary.common.states.toZKStateAndRef
 import net.corda.core.contracts.Command
+import net.corda.core.contracts.ComponentGroupEnum
+import net.corda.core.contracts.StateAndRef
+import net.corda.core.contracts.TransactionState
+import net.corda.core.contracts.requireThat
 import net.corda.core.crypto.DigestService
 import net.corda.core.serialization.serialize
 import net.corda.core.transactions.LedgerTransaction
@@ -13,10 +18,33 @@ class ZKProverTransactionFactory {
             ltx: LedgerTransaction,
             serializationFactoryService: SerializationFactoryService,
             componentGroupLeafDigestService: DigestService,
-            nodeDigestService: DigestService = componentGroupLeafDigestService
+            nodeDigestService: DigestService = componentGroupLeafDigestService,
+            componentPadding: Map<ComponentGroupEnum, Int> = DEFAULT_PADDING
         ): ZKProverTransaction {
-            require(ltx.notary != null) { "A notary must always be set on a ZKProverTransaction" }
-            require(ltx.commands.size == 1) { "There must be exactly one command on a ZKProverTransactions" }
+            requireThat {
+                "A notary must always be set on a ZKProverTransaction" using (ltx.notary != null)
+                "There must be exactly one command on a ZKProverTransactions" using (ltx.commands.size == 1)
+                "Command must contain exactly two signers" using (ltx.commands.first().signers.size == 2)
+
+                "Size of Inputs group must be defined with a positive number" using (
+                    componentPadding.getOrDefault(ComponentGroupEnum.INPUTS_GROUP, -1) > 0)
+                "Size of Outputs group must be defined with a positive number" using (
+                    componentPadding.getOrDefault(ComponentGroupEnum.OUTPUTS_GROUP, -1) > 0)
+                "Size of References group must be defined with a positive number" using (
+                    componentPadding.getOrDefault(ComponentGroupEnum.REFERENCES_GROUP, -1) > 0)
+
+                "Inputs' size exceeds quantity accepted by ZK circuit" using (
+                    ltx.inputs.size > componentPadding.getOrDefault(ComponentGroupEnum.INPUTS_GROUP, ltx.inputs.size - 1))
+                "Outputs' size exceeds quantity accepted by ZK circuit" using (
+                    ltx.outputs.size > componentPadding.getOrDefault(ComponentGroupEnum.OUTPUTS_GROUP, ltx.outputs.size - 1))
+                "References' size exceeds quantity accepted by ZK circuit" using (
+                    ltx.references.size > componentPadding.getOrDefault(ComponentGroupEnum.REFERENCES_GROUP, ltx.references.size - 1))
+
+                // TODO: what if inputs are empty? it's not possible then to construct empty states
+                "ContractState must implement ZKContractState" using (ltx.inputs.all { it is ZKContractState } &&
+                        ltx.outputs.all { it is ZKContractState })
+
+            }
 
             return ZKProverTransaction(
                 inputs = ltx.inputs.map {
@@ -45,8 +73,15 @@ class ZKProverTransactionFactory {
                 attachments = ltx.attachments.map { it.id },
                 serializationFactoryService = serializationFactoryService,
                 componentGroupLeafDigestService = componentGroupLeafDigestService,
-                nodeDigestService = nodeDigestService
+                nodeDigestService = nodeDigestService,
+                componentPadding = componentPadding
             )
         }
+
+        val DEFAULT_PADDING = mapOf(
+            ComponentGroupEnum.INPUTS_GROUP to 2,
+            ComponentGroupEnum.OUTPUTS_GROUP to 2,
+            ComponentGroupEnum.REFERENCES_GROUP to 2
+        )
     }
 }

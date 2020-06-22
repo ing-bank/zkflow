@@ -2,6 +2,8 @@ package com.ing.zknotary.common.transactions
 
 import com.ing.zknotary.common.serializer.SerializationFactoryService
 import com.ing.zknotary.common.states.ZKStateAndRef
+import com.ing.zknotary.common.states.ZKStateRef
+import com.ing.zknotary.common.zkp.ZKNulls
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.PrivacySalt
@@ -47,10 +49,34 @@ class ZKProverTransaction(
      */
     val serializationFactoryService: SerializationFactoryService,
     val componentGroupLeafDigestService: DigestService,
-    val nodeDigestService: DigestService = componentGroupLeafDigestService
+    val nodeDigestService: DigestService = componentGroupLeafDigestService,
+
+    /**
+     * Used for padding internal lists to sizes accepted by the ZK circuit.
+     */
+    val componentPadding: Map<ComponentGroupEnum, Int>
 ) : NamedByZKMerkleTree {
 
     val id by lazy { merkleTree.root }
+
+    val padded = object {
+        val inputs by lazy {
+            this@ZKProverTransaction
+                .inputs
+                .pad(componentPadding[ComponentGroupEnum.INPUTS_GROUP] ?: error("Expected a positive number"))
+        }
+        val outputs by lazy {
+            this@ZKProverTransaction
+                .outputs
+                .pad(componentPadding[ComponentGroupEnum.OUTPUTS_GROUP] ?: error("Expected a positive number"))
+        }
+
+        val references by lazy {
+            this@ZKProverTransaction
+                .references
+                .pad(componentPadding[ComponentGroupEnum.REFERENCES_GROUP] ?: error("Expected a positive number"))
+        }
+    }
 
     /** This additional merkle root is represented by the root hash of a Merkle tree over the transaction components. */
     override val merkleTree by lazy {
@@ -60,4 +86,14 @@ class ZKProverTransaction(
     override fun hashCode(): Int = id.hashCode()
     override fun toString() = prettyPrint()
     override fun equals(other: Any?) = if (other !is ZKProverTransaction) false else (this.id == other.id)
+}
+
+fun List<ZKStateAndRef>.pad(size: Int) = List(size) {
+    if (it < this.size)
+        this[it]
+    else {
+        val emptyState = this.first().state.data.empty()
+        val emptyTxState = TransactionState(emptyState, notary = ZKNulls.NULL_PARTY)
+        ZKStateAndRef(emptyTxState, ZKStateRef.empty())
+    }
 }
