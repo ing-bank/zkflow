@@ -1,7 +1,7 @@
 package com.ing.zknotary.common.transactions
 
 import com.ing.zknotary.common.states.ZKStateRef
-import net.corda.core.contracts.Command
+import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.TimeWindow
 import net.corda.core.crypto.SecureHash
@@ -10,6 +10,7 @@ import net.corda.core.internal.lazyMapped
 import net.corda.core.node.services.AttachmentId
 import net.corda.core.serialization.SerializedBytes
 import net.corda.core.transactions.ComponentGroup
+import java.security.PublicKey
 
 fun MutableList<ComponentGroup>.addInputsGroup(
     inputs: List<ZKStateRef>,
@@ -75,20 +76,25 @@ fun MutableList<ComponentGroup>.addTimeWindowGroup(
 }
 
 fun MutableList<ComponentGroup>.addCommandGroup(
-    command: Command<*>,
+    command: CommandData,
     serializer: (Any, Int) -> SerializedBytes<Any>
 ) {
-    // TODO: is it still necessary to split this for filtering purposes like in standard Corda?
     this.add(
         ComponentGroup(
             ComponentGroupEnum.COMMANDS_GROUP.ordinal,
-            listOf(command.value).lazyMapped(serializer)
+            listOf(command).lazyMapped(serializer)
         )
     )
+}
+
+fun MutableList<ComponentGroup>.addCommandSignersGroup(
+    signers: List<PublicKey>,
+    serializer: (Any, Int) -> SerializedBytes<Any>
+) {
     this.add(
         ComponentGroup(
             ComponentGroupEnum.SIGNERS_GROUP.ordinal,
-            listOf(command.signers).lazyMapped(serializer)
+            signers.lazyMapped(serializer)
         )
     )
 }

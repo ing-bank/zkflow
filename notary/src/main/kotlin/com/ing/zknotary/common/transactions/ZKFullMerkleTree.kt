@@ -1,15 +1,35 @@
 package com.ing.zknotary.common.transactions
 
 import net.corda.core.crypto.SecureHash
+import net.corda.core.internal.createComponentGroups
+import net.corda.core.serialization.serialize
+import net.corda.core.transactions.ComponentGroup
 import java.nio.ByteBuffer
 
 class ZKFullMerkleTree(
     ptx: ZKProverTransaction
 ) : AbstractZKMerkleTree(
-    ComponentGroupsFactory.create(ptx),
+    createComponentGroups(ptx),
     ptx.componentGroupLeafDigestService,
     ptx.nodeDigestService
 ) {
+    companion object {
+        fun createComponentGroups(ptx: ZKProverTransaction): List<ComponentGroup> {
+            val serializer = { value: Any, _: Int -> value.serialize(ptx.serializationFactoryService.factory) }
+
+            return mutableListOf<ComponentGroup>().apply {
+                addInputsGroup(ptx.inputs.map { it.ref }, serializer)
+                addReferencesGroup(ptx.references.map { it.ref }, serializer)
+                addOutputsGroup(ptx.outputs.map { it.ref }, serializer)
+                addCommandGroup(ptx.command.value, serializer)
+                addAttachmentsGroup(ptx.attachments, serializer)
+                addNotaryGroup(ptx.notary, serializer)
+                addTimeWindowGroup(ptx.timeWindow, serializer)
+                addNetWorkParametersHashGroup(ptx.networkParametersHash, serializer)
+                addCommandSignersGroup(ptx.command.signers, serializer)
+            }
+        }
+    }
 
     override val componentNonces: Map<Int, List<SecureHash>> by lazy {
         componentGroups.map { group ->
