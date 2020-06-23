@@ -1,10 +1,32 @@
 package com.ing.zknotary.common.transactions
 
 import net.corda.core.crypto.SecureHash
+import net.corda.core.serialization.serialize
+import net.corda.core.transactions.ComponentGroup
 
 class ZKPartialMerkleTree(
     vtx: ZKVerifierTransaction
-) : AbstractZKMerkleTree(ComponentGroupsFactory.create(vtx), vtx.componentGroupLeafDigestService, vtx.nodeDigestService) {
+) : AbstractZKMerkleTree(
+    createComponentGroups(vtx),
+    vtx.componentGroupLeafDigestService,
+    vtx.nodeDigestService
+) {
+
+    companion object {
+        private fun createComponentGroups(vtx: ZKVerifierTransaction): List<ComponentGroup> {
+            val serializer = { value: Any, _: Int -> value.serialize(vtx.serializationFactoryService.factory) }
+
+            return mutableListOf<ComponentGroup>().apply {
+                addInputsGroup(vtx.inputs, serializer)
+                addReferencesGroup(vtx.references, serializer)
+                addOutputsGroup(vtx.outputs, serializer)
+                addNotaryGroup(vtx.notary, serializer)
+                addTimeWindowGroup(vtx.timeWindow, serializer)
+                addNetWorkParametersHashGroup(vtx.networkParametersHash, serializer)
+            }
+        }
+    }
+
     override val groupHashes: List<SecureHash> by lazy {
         val componentGroupHashes = mutableListOf<SecureHash>()
         // For groups where we don't have a groupsMerkleRoot, we take the grouphash from the ZKProverTransaction.
