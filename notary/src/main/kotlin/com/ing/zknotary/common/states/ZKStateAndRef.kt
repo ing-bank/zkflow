@@ -7,6 +7,7 @@ import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.TransactionState
 import net.corda.core.crypto.DigestService
 import net.corda.core.serialization.CordaSerializable
+import net.corda.core.serialization.serialize
 
 @KeepForDJVM
 @CordaSerializable
@@ -16,12 +17,19 @@ fun StateAndRef<ContractState>.toZKStateAndRef(
     serializationFactoryService: SerializationFactoryService,
     digestService: DigestService
 ): ZKStateAndRef<ContractState> {
-    return ZKStateAndRef(state, state.data.toZKStateRef(serializationFactoryService, digestService))
+    return ZKStateAndRef(state, state.toZKStateRef(serializationFactoryService, digestService))
+}
+
+fun TransactionState<ContractState>.toZKStateRef(
+    serializationFactoryService: SerializationFactoryService,
+    digestService: DigestService
+): ZKStateRef {
+    return ZKStateRef(digestService.hash(this.serialize(serializationFactoryService.factory).bytes))
 }
 
 fun TransactionState<ContractState>.toZKStateAndRef(
     serializationFactoryService: SerializationFactoryService,
     digestService: DigestService
 ): ZKStateAndRef<ContractState> {
-    return ZKStateAndRef(this, this.data.toZKStateRef(serializationFactoryService, digestService))
+    return ZKStateAndRef(this, this.toZKStateRef(serializationFactoryService, digestService))
 }

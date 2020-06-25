@@ -16,7 +16,8 @@ class TestContract : Contract {
     }
 
     @BelongsToContract(TestContract::class)
-    data class TestState(override val owner: AbstractParty, val value: Int = Random().nextInt()) : OwnableState {
+    data class TestState(override val owner: AbstractParty, val value: Int = Random().nextInt(1000)) :
+        ZKContractState, OwnableState {
         override val participants = listOf(owner)
         override fun withNewOwner(newOwner: AbstractParty) = CommandAndState(Move(), copy(owner = newOwner))
     }
