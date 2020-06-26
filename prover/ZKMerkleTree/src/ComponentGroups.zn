@@ -57,7 +57,7 @@ struct Ref {
 
 struct StateRef {
     state: State,
-    ref: Ref
+    reference: Ref
 }
 
 struct Command {
@@ -147,7 +147,7 @@ fn convertInputsToBits(value:[StateRef; N_INPUTS]) -> [[bool; INPUT_BITS]; N_INP
 
     for i in 0.. N_INPUTS { 
         for j in (0 as u16)..((INPUT_BITS/(8 as u16)) as u16) {
-            let id_bits = to_bits(value[i].ref.id[j]);
+            let id_bits = to_bits(value[i].reference.id[j]);
             for k in (0 as u16)..(8 as u16) {
                 result[i][(8 as u16) * j + k]  = id_bits[k];
             }
@@ -184,7 +184,7 @@ fn convertReferencesToBits(value:[StateRef; N_REFERENCES]) -> [[bool; REFERENCE_
 
     for i in 0.. N_REFERENCES { 
         for j in (0 as u16)..((REFERENCE_BITS/(8 as u16)) as u16) {
-            let id_bits = to_bits(value[i].ref.id[j]);
+            let id_bits = to_bits(value[i].reference.id[j]);
             for k in (0 as u16)..(8 as u16) {
                 result[i][(8 as u16) * j + k]  = id_bits[k];
             }
