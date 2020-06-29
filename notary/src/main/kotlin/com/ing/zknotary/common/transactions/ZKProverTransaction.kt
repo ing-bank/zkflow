@@ -1,5 +1,6 @@
 package com.ing.zknotary.common.transactions
 
+import com.ing.zknotary.common.contracts.EnumerableCommand
 import com.ing.zknotary.common.contracts.TestContract
 import com.ing.zknotary.common.serializer.SerializationFactoryService
 import com.ing.zknotary.common.states.ZKStateAndRef
@@ -82,6 +83,8 @@ class ZKProverTransaction(
                 references.size <= componentPadding.getOrDefault(
                     ComponentGroupEnum.REFERENCES_GROUP, references.size - 1
                 ))
+
+            "Command must have a numeric representation" using (command.value is EnumerableCommand)
         }
     }
 
