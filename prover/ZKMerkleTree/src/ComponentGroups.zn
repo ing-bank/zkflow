@@ -17,9 +17,11 @@ const INT32_BITS:u16 = 32;
 const INT128_BITS:u16 = 128;
 
 //Number of bits for each component group
-const INPUT_BITS:u16 = HASH_BITS;
-const REFERENCE_BITS:u16 = HASH_BITS;
-const OUTPUT_BITS:u16 = PUBKEY_BITS + PUBKEY_BITS + INT32_BITS;
+//Input, Output, and Reference components have the same structure which is ZKStateAndRef. 
+//The size of state bits depends on the content of the state. The example state we have contains two public keys and an integer value. 
+const STATE_BITS:u16 = PUBKEY_BITS + INT32_BITS + PUBKEY_BITS;
+const REF_BITS:u16 = HASH_BITS;
+
 const SIGNER_BITS:u16 = PUBKEY_BITS; 
 const COMMAND_BITS:u16 = INT32_BITS; 
 
@@ -31,7 +33,6 @@ enum CommandData {
     CREATE = 0,
     MOVE = 1,
 }
-
 
 struct Owner{
     owningKey: PubKey,
@@ -46,18 +47,28 @@ struct Notary {
     owningKey: [u8; PUBKEY_BYTES],
 }
 
-struct State {
+/*
+This struct follows the structure in the original Corda TransactionState structure. The fields contractCN, 
+encumbrance and constraint declared bool intentionally to reserve their place in the structure. In the current 
+implementation we don't use these fields, if they are going to be included, they should be declared with the 
+corresponding data type. 
+*/
+struct TransactionState {
     data: Data,
+    contractCN: bool,
     notary: Notary,
+    encumbrance: bool,
+    constraint: bool,
+    nonce: [u8; HASH_BYTES],
 }
 
-struct Ref {
+struct ZKStateRef {
     id: [u8;HASH_BYTES],
 }
 
-struct StateRef {
-    state: State,
-    reference: Ref
+struct ZKStateAndRef {
+    state: TransactionState,
+    reference: ZKStateRef,
 }
 
 struct Command {
@@ -66,17 +77,17 @@ struct Command {
 }
 
 struct Inputs {
-    value: [StateRef; N_INPUTS],
+    value: [ZKStateAndRef; N_INPUTS],
     groupHash: ComponentGroupHash, 
 }
 
 struct Outputs {
-    value: [StateRef; N_OUTPUTS],
+    value: [ZKStateAndRef; N_OUTPUTS],
     groupHash: ComponentGroupHash,
 }
 
 struct References {
-    value: [StateRef; N_REFERENCES],
+    value: [ZKStateAndRef; N_REFERENCES],
     groupHash: ComponentGroupHash,
 }
 
@@ -94,18 +105,26 @@ struct ZKProverTransaction {
     privacySalt: [u8; HASH_BYTES],
 }
 
+
+struct ZKStateAndRefGroup{
+    state : [bool; STATE_BITS], 
+    zkStateRef: [bool; REF_BITS],
+    nonce: [bool; HASH_BITS], 
+}
+
+
 struct InputGroup {
-    groupElements: [[bool; INPUT_BITS]; N_INPUTS],
+    groupElements: [ZKStateAndRefGroup; N_INPUTS],
     groupHash: [bool;HASH_BITS],  
 }
 
 struct OutputGroup {
-    groupElements: [[bool; OUTPUT_BITS]; N_OUTPUTS],
+    groupElements: [ZKStateAndRefGroup; N_OUTPUTS],
     groupHash: [bool;HASH_BITS],  
 }
 
 struct ReferenceGroup{
-    groupElements: [[bool; REFERENCE_BITS]; N_REFERENCES],
+    groupElements: [ZKStateAndRefGroup; N_REFERENCES],
     groupHash: [bool;HASH_BITS],      
 }
 
@@ -127,7 +146,6 @@ struct ComponentGroup{
     commandSigners: CommandSignerGroup,
 }
 
-
 fn convertHashToBits(value:[u8;HASH_BYTES]) -> [bool; HASH_BITS]
 {
     let mut hashDigest_bits = [false; HASH_BITS];
@@ -141,55 +159,85 @@ fn convertHashToBits(value:[u8;HASH_BYTES]) -> [bool; HASH_BITS]
     hashDigest_bits 
 }
 
-fn convertInputsToBits(value:[StateRef; N_INPUTS]) -> [[bool; INPUT_BITS]; N_INPUTS]
+fn convertStateToBits(value:TransactionState) -> [bool; STATE_BITS]
 {
-    let mut result = [[false; INPUT_BITS]; N_INPUTS];
+    let mut result = [false; STATE_BITS]; 
 
-    for i in 0.. N_INPUTS { 
-        for j in (0 as u16)..((INPUT_BITS/(8 as u16)) as u16) {
-            let id_bits = to_bits(value[i].reference.id[j]);
-            for k in (0 as u16)..(8 as u16) {
-                result[i][(8 as u16) * j + k]  = id_bits[k];
-            }
-        } 
-    }  
-    result  
-}
-
-fn convertOutputsToBits(value:[StateRef; N_OUTPUTS]) -> [[bool; OUTPUT_BITS]; N_OUTPUTS]
-{
-    let mut result = [[false; OUTPUT_BITS]; N_OUTPUTS];
-
-    for i in 0.. N_OUTPUTS { 
-        //output_bits = dataOwner_owningKey || notary_owningKey || value
-        for j in (0 as u16)..PUBKEY_BYTES {
-            let owner_bits = to_bits(value[i].state.data.owner.owningKey[j]);
-            let notary_bits = to_bits(value[i].state.notary.owningKey[j]);
-            for k in (0 as u16)..(8 as u16) {
-                result[i][(8 as u16) * j + k]  = owner_bits[k];
-                result[i][PUBKEY_BITS + (8 as u16) * j + k]  = notary_bits[k];
-            }
-        } 
-        let value_bits = to_bits(value[i].state.data.value);
-        for j in (0 as u16)..INT32_BITS {
-            result[i][(2 as u16) * PUBKEY_BITS + j ]  = value_bits[j];
+    //state_bits = dataOwner_owningKey || value || notary_owningKey
+    for j in (0 as u16)..PUBKEY_BYTES {
+        let owner_bits = to_bits(value.data.owner.owningKey[j]);
+        for k in (0 as u16)..(8 as u16) {
+            result[(8 as u16) * j + k]  = owner_bits[k];
         }
-    }  
+    }
+
+    let value_bits = to_bits(value.data.value);
+    for j in (0 as u16)..INT32_BITS {
+        result[PUBKEY_BITS + j ]  = value_bits[j];
+    }
+
+    for j in (0 as u16)..PUBKEY_BYTES {
+        let notary_bits = to_bits(value.notary.owningKey[j]);
+        for k in (0 as u16)..(8 as u16) {
+            result[PUBKEY_BITS + INT32_BITS + (8 as u16) * j + k]  = notary_bits[k];
+        }
+    }
+
+    result
+}
+
+fn convertInputsToBits(value:[ZKStateAndRef; N_INPUTS]) -> [ZKStateAndRefGroup; N_INPUTS]
+{
+    let mut result = [ZKStateAndRefGroup{
+                                            state: [false; STATE_BITS],
+                                            zkStateRef: [false; REF_BITS],
+                                            nonce: [false; HASH_BITS],  
+                                        }; N_INPUTS];
+    for i in 0.. N_INPUTS { 
+        //state bits 
+        result[i].state = convertStateToBits(value[i].state); 
+        //zkStateRef bits 
+        result[i].zkStateRef = convertHashToBits(value[i].reference.id); 
+        //zkStateRef nonce bits 
+        result[i].nonce = convertHashToBits(value[i].state.nonce);
+    } 
     result  
 }
 
-fn convertReferencesToBits(value:[StateRef; N_REFERENCES]) -> [[bool; REFERENCE_BITS]; N_REFERENCES]
+fn convertOutputsToBits(value:[ZKStateAndRef; N_OUTPUTS]) -> [ZKStateAndRefGroup; N_OUTPUTS]
 {
-    let mut result = [[false; REFERENCE_BITS]; N_REFERENCES];
+    let mut result = [ZKStateAndRefGroup{
+                                            state: [false; STATE_BITS],
+                                            zkStateRef: [false; REF_BITS],
+                                            nonce: [false; HASH_BITS],  
+                                        }; N_OUTPUTS];
+    for i in 0.. N_OUTPUTS { 
+        //state bits 
+        result[i].state = convertStateToBits(value[i].state); 
+        //zkStateRef bits 
+        result[i].zkStateRef = convertHashToBits(value[i].reference.id); 
+        //zkStateRef nonce bits 
+        result[i].nonce = convertHashToBits(value[i].state.nonce);
+    } 
+    result  
+}
 
+fn convertReferencesToBits(value:[ZKStateAndRef; N_REFERENCES]) -> [ZKStateAndRefGroup; N_REFERENCES]
+{
+    let mut result = [ZKStateAndRefGroup{
+                                            state: [false; STATE_BITS],
+                                            zkStateRef: [false; REF_BITS],
+                                            nonce: [false; HASH_BITS],  
+                                        }; N_REFERENCES];
     for i in 0.. N_REFERENCES { 
-        for j in (0 as u16)..((REFERENCE_BITS/(8 as u16)) as u16) {
-            let id_bits = to_bits(value[i].reference.id[j]);
-            for k in (0 as u16)..(8 as u16) {
-                result[i][(8 as u16) * j + k]  = id_bits[k];
-            }
-        } 
-    }  
+        //state bits 
+        result[i].state = convertStateToBits(value[i].state); 
+        //zkStateRef bits 
+        result[i].zkStateRef = convertHashToBits(value[i].reference.id); 
+        //zkStateRef nonce bits 
+        result[i].nonce = convertHashToBits(value[i].state.nonce);
+    }
+
     result  
 }
 
