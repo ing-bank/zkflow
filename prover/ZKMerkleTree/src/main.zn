@@ -13,18 +13,30 @@ use ZKMerkleTree::OutputGroup;
 use ZKMerkleTree::CommandDataGroup; 
 use ZKMerkleTree::ReferenceGroup; 
 use ZKMerkleTree::CommandSignerGroup; 
-
+use ZKMerkleTree::ZKStateAndRefGroup; 
 
 //Temporary function to manually transfer components to zkmerkle tree !!!
 fn convertFromComponentToZKMerkle(zkptx: (ComponentGroups::ComponentGroup, PrivacySalt)) -> (ComponentGroup, PrivacySalt)
 {
     (ComponentGroup {
         inputs: InputGroup{
-                    groupElements: zkptx.0.inputs.groupElements,
+                    groupElements:[ ZKStateAndRefGroup{ state: zkptx.0.inputs.groupElements[0].state,
+                                                        zkStateRef: zkptx.0.inputs.groupElements[0].zkStateRef,
+                                                        nonce: zkptx.0.inputs.groupElements[0].nonce, },
+                                    ZKStateAndRefGroup{ state: zkptx.0.inputs.groupElements[1].state,
+                                                        zkStateRef: zkptx.0.inputs.groupElements[1].zkStateRef,
+                                                        nonce: zkptx.0.inputs.groupElements[1].zkStateRef,}
+                                  ],
                     groupHash: zkptx.0.inputs.groupHash, 
                 },
         outputs: OutputGroup{
-                    groupElements: zkptx.0.outputs.groupElements,
+                    groupElements:[ ZKStateAndRefGroup{ state: zkptx.0.outputs.groupElements[0].state,
+                                                        zkStateRef: zkptx.0.outputs.groupElements[0].zkStateRef,
+                                                        nonce: zkptx.0.outputs.groupElements[0].nonce, },
+                                    ZKStateAndRefGroup{ state: zkptx.0.outputs.groupElements[1].state,
+                                                        zkStateRef: zkptx.0.outputs.groupElements[1].zkStateRef,
+                                                        nonce: zkptx.0.outputs.groupElements[1].zkStateRef,}
+                                  ],
                     groupHash: zkptx.0.outputs.groupHash, 
                 },        
         commandData: CommandDataGroup{
@@ -33,7 +45,13 @@ fn convertFromComponentToZKMerkle(zkptx: (ComponentGroups::ComponentGroup, Priva
                 },
 
         references: ReferenceGroup{
-                    groupElements: zkptx.0.references.groupElements,
+                    groupElements:[ ZKStateAndRefGroup{ state: zkptx.0.references.groupElements[0].state,
+                                                        zkStateRef: zkptx.0.references.groupElements[0].zkStateRef,
+                                                        nonce: zkptx.0.references.groupElements[0].nonce, },
+                                    ZKStateAndRefGroup{ state: zkptx.0.references.groupElements[1].state,
+                                                        zkStateRef: zkptx.0.references.groupElements[1].zkStateRef,
+                                                        nonce: zkptx.0.references.groupElements[1].zkStateRef,}
+                                  ],
                     groupHash: zkptx.0.references.groupHash, 
                 },
 
@@ -56,6 +74,7 @@ fn main(witness: ZKProverTransaction) -> [u8;32] //ZKMerkleTree::PedersenDigest
     let root_hash = ZKMerkleTree::buildMerkleTree(convertFromComponentToZKMerkle(zkptx));
 
     let mut root_bytes = [0 as u8;32]; 
+ 
     for i in 0..32{
         let mut byte_bits = [false;8];
         for j in 0..8{
