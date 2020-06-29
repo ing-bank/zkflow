@@ -7,6 +7,7 @@ import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.TransactionState
 import net.corda.core.crypto.DigestService
 import net.corda.core.serialization.CordaSerializable
+import net.corda.core.serialization.serialize
 
 @KeepForDJVM
 @CordaSerializable

@@ -12,6 +12,7 @@ import com.ing.zknotary.common.transactions.ZKProverTransaction
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.ComponentGroupEnum
+import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.PrivacySalt
 import net.corda.core.contracts.TransactionState
 import net.corda.core.crypto.DigestService
@@ -55,6 +56,9 @@ private class ZincMixinSerializer : JsonSerializer<ZKProverTransaction>() {
         val cwd = System.getProperty("user.dir")
         val dims = Paths.get("$cwd/../prover/ZKMerkleTree/src/ComponentGroups.zn")
         val content = String(Files.readAllBytes(dims), Charset.defaultCharset())
+
+
+        // val a = value.merkleTree.groupHashes[ComponentGroupEnum.INPUTS_GROUP.ordinal]
 
         val inputsSize = extractDim("N_INPUTS", content)
         assert(inputsSize != null)
@@ -126,9 +130,9 @@ private class ZincMixinSerializer : JsonSerializer<ZKProverTransaction>() {
 }
 
 private class ZincJson(
-    val inputs: Group<Status<ZKStateAndRef>>,
-    val outputs: Group<Status<ZKStateAndRef>>,
-    val references: Group<Status<ZKStateAndRef>>,
+    val inputs: Group<Status<ZKStateAndRef<ContractState>>>,
+    val outputs: Group<Status<ZKStateAndRef<ContractState>>>,
+    val references: Group<Status<ZKStateAndRef<ContractState>>>,
     val commands: CommandGroup,
     val privacySalt: PrivacySalt
 )
@@ -146,7 +150,7 @@ class Group<T> (componentGroup: ComponentGroupEnum, val value: List<T>, digestSe
             val empty = SecureHash.zeroHash.bytes
             val l = value.map {
                 when (it) {
-                    is Status.Defined<*> -> (it.value as ZKStateAndRef).ref.id.bytes
+                    is Status.Defined<*> -> (it.value as ZKStateAndRef<ContractState>).ref.id.bytes
                     is Status.Undefined<*> -> empty
                     else -> throw Error("Unreachable")
                 }
@@ -158,7 +162,7 @@ class Group<T> (componentGroup: ComponentGroupEnum, val value: List<T>, digestSe
             val l = value.map {
                 when (it) {
                     is Status.Defined<*> -> {
-                        val state = (it.value as ZKStateAndRef).state
+                        val state = (it.value as ZKStateAndRef<ContractState>).state
                         val data = state.data as TestContract.TestState
                         val notary = state.notary
 
@@ -287,7 +291,7 @@ sealed class Status<T>(val primitive: ZKPrimitive) {
     fun serialize(gen: JsonGenerator) {
         if (primitive == ZKPrimitive.ZKStateAndRef) {
             when (this) {
-                is Defined -> gen.writeObject(this.value as ZKStateAndRef)
+                is Defined -> gen.writeObject(this.value as ZKStateAndRef<ContractState>)
                 is Undefined -> ZKPrimitive.ZKStateAndRef.default(gen)
             }
         } else if (primitive == ZKPrimitive.PublicKey) {

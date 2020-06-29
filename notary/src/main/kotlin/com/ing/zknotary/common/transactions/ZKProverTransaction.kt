@@ -6,9 +6,11 @@ import com.ing.zknotary.common.states.ZKStateRef
 import com.ing.zknotary.common.zkp.ZKNulls
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.ComponentGroupEnum
+import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.PrivacySalt
 import net.corda.core.contracts.TimeWindow
 import net.corda.core.contracts.TransactionState
+import net.corda.core.contracts.requireThat
 import net.corda.core.crypto.DigestService
 import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.Party
@@ -18,13 +20,13 @@ import java.security.PublicKey
 
 @CordaSerializable
 class ZKProverTransaction(
-    val inputs: List<ZKStateAndRef>,
+    val inputs: List<ZKStateAndRef<ContractState>>,
     /**
      * Because a ZKStateRef is a representation of the contents of a state, and no longer a pointer to
      * a previous transaction output, outputs are also ZKStateAndRefs, like inputs and references.
      */
-    val outputs: List<ZKStateAndRef>,
-    val references: List<ZKStateAndRef>,
+    val outputs: List<ZKStateAndRef<ContractState>>,
+    val references: List<ZKStateAndRef<ContractState>>,
     val command: Command<*>,
     val notary: Party,
     val timeWindow: TimeWindow?,
@@ -73,10 +75,10 @@ class ZKProverTransaction(
     override fun equals(other: Any?) = if (other !is ZKProverTransaction) false else (this.id == other.id)
 
     data class Padded(
-        private val _inputs: List<ZKStateAndRef>,
-        private val _outputs: List<ZKStateAndRef>,
+        private val _inputs: List<ZKStateAndRef<ContractState>>,
+        private val _outputs: List<ZKStateAndRef<ContractState>>,
         private val _signers: List<PublicKey>,
-        private val _references: List<ZKStateAndRef>,
+        private val _references: List<ZKStateAndRef<ContractState>>,
         private val _padding: Map<ComponentGroupEnum, Int>) {
 
         val inputs by lazy {
@@ -102,18 +104,23 @@ class ZKProverTransaction(
                 ZKNulls.NULL_PUBLIC_KEY)
         }
 
-        private val fillerZKStateAndRef by lazy {
-            // TODO, assumption is made that one of these is not empty
-            val someState = when {
-                _inputs.isNotEmpty() -> _inputs.first().state.data
-                _outputs.isNotEmpty() -> _outputs.first().state.data
-                _references.isNotEmpty() -> _references.first().state.data
-                else -> error("very very bad")
+        companion object {
+            private val fillerZKStateAndRef by lazy {
+                // State is hard-coded.
+                // There are two possibilities to address this.
+                // - Have an interface that requires instances to be able to produce own empty version.
+                //   To make use of it, we need to have at least one instance implementing this interface.
+                //   In this particular case it leads to requirement that one of the lists
+                //   `_inputs`, `_outputs`, `_references` is not empty.
+                //   This is statically safe and will not produce errors at runtime.
+                //
+                // - Use the reflection API to call empty constructor of a given class.
+                //   ContractState::class.java.getConstructor.newInstance()
+                //   This is unsafe and may lead to errors at runtime.
+                val emptyState = TestContract.TestState(ZKNulls.NULL_ANONYMOUS_PARTY, 0)
+                val emptyTxState = TransactionState(emptyState, notary = ZKNulls.NULL_PARTY)
+                ZKStateAndRef(emptyTxState, ZKStateRef.empty())
             }
-
-            val emptyState = someState.empty()
-            val emptyTxState = TransactionState(emptyState, notary = ZKNulls.NULL_PARTY)
-            ZKStateAndRef(emptyTxState, ZKStateRef.empty())
         }
     }
 }
