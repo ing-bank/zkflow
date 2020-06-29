@@ -8,7 +8,7 @@ import java.security.PublicKey
 object ZKNulls {
     object NULL_PUBLIC_KEY : PublicKey, Comparable<PublicKey> {
         override fun getAlgorithm() = "NULL"
-        override fun getEncoded() = ByteArray(44){0}
+        override fun getEncoded() = ByteArray(44) { 0 }
         override fun getFormat() = "NULL"
         override fun compareTo(other: PublicKey): Int = if (other == NULL_PUBLIC_KEY) 0 else -1
         override fun toString() = "NULL_KEY"

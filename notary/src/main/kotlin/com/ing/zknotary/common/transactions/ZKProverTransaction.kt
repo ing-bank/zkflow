@@ -65,24 +65,30 @@ class ZKProverTransaction(
     init {
         requireThat {
             "Size of Inputs group must be defined with a positive number" using (
-                componentPadding.getOrDefault(ComponentGroupEnum.INPUTS_GROUP, -1) > 0)
+                componentPadding.getOrDefault(ComponentGroupEnum.INPUTS_GROUP, -1) > 0
+                )
             "Size of Outputs group must be defined with a positive number" using (
-                componentPadding.getOrDefault(ComponentGroupEnum.OUTPUTS_GROUP, -1) > 0)
+                componentPadding.getOrDefault(ComponentGroupEnum.OUTPUTS_GROUP, -1) > 0
+                )
             "Size of References group must be defined with a positive number" using (
-                componentPadding.getOrDefault(ComponentGroupEnum.REFERENCES_GROUP, -1) > 0)
+                componentPadding.getOrDefault(ComponentGroupEnum.REFERENCES_GROUP, -1) > 0
+                )
 
             "Inputs' size exceeds quantity accepted by ZK circuit" using (
                 inputs.size <= componentPadding.getOrDefault(
                     ComponentGroupEnum.INPUTS_GROUP, inputs.size - 1
-                ))
+                )
+                )
             "Outputs' size exceeds quantity accepted by ZK circuit" using (
                 outputs.size <= componentPadding.getOrDefault(
                     ComponentGroupEnum.OUTPUTS_GROUP, outputs.size - 1
-                ))
+                )
+                )
             "References' size exceeds quantity accepted by ZK circuit" using (
                 references.size <= componentPadding.getOrDefault(
                     ComponentGroupEnum.REFERENCES_GROUP, references.size - 1
-                ))
+                )
+                )
 
             "Command must have a numeric representation" using (command.value is EnumerableCommand)
         }
@@ -92,7 +98,8 @@ class ZKProverTransaction(
 
     val padded = Padded(
         _inputs = inputs, _outputs = outputs, _signers = command.signers,
-        _references = references, _padding = componentPadding)
+        _references = references, _padding = componentPadding
+    )
 
     /** This additional merkle root is represented by the root hash of a Merkle tree over the transaction components. */
     override val merkleTree by lazy {
@@ -108,29 +115,34 @@ class ZKProverTransaction(
         private val _outputs: List<ZKStateAndRef<ContractState>>,
         private val _signers: List<PublicKey>,
         private val _references: List<ZKStateAndRef<ContractState>>,
-        private val _padding: Map<ComponentGroupEnum, Int>) {
+        private val _padding: Map<ComponentGroupEnum, Int>
+    ) {
 
         val inputs by lazy {
             _inputs.pad(
                 _padding[ComponentGroupEnum.INPUTS_GROUP] ?: error("Expected a positive number"),
-                fillerZKStateAndRef)
+                fillerZKStateAndRef
+            )
         }
         val outputs by lazy {
             _outputs.pad(
                 _padding[ComponentGroupEnum.OUTPUTS_GROUP] ?: error("Expected a positive number"),
-                fillerZKStateAndRef)
+                fillerZKStateAndRef
+            )
         }
 
         val references by lazy {
             _references.pad(
                 _padding[ComponentGroupEnum.REFERENCES_GROUP] ?: error("Expected a positive number"),
-                fillerZKStateAndRef)
+                fillerZKStateAndRef
+            )
         }
 
         val signers by lazy {
             _signers.pad(
                 _padding[ComponentGroupEnum.SIGNERS_GROUP] ?: error("Expected a positive number"),
-                ZKNulls.NULL_PUBLIC_KEY)
+                ZKNulls.NULL_PUBLIC_KEY
+            )
         }
 
         companion object {
@@ -158,6 +170,6 @@ fun <T> List<T>.pad(n: Int, default: T) = List(n) {
     if (it < size)
         this[it]
     else {
-       default
+        default
     }
 }

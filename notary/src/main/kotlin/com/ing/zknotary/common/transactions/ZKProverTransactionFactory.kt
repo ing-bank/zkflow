@@ -25,7 +25,7 @@ class ZKProverTransactionFactory {
 
             return ZKProverTransaction(
                 inputs = ltx.inputs.map {
-                    it .toZKStateAndRef(
+                    it.toZKStateAndRef(
                         serializationFactoryService,
                         componentGroupLeafDigestService
                     )
@@ -37,7 +37,7 @@ class ZKProverTransactionFactory {
                     )
                 },
                 references = ltx.references.map {
-                    it .toZKStateAndRef(
+                    it.toZKStateAndRef(
                         serializationFactoryService,
                         componentGroupLeafDigestService
                     )
@@ -55,7 +55,6 @@ class ZKProverTransactionFactory {
             )
         }
 
-        // TODO
         val DEFAULT_PADDING = mapOf(
             ComponentGroupEnum.INPUTS_GROUP to 2,
             ComponentGroupEnum.OUTPUTS_GROUP to 2,
