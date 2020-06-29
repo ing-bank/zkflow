@@ -1,5 +1,6 @@
 package com.ing.zknotary.common.transactions
 
+import com.ing.zknotary.common.contracts.TestContract
 import com.ing.zknotary.common.serializer.SerializationFactoryService
 import com.ing.zknotary.common.states.ZKStateAndRef
 import com.ing.zknotary.common.states.ZKStateRef
@@ -57,8 +58,33 @@ class ZKProverTransaction(
     /**
      * Used for padding internal lists to sizes accepted by the ZK circuit.
      */
-    val componentPadding: Map<ComponentGroupEnum, Int>
+    private val componentPadding: Map<ComponentGroupEnum, Int>
 ) : NamedByZKMerkleTree {
+
+    init {
+        requireThat {
+            "Size of Inputs group must be defined with a positive number" using (
+                componentPadding.getOrDefault(ComponentGroupEnum.INPUTS_GROUP, -1) > 0)
+            "Size of Outputs group must be defined with a positive number" using (
+                componentPadding.getOrDefault(ComponentGroupEnum.OUTPUTS_GROUP, -1) > 0)
+            "Size of References group must be defined with a positive number" using (
+                componentPadding.getOrDefault(ComponentGroupEnum.REFERENCES_GROUP, -1) > 0)
+
+            "Inputs' size exceeds quantity accepted by ZK circuit" using (
+                inputs.size <= componentPadding.getOrDefault(
+                    ComponentGroupEnum.INPUTS_GROUP, inputs.size - 1
+                ))
+            "Outputs' size exceeds quantity accepted by ZK circuit" using (
+                outputs.size <= componentPadding.getOrDefault(
+                    ComponentGroupEnum.OUTPUTS_GROUP, outputs.size - 1
+                ))
+            "References' size exceeds quantity accepted by ZK circuit" using (
+                references.size <= componentPadding.getOrDefault(
+                    ComponentGroupEnum.REFERENCES_GROUP, references.size - 1
+                ))
+        }
+    }
+
     val id by lazy { merkleTree.root }
 
     val padded = Padded(
