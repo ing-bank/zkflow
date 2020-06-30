@@ -6,10 +6,8 @@ import com.fasterxml.jackson.databind.JsonSerializer
 import com.fasterxml.jackson.databind.SerializerProvider
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.fasterxml.jackson.databind.module.SimpleModule
-import com.ing.zknotary.common.contracts.EnumerableCommand
 import com.ing.zknotary.common.states.ZKStateAndRef
 import com.ing.zknotary.common.transactions.ZKProverTransaction
-import net.corda.core.contracts.Command
 import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.ContractState
@@ -49,12 +47,9 @@ private class ZincMixinSerializer : JsonSerializer<ZKProverTransaction>() {
                 StateGroup(value.padded.inputs, value.merkleTree.groupHashes[ComponentGroupEnum.INPUTS_GROUP.ordinal]),
                 StateGroup(value.padded.outputs, value.merkleTree.groupHashes[ComponentGroupEnum.OUTPUTS_GROUP.ordinal]),
                 StateGroup(value.padded.references, value.merkleTree.groupHashes[ComponentGroupEnum.REFERENCES_GROUP.ordinal]),
-                CommandGroup(
-                    value.command,
-                    value.padded.signers,
-                    value.merkleTree.groupHashes[ComponentGroupEnum.COMMANDS_GROUP.ordinal],
-                    value.merkleTree.groupHashes[ComponentGroupEnum.SIGNERS_GROUP.ordinal]
-                ),
+                StateGroup(value.padded.signers, value.merkleTree.groupHashes[ComponentGroupEnum.SIGNERS_GROUP.ordinal]),
+                // Currently command serializes into a single Int. This will change in future.
+                StateGroup(listOf(0), value.merkleTree.groupHashes[ComponentGroupEnum.COMMANDS_GROUP.ordinal]),
                 value.privacySalt
             )
         )
@@ -63,25 +58,15 @@ private class ZincMixinSerializer : JsonSerializer<ZKProverTransaction>() {
 }
 
 private class ZincJson(
-    val inputs: StateGroup,
-    val outputs: StateGroup,
-    val references: StateGroup,
-    val commands: CommandGroup,
+    val inputs: StateGroup<ZKStateAndRef<ContractState>>,
+    val outputs: StateGroup<ZKStateAndRef<ContractState>>,
+    val references: StateGroup<ZKStateAndRef<ContractState>>,
+    val signers: StateGroup<PublicKey>,
+    val commands: StateGroup<Int>,
     val privacySalt: PrivacySalt
 )
 
-class StateGroup(val value: List<ZKStateAndRef<ContractState>>, val groupHash: SecureHash)
-
-class CommandGroup(
-    command: Command<*>,
-    signers: List<PublicKey>,
-    val dataGroupHash: SecureHash,
-    val signerGroupHash: SecureHash
-) {
-
-    class Cmd(val data: Int, val signers: List<PublicKey>)
-    val value = Cmd((command.value as EnumerableCommand).enum, signers)
-}
+class StateGroup<T>(val value: List<T>, val groupHash: SecureHash)
 
 fun ByteArray.asBytes255(): IntArray = this.map { it.toInt() and 0xFF }.toIntArray()
 fun IntArray.asString() = this.joinToString(", ", "[", "]")
