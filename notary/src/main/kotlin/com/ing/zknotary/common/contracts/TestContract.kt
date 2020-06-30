@@ -23,14 +23,8 @@ class TestContract : Contract {
     }
 
     // Commands
-    class Create : CommandData, EnumerableCommand {
-        override val enum: Int
-            get() = 0
-    }
-    class Move : CommandData, EnumerableCommand {
-        override val enum: Int
-            get() = 1
-    }
+    class Create : CommandData
+    class Move : CommandData
 
     override fun verify(tx: LedgerTransaction) {
         // The transaction may have only one command, of a type defined above
