@@ -1,7 +1,9 @@
 package com.ing.zknotary.common.transactions
 
+import com.ing.zknotary.common.contracts.TestContract
 import com.ing.zknotary.common.serializer.SerializationFactoryService
 import com.ing.zknotary.common.states.toZKStateAndRef
+import com.ing.zknotary.common.zkp.ZKNulls
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.requireThat
 import net.corda.core.crypto.DigestService
@@ -15,7 +17,7 @@ class ZKProverTransactionFactory {
             serializationFactoryService: SerializationFactoryService,
             componentGroupLeafDigestService: DigestService,
             nodeDigestService: DigestService = componentGroupLeafDigestService,
-            componentPadding: ComponentPadding
+            componentPadding: ComponentPadding = DEFAULT_PADDING
         ): ZKProverTransaction {
             requireThat {
                 "A notary must always be set on a ZKProverTransaction" using (ltx.notary != null)
@@ -52,6 +54,16 @@ class ZKProverTransactionFactory {
                 nodeDigestService = nodeDigestService,
                 componentPadding = componentPadding
             )
+        }
+
+        private val DEFAULT_PADDING by lazy {
+            ComponentPadding.Builder()
+                .inputs(2)
+                .outputs(2)
+                .references(2)
+                .signers(2)
+                .stateFiller(TestContract.TestState(ZKNulls.NULL_PARTY, 0))
+                .build()
         }
     }
 }
