@@ -46,9 +46,9 @@ private class ZincMixinSerializer : JsonSerializer<ZKProverTransaction>() {
         gen.writeFieldName("witness")
         gen.writeObject(
             ZincJson(
-                Group(value.padded.inputs, value.merkleTree.groupHashes[ComponentGroupEnum.INPUTS_GROUP.ordinal]),
-                Group(value.padded.outputs, value.merkleTree.groupHashes[ComponentGroupEnum.OUTPUTS_GROUP.ordinal]),
-                Group(value.padded.references, value.merkleTree.groupHashes[ComponentGroupEnum.REFERENCES_GROUP.ordinal]),
+                StateGroup(value.padded.inputs, value.merkleTree.groupHashes[ComponentGroupEnum.INPUTS_GROUP.ordinal]),
+                StateGroup(value.padded.outputs, value.merkleTree.groupHashes[ComponentGroupEnum.OUTPUTS_GROUP.ordinal]),
+                StateGroup(value.padded.references, value.merkleTree.groupHashes[ComponentGroupEnum.REFERENCES_GROUP.ordinal]),
                 CommandGroup(
                     value.command,
                     value.padded.signers,
@@ -63,14 +63,14 @@ private class ZincMixinSerializer : JsonSerializer<ZKProverTransaction>() {
 }
 
 private class ZincJson(
-    val inputs: Group,
-    val outputs: Group,
-    val references: Group,
+    val inputs: StateGroup,
+    val outputs: StateGroup,
+    val references: StateGroup,
     val commands: CommandGroup,
     val privacySalt: PrivacySalt
 )
 
-class Group(val value: List<ZKStateAndRef<ContractState>>, val groupHash: SecureHash)
+class StateGroup(val value: List<ZKStateAndRef<ContractState>>, val groupHash: SecureHash)
 
 class CommandGroup(
     command: Command<*>,
