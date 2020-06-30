@@ -55,10 +55,10 @@ corresponding data type.
 */
 struct TransactionState {
     data: Data,
-    contractCN: bool,
+    //contractCN: bool,
     notary: Notary,
-    encumbrance: bool,
-    constraint: bool,
+    //encumbrance: bool,
+    //constraint: bool,
     nonce: [u8; HASH_BYTES],
 }
 
@@ -69,11 +69,6 @@ struct ZKStateRef {
 struct ZKStateAndRef {
     state: TransactionState,
     reference: ZKStateRef,
-}
-
-struct Command {
-    data: CommandData,
-    signers: [PubKey; N_SIGNERS],
 }
 
 struct Inputs {
@@ -92,16 +87,21 @@ struct References {
 }
 
 struct Commands {
-    value: Command, 
-    dataGroupHash: ComponentGroupHash,
-    signerGroupHash: ComponentGroupHash,
+    value: CommandData, 
+    groupHash: ComponentGroupHash,
+}
+
+struct Signers {
+    value: [PubKey; N_SIGNERS], 
+    groupHash: ComponentGroupHash,
 }
 
 struct ZKProverTransaction {
     inputs: Inputs,
     outputs: Outputs,
     references: References,
-    commands: Commands,  
+    commands: Commands, 
+    signers: Signers,  
     privacySalt: [u8; HASH_BYTES],
 }
 
@@ -251,6 +251,7 @@ fn convertCommandSignersToBits(value:[PubKey; N_SIGNERS]) -> [[bool; SIGNER_BITS
     let mut result = [[false; SIGNER_BITS];N_SIGNERS];
 
     for i in 0 .. N_SIGNERS {
+        dbg!("{}", value[i]); 
         for j in 0 .. (SIGNER_BITS/ (8 as u16)){
             let commandSigner_bits = to_bits(value[i][j]);
             for k in (0 as u16)..(8 as u16) {
@@ -277,8 +278,8 @@ fn buildComponentGroups(zkptx:ZKProverTransaction) -> (ComponentGroup, PrivacySa
             },
 
         commandData: CommandDataGroup{
-                groupElements: convertCommandDataToBits(zkptx.commands.value.data),
-                groupHash: convertHashToBits(zkptx.commands.dataGroupHash),
+                groupElements: convertCommandDataToBits(zkptx.commands.value),
+                groupHash: convertHashToBits(zkptx.commands.groupHash),
             }, 
 
         references: ReferenceGroup{
@@ -287,8 +288,8 @@ fn buildComponentGroups(zkptx:ZKProverTransaction) -> (ComponentGroup, PrivacySa
             },        
 
         commandSigners: CommandSignerGroup{
-                groupElements: convertCommandSignersToBits(zkptx.commands.value.signers),
-                groupHash: convertHashToBits(zkptx.commands.signerGroupHash),
+                groupElements: convertCommandSignersToBits(zkptx.signers.value),
+                groupHash: convertHashToBits(zkptx.commands.groupHash),
             }, 
         },
         convertHashToBits(zkptx.privacySalt)
