@@ -3,7 +3,6 @@ package com.ing.zknotary.common.transactions
 import com.ing.zknotary.common.serializer.SerializationFactoryService
 import com.ing.zknotary.common.states.toZKStateAndRef
 import net.corda.core.contracts.Command
-import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.requireThat
 import net.corda.core.crypto.DigestService
 import net.corda.core.serialization.serialize
@@ -16,7 +15,7 @@ class ZKProverTransactionFactory {
             serializationFactoryService: SerializationFactoryService,
             componentGroupLeafDigestService: DigestService,
             nodeDigestService: DigestService = componentGroupLeafDigestService,
-            componentPadding: Map<ComponentGroupEnum, Int> = DEFAULT_PADDING
+            componentPadding: ComponentPadding
         ): ZKProverTransaction {
             requireThat {
                 "A notary must always be set on a ZKProverTransaction" using (ltx.notary != null)
@@ -54,12 +53,5 @@ class ZKProverTransactionFactory {
                 componentPadding = componentPadding
             )
         }
-
-        val DEFAULT_PADDING = mapOf(
-            ComponentGroupEnum.INPUTS_GROUP to 2,
-            ComponentGroupEnum.OUTPUTS_GROUP to 2,
-            ComponentGroupEnum.REFERENCES_GROUP to 2,
-            ComponentGroupEnum.SIGNERS_GROUP to 2
-        )
     }
 }

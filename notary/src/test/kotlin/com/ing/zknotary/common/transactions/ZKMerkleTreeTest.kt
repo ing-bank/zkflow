@@ -1,6 +1,8 @@
 package com.ing.zknotary.common.transactions
 
+import com.ing.zknotary.common.contracts.TestContract
 import com.ing.zknotary.common.serializer.ZincSerializationFactoryService
+import com.ing.zknotary.common.zkp.ZKNulls
 import com.ing.zknotary.notary.transactions.createTestsState
 import com.ing.zknotary.notary.transactions.moveTestsState
 import net.corda.core.crypto.BLAKE2s256DigestService
@@ -32,9 +34,18 @@ class ZKMerkleTreeTest {
             val ltx = wtx.toLedgerTransaction(ledgerServices)
             val serializationFactoryService = ZincSerializationFactoryService()
 
+            val componentPadding = ComponentPadding.Builder()
+                .inputs(2)
+                .outputs(2)
+                .references(2)
+                .signers(2)
+                .stateFiller(TestContract.TestState(ZKNulls.NULL_ANONYMOUS_PARTY, 0))
+                .build()
+
             val ptx = ZKProverTransactionFactory.create(
                 ltx,
                 serializationFactoryService,
+                componentPadding = componentPadding,
                 componentGroupLeafDigestService = BLAKE2s256DigestService,
                 nodeDigestService = BLAKE2s256DigestService // Should become Pedersen hash when available
             )
