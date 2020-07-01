@@ -10,7 +10,6 @@ import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.PrivacySalt
 import net.corda.core.contracts.TimeWindow
 import net.corda.core.contracts.TransactionState
-import net.corda.core.contracts.requireThat
 import net.corda.core.crypto.DigestService
 import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.Party
@@ -61,19 +60,7 @@ class ZKProverTransaction(
 ) : NamedByZKMerkleTree {
 
     init {
-        requireThat {
-            "Inputs' size exceeds quantity accepted by ZK circuit" using (
-                inputs.size <= componentPadding.component(ComponentGroupEnum.INPUTS_GROUP) ?: inputs.size - 1
-                )
-
-            "Outputs' size exceeds quantity accepted by ZK circuit" using (
-                outputs.size <= componentPadding.component(ComponentGroupEnum.OUTPUTS_GROUP) ?: outputs.size - 1
-                )
-
-            "References' size exceeds quantity accepted by ZK circuit" using (
-                references.size <= componentPadding.component(ComponentGroupEnum.REFERENCES_GROUP) ?: references.size - 1
-                )
-        }
+        componentPadding.validate(this)
     }
 
     val id by lazy { merkleTree.root }
@@ -102,35 +89,45 @@ class ZKProverTransaction(
 
         val inputs by lazy {
             originalInputs.pad(
-                padding.component(ComponentGroupEnum.INPUTS_GROUP) ?: error("Expected a positive number"),
-                fillerZKStateAndRef
+                sizeOf(ComponentGroupEnum.INPUTS_GROUP), filler(ComponentGroupEnum.INPUTS_GROUP)
             )
         }
         val outputs by lazy {
             originalOutputs.pad(
-                padding.component(ComponentGroupEnum.OUTPUTS_GROUP) ?: error("Expected a positive number"),
-                fillerZKStateAndRef
+                sizeOf(ComponentGroupEnum.OUTPUTS_GROUP), filler(ComponentGroupEnum.OUTPUTS_GROUP)
             )
         }
 
         val references by lazy {
             originalReferences.pad(
-                padding.component(ComponentGroupEnum.REFERENCES_GROUP) ?: error("Expected a positive number"),
-                fillerZKStateAndRef
+                sizeOf(ComponentGroupEnum.REFERENCES_GROUP), filler(ComponentGroupEnum.REFERENCES_GROUP)
             )
         }
 
         val signers by lazy {
             originalSigners.pad(
-                padding.component(ComponentGroupEnum.SIGNERS_GROUP) ?: error("Expected a positive number"),
-                ZKNulls.NULL_PUBLIC_KEY
+                sizeOf(ComponentGroupEnum.SIGNERS_GROUP), filler(ComponentGroupEnum.SIGNERS_GROUP)
             )
         }
 
-        private val fillerZKStateAndRef by lazy {
-            val emptyState = padding.fillerState
+        /**
+         * Return appropriate size ot fail.
+         */
+        private fun sizeOf(componentGroup: ComponentGroupEnum): Int =
+            padding.sizeOf(componentGroup) ?: error("Expected a positive number")
+
+        /**
+         * Return appropriate filler wrapped into ZKStateAndRef or fail.
+         */
+        private fun filler(componentGroup: ComponentGroupEnum): ZKStateAndRef<ContractState> {
+            val filler = padding.filler(componentGroup) ?: error("Expected a filler object")
+            val emptyState = when (filler) {
+                is ComponentPadding.Filler.ContractState -> filler.value
+                else -> error("Expected a Filler.ContractState instance")
+            }
+
             val emptyTxState = TransactionState(emptyState, notary = ZKNulls.NULL_PARTY)
-            ZKStateAndRef(emptyTxState, ZKStateRef.empty())
+            return ZKStateAndRef(emptyTxState, ZKStateRef.empty())
         }
 
         private fun <T> List<T>.pad(n: Int, default: T) = List(n) {
