@@ -1,5 +1,7 @@
 package com.ing.zknotary.common.transactions
 
+import com.ing.zknotary.common.states.ZKStateRef
+import com.ing.zknotary.common.util.ComponentPadding
 import net.corda.core.DeleteForDJVM
 import net.corda.core.contracts.ComponentGroupEnum
 
@@ -39,6 +41,13 @@ fun ZKProverTransaction.toZKVerifierTransaction(): ZKVerifierTransaction {
         )
     }
 
+    val filler = ComponentPadding.Filler.ZKStateRef(ZKStateRef.empty())
+    val componentPadding = ComponentPadding.Builder()
+        .inputs(this.padded.inputs.size, filler)
+        .outputs(this.padded.outputs.size, filler)
+        .references(this.padded.references.size, filler)
+        .build()
+
     return ZKVerifierTransaction(
         this.inputs.map { it.ref },
         this.outputs.map { it.ref },
@@ -53,6 +62,16 @@ fun ZKProverTransaction.toZKVerifierTransaction(): ZKVerifierTransaction {
         this.nodeDigestService,
 
         this.merkleTree.groupHashes,
-        componentNonces
+        componentNonces,
+
+        componentPadding
     )
+}
+
+fun <T> List<T>.pad(n: Int, default: T) = List(n) {
+    if (it < size)
+        this[it]
+    else {
+        default
+    }
 }

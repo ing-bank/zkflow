@@ -2,6 +2,7 @@ package com.ing.zknotary.common.transactions
 
 import com.ing.zknotary.common.serializer.SerializationFactoryService
 import com.ing.zknotary.common.states.ZKStateRef
+import com.ing.zknotary.common.util.ComponentPadding
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.TimeWindow
 import net.corda.core.crypto.DigestService
@@ -28,12 +29,28 @@ class ZKVerifierTransaction(
     val nodeDigestService: DigestService = componentGroupLeafDigestService,
 
     val groupHashes: List<SecureHash>,
-    val componentNonces: Map<Int, List<SecureHash>>
+    val componentNonces: Map<Int, List<SecureHash>>,
+
+    /**
+     * Used for padding internal lists to sizes accepted by the ZK circuit.
+     */
+    componentPadding: ComponentPadding
 ) {
+    val padded = Padded(
+        originalInputs = inputs, originalOutputs = outputs,
+        originalReferences = references, padding = componentPadding
+    )
+
+    // Required by Corda.
+    val componentPadding: ComponentPadding
+        get() = padded.padding
+
     init {
-        require(inputs.size == componentNonces[ComponentGroupEnum.INPUTS_GROUP.ordinal]?.size ?: 0) { "Number of inputs and input nonces should be equal" }
-        require(outputs.size == componentNonces[ComponentGroupEnum.OUTPUTS_GROUP.ordinal]?.size ?: 0) { "Number of outputs and output nonces should be equal" }
-        require(references.size == componentNonces[ComponentGroupEnum.REFERENCES_GROUP.ordinal]?.size ?: 0) { "Number of references (${references.size}) and reference nonces (${componentNonces[ComponentGroupEnum.REFERENCES_GROUP.ordinal]?.size}) should be equal" }
+        componentPadding.validate(this)
+
+        require(padded.inputs.size == componentNonces[ComponentGroupEnum.INPUTS_GROUP.ordinal]?.size ?: 0) { "Number of inputs and input nonces should be equal" }
+        require(padded.outputs.size == componentNonces[ComponentGroupEnum.OUTPUTS_GROUP.ordinal]?.size ?: 0) { "Number of outputs and output nonces should be equal" }
+        require(padded.references.size == componentNonces[ComponentGroupEnum.REFERENCES_GROUP.ordinal]?.size ?: 0) { "Number of references (${references.size}) and reference nonces (${componentNonces[ComponentGroupEnum.REFERENCES_GROUP.ordinal]?.size}) should be equal" }
 
         if (networkParametersHash != null) require(componentNonces[ComponentGroupEnum.PARAMETERS_GROUP.ordinal]?.size == 1) { "If there is a networkParametersHash, there should be a networkParametersHash nonce" }
         if (timeWindow != null) require(componentNonces[ComponentGroupEnum.TIMEWINDOW_GROUP.ordinal]?.size == 1) { "If there is a timeWindow, there should be exactly one timeWindow nonce" }
@@ -47,4 +64,35 @@ class ZKVerifierTransaction(
 
     override fun hashCode(): Int = id.hashCode()
     override fun equals(other: Any?) = if (other !is ZKVerifierTransaction) false else (this.id == other.id)
+
+    data class Padded(
+        private val originalInputs: List<ZKStateRef>,
+        private val originalOutputs: List<ZKStateRef>,
+        private val originalReferences: List<ZKStateRef>,
+        val padding: ComponentPadding
+    ) {
+
+        val inputs by lazy {
+            val filler = padding.filler(ComponentGroupEnum.INPUTS_GROUP) ?: error("Expected a filler object")
+            require(filler is ComponentPadding.Filler.ZKStateRef) { "Expected filler of type ZKStateRef" }
+            originalInputs.pad(sizeOf(ComponentGroupEnum.INPUTS_GROUP), filler.value)
+        }
+        val outputs by lazy {
+            val filler = padding.filler(ComponentGroupEnum.OUTPUTS_GROUP) ?: error("Expected a filler object")
+            require(filler is ComponentPadding.Filler.ZKStateRef) { "Expected filler of type ZKStateRef" }
+            originalOutputs.pad(sizeOf(ComponentGroupEnum.OUTPUTS_GROUP), filler.value)
+        }
+
+        val references by lazy {
+            val filler = padding.filler(ComponentGroupEnum.REFERENCES_GROUP) ?: error("Expected a filler object")
+            require(filler is ComponentPadding.Filler.ZKStateRef) { "Expected filler of type ZKStateRef" }
+            originalReferences.pad(sizeOf(ComponentGroupEnum.REFERENCES_GROUP), filler.value)
+        }
+
+        /**
+         * Return appropriate size ot fail.
+         */
+        private fun sizeOf(componentGroup: ComponentGroupEnum): Int =
+            padding.sizeOf(componentGroup) ?: error("Expected a positive number")
+    }
 }
