@@ -85,7 +85,7 @@ enum ComponentGroupEnum {
     PARAMETERS_GROUP = 8,
 }
 
-use std::crypto::sha256; //This will be replaced with Blake2s
+use std::crypto::blake2s; //This will be replaced with Blake2s
 use std::crypto::pedersen;
 use std::array::truncate;
 
@@ -128,7 +128,7 @@ fn computeNonce(privacySalt: PrivacySalt, groupIndex: u32, internalIndex: u32) -
         nonce[HASH_BITS + (i as u16)] = groupIndex_bits[i]; 
         nonce[HASH_BITS + INTEGER_LENGTH + (i as u16)] = internalIndex_bits[i]; 
     }
-    sha256(nonce)  
+    blake2s(nonce)  
 }
 
 /**
@@ -151,7 +151,7 @@ fn computeLeafHashRef(value:[bool; REF_BITS], privacySalt: PrivacySalt, groupInd
         message[HASH_BITS + i] = value[i]; 
     }
 
-    sha256(message)
+    blake2s(message)
 }
 
 fn computeLeafHashInt(value:[bool; INT32_BITS], privacySalt: PrivacySalt, groupIndex: u32, internalIndex: u32) -> BlakeDigest
@@ -168,7 +168,7 @@ fn computeLeafHashInt(value:[bool; INT32_BITS], privacySalt: PrivacySalt, groupI
         message[HASH_BITS + i] = value[i]; 
     }
 
-    sha256(message)
+    blake2s(message)
 }
 
 fn computeLeafHashSign(value:[bool; SIGNER_BITS], privacySalt: PrivacySalt, groupIndex: u32, internalIndex: u32) -> BlakeDigest
@@ -185,7 +185,7 @@ fn computeLeafHashSign(value:[bool; SIGNER_BITS], privacySalt: PrivacySalt, grou
         message[HASH_BITS + i] = value[i]; 
     }
 
-    sha256(message)
+    blake2s(message)
 }
 
 /**
@@ -278,31 +278,31 @@ fn computeComponentGroupHashes(componentLeafHashes:[NodeDigest;NODES]) -> [NodeD
     let mut groupInd:u8 = 0; 
 
     //inputs - this implementation assumes that the number of inputs is 2
-    componentGroupHashes[groupInd] = sha256(concatenateHashes(componentLeafHashes[leafInd], 
+    componentGroupHashes[groupInd] = blake2s(concatenateHashes(componentLeafHashes[leafInd], 
                                                               componentLeafHashes[leafInd + (1 as u16)]));
     leafInd += N_INPUTS; 
     groupInd += 1; 
 
     //outputs - this implementation assumes that the number of outputs is 2
-    componentGroupHashes[groupInd] = sha256(concatenateHashes(componentLeafHashes[leafInd], 
+    componentGroupHashes[groupInd] = blake2s(concatenateHashes(componentLeafHashes[leafInd], 
                                                               componentLeafHashes[leafInd + (1 as u16)]));  
     leafInd += N_OUTPUTS; 
     groupInd += 1; 
   
     //commandData - this implementation assumes that the number of commandData is 1
-    componentGroupHashes[groupInd] = sha256(concatenateHashes(componentLeafHashes[leafInd], 
+    componentGroupHashes[groupInd] = blake2s(concatenateHashes(componentLeafHashes[leafInd], 
                                                               padding_bits)); 
     leafInd += N_COMMANDS; 
     groupInd += 1; 
 
     //references - this implementation assumes that the number of references is 2
-    componentGroupHashes[groupInd] = sha256(concatenateHashes(componentLeafHashes[leafInd], 
+    componentGroupHashes[groupInd] = blake2s(concatenateHashes(componentLeafHashes[leafInd], 
                                                               componentLeafHashes[leafInd + (1 as u16)]));    
     leafInd += N_REFERENCES; 
     groupInd += 1;
 
     //commandSigners - this implementation assumes that the number of references is 2
-    componentGroupHashes[groupInd] = sha256(concatenateHashes(componentLeafHashes[leafInd], 
+    componentGroupHashes[groupInd] = blake2s(concatenateHashes(componentLeafHashes[leafInd], 
                                                               componentLeafHashes[leafInd + (1 as u16)]));  
 
     componentGroupHashes
@@ -322,15 +322,15 @@ fn computeMerkleRoot(componentGroupHashes:[NodeDigest; NUM_COMPONENT_GROUPS]) ->
 {
     let mut nodes = [[false; NODE_DIGEST_SIZE]; (NUM_COMPONENT_GROUPS/2)+1];
     for i in 0..(NUM_COMPONENT_GROUPS/2){
-        nodes[i] = sha256(concatenateHashes(componentGroupHashes[2*i],
+        nodes[i] = blake2s(concatenateHashes(componentGroupHashes[2*i],
                                             componentGroupHashes[2*i + 1]));}
     
     for i in 0..(NUM_COMPONENT_GROUPS/4 + 1){
-        nodes[i] = sha256(concatenateHashes(nodes[2*i],
+        nodes[i] = blake2s(concatenateHashes(nodes[2*i],
                                             nodes[2*i + 1]));}
 
     for i in 0..(NUM_COMPONENT_GROUPS/8 + 1){
-        nodes[i] = sha256(concatenateHashes(nodes[2*i],
+        nodes[i] = blake2s(concatenateHashes(nodes[2*i],
                                             nodes[2*i + 1]));}
     nodes[0]
 }
@@ -395,7 +395,7 @@ fn validateZKStateRef(value:ZKStateAndRefGroup)-> bool
     }
 
     //2)Hash 
-    let digest = sha256(data); 
+    let digest = blake2s(data); 
 
     //3)Validate by comparing computed ZKStateRef to the received one
     let mut isEqual = true; 
