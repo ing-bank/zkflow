@@ -62,10 +62,12 @@ class ZKProverTransactionFactory {
 
         private val DEFAULT_PADDING by lazy {
             val emptyState = TestContract.TestState(ZKNulls.NULL_PARTY, 0)
-            val filler = ComponentPadding.Filler.ZKStateAndRef(ZKStateAndRef(
-                TransactionState(emptyState, notary = ZKNulls.NULL_PARTY),
-                ZKStateRef.empty()
-            ))
+            val filler = ComponentPadding.Filler.ZKStateAndRef(
+                ZKStateAndRef(
+                    TransactionState(emptyState, notary = ZKNulls.NULL_PARTY),
+                    ZKStateRef.empty()
+                )
+            )
 
             ComponentPadding.Builder()
                 .inputs(2, filler)

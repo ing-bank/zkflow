@@ -117,6 +117,5 @@ class ZKProverTransaction(
          */
         private fun sizeOf(componentGroup: ComponentGroupEnum) =
             padding.sizeOf(componentGroup) ?: error("Expected a positive number")
-
     }
 }

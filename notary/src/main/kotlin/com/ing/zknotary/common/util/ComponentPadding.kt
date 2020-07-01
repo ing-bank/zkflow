@@ -16,7 +16,7 @@ data class ComponentPadding private constructor(
     @CordaSerializable
     sealed class Filler {
         data class ZKStateAndRef(val value: com.ing.zknotary.common.states.ZKStateAndRef<ContractState>) : Filler()
-        data class ZKStateRef(val value: com.ing.zknotary.common.states.ZKStateRef): Filler()
+        data class ZKStateRef(val value: com.ing.zknotary.common.states.ZKStateRef) : Filler()
         data class PublicKey(val value: java.security.PublicKey) : Filler()
     }
 
