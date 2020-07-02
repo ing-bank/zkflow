@@ -45,10 +45,6 @@ buildscript {
     }
 }
 
-plugins {
-    id 'com.cosminpolifronie.gradle.plantuml' version '1.6.0'
-}
-
 allprojects {
     apply from: "${rootProject.projectDir}/repositories.gradle"
     apply plugin: 'kotlin'
@@ -96,9 +92,6 @@ apply plugin: 'net.corda.plugins.cordformation'
 apply plugin: 'net.corda.plugins.quasar-utils'
 
 
-plantUml {
-    render input: 'docs/**/*.puml', output: "docs/build", format: 'png', withMetadata: false
-}
 
 tasks.withType(Test) {
     def cores = Runtime.runtime.availableProcessors()
