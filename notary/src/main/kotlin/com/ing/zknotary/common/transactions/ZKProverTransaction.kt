@@ -89,33 +89,34 @@ class ZKProverTransaction(
         val padding: ComponentPadding
     ) {
 
-        val inputs by lazy {
+        fun inputs(): List<ZKStateAndRef<ContractState>> {
             val filler = padding.filler(ComponentGroupEnum.INPUTS_GROUP) ?: error("Expected a filler object")
             require(filler is ComponentPadding.Filler.ZKStateAndRef) { "Expected filler of type ZKStateAndRef" }
-            originalInputs.pad(sizeOf(ComponentGroupEnum.INPUTS_GROUP), filler.value)
+            return originalInputs.pad(sizeOf(ComponentGroupEnum.INPUTS_GROUP), filler.value)
         }
-        val outputs by lazy {
+
+        fun outputs(): List<ZKStateAndRef<ContractState>> {
             val filler = padding.filler(ComponentGroupEnum.OUTPUTS_GROUP) ?: error("Expected a filler object")
             require(filler is ComponentPadding.Filler.ZKStateAndRef) { "Expected filler of type ZKStateAndRef" }
-            originalOutputs.pad(sizeOf(ComponentGroupEnum.OUTPUTS_GROUP), filler.value)
+            return originalOutputs.pad(sizeOf(ComponentGroupEnum.OUTPUTS_GROUP), filler.value)
         }
 
-        val references by lazy {
+        fun references(): List<ZKStateAndRef<ContractState>> {
             val filler = padding.filler(ComponentGroupEnum.REFERENCES_GROUP) ?: error("Expected a filler object")
             require(filler is ComponentPadding.Filler.ZKStateAndRef) { "Expected filler of type ZKStateAndRef" }
-            originalReferences.pad(sizeOf(ComponentGroupEnum.REFERENCES_GROUP), filler.value)
+            return originalReferences.pad(sizeOf(ComponentGroupEnum.REFERENCES_GROUP), filler.value)
         }
 
-        val signers by lazy {
+        fun signers(): List<PublicKey> {
             val filler = padding.filler(ComponentGroupEnum.SIGNERS_GROUP) ?: error("Expected a filler object")
             require(filler is ComponentPadding.Filler.PublicKey) { "Expected filler of type PublicKey" }
-            originalSigners.pad(sizeOf(ComponentGroupEnum.SIGNERS_GROUP), filler.value)
+            return originalSigners.pad(sizeOf(ComponentGroupEnum.SIGNERS_GROUP), filler.value)
         }
 
         /**
          * Return appropriate size ot fail.
          */
-        private fun sizeOf(componentGroup: ComponentGroupEnum) =
+        fun sizeOf(componentGroup: ComponentGroupEnum) =
             padding.sizeOf(componentGroup) ?: error("Expected a positive number")
     }
 }

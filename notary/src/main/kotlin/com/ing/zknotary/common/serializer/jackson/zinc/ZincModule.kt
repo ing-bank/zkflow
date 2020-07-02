@@ -44,10 +44,10 @@ private class ZincMixinSerializer : JsonSerializer<ZKProverTransaction>() {
         gen.writeFieldName("witness")
         gen.writeObject(
             ZincJson(
-                StateGroup(value.padded.inputs, value.merkleTree.groupHashes[ComponentGroupEnum.INPUTS_GROUP.ordinal]),
-                StateGroup(value.padded.outputs, value.merkleTree.groupHashes[ComponentGroupEnum.OUTPUTS_GROUP.ordinal]),
-                StateGroup(value.padded.references, value.merkleTree.groupHashes[ComponentGroupEnum.REFERENCES_GROUP.ordinal]),
-                StateGroup(value.padded.signers, value.merkleTree.groupHashes[ComponentGroupEnum.SIGNERS_GROUP.ordinal]),
+                StateGroup(value.padded.inputs(), value.merkleTree.groupHashes[ComponentGroupEnum.INPUTS_GROUP.ordinal]),
+                StateGroup(value.padded.outputs(), value.merkleTree.groupHashes[ComponentGroupEnum.OUTPUTS_GROUP.ordinal]),
+                StateGroup(value.padded.references(), value.merkleTree.groupHashes[ComponentGroupEnum.REFERENCES_GROUP.ordinal]),
+                StateGroup(value.padded.signers(), value.merkleTree.groupHashes[ComponentGroupEnum.SIGNERS_GROUP.ordinal]),
                 // Currently command serializes into a single Int. This will change in future.
                 StateGroup(listOf(0), value.merkleTree.groupHashes[ComponentGroupEnum.COMMANDS_GROUP.ordinal]),
                 value.privacySalt

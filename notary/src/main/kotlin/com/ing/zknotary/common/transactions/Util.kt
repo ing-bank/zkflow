@@ -43,9 +43,9 @@ fun ZKProverTransaction.toZKVerifierTransaction(): ZKVerifierTransaction {
 
     val filler = ComponentPadding.Filler.ZKStateRef(ZKStateRef.empty())
     val componentPadding = ComponentPadding.Builder()
-        .inputs(this.padded.inputs.size, filler)
-        .outputs(this.padded.outputs.size, filler)
-        .references(this.padded.references.size, filler)
+        .inputs(this.padded.sizeOf(ComponentGroupEnum.INPUTS_GROUP), filler)
+        .outputs(this.padded.sizeOf(ComponentGroupEnum.OUTPUTS_GROUP), filler)
+        .references(this.padded.sizeOf(ComponentGroupEnum.REFERENCES_GROUP), filler)
         .build()
 
     return ZKVerifierTransaction(

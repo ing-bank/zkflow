@@ -48,9 +48,9 @@ class ZKVerifierTransaction(
     init {
         componentPadding.validate(this)
 
-        require(padded.inputs.size == componentNonces[ComponentGroupEnum.INPUTS_GROUP.ordinal]?.size ?: 0) { "Number of inputs and input nonces should be equal" }
-        require(padded.outputs.size == componentNonces[ComponentGroupEnum.OUTPUTS_GROUP.ordinal]?.size ?: 0) { "Number of outputs and output nonces should be equal" }
-        require(padded.references.size == componentNonces[ComponentGroupEnum.REFERENCES_GROUP.ordinal]?.size ?: 0) { "Number of references (${references.size}) and reference nonces (${componentNonces[ComponentGroupEnum.REFERENCES_GROUP.ordinal]?.size}) should be equal" }
+        require(padded.inputs().size == componentNonces[ComponentGroupEnum.INPUTS_GROUP.ordinal]?.size ?: 0) { "Number of inputs and input nonces should be equal" }
+        require(padded.outputs().size == componentNonces[ComponentGroupEnum.OUTPUTS_GROUP.ordinal]?.size ?: 0) { "Number of outputs and output nonces should be equal" }
+        require(padded.references().size == componentNonces[ComponentGroupEnum.REFERENCES_GROUP.ordinal]?.size ?: 0) { "Number of references (${references.size}) and reference nonces (${componentNonces[ComponentGroupEnum.REFERENCES_GROUP.ordinal]?.size}) should be equal" }
 
         if (networkParametersHash != null) require(componentNonces[ComponentGroupEnum.PARAMETERS_GROUP.ordinal]?.size == 1) { "If there is a networkParametersHash, there should be a networkParametersHash nonce" }
         if (timeWindow != null) require(componentNonces[ComponentGroupEnum.TIMEWINDOW_GROUP.ordinal]?.size == 1) { "If there is a timeWindow, there should be exactly one timeWindow nonce" }
@@ -72,21 +72,21 @@ class ZKVerifierTransaction(
         val padding: ComponentPadding
     ) {
 
-        val inputs by lazy {
+        fun inputs(): List<ZKStateRef> {
             val filler = padding.filler(ComponentGroupEnum.INPUTS_GROUP) ?: error("Expected a filler object")
             require(filler is ComponentPadding.Filler.ZKStateRef) { "Expected filler of type ZKStateRef" }
-            originalInputs.pad(sizeOf(ComponentGroupEnum.INPUTS_GROUP), filler.value)
+            return originalInputs.pad(sizeOf(ComponentGroupEnum.INPUTS_GROUP), filler.value)
         }
-        val outputs by lazy {
+        fun outputs(): List<ZKStateRef> {
             val filler = padding.filler(ComponentGroupEnum.OUTPUTS_GROUP) ?: error("Expected a filler object")
             require(filler is ComponentPadding.Filler.ZKStateRef) { "Expected filler of type ZKStateRef" }
-            originalOutputs.pad(sizeOf(ComponentGroupEnum.OUTPUTS_GROUP), filler.value)
+            return originalOutputs.pad(sizeOf(ComponentGroupEnum.OUTPUTS_GROUP), filler.value)
         }
 
-        val references by lazy {
+        fun references(): List<ZKStateRef> {
             val filler = padding.filler(ComponentGroupEnum.REFERENCES_GROUP) ?: error("Expected a filler object")
             require(filler is ComponentPadding.Filler.ZKStateRef) { "Expected filler of type ZKStateRef" }
-            originalReferences.pad(sizeOf(ComponentGroupEnum.REFERENCES_GROUP), filler.value)
+            return originalReferences.pad(sizeOf(ComponentGroupEnum.REFERENCES_GROUP), filler.value)
         }
 
         /**

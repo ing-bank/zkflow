@@ -17,9 +17,9 @@ class ZKPartialMerkleTree(
             val serializer = { value: Any, _: Int -> value.serialize(vtx.serializationFactoryService.factory) }
 
             return mutableListOf<ComponentGroup>().apply {
-                addInputsGroup(vtx.padded.inputs, serializer)
-                addReferencesGroup(vtx.padded.references, serializer)
-                addOutputsGroup(vtx.padded.outputs, serializer)
+                addInputsGroup(vtx.padded.inputs(), serializer)
+                addReferencesGroup(vtx.padded.references(), serializer)
+                addOutputsGroup(vtx.padded.outputs(), serializer)
                 addNotaryGroup(vtx.notary, serializer)
                 addTimeWindowGroup(vtx.timeWindow, serializer)
                 addNetWorkParametersHashGroup(vtx.networkParametersHash, serializer)
