@@ -66,7 +66,7 @@ private class ZincJson(
     val privacySalt: PrivacySalt
 )
 
-class StateGroup<T>(val value: List<T>, val groupHash: SecureHash)
+data class StateGroup<T>(val value: List<T>, val groupHash: SecureHash)
 
 fun ByteArray.asBytes255(): IntArray = this.map { it.toInt() and 0xFF }.toIntArray()
 fun IntArray.asString() = this.joinToString(", ", "[", "]")

@@ -9,7 +9,7 @@ import net.corda.core.contracts.requireThat
 import net.corda.core.serialization.CordaSerializable
 
 @CordaSerializable
-data class ComponentPadding private constructor(
+class ComponentPadding private constructor(
     private val padding: Map<Int, Int>,
     private val fillers: Map<Int, Filler>
 ) {
@@ -20,7 +20,7 @@ data class ComponentPadding private constructor(
         data class PublicKey(val value: java.security.PublicKey) : Filler()
     }
 
-    data class Builder(
+    class Builder(
         private var padding: MutableMap<Int, Int> = mutableMapOf(),
         private var fillers: MutableMap<Int, Filler> = mutableMapOf()
     ) {
