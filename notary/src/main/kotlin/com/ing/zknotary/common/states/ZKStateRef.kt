@@ -10,4 +10,8 @@ data class ZKStateRef(
     val id: SecureHash
 ) {
     override fun toString() = id.toString()
+
+    companion object {
+        fun empty() = ZKStateRef(SecureHash.zeroHash)
+    }
 }

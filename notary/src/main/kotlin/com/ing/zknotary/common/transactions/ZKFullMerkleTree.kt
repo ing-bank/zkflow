@@ -1,7 +1,6 @@
 package com.ing.zknotary.common.transactions
 
 import net.corda.core.crypto.SecureHash
-import net.corda.core.internal.createComponentGroups
 import net.corda.core.serialization.serialize
 import net.corda.core.transactions.ComponentGroup
 import java.nio.ByteBuffer
@@ -18,15 +17,15 @@ class ZKFullMerkleTree(
             val serializer = { value: Any, _: Int -> value.serialize(ptx.serializationFactoryService.factory) }
 
             return mutableListOf<ComponentGroup>().apply {
-                addInputsGroup(ptx.inputs.map { it.ref }, serializer)
-                addReferencesGroup(ptx.references.map { it.ref }, serializer)
-                addOutputsGroup(ptx.outputs.map { it.ref }, serializer)
+                addInputsGroup(ptx.padded.inputs().map { it.ref }, serializer)
+                addReferencesGroup(ptx.padded.references().map { it.ref }, serializer)
+                addOutputsGroup(ptx.padded.outputs().map { it.ref }, serializer)
                 addCommandGroup(ptx.command.value, serializer)
                 addAttachmentsGroup(ptx.attachments, serializer)
                 addNotaryGroup(ptx.notary, serializer)
                 addTimeWindowGroup(ptx.timeWindow, serializer)
                 addNetWorkParametersHashGroup(ptx.networkParametersHash, serializer)
-                addCommandSignersGroup(ptx.command.signers, serializer)
+                addCommandSignersGroup(ptx.padded.signers(), serializer)
             }
         }
     }

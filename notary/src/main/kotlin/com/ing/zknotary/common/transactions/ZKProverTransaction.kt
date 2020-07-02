@@ -2,7 +2,9 @@ package com.ing.zknotary.common.transactions
 
 import com.ing.zknotary.common.serializer.SerializationFactoryService
 import com.ing.zknotary.common.states.ZKStateAndRef
+import com.ing.zknotary.common.util.ComponentPadding
 import net.corda.core.contracts.Command
+import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.PrivacySalt
 import net.corda.core.contracts.TimeWindow
@@ -11,6 +13,7 @@ import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.Party
 import net.corda.core.node.services.AttachmentId
 import net.corda.core.serialization.CordaSerializable
+import java.security.PublicKey
 
 @CordaSerializable
 class ZKProverTransaction(
@@ -46,8 +49,26 @@ class ZKProverTransaction(
      */
     val serializationFactoryService: SerializationFactoryService,
     val componentGroupLeafDigestService: DigestService,
-    val nodeDigestService: DigestService = componentGroupLeafDigestService
+    val nodeDigestService: DigestService = componentGroupLeafDigestService,
+
+    /**
+     * Used for padding internal lists to sizes accepted by the ZK circuit.
+     */
+    componentPadding: ComponentPadding
 ) : NamedByZKMerkleTree {
+
+    val padded = Padded(
+        originalInputs = inputs, originalOutputs = outputs, originalSigners = command.signers,
+        originalReferences = references, padding = componentPadding
+    )
+
+    // Required by Corda.
+    val componentPadding: ComponentPadding
+        get() = padded.padding
+
+    init {
+        componentPadding.validate(this)
+    }
 
     val id by lazy { merkleTree.root }
 
@@ -59,4 +80,43 @@ class ZKProverTransaction(
     override fun hashCode(): Int = id.hashCode()
     override fun toString() = prettyPrint()
     override fun equals(other: Any?) = if (other !is ZKProverTransaction) false else (this.id == other.id)
+
+    data class Padded(
+        private val originalInputs: List<ZKStateAndRef<ContractState>>,
+        private val originalOutputs: List<ZKStateAndRef<ContractState>>,
+        private val originalSigners: List<PublicKey>,
+        private val originalReferences: List<ZKStateAndRef<ContractState>>,
+        val padding: ComponentPadding
+    ) {
+
+        fun inputs(): List<ZKStateAndRef<ContractState>> {
+            val filler = padding.filler(ComponentGroupEnum.INPUTS_GROUP) ?: error("Expected a filler object")
+            require(filler is ComponentPadding.Filler.ZKStateAndRef) { "Expected filler of type ZKStateAndRef" }
+            return originalInputs.pad(sizeOf(ComponentGroupEnum.INPUTS_GROUP), filler.value)
+        }
+
+        fun outputs(): List<ZKStateAndRef<ContractState>> {
+            val filler = padding.filler(ComponentGroupEnum.OUTPUTS_GROUP) ?: error("Expected a filler object")
+            require(filler is ComponentPadding.Filler.ZKStateAndRef) { "Expected filler of type ZKStateAndRef" }
+            return originalOutputs.pad(sizeOf(ComponentGroupEnum.OUTPUTS_GROUP), filler.value)
+        }
+
+        fun references(): List<ZKStateAndRef<ContractState>> {
+            val filler = padding.filler(ComponentGroupEnum.REFERENCES_GROUP) ?: error("Expected a filler object")
+            require(filler is ComponentPadding.Filler.ZKStateAndRef) { "Expected filler of type ZKStateAndRef" }
+            return originalReferences.pad(sizeOf(ComponentGroupEnum.REFERENCES_GROUP), filler.value)
+        }
+
+        fun signers(): List<PublicKey> {
+            val filler = padding.filler(ComponentGroupEnum.SIGNERS_GROUP) ?: error("Expected a filler object")
+            require(filler is ComponentPadding.Filler.PublicKey) { "Expected filler of type PublicKey" }
+            return originalSigners.pad(sizeOf(ComponentGroupEnum.SIGNERS_GROUP), filler.value)
+        }
+
+        /**
+         * Return appropriate size ot fail.
+         */
+        fun sizeOf(componentGroup: ComponentGroupEnum) =
+            padding.sizeOf(componentGroup) ?: error("Expected a positive number")
+    }
 }
