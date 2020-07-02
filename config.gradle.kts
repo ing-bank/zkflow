@@ -1,4 +1,5 @@
 mapOf(
+    "spotlessPluginVersion" to "3.28.1",
     "cordaReleaseGroup" to "net.corda",
     "cordaCoreReleaseGroup" to "net.corda",
     "cordaVersion" to "4.5.6-ING",
