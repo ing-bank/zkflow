@@ -1,6 +1,6 @@
 plugins {
-    id("com.cosminpolifronie.gradle.plantuml") version "1.6.0"
-    id("org.danilopianini.gradle-latex") version "0.2.5"
+    id("com.cosminpolifronie.gradle.plantuml")
+    id("org.danilopianini.gradle-latex")
 }
 
 plantUml {
@@ -11,7 +11,6 @@ plantUml {
         val withMetadata = false
     })
 }
-
 
 latex {
     val pdfLatexArgs = listOf(

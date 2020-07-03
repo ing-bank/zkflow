@@ -6,9 +6,9 @@ plugins {
 }
 
 cordapp {
-    val platformVersion = (rootProject.extra["platformVersion"] as String).toInt()
-    targetPlatformVersion = platformVersion
-    minimumPlatformVersion = platformVersion
+    val platformVersion: String by project
+    targetPlatformVersion = platformVersion.toInt()
+    minimumPlatformVersion = platformVersion.toInt()
     workflow {
         name = "Zk Notary App"
         vendor = "ING Bank NV"
@@ -31,18 +31,19 @@ sourceSets {
 }
 
 dependencies {
-    val kotlinVersion = rootProject.extra["kotlinVersion"]
+    val kotlinVersion: String by project
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
     implementation("org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
 
     // Testing
+    val junitVersion: String by project
     testImplementation("org.jetbrains.kotlin:kotlin-test:$kotlinVersion")
-    testImplementation("junit:junit:${rootProject.extra["junitVersion"]}")
+    testImplementation("junit:junit:$junitVersion")
     testImplementation("org.mockito:mockito-core:2.+")
 
     // Corda dependencies.
-    val cordaReleaseGroup = rootProject.extra["cordaReleaseGroup"]
-    val cordaVersion = rootProject.extra["cordaVersion"]
+    val cordaReleaseGroup : String by project
+    val cordaVersion : String by project
     cordaCompile("$cordaReleaseGroup:corda-core:$cordaVersion")
     cordaRuntime("$cordaReleaseGroup:corda:$cordaVersion")
     cordaCompile("$cordaReleaseGroup:corda-node:$cordaVersion")
@@ -57,6 +58,34 @@ dependencies {
 spotless {
     kotlin {
         ktlint("0.37.1")
+    }
+}
+
+tasks.apply {
+    withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+        kotlinOptions {
+            languageVersion = "1.3"
+            apiVersion = "1.3"
+            jvmTarget = "1.8"
+            javaParameters = true   // Useful for reflection.
+        }
+    }
+
+    withType<Jar> {
+        // This makes the JAR's SHA-256 hash repeatable.
+        isPreserveFileTimestamps = false
+        isReproducibleFileOrder = true
+    }
+
+    withType<Test> {
+        dependsOn("spotlessCheck") // Make sure we fail early on style
+
+        val cores = Runtime.getRuntime().availableProcessors()
+        maxParallelForks = (Runtime.getRuntime().availableProcessors() / 2).takeIf { it > 0 } ?: 1
+        logger.info("Using $cores cores to run $maxParallelForks test forks.")
+
+        // Here you can specify any env vars for tests, for instance the path to the prover lib
+        // environment "LD_LIBRARY_PATH", "~/pepper_deps/lib/"
     }
 }
 
