@@ -1,17 +1,6 @@
 plugins {
-    id("com.cosminpolifronie.gradle.plantuml") version "1.6.0"
-    id("org.danilopianini.gradle-latex") version "0.2.5"
+    id("org.danilopianini.gradle-latex")
 }
-
-plantUml {
-    render(object {
-        val input = "**/*.puml"
-        val output = "build"
-        val format = "png"
-        val withMetadata = false
-    })
-}
-
 
 latex {
     val pdfLatexArgs = listOf(
@@ -23,12 +12,18 @@ latex {
         "-synctex=1",
         "-interaction=nonstopmode",
         "-halt-on-error"
-        // "-quiet"
     )
+
+    val watchFiles = fileTree(projectDir) { include("**/*.tex") }.toList()
+
     // Process all tex files in the docs dir
     projectDir.walk().maxDepth(1)
         .filter { it.isFile && it.extension == "tex" }
         .forEach { texFile ->
-            texFile.name() { extraArguments = pdfLatexArgs }
+            texFile.name() {
+                extraArguments = pdfLatexArgs
+                watching = watchFiles
+
+            }
         }
 }
