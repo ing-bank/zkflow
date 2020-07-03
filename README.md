@@ -6,6 +6,11 @@ This project makes use of our fork of Corda maintained here: https://github.com/
 This fork is based on the latest version of Corda and will have all our proposed PRs to Corda already merged.
 The artifacts for our fork are deployed to Github Packages and this project is aware of that and will be able to find Corda dependencies there
 
+Because we use private repositories, gradle needs to be authenticated with GitHub to fetch packages. 
+This is handled in repositories.gradle file. To make that work, please make sure you have the following variables 
+in your shell environment: GITHUB_USERNAME & GITHUB_TOKEN. You can generate a token here:  https://github.com/settings/tokens. The username is just your GitHub username. 
+If you really want to know how it works, see [here](https://help.github.com/en/packages/publishing-and-managing-packages/about-github-packages#about-tokens) and [here](https://help.github.com/en/packages/using-github-packages-with-your-projects-ecosystem/configuring-gradle-for-use-with-github-packages)
+
 If you want to make changes to our fork (please consult with Matthijs first), you can do the following:
 ```bash
 $ git clone https://github.com/ingzkp/corda
