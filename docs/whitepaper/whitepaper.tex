@@ -1,0 +1,46 @@
+\documentclass[a4paper,12pt,english]{memoir}
+\usepackage{babel}
+\usepackage{listings}
+\usepackage{graphicx}
+\usepackage{amsmath}
+
+\newcommand{\tx}{\textit{tx}}
+%\newcommand{{\concat}{$\mathbin\Vert$}
+\DeclareMathOperator{\concat}{\mathbin\Vert}
+
+\title{Corda ZKNotary}
+
+
+\begin{document}
+
+\maketitle
+
+% use optional argument because the \LaTeX command breaks the PDF keywords
+\chapterstyle{bianchi}
+
+\begin{abstract}
+
+\end{abstract}
+
+\chapter*{Introduction}
+
+\begin{itemize}
+\item Brief introduction to Corda
+\item Problem statement
+\end{itemize}
+
+
+\input{Chapter1/doc.tex}
+\input{Chapter2/doc.tex}
+\input{Chapter3/doc.tex}
+\input{Chapter4/doc.tex}
+
+\begin{itemize}
+\item include glossary 
+\end{itemize}
+
+\appendix
+
+\input{Appendix1/doc.tex}
+
+\end{document}
