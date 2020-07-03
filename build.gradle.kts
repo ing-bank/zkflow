@@ -13,19 +13,17 @@ buildscript {
     }
 }
 
+// Preload versions of all plugins for all projects. They should still be loaded in the subprojects build.gradle.
+// Within subprojects, version can be ommitted.
 plugins {
-    kotlin("jvm") version project.extra["kotlinVersion"] as String
+    kotlin("jvm") version project.rootProject.extra["kotlinVersion"] as String
     id("com.diffplug.gradle.spotless") version project.extra["spotlessPluginVersion"] as String
-
     id("net.corda.plugins.cordapp") version project.extra["gradlePluginsVersion"] as String
-    id("net.corda.plugins.cordformation") version project.extra["gradlePluginsVersion"] as String
     id("net.corda.plugins.quasar-utils") version project.extra["gradlePluginsVersion"] as String
 }
 
 allprojects {
     apply(from = "${rootProject.projectDir}/repositories.gradle")
-    apply(plugin = "kotlin")
-    apply(plugin = "com.diffplug.gradle.spotless")
 
     tasks.apply {
         withType<KotlinCompile> {
@@ -54,12 +52,6 @@ allprojects {
             // environment "LD_LIBRARY_PATH", "~/pepper_deps/lib/"
         }
     }
-    spotless {
-        kotlin {
-            ktlint("0.37.1")
-        }
-    }
-
 }
 
 
