@@ -3,6 +3,7 @@ package com.ing.zknotary.common.transactions
 import com.ing.zknotary.common.serializer.SerializationFactoryService
 import com.ing.zknotary.common.states.ZKStateAndRef
 import com.ing.zknotary.common.util.ComponentPadding
+import com.ing.zknotary.common.util.Nature
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.ContractState
@@ -85,28 +86,36 @@ class ZKProverTransaction(
         val padding: ComponentPadding
     ) {
 
-        fun inputs(): List<ZKStateAndRef<ContractState>> {
+        fun inputs(): List<Nature<ZKStateAndRef<ContractState>>> {
             val filler = padding.filler(ComponentGroupEnum.INPUTS_GROUP) ?: error("Expected a filler object")
             require(filler is ComponentPadding.Filler.ZKStateAndRef) { "Expected filler of type ZKStateAndRef" }
-            return originalInputs.pad(sizeOf(ComponentGroupEnum.INPUTS_GROUP), filler.value)
+            return originalInputs
+                .map { Nature.Authentic(it) }
+                .pad(sizeOf(ComponentGroupEnum.INPUTS_GROUP), Nature.Bogus(filler.value))
         }
 
-        fun outputs(): List<ZKStateAndRef<ContractState>> {
+        fun outputs(): List<Nature<ZKStateAndRef<ContractState>>> {
             val filler = padding.filler(ComponentGroupEnum.OUTPUTS_GROUP) ?: error("Expected a filler object")
             require(filler is ComponentPadding.Filler.ZKStateAndRef) { "Expected filler of type ZKStateAndRef" }
-            return originalOutputs.pad(sizeOf(ComponentGroupEnum.OUTPUTS_GROUP), filler.value)
+            return originalOutputs
+                .map { Nature.Authentic(it) }
+                .pad(sizeOf(ComponentGroupEnum.OUTPUTS_GROUP), Nature.Bogus(filler.value))
         }
 
-        fun references(): List<ZKStateAndRef<ContractState>> {
+        fun references(): List<Nature<ZKStateAndRef<ContractState>>> {
             val filler = padding.filler(ComponentGroupEnum.REFERENCES_GROUP) ?: error("Expected a filler object")
             require(filler is ComponentPadding.Filler.ZKStateAndRef) { "Expected filler of type ZKStateAndRef" }
-            return originalReferences.pad(sizeOf(ComponentGroupEnum.REFERENCES_GROUP), filler.value)
+            return originalReferences
+                .map { Nature.Authentic(it) }
+                .pad(sizeOf(ComponentGroupEnum.REFERENCES_GROUP), Nature.Bogus(filler.value))
         }
 
-        fun signers(): List<PublicKey> {
+        fun signers(): List<Nature<PublicKey>> {
             val filler = padding.filler(ComponentGroupEnum.SIGNERS_GROUP) ?: error("Expected a filler object")
             require(filler is ComponentPadding.Filler.PublicKey) { "Expected filler of type PublicKey" }
-            return originalSigners.pad(sizeOf(ComponentGroupEnum.SIGNERS_GROUP), filler.value)
+            return originalSigners
+                .map { Nature.Authentic(it) }
+                .pad(sizeOf(ComponentGroupEnum.SIGNERS_GROUP), Nature.Bogus(filler.value))
         }
 
         /**
