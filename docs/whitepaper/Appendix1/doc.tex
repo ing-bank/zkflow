@@ -15,14 +15,14 @@ Before answering this question, we provide some information about the data that 
 We compute ZKStateRef for input, output, and reference components.
 Each element in these component groups are a \texttt{ZKStateAndRef} object which consists of a \texttt{Transaction State} and \texttt{ZKStateRef}.
 Figure~\ref{fig:tree_ts} shows the relation between each object.
- 
+
 \begin{figure}[ht]
 \includegraphics[width=\textwidth]{Appendix1/images/tree_ts}
 \caption{Merkle Tree representation of a transaction with \texttt{Transaction State} and \texttt{ZKStateRef}.}
 \label{fig:tree_ts}
 \end{figure}
 
-A \texttt{Transaction State} consists of following attributes: 
+A \texttt{Transaction State} consists of following attributes:
 \begin{itemize}
 \item \texttt{data},
 \item \texttt{contract},
@@ -31,12 +31,12 @@ A \texttt{Transaction State} consists of following attributes:
 \item \texttt{constraint}
 \end{itemize}
 
-We can compute ZKStateRef as 
+We can compute ZKStateRef as
 \begin{align}
 ZKStateRef &= Hash(nonce \concat state\_fields), \text{ s.t.} \\
 state\_fields &= data \concat contract \concat notary \concat encumbrance \concat constraint \nonumber
-\end{align} 
-\noindent and the leaf hash as 
+\end{align}
+\noindent and the leaf hash as
 \begin{align}
 LeafHash &= Hash(nonce \concat ZKStateRef).
 \end{align}
@@ -60,7 +60,7 @@ Then, the next question is how can we compute a unique nonce for ZKStateRef with
 We consider three options for that:
 
 \begin{enumerate}
-\item Change the order in the computation of nonce such that: 
+\item Change the order in the computation of nonce such that:
 \begin{align}
 LeafHash\_nonce &= Hash(privacySalt \concat groupIndex \concat elementIndex) \\
 ZKStateRef\_nonce &= Hash(groupIndex \concat elementIndex \concat privacySalt)
@@ -71,7 +71,9 @@ ZKStateRef\_nonce = privacySalt \concat groupIndex \concat elementIndex
 \end{align}
 \end{enumerate}
 
+\includesvg[width=\textwidth]{Appendix1/images/fig1}
 
+Some more info. And more.
 
 
 

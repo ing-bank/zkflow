@@ -1,5 +1,27 @@
 plugins {
+    id("com.cosminpolifronie.gradle.plantuml")
     id("org.danilopianini.gradle-latex")
+}
+
+plantUml {
+    val diagrams = fileTree(projectDir) { include("**/*.puml") }.toList()
+
+    diagrams.map { it.relativeTo(projectDir) }.forEach { file ->
+        render(object {
+            val input = file.path
+            val output = file.parent + "/" + file.nameWithoutExtension + ".svg"
+            val format = "svg"
+            val withMetadata = true
+        })
+    }
+
+    tasks.named("plantUml") {
+        // outputs.upToDateWhen { false }
+    }
+}
+
+task("docs") {
+    dependsOn("buildLatex")
 }
 
 latex {
@@ -26,4 +48,14 @@ latex {
 
             }
         }
+
+    tasks.matching { it.name.contains("pdfLatex") }.forEach {
+        // it.outputs.upToDateWhen { false }
+        it.mustRunAfter("plantUml")
+        it.dependsOn("plantUml")
+
+        // also retrigger this task when plantUml diagrams change
+        val plantUmlFiles = tasks.named("plantUml").get().inputs.files
+        it.inputs.files(plantUmlFiles)
+    }
 }
