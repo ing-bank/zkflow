@@ -1,65 +1,27 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 buildscript {
-    apply(from = "${rootProject.projectDir}/config.gradle.kts")
-    repositories {
-        mavenLocal()
+    val repos by extra {closureOf<RepositoryHandler> {
         mavenCentral()
-        jcenter()
-        maven("https://ci-artifactory.corda.r3cev.com/artifactory/corda-releases")
-        maven("https://software.r3.com/artifactory/corda")
+        maven("https://jitpack.io")
         maven("https://repo.gradle.org/gradle/libs-releases")
-        maven("https://plugins.gradle.org/m2/")
-    }
-}
+        maven("https://software.r3.com/artifactory/corda")
 
-plugins {
-    kotlin("jvm") version project.extra["kotlinVersion"] as String
-    id("com.diffplug.gradle.spotless") version project.extra["spotlessPluginVersion"] as String
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/ingzkp/corda")
+            credentials {
+                username = System.getenv("GITHUB_USERNAME")
+                password = System.getenv("GITHUB_TOKEN")
+            }
+        }
+    }}
 
-    id("net.corda.plugins.cordapp") version project.extra["gradlePluginsVersion"] as String
-    id("net.corda.plugins.cordformation") version project.extra["gradlePluginsVersion"] as String
-    id("net.corda.plugins.quasar-utils") version project.extra["gradlePluginsVersion"] as String
+    @Suppress("UNCHECKED_CAST")
+    this.repositories(repos as groovy.lang.Closure<Any>)
 }
 
 allprojects {
-    apply(from = "${rootProject.projectDir}/repositories.gradle")
-    apply(plugin = "kotlin")
-    apply(plugin = "com.diffplug.gradle.spotless")
-
-    tasks.apply {
-        withType<KotlinCompile> {
-            kotlinOptions {
-                languageVersion = "1.3"
-                apiVersion = "1.3"
-                jvmTarget = "1.8"
-                javaParameters = true   // Useful for reflection.
-            }
-        }
-
-        withType<Jar> {
-            // This makes the JAR's SHA-256 hash repeatable.
-            isPreserveFileTimestamps = false
-            isReproducibleFileOrder = true
-        }
-
-        withType<Test> {
-            dependsOn("spotlessCheck") // Make sure we fail early on style
-
-            val cores = Runtime.getRuntime().availableProcessors()
-            maxParallelForks = (Runtime.getRuntime().availableProcessors() / 2).takeIf { it > 0 } ?: 1
-            logger.info("Using $cores cores to run $maxParallelForks test forks.")
-
-            // Here you can specify any env vars for tests, for instance the path to the prover lib
-            // environment "LD_LIBRARY_PATH", "~/pepper_deps/lib/"
-        }
-    }
-    spotless {
-        kotlin {
-            ktlint("0.37.1")
-        }
-    }
-
+    val repos: groovy.lang.Closure<RepositoryHandler> by rootProject.extra
+    repositories(repos)
 }
 
 
