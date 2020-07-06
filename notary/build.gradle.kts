@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
     kotlin("jvm")
     id("com.diffplug.gradle.spotless")
@@ -62,7 +64,9 @@ spotless {
 }
 
 tasks.apply {
-    withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+    matching { it is JavaCompile || it is KotlinCompile }.forEach { it.dependsOn(":checkJavaVersion") }
+
+    withType<KotlinCompile> {
         kotlinOptions {
             languageVersion = "1.3"
             apiVersion = "1.3"
