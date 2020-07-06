@@ -5,7 +5,7 @@ import com.ing.zknotary.common.serializer.SerializationFactoryService
 import com.ing.zknotary.common.states.ZKStateAndRef
 import com.ing.zknotary.common.states.ZKStateRef
 import com.ing.zknotary.common.states.toZKStateAndRef
-import com.ing.zknotary.common.util.ComponentPadding
+import com.ing.zknotary.common.util.ComponentPaddingConfiguration
 import com.ing.zknotary.common.zkp.ZKNulls
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.TransactionState
@@ -21,7 +21,7 @@ class ZKProverTransactionFactory {
             serializationFactoryService: SerializationFactoryService,
             componentGroupLeafDigestService: DigestService,
             nodeDigestService: DigestService = componentGroupLeafDigestService,
-            componentPadding: ComponentPadding = DEFAULT_PADDING
+            componentPaddingConfiguration: ComponentPaddingConfiguration = DEFAULT_PADDING
         ): ZKProverTransaction {
             requireThat {
                 "A notary must always be set on a ZKProverTransaction" using (ltx.notary != null)
@@ -56,20 +56,20 @@ class ZKProverTransactionFactory {
                 serializationFactoryService = serializationFactoryService,
                 componentGroupLeafDigestService = componentGroupLeafDigestService,
                 nodeDigestService = nodeDigestService,
-                componentPadding = componentPadding
+                componentPaddingConfiguration = componentPaddingConfiguration
             )
         }
 
         private val DEFAULT_PADDING by lazy {
             val emptyState = TestContract.TestState(ZKNulls.NULL_PARTY, 0)
-            val filler = ComponentPadding.Filler.ZKStateAndRef(
+            val filler = ComponentPaddingConfiguration.Filler.ZKStateAndRef(
                 ZKStateAndRef(
                     TransactionState(emptyState, notary = ZKNulls.NULL_PARTY),
                     ZKStateRef.empty()
                 )
             )
 
-            ComponentPadding.Builder()
+            ComponentPaddingConfiguration.Builder()
                 .inputs(2, filler)
                 .outputs(2, filler)
                 .references(2, filler)

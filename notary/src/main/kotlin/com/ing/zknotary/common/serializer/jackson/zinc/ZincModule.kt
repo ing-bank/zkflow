@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.fasterxml.jackson.databind.module.SimpleModule
 import com.ing.zknotary.common.states.ZKStateAndRef
 import com.ing.zknotary.common.transactions.ZKProverTransaction
+import com.ing.zknotary.common.util.PaddingWrapper
 import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.ContractState
@@ -49,7 +50,7 @@ private class ZincMixinSerializer : JsonSerializer<ZKProverTransaction>() {
                 StateGroup(value.padded.references(), value.merkleTree.groupHashes[ComponentGroupEnum.REFERENCES_GROUP.ordinal]),
                 StateGroup(value.padded.signers(), value.merkleTree.groupHashes[ComponentGroupEnum.SIGNERS_GROUP.ordinal]),
                 // Currently command serializes into a single Int. This will change in future.
-                StateGroup(listOf(0), value.merkleTree.groupHashes[ComponentGroupEnum.COMMANDS_GROUP.ordinal]),
+                StateGroup(listOf(PaddingWrapper.Original(0)), value.merkleTree.groupHashes[ComponentGroupEnum.COMMANDS_GROUP.ordinal]),
                 value.privacySalt
             )
         )
@@ -58,11 +59,11 @@ private class ZincMixinSerializer : JsonSerializer<ZKProverTransaction>() {
 }
 
 private class ZincJson(
-    val inputs: StateGroup<ZKStateAndRef<ContractState>>,
-    val outputs: StateGroup<ZKStateAndRef<ContractState>>,
-    val references: StateGroup<ZKStateAndRef<ContractState>>,
-    val signers: StateGroup<PublicKey>,
-    val commands: StateGroup<Int>,
+    val inputs: StateGroup<PaddingWrapper<ZKStateAndRef<ContractState>>>,
+    val outputs: StateGroup<PaddingWrapper<ZKStateAndRef<ContractState>>>,
+    val references: StateGroup<PaddingWrapper<ZKStateAndRef<ContractState>>>,
+    val signers: StateGroup<PaddingWrapper<PublicKey>>,
+    val commands: StateGroup<PaddingWrapper<Int>>,
     val privacySalt: PrivacySalt
 )
 
