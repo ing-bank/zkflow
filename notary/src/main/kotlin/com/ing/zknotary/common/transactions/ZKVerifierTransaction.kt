@@ -75,18 +75,18 @@ class ZKVerifierTransaction(
         fun inputs(): List<ZKStateRef> {
             val filler = padding.filler(ComponentGroupEnum.INPUTS_GROUP) ?: error("Expected a filler object")
             require(filler is ComponentPadding.Filler.ZKStateRef) { "Expected filler of type ZKStateRef" }
-            return originalInputs.pad(sizeOf(ComponentGroupEnum.INPUTS_GROUP), filler.value)
+            return originalInputs.pad(sizeOf(ComponentGroupEnum.INPUTS_GROUP), filler.content)
         }
         fun outputs(): List<ZKStateRef> {
             val filler = padding.filler(ComponentGroupEnum.OUTPUTS_GROUP) ?: error("Expected a filler object")
             require(filler is ComponentPadding.Filler.ZKStateRef) { "Expected filler of type ZKStateRef" }
-            return originalOutputs.pad(sizeOf(ComponentGroupEnum.OUTPUTS_GROUP), filler.value)
+            return originalOutputs.pad(sizeOf(ComponentGroupEnum.OUTPUTS_GROUP), filler.content)
         }
 
         fun references(): List<ZKStateRef> {
             val filler = padding.filler(ComponentGroupEnum.REFERENCES_GROUP) ?: error("Expected a filler object")
             require(filler is ComponentPadding.Filler.ZKStateRef) { "Expected filler of type ZKStateRef" }
-            return originalReferences.pad(sizeOf(ComponentGroupEnum.REFERENCES_GROUP), filler.value)
+            return originalReferences.pad(sizeOf(ComponentGroupEnum.REFERENCES_GROUP), filler.content)
         }
 
         /**

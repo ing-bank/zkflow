@@ -2,7 +2,7 @@ package com.ing.zknotary.common.transactions
 
 import com.ing.zknotary.common.states.ZKStateRef
 import com.ing.zknotary.common.util.ComponentPadding
-import com.ing.zknotary.common.util.Nature
+import com.ing.zknotary.common.util.PaddingWrapper
 import net.corda.core.DeleteForDJVM
 import net.corda.core.contracts.ComponentGroupEnum
 
@@ -81,4 +81,4 @@ fun <T> List<T>.pad(n: Int, default: T) = List(n) {
 }
 
 fun <T> List<T>.wrappedPad(n: Int, default: T) =
-    map { Nature.Authentic(it) }.pad(n, Nature.Bogus(default))
+    map { PaddingWrapper.Original(it) }.pad(n, PaddingWrapper.Filler(default))

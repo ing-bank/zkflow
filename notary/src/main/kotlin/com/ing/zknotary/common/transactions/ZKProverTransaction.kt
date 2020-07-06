@@ -3,7 +3,7 @@ package com.ing.zknotary.common.transactions
 import com.ing.zknotary.common.serializer.SerializationFactoryService
 import com.ing.zknotary.common.states.ZKStateAndRef
 import com.ing.zknotary.common.util.ComponentPadding
-import com.ing.zknotary.common.util.Nature
+import com.ing.zknotary.common.util.PaddingWrapper
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.ContractState
@@ -86,28 +86,28 @@ class ZKProverTransaction(
         val padding: ComponentPadding
     ) {
 
-        fun inputs(): List<Nature<ZKStateAndRef<ContractState>>> {
+        fun inputs(): List<PaddingWrapper<ZKStateAndRef<ContractState>>> {
             val filler = padding.filler(ComponentGroupEnum.INPUTS_GROUP) ?: error("Expected a filler object")
             require(filler is ComponentPadding.Filler.ZKStateAndRef) { "Expected filler of type ZKStateAndRef" }
-            return originalInputs.wrappedPad(sizeOf(ComponentGroupEnum.INPUTS_GROUP), filler.value)
+            return originalInputs.wrappedPad(sizeOf(ComponentGroupEnum.INPUTS_GROUP), filler.content)
         }
 
-        fun outputs(): List<Nature<ZKStateAndRef<ContractState>>> {
+        fun outputs(): List<PaddingWrapper<ZKStateAndRef<ContractState>>> {
             val filler = padding.filler(ComponentGroupEnum.OUTPUTS_GROUP) ?: error("Expected a filler object")
             require(filler is ComponentPadding.Filler.ZKStateAndRef) { "Expected filler of type ZKStateAndRef" }
-            return originalOutputs.wrappedPad(sizeOf(ComponentGroupEnum.OUTPUTS_GROUP), filler.value)
+            return originalOutputs.wrappedPad(sizeOf(ComponentGroupEnum.OUTPUTS_GROUP), filler.content)
         }
 
-        fun references(): List<Nature<ZKStateAndRef<ContractState>>> {
+        fun references(): List<PaddingWrapper<ZKStateAndRef<ContractState>>> {
             val filler = padding.filler(ComponentGroupEnum.REFERENCES_GROUP) ?: error("Expected a filler object")
             require(filler is ComponentPadding.Filler.ZKStateAndRef) { "Expected filler of type ZKStateAndRef" }
-            return originalReferences.wrappedPad(sizeOf(ComponentGroupEnum.REFERENCES_GROUP), filler.value)
+            return originalReferences.wrappedPad(sizeOf(ComponentGroupEnum.REFERENCES_GROUP), filler.content)
         }
 
-        fun signers(): List<Nature<PublicKey>> {
+        fun signers(): List<PaddingWrapper<PublicKey>> {
             val filler = padding.filler(ComponentGroupEnum.SIGNERS_GROUP) ?: error("Expected a filler object")
             require(filler is ComponentPadding.Filler.PublicKey) { "Expected filler of type PublicKey" }
-            return originalSigners.wrappedPad(sizeOf(ComponentGroupEnum.SIGNERS_GROUP), filler.value)
+            return originalSigners.wrappedPad(sizeOf(ComponentGroupEnum.SIGNERS_GROUP), filler.content)
         }
 
         /**

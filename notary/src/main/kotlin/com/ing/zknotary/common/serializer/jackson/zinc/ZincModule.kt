@@ -8,7 +8,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.fasterxml.jackson.databind.module.SimpleModule
 import com.ing.zknotary.common.states.ZKStateAndRef
 import com.ing.zknotary.common.transactions.ZKProverTransaction
-import com.ing.zknotary.common.util.Nature
+import com.ing.zknotary.common.util.PaddingWrapper
 import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.ContractState
@@ -23,8 +23,6 @@ class ZincModule : SimpleModule("corda-core") {
         super.setupModule(context)
 
         context.setMixInAnnotations(ZKProverTransaction::class.java, ZincMixin::class.java)
-
-        context.setMixInAnnotations(Nature::class.java, NatureMixinZinc::class.java)
 
         context.setMixInAnnotations(PublicKey::class.java, PublicKeyMixinZinc::class.java)
         context.setMixInAnnotations(TransactionState::class.java, TransactionStateMixinZinc::class.java)
@@ -52,7 +50,7 @@ private class ZincMixinSerializer : JsonSerializer<ZKProverTransaction>() {
                 StateGroup(value.padded.references(), value.merkleTree.groupHashes[ComponentGroupEnum.REFERENCES_GROUP.ordinal]),
                 StateGroup(value.padded.signers(), value.merkleTree.groupHashes[ComponentGroupEnum.SIGNERS_GROUP.ordinal]),
                 // Currently command serializes into a single Int. This will change in future.
-                StateGroup(listOf(Nature.Authentic(0)), value.merkleTree.groupHashes[ComponentGroupEnum.COMMANDS_GROUP.ordinal]),
+                StateGroup(listOf(PaddingWrapper.Original(0)), value.merkleTree.groupHashes[ComponentGroupEnum.COMMANDS_GROUP.ordinal]),
                 value.privacySalt
             )
         )
@@ -61,11 +59,11 @@ private class ZincMixinSerializer : JsonSerializer<ZKProverTransaction>() {
 }
 
 private class ZincJson(
-    val inputs: StateGroup<Nature<ZKStateAndRef<ContractState>>>,
-    val outputs: StateGroup<Nature<ZKStateAndRef<ContractState>>>,
-    val references: StateGroup<Nature<ZKStateAndRef<ContractState>>>,
-    val signers: StateGroup<Nature<PublicKey>>,
-    val commands: StateGroup<Nature<Int>>,
+    val inputs: StateGroup<PaddingWrapper<ZKStateAndRef<ContractState>>>,
+    val outputs: StateGroup<PaddingWrapper<ZKStateAndRef<ContractState>>>,
+    val references: StateGroup<PaddingWrapper<ZKStateAndRef<ContractState>>>,
+    val signers: StateGroup<PaddingWrapper<PublicKey>>,
+    val commands: StateGroup<PaddingWrapper<Int>>,
     val privacySalt: PrivacySalt
 )
 
@@ -73,8 +71,6 @@ data class StateGroup<T>(val value: List<T>, val groupHash: SecureHash)
 
 fun ByteArray.asBytes255(): IntArray = this.map { it.toInt() and 0xFF }.toIntArray()
 fun IntArray.asString() = this.joinToString(", ", "[", "]")
-
-private interface NatureMixinZinc
 
 @JsonSerialize(using = PublicKeyMixinZincSerializer::class)
 private interface PublicKeyMixinZinc
