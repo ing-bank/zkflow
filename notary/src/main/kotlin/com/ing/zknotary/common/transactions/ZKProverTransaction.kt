@@ -89,33 +89,25 @@ class ZKProverTransaction(
         fun inputs(): List<Nature<ZKStateAndRef<ContractState>>> {
             val filler = padding.filler(ComponentGroupEnum.INPUTS_GROUP) ?: error("Expected a filler object")
             require(filler is ComponentPadding.Filler.ZKStateAndRef) { "Expected filler of type ZKStateAndRef" }
-            return originalInputs
-                .map { Nature.Authentic(it) }
-                .pad(sizeOf(ComponentGroupEnum.INPUTS_GROUP), Nature.Bogus(filler.value))
+            return originalInputs.wrappedPad(sizeOf(ComponentGroupEnum.INPUTS_GROUP), filler.value)
         }
 
         fun outputs(): List<Nature<ZKStateAndRef<ContractState>>> {
             val filler = padding.filler(ComponentGroupEnum.OUTPUTS_GROUP) ?: error("Expected a filler object")
             require(filler is ComponentPadding.Filler.ZKStateAndRef) { "Expected filler of type ZKStateAndRef" }
-            return originalOutputs
-                .map { Nature.Authentic(it) }
-                .pad(sizeOf(ComponentGroupEnum.OUTPUTS_GROUP), Nature.Bogus(filler.value))
+            return originalOutputs.wrappedPad(sizeOf(ComponentGroupEnum.OUTPUTS_GROUP), filler.value)
         }
 
         fun references(): List<Nature<ZKStateAndRef<ContractState>>> {
             val filler = padding.filler(ComponentGroupEnum.REFERENCES_GROUP) ?: error("Expected a filler object")
             require(filler is ComponentPadding.Filler.ZKStateAndRef) { "Expected filler of type ZKStateAndRef" }
-            return originalReferences
-                .map { Nature.Authentic(it) }
-                .pad(sizeOf(ComponentGroupEnum.REFERENCES_GROUP), Nature.Bogus(filler.value))
+            return originalReferences.wrappedPad(sizeOf(ComponentGroupEnum.REFERENCES_GROUP), filler.value)
         }
 
         fun signers(): List<Nature<PublicKey>> {
             val filler = padding.filler(ComponentGroupEnum.SIGNERS_GROUP) ?: error("Expected a filler object")
             require(filler is ComponentPadding.Filler.PublicKey) { "Expected filler of type PublicKey" }
-            return originalSigners
-                .map { Nature.Authentic(it) }
-                .pad(sizeOf(ComponentGroupEnum.SIGNERS_GROUP), Nature.Bogus(filler.value))
+            return originalSigners.wrappedPad(sizeOf(ComponentGroupEnum.SIGNERS_GROUP), filler.value)
         }
 
         /**
