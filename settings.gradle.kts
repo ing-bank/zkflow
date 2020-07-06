@@ -25,5 +25,4 @@ pluginManagement {
 }
 
 include("notary")
-include("docs")
 include("docs:whitepaper")
