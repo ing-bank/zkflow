@@ -9,10 +9,11 @@ import net.corda.core.contracts.requireThat
 import net.corda.core.serialization.CordaSerializable
 
 @CordaSerializable
-class ComponentPadding private constructor(
+class ComponentPaddingConfiguration private constructor(
     private val padding: Map<Int, Int>,
     private val fillers: Map<Int, Filler>
 ) {
+
     @CordaSerializable
     sealed class Filler {
         data class ZKStateAndRef(val content: com.ing.zknotary.common.states.ZKStateAndRef<ContractState>) : Filler()
@@ -44,12 +45,12 @@ class ComponentPadding private constructor(
             fillers[ComponentGroupEnum.REFERENCES_GROUP.ordinal] = filler
         }
 
-        fun build(): ComponentPadding {
+        fun build(): ComponentPaddingConfiguration {
             positive(padding[ComponentGroupEnum.INPUTS_GROUP.ordinal], "inputs")
             positive(padding[ComponentGroupEnum.OUTPUTS_GROUP.ordinal], "outputs")
             positive(padding[ComponentGroupEnum.REFERENCES_GROUP.ordinal], "references")
 
-            return ComponentPadding(padding, fillers)
+            return ComponentPaddingConfiguration(padding, fillers)
         }
 
         private fun positive(value: Int?, that: String) {

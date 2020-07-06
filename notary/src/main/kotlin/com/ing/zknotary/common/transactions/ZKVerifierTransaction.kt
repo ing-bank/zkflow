@@ -2,7 +2,7 @@ package com.ing.zknotary.common.transactions
 
 import com.ing.zknotary.common.serializer.SerializationFactoryService
 import com.ing.zknotary.common.states.ZKStateRef
-import com.ing.zknotary.common.util.ComponentPadding
+import com.ing.zknotary.common.util.ComponentPaddingConfiguration
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.TimeWindow
 import net.corda.core.crypto.DigestService
@@ -34,19 +34,19 @@ class ZKVerifierTransaction(
     /**
      * Used for padding internal lists to sizes accepted by the ZK circuit.
      */
-    componentPadding: ComponentPadding
+    componentPaddingConfiguration: ComponentPaddingConfiguration
 ) {
     val padded = Padded(
         originalInputs = inputs, originalOutputs = outputs,
-        originalReferences = references, padding = componentPadding
+        originalReferences = references, paddingConfiguration = componentPaddingConfiguration
     )
 
     // Required by Corda.
-    val componentPadding: ComponentPadding
-        get() = padded.padding
+    val componentPaddingConfiguration: ComponentPaddingConfiguration
+        get() = padded.paddingConfiguration
 
     init {
-        componentPadding.validate(this)
+        componentPaddingConfiguration.validate(this)
 
         require(padded.inputs().size == componentNonces[ComponentGroupEnum.INPUTS_GROUP.ordinal]?.size ?: 0) { "Number of inputs and input nonces should be equal" }
         require(padded.outputs().size == componentNonces[ComponentGroupEnum.OUTPUTS_GROUP.ordinal]?.size ?: 0) { "Number of outputs and output nonces should be equal" }
@@ -69,23 +69,23 @@ class ZKVerifierTransaction(
         private val originalInputs: List<ZKStateRef>,
         private val originalOutputs: List<ZKStateRef>,
         private val originalReferences: List<ZKStateRef>,
-        val padding: ComponentPadding
+        val paddingConfiguration: ComponentPaddingConfiguration
     ) {
 
         fun inputs(): List<ZKStateRef> {
-            val filler = padding.filler(ComponentGroupEnum.INPUTS_GROUP) ?: error("Expected a filler object")
-            require(filler is ComponentPadding.Filler.ZKStateRef) { "Expected filler of type ZKStateRef" }
+            val filler = paddingConfiguration.filler(ComponentGroupEnum.INPUTS_GROUP) ?: error("Expected a filler object")
+            require(filler is ComponentPaddingConfiguration.Filler.ZKStateRef) { "Expected filler of type ZKStateRef" }
             return originalInputs.pad(sizeOf(ComponentGroupEnum.INPUTS_GROUP), filler.content)
         }
         fun outputs(): List<ZKStateRef> {
-            val filler = padding.filler(ComponentGroupEnum.OUTPUTS_GROUP) ?: error("Expected a filler object")
-            require(filler is ComponentPadding.Filler.ZKStateRef) { "Expected filler of type ZKStateRef" }
+            val filler = paddingConfiguration.filler(ComponentGroupEnum.OUTPUTS_GROUP) ?: error("Expected a filler object")
+            require(filler is ComponentPaddingConfiguration.Filler.ZKStateRef) { "Expected filler of type ZKStateRef" }
             return originalOutputs.pad(sizeOf(ComponentGroupEnum.OUTPUTS_GROUP), filler.content)
         }
 
         fun references(): List<ZKStateRef> {
-            val filler = padding.filler(ComponentGroupEnum.REFERENCES_GROUP) ?: error("Expected a filler object")
-            require(filler is ComponentPadding.Filler.ZKStateRef) { "Expected filler of type ZKStateRef" }
+            val filler = paddingConfiguration.filler(ComponentGroupEnum.REFERENCES_GROUP) ?: error("Expected a filler object")
+            require(filler is ComponentPaddingConfiguration.Filler.ZKStateRef) { "Expected filler of type ZKStateRef" }
             return originalReferences.pad(sizeOf(ComponentGroupEnum.REFERENCES_GROUP), filler.content)
         }
 
@@ -93,6 +93,6 @@ class ZKVerifierTransaction(
          * Return appropriate size ot fail.
          */
         private fun sizeOf(componentGroup: ComponentGroupEnum): Int =
-            padding.sizeOf(componentGroup) ?: error("Expected a positive number")
+            paddingConfiguration.sizeOf(componentGroup) ?: error("Expected a positive number")
     }
 }
