@@ -54,17 +54,13 @@ class ZKProverTransaction(
     /**
      * Used for padding internal lists to sizes accepted by the ZK circuit.
      */
-    componentPadding: ComponentPadding
+    val componentPadding: ComponentPadding
 ) : NamedByZKMerkleTree {
 
     val padded = Padded(
         originalInputs = inputs, originalOutputs = outputs, originalSigners = command.signers,
         originalReferences = references, padding = componentPadding
     )
-
-    // Required by Corda.
-    val componentPadding: ComponentPadding
-        get() = padded.padding
 
     init {
         componentPadding.validate(this)
