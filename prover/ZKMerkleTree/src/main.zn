@@ -13,56 +13,77 @@ use ZKMerkleTree::OutputGroup;
 use ZKMerkleTree::CommandDataGroup; 
 use ZKMerkleTree::ReferenceGroup; 
 use ZKMerkleTree::CommandSignerGroup; 
-use ZKMerkleTree::ZKStateAndRefGroup; 
+use ZKMerkleTree::ZKStateAndRefGroup;
+
+use ZKMerkleTree::ContentZKStateAndRefGroup; 
+use ZKMerkleTree::ContentCommandDataGroup; 
+use ZKMerkleTree::ContentCommandSignerGroup; 
 
 //Temporary function to manually transfer components to zkmerkle tree !!!
 fn convertFromComponentToZKMerkle(zkptx: (ComponentGroups::ComponentGroup, PrivacySalt)) -> (ComponentGroup, PrivacySalt)
 {
     (ComponentGroup {
         inputs: InputGroup{
-                    groupElements:[ ZKStateAndRefGroup{ state: zkptx.0.inputs.groupElements[0].state,
-                                                        zkStateRef: zkptx.0.inputs.groupElements[0].zkStateRef,
-                                                        nonce: zkptx.0.inputs.groupElements[0].nonce, },
-                                    ZKStateAndRefGroup{ state: zkptx.0.inputs.groupElements[1].state,
-                                                        zkStateRef: zkptx.0.inputs.groupElements[1].zkStateRef,
-                                                        nonce: zkptx.0.inputs.groupElements[1].zkStateRef,}
+                    groupElements:[ ContentZKStateAndRefGroup{
+                                                            content: ZKStateAndRefGroup{ state: zkptx.0.inputs.groupElements[0].content.state,
+                                                                                         zkStateRef: zkptx.0.inputs.groupElements[0].content.zkStateRef,
+                                                                                         nonce: zkptx.0.inputs.groupElements[0].content.nonce, },
+                                                            isFiller: zkptx.0.inputs.groupElements[0].isFiller, },            
+                                    ContentZKStateAndRefGroup{
+                                                            content: ZKStateAndRefGroup{ state: zkptx.0.inputs.groupElements[1].content.state,
+                                                                                         zkStateRef: zkptx.0.inputs.groupElements[1].content.zkStateRef,
+                                                                                         nonce: zkptx.0.inputs.groupElements[1].content.nonce, },
+                                                            isFiller: zkptx.0.inputs.groupElements[1].isFiller, }  
                                   ],
                     groupHash: zkptx.0.inputs.groupHash, 
                 },
         outputs: OutputGroup{
-                    groupElements:[ ZKStateAndRefGroup{ state: zkptx.0.outputs.groupElements[0].state,
-                                                        zkStateRef: zkptx.0.outputs.groupElements[0].zkStateRef,
-                                                        nonce: zkptx.0.outputs.groupElements[0].nonce, },
-                                    ZKStateAndRefGroup{ state: zkptx.0.outputs.groupElements[1].state,
-                                                        zkStateRef: zkptx.0.outputs.groupElements[1].zkStateRef,
-                                                        nonce: zkptx.0.outputs.groupElements[1].zkStateRef,}
+                    groupElements:[ ContentZKStateAndRefGroup{
+                                                            content: ZKStateAndRefGroup{ state: zkptx.0.outputs.groupElements[0].content.state,
+                                                                                         zkStateRef: zkptx.0.outputs.groupElements[0].content.zkStateRef,
+                                                                                         nonce: zkptx.0.outputs.groupElements[0].content.nonce, },
+                                                            isFiller: zkptx.0.outputs.groupElements[0].isFiller, },            
+                                    ContentZKStateAndRefGroup{
+                                                            content: ZKStateAndRefGroup{ state: zkptx.0.outputs.groupElements[1].content.state,
+                                                                                         zkStateRef: zkptx.0.outputs.groupElements[1].content.zkStateRef,
+                                                                                         nonce: zkptx.0.outputs.groupElements[1].content.nonce, },
+                                                            isFiller: zkptx.0.outputs.groupElements[1].isFiller, }
                                   ],
                     groupHash: zkptx.0.outputs.groupHash, 
                 },        
         commandData: CommandDataGroup{
-                    groupElements: zkptx.0.commandData.groupElements,
+                    groupElements: ContentCommandDataGroup {
+                                                            content: zkptx.0.commandData.groupElements.content,
+                                                            isFiller: zkptx.0.commandData.groupElements.isFiller, },
                     groupHash: zkptx.0.commandData.groupHash, 
                 },
-
         references: ReferenceGroup{
-                    groupElements:[ ZKStateAndRefGroup{ state: zkptx.0.references.groupElements[0].state,
-                                                        zkStateRef: zkptx.0.references.groupElements[0].zkStateRef,
-                                                        nonce: zkptx.0.references.groupElements[0].nonce, },
-                                    ZKStateAndRefGroup{ state: zkptx.0.references.groupElements[1].state,
-                                                        zkStateRef: zkptx.0.references.groupElements[1].zkStateRef,
-                                                        nonce: zkptx.0.references.groupElements[1].zkStateRef,}
+                    groupElements:[ ContentZKStateAndRefGroup{
+                                                            content: ZKStateAndRefGroup{ state: zkptx.0.references.groupElements[0].content.state,
+                                                                                         zkStateRef: zkptx.0.references.groupElements[0].content.zkStateRef,
+                                                                                         nonce: zkptx.0.references.groupElements[0].content.nonce, },
+                                                            isFiller: zkptx.0.references.groupElements[0].isFiller, },            
+                                    ContentZKStateAndRefGroup{
+                                                            content: ZKStateAndRefGroup{ state: zkptx.0.references.groupElements[1].content.state,
+                                                                                         zkStateRef: zkptx.0.references.groupElements[1].content.zkStateRef,
+                                                                                         nonce: zkptx.0.references.groupElements[1].content.nonce, },
+                                                            isFiller: zkptx.0.references.groupElements[1].isFiller, }
                                   ],
                     groupHash: zkptx.0.references.groupHash, 
                 },
-
         commandSigners: CommandSignerGroup{
-                    groupElements: zkptx.0.commandSigners.groupElements,
+                    groupElements: [ContentCommandSignerGroup{
+                                                            content: zkptx.0.commandSigners.groupElements[0].content,
+                                                            isFiller: zkptx.0.commandSigners.groupElements[0].isFiller, },
+                                    ContentCommandSignerGroup{
+                                                            content: zkptx.0.commandSigners.groupElements[1].content,
+                                                            isFiller: zkptx.0.commandSigners.groupElements[1].isFiller, },
+                                   ],
                     groupHash: zkptx.0.commandSigners.groupHash, 
                 }, 
     },
     zkptx.1)
 }
-
 
 fn main(witness: ZKProverTransaction) -> [u8;32] //ZKMerkleTree::PedersenDigest
 {
