@@ -13,7 +13,7 @@ class ZKFullMerkleTree(
 ) {
     companion object {
         fun createComponentGroups(ptx: ZKProverTransaction): List<ComponentGroup> {
-           val digestService = ptx.componentGroupLeafDigestService
+            val digestService = ptx.componentGroupLeafDigestService
 
             return mutableListOf<ComponentGroup>().apply {
                 addInputsGroup(ptx.padded.inputs().map { it.content.ref })

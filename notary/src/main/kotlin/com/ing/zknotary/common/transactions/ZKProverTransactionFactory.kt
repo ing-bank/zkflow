@@ -17,7 +17,6 @@ class ZKProverTransactionFactory {
     companion object {
         fun create(
             ltx: LedgerTransaction,
-            // serializationFactoryService: SerializationFactoryService,
             componentGroupLeafDigestService: DigestService,
             nodeDigestService: DigestService = componentGroupLeafDigestService,
             componentPaddingConfiguration: ComponentPaddingConfiguration = DEFAULT_PADDING_CONFIGURATION

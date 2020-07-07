@@ -45,10 +45,6 @@ class ZKProverTransaction(
     // For now we ignore attachment contents inside the circuit. We might want to use them for attaching some circuit identifier or even the verifier key.
     val attachments: List<AttachmentId>,
 
-    /**
-     * Used for serialization of the merkle tree leaves and for ZKStateRefs
-     */
-    val serializationFactoryService: SerializationFactoryService,
     val componentGroupLeafDigestService: DigestService,
     val nodeDigestService: DigestService = componentGroupLeafDigestService,
 
