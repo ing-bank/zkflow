@@ -343,3 +343,21 @@ fn buildComponentGroups(zkptx:ZKProverTransaction) -> (ComponentGroup, PrivacySa
         convertHashToBits(zkptx.privacySalt)
     )
 }
+
+//Temporary function to test isFiller attribute
+fn CheckContractRules(value: ZKProverTransaction)
+{
+    //Check if inputs total is equal to outputs total
+    let mut inputValueSum:i32 = 0;
+    let mut outputValueSum:i32 = 0;
+
+    for i in 0..N_INPUTS while value.inputs.value[i].isFiller == false {
+        inputValueSum = inputValueSum + value.inputs.value[i].content.state.data.value; 
+    }
+
+    for i in 0..N_OUTPUTS while value.outputs.value[i].isFiller == false {
+        outputValueSum = outputValueSum + value.outputs.value[i].content.state.data.value; 
+    }
+
+    assert!(inputValueSum == outputValueSum, "Failed requirement: the total value of the inputs and outputs should be equal");
+}
