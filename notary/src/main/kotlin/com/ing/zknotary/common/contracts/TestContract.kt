@@ -1,5 +1,6 @@
 package com.ing.zknotary.common.contracts
 
+import com.ing.zknotary.common.zkp.fingerprint
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.CommandAndState
 import net.corda.core.contracts.Contract
@@ -7,7 +8,6 @@ import net.corda.core.contracts.ContractClassName
 import net.corda.core.contracts.OwnableState
 import net.corda.core.identity.AbstractParty
 import net.corda.core.transactions.LedgerTransaction
-import java.nio.ByteBuffer
 import java.util.Random
 
 class TestContract : Contract {
@@ -24,11 +24,13 @@ class TestContract : Contract {
         override val participants = listOf(owner)
         override fun withNewOwner(newOwner: AbstractParty) = CommandAndState(Move(), copy(owner = newOwner))
 
-        // TODO: Consider using hashCode for fingerprinting.
-        // The benefit is that users need not implement the Fingerprintable interface.
-        // Concern is that hashCodes may be different for instances with the same content across program invocations.
+        /**
+         * TODO: Try to find an automatable way of generating the fingerprint from arbitrary objects,
+         * that is repeatable in Zinc.
+         * The benefit is that users need not implement the Fingerprintable interface.
+         */
         override val fingerprint: ByteArray =
-            nonce.bytes + owner.owningKey.encoded + ByteBuffer.allocate(4).putInt(value).array()
+            nonce.fingerprint + owner.fingerprint + value.fingerprint
     }
 
     // Commands

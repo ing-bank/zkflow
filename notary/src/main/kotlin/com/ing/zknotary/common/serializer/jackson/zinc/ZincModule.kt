@@ -52,7 +52,8 @@ private class ZincMixinSerializer : JsonSerializer<ZKProverTransaction>() {
                 // Currently command serializes into a single Int. This will change in future.
                 StateGroup(
                     listOf(PaddingWrapper.Original(value.command.value.fingerprint.first().toInt())),
-                    value.merkleTree.groupHashes[ComponentGroupEnum.COMMANDS_GROUP.ordinal]),
+                    value.merkleTree.groupHashes[ComponentGroupEnum.COMMANDS_GROUP.ordinal]
+                ),
                 value.privacySalt
             )
         )
