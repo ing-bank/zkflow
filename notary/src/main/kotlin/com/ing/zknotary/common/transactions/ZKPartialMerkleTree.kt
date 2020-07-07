@@ -1,7 +1,6 @@
 package com.ing.zknotary.common.transactions
 
 import net.corda.core.crypto.SecureHash
-import net.corda.core.serialization.serialize
 import net.corda.core.transactions.ComponentGroup
 
 class ZKPartialMerkleTree(
@@ -14,15 +13,15 @@ class ZKPartialMerkleTree(
 
     companion object {
         private fun createComponentGroups(vtx: ZKVerifierTransaction): List<ComponentGroup> {
-            val serializer = { value: Any, _: Int -> value.serialize(vtx.serializationFactoryService.factory) }
+            val digestService = vtx.componentGroupLeafDigestService
 
             return mutableListOf<ComponentGroup>().apply {
-                addInputsGroup(vtx.padded.inputs(), serializer)
-                addReferencesGroup(vtx.padded.references(), serializer)
-                addOutputsGroup(vtx.padded.outputs(), serializer)
-                addNotaryGroup(vtx.notary, serializer)
-                addTimeWindowGroup(vtx.timeWindow, serializer)
-                addNetWorkParametersHashGroup(vtx.networkParametersHash, serializer)
+                addInputsGroup(vtx.padded.inputs())
+                addReferencesGroup(vtx.padded.references())
+                addOutputsGroup(vtx.padded.outputs())
+                addNotaryGroup(vtx.notary, digestService)
+                addTimeWindowGroup(vtx.timeWindow, digestService)
+                addNetWorkParametersHashGroup(vtx.networkParametersHash)
             }
         }
     }

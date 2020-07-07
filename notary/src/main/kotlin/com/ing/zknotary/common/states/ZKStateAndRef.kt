@@ -18,7 +18,6 @@ import net.corda.core.serialization.CordaSerializable
 data class ZKStateAndRef<out T : ZKContractState>(val state: TransactionState<T>, val ref: ZKStateRef)
 
 fun StateAndRef<ContractState>.toZKStateAndRef(digestService: DigestService): ZKStateAndRef<ZKContractState> {
-    // TODO: Consider https://www.baeldung.com/kotlin-contracts
     require(state.data is ZKContractState) { "Contract state must implement ZKContractState" }
     val state = state as TransactionState<ZKContractState>
     return ZKStateAndRef(state, ZKStateRef(digestService.hash(state.fingerprint)))

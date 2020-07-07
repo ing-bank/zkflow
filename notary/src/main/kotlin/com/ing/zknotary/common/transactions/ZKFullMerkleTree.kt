@@ -1,7 +1,6 @@
 package com.ing.zknotary.common.transactions
 
 import net.corda.core.crypto.SecureHash
-import net.corda.core.serialization.serialize
 import net.corda.core.transactions.ComponentGroup
 import java.nio.ByteBuffer
 
@@ -14,18 +13,18 @@ class ZKFullMerkleTree(
 ) {
     companion object {
         fun createComponentGroups(ptx: ZKProverTransaction): List<ComponentGroup> {
-            val serializer = { value: Any, _: Int -> value.serialize(ptx.serializationFactoryService.factory) }
+           val digestService = ptx.componentGroupLeafDigestService
 
             return mutableListOf<ComponentGroup>().apply {
-                addInputsGroup(ptx.padded.inputs().map { it.content.ref }, serializer)
-                addReferencesGroup(ptx.padded.references().map { it.content.ref }, serializer)
-                addOutputsGroup(ptx.padded.outputs().map { it.content.ref }, serializer)
-                addCommandGroup(ptx.command.value, serializer)
-                addAttachmentsGroup(ptx.attachments, serializer)
-                addNotaryGroup(ptx.notary, serializer)
-                addTimeWindowGroup(ptx.timeWindow, serializer)
-                addNetWorkParametersHashGroup(ptx.networkParametersHash, serializer)
-                addCommandSignersGroup(ptx.padded.signers().map { it.content }, serializer)
+                addInputsGroup(ptx.padded.inputs().map { it.content.ref })
+                addReferencesGroup(ptx.padded.references().map { it.content.ref })
+                addOutputsGroup(ptx.padded.outputs().map { it.content.ref })
+                addCommandGroup(ptx.command.value, digestService)
+                addAttachmentsGroup(ptx.attachments)
+                addNotaryGroup(ptx.notary, digestService)
+                addTimeWindowGroup(ptx.timeWindow, digestService)
+                addNetWorkParametersHashGroup(ptx.networkParametersHash)
+                addCommandSignersGroup(ptx.padded.signers().map { it.content }, digestService)
             }
         }
     }
