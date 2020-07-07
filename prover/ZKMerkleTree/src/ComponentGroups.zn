@@ -120,36 +120,49 @@ struct ZKProverTransaction {
     privacySalt: [u8; HASH_BYTES],
 }
 
-
-struct ZKStateAndRefGroup{
-    state : [bool; STATE_BITS], 
+struct ZKStateAndRefGroup {
+    state: [bool; STATE_BITS], 
     zkStateRef: [bool; REF_BITS],
-    nonce: [bool; HASH_BITS], 
+    nonce: [bool; HASH_BITS],  
 }
 
+struct ContentZKStateAndRefGroup{
+    content: ZKStateAndRefGroup,
+    isFiller: bool,  
+}
 
 struct InputGroup {
-    groupElements: [ZKStateAndRefGroup; N_INPUTS],
+    groupElements: [ContentZKStateAndRefGroup; N_INPUTS],
     groupHash: [bool;HASH_BITS],  
 }
 
 struct OutputGroup {
-    groupElements: [ZKStateAndRefGroup; N_OUTPUTS],
+    groupElements: [ContentZKStateAndRefGroup; N_OUTPUTS],
     groupHash: [bool;HASH_BITS],  
 }
 
 struct ReferenceGroup{
-    groupElements: [ZKStateAndRefGroup; N_REFERENCES],
+    groupElements: [ContentZKStateAndRefGroup; N_REFERENCES],
     groupHash: [bool;HASH_BITS],      
 }
 
+struct ContentCommandDataGroup{
+    content: [bool; INT32_BITS], 
+    isFiller: bool, 
+}
+
 struct CommandDataGroup {
-    groupElements: [bool; INT32_BITS],
+    groupElements: ContentCommandDataGroup,
     groupHash: [bool;HASH_BITS],  
 }
 
+struct ContentCommandSignersGroup{
+    content: [bool; PUBKEY_BITS],
+    isFiller: bool, 
+}
+
 struct CommandSignerGroup {
-    groupElements: [[bool; PUBKEY_BITS]; N_SIGNERS],
+    groupElements: [ContentCommandSignersGroup; N_SIGNERS],
     groupHash: [bool;HASH_BITS],  
 }
 
@@ -201,77 +214,98 @@ fn convertStateToBits(value:TransactionState) -> [bool; STATE_BITS]
     result
 }
 
-fn convertInputsToBits(value:[ContentZKStateAndRef; N_INPUTS]) -> [ZKStateAndRefGroup; N_INPUTS]
+fn convertInputsToBits(value:[ContentZKStateAndRef; N_INPUTS]) -> [ContentZKStateAndRefGroup; N_INPUTS]
 {
-    let mut result = [ZKStateAndRefGroup{
+    let mut result = [ContentZKStateAndRefGroup{ 
+                        content: ZKStateAndRefGroup{
                                             state: [false; STATE_BITS],
                                             zkStateRef: [false; REF_BITS],
-                                            nonce: [false; HASH_BITS],  
+                                            nonce: [false; HASH_BITS],},
+                        isFiller: false,                     
                                         }; N_INPUTS];
     for i in 0.. N_INPUTS { 
         //state bits 
-        result[i].state = convertStateToBits(value[i].content.state); 
+        result[i].content.state = convertStateToBits(value[i].content.state); 
         //zkStateRef bits 
-        result[i].zkStateRef = convertHashToBits(value[i].content.reference.id); 
+        result[i].content.zkStateRef = convertHashToBits(value[i].content.reference.id); 
         //zkStateRef nonce bits 
-        result[i].nonce = convertHashToBits(value[i].content.state.nonce);
+        result[i].content.nonce = convertHashToBits(value[i].content.state.nonce);
+        
+        //isFiller
+        result[i].isFiller = value[i].isFiller; 
     } 
     result  
 }
 
-fn convertOutputsToBits(value:[ContentZKStateAndRef; N_OUTPUTS]) -> [ZKStateAndRefGroup; N_OUTPUTS]
+fn convertOutputsToBits(value:[ContentZKStateAndRef; N_OUTPUTS]) -> [ContentZKStateAndRefGroup; N_OUTPUTS]
 {
-    let mut result = [ZKStateAndRefGroup{
+    let mut result = [ContentZKStateAndRefGroup{
+                        content: ZKStateAndRefGroup{
                                             state: [false; STATE_BITS],
                                             zkStateRef: [false; REF_BITS],
-                                            nonce: [false; HASH_BITS],  
+                                            nonce: [false; HASH_BITS],},
+                        isFiller: false, 
                                         }; N_OUTPUTS];
     for i in 0.. N_OUTPUTS { 
         //state bits 
-        result[i].state = convertStateToBits(value[i].content.state); 
+        result[i].content.state = convertStateToBits(value[i].content.state); 
         //zkStateRef bits 
-        result[i].zkStateRef = convertHashToBits(value[i].content.reference.id); 
+        result[i].content.zkStateRef = convertHashToBits(value[i].content.reference.id); 
         //zkStateRef nonce bits 
-        result[i].nonce = convertHashToBits(value[i].content.state.nonce);
+        result[i].content.nonce = convertHashToBits(value[i].content.state.nonce);
+
+        //isFiller
+        result[i].isFiller = value[i].isFiller;
     } 
     result  
 }
 
-fn convertReferencesToBits(value:[ContentZKStateAndRef; N_REFERENCES]) -> [ZKStateAndRefGroup; N_REFERENCES]
+fn convertReferencesToBits(value:[ContentZKStateAndRef; N_REFERENCES]) -> [ContentZKStateAndRefGroup; N_REFERENCES]
 {
-    let mut result = [ZKStateAndRefGroup{
+    let mut result = [ContentZKStateAndRefGroup{
+                        content: ZKStateAndRefGroup{
                                             state: [false; STATE_BITS],
                                             zkStateRef: [false; REF_BITS],
-                                            nonce: [false; HASH_BITS],  
+                                            nonce: [false; HASH_BITS],},
+                        isFiller: false,  
                                         }; N_REFERENCES];
     for i in 0.. N_REFERENCES { 
         //state bits 
-        result[i].state = convertStateToBits(value[i].content.state); 
+        result[i].content.state = convertStateToBits(value[i].content.state); 
         //zkStateRef bits 
-        result[i].zkStateRef = convertHashToBits(value[i].content.reference.id); 
+        result[i].content.zkStateRef = convertHashToBits(value[i].content.reference.id); 
         //zkStateRef nonce bits 
-        result[i].nonce = convertHashToBits(value[i].content.state.nonce);
-    }
+        result[i].content.nonce = convertHashToBits(value[i].content.state.nonce);
 
+        //isFiller
+        result[i].isFiller = value[i].isFiller; 
+    }
     result  
 }
 
-fn convertCommandDataToBits(value:ContentCommandData) -> [bool; COMMAND_BITS]
+fn convertCommandDataToBits(value:ContentCommandData) -> ContentCommandDataGroup
 {
-    to_bits(value.content as u32) 
+    ContentCommandDataGroup{
+        content: to_bits(value.content as u32),
+        isFiller: value.isFiller,
+    } 
 }
 
-fn convertCommandSignersToBits(value:[ContentSigners; N_SIGNERS]) -> [[bool; SIGNER_BITS]; N_SIGNERS]
+fn convertCommandSignersToBits(value:[ContentSigners; N_SIGNERS]) -> [ContentCommandSignersGroup; N_SIGNERS]
 {
-    let mut result = [[false; SIGNER_BITS];N_SIGNERS];
+    let mut result = [ContentCommandSignersGroup{
+                        content: [false; SIGNER_BITS],
+                        isFiller: false, 
+                                        };N_SIGNERS];
 
     for i in 0 .. N_SIGNERS {
         for j in 0 .. (SIGNER_BITS/ (8 as u16)){
             let commandSigner_bits = to_bits(value[i].content[j]);
             for k in (0 as u16)..(8 as u16) {
-                result[i][(8 as u16) * j + k]  = commandSigner_bits[k];
+                result[i].content[(8 as u16) * j + k]  = commandSigner_bits[k];
             }
         }
+        result[i].isFiller = value[i].isFiller;  
     }   
 
     result  
