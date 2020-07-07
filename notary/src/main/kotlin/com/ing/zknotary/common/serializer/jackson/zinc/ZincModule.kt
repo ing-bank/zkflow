@@ -6,12 +6,12 @@ import com.fasterxml.jackson.databind.JsonSerializer
 import com.fasterxml.jackson.databind.SerializerProvider
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.fasterxml.jackson.databind.module.SimpleModule
+import com.ing.zknotary.common.contracts.ZKContractState
 import com.ing.zknotary.common.states.ZKStateAndRef
 import com.ing.zknotary.common.transactions.ZKProverTransaction
 import com.ing.zknotary.common.util.PaddingWrapper
 import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.ComponentGroupEnum
-import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.PrivacySalt
 import net.corda.core.contracts.TransactionState
 import net.corda.core.crypto.SecureHash
@@ -50,7 +50,9 @@ private class ZincMixinSerializer : JsonSerializer<ZKProverTransaction>() {
                 StateGroup(value.padded.references(), value.merkleTree.groupHashes[ComponentGroupEnum.REFERENCES_GROUP.ordinal]),
                 StateGroup(value.padded.signers(), value.merkleTree.groupHashes[ComponentGroupEnum.SIGNERS_GROUP.ordinal]),
                 // Currently command serializes into a single Int. This will change in future.
-                StateGroup(listOf(PaddingWrapper.Original(0)), value.merkleTree.groupHashes[ComponentGroupEnum.COMMANDS_GROUP.ordinal]),
+                StateGroup(
+                    listOf(PaddingWrapper.Original(value.command.value.fingerprint.first().toInt())),
+                    value.merkleTree.groupHashes[ComponentGroupEnum.COMMANDS_GROUP.ordinal]),
                 value.privacySalt
             )
         )
@@ -59,9 +61,9 @@ private class ZincMixinSerializer : JsonSerializer<ZKProverTransaction>() {
 }
 
 private class ZincJson(
-    val inputs: StateGroup<PaddingWrapper<ZKStateAndRef<ContractState>>>,
-    val outputs: StateGroup<PaddingWrapper<ZKStateAndRef<ContractState>>>,
-    val references: StateGroup<PaddingWrapper<ZKStateAndRef<ContractState>>>,
+    val inputs: StateGroup<PaddingWrapper<ZKStateAndRef<ZKContractState>>>,
+    val outputs: StateGroup<PaddingWrapper<ZKStateAndRef<ZKContractState>>>,
+    val references: StateGroup<PaddingWrapper<ZKStateAndRef<ZKContractState>>>,
     val signers: StateGroup<PaddingWrapper<PublicKey>>,
     val commands: StateGroup<PaddingWrapper<Int>>,
     val privacySalt: PrivacySalt

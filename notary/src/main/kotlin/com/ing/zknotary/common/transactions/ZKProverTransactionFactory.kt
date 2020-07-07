@@ -1,13 +1,12 @@
 package com.ing.zknotary.common.transactions
 
 import com.ing.zknotary.common.contracts.TestContract
-import com.ing.zknotary.common.serializer.SerializationFactoryService
 import com.ing.zknotary.common.states.ZKStateAndRef
 import com.ing.zknotary.common.states.ZKStateRef
+import com.ing.zknotary.common.states.toZKCommand
 import com.ing.zknotary.common.states.toZKStateAndRef
 import com.ing.zknotary.common.util.ComponentPaddingConfiguration
 import com.ing.zknotary.common.zkp.ZKNulls
-import net.corda.core.contracts.Command
 import net.corda.core.contracts.TransactionState
 import net.corda.core.contracts.requireThat
 import net.corda.core.crypto.DigestService
@@ -18,10 +17,10 @@ class ZKProverTransactionFactory {
     companion object {
         fun create(
             ltx: LedgerTransaction,
-            serializationFactoryService: SerializationFactoryService,
+            // serializationFactoryService: SerializationFactoryService,
             componentGroupLeafDigestService: DigestService,
             nodeDigestService: DigestService = componentGroupLeafDigestService,
-            componentPaddingConfiguration: ComponentPaddingConfiguration = DEFAULT_PADDING
+            componentPaddingConfiguration: ComponentPaddingConfiguration = DEFAULT_PADDING_CONFIGURATION
         ): ZKProverTransaction {
             requireThat {
                 "A notary must always be set on a ZKProverTransaction" using (ltx.notary != null)
@@ -30,37 +29,28 @@ class ZKProverTransactionFactory {
 
             return ZKProverTransaction(
                 inputs = ltx.inputs.map {
-                    it.toZKStateAndRef(
-                        serializationFactoryService,
-                        componentGroupLeafDigestService
-                    )
+                    it.toZKStateAndRef(componentGroupLeafDigestService)
                 },
                 outputs = ltx.outputs.map {
-                    it.toZKStateAndRef(
-                        serializationFactoryService,
-                        componentGroupLeafDigestService
-                    )
+                    it.toZKStateAndRef(componentGroupLeafDigestService)
                 },
                 references = ltx.references.map {
-                    it.toZKStateAndRef(
-                        serializationFactoryService,
-                        componentGroupLeafDigestService
-                    )
+                    it.toZKStateAndRef(componentGroupLeafDigestService)
                 },
-                command = ltx.commands.map { Command(it.value, it.signers) }.single(),
+                command = ltx.commands.map { it.toZKCommand() }.single(),
                 notary = ltx.notary!!,
                 timeWindow = ltx.timeWindow,
                 privacySalt = ltx.privacySalt,
                 networkParametersHash = ltx.networkParameters?.serialize()?.hash,
                 attachments = ltx.attachments.map { it.id },
-                serializationFactoryService = serializationFactoryService,
+                // serializationFactoryService = serializationFactoryService,
                 componentGroupLeafDigestService = componentGroupLeafDigestService,
                 nodeDigestService = nodeDigestService,
                 componentPaddingConfiguration = componentPaddingConfiguration
             )
         }
 
-        private val DEFAULT_PADDING by lazy {
+        private val DEFAULT_PADDING_CONFIGURATION by lazy {
             val emptyState = TestContract.TestState(ZKNulls.NULL_PARTY, 0)
             val filler = ComponentPaddingConfiguration.Filler.ZKStateAndRef(
                 ZKStateAndRef(
