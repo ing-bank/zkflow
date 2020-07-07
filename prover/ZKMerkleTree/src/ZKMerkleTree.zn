@@ -33,34 +33,49 @@ type PubKey = [u8; PUBKEY_BYTES];
 type PrivacySalt = [bool; HASH_BITS]; 
 type ComponentGroupHash = [u8; HASH_BYTES]; //For now we use SHA256 to compute component group hashes - should be replaced with Pedersen!
 
-struct ZKStateAndRefGroup{
-    state : [bool; STATE_BITS], 
+struct ZKStateAndRefGroup {
+    state: [bool; STATE_BITS], 
     zkStateRef: [bool; REF_BITS],
-    nonce: [bool; HASH_BITS], 
+    nonce: [bool; HASH_BITS],  
+}
+
+struct ContentZKStateAndRefGroup{
+    content: ZKStateAndRefGroup,
+    isFiller: bool,  
 }
 
 struct InputGroup {
-    groupElements: [ZKStateAndRefGroup; N_INPUTS],
+    groupElements: [ContentZKStateAndRefGroup; N_INPUTS],
     groupHash: [bool;HASH_BITS],  
 }
 
 struct OutputGroup {
-    groupElements: [ZKStateAndRefGroup; N_OUTPUTS],
+    groupElements: [ContentZKStateAndRefGroup; N_OUTPUTS],
     groupHash: [bool;HASH_BITS],  
 }
 
 struct ReferenceGroup{
-    groupElements: [ZKStateAndRefGroup; N_REFERENCES],
+    groupElements: [ContentZKStateAndRefGroup; N_REFERENCES],
     groupHash: [bool;HASH_BITS],      
 }
 
+struct ContentCommandDataGroup{
+    content: [bool; INT32_BITS], 
+    isFiller: bool, 
+}
+
 struct CommandDataGroup {
-    groupElements: [bool; INT32_BITS],
+    groupElements: ContentCommandDataGroup,
     groupHash: [bool;HASH_BITS],  
 }
 
+struct ContentCommandSignerGroup{
+    content: [bool; PUBKEY_BITS],
+    isFiller: bool, 
+}
+
 struct CommandSignerGroup {
-    groupElements: [[bool; PUBKEY_BITS]; N_SIGNERS],
+    groupElements: [ContentCommandSignerGroup; N_SIGNERS],
     groupHash: [bool;HASH_BITS],  
 }
 
@@ -202,7 +217,7 @@ fn computeLeafHashes(zkptx:(ComponentGroup, PrivacySalt)) -> [NodeDigest;NODES]
  
     //inputs
     for i  in (0 as u32)..(N_INPUTS as u32) {
-        componentLeafHashes[(index as u32) + i] = computeLeafHashRef( zkptx.0.inputs.groupElements[i].zkStateRef, 
+        componentLeafHashes[(index as u32) + i] = computeLeafHashRef( zkptx.0.inputs.groupElements[i].content.zkStateRef, 
                                                                    zkptx.1, 
                                                                    ComponentGroupEnum::INPUTS_GROUP as u32,
                                                                    i as u32);}
@@ -210,7 +225,7 @@ fn computeLeafHashes(zkptx:(ComponentGroup, PrivacySalt)) -> [NodeDigest;NODES]
 
     //outputs
     for i  in (0 as u32)..(N_OUTPUTS as u32) {
-        componentLeafHashes[(index as u32) + i] = computeLeafHashRef( zkptx.0.outputs.groupElements[i].zkStateRef, 
+        componentLeafHashes[(index as u32) + i] = computeLeafHashRef( zkptx.0.outputs.groupElements[i].content.zkStateRef, 
                                                                    zkptx.1, 
                                                                    ComponentGroupEnum::OUTPUTS_GROUP as u32,
                                                                    i as u32);}
@@ -218,7 +233,7 @@ fn computeLeafHashes(zkptx:(ComponentGroup, PrivacySalt)) -> [NodeDigest;NODES]
 
     //commandData
     for i  in (0 as u32)..(N_COMMANDS as u32) {
-        componentLeafHashes[(index as u32) + i] = computeLeafHashInt( zkptx.0.commandData.groupElements, 
+        componentLeafHashes[(index as u32) + i] = computeLeafHashInt( zkptx.0.commandData.groupElements.content, 
                                                                    zkptx.1, 
                                                                    ComponentGroupEnum::COMMANDS_GROUP as u32,
                                                                    i as u32);}
@@ -226,7 +241,7 @@ fn computeLeafHashes(zkptx:(ComponentGroup, PrivacySalt)) -> [NodeDigest;NODES]
 
     //references
     for i  in (0 as u32)..(N_REFERENCES as u32) {
-        componentLeafHashes[(index as u32) + i] = computeLeafHashRef( zkptx.0.references.groupElements[i].zkStateRef, 
+        componentLeafHashes[(index as u32) + i] = computeLeafHashRef( zkptx.0.references.groupElements[i].content.zkStateRef, 
                                                                    zkptx.1, 
                                                                    ComponentGroupEnum::REFERENCES_GROUP as u32,
                                                                    i as u32);}
@@ -234,7 +249,7 @@ fn computeLeafHashes(zkptx:(ComponentGroup, PrivacySalt)) -> [NodeDigest;NODES]
 
     //commandSigners
     for i  in (0 as u32)..(N_SIGNERS as u32) {
-        componentLeafHashes[(index as u32) + i] = computeLeafHashSign( zkptx.0.commandSigners.groupElements[i], 
+        componentLeafHashes[(index as u32) + i] = computeLeafHashSign( zkptx.0.commandSigners.groupElements[i].content, 
                                                                    zkptx.1, 
                                                                    ComponentGroupEnum::SIGNERS_GROUP as u32,
                                                                    i as u32);}
@@ -307,7 +322,6 @@ fn computeComponentGroupHashes(componentLeafHashes:[NodeDigest;NODES]) -> [NodeD
 
     componentGroupHashes
 }
-
 
 /**
 * Method to compute the root of merkle root, ZKId, from componentGroupHashes. 
@@ -418,19 +432,19 @@ fn validateZKStateRefs(value:ComponentGroup){
     
     //Validate input ZKStateRefs
     for i in 0..N_INPUTS{
-        let isValid = validateZKStateRef(value.inputs.groupElements[i]); 
+        let isValid = validateZKStateRef(value.inputs.groupElements[i].content); 
         //assert!(isValid == true, "Failed validation: The computed ZKStateRef for input group does not match the received ZKStateRef.");
     }
 
     //Validate output ZKStateRefs
     for i in 0..N_OUTPUTS{
-        let isValid = validateZKStateRef(value.outputs.groupElements[i]); 
+        let isValid = validateZKStateRef(value.outputs.groupElements[i].content); 
         //assert!(isValid == true, "Failed validation: The computed ZKStateRef for output group does not match the received ZKStateRef.");
     }
 
     //Validate references ZKStateRefs
     for i in 0..N_REFERENCES{
-        let isValid = validateZKStateRef(value.references.groupElements[i]); 
+        let isValid = validateZKStateRef(value.references.groupElements[i].content); 
         //assert!(isValid == true, "Failed validation: The computed ZKStateRef for reference group does not match the received ZKStateRef.");
     }
 }
