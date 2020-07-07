@@ -251,7 +251,6 @@ fn convertCommandSignersToBits(value:[PubKey; N_SIGNERS]) -> [[bool; SIGNER_BITS
     let mut result = [[false; SIGNER_BITS];N_SIGNERS];
 
     for i in 0 .. N_SIGNERS {
-        dbg!("{}", value[i]); 
         for j in 0 .. (SIGNER_BITS/ (8 as u16)){
             let commandSigner_bits = to_bits(value[i][j]);
             for k in (0 as u16)..(8 as u16) {
