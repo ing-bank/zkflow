@@ -156,13 +156,13 @@ struct CommandDataGroup {
     groupHash: [bool;HASH_BITS],  
 }
 
-struct ContentCommandSignersGroup{
+struct ContentCommandSignerGroup{
     content: [bool; PUBKEY_BITS],
     isFiller: bool, 
 }
 
 struct CommandSignerGroup {
-    groupElements: [ContentCommandSignersGroup; N_SIGNERS],
+    groupElements: [ContentCommandSignerGroup; N_SIGNERS],
     groupHash: [bool;HASH_BITS],  
 }
 
@@ -291,9 +291,9 @@ fn convertCommandDataToBits(value:ContentCommandData) -> ContentCommandDataGroup
     } 
 }
 
-fn convertCommandSignersToBits(value:[ContentSigners; N_SIGNERS]) -> [ContentCommandSignersGroup; N_SIGNERS]
+fn convertCommandSignersToBits(value:[ContentSigners; N_SIGNERS]) -> [ContentCommandSignerGroup; N_SIGNERS]
 {
-    let mut result = [ContentCommandSignersGroup{
+    let mut result = [ContentCommandSignerGroup{
                         content: [false; SIGNER_BITS],
                         isFiller: false, 
                                         };N_SIGNERS];
