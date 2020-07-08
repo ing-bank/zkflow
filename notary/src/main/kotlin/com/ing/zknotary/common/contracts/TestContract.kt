@@ -35,13 +35,11 @@ class TestContract : Contract {
 
     // Commands
     class Create : ZKCommandData {
-        override val fingerprint: ByteArray
-            get() = ByteArray(1) { 0 }
+        override val id: Int = 0
     }
 
     class Move : ZKCommandData {
-        override val fingerprint: ByteArray
-            get() = ByteArray(1) { 1 }
+        override val id: Int = 1
     }
 
     override fun verify(tx: LedgerTransaction) {
