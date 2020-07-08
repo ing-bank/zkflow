@@ -62,7 +62,7 @@ abstract class AbstractZKMerkleTree(
 
     abstract val componentNonces: Map<Int, List<SecureHash>>
 
-    private val componentHashes: Map<Int, List<SecureHash>> by lazy {
+    open val componentHashes: Map<Int, List<SecureHash>> by lazy {
         componentGroups.map { group ->
             group.groupIndex to group.components.mapIndexed { componentIndex, component ->
                 componentGroupLeafDigestService.hash(componentNonces[group.groupIndex]!![componentIndex].bytes + component.bytes)

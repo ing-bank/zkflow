@@ -16,8 +16,10 @@ import com.ing.zknotary.common.util.PaddingWrapper
 import com.ing.zknotary.common.zkp.Witness
 import com.ing.zknotary.common.zkp.fingerprint
 import net.corda.core.contracts.ComponentGroupEnum
+import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.PrivacySalt
 import net.corda.core.contracts.TimeWindow
+import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.TransactionState
 import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.Party
@@ -103,9 +105,9 @@ private class ZKProverTransactionMixinSerializer : JsonSerializer<ZKProverTransa
 }
 
 private class ZincJson(
-    val inputs: ComponentGroup<PaddingWrapper<ZKStateAndRef<ZKContractState>>>,
-    val outputs: ComponentGroup<PaddingWrapper<ZKStateAndRef<ZKContractState>>>,
-    val references: ComponentGroup<PaddingWrapper<ZKStateAndRef<ZKContractState>>>,
+    val inputs: ComponentGroup<PaddingWrapper<StateAndRef<ContractState>>>,
+    val outputs: ComponentGroup<PaddingWrapper<TransactionState<ZKContractState>>>,
+    val references: ComponentGroup<PaddingWrapper<StateAndRef<ContractState>>>,
     val commands: ComponentGroup<PaddingWrapper<ZKCommandData>>,
     val attachments: ComponentGroup<PaddingWrapper<AttachmentId>>,
     val notary: ComponentSinglet<PaddingWrapper<Party>>,

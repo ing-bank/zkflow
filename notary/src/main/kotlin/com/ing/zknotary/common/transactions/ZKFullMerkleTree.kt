@@ -21,7 +21,7 @@ class ZKFullMerkleTree(
                         ComponentGroupEnum.INPUTS_GROUP to
                             ptx.padded.inputs().map { it.content.ref.fingerprint },
                         ComponentGroupEnum.OUTPUTS_GROUP to
-                            ptx.padded.outputs().map { it.content.ref.fingerprint },
+                            ptx.padded.outputs().map { it.content.fingerprint },
                         ComponentGroupEnum.REFERENCES_GROUP to
                             ptx.padded.references().map { it.content.ref.fingerprint },
                         ComponentGroupEnum.COMMANDS_GROUP to

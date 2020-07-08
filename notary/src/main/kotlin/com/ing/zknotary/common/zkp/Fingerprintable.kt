@@ -1,6 +1,7 @@
 package com.ing.zknotary.common.zkp
 
 import net.corda.core.contracts.ContractState
+import net.corda.core.contracts.StateRef
 import net.corda.core.contracts.TimeWindow
 import net.corda.core.contracts.TransactionState
 import net.corda.core.crypto.SecureHash
@@ -22,11 +23,11 @@ interface Fingerprintable {
     val fingerprint: ByteArray
 }
 
-val Int.fingerprint: ByteArray
-    get() = ByteBuffer.allocate(4).putInt(this).array()
-
-val PublicKey.fingerprint: ByteArray
-    get() = this.encoded
+/*
+ * Corda classes
+ */
+val StateRef.fingerprint: ByteArray
+    get() = txhash.bytes + index.fingerprint
 
 val <T> TransactionState<T>.fingerprint: ByteArray
     where T : ContractState, T : Fingerprintable
@@ -38,10 +39,19 @@ val AbstractParty.fingerprint: ByteArray
 val SecureHash.fingerprint: ByteArray
     get() = this.bytes
 
-val Instant.fingerprint: ByteArray
-    get() = ByteBuffer.allocate(8).putLong(epochSecond).array() +
-        ByteBuffer.allocate(4).putInt(nano).array()
-
 val TimeWindow.fingerprint: ByteArray
     get() = (fromTime?.fingerprint ?: ByteArray(12) { 0 }) +
         (untilTime?.fingerprint ?: ByteArray(12) { 0 })
+
+/*
+ * Core Java/Kotlin classes
+ */
+val Int.fingerprint: ByteArray
+    get() = ByteBuffer.allocate(4).putInt(this).array()
+
+val PublicKey.fingerprint: ByteArray
+    get() = this.encoded
+
+val Instant.fingerprint: ByteArray
+    get() = ByteBuffer.allocate(8).putLong(epochSecond).array() +
+        ByteBuffer.allocate(4).putInt(nano).array()

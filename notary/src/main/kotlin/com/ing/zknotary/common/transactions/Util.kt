@@ -1,6 +1,6 @@
 package com.ing.zknotary.common.transactions
 
-import com.ing.zknotary.common.states.ZKStateRef
+import com.ing.zknotary.common.states.EMPTY_STATEREF
 import com.ing.zknotary.common.util.ComponentPaddingConfiguration
 import com.ing.zknotary.common.util.PaddingWrapper
 import net.corda.core.DeleteForDJVM
@@ -44,18 +44,17 @@ fun ZKProverTransaction.toZKVerifierTransaction(): ZKVerifierTransaction {
         )
     }
 
-    val zkStateRefFiller = ComponentPaddingConfiguration.Filler.ZKStateRef(ZKStateRef.empty())
+    val filler = ComponentPaddingConfiguration.Filler.StateRef(EMPTY_STATEREF)
     val secureHashFiller = ComponentPaddingConfiguration.Filler.SecureHash(SecureHash.zeroHash)
     val componentPadding = ComponentPaddingConfiguration.Builder()
-        .inputs(this.padded.sizeOf(ComponentGroupEnum.INPUTS_GROUP), zkStateRefFiller)
-        .outputs(this.padded.sizeOf(ComponentGroupEnum.OUTPUTS_GROUP), zkStateRefFiller)
-        .references(this.padded.sizeOf(ComponentGroupEnum.REFERENCES_GROUP), zkStateRefFiller)
+        .inputs(this.padded.sizeOf(ComponentGroupEnum.INPUTS_GROUP), filler)
+        .outputs(this.padded.sizeOf(ComponentGroupEnum.OUTPUTS_GROUP), filler)
+        .references(this.padded.sizeOf(ComponentGroupEnum.REFERENCES_GROUP), filler)
         .attachments(this.padded.sizeOf(ComponentGroupEnum.ATTACHMENTS_GROUP), secureHashFiller)
         .build()
 
     return ZKVerifierTransaction(
         this.inputs.map { it.ref },
-        this.outputs.map { it.ref },
         this.references.map { it.ref },
 
         this.notary,
@@ -65,6 +64,7 @@ fun ZKProverTransaction.toZKVerifierTransaction(): ZKVerifierTransaction {
         this.componentGroupLeafDigestService,
         this.nodeDigestService,
 
+        this.merkleTree.componentHashes[ComponentGroupEnum.OUTPUTS_GROUP.ordinal] ?: emptyList(),
         this.merkleTree.groupHashes,
         componentNonces,
 

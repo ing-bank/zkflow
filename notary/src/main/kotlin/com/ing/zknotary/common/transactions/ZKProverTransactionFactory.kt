@@ -1,12 +1,12 @@
 package com.ing.zknotary.common.transactions
 
 import com.ing.zknotary.common.contracts.TestContract
-import com.ing.zknotary.common.states.ZKStateAndRef
-import com.ing.zknotary.common.states.ZKStateRef
+import com.ing.zknotary.common.contracts.ZKContractState
+import com.ing.zknotary.common.states.EMPTY_STATEREF
 import com.ing.zknotary.common.states.toZKCommand
-import com.ing.zknotary.common.states.toZKStateAndRef
 import com.ing.zknotary.common.util.ComponentPaddingConfiguration
 import com.ing.zknotary.common.zkp.ZKNulls
+import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.TransactionState
 import net.corda.core.contracts.requireThat
 import net.corda.core.crypto.DigestService
@@ -28,15 +28,9 @@ class ZKProverTransactionFactory {
             }
 
             return ZKProverTransaction(
-                inputs = ltx.inputs.map {
-                    it.toZKStateAndRef(componentGroupLeafDigestService)
-                },
-                outputs = ltx.outputs.map {
-                    it.toZKStateAndRef(componentGroupLeafDigestService)
-                },
-                references = ltx.references.map {
-                    it.toZKStateAndRef(componentGroupLeafDigestService)
-                },
+                inputs = ltx.inputs,
+                outputs = ltx.outputs.map { TransactionState(data = it.data as ZKContractState, notary = it.notary) },
+                references = ltx.references,
                 command = ltx.commands.map { it.toZKCommand() }.single(),
                 notary = ltx.notary!!,
                 timeWindow = ltx.timeWindow,
@@ -50,18 +44,22 @@ class ZKProverTransactionFactory {
         }
 
         private val DEFAULT_PADDING_CONFIGURATION by lazy {
+            // TODO: Make this more generic, based on the contract and asking it to provide the padding state
             val emptyState = TestContract.TestState(ZKNulls.NULL_PARTY, 0)
-            val filler = ComponentPaddingConfiguration.Filler.ZKStateAndRef(
-                ZKStateAndRef(
+            val transactionStateFiller = ComponentPaddingConfiguration.Filler.TransactionState(
+                TransactionState(emptyState, notary = ZKNulls.NULL_PARTY)
+            )
+            val stateAndRefFiller = ComponentPaddingConfiguration.Filler.StateAndRef(
+                StateAndRef(
                     TransactionState(emptyState, notary = ZKNulls.NULL_PARTY),
-                    ZKStateRef.empty()
+                    EMPTY_STATEREF
                 )
             )
 
             ComponentPaddingConfiguration.Builder()
-                .inputs(2, filler)
-                .outputs(2, filler)
-                .references(2, filler)
+                .inputs(2, stateAndRefFiller)
+                .outputs(2, transactionStateFiller)
+                .references(2, stateAndRefFiller)
                 .attachments(2, ComponentPaddingConfiguration.Filler.SecureHash(SecureHash.zeroHash))
                 .signers(2)
                 .build()

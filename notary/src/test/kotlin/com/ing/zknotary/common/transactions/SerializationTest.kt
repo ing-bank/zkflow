@@ -4,6 +4,7 @@ import com.ing.zknotary.common.serializer.ZincSerializationFactory
 import com.ing.zknotary.common.zkp.Witness
 import com.ing.zknotary.notary.transactions.createTestsState
 import com.ing.zknotary.notary.transactions.moveTestsState
+import junit.framework.TestCase.assertEquals
 import net.corda.core.crypto.BLAKE2s256DigestService
 import net.corda.core.crypto.Crypto
 import net.corda.core.crypto.PedersenDigestService
@@ -15,7 +16,6 @@ import net.corda.testing.node.MockServices
 import net.corda.testing.node.ledger
 import org.junit.Before
 import org.junit.Test
-import kotlin.test.assertEquals
 
 class SerializationTest {
     private val alice = TestIdentity.fresh("alice", Crypto.EDDSA_ED25519_SHA512)
@@ -74,7 +74,6 @@ class SerializationTest {
             val ptxAmqp = ptx.serialize()
             val deserializedptx = ptxAmqp.deserialize()
             assertEquals(ptx, deserializedptx)
-            // ptx.verify()
         }
     }
 
@@ -84,7 +83,6 @@ class SerializationTest {
             val vtxAmqp = vtx.serialize()
             val deserializedVtx = vtxAmqp.deserialize()
             assertEquals(vtx, deserializedVtx)
-            // TODO: vtx.verify()
         }
     }
 }

@@ -5,6 +5,7 @@ import com.ing.zknotary.common.transactions.ZKProverTransaction
 import com.ing.zknotary.common.transactions.ZKVerifierTransaction
 import com.ing.zknotary.common.zkp.ZKNulls
 import net.corda.core.contracts.ComponentGroupEnum
+import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.requireThat
 import net.corda.core.serialization.CordaSerializable
 
@@ -16,8 +17,9 @@ class ComponentPaddingConfiguration private constructor(
 
     @CordaSerializable
     sealed class Filler {
-        data class ZKStateAndRef(val content: com.ing.zknotary.common.states.ZKStateAndRef<ZKContractState>) : Filler()
-        data class ZKStateRef(val content: com.ing.zknotary.common.states.ZKStateRef) : Filler()
+        data class TransactionState(val content: net.corda.core.contracts.TransactionState<ZKContractState>) : Filler()
+        data class StateAndRef(val content: net.corda.core.contracts.StateAndRef<ContractState>) : Filler()
+        data class StateRef(val content: net.corda.core.contracts.StateRef) : Filler()
         data class PublicKey(val content: java.security.PublicKey) : Filler()
         data class SecureHash(val content: net.corda.core.crypto.SecureHash) : Filler()
     }
@@ -94,7 +96,7 @@ class ComponentPaddingConfiguration private constructor(
                 )
 
             "Outputs' size exceeds quantity accepted by ZK circuit" using (
-                vtx.outputs.size <= sizeOf(ComponentGroupEnum.OUTPUTS_GROUP) ?: vtx.outputs.size - 1
+                vtx.outputHashes.size <= sizeOf(ComponentGroupEnum.OUTPUTS_GROUP) ?: (vtx.outputHashes.size) - 1
                 )
 
             "References' size exceeds quantity accepted by ZK circuit" using (

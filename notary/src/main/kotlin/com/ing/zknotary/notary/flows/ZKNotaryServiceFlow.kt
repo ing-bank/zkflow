@@ -1,12 +1,12 @@
 package com.ing.zknotary.notary.flows
 
 import co.paralleluniverse.fibers.Suspendable
-import com.ing.zknotary.common.states.ZKStateRef
 import com.ing.zknotary.common.transactions.ZKVerifierTransaction
 import com.ing.zknotary.common.zkp.ZKConfig
 import com.ing.zknotary.notary.ZKNotarisationPayload
 import com.ing.zknotary.notary.ZKNotarisationRequest
 import com.ing.zknotary.notary.ZKNotaryService
+import net.corda.core.contracts.StateRef
 import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.TransactionSignature
 import net.corda.core.flows.FlowLogic
@@ -88,7 +88,7 @@ class ZKNotaryServiceFlow(
     }
 
     private fun handleBackPressure(tx: ZKVerifierTransaction) {
-        val eta = service.getEstimatedWaitTime(tx.inputs.size + tx.references.size + tx.outputs.size)
+        val eta = service.getEstimatedWaitTime(tx.inputs.size + tx.references.size + tx.outputHashes.size)
         // We don't have to check if counterparty can handle backpressure because we already require
         // platform version >= MIN_PLATFORM_VERSION_FOR_BACKPRESSURE_MESSAGE anyway
         if (eta > etaThreshold) {
@@ -105,7 +105,8 @@ class ZKNotaryServiceFlow(
 
     private fun validateTransactionSize(tx: ZKVerifierTransaction) {
         try {
-            checkMaxStateCount(tx.inputs + tx.references + tx.outputs)
+            // TODO: should this include outputs?
+            checkMaxStateCount(tx.inputs + tx.references)
         } catch (e: Exception) {
             throw NotaryInternalException(NotaryError.TransactionInvalid(e))
         }
@@ -139,7 +140,7 @@ class ZKNotaryServiceFlow(
     }
 
     /** Checks whether the number of input states is too large. */
-    private fun checkMaxStateCount(states: List<ZKStateRef>) {
+    private fun checkMaxStateCount(states: List<StateRef>) {
         require(states.size < maxAllowedStatesInTx) {
             "A transaction cannot have more than $maxAllowedStatesInTx " +
                 "inputs or references, received: ${states.size}"

@@ -2,6 +2,7 @@ package com.ing.zknotary.common.states
 
 import com.ing.zknotary.common.zkp.Fingerprintable
 import net.corda.core.KeepForDJVM
+import net.corda.core.contracts.StateRef
 import net.corda.core.crypto.SecureHash
 import net.corda.core.serialization.CordaSerializable
 
@@ -18,3 +19,5 @@ data class ZKStateRef(
         fun empty() = ZKStateRef(SecureHash.zeroHash)
     }
 }
+
+val EMPTY_STATEREF = StateRef(SecureHash.allOnesHash, 0)
