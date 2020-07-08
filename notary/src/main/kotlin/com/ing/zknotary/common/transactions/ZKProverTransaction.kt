@@ -1,12 +1,12 @@
 package com.ing.zknotary.common.transactions
 
-import com.ing.zknotary.common.serializer.SerializationFactoryService
+import com.ing.zknotary.common.contracts.ZKCommandData
+import com.ing.zknotary.common.contracts.ZKContractState
 import com.ing.zknotary.common.states.ZKStateAndRef
 import com.ing.zknotary.common.util.ComponentPaddingConfiguration
 import com.ing.zknotary.common.util.PaddingWrapper
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.ComponentGroupEnum
-import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.PrivacySalt
 import net.corda.core.contracts.TimeWindow
 import net.corda.core.crypto.DigestService
@@ -18,14 +18,14 @@ import java.security.PublicKey
 
 @CordaSerializable
 class ZKProverTransaction(
-    val inputs: List<ZKStateAndRef<ContractState>>,
+    val inputs: List<ZKStateAndRef<ZKContractState>>,
     /**
      * Because a ZKStateRef is a representation of the contents of a state, and no longer a pointer to
      * a previous transaction output, outputs are also ZKStateAndRefs, like inputs and references.
      */
-    val outputs: List<ZKStateAndRef<ContractState>>,
-    val references: List<ZKStateAndRef<ContractState>>,
-    val command: Command<*>,
+    val outputs: List<ZKStateAndRef<ZKContractState>>,
+    val references: List<ZKStateAndRef<ZKContractState>>,
+    val command: Command<ZKCommandData>,
     val notary: Party,
     val timeWindow: TimeWindow?,
     val privacySalt: PrivacySalt,
@@ -45,10 +45,6 @@ class ZKProverTransaction(
     // For now we ignore attachment contents inside the circuit. We might want to use them for attaching some circuit identifier or even the verifier key.
     val attachments: List<AttachmentId>,
 
-    /**
-     * Used for serialization of the merkle tree leaves and for ZKStateRefs
-     */
-    val serializationFactoryService: SerializationFactoryService,
     val componentGroupLeafDigestService: DigestService,
     val nodeDigestService: DigestService = componentGroupLeafDigestService,
 
@@ -79,26 +75,26 @@ class ZKProverTransaction(
     override fun equals(other: Any?) = if (other !is ZKProverTransaction) false else (this.id == other.id)
 
     data class Padded(
-        private val originalInputs: List<ZKStateAndRef<ContractState>>,
-        private val originalOutputs: List<ZKStateAndRef<ContractState>>,
+        private val originalInputs: List<ZKStateAndRef<ZKContractState>>,
+        private val originalOutputs: List<ZKStateAndRef<ZKContractState>>,
         private val originalSigners: List<PublicKey>,
-        private val originalReferences: List<ZKStateAndRef<ContractState>>,
+        private val originalReferences: List<ZKStateAndRef<ZKContractState>>,
         val paddingConfiguration: ComponentPaddingConfiguration
     ) {
 
-        fun inputs(): List<PaddingWrapper<ZKStateAndRef<ContractState>>> {
+        fun inputs(): List<PaddingWrapper<ZKStateAndRef<ZKContractState>>> {
             val filler = paddingConfiguration.filler(ComponentGroupEnum.INPUTS_GROUP) ?: error("Expected a filler object")
             require(filler is ComponentPaddingConfiguration.Filler.ZKStateAndRef) { "Expected filler of type ZKStateAndRef" }
             return originalInputs.wrappedPad(sizeOf(ComponentGroupEnum.INPUTS_GROUP), filler.content)
         }
 
-        fun outputs(): List<PaddingWrapper<ZKStateAndRef<ContractState>>> {
+        fun outputs(): List<PaddingWrapper<ZKStateAndRef<ZKContractState>>> {
             val filler = paddingConfiguration.filler(ComponentGroupEnum.OUTPUTS_GROUP) ?: error("Expected a filler object")
             require(filler is ComponentPaddingConfiguration.Filler.ZKStateAndRef) { "Expected filler of type ZKStateAndRef" }
             return originalOutputs.wrappedPad(sizeOf(ComponentGroupEnum.OUTPUTS_GROUP), filler.content)
         }
 
-        fun references(): List<PaddingWrapper<ZKStateAndRef<ContractState>>> {
+        fun references(): List<PaddingWrapper<ZKStateAndRef<ZKContractState>>> {
             val filler = paddingConfiguration.filler(ComponentGroupEnum.REFERENCES_GROUP) ?: error("Expected a filler object")
             require(filler is ComponentPaddingConfiguration.Filler.ZKStateAndRef) { "Expected filler of type ZKStateAndRef" }
             return originalReferences.wrappedPad(sizeOf(ComponentGroupEnum.REFERENCES_GROUP), filler.content)

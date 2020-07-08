@@ -6,12 +6,12 @@ import com.fasterxml.jackson.databind.JsonSerializer
 import com.fasterxml.jackson.databind.SerializerProvider
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.fasterxml.jackson.databind.module.SimpleModule
+import com.ing.zknotary.common.contracts.ZKCommandData
+import com.ing.zknotary.common.contracts.ZKContractState
 import com.ing.zknotary.common.states.ZKStateAndRef
 import com.ing.zknotary.common.transactions.ZKProverTransaction
 import com.ing.zknotary.common.util.PaddingWrapper
-import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.ComponentGroupEnum
-import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.PrivacySalt
 import net.corda.core.contracts.TransactionState
 import net.corda.core.crypto.SecureHash
@@ -23,6 +23,7 @@ class ZincModule : SimpleModule("corda-core") {
         super.setupModule(context)
 
         context.setMixInAnnotations(ZKProverTransaction::class.java, ZincMixin::class.java)
+        context.setMixInAnnotations(ZKCommandData::class.java, ZKCommandDataMixinZinc::class.java)
 
         context.setMixInAnnotations(PublicKey::class.java, PublicKeyMixinZinc::class.java)
         context.setMixInAnnotations(TransactionState::class.java, TransactionStateMixinZinc::class.java)
@@ -49,8 +50,10 @@ private class ZincMixinSerializer : JsonSerializer<ZKProverTransaction>() {
                 StateGroup(value.padded.outputs(), value.merkleTree.groupHashes[ComponentGroupEnum.OUTPUTS_GROUP.ordinal]),
                 StateGroup(value.padded.references(), value.merkleTree.groupHashes[ComponentGroupEnum.REFERENCES_GROUP.ordinal]),
                 StateGroup(value.padded.signers(), value.merkleTree.groupHashes[ComponentGroupEnum.SIGNERS_GROUP.ordinal]),
-                // Currently command serializes into a single Int. This will change in future.
-                StateGroup(listOf(PaddingWrapper.Original(0)), value.merkleTree.groupHashes[ComponentGroupEnum.COMMANDS_GROUP.ordinal]),
+                StateGroup(
+                    listOf(PaddingWrapper.Original(value.command.value)),
+                    value.merkleTree.groupHashes[ComponentGroupEnum.COMMANDS_GROUP.ordinal]
+                ),
                 value.privacySalt
             )
         )
@@ -59,11 +62,11 @@ private class ZincMixinSerializer : JsonSerializer<ZKProverTransaction>() {
 }
 
 private class ZincJson(
-    val inputs: StateGroup<PaddingWrapper<ZKStateAndRef<ContractState>>>,
-    val outputs: StateGroup<PaddingWrapper<ZKStateAndRef<ContractState>>>,
-    val references: StateGroup<PaddingWrapper<ZKStateAndRef<ContractState>>>,
+    val inputs: StateGroup<PaddingWrapper<ZKStateAndRef<ZKContractState>>>,
+    val outputs: StateGroup<PaddingWrapper<ZKStateAndRef<ZKContractState>>>,
+    val references: StateGroup<PaddingWrapper<ZKStateAndRef<ZKContractState>>>,
     val signers: StateGroup<PaddingWrapper<PublicKey>>,
-    val commands: StateGroup<PaddingWrapper<Int>>,
+    val commands: StateGroup<PaddingWrapper<ZKCommandData>>,
     val privacySalt: PrivacySalt
 )
 
@@ -83,6 +86,15 @@ private class PublicKeyMixinZincSerializer : JsonSerializer<PublicKey>() {
 
 @JsonIgnoreProperties(value = ["contract", "encumbrance", "constraint"])
 private interface TransactionStateMixinZinc
+
+@JsonSerialize(using = ZKCommandDataZincSerializer::class)
+private interface ZKCommandDataMixinZinc
+
+private class ZKCommandDataZincSerializer : JsonSerializer<ZKCommandData>() {
+    override fun serialize(value: ZKCommandData, gen: JsonGenerator, serializers: SerializerProvider) {
+        gen.writeNumber(value.id)
+    }
+}
 
 @JsonSerialize(using = PartyMixinZincSerializer::class)
 private interface PartyMixinZinc
@@ -111,10 +123,6 @@ private class PrivacySaltMixinZincSerializer : JsonSerializer<PrivacySalt>() {
     override fun serialize(value: PrivacySalt, gen: JsonGenerator, serializers: SerializerProvider) {
         gen.writeObject(value.bytes)
     }
-}
-
-private interface CommandMixinZinc {
-    val value: CommandData
 }
 
 @JsonSerialize(using = ByteArrayMixinZincSerializer::class)

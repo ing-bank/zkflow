@@ -1,7 +1,6 @@
 package com.ing.zknotary.common.transactions
 
 import com.ing.zknotary.common.serializer.ZincSerializationFactory
-import com.ing.zknotary.common.serializer.ZincSerializationFactoryService
 import com.ing.zknotary.common.zkp.ZincWitness
 import com.ing.zknotary.notary.transactions.createTestsState
 import com.ing.zknotary.notary.transactions.moveTestsState
@@ -39,7 +38,6 @@ class SerializationTest {
             // Build a ZKProverTransaction
             ptx = ZKProverTransactionFactory.create(
                 wtx.toLedgerTransaction(ledgerServices),
-                ZincSerializationFactoryService(),
                 componentGroupLeafDigestService = BLAKE2s256DigestService,
                 nodeDigestService = BLAKE2s256DigestService // Should become Pedersen hash when available
             )

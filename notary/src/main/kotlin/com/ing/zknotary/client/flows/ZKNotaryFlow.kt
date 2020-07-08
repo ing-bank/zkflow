@@ -75,7 +75,6 @@ open class ZKNotaryFlow(
         // TODO: inject these serializationFactoryService and DigestService as part of ZKConfig
         val ptx = ZKProverTransactionFactory.create(
             ltx,
-            zkConfig.serializationFactoryService,
             BLAKE2s256DigestService
         )
 

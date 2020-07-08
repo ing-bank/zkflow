@@ -1,6 +1,5 @@
 package com.ing.zknotary.common.transactions
 
-import com.ing.zknotary.common.serializer.SerializationFactoryService
 import com.ing.zknotary.common.states.ZKStateRef
 import com.ing.zknotary.common.util.ComponentPaddingConfiguration
 import net.corda.core.contracts.ComponentGroupEnum
@@ -24,7 +23,6 @@ class ZKVerifierTransaction(
     val timeWindow: TimeWindow?,
     val networkParametersHash: SecureHash?,
 
-    val serializationFactoryService: SerializationFactoryService,
     val componentGroupLeafDigestService: DigestService,
     val nodeDigestService: DigestService = componentGroupLeafDigestService,
 

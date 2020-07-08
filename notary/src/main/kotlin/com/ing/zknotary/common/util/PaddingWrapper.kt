@@ -13,15 +13,15 @@ import com.fasterxml.jackson.annotation.JsonProperty
 sealed class PaddingWrapper<T> {
     // see https://github.com/FasterXML/jackson-module-kotlin/issues/80
     @get:JsonProperty("isFiller")
-    abstract val isFiller: Int
+    abstract val isFiller: Boolean
 
     abstract val content: T
 
     data class Original<T>(override val content: T) : PaddingWrapper<T>() {
-        override val isFiller = 1
+        override val isFiller = false
     }
 
     data class Filler<T>(override val content: T) : PaddingWrapper<T>() {
-        override val isFiller = 0
+        override val isFiller = true
     }
 }

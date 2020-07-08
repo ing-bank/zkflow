@@ -1,8 +1,8 @@
 package com.ing.zknotary.common.contracts
 
+import com.ing.zknotary.common.zkp.fingerprint
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.CommandAndState
-import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.Contract
 import net.corda.core.contracts.ContractClassName
 import net.corda.core.contracts.OwnableState
@@ -16,15 +16,31 @@ class TestContract : Contract {
     }
 
     @BelongsToContract(TestContract::class)
-    data class TestState(override val owner: AbstractParty, val value: Int = Random().nextInt(1000)) :
+    data class TestState(
+        override val owner: AbstractParty,
+        val value: Int = Random().nextInt(1000)
+    ) :
         ZKContractState, OwnableState {
         override val participants = listOf(owner)
         override fun withNewOwner(newOwner: AbstractParty) = CommandAndState(Move(), copy(owner = newOwner))
+
+        /**
+         * TODO: Try to find an automatable way of generating the fingerprint from arbitrary objects,
+         * that is repeatable in Zinc.
+         * The benefit is that users need not implement the Fingerprintable interface.
+         */
+        override val fingerprint: ByteArray =
+            nonce.fingerprint + owner.fingerprint + value.fingerprint
     }
 
     // Commands
-    class Create : CommandData
-    class Move : CommandData
+    class Create : ZKCommandData {
+        override val id: Int = 0
+    }
+
+    class Move : ZKCommandData {
+        override val id: Int = 1
+    }
 
     override fun verify(tx: LedgerTransaction) {
         // The transaction may have only one command, of a type defined above

@@ -58,7 +58,6 @@ fun ZKProverTransaction.toZKVerifierTransaction(): ZKVerifierTransaction {
         this.timeWindow,
         this.networkParametersHash,
 
-        this.serializationFactoryService,
         this.componentGroupLeafDigestService,
         this.nodeDigestService,
 

@@ -1,7 +1,8 @@
 package com.ing.zknotary.common.transactions
 
+import com.ing.zknotary.common.zkp.fingerprint
+import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.crypto.SecureHash
-import net.corda.core.serialization.serialize
 import net.corda.core.transactions.ComponentGroup
 
 class ZKPartialMerkleTree(
@@ -13,18 +14,19 @@ class ZKPartialMerkleTree(
 ) {
 
     companion object {
-        private fun createComponentGroups(vtx: ZKVerifierTransaction): List<ComponentGroup> {
-            val serializer = { value: Any, _: Int -> value.serialize(vtx.serializationFactoryService.factory) }
-
-            return mutableListOf<ComponentGroup>().apply {
-                addInputsGroup(vtx.padded.inputs(), serializer)
-                addReferencesGroup(vtx.padded.references(), serializer)
-                addOutputsGroup(vtx.padded.outputs(), serializer)
-                addNotaryGroup(vtx.notary, serializer)
-                addTimeWindowGroup(vtx.timeWindow, serializer)
-                addNetWorkParametersHashGroup(vtx.networkParametersHash, serializer)
+        private fun createComponentGroups(vtx: ZKVerifierTransaction): List<ComponentGroup> =
+            mutableListOf<ComponentGroup>().apply {
+                addGroups(
+                    mapOf(
+                        ComponentGroupEnum.INPUTS_GROUP to vtx.padded.inputs().map { it.fingerprint },
+                        ComponentGroupEnum.OUTPUTS_GROUP to vtx.padded.outputs().map { it.fingerprint },
+                        ComponentGroupEnum.REFERENCES_GROUP to vtx.padded.references().map { it.fingerprint },
+                        ComponentGroupEnum.NOTARY_GROUP to listOf(vtx.notary.fingerprint),
+                        ComponentGroupEnum.TIMEWINDOW_GROUP to listOf(vtx.timeWindow?.fingerprint),
+                        ComponentGroupEnum.PARAMETERS_GROUP to listOf(vtx.networkParametersHash?.fingerprint)
+                    )
+                )
             }
-        }
     }
 
     override val groupHashes: List<SecureHash> by lazy {
