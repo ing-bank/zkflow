@@ -48,9 +48,10 @@ fn convertFromComponentToZKMerkle(zkptx: (ComponentGroups::ComponentGroup, Priva
                     groupHash: zkptx.0.outputs.groupHash, 
                 },        
         commandData: CommandDataGroup{
-                    groupElements: ContentCommandDataGroup {
-                                                            content: zkptx.0.commandData.groupElements.content,
-                                                            isFiller: zkptx.0.commandData.groupElements.isFiller, },
+                    groupElements:[ ContentCommandDataGroup {
+                                                            content: zkptx.0.commandData.groupElements[0].content,
+                                                            isFiller: zkptx.0.commandData.groupElements[0].isFiller, },
+                                    ],
                     groupHash: zkptx.0.commandData.groupHash, 
                 },
         references: ReferenceGroup{

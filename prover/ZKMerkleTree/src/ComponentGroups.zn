@@ -96,7 +96,7 @@ struct ContentCommandData{
 }
 
 struct Commands {
-    value: ContentCommandData, 
+    value: [ContentCommandData; N_COMMANDS], 
     groupHash: ComponentGroupHash,
 }
 
@@ -150,7 +150,7 @@ struct ContentCommandDataGroup{
 }
 
 struct CommandDataGroup {
-    groupElements: ContentCommandDataGroup,
+    groupElements: [ContentCommandDataGroup; N_COMMANDS],
     groupHash: [bool;HASH_BITS],  
 }
 
@@ -272,12 +272,21 @@ fn convertReferencesToBits(value:[ContentZKStateAndRef; N_REFERENCES]) -> [Conte
     result  
 }
 
-fn convertCommandDataToBits(value:ContentCommandData) -> ContentCommandDataGroup
+fn convertCommandDataToBits(value:[ContentCommandData; N_COMMANDS]) -> [ContentCommandDataGroup; N_COMMANDS]
 {
-    ContentCommandDataGroup{
-        content: to_bits(value.content as u32),
-        isFiller: value.isFiller,
-    } 
+    let mut result = [ContentCommandDataGroup{
+                        content: [false; INT32_BITS],
+                        isFiller: false, 
+                                        };N_COMMANDS];
+    for i in 0 .. N_COMMANDS { 
+        let commandBits = to_bits(value[i].content as u32); 
+        for j in 0..INT32_BITS{
+            result[i].content[j]  = commandBits[j];
+        }
+        result[i].isFiller = value[i].isFiller; 
+
+    }  
+    result                             
 }
 
 fn convertCommandSignersToBits(value:[ContentSigners; N_SIGNERS]) -> [ContentCommandSignerGroup; N_SIGNERS]

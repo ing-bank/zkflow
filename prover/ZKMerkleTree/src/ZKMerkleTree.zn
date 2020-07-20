@@ -64,7 +64,7 @@ struct ContentCommandDataGroup{
 }
 
 struct CommandDataGroup {
-    groupElements: ContentCommandDataGroup,
+    groupElements: [ContentCommandDataGroup; N_COMMANDS],
     groupHash: [bool;HASH_BITS],  
 }
 
@@ -250,7 +250,7 @@ fn computeLeafHashes(zkptx:(ComponentGroup, PrivacySalt)) -> [NodeDigest;NODES]
 
     //commandData
     for i  in (0 as u32)..(N_COMMANDS as u32) {
-        componentLeafHashes[(index as u32) + i] = computeLeafHashInt( zkptx.0.commandData.groupElements.content, 
+        componentLeafHashes[(index as u32) + i] = computeLeafHashInt( zkptx.0.commandData.groupElements[i].content, 
                                                                    zkptx.1, 
                                                                    ComponentGroupEnum::COMMANDS_GROUP as u32,
                                                                    i as u32);}
