@@ -35,8 +35,7 @@ type ComponentGroupHash = [u8; HASH_BYTES]; //For now we use SHA256 to compute c
 
 struct ZKStateAndRefGroup {
     state: [bool; STATE_BITS], 
-    zkStateRef: [bool; REF_BITS],
-    nonce: [bool; HASH_BITS],  
+    zkStateRef: [bool; REF_BITS], 
 }
 
 struct ContentZKStateAndRefGroup{
@@ -148,9 +147,10 @@ fn computeNonce(privacySalt: PrivacySalt, groupIndex: u32, internalIndex: u32) -
 
 /**
 * Auxiliary methods for the computation of the leaf hashes. Regarding different component types, three different methods are implemented s.t.
-* computeLeafHashRef  -> computes the leaf hash for Input, Output, and Reference groups,
-* computeLeafHashInt  -> computes the leaf hash for CommandData group,
-* computeLeafHashSign -> computes the leaf hash for CommandSigner group.
+* computeLeafHashRef   -> computes the leaf hash for Input and Reference groups,
+* computeLeafHashState -> computes the leaf hash for Output group,
+* computeLeafHashInt   -> computes the leaf hash for CommandData group,
+* computeLeafHashSign  -> computes the leaf hash for CommandSigner group.
 */
 fn computeLeafHashRef(value:[bool; REF_BITS], privacySalt: PrivacySalt, groupIndex: u32, internalIndex: u32) -> BlakeDigest
 {
@@ -163,6 +163,23 @@ fn computeLeafHashRef(value:[bool; REF_BITS], privacySalt: PrivacySalt, groupInd
         message[i] = nonce[i]; 
     }
     for i in 0..REF_BITS {
+        message[HASH_BITS + i] = value[i]; 
+    }
+
+    blake2s(message)
+}
+
+fn computeLeafHashState(value:[bool; STATE_BITS], privacySalt: PrivacySalt, groupIndex: u32, internalIndex: u32) -> BlakeDigest
+{
+    //compute nonce
+    let mut nonce = computeNonce(privacySalt, groupIndex, internalIndex);
+    let mut message:[bool; HASH_BITS + STATE_BITS] = [false; HASH_BITS + STATE_BITS];
+
+    //message = nonce || ZKStateRef
+    for i in 0..HASH_BITS {
+        message[i] = nonce[i]; 
+    }
+    for i in 0..STATE_BITS {
         message[HASH_BITS + i] = value[i]; 
     }
 
@@ -225,7 +242,7 @@ fn computeLeafHashes(zkptx:(ComponentGroup, PrivacySalt)) -> [NodeDigest;NODES]
 
     //outputs
     for i  in (0 as u32)..(N_OUTPUTS as u32) {
-        componentLeafHashes[(index as u32) + i] = computeLeafHashRef( zkptx.0.outputs.groupElements[i].content.zkStateRef, 
+        componentLeafHashes[(index as u32) + i] = computeLeafHashState( zkptx.0.outputs.groupElements[i].content.state, 
                                                                    zkptx.1, 
                                                                    ComponentGroupEnum::OUTPUTS_GROUP as u32,
                                                                    i as u32);}
@@ -393,72 +410,12 @@ fn validateGroupHashes(componentGroupHashes:[NodeDigest;NUM_COMPONENT_GROUPS], c
 }
 
 /**
-* Method to validate a ZKStateRef such that ZKStateRef ?= Hash(nonce || state) 
-* @param value ZKStateAndRefGroup object that contains state, ZKStateRef, and the nonce.
-* @return bool If the computed ZKStateRef is equal to the one received then the function returns true. Otherwise, returns false. 
-*/
-fn validateZKStateRef(value:ZKStateAndRefGroup)-> bool
-{
-    //1)Concatenate data as nonce || state
-    let mut data = [false; HASH_BITS + STATE_BITS]; 
-    for i in 0..HASH_BITS{
-        data[i] = value.nonce[i]; 
-    }
-    for i in 0..STATE_BITS{
-        data[HASH_BITS + i] = value.state[i]; 
-    }
-
-    //2)Hash 
-    let digest = blake2s(data); 
-
-    //3)Validate by comparing computed ZKStateRef to the received one
-    let mut isEqual = true; 
-
-    for i in 0..HASH_BITS{
-        if (digest[i] != value.zkStateRef[i]){
-            isEqual = false;
-        }
-    }
-    isEqual
-}
-
-/**
-* Method to validate ZKStateRefs. 
-* @param value component group object that contains components.
-* If one ZKStateRef value cannot be validated then the execution terminates.
-* Assert command is commented out temporarily since in the current version of witness.json ZKStateRefs are all zeros.   
-*/
-fn validateZKStateRefs(value:ComponentGroup){
-    
-    //Validate input ZKStateRefs
-    for i in 0..N_INPUTS{
-        let isValid = validateZKStateRef(value.inputs.groupElements[i].content); 
-        //assert!(isValid == true, "Failed validation: The computed ZKStateRef for input group does not match the received ZKStateRef.");
-    }
-
-    //Validate output ZKStateRefs
-    for i in 0..N_OUTPUTS{
-        let isValid = validateZKStateRef(value.outputs.groupElements[i].content); 
-        //assert!(isValid == true, "Failed validation: The computed ZKStateRef for output group does not match the received ZKStateRef.");
-    }
-
-    //Validate references ZKStateRefs
-    for i in 0..N_REFERENCES{
-        let isValid = validateZKStateRef(value.references.groupElements[i].content); 
-        //assert!(isValid == true, "Failed validation: The computed ZKStateRef for reference group does not match the received ZKStateRef.");
-    }
-}
-
-/**
 * Method to build the Merkle tree and compute its root ZKId. 
 * @param zkptx prover transaction that contains components and also a privacy salt which is used in the computation of nonce.
 * @return ZKId - the root of the Merkle tree  
 */
 fn buildMerkleTree(zkptx:(ComponentGroup, PrivacySalt)) -> BlakeDigest //PedersenDigest
-{    
-    //Validate ZKStateRefs, if the validation fails stop execution. 
-    validateZKStateRefs(zkptx.0); 
-    
+{        
     //Compute the leaf hashes and component group hashes
     let componentGroupHashes = computeComponentGroupHashes(computeLeafHashes(zkptx));
     

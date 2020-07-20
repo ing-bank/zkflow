@@ -26,13 +26,11 @@ fn convertFromComponentToZKMerkle(zkptx: (ComponentGroups::ComponentGroup, Priva
         inputs: InputGroup{
                     groupElements:[ ContentZKStateAndRefGroup{
                                                             content: ZKStateAndRefGroup{ state: zkptx.0.inputs.groupElements[0].content.state,
-                                                                                         zkStateRef: zkptx.0.inputs.groupElements[0].content.zkStateRef,
-                                                                                         nonce: zkptx.0.inputs.groupElements[0].content.nonce, },
+                                                                                         zkStateRef: zkptx.0.inputs.groupElements[0].content.zkStateRef,},
                                                             isFiller: zkptx.0.inputs.groupElements[0].isFiller, },            
                                     ContentZKStateAndRefGroup{
                                                             content: ZKStateAndRefGroup{ state: zkptx.0.inputs.groupElements[1].content.state,
-                                                                                         zkStateRef: zkptx.0.inputs.groupElements[1].content.zkStateRef,
-                                                                                         nonce: zkptx.0.inputs.groupElements[1].content.nonce, },
+                                                                                         zkStateRef: zkptx.0.inputs.groupElements[1].content.zkStateRef,},
                                                             isFiller: zkptx.0.inputs.groupElements[1].isFiller, }  
                                   ],
                     groupHash: zkptx.0.inputs.groupHash, 
@@ -40,13 +38,11 @@ fn convertFromComponentToZKMerkle(zkptx: (ComponentGroups::ComponentGroup, Priva
         outputs: OutputGroup{
                     groupElements:[ ContentZKStateAndRefGroup{
                                                             content: ZKStateAndRefGroup{ state: zkptx.0.outputs.groupElements[0].content.state,
-                                                                                         zkStateRef: zkptx.0.outputs.groupElements[0].content.zkStateRef,
-                                                                                         nonce: zkptx.0.outputs.groupElements[0].content.nonce, },
+                                                                                         zkStateRef: zkptx.0.outputs.groupElements[0].content.zkStateRef,},
                                                             isFiller: zkptx.0.outputs.groupElements[0].isFiller, },            
                                     ContentZKStateAndRefGroup{
                                                             content: ZKStateAndRefGroup{ state: zkptx.0.outputs.groupElements[1].content.state,
-                                                                                         zkStateRef: zkptx.0.outputs.groupElements[1].content.zkStateRef,
-                                                                                         nonce: zkptx.0.outputs.groupElements[1].content.nonce, },
+                                                                                         zkStateRef: zkptx.0.outputs.groupElements[1].content.zkStateRef,},
                                                             isFiller: zkptx.0.outputs.groupElements[1].isFiller, }
                                   ],
                     groupHash: zkptx.0.outputs.groupHash, 
@@ -60,13 +56,11 @@ fn convertFromComponentToZKMerkle(zkptx: (ComponentGroups::ComponentGroup, Priva
         references: ReferenceGroup{
                     groupElements:[ ContentZKStateAndRefGroup{
                                                             content: ZKStateAndRefGroup{ state: zkptx.0.references.groupElements[0].content.state,
-                                                                                         zkStateRef: zkptx.0.references.groupElements[0].content.zkStateRef,
-                                                                                         nonce: zkptx.0.references.groupElements[0].content.nonce, },
+                                                                                         zkStateRef: zkptx.0.references.groupElements[0].content.zkStateRef,},
                                                             isFiller: zkptx.0.references.groupElements[0].isFiller, },            
                                     ContentZKStateAndRefGroup{
                                                             content: ZKStateAndRefGroup{ state: zkptx.0.references.groupElements[1].content.state,
-                                                                                         zkStateRef: zkptx.0.references.groupElements[1].content.zkStateRef,
-                                                                                         nonce: zkptx.0.references.groupElements[1].content.nonce, },
+                                                                                         zkStateRef: zkptx.0.references.groupElements[1].content.zkStateRef,},
                                                             isFiller: zkptx.0.references.groupElements[1].isFiller, }
                                   ],
                     groupHash: zkptx.0.references.groupHash, 

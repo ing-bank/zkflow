@@ -59,7 +59,6 @@ struct TransactionState {
     notary: Notary,
     //encumbrance: bool,
     //constraint: bool,
-    nonce: [u8; HASH_BYTES],
 }
 
 struct ZKStateRef {
@@ -122,8 +121,7 @@ struct ZKProverTransaction {
 
 struct ZKStateAndRefGroup {
     state: [bool; STATE_BITS], 
-    zkStateRef: [bool; REF_BITS],
-    nonce: [bool; HASH_BITS],  
+    zkStateRef: [bool; REF_BITS], 
 }
 
 struct ContentZKStateAndRefGroup{
@@ -219,8 +217,7 @@ fn convertInputsToBits(value:[ContentZKStateAndRef; N_INPUTS]) -> [ContentZKStat
     let mut result = [ContentZKStateAndRefGroup{ 
                         content: ZKStateAndRefGroup{
                                             state: [false; STATE_BITS],
-                                            zkStateRef: [false; REF_BITS],
-                                            nonce: [false; HASH_BITS],},
+                                            zkStateRef: [false; REF_BITS]},
                         isFiller: false,                     
                                         }; N_INPUTS];
     for i in 0.. N_INPUTS { 
@@ -228,9 +225,7 @@ fn convertInputsToBits(value:[ContentZKStateAndRef; N_INPUTS]) -> [ContentZKStat
         result[i].content.state = convertStateToBits(value[i].content.state); 
         //zkStateRef bits 
         result[i].content.zkStateRef = convertHashToBits(value[i].content.reference.id); 
-        //zkStateRef nonce bits 
-        result[i].content.nonce = convertHashToBits(value[i].content.state.nonce);
-        
+
         //isFiller
         result[i].isFiller = value[i].isFiller; 
     } 
@@ -242,8 +237,7 @@ fn convertOutputsToBits(value:[ContentZKStateAndRef; N_OUTPUTS]) -> [ContentZKSt
     let mut result = [ContentZKStateAndRefGroup{
                         content: ZKStateAndRefGroup{
                                             state: [false; STATE_BITS],
-                                            zkStateRef: [false; REF_BITS],
-                                            nonce: [false; HASH_BITS],},
+                                            zkStateRef: [false; REF_BITS],},
                         isFiller: false, 
                                         }; N_OUTPUTS];
     for i in 0.. N_OUTPUTS { 
@@ -251,9 +245,7 @@ fn convertOutputsToBits(value:[ContentZKStateAndRef; N_OUTPUTS]) -> [ContentZKSt
         result[i].content.state = convertStateToBits(value[i].content.state); 
         //zkStateRef bits 
         result[i].content.zkStateRef = convertHashToBits(value[i].content.reference.id); 
-        //zkStateRef nonce bits 
-        result[i].content.nonce = convertHashToBits(value[i].content.state.nonce);
-
+        
         //isFiller
         result[i].isFiller = value[i].isFiller;
     } 
@@ -265,8 +257,7 @@ fn convertReferencesToBits(value:[ContentZKStateAndRef; N_REFERENCES]) -> [Conte
     let mut result = [ContentZKStateAndRefGroup{
                         content: ZKStateAndRefGroup{
                                             state: [false; STATE_BITS],
-                                            zkStateRef: [false; REF_BITS],
-                                            nonce: [false; HASH_BITS],},
+                                            zkStateRef: [false; REF_BITS],},
                         isFiller: false,  
                                         }; N_REFERENCES];
     for i in 0.. N_REFERENCES { 
@@ -274,9 +265,7 @@ fn convertReferencesToBits(value:[ContentZKStateAndRef; N_REFERENCES]) -> [Conte
         result[i].content.state = convertStateToBits(value[i].content.state); 
         //zkStateRef bits 
         result[i].content.zkStateRef = convertHashToBits(value[i].content.reference.id); 
-        //zkStateRef nonce bits 
-        result[i].content.nonce = convertHashToBits(value[i].content.state.nonce);
-
+        
         //isFiller
         result[i].isFiller = value[i].isFiller; 
     }
