@@ -30,8 +30,9 @@ class ZKVerifierTransaction(
 
     // Outputs are not visible in a normal FilteredTransaction, so we 'leak' some info here: the amount of outputs.
     // Outputs are the leaf hashes of the outputs component group. This is the only group where:
-    // * we don't provide the leaf contents but provide the leaf hashes. In other cases we provide either all contents,
-    //   or provide nothing (hide completely) and we just use the component group hash to build the Merkle tree. In the case of outputs, verifiers need to
+    // * we don't provide the leaf contents but provide the leaf hashes. In other cases we provide either all contents
+    //   of all leaves, or we provide nothing (hide all leaves completely) and we just use the component group hash
+    //   to build the Merkle tree. In the case of outputs, verifiers need to
     //   be able to see the component leaf hashes of past transactions in the backchain, so that they can:
     //   * For each input StateRef in the head transaction, find the matching output hash in the previous tx. Then for the proof verification
     //     they provide this list of output hashes (for the inputs being consumed) as public input. The circuit will enforce

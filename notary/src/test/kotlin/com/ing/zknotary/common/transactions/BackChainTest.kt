@@ -8,6 +8,7 @@ import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.TransactionState
 import net.corda.core.crypto.BLAKE2s256DigestService
 import net.corda.core.crypto.Crypto
+import net.corda.core.crypto.SecureHash
 import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
 import net.corda.testing.node.ledger
@@ -43,10 +44,10 @@ class BackChainTest {
                 nodeDigestService = BLAKE2s256DigestService // Should become Pedersen hash when available
             )
 
+            val createdState = createTx.outRef<TestContract.TestState>(0)
+
             // build filtered ZKVerifierTransaction
             createVtx = createPtx.toZKVerifierTransaction()
-
-            val createdState = createTx.outRef<TestContract.TestState>(0)
 
             val moveTx = transaction {
                 input(createdState.ref)
@@ -67,14 +68,73 @@ class BackChainTest {
         }
     }
 
+    data class InputsProofWitness(val ptx: ZKProverTransaction)
+    data class InputsProofInstance(
+        val currentVtxId: SecureHash,
+        val prevVtxOutputNonces: List<SecureHash>,
+        val prevVtxOutputHashes: List<SecureHash>
+    )
+
+    class InputsProof(private val witness: InputsProofWitness) {
+        fun verify(instance: InputsProofInstance) {
+
+            /*
+             * Rule: witness.ptx.inputs[i] contents hashed with nonce should equal instance.prevVtxOutputHashes[i].
+             * This proves that prover did not change the contents of the input states
+             */
+            witness.ptx.inputs.map { it.state }.forEachIndexed { i, state ->
+                @Suppress("UNCHECKED_CAST")
+                state as TransactionState<ZKContractState>
+
+                assertEquals(
+                    instance.prevVtxOutputHashes[i],
+                    BLAKE2s256DigestService.hash(instance.prevVtxOutputNonces[i].bytes + state.fingerprint)
+                )
+            }
+
+            /*
+             * Rule: The recalculated Merkle root should match the one from the instance vtx.
+             *
+             * In this case on the Corda side, a ZKProverTransaction id is lazily recalculated always. This means it is
+             * always a direct representation of the ptx contents so we don't have to do a recalculation.
+             * On the Zinc side, we will need explicit recalculation based on the witness inputs.
+             *
+             * Here, we simply compare the witness.ptx.id with the instance.currentVtxId.
+             * This proves that the inputs whose contents have been verified to be unchanged, are also part of the vtx
+             * being verified.
+             */
+            assertEquals(instance.currentVtxId, witness.ptx.id)
+        }
+    }
+
     @Test
     fun `Verifier follows State chain and confirms input content is unchanged`() {
         ledgerServices.ledger {
             /*
+             * The verifier receives the following from the prover:
+             * - A ZKVerifierTransaction (vtx) for the current transaction that they want to have verified
+             * - A Zero knowledge proof for this vtx, proving that we know a valid ptx matching its id and its back chain
+             */
+            val currentVtx = moveVtx
+            val proof = InputsProof(InputsProofWitness(movePtx))
+
+            /*
              * First, the verifier resolves the chain of ZKVerifierTransactions for each input.
-             * In this case, the moveVtx has one input, and the previous transaction is createVtx
+             * In this case, the moveVtx has one input, and the previous transaction is createVtx.
+             *
+             * Like normal transaction chain resolution, this would be done by requesting the back chain from the party
+             * that is asking for verification. For each input. For now we will work with only one input, until we have
+             * all logic working.
              */
             val prevVtx = createVtx
+
+            /*
+             * To be able to verify that the inputs that are used in the transaction are correct, and unchanged from
+             * when they were outputs in the previous tx, the verifier needs both the Merkle hash for each output and
+             * the nonce that was used to create those Merkle hashes.
+             *
+             * These values will be used as part of the instance when verifying the proof.
+             */
             val prevVtxOutputNonces = prevVtx.componentNonces[ComponentGroupEnum.OUTPUTS_GROUP.ordinal]!!
             val prevVtxOutputHashes = prevVtx.outputHashes
 
@@ -84,24 +144,18 @@ class BackChainTest {
              * Inside the circuit, the prover proves:
              * - witnessTx.inputs[i] contents hashed with nonce should equal instance.moveTxInputHashesFromPrevTx[i].
              *   This proves that prover did not change the contents of the state
-             * - witnessTx.merkeRoot == intance.moveTx.id. This proves the witnessTx is the same as the ZKVerifierTransaction
-             *   that the verifier is trying to verify.
+             * - Recalculates witnessTx merkleRoot based on all components from the witness, including witnessTx.inputs.
+             * - witnessTx.merkleRoot == instance.moveTx.id. This proves the witnessTx is the same as the ZKVerifierTransaction
+             *   that the verifier is trying to verify. It also proves that the inputs consumed are indeed part of the
+             *   transaction identified by the instance.
              */
-
-            // The full ZKProverTransaction for the Move transaction (the head tx) is the witness for the current tx.
-            val currentTxWitness = movePtx
-            val witnessInputs = currentTxWitness.inputs.map {
-                @Suppress("UNCHECKED_CAST")
-                it.state as TransactionState<ZKContractState>
-            }
-
-            // Recalculate the componentHashes for each input from the witness and compare with provided prevTxOutputHashes from instance
-            witnessInputs.forEachIndexed { i, state ->
-                assertEquals(
-                    prevVtxOutputHashes[i],
-                    BLAKE2s256DigestService.hash(prevVtxOutputNonces[i].bytes + state.fingerprint)
+            proof.verify(
+                InputsProofInstance(
+                    currentVtxId = currentVtx.id,
+                    prevVtxOutputNonces = prevVtxOutputNonces,
+                    prevVtxOutputHashes = prevVtxOutputHashes
                 )
-            }
+            )
         }
     }
 }
