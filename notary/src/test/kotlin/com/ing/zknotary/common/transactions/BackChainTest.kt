@@ -9,7 +9,13 @@ import net.corda.core.contracts.TransactionState
 import net.corda.core.crypto.BLAKE2s256DigestService
 import net.corda.core.crypto.Crypto
 import net.corda.core.crypto.SecureHash
+import net.corda.core.internal.dependencies
+import net.corda.core.transactions.SignedTransaction
+import net.corda.core.transactions.WireTransaction
 import net.corda.testing.core.TestIdentity
+import net.corda.testing.dsl.LedgerDSL
+import net.corda.testing.dsl.TestLedgerDSLInterpreter
+import net.corda.testing.dsl.TestTransactionDSLInterpreter
 import net.corda.testing.node.MockServices
 import net.corda.testing.node.ledger
 import org.junit.Before
@@ -24,14 +30,19 @@ class BackChainTest {
         alice
     )
 
+    private lateinit var createWtx: WireTransaction
     private lateinit var createVtx: ZKVerifierTransaction
     private lateinit var moveVtx: ZKVerifierTransaction
     private lateinit var movePtx: ZKProverTransaction
+    private lateinit var moveWtx: WireTransaction
+    private lateinit var anotherMoveWtx: WireTransaction
+
+    private lateinit var ledger: LedgerDSL<TestTransactionDSLInterpreter, TestLedgerDSLInterpreter>
 
     @Before
     fun setup() {
-        ledgerServices.ledger {
-            val createTx = transaction {
+        ledger = ledgerServices.ledger {
+            createWtx = transaction {
                 command(listOf(alice.publicKey), TestContract.Create())
                 output(TestContract.PROGRAM_ID, "Alice's asset", TestContract.TestState(alice.party))
                 verifies()
@@ -39,17 +50,17 @@ class BackChainTest {
             verifies()
 
             val createPtx = ZKProverTransactionFactory.create(
-                createTx.toLedgerTransaction(ledgerServices),
+                createWtx.toLedgerTransaction(ledgerServices),
                 componentGroupLeafDigestService = BLAKE2s256DigestService,
                 nodeDigestService = BLAKE2s256DigestService // Should become Pedersen hash when available
             )
 
-            val createdState = createTx.outRef<TestContract.TestState>(0)
+            val createdState = createWtx.outRef<TestContract.TestState>(0)
 
             // build filtered ZKVerifierTransaction
             createVtx = createPtx.toZKVerifierTransaction()
 
-            val moveTx = transaction {
+            moveWtx = transaction {
                 input(createdState.ref)
                 output(TestContract.PROGRAM_ID, createdState.state.data.withNewOwner(bob.party).ownableState)
                 command(listOf(createdState.state.data.owner.owningKey), TestContract.Move())
@@ -58,13 +69,24 @@ class BackChainTest {
 
             // Build a ZKProverTransaction
             movePtx = ZKProverTransactionFactory.create(
-                moveTx.toLedgerTransaction(ledgerServices),
+                moveWtx.toLedgerTransaction(ledgerServices),
                 componentGroupLeafDigestService = BLAKE2s256DigestService,
                 nodeDigestService = BLAKE2s256DigestService // Should become Pedersen hash when available
             )
 
             // build filtered ZKVerifierTransaction
             moveVtx = movePtx.toZKVerifierTransaction()
+
+            val movedState = moveWtx.outRef<TestContract.TestState>(0)
+
+            anotherMoveWtx = transaction {
+                input(movedState.ref)
+                output(TestContract.PROGRAM_ID, movedState.state.data.withNewOwner(alice.party).ownableState)
+                command(listOf(movedState.state.data.owner.owningKey), TestContract.Move())
+                verifies()
+            }
+
+            verifies()
         }
     }
 
@@ -107,9 +129,45 @@ class BackChainTest {
         }
     }
 
+    /**
+     * Returns the chain of transactions for this transaction id
+     */
+    private fun loadChainFromVault(
+        id: SecureHash
+    ): List<SignedTransaction> {
+        val tx = ledgerServices.validatedTransactions.getTransaction(id)!!
+        val depTxs = tx.dependencies.flatMap { loadChainFromVault(it) }
+
+        return depTxs + tx
+    }
+
+    @Test
+    fun `Prover can build chain of ZKVerifierTransactions based on chain of WireTransactions`() {
+        ledgerServices.ledger {
+            val stxs = loadChainFromVault(anotherMoveWtx.id)
+
+            // This will be very naive: the prover will recalculate everyting and even recreate the ZKPs.
+            // In end state, the prover will receive/request the preceding ZKtxs and proofs from their counterparty.
+            val vtxs: List<ZKVerifierTransaction> = stxs.map {
+                val wtx = it.coreTransaction as WireTransaction
+                ZKProverTransactionFactory.create(
+                    wtx.toLedgerTransaction(ledgerServices),
+                    componentGroupLeafDigestService = BLAKE2s256DigestService,
+                    nodeDigestService = BLAKE2s256DigestService
+                ).toZKVerifierTransaction()
+            }
+
+            // The first transaction in the list should be the create transaction
+            assertEquals(createVtx, vtxs.first())
+
+            // the second tx in the list should be the first move tx
+            assertEquals(moveVtx, vtxs[1])
+        }
+    }
+
     @Test
     fun `Verifier follows State chain and confirms input content is unchanged`() {
-        ledgerServices.ledger {
+        ledger.apply {
             /*
              * The verifier receives the following from the prover:
              * - A ZKVerifierTransaction (vtx) for the current transaction that they want to have verified

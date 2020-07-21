@@ -31,6 +31,11 @@ class ZKProverTransaction internal constructor(
     val command: Command<ZKCommandData>,
     val notary: Party,
     val timeWindow: TimeWindow?,
+
+    /**
+     *  For the ZKProverTransaction to be deterministically created from a LedgerTransaction,
+     *  this needs to always be the privacySalt from the LedgerTransaction
+     */
     val privacySalt: PrivacySalt,
 
     /**
