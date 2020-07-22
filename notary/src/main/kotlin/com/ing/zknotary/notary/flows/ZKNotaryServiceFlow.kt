@@ -151,6 +151,10 @@ class ZKNotaryServiceFlow(
         val tx = requestPayload.transaction
 
         try {
+            /**
+             * Check if we need to do some more checks from [TransactionVerifierServiceInternal] that are done on
+             * Ledgertransactions
+             */
             // TODO: enable tx.verify()
             // TODO: verify the zkp
             // zkConfig.verifierService.verify()

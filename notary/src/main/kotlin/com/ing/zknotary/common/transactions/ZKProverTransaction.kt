@@ -22,10 +22,6 @@ import java.time.Instant
 @CordaSerializable
 class ZKProverTransaction internal constructor(
     val inputs: List<StateAndRef<ContractState>>,
-    /**
-     * Because a ZKStateRef is a representation of the contents of a state, and no longer a pointer to
-     * a previous transaction output, outputs are also ZKStateAndRefs, like inputs and references.
-     */
     val outputs: List<TransactionState<ZKContractState>>,
     val references: List<StateAndRef<ContractState>>,
     val command: Command<ZKCommandData>,
