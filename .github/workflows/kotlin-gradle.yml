@@ -63,17 +63,20 @@ jobs:
           GITHUB_USERNAME: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install Zinc ING Fork to path
+      - name: Install Zinc ING Fork to $PATH
         run: |
           tar xvzf zinc-linux.tar.gz
           echo "::add-path::$GITHUB_WORKSPACE/zinc-linux/"
-          pwd
-          ls -l
 
       - name: Build with Gradle
-        run: |
-          echo $PATH
-          ./gradlew check --build-cache --stacktrace --parallel
+        run: ./gradlew check --stacktrace --info
         env:
           GITHUB_USERNAME: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          name: Junit Test Report - Notary
+          path: notary/build/reports/tests/test
