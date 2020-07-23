@@ -16,6 +16,7 @@ import net.corda.core.serialization.serialize
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.WireTransaction
 import net.corda.node.services.DbTransactionsResolver
+import net.corda.testing.common.internal.testNetworkParameters
 import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
 import net.corda.testing.node.ledger
@@ -29,18 +30,14 @@ class BackChainTest {
 
     private val ledgerServices = MockServices(
         listOf("com.ing.zknotary.common.contracts"),
-        alice
+        alice,
+        testNetworkParameters(minimumPlatformVersion = 6),
+        bob
     )
 
     private lateinit var createWtx: WireTransaction
-
-    // private lateinit var createVtx: ZKVerifierTransaction
-    // private lateinit var moveVtx: ZKVerifierTransaction
-    // private lateinit var movePtx: ZKProverTransaction
     private lateinit var moveWtx: WireTransaction
     private lateinit var anotherMoveWtx: WireTransaction
-    // private lateinit var anotherMovePtx: ZKProverTransaction
-    // private lateinit var anotherMoveVtx: ZKVerifierTransaction
 
     @Before
     fun setup() {
@@ -51,21 +48,9 @@ class BackChainTest {
                 verifies()
             }
             verifies()
-            println("CREATED WTX: ${createWtx.id}, size: ${createWtx.serialize().bytes.size}")
-            val createdState = createWtx.outRef<TestContract.TestState>(0)
 
-            // // when creating a ptx from a wiretransaction, we need to look up the ZKVerifiertransaction that belongs
-            // // to it, so we can switch the input and reference stateRefs for the ones at that location in the vtx
-            // val createPtx = ZKProverTransactionFactory.create(
-            //     createWtx.toLedgerTransaction(ledgerServices),
-            //     componentGroupLeafDigestService = BLAKE2s256DigestService,
-            //     nodeDigestService = BLAKE2s256DigestService // Should become Pedersen hash when available
-            // )
-            //
-            //
-            // // build filtered ZKVerifierTransaction
-            // createVtx = createPtx.toZKVerifierTransaction()
-            // println("CREATED VTX: ${createVtx.id}, size: ${createVtx.serialize().bytes.size}")
+            println("CREATE \t\t\tWTX: ${createWtx.id}")
+            val createdState = createWtx.outRef<TestContract.TestState>(0)
 
             moveWtx = transaction {
                 input(createdState.ref)
@@ -73,41 +58,28 @@ class BackChainTest {
                 command(listOf(createdState.state.data.owner.owningKey), TestContract.Move())
                 verifies()
             }
-            println("CREATED WTX: ${moveWtx.id}, size: ${moveWtx.serialize().bytes.size}")
-
-            // // Build a ZKProverTransaction
-            // movePtx = ZKProverTransactionFactory.create(
-            //     moveWtx.toLedgerTransaction(ledgerServices),
-            //     componentGroupLeafDigestService = BLAKE2s256DigestService,
-            //     nodeDigestService = BLAKE2s256DigestService // Should become Pedersen hash when available
-            // )
-            //
-            // // build filtered ZKVerifierTransaction
-            // moveVtx = movePtx.toZKVerifierTransaction()
-            // println("CREATED VTX: ${moveVtx.id}, size: ${moveVtx.serialize().bytes.size}")
+            println("MOVE \t\t\tWTX: ${moveWtx.id}")
 
             val movedState = moveWtx.outRef<TestContract.TestState>(0)
+
+            val create2Wtx = transaction {
+                command(listOf(alice.publicKey), TestContract.Create())
+                output(TestContract.PROGRAM_ID, "Bob's reference asset", TestContract.TestState(alice.party))
+                verifies()
+            }
+            verifies()
+            println("CREATE2 \t\tWTX: ${create2Wtx.id}")
 
             anotherMoveWtx = transaction {
                 input(movedState.ref)
                 output(TestContract.PROGRAM_ID, movedState.state.data.withNewOwner(alice.party).ownableState)
                 command(listOf(movedState.state.data.owner.owningKey), TestContract.Move())
+                reference("Bob's reference asset")
                 verifies()
             }
-            println("CREATED WTX: ${anotherMoveWtx.id}, size: ${createWtx.serialize().bytes.size}")
+            println("ANOTHERMOVE \tWTX: ${anotherMoveWtx.id}, size: ${createWtx.serialize().bytes.size}")
 
             verifies()
-
-            // // Build a ZKProverTransaction
-            // anotherMovePtx = ZKProverTransactionFactory.create(
-            //     anotherMoveWtx.toLedgerTransaction(ledgerServices),
-            //     componentGroupLeafDigestService = BLAKE2s256DigestService,
-            //     nodeDigestService = BLAKE2s256DigestService // Should become Pedersen hash when available
-            // )
-            //
-            // // build filtered ZKVerifierTransaction
-            // anotherMoveVtx = anotherMovePtx.toZKVerifierTransaction()
-            // println("CREATED VTX: ${anotherMoveVtx.id}, size: ${createVtx.serialize().bytes.size}")
         }
     }
 
@@ -116,8 +88,6 @@ class BackChainTest {
         val currentVtxId: SecureHash,
         val inputNonces: Map<Int, SecureHash>,
         val inputHashes: Map<Int, SecureHash>
-        // val prevVtxOutputNonces: Map<Int, List<SecureHash>>,
-        // val prevVtxOutputHashes: Map<Int, List<SecureHash>>
     )
 
     class InputsProof(private val witness: InputsProofWitness) {
@@ -153,20 +123,12 @@ class BackChainTest {
     }
 
     /**
-     * Returns the chain of transactions for this transaction id
-     */
-    private fun loadChainFromVault(
-        id: SecureHash
-    ): List<SignedTransaction> {
-        val tx = ledgerServices.validatedTransactions.getTransaction(id)!!
-        val depTxs = tx.dependencies.flatMap { loadChainFromVault(it) }
-
-        return depTxs + tx
-    }
-
-    /**
      * Collects all verified transaction chains from local storage for each StateRef provided.
      * This should always be called after ResolveTransactionsFlow, to prevent an exception because of a missing transaction
+     *
+     * The returned list of SecureHashes is topologically ordered, so that any dependencies of a transaction
+     * always appear first in the list. This makes it possible to verify all transactions in the list from
+     * left to right and be sure that all dependencies for each transaction are always already known and verified.
      */
     fun collectVerifiedDependencies(
         stateRefs: List<StateRef>,
@@ -217,9 +179,10 @@ class BackChainTest {
             // txhashes of the newly created ptxs.
             val wtxs = mutableMapOf<SecureHash, WireTransaction>()
 
-            val orderedDeps = collectVerifiedDependencies(anotherMoveWtx.inputs, ledgerServices) {
-                wtxs[it.id] = it.coreTransaction as WireTransaction
-            }
+            val orderedDeps =
+                collectVerifiedDependencies(anotherMoveWtx.inputs + anotherMoveWtx.references, ledgerServices) {
+                    wtxs[it.id] = it.coreTransaction as WireTransaction
+                }
 
             val vtxs = mutableMapOf<SecureHash, Pair<ZKVerifierTransaction, InputsProof>>()
 
@@ -227,23 +190,8 @@ class BackChainTest {
             val txIdMap = mutableMapOf<SecureHash, SecureHash>()
 
             orderedDeps.forEach {
-                println("\n\nCreating PTX for $it")
                 val wtx = checkNotNull(wtxs[it]) {
                     "Unexpectedly could not find the wtx for $it. Did you run ResolveTransactionsFlow before?"
-                }
-
-                val mappedInputs = mutableListOf<StateRef>()
-                if (wtx.inputs.isNotEmpty()) {
-                    println("Inputs found, mapping txhash element...")
-                    wtx.inputs.forEachIndexed { index, input ->
-                        val zkid = checkNotNull(txIdMap[input.txhash]) {
-                            "Unexpectedly could not find the tx id map for ${input.txhash}. Did you run ResolveTransactionsFlow before?"
-                        }
-                        mappedInputs.add(index, StateRef(zkid, input.index))
-                    }
-                    println("MAPPED: ")
-                    println(wtx.inputs)
-                    println(mappedInputs)
                 }
 
                 val ptx = wtx.toZKProverTransaction(
@@ -252,11 +200,7 @@ class BackChainTest {
                     componentGroupLeafDigestService = BLAKE2s256DigestService,
                     nodeDigestService = BLAKE2s256DigestService
                 )
-                println("CREATED PTX with id ${ptx.id}")
-                if (ptx.inputs.isNotEmpty()) {
-                    println("Mapped inputs:")
-                    println(ptx.inputs.map { input -> input.ref })
-                }
+                println("PTX created with id ${ptx.id} for $it")
 
                 txIdMap[wtx.id] = ptx.id
                 vtxs[ptx.id] = Pair(ptx.toZKVerifierTransaction(), InputsProof(InputsProofWitness(ptx)))
@@ -269,11 +213,7 @@ class BackChainTest {
                 componentGroupLeafDigestService = BLAKE2s256DigestService,
                 nodeDigestService = BLAKE2s256DigestService
             )
-            println("CREATED anotherMovePtx with id ${anotherMovePtx.id}")
-            if (anotherMovePtx.inputs.isNotEmpty()) {
-                println("Mapped inputs:")
-                println(anotherMovePtx.inputs.map { input -> input.ref })
-            }
+            println("PTX created with id ${anotherMovePtx.id} for ${anotherMoveWtx.id}")
 
             val anotherMovePtxProof = InputsProof(InputsProofWitness(anotherMovePtx))
             vtxs[anotherMovePtx.id] = Pair(anotherMovePtx.toZKVerifierTransaction(), anotherMovePtxProof)
@@ -293,8 +233,8 @@ class BackChainTest {
                 val inputNonces = mutableMapOf<Int, SecureHash>()
                 val inputHashes = mutableMapOf<Int, SecureHash>()
 
-                currentVtx.inputs.forEachIndexed { index, input ->
-                    println("  - Verifying input $index: \n      $input")
+                (currentVtx.inputs + currentVtx.references).forEachIndexed { index, input ->
+                    println("  - Verifying input/reference $index: \n      $input")
                     val prevVtx = vtxs[input.txhash]?.first ?: error("Should not happen")
 
                     /*
