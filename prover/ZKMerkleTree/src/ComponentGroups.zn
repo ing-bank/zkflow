@@ -27,7 +27,7 @@ const COMMAND_BITS:u16 = INT32_BITS;
 
 type PubKey = [u8; PUBKEY_BYTES];
 type PrivacySalt = [bool; HASH_BITS]; 
-type ComponentGroupHash = [u8; HASH_BYTES]; //For now we use SHA256 to compute component group hashes - should be replaced with Pedersen!
+type ComponentGroupHash = [u8; HASH_BYTES]; //For now we use Blake2s to compute component group hashes - should be replaced with Pedersen!
 
 enum CommandData {
     CREATE = 0,
@@ -49,9 +49,9 @@ struct Notary {
 
 /*
 This struct follows the structure in the original Corda TransactionState structure. The fields contractCN, 
-encumbrance and constraint declared bool intentionally to reserve their place in the structure. In the current 
-implementation we don't use these fields, if they are going to be included, they should be declared with the 
-corresponding data type. 
+encumbrance and constraint are commented out and declared bool intentionally to reserve their place in the 
+structure. In the current implementation we don't use these fields, if they are going to be included, they 
+should be declared with the corresponding data type. 
 */
 struct TransactionState {
     data: Data,
@@ -342,7 +342,7 @@ fn buildComponentGroups(zkptx:ZKProverTransaction) -> (ComponentGroup, PrivacySa
     )
 }
 
-//Temporary function to test isFiller attribute
+//Temporary function to test isFiller attribute - it should be moved to a separate file when zinc allows better file system management
 fn CheckContractRules(value: ZKProverTransaction)
 {
     //Check if inputs total is equal to outputs total

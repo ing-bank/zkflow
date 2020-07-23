@@ -1,6 +1,8 @@
 //
 // Merkle tree library
 //
+
+
 //** This part of the code copied from ComponentGroups.zn since Zinc doesn't support mod command in non-main files
 //** It should be deleted once Zinc provides the support for file system
 //*****BEGIN
@@ -31,7 +33,7 @@ const COMMAND_BITS:u16 = INT32_BITS;
 
 type PubKey = [u8; PUBKEY_BYTES];
 type PrivacySalt = [bool; HASH_BITS]; 
-type ComponentGroupHash = [u8; HASH_BYTES]; //For now we use SHA256 to compute component group hashes - should be replaced with Pedersen!
+type ComponentGroupHash = [u8; HASH_BYTES]; //For now we use Blake2s to compute component group hashes - should be replaced with Pedersen!
 
 struct ZKStateAndRefGroup {
     state: [bool; STATE_BITS], 
@@ -99,7 +101,7 @@ enum ComponentGroupEnum {
     PARAMETERS_GROUP = 8,
 }
 
-use std::crypto::blake2s; //This will be replaced with Blake2s
+use std::crypto::blake2s; 
 use std::crypto::pedersen;
 use std::array::truncate;
 
@@ -107,7 +109,7 @@ use std::convert::to_bits;
 use std::convert::from_bits_field;
 
 
-const NODE_DIGEST_SIZE:u16 = 256; // size of field
+const NODE_DIGEST_SIZE:u16 = 256; // this should be the size of field, right now it is equal to the length of blake2s digest (TEMPORARILY)
 const INTEGER_LENGTH:u16 = 32; 
 const NODES:u8 =  9;
 
@@ -129,7 +131,6 @@ const TREE_DEPTH:u8 = 3;
 fn computeNonce(privacySalt: PrivacySalt, groupIndex: u32, internalIndex: u32) -> BlakeDigest
 {
     let mut nonce = [false; HASH_BITS + INTEGER_LENGTH + INTEGER_LENGTH];  
-    
     for i in 0..HASH_BITS
     {
         nonce[i] = privacySalt[i]; 
@@ -419,7 +420,8 @@ fn buildMerkleTree(zkptx:(ComponentGroup, PrivacySalt)) -> BlakeDigest //Pederse
     //Compute the leaf hashes and component group hashes
     let componentGroupHashes = computeComponentGroupHashes(computeLeafHashes(zkptx));
     
-    //Validate component group hashes
+    //Validate component group hashes 
+    //This function is currently disabled. Once blake2s values are validated on Corda side and Zinc side we can eanble it. 
     //validateGroupHashes(componentGroupHashes, zkptx.0);
 
     //Compute ZKId and return

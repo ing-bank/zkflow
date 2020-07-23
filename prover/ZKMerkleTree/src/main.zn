@@ -83,8 +83,6 @@ fn convertFromComponentToZKMerkle(zkptx: (ComponentGroups::ComponentGroup, Priva
 fn main(witness: ZKProverTransaction) -> [u8;32] //ZKMerkleTree::PedersenDigest
 {
     //Check contract rules
-    //Check value
-    //assert!(witness.inputs.value[0].state.data.value == witness.outputs.value[0].state.data.value, "Failed requirement: the value of the input and out put should be equal");
     ComponentGroups::CheckContractRules(witness); 
 
     let zkptx:(ComponentGroups::ComponentGroup, PrivacySalt) = ComponentGroups::buildComponentGroups(witness);
