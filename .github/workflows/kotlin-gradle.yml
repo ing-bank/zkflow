@@ -52,8 +52,28 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}-1
           restore-keys: ${{ runner.os }}-gradle
 
+      - name: Fetch Zinc ING Fork
+        uses: dsaltares/fetch-gh-release-asset@master
+        with:
+          repo: "ingzkp/zinc"
+          version: "latest"
+          file: "zinc-linux.tar.gz"
+          token: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          GITHUB_USERNAME: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install Zinc ING Fork to path
+        run: |
+          tar xvzf zinc-linux.tar.gz
+          echo "::add-path::$GITHUB_WORKSPACE/zinc-linux/"
+          pwd
+          ls -l
+
       - name: Build with Gradle
-        run: ./gradlew check --build-cache --stacktrace --parallel
+        run: |
+          echo $PATH
+          ./gradlew check --build-cache --stacktrace --parallel
         env:
           GITHUB_USERNAME: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
