@@ -87,7 +87,9 @@ class BackChainTest {
     data class InputsProofInstance(
         val currentVtxId: SecureHash,
         val inputNonces: Map<Int, SecureHash>,
-        val inputHashes: Map<Int, SecureHash>
+        val inputHashes: Map<Int, SecureHash>,
+        val referenceNonces: Map<Int, SecureHash>,
+        val referenceHashes: Map<Int, SecureHash>
     )
 
     class InputsProof(private val witness: InputsProofWitness) {
@@ -104,6 +106,20 @@ class BackChainTest {
                 assertEquals(
                     instance.inputHashes[index],
                     BLAKE2s256DigestService.hash(instance.inputNonces[index]!!.bytes + input.fingerprint)
+                )
+            }
+
+            /*
+             * Rule: witness.ptx.inputs[i] contents hashed with nonce should equal instance.prevVtxOutputHashes[i].
+             * This proves that prover did not change the contents of the input states
+             */
+            witness.ptx.references.map { it.state }.forEachIndexed { index, reference ->
+                @Suppress("UNCHECKED_CAST")
+                reference as TransactionState<ZKContractState>
+
+                assertEquals(
+                    instance.referenceHashes[index],
+                    BLAKE2s256DigestService.hash(instance.referenceNonces[index]!!.bytes + reference.fingerprint)
                 )
             }
 
@@ -189,6 +205,7 @@ class BackChainTest {
             // Map from SignedTransaction.id to ZKProverTransaction.id for later lookup
             val txIdMap = mutableMapOf<SecureHash, SecureHash>()
 
+            // Create all ptxs ordered from issuances to head tx
             orderedDeps.forEach {
                 val wtx = checkNotNull(wtxs[it]) {
                     "Unexpectedly could not find the wtx for $it. Did you run ResolveTransactionsFlow before?"
@@ -221,57 +238,90 @@ class BackChainTest {
             // Next: verification/walking back the chain of vtxs
 
             // Verify each tx recursively
-            fun verify(currentVtx: ZKVerifierTransaction, currentProof: InputsProof) {
-                println("Verifying TX: ${currentVtx.id}")
+            fun verify(currentVtx: ZKVerifierTransaction, currentProof: InputsProof, level: Int = 0) {
+                val indent = " ".repeat(level * 6) + "|-"
+                println("$indent Verifying TX at level $level: ${currentVtx.id}")
 
-                if (currentVtx.inputs.isEmpty()) {
-                    println("Reached issuance transaction. Verification complete")
+                if (currentVtx.inputs.isEmpty() && currentVtx.references.isEmpty()) {
+                    println("   $indent Reached tx without inputs or references. Verification complete")
                     return
                 }
 
                 // verify the tx graph for each input and collect nonces and hashes for current tx verification
                 val inputNonces = mutableMapOf<Int, SecureHash>()
                 val inputHashes = mutableMapOf<Int, SecureHash>()
+                val referenceNonces = mutableMapOf<Int, SecureHash>()
+                val referenceHashes = mutableMapOf<Int, SecureHash>()
 
-                (currentVtx.inputs + currentVtx.references).forEachIndexed { index, input ->
-                    println("  - Verifying input/reference $index: \n      $input")
-                    val prevVtx = vtxs[input.txhash]?.first ?: error("Should not happen")
+                (currentVtx.inputs).forEachIndexed { index, stateRef ->
+                    println("   $indent Verifying input $index: $stateRef")
+                    val prevVtx = vtxs[stateRef.txhash]?.first ?: error("Should not happen")
+                    val prevProof = vtxs[stateRef.txhash]?.second ?: error("Should not happen")
 
                     /*
-                     * To be able to verify that the inputs that are used in the transaction are correct, and unchanged from
+                     * To be able to verify that the stateRefs that are used in the transaction are correct, and unchanged from
                      * when they were outputs in the previous tx, the verifier needs both the Merkle hash for each output and
                      * the nonce that was used to create those Merkle hashes.
                      *
                      * These values will be used as part of the instance when verifying the proof.
                      */
                     inputNonces[index] =
-                        prevVtx.componentNonces[ComponentGroupEnum.OUTPUTS_GROUP.ordinal]!![input.index]
-                    inputHashes[index] = prevVtx.outputHashes[input.index]
+                        prevVtx.componentNonces[ComponentGroupEnum.OUTPUTS_GROUP.ordinal]!![stateRef.index]
+                    inputHashes[index] = prevVtx.outputHashes[stateRef.index]
 
                     /*
                      * Now the verifier calls currentVtx.proof.verify(currentVtx.id, prevVtx.outputHashes, prevVtx.outputNonces).
                      *
                      * Inside the circuit, the prover proves:
-                     * - witnessTx.inputs[i] contents hashed with nonce should equal instance.moveTxInputHashesFromPrevTx[i].
+                     * - witnessTx.stateRefs[i] contents hashed with nonce should equal instance.moveTxstateRefHashesFromPrevTx[i].
                      *   This proves that prover did not change the contents of the state
-                     * - Recalculates witnessTx merkleRoot based on all components from the witness, including witnessTx.inputs.
+                     * - Recalculates witnessTx merkleRoot based on all components from the witness, including witnessTx.stateRefs.
                      * - witnessTx.merkleRoot == instance.moveTx.id. This proves the witnessTx is the same as the ZKVerifierTransaction
-                     *   that the verifier is trying to verify. It also proves that the inputs consumed are indeed part of the
+                     *   that the verifier is trying to verify. It also proves that the stateRefs consumed are indeed part of the
                      *   transaction identified by the instance.
                      */
 
-                    val prevProof = vtxs[currentVtx.inputs.single().txhash]?.second ?: error("Should not happen")
+                    verify(prevVtx, prevProof, level + 1)
+                }
 
-                    verify(prevVtx, prevProof)
+                (currentVtx.references).forEachIndexed { index, stateRef ->
+                    println("   $indent Verifying reference $index: $stateRef")
+                    val prevVtx = vtxs[stateRef.txhash]?.first ?: error("Should not happen")
+                    val prevProof = vtxs[stateRef.txhash]?.second ?: error("Should not happen")
+
+                    /*
+                     * To be able to verify that the stateRefs that are used in the transaction are correct, and unchanged from
+                     * when they were outputs in the previous tx, the verifier needs both the Merkle hash for each output and
+                     * the nonce that was used to create those Merkle hashes.
+                     *
+                     * These values will be used as part of the instance when verifying the proof.
+                     */
+                    referenceNonces[index] =
+                        prevVtx.componentNonces[ComponentGroupEnum.OUTPUTS_GROUP.ordinal]!![stateRef.index]
+                    referenceHashes[index] = prevVtx.outputHashes[stateRef.index]
+
+                    /*
+                     * Now the verifier calls currentVtx.proof.verify(currentVtx.id, prevVtx.outputHashes, prevVtx.outputNonces).
+                     *
+                     * Inside the circuit, the prover proves:
+                     * - witnessTx.stateRefs[i] contents hashed with nonce should equal instance.moveTxstateRefHashesFromPrevTx[i].
+                     *   This proves that prover did not change the contents of the state
+                     * - Recalculates witnessTx merkleRoot based on all components from the witness, including witnessTx.stateRefs.
+                     * - witnessTx.merkleRoot == instance.moveTx.id. This proves the witnessTx is the same as the ZKVerifierTransaction
+                     *   that the verifier is trying to verify. It also proves that the stateRefs consumed are indeed part of the
+                     *   transaction identified by the instance.
+                     */
+
+                    verify(prevVtx, prevProof, level + 1)
                 }
 
                 currentProof.verify(
                     InputsProofInstance(
                         currentVtxId = currentVtx.id,
                         inputHashes = inputHashes,
-                        inputNonces = inputNonces
-                        // prevVtxOutputNonces = prevVtxOutputNonces,
-                        // prevVtxOutputHashes = prevVtxOutputHashes
+                        inputNonces = inputNonces,
+                        referenceHashes = referenceHashes,
+                        referenceNonces = referenceNonces
                     )
                 )
             }
@@ -281,131 +331,4 @@ class BackChainTest {
             verify(currentVtx.first, currentVtx.second)
         }
     }
-
-    // @Test
-    // fun `Verifier follows State chain and confirms input content is unchanged`() {
-    //     ledgerServices.ledger {
-    //         /*
-    //          * The verifier receives the following from the prover:
-    //          * - A ZKVerifierTransaction (vtx) for the current transaction that they want to have verified
-    //          * - A Zero knowledge proof for this vtx, proving that we know a valid ptx matching its id and its back chain
-    //          */
-    //         val currentVtx = anotherMoveVtx
-    //         val currentProof = InputsProof(InputsProofWitness(anotherMovePtx))
-    //
-    //         /*
-    //          * First, the verifier resolves the chain of ZKVerifierTransactions for each input.
-    //          * In this case, the moveVtx has one input, and the previous transaction is createVtx.
-    //          *
-    //          * Like normal transaction chain resolution, this would be done by requesting the back chain from the party
-    //          * that is asking for verification. For each input. For now we will work with only one input, until we have
-    //          * all logic working.
-    //          */
-    //
-    //         // Rebuilding the list of vtxs from verified SignedTransactions stored in the local vault for the inputs
-    //         // of the head transaction
-    //         val wtxs = mutableMapOf<SecureHash, WireTransaction>()
-    //         val vtxs = mutableMapOf<SecureHash, Pair<ZKVerifierTransaction, InputsProof>>()
-    //
-    //         // Map from SignedTransaction.id to ZKProverTransaction.id for later lookup
-    //         val txIdMap = mutableMapOf<SecureHash, SecureHash>()
-    //
-    //         // This will be very naive: the prover will recalculate everyting and even recreate the ZKPs.
-    //         // In end state, the prover will receive/request the preceding ZKtxs and proofs from their counterparty.
-    //         collectVerifiedDependencies(currentVtx.inputs, ledgerServices) {
-    //             val wtx = it.coreTransaction as WireTransaction
-    //             wtxs[wtx.id] = wtx
-    //         }
-    //
-    //         println("Collected Deps in order:")
-    //         wtxs.forEach { println(it.key) }
-    //
-    //         // collectVerifiedDependencies(currentVtx.inputs, ledgerServices) {
-    //         //     val wtx = it.coreTransaction as WireTransaction
-    //         //     println("Creating PTX for ${wtx.id}")
-    //         //     println("Current map contents: $txIdMap")
-    //         //
-    //         //     val inputs = mutableListOf<StateRef>()
-    //         //     if (it.inputs.isNotEmpty()) {
-    //         //         it.inputs.forEachIndexed { index, input ->
-    //         //             val zkid = checkNotNull(txIdMap[input.txhash]) {
-    //         //                 "Unexpectedly could not find the tx id map for ${input.txhash}. Did you run ResolveTransactionsFlow before?"
-    //         //             }
-    //         //             inputs[index] = StateRef(zkid, input.index)
-    //         //         }
-    //         //     }
-    //         //
-    //         //     println(it.inputs)
-    //         //     println(inputs)
-    //         //     val ptx = ZKProverTransactionFactory.create(
-    //         //         wtx.toLedgerTransaction(ledgerServices),
-    //         //         componentGroupLeafDigestService = BLAKE2s256DigestService,
-    //         //         nodeDigestService = BLAKE2s256DigestService
-    //         //     )
-    //         //
-    //         //     val proof = InputsProof(InputsProofWitness(ptx))
-    //         //
-    //         //     txIdMap[it.id] = ptx.id
-    //         //     vtxs[ptx.id] = Pair(ptx.toZKVerifierTransaction(), proof)
-    //         // }
-    //
-    //         // Verify each tx recursively
-    //         fun verify(currentVtx: ZKVerifierTransaction, currentProof: InputsProof) {
-    //             println("Verifying TX: ${currentVtx.id}")
-    //
-    //             if (currentVtx.inputs.isEmpty()) {
-    //                 println("Reached issuance transaction. Verification complete")
-    //                 return
-    //             }
-    //
-    //             // verify the tx graph for each input and collect nonces and hashes for current tx verification
-    //             val inputNonces = mutableMapOf<Int, SecureHash>()
-    //             val inputHashes = mutableMapOf<Int, SecureHash>()
-    //
-    //             currentVtx.inputs.forEachIndexed { index, input ->
-    //                 println("  - Verifying input $index: \n      $input")
-    //                 val prevVtx = vtxs[input.txhash]?.first ?: error("Should not happen")
-    //
-    //                 /*
-    //                  * To be able to verify that the inputs that are used in the transaction are correct, and unchanged from
-    //                  * when they were outputs in the previous tx, the verifier needs both the Merkle hash for each output and
-    //                  * the nonce that was used to create those Merkle hashes.
-    //                  *
-    //                  * These values will be used as part of the instance when verifying the proof.
-    //                  */
-    //                 inputNonces[index] =
-    //                     prevVtx.componentNonces[ComponentGroupEnum.OUTPUTS_GROUP.ordinal]!![input.index]
-    //                 inputHashes[index] = prevVtx.outputHashes[input.index]
-    //
-    //                 /*
-    //                  * Now the verifier calls currentVtx.proof.verify(currentVtx.id, prevVtx.outputHashes, prevVtx.outputNonces).
-    //                  *
-    //                  * Inside the circuit, the prover proves:
-    //                  * - witnessTx.inputs[i] contents hashed with nonce should equal instance.moveTxInputHashesFromPrevTx[i].
-    //                  *   This proves that prover did not change the contents of the state
-    //                  * - Recalculates witnessTx merkleRoot based on all components from the witness, including witnessTx.inputs.
-    //                  * - witnessTx.merkleRoot == instance.moveTx.id. This proves the witnessTx is the same as the ZKVerifierTransaction
-    //                  *   that the verifier is trying to verify. It also proves that the inputs consumed are indeed part of the
-    //                  *   transaction identified by the instance.
-    //                  */
-    //
-    //                 val prevProof = vtxs[currentVtx.inputs.single().txhash]?.second ?: error("Should not happen")
-    //
-    //                 verify(prevVtx, prevProof)
-    //             }
-    //
-    //             currentProof.verify(
-    //                 InputsProofInstance(
-    //                     currentVtxId = currentVtx.id,
-    //                     inputHashes = inputHashes,
-    //                     inputNonces = inputNonces
-    //                     // prevVtxOutputNonces = prevVtxOutputNonces,
-    //                     // prevVtxOutputHashes = prevVtxOutputHashes
-    //                 )
-    //             )
-    //         }
-    //
-    //         verify(currentVtx, currentProof)
-    //     }
-    // }
 }
