@@ -3,26 +3,23 @@ package com.ing.zknotary.common.transactions
 import com.ing.zknotary.common.contracts.TestContract
 import com.ing.zknotary.common.contracts.ZKContractState
 import com.ing.zknotary.common.zkp.fingerprint
+import com.ing.zknotary.node.services.collectVerifiedDependencies
+import com.ing.zknotary.nodes.services.MockZKTransactionStorage
 import junit.framework.TestCase.assertEquals
 import net.corda.core.contracts.ComponentGroupEnum
-import net.corda.core.contracts.StateRef
 import net.corda.core.contracts.TransactionState
 import net.corda.core.crypto.BLAKE2s256DigestService
 import net.corda.core.crypto.Crypto
 import net.corda.core.crypto.SecureHash
-import net.corda.core.internal.dependencies
-import net.corda.core.node.ServiceHub
 import net.corda.core.serialization.serialize
-import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.WireTransaction
-import net.corda.node.services.DbTransactionsResolver
 import net.corda.testing.common.internal.testNetworkParameters
 import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
+import net.corda.testing.node.createMockCordaService
 import net.corda.testing.node.ledger
 import org.junit.Before
 import org.junit.Test
-import java.util.LinkedHashSet
 
 class BackChainTest {
     private val alice = TestIdentity.fresh("alice", Crypto.EDDSA_ED25519_SHA512)
@@ -138,49 +135,10 @@ class BackChainTest {
         }
     }
 
-    /**
-     * Collects all verified transaction chains from local storage for each StateRef provided.
-     * This should always be called after ResolveTransactionsFlow, to prevent an exception because of a missing transaction
-     *
-     * The returned list of SecureHashes is topologically ordered, so that any dependencies of a transaction
-     * always appear first in the list. This makes it possible to verify all transactions in the list from
-     * left to right and be sure that all dependencies for each transaction are always already known and verified.
-     */
-    fun collectVerifiedDependencies(
-        stateRefs: List<StateRef>,
-        serviceHub: ServiceHub,
-        block: ((stx: SignedTransaction) -> Unit)? = null
-    ): List<SecureHash> {
-        val txHashes = stateRefs.map { it.txhash }
-
-        // Keep things unique but ordered, for unit test stability.
-        val nextRequests = LinkedHashSet<SecureHash>(txHashes)
-        val topologicalSort = DbTransactionsResolver.TopologicalSort()
-
-        while (nextRequests.isNotEmpty()) {
-            // Don't re-fetch the same tx when it's referenced multiple times in the graph we're traversing.
-            nextRequests.removeAll(topologicalSort.transactionIds)
-            if (nextRequests.isEmpty()) {
-                break
-            }
-
-            val txFromDB = checkNotNull(serviceHub.validatedTransactions.getTransaction(nextRequests.first())) {
-                "Transaction with id ${nextRequests.first()} is missing from local storage. " +
-                    "Please download it from peers with ResolveTransactionsFlow before using this function"
-            }
-
-            if (block != null) block(txFromDB)
-
-            val dependencies = txFromDB.dependencies
-            topologicalSort.add(txFromDB.id, dependencies)
-            nextRequests.addAll(dependencies)
-        }
-        return topologicalSort.complete()
-    }
-
     @Test
     fun `Prover can fetch the complete tx graph for input StateRefs`() {
-        val sortedDependencies = collectVerifiedDependencies(anotherMoveWtx.inputs, ledgerServices)
+        val sortedDependencies = ledgerServices.validatedTransactions
+            .collectVerifiedDependencies(anotherMoveWtx.inputs)
 
         // We expect that the sorted deps of the anotherMoveWtx input is createWtx, moveWtx.
         assertEquals(listOf(createWtx.id, moveWtx.id), sortedDependencies)
@@ -193,46 +151,48 @@ class BackChainTest {
             // Then, the prover walks through the list of stxs in order from issuance, leading to the stx to prove,
             // and creates ptxs out of them. This requires changing txhashes in the StateRefs to the just calculated
             // txhashes of the newly created ptxs.
-            val wtxs = mutableMapOf<SecureHash, WireTransaction>()
-
             val orderedDeps =
-                collectVerifiedDependencies(anotherMoveWtx.inputs + anotherMoveWtx.references, ledgerServices) {
-                    wtxs[it.id] = it.coreTransaction as WireTransaction
-                }
+                ledgerServices.validatedTransactions.collectVerifiedDependencies(anotherMoveWtx.inputs + anotherMoveWtx.references)
+
+            // val zkStorage = ledgerServices.cordaService(MockZKTransactionStorage::class.java)
+            val zkStorage = createMockCordaService(ledgerServices, ::MockZKTransactionStorage)
 
             val vtxs = mutableMapOf<SecureHash, Pair<ZKVerifierTransaction, InputsProof>>()
 
-            // Map from SignedTransaction.id to ZKProverTransaction.id for later lookup
-            val txIdMap = mutableMapOf<SecureHash, SecureHash>()
-
             // Create all ptxs ordered from issuances to head tx
             orderedDeps.forEach {
-                val wtx = checkNotNull(wtxs[it]) {
+                val wtx = checkNotNull(ledgerServices.validatedTransactions.getTransaction(it)) {
                     "Unexpectedly could not find the wtx for $it. Did you run ResolveTransactionsFlow before?"
-                }
+                }.coreTransaction as WireTransaction
 
+                println("Creating PTX for $it")
                 val ptx = wtx.toZKProverTransaction(
                     ledgerServices,
-                    txIdMap,
+                    zkStorage,
                     componentGroupLeafDigestService = BLAKE2s256DigestService,
                     nodeDigestService = BLAKE2s256DigestService
                 )
                 println("PTX created with id ${ptx.id} for $it")
 
-                txIdMap[wtx.id] = ptx.id
+                zkStorage.map.put(wtx, ptx)
+                zkStorage.addTransaction(ptx.toZKVerifierTransaction())
+                // TODO: remove this when the proof is made part of the ZKVerifierTransaction
                 vtxs[ptx.id] = Pair(ptx.toZKVerifierTransaction(), InputsProof(InputsProofWitness(ptx)))
             }
 
             // Next: create the ptx/vtx for the current tx now that we have the dependencies done.
             val anotherMovePtx = anotherMoveWtx.toZKProverTransaction(
                 ledgerServices,
-                txIdMap,
+                zkStorage,
                 componentGroupLeafDigestService = BLAKE2s256DigestService,
                 nodeDigestService = BLAKE2s256DigestService
             )
             println("PTX created with id ${anotherMovePtx.id} for ${anotherMoveWtx.id}")
 
             val anotherMovePtxProof = InputsProof(InputsProofWitness(anotherMovePtx))
+            zkStorage.map.put(anotherMoveWtx, anotherMovePtx)
+            zkStorage.addTransaction(anotherMovePtx.toZKVerifierTransaction())
+            // TODO: remove this when the proof is made part of the ZKVerifierTransaction
             vtxs[anotherMovePtx.id] = Pair(anotherMovePtx.toZKVerifierTransaction(), anotherMovePtxProof)
 
             // Next: verification/walking back the chain of vtxs
@@ -240,10 +200,10 @@ class BackChainTest {
             // Verify each tx recursively
             fun verify(currentVtx: ZKVerifierTransaction, currentProof: InputsProof, level: Int = 0) {
                 val indent = " ".repeat(level * 6) + "|-"
-                println("$indent Verifying TX at level $level: ${currentVtx.id}")
+                println("$indent Verifying TX at level $level: ${currentVtx.id.toString().take(8)}")
 
                 if (currentVtx.inputs.isEmpty() && currentVtx.references.isEmpty()) {
-                    println("   $indent Reached tx without inputs or references. Verification complete")
+                    println("   $indent No inputs and references")
                     return
                 }
 
@@ -254,7 +214,7 @@ class BackChainTest {
                 val referenceHashes = mutableMapOf<Int, SecureHash>()
 
                 (currentVtx.inputs).forEachIndexed { index, stateRef ->
-                    println("   $indent Verifying input $index: $stateRef")
+                    println("   $indent Verifying input $index: ${stateRef.toString().take(8)}")
                     val prevVtx = vtxs[stateRef.txhash]?.first ?: error("Should not happen")
                     val prevProof = vtxs[stateRef.txhash]?.second ?: error("Should not happen")
 
@@ -285,7 +245,7 @@ class BackChainTest {
                 }
 
                 (currentVtx.references).forEachIndexed { index, stateRef ->
-                    println("   $indent Verifying reference $index: $stateRef")
+                    println("   $indent Verifying reference $index: ${stateRef.toString().take(8)}")
                     val prevVtx = vtxs[stateRef.txhash]?.first ?: error("Should not happen")
                     val prevProof = vtxs[stateRef.txhash]?.second ?: error("Should not happen")
 

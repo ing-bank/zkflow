@@ -6,12 +6,12 @@ import com.ing.zknotary.common.states.EMPTY_STATEREF
 import com.ing.zknotary.common.states.toZKCommand
 import com.ing.zknotary.common.util.ComponentPaddingConfiguration
 import com.ing.zknotary.common.zkp.ZKNulls
+import com.ing.zknotary.node.services.ZKTransactionStorage
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.StateRef
 import net.corda.core.contracts.TransactionState
 import net.corda.core.contracts.requireThat
 import net.corda.core.crypto.DigestService
-import net.corda.core.crypto.SecureHash
 import net.corda.core.node.ServiceHub
 import net.corda.core.serialization.serialize
 import net.corda.core.transactions.LedgerTransaction
@@ -19,7 +19,7 @@ import net.corda.core.transactions.WireTransaction
 
 fun WireTransaction.toZKProverTransaction(
     services: ServiceHub,
-    txIdMap: Map<SecureHash, SecureHash>, // Temp hack, this should be a CordaService on the ServiceHub later.
+    zkTransactionStorage: ZKTransactionStorage,
     componentGroupLeafDigestService: DigestService,
     nodeDigestService: DigestService = componentGroupLeafDigestService,
     componentPaddingConfiguration: ComponentPaddingConfiguration = ZKProverTransactionFactory.DEFAULT_PADDING_CONFIGURATION
@@ -31,9 +31,9 @@ fun WireTransaction.toZKProverTransaction(
 
     val ltx = toLedgerTransaction(services)
 
-    fun List<StateAndRef<*>>.mapToZkid(txIdMap: Map<SecureHash, SecureHash>): List<StateAndRef<*>> {
+    fun List<StateAndRef<*>>.mapToZkid(): List<StateAndRef<*>> {
         return map {
-            val zkid = checkNotNull(txIdMap[it.ref.txhash]) {
+            val zkid = checkNotNull(zkTransactionStorage.map.get(it.ref.txhash)) {
                 "Unexpectedly could not find the tx id map for ${it.ref.txhash}. Did you run ResolveTransactionsFlow before?"
             }
             StateAndRef(it.state, StateRef(zkid, it.ref.index))
@@ -41,9 +41,9 @@ fun WireTransaction.toZKProverTransaction(
     }
 
     return ZKProverTransaction(
-        inputs = ltx.inputs.mapToZkid(txIdMap),
+        inputs = ltx.inputs.mapToZkid(),
         outputs = ltx.outputs.map { TransactionState(data = it.data as ZKContractState, notary = it.notary) },
-        references = ltx.references.mapToZkid(txIdMap),
+        references = ltx.references.mapToZkid(),
         command = ltx.commands.map { it.toZKCommand() }.single(),
         notary = ltx.notary!!,
         timeWindow = ltx.timeWindow,
