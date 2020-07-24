@@ -50,7 +50,6 @@ fun WireTransaction.toZKProverTransaction(
         privacySalt = ltx.privacySalt,
         networkParametersHash = ltx.networkParameters?.serialize()?.hash,
         attachments = ltx.attachments.map { it.id },
-        // serializationFactoryService = serializationFactoryService,
         componentGroupLeafDigestService = componentGroupLeafDigestService,
         nodeDigestService = nodeDigestService,
         componentPaddingConfiguration = componentPaddingConfiguration

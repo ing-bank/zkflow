@@ -1,15 +1,48 @@
 package com.ing.zknotary.node.services
 
+import com.ing.zknotary.common.serializer.ZincSerializationFactory
 import com.ing.zknotary.common.transactions.ZKProverTransaction
 import com.ing.zknotary.common.transactions.ZKVerifierTransaction
+import com.ing.zknotary.common.transactions.toZKProverTransaction
+import com.ing.zknotary.common.transactions.toZKVerifierTransaction
+import com.ing.zknotary.common.zkp.ZKService
 import net.corda.core.DeleteForDJVM
 import net.corda.core.DoNotImplement
 import net.corda.core.concurrent.CordaFuture
+import net.corda.core.crypto.BLAKE2s256DigestService
 import net.corda.core.crypto.SecureHash
 import net.corda.core.messaging.DataFeed
+import net.corda.core.node.ServiceHub
+import net.corda.core.serialization.serialize
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.WireTransaction
 import rx.Observable
+
+fun SignedTransaction.toZKVerifierTransaction(
+    services: ServiceHub,
+    zkStorage: ZKWritableTransactionStorage,
+    zkService: ZKService,
+    persist: Boolean = true
+): ZKVerifierTransaction {
+    val wtx = coreTransaction as WireTransaction
+    val ptx = wtx.toZKProverTransaction(
+        services,
+        zkStorage,
+        componentGroupLeafDigestService = BLAKE2s256DigestService,
+        nodeDigestService = BLAKE2s256DigestService
+    )
+
+    // TODO: inject SerializationFactory
+    val proof = zkService.prove(ptx.serialize(ZincSerializationFactory).bytes)
+    val vtx = ptx.toZKVerifierTransaction(proof)
+
+    if (persist) {
+        zkStorage.map.put(this, vtx)
+        zkStorage.addTransaction(vtx)
+    }
+
+    return vtx
+}
 
 /**
  * Map from SignedTransaction.id to ZKProverTransaction.id for later lookup
@@ -19,7 +52,7 @@ interface ZKTransactionMap {
     fun put(stx: SignedTransaction, vtx: ZKVerifierTransaction): SecureHash?
     fun get(stx: SignedTransaction): SecureHash?
     fun put(wtx: WireTransaction, ptx: ZKProverTransaction): SecureHash?
-    fun get(stx: WireTransaction): SecureHash?
+    fun get(wtx: WireTransaction): SecureHash?
 }
 
 /**
@@ -50,6 +83,11 @@ interface ZKTransactionStorage {
      * Returns a future that completes with the transaction corresponding to [id] once it has been committed
      */
     fun trackTransaction(id: SecureHash): CordaFuture<ZKVerifierTransaction>
+
+    fun zkVerifierTransactionFor(wtx: WireTransaction): ZKVerifierTransaction? {
+        val id = map.get(wtx)
+        return if (id != null) getTransaction(id) else null
+    }
 }
 
 /**

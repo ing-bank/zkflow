@@ -31,7 +31,7 @@ open class MockZKTransactionMap : ZKTransactionMap, SingletonSerializeAsToken() 
 
     override fun get(id: SecureHash): SecureHash? = map[id]
     override fun get(stx: SignedTransaction): SecureHash? = map[stx.id]
-    override fun get(stx: WireTransaction): SecureHash? = map[stx.id]
+    override fun get(wtx: WireTransaction): SecureHash? = map[wtx.id]
 }
 
 /**

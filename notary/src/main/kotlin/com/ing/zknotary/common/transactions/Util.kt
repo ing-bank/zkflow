@@ -3,6 +3,7 @@ package com.ing.zknotary.common.transactions
 import com.ing.zknotary.common.states.EMPTY_STATEREF
 import com.ing.zknotary.common.util.ComponentPaddingConfiguration
 import com.ing.zknotary.common.util.PaddingWrapper
+import com.ing.zknotary.common.zkp.Proof
 import net.corda.core.DeleteForDJVM
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.crypto.SecureHash
@@ -32,7 +33,7 @@ fun ZKProverTransaction.prettyPrint(): String {
     return buf.toString()
 }
 
-fun ZKProverTransaction.toZKVerifierTransaction(): ZKVerifierTransaction {
+fun ZKProverTransaction.toZKVerifierTransaction(proof: Proof): ZKVerifierTransaction {
     val componentNonces = this.merkleTree.componentNonces.filterKeys {
         it in listOf(
             ComponentGroupEnum.INPUTS_GROUP.ordinal,
@@ -54,6 +55,7 @@ fun ZKProverTransaction.toZKVerifierTransaction(): ZKVerifierTransaction {
         .build()
 
     return ZKVerifierTransaction(
+        proof,
         this.inputs.map { it.ref },
         this.references.map { it.ref },
 

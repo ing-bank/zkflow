@@ -2,6 +2,7 @@ package com.ing.zknotary.common.transactions
 
 import com.ing.zknotary.common.serializer.ZincSerializationFactory
 import com.ing.zknotary.common.zkp.Witness
+import com.ing.zknotary.common.zkp.mockProof
 import com.ing.zknotary.notary.transactions.createTestsState
 import com.ing.zknotary.notary.transactions.moveTestsState
 import junit.framework.TestCase.assertEquals
@@ -47,7 +48,7 @@ class SerializationTest {
             sigAlice = alice.keyPair.private.sign(ptx.id.bytes).bytes
 
             // build filtered ZKVerifierTransaction
-            vtx = ptx.toZKVerifierTransaction()
+            vtx = ptx.toZKVerifierTransaction(mockProof)
         }
     }
 
