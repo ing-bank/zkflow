@@ -52,8 +52,31 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}-1
           restore-keys: ${{ runner.os }}-gradle
 
-      - name: Build with Gradle
-        run: ./gradlew check --build-cache --stacktrace --parallel
+      - name: Fetch Zinc ING Fork
+        uses: dsaltares/fetch-gh-release-asset@master
+        with:
+          repo: "ingzkp/zinc"
+          version: "latest"
+          file: "zinc-linux.tar.gz"
+          token: ${{ secrets.GITHUB_TOKEN }}
         env:
           GITHUB_USERNAME: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install Zinc ING Fork to $PATH
+        run: |
+          tar xvzf zinc-linux.tar.gz
+          echo "::add-path::$GITHUB_WORKSPACE/zinc-linux/"
+
+      - name: Build with Gradle
+        run: ./gradlew check --stacktrace --info
+        env:
+          GITHUB_USERNAME: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          name: Junit Test Report - Notary
+          path: notary/build/reports/tests/test
