@@ -56,7 +56,7 @@ class ZincZKService(
         }
     }
 
-    data class ZKSetup(val publicDataPath: String, val provingKeyPath: String? = null, val verifyingKeyPath: String? = null)
+    data class ZKSetup(val provingKeyPath: String? = null, val verifyingKeyPath: String? = null)
 
     init {
         requireThat {
@@ -65,37 +65,43 @@ class ZincZKService(
         }
     }
 
-    override fun prove(witness: ByteArray): Result<String, String> {
+    override fun prove(witness: ByteArray): Result<Proof, String> {
         val provingKeyPath = zkSetup.provingKeyPath ?: error("Proving key must be present")
-        val publicDataPath = zkSetup.publicDataPath
 
         val witnessFile = createTempFile()
-        witnessFile.writeText(String(witness))
+        witnessFile.writeBytes(witness)
+
+        val publicData = createTempFile()
 
         val prove = completeZincCommand(
             "$Prove --circuit $compiledCircuit --proving-key $provingKeyPath " +
-                "--public-data $publicDataPath --witness ${witnessFile.absolutePath}",
+                "--public-data ${publicData.absolutePath} --witness ${witnessFile.absolutePath}",
             provingTimeout
-        )
+        ).map {
+            Proof(it.toByteArray(), publicData.readBytes())
+        }
 
-        witnessFile.delete()
+        publicData.delete()
 
         return prove
     }
 
-    override fun verify(proof: String): Result<Unit, String> {
+    override fun verify(proof: Proof): Result<Unit, String> {
         val verifyingKeyPath = zkSetup.verifyingKeyPath ?: error("Verifying key must be present")
-        val publicDataPath = zkSetup.publicDataPath
 
         val proofFile = createTempFile()
-        proofFile.writeText(proof)
+        proofFile.writeBytes(proof.value)
+
+        val publicDataFile = createTempFile()
+        publicDataFile.writeBytes(proof.publicData)
 
         val verify = completeZincCommand(
-            "$Verify --circuit $compiledCircuit --verifying-key $verifyingKeyPath --public-data $publicDataPath",
+            "$Verify --circuit $compiledCircuit --verifying-key $verifyingKeyPath --public-data ${publicDataFile.absolutePath}",
             verificationTimeout, proofFile
         ).map { it.toLowerCase().contains("verified") }
 
         proofFile.delete()
+        publicDataFile.delete()
 
         return when (verify) {
             is Result.Success ->
