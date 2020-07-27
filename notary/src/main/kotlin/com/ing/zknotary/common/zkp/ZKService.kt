@@ -4,6 +4,6 @@ import com.ing.zknotary.common.util.Result
 import net.corda.core.serialization.SerializeAsToken
 
 interface ZKService : SerializeAsToken {
-    fun prove(witness: ByteArray): Result<String, String>
-    fun verify(proof: String): Result<Unit, String>
+    fun prove(witness: ByteArray): Result<Proof, String>
+    fun verify(proof: Proof): Result<Unit, String>
 }

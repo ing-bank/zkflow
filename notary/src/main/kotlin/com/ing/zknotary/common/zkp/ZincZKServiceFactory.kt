@@ -17,14 +17,20 @@ class ZincZKServiceFactory() {
             val circuitSrc = File(circuitSrcPath)
             require(circuitSrc.exists()) { "Cannot find circuit at $circuitSrcPath" }
 
-            val publicDataPath = "$artifactFolder/public-data.json"
-            val witnessPath = "$artifactFolder/witness.json"
+            val publicData = createTempFile()
+            val witness = createTempFile()
+
             val compiledCircuitPath = "$artifactFolder/compiled-${circuitSrc.nameWithoutExtension}.znb"
             val build = ZincZKService.completeZincCommand(
                 "${ZincZKService.Compile} $circuitSrcPath --output $compiledCircuitPath " +
-                    "--public-data $publicDataPath --witness $witnessPath",
+                    "--public-data ${publicData.absolutePath} --witness ${witness.absolutePath}",
                 buildTimeout
             )
+
+            // Neither witness, nor Public data carry useful information after build.
+            publicData.delete()
+            witness.delete()
+
             if (build is Result.Failure) {
                 error(build.value)
             }
@@ -42,7 +48,7 @@ class ZincZKServiceFactory() {
 
             return ZincZKService(
                 compiledCircuitPath,
-                ZincZKService.ZKSetup(publicDataPath, provingKeyPath, verifyingKeyPath),
+                ZincZKService.ZKSetup(provingKeyPath, verifyingKeyPath),
                 provingTimeout,
                 verifyingTimeout
             )

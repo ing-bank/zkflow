@@ -28,12 +28,10 @@ class ZincZKServiceTest {
         )
 
         zincFiles = listOf(
-            zincZKService.compiledCircuit, zincZKService.zkSetup.publicDataPath,
-            zincZKService.zkSetup.provingKeyPath!!, zincZKService.zkSetup.verifyingKeyPath!!
+            zincZKService.compiledCircuit, zincZKService.zkSetup.provingKeyPath!!, zincZKService.zkSetup.verifyingKeyPath!!
         )
 
         assert(File(zincZKService.compiledCircuit).exists())
-        assert(File(zincZKService.zkSetup.publicDataPath).exists())
         assert(File(zincZKService.zkSetup.provingKeyPath).exists())
         assert(File(zincZKService.zkSetup.verifyingKeyPath).exists())
     }
