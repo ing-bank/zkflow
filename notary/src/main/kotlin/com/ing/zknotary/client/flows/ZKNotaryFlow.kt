@@ -6,6 +6,7 @@ import com.ing.zknotary.common.transactions.ZKVerifierTransaction
 import com.ing.zknotary.common.transactions.toZKVerifierTransaction
 import com.ing.zknotary.common.zkp.ZKConfig
 import net.corda.core.crypto.BLAKE2s256DigestService
+import net.corda.core.crypto.PedersenDigestService
 import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.TransactionSignature
 import net.corda.core.flows.FlowSession
@@ -75,7 +76,8 @@ open class ZKNotaryFlow(
         // TODO: inject these serializationFactoryService and DigestService as part of ZKConfig
         val ptx = ZKProverTransactionFactory.create(
             ltx,
-            BLAKE2s256DigestService
+            componentGroupLeafDigestService = BLAKE2s256DigestService,
+            nodeDigestService = PedersenDigestService
         )
 
         val vtx = ptx.toZKVerifierTransaction()

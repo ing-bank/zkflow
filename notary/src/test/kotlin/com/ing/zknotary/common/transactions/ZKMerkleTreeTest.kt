@@ -5,6 +5,7 @@ import com.ing.zknotary.notary.transactions.createTestsState
 import com.ing.zknotary.notary.transactions.moveTestsState
 import net.corda.core.crypto.BLAKE2s256DigestService
 import net.corda.core.crypto.Crypto
+import net.corda.core.crypto.PedersenDigestService
 import net.corda.core.crypto.sign
 import net.corda.core.serialization.serialize
 import net.corda.testing.core.TestIdentity
@@ -35,7 +36,7 @@ class ZKMerkleTreeTest {
             val ptx = ZKProverTransactionFactory.create(
                 ltx,
                 componentGroupLeafDigestService = BLAKE2s256DigestService,
-                nodeDigestService = BLAKE2s256DigestService // Should become Pedersen hash when available
+                nodeDigestService = PedersenDigestService
             )
 
             // Collect signatures
