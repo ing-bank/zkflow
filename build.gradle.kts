@@ -7,7 +7,7 @@ buildscript {
             maven("https://software.r3.com/artifactory/corda")
 
             maven {
-                name = "GitHubPackages"
+                name = "CordaForkRepo"
                 url = uri("https://maven.pkg.github.com/ingzkp/corda")
                 credentials {
                     username = System.getenv("GITHUB_USERNAME")
