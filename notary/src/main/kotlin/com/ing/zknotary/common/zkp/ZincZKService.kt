@@ -1,48 +1,45 @@
 package com.ing.zknotary.common.zkp
 
-import com.ing.zknotary.common.util.Result
-import net.corda.core.contracts.requireThat
 import net.corda.core.serialization.SingletonSerializeAsToken
 import java.io.File
 import java.time.Duration
 import java.util.concurrent.TimeUnit
 
 class ZincZKService(
-    val compiledCircuit: String,
-    //
+    val circuitSrcPath: String,
+    val compiledCircuitPath: String,
     val zkSetup: ZKSetup,
-    //
+    private val buildTimeout: Duration,
+    private val setupTimeout: Duration,
     private val provingTimeout: Duration,
     private val verificationTimeout: Duration
 ) : ZKService, SingletonSerializeAsToken() {
     companion object {
-        const val Compile = "znc"
-        const val Setup = "zargo setup"
-        const val Prove = "zargo prove"
-        const val Verify = "zargo verify"
+        const val COMPILE = "znc"
+        const val SETUP = "zargo setup"
+        const val PROVE = "zargo prove"
+        const val VERIFY = "zargo verify"
 
-        /** Returns Result of the command execution.
-         *  In case of successful execution (empty error stream) Result contains text collected from input stream,
-         *  in case of a failure, Result contains text collected from error stream.
+        /**
+         * Returns output of the command execution.
          **/
-        fun completeZincCommand(command: String, timeout: Duration, input: File? = null): Result<String, String> {
+        fun completeZincCommand(command: String, timeout: Duration, input: File? = null): String {
             val process = command.toProcess(input)
             val hasCompleted = process.waitFor(timeout.seconds, TimeUnit.SECONDS)
             if (!hasCompleted) {
                 process.destroy()
-                return Result.Failure("$command ran longer than ${timeout.seconds} seconds")
+                error("$command ran longer than ${timeout.seconds} seconds")
             }
 
-            val errors = process.errorStream.bufferedReader().readText()
-            return if (errors.isNotBlank()) {
-                Result.Failure(errors)
+            return if (process.exitValue() != 0) {
+                val stdout = process.errorStream.bufferedReader().readText()
+                error("$command failed with the following error output: $stdout")
             } else {
-                Result.Success(process.inputStream.bufferedReader().readText())
+                process.inputStream.bufferedReader().readText()
             }
         }
 
         private fun String.toProcess(input: File? = null): Process {
-            // println("Starting process: $this")
             return try {
                 val builder = ProcessBuilder(split("\\s".toRegex()))
                 if (input != null) {
@@ -50,67 +47,84 @@ class ZincZKService(
                 }
                 builder.start()
             } catch (e: Exception) {
-                e.printStackTrace()
                 error(e.localizedMessage)
             }
         }
     }
 
-    data class ZKSetup(val provingKeyPath: String? = null, val verifyingKeyPath: String? = null)
+    data class ZKSetup(val provingKeyPath: String, val verifyingKeyPath: String)
 
-    init {
-        requireThat {
-            "Circuit file must exist" using File(compiledCircuit).exists()
-            "Either proving or verifying key must be present" using (zkSetup.provingKeyPath != null || zkSetup.verifyingKeyPath != null)
+    fun setup() {
+        val circuitSrc = File(circuitSrcPath)
+        require(circuitSrc.exists()) { "Cannot find circuit at $circuitSrcPath" }
+        require(circuitSrc.name == "main.zn") { "The circuit filename must be 'main.zn', found $circuitSrcPath." }
+
+        val witnessFile = createTempFile()
+        val publicData = createTempFile()
+
+        try {
+            completeZincCommand(
+                "$COMPILE $circuitSrcPath --output $compiledCircuitPath " +
+                    "--public-data ${publicData.absolutePath} --witness ${witnessFile.absolutePath}",
+                buildTimeout
+            )
+        } finally {
+            // Neither witness, nor Public data carry useful information after build, they are just templates
+            publicData.delete()
+            witnessFile.delete()
         }
+
+        completeZincCommand(
+            "$SETUP --circuit $compiledCircuitPath " +
+                "--proving-key ${zkSetup.provingKeyPath} --verifying-key ${zkSetup.verifyingKeyPath}",
+            setupTimeout
+        )
     }
 
-    override fun prove(witness: ByteArray): Result<Proof, String> {
-        val provingKeyPath = zkSetup.provingKeyPath ?: error("Proving key must be present")
+    override fun prove(witness: ByteArray): ByteArray {
+        require(File(compiledCircuitPath).exists()) { "Compile circuit not found in path $compiledCircuitPath." }
+        require(File(zkSetup.provingKeyPath).exists()) { "Proving key not found at ${zkSetup.provingKeyPath}." }
 
         val witnessFile = createTempFile()
         witnessFile.writeBytes(witness)
 
         val publicData = createTempFile()
 
-        val prove = completeZincCommand(
-            "$Prove --circuit $compiledCircuit --proving-key $provingKeyPath " +
-                "--public-data ${publicData.absolutePath} --witness ${witnessFile.absolutePath}",
-            provingTimeout
-        ).map {
-            Proof(it.toByteArray(), publicData.readBytes())
+        try {
+            return completeZincCommand(
+                "$PROVE --circuit $compiledCircuitPath --proving-key ${zkSetup.provingKeyPath} " +
+                    "--public-data ${publicData.absolutePath} --witness ${witnessFile.absolutePath}",
+                provingTimeout
+            ).toByteArray()
+        } catch (e: Exception) {
+            throw ZKProvingException("Could not create proof. Cause: $e")
+        } finally {
+            publicData.delete()
         }
-
-        publicData.delete()
-
-        return prove
     }
 
-    override fun verify(proof: Proof): Result<Unit, String> {
-        val verifyingKeyPath = zkSetup.verifyingKeyPath ?: error("Verifying key must be present")
+    override fun verify(proof: ByteArray, publicInput: ByteArray) {
+        require(File(compiledCircuitPath).exists()) { "Compile circuit not found in path $compiledCircuitPath." }
+        require(File(zkSetup.provingKeyPath).exists()) { "Proving key not found at ${zkSetup.provingKeyPath}." }
 
         val proofFile = createTempFile()
-        proofFile.writeBytes(proof.value)
+        proofFile.writeBytes(proof)
 
         val publicDataFile = createTempFile()
-        publicDataFile.writeBytes(proof.publicData)
+        publicDataFile.writeBytes(publicInput)
 
-        val verify = completeZincCommand(
-            "$Verify --circuit $compiledCircuit --verifying-key $verifyingKeyPath --public-data ${publicDataFile.absolutePath}",
-            verificationTimeout, proofFile
-        ).map { it.toLowerCase().contains("verified") }
-
-        proofFile.delete()
-        publicDataFile.delete()
-
-        return when (verify) {
-            is Result.Success ->
-                if (verify.value) {
-                    Result.Success(Unit)
-                } else {
-                    Result.Failure("Verification output does not contain \"Verified\" keyword")
-                }
-            is Result.Failure -> Result.Failure(verify.value)
+        try {
+            completeZincCommand(
+                "$VERIFY --circuit $compiledCircuitPath --verifying-key ${zkSetup.verifyingKeyPath} --public-data ${publicDataFile.absolutePath}",
+                verificationTimeout, proofFile
+            )
+        } catch (e: Exception) {
+            throw ZKVerificationException(
+                "Could not verify proof. \nProof: ${String(proof)} \nPublic data: ${String(publicInput)}. \nCause: $e"
+            )
+        } finally {
+            proofFile.delete()
+            publicDataFile.delete()
         }
     }
 }

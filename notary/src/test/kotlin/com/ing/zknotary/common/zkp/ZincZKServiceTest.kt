@@ -1,17 +1,26 @@
 package com.ing.zknotary.common.zkp
 
-import com.ing.zknotary.common.util.Result
 import org.junit.After
 import org.junit.Test
 import java.io.File
-import java.time.Duration
+import kotlin.test.assertFailsWith
 
 class ZincZKServiceTest {
-    // Main circuit file MUST be called main.zn
     private val circuitSourcePath: String = javaClass.getResource("/ZincZKService/main.zn").path
-    private val timeout = Duration.ofSeconds(5)
+    private val zincZKService = ZincZKServiceFactory.create(
+        circuitSrcPath = circuitSourcePath,
+        artifactFolder = File(circuitSourcePath).parent
+    )
 
-    private var zincFiles = listOf<String>()
+    private var zincFiles = listOf(
+        zincZKService.compiledCircuitPath,
+        zincZKService.zkSetup.provingKeyPath,
+        zincZKService.zkSetup.verifyingKeyPath
+    )
+
+    init {
+        zincZKService.setup()
+    }
 
     @After
     fun `remove zinc files`() {
@@ -20,35 +29,48 @@ class ZincZKServiceTest {
 
     @Test
     fun `factory creates a valid setup`() {
-        val folder = File(circuitSourcePath).parent
-        val zincZKService = ZincZKServiceFactory.create(
-            circuitSourcePath, folder,
-            buildTimeout = timeout, setupTimeout = timeout,
-            provingTimeout = timeout, verifyingTimeout = timeout
-        )
-
-        zincFiles = listOf(
-            zincZKService.compiledCircuit, zincZKService.zkSetup.provingKeyPath!!, zincZKService.zkSetup.verifyingKeyPath!!
-        )
-
-        assert(File(zincZKService.compiledCircuit).exists())
+        assert(File(zincZKService.compiledCircuitPath).exists())
         assert(File(zincZKService.zkSetup.provingKeyPath).exists())
         assert(File(zincZKService.zkSetup.verifyingKeyPath).exists())
     }
 
     @Test
     fun `service can prove and verify`() {
-        val folder = File(circuitSourcePath).parent
-        val zincZKService = ZincZKServiceFactory.create(
-            circuitSourcePath, folder, buildTimeout = timeout, setupTimeout = timeout,
-            provingTimeout = timeout, verifyingTimeout = timeout
+        val proof = zincZKService.prove("{\"secret\": \"2\"}".toByteArray())
+        val correctPublicData = "\"4\"".toByteArray()
+
+        zincZKService.verify(proof, correctPublicData)
+    }
+
+    @Test
+    fun `proving fails on malformed secret data`() {
+        assertFailsWith(ZKProvingException::class) {
+            zincZKService.prove("{\"secre\": \"2\"}".toByteArray())
+        }
+    }
+
+    @Test
+    fun `verification fails on public data mismatch`() {
+        val proof = zincZKService.prove("{\"secret\": \"2\"}".toByteArray())
+        val wrongPublicData = "\"5\"".toByteArray()
+
+        assertFailsWith(ZKVerificationException::class) {
+            zincZKService.verify(proof, wrongPublicData)
+        }
+    }
+
+    @Test
+    fun `service can prove and verify when reusing setup`() {
+        val newZincZKService = ZincZKServiceFactory.create(
+            circuitSrcPath = circuitSourcePath,
+            artifactFolder = File(circuitSourcePath).parent
         )
 
-        val proofResult = zincZKService.prove("{}".toByteArray())
-        assert(proofResult is Result.Success)
-        val proof = proofResult.expect("Proof generation must have been successful")
+        // not executing setup, expecting setup artifacts to be in right place already
 
-        val verifyResult = zincZKService.verify(proof)
-        assert(verifyResult is Result.Success)
+        val proof = newZincZKService.prove("{\"secret\": \"2\"}".toByteArray())
+        val correctPublicData = "\"4\"".toByteArray()
+
+        newZincZKService.verify(proof, correctPublicData)
     }
 }
