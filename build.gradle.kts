@@ -14,6 +14,15 @@ buildscript {
                     password = System.getenv("GITHUB_TOKEN")
                 }
             }
+
+            maven {
+                name = "ZkKryptoRepo"
+                url = uri("https://maven.pkg.github.com/ing-bank/zkkrypto")
+                credentials {
+                    username = System.getenv("GITHUB_USERNAME")
+                    password = System.getenv("GITHUB_TOKEN")
+                }
+            }
         }
     }
 
