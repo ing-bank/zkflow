@@ -83,9 +83,8 @@ open class ZKNotaryFlow(
         val vtx = ptx.toZKVerifierTransaction()
 
         val proof =
-            zkConfig.proverService.prove(
-                ptx.serialize(zkConfig.serializationFactoryService.factory).bytes,
-                ptx.id.bytes
+            zkConfig.zkService.prove(
+                ptx.serialize(zkConfig.serializationFactoryService.factory).bytes
             )
 
         // TODO: create payload with vtx and proof, but for now only send vtx

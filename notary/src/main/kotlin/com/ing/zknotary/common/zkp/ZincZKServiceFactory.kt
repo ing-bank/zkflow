@@ -1,6 +1,5 @@
 package com.ing.zknotary.common.zkp
 
-import com.ing.zknotary.common.util.Result
 import java.io.File
 import java.time.Duration
 
@@ -9,46 +8,21 @@ class ZincZKServiceFactory() {
         fun create(
             circuitSrcPath: String,
             artifactFolder: String,
-            buildTimeout: Duration,
-            setupTimeout: Duration,
-            provingTimeout: Duration,
-            verifyingTimeout: Duration
+            buildTimeout: Duration = Duration.ofSeconds(5),
+            setupTimeout: Duration = Duration.ofSeconds(30),
+            provingTimeout: Duration = Duration.ofSeconds(30),
+            verifyingTimeout: Duration = Duration.ofSeconds(5)
         ): ZincZKService {
-            val circuitSrc = File(circuitSrcPath)
-            require(circuitSrc.exists()) { "Cannot find circuit at $circuitSrcPath" }
-
-            val publicData = createTempFile()
-            val witness = createTempFile()
-
-            val compiledCircuitPath = "$artifactFolder/compiled-${circuitSrc.nameWithoutExtension}.znb"
-            val build = ZincZKService.completeZincCommand(
-                "${ZincZKService.Compile} $circuitSrcPath --output $compiledCircuitPath " +
-                    "--public-data ${publicData.absolutePath} --witness ${witness.absolutePath}",
-                buildTimeout
-            )
-
-            // Neither witness, nor Public data carry useful information after build.
-            publicData.delete()
-            witness.delete()
-
-            if (build is Result.Failure) {
-                error(build.value)
-            }
-
+            val compiledCircuitPath = "$artifactFolder/compiled-${File(circuitSrcPath).nameWithoutExtension}.znb"
             val provingKeyPath = "$artifactFolder/proving_key"
             val verifyingKeyPath = "$artifactFolder/verifying_key.txt"
-            val setup = ZincZKService.completeZincCommand(
-                "${ZincZKService.Setup} --circuit $compiledCircuitPath " +
-                    "--proving-key $provingKeyPath --verifying-key $verifyingKeyPath",
-                setupTimeout
-            )
-            if (setup is Result.Failure) {
-                error(setup.value)
-            }
 
             return ZincZKService(
+                circuitSrcPath,
                 compiledCircuitPath,
                 ZincZKService.ZKSetup(provingKeyPath, verifyingKeyPath),
+                buildTimeout,
+                setupTimeout,
                 provingTimeout,
                 verifyingTimeout
             )
