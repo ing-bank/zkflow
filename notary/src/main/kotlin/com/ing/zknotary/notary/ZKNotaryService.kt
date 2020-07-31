@@ -22,7 +22,6 @@ import net.corda.core.schemas.MappedSchema
 import net.corda.core.serialization.CordaSerializable
 import net.corda.core.utilities.seconds
 import net.corda.node.services.api.ServiceHubInternal
-import net.corda.node.services.transactions.NodeNotarySchema
 import net.corda.node.services.transactions.PersistentUniquenessProvider
 import java.security.PublicKey
 import java.time.Duration
@@ -151,6 +150,8 @@ open class ZKNotaryService(final override val services: ServiceHubInternal, over
     override fun start() {}
     override fun stop() {}
 }
+
+object NodeNotarySchema
 
 object PersistentUniquenessProviderSchema : MappedSchema(
     schemaFamily = NodeNotarySchema.javaClass, version = 1,

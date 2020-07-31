@@ -18,7 +18,7 @@ class ZKProverTransactionFactory {
         fun create(
             ltx: LedgerTransaction,
             componentGroupLeafDigestService: DigestService,
-            nodeDigestService: DigestService = componentGroupLeafDigestService,
+            nodeDigestService: DigestService,
             componentPaddingConfiguration: ComponentPaddingConfiguration = DEFAULT_PADDING_CONFIGURATION
         ): ZKProverTransaction {
             requireThat {
@@ -42,7 +42,6 @@ class ZKProverTransactionFactory {
                 privacySalt = ltx.privacySalt,
                 networkParametersHash = ltx.networkParameters?.serialize()?.hash,
                 attachments = ltx.attachments.map { it.id },
-                // serializationFactoryService = serializationFactoryService,
                 componentGroupLeafDigestService = componentGroupLeafDigestService,
                 nodeDigestService = nodeDigestService,
                 componentPaddingConfiguration = componentPaddingConfiguration

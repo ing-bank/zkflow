@@ -6,6 +6,7 @@ import com.ing.zknotary.notary.transactions.createTestsState
 import com.ing.zknotary.notary.transactions.moveTestsState
 import net.corda.core.crypto.BLAKE2s256DigestService
 import net.corda.core.crypto.Crypto
+import net.corda.core.crypto.PedersenDigestService
 import net.corda.core.crypto.sign
 import net.corda.core.serialization.deserialize
 import net.corda.core.serialization.serialize
@@ -39,7 +40,7 @@ class SerializationTest {
             ptx = ZKProverTransactionFactory.create(
                 wtx.toLedgerTransaction(ledgerServices),
                 componentGroupLeafDigestService = BLAKE2s256DigestService,
-                nodeDigestService = BLAKE2s256DigestService // Should become Pedersen hash when available
+                nodeDigestService = PedersenDigestService
             )
 
             // Collect signatures

@@ -17,7 +17,7 @@ import net.corda.core.serialization.CordaSerializable
 import java.security.PublicKey
 
 @CordaSerializable
-class ZKProverTransaction(
+class ZKProverTransaction internal constructor(
     val inputs: List<ZKStateAndRef<ZKContractState>>,
     /**
      * Because a ZKStateRef is a representation of the contents of a state, and no longer a pointer to
