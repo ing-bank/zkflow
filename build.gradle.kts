@@ -2,6 +2,7 @@ buildscript {
     val repos by extra {
         closureOf<RepositoryHandler> {
             mavenCentral()
+            jcenter()
             maven("https://jitpack.io")
             maven("https://repo.gradle.org/gradle/libs-releases")
             maven("https://software.r3.com/artifactory/corda")
@@ -9,15 +10,6 @@ buildscript {
             maven {
                 name = "CordaForkRepo"
                 url = uri("https://maven.pkg.github.com/ingzkp/corda")
-                credentials {
-                    username = System.getenv("GITHUB_USERNAME")
-                    password = System.getenv("GITHUB_TOKEN")
-                }
-            }
-
-            maven {
-                name = "ZkKryptoRepo"
-                url = uri("https://maven.pkg.github.com/ing-bank/zkkrypto")
                 credentials {
                     username = System.getenv("GITHUB_USERNAME")
                     password = System.getenv("GITHUB_TOKEN")
