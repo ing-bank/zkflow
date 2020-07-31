@@ -2,8 +2,8 @@ package com.ing.zknotary.common.transactions
 
 import com.ing.zknotary.common.contracts.TestContract
 import com.ing.zknotary.common.serializer.ZincSerializationFactory
+import com.ing.zknotary.common.zkp.MockNoopZKService
 import com.ing.zknotary.common.zkp.PublicInput
-import com.ing.zknotary.common.zkp.mockZKService
 import com.ing.zknotary.node.services.collectVerifiedDependencies
 import com.ing.zknotary.node.services.toZKVerifierTransaction
 import com.ing.zknotary.nodes.services.MockZKTransactionStorage
@@ -37,6 +37,7 @@ class BackChainTest {
     private lateinit var anotherMoveWtx: WireTransaction
 
     private val zkStorage = createMockCordaService(ledgerServices, ::MockZKTransactionStorage)
+    private val zkService = createMockCordaService(ledgerServices, ::MockNoopZKService)
 
     @Before
     fun setup() {
@@ -105,7 +106,7 @@ class BackChainTest {
             (orderedDeps + anotherMoveWtx.id).forEach {
 
                 ledgerServices.validatedTransactions.getTransaction(it)!!
-                    .toZKVerifierTransaction(ledgerServices, zkStorage)
+                    .toZKVerifierTransaction(ledgerServices, zkStorage, zkService, persist = true)
             }
 
             println("\n\n\nStarting recursive verification:")
@@ -189,8 +190,6 @@ class BackChainTest {
 
             verify(prevVtx, level + 1)
         }
-
-        // confirm that the proof actually matches the vtx:
         val calculatedPublicInput = PublicInput(
             currentVtx.id,
             inputNonces = inputNonces,
@@ -199,8 +198,6 @@ class BackChainTest {
             referenceHashes = referenceHashes
         )
 
-        assertEquals(calculatedPublicInput.serialize(ZincSerializationFactory).bytes, currentVtx.proof.publicData)
-
-        mockZKService.verify(currentVtx.proof)
+        zkService.verify(currentVtx.proof, calculatedPublicInput.serialize(ZincSerializationFactory).bytes)
     }
 }

@@ -56,6 +56,7 @@ fun WireTransaction.toZKProverTransaction(
     )
 }
 
+// TODO: remove this, since it does not take into account the history and does not replace the input StateRefs with vtx.StateRefs.
 class ZKProverTransactionFactory {
     companion object {
         fun create(

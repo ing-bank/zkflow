@@ -1,17 +1,18 @@
 package com.ing.zknotary.common.zkp
 
-import com.ing.zknotary.common.util.Result
+import net.corda.core.node.AppServiceHub
+import net.corda.core.node.services.CordaService
 import net.corda.core.serialization.SingletonSerializeAsToken
 
-object mockProof : Proof(ByteArray(0), ByteArray(0))
-object mockZKService : ZKService, SingletonSerializeAsToken() {
-    override fun prove(witness: ByteArray): Result<Proof, String> {
-        return Result.Success(mockProof)
+val mockEmptyProof = ByteArray(0)
+
+@CordaService
+open class MockNoopZKService(val serviceHub: AppServiceHub) : ZKService, SingletonSerializeAsToken() {
+    override fun prove(witness: ByteArray): ByteArray {
+        return ByteArray(0)
     }
 
-    override fun verify(proof: Proof): Result<Unit, String> {
-        return Result.Success(Unit)
-    }
+    override fun verify(proof: ByteArray, publicInput: ByteArray) {}
 }
 
 // class InputsProof(private val witness: InputsProofWitness) {

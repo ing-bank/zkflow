@@ -10,9 +10,11 @@ import net.corda.core.DeleteForDJVM
 import net.corda.core.DoNotImplement
 import net.corda.core.concurrent.CordaFuture
 import net.corda.core.crypto.BLAKE2s256DigestService
+import net.corda.core.crypto.PedersenDigestService
 import net.corda.core.crypto.SecureHash
 import net.corda.core.messaging.DataFeed
 import net.corda.core.node.ServiceHub
+import net.corda.core.serialization.SerializeAsToken
 import net.corda.core.serialization.serialize
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.WireTransaction
@@ -28,8 +30,9 @@ fun SignedTransaction.toZKVerifierTransaction(
     val ptx = wtx.toZKProverTransaction(
         services,
         zkStorage,
+        // TODO: make this configurable
         componentGroupLeafDigestService = BLAKE2s256DigestService,
-        nodeDigestService = BLAKE2s256DigestService
+        nodeDigestService = PedersenDigestService
     )
 
     // TODO: inject SerializationFactory
@@ -60,7 +63,7 @@ interface ZKTransactionMap {
  */
 @DeleteForDJVM
 @DoNotImplement
-interface ZKTransactionStorage {
+interface ZKTransactionStorage : SerializeAsToken {
     val map: ZKTransactionMap
 
     /**

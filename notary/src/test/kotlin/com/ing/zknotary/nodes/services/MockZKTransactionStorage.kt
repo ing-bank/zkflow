@@ -21,24 +21,11 @@ import rx.subjects.PublishSubject
 import java.util.HashMap
 
 /**
- * Map from SignedTransaction.id to ZKProverTransaction.id for later lookup
- */
-open class MockZKTransactionMap : ZKTransactionMap, SingletonSerializeAsToken() {
-    private val map = mutableMapOf<SecureHash, SecureHash>()
-
-    override fun put(wtx: WireTransaction, ptx: ZKProverTransaction): SecureHash? = map.put(wtx.id, ptx.id)
-    override fun put(stx: SignedTransaction, vtx: ZKVerifierTransaction): SecureHash? = map.put(stx.id, vtx.id)
-
-    override fun get(id: SecureHash): SecureHash? = map[id]
-    override fun get(stx: SignedTransaction): SecureHash? = map[stx.id]
-    override fun get(wtx: WireTransaction): SecureHash? = map[wtx.id]
-}
-
-/**
  * A class which provides an implementation of [WritableTransactionStorage] which is used in [MockServices]
  */
 @CordaService
-open class MockZKTransactionStorage(val serviceHub: AppServiceHub) : ZKWritableTransactionStorage, SingletonSerializeAsToken() {
+open class MockZKTransactionStorage(val serviceHub: AppServiceHub) : ZKWritableTransactionStorage,
+    SingletonSerializeAsToken() {
 
     override fun trackTransaction(id: SecureHash): CordaFuture<ZKVerifierTransaction> {
         return getTransaction(id)?.let { doneFuture(it) } ?: _updatesPublisher.filter { it.id == id }.toFuture()
@@ -101,4 +88,18 @@ open class MockZKTransactionStorage(val serviceHub: AppServiceHub) : ZKWritableT
         txns[id]?.let { Pair(it.vtx, it.isVerified) }
 
     private class TxHolder(val vtx: ZKVerifierTransaction, var isVerified: Boolean)
+}
+
+/**
+ * Map from SignedTransaction.id to ZKProverTransaction.id for later lookup
+ */
+private class MockZKTransactionMap : ZKTransactionMap, SingletonSerializeAsToken() {
+    private val map = mutableMapOf<SecureHash, SecureHash>()
+
+    override fun put(wtx: WireTransaction, ptx: ZKProverTransaction): SecureHash? = map.put(wtx.id, ptx.id)
+    override fun put(stx: SignedTransaction, vtx: ZKVerifierTransaction): SecureHash? = map.put(stx.id, vtx.id)
+
+    override fun get(id: SecureHash): SecureHash? = map[id]
+    override fun get(stx: SignedTransaction): SecureHash? = map[stx.id]
+    override fun get(wtx: WireTransaction): SecureHash? = map[wtx.id]
 }

@@ -1,7 +1,6 @@
 package com.ing.zknotary.common.transactions
 
 import com.ing.zknotary.common.util.ComponentPaddingConfiguration
-import com.ing.zknotary.common.zkp.Proof
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.StateRef
 import net.corda.core.contracts.TimeWindow
@@ -14,7 +13,7 @@ import java.time.Instant
 
 @CordaSerializable
 class ZKVerifierTransaction(
-    val proof: Proof,
+    val proof: ByteArray,
     val inputs: List<StateRef>,
     val references: List<StateRef>,
 
