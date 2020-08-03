@@ -24,58 +24,63 @@ fn convertFromComponentToZKMerkle(zkptx: (ComponentGroups::ComponentGroup, Priva
 {
     (ComponentGroup {
         inputs: InputGroup{
-                    groupElements:[ ContentZKStateAndRefGroup{
-                                                            content: ZKStateAndRefGroup{ state: zkptx.0.inputs.groupElements[0].content.state,
-                                                                                         zkStateRef: zkptx.0.inputs.groupElements[0].content.zkStateRef,},
-                                                            isFiller: zkptx.0.inputs.groupElements[0].isFiller, },            
-                                    ContentZKStateAndRefGroup{
-                                                            content: ZKStateAndRefGroup{ state: zkptx.0.inputs.groupElements[1].content.state,
-                                                                                         zkStateRef: zkptx.0.inputs.groupElements[1].content.zkStateRef,},
-                                                            isFiller: zkptx.0.inputs.groupElements[1].isFiller, }  
-                                  ],
-                    groupHash: zkptx.0.inputs.groupHash, 
-                },
+            groupElements:[
+            ContentZKStateAndRefGroup{
+                content: ZKStateAndRefGroup{ state: zkptx.0.inputs.groupElements[0].content.state,
+                                             zkStateRef: zkptx.0.inputs.groupElements[0].content.zkStateRef,},
+                isFiller: zkptx.0.inputs.groupElements[0].isFiller, },
+            ContentZKStateAndRefGroup{
+                content: ZKStateAndRefGroup{ state: zkptx.0.inputs.groupElements[1].content.state,
+                                             zkStateRef: zkptx.0.inputs.groupElements[1].content.zkStateRef,},
+                isFiller: zkptx.0.inputs.groupElements[1].isFiller, }
+            ],
+            groupHash: zkptx.0.inputs.groupHash,
+        },
         outputs: OutputGroup{
-                    groupElements:[ ContentZKStateAndRefGroup{
-                                                            content: ZKStateAndRefGroup{ state: zkptx.0.outputs.groupElements[0].content.state,
-                                                                                         zkStateRef: zkptx.0.outputs.groupElements[0].content.zkStateRef,},
-                                                            isFiller: zkptx.0.outputs.groupElements[0].isFiller, },            
-                                    ContentZKStateAndRefGroup{
-                                                            content: ZKStateAndRefGroup{ state: zkptx.0.outputs.groupElements[1].content.state,
-                                                                                         zkStateRef: zkptx.0.outputs.groupElements[1].content.zkStateRef,},
-                                                            isFiller: zkptx.0.outputs.groupElements[1].isFiller, }
-                                  ],
-                    groupHash: zkptx.0.outputs.groupHash, 
-                },        
+            groupElements:[
+            ContentZKStateAndRefGroup{
+                content: ZKStateAndRefGroup{ state: zkptx.0.outputs.groupElements[0].content.state,
+                                             zkStateRef: zkptx.0.outputs.groupElements[0].content.zkStateRef,},
+                isFiller: zkptx.0.outputs.groupElements[0].isFiller, },
+            ContentZKStateAndRefGroup{
+                content: ZKStateAndRefGroup{ state: zkptx.0.outputs.groupElements[1].content.state,
+                                             zkStateRef: zkptx.0.outputs.groupElements[1].content.zkStateRef,},
+                isFiller: zkptx.0.outputs.groupElements[1].isFiller, }
+            ],
+            groupHash: zkptx.0.outputs.groupHash,
+        },
         commandData: CommandDataGroup{
-                    groupElements:[ ContentCommandDataGroup {
-                                                            content: zkptx.0.commandData.groupElements[0].content,
-                                                            isFiller: zkptx.0.commandData.groupElements[0].isFiller, },
-                                    ],
-                    groupHash: zkptx.0.commandData.groupHash, 
-                },
+            groupElements:[
+            ContentCommandDataGroup {
+                content: zkptx.0.commandData.groupElements[0].content,
+                isFiller: zkptx.0.commandData.groupElements[0].isFiller, },
+            ],
+            groupHash: zkptx.0.commandData.groupHash,
+        },
         references: ReferenceGroup{
-                    groupElements:[ ContentZKStateAndRefGroup{
-                                                            content: ZKStateAndRefGroup{ state: zkptx.0.references.groupElements[0].content.state,
-                                                                                         zkStateRef: zkptx.0.references.groupElements[0].content.zkStateRef,},
-                                                            isFiller: zkptx.0.references.groupElements[0].isFiller, },            
-                                    ContentZKStateAndRefGroup{
-                                                            content: ZKStateAndRefGroup{ state: zkptx.0.references.groupElements[1].content.state,
-                                                                                         zkStateRef: zkptx.0.references.groupElements[1].content.zkStateRef,},
-                                                            isFiller: zkptx.0.references.groupElements[1].isFiller, }
-                                  ],
-                    groupHash: zkptx.0.references.groupHash, 
-                },
+            groupElements:[
+            ContentZKStateAndRefGroup{
+                content: ZKStateAndRefGroup{ state: zkptx.0.references.groupElements[0].content.state,
+                                             zkStateRef: zkptx.0.references.groupElements[0].content.zkStateRef,},
+                isFiller: zkptx.0.references.groupElements[0].isFiller, },
+            ContentZKStateAndRefGroup{
+                content: ZKStateAndRefGroup{ state: zkptx.0.references.groupElements[1].content.state,
+                                             zkStateRef: zkptx.0.references.groupElements[1].content.zkStateRef,},
+                isFiller: zkptx.0.references.groupElements[1].isFiller, }
+            ],
+            groupHash: zkptx.0.references.groupHash,
+        },
         commandSigners: CommandSignerGroup{
-                    groupElements: [ContentCommandSignerGroup{
-                                                            content: zkptx.0.commandSigners.groupElements[0].content,
-                                                            isFiller: zkptx.0.commandSigners.groupElements[0].isFiller, },
-                                    ContentCommandSignerGroup{
-                                                            content: zkptx.0.commandSigners.groupElements[1].content,
-                                                            isFiller: zkptx.0.commandSigners.groupElements[1].isFiller, },
-                                   ],
-                    groupHash: zkptx.0.commandSigners.groupHash, 
-                }, 
+            groupElements: [
+            ContentCommandSignerGroup{
+                content: zkptx.0.commandSigners.groupElements[0].content,
+                isFiller: zkptx.0.commandSigners.groupElements[0].isFiller, },
+            ContentCommandSignerGroup{
+                content: zkptx.0.commandSigners.groupElements[1].content,
+                isFiller: zkptx.0.commandSigners.groupElements[1].isFiller, },
+            ],
+            groupHash: zkptx.0.commandSigners.groupHash,
+        },
     },
     zkptx.1)
 }

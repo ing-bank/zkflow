@@ -182,7 +182,7 @@ fn convertHashToBits(value:[u8;HASH_BYTES]) -> [bool; HASH_BITS]
             hashDigest_bits[(8 as u16)* i + j] = hd_bits[j];
         }
     }
-    hashDigest_bits 
+    hashDigest_bits
 }
 
 fn convertStateToBits(value:TransactionState) -> [bool; STATE_BITS]
