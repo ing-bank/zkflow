@@ -1,8 +1,8 @@
 package com.ing.zknotary.common.transactions
 
 import com.ing.zknotary.common.contracts.TestContract
-import com.ing.zknotary.common.serializer.ZincSerializationFactory
-import com.ing.zknotary.common.zkp.MockNoopZKService
+import com.ing.zknotary.common.serializer.SerializationFactoryService
+import com.ing.zknotary.common.zkp.MockZKService
 import com.ing.zknotary.common.zkp.PublicInput
 import com.ing.zknotary.node.services.collectVerifiedDependencies
 import com.ing.zknotary.node.services.toZKVerifierTransaction
@@ -11,6 +11,10 @@ import junit.framework.TestCase.assertEquals
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.crypto.Crypto
 import net.corda.core.crypto.SecureHash
+import net.corda.core.node.AppServiceHub
+import net.corda.core.node.services.CordaService
+import net.corda.core.serialization.SerializationFactory
+import net.corda.core.serialization.SingletonSerializeAsToken
 import net.corda.core.serialization.serialize
 import net.corda.core.transactions.WireTransaction
 import net.corda.testing.common.internal.testNetworkParameters
@@ -37,7 +41,22 @@ class BackChainTest {
     private lateinit var anotherMoveWtx: WireTransaction
 
     private val zkStorage = createMockCordaService(ledgerServices, ::MockZKTransactionStorage)
-    private val zkService = createMockCordaService(ledgerServices, ::MockNoopZKService)
+    private val zkService = createMockCordaService(ledgerServices, ::MockZKService)
+
+    // TODO: Make this use the ZincSerializationFactory when it supports deserialization
+    // private val zkSerializatinFactoryService = createMockCordaService(ledgerServices, ::ZincSerializationFactoryService)
+    private val zkSerializatinFactoryService =
+        createMockCordaService(ledgerServices, ::DefaultSerializationFactoryService)
+
+    @CordaService
+    class DefaultSerializationFactoryService() : SingletonSerializeAsToken(), SerializationFactoryService {
+
+        // For CordaService. We don't need the serviceHub anyway in this Service
+        constructor(serviceHub: AppServiceHub?) : this()
+
+        override val factory: SerializationFactory
+            get() = SerializationFactory.defaultFactory
+    }
 
     @Before
     fun setup() {
@@ -77,7 +96,7 @@ class BackChainTest {
                 reference("Bob's reference asset")
                 verifies()
             }
-            println("ANOTHERMOVE \tWTX: ${anotherMoveWtx.id}, size: ${createWtx.serialize().bytes.size}")
+            println("ANOTHERMOVE \tWTX: ${anotherMoveWtx.id}")
 
             verifies()
         }
@@ -106,7 +125,13 @@ class BackChainTest {
             (orderedDeps + anotherMoveWtx.id).forEach {
 
                 ledgerServices.validatedTransactions.getTransaction(it)!!
-                    .toZKVerifierTransaction(ledgerServices, zkStorage, zkService, persist = true)
+                    .toZKVerifierTransaction(
+                        ledgerServices,
+                        zkStorage,
+                        zkService,
+                        zkSerializatinFactoryService,
+                        persist = true
+                    )
             }
 
             println("\n\n\nStarting recursive verification:")
@@ -198,6 +223,6 @@ class BackChainTest {
             referenceHashes = referenceHashes
         )
 
-        zkService.verify(currentVtx.proof, calculatedPublicInput.serialize(ZincSerializationFactory).bytes)
+        zkService.verify(currentVtx.proof, calculatedPublicInput.serialize(zkSerializatinFactoryService.factory).bytes)
     }
 }

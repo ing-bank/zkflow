@@ -1,6 +1,6 @@
 package com.ing.zknotary.node.services
 
-import com.ing.zknotary.common.serializer.ZincSerializationFactory
+import com.ing.zknotary.common.serializer.SerializationFactoryService
 import com.ing.zknotary.common.transactions.ZKProverTransaction
 import com.ing.zknotary.common.transactions.ZKVerifierTransaction
 import com.ing.zknotary.common.transactions.toZKProverTransaction
@@ -24,6 +24,7 @@ fun SignedTransaction.toZKVerifierTransaction(
     services: ServiceHub,
     zkStorage: ZKWritableTransactionStorage,
     zkService: ZKService,
+    zkSerializatinFactoryService: SerializationFactoryService,
     persist: Boolean = true
 ): ZKVerifierTransaction {
     val wtx = coreTransaction as WireTransaction
@@ -35,8 +36,7 @@ fun SignedTransaction.toZKVerifierTransaction(
         nodeDigestService = PedersenDigestService
     )
 
-    // TODO: inject SerializationFactory
-    val proof = zkService.prove(ptx.serialize(ZincSerializationFactory).bytes)
+    val proof = zkService.prove(ptx.serialize(zkSerializatinFactoryService.factory).bytes)
     val vtx = ptx.toZKVerifierTransaction(proof)
 
     if (persist) {
