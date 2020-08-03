@@ -13,49 +13,88 @@ use ZKMerkleTree::OutputGroup;
 use ZKMerkleTree::CommandDataGroup; 
 use ZKMerkleTree::ReferenceGroup; 
 use ZKMerkleTree::CommandSignerGroup; 
+use ZKMerkleTree::ZKStateAndRefGroup;
 
+use ZKMerkleTree::ContentZKStateAndRefGroup; 
+use ZKMerkleTree::ContentCommandDataGroup; 
+use ZKMerkleTree::ContentCommandSignerGroup; 
 
 //Temporary function to manually transfer components to zkmerkle tree !!!
 fn convertFromComponentToZKMerkle(zkptx: (ComponentGroups::ComponentGroup, PrivacySalt)) -> (ComponentGroup, PrivacySalt)
 {
     (ComponentGroup {
         inputs: InputGroup{
-                    groupElements: zkptx.0.inputs.groupElements,
-                    groupHash: zkptx.0.inputs.groupHash, 
-                },
+            groupElements:[
+            ContentZKStateAndRefGroup{
+                content: ZKStateAndRefGroup{ state: zkptx.0.inputs.groupElements[0].content.state,
+                                             zkStateRef: zkptx.0.inputs.groupElements[0].content.zkStateRef,},
+                isFiller: zkptx.0.inputs.groupElements[0].isFiller, },
+            ContentZKStateAndRefGroup{
+                content: ZKStateAndRefGroup{ state: zkptx.0.inputs.groupElements[1].content.state,
+                                             zkStateRef: zkptx.0.inputs.groupElements[1].content.zkStateRef,},
+                isFiller: zkptx.0.inputs.groupElements[1].isFiller, }
+            ],
+            groupHash: zkptx.0.inputs.groupHash,
+        },
         outputs: OutputGroup{
-                    groupElements: zkptx.0.outputs.groupElements,
-                    groupHash: zkptx.0.outputs.groupHash, 
-                },        
+            groupElements:[
+            ContentZKStateAndRefGroup{
+                content: ZKStateAndRefGroup{ state: zkptx.0.outputs.groupElements[0].content.state,
+                                             zkStateRef: zkptx.0.outputs.groupElements[0].content.zkStateRef,},
+                isFiller: zkptx.0.outputs.groupElements[0].isFiller, },
+            ContentZKStateAndRefGroup{
+                content: ZKStateAndRefGroup{ state: zkptx.0.outputs.groupElements[1].content.state,
+                                             zkStateRef: zkptx.0.outputs.groupElements[1].content.zkStateRef,},
+                isFiller: zkptx.0.outputs.groupElements[1].isFiller, }
+            ],
+            groupHash: zkptx.0.outputs.groupHash,
+        },
         commandData: CommandDataGroup{
-                    groupElements: zkptx.0.commandData.groupElements,
-                    groupHash: zkptx.0.commandData.groupHash, 
-                },
-
+            groupElements:[
+            ContentCommandDataGroup {
+                content: zkptx.0.commandData.groupElements[0].content,
+                isFiller: zkptx.0.commandData.groupElements[0].isFiller, },
+            ],
+            groupHash: zkptx.0.commandData.groupHash,
+        },
         references: ReferenceGroup{
-                    groupElements: zkptx.0.references.groupElements,
-                    groupHash: zkptx.0.references.groupHash, 
-                },
-
+            groupElements:[
+            ContentZKStateAndRefGroup{
+                content: ZKStateAndRefGroup{ state: zkptx.0.references.groupElements[0].content.state,
+                                             zkStateRef: zkptx.0.references.groupElements[0].content.zkStateRef,},
+                isFiller: zkptx.0.references.groupElements[0].isFiller, },
+            ContentZKStateAndRefGroup{
+                content: ZKStateAndRefGroup{ state: zkptx.0.references.groupElements[1].content.state,
+                                             zkStateRef: zkptx.0.references.groupElements[1].content.zkStateRef,},
+                isFiller: zkptx.0.references.groupElements[1].isFiller, }
+            ],
+            groupHash: zkptx.0.references.groupHash,
+        },
         commandSigners: CommandSignerGroup{
-                    groupElements: zkptx.0.commandSigners.groupElements,
-                    groupHash: zkptx.0.commandSigners.groupHash, 
-                }, 
+            groupElements: [
+            ContentCommandSignerGroup{
+                content: zkptx.0.commandSigners.groupElements[0].content,
+                isFiller: zkptx.0.commandSigners.groupElements[0].isFiller, },
+            ContentCommandSignerGroup{
+                content: zkptx.0.commandSigners.groupElements[1].content,
+                isFiller: zkptx.0.commandSigners.groupElements[1].isFiller, },
+            ],
+            groupHash: zkptx.0.commandSigners.groupHash,
+        },
     },
     zkptx.1)
 }
 
-
 fn main(witness: ZKProverTransaction) -> [u8;32] //ZKMerkleTree::PedersenDigest
 {
     //Check contract rules
-    //Check value
-    //assert!(witness.inputs.value[0].state.data.value == witness.outputs.value[0].state.data.value, "Failed requirement: the value of the input and out put should be equal");
+    ComponentGroups::CheckContractRules(witness); 
 
     let zkptx:(ComponentGroups::ComponentGroup, PrivacySalt) = ComponentGroups::buildComponentGroups(witness);
     let root_hash = ZKMerkleTree::buildMerkleTree(convertFromComponentToZKMerkle(zkptx));
 
     let mut root_bytes = [0 as u8;32]; 
+ 
     for i in 0..32{
         let mut byte_bits = [false;8];
         for j in 0..8{
