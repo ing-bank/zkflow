@@ -19,6 +19,7 @@ class ComponentPaddingConfiguration private constructor(
         data class ZKStateAndRef(val content: com.ing.zknotary.common.states.ZKStateAndRef<ZKContractState>) : Filler()
         data class ZKStateRef(val content: com.ing.zknotary.common.states.ZKStateRef) : Filler()
         data class PublicKey(val content: java.security.PublicKey) : Filler()
+        data class SecureHash(val content: net.corda.core.crypto.SecureHash) : Filler()
     }
 
     class Builder(
@@ -43,6 +44,11 @@ class ComponentPaddingConfiguration private constructor(
         fun references(n: Int, filler: Filler) = apply {
             padding[ComponentGroupEnum.REFERENCES_GROUP.ordinal] = n
             fillers[ComponentGroupEnum.REFERENCES_GROUP.ordinal] = filler
+        }
+
+        fun attachments(n: Int, filler: Filler) = apply {
+            padding[ComponentGroupEnum.ATTACHMENTS_GROUP.ordinal] = n
+            fillers[ComponentGroupEnum.ATTACHMENTS_GROUP.ordinal] = filler
         }
 
         fun build(): ComponentPaddingConfiguration {
@@ -73,6 +79,10 @@ class ComponentPaddingConfiguration private constructor(
 
             "References' size exceeds quantity accepted by ZK circuit" using (
                 ptx.references.size <= sizeOf(ComponentGroupEnum.REFERENCES_GROUP) ?: ptx.references.size - 1
+                )
+
+            "Attachments' size exceeds quantity accepted by ZK circuit" using (
+                ptx.attachments.size <= sizeOf(ComponentGroupEnum.ATTACHMENTS_GROUP) ?: ptx.attachments.size - 1
                 )
 
             "Signers' size exceeds quantity accepted by ZK circuit" using (

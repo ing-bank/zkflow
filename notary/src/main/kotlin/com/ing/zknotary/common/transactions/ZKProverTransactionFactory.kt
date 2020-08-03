@@ -10,6 +10,7 @@ import com.ing.zknotary.common.zkp.ZKNulls
 import net.corda.core.contracts.TransactionState
 import net.corda.core.contracts.requireThat
 import net.corda.core.crypto.DigestService
+import net.corda.core.crypto.SecureHash
 import net.corda.core.serialization.serialize
 import net.corda.core.transactions.LedgerTransaction
 
@@ -61,6 +62,7 @@ class ZKProverTransactionFactory {
                 .inputs(2, filler)
                 .outputs(2, filler)
                 .references(2, filler)
+                .attachments(2, ComponentPaddingConfiguration.Filler.SecureHash(SecureHash.zeroHash))
                 .signers(2)
                 .build()
         }
