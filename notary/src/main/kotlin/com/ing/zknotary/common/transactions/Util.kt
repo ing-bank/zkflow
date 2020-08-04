@@ -81,3 +81,6 @@ fun <T> List<T>.pad(n: Int, default: T) = List(n) {
 
 fun <T> List<T>.wrappedPad(n: Int, default: T) =
     map { PaddingWrapper.Original(it) }.pad(n, PaddingWrapper.Filler(default))
+
+fun <T> T?.wrappedPad(default: T) =
+    if (this == null) PaddingWrapper.Filler(default) else PaddingWrapper.Original(this)

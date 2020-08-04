@@ -55,6 +55,7 @@ class ComponentPaddingConfiguration private constructor(
             positive(padding[ComponentGroupEnum.INPUTS_GROUP.ordinal], "inputs")
             positive(padding[ComponentGroupEnum.OUTPUTS_GROUP.ordinal], "outputs")
             positive(padding[ComponentGroupEnum.REFERENCES_GROUP.ordinal], "references")
+            positive(padding[ComponentGroupEnum.ATTACHMENTS_GROUP.ordinal], "attachments")
 
             return ComponentPaddingConfiguration(padding, fillers)
         }
@@ -69,25 +70,20 @@ class ComponentPaddingConfiguration private constructor(
 
     fun validate(ptx: ZKProverTransaction) {
         requireThat {
-            "Inputs' size exceeds quantity accepted by ZK circuit" using (
-                ptx.inputs.size <= sizeOf(ComponentGroupEnum.INPUTS_GROUP) ?: ptx.inputs.size - 1
-                )
+            "Inputs' size exceeds quantity accepted by ZK circuit" using
+                (ptx.inputs.size <= sizeOf(ComponentGroupEnum.INPUTS_GROUP) ?: ptx.inputs.size - 1)
 
-            "Outputs' size exceeds quantity accepted by ZK circuit" using (
-                ptx.outputs.size <= sizeOf(ComponentGroupEnum.OUTPUTS_GROUP) ?: ptx.outputs.size - 1
-                )
+            "Outputs' size exceeds quantity accepted by ZK circuit" using
+                (ptx.outputs.size <= sizeOf(ComponentGroupEnum.OUTPUTS_GROUP) ?: ptx.outputs.size - 1)
 
-            "References' size exceeds quantity accepted by ZK circuit" using (
-                ptx.references.size <= sizeOf(ComponentGroupEnum.REFERENCES_GROUP) ?: ptx.references.size - 1
-                )
+            "References' size exceeds quantity accepted by ZK circuit" using
+                (ptx.references.size <= sizeOf(ComponentGroupEnum.REFERENCES_GROUP) ?: ptx.references.size - 1)
 
-            "Attachments' size exceeds quantity accepted by ZK circuit" using (
-                ptx.attachments.size <= sizeOf(ComponentGroupEnum.ATTACHMENTS_GROUP) ?: ptx.attachments.size - 1
-                )
+            "Attachments' size exceeds quantity accepted by ZK circuit" using
+                (ptx.attachments.size <= sizeOf(ComponentGroupEnum.ATTACHMENTS_GROUP) ?: ptx.attachments.size - 1)
 
-            "Signers' size exceeds quantity accepted by ZK circuit" using (
-                ptx.command.signers.size <= sizeOf(ComponentGroupEnum.SIGNERS_GROUP) ?: ptx.command.signers.size - 1
-                )
+            "Signers' size exceeds quantity accepted by ZK circuit" using
+                (ptx.command.signers.size <= sizeOf(ComponentGroupEnum.SIGNERS_GROUP) ?: ptx.command.signers.size - 1)
         }
     }
 
