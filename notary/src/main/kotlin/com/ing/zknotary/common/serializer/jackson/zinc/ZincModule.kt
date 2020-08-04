@@ -11,11 +11,14 @@ import com.ing.zknotary.common.contracts.ZKContractState
 import com.ing.zknotary.common.states.ZKStateAndRef
 import com.ing.zknotary.common.transactions.ZKProverTransaction
 import com.ing.zknotary.common.util.PaddingWrapper
+import com.ing.zknotary.common.zkp.fingerprint
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.PrivacySalt
+import net.corda.core.contracts.TimeWindow
 import net.corda.core.contracts.TransactionState
 import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.Party
+import net.corda.core.node.services.AttachmentId
 import java.security.PublicKey
 
 class ZincModule : SimpleModule("corda-core") {
@@ -32,6 +35,7 @@ class ZincModule : SimpleModule("corda-core") {
         context.setMixInAnnotations(SecureHash::class.java, SecureHashMixinZinc::class.java)
         context.setMixInAnnotations(SecureHash.SHA256::class.java, SecureHashMixinZinc::class.java)
         context.setMixInAnnotations(PrivacySalt::class.java, PrivacySaltMixinZinc::class.java)
+        context.setMixInAnnotations(TimeWindow::class.java, TimeWindowMixinZinc::class.java)
 
         context.setMixInAnnotations(ByteArray::class.java, ByteArrayMixinZinc::class.java)
     }
@@ -46,14 +50,21 @@ private class ZincMixinSerializer : JsonSerializer<ZKProverTransaction>() {
         gen.writeFieldName("witness")
         gen.writeObject(
             ZincJson(
-                StateGroup(value.padded.inputs(), value.merkleTree.groupHashes[ComponentGroupEnum.INPUTS_GROUP.ordinal]),
-                StateGroup(value.padded.outputs(), value.merkleTree.groupHashes[ComponentGroupEnum.OUTPUTS_GROUP.ordinal]),
-                StateGroup(value.padded.references(), value.merkleTree.groupHashes[ComponentGroupEnum.REFERENCES_GROUP.ordinal]),
-                StateGroup(value.padded.signers(), value.merkleTree.groupHashes[ComponentGroupEnum.SIGNERS_GROUP.ordinal]),
-                StateGroup(
-                    listOf(PaddingWrapper.Original(value.command.value)),
+                ComponentGroup(value.padded.inputs(), value.merkleTree.groupHashes[ComponentGroupEnum.INPUTS_GROUP.ordinal]),
+                ComponentGroup(value.padded.outputs(), value.merkleTree.groupHashes[ComponentGroupEnum.OUTPUTS_GROUP.ordinal]),
+                ComponentGroup(value.padded.references(), value.merkleTree.groupHashes[ComponentGroupEnum.REFERENCES_GROUP.ordinal]),
+                ComponentGroup(
+                    PaddingWrapper.Original(value.command.value),
                     value.merkleTree.groupHashes[ComponentGroupEnum.COMMANDS_GROUP.ordinal]
                 ),
+                ComponentGroup(value.padded.attachments(), value.merkleTree.groupHashes[ComponentGroupEnum.ATTACHMENTS_GROUP.ordinal]),
+                ComponentSinglet(
+                    PaddingWrapper.Original(value.notary),
+                    value.merkleTree.groupHashes[ComponentGroupEnum.NOTARY_GROUP.ordinal]
+                ),
+                ComponentSinglet(value.padded.timeWindow(), value.merkleTree.groupHashes[ComponentGroupEnum.TIMEWINDOW_GROUP.ordinal]),
+                ComponentSinglet(value.padded.networkParametersHash(), value.merkleTree.groupHashes[ComponentGroupEnum.PARAMETERS_GROUP.ordinal]),
+                ComponentGroup(value.padded.signers(), value.merkleTree.groupHashes[ComponentGroupEnum.SIGNERS_GROUP.ordinal]),
                 value.privacySalt
             )
         )
@@ -62,15 +73,24 @@ private class ZincMixinSerializer : JsonSerializer<ZKProverTransaction>() {
 }
 
 private class ZincJson(
-    val inputs: StateGroup<PaddingWrapper<ZKStateAndRef<ZKContractState>>>,
-    val outputs: StateGroup<PaddingWrapper<ZKStateAndRef<ZKContractState>>>,
-    val references: StateGroup<PaddingWrapper<ZKStateAndRef<ZKContractState>>>,
-    val signers: StateGroup<PaddingWrapper<PublicKey>>,
-    val commands: StateGroup<PaddingWrapper<ZKCommandData>>,
+    val inputs: ComponentGroup<PaddingWrapper<ZKStateAndRef<ZKContractState>>>,
+    val outputs: ComponentGroup<PaddingWrapper<ZKStateAndRef<ZKContractState>>>,
+    val references: ComponentGroup<PaddingWrapper<ZKStateAndRef<ZKContractState>>>,
+    val commands: ComponentGroup<PaddingWrapper<ZKCommandData>>,
+    val attachments: ComponentGroup<PaddingWrapper<AttachmentId>>,
+    val notary: ComponentSinglet<PaddingWrapper<Party>>,
+    val timeWindow: ComponentSinglet<PaddingWrapper<TimeWindow>>,
+    val parameters: ComponentSinglet<PaddingWrapper<SecureHash>>,
+    val signers: ComponentGroup<PaddingWrapper<PublicKey>>,
+
     val privacySalt: PrivacySalt
 )
 
-data class StateGroup<T>(val value: List<T>, val groupHash: SecureHash)
+data class ComponentGroup<T>(val value: List<T>, val groupHash: SecureHash) {
+    constructor(value: T, groupHash: SecureHash) : this(listOf(value), groupHash)
+}
+
+data class ComponentSinglet<T>(val value: T, val groupHash: SecureHash)
 
 fun ByteArray.asBytes255(): IntArray = this.map { it.toInt() and 0xFF }.toIntArray()
 fun IntArray.asString() = this.joinToString(", ", "[", "]")
@@ -122,6 +142,15 @@ private interface PrivacySaltMixinZinc
 private class PrivacySaltMixinZincSerializer : JsonSerializer<PrivacySalt>() {
     override fun serialize(value: PrivacySalt, gen: JsonGenerator, serializers: SerializerProvider) {
         gen.writeObject(value.bytes)
+    }
+}
+
+@JsonSerialize(using = TimeWindowMixinZincSerializer::class)
+private interface TimeWindowMixinZinc
+
+private class TimeWindowMixinZincSerializer : JsonSerializer<TimeWindow>() {
+    override fun serialize(value: TimeWindow, gen: JsonGenerator, serializers: SerializerProvider) {
+        gen.writeObject(value.fingerprint)
     }
 }
 

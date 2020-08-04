@@ -18,15 +18,24 @@ class ZKFullMerkleTree(
             mutableListOf<ComponentGroup>().apply {
                 addGroups(
                     mapOf(
-                        ComponentGroupEnum.INPUTS_GROUP to ptx.padded.inputs().map { it.content.ref.fingerprint },
-                        ComponentGroupEnum.OUTPUTS_GROUP to ptx.padded.outputs().map { it.content.ref.fingerprint },
-                        ComponentGroupEnum.REFERENCES_GROUP to ptx.padded.references().map { it.content.ref.fingerprint },
-                        ComponentGroupEnum.COMMANDS_GROUP to listOf(ptx.command.value.fingerprint),
-                        ComponentGroupEnum.ATTACHMENTS_GROUP to ptx.attachments.map { it.fingerprint },
-                        ComponentGroupEnum.NOTARY_GROUP to listOf(ptx.notary.fingerprint),
-                        ComponentGroupEnum.TIMEWINDOW_GROUP to listOf(ptx.timeWindow?.fingerprint),
-                        ComponentGroupEnum.PARAMETERS_GROUP to listOf(ptx.networkParametersHash?.fingerprint),
-                        ComponentGroupEnum.SIGNERS_GROUP to ptx.padded.signers().map { it.content.fingerprint }
+                        ComponentGroupEnum.INPUTS_GROUP to
+                            ptx.padded.inputs().map { it.content.ref.fingerprint },
+                        ComponentGroupEnum.OUTPUTS_GROUP to
+                            ptx.padded.outputs().map { it.content.ref.fingerprint },
+                        ComponentGroupEnum.REFERENCES_GROUP to
+                            ptx.padded.references().map { it.content.ref.fingerprint },
+                        ComponentGroupEnum.COMMANDS_GROUP to
+                            listOf(ptx.command.value.fingerprint),
+                        ComponentGroupEnum.ATTACHMENTS_GROUP to
+                            ptx.padded.attachments().map { it.content.fingerprint },
+                        ComponentGroupEnum.NOTARY_GROUP to
+                            listOf(ptx.notary.fingerprint),
+                        ComponentGroupEnum.TIMEWINDOW_GROUP to
+                            listOf(ptx.padded.timeWindow().content.fingerprint),
+                        ComponentGroupEnum.PARAMETERS_GROUP to
+                            listOf(ptx.padded.networkParametersHash().content.fingerprint),
+                        ComponentGroupEnum.SIGNERS_GROUP to
+                            ptx.padded.signers().map { it.content.fingerprint }
                     )
                 )
             }

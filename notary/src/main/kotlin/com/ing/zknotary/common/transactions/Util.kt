@@ -5,6 +5,7 @@ import com.ing.zknotary.common.util.ComponentPaddingConfiguration
 import com.ing.zknotary.common.util.PaddingWrapper
 import net.corda.core.DeleteForDJVM
 import net.corda.core.contracts.ComponentGroupEnum
+import net.corda.core.crypto.SecureHash
 
 @DeleteForDJVM
 fun ZKProverTransaction.prettyPrint(): String {
@@ -42,11 +43,13 @@ fun ZKProverTransaction.toZKVerifierTransaction(): ZKVerifierTransaction {
         )
     }
 
-    val filler = ComponentPaddingConfiguration.Filler.ZKStateRef(ZKStateRef.empty())
+    val zkStateRefFiller = ComponentPaddingConfiguration.Filler.ZKStateRef(ZKStateRef.empty())
+    val secureHashFiller = ComponentPaddingConfiguration.Filler.SecureHash(SecureHash.zeroHash)
     val componentPadding = ComponentPaddingConfiguration.Builder()
-        .inputs(this.padded.sizeOf(ComponentGroupEnum.INPUTS_GROUP), filler)
-        .outputs(this.padded.sizeOf(ComponentGroupEnum.OUTPUTS_GROUP), filler)
-        .references(this.padded.sizeOf(ComponentGroupEnum.REFERENCES_GROUP), filler)
+        .inputs(this.padded.sizeOf(ComponentGroupEnum.INPUTS_GROUP), zkStateRefFiller)
+        .outputs(this.padded.sizeOf(ComponentGroupEnum.OUTPUTS_GROUP), zkStateRefFiller)
+        .references(this.padded.sizeOf(ComponentGroupEnum.REFERENCES_GROUP), zkStateRefFiller)
+        .attachments(this.padded.sizeOf(ComponentGroupEnum.ATTACHMENTS_GROUP), secureHashFiller)
         .build()
 
     return ZKVerifierTransaction(
@@ -81,3 +84,6 @@ fun <T> List<T>.pad(n: Int, default: T) = List(n) {
 
 fun <T> List<T>.wrappedPad(n: Int, default: T) =
     map { PaddingWrapper.Original(it) }.pad(n, PaddingWrapper.Filler(default))
+
+fun <T> T?.wrappedPad(default: T) =
+    if (this == null) PaddingWrapper.Filler(default) else PaddingWrapper.Original(this)
