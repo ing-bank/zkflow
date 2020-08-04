@@ -8,6 +8,7 @@ import net.corda.core.crypto.DigestService
 import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.Party
 import net.corda.core.serialization.CordaSerializable
+import java.time.Instant
 
 @CordaSerializable
 class ZKVerifierTransaction(
@@ -35,8 +36,12 @@ class ZKVerifierTransaction(
     componentPaddingConfiguration: ComponentPaddingConfiguration
 ) {
     val padded = Padded(
-        originalInputs = inputs, originalOutputs = outputs,
-        originalReferences = references, paddingConfiguration = componentPaddingConfiguration
+        originalInputs = inputs,
+        originalOutputs = outputs,
+        originalReferences = references,
+        originalTimeWindow = timeWindow,
+        originalNetworkParametersHash = networkParametersHash,
+        paddingConfiguration = componentPaddingConfiguration
     )
 
     // Required by Corda.
@@ -67,30 +72,42 @@ class ZKVerifierTransaction(
         private val originalInputs: List<ZKStateRef>,
         private val originalOutputs: List<ZKStateRef>,
         private val originalReferences: List<ZKStateRef>,
+        private val originalTimeWindow: TimeWindow?,
+        private val originalNetworkParametersHash: SecureHash?,
         val paddingConfiguration: ComponentPaddingConfiguration
     ) {
 
         fun inputs(): List<ZKStateRef> {
-            val filler = paddingConfiguration.filler(ComponentGroupEnum.INPUTS_GROUP) ?: error("Expected a filler object")
+            val filler = filler(ComponentGroupEnum.INPUTS_GROUP)
             require(filler is ComponentPaddingConfiguration.Filler.ZKStateRef) { "Expected filler of type ZKStateRef" }
             return originalInputs.pad(sizeOf(ComponentGroupEnum.INPUTS_GROUP), filler.content)
         }
         fun outputs(): List<ZKStateRef> {
-            val filler = paddingConfiguration.filler(ComponentGroupEnum.OUTPUTS_GROUP) ?: error("Expected a filler object")
+            val filler = filler(ComponentGroupEnum.OUTPUTS_GROUP)
             require(filler is ComponentPaddingConfiguration.Filler.ZKStateRef) { "Expected filler of type ZKStateRef" }
             return originalOutputs.pad(sizeOf(ComponentGroupEnum.OUTPUTS_GROUP), filler.content)
         }
 
         fun references(): List<ZKStateRef> {
-            val filler = paddingConfiguration.filler(ComponentGroupEnum.REFERENCES_GROUP) ?: error("Expected a filler object")
+            val filler = filler(ComponentGroupEnum.REFERENCES_GROUP)
             require(filler is ComponentPaddingConfiguration.Filler.ZKStateRef) { "Expected filler of type ZKStateRef" }
             return originalReferences.pad(sizeOf(ComponentGroupEnum.REFERENCES_GROUP), filler.content)
         }
 
+        fun timeWindow() = originalTimeWindow.wrappedPad(TimeWindow.fromOnly(Instant.MIN))
+
+        fun networkParametersHash() = originalNetworkParametersHash.wrappedPad(SecureHash.zeroHash)
+
         /**
-         * Return appropriate size ot fail.
+         * Returns appropriate size ot fail.
          */
         private fun sizeOf(componentGroup: ComponentGroupEnum): Int =
             paddingConfiguration.sizeOf(componentGroup) ?: error("Expected a positive number")
+
+        /**
+         * Returns appropriate size or fail.
+         */
+        fun filler(componentGroup: ComponentGroupEnum) =
+            paddingConfiguration.filler(componentGroup) ?: error("Expected a filler object")
     }
 }
