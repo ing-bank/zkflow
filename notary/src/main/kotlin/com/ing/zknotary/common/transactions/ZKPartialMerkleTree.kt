@@ -18,12 +18,18 @@ class ZKPartialMerkleTree(
             mutableListOf<ComponentGroup>().apply {
                 addGroups(
                     mapOf(
-                        ComponentGroupEnum.INPUTS_GROUP to vtx.padded.inputs().map { it.fingerprint },
-                        ComponentGroupEnum.OUTPUTS_GROUP to vtx.padded.outputs().map { it.fingerprint },
-                        ComponentGroupEnum.REFERENCES_GROUP to vtx.padded.references().map { it.fingerprint },
-                        ComponentGroupEnum.NOTARY_GROUP to listOf(vtx.notary.fingerprint),
-                        ComponentGroupEnum.TIMEWINDOW_GROUP to listOf(vtx.timeWindow?.fingerprint),
-                        ComponentGroupEnum.PARAMETERS_GROUP to listOf(vtx.networkParametersHash?.fingerprint)
+                        ComponentGroupEnum.INPUTS_GROUP to
+                            vtx.padded.inputs().map { it.fingerprint },
+                        ComponentGroupEnum.OUTPUTS_GROUP to
+                            vtx.padded.outputs().map { it.fingerprint },
+                        ComponentGroupEnum.REFERENCES_GROUP to
+                            vtx.padded.references().map { it.fingerprint },
+                        ComponentGroupEnum.NOTARY_GROUP to
+                            listOf(vtx.notary.fingerprint),
+                        ComponentGroupEnum.TIMEWINDOW_GROUP to
+                            listOf(vtx.padded.timeWindow().content.fingerprint),
+                        ComponentGroupEnum.PARAMETERS_GROUP to
+                            listOf(vtx.padded.networkParametersHash().content.fingerprint)
                     )
                 )
             }

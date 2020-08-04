@@ -43,7 +43,6 @@ class ZKMerkleTreeTest {
             val sigAlice = alice.keyPair.private.sign(ptx.id.bytes).bytes
 
             val json = ptx.serialize(serializationFactoryService.factory)
-            println(String(json.bytes))
 
             val cwd = System.getProperty("user.dir")
             val circuitWd = Paths.get("$cwd/../prover/ZKMerkleTree").normalize().toString()
