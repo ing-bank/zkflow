@@ -6,14 +6,19 @@ import java.time.Duration
 import java.util.concurrent.TimeUnit
 
 class ZincZKService(
-    val circuitSrcPath: String,
-    val compiledCircuitPath: String,
-    val zkSetup: ZKSetup,
+    private val circuitSrcPath: String,
+    artifactFolder: String,
     private val buildTimeout: Duration,
     private val setupTimeout: Duration,
     private val provingTimeout: Duration,
     private val verificationTimeout: Duration
 ) : ZKService, SingletonSerializeAsToken() {
+    val compiledCircuitPath = "$artifactFolder/compiled-${File(circuitSrcPath).nameWithoutExtension}.znb"
+    val zkSetup = ZKSetup(
+        provingKeyPath = "$artifactFolder/proving_key",
+        verifyingKeyPath = "$artifactFolder/verifying_key.txt"
+    )
+
     companion object {
         const val COMPILE = "znc"
         const val SETUP = "zargo setup"

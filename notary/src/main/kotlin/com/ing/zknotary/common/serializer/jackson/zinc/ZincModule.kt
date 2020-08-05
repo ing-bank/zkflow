@@ -9,8 +9,10 @@ import com.fasterxml.jackson.databind.module.SimpleModule
 import com.ing.zknotary.common.contracts.ZKCommandData
 import com.ing.zknotary.common.contracts.ZKContractState
 import com.ing.zknotary.common.states.ZKStateAndRef
+import com.ing.zknotary.common.states.ZKStateRef
 import com.ing.zknotary.common.transactions.ZKProverTransaction
 import com.ing.zknotary.common.util.PaddingWrapper
+import com.ing.zknotary.common.zkp.Witness
 import com.ing.zknotary.common.zkp.fingerprint
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.PrivacySalt
@@ -25,7 +27,9 @@ class ZincModule : SimpleModule("corda-core") {
     override fun setupModule(context: SetupContext) {
         super.setupModule(context)
 
-        context.setMixInAnnotations(ZKProverTransaction::class.java, ZincMixin::class.java)
+        context.setMixInAnnotations(ZKStateAndRef::class.java, ZKStateAndRefMixin::class.java)
+        context.setMixInAnnotations(Witness::class.java, WitnessMixin::class.java)
+        context.setMixInAnnotations(ZKProverTransaction::class.java, ZKProverTransactionMixin::class.java)
         context.setMixInAnnotations(ZKCommandData::class.java, ZKCommandDataMixinZinc::class.java)
 
         context.setMixInAnnotations(PublicKey::class.java, PublicKeyMixinZinc::class.java)
@@ -41,13 +45,38 @@ class ZincModule : SimpleModule("corda-core") {
     }
 }
 
-@JsonSerialize(using = ZincMixinSerializer::class)
-private interface ZincMixin
+@JsonSerialize(using = ZKStateAndRefMixinSerializer::class)
+private interface ZKStateAndRefMixin
 
-private class ZincMixinSerializer : JsonSerializer<ZKProverTransaction>() {
-    override fun serialize(value: ZKProverTransaction, gen: JsonGenerator, serializers: SerializerProvider) {
+private class ZKStateAndRefMixinSerializer : JsonSerializer<ZKStateAndRef<ZKContractState>>() {
+    override fun serialize(value: ZKStateAndRef<ZKContractState>, gen: JsonGenerator, serializers: SerializerProvider) {
+        gen.writeObject(
+            ZKStateAndRefJson(value.state, value.ref)
+        )
+    }
+}
+
+private class ZKStateAndRefJson(val state: TransactionState<ZKContractState>, val reference: ZKStateRef)
+
+@JsonSerialize(using = WitnessMixinSerializer::class)
+private interface WitnessMixin
+
+private class WitnessMixinSerializer : JsonSerializer<Witness>() {
+    override fun serialize(value: Witness, gen: JsonGenerator, serializers: SerializerProvider) {
         gen.writeStartObject()
         gen.writeFieldName("witness")
+        gen.writeObject(value.transaction)
+        gen.writeEndObject()
+    }
+}
+
+@JsonSerialize(using = ZKProverTransactionMixinSerializer::class)
+private interface ZKProverTransactionMixin
+
+private class ZKProverTransactionMixinSerializer : JsonSerializer<ZKProverTransaction>() {
+    override fun serialize(value: ZKProverTransaction, gen: JsonGenerator, serializers: SerializerProvider) {
+        gen.writeStartObject()
+        gen.writeFieldName("transaction")
         gen.writeObject(
             ZincJson(
                 ComponentGroup(value.padded.inputs(), value.merkleTree.groupHashes[ComponentGroupEnum.INPUTS_GROUP.ordinal]),

@@ -72,7 +72,7 @@ open class ZKNotaryService(final override val services: ServiceHubInternal, over
      * This prevents runtime exceptions on bad config.
      */
     private val zkConfig = ZKConfig(
-        zkService = services.getCordaServiceFromConfig("zkService"),
+        zkTransactionService = services.getCordaServiceFromConfig("zkTransactionService"),
         serializationFactoryService = services.getCordaServiceFromConfig("zkpSerializationFactoryService")
     )
 
