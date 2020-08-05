@@ -13,7 +13,9 @@ const PUBKEY_BITS:u16 = (8 as u16) * PUBKEY_BYTES;
 
 const HASH_BYTES:u16 = 32;
 const HASH_BITS:u16 = (8 as u16) * HASH_BYTES;
-const TIME_WINDOW_BYTES: u16 = 24;  
+
+const TIME_WINDOW_BYTES: u16 = 24;
+const TIME_WINDOW_BITS: u16 = (8 as u16) * TIME_WINDOW_BYTES;  
 
 const INT32_BITS:u16 = 32; 
 const INT128_BITS:u16 = 128;
@@ -202,6 +204,46 @@ struct CommandDataGroup {
     groupHash: [bool;HASH_BITS],  
 }
 
+struct ContentAttachmentGroup{
+    content: [bool; HASH_BITS],
+    isFiller: bool, 
+}
+
+struct AttachmentGroup {
+    groupElements: [ContentAttachmentGroup; N_ATTACHMENTS],
+    groupHash: [bool;HASH_BITS],  
+}
+
+struct ContentNotaryGroup{
+    content: [bool; PUBKEY_BITS],
+    isFiller: bool, 
+}
+
+struct NotaryGroup {
+    groupElements: ContentNotaryGroup,
+    groupHash: [bool;HASH_BITS],  
+}
+
+struct ContentTimeWindowGroup{
+    content: [bool; TIME_WINDOW_BITS],
+    isFiller: bool, 
+}
+
+struct TimeWindowGroup {
+    groupElements: ContentTimeWindowGroup,
+    groupHash: [bool;HASH_BITS],  
+}
+
+struct ContentParameterGroup{
+    content: [bool; HASH_BITS],
+    isFiller: bool, 
+}
+
+struct ParameterGroup {
+    groupElements: ContentParameterGroup,
+    groupHash: [bool;HASH_BITS],  
+}
+
 struct ContentCommandSignerGroup{
     content: [bool; PUBKEY_BITS],
     isFiller: bool, 
@@ -215,8 +257,12 @@ struct CommandSignerGroup {
 struct ComponentGroup{
     inputs: InputGroup,
     outputs: OutputGroup,
-    commandData: CommandDataGroup,  
     references: ReferenceGroup,
+    commandData: CommandDataGroup,
+    attachments: AttachmentGroup,
+    notary: NotaryGroup,
+    timeWindow: TimeWindowGroup,
+    parameters: ParameterGroup,  
     commandSigners: CommandSignerGroup,
 }
 
@@ -231,6 +277,19 @@ fn convertHashToBits(value:[u8;HASH_BYTES]) -> [bool; HASH_BITS]
         }
     }
     hashDigest_bits
+}
+
+fn convertPubKeyToBits(value:[u8;PUBKEY_BYTES]) -> [bool; PUBKEY_BITS]
+{
+    let mut pubkey_bits = [false; PUBKEY_BITS];
+
+    for i in (0 as u16) .. PUBKEY_BYTES{
+        let pk_bits = to_bits(value[i]);
+        for j in (0 as u16) .. (8 as u16) {
+            pubkey_bits[(8 as u16)* i + j] = pk_bits[j];
+        }
+    }
+    pubkey_bits
 }
 
 fn convertStateToBits(value:TransactionState) -> [bool; STATE_BITS]
@@ -337,6 +396,52 @@ fn convertCommandDataToBits(value:[ContentCommandData; N_COMMANDS]) -> [ContentC
     result                             
 }
 
+fn convertAttachmentsToBits(value:[ContentAttachments; N_ATTACHMENTS]) -> [ContentAttachmentGroup; N_ATTACHMENTS]
+{
+    let mut result = [ContentAttachmentGroup{
+                        content: [false; HASH_BITS],
+                        isFiller: false, 
+                                        }; N_ATTACHMENTS];
+    for i in 0 .. N_ATTACHMENTS { 
+        result[i].content = convertHashToBits(value[i].content); 
+        result[i].isFiller = value[i].isFiller; 
+    }  
+    result                             
+}
+
+fn convertNotaryToBits(value:ContentNotary) -> ContentNotaryGroup
+{
+    ContentNotaryGroup{
+        content : convertPubKeyToBits(value.content.owningKey),
+        isFiller: value.isFiller,
+    }                          
+}
+
+fn convertTimeWindowToBits(value:ContentTimeWindow) -> ContentTimeWindowGroup
+{
+    let mut time_window_bits = [false; TIME_WINDOW_BITS]; 
+
+    for i in (0 as u16) .. TIME_WINDOW_BYTES { 
+        let tw_bits = to_bits(value.content[i]);
+        for j in (0 as u16) .. (8 as u16) {
+            time_window_bits[i * (8 as u16) + j] = tw_bits[j]; 
+        }        
+    }  
+
+    ContentTimeWindowGroup{
+        content: time_window_bits,
+        isFiller: value.isFiller,
+    }                      
+}
+
+fn convertParametersToBits(value:ContentParameters) -> ContentParameterGroup
+{
+    ContentParameterGroup {
+        content : convertHashToBits(value.content),
+        isFiller: value.isFiller,
+    }                      
+}
+
 fn convertCommandSignersToBits(value:[ContentSigners; N_SIGNERS]) -> [ContentCommandSignerGroup; N_SIGNERS]
 {
     let mut result = [ContentCommandSignerGroup{
@@ -371,15 +476,35 @@ fn buildComponentGroups(zkptx:ZKProverTransaction) -> (ComponentGroup, PrivacySa
                 groupHash: convertHashToBits(zkptx.outputs.groupHash),
             },
 
-        commandData: CommandDataGroup{
-                groupElements: convertCommandDataToBits(zkptx.commands.value),
-                groupHash: convertHashToBits(zkptx.commands.groupHash),
-            }, 
-
         references: ReferenceGroup{
                 groupElements: convertReferencesToBits(zkptx.references.value),
                 groupHash: convertHashToBits(zkptx.references.groupHash),
+            }, 
+
+        commandData: CommandDataGroup{
+                groupElements: convertCommandDataToBits(zkptx.commands.value),
+                groupHash: convertHashToBits(zkptx.commands.groupHash),
             },        
+        
+        attachments: AttachmentGroup{
+                groupElements: convertAttachmentsToBits(zkptx.attachments.value),
+                groupHash: convertHashToBits(zkptx.attachments.groupHash),
+            }, 
+
+        notary: NotaryGroup{
+                groupElements: convertNotaryToBits(zkptx.notary.value),
+                groupHash: convertHashToBits(zkptx.notary.groupHash),
+            }, 
+ 
+        timeWindow: TimeWindowGroup{
+                groupElements: convertTimeWindowToBits(zkptx.timeWindow.value),
+                groupHash: convertHashToBits(zkptx.timeWindow.groupHash),
+            },
+
+        parameters: ParameterGroup{
+                groupElements: convertParametersToBits(zkptx.parameters.value),
+                groupHash: convertHashToBits(zkptx.parameters.groupHash),
+            },
 
         commandSigners: CommandSignerGroup{
                 groupElements: convertCommandSignersToBits(zkptx.signers.value),
