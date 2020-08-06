@@ -9,14 +9,22 @@ use ComponentGroups::PrivacySalt;
 
 use ZKMerkleTree::ComponentGroup; 
 use ZKMerkleTree::InputGroup;
-use ZKMerkleTree::OutputGroup; 
+use ZKMerkleTree::OutputGroup;
+use ZKMerkleTree::ReferenceGroup;  
 use ZKMerkleTree::CommandDataGroup; 
-use ZKMerkleTree::ReferenceGroup; 
+use ZKMerkleTree::AttachmentGroup;
+use ZKMerkleTree::NotaryGroup;
+use ZKMerkleTree::TimeWindowGroup;
+use ZKMerkleTree::ParameterGroup;
 use ZKMerkleTree::CommandSignerGroup; 
 use ZKMerkleTree::ZKStateAndRefGroup;
 
 use ZKMerkleTree::ContentZKStateAndRefGroup; 
 use ZKMerkleTree::ContentCommandDataGroup; 
+use ZKMerkleTree::ContentAttachmentGroup;
+use ZKMerkleTree::ContentNotaryGroup; 
+use ZKMerkleTree::ContentTimeWindowGroup;
+use ZKMerkleTree::ContentParameterGroup;
 use ZKMerkleTree::ContentCommandSignerGroup; 
 
 //Temporary function to manually transfer components to zkmerkle tree !!!
@@ -49,14 +57,6 @@ fn convertFromComponentToZKMerkle(zkptx: (ComponentGroups::ComponentGroup, Priva
             ],
             groupHash: zkptx.0.outputs.groupHash,
         },
-        commandData: CommandDataGroup{
-            groupElements:[
-            ContentCommandDataGroup {
-                content: zkptx.0.commandData.groupElements[0].content,
-                isFiller: zkptx.0.commandData.groupElements[0].isFiller, },
-            ],
-            groupHash: zkptx.0.commandData.groupHash,
-        },
         references: ReferenceGroup{
             groupElements:[
             ContentZKStateAndRefGroup{
@@ -69,6 +69,46 @@ fn convertFromComponentToZKMerkle(zkptx: (ComponentGroups::ComponentGroup, Priva
                 isFiller: zkptx.0.references.groupElements[1].isFiller, }
             ],
             groupHash: zkptx.0.references.groupHash,
+        },
+        commandData: CommandDataGroup{
+            groupElements:[
+            ContentCommandDataGroup {
+                content: zkptx.0.commandData.groupElements[0].content,
+                isFiller: zkptx.0.commandData.groupElements[0].isFiller, },
+            ],
+            groupHash: zkptx.0.commandData.groupHash,
+        },
+        attachments: AttachmentGroup{
+            groupElements:[
+            ContentAttachmentGroup {
+                content: zkptx.0.attachments.groupElements[0].content,
+                isFiller: zkptx.0.attachments.groupElements[0].isFiller, },
+            ContentAttachmentGroup {
+                content: zkptx.0.attachments.groupElements[1].content,
+                isFiller: zkptx.0.attachments.groupElements[1].isFiller, },
+            ],
+            groupHash: zkptx.0.attachments.groupHash,
+        },
+        notary: NotaryGroup{
+            groupElements:
+            ContentNotaryGroup {
+                content: zkptx.0.notary.groupElements.content,
+                isFiller: zkptx.0.notary.groupElements.isFiller, },
+            groupHash: zkptx.0.notary.groupHash,
+        },
+        timeWindow: TimeWindowGroup{
+            groupElements:
+            ContentTimeWindowGroup {
+                content: zkptx.0.timeWindow.groupElements.content,
+                isFiller: zkptx.0.timeWindow.groupElements.isFiller, },
+            groupHash: zkptx.0.timeWindow.groupHash,
+        },
+        parameters: ParameterGroup{
+            groupElements:
+            ContentParameterGroup {
+                content: zkptx.0.parameters.groupElements.content,
+                isFiller: zkptx.0.parameters.groupElements.isFiller, },
+            groupHash: zkptx.0.parameters.groupHash,
         },
         commandSigners: CommandSignerGroup{
             groupElements: [
@@ -88,9 +128,10 @@ fn convertFromComponentToZKMerkle(zkptx: (ComponentGroups::ComponentGroup, Priva
 fn main(witness: ZKProverTransaction) -> [u8;32] //ZKMerkleTree::PedersenDigest
 {
     //Check contract rules
-    ComponentGroups::CheckContractRules(witness); 
+    //ComponentGroups::CheckContractRules(witness); 
 
     let zkptx:(ComponentGroups::ComponentGroup, PrivacySalt) = ComponentGroups::buildComponentGroups(witness);
+    
     let root_hash = ZKMerkleTree::buildMerkleTree(convertFromComponentToZKMerkle(zkptx));
 
     let mut root_bytes = [0 as u8;32]; 
