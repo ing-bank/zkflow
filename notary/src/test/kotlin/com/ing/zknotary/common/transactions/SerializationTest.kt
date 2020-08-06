@@ -57,7 +57,6 @@ class SerializationTest {
             // Serialize for transport to Zinc
             val witness = Witness(ptx)
             val json = witness.serialize(ZincSerializationFactory)
-            println(String(json.bytes))
             // TODO: do checks on JSON to confirm it is acceptable for Zinc
         }
     }

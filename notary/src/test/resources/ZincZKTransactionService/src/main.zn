@@ -1,51 +1,50 @@
 use std::convert::to_bits;
 
 //number of elements in each component group
-const N_INPUTS:u16 = 2;
-const N_OUTPUTS:u16 = 2;
-const N_REFERENCES:u16 = 2;
-const N_SIGNERS:u16 = 2;
-const N_COMMANDS:u16 = 1;
+const N_INPUTS: u16 = 2;
+const N_OUTPUTS: u16 = 2;
+const N_REFERENCES: u16 = 2;
+const N_SIGNERS: u16 = 2;
+const N_COMMANDS: u16 = 1;
+const N_ATTACHMENTS: u16 = 2;
 
-const PUBKEY_BYTES:u16 = 44;
-const PUBKEY_BITS:u16 = (8 as u16) * PUBKEY_BYTES;
+const PUBKEY_BYTES: u16 = 44;
+const PUBKEY_BITS: u16 = (8 as u16) * PUBKEY_BYTES;
 
-const HASH_BYTES:u16 = 32;
-const HASH_BITS:u16 = (8 as u16) * HASH_BYTES;
+const HASH_BYTES: u16 = 32;
+const HASH_BITS: u16 = (8 as u16) * HASH_BYTES;
 
-const INT32_BITS:u16 = 32;
-const INT128_BITS:u16 = 128;
+const INT32_BITS: u16 = 32;
+const INT128_BITS: u16 = 128;
 
 //Number of bits for each component group
 //Input, Output, and Reference components have the same structure which is ZKStateAndRef.
 //The size of state bits depends on the content of the state. The example state we have contains two public keys and an integer value.
-const STATE_BITS:u16 = PUBKEY_BITS + INT32_BITS + PUBKEY_BITS;
-const REF_BITS:u16 = HASH_BITS;
+const STATE_BITS: u16 = PUBKEY_BITS + INT32_BITS + PUBKEY_BITS;
+const REF_BITS: u16 = HASH_BITS;
 
-const SIGNER_BITS:u16 = PUBKEY_BITS;
-const COMMAND_BITS:u16 = INT32_BITS;
+const SIGNER_BITS: u16 = PUBKEY_BITS;
+const COMMAND_BITS: u16 = INT32_BITS;
 
 type PubKey = [u8; PUBKEY_BYTES];
 type PrivacySalt = [bool; HASH_BITS];
 type ComponentGroupHash = [u8; HASH_BYTES]; //For now we use Blake2s to compute component group hashes - should be replaced with Pedersen!
+type TimeWindowFingerPrint = [u8; 24];
 
 enum CommandData {
     CREATE = 0,
     MOVE = 1,
 }
 
-struct Owner{
+struct Party {
     owningKey: PubKey,
 }
 
 struct Data {
-    owner: Owner,
+    owner: Party,
     value: i32,
 }
 
-struct Notary {
-    owningKey: [u8; PUBKEY_BYTES],
-}
 
 /*
 This struct follows the structure in the original Corda TransactionState structure. The fields contractCN,
@@ -56,13 +55,13 @@ should be declared with the corresponding data type.
 struct TransactionState {
     data: Data,
     //contractCN: bool,
-    notary: Notary,
+    notary: Party,
     //encumbrance: bool,
     //constraint: bool,
 }
 
 struct ZKStateRef {
-    id: [u8;HASH_BYTES],
+    id: [u8; HASH_BYTES],
 }
 
 struct ZKStateAndRef {
@@ -72,6 +71,11 @@ struct ZKStateAndRef {
 
 struct ContentZKStateAndRef {
     content: ZKStateAndRef,
+    isFiller: bool,
+}
+
+struct ContentAttachment {
+    content: [u8; HASH_BYTES],
     isFiller: bool,
 }
 
@@ -90,7 +94,7 @@ struct References {
     groupHash: ComponentGroupHash,
 }
 
-struct ContentCommandData{
+struct ContentCommandData {
     content: CommandData,
     isFiller: bool,
 }
@@ -100,13 +104,48 @@ struct Commands {
     groupHash: ComponentGroupHash,
 }
 
-struct ContentSigners {
+struct Attachments {
+    value: [ContentAttachment; N_ATTACHMENTS],
+    groupHash: ComponentGroupHash,
+}
+
+struct ContentPubkey {
     content: PubKey,
     isFiller: bool,
 }
 
+struct ContentParty {
+    content: Party,
+    isFiller: bool,
+}
+
 struct Signers {
-    value: [ContentSigners; N_SIGNERS],
+    value: [ContentPubkey; N_SIGNERS],
+    groupHash: ComponentGroupHash,
+}
+
+struct Notary {
+    value: ContentParty,
+    groupHash: ComponentGroupHash,
+}
+
+struct ContentTimeWindow {
+    content: TimeWindowFingerPrint,
+    isFiller: bool,
+}
+
+struct TimeWindow {
+    value: ContentTimeWindow,
+    groupHash: ComponentGroupHash,
+}
+
+struct ContentNetworkParametersHash {
+    content: [u8; HASH_BYTES],
+    isFiller: bool,
+}
+
+struct NetworkParametersHash {
+    value: ContentNetworkParametersHash,
     groupHash: ComponentGroupHash,
 }
 
@@ -115,6 +154,10 @@ struct ZKProverTransaction {
     outputs: Outputs,
     references: References,
     commands: Commands,
+    attachments: Attachments,
+    notary: Notary,
+    timeWindow: TimeWindow,
+    parameters: NetworkParametersHash,
     signers: Signers,
     privacySalt: [u8; HASH_BYTES],
 }
@@ -123,8 +166,11 @@ struct Witness {
     transaction: ZKProverTransaction
 }
 
-fn main(witness: Witness) -> [u8;32] //ZKMerkleTree::PedersenDigest
-{
-    witness.transaction.privacySalt
+struct PublicInput {
+    transactionId: [u8; HASH_BYTES]
+}
 
+fn main(witness: Witness) -> PublicInput //ZKMerkleTree::PedersenDigest
+{
+    PublicInput { transactionId: witness.transaction.privacySalt }
 }

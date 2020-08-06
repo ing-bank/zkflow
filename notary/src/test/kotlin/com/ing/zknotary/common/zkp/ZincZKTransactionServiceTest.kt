@@ -7,9 +7,11 @@ import com.ing.zknotary.notary.transactions.moveTestsState
 import net.corda.core.crypto.BLAKE2s256DigestService
 import net.corda.core.crypto.Crypto
 import net.corda.core.crypto.PedersenDigestService
+import net.corda.core.crypto.SecureHash
 import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
 import net.corda.testing.node.ledger
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import java.io.File
@@ -18,7 +20,7 @@ import kotlin.test.assertFailsWith
 
 class ZincZKTransactionServiceTest {
     private val circuitSourcePath: String = javaClass.getResource("/ZincZKTransactionService/src/main.zn").path
-    private val zincZKService = ZincZKTransactionService(
+    private val zincTransactionZKService = ZincZKTransactionService(
         circuitSrcPath = circuitSourcePath,
         artifactFolder = File(circuitSourcePath).parent,
         buildTimeout = Duration.ofSeconds(5),
@@ -51,27 +53,32 @@ class ZincZKTransactionServiceTest {
     }
 
     init {
-        zincZKService.setup()
+        zincTransactionZKService.setup()
+    }
+
+    @After
+    fun `remove zinc files`() {
+        zincTransactionZKService.cleanup()
     }
 
     @Test
     fun `valid witness verifies`() {
         ledgerServices.ledger {
-            val proof = zincZKService.prove(Witness(ptx))
-            val correctPublicInput = PublicInput(ptx.id)
+            val proof = zincTransactionZKService.prove(Witness(ptx))
+            val correctPublicInput = PublicInput(SecureHash.Pedersen(ptx.privacySalt.bytes))
 
-            zincZKService.verify(proof, correctPublicInput)
+            zincTransactionZKService.verify(proof, correctPublicInput)
         }
     }
 
     @Test
     fun `verification fails on public data mismatch`() {
         ledgerServices.ledger {
-            val proof = zincZKService.prove(Witness(ptx))
+            val proof = zincTransactionZKService.prove(Witness(ptx))
             val wrongPublicData = PublicInput(PedersenDigestService.zeroHash)
 
             assertFailsWith(ZKVerificationException::class) {
-                zincZKService.verify(proof, wrongPublicData)
+                zincTransactionZKService.verify(proof, wrongPublicData)
             }
         }
     }

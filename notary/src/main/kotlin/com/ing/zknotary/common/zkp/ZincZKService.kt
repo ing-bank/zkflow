@@ -59,6 +59,14 @@ class ZincZKService(
 
     data class ZKSetup(val provingKeyPath: String, val verifyingKeyPath: String)
 
+    fun cleanup() {
+        listOf(
+            compiledCircuitPath,
+            zkSetup.provingKeyPath,
+            zkSetup.verifyingKeyPath
+        ).forEach { File(it).delete() }
+    }
+
     fun setup() {
         val circuitSrc = File(circuitSrcPath)
         require(circuitSrc.exists()) { "Cannot find circuit at $circuitSrcPath" }

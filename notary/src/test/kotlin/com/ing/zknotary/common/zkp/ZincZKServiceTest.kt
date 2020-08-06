@@ -17,19 +17,13 @@ class ZincZKServiceTest {
         verificationTimeout = Duration.ofSeconds(1)
     )
 
-    private var zincFiles = listOf(
-        zincZKService.compiledCircuitPath,
-        zincZKService.zkSetup.provingKeyPath,
-        zincZKService.zkSetup.verifyingKeyPath
-    )
-
     init {
         zincZKService.setup()
     }
 
     @After
     fun `remove zinc files`() {
-        zincFiles.map { File(it).delete() }
+        zincZKService.cleanup()
     }
 
     @Test
