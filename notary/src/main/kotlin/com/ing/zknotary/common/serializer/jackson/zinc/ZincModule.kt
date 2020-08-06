@@ -121,9 +121,6 @@ data class ComponentGroup<T>(val value: List<T>, val groupHash: SecureHash) {
 
 data class ComponentSinglet<T>(val value: T, val groupHash: SecureHash)
 
-fun ByteArray.asBytes255(): IntArray = this.map { it.toInt() and 0xFF }.toIntArray()
-fun IntArray.asString() = this.joinToString(", ", "[", "]")
-
 @JsonSerialize(using = PublicKeyMixinZincSerializer::class)
 private interface PublicKeyMixinZinc
 
@@ -188,6 +185,18 @@ private interface ByteArrayMixinZinc
 
 private class ByteArrayMixinZincSerializer : JsonSerializer<ByteArray>() {
     override fun serialize(value: ByteArray, gen: JsonGenerator, serializers: SerializerProvider) {
-        gen.writeObject(value.map { it.toInt() and 0xFF })
+        gen.writeObject(value.map { it.reverseBits().asUnsigned() })
     }
+
+    private fun Byte.reverseBits(): Byte {
+        var x = this.toInt()
+        var y: Byte = 0
+        for (position in 8 - 1 downTo 0) {
+            y = (y + (x and 1 shl position).toByte()).toByte()
+            x = (x shr 1)
+        }
+        return y
+    }
+
+    private fun Byte.asUnsigned() = this.toInt() and 0xFF
 }
