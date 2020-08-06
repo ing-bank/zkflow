@@ -8,4 +8,3 @@
     * otherwise outputs will not be in the accumulator and can't be used as inputs.
 * We leak the contract and command information to the verifier, because we use one circuit per contract command for performance reasons, and because the verifier must know which circuit (verifier key) to use.
 * Encumbering states is not supported, this should be solvable with reference states or simply with contract rules
-
