@@ -50,7 +50,6 @@ class ZKVerifierTransaction(
 ) {
     val padded = Padded(
         originalInputs = inputs,
-        originalOutputs = outputs,
         originalReferences = references,
         originalTimeWindow = timeWindow,
         originalNetworkParametersHash = networkParametersHash,
@@ -85,7 +84,6 @@ class ZKVerifierTransaction(
 
     data class Padded(
         private val originalInputs: List<StateRef>,
-        private val originalOutputs: List<StateRef>,
         private val originalReferences: List<StateRef>,
         private val originalTimeWindow: TimeWindow?,
         private val originalNetworkParametersHash: SecureHash?,
@@ -96,11 +94,6 @@ class ZKVerifierTransaction(
             val filler = filler(ComponentGroupEnum.INPUTS_GROUP)
             require(filler is ComponentPaddingConfiguration.Filler.StateRef) { "Expected filler of type ZKStateRef" }
             return originalInputs.pad(sizeOf(ComponentGroupEnum.INPUTS_GROUP), filler.content)
-        }
-        fun outputs(): List<StateRef> {
-            val filler = filler(ComponentGroupEnum.OUTPUTS_GROUP)
-            require(filler is ComponentPaddingConfiguration.Filler.StateRef) { "Expected filler of type ZKStateRef" }
-            return originalOutputs.pad(sizeOf(ComponentGroupEnum.OUTPUTS_GROUP), filler.content)
         }
 
         fun references(): List<StateRef> {

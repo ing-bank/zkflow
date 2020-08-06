@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.DeserializationContext
 import com.fasterxml.jackson.databind.JsonDeserializer
 import com.fasterxml.jackson.databind.JsonSerializer
 import com.fasterxml.jackson.databind.SerializerProvider
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.fasterxml.jackson.databind.module.SimpleModule
 import com.ing.dlt.zkkrypto.util.asUnsigned
@@ -26,8 +25,8 @@ import net.corda.core.contracts.Command
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.PrivacySalt
-import net.corda.core.contracts.TimeWindow
 import net.corda.core.contracts.StateAndRef
+import net.corda.core.contracts.TimeWindow
 import net.corda.core.contracts.TransactionState
 import net.corda.core.crypto.BLAKE2s256DigestService
 import net.corda.core.crypto.PedersenDigestService

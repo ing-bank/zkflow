@@ -1,17 +1,16 @@
 package com.ing.zknotary.common.transactions
 
-import com.ing.zknotary.common.states.EMPTY_STATEREF
 import com.ing.zknotary.common.util.ComponentPaddingConfiguration
 import com.ing.zknotary.common.util.PaddingWrapper
 import net.corda.core.DeleteForDJVM
 import net.corda.core.contracts.ComponentGroupEnum
-import net.corda.core.crypto.SecureHash
+import net.corda.core.contracts.StateRef
 import kotlin.math.max
 
 @DeleteForDJVM
 fun ZKProverTransaction.prettyPrint(): String {
     val buf = StringBuilder()
-    buf.appendln("Transaction:")
+    buf.appendln("Prover Transaction:")
 
     fun addComponentList(buf: StringBuilder, name: String, componentList: List<*>) {
         if (componentList.isNotEmpty()) buf.appendln(" - $name:")
@@ -44,12 +43,12 @@ fun ZKProverTransaction.toZKVerifierTransaction(proof: ByteArray): ZKVerifierTra
         )
     }
 
-    val filler = ComponentPaddingConfiguration.Filler.StateRef(EMPTY_STATEREF)
-    val secureHashFiller = ComponentPaddingConfiguration.Filler.SecureHash(SecureHash.zeroHash)
+    val stateRefFiller = ComponentPaddingConfiguration.Filler.StateRef(StateRef(componentGroupLeafDigestService.zeroHash, 0))
+    val secureHashFiller = ComponentPaddingConfiguration.Filler.SecureHash(componentGroupLeafDigestService.zeroHash)
     val componentPadding = ComponentPaddingConfiguration.Builder()
-        .inputs(this.padded.sizeOf(ComponentGroupEnum.INPUTS_GROUP), filler)
-        .outputs(this.padded.sizeOf(ComponentGroupEnum.OUTPUTS_GROUP), filler)
-        .references(this.padded.sizeOf(ComponentGroupEnum.REFERENCES_GROUP), filler)
+        .inputs(this.padded.sizeOf(ComponentGroupEnum.INPUTS_GROUP), stateRefFiller)
+        .outputs(this.padded.sizeOf(ComponentGroupEnum.OUTPUTS_GROUP), stateRefFiller)
+        .references(this.padded.sizeOf(ComponentGroupEnum.REFERENCES_GROUP), stateRefFiller)
         .attachments(this.padded.sizeOf(ComponentGroupEnum.ATTACHMENTS_GROUP), secureHashFiller)
         .build()
 

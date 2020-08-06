@@ -12,6 +12,7 @@ import net.corda.core.contracts.StateRef
 import net.corda.core.contracts.TransactionState
 import net.corda.core.contracts.requireThat
 import net.corda.core.crypto.DigestService
+import net.corda.core.crypto.SecureHash
 import net.corda.core.node.ServiceHub
 import net.corda.core.serialization.serialize
 import net.corda.core.transactions.LedgerTransaction
@@ -95,6 +96,7 @@ class ZKProverTransactionFactory {
             val stateAndRefFiller = ComponentPaddingConfiguration.Filler.StateAndRef(
                 StateAndRef(
                     TransactionState(emptyState, notary = ZKNulls.NULL_PARTY),
+                    StateRef(componentGroupLeafDigestService.zeroHash, 0)
                     EMPTY_STATEREF
                 )
             )

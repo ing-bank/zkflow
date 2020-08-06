@@ -1,6 +1,7 @@
 package com.ing.zknotary.common.transactions
 
 import com.ing.zknotary.common.serializer.ZincSerializationFactory
+import com.ing.zknotary.common.zkp.PublicInput
 import com.ing.zknotary.common.zkp.Witness
 import com.ing.zknotary.common.zkp.mockEmptyProof
 import com.ing.zknotary.notary.transactions.createTestsState
@@ -53,7 +54,21 @@ class SerializationTest {
     }
 
     @Test
-    fun `Serialize to Zinc`() {
+    fun `Serialize public input to Zinc`() {
+        ledgerServices.ledger {
+            // Serialize for transport to Zinc
+            val emptyMap = mapOf(
+                1 to PedersenDigestService.zeroHash
+            )
+            val publicInput = PublicInput(PedersenDigestService.zeroHash, emptyMap, emptyMap, emptyMap, emptyMap)
+            val json = publicInput.serialize(ZincSerializationFactory)
+            println(String(json.bytes))
+            // TODO: do checks on JSON to confirm it is acceptable for Zinc
+        }
+    }
+
+    @Test
+    fun `Serialize witness to Zinc`() {
         ledgerServices.ledger {
             // Serialize for transport to Zinc
             val witness = Witness(ptx)

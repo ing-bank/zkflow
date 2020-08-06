@@ -14,14 +14,17 @@ class ZKPartialMerkleTree(
 ) {
 
     companion object {
+        /**
+         * In this case, we don't include a group for outputs, as we will add the output
+         * hashes from the constructor parameter directly when calculating the component hashes
+         * for the leaves below in [componentHashes]
+         */
         private fun createComponentGroups(vtx: ZKVerifierTransaction): List<ComponentGroup> =
             mutableListOf<ComponentGroup>().apply {
                 addGroups(
                     mapOf(
                         ComponentGroupEnum.INPUTS_GROUP to
                             vtx.padded.inputs().map { it.fingerprint },
-                        ComponentGroupEnum.OUTPUTS_GROUP to
-                            vtx.padded.outputs().map { it.fingerprint },
                         ComponentGroupEnum.REFERENCES_GROUP to
                             vtx.padded.references().map { it.fingerprint },
                         ComponentGroupEnum.NOTARY_GROUP to
@@ -30,6 +33,7 @@ class ZKPartialMerkleTree(
                             listOf(vtx.padded.timeWindow().content.fingerprint),
                         ComponentGroupEnum.PARAMETERS_GROUP to
                             listOf(vtx.padded.networkParametersHash().content.fingerprint)
+
                     )
                 )
             }

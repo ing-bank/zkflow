@@ -19,5 +19,3 @@ data class ZKStateRef(
         fun empty() = ZKStateRef(SecureHash.zeroHash)
     }
 }
-
-val EMPTY_STATEREF = StateRef(SecureHash.allOnesHash, 0)

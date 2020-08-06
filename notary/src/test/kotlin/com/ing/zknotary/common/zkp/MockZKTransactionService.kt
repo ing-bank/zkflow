@@ -1,7 +1,6 @@
 package com.ing.zknotary.common.zkp
 
 import com.ing.zknotary.common.contracts.ZKContractState
-import com.ing.zknotary.common.transactions.ZKProverTransaction
 import net.corda.core.contracts.TransactionState
 import net.corda.core.crypto.BLAKE2s256DigestService
 import net.corda.core.node.AppServiceHub
@@ -9,20 +8,21 @@ import net.corda.core.node.services.CordaService
 import net.corda.core.serialization.SerializationFactory
 import net.corda.core.serialization.SingletonSerializeAsToken
 import net.corda.core.serialization.deserialize
+import net.corda.core.serialization.serialize
 
 val mockEmptyProof = ByteArray(0)
 
 @CordaService
-open class MockZKService(val serviceHub: AppServiceHub) : ZKService, SingletonSerializeAsToken() {
+open class MockZKTransactionService(val serviceHub: AppServiceHub) : ZKTransactionService, SingletonSerializeAsToken() {
     /**
-     * This mock version simply returns the witness, so that we can use it in `verify()`
+     * This mock version simply returns the serialized witness, so that we can use it in `verify()`
      * to do all the verifications
      */
-    override fun prove(witness: ByteArray): ByteArray {
-        return witness
+    override fun prove(witness: Witness): ByteArray {
+        return witness.serialize().bytes
     }
 
-    override fun verify(proof: ByteArray, publicInput: ByteArray) {
+    override fun verify(proof: ByteArray, publicInput: PublicInput) {
         // TODO: Make this use the ZincSerializationFactory when it supports deserialization
         // val serializationFactory = ZincSerializationFactory
         val serializationFactory = SerializationFactory.defaultFactory
@@ -32,11 +32,12 @@ open class MockZKService(val serviceHub: AppServiceHub) : ZKService, SingletonSe
         // val ptx = serializationFactory.withCurrentContext(AMQP_RPC_CLIENT_CONTEXT) {
         //     proof.deserialize<ZKProverTransaction>()
         // }
-        val ptx = proof.deserialize<ZKProverTransaction>(serializationFactory)
-        val witness = Witness(ptx, emptyList())
+        // This assumes that the proof (for testing only) is simply a serialized witness.
+        val witness = proof.deserialize<Witness>(serializationFactory)
 
-        val instance = publicInput.deserialize<PublicInput>(serializationFactory)
-
+        println(witness.transaction.id)
+        println(witness.transaction::class)
+        println(witness.transaction)
         /*
          * Rule 1: The recalculated Merkle root should match the one from the instance vtx.
          *
@@ -48,29 +49,29 @@ open class MockZKService(val serviceHub: AppServiceHub) : ZKService, SingletonSe
          * This proves that the inputs whose contents have been verified to be unchanged, are also part of the vtx
          * being verified.
          */
-        if (instance.transactionId != witness.ptx.id) error(
-            "The calculated Merkle root from the witness (${witness.ptx.id}) does not match " +
-                "the transaction id from the public input (${instance.transactionId})."
+        if (publicInput.transactionId != witness.transaction.id) error(
+            "The calculated Merkle root from the witness (${witness.transaction.id}) does not match " +
+                "the expected transaction id from the public input (${publicInput.transactionId})."
         )
 
         /*
-         * Rule 2: witness.ptx.inputs[i] contents hashed with nonce should equal instance.prevVtxOutputHashes[i].
+         * Rule 2: witness.ptx.inputs[i] contents hashed with nonce should equal publicInput.prevVtxOutputHashes[i].
          * This proves that prover did not change the contents of the input states
          */
-        witness.ptx.inputs.map { it.state }.forEachIndexed { index, input ->
+        witness.transaction.inputs.map { it.state }.forEachIndexed { index, input ->
             @Suppress("UNCHECKED_CAST")
             input as TransactionState<ZKContractState>
 
-            val nonceFromPublicInput = instance.inputNonces[index]
-                ?: error("Nonce not present in public input for input $index of tx ${witness.ptx.id}")
-            val leafHashFromPublicInput = instance.inputHashes[index]
-                ?: error("Leaf hash not present in public input for input $index of tx ${witness.ptx.id}")
+            val nonceFromPublicInput = publicInput.inputNonces[index]
+                ?: error("Nonce not present in public input for input $index of tx ${witness.transaction.id}")
+            val leafHashFromPublicInput = publicInput.inputHashes[index]
+                ?: error("Leaf hash not present in public input for input $index of tx ${witness.transaction.id}")
 
             val calculatedLeafHashFromWitness =
                 BLAKE2s256DigestService.hash(nonceFromPublicInput.bytes + input.fingerprint)
 
             if (leafHashFromPublicInput != calculatedLeafHashFromWitness) error(
-                "Calculated leaf hash ($calculatedLeafHashFromWitness} for input $index of tx ${witness.ptx.id} does " +
+                "Calculated leaf hash ($calculatedLeafHashFromWitness} for input $index of tx ${witness.transaction.id} does " +
                     "not match the leaf hash from the public input ($leafHashFromPublicInput)."
             )
         }

@@ -65,7 +65,8 @@ class ZincZKTransactionServiceTest {
     fun `valid witness verifies`() {
         ledgerServices.ledger {
             val proof = zincTransactionZKService.prove(Witness(ptx))
-            val correctPublicInput = PublicInput(SecureHash.Pedersen(ptx.privacySalt.bytes))
+            val emptyMap = emptyMap<Int, SecureHash>()
+            val correctPublicInput = PublicInput(SecureHash.Pedersen(ptx.privacySalt.bytes), emptyMap, emptyMap, emptyMap, emptyMap)
 
             zincTransactionZKService.verify(proof, correctPublicInput)
         }
@@ -75,7 +76,8 @@ class ZincZKTransactionServiceTest {
     fun `verification fails on public data mismatch`() {
         ledgerServices.ledger {
             val proof = zincTransactionZKService.prove(Witness(ptx))
-            val wrongPublicData = PublicInput(PedersenDigestService.zeroHash)
+            val emptyMap = emptyMap<Int, SecureHash>()
+            val wrongPublicData = PublicInput(PedersenDigestService.zeroHash, emptyMap, emptyMap, emptyMap, emptyMap)
 
             assertFailsWith(ZKVerificationException::class) {
                 zincTransactionZKService.verify(proof, wrongPublicData)

@@ -2,7 +2,7 @@ package com.ing.zknotary.common.transactions
 
 import com.ing.zknotary.common.contracts.TestContract
 import com.ing.zknotary.common.serializer.SerializationFactoryService
-import com.ing.zknotary.common.zkp.MockZKService
+import com.ing.zknotary.common.zkp.MockZKTransactionService
 import com.ing.zknotary.common.zkp.PublicInput
 import com.ing.zknotary.node.services.collectVerifiedDependencies
 import com.ing.zknotary.node.services.toZKVerifierTransaction
@@ -15,7 +15,6 @@ import net.corda.core.node.AppServiceHub
 import net.corda.core.node.services.CordaService
 import net.corda.core.serialization.SerializationFactory
 import net.corda.core.serialization.SingletonSerializeAsToken
-import net.corda.core.serialization.serialize
 import net.corda.core.transactions.WireTransaction
 import net.corda.testing.common.internal.testNetworkParameters
 import net.corda.testing.core.TestIdentity
@@ -41,7 +40,7 @@ class BackChainTest {
     private lateinit var anotherMoveWtx: WireTransaction
 
     private val zkStorage = createMockCordaService(ledgerServices, ::MockZKTransactionStorage)
-    private val zkService = createMockCordaService(ledgerServices, ::MockZKService)
+    private val zkTransactionService = createMockCordaService(ledgerServices, ::MockZKTransactionService)
 
     // TODO: Make this use the ZincSerializationFactory when it supports deserialization
     // private val zkSerializatinFactoryService = createMockCordaService(ledgerServices, ::ZincSerializationFactoryService)
@@ -128,7 +127,7 @@ class BackChainTest {
                     .toZKVerifierTransaction(
                         ledgerServices,
                         zkStorage,
-                        zkService,
+                        zkTransactionService,
                         zkSerializatinFactoryService,
                         persist = true
                     )
@@ -223,6 +222,6 @@ class BackChainTest {
             referenceHashes = referenceHashes
         )
 
-        zkService.verify(currentVtx.proof, calculatedPublicInput.serialize(zkSerializatinFactoryService.factory).bytes)
+        zkTransactionService.verify(currentVtx.proof, calculatedPublicInput)
     }
 }

@@ -5,7 +5,8 @@ import com.ing.zknotary.common.transactions.ZKProverTransaction
 import com.ing.zknotary.common.transactions.ZKVerifierTransaction
 import com.ing.zknotary.common.transactions.toZKProverTransaction
 import com.ing.zknotary.common.transactions.toZKVerifierTransaction
-import com.ing.zknotary.common.zkp.ZKService
+import com.ing.zknotary.common.zkp.Witness
+import com.ing.zknotary.common.zkp.ZKTransactionService
 import net.corda.core.DeleteForDJVM
 import net.corda.core.DoNotImplement
 import net.corda.core.concurrent.CordaFuture
@@ -15,7 +16,6 @@ import net.corda.core.crypto.SecureHash
 import net.corda.core.messaging.DataFeed
 import net.corda.core.node.ServiceHub
 import net.corda.core.serialization.SerializeAsToken
-import net.corda.core.serialization.serialize
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.WireTransaction
 import rx.Observable
@@ -23,7 +23,7 @@ import rx.Observable
 fun SignedTransaction.toZKVerifierTransaction(
     services: ServiceHub,
     zkStorage: ZKWritableTransactionStorage,
-    zkService: ZKService,
+    zktransactionService: ZKTransactionService,
     zkSerializatinFactoryService: SerializationFactoryService,
     persist: Boolean = true
 ): ZKVerifierTransaction {
@@ -36,7 +36,7 @@ fun SignedTransaction.toZKVerifierTransaction(
         nodeDigestService = PedersenDigestService
     )
 
-    val proof = zkService.prove(ptx.serialize(zkSerializatinFactoryService.factory).bytes)
+    val proof = zktransactionService.prove(Witness(ptx))
     val vtx = ptx.toZKVerifierTransaction(proof)
 
     if (persist) {
