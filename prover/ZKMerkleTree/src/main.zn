@@ -125,7 +125,7 @@ fn convertFromComponentToZKMerkle(zkptx: (ComponentGroups::ComponentGroup, Priva
     zkptx.1)
 }
 
-fn main(witness: ZKProverTransaction) -> bool //[u8;32] //ZKMerkleTree::PedersenDigest
+fn main(witness: ZKProverTransaction) -> [u8;32] //ZKMerkleTree::PedersenDigest
 {
     //Check contract rules
     //ComponentGroups::CheckContractRules(witness); 
@@ -133,7 +133,7 @@ fn main(witness: ZKProverTransaction) -> bool //[u8;32] //ZKMerkleTree::Pedersen
     let zkptx:(ComponentGroups::ComponentGroup, PrivacySalt) = ComponentGroups::buildComponentGroups(witness);
     
     let root_hash = ZKMerkleTree::buildMerkleTree(convertFromComponentToZKMerkle(zkptx));
-/*
+
     let mut root_bytes = [0 as u8;32]; 
  
     for i in 0..32{
@@ -144,8 +144,5 @@ fn main(witness: ZKProverTransaction) -> bool //[u8;32] //ZKMerkleTree::Pedersen
         root_bytes[i] = std::convert::from_bits_unsigned(byte_bits); 
     }
 
-    root_bytes;
-    */
-
-    true
+    root_bytes
 }

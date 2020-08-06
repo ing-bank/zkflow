@@ -405,7 +405,7 @@ fn concatenateHashes(hash1:[bool; NODE_DIGEST_SIZE], hash2:[bool; NODE_DIGEST_SI
     data 
 }
 
-fn to_padded_bits(digest:field) -> [bool; NODE_DIGEST_SIZE]
+fn toPaddedBits(digest:field) -> [bool; NODE_DIGEST_SIZE]
 {
     let mut digest_bits:[bool; NODE_DIGEST_SIZE] = [false; NODE_DIGEST_SIZE]; 
     let pedersen_bits = to_bits(digest); 
@@ -436,56 +436,56 @@ fn computeComponentGroupHashes(componentLeafHashes:[NodeDigest;NODES]) -> [NodeD
     let mut groupInd:u8 = 0; 
 
     //inputs - this implementation assumes that the number of inputs is 2
-    componentGroupHashes[groupInd] = to_padded_bits(pedersen(concatenateHashes(componentLeafHashes[leafInd], 
+    componentGroupHashes[groupInd] = toPaddedBits(pedersen(concatenateHashes(componentLeafHashes[leafInd], 
                                                               componentLeafHashes[leafInd + (1 as u16)])).0);
     leafInd += N_INPUTS; 
     groupInd += 1; 
 
     //outputs - this implementation assumes that the number of outputs is 2
-    componentGroupHashes[groupInd] = to_padded_bits(pedersen(concatenateHashes(componentLeafHashes[leafInd], 
+    componentGroupHashes[groupInd] = toPaddedBits(pedersen(concatenateHashes(componentLeafHashes[leafInd], 
                                                               componentLeafHashes[leafInd + (1 as u16)])).0);  
     leafInd += N_OUTPUTS; 
     groupInd += 1; 
 
     //commandData - this implementation assumes that the number of commandData is 1
-    componentGroupHashes[groupInd] = to_padded_bits(pedersen(concatenateHashes(componentLeafHashes[leafInd], 
+    componentGroupHashes[groupInd] = toPaddedBits(pedersen(concatenateHashes(componentLeafHashes[leafInd], 
                                                               padding_bits)).0); 
     leafInd += N_COMMANDS; 
     groupInd += 1; 
 
     //attachments - this implementation assumes that the number of attachments is 2
-    componentGroupHashes[groupInd] = to_padded_bits(pedersen(concatenateHashes(componentLeafHashes[leafInd], 
+    componentGroupHashes[groupInd] = toPaddedBits(pedersen(concatenateHashes(componentLeafHashes[leafInd], 
                                                               componentLeafHashes[leafInd + (1 as u16)])).0);    
     leafInd += N_ATTACHMENTS; 
     groupInd += 1;
 
     //notary - this implementation assumes that the number of notary is 1
-    componentGroupHashes[groupInd] = to_padded_bits(pedersen(concatenateHashes(componentLeafHashes[leafInd], 
+    componentGroupHashes[groupInd] = toPaddedBits(pedersen(concatenateHashes(componentLeafHashes[leafInd], 
                                                               padding_bits)).0); 
     leafInd += (1 as u16); 
     groupInd += 1; 
 
     //timeWindow - this implementation assumes that the number of timeWindow is 1
-    componentGroupHashes[groupInd] = to_padded_bits(pedersen(concatenateHashes(componentLeafHashes[leafInd], 
+    componentGroupHashes[groupInd] = toPaddedBits(pedersen(concatenateHashes(componentLeafHashes[leafInd], 
                                                               padding_bits)).0); 
     leafInd += (1 as u16); 
     groupInd += 1; 
 
     //commandSigners - this implementation assumes that the number of commandSigners is 2
-    componentGroupHashes[groupInd] = to_padded_bits(pedersen(concatenateHashes(componentLeafHashes[leafInd], 
+    componentGroupHashes[groupInd] = toPaddedBits(pedersen(concatenateHashes(componentLeafHashes[leafInd], 
                                                               componentLeafHashes[leafInd + (1 as u16)])).0); 
 
     leafInd += N_SIGNERS; 
     groupInd += 1;  
 
     //references - this implementation assumes that the number of references is 2
-    componentGroupHashes[groupInd] = to_padded_bits(pedersen(concatenateHashes(componentLeafHashes[leafInd], 
+    componentGroupHashes[groupInd] = toPaddedBits(pedersen(concatenateHashes(componentLeafHashes[leafInd], 
                                                               componentLeafHashes[leafInd + (1 as u16)])).0);    
     leafInd += N_REFERENCES; 
     groupInd += 1; 
 
     //parameters - this implementation assumes that the number of parameter is 1
-    componentGroupHashes[groupInd] = to_padded_bits(pedersen(concatenateHashes(componentLeafHashes[leafInd], 
+    componentGroupHashes[groupInd] = toPaddedBits(pedersen(concatenateHashes(componentLeafHashes[leafInd], 
                                                               padding_bits)).0); 
 
     componentGroupHashes
@@ -504,20 +504,20 @@ fn computeMerkleRoot(componentGroupHashes:[NodeDigest; NUM_COMPONENT_GROUPS]) ->
 {
     let mut nodes = [[false; NODE_DIGEST_SIZE]; (NUM_COMPONENT_GROUPS/2)+1];
     for i in 0..(NUM_COMPONENT_GROUPS/2){
-        nodes[i] = to_padded_bits(pedersen(concatenateHashes(componentGroupHashes[2*i],
+        nodes[i] = toPaddedBits(pedersen(concatenateHashes(componentGroupHashes[2*i],
                                             componentGroupHashes[2*i + 1])).0);
     }
     
     for i in 0..(NUM_COMPONENT_GROUPS/4 + 1){
-        nodes[i] = to_padded_bits(pedersen(concatenateHashes(nodes[2*i],
+        nodes[i] = toPaddedBits(pedersen(concatenateHashes(nodes[2*i],
                                             nodes[2*i + 1])).0);}
 
     for i in 0..(NUM_COMPONENT_GROUPS/8 + 1){
-        nodes[i] = to_padded_bits(pedersen(concatenateHashes(nodes[2*i],
+        nodes[i] = toPaddedBits(pedersen(concatenateHashes(nodes[2*i],
                                             nodes[2*i + 1])).0);}
 
     for i in 0..(NUM_COMPONENT_GROUPS/16 + 1){
-        nodes[i] = to_padded_bits(pedersen(concatenateHashes(nodes[2*i],
+        nodes[i] = toPaddedBits(pedersen(concatenateHashes(nodes[2*i],
                                             nodes[2*i + 1])).0);}  
                                           
     nodes[0]
@@ -571,7 +571,7 @@ fn validateGroupHashes(componentGroupHashes:[NodeDigest;NUM_COMPONENT_GROUPS], c
 * @param zkptx prover transaction that contains components and also a privacy salt which is used in the computation of nonce.
 * @return ZKId - the root of the Merkle tree  
 */
-fn buildMerkleTree(zkptx:(ComponentGroup, PrivacySalt)) -> bool //BlakeDigest //PedersenDigest
+fn buildMerkleTree(zkptx:(ComponentGroup, PrivacySalt)) -> BlakeDigest //PedersenDigest
 {        
     //Compute the leaf hashes and component group hashes
     let componentGroupHashes = computeComponentGroupHashes(computeLeafHashes(zkptx));
@@ -581,6 +581,6 @@ fn buildMerkleTree(zkptx:(ComponentGroup, PrivacySalt)) -> bool //BlakeDigest //
     //validateGroupHashes(componentGroupHashes, zkptx.0);
 
     //Compute ZKId and return
-    //computeMerkleRoot(componentGroupHashes)
-    true 
+    computeMerkleRoot(componentGroupHashes)
+
 }
