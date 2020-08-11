@@ -1,0 +1,142 @@
+//!
+//! The 'TestMerkleRoot' main module.
+//!
+
+use std::crypto::pedersen;
+use std::crypto::blake2s;
+use std::convert::to_bits;
+use std::array::reverse;
+
+const BYTE_BITS: u16 = 8;
+
+const N_LEAVES: u16 = 4;
+const LEAF_BYTES: u16 = 4;
+
+const LEAF_BITS: u16 = LEAF_BYTES * BYTE_BITS;
+
+const HASH_BYTES: u16 = 32;
+const HASH_BITS: u16 = HASH_BYTES * BYTE_BITS;
+
+const INNER_INPUT_BITS: u16 = HASH_BITS + HASH_BITS;
+const INNER_INPUT_BYTES: u16 = HASH_BYTES + HASH_BYTES;
+
+const FIELD_SIZE: u16 = 254;
+
+/**
+ * Pads left with 0-bits until HASH_BITS size
+ */
+fn to_padded_bits(digest: field) -> [bool; HASH_BITS]
+{
+    let mut digest_bits = [false; HASH_BITS];
+    let pedersen_bits = to_bits(digest);
+
+    let offset = HASH_BITS - FIELD_SIZE;
+    for i in 0..FIELD_SIZE {
+        digest_bits[(offset as u16) + i] = pedersen_bits[i];
+    }
+
+    digest_bits
+}
+
+fn output_to_bytes(digest: [bool; HASH_BITS]) -> [u8; HASH_BYTES] {
+    let mut hash_bytes = [0 as u8; HASH_BYTES];
+
+    for i in 0..HASH_BYTES {
+        let mut byte_bits = [false; BYTE_BITS];
+        for j in 0..BYTE_BITS {
+            byte_bits[j] = digest[BYTE_BITS * i + j];
+        }
+        hash_bytes[i] = std::convert::from_bits_unsigned(byte_bits);
+    }
+
+    hash_bytes
+}
+
+fn inner_input_to_bytes(digest: [bool; INNER_INPUT_BITS]) -> [u8; INNER_INPUT_BYTES] {
+    let mut hash_bytes = [0 as u8; INNER_INPUT_BYTES];
+
+    for i in 0..INNER_INPUT_BYTES {
+        let mut byte_bits = [false; BYTE_BITS];
+        for j in 0..BYTE_BITS {
+            byte_bits[j] = digest[BYTE_BITS * i + j];
+        }
+        hash_bytes[i] = std::convert::from_bits_unsigned(byte_bits);
+    }
+
+    hash_bytes
+}
+
+fn leaf_to_bits(leaf: [u8; LEAF_BYTES]) -> [bool; LEAF_BITS] {
+    let mut leaf_bits = [false; LEAF_BITS];
+    for i in 0..LEAF_BYTES {
+        let leaf_byte_bits = to_bits(leaf[i]);
+        for j in 0..BYTE_BITS {
+            leaf_bits[BYTE_BITS * i + j] = leaf_byte_bits[j];
+        }
+    }
+
+    leaf_bits
+}
+
+fn join(hash1:[bool; HASH_BITS], hash2:[bool; HASH_BITS]) -> [bool; INNER_INPUT_BITS]
+{
+    let mut joined = [false; INNER_INPUT_BITS];
+
+    for i in 0..HASH_BITS {
+        joined[i] = hash1[i];
+        joined[HASH_BITS + i] = hash2[i];
+    }
+
+    joined
+}
+
+fn main(leaves: [[u8; LEAF_BYTES]; N_LEAVES]) -> [u8; HASH_BYTES] {
+    dbg!("leaves: {}", leaves);
+
+    //  The following computation targets SOLELY a tree with _4_ leaves.
+    //  The code targets debugging, not performance.
+    //
+    //  The tree will be computed as follows (in order of computation appearance)
+    //  leaves  ->    l0, l1, ...
+    //  level 0 ->    blake2s(l0), blake(l1), ...
+    //  level 1 ->    pedersen(blake2s(l0) + blake2s(l1)), ...
+    //  root    ->
+
+    let mut level0 = [[false; HASH_BITS]; N_LEAVES];
+    for i in 0..N_LEAVES {
+        let leaf_bits = leaf_to_bits(leaves[i]);
+        let blake = blake2s(leaf_bits);
+        dbg!("pos = {}, blake = {}", i, output_to_bytes(blake));
+
+        level0[i] = blake;
+    }
+    dbg!("");
+
+    let mut level1 = [[false; HASH_BITS]; 2];
+    for i in 0..2 {
+        let inner_input = join(level0[2 * i], level0[2 * i + 1]);
+        dbg!("level 1 (IN): blake <{}> + blake <{}>:", 2 * i, 2 * i + 1);
+        dbg!("{}", inner_input_to_bytes(inner_input));
+
+        let pedersen_bits = to_padded_bits(pedersen(inner_input).0);
+        dbg!("level 1 (OUT) <{}>:", i);
+        dbg!("{}", output_to_bytes(pedersen_bits));
+
+        level1[i] = pedersen_bits;
+
+        dbg!("");
+    }
+
+
+    let inner_input = join(level1[0], level1[1]);
+    dbg!("root (IN): pedersen <{}> + pedersen <{}>:", 0, 1);
+    dbg!("{}", inner_input_to_bytes(inner_input));
+
+    let pedersen_bits = to_padded_bits(pedersen(inner_input).0);
+    dbg!("root (OUT) <{}>:", 0);
+    dbg!("{}", output_to_bytes(pedersen_bits));
+
+    let root = pedersen_bits;
+
+    output_to_bytes(root)
+}

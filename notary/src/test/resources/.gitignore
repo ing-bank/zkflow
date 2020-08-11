@@ -1,1 +1,4 @@
-**/data
+proving-key
+public-data.json
+verifying-key.txt
+Zargo.toml

@@ -6,13 +6,13 @@ import com.fasterxml.jackson.databind.JsonSerializer
 import com.fasterxml.jackson.databind.SerializerProvider
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.fasterxml.jackson.databind.module.SimpleModule
+import com.ing.dlt.zkkrypto.util.asUnsigned
 import com.ing.zknotary.common.contracts.ZKCommandData
 import com.ing.zknotary.common.contracts.ZKContractState
 import com.ing.zknotary.common.states.ZKStateAndRef
 import com.ing.zknotary.common.states.ZKStateRef
 import com.ing.zknotary.common.transactions.ZKProverTransaction
 import com.ing.zknotary.common.util.PaddingWrapper
-import com.ing.zknotary.common.util.asUnsigned
 import com.ing.zknotary.common.zkp.Witness
 import com.ing.zknotary.common.zkp.fingerprint
 import net.corda.core.contracts.ComponentGroupEnum
