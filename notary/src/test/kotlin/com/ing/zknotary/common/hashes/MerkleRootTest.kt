@@ -23,6 +23,7 @@ class MerkleRootTest {
     )
 
     private val blake2sDigestService = BLAKE2s256DigestService
+    private val blake2sReversedDigestService = BLAKE2s256ReversedDigestService
     private val pedersenDigestService = PedersenDigestService
 
     init {
@@ -45,7 +46,7 @@ class MerkleRootTest {
             }
             return y
         }
-        
+
         val values = listOf(1, 2, 3, 4)
 
         val witness = values.map {
@@ -64,6 +65,30 @@ class MerkleRootTest {
         val root = pedersenDigestService.hash(level1[0] + level1[1]).bytes
 
         val leaves = witness.map { input -> input.map { "\"${it.reverseBits().asUnsigned()}\"" } }
+        val publicData = root.map { "\"${it.asUnsigned()}\"" }
+
+        val proof = zincZKService.prove("{\"leaves\": $leaves}".toByteArray())
+        zincZKService.verify(proof, "$publicData".toByteArray())
+    }
+
+    @Test
+    fun `zinc verifies Merkle root - Blake2sRev and Pedersen`() {
+        val values = listOf(1, 2, 3, 4)
+
+        val witness = values.map {
+            ByteBuffer.allocate(4).putInt(it).array()
+        }
+
+        val level0 = witness.map { blake2sReversedDigestService.hash(it).bytes }
+
+        val level1 = listOf(
+            pedersenDigestService.hash(level0[0] + level0[1]).bytes,
+            pedersenDigestService.hash(level0[2] + level0[3]).bytes
+        )
+
+        val root = pedersenDigestService.hash(level1[0] + level1[1]).bytes
+
+        val leaves = witness.map { input -> input.map { "\"${it.asUnsigned()}\"" } }
         val publicData = root.map { "\"${it.asUnsigned()}\"" }
 
         val proof = zincZKService.prove("{\"leaves\": $leaves}".toByteArray())
