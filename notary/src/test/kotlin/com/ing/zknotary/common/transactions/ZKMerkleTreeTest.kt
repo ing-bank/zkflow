@@ -1,6 +1,7 @@
 package com.ing.zknotary.common.transactions
 
 import com.ing.zknotary.common.serializer.ZincSerializationFactoryService
+import com.ing.zknotary.common.zkp.Witness
 import com.ing.zknotary.notary.transactions.createTestsState
 import com.ing.zknotary.notary.transactions.moveTestsState
 import net.corda.core.crypto.BLAKE2s256DigestService
@@ -42,7 +43,8 @@ class ZKMerkleTreeTest {
             // Collect signatures
             val sigAlice = alice.keyPair.private.sign(ptx.id.bytes).bytes
 
-            val json = ptx.serialize(serializationFactoryService.factory)
+            val witness = Witness(ptx)
+            val json = witness.serialize(serializationFactoryService.factory)
 
             val cwd = System.getProperty("user.dir")
             val circuitWd = Paths.get("$cwd/../prover/ZKMerkleTree").normalize().toString()

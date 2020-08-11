@@ -3,19 +3,18 @@ package com.ing.zknotary.common.zkp
 import org.junit.After
 import org.junit.Test
 import java.io.File
+import java.time.Duration
 import kotlin.test.assertFailsWith
 
 class ZincZKServiceTest {
     private val circuitSourcePath: String = javaClass.getResource("/ZincZKService/main.zn").path
-    private val zincZKService = ZincZKServiceFactory.create(
+    private val zincZKService = ZincZKService(
         circuitSrcPath = circuitSourcePath,
-        artifactFolder = File(circuitSourcePath).parent
-    )
-
-    private var zincFiles = listOf(
-        zincZKService.compiledCircuitPath,
-        zincZKService.zkSetup.provingKeyPath,
-        zincZKService.zkSetup.verifyingKeyPath
+        artifactFolder = File(circuitSourcePath).parent,
+        buildTimeout = Duration.ofSeconds(5),
+        setupTimeout = Duration.ofSeconds(30),
+        provingTimeout = Duration.ofSeconds(30),
+        verificationTimeout = Duration.ofSeconds(1)
     )
 
     init {
@@ -24,7 +23,7 @@ class ZincZKServiceTest {
 
     @After
     fun `remove zinc files`() {
-        zincFiles.map { File(it).delete() }
+        zincZKService.cleanup()
     }
 
     @Test
@@ -61,9 +60,13 @@ class ZincZKServiceTest {
 
     @Test
     fun `service can prove and verify when reusing setup`() {
-        val newZincZKService = ZincZKServiceFactory.create(
+        val newZincZKService = ZincZKService(
             circuitSrcPath = circuitSourcePath,
-            artifactFolder = File(circuitSourcePath).parent
+            artifactFolder = File(circuitSourcePath).parent,
+            buildTimeout = Duration.ofSeconds(5),
+            setupTimeout = Duration.ofSeconds(30),
+            provingTimeout = Duration.ofSeconds(30),
+            verificationTimeout = Duration.ofSeconds(1)
         )
 
         // not executing setup, expecting setup artifacts to be in right place already

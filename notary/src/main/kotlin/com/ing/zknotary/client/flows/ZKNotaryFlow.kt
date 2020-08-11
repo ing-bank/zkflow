@@ -4,6 +4,7 @@ import co.paralleluniverse.fibers.Suspendable
 import com.ing.zknotary.common.transactions.ZKProverTransactionFactory
 import com.ing.zknotary.common.transactions.ZKVerifierTransaction
 import com.ing.zknotary.common.transactions.toZKVerifierTransaction
+import com.ing.zknotary.common.zkp.Witness
 import com.ing.zknotary.common.zkp.ZKConfig
 import net.corda.core.crypto.BLAKE2s256DigestService
 import net.corda.core.crypto.PedersenDigestService
@@ -19,7 +20,6 @@ import net.corda.core.flows.NotaryFlow
 import net.corda.core.identity.Party
 import net.corda.core.internal.NetworkParametersStorage
 import net.corda.core.internal.notary.generateSignature
-import net.corda.core.serialization.serialize
 import net.corda.core.transactions.ContractUpgradeWireTransaction
 import net.corda.core.transactions.NotaryChangeWireTransaction
 import net.corda.core.transactions.SignedTransaction
@@ -82,10 +82,7 @@ open class ZKNotaryFlow(
 
         val vtx = ptx.toZKVerifierTransaction()
 
-        val proof =
-            zkConfig.zkService.prove(
-                ptx.serialize(zkConfig.serializationFactoryService.factory).bytes
-            )
+        val proof = zkConfig.zkTransactionService.prove(Witness(ptx))
 
         // TODO: create payload with vtx and proof, but for now only send vtx
         return vtx

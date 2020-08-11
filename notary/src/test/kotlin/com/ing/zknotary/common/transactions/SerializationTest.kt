@@ -1,7 +1,7 @@
 package com.ing.zknotary.common.transactions
 
 import com.ing.zknotary.common.serializer.ZincSerializationFactory
-import com.ing.zknotary.common.zkp.ZincWitness
+import com.ing.zknotary.common.zkp.Witness
 import com.ing.zknotary.notary.transactions.createTestsState
 import com.ing.zknotary.notary.transactions.moveTestsState
 import net.corda.core.crypto.BLAKE2s256DigestService
@@ -55,9 +55,8 @@ class SerializationTest {
     fun `Serialize to Zinc`() {
         ledgerServices.ledger {
             // Serialize for transport to Zinc
-            val witness = ZincWitness(ptx, listOf(sigAlice))
+            val witness = Witness(ptx)
             val json = witness.serialize(ZincSerializationFactory)
-            println(String(json.bytes))
             // TODO: do checks on JSON to confirm it is acceptable for Zinc
         }
     }
