@@ -2,7 +2,7 @@ package com.ing.zknotary.common.hashes
 
 import com.ing.dlt.zkkrypto.util.asUnsigned
 import com.ing.zknotary.common.util.BLAKE2s256ReversedDigestService
-import com.ing.zknotary.common.zkp.ZincZKServiceFactory
+import com.ing.zknotary.common.zkp.ZincZKService
 import net.corda.core.crypto.BLAKE2s256DigestService
 import org.junit.After
 import org.junit.Test
