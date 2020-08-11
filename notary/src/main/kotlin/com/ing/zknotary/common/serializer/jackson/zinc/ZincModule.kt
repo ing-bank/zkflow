@@ -12,6 +12,7 @@ import com.ing.zknotary.common.states.ZKStateAndRef
 import com.ing.zknotary.common.states.ZKStateRef
 import com.ing.zknotary.common.transactions.ZKProverTransaction
 import com.ing.zknotary.common.util.PaddingWrapper
+import com.ing.zknotary.common.util.asUnsigned
 import com.ing.zknotary.common.zkp.Witness
 import com.ing.zknotary.common.zkp.fingerprint
 import net.corda.core.contracts.ComponentGroupEnum
@@ -185,18 +186,6 @@ private interface ByteArrayMixinZinc
 
 private class ByteArrayMixinZincSerializer : JsonSerializer<ByteArray>() {
     override fun serialize(value: ByteArray, gen: JsonGenerator, serializers: SerializerProvider) {
-        gen.writeObject(value.map { it.reverseBits().asUnsigned() })
+        gen.writeObject(value.map { it.asUnsigned() })
     }
-
-    private fun Byte.reverseBits(): Byte {
-        var x = this.toInt()
-        var y: Byte = 0
-        for (position in 8 - 1 downTo 0) {
-            y = (y + (x and 1 shl position).toByte()).toByte()
-            x = (x shr 1)
-        }
-        return y
-    }
-
-    private fun Byte.asUnsigned() = this.toInt() and 0xFF
 }
