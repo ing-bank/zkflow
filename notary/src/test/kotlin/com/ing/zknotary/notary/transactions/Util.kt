@@ -7,9 +7,10 @@ import net.corda.testing.core.TestIdentity
 import net.corda.testing.dsl.LedgerDSL
 import net.corda.testing.dsl.TestLedgerDSLInterpreter
 import net.corda.testing.dsl.TestTransactionDSLInterpreter
+import java.util.Random
 
-fun LedgerDSL<TestTransactionDSLInterpreter, TestLedgerDSLInterpreter>.createTestsState(owner: TestIdentity): StateAndRef<TestContract.TestState> {
-    val createdState = TestContract.TestState(owner.party)
+fun LedgerDSL<TestTransactionDSLInterpreter, TestLedgerDSLInterpreter>.createTestsState(owner: TestIdentity, value: Int = Random().nextInt(1000)): StateAndRef<TestContract.TestState> {
+    val createdState = TestContract.TestState(owner.party, value)
     val wtx = unverifiedTransaction {
         command(listOf(owner.publicKey), TestContract.Create())
         output(TestContract.PROGRAM_ID, "Alice's asset", createdState)
