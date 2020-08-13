@@ -1,38 +1,38 @@
-use std::convert::to_bits; 
+use std::convert::to_bits;
 
 //number of elements in each component group
-const N_INPUTS:u16 = 2; 
-const N_OUTPUTS:u16 = 2;
-const N_COMMANDS:u16 = 1;
+const N_INPUTS: u16 = 2;
+const N_OUTPUTS: u16 = 2;
+const N_COMMANDS: u16 = 1;
 const N_ATTACHMENTS: u16 = 2;
-const N_SIGNERS:u16 = 2; 
-const N_REFERENCES:u16 = 2; 
+const N_SIGNERS: u16 = 2;
+const N_REFERENCES: u16 = 2;
 
-const PUBKEY_BYTES:u16 = 44;
-const PUBKEY_BITS:u16 = (8 as u16) * PUBKEY_BYTES;
+const PUBKEY_BYTES: u16 = 44;
+const PUBKEY_BITS: u16 = (8 as u16) * PUBKEY_BYTES;
 
-const HASH_BYTES:u16 = 32;
-const HASH_BITS:u16 = (8 as u16) * HASH_BYTES;
+const HASH_BYTES: u16 = 32;
+const HASH_BITS: u16 = (8 as u16) * HASH_BYTES;
 
 const TIME_WINDOW_BYTES: u16 = 24;
-const TIME_WINDOW_BITS: u16 = (8 as u16) * TIME_WINDOW_BYTES;  
+const TIME_WINDOW_BITS: u16 = (8 as u16) * TIME_WINDOW_BYTES;
 
-const INT32_BITS:u16 = 32; 
-const INT128_BITS:u16 = 128;
+const INT32_BITS: u16 = 32;
+const INT128_BITS: u16 = 128;
 
 //Number of bits for each component group
-//Input, Output, and Reference components have the same structure which is ZKStateAndRef. 
-//The size of state bits depends on the content of the state. The example state we have contains two public keys and an integer value. 
-const STATE_BITS:u16 = PUBKEY_BITS + INT32_BITS + PUBKEY_BITS;
-const REF_BITS:u16 = HASH_BITS;
+//Input, Output, and Reference components have the same structure which is ZKStateAndRef.
+//The size of state bits depends on the content of the state. The example state we have contains two public keys and an integer value.
+const STATE_BITS: u16 = PUBKEY_BITS + INT32_BITS + PUBKEY_BITS;
+const REF_BITS: u16 = HASH_BITS;
 
-const SIGNER_BITS:u16 = PUBKEY_BITS; 
-const COMMAND_BITS:u16 = INT32_BITS; 
+const SIGNER_BITS: u16 = PUBKEY_BITS;
+const COMMAND_BITS: u16 = INT32_BITS;
 
 type PubKey = [u8; PUBKEY_BYTES];
 type HashDigest = [u8; HASH_BYTES];
 
-type PrivacySalt = [bool; HASH_BITS]; 
+type PrivacySalt = [bool; HASH_BITS];
 type ComponentGroupHash = [u8; HASH_BYTES];
 
 enum CommandData {
@@ -40,7 +40,7 @@ enum CommandData {
     MOVE = 1,
 }
 
-struct OwnerKey{
+struct OwnerKey {
     owningKey: PubKey,
 }
 
@@ -54,10 +54,10 @@ struct NotaryKey {
 }
 
 /*
-This struct follows the structure in the original Corda TransactionState structure. The fields contractCN, 
-encumbrance and constraint are commented out and declared bool intentionally to reserve their place in the 
-structure. In the current implementation we don't use these fields, if they are going to be included, they 
-should be declared with the corresponding data type. 
+This struct follows the structure in the original Corda TransactionState structure. The fields contractCN,
+encumbrance and constraint are commented out and declared bool intentionally to reserve their place in the
+structure. In the current implementation we don't use these fields, if they are going to be included, they
+should be declared with the corresponding data type.
 */
 struct TransactionState {
     data: Data,
@@ -68,7 +68,7 @@ struct TransactionState {
 }
 
 struct ZKStateRef {
-    id: [u8;HASH_BYTES],
+    id: [u8; HASH_BYTES],
 }
 
 struct ZKStateAndRef {
@@ -78,12 +78,12 @@ struct ZKStateAndRef {
 
 struct ContentZKStateAndRef {
     content: ZKStateAndRef,
-    isFiller: bool, 
+    isFiller: bool,
 }
 
 struct Inputs {
     value: [ContentZKStateAndRef; N_INPUTS],
-    groupHash: ComponentGroupHash, 
+    groupHash: ComponentGroupHash,
 }
 
 struct Outputs {
@@ -96,13 +96,13 @@ struct References {
     groupHash: ComponentGroupHash,
 }
 
-struct ContentCommandData{
+struct ContentCommandData {
     content: CommandData,
-    isFiller: bool, 
+    isFiller: bool,
 }
 
 struct Commands {
-    value: [ContentCommandData; N_COMMANDS], 
+    value: [ContentCommandData; N_COMMANDS],
     groupHash: ComponentGroupHash,
 }
 
@@ -148,11 +148,11 @@ struct Parameters {
 
 struct ContentSigner {
     content: PubKey,
-    isFiller: bool, 
+    isFiller: bool,
 }
 
 struct Signers {
-    value: [ContentSigner; N_SIGNERS], 
+    value: [ContentSigner; N_SIGNERS],
     groupHash: ComponentGroupHash,
 }
 
@@ -165,96 +165,96 @@ struct ZKProverTransaction {
     notary: Notary,
     timeWindow: TimeWindow,
     parameters: Parameters,
-    signers: Signers,  
+    signers: Signers,
     privacySalt: [u8; HASH_BYTES],
 }
 
 struct ZKStateAndRefGroup {
-    state: [bool; STATE_BITS], 
-    zkStateRef: [bool; REF_BITS], 
+    state: [bool; STATE_BITS],
+    zkStateRef: [bool; REF_BITS],
 }
 
-struct ContentZKStateAndRefGroup{
+struct ContentZKStateAndRefGroup {
     content: ZKStateAndRefGroup,
-    isFiller: bool,  
+    isFiller: bool,
 }
 
 struct InputGroup {
     groupElements: [ContentZKStateAndRefGroup; N_INPUTS],
-    groupHash: [bool;HASH_BITS],  
+    groupHash: [bool; HASH_BITS],
 }
 
 struct OutputGroup {
     groupElements: [ContentZKStateAndRefGroup; N_OUTPUTS],
-    groupHash: [bool;HASH_BITS],  
+    groupHash: [bool; HASH_BITS],
 }
 
-struct ReferenceGroup{
+struct ReferenceGroup {
     groupElements: [ContentZKStateAndRefGroup; N_REFERENCES],
-    groupHash: [bool;HASH_BITS],      
+    groupHash: [bool; HASH_BITS],
 }
 
-struct ContentCommandDataGroup{
-    content: [bool; INT32_BITS], 
-    isFiller: bool, 
+struct ContentCommandDataGroup {
+    content: [bool; INT32_BITS],
+    isFiller: bool,
 }
 
 struct CommandDataGroup {
     groupElements: [ContentCommandDataGroup; N_COMMANDS],
-    groupHash: [bool;HASH_BITS],  
+    groupHash: [bool; HASH_BITS],
 }
 
-struct ContentAttachmentGroup{
+struct ContentAttachmentGroup {
     content: [bool; HASH_BITS],
-    isFiller: bool, 
+    isFiller: bool,
 }
 
 struct AttachmentGroup {
     groupElements: [ContentAttachmentGroup; N_ATTACHMENTS],
-    groupHash: [bool;HASH_BITS],  
+    groupHash: [bool; HASH_BITS],
 }
 
-struct ContentNotaryGroup{
+struct ContentNotaryGroup {
     content: [bool; PUBKEY_BITS],
-    isFiller: bool, 
+    isFiller: bool,
 }
 
 struct NotaryGroup {
     groupElements: ContentNotaryGroup,
-    groupHash: [bool;HASH_BITS],  
+    groupHash: [bool; HASH_BITS],
 }
 
-struct ContentTimeWindowGroup{
+struct ContentTimeWindowGroup {
     content: [bool; TIME_WINDOW_BITS],
-    isFiller: bool, 
+    isFiller: bool,
 }
 
 struct TimeWindowGroup {
     groupElements: ContentTimeWindowGroup,
-    groupHash: [bool;HASH_BITS],  
+    groupHash: [bool; HASH_BITS],
 }
 
-struct ContentParameterGroup{
+struct ContentParameterGroup {
     content: [bool; HASH_BITS],
-    isFiller: bool, 
+    isFiller: bool,
 }
 
 struct ParameterGroup {
     groupElements: ContentParameterGroup,
-    groupHash: [bool;HASH_BITS],  
+    groupHash: [bool; HASH_BITS],
 }
 
-struct ContentCommandSignerGroup{
+struct ContentCommandSignerGroup {
     content: [bool; PUBKEY_BITS],
-    isFiller: bool, 
+    isFiller: bool,
 }
 
 struct CommandSignerGroup {
     groupElements: [ContentCommandSignerGroup; N_SIGNERS],
-    groupHash: [bool;HASH_BITS],  
+    groupHash: [bool; HASH_BITS],
 }
 
-struct ComponentGroup{
+struct ComponentGroup {
     inputs: InputGroup,
     outputs: OutputGroup,
     references: ReferenceGroup,
@@ -262,239 +262,260 @@ struct ComponentGroup{
     attachments: AttachmentGroup,
     notary: NotaryGroup,
     timeWindow: TimeWindowGroup,
-    parameters: ParameterGroup,  
+    parameters: ParameterGroup,
     commandSigners: CommandSignerGroup,
 }
 
-fn convertHashToBits(value:[u8;HASH_BYTES]) -> [bool; HASH_BITS]
-{
+struct Witness {
+    transaction: ZKProverTransaction,
+}
+
+fn convertHashToBits(value: [u8; HASH_BYTES]) -> [bool; HASH_BITS] {
     let mut hashDigest_bits = [false; HASH_BITS];
 
-    for i in (0 as u16) .. HASH_BYTES{
+    for i in (0 as u16)..HASH_BYTES {
         let hd_bits = to_bits(value[i]);
-        for j in (0 as u16) .. (8 as u16) {
-            hashDigest_bits[(8 as u16)* i + j] = hd_bits[j];
+        for j in (0 as u16)..(8 as u16) {
+            hashDigest_bits[(8 as u16) * i + j] = hd_bits[j];
         }
     }
     hashDigest_bits
 }
 
-fn convertPubKeyToBits(value:[u8;PUBKEY_BYTES]) -> [bool; PUBKEY_BITS]
-{
+fn convertPubKeyToBits(value: [u8; PUBKEY_BYTES]) -> [bool; PUBKEY_BITS] {
     let mut pubkey_bits = [false; PUBKEY_BITS];
 
-    for i in (0 as u16) .. PUBKEY_BYTES{
+    for i in (0 as u16)..PUBKEY_BYTES {
         let pk_bits = to_bits(value[i]);
-        for j in (0 as u16) .. (8 as u16) {
-            pubkey_bits[(8 as u16)* i + j] = pk_bits[j];
+        for j in (0 as u16)..(8 as u16) {
+            pubkey_bits[(8 as u16) * i + j] = pk_bits[j];
         }
     }
     pubkey_bits
 }
 
-fn convertStateToBits(value:TransactionState) -> [bool; STATE_BITS]
-{
-    let mut result = [false; STATE_BITS]; 
+fn convertStateToBits(value: TransactionState) -> [bool; STATE_BITS] {
+    let mut result = [false; STATE_BITS];
 
     //state_bits = dataOwner_owningKey || value || notary_owningKey
-    result[0..PUBKEY_BITS] = convertPubKeyToBits(value.data.owner.owningKey);                            //dataOwner_owningKey 
-    result[PUBKEY_BITS..(PUBKEY_BITS + INT32_BITS)] = to_bits(value.data.value);                         //value
-    result[(PUBKEY_BITS + INT32_BITS) .. STATE_BITS ] = convertPubKeyToBits(value.data.owner.owningKey); //notary_owningKey 
+    result[0..PUBKEY_BITS] = convertPubKeyToBits(value.data.owner.owningKey); //dataOwner_owningKey
+    result[PUBKEY_BITS..(PUBKEY_BITS + INT32_BITS)] = to_bits(value.data.value); //value
+    result[(PUBKEY_BITS + INT32_BITS)..STATE_BITS] =
+        convertPubKeyToBits(value.data.owner.owningKey); //notary_owningKey
 
     result
 }
 
-fn convertInputsToBits(value:[ContentZKStateAndRef; N_INPUTS]) -> [ContentZKStateAndRefGroup; N_INPUTS]
-{
-    let mut result = [ContentZKStateAndRefGroup{ content: ZKStateAndRefGroup{
-                                                          state: [false; STATE_BITS],
-                                                          zkStateRef: [false; REF_BITS]},
-                                                isFiller: false, }; N_INPUTS];
+fn convertInputsToBits(
+    value: [ContentZKStateAndRef; N_INPUTS],
+) -> [ContentZKStateAndRefGroup; N_INPUTS] {
+    let mut result = [ContentZKStateAndRefGroup {
+        content: ZKStateAndRefGroup {
+            state: [false; STATE_BITS],
+            zkStateRef: [false; REF_BITS],
+        },
+        isFiller: false,
+    }; N_INPUTS];
 
-    for i in 0.. N_INPUTS { 
-        //state bits 
-        result[i].content.state = convertStateToBits(value[i].content.state); 
-        //zkStateRef bits 
-        result[i].content.zkStateRef = convertHashToBits(value[i].content.reference.id); 
-        //isFiller
-        result[i].isFiller = value[i].isFiller; 
-    } 
-    result  
-}
-
-fn convertOutputsToBits(value:[ContentZKStateAndRef; N_OUTPUTS]) -> [ContentZKStateAndRefGroup; N_OUTPUTS]
-{
-    let mut result = [ContentZKStateAndRefGroup{ content: ZKStateAndRefGroup{
-                                                          state: [false; STATE_BITS],
-                                                          zkStateRef: [false; REF_BITS]},
-                                                isFiller: false, }; N_OUTPUTS];
-
-    for i in 0.. N_OUTPUTS { 
-        //state bits 
-        result[i].content.state = convertStateToBits(value[i].content.state); 
-        //zkStateRef bits 
-        result[i].content.zkStateRef = convertHashToBits(value[i].content.reference.id); 
+    for i in 0..N_INPUTS {
+        //state bits
+        result[i].content.state = convertStateToBits(value[i].content.state);
+        //zkStateRef bits
+        result[i].content.zkStateRef = convertHashToBits(value[i].content.reference.id);
         //isFiller
         result[i].isFiller = value[i].isFiller;
-    } 
-    result  
-}
-
-fn convertReferencesToBits(value:[ContentZKStateAndRef; N_REFERENCES]) -> [ContentZKStateAndRefGroup; N_REFERENCES]
-{
-    let mut result = [ContentZKStateAndRefGroup{ content: ZKStateAndRefGroup{
-                                                          state: [false; STATE_BITS],
-                                                          zkStateRef: [false; REF_BITS]},
-                                                isFiller: false, }; N_REFERENCES];
-
-    for i in 0.. N_REFERENCES { 
-        //state bits 
-        result[i].content.state = convertStateToBits(value[i].content.state); 
-        //zkStateRef bits 
-        result[i].content.zkStateRef = convertHashToBits(value[i].content.reference.id); 
-        //isFiller
-        result[i].isFiller = value[i].isFiller; 
     }
-    result  
+    result
 }
 
-fn convertCommandDataToBits(value:[ContentCommandData; N_COMMANDS]) -> [ContentCommandDataGroup; N_COMMANDS]
-{
-    let mut result = [ContentCommandDataGroup{ content: [false; INT32_BITS],
-                                              isFiller: false, };N_COMMANDS];
-    for i in 0 .. N_COMMANDS { 
-        let commandBits = to_bits(value[i].content as u32); 
-        for j in 0..INT32_BITS{
-            result[i].content[j]  = commandBits[j];
+fn convertOutputsToBits(
+    value: [ContentZKStateAndRef; N_OUTPUTS],
+) -> [ContentZKStateAndRefGroup; N_OUTPUTS] {
+    let mut result = [ContentZKStateAndRefGroup {
+        content: ZKStateAndRefGroup {
+            state: [false; STATE_BITS],
+            zkStateRef: [false; REF_BITS],
+        },
+        isFiller: false,
+    }; N_OUTPUTS];
+
+    for i in 0..N_OUTPUTS {
+        //state bits
+        result[i].content.state = convertStateToBits(value[i].content.state);
+        //zkStateRef bits
+        result[i].content.zkStateRef = convertHashToBits(value[i].content.reference.id);
+        //isFiller
+        result[i].isFiller = value[i].isFiller;
+    }
+    result
+}
+
+fn convertReferencesToBits(
+    value: [ContentZKStateAndRef; N_REFERENCES],
+) -> [ContentZKStateAndRefGroup; N_REFERENCES] {
+    let mut result = [ContentZKStateAndRefGroup {
+        content: ZKStateAndRefGroup {
+            state: [false; STATE_BITS],
+            zkStateRef: [false; REF_BITS],
+        },
+        isFiller: false,
+    }; N_REFERENCES];
+
+    for i in 0..N_REFERENCES {
+        //state bits
+        result[i].content.state = convertStateToBits(value[i].content.state);
+        //zkStateRef bits
+        result[i].content.zkStateRef = convertHashToBits(value[i].content.reference.id);
+        //isFiller
+        result[i].isFiller = value[i].isFiller;
+    }
+    result
+}
+
+fn convertCommandDataToBits(
+    value: [ContentCommandData; N_COMMANDS],
+) -> [ContentCommandDataGroup; N_COMMANDS] {
+    let mut result = [ContentCommandDataGroup {
+        content: [false; INT32_BITS],
+        isFiller: false,
+    }; N_COMMANDS];
+    for i in 0..N_COMMANDS {
+        let commandBits = to_bits(value[i].content as u32);
+        for j in 0..INT32_BITS {
+            result[i].content[j] = commandBits[j];
         }
-        result[i].isFiller = value[i].isFiller; 
-    }  
-    result                             
+        result[i].isFiller = value[i].isFiller;
+    }
+    result
 }
 
-fn convertAttachmentsToBits(value:[ContentAttachment; N_ATTACHMENTS]) -> [ContentAttachmentGroup; N_ATTACHMENTS]
-{
-    let mut result = [ContentAttachmentGroup{content: [false; HASH_BITS],
-                                            isFiller: false, }; N_ATTACHMENTS];
-    for i in 0 .. N_ATTACHMENTS { 
-        result[i].content = convertHashToBits(value[i].content); 
-        result[i].isFiller = value[i].isFiller; 
-    }  
-    result                             
+fn convertAttachmentsToBits(
+    value: [ContentAttachment; N_ATTACHMENTS],
+) -> [ContentAttachmentGroup; N_ATTACHMENTS] {
+    let mut result = [ContentAttachmentGroup {
+        content: [false; HASH_BITS],
+        isFiller: false,
+    }; N_ATTACHMENTS];
+    for i in 0..N_ATTACHMENTS {
+        result[i].content = convertHashToBits(value[i].content);
+        result[i].isFiller = value[i].isFiller;
+    }
+    result
 }
 
-fn convertNotaryToBits(value:ContentNotary) -> ContentNotaryGroup
-{
-    ContentNotaryGroup{
-        content : convertPubKeyToBits(value.content.owningKey),
+fn convertNotaryToBits(value: ContentNotary) -> ContentNotaryGroup {
+    ContentNotaryGroup {
+        content: convertPubKeyToBits(value.content.owningKey),
         isFiller: value.isFiller,
-    }                          
+    }
 }
 
-fn convertTimeWindowToBits(value:ContentTimeWindow) -> ContentTimeWindowGroup
-{
-    let mut time_window_bits = [false; TIME_WINDOW_BITS]; 
+fn convertTimeWindowToBits(value: ContentTimeWindow) -> ContentTimeWindowGroup {
+    let mut time_window_bits = [false; TIME_WINDOW_BITS];
 
-    for i in (0 as u16) .. TIME_WINDOW_BYTES { 
+    for i in (0 as u16)..TIME_WINDOW_BYTES {
         let tw_bits = to_bits(value.content[i]);
-        for j in (0 as u16) .. (8 as u16) {
-            time_window_bits[i * (8 as u16) + j] = tw_bits[j]; 
-        }        
-    }  
+        for j in (0 as u16)..(8 as u16) {
+            time_window_bits[i * (8 as u16) + j] = tw_bits[j];
+        }
+    }
 
-    ContentTimeWindowGroup{
+    ContentTimeWindowGroup {
         content: time_window_bits,
         isFiller: value.isFiller,
-    }                      
-}
-
-fn convertParametersToBits(value:ContentParameter) -> ContentParameterGroup
-{
-    ContentParameterGroup {
-        content : convertHashToBits(value.content),
-        isFiller: value.isFiller,
-    }                      
-}
-
-fn convertCommandSignersToBits(value:[ContentSigner; N_SIGNERS]) -> [ContentCommandSignerGroup; N_SIGNERS]
-{
-    let mut result = [ContentCommandSignerGroup{ content: [false; PUBKEY_BITS],
-                                                isFiller: false, }; N_SIGNERS];
-
-    for i in 0 .. N_SIGNERS {
-        result[i].content = convertPubKeyToBits(value[i].content);
-        result[i].isFiller = value[i].isFiller;  
     }
-    result  
 }
 
-fn buildComponentGroups(zkptx:ZKProverTransaction) -> (ComponentGroup, PrivacySalt)
-{
+fn convertParametersToBits(value: ContentParameter) -> ContentParameterGroup {
+    ContentParameterGroup {
+        content: convertHashToBits(value.content),
+        isFiller: value.isFiller,
+    }
+}
+
+fn convertCommandSignersToBits(
+    value: [ContentSigner; N_SIGNERS],
+) -> [ContentCommandSignerGroup; N_SIGNERS] {
+    let mut result = [ContentCommandSignerGroup {
+        content: [false; PUBKEY_BITS],
+        isFiller: false,
+    }; N_SIGNERS];
+
+    for i in 0..N_SIGNERS {
+        result[i].content = convertPubKeyToBits(value[i].content);
+        result[i].isFiller = value[i].isFiller;
+    }
+    result
+}
+
+fn buildComponentGroups(zkptx: ZKProverTransaction) -> (ComponentGroup, PrivacySalt) {
     (
         ComponentGroup {
-        inputs: InputGroup{
+            inputs: InputGroup {
                 groupElements: convertInputsToBits(zkptx.inputs.value),
                 groupHash: convertHashToBits(zkptx.inputs.groupHash),
             },
 
-        outputs: OutputGroup{
+            outputs: OutputGroup {
                 groupElements: convertOutputsToBits(zkptx.outputs.value),
                 groupHash: convertHashToBits(zkptx.outputs.groupHash),
             },
 
-        references: ReferenceGroup{
+            references: ReferenceGroup {
                 groupElements: convertReferencesToBits(zkptx.references.value),
                 groupHash: convertHashToBits(zkptx.references.groupHash),
-            }, 
+            },
 
-        commandData: CommandDataGroup{
+            commandData: CommandDataGroup {
                 groupElements: convertCommandDataToBits(zkptx.commands.value),
                 groupHash: convertHashToBits(zkptx.commands.groupHash),
-            },        
-        
-        attachments: AttachmentGroup{
+            },
+
+            attachments: AttachmentGroup {
                 groupElements: convertAttachmentsToBits(zkptx.attachments.value),
                 groupHash: convertHashToBits(zkptx.attachments.groupHash),
-            }, 
+            },
 
-        notary: NotaryGroup{
+            notary: NotaryGroup {
                 groupElements: convertNotaryToBits(zkptx.notary.value),
                 groupHash: convertHashToBits(zkptx.notary.groupHash),
-            }, 
- 
-        timeWindow: TimeWindowGroup{
+            },
+
+            timeWindow: TimeWindowGroup {
                 groupElements: convertTimeWindowToBits(zkptx.timeWindow.value),
                 groupHash: convertHashToBits(zkptx.timeWindow.groupHash),
             },
 
-        parameters: ParameterGroup{
+            parameters: ParameterGroup {
                 groupElements: convertParametersToBits(zkptx.parameters.value),
                 groupHash: convertHashToBits(zkptx.parameters.groupHash),
             },
 
-        commandSigners: CommandSignerGroup{
+            commandSigners: CommandSignerGroup {
                 groupElements: convertCommandSignersToBits(zkptx.signers.value),
                 groupHash: convertHashToBits(zkptx.commands.groupHash),
-            }, 
+            },
         },
-        convertHashToBits(zkptx.privacySalt)
+        convertHashToBits(zkptx.privacySalt),
     )
 }
 
 //Temporary function to test isFiller attribute - it should be moved to a separate file when zinc allows better file system management
-fn CheckContractRules(value: ZKProverTransaction)
-{
+fn CheckContractRules(value: ZKProverTransaction) {
     //Check if inputs total is equal to outputs total
-    let mut inputValueSum:i32 = 0;
-    let mut outputValueSum:i32 = 0;
+    let mut inputValueSum: i32 = 0;
+    let mut outputValueSum: i32 = 0;
 
-    for i in 0..N_INPUTS while value.inputs.value[i].isFiller == false {
-        inputValueSum = inputValueSum + value.inputs.value[i].content.state.data.value; 
+    for i in 0..N_INPUTS while !value.inputs.value[i].isFiller {
+        inputValueSum = inputValueSum + value.inputs.value[i].content.state.data.value;
     }
 
-    for i in 0..N_OUTPUTS while value.outputs.value[i].isFiller == false {
-        outputValueSum = outputValueSum + value.outputs.value[i].content.state.data.value; 
+    for i in 0..N_OUTPUTS while !value.outputs.value[i].isFiller {
+        outputValueSum = outputValueSum + value.outputs.value[i].content.state.data.value;
     }
 
-    assert!(inputValueSum == outputValueSum, "Failed requirement: the total value of the inputs and outputs should be equal");
+    assert!(
+        inputValueSum == outputValueSum,
+        "Failed requirement: the total value of the inputs and outputs should be equal"
+    );
 }
