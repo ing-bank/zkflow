@@ -493,7 +493,7 @@ fn buildComponentGroups(zkptx: ZKProverTransaction) -> (ComponentGroup, PrivacyS
 
             commandSigners: CommandSignerGroup {
                 groupElements: convertCommandSignersToBits(zkptx.signers.value),
-                groupHash: convertHashToBits(zkptx.commands.groupHash),
+                groupHash: convertHashToBits(zkptx.signers.groupHash),
             },
         },
         convertHashToBits(zkptx.privacySalt),
