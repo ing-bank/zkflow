@@ -484,21 +484,19 @@ fn computeComponentGroupHashes(
     let padding_bits: [bool; NODE_DIGEST_SIZE] = [false; NODE_DIGEST_SIZE];
 
     let mut leafInd: u16 = 0;
-    let mut groupInd: u8 = 0;
 
     // inputs - this implementation assumes that the number of inputs is 2
-    componentGroupHashes[groupInd] = toPaddedBits(pedersen(concatenateHashes(
+    componentGroupHashes[ComponentGroupEnum::INPUTS_GROUP] = toPaddedBits(pedersen(concatenateHashes(
         componentLeafHashes[leafInd],
         componentLeafHashes[leafInd + (1 as u16)],
     )).0);
 
-    dbg!("Inputs: {}", digest_to_bytes(componentGroupHashes[groupInd]));
+    dbg!("Inputs: {}", digest_to_bytes(componentGroupHashes[ComponentGroupEnum::INPUTS_GROUP]));
 
     leafInd += N_INPUTS;
-    groupInd += 1;
 
     // outputs - this implementation assumes that the number of outputs is 2
-    componentGroupHashes[groupInd] = toPaddedBits(
+    componentGroupHashes[ComponentGroupEnum::OUTPUTS_GROUP] = toPaddedBits(
         pedersen(concatenateHashes(
             componentLeafHashes[leafInd],
             componentLeafHashes[leafInd + (1 as u16)],
@@ -506,21 +504,19 @@ fn computeComponentGroupHashes(
         .0,
     );
 
-    dbg!("Outputs: {}", digest_to_bytes(componentGroupHashes[groupInd]));
+    dbg!("Outputs: {}", digest_to_bytes(componentGroupHashes[ComponentGroupEnum::OUTPUTS_GROUP]));
 
     leafInd += N_OUTPUTS;
-    groupInd += 1;
 
     // commandData - this implementation assumes that the number of commandData is 1
-    componentGroupHashes[groupInd] = componentLeafHashes[leafInd];
+    componentGroupHashes[ComponentGroupEnum::COMMANDS_GROUP] = componentLeafHashes[leafInd];
 
-    dbg!("Commands: {}", digest_to_bytes(componentGroupHashes[groupInd]));
+    dbg!("Commands: {}", digest_to_bytes(componentGroupHashes[ComponentGroupEnum::COMMANDS_GROUP]));
 
     leafInd += N_COMMANDS;
-    groupInd += 1;
 
     // attachments - this implementation assumes that the number of attachments is 2
-    componentGroupHashes[groupInd] = toPaddedBits(
+    componentGroupHashes[ComponentGroupEnum::ATTACHMENTS_GROUP] = toPaddedBits(
         pedersen(concatenateHashes(
             componentLeafHashes[leafInd],
             componentLeafHashes[leafInd + (1 as u16)],
@@ -528,29 +524,26 @@ fn computeComponentGroupHashes(
         .0,
     );
 
-    dbg!("Attachments: {}", digest_to_bytes(componentGroupHashes[groupInd]));
+    dbg!("Attachments: {}", digest_to_bytes(componentGroupHashes[ComponentGroupEnum::ATTACHMENTS_GROUP]));
 
     leafInd += N_ATTACHMENTS;
-    groupInd += 1;
 
     // notary - this implementation assumes that the number of notary is 1
-    componentGroupHashes[groupInd] = componentLeafHashes[leafInd];
+    componentGroupHashes[ComponentGroupEnum::NOTARY_GROUP] = componentLeafHashes[leafInd];
 
-    dbg!("Notary: {}", digest_to_bytes(componentGroupHashes[groupInd]));
+    dbg!("Notary: {}", digest_to_bytes(componentGroupHashes[ComponentGroupEnum::NOTARY_GROUP]));
 
     leafInd += (1 as u16);
-    groupInd += 1;
 
     // timeWindow - this implementation assumes that the number of timeWindow is 1
-    componentGroupHashes[groupInd] = componentLeafHashes[leafInd];
+    componentGroupHashes[ComponentGroupEnum::TIMEWINDOW_GROUP] = componentLeafHashes[leafInd];
 
-    dbg!("Time window: {}", digest_to_bytes(componentGroupHashes[groupInd]));
+    dbg!("Time window: {}", digest_to_bytes(componentGroupHashes[ComponentGroupEnum::TIMEWINDOW_GROUP]));
 
     leafInd += (1 as u16);
-    groupInd += 1;
 
     // commandSigners - this implementation assumes that the number of commandSigners is 2
-    componentGroupHashes[groupInd] = toPaddedBits(
+    componentGroupHashes[ComponentGroupEnum::SIGNERS_GROUP] = toPaddedBits(
         pedersen(concatenateHashes(
             componentLeafHashes[leafInd],
             componentLeafHashes[leafInd + (1 as u16)],
@@ -558,13 +551,12 @@ fn computeComponentGroupHashes(
         .0,
     );
 
-    dbg!("Signers: {}", digest_to_bytes(componentGroupHashes[groupInd]));
+    dbg!("Signers: {}", digest_to_bytes(componentGroupHashes[ComponentGroupEnum::SIGNERS_GROUP]));
 
     leafInd += N_SIGNERS;
-    groupInd += 1;
 
     // references - this implementation assumes that the number of references is 2
-    componentGroupHashes[groupInd] = toPaddedBits(
+    componentGroupHashes[ComponentGroupEnum::REFERENCES_GROUP] = toPaddedBits(
         pedersen(concatenateHashes(
             componentLeafHashes[leafInd],
             componentLeafHashes[leafInd + (1 as u16)],
@@ -572,23 +564,16 @@ fn computeComponentGroupHashes(
         .0,
     );
 
-    dbg!("References: {}", digest_to_bytes(componentGroupHashes[groupInd]));
+    dbg!("References: {}", digest_to_bytes(componentGroupHashes[ComponentGroupEnum::REFERENCES_GROUP]));
 
     leafInd += N_REFERENCES;
-    groupInd += 1;
 
     //parameters - this implementation assumes that the number of parameter is 1
-    // componentGroupHashes[groupInd] = toPaddedBits(
-    //     pedersen(concatenateHashes(
-    //         componentLeafHashes[leafInd],
-    //         padding_bits,
-    //     ))
-    //     .0,
-    // );
+    componentGroupHashes[ComponentGroupEnum::PARAMETERS_GROUP] = componentLeafHashes[leafInd];
 
-    componentGroupHashes[groupInd] = componentLeafHashes[leafInd];
+    componentGroupHashes[ComponentGroupEnum::PARAMETERS_GROUP] = componentLeafHashes[leafInd];
 
-    dbg!("Network parameters: {}", digest_to_bytes(componentGroupHashes[groupInd]));
+    dbg!("Network parameters: {}", digest_to_bytes(componentGroupHashes[ComponentGroupEnum::PARAMETERS_GROUP]));
 
     componentGroupHashes
 }
@@ -657,22 +642,31 @@ fn validateGroupHashes(
     cG: ComponentGroup,
 ) {
     //Validate component hashes
-    let validateInput = validateGroupHash(componentGroupHashes[0], cG.inputs.groupHash);
+    dbg!("Comparing Input group");
+    let validateInput = validateGroupHash(componentGroupHashes[ComponentGroupEnum::INPUTS_GROUP], cG.inputs.groupHash);
     assert!(
         validateInput,
         "Failed computation: The computed input group hash does not match the received group hash."
     );
+    dbg!("");
 
-    let validateOutput = validateGroupHash(componentGroupHashes[1], cG.outputs.groupHash);
+    dbg!("Comparing Output group");
+    let validateOutput = validateGroupHash(componentGroupHashes[ComponentGroupEnum::OUTPUTS_GROUP], cG.outputs.groupHash);
     assert!(validateOutput, "Failed computation: The computed output group hash does not match the received group hash.");
+    dbg!("");
 
-    let validateCommand = validateGroupHash(componentGroupHashes[2], cG.commandData.groupHash);
+    dbg!("Comparing Commands group");
+    let validateCommand = validateGroupHash(componentGroupHashes[ComponentGroupEnum::COMMANDS_GROUP], cG.commandData.groupHash);
     assert!(validateCommand, "Failed computation: The computed commandData group hash does not match the received group hash.");
+    dbg!("");
 
-    let validateReference = validateGroupHash(componentGroupHashes[3], cG.references.groupHash);
+    dbg!("Comparing Reference group");
+    let validateReference = validateGroupHash(componentGroupHashes[ComponentGroupEnum::REFERENCES_GROUP], cG.references.groupHash);
     assert!(validateReference, "Failed computation: The computed reference group hash does not match the received group hash.");
+    dbg!("");
 
-    let validateSigners = validateGroupHash(componentGroupHashes[4], cG.commandSigners.groupHash);
+    dbg!("Comparing Signers group");
+    let validateSigners = validateGroupHash(componentGroupHashes[ComponentGroupEnum::SIGNERS_GROUP], cG.commandSigners.groupHash);
     assert!(validateSigners, "Failed computation: The computed commandSigners group hash does not match the received group hash.");
 }
 
