@@ -301,7 +301,7 @@ fn convertStateToBits(value: TransactionState) -> [bool; STATE_BITS] {
     result[0..PUBKEY_BITS] = convertPubKeyToBits(value.data.owner.owningKey); //dataOwner_owningKey
     result[PUBKEY_BITS..(PUBKEY_BITS + INT32_BITS)] = to_bits(value.data.value); //value
     result[(PUBKEY_BITS + INT32_BITS)..STATE_BITS] =
-        convertPubKeyToBits(value.data.owner.owningKey); //notary_owningKey
+        convertPubKeyToBits(value.notary.owningKey); //notary_owningKey
 
     result
 }
