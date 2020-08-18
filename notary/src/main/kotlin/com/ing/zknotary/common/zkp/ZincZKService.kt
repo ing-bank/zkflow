@@ -6,21 +6,22 @@ import java.time.Duration
 import java.util.concurrent.TimeUnit
 
 class ZincZKService(
-    private val circuitSrcPath: String,
+    circuitFolder: String,
     artifactFolder: String,
     private val buildTimeout: Duration,
     private val setupTimeout: Duration,
     private val provingTimeout: Duration,
     private val verificationTimeout: Duration
 ) : ZKService, SingletonSerializeAsToken() {
-    val compiledCircuitPath = "$artifactFolder/compiled-${File(circuitSrcPath).nameWithoutExtension}.znb"
+    private val circuitManifestPath = "$circuitFolder/Zargo.toml"
+    val compiledCircuitPath = "$artifactFolder/compiled-circuit.znb"
     val zkSetup = ZKSetup(
         provingKeyPath = "$artifactFolder/proving_key",
         verifyingKeyPath = "$artifactFolder/verifying_key.txt"
     )
 
     companion object {
-        const val COMPILE = "znc"
+        const val BUILD = "zargo build"
         const val SETUP = "zargo setup"
         const val PROVE = "zargo prove"
         const val VERIFY = "zargo verify"
@@ -68,16 +69,15 @@ class ZincZKService(
     }
 
     fun setup() {
-        val circuitSrc = File(circuitSrcPath)
-        require(circuitSrc.exists()) { "Cannot find circuit at $circuitSrcPath" }
-        require(circuitSrc.name == "main.zn") { "The circuit filename must be 'main.zn', found $circuitSrcPath." }
+        val circuitManifest = File(circuitManifestPath)
+        require(circuitManifest.exists()) { "Cannot find circuit manifest at $circuitManifestPath" }
 
         val witnessFile = createTempFile()
         val publicData = createTempFile()
 
         try {
             completeZincCommand(
-                "$COMPILE $circuitSrcPath --output $compiledCircuitPath " +
+                "$BUILD --manifest-path $circuitManifestPath --circuit $compiledCircuitPath " +
                     "--public-data ${publicData.absolutePath} --witness ${witnessFile.absolutePath}",
                 buildTimeout
             )
