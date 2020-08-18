@@ -6,15 +6,14 @@ import com.ing.zknotary.common.zkp.ZincZKService
 import net.corda.core.crypto.BLAKE2s256DigestService
 import org.junit.After
 import org.junit.Test
-import java.io.File
 import java.nio.ByteBuffer
 import java.time.Duration
 
 class BlakeHashTest {
-    private val circuitSourcePath: String = javaClass.getResource("/TestBlakeHash/src/main.zn").path
+    private val circuitFolder: String = javaClass.getResource("/TestBlakeHash").path
     private val zincZKService = ZincZKService(
-        circuitSrcPath = circuitSourcePath,
-        artifactFolder = File(circuitSourcePath).parent,
+        circuitFolder,
+        artifactFolder = circuitFolder,
         buildTimeout = Duration.ofSeconds(5),
         setupTimeout = Duration.ofSeconds(300),
         provingTimeout = Duration.ofSeconds(300),
