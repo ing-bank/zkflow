@@ -7,10 +7,10 @@ import java.time.Duration
 import kotlin.test.assertFailsWith
 
 class ZincZKServiceTest {
-    private val circuitSourcePath: String = javaClass.getResource("/ZincZKService/main.zn").path
+    private val circuitFolder = javaClass.getResource("/ZincZKService").path
     private val zincZKService = ZincZKService(
-        circuitSrcPath = circuitSourcePath,
-        artifactFolder = File(circuitSourcePath).parent,
+        circuitFolder,
+        artifactFolder = circuitFolder,
         buildTimeout = Duration.ofSeconds(5),
         setupTimeout = Duration.ofSeconds(30),
         provingTimeout = Duration.ofSeconds(30),
@@ -61,8 +61,8 @@ class ZincZKServiceTest {
     @Test
     fun `service can prove and verify when reusing setup`() {
         val newZincZKService = ZincZKService(
-            circuitSrcPath = circuitSourcePath,
-            artifactFolder = File(circuitSourcePath).parent,
+            circuitFolder,
+            artifactFolder = circuitFolder,
             buildTimeout = Duration.ofSeconds(5),
             setupTimeout = Duration.ofSeconds(30),
             provingTimeout = Duration.ofSeconds(30),

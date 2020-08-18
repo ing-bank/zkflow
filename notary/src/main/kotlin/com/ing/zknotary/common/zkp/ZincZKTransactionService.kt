@@ -6,7 +6,7 @@ import net.corda.core.serialization.serialize
 import java.time.Duration
 
 class ZincZKTransactionService(
-    circuitSrcPath: String,
+    circuitFolder: String,
     artifactFolder: String,
     buildTimeout: Duration,
     setupTimeout: Duration,
@@ -14,7 +14,7 @@ class ZincZKTransactionService(
     verificationTimeout: Duration
 ) : ZKTransactionService, SingletonSerializeAsToken() {
     private val zkService =
-        ZincZKService(circuitSrcPath, artifactFolder, buildTimeout, setupTimeout, provingTimeout, verificationTimeout)
+        ZincZKService(circuitFolder, artifactFolder, buildTimeout, setupTimeout, provingTimeout, verificationTimeout)
 
     fun setup() = zkService.setup()
     fun cleanup() = zkService.cleanup()

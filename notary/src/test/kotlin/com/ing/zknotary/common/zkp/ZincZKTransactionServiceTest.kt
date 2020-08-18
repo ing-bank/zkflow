@@ -14,15 +14,14 @@ import net.corda.testing.node.ledger
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
-import java.io.File
 import java.time.Duration
 import kotlin.test.assertFailsWith
 
 class ZincZKTransactionServiceTest {
-    private val circuitSourcePath: String = javaClass.getResource("/ZincZKTransactionService/src/main.zn").path
+    private val circuitFolder = javaClass.getResource("/ZincZKTransactionService").path
     private val zincTransactionZKService = ZincZKTransactionService(
-        circuitSrcPath = circuitSourcePath,
-        artifactFolder = File(circuitSourcePath).parent,
+        circuitFolder,
+        artifactFolder = circuitFolder,
         buildTimeout = Duration.ofSeconds(5),
         setupTimeout = Duration.ofSeconds(30),
         provingTimeout = Duration.ofSeconds(30),

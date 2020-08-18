@@ -5,15 +5,14 @@ import com.ing.zknotary.common.zkp.ZincZKService
 import net.corda.core.crypto.PedersenDigestService
 import org.junit.After
 import org.junit.Test
-import java.io.File
 import java.nio.ByteBuffer
 import java.time.Duration
 
 class PedersenHashTest {
-    private val circuitSourcePath: String = javaClass.getResource("/TestPedersenHash/src/main.zn").path
+    private val circuitFolder: String = javaClass.getResource("/TestPedersenHash").path
     private val zincZKService = ZincZKService(
-        circuitSrcPath = circuitSourcePath,
-        artifactFolder = File(circuitSourcePath).parent,
+        circuitFolder,
+        artifactFolder = circuitFolder,
         buildTimeout = Duration.ofSeconds(5),
         setupTimeout = Duration.ofSeconds(30),
         provingTimeout = Duration.ofSeconds(30),
