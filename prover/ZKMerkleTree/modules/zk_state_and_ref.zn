@@ -1,0 +1,142 @@
+//The size of state bits depends on the content of the state. The example state we have contains two public keys and an integer value.
+const STATE_BYTES: u16 = PUBKEY_BYTES + U32_BYTES + PUBKEY_BYTES;
+const STATE_BITS: u16 = STATE_BYTES * BYTE_BITS;
+const REF_BITS: u16 = HASH_BITS;
+
+struct Party {
+    owning_key: PubKey,
+}
+
+struct Data {
+    owner: Party,
+    value: i32,
+}
+
+/*
+This struct follows the structure in the original Corda TransactionState structure. The fields contractCN,
+encumbrance and constraint are commented out and declared bool intentionally to reserve their place in the
+structure. In the current implementation we don't use these fields, if they are going to be included, they
+should be declared with the corresponding data type.
+*/
+struct TransactionState {
+    data: Data,
+    //contractCN: bool,
+    notary: Party,
+    //encumbrance: bool,
+    //constraint: bool,
+}
+
+struct ZKStateRef {
+    id: HashDigestBytes,
+}
+
+struct ContentZKStateAndRef {
+    state: TransactionState,
+    reference: ZKStateRef,
+}
+
+struct ZKStateAndRef {
+    content: ContentZKStateAndRef,
+    is_filler: bool,
+}
+
+// Utility functions -->
+fn hashref_to_bytes(digest: [bool; HASH_BITS + REF_BITS]) -> [u8; HASH_BYTES + HASH_BYTES] {
+    let mut hash_bytes = [0 as u8; HASH_BYTES + HASH_BYTES];
+
+    for i in 0..(HASH_BYTES + HASH_BYTES) {
+        let mut byte_bits = [false; BYTE_BITS];
+        for j in 0..BYTE_BITS {
+            byte_bits[j] = digest[BYTE_BITS * i + j];
+        }
+        hash_bytes[i] = from_bits_unsigned(byte_bits);
+    }
+
+    hash_bytes
+}
+
+fn hashstate_to_bytes(digest: [bool; HASH_BITS + STATE_BITS]) -> [u8; HASH_BYTES + STATE_BYTES] {
+    let mut hash_bytes = [0 as u8; HASH_BYTES + STATE_BYTES];
+
+    for i in 0..(HASH_BYTES + STATE_BYTES) {
+        let mut byte_bits = [false; BYTE_BITS];
+        for j in 0..BYTE_BITS {
+            byte_bits[j] = digest[BYTE_BITS * i + j];
+        }
+        hash_bytes[i] = from_bits_unsigned(byte_bits);
+    }
+
+    hash_bytes
+}
+// <-- Utility functions
+
+impl ZKStateAndRef {
+    fn fingerprint_state(value: ZKStateAndRef) -> [bool; STATE_BITS] {
+        let mut result = [false; STATE_BITS];
+
+        //state_bits = dataOwner_owningKey || value || notary_owningKey
+        result[0..PUBKEY_BITS] = convert_pubKey_to_bits(value.content.state.data.owner.owning_key); //dataOwner_owningKey
+        result[PUBKEY_BITS..(PUBKEY_BITS + INT32_BITS)] = to_bits(value.content.state.data.value); //value
+        result[(PUBKEY_BITS + INT32_BITS)..STATE_BITS] =
+            convert_pubKey_to_bits(value.content.state.notary.owning_key); //notary_owningKey
+
+        result
+    }
+
+    fn fingerprint_ref(value: ZKStateAndRef) -> [bool; REF_BITS] {
+        convert_hash_to_bits(value.content.reference.id)
+    }
+
+    fn compute_leaf_hash_ref(
+        value: [bool; REF_BITS],
+        privacy_salt: PrivacySalt,
+        group_index: u32,
+        internal_index: u32,
+    ) -> HashDigestBits {
+        // dbg!(">> compute_leaf_hash_ref");
+
+        //compute nonce
+        let mut nonce = compute_nonce(privacy_salt, group_index, internal_index);
+        // dbg!("   nonce = {}", digest_to_bytes(nonce));
+
+        // message = nonce || ref
+        let mut message: [bool; HASH_BITS + REF_BITS] = [false; HASH_BITS + REF_BITS];
+        for i in 0..HASH_BITS {
+            message[i] = nonce[i];
+        }
+        for i in 0..REF_BITS {
+            message[HASH_BITS + i] = value[i];
+        }
+        // dbg!("   digest input = {}", hashref_to_bytes(message));
+        blake2s(message)
+    }
+
+    fn compute_leaf_hash_state(
+        value: [bool; STATE_BITS],
+        privacy_salt: PrivacySalt,
+        group_index: u32,
+        internal_index: u32,
+    ) -> HashDigestBits {
+        // dbg!(">> compute_leaf_hash_ref");
+
+        //compute nonce
+        let mut nonce = compute_nonce(privacy_salt, group_index, internal_index);
+        // dbg!("   nonce = {}", digest_to_bytes(nonce));
+
+        // message = nonce || state
+        let mut message = [false; HASH_BITS + STATE_BITS];
+
+        //message = nonce || state nonce || state
+        for i in 0..HASH_BITS {
+            message[i] = nonce[i];
+        }
+
+        for i in 0..STATE_BITS {
+            message[HASH_BITS + i] = value[i];
+        }
+
+        // dbg!("   digest input = {}", hashstate_to_bytes(message));
+
+        blake2s(message)
+    }
+}

@@ -1,0 +1,44 @@
+struct ContentNotary {
+    content: Party,
+    is_filler: bool,
+}
+
+struct Notary {
+    value: ContentNotary,
+    group_hash: ComponentGroupHashBytes,
+}
+
+
+impl Notary {
+    fn fingerprint_value(notary: Notary) -> [bool; PUBKEY_BITS] {
+        convert_pubKey_to_bits(notary.value.content.owning_key)
+    }
+
+    fn fingerprint_group_hash(notary: Notary) -> ComponentGroupHashBits {
+        convert_hash_to_bits(notary.group_hash)
+    }
+
+    fn compute_leaf_hashes(notary: Notary, privacy_salt: PrivacySalt) -> HashDigestBits {
+        //get fingerpint
+        let fingerprint = fingerprint_value(notary);
+
+        let mut component_leaf_hashes = [false; HASH_BITS];
+        component_leaf_hashes = compute_leaf_hash_pubKey(
+            fingerprint,
+            privacy_salt,
+            ComponentGroupEnum::NOTARY_GROUP as u32,
+            0 as u32);
+
+        component_leaf_hashes
+    }
+
+    fn compute_component_group_hash(notary: Notary, privacy_salt: PrivacySalt) -> ComponentGroupHashBits {
+        let component_leaf_hashes = compute_leaf_hashes(notary, privacy_salt);
+
+        //Since NOTARY_SIZE = 1, we use zero padding first.
+        let mut component_leaves = [[false; HASH_BITS]; 2];
+        component_leaves[0] = component_leaf_hashes;
+
+        merkle_2_leaves(component_leaves)
+    }
+}

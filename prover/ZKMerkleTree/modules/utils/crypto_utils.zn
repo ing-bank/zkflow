@@ -1,0 +1,101 @@
+const PEDERSEN_DIGEST_BITS: u16 = 254;
+
+/**
+* Auxiliary method to concatenate two hash digests.
+* @param hash1 hash digest
+* @param hash2 hash digest
+* @return data = hash1 || hash2
+*/
+fn concatenate_hashes(
+    hash1: [bool; HASH_BITS],
+    hash2: [bool; HASH_BITS],
+) -> [bool; HASH_BITS + HASH_BITS] {
+    let mut data = [false; HASH_BITS + HASH_BITS]; //concatenate two child nodes
+
+    for i in (0 as u16)..HASH_BITS {
+        data[i] = hash1[i];
+        data[HASH_BITS + i] = hash2[i];
+    }
+    data
+}
+
+fn pedersen_to_padded_bits(digest: field) -> [bool; HASH_BITS] {
+    let mut digest_bits = [false; HASH_BITS];
+    let pedersen_bits = to_bits(digest);
+
+    for i in 0..PEDERSEN_DIGEST_BITS {
+        digest_bits[(2 as u16) + i] = pedersen_bits[i];
+    }
+
+    digest_bits
+}
+
+fn compute_leaf_hash_int(
+    value: [bool; U32_BITS],
+    privacy_salt: PrivacySalt,
+    group_index: u32,
+    internal_index: u32,
+) -> HashDigestBits {
+    //compute nonce
+    let mut nonce = compute_nonce(privacy_salt, group_index, internal_index);
+    let mut message: [bool; HASH_BITS + U32_BITS] = [false; HASH_BITS + U32_BITS];
+
+    //message = nonce || command
+    for i in 0..HASH_BITS {
+        message[i] = nonce[i];
+    }
+    for i in 0..U32_BITS {
+        message[HASH_BITS + i] = value[i];
+    }
+
+    blake2s(message)
+}
+
+fn compute_leaf_hash_hash(
+    value: [bool; HASH_BITS],
+    privacy_salt: PrivacySalt,
+    group_index: u32,
+    internal_index: u32,
+) -> HashDigestBits {
+    // dbg!(">> compute_leaf_hash_hash");
+
+    //compute nonce
+    let mut nonce = compute_nonce(privacy_salt, group_index, internal_index);
+    // dbg!("   nonce = {}", digest_to_bytes(nonce));
+
+    let mut message: [bool; HASH_BITS + HASH_BITS] = [false; HASH_BITS + HASH_BITS];
+
+    //message = nonce || hash
+    for i in 0..HASH_BITS {
+        message[i] = nonce[i];
+    }
+    for i in 0..HASH_BITS {
+        message[HASH_BITS + i] = value[i];
+    }
+
+    // dbg!("   digest input = {}", hashhash_to_bytes(message));
+
+    blake2s(message)
+}
+
+fn compute_leaf_hash_pubKey(
+    value: [bool; PUBKEY_BITS],
+    privacy_salt: PrivacySalt,
+    group_index: u32,
+    internal_index: u32,
+) -> HashDigestBits {
+    //compute nonce
+    let mut nonce = compute_nonce(privacy_salt, group_index, internal_index);
+    let mut message: [bool; HASH_BITS + PUBKEY_BITS] = [false; HASH_BITS + PUBKEY_BITS];
+
+    //message = nonce || signature
+    for i in 0..HASH_BITS {
+        message[i] = nonce[i];
+    }
+
+    for i in 0..PUBKEY_BITS {
+        message[HASH_BITS + i] = value[i];
+    }
+
+    blake2s(message)
+}

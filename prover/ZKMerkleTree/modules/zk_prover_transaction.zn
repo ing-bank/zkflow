@@ -1,0 +1,16 @@
+struct ZKProverTransaction {
+    inputs: Inputs,
+    outputs: Outputs,
+    references: References,
+    commands: Commands,
+    attachments: Attachments,
+    notary: Notary,
+    time_window: TimeWindow,
+    parameters: Parameters,
+    signers: Signers,
+    privacy_salt: [u8; HASH_BYTES],
+}
+
+struct Witness {
+    transaction: ZKProverTransaction,
+}

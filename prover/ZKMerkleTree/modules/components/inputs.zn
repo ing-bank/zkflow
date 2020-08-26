@@ -1,0 +1,48 @@
+const INPUT_SIZE: u16 = 2;
+
+struct Inputs {
+    value: [ZKStateAndRef; INPUT_SIZE],
+    group_hash: ComponentGroupHashBytes,
+}
+
+impl Inputs {
+    fn fingerprint_value(inputs: Inputs) -> [[bool; REF_BITS]; INPUT_SIZE] {
+        let mut result = [[false; REF_BITS]; INPUT_SIZE];
+
+        for i in 0..INPUT_SIZE {
+            //zkStateRef bits
+            result[i] = ZKStateAndRef::fingerprint_ref(inputs.value[i]);
+        }
+        result
+    }
+
+    fn fingerprint_group_hash(inputs: Inputs) -> ComponentGroupHashBits {
+        convert_hash_to_bits(inputs.group_hash)
+    }
+
+    fn compute_leaf_hashes(inputs: Inputs, privacy_salt: PrivacySalt) -> [HashDigestBits; INPUT_SIZE] {
+        //get fingerpint
+        let fingerprint = fingerprint_value(inputs);
+
+        let mut component_leaf_hashes = [[false; HASH_BITS]; INPUT_SIZE];
+        for i in (0 as u32)..(INPUT_SIZE as u32) {
+            component_leaf_hashes[i] = ZKStateAndRef::compute_leaf_hash_ref(
+                fingerprint[i],
+                privacy_salt,
+                ComponentGroupEnum::INPUTS_GROUP as u32,
+                i as u32);
+        }
+
+        component_leaf_hashes
+    }
+
+    fn compute_component_group_hash(inputs: Inputs, privacy_salt: PrivacySalt) -> ComponentGroupHashBits {
+        let component_leaf_hashes = compute_leaf_hashes(inputs, privacy_salt);
+
+        //Since INPUT_SIZE = 2, we use this Merkle function.
+        //If INPUT_SIZE is different choose the appropriate merkle_util function.
+        //If INPUT_SIZE is odd, apply zero padding until the number of leaf hashes equal to the next power of 2.
+        merkle_2_leaves(component_leaf_hashes)
+    }
+}
+

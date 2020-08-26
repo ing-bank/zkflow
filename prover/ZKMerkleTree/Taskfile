@@ -1,0 +1,89 @@
+#!/bin/bash
+function is_power_of_two () {
+    n=10
+    (( n > 0 && (n & (n - 1)) == 0 ))
+}
+
+function merkle() {
+  level_leaves=$1
+  if [ $((level_leaves)) -lt 2 ]; then
+    echo "Number of leaves must be at least 2"
+    exit
+  fi
+  # increase $level_leaves to a number n, such that
+  # $level_leaves <= n, n = 2^k, for some k.
+  # This is how Corda merkle tree construction works.
+  while [ $(( level_leaves & (level_leaves - 1) )) -ne 0 ]; do
+    level_leaves=$(( level_leaves + 1 ))
+  done
+  merkle_functions=()
+  # Invariant: level_leaves = 2^k, for some k.
+  while [ $((level_leaves)) -gt 2 ]; do
+    new_leaves=$((level_leaves / 2))
+    merkle_functions+=(\
+"fn merkle_$((level_leaves))_leaves(leaves: [[bool; HASH_BITS]; $((level_leaves))]) -> [bool; HASH_BITS] {
+  dbg!(\"Consuming $((level_leaves)) leaves\");
+  let mut new_leaves = [[false; HASH_BITS]; $((new_leaves))];
+  for i in 0..$((new_leaves)) {
+    new_leaves[i] = pedersen_to_padded_bits(
+      pedersen(concatenate_hashes(leaves[2 * i], leaves[2 * i + 1])).0,
+    );
+    dbg!(\"{}: {}\", 2 * i, digest_to_bytes(leaves[2 * i]));
+    dbg!(\"{}: {}\", 2 * i + 1, digest_to_bytes(leaves[2 * i + 1]));
+    dbg!(\"Digest: {}\", digest_to_bytes(new_leaves[i]));
+  }
+  dbg!(\"\");
+  merkle_$((new_leaves))_leaves(new_leaves)
+}"
+    )
+    level_leaves=$new_leaves
+  done
+  merkle_path=./modules/utils/merkle_utils.zn
+  echo \
+"//! Merkle tree =============================================
+//!
+//! Merkle tree construction.
+//!
+fn merkle_2_leaves(leaves: [[bool; HASH_BITS]; 2]) -> [bool; HASH_BITS] {
+  dbg!(\"Consuming 2 leaves\");
+  dbg!(\"0: {}\", digest_to_bytes(leaves[0]));
+  dbg!(\"1: {}\", digest_to_bytes(leaves[1]));
+  pedersen_to_padded_bits(
+    pedersen(concatenate_hashes(leaves[0], leaves[1])).0,
+  )
+}" > $merkle_path
+  for (( i=${#merkle_functions[@]}; i>=0; i-- ))
+  do
+    echo "${merkle_functions[i]}" >> $merkle_path
+  done
+}
+
+function fmt() {
+  for file in modules/*.zn
+  do
+    echo Formatting "$file"
+    rustfmt "$file"
+  done
+}
+
+function build() {
+  merkle 9
+  fmt
+  ordered_modules=(utils/preamble.zn utils/consts.zn component_group_enum.zn nonce.zn
+                   utils/utils.zn utils/crypto_utils.zn utils/merkle_utils.zn
+                   zk_state_and_ref.zn components/inputs.zn components/outputs.zn components/references.zn
+                   components/commands.zn components/attachments.zn components/notary.zn
+                   components/time_window.zn components/parameters.zn components/signers.zn
+                   zk_prover_transaction.zn
+                   merkle_tree.zn
+                   main.zn)
+  cat "${ordered_modules[@]/#/modules/}" > src/main.zn
+}
+
+function help() {
+  echo "$0 <task> <args>"
+  echo "Tasks:"
+  compgen -A function | cat -n
+}
+TIMEFORMAT="Task completed in %3lR"
+time "$@"

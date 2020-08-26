@@ -1,0 +1,43 @@
+struct ContentParameter {
+    content: HashDigestBytes,
+    is_filler: bool,
+}
+
+struct Parameters {
+    value: ContentParameter,
+    group_hash: ComponentGroupHashBytes,
+}
+
+impl Parameters {
+    fn fingerprint_value(parameters: Parameters) -> [bool; HASH_BITS] {
+        convert_hash_to_bits(parameters.value.content)
+    }
+
+    fn fingerprint_group_hash(parameters: Parameters) -> ComponentGroupHashBits {
+        convert_hash_to_bits(parameters.group_hash)
+    }
+
+    fn compute_leaf_hashes(parameters: Parameters, privacy_salt: PrivacySalt) -> HashDigestBits {
+        //get fingerpint
+        let fingerprint = fingerprint_value(parameters);
+
+        let mut component_leaf_hashes = [false; HASH_BITS];
+        component_leaf_hashes = compute_leaf_hash_hash(
+            fingerprint,
+            privacy_salt,
+            ComponentGroupEnum::PARAMETERS_GROUP as u32,
+            0 as u32);
+
+        component_leaf_hashes
+    }
+
+    fn compute_component_group_hash(parameters: Parameters, privacy_salt: PrivacySalt) -> ComponentGroupHashBits {
+        let component_leaf_hashes = compute_leaf_hashes(parameters, privacy_salt);
+
+        //Since PARAMETER_SIZE = 1, we use zero padding first.
+        let mut component_leaves = [[false; HASH_BITS]; 2];
+        component_leaves[0] = component_leaf_hashes;
+
+        merkle_2_leaves(component_leaves)
+    }
+}

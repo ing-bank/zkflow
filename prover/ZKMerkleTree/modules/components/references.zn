@@ -1,0 +1,44 @@
+const REFERENCE_SIZE: u16 = 2;
+
+struct References {
+    value: [ZKStateAndRef; REFERENCE_SIZE],
+    group_hash: ComponentGroupHashBytes,
+}
+
+impl References {
+    fn fingerprint_value(references: References) -> [[bool; REF_BITS]; REFERENCE_SIZE] {
+        let mut result = [[false; REF_BITS]; REFERENCE_SIZE];
+
+        for i in 0..REFERENCE_SIZE {
+            //zkStateRef bits
+            result[i] = ZKStateAndRef::fingerprint_ref(references.value[i]);
+        }
+        result
+    }
+
+    fn fingerprint_group_hash(references: References) -> ComponentGroupHashBits {
+        convert_hash_to_bits(references.group_hash)
+    }
+
+    fn compute_leaf_hashes(references: References, privacy_salt: PrivacySalt) -> [HashDigestBits; REFERENCE_SIZE] {
+        //get fingerpint
+        let fingerprint = fingerprint_value(references);
+
+        let mut component_leaf_hashes = [[false; HASH_BITS]; REFERENCE_SIZE];
+        for i in (0 as u32)..(REFERENCE_SIZE as u32) {
+            component_leaf_hashes[i] = ZKStateAndRef::compute_leaf_hash_ref(
+                fingerprint[i],
+                privacy_salt,
+                ComponentGroupEnum::REFERENCES_GROUP as u32,
+                i as u32);
+        }
+
+        component_leaf_hashes
+    }
+
+    fn compute_component_group_hash(references: References, privacy_salt: PrivacySalt) -> ComponentGroupHashBits {
+        let component_leaf_hashes = compute_leaf_hashes(references, privacy_salt);
+
+        merkle_2_leaves(component_leaf_hashes)
+    }
+}

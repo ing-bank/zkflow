@@ -1,0 +1,45 @@
+const OUTPUT_SIZE: u16 = 2;
+
+struct Outputs {
+    value: [ZKStateAndRef; OUTPUT_SIZE],
+    group_hash: ComponentGroupHashBytes,
+}
+
+
+impl Outputs {
+    fn fingerprint_value(outputs: Outputs) -> [[bool; STATE_BITS]; OUTPUT_SIZE] {
+        let mut result = [[false; STATE_BITS]; OUTPUT_SIZE];
+
+        for i in 0..OUTPUT_SIZE {
+            //zkStateRef bits
+            result[i] = ZKStateAndRef::fingerprint_state(outputs.value[i]);
+        }
+        result
+    }
+
+    fn fingerprint_group_hash(outputs: Outputs) -> ComponentGroupHashBits {
+        convert_hash_to_bits(outputs.group_hash)
+    }
+
+    fn compute_leaf_hashes(outputs: Outputs, privacy_salt: PrivacySalt) -> [HashDigestBits; OUTPUT_SIZE] {
+        //get fingerpint
+        let fingerprint = fingerprint_value(outputs);
+
+        let mut component_leaf_hashes = [[false; HASH_BITS]; OUTPUT_SIZE];
+        for i in (0 as u32)..(OUTPUT_SIZE as u32) {
+            component_leaf_hashes[i] = ZKStateAndRef::compute_leaf_hash_state(
+                fingerprint[i],
+                privacy_salt,
+                ComponentGroupEnum::OUTPUTS_GROUP as u32,
+                i as u32);
+        }
+
+        component_leaf_hashes
+    }
+
+    fn compute_component_group_hash(outputs: Outputs, privacy_salt: PrivacySalt) -> ComponentGroupHashBits {
+        let component_leaf_hashes = compute_leaf_hashes(outputs, privacy_salt);
+
+        merkle_2_leaves(component_leaf_hashes)
+    }
+}

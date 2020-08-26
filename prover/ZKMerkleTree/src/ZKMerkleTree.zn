@@ -13,30 +13,41 @@ const N_SIGNERS: u16 = 2;
 const N_COMMANDS: u16 = 1;
 const N_ATTACHMENTS: u16 = 2;
 
+const BYTE_BITS: u16 = 8;
+
 const PUBKEY_BYTES: u16 = 44;
-const PUBKEY_BITS: u16 = (8 as u16) * PUBKEY_BYTES;
+const PUBKEY_BITS: u16 = PUBKEY_BYTES * BYTE_BITS;
 
 const HASH_BYTES: u16 = 32;
-const HASH_BITS: u16 = (8 as u16) * HASH_BYTES;
+const HASH_BITS: u16 = HASH_BYTES * BYTE_BITS;
 
 const TIME_WINDOW_BYTES: u16 = 24;
-const TIME_WINDOW_BITS: u16 = (8 as u16) * TIME_WINDOW_BYTES;
+const TIME_WINDOW_BITS: u16 = TIME_WINDOW_BYTES * BYTE_BITS;
 
-const INT32_BITS: u16 = 32;
-const INT128_BITS: u16 = 128;
+const U32_BYTES: u16 = 4;
+const U32_BITS: u16 = U32_BYTES * BYTE_BITS;
+
+const U128_BYTES: u16 = 16;
+const U128_BITS: u16 = U128_BYTES * BYTE_BITS;
+
+const NONCE_BYTES: u16 = HASH_BYTES + U32_BYTES + U32_BYTES;
+const NONCE_BITS: u16 = NONCE_BYTES * BYTE_BITS;
 
 //Number of bits for each component group
 //Input, Output, and Reference components have the same structure which is ZKStateAndRef.
 //The size of state bits depends on the content of the state. The example state we have contains two public keys and an integer value.
-const STATE_BITS: u16 = PUBKEY_BITS + INT32_BITS + PUBKEY_BITS;
+const STATE_BYTES: u16 = PUBKEY_BYTES + U32_BYTES + PUBKEY_BYTES;
+const STATE_BITS: u16 = STATE_BYTES * BYTE_BITS;
 const REF_BITS: u16 = HASH_BITS;
 
 const SIGNER_BITS: u16 = PUBKEY_BITS;
-const COMMAND_BITS: u16 = INT32_BITS;
+const COMMAND_BITS: u16 = U32_BITS;
 
 type PubKey = [u8; PUBKEY_BYTES];
 type PrivacySalt = [bool; HASH_BITS];
 type ComponentGroupHash = [u8; HASH_BYTES]; //For now we use Blake2s to compute component group hashes - should be replaced with Pedersen!
+
+const STATE_NONCE_BITS: u16 = HASH_BITS;
 
 struct ZKStateAndRefGroup {
     state: [bool; STATE_BITS],
@@ -48,13 +59,24 @@ struct ContentZKStateAndRefGroup {
     isFiller: bool,
 }
 
+struct ZKStateAndRefWithNonceGroup {
+    state: [bool; STATE_BITS],
+    nonce: [bool; STATE_NONCE_BITS],
+    zkStateRef: [bool; REF_BITS],
+}
+
+struct ContentZKStateAndRefWithNonceGroup {
+    content: ZKStateAndRefWithNonceGroup,
+    isFiller: bool,
+}
+
 struct InputGroup {
     groupElements: [ContentZKStateAndRefGroup; N_INPUTS],
     groupHash: [bool; HASH_BITS],
 }
 
 struct OutputGroup {
-    groupElements: [ContentZKStateAndRefGroup; N_OUTPUTS],
+    groupElements: [ContentZKStateAndRefWithNonceGroup; N_OUTPUTS],
     groupHash: [bool; HASH_BITS],
 }
 
@@ -64,7 +86,7 @@ struct ReferenceGroup {
 }
 
 struct ContentCommandDataGroup {
-    content: [bool; INT32_BITS],
+    content: [bool; U32_BITS],
     isFiller: bool,
 }
 
@@ -157,28 +179,14 @@ use std::convert::to_bits;
 
 const NODE_DIGEST_SIZE: u16 = 256;
 const FIELD_SIZE: u16 = 254;
-const INTEGER_LENGTH: u16 = 32;
 const NODES: u8 = 14;
 
 type NodeDigest = [bool; NODE_DIGEST_SIZE];
 type BlakeDigest = [bool; HASH_BITS];
 type PedersenDigest = field;
 
-//Although we have odd number of component groups (9), to prevent errors in compilation we set it as an even number (10).
-const NUM_COMPONENT_GROUPS: u8 = 10;
+const NUM_COMPONENT_GROUPS: u8 = 9;
 const TREE_DEPTH: u8 = 3;
-
-// Some more constants
-const BYTE_BITS: u16 = 8;
-
-const U32_BYTES: u16 = 4;
-const U32_BITS: u16 = U32_BYTES * BYTE_BITS;
-
-const NONCE_BYTES: u16 = HASH_BYTES + U32_BYTES + U32_BYTES;
-const NONCE_BITS: u16 = NONCE_BYTES * BYTE_BITS;
-
-const STATE_BYTES: u16 = PUBKEY_BYTES + U32_BYTES + PUBKEY_BYTES;
-
 
 // Utility functions -->
 fn u32_to_bytes(bits: [bool; U32_BITS]) -> [u8; U32_BYTES] {
@@ -274,17 +282,26 @@ fn hashhash_to_bytes(digest: [bool; HASH_BITS + HASH_BITS]) -> [u8; HASH_BYTES +
 * @return H(privacySalt || groupIndex || internalIndex))
 */
 fn computeNonce(privacySalt: PrivacySalt, groupIndex: u32, internalIndex: u32) -> BlakeDigest {
-    let mut nonce = [false; HASH_BITS + INTEGER_LENGTH + INTEGER_LENGTH];
+    // dbg!(">> computeNonce (");
+    // dbg!("   group index = {}", groupIndex);
+    // dbg!("   internal index = {}", internalIndex);
+    // dbg!(")");
+
+    let mut nonce = [false; NONCE_BITS];
     for i in 0..HASH_BITS {
         nonce[i] = privacySalt[i];
     }
 
     let groupIndex_bits = to_bits(groupIndex);
     let internalIndex_bits = to_bits(internalIndex);
-    for i in 0..INTEGER_LENGTH {
+
+    for i in 0..U32_BITS {
         nonce[HASH_BITS + (i as u16)] = groupIndex_bits[i];
-        nonce[HASH_BITS + INTEGER_LENGTH + (i as u16)] = internalIndex_bits[i];
+        nonce[HASH_BITS + U32_BITS + (i as u16)] = internalIndex_bits[i];
     }
+
+    // dbg!("   nonce input = {}", nonce_to_bytes(nonce));
+
     blake2s(nonce)
 }
 
@@ -301,57 +318,72 @@ fn computeLeafHashRef(
     groupIndex: u32,
     internalIndex: u32,
 ) -> BlakeDigest {
+    // dbg!(">> computeLeafHashRef");
+
     //compute nonce
     let mut nonce = computeNonce(privacySalt, groupIndex, internalIndex);
+    // dbg!("   nonce = {}", digest_to_bytes(nonce));
+
     let mut message: [bool; HASH_BITS + REF_BITS] = [false; HASH_BITS + REF_BITS];
 
-    //message = nonce || ZKStateRef
+    // message = nonce || ZKStateRef
     for i in 0..HASH_BITS {
         message[i] = nonce[i];
     }
     for i in 0..REF_BITS {
         message[HASH_BITS + i] = value[i];
     }
+    // dbg!("   digest input = {}", hashref_to_bytes(message));
 
     blake2s(message)
 }
 
 fn computeLeafHashState(
     value: [bool; STATE_BITS],
+    state_nonce: [bool; STATE_NONCE_BITS],
     privacySalt: PrivacySalt,
     groupIndex: u32,
     internalIndex: u32,
 ) -> BlakeDigest {
+    // dbg!(">> computeLeafHashRef");
+
     //compute nonce
     let mut nonce = computeNonce(privacySalt, groupIndex, internalIndex);
-    let mut message: [bool; HASH_BITS + STATE_BITS] = [false; HASH_BITS + STATE_BITS];
+    // dbg!("   nonce = {}", digest_to_bytes(nonce));
 
-    //message = nonce || ZKStateRef
+    let mut message = [false; HASH_BITS + STATE_NONCE_BITS + STATE_BITS];
+
+    //message = nonce || state nonce || state
     for i in 0..HASH_BITS {
         message[i] = nonce[i];
     }
-    for i in 0..STATE_BITS {
-        message[HASH_BITS + i] = value[i];
+    for i in 0..STATE_NONCE_BITS {
+        message[HASH_BITS + i] = state_nonce[i];
     }
+    for i in 0..STATE_BITS {
+        message[HASH_BITS + STATE_NONCE_BITS + i] = value[i];
+    }
+
+    // dbg!("   digest input = {}", hashstate_to_bytes(message));
 
     blake2s(message)
 }
 
 fn computeLeafHashInt(
-    value: [bool; INT32_BITS],
+    value: [bool; U32_BITS],
     privacySalt: PrivacySalt,
     groupIndex: u32,
     internalIndex: u32,
 ) -> BlakeDigest {
     //compute nonce
     let mut nonce = computeNonce(privacySalt, groupIndex, internalIndex);
-    let mut message: [bool; HASH_BITS + INT32_BITS] = [false; HASH_BITS + INT32_BITS];
+    let mut message: [bool; HASH_BITS + U32_BITS] = [false; HASH_BITS + U32_BITS];
 
     //message = nonce || command
     for i in 0..HASH_BITS {
         message[i] = nonce[i];
     }
-    for i in 0..INT32_BITS {
+    for i in 0..U32_BITS {
         message[HASH_BITS + i] = value[i];
     }
 
@@ -364,8 +396,12 @@ fn computeLeafHashHash(
     groupIndex: u32,
     internalIndex: u32,
 ) -> BlakeDigest {
+    // dbg!(">> computeLeafHashHash");
+
     //compute nonce
     let mut nonce = computeNonce(privacySalt, groupIndex, internalIndex);
+    // dbg!("   nonce = {}", digest_to_bytes(nonce));
+
     let mut message: [bool; HASH_BITS + HASH_BITS] = [false; HASH_BITS + HASH_BITS];
 
     //message = nonce || signature
@@ -375,6 +411,8 @@ fn computeLeafHashHash(
     for i in 0..HASH_BITS {
         message[HASH_BITS + i] = value[i];
     }
+
+    // dbg!("   digest input = {}", hashhash_to_bytes(message));
 
     blake2s(message)
 }
@@ -430,29 +468,50 @@ fn computeLeafHashTimeW(
 * (which is the size of a field element) to assure consistency and security on the upper levels of the Merkle tree.
 */
 fn computeLeafHashes(zkptx: (ComponentGroup, PrivacySalt)) -> [NodeDigest; NODES] {
+    dbg!(">> computeLeafHashes");
+
     let mut componentLeafHashes: [NodeDigest; NODES] = [[false; NODE_DIGEST_SIZE]; NODES];
     let mut index: u16 = 0;
 
-    //inputs
+    // Inputs.
+    // dbg!(">> Inputs");
     for i in (0 as u32)..(N_INPUTS as u32) {
+        // dbg!("   Leaf: Inputs[{}]", i);
+
         componentLeafHashes[(index as u32) + i] = computeLeafHashRef(
             zkptx.0.inputs.groupElements[i].content.zkStateRef,
             zkptx.1,
             ComponentGroupEnum::INPUTS_GROUP as u32,
             i as u32,
         );
-    }
-    index += N_INPUTS;
 
-    //outputs
+        // dbg!("   Digest = {}", digest_to_bytes(componentLeafHashes[(index as u32) + i]));
+        // dbg!("");
+    }
+    // dbg!("<< Inputs");
+    // dbg!("");
+
+
+    // Outputs.
+    // dbg!(">> Outputs");
+    index += N_INPUTS;
     for i in (0 as u32)..(N_OUTPUTS as u32) {
-        componentLeafHashes[(index as u32) + i] = computeLeafHashRef(
-            zkptx.0.outputs.groupElements[i].content.zkStateRef,
+        // dbg!("   Leaf: Outputs[{}]", i);
+
+        componentLeafHashes[(index as u32) + i] = computeLeafHashState(
+            zkptx.0.outputs.groupElements[i].content.state,
+            zkptx.0.outputs.groupElements[i].content.nonce,
             zkptx.1,
             ComponentGroupEnum::OUTPUTS_GROUP as u32,
             i as u32,
         );
+
+        // dbg!("   Digest = {}", digest_to_bytes(componentLeafHashes[(index as u32) + i]));
+        // dbg!("");
     }
+    // dbg!("<< Outputs");
+    // dbg!("");
+
     index += N_OUTPUTS;
 
     //commandData
@@ -466,15 +525,24 @@ fn computeLeafHashes(zkptx: (ComponentGroup, PrivacySalt)) -> [NodeDigest; NODES
     }
     index += N_COMMANDS;
 
-    //attachments
+    // Attachments.
+    // dbg!(">> Attachments");
     for i in (0 as u32)..(N_ATTACHMENTS as u32) {
+        // dbg!("   Leaf: Attachments[{}]", i);
+
         componentLeafHashes[(index as u32) + i] = computeLeafHashHash(
             zkptx.0.attachments.groupElements[i].content,
             zkptx.1,
             ComponentGroupEnum::ATTACHMENTS_GROUP as u32,
             i as u32,
         );
+
+        // dbg!("   Digest = {}", digest_to_bytes(componentLeafHashes[(index as u32) + i]));
+        // dbg!("");
     }
+    // dbg!("<< Attachments");
+    // dbg!("");
+
     index += N_ATTACHMENTS;
 
     //notary
@@ -507,15 +575,24 @@ fn computeLeafHashes(zkptx: (ComponentGroup, PrivacySalt)) -> [NodeDigest; NODES
     }
     index += N_SIGNERS;
 
-    //references
+    // references
+    // dbg!(">> References");
     for i in (0 as u32)..(N_REFERENCES as u32) {
+        // dbg!("   Leaf: References[{}]", i);
+
         componentLeafHashes[(index as u32) + i] = computeLeafHashRef(
             zkptx.0.references.groupElements[i].content.zkStateRef,
             zkptx.1,
             ComponentGroupEnum::REFERENCES_GROUP as u32,
             i as u32,
         );
+
+        // dbg!("   Digest = {}", digest_to_bytes(componentLeafHashes[(index as u32) + i]));
+        // dbg!("");
     }
+    // dbg!("<< References");
+    // dbg!("");
+
     index += N_REFERENCES;
 
     //parameters
@@ -685,13 +762,7 @@ fn computeComponentGroupHashes(
     leafInd += N_REFERENCES;
 
     //parameters - this implementation assumes that the number of parameter is 1
-    componentGroupHashes[ComponentGroupEnum::PARAMETERS_GROUP] = toPaddedBits(
-        pedersen(concatenateHashes(
-            componentLeafHashes[leafInd],
-            [false; NODE_DIGEST_SIZE],
-        ))
-            .0,
-    );
+    componentGroupHashes[ComponentGroupEnum::PARAMETERS_GROUP] = componentLeafHashes[leafInd];
 
     dbg!("Network parameters: {}", digest_to_bytes(componentGroupHashes[ComponentGroupEnum::PARAMETERS_GROUP]));
 
@@ -734,7 +805,7 @@ fn computeComponentGroupHashes(
 //     nodes[0]
 // }
 
-// =============== Merkle tree: ./generated/merkle.zn ====================================>
+// =============== Merkle tree: ./generated/merkle_utils.zn ====================================>
 //!
 //! Merkle tree construction.
 //!
@@ -799,7 +870,12 @@ fn merkle_16_leaves(leaves: [[bool; HASH_BITS]; 16]) -> [bool; HASH_BITS] {
 
     merkle_8_leaves(new_leaves)
 }
-// <============== Merkle tree: ./generated/merkle.zn =====================================
+// <============== Merkle tree: ./generated/merkle_utils.zn =====================================
+
+
+
+
+
 
 /**
 * Auxiliary method to validate a GroupHash
@@ -807,11 +883,18 @@ fn merkle_16_leaves(leaves: [[bool; HASH_BITS]; 16]) -> [bool; HASH_BITS] {
 * @param received digest that is received within the witness.  
 * @return bool If the computed value is equal to the one received then the function returns true. Otherwise, returns false.
 */
-fn validateGroupHash(computed: NodeDigest, received: [bool; HASH_BITS]) -> bool {
+fn validateGroupHash(computed: NodeDigest, received: NodeDigest) -> bool {
+    let computed_bytes = digest_to_bytes(computed);
+    let expected_bytes = digest_to_bytes(received);
+
+    dbg!("{}", computed_bytes);
+    dbg!("{}", expected_bytes);
+
+
     let mut isEqual = true;
 
     for i in 0..HASH_BITS {
-        if (computed[i] != received[i]) {
+        if computed[i] != received[i] {
             isEqual = false;
         }
     }
@@ -870,7 +953,7 @@ fn buildMerkleTree(zkptx: (ComponentGroup, PrivacySalt)) -> BlakeDigest //Peders
 
     //Validate component group hashes
     //This function is currently disabled. Once blake2s values are validated on Corda side and Zinc side we can eanble it.
-    validateGroupHashes(componentGroupHashes, zkptx.0);
+    //validateGroupHashes(componentGroupHashes, zkptx.0);
 
     // There are 9 component groups.
     // Pad it from the right with as many zero hashes to get a power of two number of leaves.

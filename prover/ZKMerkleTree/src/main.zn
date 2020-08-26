@@ -1,177 +1,978 @@
+use std::array::truncate;
+
+use std::crypto::blake2s;
+use std::crypto::pedersen;
+
+use std::convert::from_bits_field;
+use std::convert::from_bits_unsigned;
+
+use std::convert::to_bits;
+const PUBKEY_BYTES: u16 = 44;
+const PUBKEY_BITS: u16 = (8 as u16) * PUBKEY_BYTES;
+
+const HASH_BYTES: u16 = 32;
+const HASH_BITS: u16 = (8 as u16) * HASH_BYTES;
+
+const INT32_BITS: u16 = 32;
+const INT128_BITS: u16 = 128;
+
+const BYTE_BITS: u16 = 8;
+
+const U32_BYTES: u16 = 4;
+const U32_BITS: u16 = U32_BYTES * BYTE_BITS;
+
+const U128_BYTES: u16 = 16;
+const U128_BITS: u16 = U128_BYTES * BYTE_BITS;
+
+type PubKey = [u8; PUBKEY_BYTES];
+
+type HashDigestBytes = [u8; HASH_BYTES];
+type HashDigestBits = [bool; HASH_BITS];
+
+type ComponentGroupHashBytes = [u8; HASH_BYTES];
+type ComponentGroupHashBits = [bool; HASH_BITS];
+
+type PrivacySalt = [bool; HASH_BITS];
+enum ComponentGroupEnum {
+    INPUTS_GROUP = 0,
+    OUTPUTS_GROUP = 1,
+    COMMANDS_GROUP = 2,
+    ATTACHMENTS_GROUP = 3,
+    NOTARY_GROUP = 4,
+    TIMEWINDOW_GROUP = 5,
+    SIGNERS_GROUP = 6,
+    REFERENCES_GROUP = 7,
+    PARAMETERS_GROUP = 8,
+}
+const NONCE_BYTES: u16 = HASH_BYTES + U32_BYTES + U32_BYTES;
+const NONCE_BITS: u16 = NONCE_BYTES * BYTE_BITS;
+
+// Utility functions -->
+fn nonce_to_bytes(bits: [bool; NONCE_BITS]) -> [u8; NONCE_BYTES] {
+    let mut nonce_bytes = [0 as u8; NONCE_BYTES];
+
+    for i in 0..NONCE_BYTES {
+        let mut byte_bits = [false; BYTE_BITS];
+        for j in 0..BYTE_BITS {
+            byte_bits[j] = bits[BYTE_BITS * i + j];
+        }
+        nonce_bytes[i] = from_bits_unsigned(byte_bits);
+    }
+
+    nonce_bytes
+}
+// <-- Utility functions
+
+/**
+* Method to compute a nonce based on privacySalt, component group index and component internal index.
+* @param privacySalt a PrivacySalt
+* @param groupIndex the fixed index (ordinal) of this component group.
+* @param internalIndex the internal index of this object in its corresponding components list.
+* @return H(privacy_salt || group_index || internal_index))
+*/
+fn compute_nonce(
+    privacy_salt: PrivacySalt,
+    group_index: u32,
+    internal_index: u32,
+) -> [bool; HASH_BITS] {
+    // dbg!(">> computeNonce (");
+    // dbg!("   group index = {}", group_index);
+    // dbg!("   internal index = {}", internal_index);
+    // dbg!(")");
+
+    let mut nonce = [false; NONCE_BITS];
+    for i in 0..HASH_BITS {
+        nonce[i] = privacy_salt[i];
+    }
+
+    let group_index_bits = to_bits(group_index);
+    let internal_index_bits = to_bits(internal_index);
+
+    for i in 0..U32_BITS {
+        nonce[HASH_BITS + (i as u16)] = group_index_bits[i];
+        nonce[HASH_BITS + U32_BITS + (i as u16)] = internal_index_bits[i];
+    }
+
+    // dbg!("   nonce input = {}", nonce_to_bytes(nonce));
+
+    blake2s(nonce)
+}
+fn convert_hash_to_bits(value: [u8; HASH_BYTES]) -> [bool; HASH_BITS] {
+    let mut hash_digest_bits = [false; HASH_BITS];
+
+    for i in (0 as u16)..HASH_BYTES {
+        let hd_bits = to_bits(value[i]);
+        for j in (0 as u16)..(8 as u16) {
+            hash_digest_bits[(8 as u16) * i + j] = hd_bits[j];
+        }
+    }
+    hash_digest_bits
+}
+
+fn convert_pubKey_to_bits(value: [u8; PUBKEY_BYTES]) -> [bool; PUBKEY_BITS] {
+    let mut pubKey_bits = [false; PUBKEY_BITS];
+
+    for i in (0 as u16)..PUBKEY_BYTES {
+        let pk_bits = to_bits(value[i]);
+        for j in (0 as u16)..(8 as u16) {
+            pubKey_bits[(8 as u16) * i + j] = pk_bits[j];
+        }
+    }
+    pubKey_bits
+}
+
+fn u32_to_bytes(bits: [bool; U32_BITS]) -> [u8; U32_BYTES] {
+    let mut u32_bytes = [0 as u8; U32_BYTES];
+
+    for i in 0..U32_BYTES {
+        let mut byte_bits = [false; BYTE_BITS];
+        for j in 0..BYTE_BITS {
+            byte_bits[j] = bits[BYTE_BITS * i + j];
+        }
+        u32_bytes[i] = from_bits_unsigned(byte_bits);
+    }
+
+    u32_bytes
+}
+
+fn digest_to_bytes(digest: [bool; HASH_BITS]) -> [u8; HASH_BYTES] {
+    let mut hash_bytes = [0 as u8; HASH_BYTES];
+
+    for i in 0..HASH_BYTES {
+        let mut byte_bits = [false; BYTE_BITS];
+        for j in 0..BYTE_BITS {
+            byte_bits[j] = digest[BYTE_BITS * i + j];
+        }
+        hash_bytes[i] = from_bits_unsigned(byte_bits);
+    }
+
+    hash_bytes
+}
+
+fn hashhash_to_bytes(digest: [bool; HASH_BITS + HASH_BITS]) -> [u8; HASH_BYTES + HASH_BYTES] {
+    let mut hash_bytes = [0 as u8; HASH_BYTES + HASH_BYTES];
+
+    for i in 0..(HASH_BYTES + HASH_BYTES) {
+        let mut byte_bits = [false; BYTE_BITS];
+        for j in 0..BYTE_BITS {
+            byte_bits[j] = digest[BYTE_BITS * i + j];
+        }
+        hash_bytes[i] = from_bits_unsigned(byte_bits);
+    }
+
+    hash_bytes
+}
+const PEDERSEN_DIGEST_BITS: u16 = 254;
+
+/**
+* Auxiliary method to concatenate two hash digests.
+* @param hash1 hash digest
+* @param hash2 hash digest
+* @return data = hash1 || hash2
+*/
+fn concatenate_hashes(
+    hash1: [bool; HASH_BITS],
+    hash2: [bool; HASH_BITS],
+) -> [bool; HASH_BITS + HASH_BITS] {
+    let mut data = [false; HASH_BITS + HASH_BITS]; //concatenate two child nodes
+
+    for i in (0 as u16)..HASH_BITS {
+        data[i] = hash1[i];
+        data[HASH_BITS + i] = hash2[i];
+    }
+    data
+}
+
+fn pedersen_to_padded_bits(digest: field) -> [bool; HASH_BITS] {
+    let mut digest_bits = [false; HASH_BITS];
+    let pedersen_bits = to_bits(digest);
+
+    for i in 0..PEDERSEN_DIGEST_BITS {
+        digest_bits[(2 as u16) + i] = pedersen_bits[i];
+    }
+
+    digest_bits
+}
+
+fn compute_leaf_hash_int(
+    value: [bool; U32_BITS],
+    privacy_salt: PrivacySalt,
+    group_index: u32,
+    internal_index: u32,
+) -> HashDigestBits {
+    //compute nonce
+    let mut nonce = compute_nonce(privacy_salt, group_index, internal_index);
+    let mut message: [bool; HASH_BITS + U32_BITS] = [false; HASH_BITS + U32_BITS];
+
+    //message = nonce || command
+    for i in 0..HASH_BITS {
+        message[i] = nonce[i];
+    }
+    for i in 0..U32_BITS {
+        message[HASH_BITS + i] = value[i];
+    }
+
+    blake2s(message)
+}
+
+fn compute_leaf_hash_hash(
+    value: [bool; HASH_BITS],
+    privacy_salt: PrivacySalt,
+    group_index: u32,
+    internal_index: u32,
+) -> HashDigestBits {
+    // dbg!(">> compute_leaf_hash_hash");
+
+    //compute nonce
+    let mut nonce = compute_nonce(privacy_salt, group_index, internal_index);
+    // dbg!("   nonce = {}", digest_to_bytes(nonce));
+
+    let mut message: [bool; HASH_BITS + HASH_BITS] = [false; HASH_BITS + HASH_BITS];
+
+    //message = nonce || hash
+    for i in 0..HASH_BITS {
+        message[i] = nonce[i];
+    }
+    for i in 0..HASH_BITS {
+        message[HASH_BITS + i] = value[i];
+    }
+
+    // dbg!("   digest input = {}", hashhash_to_bytes(message));
+
+    blake2s(message)
+}
+
+fn compute_leaf_hash_pubKey(
+    value: [bool; PUBKEY_BITS],
+    privacy_salt: PrivacySalt,
+    group_index: u32,
+    internal_index: u32,
+) -> HashDigestBits {
+    //compute nonce
+    let mut nonce = compute_nonce(privacy_salt, group_index, internal_index);
+    let mut message: [bool; HASH_BITS + PUBKEY_BITS] = [false; HASH_BITS + PUBKEY_BITS];
+
+    //message = nonce || signature
+    for i in 0..HASH_BITS {
+        message[i] = nonce[i];
+    }
+
+    for i in 0..PUBKEY_BITS {
+        message[HASH_BITS + i] = value[i];
+    }
+
+    blake2s(message)
+}
+//! Merkle tree =============================================
 //!
-//! The 'ZKMerkleTree' main module.
+//! Merkle tree construction.
 //!
-mod ZKMerkleTree;
-mod ComponentGroups;
+fn merkle_2_leaves(leaves: [[bool; HASH_BITS]; 2]) -> [bool; HASH_BITS] {
+  dbg!("Consuming 2 leaves");
+  dbg!("0: {}", digest_to_bytes(leaves[0]));
+  dbg!("1: {}", digest_to_bytes(leaves[1]));
+  pedersen_to_padded_bits(
+    pedersen(concatenate_hashes(leaves[0], leaves[1])).0,
+  )
+}
 
-use ComponentGroups::PrivacySalt;
-use ComponentGroups::Witness;
+fn merkle_4_leaves(leaves: [[bool; HASH_BITS]; 4]) -> [bool; HASH_BITS] {
+  dbg!("Consuming 4 leaves");
+  let mut new_leaves = [[false; HASH_BITS]; 2];
+  for i in 0..2 {
+    new_leaves[i] = pedersen_to_padded_bits(
+      pedersen(concatenate_hashes(leaves[2 * i], leaves[2 * i + 1])).0,
+    );
+    dbg!("{}: {}", 2 * i, digest_to_bytes(leaves[2 * i]));
+    dbg!("{}: {}", 2 * i + 1, digest_to_bytes(leaves[2 * i + 1]));
+    dbg!("Digest: {}", digest_to_bytes(new_leaves[i]));
+  }
+  dbg!("");
+  merkle_2_leaves(new_leaves)
+}
+fn merkle_8_leaves(leaves: [[bool; HASH_BITS]; 8]) -> [bool; HASH_BITS] {
+  dbg!("Consuming 8 leaves");
+  let mut new_leaves = [[false; HASH_BITS]; 4];
+  for i in 0..4 {
+    new_leaves[i] = pedersen_to_padded_bits(
+      pedersen(concatenate_hashes(leaves[2 * i], leaves[2 * i + 1])).0,
+    );
+    dbg!("{}: {}", 2 * i, digest_to_bytes(leaves[2 * i]));
+    dbg!("{}: {}", 2 * i + 1, digest_to_bytes(leaves[2 * i + 1]));
+    dbg!("Digest: {}", digest_to_bytes(new_leaves[i]));
+  }
+  dbg!("");
+  merkle_4_leaves(new_leaves)
+}
+fn merkle_16_leaves(leaves: [[bool; HASH_BITS]; 16]) -> [bool; HASH_BITS] {
+  dbg!("Consuming 16 leaves");
+  let mut new_leaves = [[false; HASH_BITS]; 8];
+  for i in 0..8 {
+    new_leaves[i] = pedersen_to_padded_bits(
+      pedersen(concatenate_hashes(leaves[2 * i], leaves[2 * i + 1])).0,
+    );
+    dbg!("{}: {}", 2 * i, digest_to_bytes(leaves[2 * i]));
+    dbg!("{}: {}", 2 * i + 1, digest_to_bytes(leaves[2 * i + 1]));
+    dbg!("Digest: {}", digest_to_bytes(new_leaves[i]));
+  }
+  dbg!("");
+  merkle_8_leaves(new_leaves)
+}
+//The size of state bits depends on the content of the state. The example state we have contains two public keys and an integer value.
+const STATE_BYTES: u16 = PUBKEY_BYTES + U32_BYTES + PUBKEY_BYTES;
+const STATE_BITS: u16 = STATE_BYTES * BYTE_BITS;
+const REF_BITS: u16 = HASH_BITS;
 
-use ZKMerkleTree::AttachmentGroup;
-use ZKMerkleTree::CommandDataGroup;
-use ZKMerkleTree::CommandSignerGroup;
-use ZKMerkleTree::ComponentGroup;
-use ZKMerkleTree::InputGroup;
-use ZKMerkleTree::NotaryGroup;
-use ZKMerkleTree::OutputGroup;
-use ZKMerkleTree::ParameterGroup;
-use ZKMerkleTree::ReferenceGroup;
-use ZKMerkleTree::TimeWindowGroup;
-use ZKMerkleTree::ZKStateAndRefGroup;
+struct Party {
+    owning_key: PubKey,
+}
 
-use ZKMerkleTree::ContentAttachmentGroup;
-use ZKMerkleTree::ContentCommandDataGroup;
-use ZKMerkleTree::ContentCommandSignerGroup;
-use ZKMerkleTree::ContentNotaryGroup;
-use ZKMerkleTree::ContentParameterGroup;
-use ZKMerkleTree::ContentTimeWindowGroup;
-use ZKMerkleTree::ContentZKStateAndRefGroup;
+struct Data {
+    owner: Party,
+    value: i32,
+}
 
+/*
+This struct follows the structure in the original Corda TransactionState structure. The fields contractCN,
+encumbrance and constraint are commented out and declared bool intentionally to reserve their place in the
+structure. In the current implementation we don't use these fields, if they are going to be included, they
+should be declared with the corresponding data type.
+*/
+struct TransactionState {
+    data: Data,
+    //contractCN: bool,
+    notary: Party,
+    //encumbrance: bool,
+    //constraint: bool,
+}
+
+struct ZKStateRef {
+    id: HashDigestBytes,
+}
+
+struct ContentZKStateAndRef {
+    state: TransactionState,
+    reference: ZKStateRef,
+}
+
+struct ZKStateAndRef {
+    content: ContentZKStateAndRef,
+    is_filler: bool,
+}
+
+// Utility functions -->
+fn hashref_to_bytes(digest: [bool; HASH_BITS + REF_BITS]) -> [u8; HASH_BYTES + HASH_BYTES] {
+    let mut hash_bytes = [0 as u8; HASH_BYTES + HASH_BYTES];
+
+    for i in 0..(HASH_BYTES + HASH_BYTES) {
+        let mut byte_bits = [false; BYTE_BITS];
+        for j in 0..BYTE_BITS {
+            byte_bits[j] = digest[BYTE_BITS * i + j];
+        }
+        hash_bytes[i] = from_bits_unsigned(byte_bits);
+    }
+
+    hash_bytes
+}
+
+fn hashstate_to_bytes(digest: [bool; HASH_BITS + STATE_BITS]) -> [u8; HASH_BYTES + STATE_BYTES] {
+    let mut hash_bytes = [0 as u8; HASH_BYTES + STATE_BYTES];
+
+    for i in 0..(HASH_BYTES + STATE_BYTES) {
+        let mut byte_bits = [false; BYTE_BITS];
+        for j in 0..BYTE_BITS {
+            byte_bits[j] = digest[BYTE_BITS * i + j];
+        }
+        hash_bytes[i] = from_bits_unsigned(byte_bits);
+    }
+
+    hash_bytes
+}
+// <-- Utility functions
+
+impl ZKStateAndRef {
+    fn fingerprint_state(value: ZKStateAndRef) -> [bool; STATE_BITS] {
+        let mut result = [false; STATE_BITS];
+
+        //state_bits = dataOwner_owningKey || value || notary_owningKey
+        result[0..PUBKEY_BITS] = convert_pubKey_to_bits(value.content.state.data.owner.owning_key); //dataOwner_owningKey
+        result[PUBKEY_BITS..(PUBKEY_BITS + INT32_BITS)] = to_bits(value.content.state.data.value); //value
+        result[(PUBKEY_BITS + INT32_BITS)..STATE_BITS] =
+            convert_pubKey_to_bits(value.content.state.notary.owning_key); //notary_owningKey
+
+        result
+    }
+
+    fn fingerprint_ref(value: ZKStateAndRef) -> [bool; REF_BITS] {
+        convert_hash_to_bits(value.content.reference.id)
+    }
+
+    fn compute_leaf_hash_ref(
+        value: [bool; REF_BITS],
+        privacy_salt: PrivacySalt,
+        group_index: u32,
+        internal_index: u32,
+    ) -> HashDigestBits {
+        // dbg!(">> compute_leaf_hash_ref");
+
+        //compute nonce
+        let mut nonce = compute_nonce(privacy_salt, group_index, internal_index);
+        // dbg!("   nonce = {}", digest_to_bytes(nonce));
+
+        // message = nonce || ref
+        let mut message: [bool; HASH_BITS + REF_BITS] = [false; HASH_BITS + REF_BITS];
+        for i in 0..HASH_BITS {
+            message[i] = nonce[i];
+        }
+        for i in 0..REF_BITS {
+            message[HASH_BITS + i] = value[i];
+        }
+        // dbg!("   digest input = {}", hashref_to_bytes(message));
+        blake2s(message)
+    }
+
+    fn compute_leaf_hash_state(
+        value: [bool; STATE_BITS],
+        privacy_salt: PrivacySalt,
+        group_index: u32,
+        internal_index: u32,
+    ) -> HashDigestBits {
+        // dbg!(">> compute_leaf_hash_ref");
+
+        //compute nonce
+        let mut nonce = compute_nonce(privacy_salt, group_index, internal_index);
+        // dbg!("   nonce = {}", digest_to_bytes(nonce));
+
+        // message = nonce || state
+        let mut message = [false; HASH_BITS + STATE_BITS];
+
+        //message = nonce || state nonce || state
+        for i in 0..HASH_BITS {
+            message[i] = nonce[i];
+        }
+
+        for i in 0..STATE_BITS {
+            message[HASH_BITS + i] = value[i];
+        }
+
+        // dbg!("   digest input = {}", hashstate_to_bytes(message));
+
+        blake2s(message)
+    }
+}
+const INPUT_SIZE: u16 = 2;
+
+struct Inputs {
+    value: [ZKStateAndRef; INPUT_SIZE],
+    group_hash: ComponentGroupHashBytes,
+}
+
+impl Inputs {
+    fn fingerprint_value(inputs: Inputs) -> [[bool; REF_BITS]; INPUT_SIZE] {
+        let mut result = [[false; REF_BITS]; INPUT_SIZE];
+
+        for i in 0..INPUT_SIZE {
+            //zkStateRef bits
+            result[i] = ZKStateAndRef::fingerprint_ref(inputs.value[i]);
+        }
+        result
+    }
+
+    fn fingerprint_group_hash(inputs: Inputs) -> ComponentGroupHashBits {
+        convert_hash_to_bits(inputs.group_hash)
+    }
+
+    fn compute_leaf_hashes(inputs: Inputs, privacy_salt: PrivacySalt) -> [HashDigestBits; INPUT_SIZE] {
+        //get fingerpint
+        let fingerprint = fingerprint_value(inputs);
+
+        let mut component_leaf_hashes = [[false; HASH_BITS]; INPUT_SIZE];
+        for i in (0 as u32)..(INPUT_SIZE as u32) {
+            component_leaf_hashes[i] = ZKStateAndRef::compute_leaf_hash_ref(
+                fingerprint[i],
+                privacy_salt,
+                ComponentGroupEnum::INPUTS_GROUP as u32,
+                i as u32);
+        }
+
+        component_leaf_hashes
+    }
+
+    fn compute_component_group_hash(inputs: Inputs, privacy_salt: PrivacySalt) -> ComponentGroupHashBits {
+        let component_leaf_hashes = compute_leaf_hashes(inputs, privacy_salt);
+
+        //Since INPUT_SIZE = 2, we use this Merkle function.
+        //If INPUT_SIZE is different choose the appropriate merkle_util function.
+        //If INPUT_SIZE is odd, apply zero padding until the number of leaf hashes equal to the next power of 2.
+        merkle_2_leaves(component_leaf_hashes)
+    }
+}
+
+const OUTPUT_SIZE: u16 = 2;
+
+struct Outputs {
+    value: [ZKStateAndRef; OUTPUT_SIZE],
+    group_hash: ComponentGroupHashBytes,
+}
+
+
+impl Outputs {
+    fn fingerprint_value(outputs: Outputs) -> [[bool; STATE_BITS]; OUTPUT_SIZE] {
+        let mut result = [[false; STATE_BITS]; OUTPUT_SIZE];
+
+        for i in 0..OUTPUT_SIZE {
+            //zkStateRef bits
+            result[i] = ZKStateAndRef::fingerprint_state(outputs.value[i]);
+        }
+        result
+    }
+
+    fn fingerprint_group_hash(outputs: Outputs) -> ComponentGroupHashBits {
+        convert_hash_to_bits(outputs.group_hash)
+    }
+
+    fn compute_leaf_hashes(outputs: Outputs, privacy_salt: PrivacySalt) -> [HashDigestBits; OUTPUT_SIZE] {
+        //get fingerpint
+        let fingerprint = fingerprint_value(outputs);
+
+        let mut component_leaf_hashes = [[false; HASH_BITS]; OUTPUT_SIZE];
+        for i in (0 as u32)..(OUTPUT_SIZE as u32) {
+            component_leaf_hashes[i] = ZKStateAndRef::compute_leaf_hash_state(
+                fingerprint[i],
+                privacy_salt,
+                ComponentGroupEnum::OUTPUTS_GROUP as u32,
+                i as u32);
+        }
+
+        component_leaf_hashes
+    }
+
+    fn compute_component_group_hash(outputs: Outputs, privacy_salt: PrivacySalt) -> ComponentGroupHashBits {
+        let component_leaf_hashes = compute_leaf_hashes(outputs, privacy_salt);
+
+        merkle_2_leaves(component_leaf_hashes)
+    }
+}const REFERENCE_SIZE: u16 = 2;
+
+struct References {
+    value: [ZKStateAndRef; REFERENCE_SIZE],
+    group_hash: ComponentGroupHashBytes,
+}
+
+impl References {
+    fn fingerprint_value(references: References) -> [[bool; REF_BITS]; REFERENCE_SIZE] {
+        let mut result = [[false; REF_BITS]; REFERENCE_SIZE];
+
+        for i in 0..REFERENCE_SIZE {
+            //zkStateRef bits
+            result[i] = ZKStateAndRef::fingerprint_ref(references.value[i]);
+        }
+        result
+    }
+
+    fn fingerprint_group_hash(references: References) -> ComponentGroupHashBits {
+        convert_hash_to_bits(references.group_hash)
+    }
+
+    fn compute_leaf_hashes(references: References, privacy_salt: PrivacySalt) -> [HashDigestBits; REFERENCE_SIZE] {
+        //get fingerpint
+        let fingerprint = fingerprint_value(references);
+
+        let mut component_leaf_hashes = [[false; HASH_BITS]; REFERENCE_SIZE];
+        for i in (0 as u32)..(REFERENCE_SIZE as u32) {
+            component_leaf_hashes[i] = ZKStateAndRef::compute_leaf_hash_ref(
+                fingerprint[i],
+                privacy_salt,
+                ComponentGroupEnum::REFERENCES_GROUP as u32,
+                i as u32);
+        }
+
+        component_leaf_hashes
+    }
+
+    fn compute_component_group_hash(references: References, privacy_salt: PrivacySalt) -> ComponentGroupHashBits {
+        let component_leaf_hashes = compute_leaf_hashes(references, privacy_salt);
+
+        merkle_2_leaves(component_leaf_hashes)
+    }
+}
+const COMMAND_SIZE: u16 = 1;
+const COMMAND_BITS: u16 = INT32_BITS;
+
+enum CommandData {
+    CREATE = 0,
+    MOVE = 1,
+}
+
+struct ContentCommand {
+    content: CommandData,
+    is_filler: bool,
+}
+
+struct Commands {
+    value: [ContentCommand; COMMAND_SIZE],
+    group_hash: ComponentGroupHashBytes,
+}
+
+impl Commands {
+    fn fingerprint_value(commands: Commands) -> [[bool; INT32_BITS]; COMMAND_SIZE] {
+        let mut result = [[false; INT32_BITS]; COMMAND_SIZE];
+
+        for i in 0..COMMAND_SIZE {
+            result[i] = to_bits(commands.value[i].content as u32);
+        }
+        result
+    }
+
+    fn fingerprint_group_hash(commands: Commands) -> ComponentGroupHashBits {
+        convert_hash_to_bits(commands.group_hash)
+    }
+
+    fn compute_leaf_hashes(commands: Commands, privacy_salt: PrivacySalt) -> [HashDigestBits; COMMAND_SIZE] {
+        //get fingerpint
+        let fingerprint = fingerprint_value(commands);
+
+        let mut component_leaf_hashes = [[false; HASH_BITS]; COMMAND_SIZE];
+        for i in (0 as u32)..(COMMAND_SIZE as u32) {
+            component_leaf_hashes[i] = compute_leaf_hash_int(
+                fingerprint[i],
+                privacy_salt,
+                ComponentGroupEnum::COMMANDS_GROUP as u32,
+                i as u32);
+        }
+
+        component_leaf_hashes
+    }
+
+    fn compute_component_group_hash(commands: Commands, privacy_salt: PrivacySalt) -> ComponentGroupHashBits {
+        let component_leaf_hashes = compute_leaf_hashes(commands, privacy_salt);
+
+        //Since COMMAND_SIZE = 1, we use zero padding first.
+        let mut component_leaves = [[false; HASH_BITS]; 2];
+        component_leaves[0] = component_leaf_hashes[0];
+
+        merkle_2_leaves(component_leaves)
+    }
+}const ATTACHMENT_SIZE: u16 = 2;
+
+struct ContentAttachment {
+    content: HashDigestBytes,
+    is_filler: bool,
+}
+
+struct Attachments {
+    value: [ContentAttachment; ATTACHMENT_SIZE],
+    group_hash: ComponentGroupHashBytes,
+}
+
+impl Attachments {
+    fn fingerprint_value(attachments: Attachments) -> [[bool; HASH_BITS]; ATTACHMENT_SIZE] {
+        let mut result = [[false; HASH_BITS]; ATTACHMENT_SIZE];
+
+        for i in 0..ATTACHMENT_SIZE {
+            result[i] = convert_hash_to_bits(attachments.value[i].content);
+        }
+        result
+    }
+
+    fn fingerprint_group_hash(attachments: Attachments) -> ComponentGroupHashBits {
+        convert_hash_to_bits(attachments.group_hash)
+    }
+
+    fn compute_leaf_hashes(attachments: Attachments, privacy_salt: PrivacySalt) -> [HashDigestBits; ATTACHMENT_SIZE] {
+        //get fingerpint
+        let fingerprint = fingerprint_value(attachments);
+
+        let mut component_leaf_hashes = [[false; HASH_BITS]; ATTACHMENT_SIZE];
+        for i in (0 as u32)..(ATTACHMENT_SIZE as u32) {
+            component_leaf_hashes[i] = compute_leaf_hash_hash(
+                fingerprint[i],
+                privacy_salt,
+                ComponentGroupEnum::ATTACHMENTS_GROUP as u32,
+                i as u32);
+        }
+
+        component_leaf_hashes
+    }
+
+    fn compute_component_group_hash(attachments: Attachments, privacy_salt: PrivacySalt) -> ComponentGroupHashBits {
+        let component_leaf_hashes = compute_leaf_hashes(attachments, privacy_salt);
+
+        merkle_2_leaves(component_leaf_hashes)
+    }
+}
+struct ContentNotary {
+    content: Party,
+    is_filler: bool,
+}
+
+struct Notary {
+    value: ContentNotary,
+    group_hash: ComponentGroupHashBytes,
+}
+
+
+impl Notary {
+    fn fingerprint_value(notary: Notary) -> [bool; PUBKEY_BITS] {
+        convert_pubKey_to_bits(notary.value.content.owning_key)
+    }
+
+    fn fingerprint_group_hash(notary: Notary) -> ComponentGroupHashBits {
+        convert_hash_to_bits(notary.group_hash)
+    }
+
+    fn compute_leaf_hashes(notary: Notary, privacy_salt: PrivacySalt) -> HashDigestBits {
+        //get fingerpint
+        let fingerprint = fingerprint_value(notary);
+
+        let mut component_leaf_hashes = [false; HASH_BITS];
+        component_leaf_hashes = compute_leaf_hash_pubKey(
+            fingerprint,
+            privacy_salt,
+            ComponentGroupEnum::NOTARY_GROUP as u32,
+            0 as u32);
+
+        component_leaf_hashes
+    }
+
+    fn compute_component_group_hash(notary: Notary, privacy_salt: PrivacySalt) -> ComponentGroupHashBits {
+        let component_leaf_hashes = compute_leaf_hashes(notary, privacy_salt);
+
+        //Since NOTARY_SIZE = 1, we use zero padding first.
+        let mut component_leaves = [[false; HASH_BITS]; 2];
+        component_leaves[0] = component_leaf_hashes;
+
+        merkle_2_leaves(component_leaves)
+    }
+}const TIME_WINDOW_BYTES: u16 = 24;
+const TIME_WINDOW_BITS: u16 = (8 as u16) * TIME_WINDOW_BYTES;
+
+struct ContentTimeWindow {
+    content: [u8; TIME_WINDOW_BYTES],
+    is_filler: bool,
+}
+
+struct TimeWindow {
+    value: ContentTimeWindow,
+    group_hash: ComponentGroupHashBytes,
+}
+
+fn compute_leaf_hash_timeW(
+    value: [bool; TIME_WINDOW_BITS],
+    privacy_salt: PrivacySalt,
+    group_index: u32,
+    internal_index: u32,
+) -> HashDigestBits {
+    //compute nonce
+    let mut nonce = compute_nonce(privacy_salt, group_index, internal_index);
+    let mut message: [bool; HASH_BITS + TIME_WINDOW_BITS] = [false; HASH_BITS + TIME_WINDOW_BITS];
+
+    //message = nonce || signature
+    for i in 0..HASH_BITS {
+        message[i] = nonce[i];
+    }
+    for i in 0..TIME_WINDOW_BITS {
+        message[HASH_BITS + i] = value[i];
+    }
+
+    blake2s(message)
+}
+
+impl TimeWindow {
+    fn fingerprint_value(time_window: TimeWindow) -> [bool; TIME_WINDOW_BITS] {
+        let mut result = [false; TIME_WINDOW_BITS];
+
+        for i in (0 as u16)..TIME_WINDOW_BYTES {
+            let time_window_bits = to_bits(time_window.value.content[i]);
+            for j in (0 as u16)..(8 as u16) {
+                result[i * (8 as u16) + j] = time_window_bits[j];
+            }
+        }
+
+        result
+    }
+
+    fn fingerprint_group_hash(time_window: TimeWindow) -> ComponentGroupHashBits {
+        convert_hash_to_bits(time_window.group_hash)
+    }
+
+    fn compute_leaf_hashes(time_window: TimeWindow, privacy_salt: PrivacySalt) -> HashDigestBits {
+        //get fingerpint
+        let fingerprint = fingerprint_value(time_window);
+
+        let mut component_leaf_hashes = [false; HASH_BITS];
+        component_leaf_hashes = compute_leaf_hash_timeW(
+            fingerprint,
+            privacy_salt,
+            ComponentGroupEnum::TIMEWINDOW_GROUP as u32,
+            0 as u32);
+
+        component_leaf_hashes
+    }
+
+    fn compute_component_group_hash(time_window: TimeWindow, privacy_salt: PrivacySalt) -> ComponentGroupHashBits {
+        let component_leaf_hashes = compute_leaf_hashes(time_window, privacy_salt);
+
+        //Since TIME_WINDOW_SIZE = 1, we use zero padding first.
+        let mut component_leaves = [[false; HASH_BITS]; 2];
+        component_leaves[0] = component_leaf_hashes;
+
+        merkle_2_leaves(component_leaves)
+    }
+}struct ContentParameter {
+    content: HashDigestBytes,
+    is_filler: bool,
+}
+
+struct Parameters {
+    value: ContentParameter,
+    group_hash: ComponentGroupHashBytes,
+}
+
+impl Parameters {
+    fn fingerprint_value(parameters: Parameters) -> [bool; HASH_BITS] {
+        convert_hash_to_bits(parameters.value.content)
+    }
+
+    fn fingerprint_group_hash(parameters: Parameters) -> ComponentGroupHashBits {
+        convert_hash_to_bits(parameters.group_hash)
+    }
+
+    fn compute_leaf_hashes(parameters: Parameters, privacy_salt: PrivacySalt) -> HashDigestBits {
+        //get fingerpint
+        let fingerprint = fingerprint_value(parameters);
+
+        let mut component_leaf_hashes = [false; HASH_BITS];
+        component_leaf_hashes = compute_leaf_hash_hash(
+            fingerprint,
+            privacy_salt,
+            ComponentGroupEnum::PARAMETERS_GROUP as u32,
+            0 as u32);
+
+        component_leaf_hashes
+    }
+
+    fn compute_component_group_hash(parameters: Parameters, privacy_salt: PrivacySalt) -> ComponentGroupHashBits {
+        let component_leaf_hashes = compute_leaf_hashes(parameters, privacy_salt);
+
+        //Since PARAMETER_SIZE = 1, we use zero padding first.
+        let mut component_leaves = [[false; HASH_BITS]; 2];
+        component_leaves[0] = component_leaf_hashes;
+
+        merkle_2_leaves(component_leaves)
+    }
+}const SIGNER_SIZE: u16 = 2;
+const SIGNER_BITS: u16 = PUBKEY_BITS;
+
+struct ContentSigner {
+    content: PubKey,
+    is_filler: bool,
+}
+
+struct Signers {
+    value: [ContentSigner; SIGNER_SIZE],
+    group_hash: ComponentGroupHashBytes,
+}
+
+impl Signers {
+    fn fingerprint_value(signers: Signers) -> [[bool; PUBKEY_BITS]; SIGNER_SIZE] {
+        let mut result = [[false; PUBKEY_BITS]; SIGNER_SIZE];
+
+        for i in 0..SIGNER_SIZE {
+            result[i] = convert_pubKey_to_bits(signers.value[i].content);
+        }
+        result
+    }
+
+    fn fingerprint_group_hash(signers: Signers) -> ComponentGroupHashBits {
+        convert_hash_to_bits(signers.group_hash)
+    }
+
+    fn compute_leaf_hashes(signers: Signers, privacy_salt: PrivacySalt) -> [HashDigestBits; SIGNER_SIZE] {
+        //get fingerpint
+        let fingerprint = fingerprint_value(signers);
+
+        let mut component_leaf_hashes = [[false; HASH_BITS]; SIGNER_SIZE];
+        for i in (0 as u32)..(SIGNER_SIZE as u32) {
+            component_leaf_hashes[i] = compute_leaf_hash_pubKey(
+                fingerprint[i],
+                privacy_salt,
+                ComponentGroupEnum::SIGNERS_GROUP as u32,
+                i as u32);
+        }
+
+        component_leaf_hashes
+    }
+
+    fn compute_component_group_hash(signers: Signers, privacy_salt: PrivacySalt) -> ComponentGroupHashBits {
+        let component_leaf_hashes = compute_leaf_hashes(signers, privacy_salt);
+
+        merkle_2_leaves(component_leaf_hashes)
+    }
+}
+
+struct ZKProverTransaction {
+    inputs: Inputs,
+    outputs: Outputs,
+    references: References,
+    commands: Commands,
+    attachments: Attachments,
+    notary: Notary,
+    time_window: TimeWindow,
+    parameters: Parameters,
+    signers: Signers,
+    privacy_salt: [u8; HASH_BYTES],
+}
+
+struct Witness {
+    transaction: ZKProverTransaction,
+}
+const COMPONENT_GROUP_SIZE: u8 = 9;
+
+fn build_merkle_tree(
+    zk_prover_transaction: ZKProverTransaction,
+    privacy_salt: PrivacySalt,
+) -> HashDigestBits {
+    let mut component_group_hashes = [[false; HASH_BITS]; COMPONENT_GROUP_SIZE];
+
+    component_group_hashes[ComponentGroupEnum::INPUTS_GROUP] =
+        Inputs::compute_component_group_hash(zk_prover_transaction.inputs, privacy_salt);
+    component_group_hashes[ComponentGroupEnum::OUTPUTS_GROUP] =
+        Outputs::compute_component_group_hash(zk_prover_transaction.outputs, privacy_salt);
+    component_group_hashes[ComponentGroupEnum::COMMANDS_GROUP] =
+        Commands::compute_component_group_hash(zk_prover_transaction.commands, privacy_salt);
+    component_group_hashes[ComponentGroupEnum::ATTACHMENTS_GROUP] =
+        Attachments::compute_component_group_hash(zk_prover_transaction.attachments, privacy_salt);
+    component_group_hashes[ComponentGroupEnum::NOTARY_GROUP] =
+        Notary::compute_component_group_hash(zk_prover_transaction.notary, privacy_salt);
+    component_group_hashes[ComponentGroupEnum::TIMEWINDOW_GROUP] =
+        TimeWindow::compute_component_group_hash(zk_prover_transaction.time_window, privacy_salt);
+    component_group_hashes[ComponentGroupEnum::SIGNERS_GROUP] =
+        Signers::compute_component_group_hash(zk_prover_transaction.signers, privacy_salt);
+    component_group_hashes[ComponentGroupEnum::REFERENCES_GROUP] =
+        References::compute_component_group_hash(zk_prover_transaction.references, privacy_salt);
+    component_group_hashes[ComponentGroupEnum::PARAMETERS_GROUP] =
+        Parameters::compute_component_group_hash(zk_prover_transaction.parameters, privacy_salt);
+
+    // There are 9 component groups.
+    // Pad it from the right with as many zero hashes to get a power of two number of leaves.
+    // This is how Corda Merkle tree construction works.
+    let mut component_leaves = [[false; HASH_BITS]; 16];
+    for i in 0..COMPONENT_GROUP_SIZE {
+        component_leaves[i] = component_group_hashes[i];
+    }
+
+    merkle_16_leaves(component_leaves)
+}
 struct PublicInput {
     transactionId: [u8; 32],
 }
 
-//Temporary function to manually transfer components to zkmerkle tree !!!
-fn convertFromComponentToZKMerkle(
-    zkptx: (ComponentGroups::ComponentGroup, PrivacySalt),
-) -> (ComponentGroup, PrivacySalt) {
-    (
-        ComponentGroup {
-            inputs: InputGroup {
-                groupElements: [
-                    ContentZKStateAndRefGroup {
-                        content: ZKStateAndRefGroup {
-                            state: zkptx.0.inputs.groupElements[0].content.state,
-                            zkStateRef: zkptx.0.inputs.groupElements[0].content.zkStateRef,
-                        },
-                        isFiller: zkptx.0.inputs.groupElements[0].isFiller,
-                    },
-                    ContentZKStateAndRefGroup {
-                        content: ZKStateAndRefGroup {
-                            state: zkptx.0.inputs.groupElements[1].content.state,
-                            zkStateRef: zkptx.0.inputs.groupElements[1].content.zkStateRef,
-                        },
-                        isFiller: zkptx.0.inputs.groupElements[1].isFiller,
-                    },
-                ],
-                groupHash: zkptx.0.inputs.groupHash,
-            },
-            outputs: OutputGroup {
-                groupElements: [
-                    ContentZKStateAndRefGroup {
-                        content: ZKStateAndRefGroup {
-                            state: zkptx.0.outputs.groupElements[0].content.state,
-                            zkStateRef: zkptx.0.outputs.groupElements[0].content.zkStateRef,
-                        },
-                        isFiller: zkptx.0.outputs.groupElements[0].isFiller,
-                    },
-                    ContentZKStateAndRefGroup {
-                        content: ZKStateAndRefGroup {
-                            state: zkptx.0.outputs.groupElements[1].content.state,
-                            zkStateRef: zkptx.0.outputs.groupElements[1].content.zkStateRef,
-                        },
-                        isFiller: zkptx.0.outputs.groupElements[1].isFiller,
-                    },
-                ],
-                groupHash: zkptx.0.outputs.groupHash,
-            },
-            references: ReferenceGroup {
-                groupElements: [
-                    ContentZKStateAndRefGroup {
-                        content: ZKStateAndRefGroup {
-                            state: zkptx.0.references.groupElements[0].content.state,
-                            zkStateRef: zkptx.0.references.groupElements[0].content.zkStateRef,
-                        },
-                        isFiller: zkptx.0.references.groupElements[0].isFiller,
-                    },
-                    ContentZKStateAndRefGroup {
-                        content: ZKStateAndRefGroup {
-                            state: zkptx.0.references.groupElements[1].content.state,
-                            zkStateRef: zkptx.0.references.groupElements[1].content.zkStateRef,
-                        },
-                        isFiller: zkptx.0.references.groupElements[1].isFiller,
-                    },
-                ],
-                groupHash: zkptx.0.references.groupHash,
-            },
-            commandData: CommandDataGroup {
-                groupElements: [ContentCommandDataGroup {
-                    content: zkptx.0.commandData.groupElements[0].content,
-                    isFiller: zkptx.0.commandData.groupElements[0].isFiller,
-                }],
-                groupHash: zkptx.0.commandData.groupHash,
-            },
-            attachments: AttachmentGroup {
-                groupElements: [
-                    ContentAttachmentGroup {
-                        content: zkptx.0.attachments.groupElements[0].content,
-                        isFiller: zkptx.0.attachments.groupElements[0].isFiller,
-                    },
-                    ContentAttachmentGroup {
-                        content: zkptx.0.attachments.groupElements[1].content,
-                        isFiller: zkptx.0.attachments.groupElements[1].isFiller,
-                    },
-                ],
-                groupHash: zkptx.0.attachments.groupHash,
-            },
-            notary: NotaryGroup {
-                groupElements: ContentNotaryGroup {
-                    content: zkptx.0.notary.groupElements.content,
-                    isFiller: zkptx.0.notary.groupElements.isFiller,
-                },
-                groupHash: zkptx.0.notary.groupHash,
-            },
-            timeWindow: TimeWindowGroup {
-                groupElements: ContentTimeWindowGroup {
-                    content: zkptx.0.timeWindow.groupElements.content,
-                    isFiller: zkptx.0.timeWindow.groupElements.isFiller,
-                },
-                groupHash: zkptx.0.timeWindow.groupHash,
-            },
-            parameters: ParameterGroup {
-                groupElements: ContentParameterGroup {
-                    content: zkptx.0.parameters.groupElements.content,
-                    isFiller: zkptx.0.parameters.groupElements.isFiller,
-                },
-                groupHash: zkptx.0.parameters.groupHash,
-            },
-            commandSigners: CommandSignerGroup {
-                groupElements: [
-                    ContentCommandSignerGroup {
-                        content: zkptx.0.commandSigners.groupElements[0].content,
-                        isFiller: zkptx.0.commandSigners.groupElements[0].isFiller,
-                    },
-                    ContentCommandSignerGroup {
-                        content: zkptx.0.commandSigners.groupElements[1].content,
-                        isFiller: zkptx.0.commandSigners.groupElements[1].isFiller,
-                    },
-                ],
-                groupHash: zkptx.0.commandSigners.groupHash,
-            },
-        },
-        zkptx.1,
-    )
-}
+fn main(witness: Witness) -> PublicInput {
+    let privacy_salt = convert_hash_to_bits(witness.transaction.privacy_salt);
+    let root_hash = build_merkle_tree(witness.transaction, privacy_salt);
 
-fn main(witness: Witness) -> PublicInput //ZKMerkleTree::PedersenDigest
-{
-    //Check contract rules
-    //ComponentGroups::CheckContractRules(witness);
-
-    let zkptx: (ComponentGroups::ComponentGroup, PrivacySalt) =
-        ComponentGroups::buildComponentGroups(witness.transaction);
-
-    let root_hash = ZKMerkleTree::buildMerkleTree(convertFromComponentToZKMerkle(zkptx));
-
-    let mut root_bytes = [0 as u8; 32];
-
-    for i in 0..32 {
-        let mut byte_bits = [false; 8];
-        for j in 0..8 {
-            byte_bits[j] = root_hash[8 * i + j];
-        }
-        root_bytes[i] = std::convert::from_bits_unsigned(byte_bits);
+    PublicInput {
+        transactionId: digest_to_bytes(root_hash),
     }
-
-    PublicInput { transactionId: root_bytes }
 }

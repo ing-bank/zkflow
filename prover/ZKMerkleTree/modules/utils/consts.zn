@@ -1,0 +1,26 @@
+const PUBKEY_BYTES: u16 = 44;
+const PUBKEY_BITS: u16 = (8 as u16) * PUBKEY_BYTES;
+
+const HASH_BYTES: u16 = 32;
+const HASH_BITS: u16 = (8 as u16) * HASH_BYTES;
+
+const INT32_BITS: u16 = 32;
+const INT128_BITS: u16 = 128;
+
+const BYTE_BITS: u16 = 8;
+
+const U32_BYTES: u16 = 4;
+const U32_BITS: u16 = U32_BYTES * BYTE_BITS;
+
+const U128_BYTES: u16 = 16;
+const U128_BITS: u16 = U128_BYTES * BYTE_BITS;
+
+type PubKey = [u8; PUBKEY_BYTES];
+
+type HashDigestBytes = [u8; HASH_BYTES];
+type HashDigestBits = [bool; HASH_BITS];
+
+type ComponentGroupHashBytes = [u8; HASH_BYTES];
+type ComponentGroupHashBits = [bool; HASH_BITS];
+
+type PrivacySalt = [bool; HASH_BITS];
