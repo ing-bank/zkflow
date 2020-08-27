@@ -12,44 +12,44 @@ fn merkle_2_leaves(leaves: [[bool; HASH_BITS]; 2]) -> [bool; HASH_BITS] {
 }
 
 fn merkle_4_leaves(leaves: [[bool; HASH_BITS]; 4]) -> [bool; HASH_BITS] {
-  //dbg!("Consuming 4 leaves");
+  dbg!("Consuming 4 leaves");
   let mut new_leaves = [[false; HASH_BITS]; 2];
   for i in 0..2 {
     new_leaves[i] = pedersen_to_padded_bits(
       pedersen(concatenate_hashes(leaves[2 * i], leaves[2 * i + 1])).0,
     );
-    //dbg!("{}: {}", 2 * i, digest_to_bytes(leaves[2 * i]));
-    //dbg!("{}: {}", 2 * i + 1, digest_to_bytes(leaves[2 * i + 1]));
-    //dbg!("Digest: {}", digest_to_bytes(new_leaves[i]));
+    dbg!("{}: {}", 2 * i, digest_to_bytes(leaves[2 * i]));
+    dbg!("{}: {}", 2 * i + 1, digest_to_bytes(leaves[2 * i + 1]));
+    dbg!("Digest: {}", digest_to_bytes(new_leaves[i]));
   }
-  //dbg!("");
+  dbg!("");
   merkle_2_leaves(new_leaves)
 }
 fn merkle_8_leaves(leaves: [[bool; HASH_BITS]; 8]) -> [bool; HASH_BITS] {
-  //dbg!("Consuming 8 leaves");
+  dbg!("Consuming 8 leaves");
   let mut new_leaves = [[false; HASH_BITS]; 4];
   for i in 0..4 {
     new_leaves[i] = pedersen_to_padded_bits(
       pedersen(concatenate_hashes(leaves[2 * i], leaves[2 * i + 1])).0,
     );
-    //dbg!("{}: {}", 2 * i, digest_to_bytes(leaves[2 * i]));
-    //dbg!("{}: {}", 2 * i + 1, digest_to_bytes(leaves[2 * i + 1]));
-    //dbg!("Digest: {}", digest_to_bytes(new_leaves[i]));
+    dbg!("{}: {}", 2 * i, digest_to_bytes(leaves[2 * i]));
+    dbg!("{}: {}", 2 * i + 1, digest_to_bytes(leaves[2 * i + 1]));
+    dbg!("Digest: {}", digest_to_bytes(new_leaves[i]));
   }
-  //dbg!("");
+  dbg!("");
   merkle_4_leaves(new_leaves)
 }
 fn merkle_16_leaves(leaves: [[bool; HASH_BITS]; 16]) -> [bool; HASH_BITS] {
-  //dbg!("Consuming 16 leaves");
+  dbg!("Consuming 16 leaves");
   let mut new_leaves = [[false; HASH_BITS]; 8];
   for i in 0..8 {
     new_leaves[i] = pedersen_to_padded_bits(
       pedersen(concatenate_hashes(leaves[2 * i], leaves[2 * i + 1])).0,
     );
-    //dbg!("{}: {}", 2 * i, digest_to_bytes(leaves[2 * i]));
-    //dbg!("{}: {}", 2 * i + 1, digest_to_bytes(leaves[2 * i + 1]));
-    //dbg!("Digest: {}", digest_to_bytes(new_leaves[i]));
+    dbg!("{}: {}", 2 * i, digest_to_bytes(leaves[2 * i]));
+    dbg!("{}: {}", 2 * i + 1, digest_to_bytes(leaves[2 * i + 1]));
+    dbg!("Digest: {}", digest_to_bytes(new_leaves[i]));
   }
-  //dbg!("");
+  dbg!("");
   merkle_8_leaves(new_leaves)
 }

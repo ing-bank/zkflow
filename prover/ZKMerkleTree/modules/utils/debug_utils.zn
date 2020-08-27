@@ -1,26 +1,6 @@
-fn convert_hash_to_bits(value: [u8; HASH_BYTES]) -> [bool; HASH_BITS] {
-    let mut hash_digest_bits = [false; HASH_BITS];
-
-    for i in (0 as u16)..HASH_BYTES {
-        let hd_bits = to_bits(value[i]);
-        for j in (0 as u16)..(8 as u16) {
-            hash_digest_bits[(8 as u16) * i + j] = hd_bits[j];
-        }
-    }
-    hash_digest_bits
-}
-
-fn convert_pubKey_to_bits(value: [u8; PUBKEY_BYTES]) -> [bool; PUBKEY_BITS] {
-    let mut pubKey_bits = [false; PUBKEY_BITS];
-
-    for i in (0 as u16)..PUBKEY_BYTES {
-        let pk_bits = to_bits(value[i]);
-        for j in (0 as u16)..(8 as u16) {
-            pubKey_bits[(8 as u16) * i + j] = pk_bits[j];
-        }
-    }
-    pubKey_bits
-}
+const STATE_BYTES: u16 = PUBKEY_BYTES + U32_BYTES + PUBKEY_BYTES;
+const STATE_BITS: u16 = STATE_BYTES * BYTE_BITS;
+const REF_BITS: u16 = HASH_BITS;
 
 fn u32_to_bytes(bits: [bool; U32_BITS]) -> [u8; U32_BYTES] {
     let mut u32_bytes = [0 as u8; U32_BYTES];
@@ -63,3 +43,33 @@ fn hashhash_to_bytes(digest: [bool; HASH_BITS + HASH_BITS]) -> [u8; HASH_BYTES +
 
     hash_bytes
 }
+
+
+fn hashref_to_bytes(digest: [bool; HASH_BITS + REF_BITS]) -> [u8; HASH_BYTES + HASH_BYTES] {
+    let mut hash_bytes = [0 as u8; HASH_BYTES + HASH_BYTES];
+
+    for i in 0..(HASH_BYTES + HASH_BYTES) {
+        let mut byte_bits = [false; BYTE_BITS];
+        for j in 0..BYTE_BITS {
+            byte_bits[j] = digest[BYTE_BITS * i + j];
+        }
+        hash_bytes[i] = from_bits_unsigned(byte_bits);
+    }
+
+    hash_bytes
+}
+
+fn hashstate_to_bytes(digest: [bool; HASH_BITS + STATE_BITS]) -> [u8; HASH_BYTES + STATE_BYTES] {
+    let mut hash_bytes = [0 as u8; HASH_BYTES + STATE_BYTES];
+
+    for i in 0..(HASH_BYTES + STATE_BYTES) {
+        let mut byte_bits = [false; BYTE_BITS];
+        for j in 0..BYTE_BITS {
+            byte_bits[j] = digest[BYTE_BITS * i + j];
+        }
+        hash_bytes[i] = from_bits_unsigned(byte_bits);
+    }
+
+    hash_bytes
+}
+

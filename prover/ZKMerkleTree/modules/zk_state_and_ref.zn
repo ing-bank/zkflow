@@ -1,8 +1,3 @@
-//The size of state bits depends on the content of the state. The example state we have contains two public keys and an integer value.
-const STATE_BYTES: u16 = PUBKEY_BYTES + U32_BYTES + PUBKEY_BYTES;
-const STATE_BITS: u16 = STATE_BYTES * BYTE_BITS;
-const REF_BITS: u16 = HASH_BITS;
-
 struct Party {
     owning_key: PubKey,
 }
@@ -40,36 +35,6 @@ struct ZKStateAndRef {
     is_filler: bool,
 }
 
-// Utility functions -->
-fn hashref_to_bytes(digest: [bool; HASH_BITS + REF_BITS]) -> [u8; HASH_BYTES + HASH_BYTES] {
-    let mut hash_bytes = [0 as u8; HASH_BYTES + HASH_BYTES];
-
-    for i in 0..(HASH_BYTES + HASH_BYTES) {
-        let mut byte_bits = [false; BYTE_BITS];
-        for j in 0..BYTE_BITS {
-            byte_bits[j] = digest[BYTE_BITS * i + j];
-        }
-        hash_bytes[i] = from_bits_unsigned(byte_bits);
-    }
-
-    hash_bytes
-}
-
-fn hashstate_to_bytes(digest: [bool; HASH_BITS + STATE_BITS]) -> [u8; HASH_BYTES + STATE_BYTES] {
-    let mut hash_bytes = [0 as u8; HASH_BYTES + STATE_BYTES];
-
-    for i in 0..(HASH_BYTES + STATE_BYTES) {
-        let mut byte_bits = [false; BYTE_BITS];
-        for j in 0..BYTE_BITS {
-            byte_bits[j] = digest[BYTE_BITS * i + j];
-        }
-        hash_bytes[i] = from_bits_unsigned(byte_bits);
-    }
-
-    hash_bytes
-}
-// <-- Utility functions
-
 impl ZKStateAndRef {
     fn fingerprint_state(value: ZKStateAndRef) -> [bool; STATE_BITS] {
         let mut result = [false; STATE_BITS];
@@ -93,11 +58,11 @@ impl ZKStateAndRef {
         group_index: u32,
         internal_index: u32,
     ) -> HashDigestBits {
-        // dbg!(">> compute_leaf_hash_ref");
+        //dbg!(">> compute_leaf_hash_ref");
 
         //compute nonce
         let mut nonce = compute_nonce(privacy_salt, group_index, internal_index);
-        // dbg!("   nonce = {}", digest_to_bytes(nonce));
+        //dbg!("   nonce = {}", digest_to_bytes(nonce));
 
         // message = nonce || ref
         let mut message: [bool; HASH_BITS + REF_BITS] = [false; HASH_BITS + REF_BITS];
@@ -107,7 +72,7 @@ impl ZKStateAndRef {
         for i in 0..REF_BITS {
             message[HASH_BITS + i] = value[i];
         }
-        // dbg!("   digest input = {}", hashref_to_bytes(message));
+        //dbg!("   digest input = {}", hashref_to_bytes(message));
         blake2s(message)
     }
 
@@ -117,11 +82,11 @@ impl ZKStateAndRef {
         group_index: u32,
         internal_index: u32,
     ) -> HashDigestBits {
-        // dbg!(">> compute_leaf_hash_ref");
+        //dbg!(">> compute_leaf_hash_ref");
 
         //compute nonce
         let mut nonce = compute_nonce(privacy_salt, group_index, internal_index);
-        // dbg!("   nonce = {}", digest_to_bytes(nonce));
+        //dbg!("   nonce = {}", digest_to_bytes(nonce));
 
         // message = nonce || state
         let mut message = [false; HASH_BITS + STATE_BITS];
@@ -135,7 +100,7 @@ impl ZKStateAndRef {
             message[HASH_BITS + i] = value[i];
         }
 
-        // dbg!("   digest input = {}", hashstate_to_bytes(message));
+        //dbg!("   digest input = {}", hashstate_to_bytes(message));
 
         blake2s(message)
     }
