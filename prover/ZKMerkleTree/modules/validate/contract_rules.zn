@@ -1,0 +1,22 @@
+
+//Temporary function to test isFiller attribute
+fn check_contract_rules(value: ZKProverTransaction) {
+    //Check if inputs total is equal to outputs total
+    let mut input_value_sum: i32 = 0;
+    let mut output_value_sum: i32 = 0;
+
+    for i in 0..INPUT_SIZE
+    while !value.inputs.value[i].is_filler {
+        input_value_sum = input_value_sum + value.inputs.value[i].content.state.data.value;
+    }
+
+    for i in 0..OUTPUT_SIZE
+    while !value.outputs.value[i].is_filler {
+        output_value_sum = output_value_sum + value.outputs.value[i].content.state.data.value;
+    }
+
+    assert!(
+        input_value_sum == output_value_sum,
+        "Failed requirement: the total value of the inputs and outputs should be equal"
+    );
+}

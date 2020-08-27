@@ -3,6 +3,9 @@ struct PublicInput {
 }
 
 fn main(witness: Witness) -> PublicInput {
+    //Check contract rules
+    check_contract_rules(witness.transaction);
+
     let privacy_salt = convert_hash_to_bits(witness.transaction.privacy_salt);
     let root_hash = build_merkle_tree(witness.transaction, privacy_salt);
 

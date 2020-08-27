@@ -1,5 +1,3 @@
-const COMPONENT_GROUP_SIZE: u8 = 9;
-
 fn build_merkle_tree(
     zk_prover_transaction: ZKProverTransaction,
     privacy_salt: PrivacySalt,
@@ -24,6 +22,10 @@ fn build_merkle_tree(
         References::compute_component_group_hash(zk_prover_transaction.references, privacy_salt);
     component_group_hashes[ComponentGroupEnum::PARAMETERS_GROUP] =
         Parameters::compute_component_group_hash(zk_prover_transaction.parameters, privacy_salt);
+
+    //Validate component group hashes
+    //This function is currently disabled since witness file is all zeros.
+    //validate_group_hashes(component_group_hashes, zk_prover_transaction);
 
     // There are 9 component groups.
     // Pad it from the right with as many zero hashes to get a power of two number of leaves.
