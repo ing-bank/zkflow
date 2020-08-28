@@ -740,7 +740,7 @@ impl Notary {
     }
 }
 const TIME_WINDOW_BYTES: u16 = 24;
-const TIME_WINDOW_BITS: u16 = (8 as u16) * TIME_WINDOW_BYTES;
+const TIME_WINDOW_BITS: u16 = (BYTE_BITS as u16) * TIME_WINDOW_BYTES;
 
 struct ContentTimeWindow {
     content: [u8; TIME_WINDOW_BYTES],

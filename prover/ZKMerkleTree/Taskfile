@@ -22,17 +22,17 @@ function merkle() {
     new_leaves=$((level_leaves / 2))
     merkle_functions+=(\
 "fn merkle_$((level_leaves))_leaves(leaves: [[bool; HASH_BITS]; $((level_leaves))]) -> [bool; HASH_BITS] {
-  //dbg!(\"Consuming $((level_leaves)) leaves\");
+  dbg!(\"Consuming $((level_leaves)) leaves\");
   let mut new_leaves = [[false; HASH_BITS]; $((new_leaves))];
   for i in 0..$((new_leaves)) {
     new_leaves[i] = pedersen_to_padded_bits(
       pedersen(concatenate_hashes(leaves[2 * i], leaves[2 * i + 1])).0,
     );
-    //dbg!(\"{}: {}\", 2 * i, digest_to_bytes(leaves[2 * i]));
-    //dbg!(\"{}: {}\", 2 * i + 1, digest_to_bytes(leaves[2 * i + 1]));
-    //dbg!(\"Digest: {}\", digest_to_bytes(new_leaves[i]));
+    dbg!(\"{}: {}\", 2 * i, digest_to_bytes(leaves[2 * i]));
+    dbg!(\"{}: {}\", 2 * i + 1, digest_to_bytes(leaves[2 * i + 1]));
+    dbg!(\"Digest: {}\", digest_to_bytes(new_leaves[i]));
   }
-  //dbg!(\"\");
+  dbg!(\"\");
   merkle_$((new_leaves))_leaves(new_leaves)
 }"
     )
@@ -43,9 +43,9 @@ function merkle() {
 "// Merkle tree construction.
 
 fn merkle_2_leaves(leaves: [[bool; HASH_BITS]; 2]) -> [bool; HASH_BITS] {
-  //dbg!(\"Consuming 2 leaves\");
-  //dbg!(\"0: {}\", digest_to_bytes(leaves[0]));
-  //dbg!(\"1: {}\", digest_to_bytes(leaves[1]));
+  dbg!(\"Consuming 2 leaves\");
+  dbg!(\"0: {}\", digest_to_bytes(leaves[0]));
+  dbg!(\"1: {}\", digest_to_bytes(leaves[1]));
   pedersen_to_padded_bits(
     pedersen(concatenate_hashes(leaves[0], leaves[1])).0,
   )
