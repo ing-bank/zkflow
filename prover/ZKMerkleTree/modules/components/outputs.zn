@@ -5,7 +5,6 @@ struct Outputs {
     group_hash: ComponentGroupHashBytes,
 }
 
-
 impl Outputs {
     fn fingerprint_value(outputs: Outputs) -> [[bool; STATE_BITS]; OUTPUT_SIZE] {
         let mut result = [[false; STATE_BITS]; OUTPUT_SIZE];
@@ -21,7 +20,10 @@ impl Outputs {
         convert_hash_to_bits(outputs.group_hash)
     }
 
-    fn compute_leaf_hashes(outputs: Outputs, privacy_salt: PrivacySalt) -> [HashDigestBits; OUTPUT_SIZE] {
+    fn compute_leaf_hashes(
+        outputs: Outputs,
+        privacy_salt: PrivacySalt,
+    ) -> [HashDigestBits; OUTPUT_SIZE] {
         //get fingerpint
         let fingerprint = fingerprint_value(outputs);
 
@@ -31,13 +33,17 @@ impl Outputs {
                 fingerprint[i],
                 privacy_salt,
                 ComponentGroupEnum::OUTPUTS_GROUP as u32,
-                i as u32);
+                i as u32,
+            );
         }
 
         component_leaf_hashes
     }
 
-    fn compute_component_group_hash(outputs: Outputs, privacy_salt: PrivacySalt) -> ComponentGroupHashBits {
+    fn compute_component_group_hash(
+        outputs: Outputs,
+        privacy_salt: PrivacySalt,
+    ) -> ComponentGroupHashBits {
         let component_leaf_hashes = compute_leaf_hashes(outputs, privacy_salt);
 
         merkle_2_leaves(component_leaf_hashes)

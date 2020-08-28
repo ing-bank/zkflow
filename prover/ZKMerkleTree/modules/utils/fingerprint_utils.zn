@@ -1,3 +1,5 @@
+//Fingerprint methods that are commonly used in component groups.
+
 fn convert_hash_to_bits(value: [u8; HASH_BYTES]) -> [bool; HASH_BITS] {
     let mut hash_digest_bits = [false; HASH_BITS];
 

@@ -59,12 +59,16 @@ impl TimeWindow {
             fingerprint,
             privacy_salt,
             ComponentGroupEnum::TIMEWINDOW_GROUP as u32,
-            0 as u32);
+            0 as u32,
+        );
 
         component_leaf_hashes
     }
 
-    fn compute_component_group_hash(time_window: TimeWindow, privacy_salt: PrivacySalt) -> ComponentGroupHashBits {
+    fn compute_component_group_hash(
+        time_window: TimeWindow,
+        privacy_salt: PrivacySalt,
+    ) -> ComponentGroupHashBits {
         let component_leaf_hashes = compute_leaf_hashes(time_window, privacy_salt);
 
         //Since TIME_WINDOW_SIZE = 1, we use zero padding first.

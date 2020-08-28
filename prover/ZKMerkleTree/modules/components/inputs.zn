@@ -20,8 +20,11 @@ impl Inputs {
         convert_hash_to_bits(inputs.group_hash)
     }
 
-    fn compute_leaf_hashes(inputs: Inputs, privacy_salt: PrivacySalt) -> [HashDigestBits; INPUT_SIZE] {
-        //get fingerpint
+    fn compute_leaf_hashes(
+        inputs: Inputs,
+        privacy_salt: PrivacySalt,
+    ) -> [HashDigestBits; INPUT_SIZE] {
+        //get fingerprint
         let fingerprint = fingerprint_value(inputs);
 
         let mut component_leaf_hashes = [[false; HASH_BITS]; INPUT_SIZE];
@@ -30,13 +33,17 @@ impl Inputs {
                 fingerprint[i],
                 privacy_salt,
                 ComponentGroupEnum::INPUTS_GROUP as u32,
-                i as u32);
+                i as u32,
+            );
         }
 
         component_leaf_hashes
     }
 
-    fn compute_component_group_hash(inputs: Inputs, privacy_salt: PrivacySalt) -> ComponentGroupHashBits {
+    fn compute_component_group_hash(
+        inputs: Inputs,
+        privacy_salt: PrivacySalt,
+    ) -> ComponentGroupHashBits {
         let component_leaf_hashes = compute_leaf_hashes(inputs, privacy_salt);
 
         //Since INPUT_SIZE = 2, we use this Merkle function.
@@ -45,4 +52,3 @@ impl Inputs {
         merkle_2_leaves(component_leaf_hashes)
     }
 }
-

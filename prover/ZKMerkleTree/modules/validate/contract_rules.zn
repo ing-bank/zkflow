@@ -1,4 +1,3 @@
-
 //Temporary function to test isFiller attribute
 fn check_contract_rules(value: ZKProverTransaction) {
     //Check if inputs total is equal to outputs total

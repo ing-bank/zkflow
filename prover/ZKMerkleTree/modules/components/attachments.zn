@@ -24,7 +24,10 @@ impl Attachments {
         convert_hash_to_bits(attachments.group_hash)
     }
 
-    fn compute_leaf_hashes(attachments: Attachments, privacy_salt: PrivacySalt) -> [HashDigestBits; ATTACHMENT_SIZE] {
+    fn compute_leaf_hashes(
+        attachments: Attachments,
+        privacy_salt: PrivacySalt,
+    ) -> [HashDigestBits; ATTACHMENT_SIZE] {
         //get fingerpint
         let fingerprint = fingerprint_value(attachments);
 
@@ -34,13 +37,17 @@ impl Attachments {
                 fingerprint[i],
                 privacy_salt,
                 ComponentGroupEnum::ATTACHMENTS_GROUP as u32,
-                i as u32);
+                i as u32,
+            );
         }
 
         component_leaf_hashes
     }
 
-    fn compute_component_group_hash(attachments: Attachments, privacy_salt: PrivacySalt) -> ComponentGroupHashBits {
+    fn compute_component_group_hash(
+        attachments: Attachments,
+        privacy_salt: PrivacySalt,
+    ) -> ComponentGroupHashBits {
         let component_leaf_hashes = compute_leaf_hashes(attachments, privacy_salt);
 
         merkle_2_leaves(component_leaf_hashes)

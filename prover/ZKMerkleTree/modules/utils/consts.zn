@@ -4,9 +4,6 @@ const PUBKEY_BITS: u16 = (8 as u16) * PUBKEY_BYTES;
 const HASH_BYTES: u16 = 32;
 const HASH_BITS: u16 = (8 as u16) * HASH_BYTES;
 
-const INT32_BITS: u16 = 32;
-const INT128_BITS: u16 = 128;
-
 const BYTE_BITS: u16 = 8;
 
 const U32_BYTES: u16 = 4;
@@ -14,6 +11,14 @@ const U32_BITS: u16 = U32_BYTES * BYTE_BITS;
 
 const U128_BYTES: u16 = 16;
 const U128_BITS: u16 = U128_BYTES * BYTE_BITS;
+
+const STATE_BYTES: u16 = PUBKEY_BYTES + U32_BYTES + PUBKEY_BYTES;
+const STATE_BITS: u16 = STATE_BYTES * BYTE_BITS;
+
+const REF_BITS: u16 = HASH_BITS;
+
+const NONCE_BYTES: u16 = HASH_BYTES + U32_BYTES + U32_BYTES;
+const NONCE_BITS: u16 = NONCE_BYTES * BYTE_BITS;
 
 type PubKey = [u8; PUBKEY_BYTES];
 

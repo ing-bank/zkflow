@@ -7,12 +7,10 @@ struct Data {
     value: i32,
 }
 
-/*
-This struct follows the structure in the original Corda TransactionState structure. The fields contractCN,
-encumbrance and constraint are commented out and declared bool intentionally to reserve their place in the
-structure. In the current implementation we don't use these fields, if they are going to be included, they
-should be declared with the corresponding data type.
-*/
+//This struct follows the structure in the original Corda TransactionState structure. The fields
+// contractCN, encumbrance and constraint are commented out and declared bool intentionally to
+// reserve their place in the structure. In the current implementation we don't use these fields,
+// if they are going to be included, they should be declared with the corresponding data type.
 struct TransactionState {
     data: Data,
     //contractCN: bool,
@@ -39,11 +37,14 @@ impl ZKStateAndRef {
     fn fingerprint_state(value: ZKStateAndRef) -> [bool; STATE_BITS] {
         let mut result = [false; STATE_BITS];
 
-        //state_bits = dataOwner_owningKey || value || notary_owningKey
-        result[0..PUBKEY_BITS] = convert_pubKey_to_bits(value.content.state.data.owner.owning_key); //dataOwner_owningKey
-        result[PUBKEY_BITS..(PUBKEY_BITS + INT32_BITS)] = to_bits(value.content.state.data.value); //value
-        result[(PUBKEY_BITS + INT32_BITS)..STATE_BITS] =
-            convert_pubKey_to_bits(value.content.state.notary.owning_key); //notary_owningKey
+        //state_bits = dataOwner_owning_key || value || notary_owning_key
+        //dataOwner_owning_key
+        result[0..PUBKEY_BITS] = convert_pubKey_to_bits(value.content.state.data.owner.owning_key);
+        //value
+        result[PUBKEY_BITS..(PUBKEY_BITS + U32_BITS)] = to_bits(value.content.state.data.value);
+        //notary_owning_key
+        result[(PUBKEY_BITS + U32_BITS)..STATE_BITS] =
+            convert_pubKey_to_bits(value.content.state.notary.owning_key);
 
         result
     }
@@ -99,9 +100,7 @@ impl ZKStateAndRef {
         for i in 0..STATE_BITS {
             message[HASH_BITS + i] = value[i];
         }
-
         //dbg!("   digest input = {}", hashstate_to_bytes(message));
-
         blake2s(message)
     }
 }

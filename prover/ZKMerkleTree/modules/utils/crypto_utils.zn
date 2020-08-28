@@ -1,16 +1,11 @@
 const PEDERSEN_DIGEST_BITS: u16 = 254;
 
-/**
-* Auxiliary method to concatenate two hash digests.
-* @param hash1 hash digest
-* @param hash2 hash digest
-* @return data = hash1 || hash2
-*/
+// Method to concatenate two hash digests.
 fn concatenate_hashes(
     hash1: [bool; HASH_BITS],
     hash2: [bool; HASH_BITS],
 ) -> [bool; HASH_BITS + HASH_BITS] {
-    let mut data = [false; HASH_BITS + HASH_BITS]; //concatenate two child nodes
+    let mut data = [false; HASH_BITS + HASH_BITS];
 
     for i in (0 as u16)..HASH_BITS {
         data[i] = hash1[i];
@@ -19,6 +14,7 @@ fn concatenate_hashes(
     data
 }
 
+// Method to pad pedersen digest with zeros to assure 256 bits digest size globally.
 fn pedersen_to_padded_bits(digest: field) -> [bool; HASH_BITS] {
     let mut digest_bits = [false; HASH_BITS];
     let pedersen_bits = to_bits(digest);
@@ -30,6 +26,7 @@ fn pedersen_to_padded_bits(digest: field) -> [bool; HASH_BITS] {
     digest_bits
 }
 
+// Method to compute leaf hash on integer  values.
 fn compute_leaf_hash_int(
     value: [bool; U32_BITS],
     privacy_salt: PrivacySalt,
@@ -51,6 +48,7 @@ fn compute_leaf_hash_int(
     blake2s(message)
 }
 
+// Method to compute leaf hash on hash values.
 fn compute_leaf_hash_hash(
     value: [bool; HASH_BITS],
     privacy_salt: PrivacySalt,
@@ -78,6 +76,7 @@ fn compute_leaf_hash_hash(
     blake2s(message)
 }
 
+// Method to compute leaf hash on public key values.
 fn compute_leaf_hash_pubKey(
     value: [bool; PUBKEY_BITS],
     privacy_salt: PrivacySalt,
