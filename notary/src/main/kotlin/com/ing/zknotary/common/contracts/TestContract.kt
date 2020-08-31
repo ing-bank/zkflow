@@ -29,8 +29,7 @@ class TestContract : Contract {
          * that is repeatable in Zinc.
          * The benefit is that users need not implement the Fingerprintable interface.
          */
-        override val fingerprint: ByteArray =
-            nonce.fingerprint + owner.fingerprint + value.fingerprint
+        override val fingerprint = owner.fingerprint + value.fingerprint
     }
 
     // Commands
