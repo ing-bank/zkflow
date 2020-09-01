@@ -25,7 +25,7 @@ fn build_merkle_tree(
 
     //Validate component group hashes
     //This function is currently disabled since witness file is all zeros.
-    //validate_group_hashes(component_group_hashes, zk_prover_transaction);
+    validate_group_hashes(component_group_hashes, zk_prover_transaction);
 
     // There are 9 component groups.
     // Pad it from the right with as many zero hashes to get a power of two number of leaves.

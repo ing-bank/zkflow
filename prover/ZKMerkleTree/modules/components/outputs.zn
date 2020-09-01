@@ -6,12 +6,12 @@ struct Outputs {
 }
 
 impl Outputs {
-    fn fingerprint_value(outputs: Outputs) -> [[bool; STATE_BITS]; OUTPUT_SIZE] {
-        let mut result = [[false; STATE_BITS]; OUTPUT_SIZE];
+    fn fingerprint_value(outputs: Outputs) -> [[bool; REF_BITS]; OUTPUT_SIZE] {
+        let mut result = [[false; REF_BITS]; OUTPUT_SIZE];
 
         for i in 0..OUTPUT_SIZE {
             //zkStateRef bits
-            result[i] = ZKStateAndRef::fingerprint_state(outputs.value[i]);
+            result[i] = ZKStateAndRef::fingerprint_ref(outputs.value[i]);
         }
         result
     }
@@ -29,7 +29,7 @@ impl Outputs {
 
         let mut component_leaf_hashes = [[false; HASH_BITS]; OUTPUT_SIZE];
         for i in (0 as u32)..(OUTPUT_SIZE as u32) {
-            component_leaf_hashes[i] = ZKStateAndRef::compute_leaf_hash_state(
+            component_leaf_hashes[i] = ZKStateAndRef::compute_leaf_hash_ref(
                 fingerprint[i],
                 privacy_salt,
                 ComponentGroupEnum::OUTPUTS_GROUP as u32,

@@ -478,12 +478,12 @@ struct Outputs {
 }
 
 impl Outputs {
-    fn fingerprint_value(outputs: Outputs) -> [[bool; STATE_BITS]; OUTPUT_SIZE] {
-        let mut result = [[false; STATE_BITS]; OUTPUT_SIZE];
+    fn fingerprint_value(outputs: Outputs) -> [[bool; REF_BITS]; OUTPUT_SIZE] {
+        let mut result = [[false; REF_BITS]; OUTPUT_SIZE];
 
         for i in 0..OUTPUT_SIZE {
             //zkStateRef bits
-            result[i] = ZKStateAndRef::fingerprint_state(outputs.value[i]);
+            result[i] = ZKStateAndRef::fingerprint_ref(outputs.value[i]);
         }
         result
     }
@@ -501,7 +501,7 @@ impl Outputs {
 
         let mut component_leaf_hashes = [[false; HASH_BITS]; OUTPUT_SIZE];
         for i in (0 as u32)..(OUTPUT_SIZE as u32) {
-            component_leaf_hashes[i] = ZKStateAndRef::compute_leaf_hash_state(
+            component_leaf_hashes[i] = ZKStateAndRef::compute_leaf_hash_ref(
                 fingerprint[i],
                 privacy_salt,
                 ComponentGroupEnum::OUTPUTS_GROUP as u32,
@@ -628,13 +628,7 @@ impl Commands {
         commands: Commands,
         privacy_salt: PrivacySalt,
     ) -> ComponentGroupHashBits {
-        let component_leaf_hashes = compute_leaf_hashes(commands, privacy_salt);
-
-        //Since COMMAND_SIZE = 1, we use zero padding first.
-        let mut component_leaves = [[false; HASH_BITS]; 2];
-        component_leaves[0] = component_leaf_hashes[0];
-
-        merkle_2_leaves(component_leaves)
+        compute_leaf_hashes(commands, privacy_salt)[0]
     }
 }
 const ATTACHMENT_SIZE: u16 = 2;
@@ -730,13 +724,7 @@ impl Notary {
         notary: Notary,
         privacy_salt: PrivacySalt,
     ) -> ComponentGroupHashBits {
-        let component_leaf_hashes = compute_leaf_hashes(notary, privacy_salt);
-
-        //Since NOTARY_SIZE = 1, we use zero padding first.
-        let mut component_leaves = [[false; HASH_BITS]; 2];
-        component_leaves[0] = component_leaf_hashes;
-
-        merkle_2_leaves(component_leaves)
+        compute_leaf_hashes(notary, privacy_salt)
     }
 }
 const TIME_WINDOW_BYTES: u16 = 24;
@@ -810,13 +798,7 @@ impl TimeWindow {
         time_window: TimeWindow,
         privacy_salt: PrivacySalt,
     ) -> ComponentGroupHashBits {
-        let component_leaf_hashes = compute_leaf_hashes(time_window, privacy_salt);
-
-        //Since TIME_WINDOW_SIZE = 1, we use zero padding first.
-        let mut component_leaves = [[false; HASH_BITS]; 2];
-        component_leaves[0] = component_leaf_hashes;
-
-        merkle_2_leaves(component_leaves)
+        compute_leaf_hashes(time_window, privacy_salt)
     }
 }
 struct ContentParameter {
@@ -857,13 +839,7 @@ impl Parameters {
         parameters: Parameters,
         privacy_salt: PrivacySalt,
     ) -> ComponentGroupHashBits {
-        let component_leaf_hashes = compute_leaf_hashes(parameters, privacy_salt);
-
-        //Since PARAMETER_SIZE = 1, we use zero padding first.
-        let mut component_leaves = [[false; HASH_BITS]; 2];
-        component_leaves[0] = component_leaf_hashes;
-
-        merkle_2_leaves(component_leaves)
+        compute_leaf_hashes(parameters, privacy_salt)
     }
 }
 const SIGNER_SIZE: u16 = 2;
@@ -1061,7 +1037,7 @@ fn build_merkle_tree(
 
     //Validate component group hashes
     //This function is currently disabled since witness file is all zeros.
-    //validate_group_hashes(component_group_hashes, zk_prover_transaction);
+    validate_group_hashes(component_group_hashes, zk_prover_transaction);
 
     // There are 9 component groups.
     // Pad it from the right with as many zero hashes to get a power of two number of leaves.
