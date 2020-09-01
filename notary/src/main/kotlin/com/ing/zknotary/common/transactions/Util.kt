@@ -6,6 +6,7 @@ import com.ing.zknotary.common.util.PaddingWrapper
 import net.corda.core.DeleteForDJVM
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.crypto.SecureHash
+import kotlin.math.max
 
 @DeleteForDJVM
 fun ZKProverTransaction.prettyPrint(): String {
@@ -74,7 +75,7 @@ fun ZKProverTransaction.toZKVerifierTransaction(): ZKVerifierTransaction {
 /**
  * Extends a list with a default value.
  */
-fun <T> List<T>.pad(n: Int, default: T) = List(n) {
+fun <T> List<T>.pad(n: Int, default: T) = List(max(size, n)) {
     if (it < size)
         this[it]
     else {
