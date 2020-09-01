@@ -1,54 +1,126 @@
 package com.ing.zknotary.common.transactions
 
-import com.ing.zknotary.common.serializer.ZincSerializationFactoryService
+import com.ing.zknotary.common.util.BLAKE2s256ReversedDigestService
+import com.ing.zknotary.common.zkp.PublicInput
 import com.ing.zknotary.common.zkp.Witness
+import com.ing.zknotary.common.zkp.ZKNulls
+import com.ing.zknotary.common.zkp.ZincZKTransactionService
 import com.ing.zknotary.notary.transactions.createTestsState
 import com.ing.zknotary.notary.transactions.moveTestsState
-import net.corda.core.crypto.BLAKE2s256DigestService
+import net.corda.core.contracts.PrivacySalt
 import net.corda.core.crypto.Crypto
 import net.corda.core.crypto.PedersenDigestService
-import net.corda.core.crypto.sign
-import net.corda.core.serialization.serialize
+import net.corda.core.crypto.toStringShort
+import net.corda.core.identity.CordaX500Name
+import net.corda.core.identity.Party
+import net.corda.core.internal.createComponentGroups
+import net.corda.core.internal.unspecifiedCountry
+import net.corda.core.transactions.WireTransaction
 import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
 import net.corda.testing.node.ledger
+import org.junit.After
+import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
 import java.io.File
-import java.nio.file.Paths
+import java.time.Duration
 
 class ZKMerkleTreeTest {
-    private val alice = TestIdentity.fresh("alice", Crypto.EDDSA_ED25519_SHA512)
-    private val bob = TestIdentity.fresh("bob", Crypto.EDDSA_ED25519_SHA512)
+    private val fixedKeyPair = ZKNulls.fixedKeyPair(Crypto.EDDSA_ED25519_SHA512)
+    private lateinit var alice: TestIdentity
+    private lateinit var bob: TestIdentity
+    private lateinit var notary: Party
+    private lateinit var ledgerServices: MockServices
 
-    private val ledgerServices = MockServices(
-        listOf("com.ing.zknotary.common.contracts"),
-        alice
+    private val circuitFolder = File("${System.getProperty("user.dir")}/../prover/ZKMerkleTree").absolutePath
+    private val artifactFolder = File("$circuitFolder/artifacts")
+    private val zincTxZKService = ZincZKTransactionService(
+        circuitFolder,
+        artifactFolder = artifactFolder.absolutePath,
+        buildTimeout = Duration.ofSeconds(10 * 60),
+        setupTimeout = Duration.ofSeconds(10 * 60),
+        provingTimeout = Duration.ofSeconds(10 * 60),
+        verificationTimeout = Duration.ofSeconds(10 * 60)
     )
 
+    init {
+        artifactFolder.mkdirs()
+        zincTxZKService.setup()
+    }
+
+    @After
+    fun `remove zinc files`() {
+        zincTxZKService.cleanup()
+    }
+
+    @Before
+    fun setup() {
+        alice = TestIdentity(
+            CordaX500Name("alice", fixedKeyPair.public.toStringShort(), CordaX500Name.unspecifiedCountry), fixedKeyPair
+        )
+
+        bob = TestIdentity(
+            CordaX500Name("bob", fixedKeyPair.public.toStringShort(), CordaX500Name.unspecifiedCountry), fixedKeyPair
+        )
+
+        notary = Party(
+            CordaX500Name("notary", fixedKeyPair.public.toStringShort(), CordaX500Name.unspecifiedCountry),
+            fixedKeyPair.public
+        )
+
+        ledgerServices = MockServices(
+            listOf("com.ing.zknotary.common.contracts"),
+            alice
+        )
+    }
+
+    @Ignore
     @Test
-    fun `can recalculate zkid based on serialized zkltx`() {
-        ledgerServices.ledger {
-            val wtx = moveTestsState(createTestsState(owner = alice), newOwner = bob)
-            verifies()
+    fun `merkle roots computed in Corda and Zinc coincide`() {
+        ledgerServices.ledger(notary) {
+            val wtx = run {
+                // This fixes the content of witness completely.
+                val wtx = moveTestsState(createTestsState(owner = alice, value = 100), newOwner = bob)
+                verifies()
+
+                WireTransaction(
+                    createComponentGroups(
+                        inputs = wtx.inputs,
+                        outputs = wtx.outputs,
+                        commands = wtx.commands,
+                        attachments = wtx.attachments,
+                        notary = wtx.notary,
+                        timeWindow = wtx.timeWindow,
+                        references = wtx.references,
+                        networkParametersHash = wtx.networkParametersHash
+                    ),
+                    privacySalt = PrivacySalt(ByteArray(wtx.privacySalt.size) { 1 })
+                )
+            }
 
             val ltx = wtx.toLedgerTransaction(ledgerServices)
-            val serializationFactoryService = ZincSerializationFactoryService()
 
             val ptx = ZKProverTransactionFactory.create(
                 ltx,
-                componentGroupLeafDigestService = BLAKE2s256DigestService,
+                componentGroupLeafDigestService = BLAKE2s256ReversedDigestService,
                 nodeDigestService = PedersenDigestService
             )
 
-            // Collect signatures
-            val sigAlice = alice.keyPair.private.sign(ptx.id.bytes).bytes
-
             val witness = Witness(ptx)
-            val json = witness.serialize(serializationFactoryService.factory)
+            val publicInput = PublicInput(ptx.id)
 
-            val cwd = System.getProperty("user.dir")
-            val circuitWd = Paths.get("$cwd/../prover/ZKMerkleTree").normalize().toString()
-            File("$circuitWd/data/witness.json").writeText(String(json.bytes))
+            // // This is left for debugging purposes, should this be required.
+            // val serializationFactoryService = ZincSerializationFactoryService()
+            //
+            // val id = publicInput.serialize(serializationFactoryService.factory)
+            // println("Expected = \n${String(id.bytes)}")
+            //
+            // val json = witness.serialize(serializationFactoryService.factory)
+            // File("$circuitFolder/data/witness.json").writeText(String(json.bytes))
+
+            val proof = zincTxZKService.prove(witness)
+            zincTxZKService.verify(proof, publicInput)
         }
     }
 }

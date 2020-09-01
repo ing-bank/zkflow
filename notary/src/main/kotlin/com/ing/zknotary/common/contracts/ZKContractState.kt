@@ -7,10 +7,7 @@ import net.corda.core.contracts.ContractState
 import net.corda.core.crypto.secureRandomBytes
 import java.nio.ByteBuffer
 
-interface ZKContractState : Fingerprintable, ContractState {
-    val nonce: StateNonce
-        get() = StateNonce()
-}
+interface ZKContractState : Fingerprintable, ContractState
 
 interface ZKCommandData : Fingerprintable, CommandData {
     val id: Int

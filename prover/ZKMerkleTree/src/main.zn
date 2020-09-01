@@ -4,145 +4,174 @@
 mod ZKMerkleTree;
 mod ComponentGroups;
 
-use ComponentGroups::ZKProverTransaction;
-use ComponentGroups::PrivacySalt; 
+use ComponentGroups::PrivacySalt;
+use ComponentGroups::Witness;
 
-use ZKMerkleTree::ComponentGroup; 
-use ZKMerkleTree::InputGroup;
-use ZKMerkleTree::OutputGroup;
-use ZKMerkleTree::ReferenceGroup;  
-use ZKMerkleTree::CommandDataGroup; 
 use ZKMerkleTree::AttachmentGroup;
+use ZKMerkleTree::CommandDataGroup;
+use ZKMerkleTree::CommandSignerGroup;
+use ZKMerkleTree::ComponentGroup;
+use ZKMerkleTree::InputGroup;
 use ZKMerkleTree::NotaryGroup;
-use ZKMerkleTree::TimeWindowGroup;
+use ZKMerkleTree::OutputGroup;
 use ZKMerkleTree::ParameterGroup;
-use ZKMerkleTree::CommandSignerGroup; 
+use ZKMerkleTree::ReferenceGroup;
+use ZKMerkleTree::TimeWindowGroup;
 use ZKMerkleTree::ZKStateAndRefGroup;
 
-use ZKMerkleTree::ContentZKStateAndRefGroup; 
-use ZKMerkleTree::ContentCommandDataGroup; 
 use ZKMerkleTree::ContentAttachmentGroup;
-use ZKMerkleTree::ContentNotaryGroup; 
-use ZKMerkleTree::ContentTimeWindowGroup;
+use ZKMerkleTree::ContentCommandDataGroup;
+use ZKMerkleTree::ContentCommandSignerGroup;
+use ZKMerkleTree::ContentNotaryGroup;
 use ZKMerkleTree::ContentParameterGroup;
-use ZKMerkleTree::ContentCommandSignerGroup; 
+use ZKMerkleTree::ContentTimeWindowGroup;
+use ZKMerkleTree::ContentZKStateAndRefGroup;
 
-//Temporary function to manually transfer components to zkmerkle tree !!!
-fn convertFromComponentToZKMerkle(zkptx: (ComponentGroups::ComponentGroup, PrivacySalt)) -> (ComponentGroup, PrivacySalt)
-{
-    (ComponentGroup {
-        inputs: InputGroup{
-            groupElements:[
-            ContentZKStateAndRefGroup{
-                content: ZKStateAndRefGroup{ state: zkptx.0.inputs.groupElements[0].content.state,
-                                             zkStateRef: zkptx.0.inputs.groupElements[0].content.zkStateRef,},
-                isFiller: zkptx.0.inputs.groupElements[0].isFiller, },
-            ContentZKStateAndRefGroup{
-                content: ZKStateAndRefGroup{ state: zkptx.0.inputs.groupElements[1].content.state,
-                                             zkStateRef: zkptx.0.inputs.groupElements[1].content.zkStateRef,},
-                isFiller: zkptx.0.inputs.groupElements[1].isFiller, }
-            ],
-            groupHash: zkptx.0.inputs.groupHash,
-        },
-        outputs: OutputGroup{
-            groupElements:[
-            ContentZKStateAndRefGroup{
-                content: ZKStateAndRefGroup{ state: zkptx.0.outputs.groupElements[0].content.state,
-                                             zkStateRef: zkptx.0.outputs.groupElements[0].content.zkStateRef,},
-                isFiller: zkptx.0.outputs.groupElements[0].isFiller, },
-            ContentZKStateAndRefGroup{
-                content: ZKStateAndRefGroup{ state: zkptx.0.outputs.groupElements[1].content.state,
-                                             zkStateRef: zkptx.0.outputs.groupElements[1].content.zkStateRef,},
-                isFiller: zkptx.0.outputs.groupElements[1].isFiller, }
-            ],
-            groupHash: zkptx.0.outputs.groupHash,
-        },
-        references: ReferenceGroup{
-            groupElements:[
-            ContentZKStateAndRefGroup{
-                content: ZKStateAndRefGroup{ state: zkptx.0.references.groupElements[0].content.state,
-                                             zkStateRef: zkptx.0.references.groupElements[0].content.zkStateRef,},
-                isFiller: zkptx.0.references.groupElements[0].isFiller, },
-            ContentZKStateAndRefGroup{
-                content: ZKStateAndRefGroup{ state: zkptx.0.references.groupElements[1].content.state,
-                                             zkStateRef: zkptx.0.references.groupElements[1].content.zkStateRef,},
-                isFiller: zkptx.0.references.groupElements[1].isFiller, }
-            ],
-            groupHash: zkptx.0.references.groupHash,
-        },
-        commandData: CommandDataGroup{
-            groupElements:[
-            ContentCommandDataGroup {
-                content: zkptx.0.commandData.groupElements[0].content,
-                isFiller: zkptx.0.commandData.groupElements[0].isFiller, },
-            ],
-            groupHash: zkptx.0.commandData.groupHash,
-        },
-        attachments: AttachmentGroup{
-            groupElements:[
-            ContentAttachmentGroup {
-                content: zkptx.0.attachments.groupElements[0].content,
-                isFiller: zkptx.0.attachments.groupElements[0].isFiller, },
-            ContentAttachmentGroup {
-                content: zkptx.0.attachments.groupElements[1].content,
-                isFiller: zkptx.0.attachments.groupElements[1].isFiller, },
-            ],
-            groupHash: zkptx.0.attachments.groupHash,
-        },
-        notary: NotaryGroup{
-            groupElements:
-            ContentNotaryGroup {
-                content: zkptx.0.notary.groupElements.content,
-                isFiller: zkptx.0.notary.groupElements.isFiller, },
-            groupHash: zkptx.0.notary.groupHash,
-        },
-        timeWindow: TimeWindowGroup{
-            groupElements:
-            ContentTimeWindowGroup {
-                content: zkptx.0.timeWindow.groupElements.content,
-                isFiller: zkptx.0.timeWindow.groupElements.isFiller, },
-            groupHash: zkptx.0.timeWindow.groupHash,
-        },
-        parameters: ParameterGroup{
-            groupElements:
-            ContentParameterGroup {
-                content: zkptx.0.parameters.groupElements.content,
-                isFiller: zkptx.0.parameters.groupElements.isFiller, },
-            groupHash: zkptx.0.parameters.groupHash,
-        },
-        commandSigners: CommandSignerGroup{
-            groupElements: [
-            ContentCommandSignerGroup{
-                content: zkptx.0.commandSigners.groupElements[0].content,
-                isFiller: zkptx.0.commandSigners.groupElements[0].isFiller, },
-            ContentCommandSignerGroup{
-                content: zkptx.0.commandSigners.groupElements[1].content,
-                isFiller: zkptx.0.commandSigners.groupElements[1].isFiller, },
-            ],
-            groupHash: zkptx.0.commandSigners.groupHash,
-        },
-    },
-    zkptx.1)
+struct PublicInput {
+    transactionId: [u8; 32],
 }
 
-fn main(witness: ZKProverTransaction) -> [u8;32] //ZKMerkleTree::PedersenDigest
+//Temporary function to manually transfer components to zkmerkle tree !!!
+fn convertFromComponentToZKMerkle(
+    zkptx: (ComponentGroups::ComponentGroup, PrivacySalt),
+) -> (ComponentGroup, PrivacySalt) {
+    (
+        ComponentGroup {
+            inputs: InputGroup {
+                groupElements: [
+                    ContentZKStateAndRefGroup {
+                        content: ZKStateAndRefGroup {
+                            state: zkptx.0.inputs.groupElements[0].content.state,
+                            zkStateRef: zkptx.0.inputs.groupElements[0].content.zkStateRef,
+                        },
+                        isFiller: zkptx.0.inputs.groupElements[0].isFiller,
+                    },
+                    ContentZKStateAndRefGroup {
+                        content: ZKStateAndRefGroup {
+                            state: zkptx.0.inputs.groupElements[1].content.state,
+                            zkStateRef: zkptx.0.inputs.groupElements[1].content.zkStateRef,
+                        },
+                        isFiller: zkptx.0.inputs.groupElements[1].isFiller,
+                    },
+                ],
+                groupHash: zkptx.0.inputs.groupHash,
+            },
+            outputs: OutputGroup {
+                groupElements: [
+                    ContentZKStateAndRefGroup {
+                        content: ZKStateAndRefGroup {
+                            state: zkptx.0.outputs.groupElements[0].content.state,
+                            zkStateRef: zkptx.0.outputs.groupElements[0].content.zkStateRef,
+                        },
+                        isFiller: zkptx.0.outputs.groupElements[0].isFiller,
+                    },
+                    ContentZKStateAndRefGroup {
+                        content: ZKStateAndRefGroup {
+                            state: zkptx.0.outputs.groupElements[1].content.state,
+                            zkStateRef: zkptx.0.outputs.groupElements[1].content.zkStateRef,
+                        },
+                        isFiller: zkptx.0.outputs.groupElements[1].isFiller,
+                    },
+                ],
+                groupHash: zkptx.0.outputs.groupHash,
+            },
+            references: ReferenceGroup {
+                groupElements: [
+                    ContentZKStateAndRefGroup {
+                        content: ZKStateAndRefGroup {
+                            state: zkptx.0.references.groupElements[0].content.state,
+                            zkStateRef: zkptx.0.references.groupElements[0].content.zkStateRef,
+                        },
+                        isFiller: zkptx.0.references.groupElements[0].isFiller,
+                    },
+                    ContentZKStateAndRefGroup {
+                        content: ZKStateAndRefGroup {
+                            state: zkptx.0.references.groupElements[1].content.state,
+                            zkStateRef: zkptx.0.references.groupElements[1].content.zkStateRef,
+                        },
+                        isFiller: zkptx.0.references.groupElements[1].isFiller,
+                    },
+                ],
+                groupHash: zkptx.0.references.groupHash,
+            },
+            commandData: CommandDataGroup {
+                groupElements: [ContentCommandDataGroup {
+                    content: zkptx.0.commandData.groupElements[0].content,
+                    isFiller: zkptx.0.commandData.groupElements[0].isFiller,
+                }],
+                groupHash: zkptx.0.commandData.groupHash,
+            },
+            attachments: AttachmentGroup {
+                groupElements: [
+                    ContentAttachmentGroup {
+                        content: zkptx.0.attachments.groupElements[0].content,
+                        isFiller: zkptx.0.attachments.groupElements[0].isFiller,
+                    },
+                    ContentAttachmentGroup {
+                        content: zkptx.0.attachments.groupElements[1].content,
+                        isFiller: zkptx.0.attachments.groupElements[1].isFiller,
+                    },
+                ],
+                groupHash: zkptx.0.attachments.groupHash,
+            },
+            notary: NotaryGroup {
+                groupElements: ContentNotaryGroup {
+                    content: zkptx.0.notary.groupElements.content,
+                    isFiller: zkptx.0.notary.groupElements.isFiller,
+                },
+                groupHash: zkptx.0.notary.groupHash,
+            },
+            timeWindow: TimeWindowGroup {
+                groupElements: ContentTimeWindowGroup {
+                    content: zkptx.0.timeWindow.groupElements.content,
+                    isFiller: zkptx.0.timeWindow.groupElements.isFiller,
+                },
+                groupHash: zkptx.0.timeWindow.groupHash,
+            },
+            parameters: ParameterGroup {
+                groupElements: ContentParameterGroup {
+                    content: zkptx.0.parameters.groupElements.content,
+                    isFiller: zkptx.0.parameters.groupElements.isFiller,
+                },
+                groupHash: zkptx.0.parameters.groupHash,
+            },
+            commandSigners: CommandSignerGroup {
+                groupElements: [
+                    ContentCommandSignerGroup {
+                        content: zkptx.0.commandSigners.groupElements[0].content,
+                        isFiller: zkptx.0.commandSigners.groupElements[0].isFiller,
+                    },
+                    ContentCommandSignerGroup {
+                        content: zkptx.0.commandSigners.groupElements[1].content,
+                        isFiller: zkptx.0.commandSigners.groupElements[1].isFiller,
+                    },
+                ],
+                groupHash: zkptx.0.commandSigners.groupHash,
+            },
+        },
+        zkptx.1,
+    )
+}
+
+fn main(witness: Witness) -> PublicInput //ZKMerkleTree::PedersenDigest
 {
     //Check contract rules
-    //ComponentGroups::CheckContractRules(witness); 
+    //ComponentGroups::CheckContractRules(witness);
 
-    let zkptx:(ComponentGroups::ComponentGroup, PrivacySalt) = ComponentGroups::buildComponentGroups(witness);
-    
+    let zkptx: (ComponentGroups::ComponentGroup, PrivacySalt) =
+        ComponentGroups::buildComponentGroups(witness.transaction);
+
     let root_hash = ZKMerkleTree::buildMerkleTree(convertFromComponentToZKMerkle(zkptx));
 
-    let mut root_bytes = [0 as u8;32]; 
- 
-    for i in 0..32{
-        let mut byte_bits = [false;8];
-        for j in 0..8{
+    let mut root_bytes = [0 as u8; 32];
+
+    for i in 0..32 {
+        let mut byte_bits = [false; 8];
+        for j in 0..8 {
             byte_bits[j] = root_hash[8 * i + j];
         }
-        root_bytes[i] = std::convert::from_bits_unsigned(byte_bits); 
+        root_bytes[i] = std::convert::from_bits_unsigned(byte_bits);
     }
 
-    root_bytes
+    PublicInput { transactionId: root_bytes }
 }
