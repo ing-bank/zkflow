@@ -37,15 +37,17 @@ abstract class AbstractZKMerkleTree(
 
     override val tree: MerkleTree by lazy { MerkleTree.getMerkleTree(groupHashes, nodeDigestService) }
 
+    /**
+     * This value will contain as many hashes as there are component groups,
+     * otherwise fail.
+     * Order of the elements corresponds to the order groups listed in ComponentGroupEnum.
+     */
     open val groupHashes: List<SecureHash> by lazy {
-        val componentGroupHashes = mutableListOf<SecureHash>()
-        // Even if empty and not used, we should at least send oneHashes for each known
-        // or received but unknown (thus, bigger than known ordinal) component groups.
-        for (i in 0..componentGroups.map { it.groupIndex }.max()!!) {
-            val root = groupsMerkleRoots[i] ?: nodeDigestService.allOnesHash
-            componentGroupHashes.add(root)
+        ComponentGroupEnum.values().map {
+            val root = groupsMerkleRoots[it.ordinal]
+            require(root != null) { "Component group $it must be present" }
+            root!!
         }
-        componentGroupHashes
     }
 
     val groupsMerkleRoots: Map<Int, SecureHash> by lazy {
