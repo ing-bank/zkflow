@@ -168,6 +168,104 @@ type PedersenDigest = field;
 const NUM_COMPONENT_GROUPS: u8 = 10;
 const TREE_DEPTH: u8 = 3;
 
+// Some more constants
+const BYTE_BITS: u16 = 8;
+
+const U32_BYTES: u16 = 4;
+const U32_BITS: u16 = U32_BYTES * BYTE_BITS;
+
+const NONCE_BYTES: u16 = HASH_BYTES + U32_BYTES + U32_BYTES;
+const NONCE_BITS: u16 = NONCE_BYTES * BYTE_BITS;
+
+const STATE_BYTES: u16 = PUBKEY_BYTES + U32_BYTES + PUBKEY_BYTES;
+
+
+// Utility functions -->
+fn u32_to_bytes(bits: [bool; U32_BITS]) -> [u8; U32_BYTES] {
+    let mut u32_bytes = [0 as u8; U32_BYTES];
+
+    for i in 0..U32_BYTES {
+        let mut byte_bits = [false; BYTE_BITS];
+        for j in 0..BYTE_BITS {
+            byte_bits[j] = bits[BYTE_BITS * i + j];
+        }
+        u32_bytes[i] = std::convert::from_bits_unsigned(byte_bits);
+    }
+
+    u32_bytes
+}
+
+fn nonce_to_bytes(bits: [bool; NONCE_BITS]) -> [u8; NONCE_BYTES] {
+    let mut nonce_bytes = [0 as u8; NONCE_BYTES];
+
+    for i in 0..NONCE_BYTES {
+        let mut byte_bits = [false; BYTE_BITS];
+        for j in 0..BYTE_BITS {
+            byte_bits[j] = bits[BYTE_BITS * i + j];
+        }
+        nonce_bytes[i] = std::convert::from_bits_unsigned(byte_bits);
+    }
+
+    nonce_bytes
+}
+
+fn digest_to_bytes(digest: [bool; HASH_BITS]) -> [u8; HASH_BYTES] {
+    let mut hash_bytes = [0 as u8; HASH_BYTES];
+
+    for i in 0..HASH_BYTES {
+        let mut byte_bits = [false; BYTE_BITS];
+        for j in 0..BYTE_BITS {
+            byte_bits[j] = digest[BYTE_BITS * i + j];
+        }
+        hash_bytes[i] = std::convert::from_bits_unsigned(byte_bits);
+    }
+
+    hash_bytes
+}
+
+fn hashref_to_bytes(digest: [bool; HASH_BITS + REF_BITS]) -> [u8; HASH_BYTES + HASH_BYTES] {
+    let mut hash_bytes = [0 as u8; HASH_BYTES + HASH_BYTES];
+
+    for i in 0..(HASH_BYTES + HASH_BYTES) {
+        let mut byte_bits = [false; BYTE_BITS];
+        for j in 0..BYTE_BITS {
+            byte_bits[j] = digest[BYTE_BITS * i + j];
+        }
+        hash_bytes[i] = std::convert::from_bits_unsigned(byte_bits);
+    }
+
+    hash_bytes
+}
+
+fn hashstate_to_bytes(digest: [bool; HASH_BITS + STATE_BITS]) -> [u8; HASH_BYTES + STATE_BYTES] {
+    let mut hash_bytes = [0 as u8; HASH_BYTES + STATE_BYTES];
+
+    for i in 0..(HASH_BYTES + STATE_BYTES) {
+        let mut byte_bits = [false; BYTE_BITS];
+        for j in 0..BYTE_BITS {
+            byte_bits[j] = digest[BYTE_BITS * i + j];
+        }
+        hash_bytes[i] = std::convert::from_bits_unsigned(byte_bits);
+    }
+
+    hash_bytes
+}
+
+fn hashhash_to_bytes(digest: [bool; HASH_BITS + HASH_BITS]) -> [u8; HASH_BYTES + HASH_BYTES] {
+    let mut hash_bytes = [0 as u8; HASH_BYTES + HASH_BYTES];
+
+    for i in 0..(HASH_BYTES + HASH_BYTES) {
+        let mut byte_bits = [false; BYTE_BITS];
+        for j in 0..BYTE_BITS {
+            byte_bits[j] = digest[BYTE_BITS * i + j];
+        }
+        hash_bytes[i] = std::convert::from_bits_unsigned(byte_bits);
+    }
+
+    hash_bytes
+}
+// <-- Utility functions
+
 /**
 * Method to compute a nonce based on privacySalt, component group index and component internal index.
 * @param privacySalt a PrivacySalt
