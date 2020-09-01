@@ -65,6 +65,10 @@ abstract class AbstractZKMerkleTree(
             group.groupIndex to group.components.mapIndexed { componentIndex, component ->
                 componentGroupLeafDigestService.hash(componentNonces[group.groupIndex]!![componentIndex].bytes + component.bytes)
             }
+                // To prevent Corda's automatic promotion of a single leaf to the Merkle root,
+                // ensure, there are at least 2 elements.
+                // See, https://github.com/corda/corda/issues/6680
+                .pad(2, componentGroupLeafDigestService.zeroHash)
         }.toMap()
     }
 }
