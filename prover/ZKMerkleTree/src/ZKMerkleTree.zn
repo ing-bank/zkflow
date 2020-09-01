@@ -446,8 +446,8 @@ fn computeLeafHashes(zkptx: (ComponentGroup, PrivacySalt)) -> [NodeDigest; NODES
 
     //outputs
     for i in (0 as u32)..(N_OUTPUTS as u32) {
-        componentLeafHashes[(index as u32) + i] = computeLeafHashState(
-            zkptx.0.outputs.groupElements[i].content.state,
+        componentLeafHashes[(index as u32) + i] = computeLeafHashRef(
+            zkptx.0.outputs.groupElements[i].content.zkStateRef,
             zkptx.1,
             ComponentGroupEnum::OUTPUTS_GROUP as u32,
             i as u32,
@@ -848,7 +848,7 @@ fn buildMerkleTree(zkptx: (ComponentGroup, PrivacySalt)) -> BlakeDigest //Peders
 
     //Validate component group hashes
     //This function is currently disabled. Once blake2s values are validated on Corda side and Zinc side we can eanble it.
-    // validateGroupHashes(componentGroupHashes, zkptx.0);
+    validateGroupHashes(componentGroupHashes, zkptx.0);
 
     // There are 9 component groups.
     // Pad it from the right with as many zero hashes to get a power of two number of leaves.
