@@ -37,7 +37,7 @@ enum CommandData {
 }
 
 struct Party {
-    owningKey: PubKey,
+    owning_key: PubKey,
 }
 
 struct Data {
@@ -71,82 +71,82 @@ struct ZKStateAndRef {
 
 struct ContentZKStateAndRef {
     content: ZKStateAndRef,
-    isFiller: bool,
+    is_filler: bool,
 }
 
 struct ContentAttachment {
     content: [u8; HASH_BYTES],
-    isFiller: bool,
+    is_filler: bool,
 }
 
 struct Inputs {
     value: [ContentZKStateAndRef; N_INPUTS],
-    groupHash: ComponentGroupHash,
+    group_hash: ComponentGroupHash,
 }
 
 struct Outputs {
     value: [ContentZKStateAndRef; N_OUTPUTS],
-    groupHash: ComponentGroupHash,
+    group_hash: ComponentGroupHash,
 }
 
 struct References {
     value: [ContentZKStateAndRef; N_REFERENCES],
-    groupHash: ComponentGroupHash,
+    group_hash: ComponentGroupHash,
 }
 
 struct ContentCommandData {
     content: CommandData,
-    isFiller: bool,
+    is_filler: bool,
 }
 
 struct Commands {
     value: [ContentCommandData; N_COMMANDS],
-    groupHash: ComponentGroupHash,
+    group_hash: ComponentGroupHash,
 }
 
 struct Attachments {
     value: [ContentAttachment; N_ATTACHMENTS],
-    groupHash: ComponentGroupHash,
+    group_hash: ComponentGroupHash,
 }
 
 struct ContentPubkey {
     content: PubKey,
-    isFiller: bool,
+    is_filler: bool,
 }
 
 struct ContentParty {
     content: Party,
-    isFiller: bool,
+    is_filler: bool,
 }
 
 struct Signers {
     value: [ContentPubkey; N_SIGNERS],
-    groupHash: ComponentGroupHash,
+    group_hash: ComponentGroupHash,
 }
 
 struct Notary {
     value: ContentParty,
-    groupHash: ComponentGroupHash,
+    group_hash: ComponentGroupHash,
 }
 
 struct ContentTimeWindow {
     content: TimeWindowFingerPrint,
-    isFiller: bool,
+    is_filler: bool,
 }
 
 struct TimeWindow {
     value: ContentTimeWindow,
-    groupHash: ComponentGroupHash,
+    group_hash: ComponentGroupHash,
 }
 
 struct ContentNetworkParametersHash {
     content: [u8; HASH_BYTES],
-    isFiller: bool,
+    is_filler: bool,
 }
 
 struct NetworkParametersHash {
     value: ContentNetworkParametersHash,
-    groupHash: ComponentGroupHash,
+    group_hash: ComponentGroupHash,
 }
 
 struct ZKProverTransaction {
@@ -156,10 +156,10 @@ struct ZKProverTransaction {
     commands: Commands,
     attachments: Attachments,
     notary: Notary,
-    timeWindow: TimeWindow,
+    time_window: TimeWindow,
     parameters: NetworkParametersHash,
     signers: Signers,
-    privacySalt: [u8; HASH_BYTES],
+    privacy_salt: [u8; HASH_BYTES],
 }
 
 struct Witness {
@@ -167,10 +167,10 @@ struct Witness {
 }
 
 struct PublicInput {
-    transactionId: [u8; HASH_BYTES]
+    transaction_id: [u8; HASH_BYTES]
 }
 
 fn main(witness: Witness) -> PublicInput //ZKMerkleTree::PedersenDigest
 {
-    PublicInput { transactionId: witness.transaction.privacySalt }
+    PublicInput { transaction_id: witness.transaction.privacy_salt }
 }
