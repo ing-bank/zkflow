@@ -149,7 +149,7 @@ private interface PartyMixinZinc
 private class PartyMixinZincSerializer : JsonSerializer<Party>() {
     override fun serialize(value: Party, gen: JsonGenerator, serializers: SerializerProvider) {
         gen.writeStartObject()
-        gen.writeObjectField("owningKey", value.owningKey)
+        gen.writeObjectField("owning_key", value.owningKey)
         gen.writeEndObject()
     }
 }

@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.DeserializationContext
 import com.fasterxml.jackson.databind.JsonDeserializer
 import com.fasterxml.jackson.databind.JsonSerializer
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.PropertyNamingStrategy
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.databind.SerializerProvider
 import com.fasterxml.jackson.databind.deser.BeanDeserializerModifier
@@ -32,6 +33,8 @@ object ZincJacksonSupport {
             enable(JsonGenerator.Feature.WRITE_NUMBERS_AS_STRINGS)
 
             disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+
+            propertyNamingStrategy = PropertyNamingStrategy.SNAKE_CASE
 
             registerModule(
                 JavaTimeModule().apply {
