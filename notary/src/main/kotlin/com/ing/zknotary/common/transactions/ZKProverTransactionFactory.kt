@@ -2,7 +2,6 @@ package com.ing.zknotary.common.transactions
 
 import com.ing.zknotary.common.contracts.TestContract
 import com.ing.zknotary.common.contracts.ZKContractState
-import com.ing.zknotary.common.states.EMPTY_STATEREF
 import com.ing.zknotary.common.states.toZKCommand
 import com.ing.zknotary.common.util.ComponentPaddingConfiguration
 import com.ing.zknotary.common.zkp.ZKNulls
@@ -11,6 +10,7 @@ import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.StateRef
 import net.corda.core.contracts.TransactionState
 import net.corda.core.contracts.requireThat
+import net.corda.core.crypto.BLAKE2s256DigestService
 import net.corda.core.crypto.DigestService
 import net.corda.core.crypto.SecureHash
 import net.corda.core.node.ServiceHub
@@ -96,8 +96,7 @@ class ZKProverTransactionFactory {
             val stateAndRefFiller = ComponentPaddingConfiguration.Filler.StateAndRef(
                 StateAndRef(
                     TransactionState(emptyState, notary = ZKNulls.NULL_PARTY),
-                    StateRef(componentGroupLeafDigestService.zeroHash, 0)
-                    EMPTY_STATEREF
+                    StateRef(BLAKE2s256DigestService.zeroHash, 0)
                 )
             )
 

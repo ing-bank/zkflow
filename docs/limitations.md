@@ -4,7 +4,7 @@
 * Limited number of inputs/outputs/references (4 each?)
 
 ## Transactions structure
-* Transactions can have only one command. This means that a use case that for example handles cash for assets, would have to have a contract that has states defined for both cash and assets. We may start to support multiple commands/contracts per tx later, which means splitting them out to separate txs and therefore create separate proofs. Intially, a proof circuit will be for contract/command combination, perhaps performance will allow for it to be per contract later. 
+* Transactions can have only one command for performance reasons. This means that a use case that for example handles cash for assets, would have to have a contract that has states defined for both cash and assets. We may start to support multiple commands/contracts per tx later, which means splitting them out to separate txs and therefore create separate proofs. Intially, a proof circuit will be for contract/command combination, perhaps performance will allow for it to be per contract later. 
 
 ## State and CommandData classes
 * For now only support TypeOnlyCommandData for commands
@@ -20,10 +20,7 @@
 * All states in a transaction must belong to one contract and circuit
 * No support for attachments within the circuit, too heavy to have as part of witness 
 * Smart contracts and linked cicruit are not in attachments but previously distributed. Tx contains a reference to that contract version
+* Output leaf hashes are visible in a FilteredTransaction, we need them to compare against when validating ZKPs for txs using those outputs to prove that we did not change the contents. This leaks the number of outputs in a tx. This should not be an issue, since we already leak the command?
 
 To be discussed: how to manage that for each command, there can be a mix of state types within inputs/outputs/references. E.g. I sell a house. Inputs contain state of type HouseState and of type CashState, so do outputs. Perhaps there is also a SaleAgreementState as an additional output, and a reference state of type GovernmentHouseIdentifierState
 
-* All transactions require a notary: 
-    * otherwise outputs will not be in the accumulator and can't be used as inputs.
-    * Is this still true if we use the backchain instead of a published accumulator?
- 
