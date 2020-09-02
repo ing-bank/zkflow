@@ -1101,7 +1101,7 @@ fn check_contract_rules(value: ZKProverTransaction) {
     );
 }
 struct PublicInput {
-    transactionId: [u8; 32],
+    transaction_id: [u8; 32],
 }
 
 fn main(witness: Witness) -> PublicInput {
@@ -1115,6 +1115,6 @@ fn main(witness: Witness) -> PublicInput {
     let root_hash = build_merkle_tree(witness.transaction, privacy_salt);
 
     PublicInput {
-        transactionId: digest_to_bytes(root_hash),
+        transaction_id: digest_to_bytes(root_hash),
     }
 }
