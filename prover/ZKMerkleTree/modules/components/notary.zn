@@ -36,6 +36,13 @@ impl Notary {
         notary: Notary,
         privacy_salt: PrivacySalt,
     ) -> ComponentGroupHashBits {
-        compute_leaf_hashes(notary, privacy_salt)
+        let component_leaf_hashes = compute_leaf_hashes(notary, privacy_salt);
+
+        //When the number of leaves is one, we pad the leaf with zeros from the right first
+        //and use padded input in the merkle_root computation.
+        let mut padded_leaves = [[false; HASH_BITS]; 2];
+        padded_leaves[0] = component_leaf_hashes;
+
+        merkle_2_leaves(padded_leaves)
     }
 }
