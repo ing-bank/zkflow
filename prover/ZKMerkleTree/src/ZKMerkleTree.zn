@@ -607,7 +607,13 @@ fn computeComponentGroupHashes(
     leafInd += N_OUTPUTS;
 
     // commandData - this implementation assumes that the number of commandData is 1
-    componentGroupHashes[ComponentGroupEnum::COMMANDS_GROUP] = componentLeafHashes[leafInd];
+    componentGroupHashes[ComponentGroupEnum::COMMANDS_GROUP] = toPaddedBits(
+        pedersen(concatenateHashes(
+            componentLeafHashes[leafInd],
+            [false; NODE_DIGEST_SIZE],
+        ))
+            .0,
+    );
 
     dbg!("Commands: {}", digest_to_bytes(componentGroupHashes[ComponentGroupEnum::COMMANDS_GROUP]));
 
@@ -627,14 +633,26 @@ fn computeComponentGroupHashes(
     leafInd += N_ATTACHMENTS;
 
     // notary - this implementation assumes that the number of notary is 1
-    componentGroupHashes[ComponentGroupEnum::NOTARY_GROUP] = componentLeafHashes[leafInd];
+    componentGroupHashes[ComponentGroupEnum::NOTARY_GROUP] = toPaddedBits(
+        pedersen(concatenateHashes(
+            componentLeafHashes[leafInd],
+            [false; NODE_DIGEST_SIZE],
+        ))
+            .0,
+    );
 
     dbg!("Notary: {}", digest_to_bytes(componentGroupHashes[ComponentGroupEnum::NOTARY_GROUP]));
 
     leafInd += (1 as u16);
 
     // timeWindow - this implementation assumes that the number of timeWindow is 1
-    componentGroupHashes[ComponentGroupEnum::TIMEWINDOW_GROUP] = componentLeafHashes[leafInd];
+    componentGroupHashes[ComponentGroupEnum::TIMEWINDOW_GROUP] = toPaddedBits(
+        pedersen(concatenateHashes(
+            componentLeafHashes[leafInd],
+            [false; NODE_DIGEST_SIZE],
+        ))
+            .0,
+    );
 
     dbg!("Time window: {}", digest_to_bytes(componentGroupHashes[ComponentGroupEnum::TIMEWINDOW_GROUP]));
 
@@ -667,9 +685,13 @@ fn computeComponentGroupHashes(
     leafInd += N_REFERENCES;
 
     //parameters - this implementation assumes that the number of parameter is 1
-    componentGroupHashes[ComponentGroupEnum::PARAMETERS_GROUP] = componentLeafHashes[leafInd];
-
-    componentGroupHashes[ComponentGroupEnum::PARAMETERS_GROUP] = componentLeafHashes[leafInd];
+    componentGroupHashes[ComponentGroupEnum::PARAMETERS_GROUP] = toPaddedBits(
+        pedersen(concatenateHashes(
+            componentLeafHashes[leafInd],
+            [false; NODE_DIGEST_SIZE],
+        ))
+            .0,
+    );
 
     dbg!("Network parameters: {}", digest_to_bytes(componentGroupHashes[ComponentGroupEnum::PARAMETERS_GROUP]));
 
