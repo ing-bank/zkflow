@@ -1,6 +1,5 @@
 package com.ing.zknotary.common.transactions
 
-import com.ing.zknotary.common.util.BLAKE2s256ReversedDigestService
 import com.ing.zknotary.common.zkp.PublicInput
 import com.ing.zknotary.common.zkp.Witness
 import com.ing.zknotary.common.zkp.ZKNulls
@@ -8,6 +7,7 @@ import com.ing.zknotary.common.zkp.ZincZKTransactionService
 import com.ing.zknotary.notary.transactions.createTestsState
 import com.ing.zknotary.notary.transactions.moveTestsState
 import net.corda.core.contracts.PrivacySalt
+import net.corda.core.crypto.BLAKE2s256DigestService
 import net.corda.core.crypto.Crypto
 import net.corda.core.crypto.PedersenDigestService
 import net.corda.core.crypto.toStringShort
@@ -21,7 +21,6 @@ import net.corda.testing.node.MockServices
 import net.corda.testing.node.ledger
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 import java.io.File
 import java.time.Duration
@@ -75,7 +74,6 @@ class ZKMerkleTreeTest {
         )
     }
 
-    @Ignore
     @Test
     fun `merkle roots computed in Corda and Zinc coincide`() {
         ledgerServices.ledger(notary) {
@@ -103,7 +101,7 @@ class ZKMerkleTreeTest {
 
             val ptx = ZKProverTransactionFactory.create(
                 ltx,
-                componentGroupLeafDigestService = BLAKE2s256ReversedDigestService,
+                componentGroupLeafDigestService = BLAKE2s256DigestService,
                 nodeDigestService = PedersenDigestService
             )
 
