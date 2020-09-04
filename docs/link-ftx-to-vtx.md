@@ -11,7 +11,7 @@ Normal Corda:
 ZKP Notarisation:
 
 * Current tx as vtx
-* backchains of vtxs for each input of the vtx
+* backchains of vtxs for each input and reference of the vtx
 * ZKProof for current vtx
 * ZKPs for all vtxs in backchains
 
@@ -26,7 +26,7 @@ ZKP notary:
 
 * resolve backchains of vtxs for each input of the vtx
 * validate vtx integrity: all leaves belong to the id
-* verify proof for vtl
+* verify proof for current vtx
 * validate integrity of all vtxs in backchains
 * verify proofs for each ZKP in the backchain
 

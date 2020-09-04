@@ -9,11 +9,11 @@
 ## State and CommandData classes
 * For now only support TypeOnlyCommandData for commands
 * Encumbering states is not supported, this should be solvable with reference states or simply with contract rules
-* We do not support standard provided contracts: Cash, Token SDK, etc
+* We do not support standard provided contracts (yet): Cash, Token SDK, etc
 * Floating point types are not supported. Please use BigInteger or similar.
 
 ## General
-* Will some require additional knowledge on part of developer. Our goal is to minimize as far as possible
+* Will require additional knowledge on part of developer. Our goal is to minimize as far as possible
 
 # Differences (not necessarily limitations)
 * We leak the contract and command information to the verifier, because we use one circuit per contract command for performance reasons, and because the verifier must know which circuit (verifier key) to use.
@@ -24,3 +24,8 @@
 
 To be discussed: how to manage that for each command, there can be a mix of state types within inputs/outputs/references. E.g. I sell a house. Inputs contain state of type HouseState and of type CashState, so do outputs. Perhaps there is also a SaleAgreementState as an additional output, and a reference state of type GovernmentHouseIdentifierState
 
+# Fixed lengt
+
+* Until Zinc starts to support arbitrary length loops, the following needs to be fixed length (hardcoded in the circuit):
+    * number of tx components in all groups
+    * the size of each component, and of each attribute of each component
