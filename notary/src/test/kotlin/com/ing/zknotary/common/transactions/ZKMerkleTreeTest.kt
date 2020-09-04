@@ -1,6 +1,6 @@
 package com.ing.zknotary.common.transactions
 
-import com.ing.zknotary.common.util.BLAKE2s256ReversedDigestService
+import com.ing.zknotary.common.serializer.ZincSerializationFactoryService
 import com.ing.zknotary.common.zkp.PublicInput
 import com.ing.zknotary.common.zkp.Witness
 import com.ing.zknotary.common.zkp.ZKNulls
@@ -8,6 +8,7 @@ import com.ing.zknotary.common.zkp.ZincZKTransactionService
 import com.ing.zknotary.notary.transactions.createTestsState
 import com.ing.zknotary.notary.transactions.moveTestsState
 import net.corda.core.contracts.PrivacySalt
+import net.corda.core.crypto.BLAKE2s256DigestService
 import net.corda.core.crypto.Crypto
 import net.corda.core.crypto.PedersenDigestService
 import net.corda.core.crypto.toStringShort
@@ -15,6 +16,7 @@ import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
 import net.corda.core.internal.createComponentGroups
 import net.corda.core.internal.unspecifiedCountry
+import net.corda.core.serialization.serialize
 import net.corda.core.transactions.WireTransaction
 import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
@@ -45,7 +47,7 @@ class ZKMerkleTreeTest {
     )
 
     init {
-        artifactFolder.mkdirs()
+        //artifactFolder.mkdirs()
         zincTxZKService.setup()
     }
 
@@ -75,7 +77,7 @@ class ZKMerkleTreeTest {
         )
     }
 
-    @Ignore
+    //@Ignore
     @Test
     fun `merkle roots computed in Corda and Zinc coincide`() {
         ledgerServices.ledger(notary) {
@@ -103,21 +105,21 @@ class ZKMerkleTreeTest {
 
             val ptx = ZKProverTransactionFactory.create(
                 ltx,
-                componentGroupLeafDigestService = BLAKE2s256ReversedDigestService,
+                componentGroupLeafDigestService = BLAKE2s256DigestService,
                 nodeDigestService = PedersenDigestService
             )
 
             val witness = Witness(ptx)
             val publicInput = PublicInput(ptx.id)
 
-            // // This is left for debugging purposes, should this be required.
-            // val serializationFactoryService = ZincSerializationFactoryService()
-            //
-            // val id = publicInput.serialize(serializationFactoryService.factory)
-            // println("Expected = \n${String(id.bytes)}")
-            //
-            // val json = witness.serialize(serializationFactoryService.factory)
-            // File("$circuitFolder/data/witness.json").writeText(String(json.bytes))
+             // This is left for debugging purposes, should this be required.
+             val serializationFactoryService = ZincSerializationFactoryService()
+
+             val id = publicInput.serialize(serializationFactoryService.factory)
+             println("Expected = \n${String(id.bytes)}")
+
+             val json = witness.serialize(serializationFactoryService.factory)
+             File("$circuitFolder/data/witness.json").writeText(String(json.bytes))
 
             val proof = zincTxZKService.prove(witness)
             zincTxZKService.verify(proof, publicInput)
