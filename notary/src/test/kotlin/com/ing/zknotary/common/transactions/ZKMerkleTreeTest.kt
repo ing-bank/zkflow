@@ -21,7 +21,6 @@ import net.corda.testing.node.MockServices
 import net.corda.testing.node.ledger
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 import java.io.File
 import java.time.Duration
@@ -75,7 +74,6 @@ class ZKMerkleTreeTest {
         )
     }
 
-    @Ignore
     @Test
     fun `merkle roots computed in Corda and Zinc coincide`() {
         ledgerServices.ledger(notary) {
