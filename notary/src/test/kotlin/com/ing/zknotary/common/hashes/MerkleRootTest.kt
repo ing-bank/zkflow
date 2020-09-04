@@ -41,7 +41,7 @@ class MerkleRootTest {
         }
 
         val level0 = witness.map { ba ->
-            blake2sDigestService.hash(ba).bytes.map { it }.toByteArray()
+            blake2sDigestService.hash(ba).bytes
         }
 
         val level1 = listOf(

@@ -1,6 +1,5 @@
 package com.ing.zknotary.common.transactions
 
-import com.ing.zknotary.common.serializer.ZincSerializationFactoryService
 import com.ing.zknotary.common.zkp.PublicInput
 import com.ing.zknotary.common.zkp.Witness
 import com.ing.zknotary.common.zkp.ZKNulls
@@ -16,7 +15,6 @@ import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
 import net.corda.core.internal.createComponentGroups
 import net.corda.core.internal.unspecifiedCountry
-import net.corda.core.serialization.serialize
 import net.corda.core.transactions.WireTransaction
 import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
