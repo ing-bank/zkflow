@@ -47,7 +47,7 @@ class ZKMerkleTreeTest {
     )
 
     init {
-        //artifactFolder.mkdirs()
+        artifactFolder.mkdirs()
         zincTxZKService.setup()
     }
 
@@ -77,7 +77,7 @@ class ZKMerkleTreeTest {
         )
     }
 
-    //@Ignore
+    @Ignore
     @Test
     fun `merkle roots computed in Corda and Zinc coincide`() {
         ledgerServices.ledger(notary) {
@@ -112,14 +112,14 @@ class ZKMerkleTreeTest {
             val witness = Witness(ptx)
             val publicInput = PublicInput(ptx.id)
 
-             // This is left for debugging purposes, should this be required.
-             val serializationFactoryService = ZincSerializationFactoryService()
-
-             val id = publicInput.serialize(serializationFactoryService.factory)
-             println("Expected = \n${String(id.bytes)}")
-
-             val json = witness.serialize(serializationFactoryService.factory)
-             File("$circuitFolder/data/witness.json").writeText(String(json.bytes))
+            // // This is left for debugging purposes, should this be required.
+            // val serializationFactoryService = ZincSerializationFactoryService()
+            //
+            // val id = publicInput.serialize(serializationFactoryService.factory)
+            // println("Expected = \n${String(id.bytes)}")
+            //
+            // val json = witness.serialize(serializationFactoryService.factory)
+            // File("$circuitFolder/data/witness.json").writeText(String(json.bytes))
 
             val proof = zincTxZKService.prove(witness)
             zincTxZKService.verify(proof, publicInput)
