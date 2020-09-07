@@ -1,11 +1,13 @@
-// Merkle tree construction.
+//! Limited-depth recursion for Merkle tree construction
 
 fn merkle_2_leaves(leaves: [[bool; HASH_BITS]; 2]) -> [bool; HASH_BITS] {
     dbg!("Consuming 2 leaves");
     dbg!("0: {}", digest_to_bytes(leaves[0]));
     dbg!("1: {}", digest_to_bytes(leaves[1]));
-    pedersen_to_padded_bits(pedersen(concatenate_hashes(leaves[0], leaves[1])).0)
-}
+    pedersen_to_padded_bits(
+        pedersen(concatenate_hashes(leaves[0], leaves[1])).0,
+    )
+}            
 
 fn merkle_4_leaves(leaves: [[bool; HASH_BITS]; 4]) -> [bool; HASH_BITS] {
     dbg!("Consuming 4 leaves");
@@ -21,6 +23,7 @@ fn merkle_4_leaves(leaves: [[bool; HASH_BITS]; 4]) -> [bool; HASH_BITS] {
     dbg!("");
     merkle_2_leaves(new_leaves)
 }
+
 fn merkle_8_leaves(leaves: [[bool; HASH_BITS]; 8]) -> [bool; HASH_BITS] {
     dbg!("Consuming 8 leaves");
     let mut new_leaves = [[false; HASH_BITS]; 4];
@@ -35,6 +38,7 @@ fn merkle_8_leaves(leaves: [[bool; HASH_BITS]; 8]) -> [bool; HASH_BITS] {
     dbg!("");
     merkle_4_leaves(new_leaves)
 }
+
 fn merkle_16_leaves(leaves: [[bool; HASH_BITS]; 16]) -> [bool; HASH_BITS] {
     dbg!("Consuming 16 leaves");
     let mut new_leaves = [[false; HASH_BITS]; 8];
@@ -48,4 +52,20 @@ fn merkle_16_leaves(leaves: [[bool; HASH_BITS]; 16]) -> [bool; HASH_BITS] {
     }
     dbg!("");
     merkle_8_leaves(new_leaves)
+}
+
+//! Top-level function to be called.
+//! Pads the configure number of leaves to the right amount with zero hashes from the right
+//! and calls appropriate tree-constructing procedure            
+fn merkle_root(leaves: [[bool; HASH_BITS]; 9]) -> [bool; HASH_BITS] {
+    dbg!("Building a tree from 9 leaves");
+    
+    dbg!("Padding from the right with 7 zero leaves");
+    let mut full_leaves = [[false; HASH_BITS]; 16];
+    for i in 0..9 {
+        full_leaves[i] = leaves[i];
+    }
+    
+    dbg!("Constructing the root");
+    merkle_16_leaves(full_leaves)
 }
