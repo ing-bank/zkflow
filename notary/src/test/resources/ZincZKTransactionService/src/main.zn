@@ -80,17 +80,17 @@ struct ContentAttachment {
 }
 
 struct Inputs {
-    value: [ContentZKStateAndRef; N_INPUTS],
+    components: [ContentZKStateAndRef; N_INPUTS],
     group_hash: ComponentGroupHash,
 }
 
 struct Outputs {
-    value: [ContentZKStateAndRef; N_OUTPUTS],
+    components: [ContentZKStateAndRef; N_OUTPUTS],
     group_hash: ComponentGroupHash,
 }
 
 struct References {
-    value: [ContentZKStateAndRef; N_REFERENCES],
+    components: [ContentZKStateAndRef; N_REFERENCES],
     group_hash: ComponentGroupHash,
 }
 
@@ -100,12 +100,12 @@ struct ContentCommandData {
 }
 
 struct Commands {
-    value: [ContentCommandData; N_COMMANDS],
+    components: [ContentCommandData; N_COMMANDS],
     group_hash: ComponentGroupHash,
 }
 
 struct Attachments {
-    value: [ContentAttachment; N_ATTACHMENTS],
+    components: [ContentAttachment; N_ATTACHMENTS],
     group_hash: ComponentGroupHash,
 }
 
@@ -120,12 +120,12 @@ struct ContentParty {
 }
 
 struct Signers {
-    value: [ContentPubkey; N_SIGNERS],
+    components: [ContentPubkey; N_SIGNERS],
     group_hash: ComponentGroupHash,
 }
 
 struct Notary {
-    value: ContentParty,
+    component: ContentParty,
     group_hash: ComponentGroupHash,
 }
 
@@ -135,7 +135,7 @@ struct ContentTimeWindow {
 }
 
 struct TimeWindow {
-    value: ContentTimeWindow,
+    component: ContentTimeWindow,
     group_hash: ComponentGroupHash,
 }
 
@@ -145,7 +145,7 @@ struct ContentNetworkParametersHash {
 }
 
 struct NetworkParametersHash {
-    value: ContentNetworkParametersHash,
+    component: ContentNetworkParametersHash,
     group_hash: ComponentGroupHash,
 }
 
