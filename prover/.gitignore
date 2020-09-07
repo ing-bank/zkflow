@@ -3,3 +3,6 @@
 **/data/proving-key
 **/data/public-data.json
 **/data/verifying-key.txt
+
+# Ignore combined circuit
+**/src/main.zn
