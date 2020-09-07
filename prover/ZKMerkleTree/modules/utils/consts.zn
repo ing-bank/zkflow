@@ -23,7 +23,4 @@ const NONCE_BITS: u16 = NONCE_BYTES * BYTE_BITS;
 type HashDigestBytes = [u8; HASH_BYTES];
 type HashDigestBits = [bool; HASH_BITS];
 
-type ComponentGroupHashBytes = [u8; HASH_BYTES];
-type ComponentGroupHashBits = [bool; HASH_BITS];
-
 type PrivacySalt = [bool; HASH_BITS];

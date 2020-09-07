@@ -44,7 +44,7 @@ struct CommandPaddingWrapper {
 
 struct CommandsComponentGroup {
     components: [CommandPaddingWrapper; COMMAND_GROUP_SIZE],
-    group_hash: ComponentGroupHashBytes,
+    group_hash: HashDigest,
 }
 
 impl CommandsComponentGroup {
@@ -68,7 +68,7 @@ impl CommandsComponentGroup {
     fn compute_component_group_hash(
         commands: CommandsComponentGroup,
         privacy_salt: PrivacySalt,
-    ) -> ComponentGroupHashBits {
+    ) -> HashDigestBits {
         let component_leaf_hashes = compute_leaf_hashes(commands, privacy_salt);
 
         //When the number of leaves is one, we pad the leaf with zeros from the right first

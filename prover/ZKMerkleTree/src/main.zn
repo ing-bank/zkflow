@@ -32,9 +32,6 @@ const NONCE_BITS: u16 = NONCE_BYTES * BYTE_BITS;
 type HashDigestBytes = [u8; HASH_BYTES];
 type HashDigestBits = [bool; HASH_BITS];
 
-type ComponentGroupHashBytes = [u8; HASH_BYTES];
-type ComponentGroupHashBits = [bool; HASH_BITS];
-
 type PrivacySalt = [bool; HASH_BITS];
 //Debug functions to convert bit arrays to byte arrays
 
@@ -189,14 +186,16 @@ fn pedersen_to_padded_bits(digest: field) -> [bool; HASH_BITS] {
 type PubKeyBytes = [u8; PUBKEY_BYTES];
 type PubKeyBits = [bool; PUBKEY_BITS];
 
-struct PubKey {}
+struct PubKey {
+    bytes: PubKeyBytes,
+}
 
 impl PubKey {
-    fn fingerprint(this: PubKeyBytes) -> PubKeyBits {
+    fn fingerprint(this: PubKey) -> PubKeyBits {
         let mut pub_key_bits = [false; PUBKEY_BITS];
 
         for i in (0 as u16)..PUBKEY_BYTES {
-            let pk_bits = to_bits(this[i]);
+            let pk_bits = to_bits(this.bytes[i]);
             for j in (0 as u16)..(8 as u16) {
                 pub_key_bits[(8 as u16) * i + j] = pk_bits[j];
             }
@@ -206,7 +205,7 @@ impl PubKey {
 
     // Method to compute leaf hash on public key values.
     fn compute_leaf_hash(
-        this: PubKeyBytes,
+        this: PubKey,
         privacy_salt: PrivacySalt,
         group_index: u32,
         internal_index: u32,
@@ -230,14 +229,16 @@ impl PubKey {
         blake2s(message)
     }
 }
-struct HashDigest {}
+struct HashDigest {
+    bytes: HashDigestBytes,
+}
 
 impl HashDigest {
-    fn fingerprint(this: HashDigestBytes) -> HashDigestBits {
+    fn fingerprint(this: HashDigest) -> HashDigestBits {
         let mut hash_digest_bits = [false; HASH_BITS];
 
         for i in (0 as u16)..HASH_BYTES {
-            let hd_bits = to_bits(this[i]);
+            let hd_bits = to_bits(this.bytes[i]);
             for j in (0 as u16)..(8 as u16) {
                 hash_digest_bits[(8 as u16) * i + j] = hd_bits[j];
             }
@@ -247,7 +248,7 @@ impl HashDigest {
 
     // Method to compute leaf hash on hash values.
     fn compute_leaf_hash(
-        this: HashDigestBytes,
+        this: HashDigest,
         privacy_salt: PrivacySalt,
         group_index: u32,
         internal_index: u32,
@@ -271,10 +272,6 @@ impl HashDigest {
 
         blake2s(message)
     }
-}
-
-fn fingerprint_group_hash(value: ComponentGroupHashBytes) -> ComponentGroupHashBits {
-    HashDigest::fingerprint(value)
 }
 // Merkle tree construction.
 
@@ -313,7 +310,7 @@ type RefBits  = [bool; REF_BITS];
 type StateBits  = [bool; STATE_BITS];
 
 struct Party {
-    owning_key: PubKeyBytes,
+    owning_key: PubKey,
 }
 
 struct Data {
@@ -334,7 +331,7 @@ struct TransactionState {
 }
 
 struct ZKStateRef {
-    id: HashDigestBytes,
+    id: HashDigest,
 }
 
 struct ZKStateAndRef {
@@ -423,7 +420,7 @@ const INPUT_GROUP_SIZE: u16 = 2;
 
 struct InputsComponentGroup {
     components: [ZKStateAndRefPaddingWrapper; INPUT_GROUP_SIZE],
-    group_hash: ComponentGroupHashBytes,
+    group_hash: HashDigest,
 }
 
 impl InputsComponentGroup {
@@ -447,7 +444,7 @@ impl InputsComponentGroup {
     fn compute_component_group_hash(
         inputs: InputsComponentGroup,
         privacy_salt: PrivacySalt,
-    ) -> ComponentGroupHashBits {
+    ) -> HashDigestBits {
         let component_leaf_hashes = compute_leaf_hashes(inputs, privacy_salt);
 
         //Since INPUT_GROUP_SIZE = 2, we use this Merkle function.
@@ -460,7 +457,7 @@ const OUTPUT_GROUP_SIZE: u16 = 2;
 
 struct OutputsComponentGroup {
     components: [ZKStateAndRefPaddingWrapper; OUTPUT_GROUP_SIZE],
-    group_hash: ComponentGroupHashBytes,
+    group_hash: HashDigest,
 }
 
 impl OutputsComponentGroup {
@@ -484,7 +481,7 @@ impl OutputsComponentGroup {
     fn compute_component_group_hash(
         outputs: OutputsComponentGroup,
         privacy_salt: PrivacySalt,
-    ) -> ComponentGroupHashBits {
+    ) -> HashDigestBits {
         let component_leaf_hashes = compute_leaf_hashes(outputs, privacy_salt);
 
         merkle_2_leaves(component_leaf_hashes)
@@ -494,7 +491,7 @@ const REFERENCE_GROUP_SIZE: u16 = 2;
 
 struct ReferencesComponentGroup {
     components: [ZKStateAndRefPaddingWrapper; REFERENCE_GROUP_SIZE],
-    group_hash: ComponentGroupHashBytes,
+    group_hash: HashDigest,
 }
 
 impl ReferencesComponentGroup {
@@ -518,7 +515,7 @@ impl ReferencesComponentGroup {
     fn compute_component_group_hash(
         references: ReferencesComponentGroup,
         privacy_salt: PrivacySalt,
-    ) -> ComponentGroupHashBits {
+    ) -> HashDigestBits {
         let component_leaf_hashes = compute_leaf_hashes(references, privacy_salt);
 
         merkle_2_leaves(component_leaf_hashes)
@@ -534,11 +531,10 @@ enum CommandData {
     MOVE = 1,
 }
 impl CommandData {
-    fn fingerprint(value: CommandData) -> CommandBits {
-        to_bits(value as u32)
+    fn fingerprint(this: CommandData) -> CommandBits {
+        to_bits(this as u32)
     }
 
-    // Method to compute leaf hash on integer  values.
     fn compute_leaf_hash(
         this: CommandData,
         privacy_salt: PrivacySalt,
@@ -571,7 +567,7 @@ struct CommandPaddingWrapper {
 
 struct CommandsComponentGroup {
     components: [CommandPaddingWrapper; COMMAND_GROUP_SIZE],
-    group_hash: ComponentGroupHashBytes,
+    group_hash: HashDigest,
 }
 
 impl CommandsComponentGroup {
@@ -595,7 +591,7 @@ impl CommandsComponentGroup {
     fn compute_component_group_hash(
         commands: CommandsComponentGroup,
         privacy_salt: PrivacySalt,
-    ) -> ComponentGroupHashBits {
+    ) -> HashDigestBits {
         let component_leaf_hashes = compute_leaf_hashes(commands, privacy_salt);
 
         //When the number of leaves is one, we pad the leaf with zeros from the right first
@@ -609,13 +605,13 @@ impl CommandsComponentGroup {
 const ATTACHMENT_GROUP_SIZE: u16 = 2;
 
 struct AttachmentPaddingWrapper {
-    content: HashDigestBytes,
+    content: HashDigest,
     is_filler: bool,
 }
 
 struct AttachmentsComponentGroup {
     components: [AttachmentPaddingWrapper; ATTACHMENT_GROUP_SIZE],
-    group_hash: ComponentGroupHashBytes,
+    group_hash: HashDigest,
 }
 
 impl AttachmentsComponentGroup {
@@ -640,7 +636,7 @@ impl AttachmentsComponentGroup {
     fn compute_component_group_hash(
         attachments: AttachmentsComponentGroup,
         privacy_salt: PrivacySalt,
-    ) -> ComponentGroupHashBits {
+    ) -> HashDigestBits {
         let component_leaf_hashes = compute_leaf_hashes(attachments, privacy_salt);
 
         merkle_2_leaves(component_leaf_hashes)
@@ -653,34 +649,25 @@ struct NotaryPaddingWrapper {
 
 struct NotaryComponentGroup {
     component: NotaryPaddingWrapper,
-    group_hash: ComponentGroupHashBytes,
+    group_hash: HashDigest,
 }
 
 impl NotaryComponentGroup {
-    fn compute_leaf_hashes(
+    fn compute_component_group_hash(
         notary: NotaryComponentGroup,
         privacy_salt: PrivacySalt,
     ) -> HashDigestBits {
-        let mut component_leaf_hashes = [false; HASH_BITS];
-        component_leaf_hashes = PubKey::compute_leaf_hash(
+        let component_leaf_hash = PubKey::compute_leaf_hash(
             notary.component.content.owning_key,
             privacy_salt,
             ComponentGroupEnum::NOTARY_GROUP as u32,
             0 as u32,
         );
-        component_leaf_hashes
-    }
-
-    fn compute_component_group_hash(
-        notary: NotaryComponentGroup,
-        privacy_salt: PrivacySalt,
-    ) -> ComponentGroupHashBits {
-        let component_leaf_hashes = compute_leaf_hashes(notary, privacy_salt);
 
         //When the number of leaves is one, we pad the leaf with zeros from the right first
         //and use padded input in the merkle_root computation.
         let mut padded_leaves = [[false; HASH_BITS]; 2];
-        padded_leaves[0] = component_leaf_hashes;
+        padded_leaves[0] = component_leaf_hash;
 
         merkle_2_leaves(padded_leaves)
     }
@@ -691,14 +678,16 @@ const TIME_WINDOW_BITS: u16 = (BYTE_BITS as u16) * TIME_WINDOW_BYTES;
 type TimeWindowBytes = [u8; TIME_WINDOW_BYTES];
 type TimeWindowBits = [bool; TIME_WINDOW_BITS];
 
-struct TimeWindow {}
+struct TimeWindow {
+    bytes: TimeWindowBytes,
+}
 
 impl TimeWindow {
-    fn fingerprint(this: TimeWindowBytes) -> TimeWindowBits {
+    fn fingerprint(this: TimeWindow) -> TimeWindowBits {
         let mut result = [false; TIME_WINDOW_BITS];
 
         for i in (0 as u16)..TIME_WINDOW_BYTES {
-            let time_window_bits = to_bits(this[i]);
+            let time_window_bits = to_bits(this.bytes[i]);
             for j in (0 as u16)..(8 as u16) {
                 result[i * (8 as u16) + j] = time_window_bits[j];
             }
@@ -707,7 +696,7 @@ impl TimeWindow {
     }
 
     fn compute_leaf_hash(
-        this: TimeWindowBytes,
+        this: TimeWindow,
         privacy_salt: PrivacySalt,
         group_index: u32,
         internal_index: u32,
@@ -733,81 +722,61 @@ impl TimeWindow {
 }
 
 struct TimeWindowPaddingWrapper {
-    content: TimeWindowBytes,
+    content: TimeWindow,
     is_filler: bool,
 }
 
 struct TimeWindowComponentGroup {
     component: TimeWindowPaddingWrapper,
-    group_hash: ComponentGroupHashBytes,
+    group_hash: HashDigest,
 }
 
 impl TimeWindowComponentGroup {
-    fn compute_leaf_hashes(
+    fn compute_component_group_hash(
         time_window: TimeWindowComponentGroup,
         privacy_salt: PrivacySalt,
     ) -> HashDigestBits {
-        let mut component_leaf_hashes = [false; HASH_BITS];
-
-        component_leaf_hashes = TimeWindow::compute_leaf_hash(
+        let component_leaf_hash = TimeWindow::compute_leaf_hash(
             time_window.component.content,
             privacy_salt,
             ComponentGroupEnum::TIMEWINDOW_GROUP as u32,
             0 as u32,
         );
-        component_leaf_hashes
-    }
-
-    fn compute_component_group_hash(
-        time_window: TimeWindowComponentGroup,
-        privacy_salt: PrivacySalt,
-    ) -> ComponentGroupHashBits {
-        let component_leaf_hashes = compute_leaf_hashes(time_window, privacy_salt);
 
         //When the number of leaves is one, we pad the leaf with zeros from the right first
         //and use padded input in the merkle_root computation.
         let mut padded_leaves = [[false; HASH_BITS]; 2];
-        padded_leaves[0] = component_leaf_hashes;
+        padded_leaves[0] = component_leaf_hash;
 
         merkle_2_leaves(padded_leaves)
     }
 }
 struct ParameterPaddingWrapper {
-    content: HashDigestBytes,
+    content: HashDigest,
     is_filler: bool,
 }
 
 struct ParametersComponentGroup {
     component: ParameterPaddingWrapper,
-    group_hash: ComponentGroupHashBytes,
+    group_hash: HashDigest,
 }
 
 impl ParametersComponentGroup {
-    fn compute_leaf_hashes(
+    fn compute_component_group_hash(
         parameters: ParametersComponentGroup,
         privacy_salt: PrivacySalt,
     ) -> HashDigestBits {
-        let mut component_leaf_hashes = [false; HASH_BITS];
-
-        component_leaf_hashes = HashDigest::compute_leaf_hash(
+        let component_leaf_hash = HashDigest::compute_leaf_hash(
             parameters.component.content,
             privacy_salt,
             ComponentGroupEnum::PARAMETERS_GROUP as u32,
             0 as u32,
         );
-        component_leaf_hashes
-    }
-
-    fn compute_component_group_hash(
-        parameters: ParametersComponentGroup,
-        privacy_salt: PrivacySalt,
-    ) -> ComponentGroupHashBits {
-        let component_leaf_hashes = compute_leaf_hashes(parameters, privacy_salt);
 
         //When the number of leaves is one, we pad the leaf with zeros from the right first
         //and use padded input in the merkle_root computation.
         let mut padded_leaves = [[false; HASH_BITS]; 2];
-        padded_leaves[0] = component_leaf_hashes;
+        padded_leaves[0] = component_leaf_hash;
 
         merkle_2_leaves(padded_leaves)
     }
@@ -816,13 +785,13 @@ const SIGNER_GROUP_SIZE: u16 = 2;
 const SIGNER_BITS: u16 = PUBKEY_BITS;
 
 struct SignerPaddingWrapper {
-    content: PubKeyBytes,
+    content: PubKey,
     is_filler: bool,
 }
 
 struct SignersComponentGroup {
     components: [SignerPaddingWrapper; SIGNER_GROUP_SIZE],
-    group_hash: ComponentGroupHashBytes,
+    group_hash: HashDigest,
 }
 
 impl SignersComponentGroup {
@@ -846,7 +815,7 @@ impl SignersComponentGroup {
     fn compute_component_group_hash(
         signers: SignersComponentGroup,
         privacy_salt: PrivacySalt,
-    ) -> ComponentGroupHashBits {
+    ) -> HashDigestBits {
         let component_leaf_hashes = compute_leaf_hashes(signers, privacy_salt);
 
         merkle_2_leaves(component_leaf_hashes)
@@ -862,7 +831,7 @@ struct ZKProverTransaction {
     time_window: TimeWindowComponentGroup,
     parameters: ParametersComponentGroup,
     signers: SignersComponentGroup,
-    privacy_salt: HashDigestBytes,
+    privacy_salt: HashDigest,
 }
 
 struct Witness {
@@ -874,7 +843,7 @@ const COMPONENT_GROUP_SIZE: u8 = 9;
 // * computed digest that is computed from witness.
 // * received digest that is received within the witness.
 // return bool If the computed value is equal to the one received then the function returns true. Otherwise, returns false.
-fn validate_group_hash(computed: ComponentGroupHashBits, received: ComponentGroupHashBits) -> bool {
+fn validate_group_hash(computed: HashDigestBits, received: HashDigestBits) -> bool {
 
     let mut is_equal = true;
 
@@ -891,13 +860,13 @@ fn validate_group_hash(computed: ComponentGroupHashBits, received: ComponentGrou
 // * zk_prover_transaction  that contains component group hashes computed by the prover.
 // If one component_group_hash value cannot be validated then the execution terminates.
 fn validate_group_hashes(
-    component_group_hashes: [ComponentGroupHashBits; COMPONENT_GROUP_SIZE],
+    component_group_hashes: [HashDigestBits; COMPONENT_GROUP_SIZE],
     zk_prover_transaction: ZKProverTransaction,
 ) {
     //Validate component hashes
     let validate_input = validate_group_hash(
         component_group_hashes[ComponentGroupEnum::INPUTS_GROUP],
-        fingerprint_group_hash(zk_prover_transaction.inputs.group_hash),
+        HashDigest::fingerprint(zk_prover_transaction.inputs.group_hash),
     );
 
     assert!(
@@ -907,56 +876,56 @@ fn validate_group_hashes(
 
     let validate_output = validate_group_hash(
         component_group_hashes[ComponentGroupEnum::OUTPUTS_GROUP],
-        fingerprint_group_hash(zk_prover_transaction.outputs.group_hash),
+        HashDigest::fingerprint(zk_prover_transaction.outputs.group_hash),
     );
 
     assert!(validate_output, "Failed computation: The computed output group hash does not match the received group hash.");
 
     let validate_command = validate_group_hash(
         component_group_hashes[ComponentGroupEnum::COMMANDS_GROUP],
-        fingerprint_group_hash(zk_prover_transaction.commands.group_hash),
+        HashDigest::fingerprint(zk_prover_transaction.commands.group_hash),
     );
 
     assert!(validate_command, "Failed computation: The computed command group hash does not match the received group hash.");
 
     let validate_attachment = validate_group_hash(
         component_group_hashes[ComponentGroupEnum::ATTACHMENTS_GROUP],
-        fingerprint_group_hash(zk_prover_transaction.attachments.group_hash),
+        HashDigest::fingerprint(zk_prover_transaction.attachments.group_hash),
     );
 
     assert!(validate_attachment, "Failed computation: The computed attachment group hash does not match the received group hash.");
 
     let validate_notary = validate_group_hash(
         component_group_hashes[ComponentGroupEnum::NOTARY_GROUP],
-        fingerprint_group_hash(zk_prover_transaction.notary.group_hash),
+        HashDigest::fingerprint(zk_prover_transaction.notary.group_hash),
     );
 
     assert!(validate_notary, "Failed computation: The computed notary group hash does not match the received group hash.");
 
     let validate_time_window = validate_group_hash(
         component_group_hashes[ComponentGroupEnum::TIMEWINDOW_GROUP],
-        fingerprint_group_hash(zk_prover_transaction.time_window.group_hash),
+        HashDigest::fingerprint(zk_prover_transaction.time_window.group_hash),
     );
 
     assert!(validate_time_window, "Failed computation: The computed time window group hash does not match the received group hash.");
 
     let validate_signers = validate_group_hash(
         component_group_hashes[ComponentGroupEnum::SIGNERS_GROUP],
-        fingerprint_group_hash(zk_prover_transaction.signers.group_hash),
+        HashDigest::fingerprint(zk_prover_transaction.signers.group_hash),
     );
 
     assert!(validate_signers, "Failed computation: The computed signers group hash does not match the received group hash.");
 
     let validate_reference = validate_group_hash(
         component_group_hashes[ComponentGroupEnum::REFERENCES_GROUP],
-        fingerprint_group_hash(zk_prover_transaction.references.group_hash),
+        HashDigest::fingerprint(zk_prover_transaction.references.group_hash),
     );
 
     assert!(validate_reference, "Failed computation: The computed reference group hash does not match the received group hash.");
 
     let validate_parameters = validate_group_hash(
         component_group_hashes[ComponentGroupEnum::PARAMETERS_GROUP],
-        fingerprint_group_hash(zk_prover_transaction.parameters.group_hash),
+        HashDigest::fingerprint(zk_prover_transaction.parameters.group_hash),
     );
 
     assert!(validate_parameters, "Failed computation: The computed parameters group hash does not match the received group hash.");
@@ -1028,7 +997,7 @@ fn check_contract_rules(value: ZKProverTransaction) {
     );
 }
 struct PublicInput {
-    transaction_id: [u8; 32],
+    transaction_id: HashDigest,
 }
 
 fn main(witness: Witness) -> PublicInput {
@@ -1039,6 +1008,6 @@ fn main(witness: Witness) -> PublicInput {
     let root_hash = build_merkle_tree(witness.transaction);
 
     PublicInput {
-        transaction_id: digest_to_bytes(root_hash),
+        transaction_id: HashDigest {  bytes: digest_to_bytes(root_hash), },
     }
 }

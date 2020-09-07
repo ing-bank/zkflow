@@ -26,14 +26,24 @@ const REF_BITS: u16 = HASH_BITS;
 const SIGNER_BITS: u16 = PUBKEY_BITS;
 const COMMAND_BITS: u16 = INT32_BITS;
 
-type PubKey = [u8; PUBKEY_BYTES];
 type PrivacySalt = [bool; HASH_BITS];
 type ComponentGroupHash = [u8; HASH_BYTES]; //For now we use Blake2s to compute component group hashes - should be replaced with Pedersen!
-type TimeWindowFingerPrint = [u8; 24];
 
 enum CommandData {
     CREATE = 0,
     MOVE = 1,
+}
+
+struct TimeWindowFingerPrint {
+    bytes : [u8; 24],
+}
+
+struct PubKey {
+    bytes :  [u8; PUBKEY_BYTES],
+}
+
+struct HashDigest {
+    bytes : [u8; HASH_BYTES],
 }
 
 struct Party {
@@ -61,7 +71,7 @@ struct TransactionState {
 }
 
 struct ZKStateRef {
-    id: [u8; HASH_BYTES],
+    id: HashDigest,
 }
 
 struct ZKStateAndRef {
@@ -75,23 +85,23 @@ struct ContentZKStateAndRef {
 }
 
 struct ContentAttachment {
-    content: [u8; HASH_BYTES],
+    content: HashDigest,
     is_filler: bool,
 }
 
 struct Inputs {
     components: [ContentZKStateAndRef; N_INPUTS],
-    group_hash: ComponentGroupHash,
+    group_hash: HashDigest,
 }
 
 struct Outputs {
     components: [ContentZKStateAndRef; N_OUTPUTS],
-    group_hash: ComponentGroupHash,
+    group_hash: HashDigest,
 }
 
 struct References {
     components: [ContentZKStateAndRef; N_REFERENCES],
-    group_hash: ComponentGroupHash,
+    group_hash: HashDigest,
 }
 
 struct ContentCommandData {
@@ -101,12 +111,12 @@ struct ContentCommandData {
 
 struct Commands {
     components: [ContentCommandData; N_COMMANDS],
-    group_hash: ComponentGroupHash,
+    group_hash: HashDigest,
 }
 
 struct Attachments {
     components: [ContentAttachment; N_ATTACHMENTS],
-    group_hash: ComponentGroupHash,
+    group_hash: HashDigest,
 }
 
 struct ContentPubkey {
@@ -121,12 +131,12 @@ struct ContentParty {
 
 struct Signers {
     components: [ContentPubkey; N_SIGNERS],
-    group_hash: ComponentGroupHash,
+    group_hash: HashDigest,
 }
 
 struct Notary {
     component: ContentParty,
-    group_hash: ComponentGroupHash,
+    group_hash: HashDigest,
 }
 
 struct ContentTimeWindow {
@@ -136,17 +146,17 @@ struct ContentTimeWindow {
 
 struct TimeWindow {
     component: ContentTimeWindow,
-    group_hash: ComponentGroupHash,
+    group_hash: HashDigest,
 }
 
 struct ContentNetworkParametersHash {
-    content: [u8; HASH_BYTES],
+    content: HashDigest,
     is_filler: bool,
 }
 
 struct NetworkParametersHash {
     component: ContentNetworkParametersHash,
-    group_hash: ComponentGroupHash,
+    group_hash: HashDigest,
 }
 
 struct ZKProverTransaction {
@@ -159,7 +169,7 @@ struct ZKProverTransaction {
     time_window: TimeWindow,
     parameters: NetworkParametersHash,
     signers: Signers,
-    privacy_salt: [u8; HASH_BYTES],
+    privacy_salt: HashDigest,
 }
 
 struct Witness {
@@ -167,7 +177,7 @@ struct Witness {
 }
 
 struct PublicInput {
-    transaction_id: [u8; HASH_BYTES]
+    transaction_id: HashDigest,
 }
 
 fn main(witness: Witness) -> PublicInput //ZKMerkleTree::PedersenDigest

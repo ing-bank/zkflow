@@ -2,7 +2,7 @@ const OUTPUT_GROUP_SIZE: u16 = 2;
 
 struct OutputsComponentGroup {
     components: [ZKStateAndRefPaddingWrapper; OUTPUT_GROUP_SIZE],
-    group_hash: ComponentGroupHashBytes,
+    group_hash: HashDigest,
 }
 
 impl OutputsComponentGroup {
@@ -26,7 +26,7 @@ impl OutputsComponentGroup {
     fn compute_component_group_hash(
         outputs: OutputsComponentGroup,
         privacy_salt: PrivacySalt,
-    ) -> ComponentGroupHashBits {
+    ) -> HashDigestBits {
         let component_leaf_hashes = compute_leaf_hashes(outputs, privacy_salt);
 
         merkle_2_leaves(component_leaf_hashes)

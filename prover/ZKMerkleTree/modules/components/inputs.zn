@@ -2,7 +2,7 @@ const INPUT_GROUP_SIZE: u16 = 2;
 
 struct InputsComponentGroup {
     components: [ZKStateAndRefPaddingWrapper; INPUT_GROUP_SIZE],
-    group_hash: ComponentGroupHashBytes,
+    group_hash: HashDigest,
 }
 
 impl InputsComponentGroup {
@@ -26,7 +26,7 @@ impl InputsComponentGroup {
     fn compute_component_group_hash(
         inputs: InputsComponentGroup,
         privacy_salt: PrivacySalt,
-    ) -> ComponentGroupHashBits {
+    ) -> HashDigestBits {
         let component_leaf_hashes = compute_leaf_hashes(inputs, privacy_salt);
 
         //Since INPUT_GROUP_SIZE = 2, we use this Merkle function.

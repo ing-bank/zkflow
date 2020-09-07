@@ -2,7 +2,7 @@ const REFERENCE_GROUP_SIZE: u16 = 2;
 
 struct ReferencesComponentGroup {
     components: [ZKStateAndRefPaddingWrapper; REFERENCE_GROUP_SIZE],
-    group_hash: ComponentGroupHashBytes,
+    group_hash: HashDigest,
 }
 
 impl ReferencesComponentGroup {
@@ -26,7 +26,7 @@ impl ReferencesComponentGroup {
     fn compute_component_group_hash(
         references: ReferencesComponentGroup,
         privacy_salt: PrivacySalt,
-    ) -> ComponentGroupHashBits {
+    ) -> HashDigestBits {
         let component_leaf_hashes = compute_leaf_hashes(references, privacy_salt);
 
         merkle_2_leaves(component_leaf_hashes)

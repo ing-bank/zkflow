@@ -2,13 +2,13 @@ const SIGNER_GROUP_SIZE: u16 = 2;
 const SIGNER_BITS: u16 = PUBKEY_BITS;
 
 struct SignerPaddingWrapper {
-    content: PubKeyBytes,
+    content: PubKey,
     is_filler: bool,
 }
 
 struct SignersComponentGroup {
     components: [SignerPaddingWrapper; SIGNER_GROUP_SIZE],
-    group_hash: ComponentGroupHashBytes,
+    group_hash: HashDigest,
 }
 
 impl SignersComponentGroup {
@@ -32,7 +32,7 @@ impl SignersComponentGroup {
     fn compute_component_group_hash(
         signers: SignersComponentGroup,
         privacy_salt: PrivacySalt,
-    ) -> ComponentGroupHashBits {
+    ) -> HashDigestBits {
         let component_leaf_hashes = compute_leaf_hashes(signers, privacy_salt);
 
         merkle_2_leaves(component_leaf_hashes)

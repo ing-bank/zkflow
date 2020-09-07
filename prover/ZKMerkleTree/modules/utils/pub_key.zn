@@ -1,14 +1,16 @@
 type PubKeyBytes = [u8; PUBKEY_BYTES];
 type PubKeyBits = [bool; PUBKEY_BITS];
 
-struct PubKey {}
+struct PubKey {
+    bytes: PubKeyBytes,
+}
 
 impl PubKey {
-    fn fingerprint(this: PubKeyBytes) -> PubKeyBits {
+    fn fingerprint(this: PubKey) -> PubKeyBits {
         let mut pub_key_bits = [false; PUBKEY_BITS];
 
         for i in (0 as u16)..PUBKEY_BYTES {
-            let pk_bits = to_bits(this[i]);
+            let pk_bits = to_bits(this.bytes[i]);
             for j in (0 as u16)..(8 as u16) {
                 pub_key_bits[(8 as u16) * i + j] = pk_bits[j];
             }
@@ -18,7 +20,7 @@ impl PubKey {
 
     // Method to compute leaf hash on public key values.
     fn compute_leaf_hash(
-        this: PubKeyBytes,
+        this: PubKey,
         privacy_salt: PrivacySalt,
         group_index: u32,
         internal_index: u32,

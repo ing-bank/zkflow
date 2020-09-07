@@ -1,11 +1,13 @@
-struct HashDigest {}
+struct HashDigest {
+    bytes: HashDigestBytes,
+}
 
 impl HashDigest {
-    fn fingerprint(this: HashDigestBytes) -> HashDigestBits {
+    fn fingerprint(this: HashDigest) -> HashDigestBits {
         let mut hash_digest_bits = [false; HASH_BITS];
 
         for i in (0 as u16)..HASH_BYTES {
-            let hd_bits = to_bits(this[i]);
+            let hd_bits = to_bits(this.bytes[i]);
             for j in (0 as u16)..(8 as u16) {
                 hash_digest_bits[(8 as u16) * i + j] = hd_bits[j];
             }
@@ -15,7 +17,7 @@ impl HashDigest {
 
     // Method to compute leaf hash on hash values.
     fn compute_leaf_hash(
-        this: HashDigestBytes,
+        this: HashDigest,
         privacy_salt: PrivacySalt,
         group_index: u32,
         internal_index: u32,
@@ -41,8 +43,4 @@ impl HashDigest {
 
         blake2s(message)
     }
-}
-
-fn fingerprint_group_hash(value: ComponentGroupHashBytes) -> ComponentGroupHashBits {
-    HashDigest::fingerprint(value)
 }

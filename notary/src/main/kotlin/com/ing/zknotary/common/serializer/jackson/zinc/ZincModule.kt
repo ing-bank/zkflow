@@ -127,7 +127,9 @@ private interface PublicKeyMixinZinc
 
 private class PublicKeyMixinZincSerializer : JsonSerializer<PublicKey>() {
     override fun serialize(value: PublicKey, gen: JsonGenerator, serializers: SerializerProvider) {
-        gen.writeObject(value.encoded)
+        gen.writeStartObject()
+        gen.writeObjectField("bytes", value.encoded)
+        gen.writeEndObject()
     }
 }
 
@@ -159,7 +161,9 @@ private interface SecureHashMixinZinc
 
 private class SecureHashMixinZincSerializer : JsonSerializer<SecureHash>() {
     override fun serialize(value: SecureHash, gen: JsonGenerator, serializers: SerializerProvider) {
-        gen.writeObject(value.bytes)
+        gen.writeStartObject()
+        gen.writeObjectField("bytes", value.bytes)
+        gen.writeEndObject()
     }
 }
 
@@ -168,7 +172,9 @@ private interface PrivacySaltMixinZinc
 
 private class PrivacySaltMixinZincSerializer : JsonSerializer<PrivacySalt>() {
     override fun serialize(value: PrivacySalt, gen: JsonGenerator, serializers: SerializerProvider) {
-        gen.writeObject(value.bytes)
+        gen.writeStartObject()
+        gen.writeObjectField("bytes", value.bytes)
+        gen.writeEndObject()
     }
 }
 
@@ -177,7 +183,9 @@ private interface TimeWindowMixinZinc
 
 private class TimeWindowMixinZincSerializer : JsonSerializer<TimeWindow>() {
     override fun serialize(value: TimeWindow, gen: JsonGenerator, serializers: SerializerProvider) {
-        gen.writeObject(value.fingerprint)
+        gen.writeStartObject()
+        gen.writeObjectField("bytes", value.fingerprint)
+        gen.writeEndObject()
     }
 }
 

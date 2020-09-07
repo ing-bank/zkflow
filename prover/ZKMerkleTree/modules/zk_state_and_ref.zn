@@ -2,7 +2,7 @@ type RefBits  = [bool; REF_BITS];
 type StateBits  = [bool; STATE_BITS];
 
 struct Party {
-    owning_key: PubKeyBytes,
+    owning_key: PubKey,
 }
 
 struct Data {
@@ -23,7 +23,7 @@ struct TransactionState {
 }
 
 struct ZKStateRef {
-    id: HashDigestBytes,
+    id: HashDigest,
 }
 
 struct ZKStateAndRef {
