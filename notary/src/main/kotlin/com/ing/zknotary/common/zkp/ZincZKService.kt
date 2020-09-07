@@ -110,7 +110,7 @@ class ZincZKService(
                 provingTimeout
             ).toByteArray()
         } catch (e: Exception) {
-            throw ZKProvingException("Could not create proof. Cause: $e")
+            throw ZKProvingException("Could not create proof. Cause: $e\n\nProvided witness: \n${String(witness)}")
         } finally {
             publicData.delete()
         }
