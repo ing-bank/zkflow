@@ -5,25 +5,21 @@ struct AttachmentPaddingWrapper {
     is_filler: bool,
 }
 
-struct Attachments {
-    value: [AttachmentPaddingWrapper; ATTACHMENT_GROUP_SIZE],
+struct AttachmentsComponentGroup {
+    components: [AttachmentPaddingWrapper; ATTACHMENT_GROUP_SIZE],
     group_hash: ComponentGroupHashBytes,
 }
 
-impl Attachments {
-    fn fingerprint_content(content: [u8; HASH_BYTES]) -> [bool; HASH_BITS] {
-        convert_hash_to_bits(content)
-    }
-
+impl AttachmentsComponentGroup {
     fn compute_leaf_hashes(
-        attachments: Attachments,
+        attachments: AttachmentsComponentGroup,
         privacy_salt: PrivacySalt,
     ) -> [HashDigestBits; ATTACHMENT_GROUP_SIZE] {
         let mut component_leaf_hashes = [[false; HASH_BITS]; ATTACHMENT_GROUP_SIZE];
 
         for i in (0 as u32)..(ATTACHMENT_GROUP_SIZE as u32) {
-            component_leaf_hashes[i] = compute_leaf_hash_hash(
-                fingerprint_content(attachments.value[i].content),
+            component_leaf_hashes[i] = HashDigest::compute_leaf_hash(
+                attachments.components[i].content,
                 privacy_salt,
                 ComponentGroupEnum::ATTACHMENTS_GROUP as u32,
                 i as u32,
@@ -34,7 +30,7 @@ impl Attachments {
     }
 
     fn compute_component_group_hash(
-        attachments: Attachments,
+        attachments: AttachmentsComponentGroup,
         privacy_salt: PrivacySalt,
     ) -> ComponentGroupHashBits {
         let component_leaf_hashes = compute_leaf_hashes(attachments, privacy_salt);

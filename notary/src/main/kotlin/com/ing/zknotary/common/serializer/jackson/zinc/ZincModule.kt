@@ -116,11 +116,11 @@ private class ZincJson(
     val privacySalt: PrivacySalt
 )
 
-data class ComponentGroup<T>(val value: List<T>, val groupHash: SecureHash) {
-    constructor(value: T, groupHash: SecureHash) : this(listOf(value), groupHash)
+data class ComponentGroup<T>(val components: List<T>, val groupHash: SecureHash) {
+    constructor(components: T, groupHash: SecureHash) : this(listOf(components), groupHash)
 }
 
-data class ComponentSinglet<T>(val value: T, val groupHash: SecureHash)
+data class ComponentSinglet<T>(val component: T, val groupHash: SecureHash)
 
 @JsonSerialize(using = PublicKeyMixinZincSerializer::class)
 private interface PublicKeyMixinZinc

@@ -3,20 +3,19 @@ struct NotaryPaddingWrapper {
     is_filler: bool,
 }
 
-struct Notary {
-    value: NotaryPaddingWrapper,
+struct NotaryComponentGroup {
+    component: NotaryPaddingWrapper,
     group_hash: ComponentGroupHashBytes,
 }
 
-impl Notary {
-    fn fingerprint_content(content: PubKey) -> [bool; PUBKEY_BITS] {
-        convert_pub_key_to_bits(content)
-    }
-
-    fn compute_leaf_hashes(notary: Notary, privacy_salt: PrivacySalt) -> HashDigestBits {
+impl NotaryComponentGroup {
+    fn compute_leaf_hashes(
+        notary: NotaryComponentGroup,
+        privacy_salt: PrivacySalt,
+    ) -> HashDigestBits {
         let mut component_leaf_hashes = [false; HASH_BITS];
-        component_leaf_hashes = compute_leaf_hash_pub_key(
-            fingerprint_content(notary.value.content.owning_key),
+        component_leaf_hashes = PubKey::compute_leaf_hash(
+            notary.component.content.owning_key,
             privacy_salt,
             ComponentGroupEnum::NOTARY_GROUP as u32,
             0 as u32,
@@ -25,7 +24,7 @@ impl Notary {
     }
 
     fn compute_component_group_hash(
-        notary: Notary,
+        notary: NotaryComponentGroup,
         privacy_salt: PrivacySalt,
     ) -> ComponentGroupHashBits {
         let component_leaf_hashes = compute_leaf_hashes(notary, privacy_salt);

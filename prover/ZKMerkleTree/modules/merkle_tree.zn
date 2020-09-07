@@ -3,28 +3,28 @@ fn build_merkle_tree(
 ) -> HashDigestBits {
 
     //Fingerprint for privacy salt
-    let privacy_salt = convert_hash_to_bits(zk_prover_transaction.privacy_salt);
+    let privacy_salt = HashDigest::fingerprint(zk_prover_transaction.privacy_salt);
 
     let mut component_group_hashes = [[false; HASH_BITS]; COMPONENT_GROUP_SIZE];
 
     component_group_hashes[ComponentGroupEnum::INPUTS_GROUP] =
-        Inputs::compute_component_group_hash(zk_prover_transaction.inputs, privacy_salt);
+        InputsComponentGroup::compute_component_group_hash(zk_prover_transaction.inputs, privacy_salt);
     component_group_hashes[ComponentGroupEnum::OUTPUTS_GROUP] =
-        Outputs::compute_component_group_hash(zk_prover_transaction.outputs, privacy_salt);
+        OutputsComponentGroup::compute_component_group_hash(zk_prover_transaction.outputs, privacy_salt);
     component_group_hashes[ComponentGroupEnum::COMMANDS_GROUP] =
-        Commands::compute_component_group_hash(zk_prover_transaction.commands, privacy_salt);
+        CommandsComponentGroup::compute_component_group_hash(zk_prover_transaction.commands, privacy_salt);
     component_group_hashes[ComponentGroupEnum::ATTACHMENTS_GROUP] =
-        Attachments::compute_component_group_hash(zk_prover_transaction.attachments, privacy_salt);
+        AttachmentsComponentGroup::compute_component_group_hash(zk_prover_transaction.attachments, privacy_salt);
     component_group_hashes[ComponentGroupEnum::NOTARY_GROUP] =
-        Notary::compute_component_group_hash(zk_prover_transaction.notary, privacy_salt);
+        NotaryComponentGroup::compute_component_group_hash(zk_prover_transaction.notary, privacy_salt);
     component_group_hashes[ComponentGroupEnum::TIMEWINDOW_GROUP] =
-        TimeWindow::compute_component_group_hash(zk_prover_transaction.time_window, privacy_salt);
+        TimeWindowComponentGroup::compute_component_group_hash(zk_prover_transaction.time_window, privacy_salt);
     component_group_hashes[ComponentGroupEnum::SIGNERS_GROUP] =
-        Signers::compute_component_group_hash(zk_prover_transaction.signers, privacy_salt);
+        SignersComponentGroup::compute_component_group_hash(zk_prover_transaction.signers, privacy_salt);
     component_group_hashes[ComponentGroupEnum::REFERENCES_GROUP] =
-        References::compute_component_group_hash(zk_prover_transaction.references, privacy_salt);
+        ReferencesComponentGroup::compute_component_group_hash(zk_prover_transaction.references, privacy_salt);
     component_group_hashes[ComponentGroupEnum::PARAMETERS_GROUP] =
-        Parameters::compute_component_group_hash(zk_prover_transaction.parameters, privacy_salt);
+        ParametersComponentGroup::compute_component_group_hash(zk_prover_transaction.parameters, privacy_salt);
 
     //Validate component group hashes
     //This function is currently disabled since witness file is all zeros.

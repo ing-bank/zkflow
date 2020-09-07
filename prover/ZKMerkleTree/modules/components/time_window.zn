@@ -1,43 +1,17 @@
 const TIME_WINDOW_BYTES: u16 = 24;
 const TIME_WINDOW_BITS: u16 = (BYTE_BITS as u16) * TIME_WINDOW_BYTES;
 
-struct TimeWindowPaddingWrapper {
-    content: [u8; TIME_WINDOW_BYTES],
-    is_filler: bool,
-}
+type TimeWindowBytes = [u8; TIME_WINDOW_BYTES];
+type TimeWindowBits = [bool; TIME_WINDOW_BITS];
 
-struct TimeWindow {
-    value: TimeWindowPaddingWrapper,
-    group_hash: ComponentGroupHashBytes,
-}
-
-fn compute_leaf_hash_timeW(
-    value: [bool; TIME_WINDOW_BITS],
-    privacy_salt: PrivacySalt,
-    group_index: u32,
-    internal_index: u32,
-) -> HashDigestBits {
-    //compute nonce
-    let mut nonce = compute_nonce(privacy_salt, group_index, internal_index);
-    let mut message: [bool; HASH_BITS + TIME_WINDOW_BITS] = [false; HASH_BITS + TIME_WINDOW_BITS];
-
-    //message = nonce || signature
-    for i in 0..HASH_BITS {
-        message[i] = nonce[i];
-    }
-    for i in 0..TIME_WINDOW_BITS {
-        message[HASH_BITS + i] = value[i];
-    }
-
-    blake2s(message)
-}
+struct TimeWindow {}
 
 impl TimeWindow {
-    fn fingerprint_content(content: [u8; TIME_WINDOW_BYTES]) -> [bool; TIME_WINDOW_BITS] {
+    fn fingerprint(this: TimeWindowBytes) -> TimeWindowBits {
         let mut result = [false; TIME_WINDOW_BITS];
 
         for i in (0 as u16)..TIME_WINDOW_BYTES {
-            let time_window_bits = to_bits(content[i]);
+            let time_window_bits = to_bits(this[i]);
             for j in (0 as u16)..(8 as u16) {
                 result[i * (8 as u16) + j] = time_window_bits[j];
             }
@@ -45,11 +19,51 @@ impl TimeWindow {
         result
     }
 
-    fn compute_leaf_hashes(time_window: TimeWindow, privacy_salt: PrivacySalt) -> HashDigestBits {
+    fn compute_leaf_hash(
+        this: TimeWindowBytes,
+        privacy_salt: PrivacySalt,
+        group_index: u32,
+        internal_index: u32,
+    ) -> HashDigestBits {
+        //fingerprint
+        let fingerprint_time_window = fingerprint(this);
+
+        //compute nonce
+        let mut nonce = compute_nonce(privacy_salt, group_index, internal_index);
+        let mut message: [bool; HASH_BITS + TIME_WINDOW_BITS] =
+            [false; HASH_BITS + TIME_WINDOW_BITS];
+
+        //message = nonce || signature
+        for i in 0..HASH_BITS {
+            message[i] = nonce[i];
+        }
+        for i in 0..TIME_WINDOW_BITS {
+            message[HASH_BITS + i] = fingerprint_time_window[i];
+        }
+
+        blake2s(message)
+    }
+}
+
+struct TimeWindowPaddingWrapper {
+    content: TimeWindowBytes,
+    is_filler: bool,
+}
+
+struct TimeWindowComponentGroup {
+    component: TimeWindowPaddingWrapper,
+    group_hash: ComponentGroupHashBytes,
+}
+
+impl TimeWindowComponentGroup {
+    fn compute_leaf_hashes(
+        time_window: TimeWindowComponentGroup,
+        privacy_salt: PrivacySalt,
+    ) -> HashDigestBits {
         let mut component_leaf_hashes = [false; HASH_BITS];
 
-        component_leaf_hashes = compute_leaf_hash_timeW(
-            fingerprint_content(time_window.value.content),
+        component_leaf_hashes = TimeWindow::compute_leaf_hash(
+            time_window.component.content,
             privacy_salt,
             ComponentGroupEnum::TIMEWINDOW_GROUP as u32,
             0 as u32,
@@ -58,7 +72,7 @@ impl TimeWindow {
     }
 
     fn compute_component_group_hash(
-        time_window: TimeWindow,
+        time_window: TimeWindowComponentGroup,
         privacy_salt: PrivacySalt,
     ) -> ComponentGroupHashBits {
         let component_leaf_hashes = compute_leaf_hashes(time_window, privacy_salt);

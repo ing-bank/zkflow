@@ -1,0 +1,48 @@
+struct HashDigest {}
+
+impl HashDigest {
+    fn fingerprint(this: HashDigestBytes) -> HashDigestBits {
+        let mut hash_digest_bits = [false; HASH_BITS];
+
+        for i in (0 as u16)..HASH_BYTES {
+            let hd_bits = to_bits(this[i]);
+            for j in (0 as u16)..(8 as u16) {
+                hash_digest_bits[(8 as u16) * i + j] = hd_bits[j];
+            }
+        }
+        hash_digest_bits
+    }
+
+    // Method to compute leaf hash on hash values.
+    fn compute_leaf_hash(
+        this: HashDigestBytes,
+        privacy_salt: PrivacySalt,
+        group_index: u32,
+        internal_index: u32,
+    ) -> HashDigestBits {
+        //fingerprint
+        let fingerprint_hash_digest = fingerprint(this);
+
+        //compute nonce
+        let mut nonce = compute_nonce(privacy_salt, group_index, internal_index);
+        // dbg!("   nonce = {}", digest_to_bytes(nonce));
+
+        let mut message: [bool; HASH_BITS + HASH_BITS] = [false; HASH_BITS + HASH_BITS];
+
+        //message = nonce || hash
+        for i in 0..HASH_BITS {
+            message[i] = nonce[i];
+        }
+        for i in 0..HASH_BITS {
+            message[HASH_BITS + i] = fingerprint_hash_digest[i];
+        }
+
+        // dbg!("   digest input = {}", hashhash_to_bytes(message));
+
+        blake2s(message)
+    }
+}
+
+fn fingerprint_group_hash(value: ComponentGroupHashBytes) -> ComponentGroupHashBits {
+    HashDigest::fingerprint(value)
+}

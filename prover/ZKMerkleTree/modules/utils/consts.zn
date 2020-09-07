@@ -20,8 +20,6 @@ const REF_BITS: u16 = HASH_BITS;
 const NONCE_BYTES: u16 = HASH_BYTES + U32_BYTES + U32_BYTES;
 const NONCE_BITS: u16 = NONCE_BYTES * BYTE_BITS;
 
-type PubKey = [u8; PUBKEY_BYTES];
-
 type HashDigestBytes = [u8; HASH_BYTES];
 type HashDigestBits = [bool; HASH_BITS];
 

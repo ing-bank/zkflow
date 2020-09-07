@@ -1,24 +1,20 @@
 const INPUT_GROUP_SIZE: u16 = 2;
 
-struct Inputs {
-    value: [ZKStateAndRefPaddingWrapper; INPUT_GROUP_SIZE],
+struct InputsComponentGroup {
+    components: [ZKStateAndRefPaddingWrapper; INPUT_GROUP_SIZE],
     group_hash: ComponentGroupHashBytes,
 }
 
-impl Inputs {
-    fn fingerprint_content(content: ZKStateRef) -> [bool; REF_BITS] {
-        ZKStateAndRef::fingerprint_ref(content)
-    }
-
+impl InputsComponentGroup {
     fn compute_leaf_hashes(
-        inputs: Inputs,
+        inputs: InputsComponentGroup,
         privacy_salt: PrivacySalt,
     ) -> [HashDigestBits; INPUT_GROUP_SIZE] {
         let mut component_leaf_hashes = [[false; HASH_BITS]; INPUT_GROUP_SIZE];
 
         for i in (0 as u32)..(INPUT_GROUP_SIZE as u32) {
-            component_leaf_hashes[i] = ZKStateAndRef::compute_leaf_hash_ref(
-                fingerprint_content(inputs.value[i].content.reference),
+            component_leaf_hashes[i] = ZKStateRef::compute_leaf_hash(
+                inputs.components[i].content.reference,
                 privacy_salt,
                 ComponentGroupEnum::INPUTS_GROUP as u32,
                 i as u32,
@@ -28,7 +24,7 @@ impl Inputs {
     }
 
     fn compute_component_group_hash(
-        inputs: Inputs,
+        inputs: InputsComponentGroup,
         privacy_salt: PrivacySalt,
     ) -> ComponentGroupHashBits {
         let component_leaf_hashes = compute_leaf_hashes(inputs, privacy_salt);

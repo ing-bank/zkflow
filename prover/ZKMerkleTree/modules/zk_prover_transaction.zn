@@ -1,14 +1,14 @@
 struct ZKProverTransaction {
-    inputs: Inputs,
-    outputs: Outputs,
-    references: References,
-    commands: Commands,
-    attachments: Attachments,
-    notary: Notary,
-    time_window: TimeWindow,
-    parameters: Parameters,
-    signers: Signers,
-    privacy_salt: [u8; HASH_BYTES],
+    inputs: InputsComponentGroup,
+    outputs: OutputsComponentGroup,
+    references: ReferencesComponentGroup,
+    commands: CommandsComponentGroup,
+    attachments: AttachmentsComponentGroup,
+    notary: NotaryComponentGroup,
+    time_window: TimeWindowComponentGroup,
+    parameters: ParametersComponentGroup,
+    signers: SignersComponentGroup,
+    privacy_salt: HashDigestBytes,
 }
 
 struct Witness {
