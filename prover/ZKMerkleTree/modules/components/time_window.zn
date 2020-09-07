@@ -59,11 +59,11 @@ struct TimeWindowComponentGroup {
 
 impl TimeWindowComponentGroup {
     fn compute_component_group_hash(
-        time_window: TimeWindowComponentGroup,
+        this: TimeWindowComponentGroup,
         privacy_salt: PrivacySalt,
     ) -> HashDigestBits {
         let component_leaf_hash = TimeWindow::compute_leaf_hash(
-            time_window.component.content,
+            this.component.content,
             privacy_salt,
             ComponentGroupEnum::TIMEWINDOW_GROUP as u32,
             0 as u32,

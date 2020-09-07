@@ -13,14 +13,14 @@ struct SignersComponentGroup {
 
 impl SignersComponentGroup {
     fn compute_leaf_hashes(
-        signers: SignersComponentGroup,
+        this: SignersComponentGroup,
         privacy_salt: PrivacySalt,
     ) -> [HashDigestBits; SIGNER_GROUP_SIZE] {
         let mut component_leaf_hashes = [[false; HASH_BITS]; SIGNER_GROUP_SIZE];
 
         for i in (0 as u32)..(SIGNER_GROUP_SIZE as u32) {
             component_leaf_hashes[i] = PubKey::compute_leaf_hash(
-                signers.components[i].content,
+                this.components[i].content,
                 privacy_salt,
                 ComponentGroupEnum::SIGNERS_GROUP as u32,
                 i as u32,
@@ -30,10 +30,10 @@ impl SignersComponentGroup {
     }
 
     fn compute_component_group_hash(
-        signers: SignersComponentGroup,
+        this: SignersComponentGroup,
         privacy_salt: PrivacySalt,
     ) -> HashDigestBits {
-        let component_leaf_hashes = compute_leaf_hashes(signers, privacy_salt);
+        let component_leaf_hashes = compute_leaf_hashes(this, privacy_salt);
 
         merkle_2_leaves(component_leaf_hashes)
     }

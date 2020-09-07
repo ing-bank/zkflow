@@ -10,11 +10,11 @@ struct NotaryComponentGroup {
 
 impl NotaryComponentGroup {
     fn compute_component_group_hash(
-        notary: NotaryComponentGroup,
+        this: NotaryComponentGroup,
         privacy_salt: PrivacySalt,
     ) -> HashDigestBits {
         let component_leaf_hash = PubKey::compute_leaf_hash(
-            notary.component.content.owning_key,
+            this.component.content.owning_key,
             privacy_salt,
             ComponentGroupEnum::NOTARY_GROUP as u32,
             0 as u32,

@@ -7,14 +7,14 @@ struct InputsComponentGroup {
 
 impl InputsComponentGroup {
     fn compute_leaf_hashes(
-        inputs: InputsComponentGroup,
+        this: InputsComponentGroup,
         privacy_salt: PrivacySalt,
     ) -> [HashDigestBits; INPUT_GROUP_SIZE] {
         let mut component_leaf_hashes = [[false; HASH_BITS]; INPUT_GROUP_SIZE];
 
         for i in (0 as u32)..(INPUT_GROUP_SIZE as u32) {
             component_leaf_hashes[i] = ZKStateRef::compute_leaf_hash(
-                inputs.components[i].content.reference,
+                this.components[i].content.reference,
                 privacy_salt,
                 ComponentGroupEnum::INPUTS_GROUP as u32,
                 i as u32,
@@ -24,10 +24,10 @@ impl InputsComponentGroup {
     }
 
     fn compute_component_group_hash(
-        inputs: InputsComponentGroup,
+        this: InputsComponentGroup,
         privacy_salt: PrivacySalt,
     ) -> HashDigestBits {
-        let component_leaf_hashes = compute_leaf_hashes(inputs, privacy_salt);
+        let component_leaf_hashes = compute_leaf_hashes(this, privacy_salt);
 
         //Since INPUT_GROUP_SIZE = 2, we use this Merkle function.
         //If INPUT_GROUP_SIZE is different choose the appropriate merkle_util function.

@@ -425,14 +425,14 @@ struct InputsComponentGroup {
 
 impl InputsComponentGroup {
     fn compute_leaf_hashes(
-        inputs: InputsComponentGroup,
+        this: InputsComponentGroup,
         privacy_salt: PrivacySalt,
     ) -> [HashDigestBits; INPUT_GROUP_SIZE] {
         let mut component_leaf_hashes = [[false; HASH_BITS]; INPUT_GROUP_SIZE];
 
         for i in (0 as u32)..(INPUT_GROUP_SIZE as u32) {
             component_leaf_hashes[i] = ZKStateRef::compute_leaf_hash(
-                inputs.components[i].content.reference,
+                this.components[i].content.reference,
                 privacy_salt,
                 ComponentGroupEnum::INPUTS_GROUP as u32,
                 i as u32,
@@ -442,10 +442,10 @@ impl InputsComponentGroup {
     }
 
     fn compute_component_group_hash(
-        inputs: InputsComponentGroup,
+        this: InputsComponentGroup,
         privacy_salt: PrivacySalt,
     ) -> HashDigestBits {
-        let component_leaf_hashes = compute_leaf_hashes(inputs, privacy_salt);
+        let component_leaf_hashes = compute_leaf_hashes(this, privacy_salt);
 
         //Since INPUT_GROUP_SIZE = 2, we use this Merkle function.
         //If INPUT_GROUP_SIZE is different choose the appropriate merkle_util function.
@@ -462,14 +462,14 @@ struct OutputsComponentGroup {
 
 impl OutputsComponentGroup {
     fn compute_leaf_hashes(
-        outputs: OutputsComponentGroup,
+        this: OutputsComponentGroup,
         privacy_salt: PrivacySalt,
     ) -> [HashDigestBits; OUTPUT_GROUP_SIZE] {
         let mut component_leaf_hashes = [[false; HASH_BITS]; OUTPUT_GROUP_SIZE];
 
         for i in (0 as u32)..(OUTPUT_GROUP_SIZE as u32) {
             component_leaf_hashes[i] = ZKStateRef::compute_leaf_hash(
-                outputs.components[i].content.reference,
+                this.components[i].content.reference,
                 privacy_salt,
                 ComponentGroupEnum::OUTPUTS_GROUP as u32,
                 i as u32,
@@ -479,10 +479,10 @@ impl OutputsComponentGroup {
     }
 
     fn compute_component_group_hash(
-        outputs: OutputsComponentGroup,
+        this: OutputsComponentGroup,
         privacy_salt: PrivacySalt,
     ) -> HashDigestBits {
-        let component_leaf_hashes = compute_leaf_hashes(outputs, privacy_salt);
+        let component_leaf_hashes = compute_leaf_hashes(this, privacy_salt);
 
         merkle_2_leaves(component_leaf_hashes)
     }
@@ -496,14 +496,14 @@ struct ReferencesComponentGroup {
 
 impl ReferencesComponentGroup {
     fn compute_leaf_hashes(
-        references: ReferencesComponentGroup,
+        this: ReferencesComponentGroup,
         privacy_salt: PrivacySalt,
     ) -> [HashDigestBits; REFERENCE_GROUP_SIZE] {
         let mut component_leaf_hashes = [[false; HASH_BITS]; REFERENCE_GROUP_SIZE];
 
         for i in (0 as u32)..(REFERENCE_GROUP_SIZE as u32) {
             component_leaf_hashes[i] = ZKStateRef::compute_leaf_hash(
-                references.components[i].content.reference,
+                this.components[i].content.reference,
                 privacy_salt,
                 ComponentGroupEnum::REFERENCES_GROUP as u32,
                 i as u32,
@@ -513,10 +513,10 @@ impl ReferencesComponentGroup {
     }
 
     fn compute_component_group_hash(
-        references: ReferencesComponentGroup,
+        this: ReferencesComponentGroup,
         privacy_salt: PrivacySalt,
     ) -> HashDigestBits {
-        let component_leaf_hashes = compute_leaf_hashes(references, privacy_salt);
+        let component_leaf_hashes = compute_leaf_hashes(this, privacy_salt);
 
         merkle_2_leaves(component_leaf_hashes)
     }
@@ -572,14 +572,14 @@ struct CommandsComponentGroup {
 
 impl CommandsComponentGroup {
     fn compute_leaf_hashes(
-        commands: CommandsComponentGroup,
+        this: CommandsComponentGroup,
         privacy_salt: PrivacySalt,
     ) -> [HashDigestBits; COMMAND_GROUP_SIZE] {
         let mut component_leaf_hashes = [[false; HASH_BITS]; COMMAND_GROUP_SIZE];
 
         for i in (0 as u32)..(COMMAND_GROUP_SIZE as u32) {
             component_leaf_hashes[i] = CommandData::compute_leaf_hash(
-                commands.components[i].content,
+                this.components[i].content,
                 privacy_salt,
                 ComponentGroupEnum::COMMANDS_GROUP as u32,
                 i as u32,
@@ -589,10 +589,10 @@ impl CommandsComponentGroup {
     }
 
     fn compute_component_group_hash(
-        commands: CommandsComponentGroup,
+        this: CommandsComponentGroup,
         privacy_salt: PrivacySalt,
     ) -> HashDigestBits {
-        let component_leaf_hashes = compute_leaf_hashes(commands, privacy_salt);
+        let component_leaf_hashes = compute_leaf_hashes(this, privacy_salt);
 
         //When the number of leaves is one, we pad the leaf with zeros from the right first
         //and use padded input in the merkle_root computation.
@@ -616,14 +616,14 @@ struct AttachmentsComponentGroup {
 
 impl AttachmentsComponentGroup {
     fn compute_leaf_hashes(
-        attachments: AttachmentsComponentGroup,
+        this: AttachmentsComponentGroup,
         privacy_salt: PrivacySalt,
     ) -> [HashDigestBits; ATTACHMENT_GROUP_SIZE] {
         let mut component_leaf_hashes = [[false; HASH_BITS]; ATTACHMENT_GROUP_SIZE];
 
         for i in (0 as u32)..(ATTACHMENT_GROUP_SIZE as u32) {
             component_leaf_hashes[i] = HashDigest::compute_leaf_hash(
-                attachments.components[i].content,
+                this.components[i].content,
                 privacy_salt,
                 ComponentGroupEnum::ATTACHMENTS_GROUP as u32,
                 i as u32,
@@ -634,10 +634,10 @@ impl AttachmentsComponentGroup {
     }
 
     fn compute_component_group_hash(
-        attachments: AttachmentsComponentGroup,
+        this: AttachmentsComponentGroup,
         privacy_salt: PrivacySalt,
     ) -> HashDigestBits {
-        let component_leaf_hashes = compute_leaf_hashes(attachments, privacy_salt);
+        let component_leaf_hashes = compute_leaf_hashes(this, privacy_salt);
 
         merkle_2_leaves(component_leaf_hashes)
     }
@@ -654,11 +654,11 @@ struct NotaryComponentGroup {
 
 impl NotaryComponentGroup {
     fn compute_component_group_hash(
-        notary: NotaryComponentGroup,
+        this: NotaryComponentGroup,
         privacy_salt: PrivacySalt,
     ) -> HashDigestBits {
         let component_leaf_hash = PubKey::compute_leaf_hash(
-            notary.component.content.owning_key,
+            this.component.content.owning_key,
             privacy_salt,
             ComponentGroupEnum::NOTARY_GROUP as u32,
             0 as u32,
@@ -733,11 +733,11 @@ struct TimeWindowComponentGroup {
 
 impl TimeWindowComponentGroup {
     fn compute_component_group_hash(
-        time_window: TimeWindowComponentGroup,
+        this: TimeWindowComponentGroup,
         privacy_salt: PrivacySalt,
     ) -> HashDigestBits {
         let component_leaf_hash = TimeWindow::compute_leaf_hash(
-            time_window.component.content,
+            this.component.content,
             privacy_salt,
             ComponentGroupEnum::TIMEWINDOW_GROUP as u32,
             0 as u32,
@@ -763,11 +763,11 @@ struct ParametersComponentGroup {
 
 impl ParametersComponentGroup {
     fn compute_component_group_hash(
-        parameters: ParametersComponentGroup,
+        this: ParametersComponentGroup,
         privacy_salt: PrivacySalt,
     ) -> HashDigestBits {
         let component_leaf_hash = HashDigest::compute_leaf_hash(
-            parameters.component.content,
+            this.component.content,
             privacy_salt,
             ComponentGroupEnum::PARAMETERS_GROUP as u32,
             0 as u32,
@@ -796,14 +796,14 @@ struct SignersComponentGroup {
 
 impl SignersComponentGroup {
     fn compute_leaf_hashes(
-        signers: SignersComponentGroup,
+        this: SignersComponentGroup,
         privacy_salt: PrivacySalt,
     ) -> [HashDigestBits; SIGNER_GROUP_SIZE] {
         let mut component_leaf_hashes = [[false; HASH_BITS]; SIGNER_GROUP_SIZE];
 
         for i in (0 as u32)..(SIGNER_GROUP_SIZE as u32) {
             component_leaf_hashes[i] = PubKey::compute_leaf_hash(
-                signers.components[i].content,
+                this.components[i].content,
                 privacy_salt,
                 ComponentGroupEnum::SIGNERS_GROUP as u32,
                 i as u32,
@@ -813,10 +813,10 @@ impl SignersComponentGroup {
     }
 
     fn compute_component_group_hash(
-        signers: SignersComponentGroup,
+        this: SignersComponentGroup,
         privacy_salt: PrivacySalt,
     ) -> HashDigestBits {
-        let component_leaf_hashes = compute_leaf_hashes(signers, privacy_salt);
+        let component_leaf_hashes = compute_leaf_hashes(this, privacy_salt);
 
         merkle_2_leaves(component_leaf_hashes)
     }

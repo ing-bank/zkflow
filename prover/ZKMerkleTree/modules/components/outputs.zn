@@ -7,14 +7,14 @@ struct OutputsComponentGroup {
 
 impl OutputsComponentGroup {
     fn compute_leaf_hashes(
-        outputs: OutputsComponentGroup,
+        this: OutputsComponentGroup,
         privacy_salt: PrivacySalt,
     ) -> [HashDigestBits; OUTPUT_GROUP_SIZE] {
         let mut component_leaf_hashes = [[false; HASH_BITS]; OUTPUT_GROUP_SIZE];
 
         for i in (0 as u32)..(OUTPUT_GROUP_SIZE as u32) {
             component_leaf_hashes[i] = ZKStateRef::compute_leaf_hash(
-                outputs.components[i].content.reference,
+                this.components[i].content.reference,
                 privacy_salt,
                 ComponentGroupEnum::OUTPUTS_GROUP as u32,
                 i as u32,
@@ -24,10 +24,10 @@ impl OutputsComponentGroup {
     }
 
     fn compute_component_group_hash(
-        outputs: OutputsComponentGroup,
+        this: OutputsComponentGroup,
         privacy_salt: PrivacySalt,
     ) -> HashDigestBits {
-        let component_leaf_hashes = compute_leaf_hashes(outputs, privacy_salt);
+        let component_leaf_hashes = compute_leaf_hashes(this, privacy_salt);
 
         merkle_2_leaves(component_leaf_hashes)
     }

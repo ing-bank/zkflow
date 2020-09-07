@@ -49,14 +49,14 @@ struct CommandsComponentGroup {
 
 impl CommandsComponentGroup {
     fn compute_leaf_hashes(
-        commands: CommandsComponentGroup,
+        this: CommandsComponentGroup,
         privacy_salt: PrivacySalt,
     ) -> [HashDigestBits; COMMAND_GROUP_SIZE] {
         let mut component_leaf_hashes = [[false; HASH_BITS]; COMMAND_GROUP_SIZE];
 
         for i in (0 as u32)..(COMMAND_GROUP_SIZE as u32) {
             component_leaf_hashes[i] = CommandData::compute_leaf_hash(
-                commands.components[i].content,
+                this.components[i].content,
                 privacy_salt,
                 ComponentGroupEnum::COMMANDS_GROUP as u32,
                 i as u32,
@@ -66,10 +66,10 @@ impl CommandsComponentGroup {
     }
 
     fn compute_component_group_hash(
-        commands: CommandsComponentGroup,
+        this: CommandsComponentGroup,
         privacy_salt: PrivacySalt,
     ) -> HashDigestBits {
-        let component_leaf_hashes = compute_leaf_hashes(commands, privacy_salt);
+        let component_leaf_hashes = compute_leaf_hashes(this, privacy_salt);
 
         //When the number of leaves is one, we pad the leaf with zeros from the right first
         //and use padded input in the merkle_root computation.
