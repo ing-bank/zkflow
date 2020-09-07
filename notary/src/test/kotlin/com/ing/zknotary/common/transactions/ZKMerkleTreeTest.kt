@@ -1,6 +1,5 @@
 package com.ing.zknotary.common.transactions
 
-import com.ing.zknotary.common.zkp.PublicInput
 import com.ing.zknotary.common.zkp.Witness
 import com.ing.zknotary.common.zkp.ZKNulls
 import com.ing.zknotary.common.zkp.ZincZKTransactionService
