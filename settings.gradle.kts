@@ -26,3 +26,4 @@ pluginManagement {
 
 include("notary")
 include("docs:whitepaper")
+include("prover")
