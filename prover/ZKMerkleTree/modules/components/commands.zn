@@ -1,4 +1,4 @@
-const COMMAND_SIZE: u16 = 1;
+const COMMAND_GROUP_SIZE: u16 = 1;
 const COMMAND_BITS: u16 = U32_BITS;
 
 enum CommandData {
@@ -6,47 +6,35 @@ enum CommandData {
     MOVE = 1,
 }
 
-struct ContentCommand {
+struct CommandPaddingWrapper {
     content: CommandData,
     is_filler: bool,
 }
 
 struct Commands {
-    value: [ContentCommand; COMMAND_SIZE],
+    value: [CommandPaddingWrapper; COMMAND_GROUP_SIZE],
     group_hash: ComponentGroupHashBytes,
 }
 
 impl Commands {
-    fn fingerprint_value(commands: Commands) -> [[bool; U32_BITS]; COMMAND_SIZE] {
-        let mut result = [[false; U32_BITS]; COMMAND_SIZE];
-
-        for i in 0..COMMAND_SIZE {
-            result[i] = to_bits(commands.value[i].content as u32);
-        }
-        result
-    }
-
-    fn fingerprint_group_hash(commands: Commands) -> ComponentGroupHashBits {
-        convert_hash_to_bits(commands.group_hash)
+    fn fingerprint_content(content: CommandData) -> [bool; U32_BITS] {
+        to_bits(content as u32)
     }
 
     fn compute_leaf_hashes(
         commands: Commands,
         privacy_salt: PrivacySalt,
-    ) -> [HashDigestBits; COMMAND_SIZE] {
-        //get fingerpint
-        let fingerprint = fingerprint_value(commands);
+    ) -> [HashDigestBits; COMMAND_GROUP_SIZE] {
+        let mut component_leaf_hashes = [[false; HASH_BITS]; COMMAND_GROUP_SIZE];
 
-        let mut component_leaf_hashes = [[false; HASH_BITS]; COMMAND_SIZE];
-        for i in (0 as u32)..(COMMAND_SIZE as u32) {
+        for i in (0 as u32)..(COMMAND_GROUP_SIZE as u32) {
             component_leaf_hashes[i] = compute_leaf_hash_int(
-                fingerprint[i],
+                fingerprint_content(commands.value[i].content),
                 privacy_salt,
                 ComponentGroupEnum::COMMANDS_GROUP as u32,
                 i as u32,
             );
         }
-
         component_leaf_hashes
     }
 

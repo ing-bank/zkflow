@@ -1,47 +1,35 @@
-const SIGNER_SIZE: u16 = 2;
+const SIGNER_GROUP_SIZE: u16 = 2;
 const SIGNER_BITS: u16 = PUBKEY_BITS;
 
-struct ContentSigner {
+struct SignerPaddingWrapper {
     content: PubKey,
     is_filler: bool,
 }
 
 struct Signers {
-    value: [ContentSigner; SIGNER_SIZE],
+    value: [SignerPaddingWrapper; SIGNER_GROUP_SIZE],
     group_hash: ComponentGroupHashBytes,
 }
 
 impl Signers {
-    fn fingerprint_value(signers: Signers) -> [[bool; PUBKEY_BITS]; SIGNER_SIZE] {
-        let mut result = [[false; PUBKEY_BITS]; SIGNER_SIZE];
-
-        for i in 0..SIGNER_SIZE {
-            result[i] = convert_pubKey_to_bits(signers.value[i].content);
-        }
-        result
-    }
-
-    fn fingerprint_group_hash(signers: Signers) -> ComponentGroupHashBits {
-        convert_hash_to_bits(signers.group_hash)
+    fn fingerprint_content(content: PubKey) -> [bool; PUBKEY_BITS] {
+        convert_pub_key_to_bits(content)
     }
 
     fn compute_leaf_hashes(
         signers: Signers,
         privacy_salt: PrivacySalt,
-    ) -> [HashDigestBits; SIGNER_SIZE] {
-        //get fingerpint
-        let fingerprint = fingerprint_value(signers);
+    ) -> [HashDigestBits; SIGNER_GROUP_SIZE] {
+        let mut component_leaf_hashes = [[false; HASH_BITS]; SIGNER_GROUP_SIZE];
 
-        let mut component_leaf_hashes = [[false; HASH_BITS]; SIGNER_SIZE];
-        for i in (0 as u32)..(SIGNER_SIZE as u32) {
-            component_leaf_hashes[i] = compute_leaf_hash_pubKey(
-                fingerprint[i],
+        for i in (0 as u32)..(SIGNER_GROUP_SIZE as u32) {
+            component_leaf_hashes[i] = compute_leaf_hash_pub_key(
+                fingerprint_content(signers.value[i].content),
                 privacy_salt,
                 ComponentGroupEnum::SIGNERS_GROUP as u32,
                 i as u32,
             );
         }
-
         component_leaf_hashes
     }
 

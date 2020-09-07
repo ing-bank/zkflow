@@ -1,13 +1,13 @@
 const TIME_WINDOW_BYTES: u16 = 24;
 const TIME_WINDOW_BITS: u16 = (BYTE_BITS as u16) * TIME_WINDOW_BYTES;
 
-struct ContentTimeWindow {
+struct TimeWindowPaddingWrapper {
     content: [u8; TIME_WINDOW_BYTES],
     is_filler: bool,
 }
 
 struct TimeWindow {
-    value: ContentTimeWindow,
+    value: TimeWindowPaddingWrapper,
     group_hash: ComponentGroupHashBytes,
 }
 
@@ -33,35 +33,27 @@ fn compute_leaf_hash_timeW(
 }
 
 impl TimeWindow {
-    fn fingerprint_value(time_window: TimeWindow) -> [bool; TIME_WINDOW_BITS] {
+    fn fingerprint_content(content: [u8; TIME_WINDOW_BYTES]) -> [bool; TIME_WINDOW_BITS] {
         let mut result = [false; TIME_WINDOW_BITS];
 
         for i in (0 as u16)..TIME_WINDOW_BYTES {
-            let time_window_bits = to_bits(time_window.value.content[i]);
+            let time_window_bits = to_bits(content[i]);
             for j in (0 as u16)..(8 as u16) {
                 result[i * (8 as u16) + j] = time_window_bits[j];
             }
         }
-
         result
     }
 
-    fn fingerprint_group_hash(time_window: TimeWindow) -> ComponentGroupHashBits {
-        convert_hash_to_bits(time_window.group_hash)
-    }
-
     fn compute_leaf_hashes(time_window: TimeWindow, privacy_salt: PrivacySalt) -> HashDigestBits {
-        //get fingerpint
-        let fingerprint = fingerprint_value(time_window);
-
         let mut component_leaf_hashes = [false; HASH_BITS];
+
         component_leaf_hashes = compute_leaf_hash_timeW(
-            fingerprint,
+            fingerprint_content(time_window.value.content),
             privacy_salt,
             ComponentGroupEnum::TIMEWINDOW_GROUP as u32,
             0 as u32,
         );
-
         component_leaf_hashes
     }
 

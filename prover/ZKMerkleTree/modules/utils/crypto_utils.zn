@@ -77,7 +77,7 @@ fn compute_leaf_hash_hash(
 }
 
 // Method to compute leaf hash on public key values.
-fn compute_leaf_hash_pubKey(
+fn compute_leaf_hash_pub_key(
     value: [bool; PUBKEY_BITS],
     privacy_salt: PrivacySalt,
     group_index: u32,

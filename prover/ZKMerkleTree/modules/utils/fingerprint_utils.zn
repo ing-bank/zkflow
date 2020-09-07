@@ -12,14 +12,18 @@ fn convert_hash_to_bits(value: [u8; HASH_BYTES]) -> [bool; HASH_BITS] {
     hash_digest_bits
 }
 
-fn convert_pubKey_to_bits(value: [u8; PUBKEY_BYTES]) -> [bool; PUBKEY_BITS] {
-    let mut pubKey_bits = [false; PUBKEY_BITS];
+fn convert_pub_key_to_bits(value: [u8; PUBKEY_BYTES]) -> [bool; PUBKEY_BITS] {
+    let mut pub_key_bits = [false; PUBKEY_BITS];
 
     for i in (0 as u16)..PUBKEY_BYTES {
         let pk_bits = to_bits(value[i]);
         for j in (0 as u16)..(8 as u16) {
-            pubKey_bits[(8 as u16) * i + j] = pk_bits[j];
+            pub_key_bits[(8 as u16) * i + j] = pk_bits[j];
         }
     }
-    pubKey_bits
+    pub_key_bits
+}
+
+fn fingerprint_group_hash(group_hash: ComponentGroupHashBytes) -> ComponentGroupHashBits {
+    convert_hash_to_bits(group_hash)
 }

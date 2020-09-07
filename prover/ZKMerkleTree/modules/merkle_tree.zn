@@ -1,7 +1,10 @@
 fn build_merkle_tree(
     zk_prover_transaction: ZKProverTransaction,
-    privacy_salt: PrivacySalt,
 ) -> HashDigestBits {
+
+    //Fingerprint for privacy salt
+    let privacy_salt = convert_hash_to_bits(zk_prover_transaction.privacy_salt);
+
     let mut component_group_hashes = [[false; HASH_BITS]; COMPONENT_GROUP_SIZE];
 
     component_group_hashes[ComponentGroupEnum::INPUTS_GROUP] =

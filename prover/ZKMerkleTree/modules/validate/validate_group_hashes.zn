@@ -5,11 +5,8 @@ const COMPONENT_GROUP_SIZE: u8 = 9;
 // * received digest that is received within the witness.
 // return bool If the computed value is equal to the one received then the function returns true. Otherwise, returns false.
 fn validate_group_hash(computed: ComponentGroupHashBits, received: ComponentGroupHashBits) -> bool {
-    let computed_bytes = digest_to_bytes(computed);
-    let expected_bytes = digest_to_bytes(received);
-
-    dbg!("{}", computed_bytes);
-    dbg!("{}", expected_bytes);
+    dbg!("{}", digest_to_bytes(computed));
+    dbg!("{}", digest_to_bytes(received));
 
     let mut is_equal = true;
 
@@ -33,7 +30,7 @@ fn validate_group_hashes(
     dbg!("Comparing Input group");
     let validate_input = validate_group_hash(
         component_group_hashes[ComponentGroupEnum::INPUTS_GROUP],
-        Inputs::fingerprint_group_hash(zk_prover_transaction.inputs),
+        fingerprint_group_hash(zk_prover_transaction.inputs.group_hash),
     );
 
     assert!(
@@ -45,7 +42,7 @@ fn validate_group_hashes(
     dbg!("Comparing Output group");
     let validate_output = validate_group_hash(
         component_group_hashes[ComponentGroupEnum::OUTPUTS_GROUP],
-        Outputs::fingerprint_group_hash(zk_prover_transaction.outputs),
+        fingerprint_group_hash(zk_prover_transaction.outputs.group_hash),
     );
 
     assert!(validate_output, "Failed computation: The computed output group hash does not match the received group hash.");
@@ -54,7 +51,7 @@ fn validate_group_hashes(
     dbg!("Comparing Commands group");
     let validate_command = validate_group_hash(
         component_group_hashes[ComponentGroupEnum::COMMANDS_GROUP],
-        Commands::fingerprint_group_hash(zk_prover_transaction.commands),
+        fingerprint_group_hash(zk_prover_transaction.commands.group_hash),
     );
 
     assert!(validate_command, "Failed computation: The computed command group hash does not match the received group hash.");
@@ -63,7 +60,7 @@ fn validate_group_hashes(
     dbg!("Comparing Attachments group");
     let validate_attachment = validate_group_hash(
         component_group_hashes[ComponentGroupEnum::ATTACHMENTS_GROUP],
-        Attachments::fingerprint_group_hash(zk_prover_transaction.attachments),
+        fingerprint_group_hash(zk_prover_transaction.attachments.group_hash),
     );
 
     assert!(validate_attachment, "Failed computation: The computed attachment group hash does not match the received group hash.");
@@ -72,7 +69,7 @@ fn validate_group_hashes(
     dbg!("Comparing Notary group");
     let validate_notary = validate_group_hash(
         component_group_hashes[ComponentGroupEnum::NOTARY_GROUP],
-        Notary::fingerprint_group_hash(zk_prover_transaction.notary),
+        fingerprint_group_hash(zk_prover_transaction.notary.group_hash),
     );
 
     assert!(validate_notary, "Failed computation: The computed notary group hash does not match the received group hash.");
@@ -81,7 +78,7 @@ fn validate_group_hashes(
     dbg!("Comparing TimeWindow group");
     let validate_time_window = validate_group_hash(
         component_group_hashes[ComponentGroupEnum::TIMEWINDOW_GROUP],
-        TimeWindow::fingerprint_group_hash(zk_prover_transaction.time_window),
+        fingerprint_group_hash(zk_prover_transaction.time_window.group_hash),
     );
 
     assert!(validate_time_window, "Failed computation: The computed time window group hash does not match the received group hash.");
@@ -90,7 +87,7 @@ fn validate_group_hashes(
     dbg!("Comparing Signers group");
     let validate_signers = validate_group_hash(
         component_group_hashes[ComponentGroupEnum::SIGNERS_GROUP],
-        Signers::fingerprint_group_hash(zk_prover_transaction.signers),
+        fingerprint_group_hash(zk_prover_transaction.signers.group_hash),
     );
 
     assert!(validate_signers, "Failed computation: The computed signers group hash does not match the received group hash.");
@@ -98,7 +95,7 @@ fn validate_group_hashes(
     dbg!("Comparing Reference group");
     let validate_reference = validate_group_hash(
         component_group_hashes[ComponentGroupEnum::REFERENCES_GROUP],
-        References::fingerprint_group_hash(zk_prover_transaction.references),
+        fingerprint_group_hash(zk_prover_transaction.references.group_hash),
     );
 
     assert!(validate_reference, "Failed computation: The computed reference group hash does not match the received group hash.");
@@ -107,7 +104,7 @@ fn validate_group_hashes(
     dbg!("Comparing Parameters group");
     let validate_parameters = validate_group_hash(
         component_group_hashes[ComponentGroupEnum::PARAMETERS_GROUP],
-        Parameters::fingerprint_group_hash(zk_prover_transaction.parameters),
+        fingerprint_group_hash(zk_prover_transaction.parameters.group_hash),
     );
 
     assert!(validate_parameters, "Failed computation: The computed parameters group hash does not match the received group hash.");

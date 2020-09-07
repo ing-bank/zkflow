@@ -1,34 +1,27 @@
-struct ContentParameter {
+struct ParameterPaddingWrapper {
     content: HashDigestBytes,
     is_filler: bool,
 }
 
 struct Parameters {
-    value: ContentParameter,
+    value: ParameterPaddingWrapper,
     group_hash: ComponentGroupHashBytes,
 }
 
 impl Parameters {
-    fn fingerprint_value(parameters: Parameters) -> [bool; HASH_BITS] {
-        convert_hash_to_bits(parameters.value.content)
-    }
-
-    fn fingerprint_group_hash(parameters: Parameters) -> ComponentGroupHashBits {
-        convert_hash_to_bits(parameters.group_hash)
+    fn fingerprint_content(content: [u8; HASH_BYTES]) -> [bool; HASH_BITS] {
+        convert_hash_to_bits(content)
     }
 
     fn compute_leaf_hashes(parameters: Parameters, privacy_salt: PrivacySalt) -> HashDigestBits {
-        //get fingerpint
-        let fingerprint = fingerprint_value(parameters);
-
         let mut component_leaf_hashes = [false; HASH_BITS];
+
         component_leaf_hashes = compute_leaf_hash_hash(
-            fingerprint,
+            fingerprint_content(parameters.value.content),
             privacy_salt,
             ComponentGroupEnum::PARAMETERS_GROUP as u32,
             0 as u32,
         );
-
         component_leaf_hashes
     }
 

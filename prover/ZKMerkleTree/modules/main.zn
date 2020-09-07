@@ -6,11 +6,8 @@ fn main(witness: Witness) -> PublicInput {
     //Check contract rules
     check_contract_rules(witness.transaction);
 
-    //Fingerprint for privacy salt
-    let privacy_salt = convert_hash_to_bits(witness.transaction.privacy_salt);
-
     //Compute the transaction id
-    let root_hash = build_merkle_tree(witness.transaction, privacy_salt);
+    let root_hash = build_merkle_tree(witness.transaction);
 
     PublicInput {
         transaction_id: digest_to_bytes(root_hash),

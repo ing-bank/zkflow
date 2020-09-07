@@ -237,7 +237,7 @@ fn compute_leaf_hash_hash(
 }
 
 // Method to compute leaf hash on public key values.
-fn compute_leaf_hash_pubKey(
+fn compute_leaf_hash_pub_key(
     value: [bool; PUBKEY_BITS],
     privacy_salt: PrivacySalt,
     group_index: u32,
@@ -305,16 +305,20 @@ fn convert_hash_to_bits(value: [u8; HASH_BYTES]) -> [bool; HASH_BITS] {
     hash_digest_bits
 }
 
-fn convert_pubKey_to_bits(value: [u8; PUBKEY_BYTES]) -> [bool; PUBKEY_BITS] {
-    let mut pubKey_bits = [false; PUBKEY_BITS];
+fn convert_pub_key_to_bits(value: [u8; PUBKEY_BYTES]) -> [bool; PUBKEY_BITS] {
+    let mut pub_key_bits = [false; PUBKEY_BITS];
 
     for i in (0 as u16)..PUBKEY_BYTES {
         let pk_bits = to_bits(value[i]);
         for j in (0 as u16)..(8 as u16) {
-            pubKey_bits[(8 as u16) * i + j] = pk_bits[j];
+            pub_key_bits[(8 as u16) * i + j] = pk_bits[j];
         }
     }
-    pubKey_bits
+    pub_key_bits
+}
+
+fn fingerprint_group_hash(group_hash: ComponentGroupHashBytes) -> ComponentGroupHashBits {
+    convert_hash_to_bits(group_hash)
 }
 struct Party {
     owning_key: PubKey,
@@ -341,34 +345,34 @@ struct ZKStateRef {
     id: HashDigestBytes,
 }
 
-struct ContentZKStateAndRef {
+struct ZKStateAndRef {
     state: TransactionState,
     reference: ZKStateRef,
 }
 
-struct ZKStateAndRef {
-    content: ContentZKStateAndRef,
+struct ZKStateAndRefPaddingWrapper {
+    content: ZKStateAndRef,
     is_filler: bool,
 }
 
 impl ZKStateAndRef {
-    fn fingerprint_state(value: ZKStateAndRef) -> [bool; STATE_BITS] {
+    fn fingerprint_state(state: TransactionState) -> [bool; STATE_BITS] {
         let mut result = [false; STATE_BITS];
 
         //state_bits = dataOwner_owning_key || value || notary_owning_key
         //dataOwner_owning_key
-        result[0..PUBKEY_BITS] = convert_pubKey_to_bits(value.content.state.data.owner.owning_key);
+        result[0..PUBKEY_BITS] = convert_pub_key_to_bits(state.data.owner.owning_key);
         //value
-        result[PUBKEY_BITS..(PUBKEY_BITS + U32_BITS)] = to_bits(value.content.state.data.value);
+        result[PUBKEY_BITS..(PUBKEY_BITS + U32_BITS)] = to_bits(state.data.value);
         //notary_owning_key
         result[(PUBKEY_BITS + U32_BITS)..STATE_BITS] =
-            convert_pubKey_to_bits(value.content.state.notary.owning_key);
+            convert_pub_key_to_bits(state.notary.owning_key);
 
         result
     }
 
-    fn fingerprint_ref(value: ZKStateAndRef) -> [bool; REF_BITS] {
-        convert_hash_to_bits(value.content.reference.id)
+    fn fingerprint_ref(reference: ZKStateRef) -> [bool; REF_BITS] {
+        convert_hash_to_bits(reference.id)
     }
 
     fn compute_leaf_hash_ref(
@@ -416,45 +420,32 @@ impl ZKStateAndRef {
         blake2s(message)
     }
 }
-const INPUT_SIZE: u16 = 2;
+const INPUT_GROUP_SIZE: u16 = 2;
 
 struct Inputs {
-    value: [ZKStateAndRef; INPUT_SIZE],
+    value: [ZKStateAndRefPaddingWrapper; INPUT_GROUP_SIZE],
     group_hash: ComponentGroupHashBytes,
 }
 
 impl Inputs {
-    fn fingerprint_value(inputs: Inputs) -> [[bool; REF_BITS]; INPUT_SIZE] {
-        let mut result = [[false; REF_BITS]; INPUT_SIZE];
-
-        for i in 0..INPUT_SIZE {
-            //zkStateRef bits
-            result[i] = ZKStateAndRef::fingerprint_ref(inputs.value[i]);
-        }
-        result
-    }
-
-    fn fingerprint_group_hash(inputs: Inputs) -> ComponentGroupHashBits {
-        convert_hash_to_bits(inputs.group_hash)
+    fn fingerprint_content(content: ZKStateRef) -> [bool; REF_BITS] {
+        ZKStateAndRef::fingerprint_ref(content)
     }
 
     fn compute_leaf_hashes(
         inputs: Inputs,
         privacy_salt: PrivacySalt,
-    ) -> [HashDigestBits; INPUT_SIZE] {
-        //get fingerprint
-        let fingerprint = fingerprint_value(inputs);
+    ) -> [HashDigestBits; INPUT_GROUP_SIZE] {
+        let mut component_leaf_hashes = [[false; HASH_BITS]; INPUT_GROUP_SIZE];
 
-        let mut component_leaf_hashes = [[false; HASH_BITS]; INPUT_SIZE];
-        for i in (0 as u32)..(INPUT_SIZE as u32) {
+        for i in (0 as u32)..(INPUT_GROUP_SIZE as u32) {
             component_leaf_hashes[i] = ZKStateAndRef::compute_leaf_hash_ref(
-                fingerprint[i],
+                fingerprint_content(inputs.value[i].content.reference),
                 privacy_salt,
                 ComponentGroupEnum::INPUTS_GROUP as u32,
                 i as u32,
             );
         }
-
         component_leaf_hashes
     }
 
@@ -464,51 +455,38 @@ impl Inputs {
     ) -> ComponentGroupHashBits {
         let component_leaf_hashes = compute_leaf_hashes(inputs, privacy_salt);
 
-        //Since INPUT_SIZE = 2, we use this Merkle function.
-        //If INPUT_SIZE is different choose the appropriate merkle_util function.
-        //If INPUT_SIZE is odd, apply zero padding until the number of leaf hashes equal to the next power of 2.
+        //Since INPUT_GROUP_SIZE = 2, we use this Merkle function.
+        //If INPUT_GROUP_SIZE is different choose the appropriate merkle_util function.
+        //If INPUT_GROUP_SIZE is odd, apply zero padding until the number of leaf hashes equal to the next power of 2.
         merkle_2_leaves(component_leaf_hashes)
     }
 }
-const OUTPUT_SIZE: u16 = 2;
+const OUTPUT_GROUP_SIZE: u16 = 2;
 
 struct Outputs {
-    value: [ZKStateAndRef; OUTPUT_SIZE],
+    value: [ZKStateAndRefPaddingWrapper; OUTPUT_GROUP_SIZE],
     group_hash: ComponentGroupHashBytes,
 }
 
 impl Outputs {
-    fn fingerprint_value(outputs: Outputs) -> [[bool; REF_BITS]; OUTPUT_SIZE] {
-        let mut result = [[false; REF_BITS]; OUTPUT_SIZE];
-
-        for i in 0..OUTPUT_SIZE {
-            //zkStateRef bits
-            result[i] = ZKStateAndRef::fingerprint_ref(outputs.value[i]);
-        }
-        result
-    }
-
-    fn fingerprint_group_hash(outputs: Outputs) -> ComponentGroupHashBits {
-        convert_hash_to_bits(outputs.group_hash)
+    fn fingerprint_content(content: ZKStateRef) -> [bool; REF_BITS] {
+        ZKStateAndRef::fingerprint_ref(content)
     }
 
     fn compute_leaf_hashes(
         outputs: Outputs,
         privacy_salt: PrivacySalt,
-    ) -> [HashDigestBits; OUTPUT_SIZE] {
-        //get fingerpint
-        let fingerprint = fingerprint_value(outputs);
+    ) -> [HashDigestBits; OUTPUT_GROUP_SIZE] {
+        let mut component_leaf_hashes = [[false; HASH_BITS]; OUTPUT_GROUP_SIZE];
 
-        let mut component_leaf_hashes = [[false; HASH_BITS]; OUTPUT_SIZE];
-        for i in (0 as u32)..(OUTPUT_SIZE as u32) {
+        for i in (0 as u32)..(OUTPUT_GROUP_SIZE as u32) {
             component_leaf_hashes[i] = ZKStateAndRef::compute_leaf_hash_ref(
-                fingerprint[i],
+                fingerprint_content(outputs.value[i].content.reference),
                 privacy_salt,
                 ComponentGroupEnum::OUTPUTS_GROUP as u32,
                 i as u32,
             );
         }
-
         component_leaf_hashes
     }
 
@@ -521,45 +499,32 @@ impl Outputs {
         merkle_2_leaves(component_leaf_hashes)
     }
 }
-const REFERENCE_SIZE: u16 = 2;
+const REFERENCE_GROUP_SIZE: u16 = 2;
 
 struct References {
-    value: [ZKStateAndRef; REFERENCE_SIZE],
+    value: [ZKStateAndRefPaddingWrapper; REFERENCE_GROUP_SIZE],
     group_hash: ComponentGroupHashBytes,
 }
 
 impl References {
-    fn fingerprint_value(references: References) -> [[bool; REF_BITS]; REFERENCE_SIZE] {
-        let mut result = [[false; REF_BITS]; REFERENCE_SIZE];
-
-        for i in 0..REFERENCE_SIZE {
-            //zkStateRef bits
-            result[i] = ZKStateAndRef::fingerprint_ref(references.value[i]);
-        }
-        result
-    }
-
-    fn fingerprint_group_hash(references: References) -> ComponentGroupHashBits {
-        convert_hash_to_bits(references.group_hash)
+    fn fingerprint_content(content: ZKStateRef) -> [bool; REF_BITS] {
+        ZKStateAndRef::fingerprint_ref(content)
     }
 
     fn compute_leaf_hashes(
         references: References,
         privacy_salt: PrivacySalt,
-    ) -> [HashDigestBits; REFERENCE_SIZE] {
-        //get fingerpint
-        let fingerprint = fingerprint_value(references);
+    ) -> [HashDigestBits; REFERENCE_GROUP_SIZE] {
+        let mut component_leaf_hashes = [[false; HASH_BITS]; REFERENCE_GROUP_SIZE];
 
-        let mut component_leaf_hashes = [[false; HASH_BITS]; REFERENCE_SIZE];
-        for i in (0 as u32)..(REFERENCE_SIZE as u32) {
+        for i in (0 as u32)..(REFERENCE_GROUP_SIZE as u32) {
             component_leaf_hashes[i] = ZKStateAndRef::compute_leaf_hash_ref(
-                fingerprint[i],
+                fingerprint_content(references.value[i].content.reference),
                 privacy_salt,
                 ComponentGroupEnum::REFERENCES_GROUP as u32,
                 i as u32,
             );
         }
-
         component_leaf_hashes
     }
 
@@ -572,7 +537,7 @@ impl References {
         merkle_2_leaves(component_leaf_hashes)
     }
 }
-const COMMAND_SIZE: u16 = 1;
+const COMMAND_GROUP_SIZE: u16 = 1;
 const COMMAND_BITS: u16 = U32_BITS;
 
 enum CommandData {
@@ -580,47 +545,35 @@ enum CommandData {
     MOVE = 1,
 }
 
-struct ContentCommand {
+struct CommandPaddingWrapper {
     content: CommandData,
     is_filler: bool,
 }
 
 struct Commands {
-    value: [ContentCommand; COMMAND_SIZE],
+    value: [CommandPaddingWrapper; COMMAND_GROUP_SIZE],
     group_hash: ComponentGroupHashBytes,
 }
 
 impl Commands {
-    fn fingerprint_value(commands: Commands) -> [[bool; U32_BITS]; COMMAND_SIZE] {
-        let mut result = [[false; U32_BITS]; COMMAND_SIZE];
-
-        for i in 0..COMMAND_SIZE {
-            result[i] = to_bits(commands.value[i].content as u32);
-        }
-        result
-    }
-
-    fn fingerprint_group_hash(commands: Commands) -> ComponentGroupHashBits {
-        convert_hash_to_bits(commands.group_hash)
+    fn fingerprint_content(content: CommandData) -> [bool; U32_BITS] {
+        to_bits(content as u32)
     }
 
     fn compute_leaf_hashes(
         commands: Commands,
         privacy_salt: PrivacySalt,
-    ) -> [HashDigestBits; COMMAND_SIZE] {
-        //get fingerpint
-        let fingerprint = fingerprint_value(commands);
+    ) -> [HashDigestBits; COMMAND_GROUP_SIZE] {
+        let mut component_leaf_hashes = [[false; HASH_BITS]; COMMAND_GROUP_SIZE];
 
-        let mut component_leaf_hashes = [[false; HASH_BITS]; COMMAND_SIZE];
-        for i in (0 as u32)..(COMMAND_SIZE as u32) {
+        for i in (0 as u32)..(COMMAND_GROUP_SIZE as u32) {
             component_leaf_hashes[i] = compute_leaf_hash_int(
-                fingerprint[i],
+                fingerprint_content(commands.value[i].content),
                 privacy_salt,
                 ComponentGroupEnum::COMMANDS_GROUP as u32,
                 i as u32,
             );
         }
-
         component_leaf_hashes
     }
 
@@ -638,43 +591,32 @@ impl Commands {
         merkle_2_leaves(padded_leaves)
     }
 }
-const ATTACHMENT_SIZE: u16 = 2;
+const ATTACHMENT_GROUP_SIZE: u16 = 2;
 
-struct ContentAttachment {
+struct AttachmentPaddingWrapper {
     content: HashDigestBytes,
     is_filler: bool,
 }
 
 struct Attachments {
-    value: [ContentAttachment; ATTACHMENT_SIZE],
+    value: [AttachmentPaddingWrapper; ATTACHMENT_GROUP_SIZE],
     group_hash: ComponentGroupHashBytes,
 }
 
 impl Attachments {
-    fn fingerprint_value(attachments: Attachments) -> [[bool; HASH_BITS]; ATTACHMENT_SIZE] {
-        let mut result = [[false; HASH_BITS]; ATTACHMENT_SIZE];
-
-        for i in 0..ATTACHMENT_SIZE {
-            result[i] = convert_hash_to_bits(attachments.value[i].content);
-        }
-        result
-    }
-
-    fn fingerprint_group_hash(attachments: Attachments) -> ComponentGroupHashBits {
-        convert_hash_to_bits(attachments.group_hash)
+    fn fingerprint_content(content: [u8; HASH_BYTES]) -> [bool; HASH_BITS] {
+        convert_hash_to_bits(content)
     }
 
     fn compute_leaf_hashes(
         attachments: Attachments,
         privacy_salt: PrivacySalt,
-    ) -> [HashDigestBits; ATTACHMENT_SIZE] {
-        //get fingerpint
-        let fingerprint = fingerprint_value(attachments);
+    ) -> [HashDigestBits; ATTACHMENT_GROUP_SIZE] {
+        let mut component_leaf_hashes = [[false; HASH_BITS]; ATTACHMENT_GROUP_SIZE];
 
-        let mut component_leaf_hashes = [[false; HASH_BITS]; ATTACHMENT_SIZE];
-        for i in (0 as u32)..(ATTACHMENT_SIZE as u32) {
+        for i in (0 as u32)..(ATTACHMENT_GROUP_SIZE as u32) {
             component_leaf_hashes[i] = compute_leaf_hash_hash(
-                fingerprint[i],
+                fingerprint_content(attachments.value[i].content),
                 privacy_salt,
                 ComponentGroupEnum::ATTACHMENTS_GROUP as u32,
                 i as u32,
@@ -693,37 +635,29 @@ impl Attachments {
         merkle_2_leaves(component_leaf_hashes)
     }
 }
-struct ContentNotary {
+struct NotaryPaddingWrapper {
     content: Party,
     is_filler: bool,
 }
 
 struct Notary {
-    value: ContentNotary,
+    value: NotaryPaddingWrapper,
     group_hash: ComponentGroupHashBytes,
 }
 
 impl Notary {
-    fn fingerprint_value(notary: Notary) -> [bool; PUBKEY_BITS] {
-        convert_pubKey_to_bits(notary.value.content.owning_key)
-    }
-
-    fn fingerprint_group_hash(notary: Notary) -> ComponentGroupHashBits {
-        convert_hash_to_bits(notary.group_hash)
+    fn fingerprint_content(content: PubKey) -> [bool; PUBKEY_BITS] {
+        convert_pub_key_to_bits(content)
     }
 
     fn compute_leaf_hashes(notary: Notary, privacy_salt: PrivacySalt) -> HashDigestBits {
-        //get fingerpint
-        let fingerprint = fingerprint_value(notary);
-
         let mut component_leaf_hashes = [false; HASH_BITS];
-        component_leaf_hashes = compute_leaf_hash_pubKey(
-            fingerprint,
+        component_leaf_hashes = compute_leaf_hash_pub_key(
+            fingerprint_content(notary.value.content.owning_key),
             privacy_salt,
             ComponentGroupEnum::NOTARY_GROUP as u32,
             0 as u32,
         );
-
         component_leaf_hashes
     }
 
@@ -744,13 +678,13 @@ impl Notary {
 const TIME_WINDOW_BYTES: u16 = 24;
 const TIME_WINDOW_BITS: u16 = (BYTE_BITS as u16) * TIME_WINDOW_BYTES;
 
-struct ContentTimeWindow {
+struct TimeWindowPaddingWrapper {
     content: [u8; TIME_WINDOW_BYTES],
     is_filler: bool,
 }
 
 struct TimeWindow {
-    value: ContentTimeWindow,
+    value: TimeWindowPaddingWrapper,
     group_hash: ComponentGroupHashBytes,
 }
 
@@ -776,35 +710,27 @@ fn compute_leaf_hash_timeW(
 }
 
 impl TimeWindow {
-    fn fingerprint_value(time_window: TimeWindow) -> [bool; TIME_WINDOW_BITS] {
+    fn fingerprint_content(content: [u8; TIME_WINDOW_BYTES]) -> [bool; TIME_WINDOW_BITS] {
         let mut result = [false; TIME_WINDOW_BITS];
 
         for i in (0 as u16)..TIME_WINDOW_BYTES {
-            let time_window_bits = to_bits(time_window.value.content[i]);
+            let time_window_bits = to_bits(content[i]);
             for j in (0 as u16)..(8 as u16) {
                 result[i * (8 as u16) + j] = time_window_bits[j];
             }
         }
-
         result
     }
 
-    fn fingerprint_group_hash(time_window: TimeWindow) -> ComponentGroupHashBits {
-        convert_hash_to_bits(time_window.group_hash)
-    }
-
     fn compute_leaf_hashes(time_window: TimeWindow, privacy_salt: PrivacySalt) -> HashDigestBits {
-        //get fingerpint
-        let fingerprint = fingerprint_value(time_window);
-
         let mut component_leaf_hashes = [false; HASH_BITS];
+
         component_leaf_hashes = compute_leaf_hash_timeW(
-            fingerprint,
+            fingerprint_content(time_window.value.content),
             privacy_salt,
             ComponentGroupEnum::TIMEWINDOW_GROUP as u32,
             0 as u32,
         );
-
         component_leaf_hashes
     }
 
@@ -822,37 +748,30 @@ impl TimeWindow {
         merkle_2_leaves(padded_leaves)
     }
 }
-struct ContentParameter {
+struct ParameterPaddingWrapper {
     content: HashDigestBytes,
     is_filler: bool,
 }
 
 struct Parameters {
-    value: ContentParameter,
+    value: ParameterPaddingWrapper,
     group_hash: ComponentGroupHashBytes,
 }
 
 impl Parameters {
-    fn fingerprint_value(parameters: Parameters) -> [bool; HASH_BITS] {
-        convert_hash_to_bits(parameters.value.content)
-    }
-
-    fn fingerprint_group_hash(parameters: Parameters) -> ComponentGroupHashBits {
-        convert_hash_to_bits(parameters.group_hash)
+    fn fingerprint_content(content: [u8; HASH_BYTES]) -> [bool; HASH_BITS] {
+        convert_hash_to_bits(content)
     }
 
     fn compute_leaf_hashes(parameters: Parameters, privacy_salt: PrivacySalt) -> HashDigestBits {
-        //get fingerpint
-        let fingerprint = fingerprint_value(parameters);
-
         let mut component_leaf_hashes = [false; HASH_BITS];
+
         component_leaf_hashes = compute_leaf_hash_hash(
-            fingerprint,
+            fingerprint_content(parameters.value.content),
             privacy_salt,
             ComponentGroupEnum::PARAMETERS_GROUP as u32,
             0 as u32,
         );
-
         component_leaf_hashes
     }
 
@@ -870,50 +789,38 @@ impl Parameters {
         merkle_2_leaves(padded_leaves)
     }
 }
-const SIGNER_SIZE: u16 = 2;
+const SIGNER_GROUP_SIZE: u16 = 2;
 const SIGNER_BITS: u16 = PUBKEY_BITS;
 
-struct ContentSigner {
+struct SignerPaddingWrapper {
     content: PubKey,
     is_filler: bool,
 }
 
 struct Signers {
-    value: [ContentSigner; SIGNER_SIZE],
+    value: [SignerPaddingWrapper; SIGNER_GROUP_SIZE],
     group_hash: ComponentGroupHashBytes,
 }
 
 impl Signers {
-    fn fingerprint_value(signers: Signers) -> [[bool; PUBKEY_BITS]; SIGNER_SIZE] {
-        let mut result = [[false; PUBKEY_BITS]; SIGNER_SIZE];
-
-        for i in 0..SIGNER_SIZE {
-            result[i] = convert_pubKey_to_bits(signers.value[i].content);
-        }
-        result
-    }
-
-    fn fingerprint_group_hash(signers: Signers) -> ComponentGroupHashBits {
-        convert_hash_to_bits(signers.group_hash)
+    fn fingerprint_content(content: PubKey) -> [bool; PUBKEY_BITS] {
+        convert_pub_key_to_bits(content)
     }
 
     fn compute_leaf_hashes(
         signers: Signers,
         privacy_salt: PrivacySalt,
-    ) -> [HashDigestBits; SIGNER_SIZE] {
-        //get fingerpint
-        let fingerprint = fingerprint_value(signers);
+    ) -> [HashDigestBits; SIGNER_GROUP_SIZE] {
+        let mut component_leaf_hashes = [[false; HASH_BITS]; SIGNER_GROUP_SIZE];
 
-        let mut component_leaf_hashes = [[false; HASH_BITS]; SIGNER_SIZE];
-        for i in (0 as u32)..(SIGNER_SIZE as u32) {
-            component_leaf_hashes[i] = compute_leaf_hash_pubKey(
-                fingerprint[i],
+        for i in (0 as u32)..(SIGNER_GROUP_SIZE as u32) {
+            component_leaf_hashes[i] = compute_leaf_hash_pub_key(
+                fingerprint_content(signers.value[i].content),
                 privacy_salt,
                 ComponentGroupEnum::SIGNERS_GROUP as u32,
                 i as u32,
             );
         }
-
         component_leaf_hashes
     }
 
@@ -949,9 +856,6 @@ const COMPONENT_GROUP_SIZE: u8 = 9;
 // * received digest that is received within the witness.
 // return bool If the computed value is equal to the one received then the function returns true. Otherwise, returns false.
 fn validate_group_hash(computed: ComponentGroupHashBits, received: ComponentGroupHashBits) -> bool {
-    let computed_bytes = digest_to_bytes(computed);
-    let expected_bytes = digest_to_bytes(received);
-
 
     let mut is_equal = true;
 
@@ -974,7 +878,7 @@ fn validate_group_hashes(
     //Validate component hashes
     let validate_input = validate_group_hash(
         component_group_hashes[ComponentGroupEnum::INPUTS_GROUP],
-        Inputs::fingerprint_group_hash(zk_prover_transaction.inputs),
+        fingerprint_group_hash(zk_prover_transaction.inputs.group_hash),
     );
 
     assert!(
@@ -984,64 +888,67 @@ fn validate_group_hashes(
 
     let validate_output = validate_group_hash(
         component_group_hashes[ComponentGroupEnum::OUTPUTS_GROUP],
-        Outputs::fingerprint_group_hash(zk_prover_transaction.outputs),
+        fingerprint_group_hash(zk_prover_transaction.outputs.group_hash),
     );
 
     assert!(validate_output, "Failed computation: The computed output group hash does not match the received group hash.");
 
     let validate_command = validate_group_hash(
         component_group_hashes[ComponentGroupEnum::COMMANDS_GROUP],
-        Commands::fingerprint_group_hash(zk_prover_transaction.commands),
+        fingerprint_group_hash(zk_prover_transaction.commands.group_hash),
     );
 
     assert!(validate_command, "Failed computation: The computed command group hash does not match the received group hash.");
 
     let validate_attachment = validate_group_hash(
         component_group_hashes[ComponentGroupEnum::ATTACHMENTS_GROUP],
-        Attachments::fingerprint_group_hash(zk_prover_transaction.attachments),
+        fingerprint_group_hash(zk_prover_transaction.attachments.group_hash),
     );
 
     assert!(validate_attachment, "Failed computation: The computed attachment group hash does not match the received group hash.");
 
     let validate_notary = validate_group_hash(
         component_group_hashes[ComponentGroupEnum::NOTARY_GROUP],
-        Notary::fingerprint_group_hash(zk_prover_transaction.notary),
+        fingerprint_group_hash(zk_prover_transaction.notary.group_hash),
     );
 
     assert!(validate_notary, "Failed computation: The computed notary group hash does not match the received group hash.");
 
     let validate_time_window = validate_group_hash(
         component_group_hashes[ComponentGroupEnum::TIMEWINDOW_GROUP],
-        TimeWindow::fingerprint_group_hash(zk_prover_transaction.time_window),
+        fingerprint_group_hash(zk_prover_transaction.time_window.group_hash),
     );
 
     assert!(validate_time_window, "Failed computation: The computed time window group hash does not match the received group hash.");
 
     let validate_signers = validate_group_hash(
         component_group_hashes[ComponentGroupEnum::SIGNERS_GROUP],
-        Signers::fingerprint_group_hash(zk_prover_transaction.signers),
+        fingerprint_group_hash(zk_prover_transaction.signers.group_hash),
     );
 
     assert!(validate_signers, "Failed computation: The computed signers group hash does not match the received group hash.");
 
     let validate_reference = validate_group_hash(
         component_group_hashes[ComponentGroupEnum::REFERENCES_GROUP],
-        References::fingerprint_group_hash(zk_prover_transaction.references),
+        fingerprint_group_hash(zk_prover_transaction.references.group_hash),
     );
 
     assert!(validate_reference, "Failed computation: The computed reference group hash does not match the received group hash.");
 
     let validate_parameters = validate_group_hash(
         component_group_hashes[ComponentGroupEnum::PARAMETERS_GROUP],
-        Parameters::fingerprint_group_hash(zk_prover_transaction.parameters),
+        fingerprint_group_hash(zk_prover_transaction.parameters.group_hash),
     );
 
     assert!(validate_parameters, "Failed computation: The computed parameters group hash does not match the received group hash.");
 }
 fn build_merkle_tree(
     zk_prover_transaction: ZKProverTransaction,
-    privacy_salt: PrivacySalt,
 ) -> HashDigestBits {
+
+    //Fingerprint for privacy salt
+    let privacy_salt = convert_hash_to_bits(zk_prover_transaction.privacy_salt);
+
     let mut component_group_hashes = [[false; HASH_BITS]; COMPONENT_GROUP_SIZE];
 
     component_group_hashes[ComponentGroupEnum::INPUTS_GROUP] =
@@ -1083,13 +990,13 @@ fn check_contract_rules(value: ZKProverTransaction) {
     let mut input_value_sum: i32 = 0;
     let mut output_value_sum: i32 = 0;
 
-    for i in 0..INPUT_SIZE {
+    for i in 0..INPUT_GROUP_SIZE {
         if !value.inputs.value[i].is_filler {
             input_value_sum = input_value_sum + value.inputs.value[i].content.state.data.value;
         }
     }
 
-    for i in 0..OUTPUT_SIZE {
+    for i in 0..OUTPUT_GROUP_SIZE {
         if !value.outputs.value[i].is_filler {
             output_value_sum = output_value_sum + value.outputs.value[i].content.state.data.value;
         }
@@ -1108,11 +1015,8 @@ fn main(witness: Witness) -> PublicInput {
     //Check contract rules
     check_contract_rules(witness.transaction);
 
-    //Fingerprint for privacy salt
-    let privacy_salt = convert_hash_to_bits(witness.transaction.privacy_salt);
-
     //Compute the transaction id
-    let root_hash = build_merkle_tree(witness.transaction, privacy_salt);
+    let root_hash = build_merkle_tree(witness.transaction);
 
     PublicInput {
         transaction_id: digest_to_bytes(root_hash),

@@ -1,42 +1,29 @@
-const REFERENCE_SIZE: u16 = 2;
+const REFERENCE_GROUP_SIZE: u16 = 2;
 
 struct References {
-    value: [ZKStateAndRef; REFERENCE_SIZE],
+    value: [ZKStateAndRefPaddingWrapper; REFERENCE_GROUP_SIZE],
     group_hash: ComponentGroupHashBytes,
 }
 
 impl References {
-    fn fingerprint_value(references: References) -> [[bool; REF_BITS]; REFERENCE_SIZE] {
-        let mut result = [[false; REF_BITS]; REFERENCE_SIZE];
-
-        for i in 0..REFERENCE_SIZE {
-            //zkStateRef bits
-            result[i] = ZKStateAndRef::fingerprint_ref(references.value[i]);
-        }
-        result
-    }
-
-    fn fingerprint_group_hash(references: References) -> ComponentGroupHashBits {
-        convert_hash_to_bits(references.group_hash)
+    fn fingerprint_content(content: ZKStateRef) -> [bool; REF_BITS] {
+        ZKStateAndRef::fingerprint_ref(content)
     }
 
     fn compute_leaf_hashes(
         references: References,
         privacy_salt: PrivacySalt,
-    ) -> [HashDigestBits; REFERENCE_SIZE] {
-        //get fingerpint
-        let fingerprint = fingerprint_value(references);
+    ) -> [HashDigestBits; REFERENCE_GROUP_SIZE] {
+        let mut component_leaf_hashes = [[false; HASH_BITS]; REFERENCE_GROUP_SIZE];
 
-        let mut component_leaf_hashes = [[false; HASH_BITS]; REFERENCE_SIZE];
-        for i in (0 as u32)..(REFERENCE_SIZE as u32) {
+        for i in (0 as u32)..(REFERENCE_GROUP_SIZE as u32) {
             component_leaf_hashes[i] = ZKStateAndRef::compute_leaf_hash_ref(
-                fingerprint[i],
+                fingerprint_content(references.value[i].content.reference),
                 privacy_salt,
                 ComponentGroupEnum::REFERENCES_GROUP as u32,
                 i as u32,
             );
         }
-
         component_leaf_hashes
     }
 

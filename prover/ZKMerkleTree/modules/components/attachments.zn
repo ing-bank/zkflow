@@ -1,40 +1,29 @@
-const ATTACHMENT_SIZE: u16 = 2;
+const ATTACHMENT_GROUP_SIZE: u16 = 2;
 
-struct ContentAttachment {
+struct AttachmentPaddingWrapper {
     content: HashDigestBytes,
     is_filler: bool,
 }
 
 struct Attachments {
-    value: [ContentAttachment; ATTACHMENT_SIZE],
+    value: [AttachmentPaddingWrapper; ATTACHMENT_GROUP_SIZE],
     group_hash: ComponentGroupHashBytes,
 }
 
 impl Attachments {
-    fn fingerprint_value(attachments: Attachments) -> [[bool; HASH_BITS]; ATTACHMENT_SIZE] {
-        let mut result = [[false; HASH_BITS]; ATTACHMENT_SIZE];
-
-        for i in 0..ATTACHMENT_SIZE {
-            result[i] = convert_hash_to_bits(attachments.value[i].content);
-        }
-        result
-    }
-
-    fn fingerprint_group_hash(attachments: Attachments) -> ComponentGroupHashBits {
-        convert_hash_to_bits(attachments.group_hash)
+    fn fingerprint_content(content: [u8; HASH_BYTES]) -> [bool; HASH_BITS] {
+        convert_hash_to_bits(content)
     }
 
     fn compute_leaf_hashes(
         attachments: Attachments,
         privacy_salt: PrivacySalt,
-    ) -> [HashDigestBits; ATTACHMENT_SIZE] {
-        //get fingerpint
-        let fingerprint = fingerprint_value(attachments);
+    ) -> [HashDigestBits; ATTACHMENT_GROUP_SIZE] {
+        let mut component_leaf_hashes = [[false; HASH_BITS]; ATTACHMENT_GROUP_SIZE];
 
-        let mut component_leaf_hashes = [[false; HASH_BITS]; ATTACHMENT_SIZE];
-        for i in (0 as u32)..(ATTACHMENT_SIZE as u32) {
+        for i in (0 as u32)..(ATTACHMENT_GROUP_SIZE as u32) {
             component_leaf_hashes[i] = compute_leaf_hash_hash(
-                fingerprint[i],
+                fingerprint_content(attachments.value[i].content),
                 privacy_salt,
                 ComponentGroupEnum::ATTACHMENTS_GROUP as u32,
                 i as u32,

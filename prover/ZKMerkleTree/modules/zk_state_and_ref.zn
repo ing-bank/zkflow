@@ -23,34 +23,34 @@ struct ZKStateRef {
     id: HashDigestBytes,
 }
 
-struct ContentZKStateAndRef {
+struct ZKStateAndRef {
     state: TransactionState,
     reference: ZKStateRef,
 }
 
-struct ZKStateAndRef {
-    content: ContentZKStateAndRef,
+struct ZKStateAndRefPaddingWrapper {
+    content: ZKStateAndRef,
     is_filler: bool,
 }
 
 impl ZKStateAndRef {
-    fn fingerprint_state(value: ZKStateAndRef) -> [bool; STATE_BITS] {
+    fn fingerprint_state(state: TransactionState) -> [bool; STATE_BITS] {
         let mut result = [false; STATE_BITS];
 
         //state_bits = dataOwner_owning_key || value || notary_owning_key
         //dataOwner_owning_key
-        result[0..PUBKEY_BITS] = convert_pubKey_to_bits(value.content.state.data.owner.owning_key);
+        result[0..PUBKEY_BITS] = convert_pub_key_to_bits(state.data.owner.owning_key);
         //value
-        result[PUBKEY_BITS..(PUBKEY_BITS + U32_BITS)] = to_bits(value.content.state.data.value);
+        result[PUBKEY_BITS..(PUBKEY_BITS + U32_BITS)] = to_bits(state.data.value);
         //notary_owning_key
         result[(PUBKEY_BITS + U32_BITS)..STATE_BITS] =
-            convert_pubKey_to_bits(value.content.state.notary.owning_key);
+            convert_pub_key_to_bits(state.notary.owning_key);
 
         result
     }
 
-    fn fingerprint_ref(value: ZKStateAndRef) -> [bool; REF_BITS] {
-        convert_hash_to_bits(value.content.reference.id)
+    fn fingerprint_ref(reference: ZKStateRef) -> [bool; REF_BITS] {
+        convert_hash_to_bits(reference.id)
     }
 
     fn compute_leaf_hash_ref(

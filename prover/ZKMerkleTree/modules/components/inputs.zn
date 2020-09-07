@@ -1,42 +1,29 @@
-const INPUT_SIZE: u16 = 2;
+const INPUT_GROUP_SIZE: u16 = 2;
 
 struct Inputs {
-    value: [ZKStateAndRef; INPUT_SIZE],
+    value: [ZKStateAndRefPaddingWrapper; INPUT_GROUP_SIZE],
     group_hash: ComponentGroupHashBytes,
 }
 
 impl Inputs {
-    fn fingerprint_value(inputs: Inputs) -> [[bool; REF_BITS]; INPUT_SIZE] {
-        let mut result = [[false; REF_BITS]; INPUT_SIZE];
-
-        for i in 0..INPUT_SIZE {
-            //zkStateRef bits
-            result[i] = ZKStateAndRef::fingerprint_ref(inputs.value[i]);
-        }
-        result
-    }
-
-    fn fingerprint_group_hash(inputs: Inputs) -> ComponentGroupHashBits {
-        convert_hash_to_bits(inputs.group_hash)
+    fn fingerprint_content(content: ZKStateRef) -> [bool; REF_BITS] {
+        ZKStateAndRef::fingerprint_ref(content)
     }
 
     fn compute_leaf_hashes(
         inputs: Inputs,
         privacy_salt: PrivacySalt,
-    ) -> [HashDigestBits; INPUT_SIZE] {
-        //get fingerprint
-        let fingerprint = fingerprint_value(inputs);
+    ) -> [HashDigestBits; INPUT_GROUP_SIZE] {
+        let mut component_leaf_hashes = [[false; HASH_BITS]; INPUT_GROUP_SIZE];
 
-        let mut component_leaf_hashes = [[false; HASH_BITS]; INPUT_SIZE];
-        for i in (0 as u32)..(INPUT_SIZE as u32) {
+        for i in (0 as u32)..(INPUT_GROUP_SIZE as u32) {
             component_leaf_hashes[i] = ZKStateAndRef::compute_leaf_hash_ref(
-                fingerprint[i],
+                fingerprint_content(inputs.value[i].content.reference),
                 privacy_salt,
                 ComponentGroupEnum::INPUTS_GROUP as u32,
                 i as u32,
             );
         }
-
         component_leaf_hashes
     }
 
@@ -46,9 +33,9 @@ impl Inputs {
     ) -> ComponentGroupHashBits {
         let component_leaf_hashes = compute_leaf_hashes(inputs, privacy_salt);
 
-        //Since INPUT_SIZE = 2, we use this Merkle function.
-        //If INPUT_SIZE is different choose the appropriate merkle_util function.
-        //If INPUT_SIZE is odd, apply zero padding until the number of leaf hashes equal to the next power of 2.
+        //Since INPUT_GROUP_SIZE = 2, we use this Merkle function.
+        //If INPUT_GROUP_SIZE is different choose the appropriate merkle_util function.
+        //If INPUT_GROUP_SIZE is odd, apply zero padding until the number of leaf hashes equal to the next power of 2.
         merkle_2_leaves(component_leaf_hashes)
     }
 }
