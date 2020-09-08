@@ -144,27 +144,27 @@ private class ZincMixinDeserializer : JsonDeserializer<ZKProverTransaction>() {
         var paddedReferences = 0
         var paddedSigners = 0
         return ZKProverTransaction(
-            inputs = json.inputs.value.mapNotNull {
+            inputs = json.inputs.components.mapNotNull {
                 if (it.isFiller) {
                     paddedInputs++
                     null
                 } else it.content
             },
-            outputs = json.outputs.value.mapNotNull {
+            outputs = json.outputs.components.mapNotNull {
                 if (it.isFiller) {
                     paddedOutputs++
                     null
                 } else it.content
             },
-            references = json.references.value.mapNotNull {
+            references = json.references.components.mapNotNull {
                 if (it.isFiller) {
                     paddedReferences++
                     null
                 } else it.content
             },
             command = Command(
-                json.commands.value.single().content,
-                json.signers.value.mapNotNull {
+                json.commands.components.single().content,
+                json.signers.components.mapNotNull {
                     if (it.isFiller) {
                         paddedSigners++
                         null
