@@ -1,12 +1,10 @@
-const COMPONENT_GROUP_SIZE: u8 = 9;
-
 // Auxiliary method to validate a GroupHash
 // * computed digest that is computed from witness.
 // * received digest that is received within the witness.
 // return bool If the computed value is equal to the one received then the function returns true. Otherwise, returns false.
 fn validate_group_hash(computed: HashDigestBits, received: HashDigestBits) -> bool {
-    dbg!("{}", digest_to_bytes(computed));
-    dbg!("{}", digest_to_bytes(received));
+    dbg!("{}", HashDigest::from_bits(computed));
+    dbg!("{}", HashDigest::from_bits(received));
 
     let mut is_equal = true;
 

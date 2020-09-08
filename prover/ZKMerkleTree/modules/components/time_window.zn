@@ -14,8 +14,8 @@ impl TimeWindow {
 
         for i in (0 as u16)..TIME_WINDOW_BYTES {
             let time_window_bits = to_bits(this.bytes[i]);
-            for j in (0 as u16)..(8 as u16) {
-                result[i * (8 as u16) + j] = time_window_bits[j];
+            for j in (0 as u16)..BYTE_BITS {
+                result[i * BYTE_BITS + j] = time_window_bits[j];
             }
         }
         result

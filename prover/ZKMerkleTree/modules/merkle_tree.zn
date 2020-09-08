@@ -1,3 +1,5 @@
+const MERKLE_TREE_SIZE : u16 = 16;
+
 fn build_merkle_tree(
     zk_prover_transaction: ZKProverTransaction,
 ) -> HashDigestBits {
@@ -33,7 +35,7 @@ fn build_merkle_tree(
     // There are 9 component groups.
     // Pad it from the right with as many zero hashes to get a power of two number of leaves.
     // This is how Corda Merkle tree construction works.
-    let mut component_leaves = [[false; HASH_BITS]; 16];
+    let mut component_leaves = [[false; HASH_BITS]; MERKLE_TREE_SIZE];
     for i in 0..COMPONENT_GROUP_SIZE {
         component_leaves[i] = component_group_hashes[i];
     }
