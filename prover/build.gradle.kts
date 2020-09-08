@@ -71,7 +71,7 @@ fn merkle_2_leaves(leaves: [[bool; HASH_BITS]; 2]) -> [bool; HASH_BITS] {
     pedersen_to_padded_bits(
         pedersen(concatenate_hashes(leaves[0], leaves[1])).0,
     )
-}            
+}
 """)
 
     var leaves = 4
@@ -106,16 +106,16 @@ fn merkle_${leaves}_leaves(leaves: [[bool; HASH_BITS]; $leaves]) -> [bool; HASH_
         """
 //! Top-level function to be called.
 //! Pads the configure number of leaves to the right amount with zero hashes from the right
-//! and calls appropriate tree-constructing procedure            
+//! and calls appropriate tree-constructing procedure
 fn merkle_root(leaves: [[bool; HASH_BITS]; $merkleLeaves]) -> [bool; HASH_BITS] {
     dbg!("Building a tree from $merkleLeaves leaves");
-    
+
     dbg!("Padding from the right with ${fullLeaves - merkleLeaves} zero leaves");
     let mut full_leaves = [[false; HASH_BITS]; $fullLeaves];
     for i in 0..$merkleLeaves {
         full_leaves[i] = leaves[i];
     }
-    
+
     dbg!("Constructing the root");
     merkle_${fullLeaves}_leaves(full_leaves)
 }
