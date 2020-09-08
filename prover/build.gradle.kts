@@ -124,6 +124,7 @@ fn merkle_root(leaves: [[bool; HASH_BITS]; $merkleLeaves]) -> [bool; HASH_BITS] 
 
 task("buildCircuit") {
     val circuit = File(circuitPath)
+    circuit.parentFile?.mkdirs() // Make sure the parent path for the circuit exists.
     circuit.writeText("//! Combined circuit\n//! DO NOT EDIT\n//! Edit a corresponding constituent\n\n");
     combineInOrder.map {
         val part = File("$modulesPath/$it")
