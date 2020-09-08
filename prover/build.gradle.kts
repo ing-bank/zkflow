@@ -61,6 +61,7 @@ task("merkleUtils") {
     val merkleUtils = File("$modulesPath/$merkleUtilsPath")
     println(merkleUtils.absolutePath)
     merkleUtils.writeText("//! Limited-depth recursion for Merkle tree construction\n")
+    merkleUtils.writeText("//! GENERATED CODE. DO NOT EDIT\n//! Edit it in prover/build.gradle.kts\n\n");
 
     merkleUtils.appendText(
         """
@@ -125,7 +126,7 @@ fn merkle_root(leaves: [[bool; HASH_BITS]; $merkleLeaves]) -> [bool; HASH_BITS] 
 task("buildCircuit") {
     val circuit = File(circuitPath)
     circuit.parentFile?.mkdirs() // Make sure the parent path for the circuit exists.
-    circuit.writeText("//! Combined circuit\n//! DO NOT EDIT\n//! Edit a corresponding constituent\n\n");
+    circuit.writeText("//! Combined circuit\n//! GENERATED CODE. DO NOT EDIT\n//! Edit a corresponding constituent\n\n");
     combineInOrder.map {
         val part = File("$modulesPath/$it")
 
