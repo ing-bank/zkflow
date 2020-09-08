@@ -1,0 +1,46 @@
+type PubKeyBytes = [u8; PUBKEY_BYTES];
+type PubKeyBits = [bool; PUBKEY_BITS];
+
+struct PubKey {
+    bytes: PubKeyBytes,
+}
+
+impl PubKey {
+    fn fingerprint(this: PubKey) -> PubKeyBits {
+        let mut pub_key_bits = [false; PUBKEY_BITS];
+
+        for i in (0 as u16)..PUBKEY_BYTES {
+            let pk_bits = to_bits(this.bytes[i]);
+            for j in (0 as u16)..BYTE_BITS {
+                pub_key_bits[BYTE_BITS * i + j] = pk_bits[j];
+            }
+        }
+        pub_key_bits
+    }
+
+    // Method to compute leaf hash on public key values.
+    fn compute_leaf_hash(
+        this: PubKey,
+        privacy_salt: PrivacySalt,
+        group_index: u32,
+        internal_index: u32,
+    ) -> HashDigestBits {
+        //fingerprint
+        let fingerprint_pub_key = fingerprint(this);
+
+        //compute nonce
+        let mut nonce = compute_nonce(privacy_salt, group_index, internal_index);
+        let mut message: [bool; HASH_BITS + PUBKEY_BITS] = [false; HASH_BITS + PUBKEY_BITS];
+
+        //message = nonce || signature
+        for i in 0..HASH_BITS {
+            message[i] = nonce[i];
+        }
+
+        for i in 0..PUBKEY_BITS {
+            message[HASH_BITS + i] = fingerprint_pub_key[i];
+        }
+
+        blake2s(message)
+    }
+}

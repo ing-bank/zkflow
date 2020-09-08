@@ -1,0 +1,40 @@
+const SIGNER_GROUP_SIZE: u16 = 2;
+const SIGNER_BITS: u16 = PUBKEY_BITS;
+
+struct SignerPaddingWrapper {
+    content: PubKey,
+    is_filler: bool,
+}
+
+struct SignersComponentGroup {
+    components: [SignerPaddingWrapper; SIGNER_GROUP_SIZE],
+    group_hash: HashDigest,
+}
+
+impl SignersComponentGroup {
+    fn compute_leaf_hashes(
+        this: SignersComponentGroup,
+        privacy_salt: PrivacySalt,
+    ) -> [HashDigestBits; SIGNER_GROUP_SIZE] {
+        let mut component_leaf_hashes = [[false; HASH_BITS]; SIGNER_GROUP_SIZE];
+
+        for i in (0 as u32)..(SIGNER_GROUP_SIZE as u32) {
+            component_leaf_hashes[i] = PubKey::compute_leaf_hash(
+                this.components[i].content,
+                privacy_salt,
+                ComponentGroupEnum::SIGNERS_GROUP as u32,
+                i as u32,
+            );
+        }
+        component_leaf_hashes
+    }
+
+    fn compute_component_group_hash(
+        this: SignersComponentGroup,
+        privacy_salt: PrivacySalt,
+    ) -> HashDigestBits {
+        let component_leaf_hashes = compute_leaf_hashes(this, privacy_salt);
+
+        merkle_2_leaves(component_leaf_hashes)
+    }
+}

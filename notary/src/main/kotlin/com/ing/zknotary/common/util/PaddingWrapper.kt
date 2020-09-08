@@ -12,7 +12,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
  */
 sealed class PaddingWrapper<T> {
     // see https://github.com/FasterXML/jackson-module-kotlin/issues/80
-    @get:JsonProperty("isFiller")
+    @get:JsonProperty("is_filler")
     abstract val isFiller: Boolean
 
     abstract val content: T

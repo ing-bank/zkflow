@@ -26,18 +26,28 @@ const REF_BITS: u16 = HASH_BITS;
 const SIGNER_BITS: u16 = PUBKEY_BITS;
 const COMMAND_BITS: u16 = INT32_BITS;
 
-type PubKey = [u8; PUBKEY_BYTES];
 type PrivacySalt = [bool; HASH_BITS];
 type ComponentGroupHash = [u8; HASH_BYTES]; //For now we use Blake2s to compute component group hashes - should be replaced with Pedersen!
-type TimeWindowFingerPrint = [u8; 24];
 
 enum CommandData {
     CREATE = 0,
     MOVE = 1,
 }
 
+struct TimeWindowFingerPrint {
+    bytes : [u8; 24],
+}
+
+struct PubKey {
+    bytes :  [u8; PUBKEY_BYTES],
+}
+
+struct HashDigest {
+    bytes : [u8; HASH_BYTES],
+}
+
 struct Party {
-    owningKey: PubKey,
+    owning_key: PubKey,
 }
 
 struct Data {
@@ -61,7 +71,7 @@ struct TransactionState {
 }
 
 struct ZKStateRef {
-    id: [u8; HASH_BYTES],
+    id: HashDigest,
 }
 
 struct ZKStateAndRef {
@@ -71,82 +81,82 @@ struct ZKStateAndRef {
 
 struct ContentZKStateAndRef {
     content: ZKStateAndRef,
-    isFiller: bool,
+    is_filler: bool,
 }
 
 struct ContentAttachment {
-    content: [u8; HASH_BYTES],
-    isFiller: bool,
+    content: HashDigest,
+    is_filler: bool,
 }
 
 struct Inputs {
-    value: [ContentZKStateAndRef; N_INPUTS],
-    groupHash: ComponentGroupHash,
+    components: [ContentZKStateAndRef; N_INPUTS],
+    group_hash: HashDigest,
 }
 
 struct Outputs {
-    value: [ContentZKStateAndRef; N_OUTPUTS],
-    groupHash: ComponentGroupHash,
+    components: [ContentZKStateAndRef; N_OUTPUTS],
+    group_hash: HashDigest,
 }
 
 struct References {
-    value: [ContentZKStateAndRef; N_REFERENCES],
-    groupHash: ComponentGroupHash,
+    components: [ContentZKStateAndRef; N_REFERENCES],
+    group_hash: HashDigest,
 }
 
 struct ContentCommandData {
     content: CommandData,
-    isFiller: bool,
+    is_filler: bool,
 }
 
 struct Commands {
-    value: [ContentCommandData; N_COMMANDS],
-    groupHash: ComponentGroupHash,
+    components: [ContentCommandData; N_COMMANDS],
+    group_hash: HashDigest,
 }
 
 struct Attachments {
-    value: [ContentAttachment; N_ATTACHMENTS],
-    groupHash: ComponentGroupHash,
+    components: [ContentAttachment; N_ATTACHMENTS],
+    group_hash: HashDigest,
 }
 
 struct ContentPubkey {
     content: PubKey,
-    isFiller: bool,
+    is_filler: bool,
 }
 
 struct ContentParty {
     content: Party,
-    isFiller: bool,
+    is_filler: bool,
 }
 
 struct Signers {
-    value: [ContentPubkey; N_SIGNERS],
-    groupHash: ComponentGroupHash,
+    components: [ContentPubkey; N_SIGNERS],
+    group_hash: HashDigest,
 }
 
 struct Notary {
-    value: ContentParty,
-    groupHash: ComponentGroupHash,
+    component: ContentParty,
+    group_hash: HashDigest,
 }
 
 struct ContentTimeWindow {
     content: TimeWindowFingerPrint,
-    isFiller: bool,
+    is_filler: bool,
 }
 
 struct TimeWindow {
-    value: ContentTimeWindow,
-    groupHash: ComponentGroupHash,
+    component: ContentTimeWindow,
+    group_hash: HashDigest,
 }
 
 struct ContentNetworkParametersHash {
-    content: [u8; HASH_BYTES],
-    isFiller: bool,
+    content: HashDigest,
+    is_filler: bool,
 }
 
 struct NetworkParametersHash {
-    value: ContentNetworkParametersHash,
-    groupHash: ComponentGroupHash,
+    component: ContentNetworkParametersHash,
+    group_hash: HashDigest,
 }
 
 struct ZKProverTransaction {
@@ -156,10 +166,10 @@ struct ZKProverTransaction {
     commands: Commands,
     attachments: Attachments,
     notary: Notary,
-    timeWindow: TimeWindow,
+    time_window: TimeWindow,
     parameters: NetworkParametersHash,
     signers: Signers,
-    privacySalt: [u8; HASH_BYTES],
+    privacy_salt: HashDigest,
 }
 
 struct Witness {
@@ -167,10 +177,10 @@ struct Witness {
 }
 
 struct PublicInput {
-    transactionId: [u8; HASH_BYTES]
+    transaction_id: HashDigest,
 }
 
 fn main(witness: Witness) -> PublicInput //ZKMerkleTree::PedersenDigest
 {
-    PublicInput { transactionId: witness.transaction.privacySalt }
+    PublicInput { transaction_id: witness.transaction.privacy_salt }
 }

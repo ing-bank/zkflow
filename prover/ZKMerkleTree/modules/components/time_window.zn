@@ -1,0 +1,79 @@
+const TIME_WINDOW_BYTES: u16 = 24;
+const TIME_WINDOW_BITS: u16 = (BYTE_BITS as u16) * TIME_WINDOW_BYTES;
+
+type TimeWindowBytes = [u8; TIME_WINDOW_BYTES];
+type TimeWindowBits = [bool; TIME_WINDOW_BITS];
+
+struct TimeWindow {
+    bytes: TimeWindowBytes,
+}
+
+impl TimeWindow {
+    fn fingerprint(this: TimeWindow) -> TimeWindowBits {
+        let mut result = [false; TIME_WINDOW_BITS];
+
+        for i in (0 as u16)..TIME_WINDOW_BYTES {
+            let time_window_bits = to_bits(this.bytes[i]);
+            for j in (0 as u16)..BYTE_BITS {
+                result[i * BYTE_BITS + j] = time_window_bits[j];
+            }
+        }
+        result
+    }
+
+    fn compute_leaf_hash(
+        this: TimeWindow,
+        privacy_salt: PrivacySalt,
+        group_index: u32,
+        internal_index: u32,
+    ) -> HashDigestBits {
+        //fingerprint
+        let fingerprint_time_window = fingerprint(this);
+
+        //compute nonce
+        let mut nonce = compute_nonce(privacy_salt, group_index, internal_index);
+        let mut message: [bool; HASH_BITS + TIME_WINDOW_BITS] =
+            [false; HASH_BITS + TIME_WINDOW_BITS];
+
+        //message = nonce || signature
+        for i in 0..HASH_BITS {
+            message[i] = nonce[i];
+        }
+        for i in 0..TIME_WINDOW_BITS {
+            message[HASH_BITS + i] = fingerprint_time_window[i];
+        }
+
+        blake2s(message)
+    }
+}
+
+struct TimeWindowPaddingWrapper {
+    content: TimeWindow,
+    is_filler: bool,
+}
+
+struct TimeWindowComponentGroup {
+    component: TimeWindowPaddingWrapper,
+    group_hash: HashDigest,
+}
+
+impl TimeWindowComponentGroup {
+    fn compute_component_group_hash(
+        this: TimeWindowComponentGroup,
+        privacy_salt: PrivacySalt,
+    ) -> HashDigestBits {
+        let component_leaf_hash = TimeWindow::compute_leaf_hash(
+            this.component.content,
+            privacy_salt,
+            ComponentGroupEnum::TIMEWINDOW_GROUP as u32,
+            0 as u32,
+        );
+
+        //When the number of leaves is one, we pad the leaf with zeros from the right first
+        //and use padded input in the merkle_root computation.
+        let mut padded_leaves = [[false; HASH_BITS]; 2];
+        padded_leaves[0] = component_leaf_hash;
+
+        merkle_2_leaves(padded_leaves)
+    }
+}

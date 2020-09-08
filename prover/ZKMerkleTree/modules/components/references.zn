@@ -1,0 +1,34 @@
+const REFERENCE_GROUP_SIZE: u16 = 2;
+
+struct ReferencesComponentGroup {
+    components: [ZKStateAndRefPaddingWrapper; REFERENCE_GROUP_SIZE],
+    group_hash: HashDigest,
+}
+
+impl ReferencesComponentGroup {
+    fn compute_leaf_hashes(
+        this: ReferencesComponentGroup,
+        privacy_salt: PrivacySalt,
+    ) -> [HashDigestBits; REFERENCE_GROUP_SIZE] {
+        let mut component_leaf_hashes = [[false; HASH_BITS]; REFERENCE_GROUP_SIZE];
+
+        for i in (0 as u32)..(REFERENCE_GROUP_SIZE as u32) {
+            component_leaf_hashes[i] = ZKStateRef::compute_leaf_hash(
+                this.components[i].content.reference,
+                privacy_salt,
+                ComponentGroupEnum::REFERENCES_GROUP as u32,
+                i as u32,
+            );
+        }
+        component_leaf_hashes
+    }
+
+    fn compute_component_group_hash(
+        this: ReferencesComponentGroup,
+        privacy_salt: PrivacySalt,
+    ) -> HashDigestBits {
+        let component_leaf_hashes = compute_leaf_hashes(this, privacy_salt);
+
+        merkle_2_leaves(component_leaf_hashes)
+    }
+}

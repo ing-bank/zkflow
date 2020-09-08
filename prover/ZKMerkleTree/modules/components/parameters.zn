@@ -1,0 +1,30 @@
+struct ParameterPaddingWrapper {
+    content: HashDigest,
+    is_filler: bool,
+}
+
+struct ParametersComponentGroup {
+    component: ParameterPaddingWrapper,
+    group_hash: HashDigest,
+}
+
+impl ParametersComponentGroup {
+    fn compute_component_group_hash(
+        this: ParametersComponentGroup,
+        privacy_salt: PrivacySalt,
+    ) -> HashDigestBits {
+        let component_leaf_hash = HashDigest::compute_leaf_hash(
+            this.component.content,
+            privacy_salt,
+            ComponentGroupEnum::PARAMETERS_GROUP as u32,
+            0 as u32,
+        );
+
+        //When the number of leaves is one, we pad the leaf with zeros from the right first
+        //and use padded input in the merkle_root computation.
+        let mut padded_leaves = [[false; HASH_BITS]; 2];
+        padded_leaves[0] = component_leaf_hash;
+
+        merkle_2_leaves(padded_leaves)
+    }
+}

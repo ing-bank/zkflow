@@ -1,0 +1,27 @@
+const PEDERSEN_DIGEST_BITS: u16 = 254;
+
+// Method to concatenate two hash digests.
+fn concatenate_hashes(
+    hash1: [bool; HASH_BITS],
+    hash2: [bool; HASH_BITS],
+) -> [bool; HASH_BITS + HASH_BITS] {
+    let mut data = [false; HASH_BITS + HASH_BITS];
+
+    for i in (0 as u16)..HASH_BITS {
+        data[i] = hash1[i];
+        data[HASH_BITS + i] = hash2[i];
+    }
+    data
+}
+
+// Method to pad pedersen digest with zeros to assure 256 bits digest size globally.
+fn pedersen_to_padded_bits(digest: field) -> [bool; HASH_BITS] {
+    let mut digest_bits = [false; HASH_BITS];
+    let pedersen_bits = to_bits(digest);
+
+    for i in 0..PEDERSEN_DIGEST_BITS {
+        digest_bits[(2 as u16) + i] = pedersen_bits[i];
+    }
+
+    digest_bits
+}

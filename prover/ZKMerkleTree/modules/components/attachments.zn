@@ -1,0 +1,40 @@
+const ATTACHMENT_GROUP_SIZE: u16 = 2;
+
+struct AttachmentPaddingWrapper {
+    content: HashDigest,
+    is_filler: bool,
+}
+
+struct AttachmentsComponentGroup {
+    components: [AttachmentPaddingWrapper; ATTACHMENT_GROUP_SIZE],
+    group_hash: HashDigest,
+}
+
+impl AttachmentsComponentGroup {
+    fn compute_leaf_hashes(
+        this: AttachmentsComponentGroup,
+        privacy_salt: PrivacySalt,
+    ) -> [HashDigestBits; ATTACHMENT_GROUP_SIZE] {
+        let mut component_leaf_hashes = [[false; HASH_BITS]; ATTACHMENT_GROUP_SIZE];
+
+        for i in (0 as u32)..(ATTACHMENT_GROUP_SIZE as u32) {
+            component_leaf_hashes[i] = HashDigest::compute_leaf_hash(
+                this.components[i].content,
+                privacy_salt,
+                ComponentGroupEnum::ATTACHMENTS_GROUP as u32,
+                i as u32,
+            );
+        }
+
+        component_leaf_hashes
+    }
+
+    fn compute_component_group_hash(
+        this: AttachmentsComponentGroup,
+        privacy_salt: PrivacySalt,
+    ) -> HashDigestBits {
+        let component_leaf_hashes = compute_leaf_hashes(this, privacy_salt);
+
+        merkle_2_leaves(component_leaf_hashes)
+    }
+}

@@ -1,0 +1,30 @@
+struct NotaryPaddingWrapper {
+    content: Party,
+    is_filler: bool,
+}
+
+struct NotaryComponentGroup {
+    component: NotaryPaddingWrapper,
+    group_hash: HashDigest,
+}
+
+impl NotaryComponentGroup {
+    fn compute_component_group_hash(
+        this: NotaryComponentGroup,
+        privacy_salt: PrivacySalt,
+    ) -> HashDigestBits {
+        let component_leaf_hash = PubKey::compute_leaf_hash(
+            this.component.content.owning_key,
+            privacy_salt,
+            ComponentGroupEnum::NOTARY_GROUP as u32,
+            0 as u32,
+        );
+
+        //When the number of leaves is one, we pad the leaf with zeros from the right first
+        //and use padded input in the merkle_root computation.
+        let mut padded_leaves = [[false; HASH_BITS]; 2];
+        padded_leaves[0] = component_leaf_hash;
+
+        merkle_2_leaves(padded_leaves)
+    }
+}

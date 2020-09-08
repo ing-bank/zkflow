@@ -1,0 +1,14 @@
+struct PublicInput {
+    transaction_id: HashDigest,
+}
+
+fn main(witness: Witness) -> PublicInput {
+    //Check contract rules
+    check_contract_rules(witness.transaction);
+
+    //Compute the transaction id
+    let root_hash = build_merkle_tree(witness.transaction);
+
+    PublicInput {
+        transaction_id: HashDigest::from_bits(root_hash), }
+}
