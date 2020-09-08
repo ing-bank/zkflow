@@ -6,3 +6,6 @@
 
 # Ignore combined circuit
 **/src/main.zn
+
+# Ignore Corda test artifacts for the circuit
+artifacts
