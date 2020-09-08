@@ -15,9 +15,10 @@ val combineInOrder = listOf(
     "utils/debug_utils.zn",
     "component_group_enum.zn",
     "nonce.zn",
+    "utils/pub_key.zn",
+    "utils/hash_digest.zn",
     "utils/crypto_utils.zn",
     merkleUtilsPath,
-    "utils/fingerprint_utils.zn",
     "zk_state_and_ref.zn",
     "components/inputs.zn",
     "components/outputs.zn",
@@ -34,7 +35,6 @@ val combineInOrder = listOf(
     "validate/contract_rules.zn",
     "main.zn"
 )
-
 
 
 task("circuit") {
