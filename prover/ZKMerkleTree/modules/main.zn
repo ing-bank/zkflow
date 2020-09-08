@@ -10,5 +10,6 @@ fn main(witness: Witness) -> PublicInput {
     let root_hash = build_merkle_tree(witness.transaction);
 
     PublicInput {
-        transaction_id: HashDigest::from_bits(root_hash), }
+        transaction_id: HashDigest::from_bits(root_hash),
+    }
 }

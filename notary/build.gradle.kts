@@ -83,6 +83,7 @@ tasks.apply {
 
     withType<Test> {
         dependsOn("spotlessCheck") // Make sure we fail early on style
+        dependsOn(":prover:circuit") // Make sure that the Zinc circuit is ready to use when running tests
 
         val cores = Runtime.getRuntime().availableProcessors()
         maxParallelForks = (Runtime.getRuntime().availableProcessors() / 2).takeIf { it > 0 } ?: 1
