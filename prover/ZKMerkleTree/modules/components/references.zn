@@ -1,7 +1,7 @@
 const REFERENCE_GROUP_SIZE: u16 = 2;
 
 struct ReferencesComponentGroup {
-    components: [ZKStateAndRefPaddingWrapper; REFERENCE_GROUP_SIZE],
+    components: [StateAndRefPaddingWrapper; REFERENCE_GROUP_SIZE],
     group_hash: NodeDigestDto,
 }
 
@@ -13,7 +13,7 @@ impl ReferencesComponentGroup {
         let mut component_leaf_hashes = [[false; COMPONENT_GROUP_LEAF_DIGEST_BITS]; REFERENCE_GROUP_SIZE];
 
         for i in (0 as u32)..(REFERENCE_GROUP_SIZE as u32) {
-            component_leaf_hashes[i] = ZKStateRef::compute_leaf_hash(
+            component_leaf_hashes[i] = StateRef::compute_leaf_hash(
                 this.components[i].content.reference,
                 privacy_salt,
                 ComponentGroupEnum::REFERENCES_GROUP as u32,

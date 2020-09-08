@@ -13,7 +13,7 @@ fn check_contract_rules(value: ZKProverTransaction) {
     for i in 0..OUTPUT_GROUP_SIZE {
         if !value.outputs.components[i].is_filler {
             output_value_sum =
-                output_value_sum + value.outputs.components[i].content.state.data.value;
+                output_value_sum + value.outputs.components[i].content.data.value;
         }
     }
 

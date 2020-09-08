@@ -23,7 +23,7 @@ val combineInOrder = listOf(
     "utils/crypto_utils.zn",
     "crypto/pub_key.zn",
     merkleUtilsPath,
-    "zk_state_and_ref.zn",
+    "state_and_ref.zn",
     "components/inputs.zn",
     "components/outputs.zn",
     "components/references.zn",

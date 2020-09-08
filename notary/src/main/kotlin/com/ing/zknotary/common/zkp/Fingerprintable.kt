@@ -29,6 +29,7 @@ interface Fingerprintable {
 val StateRef.fingerprint: ByteArray
     get() = txhash.bytes + index.fingerprint
 
+// FIXME: This is now ignoring some of the important fields of a TransactionState.
 val <T> TransactionState<T>.fingerprint: ByteArray
     where T : ContractState, T : Fingerprintable
     get() = data.fingerprint + notary.owningKey.fingerprint
