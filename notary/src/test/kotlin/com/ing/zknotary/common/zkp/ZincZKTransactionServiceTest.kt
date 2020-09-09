@@ -1,4 +1,3 @@
-
 package com.ing.zknotary.common.zkp
 
 import com.ing.zknotary.common.transactions.ZKProverTransaction
@@ -14,10 +13,12 @@ import net.corda.testing.node.MockServices
 import net.corda.testing.node.ledger
 import org.junit.After
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
 import java.time.Duration
 import kotlin.test.assertFailsWith
 
+@Ignore("Ignored until we have the witness and public input structure finalized")
 class ZincZKTransactionServiceTest {
     private val circuitFolder = javaClass.getResource("/ZincZKTransactionService").path
     private val zincTransactionZKService = ZincZKTransactionService(
@@ -65,8 +66,9 @@ class ZincZKTransactionServiceTest {
     fun `valid witness verifies`() {
         ledgerServices.ledger {
             val proof = zincTransactionZKService.prove(Witness(ptx))
-            val emptyMap = emptyMap<Int, SecureHash>()
-            val correctPublicInput = PublicInput(SecureHash.Pedersen(ptx.privacySalt.bytes), emptyMap, emptyMap, emptyMap, emptyMap)
+            val testList = listOf<SecureHash>(PedersenDigestService.allOnesHash)
+            val correctPublicInput =
+                PublicInput(SecureHash.Pedersen(ptx.privacySalt.bytes), testList, testList, testList, testList)
 
             zincTransactionZKService.verify(proof, correctPublicInput)
         }
@@ -76,8 +78,8 @@ class ZincZKTransactionServiceTest {
     fun `verification fails on public data mismatch`() {
         ledgerServices.ledger {
             val proof = zincTransactionZKService.prove(Witness(ptx))
-            val emptyMap = emptyMap<Int, SecureHash>()
-            val wrongPublicData = PublicInput(PedersenDigestService.zeroHash, emptyMap, emptyMap, emptyMap, emptyMap)
+            val testList = listOf<SecureHash>(PedersenDigestService.allOnesHash)
+            val wrongPublicData = PublicInput(PedersenDigestService.zeroHash, testList, testList, testList, testList)
 
             assertFailsWith(ZKVerificationException::class) {
                 zincTransactionZKService.verify(proof, wrongPublicData)

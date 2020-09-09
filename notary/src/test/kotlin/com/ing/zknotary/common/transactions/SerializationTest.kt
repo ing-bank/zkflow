@@ -10,6 +10,7 @@ import junit.framework.TestCase.assertEquals
 import net.corda.core.crypto.BLAKE2s256DigestService
 import net.corda.core.crypto.Crypto
 import net.corda.core.crypto.PedersenDigestService
+import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.sign
 import net.corda.core.serialization.deserialize
 import net.corda.core.serialization.serialize
@@ -57,10 +58,8 @@ class SerializationTest {
     fun `Serialize public input to Zinc`() {
         ledgerServices.ledger {
             // Serialize for transport to Zinc
-            val emptyMap = mapOf(
-                1 to PedersenDigestService.zeroHash
-            )
-            val publicInput = PublicInput(PedersenDigestService.zeroHash, emptyMap, emptyMap, emptyMap, emptyMap)
+            val testList = listOf<SecureHash>(PedersenDigestService.allOnesHash)
+            val publicInput = PublicInput(PedersenDigestService.zeroHash, testList, testList, testList, testList)
             val json = publicInput.serialize(ZincSerializationFactory)
             println(String(json.bytes))
             // TODO: do checks on JSON to confirm it is acceptable for Zinc
@@ -73,6 +72,7 @@ class SerializationTest {
             // Serialize for transport to Zinc
             val witness = Witness(ptx)
             val json = witness.serialize(ZincSerializationFactory)
+            println(String(json.bytes))
             // TODO: do checks on JSON to confirm it is acceptable for Zinc
         }
     }

@@ -71,8 +71,7 @@ open class ZKNotaryFlow(
         return stx.toZKVerifierTransaction(
             services = serviceHub,
             zkStorage = zkConfig.zkStorage,
-            zktransactionService = zkConfig.zkTransactionService,
-            zkSerializatinFactoryService = zkConfig.serializationFactoryService
+            zktransactionService = zkConfig.zkTransactionService
         )
     }
 

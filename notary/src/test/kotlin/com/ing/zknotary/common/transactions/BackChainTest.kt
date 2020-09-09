@@ -1,9 +1,8 @@
 package com.ing.zknotary.common.transactions
 
 import com.ing.zknotary.common.contracts.TestContract
-import com.ing.zknotary.common.serializer.SerializationFactoryService
-import com.ing.zknotary.common.zkp.MockZKTransactionService
 import com.ing.zknotary.common.zkp.PublicInput
+import com.ing.zknotary.common.zkp.ZincZKTransactionService
 import com.ing.zknotary.node.services.collectVerifiedDependencies
 import com.ing.zknotary.node.services.toZKVerifierTransaction
 import com.ing.zknotary.nodes.services.MockZKTransactionStorage
@@ -11,18 +10,19 @@ import junit.framework.TestCase.assertEquals
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.crypto.Crypto
 import net.corda.core.crypto.SecureHash
-import net.corda.core.node.AppServiceHub
-import net.corda.core.node.services.CordaService
-import net.corda.core.serialization.SerializationFactory
-import net.corda.core.serialization.SingletonSerializeAsToken
 import net.corda.core.transactions.WireTransaction
 import net.corda.testing.common.internal.testNetworkParameters
 import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
 import net.corda.testing.node.createMockCordaService
 import net.corda.testing.node.ledger
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import java.io.File
+import java.time.Duration
+import kotlin.time.ExperimentalTime
+import kotlin.time.measureTime
 
 class BackChainTest {
     private val alice = TestIdentity.fresh("alice", Crypto.EDDSA_ED25519_SHA512)
@@ -40,22 +40,43 @@ class BackChainTest {
     private lateinit var anotherMoveWtx: WireTransaction
 
     private val zkStorage = createMockCordaService(ledgerServices, ::MockZKTransactionStorage)
-    private val zkTransactionService = createMockCordaService(ledgerServices, ::MockZKTransactionService)
+    // private val zkTransactionService = createMockCordaService(ledgerServices, ::MockZKTransactionService)
 
     // TODO: Make this use the ZincSerializationFactory when it supports deserialization
     // private val zkSerializatinFactoryService = createMockCordaService(ledgerServices, ::ZincSerializationFactoryService)
-    private val zkSerializatinFactoryService =
-        createMockCordaService(ledgerServices, ::DefaultSerializationFactoryService)
+    // private val zkSerializatinFactoryService =
+    //     createMockCordaService(ledgerServices, ::DefaultSerializationFactoryService)
 
-    @CordaService
-    class DefaultSerializationFactoryService() : SingletonSerializeAsToken(), SerializationFactoryService {
+    private val circuitFolder = File("${System.getProperty("user.dir")}/../prover/ZKMerkleTree").absolutePath
+    private val artifactFolder = File("$circuitFolder/artifacts")
+    private val zkTransactionService = ZincZKTransactionService(
+        circuitFolder,
+        artifactFolder = artifactFolder.absolutePath,
+        buildTimeout = Duration.ofSeconds(10 * 60),
+        setupTimeout = Duration.ofSeconds(10 * 60),
+        provingTimeout = Duration.ofSeconds(10 * 60),
+        verificationTimeout = Duration.ofSeconds(10 * 60)
+    )
 
-        // For CordaService. We don't need the serviceHub anyway in this Service
-        constructor(serviceHub: AppServiceHub?) : this()
-
-        override val factory: SerializationFactory
-            get() = SerializationFactory.defaultFactory
+    init {
+        artifactFolder.mkdirs()
+        zkTransactionService.setup()
     }
+
+    @After
+    fun `remove zinc files`() {
+        zkTransactionService.cleanup()
+    }
+
+    // @CordaService
+    // class DefaultSerializationFactoryService() : SingletonSerializeAsToken(), SerializationFactoryService {
+    //
+    //     // For CordaService. We don't need the serviceHub anyway in this Service
+    //     constructor(serviceHub: AppServiceHub?) : this()
+    //
+    //     override val factory: SerializationFactory
+    //         get() = SerializationFactory.defaultFactory
+    // }
 
     @Before
     fun setup() {
@@ -110,6 +131,7 @@ class BackChainTest {
         assertEquals(listOf(createWtx.id, moveWtx.id), sortedDependencies)
     }
 
+    @ExperimentalTime
     @Test
     fun `Prover can deterministically build graph of ZKVerifierTransactions based on graph of SignedTransactions`() {
         ledgerServices.ledger {
@@ -123,14 +145,16 @@ class BackChainTest {
             // Create and store all vtxs ordered from issuances up to head tx
             (orderedDeps + anotherMoveWtx.id).forEach {
 
-                ledgerServices.validatedTransactions.getTransaction(it)!!
-                    .toZKVerifierTransaction(
-                        ledgerServices,
-                        zkStorage,
-                        zkTransactionService,
-                        zkSerializatinFactoryService,
-                        persist = true
-                    )
+                println("\n Proving tx: $it")
+                measureTime {
+                    ledgerServices.validatedTransactions.getTransaction(it)!!
+                        .toZKVerifierTransaction(
+                            ledgerServices,
+                            zkStorage,
+                            zkTransactionService,
+                            persist = true
+                        )
+                }
             }
 
             println("\n\n\nStarting recursive verification:")
@@ -150,10 +174,10 @@ class BackChainTest {
         }
 
         // verify the tx graph for each input and collect nonces and hashes for current tx verification
-        val inputNonces = mutableMapOf<Int, SecureHash>()
-        val inputHashes = mutableMapOf<Int, SecureHash>()
-        val referenceNonces = mutableMapOf<Int, SecureHash>()
-        val referenceHashes = mutableMapOf<Int, SecureHash>()
+        val inputNonces = mutableListOf<SecureHash>()
+        val inputHashes = mutableListOf<SecureHash>()
+        val referenceNonces = mutableListOf<SecureHash>()
+        val referenceHashes = mutableListOf<SecureHash>()
 
         (currentVtx.inputs).forEachIndexed { index, stateRef ->
             println("   $indent Verifying input $index: ${stateRef.toString().take(8)}")
@@ -222,6 +246,7 @@ class BackChainTest {
             referenceHashes = referenceHashes
         )
 
+        println("\n Verifying proof for tx: ${currentVtx.id}")
         zkTransactionService.verify(currentVtx.proof, calculatedPublicInput)
     }
 }

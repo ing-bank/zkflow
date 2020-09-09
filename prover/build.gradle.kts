@@ -62,7 +62,6 @@ task("merkleUtils") {
     }
 
     val merkleUtils = File("$modulesPath/$merkleUtilsPath")
-    println(merkleUtils.absolutePath)
     merkleUtils.writeText("//! Limited-depth recursion for Merkle tree construction\n")
     merkleUtils.writeText("//! GENERATED CODE. DO NOT EDIT\n//! Edit it in prover/build.gradle.kts\n\n");
 

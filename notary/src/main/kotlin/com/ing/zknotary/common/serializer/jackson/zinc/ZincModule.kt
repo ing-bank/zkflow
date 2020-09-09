@@ -15,6 +15,7 @@ import com.ing.zknotary.common.contracts.ZKContractState
 import com.ing.zknotary.common.transactions.ZKProverTransaction
 import com.ing.zknotary.common.transactions.ZKProverTransactionFactory.Companion.DEFAULT_PADDING_CONFIGURATION
 import com.ing.zknotary.common.util.PaddingWrapper
+import com.ing.zknotary.common.zkp.PublicInput
 import com.ing.zknotary.common.zkp.Witness
 import com.ing.zknotary.common.zkp.ZKNulls
 import com.ing.zknotary.common.zkp.fingerprint
@@ -40,6 +41,7 @@ class ZincModule : SimpleModule("corda-core") {
 
         context.setMixInAnnotations(StateAndRef::class.java, StateAndRefMixin::class.java)
         context.setMixInAnnotations(Witness::class.java, WitnessMixin::class.java)
+        context.setMixInAnnotations(PublicInput::class.java, PublicInputMixin::class.java)
         context.setMixInAnnotations(ZKProverTransaction::class.java, ZKProverTransactionMixin::class.java)
         context.setMixInAnnotations(ZKCommandData::class.java, ZKCommandDataMixinZinc::class.java)
 
@@ -68,6 +70,26 @@ private class StateAndRefMixinSerializer : JsonSerializer<StateAndRef<ZKContract
 }
 
 private class StateAndRefJson(val state: TransactionState<ZKContractState>, val reference: StateRef)
+
+@JsonSerialize(using = PublicInputMixinSerializer::class)
+private interface PublicInputMixin
+
+private class PublicInputMixinSerializer : JsonSerializer<PublicInput>() {
+    override fun serialize(value: PublicInput, gen: JsonGenerator, serializers: SerializerProvider) {
+        gen.writeStartObject()
+        gen.writeFieldName("transaction_id")
+        gen.writeObject(value.transactionId)
+        gen.writeFieldName("input_nonces")
+        gen.writeObject(value.inputNonces.toList())
+        gen.writeFieldName("input_hashes")
+        gen.writeObject(value.inputHashes.toList())
+        gen.writeFieldName("reference_nonces")
+        gen.writeObject(value.referenceNonces.toList())
+        gen.writeFieldName("reference_hashes")
+        gen.writeObject(value.referenceHashes.toList())
+        gen.writeEndObject()
+    }
+}
 
 @JsonSerialize(using = WitnessMixinSerializer::class)
 private interface WitnessMixin

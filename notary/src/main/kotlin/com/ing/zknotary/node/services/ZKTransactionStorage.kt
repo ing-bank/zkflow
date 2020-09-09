@@ -1,6 +1,5 @@
 package com.ing.zknotary.node.services
 
-import com.ing.zknotary.common.serializer.SerializationFactoryService
 import com.ing.zknotary.common.transactions.ZKProverTransaction
 import com.ing.zknotary.common.transactions.ZKVerifierTransaction
 import com.ing.zknotary.common.transactions.toZKProverTransaction
@@ -24,7 +23,6 @@ fun SignedTransaction.toZKVerifierTransaction(
     services: ServiceHub,
     zkStorage: ZKWritableTransactionStorage,
     zktransactionService: ZKTransactionService,
-    zkSerializatinFactoryService: SerializationFactoryService,
     persist: Boolean = true
 ): ZKVerifierTransaction {
     val wtx = coreTransaction as WireTransaction

@@ -13,20 +13,20 @@ data class PublicInput(
     /**
      * Nonce [SecureHash] for the input at index [Int]
      */
-    val inputNonces: Map<Int, SecureHash>,
+    val inputNonces: List<SecureHash>,
 
     /**
      * Leaf hash [SecureHash] for the input at index [Int]
      */
-    val inputHashes: Map<Int, SecureHash>,
+    val inputHashes: List<SecureHash>,
 
     /**
      * Nonce [SecureHash] for the input at index [Int]
      */
-    val referenceNonces: Map<Int, SecureHash>,
+    val referenceNonces: List<SecureHash>,
 
     /**
      * Leaf hash [SecureHash] for the reference at index [Int]
      */
-    val referenceHashes: Map<Int, SecureHash>
+    val referenceHashes: List<SecureHash>
 )
