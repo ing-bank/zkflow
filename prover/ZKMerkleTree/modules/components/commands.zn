@@ -17,7 +17,7 @@ impl CommandData {
         privacy_salt: PrivacySalt,
         group_index: u32,
         internal_index: u32,
-    ) -> HashDigestBits {
+    ) -> ComponentGroupLeafDigestBits {
         //fingerprint
         let fingerprint_command_data = fingerprint(this);
 
@@ -51,7 +51,7 @@ impl CommandsComponentGroup {
     fn compute_leaf_hashes(
         this: CommandsComponentGroup,
         privacy_salt: PrivacySalt,
-    ) -> [HashDigestBits; COMMAND_GROUP_SIZE] {
+    ) -> [ComponentGroupLeafDigestBits; COMMAND_GROUP_SIZE] {
         let mut component_leaf_hashes = [[false; HASH_BITS]; COMMAND_GROUP_SIZE];
 
         for i in (0 as u32)..(COMMAND_GROUP_SIZE as u32) {
@@ -68,7 +68,7 @@ impl CommandsComponentGroup {
     fn compute_component_group_hash(
         this: CommandsComponentGroup,
         privacy_salt: PrivacySalt,
-    ) -> HashDigestBits {
+    ) -> NodeDigestBits {
         let component_leaf_hashes = compute_leaf_hashes(this, privacy_salt);
 
         //When the number of leaves is one, we pad the leaf with zeros from the right first
@@ -76,6 +76,6 @@ impl CommandsComponentGroup {
         let mut padded_leaves = [[false; HASH_BITS]; 2];
         padded_leaves[0] = component_leaf_hashes[0];
 
-        merkle_2_leaves(padded_leaves)
+        get_merkle_tree_from_2_component_group_leaf_digests(padded_leaves)
     }
 }

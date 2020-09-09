@@ -25,7 +25,6 @@ fn compute_nonce(
         nonce[HASH_BITS + (i as u16)] = group_index_bits[i];
         nonce[HASH_BITS + U32_BITS + (i as u16)] = internal_index_bits[i];
     }
-
     dbg!("   nonce input = {}", nonce_to_bytes(nonce));
 
     blake2s(nonce)

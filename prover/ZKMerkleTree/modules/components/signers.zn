@@ -15,7 +15,7 @@ impl SignersComponentGroup {
     fn compute_leaf_hashes(
         this: SignersComponentGroup,
         privacy_salt: PrivacySalt,
-    ) -> [HashDigestBits; SIGNER_GROUP_SIZE] {
+    ) -> [ComponentGroupLeafDigestBits; SIGNER_GROUP_SIZE] {
         let mut component_leaf_hashes = [[false; HASH_BITS]; SIGNER_GROUP_SIZE];
 
         for i in (0 as u32)..(SIGNER_GROUP_SIZE as u32) {
@@ -32,9 +32,9 @@ impl SignersComponentGroup {
     fn compute_component_group_hash(
         this: SignersComponentGroup,
         privacy_salt: PrivacySalt,
-    ) -> HashDigestBits {
+    ) -> NodeDigestBits {
         let component_leaf_hashes = compute_leaf_hashes(this, privacy_salt);
 
-        merkle_2_leaves(component_leaf_hashes)
+        get_merkle_tree_from_2_component_group_leaf_digests(component_leaf_hashes)
     }
 }

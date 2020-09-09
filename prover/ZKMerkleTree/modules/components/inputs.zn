@@ -9,7 +9,7 @@ impl InputsComponentGroup {
     fn compute_leaf_hashes(
         this: InputsComponentGroup,
         privacy_salt: PrivacySalt,
-    ) -> [HashDigestBits; INPUT_GROUP_SIZE] {
+    ) -> [ComponentGroupLeafDigestBits; INPUT_GROUP_SIZE] {
         let mut component_leaf_hashes = [[false; HASH_BITS]; INPUT_GROUP_SIZE];
 
         for i in (0 as u32)..(INPUT_GROUP_SIZE as u32) {
@@ -26,12 +26,12 @@ impl InputsComponentGroup {
     fn compute_component_group_hash(
         this: InputsComponentGroup,
         privacy_salt: PrivacySalt,
-    ) -> HashDigestBits {
+    ) -> NodeDigestBits {
         let component_leaf_hashes = compute_leaf_hashes(this, privacy_salt);
 
         //Since INPUT_GROUP_SIZE = 2, we use this Merkle function.
         //If INPUT_GROUP_SIZE is different choose the appropriate merkle_util function.
         //If INPUT_GROUP_SIZE is odd, apply zero padding until the number of leaf hashes equal to the next power of 2.
-        merkle_2_leaves(component_leaf_hashes)
+        get_merkle_tree_from_2_component_group_leaf_digests(component_leaf_hashes)
     }
 }

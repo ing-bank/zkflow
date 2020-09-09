@@ -1,5 +1,5 @@
-//Debug functions to convert bit arrays to byte arrays
 
+//Debug functions to convert bit arrays to byte arrays
 fn u32_to_bytes(bits: [bool; U32_BITS]) -> [u8; U32_BYTES] {
     let mut u32_bytes = [0 as u8; U32_BYTES];
 

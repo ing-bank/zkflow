@@ -63,14 +63,15 @@ task("merkleUtils") {
     merkleUtils.writeText("//! Limited-depth recursion for Merkle tree construction\n")
     merkleUtils.writeText("//! GENERATED CODE. DO NOT EDIT\n//! Edit it in prover/build.gradle.kts\n\n");
 
+    merkleUtils.appendText("//! Merkle tree construction for NodeDigestBits")
     merkleUtils.appendText(
         """
-fn merkle_2_leaves(leaves: [[bool; HASH_BITS]; 2]) -> [bool; HASH_BITS] {
+fn get_merkle_tree_from_2_node_digests(leaves: [NodeDigestBits; 2]) -> NodeDigestBits {
     dbg!("Consuming 2 leaves");
     dbg!("0: {}", digest_to_bytes(leaves[0]));
     dbg!("1: {}", digest_to_bytes(leaves[1]));
     pedersen_to_padded_bits(
-        pedersen(concatenate_hashes(leaves[0], leaves[1])).0,
+        pedersen(concatenate_node_digests(leaves[0], leaves[1])).0,
     )
 }
 """)
@@ -82,26 +83,64 @@ fn merkle_2_leaves(leaves: [[bool; HASH_BITS]; 2]) -> [bool; HASH_BITS] {
 
         merkleUtils.appendText(
             """
-fn merkle_${leaves}_leaves(leaves: [[bool; HASH_BITS]; $leaves]) -> [bool; HASH_BITS] {
+fn get_merkle_tree_from_${leaves}_node_digests(leaves: [NodeDigestBits; $leaves]) -> NodeDigestBits {
     dbg!("Consuming $leaves leaves");
     let mut new_leaves = [[false; HASH_BITS]; $levelUp];
     for i in 0..$levelUp {
         new_leaves[i] = pedersen_to_padded_bits(
-            pedersen(concatenate_hashes(leaves[2 * i], leaves[2 * i + 1])).0,
+            pedersen(concatenate_node_digests(leaves[2 * i], leaves[2 * i + 1])).0,
         );
         dbg!("{}: {}", 2 * i, digest_to_bytes(leaves[2 * i]));
         dbg!("{}: {}", 2 * i + 1, digest_to_bytes(leaves[2 * i + 1]));
         dbg!("Digest: {}", digest_to_bytes(new_leaves[i]));
     }
     dbg!("");
-    merkle_${levelUp}_leaves(new_leaves)
+    get_merkle_tree_from_${levelUp}_node_digests(new_leaves)
 }
 """
         )
         leaves *= 2
     } while (leaves <= fullLeaves)
 
+    merkleUtils.appendText("\n//! Merkle tree construction for ComponentGroupLeafDigestBits.\n" +
+        "//! Use it only for the computation of a component sub-Merkle tree from component group leaf hashes.")
+    merkleUtils.appendText(
+        """
+fn get_merkle_tree_from_2_component_group_leaf_digests(leaves: [ComponentGroupLeafDigestBits; 2]) -> NodeDigestBits {
+    dbg!("Consuming 2 leaves");
+    dbg!("0: {}", digest_to_bytes(leaves[0]));
+    dbg!("1: {}", digest_to_bytes(leaves[1]));
+    pedersen_to_padded_bits(
+        pedersen(concatenate_component_group_leaf_digests(leaves[0], leaves[1])).0,
+    )
+}
+""")
 
+    leaves = 4
+
+    do {
+        val levelUp = leaves / 2
+
+        merkleUtils.appendText(
+            """
+fn get_merkle_tree_from_${leaves}_component_group_leaf_digests(leaves: [ComponentGroupLeafDigestBits; $leaves]) -> NodeDigestBits {
+    dbg!("Consuming $leaves leaves");
+    let mut new_leaves = [[false; HASH_BITS]; $levelUp];
+    for i in 0..$levelUp {
+        new_leaves[i] = pedersen_to_padded_bits(
+            pedersen(concatenate_component_group_leaf_digests(leaves[2 * i], leaves[2 * i + 1])).0,
+        );
+        dbg!("{}: {}", 2 * i, digest_to_bytes(leaves[2 * i]));
+        dbg!("{}: {}", 2 * i + 1, digest_to_bytes(leaves[2 * i + 1]));
+        dbg!("Digest: {}", digest_to_bytes(new_leaves[i]));
+    }
+    dbg!("");
+    get_merkle_tree_from_${levelUp}_node_digests(new_leaves)
+}
+"""
+        )
+        leaves *= 2
+    } while (leaves <= fullLeaves)
 
     merkleUtils.appendText(
         """
@@ -118,7 +157,7 @@ fn merkle_root(leaves: [[bool; HASH_BITS]; $merkleLeaves]) -> [bool; HASH_BITS] 
     }
 
     dbg!("Constructing the root");
-    merkle_${fullLeaves}_leaves(full_leaves)
+    get_merkle_tree_from_${fullLeaves}_node_digests(full_leaves)
 }
 """)
 }

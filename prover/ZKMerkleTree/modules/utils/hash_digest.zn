@@ -21,13 +21,13 @@ impl HashDigest {
         privacy_salt: PrivacySalt,
         group_index: u32,
         internal_index: u32,
-    ) -> HashDigestBits {
+    ) -> ComponentGroupLeafDigestBits {
         //fingerprint
         let fingerprint_hash_digest = fingerprint(this);
 
         //compute nonce
         let mut nonce = compute_nonce(privacy_salt, group_index, internal_index);
-        // dbg!("   nonce = {}", digest_to_bytes(nonce));
+        dbg!("   nonce = {}", digest_to_bytes(nonce));
 
         let mut message: [bool; HASH_BITS + HASH_BITS] = [false; HASH_BITS + HASH_BITS];
 
@@ -38,8 +38,7 @@ impl HashDigest {
         for i in 0..HASH_BITS {
             message[HASH_BITS + i] = fingerprint_hash_digest[i];
         }
-
-        // dbg!("   digest input = {}", hashhash_to_bytes(message));
+        dbg!("   digest input = {}", hashhash_to_bytes(message));
 
         blake2s(message)
     }

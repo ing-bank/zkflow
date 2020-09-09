@@ -20,9 +20,12 @@ const REF_BITS: u16 = HASH_BITS;
 const NONCE_BYTES: u16 = HASH_BYTES + U32_BYTES + U32_BYTES;
 const NONCE_BITS: u16 = NONCE_BYTES * BYTE_BITS;
 
-const COMPONENT_GROUP_SIZE: u8 = 9;
+const COMPONENT_GROUPS_SIZE: u8 = 9;
 
 type HashDigestBytes = [u8; HASH_BYTES];
 type HashDigestBits = [bool; HASH_BITS];
+
+type ComponentGroupLeafDigestBits = [bool; HASH_BITS];
+type NodeDigestBits = [bool; HASH_BITS];
 
 type PrivacySalt = [bool; HASH_BITS];

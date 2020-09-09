@@ -24,7 +24,7 @@ impl PubKey {
         privacy_salt: PrivacySalt,
         group_index: u32,
         internal_index: u32,
-    ) -> HashDigestBits {
+    ) -> ComponentGroupLeafDigestBits {
         //fingerprint
         let fingerprint_pub_key = fingerprint(this);
 

@@ -2,7 +2,7 @@
 // * computed digest that is computed from witness.
 // * received digest that is received within the witness.
 // return bool If the computed value is equal to the one received then the function returns true. Otherwise, returns false.
-fn validate_group_hash(computed: HashDigestBits, received: HashDigestBits) -> bool {
+fn validate_group_hash(computed: NodeDigestBits, received: NodeDigestBits) -> bool {
     dbg!("{}", HashDigest::from_bits(computed));
     dbg!("{}", HashDigest::from_bits(received));
 
@@ -21,7 +21,7 @@ fn validate_group_hash(computed: HashDigestBits, received: HashDigestBits) -> bo
 // * zk_prover_transaction  that contains component group hashes computed by the prover.
 // If one component_group_hash value cannot be validated then the execution terminates.
 fn validate_group_hashes(
-    component_group_hashes: [HashDigestBits; COMPONENT_GROUP_SIZE],
+    component_group_hashes: [NodeDigestBits; COMPONENT_GROUPS_SIZE],
     zk_prover_transaction: ZKProverTransaction,
 ) {
     //Validate component hashes

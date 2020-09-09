@@ -26,7 +26,7 @@ impl TimeWindow {
         privacy_salt: PrivacySalt,
         group_index: u32,
         internal_index: u32,
-    ) -> HashDigestBits {
+    ) -> ComponentGroupLeafDigestBits {
         //fingerprint
         let fingerprint_time_window = fingerprint(this);
 
@@ -61,7 +61,7 @@ impl TimeWindowComponentGroup {
     fn compute_component_group_hash(
         this: TimeWindowComponentGroup,
         privacy_salt: PrivacySalt,
-    ) -> HashDigestBits {
+    ) -> NodeDigestBits {
         let component_leaf_hash = TimeWindow::compute_leaf_hash(
             this.component.content,
             privacy_salt,
@@ -74,6 +74,6 @@ impl TimeWindowComponentGroup {
         let mut padded_leaves = [[false; HASH_BITS]; 2];
         padded_leaves[0] = component_leaf_hash;
 
-        merkle_2_leaves(padded_leaves)
+        get_merkle_tree_from_2_component_group_leaf_digests(padded_leaves)
     }
 }
