@@ -120,7 +120,7 @@ class ZKMerkleTreeTest {
 
             val proof = zincTxZKService.prove(witness)
             // FIXME: temporarily disabling, until we have API for fetching previous vtxs
-            // zincTxZKService.verify(proof, publicInput)
+            zincTxZKService.verify(proof, publicInput)
         }
     }
 }
