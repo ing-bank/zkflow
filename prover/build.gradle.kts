@@ -57,7 +57,9 @@ task("merkleUtils") {
 
     val fullLeaves = run {
         var l = merkleLeaves
-        while (!isPow2(l)) { l++ }
+        while (!isPow2(l)) {
+            l++
+        }
         l
     }
 
@@ -76,7 +78,8 @@ fn get_merkle_tree_from_2_node_digests(leaves: [NodeDigestBits; 2]) -> NodeDiges
         pedersen(concatenate_node_digests(leaves[0], leaves[1])).0,
     )
 }
-""")
+"""
+    )
 
     var leaves = 4
 
@@ -161,10 +164,17 @@ fn merkle_root(leaves: [NodeDigestBits; $merkleLeaves]) -> NodeDigestBits {
     dbg!("Constructing the root");
     get_merkle_tree_from_${fullLeaves}_node_digests(full_leaves)
 }
-""")
+"""
+    )
 }
 
 task("buildCircuit") {
+    dependsOn("merkleUtils")
+
+    outputs.file("../$circuitPath")
+    inputs.dir("../$modulesPath")
+
+
     val circuit = File(circuitPath)
     circuit.parentFile?.mkdirs() // Make sure the parent path for the circuit exists.
     circuit.writeText("//! Combined circuit\n//! GENERATED CODE. DO NOT EDIT\n//! Edit a corresponding constituent\n\n");
@@ -175,14 +185,14 @@ task("buildCircuit") {
 
             circuit.appendText("//!  IN ==== ${part.absolutePath}\n")
 
-            if (isDbgOn) {
-                circuit.appendBytes(part.readBytes())
-            } else {
-                part
-                    .readLines()
-                    .filter { line -> !line.contains("dbg!") }
-                    .forEach { line -> circuit.appendText("$line\n")}
-            }
+        if (isDbgOn) {
+            circuit.appendBytes(part.readBytes())
+        } else {
+            part
+                .readLines()
+                .filter { line -> !line.contains("dbg!") }
+                .forEach { line -> circuit.appendText("$line\n") }
+        }
 
             circuit.appendText("//! OUT ==== ${part.absolutePath}\n\n")
         }
