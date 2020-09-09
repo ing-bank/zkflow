@@ -21,11 +21,15 @@ fn main(witness: Witness) -> PublicInput {
     // This proves that we did not change the contents of the inputs and references, compared to
     // the VerifierTransaction known by the verifier, of which they were an output.
 
+    let zero_hash = HashDigest {
+        bytes: [0 as u8; HASH_BYTES],
+    };
+
     PublicInput {
         transaction_id: NodeDigestDto::from_bits_to_bytes(root_hash),
-        input_nonces: [HashDigest; INPUT_GROUP_SIZE],
-        input_hashes: [HashDigest; INPUT_GROUP_SIZE],
-        reference_nonces: [HashDigest; REFERENCE_GROUP_SIZE],
-        reference_hashes: [HashDigest; REFERENCE_GROUP_SIZE],
+        input_nonces: [zero_hash; INPUT_GROUP_SIZE],
+        input_hashes: [zero_hash; INPUT_GROUP_SIZE],
+        reference_nonces: [zero_hash; REFERENCE_GROUP_SIZE],
+        reference_hashes: [zero_hash; REFERENCE_GROUP_SIZE],
     }
 }

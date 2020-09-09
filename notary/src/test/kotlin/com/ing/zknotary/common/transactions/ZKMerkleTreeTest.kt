@@ -1,5 +1,6 @@
 package com.ing.zknotary.common.transactions
 
+import com.ing.zknotary.common.zkp.PublicInput
 import com.ing.zknotary.common.zkp.Witness
 import com.ing.zknotary.common.zkp.ZKNulls
 import com.ing.zknotary.common.zkp.ZincZKTransactionService
@@ -106,20 +107,15 @@ class ZKMerkleTreeTest {
 
             val witness = Witness(ptx)
 
-            // FIXME: temporarily disabling, until we have API for fetching previous vtxs
-            // val publicInput = PublicInput(ptx.id)
-
-            // // This is left for debugging purposes, should this be required.
-            // val serializationFactoryService = ZincSerializationFactoryService()
-            //
-            // val id = publicInput.serialize(serializationFactoryService.factory)
-            // println("Expected = \n${String(id.bytes)}")
-            //
-            // val json = witness.serialize(serializationFactoryService.factory)
-            // File("$circuitFolder/data/witness.json").writeText(String(json.bytes))
+            val publicInput = PublicInput(
+                ptx.id,
+                inputNonces = ptx.padded.inputs().map { PedersenDigestService.zeroHash },
+                inputHashes = ptx.padded.inputs().map { PedersenDigestService.zeroHash },
+                referenceNonces = ptx.padded.references().map { PedersenDigestService.zeroHash },
+                referenceHashes = ptx.padded.references().map { PedersenDigestService.zeroHash }
+            )
 
             val proof = zincTxZKService.prove(witness)
-            // FIXME: temporarily disabling, until we have API for fetching previous vtxs
             zincTxZKService.verify(proof, publicInput)
         }
     }
