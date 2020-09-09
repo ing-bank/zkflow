@@ -15,9 +15,7 @@ impl OutputsComponentGroup {
         for i in (0 as u32)..(OUTPUT_GROUP_SIZE as u32) {
             component_leaf_hashes[i] = TransactionState::compute_leaf_hash(
                 this.components[i].content,
-                privacy_salt,
-                ComponentGroupEnum::OUTPUTS_GROUP as u32,
-                i as u32,
+                compute_nonce(privacy_salt, ComponentGroupEnum::OUTPUTS_GROUP as u32, i as u32),
             );
         }
         component_leaf_hashes

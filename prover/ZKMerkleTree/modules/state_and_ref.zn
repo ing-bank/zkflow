@@ -107,15 +107,9 @@ impl TransactionState {
 
     fn compute_leaf_hash(
         this: TransactionState,
-        privacy_salt: PrivacySalt,
-        group_index: u32,
-        internal_index: u32,
+        nonce: HashDigestBits,
     ) -> HashDigestBits {
         // dbg!(">> compute_leaf_hash_transactionstate");
-
-        //compute nonce
-        let mut nonce = compute_nonce(privacy_salt, group_index, internal_index);
-        // dbg!("   nonce = {}", digest_to_bytes(nonce));
 
         // message = nonce || state
         let mut message = [false; HASH_BITS + STATE_BITS];

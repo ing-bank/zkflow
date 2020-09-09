@@ -6,6 +6,8 @@ struct PublicInput {
     reference_hashes: [HashDigest; REFERENCE_GROUP_SIZE],
 }
 
+// fn validate_b_preimage(preimage)
+
 fn main(witness: Witness) -> PublicInput {
     // Check contract rules
     // TODO: disabled for now, so that the circuit can handle any command
@@ -18,7 +20,6 @@ fn main(witness: Witness) -> PublicInput {
     // using the nonce provided in the public input, matches the hash provided in the public input.
     // This proves that we did not change the contents of the inputs and references, compared to
     // the VerifierTransaction known by the verifier, of which they were an output.
-
 
     PublicInput {
         transaction_id: NodeDigestDto::from_bits_to_bytes(root_hash),
