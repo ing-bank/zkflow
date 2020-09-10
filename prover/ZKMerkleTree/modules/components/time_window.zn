@@ -1,9 +1,7 @@
 const TIME_WINDOW_BYTES: u16 = 24;
 
-const TIME_WINDOW_FINGERPRINT_WORDS: u16 = 24;
-const TIME_WINDOW_FINGERPRINT_WORD_BITS: u16 = BYTE_BITS;
-
-const TIME_WINDOW_FINGERPRINT_BITS: u16 = TIME_WINDOW_FINGERPRINT_WORD_BITS * TIME_WINDOW_FINGERPRINT_WORDS;
+const TIME_WINDOW_FINGERPRINT_BYTES: u16 = 24;
+const TIME_WINDOW_FINGERPRINT_BITS: u16 = TIME_WINDOW_FINGERPRINT_BYTES * BYTE_BITS;
 
 type TimeWindowBytes = [u8; TIME_WINDOW_BYTES];
 type TimeWindowFingerprintBits = [bool; TIME_WINDOW_FINGERPRINT_BITS];
@@ -16,10 +14,10 @@ impl TimeWindow {
     fn fingerprint(this: TimeWindow) -> TimeWindowFingerprintBits {
         let mut fingerprint_bits = [false; TIME_WINDOW_FINGERPRINT_BITS];
 
-        for i in (0 as u16)..TIME_WINDOW_FINGERPRINT_WORDS {
+        for i in (0 as u16)..TIME_WINDOW_FINGERPRINT_BYTES {
             let bits = to_bits(this.bytes[i]);
-            for j in (0 as u16)..TIME_WINDOW_FINGERPRINT_WORD_BITS {
-                fingerprint_bits[TIME_WINDOW_FINGERPRINT_WORD_BITS * i + j] =  bits[j];
+            for j in (0 as u16)..BYTE_BITS {
+                fingerprint_bits[BYTE_BITS * i + j] =  bits[j];
             }
         }
         fingerprint_bits

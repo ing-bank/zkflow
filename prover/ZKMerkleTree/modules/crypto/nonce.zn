@@ -1,6 +1,6 @@
-const NONCE_BYTES: u16 = PRIVACY_SALT_BYTES + U32_BYTES + U32_BYTES;
+const NONCE_FINGERPRINT_BYTES: u16 = PRIVACY_SALT_BYTES + U32_BYTES + U32_BYTES;
 
-const NONCE_FINGERPRINT_BITS: u16 = NONCE_BYTES * BYTE_BITS;
+const NONCE_FINGERPRINT_BITS: u16 = NONCE_FINGERPRINT_BYTES * BYTE_BITS;
 const NONCE_DIGEST_BITS: u16  = COMPONENT_GROUP_LEAF_DIGEST_BITS;
 
 type NonceFingerPrintBits = [bool; NONCE_FINGERPRINT_BITS];
@@ -8,10 +8,10 @@ type NonceDigestBits = [bool; NONCE_DIGEST_BITS];
 
 
 //For debug purposes
-fn nonce_to_bytes(nonce: NonceFingerPrintBits) -> [u8; NONCE_BYTES] {
-    let mut nonce_bytes = [0 as u8; NONCE_BYTES];
+fn nonce_to_bytes(nonce: NonceFingerPrintBits) -> [u8; NONCE_FINGERPRINT_BYTES] {
+    let mut nonce_bytes = [0 as u8; NONCE_FINGERPRINT_BYTES];
 
-    for i in 0..NONCE_BYTES {
+    for i in 0..NONCE_FINGERPRINT_BYTES {
         let mut byte_bits: [bool; BYTE_BITS] = [false; BYTE_BITS];
         for j in 0..BYTE_BITS {
             byte_bits[j] = nonce[BYTE_BITS * i + j];
