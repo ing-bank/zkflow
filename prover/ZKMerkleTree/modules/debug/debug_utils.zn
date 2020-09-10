@@ -13,10 +13,10 @@ fn u32_to_bytes(bits: [bool; U32_BITS]) -> [u8; U32_BYTES] {
     u32_bytes
 }
 
-fn hashhash_to_bytes(digest: [bool; NONCE_DIGEST_BITS + HASH_BITS]) -> [u8; HASH_BYTES + HASH_BYTES] {
-    let mut hash_bytes = [0 as u8; HASH_BYTES + HASH_BYTES];
+fn nonce_attachment_to_bytes(digest: [bool; NONCE_DIGEST_BITS + ATTACHMENT_ID_FINGERPRINT_BITS]) -> [u8; NONCE_DIGEST_BYTES + ATTACHMENT_ID_FINGERPRINT_BYTES] {
+    let mut hash_bytes = [0 as u8; NONCE_DIGEST_BYTES + ATTACHMENT_ID_FINGERPRINT_BYTES];
 
-    for i in 0..(HASH_BYTES + HASH_BYTES) {
+    for i in 0..(NONCE_DIGEST_BYTES + ATTACHMENT_ID_FINGERPRINT_BYTES) {
         let mut byte_bits = [false; BYTE_BITS];
         for j in 0..BYTE_BITS {
             byte_bits[j] = digest[BYTE_BITS * i + j];
@@ -27,10 +27,10 @@ fn hashhash_to_bytes(digest: [bool; NONCE_DIGEST_BITS + HASH_BITS]) -> [u8; HASH
     hash_bytes
 }
 
-fn hashref_to_bytes(digest: [bool; NONCE_DIGEST_BITS + REF_FINGERPRINT_BITS]) -> [u8; NONCE_BYTES + REF_FINGERPRINT_WORDS] {
-    let mut hash_bytes = [0 as u8; NONCE_BYTES + REF_FINGERPRINT_WORDS];
+fn nonce_parameter_to_bytes(digest: [bool; NONCE_DIGEST_BITS + PARAMETERS_HASH_FINGERPRINT_BITS]) -> [u8; NONCE_DIGEST_BYTES + PARAMETERS_HASH_FINGERPRINT_BYTES] {
+    let mut hash_bytes = [0 as u8; NONCE_DIGEST_BYTES + PARAMETERS_HASH_FINGERPRINT_BYTES];
 
-    for i in 0..(NONCE_DIGEST_BITS + REF_FINGERPRINT_BITS) {
+    for i in 0..(NONCE_DIGEST_BYTES + PARAMETERS_HASH_FINGERPRINT_BYTES) {
         let mut byte_bits = [false; BYTE_BITS];
         for j in 0..BYTE_BITS {
             byte_bits[j] = digest[BYTE_BITS * i + j];
@@ -41,10 +41,24 @@ fn hashref_to_bytes(digest: [bool; NONCE_DIGEST_BITS + REF_FINGERPRINT_BITS]) ->
     hash_bytes
 }
 
-fn hashstate_to_bytes(digest: [bool; NONCE_DIGEST_BITS + STATE_FINGERPRINT_BITS]) -> [u8; HASH_BYTES + STATE_FINGERPRINT_WORDS] {
-    let mut hash_bytes = [0 as u8; NONCE_BYTES + STATE_FINGERPRINT_WORDS];
+fn nonce_ref_to_bytes(digest: [bool; NONCE_DIGEST_BITS + REF_FINGERPRINT_BITS]) -> [u8; NONCE_DIGEST_BYTES + REF_FINGERPRINT_BYTES] {
+    let mut hash_bytes = [0 as u8; NONCE_DIGEST_BYTES + REF_FINGERPRINT_BYTES];
 
-    for i in 0..(NONCE_BYTES + STATE_FINGERPRINT_WORDS) {
+    for i in 0..(NONCE_DIGEST_BYTES + REF_FINGERPRINT_BITS) {
+        let mut byte_bits = [false; BYTE_BITS];
+        for j in 0..BYTE_BITS {
+            byte_bits[j] = digest[BYTE_BITS * i + j];
+        }
+        hash_bytes[i] = std::convert::from_bits_unsigned(byte_bits);
+    }
+
+    hash_bytes
+}
+
+fn nonce_state_to_bytes(digest: [bool; NONCE_DIGEST_BITS + STATE_FINGERPRINT_BITS]) -> [u8; NONCE_DIGEST_BYTES + STATE_FINGERPRINT_BYTES] {
+    let mut hash_bytes = [0 as u8; NONCE_DIGEST_BYTES + STATE_FINGERPRINT_BYTES];
+
+    for i in 0..(NONCE_DIGEST_BYTES + STATE_FINGERPRINT_BYTES) {
         let mut byte_bits = [false; BYTE_BITS];
         for j in 0..BYTE_BITS {
             byte_bits[j] = digest[BYTE_BITS * i + j];
