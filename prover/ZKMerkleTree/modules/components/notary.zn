@@ -11,7 +11,7 @@ struct NotaryComponentGroup {
 impl NotaryComponentGroup {
     fn compute_component_group_hash(
         this: NotaryComponentGroup,
-        privacy_salt: PrivacySaltFingerprintBits,
+        privacy_salt: PrivacySaltBits,
     ) -> NodeDigestBits {
         let component_leaf_hash = PubKey::compute_leaf_hash(
             this.component.content.owning_key,

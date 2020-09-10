@@ -16,7 +16,7 @@ impl CommandData {
 
     fn compute_leaf_hash(
         this: CommandData,
-        privacy_salt: PrivacySaltFingerprintBits,
+        privacy_salt: PrivacySaltBits,
         group_index: u32,
         internal_index: u32,
     ) -> ComponentGroupLeafDigest {
@@ -52,7 +52,7 @@ struct CommandsComponentGroup {
 impl CommandsComponentGroup {
     fn compute_leaf_hashes(
         this: CommandsComponentGroup,
-        privacy_salt: PrivacySaltFingerprintBits,
+        privacy_salt: PrivacySaltBits,
     ) -> [ComponentGroupLeafDigest; COMMAND_GROUP_SIZE] {
         let mut component_leaf_hashes = [ComponentGroupLeafDigest { bits: [false; COMPONENT_GROUP_LEAF_DIGEST_BITS] }; COMMAND_GROUP_SIZE];
 
@@ -69,7 +69,7 @@ impl CommandsComponentGroup {
 
     fn compute_component_group_hash(
         this: CommandsComponentGroup,
-        privacy_salt: PrivacySaltFingerprintBits,
+        privacy_salt: PrivacySaltBits,
     ) -> NodeDigestBits {
         let component_leaf_hashes = compute_leaf_hashes(this, privacy_salt);
 

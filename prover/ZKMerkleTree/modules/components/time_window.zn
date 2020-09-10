@@ -25,7 +25,7 @@ impl TimeWindow {
 
     fn compute_leaf_hash(
         this: TimeWindow,
-        privacy_salt: PrivacySaltFingerprintBits,
+        privacy_salt: PrivacySaltBits,
         group_index: u32,
         internal_index: u32,
     ) -> ComponentGroupLeafDigest {
@@ -61,7 +61,7 @@ struct TimeWindowComponentGroup {
 impl TimeWindowComponentGroup {
     fn compute_component_group_hash(
         this: TimeWindowComponentGroup,
-        privacy_salt: PrivacySaltFingerprintBits,
+        privacy_salt: PrivacySaltBits,
     ) -> NodeDigestBits {
         let component_leaf_hash = TimeWindow::compute_leaf_hash(
             this.component.content,

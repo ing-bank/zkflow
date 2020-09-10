@@ -27,7 +27,7 @@ impl ParametersHash {
     // Method to compute leaf hash on public key values.
     fn compute_leaf_hash(
         this: ParametersHash,
-        privacy_salt: PrivacySaltFingerprintBits,
+        privacy_salt: PrivacySaltBits,
         group_index: u32,
         internal_index: u32,
     ) -> ComponentGroupLeafDigest {
@@ -64,7 +64,7 @@ struct ParametersComponentGroup {
 impl ParametersComponentGroup {
     fn compute_component_group_hash(
         this: ParametersComponentGroup,
-        privacy_salt: PrivacySaltFingerprintBits,
+        privacy_salt: PrivacySaltBits,
     ) -> NodeDigestBits {
         let component_leaf_hash = ParametersHash::compute_leaf_hash(
             this.component.content,

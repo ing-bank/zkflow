@@ -13,7 +13,7 @@ struct SignersComponentGroup {
 impl SignersComponentGroup {
     fn compute_leaf_hashes(
         this: SignersComponentGroup,
-        privacy_salt: PrivacySaltFingerprintBits,
+        privacy_salt: PrivacySaltBits,
     ) -> [ComponentGroupLeafDigest; SIGNER_GROUP_SIZE] {
         let mut component_leaf_hashes = [ComponentGroupLeafDigest { bits: [false; COMPONENT_GROUP_LEAF_DIGEST_BITS] }; SIGNER_GROUP_SIZE];
 
@@ -30,7 +30,7 @@ impl SignersComponentGroup {
 
     fn compute_component_group_hash(
         this: SignersComponentGroup,
-        privacy_salt: PrivacySaltFingerprintBits,
+        privacy_salt: PrivacySaltBits,
     ) -> NodeDigestBits {
         let component_leaf_hashes = compute_leaf_hashes(this, privacy_salt);
 

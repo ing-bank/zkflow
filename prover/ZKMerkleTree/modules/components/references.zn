@@ -8,7 +8,7 @@ struct ReferencesComponentGroup {
 impl ReferencesComponentGroup {
     fn compute_leaf_hashes(
         this: ReferencesComponentGroup,
-        privacy_salt: PrivacySaltFingerprintBits,
+        privacy_salt: PrivacySaltBits,
     ) -> [ComponentGroupLeafDigest; REFERENCE_GROUP_SIZE] {
         let mut component_leaf_hashes = [ComponentGroupLeafDigest { bits: [false; COMPONENT_GROUP_LEAF_DIGEST_BITS] }; REFERENCE_GROUP_SIZE];
 
@@ -25,7 +25,7 @@ impl ReferencesComponentGroup {
 
     fn compute_component_group_hash(
         this: ReferencesComponentGroup,
-        privacy_salt: PrivacySaltFingerprintBits,
+        privacy_salt: PrivacySaltBits,
     ) -> NodeDigestBits {
         let component_leaf_hashes = compute_leaf_hashes(this, privacy_salt);
 

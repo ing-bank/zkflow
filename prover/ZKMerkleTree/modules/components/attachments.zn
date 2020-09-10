@@ -29,7 +29,7 @@ impl AttachmentId {
     // Method to compute leaf hash on public key values.
     fn compute_leaf_hash(
         this: AttachmentId,
-        privacy_salt: PrivacySaltFingerprintBits,
+        privacy_salt: PrivacySaltBits,
         group_index: u32,
         internal_index: u32,
     ) -> ComponentGroupLeafDigest {
@@ -66,7 +66,7 @@ struct AttachmentsComponentGroup {
 impl AttachmentsComponentGroup {
     fn compute_leaf_hashes(
         this: AttachmentsComponentGroup,
-        privacy_salt: PrivacySaltFingerprintBits,
+        privacy_salt: PrivacySaltBits,
     ) -> [ComponentGroupLeafDigest; ATTACHMENT_GROUP_SIZE] {
         let mut component_leaf_hashes = [ComponentGroupLeafDigest { bits: [false; COMPONENT_GROUP_LEAF_DIGEST_BITS] }; ATTACHMENT_GROUP_SIZE];
 
@@ -84,7 +84,7 @@ impl AttachmentsComponentGroup {
 
     fn compute_component_group_hash(
         this: AttachmentsComponentGroup,
-        privacy_salt: PrivacySaltFingerprintBits,
+        privacy_salt: PrivacySaltBits,
     ) -> NodeDigestBits {
         let component_leaf_hashes = compute_leaf_hashes(this, privacy_salt);
 
