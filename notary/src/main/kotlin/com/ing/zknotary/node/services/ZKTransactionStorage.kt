@@ -9,6 +9,7 @@ import com.ing.zknotary.common.zkp.ZKTransactionService
 import net.corda.core.DeleteForDJVM
 import net.corda.core.DoNotImplement
 import net.corda.core.concurrent.CordaFuture
+import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.crypto.BLAKE2s256DigestService
 import net.corda.core.crypto.PedersenDigestService
 import net.corda.core.crypto.SecureHash
@@ -34,7 +35,21 @@ fun SignedTransaction.toZKVerifierTransaction(
         nodeDigestService = PedersenDigestService
     )
 
-    val proof = zktransactionService.prove(Witness(ptx))
+    // TODO: collect the nonces for the outputs pointed to by the inputs and references.
+    val inputNonces = ptx.inputs.map {
+        val outputTx =
+            zkStorage.getTransaction(it.ref.txhash)
+                ?: error("Could not fetch output transaction for StateRef ${it.ref}")
+        outputTx.componentNonces[ComponentGroupEnum.OUTPUTS_GROUP.ordinal]!![it.ref.index]
+    }
+    val referenceNonces = ptx.references.map {
+        val outputTx =
+            zkStorage.getTransaction(it.ref.txhash)
+                ?: error("Could not fetch output transaction for StateRef ${it.ref}")
+        outputTx.componentNonces[ComponentGroupEnum.OUTPUTS_GROUP.ordinal]!![it.ref.index]
+    }
+
+    val proof = zktransactionService.prove(Witness(ptx, inputNonces = inputNonces, referenceNonces = referenceNonces))
     val vtx = ptx.toZKVerifierTransaction(proof)
 
     if (persist) {

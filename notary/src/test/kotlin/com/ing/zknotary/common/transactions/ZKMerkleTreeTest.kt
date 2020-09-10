@@ -105,7 +105,11 @@ class ZKMerkleTreeTest {
                 nodeDigestService = PedersenDigestService
             )
 
-            val witness = Witness(ptx)
+            val witness = Witness(
+                ptx,
+                inputNonces = ptx.padded.inputs().map { PedersenDigestService.zeroHash },
+                referenceNonces = ptx.padded.references().map { PedersenDigestService.zeroHash }
+            )
 
             val publicInput = PublicInput(
                 ptx.id,

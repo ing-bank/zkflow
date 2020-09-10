@@ -70,7 +70,11 @@ class SerializationTest {
     fun `Serialize witness to Zinc`() {
         ledgerServices.ledger {
             // Serialize for transport to Zinc
-            val witness = Witness(ptx)
+            val witness = Witness(
+                ptx,
+                inputNonces = ptx.padded.inputs().map { PedersenDigestService.zeroHash },
+                referenceNonces = ptx.padded.references().map { PedersenDigestService.zeroHash }
+            )
             val json = witness.serialize(ZincSerializationFactory)
             println(String(json.bytes))
             // TODO: do checks on JSON to confirm it is acceptable for Zinc

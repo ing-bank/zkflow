@@ -80,13 +80,13 @@ private class PublicInputMixinSerializer : JsonSerializer<PublicInput>() {
         gen.writeFieldName("transaction_id")
         gen.writeObject(value.transactionId)
         gen.writeFieldName("input_nonces")
-        gen.writeObject(value.inputNonces.toList())
+        gen.writeObject(value.inputNonces)
         gen.writeFieldName("input_hashes")
-        gen.writeObject(value.inputHashes.toList())
+        gen.writeObject(value.inputHashes)
         gen.writeFieldName("reference_nonces")
-        gen.writeObject(value.referenceNonces.toList())
+        gen.writeObject(value.referenceNonces)
         gen.writeFieldName("reference_hashes")
-        gen.writeObject(value.referenceHashes.toList())
+        gen.writeObject(value.referenceHashes)
         gen.writeEndObject()
     }
 }
@@ -98,18 +98,22 @@ private class WitnessMixinSerializer : JsonSerializer<Witness>() {
     override fun serialize(value: Witness, gen: JsonGenerator, serializers: SerializerProvider) {
         gen.writeStartObject()
         gen.writeFieldName("witness")
-        gen.writeObject(value.transaction)
+        gen.writeObject(WitnessJson(value.transaction, value.inputNonces, value.referenceNonces))
         gen.writeEndObject()
     }
 }
+
+private class WitnessJson(
+    val transaction: ZKProverTransaction,
+    val inputNonces: List<SecureHash>,
+    val referenceNonces: List<SecureHash>
+)
 
 @JsonSerialize(using = ZKProverTransactionMixinSerializer::class)
 private interface ZKProverTransactionMixin
 
 private class ZKProverTransactionMixinSerializer : JsonSerializer<ZKProverTransaction>() {
     override fun serialize(value: ZKProverTransaction, gen: JsonGenerator, serializers: SerializerProvider) {
-        gen.writeStartObject()
-        gen.writeFieldName("transaction")
         gen.writeObject(
             ZincJson(
                 ComponentGroup(
@@ -151,7 +155,6 @@ private class ZKProverTransactionMixinSerializer : JsonSerializer<ZKProverTransa
                 value.privacySalt
             )
         )
-        gen.writeEndObject()
     }
 }
 
