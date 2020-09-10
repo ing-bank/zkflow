@@ -1,20 +1,21 @@
+const NONCE_DIGEST_BYTES: u16 = COMPONENT_GROUP_LEAF_DIGEST_BYTES;
+const NONCE_DIGEST_BITS: u16  = COMPONENT_GROUP_LEAF_DIGEST_BITS;
+
+type NonceDigestBits = [bool; NONCE_DIGEST_BITS];
+
 // Method to compute a nonce based on privacySalt, component group index and component internal index.
-// * privacy_salt a PrivacySalt
-// * group_index the fixed index (ordinal) of this component group.
-// * internal_index the internal index of this object in its corresponding components list.
-// return H(privacy_salt || group_index || internal_index))
 fn compute_nonce(
-    privacy_salt: PrivacySalt,
+    privacy_salt: PrivacySaltBits,
     group_index: u32,
     internal_index: u32,
-) -> [bool; HASH_BITS] {
+) -> NonceDigestBits {
     dbg!(">> computeNonce (");
     dbg!("   group index = {}", group_index);
     dbg!("   internal index = {}", internal_index);
     dbg!(")");
 
-    let mut nonce = [false; NONCE_BITS];
-    for i in 0..HASH_BITS {
+    let mut nonce = [false; PRIVACY_SALT_BITS + U32_BITS + U32_BITS];
+    for i in 0..PRIVACY_SALT_BITS {
         nonce[i] = privacy_salt[i];
     }
 
@@ -22,11 +23,11 @@ fn compute_nonce(
     let internal_index_bits = to_bits(internal_index);
 
     for i in 0..U32_BITS {
-        nonce[HASH_BITS + (i as u16)] = group_index_bits[i];
-        nonce[HASH_BITS + U32_BITS + (i as u16)] = internal_index_bits[i];
+        nonce[PRIVACY_SALT_BITS + (i as u16)] = group_index_bits[i];
+        nonce[PRIVACY_SALT_BITS + U32_BITS + (i as u16)] = internal_index_bits[i];
     }
-
     dbg!("   nonce input = {}", nonce_to_bytes(nonce));
 
     blake2s(nonce)
 }
+

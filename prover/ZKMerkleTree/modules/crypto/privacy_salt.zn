@@ -1,0 +1,24 @@
+const PRIVACY_SALT_BYTES: u16 = 32;
+
+const PRIVACY_SALT_BITS: u16 = PRIVACY_SALT_BYTES * BYTE_BITS;
+
+type PrivacySaltBytes = [u8; PRIVACY_SALT_BYTES];
+type PrivacySaltBits = [bool; PRIVACY_SALT_BITS];
+
+struct PrivacySalt{
+    bytes : PrivacySaltBytes,
+}
+
+impl PrivacySalt{
+    fn from_bytes_to_bits(this: PrivacySalt) -> PrivacySaltBits {
+        let mut bits = [false; PRIVACY_SALT_BITS];
+
+        for i in (0 as u16)..PRIVACY_SALT_BYTES {
+            let byte_bits = to_bits(this.bytes[i]);
+            for j in (0 as u16)..BYTE_BITS {
+                bits[BYTE_BITS * i + j] =  byte_bits[j];
+            }
+        }
+        bits
+    }
+}

@@ -8,7 +8,7 @@ struct ZKProverTransaction {
     time_window: TimeWindowComponentGroup,
     parameters: ParametersComponentGroup,
     signers: SignersComponentGroup,
-    privacy_salt: HashDigest,
+    privacy_salt: PrivacySalt,
 }
 
 struct Witness {
