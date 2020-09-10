@@ -2,15 +2,15 @@ const OUTPUT_GROUP_SIZE: u16 = 2;
 
 struct OutputsComponentGroup {
     components: [ZKStateAndRefPaddingWrapper; OUTPUT_GROUP_SIZE],
-    group_hash: NodeDigest,
+    group_hash: NodeDigestDto,
 }
 
 impl OutputsComponentGroup {
     fn compute_leaf_hashes(
         this: OutputsComponentGroup,
         privacy_salt: PrivacySaltBits,
-    ) -> [ComponentGroupLeafDigest; OUTPUT_GROUP_SIZE] {
-        let mut component_leaf_hashes = [ComponentGroupLeafDigest { bits: [false; COMPONENT_GROUP_LEAF_DIGEST_BITS] }; OUTPUT_GROUP_SIZE];
+    ) -> [ComponentGroupLeafDigestBits; OUTPUT_GROUP_SIZE] {
+        let mut component_leaf_hashes = [[false; COMPONENT_GROUP_LEAF_DIGEST_BITS]; OUTPUT_GROUP_SIZE];
 
         for i in (0 as u32)..(OUTPUT_GROUP_SIZE as u32) {
             component_leaf_hashes[i] = ZKStateRef::compute_leaf_hash(

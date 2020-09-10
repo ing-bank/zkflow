@@ -30,7 +30,7 @@ impl ParametersHash {
         privacy_salt: PrivacySaltBits,
         group_index: u32,
         internal_index: u32,
-    ) -> ComponentGroupLeafDigest {
+    ) -> ComponentGroupLeafDigestBits {
         //fingerprint
         let fingerprint_parameters_hash = fingerprint(this);
 
@@ -47,7 +47,7 @@ impl ParametersHash {
             message[NONCE_DIGEST_BITS + i] = fingerprint_parameters_hash[i];
         }
 
-        ComponentGroupLeafDigest{bits: blake2s(message),}
+        blake2s(message)
     }
 }
 
@@ -58,7 +58,7 @@ struct ParameterPaddingWrapper {
 
 struct ParametersComponentGroup {
     component: ParameterPaddingWrapper,
-    group_hash: NodeDigest,
+    group_hash: NodeDigestDto,
 }
 
 impl ParametersComponentGroup {
@@ -75,7 +75,7 @@ impl ParametersComponentGroup {
 
         //When the number of leaves is one, we pad the leaf with zeros from the right first
         //and use padded input in the merkle_root computation.
-        let mut padded_leaves = [ComponentGroupLeafDigest { bits: [false; COMPONENT_GROUP_LEAF_DIGEST_BITS] }; 2];
+        let mut padded_leaves = [[false; COMPONENT_GROUP_LEAF_DIGEST_BITS]; 2];
         padded_leaves[0] = component_leaf_hash;
 
         get_merkle_tree_from_2_component_group_leaf_digests(padded_leaves)

@@ -1,7 +1,6 @@
 const PUBKEY_BYTES: u16 = 44;
 
 const PUBKEY_FINGERPRINT_BYTES: u16 = 44;
-
 const PUBKEY_FINGERPRINT_BITS: u16 = PUBKEY_FINGERPRINT_BYTES * BYTE_BITS;
 
 type PubKeyBytes = [u8; PUBKEY_BYTES];
@@ -30,7 +29,7 @@ impl PubKey {
         privacy_salt: PrivacySaltBits,
         group_index: u32,
         internal_index: u32,
-    ) -> ComponentGroupLeafDigest {
+    ) -> ComponentGroupLeafDigestBits {
         //fingerprint
         let fingerprint_pub_key = fingerprint(this);
 
@@ -47,6 +46,6 @@ impl PubKey {
             message[NONCE_DIGEST_BITS + i] = fingerprint_pub_key[i];
         }
 
-        ComponentGroupLeafDigest{bits: blake2s(message),}
+        blake2s(message)
     }
 }

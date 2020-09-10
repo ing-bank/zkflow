@@ -62,7 +62,7 @@ impl ZKStateRef {
         privacy_salt: PrivacySaltBits,
         group_index: u32,
         internal_index: u32,
-    ) -> ComponentGroupLeafDigest {
+    ) -> ComponentGroupLeafDigestBits {
         //fingerprint
         let fingerprint_ref = StateRef::fingerprint(this.id);
 
@@ -80,7 +80,7 @@ impl ZKStateRef {
         }
         //dbg!("   digest input = {}", hashref_to_bytes(message));
 
-        ComponentGroupLeafDigest{bits: blake2s(message),}
+        blake2s(message)
     }
 }
 
@@ -108,7 +108,7 @@ impl ZKStateRef {
 //         privacy_salt: PrivacySaltBits,
 //         group_index: u32,
 //         internal_index: u32,
-//     ) -> ComponentGroupLeafDigest {
+//     ) -> ComponentGroupLeafDigestBits {
 //         //fingerprint
 //         let fingerprint_state = fingerprint(this);
 //
@@ -131,7 +131,7 @@ impl ZKStateRef {
 //         }
 //         //dbg!("   digest input = {}", hashstate_to_bytes(message));
 //
-//         ComponentGroupLeafDigest{bits: blake2s(message),}
+//         blake2s(message)
 //     }
 // }
 
