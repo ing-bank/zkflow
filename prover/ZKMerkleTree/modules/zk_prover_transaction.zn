@@ -13,6 +13,6 @@ struct ZKProverTransaction {
 
 struct Witness {
     transaction: ZKProverTransaction,
-    input_nonces: [HashDigest; INPUT_GROUP_SIZE],
-    reference_nonces: [HashDigest; REFERENCE_GROUP_SIZE],
+    input_nonces: [NonceDigestDto; INPUT_GROUP_SIZE],
+    reference_nonces: [NonceDigestDto; REFERENCE_GROUP_SIZE],
 }

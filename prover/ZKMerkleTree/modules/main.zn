@@ -1,22 +1,24 @@
 struct PublicInput {
     transaction_id: NodeDigestDto,
-    input_nonces: [NonceDigest; INPUT_GROUP_SIZE],
-    input_hashes: [ComponentGroupLeafDigest; INPUT_GROUP_SIZE],
-    reference_nonces: [NonceDigestBytes; REFERENCE_GROUP_SIZE],
-    reference_hashes: [ComponentGroupLeafDigestBytes; REFERENCE_GROUP_SIZE],
+    input_nonces: [NonceDigestDto; INPUT_GROUP_SIZE],
+    input_hashes: [ComponentGroupLeafDigestDto; INPUT_GROUP_SIZE],
+    reference_nonces: [NonceDigestDto; REFERENCE_GROUP_SIZE],
+    reference_hashes: [ComponentGroupLeafDigestDto; REFERENCE_GROUP_SIZE],
 }
 
 fn compute_input_digests(
     inputs: [StateAndRefPaddingWrapper; INPUT_GROUP_SIZE],
-    input_nonces: [NonceDigest; INPUT_GROUP_SIZE],
-) -> [ComponentGroupLeafDigestBytes; INPUT_GROUP_SIZE] {
-    let mut input_digests = [ComponentGroupLeafDigest {
-        bits: [false; COMPONENT_GROUP_LEAF_DIGEST_BITS]
+    input_nonces: [NonceDigestDto; INPUT_GROUP_SIZE],
+) -> [ComponentGroupLeafDigestDto; INPUT_GROUP_SIZE] {
+    let mut input_digests = [ComponentGroupLeafDigestDto {
+        bytes: [0; COMPONENT_GROUP_LEAF_DIGEST_BYTES],
     }; INPUT_GROUP_SIZE];
     for i in 0..INPUT_GROUP_SIZE {
-        input_digests[i] = ComponentGroupLeafDigest::to_bytes(
-            TransactionState::compute_leaf_hash(inputs[i].content.state, input_nonces[i])
-        );
+        input_digests[i] =
+            ComponentGroupLeafDigestDto::from_bits_to_bytes(TransactionState::compute_leaf_hash(
+                inputs[i].content.state,
+                NonceDigestDto::from_bytes_to_bits(input_nonces[i]),
+            ));
     }
     input_digests
 }
@@ -33,15 +35,21 @@ fn main(witness: Witness) -> PublicInput {
     // using the nonce provided in the public input, matches the hash provided in the public input.
     // This proves that we did not change the contents of the inputs and references, compared to
     // the VerifierTransaction known by the verifier, of which they were an output.
-    let zero_hash = HashDigest {
-        bytes: [0 as u8; HASH_BYTES],
+    // let zero_node_digest = NodeDigestDto {
+    //     bytes: [0; NODE_DIGEST_BYTES],
+    // };
+    let zero_nonce_digest = NonceDigestDto {
+        bytes: [0; NONCE_DIGEST_BYTES],
+    };
+    let zero_leaf_digest = ComponentGroupLeafDigestDto {
+        bytes: [0; COMPONENT_GROUP_LEAF_DIGEST_BYTES],
     };
 
     PublicInput {
         transaction_id: NodeDigestDto::from_bits_to_bytes(root_hash),
-        input_nonces: [zero_hash; INPUT_GROUP_SIZE],
-        input_hashes: [zero_hash; INPUT_GROUP_SIZE],
-        reference_nonces: [zero_hash; REFERENCE_GROUP_SIZE],
-        reference_hashes: [zero_hash; REFERENCE_GROUP_SIZE],
+        input_nonces: [zero_nonce_digest; INPUT_GROUP_SIZE],
+        input_hashes: [zero_leaf_digest; INPUT_GROUP_SIZE],
+        reference_nonces: [zero_nonce_digest; REFERENCE_GROUP_SIZE],
+        reference_hashes: [zero_leaf_digest; REFERENCE_GROUP_SIZE],
     }
 }
