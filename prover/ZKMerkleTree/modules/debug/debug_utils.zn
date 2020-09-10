@@ -1,4 +1,3 @@
-
 //Debug functions to convert bit arrays to byte arrays
 fn u32_to_bytes(bits: [bool; U32_BITS]) -> [u8; U32_BYTES] {
     let mut u32_bytes = [0 as u8; U32_BYTES];
@@ -14,7 +13,7 @@ fn u32_to_bytes(bits: [bool; U32_BITS]) -> [u8; U32_BYTES] {
     u32_bytes
 }
 
-fn hashhash_to_bytes(digest: [bool; HASH_BITS + HASH_BITS]) -> [u8; HASH_BYTES + HASH_BYTES] {
+fn hashhash_to_bytes(digest: [bool; NONCE_DIGEST_BITS + HASH_BITS]) -> [u8; HASH_BYTES + HASH_BYTES] {
     let mut hash_bytes = [0 as u8; HASH_BYTES + HASH_BYTES];
 
     for i in 0..(HASH_BYTES + HASH_BYTES) {
@@ -28,10 +27,10 @@ fn hashhash_to_bytes(digest: [bool; HASH_BITS + HASH_BITS]) -> [u8; HASH_BYTES +
     hash_bytes
 }
 
-fn hashref_to_bytes(digest: [bool; HASH_BITS + REF_BITS]) -> [u8; HASH_BYTES + HASH_BYTES] {
-    let mut hash_bytes = [0 as u8; HASH_BYTES + HASH_BYTES];
+fn hashref_to_bytes(digest: [bool; NONCE_DIGEST_BITS + REF_FINGERPRINT_BITS]) -> [u8; NONCE_BYTES + REF_FINGERPRINT_WORDS] {
+    let mut hash_bytes = [0 as u8; NONCE_BYTES + REF_FINGERPRINT_WORDS];
 
-    for i in 0..(HASH_BYTES + HASH_BYTES) {
+    for i in 0..(NONCE_DIGEST_BITS + REF_FINGERPRINT_BITS) {
         let mut byte_bits = [false; BYTE_BITS];
         for j in 0..BYTE_BITS {
             byte_bits[j] = digest[BYTE_BITS * i + j];
@@ -42,10 +41,10 @@ fn hashref_to_bytes(digest: [bool; HASH_BITS + REF_BITS]) -> [u8; HASH_BYTES + H
     hash_bytes
 }
 
-fn hashstate_to_bytes(digest: [bool; HASH_BITS + STATE_BITS]) -> [u8; HASH_BYTES + STATE_BYTES] {
-    let mut hash_bytes = [0 as u8; HASH_BYTES + STATE_BYTES];
+fn hashstate_to_bytes(digest: [bool; NONCE_DIGEST_BITS + STATE_FINGERPRINT_BITS]) -> [u8; HASH_BYTES + STATE_FINGERPRINT_WORDS] {
+    let mut hash_bytes = [0 as u8; NONCE_BYTES + STATE_FINGERPRINT_WORDS];
 
-    for i in 0..(HASH_BYTES + STATE_BYTES) {
+    for i in 0..(NONCE_BYTES + STATE_FINGERPRINT_WORDS) {
         let mut byte_bits = [false; BYTE_BITS];
         for j in 0..BYTE_BITS {
             byte_bits[j] = digest[BYTE_BITS * i + j];
@@ -56,16 +55,4 @@ fn hashstate_to_bytes(digest: [bool; HASH_BITS + STATE_BITS]) -> [u8; HASH_BYTES
     hash_bytes
 }
 
-fn nonce_to_bytes(bits: [bool; NONCE_BITS]) -> [u8; NONCE_BYTES] {
-    let mut nonce_bytes = [0 as u8; NONCE_BYTES];
 
-    for i in 0..NONCE_BYTES {
-        let mut byte_bits: [bool; BYTE_BITS] = [false; BYTE_BITS];
-        for j in 0..BYTE_BITS {
-            byte_bits[j] = bits[BYTE_BITS * i + j];
-        }
-        nonce_bytes[(i as u16)] = std::convert::from_bits_unsigned(byte_bits);
-    }
-
-    nonce_bytes
-}
