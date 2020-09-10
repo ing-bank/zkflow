@@ -32,7 +32,7 @@ impl AttachmentId {
         privacy_salt: PrivacySaltBits,
         group_index: u32,
         internal_index: u32,
-    ) -> ComponentGroupLeafDigest {
+    ) -> ComponentGroupLeafDigestBits {
         //fingerprint
         let fingerprint_attachment_id = fingerprint(this);
 
@@ -49,7 +49,7 @@ impl AttachmentId {
             message[NONCE_DIGEST_BITS + i] = fingerprint_attachment_id[i];
         }
 
-        ComponentGroupLeafDigest{bits: blake2s(message),}
+        blake2s(message)
     }
 }
 
@@ -60,15 +60,15 @@ struct AttachmentPaddingWrapper {
 
 struct AttachmentsComponentGroup {
     components: [AttachmentPaddingWrapper; ATTACHMENT_GROUP_SIZE],
-    group_hash: NodeDigest,
+    group_hash: NodeDigestDto,
 }
 
 impl AttachmentsComponentGroup {
     fn compute_leaf_hashes(
         this: AttachmentsComponentGroup,
         privacy_salt: PrivacySaltBits,
-    ) -> [ComponentGroupLeafDigest; ATTACHMENT_GROUP_SIZE] {
-        let mut component_leaf_hashes = [ComponentGroupLeafDigest { bits: [false; COMPONENT_GROUP_LEAF_DIGEST_BITS] }; ATTACHMENT_GROUP_SIZE];
+    ) -> [ComponentGroupLeafDigestBits; ATTACHMENT_GROUP_SIZE] {
+        let mut component_leaf_hashes = [[false; COMPONENT_GROUP_LEAF_DIGEST_BITS]; ATTACHMENT_GROUP_SIZE];
 
         for i in (0 as u32)..(ATTACHMENT_GROUP_SIZE as u32) {
             component_leaf_hashes[i] = AttachmentId::compute_leaf_hash(

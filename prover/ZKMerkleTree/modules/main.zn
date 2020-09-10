@@ -1,5 +1,5 @@
 struct PublicInput {
-    transaction_id: NodeDigest,
+    transaction_id: NodeDigestDto,
 }
 
 fn main(witness: Witness) -> PublicInput {
@@ -10,6 +10,6 @@ fn main(witness: Witness) -> PublicInput {
     let root_hash = build_merkle_tree(witness.transaction);
 
     PublicInput {
-        transaction_id: NodeDigest::from_bits(root_hash),
+        transaction_id: NodeDigestDto::from_bits_to_bytes(root_hash),
     }
 }

@@ -7,15 +7,15 @@ struct SignerPaddingWrapper {
 
 struct SignersComponentGroup {
     components: [SignerPaddingWrapper; SIGNER_GROUP_SIZE],
-    group_hash: NodeDigest,
+    group_hash: NodeDigestDto,
 }
 
 impl SignersComponentGroup {
     fn compute_leaf_hashes(
         this: SignersComponentGroup,
         privacy_salt: PrivacySaltBits,
-    ) -> [ComponentGroupLeafDigest; SIGNER_GROUP_SIZE] {
-        let mut component_leaf_hashes = [ComponentGroupLeafDigest { bits: [false; COMPONENT_GROUP_LEAF_DIGEST_BITS] }; SIGNER_GROUP_SIZE];
+    ) -> [ComponentGroupLeafDigestBits; SIGNER_GROUP_SIZE] {
+        let mut component_leaf_hashes = [[false; COMPONENT_GROUP_LEAF_DIGEST_BITS]; SIGNER_GROUP_SIZE];
 
         for i in (0 as u32)..(SIGNER_GROUP_SIZE as u32) {
             component_leaf_hashes[i] = PubKey::compute_leaf_hash(
