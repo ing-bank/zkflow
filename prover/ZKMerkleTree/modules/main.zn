@@ -1,12 +1,25 @@
 struct PublicInput {
     transaction_id: NodeDigestDto,
-    input_nonces: [HashDigest; INPUT_GROUP_SIZE],
-    input_hashes: [HashDigest; INPUT_GROUP_SIZE],
-    reference_nonces: [HashDigest; REFERENCE_GROUP_SIZE],
-    reference_hashes: [HashDigest; REFERENCE_GROUP_SIZE],
+    input_nonces: [NonceDigest; INPUT_GROUP_SIZE],
+    input_hashes: [ComponentGroupLeafDigest; INPUT_GROUP_SIZE],
+    reference_nonces: [NonceDigestBytes; REFERENCE_GROUP_SIZE],
+    reference_hashes: [ComponentGroupLeafDigestBytes; REFERENCE_GROUP_SIZE],
 }
 
-// fn validate_b_preimage(preimage)
+fn compute_input_digests(
+    inputs: [StateAndRefPaddingWrapper; INPUT_GROUP_SIZE],
+    input_nonces: [NonceDigest; INPUT_GROUP_SIZE],
+) -> [ComponentGroupLeafDigestBytes; INPUT_GROUP_SIZE] {
+    let mut input_digests = [ComponentGroupLeafDigest {
+        bits: [false; COMPONENT_GROUP_LEAF_DIGEST_BITS]
+    }; INPUT_GROUP_SIZE];
+    for i in 0..INPUT_GROUP_SIZE {
+        input_digests[i] = ComponentGroupLeafDigest::to_bytes(
+            TransactionState::compute_leaf_hash(inputs[i].content.state, input_nonces[i])
+        );
+    }
+    input_digests
+}
 
 fn main(witness: Witness) -> PublicInput {
     // Check contract rules
@@ -20,7 +33,6 @@ fn main(witness: Witness) -> PublicInput {
     // using the nonce provided in the public input, matches the hash provided in the public input.
     // This proves that we did not change the contents of the inputs and references, compared to
     // the VerifierTransaction known by the verifier, of which they were an output.
-
     let zero_hash = HashDigest {
         bytes: [0 as u8; HASH_BYTES],
     };
