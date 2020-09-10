@@ -5,9 +5,9 @@ fn build_merkle_tree(
 ) -> NodeDigestBits {
 
     //Fingerprint for privacy salt
-    let privacy_salt = HashDigest::fingerprint(zk_prover_transaction.privacy_salt);
+    let privacy_salt = PrivacySalt::fingerprint(zk_prover_transaction.privacy_salt);
 
-    let mut component_group_hashes = [[false; HASH_BITS]; COMPONENT_GROUPS_SIZE];
+    let mut component_group_hashes = [[false; NODE_DIGEST_BITS]; COMPONENT_GROUPS_SIZE];
 
     component_group_hashes[ComponentGroupEnum::INPUTS_GROUP] =
         InputsComponentGroup::compute_component_group_hash(zk_prover_transaction.inputs, privacy_salt);
@@ -27,10 +27,6 @@ fn build_merkle_tree(
         ReferencesComponentGroup::compute_component_group_hash(zk_prover_transaction.references, privacy_salt);
     component_group_hashes[ComponentGroupEnum::PARAMETERS_GROUP] =
         ParametersComponentGroup::compute_component_group_hash(zk_prover_transaction.parameters, privacy_salt);
-
-    //Validate component group hashes
-    //This function is currently disabled since witness file is all zeros.
-    validate_group_hashes(component_group_hashes, zk_prover_transaction);
 
     //compute merkle root
     merkle_root(component_group_hashes)

@@ -2,15 +2,15 @@ const INPUT_GROUP_SIZE: u16 = 2;
 
 struct InputsComponentGroup {
     components: [ZKStateAndRefPaddingWrapper; INPUT_GROUP_SIZE],
-    group_hash: HashDigest,
+    group_hash: NodeDigest,
 }
 
 impl InputsComponentGroup {
     fn compute_leaf_hashes(
         this: InputsComponentGroup,
-        privacy_salt: PrivacySalt,
-    ) -> [ComponentGroupLeafDigestBits; INPUT_GROUP_SIZE] {
-        let mut component_leaf_hashes = [[false; HASH_BITS]; INPUT_GROUP_SIZE];
+        privacy_salt: PrivacySaltFingerprintBits,
+    ) -> [ComponentGroupLeafDigest; INPUT_GROUP_SIZE] {
+        let mut component_leaf_hashes = [ComponentGroupLeafDigest { bits: [false; COMPONENT_GROUP_LEAF_DIGEST_BITS] }; INPUT_GROUP_SIZE];
 
         for i in (0 as u32)..(INPUT_GROUP_SIZE as u32) {
             component_leaf_hashes[i] = ZKStateRef::compute_leaf_hash(
@@ -25,7 +25,7 @@ impl InputsComponentGroup {
 
     fn compute_component_group_hash(
         this: InputsComponentGroup,
-        privacy_salt: PrivacySalt,
+        privacy_salt: PrivacySaltFingerprintBits,
     ) -> NodeDigestBits {
         let component_leaf_hashes = compute_leaf_hashes(this, privacy_salt);
 

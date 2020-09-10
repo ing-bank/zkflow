@@ -1,0 +1,27 @@
+const PRIVACY_SALT_BYTES: u16 = 32;
+
+const PRIVACY_SALT_FINGERPRINT_WORDS: u16 = 32;
+const PRIVACY_SALT_FINGERPRINT_WORD_BITS: u16 = BYTE_BITS;
+
+const PRIVACY_SALT_FINGERPRINT_BITS: u16 = PRIVACY_SALT_FINGERPRINT_WORDS * PRIVACY_SALT_FINGERPRINT_WORD_BITS;
+
+type PrivacySaltBytes = [u8; PRIVACY_SALT_BYTES];
+type PrivacySaltFingerprintBits = [bool; PRIVACY_SALT_FINGERPRINT_BITS];
+
+struct PrivacySalt{
+    bytes : PrivacySaltBytes,
+}
+
+impl PrivacySalt{
+    fn fingerprint(this: PrivacySalt) -> PrivacySaltFingerprintBits {
+        let mut fingerprint_bits = [false; PRIVACY_SALT_FINGERPRINT_BITS];
+
+        for i in (0 as u16)..PRIVACY_SALT_FINGERPRINT_WORDS {
+            let bits = to_bits(this.bytes[i]);
+            for j in (0 as u16)..PRIVACY_SALT_FINGERPRINT_WORD_BITS {
+                fingerprint_bits[PRIVACY_SALT_FINGERPRINT_WORD_BITS * i + j] =  bits[j];
+            }
+        }
+        fingerprint_bits
+    }
+}

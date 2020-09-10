@@ -12,11 +12,12 @@ val merkleUtilsPath = "utils/merkle_utils.zn"
 val combineInOrder = listOf(
     "utils/preamble.zn",
     "utils/consts.zn",
-    "utils/debug_utils.zn",
     "component_group_enum.zn",
-    "nonce.zn",
-    "utils/pub_key.zn",
-    "utils/hash_digest.zn",
+    "crypto/privacy_salt.zn",
+    "crypto/nonce.zn",
+    "crypto/component_group_leaf_digest.zn",
+    "crypto/node_digest.zn",
+    "crypto/pub_key.zn",
     "utils/crypto_utils.zn",
     merkleUtilsPath,
     "zk_state_and_ref.zn",
@@ -30,7 +31,6 @@ val combineInOrder = listOf(
     "components/parameters.zn",
     "components/signers.zn",
     "zk_prover_transaction.zn",
-    "validate/validate_group_hashes.zn",
     "merkle_tree.zn",
     "validate/contract_rules.zn",
     "main.zn"
@@ -68,10 +68,10 @@ task("merkleUtils") {
         """
 fn get_merkle_tree_from_2_node_digests(leaves: [NodeDigestBits; 2]) -> NodeDigestBits {
     dbg!("Consuming 2 leaves");
-    dbg!("0: {}", digest_to_bytes(leaves[0]));
-    dbg!("1: {}", digest_to_bytes(leaves[1]));
+    dbg!("0: {}", NodeDigest::from_bits(leaves[0]));
+    dbg!("1: {}", NodeDigest::from_bits(leaves[1]));
     pedersen_to_padded_bits(
-        pedersen(concatenate_node_digests(leaves[0], leaves[1])).0,
+        pedersen(NodeDigest::concatenate(leaves[0], leaves[1])).0,
     )
 }
 """)
@@ -85,14 +85,14 @@ fn get_merkle_tree_from_2_node_digests(leaves: [NodeDigestBits; 2]) -> NodeDiges
             """
 fn get_merkle_tree_from_${leaves}_node_digests(leaves: [NodeDigestBits; $leaves]) -> NodeDigestBits {
     dbg!("Consuming $leaves leaves");
-    let mut new_leaves = [[false; HASH_BITS]; $levelUp];
+    let mut new_leaves = [[false; NODE_DIGEST_BITS]; $levelUp];
     for i in 0..$levelUp {
         new_leaves[i] = pedersen_to_padded_bits(
-            pedersen(concatenate_node_digests(leaves[2 * i], leaves[2 * i + 1])).0,
+            pedersen(NodeDigest::concatenate(leaves[2 * i], leaves[2 * i + 1])).0,
         );
-        dbg!("{}: {}", 2 * i, digest_to_bytes(leaves[2 * i]));
-        dbg!("{}: {}", 2 * i + 1, digest_to_bytes(leaves[2 * i + 1]));
-        dbg!("Digest: {}", digest_to_bytes(new_leaves[i]));
+        dbg!("{}: {}", 2 * i, NodeDigest::from_bits(leaves[2 * i]));
+        dbg!("{}: {}", 2 * i + 1, NodeDigest::from_bits(leaves[2 * i + 1]));
+        dbg!("Digest: {}", NodeDigest::from_bits(new_leaves[i]));
     }
     dbg!("");
     get_merkle_tree_from_${levelUp}_node_digests(new_leaves)
@@ -106,12 +106,12 @@ fn get_merkle_tree_from_${leaves}_node_digests(leaves: [NodeDigestBits; $leaves]
         "//! Use it only for the computation of a component sub-Merkle tree from component group leaf hashes.")
     merkleUtils.appendText(
         """
-fn get_merkle_tree_from_2_component_group_leaf_digests(leaves: [ComponentGroupLeafDigestBits; 2]) -> NodeDigestBits {
+fn get_merkle_tree_from_2_component_group_leaf_digests(leaves: [ComponentGroupLeafDigest; 2]) -> NodeDigestBits {
     dbg!("Consuming 2 leaves");
-    dbg!("0: {}", digest_to_bytes(leaves[0]));
-    dbg!("1: {}", digest_to_bytes(leaves[1]));
+    dbg!("0: {}", ComponentGroupLeafDigest::to_bytes(leaves[0]));
+    dbg!("1: {}", ComponentGroupLeafDigest::to_bytes(leaves[1]));
     pedersen_to_padded_bits(
-        pedersen(concatenate_component_group_leaf_digests(leaves[0], leaves[1])).0,
+        pedersen(ComponentGroupLeafDigest::concatenate(leaves[0], leaves[1])).0,
     )
 }
 """)
@@ -123,16 +123,16 @@ fn get_merkle_tree_from_2_component_group_leaf_digests(leaves: [ComponentGroupLe
 
         merkleUtils.appendText(
             """
-fn get_merkle_tree_from_${leaves}_component_group_leaf_digests(leaves: [ComponentGroupLeafDigestBits; $leaves]) -> NodeDigestBits {
+fn get_merkle_tree_from_${leaves}_component_group_leaf_digests(leaves: [ComponentGroupLeafDigest; $leaves]) -> NodeDigestBits {
     dbg!("Consuming $leaves leaves");
-    let mut new_leaves = [[false; HASH_BITS]; $levelUp];
+    let mut new_leaves = [[false; NODE_DIGEST_BITS]; $levelUp];
     for i in 0..$levelUp {
         new_leaves[i] = pedersen_to_padded_bits(
-            pedersen(concatenate_component_group_leaf_digests(leaves[2 * i], leaves[2 * i + 1])).0,
+            pedersen(ComponentGroupLeafDigest::concatenate(leaves[2 * i], leaves[2 * i + 1])).0,
         );
-        dbg!("{}: {}", 2 * i, digest_to_bytes(leaves[2 * i]));
-        dbg!("{}: {}", 2 * i + 1, digest_to_bytes(leaves[2 * i + 1]));
-        dbg!("Digest: {}", digest_to_bytes(new_leaves[i]));
+        dbg!("{}: {}", 2 * i, ComponentGroupLeafDigest::to_bytes(leaves[2 * i]));
+        dbg!("{}: {}", 2 * i + 1, ComponentGroupLeafDigest::to_bytes(leaves[2 * i + 1]));
+        dbg!("Digest: {}", ComponentGroupLeafDigest::to_bytes(new_leaves[i]));
     }
     dbg!("");
     get_merkle_tree_from_${levelUp}_node_digests(new_leaves)
@@ -147,11 +147,11 @@ fn get_merkle_tree_from_${leaves}_component_group_leaf_digests(leaves: [Componen
 //! Top-level function to be called.
 //! Pads the configure number of leaves to the right amount with zero hashes from the right
 //! and calls appropriate tree-constructing procedure
-fn merkle_root(leaves: [[bool; HASH_BITS]; $merkleLeaves]) -> [bool; HASH_BITS] {
+fn merkle_root(leaves: [NodeDigestBits; $merkleLeaves]) -> NodeDigestBits {
     dbg!("Building a tree from $merkleLeaves leaves");
 
     dbg!("Padding from the right with ${fullLeaves - merkleLeaves} zero leaves");
-    let mut full_leaves = [[false; HASH_BITS]; $fullLeaves];
+    let mut full_leaves = [[false; NODE_DIGEST_BITS]; $fullLeaves];
     for i in 0..$merkleLeaves {
         full_leaves[i] = leaves[i];
     }

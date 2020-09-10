@@ -1,5 +1,21 @@
-type RefBits  = [bool; REF_BITS];
-type StateBits  = [bool; STATE_BITS];
+const STATE_BYTES: u16 = PUBKEY_BYTES + U32_BYTES + PUBKEY_BYTES;
+const STATE_FINGERPRINT_WORDS: u16 = PUBKEY_BYTES + U32_BYTES + PUBKEY_BYTES;
+
+const STATE_FINGERPRINT_WORD_BITS: u16 = BYTE_BITS;
+const STATE_FINGERPRINT_BITS: u16 = STATE_FINGERPRINT_WORDS * STATE_FINGERPRINT_WORD_BITS;
+
+type StateBytes  = [u8; STATE_BYTES];
+type StateFingerprintBits = [bool; STATE_FINGERPRINT_BITS];
+
+
+const REF_BYTES: u16 = 32;
+const REF_FINGERPRINT_WORDS: u16 = 32;
+
+const REF_FINGERPRINT_WORD_BITS: u16 = BYTE_BITS;
+const REF_FINGERPRINT_BITS: u16 = REF_FINGERPRINT_WORDS * REF_FINGERPRINT_WORD_BITS;
+
+type RefBytes  = [u8; REF_BYTES];
+type RefFingerprintBits = [bool; REF_FINGERPRINT_BITS];
 
 struct Party {
     owning_key: PubKey,
@@ -22,9 +38,107 @@ struct TransactionState {
     //constraint: bool,
 }
 
-struct ZKStateRef {
-    id: HashDigest,
+struct StateRef{
+    bytes: RefBytes,
 }
+
+impl StateRef{
+    fn fingerprint(this: StateRef) -> RefFingerprintBits {
+        let mut fingerprint_bits = [false; REF_FINGERPRINT_BITS];
+
+        for i in (0 as u16)..REF_FINGERPRINT_WORDS {
+            let bits = to_bits(this.bytes[i]);
+            for j in (0 as u16)..REF_FINGERPRINT_WORD_BITS {
+                fingerprint_bits[REF_FINGERPRINT_WORD_BITS * i + j] =  bits[j];
+            }
+        }
+        fingerprint_bits
+    }
+}
+
+struct ZKStateRef {
+    id: StateRef,
+}
+
+impl ZKStateRef {
+
+    fn compute_leaf_hash(
+        this: ZKStateRef,
+        privacy_salt: PrivacySaltFingerprintBits,
+        group_index: u32,
+        internal_index: u32,
+    ) -> ComponentGroupLeafDigest {
+        //fingerprint
+        let fingerprint_ref = StateRef::fingerprint(this.id);
+
+        //compute nonce
+        let mut nonce = compute_nonce(privacy_salt, group_index, internal_index);
+        //dbg!("   nonce = {}", digest_to_bytes(nonce));
+
+        // message = nonce || ref
+        let mut message = [false; NONCE_DIGEST_BITS + REF_FINGERPRINT_BITS];
+        for i in 0..NONCE_DIGEST_BITS {
+            message[i] = nonce[i];
+        }
+        for i in 0..REF_FINGERPRINT_BITS {
+            message[NONCE_DIGEST_BITS + i] = fingerprint_ref[i];
+        }
+        //dbg!("   digest input = {}", hashref_to_bytes(message));
+
+        ComponentGroupLeafDigest{bits: blake2s(message),}
+    }
+}
+
+
+///This part is currently commented out since it is not used.
+/// However, we will need it in future for the backchain concept.
+// impl TransactionState {
+//     fn fingerprint(this: TransactionState) -> StateFingerprintBits {
+//         let mut fingerprint_bits = [false; STATE_FINGERPRINT_BITS];
+//
+//         //state_bits = dataOwner_owning_key || value || notary_owning_key
+//         //dataOwner_owning_key
+//         fingerprint_bits[0..PUBKEY_FINGERPRINT_BITS] = PubKey::fingerprint(this.data.owner.owning_key);
+//         //value
+//         fingerprint_bits[PUBKEY_FINGERPRINT_BITS..(PUBKEY_FINGERPRINT_BITS + U32_BITS)] = to_bits(this.data.value);
+//         //notary_owning_key
+//         fingerprint_bits[(PUBKEY_FINGERPRINT_BITS + U32_BITS)..STATE_FINGERPRINT_BITS] =
+//             PubKey::fingerprint(this.notary.owning_key);
+//
+//         fingerprint_bits
+//     }
+//
+//     fn compute_leaf_hash_state(
+//         this: TransactionState,
+//         privacy_salt: PrivacySaltFingerprintBits,
+//         group_index: u32,
+//         internal_index: u32,
+//     ) -> ComponentGroupLeafDigest {
+//         //fingerprint
+//         let fingerprint_state = fingerprint(this);
+//
+//         //dbg!(">> compute_leaf_hash_ref");
+//
+//         //compute nonce
+//         let mut nonce = compute_nonce(privacy_salt, group_index, internal_index);
+//         //dbg!("   nonce = {}", digest_to_bytes(nonce));
+//
+//         // message = nonce || state
+//         let mut message = [false; NONCE_DIGEST_BITS + STATE_FINGERPRINT_BITS];
+//
+//         //message = nonce || state
+//         for i in 0..NONCE_DIGEST_BITS {
+//             message[i] = nonce[i];
+//         }
+//
+//         for i in 0..STATE_FINGERPRINT_BITS {
+//             message[NONCE_DIGEST_BITS + i] = fingerprint_state[i];
+//         }
+//         //dbg!("   digest input = {}", hashstate_to_bytes(message));
+//
+//         ComponentGroupLeafDigest{bits: blake2s(message),}
+//     }
+// }
 
 struct ZKStateAndRef {
     state: TransactionState,
@@ -35,81 +149,3 @@ struct ZKStateAndRefPaddingWrapper {
     content: ZKStateAndRef,
     is_filler: bool,
 }
-
-impl ZKStateRef {
-    fn fingerprint(value: ZKStateRef) -> RefBits{
-        HashDigest::fingerprint(value.id)
-    }
-
-    fn compute_leaf_hash(
-        this: ZKStateRef,
-        privacy_salt: PrivacySalt,
-        group_index: u32,
-        internal_index: u32,
-    ) -> HashDigestBits {
-        //fingerprint
-        let fingerprint_ref = fingerprint(this);
-
-        //compute nonce
-        let mut nonce = compute_nonce(privacy_salt, group_index, internal_index);
-        //dbg!("   nonce = {}", digest_to_bytes(nonce));
-
-        // message = nonce || ref
-        let mut message: [bool; HASH_BITS + REF_BITS] = [false; HASH_BITS + REF_BITS];
-        for i in 0..HASH_BITS {
-            message[i] = nonce[i];
-        }
-        for i in 0..REF_BITS {
-            message[HASH_BITS + i] = fingerprint_ref[i];
-        }
-        //dbg!("   digest input = {}", hashref_to_bytes(message));
-        blake2s(message)
-    }
-}
-
-
-///This part is currently commented out since it is not used.
-/// However, we will need it in future for the backchain concept.
-// impl TransactionState {
-//     fn fingerprint_state(state: TransactionState) -> [bool; STATE_BITS] {
-//         let mut result = [false; STATE_BITS];
-//
-//         //state_bits = dataOwner_owning_key || value || notary_owning_key
-//         //dataOwner_owning_key
-//         result[0..PUBKEY_BITS] = convert_pub_key_to_bits(state.data.owner.owning_key);
-//         //value
-//         result[PUBKEY_BITS..(PUBKEY_BITS + U32_BITS)] = to_bits(state.data.value);
-//         //notary_owning_key
-//         result[(PUBKEY_BITS + U32_BITS)..STATE_BITS] =
-//             convert_pub_key_to_bits(state.notary.owning_key);
-//
-//         result
-//     }
-//
-//     fn compute_leaf_hash_state(
-//         value: StateBits,
-//         privacy_salt: PrivacySalt,
-//         group_index: u32,
-//         internal_index: u32,
-//     ) -> HashDigestBits {
-//         //dbg!(">> compute_leaf_hash_ref");
-//
-//         //compute nonce
-//         let mut nonce = compute_nonce(privacy_salt, group_index, internal_index);
-//         //dbg!("   nonce = {}", digest_to_bytes(nonce));
-//
-//         // message = nonce || state
-//         let mut message = [false; HASH_BITS + STATE_BITS];
-//
-//         //message = nonce || state nonce || state
-//         for i in 0..HASH_BITS {
-//             message[i] = nonce[i];
-//         }
-//
-//         for i in 0..STATE_BITS {
-//             message[HASH_BITS + i] = value[i];
-//         }
-//         //dbg!("   digest input = {}", hashstate_to_bytes(message));
-//         blake2s(message)
-//     }
-// }
