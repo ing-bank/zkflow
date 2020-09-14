@@ -26,9 +26,9 @@ class ZKPartialMerkleTree(
                 addGroups(
                     mapOf(
                         ComponentGroupEnum.INPUTS_GROUP to
-                            vtx.padded.inputs().map { it.fingerprint },
+                            vtx.padded.inputs().map { it.content.fingerprint },
                         ComponentGroupEnum.REFERENCES_GROUP to
-                            vtx.padded.references().map { it.fingerprint },
+                            vtx.padded.references().map { it.content.fingerprint },
                         ComponentGroupEnum.NOTARY_GROUP to
                             listOf(vtx.notary.fingerprint),
                         ComponentGroupEnum.TIMEWINDOW_GROUP to

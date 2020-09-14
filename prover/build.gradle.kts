@@ -41,7 +41,7 @@ val combineInOrder = listOf(
 
 
 task("circuit") {
-    dependsOn("merkleUtils", "rustfmtCheck", "buildCircuit")
+    dependsOn("rustfmtCheck", "buildCircuit")
 }
 
 task<Exec>("rustfmt") {
@@ -107,8 +107,10 @@ fn get_merkle_tree_from_${leaves}_node_digests(leaves: [NodeDigestBits; $leaves]
         leaves *= 2
     } while (leaves <= fullLeaves)
 
-    merkleUtils.appendText("\n//! Merkle tree construction for ComponentGroupLeafDigestBits.\n" +
-        "//! Use it only for the computation of a component sub-Merkle tree from component group leaf hashes.")
+    merkleUtils.appendText(
+        "\n//! Merkle tree construction for ComponentGroupLeafDigestBits.\n" +
+            "//! Use it only for the computation of a component sub-Merkle tree from component group leaf hashes."
+    )
     merkleUtils.appendText(
         """
 fn get_merkle_tree_from_2_component_group_leaf_digests(leaves: [ComponentGroupLeafDigestBits; 2]) -> NodeDigestBits {
@@ -119,7 +121,8 @@ fn get_merkle_tree_from_2_component_group_leaf_digests(leaves: [ComponentGroupLe
         pedersen(concatenate_component_group_leaf_digests(leaves[0], leaves[1])).0,
     )
 }
-""")
+"""
+    )
 
     leaves = 4
 
@@ -174,7 +177,6 @@ task("buildCircuit") {
     outputs.file("../$circuitPath")
     inputs.dir("../$modulesPath")
 
-
     val circuit = File(circuitPath)
     circuit.parentFile?.mkdirs() // Make sure the parent path for the circuit exists.
     circuit.writeText("//! Combined circuit\n//! GENERATED CODE. DO NOT EDIT\n//! Edit a corresponding constituent\n\n");
@@ -196,4 +198,18 @@ task("buildCircuit") {
 
             circuit.appendText("//! OUT ==== ${part.absolutePath}\n\n")
         }
+
+    // Compile circuit
+    val circuitPath = File(project.rootDir.absolutePath + "/$circuitRoot")
+    exec {
+        workingDir = circuitPath
+        executable = "zargo"
+        args = listOf("clean", "-v")
+    }
+
+    exec {
+        workingDir = circuitPath
+        executable = "zargo"
+        args = listOf("build")
+    }
 }

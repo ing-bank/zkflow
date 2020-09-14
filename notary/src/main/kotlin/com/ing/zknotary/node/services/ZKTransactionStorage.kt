@@ -4,6 +4,7 @@ import com.ing.zknotary.common.transactions.ZKProverTransaction
 import com.ing.zknotary.common.transactions.ZKVerifierTransaction
 import com.ing.zknotary.common.transactions.toZKProverTransaction
 import com.ing.zknotary.common.transactions.toZKVerifierTransaction
+import com.ing.zknotary.common.util.PaddingWrapper
 import com.ing.zknotary.common.zkp.Witness
 import com.ing.zknotary.common.zkp.ZKTransactionService
 import net.corda.core.DeleteForDJVM
@@ -35,18 +36,29 @@ fun SignedTransaction.toZKVerifierTransaction(
         nodeDigestService = PedersenDigestService
     )
 
-    // TODO: collect the nonces for the outputs pointed to by the inputs and references.
-    val inputNonces = ptx.inputs.map {
-        val outputTx =
-            zkStorage.getTransaction(it.ref.txhash)
-                ?: error("Could not fetch output transaction for StateRef ${it.ref}")
-        outputTx.componentNonces[ComponentGroupEnum.OUTPUTS_GROUP.ordinal]!![it.ref.index]
+    // Collect the nonces for the outputs pointed to by the inputs and references.
+    val inputNonces = ptx.padded.inputs().map {
+        if (it is PaddingWrapper.Filler) {
+            // When it is a padded state, the nonce is ALWAYS a zerohash
+            // TODO: perhaps place this info in the padding configuration?
+            ptx.componentGroupLeafDigestService.zeroHash
+        } else {
+            val outputTx =
+                zkStorage.getTransaction(it.content.ref.txhash)
+                    ?: error("Could not fetch output transaction for StateRef ${it.content.ref}")
+            outputTx.componentNonces[ComponentGroupEnum.OUTPUTS_GROUP.ordinal]!![it.content.ref.index]
+        }
     }
-    val referenceNonces = ptx.references.map {
-        val outputTx =
-            zkStorage.getTransaction(it.ref.txhash)
-                ?: error("Could not fetch output transaction for StateRef ${it.ref}")
-        outputTx.componentNonces[ComponentGroupEnum.OUTPUTS_GROUP.ordinal]!![it.ref.index]
+    val referenceNonces = ptx.padded.references().map {
+        if (it is PaddingWrapper.Filler) {
+            // When it is a padded state, the nonce is ALWAYS a zerohash
+            ptx.componentGroupLeafDigestService.zeroHash
+        } else {
+            val outputTx =
+                zkStorage.getTransaction(it.content.ref.txhash)
+                    ?: error("Could not fetch output transaction for StateRef ${it.content.ref}")
+            outputTx.componentNonces[ComponentGroupEnum.OUTPUTS_GROUP.ordinal]!![it.content.ref.index]
+        }
     }
 
     val proof = zktransactionService.prove(Witness(ptx, inputNonces = inputNonces, referenceNonces = referenceNonces))

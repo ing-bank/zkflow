@@ -1,6 +1,7 @@
 package com.ing.zknotary.common.transactions
 
 import com.ing.zknotary.common.util.ComponentPaddingConfiguration
+import com.ing.zknotary.common.util.PaddingWrapper
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.StateRef
 import net.corda.core.contracts.TimeWindow
@@ -91,16 +92,16 @@ class ZKVerifierTransaction(
         val paddingConfiguration: ComponentPaddingConfiguration
     ) {
 
-        fun inputs(): List<StateRef> {
+        fun inputs(): List<PaddingWrapper<StateRef>> {
             val filler = filler(ComponentGroupEnum.INPUTS_GROUP)
             require(filler is ComponentPaddingConfiguration.Filler.StateRef) { "Expected filler of type ZKStateRef" }
-            return originalInputs.pad(sizeOf(ComponentGroupEnum.INPUTS_GROUP), filler.content)
+            return originalInputs.wrappedPad(sizeOf(ComponentGroupEnum.INPUTS_GROUP), filler.content)
         }
 
-        fun references(): List<StateRef> {
+        fun references(): List<PaddingWrapper<StateRef>> {
             val filler = filler(ComponentGroupEnum.REFERENCES_GROUP)
             require(filler is ComponentPaddingConfiguration.Filler.StateRef) { "Expected filler of type ZKStateRef" }
-            return originalReferences.pad(sizeOf(ComponentGroupEnum.REFERENCES_GROUP), filler.content)
+            return originalReferences.wrappedPad(sizeOf(ComponentGroupEnum.REFERENCES_GROUP), filler.content)
         }
 
         fun timeWindow() = originalTimeWindow.wrappedPad(TimeWindow.fromOnly(Instant.MIN))
