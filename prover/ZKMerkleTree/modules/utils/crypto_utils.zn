@@ -25,7 +25,7 @@ fn compute_nonce(
         nonce[PRIVACY_SALT_BITS + (i as u16)] = group_index_bits[i];
         nonce[PRIVACY_SALT_BITS + U32_BITS + (i as u16)] = internal_index_bits[i];
     }
-    dbg!("   nonce input = {}", nonce_to_bytes(nonce));
+    dbg!("   nonce input = {}", nonce_preimage_bits_to_bytes(nonce));
 
     blake2s(nonce)
 }

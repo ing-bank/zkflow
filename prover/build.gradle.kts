@@ -6,6 +6,8 @@ val circuitPath = "$circuitRoot/src/main.zn"
 
 val isDbgOn = false
 
+val debugUtilsPath = "debug/debug_utils.zn"
+
 val merkleLeaves = 9
 val merkleUtilsPath = "utils/merkle_utils.zn"
 
@@ -17,6 +19,7 @@ val combineInOrder = listOf(
     "dto/component_group_leaf_digest_dto.zn",
     "dto/node_digest_dto.zn",
     "dto/nonce_digest_dto.zn",
+    debugUtilsPath,
     "utils/crypto_utils.zn",
     "crypto/pub_key.zn",
     merkleUtilsPath,
@@ -166,20 +169,22 @@ task("buildCircuit") {
     val circuit = File(circuitPath)
     circuit.parentFile?.mkdirs() // Make sure the parent path for the circuit exists.
     circuit.writeText("//! Combined circuit\n//! GENERATED CODE. DO NOT EDIT\n//! Edit a corresponding constituent\n\n");
-    combineInOrder.map {
-        val part = File("$modulesPath/$it")
+    combineInOrder
+        .filter{it != debugUtilsPath || isDbgOn }
+        .map {
+            val part = File("$modulesPath/$it")
 
-        circuit.appendText("//!  IN ==== ${part.absolutePath}\n")
+            circuit.appendText("//!  IN ==== ${part.absolutePath}\n")
 
-        if (isDbgOn) {
-            circuit.appendBytes(part.readBytes())
-        } else {
-            part
-                .readLines()
-                .filter { line -> !line.contains("dbg!") }
-                .forEach { line -> circuit.appendText("$line\n")}
+            if (isDbgOn) {
+                circuit.appendBytes(part.readBytes())
+            } else {
+                part
+                    .readLines()
+                    .filter { line -> !line.contains("dbg!") }
+                    .forEach { line -> circuit.appendText("$line\n")}
+            }
+
+            circuit.appendText("//! OUT ==== ${part.absolutePath}\n\n")
         }
-
-        circuit.appendText("//! OUT ==== ${part.absolutePath}\n\n")
-    }
 }
