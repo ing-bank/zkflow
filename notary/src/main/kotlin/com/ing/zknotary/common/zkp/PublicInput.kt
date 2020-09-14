@@ -11,22 +11,12 @@ data class PublicInput(
     val transactionId: SecureHash,
 
     /**
-     * Nonce [SecureHash] for the input at index [Int]
-     */
-    val inputNonces: List<SecureHash>,
-
-    /**
-     * Leaf hash [SecureHash] for the input at index [Int]
+     * Leaf hash [SecureHash] of the UTXO pointed to by the input at index [Int]
      */
     val inputHashes: List<SecureHash>,
 
     /**
-     * Nonce [SecureHash] for the input at index [Int]
-     */
-    val referenceNonces: List<SecureHash>,
-
-    /**
-     * Leaf hash [SecureHash] for the reference at index [Int]
+     * Leaf hash [SecureHash] of the UTXO pointed to by the reference at index [Int]
      */
     val referenceHashes: List<SecureHash>
 )

@@ -35,9 +35,6 @@ open class MockZKTransactionService(val serviceHub: AppServiceHub) : ZKTransacti
         // This assumes that the proof (for testing only) is simply a serialized witness.
         val witness = proof.deserialize<Witness>(serializationFactory)
 
-        // println(witness.transaction.id)
-        // println(witness.transaction::class)
-        // println(witness.transaction)
         /*
          * Rule 1: The recalculated Merkle root should match the one from the instance vtx.
          *

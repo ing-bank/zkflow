@@ -30,6 +30,7 @@ import java.time.Duration
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
 
+@ExperimentalTime
 class BackChainTest {
     private val alice = TestIdentity.fresh("alice", Crypto.EDDSA_ED25519_SHA512)
     private val bob = TestIdentity.fresh("bob", Crypto.EDDSA_ED25519_SHA512)
@@ -47,7 +48,11 @@ class BackChainTest {
 
     private val zkStorage = createMockCordaService(ledgerServices, ::MockZKTransactionStorage)
 
+    // User real Zinc circuit, or mocked circuit (that checks same rules)
     private val mockZKP = false
+
+    // Wich transaction to start verifying. This can be any transaction in the vault.
+    private lateinit var transactionToVerify: WireTransaction
 
     private val zkTransactionService: ZKTransactionService
 
@@ -55,13 +60,11 @@ class BackChainTest {
         if (mockZKP) {
             zkTransactionService = createMockCordaService(ledgerServices, ::MockZKTransactionService)
         } else {
-            // TODO: Make this use the ZincSerializationFactory when it supports deserialization
-            // private val zkSerializatinFactoryService = createMockCordaService(ledgerServices, ::ZincSerializationFactoryService)
             val circuitFolder = File("${System.getProperty("user.dir")}/../prover/ZKMerkleTree").absolutePath
             val artifactFolder = File("$circuitFolder/artifacts")
             artifactFolder.mkdirs()
 
-            val realZKTransactionService = ZincZKTransactionService(
+            val zincZKTransactionService = ZincZKTransactionService(
                 circuitFolder,
                 artifactFolder = artifactFolder.absolutePath,
                 buildTimeout = Duration.ofSeconds(10 * 60),
@@ -69,9 +72,12 @@ class BackChainTest {
                 provingTimeout = Duration.ofSeconds(10 * 60),
                 verificationTimeout = Duration.ofSeconds(10 * 60)
             )
-            realZKTransactionService.setup()
 
-            zkTransactionService = realZKTransactionService
+            val setupDuration = measureTime {
+                zincZKTransactionService.setup()
+            }
+            println("Setup duration: ${setupDuration.inMinutes}")
+            zkTransactionService = zincZKTransactionService
         }
     }
 
@@ -79,16 +85,6 @@ class BackChainTest {
     fun `remove zinc files`() {
         (zkTransactionService as? ZincZKTransactionService)?.cleanup()
     }
-
-    // @CordaService
-    // class DefaultSerializationFactoryService() : SingletonSerializeAsToken(), SerializationFactoryService {
-    //
-    //     // For CordaService. We don't need the serviceHub anyway in this Service
-    //     constructor(serviceHub: AppServiceHub?) : this()
-    //
-    //     override val factory: SerializationFactory
-    //         get() = SerializationFactory.defaultFactory
-    // }
 
     @Before
     fun setup() {
@@ -132,6 +128,8 @@ class BackChainTest {
 
             verifies()
         }
+
+        transactionToVerify = createWtx
     }
 
     @Test
@@ -143,20 +141,19 @@ class BackChainTest {
         assertEquals(listOf(createWtx.id, moveWtx.id), sortedDependencies)
     }
 
-    @ExperimentalTime
     @Test
-    fun `Prover can deterministically build graph of ZKVerifierTransactions based on graph of SignedTransactions`() {
+    fun `We deterministically build, prove and verify graph of ZKVerifierTransactions based on graph of SignedTransactions`() {
         ledgerServices.ledger {
             // First, if not done before,  the prover makes sure it has all SignedTransactions by calling ResolveTransactionsFlow
             // Then, the prover walks through the list of stxs in order from issuance, leading to the stx to prove,
             // and creates ptxs out of them. This requires changing txhashes in the StateRefs to the just calculated
             // txhashes of the newly created ptxs.
             val orderedDeps =
-                ledgerServices.validatedTransactions.collectVerifiedDependencies(anotherMoveWtx.inputs + anotherMoveWtx.references)
+                ledgerServices.validatedTransactions.collectVerifiedDependencies(transactionToVerify.inputs + transactionToVerify.references)
 
             println()
             // Create and store all vtxs ordered from issuances up to head tx
-            (orderedDeps + anotherMoveWtx.id).forEach {
+            (orderedDeps + transactionToVerify.id).forEach {
 
                 print("Proving tx: ${it.toString().take(8)}")
                 val provingTime = measureTime {
@@ -169,12 +166,11 @@ class BackChainTest {
                         )
                     print(" => ${vtx.id.toString().take(8)}")
                 }
-                println(" - Time: $provingTime")
+                println(" in $provingTime")
             }
 
             println("\nStarting recursive verification:")
-            val currentVtx = zkStorage.zkVerifierTransactionFor(anotherMoveWtx)!!
-            verify(currentVtx)
+            verify(zkStorage.zkVerifierTransactionFor(transactionToVerify)!!)
         }
     }
 
@@ -185,9 +181,7 @@ class BackChainTest {
         println("$indent Verifying TX at level $level: ${currentVtx.id.toString().take(8)}")
 
         // verify the tx graph for each input and collect nonces and hashes for current tx verification
-        val inputNonces = mutableListOf<SecureHash>()
         val inputHashes = mutableListOf<SecureHash>()
-        val referenceNonces = mutableListOf<SecureHash>()
         val referenceHashes = mutableListOf<SecureHash>()
 
         // FIXME: until we have support for different circuits per tx/command, even issuance txs will need to have
@@ -200,6 +194,7 @@ class BackChainTest {
         // The hash for a non-existent output pointed to by a padded input stateRef, is
         // componentGroupLeafDigestService.hash(zeroHashNonce + FillerOutputState)
         // TODO: move this logic to somewhere in the padding config
+        // FIXME: Should we get this filler from the previous transaction? Probably makes more sense
         val fillerOutput = currentVtx.componentPaddingConfiguration.filler(ComponentGroupEnum.OUTPUTS_GROUP)
             ?: error("Expected a filler object")
         require(fillerOutput is ComponentPaddingConfiguration.Filler.TransactionState) { "Expected filler of type TransactionState" }
@@ -207,13 +202,11 @@ class BackChainTest {
             currentVtx.componentGroupLeafDigestService.hash(paddingNonce.bytes + fillerOutput.content.fingerprint)
 
         (currentVtx.padded.inputs()).forEachIndexed { index, paddingWrapper ->
-            val (collectedNonce, collectedHash) = collectStateRefNonceAndHash(
+            val collectedHash = collectStateRefUtxoHash(
                 paddingWrapper,
-                paddingNonce = paddingNonce,
                 paddingHash = paddingHash
             )
 
-            inputNonces.add(index, collectedNonce)
             inputHashes.add(index, collectedHash)
 
             if (paddingWrapper is PaddingWrapper.Original) {
@@ -227,13 +220,11 @@ class BackChainTest {
         }
 
         (currentVtx.padded.references()).forEachIndexed { index, paddingWrapper ->
-            val (collectedNonce, collectedHash) = collectStateRefNonceAndHash(
+            val collectedHash = collectStateRefUtxoHash(
                 paddingWrapper,
-                paddingNonce = paddingNonce,
                 paddingHash = paddingHash
             )
 
-            referenceNonces.add(index, collectedNonce)
             referenceHashes.add(index, collectedHash)
 
             if (paddingWrapper is PaddingWrapper.Original) {
@@ -248,23 +239,21 @@ class BackChainTest {
 
         val calculatedPublicInput = PublicInput(
             currentVtx.id,
-            inputNonces = inputNonces,
             inputHashes = inputHashes,
-            referenceNonces = referenceNonces,
             referenceHashes = referenceHashes
         )
 
-        zkTransactionService.verify(currentVtx.proof, calculatedPublicInput)
-        println("   $indent Verified proof for tx: ${currentVtx.id.toString().take(8)}")
+        val verifyDuration = measureTime {
+            zkTransactionService.verify(currentVtx.proof, calculatedPublicInput)
+        }
+        println("   $indent Verified proof for tx: ${currentVtx.id.toString().take(8)} in $verifyDuration")
     }
 
-    private fun collectStateRefNonceAndHash(
+    private fun collectStateRefUtxoHash(
         paddingWrapper: PaddingWrapper<StateRef>,
-        paddingNonce: SecureHash,
         paddingHash: SecureHash
-    ): Pair<SecureHash, SecureHash> {
+    ): SecureHash {
 
-        var nonce = paddingNonce
         var hash = paddingHash
         if (paddingWrapper is PaddingWrapper.Original) {
             val stateRef = paddingWrapper.content
@@ -277,7 +266,6 @@ class BackChainTest {
              *
              * These values will be used as part of the instance when verifying the proof.
              */
-            nonce = prevVtx.componentNonces[ComponentGroupEnum.OUTPUTS_GROUP.ordinal]!![stateRef.index]
             hash = prevVtx.outputHashes[stateRef.index]
 
             /*
@@ -292,6 +280,6 @@ class BackChainTest {
              *   transaction identified by the instance.
              */
         }
-        return Pair(nonce, hash)
+        return hash
     }
 }

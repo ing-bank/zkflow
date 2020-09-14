@@ -34,6 +34,7 @@ val combineInOrder = listOf(
     "components/parameters.zn",
     "components/signers.zn",
     "zk_prover_transaction.zn",
+    "utils/utxo_digests.zn",
     "merkle_tree.zn",
     "validate/contract_rules.zn",
     "main.zn"

@@ -1,52 +1,13 @@
 struct PublicInput {
     transaction_id: NodeDigestDto,
-    input_nonces: [NonceDigestDto; INPUT_GROUP_SIZE],
     input_hashes: [ComponentGroupLeafDigestDto; INPUT_GROUP_SIZE],
-    reference_nonces: [NonceDigestDto; REFERENCE_GROUP_SIZE],
     reference_hashes: [ComponentGroupLeafDigestDto; REFERENCE_GROUP_SIZE],
-}
-
-fn compute_input_digests(
-    inputs: [StateAndRefPaddingWrapper; INPUT_GROUP_SIZE],
-    input_nonces: [NonceDigestDto; INPUT_GROUP_SIZE],
-) -> [ComponentGroupLeafDigestDto; INPUT_GROUP_SIZE] {
-    let mut input_digests = [ComponentGroupLeafDigestDto {
-        bytes: [0; COMPONENT_GROUP_LEAF_DIGEST_BYTES],
-    }; INPUT_GROUP_SIZE];
-    for i in 0..INPUT_GROUP_SIZE {
-        input_digests[i] =
-            ComponentGroupLeafDigestDto::from_bits_to_bytes(TransactionState::compute_leaf_hash(
-                inputs[i].content.state,
-                NonceDigestDto::from_bytes_to_bits(input_nonces[i]),
-            ));
-    }
-    input_digests
-}
-
-// Verify that for each input and reference, the recalculation of its hash,
-// using the nonce provided in the public input, matches the hash provided in the public input.
-// This proves that we did not change the contents of the inputs and references, compared to
-// the VerifierTransaction known by the verifier, of which they were an output.
-fn compute_reference_digests(
-    references: [StateAndRefPaddingWrapper; REFERENCE_GROUP_SIZE],
-    reference_nonces: [NonceDigestDto; REFERENCE_GROUP_SIZE],
-) -> [ComponentGroupLeafDigestDto; REFERENCE_GROUP_SIZE] {
-    let mut reference_digests = [ComponentGroupLeafDigestDto {
-        bytes: [0; COMPONENT_GROUP_LEAF_DIGEST_BYTES],
-    }; REFERENCE_GROUP_SIZE];
-    for i in 0..REFERENCE_GROUP_SIZE {
-        reference_digests[i] =
-            ComponentGroupLeafDigestDto::from_bits_to_bytes(TransactionState::compute_leaf_hash(
-                references[i].content.state,
-                NonceDigestDto::from_bytes_to_bits(reference_nonces[i]),
-            ));
-    }
-    reference_digests
 }
 
 fn main(witness: Witness) -> PublicInput {
     // Check contract rules
-    // TODO: disabled for now, so that the circuit can handle any command
+    // TODO: disabled for now, so that the circuit can handle any command,
+    // and always expects same number of input/output/references
     // check_contract_rules(witness.transaction);
 
     // Compute the transaction id
@@ -54,13 +15,11 @@ fn main(witness: Witness) -> PublicInput {
 
     PublicInput {
         transaction_id: NodeDigestDto::from_bits_to_bytes(root_hash),
-        input_nonces: witness.input_nonces,
-        input_hashes: compute_input_digests(
+        input_hashes: compute_input_utxo_digests(
             witness.transaction.inputs.components,
             witness.input_nonces,
         ),
-        reference_nonces: witness.reference_nonces,
-        reference_hashes: compute_reference_digests(
+        reference_hashes: compute_reference_utxo_digests(
             witness.transaction.references.components,
             witness.reference_nonces,
         ),

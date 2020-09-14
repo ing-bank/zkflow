@@ -59,7 +59,7 @@ class SerializationTest {
         ledgerServices.ledger {
             // Serialize for transport to Zinc
             val testList = listOf<SecureHash>(PedersenDigestService.allOnesHash)
-            val publicInput = PublicInput(PedersenDigestService.zeroHash, testList, testList, testList, testList)
+            val publicInput = PublicInput(PedersenDigestService.zeroHash, testList, testList)
             val json = publicInput.serialize(ZincSerializationFactory)
             println(String(json.bytes))
             // TODO: do checks on JSON to confirm it is acceptable for Zinc

@@ -74,7 +74,7 @@ class ZincZKTransactionServiceTest {
             )
             val testList = listOf<SecureHash>(PedersenDigestService.allOnesHash)
             val correctPublicInput =
-                PublicInput(SecureHash.Pedersen(ptx.privacySalt.bytes), testList, testList, testList, testList)
+                PublicInput(SecureHash.Pedersen(ptx.privacySalt.bytes), testList, testList)
 
             zincTransactionZKService.verify(proof, correctPublicInput)
         }
@@ -91,7 +91,7 @@ class ZincZKTransactionServiceTest {
                 )
             )
             val testList = listOf<SecureHash>(PedersenDigestService.allOnesHash)
-            val wrongPublicData = PublicInput(PedersenDigestService.zeroHash, testList, testList, testList, testList)
+            val wrongPublicData = PublicInput(PedersenDigestService.zeroHash, testList, testList)
 
             assertFailsWith(ZKVerificationException::class) {
                 zincTransactionZKService.verify(proof, wrongPublicData)
