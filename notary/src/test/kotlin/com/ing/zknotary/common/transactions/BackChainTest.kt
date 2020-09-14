@@ -76,7 +76,7 @@ class BackChainTest {
             val setupDuration = measureTime {
                 zincZKTransactionService.setup()
             }
-            println("Setup duration: ${setupDuration.inMinutes}")
+            println("Setup duration: ${setupDuration.inMinutes} minutes")
             zkTransactionService = zincZKTransactionService
         }
     }
@@ -129,7 +129,7 @@ class BackChainTest {
             verifies()
         }
 
-        transactionToVerify = createWtx
+        transactionToVerify = moveWtx
     }
 
     @Test
