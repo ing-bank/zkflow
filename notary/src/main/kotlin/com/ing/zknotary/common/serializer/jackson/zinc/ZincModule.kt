@@ -2,9 +2,6 @@ package com.ing.zknotary.common.serializer.jackson.zinc
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.core.JsonGenerator
-import com.fasterxml.jackson.core.JsonParser
-import com.fasterxml.jackson.databind.DeserializationContext
-import com.fasterxml.jackson.databind.JsonDeserializer
 import com.fasterxml.jackson.databind.JsonSerializer
 import com.fasterxml.jackson.databind.SerializerProvider
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
@@ -13,14 +10,10 @@ import com.ing.dlt.zkkrypto.util.asUnsigned
 import com.ing.zknotary.common.contracts.ZKCommandData
 import com.ing.zknotary.common.contracts.ZKContractState
 import com.ing.zknotary.common.transactions.ZKProverTransaction
-import com.ing.zknotary.common.transactions.ZKProverTransactionFactory.Companion.DEFAULT_PADDING_CONFIGURATION
 import com.ing.zknotary.common.util.PaddingWrapper
 import com.ing.zknotary.common.zkp.PublicInput
 import com.ing.zknotary.common.zkp.Witness
-import com.ing.zknotary.common.zkp.ZKNulls
 import com.ing.zknotary.common.zkp.fingerprint
-import net.corda.client.jackson.internal.readValueAs
-import net.corda.core.contracts.Command
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.PrivacySalt
@@ -28,8 +21,6 @@ import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.StateRef
 import net.corda.core.contracts.TimeWindow
 import net.corda.core.contracts.TransactionState
-import net.corda.core.crypto.BLAKE2s256DigestService
-import net.corda.core.crypto.PedersenDigestService
 import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.Party
 import net.corda.core.node.services.AttachmentId
@@ -79,12 +70,8 @@ private class PublicInputMixinSerializer : JsonSerializer<PublicInput>() {
         gen.writeStartObject()
         gen.writeFieldName("transaction_id")
         gen.writeObject(value.transactionId)
-        // gen.writeFieldName("input_nonces")
-        // gen.writeObject(value.inputNonces)
         gen.writeFieldName("input_hashes")
         gen.writeObject(value.inputHashes)
-        // gen.writeFieldName("reference_nonces")
-        // gen.writeObject(value.referenceNonces)
         gen.writeFieldName("reference_hashes")
         gen.writeObject(value.referenceHashes)
         gen.writeEndObject()
@@ -158,62 +145,6 @@ private class ZKProverTransactionMixinSerializer : JsonSerializer<ZKProverTransa
     }
 }
 
-/**
- * Only used for testing. Outside testing, ZincSerialization is one way.
- */
-private class ZincMixinDeserializer : JsonDeserializer<ZKProverTransaction>() {
-    override fun deserialize(parser: JsonParser, ctxt: DeserializationContext): ZKProverTransaction {
-        val json = parser.readValueAs<ZincJson>()
-        var paddedInputs = 0
-        var paddedOutputs = 0
-        var paddedReferences = 0
-        var paddedSigners = 0
-        return ZKProverTransaction(
-            inputs = json.inputs.components.mapNotNull {
-                if (it.isFiller) {
-                    paddedInputs++
-                    null
-                } else it.content
-            },
-            outputs = json.outputs.components.mapNotNull {
-                if (it.isFiller) {
-                    paddedOutputs++
-                    null
-                } else it.content
-            },
-            references = json.references.components.mapNotNull {
-                if (it.isFiller) {
-                    paddedReferences++
-                    null
-                } else it.content
-            },
-            command = Command(
-                json.commands.components.single().content,
-                json.signers.components.mapNotNull {
-                    if (it.isFiller) {
-                        paddedSigners++
-                        null
-                    } else it.content
-                }
-            ),
-            privacySalt = json.privacySalt,
-
-            componentGroupLeafDigestService = BLAKE2s256DigestService,
-            nodeDigestService = PedersenDigestService,
-            componentPaddingConfiguration = DEFAULT_PADDING_CONFIGURATION,
-
-            // TODO: JSON does not yet include all required parts (notary, networkparametershash)
-            notary = ZKNulls.NULL_PARTY,
-
-            // TODO: This does not yet include all components needed for merkle calculation: attachments...
-            attachments = emptyList(),
-            networkParametersHash = null,
-            timeWindow = null
-        )
-    }
-}
-
-// TODO: This does not yet include all components needed for merkle calculation: attachments, networkparams, timewindow
 private class ZincJson(
     val inputs: ComponentGroup<PaddingWrapper<StateAndRef<ContractState>>>,
     val outputs: ComponentGroup<PaddingWrapper<TransactionState<ZKContractState>>>,
@@ -224,7 +155,6 @@ private class ZincJson(
     val timeWindow: ComponentSinglet<PaddingWrapper<TimeWindow>>,
     val parameters: ComponentSinglet<PaddingWrapper<SecureHash>>,
     val signers: ComponentGroup<PaddingWrapper<PublicKey>>,
-
     val privacySalt: PrivacySalt
 )
 
