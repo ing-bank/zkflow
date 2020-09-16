@@ -19,40 +19,39 @@ import kotlin.reflect.jvm.javaType
 interface Fingerprintable {
     fun fingerprint(): ByteArray
 
-    companion object {
-        private const val name = "fingerprint"
-        fun isFingerprinting(func: KFunction<*>): Boolean =
-            func.name.contains(name, true) &&
-                func.parameters.count() == 1 &&
-                func.returnType.javaType == ByteArray::class.java
+    /**
+     * Instance of a class implementing the Fingerprintable interface
+     * is considered capable of fingerprinting if it implements itself the required functionality.
+     *
+     * If a class inherits from another class implementing Fingerprintable
+     * then the descendant also implements Fingerprintable, but the inherited functionality is only
+     * valid for the superclass, not the descendants.
+     */
+    val isFingerprinting: Boolean
+        get() {
+            val reflection = this::class
+            return reflection.declaredMemberFunctions.any { it.isFingerprinting } ||
+                reflection.declaredMemberExtensionFunctions.any { it.isFingerprinting }
+        }
 
-        fun isFingerprinting(method: Method): Boolean =
-            method.name.contains(name, true) &&
-                method.parameterCount == 1 &&
-                method.returnType == ByteArray::class.java
+    companion object {
+        const val name = "fingerprint"
     }
 }
 
 val KFunction<*>.isFingerprinting: Boolean
-    get() = Fingerprintable.isFingerprinting(this)
+    get() = name.contains(Fingerprintable.name, true) &&
+        parameters.count() == 1 &&
+        returnType.javaType == ByteArray::class.java
 
 val Method.isFingerprinting: Boolean
-    get() = Fingerprintable.isFingerprinting(this)
+    get() = name.contains(Fingerprintable.name, true) &&
+        parameterCount == 1 &&
+        returnType == ByteArray::class.java
 
 /**
- * Instance of a class implementing the Fingerprintable interface
- * is considered capable of fingerprinting if it implements itself the required functionality.
- *
- * The reason for that is that if a class inherits from another class implementing Fingerprintable
- * then the descendant also implements Fingerprintable, but the inherited functionality is only
- * valid for the superclass, not the descendants.
+ * Collects all super types (including interfaces) of the class such that
+ * the collected super types are whitelisted in FingerprintableTypes.
  */
-val Fingerprintable.isFingerprinting: Boolean
-    get() {
-        val reflection = this::class
-        return reflection.declaredMemberFunctions.any { it.isFingerprinting } ||
-            reflection.declaredMemberExtensionFunctions.any { it.isFingerprinting }
-    }
-
-fun Any.allImplementedExtendedInterfaces(interfaceNames: Set<String>) =
-    this::class.allSuperclasses.map { it.qualifiedName }.filter { interfaceNames.contains(it) }
+fun Any.allSuperTypesWithFingerprintExtension(fingerprintableTypes: Set<String>) =
+    this::class.allSuperclasses.map { it.qualifiedName }.filter { it in fingerprintableTypes }
