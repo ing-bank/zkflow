@@ -96,22 +96,19 @@ class ZKProverTransaction internal constructor(
     ) {
 
         fun inputs(): List<PaddingWrapper<StateAndRef<ContractState>>> {
-            val filler =
-                paddingConfiguration.filler(ComponentGroupEnum.INPUTS_GROUP) ?: error("Expected a filler object")
+            val filler = filler(ComponentGroupEnum.INPUTS_GROUP)
             require(filler is ComponentPaddingConfiguration.Filler.StateAndRef) { "Expected filler of type StateAndRef" }
             return originalInputs.wrappedPad(sizeOf(ComponentGroupEnum.INPUTS_GROUP), filler.content)
         }
 
         fun outputs(): List<PaddingWrapper<TransactionState<ZKContractState>>> {
-            val filler =
-                paddingConfiguration.filler(ComponentGroupEnum.OUTPUTS_GROUP) ?: error("Expected a filler object")
+            val filler = filler(ComponentGroupEnum.OUTPUTS_GROUP)
             require(filler is ComponentPaddingConfiguration.Filler.TransactionState) { "Expected filler of type TransactionState" }
             return originalOutputs.wrappedPad(sizeOf(ComponentGroupEnum.OUTPUTS_GROUP), filler.content)
         }
 
         fun references(): List<PaddingWrapper<StateAndRef<ContractState>>> {
-            val filler =
-                paddingConfiguration.filler(ComponentGroupEnum.REFERENCES_GROUP) ?: error("Expected a filler object")
+            val filler = filler(ComponentGroupEnum.REFERENCES_GROUP)
             require(filler is ComponentPaddingConfiguration.Filler.StateAndRef) { "Expected filler of type StateAndRef" }
             return originalReferences.wrappedPad(sizeOf(ComponentGroupEnum.REFERENCES_GROUP), filler.content)
         }
@@ -127,8 +124,7 @@ class ZKProverTransaction internal constructor(
         fun networkParametersHash() = originalNetworkParametersHash.wrappedPad(SecureHash.zeroHash)
 
         fun signers(): List<PaddingWrapper<PublicKey>> {
-            val filler =
-                paddingConfiguration.filler(ComponentGroupEnum.SIGNERS_GROUP) ?: error("Expected a filler object")
+            val filler = filler(ComponentGroupEnum.SIGNERS_GROUP)
             require(filler is ComponentPaddingConfiguration.Filler.PublicKey) { "Expected filler of type PublicKey" }
             return originalSigners.wrappedPad(sizeOf(ComponentGroupEnum.SIGNERS_GROUP), filler.content)
         }
