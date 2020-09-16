@@ -1,7 +1,7 @@
 package com.ing.zknotary.common.zkp
 
-import org.junit.After
-import org.junit.Test
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Test
 import java.io.File
 import java.time.Duration
 import kotlin.test.assertFailsWith
@@ -21,7 +21,7 @@ class ZincZKServiceTest {
         zincZKService.setup()
     }
 
-    @After
+    @AfterEach
     fun `remove zinc files`() {
         zincZKService.cleanup()
     }

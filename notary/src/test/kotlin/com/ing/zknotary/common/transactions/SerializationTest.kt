@@ -17,8 +17,8 @@ import net.corda.core.serialization.serialize
 import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
 import net.corda.testing.node.ledger
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 
 class SerializationTest {
     private val alice = TestIdentity.fresh("alice", Crypto.EDDSA_ED25519_SHA512)
@@ -33,7 +33,7 @@ class SerializationTest {
     private lateinit var vtx: ZKVerifierTransaction
     private lateinit var sigAlice: ByteArray
 
-    @Before
+    @BeforeEach
     fun setup() {
         ledgerServices.ledger {
             val wtx = moveTestsState(createTestsState(owner = alice), newOwner = bob)

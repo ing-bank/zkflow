@@ -23,9 +23,10 @@ import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
 import net.corda.testing.node.createMockCordaService
 import net.corda.testing.node.ledger
-import org.junit.After
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Tag
+import org.junit.jupiter.api.Test
 import java.io.File
 import java.time.Duration
 import kotlin.time.ExperimentalTime
@@ -82,12 +83,12 @@ class BackChainTest {
         }
     }
 
-    @After
+    @AfterEach
     fun `remove zinc files`() {
         (zkTransactionService as? ZincZKTransactionService)?.cleanup()
     }
 
-    @Before
+    @BeforeEach
     fun setup() {
         ledgerServices.ledger {
             createWtx = transaction {
@@ -134,6 +135,7 @@ class BackChainTest {
     }
 
     @Test
+    @Tag("slow")
     fun `Prover can fetch the complete tx graph for input StateRefs`() {
         val sortedDependencies = ledgerServices.validatedTransactions
             .collectVerifiedDependencies(anotherMoveWtx.inputs)
@@ -143,6 +145,7 @@ class BackChainTest {
     }
 
     @Test
+    @Tag("slow")
     fun `We deterministically build, prove and verify graph of ZKVerifierTransactions based on graph of SignedTransactions`() {
         ledgerServices.ledger {
             // First, if not done before,  the prover makes sure it has all SignedTransactions by calling ResolveTransactionsFlow

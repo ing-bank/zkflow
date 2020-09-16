@@ -38,13 +38,13 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
 
     // Testing
-    val junitVersion: String by project
-    testImplementation("junit:junit:$junitVersion")
-    testImplementation("org.mockito:mockito-core:2.+")
+    val junit5Version: String by project
+    testImplementation("org.junit.jupiter:junit-jupiter-api:$junit5Version")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
 
     // Corda dependencies.
-    val cordaReleaseGroup : String by project
-    val cordaVersion : String by project
+    val cordaReleaseGroup: String by project
+    val cordaVersion: String by project
     cordaCompile("$cordaReleaseGroup:corda-core:$cordaVersion")
     cordaRuntime("$cordaReleaseGroup:corda:$cordaVersion")
     cordaCompile("$cordaReleaseGroup:corda-node:$cordaVersion")
@@ -59,6 +59,21 @@ dependencies {
 spotless {
     kotlin {
         ktlint("0.37.1")
+    }
+}
+
+task<Test>("slowTest") {
+    useJUnitPlatform {
+        includeTags("slow")
+
+    }
+    shouldRunAfter("test")
+}
+
+tasks.test {
+    // We have a separate task for slow tests
+    useJUnitPlatform {
+        excludeTags("slow")
     }
 }
 
@@ -80,6 +95,7 @@ tasks.apply {
         isReproducibleFileOrder = true
     }
 
+    // This applies to all test types, both fast and slow
     withType<Test> {
         dependsOn("spotlessCheck") // Make sure we fail early on style
         dependsOn(":prover:circuit") // Make sure that the Zinc circuit is ready to use when running tests
@@ -88,8 +104,14 @@ tasks.apply {
         maxParallelForks = (Runtime.getRuntime().availableProcessors() / 2).takeIf { it > 0 } ?: 1
         logger.info("Using $cores cores to run $maxParallelForks test forks.")
 
+        testLogging {
+            events("passed", "skipped", "failed")
+        }
+
         // Here you can specify any env vars for tests, for instance the path to the prover lib
         // environment "LD_LIBRARY_PATH", "~/pepper_deps/lib/"
     }
+
 }
+
 

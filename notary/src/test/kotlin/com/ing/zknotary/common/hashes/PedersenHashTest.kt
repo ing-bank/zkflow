@@ -3,8 +3,8 @@ package com.ing.zknotary.common.hashes
 import com.ing.dlt.zkkrypto.util.asUnsigned
 import com.ing.zknotary.common.zkp.ZincZKService
 import net.corda.core.crypto.PedersenDigestService
-import org.junit.After
-import org.junit.Test
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Test
 import java.nio.ByteBuffer
 import java.time.Duration
 
@@ -25,7 +25,7 @@ class PedersenHashTest {
         zincZKService.setup()
     }
 
-    @After
+    @AfterEach
     fun `remove zinc files`() {
         zincZKService.cleanup()
     }

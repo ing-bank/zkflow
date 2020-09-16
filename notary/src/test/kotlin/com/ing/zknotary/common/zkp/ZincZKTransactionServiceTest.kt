@@ -11,14 +11,14 @@ import net.corda.core.crypto.SecureHash
 import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
 import net.corda.testing.node.ledger
-import org.junit.After
-import org.junit.Before
-import org.junit.Ignore
-import org.junit.Test
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.Test
 import java.time.Duration
 import kotlin.test.assertFailsWith
 
-@Ignore("Ignored until we have the witness and public input structure finalized")
+@Disabled("Ignored until we have the witness and public input structure finalized")
 class ZincZKTransactionServiceTest {
     private val circuitFolder = javaClass.getResource("/ZincZKTransactionService").path
     private val zincTransactionZKService = ZincZKTransactionService(
@@ -39,7 +39,7 @@ class ZincZKTransactionServiceTest {
 
     private lateinit var ptx: ZKProverTransaction
 
-    @Before
+    @BeforeEach
     fun setup() {
         ledgerServices.ledger {
             val wtx = moveTestsState(createTestsState(owner = alice), newOwner = bob)
@@ -57,7 +57,7 @@ class ZincZKTransactionServiceTest {
         zincTransactionZKService.setup()
     }
 
-    @After
+    @AfterEach
     fun `remove zinc files`() {
         zincTransactionZKService.cleanup()
     }
