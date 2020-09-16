@@ -23,7 +23,7 @@ val combineInOrder = listOf(
     "utils/crypto_utils.zn",
     "crypto/pub_key.zn",
     merkleUtilsPath,
-    "zk_state_and_ref.zn",
+    "state_and_ref.zn",
     "components/inputs.zn",
     "components/outputs.zn",
     "components/references.zn",
@@ -34,6 +34,7 @@ val combineInOrder = listOf(
     "components/parameters.zn",
     "components/signers.zn",
     "zk_prover_transaction.zn",
+    "utils/utxo_digests.zn",
     "merkle_tree.zn",
     "validate/contract_rules.zn",
     "main.zn"
@@ -41,7 +42,7 @@ val combineInOrder = listOf(
 
 
 task("circuit") {
-    dependsOn("merkleUtils", "rustfmtCheck", "buildCircuit")
+    dependsOn("rustfmtCheck", "buildCircuit")
 }
 
 task<Exec>("rustfmt") {
@@ -57,12 +58,13 @@ task("merkleUtils") {
 
     val fullLeaves = run {
         var l = merkleLeaves
-        while (!isPow2(l)) { l++ }
+        while (!isPow2(l)) {
+            l++
+        }
         l
     }
 
     val merkleUtils = File("$modulesPath/$merkleUtilsPath")
-    println(merkleUtils.absolutePath)
     merkleUtils.writeText("//! Limited-depth recursion for Merkle tree construction\n")
     merkleUtils.writeText("//! GENERATED CODE. DO NOT EDIT\n//! Edit it in prover/build.gradle.kts\n\n");
 
@@ -77,7 +79,8 @@ fn get_merkle_tree_from_2_node_digests(leaves: [NodeDigestBits; 2]) -> NodeDiges
         pedersen(concatenate_node_digests(leaves[0], leaves[1])).0,
     )
 }
-""")
+"""
+    )
 
     var leaves = 4
 
@@ -105,8 +108,10 @@ fn get_merkle_tree_from_${leaves}_node_digests(leaves: [NodeDigestBits; $leaves]
         leaves *= 2
     } while (leaves <= fullLeaves)
 
-    merkleUtils.appendText("\n//! Merkle tree construction for ComponentGroupLeafDigestBits.\n" +
-        "//! Use it only for the computation of a component sub-Merkle tree from component group leaf hashes.")
+    merkleUtils.appendText(
+        "\n//! Merkle tree construction for ComponentGroupLeafDigestBits.\n" +
+            "//! Use it only for the computation of a component sub-Merkle tree from component group leaf hashes."
+    )
     merkleUtils.appendText(
         """
 fn get_merkle_tree_from_2_component_group_leaf_digests(leaves: [ComponentGroupLeafDigestBits; 2]) -> NodeDigestBits {
@@ -117,7 +122,8 @@ fn get_merkle_tree_from_2_component_group_leaf_digests(leaves: [ComponentGroupLe
         pedersen(concatenate_component_group_leaf_digests(leaves[0], leaves[1])).0,
     )
 }
-""")
+"""
+    )
 
     leaves = 4
 
@@ -162,10 +168,16 @@ fn merkle_root(leaves: [NodeDigestBits; $merkleLeaves]) -> NodeDigestBits {
     dbg!("Constructing the root");
     get_merkle_tree_from_${fullLeaves}_node_digests(full_leaves)
 }
-""")
+"""
+    )
 }
 
 task("buildCircuit") {
+    dependsOn("merkleUtils")
+
+    outputs.file("../$circuitPath")
+    inputs.dir("../$modulesPath")
+
     val circuit = File(circuitPath)
     circuit.parentFile?.mkdirs() // Make sure the parent path for the circuit exists.
     circuit.writeText("//! Combined circuit\n//! GENERATED CODE. DO NOT EDIT\n//! Edit a corresponding constituent\n\n");
@@ -176,15 +188,29 @@ task("buildCircuit") {
 
             circuit.appendText("//!  IN ==== ${part.absolutePath}\n")
 
-            if (isDbgOn) {
-                circuit.appendBytes(part.readBytes())
-            } else {
-                part
-                    .readLines()
-                    .filter { line -> !line.contains("dbg!") }
-                    .forEach { line -> circuit.appendText("$line\n")}
-            }
+        if (isDbgOn) {
+            circuit.appendBytes(part.readBytes())
+        } else {
+            part
+                .readLines()
+                .filter { line -> !line.contains("dbg!") }
+                .forEach { line -> circuit.appendText("$line\n") }
+        }
 
             circuit.appendText("//! OUT ==== ${part.absolutePath}\n\n")
         }
+
+    // Compile circuit
+    val circuitPath = File(project.rootDir.absolutePath + "/$circuitRoot")
+    exec {
+        workingDir = circuitPath
+        executable = "zargo"
+        args = listOf("clean", "-v")
+    }
+
+    exec {
+        workingDir = circuitPath
+        executable = "zargo"
+        args = listOf("build")
+    }
 }

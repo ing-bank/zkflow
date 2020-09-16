@@ -39,7 +39,6 @@ dependencies {
 
     // Testing
     val junitVersion: String by project
-    testImplementation("org.jetbrains.kotlin:kotlin-test:$kotlinVersion")
     testImplementation("junit:junit:$junitVersion")
     testImplementation("org.mockito:mockito-core:2.+")
 

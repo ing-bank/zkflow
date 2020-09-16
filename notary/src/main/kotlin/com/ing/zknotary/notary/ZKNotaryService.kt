@@ -2,9 +2,9 @@ package com.ing.zknotary.notary
 
 import co.paralleluniverse.fibers.Suspendable
 import com.ing.zknotary.common.flows.getCordaServiceFromConfig
-import com.ing.zknotary.common.states.ZKStateRef
 import com.ing.zknotary.common.zkp.ZKConfig
 import com.ing.zknotary.notary.flows.ZKNotaryServiceFlow
+import net.corda.core.contracts.StateRef
 import net.corda.core.contracts.TimeWindow
 import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.SignatureMetadata
@@ -73,7 +73,8 @@ open class ZKNotaryService(final override val services: ServiceHubInternal, over
      */
     private val zkConfig = ZKConfig(
         zkTransactionService = services.getCordaServiceFromConfig("zkTransactionService"),
-        serializationFactoryService = services.getCordaServiceFromConfig("zkpSerializationFactoryService")
+        serializationFactoryService = services.getCordaServiceFromConfig("zkpSerializationFactoryService"),
+        zkStorage = services.getCordaServiceFromConfig("zkStorage")
     )
 
     init {
@@ -98,12 +99,12 @@ open class ZKNotaryService(final override val services: ServiceHubInternal, over
     @CordaSerializable
     class CommitOperation(
         val service: ZKNotaryService,
-        val inputs: List<ZKStateRef>,
+        val inputs: List<StateRef>,
         val txId: SecureHash,
         val caller: Party,
         val requestSignature: NotarisationRequestSignature,
         val timeWindow: TimeWindow?,
-        val references: List<ZKStateRef>
+        val references: List<StateRef>
     ) : FlowExternalAsyncOperation<UniquenessProvider.Result> {
 
         override fun execute(deduplicationId: String): CompletableFuture<UniquenessProvider.Result> {
@@ -117,12 +118,12 @@ open class ZKNotaryService(final override val services: ServiceHubInternal, over
     /** Attempts to commit the specified transaction [txId]. */
     @Suspendable
     open fun commitStates(
-        inputs: List<ZKStateRef>,
+        inputs: List<StateRef>,
         txId: SecureHash,
         caller: Party,
         requestSignature: NotarisationRequestSignature,
         timeWindow: TimeWindow?,
-        references: List<ZKStateRef>
+        references: List<StateRef>
     ): UniquenessProvider.Result {
         val callingFlow = FlowLogic.currentTopLevel
             ?: throw IllegalStateException("This method should be invoked in a flow context.")

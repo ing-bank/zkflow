@@ -1,12 +1,16 @@
 package com.ing.zknotary.common.transactions
 
 import com.ing.zknotary.common.serializer.ZincSerializationFactory
+import com.ing.zknotary.common.zkp.PublicInput
 import com.ing.zknotary.common.zkp.Witness
+import com.ing.zknotary.common.zkp.mockEmptyProof
 import com.ing.zknotary.notary.transactions.createTestsState
 import com.ing.zknotary.notary.transactions.moveTestsState
+import junit.framework.TestCase.assertEquals
 import net.corda.core.crypto.BLAKE2s256DigestService
 import net.corda.core.crypto.Crypto
 import net.corda.core.crypto.PedersenDigestService
+import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.sign
 import net.corda.core.serialization.deserialize
 import net.corda.core.serialization.serialize
@@ -15,7 +19,6 @@ import net.corda.testing.node.MockServices
 import net.corda.testing.node.ledger
 import org.junit.Before
 import org.junit.Test
-import kotlin.test.assertEquals
 
 class SerializationTest {
     private val alice = TestIdentity.fresh("alice", Crypto.EDDSA_ED25519_SHA512)
@@ -47,16 +50,33 @@ class SerializationTest {
             sigAlice = alice.keyPair.private.sign(ptx.id.bytes).bytes
 
             // build filtered ZKVerifierTransaction
-            vtx = ptx.toZKVerifierTransaction()
+            vtx = ptx.toZKVerifierTransaction(mockEmptyProof)
         }
     }
 
     @Test
-    fun `Serialize to Zinc`() {
+    fun `Serialize public input to Zinc`() {
         ledgerServices.ledger {
             // Serialize for transport to Zinc
-            val witness = Witness(ptx)
+            val testList = listOf<SecureHash>(PedersenDigestService.allOnesHash)
+            val publicInput = PublicInput(PedersenDigestService.zeroHash, testList, testList)
+            val json = publicInput.serialize(ZincSerializationFactory)
+            println(String(json.bytes))
+            // TODO: do checks on JSON to confirm it is acceptable for Zinc
+        }
+    }
+
+    @Test
+    fun `Serialize witness to Zinc`() {
+        ledgerServices.ledger {
+            // Serialize for transport to Zinc
+            val witness = Witness(
+                ptx,
+                inputNonces = ptx.padded.inputs().map { PedersenDigestService.zeroHash },
+                referenceNonces = ptx.padded.references().map { PedersenDigestService.zeroHash }
+            )
             val json = witness.serialize(ZincSerializationFactory)
+            println(String(json.bytes))
             // TODO: do checks on JSON to confirm it is acceptable for Zinc
         }
     }
@@ -74,7 +94,6 @@ class SerializationTest {
             val ptxAmqp = ptx.serialize()
             val deserializedptx = ptxAmqp.deserialize()
             assertEquals(ptx, deserializedptx)
-            // ptx.verify()
         }
     }
 
@@ -84,7 +103,6 @@ class SerializationTest {
             val vtxAmqp = vtx.serialize()
             val deserializedVtx = vtxAmqp.deserialize()
             assertEquals(vtx, deserializedVtx)
-            // TODO: vtx.verify()
         }
     }
 }

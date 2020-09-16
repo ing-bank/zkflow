@@ -1,13 +1,10 @@
 package com.ing.zknotary.client.flows
 
 import co.paralleluniverse.fibers.Suspendable
-import com.ing.zknotary.common.transactions.ZKProverTransactionFactory
 import com.ing.zknotary.common.transactions.ZKVerifierTransaction
 import com.ing.zknotary.common.transactions.toZKVerifierTransaction
-import com.ing.zknotary.common.zkp.Witness
 import com.ing.zknotary.common.zkp.ZKConfig
-import net.corda.core.crypto.BLAKE2s256DigestService
-import net.corda.core.crypto.PedersenDigestService
+import com.ing.zknotary.node.services.toZKVerifierTransaction
 import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.TransactionSignature
 import net.corda.core.flows.FlowSession
@@ -71,21 +68,11 @@ open class ZKNotaryFlow(
     }
 
     private fun buildVerifierTransaction(stx: SignedTransaction, notaryParty: Party): ZKVerifierTransaction {
-        val ltx = stx.toLedgerTransaction(serviceHub, checkSufficientSignatures = false)
-
-        // TODO: inject these serializationFactoryService and DigestService as part of ZKConfig
-        val ptx = ZKProverTransactionFactory.create(
-            ltx,
-            componentGroupLeafDigestService = BLAKE2s256DigestService,
-            nodeDigestService = PedersenDigestService
+        return stx.toZKVerifierTransaction(
+            services = serviceHub,
+            zkStorage = zkConfig.zkStorage,
+            zktransactionService = zkConfig.zkTransactionService
         )
-
-        val vtx = ptx.toZKVerifierTransaction()
-
-        val proof = zkConfig.zkTransactionService.prove(Witness(ptx))
-
-        // TODO: create payload with vtx and proof, but for now only send vtx
-        return vtx
     }
 
     /****************************************************

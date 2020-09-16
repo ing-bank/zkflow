@@ -1,17 +1,16 @@
 package com.ing.zknotary.common.transactions
 
-import com.ing.zknotary.common.states.ZKStateRef
 import com.ing.zknotary.common.util.ComponentPaddingConfiguration
 import com.ing.zknotary.common.util.PaddingWrapper
 import net.corda.core.DeleteForDJVM
 import net.corda.core.contracts.ComponentGroupEnum
-import net.corda.core.crypto.SecureHash
+import net.corda.core.contracts.StateRef
 import kotlin.math.max
 
 @DeleteForDJVM
 fun ZKProverTransaction.prettyPrint(): String {
     val buf = StringBuilder()
-    buf.appendln("Transaction:")
+    buf.appendln("Prover Transaction:")
 
     fun addComponentList(buf: StringBuilder, name: String, componentList: List<*>) {
         if (componentList.isNotEmpty()) buf.appendln(" - $name:")
@@ -32,7 +31,7 @@ fun ZKProverTransaction.prettyPrint(): String {
     return buf.toString()
 }
 
-fun ZKProverTransaction.toZKVerifierTransaction(): ZKVerifierTransaction {
+fun ZKProverTransaction.toZKVerifierTransaction(proof: ByteArray): ZKVerifierTransaction {
     val componentNonces = this.merkleTree.componentNonces.filterKeys {
         it in listOf(
             ComponentGroupEnum.INPUTS_GROUP.ordinal,
@@ -44,18 +43,19 @@ fun ZKProverTransaction.toZKVerifierTransaction(): ZKVerifierTransaction {
         )
     }
 
-    val zkStateRefFiller = ComponentPaddingConfiguration.Filler.ZKStateRef(ZKStateRef.empty())
-    val secureHashFiller = ComponentPaddingConfiguration.Filler.SecureHash(SecureHash.zeroHash)
+    val transactionStateFiller = this.padded.paddingConfiguration.filler(ComponentGroupEnum.OUTPUTS_GROUP)!!
+    val stateRefFiller = ComponentPaddingConfiguration.Filler.StateRef(StateRef(componentGroupLeafDigestService.zeroHash, 0))
+    val secureHashFiller = ComponentPaddingConfiguration.Filler.SecureHash(componentGroupLeafDigestService.zeroHash)
     val componentPadding = ComponentPaddingConfiguration.Builder()
-        .inputs(this.padded.sizeOf(ComponentGroupEnum.INPUTS_GROUP), zkStateRefFiller)
-        .outputs(this.padded.sizeOf(ComponentGroupEnum.OUTPUTS_GROUP), zkStateRefFiller)
-        .references(this.padded.sizeOf(ComponentGroupEnum.REFERENCES_GROUP), zkStateRefFiller)
+        .inputs(this.padded.sizeOf(ComponentGroupEnum.INPUTS_GROUP), stateRefFiller)
+        .outputs(this.padded.sizeOf(ComponentGroupEnum.OUTPUTS_GROUP), transactionStateFiller)
+        .references(this.padded.sizeOf(ComponentGroupEnum.REFERENCES_GROUP), stateRefFiller)
         .attachments(this.padded.sizeOf(ComponentGroupEnum.ATTACHMENTS_GROUP), secureHashFiller)
         .build()
 
     return ZKVerifierTransaction(
+        proof,
         this.inputs.map { it.ref },
-        this.outputs.map { it.ref },
         this.references.map { it.ref },
 
         this.notary,
@@ -65,6 +65,7 @@ fun ZKProverTransaction.toZKVerifierTransaction(): ZKVerifierTransaction {
         this.componentGroupLeafDigestService,
         this.nodeDigestService,
 
+        this.merkleTree.componentHashes[ComponentGroupEnum.OUTPUTS_GROUP.ordinal] ?: emptyList(),
         this.merkleTree.groupHashes,
         componentNonces,
 

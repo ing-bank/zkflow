@@ -1,7 +1,7 @@
 const OUTPUT_GROUP_SIZE: u16 = 2;
 
 struct OutputsComponentGroup {
-    components: [ZKStateAndRefPaddingWrapper; OUTPUT_GROUP_SIZE],
+    components: [TransactionStatePaddingWrapper; OUTPUT_GROUP_SIZE],
     group_hash: NodeDigestDto,
 }
 
@@ -13,11 +13,9 @@ impl OutputsComponentGroup {
         let mut component_leaf_hashes = [[false; COMPONENT_GROUP_LEAF_DIGEST_BITS]; OUTPUT_GROUP_SIZE];
 
         for i in (0 as u32)..(OUTPUT_GROUP_SIZE as u32) {
-            component_leaf_hashes[i] = ZKStateRef::compute_leaf_hash(
-                this.components[i].content.reference,
-                privacy_salt,
-                ComponentGroupEnum::OUTPUTS_GROUP as u32,
-                i as u32,
+            component_leaf_hashes[i] = TransactionState::compute_leaf_hash(
+                this.components[i].content,
+                compute_nonce(privacy_salt, ComponentGroupEnum::OUTPUTS_GROUP as u32, i as u32),
             );
         }
         component_leaf_hashes

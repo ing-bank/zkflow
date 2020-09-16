@@ -9,14 +9,16 @@ import com.fasterxml.jackson.databind.module.SimpleModule
 import com.ing.dlt.zkkrypto.util.asUnsigned
 import com.ing.zknotary.common.contracts.ZKCommandData
 import com.ing.zknotary.common.contracts.ZKContractState
-import com.ing.zknotary.common.states.ZKStateAndRef
-import com.ing.zknotary.common.states.ZKStateRef
 import com.ing.zknotary.common.transactions.ZKProverTransaction
 import com.ing.zknotary.common.util.PaddingWrapper
+import com.ing.zknotary.common.zkp.PublicInput
 import com.ing.zknotary.common.zkp.Witness
 import com.ing.zknotary.common.zkp.fingerprint
 import net.corda.core.contracts.ComponentGroupEnum
+import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.PrivacySalt
+import net.corda.core.contracts.StateAndRef
+import net.corda.core.contracts.StateRef
 import net.corda.core.contracts.TimeWindow
 import net.corda.core.contracts.TransactionState
 import net.corda.core.crypto.SecureHash
@@ -28,8 +30,9 @@ class ZincModule : SimpleModule("corda-core") {
     override fun setupModule(context: SetupContext) {
         super.setupModule(context)
 
-        context.setMixInAnnotations(ZKStateAndRef::class.java, ZKStateAndRefMixin::class.java)
+        context.setMixInAnnotations(StateAndRef::class.java, StateAndRefMixin::class.java)
         context.setMixInAnnotations(Witness::class.java, WitnessMixin::class.java)
+        context.setMixInAnnotations(PublicInput::class.java, PublicInputMixin::class.java)
         context.setMixInAnnotations(ZKProverTransaction::class.java, ZKProverTransactionMixin::class.java)
         context.setMixInAnnotations(ZKCommandData::class.java, ZKCommandDataMixinZinc::class.java)
 
@@ -46,18 +49,34 @@ class ZincModule : SimpleModule("corda-core") {
     }
 }
 
-@JsonSerialize(using = ZKStateAndRefMixinSerializer::class)
-private interface ZKStateAndRefMixin
+@JsonSerialize(using = StateAndRefMixinSerializer::class)
+private interface StateAndRefMixin
 
-private class ZKStateAndRefMixinSerializer : JsonSerializer<ZKStateAndRef<ZKContractState>>() {
-    override fun serialize(value: ZKStateAndRef<ZKContractState>, gen: JsonGenerator, serializers: SerializerProvider) {
+private class StateAndRefMixinSerializer : JsonSerializer<StateAndRef<ZKContractState>>() {
+    override fun serialize(value: StateAndRef<ZKContractState>, gen: JsonGenerator, serializers: SerializerProvider) {
         gen.writeObject(
-            ZKStateAndRefJson(value.state, value.ref)
+            StateAndRefJson(value.state, value.ref)
         )
     }
 }
 
-private class ZKStateAndRefJson(val state: TransactionState<ZKContractState>, val reference: ZKStateRef)
+private class StateAndRefJson(val state: TransactionState<ZKContractState>, val reference: StateRef)
+
+@JsonSerialize(using = PublicInputMixinSerializer::class)
+private interface PublicInputMixin
+
+private class PublicInputMixinSerializer : JsonSerializer<PublicInput>() {
+    override fun serialize(value: PublicInput, gen: JsonGenerator, serializers: SerializerProvider) {
+        gen.writeStartObject()
+        gen.writeFieldName("transaction_id")
+        gen.writeObject(value.transactionId)
+        gen.writeFieldName("input_hashes")
+        gen.writeObject(value.inputHashes)
+        gen.writeFieldName("reference_hashes")
+        gen.writeObject(value.referenceHashes)
+        gen.writeEndObject()
+    }
+}
 
 @JsonSerialize(using = WitnessMixinSerializer::class)
 private interface WitnessMixin
@@ -66,53 +85,76 @@ private class WitnessMixinSerializer : JsonSerializer<Witness>() {
     override fun serialize(value: Witness, gen: JsonGenerator, serializers: SerializerProvider) {
         gen.writeStartObject()
         gen.writeFieldName("witness")
-        gen.writeObject(value.transaction)
+        gen.writeObject(WitnessJson(value.transaction, value.inputNonces, value.referenceNonces))
         gen.writeEndObject()
     }
 }
+
+private class WitnessJson(
+    val transaction: ZKProverTransaction,
+    val inputNonces: List<SecureHash>,
+    val referenceNonces: List<SecureHash>
+)
 
 @JsonSerialize(using = ZKProverTransactionMixinSerializer::class)
 private interface ZKProverTransactionMixin
 
 private class ZKProverTransactionMixinSerializer : JsonSerializer<ZKProverTransaction>() {
     override fun serialize(value: ZKProverTransaction, gen: JsonGenerator, serializers: SerializerProvider) {
-        gen.writeStartObject()
-        gen.writeFieldName("transaction")
         gen.writeObject(
             ZincJson(
-                ComponentGroup(value.padded.inputs(), value.merkleTree.groupHashes[ComponentGroupEnum.INPUTS_GROUP.ordinal]),
-                ComponentGroup(value.padded.outputs(), value.merkleTree.groupHashes[ComponentGroupEnum.OUTPUTS_GROUP.ordinal]),
-                ComponentGroup(value.padded.references(), value.merkleTree.groupHashes[ComponentGroupEnum.REFERENCES_GROUP.ordinal]),
+                ComponentGroup(
+                    value.padded.inputs(),
+                    value.merkleTree.groupHashes[ComponentGroupEnum.INPUTS_GROUP.ordinal]
+                ),
+                ComponentGroup(
+                    value.padded.outputs(),
+                    value.merkleTree.groupHashes[ComponentGroupEnum.OUTPUTS_GROUP.ordinal]
+                ),
+                ComponentGroup(
+                    value.padded.references(),
+                    value.merkleTree.groupHashes[ComponentGroupEnum.REFERENCES_GROUP.ordinal]
+                ),
                 ComponentGroup(
                     PaddingWrapper.Original(value.command.value),
                     value.merkleTree.groupHashes[ComponentGroupEnum.COMMANDS_GROUP.ordinal]
                 ),
-                ComponentGroup(value.padded.attachments(), value.merkleTree.groupHashes[ComponentGroupEnum.ATTACHMENTS_GROUP.ordinal]),
+                ComponentGroup(
+                    value.padded.attachments(),
+                    value.merkleTree.groupHashes[ComponentGroupEnum.ATTACHMENTS_GROUP.ordinal]
+                ),
                 ComponentSinglet(
                     PaddingWrapper.Original(value.notary),
                     value.merkleTree.groupHashes[ComponentGroupEnum.NOTARY_GROUP.ordinal]
                 ),
-                ComponentSinglet(value.padded.timeWindow(), value.merkleTree.groupHashes[ComponentGroupEnum.TIMEWINDOW_GROUP.ordinal]),
-                ComponentSinglet(value.padded.networkParametersHash(), value.merkleTree.groupHashes[ComponentGroupEnum.PARAMETERS_GROUP.ordinal]),
-                ComponentGroup(value.padded.signers(), value.merkleTree.groupHashes[ComponentGroupEnum.SIGNERS_GROUP.ordinal]),
+                ComponentSinglet(
+                    value.padded.timeWindow(),
+                    value.merkleTree.groupHashes[ComponentGroupEnum.TIMEWINDOW_GROUP.ordinal]
+                ),
+                ComponentSinglet(
+                    value.padded.networkParametersHash(),
+                    value.merkleTree.groupHashes[ComponentGroupEnum.PARAMETERS_GROUP.ordinal]
+                ),
+                ComponentGroup(
+                    value.padded.signers(),
+                    value.merkleTree.groupHashes[ComponentGroupEnum.SIGNERS_GROUP.ordinal]
+                ),
                 value.privacySalt
             )
         )
-        gen.writeEndObject()
     }
 }
 
 private class ZincJson(
-    val inputs: ComponentGroup<PaddingWrapper<ZKStateAndRef<ZKContractState>>>,
-    val outputs: ComponentGroup<PaddingWrapper<ZKStateAndRef<ZKContractState>>>,
-    val references: ComponentGroup<PaddingWrapper<ZKStateAndRef<ZKContractState>>>,
+    val inputs: ComponentGroup<PaddingWrapper<StateAndRef<ContractState>>>,
+    val outputs: ComponentGroup<PaddingWrapper<TransactionState<ZKContractState>>>,
+    val references: ComponentGroup<PaddingWrapper<StateAndRef<ContractState>>>,
     val commands: ComponentGroup<PaddingWrapper<ZKCommandData>>,
     val attachments: ComponentGroup<PaddingWrapper<AttachmentId>>,
     val notary: ComponentSinglet<PaddingWrapper<Party>>,
     val timeWindow: ComponentSinglet<PaddingWrapper<TimeWindow>>,
     val parameters: ComponentSinglet<PaddingWrapper<SecureHash>>,
     val signers: ComponentGroup<PaddingWrapper<PublicKey>>,
-
     val privacySalt: PrivacySalt
 )
 

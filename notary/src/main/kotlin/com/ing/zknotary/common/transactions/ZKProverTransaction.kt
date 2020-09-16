@@ -2,13 +2,15 @@ package com.ing.zknotary.common.transactions
 
 import com.ing.zknotary.common.contracts.ZKCommandData
 import com.ing.zknotary.common.contracts.ZKContractState
-import com.ing.zknotary.common.states.ZKStateAndRef
 import com.ing.zknotary.common.util.ComponentPaddingConfiguration
 import com.ing.zknotary.common.util.PaddingWrapper
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.ComponentGroupEnum
+import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.PrivacySalt
+import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.TimeWindow
+import net.corda.core.contracts.TransactionState
 import net.corda.core.crypto.DigestService
 import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.Party
@@ -19,16 +21,17 @@ import java.time.Instant
 
 @CordaSerializable
 class ZKProverTransaction internal constructor(
-    val inputs: List<ZKStateAndRef<ZKContractState>>,
-    /**
-     * Because a ZKStateRef is a representation of the contents of a state, and no longer a pointer to
-     * a previous transaction output, outputs are also ZKStateAndRefs, like inputs and references.
-     */
-    val outputs: List<ZKStateAndRef<ZKContractState>>,
-    val references: List<ZKStateAndRef<ZKContractState>>,
+    val inputs: List<StateAndRef<ContractState>>,
+    val outputs: List<TransactionState<ZKContractState>>,
+    val references: List<StateAndRef<ContractState>>,
     val command: Command<ZKCommandData>,
     val notary: Party,
     val timeWindow: TimeWindow?,
+
+    /**
+     *  For the ZKProverTransaction to be deterministically created from a LedgerTransaction,
+     *  this needs to always be the privacySalt from the LedgerTransaction
+     */
     val privacySalt: PrivacySalt,
 
     /**
@@ -82,31 +85,31 @@ class ZKProverTransaction internal constructor(
     override fun equals(other: Any?) = if (other !is ZKProverTransaction) false else (this.id == other.id)
 
     data class Padded(
-        private val originalInputs: List<ZKStateAndRef<ZKContractState>>,
-        private val originalOutputs: List<ZKStateAndRef<ZKContractState>>,
-        private val originalReferences: List<ZKStateAndRef<ZKContractState>>,
+        private val originalInputs: List<StateAndRef<ContractState>>,
+        private val originalOutputs: List<TransactionState<ZKContractState>>,
+        private val originalSigners: List<PublicKey>,
+        private val originalReferences: List<StateAndRef<ContractState>>,
         private val originalAttachments: List<AttachmentId>,
         private val originalTimeWindow: TimeWindow?,
         private val originalNetworkParametersHash: SecureHash?,
-        private val originalSigners: List<PublicKey>,
         val paddingConfiguration: ComponentPaddingConfiguration
     ) {
 
-        fun inputs(): List<PaddingWrapper<ZKStateAndRef<ZKContractState>>> {
+        fun inputs(): List<PaddingWrapper<StateAndRef<ContractState>>> {
             val filler = filler(ComponentGroupEnum.INPUTS_GROUP)
-            require(filler is ComponentPaddingConfiguration.Filler.ZKStateAndRef) { "Expected filler of type ZKStateAndRef" }
+            require(filler is ComponentPaddingConfiguration.Filler.StateAndRef) { "Expected filler of type StateAndRef" }
             return originalInputs.wrappedPad(sizeOf(ComponentGroupEnum.INPUTS_GROUP), filler.content)
         }
 
-        fun outputs(): List<PaddingWrapper<ZKStateAndRef<ZKContractState>>> {
+        fun outputs(): List<PaddingWrapper<TransactionState<ZKContractState>>> {
             val filler = filler(ComponentGroupEnum.OUTPUTS_GROUP)
-            require(filler is ComponentPaddingConfiguration.Filler.ZKStateAndRef) { "Expected filler of type ZKStateAndRef" }
+            require(filler is ComponentPaddingConfiguration.Filler.TransactionState) { "Expected filler of type TransactionState" }
             return originalOutputs.wrappedPad(sizeOf(ComponentGroupEnum.OUTPUTS_GROUP), filler.content)
         }
 
-        fun references(): List<PaddingWrapper<ZKStateAndRef<ZKContractState>>> {
+        fun references(): List<PaddingWrapper<StateAndRef<ContractState>>> {
             val filler = filler(ComponentGroupEnum.REFERENCES_GROUP)
-            require(filler is ComponentPaddingConfiguration.Filler.ZKStateAndRef) { "Expected filler of type ZKStateAndRef" }
+            require(filler is ComponentPaddingConfiguration.Filler.StateAndRef) { "Expected filler of type StateAndRef" }
             return originalReferences.wrappedPad(sizeOf(ComponentGroupEnum.REFERENCES_GROUP), filler.content)
         }
 

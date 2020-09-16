@@ -1,6 +1,6 @@
 package com.ing.zknotary.notary
 
-import com.ing.zknotary.common.states.ZKStateRef
+import net.corda.core.contracts.StateRef
 import net.corda.core.crypto.SecureHash
 import net.corda.core.flows.NotarisationRequestSignature
 import net.corda.core.flows.NotaryError
@@ -32,16 +32,16 @@ import net.corda.core.utilities.toBase58String
  */
 @CordaSerializable
 // TODO: should this also contain the states that will be created?
-class ZKNotarisationRequest(statesToConsume: List<ZKStateRef>, val transactionId: SecureHash) {
+class ZKNotarisationRequest(statesToConsume: List<StateRef>, val transactionId: SecureHash) {
     companion object {
         /** Sorts in ascending order first by transaction hash, then by output index. */
-        private val stateRefComparator = compareBy<ZKStateRef> { it.id }
+        private val stateRefComparator = compareBy<StateRef>({ it.txhash }, { it.index })
     }
 
     private val _statesToConsumeSorted = statesToConsume.sortedWith(stateRefComparator)
 
     /** States this request specifies to be consumed. Sorted to ensure the serialized form does not get affected by the state order. */
-    val statesToConsume: List<ZKStateRef> get() = _statesToConsumeSorted // Getter required for AMQP serialization
+    val statesToConsume: List<StateRef> get() = _statesToConsumeSorted // Getter required for AMQP serialization
 
     /** Verifies the signature against this notarisation request. Checks that the signature is issued by the right party. */
     fun verifySignature(requestSignature: NotarisationRequestSignature, intendedSigner: Party) {
