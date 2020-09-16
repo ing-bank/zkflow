@@ -201,41 +201,31 @@ class BackChainTest {
         val paddingHash =
             currentVtx.componentGroupLeafDigestService.hash(paddingNonce.bytes + fillerOutput.content.fingerprint)
 
-        (currentVtx.padded.inputs()).forEachIndexed { index, paddingWrapper ->
-            val collectedHash = collectStateRefUtxoHash(
-                paddingWrapper,
-                paddingHash = paddingHash
-            )
+        fun List<PaddingWrapper<StateRef>>.collectUtxoHashesInto(hashes: MutableList<SecureHash>) =
+            mapIndexed() { index, it ->
+                val collectedHash = collectStateRefUtxoHash(
+                    it,
+                    paddingHash = paddingHash
+                )
 
-            inputHashes.add(index, collectedHash)
+                hashes.add(index, collectedHash)
 
-            if (paddingWrapper is PaddingWrapper.Original) {
-                println("   $indent Walking chain for input $index: ${paddingWrapper.content.toString().take(8)}")
-                // We only recurse if we are verifying a real stateRef
-                val prevVtx = zkStorage.getTransaction(paddingWrapper.content.txhash) ?: error("Should not happen")
-                verify(prevVtx, level + 1)
-            } else {
-                println("   $indent Skipping input $index: padding")
+                when (it) {
+                    is PaddingWrapper.Filler -> {
+                        println("   $indent Skipping input $index: padding")
+                    }
+                    is PaddingWrapper.Original -> {
+                        println("   $indent Walking chain for StateRef $index: ${it.content.toString().take(8)}")
+                        // We only recurse if we are verifying a real stateRef
+                        val prevVtx = zkStorage.getTransaction(it.content.txhash) ?: error("Should not happen")
+                        // TODO: Perhaps save this recursion until the end? Depends which order we want...
+                        verify(prevVtx, level + 1)
+                    }
+                }
             }
-        }
 
-        (currentVtx.padded.references()).forEachIndexed { index, paddingWrapper ->
-            val collectedHash = collectStateRefUtxoHash(
-                paddingWrapper,
-                paddingHash = paddingHash
-            )
-
-            referenceHashes.add(index, collectedHash)
-
-            if (paddingWrapper is PaddingWrapper.Original) {
-                println("   $indent Walking chain for reference $index: ${paddingWrapper.content.toString().take(8)}")
-                // We only recurse if we are verifying a real stateRef
-                val prevVtx = zkStorage.getTransaction(paddingWrapper.content.txhash) ?: error("Should not happen")
-                verify(prevVtx, level + 1)
-            } else {
-                println("   $indent Skipping reference $index: padding")
-            }
-        }
+        currentVtx.padded.inputs().collectUtxoHashesInto(inputHashes)
+        currentVtx.padded.references().collectUtxoHashesInto(referenceHashes)
 
         val calculatedPublicInput = PublicInput(
             currentVtx.id,
