@@ -6,7 +6,6 @@ import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.StateRef
 import net.corda.core.contracts.TimeWindow
 import net.corda.core.crypto.DigestService
-import net.corda.core.crypto.MerkleTree
 import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.Party
 import net.corda.core.serialization.CordaSerializable
@@ -71,8 +70,6 @@ class ZKVerifierTransaction(
 
         if (networkParametersHash != null) require(componentNonces[ComponentGroupEnum.PARAMETERS_GROUP.ordinal]?.size == 1) { "If there is a networkParametersHash, there should be a networkParametersHash nonce" }
         if (timeWindow != null) require(componentNonces[ComponentGroupEnum.TIMEWINDOW_GROUP.ordinal]?.size == 1) { "If there is a timeWindow, there should be exactly one timeWindow nonce" }
-
-        verify()
     }
 
     val id by lazy { merkleTree.root }
@@ -119,15 +116,5 @@ class ZKVerifierTransaction(
          */
         fun filler(componentGroup: ComponentGroupEnum) =
             paddingConfiguration.filler(componentGroup) ?: error("Expected a filler object")
-    }
-
-    fun verify() {
-        // Confirm that the known component hashes of the provided outputs component group match with the provided groupHash
-        if (outputHashes.isNotEmpty()) {
-            val outputsubTree = MerkleTree.getMerkleTree(outputHashes, nodeDigestService, componentGroupLeafDigestService)
-            check(outputsubTree.hash == groupHashes[ComponentGroupEnum.OUTPUTS_GROUP.ordinal]) {
-                "The provided output hashes do not match the provided outputs group hash"
-            }
-        }
     }
 }
