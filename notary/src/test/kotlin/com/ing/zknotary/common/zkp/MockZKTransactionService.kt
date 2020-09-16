@@ -1,6 +1,7 @@
 package com.ing.zknotary.common.zkp
 
 import com.ing.zknotary.common.contracts.ZKContractState
+import com.ing.zknotary.common.dactyloscopy.fingerprint
 import net.corda.core.contracts.TransactionState
 import net.corda.core.crypto.BLAKE2s256DigestService
 import net.corda.core.node.AppServiceHub
@@ -68,7 +69,7 @@ open class MockZKTransactionService(val serviceHub: AppServiceHub) : ZKTransacti
             }
 
             val calculatedLeafHashFromWitness =
-                BLAKE2s256DigestService.hash(nonceFromWitness.bytes + state.fingerprint)
+                BLAKE2s256DigestService.hash(nonceFromWitness.bytes + state.fingerprint())
 
             if (leafHashFromPublicInput != calculatedLeafHashFromWitness) error(
                 "Calculated leaf hash ($calculatedLeafHashFromWitness} for input $index of tx ${witness.transaction.id} does " +
@@ -93,7 +94,7 @@ open class MockZKTransactionService(val serviceHub: AppServiceHub) : ZKTransacti
             }
 
             val calculatedLeafHashFromWitness =
-                BLAKE2s256DigestService.hash(nonceFromWitness.bytes + state.fingerprint)
+                BLAKE2s256DigestService.hash(nonceFromWitness.bytes + state.fingerprint())
 
             if (leafHashFromPublicreference != calculatedLeafHashFromWitness) error(
                 "Calculated leaf hash ($calculatedLeafHashFromWitness} for reference $index of tx ${witness.transaction.id} does " +
