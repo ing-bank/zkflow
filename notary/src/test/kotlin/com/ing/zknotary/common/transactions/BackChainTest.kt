@@ -1,6 +1,7 @@
 package com.ing.zknotary.common.transactions
 
 import com.ing.zknotary.common.contracts.TestContract
+import com.ing.zknotary.common.testing.fixed
 import com.ing.zknotary.common.util.ComponentPaddingConfiguration
 import com.ing.zknotary.common.util.PaddingWrapper
 import com.ing.zknotary.common.zkp.MockZKTransactionService
@@ -32,8 +33,8 @@ import kotlin.time.measureTime
 
 @ExperimentalTime
 class BackChainTest {
-    private val alice = TestIdentity.fresh("alice", Crypto.EDDSA_ED25519_SHA512)
-    private val bob = TestIdentity.fresh("bob", Crypto.EDDSA_ED25519_SHA512)
+    private val alice = TestIdentity.fixed("alice", Crypto.EDDSA_ED25519_SHA512)
+    private val bob = TestIdentity.fixed("bob", Crypto.EDDSA_ED25519_SHA512)
 
     private val ledgerServices = MockServices(
         listOf("com.ing.zknotary.common.contracts"),
