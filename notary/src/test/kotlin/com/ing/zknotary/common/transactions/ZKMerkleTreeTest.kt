@@ -22,17 +22,19 @@ import net.corda.core.transactions.WireTransaction
 import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
 import net.corda.testing.node.ledger
-import org.junit.After
-import org.junit.Before
-import org.junit.Ignore
-import org.junit.Test
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.Tag
+import org.junit.jupiter.api.Test
 import java.io.File
 import java.time.Duration
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
 
 @ExperimentalTime
-@Ignore("Now that we need history for proof generation, this test will no longer work. Solution: use issuance tx for it")
+@Disabled("Now that we need history for proof generation, this test will no longer work. Solution: use issuance tx for it")
+@Tag("slow")
 class ZKMerkleTreeTest {
     private val fixedKeyPair = ZKNulls.fixedKeyPair(Crypto.EDDSA_ED25519_SHA512)
     private lateinit var alice: TestIdentity
@@ -59,12 +61,12 @@ class ZKMerkleTreeTest {
         println("Setup duration: $setupDuration")
     }
 
-    @After
+    @AfterEach
     fun `remove zinc files`() {
         zincTxZKService.cleanup()
     }
 
-    @Before
+    @BeforeEach
     fun setup() {
         alice = TestIdentity(
             CordaX500Name("alice", fixedKeyPair.public.toStringShort(), CordaX500Name.unspecifiedCountry), fixedKeyPair
