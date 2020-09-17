@@ -37,7 +37,6 @@ fun ZKProverTransaction.toZKVerifierTransaction(proof: ByteArray): ZKVerifierTra
     val componentNonces = this.merkleTree.componentNonces.filterKeys {
         it in listOf(
             ComponentGroupEnum.INPUTS_GROUP.ordinal,
-            ComponentGroupEnum.OUTPUTS_GROUP.ordinal,
             ComponentGroupEnum.REFERENCES_GROUP.ordinal,
             ComponentGroupEnum.NOTARY_GROUP.ordinal,
             ComponentGroupEnum.TIMEWINDOW_GROUP.ordinal,
