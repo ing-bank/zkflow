@@ -52,7 +52,7 @@ class Dactyloscopist() {
                 println("${prefix}Deep Fingerprintable: ${item::class.simpleName} -- ${fingerprint.joinToString(", ")}")
                 return fingerprint
             }
-            else -> error("Cannot decide which extension to use for fingerprinting: ${superTypes.joinToString(", ")}")
+            else -> throw MultipleFingerprintImplementations(item::class.qualifiedName, superTypes)
         }
 
         // ► Otherwise, try to fingerprint `item` via reflection.
@@ -76,8 +76,8 @@ class Dactyloscopist() {
             .filter { it.visibility != null && it.visibility == KVisibility.PUBLIC }
             .sortedBy { it.name }
 
-        require(members.isNotEmpty()) {
-            "Type with no associated fingerprinting functionality must be decomposable: ${reflection.qualifiedName}"
+        if (members.isEmpty()) {
+            throw MustHavePublicMembers(reflection.qualifiedName)
         }
 
         println("${prefix}Compose from: ${members.joinToString(", ")}")
