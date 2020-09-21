@@ -1,6 +1,6 @@
 package com.ing.zknotary.common.states
 
-import com.ing.zknotary.common.zkp.Fingerprintable
+import com.ing.zknotary.common.dactyloscopy.Fingerprintable
 import net.corda.core.KeepForDJVM
 import net.corda.core.crypto.SecureHash
 import net.corda.core.serialization.CordaSerializable
@@ -12,7 +12,7 @@ data class ZKStateRef(
 ) : Fingerprintable {
     override fun toString() = id.toString()
 
-    override val fingerprint: ByteArray = id.bytes
+    override fun fingerprint(): ByteArray = id.bytes
 
     companion object {
         fun empty() = ZKStateRef(SecureHash.zeroHash)

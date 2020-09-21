@@ -2,7 +2,7 @@ package com.ing.zknotary.common.states
 
 import com.ing.zknotary.common.contracts.ZKCommandData
 import com.ing.zknotary.common.contracts.ZKContractState
-import com.ing.zknotary.common.zkp.fingerprint
+import com.ing.zknotary.common.dactyloscopy.fingerprint
 import net.corda.core.KeepForDJVM
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.CommandData
@@ -20,13 +20,13 @@ data class ZKStateAndRef<out T : ZKContractState>(val state: TransactionState<T>
 fun StateAndRef<ContractState>.toZKStateAndRef(digestService: DigestService): ZKStateAndRef<ZKContractState> {
     require(state.data is ZKContractState) { "Contract state must implement ZKContractState" }
     val state = state as TransactionState<ZKContractState>
-    return ZKStateAndRef(state, ZKStateRef(digestService.hash(state.fingerprint)))
+    return ZKStateAndRef(state, ZKStateRef(digestService.hash(state.fingerprint())))
 }
 
 fun TransactionState<ContractState>.toZKStateAndRef(digestService: DigestService): ZKStateAndRef<ZKContractState> {
     require(data is ZKContractState) { "Contract state must implement ZKContractState" }
     val state = this as TransactionState<ZKContractState>
-    return ZKStateAndRef(state, ZKStateRef(digestService.hash(state.fingerprint)))
+    return ZKStateAndRef(state, ZKStateRef(digestService.hash(state.fingerprint())))
 }
 
 fun <T : CommandData> CommandWithParties<T>.toZKCommand(): Command<ZKCommandData> {

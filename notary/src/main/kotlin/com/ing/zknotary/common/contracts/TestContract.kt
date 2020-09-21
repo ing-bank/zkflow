@@ -1,6 +1,6 @@
 package com.ing.zknotary.common.contracts
 
-import com.ing.zknotary.common.zkp.fingerprint
+import com.ing.zknotary.common.dactyloscopy.fingerprint
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.CommandAndState
 import net.corda.core.contracts.Contract
@@ -29,7 +29,7 @@ class TestContract : Contract {
          * that is repeatable in Zinc.
          * The benefit is that users need not implement the Fingerprintable interface.
          */
-        override val fingerprint = owner.fingerprint + value.fingerprint
+        override fun fingerprint() = owner.fingerprint() + value.fingerprint()
     }
 
     // Commands

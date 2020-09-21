@@ -1,11 +1,11 @@
 package com.ing.zknotary.common.transactions
 
+import com.ing.zknotary.common.dactyloscopy.fingerprint
 import com.ing.zknotary.common.util.ComponentPaddingConfiguration
 import com.ing.zknotary.common.zkp.PublicInput
 import com.ing.zknotary.common.zkp.Witness
 import com.ing.zknotary.common.zkp.ZKNulls
 import com.ing.zknotary.common.zkp.ZincZKTransactionService
-import com.ing.zknotary.common.zkp.fingerprint
 import com.ing.zknotary.notary.transactions.createTestsState
 import com.ing.zknotary.notary.transactions.moveTestsState
 import net.corda.core.contracts.ComponentGroupEnum
@@ -124,7 +124,7 @@ class ZKMerkleTreeTest {
                 ?: error("Expected a filler object")
             require(fillerOutput is ComponentPaddingConfiguration.Filler.TransactionState) { "Expected filler of type TransactionState" }
             val paddingHash =
-                ptx.componentGroupLeafDigestService.hash(paddingNonce.bytes + fillerOutput.content.fingerprint)
+                ptx.componentGroupLeafDigestService.hash(paddingNonce.bytes + fillerOutput.content.fingerprint())
 
             val witness = Witness(
                 ptx,
