@@ -22,21 +22,12 @@ class Dactyloscopist() {
                 val receiver = it.parameters[0].type
                 receiver.canonicalName to it
             }.toMap()
-
-        println(
-            fingerprintableTypes.keys.joinToString(
-                ",\t",
-                "Known fingerprintable types:\n\t"
-            )
-        )
     }
 
-    fun identify(item: Any, prefix: String = "|--"): ByteArray {
+    fun identify(item: Any): ByteArray {
         // ► Check whether item **implements itself** the Fingerprintable interface.
         if (item is Fingerprintable && item.isFingerprinting) {
-            val fingerprint = item.fingerprint()
-            println("${prefix}Fingerprintable: ${item::class.simpleName} -- ${fingerprint?.joinToString(", ")}")
-            return fingerprint
+            return item.fingerprint()
         }
 
         // ► Check whether any of `item`'s superclasses implements an interface,
@@ -48,9 +39,7 @@ class Dactyloscopist() {
             1 -> {
                 // Force non-nullness is OK, because interfaces has been selected from known types
                 // and methods are known to return ByteArrays
-                val fingerprint = fingerprintableTypes[superTypes.single()]!!.invoke(container, item)!! as ByteArray
-                println("${prefix}Deep Fingerprintable: ${item::class.simpleName} -- ${fingerprint.joinToString(", ")}")
-                return fingerprint
+                return fingerprintableTypes[superTypes.single()]!!.invoke(container, item)!! as ByteArray
             }
             else -> throw MultipleFingerprintImplementations(item::class.qualifiedName, superTypes)
         }
@@ -67,7 +56,6 @@ class Dactyloscopist() {
         // - Cast as ByteArray is safe, because `specimen` contains only fingerprinting methods (`method.isFingerprinting == true`) by design.
         val fingerprint = fingerprintableTypes[receiver]?.invoke(container, item) as? ByteArray
         if (fingerprint != null) {
-            println("${prefix}Fingerprint: ${reflection.simpleName} -- ${fingerprint?.joinToString(", ")}")
             return fingerprint
         }
 
@@ -80,8 +68,6 @@ class Dactyloscopist() {
             throw MustHavePublicMembers(reflection.qualifiedName)
         }
 
-        println("${prefix}Compose from: ${members.joinToString(", ")}")
-
         return members.map {
             // Why is this working ???
             // without this clause everything breaks
@@ -90,11 +76,7 @@ class Dactyloscopist() {
             val value = it.get(item)
             require(value != null) { "All internal values must be non-null: ${it.name} of ${reflection.qualifiedName}" }
 
-            println("${prefix}${it.name}")
-            val bytes = identify(value!!, "$prefix--")
-            println("${prefix}Composite fingerprint: ${bytes.joinToString(", ")}\n|")
-
-            bytes
+            identify(value!!)
         }.fold(ByteArray(0)) { acc, bytes -> acc + bytes }
     }
 }
