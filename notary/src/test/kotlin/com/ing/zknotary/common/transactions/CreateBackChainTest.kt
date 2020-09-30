@@ -9,10 +9,8 @@ import com.ing.zknotary.common.zkp.MockZKTransactionService
 import com.ing.zknotary.common.zkp.PublicInput
 import com.ing.zknotary.common.zkp.ZKTransactionService
 import com.ing.zknotary.common.zkp.ZincZKTransactionService
-import com.ing.zknotary.node.services.collectVerifiedDependencies
 import com.ing.zknotary.node.services.toZKVerifierTransaction
 import com.ing.zknotary.nodes.services.MockZKTransactionStorage
-import junit.framework.TestCase.assertEquals
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.StateRef
 import net.corda.core.crypto.Crypto
@@ -33,7 +31,7 @@ import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
 
 @ExperimentalTime
-class BackChainTest {
+class CreateBackChainTest {
     private val alice = TestIdentity.fixed("alice", Crypto.EDDSA_ED25519_SHA512)
     private val bob = TestIdentity.fixed("bob", Crypto.EDDSA_ED25519_SHA512)
 
@@ -45,15 +43,13 @@ class BackChainTest {
     )
 
     private lateinit var createWtx: WireTransaction
-    private lateinit var moveWtx: WireTransaction
-    private lateinit var anotherMoveWtx: WireTransaction
 
     private val zkStorage = createMockCordaService(ledgerServices, ::MockZKTransactionStorage)
 
     // User real Zinc circuit, or mocked circuit (that checks same rules)
-    private val mockZKP = false
+    private val mockZKP = true
 
-    // Wich transaction to start verifying. This can be any transaction in the vault.
+    // Which transaction to start verifying. This can be any transaction in the vault.
     private lateinit var transactionToVerify: WireTransaction
 
     private val zkTransactionService: ZKTransactionService
@@ -62,7 +58,7 @@ class BackChainTest {
         if (mockZKP) {
             zkTransactionService = createMockCordaService(ledgerServices, ::MockZKTransactionService)
         } else {
-            val circuitFolder = File("${System.getProperty("user.dir")}/../prover/ZKMerkleTree").absolutePath
+            val circuitFolder = File("${System.getProperty("user.dir")}/../prover/circuits/create").absolutePath
             val artifactFolder = File("$circuitFolder/artifacts")
             artifactFolder.mkdirs()
 
@@ -99,66 +95,18 @@ class BackChainTest {
             verifies()
 
             println("CREATE \t\t\tWTX: ${createWtx.id.toString().take(8)}")
-            val createdState = createWtx.outRef<TestContract.TestState>(0)
-
-            moveWtx = transaction {
-                input(createdState.ref)
-                output(TestContract.PROGRAM_ID, createdState.state.data.withNewOwner(bob.party).ownableState)
-                command(listOf(createdState.state.data.owner.owningKey), TestContract.Move())
-                verifies()
-            }
-            println("MOVE \t\t\tWTX: ${moveWtx.id.toString().take(8)}")
-
-            val movedState = moveWtx.outRef<TestContract.TestState>(0)
-
-            val create2Wtx = transaction {
-                command(listOf(alice.publicKey), TestContract.Create())
-                output(TestContract.PROGRAM_ID, "Bob's reference asset", TestContract.TestState(alice.party))
-                verifies()
-            }
-            verifies()
-            println("CREATE2 \t\tWTX: ${create2Wtx.id.toString().take(8)}")
-
-            anotherMoveWtx = transaction {
-                input(movedState.ref)
-                output(TestContract.PROGRAM_ID, movedState.state.data.withNewOwner(alice.party).ownableState)
-                command(listOf(movedState.state.data.owner.owningKey), TestContract.Move())
-                reference("Bob's reference asset")
-                verifies()
-            }
-            println("ANOTHERMOVE \tWTX: ${anotherMoveWtx.id.toString().take(8)}")
-
-            verifies()
         }
 
-        transactionToVerify = moveWtx
-    }
-
-    @Test
-    @Tag("slow")
-    fun `Prover can fetch the complete tx graph for input StateRefs`() {
-        val sortedDependencies = ledgerServices.validatedTransactions
-            .collectVerifiedDependencies(anotherMoveWtx.inputs)
-
-        // We expect that the sorted deps of the anotherMoveWtx input is createWtx, moveWtx.
-        assertEquals(listOf(createWtx.id, moveWtx.id), sortedDependencies)
+        transactionToVerify = createWtx
     }
 
     @Test
     @Tag("slow")
     fun `We deterministically build, prove and verify graph of ZKVerifierTransactions based on graph of SignedTransactions`() {
         ledgerServices.ledger {
-            // First, if not done before,  the prover makes sure it has all SignedTransactions by calling ResolveTransactionsFlow
-            // Then, the prover walks through the list of stxs in order from issuance, leading to the stx to prove,
-            // and creates ptxs out of them. This requires changing txhashes in the StateRefs to the just calculated
-            // txhashes of the newly created ptxs.
-            val orderedDeps =
-                ledgerServices.validatedTransactions.collectVerifiedDependencies(transactionToVerify.inputs + transactionToVerify.references)
-
             println()
-            // Create and store all vtxs ordered from issuances up to head tx
-            (orderedDeps + transactionToVerify.id).forEach {
-
+            // For Create tx there is no history.
+            listOf(transactionToVerify.id).forEach {
                 print("Proving tx: ${it.toString().take(8)}")
                 val provingTime = measureTime {
                     val vtx = ledgerServices.validatedTransactions.getTransaction(it)!!

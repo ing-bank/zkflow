@@ -35,14 +35,14 @@ import kotlin.time.measureTime
 @ExperimentalTime
 @Disabled("Now that we need history for proof generation, this test will no longer work. Solution: use issuance tx for it")
 @Tag("slow")
-class ZKMerkleTreeTest {
+class MoveTxTest {
     private val fixedKeyPair = ZKNulls.fixedKeyPair(Crypto.EDDSA_ED25519_SHA512)
     private lateinit var alice: TestIdentity
     private lateinit var bob: TestIdentity
     private lateinit var notary: Party
     private lateinit var ledgerServices: MockServices
 
-    private val circuitFolder = File("${System.getProperty("user.dir")}/../prover/ZKMerkleTree").absolutePath
+    private val circuitFolder = File("${System.getProperty("user.dir")}/../prover/circuits/move").absolutePath
     private val artifactFolder = File("$circuitFolder/artifacts")
     private val zincTxZKService = ZincZKTransactionService(
         circuitFolder,
@@ -118,7 +118,7 @@ class ZKMerkleTreeTest {
                 nodeDigestService = PedersenDigestService
             )
 
-            // TODO: replace this duplicated code from BackChainTest
+            // TODO: replace this duplicated code from MoveBackChainTest
             val paddingNonce = ptx.componentGroupLeafDigestService.zeroHash
             val fillerOutput = ptx.componentPaddingConfiguration.filler(ComponentGroupEnum.OUTPUTS_GROUP)
                 ?: error("Expected a filler object")
