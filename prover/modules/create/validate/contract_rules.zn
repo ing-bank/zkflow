@@ -1,0 +1,5 @@
+//Temporary function to test isFiller attribute
+fn check_contract_rules(value: ZKProverTransaction) {
+    //TODO
+
+}

@@ -1,0 +1,1 @@
+const COMPONENT_GROUPS_SIZE: u8 = 8;
