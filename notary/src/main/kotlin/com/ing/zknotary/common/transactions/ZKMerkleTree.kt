@@ -44,19 +44,18 @@ abstract class AbstractZKMerkleTree(
      */
     open val groupHashes: List<SecureHash> by lazy {
         ComponentGroupEnum.values().map {
-            val root = groupsMerkleRoots[it.ordinal]
-            require(root != null) { "Component group $it must be present" }
-            root!!
+            groupsMerkleRoots[it.ordinal] ?: SecureHash.allOnesHash
         }
     }
 
     val groupsMerkleRoots: Map<Int, SecureHash> by lazy {
         componentHashes.map { (groupIndex: Int, componentHashesInGroup: List<SecureHash>) ->
-            groupIndex to MerkleTree.getMerkleTree(
+            val root = MerkleTree.getMerkleTree(
                 componentHashesInGroup,
                 nodeDigestService,
                 componentGroupLeafDigestService
             ).hash
+            groupIndex to root
         }.toMap()
     }
 
