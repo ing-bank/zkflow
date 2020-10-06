@@ -4,6 +4,7 @@
 
 struct PublicInput {
     transaction_id: NodeDigestDto,
+    input_hashes: [ComponentGroupLeafDigestDto; INPUT_GROUP_SIZE],
     reference_hashes: [ComponentGroupLeafDigestDto; REFERENCE_GROUP_SIZE],
 }
 
@@ -18,6 +19,9 @@ fn main(witness: Witness) -> PublicInput {
 
     PublicInput {
         transaction_id: NodeDigestDto::from_bits_to_bytes(root_hash),
+        input_hashes: [ComponentGroupLeafDigestDto {
+            bytes: [0; COMPONENT_GROUP_LEAF_DIGEST_BYTES],
+        }; INPUT_GROUP_SIZE],
         reference_hashes: compute_reference_utxo_digests(
             witness.transaction.references.components,
             witness.reference_nonces,

@@ -187,6 +187,7 @@ sealed class CommandCircuit(command: String, absoluteRoot: String) {
             "shared/crypto/pub_key.zn",
             "shared/utils/merkle_utils.zn",
             "shared/state_and_ref.zn",
+            "shared/components/inputs.zn",
             "shared/components/outputs.zn",
             "shared/components/references.zn",
             "shared/components/commands.zn",
@@ -195,9 +196,9 @@ sealed class CommandCircuit(command: String, absoluteRoot: String) {
             "shared/components/time_window.zn",
             "shared/components/parameters.zn",
             "shared/components/signers.zn",
-            "create/zk_prover_transaction.zn",
-            "create/utils/utxo_digests.zn",
-            "create/merkle_tree.zn",
+            "shared/zk_prover_transaction.zn",
+            "shared/utils/utxo_digests.zn",
+            "shared/merkle_tree.zn",
             "create/validate/contract_rules.zn",
             "create/main.zn")
     }
@@ -226,12 +227,93 @@ sealed class CommandCircuit(command: String, absoluteRoot: String) {
             "shared/components/time_window.zn",
             "shared/components/parameters.zn",
             "shared/components/signers.zn",
-            "move/zk_prover_transaction.zn",
-            "move/utils/utxo_digests.zn",
-            "move/merkle_tree.zn",
+            "shared/zk_prover_transaction.zn",
+            "shared/utils/utxo_digests.zn",
+            "shared/merkle_tree.zn",
             "move/validate/contract_rules.zn",
             "move/main.zn"
         )
+    }
+
+    private fun getNextPowerOfTwo(value: Int): Int {
+        val highestOneBit = Integer.highestOneBit(value)
+        return if (value == 1) {
+            2
+        }
+        else {
+            highestOneBit shl 1
+        }
+    }
+
+    private fun getGroupSize(constsPath: String): HashMap<String, Int> {
+        var componentGroupSizes = HashMap<String, Int>()
+
+        File(constsPath).forEachLine {
+            if (it.contains("_GROUP_SIZE")) {
+                val groupName = it.substring(it.indexOf("const") + 6, it.indexOf("_GROUP_SIZE")).toLowerCase()
+                val groupSize = it.substring(it.indexOf("=") + 2, it.indexOf(";")).toInt()
+                componentGroupSizes[groupName] = groupSize
+            }
+        }
+
+        return componentGroupSizes
+    }
+
+    private fun findCorrespondingMerkleTreeFunction(componentPath: String, circuitPath: String): String {
+        val componentGroupSizes = if(circuitPath.contains("create")) {
+            getGroupSize(constsPath = "$modules/create/utils/consts.zn")
+        } else {
+            getGroupSize(constsPath = "$modules/move/utils/consts.zn")
+        }
+        val componentGroupName = componentPath.substring(componentPath.indexOf("components/") + 11, componentPath.indexOf(".zn") - 1)
+
+        if (componentGroupSizes.containsKey(componentGroupName)) {
+            val componentGroupSize = componentGroupSizes.getValue(componentGroupName)
+            return when {
+                //This condition is executed when there is no element in the component group.
+                //The return value is allOnesHash
+                componentGroupSize == 0 -> {
+                    ("""
+        ///Return all ones hash
+        [true; NODE_DIGEST_BITS]
+        """)
+                }
+                //This condition is executed when the defined group size is an exact power of 2.
+                //The return value is the merkle tree function that corresponds to the group size.
+                componentGroupSize % 2 == 0 -> {
+                    ("""
+        let component_leaf_hashes = compute_leaf_hashes(this, privacy_salt);
+        
+        get_merkle_tree_from_${componentGroupSize}_component_group_leaf_digests(component_leaf_hashes)
+        """)
+                }
+                //This condition is executed when the defined group size is not a power of 2.
+                //The function finds the next power of 2 and adds padded values to the group.
+                //The return value is the merkle tree function that corresponds to the padded group size.
+                else -> {
+                    val paddedGroupSize = getNextPowerOfTwo(componentGroupSize)
+                    ("""
+        let component_leaf_hashes = compute_leaf_hashes(this, privacy_salt);
+        
+        let mut padded_leaves = [[false; COMPONENT_GROUP_LEAF_DIGEST_BITS]; ${paddedGroupSize}];
+        for i in 0..${componentGroupSize} {
+            padded_leaves[i] = component_leaf_hashes[i];
+        }
+        
+        get_merkle_tree_from_${paddedGroupSize}_component_group_leaf_digests(padded_leaves)
+        """)
+                }
+            }
+        }
+        //This condition is executed when there is no component group size defined.
+        //It is possible for notary, timeWindow, parameters groups
+        //In that case, we call Merkle tree function for 2 with padded leaves
+        return ("""
+        let mut padded_leaves = [[false; COMPONENT_GROUP_LEAF_DIGEST_BITS]; 2];
+        padded_leaves[0] = component_leaf_hash;
+        
+        get_merkle_tree_from_2_component_group_leaf_digests(padded_leaves)
+        """)
     }
 
     fun build() {
@@ -251,7 +333,13 @@ sealed class CommandCircuit(command: String, absoluteRoot: String) {
                     part
                         .readLines()
                         .filter { line -> !line.contains("dbg!") }
-                        .forEach { line -> circuit.appendText("$line\n") }
+                        .forEach { line ->
+                            if (line.contains("//!###CALL APPROPRIATE MERKLE TREE FUNCTION###")) {
+                                circuit.appendText(findCorrespondingMerkleTreeFunction(it, circuitPath) + "\n")
+                            } else {
+                                circuit.appendText("$line\n")
+                            }
+                        }
                 }
 
                 circuit.appendText("//! OUT ==== $it\n\n")
@@ -264,3 +352,18 @@ sealed class CommandCircuit(command: String, absoluteRoot: String) {
 task("circuits") {
     dependsOn("generateMerkleUtils", "rustfmtCheck", "buildCircuits")
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
