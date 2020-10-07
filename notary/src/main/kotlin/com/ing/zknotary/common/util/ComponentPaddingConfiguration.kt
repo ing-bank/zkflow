@@ -54,16 +54,16 @@ class ComponentPaddingConfiguration private constructor(
         }
 
         fun build(): ComponentPaddingConfiguration {
-            positive(padding[ComponentGroupEnum.INPUTS_GROUP.ordinal], "inputs")
-            positive(padding[ComponentGroupEnum.OUTPUTS_GROUP.ordinal], "outputs")
-            positive(padding[ComponentGroupEnum.REFERENCES_GROUP.ordinal], "references")
-            positive(padding[ComponentGroupEnum.ATTACHMENTS_GROUP.ordinal], "attachments")
+            nonNegative(padding[ComponentGroupEnum.INPUTS_GROUP.ordinal], "inputs")
+            nonNegative(padding[ComponentGroupEnum.OUTPUTS_GROUP.ordinal], "outputs")
+            nonNegative(padding[ComponentGroupEnum.REFERENCES_GROUP.ordinal], "references")
+            nonNegative(padding[ComponentGroupEnum.ATTACHMENTS_GROUP.ordinal], "attachments")
 
             return ComponentPaddingConfiguration(padding, fillers)
         }
 
-        private fun positive(value: Int?, that: String) {
-            require(value ?: -1 > 0) { "Size of $that group must be defined with a positive number" }
+        private fun nonNegative(value: Int?, that: String) {
+            require(value ?: -1 >= 0) { "Size of $that group must be defined with a non-negative number" }
         }
     }
 
