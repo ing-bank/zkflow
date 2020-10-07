@@ -172,6 +172,12 @@ sealed class CommandCircuit(command: String, absoluteRoot: String) {
     val circuitRoot = "$circuits/$command"
     val circuitPath = "$circuitRoot/src/main.zn"
 
+    //a map where each command has its corresponding consts path
+    val commandConstsMap = mapOf(
+        "create" to "$modules/create/utils/consts.zn",
+        "move" to "$modules/move/utils/consts.zn")
+
+
     class Create(root: String): CommandCircuit("create", root){
         override val _orderedModules = listOf(
             "shared/utils/preamble.zn",
@@ -245,30 +251,25 @@ sealed class CommandCircuit(command: String, absoluteRoot: String) {
         }
     }
 
-    private fun getGroupSize(constsPath: String): HashMap<String, Int> {
-        var componentGroupSizes = HashMap<String, Int>()
+    private fun getGroupSize(constsPath: String): Map<String, Int> {
+        val regex = "const[ ]+([A-Z]+)_GROUP_SIZE[a-z,0-9,: ]+=[ ]?([0-9]+)".toRegex()
 
-        File(constsPath).forEachLine {
-            if (it.contains("_GROUP_SIZE")) {
-                val groupName = it.substring(it.indexOf("const") + 6, it.indexOf("_GROUP_SIZE")).toLowerCase()
-                val groupSize = it.substring(it.indexOf("=") + 2, it.indexOf(";")).toInt()
-                componentGroupSizes[groupName] = groupSize
-            }
-        }
-
-        return componentGroupSizes
+        return regex.findAll(File(constsPath).readText()).map {
+            val(a, b) = it.destructured
+            a.toLowerCase() to b.toInt()
+        }.toMap()
     }
 
+    fun<K, V> Map<K, V>.single(predicate: (K, V) -> Boolean) =
+        filter { (k, v) -> predicate(k, v) }.values.single()
+
     private fun findCorrespondingMerkleTreeFunction(componentPath: String, circuitPath: String): String {
-        val componentGroupSizes = if(circuitPath.contains("create")) {
-            getGroupSize(constsPath = "$modules/create/utils/consts.zn")
-        } else {
-            getGroupSize(constsPath = "$modules/move/utils/consts.zn")
-        }
+        val componentGroupSizes = getGroupSize(commandConstsMap.single { command, _ -> circuitPath.contains(command) })
         val componentGroupName = componentPath.substring(componentPath.indexOf("components/") + 11, componentPath.indexOf(".zn") - 1)
 
         if (componentGroupSizes.containsKey(componentGroupName)) {
             val componentGroupSize = componentGroupSizes.getValue(componentGroupName)
+
             return when {
                 //This condition is executed when there is no element in the component group.
                 //The return value is allOnesHash
@@ -352,10 +353,6 @@ sealed class CommandCircuit(command: String, absoluteRoot: String) {
 task("circuits") {
     dependsOn("generateMerkleUtils", "rustfmtCheck", "buildCircuits")
 }
-
-
-
-
 
 
 
