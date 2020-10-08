@@ -5,6 +5,8 @@ import com.ing.zknotary.common.util.PaddingWrapper
 import net.corda.core.DeleteForDJVM
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.StateRef
+import net.corda.core.crypto.SecureHash
+import java.nio.ByteBuffer
 import kotlin.math.max
 
 @DeleteForDJVM
@@ -53,10 +55,13 @@ fun ZKProverTransaction.toZKVerifierTransaction(proof: ByteArray): ZKVerifierTra
         .attachments(this.padded.sizeOf(ComponentGroupEnum.ATTACHMENTS_GROUP), secureHashFiller)
         .build()
 
+    val circuitId = SecureHash.sha256(ByteBuffer.allocate(4).putInt(this.command.value.id).array())
+
     return ZKVerifierTransaction(
         proof,
         this.inputs.map { it.ref },
         this.references.map { it.ref },
+        circuitId,
 
         this.notary,
         this.timeWindow,

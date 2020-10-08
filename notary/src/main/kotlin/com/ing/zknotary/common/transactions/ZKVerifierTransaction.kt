@@ -21,6 +21,7 @@ class ZKVerifierTransaction(
     // Or do we just attach the hash of the verifier key?
     // With that they can select the correct key, and also know which circuit they are verifiying.
     // Perhaps the command?
+    val circuitId: SecureHash,
 
     val notary: Party,
     val timeWindow: TimeWindow?,
