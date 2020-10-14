@@ -1,125 +1,41 @@
 package com.ing.zknotary.common.transactions
 
-import com.ing.zknotary.common.contracts.ZKCommandData
 import com.ing.zknotary.common.dactyloscopy.fingerprint
 import com.ing.zknotary.common.util.ComponentPaddingConfiguration
 import com.ing.zknotary.common.util.PaddingWrapper
-import com.ing.zknotary.common.zkp.MockZKTransactionService
 import com.ing.zknotary.common.zkp.PublicInput
-import com.ing.zknotary.common.zkp.ZKTransactionService
 import com.ing.zknotary.common.zkp.ZincZKTransactionService
-import com.ing.zknotary.node.services.collectVerifiedDependencies
-import com.ing.zknotary.node.services.toZKVerifierTransaction
-import com.ing.zknotary.nodes.services.MockZKTransactionStorage
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.StateRef
 import net.corda.core.crypto.SecureHash
 import net.corda.core.transactions.WireTransaction
-import net.corda.testing.node.MockServices
-import net.corda.testing.node.createMockCordaService
 import net.corda.testing.node.ledger
-import java.io.File
-import java.nio.ByteBuffer
-import java.time.Duration
-import kotlin.streams.toList
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
 
 @ExperimentalTime
-class VerificationService {
-    private val ledgerServices: MockServices
-    private val zkTransactionServices: Map<SecureHash, ZKTransactionService>
-    private val zkStorage: MockZKTransactionStorage
-
-    constructor(ledgerServices: MockServices, circuits: Map<SecureHash, String>) {
-        this.ledgerServices = ledgerServices
-        zkStorage = createMockCordaService(ledgerServices, ::MockZKTransactionStorage)
-
-        println("Setting up ${circuits.size} circuits, this may take some minutes")
-        val overallSetupDuration = measureTime {
-            zkTransactionServices = circuits.entries.parallelStream().map { (circuitId, circuitPath) ->
-                println("Starting for $circuitPath")
-
-                val circuitFolder = File(circuitPath).absolutePath
-                val artifactFolder = File("$circuitFolder/artifacts")
-                artifactFolder.mkdirs()
-
-                val zkTransactionService = ZincZKTransactionService(
-                    circuitFolder,
-                    artifactFolder = artifactFolder.absolutePath,
-                    buildTimeout = Duration.ofSeconds(10 * 60),
-                    setupTimeout = Duration.ofSeconds(10 * 60),
-                    provingTimeout = Duration.ofSeconds(10 * 60),
-                    verificationTimeout = Duration.ofSeconds(10 * 60)
-                )
-
-                val setupDuration = measureTime {
-                    zkTransactionService.setup()
-                }
-
-                println("Setup duration for $circuitPath: ${setupDuration.inMinutes} minutes")
-
-                circuitId to zkTransactionService
-            }
-                .toList()
-                .toMap()
-            // Impossible to immediately collect into a Map.
-        }
-
-        println("Overall setup duration: ${overallSetupDuration.inMinutes} minutes")
-    }
-
-    private constructor(ledgerServices: MockServices) {
-        this.ledgerServices = ledgerServices
-        zkTransactionServices = mapOf(SecureHash.allOnesHash as SecureHash to createMockCordaService(ledgerServices, ::MockZKTransactionService))
-        zkStorage = createMockCordaService(ledgerServices, ::MockZKTransactionStorage)
-    }
-
-    companion object {
-        fun mocked(ledgerServices: MockServices): VerificationService {
-            return VerificationService(ledgerServices)
-        }
-    }
+class VerificationService(private val proverService: ProverService) {
+    private val ledgerServices = proverService.ledgerServices
+    private val zkStorage = proverService.zkStorage
+    private val zkTransactionServices = proverService.zkTransactionServices
 
     fun verify(tx: WireTransaction) {
-        ledgerServices.ledger {
-            // First, if not done before,  the prover makes sure it has all SignedTransactions by calling ResolveTransactionsFlow
-            // Then, the prover walks through the list of stxs in order from issuance, leading to the stx to prove,
-            // and creates ptxs out of them. This requires changing txhashes in the StateRefs to the just calculated
-            // txhashes of the newly created ptxs.
-            val orderedDeps =
-                ledgerServices.validatedTransactions.collectVerifiedDependencies(tx.inputs + tx.references)
+        println("\nVerifying chain leading to: ${tx.id.toString().take(8)}")
 
-            // Create and store all vtxs ordered from issuances up to head tx
-            (orderedDeps + tx.id).forEach {
-                print("Proving tx: ${it.toString().take(8)}")
-                val provingTime = measureTime {
-                    val stx = ledgerServices.validatedTransactions.getTransaction(it)!!
-
-                    val commandId = ((stx.coreTransaction as WireTransaction).commands.single().value as ZKCommandData).id
-                    val circuitId = SecureHash.Companion.sha256(ByteBuffer.allocate(4).putInt(commandId).array())
-                    val zkTransactionService = zkTransactionServices[circuitId]
-                        ?: zkTransactionServices[SecureHash.allOnesHash]
-                        ?: error("Unknown circuit for command id: $commandId")
-
-                    val vtx = stx.toZKVerifierTransaction(
-                        ledgerServices,
-                        zkStorage,
-                        zkTransactionService,
-                        persist = true
-                    )
-
-                    print(" => ${vtx.id.toString().take(8)}")
-                }
-                println(" in $provingTime")
+        val verificationTime = measureTime {
+            ledgerServices.ledger {
+                println("Starting recursive verification:")
+                val vtx = zkStorage.zkVerifierTransactionFor(tx) ?: error("No corresponding Verifier Tx found for Wire Tx ${tx.id}")
+                verify(vtx)
             }
-
-            println("\nStarting recursive verification:")
-            verify(zkStorage.zkVerifierTransactionFor(tx)!!)
         }
+
+        println("Overall verification time: $verificationTime")
     }
 
-    // Verify each tx recursively ("walking back the chain")
+    /**
+     * Verify each tx recursively ("walking back the chain")
+     */
     private fun verify(currentVtx: ZKVerifierTransaction, level: Int = 0) {
         val indent = " ".repeat(level * 6) + "|-"
         println("$indent Verifying TX at level $level: ${currentVtx.id.toString().take(8)}")
@@ -222,6 +138,8 @@ class VerificationService {
     }
 
     fun cleanup() {
-        // (zkTransactionService as? ZincZKTransactionService)?.cleanup()
+        zkTransactionServices.forEach { (_, service) ->
+            (service as? ZincZKTransactionService)?.cleanup()
+        }
     }
 }

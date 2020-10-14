@@ -45,10 +45,16 @@ class MoveBackChainTest {
         SecureHash.Companion.sha256(ByteBuffer.allocate(4).putInt(it.key).array()) as SecureHash to it.value
     }.toMap()
 
-    private val verificationService = if (mockZKP) {
-        VerificationService.mocked(ledgerServices)
-    } else {
-        VerificationService(ledgerServices, circuits)
+    private val verificationService by lazy {
+        val proverService = if (mockZKP) {
+            ProverService(ledgerServices)
+        } else {
+            ProverService(ledgerServices, circuits)
+        }
+
+        proverService.prove(transactionToVerify)
+
+        VerificationService(proverService)
     }
 
     @AfterEach

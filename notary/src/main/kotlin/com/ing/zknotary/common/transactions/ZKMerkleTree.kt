@@ -50,12 +50,11 @@ abstract class AbstractZKMerkleTree(
 
     val groupsMerkleRoots: Map<Int, SecureHash> by lazy {
         componentHashes.map { (groupIndex: Int, componentHashesInGroup: List<SecureHash>) ->
-            val root = MerkleTree.getMerkleTree(
+            groupIndex to MerkleTree.getMerkleTree(
                 componentHashesInGroup,
                 nodeDigestService,
                 componentGroupLeafDigestService
             ).hash
-            groupIndex to root
         }.toMap()
     }
 

@@ -55,6 +55,9 @@ fun ZKProverTransaction.toZKVerifierTransaction(proof: ByteArray): ZKVerifierTra
         .attachments(this.padded.sizeOf(ComponentGroupEnum.ATTACHMENTS_GROUP), secureHashFiller)
         .build()
 
+    // TODO
+    // This construction of the circuit id is temporary and will be replaced in the subsequent work.
+    // The proper id must identify circuit and its version.
     val circuitId = SecureHash.sha256(ByteBuffer.allocate(4).putInt(this.command.value.id).array())
 
     return ZKVerifierTransaction(
