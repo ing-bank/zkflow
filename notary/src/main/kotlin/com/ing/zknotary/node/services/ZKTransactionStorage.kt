@@ -26,7 +26,7 @@ import rx.Observable
 fun SignedTransaction.toZKVerifierTransaction(
     services: ServiceHub,
     zkStorage: ZKWritableTransactionStorage,
-    zktransactionService: ZKTransactionService,
+    zkTransactionService: ZKTransactionService,
     persist: Boolean = true
 ): ZKVerifierTransaction {
     val wtx = coreTransaction as WireTransaction
@@ -57,7 +57,7 @@ fun SignedTransaction.toZKVerifierTransaction(
     val inputNonces = ptx.padded.inputs().collectUtxoNonces()
     val referenceNonces = ptx.padded.references().collectUtxoNonces()
 
-    val proof = zktransactionService.prove(Witness(ptx, inputNonces = inputNonces, referenceNonces = referenceNonces))
+    val proof = zkTransactionService.prove(Witness(ptx, inputNonces = inputNonces, referenceNonces = referenceNonces))
     val vtx = ptx.toZKVerifierTransaction(proof)
 
     if (persist) {

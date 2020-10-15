@@ -50,13 +50,9 @@ class ZKProverTransaction internal constructor(
     val attachments: List<AttachmentId>,
 
     val componentGroupLeafDigestService: DigestService,
-    val nodeDigestService: DigestService = componentGroupLeafDigestService,
-
-    /**
-     * Used for padding internal lists to sizes accepted by the ZK circuit.
-     */
-    val componentPaddingConfiguration: ComponentPaddingConfiguration
+    val nodeDigestService: DigestService = componentGroupLeafDigestService
 ) : NamedByZKMerkleTree {
+    val componentPaddingConfiguration = command.value.paddingConfiguration
 
     val padded = Padded(
         originalInputs = inputs,

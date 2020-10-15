@@ -44,9 +44,7 @@ abstract class AbstractZKMerkleTree(
      */
     open val groupHashes: List<SecureHash> by lazy {
         ComponentGroupEnum.values().map {
-            val root = groupsMerkleRoots[it.ordinal]
-            require(root != null) { "Component group $it must be present" }
-            root!!
+            groupsMerkleRoots[it.ordinal] ?: SecureHash.allOnesHash
         }
     }
 

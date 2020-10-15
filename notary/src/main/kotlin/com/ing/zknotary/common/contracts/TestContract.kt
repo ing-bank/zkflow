@@ -1,11 +1,18 @@
 package com.ing.zknotary.common.contracts
 
 import com.ing.zknotary.common.dactyloscopy.fingerprint
+import com.ing.zknotary.common.util.ComponentPaddingConfiguration
+import com.ing.zknotary.common.zkp.ZKNulls
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.CommandAndState
 import net.corda.core.contracts.Contract
 import net.corda.core.contracts.ContractClassName
 import net.corda.core.contracts.OwnableState
+import net.corda.core.contracts.StateAndRef
+import net.corda.core.contracts.StateRef
+import net.corda.core.contracts.TransactionState
+import net.corda.core.crypto.BLAKE2s256DigestService
+import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.AbstractParty
 import net.corda.core.transactions.LedgerTransaction
 import java.util.Random
@@ -35,10 +42,52 @@ class TestContract : Contract {
     // Commands
     class Create : ZKCommandData {
         override val id: Int = 0
+        override val paddingConfiguration: ComponentPaddingConfiguration
+            get() {
+                val emptyState = TestState(ZKNulls.NULL_PARTY, 0)
+                val transactionStateFiller = ComponentPaddingConfiguration.Filler.TransactionState(
+                    TransactionState(emptyState, notary = ZKNulls.NULL_PARTY)
+                )
+                val stateAndRefFiller = ComponentPaddingConfiguration.Filler.StateAndRef(
+                    StateAndRef(
+                        TransactionState(emptyState, notary = ZKNulls.NULL_PARTY),
+                        StateRef(BLAKE2s256DigestService.zeroHash, 0)
+                    )
+                )
+
+                return ComponentPaddingConfiguration.Builder()
+                    .inputs(0, stateAndRefFiller)
+                    .outputs(2, transactionStateFiller)
+                    .references(2, stateAndRefFiller)
+                    .attachments(2, ComponentPaddingConfiguration.Filler.SecureHash(SecureHash.zeroHash))
+                    .signers(2)
+                    .build()
+            }
     }
 
     class Move : ZKCommandData {
         override val id: Int = 1
+        override val paddingConfiguration: ComponentPaddingConfiguration
+            get() {
+                val emptyState = TestState(ZKNulls.NULL_PARTY, 0)
+                val transactionStateFiller = ComponentPaddingConfiguration.Filler.TransactionState(
+                    TransactionState(emptyState, notary = ZKNulls.NULL_PARTY)
+                )
+                val stateAndRefFiller = ComponentPaddingConfiguration.Filler.StateAndRef(
+                    StateAndRef(
+                        TransactionState(emptyState, notary = ZKNulls.NULL_PARTY),
+                        StateRef(BLAKE2s256DigestService.zeroHash, 0)
+                    )
+                )
+
+                return ComponentPaddingConfiguration.Builder()
+                    .inputs(2, stateAndRefFiller)
+                    .outputs(2, transactionStateFiller)
+                    .references(2, stateAndRefFiller)
+                    .attachments(2, ComponentPaddingConfiguration.Filler.SecureHash(SecureHash.zeroHash))
+                    .signers(2)
+                    .build()
+            }
     }
 
     override fun verify(tx: LedgerTransaction) {

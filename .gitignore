@@ -103,3 +103,6 @@ gradle-app.setting
 
 # Witness file for Zinc
 witness.json
+
+# Generated Zinc file
+merkle_utils.zn

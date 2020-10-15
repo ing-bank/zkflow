@@ -98,7 +98,7 @@ tasks.apply {
     // This applies to all test types, both fast and slow
     withType<Test> {
         dependsOn("spotlessCheck") // Make sure we fail early on style
-        dependsOn(":prover:circuit") // Make sure that the Zinc circuit is ready to use when running tests
+        dependsOn(":prover:circuits") // Make sure that the Zinc circuit is ready to use when running tests
 
         val cores = Runtime.getRuntime().availableProcessors()
         maxParallelForks = (Runtime.getRuntime().availableProcessors() / 2).takeIf { it > 0 } ?: 1

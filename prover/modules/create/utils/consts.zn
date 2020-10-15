@@ -1,0 +1,12 @@
+//!
+//! Sizes of Corda's component groups are fixed to the below values.
+//! Corda must produce witness such it contains the expected number of components
+//! in each group.
+//! See definition of ZKCommandData on the Corda side.
+//!
+const ATTACHMENT_GROUP_SIZE: u16 = 2;
+const COMMAND_GROUP_SIZE: u16 = 1;
+const INPUT_GROUP_SIZE: u16 = 0;
+const OUTPUT_GROUP_SIZE: u16 = 2;
+const REFERENCE_GROUP_SIZE: u16 = 2;
+const SIGNER_GROUP_SIZE: u16 = 2;

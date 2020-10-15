@@ -1,0 +1,71 @@
+///Utility functions that are used by cryptographic primitives.
+
+const PEDERSEN_FIELD_BITS: u16 = 254;
+
+// Method to compute a nonce based on privacySalt, component group index and component internal index.
+fn compute_nonce(
+    privacy_salt: PrivacySaltBits,
+    group_index: u32,
+    internal_index: u32,
+) -> NonceDigestBits {
+    dbg!(">> computeNonce (");
+    dbg!("   group index = {}", group_index);
+    dbg!("   internal index = {}", internal_index);
+    dbg!(")");
+
+    let mut nonce = [false; PRIVACY_SALT_BITS + U32_BITS + U32_BITS];
+    for i in 0..PRIVACY_SALT_BITS {
+        nonce[i] = privacy_salt[i];
+    }
+
+    let group_index_bits = to_bits(group_index);
+    let internal_index_bits = to_bits(internal_index);
+
+    for i in 0..U32_BITS {
+        nonce[PRIVACY_SALT_BITS + (i as u16)] = group_index_bits[i];
+        nonce[PRIVACY_SALT_BITS + U32_BITS + (i as u16)] = internal_index_bits[i];
+    }
+    dbg!("   nonce input = {}", nonce_preimage_bits_to_bytes(nonce));
+
+    blake2s(nonce)
+}
+
+// Method to pad pedersen digest with zeros to assure 256 bits digest size globally.
+fn pedersen_to_padded_bits(digest: field) -> NodeDigestBits {
+    let mut digest_bits = [false; NODE_DIGEST_BITS];
+    let pedersen_bits = to_bits(digest);
+
+    for i in 0..PEDERSEN_FIELD_BITS {
+        digest_bits[(2 as u16) + i] = pedersen_bits[i];
+    }
+
+    digest_bits
+}
+
+// Method to concatenate two component leaf hash digests.
+fn concatenate_component_group_leaf_digests(
+    hash1: ComponentGroupLeafDigestBits,
+    hash2: ComponentGroupLeafDigestBits,
+) -> [bool; COMPONENT_GROUP_LEAF_DIGEST_BITS + COMPONENT_GROUP_LEAF_DIGEST_BITS] {
+    let mut data = [false; COMPONENT_GROUP_LEAF_DIGEST_BITS + COMPONENT_GROUP_LEAF_DIGEST_BITS];
+
+    for i in (0 as u16)..COMPONENT_GROUP_LEAF_DIGEST_BITS {
+        data[i] = hash1[i];
+        data[COMPONENT_GROUP_LEAF_DIGEST_BITS + i] = hash2[i];
+    }
+    data
+}
+
+// Method to concatenate two component node hash digests.
+fn concatenate_node_digests(
+    hash1: NodeDigestBits,
+    hash2: NodeDigestBits,
+) -> [bool; NODE_DIGEST_BITS + NODE_DIGEST_BITS] {
+    let mut data = [false; NODE_DIGEST_BITS + NODE_DIGEST_BITS];
+
+    for i in (0 as u16)..NODE_DIGEST_BITS {
+        data[i] = hash1[i];
+        data[NODE_DIGEST_BITS + i] = hash2[i];
+    }
+    data
+}
