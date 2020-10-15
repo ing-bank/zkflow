@@ -172,7 +172,7 @@ sealed class CommandCircuit(command: String, absoluteRoot: String) {
     val circuitRoot = "$circuits/$command"
     val circuitPath = "$circuitRoot/src/main.zn"
 
-    //a map where each command has its corresponding consts path
+    // a map where each command has its corresponding consts path
     val commandConstsMap = mapOf(
         "create" to "$modules/create/utils/consts.zn",
         "move" to "$modules/move/utils/consts.zn")
@@ -251,6 +251,7 @@ sealed class CommandCircuit(command: String, absoluteRoot: String) {
         }
     }
 
+    // TODO: These functions will be removed once Zinc supports dynamic length arrays.
     private fun getGroupSize(constsPath: String): Map<String, Int> {
         val regex = "const[ ]+([A-Z]+)_GROUP_SIZE[a-z,0-9,: ]+=[ ]?([0-9]+)".toRegex()
 
@@ -271,16 +272,16 @@ sealed class CommandCircuit(command: String, absoluteRoot: String) {
             val componentGroupSize = componentGroupSizes.getValue(componentGroupName)
 
             return when {
-                //This condition is executed when there is no element in the component group.
-                //The return value is allOnesHash
+                // This condition is executed when there is no element in the component group.
+                // The return value is allOnesHash
                 componentGroupSize == 0 -> {
                     ("""
-        ///Return all ones hash
+        /// Return all ones hash
         [true; NODE_DIGEST_BITS]
         """)
                 }
-                //This condition is executed when the defined group size is an exact power of 2.
-                //The return value is the merkle tree function that corresponds to the group size.
+                // This condition is executed when the defined group size is an exact power of 2.
+                // The return value is the merkle tree function that corresponds to the group size.
                 componentGroupSize % 2 == 0 -> {
                     ("""
         let component_leaf_hashes = compute_leaf_hashes(this, privacy_salt);
@@ -288,9 +289,9 @@ sealed class CommandCircuit(command: String, absoluteRoot: String) {
         get_merkle_tree_from_${componentGroupSize}_component_group_leaf_digests(component_leaf_hashes)
         """)
                 }
-                //This condition is executed when the defined group size is not a power of 2.
-                //The function finds the next power of 2 and adds padded values to the group.
-                //The return value is the merkle tree function that corresponds to the padded group size.
+                // This condition is executed when the defined group size is not a power of 2.
+                // The function finds the next power of 2 and adds padded values to the group.
+                // The return value is the merkle tree function that corresponds to the padded group size.
                 else -> {
                     val paddedGroupSize = getNextPowerOfTwo(componentGroupSize)
                     ("""
@@ -306,9 +307,9 @@ sealed class CommandCircuit(command: String, absoluteRoot: String) {
                 }
             }
         }
-        //This condition is executed when there is no component group size defined.
-        //It is possible for notary, timeWindow, parameters groups
-        //In that case, we call Merkle tree function for 2 with padded leaves
+        // This condition is executed when there is no component group size defined.
+        // It is possible for notary, timeWindow, parameters groups
+        // In that case, we call Merkle tree function for 2 with padded leaves
         return ("""
         let mut padded_leaves = [[false; COMPONENT_GROUP_LEAF_DIGEST_BITS]; 2];
         padded_leaves[0] = component_leaf_hash;
@@ -328,20 +329,17 @@ sealed class CommandCircuit(command: String, absoluteRoot: String) {
 
                 circuit.appendText("//!  IN ==== $it\n")
 
-                if (isDbgOn) {
-                    circuit.appendBytes(part.readBytes())
-                } else {
-                    part
-                        .readLines()
-                        .filter { line -> !line.contains("dbg!") }
-                        .forEach { line ->
-                            if (line.contains("//!###CALL APPROPRIATE MERKLE TREE FUNCTION###")) {
-                                circuit.appendText(findCorrespondingMerkleTreeFunction(it, circuitPath) + "\n")
-                            } else {
+                part.readLines()
+                    .forEach { line ->
+                        if (line.contains("//!###CALL APPROPRIATE MERKLE TREE FUNCTION###")) {
+                            circuit.appendText(findCorrespondingMerkleTreeFunction(it, circuitPath) + "\n")
+                        }
+                        else {
+                            if(isDbgOn || !line.contains("dbg!")){
                                 circuit.appendText("$line\n")
                             }
                         }
-                }
+                    }
 
                 circuit.appendText("//! OUT ==== $it\n\n")
             }

@@ -4,9 +4,9 @@ const MERKLE_TREE_SIZE : u16 = 16;
 //! Pads the configure number of leaves to the right amount with zero hashes from the right
 //! and calls appropriate tree-constructing procedure
 fn merkle_root(leaves: [NodeDigestBits; COMPONENT_GROUPS_SIZE]) -> NodeDigestBits {
-    dbg!("Building a tree from 9 leaves");
+    dbg!("Building a tree from {} leaves", COMPONENT_GROUPS_SIZE);
 
-    dbg!("Padding from the right with 7 zero leaves");
+    dbg!("Padding from the right with {} zero leaves", (MERKLE_TREE_SIZE - COMPONENT_GROUPS_SIZE));
     let mut full_leaves = [[false; NODE_DIGEST_BITS]; MERKLE_TREE_SIZE];
     for i in 0..COMPONENT_GROUPS_SIZE {
         full_leaves[i] = leaves[i];
