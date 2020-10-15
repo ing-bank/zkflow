@@ -11,6 +11,11 @@ interface ZKContractState : Fingerprintable, ContractState
 interface ZKCommandData : Fingerprintable, CommandData {
     val id: Int
 
+    /**
+     * Command data must contain padding configuration to produce a witness of the appropriate structure.
+     * This witness is a serialization of the padded version of the Corda's component groups.
+     * See consts.zn in folders corresponding to the respective commands.
+     */
     val paddingConfiguration: ComponentPaddingConfiguration
 
     override fun fingerprint(): ByteArray =
