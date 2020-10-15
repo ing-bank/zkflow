@@ -92,7 +92,6 @@ impl StateRef {
     }
 }
 
-
 impl TransactionState {
     fn fingerprint(this: TransactionState) -> [bool; STATE_FINGERPRINT_BITS] {
         let mut result = [false; STATE_FINGERPRINT_BITS];
@@ -104,7 +103,8 @@ impl TransactionState {
         //dataOwner_owning_key
         result[0..PUBKEY_FINGERPRINT_BITS] = PubKey::fingerprint(this.data.owner.owning_key);
         //value
-        result[PUBKEY_FINGERPRINT_BITS..(PUBKEY_FINGERPRINT_BITS + U32_BITS)] = to_bits(this.data.value);
+        result[PUBKEY_FINGERPRINT_BITS..(PUBKEY_FINGERPRINT_BITS + U32_BITS)] =
+            to_bits(this.data.value);
         //notary_owning_key
         result[(PUBKEY_FINGERPRINT_BITS + U32_BITS)..STATE_FINGERPRINT_BITS] =
             PubKey::fingerprint(this.notary.owning_key);

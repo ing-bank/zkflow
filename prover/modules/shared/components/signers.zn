@@ -13,7 +13,8 @@ impl SignersComponentGroup {
         this: SignersComponentGroup,
         privacy_salt: PrivacySaltBits,
     ) -> [ComponentGroupLeafDigestBits; SIGNER_GROUP_SIZE] {
-        let mut component_leaf_hashes = [[false; COMPONENT_GROUP_LEAF_DIGEST_BITS]; SIGNER_GROUP_SIZE];
+        let mut component_leaf_hashes =
+            [[false; COMPONENT_GROUP_LEAF_DIGEST_BITS]; SIGNER_GROUP_SIZE];
 
         for i in (0 as u32)..(SIGNER_GROUP_SIZE as u32) {
             component_leaf_hashes[i] = PubKey::compute_leaf_hash(
@@ -30,6 +31,6 @@ impl SignersComponentGroup {
         this: SignersComponentGroup,
         privacy_salt: PrivacySaltBits,
     ) -> NodeDigestBits {
-        //!###CALL APPROPRIATE MERKLE TREE FUNCTION###
+        // ### CALL APPROPRIATE MERKLE TREE FUNCTION ###
     }
 }

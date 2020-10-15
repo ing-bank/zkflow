@@ -2,13 +2,13 @@
 ///In internal computations, the circuit only uses NonceDigestBits type.
 
 const NONCE_DIGEST_BYTES: u16 = COMPONENT_GROUP_LEAF_DIGEST_BYTES;
-const NONCE_DIGEST_BITS: u16  = COMPONENT_GROUP_LEAF_DIGEST_BITS;
+const NONCE_DIGEST_BITS: u16 = COMPONENT_GROUP_LEAF_DIGEST_BITS;
 
 type NonceDigestBytes = [u8; NONCE_DIGEST_BYTES];
 type NonceDigestBits = [bool; NONCE_DIGEST_BITS];
 
 struct NonceDigestDto {
-    bytes : NonceDigestBytes,
+    bytes: NonceDigestBytes,
 }
 
 impl NonceDigestDto {
@@ -34,7 +34,6 @@ impl NonceDigestDto {
             }
             bytes[i] = from_bits_unsigned(byte_bits);
         }
-        NonceDigestDto{bytes: bytes}
+        NonceDigestDto { bytes: bytes }
     }
-
 }

@@ -52,7 +52,8 @@ impl CommandsComponentGroup {
         this: CommandsComponentGroup,
         privacy_salt: PrivacySaltBits,
     ) -> [ComponentGroupLeafDigestBits; COMMAND_GROUP_SIZE] {
-        let mut component_leaf_hashes = [[false; COMPONENT_GROUP_LEAF_DIGEST_BITS]; COMMAND_GROUP_SIZE];
+        let mut component_leaf_hashes =
+            [[false; COMPONENT_GROUP_LEAF_DIGEST_BITS]; COMMAND_GROUP_SIZE];
 
         for i in (0 as u32)..(COMMAND_GROUP_SIZE as u32) {
             component_leaf_hashes[i] = CommandData::compute_leaf_hash(
@@ -69,6 +70,6 @@ impl CommandsComponentGroup {
         this: CommandsComponentGroup,
         privacy_salt: PrivacySaltBits,
     ) -> NodeDigestBits {
-        //!###CALL APPROPRIATE MERKLE TREE FUNCTION###
+        // ### CALL APPROPRIATE MERKLE TREE FUNCTION ###
     }
 }

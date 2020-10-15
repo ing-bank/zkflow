@@ -5,7 +5,7 @@ type NodeDigestBytes = [u8; NODE_DIGEST_BYTES];
 type NodeDigestBits = [bool; NODE_DIGEST_BITS];
 
 struct NodeDigestDto {
-    bytes : NodeDigestBytes,
+    bytes: NodeDigestBytes,
 }
 
 impl NodeDigestDto {
@@ -31,9 +31,6 @@ impl NodeDigestDto {
             }
             bytes[i] = from_bits_unsigned(byte_bits);
         }
-        NodeDigestDto{bytes: bytes}
+        NodeDigestDto { bytes: bytes }
     }
-
 }
-
-

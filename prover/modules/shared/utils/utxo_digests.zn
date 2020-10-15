@@ -39,4 +39,3 @@ fn compute_reference_utxo_digests(
     }
     reference_digests
 }
-

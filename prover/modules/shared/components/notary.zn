@@ -19,6 +19,6 @@ impl NotaryComponentGroup {
             ComponentGroupEnum::NOTARY_GROUP as u32,
             0 as u32,
         );
-        //!###CALL APPROPRIATE MERKLE TREE FUNCTION###
+        // ### CALL APPROPRIATE MERKLE TREE FUNCTION ###
     }
 }
