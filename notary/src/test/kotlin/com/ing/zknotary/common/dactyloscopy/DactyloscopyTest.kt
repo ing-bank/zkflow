@@ -105,6 +105,14 @@ class DactyloscopyTest {
     }
 
     @Test
+    fun `Fingerprint a list`() {
+        val list = listOf(2, 1)
+        val fingerprint = ByteArray(0) + listOf<Byte>(0, 0, 0, 2, 0, 0, 0, 1)
+
+        assert(dactyloscopist.identify(list).contentEquals(fingerprint))
+    }
+
+    @Test
     fun `Multiple fingerprintable interface overriden by direct Fingerprintable implementation`() {
         val fixedKeyPair = ZKNulls.fixedKeyPair(Crypto.EDDSA_ED25519_SHA512)
 

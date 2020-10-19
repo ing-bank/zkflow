@@ -9,6 +9,7 @@ import net.corda.core.identity.AbstractParty
 import java.nio.ByteBuffer
 import java.security.PublicKey
 import java.time.Instant
+import java.util.AbstractList
 
 /**
  * PLEASE READ before extending new types with the fingerprinting functionality.
@@ -16,7 +17,7 @@ import java.time.Instant
  * Extending types with the fingerprinting functionality is easy, but not always risk-free.
  * Consider implication before amending this file.
  *
- * Java/Kotlin allow for complex class hierarchies, thus the type implementing or extending
+ * Java/Kotlin allows for complex class hierarchies, thus the type implementing or extending
  * from any of the types extended here will inherit the fingerprinting functionality from the parent.
  * Such behavior is not guaranteed to produce correct fingerprint for the children classes.
  * It may happen that an implementing/extending class contains extra fields which must be accounted in
@@ -69,3 +70,10 @@ fun SecureHash.fingerprint(): ByteArray =
 fun TimeWindow.fingerprint(): ByteArray =
     (fromTime?.fingerprint() ?: ByteArray(12) { 0 }) +
         (untilTime?.fingerprint() ?: ByteArray(12) { 0 })
+
+fun AbstractList<Any>.fingerprint(): ByteArray {
+    val dactyloscopist = Dactyloscopist()
+    return this.fold(ByteArray(0)) { acc, element ->
+        acc + dactyloscopist.identify(element)
+    }
+}
