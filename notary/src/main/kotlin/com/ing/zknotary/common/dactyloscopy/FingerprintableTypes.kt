@@ -77,3 +77,9 @@ fun AbstractList<Any>.fingerprint(): ByteArray {
         acc + dactyloscopist.identify(element)
     }
 }
+
+/*
+ * Annotation to skip fields from including into the fingerprint.
+ */
+@Target(AnnotationTarget.PROPERTY)
+annotation class NonFingerprintable

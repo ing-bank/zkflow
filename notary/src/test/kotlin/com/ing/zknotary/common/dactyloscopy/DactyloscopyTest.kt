@@ -113,6 +113,15 @@ class DactyloscopyTest {
     }
 
     @Test
+    fun `Skip non fingerprintable fields`() {
+        data class Table(val feet: Int = 0, @NonFingerprintable val top: Int = 1)
+
+        val table = Table()
+
+        assert(dactyloscopist.identify(table).contentEquals(table.feet.fingerprint()))
+    }
+
+    @Test
     fun `Multiple fingerprintable interface overriden by direct Fingerprintable implementation`() {
         val fixedKeyPair = ZKNulls.fixedKeyPair(Crypto.EDDSA_ED25519_SHA512)
 

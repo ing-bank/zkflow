@@ -61,7 +61,12 @@ class Dactyloscopist() {
 
         // ► Fingerprint `item` by a composing fingerprints of its public constituents.
         val members = reflection.memberProperties
-            .filter { it.visibility != null && it.visibility == KVisibility.PUBLIC }
+            .filter {
+                // Take only public fields.
+                it.visibility != null && it.visibility == KVisibility.PUBLIC &&
+                    // Field must NOT be annotated with NonFingerprintable
+                    it.findAnnotation<NonFingerprintable>() == null
+            }
             .sortedBy { it.name }
 
         if (members.isEmpty()) {
