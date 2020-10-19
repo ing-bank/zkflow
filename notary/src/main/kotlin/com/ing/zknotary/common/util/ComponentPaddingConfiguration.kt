@@ -62,6 +62,10 @@ class ComponentPaddingConfiguration private constructor(
             return ComponentPaddingConfiguration(padding, fillers)
         }
 
+        fun empty(): ComponentPaddingConfiguration {
+            return ComponentPaddingConfiguration(padding, fillers)
+        }
+
         private fun nonNegative(value: Int?, that: String) {
             require(value ?: -1 >= 0) { "Size of $that group must be defined with a non-negative number" }
         }
