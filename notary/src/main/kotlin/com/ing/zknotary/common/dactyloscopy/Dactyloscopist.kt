@@ -3,6 +3,7 @@ package com.ing.zknotary.common.dactyloscopy
 import java.lang.reflect.Method
 import kotlin.reflect.KProperty1
 import kotlin.reflect.KVisibility
+import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.memberProperties
 
 class Dactyloscopist() {
