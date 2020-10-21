@@ -25,25 +25,23 @@ import kotlin.test.assertFails
 import kotlin.test.assertFailsWith
 
 class DactyloscopyTest {
-    private val dactyloscopist = Dactyloscopist()
-
     @Test
     fun `int must be fingerprintable`() {
-        val fingerprint = dactyloscopist.identify(1)
+        val fingerprint = Dactyloscopist.identify(1)
         assert(fingerprint.contentEquals(ByteArray(4) { if (it < 3) { 0 } else { 1 } }))
     }
 
     @Test
     fun `Byte array must short circuit`() {
         val array = "ZKP".toByteArray()
-        val fingerprint = dactyloscopist.identify(array)
+        val fingerprint = Dactyloscopist.identify(array)
         assert(fingerprint.contentEquals(array))
     }
 
     @Test
     fun `Public key must be fingerprintable`() {
         val fixedKeyPair = ZKNulls.fixedKeyPair(Crypto.EDDSA_ED25519_SHA512)
-        val fingerprint = dactyloscopist.identify(fixedKeyPair.public)
+        val fingerprint = Dactyloscopist.identify(fixedKeyPair.public)
         assert(fingerprint.contentEquals(fixedKeyPair.public.encoded))
     }
 
@@ -54,14 +52,14 @@ class DactyloscopyTest {
             CordaX500Name("alice", fixedKeyPair.public.toStringShort(), CordaX500Name.unspecifiedCountry),
             fixedKeyPair.public
         )
-        val fingerprint = dactyloscopist.identify(party)
+        val fingerprint = Dactyloscopist.identify(party)
         assert(fingerprint.contentEquals(fixedKeyPair.public.encoded))
     }
 
     @Test
     fun `SecureHash must be fingerprintable`() {
         val hash = ByteArray(1) { 0 }.sha256()
-        val fingerprint = dactyloscopist.identify(hash)
+        val fingerprint = Dactyloscopist.identify(hash)
         assert(fingerprint.contentEquals(hash.bytes))
     }
 
@@ -72,7 +70,7 @@ class DactyloscopyTest {
             private val b = 1
         }
         assertFails("Non decomposable type must fail") {
-            dactyloscopist.identify(obj)
+            Dactyloscopist.identify(obj)
         }
     }
 
@@ -82,7 +80,7 @@ class DactyloscopyTest {
             val a = 0
             private val b = 2
         }
-        assert(dactyloscopist.identify(obj).contentEquals(ByteArray(4) { 0 }))
+        assert(Dactyloscopist.identify(obj).contentEquals(ByteArray(4) { 0 }))
     }
 
     @Test
@@ -109,7 +107,7 @@ class DactyloscopyTest {
         }
 
         assertFailsWith<MultipleFingerprintImplementations>("Types implementing multiple fingerprintables must fail") {
-            dactyloscopist.identify(obj)
+            Dactyloscopist.identify(obj)
         }
     }
 
@@ -118,7 +116,7 @@ class DactyloscopyTest {
         val list = listOf(2, 1)
         val fingerprint = ByteArray(0) + listOf<Byte>(0, 0, 0, 2, 0, 0, 0, 1)
 
-        assert(dactyloscopist.identify(list).contentEquals(fingerprint))
+        assert(Dactyloscopist.identify(list).contentEquals(fingerprint))
     }
 
     @Test
@@ -126,8 +124,7 @@ class DactyloscopyTest {
         data class Table(val feet: Int = 0, @NonFingerprintable("Test") val top: Int = 1)
 
         val table = Table()
-
-        assert(dactyloscopist.identify(table).contentEquals(table.feet.fingerprint()))
+        assert(Dactyloscopist.identify(table).contentEquals(table.feet.fingerprint()))
     }
 
     @Test
@@ -156,7 +153,7 @@ class DactyloscopyTest {
             }
         }
 
-        assert(dactyloscopist.identify(obj).contentEquals(ByteArray(1) { 0 }))
+        assert(Dactyloscopist.identify(obj).contentEquals(ByteArray(1) { 0 }))
     }
 
     @Test
@@ -175,7 +172,7 @@ class DactyloscopyTest {
                 // value
                 value.fingerprint()
 
-        assert(dactyloscopist.identify(state).contentEquals(fingerprint))
+        assert(Dactyloscopist.identify(state).contentEquals(fingerprint))
     }
 
     @Test
@@ -183,7 +180,7 @@ class DactyloscopyTest {
         val command = TestContract.Create()
         val fingerprint = command.id.fingerprint()
 
-        assert(dactyloscopist.identify(command).contentEquals(fingerprint))
+        assert(Dactyloscopist.identify(command).contentEquals(fingerprint))
     }
 
     // ================================ Service definitions ===========================================

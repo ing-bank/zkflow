@@ -75,9 +75,8 @@ fun TimeWindow.fingerprint(): ByteArray =
         (untilTime?.fingerprint() ?: ByteArray(12) { 0 })
 
 fun AbstractList<Any>.fingerprint(): ByteArray {
-    val dactyloscopist = Dactyloscopist()
     return this.fold(ByteArray(0)) { acc, element ->
-        acc + dactyloscopist.identify(element)
+        acc + Dactyloscopist.identify(element)
     }
 }
 

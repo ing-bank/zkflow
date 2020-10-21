@@ -6,7 +6,7 @@ import kotlin.reflect.KVisibility
 import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.memberProperties
 
-class Dactyloscopist() {
+object Dactyloscopist {
     private val container = Class.forName("com.ing.zknotary.common.dactyloscopy." + "FingerprintableTypes" + "Kt")
     private val fingerprintableTypes: Map<String, Method>
 
