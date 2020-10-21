@@ -208,15 +208,11 @@ class DactyloscopyTest {
         // Commands
         class Create : ZKCommandData {
             override val id: Int = 0
-
-            @NonFingerprintable
             override val paddingConfiguration = ComponentPaddingConfiguration.Builder().empty()
         }
 
         class Move : ZKCommandData {
             override val id: Int = 1
-
-            @NonFingerprintable
             override val paddingConfiguration = ComponentPaddingConfiguration.Builder().empty()
         }
 

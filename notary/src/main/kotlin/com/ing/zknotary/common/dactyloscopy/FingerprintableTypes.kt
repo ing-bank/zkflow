@@ -54,6 +54,8 @@ fun <T> TransactionState<T>.fingerprint(): ByteArray
     where T : ContractState, T : Fingerprintable =
     data.fingerprint() + notary.owningKey.fingerprint()
 
+fun ComponentPaddingConfiguration.fingerprint() = ByteArray(0)
+
 /*
  * Unsafe types: interfaces and extendable classes
  */

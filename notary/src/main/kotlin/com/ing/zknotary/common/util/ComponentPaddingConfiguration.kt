@@ -62,7 +62,12 @@ class ComponentPaddingConfiguration private constructor(
             return ComponentPaddingConfiguration(padding, fillers)
         }
 
-        fun empty(): ComponentPaddingConfiguration {
+        // This function must only be used for testing.
+        // It is expected that padding will become obsolete in the near future.
+        // If padding is required past
+        // ** 01.02.2021 **
+        // this functionality must refactored.
+        internal fun empty(): ComponentPaddingConfiguration {
             return ComponentPaddingConfiguration(padding, fillers)
         }
 

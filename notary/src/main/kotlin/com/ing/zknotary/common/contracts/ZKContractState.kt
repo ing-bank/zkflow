@@ -15,6 +15,10 @@ interface ZKCommandData : Fingerprintable, CommandData {
      * Command data must contain padding configuration to produce a witness of the appropriate structure.
      * This witness is a serialization of the padded version of the Corda's component groups.
      * See consts.zn in folders corresponding to the respective commands.
+     *
+     * This public property will have NO influence on the fingerprint of the implementor
+     * as ComponentPaddingConfiguration implements Fingerprintable itself with fingerprint
+     * being an empty bytearray.
      */
     val paddingConfiguration: ComponentPaddingConfiguration
 
