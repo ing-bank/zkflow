@@ -123,7 +123,7 @@ class DactyloscopyTest {
 
     @Test
     fun `Skip non fingerprintable fields`() {
-        data class Table(val feet: Int = 0, @NonFingerprintable val top: Int = 1)
+        data class Table(val feet: Int = 0, @NonFingerprintable("Test") val top: Int = 1)
 
         val table = Table()
 
@@ -167,8 +167,11 @@ class DactyloscopyTest {
         val fingerprint =
             // owner
             owner.fingerprint() +
+                //
                 // participants = join of participants fingerprints
-                owner.fingerprint() +
+                // disabled for now
+                // owner.fingerprint() +
+                //
                 // value
                 value.fingerprint()
 
@@ -201,7 +204,10 @@ class DactyloscopyTest {
             override val owner: AbstractParty,
             val value: Int = Random().nextInt(1000)
         ) : ContractState, OwnableState {
+
+            @NonFingerprintable("Temporary removed from fingerprinting")
             override val participants = listOf(owner)
+
             override fun withNewOwner(newOwner: AbstractParty) = CommandAndState(Move(), copy(owner = newOwner))
         }
 

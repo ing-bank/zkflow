@@ -1,5 +1,6 @@
 package com.ing.zknotary.common.dactyloscopy
 
+import com.ing.zknotary.common.util.ComponentPaddingConfiguration
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.StateRef
 import net.corda.core.contracts.TimeWindow
@@ -84,4 +85,4 @@ fun AbstractList<Any>.fingerprint(): ByteArray {
  * Annotation to skip fields from including into the fingerprint.
  */
 @Target(AnnotationTarget.PROPERTY)
-annotation class NonFingerprintable
+annotation class NonFingerprintable(val reason: String)
