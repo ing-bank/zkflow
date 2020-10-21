@@ -1,6 +1,5 @@
 package com.ing.zknotary.common.util
 
-import com.ing.zknotary.common.contracts.ZKContractState
 import com.ing.zknotary.common.transactions.ZKProverTransaction
 import com.ing.zknotary.common.transactions.ZKVerifierTransaction
 import com.ing.zknotary.common.zkp.ZKNulls
@@ -17,7 +16,7 @@ class ComponentPaddingConfiguration private constructor(
 
     @CordaSerializable
     sealed class Filler {
-        data class TransactionState(val content: net.corda.core.contracts.TransactionState<ZKContractState>) : Filler()
+        data class TransactionState(val content: net.corda.core.contracts.TransactionState<ContractState>) : Filler()
         data class StateAndRef(val content: net.corda.core.contracts.StateAndRef<ContractState>) : Filler()
         data class StateRef(val content: net.corda.core.contracts.StateRef) : Filler()
         data class PublicKey(val content: java.security.PublicKey) : Filler()

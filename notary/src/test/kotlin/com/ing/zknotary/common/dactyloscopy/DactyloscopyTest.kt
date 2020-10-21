@@ -1,13 +1,7 @@
 package com.ing.zknotary.common.dactyloscopy
 
-import com.ing.zknotary.common.util.ComponentPaddingConfiguration
+import com.ing.zknotary.common.contracts.TestContract
 import com.ing.zknotary.common.zkp.ZKNulls
-import net.corda.core.contracts.CommandAndState
-import net.corda.core.contracts.CommandData
-import net.corda.core.contracts.Contract
-import net.corda.core.contracts.ContractClassName
-import net.corda.core.contracts.ContractState
-import net.corda.core.contracts.OwnableState
 import net.corda.core.contracts.PartyAndReference
 import net.corda.core.crypto.Crypto
 import net.corda.core.crypto.sha256
@@ -16,11 +10,9 @@ import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
 import net.corda.core.internal.unspecifiedCountry
-import net.corda.core.transactions.LedgerTransaction
 import net.corda.core.utilities.OpaqueBytes
 import org.junit.Test
 import java.security.PublicKey
-import java.util.Random
 import kotlin.test.assertFails
 import kotlin.test.assertFailsWith
 
@@ -181,44 +173,5 @@ class DactyloscopyTest {
         val fingerprint = command.id.fingerprint()
 
         assert(Dactyloscopist.identify(command).contentEquals(fingerprint))
-    }
-
-    // ================================ Service definitions ===========================================
-    // This definition is a copy of ZKCommandData _without_ implementing the Fingerprintable interface.
-    // Copying it here serves the testing purposes.
-    interface ZKCommandData : CommandData {
-        val id: Int
-        val paddingConfiguration: ComponentPaddingConfiguration
-    }
-
-    // This definition is a copy of TestContract _without_ implementing the Fingerprintable interface.
-    class TestContract : Contract {
-        companion object {
-            const val PROGRAM_ID: ContractClassName = "com.ing.zknotary.common.contracts.TestContract"
-        }
-
-        data class TestState(
-            override val owner: AbstractParty,
-            val value: Int = Random().nextInt(1000)
-        ) : ContractState, OwnableState {
-
-            @NonFingerprintable("Temporary removed from fingerprinting")
-            override val participants = listOf(owner)
-
-            override fun withNewOwner(newOwner: AbstractParty) = CommandAndState(Move(), copy(owner = newOwner))
-        }
-
-        // Commands
-        class Create : ZKCommandData {
-            override val id: Int = 0
-            override val paddingConfiguration = ComponentPaddingConfiguration.Builder().empty()
-        }
-
-        class Move : ZKCommandData {
-            override val id: Int = 1
-            override val paddingConfiguration = ComponentPaddingConfiguration.Builder().empty()
-        }
-
-        override fun verify(tx: LedgerTransaction) {}
     }
 }

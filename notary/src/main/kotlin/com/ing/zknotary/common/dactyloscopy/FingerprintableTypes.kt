@@ -52,8 +52,8 @@ fun StateRef.fingerprint(): ByteArray =
 
 // FIXME: This is now ignoring some of the important fields of a TransactionState.
 fun <T> TransactionState<T>.fingerprint(): ByteArray
-    where T : ContractState, T : Fingerprintable =
-    data.fingerprint() + notary.owningKey.fingerprint()
+    where T : ContractState =
+    Dactyloscopist.identify(data) + notary.owningKey.fingerprint()
 
 fun ComponentPaddingConfiguration.fingerprint() = ByteArray(0)
 

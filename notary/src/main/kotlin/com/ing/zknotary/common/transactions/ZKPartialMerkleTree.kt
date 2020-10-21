@@ -1,6 +1,6 @@
 package com.ing.zknotary.common.transactions
 
-import com.ing.zknotary.common.dactyloscopy.fingerprint
+import com.ing.zknotary.common.dactyloscopy.Dactyloscopist
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.crypto.SecureHash
 import net.corda.core.transactions.ComponentGroup
@@ -26,15 +26,15 @@ class ZKPartialMerkleTree(
                 addGroups(
                     mapOf(
                         ComponentGroupEnum.INPUTS_GROUP to
-                            vtx.padded.inputs().map { it.content.fingerprint() },
+                            vtx.padded.inputs().map { Dactyloscopist.identify(it.content) },
                         ComponentGroupEnum.REFERENCES_GROUP to
-                            vtx.padded.references().map { it.content.fingerprint() },
+                            vtx.padded.references().map { Dactyloscopist.identify(it.content) },
                         ComponentGroupEnum.NOTARY_GROUP to
-                            listOf(vtx.notary.fingerprint()),
+                            listOf(Dactyloscopist.identify(vtx.notary)),
                         ComponentGroupEnum.TIMEWINDOW_GROUP to
-                            listOf(vtx.padded.timeWindow().content.fingerprint()),
+                            listOf(Dactyloscopist.identify(vtx.padded.timeWindow().content)),
                         ComponentGroupEnum.PARAMETERS_GROUP to
-                            listOf(vtx.padded.networkParametersHash().content.fingerprint())
+                            listOf(Dactyloscopist.identify(vtx.padded.networkParametersHash().content))
                     )
                 )
             }
