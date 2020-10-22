@@ -1,6 +1,6 @@
 package com.ing.zknotary.common.transactions
 
-import com.ing.zknotary.common.states.toZKCommand
+import com.ing.zknotary.common.contracts.toZKCommand
 import com.ing.zknotary.node.services.ZKTransactionStorage
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.StateRef

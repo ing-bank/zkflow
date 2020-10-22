@@ -1,7 +1,9 @@
 package com.ing.zknotary.common.contracts
 
 import com.ing.zknotary.common.util.ComponentPaddingConfiguration
+import net.corda.core.contracts.Command
 import net.corda.core.contracts.CommandData
+import net.corda.core.contracts.CommandWithParties
 
 interface ZKCommandData : CommandData {
     val id: Int
@@ -16,4 +18,9 @@ interface ZKCommandData : CommandData {
      * being an empty bytearray.
      */
     val paddingConfiguration: ComponentPaddingConfiguration
+}
+
+fun <T : CommandData> CommandWithParties<T>.toZKCommand(): Command<ZKCommandData> {
+    require(value is ZKCommandData) { "CommandData must implement ZKCommandData" }
+    return Command(value as ZKCommandData, signers)
 }
