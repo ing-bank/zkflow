@@ -37,7 +37,7 @@ class MoveBackChainTest {
     private lateinit var transactionToVerify: WireTransaction
 
     // User real Zinc circuit, or mocked circuit (that checks same rules)
-    private val mockZKP = true
+    private val mockZKP = false
     private val circuits = mapOf(
         TestContract.Create().id to "${System.getProperty("user.dir")}/../prover/circuits/create",
         TestContract.Move().id to "${System.getProperty("user.dir")}/../prover/circuits/move"
