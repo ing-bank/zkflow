@@ -7,13 +7,16 @@ import java.util.concurrent.TimeUnit
 
 class ZincZKService(
     circuitFolder: String,
-    artifactFolder: String,
+    private val artifactFolder: String,
     private val buildTimeout: Duration,
     private val setupTimeout: Duration,
     private val provingTimeout: Duration,
     private val verificationTimeout: Duration
 ) : ZKService, SingletonSerializeAsToken() {
     private val circuitManifestPath = "$circuitFolder/Zargo.toml"
+    private val defaultBuildPath = "$circuitFolder/build"
+    private val defaultDataPath = "$circuitFolder/data"
+
     val compiledCircuitPath = "$artifactFolder/compiled-circuit.znb"
     val zkSetup = ZKSetup(
         provingKeyPath = "$artifactFolder/proving_key",
@@ -32,6 +35,7 @@ class ZincZKService(
         fun completeZincCommand(command: String, timeout: Duration, input: File? = null): String {
             val process = command.toProcess(input)
             val hasCompleted = process.waitFor(timeout.seconds, TimeUnit.SECONDS)
+
             if (!hasCompleted) {
                 process.destroy()
                 error("$command ran longer than ${timeout.seconds} seconds")
@@ -85,6 +89,10 @@ class ZincZKService(
             // Neither witness, nor Public data carry useful information after build, they are just templates
             publicData.delete()
             witnessFile.delete()
+            // Zinc creates files in the default locations independently if it was specified the exact locations,
+            // clear the defaults too.
+            File(defaultBuildPath).deleteRecursively()
+            File(defaultDataPath).deleteRecursively()
         }
 
         completeZincCommand(
