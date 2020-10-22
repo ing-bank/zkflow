@@ -9,14 +9,16 @@ import net.corda.testing.common.internal.testNetworkParameters
 import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
 import net.corda.testing.node.ledger
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 import java.nio.ByteBuffer
 import kotlin.time.ExperimentalTime
 
 @ExperimentalTime
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class CreateBackChainTest {
     private val alice = TestIdentity.fixed("alice", Crypto.EDDSA_ED25519_SHA512)
     private val bob = TestIdentity.fixed("bob", Crypto.EDDSA_ED25519_SHA512)
@@ -51,12 +53,12 @@ class CreateBackChainTest {
         VerificationService(proverService)
     }
 
-    @AfterEach
+    @AfterAll
     fun `remove zinc files`() {
         verificationService.cleanup()
     }
 
-    @BeforeEach
+    @BeforeAll
     fun setup() {
         ledgerServices.ledger {
             createWtx = transaction {
