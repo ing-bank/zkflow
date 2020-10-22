@@ -40,7 +40,8 @@ jobs:
       - name: Install Zinc ING Fork and add to $PATH
         run: |
           tar xvzf zinc-linux.tar.gz
-          echo "::add-path::$GITHUB_WORKSPACE/zinc-linux/"
+          echo "$GITHUB_WORKSPACE/zinc-linux/" >> $GITHUB_PATH
+
 
       - name: Build with Gradle
         run: ./gradlew assemble --build-cache --stacktrace --parallel
@@ -82,7 +83,7 @@ jobs:
       - name: Install Zinc ING Fork and add to $PATH
         run: |
           tar xvzf zinc-linux.tar.gz
-          echo "::add-path::$GITHUB_WORKSPACE/zinc-linux/"
+          echo "$GITHUB_WORKSPACE/zinc-linux/" >> $GITHUB_PATH
 
       - name: Build with Gradle
         run: ./gradlew check --stacktrace --info
