@@ -1,7 +1,6 @@
 package com.ing.zknotary.common.transactions
 
-import com.ing.zknotary.common.contracts.ZKContractState
-import com.ing.zknotary.common.states.toZKCommand
+import com.ing.zknotary.common.contracts.toZKCommand
 import com.ing.zknotary.node.services.ZKTransactionStorage
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.StateRef
@@ -37,7 +36,7 @@ fun WireTransaction.toZKProverTransaction(
 
     return ZKProverTransaction(
         inputs = ltx.inputs.mapToZkid(),
-        outputs = ltx.outputs.map { TransactionState(data = it.data as ZKContractState, notary = it.notary) },
+        outputs = ltx.outputs.map { TransactionState(data = it.data, notary = it.notary) },
         references = ltx.references.mapToZkid(),
         command = ltx.commands.single().toZKCommand(),
         notary = ltx.notary!!,
@@ -65,7 +64,7 @@ class ZKProverTransactionFactory {
 
             return ZKProverTransaction(
                 inputs = ltx.inputs,
-                outputs = ltx.outputs.map { TransactionState(data = it.data as ZKContractState, notary = it.notary) },
+                outputs = ltx.outputs.map { TransactionState(data = it.data, notary = it.notary) },
                 references = ltx.references,
                 command = ltx.commands.map { it.toZKCommand() }.single(),
                 notary = ltx.notary!!,

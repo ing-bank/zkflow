@@ -8,7 +8,6 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.fasterxml.jackson.databind.module.SimpleModule
 import com.ing.dlt.zkkrypto.util.asUnsigned
 import com.ing.zknotary.common.contracts.ZKCommandData
-import com.ing.zknotary.common.contracts.ZKContractState
 import com.ing.zknotary.common.dactyloscopy.fingerprint
 import com.ing.zknotary.common.transactions.ZKProverTransaction
 import com.ing.zknotary.common.util.PaddingWrapper
@@ -52,15 +51,15 @@ class ZincModule : SimpleModule("corda-core") {
 @JsonSerialize(using = StateAndRefMixinSerializer::class)
 private interface StateAndRefMixin
 
-private class StateAndRefMixinSerializer : JsonSerializer<StateAndRef<ZKContractState>>() {
-    override fun serialize(value: StateAndRef<ZKContractState>, gen: JsonGenerator, serializers: SerializerProvider) {
+private class StateAndRefMixinSerializer : JsonSerializer<StateAndRef<ContractState>>() {
+    override fun serialize(value: StateAndRef<ContractState>, gen: JsonGenerator, serializers: SerializerProvider) {
         gen.writeObject(
             StateAndRefJson(value.state, value.ref)
         )
     }
 }
 
-private class StateAndRefJson(val state: TransactionState<ZKContractState>, val reference: StateRef)
+private class StateAndRefJson(val state: TransactionState<ContractState>, val reference: StateRef)
 
 @JsonSerialize(using = PublicInputMixinSerializer::class)
 private interface PublicInputMixin
@@ -147,7 +146,7 @@ private class ZKProverTransactionMixinSerializer : JsonSerializer<ZKProverTransa
 
 private class ZincJson(
     val inputs: ComponentGroup<PaddingWrapper<StateAndRef<ContractState>>>,
-    val outputs: ComponentGroup<PaddingWrapper<TransactionState<ZKContractState>>>,
+    val outputs: ComponentGroup<PaddingWrapper<TransactionState<ContractState>>>,
     val references: ComponentGroup<PaddingWrapper<StateAndRef<ContractState>>>,
     val commands: ComponentGroup<PaddingWrapper<ZKCommandData>>,
     val attachments: ComponentGroup<PaddingWrapper<AttachmentId>>,

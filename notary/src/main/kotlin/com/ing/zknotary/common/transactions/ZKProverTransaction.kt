@@ -1,7 +1,6 @@
 package com.ing.zknotary.common.transactions
 
 import com.ing.zknotary.common.contracts.ZKCommandData
-import com.ing.zknotary.common.contracts.ZKContractState
 import com.ing.zknotary.common.util.ComponentPaddingConfiguration
 import com.ing.zknotary.common.util.PaddingWrapper
 import net.corda.core.contracts.Command
@@ -22,7 +21,7 @@ import java.time.Instant
 @CordaSerializable
 class ZKProverTransaction internal constructor(
     val inputs: List<StateAndRef<ContractState>>,
-    val outputs: List<TransactionState<ZKContractState>>,
+    val outputs: List<TransactionState<ContractState>>,
     val references: List<StateAndRef<ContractState>>,
     val command: Command<ZKCommandData>,
     val notary: Party,
@@ -82,7 +81,7 @@ class ZKProverTransaction internal constructor(
 
     data class Padded(
         private val originalInputs: List<StateAndRef<ContractState>>,
-        private val originalOutputs: List<TransactionState<ZKContractState>>,
+        private val originalOutputs: List<TransactionState<ContractState>>,
         private val originalSigners: List<PublicKey>,
         private val originalReferences: List<StateAndRef<ContractState>>,
         private val originalAttachments: List<AttachmentId>,
@@ -97,7 +96,7 @@ class ZKProverTransaction internal constructor(
             return originalInputs.wrappedPad(sizeOf(ComponentGroupEnum.INPUTS_GROUP), filler.content)
         }
 
-        fun outputs(): List<PaddingWrapper<TransactionState<ZKContractState>>> {
+        fun outputs(): List<PaddingWrapper<TransactionState<ContractState>>> {
             val filler = filler(ComponentGroupEnum.OUTPUTS_GROUP)
             require(filler is ComponentPaddingConfiguration.Filler.TransactionState) { "Expected filler of type TransactionState" }
             return originalOutputs.wrappedPad(sizeOf(ComponentGroupEnum.OUTPUTS_GROUP), filler.content)

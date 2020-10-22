@@ -1,11 +1,14 @@
 package com.ing.zknotary.common.zkp
 
-import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 import java.io.File
 import java.time.Duration
 import kotlin.test.assertFailsWith
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ZincZKServiceTest {
     private val circuitFolder = javaClass.getResource("/ZincZKService").path
     private val zincZKService = ZincZKService(
@@ -17,11 +20,12 @@ class ZincZKServiceTest {
         verificationTimeout = Duration.ofSeconds(1)
     )
 
-    init {
+    @BeforeAll
+    fun `setup circuit`() {
         zincZKService.setup()
     }
 
-    @AfterEach
+    @AfterAll
     fun `remove zinc files`() {
         zincZKService.cleanup()
     }

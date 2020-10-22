@@ -1,8 +1,6 @@
 package com.ing.zknotary.common.zkp
 
-import com.ing.zknotary.common.contracts.ZKContractState
-import com.ing.zknotary.common.dactyloscopy.fingerprint
-import net.corda.core.contracts.TransactionState
+import com.ing.zknotary.common.dactyloscopy.Dactyloscopist
 import net.corda.core.crypto.BLAKE2s256DigestService
 import net.corda.core.node.AppServiceHub
 import net.corda.core.node.services.CordaService
@@ -57,9 +55,6 @@ open class MockZKTransactionService(val serviceHub: AppServiceHub) : ZKTransacti
          * This proves that prover did not change the contents of the input states
          */
         witness.transaction.inputs.map { it.state }.forEachIndexed { index, state ->
-            @Suppress("UNCHECKED_CAST")
-            state as TransactionState<ZKContractState>
-
             val nonceFromWitness = witness.inputNonces.getOrElse(index) {
                 error("Nonce not present in public input for input $index of tx ${witness.transaction.id}")
             }
@@ -69,7 +64,7 @@ open class MockZKTransactionService(val serviceHub: AppServiceHub) : ZKTransacti
             }
 
             val calculatedLeafHashFromWitness =
-                BLAKE2s256DigestService.hash(nonceFromWitness.bytes + state.fingerprint())
+                BLAKE2s256DigestService.hash(nonceFromWitness.bytes + Dactyloscopist.identify(state))
 
             if (leafHashFromPublicInput != calculatedLeafHashFromWitness) error(
                 "Calculated leaf hash ($calculatedLeafHashFromWitness} for input $index of tx ${witness.transaction.id} does " +
@@ -82,9 +77,6 @@ open class MockZKTransactionService(val serviceHub: AppServiceHub) : ZKTransacti
          * This proves that prover did not change the contents of the reference states
          */
         witness.transaction.references.map { it.state }.forEachIndexed { index, state ->
-            @Suppress("UNCHECKED_CAST")
-            state as TransactionState<ZKContractState>
-
             val nonceFromWitness = witness.referenceNonces.getOrElse(index) {
                 error("Nonce not present in public reference for reference $index of tx ${witness.transaction.id}")
             }
@@ -94,7 +86,7 @@ open class MockZKTransactionService(val serviceHub: AppServiceHub) : ZKTransacti
             }
 
             val calculatedLeafHashFromWitness =
-                BLAKE2s256DigestService.hash(nonceFromWitness.bytes + state.fingerprint())
+                BLAKE2s256DigestService.hash(nonceFromWitness.bytes + Dactyloscopist.identify(state))
 
             if (leafHashFromPublicreference != calculatedLeafHashFromWitness) error(
                 "Calculated leaf hash ($calculatedLeafHashFromWitness} for reference $index of tx ${witness.transaction.id} does " +

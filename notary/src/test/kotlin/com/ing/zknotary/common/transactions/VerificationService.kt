@@ -1,6 +1,6 @@
 package com.ing.zknotary.common.transactions
 
-import com.ing.zknotary.common.dactyloscopy.fingerprint
+import com.ing.zknotary.common.dactyloscopy.Dactyloscopist
 import com.ing.zknotary.common.util.ComponentPaddingConfiguration
 import com.ing.zknotary.common.util.PaddingWrapper
 import com.ing.zknotary.common.zkp.PublicInput
@@ -59,7 +59,7 @@ class VerificationService(private val proverService: ProverService) {
             ?: error("Expected a filler object")
         require(fillerOutput is ComponentPaddingConfiguration.Filler.TransactionState) { "Expected filler of type TransactionState" }
         val paddingHash =
-            currentVtx.componentGroupLeafDigestService.hash(paddingNonce.bytes + fillerOutput.content.fingerprint())
+            currentVtx.componentGroupLeafDigestService.hash(paddingNonce.bytes + Dactyloscopist.identify(fillerOutput.content))
 
         fun List<PaddingWrapper<StateRef>>.collectUtxoHashesInto(hashes: MutableList<SecureHash>) =
             mapIndexed() { index, it ->

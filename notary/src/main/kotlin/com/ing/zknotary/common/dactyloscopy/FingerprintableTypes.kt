@@ -1,5 +1,6 @@
 package com.ing.zknotary.common.dactyloscopy
 
+import com.ing.zknotary.common.util.ComponentPaddingConfiguration
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.StateRef
 import net.corda.core.contracts.TimeWindow
@@ -9,6 +10,7 @@ import net.corda.core.identity.AbstractParty
 import java.nio.ByteBuffer
 import java.security.PublicKey
 import java.time.Instant
+import java.util.AbstractList
 
 /**
  * PLEASE READ before extending new types with the fingerprinting functionality.
@@ -16,7 +18,7 @@ import java.time.Instant
  * Extending types with the fingerprinting functionality is easy, but not always risk-free.
  * Consider implication before amending this file.
  *
- * Java/Kotlin allow for complex class hierarchies, thus the type implementing or extending
+ * Java/Kotlin allows for complex class hierarchies, thus the type implementing or extending
  * from any of the types extended here will inherit the fingerprinting functionality from the parent.
  * Such behavior is not guaranteed to produce correct fingerprint for the children classes.
  * It may happen that an implementing/extending class contains extra fields which must be accounted in
@@ -50,8 +52,10 @@ fun StateRef.fingerprint(): ByteArray =
 
 // FIXME: This is now ignoring some of the important fields of a TransactionState.
 fun <T> TransactionState<T>.fingerprint(): ByteArray
-    where T : ContractState, T : Fingerprintable =
-    data.fingerprint() + notary.owningKey.fingerprint()
+    where T : ContractState =
+    Dactyloscopist.identify(data) + notary.owningKey.fingerprint()
+
+fun ComponentPaddingConfiguration.fingerprint() = ByteArray(0)
 
 /*
  * Unsafe types: interfaces and extendable classes
@@ -69,3 +73,15 @@ fun SecureHash.fingerprint(): ByteArray =
 fun TimeWindow.fingerprint(): ByteArray =
     (fromTime?.fingerprint() ?: ByteArray(12) { 0 }) +
         (untilTime?.fingerprint() ?: ByteArray(12) { 0 })
+
+fun AbstractList<Any>.fingerprint(): ByteArray {
+    return this.fold(ByteArray(0)) { acc, element ->
+        acc + Dactyloscopist.identify(element)
+    }
+}
+
+/*
+ * Annotation to skip fields from including into the fingerprint.
+ */
+@Target(AnnotationTarget.PROPERTY)
+annotation class NonFingerprintable(val reason: String)

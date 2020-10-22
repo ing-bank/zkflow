@@ -3,9 +3,10 @@ package com.ing.zknotary.common.dactyloscopy
 import java.lang.reflect.Method
 import kotlin.reflect.KProperty1
 import kotlin.reflect.KVisibility
+import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.memberProperties
 
-class Dactyloscopist() {
+object Dactyloscopist {
     private val container = Class.forName("com.ing.zknotary.common.dactyloscopy." + "FingerprintableTypes" + "Kt")
     private val fingerprintableTypes: Map<String, Method>
 
@@ -61,7 +62,12 @@ class Dactyloscopist() {
 
         // ► Fingerprint `item` by a composing fingerprints of its public constituents.
         val members = reflection.memberProperties
-            .filter { it.visibility != null && it.visibility == KVisibility.PUBLIC }
+            .filter {
+                // Take only public fields.
+                it.visibility != null && it.visibility == KVisibility.PUBLIC &&
+                    // Field must NOT be annotated with NonFingerprintable
+                    it.findAnnotation<NonFingerprintable>() == null
+            }
             .sortedBy { it.name }
 
         if (members.isEmpty()) {

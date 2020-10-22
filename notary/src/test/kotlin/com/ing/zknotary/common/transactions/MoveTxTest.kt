@@ -1,6 +1,6 @@
 package com.ing.zknotary.common.transactions
 
-import com.ing.zknotary.common.dactyloscopy.fingerprint
+import com.ing.zknotary.common.dactyloscopy.Dactyloscopist
 import com.ing.zknotary.common.util.ComponentPaddingConfiguration
 import com.ing.zknotary.common.zkp.PublicInput
 import com.ing.zknotary.common.zkp.Witness
@@ -124,7 +124,7 @@ class MoveTxTest {
                 ?: error("Expected a filler object")
             require(fillerOutput is ComponentPaddingConfiguration.Filler.TransactionState) { "Expected filler of type TransactionState" }
             val paddingHash =
-                ptx.componentGroupLeafDigestService.hash(paddingNonce.bytes + fillerOutput.content.fingerprint())
+                ptx.componentGroupLeafDigestService.hash(paddingNonce.bytes + Dactyloscopist.identify(fillerOutput.content))
 
             val witness = Witness(
                 ptx,

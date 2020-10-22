@@ -1,12 +1,13 @@
 package com.ing.zknotary.common.contracts
 
-import com.ing.zknotary.common.dactyloscopy.fingerprint
+import com.ing.zknotary.common.dactyloscopy.NonFingerprintable
 import com.ing.zknotary.common.util.ComponentPaddingConfiguration
 import com.ing.zknotary.common.zkp.ZKNulls
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.CommandAndState
 import net.corda.core.contracts.Contract
 import net.corda.core.contracts.ContractClassName
+import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.OwnableState
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.StateRef
@@ -27,16 +28,12 @@ class TestContract : Contract {
         override val owner: AbstractParty,
         val value: Int = Random().nextInt(1000)
     ) :
-        ZKContractState, OwnableState {
-        override val participants = listOf(owner)
-        override fun withNewOwner(newOwner: AbstractParty) = CommandAndState(Move(), copy(owner = newOwner))
+        ContractState, OwnableState {
 
-        /**
-         * TODO: Try to find an automatable way of generating the fingerprint from arbitrary objects,
-         * that is repeatable in Zinc.
-         * The benefit is that users need not implement the Fingerprintable interface.
-         */
-        override fun fingerprint() = owner.fingerprint() + value.fingerprint()
+        @NonFingerprintable("Temporary removed from fingerprinting")
+        override val participants = listOf(owner)
+
+        override fun withNewOwner(newOwner: AbstractParty) = CommandAndState(Move(), copy(owner = newOwner))
     }
 
     // Commands
