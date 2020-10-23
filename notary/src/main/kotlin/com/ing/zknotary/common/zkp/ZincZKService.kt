@@ -7,7 +7,7 @@ import java.util.concurrent.TimeUnit
 
 class ZincZKService(
     circuitFolder: String,
-    private val artifactFolder: String,
+    artifactFolder: String,
     private val buildTimeout: Duration,
     private val setupTimeout: Duration,
     private val provingTimeout: Duration,
