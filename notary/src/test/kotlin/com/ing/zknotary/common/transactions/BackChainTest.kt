@@ -2,6 +2,8 @@ package com.ing.zknotary.common.transactions
 
 import com.ing.zknotary.common.contracts.TestContract
 import com.ing.zknotary.common.testing.fixed
+import com.ing.zknotary.common.zkp.ZKTransactionService
+import com.ing.zknotary.common.zkp.ZincZKTransactionService
 import com.ing.zknotary.node.services.collectVerifiedDependencies
 import junit.framework.TestCase
 import net.corda.core.crypto.Crypto
@@ -15,8 +17,11 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import java.io.File
 import java.nio.ByteBuffer
+import java.time.Duration
 import kotlin.time.ExperimentalTime
+import kotlin.time.measureTime
 
 @ExperimentalTime
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -33,15 +38,6 @@ class BackChainTest {
 
     // User real Zinc circuit, or mocked circuit (that checks same rules)
     private val mockZKP = false
-    private val circuits = mapOf(
-        TestContract.Create().id to "${System.getProperty("user.dir")}/../prover/circuits/create",
-        TestContract.Move().id to "${System.getProperty("user.dir")}/../prover/circuits/move"
-    ).map {
-        SecureHash.Companion.sha256(ByteBuffer.allocate(4).putInt(it.key).array()) as SecureHash to it.value
-    }.toMap()
-
-    private val proverService: ProverService
-    private val verificationService: VerificationService
 
     // Mocked txs:
     private lateinit var createWtx: WireTransaction
@@ -91,20 +87,25 @@ class BackChainTest {
             verifies()
             println("ANOTHERMOVE \tWTX: ${move2Wtx.id.toString().take(8)}")
         }
-
-        println("Setting up proving and verification services")
-
-        proverService = if (mockZKP) {
-            ProverService(ledgerServices)
-        } else {
-            ProverService(ledgerServices, circuits)
-        }
-
-        verificationService = VerificationService(proverService)
     }
 
     @Nested
     inner class Create {
+        private val circuits = mapOf(
+            TestContract.Create().id to "${System.getProperty("user.dir")}/../prover/circuits/create"
+        ).map {
+            SecureHash.Companion.sha256(
+                ByteBuffer.allocate(4).putInt(it.key).array()
+            ) as SecureHash to setupCircuit(it.value)
+        }.toMap()
+
+        private val proverService = if (mockZKP) {
+            ProverService(ledgerServices)
+        } else {
+            ProverService(ledgerServices, circuits)
+        }
+        private val verificationService = VerificationService(proverService)
+
         @Test
         @Tag("slow")
         fun `We deterministically build, prove and verify graph of ZKVerifierTransactions based on graph of SignedTransactions`() {
@@ -115,6 +116,22 @@ class BackChainTest {
 
     @Nested
     inner class Move {
+        private val circuits = mapOf(
+            TestContract.Create().id to "${System.getProperty("user.dir")}/../prover/circuits/create",
+            TestContract.Move().id to "${System.getProperty("user.dir")}/../prover/circuits/move"
+        ).map {
+            SecureHash.Companion.sha256(
+                ByteBuffer.allocate(4).putInt(it.key).array()
+            ) as SecureHash to setupCircuit(it.value)
+        }.toMap()
+
+        private val proverService = if (mockZKP) {
+            ProverService(ledgerServices)
+        } else {
+            ProverService(ledgerServices, circuits)
+        }
+        private val verificationService = VerificationService(proverService)
+
         @Test
         @Tag("slow")
         fun `Prover can fetch the complete tx graph for input StateRefs`() {
@@ -131,5 +148,30 @@ class BackChainTest {
             proverService.prove(moveWtx)
             verificationService.verify(moveWtx)
         }
+    }
+
+    private fun setupCircuit(circuitFolder: String): ZKTransactionService {
+        println("Starting for $circuitFolder")
+
+        val circuitFolder = File(circuitFolder).absolutePath
+        val artifactFolder = File("$circuitFolder/artifacts")
+        artifactFolder.mkdirs()
+
+        val zincZKTransactionService = ZincZKTransactionService(
+            circuitFolder,
+            artifactFolder = artifactFolder.absolutePath,
+            buildTimeout = Duration.ofSeconds(10 * 60),
+            setupTimeout = Duration.ofSeconds(10 * 60),
+            provingTimeout = Duration.ofSeconds(10 * 60),
+            verificationTimeout = Duration.ofSeconds(10 * 60)
+        )
+
+        val setupDuration = measureTime {
+            zincZKTransactionService.setup()
+        }
+
+        println("Setup duration for $circuitFolder: ${setupDuration.inMinutes} mins")
+
+        return zincZKTransactionService
     }
 }
