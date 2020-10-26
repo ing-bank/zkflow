@@ -91,15 +91,17 @@ open class MockZKTransactionStorage(val serviceHub: AppServiceHub) : ZKWritableT
 }
 
 /**
- * Map from SignedTransaction.id to ZKProverTransaction.id for later lookup
+ * Map from SignedTransaction.id to ZKVerifierTransaction.id for later lookup
  */
 private class MockZKTransactionMap : ZKTransactionMap, SingletonSerializeAsToken() {
     private val map = mutableMapOf<SecureHash, SecureHash>()
 
-    override fun put(wtx: WireTransaction, ptx: ZKProverTransaction): SecureHash? = map.put(wtx.id, ptx.id)
-    override fun put(stx: SignedTransaction, vtx: ZKVerifierTransaction): SecureHash? = map.put(stx.id, vtx.id)
+    override fun get(id: SecureHash) = map[id]
+    override fun get(stx: SignedTransaction) = map[stx.id]
+    override fun get(wtx: WireTransaction) = map[wtx.id]
 
-    override fun get(id: SecureHash): SecureHash? = map[id]
-    override fun get(stx: SignedTransaction): SecureHash? = map[stx.id]
-    override fun get(wtx: WireTransaction): SecureHash? = map[wtx.id]
+    override fun put(wtx: WireTransaction, vtx: ZKVerifierTransaction) = map.put(wtx.id, vtx.id)
+    override fun put(wtx: WireTransaction, ptx: ZKProverTransaction) = map.put(wtx.id, ptx.id)
+    override fun put(stx: SignedTransaction, vtx: ZKVerifierTransaction) = map.put(stx.id, vtx.id)
+    override fun put(stx: SignedTransaction, ptx: ZKProverTransaction) = map.put(stx.id, ptx.id)
 }

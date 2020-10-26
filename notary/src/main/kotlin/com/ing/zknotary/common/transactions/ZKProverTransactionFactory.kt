@@ -56,7 +56,7 @@ fun WireTransaction.toWitness(
     )
 
     // Because the PrivacySalt of the WireTransaction is reused to create the ProverTransactions,
-    // the nonces are also identical from WireTransaction to ZKProverTransaction
+    // the nonces are also identical from WireTransaction to ZKProverTransaction.
     // This means we can collect the UTXO nonces for the inputs and references of the wiretransaction and it should
     // just work.
     // When we move to full backchain privacy and no longer have the WireTransactions at all, we will
@@ -70,11 +70,10 @@ fun WireTransaction.toWitness(
                 ptx.componentGroupLeafDigestService.zeroHash
             }
             is PaddingWrapper.Original -> {
-                val wtxRefToLookUp = this@toWitness.inputs[index]
                 val outputTx =
-                    zkTransactionStorage.getTransaction(it.content.ref.txhash)
+                    services.validatedTransactions.getTransaction(it.content.ref.txhash)
                         ?: error("Could not fetch output transaction for StateRef ${it.content.ref}")
-                outputTx.componentNonces[ComponentGroupEnum.OUTPUTS_GROUP.ordinal]!![it.content.ref.index]
+                outputTx.tx.availableComponentNonces[ComponentGroupEnum.OUTPUTS_GROUP.ordinal]!![it.content.ref.index]
             }
         }
     }

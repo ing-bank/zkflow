@@ -48,7 +48,7 @@ class ZKVerifierTransaction(
      * Used for padding internal lists to sizes accepted by the ZK circuit.
      */
     componentPaddingConfiguration: ComponentPaddingConfiguration
-) {
+): NamedByZKMerkleTree {
     val padded = Padded(
         originalInputs = inputs,
         originalReferences = references,
@@ -74,7 +74,7 @@ class ZKVerifierTransaction(
 
     val id by lazy { merkleTree.root }
 
-    val merkleTree by lazy {
+    override val merkleTree by lazy {
         ZKPartialMerkleTree(this)
     }
 

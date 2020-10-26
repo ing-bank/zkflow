@@ -11,5 +11,5 @@ interface NamedByZKMerkleTree {
     /**
      * A [ZKFullMerkleTree] that identifies this transaction.
      */
-    val merkleTree: ZKFullMerkleTree
+    val merkleTree: TransactionMerkleTree
 }

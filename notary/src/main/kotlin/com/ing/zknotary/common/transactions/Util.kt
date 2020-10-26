@@ -34,6 +34,7 @@ fun ZKProverTransaction.prettyPrint(): String {
 }
 
 fun ZKProverTransaction.toZKVerifierTransaction(proof: ByteArray): ZKVerifierTransaction {
+    // IMPORTANT: this should only include the nonces for the components that are visible in the ZKVerifierTransaction
     val componentNonces = this.merkleTree.componentNonces.filterKeys {
         it in listOf(
             ComponentGroupEnum.INPUTS_GROUP.ordinal,
