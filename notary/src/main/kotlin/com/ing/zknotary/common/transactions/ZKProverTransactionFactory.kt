@@ -3,7 +3,7 @@ package com.ing.zknotary.common.transactions
 import com.ing.zknotary.common.contracts.toZKCommand
 import com.ing.zknotary.common.util.PaddingWrapper
 import com.ing.zknotary.common.zkp.Witness
-import com.ing.zknotary.node.services.ZKTransactionStorage
+import com.ing.zknotary.node.services.ZKProverTransactionStorage
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.StateAndRef
@@ -23,7 +23,7 @@ import net.corda.core.transactions.WireTransaction
  */
 fun WireTransaction.toWitness(
     services: ServiceHub,
-    zkTransactionStorage: ZKTransactionStorage,
+    zkProverTransactionStorage: ZKProverTransactionStorage,
     componentGroupLeafDigestService: DigestService,
     nodeDigestService: DigestService = componentGroupLeafDigestService
 ): Witness {
@@ -32,7 +32,7 @@ fun WireTransaction.toWitness(
     // Look up the ZKid for each WireTransaction.id
     fun List<StateAndRef<*>>.mapToZkid(): List<StateAndRef<*>> {
         return map {
-            val zkid = checkNotNull(zkTransactionStorage.map.get(it.ref.txhash)) {
+            val zkid = checkNotNull(zkProverTransactionStorage.map.get(it.ref.txhash)) {
                 "Unexpectedly could not find the tx id map for ${it.ref.txhash}. Did you run ResolveTransactionsFlow before?"
             }
             StateAndRef(it.state, StateRef(zkid, it.ref.index))
@@ -65,15 +65,15 @@ fun WireTransaction.toWitness(
     fun List<PaddingWrapper<StateAndRef<ContractState>>>.collectUtxoNonces() = mapIndexed { index, it ->
         when (it) {
             is PaddingWrapper.Filler -> {
-                // TODO: The hash to use should probably come from paddingConfig
-                // When it is a padded state, the nonce is ALWAYS a zerohash
+                // When it is a padded state, the nonce is ALWAYS a zerohash of the algo used for merkle tree leaves
                 ptx.componentGroupLeafDigestService.zeroHash
             }
             is PaddingWrapper.Original -> {
+                // When it is an original state, we look up the tx it points to and collect the nonce for the UTXO it points to.
                 val outputTx =
-                    services.validatedTransactions.getTransaction(it.content.ref.txhash)
+                    zkProverTransactionStorage.getTransaction(it.content.ref.txhash)
                         ?: error("Could not fetch output transaction for StateRef ${it.content.ref}")
-                outputTx.tx.availableComponentNonces[ComponentGroupEnum.OUTPUTS_GROUP.ordinal]!![it.content.ref.index]
+                outputTx.merkleTree.componentNonces[ComponentGroupEnum.OUTPUTS_GROUP.ordinal]!![it.content.ref.index]
             }
         }
     }
@@ -86,31 +86,31 @@ fun WireTransaction.toWitness(
 }
 
 // TODO: remove this, since it does not take into account the history and does not replace the input StateRefs with vtx.StateRefs.
-class ZKProverTransactionFactory {
-    companion object {
-        fun create(
-            ltx: LedgerTransaction,
-            componentGroupLeafDigestService: DigestService,
-            nodeDigestService: DigestService
-        ): ZKProverTransaction {
-            requireThat {
-                // "A notary must always be set on a ZKProverTransaction" using (ltx.notary != null)
-                "There must be exactly one command on a ZKProverTransactions" using (ltx.commands.size == 1)
-            }
-
-            return ZKProverTransaction(
-                inputs = ltx.inputs,
-                outputs = ltx.outputs.map { TransactionState(data = it.data, notary = it.notary) },
-                references = ltx.references,
-                command = ltx.commands.map { it.toZKCommand() }.single(),
-                notary = ltx.notary!!,
-                timeWindow = ltx.timeWindow,
-                privacySalt = ltx.privacySalt,
-                networkParametersHash = ltx.networkParameters?.serialize()?.hash,
-                attachments = ltx.attachments.map { it.id },
-                componentGroupLeafDigestService = componentGroupLeafDigestService,
-                nodeDigestService = nodeDigestService
-            )
-        }
-    }
-}
+// class ZKProverTransactionFactory {
+//     companion object {
+//         fun create(
+//             ltx: LedgerTransaction,
+//             componentGroupLeafDigestService: DigestService,
+//             nodeDigestService: DigestService
+//         ): ZKProverTransaction {
+//             requireThat {
+//                 // "A notary must always be set on a ZKProverTransaction" using (ltx.notary != null)
+//                 "There must be exactly one command on a ZKProverTransactions" using (ltx.commands.size == 1)
+//             }
+//
+//             return ZKProverTransaction(
+//                 inputs = ltx.inputs,
+//                 outputs = ltx.outputs.map { TransactionState(data = it.data, notary = it.notary) },
+//                 references = ltx.references,
+//                 command = ltx.commands.map { it.toZKCommand() }.single(),
+//                 notary = ltx.notary!!,
+//                 timeWindow = ltx.timeWindow,
+//                 privacySalt = ltx.privacySalt,
+//                 networkParametersHash = ltx.networkParameters?.serialize()?.hash,
+//                 attachments = ltx.attachments.map { it.id },
+//                 componentGroupLeafDigestService = componentGroupLeafDigestService,
+//                 nodeDigestService = nodeDigestService
+//             )
+//         }
+//     }
+// }
