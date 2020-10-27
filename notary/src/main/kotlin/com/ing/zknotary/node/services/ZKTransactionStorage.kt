@@ -4,6 +4,7 @@ import com.ing.zknotary.common.transactions.NamedByZKMerkleTree
 import com.ing.zknotary.common.transactions.ZKProverTransaction
 import com.ing.zknotary.common.transactions.ZKVerifierTransaction
 import com.ing.zknotary.common.transactions.toWitness
+import com.ing.zknotary.common.transactions.toZKProverTransaction
 import com.ing.zknotary.common.transactions.toZKVerifierTransaction
 import com.ing.zknotary.common.zkp.ZKTransactionService
 import net.corda.core.DeleteForDJVM
@@ -28,13 +29,12 @@ fun SignedTransaction.toZKVerifierTransaction(
     persist: Boolean = true
 ): ZKVerifierTransaction {
     val wtx = coreTransaction as WireTransaction
-    val witness = wtx.toWitness(
+    val witness = wtx.toZKProverTransaction(
         services,
         zkProverTransactionStorage,
-        // TODO: make this configurable
         componentGroupLeafDigestService = BLAKE2s256DigestService,
         nodeDigestService = PedersenDigestService
-    )
+    ).toWitness(zkProverTransactionStorage)
 
     val proof = zkTransactionService.prove(witness)
     val vtx = witness.transaction.toZKVerifierTransaction(proof)

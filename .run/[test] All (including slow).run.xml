@@ -1,10 +1,10 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="[test] All (including slow)" type="GradleRunConfiguration" factoryName="Gradle">
+  <configuration default="false" name="[TEST] All (including slow)" type="GradleRunConfiguration" factoryName="Gradle">
     <ExternalSystemSettings>
       <option name="executionName" />
       <option name="externalProjectPath" value="$PROJECT_DIR$" />
       <option name="externalSystemIdString" value="GRADLE" />
-      <option name="scriptParameters" value=":notary:test --tests * :notary:slowTest --tests * --continue" />
+      <option name="scriptParameters" value="test --tests * slowTest --tests * --continue" />
       <option name="taskDescriptions">
         <list />
       </option>
