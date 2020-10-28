@@ -21,7 +21,7 @@ class ZincZKTransactionService(
             cleanup()
         }
 
-        val circuit = Pair("${zkService.circuitFolder}/src", zkService.artifactFolder)
+        val circuit = CircuitManager.CircuitDescription("${zkService.circuitFolder}/src", zkService.artifactFolder)
         CircuitManager.register(circuit)
 
         while (CircuitManager[circuit] == CircuitManager.Status.InProgress) {
@@ -30,7 +30,7 @@ class ZincZKTransactionService(
             Thread.sleep(10 * 1000)
         }
 
-        if (CircuitManager[circuit] == CircuitManager.Status.NotReady) {
+        if (CircuitManager[circuit] == CircuitManager.Status.Outdated) {
             cleanup()
             CircuitManager.inProgress(circuit)
             zkService.setup()

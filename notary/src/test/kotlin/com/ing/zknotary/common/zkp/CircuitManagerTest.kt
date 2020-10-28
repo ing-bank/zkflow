@@ -1,19 +1,19 @@
 package com.ing.zknotary.common.zkp
 
+import com.ing.zknotary.common.util.includedLastModified
 import org.junit.jupiter.api.Test
 import java.io.File
-import kotlin.math.max
 import kotlin.test.assertEquals
 
 class CircuitManagerTest {
     private val source: String = javaClass.getResource("/CircuitManager/src").path
     private val artifact: String = javaClass.getResource("/CircuitManager/artifact").path
-    private val id = Pair(source, artifact)
+    private val id = CircuitManager.CircuitDescription(source, artifact)
 
     @Test
     fun `no metadata`() {
         CircuitManager.register(id)
-        assertEquals(CircuitManager.Status.NotReady, CircuitManager[id])
+        assertEquals(CircuitManager.Status.Outdated, CircuitManager[id])
     }
 
     @Test
@@ -22,18 +22,14 @@ class CircuitManagerTest {
         outdatedMetadataFile.writeText("0")
 
         CircuitManager.register(id)
-        assertEquals(CircuitManager.Status.NotReady, CircuitManager[id])
+        assertEquals(CircuitManager.Status.Outdated, CircuitManager[id])
         assert(!outdatedMetadataFile.exists())
     }
 
     @Test
     fun `metadata present and valid`() {
         // Find the last time files in the source folder have been modified.
-        val lastModified = File(source).walkTopDown()
-            .filter { it.isFile }
-            .fold(null as Long?) { lastModified, path ->
-                max(path.lastModified(), lastModified ?: 0L)
-            } ?: error("No files in the source directory")
+        val lastModified = File(source).includedLastModified ?: error("No files in the source directory")
 
         // Create a dummy artifact.
         val artifactFile = File("$artifact/dummy.txt")
@@ -44,7 +40,7 @@ class CircuitManagerTest {
         metadataFile.appendText("\n${artifactFile.absolutePath}:${artifactFile.lastModified()}")
 
         CircuitManager.register(id)
-        assertEquals(CircuitManager.Status.Ready, CircuitManager[id])
+        assertEquals(CircuitManager.Status.UpToDate, CircuitManager[id])
 
         metadataFile.delete()
         artifactFile.delete()

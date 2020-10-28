@@ -1,34 +1,50 @@
 package com.ing.zknotary.common.zkp
 
+import com.ing.zknotary.common.util.includedLastModified
 import java.io.File
-import kotlin.math.max
 
+/**
+ * CircuitManager examines Zinc artifacts whether they are up-to-date/outdated.
+ *
+ * This is achieved by maintaining a metadata file in the artifacts directory.
+ * This file has the following format:
+ * line 0:timestamp of the latest modification of the source folder content
+ * lines 1..n: "path to artifact":"last modification timestamp"
+ *
+ * line 0 sets a necessary condition for artifacts to be used:
+ * if recorded timestamp of the source  < actual timestamp of the source, then artifacts are outdated
+ *
+ * lines 1..n set a sufficient condition for artifacts to be used:
+ * the artifact folder must contain the listed artifacts
+ * and their actual timestamps must coincide with the corresponding timestamps.
+ * e.g., for line 35: "path/to/artifact":20304050
+ * there must be an artifact at "path/to/artifact" and its actual timestamp must be 20304050.
+ *
+ * Metadata file is constructed when `cache()` is called. It is assumed that
+ * at the moment of caching the current artifacts are aligned with the current source.
+ */
 object CircuitManager {
-    /**
-     * Metadata file contains:
-     * 0: date of the latest modification of the source folder content
-     * 1: artifact:content-hash
-     * 2..n: ..
-     */
     const val metadataPath = "__circuit_metadata__"
 
     enum class Status {
-        NotReady,
-        Ready,
+        Outdated,
+        UpToDate,
         InProgress
     }
 
-    private var circuits = mutableMapOf<Pair<String, String>, Status>()
+    data class CircuitDescription(val circuitFolder: String, val artifactFolder: String)
 
-    operator fun get(circuit: Pair<String, String>) = circuits[circuit]
+    private var circuits = mutableMapOf<CircuitDescription, Status>()
 
-    fun register(circuit: Pair<String, String>) {
-        val (circuitFolder, artifactFolder) = circuit
+    operator fun get(circuitDescription: CircuitDescription) = circuits[circuitDescription]
+
+    fun register(circuitDescription: CircuitDescription) {
+        val (circuitFolder, artifactFolder) = circuitDescription
 
         val metadataFile = File("$artifactFolder/$metadataPath")
 
         if (!metadataFile.exists()) {
-            circuits[circuit] = Status.NotReady
+            circuits[circuitDescription] = Status.Outdated
             return
         }
 
@@ -38,21 +54,17 @@ object CircuitManager {
         val lastModifiedArtifactsRecorded = metadata.subList(1, metadata.size)
 
         // Find the last time files in the source folder have been modified.
-        val lastModifiedSource = File(circuitFolder).walkTopDown()
-            .filter { it.isFile }
-            .fold(null as Long?) { lastModified, path ->
-                max(path.lastModified(), lastModified ?: 0L)
-            } ?: error("No files in the source directory")
+        val lastModifiedSource = File(circuitFolder).includedLastModified ?: error("No files in the source directory")
 
-        // Check if the artifact folder contains actual artifacts.
+        // Check if the source has not been changed after the artifacts have been generated.
         if (lastModifiedSourceRecorded < lastModifiedSource) {
             metadataFile.delete()
 
-            circuits[circuit] = Status.NotReady
+            circuits[circuitDescription] = Status.Outdated
             return
         }
 
-        // Check if the artifact folder the correct required artifacts.
+        // Check if the artifact folder contains the artifacts as listed in the metadata file.
         for (it in lastModifiedArtifactsRecorded) {
             val (path, lastModified) = it.split(":")
             val artifactFile = File(path)
@@ -61,34 +73,37 @@ object CircuitManager {
                 !artifactFile.exists() ||
                 lastModified.toLong() < artifactFile.lastModified()
             ) {
-                circuits[circuit] = Status.NotReady
+                metadataFile.delete()
+
+                circuits[circuitDescription] = Status.Outdated
                 return
             }
         }
 
-        // lastModifiedRecorded = lastModified
-        circuits[circuit] = Status.Ready
+        // lastModifiedRecorded = lastModifiedSource
+        circuits[circuitDescription] = Status.UpToDate
     }
 
-    fun inProgress(circuit: Pair<String, String>) {
-        circuits[circuit] ?: error("Circuit must be register first")
-        circuits[circuit] = Status.InProgress
+    fun inProgress(circuitDescription: CircuitDescription) {
+        circuits[circuitDescription] ?: error("Circuit must be registered first")
+        circuits[circuitDescription] = Status.InProgress
     }
 
-    fun cache(circuit: Pair<String, String>) {
-        circuits[circuit] ?: error("Circuit must be register first")
+    /**
+     * Creates the metadata file by
+     * 1. Finding out the latest modification date of across files in the circuit folder,
+     * 2. Listing all artifacts currently present in the artifacts folder together with their timestamps.
+     */
+    fun cache(circuitDescription: CircuitDescription) {
+        circuits[circuitDescription] ?: error("Circuit must be registered first")
 
-        val (circuitFolder, artifactFolder) = circuit
+        val (circuitFolder, artifactFolder) = circuitDescription
 
         // Find the last time files in the source folder have been modified.
-        val lastModified = File(circuitFolder).walkTopDown()
-            .filter { it.isFile }
-            .fold(null as Long?) { lastModified, path ->
-                max(path.lastModified(), lastModified ?: 0L)
-            } ?: error("No files in the source directory")
+        val lastModifiedSource = File(circuitFolder).includedLastModified ?: error("No files in the source directory")
 
         val metadataFile = File("$artifactFolder/$metadataPath")
-        metadataFile.writeText("$lastModified")
+        metadataFile.writeText("$lastModifiedSource")
 
         File(artifactFolder).walkTopDown()
             .filter { it.isFile && it.name != metadataPath }
@@ -96,6 +111,6 @@ object CircuitManager {
                 metadataFile.appendText("\n${it.absolutePath}:${it.lastModified()}")
             }
 
-        circuits[circuit] = Status.Ready
+        circuits[circuitDescription] = Status.UpToDate
     }
 }
