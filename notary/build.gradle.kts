@@ -63,6 +63,10 @@ spotless {
 }
 
 task<Test>("slowTest") {
+    val root = project.rootDir.absolutePath
+    inputs.dir("$root/prover/circuits/create/artifacts")
+    inputs.dir("$root/prover/circuits/move/artifacts")
+
     useJUnitPlatform {
         includeTags("slow")
 

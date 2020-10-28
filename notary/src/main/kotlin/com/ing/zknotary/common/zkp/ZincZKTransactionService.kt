@@ -16,7 +16,28 @@ class ZincZKTransactionService(
     private val zkService =
         ZincZKService(circuitFolder, artifactFolder, buildTimeout, setupTimeout, provingTimeout, verificationTimeout)
 
-    fun setup() = zkService.setup()
+    fun setup(force: Boolean = false) {
+        if (force) {
+            cleanup()
+        }
+
+        val circuit = CircuitManager.CircuitDescription("${zkService.circuitFolder}/src", zkService.artifactFolder)
+        CircuitManager.register(circuit)
+
+        while (CircuitManager[circuit] == CircuitManager.Status.InProgress) {
+            // An upper waiting time bound can be set up,
+            // but this bound may be overly pessimistic.
+            Thread.sleep(10 * 1000)
+        }
+
+        if (CircuitManager[circuit] == CircuitManager.Status.Outdated) {
+            cleanup()
+            CircuitManager.inProgress(circuit)
+            zkService.setup()
+            CircuitManager.cache(circuit)
+        }
+    }
+
     fun cleanup() = zkService.cleanup()
 
     override fun prove(witness: Witness): ByteArray {

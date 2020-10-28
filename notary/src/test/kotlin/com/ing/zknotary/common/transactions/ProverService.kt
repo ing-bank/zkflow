@@ -3,7 +3,6 @@ package com.ing.zknotary.common.transactions
 import com.ing.zknotary.common.contracts.ZKCommandData
 import com.ing.zknotary.common.zkp.MockZKTransactionService
 import com.ing.zknotary.common.zkp.ZKTransactionService
-import com.ing.zknotary.common.zkp.ZincZKTransactionService
 import com.ing.zknotary.node.services.collectVerifiedDependencies
 import com.ing.zknotary.node.services.toZKVerifierTransaction
 import com.ing.zknotary.nodes.services.MockZKTransactionStorage
@@ -12,10 +11,7 @@ import net.corda.core.transactions.WireTransaction
 import net.corda.testing.node.MockServices
 import net.corda.testing.node.createMockCordaService
 import net.corda.testing.node.ledger
-import java.io.File
 import java.nio.ByteBuffer
-import java.time.Duration
-import kotlin.streams.toList
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
 
@@ -25,42 +21,10 @@ class ProverService {
     val zkTransactionServices: Map<SecureHash, ZKTransactionService>
     val zkStorage: MockZKTransactionStorage
 
-    constructor(ledgerServices: MockServices, circuits: Map<SecureHash, String>) {
+    constructor(ledgerServices: MockServices, zkTransactionServices: Map<SecureHash, ZKTransactionService>) {
         this.ledgerServices = ledgerServices
+        this.zkTransactionServices = zkTransactionServices
         zkStorage = createMockCordaService(ledgerServices, ::MockZKTransactionStorage)
-
-        println("\nSetting up ${circuits.size} circuit(s), this may take some minutes")
-        val overallSetupDuration = measureTime {
-            zkTransactionServices = circuits.entries.parallelStream().map { (circuitId, circuitPath) ->
-                println("Starting for $circuitPath")
-
-                val circuitFolder = File(circuitPath).absolutePath
-                val artifactFolder = File("$circuitFolder/artifacts")
-                artifactFolder.mkdirs()
-
-                val zkTransactionService = ZincZKTransactionService(
-                    circuitFolder,
-                    artifactFolder = artifactFolder.absolutePath,
-                    buildTimeout = Duration.ofSeconds(10 * 60),
-                    setupTimeout = Duration.ofSeconds(10 * 60),
-                    provingTimeout = Duration.ofSeconds(10 * 60),
-                    verificationTimeout = Duration.ofSeconds(10 * 60)
-                )
-
-                val setupDuration = measureTime {
-                    zkTransactionService.setup()
-                }
-
-                println("Setup duration for $circuitPath: ${setupDuration.inMinutes} mins")
-
-                circuitId to zkTransactionService
-            }
-                .toList()
-                .toMap()
-            // Impossible to immediately collect into a Map.
-        }
-
-        println("Overall setup duration: ${overallSetupDuration.inMinutes} mins")
     }
 
     constructor(ledgerServices: MockServices) {
