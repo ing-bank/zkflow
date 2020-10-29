@@ -74,7 +74,8 @@ open class ZKNotaryService(final override val services: ServiceHubInternal, over
     private val zkConfig = ZKConfig(
         zkTransactionService = services.getCordaServiceFromConfig("zkTransactionService"),
         serializationFactoryService = services.getCordaServiceFromConfig("zkpSerializationFactoryService"),
-        zkStorage = services.getCordaServiceFromConfig("zkStorage")
+        zkProverTransactionStorage = services.getCordaServiceFromConfig("zkVerifierTransactionStorage"),
+        zkVerifierTransactionStorage = services.getCordaServiceFromConfig("zkVerifierTransactionStorage")
     )
 
     init {

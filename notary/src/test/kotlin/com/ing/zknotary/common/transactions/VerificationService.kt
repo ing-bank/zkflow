@@ -16,7 +16,7 @@ import kotlin.time.measureTime
 @ExperimentalTime
 class VerificationService(private val proverService: ProverService) {
     private val ledgerServices = proverService.ledgerServices
-    private val zkStorage = proverService.zkStorage
+    private val zkStorage = proverService.zkVerifierTransactionStorage
     private val zkTransactionServices = proverService.zkTransactionServices
 
     fun verify(tx: WireTransaction) {
@@ -25,7 +25,7 @@ class VerificationService(private val proverService: ProverService) {
         val verificationTime = measureTime {
             ledgerServices.ledger {
                 println("Starting recursive verification:")
-                val vtx = zkStorage.zkVerifierTransactionFor(tx) ?: error("No corresponding Verifier Tx found for Wire Tx ${tx.id}")
+                val vtx = zkStorage.zkTransactionFor(tx) ?: error("No corresponding Verifier Tx found for Wire Tx ${tx.id}")
                 verify(vtx)
             }
         }

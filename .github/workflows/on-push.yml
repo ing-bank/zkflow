@@ -144,4 +144,4 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: Junit Test Report - Notary - Slow tests
-          path: notary/build/reports/tests/test
+          path: notary/build/reports/tests/slowTest

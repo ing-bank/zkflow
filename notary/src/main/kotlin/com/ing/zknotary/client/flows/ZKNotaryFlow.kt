@@ -69,7 +69,8 @@ open class ZKNotaryFlow(
     private fun buildVerifierTransaction(stx: SignedTransaction, notaryParty: Party): ZKVerifierTransaction {
         return stx.toZKVerifierTransaction(
             services = serviceHub,
-            zkStorage = zkConfig.zkStorage,
+            zkProverTransactionStorage = zkConfig.zkProverTransactionStorage,
+            zkVerifierTransactionStorage = zkConfig.zkVerifierTransactionStorage,
             zkTransactionService = zkConfig.zkTransactionService
         )
     }

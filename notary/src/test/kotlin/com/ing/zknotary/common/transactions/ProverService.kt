@@ -5,7 +5,8 @@ import com.ing.zknotary.common.zkp.MockZKTransactionService
 import com.ing.zknotary.common.zkp.ZKTransactionService
 import com.ing.zknotary.node.services.collectVerifiedDependencies
 import com.ing.zknotary.node.services.toZKVerifierTransaction
-import com.ing.zknotary.nodes.services.MockZKTransactionStorage
+import com.ing.zknotary.nodes.services.MockZKProverTransactionStorage
+import com.ing.zknotary.nodes.services.MockZKVerifierTransactionStorage
 import net.corda.core.crypto.SecureHash
 import net.corda.core.transactions.WireTransaction
 import net.corda.testing.node.MockServices
@@ -19,12 +20,14 @@ import kotlin.time.measureTime
 class ProverService {
     val ledgerServices: MockServices
     val zkTransactionServices: Map<SecureHash, ZKTransactionService>
-    val zkStorage: MockZKTransactionStorage
+    val zkVerifierTransactionStorage: MockZKVerifierTransactionStorage
+    private val zkProverTransactionStorage: MockZKProverTransactionStorage
 
     constructor(ledgerServices: MockServices, zkTransactionServices: Map<SecureHash, ZKTransactionService>) {
         this.ledgerServices = ledgerServices
+        zkVerifierTransactionStorage = createMockCordaService(ledgerServices, ::MockZKVerifierTransactionStorage)
+        zkProverTransactionStorage = createMockCordaService(ledgerServices, ::MockZKProverTransactionStorage)
         this.zkTransactionServices = zkTransactionServices
-        zkStorage = createMockCordaService(ledgerServices, ::MockZKTransactionStorage)
     }
 
     constructor(ledgerServices: MockServices) {
@@ -37,7 +40,8 @@ class ProverService {
                 ::MockZKTransactionService
             )
         )
-        zkStorage = createMockCordaService(ledgerServices, ::MockZKTransactionStorage)
+        zkVerifierTransactionStorage = createMockCordaService(ledgerServices, ::MockZKVerifierTransactionStorage)
+        zkProverTransactionStorage = createMockCordaService(ledgerServices, ::MockZKProverTransactionStorage)
     }
 
     /**
@@ -60,7 +64,8 @@ class ProverService {
 
             val vtx = stx.toZKVerifierTransaction(
                 ledgerServices,
-                zkStorage,
+                zkProverTransactionStorage,
+                zkVerifierTransactionStorage,
                 zkTransactionService,
                 persist = true
             )

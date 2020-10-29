@@ -48,7 +48,7 @@ class ZKVerifierTransaction(
      * Used for padding internal lists to sizes accepted by the ZK circuit.
      */
     componentPaddingConfiguration: ComponentPaddingConfiguration
-) {
+) : NamedByZKMerkleTree {
     val padded = Padded(
         originalInputs = inputs,
         originalReferences = references,
@@ -66,7 +66,6 @@ class ZKVerifierTransaction(
 
         require(groupHashes.size == ComponentGroupEnum.values().size) { "There should be a group hash for each ComponentGroupEnum value" }
         require(padded.inputs().size == componentNonces[ComponentGroupEnum.INPUTS_GROUP.ordinal]?.size ?: 0) { "Number of inputs and input nonces should be equal" }
-        require(outputHashes.size == componentNonces[ComponentGroupEnum.OUTPUTS_GROUP.ordinal]?.size ?: 0) { "Number of outputs and output nonces should be equal" }
         require(padded.references().size == componentNonces[ComponentGroupEnum.REFERENCES_GROUP.ordinal]?.size ?: 0) { "Number of references (${references.size}) and reference nonces (${componentNonces[ComponentGroupEnum.REFERENCES_GROUP.ordinal]?.size}) should be equal" }
 
         if (networkParametersHash != null) require(componentNonces[ComponentGroupEnum.PARAMETERS_GROUP.ordinal]?.size == 1) { "If there is a networkParametersHash, there should be a networkParametersHash nonce" }
@@ -75,7 +74,7 @@ class ZKVerifierTransaction(
 
     val id by lazy { merkleTree.root }
 
-    val merkleTree by lazy {
+    override val merkleTree by lazy {
         ZKPartialMerkleTree(this)
     }
 

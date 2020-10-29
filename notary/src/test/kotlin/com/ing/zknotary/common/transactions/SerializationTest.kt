@@ -4,8 +4,8 @@ import com.ing.zknotary.common.serializer.ZincSerializationFactory
 import com.ing.zknotary.common.zkp.PublicInput
 import com.ing.zknotary.common.zkp.Witness
 import com.ing.zknotary.common.zkp.mockEmptyProof
-import com.ing.zknotary.notary.transactions.createTestsState
-import com.ing.zknotary.notary.transactions.moveTestsState
+import com.ing.zknotary.nodes.services.MockZKProverTransactionStorage
+import com.ing.zknotary.notary.transactions.createTestWireTransaction
 import junit.framework.TestCase.assertEquals
 import net.corda.core.crypto.BLAKE2s256DigestService
 import net.corda.core.crypto.Crypto
@@ -16,6 +16,7 @@ import net.corda.core.serialization.deserialize
 import net.corda.core.serialization.serialize
 import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
+import net.corda.testing.node.createMockCordaService
 import net.corda.testing.node.ledger
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -36,14 +37,14 @@ class SerializationTest {
     @BeforeEach
     fun setup() {
         ledgerServices.ledger {
-            val wtx = moveTestsState(createTestsState(owner = alice), newOwner = bob)
-            verifies()
+            val wtx = createTestWireTransaction(owner = alice, value = 1)
 
             // Build a ZKProverTransaction
-            ptx = ZKProverTransactionFactory.create(
-                wtx.toLedgerTransaction(ledgerServices),
+            ptx = wtx.toZKProverTransaction(
+                services = ledgerServices,
                 componentGroupLeafDigestService = BLAKE2s256DigestService,
-                nodeDigestService = PedersenDigestService
+                nodeDigestService = PedersenDigestService,
+                zkProverTransactionStorage = createMockCordaService(ledgerServices, ::MockZKProverTransactionStorage)
             )
 
             // Collect signatures
