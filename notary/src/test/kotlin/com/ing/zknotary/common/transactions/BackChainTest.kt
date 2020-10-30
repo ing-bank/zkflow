@@ -9,6 +9,7 @@ import junit.framework.TestCase
 import net.corda.core.crypto.Crypto
 import net.corda.core.crypto.SecureHash
 import net.corda.core.transactions.WireTransaction
+import net.corda.core.utilities.loggerFor
 import net.corda.testing.common.internal.testNetworkParameters
 import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
@@ -45,8 +46,10 @@ class BackChainTest {
     private lateinit var create2Wtx: WireTransaction
     private lateinit var move2Wtx: WireTransaction
 
+    private val logger = loggerFor<BackChainTest>()
+
     init {
-        println("Mocking up some txs")
+        logger.info("Mocking up some txs")
         ledgerServices.ledger {
             createWtx = transaction {
                 command(listOf(alice.publicKey), TestContract.Create())
@@ -54,7 +57,7 @@ class BackChainTest {
                 verifies()
             }
             verifies()
-            println("CREATE \t\t\tWTX: ${createWtx.id.toString().take(8)}")
+            logger.info("CREATE \tWTX: ${createWtx.id.toString().take(8)}")
 
             val createdState = createWtx.outRef<TestContract.TestState>(0)
 
@@ -65,7 +68,7 @@ class BackChainTest {
                 verifies()
             }
             verifies()
-            println("MOVE \t\t\tWTX: ${moveWtx.id.toString().take(8)}")
+            logger.info("MOVE \t\tWTX: ${moveWtx.id.toString().take(8)}")
 
             val movedState = moveWtx.outRef<TestContract.TestState>(0)
 
@@ -75,7 +78,7 @@ class BackChainTest {
                 verifies()
             }
             verifies()
-            println("CREATE2 \t\tWTX: ${create2Wtx.id.toString().take(8)}")
+            logger.info("CREATE2 \tWTX: ${create2Wtx.id.toString().take(8)}")
 
             move2Wtx = transaction {
                 input(movedState.ref)
@@ -85,7 +88,7 @@ class BackChainTest {
                 verifies()
             }
             verifies()
-            println("ANOTHERMOVE \tWTX: ${move2Wtx.id.toString().take(8)}")
+            logger.info("ANOTHERMOVE \tWTX: ${move2Wtx.id.toString().take(8)}")
         }
     }
 
@@ -151,7 +154,7 @@ class BackChainTest {
     }
 
     private fun setupCircuit(circuitFolder: String): ZKTransactionService {
-        println("Starting for $circuitFolder")
+        logger.info("Setting up circuit: $circuitFolder")
 
         val circuitFolder = File(circuitFolder).absolutePath
         val artifactFolder = File("$circuitFolder/artifacts")
@@ -170,7 +173,8 @@ class BackChainTest {
             zincZKTransactionService.setup()
         }
 
-        println("Setup duration for $circuitFolder: ${setupDuration.inMinutes} mins")
+        logger.info("Completed set up for circuit: $circuitFolder ")
+        logger.debug("Duration: ${setupDuration.inMinutes} mins")
 
         return zincZKTransactionService
     }

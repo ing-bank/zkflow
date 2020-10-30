@@ -9,6 +9,7 @@ import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.StateRef
 import net.corda.core.crypto.SecureHash
 import net.corda.core.transactions.WireTransaction
+import net.corda.core.utilities.loggerFor
 import net.corda.testing.node.ledger
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
@@ -19,18 +20,20 @@ class VerificationService(private val proverService: ProverService) {
     private val zkStorage = proverService.zkVerifierTransactionStorage
     private val zkTransactionServices = proverService.zkTransactionServices
 
+    private val logger = loggerFor<VerificationService>()
+
     fun verify(tx: WireTransaction) {
-        println("\nVerifying chain leading to: ${tx.id.toString().take(8)}")
+        logger.info("Verifying chain leading to: ${tx.id.toString().take(8)}")
 
         val verificationTime = measureTime {
             ledgerServices.ledger {
-                println("Starting recursive verification:")
+                logger.info("Starting recursive verification:")
                 val vtx = zkStorage.zkTransactionFor(tx) ?: error("No corresponding Verifier Tx found for Wire Tx ${tx.id}")
                 verify(vtx)
             }
         }
 
-        println("Overall verification time: $verificationTime")
+        logger.debug("Overall verification time: $verificationTime")
     }
 
     /**
@@ -38,7 +41,7 @@ class VerificationService(private val proverService: ProverService) {
      */
     private fun verify(currentVtx: ZKVerifierTransaction, level: Int = 0) {
         val indent = " ".repeat(level * 6) + "|-"
-        println("$indent Verifying TX at level $level: ${currentVtx.id.toString().take(8)}")
+        logger.info("$indent Verifying TX at level $level: ${currentVtx.id.toString().take(8)}")
 
         // verify the tx graph for each input and collect nonces and hashes for current tx verification
         val inputHashes = mutableListOf<SecureHash>()
@@ -72,10 +75,10 @@ class VerificationService(private val proverService: ProverService) {
 
                 when (it) {
                     is PaddingWrapper.Filler -> {
-                        println("   $indent Skipping input $index: padding")
+                        logger.info("   $indent Skipping input $index: padding")
                     }
                     is PaddingWrapper.Original -> {
-                        println("   $indent Walking chain for StateRef $index: ${it.content.toString().take(8)}")
+                        logger.info("   $indent Walking chain for StateRef $index: ${it.content.toString().take(8)}")
                         // We only recurse if we are verifying a real stateRef
                         val prevVtx = zkStorage.getTransaction(it.content.txhash) ?: error("Should not happen")
                         // TODO: Perhaps save this recursion until the end? Depends which order we want...
@@ -100,7 +103,8 @@ class VerificationService(private val proverService: ProverService) {
         val verifyDuration = measureTime {
             zkTransactionService.verify(currentVtx.proof, calculatedPublicInput)
         }
-        println("   $indent Verified proof for tx: ${currentVtx.id.toString().take(8)} in $verifyDuration")
+        logger.info("   $indent Verified proof for tx: ${currentVtx.id.toString().take(8)}")
+        logger.debug("Verification time: $verifyDuration")
     }
 
     private fun collectStateRefUtxoHash(

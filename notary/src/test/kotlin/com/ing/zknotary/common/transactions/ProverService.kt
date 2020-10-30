@@ -9,6 +9,7 @@ import com.ing.zknotary.nodes.services.MockZKProverTransactionStorage
 import com.ing.zknotary.nodes.services.MockZKVerifierTransactionStorage
 import net.corda.core.crypto.SecureHash
 import net.corda.core.transactions.WireTransaction
+import net.corda.core.utilities.loggerFor
 import net.corda.testing.node.MockServices
 import net.corda.testing.node.createMockCordaService
 import net.corda.testing.node.ledger
@@ -23,7 +24,11 @@ class ProverService {
     val zkVerifierTransactionStorage: MockZKVerifierTransactionStorage
     private val zkProverTransactionStorage: MockZKProverTransactionStorage
 
+    private val logger = loggerFor<ProverService>()
+
     constructor(ledgerServices: MockServices, zkTransactionServices: Map<SecureHash, ZKTransactionService>) {
+        logger.info("Setting up Prover Service")
+
         this.ledgerServices = ledgerServices
         zkVerifierTransactionStorage = createMockCordaService(ledgerServices, ::MockZKVerifierTransactionStorage)
         zkProverTransactionStorage = createMockCordaService(ledgerServices, ::MockZKProverTransactionStorage)
@@ -31,7 +36,7 @@ class ProverService {
     }
 
     constructor(ledgerServices: MockServices) {
-        println("Mocking up ProverService")
+        logger.info("Mocking up Prover Service")
 
         this.ledgerServices = ledgerServices
         zkTransactionServices = mapOf(
@@ -48,7 +53,7 @@ class ProverService {
      Proves a single tx.
      */
     private fun prove(txId: SecureHash) {
-        println("\nProving tx: ${txId.toString().take(8)}")
+        logger.info("Proving tx: ${txId.toString().take(8)}")
         var vtxId: SecureHash? = null
         val provingTime = measureTime {
             val stx = ledgerServices.validatedTransactions.getTransaction(txId) ?: error("Tx with id $txId not found")
@@ -73,14 +78,14 @@ class ProverService {
             vtxId = vtx.id
         }
 
-        println("\t${txId.toString().take(8)} => ${vtxId?.toString()?.take(8)} in $provingTime")
+        logger.debug("\t${txId.toString().take(8)} => ${vtxId?.toString()?.take(8)} in $provingTime")
     }
 
     /**
      Given a wire tx, proves it and all txs leading to it.
      */
     fun prove(tx: WireTransaction) {
-        println("Proving chain leading to: ${tx.id.toString().take(8)}")
+        logger.info("Proving chain leading to: ${tx.id.toString().take(8)}")
         val provingTime = measureTime {
             ledgerServices.ledger {
                 // First, if not done before,  the prover makes sure it has all SignedTransactions by calling ResolveTransactionsFlow
@@ -96,6 +101,6 @@ class ProverService {
                 }
             }
         }
-        println("Overall proving time: ${provingTime.inMinutes} mins")
+        logger.debug("Overall proving time: ${provingTime.inMinutes} mins")
     }
 }

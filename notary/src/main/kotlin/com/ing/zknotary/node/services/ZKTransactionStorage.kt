@@ -19,6 +19,7 @@ import net.corda.core.node.ServiceHub
 import net.corda.core.serialization.SerializeAsToken
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.WireTransaction
+import net.corda.core.utilities.loggerFor
 import rx.Observable
 
 fun SignedTransaction.toZKVerifierTransaction(
@@ -28,6 +29,8 @@ fun SignedTransaction.toZKVerifierTransaction(
     zkTransactionService: ZKTransactionService,
     persist: Boolean = true
 ): ZKVerifierTransaction {
+    loggerFor<SignedTransaction>().debug("Converting SignedTx to VerifierTx")
+
     val wtx = coreTransaction as WireTransaction
     val witness = wtx.toZKProverTransaction(
         services,
