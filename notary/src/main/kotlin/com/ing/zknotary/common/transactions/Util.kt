@@ -55,14 +55,29 @@ fun ZKProverTransaction.toZKVerifierTransaction(proof: ByteArray): ZKVerifierTra
         )
     }
 
-    val transactionStateFiller = this.padded.paddingConfiguration.filler(ComponentGroupEnum.OUTPUTS_GROUP)!!
-    val stateRefFiller = ComponentPaddingConfiguration.Filler.StateRef(StateRef(componentGroupLeafDigestService.zeroHash, 0))
-    val secureHashFiller = ComponentPaddingConfiguration.Filler.SecureHash(componentGroupLeafDigestService.zeroHash)
+    val stateRefInputsFiller = ComponentPaddingConfiguration.Filler.StateRef(
+        (this.padded.paddingConfiguration.filler(ComponentGroupEnum.INPUTS_GROUP) as ComponentPaddingConfiguration.Filler.StateAndRef).content.ref
+    )
+    val stateRefReferencesFiller = ComponentPaddingConfiguration.Filler.StateRef(
+        (this.padded.paddingConfiguration.filler(ComponentGroupEnum.REFERENCES_GROUP) as ComponentPaddingConfiguration.Filler.StateAndRef).content.ref
+    )
     val componentPadding = ComponentPaddingConfiguration.Builder()
-        .inputs(this.padded.sizeOf(ComponentGroupEnum.INPUTS_GROUP), stateRefFiller)
-        .outputs(this.padded.sizeOf(ComponentGroupEnum.OUTPUTS_GROUP), transactionStateFiller)
-        .references(this.padded.sizeOf(ComponentGroupEnum.REFERENCES_GROUP), stateRefFiller)
-        .attachments(this.padded.sizeOf(ComponentGroupEnum.ATTACHMENTS_GROUP), secureHashFiller)
+        .inputs(
+            this.padded.sizeOf(ComponentGroupEnum.INPUTS_GROUP),
+            stateRefInputsFiller
+        )
+        .outputs(
+            this.padded.sizeOf(ComponentGroupEnum.OUTPUTS_GROUP),
+            this.padded.paddingConfiguration.filler(ComponentGroupEnum.OUTPUTS_GROUP)!!
+        )
+        .references(
+            this.padded.sizeOf(ComponentGroupEnum.REFERENCES_GROUP),
+            stateRefReferencesFiller
+        )
+        .attachments(
+            this.padded.sizeOf(ComponentGroupEnum.ATTACHMENTS_GROUP),
+            this.padded.paddingConfiguration.filler(ComponentGroupEnum.ATTACHMENTS_GROUP)!!
+        )
         .build()
 
     // TODO
