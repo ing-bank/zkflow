@@ -54,6 +54,10 @@
             <AppenderRef ref="Console-Appender"/>
             <AppenderRef ref="RollingFile-Appender"/>
         </Logger>
+        <Logger name="com.ing" level="debug" additivity="false">
+            <AppenderRef ref="Console-Appender"/>
+            <AppenderRef ref="RollingFile-Appender"/>
+        </Logger>
     </Loggers>
 
 </Configuration>

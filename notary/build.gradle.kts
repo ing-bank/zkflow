@@ -122,6 +122,11 @@ tasks.apply {
             events("passed", "skipped", "failed")
         }
 
+        val logConfigPath = System.getProperty("log4j.configurationFile")
+        if (logConfigPath != null) {
+            systemProperty("log4j.configurationFile", logConfigPath)
+        }
+
         // Here you can specify any env vars for tests, for instance the path to the prover lib
         // environment "LD_LIBRARY_PATH", "~/pepper_deps/lib/"
     }
