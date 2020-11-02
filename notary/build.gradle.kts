@@ -109,6 +109,7 @@ tasks.apply {
 
         testLogging {
             events("passed", "skipped", "failed")
+            showStandardStreams = true
         }
 
         val logConfigPath = System.getProperty("log4j.configurationFile")
