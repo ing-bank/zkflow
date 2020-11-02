@@ -94,17 +94,17 @@ class BackChainTest {
 
     @Nested
     inner class Create {
-        private val circuits = mapOf(
-            TestContract.Create().id to "${System.getProperty("user.dir")}/../prover/circuits/create"
-        ).map {
-            SecureHash.Companion.sha256(
-                ByteBuffer.allocate(4).putInt(it.key).array()
-            ) as SecureHash to setupCircuit(it.value)
-        }.toMap()
-
         private val proverService = if (mockZKP) {
             ProverService(ledgerServices)
         } else {
+            val circuits = mapOf(
+                TestContract.Create().id to "${System.getProperty("user.dir")}/../prover/circuits/create"
+            ).map {
+                SecureHash.Companion.sha256(
+                    ByteBuffer.allocate(4).putInt(it.key).array()
+                ) as SecureHash to setupCircuit(it.value)
+            }.toMap()
+
             ProverService(ledgerServices, circuits)
         }
         private val verificationService = VerificationService(proverService)
@@ -119,18 +119,18 @@ class BackChainTest {
 
     @Nested
     inner class Move {
-        private val circuits = mapOf(
-            TestContract.Create().id to "${System.getProperty("user.dir")}/../prover/circuits/create",
-            TestContract.Move().id to "${System.getProperty("user.dir")}/../prover/circuits/move"
-        ).map {
-            SecureHash.Companion.sha256(
-                ByteBuffer.allocate(4).putInt(it.key).array()
-            ) as SecureHash to setupCircuit(it.value)
-        }.toMap()
-
         private val proverService = if (mockZKP) {
             ProverService(ledgerServices)
         } else {
+            val circuits = mapOf(
+                TestContract.Create().id to "${System.getProperty("user.dir")}/../prover/circuits/create",
+                TestContract.Move().id to "${System.getProperty("user.dir")}/../prover/circuits/move"
+            ).map {
+                SecureHash.Companion.sha256(
+                    ByteBuffer.allocate(4).putInt(it.key).array()
+                ) as SecureHash to setupCircuit(it.value)
+            }.toMap()
+
             ProverService(ledgerServices, circuits)
         }
         private val verificationService = VerificationService(proverService)
