@@ -17,7 +17,6 @@ import net.corda.testing.node.ledger
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
 import java.io.File
 import java.nio.ByteBuffer
 import java.time.Duration
@@ -25,7 +24,6 @@ import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
 
 @ExperimentalTime
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class BackChainTest {
     private val alice = TestIdentity.fixed("alice", Crypto.EDDSA_ED25519_SHA512)
     private val bob = TestIdentity.fixed("bob", Crypto.EDDSA_ED25519_SHA512)

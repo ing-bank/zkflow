@@ -11,53 +11,44 @@ import net.corda.core.crypto.BLAKE2s256DigestService
 import net.corda.core.crypto.Crypto
 import net.corda.core.crypto.PedersenDigestService
 import net.corda.core.crypto.SecureHash
-import net.corda.core.crypto.sign
 import net.corda.core.serialization.deserialize
 import net.corda.core.serialization.serialize
 import net.corda.testing.core.TestIdentity
+import net.corda.testing.internal.withTestSerializationEnvIfNotSet
 import net.corda.testing.node.MockServices
 import net.corda.testing.node.createMockCordaService
 import net.corda.testing.node.ledger
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 class SerializationTest {
     private val alice = TestIdentity.fresh("alice", Crypto.EDDSA_ED25519_SHA512)
-    private val bob = TestIdentity.fresh("bob", Crypto.EDDSA_ED25519_SHA512)
+    private val notary = TestIdentity.fresh("notary", Crypto.EDDSA_ED25519_SHA512)
 
     private val ledgerServices = MockServices(
         listOf("com.ing.zknotary.common.contracts"),
         alice
     )
 
-    private lateinit var ptx: ZKProverTransaction
-    private lateinit var vtx: ZKVerifierTransaction
-    private lateinit var sigAlice: ByteArray
+    private val ledger = ledgerServices.ledger {}
 
-    @BeforeEach
-    fun setup() {
-        ledgerServices.ledger {
-            val wtx = createTestWireTransaction(owner = alice, value = 1)
+    private val wtx = ledger.createTestWireTransaction(owner = alice, value = 1)
 
-            // Build a ZKProverTransaction
-            ptx = wtx.toZKProverTransaction(
-                services = ledgerServices,
-                componentGroupLeafDigestService = BLAKE2s256DigestService,
-                nodeDigestService = PedersenDigestService,
-                zkProverTransactionStorage = createMockCordaService(ledgerServices, ::MockZKProverTransactionStorage)
-            )
-
-            // Collect signatures
-            sigAlice = alice.keyPair.private.sign(ptx.id.bytes).bytes
-
-            // build filtered ZKVerifierTransaction
-            vtx = ptx.toZKVerifierTransaction(mockEmptyProof)
-        }
+    // Build a ZKProverTransaction
+    private val ptx = withTestSerializationEnvIfNotSet {
+        wtx.toZKProverTransaction(
+            services = ledgerServices,
+            componentGroupLeafDigestService = BLAKE2s256DigestService,
+            nodeDigestService = PedersenDigestService,
+            zkProverTransactionStorage = createMockCordaService(ledgerServices, ::MockZKProverTransactionStorage)
+        )
     }
+
+    // build filtered ZKVerifierTransaction
+    private val vtx = ptx.toZKVerifierTransaction(mockEmptyProof)
 
     @Test
     fun `Serialize public input to Zinc`() {
-        ledgerServices.ledger {
+        withTestSerializationEnvIfNotSet {
             // Serialize for transport to Zinc
             val testList = listOf<SecureHash>(PedersenDigestService.allOnesHash)
             val publicInput = PublicInput(PedersenDigestService.zeroHash, testList, testList)
@@ -69,7 +60,7 @@ class SerializationTest {
 
     @Test
     fun `Serialize witness to Zinc`() {
-        ledgerServices.ledger {
+        withTestSerializationEnvIfNotSet {
             // Serialize for transport to Zinc
             val witness = Witness(
                 ptx,
@@ -84,14 +75,14 @@ class SerializationTest {
 
     @Test
     fun `VerifierTransaction from ProverTransaction has same Merkle root`() {
-        ledgerServices.ledger {
+        withTestSerializationEnvIfNotSet {
             assertEquals(ptx.id, vtx.id)
         }
     }
 
     @Test
     fun `ProverTransaction survives Corda AMQP serialization`() {
-        ledgerServices.ledger {
+        withTestSerializationEnvIfNotSet {
             val ptxAmqp = ptx.serialize()
             val deserializedptx = ptxAmqp.deserialize()
             assertEquals(ptx, deserializedptx)
@@ -100,7 +91,7 @@ class SerializationTest {
 
     @Test
     fun `VerifierTransaction survives Corda AMQP serialization`() {
-        ledgerServices.ledger {
+        withTestSerializationEnvIfNotSet {
             val vtxAmqp = vtx.serialize()
             val deserializedVtx = vtxAmqp.deserialize()
             assertEquals(vtx, deserializedVtx)
