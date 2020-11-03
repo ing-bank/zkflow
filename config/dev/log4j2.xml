@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Configuration status="info">
+<Configuration status="WARN">
 
     <Properties>
         <Property name="log-path">logs</Property>
@@ -7,13 +7,13 @@
         <Property name="archive">${log-path}/archive</Property>
     </Properties>
 
-    <ThresholdFilter level="trace"/>
+    <ThresholdFilter level="TRACE"/>
 
     <Appenders>
         <Console name="Console-Appender" target="SYSTEM_OUT">
             <PatternLayout>
                 <pattern>
-                    %highlight{[%level{length=1}] %r  %d{HH:mm:ss.SSS} %-20.20c{1} - %msg%n}{TRACE=dim white}
+                    %highlight{[%level{length=1}] %-5r %-20.20c{1} - %msg%n}{TRACE=dim white}
                 </pattern>>
             </PatternLayout>
         </Console>
@@ -46,21 +46,21 @@
     </Appenders>
 
     <Loggers>
-        <Root level="info">
+        <Root level="INFO">
             <AppenderRef ref="Console-Appender"/>
             <AppenderRef ref="RollingFile-Appender"/>
         </Root>
-        <Logger name="net.corda" level="warn" additivity="false">
+        <Logger name="net.corda" level="INFO" additivity="false">
+            <AppenderRef ref="Console-Appender" level="WARN"/>
+            <AppenderRef ref="RollingFile-Appender" level="INFO"/>
+        </Logger>
+        <Logger name="org.junit" level="WARN" additivity="false">
             <AppenderRef ref="Console-Appender"/>
             <AppenderRef ref="RollingFile-Appender"/>
         </Logger>
-        <Logger name="org.junit" level="warn" additivity="false">
-            <AppenderRef ref="Console-Appender"/>
-            <AppenderRef ref="RollingFile-Appender"/>
-        </Logger>
-        <Logger name="com.ing" level="trace" additivity="false">
-            <AppenderRef ref="Console-Appender"/>
-            <AppenderRef ref="RollingFile-Appender"/>
+        <Logger name="com.ing" level="TRACE" additivity="false">
+            <AppenderRef ref="Console-Appender" level="TRACE"/>
+            <AppenderRef ref="RollingFile-Appender" level="INFO"/>
         </Logger>
     </Loggers>
 

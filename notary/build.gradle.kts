@@ -110,15 +110,19 @@ tasks.apply {
         testLogging {
             events("passed", "skipped", "failed")
             showStandardStreams = true
+            info {
+
+            }
         }
 
+        // Allow setting a custom log4j config file
         val logConfigPath = System.getProperty("log4j.configurationFile")
         if (logConfigPath != null) {
             systemProperty("log4j.configurationFile", logConfigPath)
         }
 
-        // Here you can specify any env vars for tests, for instance the path to the prover lib
-        // environment "LD_LIBRARY_PATH", "~/pepper_deps/lib/"
+        // This file determines for the standard java.util.logging how and what is logged to the console
+        systemProperty("java.util.logging.config.file", "${project.buildDir}/resources/test/logging-test.properties")
     }
 
 }
