@@ -51,9 +51,6 @@ dependencies {
     cordaCompile("$cordaReleaseGroup:corda-jackson:$cordaVersion")
     testImplementation("$cordaReleaseGroup:corda-node-driver:$cordaVersion")
     testImplementation("$cordaReleaseGroup:corda-test-utils:$cordaVersion")
-
-    // Other
-    implementation(group = "net.java.dev.jna", name = "jna", version = "5.3.1")
 }
 
 spotless {
