@@ -42,9 +42,15 @@ fun Short.fingerprint(): ByteArray = ByteBuffer.allocate(2).putShort(this).array
 fun Int.fingerprint(): ByteArray = ByteBuffer.allocate(4).putInt(this).array()
 fun Long.fingerprint(): ByteArray = ByteBuffer.allocate(8).putLong(this).array()
 
-fun Byte.fingerprint(): ByteArray = ByteBuffer.allocate(4).putInt(this.toInt()).array()
+fun Byte.fingerprint(): ByteArray = ByteArray(1) { this }
 fun ByteArray.fingerprint(): ByteArray = this
 
+// Chars are 16 bit
+fun Char.fingerprint(): ByteArray = ByteBuffer.allocate(2).putShort(this.toShort()).array()
+
+fun Boolean.fingerprint(): ByteArray = ByteArray(1) { (if (this) 1 else 0).toByte() }
+
+// Unsupported primitives
 fun Double.fingerprint(): ByteArray = throw IllegalArgumentException("Type Double is not supported")
 fun Float.fingerprint(): ByteArray = throw IllegalArgumentException("Type Float is not supported")
 
