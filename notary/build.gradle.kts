@@ -39,8 +39,10 @@ dependencies {
 
     // Testing
     val junit5Version: String by project
+    val kotestVersion: String by project
     testImplementation("org.junit.jupiter:junit-jupiter-api:$junit5Version")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
+    testImplementation("io.kotest:kotest-assertions-core:$kotestVersion")
 
     // Corda dependencies.
     val cordaReleaseGroup: String by project
@@ -55,7 +57,8 @@ dependencies {
 
 spotless {
     kotlin {
-        ktlint("0.37.1")
+        val ktlintVersion: String by project
+        ktlint(ktlintVersion)
     }
 }
 
