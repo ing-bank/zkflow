@@ -3,7 +3,7 @@ package com.ing.zknotary.common.hashes
 import com.ing.dlt.zkkrypto.util.asUnsigned
 import com.ing.zknotary.common.zkp.ZincZKService
 import net.corda.core.crypto.PedersenDigestService
-import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 import java.nio.ByteBuffer
 import java.time.Duration
@@ -19,13 +19,11 @@ class PedersenHashTest {
         verificationTimeout = Duration.ofSeconds(1)
     )
 
-    private val pedersenDigestService = PedersenDigestService
-
     init {
         zincZKService.setup()
     }
 
-    @AfterEach
+    @AfterAll
     fun `remove zinc files`() {
         zincZKService.cleanup()
     }
@@ -34,7 +32,7 @@ class PedersenHashTest {
     fun `zinc verifies Pedersen`() {
         val value = 2
         val witness = ByteBuffer.allocate(4).putInt(value).array()
-        val expected = pedersenDigestService.hash(witness).bytes
+        val expected = PedersenDigestService.hash(witness).bytes
 
         val preimage = witness.map { "\"${it.asUnsigned()}\"" }
         val publicData = expected.map { "\"${it.asUnsigned()}\"" }

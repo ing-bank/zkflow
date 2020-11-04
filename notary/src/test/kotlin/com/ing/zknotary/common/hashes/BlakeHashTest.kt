@@ -3,7 +3,7 @@ package com.ing.zknotary.common.hashes
 import com.ing.dlt.zkkrypto.util.asUnsigned
 import com.ing.zknotary.common.zkp.ZincZKService
 import net.corda.core.crypto.BLAKE2s256DigestService
-import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 import java.nio.ByteBuffer
 import java.time.Duration
@@ -19,13 +19,11 @@ class BlakeHashTest {
         verificationTimeout = Duration.ofSeconds(1)
     )
 
-    private val blake2sDigestService = BLAKE2s256DigestService
-
     init {
         zincZKService.setup()
     }
 
-    @AfterEach
+    @AfterAll
     fun `remove zinc files`() {
         zincZKService.cleanup()
     }
@@ -35,7 +33,7 @@ class BlakeHashTest {
         val value = 2
 
         val witness = ByteBuffer.allocate(4).putInt(value).array()
-        val expected = blake2sDigestService.hash(witness).bytes
+        val expected = BLAKE2s256DigestService.hash(witness).bytes
 
         val preimage = witness.map { "\"${it.asUnsigned()}\"" }
         val publicData = expected.map { "\"${it.asUnsigned()}\"" }
