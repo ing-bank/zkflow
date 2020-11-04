@@ -13,7 +13,7 @@
         <Console name="Console-Appender" target="SYSTEM_OUT">
             <PatternLayout>
                 <pattern>
-                    %highlight{%level{length=1} %d{HH:mm:ss} %T %c{1}.%M - %msg%n}{INFO=white,WARN=red,FATAL=bright red blink}
+                    %highlight{[%level{length=1}] %r  %d{HH:mm:ss.SSS} %-20.20c{1} - %msg%n}{TRACE=dim white}
                 </pattern>>
             </PatternLayout>
         </Console>
@@ -50,7 +50,15 @@
             <AppenderRef ref="Console-Appender"/>
             <AppenderRef ref="RollingFile-Appender"/>
         </Root>
-        <Logger name="net.corda" level="info" additivity="false">
+        <Logger name="net.corda" level="warn" additivity="false">
+            <AppenderRef ref="Console-Appender"/>
+            <AppenderRef ref="RollingFile-Appender"/>
+        </Logger>
+        <Logger name="org.junit" level="warn" additivity="false">
+            <AppenderRef ref="Console-Appender"/>
+            <AppenderRef ref="RollingFile-Appender"/>
+        </Logger>
+        <Logger name="com.ing" level="trace" additivity="false">
             <AppenderRef ref="Console-Appender"/>
             <AppenderRef ref="RollingFile-Appender"/>
         </Logger>

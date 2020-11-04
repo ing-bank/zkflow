@@ -16,6 +16,7 @@ import net.corda.core.crypto.SecureHash
 import net.corda.core.node.ServiceHub
 import net.corda.core.serialization.serialize
 import net.corda.core.transactions.WireTransaction
+import net.corda.core.utilities.loggerFor
 import java.nio.ByteBuffer
 import kotlin.math.max
 
@@ -44,6 +45,8 @@ fun ZKProverTransaction.prettyPrint(): String {
 }
 
 fun ZKProverTransaction.toZKVerifierTransaction(proof: ByteArray): ZKVerifierTransaction {
+    loggerFor<ZKProverTransaction>().debug("Converting ProverTx tot VerifierTx")
+
     // IMPORTANT: this should only include the nonces for the components that are visible in the ZKVerifierTransaction
     val componentNonces = this.merkleTree.componentNonces.filterKeys {
         it in listOf(
@@ -117,6 +120,8 @@ fun WireTransaction.toZKProverTransaction(
     componentGroupLeafDigestService: DigestService,
     nodeDigestService: DigestService = componentGroupLeafDigestService
 ): ZKProverTransaction {
+    loggerFor<WireTransaction>().debug("Converting WireTx to ProverTx")
+
     require(commands.size == 1) { "There must be exactly one command on a ZKProverTransaction" }
 
     // Look up the ZKid for each WireTransaction.id
@@ -149,6 +154,7 @@ fun WireTransaction.toZKProverTransaction(
 fun ZKProverTransaction.toWitness(
     zkProverTransactionStorage: ZKProverTransactionStorage
 ): Witness {
+    loggerFor<ZKProverTransaction>().debug("Creating Witness from ProverTx")
     // Because the PrivacySalt of the WireTransaction is reused to create the ProverTransactions,
     // the nonces are also identical from WireTransaction to ZKProverTransaction.
     // This means we can collect the UTXO nonces for the inputs and references of the wiretransaction and it should

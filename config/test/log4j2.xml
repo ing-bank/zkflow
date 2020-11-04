@@ -16,5 +16,8 @@
         <Logger name="net.corda" level="info" additivity="false">
             <AppenderRef ref="Console-Appender"/>
         </Logger>
+        <Logger name="com.ing" level="debug" additivity="false">
+            <AppenderRef ref="Console-Appender"/>
+        </Logger>
     </Loggers>
 </Configuration>
