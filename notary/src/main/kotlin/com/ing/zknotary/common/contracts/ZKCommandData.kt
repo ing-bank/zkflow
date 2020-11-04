@@ -21,7 +21,11 @@ interface ZKCommandData : CommandData {
     val paddingConfiguration: ComponentPaddingConfiguration
 
     /**
-     * The location of the circuit's main.zn for this command
+     * The information about the circuit for this command.
+     *
+     * This public property will have NO influence on the fingerprint of the implementor
+     * as ComponentPaddingConfiguration implements Fingerprintable itself with fingerprint
+     * being an empty bytearray.
      */
     val circuit: CircuitMetaData
 }

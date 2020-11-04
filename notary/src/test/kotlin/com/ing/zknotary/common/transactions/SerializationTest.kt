@@ -5,7 +5,7 @@ import com.ing.zknotary.common.zkp.PublicInput
 import com.ing.zknotary.common.zkp.Witness
 import com.ing.zknotary.common.zkp.mockEmptyProof
 import com.ing.zknotary.nodes.services.MockZKProverTransactionStorage
-import com.ing.zknotary.notary.transactions.createTestWireTransaction
+import com.ing.zknotary.notary.transactions.createIssuanceWtx
 import junit.framework.TestCase.assertEquals
 import net.corda.core.crypto.BLAKE2s256DigestService
 import net.corda.core.crypto.Crypto
@@ -31,7 +31,7 @@ class SerializationTest {
 
     private val ledger = ledgerServices.ledger {}
 
-    private val wtx = ledger.createTestWireTransaction(owner = alice, value = 1)
+    private val wtx = ledger.createIssuanceWtx(owner = alice, value = 1)
 
     // Build a ZKProverTransaction
     private val ptx = withTestSerializationEnvIfNotSet {

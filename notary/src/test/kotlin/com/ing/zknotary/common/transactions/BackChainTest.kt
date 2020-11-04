@@ -1,10 +1,15 @@
 package com.ing.zknotary.common.transactions
 
 import com.ing.zknotary.common.contracts.TestContract
+import com.ing.zknotary.common.contracts.ZKCommandData
 import com.ing.zknotary.common.testing.fixed
+import com.ing.zknotary.common.zkp.CircuitMetaData
+import com.ing.zknotary.common.zkp.MockZKTransactionService
 import com.ing.zknotary.common.zkp.ZKTransactionService
 import com.ing.zknotary.common.zkp.ZincZKTransactionService
 import com.ing.zknotary.node.services.collectVerifiedDependencies
+import com.ing.zknotary.notary.transactions.createIssuanceWtx
+import com.ing.zknotary.notary.transactions.createMoveWtx
 import junit.framework.TestCase
 import net.corda.core.crypto.Crypto
 import net.corda.core.crypto.SecureHash
@@ -13,6 +18,7 @@ import net.corda.core.utilities.loggerFor
 import net.corda.testing.common.internal.testNetworkParameters
 import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
+import net.corda.testing.node.createMockCordaService
 import net.corda.testing.node.ledger
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Tag
@@ -25,6 +31,8 @@ import kotlin.time.measureTime
 
 @ExperimentalTime
 class BackChainTest {
+    private val logger = loggerFor<BackChainTest>()
+
     private val alice = TestIdentity.fixed("alice", Crypto.EDDSA_ED25519_SHA512)
     private val bob = TestIdentity.fixed("bob", Crypto.EDDSA_ED25519_SHA512)
 
@@ -35,75 +43,35 @@ class BackChainTest {
         bob
     )
 
+    private val ledger = ledgerServices.ledger {}
+
     // User real Zinc circuit, or mocked circuit (that checks same rules)
     private val mockZKP = false
 
     // Mocked txs:
-    private lateinit var createWtx: WireTransaction
-    private lateinit var moveWtx: WireTransaction
-    private lateinit var create2Wtx: WireTransaction
-    private lateinit var move2Wtx: WireTransaction
-
-    private val logger = loggerFor<BackChainTest>()
+    private val createWtx: WireTransaction
+    private val moveWtx: WireTransaction
+    private val move2Wtx: WireTransaction
 
     init {
-        logger.info("Mocking up some txs")
-        ledgerServices.ledger {
-            createWtx = transaction {
-                command(listOf(alice.publicKey), TestContract.Create())
-                output(TestContract.PROGRAM_ID, "Alice's asset", TestContract.TestState(alice.party))
-                verifies()
-            }
-            verifies()
-            logger.info("CREATE \tWTX: ${createWtx.id.toString().take(8)}")
-
-            val createdState = createWtx.outRef<TestContract.TestState>(0)
-
-            moveWtx = transaction {
-                input(createdState.ref)
-                output(TestContract.PROGRAM_ID, createdState.state.data.withNewOwner(bob.party).ownableState)
-                command(listOf(createdState.state.data.owner.owningKey), TestContract.Move())
-                verifies()
-            }
-            verifies()
-            logger.info("MOVE \t\tWTX: ${moveWtx.id.toString().take(8)}")
-
-            val movedState = moveWtx.outRef<TestContract.TestState>(0)
-
-            create2Wtx = transaction {
-                command(listOf(alice.publicKey), TestContract.Create())
-                output(TestContract.PROGRAM_ID, "Bob's reference asset", TestContract.TestState(alice.party))
-                verifies()
-            }
-            verifies()
-            logger.info("CREATE2 \tWTX: ${create2Wtx.id.toString().take(8)}")
-
-            move2Wtx = transaction {
-                input(movedState.ref)
-                output(TestContract.PROGRAM_ID, movedState.state.data.withNewOwner(alice.party).ownableState)
-                command(listOf(movedState.state.data.owner.owningKey), TestContract.Move())
-                reference("Bob's reference asset")
-                verifies()
-            }
-            verifies()
-            logger.info("ANOTHERMOVE \tWTX: ${move2Wtx.id.toString().take(8)}")
+        ledger.apply {
+            createWtx = createIssuanceWtx(alice, 1, "Alice's asset #1")
+            moveWtx = createMoveWtx("Alice's asset #1", bob)
+            createIssuanceWtx(bob, 2, "Bob's reference asset #1")
+            move2Wtx = ledger.createMoveWtx(
+                moveWtx.outRef<TestContract.TestState>(0),
+                alice,
+                "Bob's reference asset #1"
+            )
         }
     }
 
     @Nested
     inner class Create {
         private val proverService = if (mockZKP) {
-            ProverService(ledgerServices)
+            ProverService(ledgerServices, setupMockCircuits())
         } else {
-            val circuits = mapOf(
-                TestContract.Create().id to "${System.getProperty("user.dir")}/../prover/circuits/create"
-            ).map {
-                SecureHash.Companion.sha256(
-                    ByteBuffer.allocate(4).putInt(it.key).array()
-                ) as SecureHash to setupCircuit(it.value)
-            }.toMap()
-
-            ProverService(ledgerServices, circuits)
+            ProverService(ledgerServices, setupCircuits(TestContract.Create()))
         }
         private val verificationService = VerificationService(proverService)
 
@@ -118,18 +86,9 @@ class BackChainTest {
     @Nested
     inner class Move {
         private val proverService = if (mockZKP) {
-            ProverService(ledgerServices)
+            ProverService(ledgerServices, setupMockCircuits())
         } else {
-            val circuits = mapOf(
-                TestContract.Create().id to "${System.getProperty("user.dir")}/../prover/circuits/create",
-                TestContract.Move().id to "${System.getProperty("user.dir")}/../prover/circuits/move"
-            ).map {
-                SecureHash.Companion.sha256(
-                    ByteBuffer.allocate(4).putInt(it.key).array()
-                ) as SecureHash to setupCircuit(it.value)
-            }.toMap()
-
-            ProverService(ledgerServices, circuits)
+            ProverService(ledgerServices, setupCircuits(TestContract.Create(), TestContract.Move()))
         }
         private val verificationService = VerificationService(proverService)
 
@@ -151,15 +110,22 @@ class BackChainTest {
         }
     }
 
-    private fun setupCircuit(circuitFolder: String): ZKTransactionService {
-        logger.info("Setting up circuit: $circuitFolder")
+    private fun setupCircuits(vararg commands: ZKCommandData) =
+        commands.map {
+            SecureHash.Companion.sha256(
+                ByteBuffer.allocate(4).putInt(it.id).array()
+            ) as SecureHash to setupCircuit(it.circuit)
+        }.toMap()
 
-        val circuitFolder = File(circuitFolder).absolutePath
-        val artifactFolder = File("$circuitFolder/artifacts")
+    private fun setupCircuit(circuit: CircuitMetaData): ZKTransactionService {
+        logger.info("Setting up circuit: ${circuit.folder}")
+
+        val circuitFolderAbsolute = File(circuit.folder).absolutePath
+        val artifactFolder = File("$circuitFolderAbsolute/artifacts")
         artifactFolder.mkdirs()
 
         val zincZKTransactionService = ZincZKTransactionService(
-            circuitFolder,
+            circuitFolderAbsolute,
             artifactFolder = artifactFolder.absolutePath,
             buildTimeout = Duration.ofSeconds(10 * 60),
             setupTimeout = Duration.ofSeconds(10 * 60),
@@ -171,9 +137,16 @@ class BackChainTest {
             zincZKTransactionService.setup()
         }
 
-        logger.info("Completed set up for circuit: $circuitFolder ")
+        logger.info("Completed set up for circuit: $circuitFolderAbsolute ")
         logger.debug("Duration: ${setupDuration.inMinutes} mins")
 
         return zincZKTransactionService
     }
+
+    private fun setupMockCircuits() = mapOf(
+        SecureHash.allOnesHash as SecureHash to createMockCordaService(
+            ledgerServices,
+            ::MockZKTransactionService
+        )
+    )
 }
