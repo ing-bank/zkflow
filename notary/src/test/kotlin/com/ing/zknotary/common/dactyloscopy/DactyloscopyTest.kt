@@ -195,4 +195,12 @@ class DactyloscopyTest {
 
         Dactyloscopist.identify(command) shouldBe fingerprint
     }
+
+    @Test
+    fun `Fingerprint a char array`() {
+        val array = CharArray(2) { 'a' }
+        val fingerprint = ByteBuffer.allocate(4).putShort(97).putShort(97).array()
+
+        Dactyloscopist.identify(array) shouldBe fingerprint
+    }
 }

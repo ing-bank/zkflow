@@ -82,7 +82,7 @@ object Dactyloscopist {
             val value = it.get(item)
             require(value != null) { "All internal values must be non-null: ${it.name} of ${reflection.qualifiedName}" }
 
-            identify(value!!)
+            identify(value)
         }.fold(ByteArray(0)) { acc, bytes -> acc + bytes }
     }
 }
