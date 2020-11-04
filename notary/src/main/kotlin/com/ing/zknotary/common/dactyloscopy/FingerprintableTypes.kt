@@ -38,18 +38,23 @@ import java.util.AbstractList
 /*
  * Safe classes.
  */
-fun Int.fingerprint(): ByteArray =
-    ByteBuffer.allocate(4).putInt(this).array()
+fun Short.fingerprint(): ByteArray = ByteBuffer.allocate(2).putShort(this).array()
+fun Int.fingerprint(): ByteArray = ByteBuffer.allocate(4).putInt(this).array()
+fun Long.fingerprint(): ByteArray = ByteBuffer.allocate(8).putLong(this).array()
 
-fun ByteArray.fingerprint(): ByteArray =
-    this
+fun Byte.fingerprint(): ByteArray = ByteBuffer.allocate(4).putInt(this.toInt()).array()
+fun ByteArray.fingerprint(): ByteArray = this
+
+fun Double.fingerprint(): ByteArray = throw IllegalArgumentException("Type Double is not supported")
+fun Float.fingerprint(): ByteArray = throw IllegalArgumentException("Type Float is not supported")
+
+fun String.fingerprint(): ByteArray = toByteArray(Charsets.UTF_8).fingerprint()
 
 fun Instant.fingerprint(): ByteArray =
     ByteBuffer.allocate(8).putLong(epochSecond).array() +
         ByteBuffer.allocate(4).putInt(nano).array()
 
-fun StateRef.fingerprint(): ByteArray =
-    txhash.fingerprint() + index.fingerprint()
+fun StateRef.fingerprint(): ByteArray = txhash.fingerprint() + index.fingerprint()
 
 // FIXME: This is now ignoring some of the important fields of a TransactionState.
 fun <T> TransactionState<T>.fingerprint(): ByteArray
