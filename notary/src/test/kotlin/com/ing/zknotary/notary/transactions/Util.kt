@@ -1,52 +1,90 @@
 package com.ing.zknotary.notary.transactions
 
 import com.ing.zknotary.common.contracts.TestContract
+import net.corda.core.contracts.ContractState
+import net.corda.core.contracts.OwnableState
 import net.corda.core.contracts.StateAndRef
+import net.corda.core.contracts.StateRef
 import net.corda.core.transactions.WireTransaction
 import net.corda.testing.core.TestIdentity
 import net.corda.testing.dsl.LedgerDSL
 import net.corda.testing.dsl.TestLedgerDSLInterpreter
 import net.corda.testing.dsl.TestTransactionDSLInterpreter
+import net.corda.testing.internal.withTestSerializationEnvIfNotSet
 import java.util.Random
 
-fun LedgerDSL<TestTransactionDSLInterpreter, TestLedgerDSLInterpreter>.createTestWireTransaction(
+fun LedgerDSL<TestTransactionDSLInterpreter, TestLedgerDSLInterpreter>.createIssuanceWtx(
     owner: TestIdentity,
-    value: Int = Random().nextInt(1000)
+    value: Int = Random().nextInt(1000),
+    label: String = "${owner.name.organisation}'s asset"
 ): WireTransaction {
     val createdState = TestContract.TestState(owner.party, value)
-    val wtx = transaction {
-        command(listOf(owner.publicKey), TestContract.Create())
-        output(TestContract.PROGRAM_ID, "Alice's asset", createdState)
+    return withTestSerializationEnvIfNotSet {
+        val wtx = transaction {
+            command(listOf(owner.publicKey), TestContract.Create())
+            output(TestContract.PROGRAM_ID, label, createdState)
+            verifies()
+        }
         verifies()
-    }
-    verifies()
 
-    return wtx
+        wtx
+    }
 }
 
-fun LedgerDSL<TestTransactionDSLInterpreter, TestLedgerDSLInterpreter>.createTestsState(
-    owner: TestIdentity,
-    value: Int = Random().nextInt(1000)
-): StateAndRef<TestContract.TestState> {
-    val createdState = TestContract.TestState(owner.party, value)
-    val wtx = unverifiedTransaction {
-        command(listOf(owner.publicKey), TestContract.Create())
-        output(TestContract.PROGRAM_ID, "Alice's asset", createdState)
-    }
-
-    return wtx.outRef(createdState)
-}
-
-fun LedgerDSL<TestTransactionDSLInterpreter, TestLedgerDSLInterpreter>.moveTestsState(
-    input: StateAndRef<TestContract.TestState>,
-    newOwner: TestIdentity
+fun LedgerDSL<TestTransactionDSLInterpreter, TestLedgerDSLInterpreter>.createMoveWtx(
+    stateLabel: String,
+    newOwner: TestIdentity,
+    referenceStateRef: StateRef?
 ): WireTransaction {
-    val wtx = transaction {
-        input(input.ref)
-        output(TestContract.PROGRAM_ID, input.state.data.withNewOwner(newOwner.party).ownableState)
-        command(listOf(input.state.data.owner.owningKey), TestContract.Move())
-        verifies()
+    return withTestSerializationEnvIfNotSet {
+        val stateAndRef = retrieveOutputStateAndRef(OwnableState::class.java, stateLabel)
+        createMoveWtx(stateAndRef, newOwner, referenceStateRef)
     }
+}
 
-    return wtx
+fun LedgerDSL<TestTransactionDSLInterpreter, TestLedgerDSLInterpreter>.createMoveWtx(
+    stateLabel: String,
+    newOwner: TestIdentity,
+    referenceLabel: String? = null
+): WireTransaction {
+    return withTestSerializationEnvIfNotSet {
+        val stateAndRef = retrieveOutputStateAndRef(OwnableState::class.java, stateLabel)
+        val referenceStateRef =
+            if (referenceLabel != null) retrieveOutputStateAndRef(ContractState::class.java, referenceLabel).ref else null
+
+        createMoveWtx(stateAndRef, newOwner, referenceStateRef)
+    }
+}
+
+fun LedgerDSL<TestTransactionDSLInterpreter, TestLedgerDSLInterpreter>.createMoveWtx(
+    stateAndRef: StateAndRef<OwnableState>,
+    newOwner: TestIdentity,
+    referenceLabel: String? = null
+): WireTransaction {
+    return withTestSerializationEnvIfNotSet {
+        val referenceStateRef =
+            if (referenceLabel != null) retrieveOutputStateAndRef(ContractState::class.java, referenceLabel).ref else null
+
+        createMoveWtx(stateAndRef, newOwner, referenceStateRef)
+    }
+}
+
+fun LedgerDSL<TestTransactionDSLInterpreter, TestLedgerDSLInterpreter>.createMoveWtx(
+    stateAndRef: StateAndRef<OwnableState>,
+    newOwner: TestIdentity,
+    referenceStateRef: StateRef?
+): WireTransaction {
+    return withTestSerializationEnvIfNotSet {
+        val state = stateAndRef.state.data
+
+        transaction {
+            input(stateAndRef.ref)
+            output(TestContract.PROGRAM_ID, state.withNewOwner(newOwner.party).ownableState)
+            command(listOf(state.owner.owningKey), TestContract.Move())
+            if (referenceStateRef != null) {
+                reference(referenceStateRef)
+            }
+            verifies()
+        }
+    }
 }

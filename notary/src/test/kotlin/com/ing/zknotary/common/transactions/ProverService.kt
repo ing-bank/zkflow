@@ -1,7 +1,6 @@
 package com.ing.zknotary.common.transactions
 
 import com.ing.zknotary.common.contracts.ZKCommandData
-import com.ing.zknotary.common.zkp.MockZKTransactionService
 import com.ing.zknotary.common.zkp.ZKTransactionService
 import com.ing.zknotary.node.services.collectVerifiedDependencies
 import com.ing.zknotary.node.services.toZKVerifierTransaction
@@ -33,20 +32,6 @@ class ProverService {
         zkVerifierTransactionStorage = createMockCordaService(ledgerServices, ::MockZKVerifierTransactionStorage)
         zkProverTransactionStorage = createMockCordaService(ledgerServices, ::MockZKProverTransactionStorage)
         this.zkTransactionServices = zkTransactionServices
-    }
-
-    constructor(ledgerServices: MockServices) {
-        logger.info("Mocking up Prover Service")
-
-        this.ledgerServices = ledgerServices
-        zkTransactionServices = mapOf(
-            SecureHash.allOnesHash as SecureHash to createMockCordaService(
-                ledgerServices,
-                ::MockZKTransactionService
-            )
-        )
-        zkVerifierTransactionStorage = createMockCordaService(ledgerServices, ::MockZKVerifierTransactionStorage)
-        zkProverTransactionStorage = createMockCordaService(ledgerServices, ::MockZKProverTransactionStorage)
     }
 
     /**

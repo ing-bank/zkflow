@@ -39,8 +39,10 @@ dependencies {
 
     // Testing
     val junit5Version: String by project
+    val kotestVersion: String by project
     testImplementation("org.junit.jupiter:junit-jupiter-api:$junit5Version")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
+    testImplementation("io.kotest:kotest-assertions-core:$kotestVersion")
 
     // Corda dependencies.
     val cordaReleaseGroup: String by project
@@ -51,14 +53,12 @@ dependencies {
     cordaCompile("$cordaReleaseGroup:corda-jackson:$cordaVersion")
     testImplementation("$cordaReleaseGroup:corda-node-driver:$cordaVersion")
     testImplementation("$cordaReleaseGroup:corda-test-utils:$cordaVersion")
-
-    // Other
-    implementation(group = "net.java.dev.jna", name = "jna", version = "5.3.1")
 }
 
 spotless {
     kotlin {
-        ktlint("0.37.1")
+        val ktlintVersion: String by project
+        ktlint(ktlintVersion)
     }
 }
 
@@ -110,15 +110,23 @@ tasks.apply {
         testLogging {
             events("passed", "skipped", "failed")
             showStandardStreams = true
+            info {
+
+            }
         }
 
+        // Set the default log4j config file for tests
+        systemProperty("log4j.configurationFile", "${project.buildDir}/resources/test/log4j2.xml")
+
+        // Allow setting a custom log4j config file
         val logConfigPath = System.getProperty("log4j.configurationFile")
         if (logConfigPath != null) {
             systemProperty("log4j.configurationFile", logConfigPath)
         }
 
-        // Here you can specify any env vars for tests, for instance the path to the prover lib
-        // environment "LD_LIBRARY_PATH", "~/pepper_deps/lib/"
+        // This file determines for the standard java.util.logging how and what is logged to the console
+        // This is to configure logging that does not go through slf4j/log4j, like JUnit platform logging.
+        systemProperty("java.util.logging.config.file", "${project.buildDir}/resources/test/logging-test.properties")
     }
 
 }

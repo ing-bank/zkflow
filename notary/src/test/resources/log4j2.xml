@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+    <ThresholdFilter level="TRACE"/>
+
+    <Appenders>
+        <Console name="Console-Appender" target="SYSTEM_OUT">
+            <PatternLayout>
+                <pattern>
+                    %highlight{[%level{length=1}] %-5r %-20.20c{1} - %msg}{TRACE=dim white,INFO=normal}%n
+                </pattern>>
+            </PatternLayout>
+        </Console>
+    </Appenders>
+
+    <Loggers>
+        <Root level="INFO">
+            <AppenderRef ref="Console-Appender"/>
+        </Root>
+        <Logger name="ClassloaderUtils" level="WARN" additivity="false">
+            <AppenderRef ref="Console-Appender" level="WARN"/>
+        </Logger>
+        <Logger name="net.corda" level="WARN" additivity="false">
+            <AppenderRef ref="Console-Appender" level="WARN"/>
+        </Logger>
+        <Logger name="org.junit" level="WARN" additivity="false">
+            <AppenderRef ref="Console-Appender"/>
+        </Logger>
+        <Logger name="com.ing" level="TRACE" additivity="false">
+            <AppenderRef ref="Console-Appender" level="TRACE"/>
+        </Logger>
+    </Loggers>
+
+</Configuration>

@@ -1,6 +1,7 @@
 package com.ing.zknotary.common.dactyloscopy
 
 import com.ing.zknotary.common.util.ComponentPaddingConfiguration
+import com.ing.zknotary.common.zkp.CircuitMetaData
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.StateRef
 import net.corda.core.contracts.TimeWindow
@@ -37,25 +38,38 @@ import java.util.AbstractList
 /*
  * Safe classes.
  */
-fun Int.fingerprint(): ByteArray =
-    ByteBuffer.allocate(4).putInt(this).array()
+fun Short.fingerprint(): ByteArray = ByteBuffer.allocate(2).putShort(this).array()
+fun Int.fingerprint(): ByteArray = ByteBuffer.allocate(4).putInt(this).array()
+fun Long.fingerprint(): ByteArray = ByteBuffer.allocate(8).putLong(this).array()
 
-fun ByteArray.fingerprint(): ByteArray =
-    this
+fun Byte.fingerprint(): ByteArray = ByteArray(1) { this }
+fun ByteArray.fingerprint(): ByteArray = this
+
+// Chars are 16 bit
+fun Char.fingerprint(): ByteArray = ByteBuffer.allocate(2).putShort(this.toShort()).array()
+
+fun Boolean.fingerprint(): ByteArray = ByteArray(1) { (if (this) 1 else 0).toByte() }
+
+// Unsupported primitives
+fun Double.fingerprint(): ByteArray = throw IllegalArgumentException("Type Double is not supported")
+fun Float.fingerprint(): ByteArray = throw IllegalArgumentException("Type Float is not supported")
+
+fun String.fingerprint(): ByteArray = toByteArray(Charsets.UTF_8).fingerprint()
 
 fun Instant.fingerprint(): ByteArray =
     ByteBuffer.allocate(8).putLong(epochSecond).array() +
         ByteBuffer.allocate(4).putInt(nano).array()
 
-fun StateRef.fingerprint(): ByteArray =
-    txhash.fingerprint() + index.fingerprint()
+fun StateRef.fingerprint(): ByteArray = txhash.fingerprint() + index.fingerprint()
 
 // FIXME: This is now ignoring some of the important fields of a TransactionState.
 fun <T> TransactionState<T>.fingerprint(): ByteArray
     where T : ContractState =
     Dactyloscopist.identify(data) + notary.owningKey.fingerprint()
 
+// We explicitly exclude these types from the fingerprint, by making their fingerprint an empty bytearray
 fun ComponentPaddingConfiguration.fingerprint() = ByteArray(0)
+fun CircuitMetaData.fingerprint() = ByteArray(0)
 
 /*
  * Unsafe types: interfaces and extendable classes

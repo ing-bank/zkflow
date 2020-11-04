@@ -1,6 +1,7 @@
 package com.ing.zknotary.common.contracts
 
 import com.ing.zknotary.common.util.ComponentPaddingConfiguration
+import com.ing.zknotary.common.zkp.CircuitMetaData
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.CommandWithParties
@@ -18,6 +19,15 @@ interface ZKCommandData : CommandData {
      * being an empty bytearray.
      */
     val paddingConfiguration: ComponentPaddingConfiguration
+
+    /**
+     * The information about the circuit for this command.
+     *
+     * This public property will have NO influence on the fingerprint of the implementor
+     * as ComponentPaddingConfiguration implements Fingerprintable itself with fingerprint
+     * being an empty bytearray.
+     */
+    val circuit: CircuitMetaData
 }
 
 fun <T : CommandData> CommandWithParties<T>.toZKCommand(): Command<ZKCommandData> {

@@ -2,6 +2,7 @@ package com.ing.zknotary.common.dactyloscopy
 
 import com.ing.zknotary.common.contracts.TestContract
 import com.ing.zknotary.common.zkp.ZKNulls
+import io.kotest.matchers.shouldBe
 import net.corda.core.contracts.PartyAndReference
 import net.corda.core.crypto.Crypto
 import net.corda.core.crypto.sha256
@@ -168,10 +169,18 @@ class DactyloscopyTest {
     }
 
     @Test
+    fun `Fingerprint a string`() {
+        val string = "YELLOW SUBMARINE"
+        val fingerprint = string.toByteArray(Charsets.UTF_8)
+
+        Dactyloscopist.identify(string) shouldBe fingerprint
+    }
+
+    @Test
     fun `Fingerprint a command`() {
         val command = TestContract.Create()
         val fingerprint = command.id.fingerprint()
 
-        assert(Dactyloscopist.identify(command).contentEquals(fingerprint))
+        Dactyloscopist.identify(command) shouldBe fingerprint
     }
 }
