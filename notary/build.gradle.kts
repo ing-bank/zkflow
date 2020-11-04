@@ -115,6 +115,9 @@ tasks.apply {
             }
         }
 
+        // Set the default log4j config file for tests
+        systemProperty("log4j.configurationFile", "${project.buildDir}/resources/test/log4j2.xml")
+
         // Allow setting a custom log4j config file
         val logConfigPath = System.getProperty("log4j.configurationFile")
         if (logConfigPath != null) {
@@ -122,6 +125,7 @@ tasks.apply {
         }
 
         // This file determines for the standard java.util.logging how and what is logged to the console
+        // This is to configure logging that does not go through slf4j/log4j, like JUnit platform logging.
         systemProperty("java.util.logging.config.file", "${project.buildDir}/resources/test/logging-test.properties")
     }
 
