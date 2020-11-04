@@ -17,6 +17,7 @@ import net.corda.core.crypto.BLAKE2s256DigestService
 import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.AbstractParty
 import net.corda.core.transactions.LedgerTransaction
+import java.io.File
 import java.util.Random
 
 class TestContract : Contract {
@@ -42,7 +43,7 @@ class TestContract : Contract {
         override val id: Int = 0
 
         override val circuit: CircuitMetaData =
-            CircuitMetaData(folder = "${System.getProperty("user.dir")}/../prover/circuits/create")
+            CircuitMetaData(folder = File("${System.getProperty("user.dir")}/../prover/circuits/create"))
 
         override val paddingConfiguration: ComponentPaddingConfiguration
             get() {
@@ -70,7 +71,7 @@ class TestContract : Contract {
     class Move : ZKCommandData {
         override val id: Int = 1
         override val circuit: CircuitMetaData =
-            CircuitMetaData(folder = "${System.getProperty("user.dir")}/../prover/circuits/move")
+            CircuitMetaData(folder = File("${System.getProperty("user.dir")}/../prover/circuits/move"))
 
         override val paddingConfiguration: ComponentPaddingConfiguration
             get() {

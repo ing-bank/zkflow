@@ -120,7 +120,7 @@ class BackChainTest {
     private fun setupCircuit(circuit: CircuitMetaData): ZKTransactionService {
         logger.info("Setting up circuit: ${circuit.folder}")
 
-        val circuitFolderAbsolute = File(circuit.folder).absolutePath
+        val circuitFolderAbsolute = circuit.folder.absolutePath
         val artifactFolder = File("$circuitFolderAbsolute/artifacts")
         artifactFolder.mkdirs()
 
