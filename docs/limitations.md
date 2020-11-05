@@ -24,8 +24,12 @@
 
 To be discussed: how to manage that for each command, there can be a mix of state types within inputs/outputs/references. E.g. I sell a house. Inputs contain state of type HouseState and of type CashState, so do outputs. Perhaps there is also a SaleAgreementState as an additional output, and a reference state of type GovernmentHouseIdentifierState
 
-# Fixed lengt
+# Fixed length
 
 * Until Zinc starts to support arbitrary length loops, the following needs to be fixed length (hardcoded in the circuit):
     * number of tx components in all groups
     * the size of each component, and of each attribute of each component
+    
+# State/Command contents
+
+* Our custom leaf hash serialization does not support nullable types in collections. So List<Int?> is not supported for use in your custom Cordapp classes such as states and commands that are part of the tx Merkle tree. This could change when we move to two-serialization for this (if necessary), because then we would add metadata to each the serialized form of each item that prevents the attack where without metadata, but supported nulls, an attacker could craft a list that is equal to a list containing nulls by carefully choosing the non-null values to serialize as a null value.
