@@ -46,7 +46,8 @@ class BackChainTest {
     private val ledger = ledgerServices.ledger {}
 
     // User real Zinc circuit, or mocked circuit (that checks same rules)
-    private val mockZKP = false
+    // private val mockZKP = true
+    val mockZKP = if (System.getProperty("MockZKP") != null) true else false
 
     // Mocked txs:
     private val createWtx: WireTransaction
@@ -54,6 +55,7 @@ class BackChainTest {
     private val move2Wtx: WireTransaction
 
     init {
+        logger.info("Mocking ZKP circuit: $mockZKP")
         ledger.apply {
             createWtx = createIssuanceWtx(alice, 1, "Alice's asset #1")
             moveWtx = createMoveWtx("Alice's asset #1", bob)

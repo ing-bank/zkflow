@@ -115,6 +115,11 @@ tasks.apply {
             }
         }
 
+        val mockZKP = System.getProperty("MockZKP")
+        if (mockZKP != null) {
+            systemProperty("MockZKP", true)
+        }
+
         // Set the default log4j config file for tests
         systemProperty("log4j.configurationFile", "${project.buildDir}/resources/test/log4j2.xml")
 
