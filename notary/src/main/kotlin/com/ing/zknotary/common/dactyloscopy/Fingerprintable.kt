@@ -54,4 +54,8 @@ val Method.isFingerprinting: Boolean
  * the collected super types are whitelisted in FingerprintableTypes.
  */
 fun Any.allSuperTypesWithFingerprintExtension(fingerprintableTypes: Set<String>) =
-    this::class.allSuperclasses.map { it.qualifiedName }.filter { it in fingerprintableTypes }.filterNotNull()
+    (listOf(this::class) + this::class.allSuperclasses).map {
+        it.javaPrimitiveType?.canonicalName ?: it.java.canonicalName
+    }.filter {
+        it in fingerprintableTypes
+    }.filterNotNull()

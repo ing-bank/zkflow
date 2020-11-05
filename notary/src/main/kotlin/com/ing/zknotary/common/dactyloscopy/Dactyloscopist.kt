@@ -72,6 +72,43 @@ object Dactyloscopist {
             return fingerprint
         }
 
+        // Hack because Array<T> is seen as T[]. That means we can't create an extension function that will match.
+        if (item::class.java is Iterable<*>) {
+            logger.trace("[$itemType] No fingerprint() implementation found, but is Iterable. Fingerprinting its elements.")
+            return (item as Iterable<*>).toList().fingerprint()
+        } else if (item::class.java.isArray) {
+            logger.trace("[$itemType] No fingerprint() implementation found, but is Array. Fingerprinting its elements.")
+            /**
+             * If it starts with "[", it is a primitive array. See JavaDoc for [Class.getName()].
+             *
+             * Element Type     Encoding
+             *
+             * boolean          Z
+             * byte             B
+             * char             C
+             * class/interface  Lclassname;
+             * double           D
+             * float            F
+             * int              I
+             * long             J
+             * short            S
+             *
+             * **/
+            val type = item::class.java.name.last()
+            return when (type) {
+                'Z' -> (item as BooleanArray).asList()
+                'B' -> (item as ByteArray).asList()
+                'C' -> (item as CharArray).asList()
+                'D' -> (item as DoubleArray).asList()
+                'F' -> (item as FloatArray).asList()
+                'I' -> (item as IntArray).asList()
+                'J' -> (item as LongArray).asList()
+                'S' -> (item as ShortArray).asList()
+                else -> (item as Array<*>).asList()
+            }.fingerprint()
+        }
+
+        logger.trace("[$itemType] No fingerprint() implementation found, recursively fingerprinting its members.")
         // ► Fingerprint `item` by a composing fingerprints of its public constituents.
         val members = reflection.memberProperties
             .filter {

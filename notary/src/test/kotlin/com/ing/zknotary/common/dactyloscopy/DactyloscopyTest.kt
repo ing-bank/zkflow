@@ -22,15 +22,21 @@ class DactyloscopyTest {
     fun `int must be fingerprintable`() {
         val fingerprint = Dactyloscopist.identify(1)
 
-        fingerprint shouldBe ByteArray(4) { if (it < 3) { 0 } else { 1 } }
+        fingerprint shouldBe ByteArray(4) {
+            if (it < 3) {
+                0
+            } else {
+                1
+            }
+        }
     }
 
     @Test
     fun `Byte array must short circuit`() {
-        val array = "ZKP".toByteArray()
-        val fingerprint = Dactyloscopist.identify(array)
+        val expected = "ZKP".toByteArray()
+        val fingerprint = Dactyloscopist.identify(expected)
 
-        fingerprint shouldBe array
+        fingerprint shouldBe expected
     }
 
     @Test
@@ -96,15 +102,18 @@ class DactyloscopyTest {
             override fun getAlgorithm(): String {
                 TODO("Not yet implemented")
             }
+
             override fun getFormat(): String {
                 TODO("Not yet implemented")
             }
+
             override fun getEncoded() = ByteArray(1) { 0 }
 
             // AbstractParty members.
             override fun nameOrNull(): CordaX500Name? {
                 TODO("Not yet implemented")
             }
+
             override fun ref(bytes: OpaqueBytes): PartyAndReference {
                 TODO("Not yet implemented")
             }
@@ -144,15 +153,18 @@ class DactyloscopyTest {
             override fun getAlgorithm(): String {
                 TODO("Not yet implemented")
             }
+
             override fun getFormat(): String {
                 TODO("Not yet implemented")
             }
+
             override fun getEncoded() = ByteArray(1) { 0 }
 
             // AbstractParty members.
             override fun nameOrNull(): CordaX500Name? {
                 TODO("Not yet implemented")
             }
+
             override fun ref(bytes: OpaqueBytes): PartyAndReference {
                 TODO("Not yet implemented")
             }
@@ -201,6 +213,27 @@ class DactyloscopyTest {
         val array = CharArray(2) { 'a' }
         val fingerprint = ByteBuffer.allocate(4).putShort(97).putShort(97).array()
 
+        Dactyloscopist.identify(array) shouldBe fingerprint
+    }
+
+    @Test
+    fun `Fingerprint an array of ints`() {
+        val array = Array(2) { 1 }
+        val fingerprint = ByteBuffer.allocate(8).putInt(1).putInt(1).array()
+
+        // array.fingerprint() shouldBe fingerprint
+        Dactyloscopist.identify(array) shouldBe fingerprint
+    }
+
+    data class Foo(val bar: Int = 3)
+    @Test
+    fun `Fingerprint an array of unknown types`() {
+
+        val array = Array(2) { Foo() }
+
+        val fingerprint = ByteBuffer.allocate(8).putInt(3).putInt(3).array()
+
+        // array.fingerprint() shouldBe fingerprint
         Dactyloscopist.identify(array) shouldBe fingerprint
     }
 }
