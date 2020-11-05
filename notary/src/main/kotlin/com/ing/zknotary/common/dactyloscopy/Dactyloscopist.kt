@@ -1,5 +1,7 @@
 package com.ing.zknotary.common.dactyloscopy
 
+import com.ing.zknotary.common.util.toIntList
+import org.slf4j.LoggerFactory
 import java.lang.reflect.Method
 import kotlin.reflect.KProperty1
 import kotlin.reflect.KVisibility
@@ -9,6 +11,8 @@ import kotlin.reflect.full.memberProperties
 object Dactyloscopist {
     private val container = Class.forName("com.ing.zknotary.common.dactyloscopy." + "FingerprintableTypes" + "Kt")
     private val fingerprintableTypes: Map<String, Method>
+
+    private val logger = LoggerFactory.getLogger(Dactyloscopist::class.java)
 
     /**
      * Builds the list of types supporting extension function.
@@ -26,9 +30,14 @@ object Dactyloscopist {
     }
 
     fun identify(item: Any): ByteArray {
+        val itemType = item::class.simpleName
+
         // ► Check whether item **implements itself** the Fingerprintable interface.
         if (item is Fingerprintable && item.isFingerprinting) {
-            return item.fingerprint()
+            logger.trace("[$itemType] Direct fingerprint() implementation found")
+            val fingerprint = item.fingerprint()
+            logger.trace("[$itemType] Fingerprint: ${fingerprint.toIntList()}")
+            return fingerprint
         }
 
         // ► Check whether any of `item`'s superclasses implements an interface,
@@ -40,7 +49,10 @@ object Dactyloscopist {
             1 -> {
                 // Force non-nullness is OK, because interfaces has been selected from known types
                 // and methods are known to return ByteArrays
-                return fingerprintableTypes[superTypes.single()]!!.invoke(container, item)!! as ByteArray
+                logger.trace("[$itemType] fingerprint() extension function found for $itemType")
+                val fingerprint = fingerprintableTypes[superTypes.single()]!!.invoke(container, item)!! as ByteArray
+                logger.trace("[$itemType] Fingerprint: ${fingerprint.toIntList()}")
+                return fingerprint
             }
             else -> throw MultipleFingerprintImplementations(item::class.qualifiedName, superTypes)
         }
@@ -74,9 +86,10 @@ object Dactyloscopist {
             throw MustHavePublicMembers(reflection.qualifiedName)
         }
 
-        return members.map {
+        val membersFingerprint = members.map {
             // Why is this working ???
             // without this clause everything breaks
+            @Suppress("UNCHECKED_CAST")
             it as KProperty1<Any, *>
 
             val value = it.get(item)
@@ -84,6 +97,9 @@ object Dactyloscopist {
 
             identify(value)
         }.fold(ByteArray(0)) { acc, bytes -> acc + bytes }
+
+        logger.trace("[$itemType] Fingerprint: ${membersFingerprint.toIntList()}")
+        return membersFingerprint
     }
 }
 

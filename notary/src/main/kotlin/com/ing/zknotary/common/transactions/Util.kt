@@ -162,7 +162,7 @@ fun ZKProverTransaction.toWitness(
     // When we move to full backchain privacy and no longer have the WireTransactions at all, we will
     // promote the ZKProverTransactions to first-class citizens and then they will be saved in the vault as WireTransactions
     // are now.
-    fun List<PaddingWrapper<StateAndRef<ContractState>>>.collectUtxoNonces() = mapIndexed { index, it ->
+    fun List<PaddingWrapper<StateAndRef<ContractState>>>.collectUtxoNonces() = mapIndexed { _, it ->
         when (it) {
             is PaddingWrapper.Filler -> {
                 // When it is a padded state, the nonce is ALWAYS a zerohash of the algo used for merkle tree leaves
