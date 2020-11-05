@@ -11,16 +11,20 @@ import java.security.PublicKey
 import java.security.SecureRandom
 
 object ZKNulls {
-    fun fixedKeyPair(signatureScheme: SignatureScheme): KeyPair {
-        val keyPairGenerator = KeyPairGenerator.getInstance(signatureScheme.algorithmName, Crypto.findProvider(signatureScheme.providerName))
-        var insecureRandom = SecureRandom.getInstance("SHA1PRNG")
-        insecureRandom.setSeed(ByteArray(1) { 1 })
+    private val keyPairs = mutableMapOf<SignatureScheme, KeyPair>()
 
-        if (signatureScheme.algSpec != null)
-            keyPairGenerator.initialize(signatureScheme.algSpec, insecureRandom)
-        else
-            keyPairGenerator.initialize(signatureScheme.keySize!!, insecureRandom)
-        return keyPairGenerator.generateKeyPair()
+    fun fixedKeyPair(signatureScheme: SignatureScheme): KeyPair {
+        return keyPairs.getOrPut(signatureScheme) {
+            val keyPairGenerator = KeyPairGenerator.getInstance(signatureScheme.algorithmName, Crypto.findProvider(signatureScheme.providerName))
+            val insecureRandom = SecureRandom.getInstance("SHA1PRNG")
+            insecureRandom.setSeed(ByteArray(1) { 1 })
+
+            if (signatureScheme.algSpec != null)
+                keyPairGenerator.initialize(signatureScheme.algSpec, insecureRandom)
+            else
+                keyPairGenerator.initialize(signatureScheme.keySize!!, insecureRandom)
+            keyPairGenerator.generateKeyPair()
+        }
     }
 
     // TODO: Make a function accepting a signature scheme
