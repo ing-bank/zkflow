@@ -2,6 +2,7 @@ package com.ing.zknotary.common.dactyloscopy
 
 import com.ing.zknotary.common.contracts.TestContract
 import com.ing.zknotary.common.zkp.ZKNulls
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import net.corda.core.contracts.PartyAndReference
 import net.corda.core.crypto.Crypto
@@ -13,29 +14,31 @@ import net.corda.core.identity.Party
 import net.corda.core.internal.unspecifiedCountry
 import net.corda.core.utilities.OpaqueBytes
 import org.junit.Test
+import java.nio.ByteBuffer
 import java.security.PublicKey
-import kotlin.test.assertFails
-import kotlin.test.assertFailsWith
 
 class DactyloscopyTest {
     @Test
     fun `int must be fingerprintable`() {
         val fingerprint = Dactyloscopist.identify(1)
-        assert(fingerprint.contentEquals(ByteArray(4) { if (it < 3) { 0 } else { 1 } }))
+
+        fingerprint shouldBe ByteArray(4) { if (it < 3) { 0 } else { 1 } }
     }
 
     @Test
     fun `Byte array must short circuit`() {
         val array = "ZKP".toByteArray()
         val fingerprint = Dactyloscopist.identify(array)
-        assert(fingerprint.contentEquals(array))
+
+        fingerprint shouldBe array
     }
 
     @Test
     fun `Public key must be fingerprintable`() {
         val fixedKeyPair = ZKNulls.fixedKeyPair(Crypto.EDDSA_ED25519_SHA512)
         val fingerprint = Dactyloscopist.identify(fixedKeyPair.public)
-        assert(fingerprint.contentEquals(fixedKeyPair.public.encoded))
+
+        fingerprint shouldBe fixedKeyPair.public.encoded
     }
 
     @Test
@@ -46,14 +49,16 @@ class DactyloscopyTest {
             fixedKeyPair.public
         )
         val fingerprint = Dactyloscopist.identify(party)
-        assert(fingerprint.contentEquals(fixedKeyPair.public.encoded))
+
+        fingerprint shouldBe fixedKeyPair.public.encoded
     }
 
     @Test
     fun `SecureHash must be fingerprintable`() {
         val hash = ByteArray(1) { 0 }.sha256()
         val fingerprint = Dactyloscopist.identify(hash)
-        assert(fingerprint.contentEquals(hash.bytes))
+
+        fingerprint shouldBe hash.bytes
     }
 
     @Test
@@ -62,9 +67,14 @@ class DactyloscopyTest {
             private val a = 0
             private val b = 1
         }
-        assertFails("Non decomposable type must fail") {
+
+        val exception = shouldThrow<MustHavePublicMembers> {
             Dactyloscopist.identify(obj)
         }
+        val errorMessage =
+            "Type with no associated fingerprinting functionality must have public members: ${obj::class.qualifiedName}"
+
+        exception.message shouldBe errorMessage
     }
 
     @Test
@@ -73,7 +83,8 @@ class DactyloscopyTest {
             val a = 0
             private val b = 2
         }
-        assert(Dactyloscopist.identify(obj).contentEquals(ByteArray(4) { 0 }))
+
+        Dactyloscopist.identify(obj) shouldBe ByteArray(4) { 0 }
     }
 
     @Test
@@ -99,7 +110,7 @@ class DactyloscopyTest {
             }
         }
 
-        assertFailsWith<MultipleFingerprintImplementations>("Types implementing multiple fingerprintables must fail") {
+        shouldThrow<MultipleFingerprintImplementations> {
             Dactyloscopist.identify(obj)
         }
     }
@@ -109,7 +120,7 @@ class DactyloscopyTest {
         val list = listOf(2, 1)
         val fingerprint = ByteArray(0) + listOf<Byte>(0, 0, 0, 2, 0, 0, 0, 1)
 
-        assert(Dactyloscopist.identify(list).contentEquals(fingerprint))
+        Dactyloscopist.identify(list) shouldBe fingerprint
     }
 
     @Test
@@ -117,7 +128,8 @@ class DactyloscopyTest {
         data class Table(val feet: Int = 0, @NonFingerprintable("Test") val top: Int = 1)
 
         val table = Table()
-        assert(Dactyloscopist.identify(table).contentEquals(table.feet.fingerprint()))
+
+        Dactyloscopist.identify(table) shouldBe table.feet.fingerprint()
     }
 
     @Test
@@ -146,7 +158,7 @@ class DactyloscopyTest {
             }
         }
 
-        assert(Dactyloscopist.identify(obj).contentEquals(ByteArray(1) { 0 }))
+        Dactyloscopist.identify(obj) shouldBe ByteArray(1) { 0 }
     }
 
     @Test
@@ -165,7 +177,7 @@ class DactyloscopyTest {
                 // value
                 value.fingerprint()
 
-        assert(Dactyloscopist.identify(state).contentEquals(fingerprint))
+        Dactyloscopist.identify(state) shouldBe fingerprint
     }
 
     @Test
@@ -182,5 +194,13 @@ class DactyloscopyTest {
         val fingerprint = command.id.fingerprint()
 
         Dactyloscopist.identify(command) shouldBe fingerprint
+    }
+
+    @Test
+    fun `Fingerprint a char array`() {
+        val array = CharArray(2) { 'a' }
+        val fingerprint = ByteBuffer.allocate(4).putShort(97).putShort(97).array()
+
+        Dactyloscopist.identify(array) shouldBe fingerprint
     }
 }

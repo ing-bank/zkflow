@@ -35,24 +35,41 @@ import java.util.AbstractList
  * Interfaces and non final classes (`open` in Kotlin) are UNSAFE and must be extended with great care.
  */
 
+fun List<*>.fingerprint() =
+    this
+        .filterNotNull()
+        .fold(ByteArray(0)) { acc, element ->
+            acc + Dactyloscopist.identify(element)
+        }
+
 /*
  * Safe classes.
  */
 fun Short.fingerprint(): ByteArray = ByteBuffer.allocate(2).putShort(this).array()
+fun ShortArray.fingerprint() = this.asList().fingerprint()
+
 fun Int.fingerprint(): ByteArray = ByteBuffer.allocate(4).putInt(this).array()
+fun IntArray.fingerprint() = this.asList().fingerprint()
+
 fun Long.fingerprint(): ByteArray = ByteBuffer.allocate(8).putLong(this).array()
+fun LongArray.fingerprint() = this.asList().fingerprint()
 
 fun Byte.fingerprint(): ByteArray = ByteArray(1) { this }
 fun ByteArray.fingerprint(): ByteArray = this
 
 // Chars are 16 bit
 fun Char.fingerprint(): ByteArray = ByteBuffer.allocate(2).putShort(this.toShort()).array()
+fun CharArray.fingerprint() = this.asList().fingerprint()
 
 fun Boolean.fingerprint(): ByteArray = ByteArray(1) { (if (this) 1 else 0).toByte() }
+fun BooleanArray.fingerprint() = this.asList().fingerprint()
 
 // Unsupported primitives
 fun Double.fingerprint(): ByteArray = throw IllegalArgumentException("Type Double is not supported")
+fun DoubleArray.fingerprint(): ByteArray = throw IllegalArgumentException("Type Double is not supported")
+
 fun Float.fingerprint(): ByteArray = throw IllegalArgumentException("Type Float is not supported")
+fun FloatArray.fingerprint(): ByteArray = throw IllegalArgumentException("Type Float is not supported")
 
 fun String.fingerprint(): ByteArray = toByteArray(Charsets.UTF_8).fingerprint()
 
