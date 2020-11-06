@@ -1,6 +1,7 @@
 buildscript {
     val repos by extra {
         closureOf<RepositoryHandler> {
+            google()
             mavenCentral()
             jcenter()
             maven("https://jitpack.io")

@@ -5,6 +5,7 @@ pluginManagement {
     plugins {
         val kotlinVersion: String by settings
         kotlin("jvm") version kotlinVersion
+        kotlin("kapt") version kotlinVersion apply false
 
         val spotlessPluginVersion: String by settings
         id("com.diffplug.gradle.spotless") version spotlessPluginVersion apply false
@@ -18,15 +19,28 @@ pluginManagement {
 
         // id("com.cosminpolifronie.gradle.plantuml") version "1.6.0" apply false
         // id("org.danilopianini.gradle-latex") version "0.2.6" apply false
+
+
+    }
+
+    resolutionStrategy {
+        eachPlugin {
+            when (requested.id.id) {
+                "symbol-processing" ->
+                    useModule("com.google.devtools.ksp:symbol-processing:${requested.version}")
+            }
+        }
     }
 
     repositories { // Only for these plugins. Repos for other dependencies should be defined in build.gradle.kts
+        google()
         mavenCentral()
         maven("https://plugins.gradle.org/m2/")
         maven("https://software.r3.com/artifactory/corda")
     }
 }
 
+include("generator")
 include("notary")
 // include("docs:whitepaper")
 include("prover")

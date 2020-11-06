@@ -71,7 +71,7 @@ class ZKNotaryServiceFlow(
             )
         } catch (e: NotaryInternalException) {
             logger.error("Error notarising transaction ${tx.id}", e.error)
-            // Any exception that's not a NotaryInternalException is assumed to be an unexpected internal error
+            // Any exception that's not a NotaryInternalException is assumed to be an unexpected internal com.ing.zknotary.generator.error
             // that is not relayed back to the client.
             throw NotaryException(e.error, tx.id)
         }

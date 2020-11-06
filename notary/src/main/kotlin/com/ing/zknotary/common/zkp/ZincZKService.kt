@@ -44,7 +44,7 @@ class ZincZKService(
 
             return if (process.exitValue() != 0) {
                 val stdout = process.errorStream.bufferedReader().readText()
-                error("$command failed with the following error output: $stdout")
+                error("$command failed with the following com.ing.zknotary.generator.error output: $stdout")
             } else {
                 process.inputStream.bufferedReader().readText()
             }

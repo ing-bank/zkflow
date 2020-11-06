@@ -2,6 +2,7 @@ import io.gitlab.arturbosch.detekt.Detekt
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
+    id("symbol-processing") version "1.4.10-dev-experimental-20201110"
     kotlin("jvm")
     id("com.diffplug.gradle.spotless")
     id("net.corda.plugins.cordapp")
@@ -23,13 +24,13 @@ cordapp {
 
 sourceSets {
     main {
-        resources {
-            srcDir(rootProject.file("config/dev"))
+        java {
+            srcDir(file("build/generated/ksp/src/main/kotlin"))
         }
     }
     test {
-        resources {
-            srcDir(rootProject.file("config/test"))
+        java {
+            srcDir(file("build/generated/ksp/src/test/kotlin"))
         }
     }
 }
@@ -56,10 +57,17 @@ dependencies {
     cordaCompile("$cordaReleaseGroup:corda-jackson:$cordaVersion")
     testImplementation("$cordaReleaseGroup:corda-node-driver:$cordaVersion")
     testImplementation("$cordaReleaseGroup:corda-test-utils:$cordaVersion")
+
+    // Annotation processing & Code generation
+    // kapt(project(":generator"))
+    compileOnly(project(":generator"))
+    ksp(project(":generator"))
 }
 
 spotless {
     kotlin {
+        target("**/*.kt")
+        targetExclude("${buildDir.relativeTo(rootDir).path}/generated/**")
         val ktlintVersion: String by project
         ktlint(ktlintVersion)
     }
@@ -86,6 +94,12 @@ tasks.test {
         excludeTags("slow")
     }
 }
+
+// TODO: We will have to enable explicitApi soon:
+// https://kotlinlang.org/docs/reference/whatsnew14.html#explicit-api-mode-for-library-authors
+// kotlin {
+//     explicitApi = Strict
+// }
 
 tasks.apply {
     matching { it is JavaCompile || it is KotlinCompile }.forEach { it.dependsOn(":checkJavaVersion") }
