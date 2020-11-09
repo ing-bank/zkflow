@@ -1,9 +1,9 @@
-name: All checks scheduled
+name: All checks nightly
 
 on:
   schedule:
-    # Run every 2nd hour, so we don't use up our run hours too fast
-    - cron:  '0 */2 * * *'
+    # Run nightly at 04:00, so we don't use up our run hours too fast
+    - cron:  '0 4 * * *'
 
 jobs:
   assemble:
