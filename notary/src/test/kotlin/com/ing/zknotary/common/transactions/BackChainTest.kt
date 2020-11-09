@@ -47,7 +47,7 @@ class BackChainTest {
 
     // User real Zinc circuit, or mocked circuit (that checks same rules)
     // private val mockZKP = true
-    val mockZKP = if (System.getProperty("MockZKP") != null) true else false
+    val mockZKP = System.getProperty("MockZKP") != null
 
     // Mocked txs:
     private val createWtx: WireTransaction

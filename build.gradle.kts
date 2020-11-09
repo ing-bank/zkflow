@@ -22,6 +22,10 @@ buildscript {
     this.repositories(repos as groovy.lang.Closure<Any>)
 }
 
+plugins {
+    kotlin("jvm") apply false
+}
+
 task("checkJavaVersion") {
     if (!JavaVersion.current().isJava8) {
         throw IllegalStateException(

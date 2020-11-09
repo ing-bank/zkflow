@@ -4,7 +4,7 @@ pluginManagement {
     // Within subprojects, version should be omitted.
     plugins {
         val kotlinVersion: String by settings
-        kotlin("jvm") version kotlinVersion apply false
+        kotlin("jvm") version kotlinVersion
 
         val spotlessPluginVersion: String by settings
         id("com.diffplug.gradle.spotless") version spotlessPluginVersion apply false
