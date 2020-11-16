@@ -9,6 +9,9 @@ pluginManagement {
         val spotlessPluginVersion: String by settings
         id("com.diffplug.gradle.spotless") version spotlessPluginVersion apply false
 
+        val detektPluginVersion: String by settings
+        id("io.gitlab.arturbosch.detekt") version detektPluginVersion apply false
+
         val cordaGradlePluginsVersion: String by settings
         id("net.corda.plugins.cordapp") version cordaGradlePluginsVersion apply false
         id("net.corda.plugins.quasar-utils") version cordaGradlePluginsVersion apply false

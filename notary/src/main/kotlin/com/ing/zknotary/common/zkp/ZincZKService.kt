@@ -2,6 +2,7 @@ package com.ing.zknotary.common.zkp
 
 import net.corda.core.serialization.SingletonSerializeAsToken
 import java.io.File
+import java.io.IOException
 import java.time.Duration
 import java.util.concurrent.TimeUnit
 
@@ -56,7 +57,7 @@ class ZincZKService(
                     builder.redirectInput(input)
                 }
                 builder.start()
-            } catch (e: Exception) {
+            } catch (e: IOException) {
                 error(e.localizedMessage)
             }
         }

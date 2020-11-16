@@ -97,6 +97,7 @@ open class ZKNotaryService(final override val services: ServiceHubInternal, over
      * Required for the flow to be able to suspend until the commit is complete.
      * This object will be included in the flow checkpoint.
      */
+    @Suppress("LongParameterList")
     @CordaSerializable
     class CommitOperation(
         val service: ZKNotaryService,
@@ -117,6 +118,7 @@ open class ZKNotaryService(final override val services: ServiceHubInternal, over
     }
 
     /** Attempts to commit the specified transaction [txId]. */
+    // @Suppress("LongParameterList")
     @Suspendable
     open fun commitStates(
         inputs: List<StateRef>,

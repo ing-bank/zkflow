@@ -1,5 +1,30 @@
 ![Build](https://github.com/ingzkp/zk-notary/workflows/Fast%20and%20slow%20tests%20for%20PRs%20and%20merges%20to%20master/badge.svg?branch=master)
 
+## Static analysis
+
+For static analysis, we use [ktlint](https://ktlint.github.io/) for code style, and [detekt](https://detekt.github.io/detekt/) for so-called mess detection (like [PMD](https://pmd.github.io/) for Java).
+
+The goal of these checks is to ensure maintainability and readability of our code. We are not going for a beauty contest. That means that apply the following policy:
+
+* Violations are errors and break the build
+* We fail only on thing we really care about. So we prefer less rules that are breaking, over more rules that are warnings. Experience shows that long lists of warnings tend to get ignored and it is hard to spot when new warnings get added. Experience also shows that if the rules are too strict and the build fails on trivial issues, it is very demotivating and defeating the purpose.
+
+It may be that we have too many or too strict rules at the start. It is always an option to remove or relax a rule, but always try to get agreement on this first.
+
+On config:
+
+Ktlint is not configurable and enforces the default Kotlin code style. Our project uses `spotless` as a wrapper, which enables auto-formatting. Any style fix that can be applied by ktlint without human intervention is automatically applied on every Gradle test run.
+
+Detekt is very configurable, and to start with, we have chosen to use the default (community-discussed for *ages*) ruleset. We have disabled style and formatting rules because that is covered by ktlint.
+
+### What to do when these check fail the build?
+
+When either ktlint or detekt fail the build, you have a few options to fix it:
+
+1. Update your code. This is obviously the preferable option in most cases.
+2. Annotate the offending code with `@Suppress("SomeRuleName")`. Be ready to explain yourself during code review.
+3. Propose a change to the ruleset (not possible for ktlint). A mentioned above, this is always an option, but should be a last resort only when we see too many suppression annotations for a rule.
+
 ## Configuring how the tests run
 
 If you only want to run the fast unit tests, you can run `./gradlew build` or `./gradlew test`. If you also want to run the slow tests (e.g. the ones that test the real Zinc ciruit), you can run `./gradlew test slowTest`.
@@ -41,7 +66,7 @@ Github Packages, that you should also bump the Corda patch version (`cordaVersio
 Normally we would just use a SNAPSHOT version for this, but unfortunately Github Packages does not properly support this at this time.
 That means we will just have to bump the version when we introduce a feature that we want to make available.
 
-## Contributing
+## Branching strategy
 
 In this repo, we will use Github Flow: https://guides.github.com/introduction/flow/
 

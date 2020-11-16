@@ -18,6 +18,7 @@ import net.corda.core.serialization.CordaSerializable
 import java.security.PublicKey
 import java.time.Instant
 
+@Suppress("LongParameterList")
 @CordaSerializable
 class ZKProverTransaction internal constructor(
     val inputs: List<StateAndRef<ContractState>>,

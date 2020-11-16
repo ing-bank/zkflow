@@ -11,6 +11,7 @@ import net.corda.core.identity.Party
 import net.corda.core.serialization.CordaSerializable
 import java.time.Instant
 
+@Suppress("LongParameterList")
 @CordaSerializable
 class ZKVerifierTransaction(
     val proof: ByteArray,

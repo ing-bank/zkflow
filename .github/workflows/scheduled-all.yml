@@ -102,3 +102,10 @@ jobs:
         with:
           name: Junit Test Report - Notary - Fast tests
           path: notary/build/reports/tests/slowTest
+
+      - name: Upload detekt report
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          name: Detekt Report - Notary
+          path: notary/build/reports/detekt

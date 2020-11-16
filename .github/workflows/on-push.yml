@@ -90,12 +90,19 @@ jobs:
           GITHUB_USERNAME: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload test report
+      - name: Upload Notary test report
         if: always()
         uses: actions/upload-artifact@v2
         with:
           name: Junit Test Report - Notary - Fast tests
           path: notary/build/reports/tests/test
+
+      - name: Upload Notary detekt report
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          name: Detekt Report - Notary
+          path: notary/build/reports/detekt
 
   slow-tests:
     runs-on: ubuntu-latest

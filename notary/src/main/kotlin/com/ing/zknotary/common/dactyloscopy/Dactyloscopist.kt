@@ -29,6 +29,7 @@ object Dactyloscopist {
             }.toMap()
     }
 
+    @Suppress("LongMethod", "ComplexMethod")
     fun identify(item: Any): ByteArray {
         val itemType = item::class.simpleName
 
@@ -80,20 +81,7 @@ object Dactyloscopist {
             logger.trace("[$itemType] No fingerprint() implementation found, but is Array. Fingerprinting its elements.")
             /**
              * If it starts with "[", it is a primitive array. See JavaDoc for [Class.getName()].
-             *
-             * Element Type     Encoding
-             *
-             * boolean          Z
-             * byte             B
-             * char             C
-             * class/interface  Lclassname;
-             * double           D
-             * float            F
-             * int              I
-             * long             J
-             * short            S
-             *
-             * **/
+             **/
             val type = item::class.java.name.last()
             return when (type) {
                 'Z' -> (item as BooleanArray).asList()
