@@ -144,7 +144,7 @@ private class ZKProverTransactionMixinSerializer : JsonSerializer<ZKProverTransa
     }
 }
 
-private class ZincJson(
+private data class ZincJson(
     val inputs: ComponentGroup<PaddingWrapper<StateAndRef<ContractState>>>,
     val outputs: ComponentGroup<PaddingWrapper<TransactionState<ContractState>>>,
     val references: ComponentGroup<PaddingWrapper<StateAndRef<ContractState>>>,

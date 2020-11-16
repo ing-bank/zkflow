@@ -1,3 +1,4 @@
+import io.gitlab.arturbosch.detekt.Detekt
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
@@ -5,6 +6,7 @@ plugins {
     id("com.diffplug.gradle.spotless")
     id("net.corda.plugins.cordapp")
     id("net.corda.plugins.quasar-utils")
+    id("io.gitlab.arturbosch.detekt")
 }
 
 cordapp {
@@ -63,6 +65,10 @@ spotless {
     }
 }
 
+detekt {
+    config = files("${rootDir}/config/detekt/detekt.yml")
+}
+
 task<Test>("slowTest") {
     val root = project.rootDir.absolutePath
     inputs.dir("$root/prover/circuits")
@@ -84,6 +90,11 @@ tasks.test {
 tasks.apply {
     matching { it is JavaCompile || it is KotlinCompile }.forEach { it.dependsOn(":checkJavaVersion") }
 
+    withType<Detekt> {
+        // Target version of the generated JVM bytecode. It is used for type resolution.
+        jvmTarget = "1.8"
+    }
+
     withType<KotlinCompile> {
         kotlinOptions {
             languageVersion = "1.3"
@@ -101,7 +112,9 @@ tasks.apply {
 
     // This applies to all test types, both fast and slow
     withType<Test> {
-        dependsOn("spotlessCheck") // Make sure we fail early on style
+        dependsOn("spotlessApply") // Autofix before check
+        dependsOn("spotlessCheck") // Fail on remaining non-autofixable issues
+        dependsOn("detekt")
         dependsOn(":prover:circuits") // Make sure that the Zinc circuit is ready to use when running tests
 
         val cores = Runtime.getRuntime().availableProcessors()

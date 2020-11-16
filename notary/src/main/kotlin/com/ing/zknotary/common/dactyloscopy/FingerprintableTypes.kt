@@ -1,3 +1,4 @@
+@file:Suppress("TooManyFunctions")
 package com.ing.zknotary.common.dactyloscopy
 
 import com.ing.zknotary.common.util.ComponentPaddingConfiguration

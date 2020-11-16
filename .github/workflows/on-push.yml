@@ -1,5 +1,8 @@
 name: Fast and slow tests for PRs and merges to master
 
+env:
+  ZINC_VERSION: "v0.1.5-ING-4"
+
 on:
   push:
     branches: [ master, main ]
@@ -30,7 +33,7 @@ jobs:
         uses: dsaltares/fetch-gh-release-asset@master
         with:
           repo: "ingzkp/zinc"
-          version: "latest"
+          version: "tags/${{ env.ZINC_VERSION }}"
           file: "zinc-linux.tar.gz"
           token: ${{ secrets.GITHUB_TOKEN }}
         env:
@@ -72,7 +75,7 @@ jobs:
         uses: dsaltares/fetch-gh-release-asset@master
         with:
           repo: "ingzkp/zinc"
-          version: "latest"
+          version: "tags/${{ env.ZINC_VERSION }}"
           file: "zinc-linux.tar.gz"
           token: ${{ secrets.GITHUB_TOKEN }}
         env:
@@ -90,12 +93,19 @@ jobs:
           GITHUB_USERNAME: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload test report
+      - name: Upload Notary test report
         if: always()
         uses: actions/upload-artifact@v2
         with:
           name: Junit Test Report - Notary - Fast tests
           path: notary/build/reports/tests/test
+
+      - name: Upload Notary detekt report
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          name: Detekt Report - Notary
+          path: notary/build/reports/detekt
 
   slow-tests:
     runs-on: ubuntu-latest
@@ -121,7 +131,7 @@ jobs:
         uses: dsaltares/fetch-gh-release-asset@master
         with:
           repo: "ingzkp/zinc"
-          version: "latest"
+          version: "tags/${{ env.ZINC_VERSION }}"
           file: "zinc-linux.tar.gz"
           token: ${{ secrets.GITHUB_TOKEN }}
         env:

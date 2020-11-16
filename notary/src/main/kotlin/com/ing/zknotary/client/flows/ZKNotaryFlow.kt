@@ -16,10 +16,8 @@ import net.corda.core.flows.NotaryFlow
 import net.corda.core.identity.Party
 import net.corda.core.internal.NetworkParametersStorage
 import net.corda.core.internal.notary.generateSignature
-import net.corda.core.transactions.ContractUpgradeWireTransaction
 import net.corda.core.transactions.NotaryChangeWireTransaction
 import net.corda.core.transactions.SignedTransaction
-import net.corda.core.transactions.WireTransaction
 import net.corda.core.utilities.UntrustworthyData
 
 open class ZKNotaryFlow(
@@ -49,24 +47,25 @@ open class ZKNotaryFlow(
         }
     }
 
+    @Suppress("UNUSED_PARAMETER")
     @Suspendable
     private fun sendAndReceiveNonValidatingWithZKProof(
         notaryParty: Party,
         session: FlowSession,
         signature: NotarisationRequestSignature
     ): UntrustworthyData<NotarisationResponse> {
-        val ctx = stx.coreTransaction
-        val tx = when (ctx) {
-            is ContractUpgradeWireTransaction -> ctx.buildFilteredTransaction()
-            is WireTransaction -> buildVerifierTransaction(stx, notaryParty)
-            else -> ctx
-        }
+        @Suppress("UNUSED_VARIABLE") val ctx = stx.coreTransaction
+        // val tx = when (ctx) {
+        //     is ContractUpgradeWireTransaction -> ctx.buildFilteredTransaction()
+        //     is WireTransaction -> buildVerifierTransaction(stx, notaryParty)
+        //     else -> ctx
+        // }
         // TODO: re-enable this when this flow is refactored to use the ZKProverTransaction
         // session.send(ZKNotarisationPayload(tx, signature))
         return receiveResultOrTiming(session)
     }
 
-    private fun buildVerifierTransaction(stx: SignedTransaction, notaryParty: Party): ZKVerifierTransaction {
+    private fun buildVerifierTransaction(stx: SignedTransaction, @Suppress("UNUSED_PARAMETER") notaryParty: Party): ZKVerifierTransaction {
         return stx.toZKVerifierTransaction(
             services = serviceHub,
             zkProverTransactionStorage = zkConfig.zkProverTransactionStorage,

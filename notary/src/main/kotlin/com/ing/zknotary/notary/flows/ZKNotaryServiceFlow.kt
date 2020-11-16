@@ -107,7 +107,7 @@ class ZKNotaryServiceFlow(
         try {
             // TODO: should this include outputs?
             checkMaxStateCount(tx.inputs + tx.references)
-        } catch (e: Exception) {
+        } catch (e: IllegalArgumentException) {
             throw NotaryInternalException(NotaryError.TransactionInvalid(e))
         }
     }
@@ -120,7 +120,7 @@ class ZKNotaryServiceFlow(
              * Not calling [checkParameterHash] anymore: that same operation is already done by [checkNotaryWhitelisted]
              */
             checkNotaryWhitelisted(tx.notary, tx.networkParametersHash)
-        } catch (e: Exception) {
+        } catch (e: IllegalArgumentException) {
             throw NotaryInternalException(NotaryError.TransactionInvalid(e))
         }
     }
@@ -158,7 +158,7 @@ class ZKNotaryServiceFlow(
             // TODO: enable tx.verify()
             // TODO: verify the zkp
             // zkConfig.verifierService.verify()
-        } catch (e: Exception) {
+        } catch (e: IllegalArgumentException) {
             throw NotaryInternalException(NotaryError.TransactionInvalid(e))
         }
     }

@@ -14,6 +14,7 @@ interface SerializationFactoryService : SerializeAsToken {
 class ZincSerializationFactoryService() : SingletonSerializeAsToken(), SerializationFactoryService {
 
     // For CordaService. We don't need the serviceHub anyway in this Service
+    @Suppress("UNUSED_PARAMETER")
     constructor(serviceHub: AppServiceHub?) : this()
 
     override val factory: SerializationFactory
