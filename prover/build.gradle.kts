@@ -7,14 +7,17 @@
 val root = "${project.rootDir.absolutePath}/prover"
 val sharedModules = "$root/modules/shared"
 
+val create = CommandCircuit.Create(root)
+val move = CommandCircuit.Move(root)
+
+val circuits: List<CommandCircuit> = listOf(create, move)
+val distinctModules =
+    circuits.fold(emptySet<String>()) { acc, commandCircuit -> acc + commandCircuit.orderedModules }
+val merkleUtilsPath = "$sharedModules/utils/merkle_utils.zn"
+
 task("buildCircuits") {
     mustRunAfter("rustfmtCheck")
     dependsOn("generateMerkleUtils")
-
-    val create = CommandCircuit.Create(root)
-    val move = CommandCircuit.Move(root)
-
-    val circuits: List<CommandCircuit> = listOf(create, move)
 
     circuits.forEach {
         outputs.dir(it.circuitRoot)
@@ -37,8 +40,13 @@ task("buildCircuits") {
 }
 
 task("rustfmt") {
+    circuits.forEach {
+        outputs.dir(it.circuitRoot)
+        inputs.files(it.orderedModules)
+    }
+
     doLast {
-        (CommandCircuit.Move(root).orderedModules + CommandCircuit.Create(root).orderedModules)
+        distinctModules
             .forEach {
                 exec {
                     commandLine("rustfmt", it)
@@ -50,8 +58,13 @@ task("rustfmt") {
 task("rustfmtCheck") {
     mustRunAfter("generateMerkleUtils")
 
+    circuits.forEach {
+        outputs.dir(it.circuitRoot)
+        inputs.files(it.orderedModules)
+    }
+
     doLast {
-        (CommandCircuit.Move(root).orderedModules + CommandCircuit.Create(root).orderedModules)
+        distinctModules
             .forEach {
                 exec {
                     commandLine("rustfmt", "--check", it)
@@ -62,11 +75,14 @@ task("rustfmtCheck") {
 
 val merkleLeaves = 9
 task("generateMerkleUtils") {
+    outputs.file(merkleUtilsPath)
+    circuits.forEach {
+        inputs.files(it.orderedModules.filter { !it.contains("merkle_utils.zn")})
+    }
+
     // #######################################################
     // It is of UTTER importance to not reformat code snippets
     // #######################################################
-    val merkleUtilsPath = "$sharedModules/utils/merkle_utils.zn"
-    outputs.file(merkleUtilsPath)
 
     doLast {
         fun isPow2(num: Int) = num and (num - 1) == 0
@@ -228,10 +244,10 @@ sealed class CommandCircuit(command: String, absoluteRoot: String) {
     // a map where each command has its corresponding consts path
     val commandConstsMap = mapOf(
         "create" to "$modules/create/utils/consts.zn",
-        "move" to "$modules/move/utils/consts.zn")
+        "move" to "$modules/move/utils/consts.zn"
+    )
 
-
-    class Create(root: String): CommandCircuit("create", root){
+    class Create(root: String) : CommandCircuit("create", root) {
         override val _orderedModules = listOf(
             "shared/utils/preamble.zn",
             "shared/utils/consts.zn",
@@ -259,10 +275,11 @@ sealed class CommandCircuit(command: String, absoluteRoot: String) {
             "shared/utils/utxo_digests.zn",
             "shared/merkle_tree.zn",
             "create/validate/contract_rules.zn",
-            "create/main.zn")
+            "create/main.zn"
+        )
     }
 
-    class Move(root: String): CommandCircuit("move", root) {
+    class Move(root: String) : CommandCircuit("move", root) {
         override val _orderedModules = listOf(
             "shared/utils/preamble.zn",
             "shared/utils/consts.zn",
@@ -298,8 +315,7 @@ sealed class CommandCircuit(command: String, absoluteRoot: String) {
         val highestOneBit = Integer.highestOneBit(value)
         return if (value == 1) {
             2
-        }
-        else {
+        } else {
             highestOneBit shl 1
         }
     }
@@ -309,17 +325,18 @@ sealed class CommandCircuit(command: String, absoluteRoot: String) {
         val regex = "const[ ]+([A-Z]+)_GROUP_SIZE[a-z,0-9,: ]+=[ ]?([0-9]+)".toRegex()
 
         return regex.findAll(File(constsPath).readText()).map {
-            val(a, b) = it.destructured
+            val (a, b) = it.destructured
             a.toLowerCase() to b.toInt()
         }.toMap()
     }
 
-    fun<K, V> Map<K, V>.single(predicate: (K, V) -> Boolean) =
+    fun <K, V> Map<K, V>.single(predicate: (K, V) -> Boolean) =
         filter { (k, v) -> predicate(k, v) }.values.single()
 
     private fun findCorrespondingMerkleTreeFunction(componentPath: String, circuitPath: String): String {
         val componentGroupSizes = getGroupSize(commandConstsMap.single { command, _ -> circuitPath.contains(command) })
-        val componentGroupName = componentPath.substring(componentPath.indexOf("components/") + 11, componentPath.indexOf(".zn") - 1)
+        val componentGroupName =
+            componentPath.substring(componentPath.indexOf("components/") + 11, componentPath.indexOf(".zn") - 1)
 
         if (componentGroupSizes.containsKey(componentGroupName)) {
             val componentGroupSize = componentGroupSizes.getValue(componentGroupName)
@@ -389,9 +406,8 @@ sealed class CommandCircuit(command: String, absoluteRoot: String) {
                     .forEach { line ->
                         if (line.contains("// ### CALL APPROPRIATE MERKLE TREE FUNCTION ###")) {
                             circuit.appendText(findCorrespondingMerkleTreeFunction(it, circuitPath) + "\n")
-                        }
-                        else {
-                            if(isDbgOn || !line.contains("dbg!")){
+                        } else {
+                            if (isDbgOn || !line.contains("dbg!")) {
                                 circuit.appendText("$line\n")
                             }
                         }
