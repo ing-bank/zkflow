@@ -16,8 +16,8 @@ pluginManagement {
         id("net.corda.plugins.cordapp") version cordaGradlePluginsVersion apply false
         id("net.corda.plugins.quasar-utils") version cordaGradlePluginsVersion apply false
 
-        id("com.cosminpolifronie.gradle.plantuml") version "1.6.0" apply false
-        id("org.danilopianini.gradle-latex") version "0.2.5" apply false
+        // id("com.cosminpolifronie.gradle.plantuml") version "1.6.0" apply false
+        // id("org.danilopianini.gradle-latex") version "0.2.6" apply false
     }
 
     repositories { // Only for these plugins. Repos for other dependencies should be defined in build.gradle.kts
@@ -28,5 +28,5 @@ pluginManagement {
 }
 
 include("notary")
-include("docs:whitepaper")
+// include("docs:whitepaper")
 include("prover")
