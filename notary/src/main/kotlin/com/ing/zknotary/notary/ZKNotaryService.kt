@@ -118,7 +118,7 @@ open class ZKNotaryService(final override val services: ServiceHubInternal, over
     }
 
     /** Attempts to commit the specified transaction [txId]. */
-    // @Suppress("LongParameterList")
+    @Suppress("LongParameterList")
     @Suspendable
     open fun commitStates(
         inputs: List<StateRef>,
