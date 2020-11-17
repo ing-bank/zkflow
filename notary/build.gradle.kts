@@ -4,6 +4,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     id("symbol-processing") version "1.4.10-dev-experimental-20201110"
     kotlin("jvm")
+    id("idea")
     id("com.diffplug.gradle.spotless")
     id("net.corda.plugins.cordapp")
     id("net.corda.plugins.quasar-utils")
@@ -22,16 +23,21 @@ cordapp {
     }
 }
 
+// We need to tell Gradle where to find our generated code
+val generatedSourcePath = "build/generated/ksp/src/main/kotlin"
 sourceSets {
     main {
         java {
             srcDir(file("build/generated/ksp/src/main/kotlin"))
         }
     }
-    test {
-        java {
-            srcDir(file("build/generated/ksp/src/test/kotlin"))
-        }
+}
+idea {
+    module {
+        // We also need to tell Intellij to see it correctly as generated
+        // Marks the already(!) added srcDir as "generated"
+        generatedSourceDirs = generatedSourceDirs + file(generatedSourcePath)
+        isDownloadSources = true
     }
 }
 
