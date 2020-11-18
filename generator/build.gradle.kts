@@ -23,10 +23,6 @@ dependencies {
     implementation("com.google.devtools.ksp:symbol-processing-api:1.4.10-dev-experimental-20201110")
 }
 
-// kapt {
-//     includeCompileClasspath = false
-// }
-
 tasks.apply {
     withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
         kotlinOptions {

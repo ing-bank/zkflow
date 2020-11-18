@@ -24,19 +24,26 @@ cordapp {
 }
 
 // We need to tell Gradle where to find our generated code
-val generatedSourcePath = "build/generated/ksp/src/main/kotlin"
+val generatedSourcePath = "${buildDir.name}/generated/ksp/src/main/kotlin"
+val testConfigResourcesDir = "$rootDir/config/test"
 sourceSets {
     main {
         java {
-            srcDir(file("build/generated/ksp/src/main/kotlin"))
+            srcDir(file(generatedSourcePath))
+        }
+    }
+    test {
+        resources {
+            srcDir(testConfigResourcesDir)
         }
     }
 }
 idea {
     module {
-        // We also need to tell Intellij to see it correctly as generated
-        // Marks the already(!) added srcDir as "generated"
+        // We also need to tell Intellij to mark it correctly as generated source
         generatedSourceDirs = generatedSourceDirs + file(generatedSourcePath)
+
+        // Tell Intellij to download sources for dependencies
         isDownloadSources = true
     }
 }
