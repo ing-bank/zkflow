@@ -45,6 +45,13 @@ To change log levels, you can make changes in the following files:
 
 ## Prerequisites
 
+### Java version
+
+This project requires Java 8. To be consistent with our CI, it is advisable to use Zulu OpenJDK 8u232b18.
+On Mac, that is very easy to install and manage with [SDKMAN](https://sdkman.io/).
+
+### Our Corda fork
+
 This project makes use of our fork of Corda maintained here: https://github.com/ingzkp/corda/tree/ing-fork
 This fork is based on the latest version of Corda and will have all our proposed PRs to Corda already merged.
 The artifacts for our fork are deployed to Github Packages and this project is aware of that and will be able to find Corda dependencies there
