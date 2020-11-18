@@ -37,19 +37,30 @@ dependencies {
 
     // Normally a cordapp using our product would use our gradle plugin to load deps and configure.
     // Because we want short dev cycles, we directly include the deps here locally.
-    // And only for test code
     val kspVersion: String by project
-    testImplementation("com.google.devtools.ksp:symbol-processing:$kspVersion")
-    testImplementation(project(":generator"))
+    implementation("com.google.devtools.ksp:symbol-processing:$kspVersion")
+    implementation(project(":generator"))
     ksp(project(":generator"))
 }
 
 // Normally a cordapp using our product would use our gradle plugin to load deps and configure.
 // Because we want short dev cycles, we directly include the deps here locally.
-val generatedTestSourcePath = "${buildDir.name}/generated/ksp/test/kotlin"
+val generatedSourcePath = "${buildDir.name}/generated/ksp/src/main/kotlin"
+val generatedTestSourcePath = "${buildDir.name}/generated/ksp/src/test/kotlin"
+val testConfigResourcesDir = "$rootDir/config/test"
 sourceSets {
+    main {
+        java {
+            srcDir(file(generatedSourcePath))
+        }
+    }
     test {
-        java.srcDir(generatedTestSourcePath)
+        java {
+            srcDir(file(generatedTestSourcePath))
+        }
+        resources {
+            srcDir(testConfigResourcesDir)
+        }
     }
 }
 
@@ -57,16 +68,11 @@ sourceSets {
 // Because we want short dev cycles, we directly include the deps here locally.
 idea {
     module {
-        generatedSourceDirs + file(generatedTestSourcePath)
-    }
-}
+        // We also need to tell Intellij to mark it correctly as generated source
+        generatedSourceDirs = generatedSourceDirs + file(generatedSourcePath) + file(generatedTestSourcePath)
 
-val testConfigResourcesDir = "$rootDir/config/test"
-sourceSets {
-    test {
-        resources {
-            srcDir(testConfigResourcesDir)
-        }
+        // Tell Intellij to download sources for dependencies
+        isDownloadSources = true
     }
 }
 
