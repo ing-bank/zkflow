@@ -110,3 +110,6 @@ fun KSTypeReference.toTypeName(): TypeName {
 fun KSAnnotation.toTypeName(): TypeName {
     return annotationType.resolve().toTypeName()
 }
+
+val KSTypeReference.isList: Boolean
+    get() = toString().contains("List", ignoreCase = true)
