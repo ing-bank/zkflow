@@ -2,7 +2,9 @@ import io.gitlab.arturbosch.detekt.Detekt
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
+    id("symbol-processing") version "1.4.10-dev-experimental-20201110"
     kotlin("jvm")
+    id("idea")
     id("com.diffplug.gradle.spotless")
     id("net.corda.plugins.cordapp")
     id("net.corda.plugins.quasar-utils")
@@ -21,16 +23,28 @@ cordapp {
     }
 }
 
+// We need to tell Gradle where to find our generated code
+val generatedSourcePath = "${buildDir.name}/generated/ksp/src/main/kotlin"
+val testConfigResourcesDir = "$rootDir/config/test"
 sourceSets {
     main {
-        resources {
-            srcDir(rootProject.file("config/dev"))
+        java {
+            srcDir(file(generatedSourcePath))
         }
     }
     test {
         resources {
-            srcDir(rootProject.file("config/test"))
+            srcDir(testConfigResourcesDir)
         }
+    }
+}
+idea {
+    module {
+        // We also need to tell Intellij to mark it correctly as generated source
+        generatedSourceDirs = generatedSourceDirs + file(generatedSourcePath)
+
+        // Tell Intellij to download sources for dependencies
+        isDownloadSources = true
     }
 }
 
@@ -56,10 +70,17 @@ dependencies {
     cordaCompile("$cordaReleaseGroup:corda-jackson:$cordaVersion")
     testImplementation("$cordaReleaseGroup:corda-node-driver:$cordaVersion")
     testImplementation("$cordaReleaseGroup:corda-test-utils:$cordaVersion")
+
+    // Annotation processing & Code generation
+    // kapt(project(":generator"))
+    compileOnly(project(":generator"))
+    ksp(project(":generator"))
 }
 
 spotless {
     kotlin {
+        target("**/*.kt")
+        targetExclude("${buildDir.relativeTo(rootDir).path}/generated/**")
         val ktlintVersion: String by project
         ktlint(ktlintVersion)
     }
@@ -86,6 +107,12 @@ tasks.test {
         excludeTags("slow")
     }
 }
+
+// TODO: We will have to enable explicitApi soon:
+// https://kotlinlang.org/docs/reference/whatsnew14.html#explicit-api-mode-for-library-authors
+// kotlin {
+//     explicitApi = Strict
+// }
 
 tasks.apply {
     matching { it is JavaCompile || it is KotlinCompile }.forEach { it.dependsOn(":checkJavaVersion") }

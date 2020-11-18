@@ -16,11 +16,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Set up JDK 8.0.x (FX)
+      - name: Set up JDK 8.0.232
         uses: actions/setup-java@v1
         with:
-          java-version: 8.0.x
-          java-package: jdk+fx
+          java-version: 8.0.232
+          java-package: jdk
 
       - name: Cache Gradle packages
         uses: actions/cache@v1
@@ -58,11 +58,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Set up JDK 8.0.x (FX)
+      - name: Set up JDK 8.0.232
         uses: actions/setup-java@v1
         with:
-          java-version: 8.0.x
-          java-package: jdk+fx
+          java-version: 8.0.232
+          java-package: jdk
 
       - name: Cache Gradle packages
         uses: actions/cache@v1
@@ -114,11 +114,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Set up JDK 8.0.x (FX)
+      - name: Set up JDK 8.0.232
         uses: actions/setup-java@v1
         with:
-          java-version: 8.0.x
-          java-package: jdk+fx
+          java-version: 8.0.232
+          java-package: jdk
 
       - name: Cache Gradle packages
         uses: actions/cache@v1

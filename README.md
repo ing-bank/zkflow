@@ -36,14 +36,21 @@ To run the slow tests, but faster, you can set the following system property: `M
 
 > Please note that we have configured JUnit5 so that test classes are instantiated only once. So if you want to have tests state reset per test, add a setup method and annotate it with @BeforeAll. We follow the following best practices as much as possible: https://phauer.com/2018/best-practices-unit-testing-kotlin/
 
-## Configuring logging
+## Configuring logging during testing
 
 To change log levels, you can make changes in the following files:
 
-* `notary/src/test/resources/log4j2.xml`. This file determines how our main logger logs. Note that it is only affecting test builds. The file will have no effect on the final jar. If you really want, you can even override this file by specifying your own with the following system property: `log4j.configurationFile`.
-* `notary/src/test/resources/logging-test.properties`. This file determines the log levels for parts of our application (mostly dependencies) that directly use java.util.logging logger. This for instancte determines how JUnit logs before our tests run.
+* `config/test/log4j2.xml`. This file determines how our main logger logs. Note that it is only affecting test builds. The file will have no effect on the final jar. If you really want, you can even override this file by specifying your own with the following system property: `log4j.configurationFile`.
+* `config/test/logging-test.properties`. This file determines the log levels for parts of our application (mostly dependencies) that directly use java.util.logging logger. This for instancte determines how JUnit logs before our tests run.
 
 ## Prerequisites
+
+### Java version
+
+This project requires Java 8. To be consistent with our CI, it is advisable to use Zulu OpenJDK 8u232b18.
+On Mac, that is very easy to install and manage with [SDKMAN](https://sdkman.io/).
+
+### Our Corda fork
 
 This project makes use of our fork of Corda maintained here: https://github.com/ingzkp/corda/tree/ing-fork
 This fork is based on the latest version of Corda and will have all our proposed PRs to Corda already merged.

@@ -116,7 +116,7 @@ interface ZKWritableProverTransactionStorage : ZKProverTransactionStorage {
     fun getTransactionInternal(id: SecureHash): Pair<ZKProverTransaction, Boolean>?
 
     /**
-     * Returns a future that completes with the transaction corresponding to [id] once it has been committed. Do not warn when run inside
+     * Returns a future that completes with the transaction corresponding to [id] once it has been committed. Do not com.ing.zknotary.generator.warn when run inside
      * a DB transaction.
      */
     fun trackTransactionWithNoWarning(id: SecureHash): CordaFuture<ZKProverTransaction>
@@ -177,7 +177,7 @@ interface ZKWritableVerifierTransactionStorage : ZKVerifierTransactionStorage {
     fun getTransactionInternal(id: SecureHash): Pair<ZKVerifierTransaction, Boolean>?
 
     /**
-     * Returns a future that completes with the transaction corresponding to [id] once it has been committed. Do not warn when run inside
+     * Returns a future that completes with the transaction corresponding to [id] once it has been committed. Do not com.ing.zknotary.generator.warn when run inside
      * a DB transaction.
      */
     fun trackTransactionWithNoWarning(id: SecureHash): CordaFuture<ZKVerifierTransaction>
