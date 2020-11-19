@@ -110,6 +110,9 @@ class ComponentPaddingConfiguration private constructor(
             "References' size exceeds quantity accepted by ZK circuit" using (
                 vtx.references.size <= sizeOf(ComponentGroupEnum.REFERENCES_GROUP) ?: vtx.references.size - 1
                 )
+
+            "Signers' size exceeds quantity accepted by ZK circuit" using
+                (vtx.signers.size <= sizeOf(ComponentGroupEnum.SIGNERS_GROUP) ?: vtx.signers.size - 1)
         }
     }
 }

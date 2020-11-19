@@ -33,6 +33,8 @@ class ZKPartialMerkleTree(
                             listOf(Dactyloscopist.identify(vtx.notary)),
                         ComponentGroupEnum.TIMEWINDOW_GROUP to
                             listOf(Dactyloscopist.identify(vtx.padded.timeWindow().content)),
+                        ComponentGroupEnum.SIGNERS_GROUP to
+                            vtx.padded.signers().map { Dactyloscopist.identify(it.content) },
                         ComponentGroupEnum.PARAMETERS_GROUP to
                             listOf(Dactyloscopist.identify(vtx.padded.networkParametersHash().content))
                     )
