@@ -1,6 +1,7 @@
 buildscript {
     val repos by extra {
         closureOf<RepositoryHandler> {
+            mavenLocal()
             google()
             mavenCentral()
             jcenter()
