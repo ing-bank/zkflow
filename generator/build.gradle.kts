@@ -1,6 +1,7 @@
 plugins {
     kotlin("jvm")
     kotlin("kapt")
+    id("maven-publish")
 }
 
 repositories {
@@ -30,6 +31,25 @@ tasks.apply {
             apiVersion = "1.3"
             jvmTarget = "1.8"
             javaParameters = true   // Useful for reflection.
+        }
+    }
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("zkGenerator") {
+            from(components["java"])
+        }
+    }
+
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/ingzkp/zk-notary")
+            credentials {
+                username = System.getenv("GITHUB_USERNAME")
+                password = System.getenv("GITHUB_TOKEN")
+            }
         }
     }
 }

@@ -9,6 +9,8 @@ plugins {
     id("net.corda.plugins.cordapp")
     id("net.corda.plugins.quasar-utils")
     id("io.gitlab.arturbosch.detekt")
+    id("maven-publish")
+    id("java-library")
 }
 
 cordapp {
@@ -72,8 +74,7 @@ dependencies {
     testImplementation("$cordaReleaseGroup:corda-test-utils:$cordaVersion")
 
     // Annotation processing & Code generation
-    // kapt(project(":generator"))
-    compileOnly(project(":generator"))
+    api(project(":generator"))
     ksp(project(":generator"))
 }
 
@@ -175,7 +176,23 @@ tasks.apply {
         // This is to configure logging that does not go through slf4j/log4j, like JUnit platform logging.
         systemProperty("java.util.logging.config.file", "${project.buildDir}/resources/test/logging-test.properties")
     }
-
 }
 
+publishing {
+    publications {
+        create<MavenPublication>("zkNotary") {
+            from(components["java"])
+        }
+    }
 
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/ingzkp/zk-notary")
+            credentials {
+                username = System.getenv("GITHUB_USERNAME")
+                password = System.getenv("GITHUB_TOKEN")
+            }
+        }
+    }
+}
