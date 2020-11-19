@@ -2,8 +2,8 @@ package com.ing.zknotary.client.flows
 
 import co.paralleluniverse.fibers.Suspendable
 import com.ing.zknotary.common.transactions.ZKVerifierTransaction
+import com.ing.zknotary.common.transactions.toZKVerifierTransaction
 import com.ing.zknotary.common.zkp.ZKConfig
-import com.ing.zknotary.node.services.toZKVerifierTransaction
 import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.TransactionSignature
 import net.corda.core.flows.FlowSession

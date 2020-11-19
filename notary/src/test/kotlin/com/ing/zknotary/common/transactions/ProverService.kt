@@ -3,7 +3,6 @@ package com.ing.zknotary.common.transactions
 import com.ing.zknotary.common.contracts.ZKCommandData
 import com.ing.zknotary.common.zkp.ZKTransactionService
 import com.ing.zknotary.node.services.collectVerifiedDependencies
-import com.ing.zknotary.node.services.toZKVerifierTransaction
 import com.ing.zknotary.nodes.services.MockZKProverTransactionStorage
 import com.ing.zknotary.nodes.services.MockZKVerifierTransactionStorage
 import net.corda.core.crypto.SecureHash

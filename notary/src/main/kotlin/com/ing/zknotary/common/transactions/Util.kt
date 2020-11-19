@@ -4,17 +4,23 @@ import com.ing.zknotary.common.contracts.toZKCommand
 import com.ing.zknotary.common.util.ComponentPaddingConfiguration
 import com.ing.zknotary.common.util.PaddingWrapper
 import com.ing.zknotary.common.zkp.Witness
+import com.ing.zknotary.common.zkp.ZKTransactionService
 import com.ing.zknotary.node.services.ZKProverTransactionStorage
+import com.ing.zknotary.node.services.ZKWritableProverTransactionStorage
+import com.ing.zknotary.node.services.ZKWritableVerifierTransactionStorage
 import net.corda.core.DeleteForDJVM
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.StateRef
 import net.corda.core.contracts.TransactionState
+import net.corda.core.crypto.BLAKE2s256DigestService
 import net.corda.core.crypto.DigestService
+import net.corda.core.crypto.PedersenDigestService
 import net.corda.core.crypto.SecureHash
 import net.corda.core.node.ServiceHub
 import net.corda.core.serialization.serialize
+import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.WireTransaction
 import net.corda.core.utilities.loggerFor
 import java.nio.ByteBuffer
@@ -54,7 +60,8 @@ fun ZKProverTransaction.toZKVerifierTransaction(proof: ByteArray): ZKVerifierTra
             ComponentGroupEnum.REFERENCES_GROUP.ordinal,
             ComponentGroupEnum.NOTARY_GROUP.ordinal,
             ComponentGroupEnum.TIMEWINDOW_GROUP.ordinal,
-            ComponentGroupEnum.PARAMETERS_GROUP.ordinal
+            ComponentGroupEnum.PARAMETERS_GROUP.ordinal,
+            ComponentGroupEnum.SIGNERS_GROUP.ordinal
         )
     }
 
@@ -81,6 +88,7 @@ fun ZKProverTransaction.toZKVerifierTransaction(proof: ByteArray): ZKVerifierTra
             this.padded.sizeOf(ComponentGroupEnum.ATTACHMENTS_GROUP),
             this.padded.paddingConfiguration.filler(ComponentGroupEnum.ATTACHMENTS_GROUP)!!
         )
+        .signers(this.padded.sizeOf(ComponentGroupEnum.SIGNERS_GROUP))
         .build()
 
     // TODO
@@ -93,6 +101,8 @@ fun ZKProverTransaction.toZKVerifierTransaction(proof: ByteArray): ZKVerifierTra
         this.inputs.map { it.ref },
         this.references.map { it.ref },
         circuitId,
+
+        this.command.signers,
 
         this.notary,
         this.timeWindow,
@@ -149,6 +159,36 @@ fun WireTransaction.toZKProverTransaction(
         componentGroupLeafDigestService = componentGroupLeafDigestService,
         nodeDigestService = nodeDigestService
     )
+}
+
+fun SignedTransaction.toZKVerifierTransaction(
+    services: ServiceHub,
+    zkProverTransactionStorage: ZKWritableProverTransactionStorage,
+    zkVerifierTransactionStorage: ZKWritableVerifierTransactionStorage,
+    zkTransactionService: ZKTransactionService,
+    persist: Boolean = true
+): ZKVerifierTransaction {
+    loggerFor<SignedTransaction>().debug("Converting SignedTx to VerifierTx")
+
+    val wtx = coreTransaction as WireTransaction
+    val witness = wtx.toZKProverTransaction(
+        services,
+        zkProverTransactionStorage,
+        componentGroupLeafDigestService = BLAKE2s256DigestService,
+        nodeDigestService = PedersenDigestService
+    ).toWitness(zkProverTransactionStorage)
+
+    val proof = zkTransactionService.prove(witness)
+    val vtx = witness.transaction.toZKVerifierTransaction(proof)
+
+    if (persist) {
+        zkProverTransactionStorage.map.put(this, vtx)
+        zkVerifierTransactionStorage.map.put(this, vtx)
+        zkProverTransactionStorage.addTransaction(witness.transaction)
+        zkVerifierTransactionStorage.addTransaction(vtx)
+    }
+
+    return vtx
 }
 
 fun ZKProverTransaction.toWitness(

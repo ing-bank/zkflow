@@ -3,54 +3,14 @@ package com.ing.zknotary.node.services
 import com.ing.zknotary.common.transactions.NamedByZKMerkleTree
 import com.ing.zknotary.common.transactions.ZKProverTransaction
 import com.ing.zknotary.common.transactions.ZKVerifierTransaction
-import com.ing.zknotary.common.transactions.toWitness
-import com.ing.zknotary.common.transactions.toZKProverTransaction
-import com.ing.zknotary.common.transactions.toZKVerifierTransaction
-import com.ing.zknotary.common.zkp.ZKTransactionService
 import net.corda.core.DeleteForDJVM
 import net.corda.core.DoNotImplement
 import net.corda.core.concurrent.CordaFuture
 import net.corda.core.contracts.NamedByHash
-import net.corda.core.crypto.BLAKE2s256DigestService
-import net.corda.core.crypto.PedersenDigestService
 import net.corda.core.crypto.SecureHash
 import net.corda.core.messaging.DataFeed
-import net.corda.core.node.ServiceHub
 import net.corda.core.serialization.SerializeAsToken
-import net.corda.core.transactions.SignedTransaction
-import net.corda.core.transactions.WireTransaction
-import net.corda.core.utilities.loggerFor
 import rx.Observable
-
-fun SignedTransaction.toZKVerifierTransaction(
-    services: ServiceHub,
-    zkProverTransactionStorage: ZKWritableProverTransactionStorage,
-    zkVerifierTransactionStorage: ZKWritableVerifierTransactionStorage,
-    zkTransactionService: ZKTransactionService,
-    persist: Boolean = true
-): ZKVerifierTransaction {
-    loggerFor<SignedTransaction>().debug("Converting SignedTx to VerifierTx")
-
-    val wtx = coreTransaction as WireTransaction
-    val witness = wtx.toZKProverTransaction(
-        services,
-        zkProverTransactionStorage,
-        componentGroupLeafDigestService = BLAKE2s256DigestService,
-        nodeDigestService = PedersenDigestService
-    ).toWitness(zkProverTransactionStorage)
-
-    val proof = zkTransactionService.prove(witness)
-    val vtx = witness.transaction.toZKVerifierTransaction(proof)
-
-    if (persist) {
-        zkProverTransactionStorage.map.put(this, vtx)
-        zkVerifierTransactionStorage.map.put(this, vtx)
-        zkProverTransactionStorage.addTransaction(witness.transaction)
-        zkVerifierTransactionStorage.addTransaction(vtx)
-    }
-
-    return vtx
-}
 
 /**
  * Map from Standard Corda transactions id to ZKP transaction id
