@@ -5,7 +5,13 @@ import com.ing.zknotary.common.zkp.ZKTransactionService
 import com.ing.zknotary.node.services.collectVerifiedDependencies
 import com.ing.zknotary.nodes.services.MockZKProverTransactionStorage
 import com.ing.zknotary.nodes.services.MockZKVerifierTransactionStorage
-import net.corda.core.crypto.*
+import net.corda.core.crypto.BLAKE2s256DigestService
+import net.corda.core.crypto.Crypto
+import net.corda.core.crypto.PedersenDigestService
+import net.corda.core.crypto.SecureHash
+import net.corda.core.crypto.SignableData
+import net.corda.core.crypto.SignatureMetadata
+import net.corda.core.crypto.TransactionSignature
 import net.corda.core.transactions.WireTransaction
 import net.corda.core.utilities.loggerFor
 import net.corda.testing.node.MockServices
@@ -60,9 +66,13 @@ class ProverService {
 
             val zkSigs: List<TransactionSignature> = ptx.command.signers.map { signer ->
 
-                ledgerServices.keyManagementService.sign(SignableData(ptx.id,
-                    SignatureMetadata(ledgerServices.myInfo.platformVersion, Crypto.findSignatureScheme(signer).schemeNumberID)
-                ), signer)
+                ledgerServices.keyManagementService.sign(
+                    SignableData(
+                        ptx.id,
+                        SignatureMetadata(ledgerServices.myInfo.platformVersion, Crypto.findSignatureScheme(signer).schemeNumberID)
+                    ),
+                    signer
+                )
             }
 
             val vtx = stx.toSignedZKVerifierTransaction(
