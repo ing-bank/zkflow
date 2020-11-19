@@ -5,7 +5,7 @@ import com.ing.zknotary.common.zkp.ZKTransactionService
 import com.ing.zknotary.node.services.collectVerifiedDependencies
 import com.ing.zknotary.nodes.services.MockZKProverTransactionStorage
 import com.ing.zknotary.nodes.services.MockZKVerifierTransactionStorage
-import net.corda.core.crypto.SecureHash
+import net.corda.core.crypto.*
 import net.corda.core.transactions.WireTransaction
 import net.corda.core.utilities.loggerFor
 import net.corda.testing.node.MockServices
@@ -51,8 +51,23 @@ class ProverService {
                 ?: zkTransactionServices[SecureHash.allOnesHash]
                 ?: error("Unknown circuit for command id $commandId")
 
-            val vtx = stx.toZKVerifierTransaction(
+            val ptx = stx.tx.toZKProverTransaction(
                 ledgerServices,
+                zkProverTransactionStorage,
+                componentGroupLeafDigestService = BLAKE2s256DigestService,
+                nodeDigestService = PedersenDigestService
+            )
+
+            val zkSigs: List<TransactionSignature> = ptx.command.signers.map { signer ->
+
+                ledgerServices.keyManagementService.sign(SignableData(ptx.id,
+                    SignatureMetadata(ledgerServices.myInfo.platformVersion, Crypto.findSignatureScheme(signer).schemeNumberID)
+                ), signer)
+            }
+
+            val vtx = stx.toSignedZKVerifierTransaction(
+                ledgerServices,
+                zkSigs,
                 zkProverTransactionStorage,
                 zkVerifierTransactionStorage,
                 zkTransactionService,

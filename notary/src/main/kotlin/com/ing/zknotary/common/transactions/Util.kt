@@ -18,6 +18,7 @@ import net.corda.core.crypto.BLAKE2s256DigestService
 import net.corda.core.crypto.DigestService
 import net.corda.core.crypto.PedersenDigestService
 import net.corda.core.crypto.SecureHash
+import net.corda.core.crypto.TransactionSignature
 import net.corda.core.node.ServiceHub
 import net.corda.core.serialization.serialize
 import net.corda.core.transactions.SignedTransaction
@@ -161,34 +162,40 @@ fun WireTransaction.toZKProverTransaction(
     )
 }
 
-fun SignedTransaction.toZKVerifierTransaction(
+@Suppress("LongParameterList")
+fun SignedTransaction.toSignedZKVerifierTransaction(
     services: ServiceHub,
+    zkSigs: List<TransactionSignature>,
     zkProverTransactionStorage: ZKWritableProverTransactionStorage,
     zkVerifierTransactionStorage: ZKWritableVerifierTransactionStorage,
     zkTransactionService: ZKTransactionService,
     persist: Boolean = true
-): ZKVerifierTransaction {
-    loggerFor<SignedTransaction>().debug("Converting SignedTx to VerifierTx")
+): SignedZKVerifierTransaction {
+    loggerFor<SignedTransaction>().debug("Converting SignedTx to SignedVerifierTx")
 
     val wtx = coreTransaction as WireTransaction
-    val witness = wtx.toZKProverTransaction(
+    val ptx = wtx.toZKProverTransaction(
         services,
         zkProverTransactionStorage,
         componentGroupLeafDigestService = BLAKE2s256DigestService,
         nodeDigestService = PedersenDigestService
-    ).toWitness(zkProverTransactionStorage)
+    )
+    val witness = ptx.toWitness(zkProverTransactionStorage)
 
     val proof = zkTransactionService.prove(witness)
     val vtx = witness.transaction.toZKVerifierTransaction(proof)
 
+    val sptx = SignedZKProverTransaction(ptx, zkSigs)
+    val svtx = SignedZKVerifierTransaction(vtx, zkSigs)
+
     if (persist) {
         zkProverTransactionStorage.map.put(this, vtx)
         zkVerifierTransactionStorage.map.put(this, vtx)
-        zkProverTransactionStorage.addTransaction(witness.transaction)
-        zkVerifierTransactionStorage.addTransaction(vtx)
+        zkProverTransactionStorage.addTransaction(sptx)
+        zkVerifierTransactionStorage.addTransaction(svtx)
     }
 
-    return vtx
+    return svtx
 }
 
 fun ZKProverTransaction.toWitness(
@@ -213,7 +220,7 @@ fun ZKProverTransaction.toWitness(
                 val outputTx =
                     zkProverTransactionStorage.getTransaction(it.content.ref.txhash)
                         ?: error("Could not fetch output transaction for StateRef ${it.content.ref}")
-                outputTx.merkleTree.componentNonces[ComponentGroupEnum.OUTPUTS_GROUP.ordinal]!![it.content.ref.index]
+                outputTx.tx.merkleTree.componentNonces[ComponentGroupEnum.OUTPUTS_GROUP.ordinal]!![it.content.ref.index]
             }
         }
     }

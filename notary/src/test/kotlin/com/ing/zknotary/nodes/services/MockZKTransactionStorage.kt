@@ -1,8 +1,8 @@
 package com.ing.zknotary.nodes.services
 
 import com.ing.zknotary.common.transactions.NamedByZKMerkleTree
-import com.ing.zknotary.common.transactions.ZKProverTransaction
-import com.ing.zknotary.common.transactions.ZKVerifierTransaction
+import com.ing.zknotary.common.transactions.SignedZKProverTransaction
+import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
 import com.ing.zknotary.node.services.ZKTransactionMap
 import com.ing.zknotary.node.services.ZKWritableProverTransactionStorage
 import com.ing.zknotary.node.services.ZKWritableVerifierTransactionStorage
@@ -28,15 +28,15 @@ import java.util.HashMap
 open class MockZKProverTransactionStorage(val serviceHub: AppServiceHub) : ZKWritableProverTransactionStorage,
     SingletonSerializeAsToken() {
 
-    override fun trackTransaction(id: SecureHash): CordaFuture<ZKProverTransaction> {
+    override fun trackTransaction(id: SecureHash): CordaFuture<SignedZKProverTransaction> {
         return getTransaction(id)?.let { doneFuture(it) } ?: _updatesPublisher.filter { it.id == id }.toFuture()
     }
 
-    override fun trackTransactionWithNoWarning(id: SecureHash): CordaFuture<ZKProverTransaction> {
+    override fun trackTransactionWithNoWarning(id: SecureHash): CordaFuture<SignedZKProverTransaction> {
         return trackTransaction(id)
     }
 
-    override fun track(): DataFeed<List<ZKProverTransaction>, ZKProverTransaction> {
+    override fun track(): DataFeed<List<SignedZKProverTransaction>, SignedZKProverTransaction> {
         return DataFeed(txns.values.mapNotNull { if (it.isVerified) it.vtx else null }, _updatesPublisher)
     }
 
@@ -44,17 +44,17 @@ open class MockZKProverTransactionStorage(val serviceHub: AppServiceHub) : ZKWri
 
     private val txns = HashMap<SecureHash, TxHolder>()
 
-    private val _updatesPublisher = PublishSubject.create<ZKProverTransaction>()
+    private val _updatesPublisher = PublishSubject.create<SignedZKProverTransaction>()
 
-    override val updates: Observable<ZKProverTransaction>
+    override val updates: Observable<SignedZKProverTransaction>
         get() = _updatesPublisher
 
-    private fun notify(transaction: ZKProverTransaction): Boolean {
+    private fun notify(transaction: SignedZKProverTransaction): Boolean {
         _updatesPublisher.onNext(transaction)
         return true
     }
 
-    override fun addTransaction(transaction: ZKProverTransaction): Boolean {
+    override fun addTransaction(transaction: SignedZKProverTransaction): Boolean {
         val current = txns.putIfAbsent(
             transaction.id,
             TxHolder(
@@ -72,7 +72,7 @@ open class MockZKProverTransactionStorage(val serviceHub: AppServiceHub) : ZKWri
         }
     }
 
-    override fun addUnverifiedTransaction(transaction: ZKProverTransaction) {
+    override fun addUnverifiedTransaction(transaction: SignedZKProverTransaction) {
         txns.putIfAbsent(
             transaction.id,
             TxHolder(
@@ -82,13 +82,13 @@ open class MockZKProverTransactionStorage(val serviceHub: AppServiceHub) : ZKWri
         )
     }
 
-    override fun getTransaction(id: SecureHash): ZKProverTransaction? =
+    override fun getTransaction(id: SecureHash): SignedZKProverTransaction? =
         txns[id]?.let { if (it.isVerified) it.vtx else null }
 
-    override fun getTransactionInternal(id: SecureHash): Pair<ZKProverTransaction, Boolean>? =
+    override fun getTransactionInternal(id: SecureHash): Pair<SignedZKProverTransaction, Boolean>? =
         txns[id]?.let { Pair(it.vtx, it.isVerified) }
 
-    private class TxHolder(val vtx: ZKProverTransaction, var isVerified: Boolean)
+    private class TxHolder(val vtx: SignedZKProverTransaction, var isVerified: Boolean)
 }
 
 /**
@@ -98,15 +98,15 @@ open class MockZKProverTransactionStorage(val serviceHub: AppServiceHub) : ZKWri
 open class MockZKVerifierTransactionStorage(val serviceHub: AppServiceHub) : ZKWritableVerifierTransactionStorage,
     SingletonSerializeAsToken() {
 
-    override fun trackTransaction(id: SecureHash): CordaFuture<ZKVerifierTransaction> {
+    override fun trackTransaction(id: SecureHash): CordaFuture<SignedZKVerifierTransaction> {
         return getTransaction(id)?.let { doneFuture(it) } ?: _updatesPublisher.filter { it.id == id }.toFuture()
     }
 
-    override fun trackTransactionWithNoWarning(id: SecureHash): CordaFuture<ZKVerifierTransaction> {
+    override fun trackTransactionWithNoWarning(id: SecureHash): CordaFuture<SignedZKVerifierTransaction> {
         return trackTransaction(id)
     }
 
-    override fun track(): DataFeed<List<ZKVerifierTransaction>, ZKVerifierTransaction> {
+    override fun track(): DataFeed<List<SignedZKVerifierTransaction>, SignedZKVerifierTransaction> {
         return DataFeed(txns.values.mapNotNull { if (it.isVerified) it.vtx else null }, _updatesPublisher)
     }
 
@@ -114,17 +114,17 @@ open class MockZKVerifierTransactionStorage(val serviceHub: AppServiceHub) : ZKW
 
     private val txns = HashMap<SecureHash, TxHolder>()
 
-    private val _updatesPublisher = PublishSubject.create<ZKVerifierTransaction>()
+    private val _updatesPublisher = PublishSubject.create<SignedZKVerifierTransaction>()
 
-    override val updates: Observable<ZKVerifierTransaction>
+    override val updates: Observable<SignedZKVerifierTransaction>
         get() = _updatesPublisher
 
-    private fun notify(transaction: ZKVerifierTransaction): Boolean {
+    private fun notify(transaction: SignedZKVerifierTransaction): Boolean {
         _updatesPublisher.onNext(transaction)
         return true
     }
 
-    override fun addTransaction(transaction: ZKVerifierTransaction): Boolean {
+    override fun addTransaction(transaction: SignedZKVerifierTransaction): Boolean {
         val current = txns.putIfAbsent(
             transaction.id,
             TxHolder(
@@ -142,7 +142,7 @@ open class MockZKVerifierTransactionStorage(val serviceHub: AppServiceHub) : ZKW
         }
     }
 
-    override fun addUnverifiedTransaction(transaction: ZKVerifierTransaction) {
+    override fun addUnverifiedTransaction(transaction: SignedZKVerifierTransaction) {
         txns.putIfAbsent(
             transaction.id,
             TxHolder(
@@ -152,13 +152,13 @@ open class MockZKVerifierTransactionStorage(val serviceHub: AppServiceHub) : ZKW
         )
     }
 
-    override fun getTransaction(id: SecureHash): ZKVerifierTransaction? =
+    override fun getTransaction(id: SecureHash): SignedZKVerifierTransaction? =
         txns[id]?.let { if (it.isVerified) it.vtx else null }
 
-    override fun getTransactionInternal(id: SecureHash): Pair<ZKVerifierTransaction, Boolean>? =
+    override fun getTransactionInternal(id: SecureHash): Pair<SignedZKVerifierTransaction, Boolean>? =
         txns[id]?.let { Pair(it.vtx, it.isVerified) }
 
-    private class TxHolder(val vtx: ZKVerifierTransaction, var isVerified: Boolean)
+    private class TxHolder(val vtx: SignedZKVerifierTransaction, var isVerified: Boolean)
 }
 
 /**

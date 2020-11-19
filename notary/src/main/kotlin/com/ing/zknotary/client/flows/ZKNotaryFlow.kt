@@ -1,8 +1,8 @@
 package com.ing.zknotary.client.flows
 
 import co.paralleluniverse.fibers.Suspendable
-import com.ing.zknotary.common.transactions.ZKVerifierTransaction
-import com.ing.zknotary.common.transactions.toZKVerifierTransaction
+import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
+import com.ing.zknotary.common.transactions.toSignedZKVerifierTransaction
 import com.ing.zknotary.common.zkp.ZKConfig
 import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.TransactionSignature
@@ -65,9 +65,10 @@ open class ZKNotaryFlow(
         return receiveResultOrTiming(session)
     }
 
-    private fun buildVerifierTransaction(stx: SignedTransaction, @Suppress("UNUSED_PARAMETER") notaryParty: Party): ZKVerifierTransaction {
-        return stx.toZKVerifierTransaction(
+    private fun buildVerifierTransaction(stx: SignedTransaction, zkSigs: List<TransactionSignature>, @Suppress("UNUSED_PARAMETER") notaryParty: Party): SignedZKVerifierTransaction {
+        return stx.toSignedZKVerifierTransaction(
             services = serviceHub,
+            zkSigs = zkSigs,
             zkProverTransactionStorage = zkConfig.zkProverTransactionStorage,
             zkVerifierTransactionStorage = zkConfig.zkVerifierTransactionStorage,
             zkTransactionService = zkConfig.zkTransactionService

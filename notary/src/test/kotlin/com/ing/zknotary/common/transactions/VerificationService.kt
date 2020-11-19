@@ -10,6 +10,7 @@ import net.corda.core.contracts.StateRef
 import net.corda.core.crypto.SecureHash
 import net.corda.core.transactions.WireTransaction
 import net.corda.core.utilities.loggerFor
+import net.corda.core.utilities.toBase58String
 import net.corda.testing.node.ledger
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
@@ -39,7 +40,10 @@ class VerificationService(private val proverService: ProverService) {
     /**
      * Verify each tx recursively ("walking back the chain")
      */
-    private fun verify(currentVtx: ZKVerifierTransaction, level: Int = 0) {
+    private fun verify(currentSignedVtx: SignedZKVerifierTransaction, level: Int = 0) {
+
+        val currentVtx = currentSignedVtx.tx
+
         val indent = " ".repeat(level * 6) + "|-"
         logger.info("$indent Verifying TX at level $level: ${currentVtx.id.toString().take(8)}")
 
@@ -103,6 +107,12 @@ class VerificationService(private val proverService: ProverService) {
         val verifyDuration = measureTime {
             zkTransactionService.verify(currentVtx.proof, calculatedPublicInput)
         }
+
+        currentVtx.signers.forEach { signer ->
+            val sig = currentSignedVtx.sigs.find { it.by == signer } ?: error("Missing signature by '${signer.toBase58String()}'")
+            if (!sig.isValid(currentSignedVtx.id)) error("Signature by '${sig.by.toBase58String()}' is not valid")
+        }
+
         logger.info("   $indent Verified proof for tx: ${currentVtx.id.toString().take(8)}")
         logger.debug("Verification time: $verifyDuration")
     }
@@ -124,7 +134,7 @@ class VerificationService(private val proverService: ProverService) {
                  *
                  * These values will be used as part of the instance when verifying the proof.
                  */
-            hash = prevVtx.outputHashes[stateRef.index]
+            hash = prevVtx.tx.outputHashes[stateRef.index]
 
                 /*
                  * Now the verifier calls currentVtx.proof.verify(currentVtx.id, prevVtx.outputHashes, prevVtx.outputNonces).
