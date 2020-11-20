@@ -5,7 +5,6 @@ plugins {
     kotlin("jvm")
     `java-gradle-plugin`
     id("maven-publish")
-    id("symbol-processing") version "1.4.10-dev-experimental-20201118"
 }
 
 dependencies {
@@ -28,6 +27,7 @@ publishing {
         }
     }
 
+    // TODO: remove this when using a real package repo
     repositories {
         maven {
             name = "GitHubPackages"
