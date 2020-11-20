@@ -2,7 +2,6 @@ import io.gitlab.arturbosch.detekt.Detekt
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    id("symbol-processing") version "1.4.10-dev-experimental-20201110"
     kotlin("jvm")
     id("idea")
     id("com.diffplug.gradle.spotless")
@@ -11,6 +10,8 @@ plugins {
     id("io.gitlab.arturbosch.detekt")
     id("maven-publish")
     id("java-library")
+
+    id("com.ing.zknotary.gradle-plugin") version "0.1"
 }
 
 cordapp {
@@ -22,31 +23,6 @@ cordapp {
         vendor = "ING Bank NV"
         licence = "Apache License, Version 2.0"
         versionId = 1
-    }
-}
-
-// We need to tell Gradle where to find our generated code
-val generatedSourcePath = "${buildDir.name}/generated/ksp/src/main/kotlin"
-val testConfigResourcesDir = "$rootDir/config/test"
-sourceSets {
-    main {
-        java {
-            srcDir(file(generatedSourcePath))
-        }
-    }
-    test {
-        resources {
-            srcDir(testConfigResourcesDir)
-        }
-    }
-}
-idea {
-    module {
-        // We also need to tell Intellij to mark it correctly as generated source
-        generatedSourceDirs = generatedSourceDirs + file(generatedSourcePath)
-
-        // Tell Intellij to download sources for dependencies
-        isDownloadSources = true
     }
 }
 
@@ -72,10 +48,15 @@ dependencies {
     cordaCompile("$cordaReleaseGroup:corda-jackson:$cordaVersion")
     testImplementation("$cordaReleaseGroup:corda-node-driver:$cordaVersion")
     testImplementation("$cordaReleaseGroup:corda-test-utils:$cordaVersion")
+}
 
-    // Annotation processing & Code generation
-    api(project(":generator"))
-    ksp(project(":generator"))
+val testConfigResourcesDir = "$rootDir/config/test"
+sourceSets {
+    test {
+        resources {
+            srcDir(testConfigResourcesDir)
+        }
+    }
 }
 
 spotless {

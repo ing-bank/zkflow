@@ -1,5 +1,4 @@
 package com.ing.zknotary.common.contracts
-
 import com.ing.zknotary.annotations.ZKPState
 import com.ing.zknotary.common.dactyloscopy.NonFingerprintable
 import com.ing.zknotary.common.util.ComponentPaddingConfiguration
