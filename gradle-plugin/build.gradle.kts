@@ -9,9 +9,7 @@ plugins {
 }
 
 dependencies {
-    api("com.ing.zknotary:notary:0.1")
-    api("com.ing.zknotary:generator:0.1")
-
+    api("com.google.devtools.ksp:symbol-processing:1.4.10-dev-experimental-20201118")
 }
 
 gradlePlugin {

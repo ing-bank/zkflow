@@ -1,6 +1,6 @@
 package com.ing.zknotary.gradle.extension
 
 open class ZKNotaryExtension {
-    var message: String? = null
-    var greeter: String? = null
+    var notaryVersion: String? = "0.1"
+    var generatorVersion: String? = "0.1"
 }

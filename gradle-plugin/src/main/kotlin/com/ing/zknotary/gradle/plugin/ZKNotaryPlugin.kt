@@ -7,10 +7,11 @@ import org.gradle.api.Project
 class ZKNotaryPlugin : Plugin<Project> {
     override fun apply(project: Project) {
         val extension = project.extensions.create("zkp", ZKNotaryExtension::class.java)
-        project.task("hello") {
-            it.doLast {
-                println("${extension.message} from ${extension.greeter}")
-            }
-        }
+
+        project.plugins.apply("symbol-processing")
+
+        project.dependencies.add("implementation", "com.ing.zknotary:notary:${extension.notaryVersion}")
+        project.dependencies.add("implementation", "com.ing.zknotary:generator:${extension.generatorVersion}")
+        project.dependencies.add("ksp", "com.ing.zknotary:generator:${extension.generatorVersion}")
     }
 }
