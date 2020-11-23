@@ -1,4 +1,6 @@
-package com.ing.zknotary.common.contracts
+package com.ing.zknotary.testcordapp.contracts
+import com.ing.zknotary.annotations.ZKPState
+import com.ing.zknotary.common.contracts.ZKCommandData
 import com.ing.zknotary.common.dactyloscopy.NonFingerprintable
 import com.ing.zknotary.common.util.ComponentPaddingConfiguration
 import com.ing.zknotary.common.zkp.CircuitMetaData
@@ -25,6 +27,7 @@ class TestContract : Contract {
     }
 
     @BelongsToContract(TestContract::class)
+    @ZKPState
     data class TestState(
         override val owner: AbstractParty,
         val value: Int = Random().nextInt(1000)

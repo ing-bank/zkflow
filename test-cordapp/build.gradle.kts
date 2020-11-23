@@ -1,34 +1,20 @@
-import io.gitlab.arturbosch.detekt.Detekt
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 plugins {
+    // Normally a cordapp using our product would use our gradle plugin.
+    // Because we want short dev cycles, we directly include the deps here locally.
+    // id("com.ing.zknotary.gradle-plugin") version "0.1"
+    id("symbol-processing") version "1.4.10-dev-experimental-20201118"
+
     kotlin("jvm")
-    id("idea")
-    id("com.diffplug.gradle.spotless")
     id("net.corda.plugins.cordapp")
     id("net.corda.plugins.quasar-utils")
-    id("io.gitlab.arturbosch.detekt")
-    id("maven-publish")
-    id("java-library")
-}
 
-cordapp {
-    val platformVersion: String by project
-    targetPlatformVersion = platformVersion.toInt()
-    minimumPlatformVersion = platformVersion.toInt()
-    workflow {
-        name = "Zk Notary App"
-        vendor = "ING Bank NV"
-        licence = "Apache License, Version 2.0"
-        versionId = 1
-    }
+    id("idea")
+    id("io.gitlab.arturbosch.detekt")
+    id("com.diffplug.gradle.spotless")
 }
 
 dependencies {
-    val kotlinVersion: String by project
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlinVersion")
-    implementation("org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
+    implementation(kotlin("stdlib"))
 
     // Testing
     val junit5Version: String by project
@@ -46,14 +32,45 @@ dependencies {
     cordaCompile("$cordaReleaseGroup:corda-jackson:$cordaVersion")
     testImplementation("$cordaReleaseGroup:corda-node-driver:$cordaVersion")
     testImplementation("$cordaReleaseGroup:corda-test-utils:$cordaVersion")
+
+    // Normally a cordapp using our product would use our gradle plugin to load deps and configure.
+    // Because we want short dev cycles, we directly include the deps here locally.
+    implementation("com.google.devtools.ksp:symbol-processing:1.4.10-dev-experimental-20201118")
+    implementation(project(":notary"))
+    implementation(project(":generator"))
+    ksp(project(":generator"))
 }
 
-val testConfigResourcesDir = "$rootDir/config/test"
+// Normally a cordapp using our product would use our gradle plugin to load deps and configure.
+// Because we want short dev cycles, we directly include the deps here locally.
+val generatedSourcePath = "${buildDir.name}/generated/ksp/src/main/kotlin"
+val generatedTestSourcePath = "${buildDir.name}/generated/ksp/src/test/kotlin"
 sourceSets {
+    main {
+        java.srcDir(generatedSourcePath)
+    }
     test {
-        resources {
-            srcDir(testConfigResourcesDir)
-        }
+        java.srcDir(generatedTestSourcePath)
+    }
+}
+
+// Normally a cordapp using our product would use our gradle plugin to load deps and configure.
+// Because we want short dev cycles, we directly include the deps here locally.
+idea {
+    module {
+        generatedSourceDirs + file(generatedSourcePath) + file(generatedTestSourcePath)
+    }
+}
+
+cordapp {
+    val platformVersion: String by project
+    targetPlatformVersion = platformVersion.toInt()
+    minimumPlatformVersion = platformVersion.toInt()
+    workflow {
+        name = "Test Cordapp"
+        vendor = "ING Bank NV"
+        licence = "Apache License, Version 2.0"
+        versionId = 1
     }
 }
 
@@ -95,14 +112,14 @@ tasks.test {
 // }
 
 tasks.apply {
-    matching { it is JavaCompile || it is KotlinCompile }.forEach { it.dependsOn(":checkJavaVersion") }
+    matching { it is JavaCompile || it is org.jetbrains.kotlin.gradle.tasks.KotlinCompile }.forEach { it.dependsOn(":checkJavaVersion") }
 
-    withType<Detekt> {
+    withType<io.gitlab.arturbosch.detekt.Detekt> {
         // Target version of the generated JVM bytecode. It is used for type resolution.
         jvmTarget = "1.8"
     }
 
-    withType<KotlinCompile> {
+    withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
         kotlinOptions {
             languageVersion = "1.3"
             apiVersion = "1.3"
@@ -120,8 +137,8 @@ tasks.apply {
 
     // This applies to all test types, both fast and slow
     withType<Test> {
-        dependsOn("spotlessApply") // Autofix before check
-        dependsOn("spotlessCheck") // Fail on remaining non-autofixable issues
+        // dependsOn("spotlessApply") // Autofix before check
+        // dependsOn("spotlessCheck") // Fail on remaining non-autofixable issues
         dependsOn("detekt")
         dependsOn(":prover:circuits") // Make sure that the Zinc circuit is ready to use when running tests
 
@@ -157,21 +174,11 @@ tasks.apply {
     }
 }
 
-publishing {
-    publications {
-        create<MavenPublication>("zkNotary") {
-            from(components["java"])
-        }
-    }
-
-    repositories {
-        maven {
-            name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/ingzkp/zk-notary")
-            credentials {
-                username = System.getenv("GITHUB_USERNAME")
-                password = System.getenv("GITHUB_TOKEN")
-            }
+val testConfigResourcesDir = "$rootDir/config/test"
+sourceSets {
+    test {
+        resources {
+            srcDir(testConfigResourcesDir)
         }
     }
 }

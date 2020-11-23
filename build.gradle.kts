@@ -26,6 +26,7 @@ buildscript {
 
 plugins {
     kotlin("jvm") apply false
+    id("com.diffplug.gradle.spotless") apply false
 }
 
 task("checkJavaVersion") {
