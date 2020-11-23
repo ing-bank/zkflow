@@ -2,7 +2,6 @@ package com.ing.zknotary.common.transactions
 
 import com.ing.zknotary.common.contracts.TestContract
 import com.ing.zknotary.common.contracts.ZKCommandData
-import com.ing.zknotary.common.testing.fixed
 import com.ing.zknotary.common.zkp.CircuitMetaData
 import com.ing.zknotary.common.zkp.MockZKTransactionService
 import com.ing.zknotary.common.zkp.ZKTransactionService
@@ -23,6 +22,7 @@ import net.corda.testing.node.ledger
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
+import testing.fixed
 import java.io.File
 import java.nio.ByteBuffer
 import java.time.Duration

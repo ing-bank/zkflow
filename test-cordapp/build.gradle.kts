@@ -43,6 +43,11 @@ dependencies {
     implementation(project(":notary"))
     implementation(project(":generator"))
     ksp(project(":generator"))
+
+
+    // Normally a cordapp using our product would use our real deps
+    // Because we want short dev cycles, we directly include the deps here locally.
+    testImplementation(project(":test-utils"))
 }
 
 // Normally a cordapp using our product would use our gradle plugin to load deps and configure.

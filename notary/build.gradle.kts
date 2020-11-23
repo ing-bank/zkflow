@@ -46,6 +46,8 @@ dependencies {
     cordaCompile("$cordaReleaseGroup:corda-jackson:$cordaVersion")
     testImplementation("$cordaReleaseGroup:corda-node-driver:$cordaVersion")
     testImplementation("$cordaReleaseGroup:corda-test-utils:$cordaVersion")
+
+    testImplementation(project(":test-utils"))
 }
 
 val testConfigResourcesDir = "$rootDir/config/test"
