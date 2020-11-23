@@ -6,7 +6,7 @@ import net.corda.core.transactions.TransactionWithSignatures
 import net.corda.core.utilities.toBase58String
 import java.security.PublicKey
 
-class SignedZKProverTransaction(val tx: ZKProverTransaction, override val sigs: List<TransactionSignature>) : TransactionWithSignatures {
+data class SignedZKProverTransaction(val tx: ZKProverTransaction, override val sigs: List<TransactionSignature>) : TransactionWithSignatures {
 
     override val id: SecureHash
         get() = tx.id
@@ -17,4 +17,8 @@ class SignedZKProverTransaction(val tx: ZKProverTransaction, override val sigs: 
     override fun getKeyDescriptions(keys: Set<PublicKey>): List<String> {
         return keys.map { it.toBase58String() }
     }
+
+    operator fun plus(sig: TransactionSignature) = copy(sigs = sigs + listOf(sig))
+
+    operator fun plus(sigList: Collection<TransactionSignature>) = copy(sigs = sigs + sigList)
 }
