@@ -15,6 +15,10 @@ plugins {
 
 dependencies {
     implementation(kotlin("stdlib"))
+    val kotlinVersion: String by project
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlinVersion")
+    implementation("org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
 
     // Testing
     val junit5Version: String by project
@@ -105,12 +109,6 @@ tasks.test {
     }
 }
 
-// TODO: We will have to enable explicitApi soon:
-// https://kotlinlang.org/docs/reference/whatsnew14.html#explicit-api-mode-for-library-authors
-// kotlin {
-//     explicitApi = Strict
-// }
-
 tasks.apply {
     matching { it is JavaCompile || it is org.jetbrains.kotlin.gradle.tasks.KotlinCompile }.forEach { it.dependsOn(":checkJavaVersion") }
 
@@ -137,8 +135,8 @@ tasks.apply {
 
     // This applies to all test types, both fast and slow
     withType<Test> {
-        // dependsOn("spotlessApply") // Autofix before check
-        // dependsOn("spotlessCheck") // Fail on remaining non-autofixable issues
+        dependsOn("spotlessApply") // Autofix before check
+        dependsOn("spotlessCheck") // Fail on remaining non-autofixable issues
         dependsOn("detekt")
         dependsOn(":prover:circuits") // Make sure that the Zinc circuit is ready to use when running tests
 
