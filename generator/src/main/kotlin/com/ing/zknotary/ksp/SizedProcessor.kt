@@ -26,13 +26,14 @@ class SizedProcessor : SymbolProcessor {
     }
 
     override fun process(resolver: Resolver) {
-        resolver.getSymbolsWithAnnotation(Sized::class.qualifiedName!!)
-            .asSequence()
+        val annotatedClasses = resolver
+            .getSymbolsWithAnnotation(Sized::class.qualifiedName!!)
             .filterIsInstance<KSClassDeclaration>()
-            .forEach { clazz ->
-                val file = SizedType.fromClass(clazz, logger)
-                file.writeTo(generator)
-            }
+
+        annotatedClasses.forEach { clazz ->
+            val file = SizedType.fromClass(clazz, annotatedClasses, logger)
+            file.writeTo(generator)
+        }
     }
 
     override fun finish() {}

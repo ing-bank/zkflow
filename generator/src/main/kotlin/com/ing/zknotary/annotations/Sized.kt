@@ -1,7 +1,7 @@
 package com.ing.zknotary.annotations
 
 @Retention(AnnotationRetention.SOURCE)
-@Target(AnnotationTarget.CLASS, AnnotationTarget.FIELD)
+@Target(AnnotationTarget.CLASS, AnnotationTarget.TYPE)
 annotation class Sized(val size: Int = -1)
 
 data class WrappedList<T> private constructor(val list: List<T>, val originalSize: Int) {
