@@ -29,7 +29,6 @@ import net.corda.core.utilities.ProgressTracker
 import net.corda.core.utilities.unwrap
 import java.security.PublicKey
 
-
 /**
  * The [CollectSignaturesFlow] is used to automate the collection of counterparty signatures for a given transaction.
  *
@@ -79,17 +78,19 @@ import java.security.PublicKey
  * just in the states. If null, the default well known identity of the node is used.
  */
 // TODO: AbstractStateReplacementFlow needs updating to use this flow.
-class ZKCollectSignaturesFlow @JvmOverloads constructor(val partiallySignedTx: SignedTransaction,
-                                                        val partiallySignedZKTx: SignedZKProverTransaction,
-                                                        val sessionsToCollectFrom: Collection<FlowSession>,
-                                                        val myOptionalKeys: Iterable<PublicKey>?,
-                                                        override val progressTracker: ProgressTracker = tracker()) : FlowLogic<TransactionsPair>() {
+class ZKCollectSignaturesFlow @JvmOverloads constructor(
+    val partiallySignedTx: SignedTransaction,
+    val partiallySignedZKTx: SignedZKProverTransaction,
+    val sessionsToCollectFrom: Collection<FlowSession>,
+    val myOptionalKeys: Iterable<PublicKey>?,
+    override val progressTracker: ProgressTracker = tracker()
+) : FlowLogic<TransactionsPair>() {
     @JvmOverloads
     constructor(
-            partiallySignedTx: SignedTransaction,
-            partiallySignedZKTx: SignedZKProverTransaction,
-            sessionsToCollectFrom: Collection<FlowSession>,
-            progressTracker: ProgressTracker = tracker()
+        partiallySignedTx: SignedTransaction,
+        partiallySignedZKTx: SignedZKProverTransaction,
+        sessionsToCollectFrom: Collection<FlowSession>,
+        progressTracker: ProgressTracker = tracker()
     ) : this(partiallySignedTx, partiallySignedZKTx, sessionsToCollectFrom, null, progressTracker)
 
     companion object {
@@ -138,31 +139,31 @@ class ZKCollectSignaturesFlow @JvmOverloads constructor(val partiallySignedTx: S
 
         val wellKnownPartyToSessionMap: Map<Party, List<FlowSession>> = wellKnownSessions.groupBy { (it.destination as Party) }
         val anonymousPartyToSessionMap: Map<AnonymousParty, List<FlowSession>> = anonymousSessions
-                .groupBy { (it.destination as AnonymousParty) }
+            .groupBy { (it.destination as AnonymousParty) }
 
-        //check that there is at most one session for each not well known party
+        // check that there is at most one session for each not well known party
         for (entry in anonymousPartyToSessionMap) {
             require(entry.value.size == 1) {
                 "There are multiple sessions initiated for Anonymous Party ${entry.key.owningKey.toStringShort()}"
             }
         }
 
-        //all keys that were used to initate a session must be sent to that session
+        // all keys that were used to initate a session must be sent to that session
         val keysToSendToAnonymousSessions: Set<PublicKey> = unsigned.intersect(anonymousPartyToSessionMap.keys.map { it.owningKey })
 
-        //all keys that are left over MUST map back to a
+        // all keys that are left over MUST map back to a
         val keysThatMustMapToAWellKnownSession: Set<PublicKey> = unsigned - keysToSendToAnonymousSessions
-        //if a key does not have a well known identity associated with it, it does not map to a wellKnown session
+        // if a key does not have a well known identity associated with it, it does not map to a wellKnown session
         val keysThatDoNotMapToAWellKnownSession: List<PublicKey> = keysThatMustMapToAWellKnownSession
-                .filter { serviceHub.identityService.wellKnownPartyFromAnonymous(AnonymousParty(it)) == null }
-        //ensure that no keys are impossible to map to a session
+            .filter { serviceHub.identityService.wellKnownPartyFromAnonymous(AnonymousParty(it)) == null }
+        // ensure that no keys are impossible to map to a session
         require(keysThatDoNotMapToAWellKnownSession.isEmpty()) {
             " Unable to match key(s): $keysThatDoNotMapToAWellKnownSession to a session to collect signatures from"
         }
 
-        //we now know that all the keys are either related to a specific session due to being used as a Destination for that session
-        //OR map back to a wellKnown party
-        //now we must check that each wellKnown party has a session passed for it
+        // we now know that all the keys are either related to a specific session due to being used as a Destination for that session
+        // OR map back to a wellKnown party
+        // now we must check that each wellKnown party has a session passed for it
         val groupedByPartyKeys = groupPublicKeysByWellKnownParty(serviceHub, keysThatMustMapToAWellKnownSession)
         for (entry in groupedByPartyKeys) {
             require(wellKnownPartyToSessionMap.contains(entry.key)) {
@@ -170,22 +171,24 @@ class ZKCollectSignaturesFlow @JvmOverloads constructor(val partiallySignedTx: S
             }
         }
 
-        //so we now know that all keys are linked to a session in some way
-        //we need to check that there are no extra sessions
+        // so we now know that all keys are linked to a session in some way
+        // we need to check that there are no extra sessions
         val extraNotWellKnownSessions = anonymousSessions.filterNot { (it.destination as AnonymousParty).owningKey in unsigned }
         val extraWellKnownSessions = wellKnownSessions.filterNot { it.counterparty in groupedByPartyKeys }
 
         require(extraNotWellKnownSessions.isEmpty() && extraWellKnownSessions.isEmpty()) {
             "The Initiator of CollectSignaturesFlow must pass in exactly the sessions required to sign the transaction, " +
-                    "the following extra sessions were passed in: " +
-                    (extraWellKnownSessions.map { it.counterparty.name.toString() } +
-                            extraNotWellKnownSessions.map { (it.destination as AbstractParty).owningKey.toString() })
+                "the following extra sessions were passed in: " +
+                (
+                    extraWellKnownSessions.map { it.counterparty.name.toString() } +
+                        extraNotWellKnownSessions.map { (it.destination as AbstractParty).owningKey.toString() }
+                    )
         }
 
-        //OK let's collect some signatures!
+        // OK let's collect some signatures!
 
         val sigsFromNotWellKnownSessions = anonymousSessions.flatMap { flowSession ->
-            //anonymous sessions will only ever sign for their own key
+            // anonymous sessions will only ever sign for their own key
             subFlow(ZKCollectSignatureFlow(partiallySignedTx, flowSession, (flowSession.destination as AbstractParty).owningKey))
         }
 
@@ -222,7 +225,7 @@ class ZKCollectSignaturesFlow @JvmOverloads constructor(val partiallySignedTx: S
 @Suspendable
 class ZKCollectSignatureFlow(val partiallySignedTx: SignedTransaction, val session: FlowSession, val signingKeys: List<PublicKey>) : FlowLogic<List<TransactionSignaturesPair>>() {
     constructor(partiallySignedTx: SignedTransaction, session: FlowSession, vararg signingKeys: PublicKey) :
-            this(partiallySignedTx, session, listOf(*signingKeys))
+        this(partiallySignedTx, session, listOf(*signingKeys))
 
     @Suspendable
     override fun call(): List<TransactionSignaturesPair> {
@@ -283,8 +286,10 @@ class ZKCollectSignatureFlow(val partiallySignedTx: SignedTransaction, val sessi
  *
  * @param otherSideSession The session which is providing you a transaction to sign.
  */
-abstract class ZKSignTransactionFlow @JvmOverloads constructor(val otherSideSession: FlowSession,
-                                                             override val progressTracker: ProgressTracker = tracker()) : FlowLogic<List<TransactionSignaturesPair>>() {
+abstract class ZKSignTransactionFlow @JvmOverloads constructor(
+    val otherSideSession: FlowSession,
+    override val progressTracker: ProgressTracker = tracker()
+) : FlowLogic<List<TransactionSignaturesPair>>() {
 
     companion object {
         object RECEIVING : ProgressTracker.Step("Receiving transaction proposal for signing.")
@@ -315,10 +320,10 @@ abstract class ZKSignTransactionFlow @JvmOverloads constructor(val otherSideSess
         stx.tx.toLedgerTransaction(serviceHub).verify()
         // Convert Tx to ZKP form
         val zktx = stx.tx.toZKProverTransaction(
-                serviceHub,
-                serviceHub.cordaService(ZKProverTransactionStorage::class.java),
-                componentGroupLeafDigestService = BLAKE2s256DigestService,
-                nodeDigestService = PedersenDigestService
+            serviceHub,
+            serviceHub.cordaService(ZKProverTransactionStorage::class.java),
+            componentGroupLeafDigestService = BLAKE2s256DigestService,
+            nodeDigestService = PedersenDigestService
         )
         // Perform some custom verification over the transaction.
         try {
@@ -345,8 +350,8 @@ abstract class ZKSignTransactionFlow @JvmOverloads constructor(val otherSideSess
 
     fun createSignature(zktxId: SecureHash, publicKey: PublicKey): TransactionSignature {
         val signatureMetadata = SignatureMetadata(
-                serviceHub.myInfo.platformVersion,
-                Crypto.findSignatureScheme(publicKey).schemeNumberID
+            serviceHub.myInfo.platformVersion,
+            Crypto.findSignatureScheme(publicKey).schemeNumberID
         )
         val signableData = SignableData(zktxId, signatureMetadata)
         return serviceHub.keyManagementService.sign(signableData, publicKey)
