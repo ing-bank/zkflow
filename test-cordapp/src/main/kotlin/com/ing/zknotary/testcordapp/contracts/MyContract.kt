@@ -21,14 +21,14 @@ import net.corda.core.transactions.LedgerTransaction
 import java.io.File
 import java.util.Random
 
-class TestContract : Contract {
+class MyContract : Contract {
     companion object {
         const val PROGRAM_ID: ContractClassName = "com.ing.zknotary.common.contracts.TestContract"
     }
 
-    @BelongsToContract(TestContract::class)
+    @BelongsToContract(MyContract::class)
     @ZKPState
-    data class TestState(
+    data class MyState(
         override val owner: AbstractParty,
         val value: Int = Random().nextInt(1000)
     ) : ContractState, OwnableState {
@@ -48,7 +48,7 @@ class TestContract : Contract {
 
         override val paddingConfiguration: ComponentPaddingConfiguration
             get() {
-                val emptyState = TestState(ZKNulls.NULL_PARTY, 0)
+                val emptyState = MyState(ZKNulls.NULL_PARTY, 0)
                 val transactionStateFiller = ComponentPaddingConfiguration.Filler.TransactionState(
                     TransactionState(emptyState, notary = ZKNulls.NULL_PARTY)
                 )
@@ -76,7 +76,7 @@ class TestContract : Contract {
 
         override val paddingConfiguration: ComponentPaddingConfiguration
             get() {
-                val emptyState = TestState(ZKNulls.NULL_PARTY, 0)
+                val emptyState = MyState(ZKNulls.NULL_PARTY, 0)
                 val transactionStateFiller = ComponentPaddingConfiguration.Filler.TransactionState(
                     TransactionState(emptyState, notary = ZKNulls.NULL_PARTY)
                 )
@@ -109,7 +109,7 @@ class TestContract : Contract {
                 if (tx.inputs.isNotEmpty()) throw IllegalArgumentException("Failed requirement: the tx has no inputs")
 
                 // Transaction contents
-                val output = tx.getOutput(0) as TestState
+                val output = tx.getOutput(0) as MyState
                 if (output.owner.owningKey !in command.signers) throw IllegalArgumentException("Failed requirement: the output state is owned by the command signer")
             }
             is Move -> {
@@ -118,8 +118,8 @@ class TestContract : Contract {
                 if (tx.inputs.size != 1) throw IllegalArgumentException("Failed requirement: the tx has only one output")
 
                 // Transaction contents
-                val output = tx.getOutput(0) as TestState
-                val input = tx.getInput(0) as TestState
+                val output = tx.getOutput(0) as MyState
+                val input = tx.getInput(0) as MyState
 
                 /*
                 // Note: the fact that command.signers contains a certain required key, does not mean we can assume it has been
