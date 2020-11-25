@@ -22,8 +22,8 @@ class ZKNotaryPlugin : Plugin<Project> {
 
         // For each consumer project, mark the KSP generated code as source
         project.allprojects { subProject ->
-            val generatedSourcePath = "${subProject.buildDir.name}/generated/ksp/src/main/kotlin"
-            val generatedTestSourcePath = "${subProject.buildDir.name}/generated/ksp/src/test/kotlin"
+            val generatedSourcePath = "${subProject.buildDir.name}/generated/ksp/main/kotlin"
+            val generatedTestSourcePath = "${subProject.buildDir.name}/generated/ksp/test/kotlin"
 
             val sourceSets = subProject.properties["sourceSets"] as SourceSetContainer?
 

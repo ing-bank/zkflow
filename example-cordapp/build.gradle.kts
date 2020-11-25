@@ -2,7 +2,7 @@ plugins {
     // Normally a cordapp using our product would use our gradle plugin.
     // Because we want short dev cycles, we directly include the deps here locally.
     // id("com.ing.zknotary.gradle-plugin") version "0.1"
-    id("symbol-processing") version "1.4.10-dev-experimental-20201118"
+    id("symbol-processing")
 
     kotlin("jvm")
     id("net.corda.plugins.cordapp")
@@ -39,7 +39,8 @@ dependencies {
 
     // Normally a cordapp using our product would use our gradle plugin to load deps and configure.
     // Because we want short dev cycles, we directly include the deps here locally.
-    implementation("com.google.devtools.ksp:symbol-processing:1.4.10-dev-experimental-20201118")
+    val kspVersion: String by project
+    implementation("com.google.devtools.ksp:symbol-processing:$kspVersion")
     implementation(project(":notary"))
     implementation(project(":generator"))
     ksp(project(":generator"))
@@ -52,8 +53,8 @@ dependencies {
 
 // Normally a cordapp using our product would use our gradle plugin to load deps and configure.
 // Because we want short dev cycles, we directly include the deps here locally.
-val generatedSourcePath = "${buildDir.name}/generated/ksp/src/main/kotlin"
-val generatedTestSourcePath = "${buildDir.name}/generated/ksp/src/test/kotlin"
+val generatedSourcePath = "${buildDir.name}/generated/ksp/main/kotlin"
+val generatedTestSourcePath = "${buildDir.name}/generated/ksp/test/kotlin"
 sourceSets {
     main {
         java.srcDir(generatedSourcePath)

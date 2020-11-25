@@ -8,7 +8,7 @@ import kotlin.reflect.full.memberProperties
 
 class KspTest {
     @Test
-    fun `Show generated FixedTestState`() {
+    fun `Show generated FixedMyState`() {
         val original = MyContract.MyState(ZKNulls.NULL_PARTY, 1)
         val fixed = FixedMyState(original)
         println(fixed::class.memberProperties)

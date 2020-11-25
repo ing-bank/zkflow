@@ -8,7 +8,8 @@ plugins {
 }
 
 dependencies {
-    api("com.google.devtools.ksp:symbol-processing:1.4.10-dev-experimental-20201118")
+    val kspVersion: String by project
+    api("com.google.devtools.ksp:symbol-processing:$kspVersion")
 }
 
 gradlePlugin {

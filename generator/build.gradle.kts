@@ -21,7 +21,8 @@ dependencies {
     implementation("com.google.auto.service:auto-service:$autoServiceVersion")
     kapt("com.google.auto.service:auto-service:$autoServiceVersion")
 
-    implementation("com.google.devtools.ksp:symbol-processing-api:1.4.10-dev-experimental-20201110")
+    val kspVersion: String by project
+    implementation("com.google.devtools.ksp:symbol-processing-api:$kspVersion")
 }
 
 tasks.apply {

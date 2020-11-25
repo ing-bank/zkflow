@@ -8,6 +8,9 @@ pluginManagement {
         kotlin("jvm") version kotlinVersion
         kotlin("kapt") version kotlinVersion apply false
 
+        val kspVersion:String  by settings
+        id("symbol-processing") version kspVersion apply false
+
         val spotlessPluginVersion: String by settings
         id("com.diffplug.gradle.spotless") version spotlessPluginVersion apply false
 
@@ -27,8 +30,10 @@ pluginManagement {
     resolutionStrategy {
         eachPlugin {
             when (requested.id.id) {
-                "symbol-processing" ->
-                    useModule("com.google.devtools.ksp:symbol-processing:${requested.version}")
+                "symbol-processing" -> {
+                    val kspVersion:String  by settings
+                    useModule("com.google.devtools.ksp:symbol-processing:$kspVersion")
+                }
             }
         }
     }
