@@ -1,6 +1,7 @@
-package com.ing.zknotary.common.transactions
+package com.ing.zknotary.testing.zkp
 
 import com.ing.zknotary.common.dactyloscopy.Dactyloscopist
+import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
 import com.ing.zknotary.common.util.ComponentPaddingConfiguration
 import com.ing.zknotary.common.util.PaddingWrapper
 import com.ing.zknotary.common.zkp.PublicInput
@@ -16,14 +17,14 @@ import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
 
 @ExperimentalTime
-class VerificationService(private val proverService: ProverService) {
+public class VerificationService(private val proverService: ProverService) {
     private val ledgerServices = proverService.ledgerServices
     private val zkStorage = proverService.zkVerifierTransactionStorage
     private val zkTransactionServices = proverService.zkTransactionServices
 
     private val logger = loggerFor<VerificationService>()
 
-    fun verify(tx: WireTransaction) {
+    public fun verify(tx: WireTransaction) {
         logger.info("Verifying chain leading to: ${tx.id.toString().take(8)}")
 
         val verificationTime = measureTime {
@@ -151,7 +152,7 @@ class VerificationService(private val proverService: ProverService) {
         return hash
     }
 
-    fun cleanup() {
+    public fun cleanup() {
         zkTransactionServices.forEach { (_, service) ->
             (service as? ZincZKTransactionService)?.cleanup()
         }

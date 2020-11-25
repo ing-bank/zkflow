@@ -8,11 +8,17 @@ plugins {
 
 dependencies {
     implementation(kotlin("stdlib"))
+    val kotlinVersion: String by project
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlinVersion")
+    implementation("org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
+
     implementation(project(":notary"))
 
     val cordaReleaseGroup: String by project
     val cordaVersion: String by project
     implementation("$cordaReleaseGroup:corda-test-utils:$cordaVersion")
+    implementation("$cordaReleaseGroup:corda-node-driver:$cordaVersion")
 }
 
 kotlin {

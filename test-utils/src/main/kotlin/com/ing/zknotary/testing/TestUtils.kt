@@ -1,5 +1,6 @@
-package testing
+package com.ing.zknotary.testing
 
+import com.ing.zknotary.common.zkp.ZKNulls.fixedKeyPair
 import net.corda.core.crypto.Crypto.DEFAULT_SIGNATURE_SCHEME
 import net.corda.core.crypto.SignatureScheme
 import net.corda.core.crypto.toStringShort
@@ -12,7 +13,7 @@ public fun TestIdentity.Companion.fixed(
     signatureScheme: SignatureScheme = DEFAULT_SIGNATURE_SCHEME
 ): TestIdentity {
 
-    val fixedKeyPair = com.ing.zknotary.common.zkp.ZKNulls.fixedKeyPair(signatureScheme)
+    val fixedKeyPair = fixedKeyPair(signatureScheme)
     return TestIdentity(
         CordaX500Name(
             organisation,

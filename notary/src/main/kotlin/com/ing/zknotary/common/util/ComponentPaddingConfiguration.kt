@@ -2,7 +2,6 @@ package com.ing.zknotary.common.util
 
 import com.ing.zknotary.common.transactions.ZKProverTransaction
 import com.ing.zknotary.common.transactions.ZKVerifierTransaction
-import com.ing.zknotary.common.zkp.ZKNulls
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.requireThat
@@ -37,7 +36,7 @@ class ComponentPaddingConfiguration private constructor(
             fillers[ComponentGroupEnum.OUTPUTS_GROUP.ordinal] = filler
         }
 
-        fun signers(n: Int, filler: Filler = Filler.PublicKey(ZKNulls.NULL_PUBLIC_KEY)) = apply {
+        fun signers(n: Int, filler: Filler) = apply {
             padding[ComponentGroupEnum.SIGNERS_GROUP.ordinal] = n
             fillers[ComponentGroupEnum.SIGNERS_GROUP.ordinal] = filler
         }

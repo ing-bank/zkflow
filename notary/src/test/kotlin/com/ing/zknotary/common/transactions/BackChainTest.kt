@@ -3,12 +3,15 @@ package com.ing.zknotary.common.transactions
 import com.ing.zknotary.common.contracts.TestContract
 import com.ing.zknotary.common.contracts.ZKCommandData
 import com.ing.zknotary.common.zkp.CircuitMetaData
-import com.ing.zknotary.common.zkp.MockZKTransactionService
 import com.ing.zknotary.common.zkp.ZKTransactionService
 import com.ing.zknotary.common.zkp.ZincZKTransactionService
 import com.ing.zknotary.node.services.collectVerifiedDependencies
 import com.ing.zknotary.notary.transactions.createIssuanceWtx
 import com.ing.zknotary.notary.transactions.createMoveWtx
+import com.ing.zknotary.testing.fixed
+import com.ing.zknotary.testing.zkp.MockZKTransactionService
+import com.ing.zknotary.testing.zkp.ProverService
+import com.ing.zknotary.testing.zkp.VerificationService
 import junit.framework.TestCase
 import net.corda.core.crypto.Crypto
 import net.corda.core.crypto.SecureHash
@@ -22,7 +25,6 @@ import net.corda.testing.node.ledger
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
-import testing.fixed
 import java.io.File
 import java.nio.ByteBuffer
 import java.time.Duration

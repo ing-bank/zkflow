@@ -59,12 +59,14 @@ class MyContract : Contract {
                     )
                 )
 
+                val pubKeyFiller = ComponentPaddingConfiguration.Filler.PublicKey(ZKNulls.NULL_PUBLIC_KEY)
+
                 return ComponentPaddingConfiguration.Builder()
                     .inputs(0, stateAndRefFiller)
                     .outputs(2, transactionStateFiller)
                     .references(2, stateAndRefFiller)
                     .attachments(2, ComponentPaddingConfiguration.Filler.SecureHash(SecureHash.zeroHash))
-                    .signers(2)
+                    .signers(2, pubKeyFiller)
                     .build()
             }
     }
@@ -87,12 +89,14 @@ class MyContract : Contract {
                     )
                 )
 
+                val pubKeyFiller = ComponentPaddingConfiguration.Filler.PublicKey(ZKNulls.NULL_PUBLIC_KEY)
+
                 return ComponentPaddingConfiguration.Builder()
                     .inputs(2, stateAndRefFiller)
                     .outputs(2, transactionStateFiller)
                     .references(2, stateAndRefFiller)
                     .attachments(2, ComponentPaddingConfiguration.Filler.SecureHash(SecureHash.zeroHash))
-                    .signers(2)
+                    .signers(2, pubKeyFiller)
                     .build()
             }
     }

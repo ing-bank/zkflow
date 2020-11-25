@@ -1,10 +1,12 @@
-package com.ing.zknotary.common.transactions
+package com.ing.zknotary.testing.zkp
 
 import com.ing.zknotary.common.contracts.ZKCommandData
+import com.ing.zknotary.common.transactions.toSignedZKVerifierTransaction
+import com.ing.zknotary.common.transactions.toZKProverTransaction
 import com.ing.zknotary.common.zkp.ZKTransactionService
 import com.ing.zknotary.node.services.collectVerifiedDependencies
-import com.ing.zknotary.nodes.services.MockZKProverTransactionStorage
-import com.ing.zknotary.nodes.services.MockZKVerifierTransactionStorage
+import com.ing.zknotary.testing.node.services.MockZKProverTransactionStorage
+import com.ing.zknotary.testing.node.services.MockZKVerifierTransactionStorage
 import net.corda.core.crypto.BLAKE2s256DigestService
 import net.corda.core.crypto.Crypto
 import net.corda.core.crypto.PedersenDigestService
@@ -22,21 +24,19 @@ import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
 
 @ExperimentalTime
-class ProverService {
-    val ledgerServices: MockServices
-    val zkTransactionServices: Map<SecureHash, ZKTransactionService>
-    val zkVerifierTransactionStorage: MockZKVerifierTransactionStorage
+public class ProverService public constructor(
+    public val ledgerServices: MockServices,
+    public val zkTransactionServices: Map<SecureHash, ZKTransactionService>
+) {
+    public val zkVerifierTransactionStorage: MockZKVerifierTransactionStorage
     private val zkProverTransactionStorage: MockZKProverTransactionStorage
 
     private val logger = loggerFor<ProverService>()
 
-    constructor(ledgerServices: MockServices, zkTransactionServices: Map<SecureHash, ZKTransactionService>) {
+    init {
         logger.info("Setting up Prover Service")
-
-        this.ledgerServices = ledgerServices
         zkVerifierTransactionStorage = createMockCordaService(ledgerServices, ::MockZKVerifierTransactionStorage)
         zkProverTransactionStorage = createMockCordaService(ledgerServices, ::MockZKProverTransactionStorage)
-        this.zkTransactionServices = zkTransactionServices
     }
 
     /**
@@ -93,7 +93,7 @@ class ProverService {
     /**
      Given a wire tx, proves it and all txs leading to it.
      */
-    fun prove(tx: WireTransaction) {
+    public fun prove(tx: WireTransaction) {
         logger.info("Proving chain leading to: ${tx.id.toString().take(8)}")
         val provingTime = measureTime {
             ledgerServices.ledger {
