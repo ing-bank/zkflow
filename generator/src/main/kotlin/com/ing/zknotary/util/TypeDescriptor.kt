@@ -20,34 +20,38 @@ sealed class TypeDescriptor(val definition: ClassName, val typeKind: TypeKind) {
 
     class Transient(
         definition: ClassName,
-        private val innerDescriptor: TypeDescriptor,
+        private val innerDescriptors: List<TypeDescriptor>,
         typeKind: TypeKind
     ) : TypeDescriptor(definition, typeKind) {
         override fun debug(logger: KSPLogger) {
             logger.error("(${(0..100).random()}) $definition")
 
-            innerDescriptor.debug(logger)
+            innerDescriptors.forEach { it.debug(logger) }
         }
 
         override val type: TypeName
-            get() = definition.parameterizedBy(innerDescriptor.type)
+            get() = definition.parameterizedBy(innerDescriptors.map { it.type })
 
         override val default: CodeBlock
-            get() = typeKind.default(innerDescriptor.default)
+            get() = typeKind.default(*innerDescriptors.map { it.default }.toTypedArray())
 
         override fun toCodeBlock(propertyName: String): CodeBlock {
             return typeKind.toCodeBlock(
                 propertyName,
-                CodeBlock.of("%L", innerDescriptor.toCodeBlock(1)),
-                CodeBlock.of("%L", innerDescriptor.default)
+                *innerDescriptors.flatMap { listOf(
+                    CodeBlock.of("%L", it.toCodeBlock(1)),
+                    CodeBlock.of("%L", it.default)
+                )}.toTypedArray()
             )
         }
 
         override fun toCodeBlock(depth: Int): CodeBlock {
             return typeKind.toCodeBlock(
                 depth,
-                innerDescriptor.toCodeBlock(depth + 1),
-                innerDescriptor.default
+                *innerDescriptors.flatMap { listOf(
+                    CodeBlock.of("%L", it.toCodeBlock(depth + 1)),
+                    CodeBlock.of("%L", it.default)
+                )}.toTypedArray()
             )
         }
     }
@@ -91,7 +95,7 @@ sealed class TypeKind {
             val default = arguments.getOrNull(1) ?: error("balls")
 
             return CodeBlock.of(
-                "WrappedList(\n⇥n = %L,\nlist = %L.map { e0 ->\n⇥%L\n⇤},\ndefault = %L)",
+                "WrappedList(\n⇥n = %L,\nlist = %L.map { e0 ->\n⇥%L\n⇤},\ndefault = %L\n⇤)",
                 size,
                 instance,
                 mapper,
@@ -104,7 +108,7 @@ sealed class TypeKind {
             val default = arguments.getOrNull(1) ?: error("balls")
 
             return CodeBlock.of(
-                "WrappedList(\n⇥n = %L,\nlist = e${depth - 1}.map { e$depth -> \n⇥%L\n⇤},\ndefault = %L)",
+                "WrappedList(\n⇥n = %L,\nlist = e${depth - 1}.map { e$depth -> \n⇥%L\n⇤},\ndefault = %L\n⇤)",
                 size,
                 mapper,
                 default
