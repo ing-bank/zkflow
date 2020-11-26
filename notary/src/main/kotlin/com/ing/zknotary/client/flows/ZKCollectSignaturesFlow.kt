@@ -103,6 +103,7 @@ class ZKCollectSignaturesFlow @JvmOverloads constructor(
         // TODO: Make the progress tracker adapt to the number of counterparties to collect from.
     }
 
+    @Suppress("LongMethod")
     @Suspendable
     override fun call(): TransactionsPair {
         // Check the signatures which have already been provided and that the transaction is valid.
@@ -224,8 +225,8 @@ class ZKCollectSignaturesFlow @JvmOverloads constructor(
  */
 @Suspendable
 class ZKCollectSignatureFlow(val partiallySignedTx: SignedTransaction, val session: FlowSession, val signingKeys: List<PublicKey>) : FlowLogic<List<TransactionSignaturesPair>>() {
-    constructor(partiallySignedTx: SignedTransaction, session: FlowSession, vararg signingKeys: PublicKey) :
-        this(partiallySignedTx, session, listOf(*signingKeys))
+    constructor(partiallySignedTx: SignedTransaction, session: FlowSession, signingKey: PublicKey) :
+        this(partiallySignedTx, session, listOf(signingKey))
 
     @Suspendable
     override fun call(): List<TransactionSignaturesPair> {
