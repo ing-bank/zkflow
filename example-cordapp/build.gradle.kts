@@ -5,8 +5,6 @@ plugins {
     id("net.corda.plugins.quasar-utils")
 
     id("idea")
-    id("io.gitlab.arturbosch.detekt")
-    id("com.diffplug.gradle.spotless")
 }
 
 dependencies {
@@ -36,6 +34,11 @@ dependencies {
     testImplementation("com.ing.zknotary:test-utils:0.1")
 }
 
+zkp {
+    // generatorVersion = "0.1"
+    // notaryVersion = "0.1"
+}
+
 cordapp {
     val platformVersion: String by project
     targetPlatformVersion = platformVersion.toInt()
@@ -45,15 +48,6 @@ cordapp {
         vendor = "ING Bank NV"
         licence = "Apache License, Version 2.0"
         versionId = 1
-    }
-}
-
-val testConfigResourcesDir = "$rootDir/config/test"
-sourceSets {
-    test {
-        resources {
-            srcDir(testConfigResourcesDir)
-        }
     }
 }
 
