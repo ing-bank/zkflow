@@ -1,4 +1,4 @@
-package com.ing.zknotary.testcordapp.contracts
+package com.ing.zknotary.examplecordapp.contracts
 
 import com.ing.zknotary.testing.fixed
 import net.corda.core.crypto.Crypto
@@ -7,6 +7,8 @@ import net.corda.testing.common.internal.testNetworkParameters
 import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
 import net.corda.testing.node.ledger
+import org.junit.Test
+import kotlin.test.assertEquals
 import kotlin.time.ExperimentalTime
 
 @ExperimentalTime
@@ -24,4 +26,10 @@ class SomeContractTest {
     )
 
     private val ledger = ledgerServices.ledger {}
+
+    @Test
+    fun `some interesting test case`() {
+        assertEquals(alice.keyPair, bob.keyPair, "Alice and Bob have the same fixed keypair")
+
+    }
 }

@@ -1,4 +1,4 @@
-package com.ing.zknotary.testcordapp.contracts
+package com.ing.zknotary.examplecordapp.contracts
 import com.ing.zknotary.annotations.ZKPState
 import com.ing.zknotary.common.contracts.ZKCommandData
 import com.ing.zknotary.common.dactyloscopy.NonFingerprintable

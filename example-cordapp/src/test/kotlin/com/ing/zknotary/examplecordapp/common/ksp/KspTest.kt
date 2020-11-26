@@ -1,8 +1,8 @@
-package com.ing.zknotary.testcordapp.common.ksp
+package com.ing.zknotary.examplecordapp.common.ksp
 
 import com.ing.zknotary.common.zkp.ZKNulls
-import com.ing.zknotary.testcordapp.contracts.FixedMyState
-import com.ing.zknotary.testcordapp.contracts.MyContract
+import com.ing.zknotary.examplecordapp.contracts.FixedMyState
+import com.ing.zknotary.examplecordapp.contracts.MyContract
 import org.junit.Test
 import kotlin.reflect.full.memberProperties
 
