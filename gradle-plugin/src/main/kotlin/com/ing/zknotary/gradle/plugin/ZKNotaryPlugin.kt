@@ -12,25 +12,25 @@ class ZKNotaryPlugin : Plugin<Project> {
     override fun apply(project: Project) {
         val extension = project.extensions.create("zkp", ZKNotaryExtension::class.java)
 
-        // Load the KSP plugin for consumers
-        project.plugins.apply("symbol-processing")
-
-        // Add the required dependencies to consumer projects
-        project.dependencies.add("implementation", "com.ing.zknotary:notary:${extension.notaryVersion}")
-        project.dependencies.add("implementation", "com.ing.zknotary:generator:${extension.generatorVersion}")
-        project.dependencies.add("ksp", "com.ing.zknotary:generator:${extension.generatorVersion}")
-
         // For each consumer project, mark the KSP generated code as source
         project.allprojects { subProject ->
+            // Load the KSP plugin for consumers
+            project.plugins.apply("symbol-processing")
+
             val generatedSourcePath = "${subProject.buildDir.name}/generated/ksp/main/kotlin"
             val generatedTestSourcePath = "${subProject.buildDir.name}/generated/ksp/test/kotlin"
 
-            val sourceSets = subProject.properties["sourceSets"] as SourceSetContainer?
-
-            // Only add to the sourcesets if the Java plugin is loaded for the project
             subProject.plugins.withType(JavaPlugin::class.java) {
+                val sourceSets = subProject.properties["sourceSets"] as SourceSetContainer?
+                // Only add to the sourcesets if the Java plugin is loaded for the project
                 sourceSets!!.getByName("main").java.srcDir(generatedSourcePath)
                 sourceSets.getByName("test").java.srcDir(generatedTestSourcePath)
+
+                // Add the required dependencies to consumer projects
+                // project.dependencies.add("implementation", "com.ing.zknotary:prover:${extension.notaryVersion}")
+                project.dependencies.add("implementation", "com.ing.zknotary:notary:${extension.notaryVersion}")
+                project.dependencies.add("implementation", "com.ing.zknotary:generator:${extension.generatorVersion}")
+                project.dependencies.add("ksp", "com.ing.zknotary:generator:${extension.generatorVersion}")
             }
 
             // Only mark source as generated if the Idea plugin is loaded for the project
