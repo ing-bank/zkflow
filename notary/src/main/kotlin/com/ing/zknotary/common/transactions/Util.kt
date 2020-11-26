@@ -89,7 +89,10 @@ fun ZKProverTransaction.toZKVerifierTransaction(proof: ByteArray): ZKVerifierTra
             this.padded.sizeOf(ComponentGroupEnum.ATTACHMENTS_GROUP),
             this.padded.paddingConfiguration.filler(ComponentGroupEnum.ATTACHMENTS_GROUP)!!
         )
-        .signers(this.padded.sizeOf(ComponentGroupEnum.SIGNERS_GROUP))
+        .signers(
+            this.padded.sizeOf(ComponentGroupEnum.SIGNERS_GROUP),
+            this.padded.paddingConfiguration.filler(ComponentGroupEnum.SIGNERS_GROUP)!!
+        )
         .build()
 
     // TODO

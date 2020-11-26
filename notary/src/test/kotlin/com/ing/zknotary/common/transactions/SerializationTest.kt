@@ -3,9 +3,8 @@ package com.ing.zknotary.common.transactions
 import com.ing.zknotary.common.serializer.ZincSerializationFactory
 import com.ing.zknotary.common.zkp.PublicInput
 import com.ing.zknotary.common.zkp.Witness
-import com.ing.zknotary.common.zkp.mockEmptyProof
-import com.ing.zknotary.nodes.services.MockZKProverTransactionStorage
 import com.ing.zknotary.notary.transactions.createIssuanceWtx
+import com.ing.zknotary.testing.node.services.MockZKProverTransactionStorage
 import junit.framework.TestCase.assertEquals
 import net.corda.core.crypto.BLAKE2s256DigestService
 import net.corda.core.crypto.Crypto
@@ -44,7 +43,7 @@ class SerializationTest {
     }
 
     // build filtered ZKVerifierTransaction
-    private val vtx = ptx.toZKVerifierTransaction(mockEmptyProof)
+    private val vtx = ptx.toZKVerifierTransaction(ByteArray(0))
 
     @Test
     fun `Serialize public input to Zinc`() {

@@ -1,6 +1,7 @@
 plugins {
     kotlin("jvm")
     kotlin("kapt")
+    id("maven-publish")
 }
 
 repositories {
@@ -20,7 +21,8 @@ dependencies {
     implementation("com.google.auto.service:auto-service:$autoServiceVersion")
     kapt("com.google.auto.service:auto-service:$autoServiceVersion")
 
-    implementation("com.google.devtools.ksp:symbol-processing-api:1.4.10-dev-experimental-20201110")
+    val kspVersion: String by project
+    implementation("com.google.devtools.ksp:symbol-processing-api:$kspVersion")
 }
 
 tasks.apply {
@@ -30,6 +32,25 @@ tasks.apply {
             apiVersion = "1.3"
             jvmTarget = "1.8"
             javaParameters = true   // Useful for reflection.
+        }
+    }
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("zkGenerator") {
+            from(components["java"])
+        }
+    }
+
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/ingzkp/zk-notary")
+            credentials {
+                username = System.getenv("GITHUB_USERNAME")
+                password = System.getenv("GITHUB_TOKEN")
+            }
         }
     }
 }

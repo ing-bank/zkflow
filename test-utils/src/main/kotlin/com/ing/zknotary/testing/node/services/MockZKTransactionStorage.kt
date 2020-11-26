@@ -1,4 +1,4 @@
-package com.ing.zknotary.nodes.services
+package com.ing.zknotary.testing.node.services
 
 import com.ing.zknotary.common.transactions.NamedByZKMerkleTree
 import com.ing.zknotary.common.transactions.SignedZKProverTransaction
@@ -25,7 +25,7 @@ import java.util.HashMap
  * A class which provides an implementation of [WritableTransactionStorage] which is used in [MockServices]
  */
 @CordaService
-open class MockZKProverTransactionStorage(val serviceHub: AppServiceHub) : ZKWritableProverTransactionStorage,
+public open class MockZKProverTransactionStorage(public val serviceHub: AppServiceHub) : ZKWritableProverTransactionStorage,
     SingletonSerializeAsToken() {
 
     override fun trackTransaction(id: SecureHash): CordaFuture<SignedZKProverTransaction> {
@@ -95,7 +95,7 @@ open class MockZKProverTransactionStorage(val serviceHub: AppServiceHub) : ZKWri
  * A class which provides an implementation of [WritableTransactionStorage] which is used in [MockServices]
  */
 @CordaService
-open class MockZKVerifierTransactionStorage(val serviceHub: AppServiceHub) : ZKWritableVerifierTransactionStorage,
+public open class MockZKVerifierTransactionStorage(public val serviceHub: AppServiceHub) : ZKWritableVerifierTransactionStorage,
     SingletonSerializeAsToken() {
 
     override fun trackTransaction(id: SecureHash): CordaFuture<SignedZKVerifierTransaction> {

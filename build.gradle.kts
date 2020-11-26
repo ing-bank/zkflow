@@ -1,6 +1,7 @@
 buildscript {
     val repos by extra {
         closureOf<RepositoryHandler> {
+            mavenLocal()
             google()
             mavenCentral()
             jcenter()
@@ -25,6 +26,7 @@ buildscript {
 
 plugins {
     kotlin("jvm") apply false
+    id("com.diffplug.gradle.spotless") apply false
 }
 
 task("checkJavaVersion") {

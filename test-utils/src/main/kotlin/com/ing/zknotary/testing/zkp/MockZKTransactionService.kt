@@ -1,6 +1,9 @@
-package com.ing.zknotary.common.zkp
+package com.ing.zknotary.testing.zkp
 
 import com.ing.zknotary.common.dactyloscopy.Dactyloscopist
+import com.ing.zknotary.common.zkp.PublicInput
+import com.ing.zknotary.common.zkp.Witness
+import com.ing.zknotary.common.zkp.ZKTransactionService
 import net.corda.core.crypto.BLAKE2s256DigestService
 import net.corda.core.node.AppServiceHub
 import net.corda.core.node.services.CordaService
@@ -9,10 +12,8 @@ import net.corda.core.serialization.SingletonSerializeAsToken
 import net.corda.core.serialization.deserialize
 import net.corda.core.serialization.serialize
 
-val mockEmptyProof = ByteArray(0)
-
 @CordaService
-open class MockZKTransactionService(val serviceHub: AppServiceHub) : ZKTransactionService, SingletonSerializeAsToken() {
+public open class MockZKTransactionService(public val serviceHub: AppServiceHub) : ZKTransactionService, SingletonSerializeAsToken() {
     /**
      * This mock version simply returns the serialized witness, so that we can use it in `verify()`
      * to do all the verifications
