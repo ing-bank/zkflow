@@ -1,13 +1,13 @@
 package com.ing.zknotary.util
 
-import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.ing.zknotary.annotations.Sized
 import com.ing.zknotary.annotations.WrappedList
+import com.ing.zknotary.generator.log
 import com.squareup.kotlinpoet.ClassName
 
-fun KSPropertyDeclaration.describe(original: String, logger: KSPLogger): PropertyDescriptor {
+fun KSPropertyDeclaration.describe(original: String): PropertyDescriptor {
     val name = simpleName.asString()
     val typeDef = type.resolve()
     val typeName = typeDef.declaration.toString()
@@ -50,7 +50,7 @@ fun KSPropertyDeclaration.describe(original: String, logger: KSPLogger): Propert
 
 fun KSType.describe(): TypeDescriptor {
     val construction = when (val name = "$declaration") {
-        // primitive types
+        // Primitive types
         Int::class.simpleName -> {
             TypeDescriptor.Trailing(
                 ClassName(
@@ -60,8 +60,26 @@ fun KSType.describe(): TypeDescriptor {
                 TypeKind.Int_(0)
             )
         }
+
         //
-        // collections
+        // Compound types
+        Pair::class.simpleName -> {
+            TypeDescriptor.Transient(
+                ClassName(
+                    declaration.packageName.asString(),
+                    listOf(name)
+                ),
+                arguments.map {
+                    val pairType = it.type?.resolve()
+                    require(pairType != null) { "Pair must have type arguments" }
+                    pairType.describe()
+                },
+                TypeKind.Pair_
+            )
+        }
+
+        //
+        // Collections
         List::class.simpleName -> {
             // Lists must be annotated with Sized.
             val sized = annotations.single {
@@ -85,7 +103,7 @@ fun KSType.describe(): TypeDescriptor {
                     WrappedList::class.java.`package`.name,
                     listOf(WrappedList::class.simpleName!!)
                 ),
-                listType.describe(),
+                listOf(listType.describe()),
                 TypeKind.WrappedList_(size)
             )
         }

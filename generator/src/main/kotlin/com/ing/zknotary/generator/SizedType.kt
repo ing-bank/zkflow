@@ -55,7 +55,7 @@ class SizedType {
                 val properties = clazz.getAllProperties()
                     .filter { property -> property.isPublic() }
                     .map { property ->
-                        val construction = property.describe(original, logger)
+                        val construction = property.describe(original)
 
                         // construction.debug(logger)
 
