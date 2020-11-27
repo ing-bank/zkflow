@@ -6,7 +6,7 @@ import com.ing.zknotary.client.flows.ZKSignTransactionFlow
 import com.ing.zknotary.common.contracts.TestContract
 import com.ing.zknotary.common.transactions.SignedZKProverTransaction
 import com.ing.zknotary.common.transactions.toZKProverTransaction
-import com.ing.zknotary.node.services.MockZKProverTransactionStorage
+import com.ing.zknotary.node.services.InMemoryZKProverTransactionStorage
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.StateAndContract
 import net.corda.core.contracts.requireThat
@@ -39,7 +39,7 @@ class TestCollectSignaturesForCreateFlow(val signers: List<Party> = emptyList())
         val ptx = serviceHub.signInitialTransaction(builder)
         val ztx = ptx.tx.toZKProverTransaction(
             serviceHub,
-            serviceHub.cordaService(MockZKProverTransactionStorage::class.java),
+            serviceHub.cordaService(InMemoryZKProverTransactionStorage::class.java),
             componentGroupLeafDigestService = BLAKE2s256DigestService,
             nodeDigestService = PedersenDigestService
         )

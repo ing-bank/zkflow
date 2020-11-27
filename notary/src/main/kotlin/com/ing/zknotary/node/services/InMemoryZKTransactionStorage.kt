@@ -22,7 +22,7 @@ import java.util.HashMap
  * A class which provides an implementation of [WritableTransactionStorage] which is used in [MockServices]
  */
 @CordaService
-public open class MockZKProverTransactionStorage(public val serviceHub: AppServiceHub) : ZKWritableProverTransactionStorage,
+public open class InMemoryZKProverTransactionStorage(public val serviceHub: AppServiceHub) : ZKWritableProverTransactionStorage,
     SingletonSerializeAsToken() {
 
     override fun trackTransaction(id: SecureHash): CordaFuture<SignedZKProverTransaction> {
@@ -92,7 +92,7 @@ public open class MockZKProverTransactionStorage(public val serviceHub: AppServi
  * A class which provides an implementation of [WritableTransactionStorage] which is used in [MockServices]
  */
 @CordaService
-public open class MockZKVerifierTransactionStorage(public val serviceHub: AppServiceHub) : ZKWritableVerifierTransactionStorage,
+public open class InMemoryZKVerifierTransactionStorage(public val serviceHub: AppServiceHub) : ZKWritableVerifierTransactionStorage,
     SingletonSerializeAsToken() {
 
     override fun trackTransaction(id: SecureHash): CordaFuture<SignedZKVerifierTransaction> {

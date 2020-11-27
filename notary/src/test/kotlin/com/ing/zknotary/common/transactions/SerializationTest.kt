@@ -3,7 +3,7 @@ package com.ing.zknotary.common.transactions
 import com.ing.zknotary.common.serializer.ZincSerializationFactory
 import com.ing.zknotary.common.zkp.PublicInput
 import com.ing.zknotary.common.zkp.Witness
-import com.ing.zknotary.node.services.MockZKProverTransactionStorage
+import com.ing.zknotary.node.services.InMemoryZKProverTransactionStorage
 import com.ing.zknotary.notary.transactions.createIssuanceWtx
 import junit.framework.TestCase.assertEquals
 import net.corda.core.crypto.BLAKE2s256DigestService
@@ -38,7 +38,7 @@ class SerializationTest {
             services = ledgerServices,
             componentGroupLeafDigestService = BLAKE2s256DigestService,
             nodeDigestService = PedersenDigestService,
-            zkProverTransactionStorage = createMockCordaService(ledgerServices, ::MockZKProverTransactionStorage)
+            zkProverTransactionStorage = createMockCordaService(ledgerServices, ::InMemoryZKProverTransactionStorage)
         )
     }
 
