@@ -1,13 +1,16 @@
 package com.ing.zknotary.util
 
 import com.google.devtools.ksp.processing.KSPLogger
+import com.ing.zknotary.generator.log
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.TypeName
 
 sealed class TypeDescriptor(val definition: ClassName, val typeKind: TypeKind) {
-    abstract fun debug(logger: KSPLogger)
+    // TODO remove in the final version
+    // this function uses a global logger, which will also be removed in the final version.
+    abstract fun debug()
 
     open val type: TypeName
         get() = definition
@@ -24,10 +27,10 @@ sealed class TypeDescriptor(val definition: ClassName, val typeKind: TypeKind) {
         private val innerDescriptors: List<TypeDescriptor>,
         typeKind: TypeKind
     ) : TypeDescriptor(definition, typeKind) {
-        override fun debug(logger: KSPLogger) {
-            logger.error("(${(0..100).random()}) $definition")
+        override fun debug() {
+            log?.error("(${(0..100).random()}) $definition")
 
-            innerDescriptors.forEach { it.debug(logger) }
+            innerDescriptors.forEach { it.debug() }
         }
 
         override val type: TypeName
@@ -44,8 +47,8 @@ sealed class TypeDescriptor(val definition: ClassName, val typeKind: TypeKind) {
         definition: ClassName,
         typeKind: TypeKind
     ) : TypeDescriptor(definition, typeKind) {
-        override fun debug(logger: KSPLogger) {
-            logger.error("(${(0..100).random()}) $definition : $default")
+        override fun debug() {
+            log?.error("(${(0..100).random()}) $definition : $default")
         }
     }
 }

@@ -27,7 +27,7 @@ class SizedType {
 
             return FileSpec.builder(clazz.packageName.asString(), generatedClassName)
                 .addType(
-                    buildFixedLengthType(generatedClassName, clazz, annotatedClasses, logger)
+                    buildFixedLengthType(generatedClassName, clazz, annotatedClasses)
                 )
                 .build()
         }
@@ -35,13 +35,8 @@ class SizedType {
         private fun buildFixedLengthType(
             generatedClassName: String,
             clazz: KSClassDeclaration,
-            annotatedClasses: List<KSClassDeclaration>,
-            logger: KSPLogger
-        ): TypeSpec {
-            // val
-            // logger.error("${WrappedList::class.java.`package`.name}, ${WrappedList::class.simpleName!!}")
-
-            return TypeSpec.classBuilder(generatedClassName).apply {
+            annotatedClasses: List<KSClassDeclaration>
+        ) = TypeSpec.classBuilder(generatedClassName).apply {
                 val original = "original"
 
                 val privateConstructorBuilder = FunSpec.constructorBuilder()
@@ -55,19 +50,17 @@ class SizedType {
                 val properties = clazz.getAllProperties()
                     .filter { property -> property.isPublic() }
                     .map { property ->
-                        val construction = property.describe(original)
-
-                        // construction.debug(logger)
+                        val descriptor = property.describe(original)
 
                         // Side effect: defining properties and private constructor.
-                        privateConstructorBuilder.addParameter(construction.name, construction.type)
+                        privateConstructorBuilder.addParameter(descriptor.name, descriptor.type)
                         addProperty(
-                            PropertySpec.builder(construction.name, construction.type)
-                                .initializer(construction.name)
+                            PropertySpec.builder(descriptor.name, descriptor.type)
+                                .initializer(descriptor.name)
                                 .build()
                         )
 
-                        construction
+                        descriptor
                     }
 
                 primaryConstructor(privateConstructorBuilder.build())
@@ -87,5 +80,4 @@ class SizedType {
 
             }.build()
         }
-    }
 }

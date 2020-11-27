@@ -3,7 +3,6 @@ package com.ing.zknotary.common.sized
 import com.ing.zknotary.annotations.Sized
 import com.ing.zknotary.annotations.WrappedList
 import org.junit.Test
-import kotlin.reflect.full.memberProperties
 
 @Suppress("USELESS_IS_CHECK")
 class SizedTest {
