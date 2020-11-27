@@ -49,7 +49,7 @@ class CollectSignaturesFlowTest {
 
     @Test(timeout = 300_000)
     fun `Signing only on Initiator side`() {
-        val p = TestCollectSignaturesForCreateFlow()
+        val p = TestCollectSignaturesFlow()
         val future = miniCorpNode.startFlow(p)
         mockNet.runNetwork()
         val signedTxs = future.getOrThrow()
@@ -71,7 +71,7 @@ class CollectSignaturesFlowTest {
     fun `Signing on two sides`() {
 
         // Move state
-        val p = TestCollectSignaturesForCreateFlow(listOf(megaCorp))
+        val p = TestCollectSignaturesFlow(listOf(megaCorp))
         val future = miniCorpNode.startFlow(p)
         mockNet.runNetwork()
         val signedTxs = future.getOrThrow()

@@ -21,7 +21,7 @@ import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
 
 @InitiatingFlow
-class TestCollectSignaturesForCreateFlow(val signers: List<Party> = emptyList()) : FlowLogic<Pair<SignedTransaction, SignedZKProverTransaction>>() {
+class TestCollectSignaturesFlow(val signers: List<Party> = emptyList()) : FlowLogic<Pair<SignedTransaction, SignedZKProverTransaction>>() {
 
     @Suspendable
     override fun call(): Pair<SignedTransaction, SignedZKProverTransaction> {
@@ -36,8 +36,8 @@ class TestCollectSignaturesForCreateFlow(val signers: List<Party> = emptyList())
         builder.toWireTransaction(serviceHub).toLedgerTransaction(serviceHub).verify()
 
         // Transaction creator signs transaction.
-        val ptx = serviceHub.signInitialTransaction(builder)
-        val ztx = ptx.tx.toZKProverTransaction(
+        val stx = serviceHub.signInitialTransaction(builder)
+        val ztx = stx.tx.toZKProverTransaction(
             serviceHub,
             serviceHub.cordaService(InMemoryZKProverTransactionStorage::class.java),
             componentGroupLeafDigestService = BLAKE2s256DigestService,
@@ -46,13 +46,13 @@ class TestCollectSignaturesForCreateFlow(val signers: List<Party> = emptyList())
 
         val pztxSigs = signInitialZKTransaction(ztx)
 
-        val sigs = subFlow(ZKCollectSignaturesFlow(ptx, ztx.id, pztxSigs, signers.map { initiateFlow(it) }))
+        val sigs = subFlow(ZKCollectSignaturesFlow(stx, ztx.id, pztxSigs, signers.map { initiateFlow(it) }))
 
         return Pair(sigs.stx, SignedZKProverTransaction(ztx, sigs.zksigs))
     }
 }
 
-@InitiatedBy(TestCollectSignaturesForCreateFlow::class)
+@InitiatedBy(TestCollectSignaturesFlow::class)
 class CounterpartySigner(val otherPartySession: FlowSession) : FlowLogic<Any>() {
 
     @Suspendable
