@@ -3,6 +3,7 @@ package com.ing.zknotary.common.client.flows
 import co.paralleluniverse.fibers.Suspendable
 import com.ing.zknotary.client.flows.ZKCollectSignaturesFlow
 import com.ing.zknotary.client.flows.ZKSignTransactionFlow
+import com.ing.zknotary.client.flows.signInitialZKTransaction
 import com.ing.zknotary.common.contracts.TestContract
 import com.ing.zknotary.common.transactions.SignedZKProverTransaction
 import com.ing.zknotary.common.transactions.toZKProverTransaction

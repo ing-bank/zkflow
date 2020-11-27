@@ -4,11 +4,8 @@ import co.paralleluniverse.fibers.Suspendable
 import com.ing.zknotary.common.transactions.toZKProverTransaction
 import com.ing.zknotary.node.services.InMemoryZKProverTransactionStorage
 import net.corda.core.crypto.BLAKE2s256DigestService
-import net.corda.core.crypto.Crypto
 import net.corda.core.crypto.PedersenDigestService
 import net.corda.core.crypto.SecureHash
-import net.corda.core.crypto.SignableData
-import net.corda.core.crypto.SignatureMetadata
 import net.corda.core.crypto.TransactionSignature
 import net.corda.core.crypto.isFulfilledBy
 import net.corda.core.crypto.toStringShort
@@ -341,22 +338,13 @@ abstract class ZKSignTransactionFlow @JvmOverloads constructor(
         val mySignatures = signingKeys.map { key ->
             TransactionSignaturesPair(
                 serviceHub.createSignature(stx, key),
-                createSignature(zktx.id, key)
+                serviceHub.createSignature(zktx, key)
             )
         }
         otherSideSession.send(mySignatures)
 
         // Return the additionally signed transaction.
         return mySignatures
-    }
-
-    fun createSignature(zktxId: SecureHash, publicKey: PublicKey): TransactionSignature {
-        val signatureMetadata = SignatureMetadata(
-            serviceHub.myInfo.platformVersion,
-            Crypto.findSignatureScheme(publicKey).schemeNumberID
-        )
-        val signableData = SignableData(zktxId, signatureMetadata)
-        return serviceHub.keyManagementService.sign(signableData, publicKey)
     }
 
     @Suspendable
