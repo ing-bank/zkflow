@@ -1,4 +1,4 @@
-package com.ing.zknotary.common.flow
+package com.ing.zknotary.common.client.flows
 
 import groovy.util.GroovyTestCase.assertEquals
 import net.corda.core.identity.CordaX500Name
@@ -10,7 +10,7 @@ import net.corda.testing.node.MockNetwork
 import net.corda.testing.node.MockNetworkNotarySpec
 import net.corda.testing.node.MockNetworkParameters
 import net.corda.testing.node.StartedMockNode
-import net.corda.testing.node.internal.DUMMY_CONTRACTS_CORDAPP
+import net.corda.testing.node.internal.cordappWithPackages
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -27,7 +27,7 @@ class CollectSignaturesFlowTest {
     @Before
     fun setup() {
         val mockNetworkParameters = MockNetworkParameters(
-            cordappsForAllNodes = listOf(DUMMY_CONTRACTS_CORDAPP),
+            cordappsForAllNodes = listOf(cordappWithPackages("com.ing.zknotary")),
             notarySpecs = listOf(
                 MockNetworkNotarySpec(DUMMY_NOTARY_NAME)
             )
@@ -48,22 +48,44 @@ class CollectSignaturesFlowTest {
     }
 
     @Test(timeout = 300_000)
-    fun `resolve from two hashes`() {
-        val p = TestFlow("privet", megaCorp)
+    fun `Signing only on Initiator side`() {
+        val p = TestCollectSignaturesForCreateFlow()
         val future = miniCorpNode.startFlow(p)
         mockNet.runNetwork()
         val signedTxs = future.getOrThrow()
 
         // Check normal Tx signatures
-        assertEquals(signedTxs.stx.sigs.size, 2)
-        signedTxs.stx.sigs.forEach {
-            it.isValid(signedTxs.stx.id)
+        assertEquals(1, signedTxs.first.sigs.size)
+        signedTxs.first.sigs.forEach {
+            it.isValid(signedTxs.first.id)
         }
 
         // Check ZKP Tx signatures
-        assertEquals(signedTxs.zkstx.sigs.size, 2)
-        signedTxs.zkstx.sigs.forEach {
-            it.isValid(signedTxs.zkstx.id)
+        assertEquals(1, signedTxs.second.sigs.size)
+        signedTxs.second.sigs.forEach {
+            it.isValid(signedTxs.second.id)
+        }
+    }
+
+    @Test(timeout = 300_000)
+    fun `Signing on two sides`() {
+
+        // Move state
+        val p = TestCollectSignaturesForCreateFlow(listOf(megaCorp))
+        val future = miniCorpNode.startFlow(p)
+        mockNet.runNetwork()
+        val signedTxs = future.getOrThrow()
+
+        // Check normal Tx signatures
+        assertEquals(2, signedTxs.first.sigs.size)
+        signedTxs.first.sigs.forEach {
+            it.isValid(signedTxs.first.id)
+        }
+
+        // Check ZKP Tx signatures
+        assertEquals(2, signedTxs.second.sigs.size)
+        signedTxs.second.sigs.forEach {
+            it.isValid(signedTxs.second.id)
         }
     }
 }

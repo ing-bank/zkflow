@@ -1,9 +1,8 @@
 package com.ing.zknotary.client.flows
 
 import co.paralleluniverse.fibers.Suspendable
-import com.ing.zknotary.common.transactions.SignedZKProverTransaction
 import com.ing.zknotary.common.transactions.toZKProverTransaction
-import com.ing.zknotary.node.services.ZKProverTransactionStorage
+import com.ing.zknotary.node.services.MockZKProverTransactionStorage
 import net.corda.core.crypto.BLAKE2s256DigestService
 import net.corda.core.crypto.Crypto
 import net.corda.core.crypto.PedersenDigestService
@@ -80,18 +79,20 @@ import java.security.PublicKey
 // TODO: AbstractStateReplacementFlow needs updating to use this flow.
 class ZKCollectSignaturesFlow @JvmOverloads constructor(
     val partiallySignedTx: SignedTransaction,
-    val partiallySignedZKTx: SignedZKProverTransaction,
+    val zktxId: SecureHash,
+    val partialZKSigs: List<TransactionSignature>,
     val sessionsToCollectFrom: Collection<FlowSession>,
     val myOptionalKeys: Iterable<PublicKey>?,
     override val progressTracker: ProgressTracker = tracker()
-) : FlowLogic<TransactionsPair>() {
+) : FlowLogic<TransactionWithZKSignatures>() {
     @JvmOverloads
     constructor(
         partiallySignedTx: SignedTransaction,
-        partiallySignedZKTx: SignedZKProverTransaction,
+        zktxId: SecureHash,
+        partialZKSigs: List<TransactionSignature>,
         sessionsToCollectFrom: Collection<FlowSession>,
         progressTracker: ProgressTracker = tracker()
-    ) : this(partiallySignedTx, partiallySignedZKTx, sessionsToCollectFrom, null, progressTracker)
+    ) : this(partiallySignedTx, zktxId, partialZKSigs, sessionsToCollectFrom, null, progressTracker)
 
     companion object {
         object COLLECTING : ProgressTracker.Step("Collecting signatures from counterparties.")
@@ -105,7 +106,7 @@ class ZKCollectSignaturesFlow @JvmOverloads constructor(
 
     @Suppress("LongMethod")
     @Suspendable
-    override fun call(): TransactionsPair {
+    override fun call(): TransactionWithZKSignatures {
         // Check the signatures which have already been provided and that the transaction is valid.
         // Usually just the Initiator and possibly an oracle would have signed at this point.
         val myKeys: Iterable<PublicKey> = myOptionalKeys ?: listOf(ourIdentity.owningKey)
@@ -129,7 +130,7 @@ class ZKCollectSignaturesFlow @JvmOverloads constructor(
         val unsigned = if (notaryKey != null) notSigned - notaryKey else notSigned
 
         // If the unsigned counterparties list is empty then we don't need to collect any more signatures here.
-        if (unsigned.isEmpty()) return TransactionsPair(partiallySignedTx, partiallySignedZKTx)
+        if (unsigned.isEmpty()) return TransactionWithZKSignatures(partiallySignedTx, partialZKSigs)
 
         val wellKnownSessions = sessionsToCollectFrom.filter { it.destination is Party }
         val anonymousSessions = sessionsToCollectFrom.filter { it.destination is AnonymousParty }
@@ -199,19 +200,19 @@ class ZKCollectSignaturesFlow @JvmOverloads constructor(
         }
 
         val stx = partiallySignedTx + (sigsFromNotWellKnownSessions + sigsFromWellKnownSessions).map { it.sig }.toSet()
-        val zkstx = partiallySignedZKTx + (sigsFromNotWellKnownSessions + sigsFromWellKnownSessions).map { it.zksig }.toSet()
+        val zksigs = partialZKSigs + (sigsFromNotWellKnownSessions + sigsFromWellKnownSessions).map { it.zksig }.toSet()
 
         // Verify all but the notary's signature if the transaction requires a notary, otherwise verify all signatures.
         progressTracker.currentStep = VERIFYING
         if (notaryKey != null) {
             stx.verifySignaturesExcept(notaryKey)
-            zkstx.verifySignaturesExcept(notaryKey)
+            zksigs.forEach { if (it.by != notaryKey) it.verify(zktxId) }
         } else {
             stx.verifyRequiredSignatures()
-            zkstx.verifyRequiredSignatures()
+            zksigs.forEach { it.verify(zktxId) }
         }
 
-        return TransactionsPair(stx, zkstx)
+        return TransactionWithZKSignatures(stx, zksigs)
     }
 }
 
@@ -322,7 +323,7 @@ abstract class ZKSignTransactionFlow @JvmOverloads constructor(
         // Convert Tx to ZKP form
         val zktx = stx.tx.toZKProverTransaction(
             serviceHub,
-            serviceHub.cordaService(ZKProverTransactionStorage::class.java),
+            serviceHub.cordaService(MockZKProverTransactionStorage::class.java),
             componentGroupLeafDigestService = BLAKE2s256DigestService,
             nodeDigestService = PedersenDigestService
         )

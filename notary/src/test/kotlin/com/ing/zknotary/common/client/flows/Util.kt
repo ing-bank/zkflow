@@ -1,0 +1,19 @@
+package com.ing.zknotary.common.client.flows
+
+import com.ing.zknotary.common.transactions.NamedByZKMerkleTree
+import net.corda.core.crypto.Crypto
+import net.corda.core.crypto.SignableData
+import net.corda.core.crypto.SignatureMetadata
+import net.corda.core.crypto.TransactionSignature
+import net.corda.core.flows.FlowLogic
+import java.security.PublicKey
+
+fun FlowLogic<Any>.signInitialZKTransaction(
+    ztx: NamedByZKMerkleTree,
+    publicKey: PublicKey = serviceHub.myInfo.legalIdentitiesAndCerts.single().owningKey,
+    signatureMetadata: SignatureMetadata = SignatureMetadata(serviceHub.myInfo.platformVersion, Crypto.findSignatureScheme(publicKey).schemeNumberID)
+): List<TransactionSignature> {
+    val signableData = SignableData(ztx.id, signatureMetadata)
+    val sig = this.serviceHub.keyManagementService.sign(signableData, publicKey)
+    return listOf(sig)
+}

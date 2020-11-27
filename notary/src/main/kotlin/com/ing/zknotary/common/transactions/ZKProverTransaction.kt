@@ -69,7 +69,7 @@ class ZKProverTransaction internal constructor(
         componentPaddingConfiguration.validate(this)
     }
 
-    val id by lazy { merkleTree.root }
+    override val id by lazy { merkleTree.root }
 
     /** This additional merkle root is represented by the root hash of a Merkle tree over the transaction components. */
     override val merkleTree by lazy {

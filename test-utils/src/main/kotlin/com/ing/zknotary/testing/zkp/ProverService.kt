@@ -4,9 +4,9 @@ import com.ing.zknotary.common.contracts.ZKCommandData
 import com.ing.zknotary.common.transactions.toSignedZKVerifierTransaction
 import com.ing.zknotary.common.transactions.toZKProverTransaction
 import com.ing.zknotary.common.zkp.ZKTransactionService
+import com.ing.zknotary.node.services.MockZKProverTransactionStorage
+import com.ing.zknotary.node.services.MockZKVerifierTransactionStorage
 import com.ing.zknotary.node.services.collectVerifiedDependencies
-import com.ing.zknotary.testing.node.services.MockZKProverTransactionStorage
-import com.ing.zknotary.testing.node.services.MockZKVerifierTransactionStorage
 import net.corda.core.crypto.BLAKE2s256DigestService
 import net.corda.core.crypto.Crypto
 import net.corda.core.crypto.PedersenDigestService
