@@ -4,52 +4,30 @@ import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.ing.zknotary.annotations.Sized
 import com.ing.zknotary.annotations.WrappedList
-import com.ing.zknotary.generator.log
 import com.squareup.kotlinpoet.ClassName
 
 fun KSPropertyDeclaration.describe(original: String): PropertyDescriptor {
     val name = simpleName.asString()
     val typeDef = type.resolve()
     val typeName = typeDef.declaration.toString()
-    val typePackage = typeDef.declaration.packageName.asString()
 
-    // TODO does typePackage cover all collections?
-    // TODO
-    // 1 list of processable type (includes primitive types and collections AT LEAST)
-    // 2 filter and throw exception if necessary
-    // 3 typeDef.construct()
-
-    val propertyConstruction = if (typePackage.contains("collection", ignoreCase = true)) {
-        when (typeName) {
-            List::class.java.simpleName -> {
-                val construction  = typeDef.describe()
-
-                PropertyDescriptor(
-                    name = name,
-                    type = construction.type,
-                    fromInstance = construction.toCodeBlock("$original.$name"),
-                    default = construction.default
-                )
-            }
-            else -> error("Only Lists are supported")
-        }
-    } else {
-        // Not a collection.
-        val construction = typeDef.describe()
-
-        PropertyDescriptor(
-            name = name,
-            type = construction.type,
-            fromInstance = construction.toCodeBlock("$original.$name"),
-            default = construction.default
-        )
+    if (!TypeKind.supports(typeName)) {
+        error("Type $typeName is not supported\n"+
+            "Supported types:\n${TypeKind.supported.joinToString(separator = ",\n")}")
     }
 
-    return propertyConstruction
+    val descriptor = typeDef.describe()
+
+    return PropertyDescriptor(
+        name = name,
+        type = descriptor.type,
+        fromInstance = descriptor.toCodeBlock("$original.$name"),
+        default = descriptor.default
+    )
 }
 
-fun KSType.describe(): TypeDescriptor {
-    val construction = when (val name = "$declaration") {
+fun KSType.describe(): TypeDescriptor =
+    when (val name = "$declaration") {
         // Primitive types
         Int::class.simpleName -> {
             TypeDescriptor.Trailing(
@@ -70,11 +48,26 @@ fun KSType.describe(): TypeDescriptor {
                     listOf(name)
                 ),
                 arguments.map {
-                    val pairType = it.type?.resolve()
-                    require(pairType != null) { "Pair must have type arguments" }
-                    pairType.describe()
+                    val innerType = it.type?.resolve()
+                    require(innerType != null) { "Pair must have type arguments" }
+                    innerType.describe()
                 },
                 TypeKind.Pair_
+            )
+        }
+
+        Triple::class.simpleName -> {
+            TypeDescriptor.Transient(
+                ClassName(
+                    declaration.packageName.asString(),
+                    listOf(name)
+                ),
+                arguments.map {
+                    val innerType = it.type?.resolve()
+                    require(innerType != null) { "Pair must have type arguments" }
+                    innerType.describe()
+                },
+                TypeKind.Triple_
             )
         }
 
@@ -109,6 +102,3 @@ fun KSType.describe(): TypeDescriptor {
         }
         else -> error("not supported: $name")
     }
-
-    return construction
-}

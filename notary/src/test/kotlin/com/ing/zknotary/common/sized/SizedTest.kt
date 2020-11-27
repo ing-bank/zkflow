@@ -3,6 +3,7 @@ package com.ing.zknotary.common.sized
 import com.ing.zknotary.annotations.Sized
 import com.ing.zknotary.annotations.WrappedList
 import org.junit.Test
+import kotlin.reflect.full.memberProperties
 
 @Suppress("USELESS_IS_CHECK")
 class SizedTest {
@@ -52,6 +53,21 @@ class SizedTest {
 
         assert(
             sized.pair is Pair<Int, Int>
+        )
+    }
+
+    @Sized
+    class ComplexCompoundState(
+        val triple: Triple<Int, Int, Int>
+    )
+
+    @Test
+    fun `class with complex compound types must be sizeable`() {
+        val state = ComplexCompoundState(Triple(19, 84, 23))
+        val sized = ComplexCompoundStateSized(state)
+
+        assert(
+            sized.triple is Triple<Int, Int, Int>
         )
     }
 

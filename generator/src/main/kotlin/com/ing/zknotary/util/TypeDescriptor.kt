@@ -51,6 +51,18 @@ sealed class TypeDescriptor(val definition: ClassName, val typeKind: TypeKind) {
 }
 
 sealed class TypeKind {
+    companion object {
+        val supported = listOf(
+            Int::class.simpleName,
+            Pair::class.simpleName,
+            Triple::class.simpleName,
+            List::class.simpleName
+        )
+
+        fun supports(typeName: String): Boolean =
+            supported.contains(typeName)
+    }
+
     abstract fun default(innerDescriptors: List<TypeDescriptor>): CodeBlock
     abstract fun toCodeBlock(propertyName: String, innerDescriptors: List<TypeDescriptor> = listOf()): CodeBlock
 
@@ -105,32 +117,75 @@ sealed class TypeKind {
 
     object Pair_ : TypeKind() {
         override fun default(innerDescriptors: List<TypeDescriptor>): CodeBlock {
-            val typeFirst = innerDescriptors.getOrNull(0)
+            val firstType = innerDescriptors.getOrNull(0)
                 ?: error("Pair<A, B> must declare type A")
 
-            val typeSecond = innerDescriptors.getOrNull(1)
+            val secondType = innerDescriptors.getOrNull(1)
                 ?: error("Pair<A, B> must declare type B")
 
             return CodeBlock.of(
                 "Pair( %L, %L )",
-                typeFirst.default, typeSecond.default
+                firstType.default, secondType.default
             )
         }
 
         override fun toCodeBlock(propertyName: String, innerDescriptors: List<TypeDescriptor>): CodeBlock {
-            val firstType = innerDescriptors.getOrNull(0)
-                ?: error("Pair requires type of its first element")
-            val secondType = innerDescriptors.getOrNull(1)
-                ?: error("Pair requires type of its second element")
+            val first = innerDescriptors.getOrNull(0)
+                ?: error("Pair<A, B> must declare type A")
+            val second = innerDescriptors.getOrNull(1)
+                ?: error("Pair<A, B> must declare type B")
 
             val map = mapOf(
                 "propertyName" to propertyName,
-                "first" to firstType.toCodeBlock("$propertyName.first"),
-                "second" to secondType.toCodeBlock("$propertyName.second")
+                "first" to first.toCodeBlock("$propertyName.first"),
+                "second" to second.toCodeBlock("$propertyName.second")
             )
+
             return CodeBlock.builder()
                 .addNamed(
                     "Pair( %first:L, %second:L )",
+                    map
+                ).build()
+        }
+    }
+
+    object Triple_ : TypeKind() {
+        override fun default(innerDescriptors: List<TypeDescriptor>): CodeBlock {
+            val first = innerDescriptors.getOrNull(0)
+                ?: error("Triple<A, B, C> must declare type A")
+
+            val second = innerDescriptors.getOrNull(1)
+                ?: error("Triple<A, B, C> must declare type B")
+
+            val third = innerDescriptors.getOrNull(2)
+                ?: error("Triple<A, B, C> must declare type C")
+
+            return CodeBlock.of(
+                "Triple( %L, %L, %L )",
+                first.default, second.default, third.default
+            )
+        }
+
+        override fun toCodeBlock(propertyName: String, innerDescriptors: List<TypeDescriptor>): CodeBlock {
+            val first = innerDescriptors.getOrNull(0)
+                ?: error("Triple<A, B, C> must declare type A")
+
+            val second = innerDescriptors.getOrNull(1)
+                ?: error("Triple<A, B, C> must declare type B")
+
+            val third = innerDescriptors.getOrNull(2)
+                ?: error("Triple<A, B, C> must declare type C")
+
+            val map = mapOf(
+                "propertyName" to propertyName,
+                "first" to first.toCodeBlock("$propertyName.first"),
+                "second" to second.toCodeBlock("$propertyName.second"),
+                "third" to third.toCodeBlock("$propertyName.third")
+            )
+
+            return CodeBlock.builder()
+                .addNamed(
+                    "Triple( %first:L, %second:L, %third:L )",
                     map
                 ).build()
         }
