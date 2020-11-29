@@ -3,17 +3,15 @@ package com.ing.zknotary.util
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.ing.zknotary.annotations.Sized
-import com.ing.zknotary.annotations.WrappedList
-import com.squareup.kotlinpoet.ClassName
 
 fun KSPropertyDeclaration.describe(original: String): PropertyDescriptor {
     val name = simpleName.asString()
     val typeDef = type.resolve()
     val typeName = typeDef.declaration.toString()
 
-    if (!TypeKind.supports(typeName)) {
+    if (!TypeDescriptor.supports(typeName)) {
         error("Type $typeName is not supported\n"+
-            "Supported types:\n${TypeKind.supported.joinToString(separator = ",\n")}")
+            "Supported types:\n${TypeDescriptor.supported.joinToString(separator = ",\n")}")
     }
 
     val descriptor = typeDef.describe()
@@ -29,47 +27,25 @@ fun KSPropertyDeclaration.describe(original: String): PropertyDescriptor {
 fun KSType.describe(): TypeDescriptor =
     when (val name = "$declaration") {
         // Primitive types
-        Int::class.simpleName -> {
-            TypeDescriptor.Trailing(
-                ClassName(
-                    declaration.packageName.asString(),
-                    listOf(name)
-                ),
-                TypeKind.Int_(0)
-            )
-        }
+        Int::class.simpleName -> TypeDescriptor.Int_(0, declaration)
 
         //
         // Compound types
-        Pair::class.simpleName -> {
-            TypeDescriptor.Transient(
-                ClassName(
-                    declaration.packageName.asString(),
-                    listOf(name)
-                ),
-                arguments.map {
-                    val innerType = it.type?.resolve()
-                    require(innerType != null) { "Pair must have type arguments" }
-                    innerType.describe()
-                },
-                TypeKind.Pair_
-            )
-        }
+        Pair::class.simpleName -> TypeDescriptor.Pair_(
+            arguments.map {
+                val innerType = it.type?.resolve()
+                require(innerType != null) { "Pair must have type arguments" }
+                innerType.describe()
+            }
+        )
 
-        Triple::class.simpleName -> {
-            TypeDescriptor.Transient(
-                ClassName(
-                    declaration.packageName.asString(),
-                    listOf(name)
-                ),
-                arguments.map {
-                    val innerType = it.type?.resolve()
-                    require(innerType != null) { "Pair must have type arguments" }
-                    innerType.describe()
-                },
-                TypeKind.Triple_
-            )
-        }
+        Triple::class.simpleName -> TypeDescriptor.Triple_(
+            arguments.map {
+                val innerType = it.type?.resolve()
+                require(innerType != null) { "Pair must have type arguments" }
+                innerType.describe()
+            }
+        )
 
         //
         // Collections
@@ -91,14 +67,10 @@ fun KSType.describe(): TypeDescriptor =
             val listType = arguments.single().type?.resolve()
             require(listType != null) { "List must have a type" }
 
-            TypeDescriptor.Transient(
-                ClassName(
-                    WrappedList::class.java.`package`.name,
-                    listOf(WrappedList::class.simpleName!!)
-                ),
-                listOf(listType.describe()),
-                TypeKind.WrappedList_(size)
-            )
+            TypeDescriptor.List_(size, listOf(listType.describe()))
         }
+
+        //
+        // fail
         else -> error("not supported: $name")
     }

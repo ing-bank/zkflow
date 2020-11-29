@@ -1,59 +1,50 @@
 package com.ing.zknotary.util
 
-import com.google.devtools.ksp.processing.KSPLogger
+import com.google.devtools.ksp.symbol.KSDeclaration
+import com.ing.zknotary.annotations.WrappedList
 import com.ing.zknotary.generator.log
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.TypeName
+import kotlin.reflect.KClass
 
-sealed class TypeDescriptor(val definition: ClassName, val typeKind: TypeKind) {
-    // TODO remove in the final version
-    // this function uses a global logger, which will also be removed in the final version.
-    abstract fun debug()
+/**
+ * `TypeDescriptor` enables description of types parametrized by other types.
+ * This description is used to assemble types with required replacements
+ * and to create corresponding default values.
+ * For example, List<Pair<Int, Int>> is described as follows:
+ *                          TypeDescriptor.List_
+ *                          (inner descriptors)
+ *                                  |
+ *                          TypeDescriptor.Pair_
+ *                          (inner descriptors)
+ *          |----------------------|-------------------------------|
+ *          |                                                      |
+ *   TypeDescriptor.Int_                                    TypeDescriptor.Int_
+ *
+ * Each version of TypeDescriptor implements a bespoke functionality
+ * to construct default values and to create values of the right type from a variable.
+ *
+ * In the previous example, examples of such functionality are:
+ * - TypeDescriptor.List_ implements replacement of `List` to `WrappedList`
+ * and maps contained elements into sized versions;
+ * - TypeDescriptor.Pair_ constructs a pair making use of `first` and `second` fields.
+ */
 
-    open val type: TypeName
-        get() = definition
 
-    open val default: CodeBlock
-        get() =  typeKind.default(listOf())
+sealed class TypeDescriptor(
+    val definition: ClassName,
+    val innerDescriptors: List<TypeDescriptor> = listOf()
+){
+    constructor(clazz: KClass<*>, innerDescriptors: List<TypeDescriptor>) : this(
+        ClassName(
+            clazz.java.`package`.name,
+            listOf(clazz.simpleName!!)
+        ),
+        innerDescriptors
+    )
 
-    open fun toCodeBlock(propertyName: String): CodeBlock {
-        return typeKind.toCodeBlock(propertyName)
-    }
-
-    class Transient(
-        definition: ClassName,
-        private val innerDescriptors: List<TypeDescriptor>,
-        typeKind: TypeKind
-    ) : TypeDescriptor(definition, typeKind) {
-        override fun debug() {
-            log?.error("(${(0..100).random()}) $definition")
-
-            innerDescriptors.forEach { it.debug() }
-        }
-
-        override val type: TypeName
-            get() = definition.parameterizedBy(innerDescriptors.map { it.type })
-
-        override val default: CodeBlock
-            get() = typeKind.default(innerDescriptors)
-
-        override fun toCodeBlock(propertyName: String): CodeBlock =
-            typeKind.toCodeBlock(propertyName, innerDescriptors)
-    }
-
-    class Trailing(
-        definition: ClassName,
-        typeKind: TypeKind
-    ) : TypeDescriptor(definition, typeKind) {
-        override fun debug() {
-            log?.error("(${(0..100).random()}) $definition : $default")
-        }
-    }
-}
-
-sealed class TypeKind {
     companion object {
         val supported = listOf(
             Int::class.simpleName,
@@ -66,11 +57,30 @@ sealed class TypeKind {
             supported.contains(typeName)
     }
 
-    abstract fun default(innerDescriptors: List<TypeDescriptor>): CodeBlock
-    abstract fun toCodeBlock(propertyName: String, innerDescriptors: List<TypeDescriptor> = listOf()): CodeBlock
+    abstract val default: CodeBlock
+    abstract fun toCodeBlock(propertyName: String): CodeBlock
 
-    class WrappedList_(val size: Int): TypeKind() {
-        override fun default(innerDescriptors: List<TypeDescriptor>): CodeBlock {
+    val isCompound: Boolean = innerDescriptors.isNotEmpty()
+
+
+    open val type: TypeName
+        get() = definition.parameterizedBy(innerDescriptors.map { it.type })
+
+    fun debug() {
+        if (innerDescriptors.isEmpty()) {
+            log?.error("(${(0..100).random()}) $definition : $default")
+        } else {
+            log?.error("(${(0..100).random()}) $definition")
+            innerDescriptors.forEach { it.debug() }
+        }
+    }
+
+    class List_(val size: Int, innerDescriptors: List<TypeDescriptor>): TypeDescriptor(
+        WrappedList::class,
+        innerDescriptors
+    ) {
+        override val default: CodeBlock
+            get() {
             val innerType = innerDescriptors.getOrNull(0)
                 ?: error("WrappedList must declare type of its elements")
 
@@ -80,7 +90,7 @@ sealed class TypeKind {
             )
         }
 
-        override fun toCodeBlock(propertyName: String, innerDescriptors: List<TypeDescriptor>): CodeBlock {
+        override fun toCodeBlock(propertyName: String): CodeBlock {
             val listType = innerDescriptors.getOrNull(0)
                 ?: error("WrappedList must declare type of its elements")
 
@@ -91,7 +101,7 @@ sealed class TypeKind {
             )
             var mapper = ""
 
-            if (listType is TypeDescriptor.Transient) {
+            if (listType.isCompound) {
                 val itName = "it${(0..100).random()}"
                 map += "it" to itName
                 map += "mapped" to listType.toCodeBlock(itName)
@@ -110,29 +120,43 @@ sealed class TypeKind {
         }
     }
 
-    class Int_(val value: Int): TypeKind() {
-        override fun default(innerDescriptors: List<TypeDescriptor>)
-            = CodeBlock.of("%L", value)
+    // it's impossible to get to the package name for `Int` from `Int::class`
+    // 1. Kotlin has not such native functionality,
+    //    although I can resolve it from `Int::class.qualifiedName` (evaluates to `kotlin.Int`),
+    //    but I don't want to hardcode such a thing.
+    // 2. `KSDeclaration` allows to resolve package name, so I prefer
+    //    taking an extra parameter providing the required functionality.
+    class Int_(val value: Int, declaration: KSDeclaration): TypeDescriptor(
+        ClassName(
+            declaration.packageName.asString(),
+            listOf(declaration.simpleName.asString()!!)
+        )
+    ) {
+        override val type: TypeName
+            get() = definition
 
-        override fun toCodeBlock(propertyName: String, innerDescriptors: List<TypeDescriptor>)
+        override val default = CodeBlock.of("%L", value)
+
+        override fun toCodeBlock(propertyName: String)
             = CodeBlock.of(propertyName)
     }
 
-    object Pair_ : TypeKind() {
-        override fun default(innerDescriptors: List<TypeDescriptor>): CodeBlock {
-            val firstType = innerDescriptors.getOrNull(0)
-                ?: error("Pair<A, B> must declare type A")
+    class Pair_(innerDescriptors: List<TypeDescriptor>) : TypeDescriptor(Pair::class, innerDescriptors) {
+        override val default: CodeBlock
+            get() {
+                val firstType = innerDescriptors.getOrNull(0)
+                    ?: error("Pair<A, B> must declare type A")
 
-            val secondType = innerDescriptors.getOrNull(1)
-                ?: error("Pair<A, B> must declare type B")
+                val secondType = innerDescriptors.getOrNull(1)
+                    ?: error("Pair<A, B> must declare type B")
 
-            return CodeBlock.of(
-                "Pair( %L, %L )",
-                firstType.default, secondType.default
-            )
-        }
+                return CodeBlock.of(
+                    "Pair( %L, %L )",
+                    firstType.default, secondType.default
+                )
+            }
 
-        override fun toCodeBlock(propertyName: String, innerDescriptors: List<TypeDescriptor>): CodeBlock {
+        override fun toCodeBlock(propertyName: String): CodeBlock {
             val first = innerDescriptors.getOrNull(0)
                 ?: error("Pair<A, B> must declare type A")
             val second = innerDescriptors.getOrNull(1)
@@ -152,24 +176,25 @@ sealed class TypeKind {
         }
     }
 
-    object Triple_ : TypeKind() {
-        override fun default(innerDescriptors: List<TypeDescriptor>): CodeBlock {
-            val first = innerDescriptors.getOrNull(0)
-                ?: error("Triple<A, B, C> must declare type A")
+    class Triple_(innerDescriptors: List<TypeDescriptor>) : TypeDescriptor(Triple::class, innerDescriptors) {
+        override val default: CodeBlock
+            get() {
+                val first = innerDescriptors.getOrNull(0)
+                    ?: error("Triple<A, B, C> must declare type A")
 
-            val second = innerDescriptors.getOrNull(1)
-                ?: error("Triple<A, B, C> must declare type B")
+                val second = innerDescriptors.getOrNull(1)
+                    ?: error("Triple<A, B, C> must declare type B")
 
-            val third = innerDescriptors.getOrNull(2)
-                ?: error("Triple<A, B, C> must declare type C")
+                val third = innerDescriptors.getOrNull(2)
+                    ?: error("Triple<A, B, C> must declare type C")
 
-            return CodeBlock.of(
-                "Triple( %L, %L, %L )",
-                first.default, second.default, third.default
-            )
-        }
+                return CodeBlock.of(
+                    "Triple( %L, %L, %L )",
+                    first.default, second.default, third.default
+                )
+            }
 
-        override fun toCodeBlock(propertyName: String, innerDescriptors: List<TypeDescriptor>): CodeBlock {
+        override fun toCodeBlock(propertyName: String): CodeBlock {
             val first = innerDescriptors.getOrNull(0)
                 ?: error("Triple<A, B, C> must declare type A")
 
