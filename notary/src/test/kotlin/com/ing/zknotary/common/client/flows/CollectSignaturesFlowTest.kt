@@ -1,5 +1,7 @@
 package com.ing.zknotary.common.client.flows
 
+import com.ing.zknotary.node.services.InMemoryZKProverTransactionStorage
+import com.ing.zknotary.node.services.ServiceNames.ZK_PROVER_TX_STORAGE
 import groovy.util.GroovyTestCase.assertEquals
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
@@ -27,7 +29,13 @@ class CollectSignaturesFlowTest {
     @Before
     fun setup() {
         val mockNetworkParameters = MockNetworkParameters(
-            cordappsForAllNodes = listOf(cordappWithPackages("com.ing.zknotary")),
+            cordappsForAllNodes = listOf(
+                cordappWithPackages("com.ing.zknotary").withConfig(
+                    mapOf(
+                        ZK_PROVER_TX_STORAGE to InMemoryZKProverTransactionStorage::class.qualifiedName!!
+                    )
+                )
+            ),
             notarySpecs = listOf(
                 MockNetworkNotarySpec(DUMMY_NOTARY_NAME)
             )

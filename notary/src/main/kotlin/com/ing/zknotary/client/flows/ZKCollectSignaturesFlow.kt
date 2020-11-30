@@ -2,7 +2,8 @@ package com.ing.zknotary.client.flows
 
 import co.paralleluniverse.fibers.Suspendable
 import com.ing.zknotary.common.transactions.toZKProverTransaction
-import com.ing.zknotary.node.services.InMemoryZKProverTransactionStorage
+import com.ing.zknotary.node.services.ServiceNames
+import com.ing.zknotary.node.services.getCordaServiceFromConfig
 import net.corda.core.crypto.BLAKE2s256DigestService
 import net.corda.core.crypto.PedersenDigestService
 import net.corda.core.crypto.SecureHash
@@ -320,7 +321,7 @@ abstract class ZKSignTransactionFlow @JvmOverloads constructor(
         // Convert Tx to ZKP form
         val zktx = stx.tx.toZKProverTransaction(
             serviceHub,
-            serviceHub.cordaService(InMemoryZKProverTransactionStorage::class.java),
+            serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_PROVER_TX_STORAGE),
             componentGroupLeafDigestService = BLAKE2s256DigestService,
             nodeDigestService = PedersenDigestService
         )
