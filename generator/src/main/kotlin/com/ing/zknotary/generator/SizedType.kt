@@ -4,6 +4,7 @@ import com.google.devtools.ksp.isPublic
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.ing.zknotary.util.describe
+import com.ing.zknotary.util.sizedName
 import com.ing.zknotary.util.toTypeName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
@@ -23,11 +24,9 @@ class SizedType {
         ): FileSpec {
             log = logger
 
-            val generatedClassName = "${clazz.simpleName.asString()}Sized"
-
-            return FileSpec.builder(clazz.packageName.asString(), generatedClassName)
+            return FileSpec.builder(clazz.packageName.asString(), clazz.sizedName)
                 .addType(
-                    buildFixedLengthType(generatedClassName, clazz, annotatedClasses)
+                    buildFixedLengthType(clazz.sizedName, clazz, annotatedClasses)
                 )
                 .build()
         }
@@ -50,7 +49,7 @@ class SizedType {
                 val properties = clazz.getAllProperties()
                     .filter { property -> property.isPublic() }
                     .map { property ->
-                        val descriptor = property.describe(original)
+                        val descriptor = property.describe(original, annotatedClasses)
 
                         // Side effect: defining properties and private constructor.
                         privateConstructorBuilder.addParameter(descriptor.name, descriptor.type)

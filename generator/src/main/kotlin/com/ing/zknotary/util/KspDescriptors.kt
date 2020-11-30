@@ -74,3 +74,6 @@ fun KSType.describe(): TypeDescriptor =
         // fail
         else -> error("not supported: $name")
     }
+
+val KSClassDeclaration.sizedName: String
+    get() = "${simpleName.asString()}Sized"
