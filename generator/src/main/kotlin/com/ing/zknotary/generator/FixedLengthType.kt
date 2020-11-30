@@ -54,7 +54,8 @@ class FixedLengthType {
                     .addParameter("original", clazz.toTypeName())
                     .callThisConstructor(
                         CodeBlock.of(
-                            "original.%N, original.%N, original.%N",
+                            propertyNames.map { "original.%N" }.joinToString(", "),
+                            // "original.%N, original.%N, original.%N",
                             args = *propertyNames.toTypedArray()
                         )
                     )

@@ -1,4 +1,4 @@
-package com.ing.zknotary.common.flows
+package com.ing.zknotary.node.services
 
 import net.corda.core.node.ServiceHub
 import net.corda.core.serialization.SerializeAsToken
