@@ -103,4 +103,25 @@ class SizedTest {
         val l5 = l4s.list[0]
         assert(l5 is Int)
     }
+
+    @Sized
+    class StateL0(val simple: @Sized(5) List<Int>)
+
+    @Sized
+    class StateL1(val complex: @Sized(5) List<StateL0>)
+
+    @Test
+    fun `class with custom sizeable types must be sizeable`() {
+        val state = StateL1(listOf(StateL0(listOf(19))))
+        val sized = StateL1Sized(state)
+
+        val l1 = sized.complex
+        assert(l1 is WrappedList<*> && l1.list.size == 5 && l1.originalSize == 1)
+
+        val l1element = l1.list[0]
+        assert(l1element is StateL0Sized)
+
+        val l2 = l1element.simple
+        assert(l2 is WrappedList<*> && l2.list.size == 5 && l2.originalSize == 1)
+    }
 }

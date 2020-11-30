@@ -1,17 +1,34 @@
 package com.ing.zknotary.util
 
+import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.ing.zknotary.annotations.Sized
+import com.ing.zknotary.generator.log
 
-fun KSPropertyDeclaration.describe(original: String): PropertyDescriptor {
+fun KSPropertyDeclaration.describe(
+    original: String,
+    sizedClasses: List<KSClassDeclaration>
+): PropertyDescriptor {
     val name = simpleName.asString()
     val typeDef = type.resolve()
     val typeName = typeDef.declaration.toString()
 
-    if (!TypeDescriptor.supports(typeName)) {
-        error("Type $typeName is not supported\n"+
-            "Supported types:\n${TypeDescriptor.supported.joinToString(separator = ",\n")}")
+    var supported = false
+    val errors = mutableListOf("Type $typeName is not supported\n")
+
+    supported = supported || TypeDescriptor.supports(typeName)
+    if (!supported) {
+        errors += "Supported types:\n${TypeDescriptor.supported.joinToString(separator = ",\n")}"
+    }
+
+    supported = supported || sizedClasses.any { it.simpleName.asString() == typeName }
+    if (!supported) {
+        errors += "Class $typeName is not expected to have fixed length"
+    }
+
+    if (!supported) {
+        error(errors.joinToString(separator = "\n"))
     }
 
     val descriptor = typeDef.describe()
@@ -25,6 +42,8 @@ fun KSPropertyDeclaration.describe(original: String): PropertyDescriptor {
 }
 
 fun KSType.describe(): TypeDescriptor =
+    // Invariant MUST hold:
+    // This method must be be called on a type presentable as a fixed length instance.
     when (val name = "$declaration") {
         // Primitive types
         Int::class.simpleName -> TypeDescriptor.Int_(0, declaration)
@@ -70,9 +89,16 @@ fun KSType.describe(): TypeDescriptor =
             TypeDescriptor.List_(size, listOf(listType.describe()))
         }
 
-        //
-        // fail
-        else -> error("not supported: $name")
+        // Unknown type allowing fixed length representation.
+        else -> {
+            // Say, such class in called `SiClass`,
+            // meaning it is expected to have it sized version called
+            // `KSClassDeclaration<SiClass>.sizedName`
+
+            TypeDescriptor.SizedClass(
+                declaration as KSClassDeclaration
+            )
+        }
     }
 
 val KSClassDeclaration.sizedName: String

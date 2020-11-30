@@ -1,5 +1,6 @@
 package com.ing.zknotary.util
 
+import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.ing.zknotary.annotations.WrappedList
 import com.ing.zknotary.generator.log
@@ -60,8 +61,7 @@ sealed class TypeDescriptor(
     abstract val default: CodeBlock
     abstract fun toCodeBlock(propertyName: String): CodeBlock
 
-    val isCompound: Boolean = innerDescriptors.isNotEmpty()
-
+    open val isTransient: Boolean = true
 
     open val type: TypeName
         get() = definition.parameterizedBy(innerDescriptors.map { it.type })
@@ -101,7 +101,7 @@ sealed class TypeDescriptor(
             )
             var mapper = ""
 
-            if (listType.isCompound) {
+            if (listType.isTransient) {
                 val itName = "it${(0..100).random()}"
                 map += "it" to itName
                 map += "mapped" to listType.toCodeBlock(itName)
@@ -129,9 +129,11 @@ sealed class TypeDescriptor(
     class Int_(val value: Int, declaration: KSDeclaration): TypeDescriptor(
         ClassName(
             declaration.packageName.asString(),
-            listOf(declaration.simpleName.asString()!!)
+            listOf(declaration.simpleName.asString())
         )
     ) {
+        override val isTransient = false
+
         override val type: TypeName
             get() = definition
 
@@ -217,6 +219,22 @@ sealed class TypeDescriptor(
                     map
                 ).build()
         }
+    }
+
+    class SizedClass(declaration: KSClassDeclaration) : TypeDescriptor(
+        ClassName(
+            declaration.packageName.asString(),
+            listOf(declaration.sizedName)
+        )
+    ) {
+        override val type: TypeName
+            get() = definition
+
+        override val default: CodeBlock
+            get() = CodeBlock.of("%L()", definition)
+
+        override fun toCodeBlock(propertyName: String)
+            = CodeBlock.of("%L( %L )", definition, propertyName)
     }
 }
 
