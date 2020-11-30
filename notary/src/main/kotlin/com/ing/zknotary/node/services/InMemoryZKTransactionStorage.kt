@@ -1,11 +1,8 @@
-package com.ing.zknotary.testing.node.services
+package com.ing.zknotary.node.services
 
 import com.ing.zknotary.common.transactions.NamedByZKMerkleTree
 import com.ing.zknotary.common.transactions.SignedZKProverTransaction
 import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
-import com.ing.zknotary.node.services.ZKTransactionMap
-import com.ing.zknotary.node.services.ZKWritableProverTransactionStorage
-import com.ing.zknotary.node.services.ZKWritableVerifierTransactionStorage
 import net.corda.core.concurrent.CordaFuture
 import net.corda.core.contracts.NamedByHash
 import net.corda.core.crypto.SecureHash
@@ -16,16 +13,16 @@ import net.corda.core.node.services.CordaService
 import net.corda.core.serialization.SingletonSerializeAsToken
 import net.corda.core.toFuture
 import net.corda.node.services.api.WritableTransactionStorage
-import net.corda.testing.node.MockServices
 import rx.Observable
 import rx.subjects.PublishSubject
 import java.util.HashMap
 
 /**
+ * TODO this should go to test sources once we have non-mock implementation
  * A class which provides an implementation of [WritableTransactionStorage] which is used in [MockServices]
  */
 @CordaService
-public open class MockZKProverTransactionStorage(public val serviceHub: AppServiceHub) : ZKWritableProverTransactionStorage,
+public open class InMemoryZKProverTransactionStorage(public val serviceHub: AppServiceHub) : ZKWritableProverTransactionStorage,
     SingletonSerializeAsToken() {
 
     override fun trackTransaction(id: SecureHash): CordaFuture<SignedZKProverTransaction> {
@@ -95,7 +92,7 @@ public open class MockZKProverTransactionStorage(public val serviceHub: AppServi
  * A class which provides an implementation of [WritableTransactionStorage] which is used in [MockServices]
  */
 @CordaService
-public open class MockZKVerifierTransactionStorage(public val serviceHub: AppServiceHub) : ZKWritableVerifierTransactionStorage,
+public open class InMemoryZKVerifierTransactionStorage(public val serviceHub: AppServiceHub) : ZKWritableVerifierTransactionStorage,
     SingletonSerializeAsToken() {
 
     override fun trackTransaction(id: SecureHash): CordaFuture<SignedZKVerifierTransaction> {

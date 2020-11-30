@@ -80,7 +80,7 @@ class ZKVerifierTransaction(
         if (timeWindow != null) require(componentNonces[ComponentGroupEnum.TIMEWINDOW_GROUP.ordinal]?.size == 1) { "If there is a timeWindow, there should be exactly one timeWindow nonce" }
     }
 
-    val id by lazy { merkleTree.root }
+    override val id by lazy { merkleTree.root }
 
     override val merkleTree by lazy {
         ZKPartialMerkleTree(this)

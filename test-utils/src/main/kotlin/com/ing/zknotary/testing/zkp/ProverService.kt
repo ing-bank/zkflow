@@ -4,9 +4,9 @@ import com.ing.zknotary.common.contracts.ZKCommandData
 import com.ing.zknotary.common.transactions.toSignedZKVerifierTransaction
 import com.ing.zknotary.common.transactions.toZKProverTransaction
 import com.ing.zknotary.common.zkp.ZKTransactionService
+import com.ing.zknotary.node.services.InMemoryZKProverTransactionStorage
+import com.ing.zknotary.node.services.InMemoryZKVerifierTransactionStorage
 import com.ing.zknotary.node.services.collectVerifiedDependencies
-import com.ing.zknotary.testing.node.services.MockZKProverTransactionStorage
-import com.ing.zknotary.testing.node.services.MockZKVerifierTransactionStorage
 import net.corda.core.crypto.BLAKE2s256DigestService
 import net.corda.core.crypto.Crypto
 import net.corda.core.crypto.PedersenDigestService
@@ -28,15 +28,15 @@ public class ProverService public constructor(
     public val ledgerServices: MockServices,
     public val zkTransactionServices: Map<SecureHash, ZKTransactionService>
 ) {
-    public val zkVerifierTransactionStorage: MockZKVerifierTransactionStorage
-    private val zkProverTransactionStorage: MockZKProverTransactionStorage
+    public val zkVerifierTransactionStorage: InMemoryZKVerifierTransactionStorage
+    private val zkProverTransactionStorage: InMemoryZKProverTransactionStorage
 
     private val logger = loggerFor<ProverService>()
 
     init {
         logger.info("Setting up Prover Service")
-        zkVerifierTransactionStorage = createMockCordaService(ledgerServices, ::MockZKVerifierTransactionStorage)
-        zkProverTransactionStorage = createMockCordaService(ledgerServices, ::MockZKProverTransactionStorage)
+        zkVerifierTransactionStorage = createMockCordaService(ledgerServices, ::InMemoryZKVerifierTransactionStorage)
+        zkProverTransactionStorage = createMockCordaService(ledgerServices, ::InMemoryZKProverTransactionStorage)
     }
 
     /**
