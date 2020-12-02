@@ -44,6 +44,15 @@ pluginManagement {
         mavenCentral()
         maven("https://plugins.gradle.org/m2/")
         maven("https://software.r3.com/artifactory/corda")
+
+        maven {
+            name = "KspForkRepo"
+            url = uri("https://maven.pkg.github.com/ingzkp/ksp")
+            credentials {
+                username = System.getenv("GITHUB_USERNAME")
+                password = System.getenv("GITHUB_TOKEN")
+            }
+        }
     }
 }
 
