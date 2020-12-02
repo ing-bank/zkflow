@@ -124,4 +124,23 @@ class SizedTest {
         val l2 = l1element.simple
         assert(l2 is WrappedList<*> && l2.list.size == 5 && l2.originalSize == 1)
     }
+
+    class Defaultable(val n: Int) {
+        constructor() : this(0)
+    }
+
+    @Sized
+    class ListWithDefault(val simple: @Sized(5, true) List<Defaultable>)
+
+    @Test
+    fun `class with custom defaultable types must be sizeable`() {
+        val state = ListWithDefault(listOf())
+        val sized = ListWithDefaultSized(state)
+
+        val l1 = sized.simple
+        assert(l1 is WrappedList<*> && l1.list.size == 5 && l1.originalSize == 0)
+
+        val element = l1.list[0]
+        assert(element is Defaultable && element.n == 0)
+    }
 }

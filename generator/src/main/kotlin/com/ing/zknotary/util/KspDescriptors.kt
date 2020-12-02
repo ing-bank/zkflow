@@ -1,5 +1,7 @@
 package com.ing.zknotary.util
 
+import com.google.devtools.ksp.getConstructors
+import com.google.devtools.ksp.isPublic
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSType
@@ -22,6 +24,7 @@ fun KSPropertyDeclaration.describe(
         errors += "Supported types:\n${TypeDescriptor.supported.joinToString(separator = ",\n")}"
     }
 
+    // TODO have a better comment why it is ok to proceed
     supported = supported || sizedClasses.any { it.simpleName.asString() == typeName }
     if (!supported) {
         errors += "Class $typeName is not expected to have fixed length"
@@ -41,10 +44,11 @@ fun KSPropertyDeclaration.describe(
     )
 }
 
-fun KSType.describe(): TypeDescriptor =
+fun KSType.describe(useDefault: Boolean = false): TypeDescriptor =
+    // TODO explicit defence against invariance
     // Invariant MUST hold:
     // This method must be be called on a type presentable as a fixed length instance.
-    when (val name = "$declaration") {
+    when ("$declaration") {
         // Primitive types
         Int::class.simpleName -> TypeDescriptor.Int_(0, declaration)
 
@@ -69,7 +73,11 @@ fun KSType.describe(): TypeDescriptor =
         //
         // Collections
         List::class.simpleName -> {
+            val listType = arguments.single().type?.resolve()
+                ?: error( "List must have a type" )
+
             // Lists must be annotated with Sized.
+            // TODO extract this into an ext function
             val sized = annotations.single {
                 it.annotationType.toString().contains(
                     Sized::class.java.simpleName,
@@ -77,27 +85,53 @@ fun KSType.describe(): TypeDescriptor =
                 )
             }
 
-            // Sized annotation must specify the size.
-            // TODO Too many hardcoded things: "size" and Int
+            // TODO Too many hardcoded things: property names and their types.
+
+            // Sized annotation must specify the size and,
+            // perhaps, whether default is to be constructed.
             val size = sized.arguments.single {
                 it.name?.getShortName() == "size"
-            }.value as? Int ?: error("Int size is expected")
+            }.value as? Int ?: error("Int for `size` is expected")
 
-            val listType = arguments.single().type?.resolve()
-            require(listType != null) { "List must have a type" }
+            // TODO reconsider name shadowing
+            @Suppress("NAME_SHADOWING")
+            val useDefault = kotlin.run {
+                val useDefault = sized.arguments.single {
+                    it.name?.getShortName() == "useDefault"
+                }.value as? Boolean ?: false
 
-            TypeDescriptor.List_(size, listOf(listType.describe()))
+                if (!useDefault) {
+                    return@run false
+                }
+
+                // Default for list element must be used.
+                // Verify there is an empty constructor.
+
+                // TODO split to nullable casting and further constructor evaluation
+                (listType.declaration as? KSClassDeclaration)
+                    ?.getConstructors()
+                    ?.any { it.isPublic() && it.parameters.isEmpty() }
+                    ?: error("Only classes can be instantiated with default")
+            }
+
+            TypeDescriptor.List_(size, listOf(listType.describe(useDefault)))
         }
 
         // Unknown type allowing fixed length representation.
         else -> {
-            // Say, such class in called `SiClass`,
-            // meaning it is expected to have it sized version called
-            // `KSClassDeclaration<SiClass>.sizedName`
-
-            TypeDescriptor.SizedClass(
-                declaration as KSClassDeclaration
-            )
+            // Say, such class is called `SiClass`,
+            // it is either expected either
+            // 1. to have a sized version called SiClassSized,
+            //    meaning it is expected to have a sized version called
+            //    `KSClassDeclaration<SiClass>.sizedName`, or
+            // 2. to have a default constructor, in this case,
+            //    flag `useDefault` will be set to true
+            val clazz = declaration as KSClassDeclaration
+            if (useDefault) {
+                TypeDescriptor.DefaultableClass(clazz)
+            } else {
+                TypeDescriptor.SizedClass(clazz)
+            }
         }
     }
 

@@ -81,14 +81,14 @@ sealed class TypeDescriptor(
     ) {
         override val default: CodeBlock
             get() {
-            val innerType = innerDescriptors.getOrNull(0)
-                ?: error("WrappedList must declare type of its elements")
+                val innerType = innerDescriptors.getOrNull(0)
+                    ?: error("WrappedList must declare type of its elements")
 
-            return CodeBlock.of(
-                "WrappedList( %L, %L )",
-                size, innerType.default
-            )
-        }
+                return CodeBlock.of(
+                    "WrappedList( %L, %L )",
+                    size, innerType.default
+                )
+            }
 
         override fun toCodeBlock(propertyName: String): CodeBlock {
             val listType = innerDescriptors.getOrNull(0)
@@ -235,6 +235,21 @@ sealed class TypeDescriptor(
 
         override fun toCodeBlock(propertyName: String)
             = CodeBlock.of("%L( %L )", definition, propertyName)
+    }
+
+    class DefaultableClass(declaration: KSClassDeclaration) : TypeDescriptor(
+        declaration.toClassName()
+    ) {
+        override val isTransient = false
+
+        override val type: TypeName
+            get() = definition
+
+        override val default: CodeBlock
+            get() = CodeBlock.of("%L()", definition)
+
+        override fun toCodeBlock(propertyName: String)
+            = CodeBlock.of("%L", propertyName)
     }
 }
 
