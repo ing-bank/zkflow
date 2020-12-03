@@ -3,8 +3,8 @@ package com.ing.zknotary.generator
 import com.google.devtools.ksp.isPublic
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.symbol.KSClassDeclaration
-import com.ing.zknotary.util.describe
-import com.ing.zknotary.util.sizedName
+import com.ing.zknotary.descriptors.describe
+import com.ing.zknotary.descriptors.sizedName
 import com.ing.zknotary.util.toTypeName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec

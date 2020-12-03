@@ -1,4 +1,4 @@
-package com.ing.zknotary.util
+package com.ing.zknotary.descriptors
 
 import com.google.devtools.ksp.processing.KSPLogger
 import com.squareup.kotlinpoet.CodeBlock

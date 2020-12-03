@@ -49,12 +49,6 @@ fun KSAnnotated.findAnnotationWithType(target: KSType): KSAnnotation? {
     return annotations.find { it.annotationType.resolve() == target }
 }
 
-inline fun <reified T> KSAnnotation.getMember(name: String): T {
-    return arguments.find { it.name?.getShortName() == name }
-        ?.value as? T
-        ?: error("No member name found for $name.")
-}
-
 // this seems to fail
 fun KSType.toTypeName(): TypeName {
     val type = when (declaration) {
@@ -109,7 +103,7 @@ fun KSAnnotation.toTypeName(): TypeName {
     return annotationType.resolve().toTypeName()
 }
 
-///
+// /
 val KSType.typeName: TypeName
     get() {
         val primaryType = declaration.toString()
@@ -126,3 +120,22 @@ val KSType.typeName: TypeName
             clazzName
         }
     }
+
+inline fun <reified T> KSType.expectAnnotation(): KSAnnotation =
+    annotations.single {
+        it.annotationType.toString().contains(
+            T::class.simpleName ?: error("Unknown annotation class is expected"),
+            ignoreCase = true
+        )
+    }
+
+inline fun<reified T> KSAnnotation.expectArgument(name: String): T
+    = arguments.single {
+        it.name?.getShortName() == name
+    }.value as? T
+    ?: error("${T::class.simpleName} for `$name` is expected")
+
+inline fun<reified T> KSAnnotation.getArgumentOrDefault(name: String, default: T): T
+    = arguments.single {
+        it.name?.getShortName() == name
+    }.value as? T ?: default
