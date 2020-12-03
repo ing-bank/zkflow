@@ -2,7 +2,7 @@ package com.ing.zknotary.notary.flows
 
 import co.paralleluniverse.fibers.Suspendable
 import com.ing.zknotary.common.transactions.ZKVerifierTransaction
-import com.ing.zknotary.common.zkp.ZKConfig
+import com.ing.zknotary.notary.NotaryZKConfig
 import com.ing.zknotary.notary.ZKNotarisationPayload
 import com.ing.zknotary.notary.ZKNotarisationRequest
 import com.ing.zknotary.notary.ZKNotaryService
@@ -29,7 +29,7 @@ class ZKNotaryServiceFlow(
     val otherSideSession: FlowSession,
     val service: ZKNotaryService,
     private val etaThreshold: Duration,
-    private val zkConfig: ZKConfig
+    private val zkConfig: NotaryZKConfig
 ) : FlowLogic<Void?>(), IdempotentFlow {
     companion object {
         // TODO: Determine an appropriate limit and also enforce in the network parameters and the transaction builder.
@@ -45,7 +45,7 @@ class ZKNotaryServiceFlow(
     @Suspendable
     override fun call(): Void? {
         val requestPayload = otherSideSession.receive<ZKNotarisationPayload>().unwrap { it }
-        val tx = requestPayload.transaction
+        val tx = requestPayload.transaction.tx
         logger.info("Received a notarisation request for Tx [${tx.id}] from [${otherSideSession.counterparty.name}]")
 
         val commitStatus = try {
@@ -54,6 +54,7 @@ class ZKNotaryServiceFlow(
             validateRequestSignature(tx, requestPayload.requestSignature)
 
             /**
+             * TODO double-check if it is correct
              * In our case this goes *before* verification, because due to ZKP,
              * tx verification is slower than persistence and dependent on tx size
              */
@@ -148,16 +149,23 @@ class ZKNotaryServiceFlow(
     }
 
     private fun verifyTransaction(requestPayload: ZKNotarisationPayload) {
-        val tx = requestPayload.transaction
+        val svtx = requestPayload.transaction
 
         try {
             /**
-             * Check if we need to do some more checks from [TransactionVerifierServiceInternal] that are done on
-             * Ledgertransactions
+             * TODO Check if we need to do some more checks from [TransactionVerifierServiceInternal]
+             * that are done on Ledgertransactions
              */
-            // TODO: enable tx.verify()
-            // TODO: verify the zkp
-            // zkConfig.verifierService.verify()
+            // Verify ZKP
+            zkConfig.zkTransactionService.verify(svtx.tx)
+            // Verify all attached sigs are valid
+            svtx.sigs.forEach {
+                it.verify(svtx.id)
+            }
+            // Verify all required sigs are present
+            svtx.tx.signers.forEach { signer ->
+                if (svtx.sigs.find { it.by == signer } == null) throw IllegalArgumentException("Missing signature for required signer")
+            }
         } catch (e: IllegalArgumentException) {
             throw NotaryInternalException(NotaryError.TransactionInvalid(e))
         }

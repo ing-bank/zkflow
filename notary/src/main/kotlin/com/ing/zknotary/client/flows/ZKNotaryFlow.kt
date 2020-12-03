@@ -2,12 +2,11 @@ package com.ing.zknotary.client.flows
 
 import co.paralleluniverse.fibers.Suspendable
 import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
-import com.ing.zknotary.common.transactions.toSignedZKVerifierTransaction
-import com.ing.zknotary.common.zkp.ZKConfig
+import com.ing.zknotary.notary.ZKNotarisationPayload
+import com.ing.zknotary.notary.ZKNotarisationRequest
 import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.TransactionSignature
 import net.corda.core.flows.FlowSession
-import net.corda.core.flows.NotarisationRequest
 import net.corda.core.flows.NotarisationRequestSignature
 import net.corda.core.flows.NotarisationResponse
 import net.corda.core.flows.NotaryError
@@ -15,14 +14,15 @@ import net.corda.core.flows.NotaryException
 import net.corda.core.flows.NotaryFlow
 import net.corda.core.identity.Party
 import net.corda.core.internal.NetworkParametersStorage
-import net.corda.core.internal.notary.generateSignature
+import net.corda.core.internal.notary.validateSignatures
 import net.corda.core.transactions.NotaryChangeWireTransaction
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.utilities.UntrustworthyData
+import net.corda.core.utilities.unwrap
 
 open class ZKNotaryFlow(
     private val stx: SignedTransaction,
-    private val zkConfig: ZKConfig
+    private val zktx: SignedZKVerifierTransaction
 ) : NotaryFlow.Client(stx) {
 
     @Suspendable
@@ -30,7 +30,7 @@ open class ZKNotaryFlow(
     override fun call(): List<TransactionSignature> {
         val notaryParty = checkTransaction()
         val response = zkNotarise(notaryParty)
-        return validateResponse(response, notaryParty)
+        return validateNotaryResponse(response, notaryParty)
     }
 
     /** Notarises the transaction with the [notaryParty], obtains the notary's signature(s). */
@@ -54,25 +54,8 @@ open class ZKNotaryFlow(
         session: FlowSession,
         signature: NotarisationRequestSignature
     ): UntrustworthyData<NotarisationResponse> {
-        @Suppress("UNUSED_VARIABLE") val ctx = stx.coreTransaction
-        // val tx = when (ctx) {
-        //     is ContractUpgradeWireTransaction -> ctx.buildFilteredTransaction()
-        //     is WireTransaction -> buildVerifierTransaction(stx, notaryParty)
-        //     else -> ctx
-        // }
-        // TODO: re-enable this when this flow is refactored to use the ZKProverTransaction
-        // session.send(ZKNotarisationPayload(tx, signature))
+        session.send(ZKNotarisationPayload(zktx, signature))
         return receiveResultOrTiming(session)
-    }
-
-    private fun buildVerifierTransaction(stx: SignedTransaction, zkSigs: List<TransactionSignature>, @Suppress("UNUSED_PARAMETER") notaryParty: Party): SignedZKVerifierTransaction {
-        return stx.toSignedZKVerifierTransaction(
-            services = serviceHub,
-            zkSigs = zkSigs,
-            zkProverTransactionStorage = zkConfig.zkProverTransactionStorage,
-            zkVerifierTransactionStorage = zkConfig.zkVerifierTransactionStorage,
-            zkTransactionService = zkConfig.zkTransactionService
-        )
     }
 
     /****************************************************
@@ -103,7 +86,19 @@ open class ZKNotaryFlow(
     private fun generateRequestSignature(): NotarisationRequestSignature {
         // TODO: This is not required any more once our AMQP serialization supports turning off object referencing.
         val notarisationRequest =
-            NotarisationRequest(stx.inputs.map { it.copy(txhash = SecureHash.parse(it.txhash.toString())) }, stx.id)
+            ZKNotarisationRequest(zktx.tx.inputs.map { it.copy(txhash = SecureHash.parse(it.txhash.toString())) }, zktx.id)
         return notarisationRequest.generateSignature(serviceHub)
+    }
+
+    /**
+     * Checks that the notary's signature(s) is/are valid.
+     *
+     * This method is protected and final in original code (called validateResponse) that's why name change
+     */
+    private fun validateNotaryResponse(response: UntrustworthyData<NotarisationResponse>, notaryParty: Party): List<TransactionSignature> {
+        return response.unwrap {
+            it.validateSignatures(zktx.id, notaryParty)
+            it.signatures
+        }
     }
 }

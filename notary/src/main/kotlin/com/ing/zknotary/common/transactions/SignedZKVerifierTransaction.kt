@@ -2,10 +2,12 @@ package com.ing.zknotary.common.transactions
 
 import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.TransactionSignature
+import net.corda.core.serialization.CordaSerializable
 import net.corda.core.transactions.TransactionWithSignatures
 import net.corda.core.utilities.toBase58String
 import java.security.PublicKey
 
+@CordaSerializable
 class SignedZKVerifierTransaction(val tx: ZKVerifierTransaction, override val sigs: List<TransactionSignature>) : TransactionWithSignatures {
 
     override val id: SecureHash

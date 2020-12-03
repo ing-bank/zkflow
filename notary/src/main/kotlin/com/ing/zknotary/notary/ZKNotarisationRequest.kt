@@ -6,6 +6,7 @@ import net.corda.core.flows.NotarisationRequestSignature
 import net.corda.core.flows.NotaryError
 import net.corda.core.identity.Party
 import net.corda.core.internal.notary.NotaryInternalException
+import net.corda.core.node.ServiceHub
 import net.corda.core.serialization.CordaSerializable
 import net.corda.core.serialization.serialize
 import net.corda.core.transactions.CoreTransaction
@@ -60,5 +61,15 @@ class ZKNotarisationRequest(statesToConsume: List<StateRef>, val transactionId: 
             val error = NotaryError.RequestSignatureInvalid(e)
             throw NotaryInternalException(error)
         }
+    }
+
+    /** Creates a signature over the notarisation request using the legal identity key. */
+    fun generateSignature(serviceHub: ServiceHub): NotarisationRequestSignature {
+        val serializedRequest = this.serialize().bytes
+        val signature = with(serviceHub) {
+            val myLegalIdentity = myInfo.legalIdentitiesAndCerts.first().owningKey
+            keyManagementService.sign(serializedRequest, myLegalIdentity)
+        }
+        return NotarisationRequestSignature(signature, serviceHub.myInfo.platformVersion)
     }
 }

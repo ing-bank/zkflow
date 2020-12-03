@@ -1,9 +1,14 @@
 package com.ing.zknotary.testing.zkp
 
 import com.ing.zknotary.common.dactyloscopy.Dactyloscopist
+import com.ing.zknotary.common.transactions.ZKVerifierTransaction
+import com.ing.zknotary.common.zkp.AbstractZKTransactionService
 import com.ing.zknotary.common.zkp.PublicInput
 import com.ing.zknotary.common.zkp.Witness
 import com.ing.zknotary.common.zkp.ZKTransactionService
+import com.ing.zknotary.node.services.ServiceNames
+import com.ing.zknotary.node.services.ZKVerifierTransactionStorage
+import com.ing.zknotary.node.services.getCordaServiceFromConfig
 import net.corda.core.crypto.BLAKE2s256DigestService
 import net.corda.core.node.AppServiceHub
 import net.corda.core.node.services.CordaService
@@ -13,7 +18,10 @@ import net.corda.core.serialization.deserialize
 import net.corda.core.serialization.serialize
 
 @CordaService
-public open class MockZKTransactionService(public val serviceHub: AppServiceHub) : ZKTransactionService, SingletonSerializeAsToken() {
+public open class MockZKTransactionService(public val services: AppServiceHub) : AbstractZKTransactionService, SingletonSerializeAsToken() {
+
+    override val zkStorage: ZKVerifierTransactionStorage = services.getCordaServiceFromConfig(ServiceNames.ZK_VERIFIER_TX_STORAGE)
+
     /**
      * This mock version simply returns the serialized witness, so that we can use it in `verify()`
      * to do all the verifications
