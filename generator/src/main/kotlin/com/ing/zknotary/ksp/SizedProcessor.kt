@@ -38,4 +38,3 @@ class SizedProcessor : SymbolProcessor {
 
     override fun finish() {}
 }
-

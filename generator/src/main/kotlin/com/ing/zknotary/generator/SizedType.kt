@@ -36,47 +36,46 @@ class SizedType {
             clazz: KSClassDeclaration,
             annotatedClasses: List<KSClassDeclaration>
         ) = TypeSpec.classBuilder(generatedClassName).apply {
-                val original = "original"
+            val original = "original"
 
-                val privateConstructorBuilder = FunSpec.constructorBuilder()
-                    .addModifiers(KModifier.PRIVATE)
+            val privateConstructorBuilder = FunSpec.constructorBuilder()
+                .addModifiers(KModifier.PRIVATE)
 
-                val instanceConstructorBuilder = FunSpec.constructorBuilder()
-                        .addParameter(original, clazz.toTypeName())
+            val instanceConstructorBuilder = FunSpec.constructorBuilder()
+                .addParameter(original, clazz.toTypeName())
 
-                val defaultConstructor = FunSpec.constructorBuilder()
+            val defaultConstructor = FunSpec.constructorBuilder()
 
-                val properties = clazz.getAllProperties()
-                    .filter { property -> property.isPublic() }
-                    .map { property ->
-                        val descriptor = property.describe(original, annotatedClasses)
+            val properties = clazz.getAllProperties()
+                .filter { property -> property.isPublic() }
+                .map { property ->
+                    val descriptor = property.describe(original, annotatedClasses)
 
-                        // Side effect: defining properties and private constructor.
-                        privateConstructorBuilder.addParameter(descriptor.name, descriptor.type)
-                        addProperty(
-                            PropertySpec.builder(descriptor.name, descriptor.type)
-                                .initializer(descriptor.name)
-                                .build()
-                        )
-
-                        descriptor
-                    }
-
-                primaryConstructor(privateConstructorBuilder.build())
-
-                instanceConstructorBuilder
-                    .callThisConstructor(
-                        CodeBlock.of(
-                            properties.joinToString { it.fromInstance.toString() }
-                        )
+                    // Side effect: defining properties and private constructor.
+                    privateConstructorBuilder.addParameter(descriptor.name, descriptor.type)
+                    addProperty(
+                        PropertySpec.builder(descriptor.name, descriptor.type)
+                            .initializer(descriptor.name)
+                            .build()
                     )
-                addFunction(instanceConstructorBuilder.build())
 
-                defaultConstructor.callThisConstructor(
-                    CodeBlock.of(properties.joinToString { it.default.toString() })
+                    descriptor
+                }
+
+            primaryConstructor(privateConstructorBuilder.build())
+
+            instanceConstructorBuilder
+                .callThisConstructor(
+                    CodeBlock.of(
+                        properties.joinToString { it.fromInstance.toString() }
+                    )
                 )
-                addFunction(defaultConstructor.build())
+            addFunction(instanceConstructorBuilder.build())
 
-            }.build()
-        }
+            defaultConstructor.callThisConstructor(
+                CodeBlock.of(properties.joinToString { it.default.toString() })
+            )
+            addFunction(defaultConstructor.build())
+        }.build()
+    }
 }

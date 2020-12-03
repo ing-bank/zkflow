@@ -4,7 +4,7 @@ import com.google.devtools.ksp.processing.KSPLogger
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.TypeName
 
-class PropertyDescriptor (
+class PropertyDescriptor(
     val name: String,
     val type: TypeName,
     val fromInstance: CodeBlock,

@@ -9,8 +9,8 @@ data class WrappedList<T> private constructor(val list: List<T>, val originalSiz
         list = List(n) { default },
         originalSize = 0
     )
-    constructor(n: Int, list: List<T>, default: T) :  this (
-        list = if (list.size <= n )  {
+    constructor(n: Int, list: List<T>, default: T) : this (
+        list = if (list.size <= n) {
             List(n) {
                 if (it < list.size) {
                     list[it]
@@ -24,5 +24,3 @@ data class WrappedList<T> private constructor(val list: List<T>, val originalSiz
         originalSize = list.size
     )
 }
-
-

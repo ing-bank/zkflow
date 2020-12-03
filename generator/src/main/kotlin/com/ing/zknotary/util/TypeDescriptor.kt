@@ -33,11 +33,10 @@ import kotlin.reflect.KClass
  * - TypeDescriptor.Pair_ constructs a pair making use of `first` and `second` fields.
  */
 
-
 sealed class TypeDescriptor(
     val definition: ClassName,
     val innerDescriptors: List<TypeDescriptor> = listOf()
-){
+) {
     constructor(clazz: KClass<*>, innerDescriptors: List<TypeDescriptor>) : this(
         ClassName(
             clazz.java.`package`.name,
@@ -75,7 +74,7 @@ sealed class TypeDescriptor(
         }
     }
 
-    class List_(val size: Int, innerDescriptors: List<TypeDescriptor>): TypeDescriptor(
+    class List_(val size: Int, innerDescriptors: List<TypeDescriptor>) : TypeDescriptor(
         WrappedList::class,
         innerDescriptors
     ) {
@@ -111,7 +110,7 @@ sealed class TypeDescriptor(
 
             return CodeBlock.builder()
                 .addNamed(
-                    "WrappedList("+
+                    "WrappedList(" +
                         "\n⇥n = %size:L," +
                         "\nlist = %propertyName:L$mapper," +
                         "\ndefault = %default:L\n⇤)",
@@ -126,7 +125,7 @@ sealed class TypeDescriptor(
     //    but I don't want to hardcode such a thing.
     // 2. `KSDeclaration` allows to resolve package name, so I prefer
     //    taking an extra parameter providing the required functionality.
-    class Int_(val value: Int, declaration: KSDeclaration): TypeDescriptor(
+    class Int_(val value: Int, declaration: KSDeclaration) : TypeDescriptor(
         ClassName(
             declaration.packageName.asString(),
             listOf(declaration.simpleName.asString())
@@ -139,8 +138,8 @@ sealed class TypeDescriptor(
 
         override val default = CodeBlock.of("%L", value)
 
-        override fun toCodeBlock(propertyName: String)
-            = CodeBlock.of(propertyName)
+        override fun toCodeBlock(propertyName: String) =
+            CodeBlock.of(propertyName)
     }
 
     class Pair_(innerDescriptors: List<TypeDescriptor>) : TypeDescriptor(Pair::class, innerDescriptors) {
@@ -233,8 +232,8 @@ sealed class TypeDescriptor(
         override val default: CodeBlock
             get() = CodeBlock.of("%L()", definition)
 
-        override fun toCodeBlock(propertyName: String)
-            = CodeBlock.of("%L( %L )", definition, propertyName)
+        override fun toCodeBlock(propertyName: String) =
+            CodeBlock.of("%L( %L )", definition, propertyName)
     }
 
     class DefaultableClass(declaration: KSClassDeclaration) : TypeDescriptor(
@@ -248,8 +247,7 @@ sealed class TypeDescriptor(
         override val default: CodeBlock
             get() = CodeBlock.of("%L()", definition)
 
-        override fun toCodeBlock(propertyName: String)
-            = CodeBlock.of("%L", propertyName)
+        override fun toCodeBlock(propertyName: String) =
+            CodeBlock.of("%L", propertyName)
     }
 }
-

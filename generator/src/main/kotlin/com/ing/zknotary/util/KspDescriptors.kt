@@ -6,7 +6,6 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.ing.zknotary.annotations.Sized
-import com.ing.zknotary.generator.log
 
 fun KSPropertyDeclaration.describe(
     original: String,
@@ -74,7 +73,7 @@ fun KSType.describe(useDefault: Boolean = false): TypeDescriptor =
         // Collections
         List::class.simpleName -> {
             val listType = arguments.single().type?.resolve()
-                ?: error( "List must have a type" )
+                ?: error("List must have a type")
 
             // Lists must be annotated with Sized.
             // TODO extract this into an ext function
