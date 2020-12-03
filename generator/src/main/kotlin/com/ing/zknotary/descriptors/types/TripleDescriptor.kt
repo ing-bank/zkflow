@@ -3,7 +3,7 @@ package com.ing.zknotary.descriptors.types
 import com.ing.zknotary.descriptors.TypeDescriptor
 import com.squareup.kotlinpoet.CodeBlock
 
-class Triple_(innerDescriptors: List<TypeDescriptor>) : TypeDescriptor(Triple::class, innerDescriptors) {
+class TripleDescriptor(innerDescriptors: List<TypeDescriptor>) : TypeDescriptor(Triple::class, innerDescriptors) {
     override val default: CodeBlock
         get() {
             val first = innerDescriptors.getOrNull(0)

@@ -12,22 +12,22 @@ import kotlin.reflect.KClass
  * This description is used to assemble types with required replacements
  * and to create corresponding default values.
  * For example, List<Pair<Int, Int>> is described as follows:
- *                          TypeDescriptor.List_
+ *                          TypeDescriptor.ListDescriptor
  *                          (inner descriptors)
  *                                  |
- *                          TypeDescriptor.Pair_
+ *                          TypeDescriptor.PairDescriptor
  *                          (inner descriptors)
  *          |----------------------|-------------------------------|
  *          |                                                      |
- *   TypeDescriptor.Int_                                    TypeDescriptor.Int_
+ *   TypeDescriptor.IntDescriptor                                    TypeDescriptor.IntDescriptor
  *
  * Each version of TypeDescriptor implements a bespoke functionality
  * to construct default values and to create values of the right type from a variable.
  *
  * In the previous example, examples of such functionality are:
- * - TypeDescriptor.List_ implements replacement of `List` to `WrappedList`
+ * - TypeDescriptor.ListDescriptor implements replacement of `List` to `WrappedList`
  * and maps contained elements into sized versions;
- * - TypeDescriptor.Pair_ constructs a pair making use of `first` and `second` fields.
+ * - TypeDescriptor.PairDescriptor constructs a pair making use of `first` and `second` fields.
  *
  * The TypeDescriptor tree terminates at
  *  - built-in types such as Int, Byte, etc.,
@@ -38,10 +38,9 @@ import kotlin.reflect.KClass
  */
 
 abstract class TypeDescriptor(
-        val definition: ClassName,
-        val innerDescriptors: List<TypeDescriptor> = listOf()
-    )
-{
+    val definition: ClassName,
+    val innerDescriptors: List<TypeDescriptor> = listOf()
+) {
     constructor(clazz: KClass<*>, innerDescriptors: List<TypeDescriptor>) : this(
         ClassName(
             clazz.java.`package`.name,

@@ -12,7 +12,7 @@ import com.squareup.kotlinpoet.TypeName
 //    but I don't want to hardcode such a thing.
 // 2. `KSDeclaration` allows to resolve package name, so I prefer
 //    taking an extra parameter providing the required functionality.
-class Int_(val value: Int, declaration: KSDeclaration) : TypeDescriptor(
+class IntDescriptor(val value: Int, declaration: KSDeclaration) : TypeDescriptor(
     ClassName(
         declaration.packageName.asString(),
         listOf(declaration.simpleName.asString())

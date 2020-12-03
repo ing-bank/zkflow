@@ -14,12 +14,12 @@ import com.ing.zknotary.util.expectArgument
 import com.ing.zknotary.util.getArgumentOrDefault
 import com.squareup.kotlinpoet.CodeBlock
 
-class List_ private constructor(val size: Int, innerDescriptors: List<TypeDescriptor>) : TypeDescriptor(
+class ListDescriptor private constructor(private val size: Int, innerDescriptors: List<TypeDescriptor>) : TypeDescriptor(
     WrappedList::class,
     innerDescriptors
 ) {
     companion object {
-        fun fromKSP(list: KSType, support: Support): List_ {
+        fun fromKSP(list: KSType, support: Support): ListDescriptor {
             // List must be annotated with Sized.
             val sized = list.expectAnnotation<Sized>()
 
@@ -41,14 +41,14 @@ class List_ private constructor(val size: Int, innerDescriptors: List<TypeDescri
                     listClass.getConstructors().any {
                         it.isPublic() && it.parameters.isEmpty()
                     }
-                ){ "$listType must have a default (empty) constructor" }
+                ) { "$listType must have a default (empty) constructor" }
 
                 Support.Default
             } else {
                 support
             }
 
-            return List_(size, listOf(listType.describe(innerSupport)))
+            return ListDescriptor(size, listOf(listType.describe(innerSupport)))
         }
     }
 

@@ -5,10 +5,10 @@ import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.ing.zknotary.descriptors.types.AnnotatedSizedClass
 import com.ing.zknotary.descriptors.types.DefaultableClass
-import com.ing.zknotary.descriptors.types.Int_
-import com.ing.zknotary.descriptors.types.List_
-import com.ing.zknotary.descriptors.types.Pair_
-import com.ing.zknotary.descriptors.types.Triple_
+import com.ing.zknotary.descriptors.types.IntDescriptor
+import com.ing.zknotary.descriptors.types.ListDescriptor
+import com.ing.zknotary.descriptors.types.PairDescriptor
+import com.ing.zknotary.descriptors.types.TripleDescriptor
 
 /**
  * To describe the property structure in a way allowing
@@ -46,11 +46,11 @@ fun KSType.describe(support: Support): TypeDescriptor {
 
     return when ("$declaration") {
         // Primitive types
-        Int::class.simpleName -> Int_(0, declaration)
+        Int::class.simpleName -> IntDescriptor(0, declaration)
 
         //
         // Compound types
-        Pair::class.simpleName -> Pair_(
+        Pair::class.simpleName -> PairDescriptor(
             arguments.subList(0, 2).map {
                 val innerType = it.type?.resolve()
                 require(innerType != null) { "Pair must have type arguments" }
@@ -58,7 +58,7 @@ fun KSType.describe(support: Support): TypeDescriptor {
             }
         )
 
-        Triple::class.simpleName -> Triple_(
+        Triple::class.simpleName -> TripleDescriptor(
             arguments.subList(0, 3).map {
                 val innerType = it.type?.resolve()
                 require(innerType != null) { "Pair must have type arguments" }
@@ -68,7 +68,7 @@ fun KSType.describe(support: Support): TypeDescriptor {
 
         //
         // Collections
-        List::class.simpleName -> List_.fromKSP(this, support)
+        List::class.simpleName -> ListDescriptor.fromKSP(this, support)
 
         // Unknown type allowing fixed length representation.
         else -> {
@@ -98,7 +98,7 @@ sealed class Support {
         override fun requireFor(type: KSType) {}
     }
 
-    data class SizedClasses(val classes: List<KSClassDeclaration>): Support() {
+    data class SizedClasses(val classes: List<KSClassDeclaration>) : Support() {
         override fun requireFor(type: KSType) {
             val typename = "${type.declaration}"
             val errors = mutableListOf("Type $typename is not supported\n")

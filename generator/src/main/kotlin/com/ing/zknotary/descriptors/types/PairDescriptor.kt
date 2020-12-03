@@ -3,7 +3,7 @@ package com.ing.zknotary.descriptors.types
 import com.ing.zknotary.descriptors.TypeDescriptor
 import com.squareup.kotlinpoet.CodeBlock
 
-class Pair_(innerDescriptors: List<TypeDescriptor>) : TypeDescriptor(Pair::class, innerDescriptors) {
+class PairDescriptor(innerDescriptors: List<TypeDescriptor>) : TypeDescriptor(Pair::class, innerDescriptors) {
     override val default: CodeBlock
         get() {
             val firstType = innerDescriptors.getOrNull(0)

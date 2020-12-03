@@ -29,12 +29,12 @@ class SizedTest {
         val sized = ListStateSized(state)
 
         assert(
-            sized.shallow is WrappedList &&
+            sized.shallow is WrappedList<*> &&
                 sized.shallow.list.size == 7 &&
                 sized.shallow.originalSize == state.shallow.size
         )
         assert(
-            sized.deep is WrappedList &&
+            sized.deep is WrappedList<*> &&
                 sized.deep.list.size == 5 &&
                 sized.deep.originalSize == state.deep.size
         )
@@ -143,4 +143,33 @@ class SizedTest {
         val element = l1.list[0]
         assert(element is Defaultable && element.n == 0)
     }
+
+    // // TODO
+    // @Test
+    // fun `Show generated FixedTestState`() {
+    //     val original = TestContract.TestState(ZKNulls.NULL_PARTY, 1)
+    //     val fixed = FixedTestState(original)
+    //     println(fixed::class.memberProperties)
+    // }
+
+    // // TODO
+    // class FixedLengthGeneratedTest {
+    //     private val alice = TestIdentity.fixed("alice", Crypto.EDDSA_ED25519_SHA512)
+    //
+    //     @Test
+    //     @Suppress("UNCHECKED_CAST")
+    //     fun `generated fixed state must have identical visible properties`() {
+    //         val original = TestContract.TestState(alice.party, 1)
+    //         val fixed = FixedTestState(original)
+    //         original::class.memberProperties.filter { it.visibility == KVisibility.PUBLIC }.forEach {
+    //             it as KProperty1<Any, *>
+    //             val origVal = it.get(original)
+    //
+    //             val fixedProp = fixed::class.memberProperties.single { fixedProp -> fixedProp.name == it.name } as KProperty1<Any, *>
+    //             val fixedVal = fixedProp.get(fixed)
+    //             println("${it.name}: \n\t\t\"$origVal\" \n\t\t\"$fixedVal\"")
+    //             assertEquals(origVal, fixedVal)
+    //         }
+    //     }
+    // }
 }
