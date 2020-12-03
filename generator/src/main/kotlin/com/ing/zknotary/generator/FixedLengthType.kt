@@ -31,6 +31,8 @@ class FixedLengthType {
                 val propertyNames = mutableListOf<String>()
 
                 clazz.getAllProperties()
+
+
                     .filter { property -> property.isPublic() }
                     .forEach { property ->
                         val name = property.simpleName.asString()
