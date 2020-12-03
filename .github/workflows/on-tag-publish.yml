@@ -26,7 +26,7 @@ jobs:
           restore-keys: ${{ runner.os }}-gradle
 
       - name: Publish to GitHub Packages (should never fail)
-        run: ./gradlew :generator:publish :gradle-plugin:publish :notary:publish --continue --build-cache --parallel
+        run: ./gradlew publish --continue --build-cache --parallel
         env:
           GITHUB_USERNAME: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

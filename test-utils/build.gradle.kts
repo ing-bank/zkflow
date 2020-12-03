@@ -27,7 +27,7 @@ kotlin {
 
 publishing {
     publications {
-        create<MavenPublication>("zkNotary") {
+        create<MavenPublication>("zkTestUtils") {
             from(components["java"])
         }
     }
