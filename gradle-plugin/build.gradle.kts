@@ -1,6 +1,3 @@
-group = "com.ing.zknotary"
-version = "0.1"
-
 plugins {
     kotlin("jvm")
     `java-gradle-plugin`
