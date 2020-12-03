@@ -28,6 +28,13 @@ import kotlin.reflect.KClass
  * - TypeDescriptor.List_ implements replacement of `List` to `WrappedList`
  * and maps contained elements into sized versions;
  * - TypeDescriptor.Pair_ constructs a pair making use of `first` and `second` fields.
+ *
+ * The TypeDescriptor tree terminates at
+ *  - built-in types such as Int, Byte, etc.,
+ *  - types for which user has indicated to use respective default constructors, in this
+ *    case, user is responsible for making such types have constant size,
+ *  - types which have been annotated with Sized and thus the respective default
+ *    constructors creating their fixed size versions will be generated.
  */
 
 abstract class TypeDescriptor(

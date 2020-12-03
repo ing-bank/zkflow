@@ -6,6 +6,7 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.ing.zknotary.annotations.Sized
 import com.ing.zknotary.annotations.WrappedList
+import com.ing.zknotary.descriptors.Support
 import com.ing.zknotary.descriptors.TypeDescriptor
 import com.ing.zknotary.descriptors.describe
 import com.ing.zknotary.util.expectAnnotation
@@ -18,7 +19,7 @@ class List_ private constructor(val size: Int, innerDescriptors: List<TypeDescri
     innerDescriptors
 ) {
     companion object {
-        fun fromKSP(list: KSType): List_ {
+        fun fromKSP(list: KSType, support: Support): List_ {
             // List must be annotated with Sized.
             val sized = list.expectAnnotation<Sized>()
 
@@ -30,7 +31,7 @@ class List_ private constructor(val size: Int, innerDescriptors: List<TypeDescri
             val listType = list.arguments.single().type?.resolve()
                 ?: error("List must have a type")
 
-            if (useDefault) {
+            val innerSupport = if (useDefault) {
                 // Verify that the list type is a user class.
                 val listClass = listType.declaration as? KSClassDeclaration
                     ?: error("$listType is not a user class and cannot be instantiated with a default value")
@@ -41,9 +42,13 @@ class List_ private constructor(val size: Int, innerDescriptors: List<TypeDescri
                         it.isPublic() && it.parameters.isEmpty()
                     }
                 ){ "$listType must have a default (empty) constructor" }
+
+                Support.Default
+            } else {
+                support
             }
 
-            return List_(size, listOf(listType.describe(useDefault)))
+            return List_(size, listOf(listType.describe(innerSupport)))
         }
     }
 

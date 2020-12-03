@@ -1,11 +1,8 @@
 package com.ing.zknotary.descriptors
 
-import com.google.devtools.ksp.getConstructors
-import com.google.devtools.ksp.isPublic
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSType
-import com.ing.zknotary.annotations.Sized
 import com.ing.zknotary.descriptors.types.AnnotatedSizedClass
 import com.ing.zknotary.descriptors.types.DefaultableClass
 import com.ing.zknotary.descriptors.types.Int_
@@ -13,47 +10,41 @@ import com.ing.zknotary.descriptors.types.List_
 import com.ing.zknotary.descriptors.types.Pair_
 import com.ing.zknotary.descriptors.types.Triple_
 
+/**
+ * To describe the property structure in a way allowing
+ * derivation of its fixed length version, it is required to know
+ * - the name of the property,
+ * - list of user classes, for which fixed length version will be generated.
+ *
+ * The latter is required because potentially the property type may include
+ * such classes as internal components.
+ */
 fun KSPropertyDeclaration.describe(
-    original: String,
+    propertyName: String,
     sizedClasses: List<KSClassDeclaration>
 ): PropertyDescriptor {
     val name = simpleName.asString()
     val typeDef = type.resolve()
-    val typeName = typeDef.declaration.toString()
 
-    var supported = false
-    val errors = mutableListOf("Type $typeName is not supported\n")
-
-    supported = supported || TypeDescriptor.supports(typeName)
-    if (!supported) {
-        errors += "Supported types:\n${TypeDescriptor.supported.joinToString(separator = ",\n")}"
-    }
-
-    // TODO have a better comment why it is ok to proceed
-    supported = supported || sizedClasses.any { it.simpleName.asString() == typeName }
-    if (!supported) {
-        errors += "Class $typeName is not expected to have fixed length"
-    }
-
-    if (!supported) {
-        error(errors.joinToString(separator = "\n"))
-    }
-
-    val descriptor = typeDef.describe()
+    val descriptor = typeDef.describe(Support.SizedClasses(sizedClasses))
 
     return PropertyDescriptor(
         name = name,
         type = descriptor.type,
-        fromInstance = descriptor.toCodeBlock("$original.$name"),
+        fromInstance = descriptor.toCodeBlock("$propertyName.$name"),
         default = descriptor.default
     )
 }
 
-fun KSType.describe(useDefault: Boolean = false): TypeDescriptor =
-    // TODO explicit defence against invariance
-    // Invariant MUST hold:
-    // This method must be be called on a type presentable as a fixed length instance.
-    when ("$declaration") {
+/**
+ * `support` adds context on how to treat classes which
+ * are not supported by `TypeDescriptor` and adds a shortcut
+ * for types for which user-defined empty constructor needs to be used.
+ */
+fun KSType.describe(support: Support): TypeDescriptor {
+    support.requireFor(this)
+
+    return when ("$declaration") {
         // Primitive types
         Int::class.simpleName -> Int_(0, declaration)
 
@@ -63,7 +54,7 @@ fun KSType.describe(useDefault: Boolean = false): TypeDescriptor =
             arguments.subList(0, 2).map {
                 val innerType = it.type?.resolve()
                 require(innerType != null) { "Pair must have type arguments" }
-                innerType.describe()
+                innerType.describe(support)
             }
         )
 
@@ -71,13 +62,13 @@ fun KSType.describe(useDefault: Boolean = false): TypeDescriptor =
             arguments.subList(0, 3).map {
                 val innerType = it.type?.resolve()
                 require(innerType != null) { "Pair must have type arguments" }
-                innerType.describe()
+                innerType.describe(support)
             }
         )
 
         //
         // Collections
-        List::class.simpleName -> List_.fromKSP(this)
+        List::class.simpleName -> List_.fromKSP(this, support)
 
         // Unknown type allowing fixed length representation.
         else -> {
@@ -89,13 +80,42 @@ fun KSType.describe(useDefault: Boolean = false): TypeDescriptor =
             // 2. to have a default constructor, in this case,
             //    flag `useDefault` will be set to true
             val clazz = declaration as KSClassDeclaration
-            if (useDefault) {
-                DefaultableClass(clazz)
-            } else {
-                AnnotatedSizedClass(clazz)
+            when (support) {
+                is Support.Default -> DefaultableClass(clazz)
+                is Support.SizedClasses -> AnnotatedSizedClass(clazz)
             }
         }
     }
+}
 
 val KSClassDeclaration.sizedName: String
     get() = "${simpleName.asString()}Sized"
+
+sealed class Support {
+    abstract fun requireFor(type: KSType)
+
+    object Default : Support() {
+        override fun requireFor(type: KSType) {}
+    }
+
+    data class SizedClasses(val classes: List<KSClassDeclaration>): Support() {
+        override fun requireFor(type: KSType) {
+            val typename = "${type.declaration}"
+            val errors = mutableListOf("Type $typename is not supported\n")
+
+            // Check type is one of those listed in TypeDecriptor
+            if (TypeDescriptor.supports(typename)) {
+                return
+            }
+            errors += "Supported types:\n${TypeDescriptor.supported.joinToString(separator = ",\n")}"
+
+            // Check type will (or already) have a generated fixed length version.
+            if (classes.any { it.simpleName.asString() == typename }) {
+                return
+            }
+            errors += "Class $typename is not expected to have fixed length"
+
+            error(errors.joinToString(separator = "\n"))
+        }
+    }
+}
