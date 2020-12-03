@@ -1,4 +1,6 @@
+@file:Suppress("TooManyFunctions")
 package com.ing.zknotary.util
+
 
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
@@ -13,6 +15,7 @@ import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.TypeName
+import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.STAR as KpStar
 
 inline fun <reified T> Resolver.getClassDeclarationByName(): KSClassDeclaration {
@@ -97,7 +100,7 @@ fun KSTypeParameter.toTypeName(): TypeName {
         Variance.CONTRAVARIANT -> KModifier.OUT
         else -> null
     }
-    return com.squareup.kotlinpoet.TypeVariableName(typeVarName, bounds = typeVarBounds, variance = typeVarVariance)
+    return TypeVariableName(typeVarName, bounds = typeVarBounds, variance = typeVarVariance)
 }
 
 fun KSTypeReference.toTypeName(): TypeName {
