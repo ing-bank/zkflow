@@ -32,7 +32,6 @@ class FixedLengthType {
 
                 clazz.getAllProperties()
 
-
                     .filter { property -> property.isPublic() }
                     .forEach { property ->
                         val name = property.simpleName.asString()
