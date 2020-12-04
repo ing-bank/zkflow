@@ -25,6 +25,15 @@
         <Logger name="org.junit" level="WARN" additivity="false">
             <AppenderRef ref="Console-Appender"/>
         </Logger>
+        <Logger name="liquibase" level="WARN" additivity="false">
+            <AppenderRef ref="Console-Appender"/>
+        </Logger>
+        <Logger name="org.hibernate" level="WARN" additivity="false">
+            <AppenderRef ref="Console-Appender"/>
+        </Logger>
+        <Logger name="com.zaxxer.hikari" level="WARN" additivity="false">
+            <AppenderRef ref="Console-Appender"/>
+        </Logger>
         <Logger name="com.ing" level="DEBUG" additivity="false">
             <AppenderRef ref="Console-Appender" level="TRACE"/>
         </Logger>

@@ -13,21 +13,22 @@ import net.corda.testing.node.MockNetworkNotarySpec
 import net.corda.testing.node.MockNetworkParameters
 import net.corda.testing.node.StartedMockNode
 import net.corda.testing.node.internal.cordappWithPackages
-import org.junit.After
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.api.Timeout
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class CollectSignaturesFlowTest {
-    private lateinit var mockNet: MockNetwork
-    private lateinit var notaryNode: StartedMockNode
-    private lateinit var megaCorpNode: StartedMockNode
-    private lateinit var miniCorpNode: StartedMockNode
-    private lateinit var megaCorp: Party
-    private lateinit var miniCorp: Party
-    private lateinit var notary: Party
+    private val mockNet: MockNetwork
+    private val notaryNode: StartedMockNode
+    private val megaCorpNode: StartedMockNode
+    private val miniCorpNode: StartedMockNode
+    private val megaCorp: Party
+    private val miniCorp: Party
+    private val notary: Party
 
-    @Before
-    fun setup() {
+    init {
         val mockNetworkParameters = MockNetworkParameters(
             cordappsForAllNodes = listOf(
                 cordappWithPackages("com.ing.zknotary").withConfig(
@@ -49,13 +50,14 @@ class CollectSignaturesFlowTest {
         miniCorp = miniCorpNode.info.singleIdentity()
     }
 
-    @After
+    @AfterAll
     fun tearDown() {
         mockNet.stopNodes()
         System.setProperty("net.corda.node.dbtransactionsresolver.InMemoryResolutionLimit", "0")
     }
 
-    @Test(timeout = 300_000)
+    @Test
+    @Timeout(300)
     fun `Signing only on Initiator side`() {
         val p = TestCollectSignaturesFlow()
         val future = miniCorpNode.startFlow(p)
@@ -75,7 +77,8 @@ class CollectSignaturesFlowTest {
         }
     }
 
-    @Test(timeout = 300_000)
+    @Test
+    @Timeout(300)
     fun `Signing on two sides`() {
 
         // Move state

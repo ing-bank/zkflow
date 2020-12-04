@@ -24,7 +24,6 @@ class FixedLengthGeneratedTest {
 
             val fixedProp = fixed::class.memberProperties.single { fixedProp -> fixedProp.name == it.name } as KProperty1<Any, *>
             val fixedVal = fixedProp.get(fixed)
-            println("${it.name}: \n\t\t\"$origVal\" \n\t\t\"$fixedVal\"")
             assertEquals(origVal, fixedVal)
         }
     }
