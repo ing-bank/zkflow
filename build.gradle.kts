@@ -74,6 +74,15 @@ subprojects {
             add("testImplementation", "io.kotest:kotest-assertions-core:$kotestVersion")
         }
 
+        configure<com.diffplug.gradle.spotless.SpotlessExtension> {
+            kotlin {
+                target("**/*.kt")
+                targetExclude("${buildDir.relativeTo(rootDir).path}/generated/**")
+                val ktlintVersion: String by project
+                ktlint(ktlintVersion)
+            }
+        }
+
         this@subprojects.tasks.apply {
             matching { it is JavaCompile || it is org.jetbrains.kotlin.gradle.tasks.KotlinCompile }.forEach {
                 it.dependsOn(
@@ -87,17 +96,6 @@ subprojects {
                 config.setFrom("${rootDir}/config/detekt/detekt.yml")
             }
 
-            withType(com.diffplug.gradle.spotless.SpotlessTask::class) {
-                this.configure<com.diffplug.gradle.spotless.SpotlessExtension> {
-                    kotlin {
-                        target("**/*.kt")
-                        targetExclude("${buildDir.relativeTo(rootDir).path}/generated/**")
-                        val ktlintVersion: String by project
-                        ktlint(ktlintVersion)
-                    }
-
-                }
-            }
 
             withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
                 kotlinOptions {

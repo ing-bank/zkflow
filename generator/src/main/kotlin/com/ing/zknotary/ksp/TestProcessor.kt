@@ -38,4 +38,3 @@ class TestProcessor : SymbolProcessor {
 
     override fun finish() {}
 }
-
