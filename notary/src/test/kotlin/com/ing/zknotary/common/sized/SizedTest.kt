@@ -1,7 +1,7 @@
 package com.ing.zknotary.common.sized
 
 import com.ing.zknotary.annotations.Sized
-import com.ing.zknotary.annotations.WrappedList
+import com.ing.zknotary.annotations.SizedList
 import org.junit.Test
 
 @Suppress("USELESS_IS_CHECK")
@@ -29,12 +29,12 @@ class SizedTest {
         val sized = ListStateSized(state)
 
         assert(
-            sized.shallow is WrappedList<*> &&
+            sized.shallow is SizedList<*> &&
                 sized.shallow.list.size == 7 &&
                 sized.shallow.originalSize == state.shallow.size
         )
         assert(
-            sized.deep is WrappedList<*> &&
+            sized.deep is SizedList<*> &&
                 sized.deep.list.size == 5 &&
                 sized.deep.originalSize == state.deep.size
         )
@@ -86,10 +86,10 @@ class SizedTest {
         val sized = DeepCompoundStateSized(state)
 
         val l1 = sized.deep
-        assert(l1 is WrappedList<*> && l1.list.size == 5 && l1.originalSize == 1)
+        assert(l1 is SizedList<*> && l1.list.size == 5 && l1.originalSize == 1)
 
         val l2 = l1.list[0]
-        assert(l2 is WrappedList<*> && l2.list.size == 2 && l2.originalSize == 1)
+        assert(l2 is SizedList<*> && l2.list.size == 2 && l2.originalSize == 1)
 
         val l3 = l2.list[0]
         assert(l3 is Pair<*, *>)
@@ -98,7 +98,7 @@ class SizedTest {
         assert(l4f is Int)
 
         val l4s = l3.second
-        assert(l4s is WrappedList<*> && l4s.list.size == 2 && l4s.originalSize == 1)
+        assert(l4s is SizedList<*> && l4s.list.size == 2 && l4s.originalSize == 1)
 
         val l5 = l4s.list[0]
         assert(l5 is Int)
@@ -116,13 +116,13 @@ class SizedTest {
         val sized = StateL1Sized(state)
 
         val l1 = sized.complex
-        assert(l1 is WrappedList<*> && l1.list.size == 5 && l1.originalSize == 1)
+        assert(l1 is SizedList<*> && l1.list.size == 5 && l1.originalSize == 1)
 
         val l1element = l1.list[0]
         assert(l1element is StateL0Sized)
 
         val l2 = l1element.simple
-        assert(l2 is WrappedList<*> && l2.list.size == 5 && l2.originalSize == 1)
+        assert(l2 is SizedList<*> && l2.list.size == 5 && l2.originalSize == 1)
     }
 
     class Defaultable(val n: Int) {
@@ -138,7 +138,7 @@ class SizedTest {
         val sized = ListWithDefaultSized(state)
 
         val l1 = sized.simple
-        assert(l1 is WrappedList<*> && l1.list.size == 5 && l1.originalSize == 0)
+        assert(l1 is SizedList<*> && l1.list.size == 5 && l1.originalSize == 0)
 
         val element = l1.list[0]
         assert(element is Defaultable && element.n == 0)

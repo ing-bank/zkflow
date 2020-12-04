@@ -4,7 +4,7 @@ package com.ing.zknotary.annotations
 @Target(AnnotationTarget.CLASS, AnnotationTarget.TYPE)
 annotation class Sized(val size: Int = -1, val useDefault: Boolean = false)
 
-data class WrappedList<T> private constructor(val list: List<T>, val originalSize: Int) {
+data class SizedList<T> private constructor(val list: List<T>, val originalSize: Int) {
     constructor(n: Int, default: T) : this(
         list = List(n) { default },
         originalSize = 0

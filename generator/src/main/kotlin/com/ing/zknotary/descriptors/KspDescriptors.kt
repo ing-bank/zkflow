@@ -11,7 +11,7 @@ import com.ing.zknotary.descriptors.types.PairDescriptor
 import com.ing.zknotary.descriptors.types.TripleDescriptor
 
 /**
- * To describe the property structure in a way allowing
+ * Describes the property structure in a way allowing
  * derivation of its fixed length version, it is required to know
  * - the name of the property,
  * - list of user classes, for which fixed length version will be generated.
@@ -21,12 +21,12 @@ import com.ing.zknotary.descriptors.types.TripleDescriptor
  */
 fun KSPropertyDeclaration.describe(
     propertyName: String,
-    sizedClasses: List<KSClassDeclaration>
+    annotatedClasses: List<KSClassDeclaration>
 ): PropertyDescriptor {
     val name = simpleName.asString()
     val typeDef = type.resolve()
 
-    val descriptor = typeDef.describe(Support.SizedClasses(sizedClasses))
+    val descriptor = typeDef.describe(Support.SizedClasses(annotatedClasses))
 
     return PropertyDescriptor(
         name = name,
@@ -37,9 +37,10 @@ fun KSPropertyDeclaration.describe(
 }
 
 /**
- * `support` adds context on how to treat classes which
- * are not supported by `TypeDescriptor` and adds a shortcut
- * for types for which user-defined empty constructor needs to be used.
+ * Describes `type` and its inner components recursively
+ * allowing its synthesis into a fixed length variant.
+ *
+ * `support` indicates when further decomposition is possible.
  */
 fun KSType.describe(support: Support): TypeDescriptor {
     support.requireFor(this)
@@ -72,13 +73,6 @@ fun KSType.describe(support: Support): TypeDescriptor {
 
         // Unknown type allowing fixed length representation.
         else -> {
-            // Say, such class is called `SiClass`,
-            // it is either expected either
-            // 1. to have a sized version called SiClassSized,
-            //    meaning it is expected to have a sized version called
-            //    `KSClassDeclaration<SiClass>.sizedName`, or
-            // 2. to have a default constructor, in this case,
-            //    flag `useDefault` will be set to true
             val clazz = declaration as KSClassDeclaration
             when (support) {
                 is Support.Default -> DefaultableClass(clazz)
@@ -90,32 +84,3 @@ fun KSType.describe(support: Support): TypeDescriptor {
 
 val KSClassDeclaration.sizedName: String
     get() = "${simpleName.asString()}Sized"
-
-sealed class Support {
-    abstract fun requireFor(type: KSType)
-
-    object Default : Support() {
-        override fun requireFor(type: KSType) {}
-    }
-
-    data class SizedClasses(val classes: List<KSClassDeclaration>) : Support() {
-        override fun requireFor(type: KSType) {
-            val typename = "${type.declaration}"
-            val errors = mutableListOf("Type $typename is not supported\n")
-
-            // Check type is one of those listed in TypeDecriptor
-            if (TypeDescriptor.supports(typename)) {
-                return
-            }
-            errors += "Supported types:\n${TypeDescriptor.supported.joinToString(separator = ",\n")}"
-
-            // Check type will (or already) have a generated fixed length version.
-            if (classes.any { it.simpleName.asString() == typename }) {
-                return
-            }
-            errors += "Class $typename is not expected to have fixed length"
-
-            error(errors.joinToString(separator = "\n"))
-        }
-    }
-}
