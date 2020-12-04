@@ -89,9 +89,9 @@ subprojects {
 
         this@subprojects.tasks.apply {
             matching { it is JavaCompile || it is org.jetbrains.kotlin.gradle.tasks.KotlinCompile }.forEach {
-                it.dependsOn(
-                    ":checkJavaVersion"
-                )
+                it.dependsOn(":checkJavaVersion")
+                it.dependsOn("spotlessApply") // Autofix before check
+                it.dependsOn("spotlessCheck") // Fail on remaining non-autofixable issues
             }
 
             withType<io.gitlab.arturbosch.detekt.Detekt> {
@@ -119,8 +119,6 @@ subprojects {
 
             // This applies to all test types, both fast and slow
             withType<Test> {
-                dependsOn("spotlessApply") // Autofix before check
-                dependsOn("spotlessCheck") // Fail on remaining non-autofixable issues
                 dependsOn("detekt")
                 dependsOn(":prover:circuits") // Make sure that the Zinc circuit is ready to use when running tests
 
