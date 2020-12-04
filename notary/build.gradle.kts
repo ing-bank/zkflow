@@ -70,14 +70,11 @@ sourceSets {
     }
 }
 
-
-
 // TODO: We will have to enable explicitApi soon:
 // https://kotlinlang.org/docs/reference/whatsnew14.html#explicit-api-mode-for-library-authors
 // kotlin {
 //     explicitApi = Strict
 // }
-
 
 // TODO: This should probably become a fat jar at some point, with its dependencies included
 publishing {

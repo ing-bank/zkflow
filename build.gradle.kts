@@ -81,6 +81,10 @@ subprojects {
                 val ktlintVersion: String by project
                 ktlint(ktlintVersion)
             }
+            kotlinGradle {
+                target("*.gradle.kts") // default target for kotlinGradle
+                ktlint() // or ktfmt() or prettier()
+            }
         }
 
         this@subprojects.tasks.apply {
