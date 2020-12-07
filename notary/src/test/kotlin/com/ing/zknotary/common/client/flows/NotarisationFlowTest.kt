@@ -7,7 +7,7 @@ import com.ing.zknotary.node.services.ServiceNames.ZK_TX_SERVICE
 import com.ing.zknotary.node.services.ServiceNames.ZK_VERIFIER_TX_STORAGE
 import com.ing.zknotary.notary.ZKNotaryService
 import com.ing.zknotary.testing.zkp.MockZKTransactionService
-import junit.framework.TestCase.assertEquals
+import io.kotest.matchers.shouldBe
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
 import net.corda.core.utilities.getOrThrow
@@ -22,18 +22,19 @@ import net.corda.testing.node.internal.cordappWithPackages
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.Timeout
 
 class NotarisationFlowTest {
-    private lateinit var mockNet: MockNetwork
-    private lateinit var notaryNode: StartedMockNode
-    private lateinit var megaCorpNode: StartedMockNode
-    private lateinit var miniCorpNode: StartedMockNode
-    private lateinit var megaCorp: Party
-    private lateinit var miniCorp: Party
-    private lateinit var notary: Party
+    private val mockNet: MockNetwork
+    private val notaryNode: StartedMockNode
+    private val megaCorpNode: StartedMockNode
+    private val miniCorpNode: StartedMockNode
+    private val megaCorp: Party
+    private val miniCorp: Party
+    private val notary: Party
 
-    @Before
-    fun setup() {
+   init {
         val mockNetworkParameters = MockNetworkParameters(
             cordappsForAllNodes = listOf(
                 cordappWithPackages("com.ing.zknotary").withConfig(
@@ -58,13 +59,14 @@ class NotarisationFlowTest {
         miniCorp = miniCorpNode.info.singleIdentity()
     }
 
-    @After
+    @AfterAll
     fun tearDown() {
         mockNet.stopNodes()
         System.setProperty("net.corda.node.dbtransactionsresolver.InMemoryResolutionLimit", "0")
     }
 
-    @Test(timeout = 30_000)
+    @Test
+    @Timeout(30)
     fun `Notary signing`() {
         val createFlow = TestNotarisationFlow()
         val future = miniCorpNode.startFlow(createFlow)
@@ -72,22 +74,21 @@ class NotarisationFlowTest {
         val signedTxs = future.getOrThrow()
 
         // Check normal Tx signatures
-        assertEquals(1, signedTxs.first.sigs.size)
+        signedTxs.first.sigs.size shouldBe 1
         signedTxs.first.sigs.forEach {
-            it.isValid(signedTxs.first.id)
+            it.verify(signedTxs.first.id)
         }
 
         // Check ZKP Tx signatures
-        assertEquals(2, signedTxs.second.sigs.size)
+        signedTxs.second.sigs.size shouldBe 2
         signedTxs.second.sigs.forEach {
-            it.isValid(signedTxs.second.id)
+            it.verify(signedTxs.second.id)
         }
 
         // Check that notary sig is here
-        assert(
-            signedTxs.second.sigs.filter {
-                it.by == notaryNode.info.legalIdentities.single().owningKey
-            }.size == 1
-        )
+
+        signedTxs.second.sigs.filter {
+            it.by == notaryNode.info.legalIdentities.single().owningKey
+        }.size shouldBe 1
     }
 }

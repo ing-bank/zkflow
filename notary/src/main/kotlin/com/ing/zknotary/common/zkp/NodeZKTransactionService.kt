@@ -13,7 +13,7 @@ import net.corda.core.crypto.SecureHash
  * In fact it is an abstract class that incapsulates operations that will be same for all implementations,
  * but we can make it a class because ancestors of this class are also forced to inherit SerializeAsToken implementation
  */
-interface AbstractZKTransactionService : ZKTransactionService {
+interface NodeZKTransactionService : ZKTransactionService {
 
     val zkStorage: ZKVerifierTransactionStorage
 

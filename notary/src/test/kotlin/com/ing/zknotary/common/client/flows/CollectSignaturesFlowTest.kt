@@ -5,7 +5,7 @@ import com.ing.zknotary.node.services.InMemoryZKVerifierTransactionStorage
 import com.ing.zknotary.node.services.ServiceNames
 import com.ing.zknotary.node.services.ServiceNames.ZK_PROVER_TX_STORAGE
 import com.ing.zknotary.testing.zkp.MockZKTransactionService
-import groovy.util.GroovyTestCase.assertEquals
+import io.kotest.matchers.shouldBe
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
 import net.corda.core.utilities.getOrThrow
@@ -68,15 +68,15 @@ class CollectSignaturesFlowTest {
         val signedTxs = future.getOrThrow()
 
         // Check normal Tx signatures
-        assertEquals(1, signedTxs.first.sigs.size)
+        signedTxs.first.sigs.size shouldBe 1
         signedTxs.first.sigs.forEach {
-            it.isValid(signedTxs.first.id)
+            it.verify(signedTxs.first.id)
         }
 
         // Check ZKP Tx signatures
-        assertEquals(1, signedTxs.second.sigs.size)
+        signedTxs.second.sigs.size shouldBe 1
         signedTxs.second.sigs.forEach {
-            it.isValid(signedTxs.second.id)
+            it.verify(signedTxs.second.id)
         }
     }
 
@@ -91,15 +91,15 @@ class CollectSignaturesFlowTest {
         val signedTxs = future.getOrThrow()
 
         // Check normal Tx signatures
-        assertEquals(2, signedTxs.first.sigs.size)
+        signedTxs.first.sigs.size shouldBe 2
         signedTxs.first.sigs.forEach {
-            it.isValid(signedTxs.first.id)
+            it.verify(signedTxs.first.id)
         }
 
         // Check ZKP Tx signatures
-        assertEquals(2, signedTxs.second.sigs.size)
+        signedTxs.second.sigs.size shouldBe 2
         signedTxs.second.sigs.forEach {
-            it.isValid(signedTxs.second.id)
+            it.verify(signedTxs.second.id)
         }
     }
 }

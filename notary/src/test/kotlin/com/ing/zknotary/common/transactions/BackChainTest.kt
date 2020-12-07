@@ -129,6 +129,7 @@ class BackChainTest {
         artifactFolder.mkdirs()
 
         val zincZKTransactionService = ZincZKTransactionService(
+            ledgerServices,
             circuitFolderAbsolute,
             artifactFolder = artifactFolder.absolutePath,
             buildTimeout = Duration.ofSeconds(10 * 60),

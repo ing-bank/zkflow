@@ -158,14 +158,8 @@ class ZKNotaryServiceFlow(
              */
             // Verify ZKP
             zkConfig.zkTransactionService.verify(svtx.tx)
-            // Verify all attached sigs are valid
-            svtx.sigs.forEach {
-                it.verify(svtx.id)
-            }
-            // Verify all required sigs are present
-            svtx.tx.signers.forEach { signer ->
-                if (svtx.sigs.find { it.by == signer } == null) throw IllegalArgumentException("Missing signature for required signer")
-            }
+            // Verify signatures
+            svtx.verifySignaturesExcept(service.notaryIdentityKey)
         } catch (e: IllegalArgumentException) {
             throw NotaryInternalException(NotaryError.TransactionInvalid(e))
         }

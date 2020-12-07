@@ -1,19 +1,27 @@
 package com.ing.zknotary.common.zkp
 
 import com.ing.zknotary.common.serializer.ZincSerializationFactory
-import com.ing.zknotary.common.transactions.ZKVerifierTransaction
+import com.ing.zknotary.node.services.ServiceNames
+import com.ing.zknotary.node.services.ZKVerifierTransactionStorage
+import com.ing.zknotary.node.services.getCordaServiceFromConfig
+import net.corda.core.node.ServiceHub
 import net.corda.core.serialization.SingletonSerializeAsToken
 import net.corda.core.serialization.serialize
 import java.time.Duration
 
+@Suppress("LongParameterList")
 class ZincZKTransactionService(
+    val services: ServiceHub,
     circuitFolder: String,
     artifactFolder: String,
     buildTimeout: Duration,
     setupTimeout: Duration,
     provingTimeout: Duration,
     verificationTimeout: Duration
-) : ZKTransactionService, SingletonSerializeAsToken() {
+) : NodeZKTransactionService, SingletonSerializeAsToken() {
+
+    override val zkStorage: ZKVerifierTransactionStorage = services.getCordaServiceFromConfig(ServiceNames.ZK_VERIFIER_TX_STORAGE)
+
     private val zkService =
         ZincZKService(circuitFolder, artifactFolder, buildTimeout, setupTimeout, provingTimeout, verificationTimeout)
 
@@ -53,9 +61,5 @@ class ZincZKTransactionService(
         // this should be serialized in here. Makes no sense to make it injectable.
         val publicInputJson = publicInput.serialize(ZincSerializationFactory).bytes
         return zkService.verify(proof, publicInputJson)
-    }
-
-    override fun verify(tx: ZKVerifierTransaction) {
-        TODO("Not yet implemented")
     }
 }

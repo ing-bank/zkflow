@@ -4,7 +4,7 @@ import com.ing.zknotary.common.zkp.ZKTransactionService
 import com.ing.zknotary.node.services.ZKWritableVerifierTransactionStorage
 
 /**
- * To investigate:
+ * TODO investigate:
  * Do we need this container at all?
  * Probably we can just inject whatever we need where we need it.
  */
