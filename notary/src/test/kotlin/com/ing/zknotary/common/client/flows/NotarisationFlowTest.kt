@@ -19,8 +19,6 @@ import net.corda.testing.node.MockNetworkNotarySpec
 import net.corda.testing.node.MockNetworkParameters
 import net.corda.testing.node.StartedMockNode
 import net.corda.testing.node.internal.cordappWithPackages
-import org.junit.After
-import org.junit.Before
 import org.junit.Test
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Timeout
@@ -34,7 +32,7 @@ class NotarisationFlowTest {
     private val miniCorp: Party
     private val notary: Party
 
-   init {
+    init {
         val mockNetworkParameters = MockNetworkParameters(
             cordappsForAllNodes = listOf(
                 cordappWithPackages("com.ing.zknotary").withConfig(

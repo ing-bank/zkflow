@@ -8,7 +8,6 @@ import com.ing.zknotary.common.contracts.TestContract
 import com.ing.zknotary.common.transactions.SignedZKProverTransaction
 import com.ing.zknotary.common.transactions.toSignedZKVerifierTransaction
 import com.ing.zknotary.common.transactions.toZKProverTransaction
-import com.ing.zknotary.node.services.InMemoryZKProverTransactionStorage
 import com.ing.zknotary.node.services.ServiceNames
 import com.ing.zknotary.node.services.getCordaServiceFromConfig
 import net.corda.core.contracts.Command

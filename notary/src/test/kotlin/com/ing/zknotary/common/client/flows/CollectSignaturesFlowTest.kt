@@ -2,8 +2,9 @@ package com.ing.zknotary.common.client.flows
 
 import com.ing.zknotary.node.services.InMemoryZKProverTransactionStorage
 import com.ing.zknotary.node.services.InMemoryZKVerifierTransactionStorage
-import com.ing.zknotary.node.services.ServiceNames
 import com.ing.zknotary.node.services.ServiceNames.ZK_PROVER_TX_STORAGE
+import com.ing.zknotary.node.services.ServiceNames.ZK_TX_SERVICE
+import com.ing.zknotary.node.services.ServiceNames.ZK_VERIFIER_TX_STORAGE
 import com.ing.zknotary.testing.zkp.MockZKTransactionService
 import io.kotest.matchers.shouldBe
 import net.corda.core.identity.CordaX500Name
@@ -35,8 +36,8 @@ class CollectSignaturesFlowTest {
                 cordappWithPackages("com.ing.zknotary").withConfig(
                     mapOf(
                         ZK_PROVER_TX_STORAGE to InMemoryZKProverTransactionStorage::class.qualifiedName!!,
-                        ServiceNames.ZK_VERIFIER_TX_STORAGE to InMemoryZKVerifierTransactionStorage::class.qualifiedName!!,
-                        ServiceNames.ZK_TX_SERVICE to MockZKTransactionService::class.qualifiedName!!
+                        ZK_VERIFIER_TX_STORAGE to InMemoryZKVerifierTransactionStorage::class.qualifiedName!!,
+                        ZK_TX_SERVICE to MockZKTransactionService::class.qualifiedName!!
                     )
                 )
             ),

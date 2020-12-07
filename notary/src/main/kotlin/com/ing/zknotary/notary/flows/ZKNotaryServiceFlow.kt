@@ -4,13 +4,13 @@ import co.paralleluniverse.fibers.Suspendable
 import com.ing.zknotary.common.transactions.ZKVerifierTransaction
 import com.ing.zknotary.notary.NotaryZKConfig
 import com.ing.zknotary.notary.ZKNotarisationPayload
-import com.ing.zknotary.notary.ZKNotarisationRequest
 import com.ing.zknotary.notary.ZKNotaryService
 import net.corda.core.contracts.StateRef
 import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.TransactionSignature
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
+import net.corda.core.flows.NotarisationRequest
 import net.corda.core.flows.NotarisationRequestSignature
 import net.corda.core.flows.NotarisationResponse
 import net.corda.core.flows.NotaryError
@@ -21,6 +21,7 @@ import net.corda.core.internal.IdempotentFlow
 import net.corda.core.internal.checkParameterHash
 import net.corda.core.internal.notary.NotaryInternalException
 import net.corda.core.internal.notary.UniquenessProvider
+import net.corda.core.internal.notary.verifySignature
 import net.corda.core.utilities.unwrap
 import java.time.Duration
 
@@ -53,11 +54,6 @@ class ZKNotaryServiceFlow(
             validateNotary(tx)
             validateRequestSignature(tx, requestPayload.requestSignature)
 
-            /**
-             * TODO double-check if it is correct
-             * In our case this goes *before* verification, because due to ZKP,
-             * tx verification is slower than persistence and dependent on tx size
-             */
             handleBackPressure(tx)
 
             verifyTransaction(requestPayload)
@@ -99,7 +95,7 @@ class ZKNotaryServiceFlow(
 
     /** Verifies that the correct notarisation request was signed by the counterparty. */
     private fun validateRequestSignature(tx: ZKVerifierTransaction, signature: NotarisationRequestSignature) {
-        val request = ZKNotarisationRequest(tx.inputs, tx.id)
+        val request = NotarisationRequest(tx.inputs, tx.id)
         val requestingParty = otherSideSession.counterparty
         request.verifySignature(signature, requestingParty)
     }
