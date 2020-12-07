@@ -40,7 +40,7 @@ class TestNotarisationFlow(val signers: List<Party> = emptyList()) : FlowLogic<P
         val stx = serviceHub.signInitialTransaction(builder)
         val ptx = stx.tx.toZKProverTransaction(
             serviceHub,
-            serviceHub.cordaService(InMemoryZKProverTransactionStorage::class.java),
+            serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_PROVER_TX_STORAGE),
             componentGroupLeafDigestService = BLAKE2s256DigestService,
             nodeDigestService = PedersenDigestService
         )
