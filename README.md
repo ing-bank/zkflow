@@ -73,6 +73,25 @@ Github Packages, that you should also bump the Corda patch version (`cordaVersio
 Normally we would just use a SNAPSHOT version for this, but unfortunately Github Packages does not properly support this at this time.
 That means we will just have to bump the version when we introduce a feature that we want to make available.
 
+## A note on commit messages
+
+For consistency, it is important that we use one standard for our commit messages. 
+
+For wording, we use the same standard as git itself. This is taken from: https://github.com/git/git/blob/master/Documentation/SubmittingPatches
+
+> Describe your changes in imperative mood, e.g. "make xyzzy do frotz"
+> instead of "[This patch] makes xyzzy do frotz" or "[I] changed xyzzy
+> to do frotz", as if you are giving orders to the codebase to change
+> its behavior. 
+
+Think of it this way: the commit message describes what will happen when a commit is applied.
+
+For format we follow the advice from the `git commit` [manpage](https://mirrors.edge.kernel.org/pub/software/scm/git/docs/git-commit.html#_discussion):
+
+> Though not required, it’s a good idea to begin the commit message with a single short (less than 50 character) line summarizing the change, followed by a blank line and then a more thorough description. The text up to the first blank line in a commit message is treated as the commit title, and that title is used throughout Git. 
+
+Like other holy wars, such as tabs versus spaces, VIM vs Emacs, etc., this can be argued about. Let's not. 
+
 ## Branching strategy
 
 In this repo, we will use Github Flow: https://guides.github.com/introduction/flow/
