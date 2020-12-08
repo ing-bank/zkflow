@@ -5,6 +5,7 @@ import com.ing.zknotary.common.contracts.ZKCommandData
 import com.ing.zknotary.common.zkp.CircuitMetaData
 import com.ing.zknotary.common.zkp.ZKTransactionService
 import com.ing.zknotary.common.zkp.ZincZKTransactionService
+import com.ing.zknotary.node.services.InMemoryZKVerifierTransactionStorage
 import com.ing.zknotary.node.services.collectVerifiedDependencies
 import com.ing.zknotary.notary.transactions.createIssuanceWtx
 import com.ing.zknotary.notary.transactions.createMoveWtx
@@ -130,6 +131,7 @@ class BackChainTest {
 
         val zincZKTransactionService = ZincZKTransactionService(
             ledgerServices,
+            createMockCordaService(ledgerServices, ::InMemoryZKVerifierTransactionStorage),
             circuitFolderAbsolute,
             artifactFolder = artifactFolder.absolutePath,
             buildTimeout = Duration.ofSeconds(10 * 60),
