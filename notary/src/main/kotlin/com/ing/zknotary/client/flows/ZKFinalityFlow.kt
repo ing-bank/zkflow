@@ -134,7 +134,7 @@ class ZKFinalityFlow private constructor(
         val notarised = if (needsNotarySignature(transaction)) {
             progressTracker.currentStep =
                 NOTARISING
-            val notarySignatures = subFlow(ZKNotaryFlow(transaction, zkConfig))
+            val notarySignatures = subFlow(ZKNotaryFlow(transaction, TODO()))
             transaction + notarySignatures
         } else {
             logger.info("No need to notarise this transaction.")

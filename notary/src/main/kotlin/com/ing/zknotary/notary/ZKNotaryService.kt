@@ -1,12 +1,14 @@
 package com.ing.zknotary.notary
 
 import co.paralleluniverse.fibers.Suspendable
-import com.ing.zknotary.common.zkp.ZKConfig
+import com.ing.zknotary.node.services.ServiceNames
 import com.ing.zknotary.node.services.getCordaServiceFromConfig
 import com.ing.zknotary.notary.flows.ZKNotaryServiceFlow
 import net.corda.core.contracts.StateRef
 import net.corda.core.contracts.TimeWindow
+import net.corda.core.crypto.Crypto
 import net.corda.core.crypto.SecureHash
+import net.corda.core.crypto.SignableData
 import net.corda.core.crypto.SignatureMetadata
 import net.corda.core.crypto.TransactionSignature
 import net.corda.core.flows.FlowExternalAsyncOperation
@@ -14,7 +16,6 @@ import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
 import net.corda.core.flows.NotarisationRequestSignature
 import net.corda.core.identity.Party
-import net.corda.core.internal.concurrent.openFuture
 import net.corda.core.internal.notary.NotaryInternalException
 import net.corda.core.internal.notary.NotaryService
 import net.corda.core.internal.notary.UniquenessProvider
@@ -32,7 +33,7 @@ open class ZKNotaryService(final override val services: ServiceHubInternal, over
 
     /**
      * TODO: Perhaps we can use [AppendOnlyPersistentMap] for persistence of the inputs and outputs?
-     * Or perhaps not, because it caches everythoing by default? That would be a too long list.
+     * Or perhaps not, because it caches everything by default? That would be a too long list.
      * Have a look at how the cache works.
      */
     val uniquenessProvider = PersistentUniquenessProvider(
@@ -57,10 +58,14 @@ open class ZKNotaryService(final override val services: ServiceHubInternal, over
      * And if we do, do we need the SignatureMetadata to contain a meaningful schemeNumberID?
      */
     fun signTransaction(txId: SecureHash): TransactionSignature {
+
+        val signatureMetadata = SignatureMetadata(services.myInfo.platformVersion, Crypto.findSignatureScheme(notaryIdentityKey).schemeNumberID)
+        val signableData = SignableData(txId, signatureMetadata)
+
         return TransactionSignature(
-            services.keyManagementService.sign(txId.bytes, notaryIdentityKey).bytes,
+            services.keyManagementService.sign(signableData, notaryIdentityKey).bytes,
             notaryIdentityKey,
-            SignatureMetadata(services.networkParameters.minimumPlatformVersion, 0)
+            signatureMetadata
         )
     }
 
@@ -71,11 +76,9 @@ open class ZKNotaryService(final override val services: ServiceHubInternal, over
      * By loading this on construction, we enforce valid config.
      * This prevents runtime exceptions on bad config.
      */
-    private val zkConfig = ZKConfig(
-        zkTransactionService = services.getCordaServiceFromConfig("zkTransactionService"),
-        serializationFactoryService = services.getCordaServiceFromConfig("zkpSerializationFactoryService"),
-        zkProverTransactionStorage = services.getCordaServiceFromConfig("zkVerifierTransactionStorage"),
-        zkVerifierTransactionStorage = services.getCordaServiceFromConfig("zkVerifierTransactionStorage")
+    private val zkConfig = NotaryZKConfig(
+        zkTransactionService = services.getCordaServiceFromConfig(ServiceNames.ZK_TX_SERVICE),
+        zkVerifierTransactionStorage = services.getCordaServiceFromConfig(ServiceNames.ZK_VERIFIER_TX_STORAGE)
     )
 
     init {
@@ -112,8 +115,7 @@ open class ZKNotaryService(final override val services: ServiceHubInternal, over
         override fun execute(deduplicationId: String): CompletableFuture<UniquenessProvider.Result> {
             // TODO: call our own custom PersistentUniquenessProvider, that unfortunately does NOT implement that interface,
             // because it can't handle ZKStateRefs and outputs
-            // return service.uniquenessProvider.commit(inputs, txId, caller, requestSignature, timeWindow, references).toCompletableFuture()
-            return openFuture<UniquenessProvider.Result>().toCompletableFuture()
+            return service.uniquenessProvider.commit(inputs, txId, caller, requestSignature, timeWindow, references).toCompletableFuture()
         }
     }
 

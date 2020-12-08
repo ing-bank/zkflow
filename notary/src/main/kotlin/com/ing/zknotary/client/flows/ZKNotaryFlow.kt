@@ -2,8 +2,7 @@ package com.ing.zknotary.client.flows
 
 import co.paralleluniverse.fibers.Suspendable
 import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
-import com.ing.zknotary.common.transactions.toSignedZKVerifierTransaction
-import com.ing.zknotary.common.zkp.ZKConfig
+import com.ing.zknotary.notary.ZKNotarisationPayload
 import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.TransactionSignature
 import net.corda.core.flows.FlowSession
@@ -14,23 +13,36 @@ import net.corda.core.flows.NotaryError
 import net.corda.core.flows.NotaryException
 import net.corda.core.flows.NotaryFlow
 import net.corda.core.identity.Party
-import net.corda.core.internal.NetworkParametersStorage
 import net.corda.core.internal.notary.generateSignature
-import net.corda.core.transactions.NotaryChangeWireTransaction
+import net.corda.core.internal.notary.validateSignatures
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.utilities.UntrustworthyData
+import net.corda.core.utilities.unwrap
 
 open class ZKNotaryFlow(
     private val stx: SignedTransaction,
-    private val zkConfig: ZKConfig
+    private val zktx: SignedZKVerifierTransaction
 ) : NotaryFlow.Client(stx) {
 
     @Suspendable
     @Throws(NotaryException::class)
     override fun call(): List<TransactionSignature> {
-        val notaryParty = checkTransaction()
+        val notaryParty = checkZKTransaction()
         val response = zkNotarise(notaryParty)
-        return validateResponse(response, notaryParty)
+        return validateNotaryResponse(response, notaryParty)
+    }
+
+    /**
+     * Checks that the transaction specifies a valid notary
+     */
+    @Suspendable
+    protected fun checkZKTransaction(): Party {
+        val notaryParty = zktx.tx.notary
+        check(serviceHub.networkMapCache.isNotary(notaryParty)) { "$notaryParty is not a notary on the network" }
+        check(serviceHub.loadStates(zktx.tx.inputs.toSet() + zktx.tx.references.toSet()).all { it.state.notary == notaryParty }) {
+            "Input states and reference input states must have the same Notary"
+        }
+        return notaryParty
     }
 
     /** Notarises the transaction with the [notaryParty], obtains the notary's signature(s). */
@@ -39,61 +51,30 @@ open class ZKNotaryFlow(
     protected fun zkNotarise(notaryParty: Party): UntrustworthyData<NotarisationResponse> {
         val session = initiateFlow(notaryParty)
         val requestSignature = generateRequestSignature()
-        return if (isValidating(notaryParty)) {
-            throw NotaryException(NotaryError.TransactionInvalid(Throwable("Validating notaries can never handle ZKTransactions")))
+        return if (!isZKValidating(notaryParty)) {
+            throw NotaryException(NotaryError.TransactionInvalid(Throwable("Notary is not ZK-validating")))
         } else {
-            // TODO: find a way to check that this notary is actually running ZKNotaryServiceFlow (className property?)
-            sendAndReceiveNonValidatingWithZKProof(notaryParty, session, requestSignature)
+            sendAndReceiveZKValidating(notaryParty, session, requestSignature)
         }
     }
 
     @Suppress("UNUSED_PARAMETER")
     @Suspendable
-    private fun sendAndReceiveNonValidatingWithZKProof(
+    private fun sendAndReceiveZKValidating(
         notaryParty: Party,
         session: FlowSession,
         signature: NotarisationRequestSignature
     ): UntrustworthyData<NotarisationResponse> {
-        @Suppress("UNUSED_VARIABLE") val ctx = stx.coreTransaction
-        // val tx = when (ctx) {
-        //     is ContractUpgradeWireTransaction -> ctx.buildFilteredTransaction()
-        //     is WireTransaction -> buildVerifierTransaction(stx, notaryParty)
-        //     else -> ctx
-        // }
-        // TODO: re-enable this when this flow is refactored to use the ZKProverTransaction
-        // session.send(ZKNotarisationPayload(tx, signature))
+        session.send(ZKNotarisationPayload(zktx, signature))
         return receiveResultOrTiming(session)
     }
 
-    private fun buildVerifierTransaction(stx: SignedTransaction, zkSigs: List<TransactionSignature>, @Suppress("UNUSED_PARAMETER") notaryParty: Party): SignedZKVerifierTransaction {
-        return stx.toSignedZKVerifierTransaction(
-            services = serviceHub,
-            zkSigs = zkSigs,
-            zkProverTransactionStorage = zkConfig.zkProverTransactionStorage,
-            zkVerifierTransactionStorage = zkConfig.zkVerifierTransactionStorage,
-            zkTransactionService = zkConfig.zkTransactionService
-        )
-    }
-
-    /****************************************************
-     * Copies of private methods from NotaryFlow.Client *
-     ****************************************************/
-    private fun isValidating(notaryParty: Party): Boolean {
-        val onTheCurrentWhitelist = serviceHub.networkMapCache.isNotary(notaryParty)
-        return if (!onTheCurrentWhitelist) {
-            /*
-                Note that the only scenario where it's acceptable to use a notary not in the current network parameter whitelist is
-                when performing a notary change transaction after a network merge – the old notary won't be on the whitelist of the new network,
-                and can't be used for regular transactions.
-            */
-            check(stx.coreTransaction is NotaryChangeWireTransaction) {
-                "Notary $notaryParty is not on the network parameter whitelist. A non-whitelisted notary can only be used for notary change transactions"
-            }
-            val historicNotary =
-                (serviceHub.networkParametersService as NetworkParametersStorage).getHistoricNotary(notaryParty)
-                    ?: throw IllegalStateException("The notary party $notaryParty specified by transaction ${stx.id}, is not recognised as a current or historic notary.")
-            historicNotary.validating
-        } else serviceHub.networkMapCache.isValidatingNotary(notaryParty)
+    /**
+     * Currently we cannot check if notary is ZK-validating so we use dummy check
+     */
+    private fun isZKValidating(notaryParty: Party): Boolean {
+        // TODO invent smart way of checking if notary is ZK validating
+        return true
     }
 
     /**
@@ -103,7 +84,17 @@ open class ZKNotaryFlow(
     private fun generateRequestSignature(): NotarisationRequestSignature {
         // TODO: This is not required any more once our AMQP serialization supports turning off object referencing.
         val notarisationRequest =
-            NotarisationRequest(stx.inputs.map { it.copy(txhash = SecureHash.parse(it.txhash.toString())) }, stx.id)
+            NotarisationRequest(zktx.tx.inputs.map { it.copy(txhash = SecureHash.parse(it.txhash.toString())) }, zktx.id)
         return notarisationRequest.generateSignature(serviceHub)
+    }
+
+    /**
+     * Checks that the notary's signature(s) is/are valid.
+     */
+    private fun validateNotaryResponse(response: UntrustworthyData<NotarisationResponse>, notaryParty: Party): List<TransactionSignature> {
+        return response.unwrap {
+            it.validateSignatures(zktx.id, notaryParty)
+            it.signatures
+        }
     }
 }

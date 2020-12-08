@@ -192,7 +192,7 @@ fun SignedTransaction.toSignedZKVerifierTransaction(
     val svtx = SignedZKVerifierTransaction(vtx, zkSigs)
 
     if (persist) {
-        zkProverTransactionStorage.map.put(this, vtx)
+        zkProverTransactionStorage.map.put(this, ptx)
         zkVerifierTransactionStorage.map.put(this, vtx)
         zkProverTransactionStorage.addTransaction(sptx)
         zkVerifierTransactionStorage.addTransaction(svtx)

@@ -1,6 +1,6 @@
 package com.ing.zknotary.notary
 
-import com.ing.zknotary.common.transactions.ZKVerifierTransaction
+import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
 import net.corda.core.flows.NotarisationRequestSignature
 import net.corda.core.serialization.CordaSerializable
 
@@ -10,6 +10,6 @@ import net.corda.core.serialization.CordaSerializable
  */
 @CordaSerializable
 data class ZKNotarisationPayload(
-    val transaction: ZKVerifierTransaction,
+    val transaction: SignedZKVerifierTransaction,
     val requestSignature: NotarisationRequestSignature
 )

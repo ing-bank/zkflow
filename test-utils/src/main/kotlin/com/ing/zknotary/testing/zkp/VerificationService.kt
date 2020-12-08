@@ -70,7 +70,7 @@ public class VerificationService(private val proverService: ProverService) {
             currentVtx.componentGroupLeafDigestService.hash(paddingNonce.bytes + Dactyloscopist.identify(fillerOutput.content))
 
         fun List<PaddingWrapper<StateRef>>.collectUtxoHashesInto(hashes: MutableList<SecureHash>) =
-            mapIndexed() { index, it ->
+            forEachIndexed { index, it ->
                 val collectedHash = collectStateRefUtxoHash(
                     it,
                     paddingHash = paddingHash

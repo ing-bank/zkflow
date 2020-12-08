@@ -1,18 +1,27 @@
 package com.ing.zknotary.common.zkp
 
 import com.ing.zknotary.common.serializer.ZincSerializationFactory
+import com.ing.zknotary.node.services.ZKVerifierTransactionStorage
+import net.corda.core.node.ServiceHub
 import net.corda.core.serialization.SingletonSerializeAsToken
 import net.corda.core.serialization.serialize
 import java.time.Duration
 
+@Suppress("LongParameterList")
 class ZincZKTransactionService(
+    val services: ServiceHub,
+    override val zkStorage: ZKVerifierTransactionStorage,
     circuitFolder: String,
     artifactFolder: String,
     buildTimeout: Duration,
     setupTimeout: Duration,
     provingTimeout: Duration,
     verificationTimeout: Duration
-) : ZKTransactionService, SingletonSerializeAsToken() {
+) : NodeZKTransactionService, SingletonSerializeAsToken() {
+
+    // TODO create secondary constructor for tests that receives all values that are supposed to be injected in real Node
+    // override val zkStorage: ZKVerifierTransactionStorage = services.getCordaServiceFromConfig(ServiceNames.ZK_VERIFIER_TX_STORAGE)
+
     private val zkService =
         ZincZKService(circuitFolder, artifactFolder, buildTimeout, setupTimeout, provingTimeout, verificationTimeout)
 

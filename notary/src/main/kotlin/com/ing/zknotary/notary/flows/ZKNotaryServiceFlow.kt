@@ -2,15 +2,15 @@ package com.ing.zknotary.notary.flows
 
 import co.paralleluniverse.fibers.Suspendable
 import com.ing.zknotary.common.transactions.ZKVerifierTransaction
-import com.ing.zknotary.common.zkp.ZKConfig
+import com.ing.zknotary.notary.NotaryZKConfig
 import com.ing.zknotary.notary.ZKNotarisationPayload
-import com.ing.zknotary.notary.ZKNotarisationRequest
 import com.ing.zknotary.notary.ZKNotaryService
 import net.corda.core.contracts.StateRef
 import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.TransactionSignature
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
+import net.corda.core.flows.NotarisationRequest
 import net.corda.core.flows.NotarisationRequestSignature
 import net.corda.core.flows.NotarisationResponse
 import net.corda.core.flows.NotaryError
@@ -21,6 +21,7 @@ import net.corda.core.internal.IdempotentFlow
 import net.corda.core.internal.checkParameterHash
 import net.corda.core.internal.notary.NotaryInternalException
 import net.corda.core.internal.notary.UniquenessProvider
+import net.corda.core.internal.notary.verifySignature
 import net.corda.core.utilities.unwrap
 import java.time.Duration
 
@@ -29,7 +30,7 @@ class ZKNotaryServiceFlow(
     val otherSideSession: FlowSession,
     val service: ZKNotaryService,
     private val etaThreshold: Duration,
-    private val zkConfig: ZKConfig
+    private val zkConfig: NotaryZKConfig
 ) : FlowLogic<Void?>(), IdempotentFlow {
     companion object {
         // TODO: Determine an appropriate limit and also enforce in the network parameters and the transaction builder.
@@ -45,7 +46,7 @@ class ZKNotaryServiceFlow(
     @Suspendable
     override fun call(): Void? {
         val requestPayload = otherSideSession.receive<ZKNotarisationPayload>().unwrap { it }
-        val tx = requestPayload.transaction
+        val tx = requestPayload.transaction.tx
         logger.info("Received a notarisation request for Tx [${tx.id}] from [${otherSideSession.counterparty.name}]")
 
         val commitStatus = try {
@@ -53,10 +54,6 @@ class ZKNotaryServiceFlow(
             validateNotary(tx)
             validateRequestSignature(tx, requestPayload.requestSignature)
 
-            /**
-             * In our case this goes *before* verification, because due to ZKP,
-             * tx verification is slower than persistence and dependent on tx size
-             */
             handleBackPressure(tx)
 
             verifyTransaction(requestPayload)
@@ -98,7 +95,7 @@ class ZKNotaryServiceFlow(
 
     /** Verifies that the correct notarisation request was signed by the counterparty. */
     private fun validateRequestSignature(tx: ZKVerifierTransaction, signature: NotarisationRequestSignature) {
-        val request = ZKNotarisationRequest(tx.inputs, tx.id)
+        val request = NotarisationRequest(tx.inputs, tx.id)
         val requestingParty = otherSideSession.counterparty
         request.verifySignature(signature, requestingParty)
     }
@@ -148,16 +145,17 @@ class ZKNotaryServiceFlow(
     }
 
     private fun verifyTransaction(requestPayload: ZKNotarisationPayload) {
-        val tx = requestPayload.transaction
+        val svtx = requestPayload.transaction
 
         try {
             /**
-             * Check if we need to do some more checks from [TransactionVerifierServiceInternal] that are done on
-             * Ledgertransactions
+             * TODO Check if we need to do some more checks from [TransactionVerifierServiceInternal]
+             * that are done on Ledgertransactions
              */
-            // TODO: enable tx.verify()
-            // TODO: verify the zkp
-            // zkConfig.verifierService.verify()
+            // Verify ZKP
+            zkConfig.zkTransactionService.verify(svtx.tx)
+            // Verify signatures
+            svtx.verifySignaturesExcept(service.notaryIdentityKey)
         } catch (e: IllegalArgumentException) {
             throw NotaryInternalException(NotaryError.TransactionInvalid(e))
         }
