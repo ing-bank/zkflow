@@ -16,9 +16,13 @@ import net.corda.core.serialization.deserialize
 import net.corda.core.serialization.serialize
 
 @CordaService
-public open class MockZKTransactionService(public val services: AppServiceHub) : NodeZKTransactionService, SingletonSerializeAsToken() {
+public open class MockZKTransactionService(
+    override val zkStorage: ZKVerifierTransactionStorage
+) : NodeZKTransactionService, SingletonSerializeAsToken() {
 
-    override val zkStorage: ZKVerifierTransactionStorage = services.getCordaServiceFromConfig(ServiceNames.ZK_VERIFIER_TX_STORAGE)
+    public constructor(services: AppServiceHub) : this(
+        zkStorage = services.getCordaServiceFromConfig(ServiceNames.ZK_VERIFIER_TX_STORAGE)
+    )
 
     /**
      * This mock version simply returns the serialized witness, so that we can use it in `verify()`
