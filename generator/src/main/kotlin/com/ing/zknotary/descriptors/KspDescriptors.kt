@@ -15,19 +15,11 @@ import com.google.devtools.ksp.symbol.KSType
  * such classes as internal components.
  */
 fun KSPropertyDeclaration.describe(
-    propertyName: String,
     annotatedClasses: List<KSClassDeclaration>
 ): PropertyDescriptor {
-    val name = simpleName.asString()
-    val typeDef = type.resolve()
-
-    val descriptor = typeDef.describe(DescriptionContext(annotatedClasses))
-
     return PropertyDescriptor(
-        name = name,
-        type = descriptor.type,
-        fromInstance = descriptor.toCodeBlock("$propertyName.$name"),
-        default = descriptor.default
+        name = simpleName.asString(),
+        typeDescriptor = type.resolve().describe(DescriptionContext(annotatedClasses))
     )
 }
 

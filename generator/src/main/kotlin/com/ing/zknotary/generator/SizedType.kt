@@ -49,13 +49,14 @@ class SizedType {
             val properties = clazz.getAllProperties()
                 .filter { property -> property.isPublic() }
                 .map { property ->
-                    val descriptor = property.describe(original, annotatedClasses)
+                    val name = property.simpleName.asString()
+                    val descriptor = property.describe(annotatedClasses)
 
                     // Side effect: defining properties and private constructor.
-                    privateConstructorBuilder.addParameter(descriptor.name, descriptor.type)
+                    privateConstructorBuilder.addParameter(name, descriptor.typeDescriptor.type)
                     addProperty(
-                        PropertySpec.builder(descriptor.name, descriptor.type)
-                            .initializer(descriptor.name)
+                        PropertySpec.builder(name, descriptor.typeDescriptor.type)
+                            .initializer(name)
                             .build()
                     )
 
@@ -67,13 +68,13 @@ class SizedType {
             instanceConstructorBuilder
                 .callThisConstructor(
                     CodeBlock.of(
-                        properties.joinToString { it.fromInstance.toString() }
+                        properties.joinToString { it.typeDescriptor.toCodeBlock("$original.${it.name}").toString() }
                     )
                 )
             addFunction(instanceConstructorBuilder.build())
 
             defaultConstructor.callThisConstructor(
-                CodeBlock.of(properties.joinToString { it.default.toString() })
+                CodeBlock.of(properties.joinToString { it.typeDescriptor.default.toString() })
             )
             addFunction(defaultConstructor.build())
         }.build()

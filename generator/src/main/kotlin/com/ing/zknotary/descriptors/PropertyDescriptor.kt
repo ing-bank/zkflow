@@ -18,7 +18,6 @@ import com.squareup.kotlinpoet.TypeName
  *
  * A corresponding PropertyDescriptor is
  * PropertyDescriptor {
- *  name: "prop",
  *  type: "kotlin.Int",
  *  fromInstance: "original.prop",
  *  default: "0"
@@ -26,13 +25,6 @@ import com.squareup.kotlinpoet.TypeName
  */
 data class PropertyDescriptor(
     val name: String,
-    val type: TypeName,
-    val fromInstance: CodeBlock,
-    val default: CodeBlock
-) {
-    fun debug() {
-        log?.error("$name : $type")
-        log?.error("$fromInstance")
-        log?.error("$default")
-    }
-}
+    val typeDescriptor: TypeDescriptor
+)
+
