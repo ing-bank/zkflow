@@ -22,10 +22,10 @@ import com.ing.zknotary.util.findAnnotation
  * version of `TypeDescriptor` will be returned.
  */
 
-class DescriptionContext(val annotatedClasses: List<KSClassDeclaration>) {
-    fun describe(type: KSType): TypeDescriptor? {
+class DescriptionContext(private val annotatedClasses: List<KSClassDeclaration>) {
+    fun describe(type: KSType): TypeDescriptor {
         val clazz = type.declaration as? KSClassDeclaration
-            ?: error("$type is not a class and cannot be instantiated")
+            ?: throw CodeException.CannotInstantiate(type)
 
         val typename = "${type.declaration}"
 
@@ -36,14 +36,16 @@ class DescriptionContext(val annotatedClasses: List<KSClassDeclaration>) {
         }
 
         // Check if this type is annotated with `UseDefault`
-        type.findAnnotation<UseDefault>() ?: return null
+        // We throw UnsupportedUserType and not MissingAnnotation,
+        // because if such annotation is not found given that the type is not Sized,
+        // we can conclude more than the absence of annotation.
+        type.findAnnotation<UseDefault>()
+            ?: throw SupportException.UnsupportedUserType(type, annotatedClasses.map { it.simpleName.asString() })
 
-        if (clazz.getConstructors().any {
-                it.isPublic() && it.parameters.isEmpty()
-            }) {
+        if (clazz.getConstructors().any { it.isPublic() && it.parameters.isEmpty() }) {
             return DefaultableClassDescriptor(clazz)
         }
 
-        return null
+        throw CodeException.DefaultConstructorAbsent(type)
     }
 }

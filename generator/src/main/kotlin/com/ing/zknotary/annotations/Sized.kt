@@ -8,13 +8,13 @@ annotation class Sized
 @Target(AnnotationTarget.TYPE)
 /** Only applicable to collections, otherwise ignored.
  */
-annotation class FixLength(val size: Int = -1)
+annotation class FixToLength(val size: Int = -1)
 
 @Retention(AnnotationRetention.SOURCE)
 @Target(AnnotationTarget.TYPE)
 annotation class UseDefault
 
-data class SizedList<T> private constructor(val list: List<T>, val originalSize: Int) {
+class SizedList<T> private constructor(val list: List<T>, val originalSize: Int) {
     constructor(n: Int, default: T) : this(
         list = List(n) { default },
         originalSize = 0

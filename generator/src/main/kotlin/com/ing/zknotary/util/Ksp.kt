@@ -16,8 +16,7 @@ import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.STAR as KpStar
 
 // --> 3rd party methods.
-// Originally, copy-pasted by Matthijs,
-// reference would be helpful.
+// https://www.zacsweers.dev/kotlin-symbol-processor-early-thoughts/
 fun KSType.toTypeName(): TypeName {
     val type = when (declaration) {
         is KSClassDeclaration -> {
@@ -76,13 +75,15 @@ inline fun <reified T> KSType.findAnnotation(): KSAnnotation? =
         )
     }
 
-inline fun <reified T> KSAnnotation.expectArgument(name: String): T =
+inline fun <reified T> KSAnnotation.findArgument(name: String): T? =
     arguments.single {
         it.name?.getShortName() == name
     }.value as? T
-        ?: error("${T::class.simpleName} for `$name` is expected")
 
 inline fun <reified T> KSAnnotation.getArgumentOrDefault(name: String, default: T): T =
     arguments.single {
         it.name?.getShortName() == name
     }.value as? T ?: default
+
+val KSClassDeclaration.sizedName: String
+    get() = "${simpleName.asString()}Sized"

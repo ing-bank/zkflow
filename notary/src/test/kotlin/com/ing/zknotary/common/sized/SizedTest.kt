@@ -1,6 +1,6 @@
 package com.ing.zknotary.common.sized
 
-import com.ing.zknotary.annotations.FixLength
+import com.ing.zknotary.annotations.FixToLength
 import com.ing.zknotary.annotations.Sized
 import com.ing.zknotary.annotations.SizedList
 import com.ing.zknotary.annotations.UseDefault
@@ -21,8 +21,8 @@ class SizedTest {
 
     @Sized
     class ListState(
-        val shallow: @FixLength(7) List<Int>,
-        val deep: @FixLength(5) List<@FixLength(2) List<Int>>
+        val shallow: @FixToLength(7) List<Int>,
+        val deep: @FixToLength(5) List<@FixToLength(2) List<Int>>
     )
 
     @Test
@@ -75,11 +75,11 @@ class SizedTest {
     @Sized
     class DeepCompoundState(
         val deep:
-            @FixLength(5) List<
-                @FixLength(2) List<
+            @FixToLength(5) List<
+                @FixToLength(2) List<
                     Pair<
                         Int,
-                        @FixLength(2) List<Int>>>>
+                        @FixToLength(2) List<Int>>>>
     )
 
     @Test
@@ -107,10 +107,10 @@ class SizedTest {
     }
 
     @Sized
-    class StateL0(val simple: @FixLength(5) List<Int>)
+    class StateL0(val simple: @FixToLength(5) List<Int>)
 
     @Sized
-    class StateL1(val complex: @FixLength(5) List<StateL0>)
+    class StateL1(val complex: @FixToLength(5) List<StateL0>)
 
     @Test
     fun `class with custom sizeable types must be sizeable`() {
@@ -134,7 +134,7 @@ class SizedTest {
     @Sized
     class ListWithDefault(
         val simple: @UseDefault Defaultable,
-        val shallow: @FixLength(5) List<@UseDefault Defaultable>
+        val shallow: @FixToLength(5) List<@UseDefault Defaultable>
     )
 
     @Test

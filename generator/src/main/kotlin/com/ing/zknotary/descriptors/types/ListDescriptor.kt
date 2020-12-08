@@ -1,9 +1,6 @@
 package com.ing.zknotary.descriptors.types
 
-import com.google.devtools.ksp.symbol.KSType
-import com.ing.zknotary.annotations.FixLength
 import com.ing.zknotary.annotations.SizedList
-import com.ing.zknotary.descriptors.DescriptionContext
 import com.ing.zknotary.descriptors.TypeDescriptor
 import com.squareup.kotlinpoet.CodeBlock
 

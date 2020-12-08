@@ -2,7 +2,7 @@ package com.ing.zknotary.descriptors.types
 
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.ing.zknotary.descriptors.TypeDescriptor
-import com.ing.zknotary.descriptors.sizedName
+import com.ing.zknotary.util.sizedName
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.TypeName

@@ -1,9 +1,5 @@
 package com.ing.zknotary.descriptors
 
-import com.ing.zknotary.generator.log
-import com.squareup.kotlinpoet.CodeBlock
-import com.squareup.kotlinpoet.TypeName
-
 /**
  * A convenience class holding data necessary to compose
  * a sized version of some `KSPropertyDeclaration`.
@@ -27,4 +23,3 @@ data class PropertyDescriptor(
     val name: String,
     val typeDescriptor: TypeDescriptor
 )
-
