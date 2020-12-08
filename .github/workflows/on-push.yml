@@ -22,13 +22,23 @@ jobs:
           java-version: 8.0.232
           java-package: jdk
 
-      - name: Cache Gradle packages
-        uses: actions/cache@v1
+      # Build cache
+      - name: Cache Gradle Cache
+        uses: actions/cache@v2
         with:
           path: ~/.gradle/caches
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}-1
-          restore-keys: ${{ runner.os }}-gradle
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle.kts') }}-${{ hashFiles('**/gradle.properties') }}
+          # An ordered list of keys to use for restoring the cache if no cache hit occurred for key
+          restore-keys: |
+            ${{ runner.os }}-gradle-
 
+      - name: Cache gradle wrapper
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
+
+      # Zinc install
       - name: Fetch Zinc ING Fork
         uses: dsaltares/fetch-gh-release-asset@master
         with:
@@ -45,6 +55,7 @@ jobs:
           tar xvzf zinc-linux.tar.gz
           echo "$GITHUB_WORKSPACE/zinc-linux/" >> $GITHUB_PATH
 
+      # Assemble only
       - name: Build with Gradle
         run: ./gradlew assemble --build-cache --stacktrace --parallel
         env:
@@ -64,12 +75,21 @@ jobs:
           java-version: 8.0.232
           java-package: jdk
 
-      - name: Cache Gradle packages
-        uses: actions/cache@v1
+      # Build cache
+      - name: Cache Gradle Cache
+        uses: actions/cache@v2
         with:
           path: ~/.gradle/caches
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}-1
-          restore-keys: ${{ runner.os }}-gradle
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle.kts') }}-${{ hashFiles('**/gradle.properties') }}
+          # An ordered list of keys to use for restoring the cache if no cache hit occurred for key
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Cache gradle wrapper
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
 
       - name: Fetch Zinc ING Fork
         uses: dsaltares/fetch-gh-release-asset@master
@@ -120,12 +140,21 @@ jobs:
           java-version: 8.0.232
           java-package: jdk
 
-      - name: Cache Gradle packages
-        uses: actions/cache@v1
+      # Build cache
+      - name: Cache Gradle Cache
+        uses: actions/cache@v2
         with:
           path: ~/.gradle/caches
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}-1
-          restore-keys: ${{ runner.os }}-gradle
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle.kts') }}-${{ hashFiles('**/gradle.properties') }}
+          # An ordered list of keys to use for restoring the cache if no cache hit occurred for key
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Cache gradle wrapper
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
 
       - name: Fetch Zinc ING Fork
         uses: dsaltares/fetch-gh-release-asset@master
