@@ -151,9 +151,6 @@ class BackChainTest {
     }
 
     private fun setupMockCircuits() = mapOf(
-        SecureHash.allOnesHash as SecureHash to createMockCordaService(
-            ledgerServices,
-            ::MockZKTransactionService
-        )
+        SecureHash.allOnesHash as SecureHash to MockZKTransactionService(createMockCordaService(ledgerServices, ::InMemoryZKVerifierTransactionStorage))
     )
 }
