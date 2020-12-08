@@ -6,7 +6,7 @@ import com.ing.zknotary.util.toClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.TypeName
 
-class DefaultableClass(declaration: KSClassDeclaration) : TypeDescriptor(
+class DefaultableClassDescriptor(declaration: KSClassDeclaration) : TypeDescriptor(
     declaration.toClassName()
 ) {
     override val isTransient = false

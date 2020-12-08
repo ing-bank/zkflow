@@ -7,7 +7,7 @@ import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.TypeName
 
-class AnnotatedSizedClass(declaration: KSClassDeclaration) : TypeDescriptor(
+class AnnotatedSizedClassDescriptor(declaration: KSClassDeclaration) : TypeDescriptor(
     ClassName(
         declaration.packageName.asString(),
         listOf(declaration.sizedName)

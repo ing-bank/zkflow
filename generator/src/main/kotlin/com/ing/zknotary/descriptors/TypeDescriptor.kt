@@ -4,6 +4,12 @@ import com.google.devtools.ksp.getConstructors
 import com.google.devtools.ksp.isPublic
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSType
+import com.ing.zknotary.descriptors.types.AnnotatedSizedClassDescriptor
+import com.ing.zknotary.descriptors.types.DefaultableClassDescriptor
+import com.ing.zknotary.descriptors.types.IntDescriptor
+import com.ing.zknotary.descriptors.types.ListDescriptor
+import com.ing.zknotary.descriptors.types.PairDescriptor
+import com.ing.zknotary.descriptors.types.TripleDescriptor
 import com.ing.zknotary.generator.log
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
@@ -53,16 +59,55 @@ abstract class TypeDescriptor(
         innerDescriptors
     )
 
-    companion object {
-        val supported = listOf(
-            Int::class.simpleName,
-            Pair::class.simpleName,
-            Triple::class.simpleName,
-            List::class.simpleName
-        )
+    // 'kotlin.Result' cannot be used as a return type.
+    data class Result private constructor (val descriptor: TypeDescriptor?, val error: String?) {
+        companion object {
+            fun ok(descriptor: TypeDescriptor) = Result(descriptor, null)
+            fun err(reason: String) = Result(null, reason)
+        }
+    }
 
-        fun supports(typeName: String): Boolean =
-            supported.contains(typeName)
+    companion object {
+        fun of(type: KSType, userTypeDescriptor: UserTypeDescriptor): Result {
+            val supported = listOf(
+                Int::class.simpleName,
+                Pair::class.simpleName,
+                Triple::class.simpleName,
+                List::class.simpleName
+            )
+
+            return when ("${type.declaration}") {
+                // Primitive types
+                Int::class.simpleName -> Result.ok(IntDescriptor(0, type.declaration))
+
+                //
+                // Compound types
+                Pair::class.simpleName -> Result.ok(PairDescriptor(
+                    type.arguments.subList(0, 2).map {
+                        val innerType = it.type?.resolve()
+                        require(innerType != null) { "Pair must have type arguments" }
+                        innerType.describe(userTypeDescriptor)
+                    }
+                ))
+
+                Triple::class.simpleName -> Result.ok(TripleDescriptor(
+                    type.arguments.subList(0, 3).map {
+                        val innerType = it.type?.resolve()
+                        require(innerType != null) { "Pair must have type arguments" }
+                        innerType.describe(userTypeDescriptor)
+                    }
+                ))
+
+                //
+                // Collections
+                List::class.simpleName -> Result.ok(ListDescriptor.fromKSP(type, userTypeDescriptor))
+
+                //
+                //
+                else -> Result.err("Built-in supported types ${supported.joinToString(separator = ",\n")}")
+            }
+        }
+
     }
 
     abstract val default: CodeBlock
@@ -86,56 +131,51 @@ abstract class TypeDescriptor(
 /**
  * When building a `TypeDescriptor` for some type, any given type
  * will be decomposed into components.
- * At every level it must hold that a variant of fixed size can be
- * constructed for each type component.
- * Such types are
- * - classes supported by `TypeDescriptor`,
- * - classes that are marked with `Sized` annotation,
- *   i.e., fixed length version of those classes will be or have been generated,
- * - classes for which the generator was instructed to use the default constructor.
+ * As it is described in docs for `TypeDescriptor`, the type tree
+ * can terminate at use classes which are either annotated with `Sized`
+ * or have default constructors which must be used if user requested this.
  *
- * Support class conveniently offers such verification mechanism.
- * It bundles:
- * - types supported by `TypeDescriptor` and those annotated with `Sized` into SizedClasses.
- *   the former ones are sized by construction and the latter ones by expectation.
- * - types for which user "promises" to have implemented a default constructor creating own fixed length version.
+ * `UserTypeDescriptor` enforces conditions when such termination is possible
+ * - type under consideration is listed as `Sized`,
+ * - default constructor must be used and it is present.
+ *
+ * If a respective condition holds, a variant of `TypeDescriptor` will be constructed.
  */
-sealed class Support {
-    abstract fun requireFor(type: KSType)
 
-    object Default : Support() {
-        override fun requireFor(type: KSType) {
+sealed class UserTypeDescriptor {
+    abstract fun of(type: KSType): TypeDescriptor.Result
+
+    object Default : UserTypeDescriptor() {
+        override fun of(type: KSType): TypeDescriptor.Result {
             // Verify that the type is a user class.
             val clazz = type.declaration as? KSClassDeclaration
-                ?: error("$type is not a user class and cannot be instantiated with a default value")
+                ?: return TypeDescriptor.Result.err("$type is not a user class and cannot be instantiated with a default value")
 
             // Verify this class has a default (empty) constructor.
-            require(
-                clazz.getConstructors().any {
+            return if (clazz.getConstructors().any {
                     it.isPublic() && it.parameters.isEmpty()
-                }
-            ) { "$type must have a default (empty) constructor" }
+                }) {
+                TypeDescriptor.Result.ok(DefaultableClassDescriptor(clazz))
+            } else {
+                TypeDescriptor.Result.err("$type must have a default (empty) constructor")
+            }
         }
     }
 
-    data class SizedClasses(val annotatedClasses: List<KSClassDeclaration>) : Support() {
-        override fun requireFor(type: KSType) {
-            val typename = "${type.declaration}"
-            val errors = mutableListOf("Type $typename is not supported\n")
+    data class Sized(val annotatedClasses: List<KSClassDeclaration>) : UserTypeDescriptor() {
+        override fun of(type: KSType): TypeDescriptor.Result {
+            val clazz = type.declaration as? KSClassDeclaration
+                ?: return TypeDescriptor.Result.err("$type is not a user class and cannot be instantiated with a default value")
 
-            // Check type is one of those listed in TypeDecriptor
-            if (TypeDescriptor.supports(typename)) {
-                return
-            }
-            errors += "Supported types:\n${TypeDescriptor.supported.joinToString(separator = ",\n")}"
+            val typename = "${type.declaration}"
 
             // Check type will (or already) have a generated fixed length version.
-            if (annotatedClasses.any { it.simpleName.asString() == typename }) {
-                return
+            return if (annotatedClasses.any { it.simpleName.asString() == typename }) {
+                TypeDescriptor.Result.ok(AnnotatedSizedClassDescriptor(clazz))
+            } else {
+                TypeDescriptor.Result.err("Class $typename is not expected to have fixed length")
             }
-            errors += "Class $typename is not expected to have fixed length"
-
-            error(errors.joinToString(separator = "\n"))
         }
     }
 }
+

@@ -3,7 +3,7 @@ package com.ing.zknotary.descriptors.types
 import com.google.devtools.ksp.symbol.KSType
 import com.ing.zknotary.annotations.Sized
 import com.ing.zknotary.annotations.SizedList
-import com.ing.zknotary.descriptors.Support
+import com.ing.zknotary.descriptors.UserTypeDescriptor
 import com.ing.zknotary.descriptors.TypeDescriptor
 import com.ing.zknotary.descriptors.describe
 import com.ing.zknotary.util.expectAnnotation
@@ -16,7 +16,7 @@ class ListDescriptor private constructor(private val size: Int, innerDescriptors
     innerDescriptors
 ) {
     companion object {
-        fun fromKSP(list: KSType, support: Support): ListDescriptor {
+        fun fromKSP(list: KSType, userTypeDescriptor: UserTypeDescriptor): ListDescriptor {
             // List must be annotated with Sized.
             val sized = list.expectAnnotation<Sized>()
 
@@ -29,9 +29,9 @@ class ListDescriptor private constructor(private val size: Int, innerDescriptors
                 ?: error("List must have a type")
 
             val innerSupport = if (useDefault) {
-                Support.Default
+                UserTypeDescriptor.Default
             } else {
-                support
+                userTypeDescriptor
             }
 
             return ListDescriptor(size, listOf(listType.describe(innerSupport)))
