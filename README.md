@@ -17,12 +17,12 @@ Ktlint is not configurable and enforces the default Kotlin code style. Our proje
 
 Detekt is very configurable, and to start with, we have chosen to use the default (community-discussed for *ages*) ruleset. We have disabled style and formatting rules because that is covered by ktlint.
 
-### What to do when these check fail the build?
+### What to do when these checks fail the build?
 
 When either ktlint or detekt fail the build, you have a few options to fix it:
 
 1. Update your code. This is obviously the preferable option in most cases.
-2. Annotate the offending code with `@Suppress("SomeRuleName")`. Be ready to explain yourself during code review.
+2. Annotate the offending code with `@Suppress("SomeRuleName")`. Be ready to explain your reasoning during code review.
 3. Propose a change to the ruleset (not possible for ktlint). A mentioned above, this is always an option, but should be a last resort only when we see too many suppression annotations for a rule.
 
 ## Configuring how the tests run
@@ -34,7 +34,7 @@ To run the slow tests, but faster, you can set the following system property: `M
 
 > How to set a system property? `./gradlew test slowTest -DMockZKP`.
 
-> Please note that we have configured JUnit5 so that test classes are instantiated only once. So if you want to have tests state reset per test, add a setup method and annotate it with @BeforeAll. We follow the following best practices as much as possible: https://phauer.com/2018/best-practices-unit-testing-kotlin/
+> Please note that we have configured JUnit5 so that test classes are instantiated only once. This means 'static' setup can just go in the init block or by declaring vals. If you want to isolate individual tests more, you can still have a setup method that runs before each test. Just annotate it with @BeforeEach (JUnit4's @Before will no longer work). We follow the following best practices as much as possible: https://phauer.com/2018/best-practices-unit-testing-kotlin/
 
 ## Configuring logging during testing
 
