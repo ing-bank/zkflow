@@ -25,17 +25,14 @@ class SizedType {
             log = logger
 
             return FileSpec.builder(clazz.packageName.asString(), clazz.sizedName)
-                .addType(
-                    buildFixedLengthType(clazz.sizedName, clazz, annotatedClasses)
-                )
+                .addType(buildFixedLengthType(clazz, annotatedClasses))
                 .build()
         }
 
         private fun buildFixedLengthType(
-            generatedClassName: String,
             clazz: KSClassDeclaration,
             annotatedClasses: List<KSClassDeclaration>
-        ) = TypeSpec.classBuilder(generatedClassName).apply {
+        ) = TypeSpec.classBuilder(clazz.sizedName).apply {
             val original = "original"
 
             val privateConstructorBuilder = FunSpec.constructorBuilder()

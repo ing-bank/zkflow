@@ -4,16 +4,14 @@ import com.ing.zknotary.descriptors.TypeDescriptor
 import com.squareup.kotlinpoet.CodeBlock
 
 class TripleDescriptor(innerDescriptors: List<TypeDescriptor>) : TypeDescriptor(Triple::class, innerDescriptors) {
+    /**
+     * Index accesses to inner descriptors shall not fail,
+     * existence of inner types is verified during the construction.
+     */
+
     override val default: CodeBlock
         get() {
-            val first = innerDescriptors.getOrNull(0)
-                ?: error("Triple<A, B, C> must declare type A")
-
-            val second = innerDescriptors.getOrNull(1)
-                ?: error("Triple<A, B, C> must declare type B")
-
-            val third = innerDescriptors.getOrNull(2)
-                ?: error("Triple<A, B, C> must declare type C")
+            val (first, second, third) = innerDescriptors.subList(0, 3)
 
             return CodeBlock.of(
                 "Triple( %L, %L, %L )",
@@ -22,14 +20,7 @@ class TripleDescriptor(innerDescriptors: List<TypeDescriptor>) : TypeDescriptor(
         }
 
     override fun toCodeBlock(propertyName: String): CodeBlock {
-        val first = innerDescriptors.getOrNull(0)
-            ?: error("Triple<A, B, C> must declare type A")
-
-        val second = innerDescriptors.getOrNull(1)
-            ?: error("Triple<A, B, C> must declare type B")
-
-        val third = innerDescriptors.getOrNull(2)
-            ?: error("Triple<A, B, C> must declare type C")
+        val (first, second, third) = innerDescriptors.subList(0, 3)
 
         val map = mapOf(
             "propertyName" to propertyName,

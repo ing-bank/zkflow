@@ -8,32 +8,35 @@ class ListDescriptor(private val size: Int, innerDescriptors: List<TypeDescripto
     SizedList::class,
     innerDescriptors
 ) {
+    /**
+     * Index accesses to inner descriptors shall not fail,
+     * existence of inner types is verified during the construction.
+     */
+
     override val default: CodeBlock
         get() {
-            val innerType = innerDescriptors.getOrNull(0)
-                ?: error("SizedList must declare type of its elements")
+            val inner = innerDescriptors.first()
 
             return CodeBlock.of(
                 "SizedList( %L, %L )",
-                size, innerType.default
+                size, inner.default
             )
         }
 
     override fun toCodeBlock(propertyName: String): CodeBlock {
-        val listType = innerDescriptors.getOrNull(0)
-            ?: error("SizedList must declare type of its elements")
+        val inner = innerDescriptors.first()
 
         val map = mutableMapOf(
             "propertyName" to propertyName,
             "size" to size,
-            "default" to listType.default
+            "default" to inner.default
         )
         var mapper = ""
 
-        if (listType.isTransient) {
+        if (inner.isTransient) {
             val itName = "it${(0..1000).random()}"
             map += "it" to itName
-            map += "mapped" to listType.toCodeBlock(itName)
+            map += "mapped" to inner.toCodeBlock(itName)
 
             mapper = ".map { %it:L ->\n⇥%mapped:L\n⇤}"
         }

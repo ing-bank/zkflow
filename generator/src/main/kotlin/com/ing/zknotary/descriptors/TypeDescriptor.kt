@@ -120,13 +120,4 @@ abstract class TypeDescriptor(
 
     open val type: TypeName
         get() = definition.parameterizedBy(innerDescriptors.map { it.type })
-
-    fun debug() {
-        if (innerDescriptors.isEmpty()) {
-            log?.error("(${(0..100).random()}) $definition : $default")
-        } else {
-            log?.error("(${(0..100).random()}) $definition")
-            innerDescriptors.forEach { it.debug() }
-        }
-    }
 }

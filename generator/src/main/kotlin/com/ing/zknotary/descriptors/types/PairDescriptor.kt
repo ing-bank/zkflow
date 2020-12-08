@@ -4,25 +4,23 @@ import com.ing.zknotary.descriptors.TypeDescriptor
 import com.squareup.kotlinpoet.CodeBlock
 
 class PairDescriptor(innerDescriptors: List<TypeDescriptor>) : TypeDescriptor(Pair::class, innerDescriptors) {
+    /**
+     * Index accesses to inner descriptors shall not fail,
+     * existence of inner types is verified during the construction.
+     */
+
     override val default: CodeBlock
         get() {
-            val firstType = innerDescriptors.getOrNull(0)
-                ?: error("Pair<A, B> must declare type A")
-
-            val secondType = innerDescriptors.getOrNull(1)
-                ?: error("Pair<A, B> must declare type B")
+            val (first, second) = innerDescriptors.subList(0, 2)
 
             return CodeBlock.of(
                 "Pair( %L, %L )",
-                firstType.default, secondType.default
+                first.default, second.default
             )
         }
 
     override fun toCodeBlock(propertyName: String): CodeBlock {
-        val first = innerDescriptors.getOrNull(0)
-            ?: error("Pair<A, B> must declare type A")
-        val second = innerDescriptors.getOrNull(1)
-            ?: error("Pair<A, B> must declare type B")
+        val (first, second) = innerDescriptors.subList(0, 2)
 
         val map = mapOf(
             "propertyName" to propertyName,
