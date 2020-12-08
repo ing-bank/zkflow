@@ -1,8 +1,18 @@
 package com.ing.zknotary.annotations
 
 @Retention(AnnotationRetention.SOURCE)
-@Target(AnnotationTarget.CLASS, AnnotationTarget.TYPE)
-annotation class Sized(val size: Int = -1, val useDefault: Boolean = false)
+@Target(AnnotationTarget.CLASS)
+annotation class Sized
+
+@Retention(AnnotationRetention.SOURCE)
+@Target(AnnotationTarget.TYPE)
+/** Only applicable to collections, otherwise ignored.
+ */
+annotation class FixLength(val size: Int = -1)
+
+@Retention(AnnotationRetention.SOURCE)
+@Target(AnnotationTarget.TYPE)
+annotation class UseDefault
 
 data class SizedList<T> private constructor(val list: List<T>, val originalSize: Int) {
     constructor(n: Int, default: T) : this(

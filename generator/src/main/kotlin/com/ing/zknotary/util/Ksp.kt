@@ -68,8 +68,8 @@ fun KSTypeReference.toTypeName(): TypeName {
 }
 // <-- 3rd party methods
 
-inline fun <reified T> KSType.expectAnnotation(): KSAnnotation =
-    annotations.single {
+inline fun <reified T> KSType.findAnnotation(): KSAnnotation? =
+    annotations.find {
         it.annotationType.toString().contains(
             T::class.simpleName ?: error("Unknown annotation class is expected"),
             ignoreCase = true

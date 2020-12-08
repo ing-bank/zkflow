@@ -21,7 +21,7 @@ fun KSPropertyDeclaration.describe(
     val name = simpleName.asString()
     val typeDef = type.resolve()
 
-    val descriptor = typeDef.describe(UserTypeDescriptor.Sized(annotatedClasses))
+    val descriptor = typeDef.describe(DescriptionContext(annotatedClasses))
 
     return PropertyDescriptor(
         name = name,
@@ -37,23 +37,31 @@ fun KSPropertyDeclaration.describe(
  *
  * `userTypeDescriptor` indicates when further decomposition is possible.
  */
-fun KSType.describe(userTypeDescriptor: UserTypeDescriptor): TypeDescriptor {
+fun KSType.describe(context: DescriptionContext): TypeDescriptor {
     val typename = "$declaration"
-    val errors = mutableListOf("Type $typename is not supported\n")
-
     // Try built-in generating fixed length versions using built-in functionality.
-    var result = TypeDescriptor.of(this, userTypeDescriptor)
-    if (result.descriptor != null) {
-        return result.descriptor!!
+    var descriptor = TypeDescriptor.of(this, context)
+    if (descriptor != null) {
+        return descriptor
     }
-    errors += result.error!!
 
     // Try to leverage the knowledge of user "promised" fixed length classes.
-    result = userTypeDescriptor.of(this)
-    if (result.descriptor != null) {
-        return result.descriptor!!
+    descriptor = context.describe(this)
+    if (descriptor != null) {
+        return descriptor
     }
-    errors += result.error!!
+
+    val errors = listOf(
+        "No sized version can be constructed for $typename",
+        //
+        "No built-in support for $typename",
+        "Built-in supported types: ", *TypeDescriptor.supported.toTypedArray(),
+        //
+        "$typename is not marked as `Sized`",
+        "Classes marked as sized: ", *context.annotatedClasses.map { it.simpleName.asString() }.toTypedArray(),
+        //
+        "$typename is not marked with `UseDefault` or has marked but has no default constructor"
+    )
 
     // Fail.
     error(errors.joinToString(separator = "\n"))

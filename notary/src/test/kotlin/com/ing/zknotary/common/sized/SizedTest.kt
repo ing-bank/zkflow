@@ -1,7 +1,9 @@
 package com.ing.zknotary.common.sized
 
+import com.ing.zknotary.annotations.FixLength
 import com.ing.zknotary.annotations.Sized
 import com.ing.zknotary.annotations.SizedList
+import com.ing.zknotary.annotations.UseDefault
 import org.junit.Test
 
 @Suppress("USELESS_IS_CHECK")
@@ -19,8 +21,8 @@ class SizedTest {
 
     @Sized
     class ListState(
-        val shallow: @Sized(7) List<Int>,
-        val deep: @Sized(5) List<@Sized(2) List<Int>>
+        val shallow: @FixLength(7) List<Int>,
+        val deep: @FixLength(5) List<@FixLength(2) List<Int>>
     )
 
     @Test
@@ -73,11 +75,11 @@ class SizedTest {
     @Sized
     class DeepCompoundState(
         val deep:
-            @Sized(5) List<
-                @Sized(2) List<
+            @FixLength(5) List<
+                @FixLength(2) List<
                     Pair<
                         Int,
-                        @Sized(2) List<Int>>>>
+                        @FixLength(2) List<Int>>>>
     )
 
     @Test
@@ -105,10 +107,10 @@ class SizedTest {
     }
 
     @Sized
-    class StateL0(val simple: @Sized(5) List<Int>)
+    class StateL0(val simple: @FixLength(5) List<Int>)
 
     @Sized
-    class StateL1(val complex: @Sized(5) List<StateL0>)
+    class StateL1(val complex: @FixLength(5) List<StateL0>)
 
     @Test
     fun `class with custom sizeable types must be sizeable`() {
@@ -130,14 +132,17 @@ class SizedTest {
     }
 
     @Sized
-    class ListWithDefault(val simple: @Sized(5, true) List<Defaultable>)
+    class ListWithDefault(
+        val simple: @UseDefault Defaultable,
+        val shallow: @FixLength(5) List<@UseDefault Defaultable>
+    )
 
     @Test
     fun `class with custom defaultable types must be sizeable`() {
-        val state = ListWithDefault(listOf())
+        val state = ListWithDefault(Defaultable(2), listOf())
         val sized = ListWithDefaultSized(state)
 
-        val l1 = sized.simple
+        val l1 = sized.shallow
         assert(l1 is SizedList<*> && l1.list.size == 5 && l1.originalSize == 0)
 
         val element = l1.list[0]
