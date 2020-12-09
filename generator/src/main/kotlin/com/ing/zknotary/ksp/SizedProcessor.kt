@@ -6,12 +6,12 @@ import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.symbol.KSClassDeclaration
-import com.ing.zknotary.annotations.ZKPState
-import com.ing.zknotary.generator.FixedLengthType
+import com.ing.zknotary.annotations.Sized
+import com.ing.zknotary.generator.SizedType
 import com.ing.zknotary.util.writeTo
 
 @AutoService(SymbolProcessor::class)
-class TestProcessor : SymbolProcessor {
+class SizedProcessor : SymbolProcessor {
     private lateinit var generator: CodeGenerator
     private lateinit var logger: KSPLogger
 
@@ -26,14 +26,14 @@ class TestProcessor : SymbolProcessor {
     }
 
     override fun process(resolver: Resolver) {
-        resolver.getSymbolsWithAnnotation(ZKPState::class.qualifiedName!!)
-            .asSequence()
+        val annotatedClasses = resolver
+            .getSymbolsWithAnnotation(Sized::class.qualifiedName!!)
             .filterIsInstance<KSClassDeclaration>()
-            .forEach { clazz ->
-                val file = FixedLengthType.fromClass(clazz)
 
-                file.writeTo(generator)
-            }
+        annotatedClasses.forEach { clazz ->
+            val file = SizedType.fromClass(clazz, annotatedClasses, logger)
+            file.writeTo(generator)
+        }
     }
 
     override fun finish() {}

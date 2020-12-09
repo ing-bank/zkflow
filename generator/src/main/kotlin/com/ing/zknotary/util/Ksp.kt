@@ -1,8 +1,6 @@
 @file:Suppress("TooManyFunctions")
 package com.ing.zknotary.util
 
-import com.google.devtools.ksp.processing.Resolver
-import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSType
@@ -17,47 +15,8 @@ import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.STAR as KpStar
 
-inline fun <reified T> Resolver.getClassDeclarationByName(): KSClassDeclaration {
-    return getClassDeclarationByName(T::class.qualifiedName!!)
-}
-
-fun Resolver.getClassDeclarationByName(fqcn: String): KSClassDeclaration {
-    return getClassDeclarationByName(getKSNameFromString(fqcn)) ?: error("Class '$fqcn' not found.")
-}
-
-fun KSClassDeclaration.asType() = asType(emptyList())
-
-fun KSAnnotated.getAnnotationWithType(target: KSType): KSAnnotation {
-    return findAnnotationWithType(target) ?: error("Annotation $target not found.")
-}
-
-fun KSAnnotated.hasAnnotation(target: KSType): Boolean {
-    return findAnnotationWithType(target) != null
-}
-
-fun KSAnnotated.findAnnotationWithType(target: KSType): KSAnnotation? {
-    return annotations.find { it.annotationType.resolve() == target }
-}
-
-inline fun <reified T> KSAnnotation.getMember(name: String): T {
-    return arguments.find { it.name?.getShortName() == name }
-        ?.value as? T
-        ?: error("No member name found for $name.")
-}
-
-val KSType.typeName: TypeName
-    get() {
-        val primaryType = declaration.toString()
-        val typeArgs = arguments.mapNotNull { it.type?.resolve() }
-
-        val clazzName = ClassName(
-            declaration.packageName.asString(),
-            listOf(primaryType)
-        )
-
-        return if (typeArgs.isNotEmpty()) clazzName.parameterizedBy(typeArgs.map { it.typeName }) else clazzName
-    }
-
+// --> 3rd party methods.
+// https://www.zacsweers.dev/kotlin-symbol-processor-early-thoughts/
 fun KSType.toTypeName(): TypeName {
     val type = when (declaration) {
         is KSClassDeclaration -> {
@@ -106,7 +65,25 @@ fun KSTypeReference.toTypeName(): TypeName {
     val type = resolve()
     return type.toTypeName()
 }
+// <-- 3rd party methods
 
-fun KSAnnotation.toTypeName(): TypeName {
-    return annotationType.resolve().toTypeName()
-}
+inline fun <reified T> KSType.findAnnotation(): KSAnnotation? =
+    annotations.find {
+        it.annotationType.toString().contains(
+            T::class.simpleName ?: error("Unknown annotation class is expected"),
+            ignoreCase = true
+        )
+    }
+
+inline fun <reified T> KSAnnotation.findArgument(name: String): T? =
+    arguments.single {
+        it.name?.getShortName() == name
+    }.value as? T
+
+inline fun <reified T> KSAnnotation.getArgumentOrDefault(name: String, default: T): T =
+    arguments.single {
+        it.name?.getShortName() == name
+    }.value as? T ?: default
+
+val KSClassDeclaration.sizedName: String
+    get() = "${simpleName.asString()}Sized"
