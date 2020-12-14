@@ -18,6 +18,18 @@ dependencies {
 
     val kspVersion: String by project
     implementation("com.google.devtools.ksp:symbol-processing-api:$kspVersion")
+    testImplementation("com.google.devtools.ksp:symbol-processing:$kspVersion")
+
+    val kspTestingVersion: String by project
+    val kotlinVersion: String by project
+    implementation("com.github.tschuchortdev:kotlin-compile-testing-ksp:$kspTestingVersion")
+    // Require to override everything included by kotlin-compile-testing
+    testImplementation("org.jetbrains.kotlin:kotlin-compiler-embeddable:$kotlinVersion")
+
+    // This is necessary, because the version included by kotlin-compile-testing (4.8.86)
+    // is breaking the Corda classloading.
+    // TODO: This is dangerous of course, so we need to keep an eye on this
+    implementation("io.github.classgraph:classgraph:4.8.78!!")
 }
 
 publishing {

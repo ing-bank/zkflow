@@ -43,9 +43,9 @@ class SizedType {
 
             val defaultConstructor = FunSpec.constructorBuilder()
 
-            val properties = clazz.getAllProperties()
-                .filter { property -> property.isPublic() }
-                .map { property ->
+            val properties = clazz.getAllProperties().filter { it.isPublic() }
+
+            val descriptors = properties.map { property ->
                     val name = property.simpleName.asString()
                     val descriptor = property.describe(annotatedClasses)
 
@@ -65,13 +65,13 @@ class SizedType {
             instanceConstructorBuilder
                 .callThisConstructor(
                     CodeBlock.of(
-                        properties.joinToString { it.typeDescriptor.toCodeBlock("$original.${it.name}").toString() }
+                        descriptors.joinToString { it.typeDescriptor.toCodeBlock("$original.${it.name}").toString() }
                     )
                 )
             addFunction(instanceConstructorBuilder.build())
 
             defaultConstructor.callThisConstructor(
-                CodeBlock.of(properties.joinToString { it.typeDescriptor.default.toString() })
+                CodeBlock.of(descriptors.joinToString { it.typeDescriptor.default.toString() })
             )
             addFunction(defaultConstructor.build())
         }.build()

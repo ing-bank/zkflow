@@ -29,5 +29,3 @@ sealed class CodeException(message: String) : Exception(message) {
         "Type $type is supposed to have an empty constructor but it does not."
     )
 }
-
-
