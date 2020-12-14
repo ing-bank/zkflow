@@ -6,9 +6,7 @@ import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.tschuchort.compiletesting.KotlinCompilation
-import com.tschuchort.compiletesting.KotlinCompilation.ExitCode
 import com.tschuchort.compiletesting.SourceFile
-import com.tschuchort.compiletesting.kspSourcesDir
 import com.tschuchort.compiletesting.symbolProcessors
 import io.kotest.matchers.reflection.shouldHaveFunction
 import io.kotest.matchers.shouldBe
@@ -82,31 +80,36 @@ class SizedTest2 {
         )
 
         // Somehow this does not actually compile, but only KSP-generates classes.
-        val processor = MyProcessor()
-        val firstPassCompiler = KotlinCompilation().apply {
+        val compilation = KotlinCompilation().apply {
             sources = listOf(annotation, targetClass)
-            symbolProcessors = listOf(processor)
+            symbolProcessors = listOf(MyProcessor())
         }
 
-        val result = firstPassCompiler.compile()
-        result.exitCode shouldBe ExitCode.OK
+        val result = KSPRuntimeCompiler.compile(compilation)
 
-        val result2 = KotlinCompilation().apply {
-            sources = listOf(annotation, targetClass) + firstPassCompiler.kspGeneratedSourceFiles()
-        }.compile()
-        result2.exitCode shouldBe ExitCode.OK
+        val gen = result.classLoader.loadClass("foo.bar.generated.AppCode_Gen").kotlin
+        gen shouldHaveFunction "test"
 
-        val klazz = assertClassLoadable(result2, "foo.bar.generated.AppCode_Gen")
-        klazz shouldHaveFunction "test"
+        // val result = firstPassCompiler.compile()
+        // result.exitCode shouldBe ExitCode.OK
+        //
+        //
+        // val result2 = KotlinCompilation().apply {
+        //     sources = listOf(annotation, targetClass) + firstPassCompiler.kspGeneratedSourceFiles()
+        // }.compile()
+        // result2.exitCode shouldBe ExitCode.OK
+        //
+        // val klazz = assertClassLoadable(result2, "foo.bar.generated.AppCode_Gen")
+        // klazz shouldHaveFunction "test"
     }
 
-    private fun KotlinCompilation.kspGeneratedSourceFiles(): List<SourceFile> {
-        return kspSourcesDir.resolve("kotlin")
-            .walk()
-            .filter { it.isFile }
-            .map { SourceFile.fromPath(it.absoluteFile) }
-            .toList()
-    }
+    // private fun KotlinCompilation.kspGeneratedSourceFiles(): List<SourceFile> {
+    //     return kspSourcesDir.resolve("kotlin")
+    //         .walk()
+    //         .filter { it.isFile }
+    //         .map { SourceFile.fromPath(it.absoluteFile) }
+    //         .toList()
+    // }
 
     private fun assertClassLoadable(compileResult: KotlinCompilation.Result, className: String): KClass<out Any> {
         return try {
