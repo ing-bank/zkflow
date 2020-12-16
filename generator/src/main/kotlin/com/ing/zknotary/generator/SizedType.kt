@@ -46,19 +46,19 @@ class SizedType {
             val properties = clazz.getAllProperties().filter { it.isPublic() }
 
             val descriptors = properties.map { property ->
-                    val name = property.simpleName.asString()
-                    val descriptor = property.describe(annotatedClasses)
+                val name = property.simpleName.asString()
+                val descriptor = property.describe(annotatedClasses)
 
-                    // Side effect: defining properties and private constructor.
-                    privateConstructorBuilder.addParameter(name, descriptor.typeDescriptor.type)
-                    addProperty(
-                        PropertySpec.builder(name, descriptor.typeDescriptor.type)
-                            .initializer(name)
-                            .build()
-                    )
+                // Side effect: defining properties and private constructor.
+                privateConstructorBuilder.addParameter(name, descriptor.typeDescriptor.type)
+                addProperty(
+                    PropertySpec.builder(name, descriptor.typeDescriptor.type)
+                        .initializer(name)
+                        .build()
+                )
 
-                    descriptor
-                }
+                descriptor
+            }
 
             primaryConstructor(privateConstructorBuilder.build())
 
