@@ -43,35 +43,35 @@ class SizedType {
 
             val defaultConstructor = FunSpec.constructorBuilder()
 
-            val properties = clazz.getAllProperties()
-                .filter { property -> property.isPublic() }
-                .map { property ->
-                    val name = property.simpleName.asString()
-                    val descriptor = property.describe(annotatedClasses)
+            val properties = clazz.getAllProperties().filter { it.isPublic() }
 
-                    // Side effect: defining properties and private constructor.
-                    privateConstructorBuilder.addParameter(name, descriptor.typeDescriptor.type)
-                    addProperty(
-                        PropertySpec.builder(name, descriptor.typeDescriptor.type)
-                            .initializer(name)
-                            .build()
-                    )
+            val descriptors = properties.map { property ->
+                val name = property.simpleName.asString()
+                val descriptor = property.describe(annotatedClasses)
 
-                    descriptor
-                }
+                // Side effect: defining properties and private constructor.
+                privateConstructorBuilder.addParameter(name, descriptor.typeDescriptor.type)
+                addProperty(
+                    PropertySpec.builder(name, descriptor.typeDescriptor.type)
+                        .initializer(name)
+                        .build()
+                )
+
+                descriptor
+            }
 
             primaryConstructor(privateConstructorBuilder.build())
 
             instanceConstructorBuilder
                 .callThisConstructor(
                     CodeBlock.of(
-                        properties.joinToString { it.typeDescriptor.toCodeBlock("$original.${it.name}").toString() }
+                        descriptors.joinToString { it.typeDescriptor.toCodeBlock("$original.${it.name}").toString() }
                     )
                 )
             addFunction(instanceConstructorBuilder.build())
 
             defaultConstructor.callThisConstructor(
-                CodeBlock.of(properties.joinToString { it.typeDescriptor.default.toString() })
+                CodeBlock.of(descriptors.joinToString { it.typeDescriptor.default.toString() })
             )
             addFunction(defaultConstructor.build())
         }.build()

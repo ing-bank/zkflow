@@ -6,7 +6,6 @@ import com.ing.zknotary.descriptors.types.IntDescriptor
 import com.ing.zknotary.descriptors.types.ListDescriptor
 import com.ing.zknotary.descriptors.types.PairDescriptor
 import com.ing.zknotary.descriptors.types.TripleDescriptor
-import com.ing.zknotary.generator.log
 import com.ing.zknotary.util.findAnnotation
 import com.ing.zknotary.util.findArgument
 import com.squareup.kotlinpoet.ClassName
