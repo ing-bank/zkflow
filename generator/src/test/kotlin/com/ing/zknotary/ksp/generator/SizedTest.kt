@@ -1,5 +1,6 @@
 package com.ing.zknotary.ksp.generator
 
+import com.ing.zknotary.annotations.SizedString
 import com.ing.zknotary.ksp.SizedProcessor
 import com.squareup.kotlinpoet.asTypeName
 import com.tschuchort.compiletesting.KotlinCompilation
@@ -100,6 +101,33 @@ class SizedTest {
         testWrapper(100.toLong())
         testWrapper(false)
         testWrapper('a')
+    }
+
+    /**
+     * Compound types as defined in TypeDescriptor.compoundTypes.
+     */
+    @Test
+    fun `class with strings must be sizeable`() {
+        val loader = buildSizedVersion(
+            SimpleSource(
+                "StringState",
+                "@Sized class StringState(val string: @FixToLength(10) String)"
+            )
+        )
+
+        val sourceClass = loader.load("StringState")
+        val targetClass = loader.load("StringStateSized")
+
+        // Structural integrity and alignment.
+        targetClass shouldBeAlignedWith sourceClass
+
+        // Construction alignment.
+        val source = sourceClass.constructors.single().call("a")
+        val target = targetClass.constructorFrom(sourceClass).call(source)
+
+        assert(target["string"] is SizedString)
+        target["string"]["string"] shouldBe "a" + List(9) { '0' }.joinToString(separator = "")
+        target["string"]["originalLength"] shouldBe 1
     }
 
     @Test

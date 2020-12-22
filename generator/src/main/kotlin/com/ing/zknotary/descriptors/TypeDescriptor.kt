@@ -5,6 +5,7 @@ import com.ing.zknotary.annotations.FixToLength
 import com.ing.zknotary.descriptors.types.ListDescriptor
 import com.ing.zknotary.descriptors.types.PairDescriptor
 import com.ing.zknotary.descriptors.types.PrimitiveTypeDescriptor
+import com.ing.zknotary.descriptors.types.StringDescriptor
 import com.ing.zknotary.descriptors.types.TripleDescriptor
 import com.ing.zknotary.util.findAnnotation
 import com.ing.zknotary.util.findArgument
@@ -67,12 +68,14 @@ abstract class TypeDescriptor(
         ).map { it!! }
 
         private val compoundTypes = listOf(
+            String::class.simpleName,
             Pair::class.simpleName,
-            Triple::class.simpleName,
-            List::class.simpleName
+            Triple::class.simpleName
         ).map { it!! }
 
-        private val supported = primitiveTypes + compoundTypes
+        private val collectionTypes = listOf(List::class.simpleName).map { it!! }
+
+        private val supported = primitiveTypes + compoundTypes + collectionTypes
 
         @Suppress("ComplexMethod")
         fun of(type: KSType, context: DescriptionContext): TypeDescriptor {
@@ -80,13 +83,13 @@ abstract class TypeDescriptor(
             return when {
                 declaration belongsTo primitiveTypes -> ofPrimitiveType(type)
                 declaration belongsTo compoundTypes -> ofCompoundType(type, context)
+                declaration belongsTo collectionTypes -> ofCollectionTypes(type, context)
                 else -> throw SupportException.UnsupportedNativeType(type, supported)
             }
         }
 
         private fun ofPrimitiveType(type: KSType): TypeDescriptor =
             when ("${type.declaration}") {
-                // Primitive types
                 Byte::class.simpleName -> PrimitiveTypeDescriptor<Byte>(0, type.declaration)
                 Short::class.simpleName -> PrimitiveTypeDescriptor<Short>(0, type.declaration)
                 Int::class.simpleName -> PrimitiveTypeDescriptor<Int>(0, type.declaration)
@@ -98,7 +101,7 @@ abstract class TypeDescriptor(
 
         private fun ofCompoundType(type: KSType, context: DescriptionContext): TypeDescriptor =
             when ("${type.declaration}") {
-                // Compound types
+                String::class.simpleName -> StringDescriptor(length = type.expectArgFixToLength(), filler = '0')
                 Pair::class.simpleName -> PairDescriptor(
                     type.arguments.subList(0, 2).map {
                         val innerType = it.type?.resolve()
@@ -115,18 +118,13 @@ abstract class TypeDescriptor(
                     }
                 )
 
-                // Collections
+                else -> error("Unexpected error. Type ${type.declaration} must be in the list of compound types.")
+            }
+
+        private fun ofCollectionTypes(type: KSType, context: DescriptionContext): TypeDescriptor =
+            when ("${type.declaration}") {
                 List::class.simpleName -> {
-                    // List must be annotated with Sized.
-                    val fixedLength = type.findAnnotation<FixToLength>()
-                        ?: throw CodeException.MissingAnnotation(type, FixToLength::class)
-
-                    val size = fixedLength.findArgument<Int>("size")
-                        ?: throw CodeException.InvalidAnnotation(FixToLength::class, "size")
-
-                    if (size <= 0) {
-                        throw CodeException.InvalidAnnotationArgument(FixToLength::class, "size")
-                    }
+                    val size = type.expectArgFixToLength()
 
                     // List must have an inner type.
                     val listType = type.arguments.single().type?.resolve()
@@ -135,11 +133,24 @@ abstract class TypeDescriptor(
                     ListDescriptor(size, listOf(listType.describe(context)))
                 }
 
-                //
-                else -> throw SupportException.UnsupportedNativeType(type, supported)
+                else -> error("Unexpected error. Type ${type.declaration} must be in the list of collection types.")
             }
 
         private infix fun <T> T.belongsTo(list: List<T>) = list.contains(this)
+
+        private fun KSType.expectArgFixToLength(): Int {
+            val size = (
+                this
+                    .findAnnotation<FixToLength>() ?: throw CodeException.MissingAnnotation(this, FixToLength::class)
+                )
+                .findArgument<Int>("size") ?: throw CodeException.InvalidAnnotation(FixToLength::class, "size")
+
+            if (size <= 0) {
+                throw CodeException.InvalidAnnotationArgument(FixToLength::class, "size")
+            }
+
+            return size
+        }
     }
 
     abstract val default: CodeBlock
