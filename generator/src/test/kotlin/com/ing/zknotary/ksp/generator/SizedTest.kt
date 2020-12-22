@@ -16,65 +16,90 @@ import kotlin.reflect.KProperty1
 import kotlin.reflect.full.memberProperties
 
 class SizedTest {
+    /**
+     * Primitive types as defined in TypeDescriptor.primitiveTypes.
+     */
     @Test
-    fun `class with simple types must be sizeable`() {
-        val loader = buildSizedVersion(
-            SimpleSource(
-                "SimpleState",
-                """
+    fun `class with primitive types must be sizeable`() {
+        fun <T : Any> testWrapper(primitive: T) {
+            val loader = buildSizedVersion(
+                SimpleSource(
+                    "SimpleState",
+                    """
                 @Sized
-                class SimpleState(val simple: Int)
-                """.trimIndent()
+                class SimpleState(val primitive: ${primitive::class.simpleName!!})
+                    """.trimIndent()
+                )
             )
-        )
 
-        val sourceClass = loader.load("SimpleState")
-        val targetClass = loader.load("SimpleStateSized")
+            val sourceClass = loader.load("SimpleState")
+            val targetClass = loader.load("SimpleStateSized")
 
-        // Structural integrity and alignment.
-        targetClass shouldBeAlignedWith sourceClass
+            // Structural integrity and alignment.
+            targetClass shouldBeAlignedWith sourceClass
 
-        // Construction alignment.
-        val source = sourceClass.constructors.single().call(100)
-        val target = targetClass.constructorFrom(sourceClass).call(source)
+            // Construction alignment.
 
-        target["simple"] shouldBe source["simple"]
+            val source = sourceClass.constructors.single().call(primitive)
+            val target = targetClass.constructorFrom(sourceClass).call(source)
+
+            target["primitive"] shouldBe source["primitive"]
+            assert(target["primitive"]::class == primitive::class)
+        }
+
+        testWrapper(100.toByte())
+        testWrapper(100.toShort())
+        testWrapper(100.toInt())
+        testWrapper(100.toLong())
+        testWrapper(false)
+        testWrapper('a')
     }
 
     @Test
-    fun `class with list of ints must be sizeable`() {
-        val loader = buildSizedVersion(
-            SimpleSource(
-                "ListState",
-                """
+    fun `class with list of primitive types must be sizeable`() {
+        fun <T : Any> testWrapper(primitive: T) {
+            val loader = buildSizedVersion(
+                SimpleSource(
+                    "ListState",
+                    """
                 @Sized
                 class ListState(
-                    val shallow: @FixToLength(7) List<Int>,
-                    val deep: @FixToLength(5) List<@FixToLength(2) List<Int>>
+                    val shallow: @FixToLength(7) List<${primitive::class.simpleName!!}>,
+                    val deep: @FixToLength(5) List<@FixToLength(2) List<${primitive::class.simpleName!!}>>
                 )
-                """.trimIndent()
+                    """.trimIndent()
+                )
             )
-        )
 
-        val sourceClass = loader.load("ListState")
-        val targetClass = loader.load("ListStateSized")
+            val sourceClass = loader.load("ListState")
+            val targetClass = loader.load("ListStateSized")
 
-        // Structural integrity and alignment.
-        targetClass shouldBeAlignedWith sourceClass
+            // Structural integrity and alignment.
+            targetClass shouldBeAlignedWith sourceClass
 
-        // Construction alignment.
-        val source = sourceClass.constructors.single()
-            .call(List(3) { 2 }, List(2) { List(1) { 1 } })
-        val target = targetClass.constructorFrom(sourceClass).call(source)
+            // Construction alignment.
+            val source = sourceClass.constructors.single()
+                .call(List(3) { primitive }, List(2) { List(1) { primitive } })
+            val target = targetClass.constructorFrom(sourceClass).call(source)
 
-        target["shallow"]["list"]["size"] shouldBe 7
-        target["shallow"]["originalSize"] shouldBe source["shallow"]["size"]
+            target["shallow"]["list"]["size"] shouldBe 7
+            target["shallow"]["originalSize"] shouldBe source["shallow"]["size"]
+            assert(target["shallow"]["list"]["0"]::class == primitive::class)
 
-        target["deep"]["list"]["size"] shouldBe 5
-        target["deep"]["originalSize"] shouldBe source["deep"]["size"]
+            target["deep"]["list"]["size"] shouldBe 5
+            target["deep"]["originalSize"] shouldBe source["deep"]["size"]
 
-        target["deep"]["list"]["0"]["list"]["size"] shouldBe 2
-        target["deep"]["list"]["0"]["originalSize"] shouldBe source["deep"]["0"]["size"]
+            target["deep"]["list"]["0"]["list"]["size"] shouldBe 2
+            target["deep"]["list"]["0"]["originalSize"] shouldBe source["deep"]["0"]["size"]
+            assert(target["deep"]["list"]["0"]["list"]["0"]::class == primitive::class)
+        }
+
+        testWrapper(100.toByte())
+        testWrapper(100.toShort())
+        testWrapper(100.toInt())
+        testWrapper(100.toLong())
+        testWrapper(false)
+        testWrapper('a')
     }
 
     @Test
@@ -339,7 +364,7 @@ class SizedTest {
                     return this[indexAccess]!!
                 }
             }
-
+            @Suppress("UNCHECKED_CAST")
             val thisProperty = this::class.memberProperties.first { it.name == propertyName } as KProperty1<Any, *>
             return thisProperty.get(this) ?: error("Property $propertyName is not found for ${Any::class.simpleName}")
         }

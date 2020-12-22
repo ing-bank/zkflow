@@ -2,9 +2,9 @@ package com.ing.zknotary.descriptors
 
 import com.google.devtools.ksp.symbol.KSType
 import com.ing.zknotary.annotations.FixToLength
-import com.ing.zknotary.descriptors.types.IntDescriptor
 import com.ing.zknotary.descriptors.types.ListDescriptor
 import com.ing.zknotary.descriptors.types.PairDescriptor
+import com.ing.zknotary.descriptors.types.PrimitiveTypeDescriptor
 import com.ing.zknotary.descriptors.types.TripleDescriptor
 import com.ing.zknotary.util.findAnnotation
 import com.ing.zknotary.util.findArgument
@@ -26,7 +26,7 @@ import kotlin.reflect.KClass
  *                          (inner descriptors)
  *          |----------------------|-------------------------------|
  *          |                                                      |
- *   TypeDescriptor.IntDescriptor                                    TypeDescriptor.IntDescriptor
+ *   TypeDescriptor.PrimitiveTypeDescriptor                                    TypeDescriptor.PrimitiveTypeDescriptor
  *
  * Each version of TypeDescriptor implements a bespoke functionality
  * to construct default values and to create values of the right type from a variable.
@@ -57,18 +57,47 @@ abstract class TypeDescriptor(
     )
 
     companion object {
-        private val supported = listOf(
+        private val primitiveTypes = listOf(
+            Byte::class.simpleName,
+            Short::class.simpleName,
             Int::class.simpleName,
+            Long::class.simpleName,
+            Boolean::class.simpleName,
+            Char::class.simpleName
+        ).map { it!! }
+
+        private val compoundTypes = listOf(
             Pair::class.simpleName,
             Triple::class.simpleName,
             List::class.simpleName
         ).map { it!! }
 
-        fun of(type: KSType, context: DescriptionContext): TypeDescriptor {
-            return when ("${type.declaration}") {
-                // Primitive types
-                Int::class.simpleName -> IntDescriptor(0, type.declaration)
+        private val supported = primitiveTypes + compoundTypes
 
+        @Suppress("ComplexMethod")
+        fun of(type: KSType, context: DescriptionContext): TypeDescriptor {
+            val declaration = "${type.declaration}"
+            return when {
+                declaration belongsTo primitiveTypes -> ofPrimitiveType(type)
+                declaration belongsTo compoundTypes -> ofCompoundType(type, context)
+                else -> throw SupportException.UnsupportedNativeType(type, supported)
+            }
+        }
+
+        private fun ofPrimitiveType(type: KSType): TypeDescriptor =
+            when ("${type.declaration}") {
+                // Primitive types
+                Byte::class.simpleName -> PrimitiveTypeDescriptor<Byte>(0, type.declaration)
+                Short::class.simpleName -> PrimitiveTypeDescriptor<Short>(0, type.declaration)
+                Int::class.simpleName -> PrimitiveTypeDescriptor<Int>(0, type.declaration)
+                Long::class.simpleName -> PrimitiveTypeDescriptor<Long>(0, type.declaration)
+                Boolean::class.simpleName -> PrimitiveTypeDescriptor(false, type.declaration)
+                Char::class.simpleName -> PrimitiveTypeDescriptor("'0'", type.declaration)
+                else -> error("Unexpected error. Type ${type.declaration} must be in the list of primitive types.")
+            }
+
+        private fun ofCompoundType(type: KSType, context: DescriptionContext): TypeDescriptor =
+            when ("${type.declaration}") {
                 // Compound types
                 Pair::class.simpleName -> PairDescriptor(
                     type.arguments.subList(0, 2).map {
@@ -109,7 +138,8 @@ abstract class TypeDescriptor(
                 //
                 else -> throw SupportException.UnsupportedNativeType(type, supported)
             }
-        }
+
+        private infix fun <T> T.belongsTo(list: List<T>) = list.contains(this)
     }
 
     abstract val default: CodeBlock
