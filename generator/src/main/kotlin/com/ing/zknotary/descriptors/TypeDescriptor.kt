@@ -49,7 +49,7 @@ abstract class TypeDescriptor(
     val definition: ClassName,
     val innerDescriptors: List<TypeDescriptor> = listOf()
 ) {
-    constructor(clazz: KClass<*>, innerDescriptors: List<TypeDescriptor>) : this(
+    constructor(clazz: KClass<*>, innerDescriptors: List<TypeDescriptor> = listOf()) : this(
         ClassName(
             clazz.java.`package`.name,
             listOf(clazz.simpleName!!)
@@ -138,19 +138,24 @@ abstract class TypeDescriptor(
 
         private infix fun <T> T.belongsTo(list: List<T>) = list.contains(this)
 
-        private fun KSType.expectArgFixToLength(): Int {
-            val size = (
-                this
-                    .findAnnotation<FixToLength>() ?: throw CodeException.MissingAnnotation(this, FixToLength::class)
-                )
-                .findArgument<Int>("size") ?: throw CodeException.InvalidAnnotation(FixToLength::class, "size")
-
-            if (size <= 0) {
-                throw CodeException.InvalidAnnotationArgument(FixToLength::class, "size")
-            }
-
-            return size
-        }
+        private fun KSType.expectArgFixToLength(): Int =
+            Result.success(this)
+                .mapCatching { type ->
+                    type.findAnnotation<FixToLength>() ?: throw CodeException.MissingAnnotation(
+                        this,
+                        FixToLength::class
+                    )
+                }
+                .mapCatching { ann ->
+                    ann.findArgument<Int>("size") ?: throw CodeException.InvalidAnnotation(FixToLength::class, "size")
+                }
+                .mapCatching { size ->
+                    if (size <= 0) {
+                        throw CodeException.InvalidAnnotationArgument(FixToLength::class, "size")
+                    }
+                    size
+                }
+                .getOrThrow()
     }
 
     abstract val default: CodeBlock
@@ -160,4 +165,7 @@ abstract class TypeDescriptor(
 
     open val type: TypeName
         get() = definition.parameterizedBy(innerDescriptors.map { it.type })
+
+    open val ownImports: List<ClassName> = listOf()
+    fun imports(): List<ClassName> = innerDescriptors.fold(ownImports) { total, item -> total + item.imports() }
 }

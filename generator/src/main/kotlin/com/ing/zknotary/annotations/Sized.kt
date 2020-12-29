@@ -1,14 +1,13 @@
 package com.ing.zknotary.annotations
 
-import kotlin.reflect.KClass
-
 @Retention(AnnotationRetention.SOURCE)
 @Target(AnnotationTarget.CLASS)
 annotation class Sized
 
 @Retention(AnnotationRetention.SOURCE)
 @Target(AnnotationTarget.TYPE)
-/** Only applicable to collections, otherwise ignored.
+/**
+ *  Only applicable to collections, otherwise ignored.
  */
 annotation class FixToLength(val size: Int = -1)
 
@@ -20,9 +19,9 @@ annotation class UseDefault
 @Target(AnnotationTarget.TYPE)
 /**
  * Instructs the annotation processor to use `code` for constructing default elements.
- * `code` must be a valid kotlin code using only classes listed in `classes`.
+ * `code` must be a valid kotlin code using only classes listed in `imports`.
  */
-annotation class Call(val code: String, val classes: Array<KClass<*>>)
+annotation class Call(val imports: Array<String>, val code: String)
 
 class SizedList<T> private constructor(val list: List<T>, val originalSize: Int) : List<T> by list {
     constructor(n: Int, default: T) : this(
