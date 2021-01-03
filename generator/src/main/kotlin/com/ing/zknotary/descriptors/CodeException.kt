@@ -21,9 +21,11 @@ sealed class CodeException(message: String) : Exception(message) {
         "${annotationClazz.simpleName} incorrectly defines argument: `$expectedArgument`."
     )
 
-    class CannotInstantiate(type: KSType) : CodeException(
-        "Type $type cannot be instantiated."
-    )
+    class NotAClass(types: List<String>) : CodeException(
+        "Types [ ${types.joinToString(separator = ", ") } ] cannot be instantiated."
+    ) {
+        constructor(type: String) : this(listOf(type))
+    }
 
     class DefaultConstructorAbsent(type: KSType) : CodeException(
         "Type $type is supposed to have an empty constructor but it does not."

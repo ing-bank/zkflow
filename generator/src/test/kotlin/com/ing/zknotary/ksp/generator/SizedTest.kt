@@ -299,13 +299,13 @@ class SizedTest {
 
         val target = targetClass.constructorFrom(listWithDefaultClass).call(listWithDefault)
 
-        target["shallow"]["list"]["size"] shouldBe 5
+        target["shallow"]["size"] shouldBe 5
         target["shallow"]["originalSize"] shouldBe listWithDefault["shallow"]["size"]
 
-        // Check element we placed there.
-        target["shallow"]["list"]["0"]["n"] shouldBe 2
-        // Check filler element created by default.
-        target["shallow"]["list"]["1"]["n"] shouldBe 0
+        // Check elements we placed there.
+        target["shallow"]["0"]["n"] shouldBe 2
+        // Check a filler element created by default.
+        target["shallow"]["1"]["n"] shouldBe 0
     }
 
     private companion object {
@@ -344,7 +344,10 @@ class SizedTest {
         }
 
         infix fun KClass<out Any>.shouldHaveSamePublicStructureWith(that: KClass<out Any>) {
-            memberProperties.forEach {
+            memberProperties.filter { property ->
+                property.visibility?.let { it == KVisibility.PUBLIC }
+                    ?: error("Property $this.$property has undefined visibility")
+            }.forEach {
                 that shouldHaveMemberProperty it.name
             }
         }
@@ -370,6 +373,7 @@ class SizedTest {
 
         infix fun KClass<out Any>.shouldBeAlignedWith(that: KClass<out Any>) {
             this shouldHaveSamePublicStructureWith that
+            that shouldHaveSamePublicStructureWith this
             this shouldHaveConstructorsAlignedWith that
         }
 
