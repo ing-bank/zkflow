@@ -14,6 +14,7 @@ import java.net.URLClassLoader
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 import kotlin.reflect.KProperty1
+import kotlin.reflect.KVisibility
 import kotlin.reflect.full.memberProperties
 
 class SizedTest {
@@ -83,16 +84,16 @@ class SizedTest {
                 .call(List(3) { primitive }, List(2) { List(1) { primitive } })
             val target = targetClass.constructorFrom(sourceClass).call(source)
 
-            target["shallow"]["list"]["size"] shouldBe 7
+            target["shallow"]["size"] shouldBe 7
             target["shallow"]["originalSize"] shouldBe source["shallow"]["size"]
-            assert(target["shallow"]["list"]["0"]::class == primitive::class)
+            assert(target["shallow"]["0"]::class == primitive::class)
 
-            target["deep"]["list"]["size"] shouldBe 5
+            target["deep"]["size"] shouldBe 5
             target["deep"]["originalSize"] shouldBe source["deep"]["size"]
 
-            target["deep"]["list"]["0"]["list"]["size"] shouldBe 2
-            target["deep"]["list"]["0"]["originalSize"] shouldBe source["deep"]["0"]["size"]
-            assert(target["deep"]["list"]["0"]["list"]["0"]::class == primitive::class)
+            target["deep"]["0"]["size"] shouldBe 2
+            target["deep"]["0"]["originalSize"] shouldBe source["deep"]["0"]["size"]
+            assert(target["deep"]["0"]["0"]::class == primitive::class)
         }
 
         testWrapper(100.toByte())
@@ -212,18 +213,18 @@ class SizedTest {
 
         val sourceL1 = source["deep"]
         val targetL1 = target["deep"]
-        targetL1["list"]["size"] shouldBe 10
+        targetL1["size"] shouldBe 10
         targetL1["originalSize"] shouldBe sourceL1["size"]
 
         val sourceL2 = sourceL1["0"]
-        val targetL2 = targetL1["list"]["0"]
-        targetL2["list"]["size"] shouldBe 9
+        val targetL2 = targetL1["0"]
+        targetL2["size"] shouldBe 9
         targetL2["originalSize"] shouldBe sourceL2["size"]
-        assert(targetL2["list"]["0"] is Pair<*, *>)
+        assert(targetL2["0"] is Pair<*, *>)
 
         val sourceL3 = sourceL2["0"]["second"]
-        val targetL3 = targetL2["list"]["0"]["second"]
-        targetL3["list"]["size"] shouldBe 8
+        val targetL3 = targetL2["0"]["second"]
+        targetL3["size"] shouldBe 8
         targetL3["originalSize"] shouldBe sourceL3["size"]
     }
 
@@ -252,11 +253,11 @@ class SizedTest {
         val sourceL1 = sourceClassL1.constructors.single().call(listOf(sourceL0))
         val target = targetClass.constructorFrom(sourceClassL1).call(sourceL1)
 
-        target["complex"]["list"]["size"] shouldBe 5
+        target["complex"]["size"] shouldBe 5
         target["complex"]["originalSize"] shouldBe sourceL1["complex"]["size"]
 
-        target["complex"]["list"]["0"]["simple"]["list"]["size"] shouldBe 4
-        target["complex"]["list"]["0"]["simple"]["originalSize"] shouldBe
+        target["complex"]["0"]["simple"]["size"] shouldBe 4
+        target["complex"]["0"]["simple"]["originalSize"] shouldBe
             sourceL1["complex"]["0"]["simple"]["size"]
     }
 
