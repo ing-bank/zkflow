@@ -23,18 +23,29 @@ annotation class UseDefault
  */
 annotation class Call(val imports: Array<String>, val code: String)
 
+/**
+ * Wraps Lists into lists of fixed size.
+ * ALSO, wraps both generic and specialized arrays (ByteArray, CharArray, etc.)
+ * The latter has a performance penalty, thus specific wrapper classes can be developed if the penalty is too high.
+ */
 class SizedList<T> private constructor(val list: List<T>, val originalSize: Int) : List<T> by list {
+    companion object {
+        fun <T> fromIterator(iterator: Iterator<T>, n: Int, default: T): SizedList<T> {
+            val list = iterator.asSequence().toList()
+            return SizedList(
+                list = if (list.size <= n) {
+                    list + List(n - list.size) { default }
+                } else {
+                    error("Actual size ${list.size} of the list exceeds expected size $n")
+                },
+                originalSize = list.size
+            )
+        }
+    }
+
     constructor(n: Int, default: T) : this(
         list = List(n) { default },
         originalSize = 0
-    )
-    constructor(n: Int, list: List<T>, default: T) : this (
-        list = if (list.size <= n) {
-            list + List(n - list.size) { default }
-        } else {
-            error("Actual size ${list.size} of the list exceeds expected size $n")
-        },
-        originalSize = list.size
     )
 }
 
