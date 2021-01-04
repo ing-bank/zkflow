@@ -29,7 +29,7 @@ import kotlin.reflect.KClass
  *                          (inner descriptors)
  *          |----------------------|-------------------------------|
  *          |                                                      |
- *   TypeDescriptor.PrimitiveTypeDescriptor                                    TypeDescriptor.PrimitiveTypeDescriptor
+ *   TypeDescriptor.IntDescriptor                      TypeDescriptor.IntTypeDescriptor
  *
  * Each version of TypeDescriptor implements a bespoke functionality
  * to construct default values and to create values of the right type from a variable.
@@ -75,22 +75,29 @@ abstract class TypeDescriptor(
             Triple::class.simpleName
         ).map { it!! }
 
-        private val collectionTypes = listOf(List::class.simpleName).map { it!! }
+        private val collectionTypes = listOf(
+            ByteArray::class.simpleName,
+            ShortArray::class.simpleName,
+            IntArray::class.simpleName,
+            LongArray::class.simpleName,
+            BooleanArray::class.simpleName,
+            CharArray::class.simpleName,
+            // Exact type of the array does not matter, type is required to get `simpleName` in an "agreed" way.
+            Array<Unit>::class.simpleName,
+            List::class.simpleName
+        ).map { it!! }
 
         private val supported = primitiveTypes + compoundTypes + collectionTypes
 
-        @Suppress("ComplexMethod")
         fun of(type: KSType, context: DescriptionContext): TypeDescriptor {
-            val declaration = "${type.declaration}"
-            return when {
-                declaration belongsTo primitiveTypes -> ofPrimitiveType(type)
-                declaration belongsTo compoundTypes -> ofCompoundType(type, context)
-                declaration belongsTo collectionTypes -> ofCollectionTypes(type, context)
-                else -> throw SupportException.UnsupportedNativeType(type, supported)
-            }
+            ofPrimitiveType(type) ?.let { return it }
+            ofCompoundType(type, context) ?.let { return it }
+            ofCollectionTypes(type, context) ?.let { return it }
+
+            throw SupportException.UnsupportedNativeType(type, supported)
         }
 
-        private fun ofPrimitiveType(type: KSType): TypeDescriptor =
+        private fun ofPrimitiveType(type: KSType): TypeDescriptor? =
             when ("${type.declaration}") {
                 Byte::class.simpleName -> PrimitiveTypeDescriptor<Byte>(0, type.declaration.asClassName)
                 Short::class.simpleName -> PrimitiveTypeDescriptor<Short>(0, type.declaration.asClassName)
@@ -101,7 +108,7 @@ abstract class TypeDescriptor(
                 else -> null
             }
 
-        private fun ofCompoundType(type: KSType, context: DescriptionContext): TypeDescriptor =
+        private fun ofCompoundType(type: KSType, context: DescriptionContext): TypeDescriptor? =
             when ("${type.declaration}") {
                 String::class.simpleName -> StringDescriptor(length = type.expectArgFixToLength(), filler = '0')
                 Pair::class.simpleName -> PairDescriptor(
@@ -120,14 +127,38 @@ abstract class TypeDescriptor(
                     }
                 )
 
-                else -> error("Unexpected error. Type ${type.declaration} must be in the list of compound types.")
+                else -> null
             }
 
-        private fun ofCollectionTypes(type: KSType, context: DescriptionContext): TypeDescriptor =
-            when ("${type.declaration}") {
-                List::class.simpleName -> {
-                    val size = type.expectArgFixToLength()
+        private fun ofCollectionTypes(type: KSType, context: DescriptionContext): TypeDescriptor? {
+            val declaration = "${type.declaration}"
+            if (!collectionTypes.contains(declaration)) {
+                return null
+            }
 
+            val size = type.expectArgFixToLength()
+
+            return when (declaration) {
+                ByteArray::class.simpleName ->
+                    ListDescriptor(size, listOf(PrimitiveTypeDescriptor<Byte>(0, Byte::class.asClassName())))
+                ShortArray::class.simpleName ->
+                    ListDescriptor(size, listOf(PrimitiveTypeDescriptor<Short>(0, Short::class.asClassName())))
+                IntArray::class.simpleName ->
+                    ListDescriptor(size, listOf(PrimitiveTypeDescriptor<Int>(0, Int::class.asClassName())))
+                LongArray::class.simpleName ->
+                    ListDescriptor(size, listOf(PrimitiveTypeDescriptor<Long>(0, Long::class.asClassName())))
+                BooleanArray::class.simpleName ->
+                    ListDescriptor(size, listOf(PrimitiveTypeDescriptor<Boolean>(false, Boolean::class.asClassName())))
+                CharArray::class.simpleName ->
+                    ListDescriptor(size, listOf(PrimitiveTypeDescriptor("'0'", Char::class.asClassName())))
+                Array<Unit>::class.simpleName -> {
+                    // Arrays must have an inner type.
+                    val arrayType = type.arguments.single().type?.resolve()
+                        ?: throw CodeException.InvalidDeclaration(type)
+
+                    ListDescriptor(size, listOf(arrayType.describe(context)))
+                }
+                List::class.simpleName -> {
                     // List must have an inner type.
                     val listType = type.arguments.single().type?.resolve()
                         ?: throw CodeException.InvalidDeclaration(type)
@@ -135,10 +166,9 @@ abstract class TypeDescriptor(
                     ListDescriptor(size, listOf(listType.describe(context)))
                 }
 
-                else -> error("Unexpected error. Type ${type.declaration} must be in the list of collection types.")
+                else -> null
             }
-
-        private infix fun <T> T.belongsTo(list: List<T>) = list.contains(this)
+        }
 
         private fun KSType.expectArgFixToLength(): Int =
             Result.success(this)
