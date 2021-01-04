@@ -7,12 +7,14 @@ import com.ing.zknotary.descriptors.types.PairDescriptor
 import com.ing.zknotary.descriptors.types.PrimitiveTypeDescriptor
 import com.ing.zknotary.descriptors.types.StringDescriptor
 import com.ing.zknotary.descriptors.types.TripleDescriptor
+import com.ing.zknotary.util.asClassName
 import com.ing.zknotary.util.findAnnotation
 import com.ing.zknotary.util.findArgument
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.TypeName
+import com.squareup.kotlinpoet.asClassName
 import kotlin.reflect.KClass
 
 /**
@@ -90,13 +92,13 @@ abstract class TypeDescriptor(
 
         private fun ofPrimitiveType(type: KSType): TypeDescriptor =
             when ("${type.declaration}") {
-                Byte::class.simpleName -> PrimitiveTypeDescriptor<Byte>(0, type.declaration)
-                Short::class.simpleName -> PrimitiveTypeDescriptor<Short>(0, type.declaration)
-                Int::class.simpleName -> PrimitiveTypeDescriptor<Int>(0, type.declaration)
-                Long::class.simpleName -> PrimitiveTypeDescriptor<Long>(0, type.declaration)
-                Boolean::class.simpleName -> PrimitiveTypeDescriptor(false, type.declaration)
-                Char::class.simpleName -> PrimitiveTypeDescriptor("'0'", type.declaration)
-                else -> error("Unexpected error. Type ${type.declaration} must be in the list of primitive types.")
+                Byte::class.simpleName -> PrimitiveTypeDescriptor<Byte>(0, type.declaration.asClassName)
+                Short::class.simpleName -> PrimitiveTypeDescriptor<Short>(0, type.declaration.asClassName)
+                Int::class.simpleName -> PrimitiveTypeDescriptor<Int>(0, type.declaration.asClassName)
+                Long::class.simpleName -> PrimitiveTypeDescriptor<Long>(0, type.declaration.asClassName)
+                Boolean::class.simpleName -> PrimitiveTypeDescriptor(false, type.declaration.asClassName)
+                Char::class.simpleName -> PrimitiveTypeDescriptor("'0'", type.declaration.asClassName)
+                else -> null
             }
 
         private fun ofCompoundType(type: KSType, context: DescriptionContext): TypeDescriptor =
