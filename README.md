@@ -50,6 +50,50 @@ To change log levels, you can make changes in the following files:
 This project requires Java 8. To be consistent with our CI, it is advisable to use Zulu OpenJDK 8u232b18.
 On Mac, that is very easy to install and manage with [SDKMAN](https://sdkman.io/).
 
+### Rust
+
+You need to install the latest stable of version of Rust in order to format all circuits. You can either visit its [homepage](https://www.rust-lang.org/learn/get-started) or use Brew:
+```bash
+brew install rustup-init
+```
+Add a directory with installed binaries to the PATH variable and execute:
+```bash
+rustup-init
+```
+During the execution, you will be asked to pick installation configuration, just pick the default one.
+
+Also, if you do it using the instructions from the website, please, be noticed that you need to install extra component manually executing the following command:
+```bash
+rustup component add rustfmt
+```
+
+### Zinc
+
+You need to install our fork of Zinc from the [Github](https://github.com/ingzkp/zinc/releases). Ask your teammates, which one you need. If you use Linux, just download already built binaries, but on the MacOS you need to build them yourself.
+Clone repository and build it:
+```bash
+$ git clone git@github.com:ingzkp/zinc.git
+$ cd zinc
+$ git checkout ing-fork
+$ cargo b --release
+```
+Built binaries will be stored in `./target/release`. Move `zargo`, `znc`, `zvm` to the directory you prefer and add it to PATH. Then you can delete sources.
+
+
+### Gradle
+
+Typically, Gradle does not require any specific changes, but you might encounter the following error during the build (path can be defferent):
+
+```bash
+Caused by: java.io.IOException: Cannot run program "zargo" (in directory "/Users/mq23re/Developer/zk-notary/prover/circuits/create"): error=2, No such file or directory
+```
+
+To fix it, run the command below from the project directory. It will stop daemon, thus it will clear cache, which can help to resolve the issue.
+
+```bash
+./gradlew --stop
+```
+
 ### Our Corda fork
 
 This project makes use of our fork of Corda maintained here: https://github.com/ingzkp/corda/tree/ing-fork
