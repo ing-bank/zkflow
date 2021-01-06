@@ -52,17 +52,8 @@ On Mac, that is very easy to install and manage with [SDKMAN](https://sdkman.io/
 
 ### Rust
 
-You need to install the latest stable of version of Rust in order to format all circuits. You can either visit its [homepage](https://www.rust-lang.org/learn/get-started) or use Brew:
-```bash
-brew install rustup-init
-```
-Add a directory with installed binaries to the PATH variable and execute:
-```bash
-rustup-init
-```
-During the execution, you will be asked to pick installation configuration, just pick the default one.
-
-Also, if you do it using the instructions from the website, please, be noticed that you need to install extra component manually executing the following command:
+You need to install the latest stable of version of Rust in order to format all circuits. Visit its [homepage](https://www.rust-lang.org/learn/get-started) for instructions.
+After you install it, you need to add one extra component executing the following command:
 ```bash
 rustup component add rustfmt
 ```
