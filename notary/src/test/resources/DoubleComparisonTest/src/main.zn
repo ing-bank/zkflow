@@ -1,0 +1,106 @@
+//!
+//! The 'double' main module.
+//!
+
+//The implementation of IEEE 764 standard
+//sign in { -1, 0, 1 }
+//exponent in [0; 1023]
+//magnitude in [0; ~4.5E+15]
+//If difference in exponents is more than 16, there's no need to compare magnitude
+const MAX_NUMBER_OF_DIGITS_IN_MAGNITUDE: u64 = 16;
+
+struct Double {
+    sign: i8,
+    exponent: i16,
+    magnitude: u64,
+}
+
+impl Double {
+    fn abs(value: i16) -> i16 {
+        if value < 0 as i16 {
+            -value
+        } else {
+            value
+        }
+    }
+
+    fn getExponent(power: i16) -> u64 {
+        let unsignedPower = abs(power) as u64;
+
+        let mut exponent = 1 as u64;
+        let base = 10 as u64;
+
+        for i in 1 as u64..(MAX_NUMBER_OF_DIGITS_IN_MAGNITUDE - (1 as u64)) while i <= unsignedPower {
+            exponent *= base
+        }
+        exponent
+    }
+
+    fn compareMagnitude(this: Double, that: Double) -> i8 {
+
+        if this.magnitude > that.magnitude {
+            1 as i8
+        } else {
+            if this.magnitude < that.magnitude {
+                -1
+            } else {
+                0 as i8
+            }
+        }
+    }
+
+    fn compareWithAdjustedMagnitude(adjusted: u64, magnitude: u64) -> i8 {
+        if adjusted >= magnitude {
+            1 as i8
+        } else {
+            -1
+        }
+    }
+
+    fn compareExponentAndMagnitude(this: Double, that: Double) -> i8 {
+        let expDiff = this.exponent - that.exponent;
+
+        if expDiff >= MAX_NUMBER_OF_DIGITS_IN_MAGNITUDE as i16 {
+            1 as i8
+        } else {
+            if expDiff <= -MAX_NUMBER_OF_DIGITS_IN_MAGNITUDE as i16 {
+                -1
+            } else {
+                let decimalExponent = getExponent(expDiff);
+
+                if expDiff > (0 as i16) {
+                    let adjusted = this.magnitude / decimalExponent;
+                    compareWithAdjustedMagnitude(adjusted, that.magnitude)
+                } else {
+                    let adjusted = that.magnitude / decimalExponent;
+                    -compareWithAdjustedMagnitude(adjusted, this.magnitude)
+                }
+            }
+        }
+    }
+
+    fn compare(this: Double, that: Double) -> i8 {
+        if this.sign > that.sign {
+            1 as i8
+        } else {
+            if this.sign < that.sign {
+                -1
+            } else {
+                let magnitudeComparison = if this.exponent == that.exponent {
+                    compareMagnitude(this, that)
+                } else {
+                    compareExponentAndMagnitude(this, that)
+                };
+                this.sign * magnitudeComparison
+            }
+        }
+    }
+
+    fn equals(this: Double, that: Double) -> bool {
+        this.sign == that.sign && this.exponent == that.exponent && this.magnitude == that.magnitude
+    }
+}
+
+fn main(left: Double, right: Double) -> i8 {
+    Double::compare(left, right)
+}
