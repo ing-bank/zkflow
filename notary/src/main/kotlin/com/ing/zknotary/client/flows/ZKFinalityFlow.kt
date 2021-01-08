@@ -1,7 +1,10 @@
 package com.ing.zknotary.client.flows
 
 import co.paralleluniverse.fibers.Suspendable
-import com.ing.zknotary.common.zkp.ZKConfig
+import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
+import com.ing.zknotary.node.services.ServiceNames
+import com.ing.zknotary.node.services.ZKWritableVerifierTransactionStorage
+import com.ing.zknotary.node.services.getCordaServiceFromConfig
 import net.corda.core.crypto.isFulfilledBy
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
@@ -40,9 +43,9 @@ import net.corda.core.utilities.ProgressTracker
 @InitiatingFlow
 class ZKFinalityFlow private constructor(
     val transaction: SignedTransaction,
+    val zkTransaction: SignedZKVerifierTransaction,
     override val progressTracker: ProgressTracker,
-    private val sessions: Collection<FlowSession>,
-    private val zkConfig: ZKConfig
+    private val sessions: Collection<FlowSession>
 ) : FlowLogic<SignedTransaction>() {
 
     /**
@@ -55,10 +58,10 @@ class ZKFinalityFlow private constructor(
     @JvmOverloads
     constructor(
         transaction: SignedTransaction,
+        zkTransaction: SignedZKVerifierTransaction,
         sessions: Collection<FlowSession>,
-        progressTracker: ProgressTracker = tracker(),
-        zkConfig: ZKConfig
-    ) : this(transaction, progressTracker, sessions, zkConfig)
+        progressTracker: ProgressTracker = tracker()
+    ) : this(transaction, zkTransaction, progressTracker, sessions)
 
     companion object {
         object NOTARISING : ProgressTracker.Step("Requesting signature by notary service") {
@@ -141,9 +144,22 @@ class ZKFinalityFlow private constructor(
             transaction
         }
         logger.info("Recording transaction locally.")
-        serviceHub.recordTransactions(notarised)
+        recordTransactions(notarised, zkTransaction)
         logger.info("Recorded transaction locally successfully.")
         return notarised
+    }
+
+    private fun recordTransactions(notarised: SignedTransaction, zkTransaction: SignedZKVerifierTransaction) {
+
+        // Record plaintext transaction
+        serviceHub.recordTransactions(notarised)
+
+        // Record ZK transaction
+        // TODO Do we need to store PTX here? It seems to be just temporary form of only required for proving
+        val zkVerifierTransactionStorage: ZKWritableVerifierTransactionStorage =
+            serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_VERIFIER_TX_STORAGE)
+        zkVerifierTransactionStorage.map.put(notarised, zkTransaction.tx)
+        zkVerifierTransactionStorage.addTransaction(zkTransaction)
     }
 
     private fun needsNotarySignature(stx: SignedTransaction): Boolean {

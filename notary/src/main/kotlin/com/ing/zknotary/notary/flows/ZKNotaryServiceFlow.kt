@@ -153,7 +153,7 @@ class ZKNotaryServiceFlow(
              * that are done on Ledgertransactions
              */
             // Verify ZKP
-            zkConfig.zkTransactionService.verify(svtx.tx)
+            zkConfig.zkTransactionService.verify(svtx)
             // Verify signatures
             svtx.verifySignaturesExcept(service.notaryIdentityKey)
         } catch (e: IllegalArgumentException) {

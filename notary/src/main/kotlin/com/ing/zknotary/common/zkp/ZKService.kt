@@ -1,10 +1,8 @@
 package com.ing.zknotary.common.zkp
 
-import net.corda.core.serialization.SerializeAsToken
-
-interface ZKService : SerializeAsToken {
-    fun prove(witness: ByteArray): ByteArray
-    fun verify(proof: ByteArray, publicInput: ByteArray)
+interface ZKService {
+    fun prove(witness: Witness): ByteArray
+    fun verify(proof: ByteArray, publicInput: PublicInput)
 }
 
 class ZKVerificationException(message: String? = null) : Throwable(message)

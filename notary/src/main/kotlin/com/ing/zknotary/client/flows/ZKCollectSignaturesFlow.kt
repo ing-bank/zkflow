@@ -321,7 +321,7 @@ abstract class ZKSignTransactionFlow @JvmOverloads constructor(
         // Convert Tx to ZKP form
         val zktx = stx.tx.toZKProverTransaction(
             serviceHub,
-            serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_PROVER_TX_STORAGE),
+            serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_VERIFIER_TX_STORAGE),
             componentGroupLeafDigestService = BLAKE2s256DigestService,
             nodeDigestService = PedersenDigestService
         )

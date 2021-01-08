@@ -1,65 +1,85 @@
 package com.ing.zknotary.common.zkp
 
-import com.ing.zknotary.common.serializer.ZincSerializationFactory
-import com.ing.zknotary.node.services.ZKVerifierTransactionStorage
-import net.corda.core.node.ServiceHub
-import net.corda.core.serialization.SingletonSerializeAsToken
-import net.corda.core.serialization.serialize
+import com.ing.zknotary.common.contracts.ZKCommandData
+import com.ing.zknotary.node.services.ConfigParams
+import com.ing.zknotary.node.services.getLongFromConfig
+import com.ing.zknotary.node.services.getStringFromConfig
+import net.corda.core.contracts.Command
+import net.corda.core.crypto.SecureHash
+import net.corda.core.node.AppServiceHub
+import net.corda.core.node.services.CordaService
+import java.io.File
+import java.nio.ByteBuffer
 import java.time.Duration
 
-@Suppress("LongParameterList")
-class ZincZKTransactionService(
-    val services: ServiceHub,
-    override val zkStorage: ZKVerifierTransactionStorage,
-    circuitFolder: String,
-    artifactFolder: String,
-    buildTimeout: Duration,
-    setupTimeout: Duration,
-    provingTimeout: Duration,
-    verificationTimeout: Duration
-) : NodeZKTransactionService, SingletonSerializeAsToken() {
+@CordaService
+class ZincZKTransactionService(services: AppServiceHub) : ZKTransactionCordaService(services) {
 
-    // TODO create secondary constructor for tests that receives all values that are supposed to be injected in real Node
-    // override val zkStorage: ZKVerifierTransactionStorage = services.getCordaServiceFromConfig(ServiceNames.ZK_VERIFIER_TX_STORAGE)
+    private val zkServices: Map<SecureHash, ZincZKService>
 
-    private val zkService =
-        ZincZKService(circuitFolder, artifactFolder, buildTimeout, setupTimeout, provingTimeout, verificationTimeout)
+    init {
+
+        val buildTimeout: Duration = Duration.ofSeconds(services.getLongFromConfig(ConfigParams.Zinc.BUILD_TIMEOUT, 60))
+        val setupTimeout: Duration = Duration.ofSeconds(services.getLongFromConfig(ConfigParams.Zinc.SETUP_TIMEOUT, 60))
+        val provingTimeout: Duration = Duration.ofSeconds(services.getLongFromConfig(ConfigParams.Zinc.PROVING_TIMEOUT, 60))
+        val verificationTimeout: Duration = Duration.ofSeconds(services.getLongFromConfig(ConfigParams.Zinc.VERIFICATION_TIMEOUT, 60))
+
+        val commandClasses = services.getStringFromConfig(ConfigParams.Zinc.COMMAND_CLASS_NAMES).split(ConfigParams.Zinc.COMMANDS_SEPARATOR)
+
+        // Probably can be not that strict
+        if (commandClasses.isEmpty()) throw ExceptionInInitializerError("List of ZK Commands cannot be empty")
+
+        val commands: List<ZKCommandData> = commandClasses.map { Class.forName(it).getConstructor().newInstance() as ZKCommandData }
+
+        zkServices = commands.map {
+
+            val circuitFolder = it.circuit.folder
+            val artifactFolder = File(circuitFolder, "artifacts")
+
+            val zkService = ZincZKService(circuitFolder.absolutePath, artifactFolder.absolutePath, buildTimeout, setupTimeout, provingTimeout, verificationTimeout)
+
+            circuitId(it.id) to zkService
+        }.toMap()
+    }
+
+    private fun circuitId(commandId: Int): SecureHash {
+        return SecureHash.Companion.sha256(ByteBuffer.allocate(4).putInt(commandId).array())
+    }
+
+    override fun zkServiceForTx(commands: List<Command<*>>): ZKService {
+        val commandId = (commands.single().value as ZKCommandData).id
+        return zkServices[circuitId(commandId)] ?: throw IllegalArgumentException("ZK Service not found for commandId $commandId; circuitId ${circuitId(commandId)}")
+    }
+
+    override fun zkServiceForTx(circuitId: SecureHash): ZKService {
+        return zkServices[circuitId] ?: throw IllegalArgumentException("ZK Service not found for circuitId $circuitId")
+    }
 
     fun setup(force: Boolean = false) {
+
         if (force) {
             cleanup()
         }
 
-        val circuit = CircuitManager.CircuitDescription("${zkService.circuitFolder}/src", zkService.artifactFolder)
-        CircuitManager.register(circuit)
+        zkServices.values.forEach { zkService ->
 
-        while (CircuitManager[circuit] == CircuitManager.Status.InProgress) {
-            // An upper waiting time bound can be set up,
-            // but this bound may be overly pessimistic.
-            Thread.sleep(10 * 1000)
+            val circuit = CircuitManager.CircuitDescription("${zkService.circuitFolder}/src", zkService.artifactFolder)
+            CircuitManager.register(circuit)
+
+            while (CircuitManager[circuit] == CircuitManager.Status.InProgress) {
+                // An upper waiting time bound can be set up,
+                // but this bound may be overly pessimistic.
+                Thread.sleep(10 * 1000)
+            }
+
+            if (CircuitManager[circuit] == CircuitManager.Status.Outdated) {
+                zkService.cleanup()
+                CircuitManager.inProgress(circuit)
+                zkService.setup()
+                CircuitManager.cache(circuit)
+            }
         }
-
-        if (CircuitManager[circuit] == CircuitManager.Status.Outdated) {
-            cleanup()
-            CircuitManager.inProgress(circuit)
-            zkService.setup()
-            CircuitManager.cache(circuit)
-        }
     }
 
-    fun cleanup() = zkService.cleanup()
-
-    override fun prove(witness: Witness): ByteArray {
-        // It is ok to hardcode the ZincSerializationFactory here, as it is the ONLY way
-        // this should be serialized in here. Makes no sense to make it injectable.
-        val witnessJson = witness.serialize(ZincSerializationFactory).bytes
-        return zkService.prove(witnessJson)
-    }
-
-    override fun verify(proof: ByteArray, publicInput: PublicInput) {
-        // It is ok to hardcode the ZincSerializationFactory here, as it is the ONLY way
-        // this should be serialized in here. Makes no sense to make it injectable.
-        val publicInputJson = publicInput.serialize(ZincSerializationFactory).bytes
-        return zkService.verify(proof, publicInputJson)
-    }
+    fun cleanup() = zkServices.values.forEach { it.cleanup() }
 }

@@ -1,10 +1,11 @@
 package com.ing.zknotary.common.zkp
 
+import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
 import com.ing.zknotary.common.transactions.ZKVerifierTransaction
 import net.corda.core.serialization.SerializeAsToken
+import net.corda.core.transactions.WireTransaction
 
 interface ZKTransactionService : SerializeAsToken {
-    fun prove(witness: Witness): ByteArray
-    fun verify(proof: ByteArray, publicInput: PublicInput)
-    fun verify(tx: ZKVerifierTransaction)
+    fun prove(tx: WireTransaction): ZKVerifierTransaction
+    fun verify(stx: SignedZKVerifierTransaction)
 }

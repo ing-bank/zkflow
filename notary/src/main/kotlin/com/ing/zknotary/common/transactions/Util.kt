@@ -4,10 +4,10 @@ import com.ing.zknotary.common.contracts.toZKCommand
 import com.ing.zknotary.common.util.ComponentPaddingConfiguration
 import com.ing.zknotary.common.util.PaddingWrapper
 import com.ing.zknotary.common.zkp.Witness
-import com.ing.zknotary.common.zkp.ZKTransactionService
+import com.ing.zknotary.node.services.ServiceNames
 import com.ing.zknotary.node.services.ZKProverTransactionStorage
-import com.ing.zknotary.node.services.ZKWritableProverTransactionStorage
-import com.ing.zknotary.node.services.ZKWritableVerifierTransactionStorage
+import com.ing.zknotary.node.services.ZKVerifierTransactionStorage
+import com.ing.zknotary.node.services.getCordaServiceFromConfig
 import net.corda.core.DeleteForDJVM
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.ContractState
@@ -16,12 +16,9 @@ import net.corda.core.contracts.StateRef
 import net.corda.core.contracts.TransactionState
 import net.corda.core.crypto.BLAKE2s256DigestService
 import net.corda.core.crypto.DigestService
-import net.corda.core.crypto.PedersenDigestService
 import net.corda.core.crypto.SecureHash
-import net.corda.core.crypto.TransactionSignature
 import net.corda.core.node.ServiceHub
 import net.corda.core.serialization.serialize
-import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.WireTransaction
 import net.corda.core.utilities.loggerFor
 import java.nio.ByteBuffer
@@ -130,8 +127,8 @@ fun ZKProverTransaction.toZKVerifierTransaction(proof: ByteArray): ZKVerifierTra
  */
 fun WireTransaction.toZKProverTransaction(
     services: ServiceHub,
-    zkProverTransactionStorage: ZKProverTransactionStorage,
-    componentGroupLeafDigestService: DigestService,
+    zkVerifierTransactionStorage: ZKVerifierTransactionStorage = services.getCordaServiceFromConfig(ServiceNames.ZK_VERIFIER_TX_STORAGE),
+    componentGroupLeafDigestService: DigestService = BLAKE2s256DigestService,
     nodeDigestService: DigestService = componentGroupLeafDigestService
 ): ZKProverTransaction {
     loggerFor<WireTransaction>().debug("Converting WireTx to ProverTx")
@@ -141,7 +138,7 @@ fun WireTransaction.toZKProverTransaction(
     // Look up the ZKid for each WireTransaction.id
     fun List<StateAndRef<*>>.mapToZkid(): List<StateAndRef<*>> {
         return map {
-            val zkid = checkNotNull(zkProverTransactionStorage.map.get(it.ref.txhash)) {
+            val zkid = checkNotNull(zkVerifierTransactionStorage.map.get(it.ref.txhash)) {
                 "Unexpectedly could not find the tx id map for ${it.ref.txhash}. Did you run ResolveTransactionsFlow before?"
             }
             StateAndRef(it.state, StateRef(zkid, it.ref.index))
@@ -163,42 +160,6 @@ fun WireTransaction.toZKProverTransaction(
         componentGroupLeafDigestService = componentGroupLeafDigestService,
         nodeDigestService = nodeDigestService
     )
-}
-
-@Suppress("LongParameterList")
-fun SignedTransaction.toSignedZKVerifierTransaction(
-    services: ServiceHub,
-    zkSigs: List<TransactionSignature>,
-    zkProverTransactionStorage: ZKWritableProverTransactionStorage,
-    zkVerifierTransactionStorage: ZKWritableVerifierTransactionStorage,
-    zkTransactionService: ZKTransactionService,
-    persist: Boolean = true
-): SignedZKVerifierTransaction {
-    loggerFor<SignedTransaction>().debug("Converting SignedTx to SignedVerifierTx")
-
-    val wtx = coreTransaction as WireTransaction
-    val ptx = wtx.toZKProverTransaction(
-        services,
-        zkProverTransactionStorage,
-        componentGroupLeafDigestService = BLAKE2s256DigestService,
-        nodeDigestService = PedersenDigestService
-    )
-    val witness = ptx.toWitness(zkProverTransactionStorage)
-
-    val proof = zkTransactionService.prove(witness)
-    val vtx = witness.transaction.toZKVerifierTransaction(proof)
-
-    val sptx = SignedZKProverTransaction(ptx, zkSigs)
-    val svtx = SignedZKVerifierTransaction(vtx, zkSigs)
-
-    if (persist) {
-        zkProverTransactionStorage.map.put(this, ptx)
-        zkVerifierTransactionStorage.map.put(this, vtx)
-        zkProverTransactionStorage.addTransaction(sptx)
-        zkVerifierTransactionStorage.addTransaction(svtx)
-    }
-
-    return svtx
 }
 
 fun ZKProverTransaction.toWitness(

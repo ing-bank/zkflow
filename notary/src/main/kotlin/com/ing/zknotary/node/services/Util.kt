@@ -1,5 +1,6 @@
 package com.ing.zknotary.node.services
 
+import net.corda.core.cordapp.CordappConfigException
 import net.corda.core.node.ServiceHub
 import net.corda.core.serialization.SerializeAsToken
 
@@ -24,4 +25,35 @@ object ServiceNames {
     const val ZK_TX_SERVICE: String = "zkTxService"
     const val ZK_PROVER_TX_STORAGE = "zkProverTxStorage"
     const val ZK_VERIFIER_TX_STORAGE: String = "zkVerifierTxStorage"
+}
+
+fun ServiceHub.getStringFromConfig(configKey: String, defaultValue: String? = null): String {
+    return try {
+        this.getAppContext().config.getString(configKey)
+    } catch (ex: CordappConfigException) {
+        defaultValue ?: throw ex
+    }
+}
+
+fun ServiceHub.getLongFromConfig(configKey: String, defaultValue: Long? = null): Long {
+    return try {
+        this.getAppContext().config.getLong(configKey)
+    } catch (ex: CordappConfigException) {
+        defaultValue ?: throw ex
+    }
+}
+
+object ConfigParams {
+    object Zinc {
+        const val CIRCUIT_FOLDER: String = "zincCircuitFolder"
+        const val ARTIFACT_FOLDER: String = "zincArtifactFolder"
+        const val BUILD_TIMEOUT: String = "zincBuildTimeout"
+        const val SETUP_TIMEOUT: String = "zincSetupTimeout"
+        const val PROVING_TIMEOUT: String = "zincProvingTimeout"
+        const val VERIFICATION_TIMEOUT: String = "zincVerificationTimeout"
+
+        const val COMMAND_CLASS_NAMES: String = "zkCommands"
+
+        const val COMMANDS_SEPARATOR: String = ","
+    }
 }

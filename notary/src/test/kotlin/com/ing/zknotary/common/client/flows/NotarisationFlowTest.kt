@@ -1,5 +1,8 @@
 package com.ing.zknotary.common.client.flows
 
+import com.ing.zknotary.common.client.flows.testflows.NotarisationFlow
+import com.ing.zknotary.common.contracts.TestContract
+import com.ing.zknotary.node.services.ConfigParams
 import com.ing.zknotary.node.services.InMemoryZKProverTransactionStorage
 import com.ing.zknotary.node.services.InMemoryZKVerifierTransactionStorage
 import com.ing.zknotary.node.services.ServiceNames.ZK_PROVER_TX_STORAGE
@@ -39,7 +42,9 @@ class NotarisationFlowTest {
                     mapOf(
                         ZK_PROVER_TX_STORAGE to InMemoryZKProverTransactionStorage::class.qualifiedName!!,
                         ZK_VERIFIER_TX_STORAGE to InMemoryZKVerifierTransactionStorage::class.qualifiedName!!,
-                        ZK_TX_SERVICE to MockZKTransactionService::class.qualifiedName!!
+                        ZK_TX_SERVICE to MockZKTransactionService::class.qualifiedName!!,
+                        ConfigParams.Zinc.COMMAND_CLASS_NAMES to listOf(TestContract.Create::class.java.name, TestContract.Move::class.java.name)
+                            .joinToString(separator = ConfigParams.Zinc.COMMANDS_SEPARATOR)
                     )
                 )
             ),
@@ -66,7 +71,7 @@ class NotarisationFlowTest {
     @Test
     @Timeout(30)
     fun `Notary signing`() {
-        val createFlow = TestNotarisationFlow()
+        val createFlow = NotarisationFlow()
         val future = miniCorpNode.startFlow(createFlow)
         mockNet.runNetwork()
         val signedTxs = future.getOrThrow()

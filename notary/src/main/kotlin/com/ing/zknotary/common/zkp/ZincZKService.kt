@@ -1,6 +1,7 @@
 package com.ing.zknotary.common.zkp
 
-import net.corda.core.serialization.SingletonSerializeAsToken
+import com.ing.zknotary.common.serializer.ZincSerializationFactory
+import net.corda.core.serialization.serialize
 import java.io.File
 import java.io.IOException
 import java.time.Duration
@@ -13,7 +14,8 @@ class ZincZKService(
     private val setupTimeout: Duration,
     private val provingTimeout: Duration,
     private val verificationTimeout: Duration
-) : ZKService, SingletonSerializeAsToken() {
+) : ZKService {
+
     private val circuitManifestPath = "$circuitFolder/Zargo.toml"
     private val defaultBuildPath = "$circuitFolder/build"
     private val defaultDataPath = "$circuitFolder/data"
@@ -95,17 +97,31 @@ class ZincZKService(
             File(defaultBuildPath).deleteRecursively()
             File(defaultDataPath).deleteRecursively()
         }
+        require(File(compiledCircuitPath).exists()) { "Compile circuit not found in path $compiledCircuitPath." }
 
         completeZincCommand(
             "$SETUP --circuit $compiledCircuitPath " +
                 "--proving-key ${zkSetup.provingKeyPath} --verifying-key ${zkSetup.verifyingKeyPath}",
             setupTimeout
         )
+        require(File(zkSetup.provingKeyPath).exists()) { "Proving key not found at ${zkSetup.provingKeyPath}." }
     }
 
-    override fun prove(witness: ByteArray): ByteArray {
-        require(File(compiledCircuitPath).exists()) { "Compile circuit not found in path $compiledCircuitPath." }
-        require(File(zkSetup.provingKeyPath).exists()) { "Proving key not found at ${zkSetup.provingKeyPath}." }
+    override fun prove(witness: Witness): ByteArray {
+        // It is ok to hardcode the ZincSerializationFactory here, as it is the ONLY way
+        // this should be serialized in here. Makes no sense to make it injectable.
+        val witnessJson = witness.serialize(ZincSerializationFactory).bytes
+        return prove(witnessJson)
+    }
+
+    override fun verify(proof: ByteArray, publicInput: PublicInput) {
+        // It is ok to hardcode the ZincSerializationFactory here, as it is the ONLY way
+        // this should be serialized in here. Makes no sense to make it injectable.
+        val publicInputJson = publicInput.serialize(ZincSerializationFactory).bytes
+        return verify(proof, publicInputJson)
+    }
+
+    fun prove(witness: ByteArray): ByteArray {
 
         val witnessFile = createTempFile()
         witnessFile.writeBytes(witness)
@@ -119,15 +135,13 @@ class ZincZKService(
                 provingTimeout
             ).toByteArray()
         } catch (e: Exception) {
-            throw ZKProvingException("Could not create proof. Cause: $e\n\nProvided witness: \n${String(witness)}")
+            throw ZKProvingException("Could not create proof. Cause: $e\n")
         } finally {
             publicData.delete()
         }
     }
 
-    override fun verify(proof: ByteArray, publicInput: ByteArray) {
-        require(File(compiledCircuitPath).exists()) { "Compile circuit not found in path $compiledCircuitPath." }
-        require(File(zkSetup.provingKeyPath).exists()) { "Proving key not found at ${zkSetup.provingKeyPath}." }
+    fun verify(proof: ByteArray, publicInput: ByteArray) {
 
         val proofFile = createTempFile()
         proofFile.writeBytes(proof)
@@ -142,7 +156,7 @@ class ZincZKService(
             )
         } catch (e: Exception) {
             throw ZKVerificationException(
-                "Could not verify proof. \nProof: ${String(proof)} \nPublic data: ${String(publicInput)}. \nCause: $e"
+                "Could not verify proof.\nCause: $e"
             )
         } finally {
             proofFile.delete()
