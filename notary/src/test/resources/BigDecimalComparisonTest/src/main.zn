@@ -1,0 +1,136 @@
+//!
+//! The 'BigDecimal' main module.
+//!
+
+const MAX_NUMBER_OF_DIGITS: u16 = 1024;
+
+struct BigDecimal {
+    sign: i8,
+    magnitude: [u8; MAX_NUMBER_OF_DIGITS],
+    scale: i16,
+}
+
+impl BigDecimal {
+    fn compareMagnitude(this: BigDecimal, that: BigDecimal) -> i8 {
+        let mut output = 0 as i8;
+        for i in 1 as u16..MAX_NUMBER_OF_DIGITS {
+            if (this.magnitude[i] > that.magnitude[i]) {
+                if (output == 0 as i8) {
+                    output = 1 as i8;
+                }
+            } else {
+                if (this.magnitude[i] < that.magnitude[i]) {
+                    if (output == 0 as i8) {
+                        output = -1;
+                    }
+                } else {
+                    output = 0 as i8;
+                }
+            }
+            
+        }
+        output
+    }
+
+    fn compareBigMagnitude(this: [u8; MAX_NUMBER_OF_DIGITS * 2 as u16], that: [u8; MAX_NUMBER_OF_DIGITS * 2 as u16]) -> i8 {
+        let mut output = 0 as i8;
+        for i in 1 as u16..MAX_NUMBER_OF_DIGITS * 2 as u16 {
+            if (this[i] > that[i]) {
+                if (output == 0 as i8) {
+                    output = 1 as i8;
+                }
+            } else {
+                if (this[i] < that[i]) {
+                    if (output == 0 as i8) {
+                        output = -1;
+                    }
+                } else {
+                    output = 0 as i8;
+                }
+            }
+            
+        }
+        output
+    }
+
+    fn abs(value: i16) -> i16 {
+        if value < 0 as i16 {
+            -value
+        } else {
+            value
+        }
+    }
+
+    fn multiplyPowerTen(input: BigDecimal, diff: i16) -> [u8; MAX_NUMBER_OF_DIGITS * 2 as u16] {
+        let mut output: [u8; MAX_NUMBER_OF_DIGITS * 2 as u16] = [0; MAX_NUMBER_OF_DIGITS * 2 as u16];
+        let absDiff = abs(diff) as u16;
+
+        for i in 0 as u16..MAX_NUMBER_OF_DIGITS {
+            output[i + absDiff] = input.magnitude[i]
+        }
+
+        output
+    }
+
+    fn pad(input: [u8; MAX_NUMBER_OF_DIGITS]) -> [u8; MAX_NUMBER_OF_DIGITS * 2 as u16] {
+        let mut output: [u8; MAX_NUMBER_OF_DIGITS * 2 as u16] = [0; MAX_NUMBER_OF_DIGITS * 2 as u16];
+
+        for i in 0 as u16..MAX_NUMBER_OF_DIGITS {
+            output[i] = input[i]
+        }
+
+        output
+    }
+
+    fn compareScaleAndMagnitude(this: BigDecimal, that: BigDecimal) -> i8 {
+        if (this.scale == that.scale) {
+            compareMagnitude(this, that)
+        } else {
+            let scaleDiff = this.scale as i16 - that.scale as i16;
+            if (scaleDiff > 0 as i16) {
+                let adjusted = multiplyPowerTen(this, scaleDiff);
+                let padded = pad(that.magnitude);
+                compareBigMagnitude(adjusted, padded)
+            } else {
+                let padded = pad(this.magnitude);
+                let adjusted = multiplyPowerTen(that, scaleDiff);
+                compareBigMagnitude(padded, adjusted)
+            }
+        }
+    }
+
+    fn compare(this: BigDecimal, that: BigDecimal) -> i8 {
+        if (this.sign == that.sign) {
+            if (this.sign == 0 as i8) {
+                0 as i8
+            } else {
+                this.sign * compareScaleAndMagnitude(this, that)
+            }
+        } else {
+            if (this.sign > that.sign) {
+                1 as i8
+            } else {
+                -1
+            }
+        }
+    }
+
+    fn equalsMagnitude(this: BigDecimal, that: BigDecimal) -> bool {
+        let mut eq = true;
+
+        for i in 1 as u16..MAX_NUMBER_OF_DIGITS {
+            if (this.magnitude[i] != that.magnitude[i]) {
+                eq = eq && false
+            }
+        }
+        eq
+    }
+
+    fn equals(this: BigDecimal, that: BigDecimal) -> bool {
+        this.sign == that.sign && this.scale == that.scale && BigDecimal::equalsMagnitude(this, that)
+    }
+}
+
+fn main(left: BigDecimal, right: BigDecimal) -> i8 {
+    BigDecimal::compare(left, right)
+}
