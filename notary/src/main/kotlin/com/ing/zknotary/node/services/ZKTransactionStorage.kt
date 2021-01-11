@@ -1,7 +1,6 @@
 package com.ing.zknotary.node.services
 
 import com.ing.zknotary.common.transactions.NamedByZKMerkleTree
-import com.ing.zknotary.common.transactions.SignedZKProverTransaction
 import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
 import net.corda.core.DeleteForDJVM
 import net.corda.core.DoNotImplement
@@ -13,12 +12,13 @@ import net.corda.core.serialization.SerializeAsToken
 import rx.Observable
 
 /**
- * Map from Standard Corda transactions id to ZKP transaction id
+ * Map from Standard Corda transactions id to ZKP transaction id and back
  */
 interface ZKTransactionMap {
     fun get(id: SecureHash): SecureHash?
     fun get(tx: NamedByHash): SecureHash?
     fun put(tx: NamedByHash, zktx: NamedByZKMerkleTree): SecureHash?
+    fun getWtxId(zktxId: SecureHash): SecureHash?
 }
 
 /**
@@ -81,18 +81,6 @@ interface ZKWritableTransactionStorage<T> : ZKTransactionStorage<T> {
      */
     fun trackTransactionWithNoWarning(id: SecureHash): CordaFuture<T>
 }
-
-/**
- * Thread-safe storage of ZKProverTransaction.
- */
-@DeleteForDJVM
-@DoNotImplement
-interface ZKProverTransactionStorage : ZKTransactionStorage<SignedZKProverTransaction>
-
-/**
- * Thread-safe storage of transactions.
- */
-interface ZKWritableProverTransactionStorage : ZKWritableTransactionStorage<SignedZKProverTransaction>, ZKProverTransactionStorage
 
 /**
  * Thread-safe storage of ZKVerifierTransaction.

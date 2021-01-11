@@ -4,9 +4,7 @@ import com.ing.zknotary.common.client.flows.testflows.TestCollectSignaturesFlow
 import com.ing.zknotary.common.contracts.TestContract
 import com.ing.zknotary.node.services.ConfigParams.Zinc.COMMANDS_SEPARATOR
 import com.ing.zknotary.node.services.ConfigParams.Zinc.COMMAND_CLASS_NAMES
-import com.ing.zknotary.node.services.InMemoryZKProverTransactionStorage
 import com.ing.zknotary.node.services.InMemoryZKVerifierTransactionStorage
-import com.ing.zknotary.node.services.ServiceNames.ZK_PROVER_TX_STORAGE
 import com.ing.zknotary.node.services.ServiceNames.ZK_TX_SERVICE
 import com.ing.zknotary.node.services.ServiceNames.ZK_VERIFIER_TX_STORAGE
 import com.ing.zknotary.testing.zkp.MockZKTransactionService
@@ -39,7 +37,6 @@ class CollectSignaturesFlowTest {
             cordappsForAllNodes = listOf(
                 cordappWithPackages("com.ing.zknotary").withConfig(
                     mapOf(
-                        ZK_PROVER_TX_STORAGE to InMemoryZKProverTransactionStorage::class.qualifiedName!!,
                         ZK_VERIFIER_TX_STORAGE to InMemoryZKVerifierTransactionStorage::class.qualifiedName!!,
                         ZK_TX_SERVICE to MockZKTransactionService::class.qualifiedName!!,
                         COMMAND_CLASS_NAMES to listOf(TestContract.Create::class.java.name, TestContract.Move::class.java.name)

@@ -1,7 +1,6 @@
 package com.ing.zknotary.node.services
 
 import com.ing.zknotary.common.transactions.NamedByZKMerkleTree
-import com.ing.zknotary.common.transactions.SignedZKProverTransaction
 import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
 import net.corda.core.concurrent.CordaFuture
 import net.corda.core.contracts.NamedByHash
@@ -19,76 +18,6 @@ import java.util.HashMap
 
 /**
  * TODO this should go to test sources once we have non-mock implementation
- * A class which provides an implementation of [WritableTransactionStorage] which is used in [MockServices]
- */
-@CordaService
-public open class InMemoryZKProverTransactionStorage(public val serviceHub: AppServiceHub) : ZKWritableProverTransactionStorage,
-    SingletonSerializeAsToken() {
-
-    override fun trackTransaction(id: SecureHash): CordaFuture<SignedZKProverTransaction> {
-        return getTransaction(id)?.let { doneFuture(it) } ?: _updatesPublisher.filter { it.id == id }.toFuture()
-    }
-
-    override fun trackTransactionWithNoWarning(id: SecureHash): CordaFuture<SignedZKProverTransaction> {
-        return trackTransaction(id)
-    }
-
-    override fun track(): DataFeed<List<SignedZKProverTransaction>, SignedZKProverTransaction> {
-        return DataFeed(txns.values.mapNotNull { if (it.isVerified) it.vtx else null }, _updatesPublisher)
-    }
-
-    override val map: ZKTransactionMap = MockZKTransactionMap()
-
-    private val txns = HashMap<SecureHash, TxHolder>()
-
-    private val _updatesPublisher = PublishSubject.create<SignedZKProverTransaction>()
-
-    override val updates: Observable<SignedZKProverTransaction>
-        get() = _updatesPublisher
-
-    private fun notify(transaction: SignedZKProverTransaction): Boolean {
-        _updatesPublisher.onNext(transaction)
-        return true
-    }
-
-    override fun addTransaction(transaction: SignedZKProverTransaction): Boolean {
-        val current = txns.putIfAbsent(
-            transaction.id,
-            TxHolder(
-                transaction,
-                isVerified = true
-            )
-        )
-        return if (current == null) {
-            notify(transaction)
-        } else if (!current.isVerified) {
-            current.isVerified = true
-            notify(transaction)
-        } else {
-            false
-        }
-    }
-
-    override fun addUnverifiedTransaction(transaction: SignedZKProverTransaction) {
-        txns.putIfAbsent(
-            transaction.id,
-            TxHolder(
-                transaction,
-                isVerified = false
-            )
-        )
-    }
-
-    override fun getTransaction(id: SecureHash): SignedZKProverTransaction? =
-        txns[id]?.let { if (it.isVerified) it.vtx else null }
-
-    override fun getTransactionInternal(id: SecureHash): Pair<SignedZKProverTransaction, Boolean>? =
-        txns[id]?.let { Pair(it.vtx, it.isVerified) }
-
-    private class TxHolder(val vtx: SignedZKProverTransaction, var isVerified: Boolean)
-}
-
-/**
  * A class which provides an implementation of [WritableTransactionStorage] which is used in [MockServices]
  */
 @CordaService
@@ -168,4 +97,7 @@ private class MockZKTransactionMap : ZKTransactionMap, SingletonSerializeAsToken
     override fun get(tx: NamedByHash) = map[tx.id]
 
     override fun put(tx: NamedByHash, zktx: NamedByZKMerkleTree) = map.put(tx.id, zktx.merkleTree.root)
+
+    // Should be something smarter in non-mock implementation
+    override fun getWtxId(zktxId: SecureHash): SecureHash? = map.entries.find { it.value == zktxId }?.key
 }

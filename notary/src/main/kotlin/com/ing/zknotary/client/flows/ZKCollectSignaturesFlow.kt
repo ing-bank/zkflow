@@ -339,7 +339,7 @@ abstract class ZKSignTransactionFlow @JvmOverloads constructor(
         val mySignatures = signingKeys.map { key ->
             TransactionSignaturesPair(
                 serviceHub.createSignature(stx, key),
-                serviceHub.createSignature(zktx, key)
+                serviceHub.createSignature(zktx.id, key)
             )
         }
         otherSideSession.send(mySignatures)

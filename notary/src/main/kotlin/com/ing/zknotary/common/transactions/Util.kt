@@ -5,8 +5,8 @@ import com.ing.zknotary.common.util.ComponentPaddingConfiguration
 import com.ing.zknotary.common.util.PaddingWrapper
 import com.ing.zknotary.common.zkp.Witness
 import com.ing.zknotary.node.services.ServiceNames
-import com.ing.zknotary.node.services.ZKProverTransactionStorage
 import com.ing.zknotary.node.services.ZKVerifierTransactionStorage
+import com.ing.zknotary.node.services.ZKWritableVerifierTransactionStorage
 import com.ing.zknotary.node.services.getCordaServiceFromConfig
 import net.corda.core.DeleteForDJVM
 import net.corda.core.contracts.ComponentGroupEnum
@@ -162,8 +162,12 @@ fun WireTransaction.toZKProverTransaction(
     )
 }
 
-fun ZKProverTransaction.toWitness(
-    zkProverTransactionStorage: ZKProverTransactionStorage
+fun toWitness(
+    ptx: ZKProverTransaction,
+    serviceHub: ServiceHub,
+    vtxStorage: ZKWritableVerifierTransactionStorage,
+    padding: ComponentPaddingConfiguration = ptx.padded.paddingConfiguration,
+    componentGroupLeafDigestService: DigestService = BLAKE2s256DigestService
 ): Witness {
     loggerFor<ZKProverTransaction>().debug("Creating Witness from ProverTx")
     // Because the PrivacySalt of the WireTransaction is reused to create the ProverTransactions,
@@ -181,19 +185,33 @@ fun ZKProverTransaction.toWitness(
             }
             is PaddingWrapper.Original -> {
                 // When it is an original state, we look up the tx it points to and collect the nonce for the UTXO it points to.
-                val outputTx =
-                    zkProverTransactionStorage.getTransaction(it.content.ref.txhash)
-                        ?: error("Could not fetch output transaction for StateRef ${it.content.ref}")
-                outputTx.tx.merkleTree.componentNonces[ComponentGroupEnum.OUTPUTS_GROUP.ordinal]!![it.content.ref.index]
+                val wtxId = vtxStorage.map.getWtxId(it.content.ref.txhash)
+                    ?: error("Mapping to Wtx not found for vtxId: ${it.content.ref.txhash}")
+
+                val outputTx = serviceHub.validatedTransactions.getTransaction(wtxId)
+                    ?: error("Could not fetch output transaction for StateRef ${it.content.ref}")
+
+                val filler = padding.filler(ComponentGroupEnum.OUTPUTS_GROUP)
+                require(filler is ComponentPaddingConfiguration.Filler.TransactionState) { "Expected filler of type TransactionState" }
+
+                outputTx.tx.outputs.wrappedPad(
+                    padding.sizeOf(ComponentGroupEnum.OUTPUTS_GROUP) ?: error("Padding configuration not found"),
+                    filler.content
+                )
+
+                componentGroupLeafDigestService.hash(
+                    ptx.privacySalt.bytes + ByteBuffer.allocate(8)
+                        .putInt(ComponentGroupEnum.OUTPUTS_GROUP.ordinal).putInt(it.content.ref.index).array()
+                )
             }
         }
     }
 
     // Collect the nonces for the outputs pointed to by the inputs and references.
-    val inputNonces = padded.inputs().collectUtxoNonces()
-    val referenceNonces = padded.references().collectUtxoNonces()
+    val inputNonces = ptx.padded.inputs().collectUtxoNonces()
+    val referenceNonces = ptx.padded.references().collectUtxoNonces()
 
-    return Witness(this, inputNonces = inputNonces, referenceNonces = referenceNonces)
+    return Witness(ptx, inputNonces = inputNonces, referenceNonces = referenceNonces)
 }
 
 /**

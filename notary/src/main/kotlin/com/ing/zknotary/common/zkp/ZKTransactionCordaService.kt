@@ -1,7 +1,6 @@
 package com.ing.zknotary.common.zkp
 
 import com.ing.zknotary.common.dactyloscopy.Dactyloscopist
-import com.ing.zknotary.common.transactions.SignedZKProverTransaction
 import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
 import com.ing.zknotary.common.transactions.ZKVerifierTransaction
 import com.ing.zknotary.common.transactions.toWitness
@@ -10,7 +9,6 @@ import com.ing.zknotary.common.transactions.toZKVerifierTransaction
 import com.ing.zknotary.common.util.ComponentPaddingConfiguration
 import com.ing.zknotary.common.util.PaddingWrapper
 import com.ing.zknotary.node.services.ServiceNames
-import com.ing.zknotary.node.services.ZKWritableProverTransactionStorage
 import com.ing.zknotary.node.services.ZKWritableVerifierTransactionStorage
 import com.ing.zknotary.node.services.getCordaServiceFromConfig
 import net.corda.core.contracts.Command
@@ -29,12 +27,9 @@ import net.corda.core.transactions.WireTransaction
  */
 abstract class ZKTransactionCordaService(val serviceHub: ServiceHub) : ZKTransactionService, SingletonSerializeAsToken() {
 
-    val ptxStorage: ZKWritableProverTransactionStorage by lazy { serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_PROVER_TX_STORAGE) as ZKWritableProverTransactionStorage }
     val vtxStorage: ZKWritableVerifierTransactionStorage by lazy { serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_VERIFIER_TX_STORAGE) as ZKWritableVerifierTransactionStorage }
 
-    override fun prove(tx: WireTransaction): ZKVerifierTransaction = prove(tx, true)
-
-    fun prove(tx: WireTransaction, persistProverTx: Boolean): ZKVerifierTransaction {
+    override fun prove(tx: WireTransaction): ZKVerifierTransaction {
 
         val zkService = zkServiceForTx(tx.commands)
 
@@ -45,19 +40,11 @@ abstract class ZKTransactionCordaService(val serviceHub: ServiceHub) : ZKTransac
             nodeDigestService = PedersenDigestService
         )
 
-        val witness = ptx.toWitness(ptxStorage)
+        val witness = toWitness(ptx = ptx, serviceHub = serviceHub, vtxStorage = vtxStorage)
 
         val proof = zkService.prove(witness)
 
         val vtx = ptx.toZKVerifierTransaction(proof)
-
-        // TODO this should be either removed if we decide not to store PTX or moved somewhere otherwise
-        if (persistProverTx) {
-            ptxStorage.map.put(tx, ptx)
-            // TODO we don't really need sigs for PTX and also nowhere to get them from here in sane manner
-            //  should either store non-signed PTX or don't store it at all - to discuss
-            ptxStorage.addTransaction(SignedZKProverTransaction(ptx, emptyList()))
-        }
 
         return vtx
     }
