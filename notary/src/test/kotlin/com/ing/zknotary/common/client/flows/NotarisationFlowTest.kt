@@ -1,6 +1,6 @@
 package com.ing.zknotary.common.client.flows
 
-import com.ing.zknotary.common.client.flows.testflows.NotarisationFlow
+import com.ing.zknotary.common.client.flows.testflows.TestNotarisationFlow
 import com.ing.zknotary.common.contracts.TestContract
 import com.ing.zknotary.node.services.ConfigParams
 import com.ing.zknotary.node.services.InMemoryZKProverTransactionStorage
@@ -71,7 +71,7 @@ class NotarisationFlowTest {
     @Test
     @Timeout(30)
     fun `Notary signing`() {
-        val createFlow = NotarisationFlow()
+        val createFlow = TestNotarisationFlow()
         val future = miniCorpNode.startFlow(createFlow)
         mockNet.runNetwork()
         val signedTxs = future.getOrThrow()

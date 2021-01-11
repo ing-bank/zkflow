@@ -22,8 +22,8 @@ import net.corda.testing.node.MockNetworkNotarySpec
 import net.corda.testing.node.MockNetworkParameters
 import net.corda.testing.node.StartedMockNode
 import net.corda.testing.node.internal.cordappWithPackages
-import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.Test
 
 class BackchainFlowTest {
     private val mockNet: MockNetwork

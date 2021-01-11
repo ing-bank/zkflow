@@ -10,8 +10,6 @@ import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
 import com.ing.zknotary.common.transactions.toZKProverTransaction
 import com.ing.zknotary.common.zkp.ZKTransactionService
 import com.ing.zknotary.node.services.ServiceNames
-import com.ing.zknotary.node.services.ZKWritableProverTransactionStorage
-import com.ing.zknotary.node.services.ZKWritableVerifierTransactionStorage
 import com.ing.zknotary.node.services.getCordaServiceFromConfig
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.StateAndContract
@@ -24,14 +22,12 @@ import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
 
 @InitiatingFlow
-class NotarisationFlow(val signers: List<Party> = emptyList()) : FlowLogic<Pair<SignedTransaction, SignedZKProverTransaction>>() {
+class TestNotarisationFlow(val signers: List<Party> = emptyList()) : FlowLogic<Pair<SignedTransaction, SignedZKProverTransaction>>() {
 
     @Suspendable
     override fun call(): Pair<SignedTransaction, SignedZKProverTransaction> {
 
         val zkService: ZKTransactionService = serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_TX_SERVICE)
-        val zkProverTransactionStorage: ZKWritableProverTransactionStorage = serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_PROVER_TX_STORAGE)
-        val zkVerifierTransactionStorage: ZKWritableVerifierTransactionStorage = serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_VERIFIER_TX_STORAGE)
 
         val me = serviceHub.myInfo.legalIdentities.single()
         val state = TestContract.TestState(me)
@@ -60,15 +56,7 @@ class NotarisationFlow(val signers: List<Party> = emptyList()) : FlowLogic<Pair<
         //  2) remove ptxId from ZXCollectSignatures flow which makes sense because counterparty recalculates it anyway
         val vtx = zkService.prove(stx.tx)
 
-        val sptx = SignedZKProverTransaction(ptx, sigs.zksigs)
         val svtx = SignedZKVerifierTransaction(vtx, sigs.zksigs)
-
-        // Persist zk transactions
-        // TODO Do we really need to store PTX at all? It seems to be just temporary form of only required for proving
-        zkProverTransactionStorage.map.put(stx, ptx)
-        zkVerifierTransactionStorage.map.put(stx, vtx)
-        zkProverTransactionStorage.addTransaction(sptx)
-        zkVerifierTransactionStorage.addTransaction(svtx)
 
         val result = subFlow(ZKNotaryFlow(stx, svtx))
 
