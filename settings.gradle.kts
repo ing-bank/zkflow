@@ -58,7 +58,6 @@ pluginManagement {
 
 include("generator")
 include("notary")
-// include("docs:whitepaper")
 include("prover")
 include("gradle-plugin")
 include("test-utils")
