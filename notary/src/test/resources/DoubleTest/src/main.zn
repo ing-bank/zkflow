@@ -49,6 +49,10 @@ impl Double {
         }
     }
 
+    //Remark: magnitude has no zeros in lowest digits (they all have to be in exponent),
+    //thus, if it is divided by power of 10, reminder != 0.
+    //So, if adjusted == other_magnitude /\ reminder != 0 => not_adjusted > other_magnitude
+    //Thus, we can combine strict greater and equal.
     fn compareWithAdjustedMagnitude(adjusted: u64, magnitude: u64) -> i8 {
         if adjusted >= magnitude {
             1 as i8
@@ -69,11 +73,11 @@ impl Double {
                 let decimalExponent = getExponent(expDiff);
 
                 if expDiff > (0 as i16) {
-                    let adjusted = this.magnitude / decimalExponent;
-                    compareWithAdjustedMagnitude(adjusted, that.magnitude)
-                } else {
                     let adjusted = that.magnitude / decimalExponent;
                     -compareWithAdjustedMagnitude(adjusted, this.magnitude)
+                } else {
+                    let adjusted = this.magnitude / decimalExponent;
+                    compareWithAdjustedMagnitude(adjusted, that.magnitude)
                 }
             }
         }
