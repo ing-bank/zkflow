@@ -5,16 +5,16 @@ import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
 import com.ing.zknotary.common.zkp.ZKTransactionService
 import com.ing.zknotary.node.services.ServiceNames
 import com.ing.zknotary.node.services.ZKVerifierTransactionStorage
+import com.ing.zknotary.node.services.ZKWritableVerifierTransactionStorage
 import com.ing.zknotary.node.services.getCordaServiceFromConfig
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
-import net.corda.core.transactions.SignedTransaction
 import net.corda.core.utilities.unwrap
 
 /**
  * Dummy test code, not intended to be used in production
  */
-class SendZKTransactionFlow(val session: FlowSession, val tx: SignedTransaction) : FlowLogic<Unit>() {
+class SendZKTransactionFlow(val session: FlowSession, val tx: SignedZKVerifierTransaction) : FlowLogic<Unit>() {
 
     @Suspendable
     override fun call() {
@@ -25,11 +25,9 @@ class SendZKTransactionFlow(val session: FlowSession, val tx: SignedTransaction)
         session.send(tx)
 
         // Send backchain transactions
-        tx.inputs.forEach {
+        tx.tx.inputs.forEach {
             session.send(
-                txStorage.getTransaction(
-                    txStorage.map.get(it.txhash)!!
-                )!!
+                txStorage.getTransaction(it.txhash)!!
             )
         }
     }
@@ -38,21 +36,24 @@ class SendZKTransactionFlow(val session: FlowSession, val tx: SignedTransaction)
 /**
  * Dummy test code, not intended to be used in production
  */
-class ReceiveZKTransactionFlow(val session: FlowSession) : FlowLogic<SignedTransaction>() {
+class ReceiveZKTransactionFlow(val session: FlowSession) : FlowLogic<SignedZKVerifierTransaction>() {
 
     @Suspendable
-    override fun call(): SignedTransaction {
+    override fun call(): SignedZKVerifierTransaction {
 
         val zkTransactionService =
             serviceHub.getCordaServiceFromConfig<ZKTransactionService>(ServiceNames.ZK_TX_SERVICE)
 
-        val tx = session.receive<SignedTransaction>().unwrap { it }
+        val zkStorage =
+            serviceHub.getCordaServiceFromConfig<ZKWritableVerifierTransactionStorage>(ServiceNames.ZK_VERIFIER_TX_STORAGE)
+
+        val tx = session.receive<SignedZKVerifierTransaction>().unwrap { it }
 
         // verifying backchain now
-        tx.inputs.forEach {
+        tx.tx.inputs.forEach {
             val zktx = session.receive<SignedZKVerifierTransaction>().unwrap { it }
             zkTransactionService.verify(zktx) // Clearly only works with backchain of length 1 for now
-            // Also we don't store transaction here
+            zkStorage.addTransaction(zktx)
         }
 
         return tx

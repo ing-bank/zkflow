@@ -200,7 +200,7 @@ fun toWitness(
                 )
 
                 componentGroupLeafDigestService.hash(
-                    ptx.privacySalt.bytes + ByteBuffer.allocate(8)
+                    outputTx.tx.privacySalt.bytes + ByteBuffer.allocate(8)
                         .putInt(ComponentGroupEnum.OUTPUTS_GROUP.ordinal).putInt(it.content.ref.index).array()
                 )
             }

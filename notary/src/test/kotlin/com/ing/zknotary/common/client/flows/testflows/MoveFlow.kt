@@ -1,6 +1,8 @@
 package com.ing.zknotary.common.client.flows.testflows
 
 import co.paralleluniverse.fibers.Suspendable
+import com.ing.zknotary.client.flows.createSignature
+import com.ing.zknotary.client.flows.signInitialZKTransaction
 import com.ing.zknotary.common.contracts.TestContract
 import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
 import com.ing.zknotary.common.zkp.ZKTransactionService
@@ -8,7 +10,6 @@ import com.ing.zknotary.node.services.ServiceNames
 import com.ing.zknotary.node.services.getCordaServiceFromConfig
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.StateAndContract
-import net.corda.core.flows.FlowException
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
 import net.corda.core.flows.InitiatedBy
@@ -31,6 +32,8 @@ class MoveFlow(
     @Suspendable
     override fun call(): SignedTransaction {
 
+        val zkService: ZKTransactionService = serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_TX_SERVICE)
+
         val session = initiateFlow(newOwner)
 
         val me = serviceHub.myInfo.legalIdentities.single()
@@ -43,20 +46,25 @@ class MoveFlow(
         builder.toWireTransaction(serviceHub).toLedgerTransaction(serviceHub).verify()
 
         // Transaction creator signs transaction.
-        val moveStx = serviceHub.signInitialTransaction(builder)
+        val stx = serviceHub.signInitialTransaction(builder)
+
+        val zktx = zkService.prove(stx.tx)
+
+        val pztxSigs = signInitialZKTransaction(zktx)
+        val zkpstx = SignedZKVerifierTransaction(zktx, pztxSigs)
 
         // Help Verifier to resolve dependencies for normal tx
-        subFlow(SendZKTransactionFlow(session, moveStx))
+        subFlow(SendZKTransactionFlow(session, zkpstx))
 
-        val vtx = (serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_TX_SERVICE) as ZKTransactionService).prove(moveStx.tx)
+        val fullySignedZktx = session.receive<SignedZKVerifierTransaction>().unwrap { it }
 
-        session.send(SignedZKVerifierTransaction(vtx))
+        zkService.verify(fullySignedZktx)
 
-        val result = session.receive<Boolean>().unwrap { it }
+        // We don't call FinalityFlow here because it expects "normal" Stx to be signed as well
+        //  and in current implementation of backchain we don't operate "normal" txs.
+        //  This may change later.
 
-        if (!result) throw FlowException("Something went wrong on the other side")
-
-        return moveStx
+        return stx
     }
 
     companion object {
@@ -66,13 +74,17 @@ class MoveFlow(
 
             @Suspendable
             override fun call() {
+                val zkService: ZKTransactionService = serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_TX_SERVICE)
 
                 // Receive TX and verify ZK backchain
-                val moveTx = subFlow(ReceiveZKTransactionFlow(session))
+                val zktx = subFlow(ReceiveZKTransactionFlow(session))
 
-                // TODO TX itself (smart contract only)
+                val key = serviceHub.keyManagementService.filterMyKeys(zktx.requiredSigningKeys).single()
+                val fullySignedZktx = SignedZKVerifierTransaction(zktx.tx, zktx.sigs + serviceHub.createSignature(zktx.id, key))
 
-                session.send(true)
+                zkService.verify(fullySignedZktx)
+
+                session.send(fullySignedZktx)
             }
         }
     }
