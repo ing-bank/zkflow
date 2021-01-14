@@ -2,8 +2,8 @@ package com.ing.zknotary.common.zkp
 
 import com.ing.zknotary.common.dactyloscopy.Dactyloscopist
 import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
+import com.ing.zknotary.common.transactions.ZKProverTransaction
 import com.ing.zknotary.common.transactions.ZKVerifierTransaction
-import com.ing.zknotary.common.transactions.toWitness
 import com.ing.zknotary.common.transactions.toZKProverTransaction
 import com.ing.zknotary.common.transactions.toZKVerifierTransaction
 import com.ing.zknotary.common.util.ComponentPaddingConfiguration
@@ -13,6 +13,8 @@ import com.ing.zknotary.node.services.ZKWritableVerifierTransactionStorage
 import com.ing.zknotary.node.services.getCordaServiceFromConfig
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.ComponentGroupEnum
+import net.corda.core.contracts.ContractState
+import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.StateRef
 import net.corda.core.crypto.BLAKE2s256DigestService
 import net.corda.core.crypto.PedersenDigestService
@@ -20,6 +22,8 @@ import net.corda.core.crypto.SecureHash
 import net.corda.core.node.ServiceHub
 import net.corda.core.serialization.SingletonSerializeAsToken
 import net.corda.core.transactions.WireTransaction
+import net.corda.core.utilities.loggerFor
+import java.nio.ByteBuffer
 
 /**
  * In fact it is an abstract class that incapsulates operations that will be same for all implementations,
@@ -31,8 +35,6 @@ abstract class ZKTransactionCordaService(val serviceHub: ServiceHub) : ZKTransac
 
     override fun prove(tx: WireTransaction): ZKVerifierTransaction {
 
-        val zkService = zkServiceForTx(tx.commands)
-
         val ptx = tx.toZKProverTransaction(
             serviceHub,
             vtxStorage,
@@ -40,13 +42,12 @@ abstract class ZKTransactionCordaService(val serviceHub: ServiceHub) : ZKTransac
             nodeDigestService = PedersenDigestService
         )
 
-        val witness = toWitness(ptx = ptx, serviceHub = serviceHub, vtxStorage = vtxStorage)
+        val witness = toWitness(ptx = ptx)
 
+        val zkService = zkServiceForTx(tx.commands)
         val proof = zkService.prove(witness)
 
-        val vtx = ptx.toZKVerifierTransaction(proof)
-
-        return vtx
+        return ptx.toZKVerifierTransaction(proof)
     }
 
     abstract fun zkServiceForTx(commands: List<Command<*>>): ZKService
@@ -58,12 +59,6 @@ abstract class ZKTransactionCordaService(val serviceHub: ServiceHub) : ZKTransac
     override fun verify(stx: SignedZKVerifierTransaction) {
 
         val tx = stx.tx
-
-        // FIXME: until we have support for different circuits per tx/command, even issuance txs will need to have
-        // nonces set in the witness for inputs and references.
-        // if (currentVtx.inputs.isEmpty() && currentVtx.references.isEmpty()) {
-        //     println("   $indent No inputs and references")
-        // }
 
         // Check proof
         zkServiceForTx(tx.circuitId).verify(tx.proof, calculatePublicInput(tx))
@@ -142,10 +137,10 @@ abstract class ZKTransactionCordaService(val serviceHub: ServiceHub) : ZKTransac
             prevVtx.tx.outputHashes[stateRef.index]
 
             /*
-             * Now the verifier calls currentVtx.proof.verify(currentVtx.id, prevVtx.outputHashes, prevVtx.outputNonces).
+             * Now the verifier calls currentVtx.proof.verify(currentVtx.id, prevVtx.outputHashes).
              *
              * Inside the circuit, the prover proves:
-             * - witnessTx.stateRefs[i] contents hashed with nonce should equal instance.moveTxstateRefHashesFromPrevTx[i].
+             * - witnessTx.stateRefs[i] contents hashed with nonce from witness should equal instance.moveTxstateRefHashesFromPrevTx[i].
              *   This proves that prover did not change the contents of the state
              * - Recalculates witnessTx merkleRoot based on all components from the witness, including witnessTx.stateRefs.
              * - witnessTx.merkleRoot == instance.moveTx.id. This proves the witnessTx is the same as the ZKVerifierTransaction
@@ -153,5 +148,50 @@ abstract class ZKTransactionCordaService(val serviceHub: ServiceHub) : ZKTransac
              *   transaction identified by the instance.
              */
         } else paddingHash
+    }
+
+    private fun toWitness(
+        ptx: ZKProverTransaction
+    ): Witness {
+        loggerFor<ZKProverTransaction>().debug("Creating Witness from ProverTx")
+        fun recalculateUtxoNonce(it: PaddingWrapper<StateAndRef<ContractState>>): SecureHash {
+            val wtxId = vtxStorage.map.getWtxId(it.content.ref.txhash)
+                ?: error("Mapping to Wtx not found for vtxId: ${it.content.ref.txhash}")
+
+            val outputTx = serviceHub.validatedTransactions.getTransaction(wtxId)
+                ?: error("Could not fetch output transaction for StateRef ${it.content.ref}")
+
+            return ptx.componentGroupLeafDigestService.hash(
+                outputTx.tx.privacySalt.bytes + ByteBuffer.allocate(8)
+                    .putInt(ComponentGroupEnum.OUTPUTS_GROUP.ordinal).putInt(it.content.ref.index).array()
+            )
+        }
+
+        // Because the PrivacySalt of the WireTransaction is reused to create the ProverTransactions,
+        // the nonces can be calculated deterministically from WireTransaction to ZKProverTransaction.
+        // This means we can recalculate the UTXO nonces for the inputs and references of the ZKProverTransaction using the
+        // PrivacySalt of the WireTransaction.
+        fun List<PaddingWrapper<StateAndRef<ContractState>>>.collectUtxoNonces() = mapIndexed { _, it ->
+            when (it) {
+                is PaddingWrapper.Filler -> {
+                    // When it is a padded state, the nonce is ALWAYS a zerohash of the algo used for merkle tree leaves
+                    ptx.componentGroupLeafDigestService.zeroHash
+                }
+                is PaddingWrapper.Original -> {
+                    // When it is an original state, we look up the tx it points to and collect the nonce for the UTXO it points to.
+
+                    // TODO: for now, we recalculate it using the PrivacySalt of the associated WireTransaction.
+                    // Once we get rid of the ZKProverTransaction and use WireTransaction only, we can simply look it up
+                    // from storage.
+                    recalculateUtxoNonce(it)
+                }
+            }
+        }
+
+        // Collect the nonces for the outputs pointed to by the inputs and references.
+        val inputNonces = ptx.padded.inputs().collectUtxoNonces()
+        val referenceNonces = ptx.padded.references().collectUtxoNonces()
+
+        return Witness(ptx, inputNonces = inputNonces, referenceNonces = referenceNonces)
     }
 }

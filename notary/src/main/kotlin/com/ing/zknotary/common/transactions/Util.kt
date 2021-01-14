@@ -3,14 +3,11 @@ package com.ing.zknotary.common.transactions
 import com.ing.zknotary.common.contracts.toZKCommand
 import com.ing.zknotary.common.util.ComponentPaddingConfiguration
 import com.ing.zknotary.common.util.PaddingWrapper
-import com.ing.zknotary.common.zkp.Witness
 import com.ing.zknotary.node.services.ServiceNames
 import com.ing.zknotary.node.services.ZKVerifierTransactionStorage
-import com.ing.zknotary.node.services.ZKWritableVerifierTransactionStorage
 import com.ing.zknotary.node.services.getCordaServiceFromConfig
 import net.corda.core.DeleteForDJVM
 import net.corda.core.contracts.ComponentGroupEnum
-import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.StateRef
 import net.corda.core.contracts.TransactionState
@@ -160,58 +157,6 @@ fun WireTransaction.toZKProverTransaction(
         componentGroupLeafDigestService = componentGroupLeafDigestService,
         nodeDigestService = nodeDigestService
     )
-}
-
-fun toWitness(
-    ptx: ZKProverTransaction,
-    serviceHub: ServiceHub,
-    vtxStorage: ZKWritableVerifierTransactionStorage,
-    padding: ComponentPaddingConfiguration = ptx.padded.paddingConfiguration,
-    componentGroupLeafDigestService: DigestService = BLAKE2s256DigestService
-): Witness {
-    loggerFor<ZKProverTransaction>().debug("Creating Witness from ProverTx")
-    // Because the PrivacySalt of the WireTransaction is reused to create the ProverTransactions,
-    // the nonces are also identical from WireTransaction to ZKProverTransaction.
-    // This means we can collect the UTXO nonces for the inputs and references of the wiretransaction and it should
-    // just work.
-    // When we move to full backchain privacy and no longer have the WireTransactions at all, we will
-    // promote the ZKProverTransactions to first-class citizens and then they will be saved in the vault as WireTransactions
-    // are now.
-    fun List<PaddingWrapper<StateAndRef<ContractState>>>.collectUtxoNonces() = mapIndexed { _, it ->
-        when (it) {
-            is PaddingWrapper.Filler -> {
-                // When it is a padded state, the nonce is ALWAYS a zerohash of the algo used for merkle tree leaves
-                componentGroupLeafDigestService.zeroHash
-            }
-            is PaddingWrapper.Original -> {
-                // When it is an original state, we look up the tx it points to and collect the nonce for the UTXO it points to.
-                val wtxId = vtxStorage.map.getWtxId(it.content.ref.txhash)
-                    ?: error("Mapping to Wtx not found for vtxId: ${it.content.ref.txhash}")
-
-                val outputTx = serviceHub.validatedTransactions.getTransaction(wtxId)
-                    ?: error("Could not fetch output transaction for StateRef ${it.content.ref}")
-
-                val filler = padding.filler(ComponentGroupEnum.OUTPUTS_GROUP)
-                require(filler is ComponentPaddingConfiguration.Filler.TransactionState) { "Expected filler of type TransactionState" }
-
-                outputTx.tx.outputs.wrappedPad(
-                    padding.sizeOf(ComponentGroupEnum.OUTPUTS_GROUP) ?: error("Padding configuration not found"),
-                    filler.content
-                )
-
-                componentGroupLeafDigestService.hash(
-                    outputTx.tx.privacySalt.bytes + ByteBuffer.allocate(8)
-                        .putInt(ComponentGroupEnum.OUTPUTS_GROUP.ordinal).putInt(it.content.ref.index).array()
-                )
-            }
-        }
-    }
-
-    // Collect the nonces for the outputs pointed to by the inputs and references.
-    val inputNonces = ptx.padded.inputs().collectUtxoNonces()
-    val referenceNonces = ptx.padded.references().collectUtxoNonces()
-
-    return Witness(ptx, inputNonces = inputNonces, referenceNonces = referenceNonces)
 }
 
 /**

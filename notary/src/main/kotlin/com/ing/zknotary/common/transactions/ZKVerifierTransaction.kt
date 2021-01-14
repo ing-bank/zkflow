@@ -70,6 +70,9 @@ class ZKVerifierTransaction(
     init {
         componentPaddingConfiguration.validate(this)
 
+        // Nonces for the outputs should NEVER be present
+        require(!componentNonces.containsKey(ComponentGroupEnum.OUTPUTS_GROUP.ordinal))
+
         require(groupHashes.size == ComponentGroupEnum.values().size) { "There should be a group hash for each ComponentGroupEnum value" }
         require(padded.inputs().size == componentNonces[ComponentGroupEnum.INPUTS_GROUP.ordinal]?.size ?: 0) { "Number of inputs and input nonces should be equal" }
         require(padded.references().size == componentNonces[ComponentGroupEnum.REFERENCES_GROUP.ordinal]?.size ?: 0) { "Number of references (${references.size}) and reference nonces (${componentNonces[ComponentGroupEnum.REFERENCES_GROUP.ordinal]?.size}) should be equal" }
