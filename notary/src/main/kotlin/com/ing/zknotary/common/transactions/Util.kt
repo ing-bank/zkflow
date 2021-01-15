@@ -13,12 +13,10 @@ import net.corda.core.contracts.StateRef
 import net.corda.core.contracts.TransactionState
 import net.corda.core.crypto.BLAKE2s256DigestService
 import net.corda.core.crypto.DigestService
-import net.corda.core.crypto.SecureHash
 import net.corda.core.node.ServiceHub
 import net.corda.core.serialization.serialize
 import net.corda.core.transactions.WireTransaction
 import net.corda.core.utilities.loggerFor
-import java.nio.ByteBuffer
 import kotlin.math.max
 
 @DeleteForDJVM
@@ -92,7 +90,7 @@ fun ZKProverTransaction.toZKVerifierTransaction(proof: ByteArray): ZKVerifierTra
     // TODO
     // This construction of the circuit id is temporary and will be replaced in the subsequent work.
     // The proper id must identify circuit and its version.
-    val circuitId = SecureHash.sha256(ByteBuffer.allocate(4).putInt(this.command.value.id).array())
+    val circuitId = command.value.circuitId()
 
     return ZKVerifierTransaction(
         proof,

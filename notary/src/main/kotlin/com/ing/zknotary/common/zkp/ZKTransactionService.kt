@@ -7,7 +7,7 @@ import net.corda.core.serialization.SerializeAsToken
 import net.corda.core.transactions.WireTransaction
 
 interface ZKTransactionService : SerializeAsToken {
-    fun toZKTransaction(tx: WireTransaction): ZKProverTransaction
+    fun toZKProverTransaction(tx: WireTransaction): ZKProverTransaction
     fun prove(ptx: ZKProverTransaction): ZKVerifierTransaction
     fun verify(stx: SignedZKVerifierTransaction)
 }

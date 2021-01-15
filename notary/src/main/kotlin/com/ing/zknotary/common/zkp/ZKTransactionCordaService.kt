@@ -28,7 +28,7 @@ abstract class ZKTransactionCordaService(val serviceHub: ServiceHub) : ZKTransac
 
     private val vtxStorage: ZKWritableVerifierTransactionStorage by lazy { serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_VERIFIER_TX_STORAGE) as ZKWritableVerifierTransactionStorage }
 
-    override fun toZKTransaction(tx: WireTransaction): ZKProverTransaction {
+    override fun toZKProverTransaction(tx: WireTransaction): ZKProverTransaction {
         return tx.toZKProverTransaction(
             serviceHub,
             vtxStorage,
@@ -44,7 +44,7 @@ abstract class ZKTransactionCordaService(val serviceHub: ServiceHub) : ZKTransac
         // TODO
         // This construction of the circuit id is temporary and will be replaced in the subsequent work.
         // The proper id must identify circuit and its version.
-        val circuitId = SecureHash.sha256(ByteBuffer.allocate(4).putInt(ptx.command.value.id).array())
+        val circuitId = ptx.command.value.circuitId()
 
         val zkService = zkServiceForTx(circuitId)
         val proof = zkService.prove(witness)

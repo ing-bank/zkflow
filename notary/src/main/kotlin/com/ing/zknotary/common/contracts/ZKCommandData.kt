@@ -5,6 +5,8 @@ import com.ing.zknotary.common.zkp.CircuitMetaData
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.CommandWithParties
+import net.corda.core.crypto.SecureHash
+import java.nio.ByteBuffer
 
 interface ZKCommandData : CommandData {
     val id: Int
@@ -28,6 +30,12 @@ interface ZKCommandData : CommandData {
      * being an empty bytearray.
      */
     val circuit: CircuitMetaData
+
+    // TODO
+    // This construction of the circuit id is temporary and will be replaced in the subsequent work.
+    // The proper id must identify circuit and its version.
+    // Also should probably go to CircuitMetaData above
+    fun circuitId(): SecureHash = SecureHash.sha256(ByteBuffer.allocate(4).putInt(id).array())
 }
 
 fun <T : CommandData> CommandWithParties<T>.toZKCommand(): Command<ZKCommandData> {
