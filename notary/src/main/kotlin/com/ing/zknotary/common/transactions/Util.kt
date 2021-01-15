@@ -174,3 +174,9 @@ fun <T> List<T>.wrappedPad(n: Int, default: T) =
 
 fun <T> T?.wrappedPad(default: T) =
     if (this == null) PaddingWrapper.Filler(default) else PaddingWrapper.Original(this)
+
+val SignedZKVerifierTransaction.dependencies: Set<SecureHash>
+    get() = tx.dependencies
+
+val ZKVerifierTransaction.dependencies: Set<SecureHash>
+    get() = (inputs.asSequence() + references.asSequence()).map { it.txhash }.toSet()
