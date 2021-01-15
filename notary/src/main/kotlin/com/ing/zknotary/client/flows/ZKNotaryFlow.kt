@@ -21,13 +21,13 @@ import net.corda.core.utilities.unwrap
 
 open class ZKNotaryFlow(
     private val stx: SignedTransaction,
-    private val zktx: SignedZKVerifierTransaction
+    private val svtx: SignedZKVerifierTransaction
 ) : NotaryFlow.Client(stx) {
 
     @Suspendable
     @Throws(NotaryException::class)
     override fun call(): List<TransactionSignature> {
-        val notaryParty = checkZKTransaction()
+        val notaryParty = checkZKVerifierTransaction()
         val response = zkNotarise(notaryParty)
         return validateNotaryResponse(response, notaryParty)
     }
@@ -36,10 +36,10 @@ open class ZKNotaryFlow(
      * Checks that the transaction specifies a valid notary
      */
     @Suspendable
-    protected fun checkZKTransaction(): Party {
-        val notaryParty = zktx.tx.notary
+    protected fun checkZKVerifierTransaction(): Party {
+        val notaryParty = svtx.tx.notary
         check(serviceHub.networkMapCache.isNotary(notaryParty)) { "$notaryParty is not a notary on the network" }
-        check(serviceHub.loadStates(zktx.tx.inputs.toSet() + zktx.tx.references.toSet()).all { it.state.notary == notaryParty }) {
+        check(serviceHub.loadStates(svtx.tx.inputs.toSet() + svtx.tx.references.toSet()).all { it.state.notary == notaryParty }) {
             "Input states and reference input states must have the same Notary"
         }
         return notaryParty
@@ -65,7 +65,7 @@ open class ZKNotaryFlow(
         session: FlowSession,
         signature: NotarisationRequestSignature
     ): UntrustworthyData<NotarisationResponse> {
-        session.send(ZKNotarisationPayload(zktx, signature))
+        session.send(ZKNotarisationPayload(svtx, signature))
         return receiveResultOrTiming(session)
     }
 
@@ -84,7 +84,7 @@ open class ZKNotaryFlow(
     private fun generateRequestSignature(): NotarisationRequestSignature {
         // TODO: This is not required any more once our AMQP serialization supports turning off object referencing.
         val notarisationRequest =
-            NotarisationRequest(zktx.tx.inputs.map { it.copy(txhash = SecureHash.parse(it.txhash.toString())) }, zktx.id)
+            NotarisationRequest(svtx.tx.inputs.map { it.copy(txhash = SecureHash.parse(it.txhash.toString())) }, svtx.id)
         return notarisationRequest.generateSignature(serviceHub)
     }
 
@@ -93,7 +93,7 @@ open class ZKNotaryFlow(
      */
     private fun validateNotaryResponse(response: UntrustworthyData<NotarisationResponse>, notaryParty: Party): List<TransactionSignature> {
         return response.unwrap {
-            it.validateSignatures(zktx.id, notaryParty)
+            it.validateSignatures(svtx.id, notaryParty)
             it.signatures
         }
     }

@@ -1,8 +1,9 @@
 package com.ing.zknotary.common.client.flows
 
-import com.ing.zknotary.node.services.InMemoryZKProverTransactionStorage
+import com.ing.zknotary.common.client.flows.testflows.TestNotarisationFlow
+import com.ing.zknotary.common.contracts.TestContract
+import com.ing.zknotary.node.services.ConfigParams
 import com.ing.zknotary.node.services.InMemoryZKVerifierTransactionStorage
-import com.ing.zknotary.node.services.ServiceNames.ZK_PROVER_TX_STORAGE
 import com.ing.zknotary.node.services.ServiceNames.ZK_TX_SERVICE
 import com.ing.zknotary.node.services.ServiceNames.ZK_VERIFIER_TX_STORAGE
 import com.ing.zknotary.notary.ZKNotaryService
@@ -19,8 +20,8 @@ import net.corda.testing.node.MockNetworkNotarySpec
 import net.corda.testing.node.MockNetworkParameters
 import net.corda.testing.node.StartedMockNode
 import net.corda.testing.node.internal.cordappWithPackages
-import org.junit.Test
 import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Timeout
 
 class NotarisationFlowTest {
@@ -37,9 +38,10 @@ class NotarisationFlowTest {
             cordappsForAllNodes = listOf(
                 cordappWithPackages("com.ing.zknotary").withConfig(
                     mapOf(
-                        ZK_PROVER_TX_STORAGE to InMemoryZKProverTransactionStorage::class.qualifiedName!!,
                         ZK_VERIFIER_TX_STORAGE to InMemoryZKVerifierTransactionStorage::class.qualifiedName!!,
-                        ZK_TX_SERVICE to MockZKTransactionService::class.qualifiedName!!
+                        ZK_TX_SERVICE to MockZKTransactionService::class.qualifiedName!!,
+                        ConfigParams.Zinc.COMMAND_CLASS_NAMES to listOf(TestContract.Create::class.java.name, TestContract.Move::class.java.name)
+                            .joinToString(separator = ConfigParams.Zinc.COMMANDS_SEPARATOR)
                     )
                 )
             ),

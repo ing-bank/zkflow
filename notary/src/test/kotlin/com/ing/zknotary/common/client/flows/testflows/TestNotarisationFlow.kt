@@ -1,4 +1,4 @@
-package com.ing.zknotary.common.client.flows
+package com.ing.zknotary.common.client.flows.testflows
 
 import co.paralleluniverse.fibers.Suspendable
 import com.ing.zknotary.client.flows.ZKCollectSignaturesFlow
@@ -6,8 +6,9 @@ import com.ing.zknotary.client.flows.ZKNotaryFlow
 import com.ing.zknotary.client.flows.signInitialZKTransaction
 import com.ing.zknotary.common.contracts.TestContract
 import com.ing.zknotary.common.transactions.SignedZKProverTransaction
-import com.ing.zknotary.common.transactions.toSignedZKVerifierTransaction
+import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
 import com.ing.zknotary.common.transactions.toZKProverTransaction
+import com.ing.zknotary.common.zkp.ZKTransactionService
 import com.ing.zknotary.node.services.ServiceNames
 import com.ing.zknotary.node.services.getCordaServiceFromConfig
 import net.corda.core.contracts.Command
@@ -26,6 +27,8 @@ class TestNotarisationFlow(val signers: List<Party> = emptyList()) : FlowLogic<P
     @Suspendable
     override fun call(): Pair<SignedTransaction, SignedZKProverTransaction> {
 
+        val zkService: ZKTransactionService = serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_TX_SERVICE)
+
         val me = serviceHub.myInfo.legalIdentities.single()
         val state = TestContract.TestState(me)
         val issueCommand = Command(TestContract.Create(), (signers + me).map { it.owningKey }) //
@@ -39,25 +42,20 @@ class TestNotarisationFlow(val signers: List<Party> = emptyList()) : FlowLogic<P
         val stx = serviceHub.signInitialTransaction(builder)
         val ptx = stx.tx.toZKProverTransaction(
             serviceHub,
-            serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_PROVER_TX_STORAGE),
+            serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_VERIFIER_TX_STORAGE),
             componentGroupLeafDigestService = BLAKE2s256DigestService,
             nodeDigestService = PedersenDigestService
         )
 
-        val pztxSigs = signInitialZKTransaction(ptx)
+        val initialPtxSigs = signInitialZKTransaction(ptx)
 
-        val sigs = subFlow(ZKCollectSignaturesFlow(stx, ptx.id, pztxSigs, signers.map { initiateFlow(it) }))
+        val sigs = subFlow(ZKCollectSignaturesFlow(stx, ptx.id, initialPtxSigs, signers.map { initiateFlow(it) }))
 
-        // TODO very stupid way of doing this, better to use ptx that we already have, but will do for test only
-        val vtx = stx.toSignedZKVerifierTransaction(
-            serviceHub,
-            sigs.zksigs,
-            serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_PROVER_TX_STORAGE),
-            serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_VERIFIER_TX_STORAGE),
-            serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_TX_SERVICE)
-        )
+        val vtx = zkService.prove(ptx)
 
-        val result = subFlow(ZKNotaryFlow(stx, vtx))
+        val svtx = SignedZKVerifierTransaction(vtx, sigs.zksigs)
+
+        val result = subFlow(ZKNotaryFlow(stx, svtx))
 
         return Pair(sigs.stx, SignedZKProverTransaction(ptx, sigs.zksigs + result))
     }

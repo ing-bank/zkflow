@@ -1,4 +1,4 @@
-package com.ing.zknotary.common.client.flows
+package com.ing.zknotary.common.client.flows.testflows
 
 import co.paralleluniverse.fibers.Suspendable
 import com.ing.zknotary.client.flows.ZKCollectSignaturesFlow
@@ -7,7 +7,8 @@ import com.ing.zknotary.client.flows.signInitialZKTransaction
 import com.ing.zknotary.common.contracts.TestContract
 import com.ing.zknotary.common.transactions.SignedZKProverTransaction
 import com.ing.zknotary.common.transactions.toZKProverTransaction
-import com.ing.zknotary.node.services.InMemoryZKProverTransactionStorage
+import com.ing.zknotary.node.services.ServiceNames
+import com.ing.zknotary.node.services.getCordaServiceFromConfig
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.StateAndContract
 import net.corda.core.contracts.requireThat
@@ -38,26 +39,26 @@ class TestCollectSignaturesFlow(val signers: List<Party> = emptyList()) : FlowLo
 
         // Transaction creator signs transaction.
         val stx = serviceHub.signInitialTransaction(builder)
-        val ztx = stx.tx.toZKProverTransaction(
+        val ptx = stx.tx.toZKProverTransaction(
             serviceHub,
-            serviceHub.cordaService(InMemoryZKProverTransactionStorage::class.java),
+            serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_VERIFIER_TX_STORAGE),
             componentGroupLeafDigestService = BLAKE2s256DigestService,
             nodeDigestService = PedersenDigestService
         )
 
-        val pztxSigs = signInitialZKTransaction(ztx)
+        val pztxSigs = signInitialZKTransaction(ptx)
 
-        val sigs = subFlow(ZKCollectSignaturesFlow(stx, ztx.id, pztxSigs, signers.map { initiateFlow(it) }))
+        val sigs = subFlow(ZKCollectSignaturesFlow(stx, ptx.id, pztxSigs, signers.map { initiateFlow(it) }))
 
-        return Pair(sigs.stx, SignedZKProverTransaction(ztx, sigs.zksigs))
+        return Pair(sigs.stx, SignedZKProverTransaction(ptx, sigs.zksigs))
     }
 }
 
 @InitiatedBy(TestCollectSignaturesFlow::class)
-class CounterpartySigner(val otherPartySession: FlowSession) : FlowLogic<Any>() {
+class CounterpartySigner(val otherPartySession: FlowSession) : FlowLogic<Unit>() {
 
     @Suspendable
-    override fun call(): Any {
+    override fun call() {
         val flow = object : ZKSignTransactionFlow(otherPartySession) {
             @Suspendable
             override fun checkTransaction(stx: SignedTransaction) = requireThat {
@@ -67,7 +68,5 @@ class CounterpartySigner(val otherPartySession: FlowSession) : FlowLogic<Any>() 
 
         // Invoke the subFlow, in response to the counterparty calling [ZKCollectSignaturesFlow].
         subFlow(flow)
-
-        return 0
     }
 }

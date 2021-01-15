@@ -8,7 +8,7 @@ import net.corda.core.utilities.toBase58String
 import java.security.PublicKey
 
 @CordaSerializable
-class SignedZKVerifierTransaction(val tx: ZKVerifierTransaction, override val sigs: List<TransactionSignature>) : TransactionWithSignatures {
+class SignedZKVerifierTransaction(val tx: ZKVerifierTransaction, override val sigs: List<TransactionSignature> = emptyList()) : TransactionWithSignatures {
 
     override val id: SecureHash
         get() = tx.id
