@@ -39,18 +39,18 @@ class TestCollectSignaturesFlow(val signers: List<Party> = emptyList()) : FlowLo
 
         // Transaction creator signs transaction.
         val stx = serviceHub.signInitialTransaction(builder)
-        val ztx = stx.tx.toZKProverTransaction(
+        val ptx = stx.tx.toZKProverTransaction(
             serviceHub,
             serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_VERIFIER_TX_STORAGE),
             componentGroupLeafDigestService = BLAKE2s256DigestService,
             nodeDigestService = PedersenDigestService
         )
 
-        val pztxSigs = signInitialZKTransaction(ztx)
+        val pztxSigs = signInitialZKTransaction(ptx)
 
-        val sigs = subFlow(ZKCollectSignaturesFlow(stx, ztx.id, pztxSigs, signers.map { initiateFlow(it) }))
+        val sigs = subFlow(ZKCollectSignaturesFlow(stx, ptx.id, pztxSigs, signers.map { initiateFlow(it) }))
 
-        return Pair(sigs.stx, SignedZKProverTransaction(ztx, sigs.zksigs))
+        return Pair(sigs.stx, SignedZKProverTransaction(ptx, sigs.zksigs))
     }
 }
 

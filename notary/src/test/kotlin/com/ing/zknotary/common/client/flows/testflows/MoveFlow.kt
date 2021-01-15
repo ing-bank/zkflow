@@ -21,7 +21,7 @@ import net.corda.core.utilities.unwrap
 
 /**
  * Disclaimer: this is not how it is supposed to be used in "real" flows, it works just for this test
- * TODO Verifier should rebuild ZKTX basing on moveStx but for now its complicated so it is temporary skipped
+ * TODO Verifier should rebuild VTX basing on moveStx but for now its complicated so it is temporary skipped
  */
 @InitiatingFlow
 class MoveFlow(
@@ -48,17 +48,17 @@ class MoveFlow(
         // Transaction creator signs transaction.
         val stx = serviceHub.signInitialTransaction(builder)
 
-        val zktx = zkService.prove(zkService.toZKTransaction(stx.tx))
+        val vtx = zkService.prove(zkService.toZKProverTransaction(stx.tx))
 
-        val pztxSigs = signInitialZKTransaction(zktx)
-        val zkpstx = SignedZKVerifierTransaction(zktx, pztxSigs)
+        val pvtxSigs = signInitialZKTransaction(vtx)
+        val svtx = SignedZKVerifierTransaction(vtx, pvtxSigs)
 
         // Help Verifier to resolve dependencies for normal tx
-        subFlow(SendZKTransactionFlow(session, zkpstx))
+        subFlow(SendZKTransactionFlow(session, svtx))
 
-        val fullySignedZktx = session.receive<SignedZKVerifierTransaction>().unwrap { it }
+        val fullySignedVtx = session.receive<SignedZKVerifierTransaction>().unwrap { it }
 
-        zkService.verify(fullySignedZktx)
+        zkService.verify(fullySignedVtx)
 
         // We don't call FinalityFlow here because it expects "normal" Stx to be signed as well
         //  and in current implementation of backchain we don't operate "normal" txs.
@@ -77,14 +77,14 @@ class MoveFlow(
                 val zkService: ZKTransactionService = serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_TX_SERVICE)
 
                 // Receive TX and verify ZK backchain
-                val zktx = subFlow(ReceiveZKTransactionFlow(session))
+                val vtx = subFlow(ReceiveZKTransactionFlow(session))
 
-                val key = serviceHub.keyManagementService.filterMyKeys(zktx.requiredSigningKeys).single()
-                val fullySignedZktx = SignedZKVerifierTransaction(zktx.tx, zktx.sigs + serviceHub.createSignature(zktx.id, key))
+                val key = serviceHub.keyManagementService.filterMyKeys(vtx.requiredSigningKeys).single()
+                val fullySignedVtx = SignedZKVerifierTransaction(vtx.tx, vtx.sigs + serviceHub.createSignature(vtx.id, key))
 
-                zkService.verify(fullySignedZktx)
+                zkService.verify(fullySignedVtx)
 
-                session.send(fullySignedZktx)
+                session.send(fullySignedVtx)
             }
         }
     }

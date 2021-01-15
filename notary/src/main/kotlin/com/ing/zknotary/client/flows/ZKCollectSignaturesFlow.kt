@@ -77,7 +77,7 @@ import java.security.PublicKey
 // TODO: AbstractStateReplacementFlow needs updating to use this flow.
 class ZKCollectSignaturesFlow @JvmOverloads constructor(
     val partiallySignedTx: SignedTransaction,
-    val zktxId: SecureHash,
+    val ptxId: SecureHash,
     val partialZKSigs: List<TransactionSignature>,
     val sessionsToCollectFrom: Collection<FlowSession>,
     val myOptionalKeys: Iterable<PublicKey>?,
@@ -86,11 +86,11 @@ class ZKCollectSignaturesFlow @JvmOverloads constructor(
     @JvmOverloads
     constructor(
         partiallySignedTx: SignedTransaction,
-        zktxId: SecureHash,
+        ptxId: SecureHash,
         partialZKSigs: List<TransactionSignature>,
         sessionsToCollectFrom: Collection<FlowSession>,
         progressTracker: ProgressTracker = tracker()
-    ) : this(partiallySignedTx, zktxId, partialZKSigs, sessionsToCollectFrom, null, progressTracker)
+    ) : this(partiallySignedTx, ptxId, partialZKSigs, sessionsToCollectFrom, null, progressTracker)
 
     companion object {
         object COLLECTING : ProgressTracker.Step("Collecting signatures from counterparties.")
@@ -204,10 +204,10 @@ class ZKCollectSignaturesFlow @JvmOverloads constructor(
         progressTracker.currentStep = VERIFYING
         if (notaryKey != null) {
             stx.verifySignaturesExcept(notaryKey)
-            zksigs.forEach { if (it.by != notaryKey) it.verify(zktxId) }
+            zksigs.forEach { if (it.by != notaryKey) it.verify(ptxId) }
         } else {
             stx.verifyRequiredSignatures()
-            zksigs.forEach { it.verify(zktxId) }
+            zksigs.forEach { it.verify(ptxId) }
         }
 
         return TransactionWithZKSignatures(stx, zksigs)
@@ -319,7 +319,7 @@ abstract class ZKSignTransactionFlow @JvmOverloads constructor(
         checkSignatures(stx)
         stx.tx.toLedgerTransaction(serviceHub).verify()
         // Convert Tx to ZKP form
-        val zktx = stx.tx.toZKProverTransaction(
+        val ptx = stx.tx.toZKProverTransaction(
             serviceHub,
             serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_VERIFIER_TX_STORAGE),
             componentGroupLeafDigestService = BLAKE2s256DigestService,
@@ -339,7 +339,7 @@ abstract class ZKSignTransactionFlow @JvmOverloads constructor(
         val mySignatures = signingKeys.map { key ->
             TransactionSignaturesPair(
                 serviceHub.createSignature(stx, key),
-                serviceHub.createSignature(zktx.id, key)
+                serviceHub.createSignature(ptx.id, key)
             )
         }
         otherSideSession.send(mySignatures)
