@@ -11,7 +11,6 @@ import com.ing.zknotary.common.util.PaddingWrapper
 import com.ing.zknotary.node.services.ServiceNames
 import com.ing.zknotary.node.services.ZKWritableVerifierTransactionStorage
 import com.ing.zknotary.node.services.getCordaServiceFromConfig
-import net.corda.core.contracts.Command
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.StateAndRef
@@ -25,10 +24,6 @@ import net.corda.core.transactions.WireTransaction
 import net.corda.core.utilities.loggerFor
 import java.nio.ByteBuffer
 
-/**
- * In fact it is an abstract class that incapsulates operations that will be same for all implementations,
- * but we can make it a class because ancestors of this class are also forced to inherit SerializeAsToken implementation
- */
 abstract class ZKTransactionCordaService(val serviceHub: ServiceHub) : ZKTransactionService, SingletonSerializeAsToken() {
 
     val vtxStorage: ZKWritableVerifierTransactionStorage by lazy { serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_VERIFIER_TX_STORAGE) as ZKWritableVerifierTransactionStorage }
@@ -44,16 +39,17 @@ abstract class ZKTransactionCordaService(val serviceHub: ServiceHub) : ZKTransac
 
         val witness = toWitness(ptx = ptx)
 
-        val zkService = zkServiceForTx(tx.commands)
+        // TODO
+        // This construction of the circuit id is temporary and will be replaced in the subsequent work.
+        // The proper id must identify circuit and its version.
+        val circuitId = SecureHash.sha256(ByteBuffer.allocate(4).putInt(ptx.command.value.id).array())
+
+        val zkService = zkServiceForTx(circuitId)
         val proof = zkService.prove(witness)
 
         return ptx.toZKVerifierTransaction(proof)
     }
 
-    abstract fun zkServiceForTx(commands: List<Command<*>>): ZKService
-
-    // TODO obe of zkServiceForTx should go, probably this one
-    //  (or both if we use single ZKService and it will figure out what circuit to use on its own)
     abstract fun zkServiceForTx(circuitId: SecureHash): ZKService
 
     override fun verify(stx: SignedZKVerifierTransaction) {

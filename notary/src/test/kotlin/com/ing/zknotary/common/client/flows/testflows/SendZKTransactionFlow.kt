@@ -24,7 +24,8 @@ class SendZKTransactionFlow(val session: FlowSession, val tx: SignedZKVerifierTr
         // Send tx itself
         session.send(tx)
 
-        // Send backchain transactions
+        // Send backchain transactions. it assumes there is only a backchain of length of 1 for each input
+        // and only sends the immediate predecessors.
         tx.tx.inputs.forEach {
             session.send(
                 txStorage.getTransaction(it.txhash)!!

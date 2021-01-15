@@ -155,7 +155,6 @@ class ZKFinalityFlow private constructor(
         serviceHub.recordTransactions(notarised)
 
         // Record ZK transaction
-        // TODO Do we need to store PTX here? It seems to be just temporary form of only required for proving
         val zkVerifierTransactionStorage: ZKWritableVerifierTransactionStorage =
             serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_VERIFIER_TX_STORAGE)
         zkVerifierTransactionStorage.map.put(notarised, zkTransaction.tx)

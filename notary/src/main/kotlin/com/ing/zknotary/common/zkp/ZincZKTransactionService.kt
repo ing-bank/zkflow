@@ -4,7 +4,6 @@ import com.ing.zknotary.common.contracts.ZKCommandData
 import com.ing.zknotary.node.services.ConfigParams
 import com.ing.zknotary.node.services.getLongFromConfig
 import com.ing.zknotary.node.services.getStringFromConfig
-import net.corda.core.contracts.Command
 import net.corda.core.crypto.SecureHash
 import net.corda.core.node.AppServiceHub
 import net.corda.core.node.services.CordaService
@@ -44,11 +43,6 @@ class ZincZKTransactionService(services: AppServiceHub) : ZKTransactionCordaServ
 
     private fun circuitId(commandId: Int): SecureHash {
         return SecureHash.Companion.sha256(ByteBuffer.allocate(4).putInt(commandId).array())
-    }
-
-    override fun zkServiceForTx(commands: List<Command<*>>): ZKService {
-        val commandId = (commands.single().value as ZKCommandData).id
-        return zkServices[circuitId(commandId)] ?: throw IllegalArgumentException("ZK Service not found for commandId $commandId; circuitId ${circuitId(commandId)}")
     }
 
     override fun zkServiceForTx(circuitId: SecureHash): ZKService {
