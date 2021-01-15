@@ -26,16 +26,18 @@ import java.nio.ByteBuffer
 
 abstract class ZKTransactionCordaService(val serviceHub: ServiceHub) : ZKTransactionService, SingletonSerializeAsToken() {
 
-    val vtxStorage: ZKWritableVerifierTransactionStorage by lazy { serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_VERIFIER_TX_STORAGE) as ZKWritableVerifierTransactionStorage }
+    private val vtxStorage: ZKWritableVerifierTransactionStorage by lazy { serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_VERIFIER_TX_STORAGE) as ZKWritableVerifierTransactionStorage }
 
-    override fun prove(tx: WireTransaction): ZKVerifierTransaction {
-
-        val ptx = tx.toZKProverTransaction(
+    override fun toZKTransaction(tx: WireTransaction): ZKProverTransaction {
+        return tx.toZKProverTransaction(
             serviceHub,
             vtxStorage,
             componentGroupLeafDigestService = BLAKE2s256DigestService,
             nodeDigestService = PedersenDigestService
         )
+    }
+
+    override fun prove(ptx: ZKProverTransaction): ZKVerifierTransaction {
 
         val witness = toWitness(ptx = ptx)
 

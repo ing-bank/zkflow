@@ -34,7 +34,7 @@ class CreateFlow : FlowLogic<SignedTransaction>() {
         builder.toWireTransaction(serviceHub).toLedgerTransaction(serviceHub).verify()
 
         val stx = serviceHub.signInitialTransaction(builder)
-        val zktx = zkService.prove(stx.tx)
+        val zktx = zkService.prove(zkService.toZKTransaction(stx.tx))
 
         val pztxSigs = signInitialZKTransaction(zktx)
         val zksigs = subFlow(ZKCollectSignaturesFlow(stx, zktx.id, pztxSigs, emptyList()))

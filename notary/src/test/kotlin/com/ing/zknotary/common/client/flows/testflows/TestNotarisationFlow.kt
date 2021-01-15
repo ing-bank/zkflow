@@ -51,10 +51,7 @@ class TestNotarisationFlow(val signers: List<Party> = emptyList()) : FlowLogic<P
 
         val sigs = subFlow(ZKCollectSignaturesFlow(stx, ptx.id, initialPtxSigs, signers.map { initiateFlow(it) }))
 
-        // TODO Inside prove() currently we create PTX one more time what affects performance. To remove that we should either
-        //  1) be able to send PTX to ZKService OR
-        //  2) remove ptxId from ZXCollectSignatures flow which makes sense because counterparty recalculates it anyway
-        val vtx = zkService.prove(stx.tx)
+        val vtx = zkService.prove(ptx)
 
         val svtx = SignedZKVerifierTransaction(vtx, sigs.zksigs)
 

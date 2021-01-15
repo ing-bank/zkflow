@@ -48,7 +48,7 @@ class MoveFlow(
         // Transaction creator signs transaction.
         val stx = serviceHub.signInitialTransaction(builder)
 
-        val zktx = zkService.prove(stx.tx)
+        val zktx = zkService.prove(zkService.toZKTransaction(stx.tx))
 
         val pztxSigs = signInitialZKTransaction(zktx)
         val zkpstx = SignedZKVerifierTransaction(zktx, pztxSigs)
