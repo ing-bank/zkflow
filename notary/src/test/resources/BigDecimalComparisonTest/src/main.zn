@@ -11,7 +11,6 @@ struct BigDecimal {
 }
 
 impl BigDecimal {
-
     fn compareMagnitude(this: BigDecimal, that: BigDecimal) -> i8 {
         let mut result: i8 = 0 as i8;
         for i in 0..MAX_NUMBER_OF_DIGITS {
@@ -31,10 +30,10 @@ impl BigDecimal {
         if (result == 0 as i8) {
             for i in 0..MAX_NUMBER_OF_DIGITS {
                 if (result == 0 as i8) {
-                    result = if (this.fraction[i] > that.fraction[i]) {
+                    result = if (this.fraction[MAX_NUMBER_OF_DIGITS - i - 1 as u16] > that.fraction[MAX_NUMBER_OF_DIGITS - i - 1 as u16]) {
                         1 as i8
                     } else {
-                        if (this.fraction[i] < that.fraction[i]) {
+                        if (this.fraction[MAX_NUMBER_OF_DIGITS - i - 1 as u16] < that.fraction[MAX_NUMBER_OF_DIGITS - i - 1 as u16]) {
                             -1
                         } else {
                             0 as i8
@@ -53,7 +52,7 @@ impl BigDecimal {
             if (this.sign == 0 as i8) {
                 0 as i8
             } else {
-                this.sign * compareMagnitude(that, that)
+                this.sign * compareMagnitude(this, that)
             }
         } else {
             if (this.sign > that.sign) {
@@ -62,23 +61,6 @@ impl BigDecimal {
                 -1
             }
         }
-    }
-
-    fn equalsArray(thisArray: [u8; MAX_NUMBER_OF_DIGITS], thatArray: [u8; MAX_NUMBER_OF_DIGITS]) -> bool {
-        let mut eq = true;
-
-        for i in 1 as u16..MAX_NUMBER_OF_DIGITS {
-            if (thisArray[i] != thatArray[i]) {
-                eq = eq && false
-            }
-        }
-        eq
-    }
-
-    fn equals(this: BigDecimal, that: BigDecimal) -> bool {
-        this.sign == that.sign
-        && BigDecimal::equalsArray(this.integer, that.integer)
-        && BigDecimal::equalsArray(this.fraction, that.fraction)
     }
 }
 

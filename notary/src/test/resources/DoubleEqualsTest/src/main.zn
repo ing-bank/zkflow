@@ -1,0 +1,30 @@
+//!
+//! The 'double' main module.
+//!
+
+//The implementation of IEEE 764 standard
+//sign in { -1, 0, 1 }
+//exponent in [0; 1023]
+//magnitude in [0; ~4.5E+15]
+//If difference in exponents is more than 16, there's no need to compare magnitude
+const MAX_NUMBER_OF_DIGITS_IN_MAGNITUDE: u64 = 16;
+
+struct Double {
+    sign: i8,
+    exponent: i16,
+    magnitude: u64,
+}
+
+impl Double {
+    fn equals(this: Double, that: Double) -> bool {
+        this.sign == that.sign && this.exponent == that.exponent && this.magnitude == that.magnitude
+    }
+}
+
+fn main(left: Double, right: Double) -> u8 {
+    if (Double::equals(left, right)) {
+        0
+    } else {
+        1
+    }
+}

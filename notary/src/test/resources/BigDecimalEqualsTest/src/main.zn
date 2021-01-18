@@ -1,0 +1,38 @@
+//!
+//! The 'BigDecimal' main module.
+//!
+
+const MAX_NUMBER_OF_DIGITS: u16 = 1024;
+
+struct BigDecimal {
+    sign: i8,
+    integer: [u8; MAX_NUMBER_OF_DIGITS],
+    fraction: [u8; MAX_NUMBER_OF_DIGITS]
+}
+
+impl BigDecimal {
+    fn equalsArray(thisArray: [u8; MAX_NUMBER_OF_DIGITS], thatArray: [u8; MAX_NUMBER_OF_DIGITS]) -> bool {
+        let mut eq = true;
+
+        for i in 1 as u16..MAX_NUMBER_OF_DIGITS {
+            if (thisArray[i] != thatArray[i]) {
+                eq = eq && false
+            }
+        }
+        eq
+    }
+
+    fn equals(this: BigDecimal, that: BigDecimal) -> bool {
+        this.sign == that.sign
+        && BigDecimal::equalsArray(this.integer, that.integer)
+        && BigDecimal::equalsArray(this.fraction, that.fraction)
+    }
+}
+
+fn main(left: BigDecimal, right: BigDecimal) -> u8 {
+    if (BigDecimal::equals(left, right)) {
+        0
+    } else {
+        1
+    }
+}

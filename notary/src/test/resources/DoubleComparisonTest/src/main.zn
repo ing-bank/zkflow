@@ -99,10 +99,6 @@ impl Double {
             }
         }
     }
-
-    fn equals(this: Double, that: Double) -> bool {
-        this.sign == that.sign && this.exponent == that.exponent && this.magnitude == that.magnitude
-    }
 }
 
 fn main(left: Double, right: Double) -> i8 {
