@@ -2,13 +2,19 @@
 //! The 'double' main module.
 //!
 
-//The implementation of IEEE 764 standard
-//sign in { -1, 0, 1 }
-//exponent in [0; 1023]
-//magnitude in [0; ~4.5E+15]
-//If difference in exponents is more than 16, there's no need to compare magnitude
 const MAX_NUMBER_OF_DIGITS_IN_MAGNITUDE: u64 = 16;
 
+//The implementation of IEEE 754 standard
+//sign in { -1, 0, 1 } - it is different from the standard.
+//In IEEE 754 sign stores only two values - 0 and 1, 0 - positive, 1 - negative.
+//In this implementation sign is stored explicitly.
+//exponent in [-1024; 1023]
+//magnitude in [0; ~4.5E+15]
+//If difference in exponents is more than 16, there's no need to compare magnitude
+//The actual stored value:
+//      sign * magnitude * 10^exponent
+//Even though values with double precision are big, they can't store many digits with meaningful (non-zero) values,
+//thus, for more accurate values we need BigDecimal.
 struct Double {
     sign: i8,
     exponent: i16,

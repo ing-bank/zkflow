@@ -2,19 +2,39 @@
 //! The 'BigDecimal' main module.
 //!
 
-const MAX_NUMBER_OF_DIGITS: u16 = 1024;
+const INTEGER_SIZE: u16 = 1024;
+const FRACTION_SIZE: u8 = 128;
 
+//Original BigDecimal in Java stores all digits in one array, ans uses scale as a number of digits to the right side of
+//the decimal point. Then it calculates difference in scale of two comparing BigDecimals to adjust digits.
+//For example:
+//1.2, which is an array of [1, 2] and scale 1, plus 10, which is an array [1, 0], but scale 0.
+//So, arrays must be adjusted w.r.t. scales. Then arithmetic operations can be applied.
+//
+//However, zink doesn't support indexes inferred from witnesses (|scale_A - scale_B|), so we use two separate arrays to
+//store integer value of BigDecimal and its fraction. It is stored in little-Endian.
 struct BigDecimal {
     sign: i8,
-    integer: [u8; MAX_NUMBER_OF_DIGITS],
-    fraction: [u8; MAX_NUMBER_OF_DIGITS]
+    integer: [u8; INTEGER_SIZE],
+    fraction: [u8; FRACTION_SIZE]
 }
 
 impl BigDecimal {
-    fn equalsArray(thisArray: [u8; MAX_NUMBER_OF_DIGITS], thatArray: [u8; MAX_NUMBER_OF_DIGITS]) -> bool {
+    fn equalsInteger(thisArray: [u8; INTEGER_SIZE], thatArray: [u8; INTEGER_SIZE]) -> bool {
         let mut eq = true;
 
-        for i in 1 as u16..MAX_NUMBER_OF_DIGITS {
+        for i in 1 as u16..INTEGER_SIZE {
+            if (thisArray[i] != thatArray[i]) {
+                eq = eq && false
+            }
+        }
+        eq
+    }
+
+    fn equalsFraction(thisArray: [u8; FRACTION_SIZE], thatArray: [u8; FRACTION_SIZE]) -> bool {
+        let mut eq = true;
+
+        for i in 1 as u16..FRACTION_SIZE {
             if (thisArray[i] != thatArray[i]) {
                 eq = eq && false
             }
@@ -24,8 +44,8 @@ impl BigDecimal {
 
     fn equals(this: BigDecimal, that: BigDecimal) -> bool {
         this.sign == that.sign
-        && BigDecimal::equalsArray(this.integer, that.integer)
-        && BigDecimal::equalsArray(this.fraction, that.fraction)
+        && BigDecimal::equalsInteger(this.integer, that.integer)
+        && BigDecimal::equalsFraction(this.fraction, that.fraction)
     }
 }
 
