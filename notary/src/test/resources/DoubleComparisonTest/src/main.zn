@@ -30,20 +30,19 @@ impl Double {
         }
     }
 
-    fn getExponent(power: i16) -> u64 {
-        let unsignedPower = abs(power) as u64;
+    fn get_exponent(power: i16) -> u64 {
+        let unsigned_power = abs(power) as u64;
 
         let mut exponent = 1 as u64;
         let base = 10 as u64;
 
-        for i in 1 as u64..(MAX_NUMBER_OF_DIGITS_IN_MAGNITUDE - (1 as u64)) while i <= unsignedPower {
+        for i in 1 as u64..(MAX_NUMBER_OF_DIGITS_IN_MAGNITUDE - (1 as u64)) while i <= unsigned_power {
             exponent *= base
         }
         exponent
     }
 
-    fn compareMagnitude(this: Double, that: Double) -> i8 {
-
+    fn compare_magnitude(this: Double, that: Double) -> i8 {
         if this.magnitude > that.magnitude {
             1 as i8
         } else {
@@ -59,7 +58,7 @@ impl Double {
     //thus, if it is divided by power of 10, reminder != 0.
     //So, if adjusted == other_magnitude /\ reminder != 0 => not_adjusted > other_magnitude
     //Thus, we can combine strict greater and equal.
-    fn compareWithAdjustedMagnitude(adjusted: u64, magnitude: u64) -> i8 {
+    fn compare_with_adjusted_magnitude(adjusted: u64, magnitude: u64) -> i8 {
         if adjusted >= magnitude {
             1 as i8
         } else {
@@ -69,23 +68,23 @@ impl Double {
 
     //The biggest number of digits that can be stored in magnitude is 16, thus if difference in exponents
     //is bigger than 16, it is useless to compare magnitudes.
-    fn compareExponentAndMagnitude(this: Double, that: Double) -> i8 {
-        let expDiff = this.exponent - that.exponent;
+    fn compare_exponent_and_magnitude(this: Double, that: Double) -> i8 {
+        let exp_diff = this.exponent - that.exponent;
 
-        if expDiff >= MAX_NUMBER_OF_DIGITS_IN_MAGNITUDE as i16 {
+        if exp_diff >= MAX_NUMBER_OF_DIGITS_IN_MAGNITUDE as i16 {
             1 as i8
         } else {
-            if expDiff <= -MAX_NUMBER_OF_DIGITS_IN_MAGNITUDE as i16 {
+            if exp_diff <= -MAX_NUMBER_OF_DIGITS_IN_MAGNITUDE as i16 {
                 -1
             } else {
-                let decimalExponent = getExponent(expDiff);
+                let decimal_exponent = get_exponent(exp_diff);
 
-                if expDiff > (0 as i16) {
-                    let adjusted = that.magnitude / decimalExponent;
-                    -compareWithAdjustedMagnitude(adjusted, this.magnitude)
+                if exp_diff > (0 as i16) {
+                    let adjusted = that.magnitude / decimal_exponent;
+                    -compare_with_adjusted_magnitude(adjusted, this.magnitude)
                 } else {
-                    let adjusted = this.magnitude / decimalExponent;
-                    compareWithAdjustedMagnitude(adjusted, that.magnitude)
+                    let adjusted = this.magnitude / decimal_exponent;
+                    compare_with_adjusted_magnitude(adjusted, that.magnitude)
                 }
             }
         }
@@ -99,12 +98,12 @@ impl Double {
             if this.sign < that.sign {
                 -1
             } else {
-                let magnitudeComparison = if this.exponent == that.exponent {
-                    compareMagnitude(this, that)
+                let magnitude_comparison = if this.exponent == that.exponent {
+                    compare_magnitude(this, that)
                 } else {
-                    compareExponentAndMagnitude(this, that)
+                    compare_exponent_and_magnitude(this, that)
                 };
-                this.sign * magnitudeComparison
+                this.sign * magnitude_comparison
             }
         }
     }

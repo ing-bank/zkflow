@@ -5,14 +5,14 @@
 const INTEGER_SIZE: u16 = 1024;
 const FRACTION_SIZE: u8 = 128;
 
-//Original BigDecimal in Java stores all digits in one array, ans uses scale as a number of digits to the right side of
+//Original BigDecimal in Java stores all digits in one array, and uses scale as a number of digits to the right side of
 //the decimal point. Then it calculates difference in scale of two comparing BigDecimals to adjust digits.
 //For example:
 //1.2, which is an array of [1, 2] and scale 1, plus 10, which is an array [1, 0], but scale 0.
 //So, arrays must be adjusted w.r.t. scales. Then arithmetic operations can be applied.
 //
-//However, zink doesn't support indexes inferred from witnesses (|scale_A - scale_B|), so we use two separate arrays to
-//store integer value of BigDecimal and its fraction. It is stored in little-Endian.
+//However, zinc doesn't support indexes inferred from witnesses (|scale_A - scale_B|), so we use two separate arrays to
+//store integer value of BigDecimal and its fraction. It is stored in little-Endian order.
 struct BigDecimal {
     sign: i8,
     integer: [u8; INTEGER_SIZE],
@@ -21,14 +21,14 @@ struct BigDecimal {
 
 impl BigDecimal {
     //comparison if the same sign
-    fn compareMagnitude(this: BigDecimal, that: BigDecimal) -> i8 {
+    fn compare_magnitude(this: BigDecimal, that: BigDecimal) -> i8 {
         let mut result: i8 = 0 as i8;
         for i in 0..INTEGER_SIZE {
-            if (result == 0 as i8) {
-                result = if (this.integer[INTEGER_SIZE - i - 1 as u16] > that.integer[INTEGER_SIZE - i - 1 as u16]) {
+            if result == 0 as i8 {
+                result = if this.integer[i] > that.integer[i] {
                     1 as i8
                 } else {
-                    if (this.integer[i] < that.integer[i]) {
+                    if this.integer[i] < that.integer[i] {
                         -1
                     } else {
                         0 as i8
@@ -37,13 +37,13 @@ impl BigDecimal {
             }
         }
 
-        if (result == 0 as i8) {
+        if result == 0 as i8 {
             for i in 0..FRACTION_SIZE {
-                if (result == 0 as i8) {
-                    result = if (this.fraction[FRACTION_SIZE - i - 1 as u8] > that.fraction[FRACTION_SIZE - i - 1 as u8]) {
+                if result == 0 as i8 {
+                    result = if this.fraction[i] > that.fraction[i] {
                         1 as i8
                     } else {
-                        if (this.fraction[FRACTION_SIZE - i - 1 as u8] < that.fraction[FRACTION_SIZE - i - 1 as u8]) {
+                        if this.fraction[i] < that.fraction[i] {
                             -1
                         } else {
                             0 as i8
@@ -61,14 +61,14 @@ impl BigDecimal {
     //Otherwise, we compare magnitude and provide result w.r.t. to the sign (if it's negative, then magnitude of the first
     //input can be less, but first argument still will be bigger).
     fn compare(this: BigDecimal, that: BigDecimal) -> i8 {
-        if (this.sign == that.sign) {
-            if (this.sign == 0 as i8) {
+        if this.sign == that.sign {
+            if this.sign == 0 as i8 {
                 0 as i8
             } else {
-                this.sign * compareMagnitude(this, that)
+                this.sign * compare_magnitude(this, that)
             }
         } else {
-            if (this.sign > that.sign) {
+            if this.sign > that.sign {
                 1 as i8
             } else {
                 -1

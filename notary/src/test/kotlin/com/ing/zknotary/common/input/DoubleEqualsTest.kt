@@ -33,7 +33,7 @@ class DoubleEqualsTest {
     }
 
     @Test
-    fun `zinc comparesusing equals (sign is different)`() {
+    fun `zinc compares using equals (sign is different)`() {
         // 100
         val leftSign: Byte = 1
         val leftExponent: Short = 1
@@ -52,7 +52,7 @@ class DoubleEqualsTest {
     }
 
     @Test
-    fun `zinc comparesusing equals (exponent is different)`() {
+    fun `zinc compares using equals (exponent is different)`() {
         // 100
         val leftSign: Byte = 1
         val leftExponent: Short = 1
@@ -71,7 +71,7 @@ class DoubleEqualsTest {
     }
 
     @Test
-    fun `zinc comparesusing equals (magnitude is different)`() {
+    fun `zinc compares using equals (magnitude is different)`() {
         // 100
         val leftSign: Byte = 1
         val leftExponent: Short = 1
@@ -90,7 +90,7 @@ class DoubleEqualsTest {
     }
 
     @Test
-    fun `zinc comparesusing equals (both are equal to each other)`() {
+    fun `zinc compares using equals (both are equal to each other)`() {
         // 100
         val leftSign: Byte = 1
         val leftExponent: Short = 1

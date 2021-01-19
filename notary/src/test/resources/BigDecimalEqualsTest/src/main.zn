@@ -5,14 +5,14 @@
 const INTEGER_SIZE: u16 = 1024;
 const FRACTION_SIZE: u8 = 128;
 
-//Original BigDecimal in Java stores all digits in one array, ans uses scale as a number of digits to the right side of
+//Original BigDecimal in Java stores all digits in one array, and uses scale as a number of digits to the right side of
 //the decimal point. Then it calculates difference in scale of two comparing BigDecimals to adjust digits.
 //For example:
 //1.2, which is an array of [1, 2] and scale 1, plus 10, which is an array [1, 0], but scale 0.
 //So, arrays must be adjusted w.r.t. scales. Then arithmetic operations can be applied.
 //
-//However, zink doesn't support indexes inferred from witnesses (|scale_A - scale_B|), so we use two separate arrays to
-//store integer value of BigDecimal and its fraction. It is stored in little-Endian.
+//However, zinc doesn't support indexes inferred from witnesses (|scale_A - scale_B|), so we use two separate arrays to
+//store integer value of BigDecimal and its fraction. It is stored in little-Endian order.
 struct BigDecimal {
     sign: i8,
     integer: [u8; INTEGER_SIZE],
@@ -20,22 +20,22 @@ struct BigDecimal {
 }
 
 impl BigDecimal {
-    fn equalsInteger(thisArray: [u8; INTEGER_SIZE], thatArray: [u8; INTEGER_SIZE]) -> bool {
+    fn equals_integer(this_array: [u8; INTEGER_SIZE], that_array: [u8; INTEGER_SIZE]) -> bool {
         let mut eq = true;
 
         for i in 1 as u16..INTEGER_SIZE {
-            if (thisArray[i] != thatArray[i]) {
+            if this_array[i] != that_array[i] {
                 eq = eq && false
             }
         }
         eq
     }
 
-    fn equalsFraction(thisArray: [u8; FRACTION_SIZE], thatArray: [u8; FRACTION_SIZE]) -> bool {
+    fn equals_fraction(this_array: [u8; FRACTION_SIZE], that_array: [u8; FRACTION_SIZE]) -> bool {
         let mut eq = true;
 
         for i in 1 as u16..FRACTION_SIZE {
-            if (thisArray[i] != thatArray[i]) {
+            if this_array[i] != that_array[i] {
                 eq = eq && false
             }
         }
@@ -44,13 +44,13 @@ impl BigDecimal {
 
     fn equals(this: BigDecimal, that: BigDecimal) -> bool {
         this.sign == that.sign
-        && BigDecimal::equalsInteger(this.integer, that.integer)
-        && BigDecimal::equalsFraction(this.fraction, that.fraction)
+        && BigDecimal::equals_integer(this.integer, that.integer)
+        && BigDecimal::equals_fraction(this.fraction, that.fraction)
     }
 }
 
 fn main(left: BigDecimal, right: BigDecimal) -> u8 {
-    if (BigDecimal::equals(left, right)) {
+    if BigDecimal::equals(left, right) {
         0
     } else {
         1

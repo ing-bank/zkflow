@@ -36,16 +36,16 @@ class BigDecimalComparisonTest {
         // 1.1
         val leftSign: Byte = 1
         val leftInteger = ByteArray(1024)
-        leftInteger[0] = 1
+        leftInteger[1023] = 1
         val leftFraction = ByteArray(128)
-        leftFraction[127] = 1
+        leftFraction[0] = 1
 
         // -1.1
         val rightSign: Byte = -1
         val rightInteger = ByteArray(1024)
-        rightInteger[0] = 1
+        rightInteger[1023] = 1
         val rightFraction = ByteArray(128)
-        rightFraction[127] = 1
+        rightFraction[0] = 1
 
         val input = "{\"left\": ${toZincString(leftSign, leftInteger, leftFraction)}" +
             ",\"right\": ${toZincString(rightSign, rightInteger, rightFraction)}}"
@@ -59,16 +59,16 @@ class BigDecimalComparisonTest {
         // -1.1
         val leftSign: Byte = -1
         val leftInteger = ByteArray(1024)
-        leftInteger[0] = 1
+        leftInteger[1023] = 1
         val leftFraction = ByteArray(128)
-        leftFraction[127] = 1
+        leftFraction[0] = 1
 
         // 1.1
         val rightSign: Byte = 1
         val rightInteger = ByteArray(1024)
-        rightInteger[0] = 1
+        rightInteger[1023] = 1
         val rightFraction = ByteArray(128)
-        rightFraction[127] = 1
+        rightFraction[0] = 1
 
         val input = "{\"left\": ${toZincString(leftSign, leftInteger, leftFraction)}" +
             ",\"right\": ${toZincString(rightSign, rightInteger, rightFraction)}}"
@@ -82,7 +82,7 @@ class BigDecimalComparisonTest {
         // 0.1
         val leftSign: Byte = 1
         val leftInteger = ByteArray(1024)
-        leftInteger[0] = 1
+        leftInteger[1023] = 1
         val leftFraction = ByteArray(128)
 
         // 0
@@ -107,7 +107,7 @@ class BigDecimalComparisonTest {
         // 1
         val rightSign: Byte = 1
         val rightInteger = ByteArray(1024)
-        rightInteger[0] = 1
+        rightInteger[1023] = 1
         val rightFraction = ByteArray(128)
 
         val input = "{\"left\": ${toZincString(leftSign, leftInteger, leftFraction)}" +
@@ -123,7 +123,7 @@ class BigDecimalComparisonTest {
         val leftSign: Byte = 1
         val leftInteger = ByteArray(1024)
         val leftFraction = ByteArray(128)
-        leftFraction[127] = 1
+        leftFraction[0] = 1
 
         // 0
         val rightSign: Byte = 1
@@ -148,7 +148,32 @@ class BigDecimalComparisonTest {
         val rightSign: Byte = 1
         val rightInteger = ByteArray(1024)
         val rightFraction = ByteArray(128)
-        rightFraction[127] = 1
+        rightFraction[0] = 1
+
+        val input = "{\"left\": ${toZincString(leftSign, leftInteger, leftFraction)}" +
+            ",\"right\": ${toZincString(rightSign, rightInteger, rightFraction)}}"
+
+        val output = zincZKService.prove(input.toByteArray())
+        zincZKService.verify(output, "\"-1\"".toByteArray())
+    }
+
+    @Test
+    fun `zinc compares two number of the same digits, but in opposite order (smoke test for endian order)`() {
+        // 123
+        val leftSign: Byte = 1
+        val leftInteger = ByteArray(1024)
+        leftInteger[1023] = 3
+        leftInteger[1022] = 2
+        leftInteger[1021] = 1
+        val leftFraction = ByteArray(128)
+
+        // 321
+        val rightSign: Byte = 1
+        val rightInteger = ByteArray(1024)
+        rightInteger[1023] = 1
+        rightInteger[1022] = 2
+        rightInteger[1021] = 3
+        val rightFraction = ByteArray(128)
 
         val input = "{\"left\": ${toZincString(leftSign, leftInteger, leftFraction)}" +
             ",\"right\": ${toZincString(rightSign, rightInteger, rightFraction)}}"
