@@ -32,6 +32,9 @@ dependencies {
     testImplementation("$cordaReleaseGroup:corda-node-driver:$cordaVersion")
     testImplementation("$cordaReleaseGroup:corda-test-utils:$cordaVersion")
 
+    val zkkryptoVersion: String by project
+    implementation("com.ing.dlt:zkkrypto:${zkkryptoVersion}")
+
     // ZKP dependencies
     testImplementation(project(":test-utils"))
 
