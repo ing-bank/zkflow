@@ -71,7 +71,7 @@ fun KSTypeReference.toTypeName(): TypeName {
 
 inline fun <reified T> KSType.findAnnotation(): KSAnnotation? =
     annotations.find {
-        it.annotationType.toString().contains(
+        it.annotationType.toString().equals(
             T::class.simpleName ?: error("Unknown annotation class is expected"),
             ignoreCase = true
         )
