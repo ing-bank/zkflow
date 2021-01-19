@@ -1,7 +1,6 @@
 package com.ing.zknotary.descriptors
 
 import com.google.devtools.ksp.symbol.KSType
-import java.lang.Exception
 import kotlin.reflect.KClass
 
 sealed class CodeException(message: String) : Exception(message) {
@@ -22,7 +21,7 @@ sealed class CodeException(message: String) : Exception(message) {
     )
 
     class NotAClass(types: List<String>) : CodeException(
-        "Types [ ${types.joinToString(separator = ", ") } ] cannot be instantiated."
+        "Types [ ${types.joinToString(separator = ", ")} ] cannot be instantiated."
     ) {
         constructor(type: String) : this(listOf(type))
     }

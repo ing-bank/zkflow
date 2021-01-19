@@ -1,4 +1,5 @@
 @file:Suppress("TooManyFunctions")
+
 package com.ing.zknotary.util
 
 import com.google.devtools.ksp.symbol.KSAnnotation

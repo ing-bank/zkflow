@@ -21,7 +21,7 @@ fun KSPropertyDeclaration.describe(annotatedClasses: List<KSClassDeclaration>) =
     )
 } catch (e: Exception) {
     // Rethrow error providing more context.
-    error("$parentDeclaration.$this: ${e.message}")
+    throw IllegalStateException("$parentDeclaration.$this: ${e.message}", e)
 }
 
 /**
