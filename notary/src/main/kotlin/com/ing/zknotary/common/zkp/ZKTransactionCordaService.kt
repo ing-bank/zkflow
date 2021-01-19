@@ -1,5 +1,7 @@
 package com.ing.zknotary.common.zkp
 
+import com.ing.zknotary.common.crypto.blake2s256
+import com.ing.zknotary.common.crypto.pedersen
 import com.ing.zknotary.common.dactyloscopy.Dactyloscopist
 import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
 import com.ing.zknotary.common.transactions.ZKProverTransaction
@@ -15,8 +17,7 @@ import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.StateRef
-import net.corda.core.crypto.BLAKE2s256DigestService
-import net.corda.core.crypto.PedersenDigestService
+import net.corda.core.crypto.DigestService
 import net.corda.core.crypto.SecureHash
 import net.corda.core.node.ServiceHub
 import net.corda.core.serialization.SingletonSerializeAsToken
@@ -32,8 +33,8 @@ abstract class ZKTransactionCordaService(val serviceHub: ServiceHub) : ZKTransac
         return tx.toZKProverTransaction(
             serviceHub,
             vtxStorage,
-            componentGroupLeafDigestService = BLAKE2s256DigestService,
-            nodeDigestService = PedersenDigestService
+            componentGroupLeafDigestService = DigestService.blake2s256,
+            nodeDigestService = DigestService.pedersen
         )
     }
 

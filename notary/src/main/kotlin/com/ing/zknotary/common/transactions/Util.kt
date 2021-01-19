@@ -1,6 +1,7 @@
 package com.ing.zknotary.common.transactions
 
 import com.ing.zknotary.common.contracts.toZKCommand
+import com.ing.zknotary.common.crypto.blake2s256
 import com.ing.zknotary.common.util.ComponentPaddingConfiguration
 import com.ing.zknotary.common.util.PaddingWrapper
 import com.ing.zknotary.node.services.ServiceNames
@@ -11,7 +12,6 @@ import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.StateRef
 import net.corda.core.contracts.TransactionState
-import net.corda.core.crypto.BLAKE2s256DigestService
 import net.corda.core.crypto.DigestService
 import net.corda.core.node.ServiceHub
 import net.corda.core.serialization.serialize
@@ -123,7 +123,7 @@ fun ZKProverTransaction.toZKVerifierTransaction(proof: ByteArray): ZKVerifierTra
 fun WireTransaction.toZKProverTransaction(
     services: ServiceHub,
     zkVerifierTransactionStorage: ZKVerifierTransactionStorage = services.getCordaServiceFromConfig(ServiceNames.ZK_VERIFIER_TX_STORAGE),
-    componentGroupLeafDigestService: DigestService = BLAKE2s256DigestService,
+    componentGroupLeafDigestService: DigestService = DigestService.blake2s256,
     nodeDigestService: DigestService = componentGroupLeafDigestService
 ): ZKProverTransaction {
     loggerFor<WireTransaction>().debug("Converting WireTx to ProverTx")

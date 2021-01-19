@@ -46,7 +46,7 @@ class MerkleRootTest {
             PedersenDigestService.hash(level0[2] + level0[3]).bytes
         )
 
-        val root = PedersenDigestService.hash(level1[0] + level1[1]).bytes
+        val root = DigestService.pedersen.hash(level1[0] + level1[1]).bytes
 
         val leaves = witness.map { input -> input.map { "\"${it.asUnsigned()}\"" } }
         val publicData = root.map { "\"${it.asUnsigned()}\"" }

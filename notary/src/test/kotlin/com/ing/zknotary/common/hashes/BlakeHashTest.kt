@@ -2,7 +2,6 @@ package com.ing.zknotary.common.hashes
 
 import com.ing.dlt.zkkrypto.util.asUnsigned
 import com.ing.zknotary.common.zkp.ZincZKService
-import net.corda.core.crypto.BLAKE2s256DigestService
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 import java.nio.ByteBuffer
@@ -33,7 +32,7 @@ class BlakeHashTest {
         val value = 2
 
         val witness = ByteBuffer.allocate(4).putInt(value).array()
-        val expected = BLAKE2s256DigestService.hash(witness).bytes
+        val expected = DigestService.blake2s256.hash(witness).bytes
 
         val preimage = witness.map { "\"${it.asUnsigned()}\"" }
         val publicData = expected.map { "\"${it.asUnsigned()}\"" }

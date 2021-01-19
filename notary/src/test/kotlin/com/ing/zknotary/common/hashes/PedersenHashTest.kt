@@ -2,7 +2,6 @@ package com.ing.zknotary.common.hashes
 
 import com.ing.dlt.zkkrypto.util.asUnsigned
 import com.ing.zknotary.common.zkp.ZincZKService
-import net.corda.core.crypto.PedersenDigestService
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 import java.nio.ByteBuffer
@@ -32,7 +31,7 @@ class PedersenHashTest {
     fun `zinc verifies Pedersen`() {
         val value = 2
         val witness = ByteBuffer.allocate(4).putInt(value).array()
-        val expected = PedersenDigestService.hash(witness).bytes
+        val expected = DigestService.pedersen.hash(witness).bytes
 
         val preimage = witness.map { "\"${it.asUnsigned()}\"" }
         val publicData = expected.map { "\"${it.asUnsigned()}\"" }

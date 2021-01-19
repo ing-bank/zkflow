@@ -6,7 +6,6 @@ import com.ing.zknotary.common.zkp.Witness
 import com.ing.zknotary.node.services.InMemoryZKVerifierTransactionStorage
 import com.ing.zknotary.notary.transactions.createIssuanceWtx
 import junit.framework.TestCase.assertEquals
-import net.corda.core.crypto.BLAKE2s256DigestService
 import net.corda.core.crypto.Crypto
 import net.corda.core.crypto.PedersenDigestService
 import net.corda.core.crypto.SecureHash
@@ -36,9 +35,12 @@ class SerializationTest {
     private val ptx = withTestSerializationEnvIfNotSet {
         wtx.toZKProverTransaction(
             services = ledgerServices,
-            componentGroupLeafDigestService = BLAKE2s256DigestService,
-            nodeDigestService = PedersenDigestService,
-            zkVerifierTransactionStorage = createMockCordaService(ledgerServices, ::InMemoryZKVerifierTransactionStorage)
+            componentGroupLeafDigestService = DigestService.blake2s256,
+            nodeDigestService = DigestService.pedersen,
+            zkVerifierTransactionStorage = createMockCordaService(
+                ledgerServices,
+                ::InMemoryZKVerifierTransactionStorage
+            )
         )
     }
 
