@@ -41,10 +41,14 @@ abstract class AbstractZKMerkleTree(
      * This value will contain as many hashes as there are component groups,
      * otherwise fail.
      * Order of the elements corresponds to the order groups listed in ComponentGroupEnum.
+     *
+     * TODO: when we revert back to the normal WireTransaction instead of ZKProverTransaction,
+     * this will be become 'dynamic' again to support unknown groups. This should be reflected in Zinc and in
+     * ZKVerifierTransaction
      */
     open val groupHashes: List<SecureHash> by lazy {
         ComponentGroupEnum.values().map {
-            groupsMerkleRoots[it.ordinal] ?: SecureHash.allOnesHash
+            groupsMerkleRoots[it.ordinal] ?: nodeDigestService.allOnesHash
         }
     }
 
