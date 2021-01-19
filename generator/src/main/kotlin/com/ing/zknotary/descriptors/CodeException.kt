@@ -16,8 +16,8 @@ sealed class CodeException(message: String) : Exception(message) {
         "${annotationClazz.simpleName} is expected to have argument: `$expectedArgument`."
     )
 
-    class InvalidAnnotationArgument(annotationClazz: KClass<*>, expectedArgument: String) : CodeException(
-        "${annotationClazz.simpleName} incorrectly defines argument: `$expectedArgument`."
+    class InvalidAnnotationArgument(annotationName: String, expectedArgument: String) : CodeException(
+        "$annotationName incorrectly defines argument: `$expectedArgument`."
     )
 
     class NotAClass(types: List<String>) : CodeException(

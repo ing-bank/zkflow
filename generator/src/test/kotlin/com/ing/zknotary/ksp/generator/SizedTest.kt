@@ -447,12 +447,45 @@ class SizedTest {
         assert(target["shallow"]["0"] is PublicKey)
     }
 
+    @Test
+    fun `elements annotated with CallKClass must be processed`() {
+        val loader = buildSizedVersion(
+            SimpleSource(
+                "CallKClassState",
+                """
+                @Sized class CallKClassState(
+                    val pubKey: @CallDefaultValueClass(
+                        arrayOf("${PublicKeyDefaultValue::class.qualifiedName}"),
+                        "${PublicKeyDefaultValue::class.qualifiedName}"
+                    ) ${PublicKey::class.qualifiedName}
+                )
+                """.trimIndent()
+            )
+        )
+
+        val sourceClass = loader.load("CallKClassState")
+        val targetClass = loader.load("CallKClassStateSized")
+
+        // Structural integrity and alignment.
+        targetClass shouldBeAlignedWith sourceClass
+
+        // Construction alignment.
+        val source = sourceClass.constructors.single().call(PublicKeyDefaultValue().default)
+        val target = targetClass.constructorFrom(sourceClass).call(source)
+
+        target["pubKey"] shouldBe PublicKeyDefaultValue().default
+        target["pubKey"] shouldBe source["pubKey"]
+    }
+
     private companion object {
         val sizedAnnotationPath = System.getProperty("user.dir") +
             "/src/main/kotlin/com/ing/zknotary/annotations/Sized.kt"
+        val fixturesPath = System.getProperty("user.dir") +
+            "/src/test/kotlin/com/ing/zknotary/ksp/generator/Fixtures.kt"
 
         fun buildSizedVersion(vararg simpleSource: SimpleSource): ClassLoader {
             val annotationSource = SourceFile.fromPath(File(sizedAnnotationPath))
+            val fixturesSource = SourceFile.fromPath(File(fixturesPath))
 
             val targetSources = simpleSource.map {
                 SourceFile.kotlin(
@@ -462,7 +495,7 @@ class SizedTest {
             }
 
             val compilation = KotlinCompilation().apply {
-                sources = targetSources + annotationSource
+                sources = targetSources + annotationSource + fixturesSource
                 symbolProcessors = listOf(SizedProcessor())
             }
 

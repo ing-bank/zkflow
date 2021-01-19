@@ -183,7 +183,7 @@ abstract class TypeDescriptor(
                 }
                 .mapCatching { size ->
                     if (size <= 0) {
-                        throw CodeException.InvalidAnnotationArgument(FixToLength::class, "size")
+                        throw CodeException.InvalidAnnotationArgument(FixToLength::class.simpleName!!, "size")
                     }
                     size
                 }

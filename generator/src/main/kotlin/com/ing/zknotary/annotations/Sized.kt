@@ -23,6 +23,14 @@ annotation class UseDefault
  */
 annotation class Call(val imports: Array<String>, val code: String)
 
+@Retention(AnnotationRetention.SOURCE)
+@Target(AnnotationTarget.TYPE)
+annotation class CallDefaultValueClass(val imports: Array<String>, val defaultValueClass: String)
+
+interface DefaultValue {
+    val default: Any
+}
+
 /**
  * Wraps Lists into lists of fixed size.
  * ALSO, wraps both generic and specialized arrays (ByteArray, CharArray, etc.)
