@@ -11,13 +11,13 @@ plugins {
 
 cordapp {
     val platformVersion: String by project
-    targetPlatformVersion = platformVersion.toInt()
-    minimumPlatformVersion = platformVersion.toInt()
+    targetPlatformVersion.set(platformVersion.toInt())
+    minimumPlatformVersion.set(platformVersion.toInt())
     workflow {
-        name = "Zk Notary App"
-        vendor = "ING Bank NV"
-        licence = "Apache License, Version 2.0"
-        versionId = 1
+        name.set("Zk Notary App")
+        vendor.set("ING Bank NV")
+        licence.set("Apache License, Version 2.0")
+        versionId.set(1)
     }
 }
 

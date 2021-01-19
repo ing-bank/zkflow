@@ -29,7 +29,7 @@ dependencies {
     // This is necessary, because the version included by kotlin-compile-testing (4.8.86)
     // is breaking the Corda classloading.
     // TODO: This is dangerous of course, so we need to keep an eye on this
-    implementation("io.github.classgraph:classgraph:4.8.78!!")
+    // implementation("io.github.classgraph:classgraph:4.8.78!!")
 }
 
 publishing {
