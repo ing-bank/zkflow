@@ -9,7 +9,7 @@ import java.time.Duration
 class DoubleEqualsTest {
 
     companion object {
-        private val circuitFolder: String = DoubleComparisonTest::class.java.getResource("/DoubleEqualsTest").path
+        private val circuitFolder: String = DoubleEqualsTest::class.java.getResource("/DoubleEqualsTest").path
         private val zincZKService = ZincZKService(
             circuitFolder,
             artifactFolder = circuitFolder,

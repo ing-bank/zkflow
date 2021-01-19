@@ -8,7 +8,7 @@ import java.time.Duration
 
 class BigDecimalEqualsTest {
     companion object {
-        private val circuitFolder: String = DoubleComparisonTest::class.java.getResource("/BigDecimalEqualsTest").path
+        private val circuitFolder: String = BigDecimalEqualsTest::class.java.getResource("/BigDecimalEqualsTest").path
         private val zincZKService = ZincZKService(
             circuitFolder,
             artifactFolder = circuitFolder,

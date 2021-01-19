@@ -1,0 +1,72 @@
+//!
+//! The 'BigDecimal' main module.
+//!
+
+const INTEGER_SIZE: u16 = 1024;
+const FRACTION_SIZE: u8 = 128;
+
+//Original BigDecimal in Java stores all digits in one array, ans uses scale as a number of digits to the right side of
+//the decimal point. Then it calculates difference in scale of two comparing BigDecimals to adjust digits.
+//For example:
+//1.2, which is an array of [1, 2] and scale 1, plus 10, which is an array [1, 0], but scale 0.
+//So, arrays must be adjusted w.r.t. scales. Then arithmetic operations can be applied.
+//
+//However, zink doesn't support indexes inferred from witnesses (|scale_A - scale_B|), so we use two separate arrays to
+//store integer value of BigDecimal and its fraction. It is stored in little-Endian.
+struct BigDecimal {
+    sign: i8,
+    integer: [u8; INTEGER_SIZE],
+    fraction: [u8; FRACTION_SIZE]
+}
+
+impl BigDecimal {
+
+    fn minus(this: BigDecimal, that: BigDecimal) -> BigDecimal {
+        let mut fraction: [u8; FRACTION_SIZE] = [0; FRACTION_SIZE];
+        let mut diff = 0 as i8;
+        let mut allZeros = true;
+        for i in 0..FRACTION_SIZE {
+            fraction[i] = this.fraction[i] - that.fraction[i] - diff;
+            if (fraction[i] < 0) {
+                diff = 1;
+                fraction[i] = 10 - fraction[i];
+            } else {
+                if (allZeros && fraction[i] != 0) {
+                    allZeros = allZeros && false;
+                }
+                diff = 0;
+            }
+        }
+
+        let mut integer: [u8; INTEGER_SIZE] = [0; INTEGER_SIZE];
+        for i in 0..INTEGER_SIZE {
+            integer[i] = this.fraction[i] - that.fraction[i] - diff;
+            if (integer[i] < 0) {
+                diff = 1;
+                integer[i] = 10 - integer[i];
+            } else {
+                diff = 0;
+            }
+        }
+
+        let sign = if (diff == 1) {
+            -1
+        } else {
+            if (allZeros) {
+                0
+            } else {
+                1
+            }
+        };
+
+        BigDecimal {
+            sign: sign,
+            fraction: fraction,
+            integer: integer,
+        }
+    }
+}
+
+fn main(left: BigDecimal, right: BigDecimal) -> BigDecimal {
+    BigDecimal::minus(left, right)
+}
