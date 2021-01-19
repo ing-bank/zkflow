@@ -52,8 +52,7 @@ abstract class AbstractZKMerkleTree(
         componentHashes.map { (groupIndex: Int, componentHashesInGroup: List<SecureHash>) ->
             groupIndex to MerkleTree.getMerkleTree(
                 componentHashesInGroup,
-                nodeDigestService,
-                componentGroupLeafDigestService
+                nodeDigestService
             ).hash
         }.toMap()
     }

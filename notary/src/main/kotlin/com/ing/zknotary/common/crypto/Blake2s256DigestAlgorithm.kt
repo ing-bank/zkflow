@@ -22,5 +22,5 @@ class Blake2s256DigestAlgorithm : DigestAlgorithm {
     override fun preImageResistantDigest(bytes: ByteArray): ByteArray = digest(bytes)
 }
 
-val blake2sAlgorithm = DigestAlgorithmFactory.registerClass(PedersenDigestAlgorithm::class.java.name)
+val blake2sAlgorithm = DigestAlgorithmFactory.registerClass(Blake2s256DigestAlgorithm::class.java.name)
 val DigestService.Companion.blake2s256: DigestService by lazy { DigestService(blake2sAlgorithm) }

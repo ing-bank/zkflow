@@ -1,10 +1,11 @@
 package com.ing.zknotary.testing.zkp
 
+import com.ing.zknotary.common.crypto.blake2s256
 import com.ing.zknotary.common.dactyloscopy.Dactyloscopist
 import com.ing.zknotary.common.zkp.PublicInput
 import com.ing.zknotary.common.zkp.Witness
 import com.ing.zknotary.common.zkp.ZKService
-import net.corda.core.crypto.BLAKE2s256DigestService
+import net.corda.core.crypto.DigestService
 import net.corda.core.serialization.SerializationFactory
 import net.corda.core.serialization.deserialize
 import net.corda.core.serialization.serialize
@@ -62,7 +63,7 @@ public class MockZKService : ZKService {
             }
 
             val calculatedLeafHashFromWitness =
-                BLAKE2s256DigestService.hash(nonceFromWitness.bytes + Dactyloscopist.identify(state))
+                DigestService.blake2s256.hash(nonceFromWitness.bytes + Dactyloscopist.identify(state))
 
             if (leafHashFromPublicInput != calculatedLeafHashFromWitness) error(
                 "Calculated leaf hash ($calculatedLeafHashFromWitness} for input $index of tx ${witness.transaction.id} does " +
@@ -84,7 +85,7 @@ public class MockZKService : ZKService {
             }
 
             val calculatedLeafHashFromWitness =
-                BLAKE2s256DigestService.hash(nonceFromWitness.bytes + Dactyloscopist.identify(state))
+                DigestService.blake2s256.hash(nonceFromWitness.bytes + Dactyloscopist.identify(state))
 
             if (leafHashFromPublicreference != calculatedLeafHashFromWitness) error(
                 "Calculated leaf hash ($calculatedLeafHashFromWitness} for reference $index of tx ${witness.transaction.id} does " +

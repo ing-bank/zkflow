@@ -1,5 +1,7 @@
 package com.ing.zknotary.common.transactions
 
+import com.ing.zknotary.common.crypto.blake2s256
+import com.ing.zknotary.common.crypto.pedersen
 import com.ing.zknotary.common.serializer.ZincSerializationFactory
 import com.ing.zknotary.common.zkp.PublicInput
 import com.ing.zknotary.common.zkp.Witness
@@ -7,8 +9,10 @@ import com.ing.zknotary.node.services.InMemoryZKVerifierTransactionStorage
 import com.ing.zknotary.notary.transactions.createIssuanceWtx
 import junit.framework.TestCase.assertEquals
 import net.corda.core.crypto.Crypto
-import net.corda.core.crypto.PedersenDigestService
+import net.corda.core.crypto.DigestService
 import net.corda.core.crypto.SecureHash
+import net.corda.core.crypto.SecureHash.Companion.allOnesHashFor
+import net.corda.core.crypto.SecureHash.Companion.zeroHashFor
 import net.corda.core.serialization.deserialize
 import net.corda.core.serialization.serialize
 import net.corda.testing.core.TestIdentity
@@ -51,8 +55,8 @@ class SerializationTest {
     fun `Serialize public input to Zinc`() {
         withTestSerializationEnvIfNotSet {
             // Serialize for transport to Zinc
-            val testList = listOf<SecureHash>(PedersenDigestService.allOnesHash)
-            val publicInput = PublicInput(PedersenDigestService.zeroHash, testList, testList)
+            val testList = listOf<SecureHash>(allOnesHashFor("PEDERSEN"))
+            val publicInput = PublicInput(zeroHashFor("PEDERSEN"), testList, testList)
             publicInput.serialize(ZincSerializationFactory)
             // TODO: do checks on JSON to confirm it is acceptable for Zinc
         }
@@ -64,8 +68,8 @@ class SerializationTest {
             // Serialize for transport to Zinc
             val witness = Witness(
                 ptx,
-                inputNonces = ptx.padded.inputs().map { PedersenDigestService.zeroHash },
-                referenceNonces = ptx.padded.references().map { PedersenDigestService.zeroHash }
+                inputNonces = ptx.padded.inputs().map { zeroHashFor("PEDERSEN") },
+                referenceNonces = ptx.padded.references().map { zeroHashFor("PEDERSEN") }
             )
             witness.serialize(ZincSerializationFactory)
             // TODO: do checks on JSON to confirm it is acceptable for Zinc

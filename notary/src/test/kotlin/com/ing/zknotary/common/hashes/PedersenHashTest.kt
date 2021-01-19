@@ -1,7 +1,9 @@
 package com.ing.zknotary.common.hashes
 
 import com.ing.dlt.zkkrypto.util.asUnsigned
+import com.ing.zknotary.common.crypto.pedersen
 import com.ing.zknotary.common.zkp.ZincZKService
+import net.corda.core.crypto.DigestService
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 import java.nio.ByteBuffer

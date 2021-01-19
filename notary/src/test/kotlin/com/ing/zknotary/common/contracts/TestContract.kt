@@ -13,7 +13,6 @@ import net.corda.core.contracts.OwnableState
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.StateRef
 import net.corda.core.contracts.TransactionState
-import net.corda.core.crypto.BLAKE2s256DigestService
 import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.AbstractParty
 import net.corda.core.transactions.LedgerTransaction
@@ -53,7 +52,7 @@ class TestContract : Contract {
                 val stateAndRefFiller = ComponentPaddingConfiguration.Filler.StateAndRef(
                     StateAndRef(
                         TransactionState(emptyState, notary = ZKNulls.NULL_PARTY),
-                        StateRef(BLAKE2s256DigestService.zeroHash, 0)
+                        StateRef(SecureHash.zeroHashFor("BLAKE2S256"), 0)
                     )
                 )
                 val pubKeyFiller = ComponentPaddingConfiguration.Filler.PublicKey(ZKNulls.NULL_PUBLIC_KEY)
@@ -82,7 +81,7 @@ class TestContract : Contract {
                 val stateAndRefFiller = ComponentPaddingConfiguration.Filler.StateAndRef(
                     StateAndRef(
                         TransactionState(emptyState, notary = ZKNulls.NULL_PARTY),
-                        StateRef(BLAKE2s256DigestService.zeroHash, 0)
+                        StateRef(SecureHash.zeroHashFor("BLAKE2S256"), 0)
                     )
                 )
 
