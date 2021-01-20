@@ -5,12 +5,10 @@ import com.google.devtools.ksp.isPublic
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSType
-import com.ing.zknotary.annotations.Call
 import com.ing.zknotary.annotations.CallDefaultValueClass
 import com.ing.zknotary.annotations.UseDefault
 import com.ing.zknotary.descriptors.types.AnnotatedSizedClassDescriptor
-import com.ing.zknotary.descriptors.types.CallableClassDescriptor
-import com.ing.zknotary.descriptors.types.CallableKClassDescriptor
+import com.ing.zknotary.descriptors.types.CallableDefaultValueClassDescriptor
 import com.ing.zknotary.descriptors.types.DefaultableClassDescriptor
 import com.ing.zknotary.util.findAnnotation
 import com.ing.zknotary.util.findArgument
@@ -39,19 +37,13 @@ class DescriptionContext(private val annotatedClasses: List<KSClassDeclaration>)
         }
 
         type.findAnnotation<UseDefault>()?.let { return processUseDefault(type) }
-        type.findAnnotation<Call>()?.let {
-            val returnType = ClassName(
-                type.declaration.packageName.asString(),
-                listOf(type.declaration.simpleName.asString())
-            )
-            return processCall(it, returnType)
-        }
+
         type.findAnnotation<CallDefaultValueClass>()?.let {
             val returnType = ClassName(
                 type.declaration.packageName.asString(),
                 listOf(type.declaration.simpleName.asString())
             )
-            return processCallKClass(it, returnType)
+            return processCallDefaultValueClass(it, returnType)
         }
 
         throw SupportException.UnsupportedUserType(type, annotatedClasses.map { it.simpleName.asString() })
@@ -65,40 +57,10 @@ class DescriptionContext(private val annotatedClasses: List<KSClassDeclaration>)
         return DefaultableClassDescriptor(clazz)
     }
 
-    private fun processCall(callAnnotation: KSAnnotation, returnType: ClassName): TypeDescriptor {
-        val imports = findImports(callAnnotation)
-
-        val code = callAnnotation.findArgument<String>("code")
-            ?: throw CodeException.InvalidAnnotationArgument(callAnnotation.shortName.asString(), "code")
-
-        return CallableClassDescriptor(imports, code, returnType)
-    }
-
-    private fun processCallKClass(callAnnotation: KSAnnotation, returnType: ClassName): TypeDescriptor {
+    private fun processCallDefaultValueClass(callAnnotation: KSAnnotation, returnType: ClassName): TypeDescriptor {
         val className = callAnnotation.findArgument<String>("defaultValueClass")
             ?: throw CodeException.InvalidAnnotationArgument(callAnnotation.shortName.asString(), "defaultValue")
 
-        return CallableKClassDescriptor(className, returnType)
+        return CallableDefaultValueClassDescriptor(className, returnType)
     }
-
-    private fun findImports(callAnnotation: KSAnnotation): List<String> {
-        return callAnnotation.findArgument<List<String>>("imports")
-            ?.let { imports ->
-                val (valid, invalid) = imports.partition { it.isValidClass }
-
-                if (invalid.isNotEmpty()) {
-                    throw CodeException.NotAClass(invalid)
-                }
-
-                valid
-            } ?: throw CodeException.InvalidAnnotationArgument(callAnnotation.shortName.asString(), "imports")
-    }
-
-    private val String.isValidClass: Boolean
-        get() = try {
-            Class.forName(this)
-            true
-        } catch (e: Exception) {
-            false
-        }
 }

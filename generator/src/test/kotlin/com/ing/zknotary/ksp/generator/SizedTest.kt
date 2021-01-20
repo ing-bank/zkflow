@@ -12,9 +12,7 @@ import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 import java.io.File
 import java.net.URLClassLoader
-import java.security.KeyPairGenerator
 import java.security.PublicKey
-import java.security.SecureRandom
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 import kotlin.reflect.KProperty1
@@ -394,67 +392,12 @@ class SizedTest {
     }
 
     @Test
-    fun `elements annotated with Call must be processed`() {
-        val keygen = KeyPairGenerator.getInstance("DSA", "SUN")
-        val insecureRandom = SecureRandom.getInstance("SHA1PRNG")
-        insecureRandom.setSeed(ByteArray(1) { 2 })
-        keygen.initialize(1024, insecureRandom)
-        val keypair = keygen.genKeyPair()
-
-        // TODO try using buildCodeBlock or buildString
-        val callable =
-            """
-            val keygen = KeyPairGenerator.getInstance("DSA", "SUN")
-            val insecureRandom = SecureRandom.getInstance("SHA1PRNG")
-            insecureRandom.setSeed(ByteArray(1) { 1 })
-            keygen.initialize(1024, insecureRandom)
-            val keypair = keygen.genKeyPair()
-            keypair.public
-            """.trimIndent()
-
-        // Using X::class in arrayOf() does not get picked up
-        // I suspect it is because the sources do not import the relevant classes
+    fun `elements annotated with CallDefaultValueClass must be processed`() {
         val loader = buildSizedVersion(
             SimpleSource(
-                "NonTrivialState",
+                "CallDefaultValueClassState",
                 """
-                @Sized class NonTrivialState(
-                    val shallow: @FixToLength(7) List
-                    <@Call(
-                        arrayOf(                          
-                            "${KeyPairGenerator::class.qualifiedName}",
-                            "${SecureRandom::class.qualifiedName}"
-                        ),
-                        ~~~$callable~~~, 
-                        "${PublicKey::class.qualifiedName}",
-                    ) ${PublicKey::class.qualifiedName}>
-                )
-                """.trimIndent().replace("~", "\"")
-            )
-        )
-
-        val sourceClass = loader.load("NonTrivialState")
-        val targetClass = loader.load("NonTrivialStateSized")
-
-        // Structural integrity and alignment.
-        targetClass shouldBeAlignedWith sourceClass
-
-        // Construction alignment.
-        val source = sourceClass.constructors.single().call(listOf(keypair.public))
-        val target = targetClass.constructorFrom(sourceClass).call(source)
-
-        target["shallow"]["size"] shouldBe 7
-        target["shallow"]["originalSize"] shouldBe 1
-        assert(target["shallow"]["0"] is PublicKey)
-    }
-
-    @Test
-    fun `elements annotated with CallKClass must be processed`() {
-        val loader = buildSizedVersion(
-            SimpleSource(
-                "CallKClassState",
-                """
-                @Sized class CallKClassState(
+                @Sized class CallDefaultValueClassState(
                     val pubKey: @CallDefaultValueClass(
                         "${PublicKeyDefaultValue::class.qualifiedName}"
                     ) ${PublicKey::class.qualifiedName}
@@ -463,8 +406,8 @@ class SizedTest {
             )
         )
 
-        val sourceClass = loader.load("CallKClassState")
-        val targetClass = loader.load("CallKClassStateSized")
+        val sourceClass = loader.load("CallDefaultValueClassState")
+        val targetClass = loader.load("CallDefaultValueClassStateSized")
 
         // Structural integrity and alignment.
         targetClass shouldBeAlignedWith sourceClass

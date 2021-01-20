@@ -7,7 +7,7 @@ import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.TypeName
 import kotlin.reflect.full.isSubclassOf
 
-class CallableKClassDescriptor(defaultValueClassName: String, returnType: ClassName) :
+class CallableDefaultValueClassDescriptor(defaultValueClassName: String, returnType: ClassName) :
     TypeDescriptor(returnType) {
 
     private val defaultValueClass = Class.forName(defaultValueClassName).kotlin

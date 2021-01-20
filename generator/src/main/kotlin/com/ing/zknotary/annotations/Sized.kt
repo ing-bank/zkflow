@@ -15,14 +15,10 @@ annotation class FixToLength(val size: Int = -1)
 @Target(AnnotationTarget.TYPE)
 annotation class UseDefault
 
-@Retention(AnnotationRetention.SOURCE)
-@Target(AnnotationTarget.TYPE)
 /**
- * Instructs the annotation processor to use `code` for constructing default elements.
- * `code` must be a valid kotlin code using only classes listed in `imports`.
+ * With this annotation, you can specify the DefaultValue class to call
+ * to get a default value when padding out a collection.
  */
-annotation class Call(val imports: Array<String>, val code: String)
-
 @Retention(AnnotationRetention.SOURCE)
 @Target(AnnotationTarget.TYPE)
 annotation class CallDefaultValueClass(val defaultValueClass: String)
