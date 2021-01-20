@@ -1,5 +1,6 @@
 package com.ing.zknotary.common.transactions
 
+import com.ing.zknotary.common.crypto.PEDERSEN
 import com.ing.zknotary.common.crypto.blake2s256
 import com.ing.zknotary.common.crypto.pedersen
 import com.ing.zknotary.common.serializer.ZincSerializationFactory
@@ -55,8 +56,8 @@ class SerializationTest {
     fun `Serialize public input to Zinc`() {
         withTestSerializationEnvIfNotSet {
             // Serialize for transport to Zinc
-            val testList = listOf<SecureHash>(allOnesHashFor("PEDERSEN"))
-            val publicInput = PublicInput(zeroHashFor("PEDERSEN"), testList, testList)
+            val testList = listOf<SecureHash>(allOnesHashFor(SecureHash.PEDERSEN))
+            val publicInput = PublicInput(zeroHashFor(SecureHash.PEDERSEN), testList, testList)
             publicInput.serialize(ZincSerializationFactory)
             // TODO: do checks on JSON to confirm it is acceptable for Zinc
         }
@@ -68,8 +69,8 @@ class SerializationTest {
             // Serialize for transport to Zinc
             val witness = Witness(
                 ptx,
-                inputNonces = ptx.padded.inputs().map { zeroHashFor("PEDERSEN") },
-                referenceNonces = ptx.padded.references().map { zeroHashFor("PEDERSEN") }
+                inputNonces = ptx.padded.inputs().map { zeroHashFor(SecureHash.PEDERSEN) },
+                referenceNonces = ptx.padded.references().map { zeroHashFor(SecureHash.PEDERSEN) }
             )
             witness.serialize(ZincSerializationFactory)
             // TODO: do checks on JSON to confirm it is acceptable for Zinc

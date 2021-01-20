@@ -3,6 +3,7 @@ package com.ing.zknotary.common.crypto
 import com.ing.dlt.zkkrypto.ecc.pedersenhash.PedersenHash
 import net.corda.core.crypto.DigestAlgorithm
 import net.corda.core.crypto.DigestService
+import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.internal.DigestAlgorithmFactory
 
 class PedersenDigestAlgorithm : DigestAlgorithm {
@@ -19,3 +20,5 @@ class PedersenDigestAlgorithm : DigestAlgorithm {
 
 val pedersenAlgorithm = DigestAlgorithmFactory.registerClass(PedersenDigestAlgorithm::class.java.name)
 val DigestService.Companion.pedersen: DigestService by lazy { DigestService(pedersenAlgorithm) }
+val SecureHash.Companion.PEDERSEN: String
+    get() = pedersenAlgorithm

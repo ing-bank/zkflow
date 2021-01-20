@@ -1,6 +1,7 @@
 package com.ing.zknotary.common.transactions
 
 import com.ing.zknotary.common.contracts.ZKCommandData
+import com.ing.zknotary.common.crypto.BLAKE2S256
 import com.ing.zknotary.common.util.ComponentPaddingConfiguration
 import com.ing.zknotary.common.util.PaddingWrapper
 import net.corda.core.contracts.Command
@@ -12,6 +13,7 @@ import net.corda.core.contracts.TimeWindow
 import net.corda.core.contracts.TransactionState
 import net.corda.core.crypto.DigestService
 import net.corda.core.crypto.SecureHash
+import net.corda.core.crypto.algorithm
 import net.corda.core.identity.Party
 import net.corda.core.node.services.AttachmentId
 import net.corda.core.serialization.CordaSerializable

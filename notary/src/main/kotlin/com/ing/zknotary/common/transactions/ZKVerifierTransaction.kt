@@ -1,5 +1,6 @@
 package com.ing.zknotary.common.transactions
 
+import com.ing.zknotary.common.crypto.BLAKE2S256
 import com.ing.zknotary.common.util.ComponentPaddingConfiguration
 import com.ing.zknotary.common.util.PaddingWrapper
 import net.corda.core.contracts.ComponentGroupEnum
@@ -7,6 +8,7 @@ import net.corda.core.contracts.StateRef
 import net.corda.core.contracts.TimeWindow
 import net.corda.core.crypto.DigestService
 import net.corda.core.crypto.SecureHash
+import net.corda.core.crypto.algorithm
 import net.corda.core.identity.Party
 import net.corda.core.serialization.CordaSerializable
 import java.security.PublicKey

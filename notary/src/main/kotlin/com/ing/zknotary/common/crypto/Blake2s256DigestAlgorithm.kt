@@ -24,3 +24,5 @@ class Blake2s256DigestAlgorithm : DigestAlgorithm {
 
 val blake2sAlgorithm = DigestAlgorithmFactory.registerClass(Blake2s256DigestAlgorithm::class.java.name)
 val DigestService.Companion.blake2s256: DigestService by lazy { DigestService(blake2sAlgorithm) }
+val SecureHash.Companion.BLAKE2S256: String
+    get() = blake2sAlgorithm
