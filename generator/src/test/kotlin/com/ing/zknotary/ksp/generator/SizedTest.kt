@@ -481,11 +481,13 @@ class SizedTest {
         val sizedAnnotationPath = System.getProperty("user.dir") +
             "/src/main/kotlin/com/ing/zknotary/annotations/Sized.kt"
         val fixturesPath = System.getProperty("user.dir") +
-            "/src/test/kotlin/com/ing/zknotary/ksp/generator/Fixtures.kt"
+            "/src/test/kotlin/com/ing/zknotary/ksp/generator/fixtures"
+
+        val fixturesFiles: Array<File>? = File(fixturesPath).listFiles { file -> file.extension == "kt" }
 
         fun buildSizedVersion(vararg simpleSource: SimpleSource): ClassLoader {
             val annotationSource = SourceFile.fromPath(File(sizedAnnotationPath))
-            val fixturesSource = SourceFile.fromPath(File(fixturesPath))
+            val fixturesSources = fixturesFiles?.map { SourceFile.fromPath(it) } ?: emptyList()
 
             val targetSources = simpleSource.map {
                 SourceFile.kotlin(
@@ -495,7 +497,7 @@ class SizedTest {
             }
 
             val compilation = KotlinCompilation().apply {
-                sources = targetSources + annotationSource + fixturesSource
+                sources = targetSources + annotationSource + fixturesSources
                 symbolProcessors = listOf(SizedProcessor())
             }
 
