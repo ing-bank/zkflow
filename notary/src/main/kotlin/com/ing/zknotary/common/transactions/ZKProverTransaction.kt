@@ -1,6 +1,7 @@
 package com.ing.zknotary.common.transactions
 
 import com.ing.zknotary.common.contracts.ZKCommandData
+import com.ing.zknotary.common.crypto.BLAKE2S256
 import com.ing.zknotary.common.util.ComponentPaddingConfiguration
 import com.ing.zknotary.common.util.PaddingWrapper
 import net.corda.core.contracts.Command
@@ -12,6 +13,7 @@ import net.corda.core.contracts.TimeWindow
 import net.corda.core.contracts.TransactionState
 import net.corda.core.crypto.DigestService
 import net.corda.core.crypto.SecureHash
+import net.corda.core.crypto.algorithm
 import net.corda.core.identity.Party
 import net.corda.core.node.services.AttachmentId
 import net.corda.core.serialization.CordaSerializable
@@ -50,7 +52,7 @@ class ZKProverTransaction internal constructor(
     val attachments: List<AttachmentId>,
 
     val componentGroupLeafDigestService: DigestService,
-    val nodeDigestService: DigestService = componentGroupLeafDigestService
+    val nodeDigestService: DigestService
 ) : NamedByZKMerkleTree {
     val componentPaddingConfiguration = command.value.paddingConfiguration
 
@@ -117,7 +119,15 @@ class ZKProverTransaction internal constructor(
 
         fun timeWindow() = originalTimeWindow.wrappedPad(TimeWindow.fromOnly(Instant.MIN))
 
-        fun networkParametersHash() = originalNetworkParametersHash.wrappedPad(SecureHash.zeroHash)
+        fun networkParametersHash(): PaddingWrapper<SecureHash> {
+            val zeroHash =
+                if (originalNetworkParametersHash == null) {
+                    SecureHash.zeroHashFor(SecureHash.BLAKE2S256)
+                } else {
+                    SecureHash.zeroHashFor(originalNetworkParametersHash.algorithm)
+                }
+            return originalNetworkParametersHash.wrappedPad(zeroHash)
+        }
 
         fun signers(): List<PaddingWrapper<PublicKey>> {
             val filler = filler(ComponentGroupEnum.SIGNERS_GROUP)

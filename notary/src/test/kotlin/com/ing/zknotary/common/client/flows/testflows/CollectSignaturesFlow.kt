@@ -5,6 +5,8 @@ import com.ing.zknotary.client.flows.ZKCollectSignaturesFlow
 import com.ing.zknotary.client.flows.ZKSignTransactionFlow
 import com.ing.zknotary.client.flows.signInitialZKTransaction
 import com.ing.zknotary.common.contracts.TestContract
+import com.ing.zknotary.common.crypto.blake2s256
+import com.ing.zknotary.common.crypto.pedersen
 import com.ing.zknotary.common.transactions.SignedZKProverTransaction
 import com.ing.zknotary.common.transactions.toZKProverTransaction
 import com.ing.zknotary.node.services.ServiceNames
@@ -12,8 +14,7 @@ import com.ing.zknotary.node.services.getCordaServiceFromConfig
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.StateAndContract
 import net.corda.core.contracts.requireThat
-import net.corda.core.crypto.BLAKE2s256DigestService
-import net.corda.core.crypto.PedersenDigestService
+import net.corda.core.crypto.DigestService
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
 import net.corda.core.flows.InitiatedBy
@@ -42,8 +43,8 @@ class TestCollectSignaturesFlow(val signers: List<Party> = emptyList()) : FlowLo
         val ptx = stx.tx.toZKProverTransaction(
             serviceHub,
             serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_VERIFIER_TX_STORAGE),
-            componentGroupLeafDigestService = BLAKE2s256DigestService,
-            nodeDigestService = PedersenDigestService
+            componentGroupLeafDigestService = DigestService.blake2s256,
+            nodeDigestService = DigestService.pedersen
         )
 
         val pztxSigs = signInitialZKTransaction(ptx)

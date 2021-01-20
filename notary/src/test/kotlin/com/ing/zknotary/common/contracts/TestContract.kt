@@ -1,5 +1,6 @@
 package com.ing.zknotary.common.contracts
 
+import com.ing.zknotary.common.crypto.BLAKE2S256
 import com.ing.zknotary.common.dactyloscopy.NonFingerprintable
 import com.ing.zknotary.common.util.ComponentPaddingConfiguration
 import com.ing.zknotary.common.zkp.CircuitMetaData
@@ -13,7 +14,6 @@ import net.corda.core.contracts.OwnableState
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.StateRef
 import net.corda.core.contracts.TransactionState
-import net.corda.core.crypto.BLAKE2s256DigestService
 import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.AbstractParty
 import net.corda.core.transactions.LedgerTransaction
@@ -53,7 +53,7 @@ class TestContract : Contract {
                 val stateAndRefFiller = ComponentPaddingConfiguration.Filler.StateAndRef(
                     StateAndRef(
                         TransactionState(emptyState, notary = ZKNulls.NULL_PARTY),
-                        StateRef(BLAKE2s256DigestService.zeroHash, 0)
+                        StateRef(SecureHash.zeroHashFor(SecureHash.BLAKE2S256), 0)
                     )
                 )
                 val pubKeyFiller = ComponentPaddingConfiguration.Filler.PublicKey(ZKNulls.NULL_PUBLIC_KEY)
@@ -62,7 +62,10 @@ class TestContract : Contract {
                     .inputs(0, stateAndRefFiller)
                     .outputs(2, transactionStateFiller)
                     .references(2, stateAndRefFiller)
-                    .attachments(2, ComponentPaddingConfiguration.Filler.SecureHash(SecureHash.zeroHash))
+                    .attachments(
+                        2,
+                        ComponentPaddingConfiguration.Filler.SecureHash(SecureHash.zeroHashFor(SecureHash.BLAKE2S256))
+                    )
                     .signers(2, pubKeyFiller)
                     .build()
             }
@@ -82,7 +85,7 @@ class TestContract : Contract {
                 val stateAndRefFiller = ComponentPaddingConfiguration.Filler.StateAndRef(
                     StateAndRef(
                         TransactionState(emptyState, notary = ZKNulls.NULL_PARTY),
-                        StateRef(BLAKE2s256DigestService.zeroHash, 0)
+                        StateRef(SecureHash.zeroHashFor(SecureHash.BLAKE2S256), 0)
                     )
                 )
 
@@ -92,7 +95,10 @@ class TestContract : Contract {
                     .inputs(2, stateAndRefFiller)
                     .outputs(2, transactionStateFiller)
                     .references(2, stateAndRefFiller)
-                    .attachments(2, ComponentPaddingConfiguration.Filler.SecureHash(SecureHash.zeroHash))
+                    .attachments(
+                        2,
+                        ComponentPaddingConfiguration.Filler.SecureHash(SecureHash.zeroHashFor(SecureHash.BLAKE2S256))
+                    )
                     .signers(2, pubKeyFiller)
                     .build()
             }

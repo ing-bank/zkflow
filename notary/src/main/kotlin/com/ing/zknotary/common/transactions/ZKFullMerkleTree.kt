@@ -44,6 +44,11 @@ class ZKFullMerkleTree(
     override val componentNonces: Map<Int, List<SecureHash>> by lazy {
         componentGroups.map { group ->
             group.groupIndex to group.components.mapIndexed { componentIndex, _ ->
+                /*
+                 * TODO: should be:
+                 * `componentGroupLeafDigestService.computeNonce(ptx.privacySalt, group.groupIndex, componentIndex)`
+                 * But can't use that until https://github.com/corda/corda/issues/6844 is fixed.
+                 */
                 componentGroupLeafDigestService.hash(
                     ptx.privacySalt.bytes + ByteBuffer.allocate(8)
                         .putInt(group.groupIndex).putInt(componentIndex).array()
