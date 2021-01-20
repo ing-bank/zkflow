@@ -123,7 +123,15 @@ class ZKVerifierTransaction(
 
         fun timeWindow() = originalTimeWindow.wrappedPad(TimeWindow.fromOnly(Instant.MIN))
 
-        fun networkParametersHash() = originalNetworkParametersHash.wrappedPad(SecureHash.zeroHash)
+        fun networkParametersHash(): PaddingWrapper<SecureHash> {
+            val zeroHash =
+                if (originalNetworkParametersHash == null) {
+                    SecureHash.zeroHashFor(SecureHash.BLAKE2S256)
+                } else {
+                    SecureHash.zeroHashFor(originalNetworkParametersHash.algorithm)
+                }
+            return originalNetworkParametersHash.wrappedPad(zeroHash)
+        }
 
         /**
          * Return appropriate size or fail.

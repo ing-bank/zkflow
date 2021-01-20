@@ -62,7 +62,10 @@ class TestContract : Contract {
                     .inputs(0, stateAndRefFiller)
                     .outputs(2, transactionStateFiller)
                     .references(2, stateAndRefFiller)
-                    .attachments(2, ComponentPaddingConfiguration.Filler.SecureHash(SecureHash.zeroHash))
+                    .attachments(
+                        2,
+                        ComponentPaddingConfiguration.Filler.SecureHash(SecureHash.zeroHashFor(SecureHash.BLAKE2S256))
+                    )
                     .signers(2, pubKeyFiller)
                     .build()
             }
@@ -92,7 +95,10 @@ class TestContract : Contract {
                     .inputs(2, stateAndRefFiller)
                     .outputs(2, transactionStateFiller)
                     .references(2, stateAndRefFiller)
-                    .attachments(2, ComponentPaddingConfiguration.Filler.SecureHash(SecureHash.zeroHash))
+                    .attachments(
+                        2,
+                        ComponentPaddingConfiguration.Filler.SecureHash(SecureHash.zeroHashFor(SecureHash.BLAKE2S256))
+                    )
                     .signers(2, pubKeyFiller)
                     .build()
             }
