@@ -75,12 +75,10 @@ class DescriptionContext(private val annotatedClasses: List<KSClassDeclaration>)
     }
 
     private fun processCallKClass(callAnnotation: KSAnnotation, returnType: ClassName): TypeDescriptor {
-        val imports = findImports(callAnnotation)
-
         val className = callAnnotation.findArgument<String>("defaultValueClass")
             ?: throw CodeException.InvalidAnnotationArgument(callAnnotation.shortName.asString(), "defaultValue")
 
-        return CallableKClassDescriptor(imports, className, returnType)
+        return CallableKClassDescriptor(className, returnType)
     }
 
     private fun findImports(callAnnotation: KSAnnotation): List<String> {

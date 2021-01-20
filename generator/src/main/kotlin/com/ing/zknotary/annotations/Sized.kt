@@ -25,7 +25,7 @@ annotation class Call(val imports: Array<String>, val code: String)
 
 @Retention(AnnotationRetention.SOURCE)
 @Target(AnnotationTarget.TYPE)
-annotation class CallDefaultValueClass(val imports: Array<String>, val defaultValueClass: String)
+annotation class CallDefaultValueClass(val defaultValueClass: String)
 
 interface DefaultValue {
     val default: Any

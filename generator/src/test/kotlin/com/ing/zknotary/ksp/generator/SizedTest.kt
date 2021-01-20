@@ -2,6 +2,7 @@ package com.ing.zknotary.ksp.generator
 
 import com.ing.zknotary.annotations.SizedString
 import com.ing.zknotary.ksp.SizedProcessor
+import com.ing.zknotary.ksp.generator.fixtures.PublicKeyDefaultValue
 import com.squareup.kotlinpoet.asTypeName
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
@@ -455,7 +456,6 @@ class SizedTest {
                 """
                 @Sized class CallKClassState(
                     val pubKey: @CallDefaultValueClass(
-                        arrayOf("${PublicKeyDefaultValue::class.qualifiedName}"),
                         "${PublicKeyDefaultValue::class.qualifiedName}"
                     ) ${PublicKey::class.qualifiedName}
                 )
