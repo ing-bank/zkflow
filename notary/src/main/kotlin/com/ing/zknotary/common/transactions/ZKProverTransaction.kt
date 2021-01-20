@@ -52,7 +52,7 @@ class ZKProverTransaction internal constructor(
     val attachments: List<AttachmentId>,
 
     val componentGroupLeafDigestService: DigestService,
-    val nodeDigestService: DigestService = componentGroupLeafDigestService
+    val nodeDigestService: DigestService
 ) : NamedByZKMerkleTree {
     val componentPaddingConfiguration = command.value.paddingConfiguration
 
