@@ -10,16 +10,9 @@ class PublicKeyDefaultValue : DefaultValue {
         get() {
             val insecureRandom = SecureRandom.getInstance("SHA1PRNG")
             insecureRandom.setSeed(ByteArray(1) { 1 })
-            return generate(insecureRandom)
+            val keygen = KeyPairGenerator.getInstance("DSA", "SUN")
+            keygen.initialize(1024, insecureRandom)
+            val keypair = keygen.genKeyPair()
+            return keypair.public
         }
-
-    val random: PublicKey
-        get() = generate(SecureRandom.getInstance("SHA1PRNG"))
-
-    private fun generate(random: SecureRandom): PublicKey {
-        val keygen = KeyPairGenerator.getInstance("DSA", "SUN")
-        keygen.initialize(1024, random)
-        val keypair = keygen.genKeyPair()
-        return keypair.public
-    }
 }

@@ -1,4 +1,4 @@
-package com.ing.zknotary.ksp.generator
+package com.ing.zknotary.ksp.generator.helpers
 
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
