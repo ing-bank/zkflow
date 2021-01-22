@@ -9,7 +9,7 @@ annotation class Sized
 /**
  *  Only applicable to collections, otherwise ignored.
  */
-annotation class FixToLength(val size: Int = -1)
+annotation class FixToLength(val size: Int)
 
 @Retention(AnnotationRetention.SOURCE)
 @Target(AnnotationTarget.TYPE)
@@ -40,7 +40,7 @@ class SizedList<T> private constructor(val list: List<T>, val originalSize: Int)
                 list = if (list.size <= n) {
                     list + List(n - list.size) { default }
                 } else {
-                    error("Actual size ${list.size} of the list exceeds expected size $n")
+                    throw ActualSizeExceedsFixedSize(list.size, n)
                 },
                 originalSize = list.size
             )
@@ -67,3 +67,7 @@ class SizedString private constructor(val string: String, val originalLength: In
         originalLength = string.length
     )
 }
+
+class ActualSizeExceedsFixedSize(actual: Int, expected: Int) : IllegalStateException(
+    "Actual size $actual of the list exceeds expected size $expected"
+)
