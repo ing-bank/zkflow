@@ -6,9 +6,11 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.time.Duration
 
+@Tag("slow")
 class BigDecimalMinusTest {
     companion object {
         private val circuitFolder: String = BigDecimalMinusTest::class.java.getResource("/BigDecimalMinusTest").path
@@ -16,8 +18,8 @@ class BigDecimalMinusTest {
             circuitFolder,
             artifactFolder = circuitFolder,
             buildTimeout = Duration.ofSeconds(5),
-            setupTimeout = Duration.ofSeconds(300),
-            provingTimeout = Duration.ofSeconds(300),
+            setupTimeout = Duration.ofSeconds(1800),
+            provingTimeout = Duration.ofSeconds(1800),
             verificationTimeout = Duration.ofSeconds(1)
         )
 

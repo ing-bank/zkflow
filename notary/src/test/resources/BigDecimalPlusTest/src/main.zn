@@ -199,18 +199,8 @@ impl BigDecimal {
             }
         }
     }
-
-    fn minus(this: BigDecimal, that: BigDecimal) -> BigDecimal {
-        let negated = BigDecimal {
-            sign: -that.sign,
-            integer: that.integer,
-            fraction: that.fraction
-        };
-
-        plus(this, negated)
-    }
 }
 
 fn main(left: BigDecimal, right: BigDecimal) -> BigDecimal {
-    BigDecimal::minus(left, right)
+    BigDecimal::plus(left, right)
 }
