@@ -9,6 +9,7 @@ import java.time.Duration
 class BigDecimalEqualsTest {
     companion object {
         private val circuitFolder: String = BigDecimalEqualsTest::class.java.getResource("/BigDecimalEqualsTest").path
+        private val sharedModules: Array<String> = arrayOf(BigDecimalEqualsTest::class.java.getResource("/shared/big_decimal.zn").path.toString())
         private val zincZKService = ZincZKService(
             circuitFolder,
             artifactFolder = circuitFolder,
@@ -21,6 +22,7 @@ class BigDecimalEqualsTest {
         @BeforeAll
         @JvmStatic
         fun setup() {
+            composeTempCircuit(circuitFolder, sharedModules)
             zincZKService.setup()
         }
 
@@ -53,8 +55,8 @@ class BigDecimalEqualsTest {
         rightFraction[127] = 4
         rightFraction[126] = 2
 
-        val input = "{\"left\": ${toZincString(leftSign, leftInteger, leftFraction)}" +
-            ",\"right\": ${toZincString(rightSign, rightInteger, rightFraction)}}"
+        val input = "{\"left\": ${toBigDecimalJSON(leftSign, leftInteger, leftFraction)}" +
+            ",\"right\": ${toBigDecimalJSON(rightSign, rightInteger, rightFraction)}}"
 
         val output = zincZKService.prove(input.toByteArray())
         zincZKService.verify(output, "\"1\"".toByteArray())
@@ -81,8 +83,8 @@ class BigDecimalEqualsTest {
         rightFraction[127] = 4
         rightFraction[126] = 2
 
-        val input = "{\"left\": ${toZincString(leftSign, leftInteger, leftFraction)}" +
-            ",\"right\": ${toZincString(rightSign, rightInteger, rightFraction)}}"
+        val input = "{\"left\": ${toBigDecimalJSON(leftSign, leftInteger, leftFraction)}" +
+            ",\"right\": ${toBigDecimalJSON(rightSign, rightInteger, rightFraction)}}"
 
         val output = zincZKService.prove(input.toByteArray())
         zincZKService.verify(output, "\"1\"".toByteArray())
@@ -111,8 +113,8 @@ class BigDecimalEqualsTest {
         rightFraction[126] = 2
         rightFraction[125] = 1
 
-        val input = "{\"left\": ${toZincString(leftSign, leftInteger, leftFraction)}" +
-            ",\"right\": ${toZincString(rightSign, rightInteger, rightFraction)}}"
+        val input = "{\"left\": ${toBigDecimalJSON(leftSign, leftInteger, leftFraction)}" +
+            ",\"right\": ${toBigDecimalJSON(rightSign, rightInteger, rightFraction)}}"
 
         val output = zincZKService.prove(input.toByteArray())
         zincZKService.verify(output, "\"1\"".toByteArray())
@@ -140,13 +142,10 @@ class BigDecimalEqualsTest {
         rightFraction[127] = 4
         rightFraction[126] = 2
 
-        val input = "{\"left\": ${toZincString(leftSign, leftInteger, leftFraction)}" +
-            ",\"right\": ${toZincString(rightSign, rightInteger, rightFraction)}}"
+        val input = "{\"left\": ${toBigDecimalJSON(leftSign, leftInteger, leftFraction)}" +
+            ",\"right\": ${toBigDecimalJSON(rightSign, rightInteger, rightFraction)}}"
 
         val output = zincZKService.prove(input.toByteArray())
         zincZKService.verify(output, "\"0\"".toByteArray())
     }
-
-    private fun toZincString(sign: Byte, integer: ByteArray, fraction: ByteArray) =
-        "{\"sign\": \"$sign\", \"integer\": [${integer.joinToString { "\"${it}\"" }}], \"fraction\": [${fraction.joinToString { "\"${it}\"" }}]}"
 }

@@ -10,6 +10,7 @@ class DoubleEqualsTest {
 
     companion object {
         private val circuitFolder: String = DoubleEqualsTest::class.java.getResource("/DoubleEqualsTest").path
+        private val sharedModules: Array<String> = arrayOf(DoubleEqualsTest::class.java.getResource("/shared/double.zn").path.toString())
         private val zincZKService = ZincZKService(
             circuitFolder,
             artifactFolder = circuitFolder,
@@ -22,6 +23,7 @@ class DoubleEqualsTest {
         @BeforeAll
         @JvmStatic
         fun setup() {
+            composeTempCircuit(circuitFolder, sharedModules)
             zincZKService.setup()
         }
 
@@ -44,8 +46,8 @@ class DoubleEqualsTest {
         val rightExponent: Short = 1
         val rightMagnitude: Long = 10
 
-        val input = "{\"left\": ${toZincString(leftSign, leftExponent, leftMagnitude)}" +
-            ",\"right\": ${toZincString(rightSign, rightExponent, rightMagnitude)}}"
+        val input = "{\"left\": ${toDoubleJSON(leftSign, leftExponent, leftMagnitude)}" +
+            ",\"right\": ${toDoubleJSON(rightSign, rightExponent, rightMagnitude)}}"
 
         val output = zincZKService.prove(input.toByteArray())
         zincZKService.verify(output, "\"1\"".toByteArray())
@@ -63,8 +65,8 @@ class DoubleEqualsTest {
         val rightExponent: Short = 0
         val rightMagnitude: Long = 10
 
-        val input = "{\"left\": ${toZincString(leftSign, leftExponent, leftMagnitude)}" +
-            ",\"right\": ${toZincString(rightSign, rightExponent, rightMagnitude)}}"
+        val input = "{\"left\": ${toDoubleJSON(leftSign, leftExponent, leftMagnitude)}" +
+            ",\"right\": ${toDoubleJSON(rightSign, rightExponent, rightMagnitude)}}"
 
         val output = zincZKService.prove(input.toByteArray())
         zincZKService.verify(output, "\"1\"".toByteArray())
@@ -82,8 +84,8 @@ class DoubleEqualsTest {
         val rightExponent: Short = 1
         val rightMagnitude: Long = 7
 
-        val input = "{\"left\": ${toZincString(leftSign, leftExponent, leftMagnitude)}" +
-            ",\"right\": ${toZincString(rightSign, rightExponent, rightMagnitude)}}"
+        val input = "{\"left\": ${toDoubleJSON(leftSign, leftExponent, leftMagnitude)}" +
+            ",\"right\": ${toDoubleJSON(rightSign, rightExponent, rightMagnitude)}}"
 
         val output = zincZKService.prove(input.toByteArray())
         zincZKService.verify(output, "\"1\"".toByteArray())
@@ -101,13 +103,10 @@ class DoubleEqualsTest {
         val rightExponent: Short = 1
         val rightMagnitude: Long = 10
 
-        val input = "{\"left\": ${toZincString(leftSign, leftExponent, leftMagnitude)}" +
-            ",\"right\": ${toZincString(rightSign, rightExponent, rightMagnitude)}}"
+        val input = "{\"left\": ${toDoubleJSON(leftSign, leftExponent, leftMagnitude)}" +
+            ",\"right\": ${toDoubleJSON(rightSign, rightExponent, rightMagnitude)}}"
 
         val output = zincZKService.prove(input.toByteArray())
         zincZKService.verify(output, "\"0\"".toByteArray())
     }
-
-    private fun toZincString(sign: Byte, exponent: Short, magnitude: Long) =
-        "{\"exponent\": \"${exponent}\",\"magnitude\": \"${magnitude}\",\"sign\": \"${sign}\"}"
 }

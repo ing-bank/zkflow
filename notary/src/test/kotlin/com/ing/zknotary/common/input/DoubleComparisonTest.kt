@@ -10,6 +10,7 @@ class DoubleComparisonTest {
 
     companion object {
         private val circuitFolder: String = DoubleComparisonTest::class.java.getResource("/DoubleComparisonTest").path
+        private val sharedModules: Array<String> = arrayOf(DoubleComparisonTest::class.java.getResource("/shared/double.zn").path.toString())
         private val zincZKService = ZincZKService(
             circuitFolder,
             artifactFolder = circuitFolder,
@@ -22,6 +23,7 @@ class DoubleComparisonTest {
         @BeforeAll
         @JvmStatic
         fun setup() {
+            composeTempCircuit(circuitFolder, sharedModules)
             zincZKService.setup()
         }
 
@@ -44,8 +46,8 @@ class DoubleComparisonTest {
         val rightExponent: Short = 0
         val rightMagnitude: Long = 0
 
-        val input = "{\"left\": ${toZincString(leftSign, leftExponent, leftMagnitude)}" +
-            ",\"right\": ${toZincString(rightSign, rightExponent, rightMagnitude)}}"
+        val input = "{\"left\": ${toDoubleJSON(leftSign, leftExponent, leftMagnitude)}" +
+            ",\"right\": ${toDoubleJSON(rightSign, rightExponent, rightMagnitude)}}"
 
         val output = zincZKService.prove(input.toByteArray())
         zincZKService.verify(output, "\"0\"".toByteArray())
@@ -63,8 +65,8 @@ class DoubleComparisonTest {
         val rightExponent: Short = 0
         val rightMagnitude: Long = 0
 
-        val input = "{\"left\": ${toZincString(leftSign, leftExponent, leftMagnitude)}" +
-            ",\"right\": ${toZincString(rightSign, rightExponent, rightMagnitude)}}"
+        val input = "{\"left\": ${toDoubleJSON(leftSign, leftExponent, leftMagnitude)}" +
+            ",\"right\": ${toDoubleJSON(rightSign, rightExponent, rightMagnitude)}}"
 
         val output = zincZKService.prove(input.toByteArray())
         zincZKService.verify(output, "\"1\"".toByteArray())
@@ -82,8 +84,8 @@ class DoubleComparisonTest {
         val rightExponent: Short = 0
         val rightMagnitude: Long = 0
 
-        val input = "{\"left\": ${toZincString(leftSign, leftExponent, leftMagnitude)}" +
-            ",\"right\": ${toZincString(rightSign, rightExponent, rightMagnitude)}}"
+        val input = "{\"left\": ${toDoubleJSON(leftSign, leftExponent, leftMagnitude)}" +
+            ",\"right\": ${toDoubleJSON(rightSign, rightExponent, rightMagnitude)}}"
 
         val output = zincZKService.prove(input.toByteArray())
         zincZKService.verify(output, "\"-1\"".toByteArray())
@@ -101,8 +103,8 @@ class DoubleComparisonTest {
         val rightExponent: Short = 5
         val rightMagnitude: Long = 123456
 
-        val input = "{\"left\": ${toZincString(leftSign, leftExponent, leftMagnitude)}" +
-            ",\"right\": ${toZincString(rightSign, rightExponent, rightMagnitude)}}"
+        val input = "{\"left\": ${toDoubleJSON(leftSign, leftExponent, leftMagnitude)}" +
+            ",\"right\": ${toDoubleJSON(rightSign, rightExponent, rightMagnitude)}}"
 
         val output = zincZKService.prove(input.toByteArray())
         zincZKService.verify(output, "\"1\"".toByteArray())
@@ -120,8 +122,8 @@ class DoubleComparisonTest {
         val rightExponent: Short = 10
         val rightMagnitude: Long = 2
 
-        val input = "{\"left\": ${toZincString(leftSign, leftExponent, leftMagnitude)}" +
-            ",\"right\": ${toZincString(rightSign, rightExponent, rightMagnitude)}}"
+        val input = "{\"left\": ${toDoubleJSON(leftSign, leftExponent, leftMagnitude)}" +
+            ",\"right\": ${toDoubleJSON(rightSign, rightExponent, rightMagnitude)}}"
 
         val output = zincZKService.prove(input.toByteArray())
         zincZKService.verify(output, "\"-1\"".toByteArray())
@@ -139,8 +141,8 @@ class DoubleComparisonTest {
         val rightExponent: Short = 5
         val rightMagnitude: Long = 123456
 
-        val input = "{\"left\": ${toZincString(leftSign, leftExponent, leftMagnitude)}" +
-            ",\"right\": ${toZincString(rightSign, rightExponent, rightMagnitude)}}"
+        val input = "{\"left\": ${toDoubleJSON(leftSign, leftExponent, leftMagnitude)}" +
+            ",\"right\": ${toDoubleJSON(rightSign, rightExponent, rightMagnitude)}}"
 
         val output = zincZKService.prove(input.toByteArray())
         zincZKService.verify(output, "\"-1\"".toByteArray())
@@ -158,8 +160,8 @@ class DoubleComparisonTest {
         val rightExponent: Short = 10
         val rightMagnitude: Long = 2
 
-        val input = "{\"left\": ${toZincString(leftSign, leftExponent, leftMagnitude)}" +
-            ",\"right\": ${toZincString(rightSign, rightExponent, rightMagnitude)}}"
+        val input = "{\"left\": ${toDoubleJSON(leftSign, leftExponent, leftMagnitude)}" +
+            ",\"right\": ${toDoubleJSON(rightSign, rightExponent, rightMagnitude)}}"
 
         val output = zincZKService.prove(input.toByteArray())
         zincZKService.verify(output, "\"1\"".toByteArray())
@@ -177,8 +179,8 @@ class DoubleComparisonTest {
         val rightExponent: Short = 5
         val rightMagnitude: Long = 123456
 
-        val input = "{\"left\": ${toZincString(leftSign, leftExponent, leftMagnitude)}" +
-            ",\"right\": ${toZincString(rightSign, rightExponent, rightMagnitude)}}"
+        val input = "{\"left\": ${toDoubleJSON(leftSign, leftExponent, leftMagnitude)}" +
+            ",\"right\": ${toDoubleJSON(rightSign, rightExponent, rightMagnitude)}}"
 
         val output = zincZKService.prove(input.toByteArray())
         zincZKService.verify(output, "\"1\"".toByteArray())
@@ -196,8 +198,8 @@ class DoubleComparisonTest {
         val rightExponent: Short = 21
         val rightMagnitude: Long = 2
 
-        val input = "{\"left\": ${toZincString(leftSign, leftExponent, leftMagnitude)}" +
-            ",\"right\": ${toZincString(rightSign, rightExponent, rightMagnitude)}}"
+        val input = "{\"left\": ${toDoubleJSON(leftSign, leftExponent, leftMagnitude)}" +
+            ",\"right\": ${toDoubleJSON(rightSign, rightExponent, rightMagnitude)}}"
 
         val output = zincZKService.prove(input.toByteArray())
         zincZKService.verify(output, "\"-1\"".toByteArray())
@@ -215,8 +217,8 @@ class DoubleComparisonTest {
         val rightExponent: Short = 5
         val rightMagnitude: Long = 123456
 
-        val input = "{\"left\": ${toZincString(leftSign, leftExponent, leftMagnitude)}" +
-            ",\"right\": ${toZincString(rightSign, rightExponent, rightMagnitude)}}"
+        val input = "{\"left\": ${toDoubleJSON(leftSign, leftExponent, leftMagnitude)}" +
+            ",\"right\": ${toDoubleJSON(rightSign, rightExponent, rightMagnitude)}}"
 
         val output = zincZKService.prove(input.toByteArray())
         zincZKService.verify(output, "\"-1\"".toByteArray())
@@ -234,8 +236,8 @@ class DoubleComparisonTest {
         val rightExponent: Short = 21
         val rightMagnitude: Long = 2
 
-        val input = "{\"left\": ${toZincString(leftSign, leftExponent, leftMagnitude)}" +
-            ",\"right\": ${toZincString(rightSign, rightExponent, rightMagnitude)}}"
+        val input = "{\"left\": ${toDoubleJSON(leftSign, leftExponent, leftMagnitude)}" +
+            ",\"right\": ${toDoubleJSON(rightSign, rightExponent, rightMagnitude)}}"
 
         val output = zincZKService.prove(input.toByteArray())
         zincZKService.verify(output, "\"1\"".toByteArray())
@@ -253,8 +255,8 @@ class DoubleComparisonTest {
         val rightExponent: Short = 0
         val rightMagnitude: Long = 10
 
-        val input = "{\"left\": ${toZincString(leftSign, leftExponent, leftMagnitude)}" +
-            ",\"right\": ${toZincString(rightSign, rightExponent, rightMagnitude)}}"
+        val input = "{\"left\": ${toDoubleJSON(leftSign, leftExponent, leftMagnitude)}" +
+            ",\"right\": ${toDoubleJSON(rightSign, rightExponent, rightMagnitude)}}"
 
         val output = zincZKService.prove(input.toByteArray())
         zincZKService.verify(output, "\"1\"".toByteArray())
@@ -272,13 +274,10 @@ class DoubleComparisonTest {
         val rightExponent: Short = 0
         val rightMagnitude: Long = 11
 
-        val input = "{\"left\": ${toZincString(leftSign, leftExponent, leftMagnitude)}" +
-            ",\"right\": ${toZincString(rightSign, rightExponent, rightMagnitude)}}"
+        val input = "{\"left\": ${toDoubleJSON(leftSign, leftExponent, leftMagnitude)}" +
+            ",\"right\": ${toDoubleJSON(rightSign, rightExponent, rightMagnitude)}}"
 
         val output = zincZKService.prove(input.toByteArray())
         zincZKService.verify(output, "\"-1\"".toByteArray())
     }
-
-    private fun toZincString(sign: Byte, exponent: Short, magnitude: Long) =
-        "{\"exponent\": \"${exponent}\",\"magnitude\": \"${magnitude}\",\"sign\": \"${sign}\"}"
 }

@@ -14,6 +14,7 @@ import java.time.Duration
 class BigDecimalPlusTest {
     companion object {
         private val circuitFolder: String = BigDecimalPlusTest::class.java.getResource("/BigDecimalPlusTest").path
+        private val sharedModules: Array<String> = arrayOf(BigDecimalPlusTest::class.java.getResource("/shared/big_decimal.zn").path.toString())
         private val zincZKService = ZincZKService(
             circuitFolder,
             artifactFolder = circuitFolder,
@@ -26,6 +27,7 @@ class BigDecimalPlusTest {
         @BeforeAll
         @JvmStatic
         fun setup() {
+            composeTempCircuit(circuitFolder, sharedModules)
             zincZKService.setup()
         }
 
@@ -48,11 +50,11 @@ class BigDecimalPlusTest {
         val rightInteger = ByteArray(1024)
         val rightFraction = ByteArray(128)
 
-        val input = "{\"left\": ${toZincString(leftSign, leftInteger, leftFraction)}" +
-            ",\"right\": ${toZincString(rightSign, rightInteger, rightFraction)}}"
+        val input = "{\"left\": ${toBigDecimalJSON(leftSign, leftInteger, leftFraction)}" +
+            ",\"right\": ${toBigDecimalJSON(rightSign, rightInteger, rightFraction)}}"
 
         val output = zincZKService.prove(input.toByteArray())
-        zincZKService.verify(output, toZincString(leftSign, leftInteger, leftFraction).toByteArray())
+        zincZKService.verify(output, toBigDecimalJSON(leftSign, leftInteger, leftFraction).toByteArray())
     }
 
     @Test
@@ -69,11 +71,11 @@ class BigDecimalPlusTest {
         val rightInteger = ByteArray(1024)
         val rightFraction = ByteArray(128)
 
-        val input = "{\"left\": ${toZincString(leftSign, leftInteger, leftFraction)}" +
-            ",\"right\": ${toZincString(rightSign, rightInteger, rightFraction)}}"
+        val input = "{\"left\": ${toBigDecimalJSON(leftSign, leftInteger, leftFraction)}" +
+            ",\"right\": ${toBigDecimalJSON(rightSign, rightInteger, rightFraction)}}"
 
         val output = zincZKService.prove(input.toByteArray())
-        zincZKService.verify(output, toZincString(leftSign, leftInteger, leftFraction).toByteArray())
+        zincZKService.verify(output, toBigDecimalJSON(leftSign, leftInteger, leftFraction).toByteArray())
     }
 
     @Test
@@ -90,11 +92,11 @@ class BigDecimalPlusTest {
         val rightInteger = ByteArray(1024)
         val rightFraction = ByteArray(128)
 
-        val input = "{\"left\": ${toZincString(leftSign, leftInteger, leftFraction)}" +
-            ",\"right\": ${toZincString(rightSign, rightInteger, rightFraction)}}"
+        val input = "{\"left\": ${toBigDecimalJSON(leftSign, leftInteger, leftFraction)}" +
+            ",\"right\": ${toBigDecimalJSON(rightSign, rightInteger, rightFraction)}}"
 
         val output = zincZKService.prove(input.toByteArray())
-        zincZKService.verify(output, toZincString(leftSign, leftInteger, leftFraction).toByteArray())
+        zincZKService.verify(output, toBigDecimalJSON(leftSign, leftInteger, leftFraction).toByteArray())
     }
 
     @Test
@@ -111,11 +113,11 @@ class BigDecimalPlusTest {
         val rightFraction = ByteArray(128)
         rightFraction[0] = 1
 
-        val input = "{\"left\": ${toZincString(leftSign, leftInteger, leftFraction)}" +
-            ",\"right\": ${toZincString(rightSign, rightInteger, rightFraction)}}"
+        val input = "{\"left\": ${toBigDecimalJSON(leftSign, leftInteger, leftFraction)}" +
+            ",\"right\": ${toBigDecimalJSON(rightSign, rightInteger, rightFraction)}}"
 
         val output = zincZKService.prove(input.toByteArray())
-        zincZKService.verify(output, toZincString(rightSign, rightInteger, rightFraction).toByteArray())
+        zincZKService.verify(output, toBigDecimalJSON(rightSign, rightInteger, rightFraction).toByteArray())
     }
 
     @Test
@@ -132,11 +134,11 @@ class BigDecimalPlusTest {
         val rightFraction = ByteArray(128)
         rightFraction[0] = 1
 
-        val input = "{\"left\": ${toZincString(leftSign, leftInteger, leftFraction)}" +
-            ",\"right\": ${toZincString(rightSign, rightInteger, rightFraction)}}"
+        val input = "{\"left\": ${toBigDecimalJSON(leftSign, leftInteger, leftFraction)}" +
+            ",\"right\": ${toBigDecimalJSON(rightSign, rightInteger, rightFraction)}}"
 
         val output = zincZKService.prove(input.toByteArray())
-        zincZKService.verify(output, toZincString(rightSign, rightInteger, rightFraction).toByteArray())
+        zincZKService.verify(output, toBigDecimalJSON(rightSign, rightInteger, rightFraction).toByteArray())
     }
 
     @Test
@@ -155,11 +157,11 @@ class BigDecimalPlusTest {
         val rightFraction = ByteArray(128)
         rightFraction[0] = 1
 
-        val input = "{\"left\": ${toZincString(leftSign, leftInteger, leftFraction)}" +
-            ",\"right\": ${toZincString(rightSign, rightInteger, rightFraction)}}"
+        val input = "{\"left\": ${toBigDecimalJSON(leftSign, leftInteger, leftFraction)}" +
+            ",\"right\": ${toBigDecimalJSON(rightSign, rightInteger, rightFraction)}}"
 
         val output = zincZKService.prove(input.toByteArray())
-        zincZKService.verify(output, toZincString(0, ByteArray(1024), ByteArray(128)).toByteArray())
+        zincZKService.verify(output, toBigDecimalJSON(0, ByteArray(1024), ByteArray(128)).toByteArray())
     }
 
     @Test
@@ -178,11 +180,11 @@ class BigDecimalPlusTest {
         val rightFraction = ByteArray(128)
         rightFraction[0] = 1
 
-        val input = "{\"left\": ${toZincString(leftSign, leftInteger, leftFraction)}" +
-            ",\"right\": ${toZincString(rightSign, rightInteger, rightFraction)}}"
+        val input = "{\"left\": ${toBigDecimalJSON(leftSign, leftInteger, leftFraction)}" +
+            ",\"right\": ${toBigDecimalJSON(rightSign, rightInteger, rightFraction)}}"
 
         val output = zincZKService.prove(input.toByteArray())
-        zincZKService.verify(output, toZincString(0, ByteArray(1024), ByteArray(128)).toByteArray())
+        zincZKService.verify(output, toBigDecimalJSON(0, ByteArray(1024), ByteArray(128)).toByteArray())
     }
 
     @Test
@@ -213,11 +215,11 @@ class BigDecimalPlusTest {
         fraction[1] = 2
         fraction[2] = 3
 
-        val input = "{\"left\": ${toZincString(leftSign, leftInteger, leftFraction)}" +
-            ",\"right\": ${toZincString(rightSign, rightInteger, rightFraction)}}"
+        val input = "{\"left\": ${toBigDecimalJSON(leftSign, leftInteger, leftFraction)}" +
+            ",\"right\": ${toBigDecimalJSON(rightSign, rightInteger, rightFraction)}}"
 
         val output = zincZKService.prove(input.toByteArray())
-        zincZKService.verify(output, toZincString(sign, integer, fraction).toByteArray())
+        zincZKService.verify(output, toBigDecimalJSON(sign, integer, fraction).toByteArray())
     }
 
     @Test
@@ -248,11 +250,11 @@ class BigDecimalPlusTest {
         fraction[1] = 2
         fraction[2] = 3
 
-        val input = "{\"left\": ${toZincString(leftSign, leftInteger, leftFraction)}" +
-            ",\"right\": ${toZincString(rightSign, rightInteger, rightFraction)}}"
+        val input = "{\"left\": ${toBigDecimalJSON(leftSign, leftInteger, leftFraction)}" +
+            ",\"right\": ${toBigDecimalJSON(rightSign, rightInteger, rightFraction)}}"
 
         val output = zincZKService.prove(input.toByteArray())
-        zincZKService.verify(output, toZincString(sign, integer, fraction).toByteArray())
+        zincZKService.verify(output, toBigDecimalJSON(sign, integer, fraction).toByteArray())
     }
 
     @Test
@@ -283,11 +285,11 @@ class BigDecimalPlusTest {
         fraction[1] = 2
         fraction[2] = 1
 
-        val input = "{\"left\": ${toZincString(leftSign, leftInteger, leftFraction)}" +
-            ",\"right\": ${toZincString(rightSign, rightInteger, rightFraction)}}"
+        val input = "{\"left\": ${toBigDecimalJSON(leftSign, leftInteger, leftFraction)}" +
+            ",\"right\": ${toBigDecimalJSON(rightSign, rightInteger, rightFraction)}}"
 
         val output = zincZKService.prove(input.toByteArray())
-        zincZKService.verify(output, toZincString(sign, integer, fraction).toByteArray())
+        zincZKService.verify(output, toBigDecimalJSON(sign, integer, fraction).toByteArray())
     }
 
     @Test
@@ -318,11 +320,11 @@ class BigDecimalPlusTest {
         fraction[1] = 2
         fraction[2] = 1
 
-        val input = "{\"left\": ${toZincString(leftSign, leftInteger, leftFraction)}" +
-            ",\"right\": ${toZincString(rightSign, rightInteger, rightFraction)}}"
+        val input = "{\"left\": ${toBigDecimalJSON(leftSign, leftInteger, leftFraction)}" +
+            ",\"right\": ${toBigDecimalJSON(rightSign, rightInteger, rightFraction)}}"
 
         val output = zincZKService.prove(input.toByteArray())
-        zincZKService.verify(output, toZincString(sign, integer, fraction).toByteArray())
+        zincZKService.verify(output, toBigDecimalJSON(sign, integer, fraction).toByteArray())
     }
 
     @Test
@@ -347,11 +349,11 @@ class BigDecimalPlusTest {
         val fraction = ByteArray(128)
         fraction[0] = 8
 
-        val input = "{\"left\": ${toZincString(leftSign, leftInteger, leftFraction)}" +
-            ",\"right\": ${toZincString(rightSign, rightInteger, rightFraction)}}"
+        val input = "{\"left\": ${toBigDecimalJSON(leftSign, leftInteger, leftFraction)}" +
+            ",\"right\": ${toBigDecimalJSON(rightSign, rightInteger, rightFraction)}}"
 
         val output = zincZKService.prove(input.toByteArray())
-        zincZKService.verify(output, toZincString(sign, integer, fraction).toByteArray())
+        zincZKService.verify(output, toBigDecimalJSON(sign, integer, fraction).toByteArray())
     }
 
     @Test
@@ -376,11 +378,11 @@ class BigDecimalPlusTest {
         val fraction = ByteArray(128)
         fraction[0] = 8
 
-        val input = "{\"left\": ${toZincString(leftSign, leftInteger, leftFraction)}" +
-            ",\"right\": ${toZincString(rightSign, rightInteger, rightFraction)}}"
+        val input = "{\"left\": ${toBigDecimalJSON(leftSign, leftInteger, leftFraction)}" +
+            ",\"right\": ${toBigDecimalJSON(rightSign, rightInteger, rightFraction)}}"
 
         val output = zincZKService.prove(input.toByteArray())
-        zincZKService.verify(output, toZincString(sign, integer, fraction).toByteArray())
+        zincZKService.verify(output, toBigDecimalJSON(sign, integer, fraction).toByteArray())
     }
 
     @Test
@@ -404,11 +406,11 @@ class BigDecimalPlusTest {
         val fraction = ByteArray(128)
         fraction[0] = 9
 
-        val input = "{\"left\": ${toZincString(leftSign, leftInteger, leftFraction)}" +
-            ",\"right\": ${toZincString(rightSign, rightInteger, rightFraction)}}"
+        val input = "{\"left\": ${toBigDecimalJSON(leftSign, leftInteger, leftFraction)}" +
+            ",\"right\": ${toBigDecimalJSON(rightSign, rightInteger, rightFraction)}}"
 
         val output = zincZKService.prove(input.toByteArray())
-        zincZKService.verify(output, toZincString(sign, integer, fraction).toByteArray())
+        zincZKService.verify(output, toBigDecimalJSON(sign, integer, fraction).toByteArray())
     }
 
     @Test
@@ -433,11 +435,11 @@ class BigDecimalPlusTest {
         val fraction = ByteArray(128)
         fraction[0] = 7
 
-        val input = "{\"left\": ${toZincString(leftSign, leftInteger, leftFraction)}" +
-            ",\"right\": ${toZincString(rightSign, rightInteger, rightFraction)}}"
+        val input = "{\"left\": ${toBigDecimalJSON(leftSign, leftInteger, leftFraction)}" +
+            ",\"right\": ${toBigDecimalJSON(rightSign, rightInteger, rightFraction)}}"
 
         val output = zincZKService.prove(input.toByteArray())
-        zincZKService.verify(output, toZincString(sign, integer, fraction).toByteArray())
+        zincZKService.verify(output, toBigDecimalJSON(sign, integer, fraction).toByteArray())
     }
 
     @Test
@@ -464,11 +466,11 @@ class BigDecimalPlusTest {
         integer[1021] = 1
         val fraction = ByteArray(128)
 
-        val input = "{\"left\": ${toZincString(leftSign, leftInteger, leftFraction)}" +
-            ",\"right\": ${toZincString(rightSign, rightInteger, rightFraction)}}"
+        val input = "{\"left\": ${toBigDecimalJSON(leftSign, leftInteger, leftFraction)}" +
+            ",\"right\": ${toBigDecimalJSON(rightSign, rightInteger, rightFraction)}}"
 
         val output = zincZKService.prove(input.toByteArray())
-        zincZKService.verify(output, toZincString(sign, integer, fraction).toByteArray())
+        zincZKService.verify(output, toBigDecimalJSON(sign, integer, fraction).toByteArray())
     }
 
     @Test
@@ -495,11 +497,11 @@ class BigDecimalPlusTest {
         val fraction = ByteArray(128)
         fraction[0] = 9
 
-        val input = "{\"left\": ${toZincString(leftSign, leftInteger, leftFraction)}" +
-            ",\"right\": ${toZincString(rightSign, rightInteger, rightFraction)}}"
+        val input = "{\"left\": ${toBigDecimalJSON(leftSign, leftInteger, leftFraction)}" +
+            ",\"right\": ${toBigDecimalJSON(rightSign, rightInteger, rightFraction)}}"
 
         val output = zincZKService.prove(input.toByteArray())
-        zincZKService.verify(output, toZincString(sign, integer, fraction).toByteArray())
+        zincZKService.verify(output, toBigDecimalJSON(sign, integer, fraction).toByteArray())
     }
 
     @Test
@@ -517,8 +519,8 @@ class BigDecimalPlusTest {
             rightInteger[0] = 9
             val rightFraction = ByteArray(128)
 
-            val input = "{\"left\": ${toZincString(leftSign, leftInteger, leftFraction)}" +
-                ",\"right\": ${toZincString(rightSign, rightInteger, rightFraction)}}"
+            val input = "{\"left\": ${toBigDecimalJSON(leftSign, leftInteger, leftFraction)}" +
+                ",\"right\": ${toBigDecimalJSON(rightSign, rightInteger, rightFraction)}}"
 
             zincZKService.prove(input.toByteArray())
         }
@@ -544,8 +546,8 @@ class BigDecimalPlusTest {
             rightInteger[0] = 9
             val rightFraction = ByteArray(128)
 
-            val input = "{\"left\": ${toZincString(leftSign, leftInteger, leftFraction)}" +
-                ",\"right\": ${toZincString(rightSign, rightInteger, rightFraction)}}"
+            val input = "{\"left\": ${toBigDecimalJSON(leftSign, leftInteger, leftFraction)}" +
+                ",\"right\": ${toBigDecimalJSON(rightSign, rightInteger, rightFraction)}}"
 
             zincZKService.prove(input.toByteArray())
         }
@@ -555,7 +557,4 @@ class BigDecimalPlusTest {
             "Circuit fails with different error"
         )
     }
-
-    private fun toZincString(sign: Byte, integer: ByteArray, fraction: ByteArray) =
-        "{\"sign\": \"$sign\", \"integer\": [${integer.joinToString { "\"${it}\"" }}], \"fraction\": [${fraction.joinToString { "\"${it}\"" }}]}"
 }
