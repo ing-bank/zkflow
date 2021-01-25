@@ -43,9 +43,9 @@ class ListDescriptor(private val size: Int, innerDescriptors: List<TypeDescripto
 
         return CodeBlock.builder()
             .addNamed(
-                "SizedList(" +
-                    "\n⇥n = %size:L," +
-                    "\nlist = %propertyName:L$mapper," +
+                "SizedList.fromIterator(" +
+                    "\n⇥iterator = %propertyName:L$mapper.iterator()," +
+                    "\nn = %size:L," +
                     "\ndefault = %default:L\n⇤)",
                 map
             ).build()

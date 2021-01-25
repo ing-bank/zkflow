@@ -2,12 +2,17 @@ package com.ing.zknotary.descriptors
 
 import com.google.devtools.ksp.getConstructors
 import com.google.devtools.ksp.isPublic
+import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSType
+import com.ing.zknotary.annotations.CallDefaultValueClass
 import com.ing.zknotary.annotations.UseDefault
 import com.ing.zknotary.descriptors.types.AnnotatedSizedClassDescriptor
+import com.ing.zknotary.descriptors.types.CallableDefaultValueClassDescriptor
 import com.ing.zknotary.descriptors.types.DefaultableClassDescriptor
 import com.ing.zknotary.util.findAnnotation
+import com.ing.zknotary.util.findArgument
+import com.squareup.kotlinpoet.ClassName
 
 /**
  * Decomposition of any type happens within a context of
@@ -24,28 +29,38 @@ import com.ing.zknotary.util.findAnnotation
 
 class DescriptionContext(private val annotatedClasses: List<KSClassDeclaration>) {
     fun describe(type: KSType): TypeDescriptor {
-        val clazz = type.declaration as? KSClassDeclaration
-            ?: throw CodeException.CannotInstantiate(type)
-
-        val typename = "${type.declaration}"
-
         // Check if this type is annotated with `Sized`:
-        // type will (or already) have a generated fixed length version.
-        if (annotatedClasses.any { it.simpleName.asString() == typename }) {
+        // type will have or already has a generated fixed length version.
+        if (annotatedClasses.any { it.simpleName.asString() == "${type.declaration}" }) {
+            val clazz = type.declaration as? KSClassDeclaration ?: throw CodeException.NotAClass("$type")
             return AnnotatedSizedClassDescriptor(clazz)
         }
 
-        // Check if this type is annotated with `UseDefault`
-        // We throw UnsupportedUserType and not MissingAnnotation,
-        // because if such annotation is not found given that the type is not Sized,
-        // we can conclude more than the absence of annotation.
-        type.findAnnotation<UseDefault>()
-            ?: throw SupportException.UnsupportedUserType(type, annotatedClasses.map { it.simpleName.asString() })
+        type.findAnnotation<UseDefault>()?.let { return processUseDefault(type) }
 
-        if (clazz.getConstructors().any { it.isPublic() && it.parameters.isEmpty() }) {
-            return DefaultableClassDescriptor(clazz)
+        type.findAnnotation<CallDefaultValueClass>()?.let {
+            val returnType = ClassName(
+                type.declaration.packageName.asString(),
+                listOf(type.declaration.simpleName.asString())
+            )
+            return processCallDefaultValueClass(it, returnType)
         }
 
-        throw CodeException.DefaultConstructorAbsent(type)
+        throw SupportException.UnsupportedUserType(type, annotatedClasses.map { it.simpleName.asString() })
+    }
+
+    private fun processUseDefault(type: KSType): TypeDescriptor {
+        val clazz = type.declaration as? KSClassDeclaration ?: throw CodeException.NotAClass("$type")
+        if (clazz.getConstructors().none { it.isPublic() && it.parameters.isEmpty() }) {
+            throw CodeException.DefaultConstructorAbsent(type)
+        }
+        return DefaultableClassDescriptor(clazz)
+    }
+
+    private fun processCallDefaultValueClass(callAnnotation: KSAnnotation, returnType: ClassName): TypeDescriptor {
+        val className = callAnnotation.findArgument<String>("defaultValueClass")
+            ?: throw CodeException.InvalidAnnotationArgument(callAnnotation.shortName.asString(), "defaultValue")
+
+        return CallableDefaultValueClassDescriptor(className, returnType)
     }
 }

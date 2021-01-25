@@ -1,8 +1,10 @@
 @file:Suppress("TooManyFunctions")
+
 package com.ing.zknotary.util
 
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSTypeParameter
 import com.google.devtools.ksp.symbol.KSTypeReference
@@ -69,7 +71,7 @@ fun KSTypeReference.toTypeName(): TypeName {
 
 inline fun <reified T> KSType.findAnnotation(): KSAnnotation? =
     annotations.find {
-        it.annotationType.toString().contains(
+        it.annotationType.toString().equals(
             T::class.simpleName ?: error("Unknown annotation class is expected"),
             ignoreCase = true
         )
@@ -87,3 +89,9 @@ inline fun <reified T> KSAnnotation.getArgumentOrDefault(name: String, default: 
 
 val KSClassDeclaration.sizedName: String
     get() = "${simpleName.asString()}Sized"
+
+val KSDeclaration.asClassName: ClassName
+    get() = ClassName(
+        this.packageName.asString(),
+        listOf(this.simpleName.asString())
+    )
