@@ -1,8 +1,8 @@
 //!
 //! The 'double' main module.
 //!
-mod double;
-use double::Double;
+mod floating_point;
+use floating_point::Double;
 
 fn main(left: Double, right: Double) -> u8 {
     if Double::equals(left, right) {

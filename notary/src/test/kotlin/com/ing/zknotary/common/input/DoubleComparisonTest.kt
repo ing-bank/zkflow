@@ -10,7 +10,7 @@ class DoubleComparisonTest {
 
     companion object {
         private val circuitFolder: String = DoubleComparisonTest::class.java.getResource("/DoubleComparisonTest").path
-        private val sharedModules: Array<String> = arrayOf(DoubleComparisonTest::class.java.getResource("/shared/double.zn").path.toString())
+        private val sharedModules: Array<String> = arrayOf(DoubleComparisonTest::class.java.getResource("/shared/floating_point.zn").path.toString())
         private val zincZKService = ZincZKService(
             circuitFolder,
             artifactFolder = circuitFolder,

@@ -11,6 +11,9 @@ fun composeTempCircuit(sourceCircuit: String, sharedModules: Array<String>) {
     }
 }
 
+fun toAmountJSON(quantity: Long, displayTokenSizeJSON: String, tokenHash: ByteArray) =
+    "{\"quantity\": \"$quantity\", \"display_token_size\": $displayTokenSizeJSON, \"token_hash\": ${tokenHash.toPrettyString()}}"
+
 fun toBigDecimalJSON(sign: Byte, integer: ByteArray, fraction: ByteArray) =
     "{\"sign\": \"$sign\", \"integer\": [${integer.joinToString { "\"${it}\"" }}], \"fraction\": ${fraction.toPrettyString()}}"
 

@@ -251,3 +251,165 @@ impl BigDecimal {
         plus(this, negated)
     }
 }
+
+const TOKEN_HASH_LENGTH: u8 = 128;
+type TokenHash = [u8; 128];
+
+struct Amount {
+    quantity: i64,
+    display_token_size: BigDecimal,
+    token_hash: TokenHash,
+}
+
+impl Amount {
+
+    fn compare_hashes(this_token_hash: TokenHash, that_token_hash: TokenHash) -> bool {
+        let mut result = true;
+        for i in 0..TOKEN_HASH_LENGTH {
+            if this_token_hash[i] != that_token_hash[i] {
+                result = result && false;
+            }
+        }
+        result
+    }
+
+    fn check_token(this: Amount, that: Amount) {
+        assert!(BigDecimal::equals(this.display_token_size, that.display_token_size), "Token sizes don't match");
+        assert!(Amount::compare_hashes(this.token_hash, that.token_hash), "Tokens don't match");
+    }
+
+    fn plus(this: Amount, that: Amount) -> Amount {
+        check_token(this, that);
+        Amount {
+            quantity: this.quantity + that.quantity,
+            display_token_size: this.display_token_size,
+            token_hash: this.token_hash,
+        }
+    }
+
+    fn minus(this: Amount, that: Amount) -> Amount {
+        check_token(this, that);
+        Amount {
+            quantity: this.quantity - that.quantity,
+            display_token_size: this.display_token_size,
+            token_hash: this.token_hash,
+        }
+    }
+
+    fn equals(this: Amount, that: Amount) -> bool {
+        this.quantity == that.quantity
+            && Amount::compare_hashes(this.token_hash, that.token_hash)
+            && BigDecimal::equals(this.display_token_size, that.display_token_size)
+    }
+}
+
+const MAX_NUMBER_OF_DIGITS_IN_MAGNITUDE: u64 = 16;
+
+struct Double {
+    sign: i8,
+    exponent: i16,
+    magnitude: u64,
+}
+
+//The implementation of IEEE 754 standard
+//sign in { -1, 0, 1 } - it is different from the standard.
+//In IEEE 754 sign stores only two values - 0 and 1, 0 - positive, 1 - negative.
+//In this implementation sign is stored explicitly.
+//exponent in [-1024; 1023]
+//magnitude in [0; ~4.5E+15]
+//If difference in exponents is more than 16, there's no need to compare magnitude
+//The actual stored value:
+//      sign * magnitude * 10^exponent
+//Even though values with double precision are big, they can't store many digits with meaningful (non-zero) values,
+//thus, for more accurate values we need BigDecimal.
+impl Double {
+    fn abs(value: i16) -> i16 {
+        if value < 0 as i16 {
+            -value
+        } else {
+            value
+        }
+    }
+
+    fn get_exponent(power: i16) -> u64 {
+        let unsigned_power = abs(power) as u64;
+
+        let mut exponent = 1 as u64;
+        let base = 10 as u64;
+
+        for i in 1 as u64..(MAX_NUMBER_OF_DIGITS_IN_MAGNITUDE - (1 as u64)) while i <= unsigned_power {
+            exponent *= base
+        }
+        exponent
+    }
+
+    fn compare_magnitude(this: Double, that: Double) -> i8 {
+        if this.magnitude > that.magnitude {
+            1 as i8
+        } else {
+            if this.magnitude < that.magnitude {
+                -1
+            } else {
+                0 as i8
+            }
+        }
+    }
+
+    //Remark: magnitude has no zeros in lowest digits (they all have to be in exponent),
+    //thus, if it is divided by power of 10, reminder != 0.
+    //So, if adjusted == other_magnitude /\ reminder != 0 => not_adjusted > other_magnitude
+    //Thus, we can combine strict greater and equal.
+    fn compare_with_adjusted_magnitude(adjusted: u64, magnitude: u64) -> i8 {
+        if adjusted >= magnitude {
+            1 as i8
+        } else {
+            -1
+        }
+    }
+
+    //The biggest number of digits that can be stored in magnitude is 16, thus if difference in exponents
+    //is bigger than 16, it is useless to compare magnitudes.
+    fn compare_exponent_and_magnitude(this: Double, that: Double) -> i8 {
+        let exp_diff = this.exponent - that.exponent;
+
+        if exp_diff >= MAX_NUMBER_OF_DIGITS_IN_MAGNITUDE as i16 {
+            1 as i8
+        } else {
+            if exp_diff <= -MAX_NUMBER_OF_DIGITS_IN_MAGNITUDE as i16 {
+                -1
+            } else {
+                let decimal_exponent = get_exponent(exp_diff);
+
+                if exp_diff > (0 as i16) {
+                    let adjusted = that.magnitude / decimal_exponent;
+                    -compare_with_adjusted_magnitude(adjusted, this.magnitude)
+                } else {
+                    let adjusted = this.magnitude / decimal_exponent;
+                    compare_with_adjusted_magnitude(adjusted, that.magnitude)
+                }
+            }
+        }
+    }
+
+    //We compare signs, then we compare magnitudes adjusted w.r.t. to difference in exponents.
+    fn compare(this: Double, that: Double) -> i8 {
+        if this.sign > that.sign {
+            1 as i8
+        } else {
+            if this.sign < that.sign {
+                -1
+            } else {
+                let magnitude_comparison = if this.exponent == that.exponent {
+                    compare_magnitude(this, that)
+                } else {
+                    compare_exponent_and_magnitude(this, that)
+                };
+                this.sign * magnitude_comparison
+            }
+        }
+    }
+
+    fn equals(this: Double, that: Double) -> bool {
+        this.sign == that.sign && this.exponent == that.exponent && this.magnitude == that.magnitude
+    }
+}
