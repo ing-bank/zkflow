@@ -1,6 +1,7 @@
 package com.ing.zknotary.common.client.flows
 
 import com.ing.zknotary.common.client.flows.testflows.CreateFlow
+import com.ing.zknotary.common.client.flows.testflows.MoveFlowWithBackchain
 import com.ing.zknotary.common.client.flows.testflows.MoveFlowWithNotarisation
 import com.ing.zknotary.common.contracts.TestContract
 import com.ing.zknotary.node.services.ConfigParams
@@ -23,7 +24,7 @@ import net.corda.testing.node.internal.cordappWithPackages
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 
-class ResolveZKTransactionsFlowTest {
+class E2ENotaryFlowTest {
     private val mockNet: MockNetwork
     private val notaryNode: StartedMockNode
     private val megaCorpNode: StartedMockNode
@@ -69,7 +70,7 @@ class ResolveZKTransactionsFlowTest {
     }
 
     @Test
-    fun `We deterministically build, prove and verify graph of ZKVerifierTransactions based on graph of SignedTransactions`() {
+    fun `End2End test with ZKP notary`() {
 
         // Build Create stx
         val createFlow = CreateFlow()
@@ -85,11 +86,8 @@ class ResolveZKTransactionsFlowTest {
         mockNet.runNetwork()
         val moveBackStx = moveBackFuture.getOrThrow()
 
-//        // Now test the chain receiving over network
-//        val testFuture = thirdPartyNode.startFlow(ResolveTransactionsTestFlow(moveBackStx, megaCorp))
-//        mockNet.runNetwork()
-//        val resolvedTxs = testFuture.getOrThrow()
-
-        // TODO check resolved TXs
+        val finalMoveFuture = thirdPartyNode.startFlow(MoveFlowWithNotarisation(moveBackStx, miniCorp))
+        mockNet.runNetwork()
+        val finalTx = finalMoveFuture.getOrThrow()
     }
 }

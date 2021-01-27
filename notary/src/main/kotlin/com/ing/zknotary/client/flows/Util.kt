@@ -1,6 +1,10 @@
 package com.ing.zknotary.client.flows
 
-import com.ing.zknotary.common.transactions.NamedByZKMerkleTree
+import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
+import com.ing.zknotary.common.transactions.ZKVerifierTransaction
+import com.ing.zknotary.node.services.ServiceNames
+import com.ing.zknotary.node.services.ZKWritableVerifierTransactionStorage
+import com.ing.zknotary.node.services.getCordaServiceFromConfig
 import net.corda.core.crypto.Crypto
 import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.SignableData
@@ -8,16 +12,17 @@ import net.corda.core.crypto.SignatureMetadata
 import net.corda.core.crypto.TransactionSignature
 import net.corda.core.flows.FlowLogic
 import net.corda.core.node.ServiceHub
+import net.corda.core.transactions.SignedTransaction
 import java.security.PublicKey
 
 fun FlowLogic<Any>.signInitialZKTransaction(
-    ztx: NamedByZKMerkleTree,
+    vtx: ZKVerifierTransaction,
     publicKey: PublicKey = serviceHub.myInfo.legalIdentitiesAndCerts.single().owningKey,
     signatureMetadata: SignatureMetadata = SignatureMetadata(serviceHub.myInfo.platformVersion, Crypto.findSignatureScheme(publicKey).schemeNumberID)
-): List<TransactionSignature> {
-    val signableData = SignableData(ztx.id, signatureMetadata)
+): SignedZKVerifierTransaction {
+    val signableData = SignableData(vtx.id, signatureMetadata)
     val sig = this.serviceHub.keyManagementService.sign(signableData, publicKey)
-    return listOf(sig)
+    return SignedZKVerifierTransaction(vtx, listOf(sig))
 }
 
 fun ServiceHub.createSignature(zktxId: SecureHash, publicKey: PublicKey): TransactionSignature {
@@ -27,4 +32,15 @@ fun ServiceHub.createSignature(zktxId: SecureHash, publicKey: PublicKey): Transa
     )
     val signableData = SignableData(zktxId, signatureMetadata)
     return keyManagementService.sign(signableData, publicKey)
+}
+
+fun ServiceHub.recordTransactions(stx: SignedTransaction? = null, svtx: SignedZKVerifierTransaction) {
+
+    val zkVerifierTransactionStorage: ZKWritableVerifierTransactionStorage = getCordaServiceFromConfig(ServiceNames.ZK_VERIFIER_TX_STORAGE)
+    zkVerifierTransactionStorage.addTransaction(svtx)
+
+    if (stx != null) {
+        recordTransactions(stx)
+        zkVerifierTransactionStorage.map.put(stx, svtx.tx)
+    }
 }

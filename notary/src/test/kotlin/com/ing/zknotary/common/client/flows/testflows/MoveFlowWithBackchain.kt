@@ -24,7 +24,7 @@ import net.corda.core.utilities.unwrap
  * TODO Verifier should rebuild VTX basing on moveStx but for now its complicated so it is temporary skipped
  */
 @InitiatingFlow
-class MoveFlow(
+class MoveFlowWithBackchain(
     private val createStx: SignedTransaction,
     private val newOwner: Party
 ) : FlowLogic<SignedTransaction>() {
@@ -50,15 +50,14 @@ class MoveFlow(
 
         val vtx = zkService.prove(zkService.toZKProverTransaction(stx.tx))
 
-        val pvtxSigs = signInitialZKTransaction(vtx)
-        val svtx = SignedZKVerifierTransaction(vtx, pvtxSigs)
+        val svtx = signInitialZKTransaction(vtx)
 
         // Help Verifier to resolve dependencies for normal tx
         subFlow(SendZKTransactionFlow(session, svtx))
 
         val fullySignedVtx = session.receive<SignedZKVerifierTransaction>().unwrap { it }
 
-        zkService.verify(fullySignedVtx)
+        zkService.verify(fullySignedVtx, false) // There is no Notary sig yet
 
         // We don't call FinalityFlow here because it expects "normal" Stx to be signed as well
         //  and in current implementation of backchain we don't operate "normal" txs.
@@ -69,7 +68,7 @@ class MoveFlow(
 
     companion object {
 
-        @InitiatedBy(MoveFlow::class)
+        @InitiatedBy(MoveFlowWithBackchain::class)
         class Verifier(val session: FlowSession) : FlowLogic<Unit>() {
 
             @Suspendable
@@ -82,7 +81,7 @@ class MoveFlow(
                 val key = serviceHub.keyManagementService.filterMyKeys(vtx.requiredSigningKeys).single()
                 val fullySignedVtx = SignedZKVerifierTransaction(vtx.tx, vtx.sigs + serviceHub.createSignature(vtx.id, key))
 
-                zkService.verify(fullySignedVtx)
+                zkService.verify(fullySignedVtx, false)
 
                 session.send(fullySignedVtx)
             }

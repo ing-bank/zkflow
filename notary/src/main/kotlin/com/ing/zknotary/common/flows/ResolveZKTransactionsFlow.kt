@@ -2,14 +2,11 @@ package com.ing.zknotary.common.flows
 
 import co.paralleluniverse.fibers.Suspendable
 import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
-import com.ing.zknotary.common.transactions.dependencies
 import com.ing.zknotary.node.services.ZKTransactionsResolver
 import net.corda.core.DeleteForDJVM
 import net.corda.core.crypto.SecureHash
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
-import net.corda.core.internal.FetchDataFlow
-import net.corda.core.internal.FetchNetworkParametersFlow
 import net.corda.core.internal.PlatformVersionSwitches
 import net.corda.core.node.StatesToRecord
 import net.corda.core.utilities.debug
@@ -20,23 +17,10 @@ import net.corda.core.utilities.trace
  * Each retrieved transaction is validated and inserted into the local transaction storage.
  */
 @DeleteForDJVM
-class ResolveZKTransactionsFlow private constructor(
-    val initialTx: SignedZKVerifierTransaction?,
+class ResolveZKTransactionsFlow constructor(
     val txHashes: Set<SecureHash>,
     val otherSide: FlowSession
 ) : FlowLogic<Unit>() {
-
-    constructor(txHashes: Set<SecureHash>, otherSide: FlowSession) :
-        this(null, txHashes, otherSide)
-
-    /**
-     * Resolves and validates the dependencies of the specified [SignedTransaction]. Fetches the attachments, but does
-     * *not* validate or store the [SignedTransaction] itself.
-     *
-     * @return a list of verified [SignedTransaction] objects, in a depth-first order.
-     */
-    constructor(transaction: SignedZKVerifierTransaction, otherSide: FlowSession) :
-        this(transaction, transaction.dependencies, otherSide)
 
     private var fetchNetParamsFromCounterpart = false
 
@@ -54,16 +38,16 @@ class ResolveZKTransactionsFlow private constructor(
         val batchMode = counterpartyPlatformVersion >= PlatformVersionSwitches.BATCH_DOWNLOAD_COUNTERPARTY_BACKCHAIN
         logger.debug { "ResolveTransactionsFlow.call(): Otherside Platform Version = '$counterpartyPlatformVersion': Batch mode = $batchMode" }
 
-        if (initialTx != null) {
-            fetchMissingAttachments(initialTx)
-            fetchMissingNetworkParameters(initialTx)
-        }
+//        if (initialTx != null) {
+//            fetchMissingAttachments(initialTx)
+//            fetchMissingNetworkParameters(initialTx)
+//        }
 
         val resolver = ZKTransactionsResolver(this)
         resolver.downloadDependencies(batchMode)
 
         logger.trace { "ResolveTransactionsFlow: Sending END." }
-        otherSide.send(FetchDataFlow.Request.End) // Finish fetching data.
+        otherSide.send(FetchZKDataFlow.Request.End) // Finish fetching data.
 
         // In ZKP mode we don't need to record any states although we still need to save ZKP backchain.
         resolver.recordDependencies(StatesToRecord.NONE)
@@ -93,13 +77,7 @@ class ResolveZKTransactionsFlow private constructor(
     // TODO This can also be done in parallel. See comment to [fetchMissingAttachments] above.
     @Suspendable
     fun fetchMissingNetworkParameters(transaction: SignedZKVerifierTransaction): Boolean {
-        return if (fetchNetParamsFromCounterpart) {
-            transaction.tx.networkParametersHash?.let {
-                val downloads = subFlow(FetchNetworkParametersFlow(setOf(it), otherSide)).downloaded
-                downloads.isNotEmpty()
-            } ?: false
-        } else {
-            false
-        }
+        // TODO network parameters are not supported yet
+        return false
     }
 }

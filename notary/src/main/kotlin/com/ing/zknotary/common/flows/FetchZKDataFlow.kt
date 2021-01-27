@@ -230,9 +230,11 @@ sealed class FetchZKDataFlow<T : NamedByHash, in W : Any>(
  * Note that returned transactions are not inserted into the database, because it's up to the caller to actually verify the transactions are valid.
  */
 class FetchZKTransactionsFlow(requests: Set<SecureHash>, otherSide: FlowSession) :
-    FetchZKDataFlow<SignedZKVerifierTransaction, SignedZKVerifierTransaction>(requests, otherSide, DataType.TRANSACTION) {
+    FetchZKDataFlow<SignedZKVerifierTransaction, SerializedBytes<SignedZKVerifierTransaction>>(requests, otherSide, DataType.TRANSACTION) {
 
     override fun load(txid: SecureHash): SignedZKVerifierTransaction? = serviceHub.getCordaServiceFromConfig<ZKVerifierTransactionStorage>(ServiceNames.ZK_VERIFIER_TX_STORAGE).getTransaction(txid)
+
+    override fun convert(wire: SerializedBytes<SignedZKVerifierTransaction>): SignedZKVerifierTransaction = wire.deserialize()
 }
 
 class FetchBatchZKTransactionsFlow(requests: Set<SecureHash>, otherSide: FlowSession) :

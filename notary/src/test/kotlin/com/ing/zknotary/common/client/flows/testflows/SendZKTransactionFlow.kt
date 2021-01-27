@@ -53,7 +53,7 @@ class ReceiveZKTransactionFlow(val session: FlowSession) : FlowLogic<SignedZKVer
         // verifying backchain now
         tx.tx.inputs.forEach {
             val svtx = session.receive<SignedZKVerifierTransaction>().unwrap { it }
-            zkTransactionService.verify(svtx) // Clearly only works with backchain of length 1 for now
+            zkTransactionService.verify(svtx, true) // Clearly only works with backchain of length 1 for now
             zkStorage.addTransaction(svtx)
         }
 

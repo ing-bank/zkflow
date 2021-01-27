@@ -5,7 +5,6 @@ import com.ing.zknotary.client.flows.ZKCollectSignaturesFlow
 import com.ing.zknotary.client.flows.ZKFinalityFlow
 import com.ing.zknotary.client.flows.signInitialZKTransaction
 import com.ing.zknotary.common.contracts.TestContract
-import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
 import com.ing.zknotary.common.zkp.ZKTransactionService
 import com.ing.zknotary.node.services.ServiceNames
 import com.ing.zknotary.node.services.getCordaServiceFromConfig
@@ -34,13 +33,13 @@ class CreateFlow : FlowLogic<SignedTransaction>() {
         builder.toWireTransaction(serviceHub).toLedgerTransaction(serviceHub).verify()
 
         val stx = serviceHub.signInitialTransaction(builder)
+
         val vtx = zkService.prove(zkService.toZKProverTransaction(stx.tx))
+        val svtx = signInitialZKTransaction(vtx)
 
-        val pztxSigs = signInitialZKTransaction(vtx)
-        val zksigs = subFlow(ZKCollectSignaturesFlow(stx, vtx.id, pztxSigs, emptyList()))
-        val svtx = SignedZKVerifierTransaction(vtx, zksigs.zksigs)
+        val signedTxs = subFlow(ZKCollectSignaturesFlow(stx, svtx, emptyList()))
 
-        subFlow(ZKFinalityFlow(stx, svtx, listOf()))
+        subFlow(ZKFinalityFlow(signedTxs.stx, signedTxs.svtx, listOf()))
 
         return stx
     }

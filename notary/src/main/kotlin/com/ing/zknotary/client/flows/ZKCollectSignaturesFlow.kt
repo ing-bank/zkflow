@@ -3,12 +3,19 @@ package com.ing.zknotary.client.flows
 import co.paralleluniverse.fibers.Suspendable
 import com.ing.zknotary.common.crypto.blake2s256
 import com.ing.zknotary.common.crypto.pedersen
+import com.ing.zknotary.common.flows.ReceiveZKTransactionFlow
+import com.ing.zknotary.common.flows.SendZKTransactionFlow
+import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
 import com.ing.zknotary.common.transactions.toZKProverTransaction
+import com.ing.zknotary.common.zkp.ZKTransactionService
 import com.ing.zknotary.node.services.ServiceNames
+import com.ing.zknotary.node.services.ZKVerifierTransactionStorage
 import com.ing.zknotary.node.services.getCordaServiceFromConfig
 import net.corda.core.crypto.DigestService
 import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.TransactionSignature
+import net.corda.core.crypto.BLAKE2s256DigestService
+import net.corda.core.crypto.PedersenDigestService
 import net.corda.core.crypto.isFulfilledBy
 import net.corda.core.crypto.toStringShort
 import net.corda.core.flows.FlowException
@@ -78,20 +85,18 @@ import java.security.PublicKey
 // TODO: AbstractStateReplacementFlow needs updating to use this flow.
 class ZKCollectSignaturesFlow @JvmOverloads constructor(
     val partiallySignedTx: SignedTransaction,
-    val ptxId: SecureHash,
-    val partialZKSigs: List<TransactionSignature>,
+    val partiallySignedVtx: SignedZKVerifierTransaction,
     val sessionsToCollectFrom: Collection<FlowSession>,
     val myOptionalKeys: Iterable<PublicKey>?,
     override val progressTracker: ProgressTracker = tracker()
-) : FlowLogic<TransactionWithZKSignatures>() {
+) : FlowLogic<TransactionsPair>() {
     @JvmOverloads
     constructor(
         partiallySignedTx: SignedTransaction,
-        ptxId: SecureHash,
-        partialZKSigs: List<TransactionSignature>,
+        partiallySignedVtx: SignedZKVerifierTransaction,
         sessionsToCollectFrom: Collection<FlowSession>,
         progressTracker: ProgressTracker = tracker()
-    ) : this(partiallySignedTx, ptxId, partialZKSigs, sessionsToCollectFrom, null, progressTracker)
+    ) : this(partiallySignedTx, partiallySignedVtx, sessionsToCollectFrom, null, progressTracker)
 
     companion object {
         object COLLECTING : ProgressTracker.Step("Collecting signatures from counterparties.")
@@ -105,7 +110,7 @@ class ZKCollectSignaturesFlow @JvmOverloads constructor(
 
     @Suppress("LongMethod")
     @Suspendable
-    override fun call(): TransactionWithZKSignatures {
+    override fun call(): TransactionsPair {
         // Check the signatures which have already been provided and that the transaction is valid.
         // Usually just the Initiator and possibly an oracle would have signed at this point.
         val myKeys: Iterable<PublicKey> = myOptionalKeys ?: listOf(ourIdentity.owningKey)
@@ -129,7 +134,7 @@ class ZKCollectSignaturesFlow @JvmOverloads constructor(
         val unsigned = if (notaryKey != null) notSigned - notaryKey else notSigned
 
         // If the unsigned counterparties list is empty then we don't need to collect any more signatures here.
-        if (unsigned.isEmpty()) return TransactionWithZKSignatures(partiallySignedTx, partialZKSigs)
+        if (unsigned.isEmpty()) return TransactionsPair(partiallySignedTx, partiallySignedVtx)
 
         val wellKnownSessions = sessionsToCollectFrom.filter { it.destination is Party }
         val anonymousSessions = sessionsToCollectFrom.filter { it.destination is AnonymousParty }
@@ -138,7 +143,8 @@ class ZKCollectSignaturesFlow @JvmOverloads constructor(
             "Unrecognized Destination type used to initiate a flow session"
         }
 
-        val wellKnownPartyToSessionMap: Map<Party, List<FlowSession>> = wellKnownSessions.groupBy { (it.destination as Party) }
+        val wellKnownPartyToSessionMap: Map<Party, List<FlowSession>> =
+            wellKnownSessions.groupBy { (it.destination as Party) }
         val anonymousPartyToSessionMap: Map<AnonymousParty, List<FlowSession>> = anonymousSessions
             .groupBy { (it.destination as AnonymousParty) }
 
@@ -150,7 +156,8 @@ class ZKCollectSignaturesFlow @JvmOverloads constructor(
         }
 
         // all keys that were used to initate a session must be sent to that session
-        val keysToSendToAnonymousSessions: Set<PublicKey> = unsigned.intersect(anonymousPartyToSessionMap.keys.map { it.owningKey })
+        val keysToSendToAnonymousSessions: Set<PublicKey> =
+            unsigned.intersect(anonymousPartyToSessionMap.keys.map { it.owningKey })
 
         // all keys that are left over MUST map back to a
         val keysThatMustMapToAWellKnownSession: Set<PublicKey> = unsigned - keysToSendToAnonymousSessions
@@ -174,7 +181,8 @@ class ZKCollectSignaturesFlow @JvmOverloads constructor(
 
         // so we now know that all keys are linked to a session in some way
         // we need to check that there are no extra sessions
-        val extraNotWellKnownSessions = anonymousSessions.filterNot { (it.destination as AnonymousParty).owningKey in unsigned }
+        val extraNotWellKnownSessions =
+            anonymousSessions.filterNot { (it.destination as AnonymousParty).owningKey in unsigned }
         val extraWellKnownSessions = wellKnownSessions.filterNot { it.counterparty in groupedByPartyKeys }
 
         require(extraNotWellKnownSessions.isEmpty() && extraWellKnownSessions.isEmpty()) {
@@ -190,28 +198,35 @@ class ZKCollectSignaturesFlow @JvmOverloads constructor(
 
         val sigsFromNotWellKnownSessions = anonymousSessions.flatMap { flowSession ->
             // anonymous sessions will only ever sign for their own key
-            subFlow(ZKCollectSignatureFlow(partiallySignedTx, flowSession, (flowSession.destination as AbstractParty).owningKey))
+            subFlow(
+                ZKCollectSignatureFlow(
+                    partiallySignedTx,
+                    partiallySignedVtx,
+                    flowSession,
+                    (flowSession.destination as AbstractParty).owningKey
+                )
+            )
         }
 
         val sigsFromWellKnownSessions = wellKnownSessions.flatMap { flowSession ->
             val keysToAskThisSessionFor = groupedByPartyKeys[flowSession.counterparty] ?: emptyList()
-            subFlow(ZKCollectSignatureFlow(partiallySignedTx, flowSession, keysToAskThisSessionFor))
+            subFlow(ZKCollectSignatureFlow(partiallySignedTx, partiallySignedVtx, flowSession, keysToAskThisSessionFor))
         }
 
         val stx = partiallySignedTx + (sigsFromNotWellKnownSessions + sigsFromWellKnownSessions).map { it.sig }.toSet()
-        val zksigs = partialZKSigs + (sigsFromNotWellKnownSessions + sigsFromWellKnownSessions).map { it.zksig }.toSet()
+        val svtx = partiallySignedVtx + (sigsFromNotWellKnownSessions + sigsFromWellKnownSessions).map { it.zksig }.toSet()
 
         // Verify all but the notary's signature if the transaction requires a notary, otherwise verify all signatures.
         progressTracker.currentStep = VERIFYING
         if (notaryKey != null) {
             stx.verifySignaturesExcept(notaryKey)
-            zksigs.forEach { if (it.by != notaryKey) it.verify(ptxId) }
+            svtx.sigs.forEach { if (it.by != notaryKey) it.verify(svtx.id) }
         } else {
             stx.verifyRequiredSignatures()
-            zksigs.forEach { it.verify(ptxId) }
+            svtx.sigs.forEach { it.verify(svtx.id) }
         }
 
-        return TransactionWithZKSignatures(stx, zksigs)
+        return TransactionsPair(stx, svtx)
     }
 }
 
@@ -224,9 +239,14 @@ class ZKCollectSignaturesFlow @JvmOverloads constructor(
  * @param signingKeys the list of keys the party should use to sign the transaction.
  */
 @Suspendable
-class ZKCollectSignatureFlow(val partiallySignedTx: SignedTransaction, val session: FlowSession, val signingKeys: List<PublicKey>) : FlowLogic<List<TransactionSignaturesPair>>() {
-    constructor(partiallySignedTx: SignedTransaction, session: FlowSession, signingKey: PublicKey) :
-        this(partiallySignedTx, session, listOf(signingKey))
+class ZKCollectSignatureFlow(
+    val partiallySignedTx: SignedTransaction,
+    val partiallySignedVtx: SignedZKVerifierTransaction,
+    val session: FlowSession,
+    val signingKeys: List<PublicKey>
+) : FlowLogic<List<TransactionSignaturesPair>>() {
+    constructor(partiallySignedTx: SignedTransaction, partiallySignedVtx: SignedZKVerifierTransaction, session: FlowSession, signingKey: PublicKey) :
+        this(partiallySignedTx, partiallySignedVtx, session, listOf(signingKey))
 
     @Suspendable
     override fun call(): List<TransactionSignaturesPair> {
@@ -236,6 +256,9 @@ class ZKCollectSignatureFlow(val partiallySignedTx: SignedTransaction, val sessi
         // keys to sign with, as it makes it faster for them to identify the key to sign with, and more straight forward
         // for us to check we have the expected signature returned.
         session.send(signingKeys)
+        // Send ZKP backchain
+        subFlow(SendZKTransactionFlow(session, partiallySignedVtx))
+
         return session.receive<List<TransactionSignaturesPair>>().unwrap { signatures ->
             require(signatures.size == signingKeys.size) { "Need signature for each signing key" }
             signatures.forEachIndexed { index, signature ->
@@ -292,6 +315,9 @@ abstract class ZKSignTransactionFlow @JvmOverloads constructor(
     override val progressTracker: ProgressTracker = tracker()
 ) : FlowLogic<List<TransactionSignaturesPair>>() {
 
+    private lateinit var zkService: ZKTransactionService
+    private lateinit var vtxStorage: ZKVerifierTransactionStorage
+
     companion object {
         object RECEIVING : ProgressTracker.Step("Receiving transaction proposal for signing.")
         object VERIFYING : ProgressTracker.Step("Verifying transaction proposal.")
@@ -319,10 +345,23 @@ abstract class ZKSignTransactionFlow @JvmOverloads constructor(
         // Check the signatures which have already been provided. Usually the Initiators and possibly an Oracle's.
         checkSignatures(stx)
         stx.tx.toLedgerTransaction(serviceHub).verify()
+        // Resolve ZK dependencies and verify them
+        val receivedVtx = subFlow(ReceiveZKTransactionFlow(otherSideSession, false))
+
+        zkService = serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_TX_SERVICE)
+        vtxStorage = serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_VERIFIER_TX_STORAGE)
+
+        // Validate that received ZKP backchain indeed is valid for given STX
+        // At this point of time we should have valid signed PTXs in our storage so we just we just go down the chain,
+        // build PTX from STX and see that we have signed version of it in storage. The trick is that for some we don't
+        // have mapping VTX <-> STX in our transaction storage yet, so we create it on the fly. This is temp solution
+        // for notary-only protocol.
+        checkBackchains(stx, receivedVtx)
+
         // Convert Tx to ZKP form
         val ptx = stx.tx.toZKProverTransaction(
             serviceHub,
-            serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_VERIFIER_TX_STORAGE),
+            vtxStorage,
             componentGroupLeafDigestService = DigestService.blake2s256,
             nodeDigestService = DigestService.pedersen
         )
@@ -347,6 +386,33 @@ abstract class ZKSignTransactionFlow @JvmOverloads constructor(
 
         // Return the additionally signed transaction.
         return mySignatures
+    }
+
+    private fun checkBackchains(stx: SignedTransaction, vtx: SignedZKVerifierTransaction) {
+
+        stx.inputs.forEachIndexed { index, input ->
+            val zkInputRef = vtx.tx.inputs[index]
+            val inputStx = serviceHub.validatedTransactions.getTransaction(input.txhash)
+                ?: throw IllegalArgumentException("STX not found for input $input")
+            val storedVtx = vtxStorage.getTransaction(zkInputRef.txhash)
+                ?: throw IllegalArgumentException("VTX not found for input $zkInputRef")
+
+            checkBackchains(inputStx, storedVtx)
+
+            val calculatedPtx = zkService.toZKProverTransaction(inputStx.tx)
+
+            require(storedVtx.id == calculatedPtx.id) { "Calculated VtxID should match received" }
+
+            // If we get to here it means that for given plaintext STX there exists VTX in our ZKTransactionStorage.
+            // Also when we add ZK transactions to storages - we verify them. So it has valid proof and sigs.
+            // What can be missing is the mapping between STX and VTX in our transaction storage.
+            // So we create this mapping if necessary.
+
+            val mappingExists = vtxStorage.map.get(inputStx.id) != null
+            if (!mappingExists) {
+                vtxStorage.map.put(inputStx, storedVtx)
+            }
+        }
     }
 
     @Suspendable

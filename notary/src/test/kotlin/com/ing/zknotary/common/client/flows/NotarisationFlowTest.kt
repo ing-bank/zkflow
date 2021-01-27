@@ -76,20 +76,20 @@ class NotarisationFlowTest {
         val signedTxs = future.getOrThrow()
 
         // Check normal Tx signatures
-        signedTxs.first.sigs.size shouldBe 1
-        signedTxs.first.sigs.forEach {
-            it.verify(signedTxs.first.id)
+        signedTxs.stx.sigs.size shouldBe 1
+        signedTxs.stx.sigs.forEach {
+            it.verify(signedTxs.stx.id)
         }
 
         // Check ZKP Tx signatures
-        signedTxs.second.sigs.size shouldBe 2
-        signedTxs.second.sigs.forEach {
-            it.verify(signedTxs.second.id)
+        signedTxs.svtx.sigs.size shouldBe 2
+        signedTxs.svtx.sigs.forEach {
+            it.verify(signedTxs.svtx.id)
         }
 
         // Check that notary sig is here
 
-        signedTxs.second.sigs.filter {
+        signedTxs.svtx.sigs.filter {
             it.by == notaryNode.info.legalIdentities.single().owningKey
         }.size shouldBe 1
     }

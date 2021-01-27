@@ -5,6 +5,7 @@ import com.ing.zknotary.common.flows.FetchZKTransactionsFlow
 import com.ing.zknotary.common.flows.ResolveZKTransactionsFlow
 import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
 import com.ing.zknotary.common.transactions.dependencies
+import com.ing.zknotary.common.zkp.ZKTransactionService
 import net.corda.core.crypto.SecureHash
 import net.corda.core.flows.FlowLogic
 import net.corda.core.internal.TransactionsResolver
@@ -12,7 +13,6 @@ import net.corda.core.node.StatesToRecord
 import net.corda.core.utilities.debug
 import net.corda.core.utilities.seconds
 import net.corda.core.utilities.trace
-import net.corda.node.services.api.WritableTransactionStorage
 import java.util.Collections
 
 class ZKTransactionsResolver(private val flow: ResolveZKTransactionsFlow) : TransactionsResolver {
@@ -97,15 +97,16 @@ class ZKTransactionsResolver(private val flow: ResolveZKTransactionsFlow) : Tran
     override fun recordDependencies(usedStatesToRecord: StatesToRecord) {
         val sortedDependencies = checkNotNull(this.sortedDependencies)
         logger.trace { "Recording ${sortedDependencies.size} dependencies for ${flow.txHashes.size} transactions" }
-        val transactionStorage = flow.serviceHub.validatedTransactions as WritableTransactionStorage
+        val zkService = flow.serviceHub.getCordaServiceFromConfig<ZKTransactionService>(ServiceNames.ZK_TX_SERVICE)
+        val transactionStorage = flow.serviceHub.getCordaServiceFromConfig<ZKWritableVerifierTransactionStorage>(ServiceNames.ZK_VERIFIER_TX_STORAGE)
         for (txId in sortedDependencies) {
             // Retrieve and delete the transaction from the unverified store.
             val (tx, isVerified) = checkNotNull(transactionStorage.getTransactionInternal(txId)) {
                 "Somehow the unverified transaction ($txId) that we stored previously is no longer there."
             }
             if (!isVerified) {
-                tx.verify(flow.serviceHub)
-                flow.serviceHub.recordTransactions(usedStatesToRecord, listOf(tx))
+                zkService.verify(tx, true)
+                transactionStorage.addTransaction(tx)
             } else {
                 logger.debug { "No need to record $txId as it's already been verified" }
             }

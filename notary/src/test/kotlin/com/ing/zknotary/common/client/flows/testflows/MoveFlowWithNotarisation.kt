@@ -3,10 +3,10 @@ package com.ing.zknotary.common.client.flows.testflows
 import co.paralleluniverse.fibers.Suspendable
 import com.ing.zknotary.client.flows.ZKCollectSignaturesFlow
 import com.ing.zknotary.client.flows.ZKFinalityFlow
+import com.ing.zknotary.client.flows.ZKReceiveFinalityFlow
 import com.ing.zknotary.client.flows.ZKSignTransactionFlow
 import com.ing.zknotary.client.flows.signInitialZKTransaction
 import com.ing.zknotary.common.contracts.TestContract
-import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
 import com.ing.zknotary.common.zkp.ZKTransactionService
 import com.ing.zknotary.node.services.ServiceNames
 import com.ing.zknotary.node.services.getCordaServiceFromConfig
@@ -49,13 +49,13 @@ class MoveFlowWithNotarisation(
 
         // Transaction creator signs transaction.
         val stx = serviceHub.signInitialTransaction(builder)
-        val zktx = zkService.prove(stx.tx)
 
-        val pztxSigs = signInitialZKTransaction(zktx)
-        val zksigs = subFlow(ZKCollectSignaturesFlow(stx, zktx.id, pztxSigs, listOf(session)))
-        val zkstx = SignedZKVerifierTransaction(zktx, zksigs.zksigs)
+        val ptx = zkService.toZKProverTransaction(stx.tx)
+        val vtx = zkService.prove(ptx)
+        val svtx = signInitialZKTransaction(vtx)
+        val signedTxs = subFlow(ZKCollectSignaturesFlow(stx, svtx, listOf(session)))
 
-        subFlow(ZKFinalityFlow(stx, zkstx, listOf(session)))
+        subFlow(ZKFinalityFlow(signedTxs.stx, signedTxs.svtx, listOf(session)))
 
         return stx
     }
@@ -67,15 +67,20 @@ class MoveFlowWithNotarisation(
 
             @Suspendable
             override fun call() {
+                var stx: SignedTransaction? = null
                 val flow = object : ZKSignTransactionFlow(session) {
                     @Suspendable
-                    override fun checkTransaction(stx: SignedTransaction) = requireThat {
+                    override fun checkTransaction(receivedStx: SignedTransaction) = requireThat {
                         // In non-test scenario here counterparty should verify incoming Tx including ZK Merkle tree calculation
+                        stx = receivedStx
                     }
                 }
 
                 // Invoke the subFlow, in response to the counterparty calling [ZKCollectSignaturesFlow].
                 subFlow(flow)
+
+                // Invoke flow in response to ZKFinalityFlow
+                subFlow(ZKReceiveFinalityFlow(session, stx ?: error("")))
             }
         }
     }

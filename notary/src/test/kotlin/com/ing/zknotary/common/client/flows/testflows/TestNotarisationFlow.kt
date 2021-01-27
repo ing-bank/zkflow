@@ -1,6 +1,7 @@
 package com.ing.zknotary.common.client.flows.testflows
 
 import co.paralleluniverse.fibers.Suspendable
+import com.ing.zknotary.client.flows.TransactionsPair
 import com.ing.zknotary.client.flows.ZKCollectSignaturesFlow
 import com.ing.zknotary.client.flows.ZKNotaryFlow
 import com.ing.zknotary.client.flows.signInitialZKTransaction
@@ -19,14 +20,13 @@ import net.corda.core.crypto.DigestService
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.InitiatingFlow
 import net.corda.core.identity.Party
-import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
 
 @InitiatingFlow
-class TestNotarisationFlow(val signers: List<Party> = emptyList()) : FlowLogic<Pair<SignedTransaction, SignedZKProverTransaction>>() {
+class TestNotarisationFlow(val signers: List<Party> = emptyList()) : FlowLogic<TransactionsPair>() {
 
     @Suspendable
-    override fun call(): Pair<SignedTransaction, SignedZKProverTransaction> {
+    override fun call(): TransactionsPair {
 
         val zkService: ZKTransactionService = serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_TX_SERVICE)
 
@@ -41,23 +41,20 @@ class TestNotarisationFlow(val signers: List<Party> = emptyList()) : FlowLogic<P
 
         // Transaction creator signs transaction.
         val stx = serviceHub.signInitialTransaction(builder)
+
         val ptx = stx.tx.toZKProverTransaction(
             serviceHub,
             serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_VERIFIER_TX_STORAGE),
             componentGroupLeafDigestService = DigestService.blake2s256,
             nodeDigestService = DigestService.pedersen
         )
-
-        val initialPtxSigs = signInitialZKTransaction(ptx)
-
-        val sigs = subFlow(ZKCollectSignaturesFlow(stx, ptx.id, initialPtxSigs, signers.map { initiateFlow(it) }))
-
         val vtx = zkService.prove(ptx)
+        val svtx = signInitialZKTransaction(vtx)
 
-        val svtx = SignedZKVerifierTransaction(vtx, sigs.zksigs)
+        val signedTxs = subFlow(ZKCollectSignaturesFlow(stx, svtx, signers.map { initiateFlow(it) }))
 
-        val result = subFlow(ZKNotaryFlow(stx, svtx))
+        val result = subFlow(ZKNotaryFlow(signedTxs.stx, signedTxs.svtx))
 
-        return Pair(sigs.stx, SignedZKProverTransaction(ptx, sigs.zksigs + result))
+        return signedTxs.copy(stx = stx, svtx = svtx + result)
     }
 }
