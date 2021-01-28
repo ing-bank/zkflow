@@ -1,16 +1,5 @@
 package com.ing.zknotary.common.input
 
-import java.nio.file.Files
-import java.nio.file.Paths
-import java.nio.file.StandardCopyOption
-
-fun composeTempCircuit(sourceCircuit: String, sharedModules: Array<String>) {
-    for (module in sharedModules) {
-        val modulePath = Paths.get(module)
-        Files.copy(modulePath, Paths.get(sourceCircuit, "src", modulePath.fileName.toString()), StandardCopyOption.REPLACE_EXISTING)
-    }
-}
-
 fun toAmountJSON(quantity: Long, displayTokenSizeJSON: String, tokenHash: ByteArray) =
     "{\"quantity\": \"$quantity\", \"display_token_size\": $displayTokenSizeJSON, \"token_hash\": ${tokenHash.toPrettyString()}}"
 

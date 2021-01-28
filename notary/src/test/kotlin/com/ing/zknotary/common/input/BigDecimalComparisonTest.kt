@@ -9,7 +9,6 @@ import java.time.Duration
 class BigDecimalComparisonTest {
     companion object {
         private val circuitFolder: String = BigDecimalComparisonTest::class.java.getResource("/BigDecimalComparisonTest").path
-        private val sharedModules: Array<String> = arrayOf(BigDecimalComparisonTest::class.java.getResource("/shared/floating_point.zn").path.toString())
         private val zincZKService = ZincZKService(
             circuitFolder,
             artifactFolder = circuitFolder,
@@ -22,7 +21,6 @@ class BigDecimalComparisonTest {
         @BeforeAll
         @JvmStatic
         fun setup() {
-            composeTempCircuit(circuitFolder, sharedModules)
             zincZKService.setup()
         }
 

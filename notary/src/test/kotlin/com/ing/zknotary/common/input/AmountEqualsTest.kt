@@ -9,7 +9,6 @@ import java.time.Duration
 class AmountEqualsTest {
     companion object {
         private val circuitFolder: String = AmountEqualsTest::class.java.getResource("/AmountEqualsTest").path
-        private val sharedModules: Array<String> = arrayOf(AmountEqualsTest::class.java.getResource("/shared/floating_point.zn").path.toString())
         private val zincZKService = ZincZKService(
             circuitFolder,
             artifactFolder = circuitFolder,
@@ -22,7 +21,6 @@ class AmountEqualsTest {
         @BeforeAll
         @JvmStatic
         fun setup() {
-            composeTempCircuit(circuitFolder, sharedModules)
             zincZKService.setup()
         }
 

@@ -252,20 +252,20 @@ impl BigDecimal {
     }
 }
 
-const TOKEN_HASH_LENGTH: u8 = 128;
-type TokenHash = [u8; 128];
+const TOKEN_NAME_HASH_LENGTH: u8 = 128;
+type TokenNameHash = [u8; TOKEN_NAME_HASH_LENGTH];
 
 struct Amount {
     quantity: i64,
     display_token_size: BigDecimal,
-    token_hash: TokenHash,
+    token_hash: TokenNameHash,
 }
 
 impl Amount {
 
-    fn compare_hashes(this_token_hash: TokenHash, that_token_hash: TokenHash) -> bool {
+    fn compare_hashes(this_token_hash: TokenNameHash, that_token_hash: TokenNameHash) -> bool {
         let mut result = true;
-        for i in 0..TOKEN_HASH_LENGTH {
+        for i in 0..TOKEN_NAME_HASH_LENGTH {
             if this_token_hash[i] != that_token_hash[i] {
                 result = result && false;
             }
