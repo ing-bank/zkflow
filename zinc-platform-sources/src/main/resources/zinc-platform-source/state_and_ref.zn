@@ -1,31 +1,21 @@
-const STATE_BYTES: u16 = PUBKEY_BYTES + U32_BYTES + PUBKEY_BYTES;
-const STATE_FINGERPRINT_BYTES: u16 = PUBKEY_BYTES + U32_BYTES + PUBKEY_BYTES;
-const STATE_FINGERPRINT_BITS: u16 = STATE_FINGERPRINT_BYTES * BYTE_BITS;
-
-type StateBytes = [u8; STATE_BYTES];
-type StateFingerprintBits = [bool; STATE_FINGERPRINT_BITS];
+const TRANSACTION_STATE_BYTES: u16 = ZKCONTRACT_STATE_BYTES + PUBKEY_BYTES;
+const TRANSACTION_STATE_FINGERPRINT_BYTES: u16 = ZKCONTRACT_STATE_FINGERPRINT_BYTES + PUBKEY_BYTES;
+const TRANSACTION_STATE_FINGERPRINT_BITS: u16 = TRANSACTION_STATE_FINGERPRINT_BYTES * BYTE_BITS;
 
 const REF_FINGERPRINT_BYTES: u16 = NODE_DIGEST_BYTES + U32_BYTES;
 const REF_FINGERPRINT_BITS: u16 = REF_FINGERPRINT_BYTES * BYTE_BITS;
 
+type TransactionStateBytes = [u8; TRANSACTION_STATE_BYTES];
+type TransactionStateFingerprintBits = [bool; TRANSACTION_STATE_FINGERPRINT_BITS];
+
 type RefFingerprintBits = [bool; REF_FINGERPRINT_BITS];
-
-struct Party {
-    owning_key: PubKey,
-}
-
-// This struct is userland code, and will be generated from Kotlin in the future
-struct TestState {
-    owner: Party,
-    value: i32,
-}
 
 //This struct follows the structure in the original Corda TransactionState structure. The fields
 // contractCN, encumbrance and constraint are commented out and declared bool intentionally to
 // reserve their place in the structure. In the current implementation we don't use these fields,
 // if they are going to be included, they should be declared with the corresponding data type.
 struct TransactionState {
-    data: TestState,
+    data: ZKContractState,
     //contractCN: bool,
     notary: Party,
     //encumbrance: bool,
@@ -93,20 +83,17 @@ impl StateRef {
 }
 
 impl TransactionState {
-    fn fingerprint(this: TransactionState) -> [bool; STATE_FINGERPRINT_BITS] {
-        let mut result = [false; STATE_FINGERPRINT_BITS];
+    fn fingerprint(this: TransactionState) -> [bool; TRANSACTION_STATE_FINGERPRINT_BITS] {
+        let mut result = [false; TRANSACTION_STATE_FINGERPRINT_BITS];
 
-        // TODO: Separate the fingerprint for the actual ZKContractState our of here.
-        // That means that TransactionState.data is asked for its own fingerprint.
+        //state_bits = ZKContractState || notary_owning_key
+        //fingerprint ZKContractState
+        //TODO: validate if the state name is determined by the user
+        result[0..ZKCONTRACT_STATE_FINGERPRINT_BITS] = ZKContractState::fingerprint(this.data);
 
-        //state_bits = dataOwner_owning_key || value || notary_owning_key
-        //dataOwner_owning_key
-        result[0..PUBKEY_FINGERPRINT_BITS] = PubKey::fingerprint(this.data.owner.owning_key);
-        //value
-        result[PUBKEY_FINGERPRINT_BITS..(PUBKEY_FINGERPRINT_BITS + U32_BITS)] =
-            to_bits(this.data.value);
+        //fingerprint notary
         //notary_owning_key
-        result[(PUBKEY_FINGERPRINT_BITS + U32_BITS)..STATE_FINGERPRINT_BITS] =
+        result[ZKCONTRACT_STATE_FINGERPRINT_BITS..TRANSACTION_STATE_FINGERPRINT_BITS] =
             PubKey::fingerprint(this.notary.owning_key);
 
         result
@@ -117,13 +104,13 @@ impl TransactionState {
         nonce: NonceDigestBits,
     ) -> ComponentGroupLeafDigestBits {
         // message = nonce || state
-        let mut message = [false; NONCE_DIGEST_BITS + STATE_FINGERPRINT_BITS];
+        let mut message = [false; NONCE_DIGEST_BITS + TRANSACTION_STATE_FINGERPRINT_BITS];
         for i in 0..NONCE_DIGEST_BITS {
             message[i] = nonce[i];
         }
 
         let fingerprint_state = fingerprint(this);
-        for i in 0..STATE_FINGERPRINT_BITS {
+        for i in 0..TRANSACTION_STATE_FINGERPRINT_BITS {
             message[NONCE_DIGEST_BITS + i] = fingerprint_state[i];
         }
         blake2s(message)
