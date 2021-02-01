@@ -1,3 +1,5 @@
+//In case if value can't be stored in BigDecimal, it will throw an exception,
+//the some goes for arithmetic operations.
 const INTEGER_SIZE: u16 = 1024;
 const FRACTION_SIZE: u8 = 128;
 
@@ -252,8 +254,8 @@ impl BigDecimal {
     }
 }
 
-const TOKEN_NAME_HASH_LENGTH: u8 = 128;
-type TokenNameHash = [u8; TOKEN_NAME_HASH_LENGTH];
+const TOKEN_HASH_LENGTH: u8 = 32;
+type TokenNameHash = [u8; TOKEN_HASH_LENGTH];
 
 struct Amount {
     quantity: i64,
@@ -265,7 +267,7 @@ impl Amount {
 
     fn compare_hashes(this_token_hash: TokenNameHash, that_token_hash: TokenNameHash) -> bool {
         let mut result = true;
-        for i in 0..TOKEN_NAME_HASH_LENGTH {
+        for i in 0..TOKEN_HASH_LENGTH {
             if this_token_hash[i] != that_token_hash[i] {
                 result = result && false;
             }
