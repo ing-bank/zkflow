@@ -46,8 +46,8 @@ import net.corda.core.utilities.ProgressTracker
 // presence of @InitiatingFlow is checked). So the new API is inlined simply because that code path doesn't call initiateFlow.
 @InitiatingFlow
 class ZKFinalityFlow private constructor(
-    val transaction: SignedTransaction,
-    val zkTransaction: SignedZKVerifierTransaction,
+    val stx: SignedTransaction,
+    val vtx: SignedZKVerifierTransaction,
     override val progressTracker: ProgressTracker,
     private val sessions: Collection<FlowSession>
 ) : FlowLogic<SignedZKVerifierTransaction>() {
@@ -95,7 +95,7 @@ class ZKFinalityFlow private constructor(
         // Then send to the notary if needed, record locally and distribute.
 
         logCommandData()
-        val ledgerTransaction = verifyTx()
+        val ledgerTransaction = stx.toLedgerTransaction(serviceHub, false) // TODO this might not work because we don't have plaintext txs for input states
         val externalTxParticipants = extractExternalParticipants(ledgerTransaction)
 
         val sessionParties = sessions.map { it.counterparty }
@@ -131,35 +131,35 @@ class ZKFinalityFlow private constructor(
     private fun logCommandData() {
         if (logger.isDebugEnabled) {
             val commandDataTypes =
-                transaction.tx.commands.asSequence().mapNotNull { it.value::class.qualifiedName }.distinct()
+                stx.tx.commands.asSequence().mapNotNull { it.value::class.qualifiedName }.distinct()
             logger.debug("Started finalization, commands are ${commandDataTypes.joinToString(", ", "[", "]")}.")
         }
     }
 
     @Suspendable
     private fun notariseAndRecord(): SignedZKVerifierTransaction {
-        val notarised = if (needsNotarySignature(transaction)) {
+        val notarised = if (needsNotarySignature(vtx)) {
             progressTracker.currentStep =
                 NOTARISING
-            val notarySignatures = subFlow(ZKNotaryFlow(transaction, zkTransaction))
-            SignedZKVerifierTransaction(zkTransaction.tx, zkTransaction.sigs + notarySignatures)
+            val notarySignatures = subFlow(ZKNotaryFlow(stx, vtx))
+            vtx + notarySignatures
         } else {
             logger.info("No need to notarise this transaction.")
-            zkTransaction
+            vtx
         }
         logger.info("Recording transaction locally.")
-        serviceHub.recordTransactions(transaction, notarised)
+        serviceHub.recordTransactions(stx, notarised)
         logger.info("Recorded transaction locally successfully.")
         return notarised
     }
 
-    private fun needsNotarySignature(stx: SignedTransaction): Boolean {
+    private fun needsNotarySignature(stx: SignedZKVerifierTransaction): Boolean {
         val wtx = stx.tx
         val needsNotarisation = wtx.inputs.isNotEmpty() || wtx.references.isNotEmpty() || wtx.timeWindow != null
         return needsNotarisation && hasNoNotarySignature(stx)
     }
 
-    private fun hasNoNotarySignature(stx: SignedTransaction): Boolean {
+    private fun hasNoNotarySignature(stx: SignedZKVerifierTransaction): Boolean {
         val notaryKey = stx.tx.notary?.owningKey
         val signers = stx.sigs.asSequence().map { it.by }.toSet()
         return notaryKey?.isFulfilledBy(signers) != true
@@ -168,16 +168,6 @@ class ZKFinalityFlow private constructor(
     private fun extractExternalParticipants(ltx: LedgerTransaction): Set<Party> {
         val participants = ltx.outputStates.flatMap { it.participants } + ltx.inputStates.flatMap { it.participants }
         return groupAbstractPartyByWellKnownParty(serviceHub, participants).keys - serviceHub.myInfo.legalIdentities
-    }
-
-    // For this first version, we still resolve the entire plaintext history of the transaction
-    private fun verifyTx(): LedgerTransaction {
-        val notary = transaction.tx.notary
-        // The notary signature(s) are allowed to be missing but no others.
-        if (notary != null) transaction.verifySignaturesExcept(notary.owningKey) else transaction.verifyRequiredSignatures()
-        val ltx = transaction.toLedgerTransaction(serviceHub, false)
-        ltx.verify()
-        return ltx
     }
 }
 

@@ -26,7 +26,7 @@ import net.corda.core.transactions.TransactionBuilder
  * TODO Verifier should rebuild ZKTX basing on moveStx but for now its complicated so it is temporary skipped
  */
 @InitiatingFlow
-class MoveFlowWithNotarisation(
+class MoveFlow(
     private val createStx: SignedTransaction,
     private val newOwner: Party
 ) : FlowLogic<SignedTransaction>() {
@@ -45,24 +45,24 @@ class MoveFlowWithNotarisation(
 
         val builder = TransactionBuilder(serviceHub.networkMapCache.notaryIdentities.single())
         builder.withItems(state, stateAndContract, command)
-        builder.toWireTransaction(serviceHub).toLedgerTransaction(serviceHub).verify()
 
         // Transaction creator signs transaction.
         val stx = serviceHub.signInitialTransaction(builder)
+        stx.verify(serviceHub, false)
 
         val ptx = zkService.toZKProverTransaction(stx.tx)
         val vtx = zkService.prove(ptx)
-        val svtx = signInitialZKTransaction(vtx)
-        val signedTxs = subFlow(ZKCollectSignaturesFlow(stx, svtx, listOf(session)))
+        val partiallySignedVtx = signInitialZKTransaction(vtx)
+        val svtx = subFlow(ZKCollectSignaturesFlow(stx, partiallySignedVtx, listOf(session)))
 
-        subFlow(ZKFinalityFlow(signedTxs.stx, signedTxs.svtx, listOf(session)))
+        subFlow(ZKFinalityFlow(stx, svtx, listOf(session)))
 
         return stx
     }
 
     companion object {
 
-        @InitiatedBy(MoveFlowWithNotarisation::class)
+        @InitiatedBy(MoveFlow::class)
         class Verifier(val session: FlowSession) : FlowLogic<Unit>() {
 
             @Suspendable

@@ -1,7 +1,6 @@
 package com.ing.zknotary.common.client.flows.testflows
 
 import co.paralleluniverse.fibers.Suspendable
-import com.ing.zknotary.client.flows.TransactionsPair
 import com.ing.zknotary.client.flows.ZKCollectSignaturesFlow
 import com.ing.zknotary.client.flows.ZKNotaryFlow
 import com.ing.zknotary.client.flows.signInitialZKTransaction
@@ -23,10 +22,10 @@ import net.corda.core.identity.Party
 import net.corda.core.transactions.TransactionBuilder
 
 @InitiatingFlow
-class TestNotarisationFlow(val signers: List<Party> = emptyList()) : FlowLogic<TransactionsPair>() {
+class TestNotarisationFlow(val signers: List<Party> = emptyList()) : FlowLogic<SignedZKVerifierTransaction>() {
 
     @Suspendable
-    override fun call(): TransactionsPair {
+    override fun call(): SignedZKVerifierTransaction {
 
         val zkService: ZKTransactionService = serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_TX_SERVICE)
 
@@ -51,10 +50,10 @@ class TestNotarisationFlow(val signers: List<Party> = emptyList()) : FlowLogic<T
         val vtx = zkService.prove(ptx)
         val svtx = signInitialZKTransaction(vtx)
 
-        val signedTxs = subFlow(ZKCollectSignaturesFlow(stx, svtx, signers.map { initiateFlow(it) }))
+        val partiallySignedVTX = subFlow(ZKCollectSignaturesFlow(stx, svtx, signers.map { initiateFlow(it) }))
 
-        val result = subFlow(ZKNotaryFlow(signedTxs.stx, signedTxs.svtx))
+        val notarySigs = subFlow(ZKNotaryFlow(stx, partiallySignedVTX))
 
-        return signedTxs.copy(stx = stx, svtx = svtx + result)
+        return svtx + notarySigs
     }
 }

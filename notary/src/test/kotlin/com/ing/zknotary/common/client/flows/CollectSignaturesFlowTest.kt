@@ -71,18 +71,12 @@ class CollectSignaturesFlowTest {
         val p = TestCollectZKSignaturesFlow()
         val future = miniCorpNode.startFlow(p)
         mockNet.runNetwork()
-        val signedTxs = future.getOrThrow()
+        val svtx = future.getOrThrow()
 
-        // Check normal Tx signatures
-        signedTxs.stx.sigs.size shouldBe 1
-        signedTxs.stx.sigs.forEach {
-            it.verify(signedTxs.stx.id)
-        }
-
-        // Check ZKP Tx signatures
-        signedTxs.stx.sigs.size shouldBe 1
-        signedTxs.svtx.sigs.forEach {
-            it.verify(signedTxs.svtx.id)
+        // Check signatures
+        svtx.sigs.size shouldBe 1
+        svtx.sigs.forEach {
+            it.verify(svtx.id)
         }
     }
 
@@ -94,18 +88,12 @@ class CollectSignaturesFlowTest {
         val p = TestCollectZKSignaturesFlow(listOf(megaCorp))
         val future = miniCorpNode.startFlow(p)
         mockNet.runNetwork()
-        val signedTxs = future.getOrThrow()
+        val svtx = future.getOrThrow()
 
-        // Check normal Tx signatures
-        signedTxs.stx.sigs.size shouldBe 2
-        signedTxs.stx.sigs.forEach {
-            it.verify(signedTxs.stx.id)
-        }
-
-        // Check ZKP Tx signatures
-        signedTxs.svtx.sigs.size shouldBe 2
-        signedTxs.svtx.sigs.forEach {
-            it.verify(signedTxs.svtx.id)
+        // Check signatures
+        svtx.sigs.size shouldBe 2
+        svtx.sigs.forEach {
+            it.verify(svtx.id)
         }
     }
 }

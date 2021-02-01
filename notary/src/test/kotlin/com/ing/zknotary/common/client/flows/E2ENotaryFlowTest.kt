@@ -1,8 +1,7 @@
 package com.ing.zknotary.common.client.flows
 
 import com.ing.zknotary.common.client.flows.testflows.CreateFlow
-import com.ing.zknotary.common.client.flows.testflows.MoveFlowWithBackchain
-import com.ing.zknotary.common.client.flows.testflows.MoveFlowWithNotarisation
+import com.ing.zknotary.common.client.flows.testflows.MoveFlow
 import com.ing.zknotary.common.contracts.TestContract
 import com.ing.zknotary.node.services.ConfigParams
 import com.ing.zknotary.node.services.InMemoryZKVerifierTransactionStorage
@@ -78,15 +77,15 @@ class E2ENotaryFlowTest {
         mockNet.runNetwork()
         val createStx = createFuture.getOrThrow()
 
-        val moveFuture = miniCorpNode.startFlow(MoveFlowWithNotarisation(createStx, megaCorp))
+        val moveFuture = miniCorpNode.startFlow(MoveFlow(createStx, megaCorp))
         mockNet.runNetwork()
         val moveStx = moveFuture.getOrThrow()
 
-        val moveBackFuture = miniCorpNode.startFlow(MoveFlowWithNotarisation(moveStx, miniCorp))
+        val moveBackFuture = megaCorpNode.startFlow(MoveFlow(moveStx, miniCorp))
         mockNet.runNetwork()
         val moveBackStx = moveBackFuture.getOrThrow()
 
-        val finalMoveFuture = thirdPartyNode.startFlow(MoveFlowWithNotarisation(moveBackStx, miniCorp))
+        val finalMoveFuture = miniCorpNode.startFlow(MoveFlow(moveBackStx, thirdParty))
         mockNet.runNetwork()
         val finalTx = finalMoveFuture.getOrThrow()
     }

@@ -159,6 +159,32 @@ fun WireTransaction.toZKProverTransaction(
     )
 }
 
+@Suppress("LongParameterList")
+fun WireTransaction.toZKProverTransaction(
+    zkInputs: List<StateAndRef<*>>,
+    zkReferences: List<StateAndRef<*>>,
+    componentGroupLeafDigestService: DigestService = BLAKE2s256DigestService,
+    nodeDigestService: DigestService = componentGroupLeafDigestService
+): ZKProverTransaction {
+    loggerFor<WireTransaction>().debug("Converting WireTx to ProverTx")
+
+    require(commands.size == 1) { "There must be exactly one command on a ZKProverTransaction" }
+
+    return ZKProverTransaction(
+        inputs = zkInputs,
+        outputs = outputs.map { TransactionState(data = it.data, notary = it.notary) },
+        references = zkReferences,
+        command = commands.single().toZKCommand(),
+        notary = notary!!,
+        timeWindow = timeWindow,
+        privacySalt = privacySalt,
+        networkParametersHash = networkParametersHash,
+        attachments = attachments,
+        componentGroupLeafDigestService = componentGroupLeafDigestService,
+        nodeDigestService = nodeDigestService
+    )
+}
+
 /**
  * Extends a list with a default value.
  */

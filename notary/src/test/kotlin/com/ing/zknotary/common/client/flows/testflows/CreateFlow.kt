@@ -35,11 +35,10 @@ class CreateFlow : FlowLogic<SignedTransaction>() {
         val stx = serviceHub.signInitialTransaction(builder)
 
         val vtx = zkService.prove(zkService.toZKProverTransaction(stx.tx))
-        val svtx = signInitialZKTransaction(vtx)
 
-        val signedTxs = subFlow(ZKCollectSignaturesFlow(stx, svtx, emptyList()))
+        val svtx = subFlow(ZKCollectSignaturesFlow(stx, signInitialZKTransaction(vtx), emptyList()))
 
-        subFlow(ZKFinalityFlow(signedTxs.stx, signedTxs.svtx, listOf()))
+        subFlow(ZKFinalityFlow(stx, svtx, listOf()))
 
         return stx
     }

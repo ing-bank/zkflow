@@ -42,3 +42,7 @@ fun <T : CommandData> CommandWithParties<T>.toZKCommand(): Command<ZKCommandData
     require(value is ZKCommandData) { "CommandData must implement ZKCommandData" }
     return Command(value as ZKCommandData, signers)
 }
+fun Command<*>.toZKCommand(): Command<ZKCommandData> {
+    require(value is ZKCommandData) { "CommandData must implement ZKCommandData" }
+    return Command(value as ZKCommandData, signers)
+}

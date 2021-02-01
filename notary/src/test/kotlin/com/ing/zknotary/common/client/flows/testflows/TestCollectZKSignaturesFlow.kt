@@ -1,7 +1,6 @@
 package com.ing.zknotary.common.client.flows.testflows
 
 import co.paralleluniverse.fibers.Suspendable
-import com.ing.zknotary.client.flows.TransactionsPair
 import com.ing.zknotary.client.flows.ZKCollectSignaturesFlow
 import com.ing.zknotary.client.flows.ZKSignTransactionFlow
 import com.ing.zknotary.client.flows.signInitialZKTransaction
@@ -9,6 +8,7 @@ import com.ing.zknotary.common.contracts.TestContract
 import com.ing.zknotary.common.crypto.blake2s256
 import com.ing.zknotary.common.crypto.pedersen
 import com.ing.zknotary.common.transactions.SignedZKProverTransaction
+import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
 import com.ing.zknotary.common.transactions.toZKProverTransaction
 import com.ing.zknotary.common.zkp.ZKTransactionService
 import com.ing.zknotary.node.services.ServiceNames
@@ -26,10 +26,10 @@ import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
 
 @InitiatingFlow
-class TestCollectZKSignaturesFlow(val signers: List<Party> = emptyList()) : FlowLogic<TransactionsPair>() {
+class TestCollectZKSignaturesFlow(val signers: List<Party> = emptyList()) : FlowLogic<SignedZKVerifierTransaction>() {
 
     @Suspendable
-    override fun call(): TransactionsPair {
+    override fun call(): SignedZKVerifierTransaction {
 
         val zkService = serviceHub.getCordaServiceFromConfig<ZKTransactionService>(ServiceNames.ZK_TX_SERVICE)
         val me = serviceHub.myInfo.legalIdentities.single()

@@ -1,7 +1,7 @@
 package com.ing.zknotary.common.client.flows
 
 import com.ing.zknotary.common.client.flows.testflows.CreateFlow
-import com.ing.zknotary.common.client.flows.testflows.MoveFlowWithBackchain
+import com.ing.zknotary.common.client.flows.testflows.MoveFlow
 import com.ing.zknotary.common.contracts.TestContract
 import com.ing.zknotary.node.services.ConfigParams
 import com.ing.zknotary.node.services.InMemoryZKVerifierTransactionStorage
@@ -76,7 +76,7 @@ class BackchainFlowTest {
         val createStx = createFuture.getOrThrow()
 
         // Build Move stx
-        val moveFlow = MoveFlowWithBackchain(createStx, megaCorp)
+        val moveFlow = MoveFlow(createStx, megaCorp)
         val moveFuture = miniCorpNode.startFlow(moveFlow)
         mockNet.runNetwork()
         val moveStx = moveFuture.getOrThrow()
