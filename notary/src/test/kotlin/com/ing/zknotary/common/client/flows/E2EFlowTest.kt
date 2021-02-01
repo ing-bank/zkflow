@@ -23,7 +23,7 @@ import net.corda.testing.node.internal.cordappWithPackages
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 
-class E2ENotaryFlowTest {
+class E2EFlowTest {
     private val mockNet: MockNetwork
     private val notaryNode: StartedMockNode
     private val megaCorpNode: StartedMockNode

@@ -67,20 +67,18 @@ class MoveFlow(
 
             @Suspendable
             override fun call() {
-                var stx: SignedTransaction? = null
                 val flow = object : ZKSignTransactionFlow(session) {
                     @Suspendable
-                    override fun checkTransaction(receivedStx: SignedTransaction) = requireThat {
+                    override fun checkTransaction(stx: SignedTransaction) = requireThat {
                         // In non-test scenario here counterparty should verify incoming Tx including ZK Merkle tree calculation
-                        stx = receivedStx
                     }
                 }
 
                 // Invoke the subFlow, in response to the counterparty calling [ZKCollectSignaturesFlow].
-                subFlow(flow)
+                val stx = subFlow(flow)
 
                 // Invoke flow in response to ZKFinalityFlow
-                subFlow(ZKReceiveFinalityFlow(session, stx ?: error("")))
+                subFlow(ZKReceiveFinalityFlow(session, stx))
             }
         }
     }

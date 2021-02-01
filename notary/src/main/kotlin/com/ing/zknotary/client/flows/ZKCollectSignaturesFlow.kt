@@ -6,6 +6,7 @@ import com.ing.zknotary.common.crypto.pedersen
 import com.ing.zknotary.common.flows.ReceiveZKTransactionFlow
 import com.ing.zknotary.common.flows.SendZKTransactionFlow
 import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
+import com.ing.zknotary.common.transactions.toLedgerTransaction
 import com.ing.zknotary.common.transactions.toZKProverTransaction
 import com.ing.zknotary.common.zkp.ZKTransactionService
 import com.ing.zknotary.node.services.ServiceNames
@@ -262,8 +263,8 @@ class ZKCollectSignatureFlow(
 
         // Send input and reference states to be able to build PTX and LedgerTransaction
         // Refs should refer to ZKP transaction
-        session.send(queryStates(stx.inputs).mapIndexed { i, sf -> StateAndRef(sf.state, vtx.tx.inputs[i]) })
-        session.send(queryStates(stx.references).mapIndexed { i, sf -> StateAndRef(sf.state, vtx.tx.references[i]) })
+        session.send(queryStates(stx.inputs))
+        session.send(queryStates(stx.references))
 
         // Send ZKP backchain
         subFlow(SendZKTransactionFlow(session, vtx))
@@ -327,7 +328,7 @@ class ZKCollectSignatureFlow(
 abstract class ZKSignTransactionFlow @JvmOverloads constructor(
     val otherSideSession: FlowSession,
     override val progressTracker: ProgressTracker = tracker()
-) : FlowLogic<List<TransactionSignature>>() {
+) : FlowLogic<SignedTransaction>() {
 
     private lateinit var zkService: ZKTransactionService
     private lateinit var vtxStorage: ZKVerifierTransactionStorage
@@ -342,7 +343,7 @@ abstract class ZKSignTransactionFlow @JvmOverloads constructor(
     }
 
     @Suspendable
-    override fun call(): List<TransactionSignature> {
+    override fun call(): SignedTransaction {
         progressTracker.currentStep = RECEIVING
         // Receive transaction
         val stx = otherSideSession.receive<SignedTransaction>().unwrap { it }
@@ -357,9 +358,13 @@ abstract class ZKSignTransactionFlow @JvmOverloads constructor(
         progressTracker.currentStep = VERIFYING
 
         // Receive input and reference states to be able to build PTX and LedgerTransaction
-        // Refs should refer to ZKP transaction
+        // Refs should refer to plaintext LedgerTransaction in order to be able to create valid ltx
         val inputs = otherSideSession.receive<List<StateAndRef<*>>>().unwrap { it }
         val references = otherSideSession.receive<List<StateAndRef<*>>>().unwrap { it }
+
+        // We are not supposed to create LedgerTransaction outside of Corda, but we do it anyway
+        val ltx = stx.tx.toLedgerTransaction(inputs, references, serviceHub)
+        ltx.verify()
 
         // TODO IMPORTANT check that inputs/references indeed point to correct backchain
 
@@ -380,8 +385,8 @@ abstract class ZKSignTransactionFlow @JvmOverloads constructor(
 
         // Convert Tx to ZKP form
         val ptx = stx.tx.toZKProverTransaction(
-            inputs,
-            references,
+            inputs.mapIndexed { i, sf -> StateAndRef(sf.state, vtx.tx.inputs[i]) }, // we assume same order of inputs
+            references.mapIndexed { i, sf -> StateAndRef(sf.state, vtx.tx.references[i]) }, // we assume same order of references
             componentGroupLeafDigestService = DigestService.blake2s256,
             nodeDigestService = DigestService.pedersen
         )
@@ -405,7 +410,7 @@ abstract class ZKSignTransactionFlow @JvmOverloads constructor(
         otherSideSession.send(mySignatures)
 
         // Return the additionally signed transaction.
-        return mySignatures
+        return stx
     }
 
     @Suspendable
