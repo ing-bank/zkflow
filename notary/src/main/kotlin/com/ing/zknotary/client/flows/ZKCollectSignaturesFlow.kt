@@ -364,9 +364,9 @@ abstract class ZKSignTransactionFlow @JvmOverloads constructor(
 
         // We are not supposed to create LedgerTransaction outside of Corda, but we do it anyway
         val ltx = stx.tx.toLedgerTransaction(inputs, references, serviceHub)
-        ltx.verify()
 
-        // TODO IMPORTANT check that inputs/references indeed point to correct backchain
+        // Still checking Kotlin contract rules, just in case
+        ltx.verify()
 
         // Resolve ZK dependencies and verify them
         val vtx = subFlow(ReceiveZKTransactionFlow(otherSideSession, false))
