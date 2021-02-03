@@ -7,7 +7,6 @@ import com.ing.zknotary.client.flows.signInitialZKTransaction
 import com.ing.zknotary.common.contracts.TestContract
 import com.ing.zknotary.common.crypto.blake2s256
 import com.ing.zknotary.common.crypto.pedersen
-import com.ing.zknotary.common.transactions.SignedZKProverTransaction
 import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
 import com.ing.zknotary.common.transactions.toZKProverTransaction
 import com.ing.zknotary.common.zkp.ZKTransactionService

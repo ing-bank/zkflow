@@ -5,7 +5,6 @@ import com.ing.zknotary.common.flows.FetchZKDataFlow
 import com.ing.zknotary.common.flows.ZKDataVendingFlow
 import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
 import com.ing.zknotary.notary.ZKNotarisationPayload
-import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.TransactionSignature
 import net.corda.core.flows.FlowSession
 import net.corda.core.flows.NotarisationPayload
@@ -92,7 +91,7 @@ open class ZKNotaryFlow(
     private fun generateRequestSignature(): NotarisationRequestSignature {
         // TODO: This is not required any more once our AMQP serialization supports turning off object referencing.
         val notarisationRequest =
-            NotarisationRequest(svtx.tx.inputs.map { it.copy(txhash = SecureHash.parse(it.txhash.toString())) }, svtx.id)
+            NotarisationRequest(svtx.tx.inputs.map { it.copy(txhash = it.txhash) }, svtx.id)
         return notarisationRequest.generateSignature(serviceHub)
     }
 

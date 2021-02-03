@@ -97,7 +97,7 @@ class ZKNotaryServiceFlow(
 
     /** Verifies that the correct notarisation request was signed by the counterparty. */
     private fun validateRequestSignature(tx: ZKVerifierTransaction, signature: NotarisationRequestSignature) {
-        val request = NotarisationRequest(tx.inputs.map { it.copy(txhash = SecureHash.parse(it.txhash.toString())) }, tx.id)
+        val request = NotarisationRequest(tx.inputs.map { it.copy(txhash = it.txhash) }, tx.id)
         val requestingParty = otherSideSession.counterparty
         request.verifySignature(signature, requestingParty)
     }

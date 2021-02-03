@@ -175,8 +175,8 @@ fun WireTransaction.toZKProverTransaction(
 fun WireTransaction.toZKProverTransaction(
     zkInputs: List<StateAndRef<*>>,
     zkReferences: List<StateAndRef<*>>,
-    componentGroupLeafDigestService: DigestService = BLAKE2s256DigestService,
-    nodeDigestService: DigestService = componentGroupLeafDigestService
+    componentGroupLeafDigestService: DigestService = DigestService.blake2s256,
+    nodeDigestService: DigestService = DigestService.pedersen
 ): ZKProverTransaction {
     loggerFor<WireTransaction>().debug("Converting WireTx to ProverTx")
 
@@ -239,7 +239,8 @@ fun WireTransaction.toLedgerTransaction(
         timeWindow,
         privacySalt,
         resolvedNetworkParameters,
-        resolvedReferences
+        resolvedReferences,
+        DigestService.sha2_256
     )
 
     // Normally here transaction size is checked but in ZKP flow we don't really care because all our txs are fixed-size

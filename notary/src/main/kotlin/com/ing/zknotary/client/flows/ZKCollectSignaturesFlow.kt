@@ -16,10 +16,6 @@ import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.StateRef
 import net.corda.core.crypto.DigestService
-import net.corda.core.crypto.SecureHash
-import net.corda.core.crypto.TransactionSignature
-import net.corda.core.crypto.BLAKE2s256DigestService
-import net.corda.core.crypto.PedersenDigestService
 import net.corda.core.crypto.TransactionSignature
 import net.corda.core.crypto.isFulfilledBy
 import net.corda.core.crypto.toStringShort
