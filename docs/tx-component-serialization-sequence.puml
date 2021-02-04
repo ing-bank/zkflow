@@ -1,0 +1,80 @@
+@startuml
+title Transaction component serialization and sizing: Corda -> Corda
+skinparam backgroundColor white
+
+
+
+
+txb as "TransactionBuilder" -> txb: withItems(*): components
+
+group build() <i>(sized)</i>
+txb -> txb: components.size(): sizedComponents
+txb -> txb: sizedComponents.serialize(): serializedSizedComponents
+txb -> wtx as "WireTransaction": WireTransaction(serializedSizedComponents, serializer)
+end
+
+group deserialiseComponentGroup(serializedSizedComponents, serializer) <i>(unsized)</i>
+wtx -> wtx: deserialize(serializedSizedComponents): sizedComponents
+wtx -> wtx: unsize(sizedComponents): components
+end
+
+group toLedgerTransaction() <i>(unsized)</i>
+wtx -> wtx: deserialiseComponentGroups(*): components <i>(unsized)</i>
+wtx -> wtx: resolveComponents(components): resolvedComponents
+wtx -> ltx as "LedgerTransaction": LedgerTransaction(resolvedComponents)
+ltx -> ltx: verify()
+end
+
+group toZincWitness() <i>(sized)</i>
+wtx -> wtx: resolveComponents(inputs): resolvedInputs
+wtx -> wtx: resolveComponents(references): resolvedReferences
+wtx -> wtx: collectUtxoNonces(inputs): inputUtxoNonces
+wtx -> wtx: collectUtxoNonces(references): referenceUtxoNonces
+wtx -> znc as "Zinc": ZincWitness(wtx, resolvedInputs, resolvedReferences, inputUtxoNonces, referenceUtxoNonces)
+note right
+We could send the sizing metadata attachment
+here too, not sure we actually need that info.
+In contract rules, when will we ever compare
+sized to unsized? Seems like we mostly
+compare tx components with other tx components,
+so will still work if both are sized?
+end note
+end
+
+group Zinc.verify() <i>(do we ever have to unsize actually?)</i>
+znc -> znc: outputCountOriginal(wtx.sizedOutputs).size == 1
+note right:
+note left
+Assumptions:
+* fixed input size = 2
+* fixed output size = 2
+* fixed signers size = 2
+
+Is there ever a case where the
+fixed size is higher than what
+we actually check for hardcoded
+in the contract rules?
+Can there ever be 1 *or* two
+real outputs for contract rules
+for a specific command?
+
+If not, we don't need structure checks like this?
+end note
+
+group Comparing with hardcoded (sized?) values
+znc -> znc: wtx.inputs[0].amount > 0
+note right: Ints are already fixed? This check will just work?
+znc -> znc: wtx.inputs[0].amount > Amount(0, GBP)
+note right: Amounts/BigDecimals are already fixed? This check will just work?
+znc -> znc: wtx.outputs[0].owner.name == "Scott00000000000"
+note right: Does this ever happen?
+end group
+
+group Comparing with other sized components
+znc -> znc: wtx.outputs[0].amount == wtx.outputs[0].amount
+znc -> znc: wtx.inputs[0].owner != wtx.outputs[0].owner
+znc -> znc: require(wtx.inputs[0].owner.owningKey in command.signers)
+end group
+
+end
+@enduml
