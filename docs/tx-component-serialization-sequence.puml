@@ -1,0 +1,123 @@
+@startuml
+title
+<b><font color=red>Transaction</font> <font color=orange>component</font> <font color=yellow>serialization</font> <font color=green>and</font> <font color=purple>sizing</font></b>
+
+end title
+
+skinparam backgroundColor white
+
+box "In Corda/Kotlin" #LightBlue
+    participant txb as "TransactionBuilder"
+    participant wtx as "WireTransaction"
+    participant ltx as "LedgerTransaction"
+end box
+participant znc as "Zinc"
+
+txb -> txb: withItems(*): components
+
+group build() <i>(sized)</i>
+    txb -> txb: components.size(): sizedComponents
+    txb -> txb: sizedComponents.serialize(): serializedSizedComponents
+    txb -> wtx: WireTransaction(serializedSizedComponents, serializer)
+end group
+
+group deserialiseComponentGroup(serializedSizedComponents, serializer) <i>(unsized)</i>
+    wtx -> wtx: deserialize(serializedSizedComponents): sizedComponents
+    wtx -> wtx: unsize(sizedComponents): components
+end group
+    note right
+        Unfortunately, we can't influence the call site of deserialiseComponentGroup.
+        This means we can't influence as what types components are deserialised.
+        Example: outputs are deserialized as TransactionState<ContractState>.
+        As a result, we can't store SizedTransactionState<SizedContractState>
+        in the serializedSizedComponents, because then deserialization will fail.
+        This is even not going to work if SizedTransactionState extended
+        TransactionState: unfortunately all Corda type such as
+        TransactionState, StateRef, etc. are final.
+    end note
+
+group toLedgerTransaction() <i>(unsized)</i>
+    wtx -> wtx: deserialiseComponentGroups(*): components <i>(unsized)</i>
+    wtx -> wtx: resolveComponents(components): resolvedComponents
+    wtx -> ltx: LedgerTransaction(resolvedComponents)
+    ltx -> ltx: verify()
+end group
+
+group toZincWitness() <i>(sized)</i>
+    wtx -> wtx: resolveComponents(inputs): resolvedInputs
+    wtx -> wtx: resolveComponents(references): resolvedReferences
+    wtx -> wtx: collectUtxoNonces(inputs): inputUtxoNonces
+    wtx -> wtx: collectUtxoNonces(references): referenceUtxoNonces
+    wtx -> znc: ZincWitness(wtx, resolvedInputs, resolvedReferences, inputUtxoNonces, referenceUtxoNonces)
+        note right
+            TBD. Do we send the wtx as:
+
+            1. Sized, serialized components with a separate sizing metadata struct with
+                a lookup path for all arbitrary-length types in the hierarchy?
+            2. sized, <b>de</b>-serialized components wrapped with Sized<Type>List wrapper
+                for each list, or similar for other arbitrary-length types
+
+
+            In the case of 1), it means deserializing in Zinc,
+            and when needed lookup the original length of for
+            a property which we know is arbitrary-length, so
+            we can conditionally ignore them.
+            A downside is the creation of the separate sizing metadata struct
+            is not trivial
+
+            In the case of 2), it means that we pass around the Sized<Type>List wrappers instead of the
+            original types, which makes it perhaps easier: this can be done on the Corda side.
+            On the other hand, all sized wrappers and their nesting needs
+            to be hand built on the Zinc side.
+            A big risk is if we can actually recreate the serialized form identically to what was created
+            on the Corda side from Kotlin types. This is necssary for correct Merkle tree calculation
+        end note
+end group
+
+group Zinc.verify()
+
+    group Comparing with hardcoded sized values
+        znc -> znc: wtx.inputs[0].amount > 0
+            note right
+                These checks can work without needing metadata about sizing.
+                We for simple checks on types like this, the standard struct defines
+                the lenght, which allows comparisons. See `participants` below
+                for an example which will NOT work like this and require
+                sizing metadata
+            end note
+        znc -> znc: wtx.inputs[0].someIntval <= 23
+        znc -> znc: wtx.inputs[0].amount > Amount(0, GBP)
+        znc -> znc: wtx.outputs[0].owner.name = "Scott00000000000"
+    end group
+
+    group Comparing with other sized components
+        znc -> znc: wtx.outputs[0].amount == wtx.outputs[0].amount
+            note right
+                These check will be fine without knowing metadata.
+                We compare within the same transaction, so comparing
+                sized to sized. We don't care about the original lengths.
+            end note
+        znc -> znc: wtx.inputs[0].owner != wtx.outputs[0].owner
+        znc -> znc: wtx.inputs[0].owner.owningkey in command.signers
+        znc -> znc: wtx.inputs[0].participants in command.signers
+    end group
+
+    group Transaction structure checks
+    znc -> znc: noop
+        note right
+            Assumption:
+
+            Not necessary: we never have to check the number of outputs, inputs, etc,
+            since the Zinc circuit structure is unique for each command and already forces
+            the number of components.
+
+            E.g. If we we require 0 inputs and 1 outputs, the hardcoded witness structure will
+            reflect this. Any witness passed to Zinc of other sizes will simpy fail.
+            So we don't need to check this inside the circuit.
+
+            Additionally, why would we ever define a fixed size of 2 outputs when
+            the contract rules require exactly 1? Makes no sense.
+        end note
+    end group
+end group
+@enduml
