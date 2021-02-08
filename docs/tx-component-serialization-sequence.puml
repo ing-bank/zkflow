@@ -28,12 +28,25 @@ end group
     note right
         Unfortunately, we can't influence the call site of deserialiseComponentGroup.
         This means we can't influence as what types components are deserialised.
-        Example: outputs are deserialized as TransactionState<ContractState>.
-        As a result, we can't store SizedTransactionState<SizedContractState>
-        in the serializedSizedComponents, because then deserialization will fail.
-        This is even not going to work if SizedTransactionState extended
-        TransactionState: unfortunately all Corda type such as
-        TransactionState, StateRef, etc. are final.
+        Example: inputs are deserialized as StateRef.
+        As a result, we can't store SizedStateRef in the serializedSizedComponents,
+        because then deserialization will fail.
+        This is even not going to work if SizedStateRef extended
+        StateRef: unfortunately all Corda type such as
+        StateRef, etc. are final.
+
+        So we solve this by adding unsizing metadata to the transaction as an attachment.
+        Our serializer will be made aware of this attachment, so during deserialization on
+        the Corda side, it will always also unsize the components to their original size.
+        This way, sizing is invisible to the user.
+
+        This can be done by providing this metadata as extra properties on the serializationContext passed to
+        deserialiseComponentGroups(). This should be possible, because it is the "TransactionBuilder" that
+        constructs the WireTransaction, its component groups and passes it the serializationContext to use.
+
+        BUT: how does tx receiver know that this metadata is valid and actually matches the
+        metadata attachment? It will receive an AMQP-serialized WireTransaction, with serializationContext
+        and should check after the fact that the metadata matched the deserialized attachment hash.
     end note
 
 group toLedgerTransaction() <i>(unsized)</i>
@@ -54,23 +67,30 @@ group toZincWitness() <i>(sized)</i>
 
             1. Sized, serialized components with a separate sizing metadata struct with
                 a lookup path for all arbitrary-length types in the hierarchy?
+            3. sized, serialized components wrapped with Sized<Type>List wrapper
+                for each list, or similar for other arbitrary-length types
             2. sized, <b>de</b>-serialized components wrapped with Sized<Type>List wrapper
                 for each list, or similar for other arbitrary-length types
 
 
             In the case of 1), it means deserializing in Zinc,
-            and when needed lookup the original length of for
+            and when needed lookup the original length for
             a property which we know is arbitrary-length, so
-            we can conditionally ignore them.
-            A downside is the creation of the separate sizing metadata struct
-            is not trivial
+            we can conditionally ignore padding whe making comparisons.
+            A downside is that the creation of the separate sizing metadata struct on the Corda side is
+            is not trivial and needs to be made such that lookups on Zinc side make sense.
 
             In the case of 2), it means that we pass around the Sized<Type>List wrappers instead of the
-            original types, which makes it perhaps easier: this can be done on the Corda side.
+            original types, which makes it perhaps easier: this can be done on the Corda side when
+            serializing the witness as JSON for transport to Zinc.
             On the other hand, all sized wrappers and their nesting needs
-            to be hand built on the Zinc side.
-            A big risk is if we can actually recreate the serialized form identically to what was created
-            on the Corda side from Kotlin types. This is necssary for correct Merkle tree calculation
+            to be hand built on the Zinc side, so Zinc can understand the witness structure.
+            Deserialization is identical to option 1.
+
+            In the case of 3), like option 2, it means that we pass around the Sized<Type>List wrappers instead of the
+            original types.
+            A big risk is if we can actually recreate from Zinc types the serialized form identically to what was created
+            on the Corda side from Kotlin types. This is necessary for correct Merkle tree calculation.
         end note
 end group
 
