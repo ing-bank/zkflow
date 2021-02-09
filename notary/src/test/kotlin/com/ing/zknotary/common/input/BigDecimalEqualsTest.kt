@@ -4,6 +4,7 @@ import com.ing.zknotary.common.zkp.ZincZKService
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import java.math.BigDecimal
 import java.time.Duration
 
 class BigDecimalEqualsTest {
@@ -33,117 +34,57 @@ class BigDecimalEqualsTest {
 
     @Test
     fun `zinc compares using equals (sign is different)`() {
-        // 421.42
-        val leftSign: Byte = 1
-        val leftInteger = ByteArray(1024)
-        leftInteger[2] = 4
-        leftInteger[1] = 2
-        leftInteger[0] = 1
-        val leftFraction = ByteArray(128)
-        leftFraction[127] = 4
-        leftFraction[126] = 2
+        val left = BigDecimal("421.42")
+        val right = BigDecimal("-421.42")
 
-        // -421.42
-        val rightSign: Byte = -1
-        val rightInteger = ByteArray(1024)
-        rightInteger[2] = 4
-        rightInteger[1] = 2
-        rightInteger[0] = 1
-        val rightFraction = ByteArray(128)
-        rightFraction[127] = 4
-        rightFraction[126] = 2
+        val input = "{\"left\": ${left.toJSON()}" +
+            ",\"right\": ${right.toJSON()}}"
 
-        val input = "{\"left\": ${toBigDecimalJSON(leftSign, leftInteger, leftFraction)}" +
-            ",\"right\": ${toBigDecimalJSON(rightSign, rightInteger, rightFraction)}}"
+        val expected = "\"${if (left == right) 0 else 1}\""
 
-        val output = zincZKService.prove(input.toByteArray())
-        zincZKService.verify(output, "\"1\"".toByteArray())
+        val proof = zincZKService.prove(input.toByteArray())
+        zincZKService.verify(proof, expected.toByteArray())
     }
 
     @Test
     fun `zinc compares using equals (integer is different)`() {
-        // 421.42
-        val leftSign: Byte = 1
-        val leftInteger = ByteArray(1024)
-        leftInteger[2] = 4
-        leftInteger[1] = 2
-        leftInteger[0] = 1
-        val leftFraction = ByteArray(128)
-        leftFraction[127] = 4
-        leftFraction[126] = 2
+        val left = BigDecimal("421.42")
+        val right = BigDecimal("42.42")
 
-        // 42.42
-        val rightSign: Byte = 1
-        val rightInteger = ByteArray(1024)
-        rightInteger[1] = 4
-        rightInteger[0] = 2
-        val rightFraction = ByteArray(128)
-        rightFraction[127] = 4
-        rightFraction[126] = 2
+        val input = "{\"left\": ${left.toJSON()}" +
+            ",\"right\": ${right.toJSON()}}"
 
-        val input = "{\"left\": ${toBigDecimalJSON(leftSign, leftInteger, leftFraction)}" +
-            ",\"right\": ${toBigDecimalJSON(rightSign, rightInteger, rightFraction)}}"
+        val expected = "\"${if (left == right) 0 else 1}\""
 
-        val output = zincZKService.prove(input.toByteArray())
-        zincZKService.verify(output, "\"1\"".toByteArray())
+        val proof = zincZKService.prove(input.toByteArray())
+        zincZKService.verify(proof, expected.toByteArray())
     }
 
     @Test
     fun `zinc compares using equals (fraction is different)`() {
-        // 421.42
-        val leftSign: Byte = 1
-        val leftInteger = ByteArray(1024)
-        leftInteger[2] = 4
-        leftInteger[1] = 2
-        leftInteger[0] = 1
-        val leftFraction = ByteArray(128)
-        leftFraction[127] = 4
-        leftFraction[126] = 2
+        val left = BigDecimal("421.42")
+        val right = BigDecimal("421.421")
 
-        // 421.421
-        val rightSign: Byte = 1
-        val rightInteger = ByteArray(1024)
-        rightInteger[2] = 4
-        rightInteger[1] = 2
-        rightInteger[0] = 1
-        val rightFraction = ByteArray(128)
-        rightFraction[127] = 4
-        rightFraction[126] = 2
-        rightFraction[125] = 1
+        val input = "{\"left\": ${left.toJSON()}" +
+            ",\"right\": ${right.toJSON()}}"
 
-        val input = "{\"left\": ${toBigDecimalJSON(leftSign, leftInteger, leftFraction)}" +
-            ",\"right\": ${toBigDecimalJSON(rightSign, rightInteger, rightFraction)}}"
+        val expected = "\"${if (left == right) 0 else 1}\""
 
-        val output = zincZKService.prove(input.toByteArray())
-        zincZKService.verify(output, "\"1\"".toByteArray())
+        val proof = zincZKService.prove(input.toByteArray())
+        zincZKService.verify(proof, expected.toByteArray())
     }
 
     @Test
     fun `zinc compares using equals (both are equal to each other)`() {
-        // 421.42
-        val leftSign: Byte = 1
-        val leftInteger = ByteArray(1024)
-        leftInteger[2] = 4
-        leftInteger[1] = 2
-        leftInteger[0] = 1
-        val leftFraction = ByteArray(128)
-        leftFraction[127] = 4
-        leftFraction[126] = 2
+        val left = BigDecimal("421.42")
+        val right = BigDecimal("421.42")
 
-        // 421.42
-        val rightSign: Byte = 1
-        val rightInteger = ByteArray(1024)
-        rightInteger[2] = 4
-        rightInteger[1] = 2
-        rightInteger[0] = 1
-        val rightFraction = ByteArray(128)
-        rightFraction[127] = 4
-        rightFraction[126] = 2
+        val input = "{\"left\": ${left.toJSON()}" +
+            ",\"right\": ${right.toJSON()}}"
 
-        val input = "{\"left\": ${toBigDecimalJSON(leftSign, leftInteger, leftFraction)}" +
-            ",\"right\": ${toBigDecimalJSON(rightSign, rightInteger, rightFraction)}}"
+        val expected = "\"${if (left == right) 0 else 1}\""
 
-        val output = zincZKService.prove(input.toByteArray())
-        zincZKService.verify(output, "\"0\"".toByteArray())
+        val proof = zincZKService.prove(input.toByteArray())
+        zincZKService.verify(proof, expected.toByteArray())
     }
 }

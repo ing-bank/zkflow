@@ -25,7 +25,6 @@ import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.Party
 import net.corda.core.node.services.AttachmentId
 import org.bouncycastle.jce.provider.BouncyCastleProvider
-import sun.misc.DoubleConsts
 import java.math.BigDecimal
 import java.security.MessageDigest
 import java.security.PublicKey

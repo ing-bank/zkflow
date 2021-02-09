@@ -2,10 +2,12 @@ package com.ing.zknotary.common.input
 
 import com.ing.zknotary.common.zkp.ZKProvingException
 import com.ing.zknotary.common.zkp.ZincZKService
+import net.corda.core.contracts.Amount
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import java.math.BigDecimal
 import java.time.Duration
 
 class AmountPlusTest {
@@ -31,35 +33,19 @@ class AmountPlusTest {
         fun `remove zinc files`() {
             zincZKService.cleanup()
         }
+
+        const val DUMMY_TOKEN = "com.ing.zknotary.SuperToken"
+        const val ANOTHER_DUMMY_TOKEN = 420
     }
 
     @Test
     fun `zinc plus fails due to different token sizes`() {
         val exception = Assertions.assertThrows(ZKProvingException::class.java) {
-            // 10
-            val leftSign: Byte = 1
-            val leftInteger = ByteArray(1024)
-            leftInteger[1022] = 1
-            val leftFraction = ByteArray(128)
-            val leftDisplayTokenSize = toBigDecimalJSON(leftSign, leftInteger, leftFraction)
+            val left = Amount(200, BigDecimal("10"), DUMMY_TOKEN)
+            val right = Amount(100, BigDecimal("1"), DUMMY_TOKEN)
 
-            val leftQuantity: Long = 100
-            val leftTokenHash = ByteArray(128)
-            val leftAmount = toAmountJSON(leftQuantity, leftDisplayTokenSize, leftTokenHash)
-
-            // 1
-            val rightSign: Byte = 1
-            val rightInteger = ByteArray(1024)
-            rightInteger[1023] = 1
-            val rightFraction = ByteArray(128)
-            val rightDisplayTokenSize = toBigDecimalJSON(rightSign, rightInteger, rightFraction)
-
-            val rightQuantity: Long = 100
-            val rightTokenHash = ByteArray(128)
-            val rightAmount = toAmountJSON(rightQuantity, rightDisplayTokenSize, rightTokenHash)
-
-            val input = "{\"left\": $leftAmount" +
-                ",\"right\": $rightAmount}"
+            val input = "{\"left\": ${left.toJSON()}" +
+                ",\"right\": ${right.toJSON()}}"
 
             zincZKService.prove(input.toByteArray())
         }
@@ -73,31 +59,11 @@ class AmountPlusTest {
     @Test
     fun `zinc plus fails due to different token hashes`() {
         val exception = Assertions.assertThrows(ZKProvingException::class.java) {
-            // 1
-            val leftSign: Byte = 1
-            val leftInteger = ByteArray(1024)
-            leftInteger[1023] = 1
-            val leftFraction = ByteArray(128)
-            val leftDisplayTokenSize = toBigDecimalJSON(leftSign, leftInteger, leftFraction)
+            val left = Amount(1, BigDecimal("1"), DUMMY_TOKEN)
+            val right = Amount(1, BigDecimal("1"), ANOTHER_DUMMY_TOKEN)
 
-            val leftQuantity: Long = 100
-            val leftTokenHash = ByteArray(128)
-            leftTokenHash[127] = 1
-            val leftAmount = toAmountJSON(leftQuantity, leftDisplayTokenSize, leftTokenHash)
-
-            // 1
-            val rightSign: Byte = 1
-            val rightInteger = ByteArray(1024)
-            rightInteger[1023] = 1
-            val rightFraction = ByteArray(128)
-            val rightDisplayTokenSize = toBigDecimalJSON(rightSign, rightInteger, rightFraction)
-
-            val rightQuantity: Long = 100
-            val rightTokenHash = ByteArray(128)
-            val rightAmount = toAmountJSON(rightQuantity, rightDisplayTokenSize, rightTokenHash)
-
-            val input = "{\"left\": $leftAmount" +
-                ",\"right\": $rightAmount}"
+            val input = "{\"left\": ${left.toJSON()}" +
+                ",\"right\": ${right.toJSON()}}"
 
             zincZKService.prove(input.toByteArray())
         }
@@ -110,42 +76,15 @@ class AmountPlusTest {
 
     @Test
     fun `zinc plus smoke test`() {
-        // 1
-        val leftSign: Byte = 1
-        val leftInteger = ByteArray(1024)
-        leftInteger[1023] = 1
-        val leftFraction = ByteArray(128)
-        val leftDisplayTokenSize = toBigDecimalJSON(leftSign, leftInteger, leftFraction)
+        val left = Amount(100, BigDecimal("1"), DUMMY_TOKEN)
+        val right = Amount(100, BigDecimal("1"), DUMMY_TOKEN)
 
-        val leftQuantity: Long = 100
-        val leftTokenHash = ByteArray(128)
-        val leftAmount = toAmountJSON(leftQuantity, leftDisplayTokenSize, leftTokenHash)
+        val input = "{\"left\": ${left.toJSON()}" +
+            ",\"right\": ${right.toJSON()}}"
 
-        // 1
-        val rightSign: Byte = 1
-        val rightInteger = ByteArray(1024)
-        rightInteger[1023] = 1
-        val rightFraction = ByteArray(128)
-        val rightDisplayTokenSize = toBigDecimalJSON(rightSign, rightInteger, rightFraction)
+        val expected = left.plus(right)
 
-        val rightQuantity: Long = 100
-        val rightTokenHash = ByteArray(128)
-        val rightAmount = toAmountJSON(rightQuantity, rightDisplayTokenSize, rightTokenHash)
-
-        val input = "{\"left\": $leftAmount" +
-            ",\"right\": $rightAmount}"
-
-        val sign: Byte = 1
-        val integer = ByteArray(1024)
-        integer[1023] = 1
-        val fraction = ByteArray(128)
-        val displayTokenSize = toBigDecimalJSON(sign, integer, fraction)
-
-        val quantity: Long = 200
-        val tokenHash = ByteArray(128)
-        val amount = toAmountJSON(quantity, displayTokenSize, tokenHash)
-
-        val output = zincZKService.prove(input.toByteArray())
-        zincZKService.verify(output, amount.toByteArray())
+        val proof = zincZKService.prove(input.toByteArray())
+        zincZKService.verify(proof, expected.toJSON().toByteArray())
     }
 }
