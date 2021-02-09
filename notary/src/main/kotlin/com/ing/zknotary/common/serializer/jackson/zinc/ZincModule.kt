@@ -53,7 +53,6 @@ class ZincModule : SimpleModule("corda-core") {
 
         context.setMixInAnnotations(BigDecimal::class.java, BigDecimalMixin::class.java)
         context.setMixInAnnotations(ByteArray::class.java, ByteArrayMixinZinc::class.java)
-        context.setMixInAnnotations(Double::class.java, DoubleMixinZinc::class.java)
     }
 }
 
@@ -299,26 +298,5 @@ private interface ByteArrayMixinZinc
 private class ByteArrayMixinZincSerializer : JsonSerializer<ByteArray>() {
     override fun serialize(value: ByteArray, gen: JsonGenerator, serializers: SerializerProvider) {
         gen.writeObject(value.map { it.asUnsigned() })
-    }
-}
-
-@JsonSerialize(using = DoubleMixinZincSerializer::class)
-private interface DoubleMixinZinc
-
-private class DoubleMixinZincSerializer : JsonSerializer<Double>() {
-    override fun serialize(value: Double, gen: JsonGenerator, serializers: SerializerProvider) {
-        val doubleBits = java.lang.Double.doubleToLongBits(value)
-        val magnitude = doubleBits and DoubleConsts.SIGNIF_BIT_MASK
-        val exponent = doubleBits and DoubleConsts.EXP_BIT_MASK shr 52
-        val sign =
-            if (magnitude == 0L && exponent == 0L) 0
-            else if (doubleBits and DoubleConsts.SIGNIF_BIT_MASK shr 63 == 0L) 1
-            else -1
-
-        gen.writeStartObject()
-        gen.writeObjectField("sign", sign)
-        gen.writeObjectField("exponent", exponent)
-        gen.writeObjectField("magnitude", magnitude)
-        gen.writeEndObject()
     }
 }
