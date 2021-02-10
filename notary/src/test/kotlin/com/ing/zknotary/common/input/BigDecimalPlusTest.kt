@@ -9,6 +9,7 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
+import java.math.BigInteger
 import java.time.Duration
 
 @Tag("slow")
@@ -274,5 +275,465 @@ class BigDecimalPlusTest {
             exception.message?.contains("Magnitude exceeds the maximum stored value") ?: false,
             "Circuit fails with different error"
         )
+    }
+
+    @Test
+    fun `BigDecimal compatibility - zinc sum of two of the same positive scale`() {
+        val leftString = "1231212478987482988429808779810457634781384756794987"
+        val leftScale = 10
+        val left = BigDecimal(BigInteger(leftString), leftScale)
+
+        val rightString = "747233429293018787918347987234564568"
+        val rightScale = 10
+        val right = BigDecimal(BigInteger(rightString), rightScale)
+
+        val input = "{\"left\": ${left.toJSON()}" +
+            ",\"right\": ${right.toJSON()}}"
+
+        val proof = zincZKService.prove(input.toByteArray())
+        zincZKService.verify(proof, left.plus(right).toJSON().toByteArray())
+    }
+
+    @Test
+    fun `BigDecimal compatibility - zinc sum of two of the same negative scale`() {
+        val leftString = "1231212478987482988429808779810457634781384756794987"
+        val leftScale = -10
+        val left = BigDecimal(BigInteger(leftString), leftScale)
+
+        val rightString = "747233429293018787918347987234564568"
+        val rightScale = -10
+        val right = BigDecimal(BigInteger(rightString), rightScale)
+
+        val input = "{\"left\": ${left.toJSON()}" +
+            ",\"right\": ${right.toJSON()}}"
+
+        val proof = zincZKService.prove(input.toByteArray())
+        zincZKService.verify(proof, left.plus(right).toJSON().toByteArray())
+    }
+
+    @Test
+    fun `BigDecimal compatibility - zinc sum of two with different scales (first - positive, second negative)`() {
+        val leftString = "1231212478987482988429808779810457634781384756794987"
+        val leftScale = 15
+        val left = BigDecimal(BigInteger(leftString), leftScale)
+
+        val rightString = "747233429293018787918347987234564568"
+        val rightScale = -10
+        val right = BigDecimal(BigInteger(rightString), rightScale)
+
+        val input = "{\"left\": ${left.toJSON()}" +
+            ",\"right\": ${right.toJSON()}}"
+
+        val proof = zincZKService.prove(input.toByteArray())
+        zincZKService.verify(proof, left.plus(right).toJSON().toByteArray())
+    }
+
+    @Test
+    fun `BigDecimal compatibility - zinc sum of two with different scales (left - negative, right - positive)`() {
+        val leftString = "1231212478987482988429808779810457634781384756794987"
+        val leftScale = -15
+        val left = BigDecimal(BigInteger(leftString), leftScale)
+
+        val rightString = "747233429293018787918347987234564568"
+        val rightScale = 10
+        val right = BigDecimal(BigInteger(rightString), rightScale)
+
+        val input = "{\"left\": ${left.toJSON()}" +
+            ",\"right\": ${right.toJSON()}}"
+
+        val proof = zincZKService.prove(input.toByteArray())
+        zincZKService.verify(proof, left.plus(right).toJSON().toByteArray())
+    }
+
+    @Test
+    fun `BigDecimal compatibility - zinc sum of two zeroes with different scales (left - negative, right - positive)`() {
+        val leftString = "0"
+        val leftScale = -15
+        val left = BigDecimal(BigInteger(leftString), leftScale)
+
+        val rightString = "0"
+        val rightScale = 10
+        val right = BigDecimal(BigInteger(rightString), rightScale)
+
+        val input = "{\"left\": ${left.toJSON()}" +
+            ",\"right\": ${right.toJSON()}}"
+
+        val proof = zincZKService.prove(input.toByteArray())
+        zincZKService.verify(proof, left.plus(right).toJSON().toByteArray())
+    }
+
+    @Test
+    fun `BigInteger compatibility - zinc sum two positives of the same length`() {
+        val leftBytes = byteArrayOf(1, 2, 3, 4, 5, 6, 7, 1, 2, 3)
+        val leftSign = 1
+        val left = BigDecimal(BigInteger(leftSign, leftBytes))
+
+        val rightBytes = byteArrayOf(10, 20, 30, 40, 50, 60, 70, 10, 20, 30)
+        val bSign = 1
+        val right = BigDecimal(BigInteger(bSign, rightBytes))
+
+        val input = "{\"left\": ${left.toJSON()}" +
+            ",\"right\": ${right.toJSON()}}"
+
+        val proof = zincZKService.prove(input.toByteArray())
+        zincZKService.verify(proof, left.add(right).toJSON().toByteArray())
+    }
+
+    @Test
+    fun `BigInteger compatibility - zinc sum two positives of the same length 2`() {
+        val leftBytes = byteArrayOf(1, 2, 3, 4, 5, 6, 7, 1, 2, 3)
+        val leftSign = -1
+        val left = BigDecimal(BigInteger(leftSign, leftBytes))
+
+        val rightBytes = byteArrayOf(10, 20, 30, 40, 50, 60, 70, 10, 20, 30)
+        val rightSign = -1
+        val right = BigDecimal(BigInteger(rightSign, rightBytes))
+
+        val input = "{\"left\": ${left.toJSON()}" +
+            ",\"right\": ${right.toJSON()}}"
+
+        val proof = zincZKService.prove(input.toByteArray())
+        zincZKService.verify(proof, left.add(right).toJSON().toByteArray())
+    }
+
+    @Test
+    fun `BigInteger compatibility - zinc sum two numbers 0f the same length (left - positive, right - negative, left abs value is greater)`() {
+        val leftBytes = byteArrayOf(3, 4, 5, 6, 7, 8, 9)
+        val leftSign = 1
+        val left = BigDecimal(BigInteger(leftSign, leftBytes))
+
+        val rightBytes = byteArrayOf(1, 2, 3, 4, 5, 6, 7)
+        val rightSign = -1
+        val right = BigDecimal(BigInteger(rightSign, rightBytes))
+
+        val input = "{\"left\": ${left.toJSON()}" +
+            ",\"right\": ${right.toJSON()}}"
+
+        val proof = zincZKService.prove(input.toByteArray())
+        zincZKService.verify(proof, left.add(right).toJSON().toByteArray())
+    }
+
+    @Test
+    fun `BigInteger compatibility - zinc sum two numbers of the same length (left - negative, right - positive, left abs value is greater)`() {
+        val leftBytes = byteArrayOf(3, 4, 5, 6, 7, 8, 9)
+        val leftSign = -1
+        val left = BigDecimal(BigInteger(leftSign, leftBytes))
+
+        val rightBytes = byteArrayOf(1, 2, 3, 4, 5, 6, 7)
+        val rightSign = 1
+        val right = BigDecimal(BigInteger(rightSign, rightBytes))
+
+        val input = "{\"left\": ${left.toJSON()}" +
+            ",\"right\": ${right.toJSON()}}"
+
+        val proof = zincZKService.prove(input.toByteArray())
+        zincZKService.verify(proof, left.add(right).toJSON().toByteArray())
+    }
+
+    @Test
+    fun `BigInteger compatibility - zinc sum two numbers of the same length (left - positive, right - negative, right abs value is greater)`() {
+        val leftBytes = byteArrayOf(1, 2, 3, 4, 5, 6, 7)
+        val leftSign = 1
+        val left = BigDecimal(BigInteger(leftSign, leftBytes))
+
+        val rightBytes = byteArrayOf(3, 4, 5, 6, 7, 8, 9)
+        val rightSign = -1
+        val right = BigDecimal(BigInteger(rightSign, rightBytes))
+
+        val input = "{\"left\": ${left.toJSON()}" +
+            ",\"right\": ${right.toJSON()}}"
+
+        val proof = zincZKService.prove(input.toByteArray())
+        zincZKService.verify(proof, left.add(right).toJSON().toByteArray())
+    }
+
+    @Test
+    fun `BigInteger compatibility - zinc sum two numbers of the same length (left - negative, right - positive, right abs value is greater)`() {
+        val leftBytes = byteArrayOf(1, 2, 3, 4, 5, 6, 7)
+        val leftSign = -1
+        val left = BigDecimal(BigInteger(leftSign, leftBytes))
+
+        val rightBytes = byteArrayOf(3, 4, 5, 6, 7, 8, 9)
+        val rightSign = 1
+        val right = BigDecimal(BigInteger(rightSign, rightBytes))
+
+        val input = "{\"left\": ${left.toJSON()}" +
+            ",\"right\": ${right.toJSON()}}"
+
+        val proof = zincZKService.prove(input.toByteArray())
+        zincZKService.verify(proof, left.add(right).toJSON().toByteArray())
+    }
+
+    @Test
+    fun `BigInteger compatibility - zinc sum two positives of different length (left is longer)`() {
+        val leftBytes = byteArrayOf(1, 2, 3, 4, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7)
+        val leftSign = 1
+        val left = BigDecimal(BigInteger(leftSign, leftBytes))
+
+        val rightBytes = byteArrayOf(10, 20, 30, 40, 50, 60, 70, 10, 20, 30)
+        val rightSign = 1
+        val right = BigDecimal(BigInteger(rightSign, rightBytes))
+
+        val input = "{\"left\": ${left.toJSON()}" +
+            ",\"right\": ${right.toJSON()}}"
+
+        val proof = zincZKService.prove(input.toByteArray())
+        zincZKService.verify(proof, left.add(right).toJSON().toByteArray())
+    }
+
+    @Test
+    fun `BigInteger compatibility - zinc sum two positives of different length (right is longer)`() {
+        val leftBytes = byteArrayOf(10, 20, 30, 40, 50, 60, 70, 10, 20, 30)
+        val left = BigDecimal(BigInteger(leftBytes))
+
+        val rightBytes = byteArrayOf(1, 2, 3, 4, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7)
+        val right = BigDecimal(BigInteger(rightBytes))
+
+        val input = "{\"left\": ${left.toJSON()}" +
+            ",\"right\": ${right.toJSON()}}"
+
+        val proof = zincZKService.prove(input.toByteArray())
+        zincZKService.verify(proof, left.add(right).toJSON().toByteArray())
+    }
+
+    @Test
+    fun `BigInteger compatibility - zinc sum two negatives of different length (left is longer)`() {
+        val leftBytes = byteArrayOf(1, 2, 3, 4, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7)
+        val leftSign = -1
+        val left = BigDecimal(BigInteger(leftSign, leftBytes))
+
+        val rightBytes = byteArrayOf(10, 20, 30, 40, 50, 60, 70, 10, 20, 30)
+        val rightSign = -1
+        val right = BigDecimal(BigInteger(rightSign, rightBytes))
+
+        val input = "{\"left\": ${left.toJSON()}" +
+            ",\"right\": ${right.toJSON()}}"
+
+        val proof = zincZKService.prove(input.toByteArray())
+        zincZKService.verify(proof, left.add(right).toJSON().toByteArray())
+    }
+
+    @Test
+    fun `BigInteger compatibility - zinc sum two negatives of different length (right is longer)`() {
+        val leftBytes = byteArrayOf(10, 20, 30, 40, 50, 60, 70, 10, 20, 30)
+        val leftSign = -1
+        val left = BigDecimal(BigInteger(leftSign, leftBytes))
+
+        val rightBytes = byteArrayOf(1, 2, 3, 4, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7)
+        val rightSign = -1
+        val right = BigDecimal(BigInteger(rightSign, rightBytes))
+
+        val input = "{\"left\": ${left.toJSON()}" +
+            ",\"right\": ${right.toJSON()}}"
+
+        val proof = zincZKService.prove(input.toByteArray())
+        zincZKService.verify(proof, left.add(right).toJSON().toByteArray())
+    }
+
+    @Test
+    fun `BigInteger compatibility - zinc sum two numbers of different length (left - positive, right - negative, left - longer)`() {
+        val leftBytes = byteArrayOf(1, 2, 3, 4, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7)
+        val leftSign = 1
+        val left = BigDecimal(BigInteger(leftSign, leftBytes))
+
+        val rightBytes = byteArrayOf(10, 20, 30, 40, 50, 60, 70, 10, 20, 30)
+        val rightSign = -1
+        val right = BigDecimal(BigInteger(rightSign, rightBytes))
+
+        val input = "{\"left\": ${left.toJSON()}" +
+            ",\"right\": ${right.toJSON()}}"
+
+        val proof = zincZKService.prove(input.toByteArray())
+        zincZKService.verify(proof, left.add(right).toJSON().toByteArray())
+    }
+
+    @Test
+    fun `BigInteger compatibility - zinc sum two numbers of different length (left - positive, right - negative, right - longer)`() {
+        val leftBytes = byteArrayOf(10, 20, 30, 40, 50, 60, 70, 10, 20, 30)
+        val leftSign = 1
+        val left = BigDecimal(BigInteger(leftSign, leftBytes))
+
+        val rightBytes = byteArrayOf(1, 2, 3, 4, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7)
+        val rightSign = -1
+        val right = BigDecimal(BigInteger(rightSign, rightBytes))
+
+        val input = "{\"left\": ${left.toJSON()}" +
+            ",\"right\": ${right.toJSON()}}"
+
+        val proof = zincZKService.prove(input.toByteArray())
+        zincZKService.verify(proof, left.add(right).toJSON().toByteArray())
+    }
+
+    @Test
+    fun `BigInteger compatibility - zinc sum two numbers of different length (left - negative, right - positive, left - longer)`() {
+        val leftBytes = byteArrayOf(1, 2, 3, 4, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7)
+        val leftSign = -1
+        val left = BigDecimal(BigInteger(leftSign, leftBytes))
+
+        val rightBytes = byteArrayOf(10, 20, 30, 40, 50, 60, 70, 10, 20, 30)
+        val rightSign = 1
+        val right = BigDecimal(BigInteger(rightSign, rightBytes))
+
+        val input = "{\"left\": ${left.toJSON()}" +
+            ",\"right\": ${right.toJSON()}}"
+
+        val proof = zincZKService.prove(input.toByteArray())
+        zincZKService.verify(proof, left.add(right).toJSON().toByteArray())
+    }
+
+    @Test
+    fun `BigInteger compatibility - zinc sum two numbers of different length (left - negative, right - positive, right - longer)`() {
+        val leftBytes = byteArrayOf(10, 20, 30, 40, 50, 60, 70, 10, 20, 30)
+        val leftSign = -1
+        val left = BigDecimal(BigInteger(leftSign, leftBytes))
+
+        val rightBytes = byteArrayOf(1, 2, 3, 4, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7)
+        val rightSign = 1
+        val right = BigDecimal(BigInteger(rightSign, rightBytes))
+
+        val input = "{\"left\": ${left.toJSON()}" +
+            ",\"right\": ${right.toJSON()}}"
+
+        val proof = zincZKService.prove(input.toByteArray())
+        zincZKService.verify(proof, left.add(right).toJSON().toByteArray())
+    }
+
+    @Test
+    fun `BigInteger compatibility - zinc sum two equal numbers with different signs`() {
+        val leftBytes = byteArrayOf(1, 2, 3, 4, 5, 6, 7)
+        val leftSign = -1
+        val left = BigDecimal(BigInteger(leftSign, leftBytes))
+
+        val rightBytes = byteArrayOf(1, 2, 3, 4, 5, 6, 7)
+        val rightSign = 1
+        val right = BigDecimal(BigInteger(rightSign, rightBytes))
+
+        val input = "{\"left\": ${left.toJSON()}" +
+            ",\"right\": ${right.toJSON()}}"
+
+        val proof = zincZKService.prove(input.toByteArray())
+        zincZKService.verify(proof, left.add(right).toJSON().toByteArray())
+    }
+
+    @Test
+    fun `BigInteger compatibility - zinc sum number and zero`() {
+        val leftBytes = byteArrayOf(1, 2, 3, 4, 5, 6, 7)
+        val leftSign = 1
+        val left = BigDecimal(BigInteger(leftSign, leftBytes))
+
+        val rightBytes = byteArrayOf(0)
+        val rightSign = 1
+        val right = BigDecimal(BigInteger(rightSign, rightBytes))
+
+        val input = "{\"left\": ${left.toJSON()}" +
+            ",\"right\": ${right.toJSON()}}"
+
+        val proof = zincZKService.prove(input.toByteArray())
+        zincZKService.verify(proof, left.add(right).toJSON().toByteArray())
+    }
+
+    @Test
+    fun `BigInteger compatibility - zinc sum zero and number`() {
+        val leftBytes = byteArrayOf(0)
+        val leftSign = 1
+        val left = BigDecimal(BigInteger(leftSign, leftBytes))
+
+        val rightBytes = byteArrayOf(1, 2, 3, 4, 5, 6, 7)
+        val rightSign = 1
+        val right = BigDecimal(BigInteger(rightSign, rightBytes))
+
+        val input = "{\"left\": ${left.toJSON()}" +
+            ",\"right\": ${right.toJSON()}}"
+
+        val proof = zincZKService.prove(input.toByteArray())
+        zincZKService.verify(proof, left.add(right).toJSON().toByteArray())
+    }
+
+    @Test
+    fun `BigInteger compatibility - zinc sum zero and zero`() {
+        val leftBytes = byteArrayOf(0)
+        val leftSign = 1
+        val left = BigDecimal(BigInteger(leftSign, leftBytes))
+
+        val rightBytes = byteArrayOf(0)
+        val rightSign = 1
+        val right = BigDecimal(BigInteger(rightSign, rightBytes))
+
+        val input = "{\"left\": ${left.toJSON()}" +
+            ",\"right\": ${right.toJSON()}}"
+
+        val proof = zincZKService.prove(input.toByteArray())
+        zincZKService.verify(proof, left.add(right).toJSON().toByteArray())
+    }
+
+    @Test
+    fun `BigInteger compatibility - zinc sum number and ZERO`() {
+        val leftBytes = byteArrayOf(1, 2, 3, 4, 5, 6, 7)
+        val leftSign = 1
+        val left = BigDecimal(BigInteger(leftSign, leftBytes))
+
+        val right = BigDecimal(BigInteger.ZERO)
+
+        val input = "{\"left\": ${left.toJSON()}" +
+            ",\"right\": ${right.toJSON()}}"
+
+        val proof = zincZKService.prove(input.toByteArray())
+        zincZKService.verify(proof, left.add(right).toJSON().toByteArray())
+    }
+
+    @Test
+    fun `BigInteger compatibility - zinc sum ZERO and number`() {
+        val left = BigDecimal(BigInteger.ZERO)
+
+        val rightBytes = byteArrayOf(1, 2, 3, 4, 5, 6, 7)
+        val rightSign = 1
+        val right = BigDecimal(BigInteger(rightSign, rightBytes))
+
+        val input = "{\"left\": ${left.toJSON()}" +
+            ",\"right\": ${right.toJSON()}}"
+
+        val proof = zincZKService.prove(input.toByteArray())
+        zincZKService.verify(proof, left.add(right).toJSON().toByteArray())
+    }
+
+    @Test
+    fun `BigInteger compatibility - zinc sum ZERO and ZERO`() {
+        val left = BigDecimal(BigInteger.ZERO)
+        val right = BigDecimal(BigInteger.ZERO)
+
+        val input = "{\"left\": ${left.toJSON()}" +
+            ",\"right\": ${right.toJSON()}}"
+
+        val proof = zincZKService.prove(input.toByteArray())
+        zincZKService.verify(proof, left.add(right).toJSON().toByteArray())
+    }
+
+    @Test
+    fun `BigInteger compatibility - zinc sum ONE and ONE`() {
+        val left = BigDecimal(BigInteger.ONE)
+        val right = BigDecimal(BigInteger.ONE)
+
+        val input = "{\"left\": ${left.toJSON()}" +
+            ",\"right\": ${right.toJSON()}}"
+
+        val proof = zincZKService.prove(input.toByteArray())
+        zincZKService.verify(proof, left.add(right).toJSON().toByteArray())
+    }
+
+    @Test
+    fun `BigInteger compatibility - zinc sum two numbers so that carry is 1`() {
+        val leftBytes = byteArrayOf(-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1)
+        val leftSign = 1
+        val left = BigDecimal(BigInteger(leftSign, leftBytes))
+
+        val rightBytes = byteArrayOf(-1, -1, -1, -1, -1, -1, -1, -1)
+        val rightSign = 1
+        val right = BigDecimal(BigInteger(rightSign, rightBytes))
+
+        val input = "{\"left\": ${left.toJSON()}" +
+            ",\"right\": ${right.toJSON()}}"
+
+        val proof = zincZKService.prove(input.toByteArray())
+        zincZKService.verify(proof, left.add(right).toJSON().toByteArray())
     }
 }

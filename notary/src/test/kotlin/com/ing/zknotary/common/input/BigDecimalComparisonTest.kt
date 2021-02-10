@@ -5,6 +5,7 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
+import java.math.BigInteger
 import java.time.Duration
 
 class BigDecimalComparisonTest {
@@ -138,6 +139,358 @@ class BigDecimalComparisonTest {
             ",\"right\": ${zero.toJSON()}}"
 
         val expected = "\"${zero.compareTo(zero)}\""
+
+        val proof = zincZKService.prove(input.toByteArray())
+        zincZKService.verify(proof, expected.toByteArray())
+    }
+
+    @Test
+    fun `BigDecimal compatibility - zinc compare the same scale`() {
+        val leftString = "12380964839238475457356735674573563567890295784902768787678287"
+        val leftScale = 18
+        val left = BigDecimal(BigInteger(leftString), leftScale)
+
+        val rightString = "4573563567890295784902768787678287"
+        val rightScale = 18
+        val right = BigDecimal(BigInteger(rightString), rightScale)
+
+        val input = "{\"left\": ${left.toJSON()}" +
+            ",\"right\": ${right.toJSON()}}"
+
+        val expected = "\"${left.compareTo(right)}\""
+
+        val proof = zincZKService.prove(input.toByteArray())
+        zincZKService.verify(proof, expected.toByteArray())
+    }
+
+    @Test
+    fun `BigDecimal compatibility - zinc compare the same scale 2`() {
+        val leftString = "12380964839238475457356735674573563567890295784902768787678287"
+        val leftScale = 18
+        val left = BigDecimal(BigInteger(leftString), leftScale)
+
+        val rightString = "4573563923487289357829759278282992758247567890295784902768787678287"
+        val rightScale = 18
+        val right = BigDecimal(BigInteger(rightString), rightScale)
+
+        val input = "{\"left\": ${left.toJSON()}" +
+            ",\"right\": ${right.toJSON()}}"
+
+        val expected = "\"${left.compareTo(right)}\""
+
+        val proof = zincZKService.prove(input.toByteArray())
+        zincZKService.verify(proof, expected.toByteArray())
+    }
+
+    @Test
+    fun `BigDecimal compatibility - zinc compare with greater left scale`() {
+        val leftString = "12380964839238475457356735674573563567890295784902768787678287"
+        val leftScale = 28
+        val left = BigDecimal(BigInteger(leftString), leftScale)
+
+        val rightString = "4573563567890295784902768787678287"
+        val rightScale = 18
+        val right = BigDecimal(BigInteger(rightString), rightScale)
+
+        val input = "{\"left\": ${left.toJSON()}" +
+            ",\"right\": ${right.toJSON()}}"
+
+        val expected = "\"${left.compareTo(right)}\""
+
+        val proof = zincZKService.prove(input.toByteArray())
+        zincZKService.verify(proof, expected.toByteArray())
+    }
+
+    @Test
+    fun `BigDecimal compatibility - zinc compare with greater left scale 2`() {
+        val leftString = "12380964839238475457356735674573563567890295784902768787678287"
+        val leftScale = 48
+        val left = BigDecimal(BigInteger(leftString), leftScale)
+
+        val rightString = "4573563567890295784902768787678287"
+        val rightScale = 2
+        val right = BigDecimal(BigInteger(rightString), rightScale)
+
+        val input = "{\"left\": ${left.toJSON()}" +
+            ",\"right\": ${right.toJSON()}}"
+
+        val expected = "\"${left.compareTo(right)}\""
+
+        val proof = zincZKService.prove(input.toByteArray())
+        zincZKService.verify(proof, expected.toByteArray())
+    }
+
+    @Test
+    fun `BigDecimal compatibility - zinc compare with greater right scale`() {
+        val leftString = "12380964839238475457356735674573563567890295784902768787678287"
+        val leftScale = 18
+        val left = BigDecimal(BigInteger(leftString), leftScale)
+
+        val rightString = "4573563567890295784902768787678287"
+        val rightScale = 28
+        val right = BigDecimal(BigInteger(rightString), rightScale)
+
+        val input = "{\"left\": ${left.toJSON()}" +
+            ",\"right\": ${right.toJSON()}}"
+
+        val expected = "\"${left.compareTo(right)}\""
+
+        val proof = zincZKService.prove(input.toByteArray())
+        zincZKService.verify(proof, expected.toByteArray())
+    }
+
+    @Test
+    fun `BigDecimal compatibility - zinc compare with greater right scale 2`() {
+        val leftString = "12380964839238475457356735674573"
+        val leftScale = 36
+        val left = BigDecimal(BigInteger(leftString), leftScale)
+
+        val rightString = "45735635948573894578349572001798379183767890295784902768787678287"
+        val rightScale = 48
+        val right = BigDecimal(BigInteger(rightString), rightScale)
+
+        val input = "{\"left\": ${left.toJSON()}" +
+            ",\"right\": ${right.toJSON()}}"
+
+        val expected = "\"${left.compareTo(right)}\""
+
+        val proof = zincZKService.prove(input.toByteArray())
+        zincZKService.verify(proof, expected.toByteArray())
+    }
+
+    @Test
+    fun `BigInteger compatibility - zinc comparison of two positives with greater left`() {
+        val leftBytes = byteArrayOf(12, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, 3, 91)
+        val leftSign = 1
+        val left = BigDecimal(BigInteger(leftSign, leftBytes))
+
+        val rightBytes = byteArrayOf(10, 20, 30, 40, 50, 60, 70, 10, 20, 30)
+        val rightSign = 1
+        val right = BigDecimal(BigInteger(rightSign, rightBytes))
+
+        val input = "{\"left\": ${left.toJSON()}" +
+            ",\"right\": ${right.toJSON()}}"
+
+        val expected = "\"${left.compareTo(right)}\""
+
+        val proof = zincZKService.prove(input.toByteArray())
+        zincZKService.verify(proof, expected.toByteArray())
+    }
+
+    @Test
+    fun `BigInteger compatibility - zinc comparison of two positives with greater right`() {
+        val leftBytes = byteArrayOf(10, 20, 30, 40, 50, 60, 70, 10, 20, 30)
+        val leftSign = 1
+        val left = BigDecimal(BigInteger(leftSign, leftBytes))
+
+        val rightBytes = byteArrayOf(12, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, 3, 91)
+        val rightSign = 1
+        val right = BigDecimal(BigInteger(rightSign, rightBytes))
+
+        val input = "{\"left\": ${left.toJSON()}" +
+            ",\"right\": ${right.toJSON()}}"
+
+        val expected = "\"${left.compareTo(right)}\""
+
+        val proof = zincZKService.prove(input.toByteArray())
+        zincZKService.verify(proof, expected.toByteArray())
+    }
+
+    @Test
+    fun `BigInteger compatibility - zinc comparison of two equal positives`() {
+        val leftBytes = byteArrayOf(12, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, 3, 91)
+        val leftSign = 1
+        val left = BigDecimal(BigInteger(leftSign, leftBytes))
+
+        val rightBytes = byteArrayOf(12, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, 3, 91)
+        val rightSign = 1
+        val right = BigDecimal(BigInteger(rightSign, rightBytes))
+
+        val input = "{\"left\": ${left.toJSON()}" +
+            ",\"right\": ${right.toJSON()}}"
+
+        val expected = "\"${left.compareTo(right)}\""
+
+        val proof = zincZKService.prove(input.toByteArray())
+        zincZKService.verify(proof, expected.toByteArray())
+    }
+
+    @Test
+    fun `BigInteger compatibility - zinc comparison of two negatives (left abs value is greater)`() {
+        val leftBytes = byteArrayOf(12, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, 3, 91)
+        val leftSign = -1
+        val left = BigDecimal(BigInteger(leftSign, leftBytes))
+
+        val rightBytes = byteArrayOf(10, 20, 30, 40, 50, 60, 70, 10, 20, 30)
+        val rightSign = -1
+        val right = BigDecimal(BigInteger(rightSign, rightBytes))
+
+        val input = "{\"left\": ${left.toJSON()}" +
+            ",\"right\": ${right.toJSON()}}"
+
+        val expected = "\"${left.compareTo(right)}\""
+
+        val proof = zincZKService.prove(input.toByteArray())
+        zincZKService.verify(proof, expected.toByteArray())
+    }
+
+    @Test
+    fun `BigInteger compatibility - zinc comparison of two negatives (right abs value is greater)`() {
+        val leftBytes = byteArrayOf(10, 20, 30, 40, 50, 60, 70, 10, 20, 30)
+        val leftSign = -1
+        val left = BigDecimal(BigInteger(leftSign, leftBytes))
+
+        val rightBytes = byteArrayOf(12, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, 3, 91)
+        val rightSign = -1
+        val right = BigDecimal(BigInteger(rightSign, rightBytes))
+
+        val input = "{\"left\": ${left.toJSON()}" +
+            ",\"right\": ${right.toJSON()}}"
+
+        val expected = "\"${left.compareTo(right)}\""
+
+        val proof = zincZKService.prove(input.toByteArray())
+        zincZKService.verify(proof, expected.toByteArray())
+    }
+
+    @Test
+    fun `BigInteger compatibility - zinc comparison of two equal negatives`() {
+        val leftBytes = byteArrayOf(12, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, 3, 91)
+        val leftSign = -1
+        val left = BigDecimal(BigInteger(leftSign, leftBytes))
+
+        val rightBytes = byteArrayOf(12, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, 3, 91)
+        val rightSign = -1
+        val right = BigDecimal(BigInteger(rightSign, rightBytes))
+
+        val input = "{\"left\": ${left.toJSON()}" +
+            ",\"right\": ${right.toJSON()}}"
+
+        val expected = "\"${left.compareTo(right)}\""
+
+        val proof = zincZKService.prove(input.toByteArray())
+        zincZKService.verify(proof, expected.toByteArray())
+    }
+
+    @Test
+    fun `BigInteger compatibility - zinc comparison of two numbers with different signs (left is positive)`() {
+        val leftBytes = byteArrayOf(12, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, 3, 91)
+        val leftSign = 1
+        val left = BigDecimal(BigInteger(leftSign, leftBytes))
+
+        val rightBytes = byteArrayOf(10, 20, 30, 40, 50, 60, 70, 10, 20, 30)
+        val rightSign = -1
+        val right = BigDecimal(BigInteger(rightSign, rightBytes))
+
+        val input = "{\"left\": ${left.toJSON()}" +
+            ",\"right\": ${right.toJSON()}}"
+
+        val expected = "\"${left.compareTo(right)}\""
+
+        val proof = zincZKService.prove(input.toByteArray())
+        zincZKService.verify(proof, expected.toByteArray())
+    }
+
+    @Test
+    fun `BigInteger compatibility - zinc comparison of two numbers with different signs (left is negative)`() {
+        val leftBytes = byteArrayOf(12, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, 3, 91)
+        val leftSign = -1
+        val left = BigDecimal(BigInteger(leftSign, leftBytes))
+
+        val rightBytes = byteArrayOf(10, 20, 30, 40, 50, 60, 70, 10, 20, 30)
+        val rightSign = 1
+        val right = BigDecimal(BigInteger(rightSign, rightBytes))
+
+        val input = "{\"left\": ${left.toJSON()}" +
+            ",\"right\": ${right.toJSON()}}"
+
+        val expected = "\"${left.compareTo(right)}\""
+
+        val proof = zincZKService.prove(input.toByteArray())
+        zincZKService.verify(proof, expected.toByteArray())
+    }
+
+    @Test
+    fun `BigInteger compatibility - zinc comparison of positive and ZERO`() {
+        val leftBytes = byteArrayOf(12, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, 3, 91)
+        val leftSign = 1
+        val left = BigDecimal(BigInteger(leftSign, leftBytes))
+
+        val right = BigDecimal(BigInteger.ZERO)
+
+        val input = "{\"left\": ${left.toJSON()}" +
+            ",\"right\": ${right.toJSON()}}"
+
+        val expected = "\"${left.compareTo(right)}\""
+
+        val proof = zincZKService.prove(input.toByteArray())
+        zincZKService.verify(proof, expected.toByteArray())
+    }
+
+    @Test
+    fun `BigInteger compatibility - zinc comparison of ZERO and positive`() {
+        val left = BigDecimal(BigInteger.ZERO)
+
+        val rightBytes = byteArrayOf(12, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, 3, 91)
+        val rightSign = 1
+        val right = BigDecimal(BigInteger(rightSign, rightBytes))
+
+        val input = "{\"left\": ${left.toJSON()}" +
+            ",\"right\": ${right.toJSON()}}"
+
+        val expected = "\"${left.compareTo(right)}\""
+
+        val proof = zincZKService.prove(input.toByteArray())
+        zincZKService.verify(proof, expected.toByteArray())
+    }
+
+    @Test
+    fun `BigInteger compatibility - zinc comparison of negative and ZERO`() {
+        val leftBytes = byteArrayOf(12, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, 3, 91)
+        val leftSign = -1
+        val left = BigDecimal(BigInteger(leftSign, leftBytes))
+
+        val right = BigDecimal(BigInteger.ZERO)
+
+        val input = "{\"left\": ${left.toJSON()}" +
+            ",\"right\": ${right.toJSON()}}"
+
+        val expected = "\"${left.compareTo(right)}\""
+
+        val proof = zincZKService.prove(input.toByteArray())
+        zincZKService.verify(proof, expected.toByteArray())
+    }
+
+    @Test
+    fun `BigInteger compatibility - zinc comparison of ZERO and negative`() {
+        val left = BigDecimal(BigInteger.ZERO)
+
+        val leftBytes = byteArrayOf(12, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, 3, 91)
+        val leftSign = -1
+        val right = BigDecimal(BigInteger(leftSign, leftBytes))
+
+        val input = "{\"left\": ${left.toJSON()}" +
+            ",\"right\": ${right.toJSON()}}"
+
+        val expected = "\"${left.compareTo(right)}\""
+
+        val proof = zincZKService.prove(input.toByteArray())
+        zincZKService.verify(proof, expected.toByteArray())
+    }
+
+    /**
+     * compareTo(BigInteger a).
+     * Compare ZERO to ZERO.
+     */
+    @Test
+    fun `BigInteger compatibility - zinc comparison of ZERO and ZERO`() {
+        val left = BigDecimal(BigInteger.ZERO)
+        val right = BigDecimal(BigInteger.ZERO)
+
+        val input = "{\"left\": ${left.toJSON()}" +
+            ",\"right\": ${right.toJSON()}}"
+
+        val expected = "\"${left.compareTo(right)}\""
 
         val proof = zincZKService.prove(input.toByteArray())
         zincZKService.verify(proof, expected.toByteArray())
