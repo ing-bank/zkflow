@@ -1,5 +1,6 @@
 //In case if value can't be stored in BigDecimal, it will throw an exception,
 //the some goes for arithmetic operations.
+//TODO: prevent or mitigate serialization of BigDecimals, which can't fit to the given sizes
 const INTEGER_SIZE: u16 = 1024;
 const FRACTION_SIZE: u8 = 128;
 

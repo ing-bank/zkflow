@@ -85,12 +85,11 @@ tasks {
             // In this package we test functions of classes, which are stored in one particular file,
             // but since there are many of them, we need many main functions with different parameters and output,
             // thus we copy implementation to each testing module in resources (because, zinc support modules pretty bad).
-            if (this.className?.startsWith("com.ing.zknotary.common.input.") == true) {
-                val clazz = this.className?.removePrefix("com.ing.zknotary.common.input.")
-                `java.nio.file`.Files.copy(
-                    `java.nio.file`.Paths.get("prover/modules/shared/floating_point.zn"),
-                    `java.nio.file`.Paths.get("notary/build/resources/test/$clazz/src/floating_point.zn"),
-                    `java.nio.file`.StandardCopyOption.REPLACE_EXISTING
+            if (this.className?.startsWith("com.ing.zknotary.common.zinc.types.") == true) {
+                val clazz = this.className?.removePrefix("com.ing.zknotary.common.zinc.types.")
+                File("prover/modules/shared/floating_point.zn").copyTo(
+                    File("notary/build/resources/test/$clazz/src/floating_point.zn"),
+                    true
                 )
             }
         })

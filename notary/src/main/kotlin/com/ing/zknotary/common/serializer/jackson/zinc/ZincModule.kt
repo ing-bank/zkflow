@@ -13,7 +13,6 @@ import com.ing.zknotary.common.transactions.ZKProverTransaction
 import com.ing.zknotary.common.util.PaddingWrapper
 import com.ing.zknotary.common.zkp.PublicInput
 import com.ing.zknotary.common.zkp.Witness
-import net.corda.core.contracts.Amount
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.PrivacySalt
@@ -24,11 +23,7 @@ import net.corda.core.contracts.TransactionState
 import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.Party
 import net.corda.core.node.services.AttachmentId
-import org.bouncycastle.jce.provider.BouncyCastleProvider
-import java.math.BigDecimal
-import java.security.MessageDigest
 import java.security.PublicKey
-import java.security.Security
 
 class ZincModule : SimpleModule("corda-core") {
     override fun setupModule(context: SetupContext) {
@@ -36,7 +31,6 @@ class ZincModule : SimpleModule("corda-core") {
 
         context.setMixInAnnotations(StateAndRef::class.java, StateAndRefMixin::class.java)
         context.setMixInAnnotations(Witness::class.java, WitnessMixin::class.java)
-        context.setMixInAnnotations(Amount::class.java, AmountMixin::class.java)
         context.setMixInAnnotations(PublicInput::class.java, PublicInputMixin::class.java)
         context.setMixInAnnotations(ZKProverTransaction::class.java, ZKProverTransactionMixin::class.java)
         context.setMixInAnnotations(ZKCommandData::class.java, ZKCommandDataMixinZinc::class.java)
@@ -50,7 +44,6 @@ class ZincModule : SimpleModule("corda-core") {
         context.setMixInAnnotations(PrivacySalt::class.java, PrivacySaltMixinZinc::class.java)
         context.setMixInAnnotations(TimeWindow::class.java, TimeWindowMixinZinc::class.java)
 
-        context.setMixInAnnotations(BigDecimal::class.java, BigDecimalMixin::class.java)
         context.setMixInAnnotations(ByteArray::class.java, ByteArrayMixinZinc::class.java)
     }
 }
@@ -96,33 +89,11 @@ private class WitnessMixinSerializer : JsonSerializer<Witness>() {
     }
 }
 
-@Suppress("unused")
 private class WitnessJson(
     val transaction: ZKProverTransaction,
     val inputNonces: List<SecureHash>,
     val referenceNonces: List<SecureHash>
 )
-
-@JsonSerialize(using = AmountMixinSerializer::class)
-private interface AmountMixin
-
-private class AmountMixinSerializer : JsonSerializer<Amount<Any>>() {
-    override fun serialize(value: Amount<Any>, gen: JsonGenerator, serializers: SerializerProvider) {
-        gen.writeStartObject()
-        gen.writeObjectField("quantity", value.quantity)
-        gen.writeObjectField("display_token_size", value.displayTokenSize)
-        gen.writeObjectField("token_name_hash", hashTokenName(value.token::class.java.toString()))
-        gen.writeEndObject()
-    }
-
-    private fun hashTokenName(tokenName: String): ByteArray {
-        Security.addProvider(BouncyCastleProvider())
-        val messageDigest = MessageDigest.getInstance("SHA-256")
-        messageDigest.update(tokenName.toByteArray())
-        val digest = messageDigest.digest()
-        return digest
-    }
-}
 
 @JsonSerialize(using = ZKProverTransactionMixinSerializer::class)
 private interface ZKProverTransactionMixin
@@ -255,38 +226,6 @@ private class TimeWindowMixinZincSerializer : JsonSerializer<TimeWindow>() {
     override fun serialize(value: TimeWindow, gen: JsonGenerator, serializers: SerializerProvider) {
         gen.writeStartObject()
         gen.writeObjectField("bytes", value.fingerprint())
-        gen.writeEndObject()
-    }
-}
-
-private const val BIG_DECIMAL_INTEGER_SIZE = 1024
-private const val BIG_DECIMAL_FRACTION_SIZE = 128
-
-@JsonSerialize(using = BigDecimalMixinSerializer::class)
-private interface BigDecimalMixin
-
-private class BigDecimalMixinSerializer : JsonSerializer<BigDecimal>() {
-    override fun serialize(value: BigDecimal, gen: JsonGenerator, serializers: SerializerProvider) {
-        val stringRepresentation = value.toPlainString()
-        val integerFractionTuple = stringRepresentation.removePrefix("-").split(".")
-
-        val integer = IntArray(BIG_DECIMAL_INTEGER_SIZE)
-        val startingIdx = BIG_DECIMAL_INTEGER_SIZE - integerFractionTuple[0].length
-        integerFractionTuple[0].forEachIndexed { idx, char ->
-            integer[startingIdx + idx] = Character.getNumericValue(char)
-        }
-
-        val fraction = IntArray(BIG_DECIMAL_FRACTION_SIZE)
-        if (integerFractionTuple.size == 2) {
-            integerFractionTuple[1].forEachIndexed { idx, char ->
-                fraction[idx] = Character.getNumericValue(char)
-            }
-        }
-
-        gen.writeStartObject()
-        gen.writeObjectField("sign", value.signum())
-        gen.writeObjectField("integer", integer)
-        gen.writeObjectField("fraction", fraction)
         gen.writeEndObject()
     }
 }
