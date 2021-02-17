@@ -27,10 +27,10 @@ public open class DealState(
     }
 
     public infix fun equalsExceptStatusAndChanged(other: DealState): Boolean =
-        deal == other.deal
-            && linearId == other.linearId
-            && status != other.status
-            && lastChangedTime != other.lastChangedTime
+        deal == other.deal &&
+            linearId == other.linearId &&
+            status != other.status &&
+            lastChangedTime != other.lastChangedTime
 
     public fun accept(): DealState = DealState(deal = deal, status = Status.ACCEPTED, lastChangedTime = Instant.now())
     public fun expire(): DealState = DealState(deal = deal, status = Status.EXPIRED, lastChangedTime = Instant.now())
