@@ -19,7 +19,8 @@ class Blake2s256DigestAlgorithm : DigestAlgorithm {
         return hash
     }
 
-    override fun preImageResistantDigest(bytes: ByteArray): ByteArray = digest(bytes)
+    override fun componentDigest(bytes: ByteArray): ByteArray = digest(bytes)
+    override fun nonceDigest(bytes: ByteArray): ByteArray = digest(bytes)
 }
 
 val blake2sAlgorithm = DigestAlgorithmFactory.registerClass(Blake2s256DigestAlgorithm::class.java.name)
