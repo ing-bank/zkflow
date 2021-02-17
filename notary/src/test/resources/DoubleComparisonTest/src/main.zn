@@ -1,0 +1,9 @@
+//!
+//! The 'double' main module.
+//!
+mod floating_point;
+use floating_point::Double;
+
+fn main(left: Double, right: Double) -> i8 {
+    Double::compare(left, right)
+}

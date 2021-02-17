@@ -1,0 +1,13 @@
+//!
+//! The 'Amount' main module.
+//!
+mod floating_point;
+use floating_point::Amount;
+
+fn main(left: Amount, right: Amount) -> u8 {
+    if Amount::equals(left, right) {
+        0
+    } else {
+        1
+    }
+}

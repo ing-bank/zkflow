@@ -1,0 +1,9 @@
+//!
+//! The 'Amount' main module.
+//!
+mod floating_point;
+use floating_point::Amount;
+
+fn main(left: Amount, right: Amount) -> Amount {
+    Amount::minus(left, right)
+}

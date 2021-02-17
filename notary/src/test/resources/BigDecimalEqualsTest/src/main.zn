@@ -1,0 +1,13 @@
+//!
+//! The 'BigDecimal' main module.
+//!
+mod floating_point;
+use floating_point::BigDecimal;
+
+fn main(left: BigDecimal, right: BigDecimal) -> u8 {
+    if BigDecimal::equals(left, right) {
+        0
+    } else {
+        1
+    }
+}
