@@ -79,12 +79,12 @@ sourceSets {
 //     explicitApi = Strict
 // }
 
-//Separate task is used in order to ensure copying will be done properly, because
-//such implementation fails sometimes:
-//tasks.withType<Test> {
+// Separate task is used in order to ensure copying will be done properly, because
+// such implementation fails sometimes:
+// tasks.withType<Test> {
 //      beforeSuite {
 //      }
-//}
+// }
 open class CopyCircuitTask : DefaultTask() {
 
     @TaskAction

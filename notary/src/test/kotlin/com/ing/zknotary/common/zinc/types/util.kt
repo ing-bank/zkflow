@@ -1,12 +1,16 @@
 package com.ing.zknotary.common.zinc.types
 
 import com.ing.dlt.zkkrypto.util.asUnsigned
+import com.ing.zknotary.common.zkp.ZincZKService
 import net.corda.core.contracts.Amount
 import org.bouncycastle.jce.provider.BouncyCastleProvider
+import org.slf4j.Logger
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.security.MessageDigest
 import java.security.Security
+import kotlin.time.ExperimentalTime
+import kotlin.time.measureTime
 
 fun <T : Any, U : Any> toWitness(left: Amount<T>, right: Amount<U>): String = "{\"left\": ${left.toJSON()}, \"right\": ${right.toJSON()}}"
 
@@ -48,3 +52,29 @@ private fun ByteArray.toPrettyJSONArray() = "[ ${this.map { it.asUnsigned() }.jo
 fun makeBigDecimal(bytes: ByteArray, sign: Int) = BigDecimal(BigInteger(sign, bytes))
 
 fun makeBigDecimal(string: String, scale: Int) = BigDecimal(BigInteger(string), scale)
+
+@ExperimentalTime
+fun ZincZKService.setupTimed(log: Logger) {
+    val time = measureTime {
+        this.setup()
+    }
+    log.debug("[setup] $time")
+}
+
+@ExperimentalTime
+fun ZincZKService.proveTimed(witness: ByteArray, log: Logger): ByteArray {
+    var proof: ByteArray
+    val time = measureTime {
+        proof = this.prove(witness)
+    }
+    log.debug("[prove] $time")
+    return proof
+}
+
+@ExperimentalTime
+fun ZincZKService.verifyTimed(proof: ByteArray, publicInput: ByteArray, log: Logger) {
+    val time = measureTime {
+        this.verify(proof, publicInput)
+    }
+    log.debug("[verify] $time")
+}

@@ -3,13 +3,18 @@ package com.ing.zknotary.common.zinc.types
 import com.ing.zknotary.common.zkp.ZKProvingException
 import com.ing.zknotary.common.zkp.ZincZKService
 import net.corda.core.contracts.Amount
+import net.corda.core.utilities.loggerFor
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.Duration
+import kotlin.time.ExperimentalTime
 
+@ExperimentalTime
 class AmountMinusTest {
+    private val log = loggerFor<AmountMinusTest>()
+
     private val circuitFolder: String = AmountMinusTest::class.java.getResource("/AmountMinusTest").path
     private val zincZKService = ZincZKService(
         circuitFolder,
@@ -24,7 +29,7 @@ class AmountMinusTest {
     private val anotherDummyToken = 420
 
     init {
-        zincZKService.setup()
+        zincZKService.setupTimed(log)
     }
 
     @AfterAll
@@ -40,7 +45,7 @@ class AmountMinusTest {
         val input = toWitness(left, right)
 
         val exception = Assertions.assertThrows(ZKProvingException::class.java) {
-            zincZKService.prove(input.toByteArray())
+            zincZKService.proveTimed(input.toByteArray(), log)
         }
 
         Assertions.assertTrue(
@@ -57,7 +62,7 @@ class AmountMinusTest {
         val input = toWitness(left, right)
 
         val exception = Assertions.assertThrows(ZKProvingException::class.java) {
-            zincZKService.prove(input.toByteArray())
+            zincZKService.proveTimed(input.toByteArray(), log)
         }
 
         Assertions.assertTrue(
@@ -74,8 +79,8 @@ class AmountMinusTest {
         val input = toWitness(left, right)
         val expected = left.minus(right).toJSON()
 
-        zincZKService.prove(input.toByteArray()).let {
-            zincZKService.verify(it, expected.toByteArray())
+        zincZKService.proveTimed(input.toByteArray(), log).let {
+            zincZKService.verifyTimed(it, expected.toByteArray(), log)
         }
     }
 }
