@@ -2,12 +2,17 @@ package com.ing.zknotary.common.zinc.types
 
 import com.ing.zknotary.common.zkp.ZincZKService
 import net.corda.core.contracts.Amount
+import net.corda.core.utilities.loggerFor
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.Duration
+import kotlin.time.ExperimentalTime
 
+@ExperimentalTime
 class AmountEqualsTest {
+    private val log = loggerFor<AmountEqualsTest>()
+
     private val circuitFolder: String = AmountEqualsTest::class.java.getResource("/AmountEqualsTest").path
     private val zincZKService = ZincZKService(
         circuitFolder,
@@ -22,7 +27,7 @@ class AmountEqualsTest {
     private val anotherDummyToken = 420
 
     init {
-        zincZKService.setup()
+        zincZKService.setupTimed(log)
     }
 
     @AfterAll
@@ -38,8 +43,8 @@ class AmountEqualsTest {
         val input = toWitness(left, right)
         val expected = "\"${if (left == right) 0 else 1}\""
 
-        zincZKService.prove(input.toByteArray()).let {
-            zincZKService.verify(it, expected.toByteArray())
+        zincZKService.proveTimed(input.toByteArray(), log).let {
+            zincZKService.verifyTimed(it, expected.toByteArray(), log)
         }
     }
 
@@ -51,8 +56,8 @@ class AmountEqualsTest {
         val input = toWitness(left, right)
         val expected = "\"${if (left == right) 0 else 1}\""
 
-        zincZKService.prove(input.toByteArray()).let {
-            zincZKService.verify(it, expected.toByteArray())
+        zincZKService.proveTimed(input.toByteArray(), log).let {
+            zincZKService.verifyTimed(it, expected.toByteArray(), log)
         }
     }
 
@@ -64,8 +69,8 @@ class AmountEqualsTest {
         val input = toWitness(left, right)
         val expected = "\"${if (left == right) 0 else 1}\""
 
-        zincZKService.prove(input.toByteArray()).let {
-            zincZKService.verify(it, expected.toByteArray())
+        zincZKService.proveTimed(input.toByteArray(), log).let {
+            zincZKService.verifyTimed(it, expected.toByteArray(), log)
         }
     }
 
@@ -77,8 +82,8 @@ class AmountEqualsTest {
         val input = toWitness(left, right)
         val expected = "\"${if (left == right) 0 else 1}\""
 
-        zincZKService.prove(input.toByteArray()).let {
-            zincZKService.verify(it, expected.toByteArray())
+        zincZKService.proveTimed(input.toByteArray(), log).let {
+            zincZKService.verifyTimed(it, expected.toByteArray(), log)
         }
     }
 }
