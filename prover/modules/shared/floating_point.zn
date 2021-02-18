@@ -115,7 +115,6 @@ impl BigDecimal {
     fn sum_magnitude(this: BigDecimal, that: BigDecimal) -> BigDecimal {
         let mut fraction: [u8; FRACTION_SIZE] = [0; FRACTION_SIZE];
         let mut diff = 0 as i8;
-        let mut all_zeros = true;
 
         for i in 0..FRACTION_SIZE {
             let value = this.fraction[FRACTION_SIZE - i - 1] as i8 + that.fraction[FRACTION_SIZE - i - 1] as i8 + diff;
@@ -125,9 +124,6 @@ impl BigDecimal {
             } else {
                 diff = 0 as i8;
                 fraction[FRACTION_SIZE - i - 1] = value as u8;
-                if all_zeros && value != 0 as i8 {
-                    all_zeros = all_zeros && false;
-                }
             }
         }
 
@@ -140,9 +136,6 @@ impl BigDecimal {
             } else {
                 diff = 0 as i8;
                 integer[INTEGER_SIZE - i - 1 as u16] = value as u8;
-                if all_zeros && value != 0 as i8 {
-                    all_zeros = all_zeros && false;
-                }
             }
         }
 
@@ -159,7 +152,6 @@ impl BigDecimal {
     fn subtract_magnitude(this: BigDecimal, that: BigDecimal) -> BigDecimal {
         let mut fraction: [u8; FRACTION_SIZE] = [0; FRACTION_SIZE];
         let mut diff = 0 as i8;
-        let mut all_zeros = true;
         for i in 0..FRACTION_SIZE {
             let value = this.fraction[FRACTION_SIZE - i - 1] as i8 - that.fraction[FRACTION_SIZE - i - 1] as i8 - diff;
             if value < 0 as i8 {
@@ -168,18 +160,12 @@ impl BigDecimal {
             } else {
                 diff = 0 as i8;
                 fraction[FRACTION_SIZE - i - 1] = value as u8;
-                if all_zeros && value != 0 as i8 {
-                    all_zeros = all_zeros && false;
-                }
             }
         }
 
         let mut integer: [u8; INTEGER_SIZE] = [0; INTEGER_SIZE];
         for i in 0..INTEGER_SIZE {
             let value = this.integer[INTEGER_SIZE - i - 1 as u16] as i8 - that.integer[INTEGER_SIZE - i - 1 as u16] as i8 - diff;
-            if all_zeros && value != 0 as i8 {
-                all_zeros = all_zeros && false;
-            };
             if value < 0 as i8 {
                 diff = 1 as i8;
                 integer[INTEGER_SIZE - i - 1 as u16] = (10 as i8 + value) as u8;
@@ -192,11 +178,7 @@ impl BigDecimal {
         let sign = if diff == 1 as i8 {
             -1
         } else {
-            if all_zeros {
-                0 as i8
-            } else {
-                1 as i8
-            }
+            1 as i8
         };
 
         BigDecimal {
