@@ -159,9 +159,23 @@ subprojects {
 
                 useJUnitPlatform {
                     includeTags("slow")
-
                 }
                 shouldRunAfter("test")
+            }
+
+            task<Test>("nightlyTest") {
+                val root = project.rootDir.absolutePath
+                inputs.dir("$root/prover/circuits")
+
+                useJUnitPlatform {
+                    includeTags("nightly")
+                }
+                shouldRunAfter("test")
+                shouldRunAfter("slowTest")
+            }
+
+            task<Test>("allTests") {
+                dependsOn("test", "slowTest", "nightlyTest")
             }
 
             matching { it is Test && it.name == "test" }.forEach {
@@ -169,6 +183,7 @@ subprojects {
                 // We have a separate task for slow tests
                 it.useJUnitPlatform {
                     excludeTags("slow")
+                    excludeTags("nightly")
                 }
             }
         }
