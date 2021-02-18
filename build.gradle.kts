@@ -164,6 +164,22 @@ subprojects {
                 shouldRunAfter("test")
             }
 
+            task<Test>("ciNightlyTest") {
+                val root = project.rootDir.absolutePath
+                inputs.dir("$root/prover/circuits")
+
+                useJUnitPlatform {
+                    includeTags("ci-nightly")
+
+                }
+                shouldRunAfter("test")
+                shouldRunAfter("slowTest")
+            }
+
+            task<Test>("all") {
+                dependsOn("test", "slowTest", "ciOnlyTest")
+            }
+
             matching { it is Test && it.name == "test" }.forEach {
                 it as Test
                 // We have a separate task for slow tests
