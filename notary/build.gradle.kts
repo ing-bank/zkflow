@@ -79,21 +79,37 @@ sourceSets {
 //     explicitApi = Strict
 // }
 
-tasks {
-    withType<Test> {
-        beforeSuite(closureOf<TestDescriptor> {
-            // In this package we test functions of classes, which are stored in one particular file,
-            // but since there are many of them, we need many main functions with different parameters and output,
-            // thus we copy implementation to each testing module in resources (because, zinc support modules pretty bad).
-            if (this.className?.startsWith("com.ing.zknotary.common.zinc.types.") == true) {
-                val clazz = this.className?.removePrefix("com.ing.zknotary.common.zinc.types.")
-                File("prover/modules/shared/floating_point.zn").copyTo(
-                    File("notary/build/resources/test/$clazz/src/floating_point.zn"),
-                    true
+//Separate task is used in order to ensure copying will be done properly, because
+//such implementation fails sometimes:
+//tasks.withType<Test> {
+//      beforeSuite {
+//      }
+//}
+open class CopyCircuitTask : DefaultTask() {
+
+    @TaskAction
+    fun copy() {
+        // In this package we test functions of classes, which are stored in one particular file,
+        // but since there are many of them, we need many main functions with different parameters and output,
+        // thus we copy implementation to each testing module in resources (because, zinc support modules pretty bad).
+        val testClassesPath = `java.nio.file`.Paths.get("notary/src/test/kotlin/com/ing/zknotary/common/zinc/types/")
+        `java.nio.file`.Files.newDirectoryStream(testClassesPath)
+            .map { it.fileName.toString().removeSuffix(".kt") }
+            .filter { `java.nio.file`.Files.exists(`java.nio.file`.Paths.get("notary/build/resources/test/$it")) }
+            .forEach {
+                `java.nio.file`.Files.copy(
+                    `java.nio.file`.Paths.get("prover/modules/shared/floating_point.zn"),
+                    `java.nio.file`.Paths.get("notary/build/resources/test/$it/src/floating_point.zn"),
+                    `java.nio.file`.StandardCopyOption.REPLACE_EXISTING
                 )
             }
-        })
     }
+}
+
+tasks.register<CopyCircuitTask>("copyCircuit")
+
+tasks.processTestResources {
+    finalizedBy(tasks.findByPath("copyCircuit"))
 }
 
 // TODO: This should probably become a fat jar at some point, with its dependencies included
