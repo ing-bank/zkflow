@@ -106,7 +106,7 @@ jobs:
           echo "$GITHUB_WORKSPACE/zinc-linux/" >> $GITHUB_PATH
 
       - name: Build with Gradle
-        run: ./gradlew check slowTest --stacktrace --info
+        run: ./gradlew check slowTest nightlyTest --stacktrace --info
         env:
           GITHUB_USERNAME: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -117,6 +117,13 @@ jobs:
         with:
           name: Junit Test Report - Notary - Fast tests
           path: notary/build/reports/tests/test
+
+      - name: Upload Nightly test report
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          name: Junit Test Report - Notary - Nightly tests
+          path: notary/build/reports/tests/nightlyTest
 
       - name: Upload slow test report
         if: always()
