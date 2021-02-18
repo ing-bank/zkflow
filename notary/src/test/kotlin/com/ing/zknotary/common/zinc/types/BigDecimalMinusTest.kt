@@ -14,7 +14,7 @@ import java.time.Duration
 import kotlin.time.ExperimentalTime
 
 @ExperimentalTime
-@Tag("slow")
+@Tag("nightly")
 class BigDecimalMinusTest {
     private val log = loggerFor<BigDecimalMinusTest>()
 

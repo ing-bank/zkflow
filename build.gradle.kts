@@ -164,12 +164,12 @@ subprojects {
                 shouldRunAfter("test")
             }
 
-            task<Test>("ciNightlyTest") {
+            task<Test>("nightlyTest") {
                 val root = project.rootDir.absolutePath
                 inputs.dir("$root/prover/circuits")
 
                 useJUnitPlatform {
-                    includeTags("ci-nightly")
+                    includeTags("nightly")
 
                 }
                 shouldRunAfter("test")
