@@ -159,7 +159,6 @@ subprojects {
 
                 useJUnitPlatform {
                     includeTags("slow")
-
                 }
                 shouldRunAfter("test")
             }
@@ -170,7 +169,6 @@ subprojects {
 
                 useJUnitPlatform {
                     includeTags("nightly")
-
                 }
                 shouldRunAfter("test")
                 shouldRunAfter("slowTest")
@@ -185,6 +183,7 @@ subprojects {
                 // We have a separate task for slow tests
                 it.useJUnitPlatform {
                     excludeTags("slow")
+                    excludeTags("nightly")
                 }
             }
         }
