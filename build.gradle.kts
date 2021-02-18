@@ -176,7 +176,7 @@ subprojects {
                 shouldRunAfter("slowTest")
             }
 
-            task<Test>("all") {
+            task<Test>("allTests") {
                 dependsOn("test", "slowTest", "ciOnlyTest")
             }
 
