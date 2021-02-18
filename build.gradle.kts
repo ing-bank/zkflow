@@ -175,7 +175,7 @@ subprojects {
             }
 
             task<Test>("allTests") {
-                dependsOn("test", "slowTest", "ciOnlyTest")
+                dependsOn("test", "slowTest", "nightlyTest")
             }
 
             matching { it is Test && it.name == "test" }.forEach {

@@ -21,9 +21,11 @@ import net.corda.testing.node.MockNetworkParameters
 import net.corda.testing.node.StartedMockNode
 import net.corda.testing.node.internal.cordappWithPackages
 import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Timeout
 
+@Tag("slow")
 class NotarisationFlowTest {
     private val mockNet: MockNetwork
     private val notaryNode: StartedMockNode
