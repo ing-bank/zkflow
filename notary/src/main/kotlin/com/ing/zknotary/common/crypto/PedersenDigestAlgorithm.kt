@@ -15,7 +15,8 @@ class PedersenDigestAlgorithm : DigestAlgorithm {
 
     override fun digest(bytes: ByteArray): ByteArray = pedersen.hash(bytes)
 
-    override fun preImageResistantDigest(bytes: ByteArray): ByteArray = digest(bytes)
+    override fun componentDigest(bytes: ByteArray): ByteArray = digest(bytes)
+    override fun nonceDigest(bytes: ByteArray): ByteArray = digest(bytes)
 }
 
 val pedersenAlgorithm = DigestAlgorithmFactory.registerClass(PedersenDigestAlgorithm::class.java.name)

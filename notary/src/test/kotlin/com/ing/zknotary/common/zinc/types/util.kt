@@ -8,11 +8,11 @@ import java.math.BigInteger
 import java.security.MessageDigest
 import java.security.Security
 
-fun <T: Any, U: Any> toWitness(left: Amount<T>, right: Amount<U>): String = "{\"left\": ${left.toJSON()}, \"right\": ${right.toJSON()}}"
+fun <T : Any, U : Any> toWitness(left: Amount<T>, right: Amount<U>): String = "{\"left\": ${left.toJSON()}, \"right\": ${right.toJSON()}}"
 
 fun toWitness(left: BigDecimal, right: BigDecimal): String = "{\"left\": ${left.toJSON()}, \"right\": ${right.toJSON()}}"
 
-fun <T: Any> Amount<T>.toJSON(): String {
+fun <T : Any> Amount<T>.toJSON(): String {
     Security.addProvider(BouncyCastleProvider())
     val messageDigest = MessageDigest.getInstance("SHA-256")
     messageDigest.update(this.token::class.java.toString().toByteArray())
