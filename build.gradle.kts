@@ -36,6 +36,17 @@ plugins {
     kotlin("jvm") apply false
     id("com.diffplug.gradle.spotless") apply false
     id("io.gitlab.arturbosch.detekt") apply false
+    id("org.owasp.dependencycheck") version "6.1.1"
+
+}
+
+dependencyCheck {
+    suppressionFile = projectDir.resolve("config/owasp/suppressions.xml").absolutePath
+    analyzers.apply {
+        assemblyEnabled = false
+        nodeEnabled = false
+    }
+    failBuildOnCVSS = 6.9F
 }
 
 task("checkJavaVersion") {

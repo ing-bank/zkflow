@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+    <suppress>
+        <notes><![CDATA[
+        Suppresses any vulnerability less than HIGH or CRITICAL
+      ]]></notes>
+        <cvssBelow>7</cvssBelow>
+    </suppress>
+
+    <suppress>
+        <notes><![CDATA[
+   file name: dom4j-*.jar
+   Part of Corda, not used
+   ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.dom4j/dom4j@.*$</packageUrl>
+        <vulnerabilityName regex="true">^CVE-.*$</vulnerabilityName>
+    </suppress>
+
+    <suppress>
+        <notes><![CDATA[
+   file name: groovy-all-*.jar
+   Part of Gradle, not used
+   ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.codehaus\.groovy/groovy\-all@.*$</packageUrl>
+        <vulnerabilityName regex="true">^CVE-.*$</vulnerabilityName>
+    </suppress>
+
+    <suppress>
+        <notes><![CDATA[
+   file name: jackson-databind-*.jar
+   Part of Corda, not used by us
+   ]]></notes>
+        <packageUrl regex="true">^pkg:maven/com\.fasterxml\.jackson\.core/jackson\-databind@.*$</packageUrl>
+        <vulnerabilityName regex="true">^CVE-.*$</vulnerabilityName>
+    </suppress>
+
+    <suppress>
+        <notes><![CDATA[
+   file name: jetty-continuation-*.jar
+   Part of Corda, not used by us
+   ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.eclipse\.jetty/jetty\-continuation@.*$</packageUrl>
+        <vulnerabilityName regex="true">^CVE-.*$</vulnerabilityName>
+    </suppress>
+
+    <suppress>
+        <notes><![CDATA[
+   file name: shiro*.jar
+   Part of Corda, not used by us
+   ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.apache\.shiro/shiro.*\b@.*$</packageUrl>
+        <vulnerabilityName regex="true">^CVE-.*$</vulnerabilityName>
+    </suppress>
+
+    <suppress>
+        <notes><![CDATA[
+   file name: jgroups-3.6.13.Final.jar
+   Part of Corda, not used by us
+   ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.jgroups/jgroups@.*$</packageUrl>
+        <cpe>cpe:/a:redhat:jgroups</cpe>
+        <vulnerabilityName regex="true">^.*$</vulnerabilityName>
+    </suppress>
+</suppressions>

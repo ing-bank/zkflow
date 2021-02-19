@@ -106,7 +106,7 @@ jobs:
           echo "$GITHUB_WORKSPACE/zinc-linux/" >> $GITHUB_PATH
 
       - name: Build with Gradle
-        run: ./gradlew check slowTest nightlyTest --stacktrace --info
+        run: ./gradlew check slowTest nightlyTest dependencyCheckAggregate --stacktrace --info
         env:
           GITHUB_USERNAME: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -118,6 +118,13 @@ jobs:
           name: Junit Test Report - Notary - Fast tests
           path: notary/build/reports/tests/test
 
+      - name: Upload slow test report
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          name: Junit Test Report - Notary - Slow tests
+          path: notary/build/reports/tests/slowTest
+
       - name: Upload Nightly test report
         if: always()
         uses: actions/upload-artifact@v2
@@ -125,12 +132,12 @@ jobs:
           name: Junit Test Report - Notary - Nightly tests
           path: notary/build/reports/tests/nightlyTest
 
-      - name: Upload slow test report
+      - name: Upload OWASP report
         if: always()
         uses: actions/upload-artifact@v2
         with:
-          name: Junit Test Report - Notary - Slow tests
-          path: notary/build/reports/tests/slowTest
+          name: OWASP Dependency Check Report - Notary
+          path: build/reports/dependency-check-report.html
 
       - name: Upload detekt report
         if: always()

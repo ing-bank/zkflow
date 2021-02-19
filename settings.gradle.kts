@@ -21,7 +21,8 @@ pluginManagement {
         id("net.corda.plugins.cordapp") version cordaGradlePluginsVersion apply false
         id("net.corda.plugins.quasar-utils") version cordaGradlePluginsVersion apply false
 
-        id("com.cosminpolifronie.gradle.plantuml") version "1.6.0" apply false
+        val plantUmlVersion: String by settings
+        id("com.cosminpolifronie.gradle.plantuml") version plantUmlVersion apply false
     }
 
     resolutionStrategy {
