@@ -9,6 +9,17 @@
 
     <suppress>
         <notes><![CDATA[
+       file name: corda*.jar
+       We have Corda as a dependency, but we never use it in production. Our software is a plugin for Corda,
+       so it is the other way around. Only direct dependencies that we introduce ourselves contribute or detract
+       from the security of our software.
+       ]]></notes>
+        <packageUrl regex="true">^pkg:maven/net\.corda/corda@.*$</packageUrl>
+        <vulnerabilityName regex="true">^.*$</vulnerabilityName>
+    </suppress>
+
+    <suppress>
+        <notes><![CDATA[
    file name: dom4j-*.jar
    Part of Corda, not used
    ]]></notes>
