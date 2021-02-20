@@ -30,14 +30,20 @@ buildscript {
 
     @Suppress("UNCHECKED_CAST")
     this.repositories(repos as groovy.lang.Closure<Any>)
+
 }
 
 plugins {
+    java
     kotlin("jvm") apply false
     id("com.diffplug.gradle.spotless") apply false
-    id("io.gitlab.arturbosch.detekt") apply false
+    id("io.gitlab.arturbosch.detekt")
     id("org.owasp.dependencycheck") version "6.1.1"
 
+}
+
+repositories {
+    jcenter()
 }
 
 dependencyCheck {
@@ -57,6 +63,40 @@ task("checkJavaVersion") {
     }
 }
 
+// This task generates an aggregate test report from all subprojects
+// EXCLUDING NIGHTLY TESTS
+val testReport = tasks.register<TestReport>("testReport") {
+    destinationDir = file("$buildDir/reports/tests/test")
+    reportOn(subprojects.flatMap {
+        it.tasks.matching { task -> task is Test && task.name != "nightlyTest" && task.name != "allTests" }
+            .map { test -> test as Test; test.binaryResultsDirectory }
+    })
+}
+
+// This task generates an aggregate test report from all subprojects
+// INCLUDING NIGHTLY TESTS
+val testReportAll = tasks.register<TestReport>("testReportAll") {
+    destinationDir = file("$buildDir/reports/tests/test")
+    reportOn(subprojects.flatMap {
+        it.tasks.matching { task -> task is Test }
+            .map { test -> test as Test; test.binaryResultsDirectory }
+    })
+}
+
+tasks.withType<io.gitlab.arturbosch.detekt.Detekt> {
+    // Target version of the generated JVM bytecode. It is used for type resolution.
+    jvmTarget = "1.8"
+    config.setFrom("${rootDir}/config/detekt/detekt.yml")
+
+    parallel = true
+
+    source(files(rootProject.projectDir))
+    include("**/*.kt")
+    exclude("**/*.kts")
+    exclude("**/resources/")
+    exclude("**/build/")
+}
+
 subprojects {
     val repos: groovy.lang.Closure<RepositoryHandler> by rootProject.extra
     repositories(repos)
@@ -66,7 +106,6 @@ subprojects {
         // Make sure the project has the necessary plugins loaded
         plugins.apply {
             apply("com.diffplug.gradle.spotless")
-            apply("io.gitlab.arturbosch.detekt")
         }
 
         // Load the necessary dependencies
@@ -105,13 +144,6 @@ subprojects {
                 it.dependsOn("spotlessCheck") // Fail on remaining non-autofixable issues
             }
 
-            withType<io.gitlab.arturbosch.detekt.Detekt> {
-                // Target version of the generated JVM bytecode. It is used for type resolution.
-                jvmTarget = "1.8"
-                config.setFrom("${rootDir}/config/detekt/detekt.yml")
-            }
-
-
             withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
                 kotlinOptions {
                     languageVersion = "1.3"
@@ -130,7 +162,7 @@ subprojects {
 
             // This applies to all test types, both fast and slow
             withType<Test> {
-                dependsOn("detekt")
+                dependsOn(":detekt")
                 dependsOn(":prover:circuits") // Make sure that the Zinc circuit is ready to use when running tests
 
                 val cores = Runtime.getRuntime().availableProcessors()
@@ -141,6 +173,9 @@ subprojects {
                     events("passed", "skipped", "failed")
                     showStandardStreams = true
                 }
+
+                // Individual projects should not report, we aggregate all results for all projects
+                reports.html.isEnabled = false
 
                 val mockZKP = System.getProperty("MockZKP")
                 if (mockZKP != null) {
@@ -172,6 +207,7 @@ subprojects {
                     includeTags("slow")
                 }
                 shouldRunAfter("test")
+                finalizedBy(testReport)
             }
 
             task<Test>("nightlyTest") {
@@ -183,6 +219,7 @@ subprojects {
                 }
                 shouldRunAfter("test")
                 shouldRunAfter("slowTest")
+                finalizedBy(testReportAll)
             }
 
             task<Test>("allTests") {
@@ -196,6 +233,7 @@ subprojects {
                     excludeTags("slow")
                     excludeTags("nightly")
                 }
+                it.finalizedBy(testReport)
             }
         }
 

@@ -98,6 +98,7 @@ class PrimitiveTypesTest {
 
     @Test
     fun `class with array of primitive types must be sizeable`() {
+        @Suppress("LongMethod")
         fun <T : Any> testWrapper(primitive: T) {
             val arrayLength = 2
 
