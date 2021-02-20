@@ -219,6 +219,10 @@ subprojects {
                 }
                 shouldRunAfter("test")
                 shouldRunAfter("slowTest")
+
+                // If running OWASP checks, run it first, so the build fails faster
+                mustRunAfter("dependencyCheckAggregate")
+
                 finalizedBy(testReportAll)
             }
 
