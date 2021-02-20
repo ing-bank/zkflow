@@ -1,4 +1,4 @@
-name: All checks nightly
+name: Nightly build
 
 env:
   ZINC_VERSION: "v0.1.5-ING-4"

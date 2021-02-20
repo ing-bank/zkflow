@@ -1,4 +1,4 @@
-name: Fast and slow tests for PRs and merges to master
+name: PRs and merges to master
 
 env:
   ZINC_VERSION: "v0.1.5-ING-4"
