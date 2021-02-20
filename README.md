@@ -1,4 +1,15 @@
-![Build](https://github.com/ingzkp/zk-notary/workflows/Fast%20and%20slow%20tests%20for%20PRs%20and%20merges%20to%20master/badge.svg?branch=master)
+[![PRs and merges to master](https://github.com/ingzkp/zk-notary/actions/workflows/on-push.yml/badge.svg)](https://github.com/ingzkp/zk-notary/actions/workflows/on-push.yml) [![Nightly build](https://github.com/ingzkp/zk-notary/actions/workflows/scheduled-all.yml/badge.svg)](https://github.com/ingzkp/zk-notary/actions/workflows/scheduled-all.yml)
+
+## Testing best practices
+
+We follow most of the best practices defined here: https://phauer.com/2018/best-practices-unit-testing-kotlin/.
+We use some different libs for assertions and mocks, but the principles remain the same.
+
+### Test Class lifecycle
+
+We have configured JUnit5 so that test classes are instantiated only once. This means 'static' setup can just go in the init block or by declaring vals. If you want to isolate individual tests more, you can still have a setup method that runs before or after each test. Just annotate it with `@BeforeEach` or `@AfterEach` (JUnit4's `@Before` will no longer work).
+
+Unfortunately this does not apply cleanup that needs to happen after all tests in a class have completed: for that you will still need a function annotated with `@AfterAll`, since there is no destroy on Kotlin classes where this could be placed.
 
 ## Static analysis
 
@@ -27,14 +38,15 @@ When either ktlint or detekt fail the build, you have a few options to fix it:
 
 ## Configuring how the tests run
 
-If you only want to run the fast unit tests, you can run `./gradlew build` or `./gradlew test`. If you also want to run the slow tests (e.g. the ones that test the real Zinc ciruit), you can run `./gradlew test slowTest`.
+If you only want to run the fast unit tests, you can run `./gradlew build` or `./gradlew test`. If you also want to run slow tests (e.g. tests that use a real Zinc ciruit, or long node driver tests), you can run `./gradlew test slowTest`.
 You can mark a test as a slow test, by tagging it like so `@Tag("slow")`.
 
-To run the slow tests, but faster, you can set the following system property: `MockZKP`. Setting this makes tests that normally tests against the real Zinc circuit use a mock. This can be useful for quick tests on other parts of the code surrounding the circuit. Of course, always run unmocked before you submit a PR for review
+Similarly, we have `@Tag("nightly")`, which is for tests that are *so* slow, that they should only be run nightly on the CI.
+If you need to run them locally, you can do `./gradlew test nightlyTest`
+
+To run Zinc tests that use the real contract circuit faster, you can set the following system property: `MockZKP`. Setting this makes tests that normally tests against the real Zinc circuit use a mock. This can be useful for quick tests on other parts of the protocol code surrounding the circuit. Of course, always run unmocked before you submit a PR for review.
 
 > How to set a system property? `./gradlew test slowTest -DMockZKP`.
-
-> Please note that we have configured JUnit5 so that test classes are instantiated only once. This means 'static' setup can just go in the init block or by declaring vals. If you want to isolate individual tests more, you can still have a setup method that runs before each test. Just annotate it with @BeforeEach (JUnit4's @Before will no longer work). We follow the following best practices as much as possible: https://phauer.com/2018/best-practices-unit-testing-kotlin/
 
 ## Configuring logging during testing
 
