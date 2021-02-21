@@ -20,6 +20,15 @@
 
     <suppress>
         <notes><![CDATA[
+   file name: detekt-report-sarif-1.15.0.jar
+   We exclude detekt, since it is only used for testing
+   ]]></notes>
+        <packageUrl regex="true">^pkg:maven/io\.gitlab\.arturbosch\.detekt/detekt.*@.*$</packageUrl>
+        <vulnerabilityName regex="true">^.*$</vulnerabilityName>
+    </suppress>
+
+    <suppress>
+        <notes><![CDATA[
    file name: dom4j-*.jar
    Part of Corda, not used
    ]]></notes>
