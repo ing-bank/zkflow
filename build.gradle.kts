@@ -51,6 +51,7 @@ dependencyCheck {
     analyzers.apply {
         assemblyEnabled = false
         nodeEnabled = false
+        retirejs.enabled = false
     }
     failBuildOnCVSS = 6.9F
 }
@@ -221,7 +222,7 @@ subprojects {
                 shouldRunAfter("slowTest")
 
                 // If running OWASP checks, run it first, so the build fails faster
-                mustRunAfter("dependencyCheckAggregate")
+                mustRunAfter(":dependencyCheckAggregate")
 
                 finalizedBy(testReportAll)
             }
