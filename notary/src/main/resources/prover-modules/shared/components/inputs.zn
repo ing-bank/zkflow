@@ -1,0 +1,31 @@
+struct InputsComponentGroup {
+    components: [StateAndRefPaddingWrapper; INPUT_GROUP_SIZE],
+    group_hash: NodeDigestDto,
+}
+
+impl InputsComponentGroup {
+    fn compute_leaf_hashes(
+        this: InputsComponentGroup,
+        privacy_salt: PrivacySaltBits,
+    ) -> [ComponentGroupLeafDigestBits; INPUT_GROUP_SIZE] {
+        let mut component_leaf_hashes =
+            [[false; COMPONENT_GROUP_LEAF_DIGEST_BITS]; INPUT_GROUP_SIZE];
+
+        for i in (0 as u32)..(INPUT_GROUP_SIZE as u32) {
+            component_leaf_hashes[i] = StateRef::compute_leaf_hash(
+                this.components[i].content.reference,
+                privacy_salt,
+                ComponentGroupEnum::INPUTS_GROUP as u32,
+                i as u32,
+            );
+        }
+        component_leaf_hashes
+    }
+
+    fn compute_component_group_hash(
+        this: InputsComponentGroup,
+        privacy_salt: PrivacySaltBits,
+    ) -> NodeDigestBits {
+        // ### CALL APPROPRIATE MERKLE TREE FUNCTION ###
+    }
+}

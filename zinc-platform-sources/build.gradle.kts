@@ -43,7 +43,7 @@ val merkleUtilsPath = "$zincPlatformSource/utils/merkle_utils.zn"
 
 task("buildCircuits") {
     mustRunAfter("rustfmtCheck")
-    dependsOn("generateMerkleUtils", "generateZKContractState")
+    dependsOn("generateMerkleUtils")
 
     circuits.forEach {
         outputs.dir(it.circuitRoot)
@@ -266,42 +266,10 @@ task("generateZKContractState") {
     circuits.forEach {
         inputs.files(it.orderedModules.filter { !it.contains("zk_contract_state.zn")})
     }
-
-    val zkContractState = File(zkContractStatePath)
-    zkContractState.writeText("//! GENERATED CODE. DO NOT EDIT\n//! Edit it in prover/build.gradle.kts\n\n");
-
-    zkContractState.appendText("//! ZKContractState construction from zkdapp")
-    //TODO: Parameterize the state content
-    zkContractState.appendText(
-        """
-const ZKCONTRACT_STATE_BYTES: u16 = PUBKEY_BYTES + U32_BYTES;
-const ZKCONTRACT_STATE_FINGERPRINT_BYTES: u16 = PUBKEY_BYTES + U32_BYTES;
-const ZKCONTRACT_STATE_FINGERPRINT_BITS: u16 = ZKCONTRACT_STATE_FINGERPRINT_BYTES * BYTE_BITS;
-
-struct ZKContractState {
-    owner: Party,
-    value: i32,
-}
-
-impl ZKContractState {
-    fn fingerprint(this: ZKContractState) -> [bool; ZKCONTRACT_STATE_FINGERPRINT_BITS] {
-        let mut result = [false; ZKCONTRACT_STATE_FINGERPRINT_BITS];
-        //fingerprint data
-        //dataOwner_owning_key
-        result[0..PUBKEY_FINGERPRINT_BITS] = PubKey::fingerprint(this.owner.owning_key);
-        //value
-        result[PUBKEY_FINGERPRINT_BITS..(PUBKEY_FINGERPRINT_BITS + U32_BITS)] = to_bits(this.value);
-        //fingerprint notary
-        //notary_owning_key
-        result
-    }
-}
-"""
-    )
 }
 
 task("circuits") {
-    dependsOn("generateMerkleUtils", "generateZKContractState", "rustfmtCheck", "buildCircuits")
+    dependsOn("generateMerkleUtils", "rustfmtCheck", "buildCircuits")
 }
 
 sealed class CommandCircuit(command: String, val absoluteRoot: String) {

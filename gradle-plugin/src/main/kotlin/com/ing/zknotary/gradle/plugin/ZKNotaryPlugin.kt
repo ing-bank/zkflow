@@ -1,6 +1,7 @@
 package com.ing.zknotary.gradle.plugin
 
 import com.ing.zknotary.gradle.extension.ZKNotaryExtension
+import com.ing.zknotary.gradle.task.CompileZincTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPlugin
@@ -31,5 +32,7 @@ class ZKNotaryPlugin : Plugin<Project> {
                 }
             }
         }
+        // Create task for building circuit
+        project.tasks.create("compileZinc", CompileZincTask::class.java)
     }
 }

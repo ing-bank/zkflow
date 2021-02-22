@@ -1,0 +1,118 @@
+const TRANSACTION_STATE_BYTES: u16 = ZKCONTRACT_STATE_BYTES + PUBKEY_BYTES;
+const TRANSACTION_STATE_FINGERPRINT_BYTES: u16 = ZKCONTRACT_STATE_FINGERPRINT_BYTES + PUBKEY_BYTES;
+const TRANSACTION_STATE_FINGERPRINT_BITS: u16 = TRANSACTION_STATE_FINGERPRINT_BYTES * BYTE_BITS;
+
+const REF_FINGERPRINT_BYTES: u16 = NODE_DIGEST_BYTES + U32_BYTES;
+const REF_FINGERPRINT_BITS: u16 = REF_FINGERPRINT_BYTES * BYTE_BITS;
+
+type TransactionStateBytes = [u8; TRANSACTION_STATE_BYTES];
+type TransactionStateFingerprintBits = [bool; TRANSACTION_STATE_FINGERPRINT_BITS];
+
+type RefFingerprintBits = [bool; REF_FINGERPRINT_BITS];
+
+//This struct follows the structure in the original Corda TransactionState structure. The fields
+// contractCN, encumbrance and constraint are commented out and declared bool intentionally to
+// reserve their place in the structure. In the current implementation we don't use these fields,
+// if they are going to be included, they should be declared with the corresponding data type.
+struct TransactionState {
+    data: ZKContractState,
+    //contractCN: bool,
+    notary: Party,
+    //encumbrance: bool,
+    //constraint: bool,
+}
+
+struct TransactionStatePaddingWrapper {
+    content: TransactionState,
+    is_filler: bool,
+}
+
+struct StateRef {
+    txhash: NodeDigestDto,
+    index: i32,
+}
+
+struct StateAndRef {
+    state: TransactionState,
+    reference: StateRef,
+}
+
+struct StateAndRefPaddingWrapper {
+    content: StateAndRef,
+    is_filler: bool,
+}
+
+impl StateRef {
+    fn fingerprint(this: StateRef) -> RefFingerprintBits {
+        let mut state_ref_bits = [false; REF_FINGERPRINT_BITS];
+
+        let txhash_fingerprint = NodeDigestDto::from_bytes_to_bits(this.txhash);
+        for i in 0..NODE_DIGEST_BITS {
+            state_ref_bits[i] = txhash_fingerprint[i];
+        }
+
+        let stateref_index_bits = to_bits(this.index);
+        for i in 0..U32_BITS {
+            state_ref_bits[NODE_DIGEST_BITS + i] = stateref_index_bits[i];
+        }
+        state_ref_bits
+    }
+
+    fn compute_leaf_hash(
+        this: StateRef,
+        privacy_salt: PrivacySaltBits,
+        group_index: u32,
+        internal_index: u32,
+    ) -> ComponentGroupLeafDigestBits {
+        // fingerprint
+        let fingerprint_ref = fingerprint(this);
+
+        // compute nonce
+        let mut nonce = compute_nonce(privacy_salt, group_index, internal_index);
+
+        // message = nonce || ref
+        let mut message = [false; NONCE_DIGEST_BITS + REF_FINGERPRINT_BITS];
+        for i in 0..NONCE_DIGEST_BITS {
+            message[i] = nonce[i];
+        }
+        for i in 0..REF_FINGERPRINT_BITS {
+            message[NONCE_DIGEST_BITS + i] = fingerprint_ref[i];
+        }
+        blake2s(message)
+    }
+}
+
+impl TransactionState {
+    fn fingerprint(this: TransactionState) -> [bool; TRANSACTION_STATE_FINGERPRINT_BITS] {
+        let mut result = [false; TRANSACTION_STATE_FINGERPRINT_BITS];
+
+        //state_bits = ZKContractState || notary_owning_key
+        //fingerprint ZKContractState
+        //TODO: validate if the state name is determined by the user
+        result[0..ZKCONTRACT_STATE_FINGERPRINT_BITS] = ZKContractState::fingerprint(this.data);
+
+        //fingerprint notary
+        //notary_owning_key
+        result[ZKCONTRACT_STATE_FINGERPRINT_BITS..TRANSACTION_STATE_FINGERPRINT_BITS] =
+            PubKey::fingerprint(this.notary.owning_key);
+
+        result
+    }
+
+    fn compute_leaf_hash(
+        this: TransactionState,
+        nonce: NonceDigestBits,
+    ) -> ComponentGroupLeafDigestBits {
+        // message = nonce || state
+        let mut message = [false; NONCE_DIGEST_BITS + TRANSACTION_STATE_FINGERPRINT_BITS];
+        for i in 0..NONCE_DIGEST_BITS {
+            message[i] = nonce[i];
+        }
+
+        let fingerprint_state = fingerprint(this);
+        for i in 0..TRANSACTION_STATE_FINGERPRINT_BITS {
+            message[NONCE_DIGEST_BITS + i] = fingerprint_state[i];
+        }
+        blake2s(message)
+    }
+}

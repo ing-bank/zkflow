@@ -1,0 +1,24 @@
+struct NotaryPaddingWrapper {
+    content: Party,
+    is_filler: bool,
+}
+
+struct NotaryComponentGroup {
+    component: NotaryPaddingWrapper,
+    group_hash: NodeDigestDto,
+}
+
+impl NotaryComponentGroup {
+    fn compute_component_group_hash(
+        this: NotaryComponentGroup,
+        privacy_salt: PrivacySaltBits,
+    ) -> NodeDigestBits {
+        let component_leaf_hash = PubKey::compute_leaf_hash(
+            this.component.content.owning_key,
+            privacy_salt,
+            ComponentGroupEnum::NOTARY_GROUP as u32,
+            0 as u32,
+        );
+        // ### CALL APPROPRIATE MERKLE TREE FUNCTION ###
+    }
+}
