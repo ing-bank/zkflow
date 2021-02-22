@@ -23,7 +23,6 @@ import net.corda.core.transactions.TransactionBuilder
 
 /**
  * Disclaimer: this is not how it is supposed to be used in "real" flows, it works just for this test
- * TODO Verifier should rebuild ZKTX basing on moveStx but for now its complicated so it is temporary skipped
  */
 @InitiatingFlow
 class MoveFlow(
@@ -70,7 +69,7 @@ class MoveFlow(
                 val flow = object : ZKSignTransactionFlow(session) {
                     @Suspendable
                     override fun checkTransaction(stx: SignedTransaction) = requireThat {
-                        // In non-test scenario here counterparty should verify incoming Tx including ZK Merkle tree calculation
+                        // In non-test scenario here counterparty can verify incoming Tx from business perspective
                     }
                 }
 

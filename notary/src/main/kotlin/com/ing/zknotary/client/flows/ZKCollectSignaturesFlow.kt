@@ -365,7 +365,7 @@ abstract class ZKSignTransactionFlow @JvmOverloads constructor(
         ltx.verify()
 
         // Resolve ZK dependencies and verify them
-        val vtx = subFlow(ReceiveZKTransactionFlow(otherSideSession, false))
+        val vtx = subFlow(ReceiveZKTransactionFlow(stx, otherSideSession, false))
 
         // Check that the Responder actually needs to sign.
         checkMySignaturesRequired(vtx, signingKeys)

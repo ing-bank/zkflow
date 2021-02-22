@@ -4,9 +4,6 @@ import co.paralleluniverse.fibers.Suspendable
 import com.ing.zknotary.common.flows.ReceiveZKTransactionFlow
 import com.ing.zknotary.common.flows.SendZKTransactionFlow
 import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
-import com.ing.zknotary.node.services.ServiceNames
-import com.ing.zknotary.node.services.ZKWritableVerifierTransactionStorage
-import com.ing.zknotary.node.services.getCordaServiceFromConfig
 import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.isFulfilledBy
 import net.corda.core.flows.FinalityFlow
@@ -193,20 +190,19 @@ class ZKReceiveFinalityFlow @JvmOverloads constructor(
 ) : FlowLogic<SignedZKVerifierTransaction>() {
     @Suspendable
     override fun call(): SignedZKVerifierTransaction {
-        val svtx = subFlow(object : ReceiveZKTransactionFlow(otherSideSession, checkSufficientSignatures = true, statesToRecord = statesToRecord) {
-            override fun checkBeforeRecording(stx: SignedZKVerifierTransaction) {
-                require(expectedTxId == null || expectedTxId == stx.id) {
-                    "We expected to receive transaction with ID $expectedTxId but instead got ${stx.id}. Transaction was" +
-                        "not recorded and nor its states sent to the vault."
+
+        return subFlow(object : ReceiveZKTransactionFlow(
+            stx,
+            otherSideSession,
+            checkSufficientSignatures = true,
+            statesToRecord = statesToRecord
+        ) {
+                override fun checkBeforeRecording(stx: SignedZKVerifierTransaction) {
+                    require(expectedTxId == null || expectedTxId == stx.id) {
+                        "We expected to receive transaction with ID $expectedTxId but instead got ${stx.id}. Transaction was" +
+                            "not recorded and nor its states sent to the vault."
+                    }
                 }
-            }
-        })
-
-        // Store STX and its mapping to VTX
-        val vtxStorage: ZKWritableVerifierTransactionStorage = serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_VERIFIER_TX_STORAGE)
-        serviceHub.recordTransactions(StatesToRecord.ONLY_RELEVANT, setOf(stx))
-        vtxStorage.map.put(stx, svtx)
-
-        return svtx
+            })
     }
 }

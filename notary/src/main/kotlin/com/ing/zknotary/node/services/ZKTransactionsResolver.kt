@@ -71,9 +71,8 @@ class ZKTransactionsResolver(private val flow: ResolveZKTransactionsFlow) : Tran
                 // The write locks are only released over a suspend, so need to keep track of whether the flow has been suspended to ensure
                 // that locks are not held beyond each while loop iteration (as doing this would result in a deadlock due to claiming locks
                 // in the wrong order)
-                val suspendedViaAttachments = flow.fetchMissingAttachments(downloaded)
                 val suspendedViaParams = flow.fetchMissingNetworkParameters(downloaded)
-                suspended = suspended || suspendedViaAttachments || suspendedViaParams
+                suspended = suspended || suspendedViaParams
 
                 // Add all input states and reference input states to the work queue.
                 nextRequests.addAll(dependencies)

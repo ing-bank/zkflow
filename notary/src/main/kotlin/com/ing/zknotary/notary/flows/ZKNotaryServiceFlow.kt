@@ -156,7 +156,7 @@ class ZKNotaryServiceFlow(
              * that are done on Ledgertransactions
              */
             // Resolve dependencies
-            subFlow(ResolveZKTransactionsFlow(svtx.dependencies, otherSideSession))
+            subFlow(ResolveZKTransactionsFlow(null, svtx.dependencies, otherSideSession))
             // Verify ZKP
             zkConfig.zkTransactionService.verify(svtx, true)
             // Verify signatures

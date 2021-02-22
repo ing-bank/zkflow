@@ -25,7 +25,6 @@ import net.corda.core.internal.lazyMapped
 import net.corda.core.node.NetworkParameters
 import net.corda.core.node.ServiceHub
 import net.corda.core.node.ServicesForResolution
-import net.corda.core.serialization.SerializedBytes
 import net.corda.core.serialization.serialize
 import net.corda.core.transactions.LedgerTransaction
 import net.corda.core.transactions.WireTransaction
@@ -207,8 +206,6 @@ fun WireTransaction.toLedgerTransaction(
 
     val resolveIdentity: (PublicKey) -> Party? = { services.identityService.partyFromKey(it) }
     val resolveAttachment: (SecureHash) -> Attachment? = { services.attachments.openAttachment(it) }
-    val resolveStateRefAsSerialized: (StateRef) -> SerializedBytes<TransactionState<ContractState>>? =
-        { WireTransaction.resolveStateRefBinaryComponent(it, services) }
     val resolveParameters: (SecureHash?) -> NetworkParameters? = {
         val hashToResolve = it ?: services.networkParametersService.defaultHash
         services.networkParametersService.lookup(hashToResolve)
@@ -246,7 +243,7 @@ fun WireTransaction.toLedgerTransaction(
     // Normally here transaction size is checked but in ZKP flow we don't really care because all our txs are fixed-size
     // checkTransactionSize(ltx, resolvedNetworkParameters.maxTransactionSize, serializedResolvedInputs, serializedResolvedReferences)
 
-    return services.specialise(ltx)
+    return ltx
 }
 
 /**

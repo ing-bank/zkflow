@@ -9,6 +9,7 @@ import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
 import net.corda.core.internal.PlatformVersionSwitches
 import net.corda.core.node.StatesToRecord
+import net.corda.core.transactions.SignedTransaction
 import net.corda.core.utilities.debug
 import net.corda.core.utilities.trace
 
@@ -18,11 +19,10 @@ import net.corda.core.utilities.trace
  */
 @DeleteForDJVM
 class ResolveZKTransactionsFlow constructor(
+    val initialTx: SignedTransaction? = null,
     val txHashes: Set<SecureHash>,
     val otherSide: FlowSession
 ) : FlowLogic<Unit>() {
-
-    private var fetchNetParamsFromCounterpart = false
 
     @Suppress("MagicNumber")
     @Suspendable
@@ -32,16 +32,11 @@ class ResolveZKTransactionsFlow constructor(
             "Couldn't retrieve party's ${otherSide.counterparty} platform version from NetworkMapCache"
         }
 
-        // Fetch missing parameters flow was added in version 4. This check is needed so we don't end up with node V4 sending parameters
-        // request to node V3 that doesn't know about this protocol.
-        fetchNetParamsFromCounterpart = counterpartyPlatformVersion >= PlatformVersionSwitches.FETCH_MISSING_NETWORK_PARAMETERS
         val batchMode = counterpartyPlatformVersion >= PlatformVersionSwitches.BATCH_DOWNLOAD_COUNTERPARTY_BACKCHAIN
         logger.debug { "ResolveTransactionsFlow.call(): Otherside Platform Version = '$counterpartyPlatformVersion': Batch mode = $batchMode" }
 
-//        if (initialTx != null) {
-//            fetchMissingAttachments(initialTx)
-//            fetchMissingNetworkParameters(initialTx)
-//        }
+        fetchMissingAttachments(initialTx)
+// TODO        fetchMissingNetworkParameters(initialTx)
 
         val resolver = ZKTransactionsResolver(this)
         resolver.downloadDependencies(batchMode)
@@ -62,7 +57,7 @@ class ResolveZKTransactionsFlow constructor(
      */
     // TODO: This could be done in parallel with other fetches for extra speed.
     @Suspendable
-    fun fetchMissingAttachments(transaction: SignedZKVerifierTransaction): Boolean {
+    fun fetchMissingAttachments(transaction: SignedTransaction?): Boolean {
         // TODO attachments are not supported yet
         return false
     }
