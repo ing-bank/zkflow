@@ -1,3 +1,27 @@
+plugins {
+    java
+    id("maven-publish")
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("zkGenerator") {
+            from(components["java"])
+        }
+    }
+
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/ingzkp/zk-notary")
+            credentials {
+                username = System.getenv("GITHUB_USERNAME")
+                password = System.getenv("GITHUB_TOKEN")
+            }
+        }
+    }
+}
+
 // The following values must be defined as global constants.
 // It is impossible to move them into the CommandCircuit as static components
 // because of an incomprehensible reason.
@@ -77,7 +101,7 @@ val merkleLeaves = 9
 task("generateMerkleUtils") {
     outputs.file(merkleUtilsPath)
     circuits.forEach {
-        inputs.files(it.orderedModules.filter { !it.contains("merkle_utils.zn")})
+        inputs.files(it.orderedModules.filter { !it.contains("merkle_utils.zn") })
     }
 
     // #######################################################
@@ -97,7 +121,7 @@ task("generateMerkleUtils") {
 
         val merkleUtils = File(merkleUtilsPath)
         merkleUtils.writeText("//! Limited-depth recursion for Merkle tree construction\n")
-        merkleUtils.writeText("//! GENERATED CODE. DO NOT EDIT\n//! Edit it in prover/build.gradle.kts\n\n");
+        merkleUtils.writeText("//! GENERATED CODE. DO NOT EDIT\n//! Edit it in prover/build.gradle.kts\n\n")
 
         merkleUtils.appendText("//! Merkle tree construction for NodeDigestBits")
         merkleUtils.appendText(
@@ -218,14 +242,12 @@ fn get_merkle_tree_from_${leaves}_component_group_leaf_digests(
             )
             leaves *= 2
         } while (leaves <= fullLeaves)
-
     }
 }
 
 task("circuits") {
     dependsOn("generateMerkleUtils", "rustfmtCheck", "buildCircuits")
 }
-
 
 sealed class CommandCircuit(command: String, absoluteRoot: String) {
     val modules = "$absoluteRoot/modules"
@@ -367,8 +389,8 @@ sealed class CommandCircuit(command: String, absoluteRoot: String) {
                     ("""
         let component_leaf_hashes = compute_leaf_hashes(this, privacy_salt);
         
-        let mut padded_leaves = [[false; COMPONENT_GROUP_LEAF_DIGEST_BITS]; ${paddedGroupSize}];
-        for i in 0..${componentGroupSize} {
+        let mut padded_leaves = [[false; COMPONENT_GROUP_LEAF_DIGEST_BITS]; $paddedGroupSize];
+        for i in 0..$componentGroupSize {
             padded_leaves[i] = component_leaf_hashes[i];
         }
         

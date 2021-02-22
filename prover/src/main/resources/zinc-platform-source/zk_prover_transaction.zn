@@ -1,0 +1,18 @@
+struct ZKProverTransaction {
+    inputs: InputsComponentGroup,
+    outputs: OutputsComponentGroup,
+    references: ReferencesComponentGroup,
+    commands: CommandsComponentGroup,
+    attachments: AttachmentsComponentGroup,
+    notary: NotaryComponentGroup,
+    time_window: TimeWindowComponentGroup,
+    parameters: ParametersComponentGroup,
+    signers: SignersComponentGroup,
+    privacy_salt: PrivacySalt,
+}
+
+struct Witness {
+    transaction: ZKProverTransaction,
+    input_nonces: [NonceDigestDto; INPUT_GROUP_SIZE],
+    reference_nonces: [NonceDigestDto; REFERENCE_GROUP_SIZE],
+}
