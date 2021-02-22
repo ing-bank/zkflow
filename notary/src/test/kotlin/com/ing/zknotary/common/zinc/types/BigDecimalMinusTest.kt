@@ -4,9 +4,7 @@ import com.ing.zknotary.common.zkp.ZKProvingException
 import com.ing.zknotary.common.zkp.ZincZKService
 import net.corda.core.utilities.loggerFor
 import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.Assertions.assertThrows
-import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.Tag
+import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -14,7 +12,6 @@ import java.time.Duration
 import kotlin.time.ExperimentalTime
 
 @ExperimentalTime
-@Tag("nightly")
 class BigDecimalMinusTest {
     private val log = loggerFor<BigDecimalMinusTest>()
 
@@ -259,16 +256,16 @@ class BigDecimalMinusTest {
 
     @Test
     fun `zinc result exceeds the maximum value that can be stored`() {
-        val left = BigDecimal("9").times(BigDecimal("10").pow(1023))
-        val right = BigDecimal("-9").times(BigDecimal("10").pow(1023))
+        val left = BigDecimal("9").times(BigDecimal("10").pow(23))
+        val right = BigDecimal("-9").times(BigDecimal("10").pow(23))
 
         val input = toWitness(left, right)
 
-        val exception = assertThrows(ZKProvingException::class.java) {
+        val exception = Assertions.assertThrows(ZKProvingException::class.java) {
             zincZKService.proveTimed(input.toByteArray(), log)
         }
 
-        assertTrue(
+        Assertions.assertTrue(
             exception.message?.contains("Magnitude exceeds the maximum stored value") ?: false,
             "Circuit fails with different error"
         )
@@ -276,71 +273,19 @@ class BigDecimalMinusTest {
 
     @Test
     fun `zinc result exceeds the minimum value that can be stored`() {
-        val left = BigDecimal("-9").times(BigDecimal("10").pow(1023))
-        val right = BigDecimal("9").times(BigDecimal("10").pow(1023))
+        val left = BigDecimal("-9").times(BigDecimal("10").pow(23))
+        val right = BigDecimal("9").times(BigDecimal("10").pow(23))
 
         val input = toWitness(left, right)
 
-        val exception = assertThrows(ZKProvingException::class.java) {
+        val exception = Assertions.assertThrows(ZKProvingException::class.java) {
             zincZKService.proveTimed(input.toByteArray(), log)
         }
 
-        assertTrue(
+        Assertions.assertTrue(
             exception.message?.contains("Magnitude exceeds the maximum stored value") ?: false,
             "Circuit fails with different error"
         )
-    }
-
-    @Test
-    fun `BigDecimal compatibility - zinc subtraction of two of the same positive scale`() {
-        val left = makeBigDecimal("1231212478987482988429808779810457634781384756794987", 10)
-        val right = makeBigDecimal("747233429293018787918347987234564568", 10)
-
-        val input = toWitness(left, right)
-        val expected = left.minus(right).toJSON()
-
-        zincZKService.proveTimed(input.toByteArray(), log).let {
-            zincZKService.verifyTimed(it, expected.toByteArray(), log)
-        }
-    }
-
-    @Test
-    fun `BigDecimal compatibility - zinc subtraction of two of the same negative scale`() {
-        val left = makeBigDecimal("1231212478987482988429808779810457634781384756794987", -10)
-        val right = makeBigDecimal("747233429293018787918347987234564568", -10)
-
-        val input = toWitness(left, right)
-        val expected = left.minus(right).toJSON()
-
-        zincZKService.proveTimed(input.toByteArray(), log).let {
-            zincZKService.verifyTimed(it, expected.toByteArray(), log)
-        }
-    }
-
-    @Test
-    fun `BigDecimal compatibility - zinc subtraction of two with different scales (left - positive, right - negative)`() {
-        val left = makeBigDecimal("1231212478987482988429808779810457634781384756794987", 15)
-        val right = makeBigDecimal("747233429293018787918347987234564568", -10)
-
-        val input = toWitness(left, right)
-        val expected = left.minus(right).toJSON()
-
-        zincZKService.proveTimed(input.toByteArray(), log).let {
-            zincZKService.verifyTimed(it, expected.toByteArray(), log)
-        }
-    }
-
-    @Test
-    fun `BigDecimal compatibility - zinc subtraction of two with different scales (left - negative, right -  positive)`() {
-        val left = makeBigDecimal("0", -15)
-        val right = makeBigDecimal("0", 10)
-
-        val input = toWitness(left, right)
-        val expected = left.minus(right).toJSON()
-
-        zincZKService.proveTimed(input.toByteArray(), log).let {
-            zincZKService.verifyTimed(it, expected.toByteArray(), log)
-        }
     }
 
     @Test
@@ -438,97 +383,6 @@ class BigDecimalMinusTest {
     fun `BigInteger compatibility - zinc subtraction of two numbers of different signs (left - negative, right - positive, right abs value is greater)`() {
         val left = makeBigDecimal(byteArrayOf(1, 2, 3, 4, 5, 6, 7, 1, 2, 3), -1)
         val right = makeBigDecimal(byteArrayOf(10, 20, 30, 40, 50, 60, 70, 10, 20, 30), 1)
-
-        val input = toWitness(left, right)
-        val expected = left.minus(right).toJSON()
-
-        zincZKService.proveTimed(input.toByteArray(), log).let {
-            zincZKService.verifyTimed(it, expected.toByteArray(), log)
-        }
-    }
-
-    @Test
-    fun `BigInteger compatibility - zinc subtraction of two positives of different length (left is longer)`() {
-        val left = makeBigDecimal(byteArrayOf(1, 2, 3, 4, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7), 1)
-        val right = makeBigDecimal(byteArrayOf(10, 20, 30, 40, 50, 60, 70, 10, 20, 30), 1)
-
-        val input = toWitness(left, right)
-        val expected = left.minus(right).toJSON()
-
-        zincZKService.proveTimed(input.toByteArray(), log).let {
-            zincZKService.verifyTimed(it, expected.toByteArray(), log)
-        }
-    }
-
-    @Test
-    fun `BigInteger compatibility - zinc subtraction of two positives of different length (right is longer)`() {
-        val left = makeBigDecimal(byteArrayOf(10, 20, 30, 40, 50, 60, 70, 10, 20, 30), 1)
-        val right = makeBigDecimal(byteArrayOf(1, 2, 3, 4, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7), 1)
-
-        val input = toWitness(left, right)
-        val expected = left.minus(right).toJSON()
-
-        zincZKService.proveTimed(input.toByteArray(), log).let {
-            zincZKService.verifyTimed(it, expected.toByteArray(), log)
-        }
-    }
-
-    @Test
-    fun `BigInteger compatibility - zinc subtraction of two numbers of different length (left - positive, right - negative, left abs value is greater)`() {
-        val left = makeBigDecimal(byteArrayOf(1, 2, 3, 4, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7), 1)
-        val right = makeBigDecimal(byteArrayOf(10, 20, 30, 40, 50, 60, 70, 10, 20, 30), -1)
-
-        val input = toWitness(left, right)
-        val expected = left.minus(right).toJSON()
-
-        zincZKService.proveTimed(input.toByteArray(), log).let {
-            zincZKService.verifyTimed(it, expected.toByteArray(), log)
-        }
-    }
-
-    @Test
-    fun `BigInteger compatibility - zinc subtraction of two numbers of the same length (left - positive, right - negative, right abs value is greater)`() {
-        val left = makeBigDecimal(byteArrayOf(10, 20, 30, 40, 50, 60, 70, 10, 20, 30), 1)
-        val right = makeBigDecimal(byteArrayOf(1, 2, 3, 4, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7), -1)
-
-        val input = toWitness(left, right)
-        val expected = left.minus(right).toJSON()
-
-        zincZKService.proveTimed(input.toByteArray(), log).let {
-            zincZKService.verifyTimed(it, expected.toByteArray(), log)
-        }
-    }
-
-    @Test
-    fun `BigInteger compatibility - zinc subtraction of two numbers (left - negative, right - positive, left is longer)`() {
-        val left = makeBigDecimal(byteArrayOf(1, 2, 3, 4, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7), -1)
-        val right = makeBigDecimal(byteArrayOf(10, 20, 30, 40, 50, 60, 70, 10, 20, 30), 1)
-
-        val input = toWitness(left, right)
-        val expected = left.minus(right).toJSON()
-
-        zincZKService.proveTimed(input.toByteArray(), log).let {
-            zincZKService.verifyTimed(it, expected.toByteArray(), log)
-        }
-    }
-
-    @Test
-    fun `BigInteger compatibility - zinc subtraction of two negative numbers (left is longer)`() {
-        val left = makeBigDecimal(byteArrayOf(1, 2, 3, 4, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7), -1)
-        val right = makeBigDecimal(byteArrayOf(10, 20, 30, 40, 50, 60, 70, 10, 20, 30), -1)
-
-        val input = toWitness(left, right)
-        val expected = left.minus(right).toJSON()
-
-        zincZKService.proveTimed(input.toByteArray(), log).let {
-            zincZKService.verifyTimed(it, expected.toByteArray(), log)
-        }
-    }
-
-    @Test
-    fun `BigInteger compatibility - zinc subtraction of two negative numbers (right is longer)`() {
-        val left = makeBigDecimal(byteArrayOf(10, 20, 30, 40, 50, 60, 70, 10, 20, 30), -1)
-        val right = makeBigDecimal(byteArrayOf(1, 2, 3, 4, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7), -1)
 
         val input = toWitness(left, right)
         val expected = left.minus(right).toJSON()

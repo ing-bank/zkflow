@@ -31,8 +31,10 @@ publishing {
 val root = "${project.rootDir.absolutePath}/zinc-platform-sources"
 val zincPlatformSource = "$root/src/main/resources/zinc-platform-source"
 
-val create = CommandCircuit.Create(root)
-val move = CommandCircuit.Move(root)
+val bigDecimalSizes = setOf(Pair(24, 6), Pair(100, 20))
+
+val create = CommandCircuit.Create(root, bigDecimalSizes.map { "src/main/resources/zinc-platform-source/floating_point_${it.first}_${it.second}.zn"})
+val move = CommandCircuit.Move(root, bigDecimalSizes.map { "src/main/resources/zinc-platform-source/floating_point_${it.first}_${it.second}.zn"})
 
 val circuits: List<CommandCircuit> = listOf(create, move)
 val distinctModules =
@@ -80,7 +82,7 @@ task("rustfmt") {
 }
 
 task("rustfmtCheck") {
-    mustRunAfter("generateMerkleUtils")
+    mustRunAfter("generateMerkleUtils", "generateFloatingPoint")
 
     circuits.forEach {
         outputs.dir(it.circuitRoot)
@@ -94,6 +96,24 @@ task("rustfmtCheck") {
                     commandLine("rustfmt", "--check", it)
                 }
             }
+    }
+}
+
+task("generateFloatingPoint") {
+    val templatePath = java.nio.file.Paths.get("$root/templates/floating_point.template")
+    val template = String(java.nio.file.Files.readAllBytes(templatePath))
+
+    bigDecimalSizes.forEach {
+        val floatingPointContent = template.replace("\${INTEGER_SIZE_PLACEHOLDER}", it.first.toString())
+            .replace("\${FRACTION_SIZE_PLACEHOLDER}", it.second.toString())
+        val sizeSuffix = "${it.first}_${it.second}"
+        val targetPath = java.nio.file.Paths.get("$zincPlatformSource/floating_point_${sizeSuffix}.zn")
+        java.nio.file.Files.write(
+            targetPath,
+            floatingPointContent.toByteArray(),
+            java.nio.file.StandardOpenOption.CREATE,
+            java.nio.file.StandardOpenOption.TRUNCATE_EXISTING
+        )
     }
 }
 
@@ -269,8 +289,8 @@ sealed class CommandCircuit(command: String, val absoluteRoot: String) {
         "move" to "$modules/modules/move/utils/consts.zn"
     )
 
-    class Create(root: String) : CommandCircuit("create", root) {
-        override val _orderedModules = listOf(
+    class Create(root: String, bigDecimalFiles: List<String>) : CommandCircuit("create", root) {
+        override val _orderedModules = bigDecimalFiles + listOf(
             "src/main/resources/zinc-platform-source/utils/preamble.zn",
             "src/main/resources/zinc-platform-source/utils/consts.zn",
             "modules/create/utils/consts.zn",
@@ -301,8 +321,8 @@ sealed class CommandCircuit(command: String, val absoluteRoot: String) {
         )
     }
 
-    class Move(root: String) : CommandCircuit("move", root) {
-        override val _orderedModules = listOf(
+    class Move(root: String, bigDecimalFiles: List<String>) : CommandCircuit("move", root) {
+        override val _orderedModules = bigDecimalFiles + listOf(
             "src/main/resources/zinc-platform-source/utils/preamble.zn",
             "src/main/resources/zinc-platform-source/utils/consts.zn",
             "modules/move/utils/consts.zn",

@@ -98,8 +98,13 @@ open class CopyCircuitTask : DefaultTask() {
             .filter { `java.nio.file`.Files.exists(`java.nio.file`.Paths.get("notary/build/resources/test/$it")) }
             .forEach {
                 `java.nio.file`.Files.copy(
-                    `java.nio.file`.Paths.get("zinc-platform-sources/src/main/resources/zinc-platform-source/floating_point.zn"),
-                    `java.nio.file`.Paths.get("notary/build/resources/test/$it/src/floating_point.zn"),
+                    `java.nio.file`.Paths.get("zinc-platform-sources/src/main/resources/zinc-platform-source/floating_point_24_6.zn"),
+                    `java.nio.file`.Paths.get("notary/build/resources/test/$it/src/floating_point_24_6.zn"),
+                    `java.nio.file`.StandardCopyOption.REPLACE_EXISTING
+                )
+                `java.nio.file`.Files.copy(
+                    `java.nio.file`.Paths.get("zinc-platform-sources/src/main/resources/zinc-platform-source/floating_point_100_20.zn"),
+                    `java.nio.file`.Paths.get("notary/build/resources/test/$it/src/floating_point_100_20.zn"),
                     `java.nio.file`.StandardCopyOption.REPLACE_EXISTING
                 )
             }
