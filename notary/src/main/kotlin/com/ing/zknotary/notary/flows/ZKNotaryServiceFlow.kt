@@ -1,7 +1,9 @@
 package com.ing.zknotary.notary.flows
 
 import co.paralleluniverse.fibers.Suspendable
+import com.ing.zknotary.common.flows.ResolveZKTransactionsFlow
 import com.ing.zknotary.common.transactions.ZKVerifierTransaction
+import com.ing.zknotary.common.transactions.dependencies
 import com.ing.zknotary.notary.NotaryZKConfig
 import com.ing.zknotary.notary.ZKNotarisationPayload
 import com.ing.zknotary.notary.ZKNotaryService
@@ -95,7 +97,7 @@ class ZKNotaryServiceFlow(
 
     /** Verifies that the correct notarisation request was signed by the counterparty. */
     private fun validateRequestSignature(tx: ZKVerifierTransaction, signature: NotarisationRequestSignature) {
-        val request = NotarisationRequest(tx.inputs, tx.id)
+        val request = NotarisationRequest(tx.inputs.map { it.copy(txhash = it.txhash) }, tx.id)
         val requestingParty = otherSideSession.counterparty
         request.verifySignature(signature, requestingParty)
     }
@@ -144,6 +146,7 @@ class ZKNotaryServiceFlow(
         }
     }
 
+    @Suspendable
     private fun verifyTransaction(requestPayload: ZKNotarisationPayload) {
         val svtx = requestPayload.transaction
 
@@ -152,8 +155,10 @@ class ZKNotaryServiceFlow(
              * TODO Check if we need to do some more checks from [TransactionVerifierServiceInternal]
              * that are done on Ledgertransactions
              */
+            // Resolve dependencies
+            subFlow(ResolveZKTransactionsFlow(null, svtx.dependencies, otherSideSession))
             // Verify ZKP
-            zkConfig.zkTransactionService.verify(svtx)
+            zkConfig.zkTransactionService.verify(svtx, true)
             // Verify signatures
             svtx.verifySignaturesExcept(service.notaryIdentityKey)
         } catch (e: IllegalArgumentException) {

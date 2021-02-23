@@ -55,7 +55,7 @@ abstract class ZKTransactionCordaService(val serviceHub: ServiceHub) : ZKTransac
 
     abstract fun zkServiceForTx(circuitId: SecureHash): ZKService
 
-    override fun verify(stx: SignedZKVerifierTransaction) {
+    override fun verify(stx: SignedZKVerifierTransaction, checkSufficientSignatures: Boolean) {
 
         val tx = stx.tx
 
@@ -63,7 +63,11 @@ abstract class ZKTransactionCordaService(val serviceHub: ServiceHub) : ZKTransac
         zkServiceForTx(tx.circuitId).verify(tx.proof, calculatePublicInput(tx))
 
         // Check signatures
-        stx.verifyRequiredSignatures()
+        if (checkSufficientSignatures) {
+            stx.verifyRequiredSignatures()
+        } else {
+            stx.checkSignaturesAreValid()
+        }
 
         // Check backchain
         tx.padded.inputs().forEach { validateBackchain(it) }
@@ -103,7 +107,7 @@ abstract class ZKTransactionCordaService(val serviceHub: ServiceHub) : ZKTransac
                 // We only recurse if we are verifying a real stateRef
                 val prevVtx = vtxStorage.getTransaction(stateRef.content.txhash) ?: error("Should not happen")
                 // TODO: Perhaps save this recursion until the end? Depends which order we want...
-                verify(prevVtx)
+                verify(prevVtx, true)
             }
         }
     }

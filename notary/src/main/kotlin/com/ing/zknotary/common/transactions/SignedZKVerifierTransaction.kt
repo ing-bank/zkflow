@@ -8,7 +8,10 @@ import net.corda.core.utilities.toBase58String
 import java.security.PublicKey
 
 @CordaSerializable
-class SignedZKVerifierTransaction(val tx: ZKVerifierTransaction, override val sigs: List<TransactionSignature> = emptyList()) : TransactionWithSignatures {
+data class SignedZKVerifierTransaction(val tx: ZKVerifierTransaction, override val sigs: List<TransactionSignature> = emptyList()) : TransactionWithSignatures, NamedByZKMerkleTree {
+
+    override val merkleTree: TransactionMerkleTree
+        get() = tx.merkleTree
 
     override val id: SecureHash
         get() = tx.id
@@ -19,4 +22,8 @@ class SignedZKVerifierTransaction(val tx: ZKVerifierTransaction, override val si
     override fun getKeyDescriptions(keys: Set<PublicKey>): List<String> {
         return keys.map { it.toBase58String() }
     }
+
+    operator fun plus(sig: TransactionSignature) = copy(tx = tx, sigs = sigs + sig)
+
+    operator fun plus(sigList: Collection<TransactionSignature>) = copy(tx = tx, sigs = sigs + sigList)
 }

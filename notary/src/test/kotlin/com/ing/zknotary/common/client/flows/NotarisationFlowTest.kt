@@ -73,23 +73,17 @@ class NotarisationFlowTest {
         val createFlow = TestNotarisationFlow()
         val future = miniCorpNode.startFlow(createFlow)
         mockNet.runNetwork()
-        val signedTxs = future.getOrThrow()
-
-        // Check normal Tx signatures
-        signedTxs.first.sigs.size shouldBe 1
-        signedTxs.first.sigs.forEach {
-            it.verify(signedTxs.first.id)
-        }
+        val svtx = future.getOrThrow()
 
         // Check ZKP Tx signatures
-        signedTxs.second.sigs.size shouldBe 2
-        signedTxs.second.sigs.forEach {
-            it.verify(signedTxs.second.id)
+        svtx.sigs.size shouldBe 2
+        svtx.sigs.forEach {
+            it.verify(svtx.id)
         }
 
         // Check that notary sig is here
 
-        signedTxs.second.sigs.filter {
+        svtx.sigs.filter {
             it.by == notaryNode.info.legalIdentities.single().owningKey
         }.size shouldBe 1
     }

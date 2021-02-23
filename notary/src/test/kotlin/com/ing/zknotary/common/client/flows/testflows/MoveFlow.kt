@@ -1,15 +1,18 @@
 package com.ing.zknotary.common.client.flows.testflows
 
 import co.paralleluniverse.fibers.Suspendable
-import com.ing.zknotary.client.flows.createSignature
+import com.ing.zknotary.client.flows.ZKCollectSignaturesFlow
+import com.ing.zknotary.client.flows.ZKFinalityFlow
+import com.ing.zknotary.client.flows.ZKReceiveFinalityFlow
+import com.ing.zknotary.client.flows.ZKSignTransactionFlow
 import com.ing.zknotary.client.flows.signInitialZKTransaction
 import com.ing.zknotary.common.contracts.TestContract
-import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
 import com.ing.zknotary.common.zkp.ZKTransactionService
 import com.ing.zknotary.node.services.ServiceNames
 import com.ing.zknotary.node.services.getCordaServiceFromConfig
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.StateAndContract
+import net.corda.core.contracts.requireThat
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
 import net.corda.core.flows.InitiatedBy
@@ -17,11 +20,9 @@ import net.corda.core.flows.InitiatingFlow
 import net.corda.core.identity.Party
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
-import net.corda.core.utilities.unwrap
 
 /**
  * Disclaimer: this is not how it is supposed to be used in "real" flows, it works just for this test
- * TODO Verifier should rebuild VTX basing on moveStx but for now its complicated so it is temporary skipped
  */
 @InitiatingFlow
 class MoveFlow(
@@ -43,26 +44,17 @@ class MoveFlow(
 
         val builder = TransactionBuilder(serviceHub.networkMapCache.notaryIdentities.single())
         builder.withItems(state, stateAndContract, command)
-        builder.toWireTransaction(serviceHub).toLedgerTransaction(serviceHub).verify()
 
         // Transaction creator signs transaction.
         val stx = serviceHub.signInitialTransaction(builder)
+        stx.verify(serviceHub, false)
 
-        val vtx = zkService.prove(zkService.toZKProverTransaction(stx.tx))
+        val ptx = zkService.toZKProverTransaction(stx.tx)
+        val vtx = zkService.prove(ptx)
+        val partiallySignedVtx = signInitialZKTransaction(vtx)
+        val svtx = subFlow(ZKCollectSignaturesFlow(stx, partiallySignedVtx, listOf(session)))
 
-        val pvtxSigs = signInitialZKTransaction(vtx)
-        val svtx = SignedZKVerifierTransaction(vtx, pvtxSigs)
-
-        // Help Verifier to resolve dependencies for normal tx
-        subFlow(SendZKTransactionFlow(session, svtx))
-
-        val fullySignedVtx = session.receive<SignedZKVerifierTransaction>().unwrap { it }
-
-        zkService.verify(fullySignedVtx)
-
-        // We don't call FinalityFlow here because it expects "normal" Stx to be signed as well
-        //  and in current implementation of backchain we don't operate "normal" txs.
-        //  This may change later.
+        subFlow(ZKFinalityFlow(stx, svtx, listOf(session)))
 
         return stx
     }
@@ -74,17 +66,18 @@ class MoveFlow(
 
             @Suspendable
             override fun call() {
-                val zkService: ZKTransactionService = serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_TX_SERVICE)
+                val flow = object : ZKSignTransactionFlow(session) {
+                    @Suspendable
+                    override fun checkTransaction(stx: SignedTransaction) = requireThat {
+                        // In non-test scenario here counterparty can verify incoming Tx from business perspective
+                    }
+                }
 
-                // Receive TX and verify ZK backchain
-                val vtx = subFlow(ReceiveZKTransactionFlow(session))
+                // Invoke the subFlow, in response to the counterparty calling [ZKCollectSignaturesFlow].
+                val stx = subFlow(flow)
 
-                val key = serviceHub.keyManagementService.filterMyKeys(vtx.requiredSigningKeys).single()
-                val fullySignedVtx = SignedZKVerifierTransaction(vtx.tx, vtx.sigs + serviceHub.createSignature(vtx.id, key))
-
-                zkService.verify(fullySignedVtx)
-
-                session.send(fullySignedVtx)
+                // Invoke flow in response to ZKFinalityFlow
+                subFlow(ZKReceiveFinalityFlow(session, stx))
             }
         }
     }

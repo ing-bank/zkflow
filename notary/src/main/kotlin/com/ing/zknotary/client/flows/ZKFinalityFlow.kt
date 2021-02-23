@@ -1,17 +1,18 @@
 package com.ing.zknotary.client.flows
 
 import co.paralleluniverse.fibers.Suspendable
+import com.ing.zknotary.common.flows.ReceiveZKTransactionFlow
+import com.ing.zknotary.common.flows.SendZKTransactionFlow
 import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
-import com.ing.zknotary.node.services.ServiceNames
-import com.ing.zknotary.node.services.ZKWritableVerifierTransactionStorage
-import com.ing.zknotary.node.services.getCordaServiceFromConfig
+import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.isFulfilledBy
+import net.corda.core.flows.FinalityFlow
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
 import net.corda.core.flows.InitiatingFlow
 import net.corda.core.flows.NotaryException
 import net.corda.core.flows.NotaryFlow
-import net.corda.core.flows.SendTransactionFlow
+import net.corda.core.flows.SignTransactionFlow
 import net.corda.core.flows.UnexpectedFlowEndException
 import net.corda.core.identity.Party
 import net.corda.core.identity.groupAbstractPartyByWellKnownParty
@@ -42,11 +43,11 @@ import net.corda.core.utilities.ProgressTracker
 // presence of @InitiatingFlow is checked). So the new API is inlined simply because that code path doesn't call initiateFlow.
 @InitiatingFlow
 class ZKFinalityFlow private constructor(
-    val transaction: SignedTransaction,
-    val zkTransaction: SignedZKVerifierTransaction,
+    val stx: SignedTransaction,
+    val vtx: SignedZKVerifierTransaction,
     override val progressTracker: ProgressTracker,
     private val sessions: Collection<FlowSession>
-) : FlowLogic<SignedTransaction>() {
+) : FlowLogic<SignedZKVerifierTransaction>() {
 
     /**
      * Notarise the given transaction and broadcast it to all the participants.
@@ -79,7 +80,7 @@ class ZKFinalityFlow private constructor(
 
     @Suspendable
     @Throws(NotaryException::class)
-    override fun call(): SignedTransaction {
+    override fun call(): SignedZKVerifierTransaction {
         require(sessions.none { serviceHub.myInfo.isLegalIdentity(it.counterparty) }) {
             "Do not provide flow sessions for the local node. ZKFinalityFlow will record the notarised transaction locally."
         }
@@ -91,7 +92,7 @@ class ZKFinalityFlow private constructor(
         // Then send to the notary if needed, record locally and distribute.
 
         logCommandData()
-        val ledgerTransaction = verifyTx()
+        val ledgerTransaction = stx.toLedgerTransaction(serviceHub, false) // TODO this might not work because we don't have plaintext txs for input states
         val externalTxParticipants = extractExternalParticipants(ledgerTransaction)
 
         val sessionParties = sessions.map { it.counterparty }
@@ -107,7 +108,7 @@ class ZKFinalityFlow private constructor(
 
         for (session in sessions) {
             try {
-                subFlow(SendTransactionFlow(session, notarised))
+                subFlow(SendZKTransactionFlow(session, notarised))
                 logger.info("Party ${session.counterparty} received the transaction.")
             } catch (e: UnexpectedFlowEndException) {
                 throw UnexpectedFlowEndException(
@@ -127,47 +128,35 @@ class ZKFinalityFlow private constructor(
     private fun logCommandData() {
         if (logger.isDebugEnabled) {
             val commandDataTypes =
-                transaction.tx.commands.asSequence().mapNotNull { it.value::class.qualifiedName }.distinct()
+                stx.tx.commands.asSequence().mapNotNull { it.value::class.qualifiedName }.distinct()
             logger.debug("Started finalization, commands are ${commandDataTypes.joinToString(", ", "[", "]")}.")
         }
     }
 
     @Suspendable
-    private fun notariseAndRecord(): SignedTransaction {
-        val notarised = if (needsNotarySignature(transaction)) {
+    private fun notariseAndRecord(): SignedZKVerifierTransaction {
+        val notarised = if (needsNotarySignature(vtx)) {
             progressTracker.currentStep =
                 NOTARISING
-            val notarySignatures = subFlow(ZKNotaryFlow(transaction, TODO()))
-            transaction + notarySignatures
+            val notarySignatures = subFlow(ZKNotaryFlow(stx, vtx))
+            vtx + notarySignatures
         } else {
             logger.info("No need to notarise this transaction.")
-            transaction
+            vtx
         }
         logger.info("Recording transaction locally.")
-        recordTransactions(notarised, zkTransaction)
+        serviceHub.recordTransactions(stx, notarised)
         logger.info("Recorded transaction locally successfully.")
         return notarised
     }
 
-    private fun recordTransactions(notarised: SignedTransaction, zkTransaction: SignedZKVerifierTransaction) {
-
-        // Record plaintext transaction
-        serviceHub.recordTransactions(notarised)
-
-        // Record ZK transaction
-        val zkVerifierTransactionStorage: ZKWritableVerifierTransactionStorage =
-            serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_VERIFIER_TX_STORAGE)
-        zkVerifierTransactionStorage.map.put(notarised, zkTransaction.tx)
-        zkVerifierTransactionStorage.addTransaction(zkTransaction)
-    }
-
-    private fun needsNotarySignature(stx: SignedTransaction): Boolean {
+    private fun needsNotarySignature(stx: SignedZKVerifierTransaction): Boolean {
         val wtx = stx.tx
         val needsNotarisation = wtx.inputs.isNotEmpty() || wtx.references.isNotEmpty() || wtx.timeWindow != null
         return needsNotarisation && hasNoNotarySignature(stx)
     }
 
-    private fun hasNoNotarySignature(stx: SignedTransaction): Boolean {
+    private fun hasNoNotarySignature(stx: SignedZKVerifierTransaction): Boolean {
         val notaryKey = stx.tx.notary?.owningKey
         val signers = stx.sigs.asSequence().map { it.by }.toSet()
         return notaryKey?.isFulfilledBy(signers) != true
@@ -177,14 +166,43 @@ class ZKFinalityFlow private constructor(
         val participants = ltx.outputStates.flatMap { it.participants } + ltx.inputStates.flatMap { it.participants }
         return groupAbstractPartyByWellKnownParty(serviceHub, participants).keys - serviceHub.myInfo.legalIdentities
     }
+}
 
-    // For this first version, we still resolve the entire plaintext history of the transaction
-    private fun verifyTx(): LedgerTransaction {
-        val notary = transaction.tx.notary
-        // The notary signature(s) are allowed to be missing but no others.
-        if (notary != null) transaction.verifySignaturesExcept(notary.owningKey) else transaction.verifyRequiredSignatures()
-        val ltx = transaction.toLedgerTransaction(serviceHub, false)
-        ltx.verify()
-        return ltx
+/**
+ * The receiving counterpart to [FinalityFlow].
+ *
+ * All parties who are receiving a finalised transaction from a sender flow must subcall this flow in their own flows.
+ *
+ * It's typical to have already signed the transaction proposal in the same workflow using [SignTransactionFlow]. If so
+ * then the transaction ID can be passed in as an extra check to ensure the finalised transaction is the one that was signed
+ * before it's committed to the vault.
+ *
+ * @param otherSideSession The session which is providing the transaction to record.
+ * @param expectedTxId Expected ID of the transaction that's about to be received. This is typically retrieved from
+ * [SignTransactionFlow]. Setting it to null disables the expected transaction ID check.
+ * @param statesToRecord Which states to commit to the vault. Defaults to [StatesToRecord.ONLY_RELEVANT].
+ */
+class ZKReceiveFinalityFlow @JvmOverloads constructor(
+    private val otherSideSession: FlowSession,
+    private val stx: SignedTransaction,
+    private val expectedTxId: SecureHash? = null,
+    private val statesToRecord: StatesToRecord = StatesToRecord.ONLY_RELEVANT
+) : FlowLogic<SignedZKVerifierTransaction>() {
+    @Suspendable
+    override fun call(): SignedZKVerifierTransaction {
+
+        return subFlow(object : ReceiveZKTransactionFlow(
+            stx,
+            otherSideSession,
+            checkSufficientSignatures = true,
+            statesToRecord = statesToRecord
+        ) {
+                override fun checkBeforeRecording(stx: SignedZKVerifierTransaction) {
+                    require(expectedTxId == null || expectedTxId == stx.id) {
+                        "We expected to receive transaction with ID $expectedTxId but instead got ${stx.id}. Transaction was" +
+                            "not recorded and nor its states sent to the vault."
+                    }
+                }
+            })
     }
 }

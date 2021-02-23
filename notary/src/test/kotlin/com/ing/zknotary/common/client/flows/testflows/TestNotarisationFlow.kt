@@ -7,7 +7,6 @@ import com.ing.zknotary.client.flows.signInitialZKTransaction
 import com.ing.zknotary.common.contracts.TestContract
 import com.ing.zknotary.common.crypto.blake2s256
 import com.ing.zknotary.common.crypto.pedersen
-import com.ing.zknotary.common.transactions.SignedZKProverTransaction
 import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
 import com.ing.zknotary.common.transactions.toZKProverTransaction
 import com.ing.zknotary.common.zkp.ZKTransactionService
@@ -19,14 +18,13 @@ import net.corda.core.crypto.DigestService
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.InitiatingFlow
 import net.corda.core.identity.Party
-import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
 
 @InitiatingFlow
-class TestNotarisationFlow(val signers: List<Party> = emptyList()) : FlowLogic<Pair<SignedTransaction, SignedZKProverTransaction>>() {
+class TestNotarisationFlow(val signers: List<Party> = emptyList()) : FlowLogic<SignedZKVerifierTransaction>() {
 
     @Suspendable
-    override fun call(): Pair<SignedTransaction, SignedZKProverTransaction> {
+    override fun call(): SignedZKVerifierTransaction {
 
         val zkService: ZKTransactionService = serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_TX_SERVICE)
 
@@ -41,23 +39,20 @@ class TestNotarisationFlow(val signers: List<Party> = emptyList()) : FlowLogic<P
 
         // Transaction creator signs transaction.
         val stx = serviceHub.signInitialTransaction(builder)
+
         val ptx = stx.tx.toZKProverTransaction(
             serviceHub,
             serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_VERIFIER_TX_STORAGE),
             componentGroupLeafDigestService = DigestService.blake2s256,
             nodeDigestService = DigestService.pedersen
         )
-
-        val initialPtxSigs = signInitialZKTransaction(ptx)
-
-        val sigs = subFlow(ZKCollectSignaturesFlow(stx, ptx.id, initialPtxSigs, signers.map { initiateFlow(it) }))
-
         val vtx = zkService.prove(ptx)
+        val svtx = signInitialZKTransaction(vtx)
 
-        val svtx = SignedZKVerifierTransaction(vtx, sigs.zksigs)
+        val partiallySignedVTX = subFlow(ZKCollectSignaturesFlow(stx, svtx, signers.map { initiateFlow(it) }))
 
-        val result = subFlow(ZKNotaryFlow(stx, svtx))
+        val notarySigs = subFlow(ZKNotaryFlow(stx, partiallySignedVTX))
 
-        return Pair(sigs.stx, SignedZKProverTransaction(ptx, sigs.zksigs + result))
+        return svtx + notarySigs
     }
 }

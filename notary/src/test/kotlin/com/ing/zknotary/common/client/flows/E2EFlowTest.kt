@@ -9,8 +9,13 @@ import com.ing.zknotary.node.services.ServiceNames.ZK_TX_SERVICE
 import com.ing.zknotary.node.services.ServiceNames.ZK_VERIFIER_TX_STORAGE
 import com.ing.zknotary.notary.ZKNotaryService
 import com.ing.zknotary.testing.zkp.MockZKTransactionService
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
+import net.corda.core.node.services.Vault
+import net.corda.core.node.services.vault.QueryCriteria
+import net.corda.core.transactions.SignedTransaction
 import net.corda.core.utilities.getOrThrow
 import net.corda.testing.common.internal.testNetworkParameters
 import net.corda.testing.core.DUMMY_NOTARY_NAME
@@ -24,14 +29,15 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 
-@Tag("slow")
-class BackchainFlowTest {
+class E2EFlowTest {
     private val mockNet: MockNetwork
     private val notaryNode: StartedMockNode
     private val megaCorpNode: StartedMockNode
     private val miniCorpNode: StartedMockNode
+    private val thirdPartyNode: StartedMockNode
     private val megaCorp: Party
     private val miniCorp: Party
+    private val thirdParty: Party
     private val notary: Party
 
     init {
@@ -55,9 +61,11 @@ class BackchainFlowTest {
         notaryNode = mockNet.notaryNodes.first()
         megaCorpNode = mockNet.createPartyNode(CordaX500Name("MegaCorp", "London", "GB"))
         miniCorpNode = mockNet.createPartyNode(CordaX500Name("MiniCorp", "London", "GB"))
+        thirdPartyNode = mockNet.createPartyNode(CordaX500Name("ThirdParty", "London", "GB"))
         notary = notaryNode.info.singleIdentity()
         megaCorp = megaCorpNode.info.singleIdentity()
         miniCorp = miniCorpNode.info.singleIdentity()
+        thirdParty = thirdPartyNode.info.singleIdentity()
     }
 
     @AfterAll
@@ -67,7 +75,8 @@ class BackchainFlowTest {
     }
 
     @Test
-    fun `We deterministically build, prove and verify graph of ZKVerifierTransactions based on graph of SignedTransactions`() {
+    @Tag("slow")
+    fun `End2End test with ZKP notary`() {
 
         // Build Create stx
         val createFlow = CreateFlow()
@@ -75,10 +84,52 @@ class BackchainFlowTest {
         mockNet.runNetwork()
         val createStx = createFuture.getOrThrow()
 
-        // Build Move stx
-        val moveFlow = MoveFlow(createStx, megaCorp)
-        val moveFuture = miniCorpNode.startFlow(moveFlow)
+        checkVault(createStx, null, miniCorpNode)
+
+        val moveFuture = miniCorpNode.startFlow(MoveFlow(createStx, megaCorp))
         mockNet.runNetwork()
         val moveStx = moveFuture.getOrThrow()
+
+        checkVault(moveStx, miniCorpNode, megaCorpNode)
+
+        val moveBackFuture = megaCorpNode.startFlow(MoveFlow(moveStx, miniCorp))
+        mockNet.runNetwork()
+        val moveBackStx = moveBackFuture.getOrThrow()
+
+        checkVault(moveBackStx, megaCorpNode, miniCorpNode)
+
+        val finalMoveFuture = miniCorpNode.startFlow(MoveFlow(moveBackStx, thirdParty))
+        mockNet.runNetwork()
+        val finalTx = finalMoveFuture.getOrThrow()
+
+        checkVault(finalTx, miniCorpNode, thirdPartyNode)
+    }
+
+    private fun checkVault(
+        tx: SignedTransaction,
+        sender: StartedMockNode?,
+        receiver: StartedMockNode
+    ) {
+
+        // Sender should have CONSUMED input state marked in its vault
+        sender?.let { it ->
+
+            val state = it.services.vaultService
+                .queryBy(
+                    contractStateType = TestContract.TestState::class.java,
+                    criteria = QueryCriteria.VaultQueryCriteria().withStatus(Vault.StateStatus.CONSUMED)
+                ).states.find { state -> state.ref == tx.inputs.single() }
+
+            state shouldNotBe null
+        }
+
+        // Receiver should have UNCONSUMED output state in its vault
+        val actualState = receiver.services.vaultService
+            .queryBy(
+                contractStateType = TestContract.TestState::class.java,
+                criteria = QueryCriteria.VaultQueryCriteria().withStatus(Vault.StateStatus.UNCONSUMED)
+            ).states.single()
+
+        actualState shouldBe tx.tx.outRef<TestContract.TestState>(0)
     }
 }

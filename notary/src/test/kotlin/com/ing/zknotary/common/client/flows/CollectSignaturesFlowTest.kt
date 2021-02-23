@@ -1,6 +1,6 @@
 package com.ing.zknotary.common.client.flows
 
-import com.ing.zknotary.common.client.flows.testflows.TestCollectSignaturesFlow
+import com.ing.zknotary.common.client.flows.testflows.TestCollectZKSignaturesFlow
 import com.ing.zknotary.common.contracts.TestContract
 import com.ing.zknotary.node.services.ConfigParams.Zinc.COMMANDS_SEPARATOR
 import com.ing.zknotary.node.services.ConfigParams.Zinc.COMMAND_CLASS_NAMES
@@ -68,21 +68,15 @@ class CollectSignaturesFlowTest {
     @Test
     @Timeout(300)
     fun `Signing only on Initiator side`() {
-        val p = TestCollectSignaturesFlow()
+        val p = TestCollectZKSignaturesFlow()
         val future = miniCorpNode.startFlow(p)
         mockNet.runNetwork()
-        val signedTxs = future.getOrThrow()
+        val svtx = future.getOrThrow()
 
-        // Check normal Tx signatures
-        signedTxs.first.sigs.size shouldBe 1
-        signedTxs.first.sigs.forEach {
-            it.verify(signedTxs.first.id)
-        }
-
-        // Check ZKP Tx signatures
-        signedTxs.second.sigs.size shouldBe 1
-        signedTxs.second.sigs.forEach {
-            it.verify(signedTxs.second.id)
+        // Check signatures
+        svtx.sigs.size shouldBe 1
+        svtx.sigs.forEach {
+            it.verify(svtx.id)
         }
     }
 
@@ -91,21 +85,15 @@ class CollectSignaturesFlowTest {
     fun `Signing on two sides`() {
 
         // Move state
-        val p = TestCollectSignaturesFlow(listOf(megaCorp))
+        val p = TestCollectZKSignaturesFlow(listOf(megaCorp))
         val future = miniCorpNode.startFlow(p)
         mockNet.runNetwork()
-        val signedTxs = future.getOrThrow()
+        val svtx = future.getOrThrow()
 
-        // Check normal Tx signatures
-        signedTxs.first.sigs.size shouldBe 2
-        signedTxs.first.sigs.forEach {
-            it.verify(signedTxs.first.id)
-        }
-
-        // Check ZKP Tx signatures
-        signedTxs.second.sigs.size shouldBe 2
-        signedTxs.second.sigs.forEach {
-            it.verify(signedTxs.second.id)
+        // Check signatures
+        svtx.sigs.size shouldBe 2
+        svtx.sigs.forEach {
+            it.verify(svtx.id)
         }
     }
 }

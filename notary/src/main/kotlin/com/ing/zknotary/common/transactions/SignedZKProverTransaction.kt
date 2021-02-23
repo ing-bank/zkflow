@@ -6,7 +6,10 @@ import net.corda.core.transactions.TransactionWithSignatures
 import net.corda.core.utilities.toBase58String
 import java.security.PublicKey
 
-data class SignedZKProverTransaction(val tx: ZKProverTransaction, override val sigs: List<TransactionSignature>) : TransactionWithSignatures {
+data class SignedZKProverTransaction(val tx: ZKProverTransaction, override val sigs: List<TransactionSignature>) : TransactionWithSignatures, NamedByZKMerkleTree {
+
+    override val merkleTree: TransactionMerkleTree
+        get() = tx.merkleTree
 
     override val id: SecureHash
         get() = tx.id
