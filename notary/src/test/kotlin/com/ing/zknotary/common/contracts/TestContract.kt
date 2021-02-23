@@ -42,7 +42,7 @@ class TestContract : Contract {
         override val id: Int = 0
 
         override val circuit: CircuitMetaData =
-            CircuitMetaData(folder = File("${System.getProperty("user.dir")}/../prover/circuits/create"))
+            CircuitMetaData(folder = File("${System.getProperty("user.dir")}/../zinc-platform-sources/circuits/create"))
 
         override val paddingConfiguration: ComponentPaddingConfiguration
             get() {
@@ -74,7 +74,7 @@ class TestContract : Contract {
     class Move : ZKCommandData {
         override val id: Int = 1
         override val circuit: CircuitMetaData =
-            CircuitMetaData(folder = File("${System.getProperty("user.dir")}/../prover/circuits/move"))
+            CircuitMetaData(folder = File("${System.getProperty("user.dir")}/../zinc-platform-sources/circuits/move"))
 
         override val paddingConfiguration: ComponentPaddingConfiguration
             get() {
