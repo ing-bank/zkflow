@@ -67,6 +67,7 @@ task("checkJavaVersion") {
 // This task generates an aggregate test report from all subprojects
 // EXCLUDING NIGHTLY TESTS
 val testReport = tasks.register<TestReport>("testReport") {
+    destinationDir = file("$buildDir/reports/tests/test")
     reportOn(subprojects.flatMap {
         it.tasks.matching { task -> task is Test && task.name != "nightlyTest" && task.name != "allTests" }
             .map { test -> test as Test; test.binaryResultsDirectory }
@@ -76,6 +77,7 @@ val testReport = tasks.register<TestReport>("testReport") {
 // This task generates an aggregate test report from all subprojects
 // INCLUDING NIGHTLY TESTS
 val testReportAll = tasks.register<TestReport>("testReportAll") {
+    destinationDir = file("$buildDir/reports/tests/test")
     reportOn(subprojects.flatMap {
         it.tasks.filterIsInstance<Test>()
             .map { test -> test as Test; test.binaryResultsDirectory }
