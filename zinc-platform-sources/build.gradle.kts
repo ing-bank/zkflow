@@ -33,8 +33,8 @@ val zincPlatformSource = "$root/src/main/resources/zinc-platform-source"
 
 val bigDecimalSizes = setOf(Pair(24, 6), Pair(100, 20))
 
-val create = CommandCircuit.Create(root, bigDecimalSizes.map { "src/main/resources/zinc-platform-source/floating_point_${it.first}_${it.second}.zn"})
-val move = CommandCircuit.Move(root, bigDecimalSizes.map { "src/main/resources/zinc-platform-source/floating_point_${it.first}_${it.second}.zn"})
+val create = CommandCircuit.Create(root, bigDecimalSizes.map { "src/main/resources/zinc-platform-source/floating_point_${it.first}_${it.second}.zn" })
+val move = CommandCircuit.Move(root, bigDecimalSizes.map { "src/main/resources/zinc-platform-source/floating_point_${it.first}_${it.second}.zn" })
 
 val circuits: List<CommandCircuit> = listOf(create, move)
 val distinctModules =
@@ -100,20 +100,16 @@ task("rustfmtCheck") {
 }
 
 task("generateFloatingPoint") {
-    val templatePath = java.nio.file.Paths.get("$root/templates/floating_point.template")
-    val template = String(java.nio.file.Files.readAllBytes(templatePath))
+    val template = File("$root/templates/floating_point.template").readText()
 
     bigDecimalSizes.forEach {
         val floatingPointContent = template.replace("\${INTEGER_SIZE_PLACEHOLDER}", it.first.toString())
             .replace("\${FRACTION_SIZE_PLACEHOLDER}", it.second.toString())
         val sizeSuffix = "${it.first}_${it.second}"
-        val targetPath = java.nio.file.Paths.get("$zincPlatformSource/floating_point_${sizeSuffix}.zn")
-        java.nio.file.Files.write(
-            targetPath,
-            floatingPointContent.toByteArray(),
-            java.nio.file.StandardOpenOption.CREATE,
-            java.nio.file.StandardOpenOption.TRUNCATE_EXISTING
-        )
+        val targetFile = File("$zincPlatformSource/floating_point_$sizeSuffix.zn")
+        targetFile.delete()
+        targetFile.createNewFile()
+        targetFile.writeBytes(floatingPointContent.toByteArray())
     }
 }
 
