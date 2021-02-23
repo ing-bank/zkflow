@@ -67,7 +67,6 @@ task("checkJavaVersion") {
 // This task generates an aggregate test report from all subprojects
 // EXCLUDING NIGHTLY TESTS
 val testReport = tasks.register<TestReport>("testReport") {
-    destinationDir = file("$buildDir/reports/tests/test")
     reportOn(subprojects.flatMap {
         it.tasks.matching { task -> task is Test && task.name != "nightlyTest" && task.name != "allTests" }
             .map { test -> test as Test; test.binaryResultsDirectory }
@@ -77,9 +76,8 @@ val testReport = tasks.register<TestReport>("testReport") {
 // This task generates an aggregate test report from all subprojects
 // INCLUDING NIGHTLY TESTS
 val testReportAll = tasks.register<TestReport>("testReportAll") {
-    destinationDir = file("$buildDir/reports/tests/test")
     reportOn(subprojects.flatMap {
-        it.tasks.matching { task -> task is Test }
+        it.tasks.filterIsInstance<Test>()
             .map { test -> test as Test; test.binaryResultsDirectory }
     })
 }
@@ -208,7 +206,6 @@ subprojects {
                     includeTags("slow")
                 }
                 shouldRunAfter("test")
-                finalizedBy(testReport)
             }
 
             task<Test>("nightlyTest") {
@@ -223,8 +220,6 @@ subprojects {
 
                 // If running OWASP checks, run it first, so the build fails faster
                 mustRunAfter(":dependencyCheckAggregate")
-
-                finalizedBy(testReportAll)
             }
 
             task<Test>("allTests") {
@@ -238,10 +233,8 @@ subprojects {
                     excludeTags("slow")
                     excludeTags("nightly")
                 }
-                it.finalizedBy(testReport)
             }
         }
-
     }
 }
 
