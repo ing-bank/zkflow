@@ -17,6 +17,9 @@ corda/
 
 .DS_Store
 
+floating_point_24_6.zn
+floating_point_100_20.zn
+
 # Gradle and Maven with auto-import
 # When using Gradle or Maven with auto-import, you should exclude module files,
 # since they will be recreated, and may cause churn.  Uncomment if using

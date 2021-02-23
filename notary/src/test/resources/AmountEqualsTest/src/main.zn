@@ -1,8 +1,8 @@
 //!
 //! The 'Amount' main module.
 //!
-mod floating_point;
-use floating_point::Amount;
+mod floating_point_24_6;
+use floating_point_24_6::Amount;
 
 fn main(left: Amount, right: Amount) -> u8 {
     if Amount::equals(left, right) {
