@@ -20,6 +20,26 @@
 
     <suppress>
         <notes><![CDATA[
+       file name: corda*.jar
+       We have Corda as a dependency, but we never use it in production. Our software is a plugin for Corda,
+       so it is the other way around. Only direct dependencies that we introduce ourselves contribute or detract
+       from the security of our software.
+       ]]></notes>
+        <gav regex="true">^net\.corda:corda:.*$</gav>
+        <vulnerabilityName regex="true">^.*$</vulnerabilityName>
+    </suppress>
+
+    <suppress>
+        <notes><![CDATA[
+   file name: artemis-jms-client-2.6.2.jar
+   Part of Corda, not used by our code
+   ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.apache\.activemq/artemis\-jms\-client@.*$</packageUrl>
+        <vulnerabilityName regex="true">^.*$</vulnerabilityName>
+    </suppress>
+
+    <suppress>
+        <notes><![CDATA[
    file name: detekt-report-sarif-1.15.0.jar
    We exclude detekt, since it is only used for testing
    ]]></notes>
