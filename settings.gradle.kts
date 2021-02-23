@@ -56,7 +56,7 @@ pluginManagement {
 
 include("generator")
 include("notary")
-include("prover")
+include("zinc-platform-sources")
 include("gradle-plugin")
 include("test-utils")
 include("docs")

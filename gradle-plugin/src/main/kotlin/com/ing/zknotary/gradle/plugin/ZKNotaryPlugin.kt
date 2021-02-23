@@ -27,8 +27,10 @@ class ZKNotaryPlugin : Plugin<Project> {
 
             // Add the required dependencies to consumer projects
             project.configurations.create("zinc")
-            project.dependencies.add("zinc", "com.ing.zknotary:prover:${extension.proverVersion}")
-            project.dependencies.add("implementation", "com.ing.zknotary:prover:${extension.proverVersion}")
+            project.dependencies.add(
+                "zinc",
+                "com.ing.zknotary:zinc-platform-sources:${extension.zincPlatformSourcesVersion}"
+            )
             project.dependencies.add("implementation", "com.ing.zknotary:notary:${extension.notaryVersion}")
             project.dependencies.add("implementation", "com.ing.zknotary:generator:${extension.generatorVersion}")
             project.dependencies.add("ksp", "com.ing.zknotary:generator:${extension.generatorVersion}")
@@ -48,7 +50,7 @@ class ZKNotaryPlugin : Plugin<Project> {
                 project.copy { copy ->
                     copy.into(project.buildDir)
                     val file = project.configurations.findByName("zinc")
-                        ?.files?.find { it.name.contains("prover-${extension.proverVersion}") }
+                        ?.files?.find { it.name.contains("zinc-platform-sources-${extension.zincPlatformSourcesVersion}") }
                     @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
                     copy.from(project.zipTree(file).matching { it.include("zinc-platform-source/**/*.zn") })
                 }

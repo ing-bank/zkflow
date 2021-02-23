@@ -28,8 +28,8 @@ publishing {
 // > Could not open cache directory 6f7l1lbu6cqg0vysvf72z734b (/Users/vic/.gradle/caches/6.5.1/gradle-kotlin-dsl/6f7l1lbu6cqg0vysvf72z734b).
 //    > Internal compiler error: Back-end (JVM) Internal error: wrong bytecode generated for static initializer
 //      <no bytecode>
-val root = "${project.rootDir.absolutePath}/prover"
-val sharedModules = "$root/modules/shared"
+val root = "${project.rootDir.absolutePath}/zinc-platform-sources"
+val zincPlatformSource = "$root/src/main/resources/zinc-platform-source"
 
 val create = CommandCircuit.Create(root)
 val move = CommandCircuit.Move(root)
@@ -37,7 +37,7 @@ val move = CommandCircuit.Move(root)
 val circuits: List<CommandCircuit> = listOf(create, move)
 val distinctModules =
     circuits.fold(emptySet<String>()) { acc, commandCircuit -> acc + commandCircuit.orderedModules }
-val merkleUtilsPath = "$sharedModules/utils/merkle_utils.zn"
+val merkleUtilsPath = "$zincPlatformSource/utils/merkle_utils.zn"
 
 task("buildCircuits") {
     mustRunAfter("rustfmtCheck")
@@ -121,7 +121,7 @@ task("generateMerkleUtils") {
 
         val merkleUtils = File(merkleUtilsPath)
         merkleUtils.writeText("//! Limited-depth recursion for Merkle tree construction\n")
-        merkleUtils.writeText("//! GENERATED CODE. DO NOT EDIT\n//! Edit it in prover/build.gradle.kts\n\n")
+        merkleUtils.writeText("//! GENERATED CODE. DO NOT EDIT\n//! Edit it in zinc-platform-sources/build.gradle.kts\n\n")
 
         merkleUtils.appendText("//! Merkle tree construction for NodeDigestBits")
         merkleUtils.appendText(
@@ -249,15 +249,15 @@ task("circuits") {
     dependsOn("generateMerkleUtils", "rustfmtCheck", "buildCircuits")
 }
 
-sealed class CommandCircuit(command: String, absoluteRoot: String) {
-    val modules = "$absoluteRoot/modules"
+sealed class CommandCircuit(command: String, val absoluteRoot: String) {
+    private val modules = absoluteRoot
     val circuits = "$absoluteRoot/circuits"
     val isDbgOn = false
 
     // Combine modules in a given order,
     abstract val _orderedModules: List<String>
     val orderedModules: Set<String>
-        get() = _orderedModules.map { "$modules/$it" }.toSet()
+        get() = _orderedModules.map { "$absoluteRoot/$it" }.toSet()
 
     // write the result to this file.
     val circuitRoot = "$circuits/$command"
@@ -265,71 +265,71 @@ sealed class CommandCircuit(command: String, absoluteRoot: String) {
 
     // a map where each command has its corresponding consts path
     val commandConstsMap = mapOf(
-        "create" to "$modules/create/utils/consts.zn",
-        "move" to "$modules/move/utils/consts.zn"
+        "create" to "$modules/modules/create/utils/consts.zn",
+        "move" to "$modules/modules/move/utils/consts.zn"
     )
 
     class Create(root: String) : CommandCircuit("create", root) {
         override val _orderedModules = listOf(
-            "shared/utils/preamble.zn",
-            "shared/utils/consts.zn",
-            "create/utils/consts.zn",
-            "shared/component_group_enum.zn",
-            "shared/crypto/privacy_salt.zn",
-            "shared/dto/component_group_leaf_digest_dto.zn",
-            "shared/dto/node_digest_dto.zn",
-            "shared/dto/nonce_digest_dto.zn",
-            "shared/debug/debug_utils.zn",
-            "shared/utils/crypto_utils.zn",
-            "shared/crypto/pub_key.zn",
-            "shared/utils/merkle_utils.zn",
-            "shared/state_and_ref.zn",
-            "shared/components/inputs.zn",
-            "shared/components/outputs.zn",
-            "shared/components/references.zn",
-            "shared/components/commands.zn",
-            "shared/components/attachments.zn",
-            "shared/components/notary.zn",
-            "shared/components/time_window.zn",
-            "shared/components/parameters.zn",
-            "shared/components/signers.zn",
-            "shared/zk_prover_transaction.zn",
-            "shared/utils/utxo_digests.zn",
-            "shared/merkle_tree.zn",
-            "create/validate/contract_rules.zn",
-            "create/main.zn"
+            "src/main/resources/zinc-platform-source/utils/preamble.zn",
+            "src/main/resources/zinc-platform-source/utils/consts.zn",
+            "modules/create/utils/consts.zn",
+            "src/main/resources/zinc-platform-source/component_group_enum.zn",
+            "src/main/resources/zinc-platform-source/crypto/privacy_salt.zn",
+            "src/main/resources/zinc-platform-source/dto/component_group_leaf_digest_dto.zn",
+            "src/main/resources/zinc-platform-source/dto/node_digest_dto.zn",
+            "src/main/resources/zinc-platform-source/dto/nonce_digest_dto.zn",
+            "src/main/resources/zinc-platform-source/debug/debug_utils.zn",
+            "src/main/resources/zinc-platform-source/utils/crypto_utils.zn",
+            "src/main/resources/zinc-platform-source/crypto/pub_key.zn",
+            "src/main/resources/zinc-platform-source/utils/merkle_utils.zn",
+            "src/main/resources/zinc-platform-source/state_and_ref.zn",
+            "src/main/resources/zinc-platform-source/components/inputs.zn",
+            "src/main/resources/zinc-platform-source/components/outputs.zn",
+            "src/main/resources/zinc-platform-source/components/references.zn",
+            "src/main/resources/zinc-platform-source/components/commands.zn",
+            "src/main/resources/zinc-platform-source/components/attachments.zn",
+            "src/main/resources/zinc-platform-source/components/notary.zn",
+            "src/main/resources/zinc-platform-source/components/time_window.zn",
+            "src/main/resources/zinc-platform-source/components/parameters.zn",
+            "src/main/resources/zinc-platform-source/components/signers.zn",
+            "src/main/resources/zinc-platform-source/zk_prover_transaction.zn",
+            "src/main/resources/zinc-platform-source/utils/utxo_digests.zn",
+            "src/main/resources/zinc-platform-source/merkle_tree.zn",
+            "modules/create/validate/contract_rules.zn",
+            "modules/create/main.zn"
         )
     }
 
     class Move(root: String) : CommandCircuit("move", root) {
         override val _orderedModules = listOf(
-            "shared/utils/preamble.zn",
-            "shared/utils/consts.zn",
-            "move/utils/consts.zn",
-            "shared/component_group_enum.zn",
-            "shared/crypto/privacy_salt.zn",
-            "shared/dto/component_group_leaf_digest_dto.zn",
-            "shared/dto/node_digest_dto.zn",
-            "shared/dto/nonce_digest_dto.zn",
-            "shared/debug/debug_utils.zn",
-            "shared/utils/crypto_utils.zn",
-            "shared/crypto/pub_key.zn",
-            "shared/utils/merkle_utils.zn",
-            "shared/state_and_ref.zn",
-            "shared/components/inputs.zn",
-            "shared/components/outputs.zn",
-            "shared/components/references.zn",
-            "shared/components/commands.zn",
-            "shared/components/attachments.zn",
-            "shared/components/notary.zn",
-            "shared/components/time_window.zn",
-            "shared/components/parameters.zn",
-            "shared/components/signers.zn",
-            "shared/zk_prover_transaction.zn",
-            "shared/utils/utxo_digests.zn",
-            "shared/merkle_tree.zn",
-            "move/validate/contract_rules.zn",
-            "move/main.zn"
+            "src/main/resources/zinc-platform-source/utils/preamble.zn",
+            "src/main/resources/zinc-platform-source/utils/consts.zn",
+            "modules/move/utils/consts.zn",
+            "src/main/resources/zinc-platform-source/component_group_enum.zn",
+            "src/main/resources/zinc-platform-source/crypto/privacy_salt.zn",
+            "src/main/resources/zinc-platform-source/dto/component_group_leaf_digest_dto.zn",
+            "src/main/resources/zinc-platform-source/dto/node_digest_dto.zn",
+            "src/main/resources/zinc-platform-source/dto/nonce_digest_dto.zn",
+            "src/main/resources/zinc-platform-source/debug/debug_utils.zn",
+            "src/main/resources/zinc-platform-source/utils/crypto_utils.zn",
+            "src/main/resources/zinc-platform-source/crypto/pub_key.zn",
+            "src/main/resources/zinc-platform-source/utils/merkle_utils.zn",
+            "src/main/resources/zinc-platform-source/state_and_ref.zn",
+            "src/main/resources/zinc-platform-source/components/inputs.zn",
+            "src/main/resources/zinc-platform-source/components/outputs.zn",
+            "src/main/resources/zinc-platform-source/components/references.zn",
+            "src/main/resources/zinc-platform-source/components/commands.zn",
+            "src/main/resources/zinc-platform-source/components/attachments.zn",
+            "src/main/resources/zinc-platform-source/components/notary.zn",
+            "src/main/resources/zinc-platform-source/components/time_window.zn",
+            "src/main/resources/zinc-platform-source/components/parameters.zn",
+            "src/main/resources/zinc-platform-source/components/signers.zn",
+            "src/main/resources/zinc-platform-source/zk_prover_transaction.zn",
+            "src/main/resources/zinc-platform-source/utils/utxo_digests.zn",
+            "src/main/resources/zinc-platform-source/merkle_tree.zn",
+            "modules/move/validate/contract_rules.zn",
+            "modules/move/main.zn"
         )
     }
 
@@ -417,7 +417,7 @@ sealed class CommandCircuit(command: String, absoluteRoot: String) {
         orderedModules
             .filter {
                 // Remove modules with the debug functionality if isDbgOn is set to false.
-                !it.contains("$modules/shared/debug") || isDbgOn
+                !it.contains("$modules/src/main/resources/zinc-platform-source/debug") || isDbgOn
             }
             .map {
                 val part = File(it)

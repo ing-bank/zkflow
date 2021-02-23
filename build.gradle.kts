@@ -164,7 +164,7 @@ subprojects {
             // This applies to all test types, both fast and slow
             withType<Test> {
                 dependsOn(":detekt")
-                dependsOn(":prover:circuits") // Make sure that the Zinc circuit is ready to use when running tests
+                dependsOn(":zinc-platform-sources:circuits") // Make sure that the Zinc circuit is ready to use when running tests
 
                 val cores = Runtime.getRuntime().availableProcessors()
                 maxParallelForks = (Runtime.getRuntime().availableProcessors() / 2).takeIf { it > 0 } ?: 1
@@ -202,7 +202,7 @@ subprojects {
 
             task<Test>("slowTest") {
                 val root = project.rootDir.absolutePath
-                inputs.dir("$root/prover/circuits")
+                inputs.dir("$root/zinc-platform-sources/circuits")
 
                 useJUnitPlatform {
                     includeTags("slow")
@@ -213,7 +213,7 @@ subprojects {
 
             task<Test>("nightlyTest") {
                 val root = project.rootDir.absolutePath
-                inputs.dir("$root/prover/circuits")
+                inputs.dir("$root/zinc-platform-sources/circuits")
 
                 useJUnitPlatform {
                     includeTags("nightly")
