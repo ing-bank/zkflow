@@ -261,13 +261,6 @@ fn get_merkle_tree_from_${leaves}_component_group_leaf_digests(
     }
 }
 
-task("generateZKContractState") {
-    outputs.file(zkContractStatePath)
-    circuits.forEach {
-        inputs.files(it.orderedModules.filter { !it.contains("zk_contract_state.zn")})
-    }
-}
-
 task("circuits") {
     dependsOn("generateMerkleUtils", "rustfmtCheck", "buildCircuits")
 }
