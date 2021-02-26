@@ -1,229 +1,256 @@
 package com.ing.zknotary.gradle.task
 
 import org.gradle.api.DefaultTask
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputDirectory
+import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import java.io.File
 
 abstract class CompileZincTask : DefaultTask() {
 
-    @get:Input
-    val merkleLeaves = 9
+    @InputFiles
+    val zincPlatformSources = "${project.rootDir}/contracts/build/zinc-platform-source"
 
-    @get:InputDirectory
-    val inputDirectory = "${project.rootDir}/contracts/src/main/zinc/"
+    @InputFiles
+    val zkdappInputFiles = "${project.rootDir}/contracts/src/main/zinc/"
 
     @OutputDirectory
-    var outputDirectory = "${project.rootDir}/contracts/build/compileZinc"
+    var outputCircuitDirectory = "${project.rootDir}/contracts/build/circuits/"
 
     @TaskAction
     fun compileZinc() {
-        generateMerkleUtils()
-        generateZKContractState()
-        generateContractRules()
+        val create = CommandCircuit.Create(zincPlatformSources, zkdappInputFiles, outputCircuitDirectory)
+        val move = CommandCircuit.Move(zincPlatformSources, zkdappInputFiles, outputCircuitDirectory)
 
-        println("done")
+        val circuits: List<CommandCircuit> = listOf(create, move)
+
+        circuits.forEach { circuit ->
+            circuit.build()
+            circuit.generateZargo()
+            // Compile circuit
+            val circuitPath = File(circuit.zargoRoot)
+            project.exec {
+                it.workingDir = circuitPath
+                it.executable = "zargo"
+                it.args = listOf("clean", "-v")
+            }
+        }
     }
 
-    @Suppress("LongMethod")
-    fun generateMerkleUtils() {
-        val merkleUtilsPath = "$inputDirectory/shared/merkle_utils.zn"
+    sealed class CommandCircuit(command: String, zincPlatformRoot: String, zkdappZincRoot: String, outputRoot: String) {
+        val coreZincModules = zincPlatformRoot
+        val zkdappZincModules = zkdappZincRoot
+        val outputCircuitRoot = outputRoot
 
-        // outputs.file(merkleUtilsPath)
-        // circuits.forEach {
-        //    inputs.files(it.orderedModules.filter { !it.contains("merkle_utils.zn") })
-        // }
+        val isDbgOn = false
 
-        // #######################################################
-        // It is of UTTER importance to not reformat code snippets
-        // #######################################################
+        // Combine modules in a given order,
+        abstract val circuitOrderedModules: List<String>
+        val orderedModules: Set<String>
+            get() = circuitOrderedModules.map { it }.toSet()
 
-        fun isPow2(num: Int) = num and (num - 1) == 0
+        // write the result to this file.
+        val circuitPath = "$outputCircuitRoot/$command/src/main.zn"
 
-        val fullLeaves = run {
-            var l = merkleLeaves
-            while (!isPow2(l)) {
-                l++
-            }
-            l
+        // a map where each command has its corresponding consts path
+        val commandConstsMap = mapOf(
+            "create" to "$zkdappZincModules/create/utils/consts.zn",
+            "move" to "$zkdappZincModules/move/utils/consts.zn"
+        )
+
+        val zargoRoot = "$outputCircuitRoot/$command"
+        val zargoPath = "$zargoRoot/Zargo.toml"
+        class Create(coreZincModules: String, zkdappZincModules: String, outputCircuitRoot: String) : CommandCircuit("create", coreZincModules, zkdappZincModules, outputCircuitRoot) {
+            override val circuitOrderedModules = listOf(
+                "$coreZincModules/utils/preamble.zn",
+                "$coreZincModules/utils/consts.zn",
+                "$zkdappZincModules/create/utils/consts.zn",
+                "$coreZincModules/component_group_enum.zn",
+                "$coreZincModules/crypto/privacy_salt.zn",
+                "$coreZincModules/dto/component_group_leaf_digest_dto.zn",
+                "$coreZincModules/dto/node_digest_dto.zn",
+                "$coreZincModules/dto/nonce_digest_dto.zn",
+                "$coreZincModules/debug/debug_utils.zn",
+                "$coreZincModules/utils/crypto_utils.zn",
+                "$coreZincModules/crypto/pub_key.zn",
+                "$zkdappZincModules/shared/merkle_utils.zn",
+                "$coreZincModules/party.zn",
+                "$zkdappZincModules/shared/zk_contract_state.zn",
+                "$coreZincModules/state_and_ref.zn",
+                "$coreZincModules/components/inputs.zn",
+                "$coreZincModules/components/outputs.zn",
+                "$coreZincModules/components/references.zn",
+                "$coreZincModules/components/commands.zn",
+                "$coreZincModules/components/attachments.zn",
+                "$coreZincModules/components/notary.zn",
+                "$coreZincModules/components/time_window.zn",
+                "$coreZincModules/components/parameters.zn",
+                "$coreZincModules/components/signers.zn",
+                "$coreZincModules/zk_prover_transaction.zn",
+                "$coreZincModules/utils/utxo_digests.zn",
+                "$coreZincModules/merkle_tree.zn",
+                "$zkdappZincModules/create/validate/contract_rules.zn",
+                "$zkdappZincModules/create/main.zn"
+            )
         }
 
-        val merkleUtils = File(merkleUtilsPath)
-        merkleUtils.writeText("//! Limited-depth recursion for Merkle tree construction\n")
-        merkleUtils.writeText("//! GENERATED CODE. DO NOT EDIT\n//! Edit it in prover/build.gradle.kts\n\n")
-
-        merkleUtils.appendText("//! Merkle tree construction for NodeDigestBits")
-        merkleUtils.appendText(
-            """
-fn get_merkle_tree_from_2_node_digests(leaves: [NodeDigestBits; 2]) -> NodeDigestBits {
-    dbg!("Consuming 2 leaves");
-    dbg!("0: {}", NodeDigestDto::from_bits_to_bytes(leaves[0]));
-    dbg!("1: {}", NodeDigestDto::from_bits_to_bytes(leaves[1]));
-    pedersen_to_padded_bits(pedersen(concatenate_node_digests(leaves[0], leaves[1])).0)
-}
-"""
-        )
-
-        var leaves = 4
-
-        do {
-            val levelUp = leaves / 2
-
-            merkleUtils.appendText(
-                """
-fn get_merkle_tree_from_${leaves}_node_digests(leaves: [NodeDigestBits; $leaves]) -> NodeDigestBits {
-    dbg!("Consuming $leaves leaves");
-    let mut new_leaves = [[false; NODE_DIGEST_BITS]; $levelUp];
-    for i in 0..$levelUp {
-        new_leaves[i] = pedersen_to_padded_bits(
-            pedersen(concatenate_node_digests(leaves[2 * i], leaves[2 * i + 1])).0,
-        );
-        dbg!(
-            "{}: {}",                                         // dbg!
-            2 * i,                                            // dbg!
-            NodeDigestDto::from_bits_to_bytes(leaves[2 * i])  // dbg!
-        ); //dbg!
-        dbg!(
-            "{}: {}",                                             // dbg!
-            2 * i + 1,                                            // dbg!
-            NodeDigestDto::from_bits_to_bytes(leaves[2 * i + 1])  // dbg!
-        ); // dbg!
-        dbg!(
-            "Digest: {}",                                     // dbg!
-            NodeDigestDto::from_bits_to_bytes(new_leaves[i])  // dbg!
-        ); // dbg!
-    }
-    dbg!("");
-    get_merkle_tree_from_${levelUp}_node_digests(new_leaves)
-}
-"""
+        class Move(coreZincModules: String, zkdappZincModules: String, outputCircuitRoot: String) : CommandCircuit("move", coreZincModules, zkdappZincModules, outputCircuitRoot) {
+            override val circuitOrderedModules = listOf(
+                "$coreZincModules/utils/preamble.zn",
+                "$coreZincModules/utils/consts.zn",
+                "$zkdappZincModules/move/utils/consts.zn",
+                "$coreZincModules/component_group_enum.zn",
+                "$coreZincModules/crypto/privacy_salt.zn",
+                "$coreZincModules/dto/component_group_leaf_digest_dto.zn",
+                "$coreZincModules/dto/node_digest_dto.zn",
+                "$coreZincModules/dto/nonce_digest_dto.zn",
+                "$coreZincModules/debug/debug_utils.zn",
+                "$coreZincModules/utils/crypto_utils.zn",
+                "$coreZincModules/crypto/pub_key.zn",
+                "$zkdappZincModules/shared/merkle_utils.zn",
+                "$coreZincModules/party.zn",
+                "$zkdappZincModules/shared/zk_contract_state.zn",
+                "$coreZincModules/state_and_ref.zn",
+                "$coreZincModules/components/inputs.zn",
+                "$coreZincModules/components/outputs.zn",
+                "$coreZincModules/components/references.zn",
+                "$coreZincModules/components/commands.zn",
+                "$coreZincModules/components/attachments.zn",
+                "$coreZincModules/components/notary.zn",
+                "$coreZincModules/components/time_window.zn",
+                "$coreZincModules/components/parameters.zn",
+                "$coreZincModules/components/signers.zn",
+                "$coreZincModules/zk_prover_transaction.zn",
+                "$coreZincModules/utils/utxo_digests.zn",
+                "$coreZincModules/merkle_tree.zn",
+                "$zkdappZincModules/move/validate/contract_rules.zn",
+                "$zkdappZincModules/move/main.zn"
             )
-            leaves *= 2
-        } while (leaves <= fullLeaves)
+        }
 
-        merkleUtils.appendText(
-            "\n/// Merkle tree construction for ComponentGroupLeafDigestBits.\n" +
-                "/// Use it only for the computation of a component sub-Merkle tree from component group leaf hashes."
-        )
-        merkleUtils.appendText(
+        private fun getNextPowerOfTwo(value: Int): Int {
+            val highestOneBit = Integer.highestOneBit(value)
+            return if (value == 1) {
+                2
+            } else {
+                highestOneBit shl 1
+            }
+        }
+
+        // TODO: These functions will be removed once Zinc supports dynamic length arrays.
+        private fun getGroupSize(constsPath: String): Map<String, Int> {
+            val regex = "const[ ]+([A-Z]+)_GROUP_SIZE[a-z,0-9,: ]+=[ ]?([0-9]+)".toRegex()
+
+            return regex.findAll(File(constsPath).readText()).map {
+                val (a, b) = it.destructured
+                a.toLowerCase() to b.toInt()
+            }.toMap()
+        }
+
+        fun <K, V> Map<K, V>.single(predicate: (K, V) -> Boolean) =
+            filter { (k, v) -> predicate(k, v) }.values.single()
+
+        private fun findCorrespondingMerkleTreeFunction(componentPath: String, circuitPath: String): String {
+            val componentGroupSizes = getGroupSize(commandConstsMap.single { command, _ -> circuitPath.contains(command) })
+            val componentGroupName =
+                componentPath.substring(componentPath.indexOf("components/") + 11, componentPath.indexOf(".zn") - 1)
+
+            if (componentGroupSizes.containsKey(componentGroupName)) {
+                val componentGroupSize = componentGroupSizes.getValue(componentGroupName)
+
+                return when {
+                    // This condition is executed when there is no element in the component group.
+                    // The return value is allOnesHash
+                    componentGroupSize == 0 -> {
+                        (
+                            """
+        // Return all ones hash
+        [true; NODE_DIGEST_BITS]
+        """
+                            )
+                    }
+                    // This condition is executed when the defined group size is an exact power of 2.
+                    // The return value is the merkle tree function that corresponds to the group size.
+                    componentGroupSize % 2 == 0 -> {
+                        (
+                            """
+        let component_leaf_hashes = compute_leaf_hashes(this, privacy_salt);
+        
+        get_merkle_tree_from_${componentGroupSize}_component_group_leaf_digests(component_leaf_hashes)
+        """
+                            )
+                    }
+                    // This condition is executed when the defined group size is not a power of 2.
+                    // The function finds the next power of 2 and adds padded values to the group.
+                    // The return value is the merkle tree function that corresponds to the padded group size.
+                    else -> {
+                        val paddedGroupSize = getNextPowerOfTwo(componentGroupSize)
+                        (
+                            """
+        let component_leaf_hashes = compute_leaf_hashes(this, privacy_salt);
+        
+        let mut padded_leaves = [[false; COMPONENT_GROUP_LEAF_DIGEST_BITS]; $paddedGroupSize];
+        for i in 0..$componentGroupSize {
+            padded_leaves[i] = component_leaf_hashes[i];
+        }
+        
+        get_merkle_tree_from_${paddedGroupSize}_component_group_leaf_digests(padded_leaves)
+        """
+                            )
+                    }
+                }
+            }
+            // This condition is executed when there is no component group size defined.
+            // It is possible for notary, timeWindow, parameters groups
+            // In that case, we call Merkle tree function for 2 with padded leaves
+            return (
+                """
+        let mut padded_leaves = [[false; COMPONENT_GROUP_LEAF_DIGEST_BITS]; 2];
+        padded_leaves[0] = component_leaf_hash;
+        
+        get_merkle_tree_from_2_component_group_leaf_digests(padded_leaves)
+        """
+                )
+        }
+
+        fun build() {
+            val circuit = File(circuitPath)
+            circuit.parentFile?.mkdirs() // Make sure the parent path for the circuit exists.
+            circuit.writeText("//! Combined circuit\n//! GENERATED CODE. DO NOT EDIT\n//! Edit a corresponding constituent\n\n")
+            orderedModules
+                .filter {
+                    // Remove modules with the debug functionality if isDbgOn is set to false.
+                    !it.contains("$coreZincModules/src/main/resources/zinc-platform-source/debug") || isDbgOn
+                }
+                .map {
+                    val part = File(it)
+
+                    circuit.appendText("//!  IN ==== $it\n")
+
+                    part.readLines()
+                        .forEach { line ->
+                            if (line.contains("// ### CALL APPROPRIATE MERKLE TREE FUNCTION ###")) {
+                                circuit.appendText(findCorrespondingMerkleTreeFunction(it, circuitPath) + "\n")
+                            } else {
+                                if (isDbgOn || !line.contains("dbg!")) {
+                                    circuit.appendText("$line\n")
+                                }
+                            }
+                        }
+
+                    circuit.appendText("//! OUT ==== $it\n\n")
+                }
+        }
+
+        fun generateZargo() {
+            val zargo = File(zargoPath)
+            zargo.parentFile?.mkdirs() // Make sure the parent path for the circuit exists.
+            zargo.writeText(
+                """
+[circuit]
+name = "${this::class.simpleName} command"
+version = "0.1.0"                
             """
-fn get_merkle_tree_from_2_component_group_leaf_digests(
-    leaves: [ComponentGroupLeafDigestBits; 2],
-) -> NodeDigestBits {
-    dbg!("Consuming 2 leaves");
-    dbg!(
-        "0: {}",                                                    // dbg!
-        ComponentGroupLeafDigestDto::from_bits_to_bytes(leaves[0])  // dbg!
-    ); //dbg!
-    dbg!(
-        "1: {}",                                                    // dbg!
-        ComponentGroupLeafDigestDto::from_bits_to_bytes(leaves[1])  // dbg!
-    ); // dbg!
-    pedersen_to_padded_bits(
-        pedersen(concatenate_component_group_leaf_digests(
-            leaves[0], leaves[1],
-        ))
-        .0,
-    )
-}
-"""
-        )
-
-        leaves = 4
-
-        do {
-            val levelUp = leaves / 2
-
-            merkleUtils.appendText(
-                """
-fn get_merkle_tree_from_${leaves}_component_group_leaf_digests(
-    leaves: [ComponentGroupLeafDigestBits; $leaves],
-) -> NodeDigestBits {
-    dbg!("Consuming $leaves leaves");
-    let mut new_leaves = [[false; NODE_DIGEST_BITS]; $levelUp];
-    for i in 0..$levelUp {
-        new_leaves[i] = pedersen_to_padded_bits(
-            pedersen(concatenate_component_group_leaf_digests(
-                leaves[2 * i],
-                leaves[2 * i + 1],
-            ))
-            .0,
-        );
-        dbg!(
-            "{}: {}",                                                       // dbg!
-            2 * i,                                                          // dbg!
-            ComponentGroupLeafDigestDto::from_bits_to_bytes(leaves[2 * i])  // dbg!
-        ); // dbg!
-        dbg!(
-            "{}: {}",                                                           // dbg!
-            2 * i + 1,                                                          // dbg!
-            ComponentGroupLeafDigestDto::from_bits_to_bytes(leaves[2 * i + 1])  // dbg!
-        ); // dbg!
-        dbg!(
-            "Digest: {}",                                                   // dbg!
-            ComponentGroupLeafDigestDto::from_bits_to_bytes(new_leaves[i])  // dbg!
-        ); // dbg!
-    }
-    dbg!("");
-    get_merkle_tree_from_${levelUp}_node_digests(new_leaves)
-}
-"""
-            )
-            leaves *= 2
-        } while (leaves <= fullLeaves)
-    }
-
-    fun generateZKContractState() {
-
-        // TODO: Generate this code from the actual ContractState in zkdapp
-        val zkContractStateFile = "$inputDirectory/shared/zk_contract_state.zn"
-
-        val zkContractState = File(zkContractStateFile)
-        zkContractState.writeText("//! GENERATED CODE. DO NOT EDIT\n//! Edit it in zk-notary/gradle-plugin/CompileZincTask.kt\n\n")
-        zkContractState.appendText(
-            """
-const ZKCONTRACT_STATE_BYTES: u16 = PUBKEY_BYTES + U32_BYTES;
-const ZKCONTRACT_STATE_FINGERPRINT_BYTES: u16 = PUBKEY_BYTES + U32_BYTES;
-const ZKCONTRACT_STATE_FINGERPRINT_BITS: u16 = ZKCONTRACT_STATE_FINGERPRINT_BYTES * BYTE_BITS;
-
-struct ZKContractState {
-    owner: Party,
-    value: i32,
-}
-
-impl ZKContractState {
-    fn fingerprint(this: ZKContractState) -> [bool; ZKCONTRACT_STATE_FINGERPRINT_BITS] {
-        let mut result = [false; ZKCONTRACT_STATE_FINGERPRINT_BITS];
-        //fingerprint data
-        //dataOwner_owning_key
-        result[0..PUBKEY_FINGERPRINT_BITS] = PubKey::fingerprint(this.owner.owning_key);
-        //value
-        result[PUBKEY_FINGERPRINT_BITS..(PUBKEY_FINGERPRINT_BITS + U32_BITS)] = to_bits(this.value);
-        //fingerprint notary
-        //notary_owning_key
-        result
-    }
-}
-                """
-        )
-    }
-
-    fun generateContractRules() {
-        // TODO: Implement the actual code generation. This is a temp code to locate files
-
-        val commands = listOf<String>("move", "create")
-
-        commands.forEach {
-            val contractRulesFile = "$inputDirectory/$it/contract_rules.zn"
-            val contractRules = File(contractRulesFile)
-            contractRules.parentFile?.mkdirs()
-            contractRules.writeText("//! GENERATED CODE. DO NOT EDIT\n//! Edit it in zk-notary/gradle-plugin/CompileZincTask.kt\n\n")
-            contractRules.appendText(
-                """
-//TODO: Implement contract rules for $it command                    
-                """
             )
         }
     }

@@ -1,0 +1,3 @@
+struct Party {
+    owning_key: PubKey,
+}
