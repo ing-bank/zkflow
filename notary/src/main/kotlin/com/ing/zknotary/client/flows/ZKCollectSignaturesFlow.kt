@@ -7,7 +7,6 @@ import com.ing.zknotary.common.flows.ReceiveZKTransactionFlow
 import com.ing.zknotary.common.flows.SendZKTransactionFlow
 import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
 import com.ing.zknotary.common.transactions.toLedgerTransaction
-import com.ing.zknotary.common.transactions.toZKProverTransaction
 import com.ing.zknotary.common.zkp.ZKTransactionService
 import com.ing.zknotary.node.services.ServiceNames
 import com.ing.zknotary.node.services.ZKVerifierTransactionStorage
@@ -380,14 +379,7 @@ abstract class ZKSignTransactionFlow @JvmOverloads constructor(
         zkService.verify(vtx, checkSufficientSignatures = false)
 
         // Convert Tx to ZKP form
-        val ptx = stx.tx.toZKProverTransaction(
-            inputs.mapIndexed { i, sf -> StateAndRef(sf.state, vtx.tx.inputs[i]) }, // we assume same order of inputs
-            references.mapIndexed { i, sf -> StateAndRef(sf.state, vtx.tx.references[i]) }, // we assume same order of references
-            componentGroupLeafDigestService = DigestService.blake2s256,
-            nodeDigestService = DigestService.pedersen
-        )
-
-        require(vtx.tx.id == ptx.id) { "ID of calculated PTX should match ID of received VTX" }
+        require(vtx.tx.id == stx.tx.id) { "ID of calculated PTX should match ID of received VTX" }
 
         // Perform some custom verification over the transaction.
         try {
@@ -401,7 +393,7 @@ abstract class ZKSignTransactionFlow @JvmOverloads constructor(
         // Sign and send back our signature to the Initiator.
         progressTracker.currentStep = SIGNING
         val mySignatures = signingKeys.map { key ->
-            serviceHub.createSignature(ptx.id, key)
+            serviceHub.createSignature(stx.tx.id, key)
         }
         otherSideSession.send(mySignatures)
 

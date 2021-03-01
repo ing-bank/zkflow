@@ -2,7 +2,6 @@ package com.ing.zknotary.common.contracts
 
 import com.ing.zknotary.common.crypto.BLAKE2S256
 import com.ing.zknotary.common.dactyloscopy.NonFingerprintable
-import com.ing.zknotary.common.util.ComponentPaddingConfiguration
 import com.ing.zknotary.common.zkp.CircuitMetaData
 import com.ing.zknotary.common.zkp.ZKNulls
 import net.corda.core.contracts.BelongsToContract

@@ -9,11 +9,8 @@ import com.fasterxml.jackson.databind.module.SimpleModule
 import com.ing.dlt.zkkrypto.util.asUnsigned
 import com.ing.zknotary.common.contracts.ZKCommandData
 import com.ing.zknotary.common.dactyloscopy.fingerprint
-import com.ing.zknotary.common.transactions.ZKProverTransaction
-import com.ing.zknotary.common.util.PaddingWrapper
 import com.ing.zknotary.common.zkp.PublicInput
 import com.ing.zknotary.common.zkp.Witness
-import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.PrivacySalt
 import net.corda.core.contracts.StateAndRef
@@ -23,6 +20,7 @@ import net.corda.core.contracts.TransactionState
 import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.Party
 import net.corda.core.node.services.AttachmentId
+import net.corda.core.transactions.WireTransaction
 import java.security.PublicKey
 
 class ZincModule : SimpleModule("corda-core") {
@@ -32,7 +30,7 @@ class ZincModule : SimpleModule("corda-core") {
         context.setMixInAnnotations(StateAndRef::class.java, StateAndRefMixin::class.java)
         context.setMixInAnnotations(Witness::class.java, WitnessMixin::class.java)
         context.setMixInAnnotations(PublicInput::class.java, PublicInputMixin::class.java)
-        context.setMixInAnnotations(ZKProverTransaction::class.java, ZKProverTransactionMixin::class.java)
+        context.setMixInAnnotations(WireTransaction::class.java, WireTransactionMixin::class.java)
         context.setMixInAnnotations(ZKCommandData::class.java, ZKCommandDataMixinZinc::class.java)
 
         context.setMixInAnnotations(PublicKey::class.java, PublicKeyMixinZinc::class.java)
@@ -84,76 +82,79 @@ private class WitnessMixinSerializer : JsonSerializer<Witness>() {
     override fun serialize(value: Witness, gen: JsonGenerator, serializers: SerializerProvider) {
         gen.writeStartObject()
         gen.writeFieldName("witness")
-        gen.writeObject(WitnessJson(value.transaction, value.inputNonces, value.referenceNonces))
+        gen.writeObject(WitnessJson(value.transaction, value.inputs, value.inputNonces, value.referenceNonces))
         gen.writeEndObject()
     }
 }
 
+// TODO why do we need this in addition to normal Witness?
 private class WitnessJson(
-    val transaction: ZKProverTransaction,
+    val transaction: WireTransaction,
+    val inputs: List<StateAndRef<ContractState>>,
     val inputNonces: List<SecureHash>,
     val referenceNonces: List<SecureHash>
 )
 
-@JsonSerialize(using = ZKProverTransactionMixinSerializer::class)
-private interface ZKProverTransactionMixin
+@JsonSerialize(using = WireTransactionMixinSerializer::class)
+private interface WireTransactionMixin
 
-private class ZKProverTransactionMixinSerializer : JsonSerializer<ZKProverTransaction>() {
-    override fun serialize(value: ZKProverTransaction, gen: JsonGenerator, serializers: SerializerProvider) {
+private class WireTransactionMixinSerializer : JsonSerializer<WireTransaction>() {
+    override fun serialize(value: WireTransaction, gen: JsonGenerator, serializers: SerializerProvider) {
         gen.writeObject(
-            ZincJson(
-                ComponentGroup(
-                    value.padded.inputs(),
-                    value.merkleTree.groupHashes[ComponentGroupEnum.INPUTS_GROUP.ordinal]
-                ),
-                ComponentGroup(
-                    value.padded.outputs(),
-                    value.merkleTree.groupHashes[ComponentGroupEnum.OUTPUTS_GROUP.ordinal]
-                ),
-                ComponentGroup(
-                    value.padded.references(),
-                    value.merkleTree.groupHashes[ComponentGroupEnum.REFERENCES_GROUP.ordinal]
-                ),
-                ComponentGroup(
-                    PaddingWrapper.Original(value.command.value),
-                    value.merkleTree.groupHashes[ComponentGroupEnum.COMMANDS_GROUP.ordinal]
-                ),
-                ComponentGroup(
-                    value.padded.attachments(),
-                    value.merkleTree.groupHashes[ComponentGroupEnum.ATTACHMENTS_GROUP.ordinal]
-                ),
-                ComponentSinglet(
-                    PaddingWrapper.Original(value.notary),
-                    value.merkleTree.groupHashes[ComponentGroupEnum.NOTARY_GROUP.ordinal]
-                ),
-                ComponentSinglet(
-                    value.padded.timeWindow(),
-                    value.merkleTree.groupHashes[ComponentGroupEnum.TIMEWINDOW_GROUP.ordinal]
-                ),
-                ComponentSinglet(
-                    value.padded.networkParametersHash(),
-                    value.merkleTree.groupHashes[ComponentGroupEnum.PARAMETERS_GROUP.ordinal]
-                ),
-                ComponentGroup(
-                    value.padded.signers(),
-                    value.merkleTree.groupHashes[ComponentGroupEnum.SIGNERS_GROUP.ordinal]
-                ),
-                value.privacySalt
-            )
+                value
+//            ZincJson(
+//                ComponentGroup(
+//                    value.padded.inputs(),
+//                    value.merkleTree.groupHashes[ComponentGroupEnum.INPUTS_GROUP.ordinal]
+//                ),
+//                ComponentGroup(
+//                    value.padded.outputs(),
+//                    value.merkleTree.groupHashes[ComponentGroupEnum.OUTPUTS_GROUP.ordinal]
+//                ),
+//                ComponentGroup(
+//                    value.padded.references(),
+//                    value.merkleTree.groupHashes[ComponentGroupEnum.REFERENCES_GROUP.ordinal]
+//                ),
+//                ComponentGroup(
+//                    PaddingWrapper.Original(value.command.value),
+//                    value.merkleTree.groupHashes[ComponentGroupEnum.COMMANDS_GROUP.ordinal]
+//                ),
+//                ComponentGroup(
+//                    value.padded.attachments(),
+//                    value.merkleTree.groupHashes[ComponentGroupEnum.ATTACHMENTS_GROUP.ordinal]
+//                ),
+//                ComponentSinglet(
+//                    PaddingWrapper.Original(value.notary),
+//                    value.merkleTree.groupHashes[ComponentGroupEnum.NOTARY_GROUP.ordinal]
+//                ),
+//                ComponentSinglet(
+//                    value.padded.timeWindow(),
+//                    value.merkleTree.groupHashes[ComponentGroupEnum.TIMEWINDOW_GROUP.ordinal]
+//                ),
+//                ComponentSinglet(
+//                    value.padded.networkParametersHash(),
+//                    value.merkleTree.groupHashes[ComponentGroupEnum.PARAMETERS_GROUP.ordinal]
+//                ),
+//                ComponentGroup(
+//                    value.padded.signers(),
+//                    value.merkleTree.groupHashes[ComponentGroupEnum.SIGNERS_GROUP.ordinal]
+//                ),
+//                value.privacySalt
+//            )
         )
     }
 }
 
 private data class ZincJson(
-    val inputs: ComponentGroup<PaddingWrapper<StateAndRef<ContractState>>>,
-    val outputs: ComponentGroup<PaddingWrapper<TransactionState<ContractState>>>,
-    val references: ComponentGroup<PaddingWrapper<StateAndRef<ContractState>>>,
-    val commands: ComponentGroup<PaddingWrapper<ZKCommandData>>,
-    val attachments: ComponentGroup<PaddingWrapper<AttachmentId>>,
-    val notary: ComponentSinglet<PaddingWrapper<Party>>,
-    val timeWindow: ComponentSinglet<PaddingWrapper<TimeWindow>>,
-    val parameters: ComponentSinglet<PaddingWrapper<SecureHash>>,
-    val signers: ComponentGroup<PaddingWrapper<PublicKey>>,
+    val inputs: ComponentGroup<StateAndRef<ContractState>>,
+    val outputs: ComponentGroup<TransactionState<ContractState>>,
+    val references: ComponentGroup<StateAndRef<ContractState>>,
+    val commands: ComponentGroup<ZKCommandData>,
+    val attachments: ComponentGroup<AttachmentId>,
+    val notary: ComponentSinglet<Party>,
+    val timeWindow: ComponentSinglet<TimeWindow>,
+    val parameters: ComponentSinglet<SecureHash>,
+    val signers: ComponentGroup<PublicKey>,
     val privacySalt: PrivacySalt
 )
 

@@ -1,7 +1,6 @@
 @file:Suppress("TooManyFunctions")
 package com.ing.zknotary.common.dactyloscopy
 
-import com.ing.zknotary.common.util.ComponentPaddingConfiguration
 import com.ing.zknotary.common.zkp.CircuitMetaData
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.StateRef
@@ -70,7 +69,6 @@ fun <T> TransactionState<T>.fingerprint(): ByteArray
     Dactyloscopist.identify(data) + notary.owningKey.fingerprint()
 
 // We explicitly exclude these types from the fingerprint, by making their fingerprint an empty bytearray
-fun ComponentPaddingConfiguration.fingerprint() = ByteArray(0)
 fun CircuitMetaData.fingerprint() = ByteArray(0)
 
 /*
