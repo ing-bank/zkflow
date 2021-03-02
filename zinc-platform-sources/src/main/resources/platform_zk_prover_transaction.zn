@@ -1,0 +1,45 @@
+mod platform_inputs;
+mod platform_outputs;
+mod platform_references;
+mod platform_commands;
+mod platform_notary;
+mod platform_attachments;
+mod platform_time_window;
+mod platform_parameters;
+mod platform_signers;
+mod platform_privacy_salt;
+mod platform_nonce_digest_dto;
+mod consts;
+
+use consts::INPUT_GROUP_SIZE;
+use consts::REFERENCE_GROUP_SIZE;
+use platform_inputs::InputsComponentGroup;
+use platform_outputs::OutputsComponentGroup;
+use platform_references::ReferencesComponentGroup;
+use platform_commands::CommandsComponentGroup;
+use platform_notary::NotaryComponentGroup;
+use platform_attachments::AttachmentsComponentGroup;
+use platform_time_window::TimeWindowComponentGroup;
+use platform_parameters::ParametersComponentGroup;
+use platform_signers::SignersComponentGroup;
+use platform_privacy_salt::PrivacySalt;
+use platform_nonce_digest_dto::NonceDigestDto;
+
+struct ZKProverTransaction {
+    inputs: InputsComponentGroup,
+    outputs: OutputsComponentGroup,
+    references: ReferencesComponentGroup,
+    commands: CommandsComponentGroup,
+    attachments: AttachmentsComponentGroup,
+    notary: NotaryComponentGroup,
+    time_window: TimeWindowComponentGroup,
+    parameters: ParametersComponentGroup,
+    signers: SignersComponentGroup,
+    privacy_salt: PrivacySalt,
+}
+
+struct Witness {
+    transaction: ZKProverTransaction,
+    input_nonces: [NonceDigestDto; INPUT_GROUP_SIZE],
+    reference_nonces: [NonceDigestDto; REFERENCE_GROUP_SIZE],
+}

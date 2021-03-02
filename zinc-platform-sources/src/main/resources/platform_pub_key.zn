@@ -1,0 +1,65 @@
+mod platform_consts;
+mod platform_privacy_salt;
+mod platform_component_group_leaf_digest_dto;
+mod platform_crypto_utils;
+mod platform_nonce_digest_dto;
+
+use platform_component_group_leaf_digest_dto::ComponentGroupLeafDigestBits;
+use platform_consts::BYTE_BITS;
+use platform_privacy_salt::PrivacySaltBits;
+use std::crypto::blake2s;
+use std::convert::to_bits;
+use platform_crypto_utils::compute_nonce;
+use platform_nonce_digest_dto::NONCE_DIGEST_BITS;
+
+const PUBKEY_BYTES: u16 = 44;
+
+const PUBKEY_FINGERPRINT_BYTES: u16 = 44;
+const PUBKEY_FINGERPRINT_BITS: u16 = PUBKEY_FINGERPRINT_BYTES * BYTE_BITS;
+
+type PubKeyBytes = [u8; PUBKEY_BYTES];
+type PubKeyFingerprintBits = [bool; PUBKEY_FINGERPRINT_BITS];
+
+struct PubKey {
+    bytes: PubKeyBytes,
+}
+
+impl PubKey {
+    fn fingerprint(this: PubKey) -> PubKeyFingerprintBits {
+        let mut fingerprint_bits = [false; PUBKEY_FINGERPRINT_BITS];
+
+        for i in (0 as u16)..PUBKEY_FINGERPRINT_BYTES {
+            let bits = to_bits(this.bytes[i]);
+            for j in (0 as u16)..BYTE_BITS {
+                fingerprint_bits[BYTE_BITS * i + j] = bits[j];
+            }
+        }
+        fingerprint_bits
+    }
+
+    // Method to compute leaf hash on public key values.
+    fn compute_leaf_hash(
+        this: PubKey,
+        privacy_salt: PrivacySaltBits,
+        group_index: u32,
+        internal_index: u32,
+    ) -> ComponentGroupLeafDigestBits {
+        //fingerprint
+        let fingerprint_pub_key = fingerprint(this);
+
+        //compute nonce
+        let mut nonce = compute_nonce(privacy_salt, group_index, internal_index);
+        let mut message = [false; NONCE_DIGEST_BITS + PUBKEY_FINGERPRINT_BITS];
+
+        //message = nonce || signature
+        for i in 0..NONCE_DIGEST_BITS {
+            message[i] = nonce[i];
+        }
+
+        for i in 0..PUBKEY_FINGERPRINT_BITS {
+            message[NONCE_DIGEST_BITS + i] = fingerprint_pub_key[i];
+        }
+
+        blake2s(message)
+    }
+}

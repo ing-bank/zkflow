@@ -31,7 +31,6 @@ plugins {
     id("com.diffplug.gradle.spotless") apply false
     id("io.gitlab.arturbosch.detekt")
     id("org.owasp.dependencycheck") version "6.1.1"
-
 }
 
 repositories {

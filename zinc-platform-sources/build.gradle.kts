@@ -100,16 +100,18 @@ task("rustfmtCheck") {
 }
 
 task("generateFloatingPoint") {
-    val template = File("$root/templates/floating_point.template").readText()
+    doLast {
+        val template = File("$root/templates/floating_point.template").readText()
 
-    bigDecimalSizes.forEach {
-        val floatingPointContent = template.replace("\${INTEGER_SIZE_PLACEHOLDER}", it.first.toString())
-            .replace("\${FRACTION_SIZE_PLACEHOLDER}", it.second.toString())
-        val sizeSuffix = "${it.first}_${it.second}"
-        val targetFile = File("$zincPlatformSource/floating_point_$sizeSuffix.zn")
-        targetFile.delete()
-        targetFile.createNewFile()
-        targetFile.writeBytes(floatingPointContent.toByteArray())
+        bigDecimalSizes.forEach {
+            val floatingPointContent = template.replace("\${INTEGER_SIZE_PLACEHOLDER}", it.first.toString())
+                    .replace("\${FRACTION_SIZE_PLACEHOLDER}", it.second.toString())
+            val sizeSuffix = "${it.first}_${it.second}"
+            val targetFile = File("$zincPlatformSource/floating_point_$sizeSuffix.zn")
+            targetFile.delete()
+            targetFile.createNewFile()
+            targetFile.writeBytes(floatingPointContent.toByteArray())
+        }
     }
 }
 

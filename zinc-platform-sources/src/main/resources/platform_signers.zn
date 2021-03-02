@@ -1,0 +1,64 @@
+mod consts;
+mod platform_consts;
+mod platform_node_digest_dto;
+mod platform_privacy_salt;
+mod platform_component_group_leaf_digest_dto;
+mod platform_component_group_enum;
+mod platform_crypto_utils;
+mod platform_nonce_digest_dto;
+mod platform_party;
+mod platform_pub_key;
+
+use platform_pub_key::PubKey;
+use platform_party::Party;
+use platform_consts::U32_BITS;
+use platform_consts::BYTE_BITS;
+use platform_node_digest_dto::NodeDigestBits;
+use std::convert::to_bits;
+use platform_component_group_enum::ComponentGroupEnum;
+use platform_component_group_leaf_digest_dto::COMPONENT_GROUP_LEAF_DIGEST_BITS;
+use platform_component_group_leaf_digest_dto::ComponentGroupLeafDigestBits;
+use platform_privacy_salt::PrivacySaltBits;
+use platform_node_digest_dto::NodeDigestDto;
+use platform_node_digest_dto::NODE_DIGEST_BITS;
+use consts::SIGNER_GROUP_SIZE;
+use platform_crypto_utils::compute_nonce;
+use platform_nonce_digest_dto::NONCE_DIGEST_BITS;
+use std::crypto::blake2s;
+
+struct SignerPaddingWrapper {
+    content: PubKey,
+    is_filler: bool,
+}
+
+struct SignersComponentGroup {
+    components: [SignerPaddingWrapper; SIGNER_GROUP_SIZE],
+    group_hash: NodeDigestDto,
+}
+
+impl SignersComponentGroup {
+    fn compute_leaf_hashes(
+        this: SignersComponentGroup,
+        privacy_salt: PrivacySaltBits,
+    ) -> [ComponentGroupLeafDigestBits; SIGNER_GROUP_SIZE] {
+        let mut component_leaf_hashes =
+            [[false; COMPONENT_GROUP_LEAF_DIGEST_BITS]; SIGNER_GROUP_SIZE];
+
+        for i in (0 as u32)..(SIGNER_GROUP_SIZE as u32) {
+            component_leaf_hashes[i] = PubKey::compute_leaf_hash(
+                this.components[i].content,
+                privacy_salt,
+                ComponentGroupEnum::SIGNERS_GROUP as u32,
+                i as u32,
+            );
+        }
+        component_leaf_hashes
+    }
+
+    fn compute_component_group_hash(
+        this: SignersComponentGroup,
+        privacy_salt: PrivacySaltBits,
+    ) -> NodeDigestBits {
+        [false; NODE_DIGEST_BITS] // ### CALL APPROPRIATE MERKLE TREE FUNCTION ###
+    }
+}

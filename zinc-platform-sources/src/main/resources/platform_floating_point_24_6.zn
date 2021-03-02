@@ -1,0 +1,291 @@
+//In case if value can't be stored in BigDecimal, it will throw an exception,
+//the some goes for arithmetic operations.
+const INTEGER_SIZE: u8 = 24;
+const FRACTION_SIZE: u8 = 6;
+
+//Original BigDecimal in Java stores all digits in one array, and uses scale as a number of digits to the right side of
+//the decimal point. Then it calculates the difference in scale of two comparing BigDecimals to adjust digits.
+//For example:
+//1.2, which is an array of [1, 2] and scale 1, plus 10, which is an array [1, 0], but scale 0.
+//So, arrays must be adjusted w.r.t. scales, such that the digits of the same significance have the same index. Then arithmetic operations can be applied.
+//
+//However, zinc doesn't support indexes inferred from witnesses, so it is impossible to adjust arrays in the same way (i + scale_A - scale_B), so we use two separate arrays to
+//store integer value of BigDecimal and its fraction. It is stored in little-Endian order.
+//
+//Description of struct properties:
+//sign - sign of stored variable, belongs to {-1, 0, 1}
+//integer - decimal representation of integer part of stored value, can contain only 1024 digits
+//fraction - decimal representation of fraction part of stored value, can contain only 128 digits
+struct BigDecimal {
+    sign: i8,
+    integer: [u8; INTEGER_SIZE],
+    fraction: [u8; FRACTION_SIZE],
+}
+
+impl BigDecimal {
+    //comparison if the same sign
+    fn _compare_magnitude(this: BigDecimal, that: BigDecimal) -> i8 {
+        let mut result: i8 = 0 as i8;
+        for i in 0..INTEGER_SIZE {
+            if result == 0 as i8 {
+                result = if this.integer[i] > that.integer[i] {
+                    1 as i8
+                } else {
+                    if this.integer[i] < that.integer[i] {
+                        -1
+                    } else {
+                        0 as i8
+                    }
+                };
+            }
+        }
+
+        if result == 0 as i8 {
+            for i in 0..FRACTION_SIZE {
+                if result == 0 as i8 {
+                    result = if this.fraction[i] > that.fraction[i] {
+                        1 as i8
+                    } else {
+                        if this.fraction[i] < that.fraction[i] {
+                            -1
+                        } else {
+                            0 as i8
+                        }
+                    };
+                }
+            }
+            result
+        } else {
+            result
+        }
+    }
+
+    //We compare signs, then if they're different (one of inputs is negative or zero), there's no need to compare magnitude.
+    //Otherwise, we compare magnitude and provide result w.r.t. to the sign (if it's negative, then magnitude of the first
+    //input can be less, but first argument still will be bigger).
+    fn compare(this: BigDecimal, that: BigDecimal) -> i8 {
+        if this.sign == that.sign {
+            if this.sign == 0 as i8 {
+                0 as i8
+            } else {
+                this.sign * _compare_magnitude(this, that)
+            }
+        } else {
+            if this.sign > that.sign {
+                1 as i8
+            } else {
+                -1
+            }
+        }
+    }
+
+    fn equals(this: BigDecimal, that: BigDecimal) -> bool {
+        this.sign == that.sign && BigDecimal::_compare_magnitude(this, that) == 0 as i8
+    }
+
+    fn _sum_magnitude(this: BigDecimal, that: BigDecimal) -> BigDecimal {
+        let mut fraction: [u8; FRACTION_SIZE] = [0; FRACTION_SIZE];
+        let mut diff = 0;
+
+        for i in 0..FRACTION_SIZE {
+            let value =
+                this.fraction[FRACTION_SIZE - i - 1] + that.fraction[FRACTION_SIZE - i - 1] + diff;
+            if value >= 10 {
+                diff = 1;
+                fraction[FRACTION_SIZE - i - 1] = value - 10;
+            } else {
+                diff = 0;
+                fraction[FRACTION_SIZE - i - 1] = value;
+            }
+        }
+
+        let mut integer: [u8; INTEGER_SIZE] = [0; INTEGER_SIZE];
+        for i in 0..INTEGER_SIZE {
+            let value =
+                this.integer[INTEGER_SIZE - i - 1] + that.integer[INTEGER_SIZE - i - 1] + diff;
+            if value >= 10 {
+                diff = 1;
+                integer[INTEGER_SIZE - i - 1] = value - 10;
+            } else {
+                diff = 0;
+                integer[INTEGER_SIZE - i - 1] = value;
+            }
+        }
+
+        assert!(diff != 1, "Magnitude exceeds the maximum stored value");
+
+        BigDecimal {
+            sign: this.sign,
+            integer: integer,
+            fraction: fraction,
+        }
+    }
+
+    //this >= that, but this[i] is not necessarily >= that[i]
+    fn _subtract_magnitude(this: BigDecimal, that: BigDecimal) -> BigDecimal {
+        let mut fraction: [u8; FRACTION_SIZE] = [0; FRACTION_SIZE];
+        let mut diff = 0;
+        for i in 0..FRACTION_SIZE {
+            let value = this.fraction[FRACTION_SIZE - i - 1] as i8
+                - that.fraction[FRACTION_SIZE - i - 1] as i8
+                - diff as i8;
+            if value < 0 as i8 {
+                diff = 1;
+                fraction[FRACTION_SIZE - i - 1] = (10 as i8 + value) as u8;
+            } else {
+                diff = 0;
+                fraction[FRACTION_SIZE - i - 1] = value as u8;
+            }
+        }
+
+        let mut integer: [u8; INTEGER_SIZE] = [0; INTEGER_SIZE];
+        for i in 0..INTEGER_SIZE {
+            let value = this.integer[INTEGER_SIZE - i - 1] as i8
+                - that.integer[INTEGER_SIZE - i - 1] as i8
+                - diff as i8;
+            if value < 0 as i8 {
+                diff = 1;
+                integer[INTEGER_SIZE - i - 1] = (10 as i8 + value) as u8;
+            } else {
+                diff = 0;
+                integer[INTEGER_SIZE - i - 1] = value as u8;
+            }
+        }
+
+        let sign = if diff == 1 { -1 } else { 1 as i8 };
+
+        BigDecimal {
+            sign: sign,
+            integer: integer,
+            fraction: fraction,
+        }
+    }
+
+    fn _handle_different_signs(this: BigDecimal, that: BigDecimal) -> BigDecimal {
+        let comparison = _compare_magnitude(this, that);
+        if comparison == 0 as i8 {
+            BigDecimal {
+                sign: 0 as i8,
+                integer: [0; INTEGER_SIZE],
+                fraction: [0; FRACTION_SIZE],
+            }
+        } else {
+            let absolute_diff = if comparison == 1 as i8 {
+                _subtract_magnitude(this, that)
+            } else {
+                _subtract_magnitude(that, this)
+            };
+            BigDecimal {
+                sign: comparison * this.sign,
+                integer: absolute_diff.integer,
+                fraction: absolute_diff.fraction,
+            }
+        }
+    }
+
+    fn _handle_same_sign(this: BigDecimal, that: BigDecimal) -> BigDecimal {
+        if that.sign == 0 as i8 {
+            BigDecimal {
+                sign: 0 as i8,
+                integer: [0; INTEGER_SIZE],
+                fraction: [0; FRACTION_SIZE],
+            }
+        } else {
+            _sum_magnitude(this, that)
+        }
+    }
+
+    fn plus(this: BigDecimal, that: BigDecimal) -> BigDecimal {
+        if this.sign == 0 as i8 {
+            that
+        } else {
+            if that.sign == 0 as i8 {
+                this
+            } else {
+                if this.sign == that.sign {
+                    _handle_same_sign(this, that)
+                } else {
+                    _handle_different_signs(this, that)
+                }
+            }
+        }
+    }
+
+    fn minus(this: BigDecimal, that: BigDecimal) -> BigDecimal {
+        let negated = BigDecimal {
+            sign: -that.sign,
+            integer: that.integer,
+            fraction: that.fraction,
+        };
+
+        plus(this, negated)
+    }
+}
+
+const TOKEN_NAME_HASH_LENGTH: u8 = 32;
+type TokenNameHash = [u8; TOKEN_NAME_HASH_LENGTH];
+
+//The representation of class net.corda.core.contracts.Amount in zinc. However, zinc does not support
+//generics, thus to maintain it to some extend we use the hash of class name.
+//
+//Description of struct properties:
+//quantity - number of tokens
+//display_token_size - number of units stored in token
+//token_name_hash - hash of class name of token, used to distinguish tokens only
+//
+//For more information about struct properties, please, refer to class net.corda.core.contracts.Amount.
+struct Amount {
+    quantity: i64,
+    display_token_size: BigDecimal,
+    token_name_hash: TokenNameHash,
+}
+
+impl Amount {
+    fn _compare_token_name_hashes(
+        this_token_hash: TokenNameHash,
+        that_token_hash: TokenNameHash,
+    ) -> bool {
+        let mut result = true;
+        for i in 0..TOKEN_NAME_HASH_LENGTH {
+            if this_token_hash[i] != that_token_hash[i] {
+                result = result && false;
+            }
+        }
+        result
+    }
+
+    fn _check_token(this: Amount, that: Amount) {
+        assert!(
+            BigDecimal::equals(this.display_token_size, that.display_token_size),
+            "Token sizes don't match"
+        );
+        assert!(
+            Amount::_compare_token_name_hashes(this.token_name_hash, that.token_name_hash),
+            "Tokens don't match"
+        );
+    }
+
+    fn plus(this: Amount, that: Amount) -> Amount {
+        _check_token(this, that);
+        Amount {
+            quantity: this.quantity + that.quantity,
+            display_token_size: this.display_token_size,
+            token_name_hash: this.token_name_hash,
+        }
+    }
+
+    fn minus(this: Amount, that: Amount) -> Amount {
+        _check_token(this, that);
+        Amount {
+            quantity: this.quantity - that.quantity,
+            display_token_size: this.display_token_size,
+            token_name_hash: this.token_name_hash,
+        }
+    }
+
+    fn equals(this: Amount, that: Amount) -> bool {
+        this.quantity == that.quantity
+            && Amount::_compare_token_name_hashes(this.token_name_hash, that.token_name_hash)
+            && BigDecimal::equals(this.display_token_size, that.display_token_size)
+    }
+}

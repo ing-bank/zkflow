@@ -1,0 +1,34 @@
+mod platform_zk_prover_transaction;
+mod consts;
+
+use consts::INPUT_GROUP_SIZE;
+use consts::COMMAND_GROUP_SIZE;
+use consts::OUTPUT_GROUP_SIZE;
+use platform_zk_prover_transaction::ZKProverTransaction;
+
+fn check_contract_rules(value: ZKProverTransaction) {
+    // Validate the number of commands
+    assert!(
+        COMMAND_GROUP_SIZE == (1 as u16),
+        "Failed requirement: the tx has only one command"
+    );
+
+    // Validate the number of inputs
+    assert!(
+        INPUT_GROUP_SIZE == (0 as u16),
+        "Failed requirement: the tx has no inputs"
+    );
+
+    // Validate the number of outputs
+    let mut output_size: u16 = 0;
+    for i in 0..OUTPUT_GROUP_SIZE {
+        if !value.outputs.components[i].is_filler {
+            output_size = output_size + (1 as u16);
+        }
+    }
+
+    assert!(
+        output_size == (1 as u16),
+        "Failed requirement: the tx has only one output"
+    );
+}

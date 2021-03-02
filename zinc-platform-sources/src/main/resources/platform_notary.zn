@@ -1,0 +1,52 @@
+mod consts;
+mod platform_consts;
+mod platform_node_digest_dto;
+mod platform_privacy_salt;
+mod platform_component_group_leaf_digest_dto;
+mod platform_component_group_enum;
+mod platform_crypto_utils;
+mod platform_nonce_digest_dto;
+mod platform_party;
+mod platform_pub_key;
+
+use platform_pub_key::PubKey;
+use platform_party::Party;
+use platform_consts::U32_BITS;
+use platform_node_digest_dto::NodeDigestBits;
+use std::convert::to_bits;
+use platform_component_group_enum::ComponentGroupEnum;
+use platform_component_group_leaf_digest_dto::COMPONENT_GROUP_LEAF_DIGEST_BITS;
+use platform_component_group_leaf_digest_dto::ComponentGroupLeafDigestBits;
+use platform_privacy_salt::PrivacySaltBits;
+use platform_node_digest_dto::NodeDigestDto;
+use platform_node_digest_dto::NODE_DIGEST_BITS;
+use consts::COMMAND_GROUP_SIZE;
+use platform_crypto_utils::compute_nonce;
+use platform_nonce_digest_dto::NONCE_DIGEST_BITS;
+use std::crypto::blake2s;
+
+
+struct NotaryPaddingWrapper {
+    content: Party,
+    is_filler: bool,
+}
+
+struct NotaryComponentGroup {
+    component: NotaryPaddingWrapper,
+    group_hash: NodeDigestDto,
+}
+
+impl NotaryComponentGroup {
+    fn compute_component_group_hash(
+        this: NotaryComponentGroup,
+        privacy_salt: PrivacySaltBits,
+    ) -> NodeDigestBits {
+        let component_leaf_hash = PubKey::compute_leaf_hash(
+            this.component.content.owning_key,
+            privacy_salt,
+            ComponentGroupEnum::NOTARY_GROUP as u32,
+            0 as u32,
+        );
+        [false; NODE_DIGEST_BITS] // ### CALL APPROPRIATE MERKLE TREE FUNCTION ###
+    }
+}
