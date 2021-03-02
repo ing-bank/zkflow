@@ -30,11 +30,12 @@ class CreateFlow : FlowLogic<SignedTransaction>() {
 
         val builder = TransactionBuilder(serviceHub.networkMapCache.notaryIdentities.single())
         builder.withItems(stateAndContract, issueCommand)
-        builder.toWireTransaction(serviceHub).toLedgerTransaction(serviceHub).verify()
+        val ltx = builder.toWireTransaction(serviceHub).toLedgerTransaction(serviceHub)
+        ltx.verify()
 
         val stx = serviceHub.signInitialTransaction(builder)
 
-        val vtx = zkService.prove(zkService.toZKProverTransaction(stx.tx))
+        val vtx = zkService.prove(stx.tx, ltx.inputs, ltx.references)
 
         val svtx = subFlow(ZKCollectSignaturesFlow(stx, signInitialZKTransaction(vtx), emptyList()))
 

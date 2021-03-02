@@ -101,7 +101,7 @@ private interface WireTransactionMixin
 private class WireTransactionMixinSerializer : JsonSerializer<WireTransaction>() {
     override fun serialize(value: WireTransaction, gen: JsonGenerator, serializers: SerializerProvider) {
         gen.writeObject(
-                value
+            value
 //            ZincJson(
 //                ComponentGroup(
 //                    value.padded.inputs(),

@@ -11,6 +11,7 @@ import net.corda.core.transactions.WireTransaction
 data class Witness(
     val transaction: WireTransaction,
     val inputs: List<StateAndRef<ContractState>>,
+    val references: List<StateAndRef<ContractState>>,
     val inputNonces: List<SecureHash>,
     val referenceNonces: List<SecureHash>
 )

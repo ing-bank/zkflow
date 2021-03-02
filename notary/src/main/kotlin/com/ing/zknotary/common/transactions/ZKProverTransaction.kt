@@ -1,28 +1,28 @@
-//package com.ing.zknotary.common.transactions
+// package com.ing.zknotary.common.transactions
 //
-//import com.ing.zknotary.common.contracts.ZKCommandData
-//import com.ing.zknotary.common.crypto.BLAKE2S256
-//import com.ing.zknotary.common.util.ComponentPaddingConfiguration
-//import com.ing.zknotary.common.util.PaddingWrapper
-//import net.corda.core.contracts.Command
-//import net.corda.core.contracts.ComponentGroupEnum
-//import net.corda.core.contracts.ContractState
-//import net.corda.core.contracts.PrivacySalt
-//import net.corda.core.contracts.StateAndRef
-//import net.corda.core.contracts.TimeWindow
-//import net.corda.core.contracts.TransactionState
-//import net.corda.core.crypto.DigestService
-//import net.corda.core.crypto.SecureHash
-//import net.corda.core.crypto.algorithm
-//import net.corda.core.identity.Party
-//import net.corda.core.node.services.AttachmentId
-//import net.corda.core.serialization.CordaSerializable
-//import java.security.PublicKey
-//import java.time.Instant
+// import com.ing.zknotary.common.contracts.ZKCommandData
+// import com.ing.zknotary.common.crypto.BLAKE2S256
+// import com.ing.zknotary.common.util.ComponentPaddingConfiguration
+// import com.ing.zknotary.common.util.PaddingWrapper
+// import net.corda.core.contracts.Command
+// import net.corda.core.contracts.ComponentGroupEnum
+// import net.corda.core.contracts.ContractState
+// import net.corda.core.contracts.PrivacySalt
+// import net.corda.core.contracts.StateAndRef
+// import net.corda.core.contracts.TimeWindow
+// import net.corda.core.contracts.TransactionState
+// import net.corda.core.crypto.DigestService
+// import net.corda.core.crypto.SecureHash
+// import net.corda.core.crypto.algorithm
+// import net.corda.core.identity.Party
+// import net.corda.core.node.services.AttachmentId
+// import net.corda.core.serialization.CordaSerializable
+// import java.security.PublicKey
+// import java.time.Instant
 //
-//@Suppress("LongParameterList")
-//@CordaSerializable
-//class ZKProverTransactionXXX internal constructor(
+// @Suppress("LongParameterList")
+// @CordaSerializable
+// class ZKProverTransactionXXX internal constructor(
 //    val inputs: List<StateAndRef<ContractState>>,
 //    val outputs: List<TransactionState<ContractState>>,
 //    val references: List<StateAndRef<ContractState>>,
@@ -53,7 +53,7 @@
 //
 //    val componentGroupLeafDigestService: DigestService,
 //    val nodeDigestService: DigestService
-//) : NamedByZKMerkleTree {
+// ) : NamedByZKMerkleTree {
 //    val componentPaddingConfiguration = command.value.paddingConfiguration
 //
 //    val padded = Padded(
@@ -147,4 +147,4 @@
 //        fun filler(componentGroup: ComponentGroupEnum) =
 //            paddingConfiguration.filler(componentGroup) ?: error("Expected a filler object")
 //    }
-//}
+// }

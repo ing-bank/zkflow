@@ -1,16 +1,12 @@
 package com.ing.zknotary.common.transactions
 
 import com.ing.zknotary.common.crypto.PEDERSEN
-import com.ing.zknotary.common.crypto.blake2s256
-import com.ing.zknotary.common.crypto.pedersen
 import com.ing.zknotary.common.serializer.ZincSerializationFactory
 import com.ing.zknotary.common.zkp.PublicInput
 import com.ing.zknotary.common.zkp.Witness
-import com.ing.zknotary.node.services.InMemoryZKVerifierTransactionStorage
 import com.ing.zknotary.notary.transactions.createIssuanceWtx
 import junit.framework.TestCase.assertEquals
 import net.corda.core.crypto.Crypto
-import net.corda.core.crypto.DigestService
 import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.SecureHash.Companion.allOnesHashFor
 import net.corda.core.crypto.SecureHash.Companion.zeroHashFor
@@ -19,7 +15,6 @@ import net.corda.core.serialization.serialize
 import net.corda.testing.core.TestIdentity
 import net.corda.testing.internal.withTestSerializationEnvIfNotSet
 import net.corda.testing.node.MockServices
-import net.corda.testing.node.createMockCordaService
 import net.corda.testing.node.ledger
 import org.junit.jupiter.api.Test
 
@@ -36,27 +31,14 @@ class SerializationTest {
 
     private val wtx = ledger.createIssuanceWtx(owner = alice, value = 1)
 
-    // Build a ZKProverTransaction
-    private val ptx = withTestSerializationEnvIfNotSet {
-        wtx.toZKProverTransaction(
-            services = ledgerServices,
-            componentGroupLeafDigestService = DigestService.blake2s256,
-            nodeDigestService = DigestService.pedersen,
-            zkVerifierTransactionStorage = createMockCordaService(
-                ledgerServices,
-                ::InMemoryZKVerifierTransactionStorage
-            )
-        )
-    }
-
     // build filtered ZKVerifierTransaction
-    private val vtx = ptx.toZKVerifierTransaction(ByteArray(0))
+    private val vtx = ZKVerifierTransaction(wtx, ByteArray(0))
 
     @Test
     fun `Serialize public input to Zinc`() {
         withTestSerializationEnvIfNotSet {
             // Serialize for transport to Zinc
-            val testList = listOf<SecureHash>(allOnesHashFor(SecureHash.PEDERSEN))
+            val testList = listOf(allOnesHashFor(SecureHash.PEDERSEN))
             val publicInput = PublicInput(zeroHashFor(SecureHash.PEDERSEN), testList, testList)
             publicInput.serialize(ZincSerializationFactory)
             // TODO: do checks on JSON to confirm it is acceptable for Zinc
@@ -68,9 +50,11 @@ class SerializationTest {
         withTestSerializationEnvIfNotSet {
             // Serialize for transport to Zinc
             val witness = Witness(
-                ptx,
-                inputNonces = ptx.padded.inputs().map { zeroHashFor(SecureHash.PEDERSEN) },
-                referenceNonces = ptx.padded.references().map { zeroHashFor(SecureHash.PEDERSEN) }
+                wtx,
+                wtx.toLedgerTransaction(ledgerServices).inputs,
+                wtx.toLedgerTransaction(ledgerServices).references,
+                inputNonces = wtx.inputs.map { zeroHashFor(SecureHash.PEDERSEN) },
+                referenceNonces = wtx.references.map { zeroHashFor(SecureHash.PEDERSEN) }
             )
             witness.serialize(ZincSerializationFactory)
             // TODO: do checks on JSON to confirm it is acceptable for Zinc
@@ -80,16 +64,16 @@ class SerializationTest {
     @Test
     fun `VerifierTransaction from ProverTransaction has same Merkle root`() {
         withTestSerializationEnvIfNotSet {
-            assertEquals(ptx.id, vtx.id)
+            assertEquals(wtx.id, vtx.id)
         }
     }
 
     @Test
     fun `ProverTransaction survives Corda AMQP serialization`() {
         withTestSerializationEnvIfNotSet {
-            val ptxAmqp = ptx.serialize()
+            val ptxAmqp = wtx.serialize()
             val deserializedptx = ptxAmqp.deserialize()
-            assertEquals(ptx, deserializedptx)
+            assertEquals(wtx, deserializedptx)
         }
     }
 

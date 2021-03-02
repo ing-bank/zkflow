@@ -1,18 +1,18 @@
-//package com.ing.zknotary.common.transactions
+// package com.ing.zknotary.common.transactions
 //
-//import com.ing.zknotary.common.dactyloscopy.Dactyloscopist
-//import net.corda.core.contracts.ComponentGroupEnum
-//import net.corda.core.crypto.SecureHash
-//import net.corda.core.transactions.ComponentGroup
-//import java.nio.ByteBuffer
+// import com.ing.zknotary.common.dactyloscopy.Dactyloscopist
+// import net.corda.core.contracts.ComponentGroupEnum
+// import net.corda.core.crypto.SecureHash
+// import net.corda.core.transactions.ComponentGroup
+// import java.nio.ByteBuffer
 //
-//class ZKFullMerkleTree(
+// class ZKFullMerkleTree(
 //    ptx: ZKProverTransaction
-//) : AbstractZKMerkleTree(
+// ) : AbstractZKMerkleTree(
 //    createComponentGroups(ptx),
 //    ptx.componentGroupLeafDigestService,
 //    ptx.nodeDigestService
-//) {
+// ) {
 //    companion object {
 //        fun createComponentGroups(ptx: ZKProverTransaction): List<ComponentGroup> =
 //            mutableListOf<ComponentGroup>().apply {
@@ -56,4 +56,4 @@
 //            }
 //        }.toMap()
 //    }
-//}
+// }

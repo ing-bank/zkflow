@@ -41,6 +41,5 @@ fun ServiceHub.recordTransactions(stx: SignedTransaction? = null, svtx: SignedZK
 
     if (stx != null) {
         recordTransactions(stx)
-        zkVerifierTransactionStorage.map.put(stx, svtx.tx)
     }
 }

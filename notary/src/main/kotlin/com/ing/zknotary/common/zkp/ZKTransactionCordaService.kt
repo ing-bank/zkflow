@@ -3,7 +3,6 @@ package com.ing.zknotary.common.zkp
 import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
 import com.ing.zknotary.common.transactions.ZKVerifierTransaction
 import com.ing.zknotary.common.transactions.toWitness
-import com.ing.zknotary.common.transactions.toZKVerifierTransaction
 import com.ing.zknotary.common.transactions.zkCommandData
 import com.ing.zknotary.node.services.ServiceNames
 import com.ing.zknotary.node.services.ZKWritableVerifierTransactionStorage
@@ -20,9 +19,13 @@ abstract class ZKTransactionCordaService(val serviceHub: ServiceHub) : ZKTransac
 
     private val vtxStorage: ZKWritableVerifierTransactionStorage by lazy { serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_VERIFIER_TX_STORAGE) as ZKWritableVerifierTransactionStorage }
 
-    override fun prove(wtx: WireTransaction, inputs: List<StateAndRef<ContractState>>): ZKVerifierTransaction {
+    override fun prove(
+        wtx: WireTransaction,
+        inputs: List<StateAndRef<ContractState>>,
+        references: List<StateAndRef<ContractState>>
+    ): ZKVerifierTransaction {
 
-        val witness = wtx.toWitness(inputs = inputs)
+        val witness = wtx.toWitness(inputStates = inputs, referenceStates = references)
 
         // TODO
         // This construction of the circuit id is temporary and will be replaced in the subsequent work.
@@ -32,7 +35,7 @@ abstract class ZKTransactionCordaService(val serviceHub: ServiceHub) : ZKTransac
         val zkService = zkServiceForTx(circuitId)
         val proof = zkService.prove(witness)
 
-        return wtx.toZKVerifierTransaction(proof)
+        return ZKVerifierTransaction(wtx, proof)
     }
 
     abstract fun zkServiceForTx(circuitId: SecureHash): ZKService
@@ -63,9 +66,9 @@ abstract class ZKTransactionCordaService(val serviceHub: ServiceHub) : ZKTransac
         val referenceHashes = getUtxoHashes(tx.references)
 
         return PublicInput(
-                tx.id,
-                inputHashes = inputHashes,
-                referenceHashes = referenceHashes
+            tx.id,
+            inputHashes = inputHashes,
+            referenceHashes = referenceHashes
         )
     }
 
@@ -78,7 +81,7 @@ abstract class ZKTransactionCordaService(val serviceHub: ServiceHub) : ZKTransac
     private fun getUtxoHashes(stateRefs: List<StateRef>): List<SecureHash> {
         return stateRefs.map { stateRef ->
             val prevVtx = vtxStorage.getTransaction(stateRef.txhash)
-                    ?: error("Verifier tx not found for hash ${stateRef.txhash}")
+                ?: error("Verifier tx not found for hash ${stateRef.txhash}")
 
             /*
              * To be able to verify that the stateRefs that are used in the transaction are correct, and unchanged from
