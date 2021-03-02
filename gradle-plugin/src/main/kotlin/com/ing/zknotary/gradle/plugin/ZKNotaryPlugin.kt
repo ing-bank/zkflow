@@ -9,6 +9,7 @@ import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.plugins.ide.idea.IdeaPlugin
 import java.io.File
+import java.nio.ByteBuffer
 
 @Suppress("unused")
 class ZKNotaryPlugin : Plugin<Project> {
@@ -33,21 +34,48 @@ class ZKNotaryPlugin : Plugin<Project> {
 
                 circuitDirs?.forEach { circuitName ->
                     project.copy { copy ->
-                        copy.into(extension.mergedCircuitOutputPath.resolve(circuitName))
+                        copy.into(extension.mergedCircuitOutputPath.resolve(circuitName).resolve("src"))
                         project.configurations.findByName("zinc")
                             ?.files
                             ?.find { it.name.contains("zinc-platform-sources-${extension.zincPlatformSourcesVersion}") }
-                            ?.let { file -> copy.from(project.zipTree(file).matching { it.include("**/*.zn") }) }
+                            ?.let { file ->
+                                copy.from(
+                                    project.zipTree(file).matching {
+                                        it.include("**/*.zn")
+                                        it.exclude("**/META-INF")
+                                    }
+                                )
+                            }
                     }
                 }
             }
         }
         project.tasks.create("copyZincCircuitSources") { task ->
             task.doLast {
-                project.copy { copy ->
-                    // TODO: these paths need to become configurable
-                    copy.from(extension.circuitSourcesBasePath)
-                    copy.into(extension.mergedCircuitOutputPath)
+                val circuitDirs = extension.circuitSourcesBasePath.listFiles { file: File?, name: String? ->
+                    file?.isDirectory ?: false
+                }?.map { it.name }
+
+                circuitDirs?.forEach { circuitName ->
+                    project.copy { copy ->
+                        copy.from(extension.circuitSourcesBasePath.resolve(circuitName))
+                        copy.into(extension.mergedCircuitOutputPath.resolve(circuitName).resolve("src"))
+                    }
+                    // TODO: Create Zargo.toml file
+                    extension.mergedCircuitOutputPath.resolve(circuitName).resolve("Zargo.toml").apply {
+                        if (!exists()) createNewFile()
+                        outputStream().channel
+                            .truncate(0)
+                            .write(
+                                ByteBuffer.wrap(
+                                    """
+[circuit]
+name = "$circuitName"
+version = "${project.version}"                                
+                                    """.trimIndent().toByteArray()
+                                )
+                            )
+                    }
                 }
             }
         }

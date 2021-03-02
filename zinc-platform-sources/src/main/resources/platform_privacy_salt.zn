@@ -1,5 +1,4 @@
 mod platform_consts;
-mod platform_preamble;
 
 use std::convert::to_bits;
 use platform_consts::BYTE_BITS;

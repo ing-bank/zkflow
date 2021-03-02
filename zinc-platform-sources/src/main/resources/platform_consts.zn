@@ -1,5 +1,3 @@
-mod platform_preamble;
-
 const BYTE_BITS: u16 = 8;
 
 const U32_BYTES: u16 = 4;
