@@ -82,7 +82,7 @@ task("rustfmt") {
 }
 
 task("rustfmtCheck") {
-    mustRunAfter("generateMerkleUtils", "generateFloatingPoint")
+    mustRunAfter("generateMerkleUtils")
 
     circuits.forEach {
         outputs.dir(it.circuitRoot)
@@ -96,22 +96,6 @@ task("rustfmtCheck") {
                     commandLine("rustfmt", "--check", it)
                 }
             }
-    }
-}
-
-task("generateFloatingPoint") {
-    doLast {
-        val template = File("$root/templates/floating_point.template").readText()
-
-        bigDecimalSizes.forEach {
-            val floatingPointContent = template.replace("\${INTEGER_SIZE_PLACEHOLDER}", it.first.toString())
-                    .replace("\${FRACTION_SIZE_PLACEHOLDER}", it.second.toString())
-            val sizeSuffix = "${it.first}_${it.second}"
-            val targetFile = File("$zincPlatformSource/floating_point_$sizeSuffix.zn")
-            targetFile.delete()
-            targetFile.createNewFile()
-            targetFile.writeBytes(floatingPointContent.toByteArray())
-        }
     }
 }
 

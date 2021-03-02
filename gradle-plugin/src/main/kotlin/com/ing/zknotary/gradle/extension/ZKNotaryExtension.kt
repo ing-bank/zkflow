@@ -16,6 +16,9 @@ open class ZKNotaryExtension(project: Project) {
     }
 
     @Input
+    var bigDecimalSizes = setOf(Pair(24, 6), Pair(100, 20))
+
+    @Input
     var zincPlatformSourcesVersion: String? = "0.1.4-SNAPSHOT"
 
     @Input
