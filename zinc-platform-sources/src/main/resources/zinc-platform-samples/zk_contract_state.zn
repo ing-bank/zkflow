@@ -1,0 +1,27 @@
+//!
+//! EXAMPLE DOCUMENT FOR CONTRACT STATE
+//! PLEASE IMPLEMENT CORRESPONDING STATE FOR THE ZKDAPP TRANSACTION
+//!
+
+const ZKCONTRACT_STATE_BYTES: u16 = PUBKEY_BYTES + U32_BYTES;
+const ZKCONTRACT_STATE_FINGERPRINT_BYTES: u16 = PUBKEY_BYTES + U32_BYTES;
+const ZKCONTRACT_STATE_FINGERPRINT_BITS: u16 = ZKCONTRACT_STATE_FINGERPRINT_BYTES * BYTE_BITS;
+
+struct ZKContractState {
+    owner: Party,
+    value: i32,
+}
+
+impl ZKContractState {
+    fn fingerprint(this: ZKContractState) -> [bool; ZKCONTRACT_STATE_FINGERPRINT_BITS] {
+        let mut result = [false; ZKCONTRACT_STATE_FINGERPRINT_BITS];
+        //fingerprint data
+        //dataOwner_owning_key
+        result[0..PUBKEY_FINGERPRINT_BITS] = PubKey::fingerprint(this.owner.owning_key);
+        //value
+        result[PUBKEY_FINGERPRINT_BITS..(PUBKEY_FINGERPRINT_BITS + U32_BITS)] = to_bits(this.value);
+        //fingerprint notary
+        //notary_owning_key
+        result
+    }
+}
