@@ -43,67 +43,44 @@ abstract class GenerateZincPlatformCodeFromTemplatesTask : DefaultTask() {
             targetFile.createNewFile()
             targetFile.writeText("//! Limited-depth recursion for Merkle tree construction\n")
             targetFile.writeText("//! GENERATED CODE. DO NOT EDIT\n//! Edit it in zk-notary GenerateZincPlatformCodeFromTemplatesTask.kt\n")
+            targetFile.appendText(
+                """
+mod platform_component_group_leaf_digest_dto;
+mod platform_crypto_utils;
+mod platform_node_digest_dto;   
+ 
+use platform_component_group_leaf_digest_dto::ComponentGroupLeafDigestBits;
+use platform_component_group_leaf_digest_dto::ComponentGroupLeafDigestDto;
+use platform_component_group_leaf_digest_dto::COMPONENT_GROUP_LEAF_DIGEST_BITS;
+use platform_crypto_utils::pedersen_to_padded_bits;
+use platform_crypto_utils::concatenate_component_group_leaf_digests;
+use platform_crypto_utils::concatenate_node_digests;
+use platform_node_digest_dto::NodeDigestBits;
+use platform_node_digest_dto::NodeDigestDto;
+use platform_node_digest_dto::NODE_DIGEST_BITS;
+use std::crypto::pedersen;
 
+            """
+            )
             val constsTemplate = File("${extension.circuitSourcesBasePath.resolve(circuitName)}/consts.zn").readText()
             val merkleLeaves = getMerkleLeaveSize(constsTemplate)
-
-            fun isPow2(num: Int) = num and (num - 1) == 0
-            val fullLeaves = run {
-                var l = merkleLeaves
-                while (!isPow2(l)) {
-                    l++
-                }
-                l
-            }
-
-            var leaves = fullLeaves
-            var levelUp = leaves / 2
-
-            if (fullLeaves == 2) {
-                targetFile.appendText(
-                    """
-fn get_merkle_tree_from_2_component_group_leaf_digests(leaves: [ComponentGroupLeafDigestBits; 2]) -> ComponentGroupLeafDigestBits {
-    dbg!("Consuming 2 leaves");
-    dbg!("0: {}", ComponentGroupLeafDigestDto::from_bits_to_bytes(leaves[0]));
-    dbg!("1: {}", ComponentGroupLeafDigestDto::from_bits_to_bytes(leaves[1]));
-    pedersen_to_padded_bits(pedersen(concatenate_component_group_leaf_digests(leaves[0], leaves[1])).0)
-}
-"""
+            targetFile.appendText(
+                getMerkleTree(
+                    templateContents, merkleLeaves, digestType = "node_digests",
+                    digestBitsType = "NodeDigestBits",
+                    digestBits = "NODE_DIGEST_BITS",
+                    dto = "NodeDigestDto"
                 )
-            } else {
-                do {
-                    // The lowest level of the tree is the leaf hashes of component subtrees in ComponentGroupLeafDigest type
-                    val merkleLeavesContent = if (leaves == fullLeaves) {
-                        templateContents.replace("\${NUM_LEAVES_PLACEHOLDER}", leaves.toString())
-                            .replace("\${DIGEST_TYPE_PLACEHOLDER}", "component_group_leaf_digests")
-                            .replace("\${DIGEST_BITS_PLACEHOLDER}", "ComponentGroupLeafDigestBits")
-                            .replace("\${DTO_PLACEHOLDER}", "ComponentGroupLeafDigestDto")
-                            .replace("\${LEVEL_UP_PLACEHOLDER}", levelUp.toString())
-                    } else {
-                        // The upper levels are NodeDigest type
-                        templateContents.replace("\${NUM_LEAVES_PLACEHOLDER}", leaves.toString())
-                            .replace("\${DIGEST_TYPE_PLACEHOLDER}", "node_digests")
-                            .replace("\${DIGEST_BITS_PLACEHOLDER}", "NodeDigestBits")
-                            .replace("\${DTO_PLACEHOLDER}", "NodeDigestDto")
-                            .replace("\${LEVEL_UP_PLACEHOLDER}", levelUp.toString())
-                    }
-                    targetFile.appendBytes(merkleLeavesContent.toByteArray())
-                    leaves /= 2
-                    levelUp = leaves / 2
-                } while (2 < leaves)
+            )
 
-                // Compute the root
-                targetFile.appendText(
-                    """
-fn get_merkle_tree_from_2_node_digests(leaves: [NodeDigestBits; 2]) -> NodeDigestBits {
-    dbg!("Consuming 2 leaves");
-    dbg!("0: {}", NodeDigestDto::from_bits_to_bytes(leaves[0]));
-    dbg!("1: {}", NodeDigestDto::from_bits_to_bytes(leaves[1]));
-    pedersen_to_padded_bits(pedersen(concatenate_node_digests(leaves[0], leaves[1])).0)
-}
-"""
+            targetFile.appendText(
+                getMerkleTree(
+                    templateContents, merkleLeaves, digestType = "component_group_leaf_digests",
+                    digestBitsType = "ComponentGroupLeafDigestBits",
+                    digestBits = "COMPONENT_GROUP_LEAF_DIGEST_BITS",
+                    dto = "ComponentGroupLeafDigestDto"
                 )
-            }
+            )
         }
     }
 
@@ -115,6 +92,31 @@ fn get_merkle_tree_from_2_node_digests(leaves: [NodeDigestBits; 2]) -> NodeDiges
             val targetFile = extension.mergedCircuitOutputPath.resolve(circuitName).resolve("src/main.zn")
             targetFile.delete()
             targetFile.createNewFile()
+            targetFile.writeText("//! GENERATED CODE. DO NOT EDIT\n//! Edit it in zk-notary GenerateZincPlatformCodeFromTemplatesTask.kt\n")
+            targetFile.appendText("//! The '$circuitName' main module.")
+            targetFile.appendText(
+                """
+mod consts;
+mod contract_rules;
+mod platform_component_group_leaf_digest_dto;
+mod platform_merkle_tree;
+mod platform_node_digest_dto;
+mod platform_utxo_digests;
+mod platform_zk_prover_transaction;
+ 
+use consts::INPUT_GROUP_SIZE;
+use consts::REFERENCE_GROUP_SIZE; 
+use contract_rules::check_contract_rules;
+use platform_component_group_leaf_digest_dto::ComponentGroupLeafDigestDto;
+use platform_component_group_leaf_digest_dto::COMPONENT_GROUP_LEAF_DIGEST_BYTES;
+use platform_merkle_tree::build_merkle_tree;
+use platform_node_digest_dto::NodeDigestDto;
+use platform_node_digest_dto::NODE_DIGEST_BYTES;
+use platform_utxo_digests::compute_input_utxo_digests;
+use platform_utxo_digests::compute_reference_utxo_digests;
+use platform_zk_prover_transaction::Witness;
+"""
+            )
 
             val constsTemplate = File("${extension.circuitSourcesBasePath.resolve(circuitName)}/consts.zn").readText()
             val inputHashes = replaceComponentPlaceholders(constsTemplate, "input")
@@ -123,7 +125,7 @@ fn get_merkle_tree_from_2_node_digests(leaves: [NodeDigestBits; 2]) -> NodeDiges
             val mainContent = templateContents.replace("\${COMMAND_NAME_PLACEHOLDER}", circuitName)
                 .replace("\${INPUT_HASH_PLACEHOLDER}", inputHashes)
                 .replace("\${REFERENCE_HASH_PLACEHOLDER}", referenceHashes)
-            targetFile.writeBytes(mainContent.toByteArray())
+            targetFile.appendBytes(mainContent.toByteArray())
         }
     }
 
@@ -161,6 +163,41 @@ fn get_merkle_tree_from_2_node_digests(leaves: [NodeDigestBits; 2]) -> NodeDiges
         }
         return total
     }
+
+    private fun getMerkleTree(templateContents: String, merkleLeaves: Int, digestType: String, digestBitsType: String, digestBits: String, dto: String): String {
+
+        fun isPow2(num: Int) = num and (num - 1) == 0
+        val fullLeaves = run {
+            var l = merkleLeaves
+            while (!isPow2(l)) {
+                l++
+            }
+            l
+        }
+        var digestMerkleFunctions = ""
+        // Compute the root
+        digestMerkleFunctions +=
+            """
+fn get_merkle_tree_from_2_$digestType(leaves: [$digestBitsType; 2]) -> $digestBitsType {
+    pedersen_to_padded_bits(pedersen(concatenate_$digestType(leaves[0], leaves[1])).0)
+}
+"""
+        if (fullLeaves > 2) {
+            var leaves = 4
+            do {
+                val levelUp = leaves / 2
+                digestMerkleFunctions += templateContents.replace("\${NUM_LEAVES_PLACEHOLDER}", leaves.toString())
+                    .replace("\${DIGEST_TYPE_PLACEHOLDER}", digestType)
+                    .replace("\${DIGEST_BITS_TYPE_PLACEHOLDER}", digestBitsType)
+                    .replace("\${DIGEST_BITS_PLACEHOLDER}", digestBits)
+                    .replace("\${DTO_PLACEHOLDER}", dto)
+                    .replace("\${LEVEL_UP_PLACEHOLDER}", levelUp.toString())
+                leaves *= 2
+            } while (leaves <= fullLeaves)
+        }
+        return digestMerkleFunctions
+    }
+
     private fun Project.getTemplateContents(templateFileName: String): String {
         return project.platformSources.matching {
             it.include("zinc-platform-templates/$templateFileName")

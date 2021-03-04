@@ -5,6 +5,8 @@ mod platform_privacy_salt;
 mod platform_component_group_leaf_digest_dto;
 mod platform_crypto_utils;
 mod platform_nonce_digest_dto;
+mod platform_party;
+mod zk_contract_state;
 
 use platform_component_group_leaf_digest_dto::ComponentGroupLeafDigestBits;
 use platform_consts::BYTE_BITS;
@@ -16,10 +18,15 @@ use platform_node_digest_dto::NODE_DIGEST_BYTES;
 use platform_node_digest_dto::NodeDigestDto;
 use platform_nonce_digest_dto::NONCE_DIGEST_BITS;
 use platform_nonce_digest_dto::NonceDigestBits;
+use platform_party::Party;
 use platform_privacy_salt::PrivacySaltBits;
 use platform_pub_key::PubKey;
 use platform_pub_key::PUBKEY_BYTES;
 use platform_pub_key::PUBKEY_FINGERPRINT_BITS;
+use zk_contract_state::ZKContractState;
+use zk_contract_state::ZKCONTRACT_STATE_BYTES;
+use zk_contract_state::ZKCONTRACT_STATE_FINGERPRINT_BYTES;
+use zk_contract_state::ZKCONTRACT_STATE_FINGERPRINT_BITS;
 use std::convert::to_bits;
 use std::crypto::blake2s;
 

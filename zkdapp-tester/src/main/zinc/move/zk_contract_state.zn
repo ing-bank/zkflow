@@ -3,6 +3,19 @@
 //! PLEASE IMPLEMENT CORRESPONDING STATE FOR THE ZKDAPP TRANSACTION
 //!
 
+mod platform_consts;
+mod platform_party;
+mod platform_pub_key;
+
+use platform_consts::BYTE_BITS;
+use platform_consts::U32_BITS;
+use platform_consts::U32_BYTES;
+use platform_party::Party;
+use platform_pub_key::PubKey;
+use platform_pub_key::PUBKEY_BYTES;
+use platform_pub_key::PUBKEY_FINGERPRINT_BITS;
+use std::convert::to_bits;
+
 const ZKCONTRACT_STATE_BYTES: u16 = PUBKEY_BYTES + U32_BYTES;
 const ZKCONTRACT_STATE_FINGERPRINT_BYTES: u16 = PUBKEY_BYTES + U32_BYTES;
 const ZKCONTRACT_STATE_FINGERPRINT_BITS: u16 = ZKCONTRACT_STATE_FINGERPRINT_BYTES * BYTE_BITS;

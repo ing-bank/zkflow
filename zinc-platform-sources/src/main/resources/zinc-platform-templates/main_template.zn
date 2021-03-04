@@ -1,6 +1,3 @@
-//!
-//! The '${COMMAND_NAME_PLACEHOLDER}' main module.
-//!
 
 struct PublicInput {
     transaction_id: NodeDigestDto,
