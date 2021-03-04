@@ -8,27 +8,32 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.options.Option
 
-abstract class CopyZincCircuitSamplesTask : DefaultTask() {
-    private var circuit = "move" // TODO remove this
+/**
+This task receives the input commandName as command line argument and creates a zinc directory under src/main with the
+ provided command name. It also copies sample code for consts, contract rules, and contract state that should be manually
+implemented on zkdapp side.
+**/
+abstract class CreateZincDirectoriesForInputCommandTask : DefaultTask() {
+    private var commandName = "command"
 
     @Option(option = "command", description = "Set the command type of the transaction.")
     fun setCommand(command: String) {
-        circuit = command
+        commandName = command
     }
 
     @Input
     fun getCommand(): String {
-        return circuit
+        return commandName
     }
 
     @TaskAction
-    fun copyZincCircuitSamples() {
+    fun createZincDirectoriesForInputCommand() {
 
         val extension = project.zkNotaryExtension
         val samples = project.platformSources.matching { it.include("zinc-platform-samples/**/*.zn") }
 
         project.copy { copy ->
-            copy.into(extension.circuitSourcesBasePath.resolve(circuit))
+            copy.into(extension.circuitSourcesBasePath.resolve(commandName))
             copy.from(samples).eachFile {
                 @Suppress("SpreadOperator")
                 it.relativePath = RelativePath(true, *it.relativePath.segments.drop(1).toTypedArray())
