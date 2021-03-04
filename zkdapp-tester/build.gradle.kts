@@ -23,5 +23,4 @@ tasks.create("mergeZincTest") {
     dependsOn("copyZincCircuitSources")
     dependsOn("copyZincPlatformSources")
     dependsOn("generateZincPlatformCodeFromTemplates")
-    dependsOn("copyZincCircuitSamples")
 }
