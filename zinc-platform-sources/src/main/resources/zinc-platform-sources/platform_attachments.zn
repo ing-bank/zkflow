@@ -1,4 +1,5 @@
 mod consts;
+mod merkle_utils;
 mod platform_consts;
 mod platform_node_digest_dto;
 mod platform_privacy_salt;
@@ -9,6 +10,7 @@ mod platform_nonce_digest_dto;
 mod platform_party;
 mod platform_pub_key;
 
+use merkle_utils::get_merkle_tree_from_${GROUP_SIZE_PLACEHOLDER}_component_group_leaf_digests;
 use platform_pub_key::PubKey;
 use platform_party::Party;
 use platform_consts::U32_BITS;
@@ -113,6 +115,6 @@ impl AttachmentsComponentGroup {
         this: AttachmentsComponentGroup,
         privacy_salt: PrivacySaltBits,
     ) -> NodeDigestBits {
-        [false; NODE_DIGEST_BITS] // ### CALL APPROPRIATE MERKLE TREE FUNCTION ###
+        // ### CALL APPROPRIATE MERKLE TREE FUNCTION ###
     }
 }

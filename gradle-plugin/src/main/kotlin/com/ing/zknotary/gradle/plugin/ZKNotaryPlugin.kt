@@ -1,11 +1,11 @@
 package com.ing.zknotary.gradle.plugin
 
 import com.ing.zknotary.gradle.extension.ZKNotaryExtension
-import com.ing.zknotary.gradle.task.BuildZincCircuitTask
 import com.ing.zknotary.gradle.task.CopyZincCircuitSourcesTask
 import com.ing.zknotary.gradle.task.CopyZincPlatformSourcesTask
 import com.ing.zknotary.gradle.task.CreateZincDirectoriesForInputCommandTask
 import com.ing.zknotary.gradle.task.GenerateZincPlatformCodeFromTemplatesTask
+import com.ing.zknotary.gradle.task.PrepareCircuitForCompilationTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPlugin
@@ -31,6 +31,6 @@ class ZKNotaryPlugin : Plugin<Project> {
         project.tasks.create("createZincDirectoriesForInputCommand", CreateZincDirectoriesForInputCommandTask::class.java)
         project.tasks.create("copyZincPlatformSources", CopyZincPlatformSourcesTask::class.java)
         project.tasks.create("generateZincPlatformCodeFromTemplates", GenerateZincPlatformCodeFromTemplatesTask::class.java)
-        project.tasks.create("buildZincCircuit", BuildZincCircuitTask::class.java)
+        project.tasks.create("prepareCircuitForCompilation", PrepareCircuitForCompilationTask::class.java)
     }
 }

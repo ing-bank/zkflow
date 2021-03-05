@@ -1,6 +1,8 @@
 package com.ing.zknotary.gradle.task
 
 import com.ing.zknotary.gradle.util.circuitNames
+import com.ing.zknotary.gradle.util.getFullMerkleTreeSize
+import com.ing.zknotary.gradle.util.getMerkleTreeSizeForComponent
 import com.ing.zknotary.gradle.util.platformSources
 import com.ing.zknotary.gradle.util.zkNotaryExtension
 import org.gradle.api.DefaultTask
@@ -63,10 +65,10 @@ use std::crypto::pedersen;
             """
             )
             val constsTemplate = File("${extension.circuitSourcesBasePath.resolve(circuitName)}/consts.zn").readText()
-            val merkleLeaves = getMerkleLeaveSize(constsTemplate)
+            val fullMerkleLeaves = getFullMerkleTreeSize(constsTemplate)
             targetFile.appendText(
                 getMerkleTree(
-                    templateContents, merkleLeaves, digestType = "node_digests",
+                    templateContents, fullMerkleLeaves, digestType = "node_digests",
                     digestBitsType = "NodeDigestBits",
                     digestBits = "NODE_DIGEST_BITS",
                     dto = "NodeDigestDto"
@@ -75,13 +77,38 @@ use std::crypto::pedersen;
 
             targetFile.appendText(
                 getMerkleTree(
-                    templateContents, merkleLeaves, digestType = "component_group_leaf_digests",
+                    templateContents, fullMerkleLeaves, digestType = "component_group_leaf_digests",
                     digestBitsType = "ComponentGroupLeafDigestBits",
                     digestBits = "COMPONENT_GROUP_LEAF_DIGEST_BITS",
                     dto = "ComponentGroupLeafDigestDto"
                 )
             )
         }
+    }
+
+    private fun getMerkleTree(templateContents: String, fullMerkleLeaves: Int, digestType: String, digestBitsType: String, digestBits: String, dto: String): String {
+        var digestMerkleFunctions = ""
+        // Compute the root
+        digestMerkleFunctions +=
+            """
+fn get_merkle_tree_from_2_$digestType(leaves: [$digestBitsType; 2]) -> $digestBitsType {
+    pedersen_to_padded_bits(pedersen(concatenate_$digestType(leaves[0], leaves[1])).0)
+}
+"""
+        if (fullMerkleLeaves > 2) {
+            var leaves = 4
+            do {
+                val levelUp = leaves / 2
+                digestMerkleFunctions += templateContents.replace("\${NUM_LEAVES_PLACEHOLDER}", leaves.toString())
+                    .replace("\${DIGEST_TYPE_PLACEHOLDER}", digestType)
+                    .replace("\${DIGEST_BITS_TYPE_PLACEHOLDER}", digestBitsType)
+                    .replace("\${DIGEST_BITS_PLACEHOLDER}", digestBits)
+                    .replace("\${DTO_PLACEHOLDER}", dto)
+                    .replace("\${LEVEL_UP_PLACEHOLDER}", levelUp.toString())
+                leaves *= 2
+            } while (leaves <= fullMerkleLeaves)
+        }
+        return digestMerkleFunctions
     }
 
     private fun generateMainCode() {
@@ -130,8 +157,7 @@ use platform_zk_prover_transaction::Witness;
     }
 
     private fun replaceComponentPlaceholders(template: String, componentGroup: String): String {
-        val componentRegex = "${componentGroup.toUpperCase()}_GROUP_SIZE: u16 = (\\d+);".toRegex()
-        val componentGroupSize = componentRegex.find(template)?.groupValues?.get(1)?.toInt()
+        val componentGroupSize = getMerkleTreeSizeForComponent(componentGroup, template)
 
         if (componentGroupSize != null) {
             return when {
@@ -153,49 +179,6 @@ use platform_zk_prover_transaction::Witness;
         } else {
             throw IllegalArgumentException("Unknown value for ${componentGroup.toUpperCase()}_GROUP_SIZE in consts.zn")
         }
-    }
-
-    private fun getMerkleLeaveSize(constsTemplate: String): Int {
-        val search = "GROUP_SIZE: u16 = (\\d+);".toRegex()
-        var total = 0
-        search.findAll(constsTemplate).forEach {
-            total += it.groupValues[1].toInt()
-        }
-        return total
-    }
-
-    private fun getMerkleTree(templateContents: String, merkleLeaves: Int, digestType: String, digestBitsType: String, digestBits: String, dto: String): String {
-
-        fun isPow2(num: Int) = num and (num - 1) == 0
-        val fullLeaves = run {
-            var l = merkleLeaves
-            while (!isPow2(l)) {
-                l++
-            }
-            l
-        }
-        var digestMerkleFunctions = ""
-        // Compute the root
-        digestMerkleFunctions +=
-            """
-fn get_merkle_tree_from_2_$digestType(leaves: [$digestBitsType; 2]) -> $digestBitsType {
-    pedersen_to_padded_bits(pedersen(concatenate_$digestType(leaves[0], leaves[1])).0)
-}
-"""
-        if (fullLeaves > 2) {
-            var leaves = 4
-            do {
-                val levelUp = leaves / 2
-                digestMerkleFunctions += templateContents.replace("\${NUM_LEAVES_PLACEHOLDER}", leaves.toString())
-                    .replace("\${DIGEST_TYPE_PLACEHOLDER}", digestType)
-                    .replace("\${DIGEST_BITS_TYPE_PLACEHOLDER}", digestBitsType)
-                    .replace("\${DIGEST_BITS_PLACEHOLDER}", digestBits)
-                    .replace("\${DTO_PLACEHOLDER}", dto)
-                    .replace("\${LEVEL_UP_PLACEHOLDER}", levelUp.toString())
-                leaves *= 2
-            } while (leaves <= fullLeaves)
-        }
-        return digestMerkleFunctions
     }
 
     private fun Project.getTemplateContents(templateFileName: String): String {

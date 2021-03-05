@@ -20,7 +20,7 @@ mod platform_time_window;
 mod platform_parameters;
 mod platform_signers;
 
-use merkle_utils::get_merkle_tree_from_16_node_digests;
+use merkle_utils::get_merkle_tree_from_${GROUP_SIZE_PLACEHOLDER}_node_digests;
 use platform_zk_prover_transaction::ZKProverTransaction;
 use platform_consts::COMPONENT_GROUPS_SIZE;
 use platform_node_digest_dto::NodeDigestBits;
@@ -61,7 +61,7 @@ fn merkle_root(leaves: [NodeDigestBits; COMPONENT_GROUPS_SIZE]) -> NodeDigestBit
     }
 
     dbg!("Constructing the root");
-    get_merkle_tree_from_16_node_digests(full_leaves)
+    get_merkle_tree_from_${GROUP_SIZE_PLACEHOLDER}_node_digests(full_leaves)
 }
 
 fn build_merkle_tree(zk_prover_transaction: ZKProverTransaction) -> NodeDigestBits {
