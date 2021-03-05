@@ -2,7 +2,7 @@ package com.ing.zknotary.gradle.util
 
 fun getFullMerkleTreeSize(consts: String): Int {
     val search = "GROUP_SIZE: u16 = (\\d+);".toRegex()
-    var total = 0
+    var total = 3 // notary, timewindow, and parameters group size
     search.findAll(consts).forEach {
         total += it.groupValues[1].toInt()
     }

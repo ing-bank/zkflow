@@ -22,40 +22,252 @@ publishing {
     }
 }
 
-// The following values must be defined as global constants.
-// It is impossible to move them into the CommandCircuit as static components
-// because of an incomprehensible reason.
-// > Could not open cache directory 6f7l1lbu6cqg0vysvf72z734b (/Users/vic/.gradle/caches/6.5.1/gradle-kotlin-dsl/6f7l1lbu6cqg0vysvf72z734b).
-//    > Internal compiler error: Back-end (JVM) Internal error: wrong bytecode generated for static initializer
-//      <no bytecode>
+// Global consts
 val root = "${project.rootDir.absolutePath}/zinc-platform-sources"
-val zincPlatformSource = "$root/src/main/resources/zinc-platform-source"
+val resources = "$root/src/main/resources"
+
+val zincPlatformSourcesPath = "$resources/zinc-platform-sources"
+val zincPlatformTemplatesPath = "$resources/zinc-platform-templates"
+
+val circuitSourcesBasePath = "$root/circuits"
+val mergedCircuitOutputPath = "$root/build/circuits"
+
+val zincPlatformSources = File(zincPlatformSourcesPath)
+val circuitSourcesBase = File(circuitSourcesBasePath)
+val mergedCircuitOutput = File(mergedCircuitOutputPath)
 
 val bigDecimalSizes = setOf(Pair(24, 6), Pair(100, 20))
 
-val create = CommandCircuit.Create(root, bigDecimalSizes.map { "src/main/resources/zinc-platform-source/floating_point_${it.first}_${it.second}.zn" })
-val move = CommandCircuit.Move(root, bigDecimalSizes.map { "src/main/resources/zinc-platform-source/floating_point_${it.first}_${it.second}.zn" })
+val circuits = circuitSourcesBase.listFiles { file, _ -> file?.isDirectory ?: false }?.map { it.name }
 
-val circuits: List<CommandCircuit> = listOf(create, move)
-val distinctModules =
-    circuits.fold(emptySet<String>()) { acc, commandCircuit -> acc + commandCircuit.orderedModules }
-val merkleUtilsPath = "$zincPlatformSource/utils/merkle_utils.zn"
+task("copyZincSources") {
+    circuits?.forEach { circuitName ->
+        // Copy circuit sources
+        copy {
+            from(circuitSourcesBase.resolve(circuitName))
+            into(mergedCircuitOutput.resolve(circuitName).resolve("src"))
+        }
+        // Copy platform sources
+        copy {
+            from(zincPlatformSources)
+            into(mergedCircuitOutput.resolve(circuitName).resolve("src"))
+        }
+    }
+}
+
+task("generateFloatingPointFromTemplate") {
+    val templateContents = File("$zincPlatformTemplatesPath/floating_point.zn").readText()
+    circuits?.forEach { circuitName ->
+        bigDecimalSizes.forEach {
+            val floatingPointContent = templateContents.replace("\${INTEGER_SIZE_PLACEHOLDER}", it.first.toString())
+                .replace("\${FRACTION_SIZE_PLACEHOLDER}", it.second.toString())
+            val sizeSuffix = "${it.first}_${it.second}"
+            val targetFile = mergedCircuitOutput.resolve(circuitName).resolve("src/floating_point_$sizeSuffix.zn")
+            targetFile.delete()
+            targetFile.createNewFile()
+            targetFile.writeBytes(floatingPointContent.toByteArray())
+        }
+    }
+}
+
+task("generateMerkleUtils") {
+    val templateContents = File("$zincPlatformTemplatesPath/merkle_template.zn").readText()
+    circuits?.forEach { circuitName ->
+        val targetFile = mergedCircuitOutput.resolve(circuitName).resolve("src/merkle_utils.zn")
+        targetFile.delete()
+        targetFile.createNewFile()
+        targetFile.writeText("//! Limited-depth recursion for Merkle tree construction\n")
+        targetFile.writeText("//! GENERATED CODE. DO NOT EDIT\n//! Edit it in zinc-platform-sources/build.gradle.kts\n")
+        targetFile.appendText(
+            """
+mod platform_component_group_leaf_digest_dto;
+mod platform_crypto_utils;
+mod platform_node_digest_dto;   
+ 
+use platform_component_group_leaf_digest_dto::ComponentGroupLeafDigestBits;
+use platform_component_group_leaf_digest_dto::ComponentGroupLeafDigestDto;
+use platform_component_group_leaf_digest_dto::COMPONENT_GROUP_LEAF_DIGEST_BITS;
+use platform_crypto_utils::pedersen_to_padded_bits;
+use platform_crypto_utils::concatenate_component_group_leaf_digests;
+use platform_crypto_utils::concatenate_node_digests;
+use platform_node_digest_dto::NodeDigestBits;
+use platform_node_digest_dto::NodeDigestDto;
+use platform_node_digest_dto::NODE_DIGEST_BITS;
+use std::crypto::pedersen;
+
+            """
+        )
+        val constsTemplate = File("${circuitSourcesBase.resolve(circuitName)}/consts.zn").readText()
+        val search = "GROUP_SIZE: u16 = (\\d+);".toRegex()
+        var total = 3 // notary, timewindow, and parameters group size
+        search.findAll(constsTemplate).forEach {
+            total += it.groupValues[1].toInt()
+        }
+
+        fun isPow2(num: Int) = num and (num - 1) == 0
+        val fullMerkleLeaves = run {
+            var l = total
+            while (!isPow2(l)) {
+                l++
+            }
+            l
+        }
+
+        targetFile.appendText(
+            getMerkleTree(
+                templateContents, fullMerkleLeaves, digestSnakeCase = "node_digests",
+                digestCamelCase = "NodeDigest",
+                digestBits = "NODE_DIGEST_BITS"
+            )
+        )
+
+        targetFile.appendText(
+            getMerkleTree(
+                templateContents, fullMerkleLeaves, digestSnakeCase = "component_group_leaf_digests",
+                digestCamelCase = "ComponentGroupLeafDigest",
+                digestBits = "COMPONENT_GROUP_LEAF_DIGEST_BITS"
+            )
+        )
+    }
+}
+
+task("generateMain") {
+    val templateContents = File("$zincPlatformTemplatesPath/main_template.zn").readText()
+    circuits?.forEach { circuitName ->
+        val targetFile = mergedCircuitOutput.resolve(circuitName).resolve("src/main.zn")
+        targetFile.delete()
+        targetFile.createNewFile()
+        targetFile.writeText("//! GENERATED CODE. DO NOT EDIT\n//! Edit it in zinc-platform-sources/build.gradle.kts\n")
+        targetFile.appendText("//! The '$circuitName' main module.")
+        targetFile.appendText(
+            """
+mod consts;
+mod contract_rules;
+mod platform_component_group_leaf_digest_dto;
+mod platform_merkle_tree;
+mod platform_node_digest_dto;
+mod platform_utxo_digests;
+mod platform_zk_prover_transaction;
+ 
+use consts::INPUT_GROUP_SIZE;
+use consts::REFERENCE_GROUP_SIZE; 
+use contract_rules::check_contract_rules;
+use platform_component_group_leaf_digest_dto::ComponentGroupLeafDigestDto;
+use platform_component_group_leaf_digest_dto::COMPONENT_GROUP_LEAF_DIGEST_BYTES;
+use platform_merkle_tree::build_merkle_tree;
+use platform_node_digest_dto::NodeDigestDto;
+use platform_node_digest_dto::NODE_DIGEST_BYTES;
+use platform_utxo_digests::compute_input_utxo_digests;
+use platform_utxo_digests::compute_reference_utxo_digests;
+use platform_zk_prover_transaction::Witness;
+"""
+        )
+
+        val constsTemplate = File("${circuitSourcesBase.resolve(circuitName)}/consts.zn").readText()
+        val inputHashes = replaceComponentPlaceholders(constsTemplate, "input")
+        val referenceHashes = replaceComponentPlaceholders(constsTemplate, "reference")
+
+        val mainContent = templateContents.replace("\${COMMAND_NAME_PLACEHOLDER}", circuitName)
+            .replace("\${INPUT_HASH_PLACEHOLDER}", inputHashes)
+            .replace("\${REFERENCE_HASH_PLACEHOLDER}", referenceHashes)
+        targetFile.appendBytes(mainContent.toByteArray())
+    }
+}
+
+task("generateMerkleFunctionCalls") {
+    circuits?.forEach { circuitName ->
+        // Update component subtrees
+        val componentGroupFiles = File("${mergedCircuitOutput.resolve(circuitName)}/").walk().filter {
+            it.name.contains("platform_components")
+        }
+        componentGroupFiles.forEach { file ->
+            // Filter component group files
+            val fileContent = file.readText()
+            // Find which component group
+            val componentRegex = "struct (\\w+)(ComponentGroup)".toRegex()
+            var componentGroupName = componentRegex.find(fileContent)?.groupValues?.get(1)
+            if (componentGroupName?.endsWith("s")!!) componentGroupName = componentGroupName.dropLast(1)
+
+            val constsTemplate = File("${circuitSourcesBase.resolve(circuitName)}/consts.zn").readText()
+            val constsRegex = "${componentGroupName.toUpperCase()}_GROUP_SIZE: u16 = (\\d+);".toRegex()
+            val componentGroupSize = constsRegex.find(constsTemplate)?.groupValues?.get(1)?.toInt()
+
+            // Find the size of the component group in consts.zn
+            file.delete()
+            file.createNewFile()
+            val updatedFileContent = callAppropriateMerkleTreeFunction(componentGroupSize, fileContent)
+
+            file.appendBytes(updatedFileContent.toByteArray())
+        }
+
+        // Update main merkle tree
+        val platformMerkleTree = File("${mergedCircuitOutput.resolve(circuitName)}/").walk().find { it.name.contains("platform_merkle_tree.zn") }
+        if (platformMerkleTree != null) {
+            val fileContent = platformMerkleTree.readText()
+            platformMerkleTree.delete()
+            platformMerkleTree.createNewFile()
+
+            val constsTemplate = File("${circuitSourcesBase.resolve(circuitName)}/consts.zn").readText()
+            val search = "GROUP_SIZE: u16 = (\\d+);".toRegex()
+            var total = 3 // notary, timewindow, and parameters group size
+            search.findAll(constsTemplate).forEach {
+                total += it.groupValues[1].toInt()
+            }
+
+            fun isPow2(num: Int) = num and (num - 1) == 0
+            val fullMerkleLeaves = run {
+                var l = total
+                while (!isPow2(l)) {
+                    l++
+                }
+                l
+            }
+            val updatedFileContent = fileContent.replace("\${GROUP_SIZE_PLACEHOLDER}", fullMerkleLeaves.toString())
+            platformMerkleTree.appendBytes(updatedFileContent.toByteArray())
+        }
+    }
+}
+
+task("removeDebugStatements") {
+    circuits?.forEach { circuitName ->
+        File("${mergedCircuitOutput.resolve(circuitName)}/").walk().forEach { file ->
+            // Skip directories
+            if (file.name.contains(".zn")) {
+                val lines = file.readLines()
+                file.delete()
+                file.createNewFile()
+
+                lines.filter { s: String -> !s.contains("dbg!") }.map {
+                    file.appendText("$it\n")
+                }
+            }
+        }
+    }
+}
 
 task("buildCircuits") {
     mustRunAfter("rustfmtCheck")
-    dependsOn("generateMerkleUtils")
-
-    circuits.forEach {
-        outputs.dir(it.circuitRoot)
-        inputs.files(it.orderedModules)
-    }
+    dependsOn("copyZincSources",
+        "generateFloatingPointFromTemplate",
+        "generateMerkleUtils",
+        "generateMain",
+        "generateMerkleFunctionCalls",
+        "removeDebugStatements")
 
     doLast {
-        circuits.forEach {
-            it.build()
+        circuits?.forEach { circuitName ->
+            val circuitPath = File("$mergedCircuitOutputPath/$circuitName")
+            // Create Zargo.toml
+            val zargoFile = File("${circuitPath.absolutePath}/Zargo.toml")
+            zargoFile.writeText(
+"""
+    [circuit]
+    name = "$circuitName"
+    version = "${project.version}"                                
+"""
+            )
 
             // Compile circuit
-            val circuitPath = File(it.circuitRoot)
             exec {
                 workingDir = circuitPath
                 executable = "zargo"
@@ -66,378 +278,155 @@ task("buildCircuits") {
 }
 
 task("rustfmt") {
-    circuits.forEach {
-        outputs.dir(it.circuitRoot)
-        inputs.files(it.orderedModules)
-    }
-
-    doLast {
-        distinctModules
-            .forEach {
+    circuits?.forEach {
+        outputs.dir("${mergedCircuitOutput.resolve(it)}/")
+        outputs.files.forEach { file ->
+            if (file.name.contains(".zn")) {
                 exec {
-                    commandLine("rustfmt", it)
+                    commandLine("rustfmt", file)
                 }
             }
+        }
     }
 }
 
 task("rustfmtCheck") {
     mustRunAfter("generateMerkleUtils")
-
-    circuits.forEach {
-        outputs.dir(it.circuitRoot)
-        inputs.files(it.orderedModules)
-    }
-
-    doLast {
-        distinctModules
-            .forEach {
+    circuits?.forEach {
+        outputs.dir("${mergedCircuitOutput.resolve(it)}/")
+        outputs.files.forEach { file ->
+            if (file.name.contains(".zn")) {
                 exec {
                     commandLine("rustfmt", "--check", it)
                 }
             }
-    }
-}
-
-val merkleLeaves = 9
-task("generateMerkleUtils") {
-    outputs.file(merkleUtilsPath)
-    circuits.forEach {
-        inputs.files(it.orderedModules.filter { !it.contains("merkle_utils.zn") })
-    }
-
-    // #######################################################
-    // It is of UTTER importance to not reformat code snippets
-    // #######################################################
-
-    doLast {
-        fun isPow2(num: Int) = num and (num - 1) == 0
-
-        val fullLeaves = run {
-            var l = merkleLeaves
-            while (!isPow2(l)) {
-                l++
-            }
-            l
         }
-
-        val merkleUtils = File(merkleUtilsPath)
-        merkleUtils.writeText("//! Limited-depth recursion for Merkle tree construction\n")
-        merkleUtils.writeText("//! GENERATED CODE. DO NOT EDIT\n//! Edit it in zinc-platform-sources/build.gradle.kts\n\n")
-
-        merkleUtils.appendText("//! Merkle tree construction for NodeDigestBits")
-        merkleUtils.appendText(
-            """
-fn get_merkle_tree_from_2_node_digests(leaves: [NodeDigestBits; 2]) -> NodeDigestBits {
-    dbg!("Consuming 2 leaves");
-    dbg!("0: {}", NodeDigestDto::from_bits_to_bytes(leaves[0]));
-    dbg!("1: {}", NodeDigestDto::from_bits_to_bytes(leaves[1]));
-    pedersen_to_padded_bits(pedersen(concatenate_node_digests(leaves[0], leaves[1])).0)
-}
-"""
-        )
-
-        var leaves = 4
-
-        do {
-            val levelUp = leaves / 2
-
-            merkleUtils.appendText(
-                """
-fn get_merkle_tree_from_${leaves}_node_digests(leaves: [NodeDigestBits; $leaves]) -> NodeDigestBits {
-    dbg!("Consuming $leaves leaves");
-    let mut new_leaves = [[false; NODE_DIGEST_BITS]; $levelUp];
-    for i in 0..$levelUp {
-        new_leaves[i] = pedersen_to_padded_bits(
-            pedersen(concatenate_node_digests(leaves[2 * i], leaves[2 * i + 1])).0,
-        );
-        dbg!(
-            "{}: {}",                                         // dbg!
-            2 * i,                                            // dbg!
-            NodeDigestDto::from_bits_to_bytes(leaves[2 * i])  // dbg!
-        ); //dbg!
-        dbg!(
-            "{}: {}",                                             // dbg!
-            2 * i + 1,                                            // dbg!
-            NodeDigestDto::from_bits_to_bytes(leaves[2 * i + 1])  // dbg!
-        ); // dbg!
-        dbg!(
-            "Digest: {}",                                     // dbg!
-            NodeDigestDto::from_bits_to_bytes(new_leaves[i])  // dbg!
-        ); // dbg!
-    }
-    dbg!("");
-    get_merkle_tree_from_${levelUp}_node_digests(new_leaves)
-}
-"""
-            )
-            leaves *= 2
-        } while (leaves <= fullLeaves)
-
-        merkleUtils.appendText(
-            "\n/// Merkle tree construction for ComponentGroupLeafDigestBits.\n" +
-                "/// Use it only for the computation of a component sub-Merkle tree from component group leaf hashes."
-        )
-        merkleUtils.appendText(
-            """
-fn get_merkle_tree_from_2_component_group_leaf_digests(
-    leaves: [ComponentGroupLeafDigestBits; 2],
-) -> NodeDigestBits {
-    dbg!("Consuming 2 leaves");
-    dbg!(
-        "0: {}",                                                    // dbg!
-        ComponentGroupLeafDigestDto::from_bits_to_bytes(leaves[0])  // dbg!
-    ); //dbg!
-    dbg!(
-        "1: {}",                                                    // dbg!
-        ComponentGroupLeafDigestDto::from_bits_to_bytes(leaves[1])  // dbg!
-    ); // dbg!
-    pedersen_to_padded_bits(
-        pedersen(concatenate_component_group_leaf_digests(
-            leaves[0], leaves[1],
-        ))
-        .0,
-    )
-}
-"""
-        )
-
-        leaves = 4
-
-        do {
-            val levelUp = leaves / 2
-
-            merkleUtils.appendText(
-                """
-fn get_merkle_tree_from_${leaves}_component_group_leaf_digests(
-    leaves: [ComponentGroupLeafDigestBits; $leaves],
-) -> NodeDigestBits {
-    dbg!("Consuming $leaves leaves");
-    let mut new_leaves = [[false; NODE_DIGEST_BITS]; $levelUp];
-    for i in 0..$levelUp {
-        new_leaves[i] = pedersen_to_padded_bits(
-            pedersen(concatenate_component_group_leaf_digests(
-                leaves[2 * i],
-                leaves[2 * i + 1],
-            ))
-            .0,
-        );
-        dbg!(
-            "{}: {}",                                                       // dbg!
-            2 * i,                                                          // dbg!
-            ComponentGroupLeafDigestDto::from_bits_to_bytes(leaves[2 * i])  // dbg!
-        ); // dbg!
-        dbg!(
-            "{}: {}",                                                           // dbg!
-            2 * i + 1,                                                          // dbg!
-            ComponentGroupLeafDigestDto::from_bits_to_bytes(leaves[2 * i + 1])  // dbg!
-        ); // dbg!
-        dbg!(
-            "Digest: {}",                                                   // dbg!
-            ComponentGroupLeafDigestDto::from_bits_to_bytes(new_leaves[i])  // dbg!
-        ); // dbg!
-    }
-    dbg!("");
-    get_merkle_tree_from_${levelUp}_node_digests(new_leaves)
-}
-"""
-            )
-            leaves *= 2
-        } while (leaves <= fullLeaves)
     }
 }
 
 task("circuits") {
-    dependsOn("generateMerkleUtils", "rustfmtCheck", "buildCircuits")
+    dependsOn("rustfmtCheck", "buildCircuits")
 }
 
-sealed class CommandCircuit(command: String, val absoluteRoot: String) {
-    private val modules = absoluteRoot
-    val circuits = "$absoluteRoot/circuits"
-    val isDbgOn = false
-
-    // Combine modules in a given order,
-    abstract val _orderedModules: List<String>
-    val orderedModules: Set<String>
-        get() = _orderedModules.map { "$absoluteRoot/$it" }.toSet()
-
-    // write the result to this file.
-    val circuitRoot = "$circuits/$command"
-    val circuitPath = "$circuitRoot/src/main.zn"
-
-    // a map where each command has its corresponding consts path
-    val commandConstsMap = mapOf(
-        "create" to "$modules/modules/create/utils/consts.zn",
-        "move" to "$modules/modules/move/utils/consts.zn"
-    )
-
-    class Create(root: String, bigDecimalFiles: List<String>) : CommandCircuit("create", root) {
-        override val _orderedModules = bigDecimalFiles + listOf(
-            "src/main/resources/zinc-platform-source/utils/preamble.zn",
-            "src/main/resources/zinc-platform-source/utils/consts.zn",
-            "modules/create/utils/consts.zn",
-            "src/main/resources/zinc-platform-source/component_group_enum.zn",
-            "src/main/resources/zinc-platform-source/crypto/privacy_salt.zn",
-            "src/main/resources/zinc-platform-source/dto/component_group_leaf_digest_dto.zn",
-            "src/main/resources/zinc-platform-source/dto/node_digest_dto.zn",
-            "src/main/resources/zinc-platform-source/dto/nonce_digest_dto.zn",
-            "src/main/resources/zinc-platform-source/debug/debug_utils.zn",
-            "src/main/resources/zinc-platform-source/utils/crypto_utils.zn",
-            "src/main/resources/zinc-platform-source/crypto/pub_key.zn",
-            "src/main/resources/zinc-platform-source/utils/merkle_utils.zn",
-            "src/main/resources/zinc-platform-source/state_and_ref.zn",
-            "src/main/resources/zinc-platform-source/components/inputs.zn",
-            "src/main/resources/zinc-platform-source/components/outputs.zn",
-            "src/main/resources/zinc-platform-source/components/references.zn",
-            "src/main/resources/zinc-platform-source/components/commands.zn",
-            "src/main/resources/zinc-platform-source/components/attachments.zn",
-            "src/main/resources/zinc-platform-source/components/notary.zn",
-            "src/main/resources/zinc-platform-source/components/time_window.zn",
-            "src/main/resources/zinc-platform-source/components/parameters.zn",
-            "src/main/resources/zinc-platform-source/components/signers.zn",
-            "src/main/resources/zinc-platform-source/zk_prover_transaction.zn",
-            "src/main/resources/zinc-platform-source/utils/utxo_digests.zn",
-            "src/main/resources/zinc-platform-source/merkle_tree.zn",
-            "modules/create/validate/contract_rules.zn",
-            "modules/create/main.zn"
-        )
+// Auxiliary functions
+fun getMerkleTree(templateContents: String, fullMerkleLeaves: Int, digestSnakeCase: String, digestCamelCase: String, digestBits: String): String {
+    var digestMerkleFunctions = ""
+    // Compute the root
+    digestMerkleFunctions +=
+        """
+fn get_merkle_tree_from_2_$digestSnakeCase(leaves: [${digestCamelCase}Bits; 2]) -> ${digestCamelCase}Bits {
+    pedersen_to_padded_bits(pedersen(concatenate_$digestSnakeCase(leaves[0], leaves[1])).0)
+}
+"""
+    if (fullMerkleLeaves > 2) {
+        var leaves = 4
+        do {
+            val levelUp = leaves / 2
+            digestMerkleFunctions += templateContents.replace("\${NUM_LEAVES_PLACEHOLDER}", leaves.toString())
+                .replace("\${DIGEST_TYPE_PLACEHOLDER}", digestSnakeCase)
+                .replace("\${DIGEST_BITS_TYPE_PLACEHOLDER}", "${digestCamelCase}Bits")
+                .replace("\${DIGEST_BITS_PLACEHOLDER}", digestBits)
+                .replace("\${DTO_PLACEHOLDER}", "${digestCamelCase}Dto")
+                .replace("\${LEVEL_UP_PLACEHOLDER}", levelUp.toString())
+            leaves *= 2
+        } while (leaves <= fullMerkleLeaves)
     }
+    return digestMerkleFunctions
+}
 
-    class Move(root: String, bigDecimalFiles: List<String>) : CommandCircuit("move", root) {
-        override val _orderedModules = bigDecimalFiles + listOf(
-            "src/main/resources/zinc-platform-source/utils/preamble.zn",
-            "src/main/resources/zinc-platform-source/utils/consts.zn",
-            "modules/move/utils/consts.zn",
-            "src/main/resources/zinc-platform-source/component_group_enum.zn",
-            "src/main/resources/zinc-platform-source/crypto/privacy_salt.zn",
-            "src/main/resources/zinc-platform-source/dto/component_group_leaf_digest_dto.zn",
-            "src/main/resources/zinc-platform-source/dto/node_digest_dto.zn",
-            "src/main/resources/zinc-platform-source/dto/nonce_digest_dto.zn",
-            "src/main/resources/zinc-platform-source/debug/debug_utils.zn",
-            "src/main/resources/zinc-platform-source/utils/crypto_utils.zn",
-            "src/main/resources/zinc-platform-source/crypto/pub_key.zn",
-            "src/main/resources/zinc-platform-source/utils/merkle_utils.zn",
-            "src/main/resources/zinc-platform-source/state_and_ref.zn",
-            "src/main/resources/zinc-platform-source/components/inputs.zn",
-            "src/main/resources/zinc-platform-source/components/outputs.zn",
-            "src/main/resources/zinc-platform-source/components/references.zn",
-            "src/main/resources/zinc-platform-source/components/commands.zn",
-            "src/main/resources/zinc-platform-source/components/attachments.zn",
-            "src/main/resources/zinc-platform-source/components/notary.zn",
-            "src/main/resources/zinc-platform-source/components/time_window.zn",
-            "src/main/resources/zinc-platform-source/components/parameters.zn",
-            "src/main/resources/zinc-platform-source/components/signers.zn",
-            "src/main/resources/zinc-platform-source/zk_prover_transaction.zn",
-            "src/main/resources/zinc-platform-source/utils/utxo_digests.zn",
-            "src/main/resources/zinc-platform-source/merkle_tree.zn",
-            "modules/move/validate/contract_rules.zn",
-            "modules/move/main.zn"
-        )
-    }
+fun replaceComponentPlaceholders(template: String, componentGroup: String): String {
+    val componentRegex = "${componentGroup.toUpperCase()}_GROUP_SIZE: u16 = (\\d+);".toRegex()
+    val componentGroupSize = componentRegex.find(template)?.groupValues?.get(1)?.toInt()
 
-    private fun getNextPowerOfTwo(value: Int): Int {
-        val highestOneBit = Integer.highestOneBit(value)
-        return if (value == 1) {
-            2
-        } else {
-            highestOneBit shl 1
+    if (componentGroupSize != null) {
+        return when {
+            componentGroupSize > 0 -> {
+                """compute_${componentGroup}_utxo_digests( 
+            witness.transaction.${componentGroup}s.components,
+            witness.${componentGroup}_nonces,
+        )"""
+            }
+            componentGroupSize == 0 -> {
+                """[ComponentGroupLeafDigestDto {
+            bytes: [0; COMPONENT_GROUP_LEAF_DIGEST_BYTES],
+        }; ${componentGroup.toUpperCase()}_GROUP_SIZE]"""
+            }
+            else -> {
+                throw IllegalArgumentException("Negative values are not allowed for ${componentGroup.toUpperCase()}_GROUP_SIZE in consts.zn")
+            }
         }
+    } else {
+        throw IllegalArgumentException("Unknown value for ${componentGroup.toUpperCase()}_GROUP_SIZE in consts.zn")
     }
+}
 
-    // TODO: These functions will be removed once Zinc supports dynamic length arrays.
-    private fun getGroupSize(constsPath: String): Map<String, Int> {
-        val regex = "const[ ]+([A-Z]+)_GROUP_SIZE[a-z,0-9,: ]+=[ ]?([0-9]+)".toRegex()
-
-        return regex.findAll(File(constsPath).readText()).map {
-            val (a, b) = it.destructured
-            a.toLowerCase() to b.toInt()
-        }.toMap()
-    }
-
-    fun <K, V> Map<K, V>.single(predicate: (K, V) -> Boolean) =
-        filter { (k, v) -> predicate(k, v) }.values.single()
-
-    private fun findCorrespondingMerkleTreeFunction(componentPath: String, circuitPath: String): String {
-        val componentGroupSizes = getGroupSize(commandConstsMap.single { command, _ -> circuitPath.contains(command) })
-        val componentGroupName =
-            componentPath.substring(componentPath.indexOf("components/") + 11, componentPath.indexOf(".zn") - 1)
-
-        if (componentGroupSizes.containsKey(componentGroupName)) {
-            val componentGroupSize = componentGroupSizes.getValue(componentGroupName)
-
-            return when {
-                // This condition is executed when there is no element in the component group.
-                // The return value is allOnesHash
-                componentGroupSize == 0 -> {
-                    ("""
+fun callAppropriateMerkleTreeFunction(componentGroupSize: Int?, fileContent: String): String {
+    return if (componentGroupSize != null) {
+        when {
+            // This condition is executed when there is no element in the component group.
+            // The return value is allOnesHash
+            componentGroupSize == 0 -> {
+                fileContent.replace(
+                    "// ### CALL APPROPRIATE MERKLE TREE FUNCTION ###",
+                    """
         // Return all ones hash
         [true; NODE_DIGEST_BITS]
-        """)
-                }
-                // This condition is executed when the defined group size is an exact power of 2.
-                // The return value is the merkle tree function that corresponds to the group size.
-                componentGroupSize % 2 == 0 -> {
-                    ("""
+        """
+                ).replace("\${GROUP_SIZE_PLACEHOLDER}", "2")
+            }
+            // This condition is executed when the defined group size is an exact power of 2.
+            // The return value is the merkle tree function that corresponds to the group size.
+            componentGroupSize % 2 == 0 -> {
+                fileContent.replace(
+                    "// ### CALL APPROPRIATE MERKLE TREE FUNCTION ###",
+                    """
         let component_leaf_hashes = compute_leaf_hashes(this, privacy_salt);
-        
+
         get_merkle_tree_from_${componentGroupSize}_component_group_leaf_digests(component_leaf_hashes)
-        """)
-                }
-                // This condition is executed when the defined group size is not a power of 2.
-                // The function finds the next power of 2 and adds padded values to the group.
-                // The return value is the merkle tree function that corresponds to the padded group size.
-                else -> {
-                    val paddedGroupSize = getNextPowerOfTwo(componentGroupSize)
-                    ("""
+        """
+                ).replace("\${GROUP_SIZE_PLACEHOLDER}", componentGroupSize.toString())
+            }
+            // This condition is executed when the defined group size is not a power of 2.
+            // The function finds the next power of 2 and adds padded values to the group.
+            // The return value is the merkle tree function that corresponds to the padded group size.
+            else -> {
+                val paddedGroupSize = getNextPowerOfTwo(componentGroupSize)
+                fileContent.replace(
+                    "// ### CALL APPROPRIATE MERKLE TREE FUNCTION ###",
+                    """
         let component_leaf_hashes = compute_leaf_hashes(this, privacy_salt);
-        
+
         let mut padded_leaves = [[false; COMPONENT_GROUP_LEAF_DIGEST_BITS]; $paddedGroupSize];
         for i in 0..$componentGroupSize {
             padded_leaves[i] = component_leaf_hashes[i];
         }
-        
+
         get_merkle_tree_from_${paddedGroupSize}_component_group_leaf_digests(padded_leaves)
-        """)
-                }
+        """
+                ).replace("\${GROUP_SIZE_PLACEHOLDER}", paddedGroupSize.toString())
             }
         }
+    } else {
         // This condition is executed when there is no component group size defined.
         // It is possible for notary, timeWindow, parameters groups
         // In that case, we call Merkle tree function for 2 with padded leaves
-        return ("""
+        fileContent.replace(
+            "// ### CALL APPROPRIATE MERKLE TREE FUNCTION ###",
+            """
         let mut padded_leaves = [[false; COMPONENT_GROUP_LEAF_DIGEST_BITS]; 2];
         padded_leaves[0] = component_leaf_hash;
-        
+
         get_merkle_tree_from_2_component_group_leaf_digests(padded_leaves)
-        """)
+        """
+        ).replace("\${GROUP_SIZE_PLACEHOLDER}", "2")
     }
+}
 
-    fun build() {
-        val circuit = File(circuitPath)
-        circuit.parentFile?.mkdirs() // Make sure the parent path for the circuit exists.
-        circuit.writeText("//! Combined circuit\n//! GENERATED CODE. DO NOT EDIT\n//! Edit a corresponding constituent\n\n")
-        orderedModules
-            .filter {
-                // Remove modules with the debug functionality if isDbgOn is set to false.
-                !it.contains("$modules/src/main/resources/zinc-platform-source/debug") || isDbgOn
-            }
-            .map {
-                val part = File(it)
-
-                circuit.appendText("//!  IN ==== $it\n")
-
-                part.readLines()
-                    .forEach { line ->
-                        if (line.contains("// ### CALL APPROPRIATE MERKLE TREE FUNCTION ###")) {
-                            circuit.appendText(findCorrespondingMerkleTreeFunction(it, circuitPath) + "\n")
-                        } else {
-                            if (isDbgOn || !line.contains("dbg!")) {
-                                circuit.appendText("$line\n")
-                            }
-                        }
-                    }
-
-                circuit.appendText("//! OUT ==== $it\n\n")
-            }
+fun getNextPowerOfTwo(value: Int): Int {
+    val highestOneBit = Integer.highestOneBit(value)
+    return if (value == 1) {
+        2
+    } else {
+        highestOneBit shl 1
     }
 }
