@@ -68,31 +68,29 @@ use std::crypto::pedersen;
             val fullMerkleLeaves = getFullMerkleTreeSize(constsTemplate)
             targetFile.appendText(
                 getMerkleTree(
-                    templateContents, fullMerkleLeaves, digestType = "node_digests",
-                    digestBitsType = "NodeDigestBits",
-                    digestBits = "NODE_DIGEST_BITS",
-                    dto = "NodeDigestDto"
+                    templateContents, fullMerkleLeaves, digestSnakeCase = "node_digests",
+                    digestCamelCase = "NodeDigest",
+                    digestBits = "NODE_DIGEST_BITS"
                 )
             )
 
             targetFile.appendText(
                 getMerkleTree(
-                    templateContents, fullMerkleLeaves, digestType = "component_group_leaf_digests",
-                    digestBitsType = "ComponentGroupLeafDigestBits",
-                    digestBits = "COMPONENT_GROUP_LEAF_DIGEST_BITS",
-                    dto = "ComponentGroupLeafDigestDto"
+                    templateContents, fullMerkleLeaves, digestSnakeCase = "component_group_leaf_digests",
+                    digestCamelCase = "ComponentGroupLeafDigest",
+                    digestBits = "COMPONENT_GROUP_LEAF_DIGEST_BITS"
                 )
             )
         }
     }
 
-    private fun getMerkleTree(templateContents: String, fullMerkleLeaves: Int, digestType: String, digestBitsType: String, digestBits: String, dto: String): String {
+    private fun getMerkleTree(templateContents: String, fullMerkleLeaves: Int, digestSnakeCase: String, digestCamelCase: String, digestBits: String): String {
         var digestMerkleFunctions = ""
         // Compute the root
         digestMerkleFunctions +=
             """
-fn get_merkle_tree_from_2_$digestType(leaves: [$digestBitsType; 2]) -> $digestBitsType {
-    pedersen_to_padded_bits(pedersen(concatenate_$digestType(leaves[0], leaves[1])).0)
+fn get_merkle_tree_from_2_$digestSnakeCase(leaves: [${digestCamelCase}Bits; 2]) -> ${digestCamelCase}Bits {
+    pedersen_to_padded_bits(pedersen(concatenate_$digestSnakeCase(leaves[0], leaves[1])).0)
 }
 """
         if (fullMerkleLeaves > 2) {
@@ -100,10 +98,10 @@ fn get_merkle_tree_from_2_$digestType(leaves: [$digestBitsType; 2]) -> $digestBi
             do {
                 val levelUp = leaves / 2
                 digestMerkleFunctions += templateContents.replace("\${NUM_LEAVES_PLACEHOLDER}", leaves.toString())
-                    .replace("\${DIGEST_TYPE_PLACEHOLDER}", digestType)
-                    .replace("\${DIGEST_BITS_TYPE_PLACEHOLDER}", digestBitsType)
+                    .replace("\${DIGEST_TYPE_PLACEHOLDER}", digestSnakeCase)
+                    .replace("\${DIGEST_BITS_TYPE_PLACEHOLDER}", "${digestCamelCase}Bits")
                     .replace("\${DIGEST_BITS_PLACEHOLDER}", digestBits)
-                    .replace("\${DTO_PLACEHOLDER}", dto)
+                    .replace("\${DTO_PLACEHOLDER}", "${digestCamelCase}Dto")
                     .replace("\${LEVEL_UP_PLACEHOLDER}", levelUp.toString())
                 leaves *= 2
             } while (leaves <= fullMerkleLeaves)

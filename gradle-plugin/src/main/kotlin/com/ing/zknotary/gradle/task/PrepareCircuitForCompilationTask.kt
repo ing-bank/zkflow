@@ -45,31 +45,28 @@ abstract class PrepareCircuitForCompilationTask : DefaultTask() {
     private fun findCorrespondingMerkleTreeFunctionForComponentGroup() {
         val extension = project.zkNotaryExtension
         project.circuitNames?.forEach { circuitName ->
-            File("${extension.mergedCircuitOutputPath.resolve(circuitName)}/").walk().forEach { file ->
-                // Skip directories
-                if (file.name.contains(".zn")) {
-                    val fileContent = file.readText()
-                    if (fileContent.contains("// ### CALL APPROPRIATE MERKLE TREE FUNCTION ###")) {
-                        // Find which component group
-                        val componentRegex = "struct (\\w+)ComponentGroup".toRegex()
-                        var componentGroupName = componentRegex.find(fileContent)?.groupValues?.get(1)
+            val componentGroupFiles = File("${extension.mergedCircuitOutputPath.resolve(circuitName)}/").walk().filter {
+                it.name.contains("platform_components")
+            }
+            componentGroupFiles.forEach { file ->
+                // Filter component group files
 
-                        if (componentGroupName != null) {
-                            if (componentGroupName.endsWith("s")) {
-                                componentGroupName = componentGroupName.dropLast(1)
-                            }
-                            val constsTemplate = File("${extension.circuitSourcesBasePath.resolve(circuitName)}/consts.zn").readText()
-                            val componentGroupSize = getMerkleTreeSizeForComponent(componentGroupName, constsTemplate)
+                val fileContent = file.readText()
+                // Find which component group
+                val componentRegex = "struct (\\w+)(ComponentGroup)".toRegex()
+                var componentGroupName = componentRegex.find(fileContent)?.groupValues?.get(1)
 
-                            // Find the size of the component group in consts.zn
-                            file.delete()
-                            file.createNewFile()
-                            val updatedFileContent = callAppropriateMerkleTreeFunction(componentGroupSize, fileContent)
+                if (componentGroupName?.endsWith("s")!!) componentGroupName = componentGroupName.dropLast(1)
 
-                            file.appendBytes(updatedFileContent.toByteArray())
-                        }
-                    }
-                }
+                val constsTemplate = File("${extension.circuitSourcesBasePath.resolve(circuitName)}/consts.zn").readText()
+                val componentGroupSize = getMerkleTreeSizeForComponent(componentGroupName, constsTemplate)
+
+                // Find the size of the component group in consts.zn
+                file.delete()
+                file.createNewFile()
+                val updatedFileContent = callAppropriateMerkleTreeFunction(componentGroupSize, fileContent)
+
+                file.appendBytes(updatedFileContent.toByteArray())
             }
         }
     }
