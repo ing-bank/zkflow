@@ -1,11 +1,13 @@
 package com.ing.zknotary.common.transactions
 
-import com.ing.zknotary.common.dactyloscopy.Dactyloscopist
+import com.ing.zknotary.common.contracts.ZKCommandData
 import net.corda.core.contracts.ComponentGroupEnum
+import net.corda.core.crypto.DigestService
 import net.corda.core.crypto.MerkleTree
 import net.corda.core.crypto.SecureHash
 import net.corda.core.serialization.CordaSerializable
 import net.corda.core.transactions.ComponentGroup
+import net.corda.core.transactions.FilteredTransaction
 import net.corda.core.transactions.TraversableTransaction
 import net.corda.core.transactions.WireTransaction
 import java.security.PublicKey
@@ -14,18 +16,8 @@ import java.util.function.Predicate
 @Suppress("LongParameterList")
 @CordaSerializable
 class ZKVerifierTransaction(
-    wtx: WireTransaction,
-    val proof: ByteArray
-) : TraversableTransaction(createComponentGroups(wtx), wtx.digestService) {
-
-    // Since we don't store Command itself we need to get signers from it. Should be removed when/if we use Command.
-    val signers: List<PublicKey> = commands.single().signers
-
-    // TODO: we should add some information that the verifier can use to select the correct verifier key?
-    // Or do we just attach the hash of the verifier key?
-    // With that they can select the correct key, and also know which circuit they are verifying.
-    // Perhaps the command?
-    val circuitId: SecureHash = wtx.zkCommandData().circuitId()
+    val proof: ByteArray,
+    val signers: List<PublicKey>,
 
     // Outputs are not visible in a normal FilteredTransaction, so we 'leak' some info here: the amount of outputs.
     // Outputs are the leaf hashes of the outputs component group. This is the only group where:
@@ -37,69 +29,88 @@ class ZKVerifierTransaction(
     //     they provide this list of output hashes (for the inputs being consumed) as public input. The circuit will enforce
     //     that for each input contents from the witness,  when combined with their nonce, should hash to the same hash as
     //     provided for that input in the public input.
-    val outputHashes: List<SecureHash>
+    val outputHashes: List<SecureHash>,
 
-    lateinit var groupHashes: List<SecureHash>
+    /**
+     * This value will contain as many hashes as there are component groups,
+     * otherwise fail.
+     * Order of the elements corresponds to the order groups listed in ComponentGroupEnum.
+     *
+     * TODO: when we revert back to the normal WireTransaction instead of ZKProverTransaction,
+     * this will become 'dynamic' again to support unknown groups. This should be reflected in Zinc and in
+     * ZKVerifierTransaction
+     */
+    val groupHashes: List<SecureHash>,
+
+    digestService: DigestService,
+
+    componentGroups: List<ComponentGroup>
+
+) : TraversableTransaction(componentGroups, digestService) {
+
+    // TODO: we should add some information that the verifier can use to select the correct verifier key?
+    // Or do we just attach the hash of the verifier key?
+    // With that they can select the correct key, and also know which circuit they are verifying.
+    // Perhaps the command?
+    val circuitId: SecureHash
+        get() = (commands.single().value as ZKCommandData).circuitId()
 
     override val id: SecureHash by lazy { MerkleTree.getMerkleTree(groupHashes, digestService).hash }
 
-    init {
+    fun verifyOutputsGroupHash() {
 
-        // We turn wtx into ftx to get access to nonces and hashes, they are internal in wtx but visible in ftx
-        val ftx = wtx.buildFilteredTransaction(Predicate { true })
+        // To prevent Corda's automatic promotion of a single leaf to the Merkle root,
+        // ensure, there are at least 2 elements.
+        // See, https://github.com/corda/corda/issues/6680
+        val paddedOutputHashes = outputHashes // TODO .pad(2, digestService.zeroHash)
 
-        // IMPORTANT: this should only include the nonces for the components that are visible in the ZKVerifierTransaction
-        val componentNonces = ftx.filteredComponentGroups.filter {
-            it.groupIndex in listOf(
-                ComponentGroupEnum.INPUTS_GROUP.ordinal,
-                ComponentGroupEnum.REFERENCES_GROUP.ordinal,
-                ComponentGroupEnum.NOTARY_GROUP.ordinal,
-                ComponentGroupEnum.TIMEWINDOW_GROUP.ordinal,
-                ComponentGroupEnum.PARAMETERS_GROUP.ordinal,
-                ComponentGroupEnum.SIGNERS_GROUP.ordinal
-            )
-        }.map { it.groupIndex to it.nonces }.toMap()
-
-        outputHashes = availableComponentHashes(ComponentGroupEnum.OUTPUTS_GROUP.ordinal, wtx, ftx)
-        groupHashes = ftx.groupHashes
-
-        // Nonces for the outputs should NEVER be present
-        require(!componentNonces.containsKey(ComponentGroupEnum.OUTPUTS_GROUP.ordinal))
-
-        require(groupHashes.size == ComponentGroupEnum.values().size) { "There should be a group hash for each ComponentGroupEnum value" }
-        require(inputs.size == componentNonces[ComponentGroupEnum.INPUTS_GROUP.ordinal]?.size ?: 0) { "Number of inputs and input nonces should be equal" }
-        require(references.size == componentNonces[ComponentGroupEnum.REFERENCES_GROUP.ordinal]?.size ?: 0) { "Number of references (${references.size}) and reference nonces (${componentNonces[ComponentGroupEnum.REFERENCES_GROUP.ordinal]?.size}) should be equal" }
-
-        require(signers.size == componentNonces[ComponentGroupEnum.SIGNERS_GROUP.ordinal]?.size ?: 0) { "Number of signers and signer nonces should be equal" }
-
-        if (networkParametersHash != null) require(componentNonces[ComponentGroupEnum.PARAMETERS_GROUP.ordinal]?.size == 1) { "If there is a networkParametersHash, there should be a networkParametersHash nonce" }
-        if (timeWindow != null) require(componentNonces[ComponentGroupEnum.TIMEWINDOW_GROUP.ordinal]?.size == 1) { "If there is a timeWindow, there should be exactly one timeWindow nonce" }
+        require(
+            MerkleTree.getMerkleTree(
+                paddedOutputHashes,
+                digestService
+            ).hash == groupHashes[ComponentGroupEnum.OUTPUTS_GROUP.ordinal]
+        )
     }
 
     override fun hashCode(): Int = id.hashCode()
     override fun equals(other: Any?) = if (other !is ZKVerifierTransaction) false else (this.id == other.id)
 
     companion object {
-        private fun createComponentGroups(wtx: WireTransaction): List<ComponentGroup> =
-            mutableListOf<ComponentGroup>().apply {
-                addGroups(
-                    mapOf(
-                        ComponentGroupEnum.INPUTS_GROUP to
-                            wtx.inputs.map { Dactyloscopist.identify(it) },
-                        ComponentGroupEnum.REFERENCES_GROUP to
-                            wtx.references.map { Dactyloscopist.identify(it) },
-                        ComponentGroupEnum.NOTARY_GROUP to
-                            listOf(Dactyloscopist.identify(wtx.notary ?: error("Notary should be set"))),
-                        ComponentGroupEnum.TIMEWINDOW_GROUP to
-                            if (wtx.timeWindow != null) listOf(Dactyloscopist.identify(wtx.timeWindow!!)) else emptyList(), // TODO stub instead of empty list?
-                        ComponentGroupEnum.SIGNERS_GROUP to
-                            wtx.commands.single().signers.map { Dactyloscopist.identify(it) },
-                        ComponentGroupEnum.PARAMETERS_GROUP to
-                            listOf(Dactyloscopist.identify(wtx.networkParametersHash ?: error("Network parameters should be set"))),
-                        ComponentGroupEnum.COMMANDS_GROUP to
-                            wtx.commands.map { Dactyloscopist.identify(it) }
-                    )
+
+        fun new(wtx: WireTransaction, proof: ByteArray): ZKVerifierTransaction {
+
+            val ftx = FilteredTransaction.buildFilteredTransaction(wtx, Predicate { true })
+
+            return ZKVerifierTransaction(
+                proof = proof,
+                signers = wtx.commands.single().signers,
+                outputHashes = outputHashes(wtx, ftx),
+                groupHashes = ftx.groupHashes,
+                digestService = wtx.digestService,
+                componentGroups = createComponentGroups(wtx)
+            )
+        }
+
+        private fun createComponentGroups(wtx: WireTransaction): List<ComponentGroup> {
+
+            val ftx = wtx.buildFilteredTransaction(Predicate { true })
+
+            return ftx.filteredComponentGroups.filter {
+                it.groupIndex in listOf(
+                    ComponentGroupEnum.INPUTS_GROUP.ordinal,
+                    ComponentGroupEnum.REFERENCES_GROUP.ordinal,
+                    ComponentGroupEnum.NOTARY_GROUP.ordinal,
+                    ComponentGroupEnum.TIMEWINDOW_GROUP.ordinal,
+                    ComponentGroupEnum.PARAMETERS_GROUP.ordinal,
+                    ComponentGroupEnum.SIGNERS_GROUP.ordinal,
+                    ComponentGroupEnum.COMMANDS_GROUP.ordinal
                 )
             }
+        }
+
+        private fun outputHashes(wtx: WireTransaction, ftx: FilteredTransaction): List<SecureHash> {
+            val nonces = ftx.filteredComponentGroups.find { it.groupIndex == ComponentGroupEnum.OUTPUTS_GROUP.ordinal }!!.nonces
+            return wtx.componentGroups.find { it.groupIndex == ComponentGroupEnum.OUTPUTS_GROUP.ordinal }!!.components.mapIndexed { internalIndex, internalIt -> wtx.digestService.componentHash(nonces[internalIndex], internalIt) }
+        }
     }
 }

@@ -35,7 +35,7 @@ abstract class ZKTransactionCordaService(val serviceHub: ServiceHub) : ZKTransac
         val zkService = zkServiceForTx(circuitId)
         val proof = zkService.prove(witness)
 
-        return ZKVerifierTransaction(wtx, proof)
+        return ZKVerifierTransaction.new(wtx, proof)
     }
 
     abstract fun zkServiceForTx(circuitId: SecureHash): ZKService

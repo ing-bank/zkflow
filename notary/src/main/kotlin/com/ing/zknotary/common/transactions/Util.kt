@@ -16,7 +16,6 @@ import net.corda.core.identity.Party
 import net.corda.core.internal.lazyMapped
 import net.corda.core.node.NetworkParameters
 import net.corda.core.node.ServicesForResolution
-import net.corda.core.transactions.FilteredTransaction
 import net.corda.core.transactions.LedgerTransaction
 import net.corda.core.transactions.WireTransaction
 import net.corda.core.utilities.loggerFor
@@ -64,11 +63,6 @@ fun WireTransaction.toWitness(
     val referenceNonces = ftx.filteredComponentGroups.find { it.groupIndex == ComponentGroupEnum.REFERENCES_GROUP.ordinal }?.nonces ?: emptyList()
 
     return Witness(this, inputStates, referenceStates, inputNonces, referenceNonces)
-}
-
-fun availableComponentHashes(groupIndex: Int, wtx: WireTransaction, ftx: FilteredTransaction): List<SecureHash> {
-    val nonces = ftx.filteredComponentGroups.find { it.groupIndex == ComponentGroupEnum.OUTPUTS_GROUP.ordinal }!!.nonces
-    return wtx.componentGroups[groupIndex].components.mapIndexed { internalIndex, internalIt -> wtx.digestService.componentHash(nonces[internalIndex], internalIt) }
 }
 
 @Throws(AttachmentResolutionException::class, TransactionResolutionException::class)

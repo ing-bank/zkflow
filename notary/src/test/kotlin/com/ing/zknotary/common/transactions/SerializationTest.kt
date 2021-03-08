@@ -32,7 +32,7 @@ class SerializationTest {
     private val wtx = ledger.createIssuanceWtx(owner = alice, value = 1)
 
     // build filtered ZKVerifierTransaction
-    private val vtx = ZKVerifierTransaction(wtx, ByteArray(0))
+    private val vtx = ZKVerifierTransaction.new(wtx, ByteArray(0))
 
     @Test
     fun `Serialize public input to Zinc`() {
