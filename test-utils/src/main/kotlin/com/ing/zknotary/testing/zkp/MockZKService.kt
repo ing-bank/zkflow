@@ -1,7 +1,6 @@
 package com.ing.zknotary.testing.zkp
 
-import com.ing.zknotary.common.crypto.blake2s256
-import com.ing.zknotary.common.dactyloscopy.Dactyloscopist
+import com.ing.zknotary.common.crypto.zinc
 import com.ing.zknotary.common.zkp.PublicInput
 import com.ing.zknotary.common.zkp.Witness
 import com.ing.zknotary.common.zkp.ZKService
@@ -63,7 +62,7 @@ public class MockZKService : ZKService {
             }
 
             val calculatedLeafHashFromWitness =
-                DigestService.blake2s256.hash(nonceFromWitness.bytes + Dactyloscopist.identify(state))
+                DigestService.zinc.componentHash(nonceFromWitness, state.serialize())
 
             if (leafHashFromPublicInput != calculatedLeafHashFromWitness) error(
                 "Calculated leaf hash ($calculatedLeafHashFromWitness} for input $index of tx ${witness.transaction.id} does " +
@@ -85,7 +84,7 @@ public class MockZKService : ZKService {
             }
 
             val calculatedLeafHashFromWitness =
-                DigestService.blake2s256.hash(nonceFromWitness.bytes + Dactyloscopist.identify(state))
+                DigestService.zinc.componentHash(nonceFromWitness, state.serialize())
 
             if (leafHashFromPublicreference != calculatedLeafHashFromWitness) error(
                 "Calculated leaf hash ($calculatedLeafHashFromWitness} for reference $index of tx ${witness.transaction.id} does " +

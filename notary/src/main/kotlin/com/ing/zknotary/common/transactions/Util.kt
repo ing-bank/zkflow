@@ -1,12 +1,10 @@
 package com.ing.zknotary.common.transactions
 
 import com.ing.zknotary.common.contracts.ZKCommandData
-import com.ing.zknotary.common.zkp.Witness
 import net.corda.core.DeleteForDJVM
 import net.corda.core.contracts.Attachment
 import net.corda.core.contracts.AttachmentResolutionException
 import net.corda.core.contracts.CommandWithParties
-import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.TransactionResolutionException
@@ -18,9 +16,7 @@ import net.corda.core.node.NetworkParameters
 import net.corda.core.node.ServicesForResolution
 import net.corda.core.transactions.LedgerTransaction
 import net.corda.core.transactions.WireTransaction
-import net.corda.core.utilities.loggerFor
 import java.security.PublicKey
-import java.util.function.Predicate
 import kotlin.math.max
 
 @DeleteForDJVM
@@ -48,22 +44,6 @@ fun WireTransaction.prettyPrint(): String {
 }
 
 fun WireTransaction.zkCommandData() = commands.single().value as ZKCommandData
-
-fun WireTransaction.toWitness(
-    inputStates: List<StateAndRef<ContractState>>,
-    referenceStates: List<StateAndRef<ContractState>>
-): Witness {
-    loggerFor<WireTransaction>().debug("Creating Witness from ProverTx")
-
-    // We turn wtx into ftx to get access to nonces, they are internal in wtx but visible in ftx
-    val ftx = buildFilteredTransaction(Predicate { true })
-
-    // Collect the nonces for the outputs pointed to by the inputs and references.
-    val inputNonces = ftx.filteredComponentGroups.find { it.groupIndex == ComponentGroupEnum.INPUTS_GROUP.ordinal }?.nonces ?: emptyList()
-    val referenceNonces = ftx.filteredComponentGroups.find { it.groupIndex == ComponentGroupEnum.REFERENCES_GROUP.ordinal }?.nonces ?: emptyList()
-
-    return Witness(this, inputStates, referenceStates, inputNonces, referenceNonces)
-}
 
 @Throws(AttachmentResolutionException::class, TransactionResolutionException::class)
 @DeleteForDJVM

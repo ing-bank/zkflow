@@ -2,11 +2,11 @@ package com.ing.zknotary.common.zkp
 
 import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
 import com.ing.zknotary.common.transactions.ZKVerifierTransaction
-import com.ing.zknotary.common.transactions.toWitness
 import com.ing.zknotary.common.transactions.zkCommandData
 import com.ing.zknotary.node.services.ServiceNames
 import com.ing.zknotary.node.services.ZKWritableVerifierTransactionStorage
 import com.ing.zknotary.node.services.getCordaServiceFromConfig
+import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.StateRef
@@ -14,6 +14,7 @@ import net.corda.core.crypto.SecureHash
 import net.corda.core.node.ServiceHub
 import net.corda.core.serialization.SingletonSerializeAsToken
 import net.corda.core.transactions.WireTransaction
+import java.util.function.Predicate
 
 abstract class ZKTransactionCordaService(val serviceHub: ServiceHub) : ZKTransactionService, SingletonSerializeAsToken() {
 
@@ -25,7 +26,10 @@ abstract class ZKTransactionCordaService(val serviceHub: ServiceHub) : ZKTransac
         references: List<StateAndRef<ContractState>>
     ): ZKVerifierTransaction {
 
-        val witness = wtx.toWitness(inputStates = inputs, referenceStates = references)
+        val inputNonces = collectNonces(wtx.inputs)
+        val referenceNonces = collectNonces(wtx.references)
+
+        val witness = Witness(wtx, inputs, references, inputNonces, referenceNonces)
 
         // TODO
         // This construction of the circuit id is temporary and will be replaced in the subsequent work.
@@ -102,6 +106,19 @@ abstract class ZKTransactionCordaService(val serviceHub: ServiceHub) : ZKTransac
              *   that the verifier is trying to verify. It also proves that the stateRefs consumed are indeed part of the
              *   transaction identified by the instance.
              */
+        }
+    }
+
+    private fun collectNonces(stateRefs: List<StateRef>): List<SecureHash> {
+
+        return stateRefs.map { stateRef ->
+            val prevStx = serviceHub.validatedTransactions.getTransaction(stateRef.txhash)
+                ?: error("Plaintext tx not found for hash ${stateRef.txhash}")
+
+            val ftx = prevStx.buildFilteredTransaction(Predicate { true })
+            val nonces = ftx.filteredComponentGroups.find { it.groupIndex == ComponentGroupEnum.OUTPUTS_GROUP.ordinal }!!.nonces
+
+            nonces[stateRef.index]
         }
     }
 }
