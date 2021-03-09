@@ -89,10 +89,10 @@ task("circuits") {
             zargoFile.createNewFile()
             zargoFile.writeText(
                 """
- [circuit]
- name = "$circuitName"
- version = "${project.version}"
- """
+    [circuit]
+    name = "$circuitName"
+    version = "${project.version}"                                
+"""
             )
 
             // Compile circuit

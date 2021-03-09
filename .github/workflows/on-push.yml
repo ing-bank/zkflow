@@ -55,18 +55,24 @@ jobs:
           echo "$GITHUB_WORKSPACE/zinc-linux/" >> $GITHUB_PATH
 
       - name: Build with Gradle
-        run: ./gradlew check test slowTest testReport publishToMavenLocal --stacktrace --info --build-cache
+        run: ./gradlew check test slowTest testReport --stacktrace --info --build-cache
         env:
           GITHUB_USERNAME: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build with Gradle
-        run: ../gradlew build
-        working-dir: zkdapp-tester
+      - name: Init new circuit and Process Zinc sources with Gradle
+        run: ../gradlew processZincSources createZincDirectoriesForInputCommand --command test-command
+        working-directory: zkdapp-tester
         env:
           GITHUB_USERNAME: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Compile test-command circuit with Zargo
+        run: zargo build -v
+        working-directory: zkdapp-tester/build/zinc/test-command
+        env:
+          GITHUB_USERNAME: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload JUnit test report
         if: always()
