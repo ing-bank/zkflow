@@ -1,6 +1,5 @@
 package com.ing.zknotary.common.zkp
 
-import com.ing.zknotary.common.serializer.ZincSerializationFactory
 import net.corda.core.serialization.serialize
 import java.io.File
 import java.io.IOException
@@ -110,14 +109,14 @@ class ZincZKService(
     override fun prove(witness: Witness): ByteArray {
         // It is ok to hardcode the ZincSerializationFactory here, as it is the ONLY way
         // this should be serialized in here. Makes no sense to make it injectable.
-        val witnessJson = witness.serialize(ZincSerializationFactory).bytes
+        val witnessJson = witness.serialize(TODO()).bytes
         return prove(witnessJson)
     }
 
     override fun verify(proof: ByteArray, publicInput: PublicInput) {
         // It is ok to hardcode the ZincSerializationFactory here, as it is the ONLY way
         // this should be serialized in here. Makes no sense to make it injectable.
-        val publicInputJson = publicInput.serialize(ZincSerializationFactory).bytes
+        val publicInputJson = publicInput.serialize(TODO()).bytes
         return verify(proof, publicInputJson)
     }
 

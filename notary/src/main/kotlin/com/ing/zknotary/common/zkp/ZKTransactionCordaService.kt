@@ -1,5 +1,6 @@
 package com.ing.zknotary.common.zkp
 
+import com.ing.zknotary.common.contracts.ZKCommandData
 import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
 import com.ing.zknotary.common.transactions.ZKVerifierTransaction
 import com.ing.zknotary.common.transactions.zkCommandData
@@ -31,25 +32,20 @@ abstract class ZKTransactionCordaService(val serviceHub: ServiceHub) : ZKTransac
 
         val witness = Witness(wtx, inputs, references, inputNonces, referenceNonces)
 
-        // TODO
-        // This construction of the circuit id is temporary and will be replaced in the subsequent work.
-        // The proper id must identify circuit and its version.
-        val circuitId = wtx.zkCommandData().circuitId()
-
-        val zkService = zkServiceForTx(circuitId)
+        val zkService = zkServiceForTx(wtx.zkCommandData())
         val proof = zkService.prove(witness)
 
         return ZKVerifierTransaction.new(wtx, proof)
     }
 
-    abstract fun zkServiceForTx(circuitId: SecureHash): ZKService
+    abstract fun zkServiceForTx(command: ZKCommandData): ZKService
 
     override fun verify(stx: SignedZKVerifierTransaction, checkSufficientSignatures: Boolean) {
 
         val tx = stx.tx
 
         // Check proof
-        zkServiceForTx(tx.circuitId).verify(tx.proof, calculatePublicInput(tx))
+        zkServiceForTx(tx.zkCommandData).verify(tx.proof, calculatePublicInput(tx))
 
         // Check signatures
         if (checkSufficientSignatures) {

@@ -112,7 +112,7 @@ class ZKCollectSignaturesFlow @JvmOverloads constructor(
         // Usually just the Initiator and possibly an oracle would have signed at this point.
         val myKeys: Iterable<PublicKey> = myOptionalKeys ?: listOf(ourIdentity.owningKey)
         val signed = vtx.sigs.map { it.by }
-        val notSigned = (vtx.tx.signers - signed).toSet()
+        val notSigned = (vtx.tx.requiredSigningKeys - signed).toSet()
 
         // One of the signatures collected so far MUST be from the initiator of this flow.
         require(vtx.sigs.any { it.by in myKeys }) {
@@ -401,7 +401,7 @@ abstract class ZKSignTransactionFlow @JvmOverloads constructor(
     @Suspendable
     private fun checkSignatures(stx: SignedZKVerifierTransaction) {
         val signed = stx.sigs.map { it.by }
-        val allSigners = stx.tx.signers
+        val allSigners = stx.tx.requiredSigningKeys
         val notSigned = allSigners - signed
         stx.verifySignaturesExcept(notSigned)
     }
@@ -432,7 +432,7 @@ abstract class ZKSignTransactionFlow @JvmOverloads constructor(
 
     @Suspendable
     private fun checkMySignaturesRequired(stx: SignedZKVerifierTransaction, signingKeys: Iterable<PublicKey>) {
-        require(signingKeys.all { it in stx.tx.signers }) {
+        require(signingKeys.all { it in stx.tx.requiredSigningKeys }) {
             "A signature was requested for a key that isn't part of the required signing keys for transaction ${stx.id}"
         }
     }

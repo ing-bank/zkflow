@@ -4,17 +4,15 @@ import com.ing.zknotary.common.contracts.ZKCommandData
 import com.ing.zknotary.node.services.ConfigParams
 import com.ing.zknotary.node.services.getLongFromConfig
 import com.ing.zknotary.node.services.getStringFromConfig
-import net.corda.core.crypto.SecureHash
 import net.corda.core.node.AppServiceHub
 import net.corda.core.node.services.CordaService
 import java.io.File
-import java.nio.ByteBuffer
 import java.time.Duration
 
 @CordaService
 class ZincZKTransactionService(services: AppServiceHub) : ZKTransactionCordaService(services) {
 
-    private val zkServices: Map<SecureHash, ZincZKService>
+    private val zkServices: Map<ZKCommandData, ZincZKService>
 
     init {
 
@@ -37,16 +35,12 @@ class ZincZKTransactionService(services: AppServiceHub) : ZKTransactionCordaServ
 
             val zkService = ZincZKService(circuitFolder.absolutePath, artifactFolder.absolutePath, buildTimeout, setupTimeout, provingTimeout, verificationTimeout)
 
-            circuitId(it.id) to zkService
+            it to zkService
         }.toMap()
     }
 
-    private fun circuitId(commandId: Int): SecureHash {
-        return SecureHash.Companion.sha256(ByteBuffer.allocate(4).putInt(commandId).array())
-    }
-
-    override fun zkServiceForTx(circuitId: SecureHash): ZKService {
-        return zkServices[circuitId] ?: throw IllegalArgumentException("ZK Service not found for circuitId $circuitId")
+    override fun zkServiceForTx(command: ZKCommandData): ZKService {
+        return zkServices[command] ?: throw IllegalArgumentException("ZK Service not found for circuitId $command")
     }
 
     fun setup(force: Boolean = false) {

@@ -14,7 +14,7 @@ data class SignedZKVerifierTransaction(val tx: ZKVerifierTransaction, override v
         get() = tx.id
 
     override val requiredSigningKeys: Set<PublicKey>
-        get() = tx.signers.toSet()
+        get() = tx.requiredSigningKeys
 
     override fun getKeyDescriptions(keys: Set<PublicKey>): List<String> {
         return keys.map { it.toBase58String() }

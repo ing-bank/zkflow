@@ -10,7 +10,7 @@ import net.corda.core.serialization.SerializeAsToken
 import rx.Observable
 
 /**
- * Thread-safe storage of ZKProverTransaction.
+ * Thread-safe storage of ZKVerifierTransactions.
  */
 @DeleteForDJVM
 @DoNotImplement

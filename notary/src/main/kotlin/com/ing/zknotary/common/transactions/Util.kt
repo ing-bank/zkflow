@@ -22,7 +22,7 @@ import kotlin.math.max
 @DeleteForDJVM
 fun WireTransaction.prettyPrint(): String {
     val buf = StringBuilder()
-    buf.appendln("Prover Transaction:")
+    buf.appendln("Wire Transaction:")
 
     fun addComponentList(buf: StringBuilder, name: String, componentList: List<*>) {
         if (componentList.isNotEmpty()) buf.appendln(" - $name:")

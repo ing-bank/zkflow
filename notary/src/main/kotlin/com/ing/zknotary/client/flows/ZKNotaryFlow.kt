@@ -42,7 +42,7 @@ open class ZKNotaryFlow(
      */
     @Suspendable
     protected fun checkZKVerifierTransaction(): Party {
-        val notaryParty = svtx.tx.notary ?: error("Notary cannot be null")
+        val notaryParty = svtx.tx.notary ?: throw IllegalStateException("Transaction does not specify a Notary")
         check(serviceHub.networkMapCache.isNotary(notaryParty)) { "$notaryParty is not a notary on the network" }
 //      TODO check if states belong to this notary somehow (given that we don't have states' contents)
 //        check(serviceHub.loadStates(svtx.tx.inputs.toSet() + svtx.tx.references.toSet()).all { it.state.notary == notaryParty }) {

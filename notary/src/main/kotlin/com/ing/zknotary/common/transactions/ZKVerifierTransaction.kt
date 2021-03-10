@@ -17,7 +17,6 @@ import java.util.function.Predicate
 @CordaSerializable
 class ZKVerifierTransaction(
     val proof: ByteArray,
-    val signers: List<PublicKey>,
 
     // Outputs are not visible in a normal FilteredTransaction, so we 'leak' some info here: the amount of outputs.
     // Outputs are the leaf hashes of the outputs component group. This is the only group where:
@@ -48,14 +47,22 @@ class ZKVerifierTransaction(
 
 ) : TraversableTransaction(componentGroups, digestService) {
 
-    // TODO: we should add some information that the verifier can use to select the correct verifier key?
-    // Or do we just attach the hash of the verifier key?
-    // With that they can select the correct key, and also know which circuit they are verifying.
-    // Perhaps the command?
-    val circuitId: SecureHash
-        get() = (commands.single().value as ZKCommandData).circuitId()
-
     override val id: SecureHash by lazy { MerkleTree.getMerkleTree(groupHashes, digestService).hash }
+
+    val zkCommandData: ZKCommandData = commands.single().value as ZKCommandData
+
+    /** Public keys that need to be fulfilled by signatures in order for the transaction to be valid. */
+    val requiredSigningKeys: Set<PublicKey>
+        get() {
+            val commandKeys = commands.flatMap { it.signers }.toSet()
+            // TODO: prevent notary field from being set if there are no inputs and no time-window.
+            @Suppress("ComplexCondition")
+            return if (notary != null && (inputs.isNotEmpty() || references.isNotEmpty() || timeWindow != null)) {
+                commandKeys + notary.owningKey
+            } else {
+                commandKeys
+            }
+        }
 
     fun verifyOutputsGroupHash() {
 
@@ -79,11 +86,11 @@ class ZKVerifierTransaction(
 
         fun new(wtx: WireTransaction, proof: ByteArray): ZKVerifierTransaction {
 
+            // Here we don't need to filter anything, we only create FTX to be able to access hashes (they are internal in WTX)
             val ftx = FilteredTransaction.buildFilteredTransaction(wtx, Predicate { true })
 
             return ZKVerifierTransaction(
                 proof = proof,
-                signers = wtx.commands.single().signers,
                 outputHashes = outputHashes(wtx, ftx),
                 groupHashes = ftx.groupHashes,
                 digestService = wtx.digestService,
@@ -93,8 +100,11 @@ class ZKVerifierTransaction(
 
         private fun createComponentGroups(wtx: WireTransaction): List<ComponentGroup> {
 
+            // We don't filter anything here because of unfriendly Predicate interface...
             val ftx = wtx.buildFilteredTransaction(Predicate { true })
 
+//             ... filtering happens here - we hide all groups except mentioned below.
+//               For hidden groups we only store group hashes. No components, nonces or anything else
             return ftx.filteredComponentGroups.filter {
                 it.groupIndex in listOf(
                     ComponentGroupEnum.INPUTS_GROUP.ordinal,
@@ -110,7 +120,7 @@ class ZKVerifierTransaction(
 
         private fun outputHashes(wtx: WireTransaction, ftx: FilteredTransaction): List<SecureHash> {
             val nonces = ftx.filteredComponentGroups.find { it.groupIndex == ComponentGroupEnum.OUTPUTS_GROUP.ordinal }!!.nonces
-            return wtx.componentGroups.find { it.groupIndex == ComponentGroupEnum.OUTPUTS_GROUP.ordinal }!!.components.mapIndexed { internalIndex, internalIt -> wtx.digestService.componentHash(nonces[internalIndex], internalIt) }
+            return wtx.componentGroups.find { it.groupIndex == ComponentGroupEnum.OUTPUTS_GROUP.ordinal }!!.components.mapIndexed { componentIndex, component -> wtx.digestService.componentHash(nonces[componentIndex], component) }
         }
     }
 }

@@ -1,6 +1,5 @@
 package com.ing.zknotary.common.contracts
 
-import com.ing.zknotary.common.dactyloscopy.NonFingerprintable
 import com.ing.zknotary.common.zkp.CircuitMetaData
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.CommandAndState
@@ -24,7 +23,6 @@ class TestContract : Contract {
         val value: Int = Random().nextInt(1000)
     ) : ContractState, OwnableState {
 
-        @NonFingerprintable("Temporary removed from fingerprinting")
         override val participants = listOf(owner)
 
         override fun withNewOwner(newOwner: AbstractParty) = CommandAndState(Move(), copy(owner = newOwner))
@@ -36,65 +34,12 @@ class TestContract : Contract {
 
         override val circuit: CircuitMetaData =
             CircuitMetaData(folder = File("${System.getProperty("user.dir")}/../zinc-platform-sources/circuits/create"))
-
-//        override val paddingConfiguration: ComponentPaddingConfiguration
-//            get() {
-//                val emptyState = TestState(ZKNulls.NULL_PARTY, 0)
-//                val transactionStateFiller = ComponentPaddingConfiguration.Filler.TransactionState(
-//                    TransactionState(emptyState, notary = ZKNulls.NULL_PARTY)
-//                )
-//                val stateAndRefFiller = ComponentPaddingConfiguration.Filler.StateAndRef(
-//                    StateAndRef(
-//                        TransactionState(emptyState, notary = ZKNulls.NULL_PARTY),
-//                        StateRef(SecureHash.zeroHashFor(SecureHash.BLAKE2S256), 0)
-//                    )
-//                )
-//                val pubKeyFiller = ComponentPaddingConfiguration.Filler.PublicKey(ZKNulls.NULL_PUBLIC_KEY)
-//
-//                return ComponentPaddingConfiguration.Builder()
-//                    .inputs(0, stateAndRefFiller)
-//                    .outputs(2, transactionStateFiller)
-//                    .references(2, stateAndRefFiller)
-//                    .attachments(
-//                        2,
-//                        ComponentPaddingConfiguration.Filler.SecureHash(SecureHash.zeroHashFor(SecureHash.BLAKE2S256))
-//                    )
-//                    .signers(2, pubKeyFiller)
-//                    .build()
-//            }
     }
 
     class Move : ZKCommandData {
         override val id: Int = 1
         override val circuit: CircuitMetaData =
             CircuitMetaData(folder = File("${System.getProperty("user.dir")}/../zinc-platform-sources/circuits/move"))
-
-//        override val paddingConfiguration: ComponentPaddingConfiguration
-//            get() {
-//                val emptyState = TestState(ZKNulls.NULL_PARTY, 0)
-//                val transactionStateFiller = ComponentPaddingConfiguration.Filler.TransactionState(
-//                    TransactionState(emptyState, notary = ZKNulls.NULL_PARTY)
-//                )
-//                val stateAndRefFiller = ComponentPaddingConfiguration.Filler.StateAndRef(
-//                    StateAndRef(
-//                        TransactionState(emptyState, notary = ZKNulls.NULL_PARTY),
-//                        StateRef(SecureHash.zeroHashFor(SecureHash.BLAKE2S256), 0)
-//                    )
-//                )
-//
-//                val pubKeyFiller = ComponentPaddingConfiguration.Filler.PublicKey(ZKNulls.NULL_PUBLIC_KEY)
-//
-//                return ComponentPaddingConfiguration.Builder()
-//                    .inputs(2, stateAndRefFiller)
-//                    .outputs(2, transactionStateFiller)
-//                    .references(2, stateAndRefFiller)
-//                    .attachments(
-//                        2,
-//                        ComponentPaddingConfiguration.Filler.SecureHash(SecureHash.zeroHashFor(SecureHash.BLAKE2S256))
-//                    )
-//                    .signers(2, pubKeyFiller)
-//                    .build()
-//            }
     }
 
     override fun verify(tx: LedgerTransaction) {
