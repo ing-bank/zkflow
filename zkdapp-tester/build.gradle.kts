@@ -1,5 +1,5 @@
 plugins {
-    kotlin("jvm")
+    kotlin("jvm") version "1.4.20"
     id("com.ing.zknotary.gradle-plugin") version "0.1.4-SNAPSHOT"
 }
 
@@ -8,6 +8,7 @@ zkp {
 }
 
 repositories {
+    mavenLocal()
     jcenter()
     mavenCentral()
 }

@@ -17,16 +17,9 @@ fn check_contract_rules(value: ZKProverTransaction) {
         "Failed requirement: the tx has only one command"
     );
 
-    // Validate the number of outputs
-    let mut input_size: u16 = 0;
-    for i in 0..INPUT_GROUP_SIZE {
-        if !value.inputs.components[i].is_filler {
-            input_size = input_size + (1 as u16);
-        }
-    }
-
-    assert!(
-        input_size == (0 as u16),
+    // Validate the number of inputs
+   assert!(
+        INPUT_GROUP_SIZE == (0 as u16),
         "Failed requirement: tx has zero inputs"
     );
 
