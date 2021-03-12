@@ -58,37 +58,6 @@ sourceSets {
 //      beforeSuite {
 //      }
 // }
-open class CopyCircuitTask : DefaultTask() {
-
-    @TaskAction
-    fun copy() {
-        // In this package we test functions of classes, which are stored in one particular file,
-        // but since there are many of them, we need many main functions with different parameters and output,
-        // thus we copy implementation to each testing module in resources (because, zinc support modules pretty bad).
-        val testClassesPath = `java.nio.file`.Paths.get("notary/src/test/kotlin/com/ing/zknotary/common/zinc/types/")
-        `java.nio.file`.Files.newDirectoryStream(testClassesPath)
-            .map { it.fileName.toString().removeSuffix(".kt") }
-            .filter { `java.nio.file`.Files.exists(`java.nio.file`.Paths.get("notary/build/resources/test/$it")) }
-            .forEach {
-                `java.nio.file`.Files.copy(
-                    `java.nio.file`.Paths.get("zinc-platform-sources/src/main/resources/zinc-platform-source/floating_point_24_6.zn"),
-                    `java.nio.file`.Paths.get("notary/build/resources/test/$it/src/floating_point_24_6.zn"),
-                    `java.nio.file`.StandardCopyOption.REPLACE_EXISTING
-                )
-                `java.nio.file`.Files.copy(
-                    `java.nio.file`.Paths.get("zinc-platform-sources/src/main/resources/zinc-platform-source/floating_point_100_20.zn"),
-                    `java.nio.file`.Paths.get("notary/build/resources/test/$it/src/floating_point_100_20.zn"),
-                    `java.nio.file`.StandardCopyOption.REPLACE_EXISTING
-                )
-            }
-    }
-}
-
-tasks.register<CopyCircuitTask>("copyCircuit")
-
-tasks.processTestResources {
-    finalizedBy(tasks.findByPath("copyCircuit"))
-}
 
 // TODO: This should probably become a fat jar at some point, with its dependencies included
 publishing {

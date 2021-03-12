@@ -1,9 +1,0 @@
-//!
-//! The 'BigDecimal' main module.
-//!
-mod floating_point_24_6;
-use floating_point_24_6::BigDecimal;
-
-fn main(left: BigDecimal, right: BigDecimal) -> BigDecimal {
-    BigDecimal::minus(left, right)
-}

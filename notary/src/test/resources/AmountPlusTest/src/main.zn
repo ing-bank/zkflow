@@ -1,9 +1,0 @@
-//!
-//! The 'Amount' main module.
-//!
-mod floating_point_24_6;
-use floating_point_24_6::Amount;
-
-fn main(left: Amount, right: Amount) -> Amount {
-    Amount::plus(left, right)
-}
