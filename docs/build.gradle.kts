@@ -1,5 +1,5 @@
 plugins {
-    id("com.cosminpolifronie.gradle.plantuml")
+    id("com.cosminpolifronie.gradle.plantuml") version "1.6.0"
 }
 
 plantUml {
