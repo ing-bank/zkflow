@@ -35,7 +35,7 @@ abstract class ZKTransactionCordaService(val serviceHub: ServiceHub) : ZKTransac
         val zkService = zkServiceForTx(wtx.zkCommandData())
         val proof = zkService.prove(witness)
 
-        return ZKVerifierTransaction.new(wtx, proof)
+        return ZKVerifierTransaction.fromWireTransaction(wtx, proof)
     }
 
     abstract fun zkServiceForTx(command: ZKCommandData): ZKService
@@ -53,6 +53,9 @@ abstract class ZKTransactionCordaService(val serviceHub: ServiceHub) : ZKTransac
         } else {
             stx.checkSignaturesAreValid()
         }
+
+        // Check output hashes
+        stx.tx.verifyOutputsGroupHash()
 
         // Check backchain
         tx.inputs.forEach { validateBackchain(it) }

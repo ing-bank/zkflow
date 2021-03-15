@@ -10,7 +10,12 @@ import org.bouncycastle.crypto.digests.Blake2sDigest
 /**
  * This is in fact a combination of 2 algorithms: Blake2s and Pedersen.
  * But because of Corda's hash agility architecture they should be combined in a single algorithm instance
- * in order to be able to use different hash algorithms for leaves and nodes of a Merkle tree
+ * in order to be able to use different hash algorithms for leaves and nodes of a Merkle tree.
+ *
+ * At the moment Blake and Pedersen have the same length 32, but this theoretically can change if we use different
+ * elliptic curve for Pedersen. In this case we can either switch from Blake2s to Blake2b that allows for longer output,
+ * or continue to use blake2s and just pad it with trailing zeroes according to Pedersen algorithm. First way will hurt
+ * performance, so probably better to go with second option (although need to double-check security wouldn't suffer)
  */
 class ZincDigestAlgorithm : DigestAlgorithm {
     override val algorithm = "ZINC"

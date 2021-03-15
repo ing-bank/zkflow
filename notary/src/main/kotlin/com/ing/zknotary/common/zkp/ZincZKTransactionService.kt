@@ -40,7 +40,7 @@ class ZincZKTransactionService(services: AppServiceHub) : ZKTransactionCordaServ
     }
 
     override fun zkServiceForTx(command: ZKCommandData): ZKService {
-        return zkServices[command] ?: throw IllegalArgumentException("ZK Service not found for circuitId $command")
+        return zkServices[command] ?: throw IllegalArgumentException("ZK Service not found for command $command")
     }
 
     fun setup(force: Boolean = false) {

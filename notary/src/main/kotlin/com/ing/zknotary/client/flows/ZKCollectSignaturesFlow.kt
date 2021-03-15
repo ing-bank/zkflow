@@ -7,7 +7,6 @@ import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
 import com.ing.zknotary.common.transactions.toLedgerTransaction
 import com.ing.zknotary.common.zkp.ZKTransactionService
 import com.ing.zknotary.node.services.ServiceNames
-import com.ing.zknotary.node.services.ZKVerifierTransactionStorage
 import com.ing.zknotary.node.services.getCordaServiceFromConfig
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.StateAndRef
@@ -123,6 +122,9 @@ class ZKCollectSignaturesFlow @JvmOverloads constructor(
         vtx.verifySignaturesExcept(notSigned)
         // and the transaction must be valid.
         stx.tx.toLedgerTransaction(serviceHub).verify()
+        // and ZKP transaction also should be valid
+        val zkService: ZKTransactionService = serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_TX_SERVICE)
+        zkService.verify(vtx, checkSufficientSignatures = false)
 
         // Determine who still needs to sign.
         progressTracker.currentStep = COLLECTING
@@ -323,7 +325,6 @@ abstract class ZKSignTransactionFlow @JvmOverloads constructor(
 ) : FlowLogic<SignedTransaction>() {
 
     private lateinit var zkService: ZKTransactionService
-    private lateinit var vtxStorage: ZKVerifierTransactionStorage
 
     companion object {
         object RECEIVING : ProgressTracker.Step("Receiving transaction proposal for signing.")
@@ -370,7 +371,6 @@ abstract class ZKSignTransactionFlow @JvmOverloads constructor(
         checkSignatures(vtx)
 
         zkService = serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_TX_SERVICE)
-        vtxStorage = serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_VERIFIER_TX_STORAGE)
 
         // Check ZKP transaction
         zkService.verify(vtx, checkSufficientSignatures = false)

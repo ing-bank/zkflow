@@ -65,15 +65,9 @@ class ZKVerifierTransaction(
         }
 
     fun verifyOutputsGroupHash() {
-
-        // To prevent Corda's automatic promotion of a single leaf to the Merkle root,
-        // ensure, there are at least 2 elements.
-        // See, https://github.com/corda/corda/issues/6680
-        val paddedOutputHashes = outputHashes // TODO .pad(2, digestService.zeroHash)
-
         require(
             MerkleTree.getMerkleTree(
-                paddedOutputHashes,
+                outputHashes,
                 digestService
             ).hash == groupHashes[ComponentGroupEnum.OUTPUTS_GROUP.ordinal]
         )
@@ -84,7 +78,7 @@ class ZKVerifierTransaction(
 
     companion object {
 
-        fun new(wtx: WireTransaction, proof: ByteArray): ZKVerifierTransaction {
+        fun fromWireTransaction(wtx: WireTransaction, proof: ByteArray): ZKVerifierTransaction {
 
             // Here we don't need to filter anything, we only create FTX to be able to access hashes (they are internal in WTX)
             val ftx = FilteredTransaction.buildFilteredTransaction(wtx, Predicate { true })
@@ -94,14 +88,11 @@ class ZKVerifierTransaction(
                 outputHashes = outputHashes(wtx, ftx),
                 groupHashes = ftx.groupHashes,
                 digestService = wtx.digestService,
-                componentGroups = createComponentGroups(wtx)
+                componentGroups = createComponentGroups(wtx, ftx)
             )
         }
 
-        private fun createComponentGroups(wtx: WireTransaction): List<ComponentGroup> {
-
-            // We don't filter anything here because of unfriendly Predicate interface...
-            val ftx = wtx.buildFilteredTransaction(Predicate { true })
+        private fun createComponentGroups(wtx: WireTransaction, ftx: FilteredTransaction): List<ComponentGroup> {
 
 //             ... filtering happens here - we hide all groups except mentioned below.
 //               For hidden groups we only store group hashes. No components, nonces or anything else
