@@ -16,9 +16,6 @@ pluginManagement {
         val cordaGradlePluginsVersion: String by settings
         id("net.corda.plugins.cordapp") version cordaGradlePluginsVersion apply false
         id("net.corda.plugins.quasar-utils") version cordaGradlePluginsVersion apply false
-
-        val plantUmlVersion: String by settings
-        id("com.cosminpolifronie.gradle.plantuml") version plantUmlVersion apply false
     }
 
     repositories { // Only for these plugins. Repos for other dependencies should be defined in build.gradle.kts
@@ -34,4 +31,3 @@ include("notary")
 include("zinc-platform-sources")
 include("gradle-plugin")
 include("test-utils")
-include("docs")
