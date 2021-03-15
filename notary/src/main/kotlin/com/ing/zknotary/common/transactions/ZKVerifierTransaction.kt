@@ -64,7 +64,8 @@ class ZKVerifierTransaction(
             }
         }
 
-    fun verifyOutputsGroupHash() {
+    fun verify() {
+        // Check that output hashes indeed produce provided group hash
         require(
             MerkleTree.getMerkleTree(
                 outputHashes,

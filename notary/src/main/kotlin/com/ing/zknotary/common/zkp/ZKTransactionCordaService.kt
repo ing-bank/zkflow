@@ -54,8 +54,8 @@ abstract class ZKTransactionCordaService(val serviceHub: ServiceHub) : ZKTransac
             stx.checkSignaturesAreValid()
         }
 
-        // Check output hashes
-        stx.tx.verifyOutputsGroupHash()
+        // Check transaction structure
+        stx.tx.verify()
 
         // Check backchain
         tx.inputs.forEach { validateBackchain(it) }
