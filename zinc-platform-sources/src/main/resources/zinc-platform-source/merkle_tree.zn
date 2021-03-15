@@ -3,6 +3,12 @@ const MERKLE_TREE_SIZE: u16 = 16;
 /// Top-level function to be called.
 /// Pads the configure number of leaves to the right amount with zero hashes from the right
 /// and calls appropriate tree-constructing procedure
+///
+/// When there is only one element in a component group Corda automatically promotes this single leaf to the Merkle root.
+/// In our first version we always padded to at least 2 element to avoid this and save some Blake operations, now we want
+/// to be compatible with original Corda protocol so we don't do it anymore.
+/// TODO implement above-mentioned promotion on Zinc side or implement workaround on Corda side (via custom TxBuilder maybe)
+///            See, https://github.com/corda/corda/issues/6680
 fn merkle_root(leaves: [NodeDigestBits; COMPONENT_GROUPS_SIZE]) -> NodeDigestBits {
     dbg!("Building a tree from {} leaves", COMPONENT_GROUPS_SIZE);
 

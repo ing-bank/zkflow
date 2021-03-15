@@ -1,20 +1,12 @@
 package com.ing.zknotary.common.contracts
 
-import com.ing.zknotary.common.crypto.BLAKE2S256
-import com.ing.zknotary.common.dactyloscopy.NonFingerprintable
-import com.ing.zknotary.common.util.ComponentPaddingConfiguration
 import com.ing.zknotary.common.zkp.CircuitMetaData
-import com.ing.zknotary.common.zkp.ZKNulls
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.CommandAndState
 import net.corda.core.contracts.Contract
 import net.corda.core.contracts.ContractClassName
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.OwnableState
-import net.corda.core.contracts.StateAndRef
-import net.corda.core.contracts.StateRef
-import net.corda.core.contracts.TransactionState
-import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.AbstractParty
 import net.corda.core.transactions.LedgerTransaction
 import java.io.File
@@ -31,7 +23,6 @@ class TestContract : Contract {
         val value: Int = Random().nextInt(1000)
     ) : ContractState, OwnableState {
 
-        @NonFingerprintable("Temporary removed from fingerprinting")
         override val participants = listOf(owner)
 
         override fun withNewOwner(newOwner: AbstractParty) = CommandAndState(Move(), copy(owner = newOwner))
@@ -43,65 +34,12 @@ class TestContract : Contract {
 
         override val circuit: CircuitMetaData =
             CircuitMetaData(folder = File("${System.getProperty("user.dir")}/../zinc-platform-sources/circuits/create"))
-
-        override val paddingConfiguration: ComponentPaddingConfiguration
-            get() {
-                val emptyState = TestState(ZKNulls.NULL_PARTY, 0)
-                val transactionStateFiller = ComponentPaddingConfiguration.Filler.TransactionState(
-                    TransactionState(emptyState, notary = ZKNulls.NULL_PARTY)
-                )
-                val stateAndRefFiller = ComponentPaddingConfiguration.Filler.StateAndRef(
-                    StateAndRef(
-                        TransactionState(emptyState, notary = ZKNulls.NULL_PARTY),
-                        StateRef(SecureHash.zeroHashFor(SecureHash.BLAKE2S256), 0)
-                    )
-                )
-                val pubKeyFiller = ComponentPaddingConfiguration.Filler.PublicKey(ZKNulls.NULL_PUBLIC_KEY)
-
-                return ComponentPaddingConfiguration.Builder()
-                    .inputs(0, stateAndRefFiller)
-                    .outputs(2, transactionStateFiller)
-                    .references(2, stateAndRefFiller)
-                    .attachments(
-                        2,
-                        ComponentPaddingConfiguration.Filler.SecureHash(SecureHash.zeroHashFor(SecureHash.BLAKE2S256))
-                    )
-                    .signers(2, pubKeyFiller)
-                    .build()
-            }
     }
 
     class Move : ZKCommandData {
         override val id: Int = 1
         override val circuit: CircuitMetaData =
             CircuitMetaData(folder = File("${System.getProperty("user.dir")}/../zinc-platform-sources/circuits/move"))
-
-        override val paddingConfiguration: ComponentPaddingConfiguration
-            get() {
-                val emptyState = TestState(ZKNulls.NULL_PARTY, 0)
-                val transactionStateFiller = ComponentPaddingConfiguration.Filler.TransactionState(
-                    TransactionState(emptyState, notary = ZKNulls.NULL_PARTY)
-                )
-                val stateAndRefFiller = ComponentPaddingConfiguration.Filler.StateAndRef(
-                    StateAndRef(
-                        TransactionState(emptyState, notary = ZKNulls.NULL_PARTY),
-                        StateRef(SecureHash.zeroHashFor(SecureHash.BLAKE2S256), 0)
-                    )
-                )
-
-                val pubKeyFiller = ComponentPaddingConfiguration.Filler.PublicKey(ZKNulls.NULL_PUBLIC_KEY)
-
-                return ComponentPaddingConfiguration.Builder()
-                    .inputs(2, stateAndRefFiller)
-                    .outputs(2, transactionStateFiller)
-                    .references(2, stateAndRefFiller)
-                    .attachments(
-                        2,
-                        ComponentPaddingConfiguration.Filler.SecureHash(SecureHash.zeroHashFor(SecureHash.BLAKE2S256))
-                    )
-                    .signers(2, pubKeyFiller)
-                    .build()
-            }
     }
 
     override fun verify(tx: LedgerTransaction) {

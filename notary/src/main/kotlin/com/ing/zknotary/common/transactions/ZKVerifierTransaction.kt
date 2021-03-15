@@ -1,41 +1,22 @@
 package com.ing.zknotary.common.transactions
 
-import com.ing.zknotary.common.crypto.BLAKE2S256
-import com.ing.zknotary.common.util.ComponentPaddingConfiguration
-import com.ing.zknotary.common.util.PaddingWrapper
+import com.ing.zknotary.common.contracts.ZKCommandData
 import net.corda.core.contracts.ComponentGroupEnum
-import net.corda.core.contracts.StateRef
-import net.corda.core.contracts.TimeWindow
 import net.corda.core.crypto.DigestService
+import net.corda.core.crypto.MerkleTree
 import net.corda.core.crypto.SecureHash
-import net.corda.core.crypto.algorithm
-import net.corda.core.identity.Party
 import net.corda.core.serialization.CordaSerializable
+import net.corda.core.transactions.ComponentGroup
+import net.corda.core.transactions.FilteredTransaction
+import net.corda.core.transactions.TraversableTransaction
+import net.corda.core.transactions.WireTransaction
 import java.security.PublicKey
-import java.time.Instant
+import java.util.function.Predicate
 
 @Suppress("LongParameterList")
 @CordaSerializable
 class ZKVerifierTransaction(
     val proof: ByteArray,
-    val inputs: List<StateRef>,
-    val references: List<StateRef>,
-
-    // TODO: we should add some information that the verifier can use to select the correct verifier key?
-    // Or do we just attach the hash of the verifier key?
-    // With that they can select the correct key, and also know which circuit they are verifying.
-    // Perhaps the command?
-    val circuitId: SecureHash,
-
-    // If we include command instead of circuitId then we can take signers from it
-    val signers: List<PublicKey>,
-
-    val notary: Party,
-    val timeWindow: TimeWindow?,
-    val networkParametersHash: SecureHash?,
-
-    val componentGroupLeafDigestService: DigestService,
-    val nodeDigestService: DigestService = componentGroupLeafDigestService,
 
     // Outputs are not visible in a normal FilteredTransaction, so we 'leak' some info here: the amount of outputs.
     // Outputs are the leaf hashes of the outputs component group. This is the only group where:
@@ -48,101 +29,90 @@ class ZKVerifierTransaction(
     //     that for each input contents from the witness,  when combined with their nonce, should hash to the same hash as
     //     provided for that input in the public input.
     val outputHashes: List<SecureHash>,
-    val groupHashes: List<SecureHash>,
-    val componentNonces: Map<Int, List<SecureHash>>,
 
     /**
-     * Used for padding internal lists to sizes accepted by the ZK circuit.
+     * This value will contain as many hashes as there are component groups,
+     * otherwise fail.
+     * Order of the elements corresponds to the order groups listed in ComponentGroupEnum.
+     *
+     * TODO: when we revert back to the normal WireTransaction instead of ZKProverTransaction,
+     * this will become 'dynamic' again to support unknown groups. This should be reflected in Zinc and in
+     * ZKVerifierTransaction
      */
-    componentPaddingConfiguration: ComponentPaddingConfiguration
-) : NamedByZKMerkleTree {
-    val padded = Padded(
-        originalInputs = inputs,
-        originalReferences = references,
-        originalSigners = signers,
-        originalTimeWindow = timeWindow,
-        originalNetworkParametersHash = networkParametersHash,
-        paddingConfiguration = componentPaddingConfiguration
-    )
+    val groupHashes: List<SecureHash>,
 
-    // Required by Corda.
-    val componentPaddingConfiguration: ComponentPaddingConfiguration
-        get() = padded.paddingConfiguration
+    digestService: DigestService,
 
-    init {
-        componentPaddingConfiguration.validate(this)
+    componentGroups: List<ComponentGroup>
 
-        // Nonces for the outputs should NEVER be present
-        require(!componentNonces.containsKey(ComponentGroupEnum.OUTPUTS_GROUP.ordinal))
+) : TraversableTransaction(componentGroups, digestService) {
 
-        require(groupHashes.size == ComponentGroupEnum.values().size) { "There should be a group hash for each ComponentGroupEnum value" }
-        require(padded.inputs().size == componentNonces[ComponentGroupEnum.INPUTS_GROUP.ordinal]?.size ?: 0) { "Number of inputs and input nonces should be equal" }
-        require(padded.references().size == componentNonces[ComponentGroupEnum.REFERENCES_GROUP.ordinal]?.size ?: 0) { "Number of references (${references.size}) and reference nonces (${componentNonces[ComponentGroupEnum.REFERENCES_GROUP.ordinal]?.size}) should be equal" }
+    override val id: SecureHash by lazy { MerkleTree.getMerkleTree(groupHashes, digestService).hash }
 
-        require(padded.signers().size == componentNonces[ComponentGroupEnum.SIGNERS_GROUP.ordinal]?.size ?: 0) { "Number of signers and signer nonces should be equal" }
+    val zkCommandData: ZKCommandData = commands.single().value as ZKCommandData
 
-        if (networkParametersHash != null) require(componentNonces[ComponentGroupEnum.PARAMETERS_GROUP.ordinal]?.size == 1) { "If there is a networkParametersHash, there should be a networkParametersHash nonce" }
-        if (timeWindow != null) require(componentNonces[ComponentGroupEnum.TIMEWINDOW_GROUP.ordinal]?.size == 1) { "If there is a timeWindow, there should be exactly one timeWindow nonce" }
-    }
+    /** Public keys that need to be fulfilled by signatures in order for the transaction to be valid. */
+    val requiredSigningKeys: Set<PublicKey>
+        get() {
+            val commandKeys = commands.flatMap { it.signers }.toSet()
+            // TODO: prevent notary field from being set if there are no inputs and no time-window.
+            @Suppress("ComplexCondition")
+            return if (notary != null && (inputs.isNotEmpty() || references.isNotEmpty() || timeWindow != null)) {
+                commandKeys + notary.owningKey
+            } else {
+                commandKeys
+            }
+        }
 
-    override val id by lazy { merkleTree.root }
-
-    override val merkleTree by lazy {
-        ZKPartialMerkleTree(this)
+    fun verify() {
+        // Check that output hashes indeed produce provided group hash
+        require(
+            MerkleTree.getMerkleTree(
+                outputHashes,
+                digestService
+            ).hash == groupHashes[ComponentGroupEnum.OUTPUTS_GROUP.ordinal]
+        )
     }
 
     override fun hashCode(): Int = id.hashCode()
     override fun equals(other: Any?) = if (other !is ZKVerifierTransaction) false else (this.id == other.id)
 
-    data class Padded(
-        private val originalInputs: List<StateRef>,
-        private val originalReferences: List<StateRef>,
-        private val originalSigners: List<PublicKey>,
-        private val originalTimeWindow: TimeWindow?,
-        private val originalNetworkParametersHash: SecureHash?,
-        val paddingConfiguration: ComponentPaddingConfiguration
-    ) {
+    companion object {
 
-        fun inputs(): List<PaddingWrapper<StateRef>> {
-            val filler = filler(ComponentGroupEnum.INPUTS_GROUP)
-            require(filler is ComponentPaddingConfiguration.Filler.StateRef) { "Expected filler of type ZKStateRef" }
-            return originalInputs.wrappedPad(sizeOf(ComponentGroupEnum.INPUTS_GROUP), filler.content)
+        fun fromWireTransaction(wtx: WireTransaction, proof: ByteArray): ZKVerifierTransaction {
+
+            // Here we don't need to filter anything, we only create FTX to be able to access hashes (they are internal in WTX)
+            val ftx = FilteredTransaction.buildFilteredTransaction(wtx, Predicate { true })
+
+            return ZKVerifierTransaction(
+                proof = proof,
+                outputHashes = outputHashes(wtx, ftx),
+                groupHashes = ftx.groupHashes,
+                digestService = wtx.digestService,
+                componentGroups = createComponentGroups(ftx)
+            )
         }
 
-        fun references(): List<PaddingWrapper<StateRef>> {
-            val filler = filler(ComponentGroupEnum.REFERENCES_GROUP)
-            require(filler is ComponentPaddingConfiguration.Filler.StateRef) { "Expected filler of type ZKStateRef" }
-            return originalReferences.wrappedPad(sizeOf(ComponentGroupEnum.REFERENCES_GROUP), filler.content)
+        private fun createComponentGroups(ftx: FilteredTransaction): List<ComponentGroup> {
+
+//             We hide all groups except ones mentioned below.
+//             For hidden groups we only store group hashes. No components, nonces or anything else
+            return ftx.filteredComponentGroups.filter {
+                it.groupIndex in listOf(
+                    ComponentGroupEnum.INPUTS_GROUP.ordinal,
+                    ComponentGroupEnum.REFERENCES_GROUP.ordinal,
+                    ComponentGroupEnum.NOTARY_GROUP.ordinal,
+                    ComponentGroupEnum.TIMEWINDOW_GROUP.ordinal,
+                    ComponentGroupEnum.PARAMETERS_GROUP.ordinal,
+                    ComponentGroupEnum.SIGNERS_GROUP.ordinal,
+                    ComponentGroupEnum.COMMANDS_GROUP.ordinal
+                )
+            }
         }
 
-        fun signers(): List<PaddingWrapper<PublicKey>> {
-            val filler = filler(ComponentGroupEnum.SIGNERS_GROUP)
-            require(filler is ComponentPaddingConfiguration.Filler.PublicKey) { "Expected filler of type PublicKey" }
-            return originalSigners.wrappedPad(sizeOf(ComponentGroupEnum.SIGNERS_GROUP), filler.content)
+        private fun outputHashes(wtx: WireTransaction, ftx: FilteredTransaction): List<SecureHash> {
+            val nonces = ftx.filteredComponentGroups.find { it.groupIndex == ComponentGroupEnum.OUTPUTS_GROUP.ordinal }!!.nonces
+            return wtx.componentGroups.find { it.groupIndex == ComponentGroupEnum.OUTPUTS_GROUP.ordinal }!!.components.mapIndexed { componentIndex, component -> wtx.digestService.componentHash(nonces[componentIndex], component) }
         }
-
-        fun timeWindow() = originalTimeWindow.wrappedPad(TimeWindow.fromOnly(Instant.MIN))
-
-        fun networkParametersHash(): PaddingWrapper<SecureHash> {
-            val zeroHash =
-                if (originalNetworkParametersHash == null) {
-                    SecureHash.zeroHashFor(SecureHash.BLAKE2S256)
-                } else {
-                    SecureHash.zeroHashFor(originalNetworkParametersHash.algorithm)
-                }
-            return originalNetworkParametersHash.wrappedPad(zeroHash)
-        }
-
-        /**
-         * Return appropriate size or fail.
-         */
-        private fun sizeOf(componentGroup: ComponentGroupEnum): Int =
-            paddingConfiguration.sizeOf(componentGroup) ?: error("Expected a positive number")
-
-        /**
-         * Returns appropriate size or fail.
-         */
-        fun filler(componentGroup: ComponentGroupEnum) =
-            paddingConfiguration.filler(componentGroup) ?: error("Expected a filler object")
     }
 }

@@ -44,13 +44,13 @@ class MoveFlow(
 
         val builder = TransactionBuilder(serviceHub.networkMapCache.notaryIdentities.single())
         builder.withItems(state, stateAndContract, command)
+        val ltx = builder.toLedgerTransaction(serviceHub)
 
         // Transaction creator signs transaction.
         val stx = serviceHub.signInitialTransaction(builder)
         stx.verify(serviceHub, false)
 
-        val ptx = zkService.toZKProverTransaction(stx.tx)
-        val vtx = zkService.prove(ptx)
+        val vtx = zkService.prove(stx.tx, ltx.inputs, ltx.references)
         val partiallySignedVtx = signInitialZKTransaction(vtx)
         val svtx = subFlow(ZKCollectSignaturesFlow(stx, partiallySignedVtx, listOf(session)))
 

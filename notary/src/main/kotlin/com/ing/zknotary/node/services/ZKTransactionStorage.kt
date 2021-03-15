@@ -1,33 +1,20 @@
 package com.ing.zknotary.node.services
 
-import com.ing.zknotary.common.transactions.NamedByZKMerkleTree
 import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
 import net.corda.core.DeleteForDJVM
 import net.corda.core.DoNotImplement
 import net.corda.core.concurrent.CordaFuture
-import net.corda.core.contracts.NamedByHash
 import net.corda.core.crypto.SecureHash
 import net.corda.core.messaging.DataFeed
 import net.corda.core.serialization.SerializeAsToken
 import rx.Observable
 
 /**
- * Map from Standard Corda transactions id to ZKP transaction id and back
- */
-interface ZKTransactionMap {
-    fun get(id: SecureHash): SecureHash?
-    fun get(tx: NamedByHash): SecureHash?
-    fun put(tx: NamedByHash, zktx: NamedByZKMerkleTree): SecureHash?
-    fun getWtxId(zktxId: SecureHash): SecureHash?
-}
-
-/**
- * Thread-safe storage of ZKProverTransaction.
+ * Thread-safe storage of ZKVerifierTransactions.
  */
 @DeleteForDJVM
 @DoNotImplement
 interface ZKTransactionStorage<T> : SerializeAsToken {
-    val map: ZKTransactionMap
 
     /**
      * Return the transaction with the given [id], or null if no such transaction exists.
@@ -49,8 +36,6 @@ interface ZKTransactionStorage<T> : SerializeAsToken {
      * Returns a future that completes with the transaction corresponding to [id] once it has been committed
      */
     fun trackTransaction(id: SecureHash): CordaFuture<T>
-
-    fun zkTransactionFor(tx: NamedByHash): T? = map.get(tx)?.let { getTransaction(it) }
 }
 
 /**

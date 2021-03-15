@@ -1,9 +1,7 @@
 package com.ing.zknotary.node.services
 
-import com.ing.zknotary.common.transactions.NamedByZKMerkleTree
 import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
 import net.corda.core.concurrent.CordaFuture
-import net.corda.core.contracts.NamedByHash
 import net.corda.core.crypto.SecureHash
 import net.corda.core.internal.concurrent.doneFuture
 import net.corda.core.messaging.DataFeed
@@ -21,7 +19,7 @@ import java.util.HashMap
  * A class which provides an implementation of [WritableTransactionStorage] which is used in [MockServices]
  */
 @CordaService
-public open class InMemoryZKVerifierTransactionStorage(public val serviceHub: AppServiceHub) : ZKWritableVerifierTransactionStorage,
+open class InMemoryZKVerifierTransactionStorage(public val serviceHub: AppServiceHub) : ZKWritableVerifierTransactionStorage,
     SingletonSerializeAsToken() {
 
     override fun trackTransaction(id: SecureHash): CordaFuture<SignedZKVerifierTransaction> {
@@ -35,8 +33,6 @@ public open class InMemoryZKVerifierTransactionStorage(public val serviceHub: Ap
     override fun track(): DataFeed<List<SignedZKVerifierTransaction>, SignedZKVerifierTransaction> {
         return DataFeed(txns.values.mapNotNull { if (it.isVerified) it.vtx else null }, _updatesPublisher)
     }
-
-    override val map: ZKTransactionMap = MockZKTransactionMap()
 
     private val txns = HashMap<SecureHash, TxHolder>()
 
@@ -85,19 +81,4 @@ public open class InMemoryZKVerifierTransactionStorage(public val serviceHub: Ap
         txns[id]?.let { Pair(it.vtx, it.isVerified) }
 
     private class TxHolder(val vtx: SignedZKVerifierTransaction, var isVerified: Boolean)
-}
-
-/**
- * Map from Standard Corda transactions id to ZKP transaction id
- */
-private class MockZKTransactionMap : ZKTransactionMap, SingletonSerializeAsToken() {
-    private val map = mutableMapOf<SecureHash, SecureHash>()
-
-    override fun get(id: SecureHash) = map[id]
-    override fun get(tx: NamedByHash) = map[tx.id]
-
-    override fun put(tx: NamedByHash, zktx: NamedByZKMerkleTree) = map.put(tx.id, zktx.merkleTree.root)
-
-    // Should be something smarter in non-mock implementation
-    override fun getWtxId(zktxId: SecureHash): SecureHash? = map.entries.find { it.value == zktxId }?.key
 }

@@ -158,8 +158,8 @@ class ZKNotaryServiceFlow(
             // Resolve dependencies
             subFlow(ResolveZKTransactionsFlow(null, svtx.dependencies, otherSideSession))
             // Verify ZKP
-            zkConfig.zkTransactionService.verify(svtx, true)
-            // Verify signatures
+            zkConfig.zkTransactionService.verify(svtx, false)
+            // Verify signatures, we cannot do it inside zkService.verify() because it lacks our (notary) signature
             svtx.verifySignaturesExcept(service.notaryIdentityKey)
         } catch (e: IllegalArgumentException) {
             throw NotaryInternalException(NotaryError.TransactionInvalid(e))
