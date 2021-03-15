@@ -89,14 +89,14 @@ class ZKVerifierTransaction(
                 outputHashes = outputHashes(wtx, ftx),
                 groupHashes = ftx.groupHashes,
                 digestService = wtx.digestService,
-                componentGroups = createComponentGroups(wtx, ftx)
+                componentGroups = createComponentGroups(ftx)
             )
         }
 
-        private fun createComponentGroups(wtx: WireTransaction, ftx: FilteredTransaction): List<ComponentGroup> {
+        private fun createComponentGroups(ftx: FilteredTransaction): List<ComponentGroup> {
 
-//             ... filtering happens here - we hide all groups except mentioned below.
-//               For hidden groups we only store group hashes. No components, nonces or anything else
+//             We hide all groups except ones mentioned below.
+//             For hidden groups we only store group hashes. No components, nonces or anything else
             return ftx.filteredComponentGroups.filter {
                 it.groupIndex in listOf(
                     ComponentGroupEnum.INPUTS_GROUP.ordinal,
