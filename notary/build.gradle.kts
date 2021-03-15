@@ -5,8 +5,6 @@ plugins {
     id("net.corda.plugins.quasar-utils")
     id("maven-publish")
     id("java-library")
-
-    id("symbol-processing")
 }
 
 cordapp {
@@ -37,31 +35,6 @@ dependencies {
 
     // ZKP dependencies
     testImplementation(project(":test-utils"))
-
-    // Normally a cordapp using our product would use our gradle plugin to load deps and configure.
-    // Because we want short dev cycles, we directly include the deps here locally.
-    // And only for test code
-    val kspVersion: String by project
-    testImplementation("com.google.devtools.ksp:symbol-processing:$kspVersion")
-    testImplementation(project(":generator"))
-    ksp(project(":generator"))
-}
-
-// Normally a cordapp using our product would use our gradle plugin to load deps and configure.
-// Because we want short dev cycles, we directly include the deps here locally.
-val generatedTestSourcePath = "${buildDir.name}/generated/ksp/test/kotlin"
-sourceSets {
-    test {
-        java.srcDir(generatedTestSourcePath)
-    }
-}
-
-// Normally a cordapp using our product would use our gradle plugin to load deps and configure.
-// Because we want short dev cycles, we directly include the deps here locally.
-idea {
-    module {
-        generatedSourceDirs + file(generatedTestSourcePath)
-    }
 }
 
 val testConfigResourcesDir = "$rootDir/config/test"
