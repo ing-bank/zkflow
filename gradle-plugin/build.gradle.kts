@@ -4,11 +4,6 @@ plugins {
     id("maven-publish")
 }
 
-dependencies {
-    val kspVersion: String by project
-    api("com.google.devtools.ksp:symbol-processing:$kspVersion")
-}
-
 gradlePlugin {
     plugins {
         create("zkNotaryPlugin") {

@@ -17,14 +17,6 @@ buildscript {
                     password = System.getenv("GITHUB_TOKEN")
                 }
             }
-            maven {
-                name = "KspForkRepo"
-                url = uri("https://maven.pkg.github.com/ingzkp/ksp")
-                credentials {
-                    username = System.getenv("GITHUB_USERNAME")
-                    password = System.getenv("GITHUB_TOKEN")
-                }
-            }
         }
     }
 
