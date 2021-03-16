@@ -1,0 +1,9 @@
+//!
+//! The 'BigDecimal' main module.
+//!
+mod floating_point_100_20;
+use floating_point_100_20::BigDecimal;
+
+fn main(left: BigDecimal, right: BigDecimal) -> BigDecimal {
+    BigDecimal::plus(left, right)
+}

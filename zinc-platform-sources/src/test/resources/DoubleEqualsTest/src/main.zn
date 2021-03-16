@@ -1,0 +1,13 @@
+//!
+//! The 'double' main module.
+//!
+mod floating_point_24_6;
+use floating_point_24_6::Double;
+
+fn main(left: Double, right: Double) -> u8 {
+    if Double::equals(left, right) {
+        0
+    } else {
+        1
+    }
+}
