@@ -9,8 +9,6 @@ import com.ing.zknotary.gradle.task.PrepareCircuitForCompilationTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPlugin
-import org.gradle.api.tasks.SourceSetContainer
-import org.gradle.plugins.ide.idea.IdeaPlugin
 
 @Suppress("unused")
 class ZKNotaryPlugin : Plugin<Project> {

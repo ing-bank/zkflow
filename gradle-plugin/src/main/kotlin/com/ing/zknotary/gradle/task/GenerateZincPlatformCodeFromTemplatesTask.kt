@@ -21,7 +21,7 @@ abstract class GenerateZincPlatformCodeFromTemplatesTask : DefaultTask() {
         val mainTemplateContents = project.getTemplateContents("main_template.zn")
 
         project.circuitNames?.forEach { circuitName ->
-            val targetFilePath = extension.mergedCircuitOutputPath.resolve(circuitName).absolutePath
+            val targetFilePath = extension.mergedCircuitOutputPath.resolve(circuitName).resolve("src").absolutePath
             val constsContent = File("${extension.circuitSourcesBasePath.resolve(circuitName)}/consts.zn").readText()
 
             generateFloatingPointsCode(targetFilePath, floatingPointTemplateContents, extension.bigDecimalSizes)
