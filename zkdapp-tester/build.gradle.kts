@@ -60,7 +60,6 @@ tasks.create("processZincSources") {
 
     }
 
-    dependsOn("clean")
     dependsOn("copyZincPlatformSources")
     dependsOn("generateZincPlatformCodeFromTemplates")
     dependsOn("prepareCircuitForCompilation")

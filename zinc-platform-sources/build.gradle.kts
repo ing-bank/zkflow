@@ -83,7 +83,6 @@ task("circuits") {
             val circuitPath = File("$mergedCircuitOutputPath/$circuitName")
             // Create Zargo.toml
             val zargoFile = File("${circuitPath.absolutePath}/Zargo.toml")
-            println("ZARGOFILE: $zargoFile")
             zargoFile.delete()
             zargoFile.parentFile.mkdirs()
             zargoFile.createNewFile()

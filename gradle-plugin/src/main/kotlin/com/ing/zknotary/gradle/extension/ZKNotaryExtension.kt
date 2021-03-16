@@ -24,9 +24,6 @@ open class ZKNotaryExtension(project: Project) {
     @Input
     var notaryVersion: String? = "0.1.4-SNAPSHOT"
 
-    @Input
-    var generatorVersion: String? = "0.1.4-SNAPSHOT"
-
     @OutputDirectory
     val mergedCircuitOutputPath: File = project.buildDir.resolve(MERGED_CIRCUIT_BUILD_PATH)
 
