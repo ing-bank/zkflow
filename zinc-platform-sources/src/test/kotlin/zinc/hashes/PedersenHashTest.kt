@@ -1,7 +1,7 @@
-package com.ing.zknotary.common.zinc.hashes
+package zinc.hashes
 
 import com.ing.dlt.zkkrypto.util.asUnsigned
-import com.ing.zknotary.common.crypto.blake2s256
+import com.ing.zknotary.common.crypto.pedersen
 import com.ing.zknotary.common.zkp.ZincZKService
 import net.corda.core.crypto.DigestService
 import org.junit.jupiter.api.AfterAll
@@ -9,14 +9,14 @@ import org.junit.jupiter.api.Test
 import java.nio.ByteBuffer
 import java.time.Duration
 
-class BlakeHashTest {
-    private val circuitFolder: String = javaClass.getResource("/TestBlakeHash").path
+class PedersenHashTest {
+    private val circuitFolder: String = javaClass.getResource("/TestPedersenHash").path
     private val zincZKService = ZincZKService(
         circuitFolder,
         artifactFolder = circuitFolder,
         buildTimeout = Duration.ofSeconds(5),
-        setupTimeout = Duration.ofSeconds(300),
-        provingTimeout = Duration.ofSeconds(300),
+        setupTimeout = Duration.ofSeconds(30),
+        provingTimeout = Duration.ofSeconds(30),
         verificationTimeout = Duration.ofSeconds(1)
     )
 
@@ -30,11 +30,10 @@ class BlakeHashTest {
     }
 
     @Test
-    fun `zinc verifies Blake2s`() {
+    fun `zinc verifies Pedersen`() {
         val value = 2
-
         val witness = ByteBuffer.allocate(4).putInt(value).array()
-        val expected = DigestService.blake2s256.hash(witness).bytes
+        val expected = DigestService.pedersen.hash(witness).bytes
 
         val preimage = witness.map { "\"${it.asUnsigned()}\"" }
         val publicData = expected.map { "\"${it.asUnsigned()}\"" }

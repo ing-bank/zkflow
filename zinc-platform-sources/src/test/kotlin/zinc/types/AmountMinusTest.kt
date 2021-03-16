@@ -7,12 +7,10 @@ import net.corda.core.utilities.loggerFor
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
 import java.time.Duration
 import kotlin.time.ExperimentalTime
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @ExperimentalTime
 class AmountMinusTest {
     private val log = loggerFor<AmountMinusTest>()

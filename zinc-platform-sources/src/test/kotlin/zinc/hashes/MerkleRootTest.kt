@@ -1,4 +1,4 @@
-package com.ing.zknotary.common.zinc.hashes
+package zinc.hashes
 
 import com.ing.dlt.zkkrypto.util.asUnsigned
 import com.ing.zknotary.common.crypto.blake2s256
