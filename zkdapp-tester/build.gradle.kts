@@ -1,8 +1,4 @@
-import com.ing.zknotary.gradle.task.CopyZincCircuitSourcesTask
-import com.ing.zknotary.gradle.task.CopyZincPlatformSourcesTask
 import com.ing.zknotary.gradle.task.CreateZincDirectoriesForInputCommandTask
-import com.ing.zknotary.gradle.task.GenerateZincPlatformCodeFromTemplatesTask
-import com.ing.zknotary.gradle.task.PrepareCircuitForCompilationTask
 
 plugins {
     kotlin("jvm") version "1.4.20"
@@ -36,32 +32,17 @@ dependencies {
     implementation(kotlin("stdlib"))
 }
 
-
-tasks.create("processZincSources") {
-    mustRunAfter(gradle.includedBuild("zk-notary").task(":zinc-platform-sources:assemble"))
-    dependsOn(gradle.includedBuild("zk-notary").task(":zinc-platform-sources:assemble"))
-
-    tasks.matching {
-        it is CopyZincCircuitSourcesTask ||
-                it is CopyZincPlatformSourcesTask ||
-                it is GenerateZincPlatformCodeFromTemplatesTask ||
-                it is PrepareCircuitForCompilationTask
-
-    }.forEach {
-        it.mustRunAfter(gradle.includedBuild("zk-notary").task(":zinc-platform-sources:assemble"))
-        it.dependsOn(gradle.includedBuild("zk-notary").task(":zinc-platform-sources:assemble"))
-
-        it.mustRunAfter("createZincDirectoriesForInputCommand")
-    }
-
-    tasks.withType(CreateZincDirectoriesForInputCommandTask::class) {
-        mustRunAfter(gradle.includedBuild("zk-notary").task(":zinc-platform-sources:assemble"))
-        dependsOn(gradle.includedBuild("zk-notary").task(":zinc-platform-sources:assemble"))
-
-    }
-
-    dependsOn("copyZincPlatformSources")
-    dependsOn("generateZincPlatformCodeFromTemplates")
-    dependsOn("prepareCircuitForCompilation")
-    dependsOn("copyZincCircuitSources")
+// Normally this build is run after the included build, but this ensures that all dependencies
+// exist at build time. This is not necessary when using the real maven dependencies instead
+// of a composite build.
+tasks.matching {
+    it.name == "processZincSources" ||
+            it is CreateZincDirectoriesForInputCommandTask
+//            it is com.ing.zknotary.gradle.task.CopyZincCircuitSourcesTask ||
+//            it is com.ing.zknotary.gradle.task.CopyZincPlatformSourcesTask ||
+//            it is com.ing.zknotary.gradle.task.GenerateZincPlatformCodeFromTemplatesTask ||
+//            it is com.ing.zknotary.gradle.task.PrepareCircuitForCompilationTask
+}.forEach {
+    it.mustRunAfter(gradle.includedBuild("zk-notary").task(":zinc-platform-sources:assemble"))
+    it.dependsOn(gradle.includedBuild("zk-notary").task(":zinc-platform-sources:assemble"))
 }

@@ -25,10 +25,36 @@ class ZKNotaryPlugin : Plugin<Project> {
             project.dependencies.add("implementation", "com.ing.zknotary:notary:${extension.notaryVersion}")
         }
 
-        project.tasks.create("copyZincCircuitSources", CopyZincCircuitSourcesTask::class.java)
-        project.tasks.create("createZincDirectoriesForInputCommand", CreateZincDirectoriesForInputCommandTask::class.java)
-        project.tasks.create("copyZincPlatformSources", CopyZincPlatformSourcesTask::class.java)
-        project.tasks.create("generateZincPlatformCodeFromTemplates", GenerateZincPlatformCodeFromTemplatesTask::class.java)
-        project.tasks.create("prepareCircuitForCompilation", PrepareCircuitForCompilationTask::class.java)
+        val createZincDirsForCommandTask = project.tasks.create(
+            "createZincDirectoriesForInputCommand",
+            CreateZincDirectoriesForInputCommandTask::class.java
+        )
+
+        val copyCircuitTask = project.tasks.create("copyZincCircuitSources", CopyZincCircuitSourcesTask::class.java)
+        val copyPlatformTask = project.tasks.create("copyZincPlatformSources", CopyZincPlatformSourcesTask::class.java)
+        val generateFromTemplatesTask = project.tasks.create(
+            "generateZincPlatformCodeFromTemplates",
+            GenerateZincPlatformCodeFromTemplatesTask::class.java
+        )
+        val prepareForCompilationTask =
+            project.tasks.create("prepareCircuitForCompilation", PrepareCircuitForCompilationTask::class.java)
+
+        // If a new circuit is scaffolded, the processing tasks should run after it
+        copyCircuitTask.mustRunAfter(createZincDirsForCommandTask)
+        copyPlatformTask.mustRunAfter(createZincDirsForCommandTask)
+        generateFromTemplatesTask.mustRunAfter(createZincDirsForCommandTask)
+        prepareForCompilationTask.mustRunAfter(createZincDirsForCommandTask)
+
+        prepareForCompilationTask.dependsOn(copyCircuitTask, copyPlatformTask, generateFromTemplatesTask)
+        prepareForCompilationTask.mustRunAfter(copyCircuitTask, copyPlatformTask, generateFromTemplatesTask)
+
+        project.tasks.create("processZincSources") {
+            it.dependsOn("copyZincPlatformSources")
+            it.dependsOn("generateZincPlatformCodeFromTemplates")
+            it.dependsOn("prepareCircuitForCompilation")
+            it.dependsOn("copyZincCircuitSources")
+        }
+
+        project.tasks.getByPath("assemble").dependsOn("processZincSources")
     }
 }
