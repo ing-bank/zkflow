@@ -28,8 +28,6 @@ import net.corda.core.transactions.WireTransaction
 import net.corda.core.utilities.ByteSequence
 import net.corda.core.utilities.getOrThrow
 import net.corda.core.utilities.unwrap
-import net.corda.coretesting.internal.asTestContextEnv
-import net.corda.coretesting.internal.createTestSerializationEnv
 import net.corda.testing.core.ALICE_NAME
 import net.corda.testing.core.BOB_NAME
 import net.corda.testing.driver.DriverParameters
@@ -86,7 +84,7 @@ class CustomSerializationSchemeDriverTest {
     class SendFlow(val counterparty: Party) : FlowLogic<Boolean>() {
         @Suspendable
         override fun call(): Boolean {
-            val wtx = createWireTx(serviceHub, counterparty, counterparty.owningKey, CustomJsonScheme.SCHEME_ID)
+            val wtx = createWireTx(serviceHub, counterparty, counterparty.owningKey, TestScheme.SCHEME_ID)
             val session = initiateFlow(counterparty)
             session.send(wtx)
             return session.receive<Boolean>().unwrap { it }
@@ -114,7 +112,7 @@ class CustomSerializationSchemeDriverTest {
 
     object DummyCommandData : TypeOnlyCommandData()
 
-    open class CustomJsonScheme : CustomSerializationScheme {
+    open class TestScheme : CustomSerializationScheme {
 
         companion object {
             const val SCHEME_ID = 7
