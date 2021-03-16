@@ -1,9 +1,8 @@
-import com.ing.zknotary.gradle.util.generateFloatingPointsCode
-import com.ing.zknotary.gradle.util.generateMainCode
-import com.ing.zknotary.gradle.util.generateMerkleUtilsCode
+
+import com.ing.zknotary.gradle.util.Copy
+import com.ing.zknotary.gradle.util.Merkle
+import com.ing.zknotary.gradle.util.Templates
 import com.ing.zknotary.gradle.util.removeDebugCode
-import com.ing.zknotary.gradle.util.setCorrespondingMerkleTreeFunctionForComponentGroups
-import com.ing.zknotary.gradle.util.setCorrespondingMerkleTreeFunctionForMainTree
 import java.io.File
 
 val bigDecimalSizes = setOf(Pair(24, 6), Pair(100, 20))
@@ -11,38 +10,39 @@ val bigDecimalSizes = setOf(Pair(24, 6), Pair(100, 20))
 fun main(args: Array<String>) {
 
     val root = args[0]
-    val zincPlatformTemplatesPath = "$root/src/main/resources/zinc-platform-templates"
+    val projectVersion = args[1]
 
-    val circuitSourcesBasePath = "$root/circuits"
-    val mergedCircuitOutputPath = "$root/build/circuits"
+    val circuitSourcesBase = File("$root/circuits")
+    val mergedCircuitOutput = File("$root/build/circuits")
 
-    val circuitSourcesBase = File(circuitSourcesBasePath)
+    val platformTemplates = File("$root/src/main/resources/zinc-platform-templates")
+    val platformSources = File("$root/src/main/resources/zinc-platform-sources")
+    val testSources = File("$root/src/main/resources/zinc-platform-test-sources")
 
     val circuits = circuitSourcesBase.listFiles { file, _ -> file?.isDirectory ?: false }?.map { it.name }
 
-    val floatingPointTemplateContents = File("$zincPlatformTemplatesPath/floating_point.zn").readText()
-    val merkleTemplateContents = File("$zincPlatformTemplatesPath/merkle_template.zn").readText()
-    val mainTemplateContents = File("$zincPlatformTemplatesPath/main_template.zn").readText()
-
-    val testSourcesPath = "$root/src/main/resources/zinc-platform-test-sources"
-
     circuits?.forEach { circuitName ->
-        val targetFilePath = "$mergedCircuitOutputPath/$circuitName/src"
-        val constsContent = File("$circuitSourcesBasePath/$circuitName/consts.zn").readText()
+        // Copy zinc sources
+        val copy = Copy(circuitName, mergedCircuitOutput, circuitSourcesBase)
+        copy.createCopyZincCircuitSources(projectVersion)
+        copy.createCopyZincPlatformSources(platformSources)
 
         // Generate code from templates
-        generateFloatingPointsCode(targetFilePath, floatingPointTemplateContents, bigDecimalSizes)
-        generateMerkleUtilsCode(targetFilePath, merkleTemplateContents, constsContent)
-        generateMainCode(targetFilePath, mainTemplateContents, constsContent, circuitName)
+        val template = Templates(circuitName, mergedCircuitOutput, circuitSourcesBase, platformTemplates)
+        template.generateFloatingPointsCode(bigDecimalSizes)
+        template.generateMerkleUtilsCode()
+        template.generateMainCode()
 
         // set correct merkle tree function
-        setCorrespondingMerkleTreeFunctionForComponentGroups(targetFilePath, constsContent)
-        setCorrespondingMerkleTreeFunctionForMainTree(targetFilePath, constsContent)
+        val merkle = Merkle(circuitName, mergedCircuitOutput, circuitSourcesBase)
+        merkle.setCorrespondingMerkleTreeFunctionForComponentGroups()
+        merkle.setCorrespondingMerkleTreeFunctionForMainTree()
 
         // remove debug statements
-        removeDebugCode(targetFilePath)
+        removeDebugCode(circuitName, mergedCircuitOutput)
 
         // Generate floating points code for test circuits
-        generateFloatingPointsCode(testSourcesPath, floatingPointTemplateContents, bigDecimalSizes)
+        val testTemplate = Templates("test", testSources, circuitSourcesBase, platformTemplates)
+        testTemplate.generateFloatingPointsCode(bigDecimalSizes)
     }
 }

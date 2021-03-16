@@ -41,67 +41,20 @@ kotlin.sourceSets {
 
 val root = "${project.rootDir.absolutePath}/zinc-platform-sources"
 
-val circuitSourcesBasePath = "$root/circuits"
-val mergedCircuitOutputPath = "$root/build/circuits"
-
-val circuitSourcesBase = File(circuitSourcesBasePath)
-val mergedCircuitOutput = File(mergedCircuitOutputPath)
+val circuitSourcesBase = File("$root/circuits")
+val mergedCircuitOutput = File("$root/build/circuits")
 
 val circuits = circuitSourcesBase.listFiles { file, _ -> file?.isDirectory ?: false }?.map { it.name }
-
-// project.tasks.create("copyZincSources", CopyZincCircuitSourcesTask::class)
-task("copyZincSources") {
-    val zincPlatformSources = File("$root/src/main/resources/zinc-platform-sources")
-
-    circuits?.forEach { circuitName ->
-        // Copy circuit sources
-        copy {
-            from(circuitSourcesBase.resolve(circuitName))
-            into(mergedCircuitOutput.resolve(circuitName).resolve("src"))
-        }
-        // Copy platform sources
-        copy {
-            from(zincPlatformSources)
-            into(mergedCircuitOutput.resolve(circuitName).resolve("src"))
-        }
-    }
-}
 
 task("prepareCircuits", JavaExec::class) {
     main = "PrepareCircuitsKt"
     classpath = sourceSets["main"].runtimeClasspath
-    args = listOf(root)
+    args(root, project.version)
 }
 
 task("circuits") {
     mustRunAfter("rustfmtCheck")
-    dependsOn("copyZincSources",
-        "prepareCircuits")
-
-    doLast {
-        circuits?.forEach { circuitName ->
-            val circuitPath = File("$mergedCircuitOutputPath/$circuitName")
-            // Create Zargo.toml
-            val zargoFile = File("${circuitPath.absolutePath}/Zargo.toml")
-            zargoFile.delete()
-            zargoFile.parentFile.mkdirs()
-            zargoFile.createNewFile()
-            zargoFile.writeText(
-                """
-    [circuit]
-    name = "$circuitName"
-    version = "${project.version}"                                
-"""
-            )
-
-            // Compile circuit
-            exec {
-                workingDir = circuitPath
-                executable = "zargo"
-                args = listOf("clean", "-v")
-            }
-        }
-    }
+    dependsOn("prepareCircuits")
 }
 
 task("rustfmt") {

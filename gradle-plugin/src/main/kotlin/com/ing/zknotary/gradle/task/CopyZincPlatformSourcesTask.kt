@@ -1,27 +1,24 @@
 package com.ing.zknotary.gradle.task
 
+import com.ing.zknotary.gradle.util.Copy
 import com.ing.zknotary.gradle.util.circuitNames
 import com.ing.zknotary.gradle.util.platformSources
 import com.ing.zknotary.gradle.util.zkNotaryExtension
 import org.gradle.api.DefaultTask
-import org.gradle.api.file.RelativePath
 import org.gradle.api.tasks.TaskAction
+import java.io.File
 
 abstract class CopyZincPlatformSourcesTask : DefaultTask() {
 
     @TaskAction
-    fun createCopyZincCircuitSources() {
+    fun createCopyZincSources() {
         val extension = project.zkNotaryExtension
-        val sources = project.platformSources.matching { it.include("zinc-platform-sources/**/*.zn") }
+        val platformSources = project.platformSources.matching { it.include("zinc-platform-sources") }
+        val platformSourcesDir = File(platformSources.asPath)
+
         project.circuitNames?.forEach { circuitName ->
-            project.copy { copy ->
-                copy.into(extension.mergedCircuitOutputPath.resolve(circuitName).resolve("src"))
-                copy.from(sources).eachFile {
-                    @Suppress("SpreadOperator")
-                    it.relativePath = RelativePath(true, *it.relativePath.segments.drop(1).toTypedArray())
-                }
-                copy.includeEmptyDirs = false
-            }
+            val copy = Copy(circuitName, extension.mergedCircuitOutputPath, extension.circuitSourcesBasePath)
+            copy.createCopyZincPlatformSources(platformSourcesDir)
         }
     }
 }
