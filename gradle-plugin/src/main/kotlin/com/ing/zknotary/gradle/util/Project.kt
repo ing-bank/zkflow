@@ -23,3 +23,9 @@ val Project.circuitNames: List<String>?
         return zkNotaryExtension.circuitSourcesBasePath
             .listFiles { file, _ -> file?.isDirectory ?: false }?.map { it.name }
     }
+
+fun Project.getPlatformTemplatesPath(): String {
+    return project.platformSources.matching {
+        it.include("zinc-platform-templates/")
+    }.asPath
+}
