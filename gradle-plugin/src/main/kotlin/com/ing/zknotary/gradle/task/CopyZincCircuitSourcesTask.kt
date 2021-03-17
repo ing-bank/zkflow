@@ -6,7 +6,7 @@ import com.ing.zknotary.gradle.util.zkNotaryExtension
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
 
-abstract class CopyZincCircuitSourcesTask : DefaultTask() {
+open class CopyZincCircuitSourcesTask : DefaultTask() {
 
     @TaskAction
     fun createCopyZincSources() {

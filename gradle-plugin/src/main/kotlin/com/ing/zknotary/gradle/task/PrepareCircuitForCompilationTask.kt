@@ -7,7 +7,7 @@ import com.ing.zknotary.gradle.util.zkNotaryExtension
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
 
-abstract class PrepareCircuitForCompilationTask : DefaultTask() {
+open class PrepareCircuitForCompilationTask : DefaultTask() {
 
     @TaskAction
     fun prepareCircuitForCompilation() {

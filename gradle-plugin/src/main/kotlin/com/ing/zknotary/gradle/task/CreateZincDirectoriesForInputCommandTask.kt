@@ -10,10 +10,10 @@ import org.gradle.api.tasks.options.Option
 
 /**
 This task receives the input commandName as command line argument and creates a zinc directory under src/main with the
- provided command name. It also copies sample code for consts, contract rules, and contract state that should be manually
+provided command name. It also copies sample code for consts, contract rules, and contract state that should be manually
 implemented on zkdapp side.
-**/
-abstract class CreateZincDirectoriesForInputCommandTask : DefaultTask() {
+ **/
+open class CreateZincDirectoriesForInputCommandTask : DefaultTask() {
     private var commandName = "command"
 
     @Option(option = "command", description = "Set the command type of the transaction.")
