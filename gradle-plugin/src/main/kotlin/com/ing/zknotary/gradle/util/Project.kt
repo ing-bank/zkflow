@@ -3,6 +3,7 @@ package com.ing.zknotary.gradle.util
 import com.ing.zknotary.gradle.extension.ZKNotaryExtension
 import org.gradle.api.Project
 import org.gradle.api.file.FileTree
+import java.io.File
 
 val Project.platformSources: FileTree
     get() {
@@ -24,8 +25,8 @@ val Project.circuitNames: List<String>?
             .listFiles { file, _ -> file?.isDirectory ?: false }?.map { it.name }
     }
 
-fun Project.getPlatformTemplatesPath(): String {
+fun Project.getTemplateContents(templateFileName: String): File {
     return project.platformSources.matching {
-        it.include("zinc-platform-templates/")
-    }.asPath
+        it.include("zinc-platform-templates/$templateFileName")
+    }.singleFile
 }

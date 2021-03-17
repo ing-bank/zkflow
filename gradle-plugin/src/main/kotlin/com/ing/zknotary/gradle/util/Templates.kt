@@ -2,11 +2,11 @@ package com.ing.zknotary.gradle.util
 
 import java.io.File
 
-class Templates(private val circuitName: String, private val mergedCircuitOutput: File, private val circuitSourcesBase: File, private val platformTemplates: File) {
+class Templates(private val circuitName: String, private val mergedCircuitOutput: File, private val circuitSourcesBase: File) {
+
+    var templateContents: String = " "
 
     fun generateFloatingPointsCode(bigDecimalSizes: Set<Pair<Int, Int>>) {
-        val templateContents = platformTemplates.resolve("floating_point.zn").readText()
-
         bigDecimalSizes.forEach {
             val floatingPointContent = templateContents.replace("\${INTEGER_SIZE_PLACEHOLDER}", it.first.toString())
                 .replace("\${FRACTION_SIZE_PLACEHOLDER}", it.second.toString())
@@ -25,7 +25,6 @@ class Templates(private val circuitName: String, private val mergedCircuitOutput
     }
 
     fun generateMerkleUtilsCode() {
-        val templateContents = platformTemplates.resolve("merkle_template.zn").readText()
         val targetFile = mergedCircuitOutput.resolve(circuitName).resolve("src").resolve("merkle_utils.zn")
 
         targetFile.parentFile?.mkdirs()
@@ -73,8 +72,6 @@ use std::crypto::pedersen;
     }
 
     fun generateMainCode() {
-        val templateContents = platformTemplates.resolve("main_template.zn").readText()
-
         val targetFile = mergedCircuitOutput.resolve(circuitName).resolve("src").resolve("main.zn")
         targetFile.parentFile?.mkdirs()
         targetFile.delete()

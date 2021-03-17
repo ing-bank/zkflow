@@ -6,10 +6,10 @@ plugins {
 
 dependencies {
     implementation(project(":gradle-plugin"))
-    implementation(project(":notary"))
+    testImplementation(project(":notary"))
 
     val zkkryptoVersion: String by project
-    implementation("com.ing.dlt:zkkrypto:$zkkryptoVersion")
+    testImplementation("com.ing.dlt:zkkrypto:$zkkryptoVersion")
     // ZKP dependencies
     testImplementation(project(":test-utils"))
 }

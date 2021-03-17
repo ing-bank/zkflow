@@ -6,19 +6,17 @@ import com.ing.zknotary.gradle.util.platformSources
 import com.ing.zknotary.gradle.util.zkNotaryExtension
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
-import java.io.File
 
 abstract class CopyZincPlatformSourcesTask : DefaultTask() {
 
     @TaskAction
     fun createCopyZincSources() {
         val extension = project.zkNotaryExtension
-        val platformSources = project.platformSources.matching { it.include("zinc-platform-sources") }
-        val platformSourcesDir = File(platformSources.asPath)
+        val platformSources = project.platformSources.matching { it.include("zinc-platform-sources/**/*.zn") }.toList().toTypedArray()
 
         project.circuitNames?.forEach { circuitName ->
             val copy = Copy(circuitName, extension.mergedCircuitOutputPath, extension.circuitSourcesBasePath)
-            copy.createCopyZincPlatformSources(platformSourcesDir)
+            copy.createCopyZincPlatformSources(platformSources)
         }
     }
 }

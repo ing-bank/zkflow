@@ -27,10 +27,12 @@ class Copy(private val circuitName: String, private val mergedCircuitOutput: Fil
         }
     }
 
-    fun createCopyZincPlatformSources(zincPlatformSources: File) {
-        zincPlatformSources.copyRecursively(
-            mergedCircuitOutput.resolve(circuitName).resolve("src"),
-            overwrite = true
-        )
+    fun createCopyZincPlatformSources(zincPlatformSources: Array<File>?) {
+        zincPlatformSources?.forEach { file ->
+            file?.copyRecursively(
+                mergedCircuitOutput.resolve(circuitName).resolve("src").resolve(file.name),
+                overwrite = true
+            )
+        }
     }
 }
