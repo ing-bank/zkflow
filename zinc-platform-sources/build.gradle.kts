@@ -1,3 +1,5 @@
+import javax.inject.Inject
+
 plugins {
     kotlin("jvm")
     java
@@ -84,7 +86,7 @@ task("rustfmtCheck") {
     }
 }
 
-open class CopyCircuitTask : DefaultTask() {
+open class CopyCircuitTask @Inject constructor() : DefaultTask() {
 
     init {
         dependsOn(":zinc-platform-sources:circuits")
@@ -96,7 +98,8 @@ open class CopyCircuitTask : DefaultTask() {
         // In this package we test functions of classes, which are stored in one particular file,
         // but since there are many of them, we need many main functions with different parameters and output,
         // thus we copy implementation to each testing module in resources (because, zinc support modules pretty bad).
-        val testClassesPath = `java.nio.file`.Paths.get("zinc-platform-sources/src/test/kotlin/zinc/types/")
+        val testClassesPath =
+            `java.nio.file`.Paths.get(project.projectDir.resolve("src/test/kotlin/zinc/types/").absolutePath)
         `java.nio.file`.Files.newDirectoryStream(testClassesPath)
             .map { it.fileName.toString().removeSuffix(".kt") }
             .filter { `java.nio.file`.Files.exists(`java.nio.file`.Paths.get("zinc-platform-sources/build/resources/test/$it")) }

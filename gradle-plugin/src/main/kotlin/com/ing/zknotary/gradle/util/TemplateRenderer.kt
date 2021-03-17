@@ -2,36 +2,22 @@ package com.ing.zknotary.gradle.util
 
 import java.io.File
 
-class Templates(private val circuitName: String, private val mergedCircuitOutput: File, private val circuitSourcesBase: File) {
+class TemplateRenderer(private val outputPath: File) {
 
-    var templateContents: String = " "
-
-    fun generateFloatingPointsCode(bigDecimalSizes: Set<Pair<Int, Int>>) {
+    fun generateFloatingPointsCode(templateContents: String, bigDecimalSizes: Set<Pair<Int, Int>>) {
         bigDecimalSizes.forEach {
             val floatingPointContent = templateContents.replace("\${INTEGER_SIZE_PLACEHOLDER}", it.first.toString())
                 .replace("\${FRACTION_SIZE_PLACEHOLDER}", it.second.toString())
             val sizeSuffix = "${it.first}_${it.second}"
-            val targetFile = if (circuitName == "test") {
-                mergedCircuitOutput.resolve("floating_point_$sizeSuffix.zn") // for test code
-            } else {
-                mergedCircuitOutput.resolve(circuitName).resolve("src").resolve("floating_point_$sizeSuffix.zn")
-            }
-
-            targetFile.parentFile?.mkdirs()
-            targetFile.delete()
-            targetFile.createNewFile()
-            targetFile.writeBytes(floatingPointContent.toByteArray())
+            createOutputFile(outputPath.resolve("floating_point_$sizeSuffix.zn"))
+                .writeBytes(floatingPointContent.toByteArray())
         }
     }
 
-    fun generateMerkleUtilsCode() {
-        val targetFile = mergedCircuitOutput.resolve(circuitName).resolve("src").resolve("merkle_utils.zn")
-
-        targetFile.parentFile?.mkdirs()
-        targetFile.delete()
-        targetFile.createNewFile()
+    fun generateMerkleUtilsCode(templateContents: String, constsContent: String) {
+        val targetFile = createOutputFile(outputPath.resolve("merkle_utils.zn"))
         targetFile.writeText("//! Limited-depth recursion for Merkle tree construction\n")
-        targetFile.writeText("//! GENERATED CODE. DO NOT EDIT\n//! Edit it in zk-notary GenerateZincPlatformCodeFromTemplatesTask.kt\n")
+        targetFile.appendText("//! GENERATED CODE. DO NOT EDIT\n//! Edit it in zk-notary GenerateZincPlatformCodeFromTemplatesTask.kt\n")
         targetFile.appendText(
             """
 mod platform_component_group_leaf_digest_dto;
@@ -52,7 +38,6 @@ use std::crypto::pedersen;
         """
         )
 
-        val constsContent = circuitSourcesBase.resolve(circuitName).resolve("consts.zn").readText()
         val fullMerkleLeaves = getFullMerkleTreeSize(constsContent)
         targetFile.appendText(
             getMerkleTree(
@@ -71,13 +56,10 @@ use std::crypto::pedersen;
         )
     }
 
-    fun generateMainCode() {
-        val targetFile = mergedCircuitOutput.resolve(circuitName).resolve("src").resolve("main.zn")
-        targetFile.parentFile?.mkdirs()
-        targetFile.delete()
-        targetFile.createNewFile()
+    fun generateMainCode(templateContents: String, constsContent: String) {
+        val targetFile = createOutputFile(outputPath.resolve("main.zn"))
         targetFile.writeText("//! GENERATED CODE. DO NOT EDIT\n//! Edit it in zk-notary GenerateZincPlatformCodeFromTemplatesTask.kt\n")
-        targetFile.appendText("//! The '$circuitName' main module.")
+        targetFile.appendText("//! The main module.")
         targetFile.appendText(
             """
 mod consts;
@@ -101,15 +83,20 @@ use platform_utxo_digests::compute_reference_utxo_digests;
 use platform_zk_prover_transaction::Witness;
 """
         )
-        val constsContent = circuitSourcesBase.resolve(circuitName).resolve("consts.zn").readText()
+        val inputHashesCode = getUtxoDigestCode(constsContent, "input")
+        val referenceHashesCode = getUtxoDigestCode(constsContent, "reference")
 
-        val inputHashes = getUtxoDigestCode(constsContent, "input")
-        val referenceHashes = getUtxoDigestCode(constsContent, "reference")
-
-        val mainContent = templateContents.replace("\${COMMAND_NAME_PLACEHOLDER}", circuitName)
-            .replace("\${INPUT_HASH_PLACEHOLDER}", inputHashes)
-            .replace("\${REFERENCE_HASH_PLACEHOLDER}", referenceHashes)
+        val mainContent = templateContents
+            .replace("\${INPUT_HASH_PLACEHOLDER}", inputHashesCode)
+            .replace("\${REFERENCE_HASH_PLACEHOLDER}", referenceHashesCode)
         targetFile.appendBytes(mainContent.toByteArray())
+    }
+
+    private fun createOutputFile(targetFile: File): File {
+        targetFile.parentFile?.mkdirs()
+        targetFile.delete()
+        targetFile.createNewFile()
+        return targetFile
     }
 
     private fun getUtxoDigestCode(constsContent: String, componentGroupName: String): String {

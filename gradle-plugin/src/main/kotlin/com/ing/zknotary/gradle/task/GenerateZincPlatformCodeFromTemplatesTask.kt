@@ -1,6 +1,6 @@
 package com.ing.zknotary.gradle.task
 
-import com.ing.zknotary.gradle.util.Templates
+import com.ing.zknotary.gradle.util.TemplateRenderer
 import com.ing.zknotary.gradle.util.circuitNames
 import com.ing.zknotary.gradle.util.getTemplateContents
 import com.ing.zknotary.gradle.util.zkNotaryExtension
@@ -14,16 +14,24 @@ open class GenerateZincPlatformCodeFromTemplatesTask : DefaultTask() {
         val extension = project.zkNotaryExtension
 
         project.circuitNames?.forEach { circuitName ->
-            val template = Templates(circuitName, extension.mergedCircuitOutputPath, extension.circuitSourcesBasePath)
+            val renderer = TemplateRenderer(extension.mergedCircuitOutputPath.resolve(circuitName).resolve("src"))
 
-            template.templateContents = project.getTemplateContents("floating_point.zn").readText()
-            template.generateFloatingPointsCode(extension.bigDecimalSizes)
+            renderer.generateFloatingPointsCode(
+                project.getTemplateContents("floating_point.zn").readText(),
+                extension.bigDecimalSizes
+            )
 
-            template.templateContents = project.getTemplateContents("merkle_template.zn").readText()
-            template.generateMerkleUtilsCode()
+            val consts = extension.circuitSourcesBasePath.resolve(circuitName).resolve("consts.zn").readText()
 
-            template.templateContents = project.getTemplateContents("main_template.zn").readText()
-            template.generateMainCode()
+            renderer.generateMerkleUtilsCode(
+                project.getTemplateContents("merkle_template.zn").readText(),
+                consts
+            )
+
+            renderer.generateMainCode(
+                project.getTemplateContents("main_template.zn").readText(),
+                consts
+            )
         }
     }
 }

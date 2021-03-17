@@ -1,7 +1,7 @@
 
 import com.ing.zknotary.gradle.util.Copy
 import com.ing.zknotary.gradle.util.Merkle
-import com.ing.zknotary.gradle.util.Templates
+import com.ing.zknotary.gradle.util.TemplateRenderer
 import com.ing.zknotary.gradle.util.removeDebugCode
 import java.io.File
 
@@ -27,18 +27,22 @@ fun main(args: Array<String>) {
         copy.createCopyZincPlatformSources(platformSources)
 
         // Generate code from templates
-        val template = Templates(circuitName, mergedCircuitOutput, circuitSourcesBase)
+        // TODO: this is a direct code duplication of generateZincPlatformCodeFromTemplates.
+        // That logic should be extracted and called from the task and here
+        val renderer = TemplateRenderer(mergedCircuitOutput.resolve(circuitName).resolve("src"))
 
-        template.templateContents = platformTemplates.resolve("floating_point.zn").readText()
-        template.generateFloatingPointsCode(bigDecimalSizes)
+        renderer.generateFloatingPointsCode(
+            platformTemplates.resolve("floating_point.zn").readText(),
+            bigDecimalSizes
+        )
 
-        template.templateContents = platformTemplates.resolve("merkle_template.zn").readText()
-        template.generateMerkleUtilsCode()
+        val consts = circuitSourcesBase.resolve(circuitName).resolve("consts.zn").readText()
 
-        template.templateContents = platformTemplates.resolve("main_template.zn").readText()
-        template.generateMainCode()
+        renderer.generateMerkleUtilsCode(platformTemplates.resolve("merkle_template.zn").readText(), consts)
+        renderer.generateMainCode(platformTemplates.resolve("main_template.zn").readText(), consts)
 
         // set correct merkle tree function
+        // TODO: This should call renderer.generateMerkleUtilsCode()?
         val merkle = Merkle(circuitName, mergedCircuitOutput, circuitSourcesBase)
         merkle.setCorrespondingMerkleTreeFunctionForComponentGroups()
         merkle.setCorrespondingMerkleTreeFunctionForMainTree()
@@ -47,8 +51,11 @@ fun main(args: Array<String>) {
         removeDebugCode(circuitName, mergedCircuitOutput)
 
         // Generate floating points code for test circuits
-        val testTemplate = Templates("test", testSources, circuitSourcesBase)
-        testTemplate.templateContents = platformTemplates.resolve("floating_point.zn").readText()
-        testTemplate.generateFloatingPointsCode(bigDecimalSizes)
+        val testTemplate = TemplateRenderer(testSources)
+
+        testTemplate.generateFloatingPointsCode(
+            platformTemplates.resolve("floating_point.zn").readText(),
+            bigDecimalSizes
+        )
     }
 }
