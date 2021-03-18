@@ -1,6 +1,5 @@
 
-import com.ing.zknotary.gradle.util.Copy
-import com.ing.zknotary.gradle.util.Merkle
+import com.ing.zknotary.gradle.util.Renderer
 import com.ing.zknotary.gradle.util.TemplateRenderer
 import com.ing.zknotary.gradle.util.removeDebugCode
 import java.io.File
@@ -15,47 +14,37 @@ fun main(args: Array<String>) {
     val circuitSourcesBase = File("$root/circuits")
     val mergedCircuitOutput = File("$root/build/circuits")
 
-    val platformTemplates = File("$root/src/main/resources/zinc-platform-templates")
-    val platformSources = File("$root/src/main/resources/zinc-platform-sources").listFiles()
-    val testSources = File("$root/src/main/resources/zinc-platform-test-sources")
-
     val circuits = circuitSourcesBase.listFiles { file, _ -> file?.isDirectory ?: false }?.map { it.name }
     circuits?.forEach { circuitName ->
-        // Copy zinc sources
-        val copy = Copy(circuitName, mergedCircuitOutput, circuitSourcesBase)
-        copy.createCopyZincCircuitSources(projectVersion)
-        copy.createCopyZincPlatformSources(platformSources)
 
-        // Generate code from templates
-        // TODO: this is a direct code duplication of generateZincPlatformCodeFromTemplates.
-        // That logic should be extracted and called from the task and here
-        val renderer = TemplateRenderer(mergedCircuitOutput.resolve(circuitName).resolve("src"))
-
-        renderer.generateFloatingPointsCode(
-            platformTemplates.resolve("floating_point.zn").readText(),
-            bigDecimalSizes
-        )
-
+        val renderer = Renderer(mergedCircuitOutput.resolve(circuitName).resolve("src"))
         val consts = circuitSourcesBase.resolve(circuitName).resolve("consts.zn").readText()
 
-        renderer.generateMerkleUtilsCode(platformTemplates.resolve("merkle_template.zn").readText(), consts)
-        renderer.generateMainCode(platformTemplates.resolve("main_template.zn").readText(), consts)
+        // Copy Zinc sources
+        getPlatformSourcesFiles(root, "zinc-platform-sources")?.let { renderer.operateCopyRenderer(it, circuitSourcesBase, circuitName, projectVersion) }
 
-        // set correct merkle tree function
-        // TODO: This should call renderer.generateMerkleUtilsCode()?
-        val merkle = Merkle(circuitName, mergedCircuitOutput, circuitSourcesBase)
-        merkle.setCorrespondingMerkleTreeFunctionForComponentGroups()
-        merkle.setCorrespondingMerkleTreeFunctionForMainTree()
+        // Generate code from templates
+        getPlatformSourcesFiles(root, "zinc-platform-templates")?.let { renderer.operateTemplateRenderer(it, consts, bigDecimalSizes) }
+
+        // Set correct merkle tree function
+        renderer.operateMerkleRenderer(consts)
 
         // remove debug statements
         removeDebugCode(circuitName, mergedCircuitOutput)
 
         // Generate floating points code for test circuits
-        val testTemplate = TemplateRenderer(testSources)
-
+        val testTemplate = TemplateRenderer(getPlatformSourcesPath(root, "zinc-platform-test-sources"))
         testTemplate.generateFloatingPointsCode(
-            platformTemplates.resolve("floating_point.zn").readText(),
+            getPlatformSourcesPath(root, "zinc-platform-templates").resolve("floating_point.zn").readText(),
             bigDecimalSizes
         )
     }
+}
+
+private fun getPlatformSourcesFiles(root: String, sourceName: String): Array<File>? {
+    return File("$root/src/main/resources/$sourceName").listFiles()
+}
+
+private fun getPlatformSourcesPath(root: String, sourceName: String): File {
+    return File("$root/src/main/resources/$sourceName")
 }

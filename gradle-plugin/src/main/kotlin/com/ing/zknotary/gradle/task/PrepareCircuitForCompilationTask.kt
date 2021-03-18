@@ -1,6 +1,6 @@
 package com.ing.zknotary.gradle.task
 
-import com.ing.zknotary.gradle.util.Merkle
+import com.ing.zknotary.gradle.util.Renderer
 import com.ing.zknotary.gradle.util.circuitNames
 import com.ing.zknotary.gradle.util.removeDebugCode
 import com.ing.zknotary.gradle.util.zkNotaryExtension
@@ -13,10 +13,10 @@ open class PrepareCircuitForCompilationTask : DefaultTask() {
     fun prepareCircuitForCompilation() {
         val extension = project.zkNotaryExtension
         project.circuitNames?.forEach { circuitName ->
-            val merkle = Merkle(circuitName, extension.mergedCircuitOutputPath, extension.circuitSourcesBasePath)
+            val renderer = Renderer(extension.mergedCircuitOutputPath.resolve(circuitName).resolve("src"))
+            val consts = extension.circuitSourcesBasePath.resolve(circuitName).resolve("consts.zn").readText()
 
-            merkle.setCorrespondingMerkleTreeFunctionForComponentGroups()
-            merkle.setCorrespondingMerkleTreeFunctionForMainTree()
+            renderer.operateMerkleRenderer(consts)
 
             removeDebugCode(circuitName, extension.mergedCircuitOutputPath)
         }

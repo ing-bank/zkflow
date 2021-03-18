@@ -5,7 +5,7 @@ import org.gradle.api.Project
 import org.gradle.api.file.FileTree
 import java.io.File
 
-val Project.platformSources: FileTree
+val Project.platformSourcesDirectory: FileTree
     get() {
         return configurations.getByName("zinc")
             .files
@@ -25,8 +25,17 @@ val Project.circuitNames: List<String>?
             .listFiles { file, _ -> file?.isDirectory ?: false }?.map { it.name }
     }
 
-fun Project.getTemplateContents(templateFileName: String): File {
-    return project.platformSources.matching {
-        it.include("zinc-platform-templates/$templateFileName")
-    }.singleFile
-}
+val Project.platformSources: Array<File>
+    get() {
+        return project.platformSourcesDirectory.matching { it.include("zinc-platform-sources/**/*.zn") }.toList().toTypedArray()
+    }
+
+val Project.platformTemplates: Array<File>
+    get() {
+        return project.platformSourcesDirectory.matching { it.include("zinc-platform-templates/**/*.zn") }.toList().toTypedArray()
+    }
+
+val Project.platformSamples: FileTree
+    get() {
+        return project.platformSourcesDirectory.matching { it.include("zinc-platform-samples/**/*.zn") }
+    }

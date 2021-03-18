@@ -1,6 +1,6 @@
 package com.ing.zknotary.gradle.task
 
-import com.ing.zknotary.gradle.util.platformSources
+import com.ing.zknotary.gradle.util.platformSamples
 import com.ing.zknotary.gradle.util.zkNotaryExtension
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RelativePath
@@ -28,13 +28,10 @@ open class CreateZincDirectoriesForInputCommandTask : DefaultTask() {
 
     @TaskAction
     fun createZincDirectoriesForInputCommand() {
-
         val extension = project.zkNotaryExtension
-        val samples = project.platformSources.matching { it.include("zinc-platform-samples/**/*.zn") }
-
         project.copy { copy ->
             copy.into(extension.circuitSourcesBasePath.resolve(commandName))
-            copy.from(samples).eachFile {
+            copy.from(project.platformSamples).eachFile {
                 @Suppress("SpreadOperator")
                 it.relativePath = RelativePath(true, *it.relativePath.segments.drop(1).toTypedArray())
             }
