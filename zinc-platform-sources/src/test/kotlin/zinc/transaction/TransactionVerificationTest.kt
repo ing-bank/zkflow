@@ -89,7 +89,7 @@ class TransactionVerificationTest {
             commands = listOf(Command(TestContract.Create(), alice.owningKey))
         )
 
-        val witness = Witness(
+        val witness = Witness.fromWireTransaction(
             tx = wtx,
             inputStates = emptyList(),
             inputNonces = emptyList(),

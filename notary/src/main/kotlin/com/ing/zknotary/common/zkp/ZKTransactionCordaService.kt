@@ -30,7 +30,7 @@ abstract class ZKTransactionCordaService(val serviceHub: ServiceHub) : ZKTransac
         val inputNonces = collectNonces(wtx.inputs)
         val referenceNonces = collectNonces(wtx.references)
 
-        val witness = Witness(wtx, inputs, references, inputNonces, referenceNonces)
+        val witness = Witness.fromWireTransaction(wtx, inputs, references, inputNonces, referenceNonces)
 
         val zkService = zkServiceForTx(wtx.zkCommandData())
         val proof = zkService.prove(witness)
