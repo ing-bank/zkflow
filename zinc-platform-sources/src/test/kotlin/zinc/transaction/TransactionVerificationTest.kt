@@ -1,6 +1,7 @@
 package zinc.transaction
 
 import com.ing.zknotary.common.crypto.zinc
+import com.ing.zknotary.common.serialization.PublicInputSerializer
 import com.ing.zknotary.common.serialization.WitnessSerializer
 import com.ing.zknotary.common.zkp.PublicInput
 import com.ing.zknotary.common.zkp.Witness
@@ -98,7 +99,7 @@ class TransactionVerificationTest {
             referenceNonces = emptyList()
         )
 
-        val publicData = PublicInput(
+        val publicInput = PublicInput(
             transactionId = wtx.id,
             inputHashes = emptyList(),
             referenceHashes = emptyList()
@@ -107,7 +108,8 @@ class TransactionVerificationTest {
         // TODO: Implement ZincSerializationFactory and refactor circuit to handle new witness format
         val witnessJson = Json.encodeToString(WitnessSerializer, witness)
         println(witnessJson)
-        // val publicDataJson = ZincSerializationFactory.serialize(publicData)
+        val publicInputJson = Json.encodeToString(PublicInputSerializer, publicInput)
+        println(publicInputJson)
 
         // val proof = zincZKService.proveTimed(witnessJson.toByteArray(), log)
         // zincZKService.verify(proof, publicDataJson.toByteArray())
