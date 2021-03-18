@@ -66,7 +66,7 @@ public class MockZKService : ZKService {
          */
         if (publicInput.transactionId != wtx.id) error(
             "The calculated Merkle root from the witness (${wtx.id}) does not match " +
-                    "the expected transaction id from the public input (${publicInput.transactionId})."
+                "the expected transaction id from the public input (${publicInput.transactionId})."
         )
 
         /*
@@ -87,7 +87,7 @@ public class MockZKService : ZKService {
 
             if (leafHashFromPublicInput != calculatedLeafHashFromWitness) error(
                 "Calculated leaf hash ($calculatedLeafHashFromWitness} for input $index of tx ${wtx.id} does " +
-                        "not match the leaf hash from the public input ($leafHashFromPublicInput)."
+                    "not match the leaf hash from the public input ($leafHashFromPublicInput)."
             )
         }
 
@@ -109,7 +109,7 @@ public class MockZKService : ZKService {
 
             if (leafHashFromPublicreference != calculatedLeafHashFromWitness) error(
                 "Calculated leaf hash ($calculatedLeafHashFromWitness} for reference $index of tx ${wtx.id} does " +
-                        "not match the leaf hash from the public input ($leafHashFromPublicreference)."
+                    "not match the leaf hash from the public input ($leafHashFromPublicreference)."
             )
         }
     }

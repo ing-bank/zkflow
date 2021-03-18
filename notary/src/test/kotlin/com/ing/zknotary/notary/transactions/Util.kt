@@ -50,7 +50,10 @@ fun LedgerDSL<TestTransactionDSLInterpreter, TestLedgerDSLInterpreter>.createMov
     return withTestSerializationEnvIfNotSet {
         val stateAndRef = retrieveOutputStateAndRef(OwnableState::class.java, stateLabel)
         val referenceStateRef =
-            if (referenceLabel != null) retrieveOutputStateAndRef(ContractState::class.java, referenceLabel).ref else null
+            if (referenceLabel != null) retrieveOutputStateAndRef(
+                ContractState::class.java,
+                referenceLabel
+            ).ref else null
 
         createMoveWtx(stateAndRef, newOwner, referenceStateRef)
     }
@@ -63,7 +66,10 @@ fun LedgerDSL<TestTransactionDSLInterpreter, TestLedgerDSLInterpreter>.createMov
 ): WireTransaction {
     return withTestSerializationEnvIfNotSet {
         val referenceStateRef =
-            if (referenceLabel != null) retrieveOutputStateAndRef(ContractState::class.java, referenceLabel).ref else null
+            if (referenceLabel != null) retrieveOutputStateAndRef(
+                ContractState::class.java,
+                referenceLabel
+            ).ref else null
 
         createMoveWtx(stateAndRef, newOwner, referenceStateRef)
     }

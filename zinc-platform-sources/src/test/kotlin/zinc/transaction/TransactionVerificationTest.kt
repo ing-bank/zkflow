@@ -4,7 +4,6 @@ import com.ing.zknotary.common.crypto.zinc
 import com.ing.zknotary.common.zkp.PublicInput
 import com.ing.zknotary.common.zkp.Witness
 import com.ing.zknotary.testing.fixtures.contract.TestContract
-import io.mockk.junit5.MockKExtension
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.PrivacySalt
 import net.corda.core.contracts.StateAndContract
@@ -29,13 +28,11 @@ import net.corda.coretesting.internal.createTestSerializationEnv
 import net.corda.testing.core.TestIdentity
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
 import java.time.Instant
 import kotlin.time.ExperimentalTime
 
 @ExperimentalTime
 @Tag("nightly")
-@ExtendWith(MockKExtension::class)
 class TransactionVerificationTest {
 //    private val log = loggerFor<TransactionVerificationTest>()
 //
