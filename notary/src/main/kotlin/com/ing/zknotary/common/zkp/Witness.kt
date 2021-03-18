@@ -1,12 +1,11 @@
 package com.ing.zknotary.common.zkp
 
 import com.ing.zknotary.common.serialization.WitnessSerializer
-import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.PrivacySalt
-import net.corda.core.contracts.StateAndRef
+import net.corda.core.contracts.TransactionState
 import net.corda.core.crypto.DigestService
 import net.corda.core.crypto.SecureHash
 import net.corda.core.serialization.CordaSerializable
@@ -47,12 +46,12 @@ class Witness(
     val referencesGroup: List<ByteArray>,
     val parametersGroup: List<ByteArray>,
 
-    val privacySalt: @Contextual PrivacySalt,
+    val privacySalt: PrivacySalt,
 
-    val inputStates: List<@Contextual StateAndRef<ContractState>>,
-    val referenceStates: List<@Contextual StateAndRef<ContractState>>,
-    val inputNonces: List<@Contextual SecureHash>,
-    val referenceNonces: List<@Contextual SecureHash>,
+    val inputStates: List<TransactionState<ContractState>>,
+    val referenceStates: List<TransactionState<ContractState>>,
+    val inputNonces: List<SecureHash>,
+    val referenceNonces: List<SecureHash>,
 
     /**
      * This is only here so that we can use it in MockZKService to reconstruct the WireTransaction.
@@ -63,8 +62,8 @@ class Witness(
     companion object {
         fun fromWireTransaction(
             tx: WireTransaction,
-            inputStates: List<StateAndRef<ContractState>>,
-            referenceStates: List<StateAndRef<ContractState>>,
+            inputStates: List<TransactionState<ContractState>>,
+            referenceStates: List<TransactionState<ContractState>>,
             inputNonces: List<SecureHash>,
             referenceNonces: List<SecureHash>
         ): Witness {
