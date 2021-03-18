@@ -110,10 +110,12 @@ subprojects {
             // Testing
             val junit5Version: String by project
             val kotestVersion: String by project
+            val mockKVersion: String by project
 
             add("testImplementation", "org.junit.jupiter:junit-jupiter-api:$junit5Version")
             add("testRuntimeOnly", "org.junit.jupiter:junit-jupiter-engine")
             add("testImplementation", "io.kotest:kotest-assertions-core:$kotestVersion")
+            testImplementation("io.mockk:mockk:$mockKVersion")
         }
 
         configure<com.diffplug.gradle.spotless.SpotlessExtension> {
