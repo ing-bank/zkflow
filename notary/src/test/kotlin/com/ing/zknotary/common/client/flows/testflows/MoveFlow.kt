@@ -5,6 +5,7 @@ import com.ing.zknotary.client.flows.ZKCollectSignaturesFlow
 import com.ing.zknotary.client.flows.ZKFinalityFlow
 import com.ing.zknotary.client.flows.ZKReceiveFinalityFlow
 import com.ing.zknotary.client.flows.ZKSignTransactionFlow
+import com.ing.zknotary.client.flows.createSignature
 import com.ing.zknotary.client.flows.signInitialZKTransaction
 import com.ing.zknotary.common.client.flows.TestSerializationScheme
 import com.ing.zknotary.common.zkp.ZKTransactionService
@@ -45,14 +46,19 @@ class MoveFlow(
 
         val builder = TransactionBuilder(serviceHub.networkMapCache.notaryIdentities.single())
         builder.withItems(state, stateAndContract, command)
-        val ltx =
-            builder.toWireTransaction(serviceHub, TestSerializationScheme.SCHEME_ID).toLedgerTransaction(serviceHub)
+        val wtx = builder.toWireTransaction(serviceHub, TestSerializationScheme.SCHEME_ID)
 
         // Transaction creator signs transaction.
-        val stx = serviceHub.signInitialTransaction(builder)
+        //
+        // We can't use `serviceHub.signInitialTransaction(builder)`,
+        // since it prohibits us from setting custom serialization scheme.
+        // TODO: We probably have to make that clear to our users, or their code will fail.
+        // Probably best to wrap it in a subflow they can call?
+        val stx = SignedTransaction(wtx, listOf(serviceHub.createSignature(wtx.id, me.owningKey)))
         stx.verify(serviceHub, false)
 
-        val vtx = zkService.prove(stx.tx, ltx.inputs, ltx.references)
+        val vtx = zkService.prove(wtx)
+
         val partiallySignedVtx = signInitialZKTransaction(vtx)
         val svtx = subFlow(ZKCollectSignaturesFlow(stx, partiallySignedVtx, listOf(session)))
 

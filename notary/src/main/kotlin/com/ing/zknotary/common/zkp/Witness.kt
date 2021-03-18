@@ -4,13 +4,10 @@ import com.ing.zknotary.common.serialization.WitnessSerializer
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import net.corda.core.contracts.ComponentGroupEnum
-import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.PrivacySalt
-import net.corda.core.contracts.TransactionState
 import net.corda.core.crypto.DigestService
 import net.corda.core.crypto.SecureHash
 import net.corda.core.serialization.CordaSerializable
-import net.corda.core.serialization.serialize
 import net.corda.core.transactions.TraversableTransaction
 import net.corda.core.transactions.WireTransaction
 
@@ -51,10 +48,22 @@ class Witness(
 
     val privacySalt: PrivacySalt,
 
-    val inputStates: List<ByteArray>,
-    val referenceStates: List<ByteArray>,
-    val inputNonces: List<SecureHash>,
-    val referenceNonces: List<SecureHash>,
+    /**
+     * The serialized UTXOs pointed to by the input serialized stateRefs of the inputsGroup parameter.
+     *
+     * They should be indexed indentically to the inputsGroup parameter.
+     */
+    val serializedInputUtxos: List<ByteArray>,
+
+    /**
+     * The serialized UTXOs pointed to by the input serialized stateRefs of the referencesGroup parameter.
+     *
+     * They should be indexed indentically to the referencesGroup parameter.
+     */
+    val serializedReferenceUtxos: List<ByteArray>,
+
+    val inputUtxoNonces: List<SecureHash>,
+    val referenceUtxoNonces: List<SecureHash>,
 
     /**
      * This is only here so that we can use it in MockZKService to reconstruct the WireTransaction.
@@ -64,36 +73,31 @@ class Witness(
 ) {
     companion object {
         fun fromWireTransaction(
-            tx: WireTransaction,
-            inputStates: List<TransactionState<ContractState>>,
-            referenceStates: List<TransactionState<ContractState>>,
-            inputNonces: List<SecureHash>,
-            referenceNonces: List<SecureHash>
+            wtx: WireTransaction,
+            serializedInputUtxos: List<ByteArray>,
+            serializedReferenceUtxos: List<ByteArray>,
+            inputUtxoNonces: List<SecureHash>,
+            referenceUtxoNonces: List<SecureHash>
         ): Witness {
             return Witness(
-                inputsGroup = tx.serializedComponenteBytesFor(ComponentGroupEnum.INPUTS_GROUP),
-                outputsGroup = tx.serializedComponenteBytesFor(ComponentGroupEnum.OUTPUTS_GROUP),
-                commandsGroup = tx.serializedComponenteBytesFor(ComponentGroupEnum.COMMANDS_GROUP),
-                attachmentsGroup = tx.serializedComponenteBytesFor(ComponentGroupEnum.ATTACHMENTS_GROUP),
-                notaryGroup = tx.serializedComponenteBytesFor(ComponentGroupEnum.NOTARY_GROUP),
-                timeWindowGroup = tx.serializedComponenteBytesFor(ComponentGroupEnum.TIMEWINDOW_GROUP),
-                signersGroup = tx.serializedComponenteBytesFor(ComponentGroupEnum.SIGNERS_GROUP),
-                referencesGroup = tx.serializedComponenteBytesFor(ComponentGroupEnum.REFERENCES_GROUP),
-                parametersGroup = tx.serializedComponenteBytesFor(ComponentGroupEnum.PARAMETERS_GROUP),
+                inputsGroup = wtx.serializedComponenteBytesFor(ComponentGroupEnum.INPUTS_GROUP),
+                outputsGroup = wtx.serializedComponenteBytesFor(ComponentGroupEnum.OUTPUTS_GROUP),
+                commandsGroup = wtx.serializedComponenteBytesFor(ComponentGroupEnum.COMMANDS_GROUP),
+                attachmentsGroup = wtx.serializedComponenteBytesFor(ComponentGroupEnum.ATTACHMENTS_GROUP),
+                notaryGroup = wtx.serializedComponenteBytesFor(ComponentGroupEnum.NOTARY_GROUP),
+                timeWindowGroup = wtx.serializedComponenteBytesFor(ComponentGroupEnum.TIMEWINDOW_GROUP),
+                signersGroup = wtx.serializedComponenteBytesFor(ComponentGroupEnum.SIGNERS_GROUP),
+                referencesGroup = wtx.serializedComponenteBytesFor(ComponentGroupEnum.REFERENCES_GROUP),
+                parametersGroup = wtx.serializedComponenteBytesFor(ComponentGroupEnum.PARAMETERS_GROUP),
 
-                privacySalt = tx.privacySalt,
+                privacySalt = wtx.privacySalt,
 
-                /*
-                 * FIXME: This needs to be changed so that it uses the same serialization scheme as
-                 * was used for the serialization of the component groups.
-                 * As it is now, this will use Corda's standard serialization
-                */
-                inputStates = inputStates.map { it.serialize().copyBytes() },
-                referenceStates = referenceStates.map { it.serialize().copyBytes() },
-                inputNonces = inputNonces,
-                referenceNonces = referenceNonces,
+                serializedInputUtxos = serializedInputUtxos,
+                serializedReferenceUtxos = serializedReferenceUtxos,
+                inputUtxoNonces = inputUtxoNonces,
+                referenceUtxoNonces = referenceUtxoNonces,
 
-                digestService = tx.digestService
+                digestService = wtx.digestService
             )
         }
 

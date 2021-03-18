@@ -9,35 +9,37 @@ import com.ing.zknotary.node.services.ZKWritableVerifierTransactionStorage
 import com.ing.zknotary.node.services.getCordaServiceFromConfig
 import kotlinx.serialization.ExperimentalSerializationApi
 import net.corda.core.contracts.ComponentGroupEnum
-import net.corda.core.contracts.ContractState
-import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.StateRef
+import net.corda.core.contracts.TransactionResolutionException
 import net.corda.core.crypto.SecureHash
 import net.corda.core.node.ServiceHub
 import net.corda.core.serialization.SingletonSerializeAsToken
 import net.corda.core.transactions.WireTransaction
 import java.util.function.Predicate
 
-abstract class ZKTransactionCordaService(val serviceHub: ServiceHub) : ZKTransactionService, SingletonSerializeAsToken() {
+abstract class ZKTransactionCordaService(val serviceHub: ServiceHub) : ZKTransactionService,
+    SingletonSerializeAsToken() {
 
-    private val vtxStorage: ZKWritableVerifierTransactionStorage by lazy { serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_VERIFIER_TX_STORAGE) as ZKWritableVerifierTransactionStorage }
+    private val vtxStorage: ZKWritableVerifierTransactionStorage by lazy {
+        serviceHub.getCordaServiceFromConfig(
+            ServiceNames.ZK_VERIFIER_TX_STORAGE
+        ) as ZKWritableVerifierTransactionStorage
+    }
 
     @ExperimentalSerializationApi
     override fun prove(
-        wtx: WireTransaction,
-        inputs: List<StateAndRef<ContractState>>,
-        references: List<StateAndRef<ContractState>>
+        wtx: WireTransaction
     ): ZKVerifierTransaction {
 
-        val inputNonces = collectNonces(wtx.inputs)
-        val referenceNonces = collectNonces(wtx.references)
+        val inputUtxoNonces = collectUtxoNonces(wtx.inputs)
+        val referenceUtxoNonces = collectUtxoNonces(wtx.references)
 
         val witness = Witness.fromWireTransaction(
             wtx,
-            inputs.map { it.state },
-            references.map { it.state },
-            inputNonces,
-            referenceNonces
+            wtx.serializedInputUtxos(serviceHub),
+            wtx.serializedReferenceUtxos(serviceHub),
+            inputUtxoNonces,
+            referenceUtxoNonces
         )
 
         val zkService = zkServiceForTx(wtx.zkCommandData())
@@ -116,16 +118,47 @@ abstract class ZKTransactionCordaService(val serviceHub: ServiceHub) : ZKTransac
         }
     }
 
-    private fun collectNonces(stateRefs: List<StateRef>): List<SecureHash> {
+    private fun collectUtxoNonces(stateRefs: List<StateRef>): List<SecureHash> {
 
         return stateRefs.map { stateRef ->
             val prevStx = serviceHub.validatedTransactions.getTransaction(stateRef.txhash)
                 ?: error("Plaintext tx not found for hash ${stateRef.txhash}")
 
             val ftx = prevStx.buildFilteredTransaction(Predicate { true })
-            val nonces = ftx.filteredComponentGroups.find { it.groupIndex == ComponentGroupEnum.OUTPUTS_GROUP.ordinal }!!.nonces
+            val nonces =
+                ftx.filteredComponentGroups.find { it.groupIndex == ComponentGroupEnum.OUTPUTS_GROUP.ordinal }!!.nonces
 
             nonces[stateRef.index]
         }
+    }
+
+    /**
+     * TODO: It may be that this is too slow, because we query the db separately for each input and reference.
+     * If that is the case, we may consider testing an alternative for speed:
+     * calling `LedgerTransaction.transform` to get access to the private serialized contents,
+     * but that is non-supported API for now, so we can't rely on it for now:
+     *
+     * ```
+     * val (serializedInputUtxos, serializedReferenceUtxos) = wtx.toLedgerTransaction(serviceHub)
+     *     .transform { _, serializedInputs, serializedReferences -> Pair(serializedInputs, serializedReferences) }
+     * ```
+     *
+     * TODO: we should probably combine this with `collectUtxoNonces`, since the same transactions are fetched from the DB.
+     */
+    private fun WireTransaction.serializedInputUtxos(serviceHub: ServiceHub): List<ByteArray> {
+        return inputs.map { serviceHub.serializedUtxo(it) }
+    }
+
+    private fun WireTransaction.serializedReferenceUtxos(serviceHub: ServiceHub): List<ByteArray> =
+        references.map { serviceHub.serializedUtxo(it) }
+
+    private fun ServiceHub.serializedUtxo(
+        stateRef: StateRef
+    ): ByteArray {
+        val input = validatedTransactions.getTransaction(stateRef.txhash)?.tx
+            ?.componentGroups?.singleOrNull { it.groupIndex == ComponentGroupEnum.OUTPUTS_GROUP.ordinal }
+            ?.components?.getOrNull(stateRef.index)?.copyBytes()
+            ?: throw TransactionResolutionException(stateRef.txhash)
+        return input
     }
 }

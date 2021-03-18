@@ -92,11 +92,11 @@ class TransactionVerificationTest {
         )
 
         val witness = Witness.fromWireTransaction(
-            tx = wtx,
-            inputStates = emptyList(),
-            inputNonces = emptyList(),
-            referenceStates = emptyList(),
-            referenceNonces = emptyList()
+            wtx = wtx,
+            serializedInputUtxos = emptyList(),
+            inputUtxoNonces = emptyList(),
+            serializedReferenceUtxos = emptyList(),
+            referenceUtxoNonces = emptyList()
         )
 
         val publicInput = PublicInput(

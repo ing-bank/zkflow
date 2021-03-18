@@ -5,8 +5,6 @@ import com.ing.zknotary.common.zkp.PublicInput
 import com.ing.zknotary.common.zkp.Witness
 import com.ing.zknotary.common.zkp.ZKService
 import net.corda.core.contracts.ComponentGroupEnum
-import net.corda.core.contracts.ContractState
-import net.corda.core.contracts.TransactionState
 import net.corda.core.crypto.DigestService
 import net.corda.core.serialization.SerializationFactory
 import net.corda.core.serialization.deserialize
@@ -76,9 +74,8 @@ public class MockZKService : ZKService {
          * Rule 2: witness.ptx.inputs[i] contents hashed with nonce should equal publicInput.prevVtxOutputHashes[i].
          * This proves that prover did not change the contents of the input states
          */
-        val inputStates = witness.inputStates.map { it.deserialize<TransactionState<ContractState>>() }
-        inputStates.forEachIndexed { index, state ->
-            val nonceFromWitness = witness.inputNonces.getOrElse(index) {
+        witness.serializedInputUtxos.forEachIndexed { index, serializedInputUtxo ->
+            val nonceFromWitness = witness.inputUtxoNonces.getOrElse(index) {
                 error("Nonce not present in public input for input $index of tx ${wtx.id}")
             }
 
@@ -87,7 +84,7 @@ public class MockZKService : ZKService {
             }
 
             val calculatedLeafHashFromWitness =
-                DigestService.zinc.componentHash(nonceFromWitness, state.serialize())
+                DigestService.zinc.componentHash(nonceFromWitness, OpaqueBytes(serializedInputUtxo))
 
             if (leafHashFromPublicInput != calculatedLeafHashFromWitness) error(
                 "Calculated leaf hash ($calculatedLeafHashFromWitness} for input $index of tx ${wtx.id} does " +
@@ -99,9 +96,8 @@ public class MockZKService : ZKService {
          * Rule 3: witness.ptx.references[i] contents hashed with nonce should equal publicreference.prevVtxOutputHashes[i].
          * This proves that prover did not change the contents of the reference states
          */
-        val referenceStates = witness.referenceStates.map { it.deserialize<TransactionState<ContractState>>() }
-        referenceStates.forEachIndexed { index, state ->
-            val nonceFromWitness = witness.referenceNonces.getOrElse(index) {
+        witness.serializedReferenceUtxos.forEachIndexed { index, serializedReferenceUtxo ->
+            val nonceFromWitness = witness.referenceUtxoNonces.getOrElse(index) {
                 error("Nonce not present in public reference for reference $index of tx ${wtx.id}")
             }
 
@@ -110,7 +106,7 @@ public class MockZKService : ZKService {
             }
 
             val calculatedLeafHashFromWitness =
-                DigestService.zinc.componentHash(nonceFromWitness, state.serialize())
+                DigestService.zinc.componentHash(nonceFromWitness, OpaqueBytes(serializedReferenceUtxo))
 
             if (leafHashFromPublicreference != calculatedLeafHashFromWitness) error(
                 "Calculated leaf hash ($calculatedLeafHashFromWitness} for reference $index of tx ${wtx.id} does " +
