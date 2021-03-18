@@ -1,0 +1,20 @@
+
+struct PublicInput {
+    transaction_id: NodeDigestDto,
+    input_hashes: [ComponentGroupLeafDigestDto; INPUT_GROUP_SIZE],
+    reference_hashes: [ComponentGroupLeafDigestDto; REFERENCE_GROUP_SIZE],
+}
+
+fn main(witness: Witness) -> PublicInput {
+    // Check contract rules
+    check_contract_rules(witness.transaction);
+
+    // Compute the transaction id
+    let root_hash = build_merkle_tree(witness.transaction);
+
+    PublicInput {
+        transaction_id: NodeDigestDto::from_bits_to_bytes(root_hash),
+        input_hashes: ${INPUT_HASH_PLACEHOLDER},
+        reference_hashes: ${REFERENCE_HASH_PLACEHOLDER},
+    }
+}

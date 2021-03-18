@@ -6,7 +6,7 @@ env:
 on:
   schedule:
     # Run nightly at 04:00, so we don't use up our run hours too fast
-    - cron:  '0 4 * * *'
+    - cron: '0 4 * * *'
   workflow_dispatch:
 
 jobs:
@@ -56,6 +56,20 @@ jobs:
 
       - name: Build with Gradle
         run: ./gradlew check dependencyCheckAggregate test slowTest nightlyTest testReportAll --build-cache --stacktrace --info
+        env:
+          GITHUB_USERNAME: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Init new circuit and Process Zinc sources with Gradle
+        run: ../gradlew processZincSources createZincDirectoriesForInputCommand --command test-command
+        working-directory: zkdapp-tester
+        env:
+          GITHUB_USERNAME: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Compile test-command circuit with Zargo
+        run: zargo build -v
+        working-directory: zkdapp-tester/build/zinc/test-command
         env:
           GITHUB_USERNAME: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

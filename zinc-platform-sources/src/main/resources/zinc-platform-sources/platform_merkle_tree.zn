@@ -1,0 +1,121 @@
+mod consts;
+mod merkle_utils;
+mod platform_consts;
+mod platform_node_digest_dto;
+mod platform_privacy_salt;
+mod platform_component_group_leaf_digest_dto;
+mod platform_component_group_enum;
+mod platform_crypto_utils;
+mod platform_nonce_digest_dto;
+mod platform_party;
+mod platform_pub_key;
+mod platform_zk_prover_transaction;
+mod platform_components_inputs;
+mod platform_components_outputs;
+mod platform_components_references;
+mod platform_components_commands;
+mod platform_components_notary;
+mod platform_components_attachments;
+mod platform_components_time_window;
+mod platform_components_parameters;
+mod platform_components_signers;
+
+use merkle_utils::get_merkle_tree_from_${GROUP_SIZE_PLACEHOLDER}_node_digests;
+use platform_zk_prover_transaction::ZKProverTransaction;
+use platform_consts::COMPONENT_GROUPS_SIZE;
+use platform_node_digest_dto::NodeDigestBits;
+use platform_component_group_enum::ComponentGroupEnum;
+use platform_node_digest_dto::NODE_DIGEST_BITS;
+use platform_components_inputs::InputsComponentGroup;
+use platform_components_outputs::OutputsComponentGroup;
+use platform_components_references::ReferencesComponentGroup;
+use platform_components_commands::CommandsComponentGroup;
+use platform_components_notary::NotaryComponentGroup;
+use platform_components_attachments::AttachmentsComponentGroup;
+use platform_components_time_window::TimeWindowComponentGroup;
+use platform_components_parameters::ParametersComponentGroup;
+use platform_components_signers::SignersComponentGroup;
+use platform_privacy_salt::PrivacySalt;
+use platform_nonce_digest_dto::NonceDigestDto;
+
+const MERKLE_TREE_SIZE: u16 = 16;
+
+/// Top-level function to be called.
+/// Pads the configure number of leaves to the right amount with zero hashes from the right
+/// and calls appropriate tree-constructing procedure
+///
+/// When there is only one element in a component group Corda automatically promotes this single leaf to the Merkle root.
+/// In our first version we always padded to at least 2 element to avoid this and save some Blake operations, now we want
+/// to be compatible with original Corda protocol so we don't do it anymore.
+/// TODO implement above-mentioned promotion on Zinc side or implement workaround on Corda side (via custom TxBuilder maybe)
+///            See, https://github.com/corda/corda/issues/6680
+fn merkle_root(leaves: [NodeDigestBits; COMPONENT_GROUPS_SIZE]) -> NodeDigestBits {
+    dbg!("Building a tree from {} leaves", COMPONENT_GROUPS_SIZE);
+
+    let l = MERKLE_TREE_SIZE - COMPONENT_GROUPS_SIZE;
+    dbg!("Padding from the right with {} zero leaves", l);
+
+    let mut full_leaves = [[false; NODE_DIGEST_BITS]; MERKLE_TREE_SIZE];
+    for i in 0..COMPONENT_GROUPS_SIZE {
+        full_leaves[i] = leaves[i];
+    }
+
+    dbg!("Constructing the root");
+    get_merkle_tree_from_${GROUP_SIZE_PLACEHOLDER}_node_digests(full_leaves)
+}
+
+fn build_merkle_tree(zk_prover_transaction: ZKProverTransaction) -> NodeDigestBits {
+    // Fingerprint for privacy salt
+    let privacy_salt = PrivacySalt::from_bytes_to_bits(zk_prover_transaction.privacy_salt);
+
+    let mut component_group_hashes = [[false; NODE_DIGEST_BITS]; COMPONENT_GROUPS_SIZE];
+
+    component_group_hashes[ComponentGroupEnum::INPUTS_GROUP] =
+        InputsComponentGroup::compute_component_group_hash(
+            zk_prover_transaction.inputs,
+            privacy_salt,
+        );
+    component_group_hashes[ComponentGroupEnum::OUTPUTS_GROUP] =
+        OutputsComponentGroup::compute_component_group_hash(
+            zk_prover_transaction.outputs,
+            privacy_salt,
+        );
+    component_group_hashes[ComponentGroupEnum::COMMANDS_GROUP] =
+        CommandsComponentGroup::compute_component_group_hash(
+            zk_prover_transaction.commands,
+            privacy_salt,
+        );
+    component_group_hashes[ComponentGroupEnum::ATTACHMENTS_GROUP] =
+        AttachmentsComponentGroup::compute_component_group_hash(
+            zk_prover_transaction.attachments,
+            privacy_salt,
+        );
+    component_group_hashes[ComponentGroupEnum::NOTARY_GROUP] =
+        NotaryComponentGroup::compute_component_group_hash(
+            zk_prover_transaction.notary,
+            privacy_salt,
+        );
+    component_group_hashes[ComponentGroupEnum::TIMEWINDOW_GROUP] =
+        TimeWindowComponentGroup::compute_component_group_hash(
+            zk_prover_transaction.time_window,
+            privacy_salt,
+        );
+    component_group_hashes[ComponentGroupEnum::SIGNERS_GROUP] =
+        SignersComponentGroup::compute_component_group_hash(
+            zk_prover_transaction.signers,
+            privacy_salt,
+        );
+    component_group_hashes[ComponentGroupEnum::REFERENCES_GROUP] =
+        ReferencesComponentGroup::compute_component_group_hash(
+            zk_prover_transaction.references,
+            privacy_salt,
+        );
+    component_group_hashes[ComponentGroupEnum::PARAMETERS_GROUP] =
+        ParametersComponentGroup::compute_component_group_hash(
+            zk_prover_transaction.parameters,
+            privacy_salt,
+        );
+
+    //compute merkle root
+    merkle_root(component_group_hashes)
+}

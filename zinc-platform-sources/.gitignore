@@ -4,9 +4,5 @@
 **/data/public-data.json
 **/data/verifying-key.txt
 
-# Ignore generated code
-**/src/main.zn
-**/modules/utils/merkle_utils.zn
-
 # Ignore Corda test artifacts for the circuit
 artifacts

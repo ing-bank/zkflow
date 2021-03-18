@@ -90,5 +90,6 @@ open class ReceiveZKTransactionFlow @JvmOverloads constructor(
      */
     @Suspendable
     @Throws(FlowException::class)
-    protected open fun checkBeforeRecording(stx: SignedZKVerifierTransaction) = Unit
+    protected open fun checkBeforeRecording(stx: SignedZKVerifierTransaction) {
+    }
 }
