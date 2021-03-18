@@ -105,18 +105,17 @@ class TransactionVerificationTest {
             referenceHashes = emptyList()
         )
 
-        // TODO: Implement ZincSerializationFactory and refactor circuit to handle new witness format
         val witnessJson = Json.encodeToString(WitnessSerializer, witness)
         println(witnessJson)
         val publicInputJson = Json.encodeToString(PublicInputSerializer, publicInput)
         println(publicInputJson)
 
+        // TODO: Refactor circuit to handle new witness format
         // val proof = zincZKService.proveTimed(witnessJson.toByteArray(), log)
         // zincZKService.verify(proof, publicDataJson.toByteArray())
     }
 
-    class TestScheme : CustomSerializationScheme {
-
+    class TestFixedLengthSerializationScheme : CustomSerializationScheme {
         companion object {
             const val SCHEME_ID = 777
         }
@@ -130,12 +129,12 @@ class TransactionVerificationTest {
             clazz: Class<T>,
             context: SerializationSchemeContext
         ): T {
-            // TODO: use custom serializer here
+            // TODO: use custom fixed-length serializer here
             return SerializationFactory.defaultFactory.deserialize(bytes, clazz, SerializationDefaults.P2P_CONTEXT)
         }
 
         override fun <T : Any> serialize(obj: T, context: SerializationSchemeContext): ByteSequence {
-            // TODO: use custom serializer here
+            // TODO: use custom fixed serializer here
             return obj.serialize(SerializationFactory.defaultFactory, SerializationDefaults.P2P_CONTEXT)
         }
     }
@@ -154,7 +153,7 @@ class TransactionVerificationTest {
         digestService: DigestService = DigestService.zinc,
 
         // The Id of the custom serializationScheme to use
-        schemeId: Int = TestScheme.SCHEME_ID,
+        schemeId: Int = TestFixedLengthSerializationScheme.SCHEME_ID,
         additionalSerializationProperties: Map<Any, Any> = emptyMap()
     ): WireTransaction {
         val magic: SerializationMagic = CustomSerializationSchemeUtils.getCustomSerializationMagicFromSchemeId(schemeId)
