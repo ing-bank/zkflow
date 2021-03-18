@@ -20,10 +20,10 @@ class ZincZKService(
     private val defaultBuildPath = "$circuitFolder/build"
     private val defaultDataPath = "$circuitFolder/data"
 
-    val compiledCircuitPath = "$artifactFolder/compiled-circuit.znb"
+    val compiledCircuitPath = "$defaultBuildPath/default.znb"
     val zkSetup = ZKSetup(
-        provingKeyPath = "$artifactFolder/proving_key",
-        verifyingKeyPath = "$artifactFolder/verifying_key.txt"
+        provingKeyPath = "$defaultDataPath/proving_key",
+        verifyingKeyPath = "$defaultDataPath/verifying_key.txt"
     )
 
     companion object {
@@ -73,6 +73,8 @@ class ZincZKService(
             zkSetup.provingKeyPath,
             zkSetup.verifyingKeyPath
         ).forEach { File(it).delete() }
+        File(defaultBuildPath).deleteRecursively()
+        File(defaultDataPath).deleteRecursively()
     }
 
     fun setup() {
@@ -92,10 +94,6 @@ class ZincZKService(
             // Neither witness, nor Public data carry useful information after build, they are just templates
             publicData.delete()
             witnessFile.delete()
-            // Zinc creates files in the default locations independently if it was specified the exact locations,
-            // clear the defaults too.
-            File(defaultBuildPath).deleteRecursively()
-            File(defaultDataPath).deleteRecursively()
         }
         require(File(compiledCircuitPath).exists()) { "Compile circuit not found in path $compiledCircuitPath." }
 
