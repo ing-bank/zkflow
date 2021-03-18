@@ -1,5 +1,8 @@
 package com.ing.zknotary.common.zkp
 
+import com.ing.zknotary.common.serialization.JsonWitnessSerializer
+import kotlinx.serialization.Contextual
+import kotlinx.serialization.Serializable
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.PrivacySalt
@@ -31,6 +34,7 @@ import net.corda.core.transactions.WireTransaction
  * On the Zinc side, we never serialize. On deserialization, unsizing does not happen.
  */
 @CordaSerializable
+@Serializable(with = JsonWitnessSerializer::class)
 @Suppress("LongParameterList")
 class Witness(
     val inputsGroup: List<ByteArray>,
@@ -43,12 +47,12 @@ class Witness(
     val referencesGroup: List<ByteArray>,
     val parametersGroup: List<ByteArray>,
 
-    val privacySalt: PrivacySalt,
+    val privacySalt: @Contextual PrivacySalt,
 
-    val inputStates: List<StateAndRef<ContractState>>,
-    val referenceStates: List<StateAndRef<ContractState>>,
-    val inputNonces: List<SecureHash>,
-    val referenceNonces: List<SecureHash>,
+    val inputStates: List<@Contextual StateAndRef<ContractState>>,
+    val referenceStates: List<@Contextual StateAndRef<ContractState>>,
+    val inputNonces: List<@Contextual SecureHash>,
+    val referenceNonces: List<@Contextual SecureHash>,
 
     /**
      * This is only here so that we can use it in MockZKService to reconstruct the WireTransaction.

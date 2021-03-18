@@ -1,9 +1,11 @@
 package zinc.transaction
 
 import com.ing.zknotary.common.crypto.zinc
+import com.ing.zknotary.common.serialization.JsonWitnessSerializer
 import com.ing.zknotary.common.zkp.PublicInput
 import com.ing.zknotary.common.zkp.Witness
 import com.ing.zknotary.testing.fixtures.contract.TestContract
+import kotlinx.serialization.json.Json
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.PrivacySalt
 import net.corda.core.contracts.StateAndContract
@@ -101,7 +103,7 @@ class TransactionVerificationTest {
         )
 
         // TODO: Implement ZincSerializationFactory and refactor circuit to handle new witness format
-        // val witnessJson = ZincSerializationFactory.serialize(witness)
+        val witnessJson = Json.encodeToString(JsonWitnessSerializer, witness)
         // val publicDataJson = ZincSerializationFactory.serialize(publicData)
 
         // val proof = zincZKService.proveTimed(witnessJson.toByteArray(), log)
