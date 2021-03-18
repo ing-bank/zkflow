@@ -2,12 +2,12 @@ package com.ing.zknotary.common.client.flows
 
 import com.ing.zknotary.common.client.flows.testflows.CreateFlow
 import com.ing.zknotary.common.client.flows.testflows.MoveFlow
-import com.ing.zknotary.common.contracts.TestContract
 import com.ing.zknotary.node.services.ConfigParams
 import com.ing.zknotary.node.services.InMemoryZKVerifierTransactionStorage
 import com.ing.zknotary.node.services.ServiceNames.ZK_TX_SERVICE
 import com.ing.zknotary.node.services.ServiceNames.ZK_VERIFIER_TX_STORAGE
 import com.ing.zknotary.notary.ZKNotaryService
+import com.ing.zknotary.testing.fixtures.contract.TestContract
 import com.ing.zknotary.testing.zkp.MockZKTransactionService
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe

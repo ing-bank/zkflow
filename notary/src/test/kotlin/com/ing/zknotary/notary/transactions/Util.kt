@@ -1,6 +1,6 @@
 package com.ing.zknotary.notary.transactions
 
-import com.ing.zknotary.common.contracts.TestContract
+import com.ing.zknotary.testing.fixtures.contract.TestContract
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.OwnableState
 import net.corda.core.contracts.StateAndRef

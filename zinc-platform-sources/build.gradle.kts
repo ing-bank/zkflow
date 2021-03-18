@@ -8,11 +8,12 @@ plugins {
 
 dependencies {
     implementation(project(":gradle-plugin"))
+
     testImplementation(project(":notary"))
 
     val zkkryptoVersion: String by project
     testImplementation("com.ing.dlt:zkkrypto:$zkkryptoVersion")
-    // ZKP dependencies
+
     testImplementation(project(":test-utils"))
 }
 

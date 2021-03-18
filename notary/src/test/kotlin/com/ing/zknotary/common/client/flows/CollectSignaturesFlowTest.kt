@@ -1,12 +1,12 @@
 package com.ing.zknotary.common.client.flows
 
 import com.ing.zknotary.common.client.flows.testflows.TestCollectZKSignaturesFlow
-import com.ing.zknotary.common.contracts.TestContract
 import com.ing.zknotary.node.services.ConfigParams.Zinc.COMMANDS_SEPARATOR
 import com.ing.zknotary.node.services.ConfigParams.Zinc.COMMAND_CLASS_NAMES
 import com.ing.zknotary.node.services.InMemoryZKVerifierTransactionStorage
 import com.ing.zknotary.node.services.ServiceNames.ZK_TX_SERVICE
 import com.ing.zknotary.node.services.ServiceNames.ZK_VERIFIER_TX_STORAGE
+import com.ing.zknotary.testing.fixtures.contract.TestContract
 import com.ing.zknotary.testing.zkp.MockZKTransactionService
 import io.kotest.matchers.shouldBe
 import net.corda.core.identity.CordaX500Name
