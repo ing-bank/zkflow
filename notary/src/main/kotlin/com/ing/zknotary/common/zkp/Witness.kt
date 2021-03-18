@@ -1,6 +1,7 @@
 package com.ing.zknotary.common.zkp
 
 import com.ing.zknotary.common.serialization.WitnessSerializer
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.ContractState
@@ -9,6 +10,7 @@ import net.corda.core.contracts.TransactionState
 import net.corda.core.crypto.DigestService
 import net.corda.core.crypto.SecureHash
 import net.corda.core.serialization.CordaSerializable
+import net.corda.core.serialization.serialize
 import net.corda.core.transactions.TraversableTransaction
 import net.corda.core.transactions.WireTransaction
 
@@ -32,6 +34,7 @@ import net.corda.core.transactions.WireTransaction
  * On the Kotlin side, serialization and deserialization sizes and unsizes respectively, invisibly for the user.
  * On the Zinc side, we never serialize. On deserialization, unsizing does not happen.
  */
+@ExperimentalSerializationApi
 @CordaSerializable
 @Serializable(with = WitnessSerializer::class)
 @Suppress("LongParameterList")
@@ -48,8 +51,8 @@ class Witness(
 
     val privacySalt: PrivacySalt,
 
-    val inputStates: List<TransactionState<ContractState>>,
-    val referenceStates: List<TransactionState<ContractState>>,
+    val inputStates: List<ByteArray>,
+    val referenceStates: List<ByteArray>,
     val inputNonces: List<SecureHash>,
     val referenceNonces: List<SecureHash>,
 
@@ -80,8 +83,11 @@ class Witness(
 
                 privacySalt = tx.privacySalt,
 
-                inputStates = inputStates,
-                referenceStates = referenceStates,
+                // FIXME: This needs to be changed so that it uses the same serialization scheme as
+                // was used for the serialization of the component groups.
+                // As it is now, this will use Corda's standard serialization
+                inputStates = inputStates.map { it.serialize().copyBytes() },
+                referenceStates = referenceStates.map { it.serialize().copyBytes() },
                 inputNonces = inputNonces,
                 referenceNonces = referenceNonces,
 

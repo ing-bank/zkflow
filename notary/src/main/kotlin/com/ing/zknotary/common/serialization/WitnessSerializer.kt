@@ -30,8 +30,8 @@ object WitnessSerializer : KSerializer<Witness> {
         val privacySalt: @Serializable(with = PrivacySaltSerializer::class) PrivacySalt,
 
         // TODO: add serializers for the below types and uncomment these lines
-//        val inputStates: List<StateAndRef<ContractState>>,
-//        val referenceStates: List<StateAndRef<ContractState>>,
+        val inputStates: List<ByteArray>,
+        val referenceStates: List<ByteArray>,
 
         val inputNonces: List<@Serializable(with = SecureHashSerializer::class) SecureHash>,
         val referenceNonces: List<@Serializable(with = SecureHashSerializer::class) SecureHash>
@@ -49,8 +49,8 @@ object WitnessSerializer : KSerializer<Witness> {
                     referencesGroup = witness.referencesGroup,
                     parametersGroup = witness.parametersGroup,
                     privacySalt = witness.privacySalt,
-//                    inputStates = witness.inputStates,
-//                    referenceStates = witness.referenceStates,
+                    inputStates = witness.inputStates,
+                    referenceStates = witness.referenceStates,
                     inputNonces = witness.inputNonces,
                     referenceNonces = witness.referenceNonces
                 )

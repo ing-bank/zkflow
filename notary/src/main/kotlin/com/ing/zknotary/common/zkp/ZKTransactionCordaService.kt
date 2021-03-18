@@ -7,6 +7,7 @@ import com.ing.zknotary.common.transactions.zkCommandData
 import com.ing.zknotary.node.services.ServiceNames
 import com.ing.zknotary.node.services.ZKWritableVerifierTransactionStorage
 import com.ing.zknotary.node.services.getCordaServiceFromConfig
+import kotlinx.serialization.ExperimentalSerializationApi
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.StateAndRef
@@ -21,6 +22,7 @@ abstract class ZKTransactionCordaService(val serviceHub: ServiceHub) : ZKTransac
 
     private val vtxStorage: ZKWritableVerifierTransactionStorage by lazy { serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_VERIFIER_TX_STORAGE) as ZKWritableVerifierTransactionStorage }
 
+    @ExperimentalSerializationApi
     override fun prove(
         wtx: WireTransaction,
         inputs: List<StateAndRef<ContractState>>,
