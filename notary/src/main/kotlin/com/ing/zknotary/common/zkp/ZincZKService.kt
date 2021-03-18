@@ -2,6 +2,7 @@ package com.ing.zknotary.common.zkp
 
 import net.corda.core.serialization.serialize
 import java.io.File
+import java.io.File.createTempFile
 import java.io.IOException
 import java.time.Duration
 import java.util.concurrent.TimeUnit
@@ -78,8 +79,8 @@ class ZincZKService(
         val circuitManifest = File(circuitManifestPath)
         require(circuitManifest.exists()) { "Cannot find circuit manifest at $circuitManifestPath" }
 
-        val witnessFile = createTempFile()
-        val publicData = createTempFile()
+        val witnessFile = createTempFile("zkp", null)
+        val publicData = createTempFile("zkp", null)
 
         try {
             completeZincCommand(
@@ -122,10 +123,10 @@ class ZincZKService(
 
     fun prove(witness: ByteArray): ByteArray {
 
-        val witnessFile = createTempFile()
+        val witnessFile = createTempFile("zkp", null)
         witnessFile.writeBytes(witness)
 
-        val publicData = createTempFile()
+        val publicData = createTempFile("zkp", null)
 
         try {
             return completeZincCommand(
@@ -142,10 +143,10 @@ class ZincZKService(
 
     fun verify(proof: ByteArray, publicInput: ByteArray) {
 
-        val proofFile = createTempFile()
+        val proofFile = createTempFile("zkp", null)
         proofFile.writeBytes(proof)
 
-        val publicDataFile = createTempFile()
+        val publicDataFile = createTempFile("zkp", null)
         publicDataFile.writeBytes(publicInput)
 
         try {
