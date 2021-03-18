@@ -1,10 +1,11 @@
 package zinc.transaction
 
 import com.ing.zknotary.common.crypto.zinc
-import com.ing.zknotary.common.serialization.JsonWitnessSerializer
+import com.ing.zknotary.common.serialization.WitnessSerializer
 import com.ing.zknotary.common.zkp.PublicInput
 import com.ing.zknotary.common.zkp.Witness
 import com.ing.zknotary.testing.fixtures.contract.TestContract
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.PrivacySalt
@@ -33,6 +34,7 @@ import org.junit.jupiter.api.Test
 import java.time.Instant
 import kotlin.time.ExperimentalTime
 
+@ExperimentalSerializationApi
 @ExperimentalTime
 @Tag("nightly")
 class TransactionVerificationTest {
@@ -103,7 +105,8 @@ class TransactionVerificationTest {
         )
 
         // TODO: Implement ZincSerializationFactory and refactor circuit to handle new witness format
-        val witnessJson = Json.encodeToString(JsonWitnessSerializer, witness)
+        val witnessJson = Json.encodeToString(WitnessSerializer, witness)
+        println(witnessJson)
         // val publicDataJson = ZincSerializationFactory.serialize(publicData)
 
         // val proof = zincZKService.proveTimed(witnessJson.toByteArray(), log)

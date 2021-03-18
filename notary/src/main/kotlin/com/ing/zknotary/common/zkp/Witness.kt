@@ -1,6 +1,6 @@
 package com.ing.zknotary.common.zkp
 
-import com.ing.zknotary.common.serialization.JsonWitnessSerializer
+import com.ing.zknotary.common.serialization.WitnessSerializer
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import net.corda.core.contracts.ComponentGroupEnum
@@ -34,7 +34,7 @@ import net.corda.core.transactions.WireTransaction
  * On the Zinc side, we never serialize. On deserialization, unsizing does not happen.
  */
 @CordaSerializable
-@Serializable(with = JsonWitnessSerializer::class)
+@Serializable(with = WitnessSerializer::class)
 @Suppress("LongParameterList")
 class Witness(
     val inputsGroup: List<ByteArray>,
