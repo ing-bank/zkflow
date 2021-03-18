@@ -6,6 +6,7 @@ import com.ing.zknotary.client.flows.ZKFinalityFlow
 import com.ing.zknotary.client.flows.ZKReceiveFinalityFlow
 import com.ing.zknotary.client.flows.ZKSignTransactionFlow
 import com.ing.zknotary.client.flows.signInitialZKTransaction
+import com.ing.zknotary.common.client.flows.TestSerializationScheme
 import com.ing.zknotary.common.zkp.ZKTransactionService
 import com.ing.zknotary.node.services.ServiceNames
 import com.ing.zknotary.node.services.getCordaServiceFromConfig
@@ -44,7 +45,8 @@ class MoveFlow(
 
         val builder = TransactionBuilder(serviceHub.networkMapCache.notaryIdentities.single())
         builder.withItems(state, stateAndContract, command)
-        val ltx = builder.toLedgerTransaction(serviceHub)
+        val ltx =
+            builder.toWireTransaction(serviceHub, TestSerializationScheme.SCHEME_ID).toLedgerTransaction(serviceHub)
 
         // Transaction creator signs transaction.
         val stx = serviceHub.signInitialTransaction(builder)

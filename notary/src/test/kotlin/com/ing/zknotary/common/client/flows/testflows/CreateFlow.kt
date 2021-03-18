@@ -4,6 +4,7 @@ import co.paralleluniverse.fibers.Suspendable
 import com.ing.zknotary.client.flows.ZKCollectSignaturesFlow
 import com.ing.zknotary.client.flows.ZKFinalityFlow
 import com.ing.zknotary.client.flows.signInitialZKTransaction
+import com.ing.zknotary.common.client.flows.TestSerializationScheme
 import com.ing.zknotary.common.zkp.ZKTransactionService
 import com.ing.zknotary.node.services.ServiceNames
 import com.ing.zknotary.node.services.getCordaServiceFromConfig
@@ -30,7 +31,8 @@ class CreateFlow : FlowLogic<SignedTransaction>() {
 
         val builder = TransactionBuilder(serviceHub.networkMapCache.notaryIdentities.single())
         builder.withItems(stateAndContract, issueCommand)
-        val ltx = builder.toWireTransaction(serviceHub).toLedgerTransaction(serviceHub)
+        val ltx =
+            builder.toWireTransaction(serviceHub, TestSerializationScheme.SCHEME_ID).toLedgerTransaction(serviceHub)
         ltx.verify()
 
         val stx = serviceHub.signInitialTransaction(builder)

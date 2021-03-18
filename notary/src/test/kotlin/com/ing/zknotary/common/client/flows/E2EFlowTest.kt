@@ -47,13 +47,20 @@ class E2EFlowTest {
                     mapOf(
                         ZK_VERIFIER_TX_STORAGE to InMemoryZKVerifierTransactionStorage::class.qualifiedName!!,
                         ZK_TX_SERVICE to MockZKTransactionService::class.qualifiedName!!,
-                        ConfigParams.Zinc.COMMAND_CLASS_NAMES to listOf(TestContract.Create::class.java.name, TestContract.Move::class.java.name)
+                        ConfigParams.Zinc.COMMAND_CLASS_NAMES to listOf(
+                            TestContract.Create::class.java.name,
+                            TestContract.Move::class.java.name
+                        )
                             .joinToString(separator = ConfigParams.Zinc.COMMANDS_SEPARATOR)
                     )
                 )
             ),
             notarySpecs = listOf(
-                MockNetworkNotarySpec(DUMMY_NOTARY_NAME, validating = false, className = ZKNotaryService::class.java.name)
+                MockNetworkNotarySpec(
+                    DUMMY_NOTARY_NAME,
+                    validating = false,
+                    className = ZKNotaryService::class.java.name
+                )
             ),
             networkParameters = testNetworkParameters(minimumPlatformVersion = 6)
         )
@@ -92,17 +99,20 @@ class E2EFlowTest {
 
         checkVault(moveStx, miniCorpNode, megaCorpNode)
 
-        val moveBackFuture = megaCorpNode.startFlow(MoveFlow(moveStx, miniCorp))
-        mockNet.runNetwork()
-        val moveBackStx = moveBackFuture.getOrThrow()
+        // TODO: Do these additional moves prove anything more than the previous one?
+        // TODO: It seems that when the chain becomes longer, the running time of the test does not scale linearly.
+        // TODO: Why is that? Because every participant needs to resolve longer chains? Let's compare with non-zkp flows
+        // val moveBackFuture = megaCorpNode.startFlow(MoveFlow(moveStx, miniCorp))
+        // mockNet.runNetwork()
+        // val moveBackStx = moveBackFuture.getOrThrow()
 
-        checkVault(moveBackStx, megaCorpNode, miniCorpNode)
+        // checkVault(moveBackStx, megaCorpNode, miniCorpNode)
 
-        val finalMoveFuture = miniCorpNode.startFlow(MoveFlow(moveBackStx, thirdParty))
-        mockNet.runNetwork()
-        val finalTx = finalMoveFuture.getOrThrow()
+        // val finalMoveFuture = miniCorpNode.startFlow(MoveFlow(moveBackStx, thirdParty))
+        // mockNet.runNetwork()
+        // val finalTx = finalMoveFuture.getOrThrow()
 
-        checkVault(finalTx, miniCorpNode, thirdPartyNode)
+        // checkVault(finalTx, miniCorpNode, thirdPartyNode)
     }
 
     private fun checkVault(
