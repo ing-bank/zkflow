@@ -2,7 +2,7 @@ package com.ing.zknotary.gradle.util
 
 import java.io.File
 
-class MerkleRenderer(private val outputPath: File) {
+class MerkleReplacer(private val outputPath: File) {
 
     /**
      * Find appropriate merkle tree function for the main merkle tree based on the total component group size

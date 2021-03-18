@@ -1,6 +1,7 @@
 
-import com.ing.zknotary.gradle.util.Renderer
+import com.ing.zknotary.gradle.util.MerkleReplacer
 import com.ing.zknotary.gradle.util.TemplateRenderer
+import com.ing.zknotary.gradle.util.ZincSourcesCopier
 import com.ing.zknotary.gradle.util.removeDebugCode
 import java.io.File
 
@@ -16,18 +17,25 @@ fun main(args: Array<String>) {
 
     val circuits = circuitSourcesBase.listFiles { file, _ -> file?.isDirectory ?: false }?.map { it.name }
     circuits?.forEach { circuitName ->
-
-        val renderer = Renderer(mergedCircuitOutput.resolve(circuitName).resolve("src"))
-        val consts = circuitSourcesBase.resolve(circuitName).resolve("consts.zn").readText()
+        val outputPath = mergedCircuitOutput.resolve(circuitName).resolve("src")
 
         // Copy Zinc sources
-        getPlatformSourcesFiles(root, "zinc-platform-sources")?.let { renderer.operateCopyRenderer(it, circuitSourcesBase, circuitName, projectVersion) }
+        val copier = ZincSourcesCopier(outputPath)
+        copier.copyZincCircuitSources(circuitSourcesBase, circuitName, projectVersion)
+        copier.copyZincPlatformSources(getPlatformSources(root))
+
+        val consts = circuitSourcesBase.resolve(circuitName).resolve("consts.zn").readText()
 
         // Generate code from templates
-        getPlatformSourcesFiles(root, "zinc-platform-templates")?.let { renderer.operateTemplateRenderer(it, consts, bigDecimalSizes) }
+        val renderer = TemplateRenderer(outputPath)
+        getTemplateContents(root, "floating_point.zn")?.let { renderer.generateFloatingPointsCode(it, bigDecimalSizes) }
+        getTemplateContents(root, "merkle_template.zn")?.let { renderer.generateMerkleUtilsCode(it, consts) }
+        getTemplateContents(root, "main_template.zn")?.let { renderer.generateMainCode(it, consts) }
 
-        // Set correct merkle tree function
-        renderer.operateMerkleRenderer(consts)
+        // Replace placeholders in Merkle tree functions
+        val replacer = MerkleReplacer(outputPath)
+        replacer.setCorrespondingMerkleTreeFunctionForComponentGroups(consts)
+        replacer.setCorrespondingMerkleTreeFunctionForMainTree(consts)
 
         // remove debug statements
         removeDebugCode(circuitName, mergedCircuitOutput)
@@ -41,10 +49,16 @@ fun main(args: Array<String>) {
     }
 }
 
-private fun getPlatformSourcesFiles(root: String, sourceName: String): Array<File>? {
-    return File("$root/src/main/resources/$sourceName").listFiles()
+private fun getPlatformSources(root: String): Array<File>? {
+    return File("$root/src/main/resources/zinc-platform-sources").listFiles()
 }
 
 private fun getPlatformSourcesPath(root: String, sourceName: String): File {
     return File("$root/src/main/resources/$sourceName")
+}
+
+private fun getTemplateContents(root: String, templateName: String): String? {
+    return File("$root/src/main/resources/zinc-platform-templates").listFiles()?.single {
+        it.name.contains(templateName)
+    }?.readText()
 }

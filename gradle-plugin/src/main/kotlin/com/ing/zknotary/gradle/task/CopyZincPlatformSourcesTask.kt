@@ -1,6 +1,6 @@
 package com.ing.zknotary.gradle.task
 
-import com.ing.zknotary.gradle.util.CopyRenderer
+import com.ing.zknotary.gradle.util.ZincSourcesCopier
 import com.ing.zknotary.gradle.util.circuitNames
 import com.ing.zknotary.gradle.util.platformSources
 import com.ing.zknotary.gradle.util.zkNotaryExtension
@@ -14,8 +14,8 @@ open class CopyZincPlatformSourcesTask : DefaultTask() {
         val extension = project.zkNotaryExtension
 
         project.circuitNames?.forEach { circuitName ->
-            val copy = CopyRenderer(extension.mergedCircuitOutputPath.resolve(circuitName).resolve("src"))
-            copy.createCopyZincPlatformSources(project.platformSources)
+            val copier = ZincSourcesCopier(extension.mergedCircuitOutputPath.resolve(circuitName).resolve("src"))
+            copier.copyZincPlatformSources(project.platformSources)
         }
     }
 }

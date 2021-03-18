@@ -29,4 +29,22 @@ open class ZKNotaryExtension(project: Project) {
 
     @InputDirectory
     val circuitSourcesBasePath: File = project.projectDir.resolve(CIRCUIT_SOURCES_BASE_PATH)
+
+    @Input
+    val platformSourcesPath = "zinc-platform-sources/**/*.zn"
+
+    @Input
+    val platformTemplatesPath = "zinc-platform-templates/**/*.zn"
+
+    @Input
+    val platformSamplesPath = "zinc-platform-samples/**/*.zn"
+
+    @Input
+    val floatingPointTemplate = "floating_point.zn"
+
+    @Input
+    val merkleTemplate = "merkle_template.zn"
+
+    @Input
+    val mainTemplate = "main_template.zn"
 }

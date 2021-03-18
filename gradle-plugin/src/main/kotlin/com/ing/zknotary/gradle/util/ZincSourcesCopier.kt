@@ -3,9 +3,9 @@ package com.ing.zknotary.gradle.util
 import java.io.File
 import java.nio.ByteBuffer
 
-class CopyRenderer(private val outputPath: File) {
+class ZincSourcesCopier(private val outputPath: File) {
 
-    fun createCopyZincCircuitSources(circuitSources: File, circuitName: String, version: String) {
+    fun copyZincCircuitSources(circuitSources: File, circuitName: String, version: String) {
         circuitSources.copyRecursively(
             createOutputFile(outputPath),
             overwrite = true
@@ -27,7 +27,7 @@ class CopyRenderer(private val outputPath: File) {
         }
     }
 
-    fun createCopyZincPlatformSources(platformSources: Array<File>?) {
+    fun copyZincPlatformSources(platformSources: Array<File>?) {
         platformSources?.forEach { file ->
             file.copyTo(
                 createOutputFile(outputPath).resolve(file.name),

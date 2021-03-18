@@ -27,15 +27,19 @@ val Project.circuitNames: List<String>?
 
 val Project.platformSources: Array<File>
     get() {
-        return project.platformSourcesDirectory.matching { it.include("zinc-platform-sources/**/*.zn") }.toList().toTypedArray()
+        return project.platformSourcesDirectory.matching { it.include(zkNotaryExtension.platformSourcesPath) }.toList().toTypedArray()
     }
 
 val Project.platformTemplates: Array<File>
     get() {
-        return project.platformSourcesDirectory.matching { it.include("zinc-platform-templates/**/*.zn") }.toList().toTypedArray()
+        return project.platformSourcesDirectory.matching { it.include(zkNotaryExtension.platformTemplatesPath) }.toList().toTypedArray()
     }
 
 val Project.platformSamples: FileTree
     get() {
-        return project.platformSourcesDirectory.matching { it.include("zinc-platform-samples/**/*.zn") }
+        return project.platformSourcesDirectory.matching { it.include(zkNotaryExtension.platformSamplesPath) }
     }
+
+fun Project.getTemplateContents(templateFileName: String): String {
+    return project.platformTemplates.single { it.name.contains(templateFileName) }.readText()
+}
