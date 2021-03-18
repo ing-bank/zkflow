@@ -17,15 +17,9 @@ import net.corda.core.identity.Party
 import net.corda.core.internal.concurrent.transpose
 import net.corda.core.messaging.startFlow
 import net.corda.core.node.ServiceHub
-import net.corda.core.serialization.CustomSerializationScheme
-import net.corda.core.serialization.SerializationDefaults
-import net.corda.core.serialization.SerializationFactory
-import net.corda.core.serialization.SerializationSchemeContext
-import net.corda.core.serialization.serialize
 import net.corda.core.transactions.LedgerTransaction
 import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.transactions.WireTransaction
-import net.corda.core.utilities.ByteSequence
 import net.corda.core.utilities.getOrThrow
 import net.corda.core.utilities.unwrap
 import net.corda.testing.core.ALICE_NAME
@@ -33,6 +27,7 @@ import net.corda.testing.core.BOB_NAME
 import net.corda.testing.driver.DriverParameters
 import net.corda.testing.driver.NodeParameters
 import net.corda.testing.driver.driver
+import net.corda.testing.node.internal.cordappForClasses
 import net.corda.testing.node.internal.enclosedCordapp
 import org.junit.Test
 import java.security.PublicKey
@@ -66,7 +61,7 @@ class CustomSerializationSchemeDriverTest {
             DriverParameters(
                 notarySpecs = emptyList(),
                 startNodesInProcess = true,
-                cordappsForAllNodes = listOf(enclosedCordapp())
+                cordappsForAllNodes = listOf(enclosedCordapp(), cordappForClasses(TestSerializationScheme::class.java))
             )
         ) {
             val (alice, bob) = listOf(
@@ -84,7 +79,7 @@ class CustomSerializationSchemeDriverTest {
     class SendFlow(val counterparty: Party) : FlowLogic<Boolean>() {
         @Suspendable
         override fun call(): Boolean {
-            val wtx = createWireTx(serviceHub, counterparty, counterparty.owningKey, TestScheme.SCHEME_ID)
+            val wtx = createWireTx(serviceHub, counterparty, counterparty.owningKey, TestSerializationScheme.SCHEME_ID)
             val session = initiateFlow(counterparty)
             session.send(wtx)
             return session.receive<Boolean>().unwrap { it }
@@ -111,27 +106,4 @@ class CustomSerializationSchemeDriverTest {
     }
 
     object DummyCommandData : TypeOnlyCommandData()
-
-    open class TestScheme : CustomSerializationScheme {
-
-        companion object {
-            const val SCHEME_ID = 7
-        }
-
-        override fun getSchemeId(): Int {
-            return SCHEME_ID
-        }
-
-        override fun <T : Any> deserialize(
-            bytes: ByteSequence,
-            clazz: Class<T>,
-            context: SerializationSchemeContext
-        ): T {
-            return SerializationFactory.defaultFactory.deserialize(bytes, clazz, SerializationDefaults.P2P_CONTEXT)
-        }
-
-        override fun <T : Any> serialize(obj: T, context: SerializationSchemeContext): ByteSequence {
-            return obj.serialize(SerializationFactory.defaultFactory, SerializationDefaults.P2P_CONTEXT)
-        }
-    }
 }

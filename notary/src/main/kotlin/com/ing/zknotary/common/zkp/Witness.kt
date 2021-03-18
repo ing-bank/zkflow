@@ -83,9 +83,11 @@ class Witness(
 
                 privacySalt = tx.privacySalt,
 
-                // FIXME: This needs to be changed so that it uses the same serialization scheme as
-                // was used for the serialization of the component groups.
-                // As it is now, this will use Corda's standard serialization
+                /*
+                 * FIXME: This needs to be changed so that it uses the same serialization scheme as
+                 * was used for the serialization of the component groups.
+                 * As it is now, this will use Corda's standard serialization
+                */
                 inputStates = inputStates.map { it.serialize().copyBytes() },
                 referenceStates = referenceStates.map { it.serialize().copyBytes() },
                 inputNonces = inputNonces,

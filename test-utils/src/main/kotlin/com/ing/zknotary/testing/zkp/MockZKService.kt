@@ -15,6 +15,7 @@ import net.corda.core.transactions.ComponentGroup
 import net.corda.core.transactions.WireTransaction
 import net.corda.core.utilities.OpaqueBytes
 
+@Suppress("EXPERIMENTAL_API_USAGE")
 public class MockZKService : ZKService {
 
     /**
