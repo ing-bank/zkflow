@@ -55,13 +55,7 @@ sourceSets {
 // kotlin {
 //     explicitApi = Strict
 // }
-
-// Separate task is used in order to ensure copying will be done properly, because
-// such implementation fails sometimes:
-// tasks.withType<Test> {
-//      beforeSuite {
-//      }
-// }
+// TODO: Introduce kotlin/binary-compatibility-validator: https://github.com/Kotlin/binary-compatibility-validator
 
 // TODO: This should probably become a fat jar at some point, with its dependencies included
 publishing {
