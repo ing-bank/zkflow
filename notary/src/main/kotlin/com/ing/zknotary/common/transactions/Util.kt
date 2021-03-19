@@ -94,17 +94,6 @@ fun WireTransaction.toLedgerTransaction(
     return ltx
 }
 
-/**
- * Extends a list with a default value.
- */
-fun <T> List<T>.pad(n: Int, default: T) = List(max(size, n)) {
-    if (it < size)
-        this[it]
-    else {
-        default
-    }
-}
-
 val SignedZKVerifierTransaction.dependencies: Set<SecureHash>
     get() = tx.dependencies
 
