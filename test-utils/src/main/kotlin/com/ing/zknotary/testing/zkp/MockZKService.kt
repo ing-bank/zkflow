@@ -14,7 +14,7 @@ import net.corda.core.transactions.WireTransaction
 import net.corda.core.utilities.OpaqueBytes
 
 @Suppress("EXPERIMENTAL_API_USAGE")
-public class MockZKService : ZKService {
+public class MockZKService(private val digestService: DigestService) : ZKService {
 
     /**
      * This mock version simply returns the serialized witness, so that we can use it in `verify()`
@@ -51,7 +51,7 @@ public class MockZKService : ZKService {
         val wtx = WireTransaction(
             createComponentGroups(witness),
             witness.privacySalt,
-            witness.digestService
+            digestService
         )
 
         /*

@@ -5,7 +5,6 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.PrivacySalt
-import net.corda.core.crypto.DigestService
 import net.corda.core.crypto.SecureHash
 import net.corda.core.serialization.CordaSerializable
 import net.corda.core.transactions.TraversableTransaction
@@ -63,13 +62,7 @@ class Witness(
     val serializedReferenceUtxos: List<ByteArray>,
 
     val inputUtxoNonces: List<SecureHash>,
-    val referenceUtxoNonces: List<SecureHash>,
-
-    /**
-     * This is only here so that we can use it in MockZKService to reconstruct the WireTransaction.
-     * It should not be passed on to Zinc
-     */
-    val digestService: DigestService
+    val referenceUtxoNonces: List<SecureHash>
 ) {
     companion object {
         fun fromWireTransaction(
@@ -95,9 +88,7 @@ class Witness(
                 serializedInputUtxos = serializedInputUtxos,
                 serializedReferenceUtxos = serializedReferenceUtxos,
                 inputUtxoNonces = inputUtxoNonces,
-                referenceUtxoNonces = referenceUtxoNonces,
-
-                digestService = wtx.digestService
+                referenceUtxoNonces = referenceUtxoNonces
             )
         }
 
