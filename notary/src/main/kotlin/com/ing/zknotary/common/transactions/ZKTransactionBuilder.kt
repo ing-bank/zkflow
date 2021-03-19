@@ -27,6 +27,7 @@ import net.corda.core.transactions.WireTransaction
 import java.security.PublicKey
 import java.time.Duration
 import java.time.Instant
+import java.util.UUID
 
 /**
  * The main reason for this ZKTransactionBuilder to exist, is to ensure that the user always uses the
@@ -94,14 +95,40 @@ class ZKTransactionBuilder(
      * START: copy of [TransactionBuilder] API that delegates unchanged
      */
 
-    /*
-     * These functions are purposely removed from the API: we don't want another scheme to be used than the one
-     * selected on builder construction. Same for any serialization properties.
-     *
-     * fun toWireTransaction(services: ServicesForResolution, schemeId: Int)
-     * fun toWireTransaction(services: ServicesForResolution, schemeId: Int, properties: Map<Any, Any>): WireTransaction {
-     *
-    */
+    var notary: Party?
+        get() = builder.notary
+        set(value) {
+            builder.notary = value
+        }
+
+    var lockId: UUID
+        get() = builder.lockId
+        set(value) {
+            builder.lockId = value
+        }
+
+    /**
+     * This function is purposely disabled and only present for API compatibility with [TransactionBuilder].
+     * Please set the serialization scheme id and properties through the [ZKTransactionBuilder] constructor.
+     */
+    @Suppress("UNUSED_PARAMETER")
+    fun toWireTransaction(services: ServicesForResolution, schemeId: Int): WireTransaction =
+        throw UnsupportedOperationException(
+            "This function is purposely disabled and only present for API compatibility with [TransactionBuilder]. " +
+                "Please set the serialization scheme id and properties through the [ZKTransactionBuilder] constructor."
+        )
+
+    /**
+     * This function is purposely disabled and only present for API compatibility with [TransactionBuilder].
+     * Please set the serialization scheme id and properties through the [ZKTransactionBuilder] constructor.
+     */
+    @Suppress("UNUSED_PARAMETER")
+    fun toWireTransaction(services: ServicesForResolution, schemeId: Int, properties: Map<Any, Any>): WireTransaction =
+        throw UnsupportedOperationException(
+            "This function is purposely disabled and only present for API compatibility with [TransactionBuilder]. " +
+                "Please set the serialization scheme id and properties through the [ZKTransactionBuilder] constructor."
+        )
+
     fun withItems(vararg items: Any) = apply { builder.withItems(items) }
     fun addReferenceState(referencedStateAndRef: ReferencedStateAndRef<*>) = apply {
         builder.addReferenceState(referencedStateAndRef)
