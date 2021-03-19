@@ -99,9 +99,9 @@ class E2EFlowTest {
 
         checkVault(moveStx, miniCorpNode, megaCorpNode)
 
-        // TODO: Do these additional moves prove anything more than the previous one?
-        // TODO: It seems that when the chain becomes longer, the running time of the test does not scale linearly.
-        // TODO: Why is that? Because every participant needs to resolve longer chains? Let's compare with non-zkp flows
+        // TODO 1: Do these additional moves prove anything more than the previous one?
+        // TODO 2: It seems that when the chain becomes longer, the running time of the test does not scale linearly.
+        // TODO 2a: Why is that? Because every participant needs to resolve longer chains? Let's compare with non-zkp flows
         // val moveBackFuture = megaCorpNode.startFlow(MoveFlow(moveStx, miniCorp))
         // mockNet.runNetwork()
         // val moveBackStx = moveBackFuture.getOrThrow()

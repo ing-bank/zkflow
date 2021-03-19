@@ -8,9 +8,8 @@ import com.ing.zknotary.node.services.ServiceNames
 import com.ing.zknotary.node.services.ZKWritableVerifierTransactionStorage
 import com.ing.zknotary.node.services.getCordaServiceFromConfig
 import kotlinx.serialization.ExperimentalSerializationApi
-import net.corda.core.contracts.ComponentGroupEnum
+import net.corda.core.contracts.ComponentGroupEnum.OUTPUTS_GROUP
 import net.corda.core.contracts.StateRef
-import net.corda.core.contracts.TransactionResolutionException
 import net.corda.core.crypto.SecureHash
 import net.corda.core.node.ServiceHub
 import net.corda.core.serialization.SingletonSerializeAsToken
@@ -31,13 +30,13 @@ abstract class ZKTransactionCordaService(val serviceHub: ServiceHub) : ZKTransac
         wtx: WireTransaction
     ): ZKVerifierTransaction {
 
-        val inputUtxoNonces = collectUtxoNonces(wtx.inputs)
-        val referenceUtxoNonces = collectUtxoNonces(wtx.references)
+        val (serializedInputUtxos, inputUtxoNonces) = collectSerializedUtxosAndNonces(wtx.inputs)
+        val (serializedReferenceUtxos, referenceUtxoNonces) = collectSerializedUtxosAndNonces(wtx.references)
 
         val witness = Witness.fromWireTransaction(
             wtx,
-            wtx.serializedInputUtxos(serviceHub),
-            wtx.serializedReferenceUtxos(serviceHub),
+            serializedInputUtxos,
+            serializedReferenceUtxos,
             inputUtxoNonces,
             referenceUtxoNonces
         )
@@ -118,47 +117,20 @@ abstract class ZKTransactionCordaService(val serviceHub: ServiceHub) : ZKTransac
         }
     }
 
-    private fun collectUtxoNonces(stateRefs: List<StateRef>): List<SecureHash> {
-
+    private fun collectSerializedUtxosAndNonces(stateRefs: List<StateRef>): Pair<List<ByteArray>, List<SecureHash>> {
         return stateRefs.map { stateRef ->
             val prevStx = serviceHub.validatedTransactions.getTransaction(stateRef.txhash)
                 ?: error("Plaintext tx not found for hash ${stateRef.txhash}")
 
-            val ftx = prevStx.buildFilteredTransaction(Predicate { true })
-            val nonces =
-                ftx.filteredComponentGroups.find { it.groupIndex == ComponentGroupEnum.OUTPUTS_GROUP.ordinal }!!.nonces
+            val serializedUtxo = prevStx.tx
+                .componentGroups.single { it.groupIndex == OUTPUTS_GROUP.ordinal }
+                .components[stateRef.index].copyBytes()
 
-            nonces[stateRef.index]
-        }
-    }
+            val nonce = prevStx.buildFilteredTransaction(Predicate { true })
+                .filteredComponentGroups.single { it.groupIndex == OUTPUTS_GROUP.ordinal }
+                .nonces[stateRef.index]
 
-    /**
-     * TODO: It may be that this is too slow, because we query the db separately for each input and reference.
-     * If that is the case, we may consider testing an alternative for speed:
-     * calling `LedgerTransaction.transform` to get access to the private serialized contents,
-     * but that is non-supported API for now, so we can't rely on it for now:
-     *
-     * ```
-     * val (serializedInputUtxos, serializedReferenceUtxos) = wtx.toLedgerTransaction(serviceHub)
-     *     .transform { _, serializedInputs, serializedReferences -> Pair(serializedInputs, serializedReferences) }
-     * ```
-     *
-     * TODO: we should probably combine this with `collectUtxoNonces`, since the same transactions are fetched from the DB.
-     */
-    private fun WireTransaction.serializedInputUtxos(serviceHub: ServiceHub): List<ByteArray> {
-        return inputs.map { serviceHub.serializedUtxo(it) }
-    }
-
-    private fun WireTransaction.serializedReferenceUtxos(serviceHub: ServiceHub): List<ByteArray> =
-        references.map { serviceHub.serializedUtxo(it) }
-
-    private fun ServiceHub.serializedUtxo(
-        stateRef: StateRef
-    ): ByteArray {
-        val input = validatedTransactions.getTransaction(stateRef.txhash)?.tx
-            ?.componentGroups?.singleOrNull { it.groupIndex == ComponentGroupEnum.OUTPUTS_GROUP.ordinal }
-            ?.components?.getOrNull(stateRef.index)?.copyBytes()
-            ?: throw TransactionResolutionException(stateRef.txhash)
-        return input
+            serializedUtxo to nonce
+        }.unzip()
     }
 }
