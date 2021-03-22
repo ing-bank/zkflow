@@ -129,7 +129,7 @@ class ZKTransactionBuilder(
                 "Please set the serialization scheme id and properties through the [ZKTransactionBuilder] constructor."
         )
 
-    fun withItems(vararg items: Any) = apply { builder.withItems(items) }
+    fun withItems(vararg items: Any) = apply { builder.withItems(*items) }
     fun addReferenceState(referencedStateAndRef: ReferencedStateAndRef<*>) = apply {
         builder.addReferenceState(referencedStateAndRef)
     }
