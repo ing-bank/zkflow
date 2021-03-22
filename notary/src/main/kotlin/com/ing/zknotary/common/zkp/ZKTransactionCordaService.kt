@@ -7,9 +7,8 @@ import com.ing.zknotary.common.transactions.zkCommandData
 import com.ing.zknotary.node.services.ServiceNames
 import com.ing.zknotary.node.services.ZKWritableVerifierTransactionStorage
 import com.ing.zknotary.node.services.getCordaServiceFromConfig
-import net.corda.core.contracts.ComponentGroupEnum
-import net.corda.core.contracts.ContractState
-import net.corda.core.contracts.StateAndRef
+import kotlinx.serialization.ExperimentalSerializationApi
+import net.corda.core.contracts.ComponentGroupEnum.OUTPUTS_GROUP
 import net.corda.core.contracts.StateRef
 import net.corda.core.crypto.SecureHash
 import net.corda.core.node.ServiceHub
@@ -17,20 +16,30 @@ import net.corda.core.serialization.SingletonSerializeAsToken
 import net.corda.core.transactions.WireTransaction
 import java.util.function.Predicate
 
-abstract class ZKTransactionCordaService(val serviceHub: ServiceHub) : ZKTransactionService, SingletonSerializeAsToken() {
+abstract class ZKTransactionCordaService(val serviceHub: ServiceHub) : ZKTransactionService,
+    SingletonSerializeAsToken() {
 
-    private val vtxStorage: ZKWritableVerifierTransactionStorage by lazy { serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_VERIFIER_TX_STORAGE) as ZKWritableVerifierTransactionStorage }
+    private val vtxStorage: ZKWritableVerifierTransactionStorage by lazy {
+        serviceHub.getCordaServiceFromConfig(
+            ServiceNames.ZK_VERIFIER_TX_STORAGE
+        ) as ZKWritableVerifierTransactionStorage
+    }
 
+    @ExperimentalSerializationApi
     override fun prove(
-        wtx: WireTransaction,
-        inputs: List<StateAndRef<ContractState>>,
-        references: List<StateAndRef<ContractState>>
+        wtx: WireTransaction
     ): ZKVerifierTransaction {
 
-        val inputNonces = collectNonces(wtx.inputs)
-        val referenceNonces = collectNonces(wtx.references)
+        val (serializedInputUtxos, inputUtxoNonces) = collectSerializedUtxosAndNonces(wtx.inputs)
+        val (serializedReferenceUtxos, referenceUtxoNonces) = collectSerializedUtxosAndNonces(wtx.references)
 
-        val witness = Witness(wtx, inputs, references, inputNonces, referenceNonces)
+        val witness = Witness.fromWireTransaction(
+            wtx,
+            serializedInputUtxos,
+            serializedReferenceUtxos,
+            inputUtxoNonces,
+            referenceUtxoNonces
+        )
 
         val zkService = zkServiceForTx(wtx.zkCommandData())
         val proof = zkService.prove(witness)
@@ -108,16 +117,20 @@ abstract class ZKTransactionCordaService(val serviceHub: ServiceHub) : ZKTransac
         }
     }
 
-    private fun collectNonces(stateRefs: List<StateRef>): List<SecureHash> {
-
+    private fun collectSerializedUtxosAndNonces(stateRefs: List<StateRef>): Pair<List<ByteArray>, List<SecureHash>> {
         return stateRefs.map { stateRef ->
             val prevStx = serviceHub.validatedTransactions.getTransaction(stateRef.txhash)
                 ?: error("Plaintext tx not found for hash ${stateRef.txhash}")
 
-            val ftx = prevStx.buildFilteredTransaction(Predicate { true })
-            val nonces = ftx.filteredComponentGroups.find { it.groupIndex == ComponentGroupEnum.OUTPUTS_GROUP.ordinal }!!.nonces
+            val serializedUtxo = prevStx.tx
+                .componentGroups.single { it.groupIndex == OUTPUTS_GROUP.ordinal }
+                .components[stateRef.index].copyBytes()
 
-            nonces[stateRef.index]
-        }
+            val nonce = prevStx.buildFilteredTransaction(Predicate { true })
+                .filteredComponentGroups.single { it.groupIndex == OUTPUTS_GROUP.ordinal }
+                .nonces[stateRef.index]
+
+            serializedUtxo to nonce
+        }.unzip()
     }
 }

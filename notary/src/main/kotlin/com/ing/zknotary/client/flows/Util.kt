@@ -36,7 +36,8 @@ fun ServiceHub.createSignature(zktxId: SecureHash, publicKey: PublicKey): Transa
 
 fun ServiceHub.recordTransactions(stx: SignedTransaction, svtx: SignedZKVerifierTransaction) {
 
-    val zkVerifierTransactionStorage: ZKWritableVerifierTransactionStorage = getCordaServiceFromConfig(ServiceNames.ZK_VERIFIER_TX_STORAGE)
+    val zkVerifierTransactionStorage: ZKWritableVerifierTransactionStorage =
+        getCordaServiceFromConfig(ServiceNames.ZK_VERIFIER_TX_STORAGE)
     zkVerifierTransactionStorage.addTransaction(svtx)
     recordTransactions(stx)
 }

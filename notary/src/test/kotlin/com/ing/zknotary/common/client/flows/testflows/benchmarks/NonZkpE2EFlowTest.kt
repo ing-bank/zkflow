@@ -1,14 +1,12 @@
-package com.ing.zknotary.common.client.flows
+package com.ing.zknotary.common.client.flows.testflows.benchmarks
 
-import com.ing.zknotary.common.client.flows.testflows.TestNotarisationFlow
+import com.ing.zknotary.common.client.flows.checkVault
 import com.ing.zknotary.node.services.ConfigParams
 import com.ing.zknotary.node.services.InMemoryZKVerifierTransactionStorage
 import com.ing.zknotary.node.services.ServiceNames.ZK_TX_SERVICE
 import com.ing.zknotary.node.services.ServiceNames.ZK_VERIFIER_TX_STORAGE
-import com.ing.zknotary.notary.ZKNotaryService
 import com.ing.zknotary.testing.fixtures.contract.TestContract
 import com.ing.zknotary.testing.zkp.MockZKTransactionService
-import io.kotest.matchers.shouldBe
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
 import net.corda.core.utilities.getOrThrow
@@ -23,16 +21,16 @@ import net.corda.testing.node.internal.cordappWithPackages
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.Timeout
 
-@Tag("slow")
-class NotarisationFlowTest {
+class NonZkpE2EFlowTest {
     private val mockNet: MockNetwork
     private val notaryNode: StartedMockNode
     private val megaCorpNode: StartedMockNode
     private val miniCorpNode: StartedMockNode
+    private val thirdPartyNode: StartedMockNode
     private val megaCorp: Party
     private val miniCorp: Party
+    private val thirdParty: Party
     private val notary: Party
 
     init {
@@ -42,13 +40,19 @@ class NotarisationFlowTest {
                     mapOf(
                         ZK_VERIFIER_TX_STORAGE to InMemoryZKVerifierTransactionStorage::class.qualifiedName!!,
                         ZK_TX_SERVICE to MockZKTransactionService::class.qualifiedName!!,
-                        ConfigParams.Zinc.COMMAND_CLASS_NAMES to listOf(TestContract.Create::class.java.name, TestContract.Move::class.java.name)
+                        ConfigParams.Zinc.COMMAND_CLASS_NAMES to listOf(
+                            TestContract.Create::class.java.name,
+                            TestContract.Move::class.java.name
+                        )
                             .joinToString(separator = ConfigParams.Zinc.COMMANDS_SEPARATOR)
                     )
                 )
             ),
             notarySpecs = listOf(
-                MockNetworkNotarySpec(DUMMY_NOTARY_NAME, validating = false, className = ZKNotaryService::class.java.name)
+                MockNetworkNotarySpec(
+                    DUMMY_NOTARY_NAME,
+                    validating = true
+                )
             ),
             networkParameters = testNetworkParameters(minimumPlatformVersion = 6)
         )
@@ -56,9 +60,11 @@ class NotarisationFlowTest {
         notaryNode = mockNet.notaryNodes.first()
         megaCorpNode = mockNet.createPartyNode(CordaX500Name("MegaCorp", "London", "GB"))
         miniCorpNode = mockNet.createPartyNode(CordaX500Name("MiniCorp", "London", "GB"))
+        thirdPartyNode = mockNet.createPartyNode(CordaX500Name("ThirdParty", "London", "GB"))
         notary = notaryNode.info.singleIdentity()
         megaCorp = megaCorpNode.info.singleIdentity()
         miniCorp = miniCorpNode.info.singleIdentity()
+        thirdParty = thirdPartyNode.info.singleIdentity()
     }
 
     @AfterAll
@@ -68,23 +74,31 @@ class NotarisationFlowTest {
     }
 
     @Test
-    @Timeout(30)
-    fun `Notary signing`() {
-        val createFlow = TestNotarisationFlow()
-        val future = miniCorpNode.startFlow(createFlow)
+    @Tag("slow")
+    fun `End2End test with normal notary as benchmark`() {
+        val createFlow = NonZkpCreateFlow()
+        val createFuture = miniCorpNode.startFlow(createFlow)
         mockNet.runNetwork()
-        val svtx = future.getOrThrow()
+        val createStx = createFuture.getOrThrow()
 
-        // Check ZKP Tx signatures
-        svtx.sigs.size shouldBe 2
-        svtx.sigs.forEach {
-            it.verify(svtx.id)
-        }
+        checkVault(createStx, null, miniCorpNode)
 
-        // Check that notary sig is here
+        val moveFuture = miniCorpNode.startFlow(NonZkpMoveFlow(createStx, megaCorp))
+        mockNet.runNetwork()
+        val moveStx = moveFuture.getOrThrow()
 
-        svtx.sigs.filter {
-            it.by == notaryNode.info.legalIdentities.single().owningKey
-        }.size shouldBe 1
+        checkVault(moveStx, miniCorpNode, megaCorpNode)
+
+        val moveBackFuture = megaCorpNode.startFlow(NonZkpMoveFlow(moveStx, miniCorp))
+        mockNet.runNetwork()
+        val moveBackStx = moveBackFuture.getOrThrow()
+
+        checkVault(moveBackStx, megaCorpNode, miniCorpNode)
+
+        val finalMoveFuture = miniCorpNode.startFlow(NonZkpMoveFlow(moveBackStx, thirdParty))
+        mockNet.runNetwork()
+        val finalTx = finalMoveFuture.getOrThrow()
+
+        checkVault(finalTx, miniCorpNode, thirdPartyNode)
     }
 }

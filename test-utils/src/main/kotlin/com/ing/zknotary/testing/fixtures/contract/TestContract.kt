@@ -1,5 +1,6 @@
-package com.ing.zknotary.common.contracts
+package com.ing.zknotary.testing.fixtures.contract
 
+import com.ing.zknotary.common.contracts.ZKCommandData
 import com.ing.zknotary.common.zkp.CircuitMetaData
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.CommandAndState
@@ -12,31 +13,32 @@ import net.corda.core.transactions.LedgerTransaction
 import java.io.File
 import java.util.Random
 
-class TestContract : Contract {
-    companion object {
-        const val PROGRAM_ID: ContractClassName = "com.ing.zknotary.common.contracts.TestContract"
+public class TestContract : Contract {
+    public companion object {
+        public const val PROGRAM_ID: ContractClassName = "com.ing.zknotary.testing.fixtures.contract.TestContract"
     }
 
     @BelongsToContract(TestContract::class)
-    data class TestState(
+    public data class TestState(
         override val owner: AbstractParty,
         val value: Int = Random().nextInt(1000)
     ) : ContractState, OwnableState {
 
-        override val participants = listOf(owner)
+        override val participants: List<AbstractParty> = listOf(owner)
 
-        override fun withNewOwner(newOwner: AbstractParty) = CommandAndState(Move(), copy(owner = newOwner))
+        override fun withNewOwner(newOwner: AbstractParty): CommandAndState =
+            CommandAndState(Move(), copy(owner = newOwner))
     }
 
     // Commands
-    class Create : ZKCommandData {
+    public class Create : ZKCommandData {
         override val id: Int = 0
 
         override val circuit: CircuitMetaData =
             CircuitMetaData(folder = File("${System.getProperty("user.dir")}/../zinc-platform-sources/circuits/create"))
     }
 
-    class Move : ZKCommandData {
+    public class Move : ZKCommandData {
         override val id: Int = 1
         override val circuit: CircuitMetaData =
             CircuitMetaData(folder = File("${System.getProperty("user.dir")}/../zinc-platform-sources/circuits/move"))

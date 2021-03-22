@@ -7,6 +7,8 @@ pluginManagement {
         val kotlinVersion: String by settings
         kotlin("jvm") version kotlinVersion
 
+        kotlin("plugin.serialization") version kotlinVersion apply false
+
         val spotlessPluginVersion: String by settings
         id("com.diffplug.gradle.spotless") version spotlessPluginVersion apply false
 

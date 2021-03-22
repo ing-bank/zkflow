@@ -5,6 +5,7 @@ plugins {
     id("net.corda.plugins.quasar-utils")
     id("maven-publish")
     id("java-library")
+    kotlin("plugin.serialization")
 }
 
 cordapp {
@@ -20,6 +21,9 @@ cordapp {
 }
 
 dependencies {
+    val kotlinxSerializationJsonVersion: String by project
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationJsonVersion")
+
     // Corda dependencies.
     val cordaReleaseGroup: String by project
     val cordaVersion: String by project
@@ -51,13 +55,7 @@ sourceSets {
 // kotlin {
 //     explicitApi = Strict
 // }
-
-// Separate task is used in order to ensure copying will be done properly, because
-// such implementation fails sometimes:
-// tasks.withType<Test> {
-//      beforeSuite {
-//      }
-// }
+// TODO: Introduce kotlin/binary-compatibility-validator: https://github.com/Kotlin/binary-compatibility-validator
 
 // TODO: This should probably become a fat jar at some point, with its dependencies included
 publishing {

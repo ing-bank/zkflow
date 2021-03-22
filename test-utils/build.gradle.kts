@@ -11,8 +11,8 @@ dependencies {
 
     val cordaReleaseGroup: String by project
     val cordaVersion: String by project
-    implementation("$cordaReleaseGroup:corda-test-utils:$cordaVersion")
-    implementation("$cordaReleaseGroup:corda-node-driver:$cordaVersion")
+    api("$cordaReleaseGroup:corda-test-utils:$cordaVersion")
+    api("$cordaReleaseGroup:corda-node-driver:$cordaVersion")
 }
 
 kotlin {

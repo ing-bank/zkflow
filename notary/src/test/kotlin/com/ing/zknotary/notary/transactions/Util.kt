@@ -1,6 +1,6 @@
 package com.ing.zknotary.notary.transactions
 
-import com.ing.zknotary.common.contracts.TestContract
+import com.ing.zknotary.testing.fixtures.contract.TestContract
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.OwnableState
 import net.corda.core.contracts.StateAndRef
@@ -50,7 +50,10 @@ fun LedgerDSL<TestTransactionDSLInterpreter, TestLedgerDSLInterpreter>.createMov
     return withTestSerializationEnvIfNotSet {
         val stateAndRef = retrieveOutputStateAndRef(OwnableState::class.java, stateLabel)
         val referenceStateRef =
-            if (referenceLabel != null) retrieveOutputStateAndRef(ContractState::class.java, referenceLabel).ref else null
+            if (referenceLabel != null) retrieveOutputStateAndRef(
+                ContractState::class.java,
+                referenceLabel
+            ).ref else null
 
         createMoveWtx(stateAndRef, newOwner, referenceStateRef)
     }
@@ -63,7 +66,10 @@ fun LedgerDSL<TestTransactionDSLInterpreter, TestLedgerDSLInterpreter>.createMov
 ): WireTransaction {
     return withTestSerializationEnvIfNotSet {
         val referenceStateRef =
-            if (referenceLabel != null) retrieveOutputStateAndRef(ContractState::class.java, referenceLabel).ref else null
+            if (referenceLabel != null) retrieveOutputStateAndRef(
+                ContractState::class.java,
+                referenceLabel
+            ).ref else null
 
         createMoveWtx(stateAndRef, newOwner, referenceStateRef)
     }

@@ -2,6 +2,7 @@ package com.ing.zknotary.common.zkp
 
 import net.corda.core.serialization.serialize
 import java.io.File
+import java.io.File.createTempFile
 import java.io.IOException
 import java.time.Duration
 import java.util.concurrent.TimeUnit
@@ -19,10 +20,10 @@ class ZincZKService(
     private val defaultBuildPath = "$circuitFolder/build"
     private val defaultDataPath = "$circuitFolder/data"
 
-    val compiledCircuitPath = "$artifactFolder/compiled-circuit.znb"
+    val compiledCircuitPath = "$defaultBuildPath/default.znb"
     val zkSetup = ZKSetup(
-        provingKeyPath = "$artifactFolder/proving_key",
-        verifyingKeyPath = "$artifactFolder/verifying_key.txt"
+        provingKeyPath = "$defaultDataPath/proving_key",
+        verifyingKeyPath = "$defaultDataPath/verifying_key.txt"
     )
 
     companion object {
@@ -72,14 +73,16 @@ class ZincZKService(
             zkSetup.provingKeyPath,
             zkSetup.verifyingKeyPath
         ).forEach { File(it).delete() }
+        File(defaultBuildPath).deleteRecursively()
+        File(defaultDataPath).deleteRecursively()
     }
 
     fun setup() {
         val circuitManifest = File(circuitManifestPath)
         require(circuitManifest.exists()) { "Cannot find circuit manifest at $circuitManifestPath" }
 
-        val witnessFile = createTempFile()
-        val publicData = createTempFile()
+        val witnessFile = createTempFile("zkp", null)
+        val publicData = createTempFile("zkp", null)
 
         try {
             completeZincCommand(
@@ -91,10 +94,6 @@ class ZincZKService(
             // Neither witness, nor Public data carry useful information after build, they are just templates
             publicData.delete()
             witnessFile.delete()
-            // Zinc creates files in the default locations independently if it was specified the exact locations,
-            // clear the defaults too.
-            File(defaultBuildPath).deleteRecursively()
-            File(defaultDataPath).deleteRecursively()
         }
         require(File(compiledCircuitPath).exists()) { "Compile circuit not found in path $compiledCircuitPath." }
 
@@ -122,10 +121,10 @@ class ZincZKService(
 
     fun prove(witness: ByteArray): ByteArray {
 
-        val witnessFile = createTempFile()
+        val witnessFile = createTempFile("zkp", null)
         witnessFile.writeBytes(witness)
 
-        val publicData = createTempFile()
+        val publicData = createTempFile("zkp", null)
 
         try {
             return completeZincCommand(
@@ -142,10 +141,10 @@ class ZincZKService(
 
     fun verify(proof: ByteArray, publicInput: ByteArray) {
 
-        val proofFile = createTempFile()
+        val proofFile = createTempFile("zkp", null)
         proofFile.writeBytes(proof)
 
-        val publicDataFile = createTempFile()
+        val publicDataFile = createTempFile("zkp", null)
         publicDataFile.writeBytes(publicInput)
 
         try {

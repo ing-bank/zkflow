@@ -8,11 +8,15 @@ plugins {
 
 dependencies {
     implementation(project(":gradle-plugin"))
+
+    val kotlinxSerializationJsonVersion: String by project
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationJsonVersion")
+
     testImplementation(project(":notary"))
 
     val zkkryptoVersion: String by project
     testImplementation("com.ing.dlt:zkkrypto:$zkkryptoVersion")
-    // ZKP dependencies
+
     testImplementation(project(":test-utils"))
 }
 

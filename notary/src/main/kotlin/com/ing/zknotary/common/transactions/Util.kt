@@ -17,28 +17,27 @@ import net.corda.core.node.ServicesForResolution
 import net.corda.core.transactions.LedgerTransaction
 import net.corda.core.transactions.WireTransaction
 import java.security.PublicKey
-import kotlin.math.max
 
 @DeleteForDJVM
 fun WireTransaction.prettyPrint(): String {
     val buf = StringBuilder()
-    buf.appendln("Wire Transaction:")
+    buf.appendLine("Wire Transaction:")
 
     fun addComponentList(buf: StringBuilder, name: String, componentList: List<*>) {
-        if (componentList.isNotEmpty()) buf.appendln(" - $name:")
+        if (componentList.isNotEmpty()) buf.appendLine(" - $name:")
         for ((index, component) in componentList.withIndex()) {
-            buf.appendln("\t[$index]:\t$component")
+            buf.appendLine("\t[$index]:\t$component")
         }
     }
 
     addComponentList(buf, "REFS", references)
     addComponentList(buf, "INPUTS", inputs)
     addComponentList(buf, "OUTPUTS", outputs)
-    buf.appendln(" - COMMAND:  ${commands.single()}")
+    buf.appendLine(" - COMMAND:  ${commands.single()}")
     addComponentList(buf, "ATTACHMENT HASHES", attachments)
 
     if (networkParametersHash != null) {
-        buf.appendln(" - PARAMETERS HASH:  $networkParametersHash")
+        buf.appendLine(" - PARAMETERS HASH:  $networkParametersHash")
     }
     return buf.toString()
 }
@@ -93,17 +92,6 @@ fun WireTransaction.toLedgerTransaction(
     // checkTransactionSize(ltx, resolvedNetworkParameters.maxTransactionSize, serializedResolvedInputs, serializedResolvedReferences)
 
     return ltx
-}
-
-/**
- * Extends a list with a default value.
- */
-fun <T> List<T>.pad(n: Int, default: T) = List(max(size, n)) {
-    if (it < size)
-        this[it]
-    else {
-        default
-    }
 }
 
 val SignedZKVerifierTransaction.dependencies: Set<SecureHash>

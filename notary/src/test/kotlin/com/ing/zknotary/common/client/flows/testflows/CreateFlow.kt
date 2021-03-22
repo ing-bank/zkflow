@@ -4,10 +4,12 @@ import co.paralleluniverse.fibers.Suspendable
 import com.ing.zknotary.client.flows.ZKCollectSignaturesFlow
 import com.ing.zknotary.client.flows.ZKFinalityFlow
 import com.ing.zknotary.client.flows.signInitialZKTransaction
-import com.ing.zknotary.common.contracts.TestContract
+import com.ing.zknotary.common.transactions.ZKTransactionBuilder
+import com.ing.zknotary.common.transactions.signInitialTransaction
 import com.ing.zknotary.common.zkp.ZKTransactionService
 import com.ing.zknotary.node.services.ServiceNames
 import com.ing.zknotary.node.services.getCordaServiceFromConfig
+import com.ing.zknotary.testing.fixtures.contract.TestContract
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.StateAndContract
 import net.corda.core.flows.FlowLogic
@@ -28,14 +30,11 @@ class CreateFlow : FlowLogic<SignedTransaction>() {
         val issueCommand = Command(TestContract.Create(), me.owningKey) //
         val stateAndContract = StateAndContract(state, TestContract.PROGRAM_ID)
 
-        val builder = TransactionBuilder(serviceHub.networkMapCache.notaryIdentities.single())
+        val builder = ZKTransactionBuilder(TransactionBuilder(serviceHub.networkMapCache.notaryIdentities.single()))
         builder.withItems(stateAndContract, issueCommand)
-        val ltx = builder.toWireTransaction(serviceHub).toLedgerTransaction(serviceHub)
-        ltx.verify()
 
         val stx = serviceHub.signInitialTransaction(builder)
-
-        val vtx = zkService.prove(stx.tx, ltx.inputs, ltx.references)
+        val vtx = zkService.prove(stx.tx)
 
         val svtx = subFlow(ZKCollectSignaturesFlow(stx, signInitialZKTransaction(vtx), emptyList()))
 
