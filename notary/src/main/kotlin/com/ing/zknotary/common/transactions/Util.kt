@@ -1,22 +1,53 @@
 package com.ing.zknotary.common.transactions
 
 import com.ing.zknotary.common.contracts.ZKCommandData
+import com.ing.zknotary.common.zkp.UtxoInfo
 import net.corda.core.DeleteForDJVM
 import net.corda.core.contracts.Attachment
 import net.corda.core.contracts.AttachmentResolutionException
 import net.corda.core.contracts.CommandWithParties
+import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.StateAndRef
+import net.corda.core.contracts.StateRef
 import net.corda.core.contracts.TransactionResolutionException
 import net.corda.core.crypto.DigestService
 import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.Party
 import net.corda.core.internal.lazyMapped
 import net.corda.core.node.NetworkParameters
+import net.corda.core.node.ServiceHub
 import net.corda.core.node.ServicesForResolution
 import net.corda.core.transactions.LedgerTransaction
 import net.corda.core.transactions.WireTransaction
 import java.security.PublicKey
+import java.util.function.Predicate
+
+fun ServiceHub.collectSerializedUtxosAndNonces(
+    stateRefs: List<StateRef>,
+    receivedStateInfo: List<UtxoInfo> = emptyList()
+): Pair<List<ByteArray>, List<SecureHash>> {
+    return stateRefs.map { stateRef ->
+        // First see if we received the stateInfo before querying:
+        if (receivedStateInfo.any { it.stateRef == stateRef }) {
+            val utxoInfo = receivedStateInfo.single { it.stateRef == stateRef }
+            utxoInfo.serializedContents to utxoInfo.nonce
+        } else {
+            val prevStx = validatedTransactions.getTransaction(stateRef.txhash)
+                ?: error("Plaintext tx not found for hash ${stateRef.txhash}")
+
+            val serializedUtxo = prevStx.tx
+                .componentGroups.single { it.groupIndex == ComponentGroupEnum.OUTPUTS_GROUP.ordinal }
+                .components[stateRef.index].copyBytes()
+
+            val nonce = prevStx.buildFilteredTransaction(Predicate { true })
+                .filteredComponentGroups.single { it.groupIndex == ComponentGroupEnum.OUTPUTS_GROUP.ordinal }
+                .nonces[stateRef.index]
+
+            serializedUtxo to nonce
+        }
+    }.unzip()
+}
 
 @DeleteForDJVM
 fun WireTransaction.prettyPrint(): String {
