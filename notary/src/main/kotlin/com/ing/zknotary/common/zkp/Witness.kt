@@ -13,16 +13,20 @@ import net.corda.core.transactions.WireTransaction
 /**
  * The witness, which is what we serialize for Zinc, contains the following items:
  *
- * Already serialized & sized componentgroups, e.g. groups of bytearrays of the WireTransaction.
- * Already serialized & sized TransactionState<T: ContractState> class instances for all UTXOs (outputs of the previous transaction) pointed to by the inputs and reference StateRefs serialized inside the inputs and references component groups of the WireTransaction.
- * The nonces bytes for the UTXOs pointed to by the input and reference StateRefs. (Unsized because hashes are serialized and sized by nature? Or should this be serialized & sized also?)
+ * - Already serialized & sized componentgroups, e.g. groups of bytearrays of the WireTransaction.
+ * - Already serialized & sized TransactionState<T: ContractState> class instances for all UTXOs (outputs of the previous transaction) pointed to by the inputs and reference StateRefs serialized inside the inputs and references component groups of the WireTransaction.
+ * - The nonces bytes for the UTXOs pointed to by the input and reference StateRefs. (TODO: currently unsized because hashes are serialized and sized by nature. Or should this be serialized & sized also?)
  *
  * Then in Zinc, the following happens respectively:
  *
- * We recalculate the Merkle root using the sized & serialized bytearrays of the componentgroups as is.
- * Next, they are deserialized into the expected transaction structs used for contract rule validation. Rule violation fails proof generation.
- * Finally the Merkle root is 'compared' with the expected Merkle root from the public input, which would fail proof verification if not matching.
- * and 3. The sized & serialized UTXOs are hashed together with their nonces to get the Merkle tree hashes for the UTXOs. These are 'compared' with the UTXO hashes from the public input. This proves that the contract rules have been applied on inputs and references that are unchanged since they were created in the preceding transactions. Next, the UTXOs are deserialized into the expected TransactionState<T> structs and used, together with the transaction struct from 1. for contract rule verification.
+ * - We recalculate the Merkle root using the sized & serialized bytearrays of the componentgroups as is. The Merkle root is compared with the expected Merkle root from the public input, which would fail proof verification if not matching.
+ * - The sized & serialized UTXOs from the witness are hashed together with the respective nonces from the witness to get the Merkle tree hashes
+ *   for the UTXOs pointed to by the staterefs from the inputs and references component groups from the witness.
+ *   These are compared with the UTXO hashes from the public input. If they match, this proves that the contract rules have been applied on the
+ *   contents of inputs and references that are unchanged since they were created in the preceding transactions.
+ *   Next, the UTXOs are deserialized into the expected TransactionState<T> structs and used, together with the transaction struct from
+ *   from step 1 for contract rule verification.
+ * - Next, the components are deserialized into the expected transaction structs used for contract rule validation. Rule violation fails proof generation.
  *
  * Please validate these assumptions:
  *
@@ -35,33 +39,89 @@ import net.corda.core.transactions.WireTransaction
 @Serializable(with = WitnessSerializer::class)
 @Suppress("LongParameterList")
 class Witness(
+    /**
+     * These groups match the groups defined in [ComponentGroupEnum].
+     * They contain the serialized form of [TraversableTransaction] components.
+     */
+
+    /**
+     * Serialized List<StateRef>
+     */
     val inputsGroup: List<ByteArray>,
+
+    /**
+     * Serialized List<TransactionState<ContractState>>
+     */
     val outputsGroup: List<ByteArray>,
+
+    /**
+     * Serialized List<CommandData>
+     */
     val commandsGroup: List<ByteArray>,
+
+    /**
+     * Serialized List<SecureHash>
+     */
     val attachmentsGroup: List<ByteArray>,
+
+    /**
+     * Serialized List<Party>
+     */
     val notaryGroup: List<ByteArray>,
+
+    /**
+     * List<TimeWindow>
+     */
     val timeWindowGroup: List<ByteArray>,
+
+    /**
+     * Serialized List<List<PublicKey>>
+     */
     val signersGroup: List<ByteArray>,
+
+    /**
+     * Serialized List<StateRef>
+     */
     val referencesGroup: List<ByteArray>,
+
+    /**
+     * Serialized List<SecureHash>
+     */
     val parametersGroup: List<ByteArray>,
 
+    /**
+     * Note that this is *not* serialized or sized, since [PrivacySalt] is already a list of bytes that is fixed size.
+     */
     val privacySalt: PrivacySalt,
 
     /**
-     * The serialized UTXOs pointed to by the input serialized stateRefs of the inputsGroup parameter.
+     * The serialized UTXOs (TransactionState<T: ContractState>) pointed to by the serialized stateRefs of the inputsGroup parameter.
      *
      * They should be indexed indentically to the inputsGroup parameter.
      */
     val serializedInputUtxos: List<ByteArray>,
 
     /**
-     * The serialized UTXOs pointed to by the input serialized stateRefs of the referencesGroup parameter.
+     * The serialized UTXOs (TransactionState<T: ContractState>) pointed to by the serialized stateRefs of the referencesGroup parameter.
      *
      * They should be indexed indentically to the referencesGroup parameter.
      */
     val serializedReferenceUtxos: List<ByteArray>,
 
+    /**
+     * The nonce hashes ([SecureHash]) for the UTXOs pointed to by the serialized stateRefs of the inputsGroup parameter.
+     * Note that these are *not* serialized or sized, since [SecureHash] is already a list of bytes that is fixed size.
+     *
+     * They should be indexed indentically to the inputsGroup parameter.
+     */
     val inputUtxoNonces: List<SecureHash>,
+
+    /**
+     * The nonce hashes ([SecureHash]) for the UTXOs pointed to by the serialized stateRefs of the referencesGroup parameter.
+     * Note that these are *not* serialized or sized, since [SecureHash] is already a list of bytes that is fixed size.
+     *
+     * They should be indexed indentically to the inputsGroup parameter.
+     */
     val referenceUtxoNonces: List<SecureHash>
 ) {
     companion object {
