@@ -1,5 +1,6 @@
 package com.ing.zknotary.common.transactions
 
+import co.paralleluniverse.strands.Strand
 import com.ing.zknotary.common.serialization.FixedLengthSerializationScheme
 import net.corda.core.contracts.AttachmentConstraint
 import net.corda.core.contracts.AutomaticPlaceholderConstraint
@@ -10,12 +11,14 @@ import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.PrivacySalt
 import net.corda.core.contracts.ReferencedStateAndRef
 import net.corda.core.contracts.StateAndRef
+import net.corda.core.contracts.StateRef
 import net.corda.core.contracts.TimeWindow
 import net.corda.core.contracts.TransactionState
 import net.corda.core.crypto.Crypto
 import net.corda.core.crypto.SignableData
 import net.corda.core.crypto.SignatureMetadata
 import net.corda.core.identity.Party
+import net.corda.core.internal.FlowStateMachine
 import net.corda.core.internal.requiredContractClassName
 import net.corda.core.node.ServiceHub
 import net.corda.core.node.ServicesForResolution
@@ -47,12 +50,57 @@ import java.util.UUID
  * class ZKTransactionBuilder(builder: TxBuilderIface): TxBuilderIface by builder
  * ```
  */
-@Suppress("TooManyFunctions") // Copy of TransactionBuilder API
+@Suppress("TooManyFunctions", "LongParameterList", "MemberVisibilityCanBePrivate") // Copy of TransactionBuilder API
 class ZKTransactionBuilder(
     private val builder: TransactionBuilder,
     private val serializationSchemeId: Int = FixedLengthSerializationScheme.SCHEME_ID,
     private val serializationProperties: Map<Any, Any> = emptyMap()
 ) {
+
+    constructor(
+        notary: Party? = null,
+        lockId: UUID = defaultLockId(),
+        inputs: MutableList<StateRef> = arrayListOf(),
+        attachments: MutableList<AttachmentId> = arrayListOf(),
+        outputs: MutableList<TransactionState<ContractState>> = arrayListOf(),
+        commands: MutableList<Command<*>> = arrayListOf(),
+        window: TimeWindow? = null,
+        privacySalt: PrivacySalt = PrivacySalt(),
+        references: MutableList<StateRef> = arrayListOf(),
+        serviceHub: ServiceHub? = (Strand.currentStrand() as? FlowStateMachine<*>)?.serviceHub
+
+    ) : this(
+        TransactionBuilder(
+            notary,
+            lockId,
+            inputs,
+            attachments,
+            outputs,
+            commands,
+            window,
+            privacySalt,
+            references,
+            serviceHub
+        )
+    )
+
+    constructor(
+        notary: Party? = null,
+        lockId: UUID = defaultLockId(),
+        inputs: MutableList<StateRef> = arrayListOf(),
+        attachments: MutableList<AttachmentId> = arrayListOf(),
+        outputs: MutableList<TransactionState<ContractState>> = arrayListOf(),
+        commands: MutableList<Command<*>> = arrayListOf(),
+        window: TimeWindow? = null,
+        privacySalt: PrivacySalt = PrivacySalt()
+    ) : this(notary, lockId, inputs, attachments, outputs, commands, window, privacySalt, arrayListOf())
+
+    constructor(notary: Party) : this(notary, window = null)
+
+    private companion object {
+        // Copied from private `TransactionBuilder.defaultLockId`
+        private fun defaultLockId() = (Strand.currentStrand() as? FlowStateMachine<*>)?.id?.uuid ?: UUID.randomUUID()
+    }
 
     /*
      * START: copy of [TransactionBuilder] API with changed behaviour

@@ -12,7 +12,6 @@ public infix fun KClass<*>.shouldHaveSamePublicApiAs(expected: KClass<*>) {
     val expectedMemberFunctions = expected.memberFunctions.filter { it.visibility == KVisibility.PUBLIC }
 
     expectedMemberFunctions.forEach { expectedFunction ->
-
         actualMemberFunctions.singleOrNull {
             it.name == expectedFunction.name &&
                 parametersMatch(expectedFunction.parameters, it.parameters) &&
@@ -29,6 +28,17 @@ public infix fun KClass<*>.shouldHaveSamePublicApiAs(expected: KClass<*>) {
                 parametersMatch(expectedProperty.parameters, it.parameters) &&
                 returnTypesMatch(expected, expectedProperty.returnType, this, it.returnType)
         } ?: error("Public property $expectedProperty not present on $this")
+    }
+
+    val actualConstructors = this.constructors.filter { it.visibility == KVisibility.PUBLIC }
+    val expectedConstructors = expected.constructors.filter { it.visibility == KVisibility.PUBLIC }
+
+    expectedConstructors.forEach { expectedConstructor ->
+        actualConstructors.singleOrNull {
+            it.name == expectedConstructor.name &&
+                parametersMatch(expectedConstructor.parameters, it.parameters) &&
+                returnTypesMatch(expected, expectedConstructor.returnType, this, it.returnType)
+        } ?: error("Constructor $expectedConstructor not present on $this")
     }
 }
 
