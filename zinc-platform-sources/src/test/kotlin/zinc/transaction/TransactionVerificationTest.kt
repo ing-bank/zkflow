@@ -37,7 +37,7 @@ import kotlin.time.ExperimentalTime
 
 @ExperimentalSerializationApi
 @ExperimentalTime
-@Tag("nightly")
+@Tag("slow")
 class TransactionVerificationTest {
 //    private val log = loggerFor<TransactionVerificationTest>()
 //

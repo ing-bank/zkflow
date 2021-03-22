@@ -1,12 +1,10 @@
-package com.ing.zknotary.common.client.flows
+package com.ing.zknotary.common.client.flows.testflows.benchmarks
 
-import com.ing.zknotary.common.client.flows.testflows.CreateFlow
-import com.ing.zknotary.common.client.flows.testflows.MoveFlow
+import com.ing.zknotary.common.client.flows.checkVault
 import com.ing.zknotary.node.services.ConfigParams
 import com.ing.zknotary.node.services.InMemoryZKVerifierTransactionStorage
 import com.ing.zknotary.node.services.ServiceNames.ZK_TX_SERVICE
 import com.ing.zknotary.node.services.ServiceNames.ZK_VERIFIER_TX_STORAGE
-import com.ing.zknotary.notary.ZKNotaryService
 import com.ing.zknotary.testing.fixtures.contract.TestContract
 import com.ing.zknotary.testing.zkp.MockZKTransactionService
 import net.corda.core.identity.CordaX500Name
@@ -24,7 +22,7 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 
-class E2EFlowTest {
+class NonZkpE2EFlowTest {
     private val mockNet: MockNetwork
     private val notaryNode: StartedMockNode
     private val megaCorpNode: StartedMockNode
@@ -53,8 +51,7 @@ class E2EFlowTest {
             notarySpecs = listOf(
                 MockNetworkNotarySpec(
                     DUMMY_NOTARY_NAME,
-                    validating = false,
-                    className = ZKNotaryService::class.java.name
+                    validating = true
                 )
             ),
             networkParameters = testNetworkParameters(minimumPlatformVersion = 6)
@@ -78,27 +75,27 @@ class E2EFlowTest {
 
     @Test
     @Tag("slow")
-    fun `End2End test with ZKP notary`() {
-        val createFlow = CreateFlow()
+    fun `End2End test with normal notary as benchmark`() {
+        val createFlow = NonZkpCreateFlow()
         val createFuture = miniCorpNode.startFlow(createFlow)
         mockNet.runNetwork()
         val createStx = createFuture.getOrThrow()
 
         checkVault(createStx, null, miniCorpNode)
 
-        val moveFuture = miniCorpNode.startFlow(MoveFlow(createStx, megaCorp))
+        val moveFuture = miniCorpNode.startFlow(NonZkpMoveFlow(createStx, megaCorp))
         mockNet.runNetwork()
         val moveStx = moveFuture.getOrThrow()
 
         checkVault(moveStx, miniCorpNode, megaCorpNode)
 
-        val moveBackFuture = megaCorpNode.startFlow(MoveFlow(moveStx, miniCorp))
+        val moveBackFuture = megaCorpNode.startFlow(NonZkpMoveFlow(moveStx, miniCorp))
         mockNet.runNetwork()
         val moveBackStx = moveBackFuture.getOrThrow()
 
         checkVault(moveBackStx, megaCorpNode, miniCorpNode)
 
-        val finalMoveFuture = miniCorpNode.startFlow(MoveFlow(moveBackStx, thirdParty))
+        val finalMoveFuture = miniCorpNode.startFlow(NonZkpMoveFlow(moveBackStx, thirdParty))
         mockNet.runNetwork()
         val finalTx = finalMoveFuture.getOrThrow()
 
