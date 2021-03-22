@@ -16,6 +16,20 @@ import org.bouncycastle.crypto.digests.Blake2sDigest
  * elliptic curve for Pedersen. In this case we can either switch from Blake2s to Blake2b that allows for longer output,
  * or continue to use blake2s and just pad it with trailing zeroes according to Pedersen algorithm. First way will hurt
  * performance, so probably better to go with second option (although need to double-check security wouldn't suffer)
+ *
+ * In addition to the above, there is another issue caused by bug on Corda https://github.com/corda/corda/issues/6680:
+ *
+ * Because of this bug,which automatically promotes a single component in a component group to be the root hash of that
+ * component group Merkle tree (if it is the only component in the group):
+ *
+ * Given:
+ * - `componentDigest()` and `digest()` are implemented to use different algorithms: let's say Blake2s and Pedersen respectively;
+ * - component group 'inputs' contains only one component;
+ *
+ * Then:
+ * - the root hash of the 'inputs' component group will be a Blake2s hash instead of the expected Pedersen hash.
+ *
+ * This could cause unexpected security issues and might also cause problems if the output length of the respective hash algos is different.
  */
 class ZincDigestAlgorithm : DigestAlgorithm {
     override val algorithm = "ZINC"
