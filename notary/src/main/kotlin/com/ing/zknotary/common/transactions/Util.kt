@@ -2,6 +2,9 @@ package com.ing.zknotary.common.transactions
 
 import com.ing.zknotary.common.contracts.ZKCommandData
 import com.ing.zknotary.common.zkp.UtxoInfo
+import com.ing.zknotary.node.services.ServiceNames
+import com.ing.zknotary.node.services.ZKVerifierTransactionStorage
+import com.ing.zknotary.node.services.getCordaServiceFromConfig
 import net.corda.core.DeleteForDJVM
 import net.corda.core.contracts.Attachment
 import net.corda.core.contracts.AttachmentResolutionException
@@ -34,6 +37,9 @@ fun ServiceHub.collectSerializedUtxosAndNonces(
         // First see if we received the stateInfo before querying:
         if (receivedStateInfo.any { it.stateRef == stateRef }) {
             val utxoInfo = receivedStateInfo.single { it.stateRef == stateRef }
+            getCordaServiceFromConfig<ZKVerifierTransactionStorage>(ServiceNames.ZK_VERIFIER_TX_STORAGE).getTransaction(
+                utxoInfo.stateRef.txhash
+            ) ?: error("ZKP transaction not found for hash ${stateRef.txhash}")
             utxoInfo.serializedContents to utxoInfo.nonce
         } else {
             val prevStx = validatedTransactions.getTransaction(stateRef.txhash)

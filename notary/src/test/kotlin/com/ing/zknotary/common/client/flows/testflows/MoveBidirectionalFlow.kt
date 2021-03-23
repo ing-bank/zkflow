@@ -1,19 +1,14 @@
 package com.ing.zknotary.common.client.flows.testflows
 
 import co.paralleluniverse.fibers.Suspendable
-import com.ing.zknotary.client.flows.ZKCollectSignaturesFlow
-import com.ing.zknotary.client.flows.ZKFinalityFlow
-import com.ing.zknotary.client.flows.ZKReceiveFinalityFlow
 import com.ing.zknotary.client.flows.ZKSignTransactionFlow
-import com.ing.zknotary.client.flows.signInitialZKTransaction
-import com.ing.zknotary.common.flows.ResolveZKTransactionsFlow
 import com.ing.zknotary.common.flows.SendUtxoInfosFlow
+import com.ing.zknotary.common.flows.ZKReceiveStateAndRefFlow
 import com.ing.zknotary.common.transactions.ZKTransactionBuilder
 import com.ing.zknotary.common.transactions.collectSerializedUtxosAndNonces
 import com.ing.zknotary.common.transactions.signInitialTransaction
 import com.ing.zknotary.common.transactions.toLedgerTransaction
 import com.ing.zknotary.common.zkp.UtxoInfo
-import com.ing.zknotary.common.zkp.ZKTransactionService
 import com.ing.zknotary.node.services.ServiceNames
 import com.ing.zknotary.node.services.ZKVerifierTransactionStorage
 import com.ing.zknotary.node.services.getCordaServiceFromConfig
@@ -23,17 +18,14 @@ import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.StateAndContract
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.TransactionResolutionException
-import net.corda.core.contracts.TransactionState
 import net.corda.core.contracts.TransactionVerificationException
 import net.corda.core.contracts.requireThat
-import net.corda.core.crypto.SecureHash
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
 import net.corda.core.flows.InitiatedBy
 import net.corda.core.flows.InitiatingFlow
 import net.corda.core.identity.Party
 import net.corda.core.node.ServiceHub
-import net.corda.core.serialization.deserialize
 import net.corda.core.transactions.ContractUpgradeWireTransaction
 import net.corda.core.transactions.LedgerTransaction
 import net.corda.core.transactions.NotaryChangeWireTransaction
@@ -41,49 +33,25 @@ import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.utilities.unwrap
 
+
 /**
  * Disclaimer: this is not how it is supposed to be used in "real" flows, it works just for this test
  */
 @InitiatingFlow
 class MoveBidirectionalFlow(
     private val myInput: StateAndRef<TestContract.TestState>,
-//    private val theirInput: StateAndRef<TestContract.TestState>,
-//    private val receivedSerializedInput: ByteArray,
-//    private val receivedInputNonce: SecureHash,
     private val counterParty: Party
 ) : FlowLogic<SignedTransaction>() {
 
     @Suspendable
     override fun call(): SignedTransaction {
-        val zkService: ZKTransactionService = serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_TX_SERVICE)
-        val zkTxStorage: ZKVerifierTransactionStorage =
-            serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_VERIFIER_TX_STORAGE)
         val session = initiateFlow(counterParty)
 
         // Initiator sends proposed state to exchange.
+        session.send(myInput)
+
         // Expects UtxoInfo for a state of the same value in return.
-        val theirUtxoInfos = session.sendAndReceive<List<UtxoInfo>>(myInput).unwrap { it }
-
-        val theirUtxoInfo = theirUtxoInfos.single()
-
-        // resolve backchain for theirUtxoInfo
-        subFlow(ResolveZKTransactionsFlow(null, setOf(theirUtxoInfo.stateRef.txhash), session))
-
-        // calculated_utxo_hash =  hash(receivedSerializedInput +receivedInputNonce)
-        val calculatedUtxoHash = SecureHash.componentHashAs(
-            theirUtxoInfo.digestAlgorithm,
-            theirUtxoInfo.nonce.copyBytes() + theirUtxoInfo.serializedContents
-        )
-
-        val resolvedOutput = zkTxStorage.getTransaction(theirUtxoInfo.stateRef.txhash)?.tx?.outputHashes?.get(0)
-            ?: error("Coulnd't resolve zkvtx with id ${theirUtxoInfo.stateRef.txhash}")
-
-        require(resolvedOutput == calculatedUtxoHash) { "Calculated UTXO hash '$calculatedUtxoHash' does not match resolved hash '$resolvedOutput'" }
-
-        val theirInput = StateAndRef(
-            theirUtxoInfo.serializedContents.deserialize<TransactionState<TestContract.TestState>>(),
-            theirUtxoInfo.stateRef
-        )
+        val theirInput = subFlow<List<StateAndRef<TestContract.TestState>>>(ZKReceiveStateAndRefFlow(session)).single()
 
         // Now we create the transaction
         val me = serviceHub.myInfo.legalIdentities.single()
@@ -103,12 +71,12 @@ class MoveBidirectionalFlow(
         // the resolved zkvtransactions
         stx.zkVerify(serviceHub, false, listOf(theirInput))
 
-        val vtx = zkService.prove(stx.tx, listOf(theirUtxoInfo))
-
-        val partiallySignedVtx = signInitialZKTransaction(vtx)
-        val svtx = subFlow(ZKCollectSignaturesFlow(stx, partiallySignedVtx, listOf(session)))
-
-        subFlow(ZKFinalityFlow(stx, svtx, listOf(session)))
+//        val vtx = zkService.prove(stx.tx, listOf(theirUtxoInfo))
+//
+//        val partiallySignedVtx = signInitialZKTransaction(vtx)
+//        val svtx = subFlow(ZKCollectSignaturesFlow(stx, partiallySignedVtx, listOf(session)))
+//
+//        subFlow(ZKFinalityFlow(stx, svtx, listOf(session)))
 
         return stx
     }
@@ -207,10 +175,10 @@ class MoveBidirectionalFlow(
                 subFlow(SendUtxoInfosFlow(session, listOf(utxoInfo)))
 
                 // Invoke the signing subFlow, in response to the counterparty calling [ZKCollectSignaturesFlow].
-                val stx = subFlow(signFlow)
+//                val stx = subFlow(signFlow)
 
                 // Invoke flow in response to ZKFinalityFlow
-                subFlow(ZKReceiveFinalityFlow(session, stx))
+//                subFlow(ZKReceiveFinalityFlow(session, stx))
             }
         }
     }
