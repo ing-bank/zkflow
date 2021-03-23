@@ -260,6 +260,9 @@ class ZKCollectSignatureFlow(
         session.send(queryStates(stx.inputs))
         session.send(queryStates(stx.references))
 
+//        val (serialized, nonces) = serviceHub.collectSerializedUtxosAndNonces(stx.inputs)
+//        subFlow(SendUtxoInfosFlow(session, listOf(utxoInfo)))
+
         // Send ZKP backchain
         subFlow(SendZKTransactionFlow(session, vtx))
 
@@ -352,6 +355,7 @@ abstract class ZKSignTransactionFlow @JvmOverloads constructor(
 
         // Receive input and reference states to be able to build PTX and LedgerTransaction
         // Refs should refer to plaintext LedgerTransaction in order to be able to create valid ltx
+        // TODO: sender should use SendUtxoInfoFlow and here in response we should call ResolveZKTransactionsFlow
         val inputs = otherSideSession.receive<List<StateAndRef<*>>>().unwrap { it }
         val references = otherSideSession.receive<List<StateAndRef<*>>>().unwrap { it }
 

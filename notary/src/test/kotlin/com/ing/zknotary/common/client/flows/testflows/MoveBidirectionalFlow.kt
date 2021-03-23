@@ -7,9 +7,11 @@ import com.ing.zknotary.client.flows.ZKReceiveFinalityFlow
 import com.ing.zknotary.client.flows.ZKSignTransactionFlow
 import com.ing.zknotary.client.flows.signInitialZKTransaction
 import com.ing.zknotary.common.flows.ResolveZKTransactionsFlow
+import com.ing.zknotary.common.flows.SendUtxoInfosFlow
 import com.ing.zknotary.common.transactions.ZKTransactionBuilder
 import com.ing.zknotary.common.transactions.collectSerializedUtxosAndNonces
 import com.ing.zknotary.common.transactions.signInitialTransaction
+import com.ing.zknotary.common.transactions.toLedgerTransaction
 import com.ing.zknotary.common.zkp.UtxoInfo
 import com.ing.zknotary.common.zkp.ZKTransactionService
 import com.ing.zknotary.node.services.ServiceNames
@@ -17,9 +19,12 @@ import com.ing.zknotary.node.services.ZKVerifierTransactionStorage
 import com.ing.zknotary.node.services.getCordaServiceFromConfig
 import com.ing.zknotary.testing.fixtures.contract.TestContract
 import net.corda.core.contracts.Command
+import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.StateAndContract
 import net.corda.core.contracts.StateAndRef
+import net.corda.core.contracts.TransactionResolutionException
 import net.corda.core.contracts.TransactionState
+import net.corda.core.contracts.TransactionVerificationException
 import net.corda.core.contracts.requireThat
 import net.corda.core.crypto.SecureHash
 import net.corda.core.flows.FlowLogic
@@ -27,7 +32,11 @@ import net.corda.core.flows.FlowSession
 import net.corda.core.flows.InitiatedBy
 import net.corda.core.flows.InitiatingFlow
 import net.corda.core.identity.Party
+import net.corda.core.node.ServiceHub
 import net.corda.core.serialization.deserialize
+import net.corda.core.transactions.ContractUpgradeWireTransaction
+import net.corda.core.transactions.LedgerTransaction
+import net.corda.core.transactions.NotaryChangeWireTransaction
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.utilities.unwrap
@@ -47,31 +56,40 @@ class MoveBidirectionalFlow(
     @Suspendable
     override fun call(): SignedTransaction {
         val zkService: ZKTransactionService = serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_TX_SERVICE)
-        val zkTxStorage: ZKVerifierTransactionStorage = serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_VERIFIER_TX_STORAGE)
+        val zkTxStorage: ZKVerifierTransactionStorage =
+            serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_VERIFIER_TX_STORAGE)
         val session = initiateFlow(counterParty)
 
         // Initiator sends proposed state to exchange.
         // Expects UtxoInfo for a state of the same value in return.
-        val theirUtxoInfo = session.sendAndReceive<UtxoInfo>(myInput).unwrap { it }
+        val theirUtxoInfos = session.sendAndReceive<List<UtxoInfo>>(myInput).unwrap { it }
+
+        val theirUtxoInfo = theirUtxoInfos.single()
 
         // resolve backchain for theirUtxoInfo
         subFlow(ResolveZKTransactionsFlow(null, setOf(theirUtxoInfo.stateRef.txhash), session))
 
         // calculated_utxo_hash =  hash(receivedSerializedInput +receivedInputNonce)
-        val calculatedUtxoHash = SecureHash.componentHashAs(theirUtxoInfo.digestAlgorithm, theirUtxoInfo.nonce.copyBytes() + theirUtxoInfo.serializedContents)
+        val calculatedUtxoHash = SecureHash.componentHashAs(
+            theirUtxoInfo.digestAlgorithm,
+            theirUtxoInfo.nonce.copyBytes() + theirUtxoInfo.serializedContents
+        )
 
-        val resolvedOutput = zkTxStorage.getTransaction(theirUtxoInfo.stateRef.txhash)?.tx?.outputHashes?.get(0) ?: error("Coulnd't resolve zkvtx with id ${theirUtxoInfo.stateRef.txhash}")
+        val resolvedOutput = zkTxStorage.getTransaction(theirUtxoInfo.stateRef.txhash)?.tx?.outputHashes?.get(0)
+            ?: error("Coulnd't resolve zkvtx with id ${theirUtxoInfo.stateRef.txhash}")
 
-        // resolved_vtx.outref(theirInput.ref) == calculated_utxo_hash
         require(resolvedOutput == calculatedUtxoHash) { "Calculated UTXO hash '$calculatedUtxoHash' does not match resolved hash '$resolvedOutput'" }
 
-        val theirInput = theirUtxoInfo.serializedContents.deserialize<TransactionState<TestContract.TestState>>()
+        val theirInput = StateAndRef(
+            theirUtxoInfo.serializedContents.deserialize<TransactionState<TestContract.TestState>>(),
+            theirUtxoInfo.stateRef
+        )
 
         // Now we create the transaction
         val me = serviceHub.myInfo.legalIdentities.single()
-        val command = Command(TestContract.Move(), listOf(counterParty, me).map { it.owningKey })
+        val command = Command(TestContract.MoveBidirectional(), listOf(counterParty, me).map { it.owningKey })
         val myOutput = StateAndContract(myInput.state.data.copy(owner = counterParty), TestContract.PROGRAM_ID)
-        val theirOutput = StateAndContract(theirInput.data.copy(owner = me), TestContract.PROGRAM_ID)
+        val theirOutput = StateAndContract(theirInput.state.data.copy(owner = me), TestContract.PROGRAM_ID)
 
         val builder = ZKTransactionBuilder(TransactionBuilder(serviceHub.networkMapCache.notaryIdentities.single()))
         builder.withItems(myInput, theirInput, myOutput, theirOutput, command)
@@ -83,7 +101,7 @@ class MoveBidirectionalFlow(
         // Will this work when we have executed the DataVendingFlow first? Or still not?
         // more logically, we will do vtx.verify(), where we get the hashes for the inputs/referecens from
         // the resolved zkvtransactions
-//        stx.verify(serviceHub, false)
+        stx.zkVerify(serviceHub, false, listOf(theirInput))
 
         val vtx = zkService.prove(stx.tx, listOf(theirUtxoInfo))
 
@@ -93,6 +111,71 @@ class MoveBidirectionalFlow(
         subFlow(ZKFinalityFlow(stx, svtx, listOf(session)))
 
         return stx
+    }
+
+    fun SignedTransaction.zkVerify(
+        services: ServiceHub,
+        checkSufficientSignatures: Boolean = true,
+        receivedInputs: List<StateAndRef<ContractState>> = emptyList(),
+        receivedReferences: List<StateAndRef<ContractState>> = emptyList(),
+    ) {
+        zkResolveAndCheckNetworkParameters(services)
+        when (coreTransaction) {
+            is NotaryChangeWireTransaction -> verify(services, checkSufficientSignatures)
+            is ContractUpgradeWireTransaction -> verify(services, checkSufficientSignatures)
+            else -> zkVerifyRegularTransaction(services, checkSufficientSignatures, receivedInputs, receivedReferences)
+        }
+    }
+
+    private fun SignedTransaction.zkVerifyRegularTransaction(
+        services: ServiceHub,
+        checkSufficientSignatures: Boolean,
+        receivedInputs: List<StateAndRef<ContractState>>,
+        receivedReferences: List<StateAndRef<ContractState>>
+    ) {
+        val ltx = zkToLedgerTransaction(services, checkSufficientSignatures, receivedInputs, receivedReferences)
+        // This fails with a weird db access error, so we use ltx.verify
+        // services.transactionVerifierService.verify(ltx).getOrThrow()
+        ltx.verify()
+    }
+
+    fun SignedTransaction.zkToLedgerTransaction(
+        services: ServiceHub,
+        checkSufficientSignatures: Boolean = true,
+        receivedInputs: List<StateAndRef<ContractState>> = emptyList(),
+        receivedReferences: List<StateAndRef<ContractState>> = emptyList()
+    ): LedgerTransaction {
+        if (checkSufficientSignatures) {
+            verifyRequiredSignatures() // It internally invokes checkSignaturesAreValid().
+        } else {
+            checkSignaturesAreValid()
+        }
+        // We need parameters check here, because finality flow calls stx.toLedgerTransaction() and then verify.
+        zkResolveAndCheckNetworkParameters(services)
+        return tx.toLedgerTransaction(receivedInputs, receivedReferences, services)
+    }
+
+    private fun SignedTransaction.zkResolveAndCheckNetworkParameters(services: ServiceHub) {
+        val zkTxStorage: ZKVerifierTransactionStorage =
+            serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_VERIFIER_TX_STORAGE)
+
+        val hashOrDefault = networkParametersHash ?: services.networkParametersService.defaultHash
+        val txNetworkParameters = services.networkParametersService.lookup(hashOrDefault)
+            ?: throw TransactionResolutionException(id)
+        val groupedInputsAndRefs = (inputs + references).groupBy { it.txhash }
+        groupedInputsAndRefs.map { entry ->
+            val tx = zkTxStorage.getTransaction(entry.key)
+                ?: throw TransactionResolutionException(id)
+            val paramHash = tx.tx.networkParametersHash ?: services.networkParametersService.defaultHash
+            val params = services.networkParametersService.lookup(paramHash) ?: throw TransactionResolutionException(id)
+            if (txNetworkParameters.epoch < params.epoch)
+                throw TransactionVerificationException.TransactionNetworkParameterOrderingException(
+                    id,
+                    entry.value.first(),
+                    txNetworkParameters,
+                    params
+                )
+        }
     }
 
     companion object {
@@ -121,7 +204,7 @@ class MoveBidirectionalFlow(
                     nonce = nonces.single(),
                     digestAlgorithm = createStx.tx.digestService.hashAlgorithm
                 )
-                session.send(utxoInfo)
+                subFlow(SendUtxoInfosFlow(session, listOf(utxoInfo)))
 
                 // Invoke the signing subFlow, in response to the counterparty calling [ZKCollectSignaturesFlow].
                 val stx = subFlow(signFlow)

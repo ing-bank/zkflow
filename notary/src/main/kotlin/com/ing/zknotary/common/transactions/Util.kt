@@ -11,13 +11,16 @@ import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.StateRef
 import net.corda.core.contracts.TransactionResolutionException
+import net.corda.core.contracts.TransactionState
 import net.corda.core.crypto.DigestService
 import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.Party
+import net.corda.core.internal.SerializedStateAndRef
 import net.corda.core.internal.lazyMapped
 import net.corda.core.node.NetworkParameters
 import net.corda.core.node.ServiceHub
 import net.corda.core.node.ServicesForResolution
+import net.corda.core.serialization.SerializedBytes
 import net.corda.core.transactions.LedgerTransaction
 import net.corda.core.transactions.WireTransaction
 import java.security.PublicKey
@@ -77,18 +80,39 @@ fun WireTransaction.zkCommandData() = commands.single().value as ZKCommandData
 
 @Throws(AttachmentResolutionException::class, TransactionResolutionException::class)
 @DeleteForDJVM
+// TODO: This function will have to be the one that is called from anywhere we need a LedgerTransaction.
+// Currently in those locations, the 'standard' wtx.toLedgerTransaction is still called.
 fun WireTransaction.toLedgerTransaction(
-    resolvedInputs: List<StateAndRef<ContractState>>,
-    resolvedReferences: List<StateAndRef<ContractState>>,
+    // TODO: In addition to these, we should also still look up inputs and references that we *do* have in our tx storage
+    receivedResolvedInputs: List<StateAndRef<ContractState>>,
+    receivedResolvedReferences: List<StateAndRef<ContractState>>,
     services: ServicesForResolution
 ): LedgerTransaction {
-
     val resolveIdentity: (PublicKey) -> Party? = { services.identityService.partyFromKey(it) }
     val resolveAttachment: (SecureHash) -> Attachment? = { services.attachments.openAttachment(it) }
     val resolveParameters: (SecureHash?) -> NetworkParameters? = {
         val hashToResolve = it ?: services.networkParametersService.defaultHash
         services.networkParametersService.lookup(hashToResolve)
     }
+    val resolveStateRefAsSerialized: (StateRef) -> SerializedBytes<TransactionState<ContractState>>? = {
+        WireTransaction.resolveStateRefBinaryComponent(
+            it,
+            services
+        )
+    }
+
+    val unresolvedInputs = inputs.subtract(receivedResolvedInputs.map { it.ref })
+    val unresolvedReferences = references.subtract(receivedResolvedReferences.map { it.ref })
+
+    val serializedResolvedInputs = unresolvedInputs.map { ref ->
+        SerializedStateAndRef(resolveStateRefAsSerialized(ref) ?: throw TransactionResolutionException(ref.txhash), ref)
+    }
+    val resolvedInputs = serializedResolvedInputs.lazyMapped { star, _ -> star.toStateAndRef() }
+
+    val serializedResolvedReferences = unresolvedReferences.map { ref ->
+        SerializedStateAndRef(resolveStateRefAsSerialized(ref) ?: throw TransactionResolutionException(ref.txhash), ref)
+    }
+    val resolvedReferences = serializedResolvedReferences.lazyMapped { star, _ -> star.toStateAndRef() }
 
     // Look up public keys to authenticated identities.
     val authenticatedCommands = commands.lazyMapped { cmd, _ ->
@@ -106,7 +130,7 @@ fun WireTransaction.toLedgerTransaction(
         )
 
     val ltx = LedgerTransaction.createForSandbox(
-        resolvedInputs,
+        (receivedResolvedInputs + resolvedInputs).sortedBy { inputs.indexOf(it.ref) }, // Sorted as in wtx
         outputs,
         authenticatedCommands,
         resolvedAttachments,
@@ -115,7 +139,7 @@ fun WireTransaction.toLedgerTransaction(
         timeWindow,
         privacySalt,
         resolvedNetworkParameters,
-        resolvedReferences,
+        (receivedResolvedReferences + resolvedReferences).sortedBy { inputs.indexOf(it.ref) }, // Sorted as in wtx,
         DigestService.sha2_256
     )
 

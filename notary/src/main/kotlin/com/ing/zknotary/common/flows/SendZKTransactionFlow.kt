@@ -2,6 +2,7 @@ package com.ing.zknotary.common.flows
 
 import co.paralleluniverse.fibers.Suspendable
 import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
+import com.ing.zknotary.common.zkp.UtxoInfo
 import com.ing.zknotary.node.services.ServiceNames
 import com.ing.zknotary.node.services.ZKVerifierTransactionStorage
 import com.ing.zknotary.node.services.getCordaServiceFromConfig
@@ -17,13 +18,6 @@ import net.corda.core.serialization.SerializedBytes
 import net.corda.core.serialization.serialize
 import net.corda.core.utilities.trace
 import net.corda.core.utilities.unwrap
-import kotlin.collections.List
-import kotlin.collections.MutableSet
-import kotlin.collections.Set
-import kotlin.collections.flatMap
-import kotlin.collections.mutableSetOf
-import kotlin.collections.plus
-import kotlin.collections.toSet
 
 /**
  * The [SendTransactionFlow] should be used to send a transaction to another peer that wishes to verify that transaction's
@@ -34,12 +28,17 @@ import kotlin.collections.toSet
  * @param otherSide the target party.
  * @param svtx the [SignedTransaction] being sent to the [otherSideSession].
  */
-open class SendZKTransactionFlow(otherSide: FlowSession, svtx: SignedZKVerifierTransaction) : ZKDataVendingFlow(otherSide, svtx)
+open class SendZKTransactionFlow(otherSide: FlowSession, svtx: SignedZKVerifierTransaction) :
+    ZKDataVendingFlow(otherSide, svtx)
+
+open class SendUtxoInfosFlow(otherSide: FlowSession, utxoInfos: List<UtxoInfo>) :
+    ZKDataVendingFlow(otherSide, utxoInfos)
 
 open class ZKDataVendingFlow(val otherSideSession: FlowSession, val payload: Any) : FlowLogic<Void?>() {
 
     @Suspendable
-    protected open fun sendPayloadAndReceiveDataRequest(otherSideSession: FlowSession, payload: Any) = otherSideSession.sendAndReceive<FetchZKDataFlow.Request>(payload)
+    protected open fun sendPayloadAndReceiveDataRequest(otherSideSession: FlowSession, payload: Any) =
+        otherSideSession.sendAndReceive<FetchZKDataFlow.Request>(payload)
 
     @Suspendable
     protected open fun verifyDataRequest(dataRequest: FetchZKDataFlow.Request.Data) {
@@ -54,7 +53,8 @@ open class ZKDataVendingFlow(val otherSideSession: FlowSession, val payload: Any
 
         logger.trace { "DataVendingFlow: Call: Network max message size = $networkMaxMessageSize, Max Payload Size = $maxPayloadSize" }
 
-        val zkStorage = serviceHub.getCordaServiceFromConfig<ZKVerifierTransactionStorage>(ServiceNames.ZK_VERIFIER_TX_STORAGE)
+        val zkStorage =
+            serviceHub.getCordaServiceFromConfig<ZKVerifierTransactionStorage>(ServiceNames.ZK_VERIFIER_TX_STORAGE)
 
         // The first payload will be the transaction data, subsequent payload will be the transaction/attachment/network parameters data.
         var payload = payload
@@ -65,14 +65,24 @@ open class ZKDataVendingFlow(val otherSideSession: FlowSession, val payload: Any
         // Once a transaction has been requested, it will be removed from the authorised list. This means that it is a protocol violation to request a transaction twice.
         val authorisedTransactions = when (payload) {
             is ZKNotarisationPayload -> TransactionAuthorisationFilter().addAuthorised(getInputTransactions(payload.transaction))
-            is SignedZKVerifierTransaction -> TransactionAuthorisationFilter().addAuthorised(getInputTransactions(payload))
+            is SignedZKVerifierTransaction -> TransactionAuthorisationFilter().addAuthorised(
+                getInputTransactions(
+                    payload
+                )
+            )
             is RetrieveAnyTransactionPayload -> TransactionAuthorisationFilter(acceptAll = true)
             is List<*> -> TransactionAuthorisationFilter().addAuthorised(
-                payload.flatMap { stateAndRef ->
-                    if (stateAndRef is StateAndRef<*>) {
-                        getInputTransactions(zkStorage.getTransaction(stateAndRef.ref.txhash)!!) + stateAndRef.ref.txhash
-                    } else {
-                        throw IllegalArgumentException("Unknown payload type: ${stateAndRef!!::class.java} ?")
+                payload.flatMap { payloadItem ->
+                    when (payloadItem) {
+                        is StateAndRef<*> -> {
+                            getInputTransactions(zkStorage.getTransaction(payloadItem.ref.txhash)!!) + payloadItem.ref.txhash
+                        }
+                        is UtxoInfo -> {
+                            getInputTransactions(zkStorage.getTransaction(payloadItem.stateRef.txhash)!!) + payloadItem.stateRef.txhash
+                        }
+                        else -> {
+                            throw IllegalArgumentException("Unknown payload type: ${payloadItem!!::class.java} ?")
+                        }
                     }
                 }.toSet()
             )
@@ -194,7 +204,10 @@ open class ZKDataVendingFlow(val otherSideSession: FlowSession, val payload: Any
         return tx.tx.inputs.map { it.txhash }.toSet() + tx.tx.references.map { it.txhash }.toSet()
     }
 
-    private class TransactionAuthorisationFilter(private val authorisedTransactions: MutableSet<SecureHash> = mutableSetOf(), val acceptAll: Boolean = false) {
+    private class TransactionAuthorisationFilter(
+        private val authorisedTransactions: MutableSet<SecureHash> = mutableSetOf(),
+        val acceptAll: Boolean = false
+    ) {
         fun isAuthorised(txId: SecureHash) = acceptAll || authorisedTransactions.contains(txId)
 
         fun addAuthorised(txs: Set<SecureHash>): TransactionAuthorisationFilter {
