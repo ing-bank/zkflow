@@ -2,7 +2,7 @@ package com.ing.zknotary.client.flows
 
 import co.paralleluniverse.fibers.Suspendable
 import com.ing.zknotary.common.flows.ReceiveZKTransactionFlow
-import com.ing.zknotary.common.flows.SendZKTransactionFlow
+import com.ing.zknotary.common.flows.SendTransactionWithZKBackchainFlow
 import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
 import com.ing.zknotary.common.transactions.zkToLedgerTransaction
 import net.corda.core.crypto.SecureHash
@@ -112,7 +112,7 @@ class ZKFinalityFlow private constructor(
 
         for (session in sessions) {
             try {
-                subFlow(SendZKTransactionFlow(session, notarised))
+                subFlow(SendTransactionWithZKBackchainFlow(session, notarised))
                 logger.info("Party ${session.counterparty} received the transaction.")
             } catch (e: UnexpectedFlowEndException) {
                 throw UnexpectedFlowEndException(

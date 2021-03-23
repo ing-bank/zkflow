@@ -13,6 +13,7 @@ import net.corda.core.contracts.StateRef
 import net.corda.core.crypto.SecureHash
 import net.corda.core.node.ServiceHub
 import net.corda.core.serialization.SingletonSerializeAsToken
+import net.corda.core.transactions.TraversableTransaction
 import net.corda.core.transactions.WireTransaction
 
 abstract class ZKTransactionCordaService(val serviceHub: ServiceHub) : ZKTransactionService,
@@ -61,8 +62,18 @@ abstract class ZKTransactionCordaService(val serviceHub: ServiceHub) : ZKTransac
         stx.tx.verify()
 
         // Check backchain
+        validateBackchain(stx.tx)
+    }
+
+    override fun validateBackchain(tx: TraversableTransaction) {
         tx.inputs.forEach { validateBackchain(it) }
         tx.references.forEach { validateBackchain(it) }
+    }
+
+    private fun validateBackchain(stateRef: StateRef) {
+        val prevVtx = vtxStorage.getTransaction(stateRef.txhash) ?: error("Should not happen")
+        // TODO: Perhaps save this recursion until the end? Depends which order we want...
+        verify(prevVtx, true)
     }
 
     private fun calculatePublicInput(tx: ZKVerifierTransaction): PublicInput {
@@ -76,12 +87,6 @@ abstract class ZKTransactionCordaService(val serviceHub: ServiceHub) : ZKTransac
             inputHashes = inputHashes,
             referenceHashes = referenceHashes
         )
-    }
-
-    private fun validateBackchain(stateRef: StateRef) {
-        val prevVtx = vtxStorage.getTransaction(stateRef.txhash) ?: error("Should not happen")
-        // TODO: Perhaps save this recursion until the end? Depends which order we want...
-        verify(prevVtx, true)
     }
 
     private fun getUtxoHashes(stateRefs: List<StateRef>): List<SecureHash> {

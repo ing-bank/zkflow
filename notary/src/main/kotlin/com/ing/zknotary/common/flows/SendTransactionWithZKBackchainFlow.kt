@@ -19,6 +19,8 @@ import net.corda.core.internal.RetrieveAnyTransactionPayload
 import net.corda.core.internal.readFully
 import net.corda.core.serialization.SerializedBytes
 import net.corda.core.serialization.serialize
+import net.corda.core.transactions.SignedTransaction
+import net.corda.core.transactions.TraversableTransaction
 import net.corda.core.utilities.trace
 import net.corda.core.utilities.unwrap
 
@@ -31,8 +33,8 @@ import net.corda.core.utilities.unwrap
  * @param otherSide the target party.
  * @param svtx the [SignedTransaction] being sent to the [otherSideSession].
  */
-open class SendZKTransactionFlow(otherSide: FlowSession, svtx: SignedZKVerifierTransaction) :
-    ZKDataVendingFlow(otherSide, svtx)
+open class SendTransactionWithZKBackchainFlow(otherSide: FlowSession, stx: SignedTransaction) : ZKDataVendingFlow(otherSide, stx)
+open class SendZKTransactionFlow(otherSide: FlowSession, svtx: SignedZKVerifierTransaction) : ZKDataVendingFlow(otherSide, svtx)
 
 open class SendUtxoInfosFlow(otherSide: FlowSession, utxoInfos: List<UtxoInfo>) :
     ZKDataVendingFlow(otherSide, utxoInfos)
@@ -100,12 +102,9 @@ open class ZKDataVendingFlow(val otherSideSession: FlowSession, val payload: Any
         // Each time an authorised transaction is requested, the input transactions are added to the list.
         // Once a transaction has been requested, it will be removed from the authorised list. This means that it is a protocol violation to request a transaction twice.
         val authorisedTransactions = when (payload) {
-            is ZKNotarisationPayload -> TransactionAuthorisationFilter().addAuthorised(getInputTransactions(payload.transaction))
-            is SignedZKVerifierTransaction -> TransactionAuthorisationFilter().addAuthorised(
-                getInputTransactions(
-                    payload
-                )
-            )
+            is ZKNotarisationPayload -> TransactionAuthorisationFilter().addAuthorised(getInputTransactions(payload.transaction.tx))
+            is SignedTransaction -> TransactionAuthorisationFilter().addAuthorised(getInputTransactions(payload.tx))
+            is SignedZKVerifierTransaction -> TransactionAuthorisationFilter().addAuthorised(getInputTransactions(payload.tx))
             is RetrieveAnyTransactionPayload -> TransactionAuthorisationFilter(acceptAll = true)
             is List<*> -> TransactionAuthorisationFilter().addAuthorised(
                 payload.flatMap { payloadItem ->
@@ -161,7 +160,7 @@ open class ZKDataVendingFlow(val otherSideSession: FlowSession, val payload: Any
                     val tx = zkStorage.getTransaction(txId)
                         ?: throw FetchZKDataFlow.HashNotFound(txId)
                     authorisedTransactions.removeAuthorised(tx.id)
-                    authorisedTransactions.addAuthorised(getInputTransactions(tx))
+                    authorisedTransactions.addAuthorised(getInputTransactions(tx.tx))
                     val serialized = tx.serialize()
                     totalByteCount += serialized.size
                     numSent++
@@ -192,7 +191,7 @@ open class ZKDataVendingFlow(val otherSideSession: FlowSession, val payload: Any
                             // Always include at least one item else if the max is set too low nothing will ever get returned.
                             // Splitting items will be a separate Jira if need be
                             authorisedTransactions.removeAuthorised(tx.id)
-                            authorisedTransactions.addAuthorised(getInputTransactions(tx))
+                            authorisedTransactions.addAuthorised(getInputTransactions(tx.tx))
                             logger.trace { "Adding item to return set: '$txId'" }
                         } else {
                             logger.trace { "Fetch block size EXCEEDED at '$txId'." }
@@ -236,8 +235,8 @@ open class ZKDataVendingFlow(val otherSideSession: FlowSession, val payload: Any
     }
 
     @Suspendable
-    private fun getInputTransactions(tx: SignedZKVerifierTransaction): Set<SecureHash> {
-        return tx.tx.inputs.map { it.txhash }.toSet() + tx.tx.references.map { it.txhash }.toSet()
+    private fun getInputTransactions(tx: TraversableTransaction): Set<SecureHash> {
+        return tx.inputs.map { it.txhash }.toSet() + tx.references.map { it.txhash }.toSet()
     }
 
     private class TransactionAuthorisationFilter(

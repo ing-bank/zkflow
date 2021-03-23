@@ -47,13 +47,14 @@ class MoveFlow(
         builder.withItems(state, stateAndContract, command)
 
         // Transaction creator signs transaction.
-        val stx = serviceHub.signInitialTransaction(builder)
-        stx.verify(serviceHub, false)
+        val selfSignedStx = serviceHub.signInitialTransaction(builder)
+        selfSignedStx.verify(serviceHub, false)
+
+        val stx = subFlow(ZKCollectSignaturesFlow(selfSignedStx, listOf(session)))
 
         val vtx = zkService.prove(stx.tx)
 
         val partiallySignedVtx = signInitialZKTransaction(vtx)
-        val svtx = subFlow(ZKCollectSignaturesFlow(stx, partiallySignedVtx, listOf(session)))
 
         subFlow(ZKFinalityFlow(stx, svtx, listOf(session)))
 
