@@ -3,7 +3,7 @@ package com.ing.zknotary.common.client.flows.testflows
 import co.paralleluniverse.fibers.Suspendable
 import com.ing.zknotary.client.flows.ZKCollectSignaturesFlow
 import com.ing.zknotary.client.flows.ZKFinalityFlow
-import com.ing.zknotary.client.flows.signInitialZKTransaction
+import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
 import com.ing.zknotary.common.transactions.ZKTransactionBuilder
 import com.ing.zknotary.common.transactions.signInitialTransaction
 import com.ing.zknotary.common.zkp.ZKTransactionService
@@ -33,11 +33,10 @@ class CreateFlow(private val value: Int? = null) : FlowLogic<SignedTransaction>(
         builder.withItems(stateAndContract, issueCommand)
 
         val stx = serviceHub.signInitialTransaction(builder)
-        val vtx = zkService.prove(stx.tx)
+        val fullySignedStx = subFlow(ZKCollectSignaturesFlow(stx, emptyList()))
+        val svtx = SignedZKVerifierTransaction(zkService.prove(stx.tx), fullySignedStx.sigs)
 
-        val svtx = subFlow(ZKCollectSignaturesFlow(stx, signInitialZKTransaction(vtx), emptyList()))
-
-        subFlow(ZKFinalityFlow(stx, svtx, listOf()))
+        subFlow(ZKFinalityFlow(fullySignedStx, svtx, listOf()))
 
         return stx
     }

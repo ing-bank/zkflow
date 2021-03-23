@@ -9,6 +9,7 @@ import com.ing.zknotary.common.flows.ResolveZKTransactionsFlow
 import com.ing.zknotary.common.flows.SendTransactionWithZKBackchainFlow
 import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
 import com.ing.zknotary.common.transactions.zkToLedgerTransaction
+import com.ing.zknotary.common.transactions.toLedgerTransaction
 import com.ing.zknotary.common.zkp.ZKTransactionService
 import com.ing.zknotary.node.services.ServiceNames
 import com.ing.zknotary.node.services.getCordaServiceFromConfig
@@ -217,17 +218,17 @@ class ZKCollectSignaturesFlow @JvmOverloads constructor(
             subFlow(ZKCollectSignatureFlow(stx, flowSession, keysToAskThisSessionFor))
         }
 
-        val svtx = vtx + sigsFromNotWellKnownSessions + sigsFromWellKnownSessions
+        val fullySignedTx = stx + sigsFromNotWellKnownSessions + sigsFromWellKnownSessions
 
         // Verify all but the notary's signature if the transaction requires a notary, otherwise verify all signatures.
         progressTracker.currentStep = VERIFYING
         if (notaryKey != null) {
-            svtx.sigs.forEach { if (it.by != notaryKey) it.verify(svtx.id) }
+            fullySignedTx.sigs.forEach { if (it.by != notaryKey) it.verify(fullySignedTx.id) }
         } else {
-            svtx.sigs.forEach { it.verify(svtx.id) }
+            fullySignedTx.sigs.forEach { it.verify(fullySignedTx.id) }
         }
 
-        return svtx
+        return fullySignedTx
     }
 }
 
@@ -251,6 +252,11 @@ class ZKCollectSignatureFlow(
 
     @Suspendable
     override fun call(): List<TransactionSignature> {
+
+        // Send ZKP backchain
+        TODO("send only stx but after ZKSendStateAndRefFlow")
+        subFlow(SendTransactionWithZKBackchainFlow(session, stx))
+
         // Send the key we expect the counterparty to sign with - this is important where they may have several
         // keys to sign with, as it makes it faster for them to identify the key to sign with, and more straight forward
         // for us to check we have the expected signature returned.
@@ -262,10 +268,6 @@ class ZKCollectSignatureFlow(
         subFlow(ZKSendStateAndRefFlow(session, ltx.inputs + ltx.references))
 
         // TODO send nonces?
-
-        // Send ZKP backchain
-        TODO("do we still need to do this after ZKSendStateAndRefFlow?")
-        subFlow(SendTransactionWithZKBackchainFlow(session, stx))
 
         return session.receive<List<TransactionSignature>>().unwrap { signatures ->
             require(signatures.size == signingKeys.size) { "Need signature for each signing key" }
@@ -345,6 +347,9 @@ abstract class ZKSignTransactionFlow @JvmOverloads constructor(
         // Receive transaction
         val stx = otherSideSession.receive<SignedTransaction>().unwrap { it }
 
+        // Resolve ZK dependencies and verify them
+        subFlow(ResolveZKTransactionsFlow(stx, stx.dependencies, otherSideSession))
+
         // Receive the signing key that the party requesting the signature expects us to sign with. Having this provided
         // means we only have to check we own that one key, rather than matching all keys in the transaction against all
         // keys we own.
@@ -361,27 +366,20 @@ abstract class ZKSignTransactionFlow @JvmOverloads constructor(
 //        val references = otherSideSession.receive<List<StateAndRef<*>>>().unwrap { it }
         subFlow<List<StateAndRef<ContractState>>>(ZKReceiveStateAndRefFlow(otherSideSession))
 
-        // TODO receive nonces?
+//        TODO("receive nonces, check Utxos hashes")
 
         // We are not supposed to create LedgerTransaction outside of Corda, but we do it anyway
         val ltx = stx.tx.zkToLedgerTransaction(serviceHub)
 
         // Still checking Kotlin contract rules, just in case
         ltx.verify()
-
-        // Resolve ZK dependencies and verify them
-        subFlow(ResolveZKTransactionsFlow(stx, stx.dependencies, otherSideSession))
+//        TODO("zkVerify?")
 
         // Check that the Responder actually needs to sign.
         checkMySignaturesRequired(stx, signingKeys)
 
         // Check correctness of existing signatures, doesn't mean much because they are allowed to be missing, but at least no broken ones
         checkSignatures(stx)
-
-        zkService = serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_TX_SERVICE)
-
-        // TODO build ZKP Merkle Tree and verify that tx ids match
-        require(vtx.tx.id == stx.tx.id) { "ID of calculated PTX should match ID of received VTX" }
 
         // Perform some custom verification over the transaction.
         try {

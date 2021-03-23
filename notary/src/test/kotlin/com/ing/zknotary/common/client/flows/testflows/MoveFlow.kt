@@ -5,7 +5,7 @@ import com.ing.zknotary.client.flows.ZKCollectSignaturesFlow
 import com.ing.zknotary.client.flows.ZKFinalityFlow
 import com.ing.zknotary.client.flows.ZKReceiveFinalityFlow
 import com.ing.zknotary.client.flows.ZKSignTransactionFlow
-import com.ing.zknotary.client.flows.signInitialZKTransaction
+import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
 import com.ing.zknotary.common.transactions.ZKTransactionBuilder
 import com.ing.zknotary.common.transactions.signInitialTransaction
 import com.ing.zknotary.common.zkp.ZKTransactionService
@@ -52,9 +52,7 @@ class MoveFlow(
 
         val stx = subFlow(ZKCollectSignaturesFlow(selfSignedStx, listOf(session)))
 
-        val vtx = zkService.prove(stx.tx)
-
-        val partiallySignedVtx = signInitialZKTransaction(vtx)
+        val svtx = SignedZKVerifierTransaction(zkService.prove(stx.tx), stx.sigs)
 
         subFlow(ZKFinalityFlow(stx, svtx, listOf(session)))
 
