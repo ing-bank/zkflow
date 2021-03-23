@@ -3,7 +3,7 @@ package com.ing.zknotary.common.zkp
 import com.ing.zknotary.common.contracts.ZKCommandData
 import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
 import com.ing.zknotary.common.transactions.ZKVerifierTransaction
-import com.ing.zknotary.common.transactions.collectSerializedUtxosAndNonces
+import com.ing.zknotary.common.transactions.collectUtxoInfos
 import com.ing.zknotary.common.transactions.zkCommandData
 import com.ing.zknotary.node.services.ServiceNames
 import com.ing.zknotary.node.services.ZKWritableVerifierTransactionStorage
@@ -26,25 +26,13 @@ abstract class ZKTransactionCordaService(val serviceHub: ServiceHub) : ZKTransac
 
     @ExperimentalSerializationApi
     override fun prove(
-        wtx: WireTransaction,
-        receivedStateInfo: List<UtxoInfo>
+        wtx: WireTransaction
     ): ZKVerifierTransaction {
-
-        val (serializedInputUtxos, inputUtxoNonces) = serviceHub.collectSerializedUtxosAndNonces(
-            wtx.inputs,
-            receivedStateInfo
-        )
-        val (serializedReferenceUtxos, referenceUtxoNonces) = serviceHub.collectSerializedUtxosAndNonces(
-            wtx.references,
-            receivedStateInfo
-        )
 
         val witness = Witness.fromWireTransaction(
             wtx,
-            serializedInputUtxos,
-            serializedReferenceUtxos,
-            inputUtxoNonces,
-            referenceUtxoNonces
+            serviceHub.collectUtxoInfos(wtx.inputs),
+            serviceHub.collectUtxoInfos(wtx.references)
         )
 
         val zkService = zkServiceForTx(wtx.zkCommandData())

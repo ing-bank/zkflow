@@ -1,20 +1,22 @@
 package com.ing.zknotary.common.client.flows.testflows
 
 import co.paralleluniverse.fibers.Suspendable
+import com.ing.zknotary.client.flows.ZKCollectSignaturesFlow
+import com.ing.zknotary.client.flows.ZKFinalityFlow
+import com.ing.zknotary.client.flows.ZKReceiveFinalityFlow
 import com.ing.zknotary.client.flows.ZKSignTransactionFlow
-import com.ing.zknotary.common.flows.SendUtxoInfosFlow
+import com.ing.zknotary.client.flows.signInitialZKTransaction
 import com.ing.zknotary.common.flows.ZKReceiveStateAndRefFlow
+import com.ing.zknotary.common.flows.ZKSendStateAndRefFlow
 import com.ing.zknotary.common.transactions.ZKTransactionBuilder
-import com.ing.zknotary.common.transactions.collectSerializedUtxosAndNonces
 import com.ing.zknotary.common.transactions.signInitialTransaction
-import com.ing.zknotary.common.transactions.toLedgerTransaction
-import com.ing.zknotary.common.zkp.UtxoInfo
+import com.ing.zknotary.common.transactions.zkToLedgerTransaction
+import com.ing.zknotary.common.zkp.ZKTransactionService
 import com.ing.zknotary.node.services.ServiceNames
 import com.ing.zknotary.node.services.ZKVerifierTransactionStorage
 import com.ing.zknotary.node.services.getCordaServiceFromConfig
 import com.ing.zknotary.testing.fixtures.contract.TestContract
 import net.corda.core.contracts.Command
-import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.StateAndContract
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.TransactionResolutionException
@@ -33,7 +35,6 @@ import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.utilities.unwrap
 
-
 /**
  * Disclaimer: this is not how it is supposed to be used in "real" flows, it works just for this test
  */
@@ -50,7 +51,7 @@ class MoveBidirectionalFlow(
         // Initiator sends proposed state to exchange.
         session.send(myInput)
 
-        // Expects UtxoInfo for a state of the same value in return.
+        // Expects StateAndRef for a state of the same value in return.
         val theirInput = subFlow<List<StateAndRef<TestContract.TestState>>>(ZKReceiveStateAndRefFlow(session)).single()
 
         // Now we create the transaction
@@ -65,18 +66,15 @@ class MoveBidirectionalFlow(
         // Transaction creator signs transaction.
         val stx = serviceHub.signInitialTransaction(builder)
 
-        // TODO: this fails for now, because we don't have the tx history for theirInput.
-        // Will this work when we have executed the DataVendingFlow first? Or still not?
-        // more logically, we will do vtx.verify(), where we get the hashes for the inputs/referecens from
-        // the resolved zkvtransactions
-        stx.zkVerify(serviceHub, false, listOf(theirInput))
+        stx.zkVerify(serviceHub, false)
 
-//        val vtx = zkService.prove(stx.tx, listOf(theirUtxoInfo))
-//
-//        val partiallySignedVtx = signInitialZKTransaction(vtx)
-//        val svtx = subFlow(ZKCollectSignaturesFlow(stx, partiallySignedVtx, listOf(session)))
-//
-//        subFlow(ZKFinalityFlow(stx, svtx, listOf(session)))
+        val zkService: ZKTransactionService = serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_TX_SERVICE)
+        val vtx = zkService.prove(stx.tx)
+
+        val partiallySignedVtx = signInitialZKTransaction(vtx)
+        val svtx = subFlow(ZKCollectSignaturesFlow(stx, partiallySignedVtx, listOf(session)))
+
+        subFlow(ZKFinalityFlow(stx, svtx, listOf(session)))
 
         return stx
     }
@@ -84,24 +82,20 @@ class MoveBidirectionalFlow(
     fun SignedTransaction.zkVerify(
         services: ServiceHub,
         checkSufficientSignatures: Boolean = true,
-        receivedInputs: List<StateAndRef<ContractState>> = emptyList(),
-        receivedReferences: List<StateAndRef<ContractState>> = emptyList(),
     ) {
         zkResolveAndCheckNetworkParameters(services)
         when (coreTransaction) {
             is NotaryChangeWireTransaction -> verify(services, checkSufficientSignatures)
             is ContractUpgradeWireTransaction -> verify(services, checkSufficientSignatures)
-            else -> zkVerifyRegularTransaction(services, checkSufficientSignatures, receivedInputs, receivedReferences)
+            else -> zkVerifyRegularTransaction(services, checkSufficientSignatures)
         }
     }
 
     private fun SignedTransaction.zkVerifyRegularTransaction(
         services: ServiceHub,
         checkSufficientSignatures: Boolean,
-        receivedInputs: List<StateAndRef<ContractState>>,
-        receivedReferences: List<StateAndRef<ContractState>>
     ) {
-        val ltx = zkToLedgerTransaction(services, checkSufficientSignatures, receivedInputs, receivedReferences)
+        val ltx = zkToLedgerTransaction(services, checkSufficientSignatures)
         // This fails with a weird db access error, so we use ltx.verify
         // services.transactionVerifierService.verify(ltx).getOrThrow()
         ltx.verify()
@@ -109,9 +103,7 @@ class MoveBidirectionalFlow(
 
     fun SignedTransaction.zkToLedgerTransaction(
         services: ServiceHub,
-        checkSufficientSignatures: Boolean = true,
-        receivedInputs: List<StateAndRef<ContractState>> = emptyList(),
-        receivedReferences: List<StateAndRef<ContractState>> = emptyList()
+        checkSufficientSignatures: Boolean = true
     ): LedgerTransaction {
         if (checkSufficientSignatures) {
             verifyRequiredSignatures() // It internally invokes checkSignaturesAreValid().
@@ -120,7 +112,7 @@ class MoveBidirectionalFlow(
         }
         // We need parameters check here, because finality flow calls stx.toLedgerTransaction() and then verify.
         zkResolveAndCheckNetworkParameters(services)
-        return tx.toLedgerTransaction(receivedInputs, receivedReferences, services)
+        return tx.zkToLedgerTransaction(services)
     }
 
     private fun SignedTransaction.zkResolveAndCheckNetworkParameters(services: ServiceHub) {
@@ -163,22 +155,14 @@ class MoveBidirectionalFlow(
                 // Create a state of the same value as the one proposed by initiator
                 val createStx = subFlow(CreateFlow(initiatorState.state.data.value))
                 // Send it back.
-
                 val output = createStx.tx.outRef<TestContract.TestState>(0)
-                val (serialized, nonces) = serviceHub.collectSerializedUtxosAndNonces(listOf(output.ref))
-                val utxoInfo = UtxoInfo(
-                    stateRef = output.ref,
-                    serializedContents = serialized.single(),
-                    nonce = nonces.single(),
-                    digestAlgorithm = createStx.tx.digestService.hashAlgorithm
-                )
-                subFlow(SendUtxoInfosFlow(session, listOf(utxoInfo)))
+                subFlow(ZKSendStateAndRefFlow(session, listOf(output)))
 
                 // Invoke the signing subFlow, in response to the counterparty calling [ZKCollectSignaturesFlow].
-//                val stx = subFlow(signFlow)
+                val stx = subFlow(signFlow)
 
                 // Invoke flow in response to ZKFinalityFlow
-//                subFlow(ZKReceiveFinalityFlow(session, stx))
+                subFlow(ZKReceiveFinalityFlow(session, stx))
             }
         }
     }

@@ -3,8 +3,10 @@ package com.ing.zknotary.client.flows
 import co.paralleluniverse.fibers.Suspendable
 import com.ing.zknotary.common.flows.ReceiveZKTransactionFlow
 import com.ing.zknotary.common.flows.SendZKTransactionFlow
+import com.ing.zknotary.common.flows.ZKReceiveStateAndRefFlow
+import com.ing.zknotary.common.flows.ZKSendStateAndRefFlow
 import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
-import com.ing.zknotary.common.transactions.toLedgerTransaction
+import com.ing.zknotary.common.transactions.zkToLedgerTransaction
 import com.ing.zknotary.common.zkp.ZKTransactionService
 import com.ing.zknotary.node.services.ServiceNames
 import com.ing.zknotary.node.services.getCordaServiceFromConfig
@@ -257,13 +259,15 @@ class ZKCollectSignatureFlow(
 
         // Send input and reference states to be able to build PTX and LedgerTransaction
         // Refs should refer to ZKP transaction
-        session.send(queryStates(stx.inputs))
-        session.send(queryStates(stx.references))
+//        session.send(queryStates(stx.inputs))
+//        session.send(queryStates(stx.references))
 
-//        val (serialized, nonces) = serviceHub.collectSerializedUtxosAndNonces(stx.inputs)
-//        subFlow(SendUtxoInfosFlow(session, listOf(utxoInfo)))
+        val ltx = stx.tx.zkToLedgerTransaction(serviceHub)
+
+        subFlow(ZKSendStateAndRefFlow(session, ltx.inputs + ltx.references))
 
         // Send ZKP backchain
+        // TODO: do we still need to do this after ZKSendStateAndRefFlow?
         subFlow(SendZKTransactionFlow(session, vtx))
 
         return session.receive<List<TransactionSignature>>().unwrap { signatures ->
@@ -356,11 +360,12 @@ abstract class ZKSignTransactionFlow @JvmOverloads constructor(
         // Receive input and reference states to be able to build PTX and LedgerTransaction
         // Refs should refer to plaintext LedgerTransaction in order to be able to create valid ltx
         // TODO: sender should use SendUtxoInfoFlow and here in response we should call ResolveZKTransactionsFlow
-        val inputs = otherSideSession.receive<List<StateAndRef<*>>>().unwrap { it }
-        val references = otherSideSession.receive<List<StateAndRef<*>>>().unwrap { it }
+//        val inputs = otherSideSession.receive<List<StateAndRef<*>>>().unwrap { it }
+//        val references = otherSideSession.receive<List<StateAndRef<*>>>().unwrap { it }
+        subFlow<List<StateAndRef<ContractState>>>(ZKReceiveStateAndRefFlow(otherSideSession))
 
         // We are not supposed to create LedgerTransaction outside of Corda, but we do it anyway
-        val ltx = stx.tx.toLedgerTransaction(inputs, references, serviceHub)
+        val ltx = stx.tx.zkToLedgerTransaction(serviceHub)
 
         // Still checking Kotlin contract rules, just in case
         ltx.verify()

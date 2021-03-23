@@ -2,6 +2,7 @@ package com.ing.zknotary.common.flows
 
 import co.paralleluniverse.fibers.Suspendable
 import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
+import com.ing.zknotary.common.transactions.collectUtxoInfos
 import com.ing.zknotary.common.zkp.UtxoInfo
 import com.ing.zknotary.node.services.ServiceNames
 import com.ing.zknotary.node.services.ZKVerifierTransactionStorage
@@ -9,8 +10,10 @@ import com.ing.zknotary.node.services.getCordaServiceFromConfig
 import com.ing.zknotary.notary.ZKNotarisationPayload
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.crypto.SecureHash
+import net.corda.core.flows.DataVendingFlow
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
+import net.corda.core.flows.ReceiveStateAndRefFlow
 import net.corda.core.internal.NetworkParametersStorage
 import net.corda.core.internal.RetrieveAnyTransactionPayload
 import net.corda.core.internal.readFully
@@ -33,6 +36,39 @@ open class SendZKTransactionFlow(otherSide: FlowSession, svtx: SignedZKVerifierT
 
 open class SendUtxoInfosFlow(otherSide: FlowSession, utxoInfos: List<UtxoInfo>) :
     ZKDataVendingFlow(otherSide, utxoInfos)
+
+/**
+ * The [ZKSendStateAndRefFlow] should be used to send a list of input [StateAndRef] to another peer that wishes to verify
+ * the input's integrity by resolving and checking the dependencies as well. The other side should invoke [ZKReceiveStateAndRefFlow]
+ * at the right point in the conversation to receive the input state and ref and perform the resolution back-and-forth
+ * required to check the dependencies.
+ *
+ * @param otherSideSession the target session.
+ * @param stateAndRefs the list of [StateAndRef] being sent to the [otherSideSession].
+ */
+class ZKSendStateAndRefFlow(
+    private val otherSideSession: FlowSession,
+    private val stateAndRefs: List<StateAndRef<*>>
+) : FlowLogic<Void?>() {
+    @Suspendable
+    override fun call(): Void? {
+        val utxoInfos = serviceHub.collectUtxoInfos(stateAndRefs.map { it.ref })
+        subFlow(SendUtxoInfosFlow(otherSideSession, utxoInfos))
+        return null
+    }
+}
+
+/**
+ * The [SendStateAndRefFlow] should be used to send a list of input [StateAndRef] to another peer that wishes to verify
+ * the input's integrity by resolving and checking the dependencies as well. The other side should invoke [ReceiveStateAndRefFlow]
+ * at the right point in the conversation to receive the input state and ref and perform the resolution back-and-forth
+ * required to check the dependencies.
+ *
+ * @param otherSideSession the target session.
+ * @param stateAndRefs the list of [StateAndRef] being sent to the [otherSideSession].
+ */
+open class SendStateAndRefFlow(otherSideSession: FlowSession, stateAndRefs: List<StateAndRef<*>>) :
+    DataVendingFlow(otherSideSession, stateAndRefs)
 
 open class ZKDataVendingFlow(val otherSideSession: FlowSession, val payload: Any) : FlowLogic<Void?>() {
 

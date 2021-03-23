@@ -3,8 +3,10 @@ package com.ing.zknotary.common.client.flows
 import com.ing.zknotary.common.client.flows.testflows.CreateFlow
 import com.ing.zknotary.common.client.flows.testflows.MoveFlow
 import com.ing.zknotary.node.services.ConfigParams
+import com.ing.zknotary.node.services.InMemoryUtxoInfoStorage
 import com.ing.zknotary.node.services.InMemoryZKVerifierTransactionStorage
 import com.ing.zknotary.node.services.ServiceNames.ZK_TX_SERVICE
+import com.ing.zknotary.node.services.ServiceNames.ZK_UTXO_INFO_STORAGE
 import com.ing.zknotary.node.services.ServiceNames.ZK_VERIFIER_TX_STORAGE
 import com.ing.zknotary.notary.ZKNotaryService
 import com.ing.zknotary.testing.fixtures.contract.TestContract
@@ -41,6 +43,7 @@ class E2EFlowTest {
                 cordappWithPackages("com.ing.zknotary").withConfig(
                     mapOf(
                         ZK_VERIFIER_TX_STORAGE to InMemoryZKVerifierTransactionStorage::class.qualifiedName!!,
+                        ZK_UTXO_INFO_STORAGE to InMemoryUtxoInfoStorage::class.qualifiedName!!,
                         ZK_TX_SERVICE to MockZKTransactionService::class.qualifiedName!!,
                         ConfigParams.Zinc.COMMAND_CLASS_NAMES to listOf(
                             TestContract.Create::class.java.name,

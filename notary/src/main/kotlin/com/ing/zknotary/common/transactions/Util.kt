@@ -3,7 +3,7 @@ package com.ing.zknotary.common.transactions
 import com.ing.zknotary.common.contracts.ZKCommandData
 import com.ing.zknotary.common.zkp.UtxoInfo
 import com.ing.zknotary.node.services.ServiceNames
-import com.ing.zknotary.node.services.ZKVerifierTransactionStorage
+import com.ing.zknotary.node.services.WritableUtxoInfoStorage
 import com.ing.zknotary.node.services.getCordaServiceFromConfig
 import net.corda.core.DeleteForDJVM
 import net.corda.core.contracts.Attachment
@@ -11,52 +11,67 @@ import net.corda.core.contracts.AttachmentResolutionException
 import net.corda.core.contracts.CommandWithParties
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.ContractState
-import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.StateRef
 import net.corda.core.contracts.TransactionResolutionException
 import net.corda.core.contracts.TransactionState
 import net.corda.core.crypto.DigestService
 import net.corda.core.crypto.SecureHash
+import net.corda.core.crypto.algorithm
+import net.corda.core.flows.FlowException
 import net.corda.core.identity.Party
 import net.corda.core.internal.SerializedStateAndRef
 import net.corda.core.internal.lazyMapped
 import net.corda.core.node.NetworkParameters
 import net.corda.core.node.ServiceHub
-import net.corda.core.node.ServicesForResolution
 import net.corda.core.serialization.SerializedBytes
 import net.corda.core.transactions.LedgerTransaction
 import net.corda.core.transactions.WireTransaction
+import net.corda.core.transactions.WireTransaction.Companion.resolveStateRefBinaryComponent
 import java.security.PublicKey
 import java.util.function.Predicate
 
-fun ServiceHub.collectSerializedUtxosAndNonces(
-    stateRefs: List<StateRef>,
-    receivedStateInfo: List<UtxoInfo> = emptyList()
-): Pair<List<ByteArray>, List<SecureHash>> {
-    return stateRefs.map { stateRef ->
-        // First see if we received the stateInfo before querying:
-        if (receivedStateInfo.any { it.stateRef == stateRef }) {
-            val utxoInfo = receivedStateInfo.single { it.stateRef == stateRef }
-            getCordaServiceFromConfig<ZKVerifierTransactionStorage>(ServiceNames.ZK_VERIFIER_TX_STORAGE).getTransaction(
-                utxoInfo.stateRef.txhash
-            ) ?: error("ZKP transaction not found for hash ${stateRef.txhash}")
-            utxoInfo.serializedContents to utxoInfo.nonce
-        } else {
-            val prevStx = validatedTransactions.getTransaction(stateRef.txhash)
-                ?: error("Plaintext tx not found for hash ${stateRef.txhash}")
+fun ServiceHub.collectUtxoInfos(
+    stateRefs: List<StateRef>
+): List<UtxoInfo> {
+    val collectFromTransactionStorage: (StateRef) -> UtxoInfo =
+        {
+            // First see if we received the stateInfo before querying:
+            val prevStx = validatedTransactions.getTransaction(it.txhash)
+                ?: throw TransactionResolutionException(it.txhash, "Plaintext tx not found for hash ${it.txhash}")
 
             val serializedUtxo = prevStx.tx
                 .componentGroups.single { it.groupIndex == ComponentGroupEnum.OUTPUTS_GROUP.ordinal }
-                .components[stateRef.index].copyBytes()
+                .components[it.index].copyBytes()
 
             val nonce = prevStx.buildFilteredTransaction(Predicate { true })
                 .filteredComponentGroups.single { it.groupIndex == ComponentGroupEnum.OUTPUTS_GROUP.ordinal }
-                .nonces[stateRef.index]
+                .nonces[it.index]
 
-            serializedUtxo to nonce
+            UtxoInfo(it, serializedUtxo, nonce)
         }
-    }.unzip()
+
+    val collectFromUtxoInfoStorage: (StateRef) -> UtxoInfo =
+        {
+            getCordaServiceFromConfig<WritableUtxoInfoStorage>(ServiceNames.ZK_UTXO_INFO_STORAGE).getUtxoInfo(it)
+                ?: throw UtxoInfoResolutionException(it)
+        }
+
+    fun collectSerializedUtxosAndNonces(stateRef: StateRef): UtxoInfo {
+        // First we try to get from plaintext transaction storage, if that fails, from UtxoInfo storage
+        return try {
+            collectFromTransactionStorage(stateRef)
+        } catch (e: TransactionResolutionException) {
+            collectFromUtxoInfoStorage(stateRef)
+        }
+    }
+
+    return stateRefs.map { stateRef ->
+        collectSerializedUtxosAndNonces(stateRef)
+    }
 }
+
+class UtxoInfoResolutionException(it: StateRef, message: String = "UtxoInfo resolution failure for $it") :
+    FlowException(message)
 
 @DeleteForDJVM
 fun WireTransaction.prettyPrint(): String {
@@ -88,11 +103,8 @@ fun WireTransaction.zkCommandData() = commands.single().value as ZKCommandData
 @DeleteForDJVM
 // TODO: This function will have to be the one that is called from anywhere we need a LedgerTransaction.
 // Currently in those locations, the 'standard' wtx.toLedgerTransaction is still called.
-fun WireTransaction.toLedgerTransaction(
-    // TODO: In addition to these, we should also still look up inputs and references that we *do* have in our tx storage
-    receivedResolvedInputs: List<StateAndRef<ContractState>>,
-    receivedResolvedReferences: List<StateAndRef<ContractState>>,
-    services: ServicesForResolution
+fun WireTransaction.zkToLedgerTransaction(
+    services: ServiceHub
 ): LedgerTransaction {
     val resolveIdentity: (PublicKey) -> Party? = { services.identityService.partyFromKey(it) }
     val resolveAttachment: (SecureHash) -> Attachment? = { services.attachments.openAttachment(it) }
@@ -100,22 +112,37 @@ fun WireTransaction.toLedgerTransaction(
         val hashToResolve = it ?: services.networkParametersService.defaultHash
         services.networkParametersService.lookup(hashToResolve)
     }
-    val resolveStateRefAsSerialized: (StateRef) -> SerializedBytes<TransactionState<ContractState>>? = {
-        WireTransaction.resolveStateRefBinaryComponent(
-            it,
-            services
-        )
+    val resolveStateRefAsSerializedFromTransactionStorage: (StateRef) -> SerializedBytes<TransactionState<ContractState>>? =
+        {
+            resolveStateRefBinaryComponent(
+                it,
+                services
+            )
+        }
+
+    val resolveStateRefAsSerializedFromUtxoInfoStorage: (StateRef) -> SerializedBytes<TransactionState<ContractState>>? =
+        {
+            services.getCordaServiceFromConfig<WritableUtxoInfoStorage>(ServiceNames.ZK_UTXO_INFO_STORAGE)
+                .getUtxoInfo(it)?.let { utxoInfo ->
+                SerializedBytes(utxoInfo.serializedContents)
+            }
+        }
+
+    fun resolveStateRefAsSerialized(stateRef: StateRef): SerializedBytes<TransactionState<ContractState>>? {
+        // First we try to get from plaintext transaction storage, if that fails, from UtxoInfo storage
+        return try {
+            resolveStateRefAsSerializedFromTransactionStorage(stateRef)
+        } catch (e: TransactionResolutionException) {
+            resolveStateRefAsSerializedFromUtxoInfoStorage(stateRef)
+        }
     }
 
-    val unresolvedInputs = inputs.subtract(receivedResolvedInputs.map { it.ref })
-    val unresolvedReferences = references.subtract(receivedResolvedReferences.map { it.ref })
-
-    val serializedResolvedInputs = unresolvedInputs.map { ref ->
+    val serializedResolvedInputs = inputs.map { ref ->
         SerializedStateAndRef(resolveStateRefAsSerialized(ref) ?: throw TransactionResolutionException(ref.txhash), ref)
     }
     val resolvedInputs = serializedResolvedInputs.lazyMapped { star, _ -> star.toStateAndRef() }
 
-    val serializedResolvedReferences = unresolvedReferences.map { ref ->
+    val serializedResolvedReferences = references.map { ref ->
         SerializedStateAndRef(resolveStateRefAsSerialized(ref) ?: throw TransactionResolutionException(ref.txhash), ref)
     }
     val resolvedReferences = serializedResolvedReferences.lazyMapped { star, _ -> star.toStateAndRef() }
@@ -136,7 +163,7 @@ fun WireTransaction.toLedgerTransaction(
         )
 
     val ltx = LedgerTransaction.createForSandbox(
-        (receivedResolvedInputs + resolvedInputs).sortedBy { inputs.indexOf(it.ref) }, // Sorted as in wtx
+        resolvedInputs,
         outputs,
         authenticatedCommands,
         resolvedAttachments,
@@ -145,8 +172,8 @@ fun WireTransaction.toLedgerTransaction(
         timeWindow,
         privacySalt,
         resolvedNetworkParameters,
-        (receivedResolvedReferences + resolvedReferences).sortedBy { inputs.indexOf(it.ref) }, // Sorted as in wtx,
-        DigestService.sha2_256
+        resolvedReferences,
+        DigestService(id.algorithm)
     )
 
     // Normally here transaction size is checked but in ZKP flow we don't really care because all our txs are fixed-size

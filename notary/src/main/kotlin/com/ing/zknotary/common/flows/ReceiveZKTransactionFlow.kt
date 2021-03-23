@@ -7,14 +7,13 @@ import com.ing.zknotary.common.transactions.dependencies
 import com.ing.zknotary.common.zkp.UtxoInfo
 import com.ing.zknotary.common.zkp.ZKTransactionService
 import com.ing.zknotary.node.services.ServiceNames
-import com.ing.zknotary.node.services.ZKVerifierTransactionStorage
+import com.ing.zknotary.node.services.WritableUtxoInfoStorage
 import com.ing.zknotary.node.services.getCordaServiceFromConfig
 import net.corda.core.contracts.AttachmentResolutionException
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.TransactionResolutionException
 import net.corda.core.contracts.TransactionVerificationException
-import net.corda.core.crypto.SecureHash
 import net.corda.core.flows.FlowException
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
@@ -121,10 +120,11 @@ class ZKReceiveStateAndRefFlow<out T : ContractState>(private val otherSideSessi
 
         return utxoInfos.map { utxoInfo ->
             // 3. Verify Utxo
-            verifyUtxoInfo(utxoInfo)
+            utxoInfo.verify(serviceHub)
 
-            // TODO: 4. Store the UtxoInfo in some storage, so we can fetch it together with its ZKP chain when we need it elsewhere
-//            serviceHub.validatedUtxos.put(utxoInfo)
+            // 4. Store the UtxoInfo in, so we can fetch it together with its ZKP chain when we need it elsewhere
+            serviceHub.getCordaServiceFromConfig<WritableUtxoInfoStorage>(ServiceNames.ZK_UTXO_INFO_STORAGE)
+                .addUtxoInfo(utxoInfo)
 
             // 5. Return it as a StateAndRef
             StateAndRef(
@@ -132,24 +132,5 @@ class ZKReceiveStateAndRefFlow<out T : ContractState>(private val otherSideSessi
                 utxoInfo.stateRef
             )
         }
-    }
-
-    /**
-     * This function verifies that the serialized content hashed with the nonce matches
-     * the actual output hash for StateRef in the ZKP chain that was previously resolved
-     */
-    private fun verifyUtxoInfo(utxoInfo: UtxoInfo) {
-        val zkTxStorage: ZKVerifierTransactionStorage =
-            serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_VERIFIER_TX_STORAGE)
-
-        val calculatedUtxoHash = SecureHash.componentHashAs(
-            utxoInfo.digestAlgorithm,
-            utxoInfo.nonce.copyBytes() + utxoInfo.serializedContents
-        )
-
-        val resolvedOutput = zkTxStorage.getTransaction(utxoInfo.stateRef.txhash)?.tx?.outputHashes?.get(0)
-            ?: error("Coulnd't resolve zkvtx with id ${utxoInfo.stateRef.txhash}")
-
-        require(resolvedOutput == calculatedUtxoHash) { "Calculated UTXO hash '$calculatedUtxoHash' does not match resolved hash '$resolvedOutput'" }
     }
 }
