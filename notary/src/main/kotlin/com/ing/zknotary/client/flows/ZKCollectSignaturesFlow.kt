@@ -123,7 +123,7 @@ class ZKCollectSignaturesFlow @JvmOverloads constructor(
         // The signatures must be valid
         vtx.verifySignaturesExcept(notSigned)
         // and the transaction must be valid.
-        stx.tx.toLedgerTransaction(serviceHub).verify()
+        stx.tx.zkToLedgerTransaction(serviceHub).verify()
         // and ZKP transaction also should be valid
         val zkService: ZKTransactionService = serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_TX_SERVICE)
         zkService.verify(vtx, checkSufficientSignatures = false)

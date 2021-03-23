@@ -4,6 +4,7 @@ import com.ing.zknotary.common.contracts.ZKCommandData
 import com.ing.zknotary.common.zkp.UtxoInfo
 import com.ing.zknotary.node.services.ServiceNames
 import com.ing.zknotary.node.services.WritableUtxoInfoStorage
+import com.ing.zknotary.node.services.ZKVerifierTransactionStorage
 import com.ing.zknotary.node.services.getCordaServiceFromConfig
 import net.corda.core.DeleteForDJVM
 import net.corda.core.contracts.Attachment
@@ -14,6 +15,7 @@ import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.StateRef
 import net.corda.core.contracts.TransactionResolutionException
 import net.corda.core.contracts.TransactionState
+import net.corda.core.contracts.TransactionVerificationException
 import net.corda.core.crypto.DigestService
 import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.algorithm
@@ -24,7 +26,10 @@ import net.corda.core.internal.lazyMapped
 import net.corda.core.node.NetworkParameters
 import net.corda.core.node.ServiceHub
 import net.corda.core.serialization.SerializedBytes
+import net.corda.core.transactions.ContractUpgradeWireTransaction
 import net.corda.core.transactions.LedgerTransaction
+import net.corda.core.transactions.NotaryChangeWireTransaction
+import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.WireTransaction
 import net.corda.core.transactions.WireTransaction.Companion.resolveStateRefBinaryComponent
 import java.security.PublicKey
@@ -187,3 +192,62 @@ val SignedZKVerifierTransaction.dependencies: Set<SecureHash>
 
 val ZKVerifierTransaction.dependencies: Set<SecureHash>
     get() = (inputs.asSequence() + references.asSequence()).map { it.txhash }.toSet()
+
+fun SignedTransaction.zkVerify(
+    services: ServiceHub,
+    checkSufficientSignatures: Boolean = true,
+) {
+    zkResolveAndCheckNetworkParameters(services)
+    when (coreTransaction) {
+        is NotaryChangeWireTransaction -> verify(services, checkSufficientSignatures)
+        is ContractUpgradeWireTransaction -> verify(services, checkSufficientSignatures)
+        else -> zkVerifyRegularTransaction(services, checkSufficientSignatures)
+    }
+}
+
+private fun SignedTransaction.zkVerifyRegularTransaction(
+    services: ServiceHub,
+    checkSufficientSignatures: Boolean,
+) {
+    val ltx = zkToLedgerTransaction(services, checkSufficientSignatures)
+    // This fails with a weird db access error, so we use ltx.verify
+    // services.transactionVerifierService.verify(ltx).getOrThrow()
+    ltx.verify()
+}
+
+fun SignedTransaction.zkToLedgerTransaction(
+    services: ServiceHub,
+    checkSufficientSignatures: Boolean = true
+): LedgerTransaction {
+    if (checkSufficientSignatures) {
+        verifyRequiredSignatures() // It internally invokes checkSignaturesAreValid().
+    } else {
+        checkSignaturesAreValid()
+    }
+    // We need parameters check here, because finality flow calls stx.toLedgerTransaction() and then verify.
+    zkResolveAndCheckNetworkParameters(services)
+    return tx.zkToLedgerTransaction(services)
+}
+
+private fun SignedTransaction.zkResolveAndCheckNetworkParameters(services: ServiceHub) {
+    val zkTxStorage: ZKVerifierTransactionStorage =
+        services.getCordaServiceFromConfig(ServiceNames.ZK_VERIFIER_TX_STORAGE)
+
+    val hashOrDefault = networkParametersHash ?: services.networkParametersService.defaultHash
+    val txNetworkParameters = services.networkParametersService.lookup(hashOrDefault)
+        ?: throw TransactionResolutionException(id)
+    val groupedInputsAndRefs = (inputs + references).groupBy { it.txhash }
+    groupedInputsAndRefs.map { entry ->
+        val tx = zkTxStorage.getTransaction(entry.key)
+            ?: throw TransactionResolutionException(id)
+        val paramHash = tx.tx.networkParametersHash ?: services.networkParametersService.defaultHash
+        val params = services.networkParametersService.lookup(paramHash) ?: throw TransactionResolutionException(id)
+        if (txNetworkParameters.epoch < params.epoch)
+            throw TransactionVerificationException.TransactionNetworkParameterOrderingException(
+                id,
+                entry.value.first(),
+                txNetworkParameters,
+                params
+            )
+    }
+}

@@ -4,6 +4,7 @@ import co.paralleluniverse.fibers.Suspendable
 import com.ing.zknotary.common.flows.ReceiveZKTransactionFlow
 import com.ing.zknotary.common.flows.SendZKTransactionFlow
 import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
+import com.ing.zknotary.common.transactions.zkToLedgerTransaction
 import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.isFulfilledBy
 import net.corda.core.flows.FinalityFlow
@@ -92,7 +93,10 @@ class ZKFinalityFlow private constructor(
         // Then send to the notary if needed, record locally and distribute.
 
         logCommandData()
-        val ledgerTransaction = stx.toLedgerTransaction(serviceHub, false) // TODO this might not work because we don't have plaintext txs for input states
+        val ledgerTransaction = stx.zkToLedgerTransaction(
+            serviceHub,
+            false
+        )
         val externalTxParticipants = extractExternalParticipants(ledgerTransaction)
 
         val sessionParties = sessions.map { it.counterparty }
