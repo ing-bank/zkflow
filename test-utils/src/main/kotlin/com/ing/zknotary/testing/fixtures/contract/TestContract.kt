@@ -96,7 +96,7 @@ public class TestContract : Contract {
                 if (tx.outputs.size != 2) throw IllegalArgumentException("Failed requirement: the tx has two outputs")
                 if (tx.inputs.size != 2) throw IllegalArgumentException("Failed requirement: the tx has two inputs")
 
-                if (tx.inputStates.sumBy { (it as TestState).value } == tx.outputStates.sumBy { (it as TestState).value }) throw IllegalArgumentException(
+                if (tx.inputStates.sumBy { (it as TestState).value } != tx.outputStates.sumBy { (it as TestState).value }) throw IllegalArgumentException(
                     "Failed requirement: amounts are not conserved"
                 )
 
@@ -105,7 +105,7 @@ public class TestContract : Contract {
                     val output = tx.getOutput(index) as TestState
                     input as TestState
 
-                    if (input.owner.owningKey != output.owner.owningKey) throw IllegalArgumentException("Failed requirement: input state $index changes ownership")
+                    if (input.owner.owningKey == output.owner.owningKey) throw IllegalArgumentException("Failed requirement: input state $index changes ownership")
                     if ((tx.outputStates.reversed()[index] as TestState).owner.owningKey != input.owner.owningKey) throw IllegalArgumentException(
                         "Failed requirement: ownership of input $index should swap ownership"
                     )
