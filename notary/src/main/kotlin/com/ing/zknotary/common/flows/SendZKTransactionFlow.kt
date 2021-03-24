@@ -110,10 +110,10 @@ open class ZKDataVendingFlow(val otherSideSession: FlowSession, val payload: Any
                 payload.flatMap { payloadItem ->
                     when (payloadItem) {
                         is StateAndRef<*> -> {
-                            getInputTransactions(zkStorage.getTransaction(payloadItem.ref.txhash)!!) + payloadItem.ref.txhash
+                            getInputTransactions(zkStorage.getTransaction(payloadItem.ref.txhash)!!.tx) + payloadItem.ref.txhash
                         }
                         is UtxoInfo -> {
-                            getInputTransactions(zkStorage.getTransaction(payloadItem.stateRef.txhash)!!) + payloadItem.stateRef.txhash
+                            getInputTransactions(zkStorage.getTransaction(payloadItem.stateRef.txhash)!!.tx) + payloadItem.stateRef.txhash
                         }
                         else -> {
                             throw IllegalArgumentException("Unknown payload type: ${payloadItem!!::class.java} ?")

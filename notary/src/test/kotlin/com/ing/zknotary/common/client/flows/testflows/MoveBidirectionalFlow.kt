@@ -5,9 +5,9 @@ import com.ing.zknotary.client.flows.ZKCollectSignaturesFlow
 import com.ing.zknotary.client.flows.ZKFinalityFlow
 import com.ing.zknotary.client.flows.ZKReceiveFinalityFlow
 import com.ing.zknotary.client.flows.ZKSignTransactionFlow
-import com.ing.zknotary.client.flows.signInitialZKTransaction
 import com.ing.zknotary.common.flows.ZKReceiveStateAndRefFlow
 import com.ing.zknotary.common.flows.ZKSendStateAndRefFlow
+import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
 import com.ing.zknotary.common.transactions.ZKTransactionBuilder
 import com.ing.zknotary.common.transactions.signInitialTransaction
 import com.ing.zknotary.common.transactions.zkVerify
@@ -62,18 +62,15 @@ class MoveBidirectionalFlow(
         // Verify to be sure
         stx.zkVerify(serviceHub, false)
 
+        // Collect signature from counterparty
+        val fullySignedStx = subFlow(ZKCollectSignaturesFlow(stx, listOf(session)))
+
         // Create proof and vtx
         val zkService: ZKTransactionService = serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_TX_SERVICE)
-        val vtx = zkService.prove(stx.tx)
-
-        // Sign vtx
-        val partiallySignedVtx = signInitialZKTransaction(vtx)
-
-        // Collect signature from counterparty
-        val svtx = subFlow(ZKCollectSignaturesFlow(stx, partiallySignedVtx, listOf(session)))
+        val svtx = SignedZKVerifierTransaction(zkService.prove(stx.tx), fullySignedStx.sigs)
 
         // Finalize
-        subFlow(ZKFinalityFlow(stx, svtx, listOf(session)))
+        subFlow(ZKFinalityFlow(fullySignedStx, svtx, listOf(session)))
 
         return stx
     }

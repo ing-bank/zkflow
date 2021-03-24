@@ -5,7 +5,6 @@ import com.ing.zknotary.common.flows.ReceiveZKTransactionFlow
 import com.ing.zknotary.common.flows.SendZKTransactionFlow
 import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
 import com.ing.zknotary.common.transactions.zkToLedgerTransaction
-import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.isFulfilledBy
 import net.corda.core.flows.FinalityFlow
 import net.corda.core.flows.FlowLogic
@@ -139,17 +138,19 @@ class ZKFinalityFlow private constructor(
 
     @Suspendable
     private fun notariseAndRecord(): SignedZKVerifierTransaction {
+        var stxToStore = this.stx
         val notarised = if (needsNotarySignature(vtx)) {
             progressTracker.currentStep =
                 NOTARISING
-            val notarySignatures = subFlow(ZKNotaryFlow(stx, vtx))
+            val notarySignatures = subFlow(ZKNotaryFlow(stxToStore, vtx))
+            stxToStore += notarySignatures // we add signatures to stx as well, now both transactions have full set of signatures
             vtx + notarySignatures
         } else {
             logger.info("No need to notarise this transaction.")
             vtx
         }
         logger.info("Recording transaction locally.")
-        serviceHub.recordTransactions(stx, notarised)
+        serviceHub.recordTransactions(stxToStore, notarised)
         logger.info("Recorded transaction locally successfully.")
         return notarised
     }
@@ -189,7 +190,6 @@ class ZKFinalityFlow private constructor(
 class ZKReceiveFinalityFlow @JvmOverloads constructor(
     private val otherSideSession: FlowSession,
     private val stx: SignedTransaction,
-    private val expectedTxId: SecureHash? = null,
     private val statesToRecord: StatesToRecord = StatesToRecord.ONLY_RELEVANT
 ) : FlowLogic<SignedZKVerifierTransaction>() {
     @Suspendable
@@ -199,11 +199,11 @@ class ZKReceiveFinalityFlow @JvmOverloads constructor(
             stx,
             otherSideSession,
             checkSufficientSignatures = true,
-            statesToRecord = statesToRecord
+            useVtxSignaturesWhenStoringStx = true
         ) {
-                override fun checkBeforeRecording(stx: SignedZKVerifierTransaction) {
-                    require(expectedTxId == null || expectedTxId == stx.id) {
-                        "We expected to receive transaction with ID $expectedTxId but instead got ${stx.id}. Transaction was" +
+                override fun checkBeforeRecording(svtx: SignedZKVerifierTransaction) {
+                    require(stx.id == svtx.id) {
+                        "We expected to receive transaction with ID ${stx.id} but instead got ${svtx.id}. Transaction was" +
                             "not recorded and nor its states sent to the vault."
                     }
                 }

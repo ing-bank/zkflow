@@ -34,7 +34,7 @@ fun checkVault(
             criteria = QueryCriteria.VaultQueryCriteria().withStatus(Vault.StateStatus.UNCONSUMED)
         ).states.single()
 
-    actualState shouldBe tx.tx.outRef<TestContract.TestState>(0)
+    actualState shouldBe tx.tx.outRef(0)
 }
 
 fun checkVault(
@@ -42,18 +42,13 @@ fun checkVault(
     status: Vault.StateStatus,
     stateRef: StateRef
 ) {
+    val state = party.services.vaultService
+        .queryBy(
+            contractStateType = TestContract.TestState::class.java,
+            criteria = QueryCriteria.VaultQueryCriteria()
+                .withStatus(status)
+                .withStateRefs(listOf(stateRef))
+        ).states.find { state -> state.ref == stateRef }
 
-    // party should have CONSUMED input state marked in its vault
-    party?.let { it ->
-
-        val state = it.services.vaultService
-            .queryBy(
-                contractStateType = TestContract.TestState::class.java,
-                criteria = QueryCriteria.VaultQueryCriteria()
-                    .withStatus(status)
-                    .withStateRefs(listOf(stateRef))
-            ).states.find { state -> state.ref == stateRef }
-
-        state shouldNotBe null
-    }
+    state shouldNotBe null
 }

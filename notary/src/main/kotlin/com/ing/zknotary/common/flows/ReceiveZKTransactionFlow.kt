@@ -18,7 +18,6 @@ import net.corda.core.flows.FlowException
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
 import net.corda.core.internal.checkParameterHash
-import net.corda.core.node.StatesToRecord
 import net.corda.core.serialization.deserialize
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.utilities.trace
@@ -40,13 +39,12 @@ import java.security.SignatureException
  *
  * @property otherSideSession session to the other side which is calling [SendTransactionFlow].
  * @property checkSufficientSignatures if true checks all required signatures are present. See [SignedZKVerifierTransaction.verify].
- * @property statesToRecord which transaction states should be recorded in the vault, if any.
  */
 open class ReceiveZKTransactionFlow @JvmOverloads constructor(
     private val stx: SignedTransaction,
     private val otherSideSession: FlowSession,
     private val checkSufficientSignatures: Boolean = true,
-    private val statesToRecord: StatesToRecord = StatesToRecord.NONE
+    private val useVtxSignaturesWhenStoringStx: Boolean = false
 ) : FlowLogic<SignedZKVerifierTransaction>() {
 
     @Suppress("LongMethod", "ComplexMethod")
@@ -83,7 +81,11 @@ open class ReceiveZKTransactionFlow @JvmOverloads constructor(
             // there are no missing signatures. We don't want partly signed stuff in the vault.
             checkBeforeRecording(svtx)
             logger.info("Successfully received fully signed tx. Sending it to the vault for processing.")
-            serviceHub.recordTransactions(stx, svtx)
+            // Here sometimes (e.g. in ReceiveFinalityflow) we receive VTX that contains full set of sigs,
+            // while STX lacks some (e.g. Notary's). In this case we take sigs from VTX and save STX with full set.
+            // Not super pretty solution, can be refactored to something better later.
+            val stxToStore = if (useVtxSignaturesWhenStoringStx) SignedTransaction(stx.txBits, svtx.sigs) else stx
+            serviceHub.recordTransactions(stxToStore, svtx)
             logger.info("Successfully recorded received transaction locally.")
         }
         return svtx
@@ -95,7 +97,7 @@ open class ReceiveZKTransactionFlow @JvmOverloads constructor(
      */
     @Suspendable
     @Throws(FlowException::class)
-    protected open fun checkBeforeRecording(stx: SignedZKVerifierTransaction) {
+    protected open fun checkBeforeRecording(svtx: SignedZKVerifierTransaction) {
     }
 }
 
