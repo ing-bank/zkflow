@@ -4,6 +4,7 @@ import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
 import net.corda.core.DeleteForDJVM
 import net.corda.core.DoNotImplement
 import net.corda.core.concurrent.CordaFuture
+import net.corda.core.contracts.TransactionResolutionException
 import net.corda.core.crypto.SecureHash
 import net.corda.core.messaging.DataFeed
 import net.corda.core.serialization.SerializeAsToken
@@ -78,3 +79,8 @@ interface ZKVerifierTransactionStorage : ZKTransactionStorage<SignedZKVerifierTr
  * Thread-safe storage of transactions.
  */
 interface ZKWritableVerifierTransactionStorage : ZKWritableTransactionStorage<SignedZKVerifierTransaction>, ZKVerifierTransactionStorage
+
+class ZKTransactionResolutionException(
+    hash: SecureHash,
+    message: String = "ZKTransaction resolution failure for $hash"
+) : TransactionResolutionException(hash, message)

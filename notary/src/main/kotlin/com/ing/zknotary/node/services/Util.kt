@@ -24,6 +24,7 @@ fun <T : SerializeAsToken> ServiceHub.getCordaServiceFromConfig(configKey: Strin
 object ServiceNames {
     const val ZK_TX_SERVICE: String = "zkTxService"
     const val ZK_VERIFIER_TX_STORAGE: String = "zkVerifierTxStorage"
+    const val ZK_UTXO_INFO_STORAGE: String = "utxoInfoStorage"
 }
 
 fun ServiceHub.getStringFromConfig(configKey: String, defaultValue: String? = null): String {

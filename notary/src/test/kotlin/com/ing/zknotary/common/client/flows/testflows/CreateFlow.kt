@@ -15,10 +15,9 @@ import net.corda.core.contracts.StateAndContract
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.InitiatingFlow
 import net.corda.core.transactions.SignedTransaction
-import net.corda.core.transactions.TransactionBuilder
 
 @InitiatingFlow
-class CreateFlow : FlowLogic<SignedTransaction>() {
+class CreateFlow(private val value: Int? = null) : FlowLogic<SignedTransaction>() {
 
     @Suspendable
     override fun call(): SignedTransaction {
@@ -26,11 +25,11 @@ class CreateFlow : FlowLogic<SignedTransaction>() {
         val zkService: ZKTransactionService = serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_TX_SERVICE)
 
         val me = serviceHub.myInfo.legalIdentities.single()
-        val state = TestContract.TestState(me)
+        val state = if (value != null) TestContract.TestState(me, value) else TestContract.TestState(me)
         val issueCommand = Command(TestContract.Create(), me.owningKey) //
         val stateAndContract = StateAndContract(state, TestContract.PROGRAM_ID)
 
-        val builder = ZKTransactionBuilder(TransactionBuilder(serviceHub.networkMapCache.notaryIdentities.single()))
+        val builder = ZKTransactionBuilder(serviceHub.networkMapCache.notaryIdentities.single())
         builder.withItems(stateAndContract, issueCommand)
 
         val stx = serviceHub.signInitialTransaction(builder)

@@ -6,14 +6,19 @@ import com.ing.zknotary.client.flows.ZKFinalityFlow
 import com.ing.zknotary.client.flows.ZKReceiveFinalityFlow
 import com.ing.zknotary.client.flows.ZKSignTransactionFlow
 import com.ing.zknotary.client.flows.signInitialZKTransaction
+import com.ing.zknotary.common.flows.ZKReceiveStateAndRefFlow
+import com.ing.zknotary.common.flows.ZKSendStateAndRefFlow
 import com.ing.zknotary.common.transactions.ZKTransactionBuilder
 import com.ing.zknotary.common.transactions.signInitialTransaction
+import com.ing.zknotary.common.transactions.zkVerify
 import com.ing.zknotary.common.zkp.ZKTransactionService
 import com.ing.zknotary.node.services.ServiceNames
 import com.ing.zknotary.node.services.getCordaServiceFromConfig
 import com.ing.zknotary.testing.fixtures.contract.TestContract
 import net.corda.core.contracts.Command
+import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.StateAndContract
+import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.requireThat
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
@@ -21,61 +26,80 @@ import net.corda.core.flows.InitiatedBy
 import net.corda.core.flows.InitiatingFlow
 import net.corda.core.identity.Party
 import net.corda.core.transactions.SignedTransaction
+import net.corda.core.utilities.unwrap
 
 /**
  * Disclaimer: this is not how it is supposed to be used in "real" flows, it works just for this test
  */
 @InitiatingFlow
-class MoveFlow(
-    private val createStx: SignedTransaction,
-    private val newOwner: Party
+class MoveBidirectionalFlow(
+    private val myInput: StateAndRef<TestContract.TestState>,
+    private val counterParty: Party
 ) : FlowLogic<SignedTransaction>() {
 
     @Suspendable
     override fun call(): SignedTransaction {
+        val session = initiateFlow(counterParty)
 
-        val zkService: ZKTransactionService = serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_TX_SERVICE)
+        // Send a proposed state to trade to counterparty
+        session.send(myInput)
 
-        val session = initiateFlow(newOwner)
+        // Receive a state of the same value in return.
+        val theirInput = subFlow<List<StateAndRef<TestContract.TestState>>>(ZKReceiveStateAndRefFlow(session)).single()
 
+        // Now we create the transaction
         val me = serviceHub.myInfo.legalIdentities.single()
-        val state = createStx.coreTransaction.outRef<TestContract.TestState>(0)
-        val command = Command(TestContract.Move(), listOf(newOwner, me).map { it.owningKey })
-        val stateAndContract = StateAndContract(state.state.data.copy(owner = newOwner), TestContract.PROGRAM_ID)
+        val command = Command(TestContract.MoveBidirectional(), listOf(counterParty, me).map { it.owningKey })
+        val myOutput = StateAndContract(myInput.state.data.copy(owner = counterParty), TestContract.PROGRAM_ID)
+        val theirOutput = StateAndContract(theirInput.state.data.copy(owner = me), TestContract.PROGRAM_ID)
 
         val builder = ZKTransactionBuilder(serviceHub.networkMapCache.notaryIdentities.single())
-        builder.withItems(state, stateAndContract, command)
+        builder.withItems(myInput, theirInput, myOutput, theirOutput, command)
 
         // Transaction creator signs transaction.
         val stx = serviceHub.signInitialTransaction(builder)
-        stx.verify(serviceHub, false)
 
+        // Verify to be sure
+        stx.zkVerify(serviceHub, false)
+
+        // Create proof and vtx
+        val zkService: ZKTransactionService = serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_TX_SERVICE)
         val vtx = zkService.prove(stx.tx)
 
+        // Sign vtx
         val partiallySignedVtx = signInitialZKTransaction(vtx)
+
+        // Collect signature from counterparty
         val svtx = subFlow(ZKCollectSignaturesFlow(stx, partiallySignedVtx, listOf(session)))
 
+        // Finalize
         subFlow(ZKFinalityFlow(stx, svtx, listOf(session)))
 
         return stx
     }
 
     companion object {
-
-        @InitiatedBy(MoveFlow::class)
+        @InitiatedBy(MoveBidirectionalFlow::class)
         class Verifier(val session: FlowSession) : FlowLogic<Unit>() {
-
             @Suspendable
             override fun call() {
-                val flow = object : ZKSignTransactionFlow(session) {
+                class SignFlow(val myState: StateAndRef<ContractState>) : ZKSignTransactionFlow(session) {
                     @Suspendable
                     override fun checkTransaction(stx: SignedTransaction) = requireThat {
-                        // In non-test scenario here counterparty can verify incoming Tx from business perspective
+                        "The output I proposed is an input" using (stx.inputs.contains(myState.ref))
                     }
                 }
+                val initiatorState = session.receive<StateAndRef<TestContract.TestState>>().unwrap { it }
 
-                // Invoke the subFlow, in response to the counterparty calling [ZKCollectSignaturesFlow].
-                val stx = subFlow(flow)
+                // Create a state of the same value as the one proposed by initiator
+                val createStx = subFlow(CreateFlow(initiatorState.state.data.value))
+
+                // Send it back.
+                val output = createStx.tx.outRef<TestContract.TestState>(0)
+                subFlow(ZKSendStateAndRefFlow(session, listOf(output)))
+
+                // Invoke the signing subFlow, in response to the counterparty calling [ZKCollectSignaturesFlow].
+                val stx = subFlow(SignFlow(output))
 
                 // Invoke flow in response to ZKFinalityFlow
                 subFlow(ZKReceiveFinalityFlow(session, stx))

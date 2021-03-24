@@ -2,8 +2,13 @@ package com.ing.zknotary.testing.fixtures.contract
 
 import com.ing.zknotary.common.contracts.ZKCommandData
 import com.ing.zknotary.common.zkp.CircuitMetaData
+import com.ing.zknotary.testing.fixtures.contract.TestContract.Create.Companion.verifyCreate
+import com.ing.zknotary.testing.fixtures.contract.TestContract.Move.Companion.verifyMove
+import com.ing.zknotary.testing.fixtures.contract.TestContract.MoveBidirectional.Companion.verifyMoveBidirectional
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.CommandAndState
+import net.corda.core.contracts.CommandData
+import net.corda.core.contracts.CommandWithParties
 import net.corda.core.contracts.Contract
 import net.corda.core.contracts.ContractClassName
 import net.corda.core.contracts.ContractState
@@ -36,21 +41,12 @@ public class TestContract : Contract {
 
         override val circuit: CircuitMetaData =
             CircuitMetaData(folder = File("${System.getProperty("user.dir")}/../zinc-platform-sources/circuits/create"))
-    }
 
-    public class Move : ZKCommandData {
-        override val id: Int = 1
-        override val circuit: CircuitMetaData =
-            CircuitMetaData(folder = File("${System.getProperty("user.dir")}/../zinc-platform-sources/circuits/move"))
-    }
-
-    override fun verify(tx: LedgerTransaction) {
-        // The transaction may have only one command, of a type defined above
-        if (tx.commands.size != 1) throw IllegalArgumentException("Failed requirement: the tx has only one command")
-        val command = tx.commands[0]
-
-        when (command.value) {
-            is Create -> {
+        public companion object {
+            public fun verifyCreate(
+                tx: LedgerTransaction,
+                command: CommandWithParties<CommandData>
+            ) {
                 // Transaction structure
                 if (tx.outputs.size != 1) throw IllegalArgumentException("Failed requirement: the tx has only one output")
                 if (tx.inputs.isNotEmpty()) throw IllegalArgumentException("Failed requirement: the tx has no inputs")
@@ -59,7 +55,19 @@ public class TestContract : Contract {
                 val output = tx.getOutput(0) as TestState
                 if (output.owner.owningKey !in command.signers) throw IllegalArgumentException("Failed requirement: the output state is owned by the command signer")
             }
-            is Move -> {
+        }
+    }
+
+    public class Move : ZKCommandData {
+        override val id: Int = 1
+        override val circuit: CircuitMetaData =
+            CircuitMetaData(folder = File("${System.getProperty("user.dir")}/../zinc-platform-sources/circuits/move"))
+
+        public companion object {
+            public fun verifyMove(
+                tx: LedgerTransaction,
+                command: CommandWithParties<CommandData>
+            ) {
                 // Transaction structure
                 if (tx.outputs.size != 1) throw IllegalArgumentException("Failed requirement: the tx has only one output")
                 if (tx.inputs.size != 1) throw IllegalArgumentException("Failed requirement: the tx has only one output")
@@ -68,20 +76,57 @@ public class TestContract : Contract {
                 val output = tx.getOutput(0) as TestState
                 val input = tx.getInput(0) as TestState
 
-                /*
-                // Note: the fact that command.signers contains a certain required key, does not mean we can assume it has been
-                // verified that this signature is present. The validating notary does check this directly after the contract verification,
-                // but the non-validating notary never checks signatures. In that case, this check only means that we
-                // can enforce that the owner of e.g. the output is set as one of the required signers by the tx creator,
-                // but not that these signatures are actually present.
-                // Counterparties also do contract verification, and like a validating notary, do check signatures.
-                // In that case, this check equals saying that we require a signature to be present on the tx of the
-                // owner of the input and of the owner of the output.
-
-                 */
                 if (input.owner.owningKey !in command.signers) throw IllegalArgumentException("Failed requirement: the input state is owned by a required command signer")
                 if (input.value != output.value) throw IllegalArgumentException("Failed requirement: the value of the input and out put should be equal")
             }
+        }
+    }
+
+    public class MoveBidirectional : ZKCommandData {
+        override val id: Int = 1
+        override val circuit: CircuitMetaData =
+            CircuitMetaData(folder = File(System.getProperty("user.dir")))
+
+        public companion object {
+            public fun verifyMoveBidirectional(
+                tx: LedgerTransaction,
+                command: CommandWithParties<CommandData>
+            ) {
+                // Transaction structure
+                if (tx.outputs.size != 2) throw IllegalArgumentException("Failed requirement: the tx has two outputs")
+                if (tx.inputs.size != 2) throw IllegalArgumentException("Failed requirement: the tx has two inputs")
+
+                if (tx.inputStates.sumBy { (it as TestState).value } != tx.outputStates.sumBy { (it as TestState).value }) throw IllegalArgumentException(
+                    "Failed requirement: amounts are not conserved"
+                )
+
+                tx.inputStates.forEachIndexed { index, input ->
+                    // Transaction contents
+                    val output = tx.getOutput(index) as TestState
+                    input as TestState
+
+                    if (input.owner.owningKey == output.owner.owningKey) throw IllegalArgumentException("Failed requirement: input state $index changes ownership")
+                    if ((tx.outputStates.reversed()[index] as TestState).owner.owningKey != input.owner.owningKey) throw IllegalArgumentException(
+                        "Failed requirement: ownership of input $index should swap ownership"
+                    )
+
+                    if (input.owner.owningKey !in command.signers) throw IllegalArgumentException("Failed requirement: input state $index is owned by a required command signer")
+
+                    if (input.value != output.value) throw IllegalArgumentException("Failed requirement: the value of the input and out put should be equal")
+                }
+            }
+        }
+    }
+
+    override fun verify(tx: LedgerTransaction) {
+        // The transaction may have only one command, of a type defined above
+        if (tx.commands.size != 1) throw IllegalArgumentException("Failed requirement: the tx has only one command")
+        val command = tx.commands[0]
+
+        when (command.value) {
+            is Create -> verifyCreate(tx, command)
+            is Move -> verifyMove(tx, command)
+            is MoveBidirectional -> verifyMoveBidirectional(tx, command)
             else -> {
                 throw IllegalStateException("No valid command found")
             }

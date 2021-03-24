@@ -1,6 +1,7 @@
 package com.ing.zknotary.common.zkp
 
 import com.ing.zknotary.common.serialization.WitnessSerializer
+import com.ing.zknotary.common.transactions.UtxoInfo
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import net.corda.core.contracts.ComponentGroupEnum
@@ -127,10 +128,8 @@ class Witness(
     companion object {
         fun fromWireTransaction(
             wtx: WireTransaction,
-            serializedInputUtxos: List<ByteArray>,
-            serializedReferenceUtxos: List<ByteArray>,
-            inputUtxoNonces: List<SecureHash>,
-            referenceUtxoNonces: List<SecureHash>
+            inputUtxoInfos: List<UtxoInfo>,
+            referenceUtxoInfos: List<UtxoInfo>,
         ): Witness {
             return Witness(
                 inputsGroup = wtx.serializedComponenteBytesFor(ComponentGroupEnum.INPUTS_GROUP),
@@ -145,10 +144,10 @@ class Witness(
 
                 privacySalt = wtx.privacySalt,
 
-                serializedInputUtxos = serializedInputUtxos,
-                serializedReferenceUtxos = serializedReferenceUtxos,
-                inputUtxoNonces = inputUtxoNonces,
-                referenceUtxoNonces = referenceUtxoNonces
+                serializedInputUtxos = inputUtxoInfos.map { it.serializedContents },
+                serializedReferenceUtxos = referenceUtxoInfos.map { it.serializedContents },
+                inputUtxoNonces = inputUtxoInfos.map { it.nonce },
+                referenceUtxoNonces = referenceUtxoInfos.map { it.nonce }
             )
         }
 

@@ -20,7 +20,6 @@ import net.corda.core.flows.InitiatedBy
 import net.corda.core.flows.InitiatingFlow
 import net.corda.core.identity.Party
 import net.corda.core.transactions.SignedTransaction
-import net.corda.core.transactions.TransactionBuilder
 
 @InitiatingFlow
 class TestCollectZKSignaturesFlow(val signers: List<Party> = emptyList()) : FlowLogic<SignedZKVerifierTransaction>() {
@@ -34,7 +33,7 @@ class TestCollectZKSignaturesFlow(val signers: List<Party> = emptyList()) : Flow
         val issueCommand = Command(TestContract.Create(), (signers + me).map { it.owningKey }) //
         val stateAndContract = StateAndContract(state, TestContract.PROGRAM_ID)
 
-        val builder = ZKTransactionBuilder(TransactionBuilder(serviceHub.networkMapCache.notaryIdentities.single()))
+        val builder = ZKTransactionBuilder(serviceHub.networkMapCache.notaryIdentities.single())
         builder.withItems(stateAndContract, issueCommand)
 
         val stx = serviceHub.signInitialTransaction(builder)

@@ -3,11 +3,15 @@ package com.ing.zknotary.common.flows
 import co.paralleluniverse.fibers.Suspendable
 import com.ing.zknotary.client.flows.recordTransactions
 import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
+import com.ing.zknotary.common.transactions.UtxoInfo
 import com.ing.zknotary.common.transactions.dependencies
 import com.ing.zknotary.common.zkp.ZKTransactionService
 import com.ing.zknotary.node.services.ServiceNames
+import com.ing.zknotary.node.services.WritableUtxoInfoStorage
 import com.ing.zknotary.node.services.getCordaServiceFromConfig
 import net.corda.core.contracts.AttachmentResolutionException
+import net.corda.core.contracts.ContractState
+import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.TransactionResolutionException
 import net.corda.core.contracts.TransactionVerificationException
 import net.corda.core.flows.FlowException
@@ -15,6 +19,7 @@ import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
 import net.corda.core.internal.checkParameterHash
 import net.corda.core.node.StatesToRecord
+import net.corda.core.serialization.deserialize
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.utilities.trace
 import net.corda.core.utilities.unwrap
@@ -91,5 +96,41 @@ open class ReceiveZKTransactionFlow @JvmOverloads constructor(
     @Suspendable
     @Throws(FlowException::class)
     protected open fun checkBeforeRecording(stx: SignedZKVerifierTransaction) {
+    }
+}
+
+/**
+ * The [ZkReceiveStateAndRefFlow] should be called in response to the [ZKSendStateAndRefFlow].
+ *
+ * This flow is a combination of [FlowSession.receive] and resolve. This flow will receive a list of [StateAndRef]
+ * and perform the resolution back-and-forth required to check the dependencies.
+ * The flow will return the list of [StateAndRef] after it is resolved.
+ */
+// @JvmSuppressWildcards is used to suppress wildcards in return type when calling `subFlow(new ReceiveStateAndRef<T>(otherParty))` in java.
+class ZKReceiveStateAndRefFlow<out T : ContractState>(private val otherSideSession: FlowSession) :
+    FlowLogic<@JvmSuppressWildcards List<StateAndRef<T>>>() {
+    @Suspendable
+    override fun call(): List<StateAndRef<T>> {
+        // 1. Receive the list of UtxoInfo that the counterparty sent us
+        val utxoInfos = otherSideSession.receive<List<UtxoInfo>>().unwrap { it }
+        val txHashes = utxoInfos.asSequence().map { it.stateRef.txhash }.toSet()
+
+        // 2. Resolve the ZKP chain for each UtxoInfo
+        subFlow(ResolveZKTransactionsFlow(null, txHashes, otherSideSession))
+
+        return utxoInfos.map { utxoInfo ->
+            // 3. Verify Utxo
+            utxoInfo.verify(serviceHub)
+
+            // 4. Store the UtxoInfo in, so we can fetch it together with its ZKP chain when we need it elsewhere
+            serviceHub.getCordaServiceFromConfig<WritableUtxoInfoStorage>(ServiceNames.ZK_UTXO_INFO_STORAGE)
+                .addUtxoInfo(utxoInfo)
+
+            // 5. Return it as a StateAndRef
+            StateAndRef(
+                utxoInfo.serializedContents.deserialize(),
+                utxoInfo.stateRef
+            )
+        }
     }
 }

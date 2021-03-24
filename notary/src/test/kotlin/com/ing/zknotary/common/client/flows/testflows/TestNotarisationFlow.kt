@@ -16,7 +16,6 @@ import net.corda.core.contracts.StateAndContract
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.InitiatingFlow
 import net.corda.core.identity.Party
-import net.corda.core.transactions.TransactionBuilder
 
 @InitiatingFlow
 class TestNotarisationFlow(val signers: List<Party> = emptyList()) : FlowLogic<SignedZKVerifierTransaction>() {
@@ -31,7 +30,7 @@ class TestNotarisationFlow(val signers: List<Party> = emptyList()) : FlowLogic<S
         val issueCommand = Command(TestContract.Create(), (signers + me).map { it.owningKey }) //
         val stateAndContract = StateAndContract(state, TestContract.PROGRAM_ID)
 
-        val builder = ZKTransactionBuilder(TransactionBuilder(serviceHub.networkMapCache.notaryIdentities.single()))
+        val builder = ZKTransactionBuilder(serviceHub.networkMapCache.notaryIdentities.single())
         builder.withItems(stateAndContract, issueCommand)
 
         // Transaction creator signs transaction.
