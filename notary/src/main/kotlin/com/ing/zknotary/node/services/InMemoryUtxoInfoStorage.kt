@@ -1,6 +1,6 @@
 package com.ing.zknotary.node.services
 
-import com.ing.zknotary.common.zkp.UtxoInfo
+import com.ing.zknotary.common.transactions.UtxoInfo
 import net.corda.core.contracts.StateRef
 import net.corda.core.node.AppServiceHub
 import net.corda.core.node.services.CordaService

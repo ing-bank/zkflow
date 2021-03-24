@@ -1,7 +1,6 @@
 package com.ing.zknotary.common.transactions
 
 import com.ing.zknotary.common.contracts.ZKCommandData
-import com.ing.zknotary.common.zkp.UtxoInfo
 import com.ing.zknotary.node.services.ServiceNames
 import com.ing.zknotary.node.services.WritableUtxoInfoStorage
 import com.ing.zknotary.node.services.ZKVerifierTransactionStorage
@@ -199,8 +198,8 @@ fun SignedTransaction.zkVerify(
 ) {
     zkResolveAndCheckNetworkParameters(services)
     when (coreTransaction) {
-        is NotaryChangeWireTransaction -> verify(services, checkSufficientSignatures)
-        is ContractUpgradeWireTransaction -> verify(services, checkSufficientSignatures)
+        is NotaryChangeWireTransaction -> TODO("Not supported for now") // Perhaps just proxy to `verify(services, checkSufficientSignatures)`?
+        is ContractUpgradeWireTransaction -> TODO("Not supported for now") // Perhaps just proxy to `verify(services, checkSufficientSignatures)`?
         else -> zkVerifyRegularTransaction(services, checkSufficientSignatures)
     }
 }

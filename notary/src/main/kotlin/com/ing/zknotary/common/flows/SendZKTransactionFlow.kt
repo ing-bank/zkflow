@@ -2,8 +2,8 @@ package com.ing.zknotary.common.flows
 
 import co.paralleluniverse.fibers.Suspendable
 import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
+import com.ing.zknotary.common.transactions.UtxoInfo
 import com.ing.zknotary.common.transactions.collectUtxoInfos
-import com.ing.zknotary.common.zkp.UtxoInfo
 import com.ing.zknotary.node.services.ServiceNames
 import com.ing.zknotary.node.services.ZKVerifierTransactionStorage
 import com.ing.zknotary.node.services.getCordaServiceFromConfig

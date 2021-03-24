@@ -21,7 +21,6 @@ import net.corda.core.flows.InitiatedBy
 import net.corda.core.flows.InitiatingFlow
 import net.corda.core.identity.Party
 import net.corda.core.transactions.SignedTransaction
-import net.corda.core.transactions.TransactionBuilder
 
 /**
  * Disclaimer: this is not how it is supposed to be used in "real" flows, it works just for this test
@@ -44,7 +43,7 @@ class MoveFlow(
         val command = Command(TestContract.Move(), listOf(newOwner, me).map { it.owningKey })
         val stateAndContract = StateAndContract(state.state.data.copy(owner = newOwner), TestContract.PROGRAM_ID)
 
-        val builder = ZKTransactionBuilder(TransactionBuilder(serviceHub.networkMapCache.notaryIdentities.single()))
+        val builder = ZKTransactionBuilder(serviceHub.networkMapCache.notaryIdentities.single())
         builder.withItems(state, stateAndContract, command)
 
         // Transaction creator signs transaction.

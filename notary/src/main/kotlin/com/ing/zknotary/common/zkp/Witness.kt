@@ -1,6 +1,7 @@
 package com.ing.zknotary.common.zkp
 
 import com.ing.zknotary.common.serialization.WitnessSerializer
+import com.ing.zknotary.common.transactions.UtxoInfo
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import net.corda.core.contracts.ComponentGroupEnum

@@ -1,6 +1,6 @@
 package com.ing.zknotary.node.services
 
-import com.ing.zknotary.common.zkp.UtxoInfo
+import com.ing.zknotary.common.transactions.UtxoInfo
 import net.corda.core.DeleteForDJVM
 import net.corda.core.DoNotImplement
 import net.corda.core.contracts.StateRef

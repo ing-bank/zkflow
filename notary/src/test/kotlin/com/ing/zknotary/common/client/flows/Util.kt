@@ -3,6 +3,7 @@ package com.ing.zknotary.common.client.flows
 import com.ing.zknotary.testing.fixtures.contract.TestContract
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import net.corda.core.contracts.StateRef
 import net.corda.core.node.services.Vault
 import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.transactions.SignedTransaction
@@ -34,4 +35,25 @@ fun checkVault(
         ).states.single()
 
     actualState shouldBe tx.tx.outRef<TestContract.TestState>(0)
+}
+
+fun checkVault(
+    party: StartedMockNode,
+    status: Vault.StateStatus,
+    stateRef: StateRef
+) {
+
+    // party should have CONSUMED input state marked in its vault
+    party?.let { it ->
+
+        val state = it.services.vaultService
+            .queryBy(
+                contractStateType = TestContract.TestState::class.java,
+                criteria = QueryCriteria.VaultQueryCriteria()
+                    .withStatus(status)
+                    .withStateRefs(listOf(stateRef))
+            ).states.find { state -> state.ref == stateRef }
+
+        state shouldNotBe null
+    }
 }

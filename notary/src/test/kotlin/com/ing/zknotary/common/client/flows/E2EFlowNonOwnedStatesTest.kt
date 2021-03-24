@@ -13,6 +13,7 @@ import com.ing.zknotary.testing.fixtures.contract.TestContract
 import com.ing.zknotary.testing.zkp.MockZKTransactionService
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
+import net.corda.core.node.services.Vault
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.utilities.getOrThrow
 import net.corda.testing.common.internal.testNetworkParameters
@@ -82,24 +83,11 @@ class E2EFlowNonOwnedStatesTest {
     @Test
     @Tag("slow")
     fun `End2End test with ZKP notary - non-owned states`() {
-        // Both parties create a state
+        // Initiator creates a state they want to trade
         val createStxMiniCorpNode = createNewState(miniCorpNode)
-//        val createStxMegaCorpnode = createNewState(megaCorpNode)
-
-        /**
-         * MiniCorp selects the StateAndRef they want to sell
-         */
         val miniCorpStateAndRef = createStxMiniCorpNode.coreTransaction.outRef<TestContract.TestState>(0)
 
-//        /**
-//         * MegaCorp provides to MiniCorp for the state they want to 'sell':
-//         * - StateRef,
-//         * - serialized contents of the UTXO that StateRef points to
-//         * - the nonce for the the UTXO that StateRef points to
-//         */
-//        val megaCorpstateAndRef = createStxMegaCorpnode.tx.outRef<TestContract.TestState>(0)
-//        val (serializedStates, nonces) = megaCorpNode.services.collectSerializedUtxosAndNonces(listOf(megaCorpstateAndRef.ref))
-
+        // Start the trade. We expect counterparty to trade a state of identical valu
         val moveFuture = miniCorpNode.startFlow(
             MoveBidirectionalFlow(
                 miniCorpStateAndRef,
@@ -109,7 +97,19 @@ class E2EFlowNonOwnedStatesTest {
         mockNet.runNetwork()
         val moveStx = moveFuture.getOrThrow()
 
-//        checkVault(moveStx, miniCorpNode, megaCorpNode)
+        checkVault(miniCorpNode, Vault.StateStatus.CONSUMED, miniCorpStateAndRef.ref)
+        checkVault(
+            miniCorpNode,
+            Vault.StateStatus.UNCONSUMED,
+            moveStx.tx.filterOutRefs<TestContract.TestState> { it.owner == miniCorp }.single().ref
+        )
+        checkVault(
+            megaCorpNode,
+            Vault.StateStatus.UNCONSUMED,
+            moveStx.tx.filterOutRefs<TestContract.TestState> {
+                it == miniCorpStateAndRef.state.data.withNewOwner(megaCorp).ownableState
+            }.single().ref
+        )
     }
 
     private fun createNewState(owner: StartedMockNode): SignedTransaction {
