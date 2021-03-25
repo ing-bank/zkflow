@@ -8,7 +8,6 @@ import com.ing.zknotary.common.transactions.zkVerify
 import com.ing.zknotary.common.zkp.ZKTransactionService
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.StateAndRef
-import net.corda.core.contracts.StateRef
 import net.corda.core.crypto.TransactionSignature
 import net.corda.core.crypto.isFulfilledBy
 import net.corda.core.crypto.toStringShort
@@ -20,7 +19,6 @@ import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.Party
 import net.corda.core.identity.groupPublicKeysByWellKnownParty
 import net.corda.core.node.ServiceHub
-import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.WireTransaction
 import net.corda.core.utilities.ProgressTracker
@@ -340,7 +338,6 @@ abstract class ZKSignTransactionFlow @JvmOverloads constructor(
         stx.checkSignaturesAreValid()
 
         // Receive input and reference states to be able to build PTX and LedgerTransaction
-        // Refs should refer to plaintext LedgerTransaction in order to be able to create valid ltx
         subFlow<List<StateAndRef<ContractState>>>(ZKReceiveStateAndRefFlow(otherSideSession))
 
         stx.zkVerify(serviceHub, checkSufficientSignatures = false)

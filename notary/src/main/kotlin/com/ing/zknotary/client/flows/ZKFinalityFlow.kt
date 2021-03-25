@@ -4,10 +4,8 @@ import co.paralleluniverse.fibers.Suspendable
 import com.ing.zknotary.common.flows.ReceiveZKTransactionFlow
 import com.ing.zknotary.common.flows.SendZKTransactionFlow
 import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
+import com.ing.zknotary.common.transactions.prove
 import com.ing.zknotary.common.transactions.zkToLedgerTransaction
-import com.ing.zknotary.common.zkp.ZKTransactionService
-import com.ing.zknotary.node.services.ServiceNames
-import com.ing.zknotary.node.services.getCordaServiceFromConfig
 import net.corda.core.crypto.isFulfilledBy
 import net.corda.core.flows.FinalityFlow
 import net.corda.core.flows.FlowLogic
@@ -64,9 +62,6 @@ class ZKFinalityFlow private constructor(
         sessions: Collection<FlowSession>,
         progressTracker: ProgressTracker = tracker()
     ) : this(transaction, progressTracker, sessions)
-
-//    private val vtx: SignedZKVerifierTransaction
-//
 
     companion object {
         object NOTARISING : ProgressTracker.Step("Requesting signature by notary service") {
@@ -144,22 +139,20 @@ class ZKFinalityFlow private constructor(
     private fun notariseAndRecord(): SignedZKVerifierTransaction {
 
         // Create proof and vtx
-        val zkService: ZKTransactionService = serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_TX_SERVICE)
-        val vtx = SignedZKVerifierTransaction(zkService.prove(stx.tx), stx.sigs)
 
-        var stxToStore = this.stx
+        val vtx = stx.prove(serviceHub)
+
         val notarised = if (needsNotarySignature(vtx)) {
             progressTracker.currentStep =
                 NOTARISING
-            val notarySignatures = subFlow(ZKNotaryFlow(stxToStore, vtx))
-            stxToStore += notarySignatures // we add signatures to stx as well, now both transactions have full set of signatures
+            val notarySignatures = subFlow(ZKNotaryFlow(stx, vtx))
             vtx + notarySignatures
         } else {
             logger.info("No need to notarise this transaction.")
             vtx
         }
         logger.info("Recording transaction locally.")
-        serviceHub.recordTransactions(stxToStore, notarised)
+        serviceHub.recordTransactions(SignedTransaction(stx.tx, vtx.sigs), notarised)
         logger.info("Recorded transaction locally successfully.")
         return notarised
     }
