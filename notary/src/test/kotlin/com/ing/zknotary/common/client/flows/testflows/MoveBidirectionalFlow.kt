@@ -91,7 +91,7 @@ class MoveBidirectionalFlow(
                 val stx = subFlow(SignFlow(output))
 
                 // Invoke flow in response to ZKFinalityFlow
-                subFlow(ZKReceiveFinalityFlow(session, stx))
+                subFlow(ZKReceiveFinalityFlow(session, stx.id))
             }
         }
     }

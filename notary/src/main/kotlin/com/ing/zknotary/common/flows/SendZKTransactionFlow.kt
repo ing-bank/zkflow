@@ -42,8 +42,8 @@ open class ZKSendTransactionProposal(private val otherSideSession: FlowSession, 
     }
 }
 
-open class SendZKTransactionFlow(otherSide: FlowSession, svtx: SignedZKVerifierTransaction) :
-    ZKDataVendingFlow(otherSide, svtx)
+open class SendZKTransactionFlow(otherSide: FlowSession, svtx: SignedZKVerifierTransaction, stx: SignedTransaction) :
+    ZKDataVendingFlow(otherSide, Pair(svtx, stx))
 
 open class SendUtxoInfosFlow(otherSide: FlowSession, utxoInfos: List<UtxoInfo>) :
     ZKDataVendingFlow(otherSide, utxoInfos)
@@ -101,7 +101,25 @@ open class ZKDataVendingFlow(val otherSideSession: FlowSession, val payload: Any
         val authorisedTransactions = when (payload) {
             is ZKNotarisationPayload -> TransactionAuthorisationFilter().addAuthorised(getInputTransactions(payload.transaction.tx))
             is SignedTransaction -> TransactionAuthorisationFilter().addAuthorised(getInputTransactions(payload.tx))
-            is SignedZKVerifierTransaction -> TransactionAuthorisationFilter().addAuthorised(getInputTransactions(payload.tx))
+            // TODO: introduce a data class for this pair, which also guards against differing ids
+            is Pair<*, *> -> TransactionAuthorisationFilter().addAuthorised(
+                when {
+                    payload.first is SignedZKVerifierTransaction && payload.second is SignedTransaction -> {
+                        val svtx = payload.first as SignedZKVerifierTransaction
+                        val stx = payload.second as SignedTransaction
+                        require(stx.id == svtx.id) { "Can't send pair of SignedZKVerifierTransaction and SignedTransaction with different ids: ${svtx.id} and ${stx.id} respectively" }
+                        getInputTransactions(stx.tx)
+                    }
+                    else -> {
+                        throw IllegalArgumentException("Unknown payload type: Pair<${payload.first!!::class.java}, ${payload.second!!::class.java}> ?")
+                    }
+                }.toSet()
+            )
+            is SignedZKVerifierTransaction -> TransactionAuthorisationFilter().addAuthorised(
+                getInputTransactions(
+                    payload.tx
+                )
+            )
             is RetrieveAnyTransactionPayload -> TransactionAuthorisationFilter(acceptAll = true)
             is List<*> -> TransactionAuthorisationFilter().addAuthorised(
                 payload.flatMap { payloadItem ->
