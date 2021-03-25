@@ -5,6 +5,9 @@ import com.ing.zknotary.common.flows.ReceiveZKTransactionFlow
 import com.ing.zknotary.common.flows.SendZKTransactionFlow
 import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
 import com.ing.zknotary.common.transactions.zkToLedgerTransaction
+import com.ing.zknotary.common.zkp.ZKTransactionService
+import com.ing.zknotary.node.services.ServiceNames
+import com.ing.zknotary.node.services.getCordaServiceFromConfig
 import net.corda.core.crypto.isFulfilledBy
 import net.corda.core.flows.FinalityFlow
 import net.corda.core.flows.FlowLogic
@@ -30,7 +33,7 @@ import net.corda.core.utilities.ProgressTracker
  * storage, verification will fail. It must have signatures from all necessary parties other than the notary.
  *
  * A list of [FlowSession]s is required for each non-local participant of the transaction. These participants will receive
- * the final notarised transaction by calling [ReceiveFinalityFlow] in their counterpart com.ing.zknotary.flows. Sessions with non-participants
+ * the final notarised transaction by calling [ZKReceiveFinalityFlow] in their counterpart com.ing.zknotary.flows. Sessions with non-participants
  * can also be included, but they must specify [StatesToRecord.ALL_VISIBLE] for statesToRecord if they wish to record the
  * contract states into their vaults.
  *
@@ -44,7 +47,6 @@ import net.corda.core.utilities.ProgressTracker
 @InitiatingFlow
 class ZKFinalityFlow private constructor(
     val stx: SignedTransaction,
-    val vtx: SignedZKVerifierTransaction,
     override val progressTracker: ProgressTracker,
     private val sessions: Collection<FlowSession>
 ) : FlowLogic<SignedZKVerifierTransaction>() {
@@ -59,10 +61,12 @@ class ZKFinalityFlow private constructor(
     @JvmOverloads
     constructor(
         transaction: SignedTransaction,
-        zkTransaction: SignedZKVerifierTransaction,
         sessions: Collection<FlowSession>,
         progressTracker: ProgressTracker = tracker()
-    ) : this(transaction, zkTransaction, progressTracker, sessions)
+    ) : this(transaction, progressTracker, sessions)
+
+//    private val vtx: SignedZKVerifierTransaction
+//
 
     companion object {
         object NOTARISING : ProgressTracker.Step("Requesting signature by notary service") {
@@ -138,6 +142,11 @@ class ZKFinalityFlow private constructor(
 
     @Suspendable
     private fun notariseAndRecord(): SignedZKVerifierTransaction {
+
+        // Create proof and vtx
+        val zkService: ZKTransactionService = serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_TX_SERVICE)
+        val vtx = SignedZKVerifierTransaction(zkService.prove(stx.tx), stx.sigs)
+
         var stxToStore = this.stx
         val notarised = if (needsNotarySignature(vtx)) {
             progressTracker.currentStep =
@@ -183,8 +192,6 @@ class ZKFinalityFlow private constructor(
  * before it's committed to the vault.
  *
  * @param otherSideSession The session which is providing the transaction to record.
- * @param expectedTxId Expected ID of the transaction that's about to be received. This is typically retrieved from
- * [SignTransactionFlow]. Setting it to null disables the expected transaction ID check.
  * @param statesToRecord Which states to commit to the vault. Defaults to [StatesToRecord.ONLY_RELEVANT].
  */
 class ZKReceiveFinalityFlow @JvmOverloads constructor(

@@ -7,13 +7,9 @@ import com.ing.zknotary.client.flows.ZKReceiveFinalityFlow
 import com.ing.zknotary.client.flows.ZKSignTransactionFlow
 import com.ing.zknotary.common.flows.ZKReceiveStateAndRefFlow
 import com.ing.zknotary.common.flows.ZKSendStateAndRefFlow
-import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
 import com.ing.zknotary.common.transactions.ZKTransactionBuilder
 import com.ing.zknotary.common.transactions.signInitialTransaction
 import com.ing.zknotary.common.transactions.zkVerify
-import com.ing.zknotary.common.zkp.ZKTransactionService
-import com.ing.zknotary.node.services.ServiceNames
-import com.ing.zknotary.node.services.getCordaServiceFromConfig
 import com.ing.zknotary.testing.fixtures.contract.TestContract
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.ContractState
@@ -65,12 +61,8 @@ class MoveBidirectionalFlow(
         // Collect signature from counterparty
         val fullySignedStx = subFlow(ZKCollectSignaturesFlow(stx, listOf(session)))
 
-        // Create proof and vtx
-        val zkService: ZKTransactionService = serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_TX_SERVICE)
-        val svtx = SignedZKVerifierTransaction(zkService.prove(stx.tx), fullySignedStx.sigs)
-
         // Finalize
-        subFlow(ZKFinalityFlow(fullySignedStx, svtx, listOf(session)))
+        subFlow(ZKFinalityFlow(fullySignedStx, listOf(session)))
 
         return stx
     }

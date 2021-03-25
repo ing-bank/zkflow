@@ -6,8 +6,6 @@ import com.ing.zknotary.common.flows.ZKSendStateAndRefFlow
 import com.ing.zknotary.common.transactions.zkToLedgerTransaction
 import com.ing.zknotary.common.transactions.zkVerify
 import com.ing.zknotary.common.zkp.ZKTransactionService
-import com.ing.zknotary.node.services.ServiceNames
-import com.ing.zknotary.node.services.getCordaServiceFromConfig
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.StateRef
@@ -120,9 +118,6 @@ class ZKCollectSignaturesFlow @JvmOverloads constructor(
         stx.verifySignaturesExcept(notSigned)
         // and the transaction must be valid.
         stx.tx.zkToLedgerTransaction(serviceHub).verify()
-        // and ZKP backchain also should be valid
-        val zkService: ZKTransactionService = serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_TX_SERVICE)
-        zkService.validateBackchain(stx.tx)
 
         // Determine who still needs to sign.
         progressTracker.currentStep = COLLECTING
@@ -253,8 +248,7 @@ class ZKCollectSignatureFlow(
         // for us to check we have the expected signature returned.
         session.send(signingKeys)
 
-        // Send input and reference states to be able to build PTX and LedgerTransaction
-        // Refs should refer to ZKP transaction
+        // Send input and reference states (and their history) to counterpary so they can build a LedgerTransaction and verify it all.
         val ltx = stx.tx.zkToLedgerTransaction(serviceHub)
         subFlow(ZKSendStateAndRefFlow(session, ltx.inputs + ltx.references))
 

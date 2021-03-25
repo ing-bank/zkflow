@@ -68,6 +68,7 @@ open class ReceiveZKTransactionFlow @JvmOverloads constructor(
             checkParameterHash(it.tx.networkParametersHash)
             subFlow(ResolveZKTransactionsFlow(stx, it.dependencies, otherSideSession))
             logger.info("Transaction dependencies resolution completed.")
+            require(stx.id == it.id) { "IDs of STX and SVTX should match" }
             try {
                 zkService.verify(it, checkSufficientSignatures)
                 it
