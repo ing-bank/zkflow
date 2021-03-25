@@ -260,12 +260,6 @@ class ZKCollectSignatureFlow(
             signatures
         }
     }
-
-    private fun queryStates(refs: List<StateRef>): List<StateAndRef<*>> {
-        val criteria = QueryCriteria.VaultQueryCriteria().withStateRefs(refs)
-        // TODO consider paging
-        return serviceHub.vaultService.queryBy(ContractState::class.java, criteria).states
-    }
 }
 // DOCEND 1
 
