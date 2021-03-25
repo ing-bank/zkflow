@@ -39,7 +39,7 @@ class ZincZKTransactionService(services: AppServiceHub) : ZKTransactionCordaServ
         }.toMap()
     }
 
-    override fun zkServiceForTx(command: ZKCommandData): ZKService {
+    override fun zkServiceForCommand(command: ZKCommandData): ZKService {
         return zkServices[command] ?: throw IllegalArgumentException("ZK Service not found for command $command")
     }
 

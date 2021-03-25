@@ -5,6 +5,7 @@ import com.ing.zknotary.client.flows.recordTransactions
 import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
 import com.ing.zknotary.common.transactions.UtxoInfo
 import com.ing.zknotary.common.transactions.dependencies
+import com.ing.zknotary.common.transactions.zkVerify
 import com.ing.zknotary.common.zkp.ZKTransactionService
 import com.ing.zknotary.node.services.ServiceNames
 import com.ing.zknotary.node.services.WritableUtxoInfoStorage
@@ -40,7 +41,7 @@ import java.security.SignatureException
  * @property otherSideSession session to the other side which is calling [SendTransactionFlow].
  * @property checkSufficientSignatures if true checks all required signatures are present. See [SignedZKVerifierTransaction.verify].
  */
-open class ReceiveZKTransactionFlow @JvmOverloads constructor(
+open class ZKReceiveZKTransactionFlow @JvmOverloads constructor(
     private val stx: SignedTransaction,
     private val otherSideSession: FlowSession,
     private val checkSufficientSignatures: Boolean = true,
@@ -63,7 +64,6 @@ open class ReceiveZKTransactionFlow @JvmOverloads constructor(
         }
         val zkService = serviceHub.getCordaServiceFromConfig<ZKTransactionService>(ServiceNames.ZK_TX_SERVICE)
         val svtx = otherSideSession.receive<SignedZKVerifierTransaction>().unwrap {
-//            it.pushToLoggingContext()
             logger.info("Received transaction acknowledgement request from party ${otherSideSession.counterparty}.")
             checkParameterHash(it.tx.networkParametersHash)
             subFlow(ResolveZKTransactionsFlow(stx, it.dependencies, otherSideSession))
@@ -103,6 +103,71 @@ open class ReceiveZKTransactionFlow @JvmOverloads constructor(
 }
 
 /**
+ * This is the counterpart to [ZKSendTransactionProposal].
+ *
+ * It should *only* be used for receiving transaction proposals, not for receiving finalized transactions.
+ *
+ * Use [ZKReceiveZKTransactionFlow] and its counterpart [SendZKTransactionFlow] for sending finalized
+ * transactions together with their ZKP variants for storage.
+ *
+ * This receives an [SignedTransaction] for further processing verifies it and resolves and verifies its backchain.
+ * It does *not* store the [SignedTransaction] itself, only its verified ZKP backchain(s)
+ */
+open class ZKReceiveTransactionProposalFlow constructor(
+    private val otherSideSession: FlowSession,
+) : FlowLogic<SignedTransaction>() {
+    @Suspendable
+    override fun call(): SignedTransaction {
+        return otherSideSession.receive<SignedTransaction>().unwrap {
+            checkParameterHash(it.tx.networkParametersHash)
+
+            // Resolve all dependencies
+            subFlow(ZKReceiveUtxoInfoFlow(otherSideSession))
+
+            // Verify the transaction. We don't know if we will have all sigs, since this is only a proposal, not final
+            it.zkVerify(serviceHub, false)
+
+            // Verify its ZKP backchain, including proof verification
+            serviceHub.getCordaServiceFromConfig<ZKTransactionService>(ServiceNames.ZK_TX_SERVICE)
+                .validateBackchain(it.tx)
+
+            it
+        }
+    }
+}
+
+/**
+ * The [ZkReceiveUtxoInfoFlow] should be called in response to the [SendUtxoInfosFlow].
+ *
+ * This flow is a combination of [FlowSession.receive] and resolve. This flow will receive a list of [UtxoInfo]
+ * and perform the resolution back-and-forth required to check the dependencies.
+ * The flow will return the list of [UtxoInfo] after it is resolved.
+ */
+// @JvmSuppressWildcards is used to suppress wildcards in return type when calling `subFlow(new ReceiveUtxoInfo<T>(otherParty))` in java.
+class ZKReceiveUtxoInfoFlow(private val otherSideSession: FlowSession) :
+    FlowLogic<@JvmSuppressWildcards List<UtxoInfo>>() {
+    @Suspendable
+    override fun call(): List<UtxoInfo> {
+        // 1. Receive the list of UtxoInfo that the counterparty sent us
+        val utxoInfos = otherSideSession.receive<List<UtxoInfo>>().unwrap { it }
+        val txHashes = utxoInfos.asSequence().map { it.stateRef.txhash }.toSet()
+
+        // 2. Resolve the ZKP chain for each UtxoInfo
+        subFlow(ResolveZKTransactionsFlow(null, txHashes, otherSideSession))
+
+        utxoInfos.forEach { utxoInfo ->
+            // 3. Verify Utxo
+            utxoInfo.verify(serviceHub)
+
+            // 4. Store the UtxoInfo in, so we can fetch it together with its ZKP chain when we need it elsewhere
+            serviceHub.getCordaServiceFromConfig<WritableUtxoInfoStorage>(ServiceNames.ZK_UTXO_INFO_STORAGE)
+                .addUtxoInfo(utxoInfo)
+        }
+        return utxoInfos
+    }
+}
+
+/**
  * The [ZkReceiveStateAndRefFlow] should be called in response to the [ZKSendStateAndRefFlow].
  *
  * This flow is a combination of [FlowSession.receive] and resolve. This flow will receive a list of [StateAndRef]
@@ -115,21 +180,10 @@ class ZKReceiveStateAndRefFlow<out T : ContractState>(private val otherSideSessi
     @Suspendable
     override fun call(): List<StateAndRef<T>> {
         // 1. Receive the list of UtxoInfo that the counterparty sent us
-        val utxoInfos = otherSideSession.receive<List<UtxoInfo>>().unwrap { it }
-        val txHashes = utxoInfos.asSequence().map { it.stateRef.txhash }.toSet()
-
-        // 2. Resolve the ZKP chain for each UtxoInfo
-        subFlow(ResolveZKTransactionsFlow(null, txHashes, otherSideSession))
+        val utxoInfos = subFlow(ZKReceiveUtxoInfoFlow(otherSideSession))
 
         return utxoInfos.map { utxoInfo ->
-            // 3. Verify Utxo
-            utxoInfo.verify(serviceHub)
-
-            // 4. Store the UtxoInfo in, so we can fetch it together with its ZKP chain when we need it elsewhere
-            serviceHub.getCordaServiceFromConfig<WritableUtxoInfoStorage>(ServiceNames.ZK_UTXO_INFO_STORAGE)
-                .addUtxoInfo(utxoInfo)
-
-            // 5. Return it as a StateAndRef
+            // 2. Return it as a StateAndRef
             StateAndRef(
                 utxoInfo.serializedContents.deserialize(),
                 utxoInfo.stateRef

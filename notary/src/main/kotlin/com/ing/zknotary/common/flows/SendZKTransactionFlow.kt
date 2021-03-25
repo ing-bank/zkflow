@@ -10,10 +10,8 @@ import com.ing.zknotary.node.services.getCordaServiceFromConfig
 import com.ing.zknotary.notary.ZKNotarisationPayload
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.crypto.SecureHash
-import net.corda.core.flows.DataVendingFlow
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
-import net.corda.core.flows.ReceiveStateAndRefFlow
 import net.corda.core.internal.NetworkParametersStorage
 import net.corda.core.internal.RetrieveAnyTransactionPayload
 import net.corda.core.internal.readFully
@@ -25,16 +23,27 @@ import net.corda.core.utilities.trace
 import net.corda.core.utilities.unwrap
 
 /**
- * The [SendTransactionFlow] should be used to send a transaction to another peer that wishes to verify that transaction's
- * integrity by resolving and checking the dependencies as well. The other side should invoke [ReceiveTransactionFlow] at
+ * The [ZKSendTransactionProposal] should be used to send a transaction to another peer that wishes to verify that transaction's
+ * integrity by resolving and checking the dependencies as well. The other side should invoke [ZKReceiveTransactionProposalFlow] at
  * the right point in the conversation to receive the sent transaction and perform the resolution back-and-forth required
  * to check the dependencies and download any missing attachments.
  *
  * @param otherSide the target party.
- * @param svtx the [SignedTransaction] being sent to the [otherSideSession].
+ * @param stx the [SignedTransaction] being sent to the [otherSideSession].
  */
-open class SendTransactionWithZKBackchainFlow(otherSide: FlowSession, stx: SignedTransaction) : ZKDataVendingFlow(otherSide, stx)
-open class SendZKTransactionFlow(otherSide: FlowSession, svtx: SignedZKVerifierTransaction) : ZKDataVendingFlow(otherSide, svtx)
+open class ZKSendTransactionProposal(private val otherSideSession: FlowSession, private val stx: SignedTransaction) :
+    FlowLogic<Void?>() {
+    @Suspendable
+    override fun call(): Void? {
+        otherSideSession.send(stx)
+        val utxoInfos = serviceHub.collectUtxoInfos(stx.inputs + stx.references)
+        subFlow(SendUtxoInfosFlow(otherSideSession, utxoInfos))
+        return null
+    }
+}
+
+open class SendZKTransactionFlow(otherSide: FlowSession, svtx: SignedZKVerifierTransaction) :
+    ZKDataVendingFlow(otherSide, svtx)
 
 open class SendUtxoInfosFlow(otherSide: FlowSession, utxoInfos: List<UtxoInfo>) :
     ZKDataVendingFlow(otherSide, utxoInfos)
@@ -59,18 +68,6 @@ class ZKSendStateAndRefFlow(
         return null
     }
 }
-
-/**
- * The [SendStateAndRefFlow] should be used to send a list of input [StateAndRef] to another peer that wishes to verify
- * the input's integrity by resolving and checking the dependencies as well. The other side should invoke [ReceiveStateAndRefFlow]
- * at the right point in the conversation to receive the input state and ref and perform the resolution back-and-forth
- * required to check the dependencies.
- *
- * @param otherSideSession the target session.
- * @param stateAndRefs the list of [StateAndRef] being sent to the [otherSideSession].
- */
-open class SendStateAndRefFlow(otherSideSession: FlowSession, stateAndRefs: List<StateAndRef<*>>) :
-    DataVendingFlow(otherSideSession, stateAndRefs)
 
 open class ZKDataVendingFlow(val otherSideSession: FlowSession, val payload: Any) : FlowLogic<Void?>() {
 

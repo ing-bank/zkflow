@@ -1,8 +1,8 @@
 package com.ing.zknotary.client.flows
 
 import co.paralleluniverse.fibers.Suspendable
-import com.ing.zknotary.common.flows.ReceiveZKTransactionFlow
 import com.ing.zknotary.common.flows.SendZKTransactionFlow
+import com.ing.zknotary.common.flows.ZKReceiveZKTransactionFlow
 import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
 import com.ing.zknotary.common.transactions.prove
 import com.ing.zknotary.common.transactions.zkToLedgerTransaction
@@ -195,7 +195,7 @@ class ZKReceiveFinalityFlow @JvmOverloads constructor(
     @Suspendable
     override fun call(): SignedZKVerifierTransaction {
 
-        return subFlow(object : ReceiveZKTransactionFlow(
+        return subFlow(object : ZKReceiveZKTransactionFlow(
             stx,
             otherSideSession,
             checkSufficientSignatures = true,
