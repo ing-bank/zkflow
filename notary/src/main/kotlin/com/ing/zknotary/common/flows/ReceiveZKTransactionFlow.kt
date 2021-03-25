@@ -45,7 +45,6 @@ open class ZKReceiveZKTransactionFlow @JvmOverloads constructor(
     private val stx: SignedTransaction,
     private val otherSideSession: FlowSession,
     private val checkSufficientSignatures: Boolean = true,
-    private val useVtxSignaturesWhenStoringStx: Boolean = false
 ) : FlowLogic<SignedZKVerifierTransaction>() {
 
     @Suppress("LongMethod", "ComplexMethod")
@@ -85,8 +84,7 @@ open class ZKReceiveZKTransactionFlow @JvmOverloads constructor(
             // Here sometimes (e.g. in ReceiveFinalityflow) we receive VTX that contains full set of sigs,
             // while STX lacks some (e.g. Notary's). In this case we take sigs from VTX and save STX with full set.
             // Not super pretty solution, can be refactored to something better later.
-            val stxToStore = if (useVtxSignaturesWhenStoringStx) SignedTransaction(stx.txBits, svtx.sigs) else stx
-            serviceHub.recordTransactions(stxToStore, svtx)
+            serviceHub.recordTransactions(SignedTransaction(stx.txBits, svtx.sigs), svtx)
             logger.info("Successfully recorded received transaction locally.")
         }
         return svtx
