@@ -19,6 +19,7 @@ import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
 import net.corda.core.internal.checkParameterHash
 import net.corda.core.internal.dependencies
+import net.corda.core.node.StatesToRecord
 import net.corda.core.serialization.deserialize
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.utilities.trace
@@ -41,6 +42,7 @@ import java.security.SignatureException
 open class ZKReceiveNotarisedTransactionPayloadFlow @JvmOverloads constructor(
     private val otherSideSession: FlowSession,
     private val checkSufficientSignatures: Boolean = true,
+    private val statesToRecord: StatesToRecord = StatesToRecord.ONLY_RELEVANT
 ) : FlowLogic<SignedTransaction>() {
 
     @Suppress("LongMethod", "ComplexMethod")
@@ -80,7 +82,7 @@ open class ZKReceiveNotarisedTransactionPayloadFlow @JvmOverloads constructor(
             // there are no missing signatures. We don't want partly signed stuff in the vault.
             checkBeforeRecording(notarised)
             logger.info("Successfully received fully signed tx. Sending it to the vault for processing.")
-            serviceHub.recordTransactions(notarised)
+            serviceHub.recordTransactions(notarised, statesToRecord)
             logger.info("Successfully recorded received transaction locally.")
         }
         return notarised.stx

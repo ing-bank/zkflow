@@ -190,24 +190,24 @@ class ZKFinalityFlow private constructor(
  */
 class ZKReceiveFinalityFlow @JvmOverloads constructor(
     private val otherSideSession: FlowSession,
-    private val expectedTxId: SecureHash? = null
-    // private val statesToRecord: StatesToRecord = StatesToRecord.ONLY_RELEVANT // TODO: Should we start using this?
+    private val expectedTxId: SecureHash? = null,
+    private val statesToRecord: StatesToRecord = StatesToRecord.ONLY_RELEVANT
 ) : FlowLogic<SignedTransaction>() {
     @Suspendable
     override fun call(): SignedTransaction {
         return subFlow(object : ZKReceiveNotarisedTransactionPayloadFlow(
             otherSideSession,
-            checkSufficientSignatures = true
-            // statesToRecord = statesToRecord // TODO: Should we start using this?
+            checkSufficientSignatures = true,
+            statesToRecord = statesToRecord
         ) {
-            override fun checkBeforeRecording(notarised: NotarisedTransactionPayload) {
-                expectedTxId?.let {
-                    require(it == notarised.stx.id) {
-                        "We expected to receive transaction with ID $it but instead got ${notarised.stx.id}. Transaction was" +
-                            "not recorded, nor its states sent to the vault."
+                override fun checkBeforeRecording(notarised: NotarisedTransactionPayload) {
+                    expectedTxId?.let {
+                        require(it == notarised.stx.id) {
+                            "We expected to receive transaction with ID $it but instead got ${notarised.stx.id}. Transaction was" +
+                                "not recorded, nor its states sent to the vault."
+                        }
                     }
                 }
-            }
-        })
+            })
     }
 }

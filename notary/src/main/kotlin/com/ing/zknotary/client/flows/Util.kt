@@ -10,6 +10,7 @@ import net.corda.core.crypto.SignableData
 import net.corda.core.crypto.SignatureMetadata
 import net.corda.core.crypto.TransactionSignature
 import net.corda.core.node.ServiceHub
+import net.corda.core.node.StatesToRecord
 import java.security.PublicKey
 
 fun ServiceHub.createSignature(zktxId: SecureHash, publicKey: PublicKey): TransactionSignature {
@@ -21,10 +22,10 @@ fun ServiceHub.createSignature(zktxId: SecureHash, publicKey: PublicKey): Transa
     return keyManagementService.sign(signableData, publicKey)
 }
 
-fun ServiceHub.recordTransactions(notarised: NotarisedTransactionPayload) {
+fun ServiceHub.recordTransactions(notarised: NotarisedTransactionPayload, statesToRecord: StatesToRecord = StatesToRecord.ONLY_RELEVANT) {
 
     getCordaServiceFromConfig<ZKWritableVerifierTransactionStorage>(ServiceNames.ZK_VERIFIER_TX_STORAGE).addTransaction(
         notarised.svtx
     )
-    recordTransactions(notarised.stx)
+    recordTransactions(statesToRecord, listOf(notarised.stx))
 }
