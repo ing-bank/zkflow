@@ -62,9 +62,7 @@ class MoveBidirectionalFlow(
         val fullySignedStx = subFlow(ZKCollectSignaturesFlow(stx, listOf(session)))
 
         // Finalize
-        subFlow(ZKFinalityFlow(fullySignedStx, listOf(session)))
-
-        return stx
+        return subFlow(ZKFinalityFlow(fullySignedStx, listOf(session)))
     }
 
     companion object {

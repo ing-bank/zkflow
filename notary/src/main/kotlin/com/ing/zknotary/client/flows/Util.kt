@@ -1,6 +1,6 @@
 package com.ing.zknotary.client.flows
 
-import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
+import com.ing.zknotary.common.transactions.NotarisedTransactionPayload
 import com.ing.zknotary.node.services.ServiceNames
 import com.ing.zknotary.node.services.ZKWritableVerifierTransactionStorage
 import com.ing.zknotary.node.services.getCordaServiceFromConfig
@@ -10,7 +10,6 @@ import net.corda.core.crypto.SignableData
 import net.corda.core.crypto.SignatureMetadata
 import net.corda.core.crypto.TransactionSignature
 import net.corda.core.node.ServiceHub
-import net.corda.core.transactions.SignedTransaction
 import java.security.PublicKey
 
 fun ServiceHub.createSignature(zktxId: SecureHash, publicKey: PublicKey): TransactionSignature {
@@ -22,10 +21,10 @@ fun ServiceHub.createSignature(zktxId: SecureHash, publicKey: PublicKey): Transa
     return keyManagementService.sign(signableData, publicKey)
 }
 
-fun ServiceHub.recordTransactions(stx: SignedTransaction, svtx: SignedZKVerifierTransaction) {
+fun ServiceHub.recordTransactions(notarised: NotarisedTransactionPayload) {
 
-    val zkVerifierTransactionStorage: ZKWritableVerifierTransactionStorage =
-        getCordaServiceFromConfig(ServiceNames.ZK_VERIFIER_TX_STORAGE)
-    zkVerifierTransactionStorage.addTransaction(svtx)
-    recordTransactions(stx)
+    getCordaServiceFromConfig<ZKWritableVerifierTransactionStorage>(ServiceNames.ZK_VERIFIER_TX_STORAGE).addTransaction(
+        notarised.svtx
+    )
+    recordTransactions(notarised.stx)
 }

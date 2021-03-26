@@ -2,6 +2,7 @@ package com.ing.zknotary.common.flows
 
 import co.paralleluniverse.fibers.Suspendable
 import com.ing.zknotary.client.flows.recordTransactions
+import com.ing.zknotary.common.transactions.NotarisedTransactionPayload
 import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
 import com.ing.zknotary.common.transactions.UtxoInfo
 import com.ing.zknotary.common.transactions.zkVerify
@@ -14,7 +15,6 @@ import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.TransactionResolutionException
 import net.corda.core.contracts.TransactionVerificationException
-import net.corda.core.flows.FlowException
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
 import net.corda.core.internal.checkParameterHash
@@ -26,7 +26,7 @@ import net.corda.core.utilities.unwrap
 import java.security.SignatureException
 
 /**
- * The [ZKReceiveZKTransactionFlow] should be called in response to the [SendZKTransactionFlow].
+ * The [ZKReceiveNotarisedTransactionPayloadFlow] should be called in response to the [SendNotarisedTransactionPayloadFlow].
  *
  * This flow is a combination of [FlowSession.receive], resolve and [SignedZKVerifierTransaction.verify]. This flow will receive the
  * [SignedZKVerifierTransaction] and perform the resolution back-and-forth required to check the dependencies and download any missing
@@ -38,10 +38,10 @@ import java.security.SignatureException
  * @property otherSideSession session to the other side which is calling [SendTransactionFlow].
  * @property checkSufficientSignatures if true checks all required signatures are present. See [SignedZKVerifierTransaction.verify].
  */
-open class ZKReceiveZKTransactionFlow @JvmOverloads constructor(
+open class ZKReceiveNotarisedTransactionPayloadFlow @JvmOverloads constructor(
     private val otherSideSession: FlowSession,
     private val checkSufficientSignatures: Boolean = true,
-) : FlowLogic<SignedZKVerifierTransaction>() {
+) : FlowLogic<SignedTransaction>() {
 
     @Suppress("LongMethod", "ComplexMethod")
     @Suspendable
@@ -51,23 +51,25 @@ open class ZKReceiveZKTransactionFlow @JvmOverloads constructor(
         TransactionResolutionException::class,
         TransactionVerificationException::class
     )
-    override fun call(): SignedZKVerifierTransaction {
+    override fun call(): SignedTransaction {
         if (checkSufficientSignatures) {
             logger.trace { "Receiving a transaction from ${otherSideSession.counterparty}" }
         } else {
             logger.trace { "Receiving a transaction (but without checking the signatures) from ${otherSideSession.counterparty}" }
         }
         val zkService = serviceHub.getCordaServiceFromConfig<ZKTransactionService>(ServiceNames.ZK_TX_SERVICE)
-        val (svtx, stx) = otherSideSession.receive<Pair<SignedZKVerifierTransaction, SignedTransaction>>()
-            .unwrap { (svtx: SignedZKVerifierTransaction, stx: SignedTransaction) ->
+        val notarised = otherSideSession.receive<NotarisedTransactionPayload>()
+            .unwrap { notarised ->
+
                 logger.info("Received transaction acknowledgement request from party ${otherSideSession.counterparty}.")
-                checkParameterHash(stx.networkParametersHash)
-                subFlow(ResolveZKTransactionsFlow(stx, stx.dependencies, otherSideSession))
+                checkParameterHash(notarised.stx.networkParametersHash)
+
+                subFlow(ResolveZKTransactionsFlow(notarised.stx, notarised.stx.dependencies, otherSideSession))
                 logger.info("Transaction dependencies resolution completed.")
-                require(stx.id == svtx.id) { "IDs of STX and SVTX should match" }
+
                 try {
-                    zkService.verify(svtx, checkSufficientSignatures)
-                    svtx to stx
+                    zkService.verify(notarised.svtx, checkSufficientSignatures)
+                    notarised
                 } catch (e: Exception) {
                     logger.warn("Transaction verification failed.")
                     throw e
@@ -76,15 +78,12 @@ open class ZKReceiveZKTransactionFlow @JvmOverloads constructor(
         if (checkSufficientSignatures) {
             // We should only send a transaction to the vault for processing if we did in fact fully verify it, and
             // there are no missing signatures. We don't want partly signed stuff in the vault.
-            checkBeforeRecording(svtx, stx)
+            checkBeforeRecording(notarised)
             logger.info("Successfully received fully signed tx. Sending it to the vault for processing.")
-            // Here sometimes (e.g. in ReceiveFinalityflow) we receive VTX that contains full set of sigs,
-            // while STX lacks some (e.g. Notary's). In this case we take sigs from VTX and save STX with full set.
-            // Not super pretty solution, can be refactored to something better later.
-            serviceHub.recordTransactions(SignedTransaction(stx.txBits, svtx.sigs), svtx)
+            serviceHub.recordTransactions(notarised)
             logger.info("Successfully recorded received transaction locally.")
         }
-        return svtx
+        return notarised.stx
     }
 
     /**
@@ -92,8 +91,7 @@ open class ZKReceiveZKTransactionFlow @JvmOverloads constructor(
      * been resolved and verified at this point.
      */
     @Suspendable
-    @Throws(FlowException::class)
-    protected open fun checkBeforeRecording(svtx: SignedZKVerifierTransaction, stx: SignedTransaction) {
+    protected open fun checkBeforeRecording(notarised: NotarisedTransactionPayload) {
     }
 }
 
@@ -102,7 +100,7 @@ open class ZKReceiveZKTransactionFlow @JvmOverloads constructor(
  *
  * It should *only* be used for receiving transaction proposals, not for receiving finalized transactions.
  *
- * Use [ZKReceiveZKTransactionFlow] and its counterpart [SendZKTransactionFlow] for sending finalized
+ * Use [ZKReceiveNotarisedTransactionPayloadFlow] and its counterpart [SendNotarisedTransactionPayloadFlow] for sending finalized
  * transactions together with their ZKP variants for storage.
  *
  * This receives an [SignedTransaction] for further processing verifies it and resolves and verifies its backchain.
