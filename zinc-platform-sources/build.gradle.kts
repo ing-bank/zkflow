@@ -21,6 +21,8 @@ dependencies {
     testImplementation("com.ing.serialization.bfl:kotlinx-serialization-bfl:$kotlinxSerializationBflVersion")
 
     testImplementation(project(":test-utils"))
+
+    testImplementation(project(":notary"))
 }
 
 publishing {
