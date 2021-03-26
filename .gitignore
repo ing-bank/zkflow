@@ -13,7 +13,7 @@
 # ignore svg-inkscape dir, as it is intermediate generated stuff
 **/svg-inkscape
 
-corda/
+/corda/
 
 .DS_Store
 
