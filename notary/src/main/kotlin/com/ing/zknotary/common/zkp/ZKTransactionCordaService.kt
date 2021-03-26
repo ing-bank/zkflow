@@ -66,13 +66,11 @@ abstract class ZKTransactionCordaService(val serviceHub: ServiceHub) : ZKTransac
     }
 
     override fun validateBackchain(tx: TraversableTransaction) {
-        // TODO: group these by txhash, perhaps some are from the same tx, so this saves validations. Then call `validateBackchain(stateRef.txhash)`
-        tx.inputs.forEach { validateBackchain(it) }
-        tx.references.forEach { validateBackchain(it) }
+        (tx.inputs + tx.references).groupBy { it.txhash }.keys.forEach { validateBackchain(it) }
     }
 
-    private fun validateBackchain(stateRef: StateRef) {
-        vtxStorage.getTransaction(stateRef.txhash) ?: throw ZKTransactionResolutionException(stateRef.txhash)
+    private fun validateBackchain(txhash: SecureHash) {
+        vtxStorage.getTransaction(txhash) ?: throw ZKTransactionResolutionException(txhash)
     }
 
     private fun calculatePublicInput(tx: ZKVerifierTransaction): PublicInput {
