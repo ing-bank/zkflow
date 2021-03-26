@@ -7,10 +7,7 @@ import net.corda.core.transactions.TraversableTransaction
 import net.corda.core.transactions.WireTransaction
 
 interface ZKTransactionService : SerializeAsToken {
-    fun prove(
-        wtx: WireTransaction
-    ): ZKVerifierTransaction
-
-    fun verify(stx: SignedZKVerifierTransaction, checkSufficientSignatures: Boolean)
+    fun prove(wtx: WireTransaction): ZKVerifierTransaction
+    fun verify(svtx: SignedZKVerifierTransaction, checkSufficientSignatures: Boolean)
     fun validateBackchain(tx: TraversableTransaction)
 }

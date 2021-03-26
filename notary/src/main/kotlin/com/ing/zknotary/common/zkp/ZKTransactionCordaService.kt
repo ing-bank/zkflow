@@ -6,6 +6,7 @@ import com.ing.zknotary.common.transactions.ZKVerifierTransaction
 import com.ing.zknotary.common.transactions.collectUtxoInfos
 import com.ing.zknotary.common.transactions.zkCommandData
 import com.ing.zknotary.node.services.ServiceNames
+import com.ing.zknotary.node.services.ZKTransactionResolutionException
 import com.ing.zknotary.node.services.ZKWritableVerifierTransactionStorage
 import com.ing.zknotary.node.services.getCordaServiceFromConfig
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -36,42 +37,43 @@ abstract class ZKTransactionCordaService(val serviceHub: ServiceHub) : ZKTransac
             serviceHub.collectUtxoInfos(wtx.references)
         )
 
-        val zkService = zkServiceForTx(wtx.zkCommandData())
+        val zkService = zkServiceForCommand(wtx.zkCommandData())
         val proof = zkService.prove(witness)
 
         return ZKVerifierTransaction.fromWireTransaction(wtx, proof)
     }
 
-    abstract fun zkServiceForTx(command: ZKCommandData): ZKService
+    abstract fun zkServiceForCommand(command: ZKCommandData): ZKService
 
-    override fun verify(stx: SignedZKVerifierTransaction, checkSufficientSignatures: Boolean) {
-
-        val tx = stx.tx
+    override fun verify(svtx: SignedZKVerifierTransaction, checkSufficientSignatures: Boolean) {
+        val tx = svtx.tx
 
         // Check proof
-        zkServiceForTx(tx.zkCommandData).verify(tx.proof, calculatePublicInput(tx))
+        zkServiceForCommand(tx.zkCommandData).verify(tx.proof, calculatePublicInput(tx))
 
         // Check signatures
         if (checkSufficientSignatures) {
-            stx.verifyRequiredSignatures()
+            svtx.verifyRequiredSignatures()
         } else {
-            stx.checkSignaturesAreValid()
+            svtx.checkSignaturesAreValid()
         }
 
         // Check transaction structure
-        stx.tx.verify()
+        svtx.tx.verify()
 
         // Check backchain
-        validateBackchain(stx.tx)
+        validateBackchain(svtx.tx)
     }
 
     override fun validateBackchain(tx: TraversableTransaction) {
+        // TODO: group these by txhash, perhaps some are from the same tx, so this saves validations. Then call `validateBackchain(stateRef.txhash)`
         tx.inputs.forEach { validateBackchain(it) }
         tx.references.forEach { validateBackchain(it) }
     }
 
     private fun validateBackchain(stateRef: StateRef) {
-        val prevVtx = vtxStorage.getTransaction(stateRef.txhash) ?: error("Should not happen")
+        val prevVtx =
+            vtxStorage.getTransaction(stateRef.txhash) ?: throw ZKTransactionResolutionException(stateRef.txhash)
         // TODO: Perhaps save this recursion until the end? Depends which order we want...
         verify(prevVtx, true)
     }

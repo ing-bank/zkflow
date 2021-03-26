@@ -19,5 +19,5 @@ public open class MockZKTransactionService(serviceHub: AppServiceHub) : ZKTransa
 
     private val zkService: ZKService = MockZKService(DigestService.zinc)
 
-    override fun zkServiceForTx(command: ZKCommandData): ZKService = zkService
+    override fun zkServiceForCommand(command: ZKCommandData): ZKService = zkService
 }

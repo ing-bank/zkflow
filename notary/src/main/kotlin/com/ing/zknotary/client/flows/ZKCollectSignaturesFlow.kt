@@ -1,13 +1,11 @@
 package com.ing.zknotary.client.flows
 
 import co.paralleluniverse.fibers.Suspendable
-import com.ing.zknotary.common.flows.ZKReceiveStateAndRefFlow
-import com.ing.zknotary.common.flows.ZKSendStateAndRefFlow
+import com.ing.zknotary.common.flows.ZKReceiveTransactionProposalFlow
+import com.ing.zknotary.common.flows.ZKSendTransactionProposal
 import com.ing.zknotary.common.transactions.zkToLedgerTransaction
 import com.ing.zknotary.common.transactions.zkVerify
 import com.ing.zknotary.common.zkp.ZKTransactionService
-import net.corda.core.contracts.ContractState
-import net.corda.core.contracts.StateAndRef
 import net.corda.core.crypto.TransactionSignature
 import net.corda.core.crypto.isFulfilledBy
 import net.corda.core.crypto.toStringShort
@@ -237,18 +235,13 @@ class ZKCollectSignatureFlow(
 
     @Suspendable
     override fun call(): List<TransactionSignature> {
-
-        // Send ZKP backchain
-        session.send(stx)
+        // Send transaction proposal, including backchain and plaintext UtxoInfo for the inputs and references
+        subFlow(ZKSendTransactionProposal(session, stx))
 
         // Send the key we expect the counterparty to sign with - this is important where they may have several
         // keys to sign with, as it makes it faster for them to identify the key to sign with, and more straight forward
         // for us to check we have the expected signature returned.
         session.send(signingKeys)
-
-        // Send input and reference states (and their history) to counterpary so they can build a LedgerTransaction and verify it all.
-        val ltx = stx.tx.zkToLedgerTransaction(serviceHub)
-        subFlow(ZKSendStateAndRefFlow(session, ltx.inputs + ltx.references))
 
         return session.receive<List<TransactionSignature>>().unwrap { signatures ->
             require(signatures.size == signingKeys.size) { "Need signature for each signing key" }
@@ -301,7 +294,7 @@ class ZKCollectSignatureFlow(
  * @param otherSideSession The session which is providing you a transaction to sign.
  */
 abstract class ZKSignTransactionFlow @JvmOverloads constructor(
-    val otherSideSession: FlowSession,
+    private val otherSideSession: FlowSession,
     override val progressTracker: ProgressTracker = tracker()
 ) : FlowLogic<SignedTransaction>() {
 
@@ -319,8 +312,8 @@ abstract class ZKSignTransactionFlow @JvmOverloads constructor(
     @Suspendable
     override fun call(): SignedTransaction {
         progressTracker.currentStep = RECEIVING
-        // Receive transaction
-        val stx = otherSideSession.receive<SignedTransaction>().unwrap { it }
+        // Receive transaction, its backchain and the UtxoInfos for the inputs and references
+        val stx = subFlow(ZKReceiveTransactionProposalFlow(otherSideSession))
 
         // Receive the signing key that the party requesting the signature expects us to sign with. Having this provided
         // means we only have to check we own that one key, rather than matching all keys in the transaction against all
@@ -334,12 +327,7 @@ abstract class ZKSignTransactionFlow @JvmOverloads constructor(
         // Check that the Responder actually needs to sign.
         checkMySignaturesRequired(stx, signingKeys)
 
-        // Check signatures that are present (we don't expect to have a complete set here)
-        stx.checkSignaturesAreValid()
-
-        // Receive input and reference states to be able to build PTX and LedgerTransaction
-        subFlow<List<StateAndRef<ContractState>>>(ZKReceiveStateAndRefFlow(otherSideSession))
-
+        // Verify contract and check signatures that are present (we don't expect to have a complete set here)
         stx.zkVerify(serviceHub, checkSufficientSignatures = false)
 
         // Perform some custom verification over the transaction.
@@ -360,14 +348,6 @@ abstract class ZKSignTransactionFlow @JvmOverloads constructor(
 
         // Return the additionally signed transaction.
         return stx
-    }
-
-    @Suspendable
-    private fun checkSignatures(stx: SignedTransaction) {
-        val signed = stx.sigs.map { it.by }
-        val allSigners = stx.tx.requiredSigningKeys
-        val notSigned = allSigners - signed
-        stx.verifySignaturesExcept(notSigned)
     }
 
     /**
