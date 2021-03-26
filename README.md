@@ -55,6 +55,10 @@ To change log levels, you can make changes in the following files:
 * `config/test/log4j2.xml`. This file determines how our main logger logs. Note that it is only affecting test builds. The file will have no effect on the final jar. If you really want, you can even override this file by specifying your own with the following system property: `log4j.configurationFile`.
 * `config/test/logging-test.properties`. This file determines the log levels for parts of our application (mostly dependencies) that directly use java.util.logging logger. This for instancte determines how JUnit logs before our tests run.
 
+## Verifying test coverage
+
+To assess the test coverage, you can run `./gradlew test jacocoTestReport`. The coverage reports can be found in `build/reports/jacoco/test/html` for each module.
+
 ## Prerequisites
 
 ### Java version
@@ -179,11 +183,11 @@ One of the challenges in creating a meaningful history like this, is in keeping 
 ```
 There are two ways to prevent this. The best option is changing your development workflow to use regular rebasing on master as explained here: https://www.atlassian.com/git/tutorials/merging-vs-rebasing. Alternatively, if you really hate rebasing and especially the merge conflicts it can cause, you can also clean up your feature branch by using only one final rebase when you are ready to merge your branch into master: `git rebase -i origin/master`. Rebasing in itself already makes your feature branch history linear, but when you do it interactively, you can then `fixup` commits that you may not want to end up visibly in master, or `reword` bad commit messages.
 
-# How to release
+## How to release
 
 A release can be made by creating a tag with the pattern `release/VERSION`. This will trigger a github action that will publish the jar file to the github maven repository, with version `VERSION`.
 
-## How it works
+### How it works
 
 In the github workflow `on-tag-publish.yml`, the version is parsed from the git tag, by removing the prefix `release/`. This version is set in the environment variable `GIT_RELEASE_VERSION`, and passed to gradle using the `-Pversion=$GIT_RELEASE_VERSION`.
 

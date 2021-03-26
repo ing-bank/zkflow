@@ -98,6 +98,7 @@ subprojects {
         // Make sure the project has the necessary plugins loaded
         plugins.apply {
             apply("com.diffplug.gradle.spotless")
+            apply("jacoco")
         }
 
         // Load the necessary dependencies
