@@ -72,10 +72,7 @@ abstract class ZKTransactionCordaService(val serviceHub: ServiceHub) : ZKTransac
     }
 
     private fun validateBackchain(stateRef: StateRef) {
-        val prevVtx =
-            vtxStorage.getTransaction(stateRef.txhash) ?: throw ZKTransactionResolutionException(stateRef.txhash)
-        // TODO: Perhaps save this recursion until the end? Depends which order we want...
-        verify(prevVtx, true)
+        vtxStorage.getTransaction(stateRef.txhash) ?: throw ZKTransactionResolutionException(stateRef.txhash)
     }
 
     private fun calculatePublicInput(tx: ZKVerifierTransaction): PublicInput {
