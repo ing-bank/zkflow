@@ -21,9 +21,6 @@ cordapp {
 }
 
 dependencies {
-    val kotlinxSerializationJsonVersion: String by project
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationJsonVersion")
-
     // Corda dependencies.
     val cordaReleaseGroup: String by project
     val cordaVersion: String by project
