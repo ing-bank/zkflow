@@ -21,6 +21,9 @@ cordapp {
 }
 
 dependencies {
+    val kotlinxSerializationBflVersion: String by project
+    implementation("com.ing.serialization.bfl:kotlinx-serialization-bfl:$kotlinxSerializationBflVersion")
+
     // Corda dependencies.
     val cordaReleaseGroup: String by project
     val cordaVersion: String by project

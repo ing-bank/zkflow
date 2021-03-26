@@ -14,6 +14,9 @@ dependencies {
     val zkkryptoVersion: String by project
     testImplementation("com.ing.dlt:zkkrypto:$zkkryptoVersion")
 
+    val kotlinxSerializationBflVersion: String by project
+    testImplementation("com.ing.serialization.bfl:kotlinx-serialization-bfl:$kotlinxSerializationBflVersion")
+
     testImplementation(project(":test-utils"))
 }
 

@@ -17,6 +17,15 @@ buildscript {
                     password = System.getenv("GITHUB_TOKEN")
                 }
             }
+
+            maven {
+                name = "BinaryFixedLengthSerializationRepo"
+                url = uri("https://maven.pkg.github.com/ingzkp/kotlinx-serialization-bfl")
+                credentials {
+                    username = System.getenv("GITHUB_USERNAME")
+                    password = System.getenv("GITHUB_TOKEN")
+                }
+            }
         }
     }
 
