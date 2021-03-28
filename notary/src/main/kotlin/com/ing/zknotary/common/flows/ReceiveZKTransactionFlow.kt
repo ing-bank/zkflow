@@ -121,7 +121,7 @@ open class ZKReceiveTransactionProposalFlow constructor(
             // Verify the transaction. We don't know if we will have all sigs, since this is only a proposal, not final
             it.zkVerify(serviceHub, false)
 
-            // Verify its ZKP backchain, including proof verification
+            // Verify that we have a validated backchain stored for this transaction
             serviceHub.getCordaServiceFromConfig<ZKTransactionService>(ServiceNames.ZK_TX_SERVICE)
                 .validateBackchain(it.tx)
 

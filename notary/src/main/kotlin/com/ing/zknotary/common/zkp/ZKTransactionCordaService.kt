@@ -14,6 +14,7 @@ import net.corda.core.contracts.StateRef
 import net.corda.core.crypto.SecureHash
 import net.corda.core.node.ServiceHub
 import net.corda.core.serialization.SingletonSerializeAsToken
+import net.corda.core.transactions.TraversableTransaction
 import net.corda.core.transactions.WireTransaction
 
 abstract class ZKTransactionCordaService(val serviceHub: ServiceHub) : ZKTransactionService,
@@ -47,6 +48,9 @@ abstract class ZKTransactionCordaService(val serviceHub: ServiceHub) : ZKTransac
     override fun verify(svtx: SignedZKVerifierTransaction, checkSufficientSignatures: Boolean) {
         val vtx = svtx.tx
 
+        // Check transaction structure first, so we fail fast
+        vtx.verify()
+
         // Check proof
         zkServiceForCommand(vtx.zkCommandData).verify(vtx.proof, calculatePublicInput(vtx))
 
@@ -56,16 +60,15 @@ abstract class ZKTransactionCordaService(val serviceHub: ServiceHub) : ZKTransac
         } else {
             svtx.checkSignaturesAreValid()
         }
-
-        // Check transaction structure
-        vtx.verify()
     }
 
-    private fun validateBackchain(txhash: SecureHash) {
-        vtxStorage.getTransaction(txhash) ?: throw ZKTransactionResolutionException(txhash)
+    override fun validateBackchain(tx: TraversableTransaction) {
+        (tx.inputs + tx.references).groupBy { it.txhash }.keys.forEach {
+            vtxStorage.getTransaction(it) ?: throw ZKTransactionResolutionException(it)
+        }
     }
 
-    private fun calculatePublicInput(tx: ZKVerifierTransaction): PublicInput {
+    private fun calculatePublicInput(tx: TraversableTransaction): PublicInput {
         // Fetch the UTXO hashes from the svtx's pointed to by the inputs and references.
         // This confirms that we have a validated backchain stored for them.
         val inputHashes = getUtxoHashes(tx.inputs)
