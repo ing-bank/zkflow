@@ -59,7 +59,6 @@ open class ZKReceiveNotarisedTransactionPayloadFlow @JvmOverloads constructor(
         } else {
             logger.trace { "Receiving a transaction (but without checking the signatures) from ${otherSideSession.counterparty}" }
         }
-        val zkService = serviceHub.getCordaServiceFromConfig<ZKTransactionService>(ServiceNames.ZK_TX_SERVICE)
         val notarised = otherSideSession.receive<NotarisedTransactionPayload>()
             .unwrap { notarised ->
 
@@ -70,7 +69,7 @@ open class ZKReceiveNotarisedTransactionPayloadFlow @JvmOverloads constructor(
                 logger.info("Transaction dependencies resolution completed.")
 
                 try {
-                    zkService.verify(notarised.svtx, checkSufficientSignatures)
+                    notarised.verify(serviceHub, checkSufficientSignatures)
                     notarised
                 } catch (e: Exception) {
                     logger.warn("Transaction verification failed.")
