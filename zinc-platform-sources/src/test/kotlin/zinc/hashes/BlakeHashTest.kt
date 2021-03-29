@@ -41,13 +41,14 @@ class BlakeHashTest {
         val witness = ByteBuffer.allocate(4).putInt(value).array()
         val expected = DigestService.blake2s256.hash(witness).bytes
 
-        val preimage = witness.map { "\"${it.asUnsigned()}\"" }
-        val publicData = expected.map { "${it.asUnsigned()}" }
+        val witnessJson = "{\"preimage\": ${witness.map { "\"${it.asUnsigned()}\"" }}}"
+        val publicData = expected.map { it.asUnsigned().toString() }
+        val publicDataJson = Json.encodeToString(publicData)
 
-        val actual = zincZKService.run("{\"preimage\": $preimage}".toByteArray(), "$publicData".toByteArray())
-        actual shouldBe Json.encodeToString(publicData)
+        val actual = zincZKService.run(witnessJson, publicDataJson)
+        actual shouldBe publicDataJson
 
-        val proof = zincZKService.prove("{\"preimage\": $preimage}".toByteArray())
-        zincZKService.verify(proof, "$publicData".toByteArray())
+        val proof = zincZKService.prove(witnessJson)
+        zincZKService.verify(proof, publicDataJson)
     }
 }

@@ -112,17 +112,17 @@ class ZincZKService(
 
     @ExperimentalSerializationApi
     fun run(witness: Witness, publicInput: PublicInput): String {
-        val witnessJson = Json.encodeToString(WitnessSerializer, witness).toByteArray()
-        val publicInputJson = Json.encodeToString(PublicInputSerializer, publicInput).toByteArray()
+        val witnessJson = Json.encodeToString(WitnessSerializer, witness)
+        val publicInputJson = Json.encodeToString(PublicInputSerializer, publicInput)
         return run(witnessJson, publicInputJson)
     }
 
-    fun run(witness: ByteArray, publicInput: ByteArray): String {
+    fun run(witness: String, publicInputJson: String): String {
         val witnessFile = createTempFile("zkp", null)
-        witnessFile.writeBytes(witness)
+        witnessFile.writeText(witness)
 
         val publicDataFile = createTempFile("zkp", null)
-        publicDataFile.writeBytes(publicInput)
+        publicDataFile.writeText(publicInputJson)
 
         try {
             return completeZincCommand(
@@ -140,13 +140,12 @@ class ZincZKService(
     }
 
     override fun prove(witness: Witness): ByteArray {
-        val witnessJson = Json.encodeToString(WitnessSerializer, witness).toByteArray()
+        val witnessJson = Json.encodeToString(WitnessSerializer, witness)
         return prove(witnessJson)
     }
 
-    override fun verify(proof: ByteArray, publicInput: PublicInput) {
-        val publicInputJson = Json.encodeToString(PublicInputSerializer, publicInput).toByteArray()
-        return verify(proof, publicInputJson)
+    fun prove(witnessJson: String): ByteArray {
+        return prove(witnessJson.toByteArray())
     }
 
     fun prove(witness: ByteArray): ByteArray {
@@ -167,6 +166,15 @@ class ZincZKService(
         } finally {
             publicData.delete()
         }
+    }
+
+    override fun verify(proof: ByteArray, publicInput: PublicInput) {
+        val publicInputJson = Json.encodeToString(PublicInputSerializer, publicInput)
+        return verify(proof, publicInputJson)
+    }
+
+    fun verify(proof: ByteArray, publicInputJson: String) {
+        return verify(proof, publicInputJson.toByteArray())
     }
 
     fun verify(proof: ByteArray, publicInput: ByteArray) {
