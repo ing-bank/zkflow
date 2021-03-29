@@ -117,10 +117,6 @@ subprojects {
             add("implementation", "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlinVersion")
             add("implementation", "org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
 
-            val kotlinxSerializationVersion: String by project
-            implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:$kotlinxSerializationVersion")
-            implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
-
             // Testing
             val junit5Version: String by project
             val kotestVersion: String by project
