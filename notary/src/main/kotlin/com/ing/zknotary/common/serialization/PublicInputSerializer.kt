@@ -1,7 +1,6 @@
 package com.ing.zknotary.common.serialization
 
 import com.ing.zknotary.common.zkp.PublicInput
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -10,7 +9,6 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import net.corda.core.crypto.SecureHash
 
-@ExperimentalSerializationApi
 object PublicInputSerializer : KSerializer<PublicInput> {
     @Serializable
     @SerialName("PublicInput")

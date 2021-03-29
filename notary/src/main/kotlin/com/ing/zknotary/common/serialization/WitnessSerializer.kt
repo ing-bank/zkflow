@@ -1,7 +1,6 @@
 package com.ing.zknotary.common.serialization
 
 import com.ing.zknotary.common.zkp.Witness
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -11,7 +10,6 @@ import kotlinx.serialization.encoding.Encoder
 import net.corda.core.contracts.PrivacySalt
 import net.corda.core.crypto.SecureHash
 
-@ExperimentalSerializationApi
 object WitnessSerializer : KSerializer<Witness> {
     @Serializable
     @SerialName("Witness")

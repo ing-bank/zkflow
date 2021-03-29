@@ -39,8 +39,8 @@ class BigDecimalEqualsTest {
         val input = toWitness(left, right)
         val expected = "\"${if (left == right) 0 else 1}\""
 
-        zincZKService.proveTimed(input.toByteArray(), log).let {
-            zincZKService.verifyTimed(it, expected.toByteArray(), log)
+        zincZKService.proveTimed(input, log).let {
+            zincZKService.verifyTimed(it, expected, log)
         }
     }
 
@@ -52,8 +52,8 @@ class BigDecimalEqualsTest {
         val input = toWitness(left, right)
         val expected = "\"${if (left == right) 0 else 1}\""
 
-        zincZKService.proveTimed(input.toByteArray(), log).let {
-            zincZKService.verifyTimed(it, expected.toByteArray(), log)
+        zincZKService.proveTimed(input, log).let {
+            zincZKService.verifyTimed(it, expected, log)
         }
     }
 
@@ -65,8 +65,8 @@ class BigDecimalEqualsTest {
         val input = toWitness(left, right)
         val expected = "\"${if (left == right) 0 else 1}\""
 
-        zincZKService.proveTimed(input.toByteArray(), log).let {
-            zincZKService.verifyTimed(it, expected.toByteArray(), log)
+        zincZKService.proveTimed(input, log).let {
+            zincZKService.verifyTimed(it, expected, log)
         }
     }
 
@@ -78,8 +78,8 @@ class BigDecimalEqualsTest {
         val input = toWitness(left, right)
         val expected = "\"${if (left == right) 0 else 1}\""
 
-        zincZKService.proveTimed(input.toByteArray(), log).let {
-            zincZKService.verifyTimed(it, expected.toByteArray(), log)
+        zincZKService.proveTimed(input, log).let {
+            zincZKService.verifyTimed(it, expected, log)
         }
     }
 }

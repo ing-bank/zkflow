@@ -9,7 +9,6 @@ import com.ing.zknotary.node.services.ServiceNames
 import com.ing.zknotary.node.services.ZKTransactionResolutionException
 import com.ing.zknotary.node.services.ZKWritableVerifierTransactionStorage
 import com.ing.zknotary.node.services.getCordaServiceFromConfig
-import kotlinx.serialization.ExperimentalSerializationApi
 import net.corda.core.contracts.StateRef
 import net.corda.core.crypto.SecureHash
 import net.corda.core.node.ServiceHub
@@ -26,7 +25,6 @@ abstract class ZKTransactionCordaService(val serviceHub: ServiceHub) : ZKTransac
         ) as ZKWritableVerifierTransactionStorage
     }
 
-    @ExperimentalSerializationApi
     override fun prove(
         wtx: WireTransaction
     ): ZKVerifierTransaction {

@@ -1,6 +1,8 @@
 package com.ing.zknotary.common.zkp
 
-import net.corda.core.serialization.serialize
+import com.ing.zknotary.common.serialization.PublicInputSerializer
+import com.ing.zknotary.common.serialization.WitnessSerializer
+import kotlinx.serialization.json.Json
 import java.io.File
 import java.io.File.createTempFile
 import java.io.IOException
@@ -30,6 +32,7 @@ class ZincZKService(
         const val BUILD = "zargo build"
         const val SETUP = "zargo setup"
         const val PROVE = "zargo prove"
+        const val RUN = "zargo run"
         const val VERIFY = "zargo verify"
 
         /**
@@ -105,24 +108,42 @@ class ZincZKService(
         require(File(zkSetup.provingKeyPath).exists()) { "Proving key not found at ${zkSetup.provingKeyPath}." }
     }
 
+    fun run(witness: Witness, publicInput: PublicInput): String {
+        val witnessJson = Json.encodeToString(WitnessSerializer, witness)
+        val publicInputJson = Json.encodeToString(PublicInputSerializer, publicInput)
+        return run(witnessJson, publicInputJson)
+    }
+
+    fun run(witness: String, publicInputJson: String): String {
+        val witnessFile = createTempFile("zkp", null)
+        witnessFile.writeText(witness)
+
+        val publicDataFile = createTempFile("zkp", null)
+        publicDataFile.writeText(publicInputJson)
+
+        try {
+            return completeZincCommand(
+                "$RUN --circuit $compiledCircuitPath --manifest-path $circuitManifestPath " +
+                    "--public-data ${publicDataFile.absolutePath} --witness ${witnessFile.absolutePath}",
+                provingTimeout
+            ).replace(" ", "")
+                .replace("\n", "")
+        } catch (e: Exception) {
+            throw ZKRunException("Failed to run circuit. Cause: $e\n")
+        } finally {
+            witnessFile.delete()
+            publicDataFile.delete()
+        }
+    }
+
     override fun prove(witness: Witness): ByteArray {
-        // It is ok to hardcode the ZincSerializationFactory here, as it is the ONLY way
-        // this should be serialized in here. Makes no sense to make it injectable.
-        val witnessJson = witness.serialize(TODO()).bytes
+        val witnessJson = Json.encodeToString(WitnessSerializer, witness)
         return prove(witnessJson)
     }
 
-    override fun verify(proof: ByteArray, publicInput: PublicInput) {
-        // It is ok to hardcode the ZincSerializationFactory here, as it is the ONLY way
-        // this should be serialized in here. Makes no sense to make it injectable.
-        val publicInputJson = publicInput.serialize(TODO()).bytes
-        return verify(proof, publicInputJson)
-    }
-
-    fun prove(witness: ByteArray): ByteArray {
-
+    fun prove(witnessJson: String): ByteArray {
         val witnessFile = createTempFile("zkp", null)
-        witnessFile.writeBytes(witness)
+        witnessFile.writeText(witnessJson)
 
         val publicData = createTempFile("zkp", null)
 
@@ -139,13 +160,17 @@ class ZincZKService(
         }
     }
 
-    fun verify(proof: ByteArray, publicInput: ByteArray) {
+    override fun verify(proof: ByteArray, publicInput: PublicInput) {
+        val publicInputJson = Json.encodeToString(PublicInputSerializer, publicInput)
+        return verify(proof, publicInputJson)
+    }
 
+    fun verify(proof: ByteArray, publicInputJson: String) {
         val proofFile = createTempFile("zkp", null)
         proofFile.writeBytes(proof)
 
         val publicDataFile = createTempFile("zkp", null)
-        publicDataFile.writeBytes(publicInput)
+        publicDataFile.writeText(publicInputJson)
 
         try {
             completeZincCommand(

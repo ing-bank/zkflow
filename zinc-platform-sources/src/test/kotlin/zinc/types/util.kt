@@ -1,6 +1,8 @@
 package zinc.types
 
 import com.ing.dlt.zkkrypto.util.asUnsigned
+import com.ing.zknotary.common.zkp.PublicInput
+import com.ing.zknotary.common.zkp.Witness
 import com.ing.zknotary.common.zkp.ZincZKService
 import net.corda.core.contracts.Amount
 import org.bouncycastle.jce.provider.BouncyCastleProvider
@@ -65,7 +67,7 @@ fun ZincZKService.setupTimed(log: Logger) {
 }
 
 @ExperimentalTime
-fun ZincZKService.proveTimed(witness: ByteArray, log: Logger): ByteArray {
+fun ZincZKService.proveTimed(witness: Witness, log: Logger): ByteArray {
     var proof: ByteArray
     val time = measureTime {
         proof = this.prove(witness)
@@ -75,7 +77,25 @@ fun ZincZKService.proveTimed(witness: ByteArray, log: Logger): ByteArray {
 }
 
 @ExperimentalTime
-fun ZincZKService.verifyTimed(proof: ByteArray, publicInput: ByteArray, log: Logger) {
+fun ZincZKService.proveTimed(witnessJson: String, log: Logger): ByteArray {
+    var proof: ByteArray
+    val time = measureTime {
+        proof = this.prove(witnessJson)
+    }
+    log.debug("[prove] $time")
+    return proof
+}
+
+@ExperimentalTime
+fun ZincZKService.verifyTimed(proof: ByteArray, publicInputJson: String, log: Logger) {
+    val time = measureTime {
+        this.verify(proof, publicInputJson)
+    }
+    log.debug("[verify] $time")
+}
+
+@ExperimentalTime
+fun ZincZKService.verifyTimed(proof: ByteArray, publicInput: PublicInput, log: Logger) {
     val time = measureTime {
         this.verify(proof, publicInput)
     }

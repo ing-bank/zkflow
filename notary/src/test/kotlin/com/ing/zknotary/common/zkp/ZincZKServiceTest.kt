@@ -3,12 +3,10 @@ package com.ing.zknotary.common.zkp
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
 import java.io.File
 import java.time.Duration
 import kotlin.test.assertFailsWith
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ZincZKServiceTest {
     private val circuitFolder = javaClass.getResource("/ZincZKService").path
     private val zincZKService = ZincZKService(
@@ -39,8 +37,8 @@ class ZincZKServiceTest {
 
     @Test
     fun `service can prove and verify`() {
-        val proof = zincZKService.prove("{\"secret\": \"2\"}".toByteArray())
-        val correctPublicData = "\"4\"".toByteArray()
+        val proof = zincZKService.prove("{\"secret\": \"2\"}")
+        val correctPublicData = "\"4\""
 
         zincZKService.verify(proof, correctPublicData)
     }
@@ -48,14 +46,14 @@ class ZincZKServiceTest {
     @Test
     fun `proving fails on malformed secret data`() {
         assertFailsWith(ZKProvingException::class) {
-            zincZKService.prove("{\"secre\": \"2\"}".toByteArray())
+            zincZKService.prove("{\"secre\": \"2\"}")
         }
     }
 
     @Test
     fun `verification fails on public data mismatch`() {
-        val proof = zincZKService.prove("{\"secret\": \"2\"}".toByteArray())
-        val wrongPublicData = "\"5\"".toByteArray()
+        val proof = zincZKService.prove("{\"secret\": \"2\"}")
+        val wrongPublicData = "\"5\""
 
         assertFailsWith(ZKVerificationException::class) {
             zincZKService.verify(proof, wrongPublicData)
@@ -75,8 +73,8 @@ class ZincZKServiceTest {
 
         // not executing setup, expecting setup artifacts to be in right place already
 
-        val proof = newZincZKService.prove("{\"secret\": \"2\"}".toByteArray())
-        val correctPublicData = "\"4\"".toByteArray()
+        val proof = newZincZKService.prove("{\"secret\": \"2\"}")
+        val correctPublicData = "\"4\""
 
         newZincZKService.verify(proof, correctPublicData)
     }

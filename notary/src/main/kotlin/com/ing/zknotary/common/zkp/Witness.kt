@@ -2,7 +2,6 @@ package com.ing.zknotary.common.zkp
 
 import com.ing.zknotary.common.serialization.WitnessSerializer
 import com.ing.zknotary.common.transactions.UtxoInfo
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.PrivacySalt
@@ -35,7 +34,7 @@ import net.corda.core.transactions.WireTransaction
  * On the Kotlin side, serialization and deserialization sizes and unsizes respectively, invisibly for the user.
  * On the Zinc side, we never serialize. On deserialization, unsizing does not happen.
  */
-@ExperimentalSerializationApi
+
 @CordaSerializable
 @Serializable(with = WitnessSerializer::class)
 @Suppress("LongParameterList")

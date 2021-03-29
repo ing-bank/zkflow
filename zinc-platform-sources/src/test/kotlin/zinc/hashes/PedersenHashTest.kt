@@ -38,7 +38,7 @@ class PedersenHashTest {
         val preimage = witness.map { "\"${it.asUnsigned()}\"" }
         val publicData = expected.map { "\"${it.asUnsigned()}\"" }
 
-        val proof = zincZKService.prove("{\"preimage\": $preimage}".toByteArray())
-        zincZKService.verify(proof, "$publicData".toByteArray())
+        val proof = zincZKService.prove("{\"preimage\": $preimage}")
+        zincZKService.verify(proof, "$publicData")
     }
 }
