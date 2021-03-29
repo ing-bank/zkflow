@@ -1,6 +1,7 @@
 package com.ing.zknotary.common.flows
 
 import co.paralleluniverse.fibers.Suspendable
+import com.ing.zknotary.common.transactions.NotarisedTransactionPayload
 import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
 import com.ing.zknotary.common.transactions.UtxoInfo
 import com.ing.zknotary.common.transactions.collectUtxoInfos
@@ -10,29 +11,40 @@ import com.ing.zknotary.node.services.getCordaServiceFromConfig
 import com.ing.zknotary.notary.ZKNotarisationPayload
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.crypto.SecureHash
-import net.corda.core.flows.DataVendingFlow
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
-import net.corda.core.flows.ReceiveStateAndRefFlow
 import net.corda.core.internal.NetworkParametersStorage
 import net.corda.core.internal.RetrieveAnyTransactionPayload
 import net.corda.core.internal.readFully
 import net.corda.core.serialization.SerializedBytes
 import net.corda.core.serialization.serialize
+import net.corda.core.transactions.SignedTransaction
+import net.corda.core.transactions.TraversableTransaction
 import net.corda.core.utilities.trace
 import net.corda.core.utilities.unwrap
 
 /**
- * The [SendTransactionFlow] should be used to send a transaction to another peer that wishes to verify that transaction's
- * integrity by resolving and checking the dependencies as well. The other side should invoke [ReceiveTransactionFlow] at
+ * The [ZKSendTransactionProposal] should be used to send a transaction to another peer that wishes to verify that transaction's
+ * integrity by resolving and checking the dependencies as well. The other side should invoke [ZKReceiveTransactionProposalFlow] at
  * the right point in the conversation to receive the sent transaction and perform the resolution back-and-forth required
  * to check the dependencies and download any missing attachments.
  *
  * @param otherSide the target party.
- * @param svtx the [SignedTransaction] being sent to the [otherSideSession].
+ * @param stx the [SignedTransaction] being sent to the [otherSideSession].
  */
-open class SendZKTransactionFlow(otherSide: FlowSession, svtx: SignedZKVerifierTransaction) :
-    ZKDataVendingFlow(otherSide, svtx)
+open class ZKSendTransactionProposal(private val otherSideSession: FlowSession, private val stx: SignedTransaction) :
+    FlowLogic<Void?>() {
+    @Suspendable
+    override fun call(): Void? {
+        otherSideSession.send(stx)
+        val utxoInfos = serviceHub.collectUtxoInfos(stx.inputs + stx.references)
+        subFlow(SendUtxoInfosFlow(otherSideSession, utxoInfos))
+        return null
+    }
+}
+
+open class SendNotarisedTransactionPayloadFlow(otherSide: FlowSession, notarised: NotarisedTransactionPayload) :
+    ZKDataVendingFlow(otherSide, notarised)
 
 open class SendUtxoInfosFlow(otherSide: FlowSession, utxoInfos: List<UtxoInfo>) :
     ZKDataVendingFlow(otherSide, utxoInfos)
@@ -57,18 +69,6 @@ class ZKSendStateAndRefFlow(
         return null
     }
 }
-
-/**
- * The [SendStateAndRefFlow] should be used to send a list of input [StateAndRef] to another peer that wishes to verify
- * the input's integrity by resolving and checking the dependencies as well. The other side should invoke [ReceiveStateAndRefFlow]
- * at the right point in the conversation to receive the input state and ref and perform the resolution back-and-forth
- * required to check the dependencies.
- *
- * @param otherSideSession the target session.
- * @param stateAndRefs the list of [StateAndRef] being sent to the [otherSideSession].
- */
-open class SendStateAndRefFlow(otherSideSession: FlowSession, stateAndRefs: List<StateAndRef<*>>) :
-    DataVendingFlow(otherSideSession, stateAndRefs)
 
 open class ZKDataVendingFlow(val otherSideSession: FlowSession, val payload: Any) : FlowLogic<Void?>() {
 
@@ -100,21 +100,27 @@ open class ZKDataVendingFlow(val otherSideSession: FlowSession, val payload: Any
         // Each time an authorised transaction is requested, the input transactions are added to the list.
         // Once a transaction has been requested, it will be removed from the authorised list. This means that it is a protocol violation to request a transaction twice.
         val authorisedTransactions = when (payload) {
-            is ZKNotarisationPayload -> TransactionAuthorisationFilter().addAuthorised(getInputTransactions(payload.transaction))
-            is SignedZKVerifierTransaction -> TransactionAuthorisationFilter().addAuthorised(
+            is ZKNotarisationPayload -> TransactionAuthorisationFilter().addAuthorised(getInputTransactions(payload.transaction.tx))
+//            is SignedTransaction -> TransactionAuthorisationFilter().addAuthorised(getInputTransactions(payload.tx))
+            is NotarisedTransactionPayload -> TransactionAuthorisationFilter().addAuthorised(
                 getInputTransactions(
-                    payload
+                    payload.stx.tx
                 )
             )
+//            is SignedZKVerifierTransaction -> TransactionAuthorisationFilter().addAuthorised(
+//                getInputTransactions(
+//                    payload.tx
+//                )
+//            )
             is RetrieveAnyTransactionPayload -> TransactionAuthorisationFilter(acceptAll = true)
             is List<*> -> TransactionAuthorisationFilter().addAuthorised(
                 payload.flatMap { payloadItem ->
                     when (payloadItem) {
                         is StateAndRef<*> -> {
-                            getInputTransactions(zkStorage.getTransaction(payloadItem.ref.txhash)!!) + payloadItem.ref.txhash
+                            getInputTransactions(zkStorage.getTransaction(payloadItem.ref.txhash)!!.tx) + payloadItem.ref.txhash
                         }
                         is UtxoInfo -> {
-                            getInputTransactions(zkStorage.getTransaction(payloadItem.stateRef.txhash)!!) + payloadItem.stateRef.txhash
+                            getInputTransactions(zkStorage.getTransaction(payloadItem.stateRef.txhash)!!.tx) + payloadItem.stateRef.txhash
                         }
                         else -> {
                             throw IllegalArgumentException("Unknown payload type: ${payloadItem!!::class.java} ?")
@@ -161,7 +167,7 @@ open class ZKDataVendingFlow(val otherSideSession: FlowSession, val payload: Any
                     val tx = zkStorage.getTransaction(txId)
                         ?: throw FetchZKDataFlow.HashNotFound(txId)
                     authorisedTransactions.removeAuthorised(tx.id)
-                    authorisedTransactions.addAuthorised(getInputTransactions(tx))
+                    authorisedTransactions.addAuthorised(getInputTransactions(tx.tx))
                     val serialized = tx.serialize()
                     totalByteCount += serialized.size
                     numSent++
@@ -192,7 +198,7 @@ open class ZKDataVendingFlow(val otherSideSession: FlowSession, val payload: Any
                             // Always include at least one item else if the max is set too low nothing will ever get returned.
                             // Splitting items will be a separate Jira if need be
                             authorisedTransactions.removeAuthorised(tx.id)
-                            authorisedTransactions.addAuthorised(getInputTransactions(tx))
+                            authorisedTransactions.addAuthorised(getInputTransactions(tx.tx))
                             logger.trace { "Adding item to return set: '$txId'" }
                         } else {
                             logger.trace { "Fetch block size EXCEEDED at '$txId'." }
@@ -236,8 +242,8 @@ open class ZKDataVendingFlow(val otherSideSession: FlowSession, val payload: Any
     }
 
     @Suspendable
-    private fun getInputTransactions(tx: SignedZKVerifierTransaction): Set<SecureHash> {
-        return tx.tx.inputs.map { it.txhash }.toSet() + tx.tx.references.map { it.txhash }.toSet()
+    private fun getInputTransactions(tx: TraversableTransaction): Set<SecureHash> {
+        return tx.inputs.map { it.txhash }.toSet() + tx.references.map { it.txhash }.toSet()
     }
 
     private class TransactionAuthorisationFilter(

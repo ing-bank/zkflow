@@ -1,18 +1,11 @@
 package com.ing.zknotary.client.flows
 
 import co.paralleluniverse.fibers.Suspendable
-import com.ing.zknotary.common.flows.ReceiveZKTransactionFlow
-import com.ing.zknotary.common.flows.SendZKTransactionFlow
-import com.ing.zknotary.common.flows.ZKReceiveStateAndRefFlow
-import com.ing.zknotary.common.flows.ZKSendStateAndRefFlow
-import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
+import com.ing.zknotary.common.flows.ZKReceiveTransactionProposalFlow
+import com.ing.zknotary.common.flows.ZKSendTransactionProposal
 import com.ing.zknotary.common.transactions.zkToLedgerTransaction
+import com.ing.zknotary.common.transactions.zkVerify
 import com.ing.zknotary.common.zkp.ZKTransactionService
-import com.ing.zknotary.node.services.ServiceNames
-import com.ing.zknotary.node.services.getCordaServiceFromConfig
-import net.corda.core.contracts.ContractState
-import net.corda.core.contracts.StateAndRef
-import net.corda.core.contracts.StateRef
 import net.corda.core.crypto.TransactionSignature
 import net.corda.core.crypto.isFulfilledBy
 import net.corda.core.crypto.toStringShort
@@ -24,7 +17,6 @@ import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.Party
 import net.corda.core.identity.groupPublicKeysByWellKnownParty
 import net.corda.core.node.ServiceHub
-import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.WireTransaction
 import net.corda.core.utilities.ProgressTracker
@@ -83,18 +75,16 @@ import java.security.PublicKey
 // TODO: AbstractStateReplacementFlow needs updating to use this flow.
 class ZKCollectSignaturesFlow @JvmOverloads constructor(
     val stx: SignedTransaction,
-    val vtx: SignedZKVerifierTransaction,
     val sessionsToCollectFrom: Collection<FlowSession>,
     val myOptionalKeys: Iterable<PublicKey>?,
     override val progressTracker: ProgressTracker = tracker()
-) : FlowLogic<SignedZKVerifierTransaction>() {
+) : FlowLogic<SignedTransaction>() {
     @JvmOverloads
     constructor(
         partiallySignedTx: SignedTransaction,
-        partiallySignedVtx: SignedZKVerifierTransaction,
         sessionsToCollectFrom: Collection<FlowSession>,
         progressTracker: ProgressTracker = tracker()
-    ) : this(partiallySignedTx, partiallySignedVtx, sessionsToCollectFrom, null, progressTracker)
+    ) : this(partiallySignedTx, sessionsToCollectFrom, null, progressTracker)
 
     companion object {
         object COLLECTING : ProgressTracker.Step("Collecting signatures from counterparties.")
@@ -108,35 +98,32 @@ class ZKCollectSignaturesFlow @JvmOverloads constructor(
 
     @Suppress("LongMethod")
     @Suspendable
-    override fun call(): SignedZKVerifierTransaction {
+    override fun call(): SignedTransaction {
         // Check the signatures which have already been provided and that the transaction is valid.
         // Usually just the Initiator and possibly an oracle would have signed at this point.
         val myKeys: Iterable<PublicKey> = myOptionalKeys ?: listOf(ourIdentity.owningKey)
-        val signed = vtx.sigs.map { it.by }
-        val notSigned = (vtx.tx.requiredSigningKeys - signed).toSet()
+        val signed = stx.sigs.map { it.by }
+        val notSigned = (stx.tx.requiredSigningKeys - signed).toSet()
 
         // One of the signatures collected so far MUST be from the initiator of this flow.
-        require(vtx.sigs.any { it.by in myKeys }) {
+        require(stx.sigs.any { it.by in myKeys }) {
             "The Initiator of CollectSignaturesFlow must have signed the transaction."
         }
 
         // The signatures must be valid
-        vtx.verifySignaturesExcept(notSigned)
+        stx.verifySignaturesExcept(notSigned)
         // and the transaction must be valid.
         stx.tx.zkToLedgerTransaction(serviceHub).verify()
-        // and ZKP transaction also should be valid
-        val zkService: ZKTransactionService = serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_TX_SERVICE)
-        zkService.verify(vtx, checkSufficientSignatures = false)
 
         // Determine who still needs to sign.
         progressTracker.currentStep = COLLECTING
-        val notaryKey = vtx.tx.notary?.owningKey
+        val notaryKey = stx.tx.notary?.owningKey
         // If present, we need to exclude the notary's PublicKey as the notary signature is collected separately with
         // the FinalityFlow.
         val unsigned = if (notaryKey != null) notSigned - notaryKey else notSigned
 
         // If the unsigned counterparties list is empty then we don't need to collect any more signatures here.
-        if (unsigned.isEmpty()) return vtx
+        if (unsigned.isEmpty()) return stx
 
         val wellKnownSessions = sessionsToCollectFrom.filter { it.destination is Party }
         val anonymousSessions = sessionsToCollectFrom.filter { it.destination is AnonymousParty }
@@ -203,7 +190,6 @@ class ZKCollectSignaturesFlow @JvmOverloads constructor(
             subFlow(
                 ZKCollectSignatureFlow(
                     stx,
-                    vtx,
                     flowSession,
                     (flowSession.destination as AbstractParty).owningKey
                 )
@@ -212,20 +198,20 @@ class ZKCollectSignaturesFlow @JvmOverloads constructor(
 
         val sigsFromWellKnownSessions = wellKnownSessions.flatMap { flowSession ->
             val keysToAskThisSessionFor = groupedByPartyKeys[flowSession.counterparty] ?: emptyList()
-            subFlow(ZKCollectSignatureFlow(stx, vtx, flowSession, keysToAskThisSessionFor))
+            subFlow(ZKCollectSignatureFlow(stx, flowSession, keysToAskThisSessionFor))
         }
 
-        val svtx = vtx + sigsFromNotWellKnownSessions + sigsFromWellKnownSessions
+        val fullySignedTx = stx + sigsFromNotWellKnownSessions + sigsFromWellKnownSessions
 
         // Verify all but the notary's signature if the transaction requires a notary, otherwise verify all signatures.
         progressTracker.currentStep = VERIFYING
         if (notaryKey != null) {
-            svtx.sigs.forEach { if (it.by != notaryKey) it.verify(svtx.id) }
+            fullySignedTx.sigs.forEach { if (it.by != notaryKey) it.verify(fullySignedTx.id) }
         } else {
-            svtx.sigs.forEach { it.verify(svtx.id) }
+            fullySignedTx.sigs.forEach { it.verify(fullySignedTx.id) }
         }
 
-        return svtx
+        return fullySignedTx
     }
 }
 
@@ -241,34 +227,21 @@ class ZKCollectSignaturesFlow @JvmOverloads constructor(
 @Suspendable
 class ZKCollectSignatureFlow(
     val stx: SignedTransaction,
-    val vtx: SignedZKVerifierTransaction,
     val session: FlowSession,
     val signingKeys: List<PublicKey>
 ) : FlowLogic<List<TransactionSignature>>() {
-    constructor(stx: SignedTransaction, partiallySignedVtx: SignedZKVerifierTransaction, session: FlowSession, signingKey: PublicKey) :
-        this(stx, partiallySignedVtx, session, listOf(signingKey))
+    constructor(stx: SignedTransaction, session: FlowSession, signingKey: PublicKey) :
+        this(stx, session, listOf(signingKey))
 
     @Suspendable
     override fun call(): List<TransactionSignature> {
-        // SendTransactionFlow allows counterparty to access our data to resolve the transaction.
-        session.send(stx)
+        // Send transaction proposal, including backchain and plaintext UtxoInfo for the inputs and references
+        subFlow(ZKSendTransactionProposal(session, stx))
+
         // Send the key we expect the counterparty to sign with - this is important where they may have several
         // keys to sign with, as it makes it faster for them to identify the key to sign with, and more straight forward
         // for us to check we have the expected signature returned.
         session.send(signingKeys)
-
-        // Send input and reference states to be able to build PTX and LedgerTransaction
-        // Refs should refer to ZKP transaction
-//        session.send(queryStates(stx.inputs))
-//        session.send(queryStates(stx.references))
-
-        val ltx = stx.tx.zkToLedgerTransaction(serviceHub)
-
-        subFlow(ZKSendStateAndRefFlow(session, ltx.inputs + ltx.references))
-
-        // Send ZKP backchain
-        // TODO: do we still need to do this after ZKSendStateAndRefFlow?
-        subFlow(SendZKTransactionFlow(session, vtx))
 
         return session.receive<List<TransactionSignature>>().unwrap { signatures ->
             require(signatures.size == signingKeys.size) { "Need signature for each signing key" }
@@ -277,12 +250,6 @@ class ZKCollectSignatureFlow(
             }
             signatures
         }
-    }
-
-    private fun queryStates(refs: List<StateRef>): List<StateAndRef<*>> {
-        val criteria = QueryCriteria.VaultQueryCriteria().withStateRefs(refs)
-        // TODO consider paging
-        return serviceHub.vaultService.queryBy(ContractState::class.java, criteria).states
     }
 }
 // DOCEND 1
@@ -327,7 +294,7 @@ class ZKCollectSignatureFlow(
  * @param otherSideSession The session which is providing you a transaction to sign.
  */
 abstract class ZKSignTransactionFlow @JvmOverloads constructor(
-    val otherSideSession: FlowSession,
+    private val otherSideSession: FlowSession,
     override val progressTracker: ProgressTracker = tracker()
 ) : FlowLogic<SignedTransaction>() {
 
@@ -345,8 +312,8 @@ abstract class ZKSignTransactionFlow @JvmOverloads constructor(
     @Suspendable
     override fun call(): SignedTransaction {
         progressTracker.currentStep = RECEIVING
-        // Receive transaction
-        val stx = otherSideSession.receive<SignedTransaction>().unwrap { it }
+        // Receive transaction, its backchain and the UtxoInfos for the inputs and references
+        val stx = subFlow(ZKReceiveTransactionProposalFlow(otherSideSession))
 
         // Receive the signing key that the party requesting the signature expects us to sign with. Having this provided
         // means we only have to check we own that one key, rather than matching all keys in the transaction against all
@@ -357,35 +324,11 @@ abstract class ZKSignTransactionFlow @JvmOverloads constructor(
         }
         progressTracker.currentStep = VERIFYING
 
-        // Receive input and reference states to be able to build PTX and LedgerTransaction
-        // Refs should refer to plaintext LedgerTransaction in order to be able to create valid ltx
-        // TODO: sender should use SendUtxoInfoFlow and here in response we should call ResolveZKTransactionsFlow
-//        val inputs = otherSideSession.receive<List<StateAndRef<*>>>().unwrap { it }
-//        val references = otherSideSession.receive<List<StateAndRef<*>>>().unwrap { it }
-        subFlow<List<StateAndRef<ContractState>>>(ZKReceiveStateAndRefFlow(otherSideSession))
-
-        // We are not supposed to create LedgerTransaction outside of Corda, but we do it anyway
-        val ltx = stx.tx.zkToLedgerTransaction(serviceHub)
-
-        // Still checking Kotlin contract rules, just in case
-        ltx.verify()
-
-        // Resolve ZK dependencies and verify them
-        val vtx = subFlow(ReceiveZKTransactionFlow(stx, otherSideSession, false))
-
         // Check that the Responder actually needs to sign.
-        checkMySignaturesRequired(vtx, signingKeys)
+        checkMySignaturesRequired(stx, signingKeys)
 
-        // Check correctness of existing signatures, doesn't mean much because they are allowed to be missing, but at least no broken ones
-        checkSignatures(vtx)
-
-        zkService = serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_TX_SERVICE)
-
-        // Check ZKP transaction
-        zkService.verify(vtx, checkSufficientSignatures = false)
-
-        // Convert Tx to ZKP form
-        require(vtx.tx.id == stx.tx.id) { "ID of calculated PTX should match ID of received VTX" }
+        // Verify contract and check signatures that are present (we don't expect to have a complete set here)
+        stx.zkVerify(serviceHub, checkSufficientSignatures = false)
 
         // Perform some custom verification over the transaction.
         try {
@@ -405,14 +348,6 @@ abstract class ZKSignTransactionFlow @JvmOverloads constructor(
 
         // Return the additionally signed transaction.
         return stx
-    }
-
-    @Suspendable
-    private fun checkSignatures(stx: SignedZKVerifierTransaction) {
-        val signed = stx.sigs.map { it.by }
-        val allSigners = stx.tx.requiredSigningKeys
-        val notSigned = allSigners - signed
-        stx.verifySignaturesExcept(notSigned)
     }
 
     /**
@@ -440,7 +375,7 @@ abstract class ZKSignTransactionFlow @JvmOverloads constructor(
     protected abstract fun checkTransaction(stx: SignedTransaction)
 
     @Suspendable
-    private fun checkMySignaturesRequired(stx: SignedZKVerifierTransaction, signingKeys: Iterable<PublicKey>) {
+    private fun checkMySignaturesRequired(stx: SignedTransaction, signingKeys: Iterable<PublicKey>) {
         require(signingKeys.all { it in stx.tx.requiredSigningKeys }) {
             "A signature was requested for a key that isn't part of the required signing keys for transaction ${stx.id}"
         }

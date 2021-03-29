@@ -1,9 +1,11 @@
 package com.ing.zknotary.client.flows
 
 import co.paralleluniverse.fibers.Suspendable
-import com.ing.zknotary.common.flows.ReceiveZKTransactionFlow
-import com.ing.zknotary.common.flows.SendZKTransactionFlow
+import com.ing.zknotary.common.flows.SendNotarisedTransactionPayloadFlow
+import com.ing.zknotary.common.flows.ZKReceiveNotarisedTransactionPayloadFlow
+import com.ing.zknotary.common.transactions.NotarisedTransactionPayload
 import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
+import com.ing.zknotary.common.transactions.prove
 import com.ing.zknotary.common.transactions.zkToLedgerTransaction
 import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.isFulfilledBy
@@ -31,7 +33,7 @@ import net.corda.core.utilities.ProgressTracker
  * storage, verification will fail. It must have signatures from all necessary parties other than the notary.
  *
  * A list of [FlowSession]s is required for each non-local participant of the transaction. These participants will receive
- * the final notarised transaction by calling [ReceiveFinalityFlow] in their counterpart com.ing.zknotary.flows. Sessions with non-participants
+ * the final notarised transaction by calling [ZKReceiveFinalityFlow] in their counterpart com.ing.zknotary.flows. Sessions with non-participants
  * can also be included, but they must specify [StatesToRecord.ALL_VISIBLE] for statesToRecord if they wish to record the
  * contract states into their vaults.
  *
@@ -45,10 +47,9 @@ import net.corda.core.utilities.ProgressTracker
 @InitiatingFlow
 class ZKFinalityFlow private constructor(
     val stx: SignedTransaction,
-    val vtx: SignedZKVerifierTransaction,
     override val progressTracker: ProgressTracker,
     private val sessions: Collection<FlowSession>
-) : FlowLogic<SignedZKVerifierTransaction>() {
+) : FlowLogic<SignedTransaction>() {
 
     /**
      * Notarise the given transaction and broadcast it to all the participants.
@@ -60,10 +61,9 @@ class ZKFinalityFlow private constructor(
     @JvmOverloads
     constructor(
         transaction: SignedTransaction,
-        zkTransaction: SignedZKVerifierTransaction,
         sessions: Collection<FlowSession>,
         progressTracker: ProgressTracker = tracker()
-    ) : this(transaction, zkTransaction, progressTracker, sessions)
+    ) : this(transaction, progressTracker, sessions)
 
     companion object {
         object NOTARISING : ProgressTracker.Step("Requesting signature by notary service") {
@@ -81,7 +81,7 @@ class ZKFinalityFlow private constructor(
 
     @Suspendable
     @Throws(NotaryException::class)
-    override fun call(): SignedZKVerifierTransaction {
+    override fun call(): SignedTransaction {
         require(sessions.none { serviceHub.myInfo.isLegalIdentity(it.counterparty) }) {
             "Do not provide flow sessions for the local node. ZKFinalityFlow will record the notarised transaction locally."
         }
@@ -112,12 +112,12 @@ class ZKFinalityFlow private constructor(
 
         for (session in sessions) {
             try {
-                subFlow(SendZKTransactionFlow(session, notarised))
+                subFlow(SendNotarisedTransactionPayloadFlow(session, notarised))
                 logger.info("Party ${session.counterparty} received the transaction.")
             } catch (e: UnexpectedFlowEndException) {
                 throw UnexpectedFlowEndException(
                     "${session.counterparty} has finished prematurely and we're trying to send them the finalised transaction. " +
-                        "Did they forget to call ReceiveFinalityFlow? (${e.message})",
+                        "Did they forget to call ZKReceiveFinalityFlow? (${e.message})",
                     e.cause,
                     e.originalErrorId
                 )
@@ -126,7 +126,7 @@ class ZKFinalityFlow private constructor(
 
         logger.info("All parties received the transaction successfully.")
 
-        return notarised
+        return notarised.stx
     }
 
     private fun logCommandData() {
@@ -138,8 +138,11 @@ class ZKFinalityFlow private constructor(
     }
 
     @Suspendable
-    private fun notariseAndRecord(): SignedZKVerifierTransaction {
-        val notarised = if (needsNotarySignature(vtx)) {
+    private fun notariseAndRecord(): NotarisedTransactionPayload {
+        // Create proof and vtx
+        val vtx = stx.prove(serviceHub)
+
+        val notarisedSvtx = if (needsNotarySignature(vtx)) {
             progressTracker.currentStep =
                 NOTARISING
             val notarySignatures = subFlow(ZKNotaryFlow(stx, vtx))
@@ -149,7 +152,8 @@ class ZKFinalityFlow private constructor(
             vtx
         }
         logger.info("Recording transaction locally.")
-        serviceHub.recordTransactions(stx, notarised)
+        val notarised = NotarisedTransactionPayload(notarisedSvtx, SignedTransaction(stx.tx, notarisedSvtx.sigs))
+        serviceHub.recordTransactions(notarised)
         logger.info("Recorded transaction locally successfully.")
         return notarised
     }
@@ -182,29 +186,26 @@ class ZKFinalityFlow private constructor(
  * before it's committed to the vault.
  *
  * @param otherSideSession The session which is providing the transaction to record.
- * @param expectedTxId Expected ID of the transaction that's about to be received. This is typically retrieved from
- * [SignTransactionFlow]. Setting it to null disables the expected transaction ID check.
  * @param statesToRecord Which states to commit to the vault. Defaults to [StatesToRecord.ONLY_RELEVANT].
  */
 class ZKReceiveFinalityFlow @JvmOverloads constructor(
     private val otherSideSession: FlowSession,
-    private val stx: SignedTransaction,
     private val expectedTxId: SecureHash? = null,
     private val statesToRecord: StatesToRecord = StatesToRecord.ONLY_RELEVANT
-) : FlowLogic<SignedZKVerifierTransaction>() {
+) : FlowLogic<SignedTransaction>() {
     @Suspendable
-    override fun call(): SignedZKVerifierTransaction {
-
-        return subFlow(object : ReceiveZKTransactionFlow(
-            stx,
+    override fun call(): SignedTransaction {
+        return subFlow(object : ZKReceiveNotarisedTransactionPayloadFlow(
             otherSideSession,
             checkSufficientSignatures = true,
             statesToRecord = statesToRecord
         ) {
-                override fun checkBeforeRecording(stx: SignedZKVerifierTransaction) {
-                    require(expectedTxId == null || expectedTxId == stx.id) {
-                        "We expected to receive transaction with ID $expectedTxId but instead got ${stx.id}. Transaction was" +
-                            "not recorded and nor its states sent to the vault."
+                override fun checkBeforeRecording(notarised: NotarisedTransactionPayload) {
+                    expectedTxId?.let {
+                        require(it == notarised.stx.id) {
+                            "We expected to receive transaction with ID $it but instead got ${notarised.stx.id}. Transaction was" +
+                                "not recorded, nor its states sent to the vault."
+                        }
                     }
                 }
             })

@@ -3,7 +3,6 @@ package com.ing.zknotary.common.client.flows.testflows
 import co.paralleluniverse.fibers.Suspendable
 import com.ing.zknotary.client.flows.ZKCollectSignaturesFlow
 import com.ing.zknotary.client.flows.ZKSignTransactionFlow
-import com.ing.zknotary.client.flows.signInitialZKTransaction
 import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
 import com.ing.zknotary.common.transactions.ZKTransactionBuilder
 import com.ing.zknotary.common.transactions.signInitialTransaction
@@ -36,15 +35,10 @@ class TestCollectZKSignaturesFlow(val signers: List<Party> = emptyList()) : Flow
         val builder = ZKTransactionBuilder(serviceHub.networkMapCache.notaryIdentities.single())
         builder.withItems(stateAndContract, issueCommand)
 
-        val stx = serviceHub.signInitialTransaction(builder)
-
-        val vtx = zkService.prove(stx.tx)
-
-        // Sign ZKP transaction
-        val svtx = signInitialZKTransaction(vtx)
-
         // Sign with counterparty
-        return subFlow(ZKCollectSignaturesFlow(stx, svtx, signers.map { initiateFlow(it) }))
+        val stx = subFlow(ZKCollectSignaturesFlow(serviceHub.signInitialTransaction(builder), signers.map { initiateFlow(it) }))
+
+        return SignedZKVerifierTransaction(zkService.prove(stx.tx), stx.sigs)
     }
 }
 

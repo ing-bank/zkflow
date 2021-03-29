@@ -5,12 +5,8 @@ import com.ing.zknotary.client.flows.ZKCollectSignaturesFlow
 import com.ing.zknotary.client.flows.ZKFinalityFlow
 import com.ing.zknotary.client.flows.ZKReceiveFinalityFlow
 import com.ing.zknotary.client.flows.ZKSignTransactionFlow
-import com.ing.zknotary.client.flows.signInitialZKTransaction
 import com.ing.zknotary.common.transactions.ZKTransactionBuilder
 import com.ing.zknotary.common.transactions.signInitialTransaction
-import com.ing.zknotary.common.zkp.ZKTransactionService
-import com.ing.zknotary.node.services.ServiceNames
-import com.ing.zknotary.node.services.getCordaServiceFromConfig
 import com.ing.zknotary.testing.fixtures.contract.TestContract
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.StateAndContract
@@ -34,8 +30,6 @@ class MoveFlow(
     @Suspendable
     override fun call(): SignedTransaction {
 
-        val zkService: ZKTransactionService = serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_TX_SERVICE)
-
         val session = initiateFlow(newOwner)
 
         val me = serviceHub.myInfo.legalIdentities.single()
@@ -47,15 +41,12 @@ class MoveFlow(
         builder.withItems(state, stateAndContract, command)
 
         // Transaction creator signs transaction.
-        val stx = serviceHub.signInitialTransaction(builder)
-        stx.verify(serviceHub, false)
+        val selfSignedStx = serviceHub.signInitialTransaction(builder)
+        selfSignedStx.verify(serviceHub, false)
 
-        val vtx = zkService.prove(stx.tx)
+        val stx = subFlow(ZKCollectSignaturesFlow(selfSignedStx, listOf(session)))
 
-        val partiallySignedVtx = signInitialZKTransaction(vtx)
-        val svtx = subFlow(ZKCollectSignaturesFlow(stx, partiallySignedVtx, listOf(session)))
-
-        subFlow(ZKFinalityFlow(stx, svtx, listOf(session)))
+        subFlow(ZKFinalityFlow(stx, listOf(session)))
 
         return stx
     }
@@ -78,7 +69,7 @@ class MoveFlow(
                 val stx = subFlow(flow)
 
                 // Invoke flow in response to ZKFinalityFlow
-                subFlow(ZKReceiveFinalityFlow(session, stx))
+                subFlow(ZKReceiveFinalityFlow(session, stx.id))
             }
         }
     }

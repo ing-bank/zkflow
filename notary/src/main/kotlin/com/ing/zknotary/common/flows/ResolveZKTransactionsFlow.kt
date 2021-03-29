@@ -28,9 +28,10 @@ class ResolveZKTransactionsFlow constructor(
     @Suspendable
     override fun call() {
         // TODO This error should actually cause the flow to be sent to the flow hospital to be retried
-        val counterpartyPlatformVersion = checkNotNull(serviceHub.networkMapCache.getNodeByLegalIdentity(otherSide.counterparty)?.platformVersion) {
-            "Couldn't retrieve party's ${otherSide.counterparty} platform version from NetworkMapCache"
-        }
+        val counterpartyPlatformVersion =
+            checkNotNull(serviceHub.networkMapCache.getNodeByLegalIdentity(otherSide.counterparty)?.platformVersion) {
+                "Couldn't retrieve party's ${otherSide.counterparty} platform version from NetworkMapCache"
+            }
 
         val batchMode = counterpartyPlatformVersion >= PlatformVersionSwitches.BATCH_DOWNLOAD_COUNTERPARTY_BACKCHAIN
         logger.debug { "ResolveTransactionsFlow.call(): Otherside Platform Version = '$counterpartyPlatformVersion': Batch mode = $batchMode" }

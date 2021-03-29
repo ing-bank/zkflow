@@ -3,7 +3,6 @@ package com.ing.zknotary.common.client.flows.testflows
 import co.paralleluniverse.fibers.Suspendable
 import com.ing.zknotary.client.flows.ZKCollectSignaturesFlow
 import com.ing.zknotary.client.flows.ZKNotaryFlow
-import com.ing.zknotary.client.flows.signInitialZKTransaction
 import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
 import com.ing.zknotary.common.transactions.ZKTransactionBuilder
 import com.ing.zknotary.common.transactions.signInitialTransaction
@@ -33,15 +32,11 @@ class TestNotarisationFlow(val signers: List<Party> = emptyList()) : FlowLogic<S
         val builder = ZKTransactionBuilder(serviceHub.networkMapCache.notaryIdentities.single())
         builder.withItems(stateAndContract, issueCommand)
 
-        // Transaction creator signs transaction.
-        val stx = serviceHub.signInitialTransaction(builder)
+        val stx = subFlow(ZKCollectSignaturesFlow(serviceHub.signInitialTransaction(builder), signers.map { initiateFlow(it) }))
 
-        val vtx = zkService.prove(stx.tx)
-        val svtx = signInitialZKTransaction(vtx)
+        val svtx = SignedZKVerifierTransaction(zkService.prove(stx.tx), stx.sigs)
 
-        val partiallySignedVTX = subFlow(ZKCollectSignaturesFlow(stx, svtx, signers.map { initiateFlow(it) }))
-
-        val notarySigs = subFlow(ZKNotaryFlow(stx, partiallySignedVTX))
+        val notarySigs = subFlow(ZKNotaryFlow(stx, svtx))
 
         return svtx + notarySigs
     }

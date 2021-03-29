@@ -1,6 +1,7 @@
 package com.ing.zknotary.common.transactions
 
 import com.ing.zknotary.common.contracts.ZKCommandData
+import com.ing.zknotary.common.zkp.ZKTransactionService
 import com.ing.zknotary.node.services.ServiceNames
 import com.ing.zknotary.node.services.WritableUtxoInfoStorage
 import com.ing.zknotary.node.services.ZKVerifierTransactionStorage
@@ -249,4 +250,11 @@ private fun SignedTransaction.zkResolveAndCheckNetworkParameters(services: Servi
                 params
             )
     }
+}
+
+fun SignedTransaction.prove(
+    services: ServiceHub
+): SignedZKVerifierTransaction {
+    val zkService: ZKTransactionService = services.getCordaServiceFromConfig(ServiceNames.ZK_TX_SERVICE)
+    return SignedZKVerifierTransaction(zkService.prove(tx), sigs)
 }

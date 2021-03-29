@@ -5,15 +5,11 @@ import com.ing.zknotary.client.flows.ZKCollectSignaturesFlow
 import com.ing.zknotary.client.flows.ZKFinalityFlow
 import com.ing.zknotary.client.flows.ZKReceiveFinalityFlow
 import com.ing.zknotary.client.flows.ZKSignTransactionFlow
-import com.ing.zknotary.client.flows.signInitialZKTransaction
 import com.ing.zknotary.common.flows.ZKReceiveStateAndRefFlow
 import com.ing.zknotary.common.flows.ZKSendStateAndRefFlow
 import com.ing.zknotary.common.transactions.ZKTransactionBuilder
 import com.ing.zknotary.common.transactions.signInitialTransaction
 import com.ing.zknotary.common.transactions.zkVerify
-import com.ing.zknotary.common.zkp.ZKTransactionService
-import com.ing.zknotary.node.services.ServiceNames
-import com.ing.zknotary.node.services.getCordaServiceFromConfig
 import com.ing.zknotary.testing.fixtures.contract.TestContract
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.ContractState
@@ -62,20 +58,11 @@ class MoveBidirectionalFlow(
         // Verify to be sure
         stx.zkVerify(serviceHub, false)
 
-        // Create proof and vtx
-        val zkService: ZKTransactionService = serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_TX_SERVICE)
-        val vtx = zkService.prove(stx.tx)
-
-        // Sign vtx
-        val partiallySignedVtx = signInitialZKTransaction(vtx)
-
         // Collect signature from counterparty
-        val svtx = subFlow(ZKCollectSignaturesFlow(stx, partiallySignedVtx, listOf(session)))
+        val fullySignedStx = subFlow(ZKCollectSignaturesFlow(stx, listOf(session)))
 
         // Finalize
-        subFlow(ZKFinalityFlow(stx, svtx, listOf(session)))
-
-        return stx
+        return subFlow(ZKFinalityFlow(fullySignedStx, listOf(session)))
     }
 
     companion object {
@@ -102,7 +89,7 @@ class MoveBidirectionalFlow(
                 val stx = subFlow(SignFlow(output))
 
                 // Invoke flow in response to ZKFinalityFlow
-                subFlow(ZKReceiveFinalityFlow(session, stx))
+                subFlow(ZKReceiveFinalityFlow(session, stx.id))
             }
         }
     }
