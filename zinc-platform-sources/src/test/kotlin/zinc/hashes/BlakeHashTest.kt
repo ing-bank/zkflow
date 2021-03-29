@@ -42,8 +42,7 @@ class BlakeHashTest {
         val expected = DigestService.blake2s256.hash(witness).bytes
 
         val witnessJson = "{\"preimage\": ${witness.map { "\"${it.asUnsigned()}\"" }}}"
-        val publicData = expected.map { it.asUnsigned().toString() }
-        val publicDataJson = Json.encodeToString(publicData)
+        val publicDataJson = Json.encodeToString(expected.map { it.asUnsigned().toString() })
 
         val actual = zincZKService.run(witnessJson, publicDataJson)
         actual shouldBe publicDataJson

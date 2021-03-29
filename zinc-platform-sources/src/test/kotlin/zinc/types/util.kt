@@ -1,7 +1,10 @@
 package zinc.types
 
 import com.ing.dlt.zkkrypto.util.asUnsigned
+import com.ing.zknotary.common.zkp.PublicInput
+import com.ing.zknotary.common.zkp.Witness
 import com.ing.zknotary.common.zkp.ZincZKService
+import kotlinx.serialization.ExperimentalSerializationApi
 import net.corda.core.contracts.Amount
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.slf4j.Logger
@@ -56,6 +59,7 @@ fun makeBigDecimal(bytes: ByteArray, sign: Int) = BigDecimal(BigInteger(sign, by
 
 fun makeBigDecimal(string: String, scale: Int) = BigDecimal(BigInteger(string), scale)
 
+@ExperimentalSerializationApi
 @ExperimentalTime
 fun ZincZKService.setupTimed(log: Logger) {
     val time = measureTime {
@@ -64,6 +68,29 @@ fun ZincZKService.setupTimed(log: Logger) {
     log.debug("[setup] $time")
 }
 
+@ExperimentalSerializationApi
+@ExperimentalTime
+fun ZincZKService.proveTimed(witness: Witness, log: Logger): ByteArray {
+    var proof: ByteArray
+    val time = measureTime {
+        proof = this.prove(witness)
+    }
+    log.debug("[prove] $time")
+    return proof
+}
+
+@ExperimentalSerializationApi
+@ExperimentalTime
+fun ZincZKService.proveTimed(witness: String, log: Logger): ByteArray {
+    var proof: ByteArray
+    val time = measureTime {
+        proof = this.prove(witness)
+    }
+    log.debug("[prove] $time")
+    return proof
+}
+
+@ExperimentalSerializationApi
 @ExperimentalTime
 fun ZincZKService.proveTimed(witness: ByteArray, log: Logger): ByteArray {
     var proof: ByteArray
@@ -74,8 +101,27 @@ fun ZincZKService.proveTimed(witness: ByteArray, log: Logger): ByteArray {
     return proof
 }
 
+@ExperimentalSerializationApi
 @ExperimentalTime
 fun ZincZKService.verifyTimed(proof: ByteArray, publicInput: ByteArray, log: Logger) {
+    val time = measureTime {
+        this.verify(proof, publicInput)
+    }
+    log.debug("[verify] $time")
+}
+
+@ExperimentalSerializationApi
+@ExperimentalTime
+fun ZincZKService.verifyTimed(proof: ByteArray, publicInput: String, log: Logger) {
+    val time = measureTime {
+        this.verify(proof, publicInput)
+    }
+    log.debug("[verify] $time")
+}
+
+@ExperimentalSerializationApi
+@ExperimentalTime
+fun ZincZKService.verifyTimed(proof: ByteArray, publicInput: PublicInput, log: Logger) {
     val time = measureTime {
         this.verify(proof, publicInput)
     }

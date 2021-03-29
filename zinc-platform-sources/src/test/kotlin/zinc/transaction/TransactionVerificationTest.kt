@@ -108,8 +108,8 @@ class TransactionVerificationTest {
 //        actual shouldBe Json.encodeToString(publicInput)
 
         // Uncomment this and setup above to test with the real setup/prove/verify functions
-//        val proof = zincZKService.prove(witness)
-//        zincZKService.verify(proof, publicInput)
+//        val proof = zincZKService.proveTimed(witness, log)
+//        zincZKService.verifyTimed(proof, publicInput, log)
     }
 
     class TestFixedLengthSerializationScheme : CustomSerializationScheme {
