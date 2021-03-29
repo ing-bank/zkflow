@@ -5,7 +5,6 @@ import com.ing.zknotary.common.zkp.PublicInput
 import com.ing.zknotary.common.zkp.Witness
 import com.ing.zknotary.common.zkp.ZincZKService
 import com.ing.zknotary.testing.fixtures.contract.TestContract
-import kotlinx.serialization.ExperimentalSerializationApi
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.PrivacySalt
 import net.corda.core.contracts.StateAndContract
@@ -36,7 +35,6 @@ import java.time.Duration
 import java.time.Instant
 import kotlin.time.ExperimentalTime
 
-@ExperimentalSerializationApi
 @ExperimentalTime
 @Tag("slow")
 class TransactionVerificationTest {

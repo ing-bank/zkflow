@@ -4,7 +4,6 @@ import com.ing.dlt.zkkrypto.util.asUnsigned
 import com.ing.zknotary.common.zkp.PublicInput
 import com.ing.zknotary.common.zkp.Witness
 import com.ing.zknotary.common.zkp.ZincZKService
-import kotlinx.serialization.ExperimentalSerializationApi
 import net.corda.core.contracts.Amount
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.slf4j.Logger
@@ -59,7 +58,6 @@ fun makeBigDecimal(bytes: ByteArray, sign: Int) = BigDecimal(BigInteger(sign, by
 
 fun makeBigDecimal(string: String, scale: Int) = BigDecimal(BigInteger(string), scale)
 
-@ExperimentalSerializationApi
 @ExperimentalTime
 fun ZincZKService.setupTimed(log: Logger) {
     val time = measureTime {
@@ -68,7 +66,6 @@ fun ZincZKService.setupTimed(log: Logger) {
     log.debug("[setup] $time")
 }
 
-@ExperimentalSerializationApi
 @ExperimentalTime
 fun ZincZKService.proveTimed(witness: Witness, log: Logger): ByteArray {
     var proof: ByteArray
@@ -79,7 +76,6 @@ fun ZincZKService.proveTimed(witness: Witness, log: Logger): ByteArray {
     return proof
 }
 
-@ExperimentalSerializationApi
 @ExperimentalTime
 fun ZincZKService.proveTimed(witnessJson: String, log: Logger): ByteArray {
     var proof: ByteArray
@@ -90,7 +86,6 @@ fun ZincZKService.proveTimed(witnessJson: String, log: Logger): ByteArray {
     return proof
 }
 
-@ExperimentalSerializationApi
 @ExperimentalTime
 fun ZincZKService.verifyTimed(proof: ByteArray, publicInputJson: String, log: Logger) {
     val time = measureTime {
@@ -99,7 +94,6 @@ fun ZincZKService.verifyTimed(proof: ByteArray, publicInputJson: String, log: Lo
     log.debug("[verify] $time")
 }
 
-@ExperimentalSerializationApi
 @ExperimentalTime
 fun ZincZKService.verifyTimed(proof: ByteArray, publicInput: PublicInput, log: Logger) {
     val time = measureTime {

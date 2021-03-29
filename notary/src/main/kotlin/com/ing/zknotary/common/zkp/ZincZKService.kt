@@ -2,7 +2,6 @@ package com.ing.zknotary.common.zkp
 
 import com.ing.zknotary.common.serialization.PublicInputSerializer
 import com.ing.zknotary.common.serialization.WitnessSerializer
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import java.io.File
 import java.io.File.createTempFile
@@ -10,7 +9,6 @@ import java.io.IOException
 import java.time.Duration
 import java.util.concurrent.TimeUnit
 
-@ExperimentalSerializationApi
 class ZincZKService(
     val circuitFolder: String,
     val artifactFolder: String,
@@ -110,7 +108,6 @@ class ZincZKService(
         require(File(zkSetup.provingKeyPath).exists()) { "Proving key not found at ${zkSetup.provingKeyPath}." }
     }
 
-    @ExperimentalSerializationApi
     fun run(witness: Witness, publicInput: PublicInput): String {
         val witnessJson = Json.encodeToString(WitnessSerializer, witness)
         val publicInputJson = Json.encodeToString(PublicInputSerializer, publicInput)
