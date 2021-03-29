@@ -19,9 +19,11 @@ fun main(args: Array<String>) {
     circuits?.forEach { circuitName ->
         val outputPath = mergedCircuitOutput.resolve(circuitName).resolve("src")
 
+        val circuitSourcesPath = circuitSourcesBase.resolve(circuitName)
+
         // Copy Zinc sources
         val copier = ZincSourcesCopier(outputPath)
-        copier.copyZincCircuitSources(circuitSourcesBase, circuitName, projectVersion)
+        copier.copyZincCircuitSources(circuitSourcesPath, circuitName, projectVersion)
         copier.copyZincPlatformSources(getPlatformSources(root))
 
         val consts = circuitSourcesBase.resolve(circuitName).resolve("consts.zn").readText()
