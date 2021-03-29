@@ -81,10 +81,10 @@ fun ZincZKService.proveTimed(witness: Witness, log: Logger): ByteArray {
 
 @ExperimentalSerializationApi
 @ExperimentalTime
-fun ZincZKService.proveTimed(witness: String, log: Logger): ByteArray {
+fun ZincZKService.proveTimed(witnessJson: String, log: Logger): ByteArray {
     var proof: ByteArray
     val time = measureTime {
-        proof = this.prove(witness)
+        proof = this.prove(witnessJson)
     }
     log.debug("[prove] $time")
     return proof
@@ -92,29 +92,9 @@ fun ZincZKService.proveTimed(witness: String, log: Logger): ByteArray {
 
 @ExperimentalSerializationApi
 @ExperimentalTime
-fun ZincZKService.proveTimed(witness: ByteArray, log: Logger): ByteArray {
-    var proof: ByteArray
+fun ZincZKService.verifyTimed(proof: ByteArray, publicInputJson: String, log: Logger) {
     val time = measureTime {
-        proof = this.prove(witness)
-    }
-    log.debug("[prove] $time")
-    return proof
-}
-
-@ExperimentalSerializationApi
-@ExperimentalTime
-fun ZincZKService.verifyTimed(proof: ByteArray, publicInput: ByteArray, log: Logger) {
-    val time = measureTime {
-        this.verify(proof, publicInput)
-    }
-    log.debug("[verify] $time")
-}
-
-@ExperimentalSerializationApi
-@ExperimentalTime
-fun ZincZKService.verifyTimed(proof: ByteArray, publicInput: String, log: Logger) {
-    val time = measureTime {
-        this.verify(proof, publicInput)
+        this.verify(proof, publicInputJson)
     }
     log.debug("[verify] $time")
 }

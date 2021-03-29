@@ -52,7 +52,7 @@ class MerkleRootTest {
         val leaves = witness.map { input -> input.map { "\"${it.asUnsigned()}\"" } }
         val publicData = root.map { "\"${it.asUnsigned()}\"" }
 
-        val proof = zincZKService.prove("{\"leaves\": $leaves}".toByteArray())
-        zincZKService.verify(proof, "$publicData".toByteArray())
+        val proof = zincZKService.prove("{\"leaves\": $leaves}")
+        zincZKService.verify(proof, "$publicData")
     }
 }

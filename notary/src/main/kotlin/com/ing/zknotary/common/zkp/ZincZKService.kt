@@ -145,13 +145,8 @@ class ZincZKService(
     }
 
     fun prove(witnessJson: String): ByteArray {
-        return prove(witnessJson.toByteArray())
-    }
-
-    fun prove(witness: ByteArray): ByteArray {
-
         val witnessFile = createTempFile("zkp", null)
-        witnessFile.writeBytes(witness)
+        witnessFile.writeText(witnessJson)
 
         val publicData = createTempFile("zkp", null)
 
@@ -174,16 +169,11 @@ class ZincZKService(
     }
 
     fun verify(proof: ByteArray, publicInputJson: String) {
-        return verify(proof, publicInputJson.toByteArray())
-    }
-
-    fun verify(proof: ByteArray, publicInput: ByteArray) {
-
         val proofFile = createTempFile("zkp", null)
         proofFile.writeBytes(proof)
 
         val publicDataFile = createTempFile("zkp", null)
-        publicDataFile.writeBytes(publicInput)
+        publicDataFile.writeText(publicInputJson)
 
         try {
             completeZincCommand(
