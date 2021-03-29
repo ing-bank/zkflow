@@ -7,3 +7,4 @@ interface ZKService {
 
 class ZKVerificationException(message: String? = null) : Throwable(message)
 class ZKProvingException(message: String? = null) : Throwable(message)
+class ZKRunException(message: String? = null) : Throwable(message)

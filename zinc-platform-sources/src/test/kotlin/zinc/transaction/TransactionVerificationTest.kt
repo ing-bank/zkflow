@@ -1,13 +1,11 @@
 package zinc.transaction
 
 import com.ing.zknotary.common.crypto.zinc
-import com.ing.zknotary.common.serialization.PublicInputSerializer
-import com.ing.zknotary.common.serialization.WitnessSerializer
 import com.ing.zknotary.common.zkp.PublicInput
 import com.ing.zknotary.common.zkp.Witness
+import com.ing.zknotary.common.zkp.ZincZKService
 import com.ing.zknotary.testing.fixtures.contract.TestContract
 import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.json.Json
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.PrivacySalt
 import net.corda.core.contracts.StateAndContract
@@ -27,11 +25,14 @@ import net.corda.core.serialization.internal.CustomSerializationSchemeUtils
 import net.corda.core.serialization.serialize
 import net.corda.core.transactions.WireTransaction
 import net.corda.core.utilities.ByteSequence
+import net.corda.core.utilities.loggerFor
 import net.corda.coretesting.internal.asTestContextEnv
 import net.corda.coretesting.internal.createTestSerializationEnv
 import net.corda.testing.core.TestIdentity
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
+import java.io.File
+import java.time.Duration
 import java.time.Instant
 import kotlin.time.ExperimentalTime
 
@@ -39,18 +40,18 @@ import kotlin.time.ExperimentalTime
 @ExperimentalTime
 @Tag("slow")
 class TransactionVerificationTest {
-//    private val log = loggerFor<TransactionVerificationTest>()
-//
-//    private val circuitFolder: String = File("build/circuits/create").absolutePath
+    private val log = loggerFor<TransactionVerificationTest>()
 
-//    private val zincZKService = ZincZKService(
-//        circuitFolder,
-//        artifactFolder = circuitFolder,
-//        buildTimeout = Duration.ofSeconds(5),
-//        setupTimeout = Duration.ofSeconds(300),
-//        provingTimeout = Duration.ofSeconds(300),
-//        verificationTimeout = Duration.ofSeconds(1)
-//    )
+    private val circuitFolder: String = File("build/circuits/create").absolutePath
+
+    private val zincZKService = ZincZKService(
+        circuitFolder,
+        artifactFolder = circuitFolder,
+        buildTimeout = Duration.ofSeconds(5),
+        setupTimeout = Duration.ofSeconds(300),
+        provingTimeout = Duration.ofSeconds(300),
+        verificationTimeout = Duration.ofSeconds(1)
+    )
 
     private val notary = TestIdentity.fresh("Notary").party
     private val alice = TestIdentity.fresh("Alice").party
@@ -102,14 +103,13 @@ class TransactionVerificationTest {
             referenceHashes = emptyList()
         )
 
-        val witnessJson = Json.encodeToString(WitnessSerializer, witness)
-        println(witnessJson)
-        val publicInputJson = Json.encodeToString(PublicInputSerializer, publicInput)
-        println(publicInputJson)
+        // Uncomment this to test short dev cycles with the real circuit, but not yet real setup/prove/verify functions
+//        val actual = zincZKService.run(witness, publicInput)
+//        actual shouldBe Json.encodeToString(publicInput)
 
-        // TODO: Refactor circuit to handle new witness format
-        // val proof = zincZKService.proveTimed(witnessJson.toByteArray(), log)
-        // zincZKService.verify(proof, publicDataJson.toByteArray())
+        // Uncomment this and setup above to test with the real setup/prove/verify functions
+//        val proof = zincZKService.prove(witness)
+//        zincZKService.verify(proof, publicInput)
     }
 
     class TestFixedLengthSerializationScheme : CustomSerializationScheme {

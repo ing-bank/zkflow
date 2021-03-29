@@ -3,12 +3,17 @@ package zinc.hashes
 import com.ing.dlt.zkkrypto.util.asUnsigned
 import com.ing.zknotary.common.crypto.blake2s256
 import com.ing.zknotary.common.zkp.ZincZKService
+import io.kotest.matchers.shouldBe
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import net.corda.core.crypto.DigestService
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 import java.nio.ByteBuffer
 import java.time.Duration
 
+@ExperimentalSerializationApi
 class BlakeHashTest {
     private val circuitFolder: String = javaClass.getResource("/TestBlakeHash").path
     private val zincZKService = ZincZKService(
@@ -37,7 +42,10 @@ class BlakeHashTest {
         val expected = DigestService.blake2s256.hash(witness).bytes
 
         val preimage = witness.map { "\"${it.asUnsigned()}\"" }
-        val publicData = expected.map { "\"${it.asUnsigned()}\"" }
+        val publicData = expected.map { "${it.asUnsigned()}" }
+
+        val actual = zincZKService.run("{\"preimage\": $preimage}".toByteArray(), "$publicData".toByteArray())
+        actual shouldBe Json.encodeToString(publicData)
 
         val proof = zincZKService.prove("{\"preimage\": $preimage}".toByteArray())
         zincZKService.verify(proof, "$publicData".toByteArray())
