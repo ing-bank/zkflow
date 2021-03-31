@@ -1,4 +1,4 @@
-package com.ing.zknotary.common.serialization
+package com.ing.zknotary.common.serialization.json.corda
 
 import com.ing.zknotary.common.zkp.PublicInput
 import kotlinx.serialization.KSerializer

@@ -1,7 +1,7 @@
 package com.ing.zknotary.common.zkp
 
-import com.ing.zknotary.common.serialization.PublicInputSerializer
-import com.ing.zknotary.common.serialization.WitnessSerializer
+import com.ing.zknotary.common.serialization.json.corda.PublicInputSerializer
+import com.ing.zknotary.common.serialization.json.corda.WitnessSerializer
 import kotlinx.serialization.json.Json
 import java.io.File
 import java.io.File.createTempFile
