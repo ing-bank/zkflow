@@ -1,7 +1,6 @@
 package com.ing.zknotary.common.serialization
 
 import kotlinx.serialization.Contextual
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.AnonymousParty
@@ -12,7 +11,6 @@ import java.security.KeyPairGenerator
 import java.security.PublicKey
 import java.security.SecureRandom
 
-@ExperimentalSerializationApi
 class AbstractPartySerializerTest {
     @Serializable
     data class Data(val value: @Contextual AbstractParty)

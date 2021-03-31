@@ -1,7 +1,6 @@
 package com.ing.zknotary.common.serialization.bfl.corda
 
 import com.ing.serialization.bfl.annotations.FixedLength
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.SerialDescriptor
@@ -9,7 +8,6 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import net.corda.core.identity.CordaX500Name
 
-@ExperimentalSerializationApi
 object CordaX500NameSerializer : KSerializer<CordaX500Name> {
     private val strategy = CordaX500NameSurrogate.serializer()
     override val descriptor: SerialDescriptor = strategy.descriptor
@@ -24,7 +22,6 @@ object CordaX500NameSerializer : KSerializer<CordaX500Name> {
 }
 
 @Serializable
-@ExperimentalSerializationApi
 data class CordaX500NameSurrogate(
     @FixedLength([CordaX500Name.MAX_LENGTH_COMMON_NAME])
     val commonName: String?,

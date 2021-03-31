@@ -1,7 +1,6 @@
 package com.ing.zknotary.common.serialization.bfl.corda
 
 import com.ing.serialization.bfl.annotations.FixedLength
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.SerialDescriptor
@@ -9,7 +8,6 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import net.corda.core.crypto.SecureHash
 
-@ExperimentalSerializationApi
 open class SealedSecureHashSerializer<T : SecureHash> : KSerializer<T> {
     private val strategy = SecureHashSurrogate.serializer()
     override val descriptor: SerialDescriptor = strategy.descriptor
@@ -30,7 +28,6 @@ object SecureHashSHA256Serializer : KSerializer<SecureHash.SHA256> by SealedSecu
 object SecureHashHASHSerializer : KSerializer<SecureHash.HASH> by SealedSecureHashSerializer()
 
 @Suppress("ArrayInDataClass")
-@ExperimentalSerializationApi
 @Serializable
 data class SecureHashSurrogate(
     @FixedLength([20])

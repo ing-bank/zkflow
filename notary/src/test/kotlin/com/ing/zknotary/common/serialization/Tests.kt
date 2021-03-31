@@ -5,12 +5,10 @@ import com.ing.serialization.bfl.serialize
 import com.ing.zknotary.common.serialization.bfl.corda.CordaSerializers
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import kotlinx.serialization.ExperimentalSerializationApi
 
 /**
  * Test if value survives serialization/deserialization.
  */
-@ExperimentalSerializationApi
 inline fun <reified T : Any> roundTrip(value: T) {
     val serialization = serialize(value, CordaSerializers)
     val deserialization = deserialize<T>(serialization, CordaSerializers)
@@ -21,7 +19,6 @@ inline fun <reified T : Any> roundTrip(value: T) {
 /**
  * Test if serializations of different instances have the same size.
  */
-@ExperimentalSerializationApi
 inline fun <reified T : Any> sameSize(value1: T, value2: T) {
     value1 shouldNotBe value2
 

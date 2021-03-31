@@ -1,6 +1,5 @@
 package com.ing.zknotary.common.serialization.bfl.corda
 
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.SerialDescriptor
@@ -12,7 +11,6 @@ import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
 import java.security.PublicKey
 
-@ExperimentalSerializationApi
 object AbstractPartySerializer : KSerializer<AbstractParty> {
     private val strategy = AbstractPartySurrogate.serializer()
     override val descriptor: SerialDescriptor = strategy.descriptor
@@ -26,7 +24,6 @@ object AbstractPartySerializer : KSerializer<AbstractParty> {
     }
 }
 
-@ExperimentalSerializationApi
 @Serializable
 data class AbstractPartySurrogate(
     val name: @Serializable(with = CordaX500NameSerializer::class) CordaX500Name?,
