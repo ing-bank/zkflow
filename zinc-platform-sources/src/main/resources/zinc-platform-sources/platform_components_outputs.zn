@@ -6,6 +6,7 @@ mod platform_privacy_salt;
 mod platform_component_group_leaf_digest_dto;
 mod platform_component_group_enum;
 mod platform_crypto_utils;
+mod platform_consts;
 
 use merkle_utils::get_merkle_tree_from_${GROUP_SIZE_PLACEHOLDER}_component_group_leaf_digests;
 use platform_node_digest_dto::NodeDigestBits;
@@ -15,41 +16,51 @@ use platform_component_group_leaf_digest_dto::ComponentGroupLeafDigestBits;
 use platform_privacy_salt::PrivacySaltBits;
 use platform_node_digest_dto::NodeDigestDto;
 use platform_node_digest_dto::NODE_DIGEST_BITS;
-use consts::OUTPUT_GROUP_SIZE;
 use platform_state_and_ref::TransactionStatePaddingWrapper;
 use platform_state_and_ref::TransactionState;
 use platform_crypto_utils::compute_nonce;
+use consts::OUTPUT_GROUP_SIZE;
+use consts::OUTPUT_COMPONENT_SIZE;
+use platform_consts::BYTE_BITS;
+use std::convert::to_bits;
+use std::crypto::blake2s_multi_input;
 
-struct OutputsComponentGroup {
-    components: [TransactionStatePaddingWrapper; OUTPUT_GROUP_SIZE],
-    group_hash: NodeDigestDto,
+type SerializedOutput = [u8; OUTPUT_COMPONENT_SIZE];
+type SerializedOutputGroup = [SerializedOutput; OUTPUT_GROUP_SIZE];
+
+const OUTPUT_COMPONENT_SIZE_BITS: u16 = OUTPUT_COMPONENT_SIZE * BYTE_BITS;
+
+fn bytes_to_bits(bytes: [u8; OUTPUT_COMPONENT_SIZE]) -> [bool; OUTPUT_COMPONENT_SIZE_BITS] {
+    let mut bits = [false; OUTPUT_COMPONENT_SIZE_BITS];
+
+    for i in (0 as u16)..OUTPUT_COMPONENT_SIZE {
+        let byte_bits = to_bits(bytes[i]);
+        for j in (0 as u16)..BYTE_BITS {
+            bits[BYTE_BITS * i + j] = byte_bits[j];
+        }
+    }
+    bits
 }
 
-impl OutputsComponentGroup {
-    fn compute_leaf_hashes(
-        this: OutputsComponentGroup,
-        privacy_salt: PrivacySaltBits,
-    ) -> [ComponentGroupLeafDigestBits; OUTPUT_GROUP_SIZE] {
-        let mut component_leaf_hashes =
-            [[false; COMPONENT_GROUP_LEAF_DIGEST_BITS]; OUTPUT_GROUP_SIZE];
+fn compute_leaf_hashes(
+    components: SerializedOutputGroup,
+    privacy_salt: PrivacySaltBits,
+) -> [ComponentGroupLeafDigestBits; OUTPUT_GROUP_SIZE] {
+    let mut component_leaf_hashes =
+        [[false; COMPONENT_GROUP_LEAF_DIGEST_BITS]; OUTPUT_GROUP_SIZE];
 
-        for i in (0 as u32)..(OUTPUT_GROUP_SIZE as u32) {
-            component_leaf_hashes[i] = TransactionState::compute_leaf_hash(
-                this.components[i].content,
-                compute_nonce(
-                    privacy_salt,
-                    ComponentGroupEnum::OUTPUTS_GROUP as u32,
-                    i as u32,
-                ),
-            );
-        }
-        component_leaf_hashes
+    for i in (0 as u32)..(OUTPUT_GROUP_SIZE as u32) {
+        component_leaf_hashes[i] = blake2s_multi_input(
+            compute_nonce(privacy_salt, ComponentGroupEnum::OUTPUTS_GROUP as u32, i as u32),
+            bytes_to_bits(components[i]),
+        )
     }
+    component_leaf_hashes
+}
 
-    fn compute_component_group_hash(
-        this: OutputsComponentGroup,
-        privacy_salt: PrivacySaltBits,
-    ) -> NodeDigestBits {
-        // ### CALL APPROPRIATE MERKLE TREE FUNCTION ###
-    }
+fn compute_outputs_group_hash(
+    components: SerializedOutputGroup,
+    privacy_salt: PrivacySaltBits,
+) -> NodeDigestBits {
+    // ### CALL APPROPRIATE MERKLE TREE FUNCTION ###
 }

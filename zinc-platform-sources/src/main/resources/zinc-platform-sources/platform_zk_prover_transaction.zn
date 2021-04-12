@@ -13,33 +13,35 @@ mod consts;
 
 use consts::INPUT_GROUP_SIZE;
 use consts::REFERENCE_GROUP_SIZE;
-use platform_components_inputs::InputsComponentGroup;
-use platform_components_outputs::OutputsComponentGroup;
-use platform_components_references::ReferencesComponentGroup;
-use platform_components_commands::CommandsComponentGroup;
-use platform_components_notary::NotaryComponentGroup;
-use platform_components_attachments::AttachmentsComponentGroup;
-use platform_components_time_window::TimeWindowComponentGroup;
-use platform_components_parameters::ParametersComponentGroup;
-use platform_components_signers::SignersComponentGroup;
-use platform_privacy_salt::PrivacySalt;
+use platform_components_inputs::SerializedInputGroup;
+use platform_components_outputs::SerializedOutputGroup;
+use platform_components_references::SerializedReferenceGroup;
+use platform_components_commands::SerializedCommandGroup;
+use platform_components_notary::SerializedNotaryGroup;
+use platform_components_attachments::SerializedAttachmentGroup;
+use platform_components_time_window::SerializedTimeWindowGroup;
+use platform_components_parameters::SerializedParametersGroup;
+use platform_components_signers::SerializedSignerGroup;
+use platform_privacy_salt::PrivacySaltBytes;
 use platform_nonce_digest_dto::NonceDigestDto;
 
-struct ZKProverTransaction {
-    inputs: InputsComponentGroup,
-    outputs: OutputsComponentGroup,
-    references: ReferencesComponentGroup,
-    commands: CommandsComponentGroup,
-    attachments: AttachmentsComponentGroup,
-    notary: NotaryComponentGroup,
-    time_window: TimeWindowComponentGroup,
-    parameters: ParametersComponentGroup,
-    signers: SignersComponentGroup,
-    privacy_salt: PrivacySalt,
-}
 
 struct Witness {
-    transaction: ZKProverTransaction,
+    inputs: SerializedInputGroup,
+    outputs: SerializedOutputGroup,
+    references: SerializedReferenceGroup,
+    commands: SerializedCommandGroup,
+    attachments: SerializedAttachmentGroup,
+    notary: SerializedNotaryGroup,
+    time_window: SerializedTimeWindowGroup,
+    parameters: SerializedParametersGroup,
+    signers: SerializedSignerGroup,
+
+    privacy_salt: PrivacySaltBytes,
+
     input_nonces: [NonceDigestDto; INPUT_GROUP_SIZE],
     reference_nonces: [NonceDigestDto; REFERENCE_GROUP_SIZE],
+
+    serialized_input_utxos: [u8; 0],
+    serialized_reference_utxos: [u8; 0]
 }

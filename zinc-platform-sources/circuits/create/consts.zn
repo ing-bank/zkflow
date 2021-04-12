@@ -7,9 +7,27 @@
 //! in each group.
 //! See definition of ZKCommandData on the Corda side.
 //!
-const ATTACHMENT_GROUP_SIZE: u16 = 2;
+mod platform_consts;
+mod platform_pub_key;
+
+use platform_consts::U32_BYTES;
+use platform_pub_key::PUBKEY_BYTES;
+
+const ATTACHMENT_GROUP_SIZE: u16 = 0;
 const COMMAND_GROUP_SIZE: u16 = 1;
 const INPUT_GROUP_SIZE: u16 = 0;
 const OUTPUT_GROUP_SIZE: u16 = 1;
-const REFERENCE_GROUP_SIZE: u16 = 2;
-const SIGNER_GROUP_SIZE: u16 = 2;
+const REFERENCE_GROUP_SIZE: u16 = 0;
+const SIGNER_GROUP_SIZE: u16 = 1;
+
+const INPUT_COMPONENT_SIZE: u16 = 5;
+const OUTPUT_COMPONENT_SIZE: u16 = 5; // PUBKEY_BYTES + U32_BYTES;
+const ATTACHMENT_COMPONENT_SIZE: u16 = 5;
+const COMMAND_COMPONENT_SIZE: u16 = 5;
+const REFERENCE_COMPONENT_SIZE: u16 = 5;
+const SIGNER_COMPONENT_SIZE: u16 = 5; //PUBKEY_BYTES;
+// TODO: these 3 groups are always of size 1 and probably component are also of constant size.
+//  So probably we want to hide component sizes too somewhere inside platform code
+const NOTARY_COMPONENT_SIZE: u16 = 5;
+const TIME_WINDOW_COMPONENT_SIZE: u16 = 5;
+const PARAMETERS_COMPONENT_SIZE: u16 = 5;

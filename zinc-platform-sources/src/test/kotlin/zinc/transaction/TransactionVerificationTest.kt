@@ -25,8 +25,10 @@ import net.corda.core.utilities.loggerFor
 import net.corda.coretesting.internal.asTestContextEnv
 import net.corda.coretesting.internal.createTestSerializationEnv
 import net.corda.testing.core.TestIdentity
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
+import zinc.types.setupTimed
 import java.io.File
 import java.time.Duration
 import java.time.Instant
@@ -51,14 +53,14 @@ class TransactionVerificationTest {
     private val notary = TestIdentity.fresh("Notary").party
     private val alice = TestIdentity.fresh("Alice").party
 
-//    init {
-//        zincZKService.setupTimed(log)
-//    }
+    init {
+        zincZKService.setupTimed(log)
+    }
 
-//    @AfterAll
-//    fun `remove zinc files`() {
-//        zincZKService.cleanup()
-//    }
+    @AfterAll
+    fun `remove zinc files`() {
+        zincZKService.cleanup()
+    }
 
     /**
      * The witness, which is what we serialize for Zinc, contains the following items:
@@ -99,7 +101,8 @@ class TransactionVerificationTest {
         )
 
         // Uncomment this to test short dev cycles with the real circuit, but not yet real setup/prove/verify functions
-//        val actual = zincZKService.run(witness, publicInput)
+        val actual = zincZKService.run(witness, publicInput)
+        println(actual)
 //        actual shouldBe Json.encodeToString(publicInput)
 
         // Uncomment this and setup above to test with the real setup/prove/verify functions

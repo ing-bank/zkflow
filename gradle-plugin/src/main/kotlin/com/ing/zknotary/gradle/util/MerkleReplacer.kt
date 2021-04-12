@@ -40,7 +40,8 @@ class MerkleReplacer(private val outputPath: File) {
 
             val fileContent = file.readText()
             // Find which component group
-            val componentRegex = "struct (\\w+)(ComponentGroup)".toRegex()
+            // TODO won't it be easier to just check file name? way shorter, more stable and we use already to find component group files
+            val componentRegex = "Serialized(\\w+)(Group)".toRegex()
             var componentGroupName = componentRegex.find(fileContent)?.groupValues?.get(1)
 
             if (componentGroupName?.endsWith("s")!!) componentGroupName = componentGroupName.dropLast(1)
@@ -71,12 +72,13 @@ class MerkleReplacer(private val outputPath: File) {
                     ).replace("\${GROUP_SIZE_PLACEHOLDER}", "2")
                 }
                 // This condition is executed when the defined group size is an exact power of 2.
+                // 1 doesn't count because Corda expects at least 2 leaves so 1 should be padded TODO confirm
                 // The return value is the merkle tree function that corresponds to the group size.
-                componentGroupSize % 2 == 0 -> {
+                isPowerOfTwo(componentGroupSize) && componentGroupSize != 1 -> {
                     fileContent.replace(
                         "// ### CALL APPROPRIATE MERKLE TREE FUNCTION ###",
                         """
-        let component_leaf_hashes = compute_leaf_hashes(this, privacy_salt);
+        let component_leaf_hashes = compute_leaf_hashes(components, privacy_salt);
 
         get_merkle_tree_from_${componentGroupSize}_component_group_leaf_digests(component_leaf_hashes)
         """
@@ -90,7 +92,7 @@ class MerkleReplacer(private val outputPath: File) {
                     fileContent.replace(
                         "// ### CALL APPROPRIATE MERKLE TREE FUNCTION ###",
                         """
-        let component_leaf_hashes = compute_leaf_hashes(this, privacy_salt);
+        let component_leaf_hashes = compute_leaf_hashes(components, privacy_salt);
 
         let mut padded_leaves = [[false; COMPONENT_GROUP_LEAF_DIGEST_BITS]; $paddedGroupSize];
         for i in 0..$componentGroupSize {
@@ -116,6 +118,10 @@ class MerkleReplacer(private val outputPath: File) {
         """
             ).replace("\${GROUP_SIZE_PLACEHOLDER}", "2")
         }
+    }
+
+    private fun isPowerOfTwo(value: Int): Boolean {
+        return value > 0 && (value and (value - 1)) == 0
     }
 
     private fun getNextPowerOfTwo(value: Int): Int {
