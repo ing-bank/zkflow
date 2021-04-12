@@ -16,25 +16,20 @@ import java.security.PublicKey
  * Support for public keys variant defined in Corda.
  */
 object CordaSignatureSchemeToSerializers {
-    private val scheme2serializer = Crypto.supportedSignatureSchemes()
-        .filter { it.schemeNumberID != Crypto.COMPOSITE_KEY.schemeNumberID }
-        .map {
-            val module = SerializersModule {
-                polymorphic(PublicKey::class) {
-                    when (it.schemeNumberID) {
-                        Crypto.RSA_SHA256.schemeNumberID -> subclass(BCRSAPublicKeySerializer)
-                        Crypto.ECDSA_SECP256K1_SHA256.schemeNumberID,
-                        Crypto.ECDSA_SECP256R1_SHA256.schemeNumberID -> subclass(BCECPublicKeySerializer)
-                        Crypto.EDDSA_ED25519_SHA512.schemeNumberID -> subclass(EdDSAPublicKeySerializer)
-                        Crypto.SPHINCS256_SHA256.schemeNumberID -> subclass(BCSphincs256PublicKeySerializer)
-                        else -> error("Unsupported signature scheme")
-                    }
-                }
-            }
-            Pair(it.schemeNumberID, module)
-        }.toMap()
+    private val scheme2serializer = mapOf(
+        Crypto.RSA_SHA256.schemeNumberID to
+            SerializersModule { polymorphic(PublicKey::class) { subclass(BCRSAPublicKeySerializer) } },
+        Crypto.ECDSA_SECP256K1_SHA256.schemeNumberID to
+            SerializersModule { polymorphic(PublicKey::class) { subclass(BCECPublicKeySerializer) } },
+        Crypto.ECDSA_SECP256R1_SHA256.schemeNumberID to
+            SerializersModule { polymorphic(PublicKey::class) { subclass(BCECPublicKeySerializer) } },
+        Crypto.EDDSA_ED25519_SHA512.schemeNumberID to
+            SerializersModule { polymorphic(PublicKey::class) { subclass(EdDSAPublicKeySerializer) } },
+        Crypto.SPHINCS256_SHA256.schemeNumberID to
+            SerializersModule { polymorphic(PublicKey::class) { subclass(BCSphincs256PublicKeySerializer) } },
+    )
 
-    infix fun serializerFor(scheme: SignatureScheme): SerializersModule =
+    fun serializersModuleFor(scheme: SignatureScheme): SerializersModule =
         scheme2serializer.getOrElse(scheme.schemeNumberID) { error("Unsupported signature scheme") }
 }
 

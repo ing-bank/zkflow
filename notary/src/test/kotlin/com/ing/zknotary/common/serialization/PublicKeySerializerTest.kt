@@ -15,13 +15,13 @@ class PublicKeySerializerTest {
         Crypto.supportedSignatureSchemes().filter {
             it.schemeNumberID != Crypto.COMPOSITE_KEY.schemeNumberID
         }.forEach {
-            val serializers = CordaSignatureSchemeToSerializers serializerFor it
+            val serializersModule = CordaSignatureSchemeToSerializers.serializersModuleFor(it)
 
             val pk1 = Crypto.generateKeyPair(it).public
             val pk2 = Crypto.generateKeyPair(it).public
 
-            roundTrip(pk1, serializers)
-            sameSize(pk1, pk2, serializers)
+            roundTrip(pk1, serializersModule)
+            sameSize(pk1, pk2, serializersModule)
         }
     }
 
@@ -30,13 +30,13 @@ class PublicKeySerializerTest {
         Crypto.supportedSignatureSchemes().filter {
             it.schemeNumberID != Crypto.COMPOSITE_KEY.schemeNumberID
         }.forEach {
-            val serializers = CordaSignatureSchemeToSerializers serializerFor it
+            val serializersModule = CordaSignatureSchemeToSerializers.serializersModuleFor(it)
 
             val data1 = Data(Crypto.generateKeyPair(it).public)
             val data2 = Data(Crypto.generateKeyPair(it).public)
 
-            roundTrip(data1, serializers)
-            sameSize(data1, data2, serializers)
+            roundTrip(data1, serializersModule)
+            sameSize(data1, data2, serializersModule)
         }
     }
 }
