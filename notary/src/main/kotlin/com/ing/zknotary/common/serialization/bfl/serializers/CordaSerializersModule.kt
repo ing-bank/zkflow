@@ -1,4 +1,4 @@
-package com.ing.zknotary.common.serialization.bfl.corda
+package com.ing.zknotary.common.serialization.bfl.serializers
 
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.modules.SerializersModule
@@ -43,6 +43,7 @@ val CordaSerializers = SerializersModule {
     contextual(UniqueIdentifierSerializer)
     contextual(StateRefSerializer)
     contextual(PrivacySaltSerializer)
+
     contextual(TimeWindowSerializer)
     contextual(PartyAndReferenceSerializer)
 }

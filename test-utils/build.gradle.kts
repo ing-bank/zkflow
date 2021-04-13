@@ -4,6 +4,7 @@ plugins {
     kotlin("jvm")
     id("maven-publish")
     id("java-library")
+    kotlin("plugin.serialization")
 }
 
 dependencies {
@@ -13,6 +14,15 @@ dependencies {
     val cordaVersion: String by project
     api("$cordaReleaseGroup:corda-test-utils:$cordaVersion")
     api("$cordaReleaseGroup:corda-node-driver:$cordaVersion")
+
+    val kotlinxSerializationVersion: String by project
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:$kotlinxSerializationVersion")
+
+    val kotlinxSerializationBflVersion: String by project
+    implementation("com.ing.serialization.bfl:kotlinx-serialization-bfl:$kotlinxSerializationBflVersion")
+
+    val kotestVersion: String by project
+    implementation("io.kotest:kotest-assertions-core:$kotestVersion")
 }
 
 kotlin {

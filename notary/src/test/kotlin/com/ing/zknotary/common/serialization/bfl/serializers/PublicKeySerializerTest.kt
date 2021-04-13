@@ -1,6 +1,7 @@
-package com.ing.zknotary.common.serialization
+package com.ing.zknotary.common.serialization.bfl.serializers
 
-import com.ing.zknotary.common.serialization.bfl.corda.CordaSignatureSchemeToSerializers
+import com.ing.zknotary.testing.roundTrip
+import com.ing.zknotary.testing.sameSize
 import kotlinx.serialization.Serializable
 import net.corda.core.crypto.Crypto
 import org.junit.jupiter.api.Test

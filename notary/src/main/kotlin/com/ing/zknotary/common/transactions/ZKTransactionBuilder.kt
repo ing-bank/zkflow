@@ -1,7 +1,7 @@
 package com.ing.zknotary.common.transactions
 
 import co.paralleluniverse.strands.Strand
-import com.ing.zknotary.common.serialization.FixedLengthSerializationScheme
+import com.ing.zknotary.common.serialization.bfl.FixedLengthSerializationScheme
 import net.corda.core.contracts.AttachmentConstraint
 import net.corda.core.contracts.AutomaticPlaceholderConstraint
 import net.corda.core.contracts.Command

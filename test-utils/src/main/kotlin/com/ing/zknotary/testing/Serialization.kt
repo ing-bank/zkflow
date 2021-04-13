@@ -1,8 +1,8 @@
-package com.ing.zknotary.common.serialization
+package com.ing.zknotary.testing
 
 import com.ing.serialization.bfl.api.reified.deserialize
 import com.ing.serialization.bfl.api.reified.serialize
-import com.ing.zknotary.common.serialization.bfl.corda.CordaSerializers
+import com.ing.zknotary.common.serialization.bfl.serializers.CordaSerializers
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import kotlinx.serialization.KSerializer
@@ -13,13 +13,13 @@ import kotlinx.serialization.modules.plus
 /**
  * Test if value survives serialization/deserialization.
  */
-inline fun <reified T : Any> roundTrip(
+public inline fun <reified T : Any> roundTrip(
     value: T,
     serializers: SerializersModule = EmptySerializersModule,
     strategy: KSerializer<T>? = null
 ) {
     val serialization = serialize(value, strategy, serializersModule = CordaSerializers + serializers)
-    val deserialization = deserialize<T>(serialization, serializersModule = CordaSerializers + serializers)
+    val deserialization = deserialize<T>(serialization, strategy, serializersModule = CordaSerializers + serializers)
 
     deserialization shouldBe value
 }
@@ -27,7 +27,7 @@ inline fun <reified T : Any> roundTrip(
 /**
  * Test if serializations of different instances have the same size.
  */
-inline fun <reified T : Any> sameSize(
+public inline fun <reified T : Any> sameSize(
     value1: T,
     value2: T,
     serializers: SerializersModule = EmptySerializersModule,

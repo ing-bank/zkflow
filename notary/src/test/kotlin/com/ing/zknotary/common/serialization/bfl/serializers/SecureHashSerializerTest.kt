@@ -1,5 +1,7 @@
-package com.ing.zknotary.common.serialization
+package com.ing.zknotary.common.serialization.bfl.serializers
 
+import com.ing.zknotary.testing.roundTrip
+import com.ing.zknotary.testing.sameSize
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import net.corda.core.crypto.SecureHash

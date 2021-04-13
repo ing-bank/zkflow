@@ -12,7 +12,6 @@ plugins {
 
 dependencies {
     implementation(project(":gradle-plugin"))
-
     testImplementation(project(":notary"))
 
     val zkkryptoVersion: String by project
