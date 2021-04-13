@@ -17,4 +17,5 @@ val CordaSerializers = SerializersModule {
     contextual(UniqueIdentifierSerializer)
     contextual(StateRefSerializer)
     contextual(PrivacySaltSerializer)
+    contextual(TimeWindowSerializer)
 }
