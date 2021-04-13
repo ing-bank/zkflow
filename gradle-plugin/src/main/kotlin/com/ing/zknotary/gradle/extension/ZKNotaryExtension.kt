@@ -19,10 +19,10 @@ open class ZKNotaryExtension(project: Project) {
     var bigDecimalSizes = setOf(Pair(24, 6), Pair(100, 20))
 
     @Input
-    var zincPlatformSourcesVersion: String? = "0.1.4-SNAPSHOT"
+    var zincPlatformSourcesVersion: String? = "1.0-SNAPSHOT"
 
     @Input
-    var notaryVersion: String? = "0.1.4-SNAPSHOT"
+    var notaryVersion: String? = "1.0-SNAPSHOT"
 
     @OutputDirectory
     val mergedCircuitOutputPath: File = project.buildDir.resolve(MERGED_CIRCUIT_BUILD_PATH)

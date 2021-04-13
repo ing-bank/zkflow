@@ -107,6 +107,10 @@ subprojects {
         // Make sure the project has the necessary plugins loaded
         plugins.apply {
             apply("com.diffplug.gradle.spotless")
+            /* TODO: Aggregated Jacoco report
+             * https://docs.gradle.org/6.5.1/samples/sample_jvm_multi_project_with_code_coverage.html for aggregate coverage report
+             * https://gist.github.com/tsjensen/d8b9ab9e6314ae2f63f4955c44399dad
+             */
             apply("jacoco")
         }
 
