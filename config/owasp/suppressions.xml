@@ -31,6 +31,15 @@
 
     <suppress>
         <notes><![CDATA[
+   file name: jetty-http-9.4.19.v20190610.jar
+   Part of Corda, not used by our code
+   ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.eclipse\.jetty/jetty\-.*@.*$</packageUrl>
+        <vulnerabilityName regex="true">^.*$</vulnerabilityName>
+    </suppress>
+
+    <suppress>
+        <notes><![CDATA[
    file name: artemis-jms-client-2.6.2.jar
    Part of Corda, not used by our code
    ]]></notes>
