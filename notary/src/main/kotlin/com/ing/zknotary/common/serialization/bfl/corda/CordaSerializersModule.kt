@@ -13,4 +13,8 @@ val CordaSerializers = SerializersModule {
 
     contextual(CordaX500NameSerializer)
     contextual(AbstractPartySerializer)
+
+    contextual(UniqueIdentifierSerializer)
+    contextual(StateRefSerializer)
+    contextual(PrivacySaltSerializer)
 }
