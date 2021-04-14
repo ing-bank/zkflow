@@ -23,7 +23,7 @@ data class TimeWindowSurrogate(
             fromTime != null && untilTime != null -> TimeWindow.between(fromTime, untilTime)
             fromTime != null -> TimeWindow.fromOnly(fromTime)
             untilTime != null -> TimeWindow.untilOnly(untilTime)
-            else -> error("Time window with undefined limits. Please provide at least an upper or lower limit")
+            else -> error("Serialization of time window is corrupted")
         }
     }
 
