@@ -10,7 +10,7 @@ import net.corda.core.utilities.ByteSequence
 open class TestSerializationScheme : CustomSerializationScheme {
 
     companion object {
-        const val SCHEME_ID = 777
+        const val SCHEME_ID = 7077
     }
 
     override fun getSchemeId(): Int {

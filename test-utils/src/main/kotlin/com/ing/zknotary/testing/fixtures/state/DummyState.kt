@@ -21,7 +21,7 @@ public data class DummyState(
     @FixedLength([2]) override val participants: List<@Contextual AbstractParty>
 ) : ContractState {
     public companion object {
-        private fun any(): DummyState {
+        public fun any(): DummyState {
             val alice = TestIdentity.fresh("Alice")
             return DummyState(
                 Random.nextInt(),
