@@ -25,34 +25,19 @@ internal class AmountSerializerTest {
     @Test
     fun `deserialized Amount with CustomData should equal original`() {
         val original = DataWithCustomData(Amount(5L, BigDecimal.TEN, CustomData("Hello BFL!")))
-        roundTrip(
-            original,
-            serializers = SerializersModule {
-                contextual(AmountSerializer(CustomData.serializer()))
-            }
-        )
+        roundTrip(original, serializers = SerializersModule { contextual(AmountSerializer(CustomData.serializer())) })
     }
 
     @Test
     fun `deserialized Amount with String should equal original`() {
         val original = DataWithString(Amount(5L, BigDecimal.ONE, "Hello BFL!"))
-        roundTrip(
-            original,
-            serializers = SerializersModule {
-                contextual(AmountSerializer(String.serializer()))
-            }
-        )
+        roundTrip(original, serializers = SerializersModule { contextual(AmountSerializer(String.serializer())) })
     }
 
     @Test
     fun `deserialized Amount with Currency should equal original`() {
         val original = DataWithCurrency(Amount(5L, BigDecimal.ONE, Currency.getInstance(Locale.CANADA)))
-        roundTrip(
-            original,
-            serializers = SerializersModule {
-                contextual(AmountSerializer(CurrencySerializer))
-            }
-        )
+        roundTrip(original, serializers = SerializersModule { contextual(AmountSerializer(CurrencySerializer)) })
     }
 
     @Test
@@ -66,26 +51,18 @@ internal class AmountSerializerTest {
             original,
             serializers = CordaSerializers +
                 CordaSignatureSchemeToSerializers.serializersModuleFor(Crypto.DEFAULT_SIGNATURE_SCHEME) +
-                SerializersModule {
-                    contextual(AmountSerializer(IssuedSerializer(Int.serializer())))
-                }
+                SerializersModule { contextual(AmountSerializer(IssuedSerializer(Int.serializer()))) }
         )
     }
 
     @Test
     fun `deserialized Amount with TokenizableAssetInfo should equal original`() {
         val original = DataWithTokenizableAssetInfo(
-            Amount(
-                5L,
-                BigDecimal.ONE,
-                MyTokenizableAssetInfo(BigDecimal.TEN)
-            )
+            Amount(5L, BigDecimal.ONE, MyTokenizableAssetInfo(BigDecimal.TEN))
         )
         roundTrip(
             original,
-            serializers = SerializersModule {
-                contextual(AmountSerializer(MyTokenizableAssetInfo.serializer()))
-            }
+            serializers = SerializersModule { contextual(AmountSerializer(MyTokenizableAssetInfo.serializer())) }
         )
     }
 }
