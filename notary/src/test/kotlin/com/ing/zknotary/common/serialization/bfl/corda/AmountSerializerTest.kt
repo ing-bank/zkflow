@@ -12,6 +12,7 @@ import kotlinx.serialization.modules.plus
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.Issued
 import net.corda.core.contracts.PartyAndReference
+import net.corda.core.contracts.TokenizableAssetInfo
 import net.corda.core.crypto.Crypto
 import net.corda.core.utilities.OpaqueBytes
 import net.corda.testing.core.TestIdentity
@@ -75,9 +76,26 @@ internal class AmountSerializerTest {
         roundTrip(
             original,
             serializers = CordaSerializers +
-                    CordaSignatureSchemeToSerializers.serializersModuleFor(Crypto.DEFAULT_SIGNATURE_SCHEME) +
-                    SerializersModule {
-                contextual(AmountSerializer(IssuedSerializer(Int.serializer())))
+                CordaSignatureSchemeToSerializers.serializersModuleFor(Crypto.DEFAULT_SIGNATURE_SCHEME) +
+                SerializersModule {
+                    contextual(AmountSerializer(IssuedSerializer(Int.serializer())))
+                }
+        )
+    }
+
+    @Test
+    fun `deserialized Amount with TokenizableAssetInfo should equal original`() {
+        val original = DataWithTokenizableAssetInfo(
+            Amount(
+                5L,
+                BigDecimal.ONE,
+                MyTokenizableAssetInfo(BigDecimal.TEN)
+            )
+        )
+        roundTrip(
+            original,
+            serializers = SerializersModule {
+                contextual(AmountSerializer(MyTokenizableAssetInfo.serializer()))
             }
         )
     }
@@ -99,6 +117,17 @@ private data class DataWithCurrency(
 @Serializable
 private data class DataWithIssued(
     val amount: @Contextual Amount<@Contextual Issued<@Contextual Any>>
+)
+
+@Serializable
+private data class MyTokenizableAssetInfo(
+    @FixedLength([AmountSurrogate.DISPLAY_TOKEN_SIZE_INTEGER_LENGTH, AmountSurrogate.DISPLAY_TOKEN_SIZE_FRACTION_LENGTH])
+    override val displayTokenSize: @Contextual BigDecimal
+) : TokenizableAssetInfo
+
+@Serializable
+private data class DataWithTokenizableAssetInfo(
+    val amount: @Contextual Amount<MyTokenizableAssetInfo>
 )
 
 @Serializable
