@@ -14,7 +14,7 @@ import net.corda.core.utilities.OpaqueBytes
 @Suppress("ArrayInDataClass")
 data class PartyAndReferenceSurrogate(
     val party: @Contextual AbstractParty,
-    @FixedLength([32]) // TODO is this enough? What is usually put in the reference?
+    @FixedLength([256])
     val reference: ByteArray
 ) : Surrogate<PartyAndReference> {
     override fun toOriginal(): PartyAndReference {
