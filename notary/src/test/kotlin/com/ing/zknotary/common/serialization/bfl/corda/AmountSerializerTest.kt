@@ -56,17 +56,6 @@ internal class AmountSerializerTest {
     }
 
     @Test
-    fun `deserialized Amount with Currency2 should equal original`() {
-        val original = DataWithCurrency2(Amount(5L, BigDecimal.ONE, Currency.getInstance(Locale.CANADA)))
-        roundTrip(
-            original,
-            serializers = SerializersModule {
-                contextual(AmountSerializer(CurrencySerializer))
-            }
-        )
-    }
-
-    @Test
     fun `deserialized Amount with Issued should equal original`() {
         val issued = Issued(
             PartyAndReference(TestIdentity.fresh("test").party, OpaqueBytes("world".toByteArray())),
@@ -128,11 +117,6 @@ private data class MyTokenizableAssetInfo(
 @Serializable
 private data class DataWithTokenizableAssetInfo(
     val amount: @Contextual Amount<MyTokenizableAssetInfo>
-)
-
-@Serializable
-private data class DataWithCurrency2(
-    val amount: @Contextual Amount<@Serializable(with = CurrencySerializer::class) Currency>
 )
 
 @Serializable
