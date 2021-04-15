@@ -36,6 +36,7 @@ buildscript {
 
 plugins {
     java
+    idea
     kotlin("jvm") apply false
     id("com.diffplug.gradle.spotless") apply false
     id("io.gitlab.arturbosch.detekt")
@@ -98,6 +99,13 @@ tasks.withType<io.gitlab.arturbosch.detekt.Detekt> {
     exclude("**/build/")
 }
 
+idea {
+    module {
+        isDownloadSources = true
+        isDownloadJavadoc = true
+    }
+}
+
 subprojects {
     val repos: groovy.lang.Closure<RepositoryHandler> by rootProject.extra
     repositories(repos)
@@ -112,6 +120,7 @@ subprojects {
              * https://gist.github.com/tsjensen/d8b9ab9e6314ae2f63f4955c44399dad
              */
             apply("jacoco")
+            apply("idea")
         }
 
         // Load the necessary dependencies
