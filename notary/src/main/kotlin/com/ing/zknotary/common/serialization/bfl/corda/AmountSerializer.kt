@@ -43,7 +43,7 @@ class AmountSerializer<T : Any>(tokenSerializer: KSerializer<T>) : KSerializer<A
         get() = surrogateSerializer.descriptor
 
     override fun serialize(encoder: Encoder, value: Amount<T>) {
-        return encoder.encodeSerializableValue(
+        encoder.encodeSerializableValue(
             surrogateSerializer,
             AmountSurrogate(
                 value.quantity,
