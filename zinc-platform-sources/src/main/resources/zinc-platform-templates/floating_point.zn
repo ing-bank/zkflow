@@ -1,7 +1,41 @@
+// Input parameters:
+//   - INTEGER_SIZE_PLACEHOLDER: u16 = Integer size of BigDecimal
+//   - FRACTION_SIZE_PLACEHOLDER: u16 = Fraction size of BigDecimal
+// NOTE:
+// All internal size constants are u16, which mean that all values should be below 65536.
+// The largest size constant is AMOUNT_LENGTH, which can be calculated as:
+//   AMOUNT_LENGTH = 61 + INTEGER_SIZE + FRACTION_SIZE + TOKEN_SIZE
+// So in order not to violate the u16 boundary, the following expression should hold:
+//   INTEGER_SIZE + FRACTION_SIZE + TOKEN_SIZE < (65536 - 61)
+
 //In case if value can't be stored in BigDecimal, it will throw an exception,
 //the some goes for arithmetic operations.
-const INTEGER_SIZE: u8 = ${INTEGER_SIZE_PLACEHOLDER};
-const FRACTION_SIZE: u8 = ${FRACTION_SIZE_PLACEHOLDER};
+const BIG_DECIMAL_SIGN_LENGTH: u16 = 1;
+const BIG_DECIMAL_INTEGER_LENGTH_LENGTH: u16 = 4;
+const BIG_DECIMAL_INTEGER_LENGTH: u16 = ${INTEGER_SIZE_PLACEHOLDER};
+const BIG_DECIMAL_FRACTION_LENGTH_LENGTH: u16 = 4;
+const BIG_DECIMAL_FRACTION_LENGTH: u16 = ${FRACTION_SIZE_PLACEHOLDER};
+
+//! Big Decimal offsets
+const BIG_DECIMAL_SIGN_OFFSET: u16 = 0;
+const BIG_DECIMAL_INTEGER_LENGTH_OFFSET: u16 =
+      BIG_DECIMAL_SIGN_OFFSET
+    + BIG_DECIMAL_SIGN_LENGTH;
+const BIG_DECIMAL_INTEGER_OFFSET: u16 =
+      BIG_DECIMAL_INTEGER_LENGTH_OFFSET
+    + BIG_DECIMAL_INTEGER_LENGTH_LENGTH;
+const BIG_DECIMAL_FRACTION_LENGTH_OFFSET: u16 =
+      BIG_DECIMAL_INTEGER_OFFSET
+    + BIG_DECIMAL_INTEGER_LENGTH;
+const BIG_DECIMAL_FRACTION_OFFSET: u16 =
+      BIG_DECIMAL_FRACTION_LENGTH_OFFSET
+    + BIG_DECIMAL_FRACTION_LENGTH_LENGTH;
+const BIG_DECIMAL_LENGTH: u16 =
+      BIG_DECIMAL_FRACTION_OFFSET
+    + BIG_DECIMAL_FRACTION_LENGTH;
+
+//Type for the ByteArray of the serialized form of BigDecimal.
+type SerializedBigDecimal = [u8; BIG_DECIMAL_LENGTH];
 
 //Original BigDecimal in Java stores all digits in one array, and uses scale as a number of digits to the right side of
 //the decimal point. Then it calculates the difference in scale of two comparing BigDecimals to adjust digits.
@@ -18,15 +52,23 @@ const FRACTION_SIZE: u8 = ${FRACTION_SIZE_PLACEHOLDER};
 //fraction - decimal representation of fraction part of stored value, can contain only 128 digits
 struct BigDecimal {
     sign: i8,
-    integer: [u8; INTEGER_SIZE],
-    fraction: [u8; FRACTION_SIZE],
+    integer: [u8; BIG_DECIMAL_INTEGER_LENGTH],
+    fraction: [u8; BIG_DECIMAL_FRACTION_LENGTH],
 }
 
 impl BigDecimal {
+    fn zero() -> BigDecimal {
+        BigDecimal {
+            sign: 0 as i8,
+            integer: [0; BIG_DECIMAL_INTEGER_LENGTH],
+            fraction: [0; BIG_DECIMAL_FRACTION_LENGTH],
+        }
+    }
+
     //comparison if the same sign
     fn _compare_magnitude(this: BigDecimal, that: BigDecimal) -> i8 {
         let mut result: i8 = 0 as i8;
-        for i in 0..INTEGER_SIZE {
+        for i in 0..BIG_DECIMAL_INTEGER_LENGTH {
             if result == 0 as i8 {
                 result = if this.integer[i] > that.integer[i] {
                     1 as i8
@@ -41,7 +83,7 @@ impl BigDecimal {
         }
 
         if result == 0 as i8 {
-            for i in 0..FRACTION_SIZE {
+            for i in 0..BIG_DECIMAL_FRACTION_LENGTH {
                 if result == 0 as i8 {
                     result = if this.fraction[i] > that.fraction[i] {
                         1 as i8
@@ -84,35 +126,37 @@ impl BigDecimal {
     }
 
     fn _sum_magnitude(this: BigDecimal, that: BigDecimal) -> BigDecimal {
-        let mut fraction: [u8; FRACTION_SIZE] = [0; FRACTION_SIZE];
-        let mut diff = 0;
+        let mut fraction: [u8; BIG_DECIMAL_FRACTION_LENGTH] = [0; BIG_DECIMAL_FRACTION_LENGTH];
+        let mut carry = 0;
 
-        for i in 0..FRACTION_SIZE {
+        for i in 0..BIG_DECIMAL_FRACTION_LENGTH {
+            let index = BIG_DECIMAL_FRACTION_LENGTH - i - 1 as u16;
             let value =
-                this.fraction[FRACTION_SIZE - i - 1] + that.fraction[FRACTION_SIZE - i - 1] + diff;
+                this.fraction[index] + that.fraction[index] + carry;
             if value >= 10 {
-                diff = 1;
-                fraction[FRACTION_SIZE - i - 1] = value - 10;
+                carry = 1;
+                fraction[index] = value - 10;
             } else {
-                diff = 0;
-                fraction[FRACTION_SIZE - i - 1] = value;
+                carry = 0;
+                fraction[index] = value;
             }
         }
 
-        let mut integer: [u8; INTEGER_SIZE] = [0; INTEGER_SIZE];
-        for i in 0..INTEGER_SIZE {
+        let mut integer: [u8; BIG_DECIMAL_INTEGER_LENGTH] = [0; BIG_DECIMAL_INTEGER_LENGTH];
+        for i in 0..BIG_DECIMAL_INTEGER_LENGTH {
+            let index = BIG_DECIMAL_INTEGER_LENGTH - i - 1 as u16;
             let value =
-                this.integer[INTEGER_SIZE - i - 1] + that.integer[INTEGER_SIZE - i - 1] + diff;
+                this.integer[index] + that.integer[index] + carry;
             if value >= 10 {
-                diff = 1;
-                integer[INTEGER_SIZE - i - 1] = value - 10;
+                carry = 1;
+                integer[index] = value - 10;
             } else {
-                diff = 0;
-                integer[INTEGER_SIZE - i - 1] = value;
+                carry = 0;
+                integer[index] = value;
             }
         }
 
-        assert!(diff != 1, "Magnitude exceeds the maximum stored value");
+        assert!(carry != 1, "Magnitude exceeds the maximum stored value");
 
         BigDecimal {
             sign: this.sign,
@@ -123,36 +167,34 @@ impl BigDecimal {
 
     //this >= that, but this[i] is not necessarily >= that[i]
     fn _subtract_magnitude(this: BigDecimal, that: BigDecimal) -> BigDecimal {
-        let mut fraction: [u8; FRACTION_SIZE] = [0; FRACTION_SIZE];
-        let mut diff = 0;
-        for i in 0..FRACTION_SIZE {
-            let value = this.fraction[FRACTION_SIZE - i - 1] as i8
-                - that.fraction[FRACTION_SIZE - i - 1] as i8
-                - diff as i8;
+        let mut fraction: [u8; BIG_DECIMAL_FRACTION_LENGTH] = [0; BIG_DECIMAL_FRACTION_LENGTH];
+        let mut carry = 0;
+        for i in 0..BIG_DECIMAL_FRACTION_LENGTH {
+            let index = BIG_DECIMAL_FRACTION_LENGTH - i - 1 as u16;
+            let value = this.fraction[index] as i8 - that.fraction[index] as i8 - carry as i8;
             if value < 0 as i8 {
-                diff = 1;
-                fraction[FRACTION_SIZE - i - 1] = (10 as i8 + value) as u8;
+                carry = 1;
+                fraction[index] = (10 as i8 + value) as u8;
             } else {
-                diff = 0;
-                fraction[FRACTION_SIZE - i - 1] = value as u8;
+                carry = 0;
+                fraction[index] = value as u8;
             }
         }
 
-        let mut integer: [u8; INTEGER_SIZE] = [0; INTEGER_SIZE];
-        for i in 0..INTEGER_SIZE {
-            let value = this.integer[INTEGER_SIZE - i - 1] as i8
-                - that.integer[INTEGER_SIZE - i - 1] as i8
-                - diff as i8;
+        let mut integer: [u8; BIG_DECIMAL_INTEGER_LENGTH] = [0; BIG_DECIMAL_INTEGER_LENGTH];
+        for i in 0..BIG_DECIMAL_INTEGER_LENGTH {
+            let index = BIG_DECIMAL_INTEGER_LENGTH - i - 1 as u16;
+            let value = this.integer[index] as i8 - that.integer[index] as i8 - carry as i8;
             if value < 0 as i8 {
-                diff = 1;
-                integer[INTEGER_SIZE - i - 1] = (10 as i8 + value) as u8;
+                carry = 1;
+                integer[index] = (10 as i8 + value) as u8;
             } else {
-                diff = 0;
-                integer[INTEGER_SIZE - i - 1] = value as u8;
+                carry = 0;
+                integer[index] = value as u8;
             }
         }
 
-        let sign = if diff == 1 { -1 } else { 1 as i8 };
+        let sign = if carry == 1 { -1 } else { 1 as i8 };
 
         BigDecimal {
             sign: sign,
@@ -164,11 +206,7 @@ impl BigDecimal {
     fn _handle_different_signs(this: BigDecimal, that: BigDecimal) -> BigDecimal {
         let comparison = _compare_magnitude(this, that);
         if comparison == 0 as i8 {
-            BigDecimal {
-                sign: 0 as i8,
-                integer: [0; INTEGER_SIZE],
-                fraction: [0; FRACTION_SIZE],
-            }
+            zero()
         } else {
             let absolute_diff = if comparison == 1 as i8 {
                 _subtract_magnitude(this, that)
@@ -185,11 +223,7 @@ impl BigDecimal {
 
     fn _handle_same_sign(this: BigDecimal, that: BigDecimal) -> BigDecimal {
         if that.sign == 0 as i8 {
-            BigDecimal {
-                sign: 0 as i8,
-                integer: [0; INTEGER_SIZE],
-                fraction: [0; FRACTION_SIZE],
-            }
+            zero()
         } else {
             _sum_magnitude(this, that)
         }
@@ -220,36 +254,133 @@ impl BigDecimal {
 
         plus(this, negated)
     }
+
+    fn _extract_int(serialized_bd: SerializedBigDecimal, offset: u16) -> u32 {
+        let mut result: u32 = 0;
+        for i in 0..4 {
+            result = result * 256 as u32 + serialized_bd[offset + i as u16] as u32;
+        }
+        result
+    }
+
+    fn _parse_sign(sign_byte: u8) -> i8 {
+        if sign_byte > 127 {
+            -1 as i8
+        } else if sign_byte > 0 {
+            1 as i8
+        } else {
+            0 as i8
+        }
+    }
+
+    fn deserialize(serialized_bd: SerializedBigDecimal) -> BigDecimal {
+        let sign = _parse_sign(serialized_bd[BIG_DECIMAL_SIGN_OFFSET]);
+
+        let integer_length = _extract_int(serialized_bd, BIG_DECIMAL_INTEGER_LENGTH_OFFSET);
+
+        let mut integer = [0; BIG_DECIMAL_INTEGER_LENGTH];
+        // TODO investigate why the following line does not work when all constants
+        //      are u16 instead of u8. (It works with u8.) The 'downside' of this
+        //      approach, i.e. ignoring the `integer_lenght`,  are that the 'padding'
+        //      bytes in the array cannot contain bogus contents. Strangely enough it
+        //      does work for deserializing the fraction.
+        //
+        // for i in 0..BIG_DECIMAL_INTEGER_LENGTH while i as u32 < integer_length {
+        for i in 0..BIG_DECIMAL_INTEGER_LENGTH {
+            let index = BIG_DECIMAL_INTEGER_LENGTH - i - 1 as u16;
+            integer[index] = serialized_bd[i + BIG_DECIMAL_INTEGER_OFFSET];
+        }
+
+        let fraction_length = _extract_int(serialized_bd, BIG_DECIMAL_FRACTION_LENGTH_OFFSET);
+
+        let mut fraction = [0; BIG_DECIMAL_FRACTION_LENGTH];
+        for i in 0..BIG_DECIMAL_FRACTION_LENGTH while i as u32 < fraction_length {
+            fraction[i] = serialized_bd[i + BIG_DECIMAL_FRACTION_OFFSET];
+        }
+
+        BigDecimal {
+            sign: sign,
+            integer: integer,
+            fraction: fraction,
+        }
+    }
 }
 
-const TOKEN_NAME_HASH_LENGTH: u8 = 32;
-type TokenNameHash = [u8; TOKEN_NAME_HASH_LENGTH];
+const AMOUNT_QUANTITY_LENGTH: u16 = 8;
+const AMOUNT_DISPLAY_TOKEN_SIZE_LENGTH: u16 = BIG_DECIMAL_LENGTH;
+const AMOUNT_TOKEN_TYPE_HASH_LENGTH_LENGTH: u16 = 4;
+const AMOUNT_TOKEN_TYPE_HASH_LENGTH: u16 = 32;
+// TODO make template parameter
+const AMOUNT_TOKEN_LENGTH: u16 = 8;
+
+//! Amount offsets
+const AMOUNT_QUANTITY_OFFSET: u16 = 0;
+const AMOUNT_DISPLAY_TOKEN_SIZE_OFFSET: u16 =
+    AMOUNT_QUANTITY_OFFSET
+    + AMOUNT_QUANTITY_LENGTH;
+const AMOUNT_TOKEN_TYPE_HASH_LENGTH_OFFSET: u16 =
+    AMOUNT_DISPLAY_TOKEN_SIZE_OFFSET
+    + AMOUNT_DISPLAY_TOKEN_SIZE_LENGTH;
+const AMOUNT_TOKEN_TYPE_HASH_OFFSET: u16 =
+    AMOUNT_TOKEN_TYPE_HASH_LENGTH_OFFSET
+    + AMOUNT_TOKEN_TYPE_HASH_LENGTH_LENGTH;
+const AMOUNT_TOKEN_OFFSET: u16 =
+    AMOUNT_TOKEN_TYPE_HASH_OFFSET
+    + AMOUNT_TOKEN_TYPE_HASH_LENGTH;
+const AMOUNT_LENGTH: u16 =
+    AMOUNT_TOKEN_OFFSET
+    + AMOUNT_TOKEN_LENGTH;
+
+type SerializedAmount = [u8; AMOUNT_LENGTH];
+
+type TokenHash = [u8; AMOUNT_TOKEN_TYPE_HASH_LENGTH];
+type TokenValue = [u8; AMOUNT_TOKEN_LENGTH];
 
 //The representation of class net.corda.core.contracts.Amount in zinc. However, zinc does not support
-//generics, thus to maintain it to some extend we use the hash of class name.
+//generics, thus to maintain it to some extend we use the hash of the token.
 //
 //Description of struct properties:
 //quantity - number of tokens
 //display_token_size - number of units stored in token
-//token_name_hash - hash of class name of token, used to distinguish tokens only
+//token_type_hash - hash of token, used to distinguish tokens only
+//token - serialized token
 //
 //For more information about struct properties, please, refer to class net.corda.core.contracts.Amount.
 struct Amount {
     quantity: i64,
     display_token_size: BigDecimal,
-    token_name_hash: TokenNameHash,
+    token_type_hash: TokenHash,
+    token: TokenValue,
 }
 
 impl Amount {
-    fn _compare_token_name_hashes(
-        this_token_hash: TokenNameHash,
-        that_token_hash: TokenNameHash,
+    fn zero() -> Amount {
+        Amount {
+            quantity: 0 as i64,
+            display_token_size: BigDecimal::zero(),
+            token_type_hash: [0; AMOUNT_TOKEN_TYPE_HASH_LENGTH],
+            token: [0; AMOUNT_TOKEN_LENGTH],
+        }
+    }
+
+    fn _compare_token_type_hashes(
+        this_token_type_hash: TokenHash,
+        that_token_type_hash: TokenHash,
     ) -> bool {
         let mut result = true;
-        for i in 0..TOKEN_NAME_HASH_LENGTH {
-            if this_token_hash[i] != that_token_hash[i] {
-                result = result && false;
-            }
+        for i in 0..AMOUNT_TOKEN_TYPE_HASH_LENGTH {
+            result = result && this_token_type_hash[i] == that_token_type_hash[i];
+        }
+        result
+    }
+
+    fn _compare_tokens(
+        this_token: TokenValue,
+        that_token: TokenValue,
+    ) -> bool {
+        let mut result = true;
+        for i in 0..AMOUNT_TOKEN_LENGTH {
+            result = result && this_token[i] == that_token[i];
         }
         result
     }
@@ -260,7 +391,11 @@ impl Amount {
             "Token sizes don't match"
         );
         assert!(
-            Amount::_compare_token_name_hashes(this.token_name_hash, that.token_name_hash),
+            Amount::_compare_token_type_hashes(this.token_type_hash, that.token_type_hash),
+            "Token types don't match"
+        );
+        assert!(
+            Amount::_compare_tokens(this.token, that.token),
             "Tokens don't match"
         );
     }
@@ -270,7 +405,8 @@ impl Amount {
         Amount {
             quantity: this.quantity + that.quantity,
             display_token_size: this.display_token_size,
-            token_name_hash: this.token_name_hash,
+            token_type_hash: this.token_type_hash,
+            token: this.token,
         }
     }
 
@@ -279,13 +415,62 @@ impl Amount {
         Amount {
             quantity: this.quantity - that.quantity,
             display_token_size: this.display_token_size,
-            token_name_hash: this.token_name_hash,
+            token_type_hash: this.token_type_hash,
+            token: this.token,
         }
     }
 
     fn equals(this: Amount, that: Amount) -> bool {
         this.quantity == that.quantity
-            && Amount::_compare_token_name_hashes(this.token_name_hash, that.token_name_hash)
+            && Amount::_compare_token_type_hashes(this.token_type_hash, that.token_type_hash)
             && BigDecimal::equals(this.display_token_size, that.display_token_size)
+    }
+
+    fn _extract_int(serialized_amount: SerializedAmount, offset: u16) -> u32 {
+        let mut result: u32 = 0;
+        for i in 0..4 {
+            result = result * 256 as u32 + serialized_amount[offset + i as u16] as u32;
+        }
+        result
+    }
+
+    fn _extract_long(serialized_amount: SerializedAmount, offset: u16) -> u64 {
+        let mut result: u64 = 0;
+        for i in 0..8 {
+            result = result * 256 as u64 + serialized_amount[offset + i as u16] as u64;
+        }
+        result
+    }
+
+    fn _extract_big_decimal(serialized_amount: SerializedAmount, offset: u16) -> BigDecimal {
+        let mut bd_bytes: SerializedBigDecimal = [0; BIG_DECIMAL_LENGTH];
+        for i in 0..BIG_DECIMAL_LENGTH {
+            bd_bytes[i] = serialized_amount[offset + i];
+        }
+        BigDecimal::deserialize(bd_bytes)
+    }
+
+    fn deserialize(serialized_amount: SerializedAmount) -> Amount {
+        let quantity = _extract_long(serialized_amount, AMOUNT_QUANTITY_OFFSET);
+
+        let display_token_size = _extract_big_decimal(serialized_amount, AMOUNT_DISPLAY_TOKEN_SIZE_OFFSET);
+
+        let token_type_hash_length = _extract_int(serialized_amount, AMOUNT_TOKEN_TYPE_HASH_LENGTH_OFFSET);
+        let mut token_type_hash: TokenHash = [0; AMOUNT_TOKEN_TYPE_HASH_LENGTH];
+        for i in 0..AMOUNT_TOKEN_TYPE_HASH_LENGTH while i as u32 < token_type_hash_length {
+            token_type_hash[i] = serialized_amount[AMOUNT_TOKEN_TYPE_HASH_OFFSET + i];
+        }
+
+        let mut token: TokenValue = [0; AMOUNT_TOKEN_LENGTH];
+        for i in 0..AMOUNT_TOKEN_LENGTH {
+            token[i] = serialized_amount[AMOUNT_TOKEN_OFFSET + i];
+        }
+
+        Amount {
+            quantity: quantity as i64,
+            display_token_size: display_token_size,
+            token_type_hash: token_type_hash,
+            token: token,
+        }
     }
 }

@@ -5,6 +5,7 @@ import net.corda.core.contracts.Amount
 import net.corda.core.utilities.loggerFor
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.util.Currency
@@ -12,13 +13,14 @@ import java.util.Locale
 import kotlin.time.ExperimentalTime
 
 @ExperimentalTime
-class AmountMinusTest {
-    private val log = loggerFor<AmountMinusTest>()
-    private val zincZKService = getZincZKService<AmountMinusTest>()
+class SerializedAmountPlusTest {
+    private val log = loggerFor<SerializedAmountPlusTest>()
+    private val zincZKService = getZincZKService<SerializedAmountPlusTest>()
     private val dummyToken = Currency.getInstance(Locale.UK)
-    private val anotherDummyToken = Currency.getInstance(Locale.FRANCE)
+    private val anotherDummyToken = Currency.getInstance(Locale.US)
 
-    init {
+    @BeforeAll
+    fun `init`() {
         zincZKService.setupTimed(log)
     }
 
@@ -32,7 +34,7 @@ class AmountMinusTest {
         val left = Amount(200, BigDecimal("10"), dummyToken)
         val right = Amount(100, BigDecimal("1"), dummyToken)
 
-        val input = toWitness(left, right)
+        val input = toSerializedWitness(left, right)
 
         val exception = Assertions.assertThrows(ZKProvingException::class.java) {
             zincZKService.proveTimed(input, log)
@@ -49,7 +51,7 @@ class AmountMinusTest {
         val left = Amount(1, BigDecimal("1"), dummyToken)
         val right = Amount(1, BigDecimal("1"), anotherDummyToken)
 
-        val input = toWitness(left, right)
+        val input = toSerializedWitness(left, right)
 
         val exception = Assertions.assertThrows(ZKProvingException::class.java) {
             zincZKService.proveTimed(input, log)
@@ -62,12 +64,33 @@ class AmountMinusTest {
     }
 
     @Test
-    fun `zinc minus smoke test`() {
-        val left = Amount(200, BigDecimal("1"), dummyToken)
+    fun `zinc plus fails due to different token types`() {
+        val left = Amount(1, BigDecimal("1"), dummyToken)
+        val right = Amount(1, BigDecimal("1"), "BR")
+
+        val input = toSerializedWitness(left, right)
+
+        val exception = Assertions.assertThrows(ZKProvingException::class.java) {
+            zincZKService.proveTimed(input, log)
+        }
+
+        Assertions.assertTrue(
+            exception.message?.contains("Token types don't match") ?: false,
+            "Circuit fails with different error"
+        )
+    }
+
+    @Test
+    fun `zinc plus smoke test`() {
+        val left = Amount(100, BigDecimal("1"), dummyToken)
         val right = Amount(100, BigDecimal("1"), dummyToken)
 
-        val input = toWitness(left, right)
-        val expected = left.minus(right).toJSON()
+        val input = toSerializedWitness(left, right)
+
+        val expected = left.plus(right).toJSON(
+            integerSize = 100,
+            fractionSize = 20
+        )
 
         zincZKService.proveTimed(input, log).let {
             zincZKService.verifyTimed(it, expected, log)

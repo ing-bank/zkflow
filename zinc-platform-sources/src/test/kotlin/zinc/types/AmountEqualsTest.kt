@@ -5,14 +5,16 @@ import net.corda.core.utilities.loggerFor
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
+import java.util.Currency
+import java.util.Locale
 import kotlin.time.ExperimentalTime
 
 @ExperimentalTime
 class AmountEqualsTest {
     private val log = loggerFor<AmountEqualsTest>()
     private val zincZKService = getZincZKService<AmountEqualsTest>()
-    private val dummyToken = "com.ing.zknotary.SuperToken"
-    private val anotherDummyToken = 420
+    private val dummyToken = Currency.getInstance(Locale.UK)
+    private val anotherDummyToken = Currency.getInstance(Locale.FRANCE)
 
     init {
         zincZKService.setupTimed(log)

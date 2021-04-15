@@ -1,0 +1,45 @@
+mod floating_point_100_20;
+
+use floating_point_100_20::Amount;
+use floating_point_100_20::SerializedAmount;
+use floating_point_100_20::AMOUNT_LENGTH;
+
+const AMOUNTS_LENGTH_LENGTH: u8 = 4;
+const AMOUNTS_MAX_LENGTH: u8 = 4;
+
+const WITNESS_LENGTH: u16 =
+        AMOUNT_LENGTH as u16
+      * AMOUNTS_MAX_LENGTH as u16
+      + AMOUNTS_LENGTH_LENGTH as u16;
+
+fn get_int(witness: [u8; WITNESS_LENGTH], start_byte: u16) -> u32 {
+    let mut result: u32 = 0;
+    for i in 0..4 {
+        result = result * 256 as u32 + witness[start_byte + i as u16] as u32;
+    }
+    result
+}
+
+fn main(witness: [u8; WITNESS_LENGTH]) -> Amount {
+    dbg!("Witness length: {}", WITNESS_LENGTH);
+    let length = get_int(witness, 0 as u16);
+    let mut amounts: [Amount; AMOUNTS_MAX_LENGTH] = [Amount::zero(); AMOUNTS_MAX_LENGTH];
+
+    let mut amount_bytes: SerializedAmount = [0; AMOUNT_LENGTH];
+    for i in 0..AMOUNTS_MAX_LENGTH while i as u32 < length {
+        let offset: u16 = AMOUNTS_LENGTH_LENGTH as u16 + i as u16 * AMOUNT_LENGTH as u16;
+        for j in 0..AMOUNT_LENGTH {
+            amount_bytes[j] = witness[offset + j as u16];
+        }
+        amounts[i] = Amount::deserialize(amount_bytes);
+    }
+
+    let mut max: Amount = amounts[0];
+    for i in 0..AMOUNTS_MAX_LENGTH while i as u32 < length {
+        if amounts[i].quantity > max.quantity {
+            max = amounts[i];
+        }
+    }
+
+    max
+}

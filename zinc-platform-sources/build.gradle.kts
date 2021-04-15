@@ -5,6 +5,7 @@ plugins {
     kotlin("plugin.serialization")
     java
     id("maven-publish")
+    kotlin("plugin.serialization")
 }
 
 dependencies {

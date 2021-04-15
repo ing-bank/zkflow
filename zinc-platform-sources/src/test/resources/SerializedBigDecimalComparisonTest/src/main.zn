@@ -1,0 +1,7 @@
+mod floating_point_24_6;
+use floating_point_24_6::BigDecimal;
+use floating_point_24_6::SerializedBigDecimal;
+
+fn main(left: SerializedBigDecimal, right: SerializedBigDecimal) -> i8 {
+    BigDecimal::compare(BigDecimal::deserialize(left), BigDecimal::deserialize(right))
+}
