@@ -13,7 +13,7 @@ public class DummyContract : Contract {
     }
 
     @Serializable
-    public class Relax(public val now: Boolean = true) : CommandData
+    public data class Relax(public val now: Boolean = true) : CommandData
 
     @Serializable
     public class Chill : TypeOnlyCommandData()
