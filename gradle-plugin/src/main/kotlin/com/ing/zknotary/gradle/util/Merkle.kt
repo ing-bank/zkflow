@@ -29,7 +29,8 @@ fun getFullMerkleTreeSize(consts: String): Int {
     val search = "GROUP_SIZE: u16 = (\\d+);".toRegex()
     var total = 3 // notary, timewindow, and parameters group size
     search.findAll(consts).forEach {
-        total += it.groupValues[1].toInt()
+        val groupSize = it.groupValues[1].toInt()
+        total += if (groupSize != 0) groupSize else 1 // because if group is empty we use allOnes hash
     }
 
     fun isPow2(num: Int) = num and (num - 1) == 0
