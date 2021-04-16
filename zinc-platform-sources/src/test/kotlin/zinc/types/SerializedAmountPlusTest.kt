@@ -4,9 +4,10 @@ import com.ing.zknotary.common.zkp.ZKProvingException
 import net.corda.core.contracts.Amount
 import net.corda.core.utilities.loggerFor
 import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import java.math.BigDecimal
 import java.util.Currency
 import java.util.Locale
@@ -36,14 +37,14 @@ class SerializedAmountPlusTest {
 
         val input = toSerializedWitness(left, right)
 
-        val exception = Assertions.assertThrows(ZKProvingException::class.java) {
+        assertThrows<ZKProvingException> {
             zincZKService.proveTimed(input, log)
+        }.also {
+            assertTrue(
+                it.message?.contains("Token sizes don't match") ?: false,
+                "Circuit fails with different error"
+            )
         }
-
-        Assertions.assertTrue(
-            exception.message?.contains("Token sizes don't match") ?: false,
-            "Circuit fails with different error"
-        )
     }
 
     @Test
@@ -53,14 +54,14 @@ class SerializedAmountPlusTest {
 
         val input = toSerializedWitness(left, right)
 
-        val exception = Assertions.assertThrows(ZKProvingException::class.java) {
+        assertThrows<ZKProvingException> {
             zincZKService.proveTimed(input, log)
+        }.also {
+            assertTrue(
+                it.message?.contains("Tokens don't match") ?: false,
+                "Circuit fails with different error"
+            )
         }
-
-        Assertions.assertTrue(
-            exception.message?.contains("Tokens don't match") ?: false,
-            "Circuit fails with different error"
-        )
     }
 
     @Test
@@ -70,14 +71,14 @@ class SerializedAmountPlusTest {
 
         val input = toSerializedWitness(left, right)
 
-        val exception = Assertions.assertThrows(ZKProvingException::class.java) {
+        assertThrows<ZKProvingException> {
             zincZKService.proveTimed(input, log)
+        }.also {
+            assertTrue(
+                it.message?.contains("Token types don't match") ?: false,
+                "Circuit fails with different error"
+            )
         }
-
-        Assertions.assertTrue(
-            exception.message?.contains("Token types don't match") ?: false,
-            "Circuit fails with different error"
-        )
     }
 
     @Test

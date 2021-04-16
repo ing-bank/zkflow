@@ -108,8 +108,4 @@ witness.json
 
 # Generated Zinc file
 merkle_utils.zn
-string_32.zn
-big_decimal_24_6.zn
-big_decimal_100_20.zn
-amount_24_6.zn
-amount_100_20.zn
+/zinc-platform-sources/src/main/resources/zinc-platform-test-sources/*.zn

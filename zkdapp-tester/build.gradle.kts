@@ -1,4 +1,6 @@
 import com.ing.zknotary.gradle.task.CreateZincDirectoriesForInputCommandTask
+import com.ing.zknotary.gradle.extension.BigDecimalTemplateParameters
+import com.ing.zknotary.gradle.extension.AmountTemplateParameters
 
 plugins {
     kotlin("jvm") version "1.4.20"
@@ -6,8 +8,15 @@ plugins {
 }
 
 zkp {
-    bigDecimalSizes = setOf(Pair(25, 6), Pair(102, 20))
     stringConfigurations = listOf(33)
+    bigDecimalConfigurations = listOf(
+        BigDecimalTemplateParameters(25, 6),
+        BigDecimalTemplateParameters(102, 20)
+    )
+    amountConfigurations = listOf(
+        AmountTemplateParameters(BigDecimalTemplateParameters(25, 6), 8),
+        AmountTemplateParameters(BigDecimalTemplateParameters(102, 20), 8)
+    )
 }
 
 repositories {

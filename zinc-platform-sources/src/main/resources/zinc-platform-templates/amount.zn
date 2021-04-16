@@ -1,22 +1,19 @@
 // Input parameters:
-//   - AMOUNT_TOKEN_SIZE: TODO
-//   - INTEGER_SIZE_PLACEHOLDER: u16 = Integer size of BigDecimal displayTokenSize
-//   - FRACTION_SIZE_PLACEHOLDER: u16 = Fraction size of BigDecimal displayTokenSize
+//   - TOKEN_SIZE_PLACEHOLDER: u16 = number of bytes of bfl encoded token
 // NOTE:
 // All internal size constants are u16, which mean that all values should be below 65536.
 
-mod big_decimal_${INTEGER_SIZE_PLACEHOLDER}_${FRACTION_SIZE_PLACEHOLDER};
+mod big_decimal;
 
-use big_decimal_${INTEGER_SIZE_PLACEHOLDER}_${FRACTION_SIZE_PLACEHOLDER}::BigDecimal;
-use big_decimal_${INTEGER_SIZE_PLACEHOLDER}_${FRACTION_SIZE_PLACEHOLDER}::SerializedBigDecimal;
-use big_decimal_${INTEGER_SIZE_PLACEHOLDER}_${FRACTION_SIZE_PLACEHOLDER}::BIG_DECIMAL_LENGTH;
+use big_decimal::BigDecimal;
+use big_decimal::SerializedBigDecimal;
+use big_decimal::BIG_DECIMAL_LENGTH;
 
 const AMOUNT_QUANTITY_LENGTH: u16 = 8;
 const AMOUNT_DISPLAY_TOKEN_SIZE_LENGTH: u16 = BIG_DECIMAL_LENGTH;
 const AMOUNT_TOKEN_TYPE_HASH_LENGTH_LENGTH: u16 = 4;
 const AMOUNT_TOKEN_TYPE_HASH_LENGTH: u16 = 32;
-// TODO make template parameter
-const AMOUNT_TOKEN_LENGTH: u16 = 8;
+const AMOUNT_TOKEN_LENGTH: u16 = ${TOKEN_SIZE_PLACEHOLDER};
 
 //! Amount offsets
 const AMOUNT_QUANTITY_OFFSET: u16 = 0;

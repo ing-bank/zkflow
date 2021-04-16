@@ -116,11 +116,11 @@ open class CopyCircuitTask @Inject constructor() : DefaultTask() {
             .map { it.fileName.toString().removeSuffix(".kt") }
             .filter { Files.exists(generatedResourcesDir.resolve(it)) }
             .forEach { testClass ->
-                val testClassSourceTargetDir = generatedResourcesDir.resolve("$testClass/src/")
+                val generatedTestSourceDir = generatedResourcesDir.resolve("$testClass/src/")
                 Files.list(resourcesDir.resolve("zinc-platform-test-sources"))
                     .filter { it.toString().endsWith(".zn") }
                     .forEach { testSource ->
-                        val target = testClassSourceTargetDir.resolve(testSource.fileName)
+                        val target = generatedTestSourceDir.resolve(testSource.fileName)
                         Files.copy(testSource, target, StandardCopyOption.REPLACE_EXISTING)
                     }
             }

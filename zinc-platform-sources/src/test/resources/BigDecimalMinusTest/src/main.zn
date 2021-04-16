@@ -2,8 +2,8 @@
 //! The 'BigDecimal' main module.
 //!
 mod big_decimal_24_6;
-use big_decimal_24_6::BigDecimal;
+use big_decimal_24_6::BigDecimal_24_6;
 
-fn main(left: BigDecimal, right: BigDecimal) -> BigDecimal {
-    BigDecimal::minus(left, right)
+fn main(left: BigDecimal_24_6, right: BigDecimal_24_6) -> BigDecimal_24_6 {
+    BigDecimal_24_6::minus(left, right)
 }

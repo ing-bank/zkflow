@@ -5,6 +5,7 @@ import com.ing.serialization.bfl.api.reified.serialize
 import com.ing.serialization.bfl.serializers.BFLSerializers
 import com.ing.serialization.bfl.serializers.CurrencySerializer
 import com.ing.zknotary.common.serialization.bfl.corda.AmountSerializer
+import com.ing.zknotary.common.zkp.ZKRunException
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import kotlinx.serialization.Contextual
@@ -18,8 +19,10 @@ import kotlinx.serialization.modules.plus
 import net.corda.core.contracts.Amount
 import net.corda.core.utilities.loggerFor
 import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import java.util.Currency
 import java.util.Locale
 import kotlin.time.ExperimentalTime
@@ -43,7 +46,25 @@ class SerializedAmountMaxTest {
     @Test
     @ExperimentalUnsignedTypes
     fun `get max amount`() {
+        val expectedAmount = Amount(250, frenchCurrency)
+        verifyMaxAmountTest(expectedAmount)
+    }
+
+    @Test
+    @ExperimentalUnsignedTypes
+    fun `get max amount should fail for incompatible tokens`() {
         val expectedAmount = Amount(250, canadianCurrency)
+        assertThrows<ZKRunException> {
+            verifyMaxAmountTest(expectedAmount)
+        }.also {
+            assertTrue(
+                it.message?.contains("Tokens don't match") ?: false,
+                "Circuit fails with different error"
+            )
+        }
+    }
+
+    private fun SerializedAmountMaxTest.verifyMaxAmountTest(expectedAmount: Amount<Currency>) {
         val expected = expectedAmount.toJSON(
             integerSize = 100,
             fractionSize = 20
@@ -56,7 +77,8 @@ class SerializedAmountMaxTest {
                 Amount(220, frenchCurrency),
             )
         )
-        val witnessBytes: ByteArray = serialize(witnessData, serializersModule = BFLSerializers + currencySerializersModule)
+        val witnessBytes: ByteArray =
+            serialize(witnessData, serializersModule = BFLSerializers + currencySerializersModule)
 
         verifyZincRunResults(witnessBytes, expected, expectedAmount)
 

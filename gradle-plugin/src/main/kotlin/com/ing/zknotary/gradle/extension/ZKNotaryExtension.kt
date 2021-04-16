@@ -13,13 +13,24 @@ open class ZKNotaryExtension(project: Project) {
 
         private const val MERGED_CIRCUIT_BUILD_PATH = "zinc"
         private const val CIRCUIT_SOURCES_BASE_PATH = "src/main/zinc"
+
+        val float = BigDecimalTemplateParameters(39, 46, "Float")
+        val double = BigDecimalTemplateParameters(309, 325, "Double")
     }
 
     @Input
     var stringConfigurations: List<Short> = listOf(32)
 
     @Input
-    var bigDecimalSizes = setOf(Pair(24, 6), Pair(100, 20))
+    var bigDecimalConfigurations: List<BigDecimalTemplateParameters> = listOf(
+        BigDecimalTemplateParameters(24, 6),
+        BigDecimalTemplateParameters(100, 20),
+    )
+
+    @Input
+    var amountConfigurations: List<AmountTemplateParameters> = bigDecimalConfigurations.map {
+        AmountTemplateParameters(it, 8)
+    }
 
     @Input
     var zincPlatformSourcesVersion: String? = "1.0-SNAPSHOT"
@@ -56,4 +67,7 @@ open class ZKNotaryExtension(project: Project) {
 
     @Input
     val mainTemplate = "main_template.zn"
+
+    fun bigDecimalConfigurationsToGenerate(): List<BigDecimalTemplateParameters> =
+        bigDecimalConfigurations + float + double
 }

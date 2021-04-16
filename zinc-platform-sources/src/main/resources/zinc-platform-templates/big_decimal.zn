@@ -1,6 +1,6 @@
 // Input parameters:
-//   - INTEGER_SIZE_PLACEHOLDER: u16 = Integer size of BigDecimal
-//   - FRACTION_SIZE_PLACEHOLDER: u16 = Fraction size of BigDecimal
+//   - INTEGER_SIZE_PLACEHOLDER: u16 = number of bytes for BigDecimal.integer
+//   - FRACTION_SIZE_PLACEHOLDER: u16 = number of bytes for BigDecimal.fraction
 // NOTE:
 // All internal size constants are u16, which mean that all values should be below 65536.
 
