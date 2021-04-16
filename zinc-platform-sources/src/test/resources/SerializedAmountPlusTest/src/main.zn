@@ -1,6 +1,6 @@
-mod floating_point_100_20;
-use floating_point_100_20::Amount;
-use floating_point_100_20::SerializedAmount;
+mod amount_100_20;
+use amount_100_20::Amount;
+use amount_100_20::SerializedAmount;
 
 fn main(left: SerializedAmount, right: SerializedAmount) -> Amount {
     Amount::plus(Amount::deserialize(left), Amount::deserialize(right))

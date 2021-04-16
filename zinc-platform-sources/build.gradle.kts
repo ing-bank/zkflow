@@ -1,3 +1,6 @@
+import java.nio.file.Files
+import java.nio.file.Paths
+import java.nio.file.StandardCopyOption
 import javax.inject.Inject
 
 plugins {
@@ -5,7 +8,6 @@ plugins {
     kotlin("plugin.serialization")
     java
     id("maven-publish")
-    kotlin("plugin.serialization")
 }
 
 dependencies {
@@ -103,31 +105,24 @@ open class CopyCircuitTask @Inject constructor() : DefaultTask() {
 
     @TaskAction
     fun copy() {
-
         // In this package we test functions of classes, which are stored in one particular file,
         // but since there are many of them, we need many main functions with different parameters and output,
         // thus we copy implementation to each testing module in resources (because, zinc support modules pretty bad).
-        val testClassesPath =
-            `java.nio.file`.Paths.get(project.projectDir.resolve("src/test/kotlin/zinc/types/").absolutePath)
-        `java.nio.file`.Files.newDirectoryStream(testClassesPath)
+        val projectDir = Paths.get(project.projectDir.absolutePath)
+        val testClassesPath = projectDir.resolve("src/test/kotlin/zinc/types/")
+        val resourcesDir = projectDir.resolve("src/main/resources")
+        val generatedResourcesDir = projectDir.resolve("build/resources/test")
+        Files.newDirectoryStream(testClassesPath)
             .map { it.fileName.toString().removeSuffix(".kt") }
-            .filter { `java.nio.file`.Files.exists(`java.nio.file`.Paths.get("zinc-platform-sources/build/resources/test/$it")) }
-            .forEach {
-                `java.nio.file`.Files.copy(
-                    `java.nio.file`.Paths.get("zinc-platform-sources/src/main/resources/zinc-platform-test-sources/string_32.zn"),
-                    `java.nio.file`.Paths.get("zinc-platform-sources/build/resources/test/$it/src/string_32.zn"),
-                    `java.nio.file`.StandardCopyOption.REPLACE_EXISTING
-                )
-                `java.nio.file`.Files.copy(
-                    `java.nio.file`.Paths.get("zinc-platform-sources/src/main/resources/zinc-platform-test-sources/floating_point_24_6.zn"),
-                    `java.nio.file`.Paths.get("zinc-platform-sources/build/resources/test/$it/src/floating_point_24_6.zn"),
-                    `java.nio.file`.StandardCopyOption.REPLACE_EXISTING
-                )
-                `java.nio.file`.Files.copy(
-                    `java.nio.file`.Paths.get("zinc-platform-sources/src/main/resources/zinc-platform-test-sources/floating_point_100_20.zn"),
-                    `java.nio.file`.Paths.get("zinc-platform-sources/build/resources/test/$it/src/floating_point_100_20.zn"),
-                    `java.nio.file`.StandardCopyOption.REPLACE_EXISTING
-                )
+            .filter { Files.exists(generatedResourcesDir.resolve(it)) }
+            .forEach { testClass ->
+                val testClassSourceTargetDir = generatedResourcesDir.resolve("$testClass/src/")
+                Files.list(resourcesDir.resolve("zinc-platform-test-sources"))
+                    .filter { it.toString().endsWith(".zn") }
+                    .forEach { testSource ->
+                        val target = testClassSourceTargetDir.resolve(testSource.fileName)
+                        Files.copy(testSource, target, StandardCopyOption.REPLACE_EXISTING)
+                    }
             }
     }
 }

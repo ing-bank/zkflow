@@ -1,8 +1,8 @@
-mod floating_point_100_20;
+mod amount_100_20;
 
-use floating_point_100_20::Amount;
-use floating_point_100_20::SerializedAmount;
-use floating_point_100_20::AMOUNT_LENGTH;
+use amount_100_20::Amount;
+use amount_100_20::SerializedAmount;
+use amount_100_20::AMOUNT_LENGTH;
 
 const AMOUNTS_LENGTH_LENGTH: u8 = 4;
 const AMOUNTS_MAX_LENGTH: u8 = 4;

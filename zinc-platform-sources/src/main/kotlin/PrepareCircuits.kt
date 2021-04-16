@@ -33,7 +33,8 @@ fun main(args: Array<String>) {
         // Generate code from templates
         val renderer = TemplateRenderer(outputPath)
         getTemplateContents(root, "string.zn")?.let { renderer.generateStringCode(it, stringConfigurations) }
-        getTemplateContents(root, "floating_point.zn")?.let { renderer.generateFloatingPointsCode(it, bigDecimalSizes) }
+        getTemplateContents(root, "big_decimal.zn")?.let { renderer.generateBigDecimalsCode(it, bigDecimalSizes) }
+        getTemplateContents(root, "amount.zn")?.let { renderer.generateAmountsCode(it, bigDecimalSizes) }
         getTemplateContents(root, "merkle_template.zn")?.let { renderer.generateMerkleUtilsCode(it, consts) }
         getTemplateContents(root, "main_template.zn")?.let { renderer.generateMainCode(it, consts) }
 
@@ -51,8 +52,12 @@ fun main(args: Array<String>) {
             getPlatformSourcesPath(root, "zinc-platform-templates").resolve("string.zn").readText(),
             stringConfigurations
         )
-        testTemplate.generateFloatingPointsCode(
-            getPlatformSourcesPath(root, "zinc-platform-templates").resolve("floating_point.zn").readText(),
+        testTemplate.generateBigDecimalsCode(
+            getPlatformSourcesPath(root, "zinc-platform-templates").resolve("big_decimal.zn").readText(),
+            bigDecimalSizes
+        )
+        testTemplate.generateAmountsCode(
+            getPlatformSourcesPath(root, "zinc-platform-templates").resolve("amount.zn").readText(),
             bigDecimalSizes
         )
     }

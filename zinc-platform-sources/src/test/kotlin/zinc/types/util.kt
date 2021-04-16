@@ -122,7 +122,7 @@ fun BigDecimal.toJSON(integerSize: Int = 24, fractionSize: Int = 6): String {
 
 private fun IntArray.toPrettyJSONArray() = "[ ${this.joinToString { "\"$it\"" }} ]"
 
-internal fun ByteArray.toPrettyJSONArray() = "[ ${this.map { it.asUnsigned() }.joinToString { "\"$it\"" }} ]"
+fun ByteArray.toPrettyJSONArray() = "[ ${this.map { it.asUnsigned() }.joinToString { "\"$it\"" }} ]"
 
 fun makeBigDecimal(bytes: ByteArray, sign: Int) = BigDecimal(BigInteger(sign, bytes))
 

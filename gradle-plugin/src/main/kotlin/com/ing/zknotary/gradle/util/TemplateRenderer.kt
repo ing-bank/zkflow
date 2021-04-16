@@ -16,13 +16,23 @@ class TemplateRenderer(private val outputPath: File) {
         }
     }
 
-    fun generateFloatingPointsCode(templateContents: String, bigDecimalSizes: Set<Pair<Int, Int>>) {
+    fun generateBigDecimalsCode(templateContents: String, bigDecimalSizes: Set<Pair<Int, Int>>) {
         bigDecimalSizes.forEach {
-            val floatingPointContent = templateContents.replace("\${INTEGER_SIZE_PLACEHOLDER}", it.first.toString())
+            val bigDecimalsContent = templateContents.replace("\${INTEGER_SIZE_PLACEHOLDER}", it.first.toString())
                 .replace("\${FRACTION_SIZE_PLACEHOLDER}", it.second.toString())
             val sizeSuffix = "${it.first}_${it.second}"
-            createOutputFile(outputPath.resolve("floating_point_$sizeSuffix.zn"))
-                .writeBytes(floatingPointContent.toByteArray())
+            createOutputFile(outputPath.resolve("big_decimal_$sizeSuffix.zn"))
+                .writeBytes(bigDecimalsContent.toByteArray())
+        }
+    }
+
+    fun generateAmountsCode(templateContents: String, bigDecimalSizes: Set<Pair<Int, Int>>) {
+        bigDecimalSizes.forEach {
+            val bigDecimalsContent = templateContents.replace("\${INTEGER_SIZE_PLACEHOLDER}", it.first.toString())
+                .replace("\${FRACTION_SIZE_PLACEHOLDER}", it.second.toString())
+            val sizeSuffix = "${it.first}_${it.second}"
+            createOutputFile(outputPath.resolve("amount_$sizeSuffix.zn"))
+                .writeBytes(bigDecimalsContent.toByteArray())
         }
     }
 

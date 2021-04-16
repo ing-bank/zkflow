@@ -46,7 +46,10 @@ open class ZKNotaryExtension(project: Project) {
     val stringTemplate = "string.zn"
 
     @Input
-    val floatingPointTemplate = "floating_point.zn"
+    val bigDecimalTemplate = "big_decimal.zn"
+
+    @Input
+    val amountTemplate = "amount.zn"
 
     @Input
     val merkleTemplate = "merkle_template.zn"
