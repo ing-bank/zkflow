@@ -58,40 +58,54 @@ class MerkleReplacer(private val outputPath: File) {
     }
 
     private fun replaceAppropriateMerkleTreeFunction(componentGroupSize: Int?, fileContent: String): String {
-        return if (componentGroupSize != null) {
-            when {
-                // This condition is executed when there is no element in the component group.
-                // The return value is allOnesHash
-                componentGroupSize == 0 -> {
-                    fileContent.replace(
-                        "// ### CALL APPROPRIATE MERKLE TREE FUNCTION ###",
-                        """
+        return when {
+            componentGroupSize == null -> {
+                // This condition is executed when there is no component group size defined.
+                // It is possible for notary, timeWindow, parameters groups
+                // In that case, we call Merkle tree function for 2 with padded leaves
+                fileContent.replace(
+                    "// ### CALL APPROPRIATE MERKLE TREE FUNCTION ###",
+                    """
+        let mut padded_leaves = [[false; COMPONENT_GROUP_LEAF_DIGEST_BITS]; 2];
+        padded_leaves[0] = component_leaf_hash;
+
+        get_merkle_tree_from_2_component_group_leaf_digests(padded_leaves)
+        """
+                ).replace("\${GROUP_SIZE_PLACEHOLDER}", "2")
+            }
+
+            // This condition is executed when there is no element in the component group.
+            // The return value is allOnesHash
+            componentGroupSize == 0 -> {
+                fileContent.replace(
+                    "// ### CALL APPROPRIATE MERKLE TREE FUNCTION ###",
+                    """
         // Return all ones hash
         [true; NODE_DIGEST_BITS]
         """
-                    ).replace("\${GROUP_SIZE_PLACEHOLDER}", "2")
-                }
-                // This condition is executed when the defined group size is an exact power of 2.
-                // 1 doesn't count because Corda expects at least 2 leaves so 1 should be padded TODO confirm
-                // The return value is the merkle tree function that corresponds to the group size.
-                isPowerOfTwo(componentGroupSize) && componentGroupSize != 1 -> {
-                    fileContent.replace(
-                        "// ### CALL APPROPRIATE MERKLE TREE FUNCTION ###",
-                        """
+                ).replace("\${GROUP_SIZE_PLACEHOLDER}", "2")
+            }
+            // This condition is executed when the defined group size is an exact power of 2.
+            // 1 doesn't count because Corda expects at least 2 leaves so 1 should be padded TODO confirm
+            // The return value is the merkle tree function that corresponds to the group size.
+            isPowerOfTwo(componentGroupSize) && componentGroupSize != 1 -> {
+                fileContent.replace(
+                    "// ### CALL APPROPRIATE MERKLE TREE FUNCTION ###",
+                    """
         let component_leaf_hashes = compute_leaf_hashes(components, privacy_salt);
 
         get_merkle_tree_from_${componentGroupSize}_component_group_leaf_digests(component_leaf_hashes)
         """
-                    ).replace("\${GROUP_SIZE_PLACEHOLDER}", componentGroupSize.toString())
-                }
-                // This condition is executed when the defined group size is not a power of 2.
-                // The function finds the next power of 2 and adds padded values to the group.
-                // The return value is the merkle tree function that corresponds to the padded group size.
-                else -> {
-                    val paddedGroupSize = getNextPowerOfTwo(componentGroupSize)
-                    fileContent.replace(
-                        "// ### CALL APPROPRIATE MERKLE TREE FUNCTION ###",
-                        """
+                ).replace("\${GROUP_SIZE_PLACEHOLDER}", componentGroupSize.toString())
+            }
+            // This condition is executed when the defined group size is not a power of 2.
+            // The function finds the next power of 2 and adds padded values to the group.
+            // The return value is the merkle tree function that corresponds to the padded group size.
+            else -> {
+                val paddedGroupSize = getNextPowerOfTwo(componentGroupSize)
+                fileContent.replace(
+                    "// ### CALL APPROPRIATE MERKLE TREE FUNCTION ###",
+                    """
         let component_leaf_hashes = compute_leaf_hashes(components, privacy_salt);
 
         let mut padded_leaves = [[false; COMPONENT_GROUP_LEAF_DIGEST_BITS]; $paddedGroupSize];
@@ -101,22 +115,8 @@ class MerkleReplacer(private val outputPath: File) {
 
         get_merkle_tree_from_${paddedGroupSize}_component_group_leaf_digests(padded_leaves)
         """
-                    ).replace("\${GROUP_SIZE_PLACEHOLDER}", paddedGroupSize.toString())
-                }
+                ).replace("\${GROUP_SIZE_PLACEHOLDER}", paddedGroupSize.toString())
             }
-        } else {
-            // This condition is executed when there is no component group size defined.
-            // It is possible for notary, timeWindow, parameters groups
-            // In that case, we call Merkle tree function for 2 with padded leaves
-            fileContent.replace(
-                "// ### CALL APPROPRIATE MERKLE TREE FUNCTION ###",
-                """
-        let mut padded_leaves = [[false; COMPONENT_GROUP_LEAF_DIGEST_BITS]; 2];
-        padded_leaves[0] = component_leaf_hash;
-
-        get_merkle_tree_from_2_component_group_leaf_digests(padded_leaves)
-        """
-            ).replace("\${GROUP_SIZE_PLACEHOLDER}", "2")
         }
     }
 
