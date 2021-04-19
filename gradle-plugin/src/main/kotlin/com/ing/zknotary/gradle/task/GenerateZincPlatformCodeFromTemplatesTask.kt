@@ -17,6 +17,7 @@ open class GenerateZincPlatformCodeFromTemplatesTask : DefaultTask() {
             val renderer = TemplateRenderer(extension.mergedCircuitOutputPath.resolve(circuitName).resolve("src"))
             val consts = extension.circuitSourcesBasePath.resolve(circuitName).resolve("consts.zn").readText()
 
+            renderer.generateStringCode(project.getTemplateContents(extension.stringTemplate), extension.stringConfigurations)
             renderer.generateFloatingPointsCode(project.getTemplateContents(extension.floatingPointTemplate), extension.bigDecimalSizes)
             renderer.generateMerkleUtilsCode(project.getTemplateContents(extension.merkleTemplate), consts)
             renderer.generateMainCode(project.getTemplateContents(extension.mainTemplate), consts)
