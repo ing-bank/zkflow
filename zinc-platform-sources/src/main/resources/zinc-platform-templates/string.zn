@@ -33,6 +33,21 @@ impl String {
         }
     }
 
+    //! Checks whether two strings are equal
+    //! returns true iff the size and chars of both strings are equal
+    fn equals(this: String, that: String) -> bool {
+        let mut still_equal = this.size == that.size;
+        for i in 0..STRING_MAX_CHARS while still_equal {
+            still_equal = this.chars[i] == that.chars[i];
+        }
+        still_equal
+    }
+
+    //! Compares two strings, and returns the comparison result
+    //! returns
+    //! - -1 when this < that
+    //! - 1  when this > that
+    //! - 0  when this == that
     fn compare(this: String, that: String) -> i8 {
         let mut result: i8 = 0 as i8;
         for i in 0..STRING_MAX_CHARS while result == 0 as i8 {
