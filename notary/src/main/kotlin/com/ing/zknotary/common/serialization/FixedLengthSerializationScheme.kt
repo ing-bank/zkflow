@@ -1,7 +1,10 @@
 package com.ing.zknotary.common.serialization
 
 import net.corda.core.serialization.CustomSerializationScheme
+import net.corda.core.serialization.SerializationDefaults
+import net.corda.core.serialization.SerializationFactory
 import net.corda.core.serialization.SerializationSchemeContext
+import net.corda.core.serialization.serialize
 import net.corda.core.utilities.ByteSequence
 
 open class FixedLengthSerializationScheme : CustomSerializationScheme {
@@ -18,12 +21,10 @@ open class FixedLengthSerializationScheme : CustomSerializationScheme {
         clazz: Class<T>,
         context: SerializationSchemeContext
     ): T {
-        TODO("Sowwy")
-        // return SerializationFactory.defaultFactory.deserialize(bytes, clazz, SerializationDefaults.P2P_CONTEXT)
+        return SerializationFactory.defaultFactory.deserialize(bytes, clazz, SerializationDefaults.P2P_CONTEXT)
     }
 
     override fun <T : Any> serialize(obj: T, context: SerializationSchemeContext): ByteSequence {
-        TODO("sowwy")
-        // return obj.serialize(SerializationFactory.defaultFactory, SerializationDefaults.P2P_CONTEXT)
+        return obj.serialize(SerializationFactory.defaultFactory, SerializationDefaults.P2P_CONTEXT)
     }
 }

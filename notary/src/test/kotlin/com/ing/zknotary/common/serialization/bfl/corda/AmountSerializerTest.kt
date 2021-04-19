@@ -2,7 +2,9 @@ package com.ing.zknotary.common.serialization.bfl.corda
 
 import com.ing.serialization.bfl.annotations.FixedLength
 import com.ing.serialization.bfl.serializers.CurrencySerializer
-import com.ing.zknotary.common.serialization.roundTrip
+import com.ing.zknotary.common.serialization.bfl.serializers.CordaSerializers
+import com.ing.zknotary.common.serialization.bfl.serializers.CordaSignatureSchemeToSerializers
+import com.ing.zknotary.testing.roundTrip
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.serializer

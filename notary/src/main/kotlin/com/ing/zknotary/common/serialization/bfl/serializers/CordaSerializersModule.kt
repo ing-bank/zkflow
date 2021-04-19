@@ -1,5 +1,6 @@
 package com.ing.zknotary.common.serialization.bfl.serializers
 
+import com.ing.zknotary.common.serialization.bfl.corda.PartyAndReferenceSerializer
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.contextual

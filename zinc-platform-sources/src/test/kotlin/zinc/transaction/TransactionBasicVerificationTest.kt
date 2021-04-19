@@ -29,6 +29,7 @@ import net.corda.core.utilities.loggerFor
 import net.corda.coretesting.internal.asTestContextEnv
 import net.corda.coretesting.internal.createTestSerializationEnv
 import net.corda.testing.core.TestIdentity
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import zinc.transaction.envelope.Envelope
 import java.io.File
@@ -38,7 +39,7 @@ import kotlin.random.Random
 import kotlin.time.ExperimentalTime
 
 @ExperimentalTime
-// @Tag("slow")
+@Tag("slow")
 class TransactionBasicVerificationTest {
     private val log = loggerFor<TransactionBasicVerificationTest>()
 
@@ -90,6 +91,7 @@ class TransactionBasicVerificationTest {
     fun `Wire transaction serializes`() = withCustomSerializationEnv {
         Envelope.register(DummyState::class, 1, DummyState.serializer())
         Envelope.register(DummyContract.Relax::class, 1, DummyContract.Relax.serializer())
+        Envelope.register(DummyContract.Chill::class, 2, DummyContract.Chill.serializer())
 
         val state2 = DummyState.any()
         val alice = state2.participants.first()
@@ -112,7 +114,7 @@ class TransactionBasicVerificationTest {
                 HashAttachmentConstraint(SecureHash.zeroHash)
             )
         )
-        val commands = listOf(Command(DummyContract.Relax(), alice.owningKey))
+        val commands = listOf(Command(DummyContract.Relax(), alice.owningKey), Command(DummyContract.Chill(), alice.owningKey))
         val attachments = List(4) { SecureHash.randomSHA256() }
         // notary is this.notary
         val timeWindow = TimeWindow.fromOnly(Instant.now())
