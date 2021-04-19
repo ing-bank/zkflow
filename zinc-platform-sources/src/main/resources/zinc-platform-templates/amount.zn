@@ -1,42 +1,48 @@
 // Input parameters:
+//   - TYPE_NAME: String = Name of the main struct, and suffix for Serialized struct, use camelcase
+//   - CONSTANT_PREFIX: String = prefix to use for constant names, use uppercase
 //   - TOKEN_SIZE_PLACEHOLDER: u16 = number of bytes of bfl encoded token
+//   - BD_TYPE_NAME: String = name of the BigDecimal struct, and suffix for Serialized struct, use camelcase
+//   - BD_CONSTANT_PREFIX: String = prefix used for constant names of BigDecimal, use uppercase and snakecase
+//   - BD_MODULE_NAME: String = module name of the BigDecimal, use lowercase and snakecase
 // NOTE:
 // All internal size constants are u16, which mean that all values should be below 65536.
 
-mod big_decimal;
+mod ${BD_MODULE_NAME};
 
-use big_decimal::BigDecimal;
-use big_decimal::SerializedBigDecimal;
-use big_decimal::BIG_DECIMAL_LENGTH;
+use ${BD_MODULE_NAME}::${BD_TYPE_NAME};
+use ${BD_MODULE_NAME}::Serialized${BD_TYPE_NAME};
+use ${BD_MODULE_NAME}::${BD_CONSTANT_PREFIX}_LENGTH;
 
-const AMOUNT_QUANTITY_LENGTH: u16 = 8;
-const AMOUNT_DISPLAY_TOKEN_SIZE_LENGTH: u16 = BIG_DECIMAL_LENGTH;
-const AMOUNT_TOKEN_TYPE_HASH_LENGTH_LENGTH: u16 = 4;
-const AMOUNT_TOKEN_TYPE_HASH_LENGTH: u16 = 32;
-const AMOUNT_TOKEN_LENGTH: u16 = ${TOKEN_SIZE_PLACEHOLDER};
+//! ${TYPE_NAME} lengths
+const ${CONSTANT_PREFIX}_QUANTITY_LENGTH: u16 = 8;
+const ${CONSTANT_PREFIX}_DISPLAY_TOKEN_SIZE_LENGTH: u16 = ${BD_CONSTANT_PREFIX}_LENGTH;
+const ${CONSTANT_PREFIX}_TOKEN_TYPE_HASH_LENGTH_LENGTH: u16 = 4;
+const ${CONSTANT_PREFIX}_TOKEN_TYPE_HASH_LENGTH: u16 = 32;
+const ${CONSTANT_PREFIX}_TOKEN_LENGTH: u16 = ${TOKEN_SIZE_PLACEHOLDER};
 
-//! Amount offsets
-const AMOUNT_QUANTITY_OFFSET: u16 = 0;
-const AMOUNT_DISPLAY_TOKEN_SIZE_OFFSET: u16 =
-    AMOUNT_QUANTITY_OFFSET
-    + AMOUNT_QUANTITY_LENGTH;
-const AMOUNT_TOKEN_TYPE_HASH_LENGTH_OFFSET: u16 =
-    AMOUNT_DISPLAY_TOKEN_SIZE_OFFSET
-    + AMOUNT_DISPLAY_TOKEN_SIZE_LENGTH;
-const AMOUNT_TOKEN_TYPE_HASH_OFFSET: u16 =
-    AMOUNT_TOKEN_TYPE_HASH_LENGTH_OFFSET
-    + AMOUNT_TOKEN_TYPE_HASH_LENGTH_LENGTH;
-const AMOUNT_TOKEN_OFFSET: u16 =
-    AMOUNT_TOKEN_TYPE_HASH_OFFSET
-    + AMOUNT_TOKEN_TYPE_HASH_LENGTH;
-const AMOUNT_LENGTH: u16 =
-    AMOUNT_TOKEN_OFFSET
-    + AMOUNT_TOKEN_LENGTH;
+//! ${TYPE_NAME} offsets
+const ${CONSTANT_PREFIX}_QUANTITY_OFFSET: u16 = 0;
+const ${CONSTANT_PREFIX}_DISPLAY_TOKEN_SIZE_OFFSET: u16 =
+    ${CONSTANT_PREFIX}_QUANTITY_OFFSET
+    + ${CONSTANT_PREFIX}_QUANTITY_LENGTH;
+const ${CONSTANT_PREFIX}_TOKEN_TYPE_HASH_LENGTH_OFFSET: u16 =
+    ${CONSTANT_PREFIX}_DISPLAY_TOKEN_SIZE_OFFSET
+    + ${CONSTANT_PREFIX}_DISPLAY_TOKEN_SIZE_LENGTH;
+const ${CONSTANT_PREFIX}_TOKEN_TYPE_HASH_OFFSET: u16 =
+    ${CONSTANT_PREFIX}_TOKEN_TYPE_HASH_LENGTH_OFFSET
+    + ${CONSTANT_PREFIX}_TOKEN_TYPE_HASH_LENGTH_LENGTH;
+const ${CONSTANT_PREFIX}_TOKEN_OFFSET: u16 =
+    ${CONSTANT_PREFIX}_TOKEN_TYPE_HASH_OFFSET
+    + ${CONSTANT_PREFIX}_TOKEN_TYPE_HASH_LENGTH;
+const ${CONSTANT_PREFIX}_LENGTH: u16 =
+    ${CONSTANT_PREFIX}_TOKEN_OFFSET
+    + ${CONSTANT_PREFIX}_TOKEN_LENGTH;
 
-type SerializedAmount = [u8; AMOUNT_LENGTH];
+type Serialized${TYPE_NAME} = [u8; ${CONSTANT_PREFIX}_LENGTH];
 
-type TokenHash = [u8; AMOUNT_TOKEN_TYPE_HASH_LENGTH];
-type TokenValue = [u8; AMOUNT_TOKEN_LENGTH];
+type TokenHash = [u8; ${CONSTANT_PREFIX}_TOKEN_TYPE_HASH_LENGTH];
+type TokenValue = [u8; ${CONSTANT_PREFIX}_TOKEN_LENGTH];
 
 //The representation of class net.corda.core.contracts.Amount in zinc. However, zinc does not support
 //generics, thus to maintain it to some extend we use the hash of the token.
@@ -48,20 +54,20 @@ type TokenValue = [u8; AMOUNT_TOKEN_LENGTH];
 //token - serialized token
 //
 //For more information about struct properties, please, refer to class net.corda.core.contracts.Amount.
-struct Amount {
+struct ${TYPE_NAME} {
     quantity: i64,
-    display_token_size: BigDecimal,
+    display_token_size: ${BD_TYPE_NAME},
     token_type_hash: TokenHash,
     token: TokenValue,
 }
 
-impl Amount {
-    fn zero() -> Amount {
-        Amount {
+impl ${TYPE_NAME} {
+    fn zero() -> ${TYPE_NAME} {
+        ${TYPE_NAME} {
             quantity: 0 as i64,
-            display_token_size: BigDecimal::zero(),
-            token_type_hash: [0; AMOUNT_TOKEN_TYPE_HASH_LENGTH],
-            token: [0; AMOUNT_TOKEN_LENGTH],
+            display_token_size: ${BD_TYPE_NAME}::zero(),
+            token_type_hash: [0; ${CONSTANT_PREFIX}_TOKEN_TYPE_HASH_LENGTH],
+            token: [0; ${CONSTANT_PREFIX}_TOKEN_LENGTH],
         }
     }
 
@@ -70,7 +76,7 @@ impl Amount {
         that_token_type_hash: TokenHash,
     ) -> bool {
         let mut result = true;
-        for i in 0..AMOUNT_TOKEN_TYPE_HASH_LENGTH {
+        for i in 0..${CONSTANT_PREFIX}_TOKEN_TYPE_HASH_LENGTH {
             result = result && this_token_type_hash[i] == that_token_type_hash[i];
         }
         result
@@ -81,30 +87,30 @@ impl Amount {
         that_token: TokenValue,
     ) -> bool {
         let mut result = true;
-        for i in 0..AMOUNT_TOKEN_LENGTH {
+        for i in 0..${CONSTANT_PREFIX}_TOKEN_LENGTH {
             result = result && this_token[i] == that_token[i];
         }
         result
     }
 
-    fn _check_token(this: Amount, that: Amount) {
+    fn _check_token(this: ${TYPE_NAME}, that: ${TYPE_NAME}) {
         assert!(
-            BigDecimal::equals(this.display_token_size, that.display_token_size),
+            ${BD_TYPE_NAME}::equals(this.display_token_size, that.display_token_size),
             "Token sizes don't match"
         );
         assert!(
-            Amount::_compare_token_type_hashes(this.token_type_hash, that.token_type_hash),
+            ${TYPE_NAME}::_compare_token_type_hashes(this.token_type_hash, that.token_type_hash),
             "Token types don't match"
         );
         assert!(
-            Amount::_compare_tokens(this.token, that.token),
+            ${TYPE_NAME}::_compare_tokens(this.token, that.token),
             "Tokens don't match"
         );
     }
 
-    fn plus(this: Amount, that: Amount) -> Amount {
+    fn plus(this: ${TYPE_NAME}, that: ${TYPE_NAME}) -> ${TYPE_NAME} {
         _check_token(this, that);
-        Amount {
+        ${TYPE_NAME} {
             quantity: this.quantity + that.quantity,
             display_token_size: this.display_token_size,
             token_type_hash: this.token_type_hash,
@@ -112,9 +118,9 @@ impl Amount {
         }
     }
 
-    fn minus(this: Amount, that: Amount) -> Amount {
+    fn minus(this: ${TYPE_NAME}, that: ${TYPE_NAME}) -> ${TYPE_NAME} {
         _check_token(this, that);
-        Amount {
+        ${TYPE_NAME} {
             quantity: this.quantity - that.quantity,
             display_token_size: this.display_token_size,
             token_type_hash: this.token_type_hash,
@@ -122,13 +128,13 @@ impl Amount {
         }
     }
 
-    fn equals(this: Amount, that: Amount) -> bool {
+    fn equals(this: ${TYPE_NAME}, that: ${TYPE_NAME}) -> bool {
         this.quantity == that.quantity
-            && Amount::_compare_token_type_hashes(this.token_type_hash, that.token_type_hash)
-            && BigDecimal::equals(this.display_token_size, that.display_token_size)
+            && ${TYPE_NAME}::_compare_token_type_hashes(this.token_type_hash, that.token_type_hash)
+            && ${BD_TYPE_NAME}::equals(this.display_token_size, that.display_token_size)
     }
 
-    fn _extract_int(serialized_amount: SerializedAmount, offset: u16) -> u32 {
+    fn _extract_int(serialized_amount: Serialized${TYPE_NAME}, offset: u16) -> u32 {
         let mut result: u32 = 0;
         for i in 0..4 {
             result = result * 256 as u32 + serialized_amount[offset + i as u16] as u32;
@@ -136,7 +142,7 @@ impl Amount {
         result
     }
 
-    fn _extract_long(serialized_amount: SerializedAmount, offset: u16) -> u64 {
+    fn _extract_long(serialized_amount: Serialized${TYPE_NAME}, offset: u16) -> u64 {
         let mut result: u64 = 0;
         for i in 0..8 {
             result = result * 256 as u64 + serialized_amount[offset + i as u16] as u64;
@@ -144,31 +150,31 @@ impl Amount {
         result
     }
 
-    fn _extract_big_decimal(serialized_amount: SerializedAmount, offset: u16) -> BigDecimal {
-        let mut bd_bytes: SerializedBigDecimal = [0; BIG_DECIMAL_LENGTH];
-        for i in 0..BIG_DECIMAL_LENGTH {
+    fn _extract_${BD_MODULE_NAME}(serialized_amount: Serialized${TYPE_NAME}, offset: u16) -> ${BD_TYPE_NAME} {
+        let mut bd_bytes: Serialized${BD_TYPE_NAME} = [0; ${BD_CONSTANT_PREFIX}_LENGTH];
+        for i in 0..${BD_CONSTANT_PREFIX}_LENGTH {
             bd_bytes[i] = serialized_amount[offset + i];
         }
-        BigDecimal::deserialize(bd_bytes)
+        ${BD_TYPE_NAME}::deserialize(bd_bytes)
     }
 
-    fn deserialize(serialized_amount: SerializedAmount) -> Amount {
-        let quantity = _extract_long(serialized_amount, AMOUNT_QUANTITY_OFFSET);
+    fn deserialize(serialized_amount: Serialized${TYPE_NAME}) -> ${TYPE_NAME} {
+        let quantity = _extract_long(serialized_amount, ${CONSTANT_PREFIX}_QUANTITY_OFFSET);
 
-        let display_token_size = _extract_big_decimal(serialized_amount, AMOUNT_DISPLAY_TOKEN_SIZE_OFFSET);
+        let display_token_size = _extract_${BD_MODULE_NAME}(serialized_amount, ${CONSTANT_PREFIX}_DISPLAY_TOKEN_SIZE_OFFSET);
 
-        let token_type_hash_length = _extract_int(serialized_amount, AMOUNT_TOKEN_TYPE_HASH_LENGTH_OFFSET);
-        let mut token_type_hash: TokenHash = [0; AMOUNT_TOKEN_TYPE_HASH_LENGTH];
-        for i in 0..AMOUNT_TOKEN_TYPE_HASH_LENGTH while i as u32 < token_type_hash_length {
-            token_type_hash[i] = serialized_amount[AMOUNT_TOKEN_TYPE_HASH_OFFSET + i];
+        let token_type_hash_length = _extract_int(serialized_amount, ${CONSTANT_PREFIX}_TOKEN_TYPE_HASH_LENGTH_OFFSET);
+        let mut token_type_hash: TokenHash = [0; ${CONSTANT_PREFIX}_TOKEN_TYPE_HASH_LENGTH];
+        for i in 0..${CONSTANT_PREFIX}_TOKEN_TYPE_HASH_LENGTH while i as u32 < token_type_hash_length {
+            token_type_hash[i] = serialized_amount[${CONSTANT_PREFIX}_TOKEN_TYPE_HASH_OFFSET + i];
         }
 
-        let mut token: TokenValue = [0; AMOUNT_TOKEN_LENGTH];
-        for i in 0..AMOUNT_TOKEN_LENGTH {
-            token[i] = serialized_amount[AMOUNT_TOKEN_OFFSET + i];
+        let mut token: TokenValue = [0; ${CONSTANT_PREFIX}_TOKEN_LENGTH];
+        for i in 0..${CONSTANT_PREFIX}_TOKEN_LENGTH {
+            token[i] = serialized_amount[${CONSTANT_PREFIX}_TOKEN_OFFSET + i];
         }
 
-        Amount {
+        ${TYPE_NAME} {
             quantity: quantity as i64,
             display_token_size: display_token_size,
             token_type_hash: token_type_hash,

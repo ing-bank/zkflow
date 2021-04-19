@@ -22,10 +22,10 @@ class TemplateRenderer(private val outputPath: File) {
     fun generateBigDecimalsCode(templateContents: String, bigDecimalConfigurations: List<BigDecimalTemplateParameters>) {
         bigDecimalConfigurations.forEach {
             val bigDecimalsContent = templateContents
+                .replace("\${TYPE_NAME}", it.typeName)
+                .replace("\${CONSTANT_PREFIX}", it.typeName.camelToSnakeCase().toUpperCase())
                 .replace("\${INTEGER_SIZE_PLACEHOLDER}", it.integerSize.toString())
                 .replace("\${FRACTION_SIZE_PLACEHOLDER}", it.fractionSize.toString())
-                .replace("BigDecimal", it.typeName)
-                .replace("BIG_DECIMAL", it.typeName.camelToSnakeCase().toUpperCase())
             createOutputFile(outputPath.resolve("${it.typeName.camelToSnakeCase()}.zn"))
                 .writeBytes(bigDecimalsContent.toByteArray())
         }
@@ -34,12 +34,12 @@ class TemplateRenderer(private val outputPath: File) {
     fun generateAmountsCode(templateContents: String, amountConfiguration: List<AmountTemplateParameters>) {
         amountConfiguration.forEach {
             val bigDecimalsContent = templateContents
-                .replace("BigDecimal", it.tokenDisplaySize.typeName)
-                .replace("BIG_DECIMAL", it.tokenDisplaySize.typeName.camelToSnakeCase().toUpperCase())
-                .replace("big_decimal", it.tokenDisplaySize.typeName.camelToSnakeCase())
+                .replace("\${TYPE_NAME}", it.typeName)
+                .replace("\${CONSTANT_PREFIX}", it.typeName.camelToSnakeCase().toUpperCase())
                 .replace("\${TOKEN_SIZE_PLACEHOLDER}", it.tokenSize.toString())
-                .replace("Amount", it.typeName)
-                .replace("AMOUNT", it.typeName.camelToSnakeCase().toUpperCase())
+                .replace("\${BD_TYPE_NAME}", it.tokenDisplaySize.typeName)
+                .replace("\${BD_CONSTANT_PREFIX}", it.tokenDisplaySize.typeName.camelToSnakeCase().toUpperCase())
+                .replace("\${BD_MODULE_NAME}", it.tokenDisplaySize.typeName.camelToSnakeCase())
             createOutputFile(outputPath.resolve("${it.typeName.camelToSnakeCase()}.zn"))
                 .writeBytes(bigDecimalsContent.toByteArray())
         }
