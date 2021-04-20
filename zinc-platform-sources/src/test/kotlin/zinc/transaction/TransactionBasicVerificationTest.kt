@@ -24,7 +24,9 @@ import net.corda.core.serialization.SerializationContext
 import net.corda.core.serialization.SerializationDefaults
 import net.corda.core.serialization.SerializationFactory
 import net.corda.core.serialization.SerializationMagic
+import net.corda.core.serialization.deserialize
 import net.corda.core.serialization.internal.CustomSerializationSchemeUtils
+import net.corda.core.serialization.serialize
 import net.corda.core.transactions.WireTransaction
 import net.corda.core.utilities.ByteSequence
 import net.corda.core.utilities.loggerFor
@@ -143,15 +145,10 @@ class TransactionBasicVerificationTest {
         wtx.componentGroups[ComponentGroupEnum.INPUTS_GROUP.ordinal].components.first().copyBytes() shouldBe bflSerializedFirstInput.bytes
 
         // Deserialization must be forced, otherwise lazily mapped values will be picked up.
+        val forcedWtx = wtx.serialize().deserialize()
 
         println("INPUTS")
-        val actualInputs = deserialiseComponentGroup(
-            wtx.componentGroups,
-            StateRef::class,
-            ComponentGroupEnum.INPUTS_GROUP,
-            forceDeserialize = true
-        )
-        actualInputs.zip(inputs).forEach { (actual, expected) ->
+        forcedWtx.inputs.zip(inputs).forEach { (actual, expected) ->
             actual shouldBe expected
         }
 
