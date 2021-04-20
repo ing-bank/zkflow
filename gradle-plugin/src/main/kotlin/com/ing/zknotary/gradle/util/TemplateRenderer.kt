@@ -6,8 +6,11 @@ class TemplateRenderer(private val outputPath: File) {
 
     fun generateStringCode(templateContents: String, stringConfigurations: List<Short>) {
         stringConfigurations.forEach {
-            val stringContent = templateContents.replace("\${STRING_SIZE_PLACEHOLDER}", it.toString())
             val sizeSuffix = "$it"
+            val stringContent = templateContents
+                .replace("\${TYPE_NAME}", "String_$sizeSuffix")
+                .replace("\${CONSTANT_PREFIX}", "STRING_$sizeSuffix")
+                .replace("\${STRING_SIZE_PLACEHOLDER}", it.toString())
             createOutputFile(outputPath.resolve("string_$sizeSuffix.zn"))
                 .writeBytes(stringContent.toByteArray())
         }
