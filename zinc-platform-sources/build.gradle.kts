@@ -5,7 +5,6 @@ import javax.inject.Inject
 
 plugins {
     kotlin("jvm")
-    kotlin("plugin.serialization")
     java
     id("maven-publish")
     kotlin("plugin.serialization")

@@ -4,6 +4,8 @@ import com.ing.zknotary.common.crypto.zinc
 import com.ing.zknotary.common.zkp.ZincZKService
 import com.ing.zknotary.testing.fixtures.contract.DummyContract
 import com.ing.zknotary.testing.fixtures.state.DummyState
+import com.ing.zknotary.testing.serialization.getSerializationContext
+import com.ing.zknotary.testing.serialization.serializeWithScheme
 import io.kotest.matchers.shouldBe
 import net.corda.core.contracts.AttachmentConstraint
 import net.corda.core.contracts.Command
@@ -18,24 +20,18 @@ import net.corda.core.crypto.DigestService
 import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.Party
 import net.corda.core.internal.createComponentGroups
-import net.corda.core.internal.deserialiseCommands
-import net.corda.core.internal.deserialiseComponentGroup
-import net.corda.core.serialization.SerializationContext
-import net.corda.core.serialization.SerializationDefaults
 import net.corda.core.serialization.SerializationFactory
-import net.corda.core.serialization.SerializationMagic
 import net.corda.core.serialization.deserialize
-import net.corda.core.serialization.internal.CustomSerializationSchemeUtils
 import net.corda.core.serialization.serialize
 import net.corda.core.transactions.WireTransaction
-import net.corda.core.utilities.ByteSequence
 import net.corda.core.utilities.loggerFor
 import net.corda.coretesting.internal.asTestContextEnv
 import net.corda.coretesting.internal.createTestSerializationEnv
 import net.corda.testing.core.TestIdentity
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
-import zinc.transaction.envelope.Envelope
+import zinc.transaction.serializer.CommandDataSerializerMap
+import zinc.transaction.serializer.ContractStateSerializerMap
 import java.io.File
 import java.time.Duration
 import java.time.Instant
@@ -57,9 +53,6 @@ class TransactionBasicVerificationTest {
         provingTimeout = Duration.ofSeconds(300),
         verificationTimeout = Duration.ofSeconds(1)
     )
-
-    private val notary = TestIdentity.fresh("Notary").party
-    private val alice = TestIdentity.fresh("Alice").party
 
 //    init {
 //        zincZKService.setupTimed(log)
@@ -93,34 +86,24 @@ class TransactionBasicVerificationTest {
     @Test
     @Suppress("LongMethod")
     fun `Wire transaction serializes`() = withCustomSerializationEnv {
-        Envelope.register(DummyState::class, 1, DummyState.serializer())
-        Envelope.register(DummyContract.Relax::class, 1, DummyContract.Relax.serializer())
-        Envelope.register(DummyContract.Chill::class, 2, DummyContract.Chill.serializer())
+        ContractStateSerializerMap.register(DummyState::class, 1, DummyState.serializer())
+        CommandDataSerializerMap.register(DummyContract.Relax::class, 2, DummyContract.Relax.serializer())
+        CommandDataSerializerMap.register(DummyContract.Chill::class, 3, DummyContract.Chill.serializer())
 
-        val state2 = DummyState.any()
-        val alice = state2.participants.first()
-
-        // Access elements to trigger deserialization in order defined by ComponentGroupEnum
-        //     INPUTS_GROUP, // ordinal = 0.
-        //     OUTPUTS_GROUP, // ordinal = 1.
-        //     COMMANDS_GROUP, // ordinal = 2.
-        //     ATTACHMENTS_GROUP, // ordinal = 3.
-        //     NOTARY_GROUP, // ordinal = 4.
-        //     TIMEWINDOW_GROUP, // ordinal = 5.
-        //     SIGNERS_GROUP, // ordinal = 6.
-        //     REFERENCES_GROUP, // ordinal = 7.
-        //     PARAMETERS_GROUP
+        val state = DummyState.any()
+        val alice = state.participants.first()
+        val bob = TestIdentity.fresh("Bob").party
 
         val inputs = List(4) { dummyStateRef() }
         val constrainedOutputs = listOf(
             ConstrainedState(
-                StateAndContract(state2, DummyContract.PROGRAM_ID),
+                StateAndContract(state, DummyContract.PROGRAM_ID),
                 HashAttachmentConstraint(SecureHash.zeroHash)
             )
         )
-        val commands = listOf(Command(DummyContract.Relax(), alice.owningKey), Command(DummyContract.Chill(), alice.owningKey))
+        val commands = listOf(Command(DummyContract.Chill(), listOf(alice.owningKey, bob.owningKey)))
         val attachments = List(4) { SecureHash.randomSHA256() }
-        // notary is this.notary
+        val notary = TestIdentity.fresh("Notary").party
         val timeWindow = TimeWindow.fromOnly(Instant.now())
         val references = List(2) { dummyStateRef() }
         val networkParametersHash = SecureHash.randomSHA256()
@@ -134,111 +117,29 @@ class TransactionBasicVerificationTest {
             timeWindow,
             references,
             networkParametersHash
-        )
+        ).serialize().deserialize() // Deserialization must be forced, otherwise lazily mapped values will be picked up.
 
         /*
-         * Confirm that the contents are actually serialized with BFL and not something else.
-         *
+         * Confirm that the contents are actually serialized with BFL and not with something else.
          * This assertion becomes important once we start using the real ZKTransactionBuilder
          */
         val bflSerializedFirstInput = inputs.first().serializeWithScheme(TestBFLSerializationScheme.SCHEME_ID)
         wtx.componentGroups[ComponentGroupEnum.INPUTS_GROUP.ordinal].components.first().copyBytes() shouldBe bflSerializedFirstInput.bytes
 
-        // Deserialization must be forced, otherwise lazily mapped values will be picked up.
-        val forcedWtx = wtx.serialize().deserialize()
-
-        println("INPUTS")
-        forcedWtx.inputs.zip(inputs).forEach { (actual, expected) ->
-            actual shouldBe expected
-        }
-
-        println("OUTPUTS")
-        val actualOutputs = deserialiseComponentGroup(
-            wtx.componentGroups,
-            TransactionState::class,
-            ComponentGroupEnum.OUTPUTS_GROUP,
-            forceDeserialize = true
-        )
-        actualOutputs.zip(constrainedOutputs).forEach { (actual, expected) ->
+        wtx.outputs.zip(constrainedOutputs).forEach { (actual, expected) ->
             actual.data shouldBe expected.stateAndContract.state
             actual.contract shouldBe expected.stateAndContract.contract
             actual.notary shouldBe notary
             actual.constraint shouldBe expected.constraint
         }
 
-        println("COMMANDS")
-        val actualCommands = deserialiseCommands(
-            wtx.componentGroups,
-            digestService = DigestService.zinc,
-            forceDeserialize = true
-        )
-        actualCommands.zip(commands).forEach { (actual, expected) ->
-            actual shouldBe expected
-            actual.signers shouldBe expected.signers
-        }
-
-        println("ATTACHMENTS")
-        // Expected attachments are set in createWtx.
-        val actualAttachments = deserialiseComponentGroup(
-            wtx.componentGroups,
-            SecureHash::class,
-            ComponentGroupEnum.ATTACHMENTS_GROUP,
-            forceDeserialize = true
-        )
-        actualAttachments.zip(attachments).forEach { (actual, expected) ->
-            actual shouldBe expected
-        }
-
-        println("NOTARY")
-        val actualNotary = deserialiseComponentGroup(
-            wtx.componentGroups,
-            Party::class,
-            ComponentGroupEnum.NOTARY_GROUP,
-            forceDeserialize = true
-        ).single()
-        actualNotary shouldBe notary
-
-        println("TIMEWINDOW")
-        val actualTimeWindow = deserialiseComponentGroup(
-            wtx.componentGroups,
-            TimeWindow::class,
-            ComponentGroupEnum.TIMEWINDOW_GROUP,
-            forceDeserialize = true
-        ).single()
-        actualTimeWindow shouldBe timeWindow
-
-        println("REFERENCES")
-        val actualReferences = deserialiseComponentGroup(
-            wtx.componentGroups,
-            StateRef::class,
-            ComponentGroupEnum.REFERENCES_GROUP,
-            forceDeserialize = true
-        )
-        actualReferences.zip(references).forEach { (actual, expected) ->
-            actual shouldBe expected
-        }
-
-        val actualNetworkParametersHash = deserialiseComponentGroup(
-            wtx.componentGroups,
-            SecureHash::class,
-            ComponentGroupEnum.PARAMETERS_GROUP,
-            forceDeserialize = true
-        ).single()
-        actualNetworkParametersHash shouldBe networkParametersHash
-    }
-
-    private fun getSerializationContext(
-        schemeId: Int,
-        additionalSerializationProperties: Map<Any, Any> = emptyMap()
-    ): SerializationContext {
-        val magic: SerializationMagic = CustomSerializationSchemeUtils.getCustomSerializationMagicFromSchemeId(schemeId)
-        return SerializationDefaults.P2P_CONTEXT.withPreferredSerializationVersion(magic)
-            .withProperties(additionalSerializationProperties)
-    }
-
-    fun <T : Any> T.serializeWithScheme(schemeId: Int): ByteSequence {
-        val serializationContext = getSerializationContext(schemeId)
-        return SerializationFactory.defaultFactory.withCurrentContext(serializationContext) { this.serialize() }
+        wtx.inputs shouldBe inputs
+        wtx.commands shouldBe commands
+        wtx.attachments shouldBe attachments
+        wtx.notary shouldBe notary
+        wtx.timeWindow shouldBe timeWindow
+        wtx.references shouldBe references
+        wtx.networkParametersHash shouldBe networkParametersHash
     }
 
     @Suppress("LongParameterList")
@@ -247,7 +148,7 @@ class TransactionBasicVerificationTest {
         outputs: List<ConstrainedState> = emptyList(),
         commands: List<Command<*>> = emptyList(),
         attachments: List<SecureHash> = emptyList(),
-        notary: Party = this.notary,
+        notary: Party,
         timeWindow: TimeWindow = TimeWindow.fromOnly(Instant.now()),
         references: List<StateRef> = emptyList(),
         networkParametersHash: SecureHash = SecureHash.zeroHash,

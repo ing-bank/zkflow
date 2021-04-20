@@ -12,10 +12,13 @@ import net.corda.core.contracts.TransactionState
 import net.corda.core.crypto.Crypto
 import net.corda.core.serialization.CustomSerializationScheme
 import net.corda.core.serialization.SerializationSchemeContext
+import net.corda.core.serialization.internal.CustomSerializationSchemeUtils
 import net.corda.core.utilities.ByteSequence
-import zinc.transaction.envelope.Envelope
+import net.corda.core.utilities.loggerFor
+import zinc.transaction.serializer.CommandDataSerializerMap
+import zinc.transaction.serializer.ContractStateSerializerMap
+import java.nio.ByteBuffer
 import java.security.PublicKey
-import kotlin.reflect.KClass
 import com.ing.serialization.bfl.api.deserialize as obliviousDeserialize
 import com.ing.serialization.bfl.api.reified.deserialize as informedDeserialize
 import com.ing.serialization.bfl.api.reified.serialize as informedSerialize
@@ -24,73 +27,91 @@ import com.ing.serialization.bfl.api.serialize as obliviousSerialize
 open class TestBFLSerializationScheme : CustomSerializationScheme {
     companion object {
         const val SCHEME_ID = 602214076
-
-        const val CORDA_SERDE_MAGIC_LENGTH = 7
     }
 
     override fun getSchemeId(): Int {
         return SCHEME_ID
     }
 
+    private val logger = loggerFor<TestBFLSerializationScheme>()
+
+    private val cordaSerdeMagicLength = CustomSerializationSchemeUtils.getCustomSerializationMagicFromSchemeId(SCHEME_ID).size
+
     private val serializersPublicKey = CordaSignatureSchemeToSerializers.serializersModuleFor(Crypto.DEFAULT_SIGNATURE_SCHEME)
     private val serializersModule = CordaSerializers + serializersPublicKey
 
-    @Suppress("UNCHECKED_CAST")
     override fun <T : Any> deserialize(
         bytes: ByteSequence,
         clazz: Class<T>,
         context: SerializationSchemeContext
     ): T {
-        println("\tDeserializing:\n\t\t$clazz\n")
+        logger.debug("Deserializing tx component:\t$clazz")
 
-        val redaction = bytes.bytes.drop(CORDA_SERDE_MAGIC_LENGTH).toByteArray()
+        val serializedData = bytes.bytes.drop(cordaSerdeMagicLength).toByteArray()
 
         // TODO is better matching possible?
         return when (clazz.canonicalName) {
             TransactionState::class.java.canonicalName -> {
-                val (stateStrategy, message) = Envelope.unwrapState(redaction)
-                val strategy = TransactionStateSerializer(stateStrategy)
+                val (stateStrategy, message) = ContractStateSerializerMap.extractSerializerAndSerializedData(serializedData)
 
-                informedDeserialize(message, strategy, serializersModule = serializersModule) as T
+                @Suppress("UNCHECKED_CAST")
+                informedDeserialize(message, TransactionStateSerializer(stateStrategy), serializersModule = serializersModule) as T
             }
 
             List::class.java.canonicalName -> {
                 // This case will be triggered when commands will be reconstructed.
                 // This involves deserialization of the SIGNERS_GROUP to reconstruct commands.
-                val envelope: Envelope.Signers = informedDeserialize(redaction, serializersModule = serializersModule)
-                envelope.signers as T
+
+                /*
+                 * Here we read the actual length of the serialized collection from the serialized data
+                 * We use it to give the deserializer the information it requires (for now).
+                 * Once the BFL adds the fixed length info and uses it for this purpose on deserialization under the hood,
+                 * we can remove this argument
+                 */
+                val actualLength = ByteBuffer.wrap(serializedData.copyOfRange(0, Int.SIZE_BYTES)).int
+
+                @Suppress("UNCHECKED_CAST")
+                informedDeserialize<List<PublicKey>>(
+                    serializedData,
+                    serializersModule = serializersModule,
+                    outerFixedLength = intArrayOf(actualLength)
+                ) as T
             }
 
             CommandData::class.java.canonicalName -> {
-                val (commandStrategy, message) = Envelope.unwrapCommand(redaction)
+                val (commandStrategy, message) = CommandDataSerializerMap.extractSerializerAndSerializedData(serializedData)
 
-                obliviousDeserialize(message, CommandData::class.java, commandStrategy, serializersModule = serializersModule) as T
+                @Suppress("UNCHECKED_CAST")
+                obliviousDeserialize(
+                    message,
+                    CommandData::class.java,
+                    commandStrategy,
+                    serializersModule = serializersModule
+                ) as T
             }
 
-            else -> obliviousDeserialize(redaction, clazz, serializersModule = serializersModule)
+            else -> obliviousDeserialize(serializedData, clazz, serializersModule = serializersModule)
         }
     }
 
-    @Suppress("UNCHECKED_CAST")
     override fun <T : Any> serialize(obj: T, context: SerializationSchemeContext): ByteSequence {
-        println("\tSerializing:\n\t\t${obj::class}")
+        logger.debug("Serializing tx component:\t${obj::class}")
+
         val serialization = when (obj) {
             is TransactionState<*> -> when (obj.data) {
                 is DummyState -> {
+                    @Suppress("UNCHECKED_CAST")
                     obj as TransactionState<DummyState>
 
-                    val strategy = TransactionStateSerializer(DummyState.serializer())
-                    val body = informedSerialize(obj, strategy, serializersModule = serializersModule)
-
-                    Envelope.wrap(DummyState::class, body)
+                    ContractStateSerializerMap.prefixWithIdentifier(
+                        DummyState::class,
+                        informedSerialize(obj, TransactionStateSerializer(DummyState.serializer()), serializersModule = serializersModule)
+                    )
                 }
                 else -> error("Do not know how to serialize ${obj.data::class.simpleName}")
             }
             is CommandData -> {
-                val klass = obj::class as KClass<out CommandData>
-
-                val body = obliviousSerialize(obj, serializersModule = serializersModule)
-                Envelope.wrap(klass, body)
+                CommandDataSerializerMap.prefixWithIdentifier(obj::class, obliviousSerialize(obj, serializersModule = serializersModule))
             }
 
             is TimeWindow -> {
@@ -102,13 +123,20 @@ open class TestBFLSerializationScheme : CustomSerializationScheme {
                 informedSerialize(obj, TimeWindowSerializer, serializersModule = serializersModule)
             }
             is List<*> -> {
-                // This case will be triggered when
-                // SIGNERS_GROUP
-                // will be processed.
-                // Components of this group are lists of signers of commands.
-                obj as? List<PublicKey> ?: error("Signers: Expected List<PublicKey>, actual ${obj::class.simpleName}")
+                /*
+                 * This case will be triggered when SIGNERS_GROUP will be processed.
+                 * Components of this group are lists of signers of commands.
+                */
+                @Suppress("UNCHECKED_CAST")
+                val signers = obj as? List<PublicKey> ?: error("Signers: Expected List<PublicKey>, actual ${obj::class.simpleName}")
 
-                informedSerialize(Envelope.Signers(obj), serializersModule = serializersModule)
+                // TODO: The outerFixedLength is hardcoded here. Should come from the SerializationSchemeContext
+                val signersFixedLengthFromContext = 3
+                informedSerialize(
+                    signers,
+                    serializersModule = serializersModule,
+                    outerFixedLength = intArrayOf(signersFixedLengthFromContext)
+                )
             }
             else -> {
                 obliviousSerialize(obj, serializersModule = serializersModule)
