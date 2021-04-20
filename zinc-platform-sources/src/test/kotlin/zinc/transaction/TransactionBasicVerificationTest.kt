@@ -20,11 +20,13 @@ import net.corda.core.identity.Party
 import net.corda.core.internal.createComponentGroups
 import net.corda.core.internal.deserialiseCommands
 import net.corda.core.internal.deserialiseComponentGroup
+import net.corda.core.serialization.SerializationContext
 import net.corda.core.serialization.SerializationDefaults
 import net.corda.core.serialization.SerializationFactory
 import net.corda.core.serialization.SerializationMagic
 import net.corda.core.serialization.internal.CustomSerializationSchemeUtils
 import net.corda.core.transactions.WireTransaction
+import net.corda.core.utilities.ByteSequence
 import net.corda.core.utilities.loggerFor
 import net.corda.coretesting.internal.asTestContextEnv
 import net.corda.coretesting.internal.createTestSerializationEnv
@@ -132,6 +134,14 @@ class TransactionBasicVerificationTest {
             networkParametersHash
         )
 
+        /*
+         * Confirm that the contents are actually serialized with BFL and not something else.
+         *
+         * This assertion becomes important once we start using the real ZKTransactionBuilder
+         */
+        val bflSerializedFirstInput = inputs.first().serializeWithScheme(TestBFLSerializationScheme.SCHEME_ID)
+        wtx.componentGroups[ComponentGroupEnum.INPUTS_GROUP.ordinal].components.first().copyBytes() shouldBe bflSerializedFirstInput.bytes
+
         // Deserialization must be forced, otherwise lazily mapped values will be picked up.
 
         println("INPUTS")
@@ -220,6 +230,20 @@ class TransactionBasicVerificationTest {
         actualNetworkParametersHash shouldBe networkParametersHash
     }
 
+    private fun getSerializationContext(
+        schemeId: Int,
+        additionalSerializationProperties: Map<Any, Any> = emptyMap()
+    ): SerializationContext {
+        val magic: SerializationMagic = CustomSerializationSchemeUtils.getCustomSerializationMagicFromSchemeId(schemeId)
+        return SerializationDefaults.P2P_CONTEXT.withPreferredSerializationVersion(magic)
+            .withProperties(additionalSerializationProperties)
+    }
+
+    fun <T : Any> T.serializeWithScheme(schemeId: Int): ByteSequence {
+        val serializationContext = getSerializationContext(schemeId)
+        return SerializationFactory.defaultFactory.withCurrentContext(serializationContext) { this.serialize() }
+    }
+
     @Suppress("LongParameterList")
     private fun createWtx(
         inputs: List<StateRef> = emptyList(),
@@ -237,9 +261,7 @@ class TransactionBasicVerificationTest {
         schemeId: Int = TestBFLSerializationScheme.SCHEME_ID,
         additionalSerializationProperties: Map<Any, Any> = emptyMap()
     ): WireTransaction {
-        val magic: SerializationMagic = CustomSerializationSchemeUtils.getCustomSerializationMagicFromSchemeId(schemeId)
-        val serializationContext = SerializationDefaults.P2P_CONTEXT.withPreferredSerializationVersion(magic)
-            .withProperties(additionalSerializationProperties)
+        val serializationContext = getSerializationContext(schemeId, additionalSerializationProperties)
 
         return SerializationFactory.defaultFactory.withCurrentContext(serializationContext) {
             WireTransaction(
