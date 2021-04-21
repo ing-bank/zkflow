@@ -4,6 +4,18 @@ import java.io.File
 
 class TemplateRenderer(private val outputPath: File) {
 
+    fun generateStringCode(templateContents: String, stringConfigurations: List<Short>) {
+        stringConfigurations.forEach {
+            val sizeSuffix = "$it"
+            val stringContent = templateContents
+                .replace("\${TYPE_NAME}", "String_$sizeSuffix")
+                .replace("\${CONSTANT_PREFIX}", "STRING_$sizeSuffix")
+                .replace("\${STRING_SIZE_PLACEHOLDER}", it.toString())
+            createOutputFile(outputPath.resolve("string_$sizeSuffix.zn"))
+                .writeBytes(stringContent.toByteArray())
+        }
+    }
+
     fun generateFloatingPointsCode(templateContents: String, bigDecimalSizes: Set<Pair<Int, Int>>) {
         bigDecimalSizes.forEach {
             val floatingPointContent = templateContents.replace("\${INTEGER_SIZE_PLACEHOLDER}", it.first.toString())

@@ -7,6 +7,7 @@ plugins {
 
 zkp {
     bigDecimalSizes = setOf(Pair(25, 6), Pair(102, 20))
+    stringConfigurations = listOf(33)
 }
 
 repositories {

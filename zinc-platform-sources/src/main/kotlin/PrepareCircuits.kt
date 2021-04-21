@@ -7,6 +7,8 @@ import java.io.File
 
 val bigDecimalSizes = setOf(Pair(24, 6), Pair(100, 20))
 
+val stringConfigurations: List<Short> = listOf(32)
+
 fun main(args: Array<String>) {
 
     val root = args[0]
@@ -30,6 +32,7 @@ fun main(args: Array<String>) {
 
         // Generate code from templates
         val renderer = TemplateRenderer(outputPath)
+        getTemplateContents(root, "string.zn")?.let { renderer.generateStringCode(it, stringConfigurations) }
         getTemplateContents(root, "floating_point.zn")?.let { renderer.generateFloatingPointsCode(it, bigDecimalSizes) }
         getTemplateContents(root, "merkle_template.zn")?.let { renderer.generateMerkleUtilsCode(it, consts) }
         getTemplateContents(root, "main_template.zn")?.let { renderer.generateMainCode(it, consts) }
@@ -44,6 +47,10 @@ fun main(args: Array<String>) {
 
         // Generate floating points code for test circuits
         val testTemplate = TemplateRenderer(getPlatformSourcesPath(root, "zinc-platform-test-sources"))
+        testTemplate.generateStringCode(
+            getPlatformSourcesPath(root, "zinc-platform-templates").resolve("string.zn").readText(),
+            stringConfigurations
+        )
         testTemplate.generateFloatingPointsCode(
             getPlatformSourcesPath(root, "zinc-platform-templates").resolve("floating_point.zn").readText(),
             bigDecimalSizes

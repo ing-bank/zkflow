@@ -19,6 +19,7 @@
 
 .DS_Store
 
+string_32.zn
 floating_point_24_6.zn
 floating_point_100_20.zn
 
