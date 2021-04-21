@@ -1,5 +1,6 @@
 package com.ing.zknotary.common.serialization.bfl.serializers
 
+import com.ing.zknotary.common.serialization.bfl.corda.LinearPointerSerializer
 import com.ing.zknotary.common.serialization.bfl.corda.PartyAndReferenceSerializer
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.modules.SerializersModule
@@ -47,4 +48,5 @@ val CordaSerializers = SerializersModule {
 
     contextual(TimeWindowSerializer)
     contextual(PartyAndReferenceSerializer)
+    contextual(LinearPointerSerializer)
 }
