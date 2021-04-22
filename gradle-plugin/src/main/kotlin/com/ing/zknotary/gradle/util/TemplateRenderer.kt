@@ -1,14 +1,17 @@
 package com.ing.zknotary.gradle.util
 
+import com.ing.zknotary.common.serialization.bfl.corda.LinearPointerSurrogate
 import com.ing.zknotary.common.serialization.bfl.serializers.UniqueIdentifierSurrogate
 import com.ing.zknotary.gradle.extension.AmountTemplateParameters
 import com.ing.zknotary.gradle.extension.BigDecimalTemplateParameters
+import com.ing.zknotary.gradle.extension.LinearPointerTemplateParameters
 import com.ing.zknotary.gradle.extension.StringTemplateParameters
 import com.ing.zknotary.gradle.extension.TemplateParameters
 import com.ing.zknotary.gradle.extension.UniqueIdentifierTemplateParameters
 import com.ing.zknotary.gradle.extension.camelToSnakeCase
 import java.io.File
 
+@Suppress("TooManyFunctions")
 class TemplateRenderer(private val outputPath: File, private val templateResolver: (String) -> String) {
 
     fun generateTemplate(templateParameters: TemplateParameters) {
@@ -28,6 +31,7 @@ class TemplateRenderer(private val outputPath: File, private val templateResolve
             is BigDecimalTemplateParameters -> generateBigDecimalTemplate(baseTemplate, templateParameters)
             is AmountTemplateParameters -> generateAmountTemplate(baseTemplate, templateParameters)
             UniqueIdentifierTemplateParameters -> generateUniqueIdentifierTemplate(baseTemplate, templateParameters)
+            LinearPointerTemplateParameters -> generateLinearPointerTemplate(baseTemplate, templateParameters)
         }
     }
 
@@ -80,6 +84,13 @@ class TemplateRenderer(private val outputPath: File, private val templateResolve
             .replace("\${EXTERNAL_ID_STRING_SIZE}", UniqueIdentifierSurrogate.EXTERNAL_ID_LENGTH.toString())
         createOutputFile(outputPath.resolve(templateParameters.templateFile))
             .writeBytes(uniqueIdentifierContent.toByteArray())
+    }
+
+    private fun generateLinearPointerTemplate(templateContents: String, templateParameters: TemplateParameters) {
+        val linearPointerContent = templateContents
+            .replace("\${CLASS_NAME_STRING_SIZE}", LinearPointerSurrogate.MAX_CLASS_NAME_SIZE.toString())
+        createOutputFile(outputPath.resolve(templateParameters.templateFile))
+            .writeBytes(linearPointerContent.toByteArray())
     }
 
     fun generateMerkleUtilsCode(templateContents: String, constsContent: String) {

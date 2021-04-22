@@ -1,0 +1,24 @@
+mod linear_pointer;
+
+use linear_pointer::LinearPointer;
+use linear_pointer::LINEAR_POINTER_LENGTH;
+use linear_pointer::SerializedLinearPointer;
+
+const WITNESS_ITEMS_COUNT: u16 = 2;
+const WITNESS_SIZE: u16 = WITNESS_ITEMS_COUNT * LINEAR_POINTER_LENGTH;
+
+fn extract_linear_pointer(witness: [u8; WITNESS_SIZE], offset: u16) -> LinearPointer {
+    let mut str: SerializedLinearPointer = [0; LINEAR_POINTER_LENGTH];
+    for i in 0..LINEAR_POINTER_LENGTH {
+        str[i] = witness[i + offset];
+    }
+    LinearPointer::deserialize(str)
+}
+
+fn main(witness: [u8; WITNESS_SIZE]) -> bool {
+    let mut items: [LinearPointer; WITNESS_ITEMS_COUNT] = [LinearPointer::zero(); WITNESS_ITEMS_COUNT];
+    for i in 0..WITNESS_ITEMS_COUNT {
+        items[i] = extract_linear_pointer(witness, i * LINEAR_POINTER_LENGTH);
+    }
+    LinearPointer::equals(items[0], items[1])
+}

@@ -1,5 +1,6 @@
 package com.ing.zknotary.gradle.extension
 
+import com.ing.zknotary.common.serialization.bfl.corda.LinearPointerSurrogate
 import com.ing.zknotary.common.serialization.bfl.serializers.UniqueIdentifierSurrogate
 
 sealed class TemplateParameters(
@@ -50,7 +51,12 @@ data class StringTemplateParameters(
 
 object UniqueIdentifierTemplateParameters : TemplateParameters(
     "unique_identifier.zn",
-    listOf(StringTemplateParameters(UniqueIdentifierSurrogate.EXTERNAL_ID_LENGTH))
+    listOf(StringTemplateParameters(UniqueIdentifierSurrogate.EXTERNAL_ID_LENGTH.toShort()))
+)
+
+object LinearPointerTemplateParameters : TemplateParameters(
+    "linear_pointer.zn",
+    listOf(StringTemplateParameters(LinearPointerSurrogate.MAX_CLASS_NAME_SIZE.toShort()))
 )
 
 private val camelRegex = "(?<=[a-zA-Z])[A-Z]".toRegex()

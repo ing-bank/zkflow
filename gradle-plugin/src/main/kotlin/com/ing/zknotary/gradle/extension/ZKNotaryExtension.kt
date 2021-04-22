@@ -57,7 +57,8 @@ open class ZKNotaryExtension(project: Project) {
     private val fixedTemplateParameters: List<TemplateParameters> = listOf(
         float,
         double,
-        UniqueIdentifierTemplateParameters
+        UniqueIdentifierTemplateParameters,
+        LinearPointerTemplateParameters,
     )
 
     fun resolveAllTemplateParameters(): List<TemplateParameters> {

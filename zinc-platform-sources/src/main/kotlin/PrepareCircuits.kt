@@ -1,6 +1,7 @@
 
 import com.ing.zknotary.gradle.extension.AmountTemplateParameters
 import com.ing.zknotary.gradle.extension.BigDecimalTemplateParameters
+import com.ing.zknotary.gradle.extension.LinearPointerTemplateParameters
 import com.ing.zknotary.gradle.extension.StringTemplateParameters
 import com.ing.zknotary.gradle.extension.TemplateParameters
 import com.ing.zknotary.gradle.extension.UniqueIdentifierTemplateParameters
@@ -24,8 +25,14 @@ val amountConfigurations = bigDecimalConfigurations.map {
 val stringConfigurations: List<StringTemplateParameters> = listOf(StringTemplateParameters(32))
 
 fun resolveAllTemplateParameters(): List<TemplateParameters> {
-    return (bigDecimalConfigurations + amountConfigurations + stringConfigurations + UniqueIdentifierTemplateParameters)
-        .flatMap { it.resolveAllConfigurations() }.distinct()
+    return (
+        bigDecimalConfigurations + amountConfigurations + stringConfigurations + listOf(
+            UniqueIdentifierTemplateParameters,
+            LinearPointerTemplateParameters,
+        )
+        )
+        .flatMap { it.resolveAllConfigurations() }
+        .distinct()
 }
 
 fun main(args: Array<String>) {

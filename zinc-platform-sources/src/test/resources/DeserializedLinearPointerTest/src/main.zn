@@ -1,0 +1,8 @@
+mod linear_pointer;
+
+use linear_pointer::LinearPointer;
+use linear_pointer::SerializedLinearPointer;
+
+fn main(witness: SerializedLinearPointer) -> LinearPointer {
+    LinearPointer::deserialize(witness)
+}

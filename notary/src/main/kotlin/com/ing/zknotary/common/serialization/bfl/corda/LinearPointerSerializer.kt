@@ -13,12 +13,21 @@ import net.corda.core.contracts.UniqueIdentifier
 @Serializable
 data class LinearPointerSurrogate(
     val pointer: @Contextual UniqueIdentifier,
-    @FixedLength([128])
+    @FixedLength([MAX_CLASS_NAME_SIZE])
     val className: String,
     val isResolved: Boolean
 ) : Surrogate<LinearPointer<*>> {
     override fun toOriginal(): LinearPointer<*> {
         return LinearPointer(pointer, Class.forName(className) as Class<LinearState>, isResolved)
+    }
+
+    companion object {
+        /**
+         * The jvm specification does not place any limits on the size of a class name, however
+         * in practice it is limited to 65536. In practice however we don't expect to see class
+         * names longer than the chosen limit.
+         */
+        const val MAX_CLASS_NAME_SIZE = 192
     }
 }
 

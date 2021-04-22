@@ -1,0 +1,3 @@
+[circuit]
+name = "serialized LinearPointer comparison test"
+version = "0.1.0"
