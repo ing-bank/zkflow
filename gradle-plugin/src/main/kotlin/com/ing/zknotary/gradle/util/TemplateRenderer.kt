@@ -1,5 +1,8 @@
 package com.ing.zknotary.gradle.util
 
+import com.ing.zknotary.gradle.extension.AmountTemplateParameters
+import com.ing.zknotary.gradle.extension.BigDecimalTemplateParameters
+import com.ing.zknotary.gradle.extension.camelToSnakeCase
 import java.io.File
 
 class TemplateRenderer(private val outputPath: File) {
@@ -16,13 +19,29 @@ class TemplateRenderer(private val outputPath: File) {
         }
     }
 
-    fun generateFloatingPointsCode(templateContents: String, bigDecimalSizes: Set<Pair<Int, Int>>) {
-        bigDecimalSizes.forEach {
-            val floatingPointContent = templateContents.replace("\${INTEGER_SIZE_PLACEHOLDER}", it.first.toString())
-                .replace("\${FRACTION_SIZE_PLACEHOLDER}", it.second.toString())
-            val sizeSuffix = "${it.first}_${it.second}"
-            createOutputFile(outputPath.resolve("floating_point_$sizeSuffix.zn"))
-                .writeBytes(floatingPointContent.toByteArray())
+    fun generateBigDecimalsCode(templateContents: String, bigDecimalConfigurations: List<BigDecimalTemplateParameters>) {
+        bigDecimalConfigurations.forEach {
+            val bigDecimalsContent = templateContents
+                .replace("\${TYPE_NAME}", it.typeName)
+                .replace("\${CONSTANT_PREFIX}", it.typeName.camelToSnakeCase().toUpperCase())
+                .replace("\${INTEGER_SIZE_PLACEHOLDER}", it.integerSize.toString())
+                .replace("\${FRACTION_SIZE_PLACEHOLDER}", it.fractionSize.toString())
+            createOutputFile(outputPath.resolve("${it.typeName.camelToSnakeCase()}.zn"))
+                .writeBytes(bigDecimalsContent.toByteArray())
+        }
+    }
+
+    fun generateAmountsCode(templateContents: String, amountConfiguration: List<AmountTemplateParameters>) {
+        amountConfiguration.forEach {
+            val bigDecimalsContent = templateContents
+                .replace("\${TYPE_NAME}", it.typeName)
+                .replace("\${CONSTANT_PREFIX}", it.typeName.camelToSnakeCase().toUpperCase())
+                .replace("\${TOKEN_SIZE_PLACEHOLDER}", it.tokenSize.toString())
+                .replace("\${BD_TYPE_NAME}", it.tokenDisplaySize.typeName)
+                .replace("\${BD_CONSTANT_PREFIX}", it.tokenDisplaySize.typeName.camelToSnakeCase().toUpperCase())
+                .replace("\${BD_MODULE_NAME}", it.tokenDisplaySize.typeName.camelToSnakeCase())
+            createOutputFile(outputPath.resolve("${it.typeName.camelToSnakeCase()}.zn"))
+                .writeBytes(bigDecimalsContent.toByteArray())
         }
     }
 

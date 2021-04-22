@@ -1,0 +1,311 @@
+// Input parameters:
+//   - TYPE_NAME: String = Name of the main struct, and suffix for Serialized struct, use camelcase
+//   - CONSTANT_PREFIX: String = prefix to use for constant names, use uppercase
+//   - INTEGER_SIZE_PLACEHOLDER: u16 = number of bytes for BigDecimal.integer
+//   - FRACTION_SIZE_PLACEHOLDER: u16 = number of bytes for BigDecimal.fraction
+// NOTE:
+// All internal size constants are u16, which mean that all values should be below 65536.
+
+//In case if value can't be stored in ${TYPE_NAME}, it will throw an exception,
+//the some goes for arithmetic operations.
+
+//! ${TYPE_NAME} lengths
+const ${CONSTANT_PREFIX}_SIGN_LENGTH: u16 = 1;
+const ${CONSTANT_PREFIX}_INTEGER_LENGTH_LENGTH: u16 = 4;
+const ${CONSTANT_PREFIX}_INTEGER_LENGTH: u16 = ${INTEGER_SIZE_PLACEHOLDER};
+const ${CONSTANT_PREFIX}_FRACTION_LENGTH_LENGTH: u16 = 4;
+const ${CONSTANT_PREFIX}_FRACTION_LENGTH: u16 = ${FRACTION_SIZE_PLACEHOLDER};
+
+//! ${TYPE_NAME} offsets
+const ${CONSTANT_PREFIX}_SIGN_OFFSET: u16 = 0;
+const ${CONSTANT_PREFIX}_INTEGER_LENGTH_OFFSET: u16 =
+      ${CONSTANT_PREFIX}_SIGN_OFFSET
+    + ${CONSTANT_PREFIX}_SIGN_LENGTH;
+const ${CONSTANT_PREFIX}_INTEGER_OFFSET: u16 =
+      ${CONSTANT_PREFIX}_INTEGER_LENGTH_OFFSET
+    + ${CONSTANT_PREFIX}_INTEGER_LENGTH_LENGTH;
+const ${CONSTANT_PREFIX}_FRACTION_LENGTH_OFFSET: u16 =
+      ${CONSTANT_PREFIX}_INTEGER_OFFSET
+    + ${CONSTANT_PREFIX}_INTEGER_LENGTH;
+const ${CONSTANT_PREFIX}_FRACTION_OFFSET: u16 =
+      ${CONSTANT_PREFIX}_FRACTION_LENGTH_OFFSET
+    + ${CONSTANT_PREFIX}_FRACTION_LENGTH_LENGTH;
+const ${CONSTANT_PREFIX}_LENGTH: u16 =
+      ${CONSTANT_PREFIX}_FRACTION_OFFSET
+    + ${CONSTANT_PREFIX}_FRACTION_LENGTH;
+
+//Type for the ByteArray of the serialized form of ${TYPE_NAME}.
+type Serialized${TYPE_NAME} = [u8; ${CONSTANT_PREFIX}_LENGTH];
+
+//Original BigDecimal in Java stores all digits in one array, and uses scale as a number of digits to the right side of
+//the decimal point. Then it calculates the difference in scale of two comparing BigDecimals to adjust digits.
+//For example:
+//1.2, which is an array of [1, 2] and scale 1, plus 10, which is an array [1, 0], but scale 0.
+//So, arrays must be adjusted w.r.t. scales, such that the digits of the same significance have the same index. Then arithmetic operations can be applied.
+//
+//However, zinc doesn't support indexes inferred from witnesses, so it is impossible to adjust arrays in the same way (i + scale_A - scale_B), so we use two separate arrays to
+//store integer value of BigDecimal and its fraction. It is stored in little-Endian order.
+//
+//Description of struct properties:
+//sign - sign of stored variable, belongs to {-1, 0, 1}
+//integer - decimal representation of integer part of stored value, can contain only 1024 digits
+//fraction - decimal representation of fraction part of stored value, can contain only 128 digits
+struct ${TYPE_NAME} {
+    sign: i8,
+    integer: [u8; ${CONSTANT_PREFIX}_INTEGER_LENGTH],
+    fraction: [u8; ${CONSTANT_PREFIX}_FRACTION_LENGTH],
+}
+
+impl ${TYPE_NAME} {
+    fn zero() -> ${TYPE_NAME} {
+        ${TYPE_NAME} {
+            sign: 0 as i8,
+            integer: [0; ${CONSTANT_PREFIX}_INTEGER_LENGTH],
+            fraction: [0; ${CONSTANT_PREFIX}_FRACTION_LENGTH],
+        }
+    }
+
+    //comparison if the same sign
+    fn _compare_magnitude(this: ${TYPE_NAME}, that: ${TYPE_NAME}) -> i8 {
+        let mut result: i8 = 0 as i8;
+        for i in 0..${CONSTANT_PREFIX}_INTEGER_LENGTH {
+            if result == 0 as i8 {
+                result = if this.integer[i] > that.integer[i] {
+                    1 as i8
+                } else {
+                    if this.integer[i] < that.integer[i] {
+                        -1
+                    } else {
+                        0 as i8
+                    }
+                };
+            }
+        }
+
+        if result == 0 as i8 {
+            for i in 0..${CONSTANT_PREFIX}_FRACTION_LENGTH {
+                if result == 0 as i8 {
+                    result = if this.fraction[i] > that.fraction[i] {
+                        1 as i8
+                    } else {
+                        if this.fraction[i] < that.fraction[i] {
+                            -1
+                        } else {
+                            0 as i8
+                        }
+                    };
+                }
+            }
+            result
+        } else {
+            result
+        }
+    }
+
+    //We compare signs, then if they're different (one of inputs is negative or zero), there's no need to compare magnitude.
+    //Otherwise, we compare magnitude and provide result w.r.t. to the sign (if it's negative, then magnitude of the first
+    //input can be less, but first argument still will be bigger).
+    fn compare(this: ${TYPE_NAME}, that: ${TYPE_NAME}) -> i8 {
+        if this.sign == that.sign {
+            if this.sign == 0 as i8 {
+                0 as i8
+            } else {
+                this.sign * _compare_magnitude(this, that)
+            }
+        } else {
+            if this.sign > that.sign {
+                1 as i8
+            } else {
+                -1
+            }
+        }
+    }
+
+    fn equals(this: ${TYPE_NAME}, that: ${TYPE_NAME}) -> bool {
+        this.sign == that.sign && ${TYPE_NAME}::_compare_magnitude(this, that) == 0 as i8
+    }
+
+    fn _sum_magnitude(this: ${TYPE_NAME}, that: ${TYPE_NAME}) -> ${TYPE_NAME} {
+        let mut fraction: [u8; ${CONSTANT_PREFIX}_FRACTION_LENGTH] = [0; ${CONSTANT_PREFIX}_FRACTION_LENGTH];
+        let mut carry = 0;
+
+        for i in 0..${CONSTANT_PREFIX}_FRACTION_LENGTH {
+            let index = ${CONSTANT_PREFIX}_FRACTION_LENGTH - i - 1 as u16;
+            let value =
+                this.fraction[index] + that.fraction[index] + carry;
+            if value >= 10 {
+                carry = 1;
+                fraction[index] = value - 10;
+            } else {
+                carry = 0;
+                fraction[index] = value;
+            }
+        }
+
+        let mut integer: [u8; ${CONSTANT_PREFIX}_INTEGER_LENGTH] = [0; ${CONSTANT_PREFIX}_INTEGER_LENGTH];
+        for i in 0..${CONSTANT_PREFIX}_INTEGER_LENGTH {
+            let index = ${CONSTANT_PREFIX}_INTEGER_LENGTH - i - 1 as u16;
+            let value =
+                this.integer[index] + that.integer[index] + carry;
+            if value >= 10 {
+                carry = 1;
+                integer[index] = value - 10;
+            } else {
+                carry = 0;
+                integer[index] = value;
+            }
+        }
+
+        assert!(carry != 1, "Magnitude exceeds the maximum stored value");
+
+        ${TYPE_NAME} {
+            sign: this.sign,
+            integer: integer,
+            fraction: fraction,
+        }
+    }
+
+    //this >= that, but this[i] is not necessarily >= that[i]
+    fn _subtract_magnitude(this: ${TYPE_NAME}, that: ${TYPE_NAME}) -> ${TYPE_NAME} {
+        let mut fraction: [u8; ${CONSTANT_PREFIX}_FRACTION_LENGTH] = [0; ${CONSTANT_PREFIX}_FRACTION_LENGTH];
+        let mut carry = 0;
+        for i in 0..${CONSTANT_PREFIX}_FRACTION_LENGTH {
+            let index = ${CONSTANT_PREFIX}_FRACTION_LENGTH - i - 1 as u16;
+            let value = this.fraction[index] as i8 - that.fraction[index] as i8 - carry as i8;
+            if value < 0 as i8 {
+                carry = 1;
+                fraction[index] = (10 as i8 + value) as u8;
+            } else {
+                carry = 0;
+                fraction[index] = value as u8;
+            }
+        }
+
+        let mut integer: [u8; ${CONSTANT_PREFIX}_INTEGER_LENGTH] = [0; ${CONSTANT_PREFIX}_INTEGER_LENGTH];
+        for i in 0..${CONSTANT_PREFIX}_INTEGER_LENGTH {
+            let index = ${CONSTANT_PREFIX}_INTEGER_LENGTH - i - 1 as u16;
+            let value = this.integer[index] as i8 - that.integer[index] as i8 - carry as i8;
+            if value < 0 as i8 {
+                carry = 1;
+                integer[index] = (10 as i8 + value) as u8;
+            } else {
+                carry = 0;
+                integer[index] = value as u8;
+            }
+        }
+
+        let sign = if carry == 1 { -1 } else { 1 as i8 };
+
+        ${TYPE_NAME} {
+            sign: sign,
+            integer: integer,
+            fraction: fraction,
+        }
+    }
+
+    fn _handle_different_signs(this: ${TYPE_NAME}, that: ${TYPE_NAME}) -> ${TYPE_NAME} {
+        let comparison = _compare_magnitude(this, that);
+        if comparison == 0 as i8 {
+            zero()
+        } else {
+            let absolute_diff = if comparison == 1 as i8 {
+                _subtract_magnitude(this, that)
+            } else {
+                _subtract_magnitude(that, this)
+            };
+            ${TYPE_NAME} {
+                sign: comparison * this.sign,
+                integer: absolute_diff.integer,
+                fraction: absolute_diff.fraction,
+            }
+        }
+    }
+
+    fn _handle_same_sign(this: ${TYPE_NAME}, that: ${TYPE_NAME}) -> ${TYPE_NAME} {
+        if that.sign == 0 as i8 {
+            zero()
+        } else {
+            _sum_magnitude(this, that)
+        }
+    }
+
+    fn plus(this: ${TYPE_NAME}, that: ${TYPE_NAME}) -> ${TYPE_NAME} {
+        if this.sign == 0 as i8 {
+            that
+        } else {
+            if that.sign == 0 as i8 {
+                this
+            } else {
+                if this.sign == that.sign {
+                    _handle_same_sign(this, that)
+                } else {
+                    _handle_different_signs(this, that)
+                }
+            }
+        }
+    }
+
+    fn minus(this: ${TYPE_NAME}, that: ${TYPE_NAME}) -> ${TYPE_NAME} {
+        let negated = ${TYPE_NAME} {
+            sign: -that.sign,
+            integer: that.integer,
+            fraction: that.fraction,
+        };
+
+        plus(this, negated)
+    }
+
+    fn _extract_int(serialized_bd: Serialized${TYPE_NAME}, offset: u16) -> u32 {
+        let mut result: u32 = 0;
+        for i in 0..4 {
+            result = result * 256 as u32 + serialized_bd[offset + i as u16] as u32;
+        }
+        result
+    }
+
+    fn _parse_sign(sign_byte: u8) -> i8 {
+        if sign_byte > 127 {
+            -1 as i8
+        } else if sign_byte > 0 {
+            1 as i8
+        } else {
+            0 as i8
+        }
+    }
+
+    fn deserialize(serialized_bd: Serialized${TYPE_NAME}) -> ${TYPE_NAME} {
+        let sign = _parse_sign(serialized_bd[${CONSTANT_PREFIX}_SIGN_OFFSET]);
+
+        let integer_length = _extract_int(serialized_bd, ${CONSTANT_PREFIX}_INTEGER_LENGTH_OFFSET);
+
+        let mut integer = [0; ${CONSTANT_PREFIX}_INTEGER_LENGTH];
+        // TODO investigate why the following line does not work when all constants
+        //      are u16 instead of u8. (It works with u8.) The 'downside' of this
+        //      approach, i.e. ignoring the `integer_length`, it that the padding
+        //      bytes in the array cannot contain bogus contents. Strangely enough it
+        //      does work for deserializing the fraction.
+        //
+        //      The raised error is:
+        //        [ERROR   zvm] type error: expected u16, got u8 ... (at _extract_int)
+        //        [ERROR   zvm] runtime error: type error: expected u16, got u8
+        //
+        // for i in 0..${CONSTANT_PREFIX}_INTEGER_LENGTH while i as u32 < integer_length {
+        for i in 0..${CONSTANT_PREFIX}_INTEGER_LENGTH {
+            let index = ${CONSTANT_PREFIX}_INTEGER_LENGTH - i - 1 as u16;
+            integer[index] = serialized_bd[i + ${CONSTANT_PREFIX}_INTEGER_OFFSET];
+        }
+
+        let fraction_length = _extract_int(serialized_bd, ${CONSTANT_PREFIX}_FRACTION_LENGTH_OFFSET);
+
+        let mut fraction = [0; ${CONSTANT_PREFIX}_FRACTION_LENGTH];
+        for i in 0..${CONSTANT_PREFIX}_FRACTION_LENGTH while i as u32 < fraction_length {
+            fraction[i] = serialized_bd[i + ${CONSTANT_PREFIX}_FRACTION_OFFSET];
+        }
+
+        ${TYPE_NAME} {
+            sign: sign,
+            integer: integer,
+            fraction: fraction,
+        }
+    }
+}

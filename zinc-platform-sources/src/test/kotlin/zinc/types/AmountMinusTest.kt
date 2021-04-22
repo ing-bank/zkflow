@@ -7,14 +7,16 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
+import java.util.Currency
+import java.util.Locale
 import kotlin.time.ExperimentalTime
 
 @ExperimentalTime
 class AmountMinusTest {
     private val log = loggerFor<AmountMinusTest>()
     private val zincZKService = getZincZKService<AmountMinusTest>()
-    private val dummyToken = "com.ing.zknotary.SuperToken"
-    private val anotherDummyToken = 420
+    private val dummyToken = Currency.getInstance(Locale.UK)
+    private val anotherDummyToken = Currency.getInstance(Locale.FRANCE)
 
     init {
         zincZKService.setupTimed(log)

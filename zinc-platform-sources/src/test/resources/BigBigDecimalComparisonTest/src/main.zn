@@ -1,9 +1,9 @@
 //!
 //! The 'BigDecimal' main module.
 //!
-mod floating_point_100_20;
-use floating_point_100_20::BigDecimal;
+mod big_decimal_100_20;
+use big_decimal_100_20::BigDecimal_100_20;
 
-fn main(left: BigDecimal, right: BigDecimal) -> i8 {
-    BigDecimal::compare(left, right)
+fn main(left: BigDecimal_100_20, right: BigDecimal_100_20) -> i8 {
+    BigDecimal_100_20::compare(left, right)
 }

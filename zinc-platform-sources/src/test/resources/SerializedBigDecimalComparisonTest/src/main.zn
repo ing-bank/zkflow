@@ -1,0 +1,7 @@
+mod big_decimal_24_6;
+use big_decimal_24_6::BigDecimal_24_6;
+use big_decimal_24_6::SerializedBigDecimal_24_6;
+
+fn main(left: SerializedBigDecimal_24_6, right: SerializedBigDecimal_24_6) -> i8 {
+    BigDecimal_24_6::compare(BigDecimal_24_6::deserialize(left), BigDecimal_24_6::deserialize(right))
+}

@@ -1,11 +1,22 @@
 
+import com.ing.zknotary.gradle.extension.AmountTemplateParameters
+import com.ing.zknotary.gradle.extension.BigDecimalTemplateParameters
+import com.ing.zknotary.gradle.extension.ZKNotaryExtension
 import com.ing.zknotary.gradle.util.MerkleReplacer
 import com.ing.zknotary.gradle.util.TemplateRenderer
 import com.ing.zknotary.gradle.util.ZincSourcesCopier
 import com.ing.zknotary.gradle.util.removeDebugCode
 import java.io.File
 
-val bigDecimalSizes = setOf(Pair(24, 6), Pair(100, 20))
+val bigDecimalConfigurations = listOf(
+    BigDecimalTemplateParameters(24, 6),
+    BigDecimalTemplateParameters(100, 20),
+    ZKNotaryExtension.float,
+    ZKNotaryExtension.double
+)
+val amountConfigurations = bigDecimalConfigurations.map {
+    AmountTemplateParameters(it, 8)
+}
 
 val stringConfigurations: List<Short> = listOf(32)
 
@@ -33,7 +44,8 @@ fun main(args: Array<String>) {
         // Generate code from templates
         val renderer = TemplateRenderer(outputPath)
         getTemplateContents(root, "string.zn")?.let { renderer.generateStringCode(it, stringConfigurations) }
-        getTemplateContents(root, "floating_point.zn")?.let { renderer.generateFloatingPointsCode(it, bigDecimalSizes) }
+        getTemplateContents(root, "big_decimal.zn")?.let { renderer.generateBigDecimalsCode(it, bigDecimalConfigurations) }
+        getTemplateContents(root, "amount.zn")?.let { renderer.generateAmountsCode(it, amountConfigurations) }
         getTemplateContents(root, "merkle_template.zn")?.let { renderer.generateMerkleUtilsCode(it, consts) }
         getTemplateContents(root, "main_template.zn")?.let { renderer.generateMainCode(it, consts) }
 
@@ -51,9 +63,13 @@ fun main(args: Array<String>) {
             getPlatformSourcesPath(root, "zinc-platform-templates").resolve("string.zn").readText(),
             stringConfigurations
         )
-        testTemplate.generateFloatingPointsCode(
-            getPlatformSourcesPath(root, "zinc-platform-templates").resolve("floating_point.zn").readText(),
-            bigDecimalSizes
+        testTemplate.generateBigDecimalsCode(
+            getPlatformSourcesPath(root, "zinc-platform-templates").resolve("big_decimal.zn").readText(),
+            bigDecimalConfigurations
+        )
+        testTemplate.generateAmountsCode(
+            getPlatformSourcesPath(root, "zinc-platform-templates").resolve("amount.zn").readText(),
+            amountConfigurations
         )
     }
 }

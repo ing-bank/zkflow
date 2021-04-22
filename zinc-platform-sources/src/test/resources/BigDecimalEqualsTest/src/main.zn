@@ -1,11 +1,11 @@
 //!
 //! The 'BigDecimal' main module.
 //!
-mod floating_point_24_6;
-use floating_point_24_6::BigDecimal;
+mod big_decimal_24_6;
+use big_decimal_24_6::BigDecimal_24_6;
 
-fn main(left: BigDecimal, right: BigDecimal) -> u8 {
-    if BigDecimal::equals(left, right) {
+fn main(left: BigDecimal_24_6, right: BigDecimal_24_6) -> u8 {
+    if BigDecimal_24_6::equals(left, right) {
         0
     } else {
         1

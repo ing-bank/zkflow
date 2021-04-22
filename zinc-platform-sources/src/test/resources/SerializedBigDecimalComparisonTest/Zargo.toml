@@ -1,0 +1,3 @@
+[circuit]
+name = "test big decimal comparison with bfl serialization"
+version = "0.1.0"
