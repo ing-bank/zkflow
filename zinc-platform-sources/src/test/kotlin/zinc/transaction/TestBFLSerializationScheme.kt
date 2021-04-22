@@ -4,9 +4,11 @@ import com.ing.zknotary.common.serialization.bfl.serializers.CordaSerializers
 import com.ing.zknotary.common.serialization.bfl.serializers.CordaSignatureSchemeToSerializers
 import com.ing.zknotary.common.serialization.bfl.serializers.TimeWindowSerializer
 import com.ing.zknotary.common.serialization.bfl.serializers.TransactionStateSerializer
+import com.ing.zknotary.common.zkp.CircuitMetaData
 import com.ing.zknotary.testing.fixtures.state.DummyState
 import kotlinx.serialization.modules.plus
 import net.corda.core.contracts.CommandData
+import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.TimeWindow
 import net.corda.core.contracts.TransactionState
 import net.corda.core.crypto.Crypto
@@ -27,6 +29,8 @@ import com.ing.serialization.bfl.api.serialize as obliviousSerialize
 open class TestBFLSerializationScheme : CustomSerializationScheme {
     companion object {
         const val SCHEME_ID = 602214076
+
+        const val CONTEXT_KEY_CIRCUIT = 1
     }
 
     override fun getSchemeId(): Int {
@@ -131,12 +135,16 @@ open class TestBFLSerializationScheme : CustomSerializationScheme {
                 @Suppress("UNCHECKED_CAST")
                 val signers = obj as? List<PublicKey> ?: error("Signers: Expected List<PublicKey>, actual ${obj::class.simpleName}")
 
-                // TODO: The outerFixedLength is hardcoded here. Should come from the SerializationSchemeContext
-                val signersFixedLengthFromContext = 3
+                val circuitMetaData = context.properties[CONTEXT_KEY_CIRCUIT] as? CircuitMetaData
+                    ?: error("Context must specify circuit meta data")
+
+                val signersFixedLength = circuitMetaData.componentGroupSizes[ComponentGroupEnum.SIGNERS_GROUP]
+                    ?: error("Max number of signers must be an integer value")
+
                 informedSerialize(
                     signers,
                     serializersModule = serializersModule,
-                    outerFixedLength = intArrayOf(signersFixedLengthFromContext)
+                    outerFixedLength = intArrayOf(signersFixedLength)
                 )
             }
 

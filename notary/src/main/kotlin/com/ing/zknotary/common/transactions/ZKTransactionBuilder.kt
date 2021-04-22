@@ -1,11 +1,13 @@
 package com.ing.zknotary.common.transactions
 
 import co.paralleluniverse.strands.Strand
+import com.ing.zknotary.common.contracts.ZKCommandData
 import com.ing.zknotary.common.serialization.bfl.FixedLengthSerializationScheme
 import net.corda.core.contracts.AttachmentConstraint
 import net.corda.core.contracts.AutomaticPlaceholderConstraint
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.CommandData
+import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.ContractClassName
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.PrivacySalt
@@ -109,8 +111,17 @@ class ZKTransactionBuilder(
     /**
      * Duplicated so that `toWireTransaction()` always uses the serialization settings
      */
-    fun toWireTransaction(services: ServicesForResolution): WireTransaction =
-        builder.toWireTransaction(services, serializationSchemeId, serializationProperties)
+    fun toWireTransaction(services: ServicesForResolution): WireTransaction {
+        // TODO: Uncomment this when TestBFLSerializationScheme will be refactored to a prod version.
+        //  Enabling it with TestBFLSerializationScheme will introduce a circular dependency.
+        // val command = commands().singleOrNull() ?: error("Single command per transaction is allowed")
+        // val zkCommand = command.value as? ZKCommandData ?: error("Command must implement ZKCommandData")
+        // val serializationProperties = mapOf<Any, Any>(TestBFLSerializationScheme.CONTEXT_KEY_CIRCUIT to zkCommand.circuit)
+
+        // TODO: enforce sizes of the component groups.
+
+        return builder.toWireTransaction(services, serializationSchemeId, serializationProperties)
+    }
 
     /**
      * Duplicated so that it uses our custom `toWireTransaction()` function

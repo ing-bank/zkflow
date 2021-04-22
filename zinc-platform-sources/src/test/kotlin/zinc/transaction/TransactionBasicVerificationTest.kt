@@ -1,5 +1,6 @@
 package zinc.transaction
 
+import com.ing.zknotary.common.contracts.ZKCommandData
 import com.ing.zknotary.common.crypto.zinc
 import com.ing.zknotary.common.zkp.ZincZKService
 import com.ing.zknotary.testing.fixtures.contract.DummyContract
@@ -118,6 +119,11 @@ class TransactionBasicVerificationTest {
         val references = List(2) { dummyStateRef() }
         val networkParametersHash = SecureHash.randomSHA256()
 
+        // This functionality is duplicated from ZKTransaction.toWireTransaction()
+        val command = commands.singleOrNull() ?: error("Single command per transaction is allowed")
+        val zkCommand = command.value as? ZKCommandData ?: error("Command must implement ZKCommandData")
+        val additionalSerializationProperties = mapOf<Any, Any>(TestBFLSerializationScheme.CONTEXT_KEY_CIRCUIT to zkCommand.circuit)
+
         val wtx = createWtx(
             inputs,
             constrainedOutputs,
@@ -126,7 +132,8 @@ class TransactionBasicVerificationTest {
             notary,
             timeWindow,
             references,
-            networkParametersHash
+            networkParametersHash,
+            additionalSerializationProperties = additionalSerializationProperties
         ).serialize().deserialize() // Deserialization must be forced, otherwise lazily mapped values will be picked up.
 
         /*
