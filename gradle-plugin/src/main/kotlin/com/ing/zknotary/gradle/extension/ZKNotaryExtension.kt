@@ -19,18 +19,13 @@ open class ZKNotaryExtension(project: Project) {
     }
 
     @Input
-    var stringConfigurations: List<Short> = listOf(32)
+    var stringConfigurations: List<StringTemplateParameters> = emptyList()
 
     @Input
-    var bigDecimalConfigurations: List<BigDecimalTemplateParameters> = listOf(
-        BigDecimalTemplateParameters(24, 6),
-        BigDecimalTemplateParameters(100, 20),
-    )
+    var bigDecimalConfigurations: List<BigDecimalTemplateParameters> = emptyList()
 
     @Input
-    var amountConfigurations: List<AmountTemplateParameters> = bigDecimalConfigurations.map {
-        AmountTemplateParameters(it, 8)
-    }
+    var amountConfigurations: List<AmountTemplateParameters> = emptyList()
 
     @Input
     var zincPlatformSourcesVersion: String? = "1.0-SNAPSHOT"
@@ -54,20 +49,20 @@ open class ZKNotaryExtension(project: Project) {
     val platformSamplesPath = "zinc-platform-samples/**/*.zn"
 
     @Input
-    val stringTemplate = "string.zn"
-
-    @Input
-    val bigDecimalTemplate = "big_decimal.zn"
-
-    @Input
-    val amountTemplate = "amount.zn"
-
-    @Input
     val merkleTemplate = "merkle_template.zn"
 
     @Input
     val mainTemplate = "main_template.zn"
 
-    fun bigDecimalConfigurationsToGenerate(): List<BigDecimalTemplateParameters> =
-        bigDecimalConfigurations + float + double
+    private val fixedTemplateParameters: List<TemplateParameters> = listOf(
+        float,
+        double,
+        UniqueIdentifierTemplateParameters
+    )
+
+    fun resolveAllTemplateParameters(): List<TemplateParameters> {
+        return (fixedTemplateParameters + stringConfigurations + bigDecimalConfigurations + amountConfigurations)
+            .flatMap { it.resolveAllConfigurations() }
+            .distinct()
+    }
 }

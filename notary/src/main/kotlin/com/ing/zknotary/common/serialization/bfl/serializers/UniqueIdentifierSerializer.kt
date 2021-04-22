@@ -15,7 +15,7 @@ object UniqueIdentifierSerializer : KSerializer<UniqueIdentifier> by (
 
 @Serializable
 data class UniqueIdentifierSurrogate(
-    @FixedLength([EXTERNAL_ID_LENGTH])
+    @FixedLength([EXTERNAL_ID_LENGTH.toInt()])
     val externalId: String?,
     val id: @Contextual UUID
 ) : Surrogate<UniqueIdentifier> {
@@ -25,6 +25,6 @@ data class UniqueIdentifierSurrogate(
         // externalId denotes any existing weak identifier acting as a human readable identity paired with the strong UUID,
         // and as such there is no specific information on its maximum length, leading to an arbitrary choice being made
         // that nevertheless seems capable to support the functionality of this externalId
-        const val EXTERNAL_ID_LENGTH = 100
+        const val EXTERNAL_ID_LENGTH: Short = 100
     }
 }

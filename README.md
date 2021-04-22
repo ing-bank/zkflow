@@ -48,6 +48,14 @@ To run Zinc tests that use the real contract circuit faster, you can set the fol
 
 > How to set a system property? `./gradlew test slowTest -DMockZKP`.
 
+### Which tests are `slow`
+
+In order to decide whether a test is slow, consider the following statements:
+
+- Tests with big circuits are definitely slow
+- Test with simple comparison circuits such as for BD are not actually slow
+- Test that do use a big circuit, but only run and not setup/prove/verify are also not slow
+
 ## Configuring logging during testing
 
 To change log levels, you can make changes in the following files:

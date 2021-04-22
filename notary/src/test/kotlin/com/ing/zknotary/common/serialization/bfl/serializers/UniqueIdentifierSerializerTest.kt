@@ -1,6 +1,5 @@
 package com.ing.zknotary.common.serialization.bfl.serializers
 
-import com.ing.serialization.bfl.annotations.FixedLength
 import com.ing.zknotary.testing.assertRoundTripSucceeds
 import com.ing.zknotary.testing.assertSameSize
 import kotlinx.serialization.Contextual
@@ -11,7 +10,7 @@ import java.util.UUID
 
 class UniqueIdentifierSerializerTest {
     @Serializable
-    data class Data(@FixedLength([20]) val value: @Contextual UniqueIdentifier)
+    data class Data(val value: @Contextual UniqueIdentifier)
 
     @Test
     fun `UniqueIdentifier serializer`() {

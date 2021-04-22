@@ -1,0 +1,3 @@
+[circuit]
+name = "serialized UniqueIdentifier comparison test"
+version = "0.1.0"

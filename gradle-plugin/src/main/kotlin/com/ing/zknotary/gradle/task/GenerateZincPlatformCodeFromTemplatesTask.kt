@@ -14,14 +14,18 @@ open class GenerateZincPlatformCodeFromTemplatesTask : DefaultTask() {
         val extension = project.zkNotaryExtension
 
         project.circuitNames?.forEach { circuitName ->
-            val renderer = TemplateRenderer(extension.mergedCircuitOutputPath.resolve(circuitName).resolve("src"))
+            val renderer = TemplateRenderer(extension.mergedCircuitOutputPath.resolve(circuitName).resolve("src")) {
+                project.getTemplateContents(it)
+            }
+
             val consts = extension.circuitSourcesBasePath.resolve(circuitName).resolve("consts.zn").readText()
 
-            renderer.generateStringCode(project.getTemplateContents(extension.stringTemplate), extension.stringConfigurations)
-            renderer.generateBigDecimalsCode(project.getTemplateContents(extension.bigDecimalTemplate), extension.bigDecimalConfigurationsToGenerate())
-            renderer.generateAmountsCode(project.getTemplateContents(extension.amountTemplate), extension.amountConfigurations)
             renderer.generateMerkleUtilsCode(project.getTemplateContents(extension.merkleTemplate), consts)
             renderer.generateMainCode(project.getTemplateContents(extension.mainTemplate), consts)
+
+            extension.resolveAllTemplateParameters().forEach {
+                renderer.generateTemplate(project.getTemplateContents(it.templateFile), it)
+            }
         }
     }
 }

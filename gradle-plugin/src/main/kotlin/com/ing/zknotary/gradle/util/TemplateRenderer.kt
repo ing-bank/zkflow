@@ -1,48 +1,85 @@
 package com.ing.zknotary.gradle.util
 
+import com.ing.zknotary.common.serialization.bfl.serializers.UniqueIdentifierSurrogate
 import com.ing.zknotary.gradle.extension.AmountTemplateParameters
 import com.ing.zknotary.gradle.extension.BigDecimalTemplateParameters
+import com.ing.zknotary.gradle.extension.StringTemplateParameters
+import com.ing.zknotary.gradle.extension.TemplateParameters
+import com.ing.zknotary.gradle.extension.UniqueIdentifierTemplateParameters
 import com.ing.zknotary.gradle.extension.camelToSnakeCase
 import java.io.File
 
-class TemplateRenderer(private val outputPath: File) {
+class TemplateRenderer(private val outputPath: File, private val templateResolver: (String) -> String) {
 
-    fun generateStringCode(templateContents: String, stringConfigurations: List<Short>) {
-        stringConfigurations.forEach {
-            val sizeSuffix = "$it"
-            val stringContent = templateContents
-                .replace("\${TYPE_NAME}", "String_$sizeSuffix")
-                .replace("\${CONSTANT_PREFIX}", "STRING_$sizeSuffix")
-                .replace("\${STRING_SIZE_PLACEHOLDER}", it.toString())
-            createOutputFile(outputPath.resolve("string_$sizeSuffix.zn"))
-                .writeBytes(stringContent.toByteArray())
+    fun generateTemplate(templateParameters: TemplateParameters) {
+        val templateContents = templateResolver.invoke(templateParameters.templateFile)
+        generateTemplate(templateContents, templateParameters)
+    }
+
+    fun generateTemplate(templateContents: String, templateParameters: TemplateParameters) {
+        val baseTemplate =
+            """
+            //! GENERATED CODE. DO NOT EDIT
+            //! Edit it in zk-notary/src/main/resources/zinc-platform-templates/${templateParameters.templateFile}
+            //
+            """.trimIndent() + "\n" + templateContents
+        when (templateParameters) {
+            is StringTemplateParameters -> generateStringTemplate(baseTemplate, templateParameters)
+            is BigDecimalTemplateParameters -> generateBigDecimalTemplate(baseTemplate, templateParameters)
+            is AmountTemplateParameters -> generateAmountTemplate(baseTemplate, templateParameters)
+            UniqueIdentifierTemplateParameters -> generateUniqueIdentifierTemplate(baseTemplate, templateParameters)
         }
     }
 
-    fun generateBigDecimalsCode(templateContents: String, bigDecimalConfigurations: List<BigDecimalTemplateParameters>) {
-        bigDecimalConfigurations.forEach {
-            val bigDecimalsContent = templateContents
-                .replace("\${TYPE_NAME}", it.typeName)
-                .replace("\${CONSTANT_PREFIX}", it.typeName.camelToSnakeCase().toUpperCase())
-                .replace("\${INTEGER_SIZE_PLACEHOLDER}", it.integerSize.toString())
-                .replace("\${FRACTION_SIZE_PLACEHOLDER}", it.fractionSize.toString())
-            createOutputFile(outputPath.resolve("${it.typeName.camelToSnakeCase()}.zn"))
-                .writeBytes(bigDecimalsContent.toByteArray())
-        }
+    private fun generateStringTemplate(
+        templateContents: String,
+        templateParameters: StringTemplateParameters
+    ) {
+        val sizeSuffix = "${templateParameters.stringSize}"
+        val stringContent = templateContents
+            .replace("\${TYPE_NAME}", "String_$sizeSuffix")
+            .replace("\${CONSTANT_PREFIX}", "STRING_$sizeSuffix")
+            .replace("\${STRING_SIZE_PLACEHOLDER}", templateParameters.stringSize.toString())
+        createOutputFile(outputPath.resolve("string_$sizeSuffix.zn"))
+            .writeBytes(stringContent.toByteArray())
     }
 
-    fun generateAmountsCode(templateContents: String, amountConfiguration: List<AmountTemplateParameters>) {
-        amountConfiguration.forEach {
-            val bigDecimalsContent = templateContents
-                .replace("\${TYPE_NAME}", it.typeName)
-                .replace("\${CONSTANT_PREFIX}", it.typeName.camelToSnakeCase().toUpperCase())
-                .replace("\${TOKEN_SIZE_PLACEHOLDER}", it.tokenSize.toString())
-                .replace("\${BD_TYPE_NAME}", it.tokenDisplaySize.typeName)
-                .replace("\${BD_CONSTANT_PREFIX}", it.tokenDisplaySize.typeName.camelToSnakeCase().toUpperCase())
-                .replace("\${BD_MODULE_NAME}", it.tokenDisplaySize.typeName.camelToSnakeCase())
-            createOutputFile(outputPath.resolve("${it.typeName.camelToSnakeCase()}.zn"))
-                .writeBytes(bigDecimalsContent.toByteArray())
-        }
+    private fun generateBigDecimalTemplate(
+        templateContents: String,
+        templateParameters: BigDecimalTemplateParameters
+    ) {
+        val bigDecimalsContent = templateContents
+            .replace("\${TYPE_NAME}", templateParameters.typeName)
+            .replace("\${CONSTANT_PREFIX}", templateParameters.typeName.camelToSnakeCase().toUpperCase())
+            .replace("\${INTEGER_SIZE_PLACEHOLDER}", templateParameters.integerSize.toString())
+            .replace("\${FRACTION_SIZE_PLACEHOLDER}", templateParameters.fractionSize.toString())
+        createOutputFile(outputPath.resolve("${templateParameters.typeName.camelToSnakeCase()}.zn"))
+            .writeBytes(bigDecimalsContent.toByteArray())
+    }
+
+    private fun generateAmountTemplate(
+        templateContents: String,
+        templateParameters: AmountTemplateParameters
+    ) {
+        val bigDecimalsContent = templateContents
+            .replace("\${TYPE_NAME}", templateParameters.typeName)
+            .replace("\${CONSTANT_PREFIX}", templateParameters.typeName.camelToSnakeCase().toUpperCase())
+            .replace("\${TOKEN_SIZE_PLACEHOLDER}", templateParameters.tokenSize.toString())
+            .replace("\${BD_TYPE_NAME}", templateParameters.tokenDisplaySize.typeName)
+            .replace(
+                "\${BD_CONSTANT_PREFIX}",
+                templateParameters.tokenDisplaySize.typeName.camelToSnakeCase().toUpperCase()
+            )
+            .replace("\${BD_MODULE_NAME}", templateParameters.tokenDisplaySize.typeName.camelToSnakeCase())
+        createOutputFile(outputPath.resolve("${templateParameters.typeName.camelToSnakeCase()}.zn"))
+            .writeBytes(bigDecimalsContent.toByteArray())
+    }
+
+    private fun generateUniqueIdentifierTemplate(templateContents: String, templateParameters: TemplateParameters) {
+        val uniqueIdentifierContent = templateContents
+            .replace("\${EXTERNAL_ID_STRING_SIZE}", UniqueIdentifierSurrogate.EXTERNAL_ID_LENGTH.toString())
+        createOutputFile(outputPath.resolve(templateParameters.templateFile))
+            .writeBytes(uniqueIdentifierContent.toByteArray())
     }
 
     fun generateMerkleUtilsCode(templateContents: String, constsContent: String) {
