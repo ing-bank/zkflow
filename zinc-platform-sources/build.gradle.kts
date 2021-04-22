@@ -2,6 +2,7 @@ import javax.inject.Inject
 
 plugins {
     kotlin("jvm")
+    kotlin("plugin.serialization")
     java
     id("maven-publish")
 }
@@ -16,6 +17,9 @@ dependencies {
 
     val kotlinxSerializationVersion: String by project
     testImplementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
+
+    val kotlinxSerializationBflVersion: String by project
+    testImplementation("com.ing.serialization.bfl:kotlinx-serialization-bfl:$kotlinxSerializationBflVersion")
 
     testImplementation(project(":test-utils"))
 }
@@ -108,6 +112,11 @@ open class CopyCircuitTask @Inject constructor() : DefaultTask() {
             .map { it.fileName.toString().removeSuffix(".kt") }
             .filter { `java.nio.file`.Files.exists(`java.nio.file`.Paths.get("zinc-platform-sources/build/resources/test/$it")) }
             .forEach {
+                `java.nio.file`.Files.copy(
+                    `java.nio.file`.Paths.get("zinc-platform-sources/src/main/resources/zinc-platform-test-sources/string_32.zn"),
+                    `java.nio.file`.Paths.get("zinc-platform-sources/build/resources/test/$it/src/string_32.zn"),
+                    `java.nio.file`.StandardCopyOption.REPLACE_EXISTING
+                )
                 `java.nio.file`.Files.copy(
                     `java.nio.file`.Paths.get("zinc-platform-sources/src/main/resources/zinc-platform-test-sources/floating_point_24_6.zn"),
                     `java.nio.file`.Paths.get("zinc-platform-sources/build/resources/test/$it/src/floating_point_24_6.zn"),

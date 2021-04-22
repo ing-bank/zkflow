@@ -1,0 +1,24 @@
+mod string_32;
+
+use string_32::String_32;
+use string_32::STRING_32_LENGTH;
+use string_32::SerializedString_32;
+
+const WITNESS_STRING_COUNT: u16 = 2;
+const WITNESS_SIZE: u16 = WITNESS_STRING_COUNT * STRING_32_LENGTH;
+
+fn extract_string(witness: [u8; WITNESS_SIZE], offset: u16) -> String_32 {
+    let mut str: SerializedString_32 = [0; STRING_32_LENGTH];
+    for i in 0..STRING_32_LENGTH {
+        str[i] = witness[i + offset];
+    }
+    String_32::deserialize(str)
+}
+
+fn main(witness: [u8; WITNESS_SIZE]) -> bool {
+    let mut strings: [String_32; WITNESS_STRING_COUNT] = [String_32::empty(); WITNESS_STRING_COUNT];
+    for i in 0..WITNESS_STRING_COUNT {
+        strings[i] = extract_string(witness, i * STRING_32_LENGTH);
+    }
+    String_32::equals(strings[0], strings[1])
+}

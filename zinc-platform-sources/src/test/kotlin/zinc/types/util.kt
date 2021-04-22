@@ -11,6 +11,7 @@ import java.math.BigDecimal
 import java.math.BigInteger
 import java.security.MessageDigest
 import java.security.Security
+import java.time.Duration
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
 
@@ -52,11 +53,28 @@ fun BigDecimal.toJSON(integerSize: Int = 24, fractionSize: Int = 6): String {
 
 private fun IntArray.toPrettyJSONArray() = "[ ${this.joinToString { "\"$it\"" }} ]"
 
-private fun ByteArray.toPrettyJSONArray() = "[ ${this.map { it.asUnsigned() }.joinToString { "\"$it\"" }} ]"
+internal fun ByteArray.toPrettyJSONArray() = "[ ${this.map { it.asUnsigned() }.joinToString { "\"$it\"" }} ]"
 
 fun makeBigDecimal(bytes: ByteArray, sign: Int) = BigDecimal(BigInteger(sign, bytes))
 
 fun makeBigDecimal(string: String, scale: Int) = BigDecimal(BigInteger(string), scale)
+
+inline fun <reified T : Any> getZincZKService(
+    buildTimeout: Duration = Duration.ofSeconds(5),
+    setupTimeout: Duration = Duration.ofSeconds(300),
+    provingTimeout: Duration = Duration.ofSeconds(300),
+    verificationTimeout: Duration = Duration.ofSeconds(1)
+): ZincZKService {
+    val circuitFolder: String = T::class.java.getResource("/${T::class.java.simpleName}")!!.path
+    return ZincZKService(
+        circuitFolder,
+        artifactFolder = circuitFolder,
+        buildTimeout = buildTimeout,
+        setupTimeout = setupTimeout,
+        provingTimeout = provingTimeout,
+        verificationTimeout = verificationTimeout,
+    )
+}
 
 @ExperimentalTime
 fun ZincZKService.setupTimed(log: Logger) {

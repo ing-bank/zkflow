@@ -16,6 +16,9 @@ open class ZKNotaryExtension(project: Project) {
     }
 
     @Input
+    var stringConfigurations: List<Short> = listOf(32)
+
+    @Input
     var bigDecimalSizes = setOf(Pair(24, 6), Pair(100, 20))
 
     @Input
@@ -38,6 +41,9 @@ open class ZKNotaryExtension(project: Project) {
 
     @Input
     val platformSamplesPath = "zinc-platform-samples/**/*.zn"
+
+    @Input
+    val stringTemplate = "string.zn"
 
     @Input
     val floatingPointTemplate = "floating_point.zn"
