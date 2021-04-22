@@ -1,7 +1,7 @@
 package com.ing.zknotary.common.serialization.bfl.serializers
 
-import com.ing.zknotary.testing.roundTrip
-import com.ing.zknotary.testing.sameSize
+import com.ing.zknotary.testing.assertRoundTripSucceeds
+import com.ing.zknotary.testing.assertSameSize
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import net.corda.core.crypto.Crypto
@@ -19,7 +19,7 @@ class AbstractPartySerializerTest {
         val data1 = Data(TestIdentity.fresh("Alice").party)
         val data2 = Data(TestIdentity.fresh("Bob").party.anonymise())
 
-        roundTrip(data1, serializersModule)
-        sameSize(data1, data2, serializersModule)
+        assertRoundTripSucceeds(data1, serializersModule)
+        assertSameSize(data1, data2, serializersModule)
     }
 }

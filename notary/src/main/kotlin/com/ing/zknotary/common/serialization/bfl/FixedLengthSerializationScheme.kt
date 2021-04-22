@@ -7,6 +7,10 @@ import net.corda.core.serialization.SerializationSchemeContext
 import net.corda.core.serialization.serialize
 import net.corda.core.utilities.ByteSequence
 
+/**
+ * This is a placeholder serialization scheme, which will be replaced by
+ * TestBFLSerializationScheme as soon as the latter is ready to lose `Test` from its name.
+ */
 open class FixedLengthSerializationScheme : CustomSerializationScheme {
     companion object {
         const val SCHEME_ID = 120

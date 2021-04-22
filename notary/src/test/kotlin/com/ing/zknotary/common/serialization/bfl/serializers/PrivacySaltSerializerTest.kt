@@ -1,7 +1,7 @@
 package com.ing.zknotary.common.serialization.bfl.serializers
 
-import com.ing.zknotary.testing.roundTrip
-import com.ing.zknotary.testing.sameSize
+import com.ing.zknotary.testing.assertRoundTripSucceeds
+import com.ing.zknotary.testing.assertSameSize
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import net.corda.core.contracts.PrivacySalt
@@ -16,8 +16,8 @@ class PrivacySaltSerializerTest {
         val bytes1 = ByteArray(32) { i -> i.toByte() }
         val bytes2 = ByteArray(32) { i -> (i + 1).toByte() }
 
-        roundTrip(PrivacySalt())
-        sameSize(PrivacySalt(bytes1), PrivacySalt(bytes2))
+        assertRoundTripSucceeds(PrivacySalt())
+        assertSameSize(PrivacySalt(bytes1), PrivacySalt(bytes2))
     }
 
     @Test
@@ -25,7 +25,7 @@ class PrivacySaltSerializerTest {
         val bytes1 = ByteArray(32) { i -> i.toByte() }
         val bytes2 = ByteArray(32) { i -> (i + 1).toByte() }
 
-        roundTrip(Data(PrivacySalt()))
-        sameSize(Data(PrivacySalt(bytes1)), Data(PrivacySalt(bytes2)))
+        assertRoundTripSucceeds(Data(PrivacySalt()))
+        assertSameSize(Data(PrivacySalt(bytes1)), Data(PrivacySalt(bytes2)))
     }
 }

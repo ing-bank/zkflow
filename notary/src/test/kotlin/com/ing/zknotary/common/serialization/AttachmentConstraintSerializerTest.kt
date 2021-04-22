@@ -1,8 +1,8 @@
 package com.ing.zknotary.common.serialization.bfl.serializers
 
 import com.ing.serialization.bfl.annotations.FixedLength
-import com.ing.zknotary.testing.roundTrip
-import com.ing.zknotary.testing.sameSize
+import com.ing.zknotary.testing.assertRoundTripSucceeds
+import com.ing.zknotary.testing.assertSameSize
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.plus
 import net.corda.core.contracts.AlwaysAcceptAttachmentConstraint
@@ -31,8 +31,8 @@ class AttachmentConstraintSerializerTest {
         val data1 = SimpleData(HashAttachmentConstraint(SecureHash.randomSHA256()))
         val data2 = SimpleData(AlwaysAcceptAttachmentConstraint)
 
-        roundTrip(data1, serializersModule)
-        sameSize(data1, data2, serializersModule)
+        assertRoundTripSucceeds(data1, serializersModule)
+        assertSameSize(data1, data2, serializersModule)
     }
 
     @Test
@@ -57,7 +57,7 @@ class AttachmentConstraintSerializerTest {
             )
         )
 
-        roundTrip(data1, serializersModule)
-        sameSize(data1, data2, serializersModule)
+        assertRoundTripSucceeds(data1, serializersModule)
+        assertSameSize(data1, data2, serializersModule)
     }
 }

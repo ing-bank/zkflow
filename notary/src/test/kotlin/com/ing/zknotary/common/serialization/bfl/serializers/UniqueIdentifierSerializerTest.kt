@@ -1,8 +1,8 @@
 package com.ing.zknotary.common.serialization.bfl.serializers
 
 import com.ing.serialization.bfl.annotations.FixedLength
-import com.ing.zknotary.testing.roundTrip
-import com.ing.zknotary.testing.sameSize
+import com.ing.zknotary.testing.assertRoundTripSucceeds
+import com.ing.zknotary.testing.assertSameSize
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import net.corda.core.contracts.UniqueIdentifier
@@ -15,13 +15,13 @@ class UniqueIdentifierSerializerTest {
 
     @Test
     fun `UniqueIdentifier serializer`() {
-        roundTrip(UniqueIdentifier())
-        sameSize(UniqueIdentifier(id = UUID(0, 1)), UniqueIdentifier(id = UUID(0, 2)))
+        assertRoundTripSucceeds(UniqueIdentifier())
+        assertSameSize(UniqueIdentifier(id = UUID(0, 1)), UniqueIdentifier(id = UUID(0, 2)))
     }
 
     @Test
     fun `UniqueIdentifier as part of structure serializer`() {
-        roundTrip(Data(UniqueIdentifier()))
-        sameSize(Data(UniqueIdentifier(id = UUID(0, 1))), Data(UniqueIdentifier(id = UUID(0, 2))))
+        assertRoundTripSucceeds(Data(UniqueIdentifier()))
+        assertSameSize(Data(UniqueIdentifier(id = UUID(0, 1))), Data(UniqueIdentifier(id = UUID(0, 2))))
     }
 }

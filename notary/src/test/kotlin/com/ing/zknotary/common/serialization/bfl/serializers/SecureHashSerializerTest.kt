@@ -1,7 +1,7 @@
 package com.ing.zknotary.common.serialization.bfl.serializers
 
-import com.ing.zknotary.testing.roundTrip
-import com.ing.zknotary.testing.sameSize
+import com.ing.zknotary.testing.assertRoundTripSucceeds
+import com.ing.zknotary.testing.assertSameSize
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import net.corda.core.crypto.SecureHash
@@ -13,13 +13,13 @@ class SecureHashSerializerTest {
 
     @Test
     fun `SecureHash serializer`() {
-        roundTrip(SecureHash.allOnesHash)
-        sameSize(SecureHash.allOnesHash, SecureHash.zeroHash)
+        assertRoundTripSucceeds(SecureHash.allOnesHash)
+        assertSameSize(SecureHash.allOnesHash, SecureHash.zeroHash)
     }
 
     @Test
     fun `SecureHash as part of structure serializer`() {
-        roundTrip(Data(SecureHash.allOnesHash))
-        sameSize(Data(SecureHash.allOnesHash), Data(SecureHash.zeroHash))
+        assertRoundTripSucceeds(Data(SecureHash.allOnesHash))
+        assertSameSize(Data(SecureHash.allOnesHash), Data(SecureHash.zeroHash))
     }
 }

@@ -1,6 +1,7 @@
 package zinc.transaction
 
 import com.ing.zknotary.common.crypto.zinc
+import com.ing.zknotary.common.serialization.bfl.FixedLengthSerializationScheme
 import com.ing.zknotary.common.zkp.PublicInput
 import com.ing.zknotary.common.zkp.Witness
 import com.ing.zknotary.common.zkp.ZincZKService
@@ -15,15 +16,11 @@ import net.corda.core.crypto.DigestService
 import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.Party
 import net.corda.core.internal.createComponentGroups
-import net.corda.core.serialization.CustomSerializationScheme
 import net.corda.core.serialization.SerializationDefaults
 import net.corda.core.serialization.SerializationFactory
 import net.corda.core.serialization.SerializationMagic
-import net.corda.core.serialization.SerializationSchemeContext
 import net.corda.core.serialization.internal.CustomSerializationSchemeUtils
-import net.corda.core.serialization.serialize
 import net.corda.core.transactions.WireTransaction
-import net.corda.core.utilities.ByteSequence
 import net.corda.core.utilities.loggerFor
 import net.corda.coretesting.internal.asTestContextEnv
 import net.corda.coretesting.internal.createTestSerializationEnv
@@ -110,30 +107,6 @@ class TransactionVerificationTest {
 //        zincZKService.verifyTimed(proof, publicInput, log)
     }
 
-    class TestFixedLengthSerializationScheme : CustomSerializationScheme {
-        companion object {
-            const val SCHEME_ID = 777
-        }
-
-        override fun getSchemeId(): Int {
-            return SCHEME_ID
-        }
-
-        override fun <T : Any> deserialize(
-            bytes: ByteSequence,
-            clazz: Class<T>,
-            context: SerializationSchemeContext
-        ): T {
-            // TODO: use custom fixed-length serializer here
-            return SerializationFactory.defaultFactory.deserialize(bytes, clazz, SerializationDefaults.P2P_CONTEXT)
-        }
-
-        override fun <T : Any> serialize(obj: T, context: SerializationSchemeContext): ByteSequence {
-            // TODO: use custom fixed serializer here
-            return obj.serialize(SerializationFactory.defaultFactory, SerializationDefaults.P2P_CONTEXT)
-        }
-    }
-
     @Suppress("LongParameterList")
     private fun createWtx(
         inputs: List<StateRef> = emptyList(),
@@ -148,7 +121,7 @@ class TransactionVerificationTest {
         digestService: DigestService = DigestService.zinc,
 
         // The Id of the custom serializationScheme to use
-        schemeId: Int = TestFixedLengthSerializationScheme.SCHEME_ID,
+        schemeId: Int = FixedLengthSerializationScheme.SCHEME_ID,
         additionalSerializationProperties: Map<Any, Any> = emptyMap()
     ): WireTransaction {
         val magic: SerializationMagic = CustomSerializationSchemeUtils.getCustomSerializationMagicFromSchemeId(schemeId)

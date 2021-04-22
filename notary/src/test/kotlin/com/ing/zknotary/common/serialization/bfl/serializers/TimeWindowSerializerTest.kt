@@ -1,7 +1,7 @@
 package com.ing.zknotary.common.serialization.bfl.serializers
 
-import com.ing.zknotary.testing.roundTrip
-import com.ing.zknotary.testing.sameSize
+import com.ing.zknotary.testing.assertRoundTripSucceeds
+import com.ing.zknotary.testing.assertSameSize
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import net.corda.core.contracts.TimeWindow
@@ -23,18 +23,18 @@ class TimeWindowSerializerTest {
     @Test
     fun `TimeWindow serializer`() {
         testList.forEach {
-            roundTrip(it)
+            assertRoundTripSucceeds(it)
         }
 
-        sameSize(testList[0], testList[1])
+        assertSameSize(testList[0], testList[1])
     }
 
     @Test
     fun `TimeWindow as part of structure serializer`() {
         testList
             .map { Data(it) }
-            .forEach { roundTrip(it) }
+            .forEach { assertRoundTripSucceeds(it) }
 
-        sameSize(Data(testList[0]), Data(testList[1]))
+        assertSameSize(Data(testList[0]), Data(testList[1]))
     }
 }

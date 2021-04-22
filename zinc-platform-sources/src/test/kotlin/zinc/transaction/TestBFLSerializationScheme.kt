@@ -49,16 +49,15 @@ open class TestBFLSerializationScheme : CustomSerializationScheme {
 
         val serializedData = bytes.bytes.drop(cordaSerdeMagicLength).toByteArray()
 
-        // TODO is better matching possible?
-        return when (clazz.canonicalName) {
-            TransactionState::class.java.canonicalName -> {
+        return when {
+            TransactionState::class.java.isAssignableFrom(clazz) -> {
                 val (stateStrategy, message) = ContractStateSerializerMap.extractSerializerAndSerializedData(serializedData)
 
                 @Suppress("UNCHECKED_CAST")
                 informedDeserialize(message, TransactionStateSerializer(stateStrategy), serializersModule = serializersModule) as T
             }
 
-            List::class.java.canonicalName -> {
+            List::class.java.isAssignableFrom(clazz) -> {
                 // This case will be triggered when commands will be reconstructed.
                 // This involves deserialization of the SIGNERS_GROUP to reconstruct commands.
 
@@ -78,7 +77,7 @@ open class TestBFLSerializationScheme : CustomSerializationScheme {
                 ) as T
             }
 
-            CommandData::class.java.canonicalName -> {
+            CommandData::class.java.isAssignableFrom(clazz) -> {
                 val (commandStrategy, message) = CommandDataSerializerMap.extractSerializerAndSerializedData(serializedData)
 
                 @Suppress("UNCHECKED_CAST")
@@ -115,13 +114,15 @@ open class TestBFLSerializationScheme : CustomSerializationScheme {
             }
 
             is TimeWindow -> {
-                // `TimeWindow` is a sealed class with private variant classes.
-                // Although a serializer is registered for `TimeWindow`, it won't be picked up for top-level variants.
-                // It is also impossible to register top-level serializers for variants because they are private and
-                // thus it is impossible to access them to define appropriate serializers.
-                // Therefore, we cast any variant as a TimeWindow.
+                /* `TimeWindow` is a sealed class with private variant classes.
+                 * Although a serializer is registered for `TimeWindow`, it won't be picked up for top-level variants.
+                 * It is also impossible to register top-level serializers for variants because they are private and
+                 * thus it is impossible to access them to define appropriate serializers.
+                 * Therefore, we cast any variant as a TimeWindow.
+                 */
                 informedSerialize(obj, TimeWindowSerializer, serializersModule = serializersModule)
             }
+
             is List<*> -> {
                 /*
                  * This case will be triggered when SIGNERS_GROUP will be processed.
@@ -138,13 +139,8 @@ open class TestBFLSerializationScheme : CustomSerializationScheme {
                     outerFixedLength = intArrayOf(signersFixedLengthFromContext)
                 )
             }
-            else -> {
-                obliviousSerialize(obj, serializersModule = serializersModule)
-            }
-        }
 
-        if (serialization.isEmpty()) {
-            println("Conversion of serialization from ByteArray to ByteSequence will fail, because the latter require a non-empty byte array")
+            else -> obliviousSerialize(obj, serializersModule = serializersModule)
         }
 
         return ByteSequence.of(serialization)

@@ -13,7 +13,7 @@ import kotlinx.serialization.modules.plus
 /**
  * Test if value survives serialization/deserialization.
  */
-public inline fun <reified T : Any> roundTrip(
+public inline fun <reified T : Any> assertRoundTripSucceeds(
     value: T,
     serializers: SerializersModule = EmptySerializersModule,
     strategy: KSerializer<T>? = null
@@ -27,7 +27,7 @@ public inline fun <reified T : Any> roundTrip(
 /**
  * Test if serializations of different instances have the same size.
  */
-public inline fun <reified T : Any> sameSize(
+public inline fun <reified T : Any> assertSameSize(
     value1: T,
     value2: T,
     serializers: SerializersModule = EmptySerializersModule,

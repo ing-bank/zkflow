@@ -66,16 +66,26 @@ class TransactionBasicVerificationTest {
     /**
      * The witness, which is what we serialize for Zinc, contains the following items:
      *
-     * * Already serialized & sized componentgroups, e.g. groups of bytearrays of the WireTransaction.
-     * * Already serialized & sized TransactionState<T: ContractState> class instances for all UTXOs (outputs of the previous transaction) pointed to by the inputs and reference StateRefs serialized inside the inputs and references component groups of the WireTransaction.
-     * * The nonces bytes for the UTXOs pointed to by the input and reference StateRefs. (Unsized because hashes are serialized and sized by nature? Or should this be serialized & sized also?)
+     * 1. Already serialized & sized componentgroups, e.g. groups of bytearrays of the WireTransaction.
+     * 2. Already serialized & sized TransactionState<T: ContractState> class instances for all UTXOs
+     *    (outputs of the previous transaction) pointed to by the inputs and reference StateRefs
+     *    serialized inside the inputs and references component groups of the WireTransaction.
+     * 3. The nonces bytes for the UTXOs pointed to by the input and reference StateRefs.
+     *    (Unsized because hashes are serialized and sized by nature? Or should this be serialized & sized also?)
      *
      * Then in Zinc, the following happens respectively:
      *
-     * We recalculate the Merkle root using the sized & serialized bytearrays of the componentgroups as is.
-     * Next, they are deserialized into the expected transaction structs used for contract rule validation. Rule violation fails proof generation.
-     * Finally the Merkle root is 'compared' with the expected Merkle root from the public input, which would fail proof verification if not matching.
-     * and 3. The sized & serialized UTXOs are hashed together with their nonces to get the Merkle tree hashes for the UTXOs. These are 'compared' with the UTXO hashes from the public input. This proves that the contract rules have been applied on inputs and references that are unchanged since they were created in the preceding transactions. Next, the UTXOs are deserialized into the expected TransactionState<T> structs and used, together with the transaction struct from 1. for contract rule verification.
+     * 1. Recalculate the Merkle root using the sized & serialized bytearrays of the ComponentGroup's as-is,
+     * 2. ComponentGroup's are deserialized into the expected transaction structs used for contract rule validation.
+     *    Rule violation fails proof generation.
+     * 3. The Merkle root is 'compared' with the expected Merkle root from the public input
+     *    which would fail proof verification if not matching.
+     * 4. The sized & serialized UTXOs are hashed together with their nonces to get the Merkle tree hashes for the UTXOs.
+     *    These are 'compared' with the UTXO hashes from the public input.
+     *    This proves that the contract rules have been applied on inputs and references that are unchanged
+     *    since they were created in the preceding transactions.
+     * 5. The UTXOs are deserialized into the expected TransactionState<T> structs and used
+     *    together with the transaction struct from 2. for contract rule verification.
      *
      * Please validate these assumptions:
      *

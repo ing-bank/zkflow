@@ -1,7 +1,7 @@
 package com.ing.zknotary.common.serialization.bfl.serializers
 
-import com.ing.zknotary.testing.roundTrip
-import com.ing.zknotary.testing.sameSize
+import com.ing.zknotary.testing.assertRoundTripSucceeds
+import com.ing.zknotary.testing.assertSameSize
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import net.corda.core.identity.CordaX500Name
@@ -13,8 +13,8 @@ class CordaX500NameSerializerTest {
 
     @Test
     fun `CordaX500Name serializer`() {
-        roundTrip(Data(CordaX500Name("Batman", "UT", "US")))
-        sameSize(
+        assertRoundTripSucceeds(Data(CordaX500Name("Batman", "UT", "US")))
+        assertSameSize(
             Data(CordaX500Name("Batman", "UT", "US")),
             Data(
                 CordaX500Name(
