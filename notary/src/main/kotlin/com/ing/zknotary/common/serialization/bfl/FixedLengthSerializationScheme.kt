@@ -1,4 +1,4 @@
-package com.ing.zknotary.common.client.flows
+package com.ing.zknotary.common.serialization.bfl
 
 import net.corda.core.serialization.CustomSerializationScheme
 import net.corda.core.serialization.SerializationDefaults
@@ -7,10 +7,13 @@ import net.corda.core.serialization.SerializationSchemeContext
 import net.corda.core.serialization.serialize
 import net.corda.core.utilities.ByteSequence
 
-open class TestSerializationScheme : CustomSerializationScheme {
-
+/**
+ * This is a placeholder serialization scheme, which will be replaced by
+ * TestBFLSerializationScheme as soon as the latter is ready to lose `Test` from its name.
+ */
+open class FixedLengthSerializationScheme : CustomSerializationScheme {
     companion object {
-        const val SCHEME_ID = 777
+        const val SCHEME_ID = 120
     }
 
     override fun getSchemeId(): Int {

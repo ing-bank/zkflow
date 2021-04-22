@@ -5,14 +5,13 @@ import javax.inject.Inject
 
 plugins {
     kotlin("jvm")
-    kotlin("plugin.serialization")
     java
     id("maven-publish")
+    kotlin("plugin.serialization")
 }
 
 dependencies {
     implementation(project(":gradle-plugin"))
-
     testImplementation(project(":notary"))
 
     val zkkryptoVersion: String by project

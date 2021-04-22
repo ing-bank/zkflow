@@ -1,6 +1,7 @@
-package com.ing.zknotary.common.serialization
+package com.ing.zknotary.common.serialization.bfl.serializers
 
-import com.ing.zknotary.common.serialization.bfl.corda.CordaSignatureSchemeToSerializers
+import com.ing.zknotary.testing.assertRoundTripSucceeds
+import com.ing.zknotary.testing.assertSameSize
 import kotlinx.serialization.Serializable
 import net.corda.core.crypto.Crypto
 import org.junit.jupiter.api.Test
@@ -20,8 +21,8 @@ class PublicKeySerializerTest {
             val pk1 = Crypto.generateKeyPair(it).public
             val pk2 = Crypto.generateKeyPair(it).public
 
-            roundTrip(pk1, serializersModule)
-            sameSize(pk1, pk2, serializersModule)
+            assertRoundTripSucceeds(pk1, serializersModule)
+            assertSameSize(pk1, pk2, serializersModule)
         }
     }
 
@@ -35,8 +36,8 @@ class PublicKeySerializerTest {
             val data1 = Data(Crypto.generateKeyPair(it).public)
             val data2 = Data(Crypto.generateKeyPair(it).public)
 
-            roundTrip(data1, serializersModule)
-            sameSize(data1, data2, serializersModule)
+            assertRoundTripSucceeds(data1, serializersModule)
+            assertSameSize(data1, data2, serializersModule)
         }
     }
 }

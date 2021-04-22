@@ -1,5 +1,7 @@
-package com.ing.zknotary.common.serialization
+package com.ing.zknotary.common.serialization.bfl.serializers
 
+import com.ing.zknotary.testing.assertRoundTripSucceeds
+import com.ing.zknotary.testing.assertSameSize
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import net.corda.core.contracts.StateRef
@@ -12,14 +14,14 @@ class StateRefSerializerTest {
 
     @Test
     fun `StateRef serializer`() {
-        roundTrip(StateRef(SecureHash.allOnesHash, 1))
-        sameSize(StateRef(SecureHash.allOnesHash, 1), StateRef(SecureHash.zeroHash, 0))
+        assertRoundTripSucceeds(StateRef(SecureHash.allOnesHash, 1))
+        assertSameSize(StateRef(SecureHash.allOnesHash, 1), StateRef(SecureHash.zeroHash, 0))
     }
 
     @Test
     fun `StateRef as part of structure serializer`() {
-        roundTrip(Data(StateRef(SecureHash.allOnesHash, 1)))
-        sameSize(
+        assertRoundTripSucceeds(Data(StateRef(SecureHash.allOnesHash, 1)))
+        assertSameSize(
             Data(StateRef(SecureHash.allOnesHash, 1)),
             Data(StateRef(SecureHash.zeroHash, 1))
         )

@@ -1,4 +1,4 @@
-package com.ing.zknotary.common.serialization.bfl.corda
+package com.ing.zknotary.common.serialization.bfl.serializers
 
 import com.ing.serialization.bfl.api.Surrogate
 import com.ing.serialization.bfl.api.SurrogateSerializer

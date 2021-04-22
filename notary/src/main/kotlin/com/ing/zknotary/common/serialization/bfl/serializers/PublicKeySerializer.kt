@@ -1,10 +1,10 @@
-package com.ing.zknotary.common.serialization.bfl.corda
+package com.ing.zknotary.common.serialization.bfl.serializers
 
 import com.ing.serialization.bfl.api.Surrogate
-import com.ing.zknotary.common.serialization.bfl.corda.publickey.BCECPublicKeySerializer
-import com.ing.zknotary.common.serialization.bfl.corda.publickey.BCRSAPublicKeySerializer
-import com.ing.zknotary.common.serialization.bfl.corda.publickey.BCSphincs256PublicKeySerializer
-import com.ing.zknotary.common.serialization.bfl.corda.publickey.EdDSAPublicKeySerializer
+import com.ing.zknotary.common.serialization.bfl.serializers.publickey.BCECPublicKeySerializer
+import com.ing.zknotary.common.serialization.bfl.serializers.publickey.BCRSAPublicKeySerializer
+import com.ing.zknotary.common.serialization.bfl.serializers.publickey.BCSphincs256PublicKeySerializer
+import com.ing.zknotary.common.serialization.bfl.serializers.publickey.EdDSAPublicKeySerializer
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass

@@ -1,9 +1,9 @@
-package com.ing.zknotary.common.serialization
+package com.ing.zknotary.common.serialization.bfl.serializers
 
-import com.ing.zknotary.common.serialization.bfl.corda.CordaSignatureSchemeToSerializers
+import com.ing.zknotary.testing.assertRoundTripSucceeds
+import com.ing.zknotary.testing.assertSameSize
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
-import net.corda.core.contracts.Amount
 import net.corda.core.crypto.Crypto
 import net.corda.core.identity.AbstractParty
 import net.corda.testing.core.TestIdentity
@@ -19,9 +19,7 @@ class AbstractPartySerializerTest {
         val data1 = Data(TestIdentity.fresh("Alice").party)
         val data2 = Data(TestIdentity.fresh("Bob").party.anonymise())
 
-        Amount
-
-        roundTrip(data1, serializersModule)
-        sameSize(data1, data2, serializersModule)
+        assertRoundTripSucceeds(data1, serializersModule)
+        assertSameSize(data1, data2, serializersModule)
     }
 }
