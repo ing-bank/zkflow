@@ -37,8 +37,6 @@ public class TestContract : Contract {
 
     // Commands
     public class Create : ZKCommandData {
-        override val id: Int = 0
-
         override val circuit: CircuitMetaData =
             CircuitMetaData(folder = File("${System.getProperty("user.dir")}/../zinc-platform-sources/circuits/create"))
 
@@ -59,7 +57,6 @@ public class TestContract : Contract {
     }
 
     public class Move : ZKCommandData {
-        override val id: Int = 1
         override val circuit: CircuitMetaData =
             CircuitMetaData(folder = File("${System.getProperty("user.dir")}/../zinc-platform-sources/circuits/move"))
 
@@ -83,7 +80,6 @@ public class TestContract : Contract {
     }
 
     public class MoveBidirectional : ZKCommandData {
-        override val id: Int = 1
         override val circuit: CircuitMetaData =
             CircuitMetaData(folder = File(System.getProperty("user.dir")))
 
