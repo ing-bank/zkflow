@@ -23,8 +23,8 @@ data class PartyAndReferenceSurrogate(
 }
 
 object PartyAndReferenceSerializer : KSerializer<PartyAndReference>
-    by (
-        SurrogateSerializer(PartyAndReferenceSurrogate.serializer()) {
-            PartyAndReferenceSurrogate(it.party, it.reference.copyBytes())
-        }
-        )
+by (
+    SurrogateSerializer(PartyAndReferenceSurrogate.serializer()) {
+        PartyAndReferenceSurrogate(it.party, it.reference.copyBytes())
+    }
+    )

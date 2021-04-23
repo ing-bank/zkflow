@@ -9,8 +9,8 @@ import net.corda.core.contracts.TimeWindow
 import java.time.Instant
 
 object TimeWindowSerializer : KSerializer<TimeWindow> by (
-        SurrogateSerializer(TimeWindowSurrogate.serializer()) { TimeWindowSurrogate.from(it) }
-        )
+    SurrogateSerializer(TimeWindowSurrogate.serializer()) { TimeWindowSurrogate.from(it) }
+    )
 
 @Serializable
 data class TimeWindowSurrogate(

@@ -9,8 +9,8 @@ import net.corda.core.contracts.StateRef
 import net.corda.core.crypto.SecureHash
 
 object StateRefSerializer : KSerializer<StateRef> by (
-        SurrogateSerializer(StateRefSurrogate.serializer()) { StateRefSurrogate(it.txhash, it.index) }
-        )
+    SurrogateSerializer(StateRefSurrogate.serializer()) { StateRefSurrogate(it.txhash, it.index) }
+    )
 
 @Serializable
 data class StateRefSurrogate(

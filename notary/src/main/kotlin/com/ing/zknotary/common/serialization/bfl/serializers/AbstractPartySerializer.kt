@@ -11,14 +11,14 @@ import net.corda.core.identity.Party
 import java.security.PublicKey
 
 object AbstractPartySerializer : KSerializer<AbstractParty> by (
-        SurrogateSerializer(AbstractPartySurrogate.serializer()) {
-            when (it) {
-                is AnonymousParty -> AbstractPartySurrogate(null, it.owningKey)
-                is Party -> AbstractPartySurrogate(it.name, it.owningKey)
-                else -> error("AbstractParty is only known to be implemented by Party and AnonymousParty")
-            }
+    SurrogateSerializer(AbstractPartySurrogate.serializer()) {
+        when (it) {
+            is AnonymousParty -> AbstractPartySurrogate(null, it.owningKey)
+            is Party -> AbstractPartySurrogate(it.name, it.owningKey)
+            else -> error("AbstractParty is only known to be implemented by Party and AnonymousParty")
         }
-        )
+    }
+    )
 
 @Serializable
 data class AbstractPartySurrogate(

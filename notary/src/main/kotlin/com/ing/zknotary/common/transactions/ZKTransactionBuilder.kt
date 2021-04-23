@@ -1,13 +1,11 @@
 package com.ing.zknotary.common.transactions
 
 import co.paralleluniverse.strands.Strand
-import com.ing.zknotary.common.contracts.ZKCommandData
 import com.ing.zknotary.common.serialization.bfl.FixedLengthSerializationScheme
 import net.corda.core.contracts.AttachmentConstraint
 import net.corda.core.contracts.AutomaticPlaceholderConstraint
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.CommandData
-import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.ContractClassName
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.PrivacySalt

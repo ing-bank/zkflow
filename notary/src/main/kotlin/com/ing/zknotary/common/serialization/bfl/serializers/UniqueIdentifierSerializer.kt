@@ -10,8 +10,8 @@ import net.corda.core.contracts.UniqueIdentifier
 import java.util.UUID
 
 object UniqueIdentifierSerializer : KSerializer<UniqueIdentifier> by (
-        SurrogateSerializer(UniqueIdentifierSurrogate.serializer()) { UniqueIdentifierSurrogate(it.externalId, it.id) }
-        )
+    SurrogateSerializer(UniqueIdentifierSurrogate.serializer()) { UniqueIdentifierSurrogate(it.externalId, it.id) }
+    )
 
 @Serializable
 data class UniqueIdentifierSurrogate(
