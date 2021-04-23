@@ -1,13 +1,14 @@
 
-import com.ing.zknotary.gradle.extension.AmountTemplateParameters
-import com.ing.zknotary.gradle.extension.BigDecimalTemplateParameters
-import com.ing.zknotary.gradle.extension.LinearPointerTemplateParameters
-import com.ing.zknotary.gradle.extension.StringTemplateParameters
-import com.ing.zknotary.gradle.extension.TemplateParameters
-import com.ing.zknotary.gradle.extension.UniqueIdentifierTemplateParameters
 import com.ing.zknotary.gradle.extension.ZKNotaryExtension
+import com.ing.zknotary.gradle.template.AmountTemplateParameters
+import com.ing.zknotary.gradle.template.BigDecimalTemplateParameters
+import com.ing.zknotary.gradle.template.LinearPointerTemplateParameters
+import com.ing.zknotary.gradle.template.StringTemplateParameters
+import com.ing.zknotary.gradle.template.TemplateParameters
+import com.ing.zknotary.gradle.template.TemplateRenderer
+import com.ing.zknotary.gradle.template.UniqueIdentifierTemplateParameters
+import com.ing.zknotary.gradle.util.CodeGenerator
 import com.ing.zknotary.gradle.util.MerkleReplacer
-import com.ing.zknotary.gradle.util.TemplateRenderer
 import com.ing.zknotary.gradle.util.ZincSourcesCopier
 import com.ing.zknotary.gradle.util.removeDebugCode
 import java.io.File
@@ -15,8 +16,8 @@ import java.io.File
 val bigDecimalConfigurations = listOf(
     BigDecimalTemplateParameters(24, 6),
     BigDecimalTemplateParameters(100, 20),
-    ZKNotaryExtension.float,
-    ZKNotaryExtension.double
+    ZKNotaryExtension.floatTemplateParameters,
+    ZKNotaryExtension.doubleTemplateParameters
 )
 val amountConfigurations = bigDecimalConfigurations.map {
     AmountTemplateParameters(it, 8)
@@ -56,15 +57,17 @@ fun main(args: Array<String>) {
 
         val consts = circuitSourcesBase.resolve(circuitName).resolve("consts.zn").readText()
 
-        // Generate code from templates
-        val renderer = TemplateRenderer(outputPath) {
-            getTemplateContents(root, it)!!
+        // Render templates
+        val templateRenderer = TemplateRenderer(outputPath.toPath()) {
+            getTemplateContents(root, it.templateFile)!!
         }
         resolveAllTemplateParameters().forEach {
-            renderer.generateTemplate(it)
+            templateRenderer.renderTemplate(it)
         }
-        getTemplateContents(root, "merkle_template.zn")?.let { renderer.generateMerkleUtilsCode(it, consts) }
-        getTemplateContents(root, "main_template.zn")?.let { renderer.generateMainCode(it, consts) }
+        // Generate code
+        val codeGenerator = CodeGenerator(outputPath)
+        getTemplateContents(root, "merkle_template.zn")?.let { codeGenerator.generateMerkleUtilsCode(it, consts) }
+        getTemplateContents(root, "main_template.zn")?.let { codeGenerator.generateMainCode(it, consts) }
 
         // Replace placeholders in Merkle tree functions
         val replacer = MerkleReplacer(outputPath)
@@ -75,12 +78,12 @@ fun main(args: Array<String>) {
         removeDebugCode(circuitName, mergedCircuitOutput)
     }
 
-    // Generate floating points code for test circuits
-    val testTemplate = TemplateRenderer(getPlatformSourcesPath(root, "zinc-platform-test-sources")) {
-        getTemplateContents(root, it)!!
+    // Render templates for test circuits
+    val testTemplateRenderer = TemplateRenderer(getPlatformSourcesPath(root, "zinc-platform-test-sources").toPath()) {
+        getTemplateContents(root, it.templateFile)!!
     }
     resolveAllTemplateParameters().forEach {
-        testTemplate.generateTemplate(it)
+        testTemplateRenderer.renderTemplate(it)
     }
 }
 

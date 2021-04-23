@@ -1,4 +1,4 @@
-package com.ing.zknotary.gradle.extension
+package com.ing.zknotary.gradle.template
 
 import com.ing.zknotary.common.serialization.bfl.corda.LinearPointerSurrogate
 import com.ing.zknotary.common.serialization.bfl.serializers.UniqueIdentifierSurrogate

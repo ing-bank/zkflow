@@ -18,13 +18,15 @@ data class LinearPointerSurrogate(
     val isResolved: Boolean
 ) : Surrogate<LinearPointer<*>> {
     override fun toOriginal(): LinearPointer<*> {
-        return LinearPointer(pointer, Class.forName(className) as Class<LinearState>, isResolved)
+        @Suppress("UNCHECKED_CAST")
+        val klass = Class.forName(className) as Class<LinearState>
+        return LinearPointer(pointer, klass, isResolved)
     }
 
     companion object {
         /**
-         * The jvm specification does not place any limits on the size of a class name, however
-         * in practice it is limited to 65536. In practice however we don't expect to see class
+         * The jvm specification does not place any limits on the size of a class name, the
+         * implementation limits it to 65536. In practice however we don't expect to see class
          * names longer than the chosen limit.
          */
         const val MAX_CLASS_NAME_SIZE = 192
@@ -32,8 +34,8 @@ data class LinearPointerSurrogate(
 }
 
 object LinearPointerSerializer : KSerializer<LinearPointer<*>>
-    by (
-        SurrogateSerializer(LinearPointerSurrogate.serializer()) {
-            LinearPointerSurrogate(it.pointer, it.type.name, it.isResolved)
-        }
-        )
+by (
+    SurrogateSerializer(LinearPointerSurrogate.serializer()) {
+        LinearPointerSurrogate(it.pointer, it.type.name, it.isResolved)
+    }
+    )

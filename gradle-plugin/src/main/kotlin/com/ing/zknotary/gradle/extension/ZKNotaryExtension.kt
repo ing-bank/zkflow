@@ -1,5 +1,13 @@
 package com.ing.zknotary.gradle.extension
 
+import com.ing.serialization.bfl.serializers.DoubleSurrogate
+import com.ing.serialization.bfl.serializers.FloatSurrogate
+import com.ing.zknotary.gradle.template.AmountTemplateParameters
+import com.ing.zknotary.gradle.template.BigDecimalTemplateParameters
+import com.ing.zknotary.gradle.template.LinearPointerTemplateParameters
+import com.ing.zknotary.gradle.template.StringTemplateParameters
+import com.ing.zknotary.gradle.template.TemplateParameters
+import com.ing.zknotary.gradle.template.UniqueIdentifierTemplateParameters
 import org.gradle.api.Project
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
@@ -14,8 +22,16 @@ open class ZKNotaryExtension(project: Project) {
         private const val MERGED_CIRCUIT_BUILD_PATH = "zinc"
         private const val CIRCUIT_SOURCES_BASE_PATH = "src/main/zinc"
 
-        val float = BigDecimalTemplateParameters(39, 46, "Float")
-        val double = BigDecimalTemplateParameters(309, 325, "Double")
+        val floatTemplateParameters = BigDecimalTemplateParameters(
+            FloatSurrogate.FLOAT_INTEGER_SIZE.toShort(),
+            FloatSurrogate.FLOAT_FRACTION_SIZE.toShort(),
+            "Float"
+        )
+        val doubleTemplateParameters = BigDecimalTemplateParameters(
+            DoubleSurrogate.DOUBLE_INTEGER_SIZE.toShort(),
+            DoubleSurrogate.DOUBLE_FRACTION_SIZE.toShort(),
+            "Double"
+        )
     }
 
     @Input
@@ -54,9 +70,13 @@ open class ZKNotaryExtension(project: Project) {
     @Input
     val mainTemplate = "main_template.zn"
 
+    /*
+     * Pre-defined collection of configurations to generate zinc sources for
+     * standard data types like float and double.
+     */
     private val fixedTemplateParameters: List<TemplateParameters> = listOf(
-        float,
-        double,
+        floatTemplateParameters,
+        doubleTemplateParameters,
         UniqueIdentifierTemplateParameters,
         LinearPointerTemplateParameters,
     )
