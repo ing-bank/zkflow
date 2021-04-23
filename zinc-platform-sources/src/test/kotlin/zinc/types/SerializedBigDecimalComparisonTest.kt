@@ -142,7 +142,7 @@ class SerializedBigDecimalComparisonTest {
     fun `zinc compares two zeros`() {
         val zero = BigDecimal.ZERO
 
-        val input = "{\"left\": ${zero.toSerializedJson()}, \"right\": ${zero.toSerializedJson()}}"
+        val input = toSerializedWitness(zero, zero)
         val expected = "\"${zero.compareTo(zero)}\""
 
         zincZKService.proveTimed(input, log).let {

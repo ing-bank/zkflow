@@ -2,8 +2,10 @@ package zinc.types
 
 import com.ing.serialization.bfl.api.reified.serialize
 import com.ing.zknotary.common.serialization.bfl.serializers.CordaSerializers
+import io.kotest.matchers.shouldBe
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import net.corda.core.contracts.LinearPointer
 import net.corda.core.contracts.LinearState
 import net.corda.core.contracts.UniqueIdentifier
@@ -29,11 +31,17 @@ class DeserializedLinearPointerTest {
     }
 
     @Test
-    fun `a LinearPointer should be equal to itself`() {
+    fun `a LinearPointer should be deserialized correctly`() {
         val data = Data(LinearPointer(getSomeId(), MyLinearState::class.java, true))
         val witness = toWitness(data)
 
-        println(zincZKService.run(witness, ""))
+        val expected = data.pointer.toZincJson()
+        val actual = zincZKService.run(witness, "")
+
+        val expectedJson = Json.parseToJsonElement(expected)
+        val actualJson = Json.parseToJsonElement(actual)
+
+        actualJson shouldBe expectedJson
     }
 
     private fun toWitness(item: Data): String {
@@ -49,8 +57,11 @@ class DeserializedLinearPointerTest {
 
     @Serializable
     private data class Data(
-        val id: @Contextual LinearPointer<MyLinearState>
+        val pointer: @Contextual LinearPointer<MyLinearState>
     )
 
-    private fun getSomeId() = UniqueIdentifier("some.id", UUID(1L, 42L))
+    private fun getSomeId() = UniqueIdentifier(
+        externalId = "some.id",
+        id = UUID(0L, 42L)
+    )
 }

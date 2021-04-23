@@ -74,18 +74,21 @@ inline fun <reified T : Any> Amount<T>.toSerializedJson(): String {
 inline fun <reified T : Any> Amount<T>.toJSON(
     integerSize: Int = 24,
     fractionSize: Int = 6,
+    tokenSize: Int = 8,
     serializersModule: SerializersModule = EmptySerializersModule
 ): String {
     val displayTokenSizeJson = this.displayTokenSize.toJSON(integerSize, fractionSize)
     val tokenTypeHashJson = this.token.javaClass.sha256().toPrettyJSONArray()
     val token = serialize(this.token, serializersModule = BFLSerializers + serializersModule)
 
-    token.size shouldBe 8
+    token.size shouldBe tokenSize
 
     val tokenJson = token.toPrettyJSONArray()
 
-    return "{\"quantity\": \"$quantity\", \"display_token_size\": $displayTokenSizeJson," +
-        " \"token_type_hash\": $tokenTypeHashJson, \"token\": $tokenJson}"
+    return "{\"quantity\": \"$quantity\", " +
+        "\"display_token_size\": $displayTokenSizeJson, " +
+        "\"token_type_hash\": $tokenTypeHashJson, " +
+        "\"token\": $tokenJson}"
 }
 
 @Serializable
@@ -120,7 +123,7 @@ fun BigDecimal.toJSON(integerSize: Int = 24, fractionSize: Int = 6): String {
         " \"fraction\": ${fraction.toPrettyJSONArray()}}"
 }
 
-private fun IntArray.toPrettyJSONArray() = "[ ${this.joinToString { "\"$it\"" }} ]"
+fun IntArray.toPrettyJSONArray() = "[ ${this.joinToString { "\"$it\"" }} ]"
 
 fun ByteArray.toPrettyJSONArray() = "[ ${this.map { it.asUnsigned() }.joinToString { "\"$it\"" }} ]"
 
