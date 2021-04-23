@@ -9,11 +9,11 @@ import net.corda.core.crypto.Crypto
 import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey
 
 object BCECPublicKeySerializer : KSerializer<BCECPublicKey> by (
-        SurrogateSerializer(BCECSurrogate.serializer()) {
-            val scheme = Crypto.findSignatureScheme(it)
-            BCECSurrogate(scheme.schemeNumberID, it.encoded)
-        }
-        )
+    SurrogateSerializer(BCECSurrogate.serializer()) {
+        val scheme = Crypto.findSignatureScheme(it)
+        BCECSurrogate(scheme.schemeNumberID, it.encoded)
+    }
+    )
 
 @Suppress("ArrayInDataClass")
 @Serializable

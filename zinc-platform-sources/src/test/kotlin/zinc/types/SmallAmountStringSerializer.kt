@@ -15,7 +15,7 @@ data class SmallStringSurrogate(
 }
 
 object SmallStringSerializer : KSerializer<String> by (
-        SurrogateSerializer(SmallStringSurrogate.serializer()) {
-            SmallStringSurrogate(it)
-        }
-        )
+    SurrogateSerializer(SmallStringSurrogate.serializer()) {
+        SmallStringSurrogate(it)
+    }
+    )

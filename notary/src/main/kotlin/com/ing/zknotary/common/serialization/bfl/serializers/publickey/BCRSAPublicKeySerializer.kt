@@ -9,10 +9,10 @@ import net.corda.core.crypto.Crypto
 import org.bouncycastle.jcajce.provider.asymmetric.rsa.BCRSAPublicKey
 
 object BCRSAPublicKeySerializer : KSerializer<BCRSAPublicKey> by (
-        SurrogateSerializer(BCRSASurrogate.serializer()) {
-            BCRSASurrogate(it.encoded)
-        }
-        )
+    SurrogateSerializer(BCRSASurrogate.serializer()) {
+        BCRSASurrogate(it.encoded)
+    }
+    )
 
 @Suppress("ArrayInDataClass")
 @Serializable

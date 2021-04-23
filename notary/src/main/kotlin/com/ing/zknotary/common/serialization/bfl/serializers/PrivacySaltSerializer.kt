@@ -8,8 +8,8 @@ import kotlinx.serialization.Serializable
 import net.corda.core.contracts.PrivacySalt
 
 object PrivacySaltSerializer : KSerializer<PrivacySalt> by (
-        SurrogateSerializer(PrivacySaltSurrogate.serializer()) { PrivacySaltSurrogate(it.bytes) }
-        )
+    SurrogateSerializer(PrivacySaltSurrogate.serializer()) { PrivacySaltSurrogate(it.bytes) }
+    )
 
 @Suppress("ArrayInDataClass")
 @Serializable

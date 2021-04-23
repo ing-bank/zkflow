@@ -129,8 +129,8 @@ fun WireTransaction.zkToLedgerTransaction(
         {
             services.getCordaServiceFromConfig<WritableUtxoInfoStorage>(ServiceNames.ZK_UTXO_INFO_STORAGE)
                 .getUtxoInfo(it)?.let { utxoInfo ->
-                SerializedBytes(utxoInfo.serializedContents)
-            }
+                    SerializedBytes(utxoInfo.serializedContents)
+                }
         }
 
     fun resolveStateRefAsSerialized(stateRef: StateRef): SerializedBytes<TransactionState<ContractState>>? {

@@ -83,29 +83,29 @@ data class AutomaticHashConstraintSurrogate(
 }
 
 object AlwaysAcceptAttachmentConstraintSerializer : KSerializer<AlwaysAcceptAttachmentConstraint> by (
-        SurrogateSerializer(AlwaysAcceptAttachmentConstraintSurrogate.serializer()) { AlwaysAcceptAttachmentConstraintSurrogate() }
-        )
+    SurrogateSerializer(AlwaysAcceptAttachmentConstraintSurrogate.serializer()) { AlwaysAcceptAttachmentConstraintSurrogate() }
+    )
 
 object HashAttachmentConstraintSerializer : KSerializer<HashAttachmentConstraint> by (
-        SurrogateSerializer(HashAttachmentConstraintSurrogate.serializer()) {
-            HashAttachmentConstraintSurrogate(attachmentId = it.attachmentId)
-        }
-        )
+    SurrogateSerializer(HashAttachmentConstraintSurrogate.serializer()) {
+        HashAttachmentConstraintSurrogate(attachmentId = it.attachmentId)
+    }
+    )
 
 object WhitelistedByZoneAttachmentConstraintSerializer : KSerializer<WhitelistedByZoneAttachmentConstraint> by (
-        SurrogateSerializer(WhitelistedByZoneAttachmentConstraintSurrogate.serializer()) { WhitelistedByZoneAttachmentConstraintSurrogate() }
-        )
+    SurrogateSerializer(WhitelistedByZoneAttachmentConstraintSurrogate.serializer()) { WhitelistedByZoneAttachmentConstraintSurrogate() }
+    )
 
 object AutomaticPlaceholderConstraintSerializer : KSerializer<AutomaticPlaceholderConstraint> by (
-        SurrogateSerializer(AutomaticPlaceholderConstraintSurrogate.serializer()) { AutomaticPlaceholderConstraintSurrogate() }
-        )
+    SurrogateSerializer(AutomaticPlaceholderConstraintSurrogate.serializer()) { AutomaticPlaceholderConstraintSurrogate() }
+    )
 
 object SignatureAttachmentConstraintSerializer : KSerializer<SignatureAttachmentConstraint> by (
-        SurrogateSerializer(SignatureAttachmentConstraintSurrogate.serializer()) {
-            SignatureAttachmentConstraintSurrogate(publicKey = it.key)
-        }
-        )
+    SurrogateSerializer(SignatureAttachmentConstraintSurrogate.serializer()) {
+        SignatureAttachmentConstraintSurrogate(publicKey = it.key)
+    }
+    )
 
 object AutomaticHashConstraintSerializer : KSerializer<AutomaticHashConstraint> by (
-        SurrogateSerializer(AutomaticHashConstraintSurrogate.serializer()) { AutomaticHashConstraintSurrogate() }
-        )
+    SurrogateSerializer(AutomaticHashConstraintSurrogate.serializer()) { AutomaticHashConstraintSurrogate() }
+    )

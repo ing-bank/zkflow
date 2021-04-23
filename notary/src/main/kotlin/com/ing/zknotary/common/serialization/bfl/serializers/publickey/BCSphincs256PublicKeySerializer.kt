@@ -9,10 +9,10 @@ import net.corda.core.crypto.Crypto
 import org.bouncycastle.pqc.jcajce.provider.sphincs.BCSphincs256PublicKey
 
 object BCSphincs256PublicKeySerializer : KSerializer<BCSphincs256PublicKey> by (
-        SurrogateSerializer(BCSphincs256Surrogate.serializer()) {
-            BCSphincs256Surrogate(it.encoded)
-        }
-        )
+    SurrogateSerializer(BCSphincs256Surrogate.serializer()) {
+        BCSphincs256Surrogate(it.encoded)
+    }
+    )
 
 @Suppress("ArrayInDataClass")
 @Serializable

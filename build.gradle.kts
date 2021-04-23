@@ -38,7 +38,7 @@ plugins {
     java
     idea
     kotlin("jvm") apply false
-    id("com.diffplug.gradle.spotless") apply false
+    id("com.diffplug.spotless") apply false
     id("io.gitlab.arturbosch.detekt")
     id("org.owasp.dependencycheck") version "6.1.1"
 }
@@ -114,7 +114,7 @@ subprojects {
     plugins.withType(JavaPlugin::class.java) {
         // Make sure the project has the necessary plugins loaded
         plugins.apply {
-            apply("com.diffplug.gradle.spotless")
+            apply("com.diffplug.spotless")
             /* TODO: Aggregated Jacoco report
              * https://docs.gradle.org/6.5.1/samples/sample_jvm_multi_project_with_code_coverage.html for aggregate coverage report
              * https://gist.github.com/tsjensen/d8b9ab9e6314ae2f63f4955c44399dad

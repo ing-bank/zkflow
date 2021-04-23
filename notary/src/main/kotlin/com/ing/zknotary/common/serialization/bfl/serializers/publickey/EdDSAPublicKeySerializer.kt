@@ -9,10 +9,10 @@ import net.corda.core.crypto.Crypto
 import net.i2p.crypto.eddsa.EdDSAPublicKey
 
 object EdDSAPublicKeySerializer : KSerializer<EdDSAPublicKey> by (
-        SurrogateSerializer(EdDSASurrogate.serializer()) {
-            EdDSASurrogate(it.encoded)
-        }
-        )
+    SurrogateSerializer(EdDSASurrogate.serializer()) {
+        EdDSASurrogate(it.encoded)
+    }
+    )
 
 @Suppress("ArrayInDataClass")
 @Serializable
