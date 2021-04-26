@@ -2,6 +2,9 @@ package zinc.transaction
 
 import com.ing.zknotary.common.contracts.ZKCommandData
 import com.ing.zknotary.common.crypto.zinc
+import com.ing.zknotary.common.serialization.bfl.BFLSerializationScheme
+import com.ing.zknotary.common.serialization.bfl.CommandDataSerializerMap
+import com.ing.zknotary.common.serialization.bfl.ContractStateSerializerMap
 import com.ing.zknotary.common.zkp.ZincZKService
 import com.ing.zknotary.testing.fixtures.contract.DummyContract
 import com.ing.zknotary.testing.fixtures.state.DummyState
@@ -31,8 +34,6 @@ import net.corda.coretesting.internal.createTestSerializationEnv
 import net.corda.testing.core.TestIdentity
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
-import zinc.transaction.serializer.CommandDataSerializerMap
-import zinc.transaction.serializer.ContractStateSerializerMap
 import java.io.File
 import java.time.Duration
 import java.time.Instant
@@ -122,7 +123,7 @@ class TransactionBasicVerificationTest {
         // This functionality is duplicated from ZKTransaction.toWireTransaction()
         val command = commands.singleOrNull() ?: error("Single command per transaction is allowed")
         val zkCommand = command.value as? ZKCommandData ?: error("Command must implement ZKCommandData")
-        val additionalSerializationProperties = mapOf<Any, Any>(TestBFLSerializationScheme.CONTEXT_KEY_CIRCUIT to zkCommand.circuit)
+        val additionalSerializationProperties = mapOf<Any, Any>(BFLSerializationScheme.CONTEXT_KEY_CIRCUIT to zkCommand.circuit)
 
         val wtx = createWtx(
             inputs,
@@ -133,6 +134,7 @@ class TransactionBasicVerificationTest {
             timeWindow,
             references,
             networkParametersHash,
+            schemeId = BFLSerializationScheme.SCHEME_ID,
             additionalSerializationProperties = additionalSerializationProperties
         ).serialize().deserialize() // Deserialization must be forced, otherwise lazily mapped values will be picked up.
 
@@ -140,7 +142,7 @@ class TransactionBasicVerificationTest {
          * Confirm that the contents are actually serialized with BFL and not with something else.
          * This assertion becomes important once we start using the real ZKTransactionBuilder
          */
-        val bflSerializedFirstInput = inputs.first().serializeWithScheme(TestBFLSerializationScheme.SCHEME_ID)
+        val bflSerializedFirstInput = inputs.first().serializeWithScheme(BFLSerializationScheme.SCHEME_ID)
         wtx.componentGroups[ComponentGroupEnum.INPUTS_GROUP.ordinal].components.first().copyBytes() shouldBe bflSerializedFirstInput.bytes
 
         wtx.outputs.zip(constrainedOutputs).forEach { (actual, expected) ->
@@ -173,7 +175,7 @@ class TransactionBasicVerificationTest {
         digestService: DigestService = DigestService.zinc,
 
         // The Id of the custom serializationScheme to use
-        schemeId: Int = TestBFLSerializationScheme.SCHEME_ID,
+        schemeId: Int,
         additionalSerializationProperties: Map<Any, Any> = emptyMap()
     ): WireTransaction {
         val serializationContext = getSerializationContext(schemeId, additionalSerializationProperties)
