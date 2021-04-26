@@ -17,11 +17,12 @@ public inline fun <reified T : Any> assertRoundTripSucceeds(
     value: T,
     serializers: SerializersModule = EmptySerializersModule,
     strategy: KSerializer<T>? = null
-) {
+): T {
     val serialization = serialize(value, strategy, serializersModule = CordaSerializers + serializers)
     val deserialization = deserialize<T>(serialization, strategy, serializersModule = CordaSerializers + serializers)
 
     deserialization shouldBe value
+    return deserialization
 }
 
 /**

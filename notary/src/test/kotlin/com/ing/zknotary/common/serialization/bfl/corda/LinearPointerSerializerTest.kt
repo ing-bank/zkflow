@@ -3,6 +3,8 @@ package com.ing.zknotary.common.serialization.bfl.corda
 import com.ing.zknotary.common.serialization.bfl.serializers.CordaSerializers
 import com.ing.zknotary.testing.assertRoundTripSucceeds
 import com.ing.zknotary.testing.assertSameSize
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import net.corda.core.contracts.LinearPointer
@@ -26,15 +28,36 @@ internal class LinearPointerSerializerTest {
     private data class Data(val data: @Contextual LinearPointer<out LinearState>)
 
     @Test
-    fun `LinearPointer should equal the original after serialization and deserialization`() {
-        val data = Data(LinearPointer(pointer = UniqueIdentifier(), type = MyLinearState::class.java))
-        assertRoundTripSucceeds(data, serializers = CordaSerializers)
-    }
-
-    @Test
     fun `different LinearPointers should have the same size`() {
         val data1 = Data(LinearPointer(pointer = UniqueIdentifier(), type = MyLinearState::class.java))
         val data2 = Data(LinearPointer(pointer = UniqueIdentifier(), type = MyOtherLinearState::class.java))
         assertSameSize(data1, data2, serializers = CordaSerializers)
+    }
+
+    @Test
+    fun `LinearPointer with MyLinearState should be deserialized correctly`() {
+        val data1 = Data(LinearPointer(pointer = UniqueIdentifier(), type = MyLinearState::class.java))
+        assertRoundTripSucceeds(data1, CordaSerializers).data.type shouldBe MyLinearState::class.java
+    }
+
+    @Test
+    fun `LinearPointer with MyOtherLinearState should be deserialized correctly`() {
+        val data2 = Data(LinearPointer(pointer = UniqueIdentifier(), type = MyOtherLinearState::class.java))
+        assertRoundTripSucceeds(data2, CordaSerializers).data.type shouldBe MyOtherLinearState::class.java
+    }
+
+    @Test
+    fun `validate LinearPointer with different types`() {
+        val pointer = UniqueIdentifier()
+        val data1 = Data(LinearPointer(pointer = pointer, type = MyLinearState::class.java))
+        val deserializedData1 = assertRoundTripSucceeds(data1, CordaSerializers)
+
+        val data2 = Data(LinearPointer(pointer = pointer, type = MyOtherLinearState::class.java))
+        val deserializedData2 = assertRoundTripSucceeds(data2, CordaSerializers)
+
+        // LinearPointers have the same pointer, so they're equal
+        data1 shouldBe data2
+        // The types of the deserialized values should be different
+        data1.data.type shouldNotBe data2.data.type
     }
 }
