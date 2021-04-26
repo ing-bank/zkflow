@@ -1,3 +1,7 @@
+import java.io.ByteArrayOutputStream
+import java.io.ByteArrayInputStream
+import java.io.FileReader
+
 buildscript {
     val repos by extra {
         closureOf<RepositoryHandler> {
@@ -62,6 +66,34 @@ task("checkJavaVersion") {
         throw IllegalStateException(
             "ERROR: Java 1.8 required but " + JavaVersion.current() + " found. Change your JAVA_HOME environment variable."
         )
+    }
+}
+
+val zincVersionRegex = ".*ZINC_VERSION: \"v(.*)\".*".toRegex()
+val zincVersionOutputRegex = "^znc (.*)$".toRegex()
+task("checkZincVersion") {
+    val requiredZincVersion = projectDir.resolve(".github/workflows/on-push.yml").readLines()
+        .filter { it.matches(zincVersionRegex) }
+        .map { it.replace(zincVersionRegex, "$1") }
+        .single()
+    ByteArrayOutputStream().use { os ->
+        val result = exec {
+            executable = "znc"
+            args = listOf("--version")
+            standardOutput = os
+        }
+        if (result.exitValue != 0) {
+            throw IllegalStateException(
+                "ERROR: Zinc was not found on this system, please install Zinc version '$requiredZincVersion'."
+            )
+        } else {
+            val zincVersion = os.toString().trim().replace(zincVersionOutputRegex, "$1")
+            if (zincVersion != requiredZincVersion) {
+                throw IllegalStateException(
+                    "ERROR: Zinc version '$requiredZincVersion' required, but '$zincVersion' found. Please update zinc."
+                )
+            }
+        }
     }
 }
 
@@ -182,6 +214,7 @@ subprojects {
             // This applies to all test types, both fast and slow
             withType<Test> {
                 dependsOn(":detekt")
+                dependsOn(":checkZincVersion")
                 dependsOn(":zinc-platform-sources:circuits") // Make sure that the Zinc circuit is ready to use when running tests
 
                 val cores = Runtime.getRuntime().availableProcessors()
@@ -257,5 +290,3 @@ subprojects {
         }
     }
 }
-
-
