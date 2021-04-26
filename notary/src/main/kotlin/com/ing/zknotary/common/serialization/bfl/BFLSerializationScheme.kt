@@ -1,14 +1,15 @@
-package zinc.transaction
+package com.ing.zknotary.common.serialization.bfl
 
 import com.ing.zknotary.common.serialization.bfl.serializers.CordaSerializers
 import com.ing.zknotary.common.serialization.bfl.serializers.CordaSignatureSchemeToSerializers
 import com.ing.zknotary.common.serialization.bfl.serializers.TimeWindowSerializer
 import com.ing.zknotary.common.serialization.bfl.serializers.TransactionStateSerializer
 import com.ing.zknotary.common.zkp.CircuitMetaData
-import com.ing.zknotary.testing.fixtures.state.DummyState
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.modules.plus
 import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.ComponentGroupEnum
+import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.TimeWindow
 import net.corda.core.contracts.TransactionState
 import net.corda.core.crypto.Crypto
@@ -17,8 +18,6 @@ import net.corda.core.serialization.SerializationSchemeContext
 import net.corda.core.serialization.internal.CustomSerializationSchemeUtils
 import net.corda.core.utilities.ByteSequence
 import net.corda.core.utilities.loggerFor
-import zinc.transaction.serializer.CommandDataSerializerMap
-import zinc.transaction.serializer.ContractStateSerializerMap
 import java.nio.ByteBuffer
 import java.security.PublicKey
 import com.ing.serialization.bfl.api.deserialize as obliviousDeserialize
@@ -26,7 +25,7 @@ import com.ing.serialization.bfl.api.reified.deserialize as informedDeserialize
 import com.ing.serialization.bfl.api.reified.serialize as informedSerialize
 import com.ing.serialization.bfl.api.serialize as obliviousSerialize
 
-open class TestBFLSerializationScheme : CustomSerializationScheme {
+open class BFLSerializationScheme : CustomSerializationScheme {
     companion object {
         const val SCHEME_ID = 602214076
 
@@ -37,7 +36,7 @@ open class TestBFLSerializationScheme : CustomSerializationScheme {
         return SCHEME_ID
     }
 
-    private val logger = loggerFor<TestBFLSerializationScheme>()
+    private val logger = loggerFor<BFLSerializationScheme>()
 
     private val cordaSerdeMagicLength = CustomSerializationSchemeUtils.getCustomSerializationMagicFromSchemeId(SCHEME_ID).size
 
@@ -58,7 +57,11 @@ open class TestBFLSerializationScheme : CustomSerializationScheme {
                 val (stateStrategy, message) = ContractStateSerializerMap.extractSerializerAndSerializedData(serializedData)
 
                 @Suppress("UNCHECKED_CAST")
-                informedDeserialize(message, TransactionStateSerializer(stateStrategy), serializersModule = serializersModule) as T
+                informedDeserialize(
+                    message,
+                    TransactionStateSerializer(stateStrategy),
+                    serializersModule = serializersModule
+                ) as T
             }
 
             List::class.java.isAssignableFrom(clazz) -> {
@@ -93,7 +96,11 @@ open class TestBFLSerializationScheme : CustomSerializationScheme {
                 ) as T
             }
 
-            else -> obliviousDeserialize(serializedData, clazz, serializersModule = serializersModule)
+            else -> com.ing.serialization.bfl.api.deserialize(
+                serializedData,
+                clazz,
+                serializersModule = serializersModule
+            )
         }
     }
 
@@ -101,20 +108,26 @@ open class TestBFLSerializationScheme : CustomSerializationScheme {
         logger.debug("Serializing tx component:\t${obj::class}")
 
         val serialization = when (obj) {
-            is TransactionState<*> -> when (obj.data) {
-                is DummyState -> {
-                    @Suppress("UNCHECKED_CAST")
-                    obj as TransactionState<DummyState>
+            is TransactionState<*> -> {
+                val state = obj.data
+                // The following cast is OK, its validity is guaranteed by the inner structure of `ContractStateSerializerMap`.
+                // If `[]`-access succeeds, then the cast MUST also succeed.
+                @Suppress("UNCHECKED_CAST")
+                val stateStrategy = ContractStateSerializerMap[state::class] as KSerializer<ContractState>
 
-                    ContractStateSerializerMap.prefixWithIdentifier(
-                        DummyState::class,
-                        informedSerialize(obj, TransactionStateSerializer(DummyState.serializer()), serializersModule = serializersModule)
-                    )
-                }
-                else -> error("Do not know how to serialize ${obj.data::class.simpleName}")
+                val strategy = TransactionStateSerializer(stateStrategy)
+
+                ContractStateSerializerMap.prefixWithIdentifier(
+                    state::class,
+                    obliviousSerialize(obj, strategy, serializersModule = serializersModule)
+                )
             }
+
             is CommandData -> {
-                CommandDataSerializerMap.prefixWithIdentifier(obj::class, obliviousSerialize(obj, serializersModule = serializersModule))
+                CommandDataSerializerMap.prefixWithIdentifier(
+                    obj::class,
+                    obliviousSerialize(obj, serializersModule = serializersModule)
+                )
             }
 
             is TimeWindow -> {
@@ -124,7 +137,11 @@ open class TestBFLSerializationScheme : CustomSerializationScheme {
                  * thus it is impossible to access them to define appropriate serializers.
                  * Therefore, we cast any variant as a TimeWindow.
                  */
-                informedSerialize(obj, TimeWindowSerializer, serializersModule = serializersModule)
+                informedSerialize(
+                    obj,
+                    TimeWindowSerializer,
+                    serializersModule = serializersModule
+                )
             }
 
             is List<*> -> {

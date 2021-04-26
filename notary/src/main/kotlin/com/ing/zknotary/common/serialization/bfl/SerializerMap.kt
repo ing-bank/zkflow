@@ -1,4 +1,4 @@
-package zinc.transaction.serializer
+package com.ing.zknotary.common.serialization.bfl
 
 import kotlinx.serialization.KSerializer
 import net.corda.core.contracts.CommandData
@@ -31,6 +31,9 @@ abstract class SerializerMap<T : Any> {
         val stamp = extractIdentifier(message)
         return objId2Serializer[stamp] ?: throw SerializerMapError.ClassNotRegistered(stamp)
     }
+
+    operator fun get(klass: KClass<*>): KSerializer<out T> =
+        obj2Id[klass]?.let { objId2Serializer[it] } ?: error("State $klass is not registered")
 
     private fun extractSerializedData(message: ByteArray): ByteArray = message.drop(Int.SIZE_BYTES).toByteArray()
     private fun extractIdentifier(message: ByteArray): Int = ByteBuffer.wrap(message.copyOfRange(0, Int.SIZE_BYTES)).int

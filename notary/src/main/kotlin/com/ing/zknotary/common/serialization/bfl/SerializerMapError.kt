@@ -1,4 +1,4 @@
-package zinc.transaction.serializer
+package com.ing.zknotary.common.serialization.bfl
 
 import kotlin.reflect.KClass
 
