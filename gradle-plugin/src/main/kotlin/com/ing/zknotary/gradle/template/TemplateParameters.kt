@@ -59,6 +59,11 @@ object LinearPointerTemplateParameters : TemplateParameters(
     listOf(StringTemplateParameters(LinearPointerSurrogate.MAX_CLASS_NAME_SIZE.toShort()))
 )
 
+object X500PrincipalTemplateParameters : TemplateParameters(
+    "x500_principal.zn",
+    listOf(StringTemplateParameters(1024))
+)
+
 private val camelRegex = "(?<=[a-zA-Z])[A-Z]".toRegex()
 
 internal fun String.camelToSnakeCase(): String {

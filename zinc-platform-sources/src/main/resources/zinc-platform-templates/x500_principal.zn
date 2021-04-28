@@ -1,0 +1,24 @@
+// Input parameters:
+//   - PRINCIPAL_NAME_STRING_SIZE: u16 = The string size of the principal name
+
+mod string_${PRINCIPAL_NAME_STRING_SIZE};
+
+use string_${PRINCIPAL_NAME_STRING_SIZE}::String_${PRINCIPAL_NAME_STRING_SIZE};
+use string_${PRINCIPAL_NAME_STRING_SIZE}::SerializedString_${PRINCIPAL_NAME_STRING_SIZE};
+use string_${PRINCIPAL_NAME_STRING_SIZE}::STRING_${PRINCIPAL_NAME_STRING_SIZE}_LENGTH;
+
+const X500_PRINCIPAL_LENGTH: u16 = STRING_${PRINCIPAL_NAME_STRING_SIZE}_LENGTH;
+
+type SerializedX500Principal = SerializedString_${PRINCIPAL_NAME_STRING_SIZE};
+
+struct X500Principal {
+    name: String_${PRINCIPAL_NAME_STRING_SIZE},
+}
+
+impl X500Principal {
+    fn deserialize(serialized_principal: SerializedX500Principal) -> X500Principal {
+        X500Principal {
+            name: String_${PRINCIPAL_NAME_STRING_SIZE}::deserialize(serialized_principal),
+        }
+    }
+}

@@ -18,6 +18,7 @@ class TemplateRenderer(
             is AmountTemplateParameters -> renderAmountTemplate(templateContents, templateParameters)
             is UniqueIdentifierTemplateParameters -> renderUniqueIdentifierTemplate(templateContents, templateParameters)
             is LinearPointerTemplateParameters -> renderLinearPointerTemplate(templateContents, templateParameters)
+            is X500PrincipalTemplateParameters -> renderX500PrincipalTemplate(templateContents, templateParameters)
         }
     }
 
@@ -91,6 +92,16 @@ class TemplateRenderer(
     ) {
         val linearPointerContent = templateContents
             .replace("\${CLASS_NAME_STRING_SIZE}", LinearPointerSurrogate.MAX_CLASS_NAME_SIZE.toString())
+        createOutputFile(outputDirectory.resolve(templateParameters.templateFile))
+            .writeBytes(linearPointerContent.toByteArray())
+    }
+
+    private fun renderX500PrincipalTemplate(
+        templateContents: String,
+        templateParameters: X500PrincipalTemplateParameters
+    ) {
+        val linearPointerContent = templateContents
+            .replace("\${PRINCIPAL_NAME_STRING_SIZE}", "1024")
         createOutputFile(outputDirectory.resolve(templateParameters.templateFile))
             .writeBytes(linearPointerContent.toByteArray())
     }

@@ -1,0 +1,8 @@
+mod x500_principal;
+
+use x500_principal::X500Principal;
+use x500_principal::SerializedX500Principal;
+
+fn main(witness: SerializedX500Principal) -> X500Principal {
+    X500Principal::deserialize(witness)
+}

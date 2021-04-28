@@ -7,6 +7,7 @@ import com.ing.zknotary.gradle.template.StringTemplateParameters
 import com.ing.zknotary.gradle.template.TemplateParameters
 import com.ing.zknotary.gradle.template.TemplateRenderer
 import com.ing.zknotary.gradle.template.UniqueIdentifierTemplateParameters
+import com.ing.zknotary.gradle.template.X500PrincipalTemplateParameters
 import com.ing.zknotary.gradle.util.CodeGenerator
 import com.ing.zknotary.gradle.util.MerkleReplacer
 import com.ing.zknotary.gradle.util.ZincSourcesCopier
@@ -27,10 +28,14 @@ val stringConfigurations: List<StringTemplateParameters> = listOf(StringTemplate
 
 fun resolveAllTemplateParameters(): List<TemplateParameters> {
     return (
-        bigDecimalConfigurations + amountConfigurations + stringConfigurations + listOf(
-            UniqueIdentifierTemplateParameters,
-            LinearPointerTemplateParameters,
-        )
+        bigDecimalConfigurations +
+            amountConfigurations +
+            stringConfigurations +
+            listOf(
+                UniqueIdentifierTemplateParameters,
+                LinearPointerTemplateParameters,
+                X500PrincipalTemplateParameters,
+            )
         )
         .flatMap { it.resolveAllConfigurations() }
         .distinct()

@@ -8,6 +8,7 @@ import com.ing.zknotary.gradle.template.LinearPointerTemplateParameters
 import com.ing.zknotary.gradle.template.StringTemplateParameters
 import com.ing.zknotary.gradle.template.TemplateParameters
 import com.ing.zknotary.gradle.template.UniqueIdentifierTemplateParameters
+import com.ing.zknotary.gradle.template.X500PrincipalTemplateParameters
 import org.gradle.api.Project
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
@@ -82,6 +83,7 @@ open class ZKNotaryExtension(project: Project) {
         doubleTemplateParameters,
         UniqueIdentifierTemplateParameters,
         LinearPointerTemplateParameters,
+        X500PrincipalTemplateParameters,
     )
 
     fun resolveAllTemplateParameters(): List<TemplateParameters> {
