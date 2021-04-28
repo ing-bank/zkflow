@@ -1,7 +1,5 @@
 package zinc.types
 
-import com.ing.serialization.bfl.api.reified.serialize
-import com.ing.zknotary.common.serialization.bfl.serializers.CordaSerializers
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
@@ -42,11 +40,6 @@ class DeserializedLinearPointerTest {
         val actualJson = Json.parseToJsonElement(actual)
 
         actualJson shouldBe expectedJson
-    }
-
-    private fun toWitness(item: Data): String {
-        val bytes = serialize(item, serializersModule = CordaSerializers)
-        return "{\"witness\":${bytes.toPrettyJSONArray()}}"
     }
 
     @Serializable

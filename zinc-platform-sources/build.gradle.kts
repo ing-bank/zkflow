@@ -122,6 +122,14 @@ open class CopyCircuitTask @Inject constructor() : DefaultTask() {
                         val target = generatedTestSourceDir.resolve(testSource.fileName)
                         Files.copy(testSource, target, StandardCopyOption.REPLACE_EXISTING)
                     }
+                Files.list(resourcesDir.resolve("zinc-platform-sources"))
+                    .filter { it.toString().endsWith(".zn") &&
+                            !it.fileName.toString().startsWith("platform_")
+                    }
+                    .forEach { source ->
+                        val target = generatedTestSourceDir.resolve(source.fileName)
+                        Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING)
+                    }
             }
     }
 }

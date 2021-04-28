@@ -6,6 +6,7 @@ import com.ing.serialization.bfl.api.reified.serialize
 import com.ing.serialization.bfl.serializers.BFLSerializers
 import com.ing.serialization.bfl.serializers.CurrencySerializer
 import com.ing.zknotary.common.serialization.bfl.corda.AmountSerializer
+import com.ing.zknotary.common.serialization.bfl.serializers.CordaSerializers
 import com.ing.zknotary.common.zkp.PublicInput
 import com.ing.zknotary.common.zkp.Witness
 import com.ing.zknotary.common.zkp.ZincZKService
@@ -40,6 +41,11 @@ fun toSerializedWitness(left: BigDecimal, right: BigDecimal): String =
 
 fun toBigWitness(left: BigDecimal, right: BigDecimal): String =
     "{\"left\": ${left.toJSON(100, 20)}, \"right\": ${right.toJSON(100, 20)}}"
+
+inline fun <reified T : Any> toWitness(item: T): String {
+    val bytes = serialize(item, serializersModule = CordaSerializers)
+    return "{\"witness\":${bytes.toPrettyJSONArray()}}"
+}
 
 fun Class<*>.sha256(): ByteArray = SecureHash.sha256(name).copyBytes()
 
