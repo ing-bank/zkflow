@@ -67,6 +67,7 @@ use platform_component_group_leaf_digest_dto::ComponentGroupLeafDigestDto;
 use platform_component_group_leaf_digest_dto::COMPONENT_GROUP_LEAF_DIGEST_BYTES;
 use platform_merkle_tree::build_merkle_tree;
 use platform_node_digest_dto::NodeDigestDto;
+use platform_node_digest_dto::NodeDigestBytes;
 use platform_node_digest_dto::NODE_DIGEST_BYTES;
 use platform_utxo_digests::compute_input_utxo_digests;
 use platform_utxo_digests::compute_reference_utxo_digests;

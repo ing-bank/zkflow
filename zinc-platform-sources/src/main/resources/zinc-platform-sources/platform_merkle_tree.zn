@@ -39,7 +39,7 @@ use platform_components_signers::compute_signers_group_hash;
 use platform_components_time_window::compute_time_window_group_hash;
 
 // TODO double-check why this is a constant, it seems to be dependant on amount leaves
-const MERKLE_TREE_SIZE: u16 = 16;
+const MERKLE_TREE_SIZE: u16 = 8;
 
 /// Top-level function to be called.
 /// Pads the configure number of leaves to the right amount with zero hashes from the right
@@ -101,24 +101,22 @@ fn build_merkle_tree(tx: Witness) -> NodeDigestBits {
             tx.time_window,
             privacy_salt,
         );
-
-
-    // TODO fix unexpected input length in Pedersen hash, it looks like Blake returns more bits than it should
-    component_group_hashes[ComponentGroupEnum::PARAMETERS_GROUP] =
-        compute_parameters_group_hash(
-            tx.parameters,
-            privacy_salt,
-        );
-    component_group_hashes[ComponentGroupEnum::REFERENCES_GROUP] =
-        compute_references_group_hash(
-            tx.references,
-            privacy_salt,
-        );
     component_group_hashes[ComponentGroupEnum::SIGNERS_GROUP] =
         compute_signers_group_hash(
             tx.signers,
             privacy_salt,
         );
+    // component_group_hashes[ComponentGroupEnum::REFERENCES_GROUP] =
+    //     compute_references_group_hash(
+    //         tx.references,
+    //         privacy_salt,
+    //     );
+    // component_group_hashes[ComponentGroupEnum::PARAMETERS_GROUP] =
+    //     compute_parameters_group_hash(
+    //         tx.parameters,
+    //         privacy_salt,
+    //     );
+
 
     //compute merkle root
     merkle_root(component_group_hashes)

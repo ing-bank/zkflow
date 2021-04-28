@@ -21,10 +21,11 @@ use platform_consts::BYTE_BITS;
 use std::convert::to_bits;
 use std::crypto::blake2s_multi_input;
 use platform_crypto_utils::compute_nonce;
-
+use platform_node_digest_dto::NODE_DIGEST_BITS;
+use consts::NOTARY_GROUP_SIZE;
 
 type SerializedNotary = [u8; NOTARY_COMPONENT_SIZE];
-type SerializedNotaryGroup = [SerializedNotary; 1];
+type SerializedNotaryGroup = [SerializedNotary; NOTARY_GROUP_SIZE];
 
 const NOTARY_COMPONENT_SIZE_BITS: u16 = NOTARY_COMPONENT_SIZE * BYTE_BITS;
 
@@ -40,15 +41,25 @@ fn bytes_to_bits(bytes: [u8; NOTARY_COMPONENT_SIZE]) -> [bool; NOTARY_COMPONENT_
     bits
 }
 
+fn compute_leaf_hashes(
+    components: SerializedNotaryGroup,
+    privacy_salt: PrivacySaltBits,
+) -> [ComponentGroupLeafDigestBits; NOTARY_GROUP_SIZE] {
+    let mut component_leaf_hashes =
+        [[false; COMPONENT_GROUP_LEAF_DIGEST_BITS]; NOTARY_GROUP_SIZE];
+
+    for i in (0 as u32)..(NOTARY_GROUP_SIZE as u32) {
+        component_leaf_hashes[i] = blake2s_multi_input(
+            compute_nonce(privacy_salt, ComponentGroupEnum::NOTARY_GROUP as u32, i as u32),
+            bytes_to_bits(components[i]),
+        )
+    }
+    component_leaf_hashes
+}
+
 fn compute_notary_group_hash(
     components: SerializedNotaryGroup,
     privacy_salt: PrivacySaltBits,
 ) -> NodeDigestBits {
-
-    let component_leaf_hash = blake2s_multi_input(
-        compute_nonce(privacy_salt, ComponentGroupEnum::NOTARY_GROUP as u32, 0 as u32),
-        bytes_to_bits(components[0]),
-    );
-
     // ### CALL APPROPRIATE MERKLE TREE FUNCTION ###
 }

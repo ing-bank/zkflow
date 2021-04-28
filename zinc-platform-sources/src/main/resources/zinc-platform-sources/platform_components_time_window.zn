@@ -24,17 +24,18 @@ use platform_node_digest_dto::NODE_DIGEST_BITS;
 use platform_crypto_utils::compute_nonce;
 use platform_nonce_digest_dto::NONCE_DIGEST_BITS;
 use std::crypto::blake2s_multi_input;
-use consts::TIME_WINDOW_COMPONENT_SIZE;
+use consts::TIMEWINDOW_COMPONENT_SIZE;
+use consts::TIMEWINDOW_GROUP_SIZE;
 
-type SerializedTimeWindow = [u8; TIME_WINDOW_COMPONENT_SIZE];
-type SerializedTimeWindowGroup = [SerializedTimeWindow; 1];
+type SerializedTimeWindow = [u8; TIMEWINDOW_COMPONENT_SIZE];
+type SerializedTimeWindowGroup = [SerializedTimeWindow; TIMEWINDOW_GROUP_SIZE];
 
-const TIME_WINDOW_COMPONENT_SIZE_BITS: u16 = TIME_WINDOW_COMPONENT_SIZE * BYTE_BITS;
+const TIME_WINDOW_COMPONENT_SIZE_BITS: u16 = TIMEWINDOW_COMPONENT_SIZE * BYTE_BITS;
 
-fn bytes_to_bits(bytes: [u8; TIME_WINDOW_COMPONENT_SIZE]) -> [bool; TIME_WINDOW_COMPONENT_SIZE_BITS] {
+fn bytes_to_bits(bytes: [u8; TIMEWINDOW_COMPONENT_SIZE]) -> [bool; TIME_WINDOW_COMPONENT_SIZE_BITS] {
     let mut bits = [false; TIME_WINDOW_COMPONENT_SIZE_BITS];
 
-    for i in (0 as u16)..TIME_WINDOW_COMPONENT_SIZE {
+    for i in (0 as u16)..TIMEWINDOW_COMPONENT_SIZE {
         let byte_bits = to_bits(bytes[i]);
         for j in (0 as u16)..BYTE_BITS {
             bits[BYTE_BITS * i + j] = byte_bits[j];
@@ -43,15 +44,25 @@ fn bytes_to_bits(bytes: [u8; TIME_WINDOW_COMPONENT_SIZE]) -> [bool; TIME_WINDOW_
     bits
 }
 
+fn compute_leaf_hashes(
+    components: SerializedTimeWindowGroup,
+    privacy_salt: PrivacySaltBits,
+) -> [ComponentGroupLeafDigestBits; TIMEWINDOW_GROUP_SIZE] {
+    let mut component_leaf_hashes =
+        [[false; COMPONENT_GROUP_LEAF_DIGEST_BITS]; TIMEWINDOW_GROUP_SIZE];
+
+    for i in (0 as u32)..(TIMEWINDOW_GROUP_SIZE as u32) {
+        component_leaf_hashes[i] = blake2s_multi_input(
+            compute_nonce(privacy_salt, ComponentGroupEnum::TIMEWINDOW_GROUP as u32, i as u32),
+            bytes_to_bits(components[i]),
+        )
+    }
+    component_leaf_hashes
+}
+
 fn compute_time_window_group_hash(
     components: SerializedTimeWindowGroup,
     privacy_salt: PrivacySaltBits,
 ) -> NodeDigestBits {
-
-    let component_leaf_hash = blake2s_multi_input(
-        compute_nonce(privacy_salt, ComponentGroupEnum::TIMEWINDOW_GROUP as u32, 0 as u32),
-        bytes_to_bits(components[0]),
-    );
-
     // ### CALL APPROPRIATE MERKLE TREE FUNCTION ###
 }

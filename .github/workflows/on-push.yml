@@ -1,7 +1,7 @@
 name: PRs and merges to master
 
 env:
-  ZINC_VERSION: "v0.1.5-ING-5"
+  ZINC_VERSION: "v0.1.5-ING-6"
 
 on:
   push:

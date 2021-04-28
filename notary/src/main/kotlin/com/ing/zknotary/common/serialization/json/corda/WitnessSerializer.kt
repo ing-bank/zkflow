@@ -40,18 +40,18 @@ object WitnessSerializer : KSerializer<Witness> {
             fun fromWitness(witness: Witness): WrappedSurrogate {
                 return WrappedSurrogate(
                     WitnessSurrogate(
-                        inputsGroup = witness.inputsGroup.map { it.take(5).map { byte -> byte.toString() } },
-                        outputsGroup = witness.outputsGroup.map { it.take(5).map { byte -> byte.toString() } },
-                        commandsGroup = witness.commandsGroup.map { it.take(5).map { byte -> byte.toString() } },
-                        attachmentsGroup = witness.attachmentsGroup.map { it.take(5).map { byte -> byte.toString() } },
-                        notaryGroup = witness.notaryGroup.map { it.take(5).map { byte -> byte.toString() } },
-                        timeWindowGroup = witness.timeWindowGroup.map { it.take(5).map { byte -> byte.toString() } },
-                        signersGroup = witness.signersGroup.map { it.take(5).map { byte -> byte.toString() } },
-                        referencesGroup = witness.referencesGroup.map { it.take(5).map { byte -> byte.toString() } },
-                        parametersGroup = witness.parametersGroup.map { it.take(5).map { byte -> byte.toString() } },
+                        inputsGroup = witness.inputsGroup.map { it.map { byte -> byte.toString() } },
+                        outputsGroup = witness.outputsGroup.map { it.map { byte -> byte.toString() } },
+                        commandsGroup = witness.commandsGroup.map { it.map { byte -> byte.toString() } },
+                        attachmentsGroup = witness.attachmentsGroup.map { it.map { byte -> byte.toString() } },
+                        notaryGroup = witness.notaryGroup.map { it.map { byte -> byte.toString() } },
+                        timeWindowGroup = witness.timeWindowGroup.map { it.map { byte -> byte.toString() } },
+                        signersGroup = witness.signersGroup.map { it.map { byte -> byte.toString() } },
+                        referencesGroup = witness.referencesGroup.map { it.map { byte -> byte.toString() } },
+                        parametersGroup = witness.parametersGroup.map { it.map { byte -> byte.toString() } },
                         privacySalt = witness.privacySalt.bytes.asList().map { byte -> byte.asUnsigned().toString() },
-                        serializedInputUtxos = witness.serializedInputUtxos.map { it.take(5).map { byte -> byte.toString() } },
-                        serializedReferenceUtxos = witness.serializedReferenceUtxos.map { it.take(5).map { byte -> byte.toString() } },
+                        serializedInputUtxos = witness.serializedInputUtxos.map { it.map { byte -> byte.toString() } },
+                        serializedReferenceUtxos = witness.serializedReferenceUtxos.map { it.map { byte -> byte.toString() } },
                         inputNonces = witness.inputUtxoNonces,
                         referenceNonces = witness.referenceUtxoNonces
                     )

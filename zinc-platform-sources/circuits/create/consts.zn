@@ -19,6 +19,9 @@ const INPUT_GROUP_SIZE: u16 = 0;
 const OUTPUT_GROUP_SIZE: u16 = 1;
 const REFERENCE_GROUP_SIZE: u16 = 0;
 const SIGNER_GROUP_SIZE: u16 = 1;
+const NOTARY_GROUP_SIZE: u16 = 0;
+const TIMEWINDOW_GROUP_SIZE: u16 = 0;
+const PARAMETERS_GROUP_SIZE: u16 = 0;
 
 const INPUT_COMPONENT_SIZE: u16 = 5;
 const OUTPUT_COMPONENT_SIZE: u16 = 5; // PUBKEY_BYTES + U32_BYTES;
@@ -29,5 +32,5 @@ const SIGNER_COMPONENT_SIZE: u16 = 5; //PUBKEY_BYTES;
 // TODO: these 3 groups are always of size 1 and probably component are also of constant size.
 //  So probably we want to hide component sizes too somewhere inside platform code
 const NOTARY_COMPONENT_SIZE: u16 = 5;
-const TIME_WINDOW_COMPONENT_SIZE: u16 = 5;
+const TIMEWINDOW_COMPONENT_SIZE: u16 = 5;
 const PARAMETERS_COMPONENT_SIZE: u16 = 5;

@@ -15,7 +15,7 @@ object SecureHashSerializer : KSerializer<SecureHash> {
 
     override fun serialize(encoder: Encoder, value: SecureHash) {
         // TODO: should these bytes be made unsigned?
-        encoder.encodeSerializableValue(ListSerializer(Int.serializer()), value.bytes.map { it.asUnsigned() }.toList())
+        encoder.encodeSerializableValue(ListSerializer(String.serializer()), value.bytes.map { it.asUnsigned().toString() }.toList())
     }
 
     override fun deserialize(decoder: Decoder): SecureHash = throw NotImplementedError()

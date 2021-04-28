@@ -13,9 +13,9 @@ object PublicInputSerializer : KSerializer<PublicInput> {
     @Serializable
     @SerialName("PublicInput")
     private data class PublicInputSurrogate(
-        val transactionId: @Serializable(with = SecureHashSerializer::class) SecureHash,
-        val inputHashes: List<@Serializable(with = SecureHashSerializer::class) SecureHash>,
-        val referenceHashes: List<@Serializable(with = SecureHashSerializer::class) SecureHash>
+        @SerialName("input_hashes") val inputHashes: List<@Serializable(with = SecureHashSerializer::class) SecureHash>,
+        @SerialName("reference_hashes") val referenceHashes: List<@Serializable(with = SecureHashSerializer::class) SecureHash>,
+        @SerialName("transaction_id") val transactionId: @Serializable(with = SecureHashSerializer::class) SecureHash
     ) {
         companion object {
             fun fromPublicInput(publicInput: PublicInput): PublicInputSurrogate {

@@ -1,6 +1,6 @@
 
 struct PublicInput {
-    transaction_id: NodeDigestDto,
+    transaction_id: NodeDigestBytes,
     input_hashes: [ComponentGroupLeafDigestDto; INPUT_GROUP_SIZE],
     reference_hashes: [ComponentGroupLeafDigestDto; REFERENCE_GROUP_SIZE],
 }

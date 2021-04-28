@@ -51,6 +51,9 @@ class ZincZKService(
                 val stdout = process.errorStream.bufferedReader().readText()
                 error("$command failed with the following com.ing.zknotary.generator.error output: $stdout")
             } else {
+                val debugOutput = process.errorStream.bufferedReader().readText()
+                // TODO better logging inside Corda node
+                println(debugOutput)
                 process.inputStream.bufferedReader().readText()
             }
         }

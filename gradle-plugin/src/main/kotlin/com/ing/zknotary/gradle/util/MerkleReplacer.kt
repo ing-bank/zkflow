@@ -19,7 +19,7 @@ class MerkleReplacer(private val outputPath: File) {
             file.createNewFile()
 
             val updatedFileContent =
-                fileContent.replace("\${GROUP_SIZE_PLACEHOLDER}", getFullMerkleTreeSize(constsContent).toString())
+                fileContent.replace("\${GROUP_SIZE_PLACEHOLDER}", getPaddedGroupCount().toString())
             file.writeBytes(updatedFileContent.toByteArray())
         }
     }
@@ -44,7 +44,9 @@ class MerkleReplacer(private val outputPath: File) {
             val componentRegex = "Serialized(\\w+)(Group)".toRegex()
             var componentGroupName = componentRegex.find(fileContent)?.groupValues?.get(1)
 
-            if (componentGroupName?.endsWith("s")!!) componentGroupName = componentGroupName.dropLast(1)
+            if (componentGroupName != "Parameters" && // TODO _probably_ we need more formal definition
+                componentGroupName?.endsWith("s")!!
+            ) componentGroupName = componentGroupName.dropLast(1)
 
             val componentGroupSize = getMerkleTreeSizeForComponent(componentGroupName, constsContent)
 
@@ -76,6 +78,8 @@ class MerkleReplacer(private val outputPath: File) {
 
             // This condition is executed when there is no element in the component group.
             // The return value is allOnesHash
+            // TODO this can also be allZeroes if group's enum ordinal is higher than highest existing,
+            //  but in practice this will never happen as soon as we have NETWORK_PARAMETERS
             componentGroupSize == 0 -> {
                 fileContent.replace(
                     "// ### CALL APPROPRIATE MERKLE TREE FUNCTION ###",

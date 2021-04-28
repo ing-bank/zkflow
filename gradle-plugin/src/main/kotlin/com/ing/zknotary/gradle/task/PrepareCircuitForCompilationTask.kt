@@ -2,7 +2,6 @@ package com.ing.zknotary.gradle.task
 
 import com.ing.zknotary.gradle.util.MerkleReplacer
 import com.ing.zknotary.gradle.util.circuitNames
-import com.ing.zknotary.gradle.util.removeDebugCode
 import com.ing.zknotary.gradle.util.zkNotaryExtension
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
@@ -19,7 +18,7 @@ open class PrepareCircuitForCompilationTask : DefaultTask() {
             replacer.setCorrespondingMerkleTreeFunctionForComponentGroups(consts)
             replacer.setCorrespondingMerkleTreeFunctionForMainTree(consts)
 
-            removeDebugCode(circuitName, extension.mergedCircuitOutputPath)
+//            removeDebugCode(circuitName, extension.mergedCircuitOutputPath)
         }
     }
 }

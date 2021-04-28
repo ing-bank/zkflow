@@ -25,9 +25,16 @@ fn get_merkle_tree_from_2_$digestSnakeCase(leaves: [${digestCamelCase}Bits; 2]) 
     return digestMerkleFunctions
 }
 
+fun getPaddedGroupCount(): Int {
+    // Now we assume that we always have NETWORK_PARAMETERS group, so this is pretty much constant,
+    // but later this can change. Theoretically we should calculate it in a way similar to Corda:
+    // this should be highest enum ordinal value amongst groups expected to be present (padded to power of 2)
+    return 8
+}
+
 fun getFullMerkleTreeSize(consts: String): Int {
     val search = "GROUP_SIZE: u16 = (\\d+);".toRegex()
-    var total = 3 // notary, timewindow, and parameters group size
+    var total = 0
     search.findAll(consts).forEach {
         val groupSize = it.groupValues[1].toInt()
         total += if (groupSize != 0) groupSize else 1 // because if group is empty we use allOnes hash

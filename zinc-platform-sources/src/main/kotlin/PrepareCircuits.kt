@@ -17,7 +17,6 @@ import com.ing.zknotary.gradle.template.X500PrincipalTemplateParameters
 import com.ing.zknotary.gradle.util.CodeGenerator
 import com.ing.zknotary.gradle.util.MerkleReplacer
 import com.ing.zknotary.gradle.util.ZincSourcesCopier
-import com.ing.zknotary.gradle.util.removeDebugCode
 import java.io.File
 
 val bigDecimalConfigurations = listOf(
@@ -92,7 +91,7 @@ fun main(args: Array<String>) {
         replacer.setCorrespondingMerkleTreeFunctionForMainTree(consts)
 
         // remove debug statements
-        removeDebugCode(circuitName, mergedCircuitOutput)
+//        removeDebugCode(circuitName, mergedCircuitOutput)
     }
 
     // Render templates for test circuits
