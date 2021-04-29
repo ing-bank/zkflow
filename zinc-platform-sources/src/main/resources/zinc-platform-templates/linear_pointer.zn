@@ -1,0 +1,76 @@
+// Input parameters:
+//   - CLASS_NAME_STRING_SIZE: u16 = The size of the class name
+
+mod unique_identifier;
+
+use unique_identifier::UniqueIdentifier;
+use unique_identifier::SerializedUniqueIdentifier;
+use unique_identifier::UNIQUE_IDENTIFIER_LENGTH;
+
+mod string_${CLASS_NAME_STRING_SIZE};
+
+use string_${CLASS_NAME_STRING_SIZE}::String_${CLASS_NAME_STRING_SIZE};
+use string_${CLASS_NAME_STRING_SIZE}::SerializedString_${CLASS_NAME_STRING_SIZE};
+use string_${CLASS_NAME_STRING_SIZE}::STRING_${CLASS_NAME_STRING_SIZE}_LENGTH;
+
+// LinearPointer lengths
+const LINEAR_POINTER_POINTER_LENGTH: u16 = UNIQUE_IDENTIFIER_LENGTH;
+const LINEAR_POINTER_CLASS_NAME_LENGTH: u16 = STRING_${CLASS_NAME_STRING_SIZE}_LENGTH;
+const LINEAR_POINTER_IS_RESOLVED_LENGTH: u16 = 1;
+
+// LinearPointer offsets
+const LINEAR_POINTER_POINTER_OFFSET: u16 = 0;
+const LINEAR_POINTER_CLASS_NAME_OFFSET: u16
+    = LINEAR_POINTER_POINTER_OFFSET
+    + LINEAR_POINTER_POINTER_LENGTH;
+const LINEAR_POINTER_IS_RESOLVED_OFFSET: u16
+    = LINEAR_POINTER_CLASS_NAME_OFFSET
+    + LINEAR_POINTER_CLASS_NAME_LENGTH;
+const LINEAR_POINTER_LENGTH: u16
+    = LINEAR_POINTER_IS_RESOLVED_OFFSET
+    + LINEAR_POINTER_IS_RESOLVED_LENGTH;
+
+type SerializedLinearPointer = [u8; LINEAR_POINTER_LENGTH];
+
+struct LinearPointer {
+    pointer: UniqueIdentifier,
+    class_name: String_${CLASS_NAME_STRING_SIZE},
+    is_resolved: bool,
+}
+
+impl LinearPointer {
+    fn zero() -> LinearPointer {
+        LinearPointer {
+            pointer: UniqueIdentifier::zero(),
+            class_name: String_${CLASS_NAME_STRING_SIZE}::empty(),
+            is_resolved: false,
+        }
+    }
+
+    // Two LinearPointers are equal when their pointers are equal
+    fn equals(this: LinearPointer, that: LinearPointer) -> bool {
+        UniqueIdentifier::equals(this.pointer, that.pointer)
+    }
+
+    fn deserialize(serialized_pointer: SerializedLinearPointer) -> LinearPointer {
+        let mut pointer_bytes: SerializedUniqueIdentifier = [0; UNIQUE_IDENTIFIER_LENGTH];
+        for i in 0..UNIQUE_IDENTIFIER_LENGTH {
+            pointer_bytes[i] = serialized_pointer[i + LINEAR_POINTER_POINTER_OFFSET];
+        }
+        let pointer = UniqueIdentifier::deserialize(pointer_bytes);
+
+        let mut class_name_bytes: SerializedString_${CLASS_NAME_STRING_SIZE} = [0; STRING_${CLASS_NAME_STRING_SIZE}_LENGTH];
+        for i in 0..STRING_${CLASS_NAME_STRING_SIZE}_LENGTH {
+            class_name_bytes[i] = serialized_pointer[i + LINEAR_POINTER_CLASS_NAME_OFFSET];
+        }
+        let class_name = String_${CLASS_NAME_STRING_SIZE}::deserialize(class_name_bytes);
+
+        let is_resolved = serialized_pointer[LINEAR_POINTER_IS_RESOLVED_OFFSET] != 0;
+
+        LinearPointer {
+            pointer: pointer,
+            class_name: class_name,
+            is_resolved: is_resolved,
+        }
+    }
+}

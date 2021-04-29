@@ -1,49 +1,8 @@
 package com.ing.zknotary.gradle.util
 
-import com.ing.zknotary.gradle.extension.AmountTemplateParameters
-import com.ing.zknotary.gradle.extension.BigDecimalTemplateParameters
-import com.ing.zknotary.gradle.extension.camelToSnakeCase
 import java.io.File
 
-class TemplateRenderer(private val outputPath: File) {
-
-    fun generateStringCode(templateContents: String, stringConfigurations: List<Short>) {
-        stringConfigurations.forEach {
-            val sizeSuffix = "$it"
-            val stringContent = templateContents
-                .replace("\${TYPE_NAME}", "String_$sizeSuffix")
-                .replace("\${CONSTANT_PREFIX}", "STRING_$sizeSuffix")
-                .replace("\${STRING_SIZE_PLACEHOLDER}", it.toString())
-            createOutputFile(outputPath.resolve("string_$sizeSuffix.zn"))
-                .writeBytes(stringContent.toByteArray())
-        }
-    }
-
-    fun generateBigDecimalsCode(templateContents: String, bigDecimalConfigurations: List<BigDecimalTemplateParameters>) {
-        bigDecimalConfigurations.forEach {
-            val bigDecimalsContent = templateContents
-                .replace("\${TYPE_NAME}", it.typeName)
-                .replace("\${CONSTANT_PREFIX}", it.typeName.camelToSnakeCase().toUpperCase())
-                .replace("\${INTEGER_SIZE_PLACEHOLDER}", it.integerSize.toString())
-                .replace("\${FRACTION_SIZE_PLACEHOLDER}", it.fractionSize.toString())
-            createOutputFile(outputPath.resolve("${it.typeName.camelToSnakeCase()}.zn"))
-                .writeBytes(bigDecimalsContent.toByteArray())
-        }
-    }
-
-    fun generateAmountsCode(templateContents: String, amountConfiguration: List<AmountTemplateParameters>) {
-        amountConfiguration.forEach {
-            val bigDecimalsContent = templateContents
-                .replace("\${TYPE_NAME}", it.typeName)
-                .replace("\${CONSTANT_PREFIX}", it.typeName.camelToSnakeCase().toUpperCase())
-                .replace("\${TOKEN_SIZE_PLACEHOLDER}", it.tokenSize.toString())
-                .replace("\${BD_TYPE_NAME}", it.tokenDisplaySize.typeName)
-                .replace("\${BD_CONSTANT_PREFIX}", it.tokenDisplaySize.typeName.camelToSnakeCase().toUpperCase())
-                .replace("\${BD_MODULE_NAME}", it.tokenDisplaySize.typeName.camelToSnakeCase())
-            createOutputFile(outputPath.resolve("${it.typeName.camelToSnakeCase()}.zn"))
-                .writeBytes(bigDecimalsContent.toByteArray())
-        }
-    }
+class CodeGenerator(private val outputPath: File) {
 
     fun generateMerkleUtilsCode(templateContents: String, constsContent: String) {
         val targetFile = createOutputFile(outputPath.resolve("merkle_utils.zn"))
@@ -121,13 +80,6 @@ use platform_zk_prover_transaction::Witness;
             .replace("\${INPUT_HASH_PLACEHOLDER}", inputHashesCode)
             .replace("\${REFERENCE_HASH_PLACEHOLDER}", referenceHashesCode)
         targetFile.appendBytes(mainContent.toByteArray())
-    }
-
-    private fun createOutputFile(targetFile: File): File {
-        targetFile.parentFile?.mkdirs()
-        targetFile.delete()
-        targetFile.createNewFile()
-        return targetFile
     }
 
     private fun getUtxoDigestCode(constsContent: String, componentGroupName: String): String {

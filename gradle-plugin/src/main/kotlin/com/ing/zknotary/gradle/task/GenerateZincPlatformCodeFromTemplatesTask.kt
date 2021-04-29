@@ -1,6 +1,7 @@
 package com.ing.zknotary.gradle.task
 
-import com.ing.zknotary.gradle.util.TemplateRenderer
+import com.ing.zknotary.gradle.template.TemplateRenderer
+import com.ing.zknotary.gradle.util.CodeGenerator
 import com.ing.zknotary.gradle.util.circuitNames
 import com.ing.zknotary.gradle.util.getTemplateContents
 import com.ing.zknotary.gradle.util.zkNotaryExtension
@@ -14,14 +15,19 @@ open class GenerateZincPlatformCodeFromTemplatesTask : DefaultTask() {
         val extension = project.zkNotaryExtension
 
         project.circuitNames?.forEach { circuitName ->
-            val renderer = TemplateRenderer(extension.mergedCircuitOutputPath.resolve(circuitName).resolve("src"))
+            val circuitSourceOutputPath = extension.mergedCircuitOutputPath.resolve(circuitName).resolve("src")
+            val codeGenerator = CodeGenerator(circuitSourceOutputPath)
             val consts = extension.circuitSourcesBasePath.resolve(circuitName).resolve("consts.zn").readText()
 
-            renderer.generateStringCode(project.getTemplateContents(extension.stringTemplate), extension.stringConfigurations)
-            renderer.generateBigDecimalsCode(project.getTemplateContents(extension.bigDecimalTemplate), extension.bigDecimalConfigurationsToGenerate())
-            renderer.generateAmountsCode(project.getTemplateContents(extension.amountTemplate), extension.amountConfigurations)
-            renderer.generateMerkleUtilsCode(project.getTemplateContents(extension.merkleTemplate), consts)
-            renderer.generateMainCode(project.getTemplateContents(extension.mainTemplate), consts)
+            codeGenerator.generateMerkleUtilsCode(project.getTemplateContents(extension.merkleTemplate), consts)
+            codeGenerator.generateMainCode(project.getTemplateContents(extension.mainTemplate), consts)
+
+            val templateRenderer = TemplateRenderer(circuitSourceOutputPath.toPath()) { params ->
+                project.getTemplateContents(params.templateFile)
+            }
+            extension.resolveAllTemplateParameters().forEach {
+                templateRenderer.renderTemplate(it)
+            }
         }
     }
 }

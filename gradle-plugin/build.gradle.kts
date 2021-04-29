@@ -4,6 +4,13 @@ plugins {
     id("maven-publish")
 }
 
+dependencies {
+    implementation(project(":notary"))
+
+    val kotlinxSerializationBflVersion: String by project
+    implementation("com.ing.serialization.bfl:kotlinx-serialization-bfl:$kotlinxSerializationBflVersion")
+}
+
 gradlePlugin {
     plugins {
         create("zkNotaryPlugin") {

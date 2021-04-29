@@ -1,10 +1,21 @@
-package com.ing.zknotary.gradle.extension
+package com.ing.zknotary.gradle.template
+
+import com.ing.zknotary.common.serialization.bfl.corda.LinearPointerSurrogate
+import com.ing.zknotary.common.serialization.bfl.serializers.UniqueIdentifierSurrogate
+
+sealed class TemplateParameters(
+    val templateFile: String,
+    private val dependencies: List<TemplateParameters>
+) {
+    fun resolveAllConfigurations(): List<TemplateParameters> =
+        dependencies.flatMap { it.resolveAllConfigurations() } + this
+}
 
 data class BigDecimalTemplateParameters(
     val integerSize: Short,
     val fractionSize: Short,
     val typeNameOverride: String? = null
-) {
+) : TemplateParameters("big_decimal.zn", emptyList()) {
     private fun postFix(): String = "_${integerSize}_$fractionSize"
 
     /**
@@ -21,7 +32,7 @@ data class AmountTemplateParameters(
     val tokenDisplaySize: BigDecimalTemplateParameters,
     val tokenSize: Short,
     val typeNameOverride: String? = null
-) {
+) : TemplateParameters("amount.zn", listOf(tokenDisplaySize)) {
     private fun postFix(): String = "_${tokenSize}_"
 
     /**
@@ -33,6 +44,20 @@ data class AmountTemplateParameters(
         const val AMOUNT = "Amount"
     }
 }
+
+data class StringTemplateParameters(
+    val stringSize: Short
+) : TemplateParameters("string.zn", emptyList())
+
+object UniqueIdentifierTemplateParameters : TemplateParameters(
+    "unique_identifier.zn",
+    listOf(StringTemplateParameters(UniqueIdentifierSurrogate.EXTERNAL_ID_LENGTH.toShort()))
+)
+
+object LinearPointerTemplateParameters : TemplateParameters(
+    "linear_pointer.zn",
+    listOf(StringTemplateParameters(LinearPointerSurrogate.MAX_CLASS_NAME_SIZE.toShort()))
+)
 
 private val camelRegex = "(?<=[a-zA-Z])[A-Z]".toRegex()
 
