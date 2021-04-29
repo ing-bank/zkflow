@@ -1,7 +1,9 @@
 package zinc.transaction
 
 import com.ing.zknotary.common.crypto.zinc
-import com.ing.zknotary.common.serialization.bfl.FixedLengthSerializationScheme
+import com.ing.zknotary.common.serialization.bfl.BFLSerializationScheme
+import com.ing.zknotary.common.serialization.bfl.CommandDataSerializerMap
+import com.ing.zknotary.common.serialization.bfl.ContractStateSerializerMap
 import com.ing.zknotary.common.serialization.json.corda.PublicInputSerializer
 import com.ing.zknotary.common.zkp.PublicInput
 import com.ing.zknotary.common.zkp.Witness
@@ -10,7 +12,6 @@ import com.ing.zknotary.testing.fixtures.contract.TestContract
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.json.Json
 import net.corda.core.contracts.Command
-import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.PrivacySalt
 import net.corda.core.contracts.StateAndContract
 import net.corda.core.contracts.StateRef
@@ -19,14 +20,12 @@ import net.corda.core.contracts.TransactionState
 import net.corda.core.crypto.DigestService
 import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.Party
-import net.corda.core.internal.lazyMapped
+import net.corda.core.internal.createComponentGroups
 import net.corda.core.serialization.SerializationDefaults
 import net.corda.core.serialization.SerializationFactory
 import net.corda.core.serialization.SerializationMagic
 import net.corda.core.serialization.internal.CustomSerializationSchemeUtils
-import net.corda.core.transactions.ComponentGroup
 import net.corda.core.transactions.WireTransaction
-import net.corda.core.utilities.OpaqueBytes
 import net.corda.core.utilities.loggerFor
 import net.corda.coretesting.internal.asTestContextEnv
 import net.corda.coretesting.internal.createTestSerializationEnv
@@ -51,7 +50,7 @@ class TransactionVerificationTest {
         circuitFolder,
         artifactFolder = circuitFolder,
         buildTimeout = Duration.ofSeconds(5),
-        setupTimeout = Duration.ofSeconds(300),
+        setupTimeout = Duration.ofSeconds(1000),
         provingTimeout = Duration.ofSeconds(300),
         verificationTimeout = Duration.ofSeconds(1)
     )
@@ -90,9 +89,20 @@ class TransactionVerificationTest {
      */
     @Test
     fun `zinc verifies full create transaction`() = withCustomSerializationEnv {
+//        ContractStateSerializerMap.register(DummyState::class, 1, DummyState.serializer())
+//        CommandDataSerializerMap.register(DummyContract.Relax::class, 2, DummyContract.Relax.serializer())
+//        CommandDataSerializerMap.register(DummyContract.Chill::class, 3, DummyContract.Chill.serializer())
+
+        ContractStateSerializerMap.register(TestContract.TestState::class, 1, TestContract.TestState.serializer())
+        CommandDataSerializerMap.register(TestContract.Create::class, 2, TestContract.Create.serializer())
+
+        val additionalSerializationProperties =
+            mapOf<Any, Any>(BFLSerializationScheme.CONTEXT_KEY_CIRCUIT to TestContract.Create().circuit)
+
         val wtx = createWtx(
             outputs = listOf(StateAndContract(TestContract.TestState(alice), TestContract.PROGRAM_ID)),
-            commands = listOf(Command(TestContract.Create(), alice.owningKey))
+            commands = listOf(Command(TestContract.Create(), alice.owningKey)),
+            additionalSerializationProperties = additionalSerializationProperties
         )
 
         val witness = Witness.fromWireTransaction(
@@ -130,7 +140,7 @@ class TransactionVerificationTest {
         digestService: DigestService = DigestService.zinc,
 
         // The Id of the custom serializationScheme to use
-        schemeId: Int = FixedLengthSerializationScheme.SCHEME_ID,
+        schemeId: Int = BFLSerializationScheme.SCHEME_ID,
         additionalSerializationProperties: Map<Any, Any> = emptyMap()
     ): WireTransaction {
         val magic: SerializationMagic = CustomSerializationSchemeUtils.getCustomSerializationMagicFromSchemeId(schemeId)
@@ -139,7 +149,7 @@ class TransactionVerificationTest {
 
         return SerializationFactory.defaultFactory.withCurrentContext(serializationContext) {
             WireTransaction(
-                createDummyComponentGroups(
+                createComponentGroups(
                     inputs,
                     outputs.map {
                         TransactionState(
@@ -150,43 +160,15 @@ class TransactionVerificationTest {
                     },
                     commands,
                     attachments,
-                    null,
-                    null,
+                    notary,
+                    timeWindow,
                     references,
-                    null
+                    networkParametersHash
                 ),
                 PrivacySalt(),
                 digestService
             )
         }
-    }
-
-    @Suppress("LongParameterList")
-    private fun createDummyComponentGroups(
-        inputs: List<StateRef>,
-        outputs: List<TransactionState<TestContract.TestState>>,
-        commands: List<Command<*>>,
-        attachments: List<SecureHash>,
-        notary: Party?,
-        timeWindow: TimeWindow?,
-        references: List<StateRef>,
-        networkParametersHash: SecureHash?
-    ): List<ComponentGroup> {
-        val serialize = { value: Any, _: Int -> OpaqueBytes(byteArrayOf(1, 2, 3, 4, 5)) }
-        val componentGroupMap: MutableList<ComponentGroup> = mutableListOf()
-        if (inputs.isNotEmpty()) componentGroupMap.add(ComponentGroup(ComponentGroupEnum.INPUTS_GROUP.ordinal, inputs.map { OpaqueBytes(byteArrayOf(1, 2, 3, 4, 5)) }))
-        if (references.isNotEmpty()) componentGroupMap.add(ComponentGroup(ComponentGroupEnum.REFERENCES_GROUP.ordinal, references.map { OpaqueBytes(byteArrayOf(1, 2, 3, 4, 5)) }))
-        if (outputs.isNotEmpty()) componentGroupMap.add(ComponentGroup(ComponentGroupEnum.OUTPUTS_GROUP.ordinal, outputs.map { OpaqueBytes(byteArrayOf(1, 2, 3, 4, 5)) }))
-        // Adding commandData only to the commands group. Signers are added in their own group.
-        if (commands.isNotEmpty()) componentGroupMap.add(ComponentGroup(ComponentGroupEnum.COMMANDS_GROUP.ordinal, commands.map { OpaqueBytes(byteArrayOf(1, 2, 3, 4, 5)) }))
-        if (attachments.isNotEmpty()) componentGroupMap.add(ComponentGroup(ComponentGroupEnum.ATTACHMENTS_GROUP.ordinal, attachments.map { OpaqueBytes(byteArrayOf(1, 2, 3, 4, 5)) }))
-        if (notary != null) componentGroupMap.add(ComponentGroup(ComponentGroupEnum.NOTARY_GROUP.ordinal, listOf(OpaqueBytes(byteArrayOf(1, 2, 3, 4, 5))).lazyMapped(serialize)))
-        if (timeWindow != null) componentGroupMap.add(ComponentGroup(ComponentGroupEnum.TIMEWINDOW_GROUP.ordinal, listOf(OpaqueBytes(byteArrayOf(1, 2, 3, 4, 5))).lazyMapped(serialize)))
-        // Adding signers to their own group. This is required for command visibility purposes: a party receiving
-        // a FilteredTransaction can now verify it sees all the commands it should sign.
-        if (commands.isNotEmpty()) componentGroupMap.add(ComponentGroup(ComponentGroupEnum.SIGNERS_GROUP.ordinal, commands.map { it.signers }.map { OpaqueBytes(byteArrayOf(1, 2, 3, 4, 5)) }))
-        if (networkParametersHash != null) componentGroupMap.add(ComponentGroup(ComponentGroupEnum.PARAMETERS_GROUP.ordinal, listOf(OpaqueBytes(byteArrayOf(1, 2, 3, 4, 5)))))
-        return componentGroupMap
     }
 
     private fun <R> withCustomSerializationEnv(block: () -> R): R {

@@ -29,7 +29,7 @@ fun getPaddedGroupCount(): Int {
     // Now we assume that we always have NETWORK_PARAMETERS group, so this is pretty much constant,
     // but later this can change. Theoretically we should calculate it in a way similar to Corda:
     // this should be highest enum ordinal value amongst groups expected to be present (padded to power of 2)
-    return 8
+    return 16
 }
 
 fun getFullMerkleTreeSize(consts: String): Int {

@@ -14,7 +14,6 @@ object WitnessSerializer : KSerializer<Witness> {
     @Serializable
     @SerialName("Witness")
     private data class WitnessSurrogate(
-        // TODO: Should all bytes of these componentgroups be made unsigned?
         @SerialName("inputs") val inputsGroup: List<List<String>>,
         @SerialName("outputs") val outputsGroup: List<List<String>>,
         @SerialName("commands") val commandsGroup: List<List<String>>,
@@ -40,18 +39,18 @@ object WitnessSerializer : KSerializer<Witness> {
             fun fromWitness(witness: Witness): WrappedSurrogate {
                 return WrappedSurrogate(
                     WitnessSurrogate(
-                        inputsGroup = witness.inputsGroup.map { it.map { byte -> byte.toString() } },
-                        outputsGroup = witness.outputsGroup.map { it.map { byte -> byte.toString() } },
-                        commandsGroup = witness.commandsGroup.map { it.map { byte -> byte.toString() } },
-                        attachmentsGroup = witness.attachmentsGroup.map { it.map { byte -> byte.toString() } },
-                        notaryGroup = witness.notaryGroup.map { it.map { byte -> byte.toString() } },
-                        timeWindowGroup = witness.timeWindowGroup.map { it.map { byte -> byte.toString() } },
-                        signersGroup = witness.signersGroup.map { it.map { byte -> byte.toString() } },
-                        referencesGroup = witness.referencesGroup.map { it.map { byte -> byte.toString() } },
-                        parametersGroup = witness.parametersGroup.map { it.map { byte -> byte.toString() } },
+                        inputsGroup = witness.inputsGroup.map { it.map { byte -> byte.asUnsigned().toString() } },
+                        outputsGroup = witness.outputsGroup.map { it.map { byte -> byte.asUnsigned().toString() } },
+                        commandsGroup = witness.commandsGroup.map { it.map { byte -> byte.asUnsigned().toString() } },
+                        attachmentsGroup = witness.attachmentsGroup.map { it.map { byte -> byte.asUnsigned().toString() } },
+                        notaryGroup = witness.notaryGroup.map { it.map { byte -> byte.asUnsigned().toString() } },
+                        timeWindowGroup = witness.timeWindowGroup.map { it.map { byte -> byte.asUnsigned().toString() } },
+                        signersGroup = witness.signersGroup.map { it.map { byte -> byte.asUnsigned().toString() } },
+                        referencesGroup = witness.referencesGroup.map { it.map { byte -> byte.asUnsigned().toString() } },
+                        parametersGroup = witness.parametersGroup.map { it.map { byte -> byte.asUnsigned().toString() } },
                         privacySalt = witness.privacySalt.bytes.asList().map { byte -> byte.asUnsigned().toString() },
-                        serializedInputUtxos = witness.serializedInputUtxos.map { it.map { byte -> byte.toString() } },
-                        serializedReferenceUtxos = witness.serializedReferenceUtxos.map { it.map { byte -> byte.toString() } },
+                        serializedInputUtxos = witness.serializedInputUtxos.map { it.map { byte -> byte.asUnsigned().toString() } },
+                        serializedReferenceUtxos = witness.serializedReferenceUtxos.map { it.map { byte -> byte.asUnsigned().toString() } },
                         inputNonces = witness.inputUtxoNonces,
                         referenceNonces = witness.referenceUtxoNonces
                     )

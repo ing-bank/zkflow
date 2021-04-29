@@ -125,7 +125,7 @@ class TransactionBasicVerificationTest {
         val zkCommand = command.value as? ZKCommandData ?: error("Command must implement ZKCommandData")
         val additionalSerializationProperties = mapOf<Any, Any>(BFLSerializationScheme.CONTEXT_KEY_CIRCUIT to zkCommand.circuit)
 
-        val wtx = createWtx(
+        val wtxOriginal = createWtx(
             inputs,
             constrainedOutputs,
             commands,
@@ -136,7 +136,9 @@ class TransactionBasicVerificationTest {
             networkParametersHash,
             schemeId = BFLSerializationScheme.SCHEME_ID,
             additionalSerializationProperties = additionalSerializationProperties
-        ).serialize().deserialize() // Deserialization must be forced, otherwise lazily mapped values will be picked up.
+        )
+        val serialized = wtxOriginal.serialize()
+        val wtx = serialized.deserialize() // Deserialization must be forced, otherwise lazily mapped values will be picked up.
 
         /*
          * Confirm that the contents are actually serialized with BFL and not with something else.

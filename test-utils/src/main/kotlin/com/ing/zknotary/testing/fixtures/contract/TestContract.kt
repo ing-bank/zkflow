@@ -1,10 +1,14 @@
 package com.ing.zknotary.testing.fixtures.contract
 
+import com.ing.serialization.bfl.annotations.FixedLength
 import com.ing.zknotary.common.contracts.ZKCommandData
 import com.ing.zknotary.common.zkp.CircuitMetaData
 import com.ing.zknotary.testing.fixtures.contract.TestContract.Create.Companion.verifyCreate
 import com.ing.zknotary.testing.fixtures.contract.TestContract.Move.Companion.verifyMove
 import com.ing.zknotary.testing.fixtures.contract.TestContract.MoveBidirectional.Companion.verifyMoveBidirectional
+import kotlinx.serialization.Contextual
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.CommandAndState
 import net.corda.core.contracts.CommandData
@@ -13,6 +17,7 @@ import net.corda.core.contracts.Contract
 import net.corda.core.contracts.ContractClassName
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.OwnableState
+import net.corda.core.contracts.TypeOnlyCommandData
 import net.corda.core.identity.AbstractParty
 import net.corda.core.transactions.LedgerTransaction
 import java.io.File
@@ -23,20 +28,24 @@ public class TestContract : Contract {
         public const val PROGRAM_ID: ContractClassName = "com.ing.zknotary.testing.fixtures.contract.TestContract"
     }
 
+    @Serializable
     @BelongsToContract(TestContract::class)
     public data class TestState(
-        override val owner: AbstractParty,
+        override val owner: @Contextual AbstractParty,
         val value: Int = Random().nextInt(1000)
     ) : ContractState, OwnableState {
 
-        override val participants: List<AbstractParty> = listOf(owner)
+        @FixedLength([2]) override val participants: List<@Contextual AbstractParty> = listOf(owner)
 
         override fun withNewOwner(newOwner: AbstractParty): CommandAndState =
             CommandAndState(Move(), copy(owner = newOwner))
     }
 
     // Commands
-    public class Create : ZKCommandData {
+    @Serializable
+    public class Create : TypeOnlyCommandData(), ZKCommandData {
+
+        @Transient
         override val circuit: CircuitMetaData =
             CircuitMetaData(folder = File("${System.getProperty("user.dir")}/../zinc-platform-sources/circuits/create"))
 
