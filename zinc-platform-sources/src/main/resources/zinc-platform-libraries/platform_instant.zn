@@ -1,6 +1,11 @@
 //    val seconds: Long,
 //    val nanos: Int
 
+mod platform_consts;
+
+use platform_consts::U32_BYTES;
+use platform_consts::U64_BYTES;
+
 //! Instant field byte sizes
 const INSTANT_SECONDS_LENGTH: u16 = 8;
 const INSTANT_NANOS_LENGTH: u16 = 4;
@@ -13,9 +18,6 @@ const INSTANT_NANOS_OFFSET: u16
 const INSTANT_LENGTH: u16
     = INSTANT_NANOS_OFFSET
     + INSTANT_NANOS_LENGTH;
-
-const U32_LENGTH: u16 = 4;
-const U64_LENGTH: u16 = 8;
 
 type SerializedInstant = [u8; INSTANT_LENGTH];
 
@@ -31,7 +33,7 @@ impl Instant {
 
     fn _extract_u32(serialized_instant: SerializedInstant, offset: u16) -> u32 {
         let mut result: u32 = 0;
-        for i in 0..U32_LENGTH {
+        for i in 0..U32_BYTES {
             result = result * 256 as u32 + serialized_instant[i + offset] as u32;
         }
         result
@@ -39,7 +41,7 @@ impl Instant {
 
     fn _extract_u64(serialized_instant: SerializedInstant, offset: u16) -> u64 {
         let mut result: u64 = 0;
-        for i in 0..U64_LENGTH {
+        for i in 0..U64_BYTES {
             result = result * 256 as u64 + serialized_instant[i + offset] as u64;
         }
         result

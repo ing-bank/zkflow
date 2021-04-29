@@ -1,8 +1,0 @@
-mod instant;
-
-use instant::Instant;
-use instant::SerializedInstant;
-
-fn main(witness: SerializedInstant) -> Instant {
-    Instant::deserialize(witness)
-}

@@ -2,6 +2,7 @@ package com.ing.zknotary.gradle.plugin
 
 import com.ing.zknotary.gradle.extension.ZKNotaryExtension
 import com.ing.zknotary.gradle.task.CopyZincCircuitSourcesTask
+import com.ing.zknotary.gradle.task.CopyZincPlatformLibraryTask
 import com.ing.zknotary.gradle.task.CopyZincPlatformSourcesTask
 import com.ing.zknotary.gradle.task.CreateZincDirectoriesForInputCommandTask
 import com.ing.zknotary.gradle.task.GenerateZincPlatformCodeFromTemplatesTask
@@ -32,6 +33,7 @@ class ZKNotaryPlugin : Plugin<Project> {
 
         val copyCircuitTask = project.tasks.create("copyZincCircuitSources", CopyZincCircuitSourcesTask::class.java)
         val copyPlatformTask = project.tasks.create("copyZincPlatformSources", CopyZincPlatformSourcesTask::class.java)
+        val copyPlatformLibsTask = project.tasks.create("copyZincPlatformLibraries", CopyZincPlatformLibraryTask::class.java)
         val generateFromTemplatesTask = project.tasks.create(
             "generateZincPlatformCodeFromTemplates",
             GenerateZincPlatformCodeFromTemplatesTask::class.java
@@ -42,6 +44,7 @@ class ZKNotaryPlugin : Plugin<Project> {
         // If a new circuit is scaffolded, the processing tasks should run after it
         copyCircuitTask.mustRunAfter(createZincDirsForCommandTask)
         copyPlatformTask.mustRunAfter(createZincDirsForCommandTask)
+        copyPlatformLibsTask.mustRunAfter(createZincDirsForCommandTask)
         generateFromTemplatesTask.mustRunAfter(createZincDirsForCommandTask)
         prepareForCompilationTask.mustRunAfter(createZincDirsForCommandTask)
 

@@ -30,6 +30,11 @@ val Project.platformSources: Array<File>
         return project.platformSourcesDirectory.matching { it.include(zkNotaryExtension.platformSourcesPath) }.toList().toTypedArray()
     }
 
+val Project.platformLibraries: Array<File>
+    get() {
+        return project.platformSourcesDirectory.matching { it.include(zkNotaryExtension.platformLibrariesPath) }.toList().toTypedArray()
+    }
+
 val Project.platformTemplates: Array<File>
     get() {
         return project.platformSourcesDirectory.matching { it.include(zkNotaryExtension.platformTemplatesPath) }.toList().toTypedArray()

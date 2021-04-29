@@ -4,25 +4,13 @@ import io.kotest.matchers.shouldBe
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import net.corda.core.utilities.loggerFor
-import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 import java.time.Instant
 import kotlin.time.ExperimentalTime
 
 @ExperimentalTime
-class DeserializedInstantTest {
-    private val log = loggerFor<DeserializedInstantTest>()
-    private val zincZKService = getZincZKService<DeserializedInstantTest>()
-
-    init {
-        zincZKService.setupTimed(log)
-    }
-
-    @AfterAll
-    fun `remove zinc files`() {
-        zincZKService.cleanup()
-    }
+class DeserializeInstantTest {
+    private val zincZKService = getZincZKService<DeserializeInstantTest>()
 
     @Test
     fun `an Instance should be deserialized correctly`() {
