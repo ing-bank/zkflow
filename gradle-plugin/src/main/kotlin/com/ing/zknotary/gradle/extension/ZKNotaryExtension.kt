@@ -59,6 +59,9 @@ open class ZKNotaryExtension(project: Project) {
     val platformSourcesPath = "zinc-platform-sources/**/*.zn"
 
     @Input
+    val platformLibrariesPath = "zinc-platform-libraries/**/*.zn"
+
+    @Input
     val platformTemplatesPath = "zinc-platform-templates/**/*.zn"
 
     @Input

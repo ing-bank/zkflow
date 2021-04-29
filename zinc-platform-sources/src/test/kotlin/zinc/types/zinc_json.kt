@@ -3,6 +3,7 @@ package zinc.types
 import io.kotest.matchers.shouldBe
 import net.corda.core.contracts.LinearPointer
 import net.corda.core.contracts.UniqueIdentifier
+import java.time.Instant
 import kotlin.streams.toList
 
 fun String?.toZincJson(size: Int): String {
@@ -35,4 +36,9 @@ fun LinearPointer<*>.toZincJson(): String {
     return "{\"pointer\": $pointerJson, " +
         "\"class_name\": $classNameJson, " +
         "\"is_resolved\": $isResolvedJson}"
+}
+
+fun Instant.toZincJson(): String {
+    return "{\"seconds\": \"$epochSecond\", " +
+        "\"nanos\": \"$nano\"}"
 }

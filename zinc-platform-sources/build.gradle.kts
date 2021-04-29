@@ -2,6 +2,7 @@ import java.nio.file.Files
 import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
 import javax.inject.Inject
+import kotlin.streams.toList
 
 plugins {
     kotlin("jvm")
@@ -116,7 +117,11 @@ open class CopyCircuitTask @Inject constructor() : DefaultTask() {
             .filter { Files.exists(generatedResourcesDir.resolve(it)) }
             .forEach { testClass ->
                 val generatedTestSourceDir = generatedResourcesDir.resolve("$testClass/src/")
-                Files.list(resourcesDir.resolve("zinc-platform-test-sources"))
+                listOf(
+                    Files.list(resourcesDir.resolve("zinc-platform-test-sources")),
+                    Files.list(resourcesDir.resolve("zinc-platform-libraries"))
+                )
+                    .flatMap { it.toList() }
                     .filter { it.toString().endsWith(".zn") }
                     .forEach { testSource ->
                         val target = generatedTestSourceDir.resolve(testSource.fileName)
