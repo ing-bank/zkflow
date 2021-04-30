@@ -119,7 +119,8 @@ open class CopyCircuitTask @Inject constructor() : DefaultTask() {
                 val generatedTestSourceDir = generatedResourcesDir.resolve("$testClass/src/")
                 listOf(
                     Files.list(resourcesDir.resolve("zinc-platform-test-sources")),
-                    Files.list(resourcesDir.resolve("zinc-platform-libraries"))
+                    Files.list(resourcesDir.resolve("zinc-platform-libraries")),
+                    listOf(resourcesDir.resolve("zinc-platform-sources").resolve("platform_consts.zn")).stream()
                 )
                     .flatMap { it.toList() }
                     .filter { it.toString().endsWith(".zn") }
