@@ -5,6 +5,7 @@ import com.ing.zknotary.common.serialization.bfl.serializers.UniqueIdentifierSur
 import io.kotest.matchers.shouldBe
 import net.corda.core.contracts.LinearPointer
 import net.corda.core.contracts.UniqueIdentifier
+import java.time.Duration
 import java.time.Instant
 import javax.security.auth.x500.X500Principal
 import kotlin.streams.toList
@@ -43,6 +44,11 @@ fun LinearPointer<*>.toZincJson(): String {
 
 fun Instant.toZincJson(): String {
     return "{\"seconds\": \"$epochSecond\", " +
+        "\"nanos\": \"$nano\"}"
+}
+
+fun Duration.toZincJson(): String {
+    return "{\"seconds\": \"$seconds\", " +
         "\"nanos\": \"$nano\"}"
 }
 

@@ -1,0 +1,8 @@
+mod platform_duration;
+
+use platform_duration::Duration;
+use platform_duration::SerializedDuration;
+
+fn main(witness: SerializedDuration) -> Duration {
+    Duration::deserialize(witness)
+}

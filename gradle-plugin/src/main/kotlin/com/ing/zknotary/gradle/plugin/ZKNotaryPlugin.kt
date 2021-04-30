@@ -52,6 +52,7 @@ class ZKNotaryPlugin : Plugin<Project> {
         prepareForCompilationTask.mustRunAfter(copyCircuitTask, copyPlatformTask, generateFromTemplatesTask)
 
         project.tasks.create("processZincSources") {
+            it.dependsOn("copyZincPlatformLibraries")
             it.dependsOn("copyZincPlatformSources")
             it.dependsOn("generateZincPlatformCodeFromTemplates")
             it.dependsOn("prepareCircuitForCompilation")
