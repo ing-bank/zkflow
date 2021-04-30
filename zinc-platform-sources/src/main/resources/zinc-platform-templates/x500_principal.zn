@@ -11,14 +11,17 @@ const X500_PRINCIPAL_LENGTH: u16 = STRING_${PRINCIPAL_NAME_STRING_SIZE}_LENGTH;
 
 type SerializedX500Principal = SerializedString_${PRINCIPAL_NAME_STRING_SIZE};
 
+// Define type alias, to make the rest of the template cleaner
+type PrincipalName = String_${PRINCIPAL_NAME_STRING_SIZE};
+
 struct X500Principal {
-    name: String_${PRINCIPAL_NAME_STRING_SIZE},
+    name: PrincipalName,
 }
 
 impl X500Principal {
     fn deserialize(serialized_principal: SerializedX500Principal) -> X500Principal {
         X500Principal {
-            name: String_${PRINCIPAL_NAME_STRING_SIZE}::deserialize(serialized_principal),
+            name: PrincipalName::deserialize(serialized_principal),
         }
     }
 }
