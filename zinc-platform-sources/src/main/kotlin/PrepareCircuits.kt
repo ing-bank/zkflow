@@ -2,6 +2,7 @@
 import com.ing.zknotary.gradle.extension.ZKNotaryExtension
 import com.ing.zknotary.gradle.template.AmountTemplateParameters
 import com.ing.zknotary.gradle.template.BigDecimalTemplateParameters
+import com.ing.zknotary.gradle.template.CurrencyTemplateParameters
 import com.ing.zknotary.gradle.template.LinearPointerTemplateParameters
 import com.ing.zknotary.gradle.template.StringTemplateParameters
 import com.ing.zknotary.gradle.template.TemplateParameters
@@ -35,6 +36,7 @@ fun resolveAllTemplateParameters(): List<TemplateParameters> {
                 UniqueIdentifierTemplateParameters,
                 LinearPointerTemplateParameters,
                 X500PrincipalTemplateParameters,
+                CurrencyTemplateParameters,
             )
         )
         .flatMap { it.resolveAllConfigurations() }

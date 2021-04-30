@@ -19,6 +19,7 @@ class TemplateRenderer(
             is UniqueIdentifierTemplateParameters -> renderUniqueIdentifierTemplate(templateContents, templateParameters)
             is LinearPointerTemplateParameters -> renderLinearPointerTemplate(templateContents, templateParameters)
             is X500PrincipalTemplateParameters -> renderX500PrincipalTemplate(templateContents, templateParameters)
+            is CurrencyTemplateParameters -> renderCurrencyTemplate(templateContents, templateParameters)
         }
     }
 
@@ -102,6 +103,16 @@ class TemplateRenderer(
     ) {
         val linearPointerContent = templateContents
             .replace("\${PRINCIPAL_NAME_STRING_SIZE}", "1024")
+        createOutputFile(outputDirectory.resolve(templateParameters.templateFile))
+            .writeBytes(linearPointerContent.toByteArray())
+    }
+
+    private fun renderCurrencyTemplate(
+        templateContents: String,
+        templateParameters: CurrencyTemplateParameters
+    ) {
+        val linearPointerContent = templateContents
+            .replace("\${CURRENCY_CODE_STRING_SIZE}", "3")
         createOutputFile(outputDirectory.resolve(templateParameters.templateFile))
             .writeBytes(linearPointerContent.toByteArray())
     }

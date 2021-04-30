@@ -64,6 +64,11 @@ object X500PrincipalTemplateParameters : TemplateParameters(
     listOf(StringTemplateParameters(1024))
 )
 
+object CurrencyTemplateParameters : TemplateParameters(
+    "currency.zn",
+    listOf(StringTemplateParameters(3))
+)
+
 private val camelRegex = "(?<=[a-zA-Z])[A-Z]".toRegex()
 
 internal fun String.camelToSnakeCase(): String {

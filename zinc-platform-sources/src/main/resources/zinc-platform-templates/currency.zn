@@ -1,0 +1,27 @@
+// Input parameters:
+//   - CURRENCY_CODE_STRING_SIZE: u16 = The string size of the currency code, i.e. 3
+
+mod string_${CURRENCY_CODE_STRING_SIZE};
+
+use string_${CURRENCY_CODE_STRING_SIZE}::String_${CURRENCY_CODE_STRING_SIZE};
+use string_${CURRENCY_CODE_STRING_SIZE}::SerializedString_${CURRENCY_CODE_STRING_SIZE};
+use string_${CURRENCY_CODE_STRING_SIZE}::STRING_${CURRENCY_CODE_STRING_SIZE}_LENGTH;
+
+const CURRENCY_LENGTH: u16 = STRING_${CURRENCY_CODE_STRING_SIZE}_LENGTH;
+
+type SerializedCurrency = SerializedString_${CURRENCY_CODE_STRING_SIZE};
+
+// Define type alias, to make the rest of the template cleaner
+type CurrencyCode = String_${CURRENCY_CODE_STRING_SIZE};
+
+struct Currency {
+    code: CurrencyCode,
+}
+
+impl Currency {
+    fn deserialize(serialized_currency: SerializedCurrency) -> Currency {
+        Currency {
+            code: CurrencyCode::deserialize(serialized_currency),
+        }
+    }
+}
