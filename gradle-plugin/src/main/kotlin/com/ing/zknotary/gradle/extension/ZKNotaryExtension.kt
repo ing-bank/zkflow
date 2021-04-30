@@ -4,6 +4,7 @@ import com.ing.serialization.bfl.serializers.DoubleSurrogate
 import com.ing.serialization.bfl.serializers.FloatSurrogate
 import com.ing.zknotary.gradle.template.AmountTemplateParameters
 import com.ing.zknotary.gradle.template.BigDecimalTemplateParameters
+import com.ing.zknotary.gradle.template.CurrencyTemplateParameters
 import com.ing.zknotary.gradle.template.LinearPointerTemplateParameters
 import com.ing.zknotary.gradle.template.StringTemplateParameters
 import com.ing.zknotary.gradle.template.TemplateParameters
@@ -84,6 +85,7 @@ open class ZKNotaryExtension(project: Project) {
         UniqueIdentifierTemplateParameters,
         LinearPointerTemplateParameters,
         X500PrincipalTemplateParameters,
+        CurrencyTemplateParameters,
     )
 
     fun resolveAllTemplateParameters(): List<TemplateParameters> {

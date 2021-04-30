@@ -1,0 +1,8 @@
+mod currency;
+
+use currency::Currency;
+use currency::SerializedCurrency;
+
+fn main(witness: SerializedCurrency) -> Currency {
+    Currency::deserialize(witness)
+}
