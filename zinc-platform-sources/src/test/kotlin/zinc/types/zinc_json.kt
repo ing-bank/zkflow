@@ -1,9 +1,12 @@
 package zinc.types
 
+import com.ing.zknotary.common.serialization.bfl.corda.LinearPointerSurrogate
+import com.ing.zknotary.common.serialization.bfl.serializers.UniqueIdentifierSurrogate
 import io.kotest.matchers.shouldBe
 import net.corda.core.contracts.LinearPointer
 import net.corda.core.contracts.UniqueIdentifier
 import java.time.Instant
+import javax.security.auth.x500.X500Principal
 import kotlin.streams.toList
 
 fun String?.toZincJson(size: Int): String {
@@ -23,7 +26,7 @@ fun UniqueIdentifier.toZincJson(): String {
     id.mostSignificantBits shouldBe 0
 
     val hasExternalId = externalId?.let { "true" } ?: "false"
-    val externalIdJson = externalId.toZincJson(100)
+    val externalIdJson = externalId.toZincJson(UniqueIdentifierSurrogate.EXTERNAL_ID_LENGTH)
     return "{\"has_external_id\": $hasExternalId, " +
         "\"external_id\": $externalIdJson, " +
         "\"id\": \"${id.leastSignificantBits}\"}"
@@ -31,7 +34,7 @@ fun UniqueIdentifier.toZincJson(): String {
 
 fun LinearPointer<*>.toZincJson(): String {
     val pointerJson = pointer.toZincJson()
-    val classNameJson = type.name.toZincJson(192)
+    val classNameJson = type.name.toZincJson(LinearPointerSurrogate.MAX_CLASS_NAME_SIZE)
     val isResolvedJson = isResolved.toString()
     return "{\"pointer\": $pointerJson, " +
         "\"class_name\": $classNameJson, " +
@@ -41,4 +44,9 @@ fun LinearPointer<*>.toZincJson(): String {
 fun Instant.toZincJson(): String {
     return "{\"seconds\": \"$epochSecond\", " +
         "\"nanos\": \"$nano\"}"
+}
+
+fun X500Principal.toZincJson(): String {
+    val nameJson = name.toZincJson(1024)
+    return "{\"name\": $nameJson}"
 }
