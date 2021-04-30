@@ -9,15 +9,19 @@
 // All internal size constants are u16, which mean that all values should be below 65536.
 
 mod ${BD_MODULE_NAME};
+mod platform_consts;
 
 use ${BD_MODULE_NAME}::${BD_TYPE_NAME};
 use ${BD_MODULE_NAME}::Serialized${BD_TYPE_NAME};
 use ${BD_MODULE_NAME}::${BD_CONSTANT_PREFIX}_LENGTH;
 
+use platform_consts::U32_BYTES;
+use platform_consts::U64_BYTES;
+
 //! ${TYPE_NAME} lengths
-const ${CONSTANT_PREFIX}_QUANTITY_LENGTH: u16 = 8;
+const ${CONSTANT_PREFIX}_QUANTITY_LENGTH: u16 = U64_BYTES;
 const ${CONSTANT_PREFIX}_DISPLAY_TOKEN_SIZE_LENGTH: u16 = ${BD_CONSTANT_PREFIX}_LENGTH;
-const ${CONSTANT_PREFIX}_TOKEN_TYPE_HASH_LENGTH_LENGTH: u16 = 4;
+const ${CONSTANT_PREFIX}_TOKEN_TYPE_HASH_LENGTH_LENGTH: u16 = U32_BYTES;
 const ${CONSTANT_PREFIX}_TOKEN_TYPE_HASH_LENGTH: u16 = 32;
 const ${CONSTANT_PREFIX}_TOKEN_LENGTH: u16 = ${TOKEN_SIZE_PLACEHOLDER};
 
@@ -136,7 +140,7 @@ impl ${TYPE_NAME} {
 
     fn _extract_int(serialized_amount: Serialized${TYPE_NAME}, offset: u16) -> u32 {
         let mut result: u32 = 0;
-        for i in 0..4 {
+        for i in 0..U32_BYTES {
             result = result * 256 as u32 + serialized_amount[offset + i as u16] as u32;
         }
         result
@@ -144,7 +148,7 @@ impl ${TYPE_NAME} {
 
     fn _extract_long(serialized_amount: Serialized${TYPE_NAME}, offset: u16) -> u64 {
         let mut result: u64 = 0;
-        for i in 0..8 {
+        for i in 0..U64_BYTES {
             result = result * 256 as u64 + serialized_amount[offset + i as u16] as u64;
         }
         result

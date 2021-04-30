@@ -7,8 +7,8 @@ use platform_consts::U32_BYTES;
 use platform_consts::U64_BYTES;
 
 //! Instant field byte sizes
-const INSTANT_SECONDS_LENGTH: u16 = 8;
-const INSTANT_NANOS_LENGTH: u16 = 4;
+const INSTANT_SECONDS_LENGTH: u16 = U64_BYTES;
+const INSTANT_NANOS_LENGTH: u16 = U32_BYTES;
 
 //! Instant field offsets
 const INSTANT_SECONDS_OFFSET: u16 = 0;

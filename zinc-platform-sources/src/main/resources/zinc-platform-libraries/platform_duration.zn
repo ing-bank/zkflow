@@ -7,8 +7,8 @@ use platform_consts::U32_BYTES;
 use platform_consts::U64_BYTES;
 
 //! Duration field byte sizes
-const DURATION_SECONDS_LENGTH: u16 = 8;
-const DURATION_NANOS_LENGTH: u16 = 4;
+const DURATION_SECONDS_LENGTH: u16 = U64_BYTES;
+const DURATION_NANOS_LENGTH: u16 = U32_BYTES;
 
 //! Duration field offsets
 const DURATION_SECONDS_OFFSET: u16 = 0;

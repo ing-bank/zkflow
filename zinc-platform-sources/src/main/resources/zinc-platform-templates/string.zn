@@ -5,11 +5,15 @@
 // NOTE:
 // All internal size constants are u16, which mean that all chars should be below 65536.
 
+mod platform_consts;
+
+use platform_consts::U16_BYTES;
+
 const ${CONSTANT_PREFIX}_MAX_CHARS: u16 = ${STRING_SIZE_PLACEHOLDER};
 
 //! ${TYPE_NAME} field byte sizes
-const ${CONSTANT_PREFIX}_SIZE_LENGTH: u16 = 2;
-const ${CONSTANT_PREFIX}_CHARS_LENGTH: u16 = ${CONSTANT_PREFIX}_MAX_CHARS * 2 as u16;
+const ${CONSTANT_PREFIX}_SIZE_LENGTH: u16 = U16_BYTES;
+const ${CONSTANT_PREFIX}_CHARS_LENGTH: u16 = ${CONSTANT_PREFIX}_MAX_CHARS * U16_BYTES;
 
 //! ${TYPE_NAME} field offsets
 const ${CONSTANT_PREFIX}_SIZE_OFFSET: u16 = 0;

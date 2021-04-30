@@ -6,14 +6,18 @@
 // NOTE:
 // All internal size constants are u16, which mean that all values should be below 65536.
 
+mod platform_consts;
+
+use platform_consts::U32_BYTES;
+
 //In case if value can't be stored in ${TYPE_NAME}, it will throw an exception,
 //the some goes for arithmetic operations.
 
 //! ${TYPE_NAME} lengths
 const ${CONSTANT_PREFIX}_SIGN_LENGTH: u16 = 1;
-const ${CONSTANT_PREFIX}_INTEGER_LENGTH_LENGTH: u16 = 4;
+const ${CONSTANT_PREFIX}_INTEGER_LENGTH_LENGTH: u16 = U32_BYTES;
 const ${CONSTANT_PREFIX}_INTEGER_LENGTH: u16 = ${INTEGER_SIZE_PLACEHOLDER};
-const ${CONSTANT_PREFIX}_FRACTION_LENGTH_LENGTH: u16 = 4;
+const ${CONSTANT_PREFIX}_FRACTION_LENGTH_LENGTH: u16 = U32_BYTES;
 const ${CONSTANT_PREFIX}_FRACTION_LENGTH: u16 = ${FRACTION_SIZE_PLACEHOLDER};
 
 //! ${TYPE_NAME} offsets
@@ -257,7 +261,7 @@ impl ${TYPE_NAME} {
 
     fn _extract_int(serialized_bd: Serialized${TYPE_NAME}, offset: u16) -> u32 {
         let mut result: u32 = 0;
-        for i in 0..4 {
+        for i in 0..U32_BYTES {
             result = result * 256 as u32 + serialized_bd[offset + i as u16] as u32;
         }
         result
