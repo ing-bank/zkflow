@@ -16,9 +16,7 @@ open class PrepareCircuitForCompilationTask : DefaultTask() {
             val consts = extension.circuitSourcesBasePath.resolve(circuitName).resolve("consts.zn").readText()
 
             replacer.setCorrespondingMerkleTreeFunctionForComponentGroups(consts)
-            replacer.setCorrespondingMerkleTreeFunctionForMainTree(consts)
-
-//            removeDebugCode(circuitName, extension.mergedCircuitOutputPath)
+            replacer.setCorrespondingMerkleTreeFunctionForMainTree()
         }
     }
 }

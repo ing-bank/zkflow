@@ -88,10 +88,7 @@ fun main(args: Array<String>) {
         // Replace placeholders in Merkle tree functions
         val replacer = MerkleReplacer(outputPath)
         replacer.setCorrespondingMerkleTreeFunctionForComponentGroups(consts)
-        replacer.setCorrespondingMerkleTreeFunctionForMainTree(consts)
-
-        // remove debug statements
-//        removeDebugCode(circuitName, mergedCircuitOutput)
+        replacer.setCorrespondingMerkleTreeFunctionForMainTree()
     }
 
     // Render templates for test circuits

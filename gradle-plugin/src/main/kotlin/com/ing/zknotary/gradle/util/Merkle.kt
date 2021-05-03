@@ -1,5 +1,7 @@
 package com.ing.zknotary.gradle.util
 
+import net.corda.core.contracts.ComponentGroupEnum
+
 fun getMerkleTree(templateContents: String, fullMerkleLeaves: Int, digestSnakeCase: String, digestCamelCase: String, digestBits: String): String {
     var digestMerkleFunctions = ""
     // Compute the root
@@ -29,7 +31,7 @@ fun getPaddedGroupCount(): Int {
     // Now we assume that we always have NETWORK_PARAMETERS group, so this is pretty much constant,
     // but later this can change. Theoretically we should calculate it in a way similar to Corda:
     // this should be highest enum ordinal value amongst groups expected to be present (padded to power of 2)
-    return 16
+    return getNextPowerOfTwo(ComponentGroupEnum.PARAMETERS_GROUP.ordinal)
 }
 
 fun getFullMerkleTreeSize(consts: String): Int {
