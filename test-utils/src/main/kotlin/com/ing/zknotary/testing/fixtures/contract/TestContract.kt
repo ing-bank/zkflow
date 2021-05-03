@@ -2,6 +2,7 @@ package com.ing.zknotary.testing.fixtures.contract
 
 import com.ing.serialization.bfl.annotations.FixedLength
 import com.ing.zknotary.common.contracts.ZKCommandData
+import com.ing.zknotary.common.contracts.ZKOwnableState
 import com.ing.zknotary.common.zkp.CircuitMetaData
 import com.ing.zknotary.testing.fixtures.contract.TestContract.Create.Companion.verifyCreate
 import com.ing.zknotary.testing.fixtures.contract.TestContract.Move.Companion.verifyMove
@@ -16,10 +17,8 @@ import net.corda.core.contracts.CommandWithParties
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.Contract
 import net.corda.core.contracts.ContractClassName
-import net.corda.core.contracts.ContractState
-import net.corda.core.contracts.OwnableState
 import net.corda.core.contracts.TypeOnlyCommandData
-import net.corda.core.identity.AbstractParty
+import net.corda.core.identity.AnonymousParty
 import net.corda.core.transactions.LedgerTransaction
 import java.io.File
 import java.util.Random
@@ -32,13 +31,13 @@ public class TestContract : Contract {
     @Serializable
     @BelongsToContract(TestContract::class)
     public data class TestState(
-        override val owner: @Contextual AbstractParty,
+        override val owner: @Contextual AnonymousParty,
         val value: Int = Random().nextInt(1000)
-    ) : ContractState, OwnableState {
+    ) : ZKOwnableState {
 
-        @FixedLength([2]) override val participants: List<@Contextual AbstractParty> = listOf(owner)
+        @FixedLength([2]) override val participants: List<@Contextual AnonymousParty> = listOf(owner)
 
-        override fun withNewOwner(newOwner: AbstractParty): CommandAndState =
+        override fun withNewOwner(newOwner: AnonymousParty): CommandAndState =
             CommandAndState(Move(), copy(owner = newOwner))
     }
 

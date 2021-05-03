@@ -18,7 +18,7 @@ class CreateFlow(private val value: Int? = null) : FlowLogic<SignedTransaction>(
     @Suspendable
     override fun call(): SignedTransaction {
 
-        val me = serviceHub.myInfo.legalIdentities.single()
+        val me = serviceHub.myInfo.legalIdentities.single().anonymise()
         val state = if (value != null) TestContract.TestState(me, value) else TestContract.TestState(me)
         val issueCommand = Command(TestContract.Create(), me.owningKey) //
         val stateAndContract = StateAndContract(state, TestContract.PROGRAM_ID)

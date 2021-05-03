@@ -24,7 +24,7 @@ class TestNotarisationFlow(val signers: List<Party> = emptyList()) : FlowLogic<S
 
         val zkService: ZKTransactionService = serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_TX_SERVICE)
 
-        val me = serviceHub.myInfo.legalIdentities.single()
+        val me = serviceHub.myInfo.legalIdentities.single().anonymise()
         val state = TestContract.TestState(me)
         val issueCommand = Command(TestContract.Create(), (signers + me).map { it.owningKey }) //
         val stateAndContract = StateAndContract(state, TestContract.PROGRAM_ID)

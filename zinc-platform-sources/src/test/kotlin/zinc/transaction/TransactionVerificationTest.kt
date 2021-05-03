@@ -100,7 +100,7 @@ class TransactionVerificationTest {
             mapOf<Any, Any>(BFLSerializationScheme.CONTEXT_KEY_CIRCUIT to TestContract.Create().circuit)
 
         val wtx = createWtx(
-            outputs = listOf(StateAndContract(TestContract.TestState(alice), TestContract.PROGRAM_ID)),
+            outputs = listOf(StateAndContract(TestContract.TestState(alice.anonymise()), TestContract.PROGRAM_ID)),
             commands = listOf(Command(TestContract.Create(), alice.owningKey)),
             additionalSerializationProperties = additionalSerializationProperties
         )
@@ -153,7 +153,7 @@ class TransactionVerificationTest {
                     inputs,
                     outputs.map {
                         TransactionState(
-                            TestContract.TestState(alice),
+                            TestContract.TestState(alice.anonymise()),
                             TestContract.PROGRAM_ID,
                             notary
                         )

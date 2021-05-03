@@ -27,7 +27,7 @@ class TestCollectZKSignaturesFlow(val signers: List<Party> = emptyList()) : Flow
     override fun call(): SignedZKVerifierTransaction {
 
         val zkService = serviceHub.getCordaServiceFromConfig<ZKTransactionService>(ServiceNames.ZK_TX_SERVICE)
-        val me = serviceHub.myInfo.legalIdentities.single()
+        val me = serviceHub.myInfo.legalIdentities.single().anonymise()
         val state = TestContract.TestState(me)
         val issueCommand = Command(TestContract.Create(), (signers + me).map { it.owningKey }) //
         val stateAndContract = StateAndContract(state, TestContract.PROGRAM_ID)

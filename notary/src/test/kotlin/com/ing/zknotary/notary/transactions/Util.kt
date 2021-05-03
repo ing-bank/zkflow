@@ -18,7 +18,7 @@ fun LedgerDSL<TestTransactionDSLInterpreter, TestLedgerDSLInterpreter>.createIss
     value: Int = Random().nextInt(1000),
     label: String = "${owner.name.organisation}'s asset"
 ): WireTransaction {
-    val createdState = TestContract.TestState(owner.party, value)
+    val createdState = TestContract.TestState(owner.party.anonymise(), value)
     return withTestSerializationEnvIfNotSet {
         val wtx = transaction {
             command(listOf(owner.publicKey), TestContract.Create())
