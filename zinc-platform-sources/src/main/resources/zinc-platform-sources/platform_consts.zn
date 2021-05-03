@@ -23,3 +23,37 @@ const NODE_DIGEST_BYTES: u16 = PEDERSEN_DIGEST_BYTES;
 const NODE_DIGEST_BITS: u16 = NODE_DIGEST_BYTES * BYTE_BITS;
 
 const COMPONENT_GROUPS_SIZE: u16 = 9;
+
+fn deserialize_u16(bytes: [u8; U16_BYTES]) -> u16 {
+    let mut result: u16 = 0;
+    for i in 0..U16_BYTES {
+        result = result * 256 as u16 + bytes[i] as u16;
+    }
+    result
+}
+
+
+fn deserialize_u32(bytes: [u8; U32_BYTES]) -> u32 {
+    let mut result: u32 = 0;
+    for i in 0..U32_BYTES {
+        result = result * 256 as u32 + bytes[i] as u32;
+    }
+    result
+}
+
+
+fn deserialize_u64(bytes: [u8; U64_BYTES]) -> u64 {
+    let mut result: u64 = 0;
+    for i in 0..U64_BYTES {
+        result = result * 256 as u64 + bytes[i] as u64;
+    }
+    result
+}
+
+fn deserialize_u128(bytes: [u8; U128_BYTES]) -> u128 {
+    let mut result: u128 = 0;
+    for i in 0..U128_BYTES {
+        result = result * 256 as u128 + bytes[i] as u128;
+    }
+    result
+}

@@ -8,6 +8,7 @@ import net.corda.core.contracts.UniqueIdentifier
 import java.time.Duration
 import java.time.Instant
 import java.util.Currency
+import java.util.Date
 import javax.security.auth.x500.X500Principal
 import kotlin.streams.toList
 
@@ -61,4 +62,8 @@ fun X500Principal.toZincJson(): String {
 fun Currency.toZincJson(): String {
     val codeJson = currencyCode.toZincJson(3)
     return "{\"code\": $codeJson}"
+}
+
+fun Date.toZincJson(): String {
+    return "{\"millis\": \"$time\"}"
 }
