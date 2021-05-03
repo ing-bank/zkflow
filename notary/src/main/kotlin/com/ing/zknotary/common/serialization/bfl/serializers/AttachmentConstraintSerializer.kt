@@ -4,6 +4,7 @@ import com.ing.serialization.bfl.api.Surrogate
 import com.ing.serialization.bfl.api.SurrogateSerializer
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import net.corda.core.contracts.AlwaysAcceptAttachmentConstraint
 import net.corda.core.contracts.AutomaticHashConstraint
@@ -22,6 +23,7 @@ abstract class AttachmentConstraintBaseSurrogate {
 }
 
 @Serializable
+@SerialName("0")
 data class AlwaysAcceptAttachmentConstraintSurrogate(
     override val id: Int = 0,
     override val attachmentId: @Contextual SecureHash? = null,
@@ -31,6 +33,7 @@ data class AlwaysAcceptAttachmentConstraintSurrogate(
 }
 
 @Serializable
+@SerialName("1")
 data class HashAttachmentConstraintSurrogate(
     override val id: Int = 1,
     override val attachmentId: @Contextual SecureHash?,
@@ -43,6 +46,7 @@ data class HashAttachmentConstraintSurrogate(
 }
 
 @Serializable
+@SerialName("2")
 data class WhitelistedByZoneAttachmentConstraintSurrogate(
     override val id: Int = 2,
     override val attachmentId: @Contextual SecureHash? = null,
@@ -52,6 +56,7 @@ data class WhitelistedByZoneAttachmentConstraintSurrogate(
 }
 
 @Serializable
+@SerialName("3")
 data class AutomaticPlaceholderConstraintSurrogate(
     override val id: Int = 3,
     override val attachmentId: @Contextual SecureHash? = null,
@@ -61,6 +66,7 @@ data class AutomaticPlaceholderConstraintSurrogate(
 }
 
 @Serializable
+@SerialName("4")
 data class SignatureAttachmentConstraintSurrogate(
     override val id: Int = 4,
     override val attachmentId: @Contextual SecureHash? = null,
@@ -73,6 +79,7 @@ data class SignatureAttachmentConstraintSurrogate(
 }
 
 @Serializable
+@SerialName("5")
 data class AutomaticHashConstraintSurrogate(
     override val id: Int = 5,
     @Contextual

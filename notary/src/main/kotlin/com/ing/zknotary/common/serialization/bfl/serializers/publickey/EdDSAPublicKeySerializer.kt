@@ -4,6 +4,7 @@ import com.ing.serialization.bfl.annotations.FixedLength
 import com.ing.serialization.bfl.api.SurrogateSerializer
 import com.ing.zknotary.common.serialization.bfl.serializers.PublicKeySurrogate
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import net.corda.core.crypto.Crypto
 import net.i2p.crypto.eddsa.EdDSAPublicKey
@@ -16,6 +17,7 @@ object EdDSAPublicKeySerializer : KSerializer<EdDSAPublicKey> by (
 
 @Suppress("ArrayInDataClass")
 @Serializable
+@SerialName("3")
 /**
  * Corresponds to Corda's Crypto.EDDSA_ED25519_SHA512 (44 bytes).
  */

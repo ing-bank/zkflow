@@ -1,6 +1,8 @@
-package com.ing.zknotary.common.serialization.bfl.serializers
+package com.ing.zknotary.common.serialization
 
 import com.ing.serialization.bfl.annotations.FixedLength
+import com.ing.zknotary.common.serialization.bfl.serializers.CordaSerializers
+import com.ing.zknotary.common.serialization.bfl.serializers.CordaSignatureSchemeToSerializers
 import com.ing.zknotary.testing.assertRoundTripSucceeds
 import com.ing.zknotary.testing.assertSameSize
 import kotlinx.serialization.Serializable
