@@ -18,5 +18,10 @@ interface ZKOwnableState : ZKContractState, OwnableState {
 
     fun withNewOwner(newOwner: AnonymousParty): CommandAndState
 
-    override fun withNewOwner(newOwner: AbstractParty): CommandAndState = error("Can't use AbstractParty as an owner")
+    override fun withNewOwner(newOwner: AbstractParty): CommandAndState {
+        if (newOwner is AnonymousParty)
+            return withNewOwner(newOwner)
+        else
+            error("Can't use AbstractParty as an owner")
+    }
 }

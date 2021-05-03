@@ -107,7 +107,7 @@ class E2EFlowNonOwnedStatesTest {
             megaCorpNode,
             Vault.StateStatus.UNCONSUMED,
             moveStx.tx.filterOutRefs<TestContract.TestState> {
-                it == miniCorpStateAndRef.state.data.withNewOwner(megaCorp).ownableState
+                it == miniCorpStateAndRef.state.data.withNewOwner(megaCorp.anonymise()).ownableState
             }.single().ref
         )
     }
