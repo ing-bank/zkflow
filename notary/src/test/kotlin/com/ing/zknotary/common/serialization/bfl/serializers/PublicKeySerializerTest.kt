@@ -27,9 +27,9 @@ class PublicKeySerializerTest {
             println(ser.second)
 
             val commonDiff = listOf(
-                2, // length of the discriminator
-                2, // the discriminator
-                4, // length of the encoded key
+                2, // length of the discriminator, encoded as a byte representation of a Short.
+                2, // the discriminator; discriminator is 1 UTF-8 char, encoded as 2 bytes.
+                4, // length of the `encoded` field, encoded as a byte representation of an Int.
             ).sum()
 
             val extraDiff = when (it.schemeNumberID) {
@@ -39,8 +39,8 @@ class PublicKeySerializerTest {
                 // All instances of the class use the same surrogate,
                 // thus the relevant field in the surrogate is also 91 bytes long.
                 Crypto.ECDSA_SECP256K1_SHA256.schemeNumberID -> listOf(
-                    4, // int to distinguish the two
-                    3, // ECDSA_SECP256K1_SHA256 is 88 bytes long, but encoded with 91 bytes
+                    4, // byte length of an int to distinguish the two.
+                    3, // ECDSA_SECP256K1_SHA256 is 88 bytes long, but encoded with 91 bytes.
                 ).sum()
                 Crypto.ECDSA_SECP256R1_SHA256.schemeNumberID -> listOf(
                     4, // int to distinguish the two
