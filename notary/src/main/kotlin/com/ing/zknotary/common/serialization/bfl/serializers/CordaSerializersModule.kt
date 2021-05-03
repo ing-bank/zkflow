@@ -49,4 +49,6 @@ val CordaSerializers = SerializersModule {
     contextual(TimeWindowSerializer)
     contextual(PartyAndReferenceSerializer)
     contextual(LinearPointerSerializer)
+
+    contextual(ZonedDateTimeSerializer)
 }
