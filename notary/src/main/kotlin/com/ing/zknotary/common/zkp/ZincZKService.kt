@@ -3,6 +3,7 @@ package com.ing.zknotary.common.zkp
 import com.ing.zknotary.common.serialization.json.corda.PublicInputSerializer
 import com.ing.zknotary.common.serialization.json.corda.WitnessSerializer
 import kotlinx.serialization.json.Json
+import net.corda.core.utilities.loggerFor
 import java.io.File
 import java.io.File.createTempFile
 import java.io.IOException
@@ -35,6 +36,8 @@ class ZincZKService(
         const val RUN = "zargo run"
         const val VERIFY = "zargo verify"
 
+        private val log = loggerFor<ZincZKService>()
+
         /**
          * Returns output of the command execution.
          **/
@@ -52,8 +55,7 @@ class ZincZKService(
                 error("$command failed with the following com.ing.zknotary.generator.error output: $stdout")
             } else {
                 val debugOutput = process.errorStream.bufferedReader().readText()
-                // TODO better logging inside Corda node
-                println(debugOutput)
+                log.debug(debugOutput)
                 process.inputStream.bufferedReader().readText()
             }
         }
@@ -122,7 +124,7 @@ class ZincZKService(
         witnessFile.writeText(witness)
 
         val publicDataFile = createTempFile("zkp", null)
-        publicDataFile.writeText(publicInputJson)
+        // publicDataFile.writeText(publicInputJson)
 
         try {
             return completeZincCommand(
@@ -155,7 +157,8 @@ class ZincZKService(
                 "$PROVE --circuit $compiledCircuitPath --proving-key ${zkSetup.provingKeyPath} " +
                     "--public-data ${publicData.absolutePath} --witness ${witnessFile.absolutePath}",
                 provingTimeout
-            ).toByteArray()
+            )
+                .toByteArray()
         } catch (e: Exception) {
             throw ZKProvingException("Could not create proof. Cause: $e\n")
         } finally {

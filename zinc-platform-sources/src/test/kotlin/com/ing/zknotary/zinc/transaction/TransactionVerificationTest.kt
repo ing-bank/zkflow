@@ -9,6 +9,11 @@ import com.ing.zknotary.common.zkp.Witness
 import com.ing.zknotary.common.zkp.ZincZKService
 import com.ing.zknotary.testing.fixtures.contract.TestContract
 import com.ing.zknotary.testing.zkp.proveTimed
+import com.ing.zknotary.testing.zkp.setupTimed
+import com.ing.zknotary.testing.zkp.verifyTimed
+import io.kotest.matchers.shouldBe
+import kotlinx.serialization.json.Json
+import com.ing.zknotary.testing.zkp.proveTimed
 import com.ing.zknotary.testing.zkp.verifyTimed
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.PrivacySalt
@@ -29,6 +34,7 @@ import net.corda.core.utilities.loggerFor
 import net.corda.coretesting.internal.asTestContextEnv
 import net.corda.coretesting.internal.createTestSerializationEnv
 import net.corda.testing.core.TestIdentity
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.io.File
@@ -55,14 +61,14 @@ class TransactionVerificationTest {
     private val notary = TestIdentity.fresh("Notary").party
     private val alice = TestIdentity.fresh("Alice").party
 
-    // init {
-    //     zincZKService.setupTimed(log)
-    // }
+    init {
+        zincZKService.setupTimed(log)
+    }
 
-    // @AfterAll
-    // fun `remove zinc files`() {
-    //     zincZKService.cleanup()
-    // }
+    @AfterAll
+    fun `remove zinc files`() {
+        zincZKService.cleanup()
+    }
 
     /**
      * The witness, which is what we serialize for Zinc, contains the following items:
@@ -115,8 +121,8 @@ class TransactionVerificationTest {
         actual shouldBe Json.encodeToString(PublicInputSerializer, publicInput)
 
         // Uncomment this and setup above to test with the real setup/prove/verify functions
-//        val proof = zincZKService.proveTimed(witness, log)
-//        zincZKService.verifyTimed(proof, publicInput, log)
+        val proof = zincZKService.proveTimed(witness, log)
+        zincZKService.verifyTimed(proof, publicInput, log)
     }
 
     @Suppress("LongParameterList")
