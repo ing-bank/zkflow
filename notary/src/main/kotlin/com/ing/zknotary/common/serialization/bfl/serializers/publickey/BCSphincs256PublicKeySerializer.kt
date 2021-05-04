@@ -4,6 +4,7 @@ import com.ing.serialization.bfl.annotations.FixedLength
 import com.ing.serialization.bfl.api.SurrogateSerializer
 import com.ing.zknotary.common.serialization.bfl.serializers.PublicKeySurrogate
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import net.corda.core.crypto.Crypto
 import org.bouncycastle.pqc.jcajce.provider.sphincs.BCSphincs256PublicKey
@@ -16,6 +17,7 @@ object BCSphincs256PublicKeySerializer : KSerializer<BCSphincs256PublicKey> by (
 
 @Suppress("ArrayInDataClass")
 @Serializable
+@SerialName("2")
 /**
  * Corresponds to Corda's Crypto.256_SHA512 (1097 bytes).
  */

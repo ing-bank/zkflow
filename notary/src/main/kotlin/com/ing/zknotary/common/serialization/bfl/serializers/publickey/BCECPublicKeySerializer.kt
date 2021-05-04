@@ -4,6 +4,7 @@ import com.ing.serialization.bfl.annotations.FixedLength
 import com.ing.serialization.bfl.api.SurrogateSerializer
 import com.ing.zknotary.common.serialization.bfl.serializers.PublicKeySurrogate
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import net.corda.core.crypto.Crypto
 import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey
@@ -17,6 +18,7 @@ object BCECPublicKeySerializer : KSerializer<BCECPublicKey> by (
 
 @Suppress("ArrayInDataClass")
 @Serializable
+@SerialName("0")
 /**
  * Corresponds to Corda's Crypto.ECDSA_SECP256K1_SHA256 (88 bytes) and Crypto.ECDSA_SECP256R1_SHA256 (91 bytes).
  */
