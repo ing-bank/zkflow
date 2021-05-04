@@ -4,6 +4,7 @@ import com.ing.zknotary.common.crypto.zinc
 import com.ing.zknotary.common.serialization.bfl.BFLSerializationScheme
 import com.ing.zknotary.common.serialization.bfl.CommandDataSerializerMap
 import com.ing.zknotary.common.serialization.bfl.ContractStateSerializerMap
+import com.ing.zknotary.common.serialization.json.corda.PublicInputSerializer
 import com.ing.zknotary.common.zkp.PublicInput
 import com.ing.zknotary.common.zkp.Witness
 import com.ing.zknotary.common.zkp.ZincZKService
@@ -13,8 +14,6 @@ import com.ing.zknotary.testing.zkp.setupTimed
 import com.ing.zknotary.testing.zkp.verifyTimed
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.json.Json
-import com.ing.zknotary.testing.zkp.proveTimed
-import com.ing.zknotary.testing.zkp.verifyTimed
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.PrivacySalt
 import net.corda.core.contracts.StateAndContract
