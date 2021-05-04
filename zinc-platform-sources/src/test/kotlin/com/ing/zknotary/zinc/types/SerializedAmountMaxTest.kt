@@ -97,7 +97,7 @@ class SerializedAmountMaxTest {
         expected: String,
         expectedAmount: Amount<Currency>
     ) {
-        val actual = zincZKService.run(witnessBytes.toJsonWitness(), "")
+        val actual = zincZKService.run(witnessBytes.toJsonWitness())
 
         val actualElement = Json.parseToJsonElement(actual)
         val expectedElement = Json.parseToJsonElement(expected)

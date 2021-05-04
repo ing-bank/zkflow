@@ -3,7 +3,6 @@ package com.ing.zknotary.zinc.hashes
 import com.ing.dlt.zkkrypto.util.asUnsigned
 import com.ing.zknotary.common.crypto.blake2s256
 import com.ing.zknotary.common.zkp.ZincZKService
-import io.kotest.matchers.shouldBe
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import net.corda.core.crypto.DigestService
@@ -42,8 +41,7 @@ class BlakeHashTest {
         val witnessJson = "{\"preimage\": ${witness.map { "\"${it.asUnsigned()}\"" }}}"
         val publicDataJson = Json.encodeToString(expected.map { it.asUnsigned().toString() })
 
-        val actual = zincZKService.run(witnessJson, publicDataJson)
-        actual shouldBe publicDataJson
+        zincZKService.run(witnessJson, publicDataJson)
 
         val proof = zincZKService.prove(witnessJson)
         zincZKService.verify(proof, publicDataJson)

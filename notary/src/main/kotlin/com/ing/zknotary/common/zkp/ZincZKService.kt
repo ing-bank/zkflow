@@ -113,18 +113,17 @@ class ZincZKService(
         require(File(zkSetup.provingKeyPath).exists()) { "Proving key not found at ${zkSetup.provingKeyPath}." }
     }
 
-    fun run(witness: Witness, publicInput: PublicInput): String {
+    fun run(witness: Witness, publicInput: PublicInput?): String {
         val witnessJson = Json.encodeToString(WitnessSerializer, witness)
-        val publicInputJson = Json.encodeToString(PublicInputSerializer, publicInput)
+        val publicInputJson = if (publicInput != null) Json.encodeToString(PublicInputSerializer, publicInput) else ""
         return run(witnessJson, publicInputJson)
     }
 
-    fun run(witness: String, publicInputJson: String): String {
+    fun run(witness: String, publicInputJson: String = ""): String {
         val witnessFile = createTempFile("zkp", null)
         witnessFile.writeText(witness)
 
         val publicDataFile = createTempFile("zkp", null)
-        // publicDataFile.writeText(publicInputJson)
 
         try {
             return completeZincCommand(
@@ -136,6 +135,19 @@ class ZincZKService(
         } catch (e: Exception) {
             throw ZKRunException("Failed to run circuit. Cause: $e\n")
         } finally {
+            val actualJson = Json.parseToJsonElement(publicDataFile.readText())
+            log.debug("Public Data (run): \n$actualJson")
+
+            if (publicInputJson != "") {
+                val expectedJson = Json.parseToJsonElement(publicInputJson)
+
+                if (actualJson != expectedJson) throw ZKRunException(
+                    "Public input does not match output from run. \n" +
+                        "Expected: \n$expectedJson \n" +
+                        "Actual: \n$actualJson"
+                )
+            }
+
             witnessFile.delete()
             publicDataFile.delete()
         }
@@ -162,6 +174,7 @@ class ZincZKService(
         } catch (e: Exception) {
             throw ZKProvingException("Could not create proof. Cause: $e\n")
         } finally {
+            log.debug("Public Data (prove): \n${publicData.readText()}")
             publicData.delete()
         }
     }

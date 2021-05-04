@@ -4,7 +4,6 @@ import com.ing.zknotary.common.crypto.zinc
 import com.ing.zknotary.common.serialization.bfl.BFLSerializationScheme
 import com.ing.zknotary.common.serialization.bfl.CommandDataSerializerMap
 import com.ing.zknotary.common.serialization.bfl.ContractStateSerializerMap
-import com.ing.zknotary.common.serialization.json.corda.PublicInputSerializer
 import com.ing.zknotary.common.zkp.PublicInput
 import com.ing.zknotary.common.zkp.Witness
 import com.ing.zknotary.common.zkp.ZincZKService
@@ -12,8 +11,6 @@ import com.ing.zknotary.testing.fixtures.contract.TestContract
 import com.ing.zknotary.testing.zkp.proveTimed
 import com.ing.zknotary.testing.zkp.setupTimed
 import com.ing.zknotary.testing.zkp.verifyTimed
-import io.kotest.matchers.shouldBe
-import kotlinx.serialization.json.Json
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.PrivacySalt
 import net.corda.core.contracts.StateAndContract
@@ -115,9 +112,7 @@ class TransactionVerificationTest {
         )
 
         // Uncomment this to test short dev cycles with the real circuit, but not yet real setup/prove/verify functions
-        val actual = zincZKService.run(witness, publicInput)
-        println(actual)
-        actual shouldBe Json.encodeToString(PublicInputSerializer, publicInput)
+        zincZKService.run(witness, publicInput)
 
         // Uncomment this and setup above to test with the real setup/prove/verify functions
         val proof = zincZKService.proveTimed(witness, log)
