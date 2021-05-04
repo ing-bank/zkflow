@@ -1,6 +1,4 @@
 import java.io.ByteArrayOutputStream
-import java.io.ByteArrayInputStream
-import java.io.FileReader
 
 buildscript {
     val repos by extra {
@@ -201,7 +199,8 @@ subprojects {
                     freeCompilerArgs =
                         listOf(
                             "-Xjvm-default=compatibility",
-                            "-Xopt-in=kotlinx.serialization.ExperimentalSerializationApi"
+                            "-Xopt-in=kotlinx.serialization.ExperimentalSerializationApi",
+                            "-Xopt-in=kotlinx.ExperimentalUnsignedTypes"
                         )
                 }
             }
