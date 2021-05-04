@@ -13,6 +13,7 @@ import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.CommandAndState
 import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.CommandWithParties
+import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.Contract
 import net.corda.core.contracts.ContractClassName
 import net.corda.core.contracts.ContractState
@@ -47,7 +48,12 @@ public class TestContract : Contract {
 
         @Transient
         override val circuit: CircuitMetaData =
-            CircuitMetaData(folder = File("${System.getProperty("user.dir")}/../zinc-platform-sources/circuits/create"))
+            CircuitMetaData(
+                folder = File("${System.getProperty("user.dir")}/../zinc-platform-sources/circuits/create"),
+                componentGroupSizes = mapOf(
+                    ComponentGroupEnum.SIGNERS_GROUP to 1
+                )
+            )
 
         public companion object {
             public fun verifyCreate(
@@ -67,7 +73,12 @@ public class TestContract : Contract {
 
     public class Move : ZKCommandData {
         override val circuit: CircuitMetaData =
-            CircuitMetaData(folder = File("${System.getProperty("user.dir")}/../zinc-platform-sources/circuits/move"))
+            CircuitMetaData(
+                folder = File("${System.getProperty("user.dir")}/../zinc-platform-sources/circuits/move"),
+                componentGroupSizes = mapOf(
+                    ComponentGroupEnum.SIGNERS_GROUP to 2
+                )
+            )
 
         public companion object {
             public fun verifyMove(

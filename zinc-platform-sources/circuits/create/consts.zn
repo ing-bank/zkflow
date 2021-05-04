@@ -28,7 +28,7 @@ const OUTPUT_COMPONENT_SIZE: u16 = 5226; // PUBKEY_BYTES + U32_BYTES;
 const ATTACHMENT_COMPONENT_SIZE: u16 = 5;
 const COMMAND_COMPONENT_SIZE: u16 = 11;
 const REFERENCE_COMPONENT_SIZE: u16 = 5;
-const SIGNER_COMPONENT_SIZE: u16 = 511; //PUBKEY_BYTES;
+const SIGNER_COMPONENT_SIZE: u16 = 261; //PUBKEY_BYTES;
 // TODO: these 3 groups are always of size 1 and probably component are also of constant size.
 //  So probably we want to hide component sizes too somewhere inside platform code
 const NOTARY_COMPONENT_SIZE: u16 = 1045;
