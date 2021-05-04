@@ -6,7 +6,10 @@
 // All internal size constants are u16, which mean that all chars should be below 65536.
 
 mod platform_consts;
+mod platform_integer;
 
+use platform_consts::BYTE_BITS;
+use platform_consts::U16_BITS;
 use platform_consts::U16_BYTES;
 
 const ${CONSTANT_PREFIX}_MAX_CHARS: u16 = ${STRING_SIZE_PLACEHOLDER};
@@ -69,8 +72,16 @@ impl ${TYPE_NAME} {
     }
 
     //! Extract a short in big-endian form
-    fn _extract_short(serialized_string: Serialized${TYPE_NAME}, offset: u16) -> u16 {
-        serialized_string[0 as u16 + offset] as u16 * 256 as u16 + serialized_string[1 as u16 + offset] as u16
+    fn _extract_short(bytes: Serialized${TYPE_NAME}, offset: u16) -> u16 {
+        let mut bits = [false; U16_BITS];
+        for i in 0..U16_BYTES {
+            let pre_bits = std::convert::to_bits(bytes[i + offset]);
+
+            for j in 0..BYTE_BITS {
+                bits[i * BYTE_BITS + j] = pre_bits[j];
+            }
+        }
+        std::convert::from_bits_unsigned(bits)
     }
 
     fn deserialize(serialized_string: Serialized${TYPE_NAME}) -> ${TYPE_NAME} {
@@ -78,7 +89,6 @@ impl ${TYPE_NAME} {
 
         let mut string_chars = [0 as u16; ${CONSTANT_PREFIX}_MAX_CHARS];
         for i in 0..${CONSTANT_PREFIX}_MAX_CHARS {
-            // for i in 0..${CONSTANT_PREFIX}_MAX_CHARS while i < string_length {
             string_chars[i] = _extract_short(serialized_string, ${CONSTANT_PREFIX}_CHARS_OFFSET + (i * 2 as u16));
         }
 
