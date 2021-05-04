@@ -98,9 +98,9 @@ class TransactionBasicVerificationTest {
     @Test
     @Suppress("LongMethod")
     fun `Wire transaction serializes`() = withCustomSerializationEnv {
-        ContractStateSerializerMap.register(DummyState::class, 1, DummyState.serializer())
-        CommandDataSerializerMap.register(DummyContract.Relax::class, 2, DummyContract.Relax.serializer())
-        CommandDataSerializerMap.register(DummyContract.Chill::class, 3, DummyContract.Chill.serializer())
+        ContractStateSerializerMap.register(DummyState::class, 3, DummyState.serializer())
+        CommandDataSerializerMap.register(DummyContract.Relax::class, 4, DummyContract.Relax.serializer())
+        CommandDataSerializerMap.register(DummyContract.Chill::class, 5, DummyContract.Chill.serializer())
 
         val state = DummyState.any()
         val alice = state.participants.first()
