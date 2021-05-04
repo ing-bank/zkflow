@@ -183,6 +183,15 @@ subprojects {
             }
         }
 
+        val testConfigResourcesDir = "$rootDir/config/test"
+        sourceSets {
+            test {
+                resources {
+                    srcDir(testConfigResourcesDir)
+                }
+            }
+        }
+
         this@subprojects.tasks.apply {
             matching { it is JavaCompile || it is org.jetbrains.kotlin.gradle.tasks.KotlinCompile }.forEach {
                 it.dependsOn(":checkJavaVersion")

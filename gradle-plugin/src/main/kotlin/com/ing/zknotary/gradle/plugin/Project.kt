@@ -1,4 +1,4 @@
-package com.ing.zknotary.gradle.util
+package com.ing.zknotary.gradle.zinc.util
 
 import com.ing.zknotary.gradle.extension.ZKNotaryExtension
 import org.gradle.api.Project

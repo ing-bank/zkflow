@@ -45,15 +45,6 @@ dependencies {
     testImplementation(project(":test-utils"))
 }
 
-val testConfigResourcesDir = "$rootDir/config/test"
-sourceSets {
-    test {
-        resources {
-            srcDir(testConfigResourcesDir)
-        }
-    }
-}
-
 // TODO: We will have to enable explicitApi soon:
 // https://kotlinlang.org/docs/reference/whatsnew14.html#explicit-api-mode-for-library-authors
 // kotlin {

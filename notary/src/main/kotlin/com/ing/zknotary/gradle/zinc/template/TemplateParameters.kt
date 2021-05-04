@@ -1,4 +1,4 @@
-package com.ing.zknotary.gradle.template
+package com.ing.zknotary.gradle.zinc.template
 
 import com.ing.serialization.bfl.serializers.CurrencySurrogate
 import com.ing.serialization.bfl.serializers.X500PrincipalSurrogate

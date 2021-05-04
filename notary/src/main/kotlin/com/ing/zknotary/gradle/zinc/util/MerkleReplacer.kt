@@ -1,4 +1,4 @@
-package com.ing.zknotary.gradle.util
+package com.ing.zknotary.gradle.zinc.util
 
 import java.io.File
 

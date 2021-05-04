@@ -1,4 +1,4 @@
-package com.ing.zknotary.gradle.util
+package com.ing.zknotary.gradle.zinc.util
 
 fun getNextPowerOfTwo(value: Int): Int {
     val highestOneBit = Integer.highestOneBit(value)

@@ -1,11 +1,11 @@
-package com.ing.zknotary.gradle.template
+package com.ing.zknotary.gradle.zinc.template
 
 import com.ing.serialization.bfl.serializers.CurrencySurrogate
 import com.ing.serialization.bfl.serializers.X500PrincipalSurrogate
 import com.ing.zknotary.common.serialization.bfl.corda.LinearPointerSurrogate
 import com.ing.zknotary.common.serialization.bfl.serializers.SecureHashSurrogate
 import com.ing.zknotary.common.serialization.bfl.serializers.UniqueIdentifierSurrogate
-import com.ing.zknotary.gradle.util.createOutputFile
+import com.ing.zknotary.gradle.zinc.util.createOutputFile
 import java.nio.file.Path
 
 @Suppress("TooManyFunctions")
