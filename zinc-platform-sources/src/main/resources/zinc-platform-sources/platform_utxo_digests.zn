@@ -38,6 +38,7 @@ fn compute_input_utxo_digests(
         bytes: [0; COMPONENT_GROUP_LEAF_DIGEST_BYTES],
     }; INPUT_GROUP_SIZE];
     for i in 0..INPUT_GROUP_SIZE {
+        // TODO: implement this correctly
         // input_digests[i] =
         //     ComponentGroupLeafDigestDto::from_bits_to_bytes(TransactionState::compute_leaf_hash(
         //         inputs[i],
@@ -59,6 +60,7 @@ fn compute_reference_utxo_digests(
         bytes: [0; COMPONENT_GROUP_LEAF_DIGEST_BYTES],
     }; REFERENCE_GROUP_SIZE];
     for i in 0..REFERENCE_GROUP_SIZE {
+        // TODO: implement this correctly
         // reference_digests[i] =
         // ComponentGroupLeafDigestDto::from_bits_to_bytes(TransactionState::compute_leaf_hash(
         //     references[i],

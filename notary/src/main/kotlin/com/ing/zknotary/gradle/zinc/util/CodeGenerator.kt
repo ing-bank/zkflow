@@ -90,7 +90,7 @@ use platform_zk_prover_transaction::Witness;
             return when {
                 componentGroupSize > 0 -> {
                     """compute_${componentGroupName}_utxo_digests( 
-            witness.transaction.${componentGroupName}s.components,
+            witness.${componentGroupName}s,
             witness.${componentGroupName}_nonces,
         )"""
                 }
