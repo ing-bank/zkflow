@@ -14,7 +14,7 @@ class DeserializeDateTest {
     private val zincZKService = getZincZKService<DeserializeDateTest>()
 
     @Test
-    fun `an Currency should be deserialized correctly`() {
+    fun `a Date should be deserialized correctly`() {
         val data = Data(Date.from(Instant.now()))
         val witness = toWitness(data)
 

@@ -10,6 +10,11 @@ use platform_consts::U64_BYTES;
 use platform_consts::U128_BITS;
 use platform_consts::U128_BYTES;
 
+fn parse_i8(byte: u8) -> i8 {
+    let bits = std::convert::to_bits(byte);
+    std::convert::from_bits_signed(bits)
+}
+
 fn parse_i16(bytes: [u8; U16_BYTES]) -> i16 {
     let mut bits = [false; U16_BITS];
     for i in 0..U16_BYTES {

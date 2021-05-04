@@ -1,0 +1,70 @@
+mod platform_consts;
+mod platform_integer;
+
+use platform_consts::U16_BYTES;
+use platform_consts::U32_BYTES;
+use platform_consts::U64_BYTES;
+use platform_consts::U128_BYTES;
+
+struct Data {
+    i_8: i8,
+    u_8: u8,
+    i_16: i16,
+    u_16: u16,
+    i_32: i32,
+    u_32: u32,
+    i_64: i64,
+    u_64: u64,
+    i_128: i128,
+    u_128: u128,
+}
+
+const WITNESS_LENGTH: u16 = 62;
+type Witness = [u8; WITNESS_LENGTH];
+
+fn _extract_16_bit_bytes(witness: Witness, offset: u16) -> [u8; U16_BYTES] {
+    let mut out = [0; U16_BYTES];
+    for i in 0..U16_BYTES {
+        out[i] = witness[i + offset];
+    }
+    out
+}
+
+fn _extract_32_bit_bytes(witness: Witness, offset: u16) -> [u8; U32_BYTES] {
+    let mut out = [0; U32_BYTES];
+    for i in 0..U32_BYTES {
+        out[i] = witness[i + offset];
+    }
+    out
+}
+
+fn _extract_64_bit_bytes(witness: Witness, offset: u16) -> [u8; U64_BYTES] {
+    let mut out = [0; U64_BYTES];
+    for i in 0..U64_BYTES {
+        out[i] = witness[i + offset];
+    }
+    out
+}
+
+fn _extract_128_bit_bytes(witness: Witness, offset: u16) -> [u8; U128_BYTES] {
+    let mut out = [0; U128_BYTES];
+    for i in 0..U128_BYTES {
+        out[i] = witness[i + offset];
+    }
+    out
+}
+
+fn main(witness: Witness) -> Data {
+    Data {
+        i_8: platform_integer::parse_i8(witness[0]),
+        u_8: witness[1],
+        i_16: platform_integer::parse_i16(_extract_16_bit_bytes(witness, 2 as u16)),
+        u_16: platform_integer::parse_u16(_extract_16_bit_bytes(witness, 4 as u16)),
+        i_32: platform_integer::parse_i32(_extract_32_bit_bytes(witness, 6 as u16)),
+        u_32: platform_integer::parse_u32(_extract_32_bit_bytes(witness, 10 as u16)),
+        i_64: platform_integer::parse_i64(_extract_64_bit_bytes(witness, 14 as u16)),
+        u_64: platform_integer::parse_u64(_extract_64_bit_bytes(witness, 22 as u16)),
+        i_128: platform_integer::parse_i128(_extract_128_bit_bytes(witness, 30 as u16)),
+        u_128: platform_integer::parse_u128(_extract_128_bit_bytes(witness, 46 as u16)),
+    }
+}
