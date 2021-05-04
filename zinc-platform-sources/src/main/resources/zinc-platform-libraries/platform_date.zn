@@ -1,6 +1,7 @@
 // val millis: Long
 
 mod platform_consts;
+mod platform_integer;
 
 use platform_consts::U64_BYTES;
 
@@ -27,7 +28,7 @@ struct Date {
 impl Date {
     fn deserialize(serialized_date: SerializedDate) -> Date {
         Date {
-            millis: platform_consts::deserialize_u64(serialized_date)
+            millis: platform_integer::parse_u64(serialized_date)
         }
     }
 }

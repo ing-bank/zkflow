@@ -1,0 +1,107 @@
+mod platform_consts;
+
+use platform_consts::BYTE_BITS;
+use platform_consts::U16_BITS;
+use platform_consts::U16_BYTES;
+use platform_consts::U32_BITS;
+use platform_consts::U32_BYTES;
+use platform_consts::U64_BITS;
+use platform_consts::U64_BYTES;
+use platform_consts::U128_BITS;
+use platform_consts::U128_BYTES;
+
+fn parse_i16(bytes: [u8; U16_BYTES]) -> i16 {
+    let mut bits = [false; U16_BITS];
+    for i in 0..U16_BYTES {
+        let pre_bits = std::convert::to_bits(bytes[i]);
+
+        for j in 0..BYTE_BITS {
+            bits[i * BYTE_BITS + j] = pre_bits[j];
+        }
+    }
+    std::convert::from_bits_signed(bits)
+}
+
+fn parse_u16(bytes: [u8; U16_BYTES]) -> u16 {
+    let mut bits = [false; U16_BITS];
+    for i in 0..U16_BYTES {
+        let pre_bits = std::convert::to_bits(bytes[i]);
+
+        for j in 0..BYTE_BITS {
+            bits[i * BYTE_BITS + j] = pre_bits[j];
+        }
+    }
+    std::convert::from_bits_unsigned(bits)
+}
+
+fn parse_i32(bytes: [u8; U32_BYTES]) -> i32 {
+    let mut bits = [false; U32_BITS];
+    for i in 0..U32_BYTES {
+        let pre_bits = std::convert::to_bits(bytes[i]);
+
+        for j in 0..BYTE_BITS {
+            bits[i * BYTE_BITS + j] = pre_bits[j];
+        }
+    }
+    std::convert::from_bits_signed(bits)
+}
+
+fn parse_u32(bytes: [u8; U32_BYTES]) -> u32 {
+    let mut bits = [false; U32_BITS];
+    for i in 0..U32_BYTES {
+        let pre_bits = std::convert::to_bits(bytes[i]);
+
+        for j in 0..BYTE_BITS {
+            bits[i * BYTE_BITS + j] = pre_bits[j];
+        }
+    }
+    std::convert::from_bits_unsigned(bits)
+}
+
+fn parse_i64(bytes: [u8; U64_BYTES]) -> i64 {
+    let mut bits = [false; U64_BITS];
+    for i in 0..U64_BYTES {
+        let pre_bits = std::convert::to_bits(bytes[i]);
+
+        for j in 0..BYTE_BITS {
+            bits[i * BYTE_BITS + j] = pre_bits[j];
+        }
+    }
+    std::convert::from_bits_signed(bits)
+}
+
+fn parse_u64(bytes: [u8; U64_BYTES]) -> u64 {
+    let mut bits = [false; U64_BITS];
+    for i in 0..U64_BYTES {
+        let pre_bits = std::convert::to_bits(bytes[i]);
+
+        for j in 0..BYTE_BITS {
+            bits[i * BYTE_BITS + j] = pre_bits[j];
+        }
+    }
+    std::convert::from_bits_unsigned(bits)
+}
+
+fn parse_i128(bytes: [u8; U128_BYTES]) -> i128 {
+    let mut bits = [false; U128_BITS];
+    for i in 0..U128_BYTES {
+        let pre_bits = std::convert::to_bits(bytes[i]);
+
+        for j in 0..BYTE_BITS {
+            bits[i * BYTE_BITS + j] = pre_bits[j];
+        }
+    }
+    std::convert::from_bits_signed(bits)
+}
+
+fn parse_u128(bytes: [u8; U128_BYTES]) -> u128 {
+    let mut bits = [false; U128_BITS];
+    for i in 0..U128_BYTES {
+        let pre_bits = std::convert::to_bits(bytes[i]);
+
+        for j in 0..BYTE_BITS {
+            bits[i * BYTE_BITS + j] = pre_bits[j];
+        }
+    }
+    std::convert::from_bits_unsigned(bits)
+}
