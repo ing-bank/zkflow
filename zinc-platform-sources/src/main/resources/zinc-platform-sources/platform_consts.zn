@@ -7,7 +7,7 @@ const U32_BYTES: u16 = 4;
 const U32_BITS: u16 = U32_BYTES * BYTE_BITS;
 
 const U64_BYTES: u16 = 8;
-const U64_BITS: u16 = U32_BYTES * BYTE_BITS;
+const U64_BITS: u16 = U64_BYTES * BYTE_BITS;
 
 const U128_BYTES: u16 = 16;
 const U128_BITS: u16 = U128_BYTES * BYTE_BITS;
