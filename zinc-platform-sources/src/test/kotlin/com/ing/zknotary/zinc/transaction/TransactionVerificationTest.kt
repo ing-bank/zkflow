@@ -10,7 +10,6 @@ import com.ing.zknotary.common.zkp.ZincZKService
 import com.ing.zknotary.testing.fixtures.contract.TestContract
 import com.ing.zknotary.testing.zkp.proveTimed
 import com.ing.zknotary.testing.zkp.setupTimed
-import com.ing.zknotary.testing.zkp.verifyTimed
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.PrivacySalt
 import net.corda.core.contracts.StateAndContract
@@ -111,12 +110,10 @@ class TransactionVerificationTest {
             referenceHashes = emptyList()
         )
 
-        // Uncomment this to test short dev cycles with the real circuit, but not yet real setup/prove/verify functions
         zincZKService.run(witness, publicInput)
 
-        // Uncomment this and setup above to test with the real setup/prove/verify functions
         val proof = zincZKService.proveTimed(witness, log)
-        zincZKService.verifyTimed(proof, publicInput, log)
+        // zincZKService.verifyTimed(proof, publicInput, log)
     }
 
     @Suppress("LongParameterList")
