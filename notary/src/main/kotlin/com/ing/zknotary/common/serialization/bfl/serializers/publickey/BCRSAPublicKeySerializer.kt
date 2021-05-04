@@ -17,7 +17,7 @@ object BCRSAPublicKeySerializer : KSerializer<BCRSAPublicKey> by (
 
 @Suppress("ArrayInDataClass")
 @Serializable
-@SerialName("1")
+@SerialName("b")
 /**
  * Corresponds to Corda's Crypto.RSA_SHA256 (422 bytes).
  */

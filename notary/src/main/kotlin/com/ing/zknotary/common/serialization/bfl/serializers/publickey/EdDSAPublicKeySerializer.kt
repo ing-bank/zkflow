@@ -17,7 +17,7 @@ object EdDSAPublicKeySerializer : KSerializer<EdDSAPublicKey> by (
 
 @Suppress("ArrayInDataClass")
 @Serializable
-@SerialName("3")
+@SerialName("d")
 /**
  * Corresponds to Corda's Crypto.EDDSA_ED25519_SHA512 (44 bytes).
  */

@@ -18,7 +18,7 @@ object BCECPublicKeySerializer : KSerializer<BCECPublicKey> by (
 
 @Suppress("ArrayInDataClass")
 @Serializable
-@SerialName("0")
+@SerialName("a")
 /**
  * Corresponds to Corda's Crypto.ECDSA_SECP256K1_SHA256 (88 bytes) and Crypto.ECDSA_SECP256R1_SHA256 (91 bytes).
  */
