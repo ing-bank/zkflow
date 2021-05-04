@@ -5,19 +5,21 @@ mod platform_nonce_digest_dto;
 mod platform_privacy_salt;
 mod platform_component_group_leaf_digest_dto;
 mod platform_component_group_enum;
+mod platform_components_inputs;
 
-use platform_node_digest_dto::NodeDigestBits;
+use consts::INPUT_GROUP_SIZE;
+use consts::REFERENCE_GROUP_SIZE;
 use platform_component_group_enum::ComponentGroupEnum;
 use platform_component_group_leaf_digest_dto::COMPONENT_GROUP_LEAF_DIGEST_BITS;
 use platform_component_group_leaf_digest_dto::COMPONENT_GROUP_LEAF_DIGEST_BYTES;
 use platform_component_group_leaf_digest_dto::ComponentGroupLeafDigestBits;
 use platform_component_group_leaf_digest_dto::ComponentGroupLeafDigestDto;
-use platform_privacy_salt::PrivacySaltBits;
+use platform_components_inputs::SerializedInputGroup;
+use platform_node_digest_dto::NODE_DIGEST_BITS;
+use platform_node_digest_dto::NodeDigestBits;
 use platform_node_digest_dto::NodeDigestDto;
 use platform_nonce_digest_dto::NonceDigestDto;
-use platform_node_digest_dto::NODE_DIGEST_BITS;
-use consts::INPUT_GROUP_SIZE;
-use consts::REFERENCE_GROUP_SIZE;
+use platform_privacy_salt::PrivacySaltBits;
 use platform_state_and_ref::StateAndRefPaddingWrapper;
 use platform_state_and_ref::StateRef;
 use platform_state_and_ref::TransactionState;
@@ -27,7 +29,7 @@ use platform_state_and_ref::TransactionState;
 // This proves that we did not change the contents of the inputs, compared to
 // the VerifierTransaction known by the verifier, of which they were an output.
 fn compute_input_utxo_digests(
-    inputs: [StateAndRefPaddingWrapper; INPUT_GROUP_SIZE],
+    inputs: SerializedInputGroup,
     input_nonces: [NonceDigestDto; INPUT_GROUP_SIZE],
 ) -> [ComponentGroupLeafDigestDto; INPUT_GROUP_SIZE] {
     let mut input_digests = [ComponentGroupLeafDigestDto {
@@ -36,7 +38,7 @@ fn compute_input_utxo_digests(
     for i in 0..INPUT_GROUP_SIZE {
         input_digests[i] =
             ComponentGroupLeafDigestDto::from_bits_to_bytes(TransactionState::compute_leaf_hash(
-                inputs[i].content.state,
+                inputs[i],
                 NonceDigestDto::from_bytes_to_bits(input_nonces[i]),
             ));
     }
