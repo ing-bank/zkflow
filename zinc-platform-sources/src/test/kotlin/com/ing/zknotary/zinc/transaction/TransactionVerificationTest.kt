@@ -9,7 +9,6 @@ import com.ing.zknotary.common.zkp.PublicInput
 import com.ing.zknotary.common.zkp.Witness
 import com.ing.zknotary.common.zkp.ZincZKService
 import com.ing.zknotary.testing.fixtures.contract.TestContract
-import com.ing.zknotary.zinc.types.setupTimed
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.json.Json
 import net.corda.core.contracts.Command
@@ -31,7 +30,6 @@ import net.corda.core.utilities.loggerFor
 import net.corda.coretesting.internal.asTestContextEnv
 import net.corda.coretesting.internal.createTestSerializationEnv
 import net.corda.testing.core.TestIdentity
-import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.io.File
@@ -58,14 +56,14 @@ class TransactionVerificationTest {
     private val notary = TestIdentity.fresh("Notary").party
     private val alice = TestIdentity.fresh("Alice").party
 
-    init {
-        zincZKService.setupTimed(log)
-    }
-
-    @AfterAll
-    fun `remove zinc files`() {
-        zincZKService.cleanup()
-    }
+    // init {
+    //     zincZKService.setupTimed(log)
+    // }
+    //
+    // @AfterAll
+    // fun `remove zinc files`() {
+    //     zincZKService.cleanup()
+    // }
 
     /**
      * The witness, which is what we serialize for Zinc, contains the following items:
@@ -89,10 +87,6 @@ class TransactionVerificationTest {
      */
     @Test
     fun `zinc verifies full create transaction`() = withCustomSerializationEnv {
-//        ContractStateSerializerMap.register(DummyState::class, 1, DummyState.serializer())
-//        CommandDataSerializerMap.register(DummyContract.Relax::class, 2, DummyContract.Relax.serializer())
-//        CommandDataSerializerMap.register(DummyContract.Chill::class, 3, DummyContract.Chill.serializer())
-
         ContractStateSerializerMap.register(TestContract.TestState::class, 1, TestContract.TestState.serializer())
         CommandDataSerializerMap.register(TestContract.Create::class, 2, TestContract.Create.serializer())
 

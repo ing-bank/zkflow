@@ -94,7 +94,7 @@ class TemplateRenderer(
     ): String {
         return """
             //! GENERATED CODE. DO NOT EDIT
-            //! Edit the template in zinc-platform-sources/src/main/resources/zinc-platform-templates/${templateParameters.templateFile}
+            //! Edit the com.ing.zknotary.gradle.zinc.template in zinc-platform-sources/src/main/resources/zinc-platform-templates/${templateParameters.templateFile}
             //
         """.trimIndent() + "\n"
     }

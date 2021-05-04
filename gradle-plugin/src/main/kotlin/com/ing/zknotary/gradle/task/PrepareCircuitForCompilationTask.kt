@@ -1,8 +1,8 @@
 package com.ing.zknotary.gradle.task
 
-import com.ing.zknotary.gradle.util.MerkleReplacer
-import com.ing.zknotary.gradle.util.circuitNames
-import com.ing.zknotary.gradle.util.zkNotaryExtension
+import com.ing.zknotary.gradle.plugin.circuitNames
+import com.ing.zknotary.gradle.plugin.zkNotaryExtension
+import com.ing.zknotary.gradle.zinc.util.MerkleReplacer
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
 

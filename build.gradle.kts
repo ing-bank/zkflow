@@ -209,7 +209,8 @@ subprojects {
                         listOf(
                             "-Xjvm-default=compatibility",
                             "-Xopt-in=kotlinx.serialization.ExperimentalSerializationApi",
-                            "-Xopt-in=kotlinx.ExperimentalUnsignedTypes"
+                            "-Xopt-in=kotlin.ExperimentalUnsignedTypes",
+                            "-Xopt-in=kotlin.ExperimentalTime"
                         )
                 }
             }

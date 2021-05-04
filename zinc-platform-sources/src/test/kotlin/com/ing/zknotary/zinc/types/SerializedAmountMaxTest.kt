@@ -6,6 +6,9 @@ import com.ing.serialization.bfl.serializers.BFLSerializers
 import com.ing.serialization.bfl.serializers.CurrencySerializer
 import com.ing.zknotary.common.serialization.bfl.corda.AmountSerializer
 import com.ing.zknotary.common.zkp.ZKRunException
+import com.ing.zknotary.testing.zkp.getZincZKService
+import com.ing.zknotary.testing.zkp.proveTimed
+import com.ing.zknotary.testing.zkp.verifyTimed
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import kotlinx.serialization.Contextual

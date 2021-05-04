@@ -1,13 +1,17 @@
 package com.ing.zknotary.common.zkp
 
+import com.ing.zknotary.testing.zkp.setupTimed
+import net.corda.core.utilities.loggerFor
 import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.io.File
 import java.time.Duration
 import kotlin.test.assertFailsWith
+import kotlin.time.ExperimentalTime
 
+@ExperimentalTime
 class ZincZKServiceTest {
+    private val log = loggerFor<ZincZKServiceTest>()
     private val circuitFolder = javaClass.getResource("/ZincZKService").path
     private val zincZKService = ZincZKService(
         circuitFolder,
@@ -18,9 +22,8 @@ class ZincZKServiceTest {
         verificationTimeout = Duration.ofSeconds(1)
     )
 
-    @BeforeAll
-    fun `setup circuit`() {
-        zincZKService.setup()
+    init {
+        zincZKService.setupTimed(log)
     }
 
     @AfterAll
