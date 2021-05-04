@@ -1,0 +1,92 @@
+
+mod platform_consts;
+mod platform_integer;
+
+use platform_consts::U32_BYTES;
+
+//! ZonedDateTime lengths
+const ZONED_DATE_TIME_YEAR_LENGTH: u16 = U32_BYTES;
+const ZONED_DATE_TIME_MONTH_LENGTH: u16 = 1;
+const ZONED_DATE_TIME_DAY_OF_MONTH_LENGTH: u16 = 1;
+const ZONED_DATE_TIME_HOUR_LENGTH: u16 = 1;
+const ZONED_DATE_TIME_MINUTE_LENGTH: u16 = 1;
+const ZONED_DATE_TIME_SECOND_LENGTH: u16 = 1;
+const ZONED_DATE_TIME_NANO_OF_SECOND_LENGTH: u16 = U32_BYTES;
+const ZONED_DATE_TIME_ZONE_OFFSET_SECONDS_LENGTH: u16 = U32_BYTES;
+const ZONED_DATE_TIME_ZONE_ID_HASH_LENGTH: u16 = U32_BYTES;
+
+//! ZonedDateTime offsets
+const ZONED_DATE_TIME_YEAR_OFFSET: u16 = 0;
+const ZONED_DATE_TIME_MONTH_OFFSET: u16
+    = ZONED_DATE_TIME_YEAR_OFFSET
+    + ZONED_DATE_TIME_YEAR_LENGTH;
+const ZONED_DATE_TIME_DAY_OF_MONTH_OFFSET: u16
+    = ZONED_DATE_TIME_MONTH_OFFSET
+    + ZONED_DATE_TIME_MONTH_LENGTH;
+const ZONED_DATE_TIME_HOUR_OFFSET: u16
+    = ZONED_DATE_TIME_DAY_OF_MONTH_OFFSET
+    + ZONED_DATE_TIME_DAY_OF_MONTH_LENGTH;
+const ZONED_DATE_TIME_MINUTE_OFFSET: u16
+    = ZONED_DATE_TIME_HOUR_OFFSET
+    + ZONED_DATE_TIME_HOUR_LENGTH;
+const ZONED_DATE_TIME_SECOND_OFFSET: u16
+    = ZONED_DATE_TIME_MINUTE_OFFSET
+    + ZONED_DATE_TIME_MINUTE_LENGTH;
+const ZONED_DATE_TIME_NANO_OF_SECOND_OFFSET: u16
+    = ZONED_DATE_TIME_SECOND_OFFSET
+    + ZONED_DATE_TIME_SECOND_LENGTH;
+const ZONED_DATE_TIME_ZONE_OFFSET_SECONDS_OFFSET: u16
+    = ZONED_DATE_TIME_NANO_OF_SECOND_OFFSET
+    + ZONED_DATE_TIME_NANO_OF_SECOND_LENGTH;
+const ZONED_DATE_TIME_ZONE_ID_HASH_OFFSET: u16
+    = ZONED_DATE_TIME_ZONE_OFFSET_SECONDS_OFFSET
+    + ZONED_DATE_TIME_ZONE_OFFSET_SECONDS_LENGTH;
+const ZONED_DATE_TIME_LENGTH: u16
+    = ZONED_DATE_TIME_ZONE_ID_HASH_OFFSET
+    + ZONED_DATE_TIME_ZONE_ID_HASH_LENGTH;
+
+type SerializedZonedDateTime = [u8; ZONED_DATE_TIME_LENGTH];
+
+struct ZonedDateTime {
+    year: i32,
+    month: u8,
+    day_of_month: u8,
+    hour: u8,
+    minute: u8,
+    second: u8,
+    nano_of_second: u32,
+    zone_offset_seconds: i32,
+    zone_id_hash: u32
+}
+
+impl ZonedDateTime {
+    fn _extract_32_bit_bytes(serialized_zdt: SerializedZonedDateTime, offset: u16) -> [u8; U32_BYTES] {
+        let mut bytes: [u8; U32_BYTES] = [0; U32_BYTES];
+        for i in 0..U32_BYTES {
+            bytes[i] = serialized_zdt[offset + i as u16];
+        }
+        bytes
+    }
+
+    fn _extract_u32(serialized_zdt: SerializedZonedDateTime, offset: u16) -> u32 {
+        platform_integer::parse_u32(_extract_32_bit_bytes(serialized_zdt, offset))
+    }
+
+    fn _extract_i32(serialized_zdt: SerializedZonedDateTime, offset: u16) -> i32 {
+        platform_integer::parse_i32(_extract_32_bit_bytes(serialized_zdt, offset))
+    }
+
+    fn deserialize(serialized_zdt: SerializedZonedDateTime) -> ZonedDateTime {
+        ZonedDateTime {
+            year: _extract_i32(serialized_zdt, ZONED_DATE_TIME_YEAR_OFFSET),
+            month: serialized_zdt[ZONED_DATE_TIME_MONTH_OFFSET],
+            day_of_month: serialized_zdt[ZONED_DATE_TIME_DAY_OF_MONTH_OFFSET],
+            hour: serialized_zdt[ZONED_DATE_TIME_HOUR_OFFSET],
+            minute: serialized_zdt[ZONED_DATE_TIME_MINUTE_OFFSET],
+            second: serialized_zdt[ZONED_DATE_TIME_SECOND_OFFSET],
+            nano_of_second: _extract_u32(serialized_zdt, ZONED_DATE_TIME_NANO_OF_SECOND_OFFSET),
+            zone_offset_seconds: _extract_i32(serialized_zdt, ZONED_DATE_TIME_ZONE_OFFSET_SECONDS_OFFSET),
+            zone_id_hash: _extract_u32(serialized_zdt, ZONED_DATE_TIME_ZONE_ID_HASH_OFFSET),
+        }
+    }
+}

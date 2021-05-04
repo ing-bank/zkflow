@@ -7,6 +7,8 @@ import net.corda.core.contracts.LinearPointer
 import net.corda.core.contracts.UniqueIdentifier
 import java.time.Duration
 import java.time.Instant
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
 import java.util.Currency
 import java.util.Date
 import javax.security.auth.x500.X500Principal
@@ -66,4 +68,20 @@ fun Currency.toZincJson(): String {
 
 fun Date.toZincJson(): String {
     return "{\"millis\": \"$time\"}"
+}
+
+fun ZonedDateTime.toZincJson(): String {
+    val zoneIdHash = when (zone) {
+        is ZoneOffset -> 0
+        else -> zone.id.hashCode()
+    }
+    return "{\"year\": \"$year\", " +
+        "\"month\": \"$monthValue\", " +
+        "\"day_of_month\": \"$dayOfMonth\", " +
+        "\"hour\": \"$hour\", " +
+        "\"minute\": \"$minute\", " +
+        "\"second\": \"$second\", " +
+        "\"nano_of_second\": \"$nano\", " +
+        "\"zone_offset_seconds\": \"${offset.totalSeconds}\", " +
+        "\"zone_id_hash\": \"$zoneIdHash\"}"
 }
