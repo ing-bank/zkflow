@@ -7,7 +7,10 @@
 // All internal size constants are u16, which mean that all values should be below 65536.
 
 mod platform_consts;
+mod platform_integer;
 
+use platform_consts::BYTE_BITS;
+use platform_consts::U32_BITS;
 use platform_consts::U32_BYTES;
 
 //In case if value can't be stored in ${TYPE_NAME}, it will throw an exception,
@@ -259,14 +262,6 @@ impl ${TYPE_NAME} {
         plus(this, negated)
     }
 
-    fn _extract_int(serialized_bd: Serialized${TYPE_NAME}, offset: u16) -> u32 {
-        let mut result: u32 = 0;
-        for i in 0..U32_BYTES {
-            result = result * 256 as u32 + serialized_bd[offset + i as u16] as u32;
-        }
-        result
-    }
-
     fn _parse_sign(sign_byte: u8) -> i8 {
         if sign_byte > 127 {
             -1 as i8
@@ -280,29 +275,14 @@ impl ${TYPE_NAME} {
     fn deserialize(serialized_bd: Serialized${TYPE_NAME}) -> ${TYPE_NAME} {
         let sign = _parse_sign(serialized_bd[${CONSTANT_PREFIX}_SIGN_OFFSET]);
 
-        let integer_length = _extract_int(serialized_bd, ${CONSTANT_PREFIX}_INTEGER_LENGTH_OFFSET);
-
         let mut integer = [0; ${CONSTANT_PREFIX}_INTEGER_LENGTH];
-        // TODO investigate why the following line does not work when all constants
-        //      are u16 instead of u8. (It works with u8.) The 'downside' of this
-        //      approach, i.e. ignoring the `integer_length`, it that the padding
-        //      bytes in the array cannot contain bogus contents. Strangely enough it
-        //      does work for deserializing the fraction.
-        //
-        //      The raised error is:
-        //        [ERROR   zvm] type error: expected u16, got u8 ... (at _extract_int)
-        //        [ERROR   zvm] runtime error: type error: expected u16, got u8
-        //
-        // for i in 0..${CONSTANT_PREFIX}_INTEGER_LENGTH while i as u32 < integer_length {
         for i in 0..${CONSTANT_PREFIX}_INTEGER_LENGTH {
             let index = ${CONSTANT_PREFIX}_INTEGER_LENGTH - i - 1 as u16;
             integer[index] = serialized_bd[i + ${CONSTANT_PREFIX}_INTEGER_OFFSET];
         }
 
-        let fraction_length = _extract_int(serialized_bd, ${CONSTANT_PREFIX}_FRACTION_LENGTH_OFFSET);
-
         let mut fraction = [0; ${CONSTANT_PREFIX}_FRACTION_LENGTH];
-        for i in 0..${CONSTANT_PREFIX}_FRACTION_LENGTH while i as u32 < fraction_length {
+        for i in 0..${CONSTANT_PREFIX}_FRACTION_LENGTH {
             fraction[i] = serialized_bd[i + ${CONSTANT_PREFIX}_FRACTION_OFFSET];
         }
 

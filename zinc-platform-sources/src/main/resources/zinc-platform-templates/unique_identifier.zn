@@ -4,6 +4,10 @@
 mod platform_consts;
 mod string_${EXTERNAL_ID_STRING_SIZE};
 
+use platform_consts::BYTE_BITS;
+use platform_consts::U128_BITS;
+use platform_consts::U128_BYTES;
+
 use string_${EXTERNAL_ID_STRING_SIZE}::String_${EXTERNAL_ID_STRING_SIZE};
 use string_${EXTERNAL_ID_STRING_SIZE}::SerializedString_${EXTERNAL_ID_STRING_SIZE};
 use string_${EXTERNAL_ID_STRING_SIZE}::STRING_${EXTERNAL_ID_STRING_SIZE}_LENGTH;
@@ -57,13 +61,16 @@ impl UniqueIdentifier {
         ExternalId::deserialize(result)
     }
 
-    fn _extract_uuid(serialized_uid: SerializedUniqueIdentifier) -> u128 {
-        let mut result: u128 = 0;
-        for i in 0..UNIQUE_IDENTIFIER_ID_LENGTH {
-            result = result * 256 as u128
-                + serialized_uid[i + UNIQUE_IDENTIFIER_ID_OFFSET] as u128;
+    fn _parse_u128(bytes: SerializedUniqueIdentifier, offset: u16) -> u128 {
+        let mut bits = [false; U128_BITS];
+        for i in 0..U128_BYTES {
+            let pre_bits = std::convert::to_bits(bytes[i + offset]);
+
+            for j in 0..BYTE_BITS {
+                bits[i * BYTE_BITS + j] = pre_bits[j];
+            }
         }
-        result
+        std::convert::from_bits_unsigned(bits)
     }
 
     fn deserialize(serialized_uid: SerializedUniqueIdentifier) -> UniqueIdentifier {
@@ -72,7 +79,7 @@ impl UniqueIdentifier {
         UniqueIdentifier {
             has_external_id: has_external_id,
             external_id: _extract_external_id(serialized_uid),
-            id: _extract_uuid(serialized_uid),
+            id: _parse_u128(serialized_uid, UNIQUE_IDENTIFIER_ID_OFFSET),
         }
     }
 }
