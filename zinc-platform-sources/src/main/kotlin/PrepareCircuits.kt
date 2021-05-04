@@ -70,6 +70,7 @@ fun main(args: Array<String>) {
         val copier = ZincSourcesCopier(outputPath)
         copier.copyZincCircuitSources(circuitSourcesPath, circuitName, projectVersion)
         copier.copyZincPlatformSources(getPlatformSources(root))
+        copier.copyZincPlatformSources(getPlatformLibs(root))
 
         val consts = circuitSourcesBase.resolve(circuitName).resolve("consts.zn").readText()
 
@@ -102,6 +103,10 @@ fun main(args: Array<String>) {
 
 private fun getPlatformSources(root: String): Array<File>? {
     return File("$root/src/main/resources/zinc-platform-sources").listFiles()
+}
+
+private fun getPlatformLibs(root: String): Array<File>? {
+    return File("$root/src/main/resources/zinc-platform-libraries").listFiles()
 }
 
 private fun getPlatformSourcesPath(root: String, sourceName: String): File {
