@@ -17,7 +17,7 @@ object BCSphincs256PublicKeySerializer : KSerializer<BCSphincs256PublicKey> by (
 
 @Suppress("ArrayInDataClass")
 @Serializable
-@SerialName("2")
+@SerialName("c")
 /**
  * Corresponds to Corda's Crypto.256_SHA512 (1097 bytes).
  */

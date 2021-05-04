@@ -23,7 +23,7 @@ abstract class AttachmentConstraintBaseSurrogate {
 }
 
 @Serializable
-@SerialName("0")
+@SerialName("e")
 data class AlwaysAcceptAttachmentConstraintSurrogate(
     override val id: Int = 0,
     override val attachmentId: @Contextual SecureHash? = null,
@@ -33,7 +33,7 @@ data class AlwaysAcceptAttachmentConstraintSurrogate(
 }
 
 @Serializable
-@SerialName("1")
+@SerialName("f")
 data class HashAttachmentConstraintSurrogate(
     override val id: Int = 1,
     override val attachmentId: @Contextual SecureHash?,
@@ -46,7 +46,7 @@ data class HashAttachmentConstraintSurrogate(
 }
 
 @Serializable
-@SerialName("2")
+@SerialName("g")
 data class WhitelistedByZoneAttachmentConstraintSurrogate(
     override val id: Int = 2,
     override val attachmentId: @Contextual SecureHash? = null,
@@ -56,7 +56,7 @@ data class WhitelistedByZoneAttachmentConstraintSurrogate(
 }
 
 @Serializable
-@SerialName("3")
+@SerialName("h")
 data class AutomaticPlaceholderConstraintSurrogate(
     override val id: Int = 3,
     override val attachmentId: @Contextual SecureHash? = null,
@@ -66,7 +66,7 @@ data class AutomaticPlaceholderConstraintSurrogate(
 }
 
 @Serializable
-@SerialName("4")
+@SerialName("i")
 data class SignatureAttachmentConstraintSurrogate(
     override val id: Int = 4,
     override val attachmentId: @Contextual SecureHash? = null,
@@ -79,7 +79,7 @@ data class SignatureAttachmentConstraintSurrogate(
 }
 
 @Serializable
-@SerialName("5")
+@SerialName("j")
 data class AutomaticHashConstraintSurrogate(
     override val id: Int = 5,
     @Contextual
