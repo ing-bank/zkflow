@@ -19,10 +19,9 @@ object ZonedDateTimeSerializer : KSerializer<ZonedDateTime> by (
 
 /**
  * BFL surrogate for [ZonedDateTime].
- * In order to save space in the serialized format, we serialize a hash of the ZoneRegion
- * and lookup the original in a map of known ZoneIds. The hashing format is described in the
- * documentation of the [String.hashCode()] method and is supposed to be stable across
- * different versions and implementations of the jvm.
+ * In order to save space in the serialized format, we serialize a hash of the ZoneId and lookup the original in a map
+ * of known ZoneIds. The hashing format is described in the documentation of the [String.hashCode] method and is
+ * stable across different versions and implementations of the jvm.
  * @property year the year to represent, from MIN_YEAR to MAX_YEAR (999_999_999)
  * @property month the month-of-year to represent, from 1 (January) to 12 (December)
  * @property dayOfMonth the day-of-month to represent, from 1 to 31
@@ -31,7 +30,7 @@ object ZonedDateTimeSerializer : KSerializer<ZonedDateTime> by (
  * @property second the second-of-minute to represent, from 0 to 59
  * @property nanoOfSecond the nano-of-second to represent, from 0 to 999,999,999
  * @property zoneOffsetSeconds the zone offset in seconds
- * @property zoneIdHash the hash of the string representation of ZoneId, or 0 if unknown TODO explain hashing & lookup
+ * @property zoneIdHash the [String.hashCode] of the string representation of ZoneId, or 0 if unknown
  */
 @Serializable
 data class ZonedDateTimeSurrogate(
@@ -46,6 +45,12 @@ data class ZonedDateTimeSurrogate(
     val zoneIdHash: Int,
 ) : Surrogate<ZonedDateTime> {
 
+    /**
+     * Reconstruct the original ZonedDateTime, when the original ZoneId could not be found on this environment,
+     * reconstruct the [ZoneId] from the [zoneOffsetSeconds].
+     * This behaviour is consistent with the documentation of [ZoneId], which states:
+     * "A ZoneId can be deserialized in a Java Runtime where the ID is unknown."
+     */
     override fun toOriginal(): ZonedDateTime {
         val zoneId = when (zoneIdHash) {
             0 -> ZoneOffset.ofTotalSeconds(zoneOffsetSeconds)

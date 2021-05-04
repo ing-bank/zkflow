@@ -1,6 +1,7 @@
 mod platform_consts;
 
 use platform_consts::BYTE_BITS;
+
 use platform_consts::U16_BITS;
 use platform_consts::U16_BYTES;
 use platform_consts::U32_BITS;

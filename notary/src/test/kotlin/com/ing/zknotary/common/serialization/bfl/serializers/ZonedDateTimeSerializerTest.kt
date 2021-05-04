@@ -27,7 +27,8 @@ class ZonedDateTimeSerializerTest {
             Data(ZonedDateTime.now()),
             Data(ZonedDateTime.now(ZoneId.of("America/Argentina/ComodRivadavia"))),
             Data(ZonedDateTime.now(ZoneOffset.ofTotalSeconds(42))),
-            Data(ZonedDateTime.of(Year.MAX_VALUE, 1, 1, 0, 0, 0, 0, ZoneId.of("GMT")))
+            Data(ZonedDateTime.of(Year.MAX_VALUE, 1, 1, 0, 0, 0, 0, ZoneId.of("GMT"))),
+            Data(ZonedDateTime.of(Year.MIN_VALUE, 1, 1, 0, 0, 0, 0, ZoneId.of("GMT"))),
         ).forEach { data ->
             assertRoundTripSucceeds(data)
         }
