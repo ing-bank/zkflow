@@ -64,4 +64,38 @@ impl Instant {
             nanos: _extract_u32(serialized_instant, INSTANT_NANOS_OFFSET),
         }
     }
+
+    /// 1 if x > y
+    /// 2 if x < y
+    /// 0, otherwise
+    fn _compare_to(this: Instant, other: Instant) -> u8 {
+        if this.seconds > other.seconds {
+            1 as u8
+        } else if this.seconds < other.seconds {
+            2 as u8
+        } else if this.nanos > other.nanos {
+            1 as u8
+        } else if this.nanos < other.nanos {
+            2 as u8
+        } else {
+            0 as u8
+        }
+    }
+
+    fn le(this: Instant, other: Instant) -> bool {
+        Instant::_compare_to(this, other) == 2
+    }
+
+    fn leq(this: Instant, other: Instant) -> bool {
+        let cmp = Instant::_compare_to(this, other);
+        cmp == 2 || cmp == 0
+    }
+
+    fn ge(this: Instant, other: Instant) -> bool {
+        Instant::le(other, this)
+    }
+
+    fn geq(this: Instant, other: Instant) -> bool {
+        Instant::leq(other, this)
+    }
 }
