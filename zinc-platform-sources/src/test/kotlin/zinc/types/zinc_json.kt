@@ -5,6 +5,7 @@ import com.ing.zknotary.common.serialization.bfl.serializers.UniqueIdentifierSur
 import io.kotest.matchers.shouldBe
 import net.corda.core.contracts.LinearPointer
 import net.corda.core.contracts.TimeWindow
+import net.corda.core.contracts.PrivacySalt
 import net.corda.core.contracts.UniqueIdentifier
 import java.time.Duration
 import java.time.Instant
@@ -108,3 +109,8 @@ fun TimeWindow.toZincJson(): String {
     }
     """.trimIndent()
 }
+
+fun PrivacySalt.toZincJson() = """{
+    "bytes": ${this.bytes.toPrettyJSONArray()}
+}
+""".trimIndent()

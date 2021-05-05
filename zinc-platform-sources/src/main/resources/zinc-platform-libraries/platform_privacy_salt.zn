@@ -1,0 +1,29 @@
+// Hashes expected by Corda must be at most 32 bytes long.
+// @FixedLength([32])
+// val bytes: ByteArray
+
+mod platform_consts;
+
+use platform_consts::LIST_LENGTH_PREFIX;
+
+const _PRIVACY_SALT_LENGTH: u16 = 32;
+
+type SerializedPrivacySalt = [u8; LIST_LENGTH_PREFIX + _PRIVACY_SALT_LENGTH];
+
+struct PrivacySalt {
+    bytes: [u8; _PRIVACY_SALT_LENGTH]
+}
+
+impl PrivacySalt {
+    fn deserialize(serialized_privacy_salt: SerializedPrivacySalt) -> PrivacySalt {
+        let mut bytes = [0 as u8; _PRIVACY_SALT_LENGTH];
+
+        for i in 0.._PRIVACY_SALT_LENGTH {
+            bytes[i] = serialized_privacy_salt[LIST_LENGTH_PREFIX + i];
+        }
+
+        PrivacySalt {
+            bytes: bytes
+        }
+    }
+}
