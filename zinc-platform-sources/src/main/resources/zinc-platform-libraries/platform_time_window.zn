@@ -1,0 +1,41 @@
+// val fromTime: @Contextual Instant?,
+// val untilTime: @Contextual Instant?
+
+mod platform_nullable_instant;
+
+use platform_nullable_instant::NullableInstant;
+use platform_nullable_instant::NULLABLE_INSTANT_LENGTH;
+
+type SerializedTimeWindow = [u8; NULLABLE_INSTANT_LENGTH + NULLABLE_INSTANT_LENGTH];
+
+struct TimeWindow {
+    from_time: NullableInstant,
+    until_time: NullableInstant,
+}
+
+impl TimeWindow {
+    fn deserialize(serialized_time_window: SerializedTimeWindow) -> TimeWindow {
+        let from_time = {
+            // Name scoping does not work!
+            // `from_time_buffer` must be called differently from `from_time`.
+            let mut from_time_buffer = [0 as u8; NULLABLE_INSTANT_LENGTH];
+            for i in 0..NULLABLE_INSTANT_LENGTH {
+                from_time_buffer[i] = serialized_time_window[i];
+            }
+            NullableInstant::deserialize(from_time_buffer)
+        };
+
+        let until_time = {
+            let mut until_time_buffer = [0 as u8; NULLABLE_INSTANT_LENGTH];
+            for i in 0..NULLABLE_INSTANT_LENGTH {
+                until_time_buffer[i] = serialized_time_window[NULLABLE_INSTANT_LENGTH + i];
+            }
+            NullableInstant::deserialize(until_time_buffer)
+        };
+
+        TimeWindow {
+            from_time: from_time,
+            until_time: until_time,
+        }
+    }
+}

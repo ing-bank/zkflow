@@ -1,0 +1,34 @@
+mod platform_instant;
+
+use platform_instant::Instant;
+use platform_instant::INSTANT_LENGTH;
+
+const NULLABLE_INSTANT_LENGTH: u16 = 1 as u16 + INSTANT_LENGTH;
+
+type SerializedNullableInstant = [u8; NULLABLE_INSTANT_LENGTH];
+
+struct NullableInstant {
+    is_null: bool,
+    instant: Instant,
+}
+
+impl NullableInstant {
+    fn deserialize(serialized_nullable_instant: SerializedNullableInstant) -> NullableInstant {
+        let is_null = serialized_nullable_instant[0] == 0;
+
+        let instant = if !is_null {
+            let mut serialized_instant = [0 as u8; INSTANT_LENGTH];
+            for i in 0..INSTANT_LENGTH {
+                serialized_instant[i] = serialized_nullable_instant[1 as u16 + i];
+            }
+            Instant::deserialize(serialized_instant)
+        } else {
+            Instant::zero()
+        };
+
+        NullableInstant {
+            is_null: is_null,
+            instant: instant,
+        }
+    }
+}

@@ -1,0 +1,8 @@
+mod platform_time_window;
+
+use platform_time_window::TimeWindow;
+use platform_time_window::SerializedTimeWindow;
+
+fn main(witness: SerializedTimeWindow) -> TimeWindow {
+    TimeWindow::deserialize(witness)
+}

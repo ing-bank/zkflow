@@ -4,6 +4,7 @@ import com.ing.zknotary.common.serialization.bfl.corda.LinearPointerSurrogate
 import com.ing.zknotary.common.serialization.bfl.serializers.UniqueIdentifierSurrogate
 import io.kotest.matchers.shouldBe
 import net.corda.core.contracts.LinearPointer
+import net.corda.core.contracts.TimeWindow
 import net.corda.core.contracts.UniqueIdentifier
 import java.time.Duration
 import java.time.Instant
@@ -84,4 +85,26 @@ fun ZonedDateTime.toZincJson(): String {
         "\"nano_of_second\": \"$nano\", " +
         "\"zone_offset_seconds\": \"${offset.totalSeconds}\", " +
         "\"zone_id_hash\": \"$zoneIdHash\"}"
+}
+
+fun TimeWindow.toZincJson(): String {
+    val zero = "{\"seconds\": \"0\", \"nanos\": \"0\"}"
+
+    val fromTime = """{
+        "is_null": ${this.fromTime == null},
+        "instant": ${this.fromTime?.toZincJson() ?: zero}
+    }
+    """.trimIndent()
+
+    val untilTime = """{
+        "is_null": ${this.untilTime == null},
+        "instant": ${this.untilTime?.toZincJson() ?: zero}
+    }
+    """.trimIndent()
+
+    return """{
+        "from_time": $fromTime,
+        "until_time": $untilTime
+    }
+    """.trimIndent()
 }
