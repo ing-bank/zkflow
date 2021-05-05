@@ -26,6 +26,7 @@ import java.time.Duration
 import java.util.Currency
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
+import com.ing.serialization.bfl.api.serialize as uninformedSerialize
 
 inline fun <reified T : Any, reified U : Any> toWitness(left: Amount<T>, right: Amount<U>): String =
     "{\"left\": ${left.toJSON()}, \"right\": ${right.toJSON()}}"
@@ -44,6 +45,11 @@ fun toBigWitness(left: BigDecimal, right: BigDecimal): String =
 
 inline fun <reified T : Any> toWitness(item: T): String {
     val bytes = serialize(item, serializersModule = CordaSerializers)
+    return "{\"witness\":${bytes.toPrettyJSONArray()}}"
+}
+
+fun <T : Any> toUninformedWitness(item: T): String {
+    val bytes = uninformedSerialize(item, serializersModule = CordaSerializers)
     return "{\"witness\":${bytes.toPrettyJSONArray()}}"
 }
 

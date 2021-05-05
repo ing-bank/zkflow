@@ -1,0 +1,64 @@
+// Input parameters:
+//   - ALGORITHM_STRING_SIZE: u16 = The string size of the algorithm
+//   - BYTES_SIZE: u16 = The bytearray size of the bytes field
+
+mod platform_consts;
+mod platform_integer;
+mod string_${ALGORITHM_STRING_SIZE};
+
+use platform_consts::U32_BYTES;
+use string_${ALGORITHM_STRING_SIZE}::STRING_${ALGORITHM_STRING_SIZE}_LENGTH;
+use string_${ALGORITHM_STRING_SIZE}::String_${ALGORITHM_STRING_SIZE};
+
+//! SecureHash lengths
+const SECURE_HASH_ALGORITHM_LENGTH: u16 = STRING_${ALGORITHM_STRING_SIZE}_LENGTH;
+const SECURE_HASH_BYTE_LENGTH_LENGTH: u16 = U32_BYTES;
+const SECURE_HASH_BYTES_LENGTH: u16 = ${BYTES_SIZE};
+
+//! SecureHash offsets
+const SECURE_HASH_ALGORITHM_OFFSET: u16 = 0;
+const SECURE_HASH_BYTE_LENGTH_OFFSET: u16
+    = SECURE_HASH_ALGORITHM_OFFSET
+    + SECURE_HASH_ALGORITHM_LENGTH;
+const SECURE_HASH_BYTES_OFFSET: u16
+    = SECURE_HASH_BYTE_LENGTH_OFFSET
+    + SECURE_HASH_BYTE_LENGTH_LENGTH;
+const SECURE_HASH_SIZE: u16
+    = SECURE_HASH_BYTES_OFFSET
+    + SECURE_HASH_BYTES_LENGTH;
+
+type SerializedSecureHash = [u8; SECURE_HASH_SIZE];
+
+type SecureHashAlgorithm = String_${ALGORITHM_STRING_SIZE};
+struct SecureHash {
+    algorithm: SecureHashAlgorithm,
+    bytes_length: u32,
+    bytes: [u8; ${BYTES_SIZE}],
+}
+
+impl SecureHash {
+    fn deserialize(serialized_hash: SerializedSecureHash) -> SecureHash {
+        let mut algorithm_bytes = [0; SECURE_HASH_ALGORITHM_LENGTH];
+        for i in 0..SECURE_HASH_ALGORITHM_LENGTH {
+            algorithm_bytes[i] = serialized_hash[i + SECURE_HASH_ALGORITHM_OFFSET];
+        }
+        let algorithm = SecureHashAlgorithm::deserialize(algorithm_bytes);
+
+        let mut bytes_length_bytes = [0; SECURE_HASH_BYTE_LENGTH_LENGTH];
+        for i in 0..SECURE_HASH_BYTE_LENGTH_LENGTH {
+            bytes_length_bytes[i] = serialized_hash[i + SECURE_HASH_BYTE_LENGTH_OFFSET];
+        }
+        let bytes_length = platform_integer::parse_u32(bytes_length_bytes);
+
+        let mut bytes = [0; SECURE_HASH_BYTES_LENGTH];
+        for i in 0..SECURE_HASH_BYTES_LENGTH {
+            bytes[i] = serialized_hash[i + SECURE_HASH_BYTES_OFFSET];
+        }
+
+        SecureHash {
+            algorithm: algorithm,
+            bytes_length: bytes_length,
+            bytes: bytes,
+        }
+    }
+}

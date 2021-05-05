@@ -30,10 +30,10 @@ object SecureHashHASHSerializer : KSerializer<SecureHash.HASH> by SealedSecureHa
 @Suppress("ArrayInDataClass")
 @Serializable
 data class SecureHashSurrogate(
-    @FixedLength([20])
+    @FixedLength([ALGORITHM_SIZE])
     val algorithm: String,
     // Hashes expected by Corda must be at most 32 bytes long.
-    @FixedLength([32])
+    @FixedLength([BYTES_SIZE])
     val bytes: ByteArray
 ) {
     fun toOriginal() = when (algorithm) {
@@ -42,6 +42,8 @@ data class SecureHashSurrogate(
     }
 
     companion object {
+        const val ALGORITHM_SIZE = 20
+        const val BYTES_SIZE = 32
         const val SHA256_algo = "SHA256"
         fun from(original: SecureHash): SecureHashSurrogate {
             val algorithm = when (original) {
