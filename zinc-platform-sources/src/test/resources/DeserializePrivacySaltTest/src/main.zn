@@ -1,0 +1,8 @@
+mod platform_privacy_salt;
+
+use platform_privacy_salt::PrivacySalt;
+use platform_privacy_salt::SerializedPrivacySalt;
+
+fn main(witness: SerializedPrivacySalt) -> PrivacySalt {
+    PrivacySalt::deserialize(witness)
+}
