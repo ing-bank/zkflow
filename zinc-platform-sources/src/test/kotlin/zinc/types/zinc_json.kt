@@ -1,6 +1,7 @@
 package zinc.types
 
 import com.ing.zknotary.common.serialization.bfl.corda.LinearPointerSurrogate
+import com.ing.zknotary.common.serialization.bfl.serializers.SecureHashSupportedAlgorithm
 import com.ing.zknotary.common.serialization.bfl.serializers.SecureHashSurrogate
 import com.ing.zknotary.common.serialization.bfl.serializers.UniqueIdentifierSurrogate
 import io.kotest.matchers.shouldBe
@@ -9,6 +10,7 @@ import net.corda.core.contracts.PrivacySalt
 import net.corda.core.contracts.TimeWindow
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.crypto.SecureHash
+import net.corda.core.crypto.algorithm
 import java.time.Duration
 import java.time.Instant
 import java.time.ZoneOffset
@@ -118,11 +120,11 @@ fun PrivacySalt.toZincJson() = """{
 """.trimIndent()
 
 fun SecureHash.toZincJson(): String {
-    val algorithmString = when (this) {
-        is SecureHash.SHA256 -> "SHA256"
-        is SecureHash.HASH -> algorithm
+    val byteArray = ByteArray(SecureHashSurrogate.BYTES_SIZE)
+    for (i in bytes.indices) {
+        byteArray[i] = bytes[i]
     }
-    return "{\"algorithm\": ${algorithmString.toZincJson(SecureHashSurrogate.ALGORITHM_SIZE)}, " +
+    return "{\"algorithm\": \"${SecureHashSupportedAlgorithm.fromAlgorithm(algorithm).id}\", " +
         "\"bytes_length\": \"${bytes.size}\", " +
-        "\"bytes\": ${bytes.toPrettyJSONArray()}}"
+        "\"bytes\": ${byteArray.toPrettyJSONArray()}}"
 }

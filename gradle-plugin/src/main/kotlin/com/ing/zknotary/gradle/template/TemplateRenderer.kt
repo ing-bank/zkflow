@@ -126,7 +126,6 @@ class TemplateRenderer(
         templateParameters: SecureHashTemplateParameters
     ) {
         val linearPointerContent = templateContents
-            .replace("\${ALGORITHM_STRING_SIZE}", SecureHashSurrogate.ALGORITHM_SIZE.toString())
             .replace("\${BYTES_SIZE}", SecureHashSurrogate.BYTES_SIZE.toString())
         createOutputFile(outputDirectory.resolve(templateParameters.templateFile))
             .writeBytes(linearPointerContent.toByteArray())

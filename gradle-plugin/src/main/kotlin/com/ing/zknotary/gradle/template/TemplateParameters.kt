@@ -3,7 +3,6 @@ package com.ing.zknotary.gradle.template
 import com.ing.serialization.bfl.serializers.CurrencySurrogate
 import com.ing.serialization.bfl.serializers.X500PrincipalSurrogate
 import com.ing.zknotary.common.serialization.bfl.corda.LinearPointerSurrogate
-import com.ing.zknotary.common.serialization.bfl.serializers.SecureHashSurrogate
 import com.ing.zknotary.common.serialization.bfl.serializers.UniqueIdentifierSurrogate
 
 sealed class TemplateParameters(
@@ -74,7 +73,7 @@ object CurrencyTemplateParameters : TemplateParameters(
 
 object SecureHashTemplateParameters : TemplateParameters(
     "secure_hash.zn",
-    listOf(StringTemplateParameters(SecureHashSurrogate.ALGORITHM_SIZE.toShort()))
+    emptyList()
 )
 
 private val camelRegex = "(?<=[a-zA-Z])[A-Z]".toRegex()

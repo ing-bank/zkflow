@@ -19,7 +19,7 @@ class DeserializeSecureHashTest :
         fun testData() = listOf(
             Data(SecureHash.allOnesHash),
             Data(SecureHash.zeroHash),
-            Data(SecureHash.hashAs(SecureHash.Companion.SHA2_256, "Hello World!".toByteArray()))
+            Data(SecureHash.hashAs(SecureHash.Companion.SHA2_512, "Hello World!".toByteArray()))
         )
     }
 }
