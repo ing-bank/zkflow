@@ -6,6 +6,7 @@ import com.ing.zknotary.gradle.template.AmountTemplateParameters
 import com.ing.zknotary.gradle.template.BigDecimalTemplateParameters
 import com.ing.zknotary.gradle.template.CurrencyTemplateParameters
 import com.ing.zknotary.gradle.template.LinearPointerTemplateParameters
+import com.ing.zknotary.gradle.template.SecureHashTemplateParameters
 import com.ing.zknotary.gradle.template.StringTemplateParameters
 import com.ing.zknotary.gradle.template.TemplateParameters
 import com.ing.zknotary.gradle.template.UniqueIdentifierTemplateParameters
@@ -86,6 +87,7 @@ open class ZKNotaryExtension(project: Project) {
         LinearPointerTemplateParameters,
         X500PrincipalTemplateParameters,
         CurrencyTemplateParameters,
+        SecureHashTemplateParameters,
     )
 
     fun resolveAllTemplateParameters(): List<TemplateParameters> {

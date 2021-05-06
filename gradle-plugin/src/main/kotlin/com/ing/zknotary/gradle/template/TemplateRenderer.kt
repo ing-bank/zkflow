@@ -1,10 +1,14 @@
 package com.ing.zknotary.gradle.template
 
+import com.ing.serialization.bfl.serializers.CurrencySurrogate
+import com.ing.serialization.bfl.serializers.X500PrincipalSurrogate
 import com.ing.zknotary.common.serialization.bfl.corda.LinearPointerSurrogate
+import com.ing.zknotary.common.serialization.bfl.serializers.SecureHashSurrogate
 import com.ing.zknotary.common.serialization.bfl.serializers.UniqueIdentifierSurrogate
 import com.ing.zknotary.gradle.util.createOutputFile
 import java.nio.file.Path
 
+@Suppress("TooManyFunctions")
 class TemplateRenderer(
     private val outputDirectory: Path,
     private val templateLoader: TemplateLoader
@@ -14,12 +18,14 @@ class TemplateRenderer(
             renderTemplateWarning(templateParameters) + templateLoader.loadTemplate(templateParameters)
         when (templateParameters) {
             is StringTemplateParameters -> renderStringTemplate(templateContents, templateParameters)
+            is ByteArrayTemplateParameters -> renderByteArrayTemplate(templateContents, templateParameters)
             is BigDecimalTemplateParameters -> renderBigDecimalTemplate(templateContents, templateParameters)
             is AmountTemplateParameters -> renderAmountTemplate(templateContents, templateParameters)
             is UniqueIdentifierTemplateParameters -> renderUniqueIdentifierTemplate(templateContents, templateParameters)
             is LinearPointerTemplateParameters -> renderLinearPointerTemplate(templateContents, templateParameters)
             is X500PrincipalTemplateParameters -> renderX500PrincipalTemplate(templateContents, templateParameters)
             is CurrencyTemplateParameters -> renderCurrencyTemplate(templateContents, templateParameters)
+            is SecureHashTemplateParameters -> renderSecureHashTemplate(templateContents, templateParameters)
         }
     }
 
@@ -43,6 +49,17 @@ class TemplateRenderer(
             .replace("\${CONSTANT_PREFIX}", "STRING_$sizeSuffix")
             .replace("\${STRING_SIZE_PLACEHOLDER}", templateParameters.stringSize.toString())
         createOutputFile(outputDirectory.resolve("string_$sizeSuffix.zn"))
+            .writeBytes(stringContent.toByteArray())
+    }
+
+    private fun renderByteArrayTemplate(
+        templateContents: String,
+        templateParameters: ByteArrayTemplateParameters
+    ) {
+        val sizeSuffix = "${templateParameters.arraySize}"
+        val stringContent = templateContents
+            .replace("\${ARRAY_LENGTH}", sizeSuffix)
+        createOutputFile(outputDirectory.resolve("byte_array_$sizeSuffix.zn"))
             .writeBytes(stringContent.toByteArray())
     }
 
@@ -102,7 +119,7 @@ class TemplateRenderer(
         templateParameters: X500PrincipalTemplateParameters
     ) {
         val linearPointerContent = templateContents
-            .replace("\${PRINCIPAL_NAME_STRING_SIZE}", "1024")
+            .replace("\${PRINCIPAL_NAME_STRING_SIZE}", X500PrincipalSurrogate.PRINCIPAL_SIZE.toString())
         createOutputFile(outputDirectory.resolve(templateParameters.templateFile))
             .writeBytes(linearPointerContent.toByteArray())
     }
@@ -112,7 +129,17 @@ class TemplateRenderer(
         templateParameters: CurrencyTemplateParameters
     ) {
         val linearPointerContent = templateContents
-            .replace("\${CURRENCY_CODE_STRING_SIZE}", "3")
+            .replace("\${CURRENCY_CODE_STRING_SIZE}", CurrencySurrogate.CURRENCY_SIZE.toString())
+        createOutputFile(outputDirectory.resolve(templateParameters.templateFile))
+            .writeBytes(linearPointerContent.toByteArray())
+    }
+
+    private fun renderSecureHashTemplate(
+        templateContents: String,
+        templateParameters: SecureHashTemplateParameters
+    ) {
+        val linearPointerContent = templateContents
+            .replace("\${BYTES_SIZE}", SecureHashSurrogate.BYTES_SIZE.toString())
         createOutputFile(outputDirectory.resolve(templateParameters.templateFile))
             .writeBytes(linearPointerContent.toByteArray())
     }

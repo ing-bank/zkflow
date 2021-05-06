@@ -1,12 +1,16 @@
 package zinc.types
 
 import com.ing.zknotary.common.serialization.bfl.corda.LinearPointerSurrogate
+import com.ing.zknotary.common.serialization.bfl.serializers.SecureHashSupportedAlgorithm
+import com.ing.zknotary.common.serialization.bfl.serializers.SecureHashSurrogate
 import com.ing.zknotary.common.serialization.bfl.serializers.UniqueIdentifierSurrogate
 import io.kotest.matchers.shouldBe
 import net.corda.core.contracts.LinearPointer
-import net.corda.core.contracts.TimeWindow
 import net.corda.core.contracts.PrivacySalt
+import net.corda.core.contracts.TimeWindow
 import net.corda.core.contracts.UniqueIdentifier
+import net.corda.core.crypto.SecureHash
+import net.corda.core.crypto.algorithm
 import java.time.Duration
 import java.time.Instant
 import java.time.ZoneOffset
@@ -25,6 +29,20 @@ fun String?.toZincJson(size: Int): String {
     val sizeJson = "\"${this?.length ?: 0}\""
     return "{\"chars\": $charsJson, " +
         "\"size\": $sizeJson}"
+}
+
+fun ByteArray.toZincJson(size: Int): String {
+    val byteArray = ByteArray(SecureHashSurrogate.BYTES_SIZE)
+    for (i in indices) {
+        byteArray[i] = this[i]
+    }
+
+    return """
+        {
+            "size": "${this.size}",
+            "bytes": ${byteArray.toPrettyJSONArray()}
+        }
+    """.trimIndent()
 }
 
 /* This method assumes that the mostSignificantBits of the id are 0 */
@@ -114,3 +132,13 @@ fun PrivacySalt.toZincJson() = """{
     "bytes": ${this.bytes.toPrettyJSONArray()}
 }
 """.trimIndent()
+
+fun SecureHash.toZincJson(): String {
+    val byteArray = bytes.toZincJson(SecureHashSurrogate.BYTES_SIZE)
+    return """
+        {
+            "algorithm": "${SecureHashSupportedAlgorithm.fromAlgorithm(algorithm).id}",
+            "bytes": $byteArray
+        }
+    """.trimIndent()
+}

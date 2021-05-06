@@ -1,6 +1,9 @@
 package com.ing.zknotary.gradle.template
 
+import com.ing.serialization.bfl.serializers.CurrencySurrogate
+import com.ing.serialization.bfl.serializers.X500PrincipalSurrogate
 import com.ing.zknotary.common.serialization.bfl.corda.LinearPointerSurrogate
+import com.ing.zknotary.common.serialization.bfl.serializers.SecureHashSurrogate
 import com.ing.zknotary.common.serialization.bfl.serializers.UniqueIdentifierSurrogate
 
 sealed class TemplateParameters(
@@ -49,6 +52,10 @@ data class StringTemplateParameters(
     val stringSize: Short
 ) : TemplateParameters("string.zn", emptyList())
 
+data class ByteArrayTemplateParameters(
+    val arraySize: Int
+) : TemplateParameters("byte_array.zn", emptyList())
+
 object UniqueIdentifierTemplateParameters : TemplateParameters(
     "unique_identifier.zn",
     listOf(StringTemplateParameters(UniqueIdentifierSurrogate.EXTERNAL_ID_LENGTH.toShort()))
@@ -61,12 +68,17 @@ object LinearPointerTemplateParameters : TemplateParameters(
 
 object X500PrincipalTemplateParameters : TemplateParameters(
     "x500_principal.zn",
-    listOf(StringTemplateParameters(1024))
+    listOf(StringTemplateParameters(X500PrincipalSurrogate.PRINCIPAL_SIZE.toShort()))
 )
 
 object CurrencyTemplateParameters : TemplateParameters(
     "currency.zn",
-    listOf(StringTemplateParameters(3))
+    listOf(StringTemplateParameters(CurrencySurrogate.CURRENCY_SIZE.toShort()))
+)
+
+object SecureHashTemplateParameters : TemplateParameters(
+    "secure_hash.zn",
+    listOf(ByteArrayTemplateParameters(SecureHashSurrogate.BYTES_SIZE))
 )
 
 private val camelRegex = "(?<=[a-zA-Z])[A-Z]".toRegex()

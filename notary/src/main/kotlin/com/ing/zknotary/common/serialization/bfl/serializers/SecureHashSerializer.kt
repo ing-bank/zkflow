@@ -7,8 +7,9 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import net.corda.core.crypto.SecureHash
+import net.corda.core.crypto.algorithm
 
-open class SealedSecureHashSerializer<T : SecureHash> : KSerializer<T> {
+class SealedSecureHashSerializer<T : SecureHash> : KSerializer<T> {
     private val strategy = SecureHashSurrogate.serializer()
     override val descriptor: SerialDescriptor = strategy.descriptor
 
@@ -30,26 +31,43 @@ object SecureHashHASHSerializer : KSerializer<SecureHash.HASH> by SealedSecureHa
 @Suppress("ArrayInDataClass")
 @Serializable
 data class SecureHashSurrogate(
-    @FixedLength([20])
-    val algorithm: String,
+    val algorithmId: Byte,
     // Hashes expected by Corda must be at most 32 bytes long.
-    @FixedLength([32])
+    @FixedLength([BYTES_SIZE])
     val bytes: ByteArray
 ) {
-    fun toOriginal() = when (algorithm) {
-        SHA256_algo -> SecureHash.SHA256(bytes)
-        else -> SecureHash.HASH(algorithm, bytes)
+    fun toOriginal(): SecureHash {
+        return when (val alg = SecureHashSupportedAlgorithm.fromByte(algorithmId).algorithm) {
+            SecureHash.SHA2_256 -> SecureHash.SHA256(bytes)
+            else -> SecureHash.HASH(alg, bytes)
+        }
     }
 
     companion object {
-        const val SHA256_algo = "SHA256"
+        const val BYTES_SIZE = 64
         fun from(original: SecureHash): SecureHashSurrogate {
-            val algorithm = when (original) {
-                is SecureHash.SHA256 -> SHA256_algo
-                is SecureHash.HASH -> original.algorithm
-            }
-
-            return SecureHashSurrogate(algorithm, original.bytes)
+            val algorithmId = SecureHashSupportedAlgorithm.fromAlgorithm(original.algorithm).id
+            return SecureHashSurrogate(algorithmId, original.bytes)
         }
+    }
+}
+
+/**
+ * This class lists the supported hashing algorithms for serialization, and
+ * defines a mapping for them.
+ */
+enum class SecureHashSupportedAlgorithm(val id: Byte, val algorithm: String) {
+    SHA_256(0, SecureHash.SHA2_256),
+    SHA_384(1, SecureHash.SHA2_384),
+    SHA_512(2, SecureHash.SHA2_512);
+
+    companion object {
+        fun fromByte(id: Byte): SecureHashSupportedAlgorithm = values()
+            .find { it.id == id }
+            ?: throw IllegalArgumentException("No algorithm found for id: $id")
+
+        fun fromAlgorithm(algorithm: String): SecureHashSupportedAlgorithm = values()
+            .find { it.algorithm == algorithm }
+            ?: throw IllegalArgumentException("No algorithm found for: $algorithm")
     }
 }
