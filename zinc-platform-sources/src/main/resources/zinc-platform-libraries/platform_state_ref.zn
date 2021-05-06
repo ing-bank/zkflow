@@ -1,0 +1,53 @@
+mod platform_consts;
+mod platform_integer;
+mod secure_hash;
+
+use platform_consts::U32_BYTES;
+
+use secure_hash::SecureHash;
+use secure_hash::SerializedSecureHash;
+use secure_hash::SECURE_HASH_LENGTH;
+
+//! StateRef lengths
+const STATE_REF_HASH_LENGTH: u16 = SECURE_HASH_LENGTH;
+const STATE_REF_INDEX_LENGTH: u16 = U32_BYTES;
+
+//! StateRef offsets
+const STATE_REF_HASH_OFFSET: u16 = 0;
+const STATE_REF_INDEX_OFFSET: u16
+    = STATE_REF_HASH_OFFSET
+    + STATE_REF_HASH_LENGTH;
+const STATE_REF_LENGTH: u16
+    = STATE_REF_INDEX_OFFSET
+    + STATE_REF_INDEX_LENGTH;
+
+type SerializedStateRef = [u8; STATE_REF_LENGTH];
+struct StateRef {
+    hash: SecureHash,
+    index: u32,
+}
+
+impl StateRef {
+    fn deserialize(serialized_state_ref: SerializedStateRef) -> StateRef {
+        let hash = {
+            let mut hash_bytes: SerializedSecureHash = [0; STATE_REF_HASH_LENGTH];
+            for i in 0..STATE_REF_HASH_LENGTH {
+                hash_bytes[i] = serialized_state_ref[i + STATE_REF_HASH_OFFSET];
+            }
+            SecureHash::deserialize(hash_bytes)
+        };
+
+        let index = {
+            let mut index_bytes = [0; STATE_REF_INDEX_LENGTH];
+            for i in 0..STATE_REF_INDEX_LENGTH {
+                index_bytes[i] = serialized_state_ref[i + STATE_REF_INDEX_OFFSET];
+            }
+            platform_integer::parse_u32(index_bytes)
+        };
+
+        StateRef {
+            hash: hash,
+            index: index,
+        }
+    }
+}

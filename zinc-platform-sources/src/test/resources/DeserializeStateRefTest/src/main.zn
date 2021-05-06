@@ -1,0 +1,8 @@
+mod platform_state_ref;
+
+use platform_state_ref::StateRef;
+use platform_state_ref::SerializedStateRef;
+
+fn main(witness: SerializedStateRef) -> StateRef {
+    StateRef::deserialize(witness)
+}

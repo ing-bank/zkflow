@@ -7,6 +7,7 @@ import com.ing.zknotary.common.serialization.bfl.serializers.UniqueIdentifierSur
 import io.kotest.matchers.shouldBe
 import net.corda.core.contracts.LinearPointer
 import net.corda.core.contracts.PrivacySalt
+import net.corda.core.contracts.StateRef
 import net.corda.core.contracts.TimeWindow
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.crypto.SecureHash
@@ -133,12 +134,16 @@ fun PrivacySalt.toZincJson() = """{
 }
 """.trimIndent()
 
-fun SecureHash.toZincJson(): String {
-    val byteArray = bytes.toZincJson(SecureHashSurrogate.BYTES_SIZE)
-    return """
-        {
-            "algorithm": "${SecureHashSupportedAlgorithm.fromAlgorithm(algorithm).id}",
-            "bytes": $byteArray
-        }
-    """.trimIndent()
-}
+fun SecureHash.toZincJson(): String = """
+    {
+        "algorithm": "${SecureHashSupportedAlgorithm.fromAlgorithm(algorithm).id}",
+        "bytes": ${bytes.toZincJson(SecureHashSurrogate.BYTES_SIZE)}
+    }
+""".trimIndent()
+
+fun StateRef.toZincJson(): String = """
+    {
+        "hash": ${txhash.toZincJson()},
+        "index": "$index"
+    }
+""".trimIndent()
