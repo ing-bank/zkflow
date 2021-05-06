@@ -10,6 +10,7 @@ import com.ing.zknotary.common.zkp.ZincZKService
 import com.ing.zknotary.testing.fixtures.contract.TestContract
 import com.ing.zknotary.testing.zkp.proveTimed
 import com.ing.zknotary.testing.zkp.setupTimed
+import com.ing.zknotary.testing.zkp.verifyTimed
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.PrivacySalt
 import net.corda.core.contracts.StateAndContract
@@ -113,7 +114,7 @@ class TransactionVerificationTest {
         zincZKService.run(witness, publicInput)
 
         val proof = zincZKService.proveTimed(witness, log)
-        // zincZKService.verifyTimed(proof, publicInput, log)
+        zincZKService.verifyTimed(proof, publicInput, log)
     }
 
     @Suppress("LongParameterList")

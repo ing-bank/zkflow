@@ -28,10 +28,6 @@ fn compute_nonce(
     group_index: u32,
     internal_index: u32,
 ) -> NonceDigestBits {
-    dbg!(">> computeNonce (");
-    dbg!("   group index = {}", group_index);
-    dbg!("   internal index = {}", internal_index);
-    dbg!(")");
 
     let mut nonce = [false; PRIVACY_SALT_BITS + U32_BITS + U32_BITS];
     for i in 0..PRIVACY_SALT_BITS {

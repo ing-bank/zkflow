@@ -22,6 +22,6 @@ interface ZKOwnableState : ZKContractState, OwnableState {
         if (newOwner is AnonymousParty)
             return withNewOwner(newOwner)
         else
-            error("Can't use AbstractParty as an owner")
+            error("The new owner must be an AnonymousParty or KeyOnlyParty")
     }
 }
