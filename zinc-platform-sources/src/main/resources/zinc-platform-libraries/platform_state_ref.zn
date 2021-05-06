@@ -29,19 +29,25 @@ struct StateRef {
 
 impl StateRef {
     fn deserialize(serialized_state_ref: SerializedStateRef) -> StateRef {
-        let mut hash_bytes: SerializedSecureHash = [0; STATE_REF_HASH_LENGTH];
-        for i in 0..STATE_REF_HASH_LENGTH {
-            hash_bytes[i] = serialized_state_ref[i + STATE_REF_HASH_OFFSET];
-        }
+        let hash = {
+            let mut hash_bytes: SerializedSecureHash = [0; STATE_REF_HASH_LENGTH];
+            for i in 0..STATE_REF_HASH_LENGTH {
+                hash_bytes[i] = serialized_state_ref[i + STATE_REF_HASH_OFFSET];
+            }
+            SecureHash::deserialize(hash_bytes)
+        };
 
-        let mut index_bytes = [0; STATE_REF_INDEX_LENGTH];
-        for i in 0..STATE_REF_INDEX_LENGTH {
-            index_bytes[i] = serialized_state_ref[i + STATE_REF_INDEX_OFFSET];
-        }
+        let index = {
+            let mut index_bytes = [0; STATE_REF_INDEX_LENGTH];
+            for i in 0..STATE_REF_INDEX_LENGTH {
+                index_bytes[i] = serialized_state_ref[i + STATE_REF_INDEX_OFFSET];
+            }
+            platform_integer::parse_u32(index_bytes)
+        };
 
         StateRef {
-            hash: SecureHash::deserialize(hash_bytes),
-            index: platform_integer::parse_u32(index_bytes),
+            hash: hash,
+            index: index,
         }
     }
 }
