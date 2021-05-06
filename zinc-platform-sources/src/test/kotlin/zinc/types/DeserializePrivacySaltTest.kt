@@ -15,7 +15,7 @@ class DeserializePrivacySaltTest {
     private val privacySalt = PrivacySalt(32)
 
     @Test
-    fun `a Privacy should be deserialized correctly`() {
+    fun `a PrivacySalt should be deserialized correctly`() {
         val data = Data(privacySalt)
         val witness = toWitness(data)
         val expected = data.data.toZincJson()
