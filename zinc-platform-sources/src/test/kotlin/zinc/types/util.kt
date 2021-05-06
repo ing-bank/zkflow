@@ -57,7 +57,7 @@ fun bytesToWitness(bytes: ByteArray) = """
     {
         "witness":${bytes.toPrettyJSONArray()}
     }
-    """.trimIndent()
+""".trimIndent()
 
 fun Class<*>.sha256(): ByteArray = SecureHash.sha256(name).copyBytes()
 
