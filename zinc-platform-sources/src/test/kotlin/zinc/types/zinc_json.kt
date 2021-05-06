@@ -31,6 +31,20 @@ fun String?.toZincJson(size: Int): String {
         "\"size\": $sizeJson}"
 }
 
+fun ByteArray.toZincJson(size: Int): String {
+    val byteArray = ByteArray(SecureHashSurrogate.BYTES_SIZE)
+    for (i in indices) {
+        byteArray[i] = this[i]
+    }
+
+    return """
+        {
+            "size": "${this.size}",
+            "bytes": ${byteArray.toPrettyJSONArray()}
+        }
+    """.trimIndent()
+}
+
 /* This method assumes that the mostSignificantBits of the id are 0 */
 fun UniqueIdentifier.toZincJson(): String {
     // input validations
@@ -120,11 +134,11 @@ fun PrivacySalt.toZincJson() = """{
 """.trimIndent()
 
 fun SecureHash.toZincJson(): String {
-    val byteArray = ByteArray(SecureHashSurrogate.BYTES_SIZE)
-    for (i in bytes.indices) {
-        byteArray[i] = bytes[i]
-    }
-    return "{\"algorithm\": \"${SecureHashSupportedAlgorithm.fromAlgorithm(algorithm).id}\", " +
-        "\"bytes_length\": \"${bytes.size}\", " +
-        "\"bytes\": ${byteArray.toPrettyJSONArray()}}"
+    val byteArray = bytes.toZincJson(SecureHashSurrogate.BYTES_SIZE)
+    return """
+        {
+            "algorithm": "${SecureHashSupportedAlgorithm.fromAlgorithm(algorithm).id}",
+            "bytes": $byteArray
+        }
+    """.trimIndent()
 }

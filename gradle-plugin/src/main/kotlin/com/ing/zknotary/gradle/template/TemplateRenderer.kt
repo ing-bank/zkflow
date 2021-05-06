@@ -8,6 +8,7 @@ import com.ing.zknotary.common.serialization.bfl.serializers.UniqueIdentifierSur
 import com.ing.zknotary.gradle.util.createOutputFile
 import java.nio.file.Path
 
+@Suppress("TooManyFunctions")
 class TemplateRenderer(
     private val outputDirectory: Path,
     private val templateLoader: TemplateLoader
@@ -17,6 +18,7 @@ class TemplateRenderer(
             renderTemplateWarning(templateParameters) + templateLoader.loadTemplate(templateParameters)
         when (templateParameters) {
             is StringTemplateParameters -> renderStringTemplate(templateContents, templateParameters)
+            is ByteArrayTemplateParameters -> renderByteArrayTemplate(templateContents, templateParameters)
             is BigDecimalTemplateParameters -> renderBigDecimalTemplate(templateContents, templateParameters)
             is AmountTemplateParameters -> renderAmountTemplate(templateContents, templateParameters)
             is UniqueIdentifierTemplateParameters -> renderUniqueIdentifierTemplate(templateContents, templateParameters)
@@ -47,6 +49,17 @@ class TemplateRenderer(
             .replace("\${CONSTANT_PREFIX}", "STRING_$sizeSuffix")
             .replace("\${STRING_SIZE_PLACEHOLDER}", templateParameters.stringSize.toString())
         createOutputFile(outputDirectory.resolve("string_$sizeSuffix.zn"))
+            .writeBytes(stringContent.toByteArray())
+    }
+
+    private fun renderByteArrayTemplate(
+        templateContents: String,
+        templateParameters: ByteArrayTemplateParameters
+    ) {
+        val sizeSuffix = "${templateParameters.arraySize}"
+        val stringContent = templateContents
+            .replace("\${ARRAY_LENGTH}", sizeSuffix)
+        createOutputFile(outputDirectory.resolve("byte_array_$sizeSuffix.zn"))
             .writeBytes(stringContent.toByteArray())
     }
 

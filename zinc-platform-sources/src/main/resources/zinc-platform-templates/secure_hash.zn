@@ -1,45 +1,34 @@
 // Input parameters:
 //   - BYTES_SIZE: u16 = The bytearray size of the bytes field
 
-mod platform_consts;
-mod platform_integer;
+mod byte_array_${BYTES_SIZE};
 
-use platform_consts::U32_BYTES;
+use byte_array_${BYTES_SIZE}::ByteArray_${BYTES_SIZE};
+use byte_array_${BYTES_SIZE}::BYTE_ARRAY_${BYTES_SIZE}_LENGTH;
 
 //! SecureHash lengths
 const SECURE_HASH_ALGORITHM_LENGTH: u16 = 1;
-const SECURE_HASH_BYTE_LENGTH_LENGTH: u16 = U32_BYTES;
-const SECURE_HASH_BYTES_LENGTH: u16 = ${BYTES_SIZE};
+const SECURE_HASH_BYTES_LENGTH: u16 = BYTE_ARRAY_${BYTES_SIZE}_LENGTH;
 
 //! SecureHash offsets
 const SECURE_HASH_ALGORITHM_OFFSET: u16 = 0;
-const SECURE_HASH_BYTE_LENGTH_OFFSET: u16
+const SECURE_HASH_BYTES_OFFSET: u16
     = SECURE_HASH_ALGORITHM_OFFSET
     + SECURE_HASH_ALGORITHM_LENGTH;
-const SECURE_HASH_BYTES_OFFSET: u16
-    = SECURE_HASH_BYTE_LENGTH_OFFSET
-    + SECURE_HASH_BYTE_LENGTH_LENGTH;
-const SECURE_HASH_SIZE: u16
+const SECURE_HASH_LENGTH: u16
     = SECURE_HASH_BYTES_OFFSET
     + SECURE_HASH_BYTES_LENGTH;
 
-type SerializedSecureHash = [u8; SECURE_HASH_SIZE];
+type SerializedSecureHash = [u8; SECURE_HASH_LENGTH];
 
 struct SecureHash {
     algorithm: u8,
-    bytes_length: u32,
-    bytes: [u8; ${BYTES_SIZE}],
+    bytes: ByteArray_${BYTES_SIZE},
 }
 
 impl SecureHash {
     fn deserialize(serialized_hash: SerializedSecureHash) -> SecureHash {
         let algorithm = serialized_hash[SECURE_HASH_ALGORITHM_OFFSET];
-
-        let mut bytes_length_bytes = [0; SECURE_HASH_BYTE_LENGTH_LENGTH];
-        for i in 0..SECURE_HASH_BYTE_LENGTH_LENGTH {
-            bytes_length_bytes[i] = serialized_hash[i + SECURE_HASH_BYTE_LENGTH_OFFSET];
-        }
-        let bytes_length = platform_integer::parse_u32(bytes_length_bytes);
 
         let mut bytes = [0; SECURE_HASH_BYTES_LENGTH];
         for i in 0..SECURE_HASH_BYTES_LENGTH {
@@ -48,8 +37,7 @@ impl SecureHash {
 
         SecureHash {
             algorithm: algorithm,
-            bytes_length: bytes_length,
-            bytes: bytes,
+            bytes: ByteArray_${BYTES_SIZE}::deserialize(bytes),
         }
     }
 }
