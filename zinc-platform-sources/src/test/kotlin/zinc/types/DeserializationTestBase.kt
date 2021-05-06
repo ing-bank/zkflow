@@ -15,7 +15,7 @@ abstract class DeserializationTestBase<T : DeserializationTestBase<T, D>, D : An
     @ParameterizedTest
     @MethodSource("testData")
     fun performDeserializationTest(data: D) {
-        val witness = toUninformedWitness(data)
+        val witness = toObliviousWitness(data)
 
         val expected = zincJsonSerializer.toZincJson(data)
         val actual = zinc.run(witness, "")
