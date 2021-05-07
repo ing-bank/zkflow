@@ -1,0 +1,19 @@
+const CORDA_X500_NAME_LENGTH: u16 = 787;
+
+struct CordaX500Name {
+    name: [u8; CORDA_X500_NAME_LENGTH]
+}
+
+impl CordaX500Name {
+    fn empty() -> CordaX500Name {
+        CordaX500Name {
+            name: [0; CORDA_X500_NAME_LENGTH],
+        }
+    }
+
+    fn deserialize(serialized_name: [u8; CORDA_X500_NAME_LENGTH]) -> CordaX500Name {
+        CordaX500Name {
+            name: serialized_name,
+        }
+    }
+}

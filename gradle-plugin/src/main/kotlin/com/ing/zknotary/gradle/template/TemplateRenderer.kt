@@ -27,7 +27,23 @@ class TemplateRenderer(
             is CurrencyTemplateParameters -> renderCurrencyTemplate(templateContents, templateParameters)
             is SecureHashTemplateParameters -> renderSecureHashTemplate(templateContents, templateParameters)
             is PublicKeyTemplateParameters -> renderPublicKeyTemplate(templateContents, templateParameters)
+            is PartyTemplateParameters -> renderPartyTemplate(templateContents, templateParameters)
         }
+    }
+
+    private fun renderPartyTemplate(templateContents: String, templateParameters: PartyTemplateParameters) {
+        val pkTypeName = templateParameters.pkTemplateParameters.typeName
+        val algName = pkTypeName.removeSuffix("PublicKey")
+        val pkSnakeCaseType = pkTypeName.camelToSnakeCase().replace("public_key", "_public_key")
+        val typeName = "Party$algName"
+        val stringContent = templateContents
+            .replace("\${TYPE_NAME}", typeName)
+            .replace("\${CONSTANT_PREFIX}", typeName.camelToSnakeCase().toUpperCase())
+            .replace("\${PK_TYPE_NAME}", "$pkTypeName")
+            .replace("\${PK_CONSTANT_PREFIX}", "${pkSnakeCaseType.toUpperCase()}")
+            .replace("\${PK_MODULE_NAME}", "$pkSnakeCaseType")
+        createOutputFile(outputDirectory.resolve("${typeName.camelToSnakeCase()}.zn"))
+            .writeBytes(stringContent.toByteArray())
     }
 
     private fun renderPublicKeyTemplate(templateContents: String, templateParameters: PublicKeyTemplateParameters) {

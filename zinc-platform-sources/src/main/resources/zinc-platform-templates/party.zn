@@ -1,0 +1,69 @@
+// Input parameters:
+//   - TYPE_NAME: String = Name of the main struct, and suffix for Serialized struct, use camelcase
+//   - CONSTANT_PREFIX: String = prefix to use for constant names, use uppercase
+//   - PK_TYPE_NAME: String = name of the PublicKey struct, and suffix for Serialized struct, use camelcase
+//   - PK_CONSTANT_PREFIX: String = prefix used for constant names of PublicKey, use uppercase and snakecase
+//   - PK_MODULE_NAME: String = module name of the PublicKey, use lowercase and snakecase
+
+mod platform_corda_x500_name;
+mod ${PK_MODULE_NAME};
+
+use platform_corda_x500_name::CordaX500Name;
+use platform_corda_x500_name::CORDA_X500_NAME_LENGTH;
+
+use ${PK_MODULE_NAME}::${PK_TYPE_NAME};
+use ${PK_MODULE_NAME}::${PK_CONSTANT_PREFIX}_LENGTH;
+
+//! ${TYPE_NAME} lengths
+const ${CONSTANT_PREFIX}_HAS_NAME_LENGTH: u16 = 1;
+const ${CONSTANT_PREFIX}_NAME_LENGTH: u16 = CORDA_X500_NAME_LENGTH;
+const ${CONSTANT_PREFIX}_OWNING_KEY_LENGTH: u16 = ${PK_CONSTANT_PREFIX}_LENGTH;
+
+//! ${TYPE_NAME} offsets
+const ${CONSTANT_PREFIX}_HAS_NAME_OFFSET: u16 = 0;
+const ${CONSTANT_PREFIX}_NAME_OFFSET: u16
+    = ${CONSTANT_PREFIX}_HAS_NAME_OFFSET
+    + ${CONSTANT_PREFIX}_HAS_NAME_LENGTH;
+const ${CONSTANT_PREFIX}_OWNING_KEY_OFFSET: u16
+    = ${CONSTANT_PREFIX}_NAME_OFFSET
+    + ${CONSTANT_PREFIX}_NAME_LENGTH;
+const ${CONSTANT_PREFIX}_LENGTH: u16
+    = ${CONSTANT_PREFIX}_OWNING_KEY_OFFSET
+    + ${CONSTANT_PREFIX}_OWNING_KEY_LENGTH;
+
+type Serialized${TYPE_NAME} = [u8; ${CONSTANT_PREFIX}_LENGTH];
+struct ${TYPE_NAME} {
+    has_name: bool,
+    name: CordaX500Name,
+    owning_key: ${PK_TYPE_NAME},
+}
+
+impl ${TYPE_NAME} {
+    fn deserialize(serialized: Serialized${TYPE_NAME}) -> ${TYPE_NAME} {
+        let has_name = serialized[${CONSTANT_PREFIX}_HAS_NAME_OFFSET] != 0;
+
+        let name = {
+            let mut name_bytes = [0; ${CONSTANT_PREFIX}_NAME_LENGTH];
+            if has_name {
+                for i in 0..${CONSTANT_PREFIX}_NAME_LENGTH {
+                    name_bytes[i] = serialized[i + ${CONSTANT_PREFIX}_NAME_OFFSET];
+                }
+            };
+            CordaX500Name::deserialize(name_bytes)
+        };
+
+        let owning_key = {
+            let mut pk_bytes = [0; ${CONSTANT_PREFIX}_OWNING_KEY_LENGTH];
+            for i in 0..${CONSTANT_PREFIX}_OWNING_KEY_LENGTH {
+                pk_bytes[i] = serialized[i + ${CONSTANT_PREFIX}_OWNING_KEY_OFFSET];
+            }
+            ${PK_TYPE_NAME}::deserialize(pk_bytes)
+        };
+
+        ${TYPE_NAME} {
+            has_name: has_name,
+            name: name,
+            owning_key: owning_key,
+        }
+    }
+}
