@@ -1,0 +1,3 @@
+[circuit]
+name = "Deserialize BCER1PublicKey test"
+version = "0.1.0"

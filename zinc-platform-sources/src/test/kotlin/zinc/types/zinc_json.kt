@@ -32,19 +32,14 @@ fun String?.toZincJson(size: Int): String {
         "\"size\": $sizeJson}"
 }
 
-fun ByteArray.toZincJson(size: Int): String {
-    val byteArray = ByteArray(SecureHashSurrogate.BYTES_SIZE)
-    for (i in indices) {
-        byteArray[i] = this[i]
-    }
+fun ByteArray.resizeTo(newSize: Int) = ByteArray(newSize) { if (it < size) this[it] else 0 }
 
-    return """
-        {
-            "size": "${this.size}",
-            "bytes": ${byteArray.toPrettyJSONArray()}
-        }
-    """.trimIndent()
-}
+fun ByteArray.toZincJson(serializedSize: Int) = """
+    {
+        "size": "$size",
+        "bytes": ${resizeTo(serializedSize).toPrettyJSONArray()}
+    }
+""".trimIndent()
 
 /* This method assumes that the mostSignificantBits of the id are 0 */
 fun UniqueIdentifier.toZincJson(): String {

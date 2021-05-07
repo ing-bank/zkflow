@@ -39,11 +39,11 @@ class PublicKeySerializerTest {
                 // All instances of the class use the same surrogate,
                 // thus the relevant field in the surrogate is also 91 bytes long.
                 Crypto.ECDSA_SECP256K1_SHA256.schemeNumberID -> listOf(
-                    4, // byte length of an int to distinguish the two.
+                    1, // byte length of a byte to distinguish the two.
                     3, // ECDSA_SECP256K1_SHA256 is 88 bytes long, but encoded with 91 bytes.
                 ).sum()
                 Crypto.ECDSA_SECP256R1_SHA256.schemeNumberID -> listOf(
-                    4, // int to distinguish the two
+                    1, // byte length of a byte to distinguish the two
                 ).sum()
                 else -> 0
             }

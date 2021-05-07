@@ -48,8 +48,8 @@ inline fun <reified T : Any> toWitness(item: T): String {
     return bytesToWitness(bytes)
 }
 
-fun <T : Any> toObliviousWitness(item: T): String {
-    val bytes = obliviousSerialize(item, serializersModule = CordaSerializers)
+fun <T : Any> toObliviousWitness(item: T, serializersModule: SerializersModule = EmptySerializersModule): String {
+    val bytes = obliviousSerialize(item, serializersModule = CordaSerializers + serializersModule)
     return bytesToWitness(bytes)
 }
 
@@ -155,7 +155,8 @@ inline fun <reified T : Any> getZincZKService(
     provingTimeout: Duration = Duration.ofSeconds(300),
     verificationTimeout: Duration = Duration.ofSeconds(1)
 ): ZincZKService {
-    val circuitFolder: String = T::class.java.getResource("/${T::class.java.simpleName}")!!.path
+    val circuitFolder: String = T::class.java.getResource("/${T::class.java.simpleName}")?.path
+        ?: throw IllegalStateException("Zinc test source folder not found: ${T::class.java.simpleName}")
     return ZincZKService(
         circuitFolder,
         artifactFolder = circuitFolder,

@@ -21,7 +21,11 @@ object EdDSAPublicKeySerializer : KSerializer<EdDSAPublicKey> by (
 /**
  * Corresponds to Corda's Crypto.EDDSA_ED25519_SHA512 (44 bytes).
  */
-data class EdDSASurrogate(@FixedLength([44]) override val encoded: ByteArray) :
+data class EdDSASurrogate(@FixedLength([ENCODED_SIZE]) override val encoded: ByteArray) :
     PublicKeySurrogate<EdDSAPublicKey> {
     override fun toOriginal() = toOriginal(Crypto.EDDSA_ED25519_SHA512.schemeNumberID) as EdDSAPublicKey
+
+    companion object {
+        const val ENCODED_SIZE = 44
+    }
 }

@@ -1,0 +1,8 @@
+mod bcrsa_public_key;
+
+use bcrsa_public_key::BCRSAPublicKey;
+use bcrsa_public_key::SerializedBCRSAPublicKey;
+
+fn main(witness: SerializedBCRSAPublicKey) -> BCRSAPublicKey {
+    BCRSAPublicKey::deserialize(witness)
+}

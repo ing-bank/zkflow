@@ -1,0 +1,8 @@
+mod bcsphincs256_public_key;
+
+use bcsphincs256_public_key::BCSphincs256PublicKey;
+use bcsphincs256_public_key::SerializedBCSphincs256PublicKey;
+
+fn main(witness: SerializedBCSphincs256PublicKey) -> BCSphincs256PublicKey {
+    BCSphincs256PublicKey::deserialize(witness)
+}
