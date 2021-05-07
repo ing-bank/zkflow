@@ -1,7 +1,7 @@
 package zinc.types
 
 import com.ing.zknotary.common.serialization.bfl.serializers.CordaSignatureSchemeToSerializers
-import com.ing.zknotary.common.serialization.bfl.serializers.publickey.EdDSASurrogate
+import com.ing.zknotary.common.serialization.bfl.serializers.publickey.BCRSASurrogate
 import com.ing.zknotary.common.zkp.ZincZKService
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
@@ -14,17 +14,17 @@ import kotlin.reflect.full.findAnnotation
 import kotlin.time.ExperimentalTime
 
 @ExperimentalTime
-class DeserializePartyTest :
-    DeserializationTestBase<DeserializePartyTest, DeserializePartyTest.Data>({
+class DeserializePartyBCRSATest :
+    DeserializationTestBase<DeserializePartyBCRSATest, DeserializePartyBCRSATest.Data>({
         it.data.toZincJson(
-            scheme = Crypto.EDDSA_ED25519_SHA512,
-            serialName = EdDSASurrogate::class.findAnnotation<SerialName>()!!.value,
-            encodedSize = EdDSASurrogate.ENCODED_SIZE
+            scheme = Crypto.RSA_SHA256,
+            serialName = BCRSASurrogate::class.findAnnotation<SerialName>()!!.value,
+            encodedSize = BCRSASurrogate.ENCODED_SIZE,
         )
     }) {
-    override fun getZincZKService(): ZincZKService = getZincZKService<DeserializePartyTest>()
+    override fun getZincZKService(): ZincZKService = getZincZKService<DeserializePartyBCRSATest>()
     override fun getSerializersModule(): SerializersModule {
-        return CordaSignatureSchemeToSerializers.serializersModuleFor(Crypto.EDDSA_ED25519_SHA512)
+        return CordaSignatureSchemeToSerializers.serializersModuleFor(Crypto.RSA_SHA256)
     }
 
     @Serializable
@@ -33,7 +33,7 @@ class DeserializePartyTest :
     companion object {
         @JvmStatic
         fun testData() = listOf(
-            Data(TestIdentity.fresh("Alice", Crypto.EDDSA_ED25519_SHA512).party),
+            Data(TestIdentity.fresh("Alice", Crypto.RSA_SHA256).party),
         )
     }
 }
