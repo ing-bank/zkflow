@@ -1,0 +1,12 @@
+ivno-collateral-token-contract
+ivno-collateral-token-workflow
+ivno-collateral-token-deploynodes
+!ivno-collateral-token-deploynodes/build/nodes/Bank A/cordapps
+build
+.circleci
+.gradle
+gradle
+lib
+logs
+.git
+*.hprof

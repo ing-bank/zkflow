@@ -1,0 +1,125 @@
+FROM ubuntu:18.04
+
+LABEL VENDOR="Ivno Ltd" \
+      MAINTAINER="adam.dry@ivno.io"
+
+ENV CORDA_VERSION "4.6_enterprise"
+ENV JAVA_DIR="/usr/lib/jvm"
+ENV JAVA_VERSION_DIR_NAME="jdk1.8.0_171"
+ENV APP_DIR /opt/corda
+# none=no DB migrations, just start the node
+# execute=run the tools-database-manager-VER.jar tool with execute-migration command - generates and executes the DB migrations (not for prod)
+# dryrun=run the tools-database-manager-VER.jar tool with dry-run command - generates the DB migrations and places them in "/opt/corda/generated-migrations"
+ENV IVNO_DB_MODE="none"
+ENV IVNO_DB_TOOL_FILENAME="tools-database-manager-4.6.jar"
+
+RUN mkdir -p "${APP_DIR}"
+WORKDIR ${APP_DIR}
+RUN mkdir -p bin
+
+# create folder for generated migrations to be placed in if IVNO_DB_MODE is set to "dryrun"
+#  the generated-migrations folder must be mapped to the host machine to persist the outputted migration files
+RUN mkdir generated-migrations
+
+# copy the DB migration tool into the docker container
+COPY ${IVNO_DB_TOOL_FILENAME} ${IVNO_DB_TOOL_FILENAME}
+
+RUN mkdir "${JAVA_DIR}"
+
+RUN apt-get update
+RUN apt-get install -y --no-install-recommends apt-utils
+RUN apt-get upgrade -y
+
+RUN apt-get install -y software-properties-common nano curl
+
+# install java - start. As per https://www.javahelps.com/2015/03/install-oracle-jdk-in-ubuntu.html
+# RUN add-apt-repository ppa:openjdk-r/ppa
+
+# RUN apt-get update
+# RUN apt-get install -y openjdk-8-jdk
+
+# download Oracle's jdk
+COPY jdk-8u171-linux-x64.tar.gz ${JAVA_DIR}/jdk-8u171-linux-x64.tar.gz
+
+RUN cd ${JAVA_DIR} && tar -xvzf jdk-8u171-linux-x64.tar.gz
+
+# env variables for java
+ENV PATH="${PATH}:${JAVA_DIR}/${JAVA_VERSION_DIR_NAME}/bin"
+ENV PATH="${PATH}:${JAVA_DIR}/${JAVA_VERSION_DIR_NAME}/db/bin"
+ENV PATH="${PATH}:${JAVA_DIR}/${JAVA_VERSION_DIR_NAME}/jre/bin"
+
+ENV J2SDKDIR="${JAVA_DIR}/${JAVA_VERSION_DIR_NAME}"
+ENV J2REDIR="${JAVA_DIR}/${JAVA_VERSION_DIR_NAME}/jre"
+ENV JAVA_HOME="${JAVA_DIR}/${JAVA_VERSION_DIR_NAME}"
+ENV DERBY_HOME="${JAVA_DIR}/${JAVA_VERSION_DIR_NAME}/db"
+
+# the following commands inform Ubuntu about the Java's location
+RUN update-alternatives --install "/usr/bin/java" "java" "${JAVA_DIR}/${JAVA_VERSION_DIR_NAME}/bin/java" 0
+RUN update-alternatives --install "/usr/bin/javac" "javac" "${JAVA_DIR}/${JAVA_VERSION_DIR_NAME}/bin/javac" 0
+RUN update-alternatives --set java "${JAVA_DIR}/${JAVA_VERSION_DIR_NAME}/bin/java"
+RUN update-alternatives --set javac "${JAVA_DIR}/${JAVA_VERSION_DIR_NAME}/bin/javac"
+
+# RUN ln -s ${JAVA_DIR}/jdk1.8.0_171/bin/java /usr/local/bin/java
+# RUN chown -R root:root ${JAVA_DIR}
+
+# install java - end
+
+# declare env vars
+ENV CORDAPPS_DIR="${APP_DIR}/cordapps"
+ENV TMP_DIR="${APP_DIR}/tmp"
+ENV CONFIG_FOLDER="${APP_DIR}/config"
+ENV CERTIFICATES_FOLDER="${APP_DIR}/certificates"
+ENV DRIVERS_FOLDER="${APP_DIR}/drivers"
+ENV MY_RPC_PORT="10201"
+ENV IVNO_DEL_NETWORK_PARAMS="false"
+# -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -XX:+UseG1GC are added by run-corda.sh
+# -Dlog4j2.debug 
+#ENV JVM_ARGS="-XX:+UnlockExperimentalVMOptions -XX:+UnlockDiagnosticVMOptions -XX:+UseCGroupMemoryLimitForHeap -XX:+UseG1GC -XX:NativeMemoryTracking=summary -XX:+PrintNMTStatistics -javaagent:./libs/jolokia-jvm-1.6.0-agent.jar=port=7005,host=localhost"
+ENV JVM_ARGS="-XX:+UnlockExperimentalVMOptions -XX:+UnlockDiagnosticVMOptions -XX:+UseCGroupMemoryLimitForHeap -XX:+UseG1GC -XX:NativeMemoryTracking=summary -XX:+PrintNMTStatistics"
+#ENV IVNO_CORDA_ARGS="--log-to-console --no-local-shell"
+
+# add ivno user
+#RUN useradd --create-home --shell /bin/bash ivno
+#RUN chown -R ivno:ivno ${APP_DIR}
+#USER ivno
+
+# copy over corda bin
+#COPY --chown=ivno:ivno "corda-${CORDA_VERSION}.jar" "bin/corda.jar"
+COPY "corda-${CORDA_VERSION}.jar" "bin/corda.jar"
+
+# create dir structure for node
+RUN mkdir ${CONFIG_FOLDER}
+RUN mkdir ${TMP_DIR}
+RUN mkdir ${CORDAPPS_DIR}
+RUN mkdir ${CERTIFICATES_FOLDER}
+RUN mkdir ${DRIVERS_FOLDER}
+
+# create blank files - this stops docker volume mounting trying to mount a file on the host side on to
+#   "nothing" as this creates a dir - even thought the host has a file there.
+RUN touch ${APP_DIR}/ivno.state
+
+# download the postgres driver into the drivers folder
+#ADD --chown=ivno:ivno https://jdbc.postgresql.org/download/postgresql-42.1.4.jar ${DRIVERS_FOLDER}
+ADD https://jdbc.postgresql.org/download/postgresql-42.1.4.jar ${DRIVERS_FOLDER}
+
+# copy the scripts we use to boot up the node
+RUN mkdir scripts
+#COPY --chown=ivno:ivno docker-node/run-corda.sh scripts/run-corda.sh
+COPY docker-node/run-corda.sh scripts/run-corda.sh
+
+# make the scripts executable from anywhere so they don't have to be aware
+#   of dir structures or where the other scripts live
+#USER root
+RUN ln -s ${APP_DIR}/scripts/run-corda.sh /usr/local/bin/run-corda
+#USER ivno
+
+# copy the version number into the docker image
+#COPY --chown=ivno:ivno version.txt version.txt
+COPY version.txt version.txt
+
+# for debugging
+# COPY --chown=ivno:ivno keep-alive.sh keep-alive.sh
+
+# CMD ["./keep-alive.sh"]
+
+CMD ["run-corda"]

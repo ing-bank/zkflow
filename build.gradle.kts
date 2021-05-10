@@ -118,6 +118,7 @@ tasks.withType<io.gitlab.arturbosch.detekt.Detekt> {
     exclude("**/*.kts")
     exclude("**/resources/")
     exclude("**/build/")
+    exclude("ivno/*")
 }
 
 idea {

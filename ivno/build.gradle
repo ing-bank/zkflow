@@ -1,0 +1,168 @@
+//import com.amazonaws.auth.profile.ProfileCredentialsProvider
+
+buildscript {
+    ext {
+        kotlin_group = "org.jetbrains.kotlin"
+        kotlin_version = "1.2.71"
+
+        corda_artifactory_url = "https://ci-artifactory.corda.r3cev.com/artifactory"
+
+        corda_group = "net.corda"
+        corda_release_version = "4.6"
+
+        corda_core_release_distribution = 'net.corda'
+        corda_core_release_version = '4.6'
+
+        corda_tokens_sdk_version = '1.0'
+        corda_tokens_sdk_release_group = 'com.r3.corda.lib.tokens'
+
+        dasl_version = "1.0.14"
+        dasl_release_group = "io.dasl"
+
+        braid_group = "io.cordite.braid"
+        braid_version = "5.0.0-RC05"
+
+        corda_gradle_plugin_group = "net.corda.plugins"
+        corda_gradle_plugin_version = "5.0.4"
+
+        junit_group = "org.junit.jupiter"
+        junit_version = "5.3.1"
+
+        awaitility_group = "org.awaitility"
+        awaitility_version = "4.0.3"
+
+        ktlint_group = "com.pinterest"
+        ktlint_version = "0.36.0"
+
+        onixlabs_group = 'io.onixlabs'
+        onixlabs_corda_core_release_version = '1.0.0-rc5'
+        onixlabs_corda_idfx_release_version = '1.0.0-rc7'
+        onixlabs_corda_bnms_release_version = '1.0.0-rc5'
+
+        cordapp_platform_version = 8
+        cordapp_signing_enabled = true
+
+        maven_repo_s3_url = "s3://io.ivno.collateraltoken-maven-repo"
+    }
+
+    repositories {
+//        mavenLocal()
+        mavenCentral()
+        jcenter()
+        maven { url "$corda_artifactory_url/corda-releases" }
+    }
+
+    dependencies {
+        classpath "$kotlin_group:kotlin-gradle-plugin:$kotlin_version"
+        classpath "$corda_gradle_plugin_group:cordapp:$corda_gradle_plugin_version"
+        classpath "$corda_gradle_plugin_group:cordformation:$corda_gradle_plugin_version"
+        classpath "$corda_gradle_plugin_group:quasar-utils:$corda_gradle_plugin_version"
+        classpath "com.amazonaws:aws-java-sdk-core:1.11.5"
+    }
+}
+
+ext {
+//    awsCredentials = new ProfileCredentialsProvider("ivno-dev").credentials
+}
+
+group 'io.ivno'
+if (hasProperty('projVersion')) {
+    version = project.projVersion
+} else {
+    version = 'SNAPSHOT'
+}
+
+repositories {
+    jcenter()
+}
+
+configurations {
+    ktlint
+}
+
+dependencies {
+    ktlint "$ktlint_group:ktlint:$ktlint_version"
+}
+
+subprojects {
+    version = project.parent.version
+
+    repositories {
+//        maven {
+//            url "${maven_repo_s3_url}"
+//            credentials(AwsCredentials) {
+//                accessKey awsCredentials.AWSAccessKeyId
+//                secretKey awsCredentials.AWSSecretKey
+//            }
+//        }
+        flatDir {
+            dirs(rootProject.projectDir.toPath().resolve("lib"))
+        }
+//        mavenLocal()
+        mavenCentral()
+        jcenter()
+        maven { url "https://jitpack.io" }
+        maven { url "$corda_artifactory_url/corda-releases" }
+        maven { url "$corda_artifactory_url/corda-lib" }
+        // Corda dependencies for the patched Quasar version
+        maven { url "https://software.r3.com/artifactory/corda-dependencies" } // access to the patched Quasar version
+        maven { url "https://repo.gradle.org/gradle/libs-releases" }
+//        maven {
+//            name = "GitHubPackagesCIF"
+//            url = uri("https://maven.pkg.github.com/onix-labs/onixlabs-corda-identity-framework-beta")
+//            credentials {
+//                username = project.findProperty("gpr.user") ?: System.getenv("GITHUB_USERNAME")
+//                password = project.findProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")
+//            }
+//        }
+//        maven {
+//            name = "GitHubPackagesBNMS"
+//            url = uri("https://maven.pkg.github.com/onix-labs/onixlabs-corda-bnms")
+//            credentials {
+//                username = project.findProperty("gpr.user") ?: System.getenv("GITHUB_USERNAME")
+//                password = project.findProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")
+//            }
+//        }
+//        maven {
+//            url "https://gitlab.com/api/v4/groups/lab577/-/packages/maven"
+//            name "GitLab"
+//            credentials(HttpHeaderCredentials) {
+//                name = "Deploy-Token"
+//                value = project.findProperty("577.deploy_token")
+//            }
+//            authentication {
+//                header(HttpHeaderAuthentication)
+//            }
+//        }
+    }
+
+    apply plugin: 'kotlin'
+    apply plugin: 'maven-publish'
+    apply plugin: 'net.corda.plugins.cordapp'
+
+    tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile) {
+        kotlinOptions {
+            languageVersion = "1.2"
+            apiVersion = "1.2"
+            jvmTarget = "1.8"
+            javaParameters = true
+        }
+    }
+
+    jar {
+        exclude '**/log4j2*.xml'
+        archiveName "${archivesBaseName}-${project.version}.jar"
+    }
+
+}
+
+task releaseLocal(type: GradleBuild) {
+    tasks = ['clean', 'build', 'publishToMavenLocal']
+}
+
+task ktlint(type: JavaExec, group: "verification") {
+    description = "Check Kotlin code style."
+    classpath = configurations.ktlint
+    main = "com.pinterest.ktlint.Main"
+    args "**/src/**/*.kt"
+}

@@ -1,0 +1,120 @@
+package io.ivno.collateraltoken.contract
+
+import net.corda.testing.node.ledger
+import org.junit.jupiter.api.Test
+
+class TransferContractRequestTests : ContractTest() {
+
+    @Test
+    fun `On transfer requesting, the transaction must include the Request command`() {
+        services.ledger {
+            transaction {
+                val memberships = createAllMemberships()
+                reference(memberships.membershipFor(BANK_A).ref)
+                reference(memberships.membershipFor(BANK_B).ref)
+                reference(memberships.attestationFor(BANK_A).ref)
+                reference(memberships.attestationFor(BANK_B).ref)
+                reference(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
+                output(TransferContract.ID, TRANSFER)
+                fails()
+                command(keysOf(BANK_A), TransferContract.Request)
+                verifies()
+            }
+        }
+    }
+
+    @Test
+    fun `On transfer requesting, zero transfer states must be consumed`() {
+        services.ledger {
+            transaction {
+                input(TransferContract.ID, TRANSFER)
+                output(TransferContract.ID, TRANSFER)
+                command(keysOf(BANK_A), TransferContract.Request)
+                failsWith(TransferContract.Request.CONTRACT_RULE_TRANSFER_INPUTS)
+            }
+        }
+    }
+
+    @Test
+    fun `On transfer requesting, only one transfer state must be created`() {
+        services.ledger {
+            transaction {
+                output(TransferContract.ID, TRANSFER)
+                output(TransferContract.ID, TRANSFER)
+                command(keysOf(BANK_A), TransferContract.Request)
+                failsWith(TransferContract.Request.CONTRACT_RULE_TRANSFER_OUTPUTS)
+            }
+        }
+    }
+
+    @Test
+    fun `On transfer requesting, the sender and the receiver accounts must not be the same`() {
+        services.ledger {
+            transaction {
+                val memberships = createAllMemberships()
+                reference(memberships.membershipFor(BANK_A).ref)
+                reference(memberships.membershipFor(BANK_B).ref)
+                reference(memberships.attestationFor(BANK_A).ref)
+                reference(memberships.attestationFor(BANK_B).ref)
+                reference(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
+                output(
+                    TransferContract.ID,
+                    TRANSFER.copy(targetTokenHolder = BANK_A.party, targetTokenHolderAccountId = "12345678")
+                )
+                command(keysOf(BANK_A), TransferContract.Request)
+                failsWith(TransferContract.Request.CONTRACT_RULE_PARTICIPANTS)
+            }
+        }
+    }
+
+    @Test
+    fun `On transfer requesting, the amount must be greater than zero`() {
+        services.ledger {
+            transaction {
+                val memberships = createAllMemberships()
+                reference(memberships.membershipFor(BANK_A).ref)
+                reference(memberships.membershipFor(BANK_B).ref)
+                reference(memberships.attestationFor(BANK_A).ref)
+                reference(memberships.attestationFor(BANK_B).ref)
+                reference(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
+                output(TransferContract.ID, TRANSFER.copy(amount = AMOUNT_OF_ZERO_IVNO_TOKEN_POINTER))
+                command(keysOf(BANK_A), TransferContract.Request)
+                failsWith(TransferContract.Request.CONTRACT_RULE_AMOUNT)
+            }
+        }
+    }
+
+    @Test
+    fun `On transfer requesting, the status must be REQUESTED`() {
+        services.ledger {
+            transaction {
+                val memberships = createAllMemberships()
+                reference(memberships.membershipFor(BANK_A).ref)
+                reference(memberships.membershipFor(BANK_B).ref)
+                reference(memberships.attestationFor(BANK_A).ref)
+                reference(memberships.attestationFor(BANK_B).ref)
+                reference(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
+                output(TransferContract.ID, TRANSFER.copy(status = TransferStatus.COMPLETED))
+                command(keysOf(BANK_A), TransferContract.Request)
+                failsWith(TransferContract.Request.CONTRACT_RULE_STATUS)
+            }
+        }
+    }
+
+    @Test
+    fun `On transfer requesting, the initiator must sign the transaction`() {
+        services.ledger {
+            transaction {
+                val memberships = createAllMemberships()
+                reference(memberships.membershipFor(BANK_A).ref)
+                reference(memberships.membershipFor(BANK_B).ref)
+                reference(memberships.attestationFor(BANK_A).ref)
+                reference(memberships.attestationFor(BANK_B).ref)
+                reference(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
+                output(TransferContract.ID, TRANSFER)
+                command(keysOf(TOKEN_ISSUING_ENTITY), TransferContract.Request)
+                failsWith(TransferContract.Request.CONTRACT_RULE_SIGNERS)
+            }
+        }
+    }
+}

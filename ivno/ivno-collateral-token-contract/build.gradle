@@ -1,0 +1,62 @@
+cordapp {
+    signing {
+        enabled = cordapp_signing_enabled
+    }
+    targetPlatformVersion cordapp_platform_version
+    minimumPlatformVersion cordapp_platform_version
+    contract {
+        name "Ivno Tokens Contract"
+        vendor "Ivno Ltd"
+        licence "Ivno Tokens Contract Copyright © 2021 Ivno Limited. All rights reserved.  The information herein is, and remains, the property of Ivno Limited [and its suppliers (if any)]. No use may be made of this software without a valid licence from Ivno Limited. Please contact legal@ivno.io for more information."
+        versionId 1
+    }
+}
+
+dependencies {
+    // Kotlin Dependencies
+    implementation "$kotlin_group:kotlin-stdlib-jdk8:$kotlin_version"
+
+    // Corda Development Dependencies
+    cordaCompile "$corda_core_release_distribution:corda-core:$corda_core_release_version"
+    cordaCompile "$onixlabs_group:onixlabs-corda-core-contract:$onixlabs_corda_core_release_version"
+    cordaCompile "$onixlabs_group:onixlabs-corda-identity-framework-contract:$onixlabs_corda_idfx_release_version"
+    cordaCompile "$onixlabs_group:onixlabs-corda-bnms-contract:$onixlabs_corda_bnms_release_version"
+
+    // DASL Dependencies
+    cordapp "$dasl_release_group:dasl-contracts:$dasl_version"
+    cordapp "$dasl_release_group:dasl-workflows:$dasl_version"
+
+    // Test Dependencies
+    testRuntimeOnly "$junit_group:junit-jupiter-engine:$junit_version"
+    testImplementation "$junit_group:junit-jupiter-api:$junit_version"
+    testImplementation "$kotlin_group:kotlin-test:$kotlin_version"
+    testImplementation "$corda_group:corda-node-driver:$corda_release_version"
+}
+
+//publishing {
+//    publications {
+//        maven(MavenPublication) {
+//            groupId = project.parent.group
+//            version = project.parent.version
+//            artifactId = 'ivno-collateral-token-contract'
+//            from components.java
+//        }
+//    }
+//    repositories {
+//        maven {
+//            url "${maven_repo_s3_url}"
+//            credentials(AwsCredentials) {
+//                accessKey awsCredentials.AWSAccessKeyId
+//                secretKey awsCredentials.AWSSecretKey
+//            }
+//        }
+//    }
+//}
+
+test {
+    jvmArgs = ["-ea", "-javaagent:../lib/quasar.jar"]
+    maxHeapSize = "1024m"
+//        forkEvery = 15
+    //failFast = true // this causes the tests to fail on the first failure - usful for cci debugging
+    useJUnitPlatform()
+}

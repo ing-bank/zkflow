@@ -1,0 +1,43 @@
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+    <changeSet author="Ivno Ltd" id="create-redemption_states">
+        <createTable tableName="redemption_states">
+            <column name="output_index" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="transaction_id" type="NVARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="linear_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="external_id" type="NVARCHAR(255)"/>
+            <column name="redeemer" type="NVARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="custodian" type="NVARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="amount" type="DECIMAL(19,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="token_type_linear_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="token_type_external_id" type="NVARCHAR(255)"/>
+            <column name="status" type="NVARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="timestamp" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="account_id" type="NVARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addPrimaryKey columnNames="output_index, transaction_id"
+                       constraintName="PK_redemption_states"
+                       tableName="redemption_states"/>
+    </changeSet>
+</databaseChangeLog>
