@@ -3,7 +3,7 @@
 buildscript {
     ext {
         kotlin_group = "org.jetbrains.kotlin"
-        kotlin_version = "1.2.71"
+        kotlin_version = "1.4.30"
 
         corda_artifactory_url = "https://ci-artifactory.corda.r3cev.com/artifactory"
 
@@ -137,13 +137,13 @@ subprojects {
     }
 
     apply plugin: 'kotlin'
-    apply plugin: 'maven-publish'
+//    apply plugin: 'maven-publish'
     apply plugin: 'net.corda.plugins.cordapp'
 
     tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile) {
         kotlinOptions {
-            languageVersion = "1.2"
-            apiVersion = "1.2"
+            languageVersion = "1.4"
+            apiVersion = "1.4"
             jvmTarget = "1.8"
             javaParameters = true
         }
@@ -156,9 +156,9 @@ subprojects {
 
 }
 
-task releaseLocal(type: GradleBuild) {
-    tasks = ['clean', 'build', 'publishToMavenLocal']
-}
+//task releaseLocal(type: GradleBuild) {
+//    tasks = ['clean', 'build', 'publishToMavenLocal']
+//}
 
 task ktlint(type: JavaExec, group: "verification") {
     description = "Check Kotlin code style."
