@@ -116,7 +116,8 @@ class BigDecimalComparisonTest {
     fun `zinc compares two zeros`() {
         val zero = BigDecimal.ZERO
 
-        val input = "{\"left\": ${zero.toJSON()}, \"right\": ${zero.toJSON()}}"
+        // val input = "{\"left\": ${zero.toJSON()}, \"right\": ${zero.toJSON()}}"
+        val input = toWitness(zero, zero)
         val expected = "\"${zero.compareTo(zero)}\""
 
         zincZKService.proveTimed(input, log).let {

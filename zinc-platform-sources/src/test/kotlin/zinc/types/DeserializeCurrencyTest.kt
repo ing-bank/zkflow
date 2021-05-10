@@ -14,7 +14,7 @@ class DeserializeCurrencyTest {
     private val zincZKService = getZincZKService<DeserializeCurrencyTest>()
 
     @Test
-    fun `an Currency should be deserialized correctly`() {
+    fun `a Currency should be deserialized correctly`() {
         val data = Data(Currency.getInstance(Locale.FRANCE))
         val witness = toWitness(data)
 

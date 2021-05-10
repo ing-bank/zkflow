@@ -74,7 +74,7 @@ internal class SerializedStringEqualsTest {
         val second: String
     ) {
         fun toWitnessJson(): String {
-            val dataJson = serialize(this, Data.serializer()).toPrettyJSONArray()
+            val dataJson = serialize(this, Data.serializer()).toJsonArray()
             return "{\"witness\":$dataJson}"
         }
     }

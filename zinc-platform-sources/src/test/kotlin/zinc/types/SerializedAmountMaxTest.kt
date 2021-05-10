@@ -65,7 +65,7 @@ class SerializedAmountMaxTest {
     }
 
     private fun SerializedAmountMaxTest.verifyMaxAmountTest(expectedAmount: Amount<Currency>) {
-        val expected = expectedAmount.toJSON(
+        val expected = expectedAmount.toZincJson(
             integerSize = 100,
             fractionSize = 20
         )
@@ -104,7 +104,7 @@ class SerializedAmountMaxTest {
         actualElement.jsonObject["display_token_size"] shouldBe expectedElement.jsonObject["display_token_size"]
         actualElement.jsonObject["token_type_hash"] shouldNotBe null
         actualElement.jsonObject["token_type_hash"] shouldBe Json.parseToJsonElement(
-            expectedAmount.token.javaClass.sha256().toPrettyJSONArray()
+            expectedAmount.token.javaClass.sha256().toJsonArray().toString()
         )
         actualElement.jsonObject["token"] shouldNotBe null
         actualElement.jsonObject["token"] shouldBe expectedElement.jsonObject["token"]
