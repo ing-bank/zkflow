@@ -36,7 +36,7 @@ class TemplateRenderer(
             .replace("\${TYPE_NAME}", templateParameters.typeName)
             .replace("\${CONST_PREFIX}", snakeCaseType.toUpperCase())
             .replace("\${ENCODED_SIZE}", "${templateParameters.encodedSize}")
-            .replace("\${SERIAL_NAME_SIZE}", "1")
+            .replace("\${TYPE_SIZE}", "1")
         createOutputFile(outputDirectory.resolve("$snakeCaseType.zn"))
             .writeBytes(stringContent.toByteArray())
     }
