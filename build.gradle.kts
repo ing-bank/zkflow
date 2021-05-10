@@ -12,15 +12,6 @@ buildscript {
             maven("https://software.r3.com/artifactory/corda")
 
             maven {
-                name = "CordaForkRepo"
-                url = uri("https://maven.pkg.github.com/ingzkp/corda")
-                credentials {
-                    username = System.getenv("GITHUB_USERNAME")
-                    password = System.getenv("GITHUB_TOKEN")
-                }
-            }
-
-            maven {
                 name = "BinaryFixedLengthSerializationRepo"
                 url = uri("https://maven.pkg.github.com/ingzkp/kotlinx-serialization-bfl")
                 credentials {
