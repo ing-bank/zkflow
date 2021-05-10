@@ -1,9 +1,7 @@
 package zinc.types
 
-import io.kotest.matchers.shouldBe
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
 import net.corda.core.contracts.PrivacySalt
 import org.junit.jupiter.api.Test
 import kotlin.time.ExperimentalTime
@@ -19,12 +17,7 @@ class DeserializePrivacySaltTest {
         val data = Data(privacySalt)
         val witness = toWitness(data)
         val expected = data.data.toZincJson()
-        val actual = zincZKService.run(witness, "")
-
-        val expectedJson = Json.parseToJsonElement(expected)
-        val actualJson = Json.parseToJsonElement(actual)
-
-        actualJson shouldBe expectedJson
+        zincZKService.run(witness, expected)
     }
 
     @Serializable

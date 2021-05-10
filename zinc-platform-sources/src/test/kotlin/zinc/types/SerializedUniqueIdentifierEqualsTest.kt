@@ -68,7 +68,7 @@ class SerializedUniqueIdentifierEqualsTest {
     private fun toWitness(left: Data, right: Data): String {
         val bytes = serialize(left, serializersModule = CordaSerializers) +
             serialize(right, serializersModule = CordaSerializers)
-        return "{\"witness\":${bytes.toPrettyJSONArray()}}"
+        return "{\"witness\":${bytes.toJsonArray()}}"
     }
 
     @Serializable

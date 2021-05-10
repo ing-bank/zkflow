@@ -26,7 +26,19 @@ class TemplateRenderer(
             is X500PrincipalTemplateParameters -> renderX500PrincipalTemplate(templateContents, templateParameters)
             is CurrencyTemplateParameters -> renderCurrencyTemplate(templateContents, templateParameters)
             is SecureHashTemplateParameters -> renderSecureHashTemplate(templateContents, templateParameters)
+            is PublicKeyTemplateParameters -> renderPublicKeyTemplate(templateContents, templateParameters)
         }
+    }
+
+    private fun renderPublicKeyTemplate(templateContents: String, templateParameters: PublicKeyTemplateParameters) {
+        val snakeCaseType = templateParameters.typeName.camelToSnakeCase().replace("public_key", "_public_key")
+        val stringContent = templateContents
+            .replace("\${TYPE_NAME}", templateParameters.typeName)
+            .replace("\${CONST_PREFIX}", snakeCaseType.toUpperCase())
+            .replace("\${ENCODED_SIZE}", "${templateParameters.encodedSize}")
+            .replace("\${TYPE_SIZE}", "1")
+        createOutputFile(outputDirectory.resolve("$snakeCaseType.zn"))
+            .writeBytes(stringContent.toByteArray())
     }
 
     private fun renderTemplateWarning(

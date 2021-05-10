@@ -1,9 +1,7 @@
 package zinc.types
 
-import io.kotest.matchers.shouldBe
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.time.Year
@@ -22,12 +20,7 @@ class DeserializeZonedDateTimeTest {
         val witness = toWitness(data)
 
         val expected = data.data.toZincJson()
-        val actual = zincZKService.run(witness, "")
-
-        val expectedJson = Json.parseToJsonElement(expected)
-        val actualJson = Json.parseToJsonElement(actual)
-
-        actualJson shouldBe expectedJson
+        zincZKService.run(witness, expected)
     }
 
     @Serializable

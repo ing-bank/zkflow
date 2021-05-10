@@ -21,6 +21,10 @@ object BCRSAPublicKeySerializer : KSerializer<BCRSAPublicKey> by (
 /**
  * Corresponds to Corda's Crypto.RSA_SHA256 (422 bytes).
  */
-data class BCRSASurrogate(@FixedLength([422]) override val encoded: ByteArray) : PublicKeySurrogate<BCRSAPublicKey> {
+data class BCRSASurrogate(@FixedLength([ENCODED_SIZE]) override val encoded: ByteArray) : PublicKeySurrogate<BCRSAPublicKey> {
     override fun toOriginal() = toOriginal(Crypto.RSA_SHA256.schemeNumberID) as BCRSAPublicKey
+
+    companion object {
+        const val ENCODED_SIZE = 422
+    }
 }

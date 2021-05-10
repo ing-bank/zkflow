@@ -1,9 +1,7 @@
 package zinc.types
 
-import io.kotest.matchers.shouldBe
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
 import net.corda.core.contracts.LinearPointer
 import net.corda.core.contracts.LinearState
 import net.corda.core.contracts.UniqueIdentifier
@@ -22,12 +20,7 @@ class DeserializeLinearPointerTest {
         val witness = toWitness(data)
 
         val expected = data.pointer.toZincJson()
-        val actual = zincZKService.run(witness, "")
-
-        val expectedJson = Json.parseToJsonElement(expected)
-        val actualJson = Json.parseToJsonElement(actual)
-
-        actualJson shouldBe expectedJson
+        zincZKService.run(witness, expected)
     }
 
     @Serializable

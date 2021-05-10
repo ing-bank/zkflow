@@ -1,6 +1,5 @@
 package zinc.types
 
-import com.ing.dlt.zkkrypto.util.asUnsigned
 import com.ing.serialization.bfl.annotations.FixedLength
 import com.ing.serialization.bfl.api.reified.serialize
 import com.ing.serialization.bfl.serializers.BFLSerializers
@@ -13,6 +12,8 @@ import com.ing.zknotary.common.zkp.ZincZKService
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.contextual
@@ -28,36 +29,46 @@ import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
 import com.ing.serialization.bfl.api.serialize as obliviousSerialize
 
-inline fun <reified T : Any, reified U : Any> toWitness(left: Amount<T>, right: Amount<U>): String =
-    "{\"left\": ${left.toJSON()}, \"right\": ${right.toJSON()}}"
+inline fun <reified T : Any, reified U : Any> toWitness(left: Amount<T>, right: Amount<U>) =
+    buildJsonObject {
+        put("left", left.toJsonObject())
+        put("right", right.toJsonObject())
+    }.toString()
 
-inline fun <reified T : Any, reified U : Any> toSerializedWitness(left: Amount<T>, right: Amount<U>): String =
-    "{\"left\": ${left.toSerializedJson()}, \"right\": ${right.toSerializedJson()}}"
+inline fun <reified T : Any, reified U : Any> toSerializedWitness(left: Amount<T>, right: Amount<U>) =
+    buildJsonObject {
+        put("left", left.toJsonArray())
+        put("right", right.toJsonArray())
+    }.toString()
 
-fun toWitness(left: BigDecimal, right: BigDecimal): String =
-    "{\"left\": ${left.toJSON()}, \"right\": ${right.toJSON()}}"
+fun toWitness(left: BigDecimal, right: BigDecimal) = buildJsonObject {
+    put("left", left.toJsonObject())
+    put("right", right.toJsonObject())
+}.toString()
 
-fun toSerializedWitness(left: BigDecimal, right: BigDecimal): String =
-    "{\"left\": ${left.toSerializedJson()}, \"right\": ${right.toSerializedJson()}}"
+fun toSerializedWitness(left: BigDecimal, right: BigDecimal) = buildJsonObject {
+    put("left", left.toJsonArray())
+    put("right", right.toJsonArray())
+}.toString()
 
-fun toBigWitness(left: BigDecimal, right: BigDecimal): String =
-    "{\"left\": ${left.toJSON(100, 20)}, \"right\": ${right.toJSON(100, 20)}}"
+fun toBigWitness(left: BigDecimal, right: BigDecimal) = buildJsonObject {
+    put("left", left.toJsonObject(100, 20))
+    put("right", right.toJsonObject(100, 20))
+}.toString()
 
 inline fun <reified T : Any> toWitness(item: T): String {
     val bytes = serialize(item, serializersModule = CordaSerializers)
     return bytesToWitness(bytes)
 }
 
-fun <T : Any> toObliviousWitness(item: T): String {
-    val bytes = obliviousSerialize(item, serializersModule = CordaSerializers)
+fun <T : Any> toObliviousWitness(item: T, serializersModule: SerializersModule = EmptySerializersModule): String {
+    val bytes = obliviousSerialize(item, serializersModule = CordaSerializers + serializersModule)
     return bytesToWitness(bytes)
 }
 
-fun bytesToWitness(bytes: ByteArray) = """
-    {
-        "witness":${bytes.toPrettyJSONArray()}
-    }
-""".trimIndent()
+fun bytesToWitness(bytes: ByteArray) = buildJsonObject {
+    put("witness", bytes.toJsonArray())
+}.toString()
 
 fun Class<*>.sha256(): ByteArray = SecureHash.sha256(name).copyBytes()
 
@@ -71,8 +82,8 @@ data class WrappedAmountCurrency(
     val wrappedValue: @Contextual Amount<@Contextual Currency>
 )
 
-inline fun <reified T : Any> Amount<T>.toSerializedJson(): String {
-    return when (this.token) {
+inline fun <reified T : Any> Amount<T>.toJsonArray() =
+    when (this.token) {
         is String -> serialize(
             WrappedAmountString(this as Amount<String>), WrappedAmountString.serializer(),
             SerializersModule {
@@ -86,27 +97,24 @@ inline fun <reified T : Any> Amount<T>.toSerializedJson(): String {
             }
         )
         else -> throw IllegalArgumentException("Amount<${this.token.javaClass.simpleName}> is not supported")
-    }.toPrettyJSONArray()
-}
+    }.toJsonArray()
 
-inline fun <reified T : Any> Amount<T>.toJSON(
+inline fun <reified T : Any> Amount<T>.toJsonObject(
     integerSize: Int = 24,
     fractionSize: Int = 6,
     tokenSize: Int = 8,
     serializersModule: SerializersModule = EmptySerializersModule
-): String {
-    val displayTokenSizeJson = this.displayTokenSize.toJSON(integerSize, fractionSize)
-    val tokenTypeHashJson = this.token.javaClass.sha256().toPrettyJSONArray()
-    val token = serialize(this.token, serializersModule = BFLSerializers + serializersModule)
+) = buildJsonObject {
+    val displayTokenSizeJson = displayTokenSize.toJsonObject(integerSize, fractionSize)
+    val tokenTypeHashJson = token.javaClass.sha256().toJsonArray()
+    val tokenJson = serialize(token, serializersModule = BFLSerializers + serializersModule).toJsonArray()
 
-    token.size shouldBe tokenSize
+    tokenJson.size shouldBe tokenSize
 
-    val tokenJson = token.toPrettyJSONArray()
-
-    return "{\"quantity\": \"$quantity\", " +
-        "\"display_token_size\": $displayTokenSizeJson, " +
-        "\"token_type_hash\": $tokenTypeHashJson, " +
-        "\"token\": $tokenJson}"
+    put("quantity", "$quantity")
+    put("display_token_size", displayTokenSizeJson)
+    put("token_type_hash", tokenTypeHashJson)
+    put("token", tokenJson)
 }
 
 @Serializable
@@ -117,11 +125,10 @@ private data class WrappedBigDecimal(
 
 private fun BigDecimal.wrap(): WrappedBigDecimal = WrappedBigDecimal(this)
 
-fun BigDecimal.toSerializedJson(): String =
-    serialize(this.wrap(), serializersModule = BFLSerializers).toPrettyJSONArray()
+fun BigDecimal.toJsonArray() = serialize(this.wrap(), serializersModule = BFLSerializers).toJsonArray()
 
-fun BigDecimal.toJSON(integerSize: Int = 24, fractionSize: Int = 6): String {
-    val stringRepresentation = this.toPlainString()
+fun BigDecimal.toJsonObject(integerSize: Int = 24, fractionSize: Int = 6) = buildJsonObject {
+    val stringRepresentation = toPlainString()
     val integerFractionTuple = stringRepresentation.removePrefix("-").split(".")
 
     val integer = IntArray(integerSize)
@@ -137,13 +144,10 @@ fun BigDecimal.toJSON(integerSize: Int = 24, fractionSize: Int = 6): String {
         }
     }
 
-    return "{\"sign\": \"${this.signum()}\", \"integer\": ${integer.toPrettyJSONArray()}," +
-        " \"fraction\": ${fraction.toPrettyJSONArray()}}"
+    put("sign", "${signum()}")
+    put("integer", integer.toJsonArray())
+    put("fraction", fraction.toJsonArray())
 }
-
-fun IntArray.toPrettyJSONArray() = "[ ${this.joinToString { "\"$it\"" }} ]"
-
-fun ByteArray.toPrettyJSONArray() = "[ ${this.map { it.asUnsigned() }.joinToString { "\"$it\"" }} ]"
 
 fun makeBigDecimal(bytes: ByteArray, sign: Int) = BigDecimal(BigInteger(sign, bytes))
 
@@ -155,7 +159,8 @@ inline fun <reified T : Any> getZincZKService(
     provingTimeout: Duration = Duration.ofSeconds(300),
     verificationTimeout: Duration = Duration.ofSeconds(1)
 ): ZincZKService {
-    val circuitFolder: String = T::class.java.getResource("/${T::class.java.simpleName}")!!.path
+    val circuitFolder: String = T::class.java.getResource("/${T::class.java.simpleName}")?.path
+        ?: throw IllegalStateException("Zinc test source folder not found: ${T::class.java.simpleName}")
     return ZincZKService(
         circuitFolder,
         artifactFolder = circuitFolder,
@@ -209,3 +214,7 @@ fun ZincZKService.verifyTimed(proof: ByteArray, publicInput: PublicInput, log: L
     }
     log.debug("[verify] $time")
 }
+
+fun ByteArray.resizeTo(newSize: Int) = ByteArray(newSize) { if (it < size) this[it] else 0 }
+fun IntArray.resizeTo(newSize: Int) = IntArray(newSize) { if (it < size) this[it] else 0 }
+fun String?.toSizedIntArray(size: Int) = (this ?: "").chars().toArray().resizeTo(size)

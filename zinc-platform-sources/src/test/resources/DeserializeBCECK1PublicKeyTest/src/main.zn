@@ -1,0 +1,8 @@
+mod bcec_public_key;
+
+use bcec_public_key::BCECPublicKey;
+use bcec_public_key::SerializedBCECPublicKey;
+
+fn main(witness: SerializedBCECPublicKey) -> BCECPublicKey {
+    BCECPublicKey::deserialize(witness)
+}

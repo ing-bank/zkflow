@@ -29,7 +29,7 @@ class BigBigDecimalMinusTest {
         val right = makeBigDecimal("747233429293018787918347987234564568", 10)
 
         val input = toBigWitness(left, right)
-        val expected = left.minus(right).toJSON(100, 20)
+        val expected = left.minus(right).toZincJson(100, 20)
 
         zincZKService.proveTimed(input, log).let {
             zincZKService.verifyTimed(it, expected, log)
@@ -42,7 +42,7 @@ class BigBigDecimalMinusTest {
         val right = makeBigDecimal("747233429293018787918347987234564568", -10)
 
         val input = toBigWitness(left, right)
-        val expected = left.minus(right).toJSON(100, 20)
+        val expected = left.minus(right).toZincJson(100, 20)
 
         zincZKService.proveTimed(input, log).let {
             zincZKService.verifyTimed(it, expected, log)
@@ -55,7 +55,7 @@ class BigBigDecimalMinusTest {
         val right = makeBigDecimal("747233429293018787918347987234564568", -10)
 
         val input = toBigWitness(left, right)
-        val expected = left.minus(right).toJSON(100, 20)
+        val expected = left.minus(right).toZincJson(100, 20)
 
         zincZKService.proveTimed(input, log).let {
             zincZKService.verifyTimed(it, expected, log)
@@ -68,7 +68,7 @@ class BigBigDecimalMinusTest {
         val right = makeBigDecimal("0", 10)
 
         val input = toBigWitness(left, right)
-        val expected = left.minus(right).toJSON(100, 20)
+        val expected = left.minus(right).toZincJson(100, 20)
 
         zincZKService.proveTimed(input, log).let {
             zincZKService.verifyTimed(it, expected, log)
@@ -81,7 +81,7 @@ class BigBigDecimalMinusTest {
         val right = makeBigDecimal(byteArrayOf(10, 20, 30, 40, 50, 60, 70, 10, 20, 30), 1)
 
         val input = toBigWitness(left, right)
-        val expected = left.minus(right).toJSON(100, 20)
+        val expected = left.minus(right).toZincJson(100, 20)
 
         zincZKService.proveTimed(input, log).let {
             zincZKService.verifyTimed(it, expected, log)
@@ -94,7 +94,7 @@ class BigBigDecimalMinusTest {
         val right = makeBigDecimal(byteArrayOf(1, 2, 3, 4, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7), 1)
 
         val input = toBigWitness(left, right)
-        val expected = left.minus(right).toJSON(100, 20)
+        val expected = left.minus(right).toZincJson(100, 20)
 
         zincZKService.proveTimed(input, log).let {
             zincZKService.verifyTimed(it, expected, log)
@@ -107,7 +107,7 @@ class BigBigDecimalMinusTest {
         val right = makeBigDecimal(byteArrayOf(10, 20, 30, 40, 50, 60, 70, 10, 20, 30), -1)
 
         val input = toBigWitness(left, right)
-        val expected = left.minus(right).toJSON(100, 20)
+        val expected = left.minus(right).toZincJson(100, 20)
 
         zincZKService.proveTimed(input, log).let {
             zincZKService.verifyTimed(it, expected, log)
@@ -120,7 +120,7 @@ class BigBigDecimalMinusTest {
         val right = makeBigDecimal(byteArrayOf(1, 2, 3, 4, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7), -1)
 
         val input = toBigWitness(left, right)
-        val expected = left.minus(right).toJSON(100, 20)
+        val expected = left.minus(right).toZincJson(100, 20)
 
         zincZKService.proveTimed(input, log).let {
             zincZKService.verifyTimed(it, expected, log)
@@ -133,7 +133,7 @@ class BigBigDecimalMinusTest {
         val right = makeBigDecimal(byteArrayOf(10, 20, 30, 40, 50, 60, 70, 10, 20, 30), 1)
 
         val input = toBigWitness(left, right)
-        val expected = left.minus(right).toJSON(100, 20)
+        val expected = left.minus(right).toZincJson(100, 20)
 
         zincZKService.proveTimed(input, log).let {
             zincZKService.verifyTimed(it, expected, log)
@@ -146,7 +146,7 @@ class BigBigDecimalMinusTest {
         val right = makeBigDecimal(byteArrayOf(10, 20, 30, 40, 50, 60, 70, 10, 20, 30), -1)
 
         val input = toBigWitness(left, right)
-        val expected = left.minus(right).toJSON(100, 20)
+        val expected = left.minus(right).toZincJson(100, 20)
 
         zincZKService.proveTimed(input, log).let {
             zincZKService.verifyTimed(it, expected, log)
@@ -159,7 +159,7 @@ class BigBigDecimalMinusTest {
         val right = makeBigDecimal(byteArrayOf(1, 2, 3, 4, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7), -1)
 
         val input = toBigWitness(left, right)
-        val expected = left.minus(right).toJSON(100, 20)
+        val expected = left.minus(right).toZincJson(100, 20)
 
         zincZKService.proveTimed(input, log).let {
             zincZKService.verifyTimed(it, expected, log)

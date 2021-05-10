@@ -1,9 +1,7 @@
 package zinc.types
 
-import io.kotest.matchers.shouldBe
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Test
 import javax.security.auth.x500.X500Principal
 import kotlin.time.ExperimentalTime
@@ -18,12 +16,7 @@ class DeserializeX500PrincipalTest {
         val witness = toWitness(data)
 
         val expected = data.data.toZincJson()
-        val actual = zincZKService.run(witness, "")
-
-        val expectedJson = Json.parseToJsonElement(expected)
-        val actualJson = Json.parseToJsonElement(actual)
-
-        actualJson shouldBe expectedJson
+        zincZKService.run(witness, expected)
     }
 
     @Serializable

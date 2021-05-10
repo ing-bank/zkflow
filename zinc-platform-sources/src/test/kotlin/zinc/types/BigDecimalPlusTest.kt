@@ -33,7 +33,7 @@ class BigDecimalPlusTest {
         val zero = BigDecimal.ZERO
 
         val input = toWitness(zero, zero)
-        val expected = zero.toJSON()
+        val expected = zero.toZincJson()
 
         val proof = zincZKService.proveTimed(input, log)
         zincZKService.verifyTimed(proof, expected, log)
@@ -45,7 +45,7 @@ class BigDecimalPlusTest {
         val right = BigDecimal.ZERO
 
         val input = toWitness(left, right)
-        val expected = left.plus(right).toJSON()
+        val expected = left.plus(right).toZincJson()
 
         zincZKService.proveTimed(input, log).let {
             zincZKService.verifyTimed(it, expected, log)
@@ -58,7 +58,7 @@ class BigDecimalPlusTest {
         val right = BigDecimal.ZERO
 
         val input = toWitness(left, right)
-        val expected = left.plus(right).toJSON()
+        val expected = left.plus(right).toZincJson()
 
         zincZKService.proveTimed(input, log).let {
             zincZKService.verifyTimed(it, expected, log)
@@ -71,7 +71,7 @@ class BigDecimalPlusTest {
         val right = BigDecimal("1.1")
 
         val input = toWitness(left, right)
-        val expected = left.plus(right).toJSON()
+        val expected = left.plus(right).toZincJson()
 
         zincZKService.proveTimed(input, log).let {
             zincZKService.verifyTimed(it, expected, log)
@@ -84,7 +84,7 @@ class BigDecimalPlusTest {
         val right = BigDecimal("-1.1")
 
         val input = toWitness(left, right)
-        val expected = left.plus(right).toJSON()
+        val expected = left.plus(right).toZincJson()
 
         zincZKService.proveTimed(input, log).let {
             zincZKService.verifyTimed(it, expected, log)
@@ -97,7 +97,7 @@ class BigDecimalPlusTest {
         val right = BigDecimal("-1.1")
 
         val input = toWitness(left, right)
-        val expected = left.plus(right).toJSON()
+        val expected = left.plus(right).toZincJson()
 
         zincZKService.proveTimed(input, log).let {
             zincZKService.verifyTimed(it, expected, log)
@@ -110,7 +110,7 @@ class BigDecimalPlusTest {
         val right = BigDecimal("1.1")
 
         val input = toWitness(left, right)
-        val expected = left.plus(right).toJSON()
+        val expected = left.plus(right).toZincJson()
 
         zincZKService.proveTimed(input, log).let {
             zincZKService.verifyTimed(it, expected, log)
@@ -123,7 +123,7 @@ class BigDecimalPlusTest {
         val right = BigDecimal("1.101")
 
         val input = toWitness(left, right)
-        val expected = left.plus(right).toJSON()
+        val expected = left.plus(right).toZincJson()
 
         zincZKService.proveTimed(input, log).let {
             zincZKService.verifyTimed(it, expected, log)
@@ -136,7 +136,7 @@ class BigDecimalPlusTest {
         val right = BigDecimal("-1.101")
 
         val input = toWitness(left, right)
-        val expected = left.plus(right).toJSON()
+        val expected = left.plus(right).toZincJson()
 
         zincZKService.proveTimed(input, log).let {
             zincZKService.verifyTimed(it, expected, log)
@@ -149,7 +149,7 @@ class BigDecimalPlusTest {
         val right = BigDecimal("-1.101")
 
         val input = toWitness(left, right)
-        val expected = left.plus(right).toJSON()
+        val expected = left.plus(right).toZincJson()
 
         zincZKService.proveTimed(input, log).let {
             zincZKService.verifyTimed(it, expected, log)
@@ -162,7 +162,7 @@ class BigDecimalPlusTest {
         val right = BigDecimal("1.101")
 
         val input = toWitness(left, right)
-        val expected = left.plus(right).toJSON()
+        val expected = left.plus(right).toZincJson()
 
         zincZKService.proveTimed(input, log).let {
             zincZKService.verifyTimed(it, expected, log)
@@ -175,7 +175,7 @@ class BigDecimalPlusTest {
         val right = BigDecimal("-2.6")
 
         val input = toWitness(left, right)
-        val expected = left.plus(right).toJSON()
+        val expected = left.plus(right).toZincJson()
 
         zincZKService.proveTimed(input, log).let {
             zincZKService.verifyTimed(it, expected, log)
@@ -188,7 +188,7 @@ class BigDecimalPlusTest {
         val right = BigDecimal("2.6")
 
         val input = toWitness(left, right)
-        val expected = left.plus(right).toJSON()
+        val expected = left.plus(right).toZincJson()
 
         zincZKService.proveTimed(input, log).let {
             zincZKService.verifyTimed(it, expected, log)
@@ -201,7 +201,7 @@ class BigDecimalPlusTest {
         val right = BigDecimal("-0.9")
 
         val input = toWitness(left, right)
-        val expected = left.plus(right).toJSON()
+        val expected = left.plus(right).toZincJson()
 
         zincZKService.proveTimed(input, log).let {
             zincZKService.verifyTimed(it, expected, log)
@@ -214,7 +214,7 @@ class BigDecimalPlusTest {
         val right = BigDecimal("0.9")
 
         val input = toWitness(left, right)
-        val expected = left.plus(right).toJSON()
+        val expected = left.plus(right).toZincJson()
 
         zincZKService.proveTimed(input, log).let {
             zincZKService.verifyTimed(it, expected, log)
@@ -227,7 +227,7 @@ class BigDecimalPlusTest {
         val right = BigDecimal("-0.1")
 
         val input = toWitness(left, right)
-        val expected = left.plus(right).toJSON()
+        val expected = left.plus(right).toZincJson()
 
         zincZKService.proveTimed(input, log).let {
             zincZKService.verifyTimed(it, expected, log)
@@ -240,7 +240,7 @@ class BigDecimalPlusTest {
         val right = BigDecimal("-0.1")
 
         val input = toWitness(left, right)
-        val expected = left.plus(right).toJSON()
+        val expected = left.plus(right).toZincJson()
 
         zincZKService.proveTimed(input, log).let {
             zincZKService.verifyTimed(it, expected, log)
@@ -287,7 +287,7 @@ class BigDecimalPlusTest {
         val right = makeBigDecimal(byteArrayOf(10, 20, 30, 40, 50, 60, 70, 10, 20, 30), 1)
 
         val input = toWitness(left, right)
-        val expected = left.plus(right).toJSON()
+        val expected = left.plus(right).toZincJson()
 
         zincZKService.proveTimed(input, log).let {
             zincZKService.verifyTimed(it, expected, log)
@@ -300,7 +300,7 @@ class BigDecimalPlusTest {
         val right = makeBigDecimal(byteArrayOf(10, 20, 30, 40, 50, 60, 70, 10, 20, 30), -1)
 
         val input = toWitness(left, right)
-        val expected = left.plus(right).toJSON()
+        val expected = left.plus(right).toZincJson()
 
         zincZKService.proveTimed(input, log).let {
             zincZKService.verifyTimed(it, expected, log)
@@ -313,7 +313,7 @@ class BigDecimalPlusTest {
         val right = makeBigDecimal(byteArrayOf(1, 2, 3, 4, 5, 6, 7), -1)
 
         val input = toWitness(left, right)
-        val expected = left.plus(right).toJSON()
+        val expected = left.plus(right).toZincJson()
 
         zincZKService.proveTimed(input, log).let {
             zincZKService.verifyTimed(it, expected, log)
@@ -326,7 +326,7 @@ class BigDecimalPlusTest {
         val right = makeBigDecimal(byteArrayOf(1, 2, 3, 4, 5, 6, 7), 1)
 
         val input = toWitness(left, right)
-        val expected = left.plus(right).toJSON()
+        val expected = left.plus(right).toZincJson()
 
         zincZKService.proveTimed(input, log).let {
             zincZKService.verifyTimed(it, expected, log)
@@ -339,7 +339,7 @@ class BigDecimalPlusTest {
         val right = makeBigDecimal(byteArrayOf(3, 4, 5, 6, 7, 8, 9), -1)
 
         val input = toWitness(left, right)
-        val expected = left.plus(right).toJSON()
+        val expected = left.plus(right).toZincJson()
 
         zincZKService.proveTimed(input, log).let {
             zincZKService.verifyTimed(it, expected, log)
@@ -352,7 +352,7 @@ class BigDecimalPlusTest {
         val right = makeBigDecimal(byteArrayOf(3, 4, 5, 6, 7, 8, 9), 1)
 
         val input = toWitness(left, right)
-        val expected = left.plus(right).toJSON()
+        val expected = left.plus(right).toZincJson()
 
         zincZKService.proveTimed(input, log).let {
             zincZKService.verifyTimed(it, expected, log)
@@ -365,7 +365,7 @@ class BigDecimalPlusTest {
         val right = makeBigDecimal(byteArrayOf(1, 2, 3, 4, 5, 6, 7), 1)
 
         val input = toWitness(left, right)
-        val expected = left.plus(right).toJSON()
+        val expected = left.plus(right).toZincJson()
 
         zincZKService.proveTimed(input, log).let {
             zincZKService.verifyTimed(it, expected, log)
@@ -378,7 +378,7 @@ class BigDecimalPlusTest {
         val right = makeBigDecimal(byteArrayOf(0), 1)
 
         val input = toWitness(left, right)
-        val expected = left.plus(right).toJSON()
+        val expected = left.plus(right).toZincJson()
 
         zincZKService.proveTimed(input, log).let {
             zincZKService.verifyTimed(it, expected, log)
@@ -391,7 +391,7 @@ class BigDecimalPlusTest {
         val right = makeBigDecimal(byteArrayOf(1, 2, 3, 4, 5, 6, 7), 1)
 
         val input = toWitness(left, right)
-        val expected = left.plus(right).toJSON()
+        val expected = left.plus(right).toZincJson()
 
         zincZKService.proveTimed(input, log).let {
             zincZKService.verifyTimed(it, expected, log)
@@ -404,7 +404,7 @@ class BigDecimalPlusTest {
         val right = makeBigDecimal(byteArrayOf(0), 1)
 
         val input = toWitness(left, right)
-        val expected = left.plus(right).toJSON()
+        val expected = left.plus(right).toZincJson()
 
         zincZKService.proveTimed(input, log).let {
             zincZKService.verifyTimed(it, expected, log)
@@ -417,7 +417,7 @@ class BigDecimalPlusTest {
         val right = BigDecimal(BigInteger.ZERO)
 
         val input = toWitness(left, right)
-        val expected = left.plus(right).toJSON()
+        val expected = left.plus(right).toZincJson()
 
         zincZKService.proveTimed(input, log).let {
             zincZKService.verifyTimed(it, expected, log)
@@ -430,7 +430,7 @@ class BigDecimalPlusTest {
         val right = makeBigDecimal(byteArrayOf(1, 2, 3, 4, 5, 6, 7), 1)
 
         val input = toWitness(left, right)
-        val expected = left.plus(right).toJSON()
+        val expected = left.plus(right).toZincJson()
 
         zincZKService.proveTimed(input, log).let {
             zincZKService.verifyTimed(it, expected, log)
@@ -443,7 +443,7 @@ class BigDecimalPlusTest {
         val right = BigDecimal(BigInteger.ZERO)
 
         val input = toWitness(left, right)
-        val expected = left.plus(right).toJSON()
+        val expected = left.plus(right).toZincJson()
 
         zincZKService.proveTimed(input, log).let {
             zincZKService.verifyTimed(it, expected, log)
@@ -456,7 +456,7 @@ class BigDecimalPlusTest {
         val right = BigDecimal(BigInteger.ONE)
 
         val input = toWitness(left, right)
-        val expected = left.plus(right).toJSON()
+        val expected = left.plus(right).toZincJson()
 
         zincZKService.proveTimed(input, log).let {
             zincZKService.verifyTimed(it, expected, log)

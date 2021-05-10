@@ -67,7 +67,7 @@ class AmountPlusTest {
         val right = Amount(100, BigDecimal("1"), dummyToken)
 
         val input = toWitness(left, right)
-        val expected = left.plus(right).toJSON()
+        val expected = left.plus(right).toZincJson()
 
         zincZKService.proveTimed(input, log).let {
             zincZKService.verifyTimed(it, expected, log)

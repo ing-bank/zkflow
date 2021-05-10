@@ -88,7 +88,7 @@ class SerializedAmountPlusTest {
 
         val input = toSerializedWitness(left, right)
 
-        val expected = left.plus(right).toJSON(
+        val expected = left.plus(right).toZincJson(
             integerSize = 100,
             fractionSize = 20
         )

@@ -21,6 +21,10 @@ object BCSphincs256PublicKeySerializer : KSerializer<BCSphincs256PublicKey> by (
 /**
  * Corresponds to Corda's Crypto.256_SHA512 (1097 bytes).
  */
-data class BCSphincs256Surrogate(@FixedLength([1097]) override val encoded: ByteArray) : PublicKeySurrogate<BCSphincs256PublicKey> {
+data class BCSphincs256Surrogate(@FixedLength([ENCODED_SIZE]) override val encoded: ByteArray) : PublicKeySurrogate<BCSphincs256PublicKey> {
     override fun toOriginal() = toOriginal(Crypto.SPHINCS256_SHA256.schemeNumberID) as BCSphincs256PublicKey
+
+    companion object {
+        const val ENCODED_SIZE = 1097
+    }
 }

@@ -4,6 +4,7 @@ import com.ing.zknotary.gradle.template.AmountTemplateParameters
 import com.ing.zknotary.gradle.template.BigDecimalTemplateParameters
 import com.ing.zknotary.gradle.template.CurrencyTemplateParameters
 import com.ing.zknotary.gradle.template.LinearPointerTemplateParameters
+import com.ing.zknotary.gradle.template.PublicKeyTemplateParameters
 import com.ing.zknotary.gradle.template.SecureHashTemplateParameters
 import com.ing.zknotary.gradle.template.StringTemplateParameters
 import com.ing.zknotary.gradle.template.TemplateParameters
@@ -39,7 +40,7 @@ fun resolveAllTemplateParameters(): List<TemplateParameters> {
                 X500PrincipalTemplateParameters,
                 CurrencyTemplateParameters,
                 SecureHashTemplateParameters,
-            )
+            ) + PublicKeyTemplateParameters.all
         )
         .flatMap { it.resolveAllConfigurations() }
         .distinct()

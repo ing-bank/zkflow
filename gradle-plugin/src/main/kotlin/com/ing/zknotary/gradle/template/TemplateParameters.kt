@@ -5,9 +5,13 @@ import com.ing.serialization.bfl.serializers.X500PrincipalSurrogate
 import com.ing.zknotary.common.serialization.bfl.corda.LinearPointerSurrogate
 import com.ing.zknotary.common.serialization.bfl.serializers.SecureHashSurrogate
 import com.ing.zknotary.common.serialization.bfl.serializers.UniqueIdentifierSurrogate
+import com.ing.zknotary.common.serialization.bfl.serializers.publickey.BCECSurrogate
+import com.ing.zknotary.common.serialization.bfl.serializers.publickey.BCRSASurrogate
+import com.ing.zknotary.common.serialization.bfl.serializers.publickey.BCSphincs256Surrogate
+import com.ing.zknotary.common.serialization.bfl.serializers.publickey.EdDSASurrogate
 
 sealed class TemplateParameters(
-    val templateFile: String,
+    open val templateFile: String,
     private val dependencies: List<TemplateParameters>
 ) {
     fun resolveAllConfigurations(): List<TemplateParameters> =
@@ -56,6 +60,30 @@ data class ByteArrayTemplateParameters(
     val arraySize: Int
 ) : TemplateParameters("byte_array.zn", emptyList())
 
+data class PublicKeyTemplateParameters(
+    override val templateFile: String,
+    val typeName: String,
+    val encodedSize: Int,
+) : TemplateParameters(
+    templateFile,
+    listOf(
+        StringTemplateParameters(1),
+        ByteArrayTemplateParameters(encodedSize),
+    )
+) {
+    companion object {
+        private const val TEMPLATE = "public_key.zn"
+        private const val TEMPLATE_WITH_SCHEME_ID = "public_key_with_scheme_id.zn"
+
+        val all = listOf(
+            PublicKeyTemplateParameters(TEMPLATE, "BCRSAPublicKey", BCRSASurrogate.ENCODED_SIZE),
+            PublicKeyTemplateParameters(TEMPLATE_WITH_SCHEME_ID, "BCECPublicKey", BCECSurrogate.ENCODED_SIZE),
+            PublicKeyTemplateParameters(TEMPLATE, "EdDSAPublicKey", EdDSASurrogate.ENCODED_SIZE),
+            PublicKeyTemplateParameters(TEMPLATE, "BCSphincs256PublicKey", BCSphincs256Surrogate.ENCODED_SIZE)
+        )
+    }
+}
+
 object UniqueIdentifierTemplateParameters : TemplateParameters(
     "unique_identifier.zn",
     listOf(StringTemplateParameters(UniqueIdentifierSurrogate.EXTERNAL_ID_LENGTH.toShort()))
@@ -81,7 +109,7 @@ object SecureHashTemplateParameters : TemplateParameters(
     listOf(ByteArrayTemplateParameters(SecureHashSurrogate.BYTES_SIZE))
 )
 
-private val camelRegex = "(?<=[a-zA-Z])[A-Z]".toRegex()
+private val camelRegex = "(?<=[a-z])[A-Z]".toRegex()
 
 internal fun String.camelToSnakeCase(): String {
     return camelRegex.replace(this) {
