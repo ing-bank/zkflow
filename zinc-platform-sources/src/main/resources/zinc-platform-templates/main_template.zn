@@ -1,8 +1,28 @@
+mod consts;
+mod contract_rules;
+mod platform_component_group_leaf_digest_dto;
+mod platform_merkle_tree;
+mod platform_node_digest_dto;
+mod platform_utxo_digests;
+mod platform_zk_prover_transaction;
+
+use consts::INPUT_GROUP_SIZE;
+use consts::REFERENCE_GROUP_SIZE;
+use contract_rules::check_contract_rules;
+use platform_component_group_leaf_digest_dto::ComponentGroupLeafDigestBytes;
+use platform_component_group_leaf_digest_dto::COMPONENT_GROUP_LEAF_DIGEST_BYTES;
+use platform_merkle_tree::build_merkle_tree;
+use platform_node_digest_dto::NodeDigestDto;
+use platform_node_digest_dto::NodeDigestBytes;
+use platform_node_digest_dto::NODE_DIGEST_BYTES;
+use platform_utxo_digests::compute_input_utxo_digests;
+use platform_utxo_digests::compute_reference_utxo_digests;
+use platform_zk_prover_transaction::Witness;
 
 struct PublicInput {
     transaction_id: NodeDigestBytes,
-    input_hashes: [ComponentGroupLeafDigestDto; INPUT_GROUP_SIZE],
-    reference_hashes: [ComponentGroupLeafDigestDto; REFERENCE_GROUP_SIZE],
+    input_hashes: [ComponentGroupLeafDigestBytes; INPUT_GROUP_SIZE],
+    reference_hashes: [ComponentGroupLeafDigestBytes; REFERENCE_GROUP_SIZE],
 }
 
 fn main(witness: Witness) -> PublicInput  {

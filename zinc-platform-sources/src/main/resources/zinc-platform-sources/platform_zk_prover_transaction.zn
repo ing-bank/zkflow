@@ -9,13 +9,16 @@ mod platform_components_parameters;
 mod platform_components_signers;
 mod platform_privacy_salt;
 mod platform_nonce_digest_dto;
+mod platform_utxo_digests;
 mod consts;
 
 use consts::INPUT_GROUP_SIZE;
 use consts::REFERENCE_GROUP_SIZE;
 use platform_components_inputs::SerializedInputGroup;
+use platform_utxo_digests::SerializedInputUtxos;
 use platform_components_outputs::SerializedOutputGroup;
 use platform_components_references::SerializedReferenceGroup;
+use platform_utxo_digests::SerializedReferenceUtxos;
 use platform_components_commands::SerializedCommandGroup;
 use platform_components_notary::SerializedNotaryGroup;
 use platform_components_attachments::SerializedAttachmentGroup;
@@ -23,7 +26,7 @@ use platform_components_time_window::SerializedTimeWindowGroup;
 use platform_components_parameters::SerializedParametersGroup;
 use platform_components_signers::SerializedSignerGroup;
 use platform_privacy_salt::PrivacySaltBytes;
-use platform_nonce_digest_dto::NonceDigestDto;
+use platform_nonce_digest_dto::NonceDigestBytes;
 
 
 struct Witness {
@@ -39,9 +42,9 @@ struct Witness {
 
     privacy_salt: PrivacySaltBytes,
 
-    input_nonces: [NonceDigestDto; INPUT_GROUP_SIZE],
-    reference_nonces: [NonceDigestDto; REFERENCE_GROUP_SIZE],
+    input_nonces: [NonceDigestBytes; INPUT_GROUP_SIZE],
+    reference_nonces: [NonceDigestBytes; REFERENCE_GROUP_SIZE],
 
-    serialized_input_utxos: [u8; 0],
-    serialized_reference_utxos: [u8; 0]
+    serialized_input_utxos: SerializedInputUtxos,
+    serialized_reference_utxos: SerializedReferenceUtxos
 }

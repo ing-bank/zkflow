@@ -7,6 +7,7 @@ mod platform_component_group_leaf_digest_dto;
 mod platform_component_group_enum;
 mod platform_consts;
 mod platform_crypto_utils;
+mod platform_nonce_digest_dto;
 
 use merkle_utils::get_merkle_tree_from_${GROUP_SIZE_PLACEHOLDER}_component_group_leaf_digests;
 use platform_node_digest_dto::NodeDigestBits;
@@ -20,6 +21,7 @@ use platform_state_and_ref::StateAndRefPaddingWrapper;
 use platform_state_and_ref::StateRef;
 use consts::REFERENCE_GROUP_SIZE;
 use consts::REFERENCE_COMPONENT_SIZE;
+use consts::REFERENCE_UTXO_SIZE;
 use platform_crypto_utils::compute_nonce;
 use platform_consts::BYTE_BITS;
 use std::convert::to_bits;

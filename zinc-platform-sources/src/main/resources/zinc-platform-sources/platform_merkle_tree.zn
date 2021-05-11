@@ -27,7 +27,6 @@ use platform_node_digest_dto::NodeDigestBits;
 use platform_component_group_enum::ComponentGroupEnum;
 use platform_node_digest_dto::NODE_DIGEST_BITS;
 use platform_privacy_salt::from_bytes_to_bits;
-use platform_nonce_digest_dto::NonceDigestDto;
 use platform_components_inputs::compute_inputs_group_hash;
 use platform_components_commands::compute_commands_group_hash;
 use platform_components_attachments::compute_attachments_group_hash;
@@ -63,7 +62,6 @@ fn merkle_root(leaves: [NodeDigestBits; COMPONENT_GROUPS_SIZE]) -> NodeDigestBit
 }
 
 fn build_merkle_tree(tx: Witness) -> NodeDigestBits {
-    // Fingerprint for privacy salt
    let privacy_salt = from_bytes_to_bits( tx.privacy_salt );
 
     let mut component_group_hashes = [[false; NODE_DIGEST_BITS]; COMPONENT_GROUPS_SIZE];

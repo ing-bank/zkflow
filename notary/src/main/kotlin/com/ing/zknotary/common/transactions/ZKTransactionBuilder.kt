@@ -1,6 +1,7 @@
 package com.ing.zknotary.common.transactions
 
 import co.paralleluniverse.strands.Strand
+import com.ing.zknotary.common.contracts.ZKContractState
 import com.ing.zknotary.common.serialization.bfl.FixedLengthSerializationScheme
 import net.corda.core.contracts.AttachmentConstraint
 import net.corda.core.contracts.AutomaticPlaceholderConstraint
@@ -96,6 +97,14 @@ class ZKTransactionBuilder(
     ) : this(notary, lockId, inputs, attachments, outputs, commands, window, privacySalt, arrayListOf())
 
     constructor(notary: Party) : this(notary, window = null)
+
+    init {
+        outputStates().forEach {
+            if (it.data !is ZKContractState)
+                throw IllegalArgumentException("Can only use ZKContractStates as output")
+        }
+        // Cannot check Input states here though
+    }
 
     private companion object {
         // Copied from private `TransactionBuilder.defaultLockId`

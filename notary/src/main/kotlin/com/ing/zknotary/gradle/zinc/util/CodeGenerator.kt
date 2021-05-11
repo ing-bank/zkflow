@@ -15,7 +15,7 @@ mod platform_crypto_utils;
 mod platform_node_digest_dto;
 
 use platform_component_group_leaf_digest_dto::ComponentGroupLeafDigestBits;
-use platform_component_group_leaf_digest_dto::ComponentGroupLeafDigestDto;
+use platform_component_group_leaf_digest_dto::ComponentGroupLeafDigestBytes;
 use platform_component_group_leaf_digest_dto::COMPONENT_GROUP_LEAF_DIGEST_BITS;
 use platform_crypto_utils::pedersen_to_padded_bits;
 use platform_crypto_utils::concatenate_component_group_leaf_digests;
@@ -49,31 +49,7 @@ use std::crypto::pedersen;
     fun generateMainCode(templateContents: String, constsContent: String) {
         val targetFile = createOutputFile(outputPath.resolve("main.zn"))
         targetFile.writeText("//! GENERATED CODE. DO NOT EDIT\n//! Edit it in zk-notary GenerateZincPlatformCodeFromTemplatesTask.kt\n")
-        targetFile.appendText("//! The main module.")
-        targetFile.appendText(
-            """
-mod consts;
-mod contract_rules;
-mod platform_component_group_leaf_digest_dto;
-mod platform_merkle_tree;
-mod platform_node_digest_dto;
-mod platform_utxo_digests;
-mod platform_zk_prover_transaction;
- 
-use consts::INPUT_GROUP_SIZE;
-use consts::REFERENCE_GROUP_SIZE; 
-use contract_rules::check_contract_rules;
-use platform_component_group_leaf_digest_dto::ComponentGroupLeafDigestDto;
-use platform_component_group_leaf_digest_dto::COMPONENT_GROUP_LEAF_DIGEST_BYTES;
-use platform_merkle_tree::build_merkle_tree;
-use platform_node_digest_dto::NodeDigestDto;
-use platform_node_digest_dto::NodeDigestBytes;
-use platform_node_digest_dto::NODE_DIGEST_BYTES;
-use platform_utxo_digests::compute_input_utxo_digests;
-use platform_utxo_digests::compute_reference_utxo_digests;
-use platform_zk_prover_transaction::Witness;
-"""
-        )
+        targetFile.appendText("//! The main module.\n")
         val inputHashesCode = getUtxoDigestCode(constsContent, "input")
         val referenceHashesCode = getUtxoDigestCode(constsContent, "reference")
 
@@ -89,15 +65,13 @@ use platform_zk_prover_transaction::Witness;
         if (componentGroupSize != null) {
             return when {
                 componentGroupSize > 0 -> {
-                    """compute_${componentGroupName}_utxo_digests( 
-            witness.${componentGroupName}s,
+                    """compute_${componentGroupName}_utxo_digests(
+            witness.serialized_${componentGroupName}_utxos,
             witness.${componentGroupName}_nonces,
         )"""
                 }
                 componentGroupSize == 0 -> {
-                    """[ComponentGroupLeafDigestDto {
-            bytes: [0; COMPONENT_GROUP_LEAF_DIGEST_BYTES],
-        }; ${componentGroupName.toUpperCase()}_GROUP_SIZE]"""
+                    """[[0; COMPONENT_GROUP_LEAF_DIGEST_BYTES]; ${componentGroupName.toUpperCase()}_GROUP_SIZE]"""
                 }
                 else -> {
                     throw IllegalArgumentException("Negative values are not allowed for ${componentGroupName.toUpperCase()}_GROUP_SIZE in consts.zn")

@@ -4,6 +4,7 @@ import com.ing.zknotary.common.crypto.zinc
 import com.ing.zknotary.common.serialization.bfl.BFLSerializationScheme
 import com.ing.zknotary.common.serialization.bfl.CommandDataSerializerMap
 import com.ing.zknotary.common.serialization.bfl.ContractStateSerializerMap
+import com.ing.zknotary.common.transactions.UtxoInfo
 import com.ing.zknotary.common.zkp.PublicInput
 import com.ing.zknotary.common.zkp.Witness
 import com.ing.zknotary.common.zkp.ZincZKService
@@ -12,6 +13,7 @@ import com.ing.zknotary.testing.zkp.proveTimed
 import com.ing.zknotary.testing.zkp.setupTimed
 import com.ing.zknotary.testing.zkp.verifyTimed
 import net.corda.core.contracts.Command
+import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.PrivacySalt
 import net.corda.core.contracts.StateAndContract
 import net.corda.core.contracts.StateRef
@@ -43,11 +45,21 @@ import kotlin.time.ExperimentalTime
 class TransactionVerificationTest {
     private val log = loggerFor<TransactionVerificationTest>()
 
-    private val circuitFolder: String = File("build/circuits/create").absolutePath
+    private val createCircuitFolder: String = File("build/circuits/create").absolutePath
+    private val moveCircuitFolder: String = File("build/circuits/move").absolutePath
 
-    private val zincZKService = ZincZKService(
-        circuitFolder,
-        artifactFolder = circuitFolder,
+    private val createZKService = ZincZKService(
+        createCircuitFolder,
+        artifactFolder = createCircuitFolder,
+        buildTimeout = Duration.ofSeconds(5),
+        setupTimeout = Duration.ofSeconds(1000),
+        provingTimeout = Duration.ofSeconds(300),
+        verificationTimeout = Duration.ofSeconds(1)
+    )
+
+    private val moveZKService = ZincZKService(
+        moveCircuitFolder,
+        artifactFolder = moveCircuitFolder,
         buildTimeout = Duration.ofSeconds(5),
         setupTimeout = Duration.ofSeconds(1000),
         provingTimeout = Duration.ofSeconds(300),
@@ -56,14 +68,17 @@ class TransactionVerificationTest {
 
     private val notary = TestIdentity.fresh("Notary").party
     private val alice = TestIdentity.fresh("Alice").party
+    private val bob = TestIdentity.fresh("Blob").party
 
     init {
-        zincZKService.setupTimed(log)
+        createZKService.setupTimed(log)
+        moveZKService.setupTimed(log)
     }
 
     @AfterAll
     fun `remove zinc files`() {
-        zincZKService.cleanup()
+        createZKService.cleanup()
+        moveZKService.cleanup()
     }
 
     /**
@@ -90,31 +105,70 @@ class TransactionVerificationTest {
     fun `zinc verifies full create transaction`() = withCustomSerializationEnv {
         ContractStateSerializerMap.register(TestContract.TestState::class, 1, TestContract.TestState.serializer())
         CommandDataSerializerMap.register(TestContract.Create::class, 2, TestContract.Create.serializer())
+        CommandDataSerializerMap.register(TestContract.Move::class, 3, TestContract.Move.serializer())
 
         val additionalSerializationProperties =
             mapOf<Any, Any>(BFLSerializationScheme.CONTEXT_KEY_CIRCUIT to TestContract.Create().circuit)
 
-        val wtx = createWtx(
+        // Create TX
+
+        val createWtx = createWtx(
             outputs = listOf(StateAndContract(TestContract.TestState(alice.anonymise()), TestContract.PROGRAM_ID)),
             commands = listOf(Command(TestContract.Create(), alice.owningKey)),
             additionalSerializationProperties = additionalSerializationProperties
         )
 
         val witness = Witness.fromWireTransaction(
-            wtx = wtx,
+            wtx = createWtx,
             emptyList(), emptyList()
         )
 
         val publicInput = PublicInput(
-            transactionId = wtx.id,
+            transactionId = createWtx.id,
             inputHashes = emptyList(),
             referenceHashes = emptyList()
         )
 
-        zincZKService.run(witness, publicInput)
+        createZKService.run(witness, null)
 
-        val proof = zincZKService.proveTimed(witness, log)
-        zincZKService.verifyTimed(proof, publicInput, log)
+        val proof = createZKService.proveTimed(witness, log)
+        createZKService.verifyTimed(proof, publicInput, log)
+
+        // Move TX
+
+        val additionalSerializationPropertiesForMove =
+            mapOf<Any, Any>(BFLSerializationScheme.CONTEXT_KEY_CIRCUIT to TestContract.Move().circuit)
+
+        val utxo = createWtx.outRef<TestContract.TestState>(0)
+        val serializedUtxo = createWtx.componentGroups.single { it.groupIndex == ComponentGroupEnum.OUTPUTS_GROUP.ordinal }.components[0]
+        val nonce = createWtx.buildFilteredTransaction { true }
+            .filteredComponentGroups.single { it.groupIndex == ComponentGroupEnum.OUTPUTS_GROUP.ordinal }
+            .nonces[0]
+        val inputHash = createWtx.digestService.componentHash(nonce, serializedUtxo)
+
+        val moveWtx = createWtx(
+            inputs = listOf(utxo.ref),
+            outputs = listOf(StateAndContract(TestContract.TestState(bob.anonymise()), TestContract.PROGRAM_ID)),
+            commands = listOf(Command(TestContract.Move(), listOf(alice.owningKey, bob.owningKey))),
+            additionalSerializationProperties = additionalSerializationPropertiesForMove
+        )
+
+        val moveWitness = Witness.fromWireTransaction(
+            wtx = moveWtx,
+            inputUtxoInfos = listOf(UtxoInfo(utxo.ref, serializedUtxo.bytes, nonce)),
+            referenceUtxoInfos = emptyList()
+        )
+
+        val movePublicInput = PublicInput(
+            transactionId = moveWtx.id,
+            inputHashes = listOf(inputHash),
+            referenceHashes = emptyList()
+        )
+
+        moveZKService.run(moveWitness, movePublicInput)
+
+        val moveProof = moveZKService.proveTimed(moveWitness, log)
+        moveZKService.verifyTimed(moveProof, movePublicInput, log)
     }
 
     @Suppress("LongParameterList")

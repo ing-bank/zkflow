@@ -70,7 +70,10 @@ public class TestContract : Contract {
         }
     }
 
-    public class Move : ZKCommandData {
+    @Serializable
+    public class Move : TypeOnlyCommandData(), ZKCommandData {
+
+        @Transient
         override val circuit: CircuitMetaData =
             CircuitMetaData(
                 folder = File("${System.getProperty("user.dir")}/../zinc-platform-sources/circuits/move"),
