@@ -7,11 +7,6 @@
 //! in each group.
 //! See definition of ZKCommandData on the Corda side.
 //!
-mod platform_consts;
-mod platform_pub_key;
-
-use platform_consts::U32_BYTES;
-use platform_pub_key::PUBKEY_BYTES;
 
 const ATTACHMENT_GROUP_SIZE: u16 = 0;
 const COMMAND_GROUP_SIZE: u16 = 1;
