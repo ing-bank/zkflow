@@ -7,9 +7,10 @@ import kotlin.reflect.KVisibility
 import kotlin.reflect.full.memberFunctions
 import kotlin.reflect.full.memberProperties
 
-public infix fun KClass<*>.shouldHaveSamePublicApiAs(expected: KClass<*>) {
-    val actualMemberFunctions = this.memberFunctions.filter { it.visibility == KVisibility.PUBLIC }
-    val expectedMemberFunctions = expected.memberFunctions.filter { it.visibility == KVisibility.PUBLIC }
+@Suppress("ComplexMethod")
+public fun KClass<*>.shouldHaveSamePublicApiAs(expected: KClass<*>, changed: List<String>) {
+    val actualMemberFunctions = this.memberFunctions.filter { it.visibility == KVisibility.PUBLIC && !changed.contains(it.name) }
+    val expectedMemberFunctions = expected.memberFunctions.filter { it.visibility == KVisibility.PUBLIC && !changed.contains(it.name) }
 
     expectedMemberFunctions.forEach { expectedFunction ->
         actualMemberFunctions.singleOrNull {
