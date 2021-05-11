@@ -10,6 +10,10 @@ import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
 import java.security.PublicKey
 
+// TODO: In future versions of BFL, only a single implementation of AbstractParty will be allowed
+//  in collections (List, Map, etc). Under such condition, AbstractParty will be serialized using
+//  either AnonymousPartySurrogate or PartySurrogate, rendering AbstractPartySurrogate obsolete.
+
 object AbstractPartySerializer : KSerializer<AbstractParty> by (
     SurrogateSerializer(AbstractPartySurrogate.serializer()) {
         when (it) {
@@ -19,6 +23,7 @@ object AbstractPartySerializer : KSerializer<AbstractParty> by (
         }
     }
     )
+
 
 @Serializable
 data class AbstractPartySurrogate(

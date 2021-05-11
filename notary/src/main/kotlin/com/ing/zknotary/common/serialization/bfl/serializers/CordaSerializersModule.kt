@@ -2,7 +2,6 @@ package com.ing.zknotary.common.serialization.bfl.serializers
 
 import com.ing.zknotary.common.serialization.bfl.corda.LinearPointerSerializer
 import com.ing.zknotary.common.serialization.bfl.corda.PartyAndReferenceSerializer
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.contextual
 import kotlinx.serialization.modules.polymorphic
@@ -13,8 +12,6 @@ import net.corda.core.contracts.AutomaticPlaceholderConstraint
 import net.corda.core.contracts.HashAttachmentConstraint
 import net.corda.core.contracts.SignatureAttachmentConstraint
 import net.corda.core.contracts.WhitelistedByZoneAttachmentConstraint
-import net.corda.core.identity.AnonymousParty
-import net.corda.core.identity.Party
 
 @Suppress("UNCHECKED_CAST")
 val CordaSerializers = SerializersModule {
@@ -37,8 +34,8 @@ val CordaSerializers = SerializersModule {
     contextual(SecureHashHASHSerializer)
 
     contextual(AbstractPartySerializer)
-    contextual(Party::class, AbstractPartySerializer as KSerializer<Party>)
-    contextual(AnonymousParty::class, AbstractPartySerializer as KSerializer<AnonymousParty>)
+    contextual(PartySerializer)
+    contextual(AnonymousPartySerializer)
 
     contextual(CordaX500NameSerializer)
 
