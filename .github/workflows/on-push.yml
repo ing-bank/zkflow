@@ -60,16 +60,30 @@ jobs:
           GITHUB_USERNAME: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Init new circuit and Process Zinc sources with Gradle
+      - name: zkdapp-tester - Init new circuit and Process Zinc sources with Gradle
         run: ../gradlew processZincSources createZincDirectoriesForInputCommand --command test-command  --stacktrace --info --build-cache
         working-directory: zkdapp-tester
         env:
           GITHUB_USERNAME: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Compile test-command circuit with Zargo
+      - name: zkdapp-tester - Compile test-command circuit with Zargo
         run: zargo build -v
         working-directory: zkdapp-tester/build/zinc/test-command
+        env:
+          GITHUB_USERNAME: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Ivno - Build with Gradle
+        run: ../gradlew build --stacktrace --info --build-cache
+        working-directory: ivno
+        env:
+          GITHUB_USERNAME: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Ivno - Compile deposit-request circuit with Zargo
+        run: zargo build -v
+        working-directory: ivno/build/zinc/deposit-request
         env:
           GITHUB_USERNAME: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
