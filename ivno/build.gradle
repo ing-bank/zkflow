@@ -136,9 +136,11 @@ subprojects {
 //        }
     }
 
+
     apply plugin: 'kotlin'
 //    apply plugin: 'maven-publish'
     apply plugin: 'net.corda.plugins.cordapp'
+//    apply plugin: 'com.ing.zknotary.gradle-plugin'
 
     tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile) {
         kotlinOptions {
