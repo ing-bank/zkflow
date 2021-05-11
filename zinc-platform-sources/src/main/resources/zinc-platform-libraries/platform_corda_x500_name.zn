@@ -1,4 +1,36 @@
-const CORDA_X500_NAME_LENGTH: u16 = 787;
+// @FixedLength([CordaX500Name.MAX_LENGTH_COMMON_NAME])
+// val commonName: String?,
+// @FixedLength([CordaX500Name.MAX_LENGTH_ORGANISATION_UNIT])
+// val organisationUnit: String?,
+// @FixedLength([CordaX500Name.MAX_LENGTH_ORGANISATION])
+// val organisation: String,
+// @FixedLength([CordaX500Name.MAX_LENGTH_LOCALITY])
+// val locality: String,
+// @FixedLength([CordaX500Name.MAX_LENGTH_STATE])
+// val state: String?,
+// // Country codes are defined in ISO 3166 and are all 2-letter abbreviations.
+// @FixedLength([LENGTH_COUNTRY = 2])
+// val country: String
+
+mod platform_consts;
+
+use platform_consts::NULLABILITY_BYTES;
+use platform_consts::CHAR_BYTES;
+use platform_consts::STRING_LENGTH_PREFIX;
+
+const MAX_LENGTH_COMMON_NAME: u16 = 64;
+const MAX_LENGTH_ORGANISATION_UNIT: u16 = 64;
+const MAX_LENGTH_ORGANISATION: u16 = 128;
+const MAX_LENGTH_LOCALITY: u16 = 64;
+const MAX_LENGTH_STATE: u16 = 64;
+const LENGTH_COUNTRY: u16 = 2;
+const CORDA_X500_NAME_LENGTH: u16 =
+    NULLABILITY_BYTES + STRING_LENGTH_PREFIX + MAX_LENGTH_COMMON_NAME * CHAR_BYTES +
+        NULLABILITY_BYTES + STRING_LENGTH_PREFIX + MAX_LENGTH_ORGANISATION_UNIT * CHAR_BYTES +
+        STRING_LENGTH_PREFIX + MAX_LENGTH_ORGANISATION * CHAR_BYTES +
+        STRING_LENGTH_PREFIX + MAX_LENGTH_LOCALITY * CHAR_BYTES +
+        STRING_LENGTH_PREFIX + NULLABILITY_BYTES + MAX_LENGTH_STATE * CHAR_BYTES +
+        STRING_LENGTH_PREFIX + LENGTH_COUNTRY * CHAR_BYTES;
 
 struct CordaX500Name {
     name: [u8; CORDA_X500_NAME_LENGTH]

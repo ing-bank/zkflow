@@ -12,6 +12,7 @@ import kotlinx.serialization.Contextual
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.contextual
@@ -128,9 +129,8 @@ class SerializedAmountMaxTest {
             contextual(AmountSerializer(CurrencySerializer))
         }
 
-        @ExperimentalUnsignedTypes
-        private fun ByteArray.toJsonWitness(): String {
-            return "{\"witness\": [${this.joinToString(",") { "\"${it.toUByte()}\"" }}] }"
-        }
+        private fun ByteArray.toJsonWitness() = buildJsonObject {
+            put("witness", toJsonArray())
+        }.toString()
     }
 }

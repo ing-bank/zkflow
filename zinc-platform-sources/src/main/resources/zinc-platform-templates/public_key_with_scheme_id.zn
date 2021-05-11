@@ -54,7 +54,9 @@ impl ${TYPE_NAME} {
             }
             String_${TYPE_SIZE}::deserialize(serial_bytes)
         };
+
         let scheme_id = serialized[${CONST_PREFIX}_SCHEME_ID_OFFSET];
+
         let encoded = {
             let mut encoded_bytes = [0; ${CONST_PREFIX}_ENCODED_LENGTH];
             for i in 0..${CONST_PREFIX}_ENCODED_LENGTH {

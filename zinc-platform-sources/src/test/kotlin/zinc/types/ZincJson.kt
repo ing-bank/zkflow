@@ -1,7 +1,10 @@
 package zinc.types
 
 import com.ing.dlt.zkkrypto.util.asUnsigned
+import com.ing.serialization.bfl.api.reified.serialize
 import com.ing.zknotary.common.serialization.bfl.corda.LinearPointerSurrogate
+import com.ing.zknotary.common.serialization.bfl.serializers.CordaX500NameSerializer
+import com.ing.zknotary.common.serialization.bfl.serializers.CordaX500NameSurrogate
 import com.ing.zknotary.common.serialization.bfl.serializers.SecureHashSupportedAlgorithm
 import com.ing.zknotary.common.serialization.bfl.serializers.SecureHashSurrogate
 import com.ing.zknotary.common.serialization.bfl.serializers.UniqueIdentifierSurrogate
@@ -18,9 +21,14 @@ import net.corda.core.contracts.PrivacySalt
 import net.corda.core.contracts.StateRef
 import net.corda.core.contracts.TimeWindow
 import net.corda.core.contracts.UniqueIdentifier
+import net.corda.core.crypto.Crypto
 import net.corda.core.crypto.SecureHash
+import net.corda.core.crypto.SignatureScheme
 import net.corda.core.crypto.algorithm
+import net.corda.core.identity.AbstractParty
+import net.corda.core.identity.CordaX500Name
 import java.math.BigDecimal
+import java.security.PublicKey
 import java.time.Duration
 import java.time.Instant
 import java.time.ZoneOffset
@@ -52,6 +60,10 @@ fun TimeWindow.toZincJson() = toJsonObject().toString()
 fun PrivacySalt.toZincJson() = toJsonObject().toString()
 fun SecureHash.toZincJson() = toJsonObject().toString()
 fun StateRef.toZincJson() = toJsonObject().toString()
+fun PublicKey.toZincJson(scheme: SignatureScheme, serialName: String, encodedSize: Int) =
+    toJsonObject(scheme, serialName, encodedSize).toString()
+fun AbstractParty.toZincJson(scheme: SignatureScheme, serialName: String, encodedSize: Int) =
+    toJsonObject(scheme, serialName, encodedSize).toString()
 
 fun String?.toJsonObject(size: Int) = buildJsonObject {
     put("chars", toSizedIntArray(size).toJsonArray())
@@ -152,4 +164,27 @@ fun SecureHash.toJsonObject() = buildJsonObject {
 fun StateRef.toJsonObject() = buildJsonObject {
     put("hash", txhash.toJsonObject())
     put("index", "$index")
+}
+
+fun PublicKey.toJsonObject(scheme: SignatureScheme, serialName: String, encodedSize: Int) = buildJsonObject {
+    put("serial_name", serialName.toJsonObject(1))
+
+    if (scheme == Crypto.ECDSA_SECP256K1_SHA256 || scheme == Crypto.ECDSA_SECP256R1_SHA256) {
+        put("scheme_id", "${scheme.schemeNumberID}")
+    }
+
+    put("encoded", encoded.toJsonObject(encodedSize))
+}
+
+fun CordaX500Name?.toJsonObject() = buildJsonObject {
+    val name: ByteArray = this@toJsonObject?.let {
+        serialize(it, strategy = CordaX500NameSerializer)
+    } ?: ByteArray(0)
+    put("name", name.resizeTo(CordaX500NameSurrogate.SIZE).toJsonArray())
+}
+
+fun AbstractParty.toJsonObject(scheme: SignatureScheme, serialName: String, encodedSize: Int) = buildJsonObject {
+    put("has_name", nameOrNull() != null)
+    put("name", nameOrNull().toJsonObject())
+    put("owning_key", owningKey.toJsonObject(scheme, serialName, encodedSize))
 }
