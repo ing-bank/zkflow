@@ -35,6 +35,11 @@ dependencies {
     testImplementation "$junit_group:junit-jupiter-api:$junit_version"
     testImplementation "$kotlin_group:kotlin-test:$kotlin_version"
     testImplementation "$corda_group:corda-node-driver:$corda_release_version"
+
+    // ZKFlow Test dependencies
+    testImplementation "com.ing.zknotary:test-utils"
+    testImplementation("io.kotest:kotest-assertions-core:4.3.1")
+
 }
 
 //publishing {
