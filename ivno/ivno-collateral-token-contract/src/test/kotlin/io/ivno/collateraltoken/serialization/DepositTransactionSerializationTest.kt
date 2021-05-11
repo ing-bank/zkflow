@@ -9,6 +9,8 @@ import com.ing.zknotary.testing.fixtures.contract.DummyContract
 import com.ing.zknotary.testing.fixtures.state.DummyState
 import com.ing.zknotary.testing.serialization.getSerializationContext
 import com.ing.zknotary.testing.serialization.serializeWithScheme
+import io.ivno.collateraltoken.contract.Deposit
+import io.ivno.collateraltoken.contract.DepositContract
 import io.kotest.matchers.shouldBe
 import net.corda.core.contracts.*
 import net.corda.core.crypto.DigestService
@@ -28,12 +30,11 @@ import kotlin.random.Random
 import kotlin.time.ExperimentalTime
 
 @ExperimentalTime
-class TransactionSerializationTest {
+class DepositTransactionSerializationTest {
     @Test
     @Suppress("LongMethod")
     fun `Wire transaction serializes`() = withCustomSerializationEnv {
-        ContractStateSerializerMap.register(DummyState::class, 1, DummyState.serializer())
-        CommandDataSerializerMap.register(DummyContract.Relax::class, 2, DummyContract.Relax.serializer())
+        ContractStateSerializerMap.register(Deposit::class, 1, DepositContract.serializer())
         CommandDataSerializerMap.register(DummyContract.Chill::class, 3, DummyContract.Chill.serializer())
 
         val state = DummyState.any()

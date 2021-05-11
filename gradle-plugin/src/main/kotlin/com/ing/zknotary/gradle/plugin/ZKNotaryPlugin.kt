@@ -24,6 +24,8 @@ class ZKNotaryPlugin : Plugin<Project> {
                 "com.ing.zknotary:zinc-platform-sources:${extension.zincPlatformSourcesVersion}"
             )
             project.dependencies.add("implementation", "com.ing.zknotary:notary:${extension.notaryVersion}")
+
+            project.pluginManager.apply("org.jetbrains.kotlin.plugin.serialization")
         }
 
         val createZincDirsForCommandTask = project.tasks.create(

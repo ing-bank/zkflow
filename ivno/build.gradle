@@ -101,6 +101,8 @@ subprojects {
 //        mavenLocal()
         mavenCentral()
         jcenter()
+
+        maven { url = "https://dl.bintray.com/kotlin/kotlin-dev/" }
         maven { url "https://jitpack.io" }
         maven { url "$corda_artifactory_url/corda-releases" }
         maven { url "$corda_artifactory_url/corda-lib" }

@@ -9,6 +9,10 @@ dependencies {
 
     val kotlinxSerializationBflVersion: String by project
     implementation("com.ing.serialization.bfl:kotlinx-serialization-bfl:$kotlinxSerializationBflVersion")
+
+    // Loaded so we can apply the plugin on project we are applied on.
+    val kotlinVersion: String by project
+    runtimeOnly("org.jetbrains.kotlin.plugin.serialization:org.jetbrains.kotlin.plugin.serialization.gradle.plugin:$kotlinVersion")
 }
 
 gradlePlugin {

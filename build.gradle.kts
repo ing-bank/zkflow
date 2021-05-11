@@ -7,6 +7,7 @@ buildscript {
             google()
             mavenCentral()
             jcenter()
+            maven("https://dl.bintray.com/kotlin/kotlin-dev/")
             maven("https://jitpack.io")
             maven("https://repo.gradle.org/gradle/libs-releases")
             maven("https://software.r3.com/artifactory/corda")
