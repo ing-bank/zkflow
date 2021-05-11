@@ -1,8 +1,0 @@
-mod party_bcec;
-
-use party_bcec::PartyBCEC;
-use party_bcec::SerializedPartyBCEC;
-
-fn main(witness: SerializedPartyBCEC) -> PartyBCEC {
-    PartyBCEC::deserialize(witness)
-}

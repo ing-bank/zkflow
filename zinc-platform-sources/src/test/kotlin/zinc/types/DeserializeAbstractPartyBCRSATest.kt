@@ -1,7 +1,7 @@
 package zinc.types
 
 import com.ing.zknotary.common.serialization.bfl.serializers.CordaSignatureSchemeToSerializers
-import com.ing.zknotary.common.serialization.bfl.serializers.publickey.BCSphincs256Surrogate
+import com.ing.zknotary.common.serialization.bfl.serializers.publickey.BCRSASurrogate
 import com.ing.zknotary.common.zkp.ZincZKService
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
@@ -14,17 +14,17 @@ import kotlin.reflect.full.findAnnotation
 import kotlin.time.ExperimentalTime
 
 @ExperimentalTime
-class DeserializePartyBCSphincs256Test :
-    DeserializationTestBase<DeserializePartyBCSphincs256Test, DeserializePartyBCSphincs256Test.Data>({
+class DeserializeAbstractPartyBCRSATest :
+    DeserializationTestBase<DeserializeAbstractPartyBCRSATest, DeserializeAbstractPartyBCRSATest.Data>({
         it.data.toZincJson(
-            scheme = Crypto.SPHINCS256_SHA256,
-            serialName = BCSphincs256Surrogate::class.findAnnotation<SerialName>()!!.value,
-            encodedSize = BCSphincs256Surrogate.ENCODED_SIZE,
+            scheme = Crypto.RSA_SHA256,
+            serialName = BCRSASurrogate::class.findAnnotation<SerialName>()!!.value,
+            encodedSize = BCRSASurrogate.ENCODED_SIZE,
         )
     }) {
-    override fun getZincZKService(): ZincZKService = getZincZKService<DeserializePartyBCSphincs256Test>()
+    override fun getZincZKService(): ZincZKService = getZincZKService<DeserializeAbstractPartyBCRSATest>()
     override fun getSerializersModule(): SerializersModule {
-        return CordaSignatureSchemeToSerializers.serializersModuleFor(Crypto.SPHINCS256_SHA256)
+        return CordaSignatureSchemeToSerializers.serializersModuleFor(Crypto.RSA_SHA256)
     }
 
     @Serializable
@@ -33,7 +33,7 @@ class DeserializePartyBCSphincs256Test :
     companion object {
         @JvmStatic
         fun testData() = listOf(
-            Data(TestIdentity.fresh("Alice", Crypto.SPHINCS256_SHA256).party),
+            Data(TestIdentity.fresh("Alice", Crypto.RSA_SHA256).party),
         )
     }
 }

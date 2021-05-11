@@ -84,13 +84,13 @@ data class PublicKeyTemplateParameters(
     }
 }
 
-data class PartyTemplateParameters(val pkTemplateParameters: PublicKeyTemplateParameters) : TemplateParameters(
-    "party.zn",
+data class AbstractPartyTemplateParameters(val pkTemplateParameters: PublicKeyTemplateParameters) : TemplateParameters(
+    "abstract_party.zn",
     listOf(pkTemplateParameters)
 ) {
     companion object {
         val all = PublicKeyTemplateParameters.all.map {
-            PartyTemplateParameters(it)
+            AbstractPartyTemplateParameters(it)
         }
     }
 }

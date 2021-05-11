@@ -1,8 +1,0 @@
-mod party_bcsphincs256;
-
-use party_bcsphincs256::PartyBCSphincs256;
-use party_bcsphincs256::SerializedPartyBCSphincs256;
-
-fn main(witness: SerializedPartyBCSphincs256) -> PartyBCSphincs256 {
-    PartyBCSphincs256::deserialize(witness)
-}

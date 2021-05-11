@@ -178,13 +178,12 @@ fun PublicKey.toJsonObject(scheme: SignatureScheme, serialName: String, encodedS
 
 fun CordaX500Name?.toJsonObject() = buildJsonObject {
     val name: ByteArray = this@toJsonObject?.let {
-        serialize(it, strategy = CordaX500NameSerializer)
+        ByteArray(1) + serialize(it, strategy = CordaX500NameSerializer)
     } ?: ByteArray(0)
     put("name", name.resizeTo(CordaX500NameSurrogate.SIZE).toJsonArray())
 }
 
 fun AbstractParty.toJsonObject(scheme: SignatureScheme, serialName: String, encodedSize: Int) = buildJsonObject {
-    put("has_name", nameOrNull() != null)
     put("name", nameOrNull().toJsonObject())
     put("owning_key", owningKey.toJsonObject(scheme, serialName, encodedSize))
 }

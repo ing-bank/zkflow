@@ -1,0 +1,3 @@
+[circuit]
+name = "Deserialize AbstractPartyBCECK1 test"
+version = "0.1.0"

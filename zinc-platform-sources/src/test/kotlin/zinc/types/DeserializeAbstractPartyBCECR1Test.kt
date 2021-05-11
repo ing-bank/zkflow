@@ -1,7 +1,7 @@
 package zinc.types
 
 import com.ing.zknotary.common.serialization.bfl.serializers.CordaSignatureSchemeToSerializers
-import com.ing.zknotary.common.serialization.bfl.serializers.publickey.EdDSASurrogate
+import com.ing.zknotary.common.serialization.bfl.serializers.publickey.BCECSurrogate
 import com.ing.zknotary.common.zkp.ZincZKService
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
@@ -14,17 +14,17 @@ import kotlin.reflect.full.findAnnotation
 import kotlin.time.ExperimentalTime
 
 @ExperimentalTime
-class DeserializePartyEdDSATest :
-    DeserializationTestBase<DeserializePartyEdDSATest, DeserializePartyEdDSATest.Data>({
+class DeserializeAbstractPartyBCECR1Test :
+    DeserializationTestBase<DeserializeAbstractPartyBCECR1Test, DeserializeAbstractPartyBCECR1Test.Data>({
         it.data.toZincJson(
-            scheme = Crypto.EDDSA_ED25519_SHA512,
-            serialName = EdDSASurrogate::class.findAnnotation<SerialName>()!!.value,
-            encodedSize = EdDSASurrogate.ENCODED_SIZE
+            scheme = Crypto.ECDSA_SECP256R1_SHA256,
+            serialName = BCECSurrogate::class.findAnnotation<SerialName>()!!.value,
+            encodedSize = BCECSurrogate.ENCODED_SIZE,
         )
     }) {
-    override fun getZincZKService(): ZincZKService = getZincZKService<DeserializePartyEdDSATest>()
+    override fun getZincZKService(): ZincZKService = getZincZKService<DeserializeAbstractPartyBCECR1Test>()
     override fun getSerializersModule(): SerializersModule {
-        return CordaSignatureSchemeToSerializers.serializersModuleFor(Crypto.EDDSA_ED25519_SHA512)
+        return CordaSignatureSchemeToSerializers.serializersModuleFor(Crypto.ECDSA_SECP256R1_SHA256)
     }
 
     @Serializable
@@ -33,7 +33,7 @@ class DeserializePartyEdDSATest :
     companion object {
         @JvmStatic
         fun testData() = listOf(
-            Data(TestIdentity.fresh("Alice", Crypto.EDDSA_ED25519_SHA512).party),
+            Data(TestIdentity.fresh("Alice", Crypto.ECDSA_SECP256R1_SHA256).party),
         )
     }
 }

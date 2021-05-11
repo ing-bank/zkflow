@@ -14,17 +14,17 @@ import kotlin.reflect.full.findAnnotation
 import kotlin.time.ExperimentalTime
 
 @ExperimentalTime
-class DeserializePartyBCECR1Test :
-    DeserializationTestBase<DeserializePartyBCECR1Test, DeserializePartyBCECR1Test.Data>({
+class DeserializeAbstractPartyBCECK1Test :
+    DeserializationTestBase<DeserializeAbstractPartyBCECK1Test, DeserializeAbstractPartyBCECK1Test.Data>({
         it.data.toZincJson(
-            scheme = Crypto.ECDSA_SECP256R1_SHA256,
+            scheme = Crypto.ECDSA_SECP256K1_SHA256,
             serialName = BCECSurrogate::class.findAnnotation<SerialName>()!!.value,
             encodedSize = BCECSurrogate.ENCODED_SIZE,
         )
     }) {
-    override fun getZincZKService(): ZincZKService = getZincZKService<DeserializePartyBCECR1Test>()
+    override fun getZincZKService(): ZincZKService = getZincZKService<DeserializeAbstractPartyBCECK1Test>()
     override fun getSerializersModule(): SerializersModule {
-        return CordaSignatureSchemeToSerializers.serializersModuleFor(Crypto.ECDSA_SECP256R1_SHA256)
+        return CordaSignatureSchemeToSerializers.serializersModuleFor(Crypto.ECDSA_SECP256K1_SHA256)
     }
 
     @Serializable
@@ -33,7 +33,7 @@ class DeserializePartyBCECR1Test :
     companion object {
         @JvmStatic
         fun testData() = listOf(
-            Data(TestIdentity.fresh("Alice", Crypto.ECDSA_SECP256R1_SHA256).party),
+            Data(TestIdentity.fresh("Alice", Crypto.ECDSA_SECP256K1_SHA256).party),
         )
     }
 }
