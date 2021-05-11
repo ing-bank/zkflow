@@ -36,7 +36,7 @@ class DepositTransactionSerializationTest : ContractTest() {
         ContractStateSerializerMap.register(Deposit::class, 1, Deposit.serializer())
         CommandDataSerializerMap.register(DepositContract.Request::class, 3, DepositContract.Request.serializer())
 
-        val inputs = emptyList<StateRef>()
+        val inputs = listOf(dummyStateRef()) // TODO: This should be remove once the outputs are added back
         val constrainedOutputs = listOf(
             ConstrainedState(
                 StateAndContract(DEPOSIT, DepositContract.ID),
@@ -58,7 +58,7 @@ class DepositTransactionSerializationTest : ContractTest() {
 
         val wtx = createWtx(
             inputs,
-            constrainedOutputs,
+            emptyList(), // TODO: create missing serializers for constrainedOutputs,
             commands,
             attachments,
             notary,
