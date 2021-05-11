@@ -1,5 +1,4 @@
 //import com.amazonaws.auth.profile.ProfileCredentialsProvider
-
 buildscript {
     ext {
         kotlin_group = "org.jetbrains.kotlin"
@@ -61,6 +60,7 @@ buildscript {
     }
 }
 
+
 ext {
 //    awsCredentials = new ProfileCredentialsProvider("ivno-dev").credentials
 }
@@ -107,6 +107,15 @@ subprojects {
         // Corda dependencies for the patched Quasar version
         maven { url "https://software.r3.com/artifactory/corda-dependencies" } // access to the patched Quasar version
         maven { url "https://repo.gradle.org/gradle/libs-releases" }
+        maven {
+            name = "BinaryFixedLengthSerializationRepo"
+            url = uri("https://maven.pkg.github.com/ingzkp/kotlinx-serialization-bfl")
+            credentials {
+                username = System.getenv("GITHUB_USERNAME")
+                password = System.getenv("GITHUB_TOKEN")
+            }
+        }
+
 //        maven {
 //            name = "GitHubPackagesCIF"
 //            url = uri("https://maven.pkg.github.com/onix-labs/onixlabs-corda-identity-framework-beta")

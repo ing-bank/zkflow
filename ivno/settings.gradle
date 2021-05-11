@@ -18,7 +18,7 @@ pluginManagement {
 
 rootProject.name = 'ivno-collateral-token'
 include 'ivno-collateral-token-contract'
-include 'ivno-collateral-token-workflow'
+//include 'ivno-collateral-token-workflow'
 //include 'ivno-collateral-token-integration'
 //include 'ivno-collateral-token-deploynodes'
 includeBuild '..'
