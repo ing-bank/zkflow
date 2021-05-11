@@ -5,10 +5,9 @@ import com.ing.zknotary.common.crypto.zinc
 import com.ing.zknotary.common.serialization.bfl.BFLSerializationScheme
 import com.ing.zknotary.common.serialization.bfl.CommandDataSerializerMap
 import com.ing.zknotary.common.serialization.bfl.ContractStateSerializerMap
-import com.ing.zknotary.testing.fixtures.contract.DummyContract
-import com.ing.zknotary.testing.fixtures.state.DummyState
 import com.ing.zknotary.testing.serialization.getSerializationContext
 import com.ing.zknotary.testing.serialization.serializeWithScheme
+import io.ivno.collateraltoken.contract.ContractTest
 import io.ivno.collateraltoken.contract.Deposit
 import io.ivno.collateraltoken.contract.DepositContract
 import io.kotest.matchers.shouldBe
@@ -30,26 +29,22 @@ import kotlin.random.Random
 import kotlin.time.ExperimentalTime
 
 @ExperimentalTime
-class DepositTransactionSerializationTest {
+class DepositTransactionSerializationTest : ContractTest() {
     @Test
     @Suppress("LongMethod")
-    fun `Wire transaction serializes`() = withCustomSerializationEnv {
-        ContractStateSerializerMap.register(Deposit::class, 1, DepositContract.serializer())
-        CommandDataSerializerMap.register(DummyContract.Chill::class, 3, DummyContract.Chill.serializer())
+    fun `Deposit Request transaction serializes`() = withCustomSerializationEnv {
+        ContractStateSerializerMap.register(Deposit::class, 1, Deposit.serializer())
+        CommandDataSerializerMap.register(DepositContract.Request::class, 3, DepositContract.Request.serializer())
 
-        val state = DummyState.any()
-        val alice = state.participants.first()
-        val bob = TestIdentity.fresh("Bob").party
-
-        val inputs = List(4) { dummyStateRef() }
+        val inputs = emptyList<StateRef>()
         val constrainedOutputs = listOf(
             ConstrainedState(
-                StateAndContract(state, DummyContract.PROGRAM_ID),
+                StateAndContract(DEPOSIT, DepositContract.ID),
                 HashAttachmentConstraint(SecureHash.zeroHash)
             )
         )
-        val commands = listOf(Command(DummyContract.Chill(), listOf(alice.owningKey, bob.owningKey)))
-        val attachments = List(4) { SecureHash.randomSHA256() }
+        val commands = listOf(Command(DepositContract.Request, listOf(BANK_A.party.owningKey)))
+        val attachments = List(1) { SecureHash.randomSHA256() }
         val notary = TestIdentity.fresh("Notary").party
         val timeWindow = TimeWindow.fromOnly(Instant.now())
         val references = List(2) { dummyStateRef() }

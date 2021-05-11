@@ -2,6 +2,8 @@ package io.ivno.collateraltoken.contract
 
 import io.dasl.contracts.v1.token.BigDecimalAmount
 import io.ivno.collateraltoken.contract.DepositSchema.DepositSchemaV1
+import kotlinx.serialization.Contextual
+import kotlinx.serialization.Serializable
 import net.corda.core.contracts.*
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
@@ -27,16 +29,17 @@ import java.util.UUID
  * @property participants A list of [AbstractParty] for which this state is relevant.
  */
 @BelongsToContract(DepositContract::class)
+@Serializable
 data class Deposit internal constructor(
-    val depositor: Party,
-    val custodian: Party,
-    val tokenIssuingEntity: Party,
-    val amount: BigDecimalAmount<LinearPointer<IvnoTokenType>>,
+    val depositor: @Contextual Party,
+    val custodian: @Contextual Party,
+    val tokenIssuingEntity: @Contextual Party,
+    val amount: @Contextual BigDecimalAmount<@Contextual LinearPointer<@Contextual IvnoTokenType>>,
     val reference: String?,
     val status: DepositStatus,
-    val timestamp: Instant,
+    val timestamp: @Contextual Instant,
     val accountId: String,
-    override val linearId: UniqueIdentifier
+    override val linearId: @Contextual UniqueIdentifier
 ) : LinearState, QueryableState {
 
     constructor(

@@ -1,12 +1,17 @@
 package io.ivno.collateraltoken.contract
 
+import com.ing.zknotary.common.contracts.ZKCommandData
+import com.ing.zknotary.common.zkp.CircuitMetaData
 import io.dasl.contracts.v1.token.BigDecimalAmount
 import io.dasl.contracts.v1.token.TokenState
 import io.onixlabs.corda.bnms.contract.membership.Membership
 import io.onixlabs.corda.bnms.contract.membership.MembershipAttestation
 import io.onixlabs.corda.identityframework.contract.AttestationStatus
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import net.corda.core.contracts.*
 import net.corda.core.transactions.LedgerTransaction
+import java.io.File
 import java.math.BigDecimal
 import java.security.PublicKey
 
@@ -25,10 +30,11 @@ class DepositContract : Contract {
         }
     }
 
-    interface DepositContractCommand : CommandData {
+    interface DepositContractCommand : ZKCommandData {
         fun verify(tx: LedgerTransaction, signers: Set<PublicKey>)
     }
 
+    @Serializable
     object Request : DepositContractCommand {
 
         internal const val CONTRACT_RULE_DEPOSIT_INPUTS =
@@ -110,6 +116,12 @@ class DepositContract : Contract {
             CONTRACT_RULE_STATUS using (depositOutput.status == DepositStatus.DEPOSIT_REQUESTED)
             CONTRACT_RULE_SIGNERS using (depositOutput.getRequiredSigningKeys().all { it in signers })
         }
+
+        @Transient
+        override val circuit: CircuitMetaData = CircuitMetaData(
+            // This is just some EXISTING circuit.
+            File("/tmp")
+        )
     }
 
     object Advance : DepositContractCommand {
@@ -216,5 +228,11 @@ class DepositContract : Contract {
             CONTRACT_RULE_TIMESTAMP using (depositOutput.timestamp > depositInput.timestamp)
             CONTRACT_RULE_SIGNERS using (depositOutput.getRequiredSigningKeys().all { it in signers })
         }
+
+        @Transient
+        override val circuit: CircuitMetaData = CircuitMetaData(
+            // This is just some EXISTING circuit.
+            File("/tmp")
+        )
     }
 }
