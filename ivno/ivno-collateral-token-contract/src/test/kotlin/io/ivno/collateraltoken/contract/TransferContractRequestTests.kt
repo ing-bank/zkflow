@@ -1,8 +1,10 @@
 package io.ivno.collateraltoken.contract
 
 import net.corda.testing.node.ledger
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 
+@Disabled("Re-enable once we have everything serializable and when we have zktransaction DSL")
 class TransferContractRequestTests : ContractTest() {
 
     @Test

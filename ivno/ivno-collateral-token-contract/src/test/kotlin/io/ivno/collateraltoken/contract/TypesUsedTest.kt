@@ -9,6 +9,7 @@ import net.corda.core.contracts.Contract
 import net.corda.core.contracts.ContractState
 import net.corda.core.internal.packageName
 import net.corda.core.internal.packageNameOrNull
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
@@ -17,6 +18,7 @@ import kotlin.reflect.full.allSuperclasses
 import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.full.memberProperties
 
+@Disabled("Enable when you need it")
 class TypesUsedTest {
     @Test
     fun `Determine serializable classes`() {

@@ -5,9 +5,11 @@ import io.onixlabs.corda.bnms.contract.Network
 import io.onixlabs.corda.identityframework.contract.AttestationStatus
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.testing.node.ledger
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.Instant
 
+@Disabled("Re-enable once we have everything serializable and when we have zktransaction DSL")
 class DepositContractAdvanceTests : ContractTest() {
 
     @Test
