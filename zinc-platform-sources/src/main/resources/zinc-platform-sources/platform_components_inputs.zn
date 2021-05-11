@@ -18,7 +18,7 @@ use platform_privacy_salt::PrivacySaltBits;
 use platform_node_digest_dto::NodeDigestDto;
 use platform_node_digest_dto::NODE_DIGEST_BITS;
 use consts::INPUT_GROUP_SIZE;
-use consts::INPUT_COMPONENT_SIZE;
+use platform_consts::INPUT_COMPONENT_SIZE;
 use platform_state_and_ref::StateAndRefPaddingWrapper;
 use platform_state_and_ref::StateRef;
 use platform_consts::BYTE_BITS;

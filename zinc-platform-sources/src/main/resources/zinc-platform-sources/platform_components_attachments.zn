@@ -22,7 +22,7 @@ use platform_crypto_utils::compute_nonce;
 use platform_nonce_digest_dto::NONCE_DIGEST_BITS;
 use std::convert::to_bits;
 use consts::ATTACHMENT_GROUP_SIZE;
-use consts::ATTACHMENT_COMPONENT_SIZE;
+use platform_consts::ATTACHMENT_COMPONENT_SIZE;
 use platform_consts::BYTE_BITS;
 use std::crypto::blake2s_multi_input;
 

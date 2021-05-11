@@ -23,8 +23,8 @@ use platform_node_digest_dto::NodeDigestDto;
 use platform_node_digest_dto::NODE_DIGEST_BITS;
 use platform_crypto_utils::compute_nonce;
 use platform_nonce_digest_dto::NONCE_DIGEST_BITS;
-use consts::PARAMETERS_COMPONENT_SIZE;
-use consts::PARAMETERS_GROUP_SIZE;
+use platform_consts::PARAMETERS_COMPONENT_SIZE;
+use platform_consts::PARAMETERS_GROUP_SIZE;
 use std::crypto::blake2s_multi_input;
 
 type SerializedParameters = [u8; PARAMETERS_COMPONENT_SIZE];

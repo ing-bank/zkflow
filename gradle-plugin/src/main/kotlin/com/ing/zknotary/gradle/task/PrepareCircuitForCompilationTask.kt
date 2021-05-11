@@ -5,6 +5,7 @@ import com.ing.zknotary.gradle.plugin.zkNotaryExtension
 import com.ing.zknotary.gradle.zinc.util.MerkleReplacer
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
+import java.io.File
 
 open class PrepareCircuitForCompilationTask : DefaultTask() {
 
@@ -13,7 +14,8 @@ open class PrepareCircuitForCompilationTask : DefaultTask() {
         val extension = project.zkNotaryExtension
         project.circuitNames?.forEach { circuitName ->
             val replacer = MerkleReplacer(extension.mergedCircuitOutputPath.resolve(circuitName).resolve("src"))
-            val consts = extension.circuitSourcesBasePath.resolve(circuitName).resolve("consts.zn").readText()
+            val consts = extension.circuitSourcesBasePath.resolve(circuitName).resolve("consts.zn").readText() + "\n\n" +
+                File(extension.platformSourcesPath).resolve("platform_consts.zn").readText()
 
             replacer.setCorrespondingMerkleTreeFunctionForComponentGroups(consts)
             replacer.setCorrespondingMerkleTreeFunctionForMainTree()

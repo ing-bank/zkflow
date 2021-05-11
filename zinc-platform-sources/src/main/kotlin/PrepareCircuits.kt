@@ -72,7 +72,8 @@ fun main(args: Array<String>) {
         copier.copyZincPlatformSources(getPlatformSources(root))
         copier.copyZincPlatformSources(getPlatformLibs(root))
 
-        val consts = circuitSourcesBase.resolve(circuitName).resolve("consts.zn").readText()
+        val consts = circuitSourcesBase.resolve(circuitName).resolve("consts.zn").readText() + "\n\n" +
+            getPlatformSourcesDir(root).resolve("platform_consts.zn").readText()
 
         // Render templates
         val templateRenderer = TemplateRenderer(outputPath.toPath()) {
@@ -99,6 +100,10 @@ fun main(args: Array<String>) {
     resolveAllTemplateParameters().forEach {
         testTemplateRenderer.renderTemplate(it)
     }
+}
+
+private fun getPlatformSourcesDir(root: String): File {
+    return File("$root/src/main/resources/zinc-platform-sources")
 }
 
 private fun getPlatformSources(root: String): Array<File>? {

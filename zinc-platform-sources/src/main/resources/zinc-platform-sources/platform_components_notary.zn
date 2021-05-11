@@ -16,7 +16,7 @@ use platform_component_group_leaf_digest_dto::COMPONENT_GROUP_LEAF_DIGEST_BITS;
 use platform_component_group_leaf_digest_dto::ComponentGroupLeafDigestBits;
 use platform_privacy_salt::PrivacySaltBits;
 use platform_node_digest_dto::NodeDigestDto;
-use consts::NOTARY_COMPONENT_SIZE;
+use platform_consts::NOTARY_COMPONENT_SIZE;
 use platform_consts::BYTE_BITS;
 use std::convert::to_bits;
 use std::crypto::blake2s_multi_input;

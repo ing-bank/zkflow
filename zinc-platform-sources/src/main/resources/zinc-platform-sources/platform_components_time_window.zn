@@ -24,7 +24,7 @@ use platform_node_digest_dto::NODE_DIGEST_BITS;
 use platform_crypto_utils::compute_nonce;
 use platform_nonce_digest_dto::NONCE_DIGEST_BITS;
 use std::crypto::blake2s_multi_input;
-use consts::TIMEWINDOW_COMPONENT_SIZE;
+use platform_consts::TIMEWINDOW_COMPONENT_SIZE;
 use consts::TIMEWINDOW_GROUP_SIZE;
 
 type SerializedTimeWindow = [u8; TIMEWINDOW_COMPONENT_SIZE];
