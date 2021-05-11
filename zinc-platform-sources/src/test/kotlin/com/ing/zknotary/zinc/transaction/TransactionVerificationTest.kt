@@ -5,6 +5,7 @@ import com.ing.zknotary.common.serialization.bfl.BFLSerializationScheme
 import com.ing.zknotary.common.serialization.bfl.CommandDataSerializerMap
 import com.ing.zknotary.common.serialization.bfl.ContractStateSerializerMap
 import com.ing.zknotary.common.transactions.UtxoInfo
+import com.ing.zknotary.common.transactions.ZKVerifierTransaction
 import com.ing.zknotary.common.zkp.PublicInput
 import com.ing.zknotary.common.zkp.Witness
 import com.ing.zknotary.common.zkp.ZincZKService
@@ -144,7 +145,7 @@ class TransactionVerificationTest {
         val nonce = createWtx.buildFilteredTransaction { true }
             .filteredComponentGroups.single { it.groupIndex == ComponentGroupEnum.OUTPUTS_GROUP.ordinal }
             .nonces[0]
-        val inputHash = createWtx.digestService.componentHash(nonce, serializedUtxo)
+        val inputHash = ZKVerifierTransaction.fromWireTransaction(createWtx, proof).outputHashes.single()
 
         val moveWtx = createWtx(
             inputs = listOf(utxo.ref),
@@ -165,9 +166,10 @@ class TransactionVerificationTest {
             referenceHashes = emptyList()
         )
 
+        val moveProof = moveZKService.proveTimed(moveWitness, log)
+
         moveZKService.run(moveWitness, movePublicInput)
 
-        val moveProof = moveZKService.proveTimed(moveWitness, log)
         moveZKService.verifyTimed(moveProof, movePublicInput, log)
     }
 
