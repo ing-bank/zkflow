@@ -1,10 +1,42 @@
 package com.ing.zknotary.common.serialization.bfl
 
+import com.ing.zknotary.common.serialization.bfl.serializers.CordaSerializers
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.overwriteWith
 import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.ContractState
+import net.corda.core.utilities.loggerFor
 import java.nio.ByteBuffer
 import kotlin.reflect.KClass
+
+interface CorDappSerializers
+
+object SerializersModuleRegistry {
+    private val log = loggerFor<SerializersModuleRegistry>()
+    private val modules = mutableListOf(CordaSerializers)
+
+    /**
+     * Register a SerializersModule
+     */
+    fun register(module: SerializersModule) {
+        log.debug("Registering SerializersModule: $module")
+        modules.add(module)
+    }
+
+    /**
+     * Returns a merged SerializersModule.
+     *
+     * This module contains the merged contents of all registered modules.
+     * Please note that modules that were registered later overwrite serializers that are present in previously
+     * registered modules. This allows users to customize the behaviour of core serializers if required.
+     */
+    val merged: SerializersModule by lazy {
+        modules.reduce { previous, next ->
+            previous.overwriteWith(next)
+        }
+    }
+}
 
 object ContractStateSerializerMap : SerializerMap<ContractState>()
 object CommandDataSerializerMap : SerializerMap<CommandData>()

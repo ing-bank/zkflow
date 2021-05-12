@@ -5,12 +5,16 @@ import com.ing.zknotary.common.crypto.zinc
 import com.ing.zknotary.common.serialization.bfl.BFLSerializationScheme
 import com.ing.zknotary.common.serialization.bfl.CommandDataSerializerMap
 import com.ing.zknotary.common.serialization.bfl.ContractStateSerializerMap
+import com.ing.zknotary.common.serialization.bfl.SerializersModuleRegistry
+import com.ing.zknotary.common.serialization.bfl.corda.LinearPointerSerializer
 import com.ing.zknotary.testing.serialization.getSerializationContext
 import com.ing.zknotary.testing.serialization.serializeWithScheme
 import io.ivno.collateraltoken.contract.ContractTest
 import io.ivno.collateraltoken.contract.Deposit
 import io.ivno.collateraltoken.contract.DepositContract
 import io.kotest.matchers.shouldBe
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.contextual
 import net.corda.core.contracts.*
 import net.corda.core.crypto.DigestService
 import net.corda.core.crypto.SecureHash
@@ -28,14 +32,12 @@ import java.time.Instant
 import kotlin.random.Random
 import kotlin.time.ExperimentalTime
 
+
 @ExperimentalTime
 class DepositTransactionSerializationTest : ContractTest() {
     @Test
     @Suppress("LongMethod")
     fun `Deposit Request transaction serializes`() = withCustomSerializationEnv {
-        ContractStateSerializerMap.register(Deposit::class, 1, Deposit.serializer())
-        CommandDataSerializerMap.register(DepositContract.Request::class, 3, DepositContract.Request.serializer())
-
         val inputs = listOf(dummyStateRef()) // TODO: This should be remove once the outputs are added back
         val constrainedOutputs = listOf(
             ConstrainedState(
@@ -58,7 +60,7 @@ class DepositTransactionSerializationTest : ContractTest() {
 
         val wtx = createWtx(
             inputs,
-            emptyList(), // TODO: create missing serializers for constrainedOutputs,
+            constrainedOutputs,
             commands,
             attachments,
             notary,

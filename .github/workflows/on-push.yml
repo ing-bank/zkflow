@@ -81,12 +81,12 @@ jobs:
           GITHUB_USERNAME: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Ivno - Compile deposit-request circuit with Zargo
-        run: zargo build -v
-        working-directory: ivno/ivno-collateral-token-contract/build/zinc/deposit-request
-        env:
-          GITHUB_USERNAME: ${{ github.actor }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#      - name: Ivno - Compile deposit-request circuit with Zargo
+#        run: zargo build -v
+#        working-directory: ivno/ivno-collateral-token-contract/build/zinc/deposit-request
+#        env:
+#          GITHUB_USERNAME: ${{ github.actor }}
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload JUnit test report
         if: always()

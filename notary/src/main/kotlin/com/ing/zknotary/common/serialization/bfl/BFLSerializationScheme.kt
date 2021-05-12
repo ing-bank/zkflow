@@ -1,6 +1,5 @@
 package com.ing.zknotary.common.serialization.bfl
 
-import com.ing.zknotary.common.serialization.bfl.serializers.CordaSerializers
 import com.ing.zknotary.common.serialization.bfl.serializers.CordaSignatureSchemeToSerializers
 import com.ing.zknotary.common.serialization.bfl.serializers.TimeWindowSerializer
 import com.ing.zknotary.common.serialization.bfl.serializers.TransactionStateSerializer
@@ -40,15 +39,16 @@ open class BFLSerializationScheme : CustomSerializationScheme {
 
     private val cordaSerdeMagicLength = CustomSerializationSchemeUtils.getCustomSerializationMagicFromSchemeId(SCHEME_ID).size
 
-    private val serializersPublicKey = CordaSignatureSchemeToSerializers.serializersModuleFor(Crypto.DEFAULT_SIGNATURE_SCHEME)
-    private val serializersModule = CordaSerializers + serializersPublicKey
-
     override fun <T : Any> deserialize(
         bytes: ByteSequence,
         clazz: Class<T>,
         context: SerializationSchemeContext
     ): T {
         logger.debug("Deserializing tx component:\t$clazz")
+
+        // TODO: Once we can properly support polymorphic subclasses, this should just be made part of the CordaSerializers object like the rest
+        val serializersPublicKey = CordaSignatureSchemeToSerializers.serializersModuleFor(Crypto.DEFAULT_SIGNATURE_SCHEME)
+        val serializersModule = SerializersModuleRegistry.merged + serializersPublicKey
 
         val serializedData = bytes.bytes.drop(cordaSerdeMagicLength).toByteArray()
 
@@ -106,6 +106,10 @@ open class BFLSerializationScheme : CustomSerializationScheme {
 
     override fun <T : Any> serialize(obj: T, context: SerializationSchemeContext): ByteSequence {
         logger.debug("Serializing tx component:\t${obj::class}")
+
+        // TODO: Once we can properly support polymorphic subclasses, this should just be made part of the CordaSerializers object like the rest
+        val serializersPublicKey = CordaSignatureSchemeToSerializers.serializersModuleFor(Crypto.DEFAULT_SIGNATURE_SCHEME)
+        val serializersModule = SerializersModuleRegistry.merged + serializersPublicKey
 
         val serialization = when (obj) {
             is TransactionState<*> -> {

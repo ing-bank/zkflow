@@ -1,7 +1,10 @@
 package io.ivno.collateraltoken.contract
 
+import com.ing.serialization.bfl.annotations.FixedLength
+import com.ing.serialization.bfl.serializers.BigDecimalSizes
 import io.dasl.contracts.v1.token.BigDecimalAmount
 import io.ivno.collateraltoken.contract.DepositSchema.DepositSchemaV1
+import io.ivno.collateraltoken.serialization.IvnoSerializers
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import net.corda.core.contracts.*
@@ -34,13 +37,20 @@ data class Deposit internal constructor(
     val depositor: @Contextual Party,
     val custodian: @Contextual Party,
     val tokenIssuingEntity: @Contextual Party,
-    val amount: @Contextual BigDecimalAmount<@Contextual LinearPointer<@Contextual IvnoTokenType>>,
-    val reference: String?,
+    @BigDecimalSizes([20,4]) val amount: @Contextual BigDecimalAmount<@Contextual LinearPointer<@Contextual IvnoTokenType>>,
+    @FixedLength([20]) val reference: String?,
     val status: DepositStatus,
     val timestamp: @Contextual Instant,
-    val accountId: String,
+    @FixedLength([20]) val accountId: String,
     override val linearId: @Contextual UniqueIdentifier
 ) : LinearState, QueryableState {
+
+    /*
+     * TODO: This is a hack to ensure that the singleton is initialized. Couldn't think of another place
+     * to put the code that registers serializers. Also there seems to be no other place to put code that
+     * should always run once globally per CorDapp.
+    */
+    init { IvnoSerializers }
 
     constructor(
         depositor: Party,
