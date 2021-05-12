@@ -32,6 +32,9 @@ const CORDA_X500_NAME_LENGTH: u16 =
         STRING_LENGTH_PREFIX + NULLABILITY_BYTES + MAX_LENGTH_STATE * CHAR_BYTES +
         STRING_LENGTH_PREFIX + LENGTH_COUNTRY * CHAR_BYTES;
 
+//! CordaX500Name is not deserialized into individual components, but only ensured
+//! that the respective byte array is of the right size.
+//! Deserialization to individual components will be added when required.
 struct CordaX500Name {
     name: [u8; CORDA_X500_NAME_LENGTH]
 }
