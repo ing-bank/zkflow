@@ -14,8 +14,7 @@ open class PrepareCircuitForCompilationTask : DefaultTask() {
         val extension = project.zkNotaryExtension
         project.circuitNames?.forEach { circuitName ->
             val replacer = MerkleReplacer(extension.mergedCircuitOutputPath.resolve(circuitName).resolve("src"))
-            val consts = extension.circuitSourcesBasePath.resolve(circuitName).resolve("consts.zn").readText() + "\n\n" +
-                File(extension.platformSourcesPath).resolve("platform_consts.zn").readText()
+            val consts = joinConstFiles(extension.circuitSourcesBasePath.resolve(circuitName), File(extension.platformSourcesPath))
 
             replacer.setCorrespondingMerkleTreeFunctionForComponentGroups(consts)
             replacer.setCorrespondingMerkleTreeFunctionForMainTree()

@@ -105,8 +105,7 @@ class ZKTransactionBuilder(
     }
 
     private fun enforceZKContractStates(state: ContractState) {
-        if (state !is ZKContractState)
-            throw IllegalArgumentException("Can only use ZKContractStates as output")
+        require(state is ZKContractState) { "Can only use ZKContractStates as output" }
     }
 
     private companion object {

@@ -1,5 +1,6 @@
 
 import com.ing.zknotary.gradle.extension.ZKNotaryExtension
+import com.ing.zknotary.gradle.task.joinConstFiles
 import com.ing.zknotary.gradle.zinc.template.AbstractPartyTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.AmountTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.AnonymousPartyTemplateParameters
@@ -72,8 +73,7 @@ fun main(args: Array<String>) {
         copier.copyZincPlatformSources(getPlatformSources(root))
         copier.copyZincPlatformSources(getPlatformLibs(root))
 
-        val consts = circuitSourcesBase.resolve(circuitName).resolve("consts.zn").readText() + "\n\n" +
-            getPlatformSourcesDir(root).resolve("platform_consts.zn").readText()
+        val consts = joinConstFiles(circuitSourcesBase.resolve(circuitName), getPlatformSourcesDir(root))
 
         // Render templates
         val templateRenderer = TemplateRenderer(outputPath.toPath()) {
