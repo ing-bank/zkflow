@@ -10,9 +10,9 @@ import com.ing.zknotary.common.zkp.PublicInput
 import com.ing.zknotary.common.zkp.Witness
 import com.ing.zknotary.common.zkp.ZincZKService
 import com.ing.zknotary.testing.fixtures.contract.TestContract
-import com.ing.zknotary.testing.zkp.proveTimed
-import com.ing.zknotary.testing.zkp.setupTimed
-import com.ing.zknotary.testing.zkp.verifyTimed
+import com.ing.zknotary.zinc.types.proveTimed
+import com.ing.zknotary.zinc.types.setupTimed
+import com.ing.zknotary.zinc.types.verifyTimed
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.PrivacySalt

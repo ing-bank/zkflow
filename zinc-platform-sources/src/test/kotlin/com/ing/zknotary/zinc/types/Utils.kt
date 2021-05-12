@@ -1,4 +1,4 @@
-package zinc.types
+package com.ing.zknotary.zinc.types
 
 import com.ing.serialization.bfl.annotations.FixedLength
 import com.ing.serialization.bfl.api.reified.serialize

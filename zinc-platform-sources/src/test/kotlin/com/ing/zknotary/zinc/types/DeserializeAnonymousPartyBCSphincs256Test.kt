@@ -1,7 +1,7 @@
-package zinc.types
+package com.ing.zknotary.zinc.types
 
 import com.ing.zknotary.common.serialization.bfl.serializers.CordaSignatureSchemeToSerializers
-import com.ing.zknotary.common.serialization.bfl.serializers.publickey.BCRSASurrogate
+import com.ing.zknotary.common.serialization.bfl.serializers.publickey.BCSphincs256Surrogate
 import com.ing.zknotary.common.zkp.ZincZKService
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
@@ -14,16 +14,16 @@ import kotlin.reflect.full.findAnnotation
 import kotlin.time.ExperimentalTime
 
 @ExperimentalTime
-class DeserializeAnonymousPartyBCRSATest :
-    DeserializationTestBase<DeserializeAnonymousPartyBCRSATest, DeserializeAnonymousPartyBCRSATest.Data>({
+class DeserializeAnonymousPartyBCSphincs256Test :
+    DeserializationTestBase<DeserializeAnonymousPartyBCSphincs256Test, DeserializeAnonymousPartyBCSphincs256Test.Data>({
         it.data.toZincJson(
-            serialName = BCRSASurrogate::class.findAnnotation<SerialName>()!!.value,
-            encodedSize = BCRSASurrogate.ENCODED_SIZE,
+            serialName = BCSphincs256Surrogate::class.findAnnotation<SerialName>()!!.value,
+            encodedSize = BCSphincs256Surrogate.ENCODED_SIZE,
         )
     }) {
-    override fun getZincZKService(): ZincZKService = getZincZKService<DeserializeAnonymousPartyBCRSATest>()
+    override fun getZincZKService(): ZincZKService = getZincZKService<DeserializeAnonymousPartyBCSphincs256Test>()
     override fun getSerializersModule(): SerializersModule {
-        return CordaSignatureSchemeToSerializers.serializersModuleFor(Crypto.RSA_SHA256)
+        return CordaSignatureSchemeToSerializers.serializersModuleFor(Crypto.SPHINCS256_SHA256)
     }
 
     @Serializable
@@ -32,7 +32,7 @@ class DeserializeAnonymousPartyBCRSATest :
     companion object {
         @JvmStatic
         fun testData() = listOf(
-            Data(TestIdentity.fresh("Alice", Crypto.RSA_SHA256).party.anonymise()),
+            Data(TestIdentity.fresh("Alice", Crypto.SPHINCS256_SHA256).party.anonymise()),
         )
     }
 }

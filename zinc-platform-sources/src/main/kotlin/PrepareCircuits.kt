@@ -1,22 +1,22 @@
 
 import com.ing.zknotary.gradle.extension.ZKNotaryExtension
-import com.ing.zknotary.gradle.template.AbstractPartyTemplateParameters
-import com.ing.zknotary.gradle.template.AmountTemplateParameters
-import com.ing.zknotary.gradle.template.AnonymousPartyTemplateParameters
-import com.ing.zknotary.gradle.template.BigDecimalTemplateParameters
-import com.ing.zknotary.gradle.template.CurrencyTemplateParameters
-import com.ing.zknotary.gradle.template.LinearPointerTemplateParameters
-import com.ing.zknotary.gradle.template.PartyTemplateParameters
-import com.ing.zknotary.gradle.template.PublicKeyTemplateParameters
-import com.ing.zknotary.gradle.template.SecureHashTemplateParameters
-import com.ing.zknotary.gradle.template.StringTemplateParameters
-import com.ing.zknotary.gradle.template.TemplateParameters
-import com.ing.zknotary.gradle.template.TemplateRenderer
-import com.ing.zknotary.gradle.template.UniqueIdentifierTemplateParameters
-import com.ing.zknotary.gradle.template.X500PrincipalTemplateParameters
-import com.ing.zknotary.gradle.util.CodeGenerator
-import com.ing.zknotary.gradle.util.MerkleReplacer
-import com.ing.zknotary.gradle.util.ZincSourcesCopier
+import com.ing.zknotary.gradle.zinc.template.AbstractPartyTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.AmountTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.AnonymousPartyTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.BigDecimalTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.CurrencyTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.LinearPointerTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.PartyTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.PublicKeyTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.SecureHashTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.StringTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.TemplateParameters
+import com.ing.zknotary.gradle.zinc.template.TemplateRenderer
+import com.ing.zknotary.gradle.zinc.template.UniqueIdentifierTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.X500PrincipalTemplateParameters
+import com.ing.zknotary.gradle.zinc.util.CodeGenerator
+import com.ing.zknotary.gradle.zinc.util.MerkleReplacer
+import com.ing.zknotary.gradle.zinc.util.ZincSourcesCopier
 import java.io.File
 
 val bigDecimalConfigurations = listOf(

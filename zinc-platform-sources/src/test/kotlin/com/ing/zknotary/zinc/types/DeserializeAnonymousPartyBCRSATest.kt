@@ -1,7 +1,7 @@
-package zinc.types
+package com.ing.zknotary.zinc.types
 
 import com.ing.zknotary.common.serialization.bfl.serializers.CordaSignatureSchemeToSerializers
-import com.ing.zknotary.common.serialization.bfl.serializers.publickey.EdDSASurrogate
+import com.ing.zknotary.common.serialization.bfl.serializers.publickey.BCRSASurrogate
 import com.ing.zknotary.common.zkp.ZincZKService
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
@@ -14,16 +14,16 @@ import kotlin.reflect.full.findAnnotation
 import kotlin.time.ExperimentalTime
 
 @ExperimentalTime
-class DeserializeAnonymousPartyEdDSATest :
-    DeserializationTestBase<DeserializeAnonymousPartyEdDSATest, DeserializeAnonymousPartyEdDSATest.Data>({
+class DeserializeAnonymousPartyBCRSATest :
+    DeserializationTestBase<DeserializeAnonymousPartyBCRSATest, DeserializeAnonymousPartyBCRSATest.Data>({
         it.data.toZincJson(
-            serialName = EdDSASurrogate::class.findAnnotation<SerialName>()!!.value,
-            encodedSize = EdDSASurrogate.ENCODED_SIZE
+            serialName = BCRSASurrogate::class.findAnnotation<SerialName>()!!.value,
+            encodedSize = BCRSASurrogate.ENCODED_SIZE,
         )
     }) {
-    override fun getZincZKService(): ZincZKService = getZincZKService<DeserializeAnonymousPartyEdDSATest>()
+    override fun getZincZKService(): ZincZKService = getZincZKService<DeserializeAnonymousPartyBCRSATest>()
     override fun getSerializersModule(): SerializersModule {
-        return CordaSignatureSchemeToSerializers.serializersModuleFor(Crypto.EDDSA_ED25519_SHA512)
+        return CordaSignatureSchemeToSerializers.serializersModuleFor(Crypto.RSA_SHA256)
     }
 
     @Serializable
@@ -32,7 +32,7 @@ class DeserializeAnonymousPartyEdDSATest :
     companion object {
         @JvmStatic
         fun testData() = listOf(
-            Data(TestIdentity.fresh("Alice", Crypto.EDDSA_ED25519_SHA512).party.anonymise()),
+            Data(TestIdentity.fresh("Alice", Crypto.RSA_SHA256).party.anonymise()),
         )
     }
 }

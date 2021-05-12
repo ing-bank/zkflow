@@ -1,6 +1,5 @@
 package com.ing.zknotary.common.zkp
 
-import com.ing.zknotary.testing.zkp.setupTimed
 import net.corda.core.utilities.loggerFor
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
@@ -23,7 +22,7 @@ class ZincZKServiceTest {
     )
 
     init {
-        zincZKService.setupTimed(log)
+        zincZKService.setup()
     }
 
     @AfterAll

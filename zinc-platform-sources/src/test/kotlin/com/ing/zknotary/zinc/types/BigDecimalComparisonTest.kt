@@ -1,9 +1,5 @@
-import com.ing.zknotary.testing.zkp.getZincZKService
-import com.ing.zknotary.testing.zkp.proveTimed
-import com.ing.zknotary.testing.zkp.setupTimed
-import com.ing.zknotary.testing.zkp.verifyTimed
-import com.ing.zknotary.zinc.types.toJSON
-import com.ing.zknotary.zinc.types.toWitness
+package com.ing.zknotary.zinc.types
+
 import net.corda.core.utilities.loggerFor
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test

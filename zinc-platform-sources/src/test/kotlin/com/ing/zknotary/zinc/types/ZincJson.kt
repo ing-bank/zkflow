@@ -1,4 +1,4 @@
-package zinc.types
+package com.ing.zknotary.zinc.types
 
 import com.ing.dlt.zkkrypto.util.asUnsigned
 import com.ing.serialization.bfl.api.reified.serialize
@@ -62,6 +62,10 @@ fun PrivacySalt.toZincJson() = toJsonObject().toString()
 fun SecureHash.toZincJson() = toJsonObject().toString()
 fun StateRef.toZincJson() = toJsonObject().toString()
 fun PublicKey.toZincJson(serialName: String, encodedSize: Int) =
+    toJsonObject(serialName, encodedSize).toString()
+fun Party.toZincJson(serialName: String, encodedSize: Int) =
+    toJsonObject(serialName, encodedSize).toString()
+fun AnonymousParty.toZincJson(serialName: String, encodedSize: Int) =
     toJsonObject(serialName, encodedSize).toString()
 fun AbstractParty.toZincJson(serialName: String, encodedSize: Int) =
     toJsonObject(serialName, encodedSize).toString()

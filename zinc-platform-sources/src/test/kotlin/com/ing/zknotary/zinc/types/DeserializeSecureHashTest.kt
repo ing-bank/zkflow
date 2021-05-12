@@ -1,4 +1,4 @@
-package zinc.types
+package com.ing.zknotary.zinc.types
 
 import com.ing.zknotary.common.zkp.ZincZKService
 import kotlinx.serialization.Contextual
@@ -19,7 +19,7 @@ class DeserializeSecureHashTest :
         fun testData() = listOf(
             Data(SecureHash.allOnesHash),
             Data(SecureHash.zeroHash),
-            Data(SecureHash.hashAs(SecureHash.Companion.SHA2_512, "Hello World!".toByteArray()))
+            Data(SecureHash.hashAs(SecureHash.SHA2_512, "Hello World!".toByteArray()))
         )
     }
 }

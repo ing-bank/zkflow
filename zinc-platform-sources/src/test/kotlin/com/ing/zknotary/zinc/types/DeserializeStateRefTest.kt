@@ -1,4 +1,4 @@
-package zinc.types
+package com.ing.zknotary.zinc.types
 
 import com.ing.zknotary.common.zkp.ZincZKService
 import kotlinx.serialization.Contextual
@@ -20,7 +20,7 @@ class DeserializeStateRefTest :
         fun testData() = listOf(
             Data(StateRef(SecureHash.allOnesHash, 0)),
             Data(StateRef(SecureHash.zeroHash, 1)),
-            Data(StateRef(SecureHash.hashAs(SecureHash.Companion.SHA2_512, "Hello World!".toByteArray()), 2))
+            Data(StateRef(SecureHash.hashAs(SecureHash.SHA2_512, "Hello World!".toByteArray()), 2))
         )
     }
 }

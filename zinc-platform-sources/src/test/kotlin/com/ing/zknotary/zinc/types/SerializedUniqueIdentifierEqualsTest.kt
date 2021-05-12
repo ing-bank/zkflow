@@ -2,10 +2,6 @@ package com.ing.zknotary.zinc.types
 
 import com.ing.serialization.bfl.api.reified.serialize
 import com.ing.zknotary.common.serialization.bfl.serializers.CordaSerializers
-import com.ing.zknotary.testing.zkp.getZincZKService
-import com.ing.zknotary.testing.zkp.proveTimed
-import com.ing.zknotary.testing.zkp.setupTimed
-import com.ing.zknotary.testing.zkp.verifyTimed
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import net.corda.core.contracts.UniqueIdentifier

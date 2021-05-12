@@ -1,4 +1,4 @@
-package zinc.types
+package com.ing.zknotary.zinc.types
 
 import com.ing.zknotary.common.serialization.bfl.serializers.publickey.BCSphincs256Surrogate
 import com.ing.zknotary.common.zkp.ZincZKService

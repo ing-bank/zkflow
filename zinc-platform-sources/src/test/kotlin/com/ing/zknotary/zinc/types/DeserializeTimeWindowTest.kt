@@ -1,4 +1,4 @@
-package zinc.types
+package com.ing.zknotary.zinc.types
 
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
