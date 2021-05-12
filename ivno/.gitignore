@@ -81,3 +81,5 @@ tools-database-manager-*.jar
 ivno-collateral-token_*.zip
 
 *.hprof
+
+!lib/*.jar
