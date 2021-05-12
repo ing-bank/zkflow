@@ -1,0 +1,8 @@
+mod anonymous_party_bcsphincs256;
+
+use anonymous_party_bcsphincs256::AnonymousPartyBCSphincs256;
+use anonymous_party_bcsphincs256::SerializedAnonymousPartyBCSphincs256;
+
+fn main(witness: SerializedAnonymousPartyBCSphincs256) -> AnonymousPartyBCSphincs256 {
+    AnonymousPartyBCSphincs256::deserialize(witness)
+}

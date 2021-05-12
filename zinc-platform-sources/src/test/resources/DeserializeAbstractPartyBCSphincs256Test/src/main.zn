@@ -1,0 +1,8 @@
+mod abstract_party_bcsphincs256;
+
+use abstract_party_bcsphincs256::AbstractPartyBCSphincs256;
+use abstract_party_bcsphincs256::SerializedAbstractPartyBCSphincs256;
+
+fn main(witness: SerializedAbstractPartyBCSphincs256) -> AbstractPartyBCSphincs256 {
+    AbstractPartyBCSphincs256::deserialize(witness)
+}

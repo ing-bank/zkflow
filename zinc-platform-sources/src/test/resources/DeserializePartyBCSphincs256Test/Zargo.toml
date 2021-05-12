@@ -1,0 +1,3 @@
+[circuit]
+name = "Deserialize PartyBCSphincs256 test"
+version = "0.1.0"

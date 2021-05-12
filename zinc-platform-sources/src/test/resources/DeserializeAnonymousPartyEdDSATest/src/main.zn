@@ -1,0 +1,8 @@
+mod anonymous_party_ed_dsa;
+
+use anonymous_party_ed_dsa::AnonymousPartyEdDSA;
+use anonymous_party_ed_dsa::SerializedAnonymousPartyEdDSA;
+
+fn main(witness: SerializedAnonymousPartyEdDSA) -> AnonymousPartyEdDSA {
+    AnonymousPartyEdDSA::deserialize(witness)
+}
