@@ -130,7 +130,7 @@ class TransactionVerificationTest {
             referenceHashes = emptyList()
         )
 
-        createZKService.run(witness, null)
+        createZKService.run(witness, publicInput)
 
         val proof = createZKService.proveTimed(witness, log)
         createZKService.verifyTimed(proof, publicInput, log)
@@ -166,10 +166,9 @@ class TransactionVerificationTest {
             referenceHashes = emptyList()
         )
 
-        val moveProof = moveZKService.proveTimed(moveWitness, log)
-
         moveZKService.run(moveWitness, movePublicInput)
 
+        val moveProof = moveZKService.proveTimed(moveWitness, log)
         moveZKService.verifyTimed(moveProof, movePublicInput, log)
     }
 

@@ -16,9 +16,9 @@ const NOTARY_GROUP_SIZE: u16 = 1;
 const TIMEWINDOW_GROUP_SIZE: u16 = 1;
 
 // Component and UTXO sizes cannot be 0, so for not present components use 1
-const OUTPUT_COMPONENT_SIZE: u16 = 1665; // PUBKEY_BYTES + U32_BYTES;
+const OUTPUT_COMPONENT_SIZE: u16 = 1664;
 const COMMAND_COMPONENT_SIZE: u16 = 11;
-const SIGNER_COMPONENT_SIZE: u16 = 63; //PUBKEY_BYTES;
+const SIGNER_COMPONENT_SIZE: u16 = 63;
 
 const INPUT_UTXO_SIZE: u16 = 1;
 const REFERENCE_UTXO_SIZE: u16 = 1;
