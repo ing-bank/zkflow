@@ -17,7 +17,6 @@ import kotlin.time.ExperimentalTime
 class DeserializeAnonymousPartyBCECR1Test :
     DeserializationTestBase<DeserializeAnonymousPartyBCECR1Test, DeserializeAnonymousPartyBCECR1Test.Data>({
         it.data.toZincJson(
-            scheme = Crypto.ECDSA_SECP256R1_SHA256,
             serialName = BCECSurrogate::class.findAnnotation<SerialName>()!!.value,
             encodedSize = BCECSurrogate.ENCODED_SIZE,
         )

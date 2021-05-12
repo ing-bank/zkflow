@@ -24,7 +24,6 @@ object AbstractPartySerializer : KSerializer<AbstractParty> by (
     }
     )
 
-
 @Serializable
 data class AbstractPartySurrogate(
     val name: @Serializable(with = CordaX500NameSerializer::class) CordaX500Name?,

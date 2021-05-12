@@ -12,7 +12,7 @@ abstract class DeserializePublicKeyTestBase<T : DeserializePublicKeyTestBase<T>>
     private val serialName: String,
     private val encodedSize: Int
 ) : DeserializationTestBase<T, DeserializePublicKeyTestBase.Data>(
-    { it.data.toZincJson(scheme, serialName, encodedSize) },
+    { it.data.toZincJson(serialName, encodedSize) },
 ) {
     override fun getSerializersModule() = CordaSignatureSchemeToSerializers.serializersModuleFor(scheme)
 

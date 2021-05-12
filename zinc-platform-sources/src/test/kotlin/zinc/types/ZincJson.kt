@@ -23,7 +23,6 @@ import net.corda.core.contracts.TimeWindow
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.crypto.Crypto
 import net.corda.core.crypto.SecureHash
-import net.corda.core.crypto.SignatureScheme
 import net.corda.core.crypto.algorithm
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.AnonymousParty
@@ -62,10 +61,10 @@ fun TimeWindow.toZincJson() = toJsonObject().toString()
 fun PrivacySalt.toZincJson() = toJsonObject().toString()
 fun SecureHash.toZincJson() = toJsonObject().toString()
 fun StateRef.toZincJson() = toJsonObject().toString()
-fun PublicKey.toZincJson(scheme: SignatureScheme, serialName: String, encodedSize: Int) =
-    toJsonObject(scheme, serialName, encodedSize).toString()
-fun AbstractParty.toZincJson(scheme: SignatureScheme, serialName: String, encodedSize: Int) =
-    toJsonObject(scheme, serialName, encodedSize).toString()
+fun PublicKey.toZincJson(serialName: String, encodedSize: Int) =
+    toJsonObject(serialName, encodedSize).toString()
+fun AbstractParty.toZincJson(serialName: String, encodedSize: Int) =
+    toJsonObject(serialName, encodedSize).toString()
 
 fun String?.toJsonObject(size: Int) = buildJsonObject {
     put("chars", toSizedIntArray(size).toJsonArray())
@@ -168,9 +167,9 @@ fun StateRef.toJsonObject() = buildJsonObject {
     put("index", "$index")
 }
 
-fun PublicKey.toJsonObject(scheme: SignatureScheme, serialName: String, encodedSize: Int) = buildJsonObject {
+fun PublicKey.toJsonObject(serialName: String, encodedSize: Int) = buildJsonObject {
     put("serial_name", serialName.toJsonObject(1))
-
+    val scheme = Crypto.findSignatureScheme(this@toJsonObject)
     if (scheme == Crypto.ECDSA_SECP256K1_SHA256 || scheme == Crypto.ECDSA_SECP256R1_SHA256) {
         put("scheme_id", "${scheme.schemeNumberID}")
     }
@@ -185,16 +184,16 @@ fun CordaX500Name?.toJsonObject() = buildJsonObject {
     put("name", name.resizeTo(CordaX500NameSurrogate.SIZE).toJsonArray())
 }
 
-fun AbstractParty.toJsonObject(scheme: SignatureScheme, serialName: String, encodedSize: Int) = buildJsonObject {
+fun AbstractParty.toJsonObject(serialName: String, encodedSize: Int) = buildJsonObject {
     put("name", nameOrNull().toJsonObject())
-    put("owning_key", owningKey.toJsonObject(scheme, serialName, encodedSize))
+    put("owning_key", owningKey.toJsonObject(serialName, encodedSize))
 }
 
-fun AnonymousParty.toJsonObject(scheme: SignatureScheme, serialName: String, encodedSize: Int) = buildJsonObject {
-    put("owning_key", owningKey.toJsonObject(scheme, serialName, encodedSize))
+fun AnonymousParty.toJsonObject(serialName: String, encodedSize: Int) = buildJsonObject {
+    put("owning_key", owningKey.toJsonObject(serialName, encodedSize))
 }
 
-fun Party.toJsonObject(scheme: SignatureScheme, serialName: String, encodedSize: Int) = buildJsonObject {
+fun Party.toJsonObject(serialName: String, encodedSize: Int) = buildJsonObject {
     put("name", name.toJsonObject())
-    put("owning_key", owningKey.toJsonObject(scheme, serialName, encodedSize))
+    put("owning_key", owningKey.toJsonObject(serialName, encodedSize))
 }

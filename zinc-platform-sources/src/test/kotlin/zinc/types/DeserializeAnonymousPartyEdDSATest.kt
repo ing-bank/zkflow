@@ -17,7 +17,6 @@ import kotlin.time.ExperimentalTime
 class DeserializeAnonymousPartyEdDSATest :
     DeserializationTestBase<DeserializeAnonymousPartyEdDSATest, DeserializeAnonymousPartyEdDSATest.Data>({
         it.data.toZincJson(
-            scheme = Crypto.EDDSA_ED25519_SHA512,
             serialName = EdDSASurrogate::class.findAnnotation<SerialName>()!!.value,
             encodedSize = EdDSASurrogate.ENCODED_SIZE
         )

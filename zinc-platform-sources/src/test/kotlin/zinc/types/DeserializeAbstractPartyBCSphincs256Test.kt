@@ -17,7 +17,6 @@ import kotlin.time.ExperimentalTime
 class DeserializeAbstractPartyBCSphincs256Test :
     DeserializationTestBase<DeserializeAbstractPartyBCSphincs256Test, DeserializeAbstractPartyBCSphincs256Test.Data>({
         it.data.toZincJson(
-            scheme = Crypto.SPHINCS256_SHA256,
             serialName = BCSphincs256Surrogate::class.findAnnotation<SerialName>()!!.value,
             encodedSize = BCSphincs256Surrogate.ENCODED_SIZE,
         )

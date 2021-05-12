@@ -17,7 +17,6 @@ import kotlin.time.ExperimentalTime
 class DeserializePartyBCRSATest :
     DeserializationTestBase<DeserializePartyBCRSATest, DeserializePartyBCRSATest.Data>({
         it.data.toZincJson(
-            scheme = Crypto.RSA_SHA256,
             serialName = BCRSASurrogate::class.findAnnotation<SerialName>()!!.value,
             encodedSize = BCRSASurrogate.ENCODED_SIZE,
         )
