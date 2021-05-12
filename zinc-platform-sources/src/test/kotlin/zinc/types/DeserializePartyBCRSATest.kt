@@ -8,33 +8,32 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
 import net.corda.core.crypto.Crypto
-import net.corda.core.identity.AbstractParty
+import net.corda.core.identity.Party
 import net.corda.testing.core.TestIdentity
 import kotlin.reflect.full.findAnnotation
 import kotlin.time.ExperimentalTime
 
 @ExperimentalTime
-class DeserializeAbstractPartyBCRSATest :
-    DeserializationTestBase<DeserializeAbstractPartyBCRSATest, DeserializeAbstractPartyBCRSATest.Data>({
+class DeserializePartyBCRSATest :
+    DeserializationTestBase<DeserializePartyBCRSATest, DeserializePartyBCRSATest.Data>({
         it.data.toZincJson(
             scheme = Crypto.RSA_SHA256,
             serialName = BCRSASurrogate::class.findAnnotation<SerialName>()!!.value,
             encodedSize = BCRSASurrogate.ENCODED_SIZE,
         )
     }) {
-    override fun getZincZKService(): ZincZKService = getZincZKService<DeserializeAbstractPartyBCRSATest>()
+    override fun getZincZKService(): ZincZKService = getZincZKService<DeserializePartyBCRSATest>()
     override fun getSerializersModule(): SerializersModule {
         return CordaSignatureSchemeToSerializers.serializersModuleFor(Crypto.RSA_SHA256)
     }
 
     @Serializable
-    data class Data(val data: @Contextual AbstractParty)
+    data class Data(val data: @Contextual Party)
 
     companion object {
         @JvmStatic
         fun testData() = listOf(
             Data(TestIdentity.fresh("Alice", Crypto.RSA_SHA256).party),
-            Data(TestIdentity.fresh("Alice", Crypto.RSA_SHA256).party.anonymise()),
         )
     }
 }

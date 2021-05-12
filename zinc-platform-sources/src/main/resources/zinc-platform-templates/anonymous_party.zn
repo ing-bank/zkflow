@@ -1,0 +1,33 @@
+// Input parameters:
+//   - TYPE_NAME: String = Name of the main struct, and suffix for Serialized struct, use camelcase
+//   - CONSTANT_PREFIX: String = prefix to use for constant names, use uppercase
+//   - PK_TYPE_NAME: String = name of the PublicKey struct, and suffix for Serialized struct, use camelcase
+//   - PK_CONSTANT_PREFIX: String = prefix used for constant names of PublicKey, use uppercase and snakecase
+//   - PK_MODULE_NAME: String = module name of the PublicKey, use lowercase and snakecase
+
+mod ${PK_MODULE_NAME};
+
+use ${PK_MODULE_NAME}::${PK_TYPE_NAME};
+use ${PK_MODULE_NAME}::${PK_CONSTANT_PREFIX}_LENGTH;
+
+const ${CONSTANT_PREFIX}_OWNING_KEY_LENGTH: u16 = ${PK_CONSTANT_PREFIX}_LENGTH;
+
+//! ${TYPE_NAME} lengths
+const ${CONSTANT_PREFIX}_OWNING_KEY_OFFSET: u16 = 0;
+const ${CONSTANT_PREFIX}_LENGTH: u16
+    = ${CONSTANT_PREFIX}_OWNING_KEY_OFFSET
+    + ${CONSTANT_PREFIX}_OWNING_KEY_LENGTH;
+
+type Serialized${TYPE_NAME} = [u8; ${CONSTANT_PREFIX}_LENGTH];
+
+struct ${TYPE_NAME} {
+    owning_key: ${PK_TYPE_NAME},
+}
+
+impl ${TYPE_NAME} {
+    fn deserialize(serialized: Serialized${TYPE_NAME}) -> ${TYPE_NAME} {
+        ${TYPE_NAME} {
+            owning_key: ${PK_TYPE_NAME}::deserialize(serialized),
+        }
+    }
+}

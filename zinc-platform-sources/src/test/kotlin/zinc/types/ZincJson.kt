@@ -26,7 +26,9 @@ import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.SignatureScheme
 import net.corda.core.crypto.algorithm
 import net.corda.core.identity.AbstractParty
+import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.CordaX500Name
+import net.corda.core.identity.Party
 import java.math.BigDecimal
 import java.security.PublicKey
 import java.time.Duration
@@ -185,5 +187,14 @@ fun CordaX500Name?.toJsonObject() = buildJsonObject {
 
 fun AbstractParty.toJsonObject(scheme: SignatureScheme, serialName: String, encodedSize: Int) = buildJsonObject {
     put("name", nameOrNull().toJsonObject())
+    put("owning_key", owningKey.toJsonObject(scheme, serialName, encodedSize))
+}
+
+fun AnonymousParty.toJsonObject(scheme: SignatureScheme, serialName: String, encodedSize: Int) = buildJsonObject {
+    put("owning_key", owningKey.toJsonObject(scheme, serialName, encodedSize))
+}
+
+fun Party.toJsonObject(scheme: SignatureScheme, serialName: String, encodedSize: Int) = buildJsonObject {
+    put("name", name.toJsonObject())
     put("owning_key", owningKey.toJsonObject(scheme, serialName, encodedSize))
 }

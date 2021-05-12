@@ -34,6 +34,7 @@ class DeserializeAbstractPartyBCECK1Test :
         @JvmStatic
         fun testData() = listOf(
             Data(TestIdentity.fresh("Alice", Crypto.ECDSA_SECP256K1_SHA256).party),
+            Data(TestIdentity.fresh("Alice", Crypto.ECDSA_SECP256K1_SHA256).party.anonymise()),
         )
     }
 }

@@ -1,0 +1,8 @@
+mod anonymous_party_bcrsa;
+
+use anonymous_party_bcrsa::AnonymousPartyBCRSA;
+use anonymous_party_bcrsa::SerializedAnonymousPartyBCRSA;
+
+fn main(witness: SerializedAnonymousPartyBCRSA) -> AnonymousPartyBCRSA {
+    AnonymousPartyBCRSA::deserialize(witness)
+}

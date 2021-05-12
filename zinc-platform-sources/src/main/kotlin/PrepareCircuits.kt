@@ -7,6 +7,7 @@ import com.ing.zknotary.gradle.template.BigDecimalTemplateParameters
 import com.ing.zknotary.gradle.template.CurrencyTemplateParameters
 import com.ing.zknotary.gradle.template.LinearPointerTemplateParameters
 import com.ing.zknotary.gradle.template.PartyTemplateParameters
+import com.ing.zknotary.gradle.template.PublicKeyTemplateParameters
 import com.ing.zknotary.gradle.template.SecureHashTemplateParameters
 import com.ing.zknotary.gradle.template.StringTemplateParameters
 import com.ing.zknotary.gradle.template.TemplateParameters
@@ -43,6 +44,7 @@ fun resolveAllTemplateParameters(): List<TemplateParameters> {
                 CurrencyTemplateParameters,
                 SecureHashTemplateParameters,
             ) +
+            PublicKeyTemplateParameters.all +
             AbstractPartyTemplateParameters.all +
             AnonymousPartyTemplateParameters.all +
             PartyTemplateParameters.all
