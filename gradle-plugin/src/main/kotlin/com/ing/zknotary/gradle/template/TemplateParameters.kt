@@ -95,6 +95,28 @@ data class AbstractPartyTemplateParameters(val pkTemplateParameters: PublicKeyTe
     }
 }
 
+data class AnonymousPartyTemplateParameters(val pkTemplateParameters: PublicKeyTemplateParameters) : TemplateParameters(
+    "anonymous_party.zn",
+    listOf(pkTemplateParameters)
+) {
+    companion object {
+        val all = PublicKeyTemplateParameters.all.map {
+            AnonymousPartyTemplateParameters(it)
+        }
+    }
+}
+
+data class PartyTemplateParameters(val pkTemplateParameters: PublicKeyTemplateParameters) : TemplateParameters(
+    "party.zn",
+    listOf(pkTemplateParameters)
+) {
+    companion object {
+        val all = PublicKeyTemplateParameters.all.map {
+            PartyTemplateParameters(it)
+        }
+    }
+}
+
 object UniqueIdentifierTemplateParameters : TemplateParameters(
     "unique_identifier.zn",
     listOf(StringTemplateParameters(UniqueIdentifierSurrogate.EXTERNAL_ID_LENGTH.toShort()))
