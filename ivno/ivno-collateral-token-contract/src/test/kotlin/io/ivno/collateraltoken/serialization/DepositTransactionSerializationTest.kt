@@ -43,7 +43,7 @@ class DepositTransactionSerializationTest : ContractTest() {
                 HashAttachmentConstraint(SecureHash.zeroHash)
             )
         )
-        val commands = listOf(Command(DepositContract.Request, listOf(BANK_A.party.owningKey)))
+        val commands = listOf(Command(DepositContract.Request(), listOf(BANK_A.party.owningKey)))
         val attachments = List(1) { SecureHash.randomSHA256() }
         val notary = TestIdentity.fresh("Notary").party
         val timeWindow = TimeWindow.fromOnly(Instant.now())
@@ -51,8 +51,8 @@ class DepositTransactionSerializationTest : ContractTest() {
         val networkParametersHash = SecureHash.randomSHA256()
 
         // This functionality is duplicated from ZKTransaction.toWireTransaction()
-        val command = commands.singleOrNull() ?: error("Single command per transaction is allowed")
-        val zkCommand = command.value as? ZKCommandData ?: error("Command must implement ZKCommandData")
+        val singleCommand = commands.singleOrNull() ?: error("Single command per transaction is allowed")
+        val zkCommand = singleCommand.value as? ZKCommandData ?: error("Command must implement ZKCommandData")
         val additionalSerializationProperties =
             mapOf<Any, Any>(BFLSerializationScheme.CONTEXT_KEY_CIRCUIT to zkCommand.circuit)
 
@@ -85,7 +85,11 @@ class DepositTransactionSerializationTest : ContractTest() {
         }
 
         wtx.inputs shouldBe inputs
-        wtx.commands shouldBe commands
+        wtx.commands.forEachIndexed { index, command ->
+            command.value::class shouldBe commands[index].value::class
+            command.signers shouldBe commands[index].signers
+
+        }
         wtx.attachments shouldBe attachments
         wtx.notary shouldBe notary
         wtx.timeWindow shouldBe timeWindow
