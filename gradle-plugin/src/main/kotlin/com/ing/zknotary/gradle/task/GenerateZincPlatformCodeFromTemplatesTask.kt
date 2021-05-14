@@ -2,6 +2,7 @@ package com.ing.zknotary.gradle.task
 
 import com.ing.zknotary.gradle.plugin.circuitNames
 import com.ing.zknotary.gradle.plugin.getTemplateContents
+import com.ing.zknotary.gradle.plugin.platformSourcesRootPath
 import com.ing.zknotary.gradle.plugin.zkNotaryExtension
 import com.ing.zknotary.gradle.zinc.template.TemplateRenderer
 import com.ing.zknotary.gradle.zinc.util.CodeGenerator
@@ -17,7 +18,7 @@ open class GenerateZincPlatformCodeFromTemplatesTask : DefaultTask() {
         project.circuitNames?.forEach { circuitName ->
             val circuitSourceOutputPath = extension.mergedCircuitOutputPath.resolve(circuitName).resolve("src")
             val codeGenerator = CodeGenerator(circuitSourceOutputPath)
-            val consts = extension.circuitSourcesBasePath.resolve(circuitName).resolve("consts.zn").readText()
+            val consts = joinConstFiles(extension.circuitSourcesBasePath.resolve(circuitName), project.platformSourcesRootPath)
 
             codeGenerator.generateMerkleUtilsCode(project.getTemplateContents(extension.merkleTemplate), consts)
             codeGenerator.generateMainCode(project.getTemplateContents(extension.mainTemplate), consts)
