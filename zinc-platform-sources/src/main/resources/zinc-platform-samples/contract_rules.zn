@@ -3,11 +3,13 @@
 //! PLEASE IMPLEMENT NECESSARY CHECKS FOR THE ZKDAPP CONTRACT
 //!
 mod consts;
+mod platform_consts;
 mod platform_zk_prover_transaction;
 
-use consts::COMMAND_GROUP_SIZE;
+use platform_consts::COMMAND_GROUP_SIZE;
 use consts::INPUT_GROUP_SIZE;
 use consts::OUTPUT_GROUP_SIZE;
 use platform_zk_prover_transaction::Witness;
 
 fn check_contract_rules(value: Witness) {}
+
