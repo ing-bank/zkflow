@@ -7,30 +7,17 @@
 //! in each group.
 //! See definition of ZKCommandData on the Corda side.
 //!
-mod platform_consts;
-mod platform_pub_key;
-
-use platform_consts::U32_BYTES;
-use platform_pub_key::PUBKEY_BYTES;
-
-const ATTACHMENT_GROUP_SIZE: u16 = 2;
-const COMMAND_GROUP_SIZE: u16 = 1;
-const INPUT_GROUP_SIZE: u16 = 1;
+const ATTACHMENT_GROUP_SIZE: u16 = 0;
+const INPUT_GROUP_SIZE: u16 = 0;
 const OUTPUT_GROUP_SIZE: u16 = 1;
-const REFERENCE_GROUP_SIZE: u16 = 2;
-const SIGNER_GROUP_SIZE: u16 = 1;
+const REFERENCE_GROUP_SIZE: u16 = 0;
 const NOTARY_GROUP_SIZE: u16 = 1;
 const TIMEWINDOW_GROUP_SIZE: u16 = 1;
-const PARAMETERS_GROUP_SIZE: u16 = 1;
 
-const INPUT_COMPONENT_SIZE: u16 = 5;
-const OUTPUT_COMPONENT_SIZE: u16 = 1674; // PUBKEY_BYTES + U32_BYTES;
-const ATTACHMENT_COMPONENT_SIZE: u16 = 5;
+// Component and UTXO sizes cannot be 0, so for not present components use 1
+const OUTPUT_COMPONENT_SIZE: u16 = 1664;
 const COMMAND_COMPONENT_SIZE: u16 = 11;
-const REFERENCE_COMPONENT_SIZE: u16 = 5;
-const SIGNER_COMPONENT_SIZE: u16 = 63; //PUBKEY_BYTES;
-// TODO: these 3 groups are always of size 1 and probably component are also of constant size.
-//  So probably we want to hide component sizes too somewhere inside platform code
-const NOTARY_COMPONENT_SIZE: u16 = 847;
-const TIMEWINDOW_COMPONENT_SIZE: u16 = 33;
-const PARAMETERS_COMPONENT_SIZE: u16 = 85;
+const SIGNER_COMPONENT_SIZE: u16 = 63;
+
+const INPUT_UTXO_SIZE: u16 = 1;
+const REFERENCE_UTXO_SIZE: u16 = 1;
