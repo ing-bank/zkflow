@@ -181,20 +181,17 @@ fun PublicKey.toJsonObject(serialName: String, encodedSize: Int) = buildJsonObje
     put("encoded", encoded.toJsonObject(encodedSize))
 }
 
-@JvmName("toJsonObject")
+@JvmName("CordaX500NameJsonObject")
 fun CordaX500Name.toJsonObject() = buildJsonObject {
-    val name: ByteArray = this@toJsonObject.let {
-        serialize(it, strategy = CordaX500NameSerializer)
-    }
-    put("name", name.resizeTo(CordaX500NameSurrogate.SIZE).toJsonArray())
+    val name = serialize(this@toJsonObject, strategy = CordaX500NameSerializer)
+    put("name", name.toJsonArray())
 }
 
-@JvmName("toNullableJsonObject")
+@JvmName("NullableCordaX500NameJsonObject")
 fun CordaX500Name?.toJsonObject() = buildJsonObject {
-    val name: ByteArray = this@toJsonObject?.let {
-        serialize(it, strategy = CordaX500NameSerializer)
-    } ?: ByteArray(0)
-    put("corda_x500_name", buildJsonObject { put("name", name.resizeTo(CordaX500NameSurrogate.SIZE).toJsonArray()) })
+    val cordaX500Name = this@toJsonObject?.toJsonObject()
+        ?: buildJsonObject { put("name", ByteArray(CordaX500NameSurrogate.SIZE) { 0 }.toJsonArray()) }
+    put("corda_x500_name", cordaX500Name)
     put("is_null", this@toJsonObject == null)
 }
 
