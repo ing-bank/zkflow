@@ -1,4 +1,3 @@
-
 import com.ing.zknotary.gradle.extension.ZKNotaryExtension
 import com.ing.zknotary.gradle.task.joinConstFiles
 import com.ing.zknotary.gradle.zinc.template.AbstractPartyTemplateParameters
@@ -73,7 +72,7 @@ fun main(args: Array<String>) {
         copier.copyZincPlatformSources(getPlatformSources(root))
         copier.copyZincPlatformSources(getPlatformLibs(root))
 
-        val consts = joinConstFiles(circuitSourcesBase.resolve(circuitName), getPlatformSourcesDir(root))
+        val consts = joinConstFiles(circuitSourcesPath, getPlatformSourcesPath(root))
 
         // Render templates
         val templateRenderer = TemplateRenderer(outputPath.toPath()) {
@@ -94,15 +93,13 @@ fun main(args: Array<String>) {
     }
 
     // Render templates for test circuits
-    val testTemplateRenderer = TemplateRenderer(getPlatformSourcesPath(root, "zinc-platform-test-sources").toPath()) {
-        getTemplateContents(root, it.templateFile)
-    }
-    resolveAllTemplateParameters().forEach {
-        testTemplateRenderer.renderTemplate(it)
-    }
+    val testTemplateRenderer =
+        TemplateRenderer(getPlatformSourcesTestSourcesPath(root).toPath()) { getTemplateContents(root, it.templateFile) }
+
+    resolveAllTemplateParameters().forEach { testTemplateRenderer.renderTemplate(it) }
 }
 
-private fun getPlatformSourcesDir(root: String): File {
+private fun getPlatformSourcesPath(root: String): File {
     return File("$root/src/main/resources/zinc-platform-sources")
 }
 
@@ -114,8 +111,8 @@ private fun getPlatformLibs(root: String): Array<File>? {
     return File("$root/src/main/resources/zinc-platform-libraries").listFiles()
 }
 
-private fun getPlatformSourcesPath(root: String, sourceName: String): File {
-    return File("$root/src/main/resources/$sourceName")
+private fun getPlatformSourcesTestSourcesPath(root: String): File {
+    return File("$root/src/main/resources/zinc-platform-test-sources")
 }
 
 private fun getTemplateContents(root: String, templateName: String) =

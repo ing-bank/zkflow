@@ -5,7 +5,7 @@ import org.gradle.api.Project
 import org.gradle.api.file.FileTree
 import java.io.File
 
-val Project.platformSourcesDirectory: FileTree
+val Project.platformSourcesFileTree: FileTree
     get() {
         return configurations.getByName("zinc")
             .files
@@ -27,22 +27,30 @@ val Project.circuitNames: List<String>?
 
 val Project.platformSources: Array<File>
     get() {
-        return project.platformSourcesDirectory.matching { it.include(zkNotaryExtension.platformSourcesPath) }.toList().toTypedArray()
+        return project.platformSourcesFileTree.matching { it.include(zkNotaryExtension.platformSourcesPath + zkNotaryExtension.zincFilesGlob) }
+            .toList().toTypedArray()
+    }
+
+val Project.platformSourcesRootPath: File
+    get() {
+        return project.platformSources.sortedArray().firstOrNull()?.parentFile?.absoluteFile ?: error("Platform Sources are empty")
     }
 
 val Project.platformLibraries: Array<File>
     get() {
-        return project.platformSourcesDirectory.matching { it.include(zkNotaryExtension.platformLibrariesPath) }.toList().toTypedArray()
+        return project.platformSourcesFileTree.matching { it.include(zkNotaryExtension.platformLibrariesPath + zkNotaryExtension.zincFilesGlob) }
+            .toList().toTypedArray()
     }
 
 val Project.platformTemplates: Array<File>
     get() {
-        return project.platformSourcesDirectory.matching { it.include(zkNotaryExtension.platformTemplatesPath) }.toList().toTypedArray()
+        return project.platformSourcesFileTree.matching { it.include(zkNotaryExtension.platformTemplatesPath + zkNotaryExtension.zincFilesGlob) }
+            .toList().toTypedArray()
     }
 
 val Project.platformSamples: FileTree
     get() {
-        return project.platformSourcesDirectory.matching { it.include(zkNotaryExtension.platformSamplesPath) }
+        return project.platformSourcesFileTree.matching { it.include(zkNotaryExtension.platformSamplesPath + zkNotaryExtension.zincFilesGlob) }
     }
 
 fun Project.getTemplateContents(templateFileName: String): String {

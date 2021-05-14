@@ -60,16 +60,19 @@ open class ZKNotaryExtension(project: Project) {
     val circuitSourcesBasePath: File = project.projectDir.resolve(CIRCUIT_SOURCES_BASE_PATH)
 
     @Input
-    val platformSourcesPath = "zinc-platform-sources/**/*.zn"
+    val zincFilesGlob = "**/*.zn"
 
     @Input
-    val platformLibrariesPath = "zinc-platform-libraries/**/*.zn"
+    val platformSourcesPath = "zinc-platform-sources/"
 
     @Input
-    val platformTemplatesPath = "zinc-platform-templates/**/*.zn"
+    val platformLibrariesPath = "zinc-platform-libraries/"
 
     @Input
-    val platformSamplesPath = "zinc-platform-samples/**/*.zn"
+    val platformTemplatesPath = "zinc-platform-templates/"
+
+    @Input
+    val platformSamplesPath = "zinc-platform-samples/"
 
     @Input
     val merkleTemplate = "merkle_template.zn"
