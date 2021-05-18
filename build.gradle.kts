@@ -183,7 +183,7 @@ subprojects {
             }
         }
 
-        val testConfigResourcesDir = "$rootDir/config/test"
+        val testConfigResourcesDir = "${rootProject.rootDir}/config/test"
         sourceSets {
             test {
                 resources {

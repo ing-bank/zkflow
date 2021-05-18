@@ -60,6 +60,9 @@ val mergedCircuitOutput = File("$root/build/circuits")
 val circuits = circuitSourcesBase.listFiles { file, _ -> file?.isDirectory ?: false }?.map { it.name }
 
 task("prepareCircuits", JavaExec::class) {
+    inputs.dir(projectDir.resolve("src/main/resources"))
+    inputs.dir(circuitSourcesBase)
+    outputs.dir(mergedCircuitOutput)
     main = "PrepareCircuitsKt"
     classpath = sourceSets["main"].runtimeClasspath
     args(root, project.version)
@@ -103,15 +106,20 @@ open class CopyCircuitTask @Inject constructor() : DefaultTask() {
         dependsOn(":zinc-platform-sources:circuits")
     }
 
+    val projectDir = Paths.get(project.projectDir.absolutePath)
+
+    @org.gradle.api.tasks.InputDirectory
+    val resourcesDir = projectDir.resolve("src/main/resources")
+
+    @org.gradle.api.tasks.OutputDirectory
+    val generatedResourcesDir = projectDir.resolve("build/resources/test")
+
     @TaskAction
     fun copy() {
         // In this package we test functions of classes, which are stored in one particular file,
         // but since there are many of them, we need many main functions with different parameters and output,
         // thus we copy implementation to each testing module in resources (because, zinc support modules pretty bad).
-        val projectDir = Paths.get(project.projectDir.absolutePath)
         val testClassesPath = projectDir.resolve("src/test/kotlin/com/ing/zknotary/zinc/types/")
-        val resourcesDir = projectDir.resolve("src/main/resources")
-        val generatedResourcesDir = projectDir.resolve("build/resources/test")
         Files.newDirectoryStream(testClassesPath)
             .map { it.fileName.toString().removeSuffix(".kt") }
             .filter { Files.exists(generatedResourcesDir.resolve(it)) }
