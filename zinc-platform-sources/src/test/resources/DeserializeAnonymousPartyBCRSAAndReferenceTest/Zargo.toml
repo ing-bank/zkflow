@@ -1,0 +1,3 @@
+[circuit]
+name = "Deserialize AnonymousPartyBCRSAAndReference test"
+version = "0.1.0"

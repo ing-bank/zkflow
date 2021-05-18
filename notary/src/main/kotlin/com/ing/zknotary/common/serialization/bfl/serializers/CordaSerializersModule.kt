@@ -1,7 +1,6 @@
 package com.ing.zknotary.common.serialization.bfl.serializers
 
 import com.ing.zknotary.common.serialization.bfl.corda.LinearPointerSerializer
-import com.ing.zknotary.common.serialization.bfl.corda.PartyAndReferenceSerializer
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.contextual
 import kotlinx.serialization.modules.polymorphic
@@ -44,7 +43,14 @@ val CordaSerializers = SerializersModule {
     contextual(PrivacySaltSerializer)
 
     contextual(TimeWindowSerializer)
-    contextual(PartyAndReferenceSerializer)
     contextual(LinearPointerSerializer)
     contextual(ZonedDateTimeSerializer)
+
+    /**
+     * This SerializersModule explicitly leaves out a KSerializer for PartyAndReference.
+     * Users of this library should choose whether they need to retain the CordaX500Name of Party, as this has a
+     * negative impact on the performance of the ZKP circuit.
+     */
+    // contextual(PartyAndReferenceSerializer)
+    // contextual(AnonymisingPartyAndReferenceSerializer)
 }

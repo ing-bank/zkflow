@@ -1,25 +1,20 @@
 package com.ing.zknotary.gradle.zinc.template.parameters
 
+import com.ing.zknotary.gradle.zinc.template.PartyType
 import com.ing.zknotary.gradle.zinc.template.TemplateParameters
 
-data class AnonymousPartyTemplateParameters(val pkTemplateParameters: PublicKeyTemplateParameters) : TemplateParameters(
+data class AnonymousPartyTemplateParameters(
+    val pkTemplateParameters: PublicKeyTemplateParameters
+) : PartyType, TemplateParameters(
     "anonymous_party.zn",
     listOf(pkTemplateParameters)
 ) {
-    private val pkTypeName by lazy { pkTemplateParameters.typeName }
-    private val algName by lazy { pkTypeName.removeSuffix("PublicKey") }
-    private val pkSnakeCaseType by lazy { pkTypeName.camelToSnakeCase().replace("public_key", "_public_key") }
-    private val typeName by lazy { "AnonymousParty$algName" }
+    private val algName by lazy { pkTemplateParameters.typeName.removeSuffix("PublicKey") }
+    override val typeName by lazy { "AnonymousParty$algName" }
 
-    override fun getReplacements() = mapOf(
-        "TYPE_NAME" to typeName,
-        "CONSTANT_PREFIX" to typeName.camelToSnakeCase().toUpperCase(),
-        "PK_TYPE_NAME" to pkTypeName,
-        "PK_CONSTANT_PREFIX" to pkSnakeCaseType.toUpperCase(),
-        "PK_MODULE_NAME" to pkSnakeCaseType,
-    )
+    override fun getReplacements() = getTypeReplacements() + pkTemplateParameters.getTypeReplacements("PK_")
 
-    override fun getTargetFilename() = "${typeName.camelToSnakeCase()}.zn"
+    override fun getTargetFilename() = getFileName()
 
     companion object {
         val all = PublicKeyTemplateParameters.all.map {

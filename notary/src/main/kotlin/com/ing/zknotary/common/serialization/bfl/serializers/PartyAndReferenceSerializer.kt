@@ -1,4 +1,4 @@
-package com.ing.zknotary.common.serialization.bfl.corda
+package com.ing.zknotary.common.serialization.bfl.serializers
 
 import com.ing.serialization.bfl.annotations.FixedLength
 import com.ing.serialization.bfl.api.Surrogate
@@ -10,21 +10,25 @@ import net.corda.core.contracts.PartyAndReference
 import net.corda.core.identity.AbstractParty
 import net.corda.core.utilities.OpaqueBytes
 
-@Serializable
-@Suppress("ArrayInDataClass")
-data class PartyAndReferenceSurrogate(
-    val party: @Contextual AbstractParty,
-    @FixedLength([256])
-    val reference: ByteArray
-) : Surrogate<PartyAndReference> {
-    override fun toOriginal(): PartyAndReference {
-        return PartyAndReference(party, OpaqueBytes(reference))
-    }
-}
-
 object PartyAndReferenceSerializer : KSerializer<PartyAndReference>
 by (
     SurrogateSerializer(PartyAndReferenceSurrogate.serializer()) {
         PartyAndReferenceSurrogate(it.party, it.reference.copyBytes())
     }
     )
+
+@Serializable
+@Suppress("ArrayInDataClass")
+data class PartyAndReferenceSurrogate(
+    val party: @Contextual AbstractParty,
+    @FixedLength([REFERENCE_SIZE])
+    val reference: ByteArray
+) : Surrogate<PartyAndReference> {
+    override fun toOriginal(): PartyAndReference {
+        return PartyAndReference(party, OpaqueBytes(reference))
+    }
+
+    companion object {
+        const val REFERENCE_SIZE = 256
+    }
+}

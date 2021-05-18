@@ -1,6 +1,6 @@
 // Input parameters:
 //   - TYPE_NAME: String = The type name of the generated file
-//   - CONST_PREFIX: String = The prefix to use for constants
+//   - CONSTANT_PREFIX: String = The prefix to use for constants
 //   - ENCODED_SIZE: u16 = Number of bytes in the encoded public key byte array
 //   - TYPE_SIZE: u16 = String size of SerialName
 
@@ -16,23 +16,23 @@ use string_${TYPE_SIZE}::SerializedString_${TYPE_SIZE};
 use string_${TYPE_SIZE}::STRING_${TYPE_SIZE}_LENGTH;
 
 //! PublicKey lengths
-const ${CONST_PREFIX}_SERIAL_NAME_LENGTH: u16 = STRING_${TYPE_SIZE}_LENGTH;
-const ${CONST_PREFIX}_SCHEME_ID_LENGTH: u16 = 1;
-const ${CONST_PREFIX}_ENCODED_LENGTH: u16 = BYTE_ARRAY_${ENCODED_SIZE}_LENGTH;
+const ${CONSTANT_PREFIX}_SERIAL_NAME_LENGTH: u16 = STRING_${TYPE_SIZE}_LENGTH;
+const ${CONSTANT_PREFIX}_SCHEME_ID_LENGTH: u16 = 1;
+const ${CONSTANT_PREFIX}_ENCODED_LENGTH: u16 = BYTE_ARRAY_${ENCODED_SIZE}_LENGTH;
 
 //! PublicKey offsets
-const ${CONST_PREFIX}_SERIAL_NAME_OFFSET: u16 = 0;
-const ${CONST_PREFIX}_SCHEME_ID_OFFSET: u16
-    = ${CONST_PREFIX}_SERIAL_NAME_OFFSET
-    + ${CONST_PREFIX}_SERIAL_NAME_LENGTH;
-const ${CONST_PREFIX}_ENCODED_OFFSET: u16
-    = ${CONST_PREFIX}_SCHEME_ID_OFFSET
-    + ${CONST_PREFIX}_SCHEME_ID_LENGTH;
-const ${CONST_PREFIX}_LENGTH: u16
-    = ${CONST_PREFIX}_ENCODED_OFFSET
-    + ${CONST_PREFIX}_ENCODED_LENGTH;
+const ${CONSTANT_PREFIX}_SERIAL_NAME_OFFSET: u16 = 0;
+const ${CONSTANT_PREFIX}_SCHEME_ID_OFFSET: u16
+    = ${CONSTANT_PREFIX}_SERIAL_NAME_OFFSET
+    + ${CONSTANT_PREFIX}_SERIAL_NAME_LENGTH;
+const ${CONSTANT_PREFIX}_ENCODED_OFFSET: u16
+    = ${CONSTANT_PREFIX}_SCHEME_ID_OFFSET
+    + ${CONSTANT_PREFIX}_SCHEME_ID_LENGTH;
+const ${CONSTANT_PREFIX}_LENGTH: u16
+    = ${CONSTANT_PREFIX}_ENCODED_OFFSET
+    + ${CONSTANT_PREFIX}_ENCODED_LENGTH;
 
-type Serialized${TYPE_NAME} = [u8; ${CONST_PREFIX}_LENGTH];
+type Serialized${TYPE_NAME} = [u8; ${CONSTANT_PREFIX}_LENGTH];
 struct ${TYPE_NAME} {
     serial_name: String_${TYPE_SIZE},
     scheme_id: u8,
@@ -48,19 +48,19 @@ impl ${TYPE_NAME} {
 
     fn deserialize(serialized: Serialized${TYPE_NAME}) -> ${TYPE_NAME} {
         let serial_name = {
-            let mut serial_bytes = [0; ${CONST_PREFIX}_SERIAL_NAME_LENGTH];
-            for i in 0..${CONST_PREFIX}_SERIAL_NAME_LENGTH {
-                serial_bytes[i] = serialized[i + ${CONST_PREFIX}_SERIAL_NAME_OFFSET];
+            let mut serial_bytes = [0; ${CONSTANT_PREFIX}_SERIAL_NAME_LENGTH];
+            for i in 0..${CONSTANT_PREFIX}_SERIAL_NAME_LENGTH {
+                serial_bytes[i] = serialized[i + ${CONSTANT_PREFIX}_SERIAL_NAME_OFFSET];
             }
             String_${TYPE_SIZE}::deserialize(serial_bytes)
         };
 
-        let scheme_id = serialized[${CONST_PREFIX}_SCHEME_ID_OFFSET];
+        let scheme_id = serialized[${CONSTANT_PREFIX}_SCHEME_ID_OFFSET];
 
         let encoded = {
-            let mut encoded_bytes = [0; ${CONST_PREFIX}_ENCODED_LENGTH];
-            for i in 0..${CONST_PREFIX}_ENCODED_LENGTH {
-                encoded_bytes[i] = serialized[i + ${CONST_PREFIX}_ENCODED_OFFSET]
+            let mut encoded_bytes = [0; ${CONSTANT_PREFIX}_ENCODED_LENGTH];
+            for i in 0..${CONSTANT_PREFIX}_ENCODED_LENGTH {
+                encoded_bytes[i] = serialized[i + ${CONSTANT_PREFIX}_ENCODED_OFFSET];
             }
             ByteArray_${ENCODED_SIZE}::deserialize(encoded_bytes)
         };

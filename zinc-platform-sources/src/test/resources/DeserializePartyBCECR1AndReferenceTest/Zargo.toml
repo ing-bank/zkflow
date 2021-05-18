@@ -1,0 +1,3 @@
+[circuit]
+name = "Deserialize PartyBCECR1AndReference test"
+version = "0.1.0"

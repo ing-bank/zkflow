@@ -1,0 +1,8 @@
+mod party_bcrsa_and_reference;
+
+use party_bcrsa_and_reference::PartyBCRSAAndReference;
+use party_bcrsa_and_reference::SerializedPartyBCRSAAndReference;
+
+fn main(witness: SerializedPartyBCRSAAndReference) -> PartyBCRSAAndReference {
+    PartyBCRSAAndReference::deserialize(witness)
+}
