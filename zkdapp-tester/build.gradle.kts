@@ -54,6 +54,7 @@ tasks.matching {
 //            it is com.ing.zknotary.gradle.task.GenerateZincPlatformCodeFromTemplatesTask ||
 //            it is com.ing.zknotary.gradle.task.PrepareCircuitForCompilationTask
 }.forEach {
-    it.mustRunAfter(gradle.includedBuild("zk-notary").task(":zinc-platform-sources:assemble"))
-    it.dependsOn(gradle.includedBuild("zk-notary").task(":zinc-platform-sources:assemble"))
+    val parentProject = gradle.includedBuild(project.rootDir.parentFile.name)
+    it.mustRunAfter(parentProject.task(":zinc-platform-sources:assemble"))
+    it.dependsOn(parentProject.task(":zinc-platform-sources:assemble"))
 }
