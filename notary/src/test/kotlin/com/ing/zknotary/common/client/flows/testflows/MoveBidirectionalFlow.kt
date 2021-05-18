@@ -44,9 +44,9 @@ class MoveBidirectionalFlow(
         val theirInput = subFlow<List<StateAndRef<TestContract.TestState>>>(ZKReceiveStateAndRefFlow(session)).single()
 
         // Now we create the transaction
-        val me = serviceHub.myInfo.legalIdentities.single()
+        val me = serviceHub.myInfo.legalIdentities.single().anonymise()
         val command = Command(TestContract.MoveBidirectional(), listOf(counterParty, me).map { it.owningKey })
-        val myOutput = StateAndContract(myInput.state.data.copy(owner = counterParty), TestContract.PROGRAM_ID)
+        val myOutput = StateAndContract(myInput.state.data.copy(owner = counterParty.anonymise()), TestContract.PROGRAM_ID)
         val theirOutput = StateAndContract(theirInput.state.data.copy(owner = me), TestContract.PROGRAM_ID)
 
         val builder = ZKTransactionBuilder(serviceHub.networkMapCache.notaryIdentities.single())

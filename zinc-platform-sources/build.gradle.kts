@@ -12,8 +12,8 @@ plugins {
 }
 
 dependencies {
+    implementation(project(":notary")) // required for Zinc com.ing.zknotary.gradle.zinc.template rendere
     implementation(project(":gradle-plugin"))
-    testImplementation(project(":notary"))
 
     val zkkryptoVersion: String by project
     testImplementation("com.ing.dlt:zkkrypto:$zkkryptoVersion")
@@ -109,7 +109,7 @@ open class CopyCircuitTask @Inject constructor() : DefaultTask() {
         // but since there are many of them, we need many main functions with different parameters and output,
         // thus we copy implementation to each testing module in resources (because, zinc support modules pretty bad).
         val projectDir = Paths.get(project.projectDir.absolutePath)
-        val testClassesPath = projectDir.resolve("src/test/kotlin/zinc/types/")
+        val testClassesPath = projectDir.resolve("src/test/kotlin/com/ing/zknotary/zinc/types/")
         val resourcesDir = projectDir.resolve("src/main/resources")
         val generatedResourcesDir = projectDir.resolve("build/resources/test")
         Files.newDirectoryStream(testClassesPath)

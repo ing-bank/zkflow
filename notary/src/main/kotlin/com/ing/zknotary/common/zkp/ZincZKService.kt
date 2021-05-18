@@ -3,6 +3,7 @@ package com.ing.zknotary.common.zkp
 import com.ing.zknotary.common.serialization.json.corda.PublicInputSerializer
 import com.ing.zknotary.common.serialization.json.corda.WitnessSerializer
 import kotlinx.serialization.json.Json
+import net.corda.core.utilities.loggerFor
 import java.io.File
 import java.io.File.createTempFile
 import java.io.IOException
@@ -35,6 +36,8 @@ class ZincZKService(
         const val RUN = "zargo run"
         const val VERIFY = "zargo verify"
 
+        private val log = loggerFor<ZincZKService>()
+
         /**
          * Returns output of the command execution.
          **/
@@ -51,6 +54,8 @@ class ZincZKService(
                 val stdout = process.errorStream.bufferedReader().readText()
                 error("$command failed with the following com.ing.zknotary.generator.error output: $stdout")
             } else {
+                val debugOutput = process.errorStream.bufferedReader().readText()
+                log.debug(debugOutput)
                 process.inputStream.bufferedReader().readText()
             }
         }
@@ -108,18 +113,17 @@ class ZincZKService(
         require(File(zkSetup.provingKeyPath).exists()) { "Proving key not found at ${zkSetup.provingKeyPath}." }
     }
 
-    fun run(witness: Witness, publicInput: PublicInput): String {
+    fun run(witness: Witness, publicInput: PublicInput?): String {
         val witnessJson = Json.encodeToString(WitnessSerializer, witness)
-        val publicInputJson = Json.encodeToString(PublicInputSerializer, publicInput)
+        val publicInputJson = if (publicInput != null) Json.encodeToString(PublicInputSerializer, publicInput) else ""
         return run(witnessJson, publicInputJson)
     }
 
-    fun run(witness: String, publicInputJson: String): String {
+    fun run(witness: String, publicInputJson: String = ""): String {
         val witnessFile = createTempFile("zkp", null)
         witnessFile.writeText(witness)
 
         val publicDataFile = createTempFile("zkp", null)
-        publicDataFile.writeText(publicInputJson)
 
         try {
             return completeZincCommand(
@@ -131,6 +135,19 @@ class ZincZKService(
         } catch (e: Exception) {
             throw ZKRunException("Failed to run circuit. Cause: $e\n")
         } finally {
+            val actualJson = Json.parseToJsonElement(publicDataFile.readText())
+            log.debug("Public Data (run): \n$actualJson")
+
+            if (publicInputJson != "") {
+                val expectedJson = Json.parseToJsonElement(publicInputJson)
+
+                if (actualJson != expectedJson) throw ZKRunException(
+                    "Public input does not match output from run. \n" +
+                        "Expected: \n$expectedJson \n" +
+                        "Actual: \n$actualJson"
+                )
+            }
+
             witnessFile.delete()
             publicDataFile.delete()
         }
@@ -152,10 +169,12 @@ class ZincZKService(
                 "$PROVE --circuit $compiledCircuitPath --proving-key ${zkSetup.provingKeyPath} " +
                     "--public-data ${publicData.absolutePath} --witness ${witnessFile.absolutePath}",
                 provingTimeout
-            ).toByteArray()
+            )
+                .toByteArray()
         } catch (e: Exception) {
             throw ZKProvingException("Could not create proof. Cause: $e\n")
         } finally {
+            log.debug("Public Data (prove): \n${publicData.readText()}")
             publicData.delete()
         }
     }

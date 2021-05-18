@@ -1,6 +1,7 @@
 package com.ing.zknotary.common.serialization.bfl.serializers
 
 import com.ing.serialization.bfl.annotations.FixedLength
+import com.ing.zknotary.common.crypto.ZINC
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.SerialDescriptor
@@ -59,7 +60,8 @@ data class SecureHashSurrogate(
 enum class SecureHashSupportedAlgorithm(val id: Byte, val algorithm: String) {
     SHA_256(0, SecureHash.SHA2_256),
     SHA_384(1, SecureHash.SHA2_384),
-    SHA_512(2, SecureHash.SHA2_512);
+    SHA_512(2, SecureHash.SHA2_512),
+    ZINC(3, SecureHash.ZINC);
 
     companion object {
         fun fromByte(id: Byte): SecureHashSupportedAlgorithm = values()

@@ -1,23 +1,22 @@
-
 import com.ing.zknotary.gradle.extension.ZKNotaryExtension
-import com.ing.zknotary.gradle.template.AbstractPartyTemplateParameters
-import com.ing.zknotary.gradle.template.AmountTemplateParameters
-import com.ing.zknotary.gradle.template.AnonymousPartyTemplateParameters
-import com.ing.zknotary.gradle.template.BigDecimalTemplateParameters
-import com.ing.zknotary.gradle.template.CurrencyTemplateParameters
-import com.ing.zknotary.gradle.template.LinearPointerTemplateParameters
-import com.ing.zknotary.gradle.template.PartyTemplateParameters
-import com.ing.zknotary.gradle.template.PublicKeyTemplateParameters
-import com.ing.zknotary.gradle.template.SecureHashTemplateParameters
-import com.ing.zknotary.gradle.template.StringTemplateParameters
-import com.ing.zknotary.gradle.template.TemplateParameters
-import com.ing.zknotary.gradle.template.TemplateRenderer
-import com.ing.zknotary.gradle.template.UniqueIdentifierTemplateParameters
-import com.ing.zknotary.gradle.template.X500PrincipalTemplateParameters
-import com.ing.zknotary.gradle.util.CodeGenerator
-import com.ing.zknotary.gradle.util.MerkleReplacer
-import com.ing.zknotary.gradle.util.ZincSourcesCopier
-import com.ing.zknotary.gradle.util.removeDebugCode
+import com.ing.zknotary.gradle.task.joinConstFiles
+import com.ing.zknotary.gradle.zinc.template.AbstractPartyTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.AmountTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.AnonymousPartyTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.BigDecimalTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.CurrencyTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.LinearPointerTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.PartyTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.PublicKeyTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.SecureHashTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.StringTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.TemplateParameters
+import com.ing.zknotary.gradle.zinc.template.TemplateRenderer
+import com.ing.zknotary.gradle.zinc.template.UniqueIdentifierTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.X500PrincipalTemplateParameters
+import com.ing.zknotary.gradle.zinc.util.CodeGenerator
+import com.ing.zknotary.gradle.zinc.util.MerkleReplacer
+import com.ing.zknotary.gradle.zinc.util.ZincSourcesCopier
 import java.io.File
 
 val bigDecimalConfigurations = listOf(
@@ -71,8 +70,9 @@ fun main(args: Array<String>) {
         val copier = ZincSourcesCopier(outputPath)
         copier.copyZincCircuitSources(circuitSourcesPath, circuitName, projectVersion)
         copier.copyZincPlatformSources(getPlatformSources(root))
+        copier.copyZincPlatformSources(getPlatformLibs(root))
 
-        val consts = circuitSourcesBase.resolve(circuitName).resolve("consts.zn").readText()
+        val consts = joinConstFiles(circuitSourcesPath, getPlatformSourcesPath(root))
 
         // Render templates
         val templateRenderer = TemplateRenderer(outputPath.toPath()) {
@@ -89,27 +89,30 @@ fun main(args: Array<String>) {
         // Replace placeholders in Merkle tree functions
         val replacer = MerkleReplacer(outputPath)
         replacer.setCorrespondingMerkleTreeFunctionForComponentGroups(consts)
-        replacer.setCorrespondingMerkleTreeFunctionForMainTree(consts)
-
-        // remove debug statements
-        removeDebugCode(circuitName, mergedCircuitOutput)
+        replacer.setCorrespondingMerkleTreeFunctionForMainTree()
     }
 
     // Render templates for test circuits
-    val testTemplateRenderer = TemplateRenderer(getPlatformSourcesPath(root, "zinc-platform-test-sources").toPath()) {
-        getTemplateContents(root, it.templateFile)
-    }
-    resolveAllTemplateParameters().forEach {
-        testTemplateRenderer.renderTemplate(it)
-    }
+    val testTemplateRenderer =
+        TemplateRenderer(getPlatformSourcesTestSourcesPath(root).toPath()) { getTemplateContents(root, it.templateFile) }
+
+    resolveAllTemplateParameters().forEach { testTemplateRenderer.renderTemplate(it) }
+}
+
+private fun getPlatformSourcesPath(root: String): File {
+    return File("$root/src/main/resources/zinc-platform-sources")
 }
 
 private fun getPlatformSources(root: String): Array<File>? {
     return File("$root/src/main/resources/zinc-platform-sources").listFiles()
 }
 
-private fun getPlatformSourcesPath(root: String, sourceName: String): File {
-    return File("$root/src/main/resources/$sourceName")
+private fun getPlatformLibs(root: String): Array<File>? {
+    return File("$root/src/main/resources/zinc-platform-libraries").listFiles()
+}
+
+private fun getPlatformSourcesTestSourcesPath(root: String): File {
+    return File("$root/src/main/resources/zinc-platform-test-sources")
 }
 
 private fun getTemplateContents(root: String, templateName: String) =

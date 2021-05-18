@@ -10,12 +10,7 @@ mod platform_nonce_digest_dto;
 mod platform_party;
 mod platform_pub_key;
 
-use consts::ATTACHMENT_GROUP_SIZE;
 use merkle_utils::get_merkle_tree_from_${GROUP_SIZE_PLACEHOLDER}_component_group_leaf_digests;
-use platform_consts::U32_BITS;
-use platform_consts::BYTE_BITS;
-use platform_pub_key::PubKey;
-use platform_party::Party;
 use platform_node_digest_dto::NodeDigestBits;
 use platform_component_group_enum::ComponentGroupEnum;
 use platform_component_group_leaf_digest_dto::COMPONENT_GROUP_LEAF_DIGEST_BITS;
@@ -25,96 +20,48 @@ use platform_node_digest_dto::NodeDigestDto;
 use platform_node_digest_dto::NODE_DIGEST_BITS;
 use platform_crypto_utils::compute_nonce;
 use platform_nonce_digest_dto::NONCE_DIGEST_BITS;
-use std::crypto::blake2s;
 use std::convert::to_bits;
+use consts::ATTACHMENT_GROUP_SIZE;
+use platform_consts::ATTACHMENT_COMPONENT_SIZE;
+use platform_consts::BYTE_BITS;
+use std::crypto::blake2s_multi_input;
 
-const ATTACHMENT_ID_BYTES: u16 = 32;
+type SerializedAttachment = [u8; ATTACHMENT_COMPONENT_SIZE];
+type SerializedAttachmentGroup = [SerializedAttachment; ATTACHMENT_GROUP_SIZE];
 
-const ATTACHMENT_ID_FINGERPRINT_BYTES: u16 = 32;
+const ATTACHMENT_COMPONENT_SIZE_BITS: u16 = ATTACHMENT_COMPONENT_SIZE * BYTE_BITS;
 
-const ATTACHMENT_ID_FINGERPRINT_BITS: u16 = ATTACHMENT_ID_FINGERPRINT_BYTES * BYTE_BITS;
+fn bytes_to_bits(bytes: [u8; ATTACHMENT_COMPONENT_SIZE]) -> [bool; ATTACHMENT_COMPONENT_SIZE_BITS] {
+    let mut bits = [false; ATTACHMENT_COMPONENT_SIZE_BITS];
 
-type AttachmentIdBytes = [u8; ATTACHMENT_ID_BYTES];
-type AttachmentIdFingerprintBits = [bool; ATTACHMENT_ID_FINGERPRINT_BITS];
-
-struct AttachmentId {
-    bytes: AttachmentIdBytes,
+    for i in (0 as u16)..ATTACHMENT_COMPONENT_SIZE {
+        let byte_bits = to_bits(bytes[i]);
+        for j in (0 as u16)..BYTE_BITS {
+            bits[BYTE_BITS * i + j] = byte_bits[j];
+        }
+    }
+    bits
 }
 
-impl AttachmentId {
-    fn fingerprint(this: AttachmentId) -> AttachmentIdFingerprintBits {
-        let mut fingerprint_bits = [false; ATTACHMENT_ID_FINGERPRINT_BITS];
+fn compute_leaf_hashes(
+    components: SerializedAttachmentGroup,
+    privacy_salt: PrivacySaltBits,
+) -> [ComponentGroupLeafDigestBits; ATTACHMENT_GROUP_SIZE] {
+    let mut component_leaf_hashes =
+        [[false; COMPONENT_GROUP_LEAF_DIGEST_BITS]; ATTACHMENT_GROUP_SIZE];
 
-        for i in (0 as u16)..ATTACHMENT_ID_FINGERPRINT_BYTES {
-            let bits = to_bits(this.bytes[i]);
-            for j in (0 as u16)..BYTE_BITS {
-                fingerprint_bits[BYTE_BITS * i + j] = bits[j];
-            }
-        }
-        fingerprint_bits
+    for i in (0 as u32)..(ATTACHMENT_GROUP_SIZE as u32) {
+        component_leaf_hashes[i] = blake2s_multi_input(
+            compute_nonce(privacy_salt, ComponentGroupEnum::ATTACHMENTS_GROUP as u32, i as u32),
+            bytes_to_bits(components[i]),
+        )
     }
-
-    // Method to compute leaf hash on public key values.
-    fn compute_leaf_hash(
-        this: AttachmentId,
-        privacy_salt: PrivacySaltBits,
-        group_index: u32,
-        internal_index: u32,
-    ) -> ComponentGroupLeafDigestBits {
-        //fingerprint
-        let fingerprint_attachment_id = fingerprint(this);
-
-        //compute nonce
-        let mut nonce = compute_nonce(privacy_salt, group_index, internal_index);
-        let mut message = [false; NONCE_DIGEST_BITS + ATTACHMENT_ID_FINGERPRINT_BITS];
-
-        //message = nonce || signature
-        for i in 0..NONCE_DIGEST_BITS {
-            message[i] = nonce[i];
-        }
-
-        for i in 0..ATTACHMENT_ID_FINGERPRINT_BITS {
-            message[NONCE_DIGEST_BITS + i] = fingerprint_attachment_id[i];
-        }
-
-        blake2s(message)
-    }
+    component_leaf_hashes
 }
 
-struct AttachmentPaddingWrapper {
-    content: AttachmentId,
-    is_filler: bool,
-}
-
-struct AttachmentsComponentGroup {
-    components: [AttachmentPaddingWrapper; ATTACHMENT_GROUP_SIZE],
-    group_hash: NodeDigestDto,
-}
-
-impl AttachmentsComponentGroup {
-    fn compute_leaf_hashes(
-        this: AttachmentsComponentGroup,
-        privacy_salt: PrivacySaltBits,
-    ) -> [ComponentGroupLeafDigestBits; ATTACHMENT_GROUP_SIZE] {
-        let mut component_leaf_hashes =
-            [[false; COMPONENT_GROUP_LEAF_DIGEST_BITS]; ATTACHMENT_GROUP_SIZE];
-
-        for i in (0 as u32)..(ATTACHMENT_GROUP_SIZE as u32) {
-            component_leaf_hashes[i] = AttachmentId::compute_leaf_hash(
-                this.components[i].content,
-                privacy_salt,
-                ComponentGroupEnum::ATTACHMENTS_GROUP as u32,
-                i as u32,
-            );
-        }
-
-        component_leaf_hashes
-    }
-
-    fn compute_component_group_hash(
-        this: AttachmentsComponentGroup,
-        privacy_salt: PrivacySaltBits,
-    ) -> NodeDigestBits {
-        // ### CALL APPROPRIATE MERKLE TREE FUNCTION ###
-    }
+fn compute_attachments_group_hash(
+    components: SerializedAttachmentGroup,
+    privacy_salt: PrivacySaltBits,
+) -> NodeDigestBits {
+    // ### CALL APPROPRIATE MERKLE TREE FUNCTION ###
 }

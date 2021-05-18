@@ -29,7 +29,7 @@ impl NodeDigestDto {
         bits
     }
 
-    fn from_bits_to_bytes(bits: NodeDigestBits) -> NodeDigestDto {
+    fn from_bits_to_bytes(bits: NodeDigestBits) -> NodeDigestBytes {
         let mut bytes = [0 as u8; NODE_DIGEST_BYTES];
 
         for i in 0..NODE_DIGEST_BYTES {
@@ -39,6 +39,6 @@ impl NodeDigestDto {
             }
             bytes[i] = from_bits_unsigned(byte_bits);
         }
-        NodeDigestDto { bytes: bytes }
+        bytes
     }
 }

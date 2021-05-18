@@ -1,7 +1,7 @@
 package com.ing.zknotary.gradle.task
 
-import com.ing.zknotary.gradle.util.platformSamples
-import com.ing.zknotary.gradle.util.zkNotaryExtension
+import com.ing.zknotary.gradle.plugin.platformSamples
+import com.ing.zknotary.gradle.plugin.zkNotaryExtension
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RelativePath
 import org.gradle.api.tasks.Input

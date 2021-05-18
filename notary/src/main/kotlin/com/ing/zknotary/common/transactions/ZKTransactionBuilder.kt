@@ -1,6 +1,7 @@
 package com.ing.zknotary.common.transactions
 
 import co.paralleluniverse.strands.Strand
+import com.ing.zknotary.common.contracts.ZKContractState
 import com.ing.zknotary.common.serialization.bfl.FixedLengthSerializationScheme
 import net.corda.core.contracts.AttachmentConstraint
 import net.corda.core.contracts.AutomaticPlaceholderConstraint
@@ -10,6 +11,7 @@ import net.corda.core.contracts.ContractClassName
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.PrivacySalt
 import net.corda.core.contracts.ReferencedStateAndRef
+import net.corda.core.contracts.StateAndContract
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.StateRef
 import net.corda.core.contracts.TimeWindow
@@ -96,6 +98,15 @@ class ZKTransactionBuilder(
     ) : this(notary, lockId, inputs, attachments, outputs, commands, window, privacySalt, arrayListOf())
 
     constructor(notary: Party) : this(notary, window = null)
+
+    init {
+        outputStates().forEach { enforceZKContractStates(it.data) }
+        // Cannot check Input or Reference states here though
+    }
+
+    private fun enforceZKContractStates(state: ContractState) {
+        require(state is ZKContractState) { "Can only use ZKContractStates as output" }
+    }
 
     private companion object {
         // Copied from private `TransactionBuilder.defaultLockId`
@@ -186,16 +197,33 @@ class ZKTransactionBuilder(
                 "Please set the serialization scheme id and properties through the [ZKTransactionBuilder] constructor."
         )
 
-    fun withItems(vararg items: Any) = apply { builder.withItems(*items) }
+    fun withItems(vararg items: Any) = apply {
+        items.forEach {
+            when (it) {
+                is StateAndRef<*> -> enforceZKContractStates(it.state.data)
+                is ReferencedStateAndRef<*> -> enforceZKContractStates(it.stateAndRef.state.data)
+                is TransactionState<*> -> enforceZKContractStates(it.data)
+                is StateAndContract -> enforceZKContractStates(it.state)
+            }
+        }
+        builder.withItems(*items)
+    }
     fun addReferenceState(referencedStateAndRef: ReferencedStateAndRef<*>) = apply {
+        enforceZKContractStates(referencedStateAndRef.stateAndRef.state.data)
         builder.addReferenceState(referencedStateAndRef)
     }
 
-    fun addInputState(stateAndRef: StateAndRef<*>) = apply { builder.addInputState(stateAndRef) }
+    fun addInputState(stateAndRef: StateAndRef<*>) = apply {
+        enforceZKContractStates(stateAndRef.state.data)
+        builder.addInputState(stateAndRef)
+    }
     fun addAttachment(attachmentId: AttachmentId) = apply { builder.addAttachment(attachmentId) }
-    fun addOutputState(state: TransactionState<*>) = apply { builder.addOutputState(state) }
+    fun addOutputState(state: TransactionState<*>) = apply {
+        enforceZKContractStates(state.data)
+        builder.addOutputState(state)
+    }
     fun addOutputState(
-        state: ContractState,
+        state: ZKContractState,
         contract: ContractClassName = requireNotNullContractClassName(state),
         notary: Party,
         encumbrance: Int? = null,
@@ -203,12 +231,12 @@ class ZKTransactionBuilder(
     ) = apply { builder.addOutputState(state, contract, notary, encumbrance, constraint) }
 
     fun addOutputState(
-        state: ContractState,
+        state: ZKContractState,
         contract: ContractClassName = requireNotNullContractClassName(state),
         constraint: AttachmentConstraint = AutomaticPlaceholderConstraint
     ) = apply { builder.addOutputState(state, contract, constraint) }
 
-    fun addOutputState(state: ContractState, constraint: AttachmentConstraint) =
+    fun addOutputState(state: ZKContractState, constraint: AttachmentConstraint) =
         apply { builder.addOutputState(state, constraint) }
 
     fun addCommand(arg: Command<*>) = apply { builder.addCommand(arg) }

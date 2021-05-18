@@ -2,16 +2,16 @@ package com.ing.zknotary.gradle.extension
 
 import com.ing.serialization.bfl.serializers.DoubleSurrogate
 import com.ing.serialization.bfl.serializers.FloatSurrogate
-import com.ing.zknotary.gradle.template.AbstractPartyTemplateParameters
-import com.ing.zknotary.gradle.template.AmountTemplateParameters
-import com.ing.zknotary.gradle.template.BigDecimalTemplateParameters
-import com.ing.zknotary.gradle.template.CurrencyTemplateParameters
-import com.ing.zknotary.gradle.template.LinearPointerTemplateParameters
-import com.ing.zknotary.gradle.template.SecureHashTemplateParameters
-import com.ing.zknotary.gradle.template.StringTemplateParameters
-import com.ing.zknotary.gradle.template.TemplateParameters
-import com.ing.zknotary.gradle.template.UniqueIdentifierTemplateParameters
-import com.ing.zknotary.gradle.template.X500PrincipalTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.AbstractPartyTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.AmountTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.BigDecimalTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.CurrencyTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.LinearPointerTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.SecureHashTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.StringTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.TemplateParameters
+import com.ing.zknotary.gradle.zinc.template.UniqueIdentifierTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.X500PrincipalTemplateParameters
 import org.gradle.api.Project
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
@@ -60,16 +60,19 @@ open class ZKNotaryExtension(project: Project) {
     val circuitSourcesBasePath: File = project.projectDir.resolve(CIRCUIT_SOURCES_BASE_PATH)
 
     @Input
-    val platformSourcesPath = "zinc-platform-sources/**/*.zn"
+    val zincFilesGlob = "**/*.zn"
 
     @Input
-    val platformLibrariesPath = "zinc-platform-libraries/**/*.zn"
+    val platformSourcesPath = "zinc-platform-sources/"
 
     @Input
-    val platformTemplatesPath = "zinc-platform-templates/**/*.zn"
+    val platformLibrariesPath = "zinc-platform-libraries/"
 
     @Input
-    val platformSamplesPath = "zinc-platform-samples/**/*.zn"
+    val platformTemplatesPath = "zinc-platform-templates/"
+
+    @Input
+    val platformSamplesPath = "zinc-platform-samples/"
 
     @Input
     val merkleTemplate = "merkle_template.zn"

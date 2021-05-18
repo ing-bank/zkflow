@@ -5,10 +5,16 @@
 mod platform_consts;
 
 use platform_consts::LIST_LENGTH_PREFIX;
+use std::convert::to_bits;
+use platform_consts::BYTE_BITS;
 
 const _PRIVACY_SALT_LENGTH: u16 = 32;
+const PRIVACY_SALT_BITS: u16 = _PRIVACY_SALT_LENGTH * 8 as u16;
 
 type SerializedPrivacySalt = [u8; LIST_LENGTH_PREFIX + _PRIVACY_SALT_LENGTH];
+
+type PrivacySaltBytes = [u8; _PRIVACY_SALT_LENGTH];
+type PrivacySaltBits = [bool; PRIVACY_SALT_BITS];
 
 struct PrivacySalt {
     bytes: [u8; _PRIVACY_SALT_LENGTH]
@@ -26,4 +32,16 @@ impl PrivacySalt {
             bytes: bytes
         }
     }
+}
+
+fn from_bytes_to_bits(bytes: PrivacySaltBytes) -> PrivacySaltBits {
+    let mut bits = [false; PRIVACY_SALT_BITS];
+
+    for i in (0 as u16).._PRIVACY_SALT_LENGTH {
+        let byte_bits = to_bits(bytes[i]);
+        for j in (0 as u16)..BYTE_BITS {
+            bits[BYTE_BITS * i + j] = byte_bits[j];
+        }
+    }
+    bits
 }

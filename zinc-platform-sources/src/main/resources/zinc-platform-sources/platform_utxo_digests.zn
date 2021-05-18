@@ -1,46 +1,94 @@
 mod platform_state_and_ref;
 mod consts;
+mod platform_consts;
 mod platform_node_digest_dto;
 mod platform_nonce_digest_dto;
 mod platform_privacy_salt;
 mod platform_component_group_leaf_digest_dto;
 mod platform_component_group_enum;
+mod platform_components_inputs;
+mod platform_components_references;
 
-use platform_node_digest_dto::NodeDigestBits;
+use consts::INPUT_GROUP_SIZE;
+use consts::INPUT_UTXO_SIZE;
+use consts::REFERENCE_GROUP_SIZE;
+use consts::REFERENCE_UTXO_SIZE;
 use platform_component_group_enum::ComponentGroupEnum;
 use platform_component_group_leaf_digest_dto::COMPONENT_GROUP_LEAF_DIGEST_BITS;
 use platform_component_group_leaf_digest_dto::COMPONENT_GROUP_LEAF_DIGEST_BYTES;
 use platform_component_group_leaf_digest_dto::ComponentGroupLeafDigestBits;
-use platform_component_group_leaf_digest_dto::ComponentGroupLeafDigestDto;
-use platform_privacy_salt::PrivacySaltBits;
-use platform_node_digest_dto::NodeDigestDto;
-use platform_nonce_digest_dto::NonceDigestDto;
+use platform_component_group_leaf_digest_dto::ComponentGroupLeafDigestBytes;
+use platform_component_group_leaf_digest_dto::component_group_leaf_digest_from_bits_to_bytes;
+use platform_components_inputs::SerializedInputGroup;
+use platform_components_references::SerializedReferenceGroup;
 use platform_node_digest_dto::NODE_DIGEST_BITS;
-use consts::INPUT_GROUP_SIZE;
-use consts::REFERENCE_GROUP_SIZE;
+use platform_node_digest_dto::NodeDigestBits;
+use platform_node_digest_dto::NodeDigestDto;
+use platform_nonce_digest_dto::from_bytes_to_bits;
+use platform_nonce_digest_dto::NonceDigestBytes;
+use platform_privacy_salt::PrivacySaltBits;
 use platform_state_and_ref::StateAndRefPaddingWrapper;
 use platform_state_and_ref::StateRef;
 use platform_state_and_ref::TransactionState;
+use platform_consts::BYTE_BITS;
+use std::crypto::blake2s_multi_input;
+use std::convert::to_bits;
+
+type SerializedInputUtxo = [u8; INPUT_UTXO_SIZE];
+type SerializedInputUtxos = [SerializedInputUtxo; INPUT_GROUP_SIZE];
+
+type SerializedReferenceUtxo = [u8; REFERENCE_UTXO_SIZE];
+type SerializedReferenceUtxos = [SerializedReferenceUtxo; REFERENCE_GROUP_SIZE];
+
+const INPUT_UTXO_SIZE_BITS: u16 = INPUT_UTXO_SIZE * BYTE_BITS;
+const REFERENCE_UTXO_SIZE_BITS: u16 = REFERENCE_UTXO_SIZE * BYTE_BITS;
+
+fn input_utxo_bytes_to_bits(bytes: [u8; INPUT_UTXO_SIZE]) -> [bool; INPUT_UTXO_SIZE_BITS] {
+    let mut bits = [false; INPUT_UTXO_SIZE_BITS];
+
+    for i in (0 as u16)..INPUT_UTXO_SIZE {
+        let byte_bits = to_bits(bytes[i]);
+        for j in (0 as u16)..BYTE_BITS {
+            bits[BYTE_BITS * i + j] = byte_bits[j];
+        }
+    }
+    bits
+}
+
+fn reference_utxo_bytes_to_bits(bytes: [u8; REFERENCE_UTXO_SIZE]) -> [bool; REFERENCE_UTXO_SIZE_BITS] {
+    let mut bits = [false; REFERENCE_UTXO_SIZE_BITS];
+
+    for i in (0 as u16)..REFERENCE_UTXO_SIZE {
+        let byte_bits = to_bits(bytes[i]);
+        for j in (0 as u16)..BYTE_BITS {
+            bits[BYTE_BITS * i + j] = byte_bits[j];
+        }
+    }
+    bits
+}
+
 
 // Verify that for each input, when calculating the digest of its content with the nonce for the utxo
 // it points to as provided in the public input, matches the digest provided in the public input.
 // This proves that we did not change the contents of the inputs, compared to
 // the VerifierTransaction known by the verifier, of which they were an output.
 fn compute_input_utxo_digests(
-    inputs: [StateAndRefPaddingWrapper; INPUT_GROUP_SIZE],
-    input_nonces: [NonceDigestDto; INPUT_GROUP_SIZE],
-) -> [ComponentGroupLeafDigestDto; INPUT_GROUP_SIZE] {
-    let mut input_digests = [ComponentGroupLeafDigestDto {
-        bytes: [0; COMPONENT_GROUP_LEAF_DIGEST_BYTES],
-    }; INPUT_GROUP_SIZE];
-    for i in 0..INPUT_GROUP_SIZE {
-        input_digests[i] =
-            ComponentGroupLeafDigestDto::from_bits_to_bytes(TransactionState::compute_leaf_hash(
-                inputs[i].content.state,
-                NonceDigestDto::from_bytes_to_bits(input_nonces[i]),
-            ));
+    utxos: SerializedInputUtxos,
+    nonces: [NonceDigestBytes; INPUT_GROUP_SIZE]
+) -> [ComponentGroupLeafDigestBytes; INPUT_GROUP_SIZE] {
+    let mut utxo_hashes =
+        [[0; COMPONENT_GROUP_LEAF_DIGEST_BYTES]; INPUT_GROUP_SIZE];
+
+    for i in (0 as u32)..(INPUT_GROUP_SIZE as u32) {
+        utxo_hashes[i] = component_group_leaf_digest_from_bits_to_bytes(
+            blake2s_multi_input(
+                from_bytes_to_bits(nonces[i]),
+                input_utxo_bytes_to_bits(utxos[i]),
+            )
+        )
     }
-    input_digests
+
+    utxo_hashes
 }
 
 // Verify that for each reference, when calculating the digest of its content with the nonce for the utxo
@@ -48,18 +96,20 @@ fn compute_input_utxo_digests(
 // This proves that we did not change the contents of the references, compared to
 // the VerifierTransaction known by the verifier, of which they were an output.
 fn compute_reference_utxo_digests(
-    references: [StateAndRefPaddingWrapper; REFERENCE_GROUP_SIZE],
-    reference_nonces: [NonceDigestDto; REFERENCE_GROUP_SIZE],
-) -> [ComponentGroupLeafDigestDto; REFERENCE_GROUP_SIZE] {
-    let mut reference_digests = [ComponentGroupLeafDigestDto {
-        bytes: [0; COMPONENT_GROUP_LEAF_DIGEST_BYTES],
-    }; REFERENCE_GROUP_SIZE];
-    for i in 0..REFERENCE_GROUP_SIZE {
-        reference_digests[i] =
-            ComponentGroupLeafDigestDto::from_bits_to_bytes(TransactionState::compute_leaf_hash(
-                references[i].content.state,
-                NonceDigestDto::from_bytes_to_bits(reference_nonces[i]),
-            ));
+    utxos: SerializedReferenceUtxos,
+    nonces: [NonceDigestBytes; REFERENCE_GROUP_SIZE]
+) -> [ComponentGroupLeafDigestBytes; REFERENCE_GROUP_SIZE] {
+    let mut utxo_hashes =
+        [[0; COMPONENT_GROUP_LEAF_DIGEST_BYTES]; REFERENCE_GROUP_SIZE];
+
+    for i in (0 as u32)..(REFERENCE_GROUP_SIZE as u32) {
+        utxo_hashes[i] = component_group_leaf_digest_from_bits_to_bytes(
+            blake2s_multi_input(
+                from_bytes_to_bits(nonces[i]),
+                reference_utxo_bytes_to_bits(utxos[i]),
+            )
+        )
     }
-    reference_digests
+
+    utxo_hashes
 }

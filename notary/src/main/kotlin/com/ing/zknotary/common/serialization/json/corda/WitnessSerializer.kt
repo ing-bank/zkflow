@@ -1,5 +1,6 @@
 package com.ing.zknotary.common.serialization.json.corda
 
+import com.ing.dlt.zkkrypto.util.asUnsigned
 import com.ing.zknotary.common.zkp.Witness
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
@@ -7,59 +8,62 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
-import net.corda.core.contracts.PrivacySalt
 import net.corda.core.crypto.SecureHash
 
 object WitnessSerializer : KSerializer<Witness> {
     @Serializable
     @SerialName("Witness")
     private data class WitnessSurrogate(
-        // TODO: Should all bytes of these componentgroups be made unsigned?
-        val inputsGroup: List<ByteArray>,
-        val outputsGroup: List<ByteArray>,
-        val commandsGroup: List<ByteArray>,
-        val attachmentsGroup: List<ByteArray>,
-        val notaryGroup: List<ByteArray>,
-        val timeWindowGroup: List<ByteArray>,
-        val signersGroup: List<ByteArray>,
-        val referencesGroup: List<ByteArray>,
-        val parametersGroup: List<ByteArray>,
+        @SerialName("inputs") val inputsGroup: List<List<String>>,
+        @SerialName("outputs") val outputsGroup: List<List<String>>,
+        @SerialName("commands") val commandsGroup: List<List<String>>,
+        @SerialName("attachments") val attachmentsGroup: List<List<String>>,
+        @SerialName("notary") val notaryGroup: List<List<String>>,
+        @SerialName("time_window") val timeWindowGroup: List<List<String>>,
+        @SerialName("signers") val signersGroup: List<List<String>>,
+        @SerialName("references") val referencesGroup: List<List<String>>,
+        @SerialName("parameters") val parametersGroup: List<List<String>>,
 
-        val privacySalt: @Serializable(with = PrivacySaltSerializer::class) PrivacySalt,
+        @SerialName("privacy_salt") val privacySalt: List<String>,
 
-        val serializedInputUtxos: List<ByteArray>,
-        val serializedReferenceUtxos: List<ByteArray>,
+        @SerialName("serialized_input_utxos") val serializedInputUtxos: List<List<String>>,
+        @SerialName("serialized_reference_utxos") val serializedReferenceUtxos: List<List<String>>,
 
-        val inputNonces: List<@Serializable(with = SecureHashSerializer::class) SecureHash>,
-        val referenceNonces: List<@Serializable(with = SecureHashSerializer::class) SecureHash>
-    ) {
+        @SerialName("input_nonces") val inputNonces: List<@Serializable(with = SecureHashSerializer::class) SecureHash>,
+        @SerialName("reference_nonces") val referenceNonces: List<@Serializable(with = SecureHashSerializer::class) SecureHash>
+    )
+
+    @Serializable
+    private data class WrappedSurrogate(val witness: WitnessSurrogate) {
         companion object {
-            fun fromWitness(witness: Witness): WitnessSurrogate {
-                return WitnessSurrogate(
-                    inputsGroup = witness.inputsGroup,
-                    outputsGroup = witness.outputsGroup,
-                    commandsGroup = witness.commandsGroup,
-                    attachmentsGroup = witness.attachmentsGroup,
-                    notaryGroup = witness.notaryGroup,
-                    timeWindowGroup = witness.timeWindowGroup,
-                    signersGroup = witness.signersGroup,
-                    referencesGroup = witness.referencesGroup,
-                    parametersGroup = witness.parametersGroup,
-                    privacySalt = witness.privacySalt,
-                    serializedInputUtxos = witness.serializedInputUtxos,
-                    serializedReferenceUtxos = witness.serializedReferenceUtxos,
-                    inputNonces = witness.inputUtxoNonces,
-                    referenceNonces = witness.referenceUtxoNonces
+            fun fromWitness(witness: Witness): WrappedSurrogate {
+                return WrappedSurrogate(
+                    WitnessSurrogate(
+                        inputsGroup = witness.inputsGroup.map { it.map { byte -> byte.asUnsigned().toString() } },
+                        outputsGroup = witness.outputsGroup.map { it.map { byte -> byte.asUnsigned().toString() } },
+                        commandsGroup = witness.commandsGroup.map { it.map { byte -> byte.asUnsigned().toString() } },
+                        attachmentsGroup = witness.attachmentsGroup.map { it.map { byte -> byte.asUnsigned().toString() } },
+                        notaryGroup = witness.notaryGroup.map { it.map { byte -> byte.asUnsigned().toString() } },
+                        timeWindowGroup = witness.timeWindowGroup.map { it.map { byte -> byte.asUnsigned().toString() } },
+                        signersGroup = witness.signersGroup.map { it.map { byte -> byte.asUnsigned().toString() } },
+                        referencesGroup = witness.referencesGroup.map { it.map { byte -> byte.asUnsigned().toString() } },
+                        parametersGroup = witness.parametersGroup.map { it.map { byte -> byte.asUnsigned().toString() } },
+                        privacySalt = witness.privacySalt.bytes.asList().map { byte -> byte.asUnsigned().toString() },
+                        serializedInputUtxos = witness.serializedInputUtxos.map { it.map { byte -> byte.asUnsigned().toString() } },
+                        serializedReferenceUtxos = witness.serializedReferenceUtxos.map { it.map { byte -> byte.asUnsigned().toString() } },
+                        inputNonces = witness.inputUtxoNonces,
+                        referenceNonces = witness.referenceUtxoNonces
+                    )
                 )
             }
         }
     }
 
-    override val descriptor: SerialDescriptor = WitnessSurrogate.serializer().descriptor
+    override val descriptor: SerialDescriptor = WrappedSurrogate.serializer().descriptor
 
     override fun serialize(encoder: Encoder, value: Witness) {
-        val surrogate = WitnessSurrogate.fromWitness(value)
-        encoder.encodeSerializableValue(WitnessSurrogate.serializer(), surrogate)
+        val surrogate = WrappedSurrogate.fromWitness(value)
+        encoder.encodeSerializableValue(WrappedSurrogate.serializer(), surrogate)
     }
 
     override fun deserialize(decoder: Decoder): Witness = throw NotImplementedError()

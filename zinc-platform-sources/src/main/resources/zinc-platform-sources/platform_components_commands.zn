@@ -18,83 +18,49 @@ use platform_component_group_leaf_digest_dto::ComponentGroupLeafDigestBits;
 use platform_privacy_salt::PrivacySaltBits;
 use platform_node_digest_dto::NodeDigestDto;
 use platform_node_digest_dto::NODE_DIGEST_BITS;
-use consts::COMMAND_GROUP_SIZE;
 use platform_crypto_utils::compute_nonce;
 use platform_nonce_digest_dto::NONCE_DIGEST_BITS;
-use std::crypto::blake2s;
+use platform_consts::COMMAND_GROUP_SIZE;
+use consts::COMMAND_COMPONENT_SIZE;
+use platform_consts::BYTE_BITS;
+use std::crypto::blake2s_multi_input;
 
-const COMMAND_FINGERPRINT_BITS: u16 = U32_BITS;
+type SerializedCommand = [u8; COMMAND_COMPONENT_SIZE];
+type SerializedCommandGroup = [SerializedCommand; COMMAND_GROUP_SIZE];
 
-type CommandFingerprintBits = [bool; COMMAND_FINGERPRINT_BITS];
+const COMMAND_COMPONENT_SIZE_BITS: u16 = COMMAND_COMPONENT_SIZE * BYTE_BITS;
 
-enum CommandData {
-    CREATE = 0,
-    MOVE = 1,
-}
+fn bytes_to_bits(bytes: [u8; COMMAND_COMPONENT_SIZE]) -> [bool; COMMAND_COMPONENT_SIZE_BITS] {
+    let mut bits = [false; COMMAND_COMPONENT_SIZE_BITS];
 
-impl CommandData {
-    fn fingerprint(this: CommandData) -> CommandFingerprintBits {
-        to_bits(this as u32)
-    }
-
-    fn compute_leaf_hash(
-        this: CommandData,
-        privacy_salt: PrivacySaltBits,
-        group_index: u32,
-        internal_index: u32,
-    ) -> ComponentGroupLeafDigestBits {
-        //fingerprint
-        let fingerprint_command_data = fingerprint(this);
-
-        //compute nonce
-        let mut nonce = compute_nonce(privacy_salt, group_index, internal_index);
-        let mut message = [false; NONCE_DIGEST_BITS + COMMAND_FINGERPRINT_BITS];
-
-        //message = nonce || command
-        for i in 0..NONCE_DIGEST_BITS {
-            message[i] = nonce[i];
+    for i in (0 as u16)..COMMAND_COMPONENT_SIZE {
+        let byte_bits = to_bits(bytes[i]);
+        for j in (0 as u16)..BYTE_BITS {
+            bits[BYTE_BITS * i + j] = byte_bits[j];
         }
-        for i in 0..COMMAND_FINGERPRINT_BITS {
-            message[NONCE_DIGEST_BITS + i] = fingerprint_command_data[i];
-        }
-
-        blake2s(message)
     }
+    bits
 }
 
-struct CommandPaddingWrapper {
-    content: CommandData,
-    is_filler: bool,
+fn compute_leaf_hashes(
+    components: SerializedCommandGroup,
+    privacy_salt: PrivacySaltBits,
+) -> [ComponentGroupLeafDigestBits; COMMAND_GROUP_SIZE] {
+    let mut component_leaf_hashes =
+        [[false; COMPONENT_GROUP_LEAF_DIGEST_BITS]; COMMAND_GROUP_SIZE];
+
+    for i in (0 as u32)..(COMMAND_GROUP_SIZE as u32) {
+        component_leaf_hashes[i] = blake2s_multi_input(
+            compute_nonce(privacy_salt, ComponentGroupEnum::COMMANDS_GROUP as u32, i as u32),
+            bytes_to_bits(components[i]),
+        )
+    }
+    component_leaf_hashes
 }
 
-struct CommandsComponentGroup {
-    components: [CommandPaddingWrapper; COMMAND_GROUP_SIZE],
-    group_hash: NodeDigestDto,
-}
-
-impl CommandsComponentGroup {
-    fn compute_leaf_hashes(
-        this: CommandsComponentGroup,
-        privacy_salt: PrivacySaltBits,
-    ) -> [ComponentGroupLeafDigestBits; COMMAND_GROUP_SIZE] {
-        let mut component_leaf_hashes =
-            [[false; COMPONENT_GROUP_LEAF_DIGEST_BITS]; COMMAND_GROUP_SIZE];
-
-        for i in (0 as u32)..(COMMAND_GROUP_SIZE as u32) {
-            component_leaf_hashes[i] = CommandData::compute_leaf_hash(
-                this.components[i].content,
-                privacy_salt,
-                ComponentGroupEnum::COMMANDS_GROUP as u32,
-                i as u32,
-            );
-        }
-        component_leaf_hashes
-    }
-
-    fn compute_component_group_hash(
-        this: CommandsComponentGroup,
-        privacy_salt: PrivacySaltBits,
-    ) -> NodeDigestBits {
-        // ### CALL APPROPRIATE MERKLE TREE FUNCTION ###
-    }
+fn compute_commands_group_hash(
+    components: SerializedCommandGroup,
+    privacy_salt: PrivacySaltBits,
+) -> NodeDigestBits {
+    // ### CALL APPROPRIATE MERKLE TREE FUNCTION ###
 }

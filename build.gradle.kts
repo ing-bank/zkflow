@@ -1,6 +1,4 @@
 import java.io.ByteArrayOutputStream
-import java.io.ByteArrayInputStream
-import java.io.FileReader
 
 buildscript {
     val repos by extra {
@@ -185,6 +183,15 @@ subprojects {
             }
         }
 
+        val testConfigResourcesDir = "$rootDir/config/test"
+        sourceSets {
+            test {
+                resources {
+                    srcDir(testConfigResourcesDir)
+                }
+            }
+        }
+
         this@subprojects.tasks.apply {
             matching { it is JavaCompile || it is org.jetbrains.kotlin.gradle.tasks.KotlinCompile }.forEach {
                 it.dependsOn(":checkJavaVersion")
@@ -201,7 +208,9 @@ subprojects {
                     freeCompilerArgs =
                         listOf(
                             "-Xjvm-default=compatibility",
-                            "-Xopt-in=kotlinx.serialization.ExperimentalSerializationApi"
+                            "-Xopt-in=kotlinx.serialization.ExperimentalSerializationApi",
+                            "-Xopt-in=kotlin.ExperimentalUnsignedTypes",
+                            "-Xopt-in=kotlin.ExperimentalTime"
                         )
                 }
             }

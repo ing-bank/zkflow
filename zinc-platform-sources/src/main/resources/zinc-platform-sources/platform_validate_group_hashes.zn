@@ -8,10 +8,10 @@
 // mod platform_privacy_salt;
 // mod platform_component_group_leaf_digest_dto;
 // mod platform_component_group_enum;
-// mod platform_zk_prover_transaction;
+// mod platform_witness;
 //
 // use platform_component_group_enum::ComponentGroupEnum;
-// use platform_zk_prover_transaction::ZKProverTransaction;
+// use platform_witness::ZKProverTransaction;
 // use platform_node_digest_dto::NodeDigestDto;
 // use platform_nonce_digest_dto::NonceDigestBits;
 // use platform_node_digest_dto::NodeDigestBits;

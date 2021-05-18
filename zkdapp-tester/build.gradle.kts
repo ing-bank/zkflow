@@ -1,7 +1,7 @@
 import com.ing.zknotary.gradle.task.CreateZincDirectoriesForInputCommandTask
-import com.ing.zknotary.gradle.template.BigDecimalTemplateParameters
-import com.ing.zknotary.gradle.template.AmountTemplateParameters
-import com.ing.zknotary.gradle.template.StringTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.BigDecimalTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.AmountTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.StringTemplateParameters
 
 plugins {
     kotlin("jvm") version "1.4.20"
@@ -48,7 +48,7 @@ dependencies {
 // of a composite build.
 tasks.matching {
     it.name == "processZincSources" ||
-            it is CreateZincDirectoriesForInputCommandTask
+        it is CreateZincDirectoriesForInputCommandTask
 //            it is com.ing.zknotary.gradle.task.CopyZincCircuitSourcesTask ||
 //            it is com.ing.zknotary.gradle.task.CopyZincPlatformSourcesTask ||
 //            it is com.ing.zknotary.gradle.task.GenerateZincPlatformCodeFromTemplatesTask ||

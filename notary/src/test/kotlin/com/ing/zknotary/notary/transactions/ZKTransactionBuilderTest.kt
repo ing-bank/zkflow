@@ -8,6 +8,9 @@ import org.junit.jupiter.api.Test
 class ZKTransactionBuilderTest {
     @Test
     fun `Public API of ZKTransactionBuilder equals TransactionBuilder`() {
-        ZKTransactionBuilder::class shouldHaveSamePublicApiAs TransactionBuilder::class
+        ZKTransactionBuilder::class.shouldHaveSamePublicApiAs(
+            TransactionBuilder::class,
+            listOf("addOutputState")
+        )
     }
 }

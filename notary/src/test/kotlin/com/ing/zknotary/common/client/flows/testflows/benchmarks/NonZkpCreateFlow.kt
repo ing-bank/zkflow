@@ -16,7 +16,7 @@ class NonZkpCreateFlow : FlowLogic<SignedTransaction>() {
 
     @Suspendable
     override fun call(): SignedTransaction {
-        val me = serviceHub.myInfo.legalIdentities.single()
+        val me = serviceHub.myInfo.legalIdentities.single().anonymise()
         val state = TestContract.TestState(me)
         val issueCommand = Command(TestContract.Create(), me.owningKey) //
         val stateAndContract = StateAndContract(state, TestContract.PROGRAM_ID)
