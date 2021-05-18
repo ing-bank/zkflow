@@ -1,7 +1,7 @@
 import com.ing.zknotary.gradle.task.CreateZincDirectoriesForInputCommandTask
-import com.ing.zknotary.gradle.zinc.template.BigDecimalTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.AmountTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.StringTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.parameters.BigDecimalTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.parameters.AmountTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.parameters.StringTemplateParameters
 
 plugins {
     kotlin("jvm") version "1.4.20"

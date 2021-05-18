@@ -1,11 +1,11 @@
 import com.ing.zknotary.gradle.task.joinConstFiles
-import com.ing.zknotary.gradle.zinc.template.AmountTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.BigDecimalTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.StringTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.TemplateConfigurations
 import com.ing.zknotary.gradle.zinc.template.TemplateConfigurations.Companion.doubleTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.TemplateConfigurations.Companion.floatTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.TemplateRenderer
+import com.ing.zknotary.gradle.zinc.template.parameters.AmountTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.parameters.BigDecimalTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.parameters.StringTemplateParameters
 import com.ing.zknotary.gradle.zinc.util.CodeGenerator
 import com.ing.zknotary.gradle.zinc.util.MerkleReplacer
 import com.ing.zknotary.gradle.zinc.util.ZincSourcesCopier

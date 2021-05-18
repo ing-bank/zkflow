@@ -2,6 +2,17 @@ package com.ing.zknotary.gradle.zinc.template
 
 import com.ing.serialization.bfl.serializers.DoubleSurrogate
 import com.ing.serialization.bfl.serializers.FloatSurrogate
+import com.ing.zknotary.gradle.zinc.template.parameters.AbstractPartyTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.parameters.AmountTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.parameters.AnonymousPartyTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.parameters.BigDecimalTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.parameters.CurrencyTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.parameters.LinearPointerTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.parameters.PartyTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.parameters.SecureHashTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.parameters.StringTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.parameters.UniqueIdentifierTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.parameters.X500PrincipalTemplateParameters
 
 open class TemplateConfigurations {
     companion object {
@@ -27,18 +38,20 @@ open class TemplateConfigurations {
      * Pre-defined collection of configurations to generate zinc sources for
      * standard data types like float and double.
      */
-    private val fixedTemplateParameters: List<TemplateParameters> = listOf(
-        floatTemplateParameters,
-        doubleTemplateParameters,
-        UniqueIdentifierTemplateParameters,
-        LinearPointerTemplateParameters,
-        X500PrincipalTemplateParameters,
-        CurrencyTemplateParameters,
-        SecureHashTemplateParameters,
-    ) +
-        AbstractPartyTemplateParameters.all +
-        AnonymousPartyTemplateParameters.all +
-        PartyTemplateParameters.all
+    private val fixedTemplateParameters: List<TemplateParameters> by lazy {
+        listOf(
+            floatTemplateParameters,
+            doubleTemplateParameters,
+            UniqueIdentifierTemplateParameters,
+            LinearPointerTemplateParameters,
+            X500PrincipalTemplateParameters,
+            CurrencyTemplateParameters,
+            SecureHashTemplateParameters,
+        ) +
+            AbstractPartyTemplateParameters.all +
+            AnonymousPartyTemplateParameters.all +
+            PartyTemplateParameters.all
+    }
 
     fun resolveAllTemplateParameters(): List<TemplateParameters> {
         return (fixedTemplateParameters + stringConfigurations + bigDecimalConfigurations + amountConfigurations)

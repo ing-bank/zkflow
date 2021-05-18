@@ -1,9 +1,9 @@
 package com.ing.zknotary.gradle.extension
 
-import com.ing.zknotary.gradle.zinc.template.AmountTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.BigDecimalTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.StringTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.TemplateConfigurations
+import com.ing.zknotary.gradle.zinc.template.parameters.AmountTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.parameters.BigDecimalTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.parameters.StringTemplateParameters
 import org.gradle.api.Project
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
