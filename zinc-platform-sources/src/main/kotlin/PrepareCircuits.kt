@@ -5,6 +5,7 @@ import com.ing.zknotary.gradle.zinc.template.TemplateConfigurations.Companion.fl
 import com.ing.zknotary.gradle.zinc.template.TemplateRenderer
 import com.ing.zknotary.gradle.zinc.template.parameters.AmountTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.BigDecimalTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.parameters.ByteArrayTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.StringTemplateParameters
 import com.ing.zknotary.gradle.zinc.util.CodeGenerator
 import com.ing.zknotary.gradle.zinc.util.MerkleReplacer
@@ -18,6 +19,8 @@ val myBigDecimalConfigurations = listOf(
     doubleTemplateParameters
 )
 
+val myByteArrayConfigurations = emptyList<ByteArrayTemplateParameters>()
+
 val myAmountConfigurations = myBigDecimalConfigurations.map {
     AmountTemplateParameters(it, 8)
 }
@@ -26,6 +29,7 @@ val myStringConfigurations: List<StringTemplateParameters> = listOf(StringTempla
 
 val templateConfigurations = TemplateConfigurations().apply {
     stringConfigurations = myStringConfigurations
+    byteArrayConfigurations = myByteArrayConfigurations
     amountConfigurations = myAmountConfigurations
     bigDecimalConfigurations = myBigDecimalConfigurations
 }

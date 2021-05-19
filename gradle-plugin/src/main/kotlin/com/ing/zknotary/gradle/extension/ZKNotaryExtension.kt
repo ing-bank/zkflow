@@ -3,6 +3,7 @@ package com.ing.zknotary.gradle.extension
 import com.ing.zknotary.gradle.zinc.template.TemplateConfigurations
 import com.ing.zknotary.gradle.zinc.template.parameters.AmountTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.BigDecimalTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.parameters.ByteArrayTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.StringTemplateParameters
 import org.gradle.api.Project
 import org.gradle.api.tasks.Input
@@ -21,6 +22,9 @@ open class ZKNotaryExtension(project: Project) : TemplateConfigurations() {
 
     @Input
     override var stringConfigurations: List<StringTemplateParameters> = emptyList()
+
+    @Input
+    override var byteArrayConfigurations: List<ByteArrayTemplateParameters> = emptyList()
 
     @Input
     override var bigDecimalConfigurations: List<BigDecimalTemplateParameters> = emptyList()
