@@ -4,7 +4,6 @@ import com.ing.serialization.bfl.annotations.FixedLength
 import com.ing.serialization.bfl.api.Surrogate
 import com.ing.serialization.bfl.api.SurrogateSerializer
 import kotlinx.serialization.Contextual
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import net.corda.core.contracts.LinearPointer
 import net.corda.core.contracts.LinearState
@@ -33,9 +32,8 @@ data class LinearPointerSurrogate(
     }
 }
 
-object LinearPointerSerializer : KSerializer<LinearPointer<*>>
-by (
-    SurrogateSerializer(LinearPointerSurrogate.serializer()) {
-        LinearPointerSurrogate(it.pointer, it.type.name, it.isResolved)
-    }
+object LinearPointerSerializer :
+    SurrogateSerializer<LinearPointer<*>, LinearPointerSurrogate>(
+        LinearPointerSurrogate.serializer(),
+        { LinearPointerSurrogate(it.pointer, it.type.name, it.isResolved) }
     )

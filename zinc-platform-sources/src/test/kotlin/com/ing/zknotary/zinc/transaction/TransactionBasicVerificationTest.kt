@@ -9,6 +9,7 @@ import com.ing.zknotary.testing.fixtures.state.DummyState
 import com.ing.zknotary.testing.serialization.getSerializationContext
 import com.ing.zknotary.testing.serialization.serializeWithScheme
 import io.kotest.matchers.shouldBe
+import net.corda.core.contracts.AlwaysAcceptAttachmentConstraint
 import net.corda.core.contracts.AttachmentConstraint
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.ComponentGroupEnum
@@ -31,7 +32,8 @@ import net.corda.coretesting.internal.asTestContextEnv
 import net.corda.coretesting.internal.createTestSerializationEnv
 import net.corda.testing.core.TestIdentity
 import org.junit.jupiter.api.Tag
-import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import java.io.File
 import java.time.Duration
 import java.time.Instant
@@ -53,6 +55,14 @@ class TransactionBasicVerificationTest {
         provingTimeout = Duration.ofSeconds(300),
         verificationTimeout = Duration.ofSeconds(1)
     )
+
+    companion object {
+        @JvmStatic
+        fun attachmentConstraints() = listOf(
+            HashAttachmentConstraint(SecureHash.zeroHash),
+            AlwaysAcceptAttachmentConstraint
+        )
+    }
 
 //    init {
 //        zincZKService.setupTimed(log)
@@ -93,9 +103,10 @@ class TransactionBasicVerificationTest {
      * On the Kotlin side, serialization and deserialization sizes and unsizes respectively, invisibly for the user.
      * On the Zinc side, we never serialize. On deserialization, unsizing does not happen.
      */
-    @Test
+    @ParameterizedTest
+    @MethodSource("attachmentConstraints")
     @Suppress("LongMethod")
-    fun `Wire transaction serializes`() = withCustomSerializationEnv {
+    fun `Wire transaction serializes`(attachmentConstraint: AttachmentConstraint) = withCustomSerializationEnv {
         val state = DummyState.any()
         val alice = state.participants.first()
         val bob = TestIdentity.fresh("Bob").party
@@ -104,7 +115,7 @@ class TransactionBasicVerificationTest {
         val constrainedOutputs = listOf(
             ConstrainedState(
                 StateAndContract(state, DummyContract.PROGRAM_ID),
-                HashAttachmentConstraint(SecureHash.zeroHash)
+                attachmentConstraint
             )
         )
         val commands = listOf(Command(DummyContract.Chill(), listOf(alice.owningKey, bob.owningKey)))

@@ -3,24 +3,16 @@ package com.ing.zknotary.common.serialization.bfl.serializers
 import com.ing.serialization.bfl.annotations.FixedLength
 import com.ing.serialization.bfl.api.Surrogate
 import com.ing.serialization.bfl.api.SurrogateSerializer
-import kotlinx.serialization.Contextual
-import kotlinx.serialization.KSerializer
+import kotlinx.serialization.Polymorphic
 import kotlinx.serialization.Serializable
 import net.corda.core.contracts.PartyAndReference
 import net.corda.core.identity.AbstractParty
 import net.corda.core.utilities.OpaqueBytes
 
-object PartyAndReferenceSerializer : KSerializer<PartyAndReference>
-by (
-    SurrogateSerializer(PartyAndReferenceSurrogate.serializer()) {
-        PartyAndReferenceSurrogate(it.party, it.reference.copyBytes())
-    }
-    )
-
 @Serializable
 @Suppress("ArrayInDataClass")
 data class PartyAndReferenceSurrogate(
-    val party: @Contextual AbstractParty,
+    val party: @Polymorphic AbstractParty,
     @FixedLength([REFERENCE_SIZE])
     val reference: ByteArray
 ) : Surrogate<PartyAndReference> {
@@ -35,3 +27,9 @@ data class PartyAndReferenceSurrogate(
         const val REFERENCE_SIZE = SecureHashSurrogate.BYTES_SIZE
     }
 }
+
+object PartyAndReferenceSerializer :
+    SurrogateSerializer<PartyAndReference, PartyAndReferenceSurrogate>(
+        PartyAndReferenceSurrogate.serializer(),
+        { PartyAndReferenceSurrogate(it.party, it.reference.copyBytes()) }
+    )

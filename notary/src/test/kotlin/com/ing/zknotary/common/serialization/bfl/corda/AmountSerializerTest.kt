@@ -4,7 +4,6 @@ import com.ing.serialization.bfl.annotations.FixedLength
 import com.ing.serialization.bfl.serializers.CurrencySerializer
 import com.ing.zknotary.common.serialization.bfl.serializers.CordaSerializers
 import com.ing.zknotary.common.serialization.bfl.serializers.CordaSignatureSchemeToSerializers
-import com.ing.zknotary.common.serialization.bfl.serializers.PartyAndReferenceSerializer
 import com.ing.zknotary.testing.assertRoundTripSucceeds
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
@@ -53,11 +52,7 @@ internal class AmountSerializerTest {
         assertRoundTripSucceeds(
             original,
             serializers = CordaSerializers +
-                CordaSignatureSchemeToSerializers.serializersModuleFor(Crypto.DEFAULT_SIGNATURE_SCHEME) +
-                SerializersModule {
-                    contextual(AmountSerializer(IssuedSerializer(Int.serializer())))
-                    contextual(PartyAndReferenceSerializer)
-                }
+                SerializersModule { contextual(AmountSerializer(IssuedSerializer(Int.serializer()))) }
         )
     }
 

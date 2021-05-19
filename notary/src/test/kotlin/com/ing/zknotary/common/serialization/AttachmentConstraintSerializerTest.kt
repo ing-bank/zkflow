@@ -1,12 +1,9 @@
 package com.ing.zknotary.common.serialization
 
 import com.ing.serialization.bfl.annotations.FixedLength
-import com.ing.zknotary.common.serialization.bfl.serializers.CordaSerializers
-import com.ing.zknotary.common.serialization.bfl.serializers.CordaSignatureSchemeToSerializers
 import com.ing.zknotary.testing.assertRoundTripSucceeds
 import com.ing.zknotary.testing.assertSameSize
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.modules.plus
 import net.corda.core.contracts.AlwaysAcceptAttachmentConstraint
 import net.corda.core.contracts.AttachmentConstraint
 import net.corda.core.contracts.AutomaticHashConstraint
@@ -14,10 +11,10 @@ import net.corda.core.contracts.AutomaticPlaceholderConstraint
 import net.corda.core.contracts.HashAttachmentConstraint
 import net.corda.core.contracts.SignatureAttachmentConstraint
 import net.corda.core.contracts.WhitelistedByZoneAttachmentConstraint
-import net.corda.core.crypto.Crypto
 import net.corda.core.crypto.SecureHash
 import net.corda.testing.core.TestIdentity
-import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 
 class AttachmentConstraintSerializerTest {
     @Serializable
@@ -26,40 +23,59 @@ class AttachmentConstraintSerializerTest {
     @Serializable
     data class Data(@FixedLength([6]) val values: List<AttachmentConstraint>)
 
-    private val serializersModule = CordaSerializers + CordaSignatureSchemeToSerializers.serializersModuleFor(Crypto.DEFAULT_SIGNATURE_SCHEME)
+    companion object {
+        @JvmStatic
+        fun simpleDataPairs() = listOf(
+            Pair(
+                SimpleData(HashAttachmentConstraint(SecureHash.randomSHA256())),
+                SimpleData(HashAttachmentConstraint(SecureHash.randomSHA256()))
+            ),
+            Pair(
+                SimpleData(SignatureAttachmentConstraint(TestIdentity.fresh("Bob").publicKey)),
+                SimpleData(SignatureAttachmentConstraint(TestIdentity.fresh("Alice").publicKey)),
+            ),
+            Pair(SimpleData(AlwaysAcceptAttachmentConstraint), SimpleData(WhitelistedByZoneAttachmentConstraint)),
+            Pair(SimpleData(WhitelistedByZoneAttachmentConstraint), SimpleData(AutomaticPlaceholderConstraint)),
+            Pair(SimpleData(AutomaticPlaceholderConstraint), SimpleData(AutomaticHashConstraint)),
+        )
 
-    @Test
-    fun `serialize and deserialize simple inclusion AttachmentConstraint`() {
-        val data1 = SimpleData(HashAttachmentConstraint(SecureHash.randomSHA256()))
-        val data2 = SimpleData(AlwaysAcceptAttachmentConstraint)
-
-        assertRoundTripSucceeds(data1, serializersModule)
-        assertSameSize(data1, data2, serializersModule)
+        @JvmStatic
+        fun dataPairs() = listOf(
+            Pair(
+                Data(listOf(HashAttachmentConstraint(SecureHash.randomSHA256()))),
+                Data(
+                    listOf(
+                        HashAttachmentConstraint(SecureHash.randomSHA256()),
+                        HashAttachmentConstraint(SecureHash.randomSHA256()),
+                    )
+                )
+            ),
+            Pair(
+                Data(
+                    listOf(
+                        SignatureAttachmentConstraint(TestIdentity.fresh("Bob").publicKey),
+                        SignatureAttachmentConstraint(TestIdentity.fresh("Alice").publicKey),
+                    )
+                ),
+                Data(listOf(SignatureAttachmentConstraint(TestIdentity.fresh("Alice").publicKey)))
+            ),
+            Pair(Data(listOf(AlwaysAcceptAttachmentConstraint)), Data(listOf(WhitelistedByZoneAttachmentConstraint))),
+            Pair(Data(listOf(WhitelistedByZoneAttachmentConstraint)), Data(listOf(AutomaticPlaceholderConstraint))),
+            Pair(Data(listOf(AutomaticPlaceholderConstraint)), Data(listOf(AutomaticHashConstraint))),
+        )
     }
 
-    @Test
-    fun `serialize and deserialize AttachmentConstraint`() {
-        val data1 = Data(
-            listOf(
-                AlwaysAcceptAttachmentConstraint,
-                HashAttachmentConstraint(SecureHash.randomSHA256()),
-                WhitelistedByZoneAttachmentConstraint,
-                AutomaticPlaceholderConstraint,
-                SignatureAttachmentConstraint(TestIdentity.fresh("Alice").publicKey),
-                AutomaticHashConstraint
-            )
-        )
+    @ParameterizedTest
+    @MethodSource("simpleDataPairs")
+    fun `serialize and deserialize simple inclusion AttachmentConstraint`(simpleDataPair: Pair<SimpleData, SimpleData>) {
+        assertRoundTripSucceeds(simpleDataPair.first)
+        assertSameSize(simpleDataPair.first, simpleDataPair.second)
+    }
 
-        val data2 = Data(
-            listOf(
-                AlwaysAcceptAttachmentConstraint,
-                WhitelistedByZoneAttachmentConstraint,
-                AutomaticPlaceholderConstraint,
-                AutomaticHashConstraint
-            )
-        )
-
-        assertRoundTripSucceeds(data1, serializersModule)
-        assertSameSize(data1, data2, serializersModule)
+    @ParameterizedTest
+    @MethodSource("dataPairs")
+    fun `serialize and deserialize AttachmentConstraint`(dataPair: Pair<Data, Data>) {
+        assertRoundTripSucceeds(dataPair.first)
+        assertSameSize(dataPair.first, dataPair.second)
     }
 }

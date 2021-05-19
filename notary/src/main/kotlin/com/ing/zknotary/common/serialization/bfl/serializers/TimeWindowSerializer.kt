@@ -3,13 +3,14 @@ package com.ing.zknotary.common.serialization.bfl.serializers
 import com.ing.serialization.bfl.api.Surrogate
 import com.ing.serialization.bfl.api.SurrogateSerializer
 import kotlinx.serialization.Contextual
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import net.corda.core.contracts.TimeWindow
 import java.time.Instant
 
-object TimeWindowSerializer : KSerializer<TimeWindow> by (
-    SurrogateSerializer(TimeWindowSurrogate.serializer()) { TimeWindowSurrogate.from(it) }
+object TimeWindowSerializer :
+    SurrogateSerializer<TimeWindow, TimeWindowSurrogate>(
+        TimeWindowSurrogate.serializer(),
+        { TimeWindowSurrogate.from(it) }
     )
 
 @Serializable

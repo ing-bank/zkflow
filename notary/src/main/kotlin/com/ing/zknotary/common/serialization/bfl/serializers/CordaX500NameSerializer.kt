@@ -1,25 +1,15 @@
 package com.ing.zknotary.common.serialization.bfl.serializers
 
 import com.ing.serialization.bfl.annotations.FixedLength
-import kotlinx.serialization.KSerializer
+import com.ing.serialization.bfl.api.Surrogate
+import com.ing.serialization.bfl.api.SurrogateSerializer
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.Encoder
 import net.corda.core.identity.CordaX500Name
 
-object CordaX500NameSerializer : KSerializer<CordaX500Name> {
-    private val strategy = CordaX500NameSurrogate.serializer()
-    override val descriptor: SerialDescriptor = strategy.descriptor
-
-    override fun deserialize(decoder: Decoder): CordaX500Name {
-        return decoder.decodeSerializableValue(strategy).toOriginal()
-    }
-
-    override fun serialize(encoder: Encoder, value: CordaX500Name) {
-        encoder.encodeSerializableValue(strategy, CordaX500NameSurrogate.from(value))
-    }
-}
+object CordaX500NameSerializer : SurrogateSerializer<CordaX500Name, CordaX500NameSurrogate>(
+    CordaX500NameSurrogate.serializer(),
+    { CordaX500NameSurrogate.from(it) }
+)
 
 @Serializable
 data class CordaX500NameSurrogate(
@@ -36,9 +26,9 @@ data class CordaX500NameSurrogate(
     // Country codes are defined in ISO 3166 and are all 2-letter abbreviations.
     @FixedLength([LENGTH_COUNTRY])
     val country: String
-) {
+) : Surrogate<CordaX500Name> {
 
-    fun toOriginal() = CordaX500Name(commonName, organisationUnit, organisation, locality, state, country)
+    override fun toOriginal() = CordaX500Name(commonName, organisationUnit, organisation, locality, state, country)
 
     companion object {
         private const val NULLABILITY = 1

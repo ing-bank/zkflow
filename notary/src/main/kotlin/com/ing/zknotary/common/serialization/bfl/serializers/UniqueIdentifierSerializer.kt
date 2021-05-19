@@ -4,13 +4,14 @@ import com.ing.serialization.bfl.annotations.FixedLength
 import com.ing.serialization.bfl.api.Surrogate
 import com.ing.serialization.bfl.api.SurrogateSerializer
 import kotlinx.serialization.Contextual
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import net.corda.core.contracts.UniqueIdentifier
 import java.util.UUID
 
-object UniqueIdentifierSerializer : KSerializer<UniqueIdentifier> by (
-    SurrogateSerializer(UniqueIdentifierSurrogate.serializer()) { UniqueIdentifierSurrogate(it.externalId, it.id) }
+object UniqueIdentifierSerializer :
+    SurrogateSerializer<UniqueIdentifier, UniqueIdentifierSurrogate>(
+        UniqueIdentifierSurrogate.serializer(),
+        { UniqueIdentifierSurrogate(it.externalId, it.id) }
     )
 
 @Serializable
