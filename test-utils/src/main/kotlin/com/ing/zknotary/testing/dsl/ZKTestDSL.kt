@@ -4,13 +4,29 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder
 import com.ing.zknotary.common.contracts.ZKContractState
 import com.ing.zknotary.common.transactions.ZKTransactionBuilder
 import net.corda.core.DoNotImplement
-import net.corda.core.contracts.*
+import net.corda.core.contracts.Attachment
+import net.corda.core.contracts.AttachmentConstraint
+import net.corda.core.contracts.AttachmentResolutionException
+import net.corda.core.contracts.Command
+import net.corda.core.contracts.CommandData
+import net.corda.core.contracts.ContractClassName
+import net.corda.core.contracts.ContractState
+import net.corda.core.contracts.StateAndRef
+import net.corda.core.contracts.StateRef
+import net.corda.core.contracts.TimeWindow
+import net.corda.core.contracts.TransactionResolutionException
+import net.corda.core.contracts.TransactionState
+import net.corda.core.contracts.TransactionVerificationException
 import net.corda.core.cordapp.CordappProvider
 import net.corda.core.crypto.NullKeys.NULL_SIGNATURE
 import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.Party
-import net.corda.core.internal.*
+import net.corda.core.internal.AttachmentTrustCalculator
+import net.corda.core.internal.ResolveTransactionsFlow
+import net.corda.core.internal.ServiceHubCoreInternal
+import net.corda.core.internal.TransactionsResolver
 import net.corda.core.internal.notary.NotaryService
+import net.corda.core.internal.uncheckedCast
 import net.corda.core.node.ServiceHub
 import net.corda.core.node.ServicesForResolution
 import net.corda.core.node.services.AttachmentId
@@ -33,14 +49,13 @@ import net.corda.testing.internal.services.InternalMockAttachmentStorage
 import net.corda.testing.services.MockAttachmentStorage
 import java.io.InputStream
 import java.security.PublicKey
-import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import kotlin.collections.component1
 import kotlin.collections.component2
 import kotlin.collections.set
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // Here is a simple DSL for building pseudo-transactions (not the same as the wire protocol) for testing purposes.
 //
@@ -241,7 +256,6 @@ public data class ZKTestTransactionDSLInterpreter private constructor(
             )
         )
     }
-
 }
 
 public data class ZKTestLedgerDSLInterpreter private constructor(
@@ -296,7 +310,7 @@ public data class ZKTestLedgerDSLInterpreter private constructor(
     internal inline fun <reified S : ZKContractState> resolveStateRef(stateRef: StateRef): TransactionState<S> {
         val transactionWithLocation =
             transactionWithLocations[stateRef.txhash] ?: nonVerifiedTransactionWithLocations[stateRef.txhash]
-            ?: throw TransactionResolutionException(stateRef.txhash)
+                ?: throw TransactionResolutionException(stateRef.txhash)
         val output = transactionWithLocation.transaction.outputs[stateRef.index]
         return if (S::class.java.isAssignableFrom(output.data.javaClass)) {
             uncheckedCast(output)

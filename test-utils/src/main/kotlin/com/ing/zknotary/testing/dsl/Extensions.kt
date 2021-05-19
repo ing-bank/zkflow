@@ -14,7 +14,6 @@ public fun ServiceHub.zkLedger(
 ): ZKLedgerDSL<ZKTestTransactionDSLInterpreter, ZKTestLedgerDSLInterpreter> {
     val currentParameters = networkParametersService.run {
         lookup(currentHash) ?: throw IllegalStateException("Current network parameters not found, $currentHash")
-
     }
     if (currentParameters.notaries.none { it.identity == notary }) {
         // Add the notary to the whitelist. Otherwise no constructed transactions will verify.

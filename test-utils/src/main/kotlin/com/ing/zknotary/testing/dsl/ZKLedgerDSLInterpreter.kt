@@ -90,7 +90,8 @@ public interface ZKLedgerDSLInterpreter<out T : ZKTransactionDSLInterpreter> : Z
      * @return The final [WireTransaction] of the built transaction.
      */
     public fun _transaction(
-        transactionLabel: String?, ZKTransactionBuilder: ZKTransactionBuilder,
+        transactionLabel: String?,
+        ZKTransactionBuilder: ZKTransactionBuilder,
         dsl: T.() -> EnforceVerifyOrFail
     ): WireTransaction
 
@@ -102,7 +103,8 @@ public interface ZKLedgerDSLInterpreter<out T : ZKTransactionDSLInterpreter> : Z
      * @return The final [WireTransaction] of the built transaction.
      */
     public fun _unverifiedTransaction(
-        transactionLabel: String?, ZKTransactionBuilder: ZKTransactionBuilder,
+        transactionLabel: String?,
+        ZKTransactionBuilder: ZKTransactionBuilder,
         dsl: T.() -> Unit
     ): WireTransaction
 
@@ -118,7 +120,6 @@ public interface ZKLedgerDSLInterpreter<out T : ZKTransactionDSLInterpreter> : Z
      * @return The [SecureHash] that identifies the attachment, to be used in transactions.
      */
     public fun attachment(attachment: InputStream): SecureHash
-
 }
 
 /**
@@ -138,7 +139,8 @@ public class ZKLedgerDSL<out T : ZKTransactionDSLInterpreter, out L : ZKLedgerDS
      */
     @JvmOverloads
     public fun transaction(
-        label: String? = null, ZKTransactionBuilder: ZKTransactionBuilder = ZKTransactionBuilder(notary = notary),
+        label: String? = null,
+        ZKTransactionBuilder: ZKTransactionBuilder = ZKTransactionBuilder(notary = notary),
         dsl: ZKTransactionDSL<ZKTransactionDSLInterpreter>.() -> EnforceVerifyOrFail
     ): WireTransaction =
         _transaction(label, ZKTransactionBuilder) { ZKTransactionDSL(this, notary).dsl() }
@@ -148,7 +150,8 @@ public class ZKLedgerDSL<out T : ZKTransactionDSLInterpreter, out L : ZKLedgerDS
      */
     @JvmOverloads
     public fun unverifiedTransaction(
-        label: String? = null, ZKTransactionBuilder: ZKTransactionBuilder = ZKTransactionBuilder(notary = notary),
+        label: String? = null,
+        ZKTransactionBuilder: ZKTransactionBuilder = ZKTransactionBuilder(notary = notary),
         dsl: ZKTransactionDSL<ZKTransactionDSLInterpreter>.() -> Unit
     ): WireTransaction =
         _unverifiedTransaction(label, ZKTransactionBuilder) { ZKTransactionDSL(this, notary).dsl() }
