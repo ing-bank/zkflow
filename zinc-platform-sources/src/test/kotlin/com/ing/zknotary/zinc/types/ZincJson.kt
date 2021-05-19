@@ -16,9 +16,12 @@ import kotlinx.serialization.json.put
 import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
 import net.corda.core.contracts.Amount
+import net.corda.core.contracts.AttachmentConstraint
+import net.corda.core.contracts.HashAttachmentConstraint
 import net.corda.core.contracts.LinearPointer
 import net.corda.core.contracts.PartyAndReference
 import net.corda.core.contracts.PrivacySalt
+import net.corda.core.contracts.SignatureAttachmentConstraint
 import net.corda.core.contracts.StateRef
 import net.corda.core.contracts.TimeWindow
 import net.corda.core.contracts.UniqueIdentifier
@@ -72,6 +75,8 @@ fun AbstractParty.toZincJson(serialName: String, encodedSize: Int) =
     toJsonObject(serialName, encodedSize).toString()
 fun PartyAndReference.toZincJson(serialName: String, encodedSize: Int) =
     toJsonObject(serialName, encodedSize).toString()
+fun AttachmentConstraint.toZincJson(serialName: String, pkSerialName: String? = null, encodedSize: Int? = null) =
+    toJsonObject(serialName, pkSerialName, encodedSize).toString()
 
 fun String?.toJsonObject(size: Int) = buildJsonObject {
     put("chars", toSizedIntArray(size).toJsonArray())
@@ -207,4 +212,20 @@ fun Party.toJsonObject(serialName: String, encodedSize: Int) = buildJsonObject {
 fun PartyAndReference.toJsonObject(serialName: String, encodedSize: Int) = buildJsonObject {
     put("party", party.toJsonObject(serialName, encodedSize))
     put("reference", reference.bytes.toJsonObject(PartyAndReferenceSurrogate.REFERENCE_SIZE))
+}
+
+fun AttachmentConstraint.toJsonObject(serialName: String, pkSerialName: String?, encodedSize: Int?) = when (this) {
+    is HashAttachmentConstraint -> toJsonObject()
+    is SignatureAttachmentConstraint -> toJsonObject(requireNotNull(pkSerialName), requireNotNull(encodedSize))
+    else -> buildJsonObject {
+        put("serial_name", serialName.toJsonObject(1))
+    }
+}
+
+fun HashAttachmentConstraint.toJsonObject() = buildJsonObject {
+    put("attachment_id", attachmentId.toJsonObject())
+}
+
+fun SignatureAttachmentConstraint.toJsonObject(serialName: String, encodedSize: Int) = buildJsonObject {
+    put("public_key", key.toJsonObject(serialName, encodedSize))
 }

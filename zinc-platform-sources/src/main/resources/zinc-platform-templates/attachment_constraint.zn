@@ -1,0 +1,37 @@
+// Input parameters:
+//   - TYPE_NAME: String = Name of the main struct, and suffix for Serialized struct, use camelcase
+//   - CONSTANT_PREFIX: String = prefix to use for constant names, use uppercase
+
+mod string_1;
+
+use string_1::String_1;
+use string_1::STRING_1_LENGTH;
+
+const ${CONSTANT_PREFIX}_SERIAL_NAME_LENGTH: u16 = STRING_1_LENGTH;
+
+//! ${TYPE_NAME} lengths
+const ${CONSTANT_PREFIX}_SERIAL_NAME_OFFSET: u16 = 0;
+const ${CONSTANT_PREFIX}_LENGTH: u16
+    = ${CONSTANT_PREFIX}_SERIAL_NAME_OFFSET
+    + ${CONSTANT_PREFIX}_SERIAL_NAME_LENGTH;
+
+type Serialized${TYPE_NAME} = [u8; ${CONSTANT_PREFIX}_LENGTH];
+
+struct ${TYPE_NAME} {
+    serial_name: String_1,
+}
+
+impl ${TYPE_NAME} {
+    fn deserialize(serialized: Serialized${TYPE_NAME}) -> ${TYPE_NAME} {
+        let serial_name = {
+            let mut serial_bytes = [0; ${CONSTANT_PREFIX}_SERIAL_NAME_LENGTH];
+            for i in 0..${CONSTANT_PREFIX}_SERIAL_NAME_LENGTH {
+                serial_bytes[i] = serialized[i + ${CONSTANT_PREFIX}_SERIAL_NAME_OFFSET];
+            }
+            String_1::deserialize(serial_bytes)
+        };
+        ${TYPE_NAME} {
+            serial_name: serial_name,
+        }
+    }
+}

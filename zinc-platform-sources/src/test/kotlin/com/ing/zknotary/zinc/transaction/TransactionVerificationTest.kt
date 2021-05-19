@@ -51,7 +51,7 @@ class TransactionVerificationTest {
         createCircuitFolder,
         artifactFolder = createCircuitFolder,
         buildTimeout = Duration.ofSeconds(5),
-        setupTimeout = Duration.ofSeconds(1500),
+        setupTimeout = Duration.ofSeconds(1000),
         provingTimeout = Duration.ofSeconds(300),
         verificationTimeout = Duration.ofSeconds(1)
     )
@@ -60,7 +60,7 @@ class TransactionVerificationTest {
         moveCircuitFolder,
         artifactFolder = moveCircuitFolder,
         buildTimeout = Duration.ofSeconds(5),
-        setupTimeout = Duration.ofSeconds(1500),
+        setupTimeout = Duration.ofSeconds(1000),
         provingTimeout = Duration.ofSeconds(300),
         verificationTimeout = Duration.ofSeconds(1)
     )
