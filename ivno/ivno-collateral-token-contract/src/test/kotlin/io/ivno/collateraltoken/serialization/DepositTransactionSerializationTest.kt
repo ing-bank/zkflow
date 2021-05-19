@@ -3,19 +3,20 @@ package io.ivno.collateraltoken.serialization
 import com.ing.zknotary.common.contracts.ZKCommandData
 import com.ing.zknotary.common.crypto.zinc
 import com.ing.zknotary.common.serialization.bfl.BFLSerializationScheme
-import com.ing.zknotary.common.serialization.bfl.CommandDataSerializerMap
-import com.ing.zknotary.common.serialization.bfl.ContractStateSerializerMap
-import com.ing.zknotary.common.serialization.bfl.SerializersModuleRegistry
-import com.ing.zknotary.common.serialization.bfl.corda.LinearPointerSerializer
 import com.ing.zknotary.testing.serialization.getSerializationContext
 import com.ing.zknotary.testing.serialization.serializeWithScheme
 import io.ivno.collateraltoken.contract.ContractTest
-import io.ivno.collateraltoken.contract.Deposit
 import io.ivno.collateraltoken.contract.DepositContract
 import io.kotest.matchers.shouldBe
-import kotlinx.serialization.modules.SerializersModule
-import kotlinx.serialization.modules.contextual
-import net.corda.core.contracts.*
+import net.corda.core.contracts.AttachmentConstraint
+import net.corda.core.contracts.Command
+import net.corda.core.contracts.ComponentGroupEnum
+import net.corda.core.contracts.HashAttachmentConstraint
+import net.corda.core.contracts.PrivacySalt
+import net.corda.core.contracts.StateAndContract
+import net.corda.core.contracts.StateRef
+import net.corda.core.contracts.TimeWindow
+import net.corda.core.contracts.TransactionState
 import net.corda.core.crypto.DigestService
 import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.Party
@@ -50,7 +51,7 @@ class DepositTransactionSerializationTest : ContractTest() {
         val notary = TestIdentity.fresh("Notary").party
         val timeWindow = TimeWindow.fromOnly(Instant.now())
         val references = List(2) { dummyStateRef() }
-        val networkParametersHash = SecureHash.randomSHA256()
+        val networkParametersHash = services.networkParametersService.currentHash
 
         // This functionality is duplicated from ZKTransaction.toWireTransaction()
         val singleCommand = commands.singleOrNull() ?: error("Single command per transaction is allowed")
