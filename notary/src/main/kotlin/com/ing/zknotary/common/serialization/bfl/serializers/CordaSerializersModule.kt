@@ -1,7 +1,6 @@
 package com.ing.zknotary.common.serialization.bfl.serializers
 
 import com.ing.zknotary.common.serialization.bfl.corda.LinearPointerSerializer
-import com.ing.zknotary.common.serialization.bfl.corda.PartyAndReferenceSerializer
 import com.ing.zknotary.common.serialization.bfl.serializers.publickey.BCECPublicKeySerializer
 import com.ing.zknotary.common.serialization.bfl.serializers.publickey.BCRSAPublicKeySerializer
 import com.ing.zknotary.common.serialization.bfl.serializers.publickey.BCSphincs256PublicKeySerializer
@@ -47,6 +46,7 @@ val CordaSerializers = SerializersModule {
         subclass(BCSphincs256PublicKey::class, BCSphincs256PublicKeySerializer)
     }
 
+    // BFL treats abstract classes as polymorphic, since they have similar behaviour with interfaces
     polymorphic(AbstractParty::class) {
         subclass(AnonymousParty::class, AnonymousPartySerializer)
         subclass(Party::class, PartySerializer)

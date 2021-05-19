@@ -4,12 +4,10 @@ import com.ing.dlt.zkkrypto.util.asUnsigned
 import com.ing.serialization.bfl.api.reified.serialize
 import com.ing.zknotary.common.serialization.bfl.corda.LinearPointerSurrogate
 import com.ing.zknotary.common.serialization.bfl.serializers.CordaX500NameSerializer
-import com.ing.zknotary.common.serialization.bfl.serializers.CordaX500NameSurrogate
 import com.ing.zknotary.common.serialization.bfl.serializers.PartyAndReferenceSurrogate
 import com.ing.zknotary.common.serialization.bfl.serializers.SecureHashSupportedAlgorithm
 import com.ing.zknotary.common.serialization.bfl.serializers.SecureHashSurrogate
 import com.ing.zknotary.common.serialization.bfl.serializers.UniqueIdentifierSurrogate
-import com.ing.zknotary.common.serialization.bfl.serializers.anonymise
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.buildJsonArray
@@ -72,8 +70,8 @@ fun AnonymousParty.toZincJson(serialName: String, encodedSize: Int) =
     toJsonObject(serialName, encodedSize).toString()
 fun AbstractParty.toZincJson(serialName: String, encodedSize: Int) =
     toJsonObject(serialName, encodedSize).toString()
-fun PartyAndReference.toZincJson(anonymous: Boolean, serialName: String, encodedSize: Int) =
-    toJsonObject(anonymous, serialName, encodedSize).toString()
+fun PartyAndReference.toZincJson(serialName: String, encodedSize: Int) =
+    toJsonObject(serialName, encodedSize).toString()
 
 fun String?.toJsonObject(size: Int) = buildJsonObject {
     put("chars", toSizedIntArray(size).toJsonArray())
@@ -192,16 +190,8 @@ fun CordaX500Name.toJsonObject() = buildJsonObject {
     put("name", name.toJsonArray())
 }
 
-@JvmName("NullableCordaX500NameJsonObject")
-fun CordaX500Name?.toJsonObject() = buildJsonObject {
-    val cordaX500Name = this@toJsonObject?.toJsonObject()
-        ?: buildJsonObject { put("name", ByteArray(CordaX500NameSurrogate.SIZE) { 0 }.toJsonArray()) }
-    put("corda_x500_name", cordaX500Name)
-    put("is_null", this@toJsonObject == null)
-}
-
 fun AbstractParty.toJsonObject(serialName: String, encodedSize: Int) = buildJsonObject {
-    put("nullable_name", nameOrNull().toJsonObject())
+    nameOrNull()?.let { put("name", it.toJsonObject()) }
     put("owning_key", owningKey.toJsonObject(serialName, encodedSize))
 }
 
@@ -214,12 +204,7 @@ fun Party.toJsonObject(serialName: String, encodedSize: Int) = buildJsonObject {
     put("owning_key", owningKey.toJsonObject(serialName, encodedSize))
 }
 
-fun PartyAndReference.toJsonObject(anonymise: Boolean, serialName: String, encodedSize: Int) = buildJsonObject {
-    val partyJson = if (anonymise) {
-        party.anonymise().toJsonObject(serialName, encodedSize)
-    } else {
-        party.toJsonObject(serialName, encodedSize)
-    }
-    put("party", partyJson)
+fun PartyAndReference.toJsonObject(serialName: String, encodedSize: Int) = buildJsonObject {
+    put("party", party.toJsonObject(serialName, encodedSize))
     put("reference", reference.bytes.toJsonObject(PartyAndReferenceSurrogate.REFERENCE_SIZE))
 }

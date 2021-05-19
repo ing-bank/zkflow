@@ -1,6 +1,7 @@
 package com.ing.zknotary.common.serialization.bfl.serializers
 
 import com.ing.serialization.bfl.annotations.FixedLength
+import com.ing.zknotary.common.crypto.ZINC
 import com.ing.zknotary.testing.assertRoundTripSucceeds
 import com.ing.zknotary.testing.assertSameSize
 import kotlinx.serialization.Contextual
@@ -29,10 +30,11 @@ class SecureHashSerializerTest {
 
     @Test
     fun `different internal classes of SecureHash in collection should be serialized successfully`() {
+        // sealed classes are handled differently to abstract classes
         val listData1 = ListData(
             listOf(
                 SecureHash.randomSHA256(),
-                SecureHash.random(SecureHash.SHA2_384),
+                SecureHash.random(SecureHash.ZINC),
             )
         )
 

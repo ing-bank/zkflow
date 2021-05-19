@@ -36,8 +36,8 @@ class ByteArrayEqualsTest {
         expected: Boolean
     ) {
         val witness = buildJsonObject {
-            put("left", left.toJsonObject(64))
-            put("right", right.toJsonObject(64))
+            put("left", left.toJsonObject(32))
+            put("right", right.toJsonObject(32))
         }.toString()
 
         zincZKService.run(witness, "$expected")

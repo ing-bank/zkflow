@@ -39,7 +39,7 @@ data class SecureHashSurrogate(
     }
 
     companion object {
-        const val BYTES_SIZE = 64
+        const val BYTES_SIZE = 32
         fun from(original: SecureHash): SecureHashSurrogate {
             val algorithmId = SecureHashSupportedAlgorithm.fromAlgorithm(original.algorithm).id
             return SecureHashSurrogate(algorithmId, original.bytes)
@@ -58,7 +58,7 @@ data class SecureHashSHA256Surrogate(
     override fun toOriginal() = SecureHash.SHA256(bytes)
 
     companion object {
-        const val BYTES_SIZE = 64
+        const val BYTES_SIZE = 32
         fun from(original: SecureHash.SHA256) = SecureHashSHA256Surrogate(0, original.bytes)
     }
 }
@@ -74,7 +74,7 @@ data class SecureHashHASHSurrogate(
     override fun toOriginal() = SecureHash.HASH(SecureHashSupportedAlgorithm.fromByte(algorithmId).algorithm, bytes)
 
     companion object {
-        const val BYTES_SIZE = 64
+        const val BYTES_SIZE = 32
         fun from(original: SecureHash.HASH) = SecureHashHASHSurrogate(
             SecureHashSupportedAlgorithm.fromAlgorithm(original.algorithm).id,
             original.bytes
@@ -88,9 +88,7 @@ data class SecureHashHASHSurrogate(
  */
 enum class SecureHashSupportedAlgorithm(val id: Byte, val algorithm: String) {
     SHA_256(0, SecureHash.SHA2_256),
-    SHA_384(1, SecureHash.SHA2_384),
-    SHA_512(2, SecureHash.SHA2_512),
-    ZINC(3, SecureHash.ZINC);
+    ZINC(1, SecureHash.ZINC);
 
     companion object {
         fun fromByte(id: Byte): SecureHashSupportedAlgorithm = values()

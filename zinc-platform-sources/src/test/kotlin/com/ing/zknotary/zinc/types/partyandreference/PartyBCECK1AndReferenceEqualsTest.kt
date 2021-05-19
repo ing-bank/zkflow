@@ -34,7 +34,6 @@ class PartyBCECK1AndReferenceEqualsTest {
         private val bobIdentity = TestIdentity.fresh("Bob", Crypto.ECDSA_SECP256K1_SHA256)
         val alice = PartyAndReference(aliceIdentity.party, reference)
         val aliceAnotherReference = PartyAndReference(aliceIdentity.party, anotherReference)
-        val aliceAnonymous = PartyAndReference(aliceIdentity.party.anonymise(), reference)
         val bob = PartyAndReference(bobIdentity.party, reference)
     }
 
@@ -46,11 +45,6 @@ class PartyBCECK1AndReferenceEqualsTest {
     @Test
     fun `alice does not equal alice with another reference`() {
         performEqualityTest(alice, aliceAnotherReference, false)
-    }
-
-    @Test
-    fun `alice equals anonymous alice`() {
-        performEqualityTest(alice, aliceAnonymous, true)
     }
 
     @Test
@@ -67,7 +61,6 @@ class PartyBCECK1AndReferenceEqualsTest {
             put(
                 "left",
                 left.toJsonObject(
-                    anonymise = false,
                     serialName = BCECSurrogate::class.findAnnotation<SerialName>()!!.value,
                     encodedSize = BCECSurrogate.ENCODED_SIZE
                 )
@@ -75,7 +68,6 @@ class PartyBCECK1AndReferenceEqualsTest {
             put(
                 "right",
                 right.toJsonObject(
-                    anonymise = false,
                     serialName = BCECSurrogate::class.findAnnotation<SerialName>()!!.value,
                     encodedSize = BCECSurrogate.ENCODED_SIZE
                 )

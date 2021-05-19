@@ -64,15 +64,6 @@ class TransactionBasicVerificationTest {
         )
     }
 
-//    init {
-//        zincZKService.setupTimed(log)
-//    }
-
-//    @AfterAll
-//    fun `remove zinc files`() {
-//        zincZKService.cleanup()
-//    }
-
     /**
      * The witness, which is what we serialize for Zinc, contains the following items:
      *

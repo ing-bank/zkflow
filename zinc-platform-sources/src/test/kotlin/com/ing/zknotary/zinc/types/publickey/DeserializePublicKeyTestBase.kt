@@ -1,6 +1,5 @@
 package com.ing.zknotary.zinc.types.publickey
 
-import com.ing.zknotary.common.serialization.bfl.serializers.CordaSignatureSchemeToSerializers
 import com.ing.zknotary.zinc.types.DeserializationTestBase
 import com.ing.zknotary.zinc.types.toZincJson
 import kotlinx.serialization.Polymorphic
@@ -16,7 +15,6 @@ abstract class DeserializePublicKeyTestBase<T : DeserializePublicKeyTestBase<T>>
 ) : DeserializationTestBase<T, DeserializePublicKeyTestBase.Data>(
     { it.data.toZincJson(serialName, encodedSize) },
 ) {
-    override fun getSerializersModule() = CordaSignatureSchemeToSerializers.serializersModuleFor(scheme)
 
     @Serializable
     data class Data(

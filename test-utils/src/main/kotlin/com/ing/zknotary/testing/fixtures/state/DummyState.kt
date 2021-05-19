@@ -45,7 +45,6 @@ public data class DummyState(
                 data = any(),
                 notary = notary.party,
                 encumbrance = 1,
-                // constraint = AutomaticPlaceholderConstraint // Fails because BFL ElementFactory.fromType has no when clause for isObject
                 constraint = HashAttachmentConstraint(SecureHash.zeroHash)
             )
         }

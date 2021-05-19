@@ -24,7 +24,6 @@ data class TransactionStateSurrogate<T : ContractState>(
     @FixedLength([256]) val contract: ContractClassName,
     val notary: @Contextual Party,
     val encumbrance: Int? = null,
-    // TODO only supports few of them. See AttachmentConstraintSerializer.kt.
     val constraint: AttachmentConstraint
 ) : Surrogate<TransactionState<T>> {
     override fun toOriginal() = TransactionState(data, contract, notary, encumbrance, constraint)

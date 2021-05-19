@@ -3,7 +3,6 @@ package com.ing.zknotary.common.serialization.bfl.corda
 import com.ing.serialization.bfl.annotations.FixedLength
 import com.ing.serialization.bfl.serializers.CurrencySerializer
 import com.ing.zknotary.common.serialization.bfl.serializers.CordaSerializers
-import com.ing.zknotary.common.serialization.bfl.serializers.CordaSignatureSchemeToSerializers
 import com.ing.zknotary.testing.assertRoundTripSucceeds
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
@@ -15,7 +14,6 @@ import net.corda.core.contracts.Amount
 import net.corda.core.contracts.Issued
 import net.corda.core.contracts.PartyAndReference
 import net.corda.core.contracts.TokenizableAssetInfo
-import net.corda.core.crypto.Crypto
 import net.corda.core.utilities.OpaqueBytes
 import net.corda.testing.core.TestIdentity
 import org.junit.jupiter.api.Test

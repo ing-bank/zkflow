@@ -1,7 +1,7 @@
-mod byte_array_64;
+mod byte_array_32;
 
-use byte_array_64::ByteArray_64;
+use byte_array_32::ByteArray_32;
 
-fn main(left: ByteArray_64, right: ByteArray_64) -> bool {
-    ByteArray_64::equals(left, right)
+fn main(left: ByteArray_32, right: ByteArray_32) -> bool {
+    ByteArray_32::equals(left, right)
 }

@@ -22,7 +22,6 @@ data class PublicKeyTemplateParameters(
 
     override fun getReplacements() = getTypeReplacements() + mapOf(
         "ENCODED_SIZE" to "$encodedSize",
-        "TYPE_SIZE" to "1",
     )
 
     override fun getTargetFilename() = getFileName()

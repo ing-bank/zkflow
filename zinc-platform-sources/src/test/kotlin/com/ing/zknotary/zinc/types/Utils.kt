@@ -89,6 +89,7 @@ inline fun <reified T : Any> Amount<T>.toJsonArray() =
             WrappedAmountString(this as Amount<String>), WrappedAmountString.serializer(),
             SerializersModule {
                 contextual(AmountSerializer(SmallStringSerializer))
+                contextual(SmallStringSerializer)
             }
         )
         is Currency -> serialize(
