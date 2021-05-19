@@ -11,7 +11,7 @@ import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.contextual
 import net.corda.core.utilities.loggerFor
 
-object IvnoSerializers: CorDappSerializers {
+object IvnoSerializers : CorDappSerializers {
     init {
         loggerFor<IvnoSerializers>().info("Registering Ivno serializers")
         SerializersModuleRegistry.register(SerializersModule {
@@ -22,5 +22,3 @@ object IvnoSerializers: CorDappSerializers {
         CommandDataSerializerMap.register(DepositContract.Request::class, 3, DepositContract.Request.serializer())
     }
 }
-
-val foo = IvnoSerializers.toString()

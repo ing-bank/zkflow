@@ -9,7 +9,10 @@ import io.onixlabs.corda.bnms.contract.membership.MembershipAttestation
 import io.onixlabs.corda.identityframework.contract.AttestationStatus
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
-import net.corda.core.contracts.*
+import net.corda.core.contracts.Contract
+import net.corda.core.contracts.ContractClassName
+import net.corda.core.contracts.requireSingleCommand
+import net.corda.core.contracts.requireThat
 import net.corda.core.transactions.LedgerTransaction
 import java.io.File
 import java.math.BigDecimal
@@ -222,7 +225,7 @@ class DepositContract : Contract {
 
                 val tokenOutput = tokenOutputs.single()
 
-                CONTRACT_RULE_TOKEN_ISSUING_ENTITY using (depositOutput.tokenIssuingEntity == tokenTypeReference.tokenIssuingEntity)
+                CONTRACT_RULE_TOKEN_ISSUING_ENTITY using (depositOutput.tokenIssuingEntity.owningKey == tokenTypeReference.tokenIssuingEntity.owningKey)
                 CONTRACT_RULE_TOKEN_AMOUNT using (tokenOutput.amount.quantity.compareTo(depositOutput.amount.quantity) == 0)
             }
 

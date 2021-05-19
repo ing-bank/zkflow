@@ -345,7 +345,7 @@ class DepositContractRequestTests : ContractTest() {
                 reference(memberships.attestationFor(CUSTODIAN).ref)
                 reference(memberships.attestationFor(TOKEN_ISSUING_ENTITY).ref)
                 reference(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
-                output(DepositContract.ID, DEPOSIT.copy(custodian = BANK_A.party))
+                output(DepositContract.ID, DEPOSIT.copy(custodian = BANK_A.party.anonymise()))
                 command(keysOf(BANK_A), DepositContract.Request())
                 failsWith(DepositContract.Request.CONTRACT_RULE_PARTICIPANTS)
             }

@@ -1,10 +1,19 @@
 package io.ivno.collateraltoken.contract
 
 import io.dasl.contracts.v1.crud.CrudCommands
-import io.dasl.contracts.v1.token.*
+import io.dasl.contracts.v1.token.BigDecimalAmount
+import io.dasl.contracts.v1.token.TokenContract
+import io.dasl.contracts.v1.token.TokenState
+import io.dasl.contracts.v1.token.linearPointer
+import io.dasl.contracts.v1.token.toBigDecimalAmount
 import io.onixlabs.corda.bnms.contract.Network
 import io.onixlabs.corda.bnms.contract.Role
-import io.onixlabs.corda.bnms.contract.membership.*
+import io.onixlabs.corda.bnms.contract.membership.Membership
+import io.onixlabs.corda.bnms.contract.membership.MembershipAttestation
+import io.onixlabs.corda.bnms.contract.membership.MembershipAttestationContract
+import io.onixlabs.corda.bnms.contract.membership.MembershipContract
+import io.onixlabs.corda.bnms.contract.membership.attest
+import io.onixlabs.corda.bnms.contract.membership.getNextOutput
 import io.onixlabs.corda.bnms.contract.relationship.RelationshipAttestationContract
 import io.onixlabs.corda.bnms.contract.relationship.RelationshipContract
 import io.onixlabs.corda.bnms.contract.revocation.RevocationLockContract
@@ -80,9 +89,9 @@ abstract class ContractTest {
         )
 
         val DEPOSIT = Deposit(
-            BANK_A.party,
-            CUSTODIAN.party,
-            TOKEN_ISSUING_ENTITY.party,
+            BANK_A.party.anonymise(),
+            CUSTODIAN.party.anonymise(),
+            TOKEN_ISSUING_ENTITY.party.anonymise(),
             AMOUNT_OF_100_IVNO_TOKEN_POINTER,
             "12345678"
         )
