@@ -34,6 +34,11 @@ impl Instant {
         Instant { seconds: 0 as u64, nanos: 0 as u32 }
     }
 
+    fn equals(this: Instant, that: Instant) -> bool {
+        this.seconds == that.seconds
+            && this.nanos == that.nanos
+    }
+
     fn _extract_u32(bytes: SerializedInstant, offset: u16) -> u32 {
         let mut bits = [false; U32_BITS];
         for i in 0..U32_BYTES {

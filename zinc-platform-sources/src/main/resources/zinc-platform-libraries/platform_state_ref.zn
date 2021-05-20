@@ -28,6 +28,11 @@ struct StateRef {
 }
 
 impl StateRef {
+    fn equals(this: StateRef, that: StateRef) -> bool {
+        SecureHash::equals(this.hash, that.hash)
+            && this.index == that.index
+    }
+
     fn deserialize(serialized_state_ref: SerializedStateRef) -> StateRef {
         let hash = {
             let mut hash_bytes: SerializedSecureHash = [0; STATE_REF_HASH_LENGTH];

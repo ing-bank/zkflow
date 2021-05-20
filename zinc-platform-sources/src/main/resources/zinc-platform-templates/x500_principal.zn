@@ -19,6 +19,10 @@ struct X500Principal {
 }
 
 impl X500Principal {
+    fn equals(this: X500Principal, that: X500Principal) -> bool {
+        PrincipalName::equals(this.name, that.name)
+    }
+
     fn deserialize(serialized_principal: SerializedX500Principal) -> X500Principal {
         X500Principal {
             name: PrincipalName::deserialize(serialized_principal),

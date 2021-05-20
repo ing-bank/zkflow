@@ -16,6 +16,11 @@ struct TimeWindow {
 }
 
 impl TimeWindow {
+    fn equals(this: TimeWindow, that: TimeWindow) -> bool {
+        NullableInstant::equals(this.from_time, that.from_time)
+            && NullableInstant::equals(this.until_time, that.until_time)
+    }
+
     fn deserialize(serialized_time_window: SerializedTimeWindow) -> TimeWindow {
         let from_time = {
             // Name scoping does not work!

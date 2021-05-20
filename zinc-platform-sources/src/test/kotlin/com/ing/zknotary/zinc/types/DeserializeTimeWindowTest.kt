@@ -13,13 +13,6 @@ import kotlin.time.ExperimentalTime
 class DeserializeTimeWindowTest {
     private val zincZKService = getZincZKService<DeserializeTimeWindowTest>()
 
-    private val timeData: List<TimeWindow> = listOf(
-        TimeWindow.fromOnly(Instant.now()),
-        TimeWindow.untilOnly(Instant.now()),
-        TimeWindow.between(Instant.now(), Instant.now().plusSeconds(3600)),
-        TimeWindow.fromStartAndDuration(Instant.now(), Duration.ofSeconds(3600)),
-    )
-
     @ParameterizedTest
     @MethodSource("testData")
     fun `a TimeWindow should be deserialized correctly`(data: Data) {

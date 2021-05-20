@@ -41,6 +41,11 @@ struct ${TYPE_NAME} {
 }
 
 impl ${TYPE_NAME} {
+    fn equals(this: ${TYPE_NAME}, that: ${TYPE_NAME}) -> bool {
+        PartyType::equals(this.party, that.party)
+            && ReferenceType::equals(this.reference, that.reference)
+    }
+
     fn deserialize(serialized: Serialized${TYPE_NAME}) -> ${TYPE_NAME} {
         let party = {
             let mut party_bytes = [0; ${CONSTANT_PREFIX}_PARTY_LENGTH];

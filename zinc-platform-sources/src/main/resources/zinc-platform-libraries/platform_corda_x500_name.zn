@@ -46,6 +46,14 @@ impl CordaX500Name {
         }
     }
 
+    fn equals(this: CordaX500Name, that: CordaX500Name) -> bool {
+        let mut are_equal = true;
+        for i in 0..CORDA_X500_NAME_LENGTH while are_equal {
+            are_equal = this.name[i] == that.name[i];
+        }
+        are_equal
+    }
+
     fn deserialize(serialized_name: [u8; CORDA_X500_NAME_LENGTH]) -> CordaX500Name {
         CordaX500Name {
             name: serialized_name,
