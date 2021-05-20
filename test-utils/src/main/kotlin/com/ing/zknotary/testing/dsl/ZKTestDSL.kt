@@ -1,3 +1,5 @@
+@file:Suppress("FunctionName", "FunctionNaming", "FunctionParameterNaming", "LongParameterList", "TooManyFunctions") // Copy of Corda API
+
 package com.ing.zknotary.testing.dsl
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder
@@ -310,7 +312,7 @@ public data class ZKTestLedgerDSLInterpreter private constructor(
     internal inline fun <reified S : ZKContractState> resolveStateRef(stateRef: StateRef): TransactionState<S> {
         val transactionWithLocation =
             transactionWithLocations[stateRef.txhash] ?: nonVerifiedTransactionWithLocations[stateRef.txhash]
-                ?: throw TransactionResolutionException(stateRef.txhash)
+            ?: throw TransactionResolutionException(stateRef.txhash)
         val output = transactionWithLocation.transaction.outputs[stateRef.index]
         return if (S::class.java.isAssignableFrom(output.data.javaClass)) {
             uncheckedCast(output)

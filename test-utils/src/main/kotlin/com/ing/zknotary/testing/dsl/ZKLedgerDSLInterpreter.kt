@@ -1,3 +1,5 @@
+@file:Suppress("FunctionName", "FunctionNaming", "FunctionParameterNaming", "LongParameterList", "TooManyFunctions") // Copy of Corda API
+
 package com.ing.zknotary.testing.dsl
 
 import com.ing.zknotary.common.contracts.ZKContractState
