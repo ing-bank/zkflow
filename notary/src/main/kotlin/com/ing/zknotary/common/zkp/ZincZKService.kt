@@ -51,11 +51,10 @@ class ZincZKService(
             }
 
             return if (process.exitValue() != 0) {
-                val stdout = process.errorStream.bufferedReader().readText()
-                error("$command failed with the following com.ing.zknotary.generator.error output: $stdout")
+                val stderr = process.errorStream.bufferedReader().readText()
+                error("$command failed with the following output: $stderr")
             } else {
-                val debugOutput = process.errorStream.bufferedReader().readText()
-                log.debug(debugOutput)
+                log.debug(process.errorStream.bufferedReader().readText())
                 process.inputStream.bufferedReader().readText()
             }
         }
@@ -175,7 +174,7 @@ class ZincZKService(
                 provingTimeout
             )
                 .toByteArray()
-        } catch (e: Exception) {
+        } catch (e: IllegalStateException) {
             throw ZKProvingException("Could not create proof. Cause: $e\n")
         } finally {
             log.debug("Public Data (prove): \n${publicData.readText()}")

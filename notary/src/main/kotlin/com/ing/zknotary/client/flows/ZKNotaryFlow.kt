@@ -44,10 +44,6 @@ open class ZKNotaryFlow(
     protected fun checkZKVerifierTransaction(): Party {
         val notaryParty = svtx.tx.notary ?: throw IllegalStateException("Transaction does not specify a Notary")
         check(serviceHub.networkMapCache.isNotary(notaryParty)) { "$notaryParty is not a notary on the network" }
-//      TODO check if states belong to this notary somehow (given that we don't have states' contents)
-//        check(serviceHub.loadStates(svtx.tx.inputs.toSet() + svtx.tx.references.toSet()).all { it.state.notary == notaryParty }) {
-//            "Input states and reference input states must have the same Notary"
-//        }
         return notaryParty
     }
 
@@ -109,9 +105,13 @@ open class ZKNotaryFlow(
      * The [NotarySendTransactionFlow] flow is similar to [SendTransactionFlow], but uses [NotarisationPayload] as the
      * initial message, and retries message delivery.
      */
-    private class ZKNotarySendTransactionFlow(otherSide: FlowSession, payload: ZKNotarisationPayload) : ZKDataVendingFlow(otherSide, payload) {
+    private class ZKNotarySendTransactionFlow(otherSide: FlowSession, payload: ZKNotarisationPayload) :
+        ZKDataVendingFlow(otherSide, payload) {
         @Suspendable
-        override fun sendPayloadAndReceiveDataRequest(otherSideSession: FlowSession, payload: Any): UntrustworthyData<FetchZKDataFlow.Request> {
+        override fun sendPayloadAndReceiveDataRequest(
+            otherSideSession: FlowSession,
+            payload: Any
+        ): UntrustworthyData<FetchZKDataFlow.Request> {
             return otherSideSession.sendAndReceiveWithRetryCustom(payload)
         }
 

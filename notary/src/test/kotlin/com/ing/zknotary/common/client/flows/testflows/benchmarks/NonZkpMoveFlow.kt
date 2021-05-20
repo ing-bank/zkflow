@@ -17,9 +17,6 @@ import net.corda.core.identity.Party
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
 
-/**
- * Disclaimer: this is not how it is supposed to be used in "real" flows, it works just for this test
- */
 @InitiatingFlow
 class NonZkpMoveFlow(
     private val createStx: SignedTransaction,
@@ -31,22 +28,22 @@ class NonZkpMoveFlow(
         val session = initiateFlow(newOwner)
 
         val me = serviceHub.myInfo.legalIdentities.single()
-        val state = createStx.coreTransaction.outRef<TestContract.TestState>(0)
+        val stateAndRef = createStx.coreTransaction.outRef<TestContract.TestState>(0)
         val command = Command(TestContract.Move(), listOf(newOwner, me).map { it.owningKey })
-        val stateAndContract = StateAndContract(state.state.data.copy(owner = newOwner.anonymise()), TestContract.PROGRAM_ID)
+        val stateAndContract = StateAndContract(stateAndRef.state.data.copy(owner = newOwner.anonymise()), TestContract.PROGRAM_ID)
 
         val builder = TransactionBuilder(serviceHub.networkMapCache.notaryIdentities.single())
-        builder.withItems(state, stateAndContract, command)
+        builder.withItems(stateAndRef, stateAndContract, command)
 
         // Transaction creator signs transaction.
-        val stx = serviceHub.signInitialTransaction(builder)
-        stx.verify(serviceHub, false)
+        val selfSignedStx = serviceHub.signInitialTransaction(builder)
+        selfSignedStx.verify(serviceHub, false)
 
-        val sstx = subFlow(CollectSignaturesFlow(stx, listOf(session)))
+        val stx = subFlow(CollectSignaturesFlow(selfSignedStx, listOf(session)))
 
-        subFlow(FinalityFlow(sstx, listOf(session)))
+        subFlow(FinalityFlow(stx, listOf(session)))
 
-        return sstx
+        return stx
     }
 
     companion object {
