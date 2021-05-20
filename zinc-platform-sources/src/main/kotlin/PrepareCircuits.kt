@@ -1,55 +1,37 @@
-import com.ing.zknotary.gradle.extension.ZKNotaryExtension
 import com.ing.zknotary.gradle.task.joinConstFiles
-import com.ing.zknotary.gradle.zinc.template.AbstractPartyTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.AmountTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.AnonymousPartyTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.BigDecimalTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.CurrencyTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.LinearPointerTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.PartyTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.PublicKeyTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.SecureHashTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.StringTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.TemplateParameters
+import com.ing.zknotary.gradle.zinc.template.TemplateConfigurations
+import com.ing.zknotary.gradle.zinc.template.TemplateConfigurations.Companion.doubleTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.TemplateConfigurations.Companion.floatTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.TemplateRenderer
-import com.ing.zknotary.gradle.zinc.template.UniqueIdentifierTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.X500PrincipalTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.parameters.AmountTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.parameters.BigDecimalTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.parameters.ByteArrayTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.parameters.StringTemplateParameters
 import com.ing.zknotary.gradle.zinc.util.CodeGenerator
 import com.ing.zknotary.gradle.zinc.util.MerkleReplacer
 import com.ing.zknotary.gradle.zinc.util.ZincSourcesCopier
 import java.io.File
 
-val bigDecimalConfigurations = listOf(
+val myBigDecimalConfigurations = listOf(
     BigDecimalTemplateParameters(24, 6),
     BigDecimalTemplateParameters(100, 20),
-    ZKNotaryExtension.floatTemplateParameters,
-    ZKNotaryExtension.doubleTemplateParameters
+    floatTemplateParameters,
+    doubleTemplateParameters
 )
-val amountConfigurations = bigDecimalConfigurations.map {
+
+val myByteArrayConfigurations = emptyList<ByteArrayTemplateParameters>()
+
+val myAmountConfigurations = myBigDecimalConfigurations.map {
     AmountTemplateParameters(it, 8)
 }
 
-val stringConfigurations: List<StringTemplateParameters> = listOf(StringTemplateParameters(32))
+val myStringConfigurations: List<StringTemplateParameters> = listOf(StringTemplateParameters(32))
 
-fun resolveAllTemplateParameters(): List<TemplateParameters> {
-    return (
-        bigDecimalConfigurations +
-            amountConfigurations +
-            stringConfigurations +
-            listOf(
-                UniqueIdentifierTemplateParameters,
-                LinearPointerTemplateParameters,
-                X500PrincipalTemplateParameters,
-                CurrencyTemplateParameters,
-                SecureHashTemplateParameters,
-            ) +
-            PublicKeyTemplateParameters.all +
-            AbstractPartyTemplateParameters.all +
-            AnonymousPartyTemplateParameters.all +
-            PartyTemplateParameters.all
-        )
-        .flatMap { it.resolveAllConfigurations() }
-        .distinct()
+val templateConfigurations = TemplateConfigurations().apply {
+    stringConfigurations = myStringConfigurations
+    byteArrayConfigurations = myByteArrayConfigurations
+    amountConfigurations = myAmountConfigurations
+    bigDecimalConfigurations = myBigDecimalConfigurations
 }
 
 fun main(args: Array<String>) {
@@ -78,9 +60,7 @@ fun main(args: Array<String>) {
         val templateRenderer = TemplateRenderer(outputPath.toPath()) {
             getTemplateContents(root, it.templateFile)
         }
-        resolveAllTemplateParameters().forEach {
-            templateRenderer.renderTemplate(it)
-        }
+        templateConfigurations.resolveAllTemplateParameters().forEach(templateRenderer::renderTemplate)
         // Generate code
         val codeGenerator = CodeGenerator(outputPath)
         getTemplateContents(root, "merkle_template.zn").also { codeGenerator.generateMerkleUtilsCode(it, consts) }
@@ -96,7 +76,7 @@ fun main(args: Array<String>) {
     val testTemplateRenderer =
         TemplateRenderer(getPlatformSourcesTestSourcesPath(root).toPath()) { getTemplateContents(root, it.templateFile) }
 
-    resolveAllTemplateParameters().forEach { testTemplateRenderer.renderTemplate(it) }
+    templateConfigurations.resolveAllTemplateParameters().forEach(testTemplateRenderer::renderTemplate)
 }
 
 private fun getPlatformSourcesPath(root: String): File {

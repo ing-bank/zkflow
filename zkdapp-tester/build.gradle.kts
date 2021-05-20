@@ -1,7 +1,7 @@
 import com.ing.zknotary.gradle.task.CreateZincDirectoriesForInputCommandTask
-import com.ing.zknotary.gradle.zinc.template.BigDecimalTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.AmountTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.StringTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.parameters.BigDecimalTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.parameters.AmountTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.parameters.StringTemplateParameters
 
 plugins {
     kotlin("jvm") version "1.4.20"
@@ -54,6 +54,7 @@ tasks.matching {
 //            it is com.ing.zknotary.gradle.task.GenerateZincPlatformCodeFromTemplatesTask ||
 //            it is com.ing.zknotary.gradle.task.PrepareCircuitForCompilationTask
 }.forEach {
-    it.mustRunAfter(gradle.includedBuild("zk-notary").task(":zinc-platform-sources:assemble"))
-    it.dependsOn(gradle.includedBuild("zk-notary").task(":zinc-platform-sources:assemble"))
+    val parentProject = gradle.includedBuild(project.rootDir.parentFile.name)
+    it.mustRunAfter(parentProject.task(":zinc-platform-sources:assemble"))
+    it.dependsOn(parentProject.task(":zinc-platform-sources:assemble"))
 }

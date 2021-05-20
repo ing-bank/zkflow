@@ -54,5 +54,5 @@ val Project.platformSamples: FileTree
     }
 
 fun Project.getTemplateContents(templateFileName: String): String {
-    return project.platformTemplates.single { it.name.contains(templateFileName) }.readText()
+    return project.platformTemplates.single { it.name == templateFileName }.readText()
 }
