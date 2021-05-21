@@ -2,8 +2,6 @@ package com.ing.zknotary.zinc.transaction
 
 import com.ing.zknotary.common.crypto.zinc
 import com.ing.zknotary.common.serialization.bfl.BFLSerializationScheme
-import com.ing.zknotary.common.serialization.bfl.CommandDataSerializerMap
-import com.ing.zknotary.common.serialization.bfl.ContractStateSerializerMap
 import com.ing.zknotary.common.transactions.UtxoInfo
 import com.ing.zknotary.common.transactions.ZKVerifierTransaction
 import com.ing.zknotary.common.zkp.PublicInput
@@ -104,10 +102,6 @@ class TransactionVerificationTest {
      */
     @Test
     fun `zinc verifies full create transaction`() = withCustomSerializationEnv {
-        ContractStateSerializerMap.register(TestContract.TestState::class, 1, TestContract.TestState.serializer())
-        CommandDataSerializerMap.register(TestContract.Create::class, 2, TestContract.Create.serializer())
-        CommandDataSerializerMap.register(TestContract.Move::class, 3, TestContract.Move.serializer())
-
         val additionalSerializationProperties =
             mapOf<Any, Any>(BFLSerializationScheme.CONTEXT_KEY_CIRCUIT to TestContract.Create().circuit)
 

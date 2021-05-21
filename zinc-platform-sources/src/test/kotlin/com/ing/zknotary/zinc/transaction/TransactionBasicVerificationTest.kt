@@ -3,8 +3,6 @@ package com.ing.zknotary.zinc.transaction
 import com.ing.zknotary.common.contracts.ZKCommandData
 import com.ing.zknotary.common.crypto.zinc
 import com.ing.zknotary.common.serialization.bfl.BFLSerializationScheme
-import com.ing.zknotary.common.serialization.bfl.CommandDataSerializerMap
-import com.ing.zknotary.common.serialization.bfl.ContractStateSerializerMap
 import com.ing.zknotary.common.zkp.ZincZKService
 import com.ing.zknotary.testing.fixtures.contract.DummyContract
 import com.ing.zknotary.testing.fixtures.state.DummyState
@@ -98,10 +96,6 @@ class TransactionBasicVerificationTest {
     @Test
     @Suppress("LongMethod")
     fun `Wire transaction serializes`() = withCustomSerializationEnv {
-        ContractStateSerializerMap.register(DummyState::class, 3, DummyState.serializer())
-        CommandDataSerializerMap.register(DummyContract.Relax::class, 4, DummyContract.Relax.serializer())
-        CommandDataSerializerMap.register(DummyContract.Chill::class, 5, DummyContract.Chill.serializer())
-
         val state = DummyState.any()
         val alice = state.participants.first()
         val bob = TestIdentity.fresh("Bob").party
