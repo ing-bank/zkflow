@@ -3,6 +3,8 @@ package com.ing.zknotary.testing.fixtures.contract
 import com.ing.serialization.bfl.annotations.FixedLength
 import com.ing.zknotary.common.contracts.ZKCommandData
 import com.ing.zknotary.common.contracts.ZKOwnableState
+import com.ing.zknotary.common.serialization.bfl.CommandDataSerializerMap
+import com.ing.zknotary.common.serialization.bfl.ContractStateSerializerMap
 import com.ing.zknotary.common.zkp.CircuitMetaData
 import com.ing.zknotary.testing.fixtures.contract.TestContract.Create.Companion.verifyCreate
 import com.ing.zknotary.testing.fixtures.contract.TestContract.Move.Companion.verifyMove
@@ -23,6 +25,16 @@ import net.corda.core.transactions.LedgerTransaction
 import java.io.File
 import java.util.Random
 
+public object TestSerializers {
+    init {
+        ContractStateSerializerMap.register(TestContract.TestState::class, 1, TestContract.TestState.serializer())
+        CommandDataSerializerMap.register(TestContract.Create::class, 2, TestContract.Create.serializer())
+        CommandDataSerializerMap.register(TestContract.Move::class, 3, TestContract.Move.serializer())
+        CommandDataSerializerMap.register(TestContract.MoveBidirectional::class, 4, TestContract.MoveBidirectional.serializer())
+        CommandDataSerializerMap.register(TestContract.SignOnly::class, 5, TestContract.SignOnly.serializer())
+    }
+}
+
 public class TestContract : Contract {
     public companion object {
         public const val PROGRAM_ID: ContractClassName = "com.ing.zknotary.testing.fixtures.contract.TestContract"
@@ -35,7 +47,15 @@ public class TestContract : Contract {
         val value: Int = Random().nextInt(1000)
     ) : ZKOwnableState {
 
-        @FixedLength([2]) override val participants: List<@Contextual AnonymousParty> = listOf(owner)
+        init {
+            /*
+             * TODO: This is a hack to ensure that the singleton is initialized. In Kotlin they are lazy until accessed.
+             */
+            TestSerializers
+        }
+
+        @FixedLength([2])
+        override val participants: List<@Contextual AnonymousParty> = listOf(owner)
 
         override fun withNewOwner(newOwner: AnonymousParty): CommandAndState =
             CommandAndState(Move(), copy(owner = newOwner))
@@ -70,6 +90,23 @@ public class TestContract : Contract {
         }
     }
 
+    /**
+     *
+     * This command is only used on [CollectSignaturesFlowTest]. It expects two signatures, but nothing else.
+     */
+    @Serializable
+    public class SignOnly : TypeOnlyCommandData(), ZKCommandData {
+
+        @Transient
+        override val circuit: CircuitMetaData =
+            CircuitMetaData(
+                folder = File("/tmp"),
+                componentGroupSizes = mapOf(
+                    ComponentGroupEnum.SIGNERS_GROUP to 2
+                )
+            )
+    }
+
     @Serializable
     public class Move : TypeOnlyCommandData(), ZKCommandData {
 
@@ -89,7 +126,7 @@ public class TestContract : Contract {
             ) {
                 // Transaction structure
                 if (tx.outputs.size != 1) throw IllegalArgumentException("Failed requirement: the tx has only one output")
-                if (tx.inputs.size != 1) throw IllegalArgumentException("Failed requirement: the tx has only one output")
+                if (tx.inputs.size != 1) throw IllegalArgumentException("Failed requirement: the tx has only one input")
 
                 // Transaction contents
                 val output = tx.getOutput(0) as TestState
@@ -101,9 +138,11 @@ public class TestContract : Contract {
         }
     }
 
+    @Serializable
     public class MoveBidirectional : ZKCommandData {
+        @Transient
         override val circuit: CircuitMetaData =
-            CircuitMetaData(folder = File(System.getProperty("user.dir")))
+            CircuitMetaData(folder = File("/tmp"))
 
         public companion object {
             public fun verifyMoveBidirectional(
@@ -145,6 +184,8 @@ public class TestContract : Contract {
             is Create -> verifyCreate(tx, command)
             is Move -> verifyMove(tx, command)
             is MoveBidirectional -> verifyMoveBidirectional(tx, command)
+            is SignOnly -> {
+            }
             else -> {
                 throw IllegalStateException("No valid command found")
             }
