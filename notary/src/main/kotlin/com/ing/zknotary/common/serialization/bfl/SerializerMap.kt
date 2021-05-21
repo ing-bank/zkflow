@@ -7,6 +7,7 @@ import kotlinx.serialization.modules.overwriteWith
 import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.ContractState
 import net.corda.core.utilities.loggerFor
+import org.slf4j.LoggerFactory
 import java.nio.ByteBuffer
 import kotlin.reflect.KClass
 
@@ -42,12 +43,14 @@ object ContractStateSerializerMap : SerializerMap<ContractState>()
 object CommandDataSerializerMap : SerializerMap<CommandData>()
 
 abstract class SerializerMap<T : Any> {
+    private val log = LoggerFactory.getLogger(this::class.java)
     private val obj2Id = mutableMapOf<KClass<out T>, Int>()
     private val objId2Serializer = mutableMapOf<Int, KSerializer<out T>>()
 
     fun register(klass: KClass<out T>, id: Int, strategy: KSerializer<out T>) {
-        obj2Id.put(klass, id)?.let { throw SerializerMapError.ClassAlreadyRegistered(klass, id) }
-        objId2Serializer.put(id, strategy)?.let { throw SerializerMapError.IdAlreadyRegistered(id, klass) }
+        log.debug("Registering serializer $strategy for $klass")
+        obj2Id.put(klass, id)?.let { throw SerializerMapError.ClassAlreadyRegistered(klass, it) }
+        objId2Serializer.put(id, strategy)?.let { throw SerializerMapError.IdAlreadyRegistered(id, klass, it.descriptor.serialName) }
     }
 
     fun prefixWithIdentifier(klass: KClass<*>, body: ByteArray): ByteArray {
@@ -65,7 +68,7 @@ abstract class SerializerMap<T : Any> {
     }
 
     operator fun get(klass: KClass<*>): KSerializer<out T> =
-        obj2Id[klass]?.let { objId2Serializer[it] } ?: error("State $klass is not registered")
+        obj2Id[klass]?.let { objId2Serializer[it] } ?: error("$klass is not registered")
 
     private fun extractSerializedData(message: ByteArray): ByteArray = message.drop(Int.SIZE_BYTES).toByteArray()
     private fun extractIdentifier(message: ByteArray): Int = ByteBuffer.wrap(message.copyOfRange(0, Int.SIZE_BYTES)).int
