@@ -29,6 +29,9 @@ data class PartyAndReferenceSurrogate(
     }
 
     companion object {
-        const val REFERENCE_SIZE = 256
+        /**
+         * Expect that the reference is a SecureHash, so use that as Reference size.
+         */
+        const val REFERENCE_SIZE = SecureHashSurrogate.BYTES_SIZE
     }
 }

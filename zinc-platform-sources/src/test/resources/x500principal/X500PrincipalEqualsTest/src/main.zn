@@ -1,0 +1,7 @@
+mod x500_principal;
+
+use x500_principal::X500Principal;
+
+fn main(left: X500Principal, right: X500Principal) -> bool {
+    X500Principal::equals(left, right)
+}

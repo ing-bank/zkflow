@@ -1,0 +1,7 @@
+mod anonymous_party_bcec;
+
+use anonymous_party_bcec::AnonymousPartyBCEC;
+
+fn main(left: AnonymousPartyBCEC, right: AnonymousPartyBCEC) -> bool {
+    AnonymousPartyBCEC::equals(left, right)
+}

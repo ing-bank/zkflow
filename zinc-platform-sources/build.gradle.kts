@@ -1,4 +1,5 @@
 import java.nio.file.Files
+import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
 import javax.inject.Inject
@@ -12,7 +13,7 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":notary")) // required for Zinc com.ing.zknotary.gradle.zinc.template rendere
+    implementation(project(":notary")) // required for Zinc com.ing.zknotary.gradle.zinc.template renderer
     implementation(project(":gradle-plugin"))
 
     val zkkryptoVersion: String by project
@@ -101,18 +102,34 @@ task("rustfmtCheck") {
 }
 
 open class CopyCircuitTask @Inject constructor() : DefaultTask() {
-
     init {
-        dependsOn(":zinc-platform-sources:circuits")
+        this.dependsOn(":zinc-platform-sources:circuits")
     }
 
-    val projectDir = Paths.get(project.projectDir.absolutePath)
+    private val projectDir: Path = Paths.get(project.projectDir.absolutePath)
 
     @org.gradle.api.tasks.InputDirectory
-    val resourcesDir = projectDir.resolve("src/main/resources")
+    val resourcesDir: Path = projectDir.resolve("src/main/resources")
 
     @org.gradle.api.tasks.OutputDirectory
-    val generatedResourcesDir = projectDir.resolve("build/resources/test")
+    val generatedResourcesDir: Path = projectDir.resolve("build/resources/test")
+
+    private fun findTestsInSubdirectory(rootDir: File, subDir: String? = null): List<String> {
+        val baseDir = subDir?.let { rootDir.resolve(it) } ?: rootDir
+        return (baseDir.listFiles() ?: emptyArray())
+            .flatMap { file ->
+                if (file.isDirectory) {
+                    findTestsInSubdirectory(rootDir, (subDir?.let { it + File.separator } ?: "") + file.name)
+                } else {
+                    if (file.nameWithoutExtension.endsWith("Test")) {
+                        listOf(subDir?.let { subDir -> "$subDir/${file.name}" } ?: file.name)
+                    } else {
+                        emptyList()
+                    }
+                }
+            }
+            .toList()
+    }
 
     @TaskAction
     fun copy() {
@@ -120,8 +137,8 @@ open class CopyCircuitTask @Inject constructor() : DefaultTask() {
         // but since there are many of them, we need many main functions with different parameters and output,
         // thus we copy implementation to each testing module in resources (because, zinc support modules pretty bad).
         val testClassesPath = projectDir.resolve("src/test/kotlin/com/ing/zknotary/zinc/types/")
-        Files.newDirectoryStream(testClassesPath)
-            .map { it.fileName.toString().removeSuffix(".kt") }
+        findTestsInSubdirectory(testClassesPath.toFile())
+            .map { it.removeSuffix(".kt") }
             .filter { Files.exists(generatedResourcesDir.resolve(it)) }
             .forEach { testClass ->
                 val generatedTestSourceDir = generatedResourcesDir.resolve("$testClass/src/")

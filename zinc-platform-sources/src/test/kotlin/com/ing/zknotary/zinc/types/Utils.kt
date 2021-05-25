@@ -21,6 +21,7 @@ import kotlinx.serialization.modules.plus
 import net.corda.core.contracts.Amount
 import net.corda.core.crypto.SecureHash
 import org.slf4j.Logger
+import java.io.File
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.time.Duration
@@ -159,8 +160,11 @@ inline fun <reified T : Any> getZincZKService(
     provingTimeout: Duration = Duration.ofSeconds(300),
     verificationTimeout: Duration = Duration.ofSeconds(1)
 ): ZincZKService {
-    val circuitFolder: String = T::class.java.getResource("/${T::class.java.simpleName}")?.path
-        ?: throw IllegalStateException("Zinc test source folder not found: ${T::class.java.simpleName}")
+    val zincTestFolder = T::class.java.name
+        .removePrefix("com.ing.zknotary.zinc.types")
+        .replace(".", File.separator)
+    val circuitFolder: String = T::class.java.getResource(zincTestFolder)?.path
+        ?: throw IllegalStateException("Zinc test source folder not found: $zincTestFolder")
     return ZincZKService(
         circuitFolder,
         artifactFolder = circuitFolder,
@@ -218,3 +222,11 @@ fun ZincZKService.verifyTimed(proof: ByteArray, publicInput: PublicInput, log: L
 fun ByteArray.resizeTo(newSize: Int) = ByteArray(newSize) { if (it < size) this[it] else 0 }
 fun IntArray.resizeTo(newSize: Int) = IntArray(newSize) { if (it < size) this[it] else 0 }
 fun String?.toSizedIntArray(size: Int) = (this ?: "").chars().toArray().resizeTo(size)
+
+inline fun <T> generateDifferentValueThan(initialValue: T, generator: () -> T): T {
+    var it = generator()
+    while (it == initialValue) {
+        it = generator()
+    }
+    return it
+}

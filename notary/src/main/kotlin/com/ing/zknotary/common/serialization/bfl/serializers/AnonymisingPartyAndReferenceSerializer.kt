@@ -34,7 +34,6 @@ data class AnonymousPartyAndReferenceSurrogate(
     }
 
     companion object {
-        // TODO why this size?
         const val REFERENCE_SIZE = PartyAndReferenceSurrogate.REFERENCE_SIZE
     }
 }

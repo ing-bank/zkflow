@@ -1,0 +1,7 @@
+mod platform_instant;
+
+use platform_instant::Instant;
+
+fn main(left: Instant, right: Instant) -> bool {
+    Instant::equals(left, right)
+}
