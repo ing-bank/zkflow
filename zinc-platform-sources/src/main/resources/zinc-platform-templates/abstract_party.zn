@@ -34,6 +34,11 @@ struct ${TYPE_NAME} {
 }
 
 impl ${TYPE_NAME} {
+    // Party equality solely depends on the key
+    fn equals(this: ${TYPE_NAME}, that: ${TYPE_NAME}) -> bool {
+        ${PK_TYPE_NAME}::equals(this.owning_key, that.owning_key)
+    }
+
     fn deserialize(serialized: Serialized${TYPE_NAME}) -> ${TYPE_NAME} {
         let nullable_name = {
             let mut nullable_name_bytes = [0; ${CONSTANT_PREFIX}_NULLABLE_NAME_LENGTH];

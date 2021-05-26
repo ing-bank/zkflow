@@ -1,0 +1,7 @@
+mod party_bcec;
+
+use party_bcec::PartyBCEC;
+
+fn main(left: PartyBCEC, right: PartyBCEC) -> bool {
+    PartyBCEC::equals(left, right)
+}

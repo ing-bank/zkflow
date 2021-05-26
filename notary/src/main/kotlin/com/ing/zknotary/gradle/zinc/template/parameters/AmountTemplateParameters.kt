@@ -1,29 +1,27 @@
 package com.ing.zknotary.gradle.zinc.template.parameters
 
+import com.ing.zknotary.gradle.zinc.template.NamedType
 import com.ing.zknotary.gradle.zinc.template.TemplateParameters
 
 data class AmountTemplateParameters(
     val tokenDisplaySize: BigDecimalTemplateParameters,
     val tokenSize: Short,
     val typeNameOverride: String? = null
-) : TemplateParameters("amount.zn", listOf(tokenDisplaySize)) {
+) : NamedType, TemplateParameters("amount.zn", listOf(tokenDisplaySize)) {
     private fun postFix(): String = "_${tokenSize}_"
 
     /**
      * The name of the struct for this configuration.
      */
-    private val typeName: String by lazy { typeNameOverride ?: AMOUNT + postFix() + tokenDisplaySize.typeName }
+    override val typeName: String by lazy { typeNameOverride ?: AMOUNT + postFix() + tokenDisplaySize.typeName }
 
-    override fun getReplacements() = mapOf(
-        "TYPE_NAME" to typeName,
-        "CONSTANT_PREFIX" to typeName.camelToSnakeCase().toUpperCase(),
-        "TOKEN_SIZE_PLACEHOLDER" to tokenSize.toString(),
-        "BD_TYPE_NAME" to tokenDisplaySize.typeName,
-        "BD_CONSTANT_PREFIX" to tokenDisplaySize.typeName.camelToSnakeCase().toUpperCase(),
-        "BD_MODULE_NAME" to tokenDisplaySize.typeName.camelToSnakeCase(),
-    )
+    override fun getReplacements() = getTypeReplacements() +
+        tokenDisplaySize.getTypeReplacements("BD_") +
+        mapOf(
+            "TOKEN_SIZE_PLACEHOLDER" to tokenSize.toString(),
+        )
 
-    override fun getTargetFilename() = "${typeName.camelToSnakeCase()}.zn"
+    override fun getTargetFilename() = getFileName()
 
     companion object {
         const val AMOUNT = "Amount"

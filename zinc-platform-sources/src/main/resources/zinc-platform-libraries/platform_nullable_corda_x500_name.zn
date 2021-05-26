@@ -13,6 +13,11 @@ struct NullableCordaX500Name {
 }
 
 impl NullableCordaX500Name {
+    fn equals(this: NullableCordaX500Name, that: NullableCordaX500Name) -> bool {
+        this.is_null == that.is_null
+            && CordaX500Name::equals(this.corda_x500_name, that.corda_x500_name)
+    }
+
     fn deserialize(serialized_nullable_corda_x500_name: SerializedNullableCordaX500Name) -> NullableCordaX500Name {
         let is_null = serialized_nullable_corda_x500_name[0] == 0;
 

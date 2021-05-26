@@ -9,6 +9,7 @@ import com.ing.zknotary.gradle.zinc.template.parameters.BigDecimalTemplateParame
 import com.ing.zknotary.gradle.zinc.template.parameters.ByteArrayTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.CurrencyTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.LinearPointerTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.parameters.PartyAndReferenceTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.PartyTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.SecureHashTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.StringTemplateParameters
@@ -61,18 +62,21 @@ open class TemplateConfigurations {
         ) +
             AbstractPartyTemplateParameters.all +
             AnonymousPartyTemplateParameters.all +
-            PartyTemplateParameters.all
+            PartyTemplateParameters.all +
+            PartyAndReferenceTemplateParameters.all
     }
 
     /**
      * Resolve all distinct [TemplateParameters] for this configuration.
      */
     fun resolveAllTemplateParameters(): List<TemplateParameters> {
-        return (fixedTemplateParameters
-                + stringConfigurations
-                + byteArrayConfigurations
-                + bigDecimalConfigurations
-                + amountConfigurations)
+        return (
+            fixedTemplateParameters +
+                stringConfigurations +
+                byteArrayConfigurations +
+                bigDecimalConfigurations +
+                amountConfigurations
+            )
             .flatMap { it.resolveAllConfigurations() }
             .distinct()
     }

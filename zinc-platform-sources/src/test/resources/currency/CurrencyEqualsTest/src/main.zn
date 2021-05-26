@@ -1,0 +1,7 @@
+mod currency;
+
+use currency::Currency;
+
+fn main(left: Currency, right: Currency) -> bool {
+    Currency::equals(left, right)
+}

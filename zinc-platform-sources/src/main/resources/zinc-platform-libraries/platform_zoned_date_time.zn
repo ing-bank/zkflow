@@ -60,6 +60,18 @@ struct ZonedDateTime {
 }
 
 impl ZonedDateTime {
+    fn equals(this: ZonedDateTime, that: ZonedDateTime) -> bool {
+        this.year == that.year
+            && this.month == that.month
+            && this.day_of_month == that.day_of_month
+            && this.hour == that.hour
+            && this.minute == that.minute
+            && this.second == that.second
+            && this.nano_of_second == that.nano_of_second
+            && this.zone_offset_seconds == that.zone_offset_seconds
+            && this.zone_id_hash == that.zone_id_hash
+    }
+
     fn _extract_32_bit_bytes(serialized_zdt: SerializedZonedDateTime, offset: u16) -> [u8; U32_BYTES] {
         let mut bytes: [u8; U32_BYTES] = [0; U32_BYTES];
         for i in 0..U32_BYTES {

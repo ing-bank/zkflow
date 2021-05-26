@@ -19,6 +19,10 @@ struct Currency {
 }
 
 impl Currency {
+    fn equals(this: Currency, that: Currency) -> bool {
+        CurrencyCode::equals(this.code, that.code)
+    }
+
     fn deserialize(serialized_currency: SerializedCurrency) -> Currency {
         Currency {
             code: CurrencyCode::deserialize(serialized_currency),

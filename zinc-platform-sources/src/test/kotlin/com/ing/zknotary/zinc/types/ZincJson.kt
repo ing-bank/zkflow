@@ -5,9 +5,11 @@ import com.ing.serialization.bfl.api.reified.serialize
 import com.ing.zknotary.common.serialization.bfl.corda.LinearPointerSurrogate
 import com.ing.zknotary.common.serialization.bfl.serializers.CordaX500NameSerializer
 import com.ing.zknotary.common.serialization.bfl.serializers.CordaX500NameSurrogate
+import com.ing.zknotary.common.serialization.bfl.serializers.PartyAndReferenceSurrogate
 import com.ing.zknotary.common.serialization.bfl.serializers.SecureHashSupportedAlgorithm
 import com.ing.zknotary.common.serialization.bfl.serializers.SecureHashSurrogate
 import com.ing.zknotary.common.serialization.bfl.serializers.UniqueIdentifierSurrogate
+import com.ing.zknotary.common.serialization.bfl.serializers.anonymise
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.buildJsonArray
@@ -17,6 +19,7 @@ import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.LinearPointer
+import net.corda.core.contracts.PartyAndReference
 import net.corda.core.contracts.PrivacySalt
 import net.corda.core.contracts.StateRef
 import net.corda.core.contracts.TimeWindow
@@ -69,6 +72,8 @@ fun AnonymousParty.toZincJson(serialName: String, encodedSize: Int) =
     toJsonObject(serialName, encodedSize).toString()
 fun AbstractParty.toZincJson(serialName: String, encodedSize: Int) =
     toJsonObject(serialName, encodedSize).toString()
+fun PartyAndReference.toZincJson(anonymous: Boolean, serialName: String, encodedSize: Int) =
+    toJsonObject(anonymous, serialName, encodedSize).toString()
 
 fun String?.toJsonObject(size: Int) = buildJsonObject {
     put("chars", toSizedIntArray(size).toJsonArray())
@@ -207,4 +212,14 @@ fun AnonymousParty.toJsonObject(serialName: String, encodedSize: Int) = buildJso
 fun Party.toJsonObject(serialName: String, encodedSize: Int) = buildJsonObject {
     put("name", name.toJsonObject())
     put("owning_key", owningKey.toJsonObject(serialName, encodedSize))
+}
+
+fun PartyAndReference.toJsonObject(anonymise: Boolean, serialName: String, encodedSize: Int) = buildJsonObject {
+    val partyJson = if (anonymise) {
+        party.anonymise().toJsonObject(serialName, encodedSize)
+    } else {
+        party.toJsonObject(serialName, encodedSize)
+    }
+    put("party", partyJson)
+    put("reference", reference.bytes.toJsonObject(PartyAndReferenceSurrogate.REFERENCE_SIZE))
 }

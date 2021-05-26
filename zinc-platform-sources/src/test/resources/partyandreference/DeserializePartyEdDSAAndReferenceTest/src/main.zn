@@ -1,0 +1,8 @@
+mod party_ed_dsa_and_reference;
+
+use party_ed_dsa_and_reference::PartyEdDSAAndReference;
+use party_ed_dsa_and_reference::SerializedPartyEdDSAAndReference;
+
+fn main(witness: SerializedPartyEdDSAAndReference) -> PartyEdDSAAndReference {
+    PartyEdDSAAndReference::deserialize(witness)
+}

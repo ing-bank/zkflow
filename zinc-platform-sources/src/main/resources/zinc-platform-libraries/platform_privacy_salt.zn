@@ -21,6 +21,14 @@ struct PrivacySalt {
 }
 
 impl PrivacySalt {
+    fn equals(this: PrivacySalt, that: PrivacySalt) -> bool {
+        let mut are_equal = true;
+        for i in 0.._PRIVACY_SALT_LENGTH while are_equal {
+            are_equal = this.bytes[i] == that.bytes[i];
+        }
+        are_equal
+    }
+
     fn deserialize(serialized_privacy_salt: SerializedPrivacySalt) -> PrivacySalt {
         let mut bytes = [0 as u8; _PRIVACY_SALT_LENGTH];
 

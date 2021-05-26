@@ -1,0 +1,8 @@
+mod anonymous_party_ed_dsa_and_reference;
+
+use anonymous_party_ed_dsa_and_reference::AnonymousPartyEdDSAAndReference;
+use anonymous_party_ed_dsa_and_reference::SerializedAnonymousPartyEdDSAAndReference;
+
+fn main(witness: SerializedAnonymousPartyEdDSAAndReference) -> AnonymousPartyEdDSAAndReference {
+    AnonymousPartyEdDSAAndReference::deserialize(witness)
+}

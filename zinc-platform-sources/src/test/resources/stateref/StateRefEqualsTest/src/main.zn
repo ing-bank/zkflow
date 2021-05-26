@@ -1,0 +1,7 @@
+mod platform_state_ref;
+
+use platform_state_ref::StateRef;
+
+fn main(left: StateRef, right: StateRef) -> bool {
+    StateRef::equals(left, right)
+}

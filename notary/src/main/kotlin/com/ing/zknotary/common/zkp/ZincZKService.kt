@@ -119,37 +119,41 @@ class ZincZKService(
         return run(witnessJson, publicInputJson)
     }
 
-    fun run(witness: String, publicInputJson: String = ""): String {
+    fun run(witness: String, expectedOutput: String = ""): String {
         val witnessFile = createTempFile("zkp", null)
         witnessFile.writeText(witness)
 
         val publicDataFile = createTempFile("zkp", null)
 
         try {
-            return completeZincCommand(
+            val result = completeZincCommand(
                 "$RUN --circuit $compiledCircuitPath --manifest-path $circuitManifestPath " +
                     "--public-data ${publicDataFile.absolutePath} --witness ${witnessFile.absolutePath}",
                 provingTimeout
             ).replace(" ", "")
                 .replace("\n", "")
+            assertOutputEqualsExpected(publicDataFile.readText(), expectedOutput)
+            return result
         } catch (e: Exception) {
             throw ZKRunException("Failed to run circuit. Cause: $e\n")
         } finally {
-            val actualJson = Json.parseToJsonElement(publicDataFile.readText())
-            log.debug("Public Data (run): \n$actualJson")
-
-            if (publicInputJson != "") {
-                val expectedJson = Json.parseToJsonElement(publicInputJson)
-
-                if (actualJson != expectedJson) throw ZKRunException(
-                    "Public input does not match output from run. \n" +
-                        "Expected: \n$expectedJson \n" +
-                        "Actual: \n$actualJson"
-                )
-            }
-
             witnessFile.delete()
             publicDataFile.delete()
+        }
+    }
+
+    private fun assertOutputEqualsExpected(circuitOutput: String, expectedOutput: String) {
+        val actualJson = if (circuitOutput.isNotBlank()) Json.parseToJsonElement(circuitOutput) else null
+        log.debug("Public Data (run): \n$actualJson")
+
+        if (expectedOutput.isNotEmpty()) {
+            val expectedJson = Json.parseToJsonElement(expectedOutput)
+
+            if (actualJson != expectedJson) throw ZKRunException(
+                "Public input does not match output from run. \n" +
+                    "Expected: \n$expectedJson \n" +
+                    "Actual: \n$actualJson"
+            )
         }
     }
 

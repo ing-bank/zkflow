@@ -27,6 +27,11 @@ struct SecureHash {
 }
 
 impl SecureHash {
+    fn equals(this: SecureHash, that: SecureHash) -> bool {
+        this.algorithm == that.algorithm
+            && ByteArray_${BYTES_SIZE}::equals(this.bytes, that.bytes)
+    }
+
     fn deserialize(serialized_hash: SerializedSecureHash) -> SecureHash {
         let algorithm = serialized_hash[SECURE_HASH_ALGORITHM_OFFSET];
 

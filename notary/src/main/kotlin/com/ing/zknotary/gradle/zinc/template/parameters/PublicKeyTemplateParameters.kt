@@ -4,31 +4,28 @@ import com.ing.zknotary.common.serialization.bfl.serializers.publickey.BCECSurro
 import com.ing.zknotary.common.serialization.bfl.serializers.publickey.BCRSASurrogate
 import com.ing.zknotary.common.serialization.bfl.serializers.publickey.BCSphincs256Surrogate
 import com.ing.zknotary.common.serialization.bfl.serializers.publickey.EdDSASurrogate
+import com.ing.zknotary.gradle.zinc.template.NamedType
 import com.ing.zknotary.gradle.zinc.template.TemplateParameters
 
 data class PublicKeyTemplateParameters(
     override val templateFile: String,
-    val typeName: String,
+    override val typeName: String,
     val encodedSize: Int,
-) : TemplateParameters(
+) : NamedType, TemplateParameters(
     templateFile,
     listOf(
         StringTemplateParameters(1),
         ByteArrayTemplateParameters(encodedSize),
     )
 ) {
-    private val snakeCaseType by lazy {
-        typeName.camelToSnakeCase().replace("public_key", "_public_key")
-    }
+    override fun getModuleName() = super.getModuleName().replace("public_key", "_public_key")
 
-    override fun getReplacements() = mapOf(
-        "TYPE_NAME" to typeName,
-        "CONST_PREFIX" to snakeCaseType.toUpperCase(),
+    override fun getReplacements() = getTypeReplacements() + mapOf(
         "ENCODED_SIZE" to "$encodedSize",
         "TYPE_SIZE" to "1",
     )
 
-    override fun getTargetFilename() = "$snakeCaseType.zn"
+    override fun getTargetFilename() = getFileName()
 
     companion object {
         private const val TEMPLATE = "public_key.zn"
