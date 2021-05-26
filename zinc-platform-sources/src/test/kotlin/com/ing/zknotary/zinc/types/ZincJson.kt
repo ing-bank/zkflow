@@ -214,8 +214,8 @@ fun Party.toJsonObject(serialName: String, encodedSize: Int) = buildJsonObject {
     put("owning_key", owningKey.toJsonObject(serialName, encodedSize))
 }
 
-fun PartyAndReference.toJsonObject(anonymous: Boolean, serialName: String, encodedSize: Int) = buildJsonObject {
-    val partyJson = if (anonymous) {
+fun PartyAndReference.toJsonObject(anonymise: Boolean, serialName: String, encodedSize: Int) = buildJsonObject {
+    val partyJson = if (anonymise) {
         party.anonymise().toJsonObject(serialName, encodedSize)
     } else {
         party.toJsonObject(serialName, encodedSize)

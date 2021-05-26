@@ -67,7 +67,7 @@ class AnonymousPartyEdDSAAndReferenceEqualsTest {
             put(
                 "left",
                 left.toJsonObject(
-                    anonymous = true,
+                    anonymise = true,
                     serialName = EdDSASurrogate::class.findAnnotation<SerialName>()!!.value,
                     encodedSize = EdDSASurrogate.ENCODED_SIZE
                 )
@@ -75,7 +75,7 @@ class AnonymousPartyEdDSAAndReferenceEqualsTest {
             put(
                 "right",
                 right.toJsonObject(
-                    anonymous = true,
+                    anonymise = true,
                     serialName = EdDSASurrogate::class.findAnnotation<SerialName>()!!.value,
                     encodedSize = EdDSASurrogate.ENCODED_SIZE
                 )

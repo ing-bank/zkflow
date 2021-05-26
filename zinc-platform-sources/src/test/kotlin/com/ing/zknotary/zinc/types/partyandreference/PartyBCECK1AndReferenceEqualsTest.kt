@@ -67,7 +67,7 @@ class PartyBCECK1AndReferenceEqualsTest {
             put(
                 "left",
                 left.toJsonObject(
-                    anonymous = false,
+                    anonymise = false,
                     serialName = BCECSurrogate::class.findAnnotation<SerialName>()!!.value,
                     encodedSize = BCECSurrogate.ENCODED_SIZE
                 )
@@ -75,7 +75,7 @@ class PartyBCECK1AndReferenceEqualsTest {
             put(
                 "right",
                 right.toJsonObject(
-                    anonymous = false,
+                    anonymise = false,
                     serialName = BCECSurrogate::class.findAnnotation<SerialName>()!!.value,
                     encodedSize = BCECSurrogate.ENCODED_SIZE
                 )
