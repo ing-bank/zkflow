@@ -4,11 +4,10 @@ import com.ing.zknotary.gradle.zinc.template.NamedType
 import com.ing.zknotary.gradle.zinc.template.TemplateParameters
 
 data class AbstractPartyTemplateParameters(
-    override val templateFile: String,
     val implementationName: String,
     val pkTemplateParameters: PublicKeyTemplateParameters
 ) : NamedType, TemplateParameters(
-    templateFile,
+    "${implementationName.camelToSnakeCase()}.zn",
     listOf(
         StringTemplateParameters(1), // the serial names of AnonymousParty, and Party, are of length 1
         pkTemplateParameters
@@ -23,13 +22,12 @@ data class AbstractPartyTemplateParameters(
     override fun getTargetFilename() = getFileName()
 
     companion object {
-        private const val ANONYMOUS_PARTY_TEMPLATE = "anonymous_party.zn"
-        private const val PARTY_TEMPLATE = "party.zn"
-
+        const val ANONYMOUS_PARTY_TYPE_NAME = "AnonymousParty"
+        const val PARTY_TYPE_NAME = "Party"
         val all = PublicKeyTemplateParameters.all.map {
             listOf(
-                AbstractPartyTemplateParameters(ANONYMOUS_PARTY_TEMPLATE, "AnonymousParty", it),
-                AbstractPartyTemplateParameters(PARTY_TEMPLATE, "Party", it),
+                AbstractPartyTemplateParameters(ANONYMOUS_PARTY_TYPE_NAME, it),
+                AbstractPartyTemplateParameters(PARTY_TYPE_NAME, it),
             )
         }.flatten()
     }

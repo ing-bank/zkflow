@@ -3,9 +3,13 @@ import com.ing.zknotary.gradle.zinc.template.TemplateConfigurations
 import com.ing.zknotary.gradle.zinc.template.TemplateConfigurations.Companion.doubleTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.TemplateConfigurations.Companion.floatTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.TemplateRenderer
+import com.ing.zknotary.gradle.zinc.template.parameters.AbstractPartyTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.parameters.AbstractPartyTemplateParameters.Companion.ANONYMOUS_PARTY_TYPE_NAME
 import com.ing.zknotary.gradle.zinc.template.parameters.AmountTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.BigDecimalTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.ByteArrayTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.parameters.IssuedTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.parameters.PublicKeyTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.StringTemplateParameters
 import com.ing.zknotary.gradle.zinc.util.CodeGenerator
 import com.ing.zknotary.gradle.zinc.util.MerkleReplacer
@@ -27,11 +31,19 @@ val myAmountConfigurations = myBigDecimalConfigurations.map {
 
 val myStringConfigurations: List<StringTemplateParameters> = listOf(StringTemplateParameters(32))
 
+val myIssuedConfigurations: List<IssuedTemplateParameters<*>> = listOf(
+    IssuedTemplateParameters(
+        AbstractPartyTemplateParameters(ANONYMOUS_PARTY_TYPE_NAME, PublicKeyTemplateParameters.eddsaTemplateParameters),
+        StringTemplateParameters(1)
+    )
+)
+
 val templateConfigurations = TemplateConfigurations().apply {
     stringConfigurations = myStringConfigurations
     byteArrayConfigurations = myByteArrayConfigurations
     amountConfigurations = myAmountConfigurations
     bigDecimalConfigurations = myBigDecimalConfigurations
+    issuedConfigurations = myIssuedConfigurations
 }
 
 fun main(args: Array<String>) {
