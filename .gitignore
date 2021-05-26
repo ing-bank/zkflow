@@ -8,7 +8,7 @@
 #**/block_stores/**/LOCK
 **/libpv*.so
 
-.idea/*
+**/.idea/*
 *.iml
 /*.ipr
 

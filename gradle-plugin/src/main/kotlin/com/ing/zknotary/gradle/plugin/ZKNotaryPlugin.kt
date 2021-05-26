@@ -10,12 +10,27 @@ import com.ing.zknotary.gradle.task.PrepareCircuitForCompilationTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPlugin
+import java.net.URI
 
 @Suppress("unused")
 class ZKNotaryPlugin : Plugin<Project> {
     override fun apply(project: Project) {
         val extension = project.extensions.create(ZKNotaryExtension.NAME, ZKNotaryExtension::class.java, project)
 
+        project.repositories.apply {
+            // For kotlinx.serialization plugin
+            maven { it.url = URI.create("https://dl.bintray.com/kotlin/kotlin-dev/") }
+
+            // For BFL
+            maven {
+                it.name = "BinaryFixedLengthSerializationRepo"
+                it.url = URI.create("https://maven.pkg.github.com/ingzkp/kotlinx-serialization-bfl")
+                it.credentials { credentials ->
+                    credentials.username = System.getenv("GITHUB_USERNAME")
+                    credentials.password = System.getenv("GITHUB_TOKEN")
+                }
+            }
+        }
         project.plugins.withType(JavaPlugin::class.java) {
             // Add the required dependencies to consumer projects
             project.configurations.create("zinc")
@@ -24,6 +39,8 @@ class ZKNotaryPlugin : Plugin<Project> {
                 "com.ing.zknotary:zinc-platform-sources:${extension.zincPlatformSourcesVersion}"
             )
             project.dependencies.add("implementation", "com.ing.zknotary:notary:${extension.notaryVersion}")
+
+            project.pluginManager.apply("org.jetbrains.kotlin.plugin.serialization")
         }
 
         val createZincDirsForCommandTask = project.tasks.create(
@@ -33,7 +50,8 @@ class ZKNotaryPlugin : Plugin<Project> {
 
         val copyCircuitTask = project.tasks.create("copyZincCircuitSources", CopyZincCircuitSourcesTask::class.java)
         val copyPlatformTask = project.tasks.create("copyZincPlatformSources", CopyZincPlatformSourcesTask::class.java)
-        val copyPlatformLibsTask = project.tasks.create("copyZincPlatformLibraries", CopyZincPlatformLibraryTask::class.java)
+        val copyPlatformLibsTask =
+            project.tasks.create("copyZincPlatformLibraries", CopyZincPlatformLibraryTask::class.java)
         val generateFromTemplatesTask = project.tasks.create(
             "generateZincPlatformCodeFromTemplates",
             GenerateZincPlatformCodeFromTemplatesTask::class.java

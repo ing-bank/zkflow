@@ -7,18 +7,10 @@ buildscript {
             google()
             mavenCentral()
             jcenter()
+            maven("https://dl.bintray.com/kotlin/kotlin-dev/")
             maven("https://jitpack.io")
             maven("https://repo.gradle.org/gradle/libs-releases")
             maven("https://software.r3.com/artifactory/corda")
-
-            maven {
-                name = "CordaForkRepo"
-                url = uri("https://maven.pkg.github.com/ingzkp/corda")
-                credentials {
-                    username = System.getenv("GITHUB_USERNAME")
-                    password = System.getenv("GITHUB_TOKEN")
-                }
-            }
 
             maven {
                 name = "BinaryFixedLengthSerializationRepo"
@@ -127,6 +119,7 @@ tasks.withType<io.gitlab.arturbosch.detekt.Detekt> {
     exclude("**/*.kts")
     exclude("**/resources/")
     exclude("**/build/")
+    exclude("ivno/*")
 }
 
 idea {

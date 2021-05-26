@@ -1,6 +1,5 @@
 package com.ing.zknotary.common.serialization.bfl
 
-import com.ing.zknotary.common.serialization.bfl.serializers.CordaSerializers
 import com.ing.zknotary.common.serialization.bfl.serializers.CordaSignatureSchemeToSerializers
 import com.ing.zknotary.common.serialization.bfl.serializers.TimeWindowSerializer
 import com.ing.zknotary.common.serialization.bfl.serializers.TransactionStateSerializer
@@ -40,8 +39,9 @@ open class BFLSerializationScheme : CustomSerializationScheme {
 
     private val cordaSerdeMagicLength = CustomSerializationSchemeUtils.getCustomSerializationMagicFromSchemeId(SCHEME_ID).size
 
+    // TODO: Once we can properly support polymorphic subclasses, this should just be made part of the CordaSerializers object like the rest
     private val serializersPublicKey = CordaSignatureSchemeToSerializers.serializersModuleFor(Crypto.DEFAULT_SIGNATURE_SCHEME)
-    private val serializersModule = CordaSerializers + serializersPublicKey
+    private val serializersModule = SerializersModuleRegistry.merged + serializersPublicKey
 
     override fun <T : Any> deserialize(
         bytes: ByteSequence,
@@ -49,7 +49,6 @@ open class BFLSerializationScheme : CustomSerializationScheme {
         context: SerializationSchemeContext
     ): T {
         logger.debug("Deserializing tx component:\t$clazz")
-
         val serializedData = bytes.bytes.drop(cordaSerdeMagicLength).toByteArray()
 
         return when {

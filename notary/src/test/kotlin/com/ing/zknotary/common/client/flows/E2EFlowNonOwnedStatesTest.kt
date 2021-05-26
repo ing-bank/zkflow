@@ -87,7 +87,7 @@ class E2EFlowNonOwnedStatesTest {
         val createStxMiniCorpNode = createNewState(miniCorpNode)
         val miniCorpStateAndRef = createStxMiniCorpNode.coreTransaction.outRef<TestContract.TestState>(0)
 
-        // Start the trade. We expect counterparty to trade a state of identical valu
+        // Start the trade. We expect counterparty to trade a state of identical value
         val moveFuture = miniCorpNode.startFlow(
             MoveBidirectionalFlow(
                 miniCorpStateAndRef,

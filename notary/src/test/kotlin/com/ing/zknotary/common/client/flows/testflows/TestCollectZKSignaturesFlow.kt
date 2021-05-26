@@ -27,13 +27,13 @@ class TestCollectZKSignaturesFlow(val signers: List<Party> = emptyList()) : Flow
     override fun call(): SignedZKVerifierTransaction {
 
         val zkService = serviceHub.getCordaServiceFromConfig<ZKTransactionService>(ServiceNames.ZK_TX_SERVICE)
+
         val me = serviceHub.myInfo.legalIdentities.single().anonymise()
-        val state = TestContract.TestState(me)
-        val issueCommand = Command(TestContract.Create(), (signers + me).map { it.owningKey }) //
-        val stateAndContract = StateAndContract(state, TestContract.PROGRAM_ID)
+        val stateAndContract = StateAndContract(TestContract.TestState(me), TestContract.PROGRAM_ID)
+        val signCommand = Command(TestContract.SignOnly(), (signers + me).map { it.owningKey }) //
 
         val builder = ZKTransactionBuilder(serviceHub.networkMapCache.notaryIdentities.single())
-        builder.withItems(stateAndContract, issueCommand)
+        builder.withItems(stateAndContract, signCommand)
 
         // Sign with counterparty
         val stx = subFlow(ZKCollectSignaturesFlow(serviceHub.signInitialTransaction(builder), signers.map { initiateFlow(it) }))

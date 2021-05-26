@@ -2,6 +2,7 @@ package com.ing.zknotary.testing.fixtures.state
 
 import com.ing.serialization.bfl.annotations.FixedLength
 import com.ing.zknotary.testing.fixtures.contract.DummyContract
+import com.ing.zknotary.testing.fixtures.contract.DummySerializers
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import net.corda.core.contracts.BelongsToContract
@@ -20,6 +21,13 @@ public data class DummyState(
     @FixedLength([2]) val set: Set<Int>,
     @FixedLength([2]) override val participants: List<@Contextual AbstractParty>
 ) : ContractState {
+    init {
+        /*
+         * TODO: This is a hack to ensure that the singleton is initialized. In Kotlin they are lazy until accessed.
+         */
+        DummySerializers
+    }
+
     public companion object {
         public fun any(): DummyState {
             val alice = TestIdentity.fresh("Alice")

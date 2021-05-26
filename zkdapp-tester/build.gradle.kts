@@ -4,7 +4,7 @@ import com.ing.zknotary.gradle.zinc.template.parameters.AmountTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.StringTemplateParameters
 
 plugins {
-    kotlin("jvm") version "1.4.20"
+    kotlin("jvm") version "1.4.30"
     id("com.ing.zknotary.gradle-plugin")
 }
 
@@ -27,16 +27,6 @@ repositories {
     maven("https://repo.gradle.org/gradle/libs-releases")
     jcenter()
     mavenCentral()
-
-    // Temporary ING fork of Corda
-    maven {
-        name = "CordaForkRepo"
-        url = uri("https://maven.pkg.github.com/ingzkp/corda")
-        credentials {
-            username = System.getenv("GITHUB_USERNAME")
-            password = System.getenv("GITHUB_TOKEN")
-        }
-    }
 }
 
 dependencies {
