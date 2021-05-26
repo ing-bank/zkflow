@@ -2,7 +2,6 @@ package io.ivno.collateraltoken.serialization
 
 import com.ing.zknotary.common.serialization.bfl.CommandDataSerializerMap
 import com.ing.zknotary.common.serialization.bfl.ContractStateSerializerMap
-import com.ing.zknotary.common.serialization.bfl.CorDappSerializers
 import com.ing.zknotary.common.serialization.bfl.SerializersModuleRegistry
 import com.ing.zknotary.common.serialization.bfl.corda.LinearPointerSerializer
 import io.ivno.collateraltoken.contract.Deposit
@@ -11,7 +10,7 @@ import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.contextual
 import net.corda.core.utilities.loggerFor
 
-object IvnoSerializers : CorDappSerializers {
+object IvnoSerializers {
     init {
         loggerFor<IvnoSerializers>().info("Registering Ivno serializers")
         SerializersModuleRegistry.register(SerializersModule {

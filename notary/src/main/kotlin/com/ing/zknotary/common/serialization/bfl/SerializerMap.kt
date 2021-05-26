@@ -11,8 +11,6 @@ import org.slf4j.LoggerFactory
 import java.nio.ByteBuffer
 import kotlin.reflect.KClass
 
-interface CorDappSerializers
-
 object SerializersModuleRegistry {
     private val log = loggerFor<SerializersModuleRegistry>()
     private val modules = mutableListOf(CordaSerializers)
