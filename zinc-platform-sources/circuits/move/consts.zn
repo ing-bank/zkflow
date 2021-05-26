@@ -18,7 +18,7 @@ const TIMEWINDOW_GROUP_SIZE: u16 = 1;
 // Component and UTXO sizes cannot be 0, so for not present components use 1
 const OUTPUT_COMPONENT_SIZE: u16 = 1537; // PUBKEY_BYTES + U32_BYTES;
 const COMMAND_COMPONENT_SIZE: u16 = 11;
-const SIGNER_COMPONENT_SIZE: u16 = 115; //PUBKEY_BYTES;
+const SIGNER_COMPONENT_SIZE: u16 = 115; // PUBKEY_BYTES;
 
 const INPUT_UTXO_SIZE: u16 = 1537;
 const REFERENCE_UTXO_SIZE: u16 = 1;

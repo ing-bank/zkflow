@@ -1,22 +1,28 @@
 package com.ing.zknotary.testing.fixtures.state
 
+import com.ing.serialization.bfl.annotations.FixedLength
 import com.ing.zknotary.testing.fixtures.contract.DealContract
+import kotlinx.serialization.Contextual
+import kotlinx.serialization.Serializable
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.LinearState
 import net.corda.core.contracts.UniqueIdentifier
-import net.corda.core.identity.AbstractParty
+import net.corda.core.identity.AnonymousParty
 import net.corda.core.serialization.CordaSerializable
 import java.time.Instant
 
 @CordaSerializable
+@Serializable
 @BelongsToContract(DealContract::class)
 public open class DealState(
-    public val deal: Deal,
+    public val deal: @Contextual Deal,
     public val status: Status = Status.PROPOSED,
-    public val lastChangedTime: Instant = Instant.now(),
-    override val linearId: UniqueIdentifier = UniqueIdentifier()
+    public val lastChangedTime: @Contextual Instant = Instant.now(),
+    override val linearId: @Contextual UniqueIdentifier = UniqueIdentifier()
 ) : LinearState {
-    override val participants: List<AbstractParty>
+
+    @FixedLength([2])
+    override val participants: List<AnonymousParty>
         get() = listOf(deal.accepter, deal.proposer)
 
     @CordaSerializable
