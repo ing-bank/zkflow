@@ -44,19 +44,21 @@ const ${CONSTANT_PREFIX}_LENGTH: u16 =
 //Type for the ByteArray of the serialized form of ${TYPE_NAME}.
 type Serialized${TYPE_NAME} = [u8; ${CONSTANT_PREFIX}_LENGTH];
 
-//Original BigDecimal in Java stores all digits in one array, and uses scale as a number of digits to the right side of
-//the decimal point. Then it calculates the difference in scale of two comparing BigDecimals to adjust digits.
-//For example:
-//1.2, which is an array of [1, 2] and scale 1, plus 10, which is an array [1, 0], but scale 0.
-//So, arrays must be adjusted w.r.t. scales, such that the digits of the same significance have the same index. Then arithmetic operations can be applied.
+// Original BigDecimal in Java stores all digits in one array, and uses scale as a number of digits to the right side of
+// the decimal point. Then it calculates the difference in scale of two comparing BigDecimals to adjust digits.
+// For example:
+// 1.2, which is an array of [1, 2] and scale 1, plus 10, which is an array [1, 0], but scale 0.
+// So, arrays must be adjusted w.r.t. scales, such that the digits of the same significance have the same index.
+// Then arithmetic operations can be applied.
 //
-//However, zinc doesn't support indexes inferred from witnesses, so it is impossible to adjust arrays in the same way (i + scale_A - scale_B), so we use two separate arrays to
-//store integer value of BigDecimal and its fraction. It is stored in little-Endian order.
+// However, zinc doesn't support indexes inferred from witnesses,
+// so it is impossible to adjust arrays in the same way (i + scale_A - scale_B), so we use two separate arrays to
+// store integer value of BigDecimal and its fraction. It is stored in little-Endian order.
 //
-//Description of struct properties:
-//sign - sign of stored variable, belongs to {-1, 0, 1}
-//integer - decimal representation of integer part of stored value, can contain only 1024 digits
-//fraction - decimal representation of fraction part of stored value, can contain only 128 digits
+// Description of struct properties:
+// sign - sign of stored variable, belongs to {-1, 0, 1}
+// integer - decimal representation of integer part of stored value
+// fraction - decimal representation of fraction part of stored value
 struct ${TYPE_NAME} {
     sign: i8,
     integer: [u8; ${CONSTANT_PREFIX}_INTEGER_LENGTH],
