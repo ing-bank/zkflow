@@ -28,6 +28,10 @@ struct ${TYPE_NAME} {
 }
 
 impl ${TYPE_NAME} {
+    fn equals(this: ${TYPE_NAME}, that: ${TYPE_NAME}) -> bool {
+        SecureHash::equals(this.attachment_id, that.attachment_id)
+    }
+
     fn deserialize(serialized: Serialized${TYPE_NAME}) -> ${TYPE_NAME} {
         let attachment_id = {
             let mut attachment_id_bytes = [0; ${CONSTANT_PREFIX}_ATTACHMENT_ID_LENGTH];

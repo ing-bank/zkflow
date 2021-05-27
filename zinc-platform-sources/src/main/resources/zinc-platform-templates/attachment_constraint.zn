@@ -22,6 +22,10 @@ struct ${TYPE_NAME} {
 }
 
 impl ${TYPE_NAME} {
+    fn equals(this: ${TYPE_NAME}, that: ${TYPE_NAME}) -> bool {
+        true
+    }
+
     fn deserialize(serialized: Serialized${TYPE_NAME}) -> ${TYPE_NAME} {
         let serial_name = {
             let mut serial_bytes = [0; ${CONSTANT_PREFIX}_SERIAL_NAME_LENGTH];

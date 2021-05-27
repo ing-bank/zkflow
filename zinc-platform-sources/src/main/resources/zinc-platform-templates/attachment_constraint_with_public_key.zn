@@ -30,6 +30,10 @@ struct ${TYPE_NAME} {
 }
 
 impl ${TYPE_NAME} {
+    fn equals(this: ${TYPE_NAME}, that: ${TYPE_NAME}) -> bool {
+        ${PK_TYPE_NAME}::equals(this.public_key, that.public_key)
+    }
+
     fn deserialize(serialized: Serialized${TYPE_NAME}) -> ${TYPE_NAME} {
         let public_key = {
             let mut public_key_bytes = [0; ${CONSTANT_PREFIX}_PUBLIC_KEY_LENGTH];

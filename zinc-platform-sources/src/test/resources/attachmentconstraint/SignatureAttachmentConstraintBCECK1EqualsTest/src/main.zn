@@ -1,0 +1,7 @@
+mod signature_attachment_constraint_bcec;
+
+use signature_attachment_constraint_bcec::SignatureAttachmentConstraintBCEC;
+
+fn main(left: SignatureAttachmentConstraintBCEC, right: SignatureAttachmentConstraintBCEC) -> bool {
+    SignatureAttachmentConstraintBCEC::equals(left, right)
+}

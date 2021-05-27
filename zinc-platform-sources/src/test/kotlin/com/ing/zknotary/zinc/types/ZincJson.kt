@@ -214,7 +214,7 @@ fun PartyAndReference.toJsonObject(serialName: String, encodedSize: Int) = build
     put("reference", reference.bytes.toJsonObject(PartyAndReferenceSurrogate.REFERENCE_SIZE))
 }
 
-fun AttachmentConstraint.toJsonObject(serialName: String, pkSerialName: String?, encodedSize: Int?) = when (this) {
+fun AttachmentConstraint.toJsonObject(serialName: String, pkSerialName: String? = null, encodedSize: Int? = null) = when (this) {
     is HashAttachmentConstraint -> toJsonObject()
     is SignatureAttachmentConstraint -> toJsonObject(requireNotNull(pkSerialName), requireNotNull(encodedSize))
     else -> buildJsonObject {

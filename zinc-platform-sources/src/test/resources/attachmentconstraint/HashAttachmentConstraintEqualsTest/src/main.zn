@@ -1,0 +1,7 @@
+mod hash_attachment_constraint;
+
+use hash_attachment_constraint::HashAttachmentConstraint;
+
+fn main(left: HashAttachmentConstraint, right: HashAttachmentConstraint) -> bool {
+    HashAttachmentConstraint::equals(left, right)
+}
