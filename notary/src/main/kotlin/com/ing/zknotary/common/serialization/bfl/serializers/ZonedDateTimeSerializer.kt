@@ -2,19 +2,16 @@ package com.ing.zknotary.common.serialization.bfl.serializers
 
 import com.ing.serialization.bfl.api.Surrogate
 import com.ing.serialization.bfl.api.SurrogateSerializer
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.time.zone.ZoneRulesProvider
 
-object ZonedDateTimeSerializer : KSerializer<ZonedDateTime> by (
-    SurrogateSerializer(ZonedDateTimeSurrogate.serializer()) {
-        ZonedDateTimeSurrogate.from(
-            it
-        )
-    }
+object ZonedDateTimeSerializer :
+    SurrogateSerializer<ZonedDateTime, ZonedDateTimeSurrogate>(
+        ZonedDateTimeSurrogate.serializer(),
+        { ZonedDateTimeSurrogate.from(it) }
     )
 
 /**

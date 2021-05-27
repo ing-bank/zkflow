@@ -2,21 +2,20 @@
 //   - TYPE_NAME: String = The type name of the generated file
 //   - CONSTANT_PREFIX: String = The prefix to use for constants
 //   - ENCODED_SIZE: u16 = Number of bytes in the encoded public key byte array
-//   - TYPE_SIZE: u16 = String size of SerialName
 
 mod byte_array_${ENCODED_SIZE};
-mod string_${TYPE_SIZE};
+mod string_1;
 
 use byte_array_${ENCODED_SIZE}::ByteArray_${ENCODED_SIZE};
 use byte_array_${ENCODED_SIZE}::SerializedByteArray_${ENCODED_SIZE};
 use byte_array_${ENCODED_SIZE}::BYTE_ARRAY_${ENCODED_SIZE}_LENGTH;
 
-use string_${TYPE_SIZE}::String_${TYPE_SIZE};
-use string_${TYPE_SIZE}::SerializedString_${TYPE_SIZE};
-use string_${TYPE_SIZE}::STRING_${TYPE_SIZE}_LENGTH;
+use string_1::String_1;
+use string_1::SerializedString_1;
+use string_1::STRING_1_LENGTH;
 
 //! PublicKey lengths
-const ${CONSTANT_PREFIX}_SERIAL_NAME_LENGTH: u16 = STRING_${TYPE_SIZE}_LENGTH;
+const ${CONSTANT_PREFIX}_SERIAL_NAME_LENGTH: u16 = STRING_1_LENGTH;
 const ${CONSTANT_PREFIX}_SCHEME_ID_LENGTH: u16 = 1;
 const ${CONSTANT_PREFIX}_ENCODED_LENGTH: u16 = BYTE_ARRAY_${ENCODED_SIZE}_LENGTH;
 
@@ -34,14 +33,14 @@ const ${CONSTANT_PREFIX}_LENGTH: u16
 
 type Serialized${TYPE_NAME} = [u8; ${CONSTANT_PREFIX}_LENGTH];
 struct ${TYPE_NAME} {
-    serial_name: String_${TYPE_SIZE},
+    serial_name: String_1,
     scheme_id: u8,
     encoded: ByteArray_${ENCODED_SIZE},
 }
 
 impl ${TYPE_NAME} {
     fn equals(this: ${TYPE_NAME}, that: ${TYPE_NAME}) -> bool {
-        String_${TYPE_SIZE}::equals(this.serial_name, that.serial_name)
+        String_1::equals(this.serial_name, that.serial_name)
             && this.scheme_id == that.scheme_id
             && ByteArray_${ENCODED_SIZE}::equals(this.encoded, that.encoded)
     }
@@ -52,7 +51,7 @@ impl ${TYPE_NAME} {
             for i in 0..${CONSTANT_PREFIX}_SERIAL_NAME_LENGTH {
                 serial_bytes[i] = serialized[i + ${CONSTANT_PREFIX}_SERIAL_NAME_OFFSET];
             }
-            String_${TYPE_SIZE}::deserialize(serial_bytes)
+            String_1::deserialize(serial_bytes)
         };
 
         let scheme_id = serialized[${CONSTANT_PREFIX}_SCHEME_ID_OFFSET];

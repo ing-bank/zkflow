@@ -3,16 +3,15 @@ package com.ing.zknotary.common.serialization.bfl.serializers.publickey
 import com.ing.serialization.bfl.annotations.FixedLength
 import com.ing.serialization.bfl.api.SurrogateSerializer
 import com.ing.zknotary.common.serialization.bfl.serializers.PublicKeySurrogate
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import net.corda.core.crypto.Crypto
 import org.bouncycastle.jcajce.provider.asymmetric.rsa.BCRSAPublicKey
 
-object BCRSAPublicKeySerializer : KSerializer<BCRSAPublicKey> by (
-    SurrogateSerializer(BCRSASurrogate.serializer()) {
-        BCRSASurrogate(it.encoded)
-    }
+object BCRSAPublicKeySerializer :
+    SurrogateSerializer<BCRSAPublicKey, BCRSASurrogate>(
+        BCRSASurrogate.serializer(),
+        { BCRSASurrogate(it.encoded) }
     )
 
 @Suppress("ArrayInDataClass")

@@ -22,7 +22,6 @@ public object DummySerializers {
     }
 }
 
-
 public class DummyContract : Contract {
     public companion object {
         public const val PROGRAM_ID: ContractClassName = "com.ing.zknotary.testing.fixtures.contract.DummyContract"

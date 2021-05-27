@@ -3,13 +3,13 @@ package com.ing.zknotary.common.serialization.bfl.serializers
 import com.ing.serialization.bfl.annotations.FixedLength
 import com.ing.serialization.bfl.api.Surrogate
 import com.ing.serialization.bfl.api.SurrogateSerializer
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import net.corda.core.contracts.PrivacySalt
 
-object PrivacySaltSerializer : KSerializer<PrivacySalt> by (
-    SurrogateSerializer(PrivacySaltSurrogate.serializer()) { PrivacySaltSurrogate(it.bytes) }
-    )
+object PrivacySaltSerializer : SurrogateSerializer<PrivacySalt, PrivacySaltSurrogate>(
+    PrivacySaltSurrogate.serializer(),
+    { PrivacySaltSurrogate(it.bytes) }
+)
 
 @Suppress("ArrayInDataClass")
 @Serializable

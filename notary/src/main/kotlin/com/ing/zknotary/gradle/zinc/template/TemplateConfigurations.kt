@@ -4,13 +4,11 @@ import com.ing.serialization.bfl.serializers.DoubleSurrogate
 import com.ing.serialization.bfl.serializers.FloatSurrogate
 import com.ing.zknotary.gradle.zinc.template.parameters.AbstractPartyTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.AmountTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.parameters.AnonymousPartyTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.BigDecimalTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.ByteArrayTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.CurrencyTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.LinearPointerTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.PartyAndReferenceTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.parameters.PartyTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.SecureHashTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.StringTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.UniqueIdentifierTemplateParameters
@@ -61,8 +59,6 @@ open class TemplateConfigurations {
             SecureHashTemplateParameters,
         ) +
             AbstractPartyTemplateParameters.all +
-            AnonymousPartyTemplateParameters.all +
-            PartyTemplateParameters.all +
             PartyAndReferenceTemplateParameters.all
     }
 

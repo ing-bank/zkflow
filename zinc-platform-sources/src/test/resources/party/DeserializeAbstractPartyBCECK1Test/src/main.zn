@@ -1,8 +1,0 @@
-mod abstract_party_bcec;
-
-use abstract_party_bcec::AbstractPartyBCEC;
-use abstract_party_bcec::SerializedAbstractPartyBCEC;
-
-fn main(witness: SerializedAbstractPartyBCEC) -> AbstractPartyBCEC {
-    AbstractPartyBCEC::deserialize(witness)
-}

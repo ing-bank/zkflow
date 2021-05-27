@@ -1,6 +1,10 @@
 package com.ing.zknotary.common.serialization.bfl.serializers
 
 import com.ing.zknotary.common.serialization.bfl.corda.LinearPointerSerializer
+import com.ing.zknotary.common.serialization.bfl.serializers.publickey.BCECPublicKeySerializer
+import com.ing.zknotary.common.serialization.bfl.serializers.publickey.BCRSAPublicKeySerializer
+import com.ing.zknotary.common.serialization.bfl.serializers.publickey.BCSphincs256PublicKeySerializer
+import com.ing.zknotary.common.serialization.bfl.serializers.publickey.EdDSAPublicKeySerializer
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.contextual
 import kotlinx.serialization.modules.polymorphic
@@ -11,6 +15,14 @@ import net.corda.core.contracts.AutomaticPlaceholderConstraint
 import net.corda.core.contracts.HashAttachmentConstraint
 import net.corda.core.contracts.SignatureAttachmentConstraint
 import net.corda.core.contracts.WhitelistedByZoneAttachmentConstraint
+import net.corda.core.identity.AbstractParty
+import net.corda.core.identity.AnonymousParty
+import net.corda.core.identity.Party
+import net.i2p.crypto.eddsa.EdDSAPublicKey
+import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey
+import org.bouncycastle.jcajce.provider.asymmetric.rsa.BCRSAPublicKey
+import org.bouncycastle.pqc.jcajce.provider.sphincs.BCSphincs256PublicKey
+import java.security.PublicKey
 
 @Suppress("UNCHECKED_CAST")
 val CordaSerializers = SerializersModule {
@@ -27,12 +39,24 @@ val CordaSerializers = SerializersModule {
         subclass(AutomaticHashConstraint::class, AutomaticHashConstraintSerializer)
     }
 
+    polymorphic(PublicKey::class) {
+        subclass(BCRSAPublicKey::class, BCRSAPublicKeySerializer)
+        subclass(BCECPublicKey::class, BCECPublicKeySerializer)
+        subclass(EdDSAPublicKey::class, EdDSAPublicKeySerializer)
+        subclass(BCSphincs256PublicKey::class, BCSphincs256PublicKeySerializer)
+    }
+
+    // BFL treats abstract classes as polymorphic, since they have similar behaviour with interfaces
+    polymorphic(AbstractParty::class) {
+        subclass(AnonymousParty::class, AnonymousPartySerializer)
+        subclass(Party::class, PartySerializer)
+    }
+
     // Contextual types.
     contextual(SecureHashSerializer)
     contextual(SecureHashSHA256Serializer)
     contextual(SecureHashHASHSerializer)
 
-    contextual(AbstractPartySerializer)
     contextual(PartySerializer)
     contextual(AnonymousPartySerializer)
 
@@ -43,14 +67,7 @@ val CordaSerializers = SerializersModule {
     contextual(PrivacySaltSerializer)
 
     contextual(TimeWindowSerializer)
+    contextual(PartyAndReferenceSerializer)
     contextual(LinearPointerSerializer)
     contextual(ZonedDateTimeSerializer)
-
-    /**
-     * This SerializersModule explicitly leaves out a KSerializer for PartyAndReference.
-     * Users of this library should choose whether they need to retain the CordaX500Name of Party, as this has a
-     * negative impact on the performance of the ZKP circuit.
-     */
-    // contextual(PartyAndReferenceSerializer)
-    // contextual(AnonymisingPartyAndReferenceSerializer)
 }

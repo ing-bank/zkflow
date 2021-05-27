@@ -1,33 +1,27 @@
 package com.ing.zknotary.common.serialization.bfl.serializers
 
 import com.ing.serialization.bfl.annotations.FixedLength
+import com.ing.serialization.bfl.api.Surrogate
+import com.ing.serialization.bfl.api.SurrogateSerializer
 import com.ing.zknotary.common.crypto.ZINC
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.Encoder
 import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.algorithm
 
-class SealedSecureHashSerializer<T : SecureHash> : KSerializer<T> {
-    private val strategy = SecureHashSurrogate.serializer()
-    override val descriptor: SerialDescriptor = strategy.descriptor
+object SecureHashSerializer : SurrogateSerializer<SecureHash, SecureHashSurrogate>(
+    SecureHashSurrogate.serializer(),
+    { SecureHashSurrogate.from(it) }
+)
 
-    override fun deserialize(decoder: Decoder): T {
-        @Suppress("UNCHECKED_CAST")
-        return decoder.decodeSerializableValue(strategy).toOriginal() as? T
-            ?: error("Cannot deserialize SecureHash")
-    }
+object SecureHashSHA256Serializer : SurrogateSerializer<SecureHash.SHA256, SecureHashSHA256Surrogate>(
+    SecureHashSHA256Surrogate.serializer(),
+    { SecureHashSHA256Surrogate.from(it) }
+)
 
-    override fun serialize(encoder: Encoder, value: T) {
-        encoder.encodeSerializableValue(strategy, SecureHashSurrogate.from(value))
-    }
-}
-
-object SecureHashSerializer : KSerializer<SecureHash> by SealedSecureHashSerializer()
-object SecureHashSHA256Serializer : KSerializer<SecureHash.SHA256> by SealedSecureHashSerializer()
-object SecureHashHASHSerializer : KSerializer<SecureHash.HASH> by SealedSecureHashSerializer()
+object SecureHashHASHSerializer : SurrogateSerializer<SecureHash.HASH, SecureHashHASHSurrogate>(
+    SecureHashHASHSurrogate.serializer(),
+    { SecureHashHASHSurrogate.from(it) }
+)
 
 @Suppress("ArrayInDataClass")
 @Serializable
@@ -36,8 +30,8 @@ data class SecureHashSurrogate(
     // Hashes expected by Corda must be at most 32 bytes long.
     @FixedLength([BYTES_SIZE])
     val bytes: ByteArray
-) {
-    fun toOriginal(): SecureHash {
+) : Surrogate<SecureHash> {
+    override fun toOriginal(): SecureHash {
         return when (val alg = SecureHashSupportedAlgorithm.fromByte(algorithmId).algorithm) {
             SecureHash.SHA2_256 -> SecureHash.SHA256(bytes)
             else -> SecureHash.HASH(alg, bytes)
@@ -45,11 +39,46 @@ data class SecureHashSurrogate(
     }
 
     companion object {
-        const val BYTES_SIZE = 64
+        const val BYTES_SIZE = 32
         fun from(original: SecureHash): SecureHashSurrogate {
             val algorithmId = SecureHashSupportedAlgorithm.fromAlgorithm(original.algorithm).id
             return SecureHashSurrogate(algorithmId, original.bytes)
         }
+    }
+}
+
+@Suppress("ArrayInDataClass")
+@Serializable
+data class SecureHashSHA256Surrogate(
+    val algorithmId: Byte,
+    // Hashes expected by Corda must be at most 32 bytes long.
+    @FixedLength([BYTES_SIZE])
+    val bytes: ByteArray
+) : Surrogate<SecureHash.SHA256> {
+    override fun toOriginal() = SecureHash.SHA256(bytes)
+
+    companion object {
+        const val BYTES_SIZE = 32
+        fun from(original: SecureHash.SHA256) = SecureHashSHA256Surrogate(0, original.bytes)
+    }
+}
+
+@Suppress("ArrayInDataClass")
+@Serializable
+data class SecureHashHASHSurrogate(
+    val algorithmId: Byte,
+    // Hashes expected by Corda must be at most 32 bytes long.
+    @FixedLength([BYTES_SIZE])
+    val bytes: ByteArray
+) : Surrogate<SecureHash.HASH> {
+    override fun toOriginal() = SecureHash.HASH(SecureHashSupportedAlgorithm.fromByte(algorithmId).algorithm, bytes)
+
+    companion object {
+        const val BYTES_SIZE = 32
+        fun from(original: SecureHash.HASH) = SecureHashHASHSurrogate(
+            SecureHashSupportedAlgorithm.fromAlgorithm(original.algorithm).id,
+            original.bytes
+        )
     }
 }
 
@@ -59,9 +88,7 @@ data class SecureHashSurrogate(
  */
 enum class SecureHashSupportedAlgorithm(val id: Byte, val algorithm: String) {
     SHA_256(0, SecureHash.SHA2_256),
-    SHA_384(1, SecureHash.SHA2_384),
-    SHA_512(2, SecureHash.SHA2_512),
-    ZINC(3, SecureHash.ZINC);
+    ZINC(1, SecureHash.ZINC);
 
     companion object {
         fun fromByte(id: Byte): SecureHashSupportedAlgorithm = values()

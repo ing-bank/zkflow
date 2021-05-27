@@ -1,6 +1,6 @@
 package com.ing.zknotary.zinc.types.partyandreference
 
-import com.ing.zknotary.common.serialization.bfl.serializers.AnonymousPartyAndReferenceSurrogate
+import com.ing.zknotary.common.serialization.bfl.serializers.PartyAndReferenceSurrogate
 import com.ing.zknotary.common.serialization.bfl.serializers.publickey.EdDSASurrogate
 import com.ing.zknotary.zinc.types.generateDifferentValueThan
 import com.ing.zknotary.zinc.types.getZincZKService
@@ -23,19 +23,18 @@ class AnonymousPartyEdDSAAndReferenceEqualsTest {
     companion object {
         private val random by lazy { Random(42) }
         private val reference by lazy {
-            OpaqueBytes(random.nextBytes(AnonymousPartyAndReferenceSurrogate.REFERENCE_SIZE))
+            OpaqueBytes(random.nextBytes(PartyAndReferenceSurrogate.REFERENCE_SIZE))
         }
         private val anotherReference by lazy {
             generateDifferentValueThan(reference) {
-                OpaqueBytes(random.nextBytes(AnonymousPartyAndReferenceSurrogate.REFERENCE_SIZE))
+                OpaqueBytes(random.nextBytes(PartyAndReferenceSurrogate.REFERENCE_SIZE))
             }
         }
         private val aliceIdentity = TestIdentity.fresh("Alice", Crypto.EDDSA_ED25519_SHA512)
         private val bobIdentity = TestIdentity.fresh("Bob", Crypto.EDDSA_ED25519_SHA512)
-        val alice = PartyAndReference(aliceIdentity.party, reference)
-        val aliceAnotherReference = PartyAndReference(aliceIdentity.party, anotherReference)
-        val aliceAnonymous = PartyAndReference(aliceIdentity.party.anonymise(), reference)
-        val bob = PartyAndReference(bobIdentity.party, reference)
+        val alice = PartyAndReference(aliceIdentity.party.anonymise(), reference)
+        val aliceAnotherReference = PartyAndReference(aliceIdentity.party.anonymise(), anotherReference)
+        val bob = PartyAndReference(bobIdentity.party.anonymise(), reference)
     }
 
     @Test
@@ -46,11 +45,6 @@ class AnonymousPartyEdDSAAndReferenceEqualsTest {
     @Test
     fun `alice does not equal alice with another reference`() {
         performEqualityTest(alice, aliceAnotherReference, false)
-    }
-
-    @Test
-    fun `alice equals anonymous alice`() {
-        performEqualityTest(alice, aliceAnonymous, true)
     }
 
     @Test
@@ -67,7 +61,6 @@ class AnonymousPartyEdDSAAndReferenceEqualsTest {
             put(
                 "left",
                 left.toJsonObject(
-                    anonymise = true,
                     serialName = EdDSASurrogate::class.findAnnotation<SerialName>()!!.value,
                     encodedSize = EdDSASurrogate.ENCODED_SIZE
                 )
@@ -75,7 +68,6 @@ class AnonymousPartyEdDSAAndReferenceEqualsTest {
             put(
                 "right",
                 right.toJsonObject(
-                    anonymise = true,
                     serialName = EdDSASurrogate::class.findAnnotation<SerialName>()!!.value,
                     encodedSize = EdDSASurrogate.ENCODED_SIZE
                 )

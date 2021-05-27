@@ -51,7 +51,7 @@ class TransactionVerificationTest {
         createCircuitFolder,
         artifactFolder = createCircuitFolder,
         buildTimeout = Duration.ofSeconds(5),
-        setupTimeout = Duration.ofSeconds(1000),
+        setupTimeout = Duration.ofSeconds(1500),
         provingTimeout = Duration.ofSeconds(300),
         verificationTimeout = Duration.ofSeconds(1)
     )
@@ -60,14 +60,12 @@ class TransactionVerificationTest {
         moveCircuitFolder,
         artifactFolder = moveCircuitFolder,
         buildTimeout = Duration.ofSeconds(5),
-        setupTimeout = Duration.ofSeconds(1000),
+        setupTimeout = Duration.ofSeconds(1500),
         provingTimeout = Duration.ofSeconds(300),
         verificationTimeout = Duration.ofSeconds(1)
     )
 
     private val notary = TestIdentity.fresh("Notary").party
-    private val alice = TestIdentity.fresh("Alice").party
-    private val bob = TestIdentity.fresh("Blob").party
 
     init {
         createZKService.setupTimed(log)
@@ -102,6 +100,9 @@ class TransactionVerificationTest {
      */
     @Test
     fun `zinc verifies full create transaction`() = withCustomSerializationEnv {
+        val alice = TestIdentity.fresh("Alice").party
+        val bob = TestIdentity.fresh("Blob").party
+
         val additionalSerializationProperties =
             mapOf<Any, Any>(BFLSerializationScheme.CONTEXT_KEY_CIRCUIT to TestContract.Create().circuit)
 
@@ -191,13 +192,7 @@ class TransactionVerificationTest {
             WireTransaction(
                 createComponentGroups(
                     inputs,
-                    outputs.map {
-                        TransactionState(
-                            TestContract.TestState(alice.anonymise()),
-                            TestContract.PROGRAM_ID,
-                            notary
-                        )
-                    },
+                    outputs.map { TransactionState(it.state, it.contract, notary) },
                     commands,
                     attachments,
                     notary,

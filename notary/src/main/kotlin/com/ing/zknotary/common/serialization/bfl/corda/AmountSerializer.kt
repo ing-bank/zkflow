@@ -2,12 +2,10 @@ package com.ing.zknotary.common.serialization.bfl.corda
 
 import com.ing.serialization.bfl.annotations.FixedLength
 import com.ing.serialization.bfl.api.Surrogate
+import com.ing.serialization.bfl.api.SurrogateSerializer
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.Encoder
 import net.corda.core.contracts.Amount
 import net.corda.core.crypto.SecureHash
 import java.math.BigDecimal
@@ -33,24 +31,8 @@ data class AmountSurrogate<T : Any>(
     }
 }
 
-class AmountSerializer<T : Any>(tokenSerializer: KSerializer<T>) : KSerializer<Amount<T>> {
-    private val surrogateSerializer = AmountSurrogate.serializer(tokenSerializer)
-    override fun deserialize(decoder: Decoder): Amount<T> {
-        return decoder.decodeSerializableValue(surrogateSerializer).toOriginal()
-    }
-
-    override val descriptor: SerialDescriptor
-        get() = surrogateSerializer.descriptor
-
-    override fun serialize(encoder: Encoder, value: Amount<T>) {
-        encoder.encodeSerializableValue(
-            surrogateSerializer,
-            AmountSurrogate(
-                value.quantity,
-                value.displayTokenSize,
-                value.getTokenTypeHash(),
-                value.token
-            )
-        )
-    }
-}
+class AmountSerializer<T : Any>(tokenSerializer: KSerializer<T>) :
+    SurrogateSerializer<Amount<T>, AmountSurrogate<T>>(
+        AmountSurrogate.serializer(tokenSerializer),
+        { AmountSurrogate(it.quantity, it.displayTokenSize, it.getTokenTypeHash(), it.token) }
+    )

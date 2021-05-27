@@ -1,5 +1,6 @@
 package com.ing.zknotary.zinc.types.stateref
 
+import com.ing.zknotary.common.crypto.ZINC
 import com.ing.zknotary.common.zkp.ZincZKService
 import com.ing.zknotary.zinc.types.DeserializationTestBase
 import com.ing.zknotary.zinc.types.getZincZKService
@@ -23,7 +24,7 @@ class DeserializeStateRefTest :
         fun testData() = listOf(
             Data(StateRef(SecureHash.allOnesHash, 0)),
             Data(StateRef(SecureHash.zeroHash, 1)),
-            Data(StateRef(SecureHash.hashAs(SecureHash.SHA2_512, "Hello World!".toByteArray()), 2))
+            Data(StateRef(SecureHash.hashAs(SecureHash.ZINC, "Hello World!".toByteArray()), 2))
         )
     }
 }

@@ -1,5 +1,6 @@
 package com.ing.zknotary.zinc.types.securehash
 
+import com.ing.zknotary.common.crypto.ZINC
 import com.ing.zknotary.common.zkp.ZincZKService
 import com.ing.zknotary.zinc.types.DeserializationTestBase
 import com.ing.zknotary.zinc.types.getZincZKService
@@ -22,7 +23,7 @@ class DeserializeSecureHashTest :
         fun testData() = listOf(
             Data(SecureHash.allOnesHash),
             Data(SecureHash.zeroHash),
-            Data(SecureHash.hashAs(SecureHash.SHA2_512, "Hello World!".toByteArray()))
+            Data(SecureHash.hashAs(SecureHash.ZINC, "Hello World!".toByteArray()))
         )
     }
 }

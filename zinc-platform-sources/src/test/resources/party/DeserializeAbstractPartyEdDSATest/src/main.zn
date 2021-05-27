@@ -1,8 +1,0 @@
-mod abstract_party_ed_dsa;
-
-use abstract_party_ed_dsa::AbstractPartyEdDSA;
-use abstract_party_ed_dsa::SerializedAbstractPartyEdDSA;
-
-fn main(witness: SerializedAbstractPartyEdDSA) -> AbstractPartyEdDSA {
-    AbstractPartyEdDSA::deserialize(witness)
-}

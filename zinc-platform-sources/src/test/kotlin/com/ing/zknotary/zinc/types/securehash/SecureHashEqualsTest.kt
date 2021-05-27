@@ -1,5 +1,6 @@
 package com.ing.zknotary.zinc.types.securehash
 
+import com.ing.zknotary.common.crypto.ZINC
 import com.ing.zknotary.zinc.types.getZincZKService
 import com.ing.zknotary.zinc.types.toJsonObject
 import kotlinx.serialization.json.buildJsonObject
@@ -27,7 +28,7 @@ class SecureHashEqualsTest {
     @Test
     fun `different PrivacySalts with different algorithms should not be equal`() {
         val first = SecureHash.hashAs(SecureHash.SHA2_256, "first".toByteArray())
-        val second = SecureHash.hashAs(SecureHash.SHA2_384, "first".toByteArray())
+        val second = SecureHash.hashAs(SecureHash.ZINC, "second".toByteArray())
         performEqualityTest(first, second, false)
     }
 

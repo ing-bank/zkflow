@@ -5,7 +5,6 @@ import com.ing.zknotary.testing.assertRoundTripSucceeds
 import com.ing.zknotary.testing.assertSameSize
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.modules.plus
 import net.corda.core.crypto.Crypto
 import org.junit.jupiter.api.Test
 import java.security.PublicKey
@@ -19,10 +18,8 @@ class PublicKeySerializerTest {
         Crypto.supportedSignatureSchemes().filter {
             it.schemeNumberID != Crypto.COMPOSITE_KEY.schemeNumberID
         }.forEach {
-            val serializersModule = CordaSignatureSchemeToSerializers.serializersModuleFor(it)
-
             val pk = Crypto.generateKeyPair(it).public
-            val ser = debugSerialize(pk, serializersModule = CordaSerializers + serializersModule)
+            val ser = debugSerialize(pk, serializersModule = CordaSerializers)
             println("${it.schemeCodeName}:\n\tPublic key size = ${pk.encoded.size}\n\tserialized size = ${ser.first.size}")
             println(ser.second)
 
@@ -57,13 +54,11 @@ class PublicKeySerializerTest {
         Crypto.supportedSignatureSchemes().filter {
             it.schemeNumberID != Crypto.COMPOSITE_KEY.schemeNumberID
         }.forEach {
-            val serializersModule = CordaSignatureSchemeToSerializers.serializersModuleFor(it)
-
             val pk1 = Crypto.generateKeyPair(it).public
             val pk2 = Crypto.generateKeyPair(it).public
 
-            assertRoundTripSucceeds(pk1, serializersModule)
-            assertSameSize(pk1, pk2, serializersModule)
+            assertRoundTripSucceeds(pk1)
+            assertSameSize(pk1, pk2)
         }
     }
 
@@ -72,13 +67,11 @@ class PublicKeySerializerTest {
         Crypto.supportedSignatureSchemes().filter {
             it.schemeNumberID != Crypto.COMPOSITE_KEY.schemeNumberID
         }.forEach {
-            val serializersModule = CordaSignatureSchemeToSerializers.serializersModuleFor(it)
-
             val data1 = Data(Crypto.generateKeyPair(it).public)
             val data2 = Data(Crypto.generateKeyPair(it).public)
 
-            assertRoundTripSucceeds(data1, serializersModule)
-            assertSameSize(data1, data2, serializersModule)
+            assertRoundTripSucceeds(data1)
+            assertSameSize(data1, data2)
         }
     }
 }
