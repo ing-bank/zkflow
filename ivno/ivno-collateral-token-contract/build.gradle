@@ -1,3 +1,5 @@
+import com.ing.zknotary.gradle.zinc.template.parameters.BigDecimalTemplateParameters
+
 plugins {
     id 'com.ing.zknotary.gradle-plugin'
 }
@@ -14,6 +16,10 @@ cordapp {
         licence "Ivno Tokens Contract Copyright © 2021 Ivno Limited. All rights reserved.  The information herein is, and remains, the property of Ivno Limited [and its suppliers (if any)]. No use may be made of this software without a valid licence from Ivno Limited. Please contact legal@ivno.io for more information."
         versionId 1
     }
+}
+
+zkp {
+    bigDecimalConfigurations = [new BigDecimalTemplateParameters(20, 4)]
 }
 
 dependencies {
@@ -41,26 +47,6 @@ dependencies {
     testImplementation("io.kotest:kotest-assertions-core:4.3.1")
 
 }
-
-//publishing {
-//    publications {
-//        maven(MavenPublication) {
-//            groupId = project.parent.group
-//            version = project.parent.version
-//            artifactId = 'ivno-collateral-token-contract'
-//            from components.java
-//        }
-//    }
-//    repositories {
-//        maven {
-//            url "${maven_repo_s3_url}"
-//            credentials(AwsCredentials) {
-//                accessKey awsCredentials.AWSAccessKeyId
-//                secretKey awsCredentials.AWSSecretKey
-//            }
-//        }
-//    }
-//}
 
 test {
     jvmArgs = ["-ea", "-javaagent:../lib/quasar.jar"]
