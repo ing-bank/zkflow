@@ -27,13 +27,13 @@ import com.ing.zknotary.gradle.zinc.template.parameters.X500PrincipalTemplatePar
 open class TemplateConfigurations {
     companion object {
         val floatTemplateParameters = BigDecimalTemplateParameters(
-            FloatSurrogate.FLOAT_INTEGER_SIZE.toShort(),
-            FloatSurrogate.FLOAT_FRACTION_SIZE.toShort(),
+            FloatSurrogate.FLOAT_INTEGER_SIZE,
+            FloatSurrogate.FLOAT_FRACTION_SIZE,
             "Float"
         )
         val doubleTemplateParameters = BigDecimalTemplateParameters(
-            DoubleSurrogate.DOUBLE_INTEGER_SIZE.toShort(),
-            DoubleSurrogate.DOUBLE_FRACTION_SIZE.toShort(),
+            DoubleSurrogate.DOUBLE_INTEGER_SIZE,
+            DoubleSurrogate.DOUBLE_FRACTION_SIZE,
             "Double"
         )
     }

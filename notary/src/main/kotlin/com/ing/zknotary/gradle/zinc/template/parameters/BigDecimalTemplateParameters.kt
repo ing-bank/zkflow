@@ -4,10 +4,13 @@ import com.ing.zknotary.gradle.zinc.template.NamedType
 import com.ing.zknotary.gradle.zinc.template.TemplateParameters
 
 data class BigDecimalTemplateParameters(
-    val integerSize: Short,
-    val fractionSize: Short,
+    val integerSize: Int,
+    val fractionSize: Int,
     val typeNameOverride: String? = null
 ) : NamedType, TemplateParameters("big_decimal.zn", emptyList()) {
+
+    constructor(integerSize: Int, fractionSize: Int) : this(integerSize, fractionSize, null)
+
     private fun postFix(): String = "_${integerSize}_$fractionSize"
 
     /**
