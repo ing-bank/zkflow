@@ -1,0 +1,27 @@
+mod string_20;
+
+use string_20::String_20;
+use string_20::STRING_20_LENGTH;
+
+const ROLE_LENGTH: u16 = STRING_20_LENGTH;
+
+type SerializedRole = [u8; ROLE_LENGTH];
+
+// Define type alias, to make the rest of the template cleaner
+type RoleValue = String_20;
+
+struct Role {
+ value: RoleValue,
+}
+
+impl Role {
+    fn equals(this: Role, that: Role) -> bool {
+        String_20::equals(this.value, that.value)
+    }
+
+    fn deserialize(serialized_role: SerializedRole) -> Role {
+        Role {
+            value: RoleValue::deserialize(serialized_role),
+        }
+    }
+}
