@@ -10,8 +10,6 @@ use byte_array_${ENCODED_SIZE}::ByteArray_${ENCODED_SIZE};
 use byte_array_${ENCODED_SIZE}::SerializedByteArray_${ENCODED_SIZE};
 use byte_array_${ENCODED_SIZE}::BYTE_ARRAY_${ENCODED_SIZE}_LENGTH;
 
-use string_1::String_1;
-use string_1::SerializedString_1;
 use string_1::STRING_1_LENGTH;
 
 //! PublicKey lengths
@@ -20,10 +18,8 @@ const ${CONSTANT_PREFIX}_SCHEME_ID_LENGTH: u16 = 1;
 const ${CONSTANT_PREFIX}_ENCODED_LENGTH: u16 = BYTE_ARRAY_${ENCODED_SIZE}_LENGTH;
 
 //! PublicKey offsets
-const ${CONSTANT_PREFIX}_SERIAL_NAME_OFFSET: u16 = 0;
 const ${CONSTANT_PREFIX}_SCHEME_ID_OFFSET: u16
-    = ${CONSTANT_PREFIX}_SERIAL_NAME_OFFSET
-    + ${CONSTANT_PREFIX}_SERIAL_NAME_LENGTH;
+    = ${CONSTANT_PREFIX}_SERIAL_NAME_LENGTH;
 const ${CONSTANT_PREFIX}_ENCODED_OFFSET: u16
     = ${CONSTANT_PREFIX}_SCHEME_ID_OFFSET
     + ${CONSTANT_PREFIX}_SCHEME_ID_LENGTH;
@@ -33,27 +29,17 @@ const ${CONSTANT_PREFIX}_LENGTH: u16
 
 type Serialized${TYPE_NAME} = [u8; ${CONSTANT_PREFIX}_LENGTH];
 struct ${TYPE_NAME} {
-    serial_name: String_1,
     scheme_id: u8,
     encoded: ByteArray_${ENCODED_SIZE},
 }
 
 impl ${TYPE_NAME} {
     fn equals(this: ${TYPE_NAME}, that: ${TYPE_NAME}) -> bool {
-        String_1::equals(this.serial_name, that.serial_name)
-            && this.scheme_id == that.scheme_id
+        this.scheme_id == that.scheme_id
             && ByteArray_${ENCODED_SIZE}::equals(this.encoded, that.encoded)
     }
 
     fn deserialize(serialized: Serialized${TYPE_NAME}) -> ${TYPE_NAME} {
-        let serial_name = {
-            let mut serial_bytes = [0; ${CONSTANT_PREFIX}_SERIAL_NAME_LENGTH];
-            for i in 0..${CONSTANT_PREFIX}_SERIAL_NAME_LENGTH {
-                serial_bytes[i] = serialized[i + ${CONSTANT_PREFIX}_SERIAL_NAME_OFFSET];
-            }
-            String_1::deserialize(serial_bytes)
-        };
-
         let scheme_id = serialized[${CONSTANT_PREFIX}_SCHEME_ID_OFFSET];
 
         let encoded = {
@@ -65,7 +51,6 @@ impl ${TYPE_NAME} {
         };
 
         ${TYPE_NAME} {
-            serial_name: serial_name,
             scheme_id: scheme_id,
             encoded: encoded,
         }

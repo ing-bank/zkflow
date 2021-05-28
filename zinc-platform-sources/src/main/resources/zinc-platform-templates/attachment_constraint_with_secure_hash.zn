@@ -1,0 +1,48 @@
+// Input parameters:
+//   - TYPE_NAME: String = Name of the main struct, and suffix for Serialized struct, use camelcase
+//   - CONSTANT_PREFIX: String = prefix to use for constant names, use uppercase
+
+mod string_1;
+mod secure_hash;
+
+use string_1::STRING_1_LENGTH;
+
+use secure_hash::SecureHash;
+use secure_hash::SECURE_HASH_LENGTH;
+
+//! ${TYPE_NAME} lengths
+const ${CONSTANT_PREFIX}_SERIAL_NAME_LENGTH: u16 = STRING_1_LENGTH;
+const ${CONSTANT_PREFIX}_ATTACHMENT_ID_LENGTH: u16 = SECURE_HASH_LENGTH;
+
+//! ${TYPE_NAME} lengths
+const ${CONSTANT_PREFIX}_ATTACHMENT_ID_OFFSET: u16
+    = ${CONSTANT_PREFIX}_SERIAL_NAME_LENGTH;
+const ${CONSTANT_PREFIX}_LENGTH: u16
+    = ${CONSTANT_PREFIX}_ATTACHMENT_ID_OFFSET
+    + ${CONSTANT_PREFIX}_ATTACHMENT_ID_LENGTH;
+
+type Serialized${TYPE_NAME} = [u8; ${CONSTANT_PREFIX}_LENGTH];
+
+struct ${TYPE_NAME} {
+    attachment_id: SecureHash,
+}
+
+impl ${TYPE_NAME} {
+    fn equals(this: ${TYPE_NAME}, that: ${TYPE_NAME}) -> bool {
+        SecureHash::equals(this.attachment_id, that.attachment_id)
+    }
+
+    fn deserialize(serialized: Serialized${TYPE_NAME}) -> ${TYPE_NAME} {
+        let attachment_id = {
+            let mut attachment_id_bytes = [0; ${CONSTANT_PREFIX}_ATTACHMENT_ID_LENGTH];
+            for i in 0..${CONSTANT_PREFIX}_ATTACHMENT_ID_LENGTH {
+                attachment_id_bytes[i] = serialized[i + ${CONSTANT_PREFIX}_ATTACHMENT_ID_OFFSET];
+            }
+            SecureHash::deserialize(attachment_id_bytes)
+        };
+
+        ${TYPE_NAME} {
+            attachment_id: attachment_id,
+        }
+    }
+}

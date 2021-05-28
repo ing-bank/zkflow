@@ -1,0 +1,3 @@
+[circuit]
+name = "Deserialize AlwaysAcceptAttachmentConstraint test"
+version = "0.1.0"

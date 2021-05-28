@@ -1,0 +1,8 @@
+mod automatic_placeholder_constraint;
+
+use automatic_placeholder_constraint::AutomaticPlaceholderConstraint;
+use automatic_placeholder_constraint::SerializedAutomaticPlaceholderConstraint;
+
+fn main(witness: SerializedAutomaticPlaceholderConstraint) -> AutomaticPlaceholderConstraint {
+    AutomaticPlaceholderConstraint::deserialize(witness)
+}

@@ -1,0 +1,8 @@
+mod whitelisted_by_zone_attachment_constraint;
+
+use whitelisted_by_zone_attachment_constraint::WhitelistedByZoneAttachmentConstraint;
+use whitelisted_by_zone_attachment_constraint::SerializedWhitelistedByZoneAttachmentConstraint;
+
+fn main(witness: SerializedWhitelistedByZoneAttachmentConstraint) -> WhitelistedByZoneAttachmentConstraint {
+    WhitelistedByZoneAttachmentConstraint::deserialize(witness)
+}

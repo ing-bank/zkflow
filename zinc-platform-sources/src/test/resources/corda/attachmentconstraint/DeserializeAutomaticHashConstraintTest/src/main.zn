@@ -1,0 +1,8 @@
+mod automatic_hash_constraint;
+
+use automatic_hash_constraint::AutomaticHashConstraint;
+use automatic_hash_constraint::SerializedAutomaticHashConstraint;
+
+fn main(witness: SerializedAutomaticHashConstraint) -> AutomaticHashConstraint {
+    AutomaticHashConstraint::deserialize(witness)
+}

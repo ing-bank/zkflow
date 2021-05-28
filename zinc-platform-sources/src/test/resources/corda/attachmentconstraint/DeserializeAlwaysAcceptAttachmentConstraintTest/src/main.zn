@@ -1,0 +1,8 @@
+mod always_accept_attachment_constraint;
+
+use always_accept_attachment_constraint::AlwaysAcceptAttachmentConstraint;
+use always_accept_attachment_constraint::SerializedAlwaysAcceptAttachmentConstraint;
+
+fn main(witness: SerializedAlwaysAcceptAttachmentConstraint) -> AlwaysAcceptAttachmentConstraint {
+    AlwaysAcceptAttachmentConstraint::deserialize(witness)
+}

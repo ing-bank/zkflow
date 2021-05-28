@@ -1,0 +1,7 @@
+mod always_accept_attachment_constraint;
+
+use always_accept_attachment_constraint::AlwaysAcceptAttachmentConstraint;
+
+fn main(left: AlwaysAcceptAttachmentConstraint, right: AlwaysAcceptAttachmentConstraint) -> bool {
+    AlwaysAcceptAttachmentConstraint::equals(left, right)
+}

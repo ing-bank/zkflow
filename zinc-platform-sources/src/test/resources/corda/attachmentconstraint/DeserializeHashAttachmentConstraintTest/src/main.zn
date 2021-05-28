@@ -1,0 +1,8 @@
+mod hash_attachment_constraint;
+
+use hash_attachment_constraint::HashAttachmentConstraint;
+use hash_attachment_constraint::SerializedHashAttachmentConstraint;
+
+fn main(witness: SerializedHashAttachmentConstraint) -> HashAttachmentConstraint {
+    HashAttachmentConstraint::deserialize(witness)
+}

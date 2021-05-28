@@ -6,21 +6,16 @@ import com.ing.zknotary.zinc.types.DeserializationTestBase
 import com.ing.zknotary.zinc.types.getZincZKService
 import com.ing.zknotary.zinc.types.toZincJson
 import kotlinx.serialization.Polymorphic
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import net.corda.core.crypto.Crypto
 import net.corda.core.identity.AbstractParty
 import net.corda.testing.core.TestIdentity
-import kotlin.reflect.full.findAnnotation
 import kotlin.time.ExperimentalTime
 
 @ExperimentalTime
 class DeserializeAnonymousPartyBCSphincs256Test :
     DeserializationTestBase<DeserializeAnonymousPartyBCSphincs256Test, DeserializeAnonymousPartyBCSphincs256Test.Data>({
-        it.data.toZincJson(
-            serialName = BCSphincs256Surrogate::class.findAnnotation<SerialName>()!!.value,
-            encodedSize = BCSphincs256Surrogate.ENCODED_SIZE,
-        )
+        it.data.toZincJson(BCSphincs256Surrogate.ENCODED_SIZE)
     }) {
     override fun getZincZKService(): ZincZKService = getZincZKService<DeserializeAnonymousPartyBCSphincs256Test>()
 

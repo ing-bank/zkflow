@@ -5,7 +5,6 @@ import com.ing.zknotary.common.serialization.bfl.serializers.publickey.BCECSurro
 import com.ing.zknotary.zinc.types.generateDifferentValueThan
 import com.ing.zknotary.zinc.types.getZincZKService
 import com.ing.zknotary.zinc.types.toJsonObject
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.json.buildJsonObject
 import net.corda.core.contracts.PartyAndReference
 import net.corda.core.crypto.Crypto
@@ -13,7 +12,6 @@ import net.corda.core.utilities.OpaqueBytes
 import net.corda.testing.core.TestIdentity
 import org.junit.jupiter.api.Test
 import kotlin.random.Random
-import kotlin.reflect.full.findAnnotation
 import kotlin.time.ExperimentalTime
 
 @ExperimentalTime
@@ -60,17 +58,11 @@ class PartyBCECK1AndReferenceEqualsTest {
         val witness = buildJsonObject {
             put(
                 "left",
-                left.toJsonObject(
-                    serialName = BCECSurrogate::class.findAnnotation<SerialName>()!!.value,
-                    encodedSize = BCECSurrogate.ENCODED_SIZE
-                )
+                left.toJsonObject(BCECSurrogate.ENCODED_SIZE)
             )
             put(
                 "right",
-                right.toJsonObject(
-                    serialName = BCECSurrogate::class.findAnnotation<SerialName>()!!.value,
-                    encodedSize = BCECSurrogate.ENCODED_SIZE
-                )
+                right.toJsonObject(BCECSurrogate.ENCODED_SIZE)
             )
         }.toString()
 
