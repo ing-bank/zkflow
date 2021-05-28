@@ -1,23 +1,18 @@
-package com.ing.zknotary.zinc.types.attachmentconstraint
+package com.ing.zknotary.zinc.types.corda.attachmentconstraint
 
-import com.ing.zknotary.common.serialization.bfl.serializers.HashAttachmentConstraintSurrogate
 import com.ing.zknotary.common.zkp.ZincZKService
 import com.ing.zknotary.zinc.types.DeserializationTestBase
 import com.ing.zknotary.zinc.types.toZincJson
 import kotlinx.serialization.Polymorphic
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import net.corda.core.contracts.AttachmentConstraint
 import net.corda.core.contracts.HashAttachmentConstraint
 import net.corda.core.crypto.SecureHash
-import kotlin.reflect.full.findAnnotation
 
 class DeserializeHashAttachmentConstraintTest :
     DeserializationTestBase<DeserializeHashAttachmentConstraintTest, DeserializeHashAttachmentConstraintTest.Data>(
         {
-            it.data.toZincJson(
-                serialName = HashAttachmentConstraintSurrogate::class.findAnnotation<SerialName>()!!.value,
-            )
+            it.data.toZincJson()
         }
     ) {
     override fun getZincZKService(): ZincZKService =

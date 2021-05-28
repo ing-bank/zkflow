@@ -6,21 +6,16 @@ import com.ing.zknotary.zinc.types.DeserializationTestBase
 import com.ing.zknotary.zinc.types.getZincZKService
 import com.ing.zknotary.zinc.types.toZincJson
 import kotlinx.serialization.Contextual
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import net.corda.core.contracts.PartyAndReference
 import net.corda.core.crypto.Crypto
 import net.corda.core.utilities.OpaqueBytes
 import net.corda.testing.core.TestIdentity
 import kotlin.random.Random
-import kotlin.reflect.full.findAnnotation
 
 class DeserializeAnonymousPartyBCECR1AndReferenceTest :
     DeserializationTestBase<DeserializeAnonymousPartyBCECR1AndReferenceTest, DeserializeAnonymousPartyBCECR1AndReferenceTest.Data>({
-        it.data.toZincJson(
-            serialName = BCECSurrogate::class.findAnnotation<SerialName>()!!.value,
-            encodedSize = BCECSurrogate.ENCODED_SIZE
-        )
+        it.data.toZincJson(BCECSurrogate.ENCODED_SIZE)
     }) {
     override fun getZincZKService() = getZincZKService<DeserializeAnonymousPartyBCECR1AndReferenceTest>()
 

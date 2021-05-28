@@ -1,22 +1,17 @@
-package com.ing.zknotary.zinc.types.attachmentconstraint
+package com.ing.zknotary.zinc.types.corda.attachmentconstraint
 
-import com.ing.zknotary.common.serialization.bfl.serializers.AutomaticPlaceholderConstraintSurrogate
 import com.ing.zknotary.common.zkp.ZincZKService
 import com.ing.zknotary.zinc.types.DeserializationTestBase
 import com.ing.zknotary.zinc.types.toZincJson
 import kotlinx.serialization.Polymorphic
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import net.corda.core.contracts.AttachmentConstraint
 import net.corda.core.contracts.AutomaticPlaceholderConstraint
-import kotlin.reflect.full.findAnnotation
 
 class DeserializeAutomaticPlaceholderConstraintTest :
     DeserializationTestBase<DeserializeAutomaticPlaceholderConstraintTest, DeserializeAutomaticPlaceholderConstraintTest.Data>(
         {
-            it.data.toZincJson(
-                serialName = AutomaticPlaceholderConstraintSurrogate::class.findAnnotation<SerialName>()!!.value,
-            )
+            it.data.toZincJson()
         }
     ) {
     override fun getZincZKService(): ZincZKService =

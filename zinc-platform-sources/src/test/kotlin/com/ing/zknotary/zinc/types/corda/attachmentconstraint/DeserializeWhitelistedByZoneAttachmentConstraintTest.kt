@@ -1,22 +1,17 @@
-package com.ing.zknotary.zinc.types.attachmentconstraint
+package com.ing.zknotary.zinc.types.corda.attachmentconstraint
 
-import com.ing.zknotary.common.serialization.bfl.serializers.WhitelistedByZoneAttachmentConstraintSurrogate
 import com.ing.zknotary.common.zkp.ZincZKService
 import com.ing.zknotary.zinc.types.DeserializationTestBase
 import com.ing.zknotary.zinc.types.toZincJson
 import kotlinx.serialization.Polymorphic
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import net.corda.core.contracts.AttachmentConstraint
 import net.corda.core.contracts.WhitelistedByZoneAttachmentConstraint
-import kotlin.reflect.full.findAnnotation
 
 class DeserializeWhitelistedByZoneAttachmentConstraintTest :
     DeserializationTestBase<DeserializeWhitelistedByZoneAttachmentConstraintTest, DeserializeWhitelistedByZoneAttachmentConstraintTest.Data>(
         {
-            it.data.toZincJson(
-                serialName = WhitelistedByZoneAttachmentConstraintSurrogate::class.findAnnotation<SerialName>()!!.value,
-            )
+            it.data.toZincJson()
         }
     ) {
     override fun getZincZKService(): ZincZKService =

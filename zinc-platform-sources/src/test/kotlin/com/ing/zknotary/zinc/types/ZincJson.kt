@@ -65,18 +65,18 @@ fun TimeWindow.toZincJson() = toJsonObject().toString()
 fun PrivacySalt.toZincJson() = toJsonObject().toString()
 fun SecureHash.toZincJson() = toJsonObject().toString()
 fun StateRef.toZincJson() = toJsonObject().toString()
-fun PublicKey.toZincJson(serialName: String, encodedSize: Int) =
-    toJsonObject(serialName, encodedSize).toString()
-fun Party.toZincJson(serialName: String, encodedSize: Int) =
-    toJsonObject(serialName, encodedSize).toString()
-fun AnonymousParty.toZincJson(serialName: String, encodedSize: Int) =
-    toJsonObject(serialName, encodedSize).toString()
-fun AbstractParty.toZincJson(serialName: String, encodedSize: Int) =
-    toJsonObject(serialName, encodedSize).toString()
-fun PartyAndReference.toZincJson(serialName: String, encodedSize: Int) =
-    toJsonObject(serialName, encodedSize).toString()
-fun AttachmentConstraint.toZincJson(serialName: String, pkSerialName: String? = null, encodedSize: Int? = null) =
-    toJsonObject(serialName, pkSerialName, encodedSize).toString()
+fun PublicKey.toZincJson(encodedSize: Int) =
+    toJsonObject(encodedSize).toString()
+fun Party.toZincJson(encodedSize: Int) =
+    toJsonObject(encodedSize).toString()
+fun AnonymousParty.toZincJson(encodedSize: Int) =
+    toJsonObject(encodedSize).toString()
+fun AbstractParty.toZincJson(encodedSize: Int) =
+    toJsonObject(encodedSize).toString()
+fun PartyAndReference.toZincJson(encodedSize: Int) =
+    toJsonObject(encodedSize).toString()
+fun AttachmentConstraint.toZincJson(encodedSize: Int? = null) =
+    toJsonObject(encodedSize).toString()
 
 fun String?.toJsonObject(size: Int) = buildJsonObject {
     put("chars", toSizedIntArray(size).toJsonArray())
@@ -179,8 +179,7 @@ fun StateRef.toJsonObject() = buildJsonObject {
     put("index", "$index")
 }
 
-fun PublicKey.toJsonObject(serialName: String, encodedSize: Int) = buildJsonObject {
-    put("serial_name", serialName.toJsonObject(1))
+fun PublicKey.toJsonObject(encodedSize: Int) = buildJsonObject {
     val scheme = Crypto.findSignatureScheme(this@toJsonObject)
     if (scheme == Crypto.ECDSA_SECP256K1_SHA256 || scheme == Crypto.ECDSA_SECP256R1_SHA256) {
         put("scheme_id", "${scheme.schemeNumberID}")
@@ -195,37 +194,35 @@ fun CordaX500Name.toJsonObject() = buildJsonObject {
     put("name", name.toJsonArray())
 }
 
-fun AbstractParty.toJsonObject(serialName: String, encodedSize: Int) = buildJsonObject {
+fun AbstractParty.toJsonObject(encodedSize: Int) = buildJsonObject {
     nameOrNull()?.let { put("name", it.toJsonObject()) }
-    put("owning_key", owningKey.toJsonObject(serialName, encodedSize))
+    put("owning_key", owningKey.toJsonObject(encodedSize))
 }
 
-fun AnonymousParty.toJsonObject(serialName: String, encodedSize: Int) = buildJsonObject {
-    put("owning_key", owningKey.toJsonObject(serialName, encodedSize))
+fun AnonymousParty.toJsonObject(encodedSize: Int) = buildJsonObject {
+    put("owning_key", owningKey.toJsonObject(encodedSize))
 }
 
-fun Party.toJsonObject(serialName: String, encodedSize: Int) = buildJsonObject {
+fun Party.toJsonObject(encodedSize: Int) = buildJsonObject {
     put("name", name.toJsonObject())
-    put("owning_key", owningKey.toJsonObject(serialName, encodedSize))
+    put("owning_key", owningKey.toJsonObject(encodedSize))
 }
 
-fun PartyAndReference.toJsonObject(serialName: String, encodedSize: Int) = buildJsonObject {
-    put("party", party.toJsonObject(serialName, encodedSize))
+fun PartyAndReference.toJsonObject(encodedSize: Int) = buildJsonObject {
+    put("party", party.toJsonObject(encodedSize))
     put("reference", reference.bytes.toJsonObject(PartyAndReferenceSurrogate.REFERENCE_SIZE))
 }
 
-fun AttachmentConstraint.toJsonObject(serialName: String, pkSerialName: String? = null, encodedSize: Int? = null) = when (this) {
+fun AttachmentConstraint.toJsonObject(encodedSize: Int? = null) = when (this) {
     is HashAttachmentConstraint -> toJsonObject()
-    is SignatureAttachmentConstraint -> toJsonObject(requireNotNull(pkSerialName), requireNotNull(encodedSize))
-    else -> buildJsonObject {
-        put("serial_name", serialName.toJsonObject(1))
-    }
+    is SignatureAttachmentConstraint -> toJsonObject(requireNotNull(encodedSize))
+    else -> buildJsonObject {}
 }
 
 fun HashAttachmentConstraint.toJsonObject() = buildJsonObject {
     put("attachment_id", attachmentId.toJsonObject())
 }
 
-fun SignatureAttachmentConstraint.toJsonObject(serialName: String, encodedSize: Int) = buildJsonObject {
-    put("public_key", key.toJsonObject(serialName, encodedSize))
+fun SignatureAttachmentConstraint.toJsonObject(encodedSize: Int) = buildJsonObject {
+    put("public_key", key.toJsonObject(encodedSize))
 }

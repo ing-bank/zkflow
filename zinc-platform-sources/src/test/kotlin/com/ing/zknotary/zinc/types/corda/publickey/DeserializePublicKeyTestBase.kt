@@ -10,10 +10,9 @@ import java.security.PublicKey
 
 abstract class DeserializePublicKeyTestBase<T : DeserializePublicKeyTestBase<T>>(
     private val scheme: SignatureScheme,
-    private val serialName: String,
     private val encodedSize: Int
 ) : DeserializationTestBase<T, DeserializePublicKeyTestBase.Data>(
-    { it.data.toZincJson(serialName, encodedSize) },
+    { it.data.toZincJson(encodedSize) },
 ) {
 
     @Serializable

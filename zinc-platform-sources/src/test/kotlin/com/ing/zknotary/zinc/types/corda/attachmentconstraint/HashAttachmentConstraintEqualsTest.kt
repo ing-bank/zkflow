@@ -1,15 +1,12 @@
-package com.ing.zknotary.zinc.types.attachmentconstraint
+package com.ing.zknotary.zinc.types.corda.attachmentconstraint
 
 import com.ing.zknotary.common.crypto.ZINC
-import com.ing.zknotary.common.serialization.bfl.serializers.HashAttachmentConstraintSurrogate
 import com.ing.zknotary.zinc.types.getZincZKService
 import com.ing.zknotary.zinc.types.toJsonObject
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.json.buildJsonObject
 import net.corda.core.contracts.HashAttachmentConstraint
 import net.corda.core.crypto.SecureHash
 import org.junit.jupiter.api.Test
-import kotlin.reflect.full.findAnnotation
 import kotlin.time.ExperimentalTime
 
 @ExperimentalTime
@@ -34,15 +31,11 @@ class HashAttachmentConstraintEqualsTest {
         val witness = buildJsonObject {
             put(
                 "left",
-                left.toJsonObject(
-                    serialName = HashAttachmentConstraintSurrogate::class.findAnnotation<SerialName>()!!.value,
-                )
+                left.toJsonObject()
             )
             put(
                 "right",
-                right.toJsonObject(
-                    serialName = HashAttachmentConstraintSurrogate::class.findAnnotation<SerialName>()!!.value,
-                )
+                right.toJsonObject()
             )
         }.toString()
 
