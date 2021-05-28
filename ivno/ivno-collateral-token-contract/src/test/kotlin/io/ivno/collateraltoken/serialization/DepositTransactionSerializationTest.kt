@@ -46,7 +46,7 @@ class DepositTransactionSerializationTest : ContractTest() {
                 HashAttachmentConstraint(SecureHash.zeroHash)
             )
         )
-        val commands = listOf(Command(DepositContract.Request(), listOf(BANK_A.party.owningKey)))
+        val commands = listOf(Command(DepositContract.Request, listOf(BANK_A.party.owningKey)))
         val attachments = List(1) { SecureHash.randomSHA256() }
         val notary = TestIdentity.fresh("Notary").party
         val timeWindow = TimeWindow.fromOnly(Instant.now())

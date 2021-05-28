@@ -38,50 +38,48 @@ class DepositContract : Contract {
     }
 
     @Serializable
-    class Request : DepositContractCommand {
-        companion object {
-            internal const val CONTRACT_RULE_DEPOSIT_INPUTS =
-                "On deposit requesting, zero deposit states must be consumed."
+    object Request : DepositContractCommand {
+        internal const val CONTRACT_RULE_DEPOSIT_INPUTS =
+            "On deposit requesting, zero deposit states must be consumed."
 
-            internal const val CONTRACT_RULE_DEPOSIT_OUTPUTS =
-                "On deposit requesting, only one deposit state must be created."
+        internal const val CONTRACT_RULE_DEPOSIT_OUTPUTS =
+            "On deposit requesting, only one deposit state must be created."
 
-            internal const val CONTRACT_RULE_TOKEN_TYPE_REFERENCES =
-                "On deposit requesting, only one Ivno token type must be referenced."
+        internal const val CONTRACT_RULE_TOKEN_TYPE_REFERENCES =
+            "On deposit requesting, only one Ivno token type must be referenced."
 
-            internal const val CONTRACT_RULE_MEMBERSHIP_REFERENCES =
-                "On deposit requesting, a membership state must be referenced for each deposit participant."
+        internal const val CONTRACT_RULE_MEMBERSHIP_REFERENCES =
+            "On deposit requesting, a membership state must be referenced for each deposit participant."
 
-            internal const val CONTRACT_RULE_MEMBERSHIP_ATTESTATION_REFERENCES =
-                "On deposit requesting, a membership attestation state must be referenced for each deposit participant."
+        internal const val CONTRACT_RULE_MEMBERSHIP_ATTESTATION_REFERENCES =
+            "On deposit requesting, a membership attestation state must be referenced for each deposit participant."
 
-            internal const val CONTRACT_RULE_MEMBERSHIP_ATTESTATION_STATUS =
-                "On deposit requesting, every membership attestation status must be ACCEPTED."
+        internal const val CONTRACT_RULE_MEMBERSHIP_ATTESTATION_STATUS =
+            "On deposit requesting, every membership attestation status must be ACCEPTED."
 
-            internal const val CONTRACT_RULE_MEMBERSHIP_NETWORK =
-                "On deposit requesting, every membership's network must be equal to the Ivno token type network."
+        internal const val CONTRACT_RULE_MEMBERSHIP_NETWORK =
+            "On deposit requesting, every membership's network must be equal to the Ivno token type network."
 
-            internal const val CONTRACT_RULE_MEMBERSHIP_ATTESTATION_NETWORK =
-                "On deposit requesting, every membership attestation's network must be equal to the Ivno token type network."
+        internal const val CONTRACT_RULE_MEMBERSHIP_ATTESTATION_NETWORK =
+            "On deposit requesting, every membership attestation's network must be equal to the Ivno token type network."
 
-            internal const val CONTRACT_RULE_MEMBERSHIP_ATTESTATIONS_POINT_TO_MEMBERSHIP_REFERENCES =
-                "On deposit requesting, every membership attestation state must point to a referenced membership state."
+        internal const val CONTRACT_RULE_MEMBERSHIP_ATTESTATIONS_POINT_TO_MEMBERSHIP_REFERENCES =
+            "On deposit requesting, every membership attestation state must point to a referenced membership state."
 
-            internal const val CONTRACT_RULE_PARTICIPANTS =
-                "On deposit requesting, the depositor, custodian and token issuing entity must be different participants."
+        internal const val CONTRACT_RULE_PARTICIPANTS =
+            "On deposit requesting, the depositor, custodian and token issuing entity must be different participants."
 
-            internal const val CONTRACT_RULE_AMOUNT =
-                "On deposit requesting, the amount must be greater than zero."
+        internal const val CONTRACT_RULE_AMOUNT =
+            "On deposit requesting, the amount must be greater than zero."
 
-            internal const val CONTRACT_RULE_REFERENCE =
-                "On deposit requesting, the reference must be null."
+        internal const val CONTRACT_RULE_REFERENCE =
+            "On deposit requesting, the reference must be null."
 
-            internal const val CONTRACT_RULE_STATUS =
-                "On deposit requesting, the status must be DEPOSIT_REQUESTED."
+        internal const val CONTRACT_RULE_STATUS =
+            "On deposit requesting, the status must be DEPOSIT_REQUESTED."
 
-            internal const val CONTRACT_RULE_SIGNERS =
-                "On deposit requesting, the depositor must sign the transaction."
-        }
+        internal const val CONTRACT_RULE_SIGNERS =
+            "On deposit requesting, the depositor must sign the transaction."
 
         override fun verify(tx: LedgerTransaction, signers: Set<PublicKey>) = requireThat {
             val depositInputs = tx.inputsOfType<Deposit>()
@@ -128,6 +126,7 @@ class DepositContract : Contract {
         )
     }
 
+    @Serializable
     object Advance : DepositContractCommand {
 
         internal const val CONTRACT_RULE_DEPOSIT_INPUTS =
