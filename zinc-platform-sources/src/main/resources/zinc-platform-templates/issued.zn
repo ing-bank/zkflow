@@ -1,0 +1,68 @@
+// Input parameters:
+//   - TYPE_NAME: String = Name of the main struct, and suffix for Serialized struct, use camelcase
+//   - CONSTANT_PREFIX: String = prefix to use for constant names, use uppercase
+//   - ISS_TYPE_NAME: String = name of the issuer struct, and suffix for Serialized struct, use camelcase
+//   - ISS_CONSTANT_PREFIX: String = prefix used for constant names of the issuer, use uppercase and snakecase
+//   - ISS_MODULE_NAME: String = module name of the issuer, use lowercase and snakecase
+//   - PRD_TYPE_NAME: String = name of the product struct, and suffix for Serialized struct, use camelcase
+//   - PRD_CONSTANT_PREFIX: String = prefix used for constant names of the product, use uppercase and snakecase
+//   - PRD_MODULE_NAME: String = module name of the product, use lowercase and snakecase
+
+mod ${ISS_MODULE_NAME};
+mod ${PRD_MODULE_NAME};
+
+use ${ISS_MODULE_NAME}::${ISS_TYPE_NAME};
+use ${ISS_MODULE_NAME}::Serialized${ISS_TYPE_NAME};
+use ${ISS_MODULE_NAME}::${ISS_CONSTANT_PREFIX}_LENGTH;
+
+use ${PRD_MODULE_NAME}::${PRD_TYPE_NAME};
+use ${PRD_MODULE_NAME}::Serialized${PRD_TYPE_NAME};
+use ${PRD_MODULE_NAME}::${PRD_CONSTANT_PREFIX}_LENGTH;
+
+//! lengths
+const ${CONSTANT_PREFIX}_ISSUER_LENGTH: u16 = ${ISS_CONSTANT_PREFIX}_LENGTH;
+const ${CONSTANT_PREFIX}_PRODUCT_LENGTH: u16 = ${PRD_CONSTANT_PREFIX}_LENGTH;
+
+//! offsets
+const ${CONSTANT_PREFIX}_ISSUER_OFFSET: u16 = 0;
+const ${CONSTANT_PREFIX}_PRODUCT_OFFSET: u16
+    = ${CONSTANT_PREFIX}_ISSUER_OFFSET
+    + ${CONSTANT_PREFIX}_ISSUER_LENGTH;
+//! length
+const ${CONSTANT_PREFIX}_LENGTH: u16
+    = ${CONSTANT_PREFIX}_PRODUCT_OFFSET
+    + ${CONSTANT_PREFIX}_PRODUCT_LENGTH;
+
+type Serialized${TYPE_NAME} = [u8; ${CONSTANT_PREFIX}_LENGTH];
+struct ${TYPE_NAME} {
+    issuer: ${ISS_TYPE_NAME},
+    product: ${PRD_TYPE_NAME},
+}
+
+impl ${TYPE_NAME} {
+    fn equals(this: ${TYPE_NAME}, that: ${TYPE_NAME}) -> bool {
+        ${ISS_TYPE_NAME}::equals(this.issuer, that.issuer)
+            && ${PRD_TYPE_NAME}::equals(this.product, that.product)
+    }
+
+    fn deserialize(serialized: Serialized${TYPE_NAME}) -> ${TYPE_NAME} {
+        let issuer = {
+            let mut issuer_bytes = [0; ${CONSTANT_PREFIX}_ISSUER_LENGTH];
+            for i in 0..${CONSTANT_PREFIX}_ISSUER_LENGTH {
+                issuer_bytes[i] = serialized[i + ${CONSTANT_PREFIX}_ISSUER_OFFSET];
+            }
+            ${ISS_TYPE_NAME}::deserialize(issuer_bytes)
+        };
+        let product = {
+            let mut product_bytes = [0; ${CONSTANT_PREFIX}_PRODUCT_LENGTH];
+            for i in 0..${CONSTANT_PREFIX}_PRODUCT_LENGTH {
+                product_bytes[i] = serialized[i + ${CONSTANT_PREFIX}_PRODUCT_OFFSET];
+            }
+            ${PRD_TYPE_NAME}::deserialize(product_bytes)
+        };
+        ${TYPE_NAME} {
+            issuer: issuer,
+            product: product,
+        }
+    }
+}

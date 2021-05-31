@@ -18,6 +18,7 @@ import kotlinx.serialization.modules.SerializersModule
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.AttachmentConstraint
 import net.corda.core.contracts.HashAttachmentConstraint
+import net.corda.core.contracts.Issued
 import net.corda.core.contracts.LinearPointer
 import net.corda.core.contracts.PartyAndReference
 import net.corda.core.contracts.PrivacySalt
@@ -32,6 +33,7 @@ import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
+import org.apache.activemq.artemis.api.core.JsonUtil.toJsonObject
 import java.math.BigDecimal
 import java.security.PublicKey
 import java.time.Duration
@@ -76,6 +78,8 @@ fun AbstractParty.toZincJson(encodedSize: Int) =
 fun PartyAndReference.toZincJson(encodedSize: Int) =
     toJsonObject(encodedSize).toString()
 fun AttachmentConstraint.toZincJson(encodedSize: Int? = null) =
+    toJsonObject(encodedSize).toString()
+fun Issued<String>.toZincJson(encodedSize: Int) =
     toJsonObject(encodedSize).toString()
 
 fun String?.toJsonObject(size: Int) = buildJsonObject {
@@ -225,4 +229,9 @@ fun HashAttachmentConstraint.toJsonObject() = buildJsonObject {
 
 fun SignatureAttachmentConstraint.toJsonObject(encodedSize: Int) = buildJsonObject {
     put("public_key", key.toJsonObject(encodedSize))
+}
+
+fun Issued<String>.toJsonObject(encodedSize: Int, productStringSize: Int = 1) = buildJsonObject {
+    put("issuer", issuer.toJsonObject(encodedSize))
+    put("product", product.toJsonObject(productStringSize))
 }

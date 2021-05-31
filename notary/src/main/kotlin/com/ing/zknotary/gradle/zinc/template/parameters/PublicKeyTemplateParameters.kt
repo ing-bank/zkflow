@@ -30,11 +30,16 @@ data class PublicKeyTemplateParameters(
         private const val TEMPLATE = "public_key.zn"
         private const val TEMPLATE_WITH_SCHEME_ID = "public_key_with_scheme_id.zn"
 
+        val bcrsaTemplateParameters = PublicKeyTemplateParameters(TEMPLATE, "BCRSAPublicKey", BCRSASurrogate.ENCODED_SIZE)
+        val bcecTemplateParameters = PublicKeyTemplateParameters(TEMPLATE_WITH_SCHEME_ID, "BCECPublicKey", BCECSurrogate.ENCODED_SIZE)
+        val eddsaTemplateParameters = PublicKeyTemplateParameters(TEMPLATE, "EdDSAPublicKey", EdDSASurrogate.ENCODED_SIZE)
+        val sphincs256TemplateParameters = PublicKeyTemplateParameters(TEMPLATE, "BCSphincs256PublicKey", BCSphincs256Surrogate.ENCODED_SIZE)
+
         val all = listOf(
-            PublicKeyTemplateParameters(TEMPLATE, "BCRSAPublicKey", BCRSASurrogate.ENCODED_SIZE),
-            PublicKeyTemplateParameters(TEMPLATE_WITH_SCHEME_ID, "BCECPublicKey", BCECSurrogate.ENCODED_SIZE),
-            PublicKeyTemplateParameters(TEMPLATE, "EdDSAPublicKey", EdDSASurrogate.ENCODED_SIZE),
-            PublicKeyTemplateParameters(TEMPLATE, "BCSphincs256PublicKey", BCSphincs256Surrogate.ENCODED_SIZE)
+            bcrsaTemplateParameters,
+            bcecTemplateParameters,
+            eddsaTemplateParameters,
+            sphincs256TemplateParameters
         )
     }
 }
