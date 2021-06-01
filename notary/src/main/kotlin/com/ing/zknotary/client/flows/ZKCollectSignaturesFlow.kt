@@ -215,7 +215,6 @@ class ZKCollectSignaturesFlow @JvmOverloads constructor(
     }
 }
 
-// DOCSTART 1
 /**
  * Get and check the required signature.
  *
@@ -252,7 +251,6 @@ class ZKCollectSignatureFlow(
         }
     }
 }
-// DOCEND 1
 
 /**
  * The [SignTransactionFlow] should be called in response to the [CollectSignaturesFlow]. It automates the signing of

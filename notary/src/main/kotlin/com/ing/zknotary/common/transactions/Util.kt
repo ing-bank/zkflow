@@ -40,7 +40,6 @@ fun ServiceHub.collectUtxoInfos(
 ): List<UtxoInfo> {
     val collectFromTransactionStorage: (StateRef) -> UtxoInfo =
         {
-            // First see if we received the stateInfo before querying:
             val prevStx = validatedTransactions.getTransaction(it.txhash)
                 ?: throw TransactionResolutionException(it.txhash, "Plaintext tx not found for hash ${it.txhash}")
 

@@ -39,7 +39,7 @@ class DepositTransactionSerializationTest : ContractTest() {
     @Test
     @Suppress("LongMethod")
     fun `Deposit Request transaction serializes`() = withCustomSerializationEnv {
-        val inputs = listOf(dummyStateRef()) // TODO: This should be remove once the outputs are added back
+        val inputs = listOf(dummyStateRef())
         val constrainedOutputs = listOf(
             ConstrainedState(
                 StateAndContract(DEPOSIT, DepositContract.ID),

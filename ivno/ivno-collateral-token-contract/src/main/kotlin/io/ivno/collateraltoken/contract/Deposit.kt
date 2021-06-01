@@ -42,20 +42,29 @@ data class Deposit internal constructor(
     val depositor: @Contextual AnonymousParty,
     val custodian: @Contextual AnonymousParty,
     val tokenIssuingEntity: @Contextual AnonymousParty,
-    @BigDecimalSizes([20, 4]) val amount: @Contextual BigDecimalAmount<@Contextual LinearPointer<@Contextual IvnoTokenType>>,
-    @FixedLength([20]) val reference: String?,
+    @BigDecimalSizes([AMOUNT_INT_LENGTH, AMOUNT_FRAC_LENGTH]) val amount: @Contextual BigDecimalAmount<@Contextual LinearPointer<@Contextual IvnoTokenType>>,
+    @FixedLength([REFERENCE_LENGTH]) val reference: String?,
     val status: DepositStatus,
     val timestamp: @Contextual Instant,
-    @FixedLength([20]) val accountId: String,
-    override val linearId: @Contextual UniqueIdentifier
+    @FixedLength([ACCOUNT_ID_LENGTH]) val accountId: String,
+    override val linearId: @Contextual UniqueIdentifier,
 ) : LinearState, QueryableState, ZKContractState {
 
+    @FixedLength([PARTICIPANTS_LENGTH]) override val participants: List<@Contextual AnonymousParty> = listOf(depositor, custodian, tokenIssuingEntity)
+
+    companion object {
+        const val AMOUNT_INT_LENGTH = 20
+        const val AMOUNT_FRAC_LENGTH = 4
+        const val ACCOUNT_ID_LENGTH = 20
+        const val REFERENCE_LENGTH = 20
+        const val PARTICIPANTS_LENGTH = 3
+    }
+
     init {
-        /*
-         * TODO: This is a hack to ensure that the singleton is initialized. In Kotlin they are lazy until accessed.
-         * In a CorDapp, there is no place to put startup code. Couldn't think of another place
-         * to put the code that registers serializers.
-         */
+        require(accountId.length <= ACCOUNT_ID_LENGTH)
+        reference?.let { require(it.length <= REFERENCE_LENGTH) }
+        require(bigDecimalSizesMatch(AMOUNT_INT_LENGTH,AMOUNT_FRAC_LENGTH))
+
         IvnoSerializers
     }
 
@@ -77,8 +86,6 @@ data class Deposit internal constructor(
         accountId,
         linearId
     )
-
-    override val participants: List<AnonymousParty> get() = listOf(depositor, custodian, tokenIssuingEntity)
 
     /**
      * Maps this state to a persistent state.
@@ -215,4 +222,8 @@ data class Deposit internal constructor(
 
         return copy(status = status, timestamp = Instant.now())
     }
+
+    private fun bigDecimalSizesMatch(maxIntSize: Int, maxFracSize: Int): Boolean =
+        amount.quantity.toBigInteger().toByteArray().size <= maxIntSize &&
+            amount.quantity.scale() <= maxFracSize
 }
