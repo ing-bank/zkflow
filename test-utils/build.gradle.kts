@@ -17,12 +17,16 @@ dependencies {
 
     val kotlinxSerializationVersion: String by project
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:$kotlinxSerializationVersion")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
 
     val kotlinxSerializationBflVersion: String by project
     implementation("com.ing.serialization.bfl:kotlinx-serialization-bfl:$kotlinxSerializationBflVersion")
 
     val kotestVersion: String by project
     implementation("io.kotest:kotest-assertions-core:$kotestVersion")
+
+    val junit5Version: String by project
+    implementation("org.junit.jupiter:junit-jupiter-params:$junit5Version")
 }
 
 kotlin {

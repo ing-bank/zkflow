@@ -1,4 +1,5 @@
 import com.ing.zknotary.gradle.zinc.template.parameters.BigDecimalTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.parameters.StringTemplateParameters
 
 plugins {
     id 'com.ing.zknotary.gradle-plugin'
@@ -18,8 +19,11 @@ cordapp {
     }
 }
 
+// The numeric values refer to the lengths used by the serializable surrogates, e.g. RoleSurrogate.VALUE_LENGTH
+// If any of these lengths are changed in the respective Kotlin files, the relevant values shall be also updated here!!!
 zkp {
     bigDecimalConfigurations = [new BigDecimalTemplateParameters(20, 4)]
+    stringConfigurations = Arrays.asList(new StringTemplateParameters(20.shortValue()))
 }
 
 dependencies {
@@ -46,12 +50,16 @@ dependencies {
     testImplementation "com.ing.zknotary:test-utils"
     testImplementation("io.kotest:kotest-assertions-core:4.3.1")
 
+    // kotlinx dependencies
+    testImplementation "$kotlinx_group:kotlinx-serialization-core:$kotlinx_version"
+    testImplementation "$kotlinx_group:kotlinx-serialization-json:$kotlinx_version"
+
 }
 
 test {
     jvmArgs = ["-ea", "-javaagent:../lib/quasar.jar"]
     maxHeapSize = "1024m"
 //        forkEvery = 15
-    //failFast = true // this causes the tests to fail on the first failure - usful for cci debugging
+    //failFast = true // this causes the tests to fail on the first failure - useful for cci debugging
     useJUnitPlatform()
 }

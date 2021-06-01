@@ -2,10 +2,10 @@ package com.ing.zknotary.zinc.types.java.string
 
 import com.ing.serialization.bfl.annotations.FixedLength
 import com.ing.serialization.bfl.api.reified.serialize
-import com.ing.zknotary.zinc.types.getZincZKService
+import com.ing.zknotary.testing.getZincZKService
+import com.ing.zknotary.testing.toJsonArray
 import com.ing.zknotary.zinc.types.proveTimed
 import com.ing.zknotary.zinc.types.setupTimed
-import com.ing.zknotary.zinc.types.toJsonArray
 import com.ing.zknotary.zinc.types.verifyTimed
 import kotlinx.serialization.Serializable
 import net.corda.core.utilities.loggerFor

@@ -1,6 +1,7 @@
 package com.ing.zknotary.gradle.plugin
 
 import com.ing.zknotary.gradle.extension.ZKNotaryExtension
+import com.ing.zknotary.gradle.task.folderIfExists
 import org.gradle.api.Project
 import org.gradle.api.file.FileTree
 import java.io.File
@@ -22,7 +23,12 @@ val Project.zkNotaryExtension: ZKNotaryExtension
 val Project.circuitNames: List<String>?
     get() {
         return zkNotaryExtension.circuitSourcesBasePath
-            .listFiles { file, _ -> file?.isDirectory ?: false }?.map { it.name }
+            .listFiles { file, _ -> file?.isDirectory ?: false }?.map { it.name }?.filterNot { it == zkNotaryExtension.zincCommonFolderName }
+    }
+
+val Project.zincCommonFolderName: String?
+    get() {
+        return zkNotaryExtension.zincCommonFolderName.folderIfExists(zkNotaryExtension.circuitSourcesBasePath)
     }
 
 val Project.platformSources: Array<File>
@@ -51,6 +57,14 @@ val Project.platformTemplates: Array<File>
 val Project.platformSamples: FileTree
     get() {
         return project.platformSourcesFileTree.matching { it.include(zkNotaryExtension.platformSamplesPath + zkNotaryExtension.zincFilesGlob) }
+    }
+
+// It is assumed that for every zinc test a similarly named folder ending in 'Test' (e.g. <test-name>Test) exists within
+// the resources folder of the project, containing the necessary zinc files for the test circuit to be run ('Zargo.toml',
+// 'src/main.zn')
+val Project.zincTestFolderNames: List<File>
+    get() {
+        return zkNotaryExtension.generatedTestResourcesDir.walkTopDown().filter { it.name.endsWith("Test") }.toList()
     }
 
 fun Project.getTemplateContents(templateFileName: String): String {

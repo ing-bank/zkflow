@@ -44,6 +44,12 @@ open class ZKNotaryExtension(project: Project) : TemplateConfigurations() {
     @InputDirectory
     val circuitSourcesBasePath: File = project.projectDir.resolve(CIRCUIT_SOURCES_BASE_PATH)
 
+    @OutputDirectory
+    val generatedTestResourcesDir: File = project.buildDir.resolve("resources/test")
+
+    @Input
+    var zincCommonFolderName = "common"
+
     @Input
     val zincFilesGlob = "**/*.zn"
 

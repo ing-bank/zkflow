@@ -1,6 +1,6 @@
 package com.ing.zknotary.zinc.types.java.instant
 
-import com.ing.zknotary.zinc.types.getZincZKService
+import com.ing.zknotary.testing.getZincZKService
 import com.ing.zknotary.zinc.types.toJsonObject
 import kotlinx.serialization.json.buildJsonObject
 import org.junit.jupiter.api.Test

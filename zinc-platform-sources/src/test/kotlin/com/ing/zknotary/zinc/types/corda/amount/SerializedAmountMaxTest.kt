@@ -6,10 +6,10 @@ import com.ing.serialization.bfl.serializers.BFLSerializers
 import com.ing.serialization.bfl.serializers.CurrencySerializer
 import com.ing.zknotary.common.serialization.bfl.corda.AmountSerializer
 import com.ing.zknotary.common.zkp.ZKRunException
-import com.ing.zknotary.zinc.types.getZincZKService
+import com.ing.zknotary.testing.getZincZKService
+import com.ing.zknotary.testing.toJsonArray
 import com.ing.zknotary.zinc.types.proveTimed
 import com.ing.zknotary.zinc.types.sha256
-import com.ing.zknotary.zinc.types.toJsonArray
 import com.ing.zknotary.zinc.types.toZincJson
 import com.ing.zknotary.zinc.types.verifyTimed
 import io.kotest.matchers.shouldBe

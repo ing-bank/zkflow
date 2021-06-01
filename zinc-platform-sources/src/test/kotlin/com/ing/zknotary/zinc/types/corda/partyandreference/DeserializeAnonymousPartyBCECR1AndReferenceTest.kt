@@ -2,8 +2,8 @@ package com.ing.zknotary.zinc.types.corda.partyandreference
 
 import com.ing.zknotary.common.serialization.bfl.serializers.PartyAndReferenceSurrogate
 import com.ing.zknotary.common.serialization.bfl.serializers.publickey.BCECSurrogate
-import com.ing.zknotary.zinc.types.DeserializationTestBase
-import com.ing.zknotary.zinc.types.getZincZKService
+import com.ing.zknotary.testing.DeserializationTestBase
+import com.ing.zknotary.testing.getZincZKService
 import com.ing.zknotary.zinc.types.toZincJson
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
