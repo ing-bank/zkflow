@@ -5,7 +5,9 @@ import com.ing.zknotary.common.serialization.bfl.serializers.CordaX500NameSerial
 import com.ing.zknotary.testing.toJsonArray
 import com.ing.zknotary.testing.toSizedIntArray
 import io.dasl.contracts.v1.token.TokenDescriptor
+import io.ivno.collateraltoken.serialization.PermissionSurrogate
 import io.ivno.collateraltoken.serialization.RoleSurrogate
+import io.onixlabs.corda.bnms.contract.Permission
 import io.onixlabs.corda.bnms.contract.Role
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
@@ -14,6 +16,7 @@ import net.corda.core.identity.CordaX500Name
 
 fun Role.toZincJson() = toJsonObject().toString()
 fun TokenDescriptor.toZincJson() = toJsonObject().toString()
+fun Permission.toZincJson() = toJsonObject().toString()
 
 fun <T: Enum<T>> T.toZincJson() = toJsonObject().toString()
 
@@ -38,3 +41,7 @@ fun CordaX500Name.toJsonObject() = buildJsonObject {
 }
 
 fun <T: Enum<T>> T.toJsonObject() = JsonPrimitive(this.ordinal.toString())
+
+fun Permission.toJsonObject() = buildJsonObject {
+    put("value", value.toJsonObject(PermissionSurrogate.VALUE_LENGTH))
+}

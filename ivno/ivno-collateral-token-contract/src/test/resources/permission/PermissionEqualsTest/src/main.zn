@@ -1,0 +1,7 @@
+mod permission;
+
+use permission::Permission;
+
+fn main(left: Permission, right: Permission) -> bool {
+    Permission::equals(left, right)
+}
