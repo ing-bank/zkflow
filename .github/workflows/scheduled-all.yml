@@ -1,7 +1,7 @@
 name: Nightly build
 
 env:
-  ZINC_VERSION: "v0.1.5-ING-6"
+  ZINC_VERSION: "v0.1.5-ING-8"
 
 on:
   schedule:
