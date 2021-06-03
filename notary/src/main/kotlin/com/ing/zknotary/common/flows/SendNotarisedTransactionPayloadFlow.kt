@@ -101,17 +101,12 @@ open class ZKDataVendingFlow(val otherSideSession: FlowSession, val payload: Any
         // Once a transaction has been requested, it will be removed from the authorised list. This means that it is a protocol violation to request a transaction twice.
         val authorisedTransactions = when (payload) {
             is ZKNotarisationPayload -> TransactionAuthorisationFilter().addAuthorised(getInputTransactions(payload.transaction.tx))
-//            is SignedTransaction -> TransactionAuthorisationFilter().addAuthorised(getInputTransactions(payload.tx))
             is NotarisedTransactionPayload -> TransactionAuthorisationFilter().addAuthorised(
                 getInputTransactions(
                     payload.stx.tx
                 )
             )
-//            is SignedZKVerifierTransaction -> TransactionAuthorisationFilter().addAuthorised(
-//                getInputTransactions(
-//                    payload.tx
-//                )
-//            )
+
             is RetrieveAnyTransactionPayload -> TransactionAuthorisationFilter(acceptAll = true)
             is List<*> -> TransactionAuthorisationFilter().addAuthorised(
                 payload.flatMap { payloadItem ->

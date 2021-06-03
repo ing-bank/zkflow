@@ -114,6 +114,8 @@ public class TestContract : Contract {
         override val circuit: CircuitMetaData =
             CircuitMetaData(
                 folder = File("${System.getProperty("user.dir")}/../zinc-platform-sources/circuits/move"),
+                // Matches consts.zn for this circuit.
+                // TODO: parse it from consts.zn
                 componentGroupSizes = mapOf(
                     ComponentGroupEnum.SIGNERS_GROUP to 2
                 )

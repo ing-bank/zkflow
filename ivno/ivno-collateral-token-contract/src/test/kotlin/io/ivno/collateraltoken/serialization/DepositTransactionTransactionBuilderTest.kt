@@ -36,7 +36,7 @@ class DepositTransactionTransactionBuilderTest : ContractTest() {
     //             reference(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
     //             output(DepositContract.ID, DEPOSIT)
     //             fails()
-    //             command(keysOf(BANK_A), DepositContract.Request())
+    //             command(keysOf(BANK_A), DepositContract.Request)
     //             verifies()
     //         }
     //     }
@@ -50,7 +50,7 @@ class DepositTransactionTransactionBuilderTest : ContractTest() {
         val outputs = listOf(
             TransactionState(DEPOSIT, notary = notary, constraint = HashAttachmentConstraint(contractAttachmentId))
         )
-        val commands = listOf(Command(DepositContract.Request(), listOf(BANK_A.party.owningKey)))
+        val commands = listOf(Command(DepositContract.Request, listOf(BANK_A.party.owningKey)))
         val attachments = listOf(contractAttachmentId)
         val timeWindow = TimeWindow.fromOnly(Instant.now())
         val references = emptyList<StateRef>()//List(2) { dummyStateRef() }

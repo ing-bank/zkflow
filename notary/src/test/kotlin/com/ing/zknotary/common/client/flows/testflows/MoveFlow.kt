@@ -18,9 +18,6 @@ import net.corda.core.flows.InitiatingFlow
 import net.corda.core.identity.Party
 import net.corda.core.transactions.SignedTransaction
 
-/**
- * Disclaimer: this is not how it is supposed to be used in "real" flows, it works just for this test
- */
 @InitiatingFlow
 class MoveFlow(
     private val createStx: SignedTransaction,
@@ -29,16 +26,15 @@ class MoveFlow(
 
     @Suspendable
     override fun call(): SignedTransaction {
-
         val session = initiateFlow(newOwner)
 
         val me = serviceHub.myInfo.legalIdentities.single()
-        val state = createStx.coreTransaction.outRef<TestContract.TestState>(0)
+        val stateAndRef = createStx.coreTransaction.outRef<TestContract.TestState>(0)
         val command = Command(TestContract.Move(), listOf(newOwner, me).map { it.owningKey })
-        val stateAndContract = StateAndContract(state.state.data.copy(owner = newOwner.anonymise()), TestContract.PROGRAM_ID)
+        val stateAndContract = StateAndContract(stateAndRef.state.data.copy(owner = newOwner.anonymise()), TestContract.PROGRAM_ID)
 
         val builder = ZKTransactionBuilder(serviceHub.networkMapCache.notaryIdentities.single())
-        builder.withItems(state, stateAndContract, command)
+        builder.withItems(stateAndRef, stateAndContract, command)
 
         // Transaction creator signs transaction.
         val selfSignedStx = serviceHub.signInitialTransaction(builder)

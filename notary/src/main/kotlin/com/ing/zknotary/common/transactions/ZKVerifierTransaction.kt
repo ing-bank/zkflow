@@ -95,8 +95,10 @@ class ZKVerifierTransaction(
 
         private fun createComponentGroups(ftx: FilteredTransaction): List<ComponentGroup> {
 
-//             We hide all groups except ones mentioned below.
-//             For hidden groups we only store group hashes. No components, nonces or anything else
+            /*
+             * We hide all groups except ones mentioned below.
+             * For hidden groups we only store group hashes. No components, nonces or anything else
+            */
             return ftx.filteredComponentGroups.filter {
                 it.groupIndex in listOf(
                     ComponentGroupEnum.INPUTS_GROUP.ordinal,
@@ -104,6 +106,7 @@ class ZKVerifierTransaction(
                     ComponentGroupEnum.NOTARY_GROUP.ordinal,
                     ComponentGroupEnum.TIMEWINDOW_GROUP.ordinal,
                     ComponentGroupEnum.PARAMETERS_GROUP.ordinal,
+
                     ComponentGroupEnum.SIGNERS_GROUP.ordinal,
                     ComponentGroupEnum.COMMANDS_GROUP.ordinal
                 )
@@ -112,7 +115,12 @@ class ZKVerifierTransaction(
 
         private fun outputHashes(wtx: WireTransaction, ftx: FilteredTransaction): List<SecureHash> {
             val nonces = ftx.filteredComponentGroups.find { it.groupIndex == ComponentGroupEnum.OUTPUTS_GROUP.ordinal }!!.nonces
-            return wtx.componentGroups.find { it.groupIndex == ComponentGroupEnum.OUTPUTS_GROUP.ordinal }!!.components.mapIndexed { componentIndex, component -> wtx.digestService.componentHash(nonces[componentIndex], component) }
+            return wtx.componentGroups.find { it.groupIndex == ComponentGroupEnum.OUTPUTS_GROUP.ordinal }!!.components.mapIndexed { componentIndex, component ->
+                wtx.digestService.componentHash(
+                    nonces[componentIndex],
+                    component
+                )
+            }
         }
     }
 }

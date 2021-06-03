@@ -252,7 +252,7 @@ abstract class ContractTest {
             reference(memberships.attestationFor(TOKEN_ISSUING_ENTITY).ref)
             reference(tokenType.ref)
             output(DepositContract.ID, label, deposit)
-            command(listOf(deposit.depositor.owningKey), DepositContract.Request())
+            command(listOf(deposit.depositor.owningKey), DepositContract.Request)
             verifies()
         }
 

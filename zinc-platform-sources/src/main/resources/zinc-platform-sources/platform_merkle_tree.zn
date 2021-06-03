@@ -37,7 +37,6 @@ use platform_components_references::compute_references_group_hash;
 use platform_components_signers::compute_signers_group_hash;
 use platform_components_time_window::compute_time_window_group_hash;
 
-// TODO double-check why this is a constant, it seems to be dependant on amount leaves
 const MERKLE_TREE_SIZE: u16 = ${GROUP_SIZE_PLACEHOLDER};
 
 /// Top-level function to be called.
