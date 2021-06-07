@@ -1,0 +1,8 @@
+mod transfer_status;
+
+use transfer_status::TransferStatus;
+use transfer_status::SerializedTransferStatus;
+
+fn main(witness: SerializedTransferStatus) -> TransferStatus {
+    TransferStatus::deserialize(witness)
+}
