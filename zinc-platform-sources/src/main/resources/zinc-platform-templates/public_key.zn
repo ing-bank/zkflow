@@ -29,6 +29,12 @@ struct ${TYPE_NAME} {
 }
 
 impl ${TYPE_NAME} {
+    fn empty() -> ${TYPE_NAME} {
+        ${TYPE_NAME} {
+            encoded: ByteArray_${ENCODED_SIZE}::empty(),
+        }
+    }
+
     fn equals(this: ${TYPE_NAME}, that: ${TYPE_NAME}) -> bool {
         ByteArray_${ENCODED_SIZE}::equals(this.encoded, that.encoded)
     }

@@ -27,6 +27,13 @@ struct ByteArray_${ARRAY_LENGTH} {
 }
 
 impl ByteArray_${ARRAY_LENGTH} {
+    fn empty() -> ByteArray_${ARRAY_LENGTH} {
+        ByteArray_${ARRAY_LENGTH} {
+            size: 0 as u32,
+            bytes: [0; BYTE_ARRAY_${ARRAY_LENGTH}_BYTES_LENGTH],
+        }
+    }
+
     fn equals(this: ByteArray_${ARRAY_LENGTH}, that: ByteArray_${ARRAY_LENGTH}) -> bool {
         let mut still_equal = this.size == that.size;
         for i in 0..BYTE_ARRAY_${ARRAY_LENGTH}_BYTES_LENGTH while still_equal {

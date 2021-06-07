@@ -1,4 +1,8 @@
+import com.ing.zknotary.common.serialization.bfl.serializers.publickey.EdDSASurrogate
+import com.ing.zknotary.gradle.zinc.template.parameters.AbstractPartyTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.BigDecimalTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.parameters.NullableTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.parameters.PublicKeyTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.StringTemplateParameters
 
 plugins {
@@ -25,6 +29,13 @@ zkp {
     bigDecimalConfigurations = [new BigDecimalTemplateParameters(20, 4)]
     stringConfigurations = [20, 32]
             .collect { new StringTemplateParameters(it.shortValue()) }
+    nullableConfigurations = [
+            new NullableTemplateParameters(
+                    "nullable.zn",
+                    new AbstractPartyTemplateParameters("Party", new PublicKeyTemplateParameters("public_key.zn", "EdDSAPublicKey", EdDSASurrogate.ENCODED_SIZE)),
+                    null
+            )
+    ]
 }
 
 dependencies {
@@ -44,6 +55,7 @@ dependencies {
     // Test Dependencies
     testRuntimeOnly "$junit_group:junit-jupiter-engine:$junit_version"
     testImplementation "$junit_group:junit-jupiter-api:$junit_version"
+    testImplementation "$junit_group:junit-jupiter-params:$junit_version"
     testImplementation "$kotlin_group:kotlin-test:$kotlin_version"
     testImplementation "$corda_group:corda-node-driver:$corda_release_version"
 
