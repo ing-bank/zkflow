@@ -2,8 +2,8 @@ package com.ing.zknotary.zinc.types.corda.uniqueidentifier
 
 import com.ing.serialization.bfl.api.reified.serialize
 import com.ing.zknotary.common.serialization.bfl.serializers.CordaSerializers
-import com.ing.zknotary.zinc.types.getZincZKService
-import com.ing.zknotary.zinc.types.toJsonArray
+import com.ing.zknotary.testing.getZincZKService
+import com.ing.zknotary.testing.toJsonArray
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.buildJsonObject

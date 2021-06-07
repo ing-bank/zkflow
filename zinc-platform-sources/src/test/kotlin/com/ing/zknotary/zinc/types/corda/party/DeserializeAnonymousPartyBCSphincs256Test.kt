@@ -2,8 +2,8 @@ package com.ing.zknotary.zinc.types.corda.party
 
 import com.ing.zknotary.common.serialization.bfl.serializers.publickey.BCSphincs256Surrogate
 import com.ing.zknotary.common.zkp.ZincZKService
-import com.ing.zknotary.zinc.types.DeserializationTestBase
-import com.ing.zknotary.zinc.types.getZincZKService
+import com.ing.zknotary.testing.DeserializationTestBase
+import com.ing.zknotary.testing.getZincZKService
 import com.ing.zknotary.zinc.types.toZincJson
 import kotlinx.serialization.Polymorphic
 import kotlinx.serialization.Serializable

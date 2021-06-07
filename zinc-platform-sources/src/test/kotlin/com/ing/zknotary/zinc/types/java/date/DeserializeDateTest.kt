@@ -1,6 +1,6 @@
 package com.ing.zknotary.zinc.types.java.date
 
-import com.ing.zknotary.zinc.types.getZincZKService
+import com.ing.zknotary.testing.getZincZKService
 import com.ing.zknotary.zinc.types.toWitness
 import com.ing.zknotary.zinc.types.toZincJson
 import kotlinx.serialization.Contextual

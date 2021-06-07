@@ -1,6 +1,5 @@
 package com.ing.zknotary.zinc.types
 
-import com.ing.dlt.zkkrypto.util.asUnsigned
 import com.ing.serialization.bfl.api.reified.serialize
 import com.ing.zknotary.common.serialization.bfl.corda.LinearPointerSurrogate
 import com.ing.zknotary.common.serialization.bfl.serializers.CordaX500NameSerializer
@@ -8,9 +7,10 @@ import com.ing.zknotary.common.serialization.bfl.serializers.PartyAndReferenceSu
 import com.ing.zknotary.common.serialization.bfl.serializers.SecureHashSupportedAlgorithm
 import com.ing.zknotary.common.serialization.bfl.serializers.SecureHashSurrogate
 import com.ing.zknotary.common.serialization.bfl.serializers.UniqueIdentifierSurrogate
+import com.ing.zknotary.testing.resizeTo
+import com.ing.zknotary.testing.toJsonArray
+import com.ing.zknotary.testing.toSizedIntArray
 import io.kotest.matchers.shouldBe
-import kotlinx.serialization.json.add
-import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.modules.EmptySerializersModule
@@ -33,7 +33,6 @@ import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
-import org.apache.activemq.artemis.api.core.JsonUtil.toJsonObject
 import java.math.BigDecimal
 import java.security.PublicKey
 import java.time.Duration
@@ -91,9 +90,6 @@ fun ByteArray.toJsonObject(serializedSize: Int) = buildJsonObject {
     put("size", "$size")
     put("bytes", resizeTo(serializedSize).toJsonArray())
 }
-
-fun ByteArray.toJsonArray() = buildJsonArray { map { add("${it.asUnsigned()}") } }
-fun IntArray.toJsonArray() = buildJsonArray { map { add("$it") } }
 
 /* This method assumes that the mostSignificantBits of the id are 0 */
 fun UniqueIdentifier.toJsonObject() = buildJsonObject {

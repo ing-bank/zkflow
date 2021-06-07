@@ -1,6 +1,6 @@
 package com.ing.zknotary.zinc.types.corda.attachmentconstraint
 
-import com.ing.zknotary.zinc.types.getZincZKService
+import com.ing.zknotary.testing.getZincZKService
 import kotlinx.serialization.json.buildJsonObject
 import org.junit.jupiter.api.Test
 import kotlin.time.ExperimentalTime

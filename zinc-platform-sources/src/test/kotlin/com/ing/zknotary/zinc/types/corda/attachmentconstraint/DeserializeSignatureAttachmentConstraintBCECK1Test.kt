@@ -2,7 +2,8 @@ package com.ing.zknotary.zinc.types.corda.attachmentconstraint
 
 import com.ing.zknotary.common.serialization.bfl.serializers.publickey.BCECSurrogate
 import com.ing.zknotary.common.zkp.ZincZKService
-import com.ing.zknotary.zinc.types.DeserializationTestBase
+import com.ing.zknotary.testing.DeserializationTestBase
+import com.ing.zknotary.testing.getZincZKService
 import com.ing.zknotary.zinc.types.toZincJson
 import kotlinx.serialization.Polymorphic
 import kotlinx.serialization.Serializable
@@ -16,8 +17,7 @@ class DeserializeSignatureAttachmentConstraintBCECK1Test :
             it.data.toZincJson(BCECSurrogate.ENCODED_SIZE)
         }
     ) {
-    override fun getZincZKService(): ZincZKService =
-        com.ing.zknotary.zinc.types.getZincZKService<DeserializeSignatureAttachmentConstraintBCECK1Test>()
+    override fun getZincZKService(): ZincZKService = getZincZKService<DeserializeSignatureAttachmentConstraintBCECK1Test>()
 
     @Serializable
     data class Data(val data: @Polymorphic AttachmentConstraint)

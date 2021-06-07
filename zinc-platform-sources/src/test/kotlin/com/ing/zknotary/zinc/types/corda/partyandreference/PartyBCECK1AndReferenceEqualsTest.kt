@@ -2,8 +2,8 @@ package com.ing.zknotary.zinc.types.corda.partyandreference
 
 import com.ing.zknotary.common.serialization.bfl.serializers.PartyAndReferenceSurrogate
 import com.ing.zknotary.common.serialization.bfl.serializers.publickey.BCECSurrogate
+import com.ing.zknotary.testing.getZincZKService
 import com.ing.zknotary.zinc.types.generateDifferentValueThan
-import com.ing.zknotary.zinc.types.getZincZKService
 import com.ing.zknotary.zinc.types.toJsonObject
 import kotlinx.serialization.json.buildJsonObject
 import net.corda.core.contracts.PartyAndReference

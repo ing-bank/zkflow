@@ -1,7 +1,7 @@
 package com.ing.zknotary.zinc.types.corda.party
 
 import com.ing.zknotary.common.serialization.bfl.serializers.publickey.BCECSurrogate
-import com.ing.zknotary.zinc.types.getZincZKService
+import com.ing.zknotary.testing.getZincZKService
 import com.ing.zknotary.zinc.types.toJsonObject
 import kotlinx.serialization.json.buildJsonObject
 import net.corda.core.crypto.Crypto

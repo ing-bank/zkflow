@@ -36,6 +36,15 @@ class ZincSourcesCopier(private val outputPath: File) {
         }
     }
 
+    fun copyZincCircuitSourcesForTests(circuitSources: File) {
+        circuitSources.listFiles { _, name -> name != "main.zn" }?.forEach {
+            it.copyTo(
+                createOutputFile(outputPath).resolve(it.name),
+                overwrite = true
+            )
+        }
+    }
+
     private fun createOutputFile(targetFile: File): File {
         targetFile.parentFile?.mkdirs()
         targetFile.delete()

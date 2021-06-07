@@ -1,6 +1,7 @@
 package com.ing.zknotary.gradle.plugin
 
 import com.ing.zknotary.gradle.extension.ZKNotaryExtension
+import com.ing.zknotary.gradle.task.CopyZincCircuitSourcesForTestsTask
 import com.ing.zknotary.gradle.task.CopyZincCircuitSourcesTask
 import com.ing.zknotary.gradle.task.CopyZincPlatformLibraryTask
 import com.ing.zknotary.gradle.task.CopyZincPlatformSourcesTask
@@ -58,6 +59,8 @@ class ZKNotaryPlugin : Plugin<Project> {
         )
         val prepareForCompilationTask =
             project.tasks.create("prepareCircuitForCompilation", PrepareCircuitForCompilationTask::class.java)
+        val copyZincCircuitSourcesForTestsTask =
+            project.tasks.create("copyZincCircuitSourcesForTests", CopyZincCircuitSourcesForTestsTask::class.java)
 
         // If a new circuit is scaffolded, the processing tasks should run after it
         copyCircuitTask.mustRunAfter(createZincDirsForCommandTask)
@@ -78,5 +81,12 @@ class ZKNotaryPlugin : Plugin<Project> {
         }
 
         project.tasks.getByPath("assemble").dependsOn("processZincSources")
+
+        copyZincCircuitSourcesForTestsTask.dependsOn("assemble", "processTestResources")
+        copyZincCircuitSourcesForTestsTask.mustRunAfter("assemble", "processTestResources")
+
+        project.afterEvaluate {
+            it.tasks.getByPath("test").dependsOn("copyZincCircuitSourcesForTests").mustRunAfter("copyZincCircuitSourcesForTests")
+        }
     }
 }

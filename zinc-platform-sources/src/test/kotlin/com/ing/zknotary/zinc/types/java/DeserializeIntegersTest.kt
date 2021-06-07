@@ -1,6 +1,6 @@
 package com.ing.zknotary.zinc.types.java
 
-import com.ing.zknotary.zinc.types.getZincZKService
+import com.ing.zknotary.testing.getZincZKService
 import com.ing.zknotary.zinc.types.toWitness
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable

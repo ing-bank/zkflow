@@ -1,7 +1,7 @@
 package com.ing.zknotary.zinc.types.corda.securehash
 
 import com.ing.zknotary.common.crypto.ZINC
-import com.ing.zknotary.zinc.types.getZincZKService
+import com.ing.zknotary.testing.getZincZKService
 import com.ing.zknotary.zinc.types.toJsonObject
 import kotlinx.serialization.json.buildJsonObject
 import net.corda.core.crypto.SecureHash

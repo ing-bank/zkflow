@@ -9,6 +9,8 @@ import com.ing.zknotary.common.serialization.bfl.serializers.CordaSerializers
 import com.ing.zknotary.common.zkp.PublicInput
 import com.ing.zknotary.common.zkp.Witness
 import com.ing.zknotary.common.zkp.ZincZKService
+import com.ing.zknotary.testing.bytesToWitness
+import com.ing.zknotary.testing.toJsonArray
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
@@ -21,10 +23,8 @@ import kotlinx.serialization.modules.plus
 import net.corda.core.contracts.Amount
 import net.corda.core.crypto.SecureHash
 import org.slf4j.Logger
-import java.io.File
 import java.math.BigDecimal
 import java.math.BigInteger
-import java.time.Duration
 import java.util.Currency
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
@@ -66,10 +66,6 @@ fun <T : Any> toObliviousWitness(item: T, serializersModule: SerializersModule =
     val bytes = obliviousSerialize(item, serializersModule = CordaSerializers + serializersModule)
     return bytesToWitness(bytes)
 }
-
-fun bytesToWitness(bytes: ByteArray) = buildJsonObject {
-    put("witness", bytes.toJsonArray())
-}.toString()
 
 fun Class<*>.sha256(): ByteArray = SecureHash.sha256(name).copyBytes()
 
@@ -155,27 +151,6 @@ fun makeBigDecimal(bytes: ByteArray, sign: Int) = BigDecimal(BigInteger(sign, by
 
 fun makeBigDecimal(string: String, scale: Int) = BigDecimal(BigInteger(string), scale)
 
-inline fun <reified T : Any> getZincZKService(
-    buildTimeout: Duration = Duration.ofSeconds(5),
-    setupTimeout: Duration = Duration.ofSeconds(300),
-    provingTimeout: Duration = Duration.ofSeconds(300),
-    verificationTimeout: Duration = Duration.ofSeconds(1)
-): ZincZKService {
-    val zincTestFolder = T::class.java.name
-        .removePrefix("com.ing.zknotary.zinc.types")
-        .replace(".", File.separator)
-    val circuitFolder: String = T::class.java.getResource(zincTestFolder)?.path
-        ?: throw IllegalStateException("Zinc test source folder not found: $zincTestFolder")
-    return ZincZKService(
-        circuitFolder,
-        artifactFolder = circuitFolder,
-        buildTimeout = buildTimeout,
-        setupTimeout = setupTimeout,
-        provingTimeout = provingTimeout,
-        verificationTimeout = verificationTimeout,
-    )
-}
-
 @ExperimentalTime
 fun ZincZKService.setupTimed(log: Logger) {
     val time = measureTime {
@@ -219,10 +194,6 @@ fun ZincZKService.verifyTimed(proof: ByteArray, publicInput: PublicInput, log: L
     }
     log.debug("[verify] $time")
 }
-
-fun ByteArray.resizeTo(newSize: Int) = ByteArray(newSize) { if (it < size) this[it] else 0 }
-fun IntArray.resizeTo(newSize: Int) = IntArray(newSize) { if (it < size) this[it] else 0 }
-fun String?.toSizedIntArray(size: Int) = (this ?: "").chars().toArray().resizeTo(size)
 
 inline fun <T> generateDifferentValueThan(initialValue: T, generator: () -> T): T {
     var it = generator()

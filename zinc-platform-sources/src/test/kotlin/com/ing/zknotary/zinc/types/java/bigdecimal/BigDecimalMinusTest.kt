@@ -1,7 +1,7 @@
 package com.ing.zknotary.zinc.types.java.bigdecimal
 
 import com.ing.zknotary.common.zkp.ZKProvingException
-import com.ing.zknotary.zinc.types.getZincZKService
+import com.ing.zknotary.testing.getZincZKService
 import com.ing.zknotary.zinc.types.makeBigDecimal
 import com.ing.zknotary.zinc.types.proveTimed
 import com.ing.zknotary.zinc.types.setupTimed
