@@ -15,6 +15,7 @@ object IvnoSerializers {
         loggerFor<IvnoSerializers>().info("Registering Ivno serializers")
         SerializersModuleRegistry.register(SerializersModule {
             contextual(BigDecimalAmountSerializer(LinearPointerSerializer))
+            contextual(PermissionSerializer)
             contextual(RoleSerializer)
             contextual(TokenDescriptorSerializer)
         })
