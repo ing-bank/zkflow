@@ -7,12 +7,15 @@ import com.ing.zknotary.testing.toSizedIntArray
 import io.dasl.contracts.v1.token.TokenDescriptor
 import io.ivno.collateraltoken.serialization.RoleSurrogate
 import io.onixlabs.corda.bnms.contract.Role
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import net.corda.core.identity.CordaX500Name
 
 fun Role.toZincJson() = toJsonObject().toString()
 fun TokenDescriptor.toZincJson() = toJsonObject().toString()
+
+fun <T: Enum<T>> T.toZincJson() = toJsonObject().toString()
 
 fun String?.toJsonObject(size: Int) = buildJsonObject {
     put("chars", toSizedIntArray(size).toJsonArray())
@@ -33,3 +36,5 @@ fun CordaX500Name.toJsonObject() = buildJsonObject {
     val name = serialize(this@toJsonObject, strategy = CordaX500NameSerializer)
     put("name", name.toJsonArray())
 }
+
+fun <T: Enum<T>> T.toJsonObject() = JsonPrimitive(this.ordinal.toString())
