@@ -114,18 +114,18 @@ open class CopyCircuitTask @Inject constructor() : DefaultTask() {
     @org.gradle.api.tasks.OutputDirectory
     val generatedResourcesDir: Path = projectDir.resolve("build/resources/test")
 
+    @org.gradle.api.tasks.InputDirectory
+    val testClassesPath: Path = projectDir.resolve("src/test/kotlin/com/ing/zknotary/zinc/types/")
+
     private fun findTestsInSubdirectory(rootDir: File, subDir: String? = null): List<String> {
         val baseDir = subDir?.let { rootDir.resolve(it) } ?: rootDir
         return (baseDir.listFiles() ?: emptyArray())
             .flatMap { file ->
-                if (file.isDirectory) {
-                    findTestsInSubdirectory(rootDir, (subDir?.let { it + File.separator } ?: "") + file.name)
-                } else {
-                    if (file.nameWithoutExtension.endsWith("Test")) {
-                        listOf(subDir?.let { subDir -> "$subDir/${file.name}" } ?: file.name)
-                    } else {
-                        emptyList()
-                    }
+                val filePath = (subDir?.let { it + File.separator } ?: "") + file.name
+                when {
+                    file.isDirectory -> findTestsInSubdirectory(rootDir, filePath)
+                    file.name.endsWith("Test.kt") -> listOf(filePath)
+                    else -> emptyList()
                 }
             }
             .toList()
@@ -136,7 +136,6 @@ open class CopyCircuitTask @Inject constructor() : DefaultTask() {
         // In this package we test functions of classes, which are stored in one particular file,
         // but since there are many of them, we need many main functions with different parameters and output,
         // thus we copy implementation to each testing module in resources (because, zinc support modules pretty bad).
-        val testClassesPath = projectDir.resolve("src/test/kotlin/com/ing/zknotary/zinc/types/")
         findTestsInSubdirectory(testClassesPath.toFile())
             .map { it.removeSuffix(".kt") }
             .filter { Files.exists(generatedResourcesDir.resolve(it)) }

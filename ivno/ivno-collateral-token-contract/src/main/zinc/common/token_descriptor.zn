@@ -1,0 +1,59 @@
+mod string_32;
+mod platform_corda_x500_name;
+
+use string_32::String_32;
+use string_32::STRING_32_LENGTH;
+
+use platform_corda_x500_name::CordaX500Name;
+use platform_corda_x500_name::CORDA_X500_NAME_LENGTH;
+
+// field lengths
+const TOKEN_DESCRIPTOR_SYMBOL_LENGTH: u16 = STRING_32_LENGTH;
+const TOKEN_DESCRIPTOR_ISSUER_NAME_LENGTH: u16 = CORDA_X500_NAME_LENGTH;
+
+// field offsets
+const TOKEN_DESCRIPTOR_SYMBOL_OFFSET: u16
+    = 0;
+const TOKEN_DESCRIPTOR_ISSUER_NAME_OFFSET: u16
+    = TOKEN_DESCRIPTOR_SYMBOL_OFFSET
+    + TOKEN_DESCRIPTOR_SYMBOL_LENGTH;
+
+// total length
+const TOKEN_DESCRIPTOR_LENGTH: u16
+    = TOKEN_DESCRIPTOR_ISSUER_NAME_OFFSET
+    + TOKEN_DESCRIPTOR_ISSUER_NAME_LENGTH;
+
+type SerializedTokenDescriptor = [u8; TOKEN_DESCRIPTOR_LENGTH];
+
+struct TokenDescriptor {
+    symbol: String_32,
+    issuer_name: CordaX500Name,
+}
+
+impl TokenDescriptor {
+    fn equals(this: TokenDescriptor, that: TokenDescriptor) -> bool {
+        String_32::equals(this.symbol, that.symbol)
+            && CordaX500Name::equals(this.issuer_name, that.issuer_name)
+    }
+
+    fn deserialize(serialized: SerializedTokenDescriptor) -> TokenDescriptor {
+        let symbol = {
+            let mut symbol_bytes = [0; TOKEN_DESCRIPTOR_SYMBOL_LENGTH];
+            for i in 0..TOKEN_DESCRIPTOR_SYMBOL_LENGTH {
+                symbol_bytes[i] = serialized[i + TOKEN_DESCRIPTOR_SYMBOL_OFFSET];
+            }
+            String_32::deserialize(symbol_bytes)
+        };
+        let issuer_name = {
+            let mut issuer_name_bytes = [0; TOKEN_DESCRIPTOR_ISSUER_NAME_LENGTH];
+            for i in 0..TOKEN_DESCRIPTOR_ISSUER_NAME_LENGTH {
+                issuer_name_bytes[i] = serialized[i + TOKEN_DESCRIPTOR_ISSUER_NAME_OFFSET];
+            }
+            CordaX500Name::deserialize(issuer_name_bytes)
+        };
+        TokenDescriptor {
+            symbol: symbol,
+            issuer_name: issuer_name,
+        }
+    }
+}
