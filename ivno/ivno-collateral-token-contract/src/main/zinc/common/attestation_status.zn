@@ -1,0 +1,27 @@
+mod platform_consts;
+mod platform_integer;
+
+use platform_consts::U32_BYTES;
+use platform_integer::parse_u32;
+
+// length
+const ATTESTATION_STATUS_LENGTH: u16 = U32_BYTES;
+
+type SerializedAttestationStatus = [u8; ATTESTATION_STATUS_LENGTH];
+
+enum AttestationStatus {
+    ACCEPTED = 0,
+    REJECTED = 1,
+}
+
+impl AttestationStatus {
+    fn deserialize(serialized: SerializedAttestationStatus) -> AttestationStatus {
+        let index = parse_u32(serialized);
+        assert!(index <= 1 as u32, "Not an AttestationStatus");
+        match index as u8 {
+            0 => AttestationStatus::ACCEPTED,
+            1 => AttestationStatus::REJECTED,
+            _ => AttestationStatus::REJECTED, // Should never happen (see assert) but here to make the compiler happy
+        }
+    }
+}
