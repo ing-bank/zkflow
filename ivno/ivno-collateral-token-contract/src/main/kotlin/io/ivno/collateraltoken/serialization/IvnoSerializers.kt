@@ -16,6 +16,7 @@ object IvnoSerializers {
         SerializersModuleRegistry.register(SerializersModule {
             contextual(BigDecimalAmountSerializer(LinearPointerSerializer))
             contextual(RoleSerializer)
+            contextual(TokenDescriptorSerializer)
         })
 
         ContractStateSerializerMap.register(Deposit::class, 1, Deposit.serializer())
