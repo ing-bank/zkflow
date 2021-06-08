@@ -1,0 +1,37 @@
+mod platform_consts;
+mod platform_integer;
+
+use platform_consts::U32_BYTES;
+use platform_integer::parse_u32;
+
+// length
+const DEPOSIT_STATUS_LENGTH: u16 = U32_BYTES;
+
+type SerializedDepositStatus = [u8; DEPOSIT_STATUS_LENGTH];
+
+enum DepositStatus {
+    DEPOSIT_REQUESTED = 0,
+    DEPOSIT_ACCEPTED = 1,
+    DEPOSIT_REJECTED = 2,
+    DEPOSIT_CANCELLED = 3,
+    PAYMENT_ISSUED = 4,
+    PAYMENT_ACCEPTED = 5,
+    PAYMENT_REJECTED = 6,
+}
+
+impl DepositStatus {
+    fn deserialize(serialized: SerializedDepositStatus) -> DepositStatus {
+        let index = parse_u32(serialized);
+        assert!(index <= 6 as u32, "Not a DepositStatus");
+        match index as u8 {
+            0 => DepositStatus::DEPOSIT_REQUESTED,
+            1 => DepositStatus::DEPOSIT_ACCEPTED,
+            2 => DepositStatus::DEPOSIT_REJECTED,
+            3 => DepositStatus::DEPOSIT_CANCELLED,
+            4 => DepositStatus::PAYMENT_ISSUED,
+            5 => DepositStatus::PAYMENT_ACCEPTED,
+            6 => DepositStatus::PAYMENT_REJECTED,
+            _ => DepositStatus::DEPOSIT_REJECTED, // Should never happen (see assert) but here to make the compiler happy
+        }
+    }
+}
