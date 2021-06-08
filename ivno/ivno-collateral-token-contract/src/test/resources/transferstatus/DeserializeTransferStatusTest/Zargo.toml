@@ -1,0 +1,3 @@
+[circuit]
+name = "Deserialize TransferStatus test"
+version = "0.1.0"

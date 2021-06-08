@@ -1,0 +1,8 @@
+mod deposit_status;
+
+use deposit_status::DepositStatus;
+use deposit_status::SerializedDepositStatus;
+
+fn main(witness: SerializedDepositStatus) -> DepositStatus {
+    DepositStatus::deserialize(witness)
+}

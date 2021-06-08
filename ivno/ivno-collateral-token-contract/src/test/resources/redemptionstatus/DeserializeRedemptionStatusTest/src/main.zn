@@ -1,0 +1,8 @@
+mod redemption_status;
+
+use redemption_status::RedemptionStatus;
+use redemption_status::SerializedRedemptionStatus;
+
+fn main(witness: SerializedRedemptionStatus) -> RedemptionStatus {
+    RedemptionStatus::deserialize(witness)
+}
