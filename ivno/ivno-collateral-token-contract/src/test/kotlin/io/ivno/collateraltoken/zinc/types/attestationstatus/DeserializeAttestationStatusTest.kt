@@ -14,6 +14,6 @@ class DeserializeAttestationStatusTest :
 
     companion object {
         @JvmStatic
-        fun testData(): Array<AttestationStatus> = AttestationStatus.values()
+        fun testData() = AttestationStatus.values()
     }
 }
