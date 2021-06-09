@@ -1,0 +1,51 @@
+// Input parameters:
+//   - INNER_MODULE_NAME: String = module name of the inner struct
+//   - INNER_CONSTANT_PREFIX: String = prefix used for constant names of the inner struct
+//   - INNER_TYPE_NAME: String = name of the inner struct
+
+mod ${INNER_MODULE_NAME};
+
+use ${INNER_MODULE_NAME}::${INNER_TYPE_NAME};
+use ${INNER_MODULE_NAME}::${INNER_CONSTANT_PREFIX}_LENGTH;
+
+const NULLABLE_${INNER_CONSTANT_PREFIX}_LENGTH: u16 = 1 as u16 + ${INNER_CONSTANT_PREFIX}_LENGTH;
+
+type SerializedNullable${INNER_TYPE_NAME} = [u8; NULLABLE_${INNER_CONSTANT_PREFIX}_LENGTH];
+
+struct Nullable${INNER_TYPE_NAME} {
+    is_null: bool,
+    inner: ${INNER_TYPE_NAME},
+}
+
+impl Nullable${INNER_TYPE_NAME} {
+    fn empty() -> Nullable${INNER_TYPE_NAME} {
+        Nullable${INNER_TYPE_NAME} {
+            is_null: false,     // TODO: decide about the default value of empty
+            inner: ${INNER_TYPE_NAME}::empty(),
+        }
+    }
+
+    fn equals(this: Nullable${INNER_TYPE_NAME}, that: Nullable${INNER_TYPE_NAME}) -> bool {
+        this.is_null == that.is_null
+            && ${INNER_TYPE_NAME}::equals(this.inner, that.inner)
+    }
+    
+    fn deserialize(serialized: SerializedNullable${INNER_TYPE_NAME}) -> Nullable${INNER_TYPE_NAME} {
+        let is_null = serialized[0] == 0;
+
+        let inner = if !is_null {
+            let mut inner_bytes = [0 as u8; ${INNER_CONSTANT_PREFIX}_LENGTH];
+            for i in 0..${INNER_CONSTANT_PREFIX}_LENGTH {
+                inner_bytes[i] = serialized[1 as u16 + i];
+            }
+            ${INNER_TYPE_NAME}::deserialize(inner_bytes)
+        } else {
+            ${INNER_TYPE_NAME}::empty()
+        };
+
+        Nullable${INNER_TYPE_NAME} {
+            is_null: is_null,
+            inner: inner,
+        }
+    }
+}

@@ -2,26 +2,22 @@
 //   - EXTERNAL_ID_STRING_SIZE: u16 = The size of external ID, MUST be UniqueIdentifierSurrogate.EXTERNAL_ID_LENGTH
 
 mod platform_consts;
-mod string_${EXTERNAL_ID_STRING_SIZE};
+mod nullable_string_${EXTERNAL_ID_STRING_SIZE};
 
 use platform_consts::BYTE_BITS;
 use platform_consts::U128_BITS;
 use platform_consts::U128_BYTES;
 
-use string_${EXTERNAL_ID_STRING_SIZE}::String_${EXTERNAL_ID_STRING_SIZE};
-use string_${EXTERNAL_ID_STRING_SIZE}::SerializedString_${EXTERNAL_ID_STRING_SIZE};
-use string_${EXTERNAL_ID_STRING_SIZE}::STRING_${EXTERNAL_ID_STRING_SIZE}_LENGTH;
+use nullable_string_${EXTERNAL_ID_STRING_SIZE}::NullableString_${EXTERNAL_ID_STRING_SIZE};
+use nullable_string_${EXTERNAL_ID_STRING_SIZE}::SerializedNullableString_${EXTERNAL_ID_STRING_SIZE};
+use nullable_string_${EXTERNAL_ID_STRING_SIZE}::NULLABLE_STRING_${EXTERNAL_ID_STRING_SIZE}_LENGTH;
 
 // UniqueIdentifier lengths
-const UNIQUE_IDENTIFIER_EXTERNAL_ID_PRESENT_LENGTH: u16 = 1;
-const UNIQUE_IDENTIFIER_EXTERNAL_ID_LENGTH: u16 = STRING_${EXTERNAL_ID_STRING_SIZE}_LENGTH;
+const UNIQUE_IDENTIFIER_EXTERNAL_ID_LENGTH: u16 = NULLABLE_STRING_${EXTERNAL_ID_STRING_SIZE}_LENGTH;
 const UNIQUE_IDENTIFIER_ID_LENGTH: u16 = platform_consts::U128_BYTES;
 
 // UniqueIdentifier offsets
-const UNIQUE_IDENTIFIER_EXTERNAL_ID_PRESENT_OFFSET: u16 = 0;
-const UNIQUE_IDENTIFIER_EXTERNAL_ID_OFFSET: u16
-    = UNIQUE_IDENTIFIER_EXTERNAL_ID_PRESENT_OFFSET
-    + UNIQUE_IDENTIFIER_EXTERNAL_ID_PRESENT_LENGTH;
+const UNIQUE_IDENTIFIER_EXTERNAL_ID_OFFSET: u16 = 0;
 const UNIQUE_IDENTIFIER_ID_OFFSET: u16
     = UNIQUE_IDENTIFIER_EXTERNAL_ID_OFFSET
     + UNIQUE_IDENTIFIER_EXTERNAL_ID_LENGTH;
@@ -32,10 +28,9 @@ const UNIQUE_IDENTIFIER_LENGTH: u16
 type SerializedUniqueIdentifier = [u8; UNIQUE_IDENTIFIER_LENGTH];
 
 // Define type alias, to make the rest of the template cleaner
-type ExternalId = String_${EXTERNAL_ID_STRING_SIZE};
+type ExternalId = NullableString_${EXTERNAL_ID_STRING_SIZE};
 
 struct UniqueIdentifier {
-    has_external_id: bool,
     external_id: ExternalId,
     id: u128,
 }
@@ -43,7 +38,6 @@ struct UniqueIdentifier {
 impl UniqueIdentifier {
     fn zero() -> UniqueIdentifier {
         UniqueIdentifier {
-            has_external_id: false,
             external_id: ExternalId::empty(),
             id: 0 as u128,
         }
@@ -74,10 +68,7 @@ impl UniqueIdentifier {
     }
 
     fn deserialize(serialized_uid: SerializedUniqueIdentifier) -> UniqueIdentifier {
-        let has_external_id = serialized_uid[UNIQUE_IDENTIFIER_EXTERNAL_ID_PRESENT_OFFSET] != 0;
-
         UniqueIdentifier {
-            has_external_id: has_external_id,
             external_id: _extract_external_id(serialized_uid),
             id: _parse_u128(serialized_uid, UNIQUE_IDENTIFIER_ID_OFFSET),
         }

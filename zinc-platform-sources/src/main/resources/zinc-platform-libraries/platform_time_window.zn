@@ -2,11 +2,11 @@
 // val untilTime: @Contextual Instant?
 
 mod platform_instant;
-mod platform_nullable_instant;
+mod nullable_instant;
 
 use platform_instant::Instant;
-use platform_nullable_instant::NullableInstant;
-use platform_nullable_instant::NULLABLE_INSTANT_LENGTH;
+use nullable_instant::NullableInstant;
+use nullable_instant::NULLABLE_INSTANT_LENGTH;
 
 type SerializedTimeWindow = [u8; NULLABLE_INSTANT_LENGTH + NULLABLE_INSTANT_LENGTH];
 
@@ -49,12 +49,12 @@ impl TimeWindow {
     fn contains(this: TimeWindow, instant: Instant) -> bool {
         // Matching on tuples does not work.
         if !this.from_time.is_null && !this.until_time.is_null {
-            Instant::geq(instant, this.from_time.instant)
-                && Instant::le(instant, this.until_time.instant)
+            Instant::geq(instant, this.from_time.inner)
+                && Instant::le(instant, this.until_time.inner)
         } else if !this.from_time.is_null {
-            Instant::geq(instant, this.from_time.instant)
+            Instant::geq(instant, this.from_time.inner)
         } else if !this.until_time.is_null {
-            Instant::le(instant, this.until_time.instant)
+            Instant::le(instant, this.until_time.inner)
         } else {
             assert!(false, "Both `from_time` and `until_time` are nulls");
             false

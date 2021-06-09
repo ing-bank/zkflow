@@ -9,6 +9,7 @@ import com.ing.zknotary.gradle.zinc.template.parameters.AmountTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.BigDecimalTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.ByteArrayTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.IssuedTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.parameters.NullableTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.PublicKeyTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.StringTemplateParameters
 import com.ing.zknotary.gradle.zinc.util.CodeGenerator
@@ -38,12 +39,15 @@ val myIssuedConfigurations: List<IssuedTemplateParameters<*>> = listOf(
     )
 )
 
+val myNullableConfigurations = emptyList<NullableTemplateParameters<*>>()
+
 val templateConfigurations = TemplateConfigurations().apply {
     stringConfigurations = myStringConfigurations
     byteArrayConfigurations = myByteArrayConfigurations
     amountConfigurations = myAmountConfigurations
     bigDecimalConfigurations = myBigDecimalConfigurations
     issuedConfigurations = myIssuedConfigurations
+    nullableConfigurations = myNullableConfigurations
 }
 
 fun main(args: Array<String>) {
