@@ -20,7 +20,7 @@ dependencies {
     testImplementation("com.ing.dlt:zkkrypto:$zkkryptoVersion")
 
     val kotlinxSerializationVersion: String by project
-    testImplementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
 
     val kotlinxSerializationBflVersion: String by project
     testImplementation("com.ing.serialization.bfl:kotlinx-serialization-bfl:$kotlinxSerializationBflVersion")
@@ -58,6 +58,7 @@ val root = "${project.rootDir.absolutePath}/zinc-platform-sources"
 val circuitSourcesBase = File("$root/circuits")
 val mergedCircuitOutput = File("$root/build/circuits")
 
+val configFile = "config.json"
 val circuits = circuitSourcesBase.listFiles { file, _ -> file?.isDirectory ?: false }?.map { it.name }
 
 task("prepareCircuits", JavaExec::class) {
@@ -66,7 +67,8 @@ task("prepareCircuits", JavaExec::class) {
     outputs.dir(mergedCircuitOutput)
     main = "PrepareCircuitsKt"
     classpath = sourceSets["main"].runtimeClasspath
-    args(root, project.version)
+
+    args(root, project.version, configFile)
 }
 
 task("circuits") {

@@ -5,6 +5,7 @@ import com.ing.zknotary.gradle.task.CopyZincCircuitSourcesForTestsTask
 import com.ing.zknotary.gradle.task.CopyZincCircuitSourcesTask
 import com.ing.zknotary.gradle.task.CopyZincPlatformLibraryTask
 import com.ing.zknotary.gradle.task.CopyZincPlatformSourcesTask
+import com.ing.zknotary.gradle.task.CreateCircuitFromConfigurationTask
 import com.ing.zknotary.gradle.task.CreateZincDirectoriesForInputCommandTask
 import com.ing.zknotary.gradle.task.GenerateZincPlatformCodeFromTemplatesTask
 import com.ing.zknotary.gradle.task.PrepareCircuitForCompilationTask
@@ -44,6 +45,11 @@ class ZKNotaryPlugin : Plugin<Project> {
             project.pluginManager.apply("org.jetbrains.kotlin.plugin.serialization")
         }
 
+        val createCircuitFromConfigurationTask = project.tasks.create(
+            "createCircuitFromConfiguration",
+            CreateCircuitFromConfigurationTask::class.java
+        )
+
         val createZincDirsForCommandTask = project.tasks.create(
             "createZincDirectoriesForInputCommand",
             CreateZincDirectoriesForInputCommandTask::class.java
@@ -63,6 +69,8 @@ class ZKNotaryPlugin : Plugin<Project> {
             project.tasks.create("copyZincCircuitSourcesForTests", CopyZincCircuitSourcesForTestsTask::class.java)
 
         // If a new circuit is scaffolded, the processing tasks should run after it
+        createCircuitFromConfigurationTask.mustRunAfter(createZincDirsForCommandTask)
+
         copyCircuitTask.mustRunAfter(createZincDirsForCommandTask)
         copyPlatformTask.mustRunAfter(createZincDirsForCommandTask)
         copyPlatformLibsTask.mustRunAfter(createZincDirsForCommandTask)
