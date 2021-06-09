@@ -38,7 +38,7 @@ struct UniqueIdentifier {
 impl UniqueIdentifier {
     fn zero() -> UniqueIdentifier {
         UniqueIdentifier {
-            external_id: ExternalId::empty(),
+            external_id: ExternalId::null(),
             id: 0 as u128,
         }
     }

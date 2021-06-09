@@ -81,14 +81,21 @@ fun AttachmentConstraint.toZincJson(encodedSize: Int? = null) =
 fun Issued<String>.toZincJson(encodedSize: Int) =
     toJsonObject(encodedSize).toString()
 
-fun String?.toJsonObject(size: Int) = buildJsonObject {
+@JvmName("toJsonObject")
+fun String.toJsonObject(size: Int) = buildJsonObject {
     put("chars", toSizedIntArray(size).toJsonArray())
-    put("size", "${this@toJsonObject?.length ?: 0}")
+    put("size", "$length")
 }
 
-fun String?.toNullableJsonObject(size: Int) = buildJsonObject {
-    put("is_null", this@toNullableJsonObject == null)
-    put("inner", this@toNullableJsonObject.toJsonObject(size))
+@JvmName("toNullableJsonObject")
+fun String?.toJsonObject(size: Int) = buildJsonObject {
+    val inner = buildJsonObject {
+        put("chars", toSizedIntArray(size).toJsonArray())
+        put("size", "${this@toJsonObject?.length ?: 0}")
+    }
+
+    put("is_null", this@toJsonObject == null)
+    put("inner", inner)
 }
 
 fun ByteArray.toJsonObject(serializedSize: Int) = buildJsonObject {
@@ -101,7 +108,7 @@ fun UniqueIdentifier.toJsonObject() = buildJsonObject {
     // input validations
     id.mostSignificantBits shouldBe 0
 
-    put("external_id", externalId.toNullableJsonObject(UniqueIdentifierSurrogate.EXTERNAL_ID_LENGTH))
+    put("external_id", externalId.toJsonObject(UniqueIdentifierSurrogate.EXTERNAL_ID_LENGTH))
     put("id", "${id.leastSignificantBits}")
 }
 

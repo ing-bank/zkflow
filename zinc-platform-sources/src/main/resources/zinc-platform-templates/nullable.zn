@@ -18,16 +18,30 @@ struct Nullable${INNER_TYPE_NAME} {
 }
 
 impl Nullable${INNER_TYPE_NAME} {
-    fn empty() -> Nullable${INNER_TYPE_NAME} {
+    fn null() -> Nullable${INNER_TYPE_NAME} {
         Nullable${INNER_TYPE_NAME} {
-            is_null: false,     // TODO: decide about the default value of empty
+            is_null: true,
+            inner: ${INNER_TYPE_NAME}::empty(),
+        }
+    }
+
+    fn nonNull() -> Nullable${INNER_TYPE_NAME} {
+        Nullable${INNER_TYPE_NAME} {
+            is_null: false,
             inner: ${INNER_TYPE_NAME}::empty(),
         }
     }
 
     fn equals(this: Nullable${INNER_TYPE_NAME}, that: Nullable${INNER_TYPE_NAME}) -> bool {
-        this.is_null == that.is_null
-            && ${INNER_TYPE_NAME}::equals(this.inner, that.inner)
+        if this.is_null == that.is_null {
+            if this.is_null {
+                true
+            } else {
+                ${INNER_TYPE_NAME}::equals(this.inner, that.inner)
+            }
+        } else {
+            false
+        }
     }
     
     fn deserialize(serialized: SerializedNullable${INNER_TYPE_NAME}) -> Nullable${INNER_TYPE_NAME} {

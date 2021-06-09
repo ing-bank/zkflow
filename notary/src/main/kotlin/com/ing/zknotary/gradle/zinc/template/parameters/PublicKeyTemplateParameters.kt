@@ -4,15 +4,14 @@ import com.ing.zknotary.common.serialization.bfl.serializers.publickey.BCECSurro
 import com.ing.zknotary.common.serialization.bfl.serializers.publickey.BCRSASurrogate
 import com.ing.zknotary.common.serialization.bfl.serializers.publickey.BCSphincs256Surrogate
 import com.ing.zknotary.common.serialization.bfl.serializers.publickey.EdDSASurrogate
-import com.ing.zknotary.gradle.zinc.template.NamedType
 import com.ing.zknotary.gradle.zinc.template.TemplateParameters
 
 data class PublicKeyTemplateParameters(
-    override val templateFile: String,
+    val baseTemplateFile: String,
     override val typeName: String,
     val encodedSize: Int,
-) : NamedType, TemplateParameters(
-    templateFile,
+) : TemplateParameters(
+    baseTemplateFile,
     listOf(
         StringTemplateParameters(1),
         ByteArrayTemplateParameters(encodedSize),

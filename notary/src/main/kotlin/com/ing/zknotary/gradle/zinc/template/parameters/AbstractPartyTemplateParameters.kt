@@ -1,12 +1,11 @@
 package com.ing.zknotary.gradle.zinc.template.parameters
 
-import com.ing.zknotary.gradle.zinc.template.NamedType
 import com.ing.zknotary.gradle.zinc.template.TemplateParameters
 
 data class AbstractPartyTemplateParameters(
     val implementationName: String,
     val pkTemplateParameters: PublicKeyTemplateParameters
-) : NamedType, TemplateParameters(
+) : TemplateParameters(
     "${implementationName.camelToSnakeCase()}.zn",
     listOf(
         StringTemplateParameters(1), // the serial names of AnonymousParty, and Party, are of length 1
