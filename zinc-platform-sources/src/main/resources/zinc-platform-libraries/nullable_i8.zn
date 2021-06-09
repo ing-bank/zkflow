@@ -1,0 +1,53 @@
+mod platform_integer;
+
+const NULLABLE_I8_LENGTH: u16 = 2 as u16;
+
+type SerializedNullableI8 = [u8; NULLABLE_I8_LENGTH];
+
+struct NullableI8 {
+    is_null: bool,
+    inner: i8,
+}
+
+impl NullableI8 {
+    fn null() -> NullableI8 {
+        NullableI8 {
+            is_null: true,
+            inner: 0 as i8,
+        }
+    }
+
+    fn non_null(value: i8) -> NullableI8 {
+        NullableI8 {
+            is_null: false,
+            inner: value,
+        }
+    }
+
+    fn equals(this: NullableI8, that: NullableI8) -> bool {
+        if this.is_null == that.is_null {
+            if this.is_null {
+                true
+            } else {
+                this.inner == that.inner
+            }
+        } else {
+            false
+        }
+    }
+
+    fn deserialize(serialized: SerializedNullableI8) -> NullableI8 {
+        let is_null = serialized[0] == 0;
+
+        let inner = if !is_null {
+            platform_integer::parse_i8(serialized[1])
+        } else {
+            0 as i8
+        };
+
+        NullableI8 {
+            is_null: is_null,
+            inner: inner,
+        }
+    }
+}

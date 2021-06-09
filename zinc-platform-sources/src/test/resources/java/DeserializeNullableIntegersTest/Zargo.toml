@@ -1,0 +1,3 @@
+[circuit]
+name = "Deserialize Nullable Integers of different sizes test"
+version = "0.1.0"

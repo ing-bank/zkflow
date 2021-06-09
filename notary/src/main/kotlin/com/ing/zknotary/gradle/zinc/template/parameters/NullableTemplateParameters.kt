@@ -3,10 +3,11 @@ package com.ing.zknotary.gradle.zinc.template.parameters
 import com.ing.zknotary.gradle.zinc.template.TemplateParameters
 
 class NullableTemplateParameters<T>(
+    baseTemplateFile: String = "nullable.zn",
     private val innerTemplateParameters: T? = null,
     platformModuleName: String? = null,
 ) : TemplateParameters(
-    "nullable.zn",
+    baseTemplateFile,
     listOfNotNull(innerTemplateParameters)
 ) where T : TemplateParameters {
     // The parameters for the inner structure can be provided in 2 ways:
@@ -30,9 +31,11 @@ class NullableTemplateParameters<T>(
 
     companion object {
         // fixed nullable template parameters needed for platform sources
-        val fixed = listOf(
+        val fixed = listOf("i16", "u16", "i32", "u32", "i64", "u64", "i128", "u128").map {
+            NullableTemplateParameters("nullable_integer.zn", null, it)
+        }.plus(
             // needed for TimeWindow
-            NullableTemplateParameters(null, "platform_instant"),
+            NullableTemplateParameters(innerTemplateParameters = null, platformModuleName = "platform_instant")
         )
     }
 }

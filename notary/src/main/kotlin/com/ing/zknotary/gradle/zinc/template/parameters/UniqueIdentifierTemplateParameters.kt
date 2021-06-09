@@ -6,7 +6,7 @@ import com.ing.zknotary.gradle.zinc.template.TemplateParameters
 object UniqueIdentifierTemplateParameters : TemplateParameters(
     "unique_identifier.zn",
     listOf(
-        NullableTemplateParameters(StringTemplateParameters(UniqueIdentifierSurrogate.EXTERNAL_ID_LENGTH.toShort()))
+        NullableTemplateParameters(innerTemplateParameters = StringTemplateParameters(UniqueIdentifierSurrogate.EXTERNAL_ID_LENGTH.toShort()))
     )
 ) {
     override fun getReplacements() = mapOf(
