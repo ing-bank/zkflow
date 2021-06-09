@@ -1,0 +1,49 @@
+// Input parameters:
+//   - INNER_MODULE_NAME: String = module name of the inner struct
+//   - INNER_CONSTANT_PREFIX: String = prefix used for constant names of the inner struct
+//   - INNER_TYPE_NAME: String = name of the inner struct
+
+mod platform_consts;
+
+use platform_consts::${INNER_CONSTANT_PREFIX}_BYTES;
+
+const OPTIONAL_${INNER_CONSTANT_PREFIX}_LENGTH: u16 = 1 as u16 + ${INNER_CONSTANT_PREFIX}_BYTES;
+
+type SerializedOptional${INNER_TYPE_NAME} = [u8; OPTIONAL_${INNER_CONSTANT_PREFIX}_LENGTH];
+
+struct Optional${INNER_TYPE_NAME} {
+    is_none: bool,
+    inner: ${INNER_MODULE_NAME},
+}
+
+impl Optional${INNER_TYPE_NAME} {
+    fn none() -> Optional${INNER_TYPE_NAME} {
+        Optional${INNER_TYPE_NAME} {
+            is_none: true,
+            inner: 0 as ${INNER_MODULE_NAME},
+        }
+    }
+
+    fn some(value: ${INNER_MODULE_NAME}) -> Optional${INNER_TYPE_NAME} {
+        Optional${INNER_TYPE_NAME} {
+            is_none: false,
+            inner: value,
+        }
+    }
+
+    fn equals(this: Optional${INNER_TYPE_NAME}, that: Optional${INNER_TYPE_NAME}) -> bool {
+        if this.is_none || that.is_none {
+            false
+        } else {
+            this.inner == that.inner
+        }
+    }
+
+    fn contains(this: Optional${INNER_TYPE_NAME}, value: ${INNER_MODULE_NAME}) -> bool {
+        if this.is_none {
+            false
+        } else {
+            this.inner == value
+        }
+    }
+}
