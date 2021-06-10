@@ -55,7 +55,7 @@ import java.util.UUID
  */
 @Suppress("TooManyFunctions", "LongParameterList", "MemberVisibilityCanBePrivate") // Copy of TransactionBuilder API
 class ZKTransactionBuilder(
-    private val builder: TransactionBuilder,
+    public val builder: TransactionBuilder,
     private val serializationSchemeId: Int = BFLSerializationScheme.SCHEME_ID,
     private val serializationProperties: Map<Any, Any> = emptyMap()
 ) {

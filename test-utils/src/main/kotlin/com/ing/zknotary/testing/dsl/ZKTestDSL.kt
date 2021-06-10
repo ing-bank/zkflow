@@ -3,12 +3,10 @@
 package com.ing.zknotary.testing.dsl
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder
-import com.ing.zknotary.common.contracts.ZKContractState
 import com.ing.zknotary.common.transactions.ZKTransactionBuilder
 import net.corda.core.DoNotImplement
 import net.corda.core.contracts.Attachment
 import net.corda.core.contracts.AttachmentConstraint
-import net.corda.core.contracts.AttachmentResolutionException
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.ContractClassName
@@ -22,6 +20,7 @@ import net.corda.core.contracts.TransactionVerificationException
 import net.corda.core.cordapp.CordappProvider
 import net.corda.core.crypto.NullKeys.NULL_SIGNATURE
 import net.corda.core.crypto.SecureHash
+import net.corda.core.flows.FlowException
 import net.corda.core.identity.Party
 import net.corda.core.internal.AttachmentTrustCalculator
 import net.corda.core.internal.ResolveTransactionsFlow
@@ -36,15 +35,12 @@ import net.corda.core.node.services.TransactionStorage
 import net.corda.core.serialization.internal.AttachmentsClassLoaderCache
 import net.corda.core.serialization.internal.AttachmentsClassLoaderCacheImpl
 import net.corda.core.transactions.SignedTransaction
+import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.transactions.WireTransaction
 import net.corda.node.services.DbTransactionsResolver
 import net.corda.node.services.attachments.NodeAttachmentTrustCalculator
 import net.corda.node.services.persistence.AttachmentStorageInternal
 import net.corda.testing.core.dummyCommand
-import net.corda.testing.dsl.DoubleSpentInputs
-import net.corda.testing.dsl.DuplicateOutputLabel
-import net.corda.testing.dsl.LedgerDSL
-import net.corda.testing.dsl.TransactionDSL
 import net.corda.testing.internal.MockCordappProvider
 import net.corda.testing.internal.TestingNamedCacheFactory
 import net.corda.testing.internal.services.InternalMockAttachmentStorage
@@ -89,26 +85,26 @@ import kotlin.collections.set
 public sealed class EnforceVerifyOrFail {
     internal object Token : EnforceVerifyOrFail()
 }
-//
-// public class DuplicateOutputLabel(label: String) : FlowException("Output label '$label' already used")
-// public class DoubleSpentInputs(ids: List<SecureHash>) :
-//     FlowException("Transactions spend the same input. Conflicting transactions ids: '$ids'")
-//
-// public class AttachmentResolutionException(attachmentId: SecureHash) : FlowException("Attachment with id $attachmentId not found")
+
+public class DuplicateOutputLabel(label: String) : FlowException("Output label '$label' already used")
+public class DoubleSpentInputs(ids: List<SecureHash>) :
+    FlowException("Transactions spend the same input. Conflicting transactions ids: '$ids'")
+
+public class AttachmentResolutionException(attachmentId: SecureHash) : FlowException("Attachment with id $attachmentId not found")
 
 /**
  * This interpreter builds a transaction, and [TransactionDSL.verifies] that the resolved transaction is correct. Note
  * that transactions corresponding to input states are not verified. Use [LedgerDSL.verifies] for that.
  */
-public data class ZKTestTransactionDSLInterpreter private constructor(
-    override val ledgerInterpreter: ZKTestLedgerDSLInterpreter,
-    val transactionBuilder: ZKTransactionBuilder,
+public data class TestTransactionDSLInterpreter private constructor(
+    override val ledgerInterpreter: TestLedgerDSLInterpreter,
+    val transactionBuilder: TransactionBuilder,
     internal val labelToIndexMap: HashMap<String, Int>
-) : ZKTransactionDSLInterpreter, ZKOutputStateLookup by ledgerInterpreter {
+) : TransactionDSLInterpreter, OutputStateLookup by ledgerInterpreter {
 
     public constructor(
-        ledgerInterpreter: ZKTestLedgerDSLInterpreter,
-        transactionBuilder: ZKTransactionBuilder
+        ledgerInterpreter: TestLedgerDSLInterpreter,
+        transactionBuilder: TransactionBuilder
     ) : this(ledgerInterpreter, transactionBuilder, HashMap())
 
     // Implementing [ServiceHubCoreInternal] allows better use in internal Corda tests
@@ -145,7 +141,7 @@ public data class ZKTestTransactionDSLInterpreter private constructor(
             DbTransactionsResolver(flow)
 
         override fun loadState(stateRef: StateRef) =
-            ledgerInterpreter.resolveStateRef<ZKContractState>(stateRef)
+            ledgerInterpreter.resolveStateRef<ContractState>(stateRef)
 
         override fun loadStates(stateRefs: Set<StateRef>): Set<StateAndRef<ContractState>> {
             return stateRefs.map { StateAndRef(loadState(it), it) }.toSet()
@@ -159,33 +155,34 @@ public data class ZKTestTransactionDSLInterpreter private constructor(
         override val attachmentsClassLoaderCache: AttachmentsClassLoaderCache = AttachmentsClassLoaderCacheImpl(TestingNamedCacheFactory())
     }
 
-    private fun copy(): ZKTestTransactionDSLInterpreter =
-        ZKTestTransactionDSLInterpreter(
+    private fun copy(): TestTransactionDSLInterpreter =
+        TestTransactionDSLInterpreter(
             ledgerInterpreter = ledgerInterpreter,
             transactionBuilder = transactionBuilder.copy(),
             labelToIndexMap = HashMap(labelToIndexMap)
         )
 
     internal fun toWireTransaction() = transactionBuilder.toWireTransaction(services)
+    internal fun toZKWireTransaction() = ZKTransactionBuilder(transactionBuilder).toWireTransaction(services)
 
     override fun input(stateRef: StateRef) {
-        val state = ledgerInterpreter.resolveStateRef<ZKContractState>(stateRef)
+        val state = ledgerInterpreter.resolveStateRef<ContractState>(stateRef)
         transactionBuilder.addInputState(StateAndRef(state, stateRef))
     }
 
     override fun reference(stateRef: StateRef) {
-        val state = ledgerInterpreter.resolveStateRef<ZKContractState>(stateRef)
+        val state = ledgerInterpreter.resolveStateRef<ContractState>(stateRef)
         @Suppress("DEPRECATION") // Will remove when feature finalised.
         transactionBuilder.addReferenceState(StateAndRef(state, stateRef).referenced())
     }
 
-    public override fun output(
+    override fun output(
         contractClassName: ContractClassName,
         label: String?,
         notary: Party,
         encumbrance: Int?,
         attachmentConstraint: AttachmentConstraint,
-        contractState: ZKContractState
+        contractState: ContractState
     ) {
         transactionBuilder.addOutputState(contractState, contractClassName, notary, encumbrance, attachmentConstraint)
         if (label != null) {
@@ -220,7 +217,7 @@ public data class ZKTestTransactionDSLInterpreter private constructor(
         transactionBuilder.setTimeWindow(data)
     }
 
-    override fun _tweak(dsl: ZKTransactionDSLInterpreter.() -> EnforceVerifyOrFail): EnforceVerifyOrFail = copy().dsl()
+    override fun _tweak(dsl: TransactionDSLInterpreter.() -> EnforceVerifyOrFail): EnforceVerifyOrFail = copy().dsl()
 
     override fun _attachment(contractClassName: ContractClassName) {
         attachment(
@@ -260,12 +257,12 @@ public data class ZKTestTransactionDSLInterpreter private constructor(
     }
 }
 
-public data class ZKTestLedgerDSLInterpreter private constructor(
+public data class TestLedgerDSLInterpreter private constructor(
     val services: ServiceHub,
     internal val labelToOutputStateAndRefs: HashMap<String, StateAndRef<ContractState>> = HashMap(),
     private val transactionWithLocations: HashMap<SecureHash, WireTransactionWithLocation> = LinkedHashMap(),
     private val nonVerifiedTransactionWithLocations: HashMap<SecureHash, WireTransactionWithLocation> = HashMap()
-) : ZKLedgerDSLInterpreter<ZKTestTransactionDSLInterpreter> {
+) : LedgerDSLInterpreter<TestTransactionDSLInterpreter> {
     val wireTransactions: List<WireTransaction> get() = transactionWithLocations.values.map { it.transaction }
 
     // We specify [labelToOutputStateAndRefs] just so that Kotlin picks the primary constructor instead of cycling
@@ -296,8 +293,8 @@ public data class ZKTestLedgerDSLInterpreter private constructor(
     public class TypeMismatch(requested: Class<*>, actual: Class<*>) :
         Exception("Actual type $actual is not a subtype of requested type $requested")
 
-    internal fun copy(): ZKTestLedgerDSLInterpreter =
-        ZKTestLedgerDSLInterpreter(
+    internal fun copy(): TestLedgerDSLInterpreter =
+        TestLedgerDSLInterpreter(
             services,
             labelToOutputStateAndRefs = HashMap(labelToOutputStateAndRefs),
             transactionWithLocations = HashMap(transactionWithLocations),
@@ -309,7 +306,7 @@ public data class ZKTestLedgerDSLInterpreter private constructor(
         return tx?.let { SignedTransaction(it.transaction, listOf(NULL_SIGNATURE)) }
     }
 
-    internal inline fun <reified S : ZKContractState> resolveStateRef(stateRef: StateRef): TransactionState<S> {
+    internal inline fun <reified S : ContractState> resolveStateRef(stateRef: StateRef): TransactionState<S> {
         val transactionWithLocation =
             transactionWithLocations[stateRef.txhash] ?: nonVerifiedTransactionWithLocations[stateRef.txhash]
                 ?: throw TransactionResolutionException(stateRef.txhash)
@@ -326,10 +323,10 @@ public data class ZKTestLedgerDSLInterpreter private constructor(
     }
 
     private fun <R> interpretTransactionDsl(
-        transactionBuilder: ZKTransactionBuilder,
-        dsl: ZKTestTransactionDSLInterpreter.() -> R
-    ): ZKTestTransactionDSLInterpreter {
-        return ZKTestTransactionDSLInterpreter(this, transactionBuilder).apply { dsl() }
+        transactionBuilder: TransactionBuilder,
+        dsl: TestTransactionDSLInterpreter.() -> R
+    ): TestTransactionDSLInterpreter {
+        return TestTransactionDSLInterpreter(this, transactionBuilder).apply { dsl() }
     }
 
     public fun transactionName(transactionHash: SecureHash): String? {
@@ -341,13 +338,43 @@ public data class ZKTestLedgerDSLInterpreter private constructor(
         }
     }
 
-    public fun outputToLabel(state: ZKContractState): String? =
+    public fun outputToLabel(state: ContractState): String? =
         labelToOutputStateAndRefs.filter { it.value.state.data == state }.keys.firstOrNull()
+
+    private fun <R> recordZKTransactionWithTransactionMap(
+        transactionLabel: String?,
+        transactionBuilder: TransactionBuilder,
+        dsl: TestTransactionDSLInterpreter.() -> R,
+        transactionMap: HashMap<SecureHash, WireTransactionWithLocation> = HashMap(),
+        /** If set to true, will add dummy components to [transactionBuilder] to make it valid. */
+        fillTransaction: Boolean
+    ): WireTransaction {
+        val transactionLocation = getCallerLocation()
+        val transactionInterpreter = interpretTransactionDsl(transactionBuilder, dsl)
+        if (fillTransaction) fillTransaction(transactionBuilder)
+        // Create the WireTransaction
+        val wireTransaction = try {
+            transactionInterpreter.toZKWireTransaction()
+        } catch (e: IllegalStateException) {
+            throw IllegalStateException("A transaction-DSL block that is part of a test ledger must return a valid transaction.", e)
+        }
+        // Record the output states
+        transactionInterpreter.labelToIndexMap.forEach { label, index ->
+            if (label in labelToOutputStateAndRefs) {
+                throw DuplicateOutputLabel(label)
+            }
+            labelToOutputStateAndRefs[label] = wireTransaction.outRef(index)
+        }
+        transactionMap[wireTransaction.id] =
+            WireTransactionWithLocation(transactionLabel, wireTransaction, transactionLocation)
+
+        return wireTransaction
+    }
 
     private fun <R> recordTransactionWithTransactionMap(
         transactionLabel: String?,
-        transactionBuilder: ZKTransactionBuilder,
-        dsl: ZKTestTransactionDSLInterpreter.() -> R,
+        transactionBuilder: TransactionBuilder,
+        dsl: TestTransactionDSLInterpreter.() -> R,
         transactionMap: HashMap<SecureHash, WireTransactionWithLocation> = HashMap(),
         /** If set to true, will add dummy components to [transactionBuilder] to make it valid. */
         fillTransaction: Boolean
@@ -381,24 +408,30 @@ public data class ZKTestLedgerDSLInterpreter private constructor(
      * The base transaction may not be valid, but it still gets recorded to the ledger. This causes a test failure,
      * even though is not being used for anything afterwards.
      */
-    private fun fillTransaction(transactionBuilder: ZKTransactionBuilder) {
+    private fun fillTransaction(transactionBuilder: TransactionBuilder) {
         if (transactionBuilder.commands().isEmpty()) transactionBuilder.addCommand(dummyCommand())
     }
 
-    public override fun _transaction(
+    override fun _transaction(
         transactionLabel: String?,
-        transactionBuilder: ZKTransactionBuilder,
-        dsl: ZKTestTransactionDSLInterpreter.() -> EnforceVerifyOrFail
+        transactionBuilder: TransactionBuilder,
+        dsl: TestTransactionDSLInterpreter.() -> EnforceVerifyOrFail
     ): WireTransaction = recordTransactionWithTransactionMap(transactionLabel, transactionBuilder, dsl, transactionWithLocations, false)
 
-    public override fun _unverifiedTransaction(
+    override fun _zkTransaction(
         transactionLabel: String?,
-        transactionBuilder: ZKTransactionBuilder,
-        dsl: ZKTestTransactionDSLInterpreter.() -> Unit
+        transactionBuilder: TransactionBuilder,
+        dsl: TestTransactionDSLInterpreter.() -> EnforceVerifyOrFail
+    ): WireTransaction = recordZKTransactionWithTransactionMap(transactionLabel, transactionBuilder, dsl, transactionWithLocations, false)
+
+    override fun _unverifiedTransaction(
+        transactionLabel: String?,
+        transactionBuilder: TransactionBuilder,
+        dsl: TestTransactionDSLInterpreter.() -> Unit
     ): WireTransaction =
         recordTransactionWithTransactionMap(transactionLabel, transactionBuilder, dsl, nonVerifiedTransactionWithLocations, true)
 
-    public override fun _tweak(dsl: ZKLedgerDSLInterpreter<ZKTestTransactionDSLInterpreter>.() -> Unit): Unit =
+    override fun _tweak(dsl: LedgerDSLInterpreter<TestTransactionDSLInterpreter>.() -> Unit): Unit =
         copy().dsl()
 
     override fun attachment(attachment: InputStream): SecureHash {
@@ -431,7 +464,7 @@ public data class ZKTestLedgerDSLInterpreter private constructor(
         }
     }
 
-    override fun <S : ZKContractState> retrieveOutputStateAndRef(clazz: Class<S>, label: String): StateAndRef<S> {
+    override fun <S : ContractState> retrieveOutputStateAndRef(clazz: Class<S>, label: String): StateAndRef<S> {
         val stateAndRef = labelToOutputStateAndRefs[label]
         if (stateAndRef == null) {
             throw IllegalArgumentException("State with label '$label' was not found")
