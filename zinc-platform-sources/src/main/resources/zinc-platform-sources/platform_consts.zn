@@ -1,3 +1,5 @@
+const U8_BYTES: u16 = 1;
+const I8_BYTES: u16 = 1;
 const BYTE_BITS: u16 = 8;
 
 const U16_BYTES: u16 = 2;

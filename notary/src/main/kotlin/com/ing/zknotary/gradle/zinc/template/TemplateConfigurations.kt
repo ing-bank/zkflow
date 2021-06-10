@@ -11,6 +11,7 @@ import com.ing.zknotary.gradle.zinc.template.parameters.CurrencyTemplateParamete
 import com.ing.zknotary.gradle.zinc.template.parameters.IssuedTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.LinearPointerTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.NullableTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.parameters.OptionalTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.PartyAndReferenceTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.SecureHashTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.StringTemplateParameters
@@ -51,6 +52,8 @@ open class TemplateConfigurations {
 
     open var nullableConfigurations: List<NullableTemplateParameters<*>> = emptyList()
 
+    open var optionalConfigurations: List<OptionalTemplateParameters<*>> = emptyList()
+
     /*
      * Pre-defined collection of configurations to generate zinc sources for
      * standard data types like float and double.
@@ -68,7 +71,8 @@ open class TemplateConfigurations {
             AbstractPartyTemplateParameters.all +
             PartyAndReferenceTemplateParameters.all +
             AttachmentConstraintParameters.all +
-            NullableTemplateParameters.fixed
+            NullableTemplateParameters.fixed +
+            OptionalTemplateParameters.fixed
     }
 
     /**
@@ -82,7 +86,8 @@ open class TemplateConfigurations {
                 bigDecimalConfigurations +
                 amountConfigurations +
                 issuedConfigurations +
-                nullableConfigurations
+                nullableConfigurations +
+                optionalConfigurations
             )
             .flatMap { it.resolveAllConfigurations() }
             .distinct()

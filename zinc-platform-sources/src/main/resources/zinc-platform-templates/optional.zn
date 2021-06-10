@@ -1,0 +1,48 @@
+// Input parameters:
+//   - INNER_MODULE_NAME: String = module name of the inner struct
+//   - INNER_CONSTANT_PREFIX: String = prefix used for constant names of the inner struct
+//   - INNER_TYPE_NAME: String = name of the inner struct
+
+mod ${INNER_MODULE_NAME};
+
+use ${INNER_MODULE_NAME}::${INNER_TYPE_NAME};
+use ${INNER_MODULE_NAME}::${INNER_CONSTANT_PREFIX}_LENGTH;
+
+const OPTIONAL_${INNER_CONSTANT_PREFIX}_LENGTH: u16 = 1 as u16 + ${INNER_CONSTANT_PREFIX}_LENGTH;
+
+struct Optional${INNER_TYPE_NAME} {
+    is_none: bool,
+    inner: ${INNER_TYPE_NAME},
+}
+
+impl Optional${INNER_TYPE_NAME} {
+    fn none() -> Optional${INNER_TYPE_NAME} {
+        Optional${INNER_TYPE_NAME} {
+            is_none: true,
+            inner: ${INNER_TYPE_NAME}::empty(),
+        }
+    }
+
+    fn some(value: ${INNER_TYPE_NAME}) -> Optional${INNER_TYPE_NAME} {
+        Optional${INNER_TYPE_NAME} {
+            is_none: false,
+            inner: value,
+        }
+    }
+
+    fn equals(this: Optional${INNER_TYPE_NAME}, that: Optional${INNER_TYPE_NAME}) -> bool {
+        if this.is_none || that.is_none {
+            false
+        } else {
+            ${INNER_TYPE_NAME}::equals(this.inner, that.inner)
+        }
+    }
+
+    fn contains(this: Optional${INNER_TYPE_NAME}, value: ${INNER_TYPE_NAME}) -> bool {
+        if this.is_none {
+            false
+        } else {
+            ${INNER_TYPE_NAME}::equals(this.inner, value)
+        }
+    }
+}
