@@ -1,6 +1,8 @@
 package com.ing.zknotary.testing.dsl
 
+import com.ing.zknotary.common.crypto.zincAlgorithm
 import net.corda.core.identity.Party
+import net.corda.core.internal.HashAgility
 import net.corda.core.node.ServiceHub
 import net.corda.coretesting.internal.asTestContextEnv
 import net.corda.coretesting.internal.createTestSerializationEnv
@@ -21,6 +23,8 @@ public fun ServiceHub.zkLedger(
         val newParameters = currentParameters.addNotary(notary)
         (networkParametersService as MockNetworkParametersStorage).setCurrentParametersUnverified(newParameters)
     }
+
+    HashAgility.init(zincAlgorithm)
 
     return createTestSerializationEnv(javaClass.classLoader).asTestContextEnv {
         val interpreter = TestLedgerDSLInterpreter(this)

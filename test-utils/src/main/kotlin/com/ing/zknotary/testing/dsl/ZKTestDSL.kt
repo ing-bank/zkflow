@@ -3,7 +3,14 @@
 package com.ing.zknotary.testing.dsl
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder
+import com.ing.zknotary.common.contracts.ZKCommandData
 import com.ing.zknotary.common.transactions.ZKTransactionBuilder
+import com.ing.zknotary.common.transactions.collectUtxoInfos
+import com.ing.zknotary.common.transactions.zkCommandData
+import com.ing.zknotary.common.zkp.PublicInput
+import com.ing.zknotary.common.zkp.Witness
+import com.ing.zknotary.common.zkp.ZKTransactionService
+import com.ing.zknotary.testing.zkp.MockZKTransactionService
 import net.corda.core.DoNotImplement
 import net.corda.core.contracts.Attachment
 import net.corda.core.contracts.AttachmentConstraint
@@ -29,7 +36,6 @@ import net.corda.core.internal.TransactionsResolver
 import net.corda.core.internal.notary.NotaryService
 import net.corda.core.internal.uncheckedCast
 import net.corda.core.node.ServiceHub
-import net.corda.core.node.ServicesForResolution
 import net.corda.core.node.services.AttachmentId
 import net.corda.core.node.services.TransactionStorage
 import net.corda.core.serialization.internal.AttachmentsClassLoaderCache
@@ -37,6 +43,8 @@ import net.corda.core.serialization.internal.AttachmentsClassLoaderCacheImpl
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.transactions.WireTransaction
+import net.corda.core.utilities.OpaqueBytes
+import net.corda.core.utilities.loggerFor
 import net.corda.node.services.DbTransactionsResolver
 import net.corda.node.services.attachments.NodeAttachmentTrustCalculator
 import net.corda.node.services.persistence.AttachmentStorageInternal
@@ -107,8 +115,10 @@ public data class TestTransactionDSLInterpreter private constructor(
         transactionBuilder: TransactionBuilder
     ) : this(ledgerInterpreter, transactionBuilder, HashMap())
 
+    private val log = loggerFor<TestTransactionDSLInterpreter>()
+
     // Implementing [ServiceHubCoreInternal] allows better use in internal Corda tests
-    val services: ServicesForResolution = object : ServiceHubCoreInternal, ServiceHub by ledgerInterpreter.services {
+    val services: ServiceHubCoreInternal = object : ServiceHubCoreInternal, ServiceHub by ledgerInterpreter.services {
 
         // [validatedTransactions.getTransaction] needs overriding as there are no calls to
         // [ServiceHub.recordTransactions] in the test dsl
@@ -207,8 +217,16 @@ public data class TestTransactionDSLInterpreter private constructor(
     override fun verifies(): EnforceVerifyOrFail {
         // Verify on a copy of the transaction builder, so if it's then further modified it doesn't error due to
         // the existing signature
-        transactionBuilder.copy().apply {
-            toWireTransaction().toLedgerTransaction(services).verify()
+        val txb = transactionBuilder.copy()
+
+        val wtx = txb.run { toWireTransaction() }
+        wtx.toLedgerTransaction(services).verify()
+
+        if (wtx.commands.all { it.value is ZKCommandData }) {
+            val zkwtx = ZKTransactionBuilder(txb).run { toZKWireTransaction() }
+            val zkService: ZKTransactionService = MockZKTransactionService(services)
+            log.info("Verifying ZKP for ${zkwtx.id} with $zkService")
+            services.proveAndVerify(zkService, zkwtx)
         }
         return EnforceVerifyOrFail.Token
     }
@@ -255,6 +273,31 @@ public data class TestTransactionDSLInterpreter private constructor(
             )
         )
     }
+}
+
+private fun ServiceHub.proveAndVerify(
+    zkService: ZKTransactionService,
+    zkwtx: WireTransaction
+) {
+    val zkServiceForCommand = zkService.zkServiceForCommand(zkwtx.zkCommandData())
+    val inputUtxoInfos = collectUtxoInfos(zkwtx.inputs)
+    val referenceUtxoInfos = collectUtxoInfos(zkwtx.references)
+    val witness = Witness.fromWireTransaction(
+        zkwtx,
+        inputUtxoInfos,
+        referenceUtxoInfos
+    )
+
+    val proof = zkServiceForCommand.prove(witness)
+
+    val inputHashes = inputUtxoInfos.map { zkwtx.digestService.componentHash(it.nonce, OpaqueBytes(it.serializedContents)) }
+    val referenceHashes = referenceUtxoInfos.map { zkwtx.digestService.componentHash(it.nonce, OpaqueBytes(it.serializedContents)) }
+    val publicInput = PublicInput(
+        transactionId = zkwtx.id,
+        inputHashes = inputHashes,
+        referenceHashes = referenceHashes
+    )
+    zkServiceForCommand.verify(proof, publicInput)
 }
 
 public data class TestLedgerDSLInterpreter private constructor(
@@ -446,6 +489,11 @@ public data class TestLedgerDSLInterpreter private constructor(
                 val wtx = value.transaction
                 val ltx = wtx.toLedgerTransaction(services)
                 ltx.verify()
+                if (wtx.commands.all { it.value is ZKCommandData }) {
+                    val zkService: ZKTransactionService = MockZKTransactionService(services)
+                    // log.info("Verifying ZKP for ${wtx.id} with $zkService")
+                    services.proveAndVerify(zkService, wtx)
+                }
                 val allInputs = wtx.inputs union wtx.references
                 val doubleSpend = allInputs intersect usedInputs
                 if (!doubleSpend.isEmpty()) {

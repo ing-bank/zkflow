@@ -6,6 +6,7 @@ import com.ing.zknotary.common.zkp.Witness
 import com.ing.zknotary.common.zkp.ZKService
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.crypto.DigestService
+import net.corda.core.node.ServiceHub
 import net.corda.core.serialization.SerializationFactory
 import net.corda.core.serialization.deserialize
 import net.corda.core.serialization.serialize
@@ -14,7 +15,7 @@ import net.corda.core.transactions.WireTransaction
 import net.corda.core.utilities.OpaqueBytes
 
 @Suppress("EXPERIMENTAL_API_USAGE")
-public class MockZKService(private val digestService: DigestService) : ZKService {
+public class MockZKService(private val serviceHub: ServiceHub, private val digestService: DigestService) : ZKService {
 
     /**
      * This mock version simply returns the serialized witness, so that we can use it in `verify()`
@@ -113,5 +114,10 @@ public class MockZKService(private val digestService: DigestService) : ZKService
                     "not match the leaf hash from the public input ($leafHashFromPublicreference)."
             )
         }
+
+        /*
+         * Rule 4: The contract rules should verify
+         */
+        wtx.toLedgerTransaction(serviceHub).verify()
     }
 }

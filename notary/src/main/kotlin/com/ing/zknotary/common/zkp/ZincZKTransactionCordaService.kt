@@ -5,11 +5,15 @@ import com.ing.zknotary.node.services.ConfigParams
 import com.ing.zknotary.node.services.getLongFromConfig
 import com.ing.zknotary.node.services.getStringFromConfig
 import net.corda.core.node.AppServiceHub
+import net.corda.core.node.ServiceHub
 import net.corda.core.node.services.CordaService
 import java.time.Duration
 
 @CordaService
-class ZincZKTransactionService(services: AppServiceHub) : ZKTransactionCordaService(services) {
+class ZincZKTransactionCordaService(services: AppServiceHub) : ZincZKTransactionService(services)
+
+@CordaService
+open class ZincZKTransactionService(services: ServiceHub) : AbstractZKTransactionService(services) {
 
     private val zkServices: Map<ZKCommandData, ZincZKService>
 

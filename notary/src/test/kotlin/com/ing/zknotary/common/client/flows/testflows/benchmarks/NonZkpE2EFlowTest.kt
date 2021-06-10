@@ -6,7 +6,7 @@ import com.ing.zknotary.node.services.InMemoryZKVerifierTransactionStorage
 import com.ing.zknotary.node.services.ServiceNames.ZK_TX_SERVICE
 import com.ing.zknotary.node.services.ServiceNames.ZK_VERIFIER_TX_STORAGE
 import com.ing.zknotary.testing.fixtures.contract.TestContract
-import com.ing.zknotary.testing.zkp.MockZKTransactionService
+import com.ing.zknotary.testing.zkp.MockZKTransactionCordaService
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
 import net.corda.core.utilities.getOrThrow
@@ -41,7 +41,7 @@ class NonZkpE2EFlowTest {
                 cordappWithPackages("com.ing.zknotary").withConfig(
                     mapOf(
                         ZK_VERIFIER_TX_STORAGE to InMemoryZKVerifierTransactionStorage::class.qualifiedName!!,
-                        ZK_TX_SERVICE to MockZKTransactionService::class.qualifiedName!!,
+                        ZK_TX_SERVICE to MockZKTransactionCordaService::class.qualifiedName!!,
                         ConfigParams.Zinc.COMMAND_CLASS_NAMES to listOf(
                             TestContract.Create::class.java.name,
                             TestContract.Move::class.java.name

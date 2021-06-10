@@ -41,6 +41,7 @@ class DepositTransactionTransactionBuilderTest : ContractTest() {
                 command(keysOf(BANK_A), DepositContract.Request)
                 verifies()
             }
+            verifies()
         }
     }
 

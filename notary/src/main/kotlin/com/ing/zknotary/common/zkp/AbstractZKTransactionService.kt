@@ -16,7 +16,7 @@ import net.corda.core.serialization.SingletonSerializeAsToken
 import net.corda.core.transactions.TraversableTransaction
 import net.corda.core.transactions.WireTransaction
 
-abstract class ZKTransactionCordaService(val serviceHub: ServiceHub) : ZKTransactionService,
+abstract class AbstractZKTransactionService(val serviceHub: ServiceHub) : ZKTransactionService,
     SingletonSerializeAsToken() {
 
     private val vtxStorage: ZKWritableVerifierTransactionStorage by lazy {
@@ -41,7 +41,7 @@ abstract class ZKTransactionCordaService(val serviceHub: ServiceHub) : ZKTransac
         return ZKVerifierTransaction.fromWireTransaction(wtx, proof)
     }
 
-    abstract fun zkServiceForCommand(command: ZKCommandData): ZKService
+    abstract override fun zkServiceForCommand(command: ZKCommandData): ZKService
 
     override fun verify(svtx: SignedZKVerifierTransaction, checkSufficientSignatures: Boolean) {
         val vtx = svtx.tx
