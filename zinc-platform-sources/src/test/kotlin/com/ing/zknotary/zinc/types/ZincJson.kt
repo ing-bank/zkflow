@@ -52,7 +52,7 @@ inline fun <reified T : Any> Amount<T>.toZincJson(
 ) = toJsonObject(
     integerSize, fractionSize, tokenSize, serializersModule
 ).toString()
-fun String?.toZincJson(size: Int) = toJsonObject(size).toString()
+fun String.toZincJson(size: Int) = toJsonObject(size).toString()
 fun ByteArray.toZincJson(serializedSize: Int) = toJsonObject(serializedSize).toString()
 fun UniqueIdentifier.toZincJson() = toJsonObject().toString()
 fun LinearPointer<*>.toZincJson() = toJsonObject().toString()
@@ -81,9 +81,21 @@ fun AttachmentConstraint.toZincJson(encodedSize: Int? = null) =
 fun Issued<String>.toZincJson(encodedSize: Int) =
     toJsonObject(encodedSize).toString()
 
-fun String?.toJsonObject(size: Int) = buildJsonObject {
+@JvmName("toJsonObject")
+fun String.toJsonObject(size: Int) = buildJsonObject {
     put("chars", toSizedIntArray(size).toJsonArray())
-    put("size", "${this@toJsonObject?.length ?: 0}")
+    put("size", "$length")
+}
+
+@JvmName("toNullableJsonObject")
+fun String?.toJsonObject(size: Int) = buildJsonObject {
+    val inner = buildJsonObject {
+        put("chars", toSizedIntArray(size).toJsonArray())
+        put("size", "${this@toJsonObject?.length ?: 0}")
+    }
+
+    put("is_null", this@toJsonObject == null)
+    put("inner", inner)
 }
 
 fun ByteArray.toJsonObject(serializedSize: Int) = buildJsonObject {
@@ -96,7 +108,6 @@ fun UniqueIdentifier.toJsonObject() = buildJsonObject {
     // input validations
     id.mostSignificantBits shouldBe 0
 
-    put("has_external_id", externalId != null)
     put("external_id", externalId.toJsonObject(UniqueIdentifierSurrogate.EXTERNAL_ID_LENGTH))
     put("id", "${id.leastSignificantBits}")
 }
@@ -153,12 +164,12 @@ fun TimeWindow.toJsonObject() = buildJsonObject {
 
     val fromTime = buildJsonObject {
         put("is_null", this@toJsonObject.fromTime == null)
-        put("instant", this@toJsonObject.fromTime?.toJsonObject() ?: zero)
+        put("inner", this@toJsonObject.fromTime?.toJsonObject() ?: zero)
     }
 
     val untilTime = buildJsonObject {
         put("is_null", this@toJsonObject.untilTime == null)
-        put("instant", this@toJsonObject.untilTime?.toJsonObject() ?: zero)
+        put("inner", this@toJsonObject.untilTime?.toJsonObject() ?: zero)
     }
 
     put("from_time", fromTime)

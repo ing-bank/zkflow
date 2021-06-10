@@ -1,15 +1,14 @@
 package com.ing.zknotary.gradle.zinc.template.parameters
 
-import com.ing.zknotary.gradle.zinc.template.NamedType
 import com.ing.zknotary.gradle.zinc.template.TemplateParameters
 
 data class AttachmentConstraintParameters(
-    override val templateFile: String,
+    val baseTemplateFile: String,
     val implementationName: String,
     val secureHashTemplateParameters: SecureHashTemplateParameters? = null,
     val pkTemplateParameters: PublicKeyTemplateParameters? = null
-) : NamedType, TemplateParameters(
-    templateFile,
+) : TemplateParameters(
+    baseTemplateFile,
     listOfNotNull(
         StringTemplateParameters(1),
         secureHashTemplateParameters,
@@ -32,7 +31,7 @@ data class AttachmentConstraintParameters(
         val all = listOf(
             AttachmentConstraintParameters(ATTACHMENT_CONSTRAINT_TEMPLATE, "AlwaysAcceptAttachmentConstraint"),
             AttachmentConstraintParameters(
-                templateFile = ATTACHMENT_CONSTRAINT_TEMPLATE_WITH_SECURE_HASH,
+                baseTemplateFile = ATTACHMENT_CONSTRAINT_TEMPLATE_WITH_SECURE_HASH,
                 implementationName = "HashAttachmentConstraint",
                 secureHashTemplateParameters = SecureHashTemplateParameters
             ),
@@ -41,7 +40,7 @@ data class AttachmentConstraintParameters(
             AttachmentConstraintParameters(ATTACHMENT_CONSTRAINT_TEMPLATE, "AutomaticHashConstraint")
         ) + PublicKeyTemplateParameters.all.map {
             AttachmentConstraintParameters(
-                templateFile = ATTACHMENT_CONSTRAINT_TEMPLATE_WITH_PUBLIC_KEY,
+                baseTemplateFile = ATTACHMENT_CONSTRAINT_TEMPLATE_WITH_PUBLIC_KEY,
                 implementationName = "SignatureAttachmentConstraint",
                 pkTemplateParameters = it
             )

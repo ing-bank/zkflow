@@ -17,9 +17,11 @@ package com.ing.zknotary.gradle.zinc.template
  * @property dependencies list of [TemplateParameters] for types this instance depends on
  */
 open class TemplateParameters(
-    open val templateFile: String,
+    val templateFile: String,
     private val dependencies: List<TemplateParameters>
-) {
+) : NamedType {
+    override val typeName = templateFile.removeSuffix(".zn").snakeCaseToCamel()
+
     /**
      * Recursively resolves all configurations required in this template.
      */
@@ -53,5 +55,12 @@ open class TemplateParameters(
                 "_${it.value}"
             }.toLowerCase()
         }
+
+        internal fun String.snakeCaseToCamel(): String = this
+            .split("_")
+            .joinToString(separator = "") { word -> word.firstCharToUpperCase() }
+
+        internal fun String.firstCharToUpperCase(): String =
+            if (isNotEmpty()) { this[0].toUpperCase() + substring(1) } else this
     }
 }

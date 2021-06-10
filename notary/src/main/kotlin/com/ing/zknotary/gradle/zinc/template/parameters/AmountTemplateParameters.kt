@@ -1,13 +1,12 @@
 package com.ing.zknotary.gradle.zinc.template.parameters
 
-import com.ing.zknotary.gradle.zinc.template.NamedType
 import com.ing.zknotary.gradle.zinc.template.TemplateParameters
 
 data class AmountTemplateParameters(
     val tokenDisplaySize: BigDecimalTemplateParameters,
     val tokenSize: Short,
     val typeNameOverride: String? = null
-) : NamedType, TemplateParameters("amount.zn", listOf(tokenDisplaySize)) {
+) : TemplateParameters("amount.zn", listOf(tokenDisplaySize)) {
     private fun postFix(): String = "_${tokenSize}_"
 
     /**

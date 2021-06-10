@@ -1,13 +1,12 @@
 package com.ing.zknotary.gradle.zinc.template.parameters
 
-import com.ing.zknotary.gradle.zinc.template.NamedType
 import com.ing.zknotary.gradle.zinc.template.TemplateParameters
 
 data class BigDecimalTemplateParameters(
     val integerSize: Int,
     val fractionSize: Int,
     val typeNameOverride: String? = null
-) : NamedType, TemplateParameters("big_decimal.zn", emptyList()) {
+) : TemplateParameters("big_decimal.zn", emptyList()) {
 
     constructor(integerSize: Int, fractionSize: Int) : this(integerSize, fractionSize, null)
 

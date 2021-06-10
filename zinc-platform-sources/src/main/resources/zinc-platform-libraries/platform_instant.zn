@@ -30,7 +30,7 @@ struct Instant {
 }
 
 impl Instant {
-    fn zero() -> Instant {
+    fn empty() -> Instant {
         Instant { seconds: 0 as u64, nanos: 0 as u32 }
     }
 

@@ -1,12 +1,11 @@
 package com.ing.zknotary.gradle.zinc.template.parameters
 
 import com.ing.zknotary.common.serialization.bfl.serializers.PartyAndReferenceSurrogate
-import com.ing.zknotary.gradle.zinc.template.NamedType
 import com.ing.zknotary.gradle.zinc.template.TemplateParameters
 
 class PartyAndReferenceTemplateParameters(
     private val partyTemplateParameters: AbstractPartyTemplateParameters
-) : NamedType, TemplateParameters(
+) : TemplateParameters(
     "party_and_reference.zn",
     listOf(
         ByteArrayTemplateParameters(PartyAndReferenceSurrogate.REFERENCE_SIZE),
