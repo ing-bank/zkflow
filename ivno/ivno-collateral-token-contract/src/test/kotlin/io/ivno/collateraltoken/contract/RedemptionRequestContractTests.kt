@@ -1,5 +1,6 @@
 package io.ivno.collateraltoken.contract
 
+import com.ing.zknotary.testing.dsl.zkLedger
 import io.dasl.contracts.v1.token.TokenContract
 import io.onixlabs.corda.bnms.contract.Network
 import io.onixlabs.corda.identityframework.contract.AttestationStatus
@@ -12,13 +13,13 @@ class RedemptionRequestContractTests : ContractTest() {
 
     @Test
     fun `On redemption requesting, the transaction must include the Request command`() {
-        services.ledger {
+        services.zkLedger {
             val tokenType = issueTokenType(IVNO_TOKEN_TYPE)
             val requestedDeposit = requestDeposit(DEPOSIT, tokenType)
             val acceptedDeposit = acceptDeposit(requestedDeposit, tokenType)
             val paymentIssuedDeposit = issueDepositPayment(acceptedDeposit, tokenType)
             val token = acceptDepositPayment(paymentIssuedDeposit, tokenType)
-            transaction {
+            zkTransaction {
                 val memberships = createAllMemberships()
                 reference(memberships.membershipFor(BANK_A).ref)
                 reference(memberships.membershipFor(CUSTODIAN).ref)
@@ -39,8 +40,8 @@ class RedemptionRequestContractTests : ContractTest() {
 
     @Test
     fun `On redemption requesting, zero redemption states must be consumed`() {
-        services.ledger {
-            transaction {
+        services.zkLedger {
+            zkTransaction {
                 input(RedemptionContract.ID, REDEMPTION)
                 output(RedemptionContract.ID, REDEMPTION)
                 command(keysOf(BANK_A, CUSTODIAN, TOKEN_ISSUING_ENTITY), RedemptionContract.Request)
@@ -51,8 +52,8 @@ class RedemptionRequestContractTests : ContractTest() {
 
     @Test
     fun `On redemption requesting, only one redemption state must be created`() {
-        services.ledger {
-            transaction {
+        services.zkLedger {
+            zkTransaction {
                 output(RedemptionContract.ID, REDEMPTION)
                 output(RedemptionContract.ID, REDEMPTION)
                 command(keysOf(BANK_A, CUSTODIAN, TOKEN_ISSUING_ENTITY), RedemptionContract.Request)
@@ -63,9 +64,9 @@ class RedemptionRequestContractTests : ContractTest() {
 
     @Test
     fun `On redemption requesting, at least one token state must be consumed`() {
-        services.ledger {
+        services.zkLedger {
             val tokenType = issueTokenType(IVNO_TOKEN_TYPE)
-            transaction {
+            zkTransaction {
                 val memberships = createAllMemberships()
                 reference(memberships.membershipFor(BANK_A).ref)
                 reference(memberships.membershipFor(CUSTODIAN).ref)
@@ -83,13 +84,13 @@ class RedemptionRequestContractTests : ContractTest() {
 
     @Test
     fun `On redemption requesting, only one Ivno token type must be referenced (verifies)`() {
-        services.ledger {
+        services.zkLedger {
             val tokenType = issueTokenType(IVNO_TOKEN_TYPE)
             val requestedDeposit = requestDeposit(DEPOSIT, tokenType)
             val acceptedDeposit = acceptDeposit(requestedDeposit, tokenType)
             val paymentIssuedDeposit = issueDepositPayment(acceptedDeposit, tokenType)
             val token = acceptDepositPayment(paymentIssuedDeposit, tokenType)
-            transaction {
+            zkTransaction {
                 val memberships = createAllMemberships()
                 reference(memberships.membershipFor(BANK_A).ref)
                 reference(memberships.membershipFor(CUSTODIAN).ref)
@@ -109,7 +110,7 @@ class RedemptionRequestContractTests : ContractTest() {
 
     @Test
     fun `On redemption requesting, a membership state must be referenced for each redemption participant (BANK_A missing)`() {
-        services.ledger {
+        services.zkLedger {
             val tokenType = issueTokenType(IVNO_TOKEN_TYPE)
             val requestedDeposit = requestDeposit(DEPOSIT, tokenType)
             val acceptedDeposit = acceptDeposit(requestedDeposit, tokenType)
@@ -134,7 +135,7 @@ class RedemptionRequestContractTests : ContractTest() {
 
     @Test
     fun `On redemption requesting, a membership state must be referenced for each redemption participant (CUSTODIAN missing)`() {
-        services.ledger {
+        services.zkLedger {
             val tokenType = issueTokenType(IVNO_TOKEN_TYPE)
             val requestedDeposit = requestDeposit(DEPOSIT, tokenType)
             val acceptedDeposit = acceptDeposit(requestedDeposit, tokenType)
@@ -159,7 +160,7 @@ class RedemptionRequestContractTests : ContractTest() {
 
     @Test
     fun `On redemption requesting, a membership state must be referenced for each redemption participant (TOKEN_ISSUING_ENTITY missing)`() {
-        services.ledger {
+        services.zkLedger {
             val tokenType = issueTokenType(IVNO_TOKEN_TYPE)
             val requestedDeposit = requestDeposit(DEPOSIT, tokenType)
             val acceptedDeposit = acceptDeposit(requestedDeposit, tokenType)
@@ -184,7 +185,7 @@ class RedemptionRequestContractTests : ContractTest() {
 
     @Test
     fun `On redemption requesting, a membership attestation state must be referenced for each redemption participant (BANK_A missing)`() {
-        services.ledger {
+        services.zkLedger {
             val tokenType = issueTokenType(IVNO_TOKEN_TYPE)
             val requestedDeposit = requestDeposit(DEPOSIT, tokenType)
             val acceptedDeposit = acceptDeposit(requestedDeposit, tokenType)
@@ -209,7 +210,7 @@ class RedemptionRequestContractTests : ContractTest() {
 
     @Test
     fun `On redemption requesting, a membership attestation state must be referenced for each redemption participant (CUSTODIAN missing)`() {
-        services.ledger {
+        services.zkLedger {
             val tokenType = issueTokenType(IVNO_TOKEN_TYPE)
             val requestedDeposit = requestDeposit(DEPOSIT, tokenType)
             val acceptedDeposit = acceptDeposit(requestedDeposit, tokenType)
@@ -234,7 +235,7 @@ class RedemptionRequestContractTests : ContractTest() {
 
     @Test
     fun `On redemption requesting, a membership attestation state must be referenced for each redemption participant (TOKEN_ISSUING_ENTITY missing)`() {
-        services.ledger {
+        services.zkLedger {
             val tokenType = issueTokenType(IVNO_TOKEN_TYPE)
             val requestedDeposit = requestDeposit(DEPOSIT, tokenType)
             val acceptedDeposit = acceptDeposit(requestedDeposit, tokenType)
@@ -259,7 +260,7 @@ class RedemptionRequestContractTests : ContractTest() {
 
     @Test
     fun `On redemption requesting, every membership attestation status must be ACCEPTED`() {
-        services.ledger {
+        services.zkLedger {
             val tokenType = issueTokenType(IVNO_TOKEN_TYPE)
             val requestedDeposit = requestDeposit(DEPOSIT, tokenType)
             val acceptedDeposit = acceptDeposit(requestedDeposit, tokenType)
@@ -285,7 +286,7 @@ class RedemptionRequestContractTests : ContractTest() {
 
     @Test
     fun `On redemption requesting, every membership's network must be equal to the Ivno token type network (BANK_A invalid)`() {
-        services.ledger {
+        services.zkLedger {
             val tokenType = issueTokenType(IVNO_TOKEN_TYPE)
             val requestedDeposit = requestDeposit(DEPOSIT, tokenType)
             val acceptedDeposit = acceptDeposit(requestedDeposit, tokenType)
@@ -313,7 +314,7 @@ class RedemptionRequestContractTests : ContractTest() {
 
     @Test
     fun `On redemption requesting, every membership's network must be equal to the Ivno token type network (CUSTODIAN invalid)`() {
-        services.ledger {
+        services.zkLedger {
             val tokenType = issueTokenType(IVNO_TOKEN_TYPE)
             val requestedDeposit = requestDeposit(DEPOSIT, tokenType)
             val acceptedDeposit = acceptDeposit(requestedDeposit, tokenType)
@@ -341,7 +342,7 @@ class RedemptionRequestContractTests : ContractTest() {
 
     @Test
     fun `On redemption requesting, every membership's network must be equal to the Ivno token type network (TOKEN_ISSUING_ENTITY invalid)`() {
-        services.ledger {
+        services.zkLedger {
             val tokenType = issueTokenType(IVNO_TOKEN_TYPE)
             val requestedDeposit = requestDeposit(DEPOSIT, tokenType)
             val acceptedDeposit = acceptDeposit(requestedDeposit, tokenType)
@@ -369,7 +370,7 @@ class RedemptionRequestContractTests : ContractTest() {
 
     @Test
     fun `On redemption requesting, every membership attestation's network must be equal to the Ivno token type network (BANK_A invalid)`() {
-        services.ledger {
+        services.zkLedger {
             val tokenType = issueTokenType(IVNO_TOKEN_TYPE)
             val requestedDeposit = requestDeposit(DEPOSIT, tokenType)
             val acceptedDeposit = acceptDeposit(requestedDeposit, tokenType)
@@ -397,7 +398,7 @@ class RedemptionRequestContractTests : ContractTest() {
 
     @Test
     fun `On redemption requesting, every membership attestation's network must be equal to the Ivno token type network (CUSTODIAN invalid)`() {
-        services.ledger {
+        services.zkLedger {
             val tokenType = issueTokenType(IVNO_TOKEN_TYPE)
             val requestedDeposit = requestDeposit(DEPOSIT, tokenType)
             val acceptedDeposit = acceptDeposit(requestedDeposit, tokenType)
@@ -425,7 +426,7 @@ class RedemptionRequestContractTests : ContractTest() {
 
     @Test
     fun `On redemption requesting, every membership attestation's network must be equal to the Ivno token type network (TOKEN_ISSUING_ENTITY invalid)`() {
-        services.ledger {
+        services.zkLedger {
             val tokenType = issueTokenType(IVNO_TOKEN_TYPE)
             val requestedDeposit = requestDeposit(DEPOSIT, tokenType)
             val acceptedDeposit = acceptDeposit(requestedDeposit, tokenType)
@@ -453,7 +454,7 @@ class RedemptionRequestContractTests : ContractTest() {
 
     @Test
     fun `On redemption requesting, every membership attestation state must point to a referenced membership state`() {
-        services.ledger {
+        services.zkLedger {
             val tokenType = issueTokenType(IVNO_TOKEN_TYPE)
             val requestedDeposit = requestDeposit(DEPOSIT, tokenType)
             val acceptedDeposit = acceptDeposit(requestedDeposit, tokenType)
@@ -480,7 +481,7 @@ class RedemptionRequestContractTests : ContractTest() {
 
     @Test
     fun `On redemption requesting, the depositor, custodian and token issuing entity must be different`() {
-        services.ledger {
+        services.zkLedger {
             val tokenType = issueTokenType(IVNO_TOKEN_TYPE)
             val requestedDeposit = requestDeposit(DEPOSIT, tokenType)
             val acceptedDeposit = acceptDeposit(requestedDeposit, tokenType)
@@ -506,7 +507,7 @@ class RedemptionRequestContractTests : ContractTest() {
 
     @Test
     fun `On redemption requesting, the redemption amount must be equal to the sum of the input token amount (not enough)`() {
-        services.ledger {
+        services.zkLedger {
             val tokenType = issueTokenType(IVNO_TOKEN_TYPE)
             val requestedDeposit = requestDeposit(DEPOSIT, tokenType)
             val acceptedDeposit = acceptDeposit(requestedDeposit, tokenType)
@@ -532,7 +533,7 @@ class RedemptionRequestContractTests : ContractTest() {
 
     @Test
     fun `On redemption requesting, the redemption amount must be equal to the sum of the input token amount (too much)`() {
-        services.ledger {
+        services.zkLedger {
             val tokenType = issueTokenType(IVNO_TOKEN_TYPE)
             val requestedDeposit = requestDeposit(DEPOSIT, tokenType)
             val acceptedDeposit = acceptDeposit(requestedDeposit, tokenType)
@@ -558,7 +559,7 @@ class RedemptionRequestContractTests : ContractTest() {
 
     @Test
     fun `On redemption requesting, all participants must sign the transaction (redeemer must sign)`() {
-        services.ledger {
+        services.zkLedger {
             val tokenType = issueTokenType(IVNO_TOKEN_TYPE)
             val requestedDeposit = requestDeposit(DEPOSIT, tokenType)
             val acceptedDeposit = acceptDeposit(requestedDeposit, tokenType)
@@ -584,7 +585,7 @@ class RedemptionRequestContractTests : ContractTest() {
 
     @Test
     fun `On redemption requesting, all participants must sign the transaction (custodian must sign)`() {
-        services.ledger {
+        services.zkLedger {
             val tokenType = issueTokenType(IVNO_TOKEN_TYPE)
             val requestedDeposit = requestDeposit(DEPOSIT, tokenType)
             val acceptedDeposit = acceptDeposit(requestedDeposit, tokenType)
@@ -610,7 +611,7 @@ class RedemptionRequestContractTests : ContractTest() {
 
     @Test
     fun `On redemption requesting, all participants must sign the transaction (token issuing entity must sign)`() {
-        services.ledger {
+        services.zkLedger {
             val tokenType = issueTokenType(IVNO_TOKEN_TYPE)
             val requestedDeposit = requestDeposit(DEPOSIT, tokenType)
             val acceptedDeposit = acceptDeposit(requestedDeposit, tokenType)

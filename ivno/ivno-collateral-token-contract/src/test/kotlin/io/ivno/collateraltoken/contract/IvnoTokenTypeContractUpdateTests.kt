@@ -8,7 +8,7 @@ class IvnoTokenTypeContractUpdateTests : ContractTest() {
 
     @Test
     fun `On token type updating, the transaction must include the Update command`() {
-//        services.ledger {
+//        services.zkLedger {
 //            transaction {
 //                fails()
 //                command(keysOf(/**required signers*/), Update())

@@ -1,5 +1,6 @@
 package io.ivno.collateraltoken.contract
 
+import com.ing.zknotary.testing.dsl.zkLedger
 import io.dasl.contracts.v1.token.TokenContract
 import io.onixlabs.corda.bnms.contract.Network
 import io.onixlabs.corda.identityframework.contract.AttestationStatus
@@ -13,8 +14,8 @@ class RedemptionAdvanceContractTests : ContractTest() {
 
     @Test
     fun `On redemption advancing, the transaction must include the Advance command`() {
-        services.ledger {
-            transaction {
+        services.zkLedger {
+            zkTransaction {
                 val memberships = createAllMemberships()
                 reference(memberships.membershipFor(BANK_A).ref)
                 reference(memberships.membershipFor(CUSTODIAN).ref)
@@ -34,8 +35,8 @@ class RedemptionAdvanceContractTests : ContractTest() {
 
     @Test
     fun `On redemption advancing, only one redemption state must be consumed`() {
-        services.ledger {
-            transaction {
+        services.zkLedger {
+            zkTransaction {
                 input(RedemptionContract.ID, REDEMPTION)
                 input(RedemptionContract.ID, REDEMPTION)
                 output(RedemptionContract.ID, REDEMPTION.completeRedemption())
@@ -47,8 +48,8 @@ class RedemptionAdvanceContractTests : ContractTest() {
 
     @Test
     fun `On redemption advancing, only one redemption state must be created`() {
-        services.ledger {
-            transaction {
+        services.zkLedger {
+            zkTransaction {
                 input(RedemptionContract.ID, REDEMPTION)
                 output(RedemptionContract.ID, REDEMPTION.completeRedemption())
                 output(RedemptionContract.ID, REDEMPTION.completeRedemption())
@@ -60,8 +61,8 @@ class RedemptionAdvanceContractTests : ContractTest() {
 
     @Test
     fun `On redemption advancing, only one token must be created when the advance status is REJECTED`() {
-        services.ledger {
-            transaction {
+        services.zkLedger {
+            zkTransaction {
                 val memberships = createAllMemberships()
                 reference(memberships.membershipFor(BANK_A).ref)
                 reference(memberships.membershipFor(CUSTODIAN).ref)
@@ -83,8 +84,8 @@ class RedemptionAdvanceContractTests : ContractTest() {
 
     @Test
     fun `On redemption advancing, only one Ivno token type must be referenced`() {
-        services.ledger {
-            transaction {
+        services.zkLedger {
+            zkTransaction {
                 val memberships = createAllMemberships()
                 reference(memberships.membershipFor(BANK_A).ref)
                 reference(memberships.membershipFor(CUSTODIAN).ref)
@@ -102,8 +103,8 @@ class RedemptionAdvanceContractTests : ContractTest() {
 
     @Test
     fun `On redemption advancing, a membership state must be referenced for each redemption participant (BANK_A missing)`() {
-        services.ledger {
-            transaction {
+        services.zkLedger {
+            zkTransaction {
                 val memberships = createAllMemberships()
                 reference(memberships.membershipFor(CUSTODIAN).ref)
                 reference(memberships.membershipFor(TOKEN_ISSUING_ENTITY).ref)
@@ -121,8 +122,8 @@ class RedemptionAdvanceContractTests : ContractTest() {
 
     @Test
     fun `On redemption advancing, a membership state must be referenced for each redemption participant (CUSTODIAN missing)`() {
-        services.ledger {
-            transaction {
+        services.zkLedger {
+            zkTransaction {
                 val memberships = createAllMemberships()
                 reference(memberships.membershipFor(BANK_A).ref)
                 reference(memberships.membershipFor(TOKEN_ISSUING_ENTITY).ref)
@@ -140,8 +141,8 @@ class RedemptionAdvanceContractTests : ContractTest() {
 
     @Test
     fun `On redemption advancing, a membership state must be referenced for each redemption participant (TOKEN_ISSUING_ENTITY missing)`() {
-        services.ledger {
-            transaction {
+        services.zkLedger {
+            zkTransaction {
                 val memberships = createAllMemberships()
                 reference(memberships.membershipFor(BANK_A).ref)
                 reference(memberships.membershipFor(CUSTODIAN).ref)
@@ -159,8 +160,8 @@ class RedemptionAdvanceContractTests : ContractTest() {
 
     @Test
     fun `On redemption advancing, a membership attestation state must be referenced for each redemption participant (BANK_A missing)`() {
-        services.ledger {
-            transaction {
+        services.zkLedger {
+            zkTransaction {
                 val memberships = createAllMemberships()
                 reference(memberships.membershipFor(BANK_A).ref)
                 reference(memberships.membershipFor(CUSTODIAN).ref)
@@ -178,8 +179,8 @@ class RedemptionAdvanceContractTests : ContractTest() {
 
     @Test
     fun `On redemption advancing, a membership attestation state must be referenced for each redemption participant (CUSTODIAN missing)`() {
-        services.ledger {
-            transaction {
+        services.zkLedger {
+            zkTransaction {
                 val memberships = createAllMemberships()
                 reference(memberships.membershipFor(BANK_A).ref)
                 reference(memberships.membershipFor(CUSTODIAN).ref)
@@ -197,8 +198,8 @@ class RedemptionAdvanceContractTests : ContractTest() {
 
     @Test
     fun `On redemption advancing, a membership attestation state must be referenced for each redemption participant (TOKEN_ISSUING_ENTITY missing)`() {
-        services.ledger {
-            transaction {
+        services.zkLedger {
+            zkTransaction {
                 val memberships = createAllMemberships()
                 reference(memberships.membershipFor(BANK_A).ref)
                 reference(memberships.membershipFor(CUSTODIAN).ref)
@@ -216,8 +217,8 @@ class RedemptionAdvanceContractTests : ContractTest() {
 
     @Test
     fun `On redemption advancing, every membership attestation status must be ACCEPTED`() {
-        services.ledger {
-            transaction {
+        services.zkLedger {
+            zkTransaction {
                 val memberships = createAllMemberships(status = AttestationStatus.REJECTED)
                 reference(memberships.membershipFor(BANK_A).ref)
                 reference(memberships.membershipFor(CUSTODIAN).ref)
@@ -236,8 +237,8 @@ class RedemptionAdvanceContractTests : ContractTest() {
 
     @Test
     fun `On redemption advancing, every membership's network must be equal to the Ivno token type network (BANK_A invalid)`() {
-        services.ledger {
-            transaction {
+        services.zkLedger {
+            zkTransaction {
                 val network = Network("INVALID_NETWORK", BNO.party)
                 val memberships = createAllMemberships()
                 val (invalidMembership, _) = createMembership(BANK_A.party, network = network)
@@ -258,8 +259,8 @@ class RedemptionAdvanceContractTests : ContractTest() {
 
     @Test
     fun `On redemption advancing, every membership's network must be equal to the Ivno token type network (CUSTODIAN invalid)`() {
-        services.ledger {
-            transaction {
+        services.zkLedger {
+            zkTransaction {
                 val network = Network("INVALID_NETWORK", BNO.party)
                 val memberships = createAllMemberships()
                 val (invalidMembership, _) = createMembership(CUSTODIAN.party, network = network)
@@ -280,8 +281,8 @@ class RedemptionAdvanceContractTests : ContractTest() {
 
     @Test
     fun `On redemption advancing, every membership's network must be equal to the Ivno token type network (TOKEN_ISSUING_ENTITY invalid)`() {
-        services.ledger {
-            transaction {
+        services.zkLedger {
+            zkTransaction {
                 val network = Network("INVALID_NETWORK", BNO.party)
                 val memberships = createAllMemberships()
                 val (invalidMembership, _) = createMembership(TOKEN_ISSUING_ENTITY.party, network = network)
@@ -302,8 +303,8 @@ class RedemptionAdvanceContractTests : ContractTest() {
 
     @Test
     fun `On redemption advancing, every membership attestation's network must be equal to the Ivno token type network (BANK_A invalid)`() {
-        services.ledger {
-            transaction {
+        services.zkLedger {
+            zkTransaction {
                 val network = Network("INVALID_NETWORK", BNO.party)
                 val memberships = createAllMemberships()
                 val (_, invalidAttestation) = createMembership(BANK_A.party, network = network)
@@ -324,8 +325,8 @@ class RedemptionAdvanceContractTests : ContractTest() {
 
     @Test
     fun `On redemption advancing, every membership attestation's network must be equal to the Ivno token type network (CUSTODIAN invalid)`() {
-        services.ledger {
-            transaction {
+        services.zkLedger {
+            zkTransaction {
                 val network = Network("INVALID_NETWORK", BNO.party)
                 val memberships = createAllMemberships()
                 val (_, invalidAttestation) = createMembership(CUSTODIAN.party, network = network)
@@ -346,8 +347,8 @@ class RedemptionAdvanceContractTests : ContractTest() {
 
     @Test
     fun `On redemption advancing, every membership attestation's network must be equal to the Ivno token type network (TOKEN_ISSUING_ENTITY invalid)`() {
-        services.ledger {
-            transaction {
+        services.zkLedger {
+            zkTransaction {
                 val network = Network("INVALID_NETWORK", BNO.party)
                 val memberships = createAllMemberships()
                 val (_, invalidAttestation) = createMembership(TOKEN_ISSUING_ENTITY.party, network = network)
@@ -368,8 +369,8 @@ class RedemptionAdvanceContractTests : ContractTest() {
 
     @Test
     fun `On redemption advancing, every membership attestation state must point to a referenced membership state`() {
-        services.ledger {
-            transaction {
+        services.zkLedger {
+            zkTransaction {
                 val memberships = createAllMemberships()
                 val (bankMembership, bankAttestation) = createMembership(BANK_A.party, evolveMembership = true)
                 reference(bankMembership.ref)
@@ -389,8 +390,8 @@ class RedemptionAdvanceContractTests : ContractTest() {
 
     @Test
     fun `On redemption advancing, the redeemer, custodian, token issuing entity, amount and linearId must not change`() {
-        services.ledger {
-            transaction {
+        services.zkLedger {
+            zkTransaction {
                 val memberships = createAllMemberships()
                 reference(memberships.membershipFor(BANK_A).ref)
                 reference(memberships.membershipFor(CUSTODIAN).ref)
@@ -411,8 +412,8 @@ class RedemptionAdvanceContractTests : ContractTest() {
 
     @Test
     fun `On redemption advancing, the output state must be able to advance from the input state`() {
-        services.ledger {
-            transaction {
+        services.zkLedger {
+            zkTransaction {
                 val memberships = createAllMemberships()
                 reference(memberships.membershipFor(BANK_A).ref)
                 reference(memberships.membershipFor(CUSTODIAN).ref)
@@ -433,8 +434,8 @@ class RedemptionAdvanceContractTests : ContractTest() {
 
     @Test
     fun `On redemption advancing, the token output amount must be equal to the redemption amount when the advance status is REJECTED`() {
-        services.ledger {
-            transaction {
+        services.zkLedger {
+            zkTransaction {
                 val memberships = createAllMemberships()
                 reference(memberships.membershipFor(BANK_A).ref)
                 reference(memberships.membershipFor(CUSTODIAN).ref)
@@ -455,8 +456,8 @@ class RedemptionAdvanceContractTests : ContractTest() {
 
     @Test
     fun `On redemption advancing, the token output holder must be equal to the redemption redeemer when the advance status is REJECTED`() {
-        services.ledger {
-            transaction {
+        services.zkLedger {
+            zkTransaction {
                 val memberships = createAllMemberships()
                 reference(memberships.membershipFor(BANK_A).ref)
                 reference(memberships.membershipFor(CUSTODIAN).ref)
@@ -477,8 +478,8 @@ class RedemptionAdvanceContractTests : ContractTest() {
 
     @Test
     fun `On redemption advancing, the required signing participants must sign the transaction (custodian must sign)`() {
-        services.ledger {
-            transaction {
+        services.zkLedger {
+            zkTransaction {
                 val memberships = createAllMemberships()
                 reference(memberships.membershipFor(BANK_A).ref)
                 reference(memberships.membershipFor(CUSTODIAN).ref)
@@ -499,8 +500,8 @@ class RedemptionAdvanceContractTests : ContractTest() {
 
     @Test
     fun `On redemption advancing, the required signing participants must sign the transaction (token issuing entity must sign)`() {
-        services.ledger {
-            transaction {
+        services.zkLedger {
+            zkTransaction {
                 val memberships = createAllMemberships()
                 reference(memberships.membershipFor(BANK_A).ref)
                 reference(memberships.membershipFor(CUSTODIAN).ref)
