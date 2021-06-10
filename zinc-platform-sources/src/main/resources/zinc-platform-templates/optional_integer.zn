@@ -9,8 +9,6 @@ use platform_consts::${INNER_CONSTANT_PREFIX}_BYTES;
 
 const OPTIONAL_${INNER_CONSTANT_PREFIX}_LENGTH: u16 = 1 as u16 + ${INNER_CONSTANT_PREFIX}_BYTES;
 
-type SerializedOptional${INNER_TYPE_NAME} = [u8; OPTIONAL_${INNER_CONSTANT_PREFIX}_LENGTH];
-
 struct Optional${INNER_TYPE_NAME} {
     is_none: bool,
     inner: ${INNER_MODULE_NAME},

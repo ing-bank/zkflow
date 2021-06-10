@@ -1,0 +1,6 @@
+mod optional_u32;
+use optional_u32::OptionalU32;
+
+fn main(value: u32) -> OptionalU32 {
+    OptionalU32::some(value)
+}

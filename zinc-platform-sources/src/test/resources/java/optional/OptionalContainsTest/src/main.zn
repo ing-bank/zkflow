@@ -1,0 +1,15 @@
+mod optional_u32;
+use optional_u32::OptionalU32;
+
+fn main(left: u32, right: u32, is_none: bool) -> u8 {
+    let optional_left = OptionalU32 {
+        is_none: is_none,
+        inner: left
+    };
+
+    if OptionalU32::contains(optional_left, right) {
+        0
+    } else {
+        1
+    }
+}

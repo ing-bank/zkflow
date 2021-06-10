@@ -6,7 +6,7 @@ class OptionalTemplateParameters<T>(
     baseTemplateFile: String = "optional.zn",
     innerTemplateParameters: T? = null,
     platformModuleName: String? = null,
-) : NullableOrOptionalTemplateParameters<T>(
+) : TypeWrapperTemplateParameters<T>(
     baseTemplateFile,
     innerTemplateParameters,
     platformModuleName
