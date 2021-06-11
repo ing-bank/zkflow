@@ -11,15 +11,18 @@ import kotlinx.serialization.modules.contextual
 import net.corda.core.utilities.loggerFor
 
 object IvnoSerializers {
+    val serializersModule = SerializersModule {
+        contextual(BigDecimalAmountSerializer(LinearPointerSerializer))
+        contextual(PermissionSerializer)
+        contextual(RoleSerializer)
+        contextual(TokenDescriptorSerializer)
+        contextual(NetworkSerializer)
+        contextual(IvnoTokenTypeSerializer)
+    }
+
     init {
         loggerFor<IvnoSerializers>().info("Registering Ivno serializers")
-        SerializersModuleRegistry.register(SerializersModule {
-            contextual(BigDecimalAmountSerializer(LinearPointerSerializer))
-            contextual(PermissionSerializer)
-            contextual(RoleSerializer)
-            contextual(TokenDescriptorSerializer)
-            contextual(NetworkSerializer)
-        })
+        SerializersModuleRegistry.register(serializersModule)
 
         ContractStateSerializerMap.register(Deposit::class, 1, Deposit.serializer())
         CommandDataSerializerMap.register(DepositContract.Request::class, 3, DepositContract.Request.serializer())

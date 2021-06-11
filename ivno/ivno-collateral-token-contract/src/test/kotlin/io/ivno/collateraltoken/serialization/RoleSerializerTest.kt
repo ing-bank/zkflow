@@ -5,8 +5,6 @@ import com.ing.zknotary.testing.assertSameSize
 import io.onixlabs.corda.bnms.contract.Role
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.modules.SerializersModule
-import kotlinx.serialization.modules.contextual
 import org.junit.jupiter.api.Test
 
 class RoleSerializerTest {
@@ -16,7 +14,7 @@ class RoleSerializerTest {
     private val role1 = Role("Thief")
     private val role2 = Role("Warrior")
 
-    private val serializersModule = SerializersModule { contextual(RoleSerializer) }
+    private val serializersModule = IvnoSerializers.serializersModule
 
     @Test
     fun `serialize and deserialize Contract-Role directly`() {

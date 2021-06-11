@@ -5,8 +5,6 @@ import com.ing.zknotary.testing.assertSameSize
 import io.onixlabs.corda.bnms.contract.Permission
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.modules.SerializersModule
-import kotlinx.serialization.modules.contextual
 import org.junit.jupiter.api.Test
 
 class PermissionSerializerTest {
@@ -16,7 +14,7 @@ class PermissionSerializerTest {
     private val permission1 = Permission("Permission1")
     private val permission2 = Permission("Permission2")
 
-    private val serializersModule = SerializersModule { contextual(PermissionSerializer) }
+    private val serializersModule = IvnoSerializers.serializersModule
 
     @Test
     fun `serialize and deserialize Contract-Permission directly`() {
