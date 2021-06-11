@@ -5,7 +5,7 @@ buildscript {
         kotlin_version = "1.4.30"
 
         kotlinx_group = "org.jetbrains.kotlinx"
-        kotlinx_version = "1.1.0"
+        kotlinx_version = "1.2.1"
 
         corda_artifactory_url = "https://ci-artifactory.corda.r3cev.com/artifactory"
 
