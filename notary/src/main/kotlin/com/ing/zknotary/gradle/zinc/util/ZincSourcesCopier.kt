@@ -12,14 +12,13 @@ class ZincSourcesCopier(private val outputPath: File) {
             overwrite = true
         )
 
-        val configFile = outputPath.walk()
-            .filter { file ->
-                file.name.contains("config.json")
-            }.single()
-
-        val replacedConfigFile = createOutputFile(outputPath.parentFile.resolve("config.json"))
-        replacedConfigFile.writeText(configFile.readText())
-        configFile.delete()
+        outputPath.walk().filter { file ->
+            file.name.contains("config.json")
+        }.forEach { configFile ->
+            val replacedConfigFile = createOutputFile(outputPath.parentFile.resolve("config.json"))
+            replacedConfigFile.writeText(configFile.readText())
+            configFile.delete()
+        }
 
         createOutputFile(outputPath.parentFile.resolve("Zargo.toml")).apply {
             if (!exists()) createNewFile()
