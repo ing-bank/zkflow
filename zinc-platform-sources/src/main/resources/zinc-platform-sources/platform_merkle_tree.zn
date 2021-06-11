@@ -1,15 +1,5 @@
-mod consts;
 mod merkle_utils;
-mod platform_consts;
-mod platform_node_digest_dto;
-mod platform_privacy_salt;
-mod platform_component_group_leaf_digest_dto;
 mod platform_component_group_enum;
-mod platform_crypto_utils;
-mod platform_nonce_digest_dto;
-mod platform_party;
-mod platform_pub_key;
-mod platform_witness;
 mod platform_components_inputs;
 mod platform_components_outputs;
 mod platform_components_references;
@@ -19,14 +9,13 @@ mod platform_components_attachments;
 mod platform_components_time_window;
 mod platform_components_parameters;
 mod platform_components_signers;
+mod platform_consts;
+mod platform_node_digest_dto;
+mod platform_privacy_salt;
+mod platform_witness;
 
 use merkle_utils::get_merkle_tree_from_${GROUP_SIZE_PLACEHOLDER}_node_digests;
-use platform_witness::Witness;
-use platform_consts::COMPONENT_GROUPS_SIZE;
-use platform_node_digest_dto::NodeDigestBits;
 use platform_component_group_enum::ComponentGroupEnum;
-use platform_node_digest_dto::NODE_DIGEST_BITS;
-use platform_privacy_salt::from_bytes_to_bits;
 use platform_components_inputs::compute_inputs_group_hash;
 use platform_components_commands::compute_commands_group_hash;
 use platform_components_attachments::compute_attachments_group_hash;
@@ -36,6 +25,11 @@ use platform_components_parameters::compute_parameters_group_hash;
 use platform_components_references::compute_references_group_hash;
 use platform_components_signers::compute_signers_group_hash;
 use platform_components_time_window::compute_time_window_group_hash;
+use platform_consts::COMPONENT_GROUPS_SIZE;
+use platform_node_digest_dto::NodeDigestBits;
+use platform_node_digest_dto::NODE_DIGEST_BITS;
+use platform_privacy_salt::from_bytes_to_bits;
+use platform_witness::Witness;
 
 const MERKLE_TREE_SIZE: u16 = ${GROUP_SIZE_PLACEHOLDER};
 

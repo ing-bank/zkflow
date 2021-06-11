@@ -1,4 +1,3 @@
-mod platform_state_and_ref;
 mod consts;
 mod merkle_utils;
 mod platform_node_digest_dto;
@@ -16,8 +15,6 @@ use platform_component_group_leaf_digest_dto::ComponentGroupLeafDigestBits;
 use platform_privacy_salt::PrivacySaltBits;
 use platform_node_digest_dto::NodeDigestDto;
 use platform_node_digest_dto::NODE_DIGEST_BITS;
-use platform_state_and_ref::TransactionStatePaddingWrapper;
-use platform_state_and_ref::TransactionState;
 use platform_crypto_utils::compute_nonce;
 use consts::OUTPUT_GROUP_SIZE;
 use consts::OUTPUT_COMPONENT_SIZE;

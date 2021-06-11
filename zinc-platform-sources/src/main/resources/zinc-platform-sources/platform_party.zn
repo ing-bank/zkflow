@@ -1,7 +1,0 @@
-mod platform_pub_key;
-
-use platform_pub_key::PubKey;
-
-struct Party {
-    owning_key: PubKey,
-}

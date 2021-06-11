@@ -1,4 +1,3 @@
-mod platform_state_and_ref;
 mod consts;
 mod platform_consts;
 mod platform_node_digest_dto;
@@ -27,9 +26,6 @@ use platform_node_digest_dto::NodeDigestDto;
 use platform_nonce_digest_dto::from_bytes_to_bits;
 use platform_nonce_digest_dto::NonceDigestBytes;
 use platform_privacy_salt::PrivacySaltBits;
-use platform_state_and_ref::StateAndRefPaddingWrapper;
-use platform_state_and_ref::StateRef;
-use platform_state_and_ref::TransactionState;
 use platform_consts::BYTE_BITS;
 use std::crypto::blake2s_multi_input;
 use std::convert::to_bits;

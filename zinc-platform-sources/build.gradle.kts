@@ -5,12 +5,12 @@ import java.nio.file.StandardCopyOption
 import javax.inject.Inject
 import kotlin.streams.toList
 
-plugins {
-    kotlin("jvm")
-    java
-    id("maven-publish")
-    kotlin("plugin.serialization")
-}
+    plugins {
+        kotlin("jvm")
+        java
+        id("maven-publish")
+        kotlin("plugin.serialization")
+    }
 
 dependencies {
     implementation(project(":notary")) // required for Zinc com.ing.zknotary.gradle.zinc.template renderer
@@ -20,7 +20,7 @@ dependencies {
     testImplementation("com.ing.dlt:zkkrypto:$zkkryptoVersion")
 
     val kotlinxSerializationVersion: String by project
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
 
     val kotlinxSerializationBflVersion: String by project
     testImplementation("com.ing.serialization.bfl:kotlinx-serialization-bfl:$kotlinxSerializationBflVersion")
@@ -58,7 +58,6 @@ val root = "${project.rootDir.absolutePath}/zinc-platform-sources"
 val circuitSourcesBase = File("$root/circuits")
 val mergedCircuitOutput = File("$root/build/circuits")
 
-val configFile = "config.json"
 val circuits = circuitSourcesBase.listFiles { file, _ -> file?.isDirectory ?: false }?.map { it.name }
 
 task("prepareCircuits", JavaExec::class) {
@@ -67,8 +66,7 @@ task("prepareCircuits", JavaExec::class) {
     outputs.dir(mergedCircuitOutput)
     main = "PrepareCircuitsKt"
     classpath = sourceSets["main"].runtimeClasspath
-
-    args(root, project.version, configFile)
+    args(root, project.version)
 }
 
 task("circuits") {

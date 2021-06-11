@@ -1,23 +1,20 @@
-mod platform_consts;
-mod platform_privacy_salt;
-mod platform_nonce_digest_dto;
-mod platform_debug_utils;
-mod platform_node_digest_dto;
 mod platform_component_group_leaf_digest_dto;
+mod platform_consts;
+mod platform_node_digest_dto;
+mod platform_nonce_digest_dto;
+mod platform_privacy_salt;
 
+use platform_component_group_leaf_digest_dto::ComponentGroupLeafDigestBits;
 use platform_consts::COMPONENT_GROUP_LEAF_DIGEST_BITS;
-use platform_privacy_salt::PRIVACY_SALT_BITS;
-use platform_privacy_salt::PrivacySaltBits;
-use platform_nonce_digest_dto::NonceDigestBits;
+use platform_consts::U32_BITS;
 use platform_node_digest_dto::NodeDigestBits;
 use platform_node_digest_dto::NODE_DIGEST_BITS;
-use platform_consts::U32_BITS;
+use platform_nonce_digest_dto::NonceDigestBits;
+use platform_privacy_salt::PRIVACY_SALT_BITS;
+use platform_privacy_salt::PrivacySaltBits;
 use std::convert::to_bits;
 use std::crypto::blake2s;
 use std::crypto::pedersen;
-use platform_component_group_leaf_digest_dto::ComponentGroupLeafDigestBits;
-
-use platform_debug_utils::nonce_preimage_bits_to_bytes;
 
 ///Utility functions that are used by cryptographic primitives.
 const PEDERSEN_FIELD_BITS: u16 = 254;
