@@ -13,10 +13,11 @@ open class PrepareCircuitForCompilationTask : DefaultTask() {
     fun prepareCircuitForCompilation() {
         val extension = project.zkNotaryExtension
         project.circuitNames?.forEach { circuitName ->
-            val replacer = MerkleReplacer(extension.mergedCircuitOutputPath.resolve(circuitName).resolve("src"))
+            val circuitSourceOutputPath = extension.mergedCircuitOutputPath.resolve(circuitName).resolve("src")
+            val replacer = MerkleReplacer(circuitSourceOutputPath)
 
             val consts =
-                joinConstFiles(extension.circuitSourcesBasePath.resolve(circuitName), project.platformSourcesRootPath)
+                joinConstFiles(circuitSourceOutputPath, project.platformSourcesRootPath)
 
             replacer.setCorrespondingMerkleTreeFunctionForComponentGroups(consts)
             replacer.setCorrespondingMerkleTreeFunctionForMainTree()

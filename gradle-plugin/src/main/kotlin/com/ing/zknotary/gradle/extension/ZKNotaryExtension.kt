@@ -66,6 +66,9 @@ open class ZKNotaryExtension(project: Project) : TemplateConfigurations() {
     val zincFilesGlob = "**/*.zn"
 
     @Input
+    val configFiles = "**/*.json"
+
+    @Input
     val platformSourcesPath = "zinc-platform-sources/"
 
     @Input
@@ -76,6 +79,9 @@ open class ZKNotaryExtension(project: Project) : TemplateConfigurations() {
 
     @Input
     val platformSamplesPath = "zinc-platform-samples/"
+
+    @Input
+    val statesSourcesPath = "states"
 
     @Input
     val merkleTemplate = "merkle_template.zn"

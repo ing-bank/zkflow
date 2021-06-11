@@ -23,7 +23,8 @@ val Project.zkNotaryExtension: ZKNotaryExtension
 val Project.circuitNames: List<String>?
     get() {
         return zkNotaryExtension.circuitSourcesBasePath
-            .listFiles { file, _ -> file?.isDirectory ?: false }?.map { it.name }?.filterNot { it == zkNotaryExtension.zincCommonFolderName }
+            .listFiles { file, _ -> file?.isDirectory ?: false }?.map { it.name }
+            ?.filterNot { it == zkNotaryExtension.zincCommonFolderName }
     }
 
 val Project.zincCommonFolderName: String?
@@ -39,7 +40,8 @@ val Project.platformSources: Array<File>
 
 val Project.platformSourcesRootPath: File
     get() {
-        return project.platformSources.sortedArray().firstOrNull()?.parentFile?.absoluteFile ?: error("Platform Sources are empty")
+        return project.platformSources.sortedArray().firstOrNull()?.parentFile?.absoluteFile
+            ?: error("Platform Sources are empty")
     }
 
 val Project.platformLibraries: Array<File>
@@ -56,7 +58,10 @@ val Project.platformTemplates: Array<File>
 
 val Project.platformSamples: FileTree
     get() {
-        return project.platformSourcesFileTree.matching { it.include(zkNotaryExtension.platformSamplesPath + zkNotaryExtension.zincFilesGlob) }
+        return project.platformSourcesFileTree.matching {
+            it.include(zkNotaryExtension.platformSamplesPath + zkNotaryExtension.zincFilesGlob)
+                .include(zkNotaryExtension.platformSamplesPath + zkNotaryExtension.configFiles)
+        }
     }
 
 // It is assumed that for every zinc test a similarly named folder ending in 'Test' (e.g. <test-name>Test) exists within

@@ -13,7 +13,7 @@ open class CopyZincPlatformLibraryTask : DefaultTask() {
     fun createCopyZincSources() {
         val extension = project.zkNotaryExtension
 
-        project.circuitNames?.forEach { circuitName ->
+        project.circuitNames?.filterNot { it.contains(extension.statesSourcesPath) }?.forEach { circuitName ->
             val copier = ZincSourcesCopier(extension.mergedCircuitOutputPath.resolve(circuitName).resolve("src"))
             copier.copyZincPlatformSources(project.platformLibraries)
         }
