@@ -1,0 +1,36 @@
+{
+  "command" : {
+    "name": "move",
+    "component_size" : 11
+  },
+  "components" : {
+    "attachment_group" : {
+      "quantity" : 0,
+      "component_size" : 1
+    },
+    "input_group" : {
+      "quantity" : 1,
+      "component_size" : 1537
+    },
+    "output_group" : {
+      "quantity" : 1,
+      "component_size" : 1537
+    },
+    "reference_group" : {
+      "quantity" : 0,
+      "component_size" : 1
+    },
+    "notary_group" : {
+      "quantity" : 1,
+      "component_size" : 1
+    },
+    "timewindow_group" : {
+      "quantity" : 1,
+      "component_size" : 1
+    },
+    "signer_group" : {
+      "quantity" : 1,
+      "component_size" : 115
+    }
+  }
+}

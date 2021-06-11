@@ -1,3 +1,4 @@
+
 import com.ing.zknotary.gradle.task.joinConstFiles
 import com.ing.zknotary.gradle.zinc.template.TemplateConfigurations
 import com.ing.zknotary.gradle.zinc.template.TemplateConfigurations.Companion.doubleTemplateParameters
@@ -17,8 +18,6 @@ import com.ing.zknotary.gradle.zinc.util.CircuitConfigurator
 import com.ing.zknotary.gradle.zinc.util.CodeGenerator
 import com.ing.zknotary.gradle.zinc.util.MerkleReplacer
 import com.ing.zknotary.gradle.zinc.util.ZincSourcesCopier
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.json.Json
 import java.io.File
 
 val myBigDecimalConfigurations = listOf(
@@ -61,14 +60,10 @@ fun main(args: Array<String>) {
 
     val root = args[0]
     val projectVersion = args[1]
-    val configurationFilePath = args[2]
 
     val circuitSourcesBase = File("$root/circuits")
     val mergedCircuitOutput = File("$root/build/circuits")
 
-    val configurator = CircuitConfigurator(configurationFilePath)
-    configurator.readConfigFile()
-    
     val circuits = circuitSourcesBase.listFiles { file, _ -> file?.isDirectory ?: false }?.map { it.name }
     circuits?.forEach { circuitName ->
         val outputPath = mergedCircuitOutput.resolve(circuitName).resolve("src")
@@ -81,7 +76,11 @@ fun main(args: Array<String>) {
         copier.copyZincPlatformSources(getPlatformSources(root))
         copier.copyZincPlatformSources(getPlatformLibs(root))
 
-        val consts = joinConstFiles(circuitSourcesPath, getPlatformSourcesPath(root))
+        // Read the configuration
+        val configurator = CircuitConfigurator(outputPath)
+        configurator.generateConstsFile()
+
+        val consts = joinConstFiles(outputPath, getPlatformSourcesPath(root))
 
         // Render templates
         val templateRenderer = TemplateRenderer(outputPath.toPath()) {
