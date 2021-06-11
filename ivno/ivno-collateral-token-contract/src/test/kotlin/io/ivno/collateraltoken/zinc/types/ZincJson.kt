@@ -10,9 +10,11 @@ import io.dasl.contracts.v1.token.TokenDescriptor
 import io.ivno.collateraltoken.serialization.PermissionSurrogate
 import io.ivno.collateraltoken.serialization.NetworkSurrogate
 import io.ivno.collateraltoken.serialization.RoleSurrogate
+import io.ivno.collateraltoken.serialization.SettingSurrogate
 import io.onixlabs.corda.bnms.contract.Permission
 import io.onixlabs.corda.bnms.contract.Network
 import io.onixlabs.corda.bnms.contract.Role
+import io.onixlabs.corda.bnms.contract.Setting
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
@@ -29,6 +31,7 @@ fun Permission.toZincJson() = toJsonObject().toString()
 fun <T: Enum<T>> T.toZincJson() = toJsonObject().toString()
 fun Network.toZincJson(encodedSize: Int, isAnonymous: Boolean, scheme: SignatureScheme) =
     toJsonObject(encodedSize, isAnonymous, scheme).toString()
+fun Setting<String>.toZincJson(size: Int) = toJsonObject(size).toString()
 
 fun JsonObject.polymorphic() = buildJsonObject {
     put("value", this@polymorphic)
@@ -142,4 +145,9 @@ fun Permission.toJsonObject() = buildJsonObject {
 fun Network.toJsonObject(encodedSize: Int, isAnonymous: Boolean, scheme: SignatureScheme) = buildJsonObject {
     put("value", value.toJsonObject(NetworkSurrogate.VALUE_LENGTH))
     put("operator", operator.toJsonObject(encodedSize, isAnonymous, scheme))
+}
+
+fun Setting<String>.toJsonObject(size: Int) = buildJsonObject {
+    put("property", property.toJsonObject(SettingSurrogate.PROPERTY_LENGTH))
+    put("value", value.toJsonObject(size))
 }
