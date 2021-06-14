@@ -8,11 +8,11 @@ import com.ing.zknotary.testing.fixtures.state.DummyState
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import net.corda.core.contracts.CommandData
+import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.Contract
 import net.corda.core.contracts.ContractClassName
 import net.corda.core.contracts.TypeOnlyCommandData
 import net.corda.core.transactions.LedgerTransaction
-import java.io.File
 
 public object DummySerializers {
     init {
@@ -33,10 +33,10 @@ public class DummyContract : Contract {
     @Serializable
     public class Chill : TypeOnlyCommandData(), ZKCommandData {
         @Transient
-        override val circuit: CircuitMetaData = CircuitMetaData(
-            // This is just some EXISTING circuit.
-            File("${System.getProperty("user.dir")}/../zinc-platform-sources/circuits/create")
-        )
+        override val circuit: CircuitMetaData = CircuitMetaData.Builder()
+            .name("Chill")
+            .addComponentGroupSize(ComponentGroupEnum.SIGNERS_GROUP, 2)
+            .build()
     }
 
     override fun verify(tx: LedgerTransaction) {}

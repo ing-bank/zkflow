@@ -17,6 +17,8 @@ import net.corda.core.transactions.LedgerTransaction
 import java.io.File
 import java.math.BigDecimal
 import java.security.PublicKey
+import net.corda.core.contracts.ComponentGroupEnum
+
 
 class DepositContract : Contract {
 
@@ -120,10 +122,10 @@ class DepositContract : Contract {
         }
 
         @Transient
-        override val circuit: CircuitMetaData = CircuitMetaData(
-            // This is just some EXISTING circuit.
-            File("/tmp")
-        )
+        override val circuit: CircuitMetaData = CircuitMetaData.Builder()
+            .name("Request")
+            .addComponentGroupSize(ComponentGroupEnum.SIGNERS_GROUP, 2)
+            .build()
     }
 
     @Serializable
@@ -233,9 +235,9 @@ class DepositContract : Contract {
         }
 
         @Transient
-        override val circuit: CircuitMetaData = CircuitMetaData(
-            // This is just some EXISTING circuit.
-            File("/tmp")
-        )
+        override val circuit: CircuitMetaData = CircuitMetaData.Builder()
+            .name("Advance")
+            .addComponentGroupSize(ComponentGroupEnum.SIGNERS_GROUP, 2)
+            .build()
     }
 }

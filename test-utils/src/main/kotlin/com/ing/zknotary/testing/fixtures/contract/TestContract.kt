@@ -66,13 +66,12 @@ public class TestContract : Contract {
     public class Create : TypeOnlyCommandData(), ZKCommandData {
 
         @Transient
-        override val circuit: CircuitMetaData =
-            CircuitMetaData(
-                folder = File("${System.getProperty("user.dir")}/../zinc-platform-sources/circuits/create"),
-                componentGroupSizes = mapOf(
-                    ComponentGroupEnum.SIGNERS_GROUP to 1
-                )
+        override val circuit: CircuitMetaData = CircuitMetaData.Builder()
+            .parseConfig(
+                // ${System.getProperty("user.dir")} = "notary"
+                File("${System.getProperty("user.dir")}/../zinc-platform-sources/build/circuits/create")
             )
+            .build()
 
         public companion object {
             public fun verifyCreate(
@@ -98,28 +97,22 @@ public class TestContract : Contract {
     public class SignOnly : TypeOnlyCommandData(), ZKCommandData {
 
         @Transient
-        override val circuit: CircuitMetaData =
-            CircuitMetaData(
-                folder = File("/tmp"),
-                componentGroupSizes = mapOf(
-                    ComponentGroupEnum.SIGNERS_GROUP to 2
-                )
-            )
+        override val circuit: CircuitMetaData = CircuitMetaData.Builder()
+            .name("SignOnly")
+            .addComponentGroupSize(ComponentGroupEnum.SIGNERS_GROUP, 2)
+            .build()
     }
 
     @Serializable
     public class Move : TypeOnlyCommandData(), ZKCommandData {
 
         @Transient
-        override val circuit: CircuitMetaData =
-            CircuitMetaData(
-                folder = File("${System.getProperty("user.dir")}/../zinc-platform-sources/circuits/move"),
-                // Matches consts.zn for this circuit.
-                // TODO: parse it from consts.zn
-                componentGroupSizes = mapOf(
-                    ComponentGroupEnum.SIGNERS_GROUP to 2
-                )
+        override val circuit: CircuitMetaData = CircuitMetaData.Builder()
+            .parseConfig(
+                // ${System.getProperty("user.dir")} = "notary"
+                File("${System.getProperty("user.dir")}/../zinc-platform-sources/build/circuits/move")
             )
+            .build()
 
         public companion object {
             public fun verifyMove(
@@ -143,8 +136,10 @@ public class TestContract : Contract {
     @Serializable
     public class MoveBidirectional : ZKCommandData {
         @Transient
-        override val circuit: CircuitMetaData =
-            CircuitMetaData(folder = File("/tmp"))
+        override val circuit: CircuitMetaData = CircuitMetaData.Builder()
+            .name("MoveBidirectional")
+            .addComponentGroupSize(ComponentGroupEnum.SIGNERS_GROUP, 2)
+            .build()
 
         public companion object {
             public fun verifyMoveBidirectional(
