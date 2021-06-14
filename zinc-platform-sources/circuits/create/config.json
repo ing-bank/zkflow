@@ -3,34 +3,34 @@
     "name": "create",
     "component_size" : 11
   },
-  "components" : {
+  "groups" : {
     "attachment_group" : {
-      "quantity" : 0,
+      "group_size" : 0,
       "component_size" : 1
     },
     "input_group" : {
-      "quantity" : 0,
+      "group_size" : 0,
       "component_size" : 1
     },
     "output_group" : {
-      "quantity" : 1,
+      "group_size" : 1,
       "component_size" : 1537
     },
     "reference_group" : {
-      "quantity" : 0,
+      "group_size" : 0,
       "component_size" : 1
     },
     "notary_group" : {
-      "quantity" : 1,
+      "group_size" : 1,
       "component_size" : 1
     },
     "timewindow_group" : {
-      "quantity" : 1,
+      "group_size" : 1,
       "component_size" : 1
     },
     "signer_group" : {
-      "quantity" : 1,
-      "component_size" : 63
+      "signer_size": 52,
+      "signer_list_size": 1
     }
   }
 }
