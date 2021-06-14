@@ -47,3 +47,13 @@ const STRING_LENGTH_PREFIX: u16 = 2;
 const NULLABILITY_BYTES: u16 = 1;
 
 const CHAR_BYTES: u16 = 2;
+
+//! Corda-side serialization-related consts.
+//! Corda prepends every serialization with 7 bytes
+//! CustomSerializationSchemeUtils.getCustomSerializationMagicFromSchemeId(SCHEME_ID).size
+const CORDA_SERDE_MAGIC_LENGTH: u16 = 7;
+//! When a TransactionState is sent to BFLSerializationScheme,
+//! without knowing the command, extra bit of information is required
+//! to deserialize it, this bit is an int.
+//! The map between inner states of TransactionStates and ints is maintained in ContractStateSerializerMap.
+const STATE_SERDE_STRATEGY_ID_LENGTH: u16 = U32_BYTES;

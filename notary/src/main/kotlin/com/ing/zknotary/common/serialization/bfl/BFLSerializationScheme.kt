@@ -90,7 +90,7 @@ open class BFLSerializationScheme : CustomSerializationScheme {
                 ) as T
             }
 
-            else -> com.ing.serialization.bfl.api.deserialize(
+            else -> obliviousDeserialize(
                 serializedData,
                 clazz,
                 serializersModule = serializersModule

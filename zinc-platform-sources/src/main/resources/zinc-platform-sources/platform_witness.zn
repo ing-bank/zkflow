@@ -24,7 +24,7 @@ use platform_components_notary::SerializedNotaryGroup;
 use platform_components_attachments::SerializedAttachmentGroup;
 use platform_components_time_window::SerializedTimeWindowGroup;
 use platform_components_parameters::SerializedParametersGroup;
-use platform_components_signers::SerializedSignerGroup;
+use platform_components_signers::SerializedSignersGroup;
 use platform_privacy_salt::PrivacySaltBytes;
 use platform_nonce_digest_dto::NonceDigestBytes;
 
@@ -38,7 +38,7 @@ struct Witness {
     notary: SerializedNotaryGroup,
     time_window: SerializedTimeWindowGroup,
     parameters: SerializedParametersGroup,
-    signers: SerializedSignerGroup,
+    signers: SerializedSignersGroup,
 
     privacy_salt: PrivacySaltBytes,
 
