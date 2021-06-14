@@ -18,6 +18,7 @@ object IvnoSerializers {
             contextual(PermissionSerializer)
             contextual(RoleSerializer)
             contextual(TokenDescriptorSerializer)
+            contextual(NetworkSerializer)
         })
 
         ContractStateSerializerMap.register(Deposit::class, 1, Deposit.serializer())

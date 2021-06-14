@@ -1,0 +1,8 @@
+mod network;
+
+use network::Network;
+use network::SerializedNetwork;
+
+fn main(witness: SerializedNetwork) -> Network {
+    Network::deserialize(witness)
+}

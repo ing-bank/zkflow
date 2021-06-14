@@ -34,6 +34,21 @@ struct ${TYPE_NAME} {
 }
 
 impl ${TYPE_NAME} {
+    // In Corda notation, the two versions of BCECPublicKey with different curves,
+    // correspond to two signtature schemes: Crypto.ECDSA_SECP256K1_SHA256 (88 bytes)
+    // and Crypto.ECDSA_SECP256R1_SHA256 (91 bytes).
+    // These scheme have associated schemeId's 2 and 3, respectively.
+    // See net.corda.core.crypto.Crypto.
+    // 0 corresponds to another scheme which is serialized without using a schemeId,
+    // the type system will prevent us from interpreting this type as the type corresponding
+    // to the signature scheme with schemeId 0.
+    fn empty() -> ${TYPE_NAME} {
+        ${TYPE_NAME} {
+            scheme_id: 0 as u8,
+            encoded: ByteArray_${ENCODED_SIZE}::empty(),
+        }
+    }
+
     fn equals(this: ${TYPE_NAME}, that: ${TYPE_NAME}) -> bool {
         this.scheme_id == that.scheme_id
             && ByteArray_${ENCODED_SIZE}::equals(this.encoded, that.encoded)

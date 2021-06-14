@@ -58,7 +58,10 @@ public fun bytesToWitness(bytes: ByteArray): String = buildJsonObject {
 
 public fun Byte.asUnsigned(): Int = this.toInt() and 0xFF
 
-public fun ByteArray.resizeTo(newSize: Int): ByteArray = ByteArray(newSize) { if (it < size) this[it] else 0 }
+public fun ByteArray?.resizeTo(newSize: Int): ByteArray = this?.let {
+    ByteArray(newSize) { if (it < size) this[it] else 0 }
+} ?: ByteArray(newSize)
+
 public fun IntArray.resizeTo(newSize: Int): IntArray = IntArray(newSize) { if (it < size) this[it] else 0 }
 public fun String?.toSizedIntArray(size: Int): IntArray = (this ?: "").chars().toArray().resizeTo(size)
 

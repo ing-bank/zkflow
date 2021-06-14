@@ -1,0 +1,7 @@
+mod network;
+
+use network::Network;
+
+fn main(left: Network, right: Network) -> bool {
+    Network::equals(left, right)
+}
