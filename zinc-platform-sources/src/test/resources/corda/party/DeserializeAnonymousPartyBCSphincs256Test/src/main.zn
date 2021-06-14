@@ -1,8 +1,10 @@
 mod anonymous_party_bcsphincs256;
+mod poly_anonymous_party_bcsphincs256;
 
 use anonymous_party_bcsphincs256::AnonymousPartyBCSphincs256;
-use anonymous_party_bcsphincs256::SerializedAnonymousPartyBCSphincs256;
+use poly_anonymous_party_bcsphincs256::PolyAnonymousPartyBCSphincs256;
+use poly_anonymous_party_bcsphincs256::SerializedPolyAnonymousPartyBCSphincs256;
 
-fn main(witness: SerializedAnonymousPartyBCSphincs256) -> AnonymousPartyBCSphincs256 {
-    AnonymousPartyBCSphincs256::deserialize(witness)
+fn main(witness: SerializedPolyAnonymousPartyBCSphincs256) -> AnonymousPartyBCSphincs256 {
+    PolyAnonymousPartyBCSphincs256::deserialize(witness).value
 }

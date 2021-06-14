@@ -4,7 +4,7 @@ import com.ing.serialization.bfl.serializers.DoubleSurrogate
 import com.ing.serialization.bfl.serializers.FloatSurrogate
 import com.ing.zknotary.gradle.zinc.template.parameters.AbstractPartyTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.AmountTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.parameters.AttachmentConstraintParameters
+import com.ing.zknotary.gradle.zinc.template.parameters.AttachmentConstraintTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.BigDecimalTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.ByteArrayTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.CurrencyTemplateParameters
@@ -13,6 +13,7 @@ import com.ing.zknotary.gradle.zinc.template.parameters.LinearPointerTemplatePar
 import com.ing.zknotary.gradle.zinc.template.parameters.NullableTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.OptionalTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.PartyAndReferenceTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.parameters.PolyTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.SecureHashTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.StringTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.UniqueIdentifierTemplateParameters
@@ -54,6 +55,8 @@ open class TemplateConfigurations {
 
     open var optionalConfigurations: List<OptionalTemplateParameters<*>> = emptyList()
 
+    open var polyConfigurations: List<PolyTemplateParameters<*>> = emptyList()
+
     /*
      * Pre-defined collection of configurations to generate zinc sources for
      * standard data types like float and double.
@@ -67,10 +70,12 @@ open class TemplateConfigurations {
             X500PrincipalTemplateParameters,
             CurrencyTemplateParameters,
             SecureHashTemplateParameters,
+            StringTemplateParameters(1), // Needed for platform_serial_name.zn
         ) +
             AbstractPartyTemplateParameters.all +
             PartyAndReferenceTemplateParameters.all +
-            AttachmentConstraintParameters.all +
+            AttachmentConstraintTemplateParameters.all +
+            AttachmentConstraintTemplateParameters.polymorphic +
             NullableTemplateParameters.fixed +
             OptionalTemplateParameters.fixed
     }
@@ -87,7 +92,8 @@ open class TemplateConfigurations {
                 amountConfigurations +
                 issuedConfigurations +
                 nullableConfigurations +
-                optionalConfigurations
+                optionalConfigurations +
+                polyConfigurations
             )
             .flatMap { it.resolveAllConfigurations() }
             .distinct()

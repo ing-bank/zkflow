@@ -1,8 +1,10 @@
 mod party_bcrsa;
+mod poly_party_bcrsa;
 
 use party_bcrsa::PartyBCRSA;
-use party_bcrsa::SerializedPartyBCRSA;
+use poly_party_bcrsa::PolyPartyBCRSA;
+use poly_party_bcrsa::SerializedPolyPartyBCRSA;
 
-fn main(witness: SerializedPartyBCRSA) -> PartyBCRSA {
-    PartyBCRSA::deserialize(witness)
+fn main(witness: SerializedPolyPartyBCRSA) -> PartyBCRSA {
+    PolyPartyBCRSA::deserialize(witness).value
 }

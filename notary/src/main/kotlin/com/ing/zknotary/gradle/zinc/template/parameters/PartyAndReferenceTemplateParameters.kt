@@ -3,21 +3,26 @@ package com.ing.zknotary.gradle.zinc.template.parameters
 import com.ing.zknotary.common.serialization.bfl.serializers.PartyAndReferenceSurrogate
 import com.ing.zknotary.gradle.zinc.template.TemplateParameters
 
-class PartyAndReferenceTemplateParameters(
-    private val partyTemplateParameters: AbstractPartyTemplateParameters
+data class PartyAndReferenceTemplateParameters(
+    private val polyPartyParams: PolyTemplateParameters<AbstractPartyTemplateParameters>
 ) : TemplateParameters(
     "party_and_reference.zn",
     listOf(
         ByteArrayTemplateParameters(PartyAndReferenceSurrogate.REFERENCE_SIZE),
-        partyTemplateParameters
+        polyPartyParams
     )
 ) {
-    override val typeName = partyTemplateParameters.typeName + "AndReference"
+    // Convenience constructor, to simplify configurations in the gradle plugin
+    constructor(
+        partyParams: AbstractPartyTemplateParameters
+    ) : this(PolyTemplateParameters(partyParams))
+
+    override val typeName = polyPartyParams.type.typeName + "AndReference"
 
     override fun getModuleName() = super.getModuleName().replace("and_reference", "_and_reference")
 
     override fun getReplacements() = getTypeReplacements() +
-        partyTemplateParameters.getTypeReplacements("PARTY_") +
+        polyPartyParams.getTypeReplacements("PARTY_") +
         mapOf(
             "REFERENCE_SIZE" to PartyAndReferenceSurrogate.REFERENCE_SIZE.toString(),
         )

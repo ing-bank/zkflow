@@ -1,8 +1,10 @@
 mod signature_attachment_constraint_bcec;
+mod poly_signature_attachment_constraint_bcec;
 
 use signature_attachment_constraint_bcec::SignatureAttachmentConstraintBCEC;
-use signature_attachment_constraint_bcec::SerializedSignatureAttachmentConstraintBCEC;
+use poly_signature_attachment_constraint_bcec::PolySignatureAttachmentConstraintBCEC;
+use poly_signature_attachment_constraint_bcec::SerializedPolySignatureAttachmentConstraintBCEC;
 
-fn main(witness: SerializedSignatureAttachmentConstraintBCEC) -> SignatureAttachmentConstraintBCEC {
-    SignatureAttachmentConstraintBCEC::deserialize(witness)
+fn main(witness: SerializedPolySignatureAttachmentConstraintBCEC) -> SignatureAttachmentConstraintBCEC {
+    PolySignatureAttachmentConstraintBCEC::deserialize(witness).value
 }

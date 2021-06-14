@@ -2,10 +2,10 @@ package com.ing.zknotary.gradle.zinc.template.parameters
 
 import com.ing.zknotary.gradle.zinc.template.TemplateParameters
 
-class NullableTemplateParameters<T>(
-    baseTemplateFile: String = "nullable.zn",
-    innerTemplateParameters: T? = null,
-    platformModuleName: String? = null,
+data class NullableTemplateParameters<T>(
+    private val baseTemplateFile: String = "nullable.zn",
+    private val innerTemplateParameters: T? = null,
+    private val platformModuleName: String? = null,
 ) : TypeWrapperTemplateParameters<T>(
     baseTemplateFile,
     innerTemplateParameters,

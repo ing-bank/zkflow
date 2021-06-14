@@ -6,14 +6,8 @@
 // representations of polymorphic structures and objects, where only the length of the serial name is used so as to
 // obtain the correct serialized structure size
 
-mod string_1;
-
-use string_1::STRING_1_LENGTH;
-
-const ${CONSTANT_PREFIX}_SERIAL_NAME_LENGTH: u16 = STRING_1_LENGTH;
-
 //! ${TYPE_NAME} lengths
-const ${CONSTANT_PREFIX}_LENGTH: u16 = ${CONSTANT_PREFIX}_SERIAL_NAME_LENGTH;
+const ${CONSTANT_PREFIX}_LENGTH: u16 = 0;
 
 type Serialized${TYPE_NAME} = [u8; ${CONSTANT_PREFIX}_LENGTH];
 

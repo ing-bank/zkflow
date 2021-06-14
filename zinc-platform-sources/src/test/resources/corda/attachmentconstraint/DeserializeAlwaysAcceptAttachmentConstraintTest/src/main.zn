@@ -1,8 +1,10 @@
 mod always_accept_attachment_constraint;
+mod poly_always_accept_attachment_constraint;
 
 use always_accept_attachment_constraint::AlwaysAcceptAttachmentConstraint;
-use always_accept_attachment_constraint::SerializedAlwaysAcceptAttachmentConstraint;
+use poly_always_accept_attachment_constraint::PolyAlwaysAcceptAttachmentConstraint;
+use poly_always_accept_attachment_constraint::SerializedPolyAlwaysAcceptAttachmentConstraint;
 
-fn main(witness: SerializedAlwaysAcceptAttachmentConstraint) -> AlwaysAcceptAttachmentConstraint {
-    AlwaysAcceptAttachmentConstraint::deserialize(witness)
+fn main(witness: SerializedPolyAlwaysAcceptAttachmentConstraint) -> AlwaysAcceptAttachmentConstraint {
+    PolyAlwaysAcceptAttachmentConstraint::deserialize(witness).value
 }

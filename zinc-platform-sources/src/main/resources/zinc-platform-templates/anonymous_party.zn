@@ -5,20 +5,19 @@
 //   - PK_CONSTANT_PREFIX: String = prefix used for constant names of PublicKey, use uppercase and snakecase
 //   - PK_MODULE_NAME: String = module name of the PublicKey, use lowercase and snakecase
 
-mod string_1;
 mod ${PK_MODULE_NAME};
-
-use string_1::STRING_1_LENGTH;
 
 use ${PK_MODULE_NAME}::${PK_TYPE_NAME};
 use ${PK_MODULE_NAME}::${PK_CONSTANT_PREFIX}_LENGTH;
 
-const ${CONSTANT_PREFIX}_SERIAL_NAME_LENGTH: u16 = STRING_1_LENGTH;
+//! ${TYPE_NAME} field lengths
 const ${CONSTANT_PREFIX}_OWNING_KEY_LENGTH: u16 = ${PK_CONSTANT_PREFIX}_LENGTH;
 
-//! ${TYPE_NAME} lengths
+//! ${TYPE_NAME} field offsets
 const ${CONSTANT_PREFIX}_OWNING_KEY_OFFSET: u16
-    = ${CONSTANT_PREFIX}_SERIAL_NAME_LENGTH;
+    = 0;
+
+//! ${TYPE_NAME} length
 const ${CONSTANT_PREFIX}_LENGTH: u16
     = ${CONSTANT_PREFIX}_OWNING_KEY_OFFSET
     + ${CONSTANT_PREFIX}_OWNING_KEY_LENGTH;

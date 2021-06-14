@@ -11,6 +11,7 @@ import com.ing.zknotary.testing.resizeTo
 import com.ing.zknotary.testing.toJsonArray
 import com.ing.zknotary.testing.toSizedIntArray
 import io.kotest.matchers.shouldBe
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.modules.EmptySerializersModule
@@ -190,6 +191,10 @@ fun StateRef.toJsonObject() = buildJsonObject {
     put("index", "$index")
 }
 
+fun JsonObject.polymorphic() = buildJsonObject {
+    put("value", this@polymorphic)
+}
+
 fun PublicKey.toJsonObject(encodedSize: Int) = buildJsonObject {
     val scheme = Crypto.findSignatureScheme(this@toJsonObject)
     if (scheme == Crypto.ECDSA_SECP256K1_SHA256 || scheme == Crypto.ECDSA_SECP256R1_SHA256) {
@@ -207,20 +212,20 @@ fun CordaX500Name.toJsonObject() = buildJsonObject {
 
 fun AbstractParty.toJsonObject(encodedSize: Int) = buildJsonObject {
     nameOrNull()?.let { put("name", it.toJsonObject()) }
-    put("owning_key", owningKey.toJsonObject(encodedSize))
+    put("owning_key", owningKey.toJsonObject(encodedSize).polymorphic())
 }
 
 fun AnonymousParty.toJsonObject(encodedSize: Int) = buildJsonObject {
-    put("owning_key", owningKey.toJsonObject(encodedSize))
+    put("owning_key", owningKey.toJsonObject(encodedSize).polymorphic())
 }
 
 fun Party.toJsonObject(encodedSize: Int) = buildJsonObject {
     put("name", name.toJsonObject())
-    put("owning_key", owningKey.toJsonObject(encodedSize))
+    put("owning_key", owningKey.toJsonObject(encodedSize).polymorphic())
 }
 
 fun PartyAndReference.toJsonObject(encodedSize: Int) = buildJsonObject {
-    put("party", party.toJsonObject(encodedSize))
+    put("party", party.toJsonObject(encodedSize).polymorphic())
     put("reference", reference.bytes.toJsonObject(PartyAndReferenceSurrogate.REFERENCE_SIZE))
 }
 
@@ -235,7 +240,7 @@ fun HashAttachmentConstraint.toJsonObject() = buildJsonObject {
 }
 
 fun SignatureAttachmentConstraint.toJsonObject(encodedSize: Int) = buildJsonObject {
-    put("public_key", key.toJsonObject(encodedSize))
+    put("public_key", key.toJsonObject(encodedSize).polymorphic())
 }
 
 fun Issued<String>.toJsonObject(encodedSize: Int, productStringSize: Int = 1) = buildJsonObject {
