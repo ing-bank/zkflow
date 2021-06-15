@@ -2,6 +2,7 @@ import com.ing.zknotary.common.serialization.bfl.serializers.publickey.EdDSASurr
 import com.ing.zknotary.gradle.zinc.template.parameters.AbstractPartyTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.BigDecimalTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.NullableTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.parameters.PolyTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.PublicKeyTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.StringTemplateParameters
 
@@ -32,7 +33,9 @@ zkp {
     nullableConfigurations = [
             new NullableTemplateParameters(
                     "nullable.zn",
-                    new AbstractPartyTemplateParameters("Party", new PublicKeyTemplateParameters("public_key.zn", "EdDSAPublicKey", EdDSASurrogate.ENCODED_SIZE)),
+                    new PolyTemplateParameters(
+                            new AbstractPartyTemplateParameters("Party", PublicKeyTemplateParameters.Companion.newInstance().eddsaTemplateParameters)
+                    ),
                     null
             )
     ]

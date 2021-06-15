@@ -2,16 +2,16 @@
 // key in particular.
 
 mod string_20;
-mod nullable_party_ed_dsa;
+mod nullable_poly_party_ed_dsa;
 
 use string_20::String_20;
 use string_20::STRING_20_LENGTH;
 
-use nullable_party_ed_dsa::NullablePartyEdDSA;
-use nullable_party_ed_dsa::NULLABLE_PARTY_ED_DSA_LENGTH;
+use nullable_poly_party_ed_dsa::NullablePolyPartyEdDSA;
+use nullable_poly_party_ed_dsa::NULLABLE_POLY_PARTY_ED_DSA_LENGTH;
 
 const NETWORK_VALUE_LENGTH: u16 = STRING_20_LENGTH;
-const NETWORK_OPERATOR_LENGTH: u16 = NULLABLE_PARTY_ED_DSA_LENGTH;
+const NETWORK_OPERATOR_LENGTH: u16 = NULLABLE_POLY_PARTY_ED_DSA_LENGTH;
 
 const NETWORK_VALUE_OFFSET: u16 = 0;
 const NETWORK_OPERATOR_OFFSET: u16
@@ -20,18 +20,18 @@ const NETWORK_OPERATOR_OFFSET: u16
 const NETWORK_LENGTH: u16
     = NETWORK_OPERATOR_OFFSET
     + NETWORK_OPERATOR_LENGTH;
-    
+
 type SerializedNetwork = [u8; NETWORK_LENGTH];
 
 struct Network {
     value: String_20,
-    operator: NullablePartyEdDSA,
+    operator: NullablePolyPartyEdDSA,
 }
 
 impl Network {
     fn equals(this: Network, that: Network) -> bool {
         String_20::equals(this.value, that.value)
-            && NullablePartyEdDSA::equals(this.operator, that.operator)
+            && NullablePolyPartyEdDSA::equals(this.operator, that.operator)
     }
 
     fn deserialize(serialized: SerializedNetwork) -> Network {
@@ -48,7 +48,7 @@ impl Network {
             for i in 0..NETWORK_OPERATOR_LENGTH {
                 operator_bytes[i] = serialized[i + NETWORK_OPERATOR_OFFSET];
             }
-            NullablePartyEdDSA::deserialize(operator_bytes)
+            NullablePolyPartyEdDSA::deserialize(operator_bytes)
         };
 
         Network {

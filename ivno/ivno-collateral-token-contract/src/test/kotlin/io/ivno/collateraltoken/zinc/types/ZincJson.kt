@@ -13,6 +13,7 @@ import io.ivno.collateraltoken.serialization.RoleSurrogate
 import io.onixlabs.corda.bnms.contract.Permission
 import io.onixlabs.corda.bnms.contract.Network
 import io.onixlabs.corda.bnms.contract.Role
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -28,6 +29,10 @@ fun Permission.toZincJson() = toJsonObject().toString()
 fun <T: Enum<T>> T.toZincJson() = toJsonObject().toString()
 fun Network.toZincJson(encodedSize: Int, isAnonymous: Boolean, scheme: SignatureScheme) =
     toJsonObject(encodedSize, isAnonymous, scheme).toString()
+
+fun JsonObject.polymorphic() = buildJsonObject {
+    put("value", this@polymorphic)
+}
 
 fun String.toJsonObject(size: Int) = buildJsonObject {
     put("chars", toSizedIntArray(size).toJsonArray())
@@ -50,7 +55,6 @@ fun ByteArray?.toJsonObject(serializedSize: Int, isEmpty: Boolean = true) = buil
     if (isEmpty) return@toJsonObject inner
     put("is_null", this@toJsonObject == null)
     put("inner", inner)
-
 }
 
 /**
@@ -79,7 +83,7 @@ fun PublicKey?.toJsonObject(encodedSize: Int, scheme: SignatureScheme, isEmpty: 
 
     if (isEmpty) return@toJsonObject inner
     put("is_null", this@toJsonObject == null)
-    put("inner", inner)
+    put("inner", inner.polymorphic())
 }
 
 /**
@@ -105,13 +109,13 @@ fun AbstractParty?.toJsonObject(encodedSize: Int, isAnonymous: Boolean, scheme: 
         }
         put(
             key = "owning_key",
-            element = this@toJsonObject?.let { owningKey.toJsonObject(encodedSize, Crypto.findSignatureScheme(owningKey)) }
-                ?: PublicKey?::toJsonObject.invoke(null, encodedSize, scheme, true)
+            element = (this@toJsonObject?.let { owningKey.toJsonObject(encodedSize, Crypto.findSignatureScheme(owningKey)) }
+                ?: PublicKey?::toJsonObject.invoke(null, encodedSize, scheme, true)).polymorphic()
         )
     }
 
     put("is_null", this@toJsonObject == null)
-    put("inner", inner)
+    put("inner", inner.polymorphic())
 }
 
 fun Role.toJsonObject() = buildJsonObject {
