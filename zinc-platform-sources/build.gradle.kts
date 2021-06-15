@@ -142,7 +142,7 @@ open class CopyCircuitTask @Inject constructor() : DefaultTask() {
             .forEach { testClass ->
                 val generatedTestSourceDir = generatedResourcesDir.resolve("$testClass/src/")
                 listOf(
-                    Files.list(resourcesDir.resolve("zinc-platform-test-sources")),
+                    Files.list(project.buildDir.resolve("zinc-platform-test-sources").toPath()),
                     Files.list(resourcesDir.resolve("zinc-platform-libraries")),
                     listOf(resourcesDir.resolve("zinc-platform-sources").resolve("platform_consts.zn")).stream()
                 )

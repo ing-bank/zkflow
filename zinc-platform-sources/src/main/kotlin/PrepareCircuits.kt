@@ -112,7 +112,7 @@ private fun getPlatformLibs(root: String): Array<File>? {
 }
 
 private fun getPlatformSourcesTestSourcesPath(root: String): File {
-    return File("$root/src/main/resources/zinc-platform-test-sources")
+    return File("$root/build/zinc-platform-test-sources")
 }
 
 private fun getTemplateContents(root: String, templateName: String) =
