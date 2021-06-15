@@ -4,13 +4,20 @@ import com.ing.zknotary.common.crypto.zinc
 import com.ing.zknotary.common.zkp.PublicInput
 import com.ing.zknotary.common.zkp.Witness
 import com.ing.zknotary.common.zkp.ZKService
+import net.corda.core.contracts.AttachmentResolutionException
+import net.corda.core.contracts.CommandWithParties
 import net.corda.core.contracts.ComponentGroupEnum
+import net.corda.core.contracts.ContractState
+import net.corda.core.contracts.StateAndRef
+import net.corda.core.contracts.TransactionResolutionException
+import net.corda.core.contracts.TransactionState
 import net.corda.core.crypto.DigestService
 import net.corda.core.node.ServiceHub
 import net.corda.core.serialization.SerializationFactory
 import net.corda.core.serialization.deserialize
 import net.corda.core.serialization.serialize
 import net.corda.core.transactions.ComponentGroup
+import net.corda.core.transactions.LedgerTransaction
 import net.corda.core.transactions.WireTransaction
 import net.corda.core.utilities.OpaqueBytes
 
@@ -118,6 +125,45 @@ public class MockZKService(private val serviceHub: ServiceHub, private val diges
         /*
          * Rule 4: The contract rules should verify
          */
-        wtx.toLedgerTransaction(serviceHub).verify()
+        verifyContract(witness, wtx)
+    }
+
+    private fun verifyContract(witness: Witness, wtx: WireTransaction) {
+        val inputs = witness.serializedInputUtxos.mapIndexed { index, bytes ->
+            bytes.deserialize<TransactionState<ContractState>>()
+            StateAndRef<ContractState>(
+                bytes.deserialize(),
+                wtx.inputs[index]
+            )
+        }
+        val references = witness.serializedReferenceUtxos.mapIndexed { index, bytes ->
+            bytes.deserialize<TransactionState<ContractState>>()
+            StateAndRef<ContractState>(
+                bytes.deserialize(),
+                wtx.references[index]
+            )
+        }
+
+        val ltx = LedgerTransaction.createForSandbox(
+            inputs = inputs,
+            outputs = wtx.outputs, // witness.outputsGroup.map { it.deserialize() },
+            commands = wtx.commands.map {
+                CommandWithParties(
+                    value = it.value,
+                    signingParties = it.signers.mapNotNull { serviceHub.identityService.partyFromKey(it) },
+                    signers = it.signers
+                )
+            },
+            attachments = wtx.attachments.map { serviceHub.attachments.openAttachment(it) ?: throw AttachmentResolutionException(it) },
+            id = wtx.id,
+            notary = wtx.notary,
+            timeWindow = wtx.timeWindow,
+            privacySalt = wtx.privacySalt,
+            networkParameters = wtx.networkParametersHash?.let { serviceHub.networkParametersService.lookup(it) }
+                ?: throw TransactionResolutionException.UnknownParametersException(wtx.id, wtx.networkParametersHash!!),
+            references = references,
+            wtx.digestService
+        )
+        ltx.verify()
     }
 }

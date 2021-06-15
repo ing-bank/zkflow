@@ -4,6 +4,7 @@ import com.ing.zknotary.common.serialization.bfl.BFLSerializationScheme
 import com.ing.zknotary.common.transactions.ZKTransactionBuilder
 import com.ing.zknotary.testing.dsl.zkLedger
 import com.ing.zknotary.testing.serialization.serializeWithScheme
+import com.ing.zknotary.testing.zkp.MockZKTransactionService
 import io.ivno.collateraltoken.contract.ContractTest
 import io.ivno.collateraltoken.contract.DepositContract
 import io.ivno.collateraltoken.contract.IvnoTokenTypeContract
@@ -26,7 +27,8 @@ import kotlin.time.ExperimentalTime
 class DepositTransactionTransactionBuilderTest : ContractTest() {
     @Test
     fun `On deposit requesting, the transaction must include the Request command`() {
-        services.zkLedger {
+        // TODO: Once the real circuits exists, remove the MockZKTransactionService param
+        services.zkLedger(zkService = MockZKTransactionService(services)) {
             zkTransaction {
                 val memberships = createAllMemberships()
                 reference(memberships.membershipFor(BANK_A).ref)

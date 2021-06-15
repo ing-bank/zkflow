@@ -1,4 +1,4 @@
-@file:Suppress("FunctionName", "FunctionNaming", "FunctionParameterNaming", "LongParameterList", "TooManypublic functions") // Copy of Corda API
+@file:Suppress("FunctionName", "FunctionNaming", "FunctionParameterNaming", "LongParameterList", "TooManyFunctions") // Copy of Corda API
 
 package com.ing.zknotary.testing.dsl
 

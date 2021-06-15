@@ -3,7 +3,6 @@ package com.ing.zknotary.common.zkp
 import com.ing.zknotary.common.contracts.ZKCommandData
 import com.ing.zknotary.node.services.ConfigParams
 import com.ing.zknotary.node.services.getLongFromConfig
-import com.ing.zknotary.node.services.getStringFromConfig
 import net.corda.core.node.AppServiceHub
 import net.corda.core.node.ServiceHub
 import net.corda.core.node.services.CordaService
@@ -15,29 +14,18 @@ class ZincZKTransactionCordaService(services: AppServiceHub) : ZincZKTransaction
 @CordaService
 open class ZincZKTransactionService(services: ServiceHub) : AbstractZKTransactionService(services) {
 
-    private val zkServices: Map<ZKCommandData, ZincZKService>
+    private val zkServices = mutableMapOf<ZKCommandData, ZincZKService>()
+    val buildTimeout: Duration = Duration.ofSeconds(services.getLongFromConfig(ConfigParams.Zinc.BUILD_TIMEOUT, 60))
+    val setupTimeout: Duration = Duration.ofSeconds(services.getLongFromConfig(ConfigParams.Zinc.SETUP_TIMEOUT, 60))
+    val provingTimeout: Duration = Duration.ofSeconds(services.getLongFromConfig(ConfigParams.Zinc.PROVING_TIMEOUT, 60))
+    val verificationTimeout: Duration = Duration.ofSeconds(services.getLongFromConfig(ConfigParams.Zinc.VERIFICATION_TIMEOUT, 60))
 
-    init {
+    override fun zkServiceForCommand(command: ZKCommandData): ZincZKService {
+        return zkServices.getOrPut(command) {
+            val circuitFolder = command.circuit.folder
+            val artifactFolder = File(circuitFolder, "artifacts")
 
-        val buildTimeout: Duration = Duration.ofSeconds(services.getLongFromConfig(ConfigParams.Zinc.BUILD_TIMEOUT, 60))
-        val setupTimeout: Duration = Duration.ofSeconds(services.getLongFromConfig(ConfigParams.Zinc.SETUP_TIMEOUT, 60))
-        val provingTimeout: Duration = Duration.ofSeconds(services.getLongFromConfig(ConfigParams.Zinc.PROVING_TIMEOUT, 60))
-        val verificationTimeout: Duration = Duration.ofSeconds(services.getLongFromConfig(ConfigParams.Zinc.VERIFICATION_TIMEOUT, 60))
-
-        val commandClasses = services.getStringFromConfig(ConfigParams.Zinc.COMMAND_CLASS_NAMES).split(ConfigParams.Zinc.COMMANDS_SEPARATOR)
-
-        // Probably can be not that strict
-        if (commandClasses.isEmpty()) throw ExceptionInInitializerError("List of ZK Commands cannot be empty")
-
-        val commands: List<ZKCommandData> = commandClasses.map { Class.forName(it).getConstructor().newInstance() as ZKCommandData }
-
-        zkServices = commands.associateWith {
-
-            val circuitFolder =
-                it.circuit.folder ?: error("Circuit folder has not been specified for ${it.circuit.name}")
-            val artifactFolder = circuitFolder.resolve("artifacts")
-
-            val zkService = ZincZKService(
+            return ZincZKService(
                 circuitFolder.absolutePath,
                 artifactFolder.absolutePath,
                 buildTimeout,
@@ -45,40 +33,33 @@ open class ZincZKTransactionService(services: ServiceHub) : AbstractZKTransactio
                 provingTimeout,
                 verificationTimeout
             )
-
-            zkService
         }
     }
 
-    override fun zkServiceForCommand(command: ZKCommandData): ZKService {
-        return zkServices[command] ?: throw IllegalArgumentException("ZK Service not found for command $command")
-    }
-
-    fun setup(force: Boolean = false) {
+    fun setup(command: ZKCommandData, force: Boolean = false) {
 
         if (force) {
-            cleanup()
+            cleanup(command)
         }
 
-        zkServices.values.forEach { zkService ->
+        val zkService = zkServiceForCommand(command)
 
-            val circuit = CircuitManager.CircuitDescription("${zkService.circuitFolder}/src", zkService.artifactFolder)
-            CircuitManager.register(circuit)
+        val circuit = CircuitManager.CircuitDescription("${zkService.circuitFolder}/src", zkService.artifactFolder)
+        CircuitManager.register(circuit)
 
-            while (CircuitManager[circuit] == CircuitManager.Status.InProgress) {
-                // An upper waiting time bound can be set up,
-                // but this bound may be overly pessimistic.
-                Thread.sleep(10 * 1000)
-            }
+        while (CircuitManager[circuit] == CircuitManager.Status.InProgress) {
+            // An upper waiting time bound can be set up,
+            // but this bound may be overly pessimistic.
+            Thread.sleep(10 * 1000)
+        }
 
-            if (CircuitManager[circuit] == CircuitManager.Status.Outdated) {
-                zkService.cleanup()
-                CircuitManager.inProgress(circuit)
-                zkService.setup()
-                CircuitManager.cache(circuit)
-            }
+        if (CircuitManager[circuit] == CircuitManager.Status.Outdated) {
+            zkService.cleanup()
+            CircuitManager.inProgress(circuit)
+            zkService.setup()
+            CircuitManager.cache(circuit)
         }
     }
 
-    fun cleanup() = zkServices.values.forEach { it.cleanup() }
+    fun cleanup(command: ZKCommandData) = zkServiceForCommand(command).cleanup()
 }

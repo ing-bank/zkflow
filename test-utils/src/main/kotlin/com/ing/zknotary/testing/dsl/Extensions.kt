@@ -1,6 +1,8 @@
 package com.ing.zknotary.testing.dsl
 
 import com.ing.zknotary.common.crypto.zincAlgorithm
+import com.ing.zknotary.common.zkp.ZKTransactionService
+import com.ing.zknotary.common.zkp.ZincZKTransactionService
 import net.corda.core.identity.Party
 import net.corda.core.internal.HashAgility
 import net.corda.core.node.ServiceHub
@@ -13,6 +15,7 @@ import net.corda.testing.node.internal.MockNetworkParametersStorage
 @JvmOverloads
 public fun ServiceHub.zkLedger(
     notary: Party = TestIdentity.fresh("ledger notary").party,
+    zkService: ZKTransactionService = ZincZKTransactionService(this),
     script: LedgerDSL<TestTransactionDSLInterpreter, TestLedgerDSLInterpreter>.() -> Unit
 ): LedgerDSL<TestTransactionDSLInterpreter, TestLedgerDSLInterpreter> {
     val currentParameters = networkParametersService.run {
@@ -27,7 +30,7 @@ public fun ServiceHub.zkLedger(
     HashAgility.init(zincAlgorithm)
 
     return createTestSerializationEnv(javaClass.classLoader).asTestContextEnv {
-        val interpreter = TestLedgerDSLInterpreter(this)
+        val interpreter = TestLedgerDSLInterpreter(this, zkService)
         LedgerDSL(interpreter, notary).apply {
             script()
         }

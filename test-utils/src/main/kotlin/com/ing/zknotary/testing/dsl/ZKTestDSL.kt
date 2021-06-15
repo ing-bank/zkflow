@@ -10,7 +10,7 @@ import com.ing.zknotary.common.transactions.zkCommandData
 import com.ing.zknotary.common.zkp.PublicInput
 import com.ing.zknotary.common.zkp.Witness
 import com.ing.zknotary.common.zkp.ZKTransactionService
-import com.ing.zknotary.testing.zkp.MockZKTransactionService
+import com.ing.zknotary.common.zkp.ZincZKService
 import net.corda.core.DoNotImplement
 import net.corda.core.contracts.Attachment
 import net.corda.core.contracts.AttachmentConstraint
@@ -60,6 +60,7 @@ import java.util.concurrent.Executors
 import kotlin.collections.component1
 import kotlin.collections.component2
 import kotlin.collections.set
+import kotlin.reflect.full.primaryConstructor
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -165,6 +166,9 @@ public data class TestTransactionDSLInterpreter private constructor(
         override val attachmentsClassLoaderCache: AttachmentsClassLoaderCache = AttachmentsClassLoaderCacheImpl(TestingNamedCacheFactory())
     }
 
+    // Hack to reuse the LedgerInterpreter's ZKTransactionService with the local ServiceHub, so transaction resolution will work.
+    private val zkService: ZKTransactionService = ledgerInterpreter.zkService::class.primaryConstructor!!.call(services)
+
     private fun copy(): TestTransactionDSLInterpreter =
         TestTransactionDSLInterpreter(
             ledgerInterpreter = ledgerInterpreter,
@@ -224,9 +228,8 @@ public data class TestTransactionDSLInterpreter private constructor(
 
         if (wtx.commands.all { it.value is ZKCommandData }) {
             val zkwtx = ZKTransactionBuilder(txb).run { toZKWireTransaction() }
-            val zkService: ZKTransactionService = MockZKTransactionService(services)
             log.info("Verifying ZKP for ${zkwtx.id} with $zkService")
-            services.proveAndVerify(zkService, zkwtx)
+            zkService.proveAndVerify(services, zkwtx)
         }
         return EnforceVerifyOrFail.Token
     }
@@ -275,20 +278,18 @@ public data class TestTransactionDSLInterpreter private constructor(
     }
 }
 
-private fun ServiceHub.proveAndVerify(
-    zkService: ZKTransactionService,
+private fun ZKTransactionService.proveAndVerify(
+    serviceHub: ServiceHub,
     zkwtx: WireTransaction
 ) {
-    val zkServiceForCommand = zkService.zkServiceForCommand(zkwtx.zkCommandData())
-    val inputUtxoInfos = collectUtxoInfos(zkwtx.inputs)
-    val referenceUtxoInfos = collectUtxoInfos(zkwtx.references)
+    val zkServiceForCommand = zkServiceForCommand(zkwtx.zkCommandData())
+    val inputUtxoInfos = serviceHub.collectUtxoInfos(zkwtx.inputs)
+    val referenceUtxoInfos = serviceHub.collectUtxoInfos(zkwtx.references)
     val witness = Witness.fromWireTransaction(
         zkwtx,
         inputUtxoInfos,
         referenceUtxoInfos
     )
-
-    val proof = zkServiceForCommand.prove(witness)
 
     val inputHashes = inputUtxoInfos.map { zkwtx.digestService.componentHash(it.nonce, OpaqueBytes(it.serializedContents)) }
     val referenceHashes = referenceUtxoInfos.map { zkwtx.digestService.componentHash(it.nonce, OpaqueBytes(it.serializedContents)) }
@@ -297,19 +298,33 @@ private fun ServiceHub.proveAndVerify(
         inputHashes = inputHashes,
         referenceHashes = referenceHashes
     )
-    zkServiceForCommand.verify(proof, publicInput)
+
+    when (zkServiceForCommand) {
+        is ZincZKService -> {
+            /*
+             * Contract tests should be fast, so no real circuit setup/prove/verify, only run.
+             * This proves correctness, but may still fail for arcane Zinc reasons when using the real circuit.
+             */
+            zkServiceForCommand.run(witness, publicInput)
+        }
+        else -> {
+            val proof = zkServiceForCommand.prove(witness)
+            zkServiceForCommand.verify(proof, publicInput)
+        }
+    }
 }
 
 public data class TestLedgerDSLInterpreter private constructor(
     val services: ServiceHub,
     internal val labelToOutputStateAndRefs: HashMap<String, StateAndRef<ContractState>> = HashMap(),
     private val transactionWithLocations: HashMap<SecureHash, WireTransactionWithLocation> = LinkedHashMap(),
-    private val nonVerifiedTransactionWithLocations: HashMap<SecureHash, WireTransactionWithLocation> = HashMap()
+    private val nonVerifiedTransactionWithLocations: HashMap<SecureHash, WireTransactionWithLocation> = HashMap(),
+    val zkService: ZKTransactionService
 ) : LedgerDSLInterpreter<TestTransactionDSLInterpreter> {
     val wireTransactions: List<WireTransaction> get() = transactionWithLocations.values.map { it.transaction }
 
     // We specify [labelToOutputStateAndRefs] just so that Kotlin picks the primary constructor instead of cycling
-    public constructor(services: ServiceHub) : this(services, labelToOutputStateAndRefs = HashMap())
+    public constructor(services: ServiceHub, zkService: ZKTransactionService) : this(services, labelToOutputStateAndRefs = HashMap(), zkService = zkService)
 
     public companion object {
         private fun getCallerLocation(): String? {
@@ -341,7 +356,8 @@ public data class TestLedgerDSLInterpreter private constructor(
             services,
             labelToOutputStateAndRefs = HashMap(labelToOutputStateAndRefs),
             transactionWithLocations = HashMap(transactionWithLocations),
-            nonVerifiedTransactionWithLocations = HashMap(nonVerifiedTransactionWithLocations)
+            nonVerifiedTransactionWithLocations = HashMap(nonVerifiedTransactionWithLocations),
+            zkService = zkService
         )
 
     internal fun getTransaction(id: SecureHash): SignedTransaction? {
@@ -490,9 +506,9 @@ public data class TestLedgerDSLInterpreter private constructor(
                 val ltx = wtx.toLedgerTransaction(services)
                 ltx.verify()
                 if (wtx.commands.all { it.value is ZKCommandData }) {
-                    val zkService: ZKTransactionService = MockZKTransactionService(services)
+                    // val zkService: ZKTransactionService = MockZKTransactionService(services)
                     // log.info("Verifying ZKP for ${wtx.id} with $zkService")
-                    services.proveAndVerify(zkService, wtx)
+                    zkService.proveAndVerify(services, wtx)
                 }
                 val allInputs = wtx.inputs union wtx.references
                 val doubleSpend = allInputs intersect usedInputs
