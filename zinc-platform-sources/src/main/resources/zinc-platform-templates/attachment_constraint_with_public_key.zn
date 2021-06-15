@@ -29,6 +29,12 @@ struct ${TYPE_NAME} {
 }
 
 impl ${TYPE_NAME} {
+    fn empty() -> ${TYPE_NAME} {
+        ${TYPE_NAME} {
+            public_key: ${PK_TYPE_NAME}::empty(),
+        }
+    }
+
     fn equals(this: ${TYPE_NAME}, that: ${TYPE_NAME}) -> bool {
         ${PK_TYPE_NAME}::equals(this.public_key, that.public_key)
     }

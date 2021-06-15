@@ -24,6 +24,12 @@ struct ${TYPE_NAME} {
 }
 
 impl ${TYPE_NAME} {
+    fn empty() -> ${TYPE_NAME} {
+        ${TYPE_NAME} {
+            attachment_id: SecureHash::empty(),
+        }
+    }
+
     fn equals(this: ${TYPE_NAME}, that: ${TYPE_NAME}) -> bool {
         SecureHash::equals(this.attachment_id, that.attachment_id)
     }

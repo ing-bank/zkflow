@@ -42,9 +42,9 @@ struct LinearPointer {
 }
 
 impl LinearPointer {
-    fn zero() -> LinearPointer {
+    fn empty() -> LinearPointer {
         LinearPointer {
-            pointer: UniqueIdentifier::zero(),
+            pointer: UniqueIdentifier::empty(),
             class_name: LinearPointerClassName::empty(),
             is_resolved: false,
         }

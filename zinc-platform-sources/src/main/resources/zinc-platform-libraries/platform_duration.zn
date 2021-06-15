@@ -30,7 +30,7 @@ struct Duration {
 }
 
 impl Duration {
-    fn zero() -> Duration {
+    fn empty() -> Duration {
         Duration { seconds: 0 as u64, nanos: 0 as u32 }
     }
 

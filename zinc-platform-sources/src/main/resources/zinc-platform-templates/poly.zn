@@ -34,6 +34,12 @@ struct ${TYPE_NAME} {
 }
 
 impl ${TYPE_NAME} {
+    fn empty() -> ${TYPE_NAME} {
+        ${TYPE_NAME} {
+            value: ${T_TYPE_NAME}::empty(),
+        }
+    }
+
     fn equals(this: ${TYPE_NAME}, that: ${TYPE_NAME}) -> bool {
         ${T_TYPE_NAME}::equals(this.value, that.value)
     }

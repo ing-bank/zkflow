@@ -27,6 +27,13 @@ struct SecureHash {
 }
 
 impl SecureHash {
+    fn empty() -> SecureHash {
+        SecureHash {
+            algorithm: 0,
+            bytes: ByteArray_${BYTES_SIZE}::empty(),
+        }
+    }
+
     fn equals(this: SecureHash, that: SecureHash) -> bool {
         this.algorithm == that.algorithm
             && ByteArray_${BYTES_SIZE}::equals(this.bytes, that.bytes)

@@ -16,7 +16,7 @@ fn extract_linear_pointer(witness: [u8; WITNESS_SIZE], offset: u16) -> LinearPoi
 }
 
 fn main(witness: [u8; WITNESS_SIZE]) -> bool {
-    let mut items: [LinearPointer; WITNESS_ITEMS_COUNT] = [LinearPointer::zero(); WITNESS_ITEMS_COUNT];
+    let mut items: [LinearPointer; WITNESS_ITEMS_COUNT] = [LinearPointer::empty(); WITNESS_ITEMS_COUNT];
     for i in 0..WITNESS_ITEMS_COUNT {
         items[i] = extract_linear_pointer(witness, i * LINEAR_POINTER_LENGTH);
     }
