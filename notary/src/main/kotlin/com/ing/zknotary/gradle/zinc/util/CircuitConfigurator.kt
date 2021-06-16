@@ -1,8 +1,16 @@
 package com.ing.zknotary.gradle.zinc.util
 
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.descriptors.buildClassSerialDescriptor
+import kotlinx.serialization.descriptors.element
+import kotlinx.serialization.encoding.CompositeDecoder
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.encoding.decodeStructure
 import kotlinx.serialization.json.Json
 import java.io.File
 
@@ -28,11 +36,46 @@ class CircuitConfigurator(private val outputPath: File) {
         @SerialName("signer_group") val signerGroup: SignersGroup,
     )
 
-    @Serializable
+    @Serializable(with = GroupSerializer::class)
     data class Group(
-        @SerialName("group_size")val groupSize: Int = 0,
-        @SerialName("component_size") val componentSize: Int = 1
+        val groupSize: Int = 0,
+        val componentSize: Int = 1
     )
+
+    object GroupSerializer : KSerializer<Group> {
+        override val descriptor: SerialDescriptor =
+            buildClassSerialDescriptor("group") {
+                element<Int>("group_size")
+                element<Int>("component_size")
+            }
+
+        override fun serialize(encoder: Encoder, value: Group) {
+            TODO("Not Supported")
+        }
+
+        override fun deserialize(decoder: Decoder): Group =
+            decoder.decodeStructure(descriptor) {
+                var groupSize = 0
+                var componentSize: Int? = null
+                while (true) {
+                    when (val index = decodeElementIndex(descriptor)) {
+                        0 -> groupSize = decodeIntElement(descriptor, 0)
+                        1 -> componentSize = decodeIntElement(descriptor, 1)
+                        CompositeDecoder.DECODE_DONE -> break
+                        else -> error("Unexpected index: $index")
+                    }
+                }
+
+                if (groupSize == 0) { componentSize = 1 }
+                if (groupSize != 0 && componentSize == null) {
+                    error("Group with `group_size > 0` must specify `component_size`")
+                }
+                // Invariant: groupSize is Int, componentSize != null
+                require(componentSize != null) { "Group rules verification failure." }
+
+                Group(groupSize, componentSize)
+            }
+    }
 
     @Serializable
     data class SignersGroup(
