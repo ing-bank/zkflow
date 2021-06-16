@@ -25,6 +25,7 @@ val Project.circuitNames: List<String>?
         return zkNotaryExtension.circuitSourcesBasePath
             .listFiles { file, _ -> file?.isDirectory ?: false }?.map { it.name }
             ?.filterNot { it == zkNotaryExtension.zincCommonFolderName }
+            ?.filterNot { it.contains(zkNotaryExtension.statesSourcesPath) }
     }
 
 val Project.zincCommonFolderName: String?

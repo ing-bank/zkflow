@@ -60,6 +60,7 @@ fun main(args: Array<String>) {
 
     val root = args[0]
     val projectVersion = args[1]
+    val configFileName = args[2]
 
     val circuitSourcesBase = File("$root/circuits")
     val mergedCircuitOutput = File("$root/build/circuits")
@@ -72,7 +73,7 @@ fun main(args: Array<String>) {
 
         // Copy Zinc sources
         val copier = ZincSourcesCopier(outputPath)
-        copier.copyZincCircuitSources(circuitSourcesPath, circuitName, projectVersion)
+        copier.copyZincCircuitSources(circuitSourcesPath, circuitName, projectVersion, configFileName)
         copier.copyZincPlatformSources(getPlatformSources(root))
         copier.copyZincPlatformSources(getPlatformLibs(root))
 

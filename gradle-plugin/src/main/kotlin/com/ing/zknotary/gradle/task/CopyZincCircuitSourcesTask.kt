@@ -14,7 +14,7 @@ open class CopyZincCircuitSourcesTask : DefaultTask() {
         val extension = project.zkNotaryExtension
         val commonFolderName = project.zincCommonFolderName
 
-        project.circuitNames?.filterNot { it.contains(extension.statesSourcesPath) }?.forEach { circuitName ->
+        project.circuitNames?.forEach { circuitName ->
             val circuitSourceOutputPath = extension.mergedCircuitOutputPath.resolve(circuitName).resolve("src")
             val copier = ZincSourcesCopier(circuitSourceOutputPath)
 
@@ -22,7 +22,7 @@ open class CopyZincCircuitSourcesTask : DefaultTask() {
                 circuitName,
                 commonFolderName,
             ).forEach {
-                copier.copyZincCircuitSources(extension.circuitSourcesBasePath.resolve(it), it, project.version.toString())
+                copier.copyZincCircuitSources(extension.circuitSourcesBasePath.resolve(it), it, project.version.toString(), extension.configFileName)
             }
         }
     }

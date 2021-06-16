@@ -1,6 +1,6 @@
 {
   "command" : {
-    "name": "move",
+    "name": "command-name",
     "component_size" : 11
   },
   "groups" : {

@@ -5,12 +5,12 @@ import java.nio.file.StandardCopyOption
 import javax.inject.Inject
 import kotlin.streams.toList
 
-    plugins {
-        kotlin("jvm")
-        java
-        id("maven-publish")
-        kotlin("plugin.serialization")
-    }
+plugins {
+    kotlin("jvm")
+    java
+    id("maven-publish")
+    kotlin("plugin.serialization")
+}
 
 dependencies {
     implementation(project(":notary")) // required for Zinc com.ing.zknotary.gradle.zinc.template renderer
@@ -59,6 +59,7 @@ val circuitSourcesBase = File("$root/circuits")
 val mergedCircuitOutput = File("$root/build/circuits")
 
 val circuits = circuitSourcesBase.listFiles { file, _ -> file?.isDirectory ?: false }?.map { it.name }
+val configFileName = "config.json"
 
 task("prepareCircuits", JavaExec::class) {
     inputs.dir(projectDir.resolve("src/main/resources"))
@@ -66,7 +67,7 @@ task("prepareCircuits", JavaExec::class) {
     outputs.dir(mergedCircuitOutput)
     main = "PrepareCircuitsKt"
     classpath = sourceSets["main"].runtimeClasspath
-    args(root, project.version)
+    args(root, project.version, configFileName)
 }
 
 task("circuits") {

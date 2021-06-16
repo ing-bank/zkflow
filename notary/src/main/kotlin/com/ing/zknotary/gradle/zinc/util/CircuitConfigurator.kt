@@ -19,25 +19,25 @@ class CircuitConfigurator(private val outputPath: File) {
 
     @Serializable
     data class Groups(
-        @SerialName("attachment_group") val attachmentGroup: Component,
-        @SerialName("input_group") val inputGroup: Component,
-        @SerialName("output_group") val outputGroup: Component,
-        @SerialName("reference_group") val referenceGroup: Component,
-        @SerialName("notary_group") val notaryGroup: Component,
-        @SerialName("timewindow_group") val timewindowGroup: Component,
-        @SerialName("signer_group") val signerGroup: SignersComponent,
+        @SerialName("attachment_group") val attachmentGroup: Group = Group(),
+        @SerialName("input_group") val inputGroup: Group = Group(),
+        @SerialName("output_group") val outputGroup: Group = Group(),
+        @SerialName("reference_group") val referenceGroup: Group = Group(),
+        @SerialName("notary_group") val notaryGroup: Group = Group(),
+        @SerialName("timewindow_group") val timewindowGroup: Group = Group(),
+        @SerialName("signer_group") val signerGroup: SignersGroup,
     )
 
     @Serializable
-    data class Component(
-        @SerialName("group_size")val groupSize: Int,
-        @SerialName("component_size") val componentSize: Int
+    data class Group(
+        @SerialName("group_size")val groupSize: Int = 0,
+        @SerialName("component_size") val componentSize: Int = 1
     )
 
     @Serializable
-    data class SignersComponent(
+    data class SignersGroup(
         @SerialName("signer_size")val signerSize: Int,
-        @SerialName("signer_list_size") val signerListSize: Int
+        @SerialName("signer_list_size") val signerListSize: Int = 1
     )
 
     val circuitConfiguration: CircuitConfiguration

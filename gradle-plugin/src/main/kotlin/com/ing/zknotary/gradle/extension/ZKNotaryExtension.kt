@@ -88,4 +88,7 @@ open class ZKNotaryExtension(project: Project) : TemplateConfigurations() {
 
     @Input
     val mainTemplate = "main_template.zn"
+
+    @Input
+    val configFileName = "config.json"
 }

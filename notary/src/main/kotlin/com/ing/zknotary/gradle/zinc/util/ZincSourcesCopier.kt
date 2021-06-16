@@ -5,7 +5,7 @@ import java.nio.ByteBuffer
 
 class ZincSourcesCopier(private val outputPath: File) {
 
-    fun copyZincCircuitSources(circuitSources: File, circuitName: String, version: String) {
+    fun copyZincCircuitSources(circuitSources: File, circuitName: String, version: String, configFileName: String) {
 
         circuitSources.copyRecursively(
             createOutputFile(outputPath),
@@ -15,7 +15,7 @@ class ZincSourcesCopier(private val outputPath: File) {
         outputPath.walk().filter { file ->
             file.name.contains("config.json")
         }.forEach { configFile ->
-            val replacedConfigFile = createOutputFile(outputPath.parentFile.resolve("config.json"))
+            val replacedConfigFile = createOutputFile(outputPath.parentFile.resolve(configFileName))
             replacedConfigFile.writeText(configFile.readText())
             configFile.delete()
         }

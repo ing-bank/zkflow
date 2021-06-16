@@ -1,35 +1,21 @@
 {
   "command" : {
-    "name": "create",
+    "name": "deposit-request",
     "component_size" : 11
   },
   "groups" : {
-    "attachment_group" : {
-      "group_size" : 0,
-      "component_size" : 1
-    },
-    "input_group" : {
-      "group_size" : 0,
-      "component_size" : 1
-    },
     "output_group" : {
       "group_size" : 1,
-      "component_size" : 1537
-    },
-    "reference_group" : {
-      "group_size" : 0,
-      "component_size" : 1
+      "component_size" : 1664
     },
     "notary_group" : {
-      "group_size" : 1,
-      "component_size" : 1
+      "group_size" : 1
     },
     "timewindow_group" : {
-      "group_size" : 1,
-      "component_size" : 1
+      "group_size" : 1
     },
     "signer_group" : {
-      "signer_size": 52,
+      "signer_size": 63,
       "signer_list_size": 1
     }
   }
