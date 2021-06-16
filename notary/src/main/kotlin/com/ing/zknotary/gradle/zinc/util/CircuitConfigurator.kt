@@ -31,8 +31,8 @@ class CircuitConfigurator(private val outputPath: File) {
         @SerialName("input_group") val inputGroup: Group = Group(),
         @SerialName("output_group") val outputGroup: Group = Group(),
         @SerialName("reference_group") val referenceGroup: Group = Group(),
-        @SerialName("notary_group") val notaryGroup: Group = Group(),
-        @SerialName("timewindow_group") val timewindowGroup: Group = Group(),
+        @SerialName("notary_group") val notaryGroup: NullableGroup = NullableGroup(),
+        @SerialName("timewindow_group") val timewindowGroup: NullableGroup = NullableGroup(),
         @SerialName("signer_group") val signerGroup: SignersGroup,
     )
 
@@ -79,8 +79,13 @@ class CircuitConfigurator(private val outputPath: File) {
 
     @Serializable
     data class SignersGroup(
-        @SerialName("signer_size")val signerSize: Int,
+        @SerialName("signer_size") val signerSize: Int,
         @SerialName("signer_list_size") val signerListSize: Int = 1
+    )
+
+    @Serializable
+    data class NullableGroup(
+        @SerialName("group_size") val groupSize: Int = 0
     )
 
     val circuitConfiguration: CircuitConfiguration
