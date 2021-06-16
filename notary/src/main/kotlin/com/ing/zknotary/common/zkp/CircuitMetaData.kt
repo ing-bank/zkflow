@@ -4,36 +4,24 @@ import com.ing.zknotary.gradle.zinc.util.CircuitConfigurator
 import net.corda.core.contracts.ComponentGroupEnum
 import java.io.File
 
-class CircuitMetaData private constructor(
+class CircuitMetaData(
     val name: String,
     val componentGroupSizes: Map<ComponentGroupEnum, Int>,
     val folder: File
 ) {
-    data class Builder(
-        var name: String = "UNKNOWN",
-        var componentGroupSizes: MutableMap<ComponentGroupEnum, Int> = mutableMapOf(),
-        var folder: File = File("/tmp")
-    ) {
-        fun name(name: String) = apply { this.name = name }
-        fun addComponentGroupSize(componentGroupEnum: ComponentGroupEnum, size: Int) =
-            apply { this.componentGroupSizes[componentGroupEnum] = size }
-        fun folder(folder: File) = apply { this.folder = folder }
-        fun parseConfig(folder: File) = apply {
+    companion object {
+        fun fromConfig(folder: File): CircuitMetaData {
             val configPath = folder.resolve("config.json")
             require(configPath.exists()) {
                 "Configuration file is expected at $configPath"
             }
             val config = CircuitConfigurator(configPath).circuitConfiguration
 
-            this.name = config.command.name
-            this.componentGroupSizes = mutableMapOf(ComponentGroupEnum.SIGNERS_GROUP to config.groups.signerGroup.signerListSize)
-            this.folder = folder
+            return CircuitMetaData(
+                config.command.name,
+                mapOf(ComponentGroupEnum.SIGNERS_GROUP to config.groups.signerGroup.signerListSize),
+                folder
+            )
         }
-
-        fun build() = CircuitMetaData(name, componentGroupSizes, folder)
-    }
-
-    companion object {
-        fun fromConfig(folder: File) = Builder().parseConfig(folder).build()
     }
 }

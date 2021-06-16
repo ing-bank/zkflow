@@ -4,6 +4,7 @@ import com.ing.zknotary.common.contracts.ZKCommandData
 import com.ing.zknotary.common.serialization.bfl.CommandDataSerializerMap
 import com.ing.zknotary.common.serialization.bfl.ContractStateSerializerMap
 import com.ing.zknotary.common.zkp.CircuitMetaData
+import com.ing.zknotary.testing.CircuitMetaDataBuilder
 import com.ing.zknotary.testing.fixtures.state.DummyState
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
@@ -33,7 +34,7 @@ public class DummyContract : Contract {
     @Serializable
     public class Chill : TypeOnlyCommandData(), ZKCommandData {
         @Transient
-        override val circuit: CircuitMetaData = CircuitMetaData.Builder()
+        override val circuit: CircuitMetaData = CircuitMetaDataBuilder()
             .name("Chill")
             .addComponentGroupSize(ComponentGroupEnum.SIGNERS_GROUP, 2)
             .build()

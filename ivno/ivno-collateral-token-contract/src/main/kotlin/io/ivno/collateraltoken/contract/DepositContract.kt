@@ -122,10 +122,10 @@ class DepositContract : Contract {
         }
 
         @Transient
-        override val circuit: CircuitMetaData = CircuitMetaData.Builder()
-            .name("Request")
-            .addComponentGroupSize(ComponentGroupEnum.SIGNERS_GROUP, 2)
-            .build()
+        override val circuit: CircuitMetaData = CircuitMetaData.fromConfig(
+            // ${System.getProperty("user.dir")} = "ivno"
+            File("${System.getProperty("user.dir")}/ivno-collateral-token-contract/build/zinc/deposit-advance")
+        )
     }
 
     @Serializable
