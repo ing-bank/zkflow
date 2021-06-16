@@ -127,9 +127,6 @@ class TransactionVerificationTest {
             referenceHashes = emptyList()
         )
 
-        // println(Json.encodeToString(WitnessSerializer, createWitness))
-        // println(Json.encodeToString(PublicInputSerializer, createPublicInput))
-
         createZKService.run(createWitness, createPublicInput)
 
         if (!runOnly) {
@@ -172,9 +169,6 @@ class TransactionVerificationTest {
             inputHashes = listOf(inputHash),
             referenceHashes = emptyList()
         )
-
-        // println(Json.encodeToString(WitnessSerializer, moveWitness))
-        // println(Json.encodeToString(PublicInputSerializer, movePublicInput))
 
         moveZKService.run(moveWitness, movePublicInput)
 
