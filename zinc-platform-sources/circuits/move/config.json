@@ -13,10 +13,12 @@
       "component_size" : 1537
     },
     "notary_group" : {
-      "group_size" : 1
+      "group_size" : 1,
+      "component_size" : 2
     },
     "timewindow_group" : {
-      "group_size" : 1
+      "group_size" : 1,
+      "component_size" : 2
     },
     "signer_group" : {
       "signer_size": 52,
