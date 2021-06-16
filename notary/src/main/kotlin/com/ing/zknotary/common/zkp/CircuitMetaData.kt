@@ -32,4 +32,8 @@ class CircuitMetaData private constructor(
 
         fun build() = CircuitMetaData(name, componentGroupSizes, folder)
     }
+
+    companion object {
+        fun fromConfig(folder: File) = Builder().parseConfig(folder).build()
+    }
 }

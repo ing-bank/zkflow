@@ -66,12 +66,10 @@ public class TestContract : Contract {
     public class Create : TypeOnlyCommandData(), ZKCommandData {
 
         @Transient
-        override val circuit: CircuitMetaData = CircuitMetaData.Builder()
-            .parseConfig(
-                // ${System.getProperty("user.dir")} = "notary"
-                File("${System.getProperty("user.dir")}/../zinc-platform-sources/build/circuits/create")
-            )
-            .build()
+        override val circuit: CircuitMetaData = CircuitMetaData.fromConfig(
+            // ${System.getProperty("user.dir")} = "notary"
+            File("${System.getProperty("user.dir")}/../zinc-platform-sources/build/circuits/create")
+        )
 
         public companion object {
             public fun verifyCreate(
@@ -107,12 +105,10 @@ public class TestContract : Contract {
     public class Move : TypeOnlyCommandData(), ZKCommandData {
 
         @Transient
-        override val circuit: CircuitMetaData = CircuitMetaData.Builder()
-            .parseConfig(
-                // ${System.getProperty("user.dir")} = "notary"
-                File("${System.getProperty("user.dir")}/../zinc-platform-sources/build/circuits/move")
-            )
-            .build()
+        override val circuit: CircuitMetaData = CircuitMetaData.fromConfig(
+            // ${System.getProperty("user.dir")} = "notary"
+            File("${System.getProperty("user.dir")}/../zinc-platform-sources/build/circuits/move")
+        )
 
         public companion object {
             public fun verifyMove(
