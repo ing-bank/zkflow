@@ -1,58 +1,45 @@
 package io.ivno.collateraltoken.zinc.types
 
-import com.ing.serialization.bfl.api.reified.serialize
-import com.ing.zknotary.common.serialization.bfl.corda.LinearPointerSurrogate
-import com.ing.zknotary.common.serialization.bfl.serializers.CordaX500NameSerializer
 import com.ing.zknotary.common.serialization.bfl.serializers.CordaX500NameSurrogate
-import com.ing.zknotary.common.serialization.bfl.serializers.UniqueIdentifierSurrogate
 import com.ing.zknotary.testing.resizeTo
 import com.ing.zknotary.testing.toJsonArray
-import com.ing.zknotary.testing.toSizedIntArray
+import com.ing.zknotary.zinc.types.polymorphic
+import com.ing.zknotary.zinc.types.toJsonObject
 import io.dasl.contracts.v1.token.BigDecimalAmount
 import io.dasl.contracts.v1.token.TokenDescriptor
 import io.ivno.collateraltoken.contract.IvnoTokenType
+import io.ivno.collateraltoken.contract.Redemption
 import io.ivno.collateraltoken.serialization.NetworkSurrogate
 import io.ivno.collateraltoken.serialization.PermissionSurrogate
 import io.ivno.collateraltoken.serialization.RoleSurrogate
 import io.ivno.collateraltoken.serialization.SettingSurrogate
-import io.onixlabs.corda.bnms.contract.Permission
-import io.kotest.matchers.shouldBe
 import io.onixlabs.corda.bnms.contract.Network
 import io.onixlabs.corda.bnms.contract.Permission
 import io.onixlabs.corda.bnms.contract.Role
 import io.onixlabs.corda.bnms.contract.Setting
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import net.corda.core.contracts.LinearPointer
-import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.crypto.Crypto
 import net.corda.core.crypto.SignatureScheme
 import net.corda.core.identity.AbstractParty
-import net.corda.core.identity.CordaX500Name
-import java.math.BigDecimal
 import java.security.PublicKey
 
 fun Role.toZincJson() = toJsonObject().toString()
 fun TokenDescriptor.toZincJson() = toJsonObject().toString()
 fun Permission.toZincJson() = toJsonObject().toString()
 fun BigDecimalAmount<LinearPointer<IvnoTokenType>>.toZincJson() = toJsonObject().toString()
-
-fun <T: Enum<T>> T.toZincJson() = toJsonObject().toString()
 fun Network.toZincJson(encodedSize: Int, isAnonymous: Boolean, scheme: SignatureScheme) =
     toJsonObject(encodedSize, isAnonymous, scheme).toString()
+
 fun Setting<String>.toZincJson(size: Int) = toJsonObject(size).toString()
 
 fun JsonObject.polymorphic() = buildJsonObject {
     put("value", this@polymorphic)
 }
 
-@JvmName("toJsonObject")
-fun String.toJsonObject(size: Int) = buildJsonObject {
-    put("chars", toSizedIntArray(size).toJsonArray())
-    put("size", "$length")
-}
+fun Redemption.toZincJson() = toJsonObject().toString()
 
 /**
  * Extension function for encoding a nullable ByteArray to Json
@@ -138,17 +125,6 @@ fun AbstractParty?.toJsonObject(encodedSize: Int, isAnonymous: Boolean, scheme: 
     put("inner", inner.polymorphic())
 }
 
-@JvmName("toNullableJsonObject")
-fun String?.toJsonObject(size: Int) = buildJsonObject {
-    val inner = buildJsonObject {
-        put("chars", toSizedIntArray(size).toJsonArray())
-        put("size", "${this@toJsonObject?.length ?: 0}")
-    }
-
-    put("is_null", this@toJsonObject == null)
-    put("inner", inner)
-}
-
 fun Role.toJsonObject() = buildJsonObject {
     put("value", value.toJsonObject(RoleSurrogate.VALUE_LENGTH))
 }
@@ -157,14 +133,6 @@ fun TokenDescriptor.toJsonObject() = buildJsonObject {
     put("symbol", symbol.toJsonObject(32))
     put("issuer_name", issuerName.toJsonObject())
 }
-
-@JvmName("CordaX500NameJsonObject")
-fun CordaX500Name.toJsonObject() = buildJsonObject {
-    val name = serialize(this@toJsonObject, strategy = CordaX500NameSerializer)
-    put("name", name.toJsonArray())
-}
-
-fun <T: Enum<T>> T.toJsonObject() = JsonPrimitive(this.ordinal.toString())
 
 fun Permission.toJsonObject() = buildJsonObject {
     put("value", value.toJsonObject(PermissionSurrogate.VALUE_LENGTH))
@@ -185,3 +153,6 @@ fun Setting<String>.toJsonObject(size: Int) = buildJsonObject {
     put("value", value.toJsonObject(size))
 }
 
+fun Redemption.toJsonObject() = buildJsonObject {
+
+}

@@ -10,18 +10,16 @@ import com.ing.zknotary.common.zkp.PublicInput
 import com.ing.zknotary.common.zkp.Witness
 import com.ing.zknotary.common.zkp.ZincZKService
 import com.ing.zknotary.testing.bytesToWitness
+import com.ing.zknotary.zinc.types.toJsonObject
 import com.ing.zknotary.testing.toJsonArray
-import io.kotest.matchers.shouldBe
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
 import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.contextual
 import kotlinx.serialization.modules.plus
 import net.corda.core.contracts.Amount
-import net.corda.core.crypto.SecureHash
 import org.slf4j.Logger
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -67,8 +65,6 @@ fun <T : Any> toObliviousWitness(item: T, serializersModule: SerializersModule =
     return bytesToWitness(bytes)
 }
 
-fun Class<*>.sha256(): ByteArray = SecureHash.sha256(name).copyBytes()
-
 @Serializable
 data class WrappedAmountString(
     val wrappedValue: @Contextual Amount<String>
@@ -97,24 +93,6 @@ inline fun <reified T : Any> Amount<T>.toJsonArray() =
         else -> throw IllegalArgumentException("Amount<${this.token.javaClass.simpleName}> is not supported")
     }.toJsonArray()
 
-inline fun <reified T : Any> Amount<T>.toJsonObject(
-    integerSize: Int = 24,
-    fractionSize: Int = 6,
-    tokenSize: Int = 8,
-    serializersModule: SerializersModule = EmptySerializersModule
-) = buildJsonObject {
-    val displayTokenSizeJson = displayTokenSize.toJsonObject(integerSize, fractionSize)
-    val tokenTypeHashJson = token.javaClass.sha256().toJsonArray()
-    val tokenJson = serialize(token, serializersModule = BFLSerializers + serializersModule).toJsonArray()
-
-    tokenJson.size shouldBe tokenSize
-
-    put("quantity", "$quantity")
-    put("display_token_size", displayTokenSizeJson)
-    put("token_type_hash", tokenTypeHashJson)
-    put("token", tokenJson)
-}
-
 @Serializable
 private data class WrappedBigDecimal(
     @FixedLength([24, 6])
@@ -124,28 +102,6 @@ private data class WrappedBigDecimal(
 private fun BigDecimal.wrap(): WrappedBigDecimal = WrappedBigDecimal(this)
 
 fun BigDecimal.toJsonArray() = serialize(this.wrap(), serializersModule = BFLSerializers).toJsonArray()
-
-fun BigDecimal.toJsonObject(integerSize: Int = 24, fractionSize: Int = 6) = buildJsonObject {
-    val stringRepresentation = toPlainString()
-    val integerFractionTuple = stringRepresentation.removePrefix("-").split(".")
-
-    val integer = IntArray(integerSize)
-    val startingIdx = integerSize - integerFractionTuple[0].length
-    integerFractionTuple[0].forEachIndexed { idx, char ->
-        integer[startingIdx + idx] = Character.getNumericValue(char)
-    }
-
-    val fraction = IntArray(fractionSize)
-    if (integerFractionTuple.size == 2) {
-        integerFractionTuple[1].forEachIndexed { idx, char ->
-            fraction[idx] = Character.getNumericValue(char)
-        }
-    }
-
-    put("sign", "${signum()}")
-    put("integer", integer.toJsonArray())
-    put("fraction", fraction.toJsonArray())
-}
 
 fun makeBigDecimal(bytes: ByteArray, sign: Int) = BigDecimal(BigInteger(sign, bytes))
 

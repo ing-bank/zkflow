@@ -1,6 +1,8 @@
+@file:Suppress("TooManyFunctions")
 package com.ing.zknotary.zinc.types
 
 import com.ing.serialization.bfl.api.reified.serialize
+import com.ing.serialization.bfl.serializers.BFLSerializers
 import com.ing.zknotary.common.serialization.bfl.corda.LinearPointerSurrogate
 import com.ing.zknotary.common.serialization.bfl.serializers.CordaX500NameSerializer
 import com.ing.zknotary.common.serialization.bfl.serializers.PartyAndReferenceSurrogate
@@ -12,10 +14,12 @@ import com.ing.zknotary.testing.toJsonArray
 import com.ing.zknotary.testing.toSizedIntArray
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.plus
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.AttachmentConstraint
 import net.corda.core.contracts.HashAttachmentConstraint
@@ -44,52 +48,53 @@ import java.util.Currency
 import java.util.Date
 import javax.security.auth.x500.X500Principal
 
-fun BigDecimal.toZincJson(integerSize: Int = 24, fractionSize: Int = 6) = toJsonObject(integerSize, fractionSize).toString()
-inline fun <reified T : Any> Amount<T>.toZincJson(
+public fun BigDecimal.toZincJson(integerSize: Int = 24, fractionSize: Int = 6): String = toJsonObject(integerSize, fractionSize).toString()
+public inline fun <reified T : Any> Amount<T>.toZincJson(
     integerSize: Int = 24,
     fractionSize: Int = 6,
     tokenSize: Int = 8,
     serializersModule: SerializersModule = EmptySerializersModule
-) = toJsonObject(
+): String = toJsonObject(
     integerSize, fractionSize, tokenSize, serializersModule
 ).toString()
-fun String.toZincJson(size: Int) = toJsonObject(size).toString()
-fun ByteArray.toZincJson(serializedSize: Int) = toJsonObject(serializedSize).toString()
-fun UniqueIdentifier.toZincJson() = toJsonObject().toString()
-fun LinearPointer<*>.toZincJson() = toJsonObject().toString()
-fun Instant.toZincJson() = toJsonObject().toString()
-fun Duration.toZincJson() = toJsonObject().toString()
-fun X500Principal.toZincJson() = toJsonObject().toString()
-fun Currency.toZincJson() = toJsonObject().toString()
-fun Date.toZincJson() = toJsonObject().toString()
-fun ZonedDateTime.toZincJson() = toJsonObject().toString()
-fun TimeWindow.toZincJson() = toJsonObject().toString()
-fun PrivacySalt.toZincJson() = toJsonObject().toString()
-fun SecureHash.toZincJson() = toJsonObject().toString()
-fun StateRef.toZincJson() = toJsonObject().toString()
-fun PublicKey.toZincJson(encodedSize: Int) =
+public fun String.toZincJson(size: Int): String = toJsonObject(size).toString()
+public fun <T : Enum<T>> T.toZincJson(): String = toJsonObject().toString()
+public fun ByteArray.toZincJson(serializedSize: Int): String = toJsonObject(serializedSize).toString()
+public fun UniqueIdentifier.toZincJson(): String = toJsonObject().toString()
+public fun LinearPointer<*>.toZincJson(): String = toJsonObject().toString()
+public fun Instant.toZincJson(): String = toJsonObject().toString()
+public fun Duration.toZincJson(): String = toJsonObject().toString()
+public fun X500Principal.toZincJson(): String = toJsonObject().toString()
+public fun Currency.toZincJson(): String = toJsonObject().toString()
+public fun Date.toZincJson(): String = toJsonObject().toString()
+public fun ZonedDateTime.toZincJson(): String = toJsonObject().toString()
+public fun TimeWindow.toZincJson(): String = toJsonObject().toString()
+public fun PrivacySalt.toZincJson(): String = toJsonObject().toString()
+public fun SecureHash.toZincJson(): String = toJsonObject().toString()
+public fun StateRef.toZincJson(): String = toJsonObject().toString()
+public fun PublicKey.toZincJson(encodedSize: Int): String =
     toJsonObject(encodedSize).toString()
-fun Party.toZincJson(encodedSize: Int) =
+public fun Party.toZincJson(encodedSize: Int): String =
     toJsonObject(encodedSize).toString()
-fun AnonymousParty.toZincJson(encodedSize: Int) =
+public fun AnonymousParty.toZincJson(encodedSize: Int): String =
     toJsonObject(encodedSize).toString()
-fun AbstractParty.toZincJson(encodedSize: Int) =
+public fun AbstractParty.toZincJson(encodedSize: Int): String =
     toJsonObject(encodedSize).toString()
-fun PartyAndReference.toZincJson(encodedSize: Int) =
+public fun PartyAndReference.toZincJson(encodedSize: Int): String =
     toJsonObject(encodedSize).toString()
-fun AttachmentConstraint.toZincJson(encodedSize: Int? = null) =
+public fun AttachmentConstraint.toZincJson(encodedSize: Int? = null): String =
     toJsonObject(encodedSize).toString()
-fun Issued<String>.toZincJson(encodedSize: Int) =
+public fun Issued<String>.toZincJson(encodedSize: Int): String =
     toJsonObject(encodedSize).toString()
 
 @JvmName("toJsonObject")
-fun String.toJsonObject(size: Int) = buildJsonObject {
+public fun String.toJsonObject(size: Int): JsonObject = buildJsonObject {
     put("chars", toSizedIntArray(size).toJsonArray())
     put("size", "$length")
 }
 
 @JvmName("toNullableJsonObject")
-fun String?.toJsonObject(size: Int) = buildJsonObject {
+public fun String?.toJsonObject(size: Int): JsonObject = buildJsonObject {
     val inner = buildJsonObject {
         put("chars", toSizedIntArray(size).toJsonArray())
         put("size", "${this@toJsonObject?.length ?: 0}")
@@ -99,13 +104,57 @@ fun String?.toJsonObject(size: Int) = buildJsonObject {
     put("inner", inner)
 }
 
-fun ByteArray.toJsonObject(serializedSize: Int) = buildJsonObject {
+public fun <T : Enum<T>> T.toJsonObject(): JsonPrimitive = JsonPrimitive(this.ordinal.toString())
+
+public fun ByteArray.toJsonObject(serializedSize: Int): JsonObject = buildJsonObject {
     put("size", "$size")
     put("bytes", resizeTo(serializedSize).toJsonArray())
 }
 
+public fun BigDecimal.toJsonObject(integerSize: Int = 24, fractionSize: Int = 6): JsonObject = buildJsonObject {
+    val stringRepresentation = toPlainString()
+    val integerFractionTuple = stringRepresentation.removePrefix("-").split(".")
+
+    val integer = IntArray(integerSize)
+    val startingIdx = integerSize - integerFractionTuple[0].length
+    integerFractionTuple[0].forEachIndexed { idx, char ->
+        integer[startingIdx + idx] = Character.getNumericValue(char)
+    }
+
+    val fraction = IntArray(fractionSize)
+    if (integerFractionTuple.size == 2) {
+        integerFractionTuple[1].forEachIndexed { idx, char ->
+            fraction[idx] = Character.getNumericValue(char)
+        }
+    }
+
+    put("sign", "${signum()}")
+    put("integer", integer.toJsonArray())
+    put("fraction", fraction.toJsonArray())
+}
+
+public fun Class<*>.sha256(): ByteArray = SecureHash.sha256(name).copyBytes()
+
+public inline fun <reified T : Any> Amount<T>.toJsonObject(
+    integerSize: Int = 24,
+    fractionSize: Int = 6,
+    tokenSize: Int = 8,
+    serializersModule: SerializersModule = EmptySerializersModule
+): JsonObject = buildJsonObject {
+    val displayTokenSizeJson = displayTokenSize.toJsonObject(integerSize, fractionSize)
+    val tokenTypeHashJson = token.javaClass.sha256().toJsonArray()
+    val tokenJson = serialize(token, serializersModule = BFLSerializers + serializersModule).toJsonArray()
+
+    tokenJson.size shouldBe tokenSize
+
+    put("quantity", "$quantity")
+    put("display_token_size", displayTokenSizeJson)
+    put("token_type_hash", tokenTypeHashJson)
+    put("token", tokenJson)
+}
+
 /* This method assumes that the mostSignificantBits of the id are 0 */
-fun UniqueIdentifier.toJsonObject() = buildJsonObject {
+public fun UniqueIdentifier.toJsonObject(): JsonObject = buildJsonObject {
     // input validations
     id.mostSignificantBits shouldBe 0
 
@@ -113,35 +162,35 @@ fun UniqueIdentifier.toJsonObject() = buildJsonObject {
     put("id", "${id.leastSignificantBits}")
 }
 
-fun LinearPointer<*>.toJsonObject() = buildJsonObject {
+public fun LinearPointer<*>.toJsonObject(): JsonObject = buildJsonObject {
     put("pointer", pointer.toJsonObject())
     put("class_name", type.name.toJsonObject(LinearPointerSurrogate.MAX_CLASS_NAME_SIZE))
     put("is_resolved", isResolved)
 }
 
-fun Instant.toJsonObject() = buildJsonObject {
+public fun Instant.toJsonObject(): JsonObject = buildJsonObject {
     put("seconds", "$epochSecond")
     put("nanos", "$nano")
 }
 
-fun Duration.toJsonObject() = buildJsonObject {
+public fun Duration.toJsonObject(): JsonObject = buildJsonObject {
     put("seconds", "$seconds")
     put("nanos", "$nano")
 }
 
-fun X500Principal.toJsonObject() = buildJsonObject {
+public fun X500Principal.toJsonObject(): JsonObject = buildJsonObject {
     put("name", name.toJsonObject(1024))
 }
 
-fun Currency.toJsonObject() = buildJsonObject {
+public fun Currency.toJsonObject(): JsonObject = buildJsonObject {
     put("code", currencyCode.toJsonObject(3))
 }
 
-fun Date.toJsonObject() = buildJsonObject {
+public fun Date.toJsonObject(): JsonObject = buildJsonObject {
     put("millis", "$time")
 }
 
-fun ZonedDateTime.toJsonObject() = buildJsonObject {
+public fun ZonedDateTime.toJsonObject(): JsonObject = buildJsonObject {
     val zoneIdHash = when (zone) {
         is ZoneOffset -> 0
         else -> zone.id.hashCode()
@@ -157,7 +206,7 @@ fun ZonedDateTime.toJsonObject() = buildJsonObject {
     put("zone_id_hash", "$zoneIdHash")
 }
 
-fun TimeWindow.toJsonObject() = buildJsonObject {
+public fun TimeWindow.toJsonObject(): JsonObject = buildJsonObject {
     val zero = buildJsonObject {
         put("seconds", "0")
         put("nanos", "0")
@@ -177,25 +226,25 @@ fun TimeWindow.toJsonObject() = buildJsonObject {
     put("until_time", untilTime)
 }
 
-fun PrivacySalt.toJsonObject() = buildJsonObject {
+public fun PrivacySalt.toJsonObject(): JsonObject = buildJsonObject {
     put("bytes", bytes.toJsonArray())
 }
 
-fun SecureHash.toJsonObject() = buildJsonObject {
+public fun SecureHash.toJsonObject(): JsonObject = buildJsonObject {
     put("algorithm", "${SecureHashSupportedAlgorithm.fromAlgorithm(algorithm).id}")
     put("bytes", bytes.toJsonObject(SecureHashSurrogate.BYTES_SIZE))
 }
 
-fun StateRef.toJsonObject() = buildJsonObject {
+public fun StateRef.toJsonObject(): JsonObject = buildJsonObject {
     put("hash", txhash.toJsonObject())
     put("index", "$index")
 }
 
-fun JsonObject.polymorphic() = buildJsonObject {
+public fun JsonObject.polymorphic(): JsonObject = buildJsonObject {
     put("value", this@polymorphic)
 }
 
-fun PublicKey.toJsonObject(encodedSize: Int) = buildJsonObject {
+public fun PublicKey.toJsonObject(encodedSize: Int): JsonObject = buildJsonObject {
     val scheme = Crypto.findSignatureScheme(this@toJsonObject)
     if (scheme == Crypto.ECDSA_SECP256K1_SHA256 || scheme == Crypto.ECDSA_SECP256R1_SHA256) {
         put("scheme_id", "${scheme.schemeNumberID}")
@@ -205,45 +254,45 @@ fun PublicKey.toJsonObject(encodedSize: Int) = buildJsonObject {
 }
 
 @JvmName("CordaX500NameJsonObject")
-fun CordaX500Name.toJsonObject() = buildJsonObject {
+public fun CordaX500Name.toJsonObject(): JsonObject = buildJsonObject {
     val name = serialize(this@toJsonObject, strategy = CordaX500NameSerializer)
     put("name", name.toJsonArray())
 }
 
-fun AbstractParty.toJsonObject(encodedSize: Int) = buildJsonObject {
+public fun AbstractParty.toJsonObject(encodedSize: Int): JsonObject = buildJsonObject {
     nameOrNull()?.let { put("name", it.toJsonObject()) }
     put("owning_key", owningKey.toJsonObject(encodedSize).polymorphic())
 }
 
-fun AnonymousParty.toJsonObject(encodedSize: Int) = buildJsonObject {
+public fun AnonymousParty.toJsonObject(encodedSize: Int): JsonObject = buildJsonObject {
     put("owning_key", owningKey.toJsonObject(encodedSize).polymorphic())
 }
 
-fun Party.toJsonObject(encodedSize: Int) = buildJsonObject {
+public fun Party.toJsonObject(encodedSize: Int): JsonObject = buildJsonObject {
     put("name", name.toJsonObject())
     put("owning_key", owningKey.toJsonObject(encodedSize).polymorphic())
 }
 
-fun PartyAndReference.toJsonObject(encodedSize: Int) = buildJsonObject {
+public fun PartyAndReference.toJsonObject(encodedSize: Int): JsonObject = buildJsonObject {
     put("party", party.toJsonObject(encodedSize).polymorphic())
     put("reference", reference.bytes.toJsonObject(PartyAndReferenceSurrogate.REFERENCE_SIZE))
 }
 
-fun AttachmentConstraint.toJsonObject(encodedSize: Int? = null) = when (this) {
+public fun AttachmentConstraint.toJsonObject(encodedSize: Int? = null): JsonObject = when (this) {
     is HashAttachmentConstraint -> toJsonObject()
     is SignatureAttachmentConstraint -> toJsonObject(requireNotNull(encodedSize))
     else -> buildJsonObject {}
 }
 
-fun HashAttachmentConstraint.toJsonObject() = buildJsonObject {
+public fun HashAttachmentConstraint.toJsonObject(): JsonObject = buildJsonObject {
     put("attachment_id", attachmentId.toJsonObject())
 }
 
-fun SignatureAttachmentConstraint.toJsonObject(encodedSize: Int) = buildJsonObject {
+public fun SignatureAttachmentConstraint.toJsonObject(encodedSize: Int): JsonObject = buildJsonObject {
     put("public_key", key.toJsonObject(encodedSize).polymorphic())
 }
 
-fun Issued<String>.toJsonObject(encodedSize: Int, productStringSize: Int = 1) = buildJsonObject {
+public fun Issued<String>.toJsonObject(encodedSize: Int, productStringSize: Int = 1): JsonObject = buildJsonObject {
     put("issuer", issuer.toJsonObject(encodedSize))
     put("product", product.toJsonObject(productStringSize))
 }
