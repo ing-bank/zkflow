@@ -1,8 +1,10 @@
 mod party_ed_dsa;
+mod poly_party_ed_dsa;
 
 use party_ed_dsa::PartyEdDSA;
-use party_ed_dsa::SerializedPartyEdDSA;
+use poly_party_ed_dsa::PolyPartyEdDSA;
+use poly_party_ed_dsa::SerializedPolyPartyEdDSA;
 
-fn main(witness: SerializedPartyEdDSA) -> PartyEdDSA {
-    PartyEdDSA::deserialize(witness)
+fn main(witness: SerializedPolyPartyEdDSA) -> PartyEdDSA {
+    PolyPartyEdDSA::deserialize(witness).value
 }

@@ -1,8 +1,10 @@
 mod anonymous_party_bcec;
+mod poly_anonymous_party_bcec;
 
 use anonymous_party_bcec::AnonymousPartyBCEC;
-use anonymous_party_bcec::SerializedAnonymousPartyBCEC;
+use poly_anonymous_party_bcec::PolyAnonymousPartyBCEC;
+use poly_anonymous_party_bcec::SerializedPolyAnonymousPartyBCEC;
 
-fn main(witness: SerializedAnonymousPartyBCEC) -> AnonymousPartyBCEC {
-    AnonymousPartyBCEC::deserialize(witness)
+fn main(witness: SerializedPolyAnonymousPartyBCEC) -> AnonymousPartyBCEC {
+    PolyAnonymousPartyBCEC::deserialize(witness).value
 }

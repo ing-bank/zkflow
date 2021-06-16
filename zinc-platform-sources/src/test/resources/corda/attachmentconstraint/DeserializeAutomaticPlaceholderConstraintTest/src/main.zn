@@ -1,8 +1,10 @@
 mod automatic_placeholder_constraint;
+mod poly_automatic_placeholder_constraint;
 
 use automatic_placeholder_constraint::AutomaticPlaceholderConstraint;
-use automatic_placeholder_constraint::SerializedAutomaticPlaceholderConstraint;
+use poly_automatic_placeholder_constraint::PolyAutomaticPlaceholderConstraint;
+use poly_automatic_placeholder_constraint::SerializedPolyAutomaticPlaceholderConstraint;
 
-fn main(witness: SerializedAutomaticPlaceholderConstraint) -> AutomaticPlaceholderConstraint {
-    AutomaticPlaceholderConstraint::deserialize(witness)
+fn main(witness: SerializedPolyAutomaticPlaceholderConstraint) -> AutomaticPlaceholderConstraint {
+    PolyAutomaticPlaceholderConstraint::deserialize(witness).value
 }

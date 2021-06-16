@@ -1,0 +1,59 @@
+// Input parameters:
+//   - TYPE_NAME: String = Name of the main struct, and suffix for Serialized struct, use camelcase
+//   - CONSTANT_PREFIX: String = prefix to use for constant names, use uppercase
+//   - T_TYPE_NAME: String = name of the issuer struct, and suffix for Serialized struct, use camelcase
+//   - T_CONSTANT_PREFIX: String = prefix used for constant names of the issuer, use uppercase and snakecase
+//   - T_MODULE_NAME: String = module name of the issuer, use lowercase and snakecase
+
+mod platform_serial_name;
+mod ${T_MODULE_NAME};
+
+use ${T_MODULE_NAME}::${T_TYPE_NAME};
+use ${T_MODULE_NAME}::${T_CONSTANT_PREFIX}_LENGTH;
+
+// lengths
+const ${CONSTANT_PREFIX}_SERIAL_NAME_LENGTH: u16 = platform_serial_name::SERIAL_NAME_LENGTH;
+const ${CONSTANT_PREFIX}_VALUE_LENGTH: u16 = ${T_CONSTANT_PREFIX}_LENGTH;
+
+// offsets
+const ${CONSTANT_PREFIX}_SERIAL_NAME_OFFSET: u16
+    = 0;
+const ${CONSTANT_PREFIX}_VALUE_OFFSET: u16
+    = ${CONSTANT_PREFIX}_SERIAL_NAME_OFFSET
+    + ${CONSTANT_PREFIX}_SERIAL_NAME_LENGTH;
+
+// length
+const ${CONSTANT_PREFIX}_LENGTH: u16
+    = ${CONSTANT_PREFIX}_VALUE_OFFSET
+    + ${CONSTANT_PREFIX}_VALUE_LENGTH;
+
+type Serialized${TYPE_NAME} = [u8; ${CONSTANT_PREFIX}_LENGTH];
+
+struct ${TYPE_NAME} {
+    value: ${T_TYPE_NAME},
+}
+
+impl ${TYPE_NAME} {
+    fn empty() -> ${TYPE_NAME} {
+        ${TYPE_NAME} {
+            value: ${T_TYPE_NAME}::empty(),
+        }
+    }
+
+    fn equals(this: ${TYPE_NAME}, that: ${TYPE_NAME}) -> bool {
+        ${T_TYPE_NAME}::equals(this.value, that.value)
+    }
+
+    fn deserialize(serialized: Serialized${TYPE_NAME}) -> ${TYPE_NAME} {
+        let value = {
+            let mut value_bytes = [0; ${CONSTANT_PREFIX}_VALUE_LENGTH];
+            for i in 0..${CONSTANT_PREFIX}_VALUE_LENGTH {
+                value_bytes[i] = serialized[i + ${CONSTANT_PREFIX}_VALUE_OFFSET];
+            }
+            ${T_TYPE_NAME}::deserialize(value_bytes)
+        };
+        ${TYPE_NAME} {
+            value: value,
+        }
+    }
+}

@@ -2,8 +2,8 @@ package com.ing.zknotary.gradle.zinc.template.parameters
 
 import com.ing.zknotary.gradle.zinc.template.TemplateParameters
 
-class IssuedTemplateParameters<PRD>(
-    partyTemplateParameters: AbstractPartyTemplateParameters,
+data class IssuedTemplateParameters<PRD>(
+    val partyTemplateParameters: AbstractPartyTemplateParameters,
     private val productTemplateParameters: PRD
 ) : TemplateParameters(
     "issued.zn",

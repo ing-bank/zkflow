@@ -70,10 +70,10 @@ struct ${TYPE_NAME} {
 }
 
 impl ${TYPE_NAME} {
-    fn zero() -> ${TYPE_NAME} {
+    fn empty() -> ${TYPE_NAME} {
         ${TYPE_NAME} {
             quantity: 0 as i64,
-            display_token_size: ${BD_TYPE_NAME}::zero(),
+            display_token_size: ${BD_TYPE_NAME}::empty(),
             token_type_hash: [0; ${CONSTANT_PREFIX}_TOKEN_TYPE_HASH_LENGTH],
             token: [0; ${CONSTANT_PREFIX}_TOKEN_LENGTH],
         }

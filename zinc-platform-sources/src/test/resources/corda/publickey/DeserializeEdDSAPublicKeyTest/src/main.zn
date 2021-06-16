@@ -1,8 +1,10 @@
 mod ed_dsa_public_key;
+mod poly_ed_dsa_public_key;
 
 use ed_dsa_public_key::EdDSAPublicKey;
-use ed_dsa_public_key::SerializedEdDSAPublicKey;
+use poly_ed_dsa_public_key::PolyEdDSAPublicKey;
+use poly_ed_dsa_public_key::SerializedPolyEdDSAPublicKey;
 
-fn main(witness: SerializedEdDSAPublicKey) -> EdDSAPublicKey {
-    EdDSAPublicKey::deserialize(witness)
+fn main(witness: SerializedPolyEdDSAPublicKey) -> EdDSAPublicKey {
+    PolyEdDSAPublicKey::deserialize(witness).value
 }

@@ -2,10 +2,10 @@ package com.ing.zknotary.gradle.zinc.template.parameters
 
 import com.ing.zknotary.gradle.zinc.template.TemplateParameters
 
-class OptionalTemplateParameters<T>(
-    baseTemplateFile: String = "optional.zn",
-    innerTemplateParameters: T? = null,
-    platformModuleName: String? = null,
+data class OptionalTemplateParameters<T>(
+    private val baseTemplateFile: String = "optional.zn",
+    private val innerTemplateParameters: T? = null,
+    private val platformModuleName: String? = null,
 ) : TypeWrapperTemplateParameters<T>(
     baseTemplateFile,
     innerTemplateParameters,

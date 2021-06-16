@@ -1,8 +1,10 @@
 mod whitelisted_by_zone_attachment_constraint;
+mod poly_whitelisted_by_zone_attachment_constraint;
 
 use whitelisted_by_zone_attachment_constraint::WhitelistedByZoneAttachmentConstraint;
-use whitelisted_by_zone_attachment_constraint::SerializedWhitelistedByZoneAttachmentConstraint;
+use poly_whitelisted_by_zone_attachment_constraint::PolyWhitelistedByZoneAttachmentConstraint;
+use poly_whitelisted_by_zone_attachment_constraint::SerializedPolyWhitelistedByZoneAttachmentConstraint;
 
-fn main(witness: SerializedWhitelistedByZoneAttachmentConstraint) -> WhitelistedByZoneAttachmentConstraint {
-    WhitelistedByZoneAttachmentConstraint::deserialize(witness)
+fn main(witness: SerializedPolyWhitelistedByZoneAttachmentConstraint) -> WhitelistedByZoneAttachmentConstraint {
+    PolyWhitelistedByZoneAttachmentConstraint::deserialize(witness).value
 }

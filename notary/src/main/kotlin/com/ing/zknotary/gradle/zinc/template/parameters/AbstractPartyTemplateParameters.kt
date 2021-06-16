@@ -4,19 +4,20 @@ import com.ing.zknotary.gradle.zinc.template.TemplateParameters
 
 data class AbstractPartyTemplateParameters(
     val implementationName: String,
-    val pkTemplateParameters: PublicKeyTemplateParameters
+    val polyPublicKeyParams: PolyTemplateParameters<PublicKeyTemplateParameters>
 ) : TemplateParameters(
     "${implementationName.camelToSnakeCase()}.zn",
-    listOf(
-        StringTemplateParameters(1), // the serial names of AnonymousParty, and Party, are of length 1
-        pkTemplateParameters
-    )
+    listOf(polyPublicKeyParams)
 ) {
-    private val pkTypeName by lazy { pkTemplateParameters.typeName }
-    private val algName by lazy { pkTypeName.removeSuffix("PublicKey") }
-    override val typeName by lazy { "$implementationName$algName" }
+    // Convenience constructor, to simplify configurations in the gradle plugin
+    constructor(
+        implementationName: String,
+        publicKeyParams: PublicKeyTemplateParameters
+    ) : this(implementationName, PolyTemplateParameters(publicKeyParams))
 
-    override fun getReplacements() = getTypeReplacements() + pkTemplateParameters.getTypeReplacements("PK_")
+    override val typeName by lazy { "$implementationName${polyPublicKeyParams.type.algName}" }
+
+    override fun getReplacements() = getTypeReplacements() + polyPublicKeyParams.getTypeReplacements("PK_")
 
     override fun getTargetFilename() = getFileName()
 

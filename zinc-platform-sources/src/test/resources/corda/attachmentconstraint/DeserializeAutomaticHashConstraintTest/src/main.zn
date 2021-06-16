@@ -1,8 +1,10 @@
 mod automatic_hash_constraint;
+mod poly_automatic_hash_constraint;
 
 use automatic_hash_constraint::AutomaticHashConstraint;
-use automatic_hash_constraint::SerializedAutomaticHashConstraint;
+use poly_automatic_hash_constraint::PolyAutomaticHashConstraint;
+use poly_automatic_hash_constraint::SerializedPolyAutomaticHashConstraint;
 
-fn main(witness: SerializedAutomaticHashConstraint) -> AutomaticHashConstraint {
-    AutomaticHashConstraint::deserialize(witness)
+fn main(witness: SerializedPolyAutomaticHashConstraint) -> AutomaticHashConstraint {
+    PolyAutomaticHashConstraint::deserialize(witness).value
 }

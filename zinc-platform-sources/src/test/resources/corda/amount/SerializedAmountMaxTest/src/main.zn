@@ -23,7 +23,7 @@ fn get_int(witness: [u8; WITNESS_LENGTH], start_byte: u16) -> u32 {
 fn main(witness: [u8; WITNESS_LENGTH]) -> Amount_8_BigDecimal_100_20 {
     dbg!("Witness length: {}", WITNESS_LENGTH);
     let length = get_int(witness, 0 as u16);
-    let mut amounts: [Amount_8_BigDecimal_100_20; AMOUNTS_MAX_LENGTH] = [Amount_8_BigDecimal_100_20::zero(); AMOUNTS_MAX_LENGTH];
+    let mut amounts: [Amount_8_BigDecimal_100_20; AMOUNTS_MAX_LENGTH] = [Amount_8_BigDecimal_100_20::empty(); AMOUNTS_MAX_LENGTH];
 
     let mut amount_bytes: SerializedAmount_8_BigDecimal_100_20 = [0; AMOUNT_8_BIG_DECIMAL_100_20_LENGTH];
     for i in 0..AMOUNTS_MAX_LENGTH while i as u32 < length {

@@ -2,7 +2,7 @@ package com.ing.zknotary.gradle.zinc.template.parameters
 
 import com.ing.zknotary.gradle.zinc.template.TemplateParameters
 
-open class TypeWrapperTemplateParameters<T>(
+abstract class TypeWrapperTemplateParameters<T>(
     baseTemplateFile: String,
     private val innerTemplateParameters: T? = null,
     platformModuleName: String? = null,

@@ -66,7 +66,7 @@ struct ${TYPE_NAME} {
 }
 
 impl ${TYPE_NAME} {
-    fn zero() -> ${TYPE_NAME} {
+    fn empty() -> ${TYPE_NAME} {
         ${TYPE_NAME} {
             sign: 0 as i8,
             integer: [0; ${CONSTANT_PREFIX}_INTEGER_LENGTH],
@@ -215,7 +215,7 @@ impl ${TYPE_NAME} {
     fn _handle_different_signs(this: ${TYPE_NAME}, that: ${TYPE_NAME}) -> ${TYPE_NAME} {
         let comparison = _compare_magnitude(this, that);
         if comparison == 0 as i8 {
-            zero()
+            empty()
         } else {
             let absolute_diff = if comparison == 1 as i8 {
                 _subtract_magnitude(this, that)
@@ -232,7 +232,7 @@ impl ${TYPE_NAME} {
 
     fn _handle_same_sign(this: ${TYPE_NAME}, that: ${TYPE_NAME}) -> ${TYPE_NAME} {
         if that.sign == 0 as i8 {
-            zero()
+            empty()
         } else {
             _sum_magnitude(this, that)
         }

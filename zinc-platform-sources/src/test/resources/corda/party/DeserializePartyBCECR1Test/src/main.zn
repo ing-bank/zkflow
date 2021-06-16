@@ -1,8 +1,10 @@
 mod party_bcec;
+mod poly_party_bcec;
 
 use party_bcec::PartyBCEC;
-use party_bcec::SerializedPartyBCEC;
+use poly_party_bcec::PolyPartyBCEC;
+use poly_party_bcec::SerializedPolyPartyBCEC;
 
-fn main(witness: SerializedPartyBCEC) -> PartyBCEC {
-    PartyBCEC::deserialize(witness)
+fn main(witness: SerializedPolyPartyBCEC) -> PartyBCEC {
+    PolyPartyBCEC::deserialize(witness).value
 }
