@@ -1,7 +1,7 @@
 mod party_ed_dsa;
 mod big_decimal_amount_linear_pointer;
 mod redemption_status;
-mod instant;
+mod platform_instant;
 mod string_20;
 mod unique_identifier;
 
@@ -14,8 +14,8 @@ use big_decimal_amount_linear_pointer::BIG_DECIMAL_AMOUNT_LINEAR_POINTER_LENGTH;
 use redemption_status::RedemptionStatus;
 use redemption_status::REDEMPTION_STATUS_LENGTH;
 
-use instant::Instant;
-use instant::INSTANT_LENGTH;
+use platform_instant::Instant;
+use platform_instant::INSTANT_LENGTH;
 
 use string_20::String_20;
 use string_20::STRING_20_LENGTH;
@@ -27,7 +27,7 @@ const REDEMPTION_REDEEMER_LENGTH: u16 = PARTY_ED_DSA_LENGTH;
 const REDEMPTION_CUSTODIAN_LENGTH: u16 = PARTY_ED_DSA_LENGTH;
 const REDEMPTION_TOKEN_ISSUING_ENTITY_LENGTH: u16 = PARTY_ED_DSA_LENGTH;
 const REDEMPTION_AMOUNT_LENGTH: u16 = BIG_DECIMAL_AMOUNT_LINEAR_POINTER_LENGTH;
-const REDEMPTION_STATUS_LENGTH: u16 = REDEMPTION_STATUS_LENGTH;
+// const REDEMPTION_STATUS_LENGTH: u16 = REDEMPTION_STATUS_LENGTH;
 const REDEMPTION_TIMESTAMP_LENGTH: u16 = INSTANT_LENGTH;
 const REDEMPTION_ACCOUNT_ID_LENGTH: u16 = STRING_20_LENGTH;
 const REDEMPTION_LINEAR_ID_LENGTH: u16 = UNIQUE_IDENTIFIER_LENGTH;
