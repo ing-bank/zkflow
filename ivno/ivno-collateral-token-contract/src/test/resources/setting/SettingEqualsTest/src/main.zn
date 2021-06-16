@@ -1,0 +1,7 @@
+mod setting;
+
+use setting::Setting;
+
+fn main(left: Setting, right: Setting) -> bool {
+    Setting::equals(left, right)
+}

@@ -28,7 +28,7 @@ cordapp {
 // If any of these lengths are changed in the respective Kotlin files, the relevant values shall be also updated here!!!
 zkp {
     bigDecimalConfigurations = [new BigDecimalTemplateParameters(20, 4)]
-    stringConfigurations = [20, 32]
+    stringConfigurations = [7, 20, 32]
             .collect { new StringTemplateParameters(it.shortValue()) }
     nullableConfigurations = [
             new NullableTemplateParameters(

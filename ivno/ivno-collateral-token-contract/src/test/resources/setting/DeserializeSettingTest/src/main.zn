@@ -1,0 +1,8 @@
+mod setting;
+
+use setting::Setting;
+use setting::SerializedSetting;
+
+fn main(witness: SerializedSetting) -> Setting {
+    Setting::deserialize(witness)
+}

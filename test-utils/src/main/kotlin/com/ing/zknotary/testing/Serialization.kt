@@ -16,10 +16,11 @@ import kotlinx.serialization.modules.plus
 public inline fun <reified T : Any> assertRoundTripSucceeds(
     value: T,
     serializers: SerializersModule = EmptySerializersModule,
-    strategy: KSerializer<T>? = null
+    strategy: KSerializer<T>? = null,
+    outerFixedLength: IntArray = IntArray(0)
 ): T {
-    val serialization = serialize(value, strategy, serializersModule = CordaSerializers + serializers)
-    val deserialization = deserialize<T>(serialization, strategy, serializersModule = CordaSerializers + serializers)
+    val serialization = serialize(value, strategy, serializersModule = CordaSerializers + serializers, outerFixedLength)
+    val deserialization = deserialize<T>(serialization, strategy, serializersModule = CordaSerializers + serializers, outerFixedLength)
 
     deserialization shouldBe value
     return deserialization
@@ -32,12 +33,13 @@ public inline fun <reified T : Any> assertSameSize(
     value1: T,
     value2: T,
     serializers: SerializersModule = EmptySerializersModule,
-    strategy: KSerializer<T>? = null
+    strategy: KSerializer<T>? = null,
+    outerFixedLength: IntArray = IntArray(0)
 ) {
     value1 shouldNotBe value2
 
-    val serialization1 = serialize(value1, strategy, serializersModule = CordaSerializers + serializers)
-    val serialization2 = serialize(value2, strategy, serializersModule = CordaSerializers + serializers)
+    val serialization1 = serialize(value1, strategy, serializersModule = CordaSerializers + serializers, outerFixedLength)
+    val serialization2 = serialize(value2, strategy, serializersModule = CordaSerializers + serializers, outerFixedLength)
 
     serialization1 shouldNotBe serialization2
     serialization1.size shouldBe serialization2.size
