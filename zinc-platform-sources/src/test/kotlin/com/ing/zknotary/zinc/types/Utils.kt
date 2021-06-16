@@ -10,7 +10,6 @@ import com.ing.zknotary.common.zkp.PublicInput
 import com.ing.zknotary.common.zkp.Witness
 import com.ing.zknotary.common.zkp.ZincZKService
 import com.ing.zknotary.testing.bytesToWitness
-import com.ing.zknotary.zinc.types.toJsonObject
 import com.ing.zknotary.testing.toJsonArray
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable

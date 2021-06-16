@@ -1,0 +1,8 @@
+mod redemption;
+
+use redemption::Redemption;
+use redemption::SerializedRedemption;
+
+fn main(witness: SerializedRedemption) -> Redemption {
+    Redemption::deserialize(witness)
+}

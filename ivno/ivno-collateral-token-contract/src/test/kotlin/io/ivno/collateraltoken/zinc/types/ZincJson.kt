@@ -1,6 +1,7 @@
 package io.ivno.collateraltoken.zinc.types
 
 import com.ing.zknotary.common.serialization.bfl.serializers.CordaX500NameSurrogate
+import com.ing.zknotary.common.serialization.bfl.serializers.publickey.EdDSASurrogate
 import com.ing.zknotary.testing.resizeTo
 import com.ing.zknotary.testing.toJsonArray
 import com.ing.zknotary.zinc.types.polymorphic
@@ -154,5 +155,12 @@ fun Setting<String>.toJsonObject(size: Int) = buildJsonObject {
 }
 
 fun Redemption.toJsonObject() = buildJsonObject {
-
+    put("redeemer", redeemer.toJsonObject(EdDSASurrogate.ENCODED_SIZE))
+    put("custodian", custodian.toJsonObject(EdDSASurrogate.ENCODED_SIZE))
+    put("token_issuing_entity", tokenIssuingEntity.toJsonObject(EdDSASurrogate.ENCODED_SIZE))
+    put("amount", amount.toJsonObject())
+    put("status", status.toJsonObject())
+    put("timestamp", timestamp.toJsonObject())
+    put("account_id", accountId.toJsonObject(20))
+    put("linear_id", linearId.toJsonObject())
 }
