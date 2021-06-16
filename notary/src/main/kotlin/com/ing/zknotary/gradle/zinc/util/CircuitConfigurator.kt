@@ -17,13 +17,10 @@ import java.io.File
 class CircuitConfigurator(private val outputPath: File) {
 
     @Serializable
-    data class CircuitConfiguration(val command: Command, val groups: Groups)
+    data class CircuitConfiguration(val circuit: Circuit, val groups: Groups)
 
     @Serializable
-    data class Command(
-        @SerialName("name") val name: String,
-        @SerialName("component_size") val componentSize: Int
-    )
+    data class Circuit(val name: String)
 
     @Serializable
     data class Groups(
@@ -31,6 +28,7 @@ class CircuitConfigurator(private val outputPath: File) {
         @SerialName("input_group") val inputGroup: Group = Group(),
         @SerialName("output_group") val outputGroup: Group = Group(),
         @SerialName("reference_group") val referenceGroup: Group = Group(),
+        @SerialName("command_group") val commandGroup: CommandGroup,
         @SerialName("notary_group") val notaryGroup: NullableGroup = NullableGroup(),
         @SerialName("timewindow_group") val timewindowGroup: NullableGroup = NullableGroup(),
         @SerialName("signer_group") val signerGroup: SignersGroup,
@@ -78,6 +76,18 @@ class CircuitConfigurator(private val outputPath: File) {
     }
 
     @Serializable
+    data class CommandGroup(
+        @SerialName("group_size") val groupSize: Int,
+        val commands: List<Command>
+    )
+
+    @Serializable
+    data class Command(
+        val name: String,
+        @SerialName("component_size") val componentSize: Int
+    )
+
+    @Serializable
     data class SignersGroup(
         @SerialName("signer_size") val signerSize: Int,
         @SerialName("signer_list_size") val signerListSize: Int = 1
@@ -91,8 +101,13 @@ class CircuitConfigurator(private val outputPath: File) {
     val circuitConfiguration: CircuitConfiguration
 
     init {
-        val configFileContent = outputPath.parentFile.resolve("config.json").readText()
-        circuitConfiguration = Json.decodeFromString(configFileContent)
+        val configPath = outputPath.parentFile.resolve("config.json")
+        require(configPath.exists()) { "Configuration file is expected at ${outputPath.parentFile}" }
+
+        // NOTE: decodeFromString fails silently if JSON is malformed.
+        circuitConfiguration = Json.decodeFromString(configPath.readText())
+
+        println(circuitConfiguration)
     }
 
     fun generateConstsFile() = createOutputFile(outputPath.resolve("consts.zn")).appendBytes(
@@ -109,7 +124,8 @@ const COMMAND_SIGNER_SIZE: u16 = ${circuitConfiguration.groups.signerGroup.signe
 
 // Component and UTXO sizes cannot be 0, so for not present groups use 1
 const OUTPUT_COMPONENT_SIZE: u16 = ${circuitConfiguration.groups.outputGroup.componentSize};
-const COMMAND_COMPONENT_SIZE: u16 = ${circuitConfiguration.command.componentSize};
+// A single command per circuit is currently supported.
+const COMMAND_COMPONENT_SIZE: u16 = ${circuitConfiguration.groups.commandGroup.commands[0].componentSize};
 const COMMAND_SIGNER_LIST_SIZE: u16 = ${circuitConfiguration.groups.signerGroup.signerListSize};
 
 const INPUT_UTXO_SIZE: u16 = ${circuitConfiguration.groups.inputGroup.componentSize};

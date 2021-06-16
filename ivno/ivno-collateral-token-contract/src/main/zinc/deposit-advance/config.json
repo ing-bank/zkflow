@@ -1,12 +1,18 @@
 {
-  "command" : {
-    "name": "deposit-advance",
-    "component_size" : 11
+  "circuit" : {
+    "name": "deposit-advance"
   },
   "groups" : {
     "output_group" : {
       "group_size" : 1,
       "component_size" : 1664
+    },
+    "command_group": {
+      "group_size": 1,
+      "commands": [ {
+        "name": "request",
+        "component_size": 11
+      }]
     },
     "notary_group" : {
       "group_size" : 1

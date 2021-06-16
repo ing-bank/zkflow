@@ -1,12 +1,18 @@
 {
-  "command" : {
-    "name": "create",
-    "component_size" : 11
+  "circuit" : {
+    "name": "create"
   },
   "groups" : {
     "output_group" : {
       "group_size" : 1,
       "component_size" : 1537
+    },
+    "command_group": {
+      "group_size": 1,
+      "commands": [ {
+        "name": "create",
+        "component_size": 11
+      }]
     },
     "signer_group" : {
       "signer_size": 52,

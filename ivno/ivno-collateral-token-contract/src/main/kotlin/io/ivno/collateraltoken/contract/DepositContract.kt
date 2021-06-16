@@ -123,8 +123,8 @@ class DepositContract : Contract {
 
         @Transient
         override val circuit: CircuitMetaData = CircuitMetaData.fromConfig(
-            // ${System.getProperty("user.dir")} = "ivno"
-            File("${System.getProperty("user.dir")}/ivno-collateral-token-contract/build/zinc/deposit-advance")
+            // ${System.getProperty("user.dir")} = "ivno/ivno-collateral-token-contract"
+            File("${System.getProperty("user.dir")}/build/zinc/deposit-request")
         )
     }
 
@@ -236,8 +236,8 @@ class DepositContract : Contract {
 
         @Transient
         override val circuit: CircuitMetaData = CircuitMetaData.fromConfig(
-            // ${System.getProperty("user.dir")} = "ivno"
-            File("${System.getProperty("user.dir")}/ivno-collateral-token-contract/build/zinc/deposit-request")
+            // ${System.getProperty("user.dir")} = "ivno/ivno-collateral-token-contract"
+            File("${System.getProperty("user.dir")}/build/zinc/deposit-advance")
         )
     }
 }
