@@ -1,5 +1,6 @@
 package com.ing.zknotary.gradle.extension
 
+import com.ing.zknotary.common.zkp.CircuitMetaData
 import com.ing.zknotary.gradle.zinc.template.TemplateConfigurations
 import com.ing.zknotary.gradle.zinc.template.parameters.AmountTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.BigDecimalTemplateParameters
@@ -18,6 +19,8 @@ open class ZKNotaryExtension(project: Project) : TemplateConfigurations() {
 
     companion object {
         const val NAME = "zkp"
+
+        const val CONFIG_CIRCUIT_FILE = CircuitMetaData.CONFIG_CIRCUIT_FILE
 
         private const val MERGED_CIRCUIT_BUILD_PATH = "zinc"
         private const val CIRCUIT_SOURCES_BASE_PATH = "src/main/zinc"
@@ -88,7 +91,4 @@ open class ZKNotaryExtension(project: Project) : TemplateConfigurations() {
 
     @Input
     val mainTemplate = "main_template.zn"
-
-    @Input
-    val configFileName = "config.json"
 }

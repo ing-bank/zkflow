@@ -10,8 +10,10 @@ class CircuitMetaData(
     val folder: File
 ) {
     companion object {
-        fun fromConfig(folder: File, commandPos: Int = 0): CircuitMetaData {
-            val configPath = folder.resolve("config.json")
+        const val CONFIG_CIRCUIT_FILE = "config.json"
+
+        fun fromConfig(circuitFolder: File, commandPos: Int = 0): CircuitMetaData {
+            val configPath = circuitFolder.resolve(CONFIG_CIRCUIT_FILE)
             require(configPath.exists()) {
                 "Configuration file is expected at $configPath"
             }
@@ -20,7 +22,7 @@ class CircuitMetaData(
             return CircuitMetaData(
                 config.groups.commandGroup.commands[commandPos].name,
                 mapOf(ComponentGroupEnum.SIGNERS_GROUP to config.groups.signerGroup.signerListSize),
-                folder
+                circuitFolder
             )
         }
     }

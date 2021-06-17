@@ -24,7 +24,7 @@ open class GenerateZincPlatformCodeFromTemplatesTask : DefaultTask() {
             configurator.generateConstsFile()
 
             val codeGenerator = CodeGenerator(circuitSourceOutputPath)
-            val consts = joinConstFiles(extension.circuitSourcesBasePath.resolve(circuitName), project.platformSourcesRootPath)
+            val consts = joinConstFiles(circuitSourceOutputPath, project.platformSourcesRootPath)
 
             codeGenerator.generateMerkleUtilsCode(project.getTemplateContents(extension.merkleTemplate), consts)
             codeGenerator.generateMainCode(project.getTemplateContents(extension.mainTemplate), consts)

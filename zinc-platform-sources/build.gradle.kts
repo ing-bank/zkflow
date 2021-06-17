@@ -59,7 +59,6 @@ val circuitSourcesBase = File("$root/circuits")
 val mergedCircuitOutput = File("$root/build/circuits")
 
 val circuits = circuitSourcesBase.listFiles { file, _ -> file?.isDirectory ?: false }?.map { it.name }
-val configFileName = "config.json"
 
 task("prepareCircuits", JavaExec::class) {
     inputs.dir(projectDir.resolve("src/main/resources"))
@@ -67,7 +66,7 @@ task("prepareCircuits", JavaExec::class) {
     outputs.dir(mergedCircuitOutput)
     main = "PrepareCircuitsKt"
     classpath = sourceSets["main"].runtimeClasspath
-    args(root, project.version, configFileName)
+    args(root, project.version)
 }
 
 task("circuits") {

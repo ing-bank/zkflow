@@ -29,8 +29,8 @@ class CircuitConfigurator(private val outputPath: File) {
         @SerialName("output_group") val outputGroup: Group = Group(),
         @SerialName("reference_group") val referenceGroup: Group = Group(),
         @SerialName("command_group") val commandGroup: CommandGroup,
-        @SerialName("notary_group") val notaryGroup: NullableGroup = NullableGroup(),
-        @SerialName("timewindow_group") val timewindowGroup: NullableGroup = NullableGroup(),
+        @SerialName("notary_group") val notaryGroup: FixedComponentSizeGroup = FixedComponentSizeGroup(),
+        @SerialName("timewindow_group") val timewindowGroup: FixedComponentSizeGroup = FixedComponentSizeGroup(),
         @SerialName("signer_group") val signerGroup: SignersGroup,
     )
 
@@ -94,7 +94,10 @@ class CircuitConfigurator(private val outputPath: File) {
     )
 
     @Serializable
-    data class NullableGroup(
+    /** For some groups `component_size`, such as NotaryGroup and TimeWindowGroup, is fixed.
+     This class describes this case.
+     */
+    data class FixedComponentSizeGroup(
         @SerialName("group_size") val groupSize: Int = 0
     )
 
@@ -107,7 +110,9 @@ class CircuitConfigurator(private val outputPath: File) {
         // NOTE: decodeFromString fails silently if JSON is malformed.
         circuitConfiguration = Json.decodeFromString(configPath.readText())
 
-        println(circuitConfiguration)
+        require(circuitConfiguration.groups.commandGroup.commands.size == 1) {
+            "Only a single command per circuit is supported FOR NOW"
+        }
     }
 
     fun generateConstsFile() = createOutputFile(outputPath.resolve("consts.zn")).appendBytes(
@@ -125,7 +130,8 @@ const COMMAND_SIGNER_SIZE: u16 = ${circuitConfiguration.groups.signerGroup.signe
 // Component and UTXO sizes cannot be 0, so for not present groups use 1
 const OUTPUT_COMPONENT_SIZE: u16 = ${circuitConfiguration.groups.outputGroup.componentSize};
 // A single command per circuit is currently supported.
-const COMMAND_COMPONENT_SIZE: u16 = ${circuitConfiguration.groups.commandGroup.commands[0].componentSize};
+// TODO: Support for multiple commands is to be implemented.
+const COMMAND_COMPONENT_SIZE: u16 = ${circuitConfiguration.groups.commandGroup.commands.single().componentSize};
 const COMMAND_SIGNER_LIST_SIZE: u16 = ${circuitConfiguration.groups.signerGroup.signerListSize};
 
 const INPUT_UTXO_SIZE: u16 = ${circuitConfiguration.groups.inputGroup.componentSize};

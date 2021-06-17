@@ -1,4 +1,5 @@
 
+import com.ing.zknotary.gradle.extension.ZKNotaryExtension
 import com.ing.zknotary.gradle.task.joinConstFiles
 import com.ing.zknotary.gradle.zinc.template.TemplateConfigurations
 import com.ing.zknotary.gradle.zinc.template.TemplateConfigurations.Companion.doubleTemplateParameters
@@ -60,7 +61,6 @@ fun main(args: Array<String>) {
 
     val root = args[0]
     val projectVersion = args[1]
-    val configFileName = args[2]
 
     val circuitSourcesBase = File("$root/circuits")
     val mergedCircuitOutput = File("$root/build/circuits")
@@ -73,7 +73,7 @@ fun main(args: Array<String>) {
 
         // Copy Zinc sources
         val copier = ZincSourcesCopier(outputPath)
-        copier.copyZincCircuitSources(circuitSourcesPath, circuitName, projectVersion, configFileName)
+        copier.copyZincCircuitSources(circuitSourcesPath, circuitName, projectVersion, ZKNotaryExtension.CONFIG_CIRCUIT_FILE)
         copier.copyZincPlatformSources(getPlatformSources(root))
         copier.copyZincPlatformSources(getPlatformLibs(root))
 

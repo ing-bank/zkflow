@@ -13,7 +13,7 @@ class ZincSourcesCopier(private val outputPath: File) {
         )
 
         outputPath.walk().filter { file ->
-            file.name.contains("config.json")
+            file.name.contains(configFileName)
         }.forEach { configFile ->
             val replacedConfigFile = createOutputFile(outputPath.parentFile.resolve(configFileName))
             replacedConfigFile.writeText(configFile.readText())
