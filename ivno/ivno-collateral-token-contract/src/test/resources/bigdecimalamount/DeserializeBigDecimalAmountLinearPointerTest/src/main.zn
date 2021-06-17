@@ -1,0 +1,8 @@
+mod big_decimal_amount_linear_pointer;
+
+use big_decimal_amount_linear_pointer::BigDecimalAmountLinearPointer;
+use big_decimal_amount_linear_pointer::SerializedBigDecimalAmountLinearPointer;
+
+fn main(witness: SerializedBigDecimalAmountLinearPointer) -> BigDecimalAmountLinearPointer {
+    BigDecimalAmountLinearPointer::deserialize(witness)
+}

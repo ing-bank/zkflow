@@ -1,0 +1,7 @@
+mod redemption;
+
+use redemption::Redemption;
+
+fn main(left: Redemption, right: Redemption) -> bool {
+    Redemption::equals(left, right)
+}

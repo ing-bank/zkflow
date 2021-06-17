@@ -3,8 +3,8 @@ package io.ivno.collateraltoken.zinc.types.depositstatus
 import com.ing.zknotary.common.zkp.ZincZKService
 import com.ing.zknotary.testing.DeserializationTestBase
 import com.ing.zknotary.testing.getZincZKService
+import com.ing.zknotary.zinc.types.toZincJson
 import io.ivno.collateraltoken.contract.DepositStatus
-import io.ivno.collateraltoken.zinc.types.toZincJson
 
 class DeserializeDepositStatusTest :
     DeserializationTestBase<DeserializeDepositStatusTest, DepositStatus>(

@@ -1,7 +1,11 @@
 package io.ivno.collateraltoken.contract
 
+import com.ing.serialization.bfl.annotations.FixedLength
+import com.ing.serialization.bfl.serializers.BigDecimalSizes
 import io.dasl.contracts.v1.token.BigDecimalAmount
 import io.ivno.collateraltoken.contract.RedemptionSchema.RedemptionSchemaV1
+import kotlinx.serialization.Contextual
+import kotlinx.serialization.Serializable
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.LinearPointer
 import net.corda.core.contracts.LinearState
@@ -28,16 +32,24 @@ import java.time.Instant
  * @property participants A list of [AbstractParty] for which this state is relevant.
  */
 @BelongsToContract(RedemptionContract::class)
+@Serializable
 data class Redemption internal constructor(
-    val redeemer: Party,
-    val custodian: Party,
-    val tokenIssuingEntity: Party,
-    val amount: BigDecimalAmount<LinearPointer<IvnoTokenType>>,
+    val redeemer: @Contextual Party,
+    val custodian: @Contextual Party,
+    val tokenIssuingEntity: @Contextual Party,
+    @BigDecimalSizes([AMOUNT_INT_LENGTH, AMOUNT_FRAC_LENGTH])
+    val amount: @Contextual BigDecimalAmount<@Contextual LinearPointer<@Contextual IvnoTokenType>>,
     val status: RedemptionStatus,
-    val timestamp: Instant,
+    val timestamp: @Contextual Instant,
+    @FixedLength([ACCOUNT_ID_LENGTH])
     val accountId: String,
-    override val linearId: UniqueIdentifier
+    override val linearId: @Contextual UniqueIdentifier
 ) : LinearState, QueryableState {
+    companion object {
+        const val AMOUNT_INT_LENGTH = 20
+        const val AMOUNT_FRAC_LENGTH = 4
+        const val ACCOUNT_ID_LENGTH = 20
+    }
 
     constructor(
         redeemer: Party,

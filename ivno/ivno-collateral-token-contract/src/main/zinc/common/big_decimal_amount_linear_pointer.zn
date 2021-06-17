@@ -1,0 +1,72 @@
+mod big_decimal_20_4;
+mod linear_pointer;
+
+use big_decimal_20_4::BigDecimal_20_4;
+use big_decimal_20_4::BIG_DECIMAL_20_4_LENGTH;
+
+use linear_pointer::LinearPointer;
+use linear_pointer::LINEAR_POINTER_LENGTH;
+
+const BIG_DECIMAL_AMOUNT_LINEAR_POINTER_QUANTITY_LENGTH: u16 = BIG_DECIMAL_20_4_LENGTH;
+const BIG_DECIMAL_AMOUNT_LINEAR_POINTER_TOKEN_LENGTH: u16 = LINEAR_POINTER_LENGTH;
+
+const BIG_DECIMAL_AMOUNT_LINEAR_POINTER_QUANTITY_OFFSET: u16 = 0;
+const BIG_DECIMAL_AMOUNT_LINEAR_POINTER_TOKEN_OFFSET: u16
+    = BIG_DECIMAL_AMOUNT_LINEAR_POINTER_QUANTITY_OFFSET
+    + BIG_DECIMAL_AMOUNT_LINEAR_POINTER_QUANTITY_LENGTH;
+
+
+const BIG_DECIMAL_AMOUNT_LINEAR_POINTER_LENGTH: u16
+    = BIG_DECIMAL_AMOUNT_LINEAR_POINTER_TOKEN_OFFSET
+    + BIG_DECIMAL_AMOUNT_LINEAR_POINTER_TOKEN_LENGTH;
+
+
+type SerializedBigDecimalAmountLinearPointer = [u8; BIG_DECIMAL_AMOUNT_LINEAR_POINTER_LENGTH];
+
+struct BigDecimalAmountLinearPointer {
+    quantity: BigDecimal_20_4,
+    token: LinearPointer,
+}
+
+impl BigDecimalAmountLinearPointer {
+    fn new(quantity: BigDecimal_20_4, token: LinearPointer) -> BigDecimalAmountLinearPointer {
+        BigDecimalAmountLinearPointer {
+            quantity: quantity,
+            token: token,
+        }
+    }
+
+    fn empty() -> BigDecimalAmountLinearPointer {
+        BigDecimalAmountLinearPointer {
+            quantity: BigDecimal_20_4::empty(),
+            token: LinearPointer::empty()
+        }
+    }
+
+    fn equals(this: BigDecimalAmountLinearPointer, that: BigDecimalAmountLinearPointer) -> bool {
+        (BigDecimal_20_4::equals(this.quantity, that.quantity))
+            && (LinearPointer::equals(this.token, that.token))
+    }
+
+    fn deserialize(serialized: SerializedBigDecimalAmountLinearPointer) -> BigDecimalAmountLinearPointer {
+        let quantity: BigDecimal_20_4 = {
+            let mut quantity_bytes: [u8; BIG_DECIMAL_AMOUNT_LINEAR_POINTER_QUANTITY_LENGTH] = [0; BIG_DECIMAL_AMOUNT_LINEAR_POINTER_QUANTITY_LENGTH];
+            for i in 0..BIG_DECIMAL_AMOUNT_LINEAR_POINTER_QUANTITY_LENGTH {
+                quantity_bytes[i] = serialized[i + BIG_DECIMAL_AMOUNT_LINEAR_POINTER_QUANTITY_OFFSET];
+            }
+            BigDecimal_20_4::deserialize(quantity_bytes)
+        };
+        let token: LinearPointer = {
+            let mut token_bytes: [u8; BIG_DECIMAL_AMOUNT_LINEAR_POINTER_TOKEN_LENGTH] = [0; BIG_DECIMAL_AMOUNT_LINEAR_POINTER_TOKEN_LENGTH];
+            for i in 0..BIG_DECIMAL_AMOUNT_LINEAR_POINTER_TOKEN_LENGTH {
+                token_bytes[i] = serialized[i + BIG_DECIMAL_AMOUNT_LINEAR_POINTER_TOKEN_OFFSET];
+            }
+            LinearPointer::deserialize(token_bytes)
+        };
+
+        BigDecimalAmountLinearPointer {
+            quantity: quantity,
+            token: token,
+        }
+    }
+}
