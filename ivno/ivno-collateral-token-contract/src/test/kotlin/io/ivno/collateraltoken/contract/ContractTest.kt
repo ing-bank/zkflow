@@ -242,7 +242,7 @@ abstract class ContractTest {
     ): StateAndRef<Deposit> {
         val label = SecureHash.randomSHA256().toString()
 
-        transaction {
+        zkTransaction {
             val memberships = createAllMemberships()
             reference(memberships.membershipFor(BANK_A).ref)
             reference(memberships.membershipFor(CUSTODIAN).ref)
@@ -265,7 +265,7 @@ abstract class ContractTest {
     ): StateAndRef<Deposit> {
         val label = SecureHash.randomSHA256().toString()
 
-        transaction {
+        zkTransaction {
             val memberships = createAllMemberships()
             reference(memberships.membershipFor(BANK_A).ref)
             reference(memberships.membershipFor(CUSTODIAN).ref)
@@ -289,7 +289,7 @@ abstract class ContractTest {
     ): StateAndRef<Deposit> {
         val label = SecureHash.randomSHA256().toString()
 
-        transaction {
+        zkTransaction {
             val memberships = createAllMemberships()
             reference(memberships.membershipFor(BANK_A).ref)
             reference(memberships.membershipFor(CUSTODIAN).ref)
@@ -307,6 +307,8 @@ abstract class ContractTest {
         return retrieveOutputStateAndRef(Deposit::class.java, label)
     }
 
+    // FIXME: This transaction has multiple commands.
+    //  Do they (all) need to be private (ZKP)?
     fun LedgerDSL<TestTransactionDSLInterpreter, TestLedgerDSLInterpreter>.acceptDepositPayment(
         deposit: StateAndRef<Deposit>,
         tokenType: StateAndRef<IvnoTokenType>

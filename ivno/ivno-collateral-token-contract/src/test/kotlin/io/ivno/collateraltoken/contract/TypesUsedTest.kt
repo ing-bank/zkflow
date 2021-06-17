@@ -1,5 +1,9 @@
 package io.ivno.collateraltoken.contract
 
+import io.dasl.contracts.v1.crud.CrudCommands
+import io.dasl.contracts.v1.token.TokenContract
+import io.dasl.contracts.v1.token.TokenTransactionSummary
+import io.dasl.contracts.v1.token.TokenTypeState
 import io.onixlabs.corda.bnms.contract.membership.Membership
 import io.onixlabs.corda.bnms.contract.membership.MembershipAttestation
 import io.onixlabs.corda.bnms.contract.membership.MembershipAttestationContract
@@ -27,7 +31,10 @@ class TypesUsedTest {
             RedemptionContract::class,
             TransferContract::class,
             MembershipContract::class,
-            MembershipAttestationContract::class
+            MembershipAttestationContract::class,
+            IvnoTokenTypeContract::class,
+            TokenContract::class,
+            TokenTransactionSummary::class
         )
             .withSuperClasses()
             .withNestedCommandClasses()
@@ -37,7 +44,10 @@ class TypesUsedTest {
             Redemption::class,
             Transfer::class,
             Membership::class,
-            MembershipAttestation::class
+            MembershipAttestation::class,
+            IvnoTokenType::class,
+            TokenTypeState::class,
+            TokenTransactionSummary.State::class
         )
             .withSuperClasses()
             .withNestedCommandClasses()
@@ -51,7 +61,12 @@ class TypesUsedTest {
             TransferContract.Request::class,
             MembershipContract.Revoke::class,
             MembershipContract.Amend::class,
-            MembershipContract.Issue::class
+            MembershipContract.Issue::class,
+            CrudCommands.Create::class,
+            CrudCommands.Update::class,
+            TokenContract.Command.Issue::class,
+            TokenContract.Command.Move::class,
+            TokenContract.Command.Redeem::class
         )
             .withSuperClasses()
             .withNestedCommandClasses()
