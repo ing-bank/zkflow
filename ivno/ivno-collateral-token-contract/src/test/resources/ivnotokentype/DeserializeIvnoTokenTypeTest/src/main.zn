@@ -1,0 +1,8 @@
+mod ivno_token_type;
+
+use ivno_token_type::IvnoTokenType;
+use ivno_token_type::SerializedIvnoTokenType;
+
+fn main(witness: SerializedIvnoTokenType) -> IvnoTokenType {
+    IvnoTokenType::deserialize(witness)
+}

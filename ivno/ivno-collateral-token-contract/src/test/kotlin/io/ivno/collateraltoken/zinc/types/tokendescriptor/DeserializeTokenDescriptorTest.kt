@@ -4,14 +4,11 @@ import com.ing.zknotary.common.zkp.ZincZKService
 import com.ing.zknotary.testing.DeserializationTestBase
 import com.ing.zknotary.testing.getZincZKService
 import io.dasl.contracts.v1.token.TokenDescriptor
-import io.ivno.collateraltoken.serialization.RoleSerializer
-import io.ivno.collateraltoken.serialization.TokenDescriptorSerializer
+import io.ivno.collateraltoken.serialization.IvnoSerializers
 import io.ivno.collateraltoken.zinc.types.toZincJson
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.modules.SerializersModule
-import kotlinx.serialization.modules.contextual
 import net.corda.core.identity.CordaX500Name
 
 class DeserializeTokenDescriptorTest :
@@ -21,7 +18,7 @@ DeserializationTestBase<DeserializeTokenDescriptorTest, DeserializeTokenDescript
     override fun getZincZKService(): ZincZKService = getZincZKService<DeserializeTokenDescriptorTest>()
 
     @ExperimentalSerializationApi
-    override fun getSerializersModule() = SerializersModule { contextual(TokenDescriptorSerializer) }
+    override fun getSerializersModule() = IvnoSerializers.serializersModule
 
     @Serializable
     data class Data(val data: @Contextual TokenDescriptor)

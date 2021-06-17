@@ -10,6 +10,7 @@ import io.dasl.contracts.v1.token.BigDecimalAmount
 import io.dasl.contracts.v1.token.TokenDescriptor
 import io.ivno.collateraltoken.contract.IvnoTokenType
 import io.ivno.collateraltoken.contract.Redemption
+import io.ivno.collateraltoken.serialization.IvnoTokenTypeSurrogate
 import io.ivno.collateraltoken.serialization.NetworkSurrogate
 import io.ivno.collateraltoken.serialization.PermissionSurrogate
 import io.ivno.collateraltoken.serialization.RoleSurrogate
@@ -18,7 +19,6 @@ import io.onixlabs.corda.bnms.contract.Network
 import io.onixlabs.corda.bnms.contract.Permission
 import io.onixlabs.corda.bnms.contract.Role
 import io.onixlabs.corda.bnms.contract.Setting
-import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import net.corda.core.contracts.LinearPointer
@@ -33,14 +33,25 @@ fun Permission.toZincJson() = toJsonObject().toString()
 fun BigDecimalAmount<LinearPointer<IvnoTokenType>>.toZincJson() = toJsonObject().toString()
 fun Network.toZincJson(encodedSize: Int, isAnonymous: Boolean, scheme: SignatureScheme) =
     toJsonObject(encodedSize, isAnonymous, scheme).toString()
-
 fun Setting<String>.toZincJson(size: Int) = toJsonObject(size).toString()
-
-fun JsonObject.polymorphic() = buildJsonObject {
-    put("value", this@polymorphic)
-}
-
 fun Redemption.toZincJson() = toJsonObject().toString()
+fun IvnoTokenType.toZincJson(
+    networkEncodedSize: Int,
+    isAnonymous: Boolean,
+    networkScheme: SignatureScheme,
+    custodianEncodedSize: Int,
+    custodianScheme: SignatureScheme,
+    tokenIssuingEntityEncodedSize: Int,
+    tokenIssuingEntityScheme: SignatureScheme
+) = toJsonObject(
+    networkEncodedSize,
+    isAnonymous,
+    networkScheme,
+    custodianEncodedSize,
+    custodianScheme,
+    tokenIssuingEntityEncodedSize,
+    tokenIssuingEntityScheme,
+).toString()
 
 /**
  * Extension function for encoding a nullable ByteArray to Json
@@ -95,10 +106,11 @@ fun PublicKey?.toJsonObject(encodedSize: Int, scheme: SignatureScheme, isEmpty: 
  * @param isAnonymous Boolean flag indicating the implementation class of the abstract party (useful in the case of a
  * null abstract party)
  * @param scheme The signature scheme of the owning key (useful in the case of a null abstract party)
+ * @param isEmpty Boolean flag indicating whether the nullability wrapper will be applied on the Json structure
  *
  * @return the JsonObject of the abstract party
  */
-fun AbstractParty?.toJsonObject(encodedSize: Int, isAnonymous: Boolean, scheme: SignatureScheme) = buildJsonObject {
+fun AbstractParty?.toJsonObject(encodedSize: Int, isAnonymous: Boolean, scheme: SignatureScheme, isEmpty: Boolean = true) = buildJsonObject {
     // In the null case there is no way to know the intended implementation class. Given the fact that the empty
     // serialization of AnonymousParty differs from the one for Party (due to the CordaX500Name name property),
     // we need to know somehow which empty version to encode to Json. Thus, the 'isAnonymous' flag is used.
@@ -122,6 +134,7 @@ fun AbstractParty?.toJsonObject(encodedSize: Int, isAnonymous: Boolean, scheme: 
         )
     }
 
+    if (isEmpty) return@toJsonObject inner
     put("is_null", this@toJsonObject == null)
     put("inner", inner.polymorphic())
 }
@@ -146,7 +159,7 @@ fun BigDecimalAmount<LinearPointer<IvnoTokenType>>.toJsonObject() = buildJsonObj
 
 fun Network.toJsonObject(encodedSize: Int, isAnonymous: Boolean, scheme: SignatureScheme) = buildJsonObject {
     put("value", value.toJsonObject(NetworkSurrogate.VALUE_LENGTH))
-    put("operator", operator.toJsonObject(encodedSize, isAnonymous, scheme))
+    put("operator", operator.toJsonObject(encodedSize, isAnonymous, scheme, false))
 }
 
 fun Setting<String>.toJsonObject(size: Int) = buildJsonObject {
@@ -162,5 +175,23 @@ fun Redemption.toJsonObject() = buildJsonObject {
     put("status", status.toJsonObject())
     put("timestamp", timestamp.toJsonObject())
     put("account_id", accountId.toJsonObject(20))
+    put("linear_id", linearId.toJsonObject())
+}
+
+
+fun IvnoTokenType.toJsonObject(
+    networkEncodedSize: Int,
+    isAnonymous: Boolean,
+    networkScheme: SignatureScheme,
+    custodianEncodedSize: Int,
+    custodianScheme: SignatureScheme,
+    tokenIssuingEntityEncodedSize: Int,
+    tokenIssuingEntityScheme: SignatureScheme,
+) = buildJsonObject {
+    put("network", network.toJsonObject(networkEncodedSize, isAnonymous, networkScheme))
+    put("custodian", custodian.toJsonObject(custodianEncodedSize, false, custodianScheme))
+    put("token_issuing_entity", tokenIssuingEntity.toJsonObject(tokenIssuingEntityEncodedSize, false, tokenIssuingEntityScheme))
+    put("display_name", displayName.toJsonObject(IvnoTokenTypeSurrogate.DISPLAY_NAME_LENGTH))
+    put("fraction_digits", "$fractionDigits")
     put("linear_id", linearId.toJsonObject())
 }
