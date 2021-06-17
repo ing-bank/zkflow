@@ -23,6 +23,8 @@ import io.onixlabs.corda.bnms.contract.Network
 import io.onixlabs.corda.bnms.contract.Permission
 import io.onixlabs.corda.bnms.contract.Role
 import io.onixlabs.corda.bnms.contract.Setting
+import io.onixlabs.corda.identityframework.contract.AbstractClaim
+import io.onixlabs.corda.identityframework.contract.Claim
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import net.corda.core.contracts.LinearPointer
@@ -59,6 +61,8 @@ fun IvnoTokenType.toZincJson(
 fun Deposit.toZincJson() = toJsonObject().toString()
 fun Transfer.toZincJson() = toJsonObject().toString()
 fun AccountAddress.toZincJson() = toJsonObject().toString()
+fun AbstractClaim<String>.toZincJson(propertyLength: Int, valueLength: Int) =
+    toJsonObject(propertyLength, valueLength).toString()
 
 /**
  * Extension function for encoding a nullable ByteArray to Json
@@ -229,4 +233,14 @@ fun Transfer.toJsonObject() = buildJsonObject {
 fun AccountAddress.toJsonObject() = buildJsonObject {
     put("account_id", accountId.toJsonObject(AccountAddressSurrogate.ACCOUNT_ID_LENGTH))
     put("party", party.toJsonObject())
+}
+
+fun AbstractClaim<String>.toJsonObject(propertyLength: Int, valueLength: Int) = when (this) {
+    is Claim<String> -> this.toJsonObject(propertyLength, valueLength).polymorphic()
+    else -> TODO("Json encoding is not supported yet for ${this::class}")
+}
+
+fun Claim<String>.toJsonObject(propertyLength: Int, valueLength: Int) = buildJsonObject {
+    put("property", property.toJsonObject(propertyLength))
+    put("value", value.toJsonObject(valueLength))
 }

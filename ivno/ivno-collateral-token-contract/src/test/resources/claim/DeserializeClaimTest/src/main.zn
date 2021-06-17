@@ -1,0 +1,8 @@
+mod poly_claim;
+
+use poly_claim::PolyClaim;
+use poly_claim::SerializedPolyClaim;
+
+fn main(witness: SerializedPolyClaim) -> PolyClaim {
+    PolyClaim::deserialize(witness)
+}

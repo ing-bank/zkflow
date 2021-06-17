@@ -1,0 +1,46 @@
+mod platform_serial_name;
+mod claim;
+
+use claim::Claim;
+use claim::CLAIM_LENGTH;
+
+// lengths
+const POLY_CLAIM_SERIAL_NAME_LENGTH: u16 = platform_serial_name::SERIAL_NAME_LENGTH;
+const POLY_CLAIM_VALUE_LENGTH: u16 = CLAIM_LENGTH;
+
+// offsets
+const POLY_CLAIM_SERIAL_NAME_OFFSET: u16
+    = 0;
+const POLY_CLAIM_VALUE_OFFSET: u16
+    = POLY_CLAIM_SERIAL_NAME_OFFSET
+    + POLY_CLAIM_SERIAL_NAME_LENGTH;
+
+// length
+const POLY_CLAIM_LENGTH: u16
+    = POLY_CLAIM_VALUE_OFFSET
+    + POLY_CLAIM_VALUE_LENGTH;
+
+type SerializedPolyClaim = [u8; POLY_CLAIM_LENGTH];
+
+struct PolyClaim {
+    value: Claim,
+}
+
+impl PolyClaim {
+    fn equals(this: PolyClaim, that: PolyClaim) -> bool {
+        Claim::equals(this.value, that.value)
+    }
+
+    fn deserialize(serialized: SerializedPolyClaim) -> PolyClaim {
+        let value = {
+            let mut value_bytes = [0; POLY_CLAIM_VALUE_LENGTH];
+            for i in 0..POLY_CLAIM_VALUE_LENGTH {
+                value_bytes[i] = serialized[i + POLY_CLAIM_VALUE_OFFSET];
+            }
+            Claim::deserialize(value_bytes)
+        };
+        PolyClaim {
+            value: value,
+        }
+    }
+}

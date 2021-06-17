@@ -7,8 +7,13 @@ import io.ivno.collateraltoken.contract.IvnoTokenType
 import io.ivno.collateraltoken.contract.Redemption
 import io.ivno.collateraltoken.contract.Transfer
 import io.ivno.collateraltoken.contract.TransferInitiator
+import io.onixlabs.corda.identityframework.contract.AbstractClaim
+import io.onixlabs.corda.identityframework.contract.Claim
 import net.corda.core.contracts.LinearPointer
+import net.corda.core.contracts.StateRef
 import net.corda.core.contracts.UniqueIdentifier
+import net.corda.core.crypto.SecureHash
+import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.Party
 import net.corda.testing.core.TestIdentity
@@ -28,6 +33,9 @@ val uuid = randomUUID()
 val anotherUuid = generateDifferentValueThan(uuid) {
     randomUUID()
 }
+
+val stateRef = StateRef(SecureHash.zeroHash, 1)
+val anotherStateRef = StateRef(SecureHash.allOnesHash, 1)
 
 val amount: BigDecimalAmount<LinearPointer<IvnoTokenType>> = BigDecimalAmount(
     42, LinearPointer(UniqueIdentifier(id = uuid), IvnoTokenType::class.java)
@@ -85,3 +93,20 @@ val transferWithDifferentAmountType = transfer.copy(amount = amountWithDifferent
 val transferWithDifferentCurrentAccountId = transfer.copy(currentTokenHolderAccountId = "another-current")
 val transferWithDifferentTargetAccountId = transfer.copy(targetTokenHolderAccountId = "another-target")
 val transferWithDifferentLinearId = transfer.copy(linearId = UniqueIdentifier(id = anotherUuid))
+
+val abstractClaimWithString : AbstractClaim<String> = Claim("Property 1", "Value 1")
+val claimWithString = abstractClaimWithString as Claim<String>
+val anotherAbstractClaimWithString : AbstractClaim<String> = Claim("Property 2", "Value 2")
+val anotherClaimWithString = anotherAbstractClaimWithString as Claim<String>
+val abstractClaimWithInt : AbstractClaim<Int> = Claim("Property 1", 1)
+val claimWithInt = abstractClaimWithInt as Claim<Int>
+val anotherAbstractClaimWithInt : AbstractClaim<Int> = Claim("Property 2", 2)
+val anotherClaimWithInt = anotherAbstractClaimWithInt as Claim<Int>
+val abstractClaimWithContextual : AbstractClaim<StateRef> = Claim("Property 1", stateRef)
+val claimWithContextual = abstractClaimWithContextual as Claim<StateRef>
+val anotherAbstractClaimWithContextual : AbstractClaim<StateRef> = Claim("Property 2", anotherStateRef)
+val anotherClaimWithContextual = anotherAbstractClaimWithContextual as Claim<StateRef>
+val abstractClaimWithPolymorphic : AbstractClaim<AbstractParty> = Claim("Property 1", party)
+val claimWithPolymorphic = abstractClaimWithPolymorphic as Claim<AbstractParty>
+val anotherAbstractClaimWithPolymorphic : AbstractClaim<AbstractParty> = Claim("Property 2", anotherParty)
+val anotherClaimWithPolymorphic = anotherAbstractClaimWithPolymorphic as Claim<AbstractParty>

@@ -1,0 +1,7 @@
+mod claim;
+
+use claim::Claim;
+
+fn main(left: Claim, right: Claim) -> bool {
+    Claim::equals(left, right)
+}

@@ -33,13 +33,13 @@ class ClaimSerializer<T: Any>(valueSerializer: KSerializer<T>) :
 @Serializable
 @SerialName("n")
 data class StringSurrogate(
-    @FixedLength([PROPERTY_LENGTH])
+    @FixedLength([VALUE_LENGTH])
     val value: String,
 ) : Surrogate<String> {
     override fun toOriginal() = value
 
     companion object {
-        const val PROPERTY_LENGTH = 7
+        const val VALUE_LENGTH = 7
     }
 }
 

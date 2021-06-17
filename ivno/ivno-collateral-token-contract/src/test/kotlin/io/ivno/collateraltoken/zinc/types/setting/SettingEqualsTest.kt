@@ -18,7 +18,7 @@ class SettingEqualsTest {
 
     @ParameterizedTest
     @MethodSource("testData")
-    fun `different network should not be equal`(testPair: Pair<Setting<String>, Setting<String>>) {
+    fun `different setting should not be equal`(testPair: Pair<Setting<String>, Setting<String>>) {
         performEqualityTest(testPair.first, testPair.second, false)
     }
 
