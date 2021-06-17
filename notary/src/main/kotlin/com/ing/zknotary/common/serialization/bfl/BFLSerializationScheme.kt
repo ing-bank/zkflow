@@ -90,7 +90,7 @@ open class BFLSerializationScheme : CustomSerializationScheme {
                 ) as T
             }
 
-            else -> com.ing.serialization.bfl.api.deserialize(
+            else -> obliviousDeserialize(
                 serializedData,
                 clazz,
                 serializersModule = serializersModule
@@ -149,8 +149,8 @@ open class BFLSerializationScheme : CustomSerializationScheme {
                 val circuitMetaData = context.properties[CONTEXT_KEY_CIRCUIT] as? CircuitMetaData
                     ?: error("Context must specify circuit meta data")
 
-                val signersFixedLength = circuitMetaData.componentGroupSizes[ComponentGroupEnum.SIGNERS_GROUP]
-                    ?: error("Max number of signers must be an integer value")
+                val signersFixedLength = circuitMetaData.componentGroupSizes?.get(ComponentGroupEnum.SIGNERS_GROUP)
+                    ?: error("[${circuitMetaData.name}] Max number of signers must be an integer value")
 
                 informedSerialize(
                     signers,

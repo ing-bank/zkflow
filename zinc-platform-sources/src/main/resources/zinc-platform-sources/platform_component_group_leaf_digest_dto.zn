@@ -1,11 +1,10 @@
 mod platform_consts;
 
-use std::convert::to_bits;
 use platform_consts::BYTE_BITS;
-use std::convert::from_bits_unsigned;
-
 use platform_consts::COMPONENT_GROUP_LEAF_DIGEST_BITS;
 use platform_consts::COMPONENT_GROUP_LEAF_DIGEST_BYTES;
+use std::convert::from_bits_unsigned;
+use std::convert::to_bits;
 
 type ComponentGroupLeafDigestBytes = [u8; COMPONENT_GROUP_LEAF_DIGEST_BYTES];
 type ComponentGroupLeafDigestBits = [bool; COMPONENT_GROUP_LEAF_DIGEST_BITS];

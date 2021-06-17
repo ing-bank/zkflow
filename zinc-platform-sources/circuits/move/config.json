@@ -1,0 +1,32 @@
+{
+  "circuit" : {
+    "name": "move"
+  },
+  "groups" : {
+    "input_group" : {
+      "group_size" : 1,
+      "component_size" : 1537
+    },
+    "output_group" : {
+      "group_size" : 1,
+      "component_size" : 1537
+    },
+    "command_group": {
+      "group_size": 1,
+      "commands": [ {
+        "name": "move",
+        "component_size": 11
+      }]
+    },
+    "notary_group" : {
+      "group_size" : 1
+    },
+    "timewindow_group" : {
+      "group_size" : 1
+    },
+    "signer_group" : {
+      "signer_size": 52,
+      "signer_list_size": 2
+    }
+  }
+}

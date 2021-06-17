@@ -1,0 +1,28 @@
+{
+  "circuit" : {
+    "name": "deposit-request"
+  },
+  "groups" : {
+    "output_group" : {
+      "group_size" : 1,
+      "component_size" : 1664
+    },
+    "command_group": {
+      "group_size": 1,
+      "commands": [ {
+        "name": "request",
+        "component_size": 11
+      }]
+    },
+    "notary_group" : {
+      "group_size" : 1
+    },
+    "timewindow_group" : {
+      "group_size" : 1
+    },
+    "signer_group" : {
+      "signer_size": 63,
+      "signer_list_size": 1
+    }
+  }
+}

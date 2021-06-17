@@ -1,3 +1,5 @@
+
+import com.ing.zknotary.gradle.extension.ZKNotaryExtension
 import com.ing.zknotary.gradle.task.joinConstFiles
 import com.ing.zknotary.gradle.zinc.template.TemplateConfigurations
 import com.ing.zknotary.gradle.zinc.template.TemplateConfigurations.Companion.doubleTemplateParameters
@@ -13,6 +15,7 @@ import com.ing.zknotary.gradle.zinc.template.parameters.NullableTemplateParamete
 import com.ing.zknotary.gradle.zinc.template.parameters.OptionalTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.PublicKeyTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.StringTemplateParameters
+import com.ing.zknotary.gradle.zinc.util.CircuitConfigurator
 import com.ing.zknotary.gradle.zinc.util.CodeGenerator
 import com.ing.zknotary.gradle.zinc.util.MerkleReplacer
 import com.ing.zknotary.gradle.zinc.util.ZincSourcesCopier
@@ -70,11 +73,15 @@ fun main(args: Array<String>) {
 
         // Copy Zinc sources
         val copier = ZincSourcesCopier(outputPath)
-        copier.copyZincCircuitSources(circuitSourcesPath, circuitName, projectVersion)
+        copier.copyZincCircuitSources(circuitSourcesPath, circuitName, projectVersion, ZKNotaryExtension.CONFIG_CIRCUIT_FILE)
         copier.copyZincPlatformSources(getPlatformSources(root))
         copier.copyZincPlatformSources(getPlatformLibs(root))
 
-        val consts = joinConstFiles(circuitSourcesPath, getPlatformSourcesPath(root))
+        // Read the configuration
+        val configurator = CircuitConfigurator(outputPath)
+        configurator.generateConstsFile()
+
+        val consts = joinConstFiles(outputPath, getPlatformSourcesPath(root))
 
         // Render templates
         val templateRenderer = TemplateRenderer(outputPath.toPath()) {

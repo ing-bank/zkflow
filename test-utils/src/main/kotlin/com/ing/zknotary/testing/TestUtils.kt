@@ -32,7 +32,7 @@ public fun TestIdentity.Companion.fixed(
 }
 
 public inline fun <reified T : Any> getZincZKService(
-    buildTimeout: Duration = Duration.ofSeconds(5),
+    buildTimeout: Duration = Duration.ofSeconds(20),
     setupTimeout: Duration = Duration.ofSeconds(300),
     provingTimeout: Duration = Duration.ofSeconds(300),
     verificationTimeout: Duration = Duration.ofSeconds(1)

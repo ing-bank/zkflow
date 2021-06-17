@@ -3,9 +3,9 @@ package com.ing.zknotary.zinc.transaction
 import com.ing.zknotary.common.crypto.zinc
 import com.ing.zknotary.common.serialization.bfl.BFLSerializationScheme
 import com.ing.zknotary.common.transactions.UtxoInfo
-import com.ing.zknotary.common.transactions.ZKVerifierTransaction
 import com.ing.zknotary.common.zkp.PublicInput
 import com.ing.zknotary.common.zkp.Witness
+import com.ing.zknotary.common.zkp.ZKNulls
 import com.ing.zknotary.common.zkp.ZincZKService
 import com.ing.zknotary.testing.fixtures.contract.TestContract
 import com.ing.zknotary.zinc.types.proveTimed
@@ -43,6 +43,7 @@ import kotlin.time.ExperimentalTime
 @Tag("slow")
 class TransactionVerificationTest {
     private val log = loggerFor<TransactionVerificationTest>()
+    private val runOnly = true
 
     private val createCircuitFolder: String = File("build/circuits/create").absolutePath
     private val moveCircuitFolder: String = File("build/circuits/move").absolutePath
@@ -68,8 +69,10 @@ class TransactionVerificationTest {
     private val notary = TestIdentity.fresh("Notary").party
 
     init {
-        createZKService.setupTimed(log)
-        moveZKService.setupTimed(log)
+        if (!runOnly) {
+            createZKService.setupTimed(log)
+            moveZKService.setupTimed(log)
+        }
     }
 
     @AfterAll
@@ -100,38 +103,40 @@ class TransactionVerificationTest {
      */
     @Test
     fun `zinc verifies full create transaction`() = withCustomSerializationEnv {
-        val alice = TestIdentity.fresh("Alice").party
-        val bob = TestIdentity.fresh("Blob").party
+        val alice = ZKNulls.NULL_ANONYMOUS_PARTY
 
-        val additionalSerializationProperties =
+        val additionalSerializationPropertiesForCreate =
             mapOf<Any, Any>(BFLSerializationScheme.CONTEXT_KEY_CIRCUIT to TestContract.Create().circuit)
 
         // Create TX
-
+        val createState = TestContract.TestState(alice, value = 88)
         val createWtx = createWtx(
-            outputs = listOf(StateAndContract(TestContract.TestState(alice.anonymise()), TestContract.PROGRAM_ID)),
+            outputs = listOf(StateAndContract(createState, TestContract.PROGRAM_ID)),
             commands = listOf(Command(TestContract.Create(), alice.owningKey)),
-            additionalSerializationProperties = additionalSerializationProperties
+            additionalSerializationProperties = additionalSerializationPropertiesForCreate
         )
 
-        val witness = Witness.fromWireTransaction(
+        val createWitness = Witness.fromWireTransaction(
             wtx = createWtx,
             emptyList(), emptyList()
         )
 
-        val publicInput = PublicInput(
+        val createPublicInput = PublicInput(
             transactionId = createWtx.id,
             inputHashes = emptyList(),
             referenceHashes = emptyList()
         )
 
-        createZKService.run(witness, publicInput)
+        createZKService.run(createWitness, createPublicInput)
 
-        val proof = createZKService.proveTimed(witness, log)
-        createZKService.verifyTimed(proof, publicInput, log)
+        if (!runOnly) {
+            val createProof = createZKService.proveTimed(createWitness, log)
+            createZKService.verifyTimed(createProof, createPublicInput, log)
+        }
 
         // Move TX
 
+        val bob = ZKNulls.NULL_ANONYMOUS_PARTY
         val additionalSerializationPropertiesForMove =
             mapOf<Any, Any>(BFLSerializationScheme.CONTEXT_KEY_CIRCUIT to TestContract.Move().circuit)
 
@@ -139,12 +144,16 @@ class TransactionVerificationTest {
         val serializedUtxo = createWtx.componentGroups.single { it.groupIndex == ComponentGroupEnum.OUTPUTS_GROUP.ordinal }.components[0]
         val nonce = createWtx.buildFilteredTransaction { true }
             .filteredComponentGroups.single { it.groupIndex == ComponentGroupEnum.OUTPUTS_GROUP.ordinal }
-            .nonces[0]
-        val inputHash = ZKVerifierTransaction.fromWireTransaction(createWtx, proof).outputHashes.single()
+            .nonces.first()
+        val inputHash = createWtx.componentGroups
+            .single { it.groupIndex == ComponentGroupEnum.OUTPUTS_GROUP.ordinal }.components.first().run {
+                createWtx.digestService.componentHash(nonce, this)
+            }
 
+        val moveState = TestContract.TestState(bob, value = createState.value)
         val moveWtx = createWtx(
             inputs = listOf(utxo.ref),
-            outputs = listOf(StateAndContract(TestContract.TestState(bob.anonymise()), TestContract.PROGRAM_ID)),
+            outputs = listOf(StateAndContract(moveState, TestContract.PROGRAM_ID)),
             commands = listOf(Command(TestContract.Move(), listOf(alice.owningKey, bob.owningKey))),
             additionalSerializationProperties = additionalSerializationPropertiesForMove
         )
@@ -163,8 +172,10 @@ class TransactionVerificationTest {
 
         moveZKService.run(moveWitness, movePublicInput)
 
-        val moveProof = moveZKService.proveTimed(moveWitness, log)
-        moveZKService.verifyTimed(moveProof, movePublicInput, log)
+        if (!runOnly) {
+            val moveProof = moveZKService.proveTimed(moveWitness, log)
+            moveZKService.verifyTimed(moveProof, movePublicInput, log)
+        }
     }
 
     @Suppress("LongParameterList")

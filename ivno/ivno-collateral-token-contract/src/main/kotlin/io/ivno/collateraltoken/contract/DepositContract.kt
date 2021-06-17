@@ -17,6 +17,8 @@ import net.corda.core.transactions.LedgerTransaction
 import java.io.File
 import java.math.BigDecimal
 import java.security.PublicKey
+import net.corda.core.contracts.ComponentGroupEnum
+
 
 class DepositContract : Contract {
 
@@ -120,9 +122,9 @@ class DepositContract : Contract {
         }
 
         @Transient
-        override val circuit: CircuitMetaData = CircuitMetaData(
-            // This is just some EXISTING circuit.
-            File("/tmp")
+        override val circuit: CircuitMetaData = CircuitMetaData.fromConfig(
+            // ${System.getProperty("user.dir")} = "ivno/ivno-collateral-token-contract"
+            File("${System.getProperty("user.dir")}/build/zinc/deposit-request")
         )
     }
 
@@ -233,9 +235,9 @@ class DepositContract : Contract {
         }
 
         @Transient
-        override val circuit: CircuitMetaData = CircuitMetaData(
-            // This is just some EXISTING circuit.
-            File("/tmp")
+        override val circuit: CircuitMetaData = CircuitMetaData.fromConfig(
+            // ${System.getProperty("user.dir")} = "ivno/ivno-collateral-token-contract"
+            File("${System.getProperty("user.dir")}/build/zinc/deposit-advance")
         )
     }
 }

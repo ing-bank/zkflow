@@ -6,7 +6,6 @@ import com.ing.zknotary.node.services.getLongFromConfig
 import com.ing.zknotary.node.services.getStringFromConfig
 import net.corda.core.node.AppServiceHub
 import net.corda.core.node.services.CordaService
-import java.io.File
 import java.time.Duration
 
 @CordaService
@@ -28,15 +27,23 @@ class ZincZKTransactionService(services: AppServiceHub) : ZKTransactionCordaServ
 
         val commands: List<ZKCommandData> = commandClasses.map { Class.forName(it).getConstructor().newInstance() as ZKCommandData }
 
-        zkServices = commands.map {
+        zkServices = commands.associateWith {
 
-            val circuitFolder = it.circuit.folder
-            val artifactFolder = File(circuitFolder, "artifacts")
+            val circuitFolder =
+                it.circuit.folder ?: error("Circuit folder has not been specified for ${it.circuit.name}")
+            val artifactFolder = circuitFolder.resolve("artifacts")
 
-            val zkService = ZincZKService(circuitFolder.absolutePath, artifactFolder.absolutePath, buildTimeout, setupTimeout, provingTimeout, verificationTimeout)
+            val zkService = ZincZKService(
+                circuitFolder.absolutePath,
+                artifactFolder.absolutePath,
+                buildTimeout,
+                setupTimeout,
+                provingTimeout,
+                verificationTimeout
+            )
 
-            it to zkService
-        }.toMap()
+            zkService
+        }
     }
 
     override fun zkServiceForCommand(command: ZKCommandData): ZKService {

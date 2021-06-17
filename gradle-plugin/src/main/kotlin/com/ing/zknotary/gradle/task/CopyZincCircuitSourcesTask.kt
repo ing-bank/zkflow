@@ -1,5 +1,6 @@
 package com.ing.zknotary.gradle.task
 
+import com.ing.zknotary.gradle.extension.ZKNotaryExtension
 import com.ing.zknotary.gradle.plugin.circuitNames
 import com.ing.zknotary.gradle.plugin.zincCommonFolderName
 import com.ing.zknotary.gradle.plugin.zkNotaryExtension
@@ -15,13 +16,14 @@ open class CopyZincCircuitSourcesTask : DefaultTask() {
         val commonFolderName = project.zincCommonFolderName
 
         project.circuitNames?.forEach { circuitName ->
-            val copier = ZincSourcesCopier(extension.mergedCircuitOutputPath.resolve(circuitName).resolve("src"))
+            val circuitSourceOutputPath = extension.mergedCircuitOutputPath.resolve(circuitName).resolve("src")
+            val copier = ZincSourcesCopier(circuitSourceOutputPath)
 
             listOfNotNull(
                 circuitName,
                 commonFolderName,
             ).forEach {
-                copier.copyZincCircuitSources(extension.circuitSourcesBasePath.resolve(it), it, project.version.toString())
+                copier.copyZincCircuitSources(extension.circuitSourcesBasePath.resolve(it), it, project.version.toString(), ZKNotaryExtension.CONFIG_CIRCUIT_FILE)
             }
         }
     }

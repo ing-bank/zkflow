@@ -5,11 +5,20 @@ import java.nio.ByteBuffer
 
 class ZincSourcesCopier(private val outputPath: File) {
 
-    fun copyZincCircuitSources(circuitSources: File, circuitName: String, version: String) {
+    fun copyZincCircuitSources(circuitSources: File, circuitName: String, version: String, configFileName: String) {
+
         circuitSources.copyRecursively(
             createOutputFile(outputPath),
             overwrite = true
         )
+
+        outputPath.walk().filter { file ->
+            file.name.contains(configFileName)
+        }.forEach { configFile ->
+            val replacedConfigFile = createOutputFile(outputPath.parentFile.resolve(configFileName))
+            replacedConfigFile.writeText(configFile.readText())
+            configFile.delete()
+        }
 
         createOutputFile(outputPath.parentFile.resolve("Zargo.toml")).apply {
             if (!exists()) createNewFile()

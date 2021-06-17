@@ -1,22 +1,29 @@
 package com.ing.zknotary.common.zkp
 
+import com.ing.zknotary.gradle.zinc.util.CircuitConfigurator
 import net.corda.core.contracts.ComponentGroupEnum
 import java.io.File
 
-data class CircuitMetaData(
-    val folder: File,
-
-    /**
-     * Hard-bounds on length of component groups.
-     * If an enum variant is absent, no bound is present.
-     */
-    val componentGroupSizes: Map<ComponentGroupEnum, Int> = mapOf(
-        // TODO these values must be generated from the respective Zinc circuit. For now, hard-code it.
-        ComponentGroupEnum.SIGNERS_GROUP to 2
-    )
-
+class CircuitMetaData(
+    val name: String,
+    val componentGroupSizes: Map<ComponentGroupEnum, Int>,
+    val folder: File
 ) {
-    init {
-        require(folder.exists())
+    companion object {
+        const val CONFIG_CIRCUIT_FILE = "config.json"
+
+        fun fromConfig(circuitFolder: File, commandPos: Int = 0): CircuitMetaData {
+            val configPath = circuitFolder.resolve(CONFIG_CIRCUIT_FILE)
+            require(configPath.exists()) {
+                "Configuration file is expected at $configPath"
+            }
+            val config = CircuitConfigurator(configPath).circuitConfiguration
+
+            return CircuitMetaData(
+                config.groups.commandGroup.commands[commandPos].name,
+                mapOf(ComponentGroupEnum.SIGNERS_GROUP to config.groups.signerGroup.signerListSize),
+                circuitFolder
+            )
+        }
     }
 }

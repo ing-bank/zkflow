@@ -29,6 +29,10 @@ open class CreateZincDirectoriesForInputCommandTask : DefaultTask() {
     @TaskAction
     fun createZincDirectoriesForInputCommand() {
         val extension = project.zkNotaryExtension
+        // Create folder for states
+        extension.circuitSourcesBasePath.resolve(extension.statesSourcesPath).mkdir()
+
+        // Create folder for the input command
         project.copy { copy ->
             copy.into(extension.circuitSourcesBasePath.resolve(commandName))
             copy.from(project.platformSamples).eachFile {

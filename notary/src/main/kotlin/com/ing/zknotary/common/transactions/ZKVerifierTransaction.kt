@@ -115,12 +115,11 @@ class ZKVerifierTransaction(
 
         private fun outputHashes(wtx: WireTransaction, ftx: FilteredTransaction): List<SecureHash> {
             val nonces = ftx.filteredComponentGroups.find { it.groupIndex == ComponentGroupEnum.OUTPUTS_GROUP.ordinal }!!.nonces
-            return wtx.componentGroups.find { it.groupIndex == ComponentGroupEnum.OUTPUTS_GROUP.ordinal }!!.components.mapIndexed { componentIndex, component ->
-                wtx.digestService.componentHash(
-                    nonces[componentIndex],
-                    component
-                )
-            }
+            return wtx.componentGroups
+                .find { it.groupIndex == ComponentGroupEnum.OUTPUTS_GROUP.ordinal }!!
+                .components.mapIndexed { componentIndex, component ->
+                    wtx.digestService.componentHash(nonces[componentIndex], component)
+                }
         }
     }
 }
