@@ -13,11 +13,7 @@ class CircuitMetaData(
         const val CONFIG_CIRCUIT_FILE = "config.json"
 
         fun fromConfig(circuitFolder: File, commandPos: Int = 0): CircuitMetaData {
-            val configPath = circuitFolder.resolve(CONFIG_CIRCUIT_FILE)
-            require(configPath.exists()) {
-                "Configuration file is expected at $configPath"
-            }
-            val config = CircuitConfigurator(configPath).circuitConfiguration
+            val config = CircuitConfigurator(circuitFolder, CONFIG_CIRCUIT_FILE).circuitConfiguration
 
             return CircuitMetaData(
                 config.groups.commandGroup.commands[commandPos].name,

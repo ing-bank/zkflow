@@ -58,7 +58,6 @@ val templateConfigurations = TemplateConfigurations().apply {
 }
 
 fun main(args: Array<String>) {
-
     val root = args[0]
     val projectVersion = args[1]
 
@@ -78,8 +77,8 @@ fun main(args: Array<String>) {
         copier.copyZincPlatformSources(getPlatformLibs(root))
 
         // Read the configuration
-        val configurator = CircuitConfigurator(outputPath)
-        configurator.generateConstsFile()
+        val configurator = CircuitConfigurator(circuitSourcesPath, ZKNotaryExtension.CONFIG_CIRCUIT_FILE)
+        configurator.generateConstsFile(outputPath)
 
         val consts = joinConstFiles(outputPath, getPlatformSourcesPath(root))
 

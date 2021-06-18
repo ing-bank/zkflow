@@ -69,7 +69,7 @@ public class TestContract : Contract {
         @Transient
         override val circuit: CircuitMetaData = CircuitMetaData.fromConfig(
             // ${System.getProperty("user.dir")} = "notary"
-            File("${System.getProperty("user.dir")}/../zinc-platform-sources/build/circuits/create")
+            File("${System.getProperty("user.dir")}/../zinc-platform-sources/circuits/create")
         )
 
         public companion object {
@@ -108,7 +108,7 @@ public class TestContract : Contract {
         @Transient
         override val circuit: CircuitMetaData = CircuitMetaData.fromConfig(
             // ${System.getProperty("user.dir")} = "notary"
-            File("${System.getProperty("user.dir")}/../zinc-platform-sources/build/circuits/move")
+            File("${System.getProperty("user.dir")}/../zinc-platform-sources/circuits/move")
         )
 
         public companion object {

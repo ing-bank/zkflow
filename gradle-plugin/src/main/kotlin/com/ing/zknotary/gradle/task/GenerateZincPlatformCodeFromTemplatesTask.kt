@@ -1,5 +1,6 @@
 package com.ing.zknotary.gradle.task
 
+import com.ing.zknotary.gradle.extension.ZKNotaryExtension
 import com.ing.zknotary.gradle.plugin.circuitNames
 import com.ing.zknotary.gradle.plugin.getTemplateContents
 import com.ing.zknotary.gradle.plugin.platformSourcesRootPath
@@ -17,11 +18,13 @@ open class GenerateZincPlatformCodeFromTemplatesTask : DefaultTask() {
         val extension = project.zkNotaryExtension
 
         project.circuitNames?.forEach { circuitName ->
+            val circuitSources = extension.circuitSourcesBasePath.resolve(circuitName)
+            val configurator = CircuitConfigurator(circuitSources, ZKNotaryExtension.CONFIG_CIRCUIT_FILE)
+
             val circuitSourceOutputPath = extension.mergedCircuitOutputPath.resolve(circuitName).resolve("src")
-            val configurator = CircuitConfigurator(circuitSourceOutputPath)
 
             // Generate consts file
-            configurator.generateConstsFile()
+            configurator.generateConstsFile(circuitSourceOutputPath)
 
             val codeGenerator = CodeGenerator(circuitSourceOutputPath)
             val consts = joinConstFiles(circuitSourceOutputPath, project.platformSourcesRootPath)

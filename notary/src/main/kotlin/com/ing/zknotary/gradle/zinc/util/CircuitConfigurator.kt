@@ -14,8 +14,10 @@ import kotlinx.serialization.encoding.decodeStructure
 import kotlinx.serialization.json.Json
 import java.io.File
 
-class CircuitConfigurator(private val outputPath: File) {
-
+class CircuitConfigurator(
+    circuitSources: File,
+    configFileName: String
+) {
     @Serializable
     data class CircuitConfiguration(val circuit: Circuit, val groups: Groups)
 
@@ -104,8 +106,8 @@ class CircuitConfigurator(private val outputPath: File) {
     val circuitConfiguration: CircuitConfiguration
 
     init {
-        val configPath = outputPath.parentFile.resolve("config.json")
-        require(configPath.exists()) { "Configuration file is expected at ${outputPath.parentFile}" }
+        val configPath = circuitSources.resolve(configFileName)
+        require(configPath.exists()) { "Configuration file is expected at $configPath" }
 
         // NOTE: decodeFromString fails silently if JSON is malformed.
         circuitConfiguration = Json.decodeFromString(configPath.readText())
@@ -115,7 +117,7 @@ class CircuitConfigurator(private val outputPath: File) {
         }
     }
 
-    fun generateConstsFile() = createOutputFile(outputPath.resolve("consts.zn")).appendBytes(
+    fun generateConstsFile(outputPath: File) = createOutputFile(outputPath.resolve("consts.zn")).appendBytes(
         """
 const ATTACHMENT_GROUP_SIZE: u16 = ${circuitConfiguration.groups.attachmentGroup.groupSize};
 const INPUT_GROUP_SIZE: u16 = ${circuitConfiguration.groups.inputGroup.groupSize};
