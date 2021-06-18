@@ -4,14 +4,12 @@ import com.ing.zknotary.common.serialization.bfl.serializers.publickey.EdDSASurr
 import com.ing.zknotary.common.zkp.ZincZKService
 import com.ing.zknotary.testing.DeserializationTestBase
 import com.ing.zknotary.testing.getZincZKService
-import io.ivno.collateraltoken.serialization.NetworkSerializer
+import io.ivno.collateraltoken.serialization.IvnoSerializers
 import io.ivno.collateraltoken.zinc.types.toZincJson
 import io.onixlabs.corda.bnms.contract.Network
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.modules.SerializersModule
-import kotlinx.serialization.modules.contextual
 import net.corda.core.crypto.Crypto
 import net.corda.testing.core.TestIdentity
 
@@ -28,7 +26,7 @@ class DeserializeNetworkTest :
     override fun getZincZKService(): ZincZKService = getZincZKService<DeserializeNetworkTest>()
 
     @ExperimentalSerializationApi
-    override fun getSerializersModule() = SerializersModule { contextual(NetworkSerializer) }
+    override fun getSerializersModule() = IvnoSerializers.serializersModule
 
     @Serializable
     data class Data(val data: @Contextual Network)

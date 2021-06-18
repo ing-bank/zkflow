@@ -5,8 +5,6 @@ import com.ing.zknotary.testing.assertSameSize
 import io.onixlabs.corda.bnms.contract.Network
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.modules.SerializersModule
-import kotlinx.serialization.modules.contextual
 import net.corda.testing.core.TestIdentity
 import org.junit.jupiter.api.Test
 
@@ -24,7 +22,7 @@ class NetworkSerializerTest {
         operator = TestIdentity.fresh("Bob").party.anonymise()
     )
 
-    private val serializersModule = SerializersModule { contextual(NetworkSerializer) }
+    private val serializersModule = IvnoSerializers.serializersModule
 
     @Test
     fun `serialize and deserialize Network directly`() {

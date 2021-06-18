@@ -1,0 +1,7 @@
+mod ivno_token_type;
+
+use ivno_token_type::IvnoTokenType;
+
+fn main(left: IvnoTokenType, right: IvnoTokenType) -> bool {
+    IvnoTokenType::equals(left, right)
+}
