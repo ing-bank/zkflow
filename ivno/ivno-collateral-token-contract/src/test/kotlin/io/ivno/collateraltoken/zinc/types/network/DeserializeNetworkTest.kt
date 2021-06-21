@@ -5,13 +5,13 @@ import com.ing.zknotary.common.zkp.ZincZKService
 import com.ing.zknotary.testing.DeserializationTestBase
 import com.ing.zknotary.testing.getZincZKService
 import io.ivno.collateraltoken.serialization.IvnoSerializers
+import io.ivno.collateraltoken.zinc.types.network
 import io.ivno.collateraltoken.zinc.types.toZincJson
 import io.onixlabs.corda.bnms.contract.Network
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import net.corda.core.crypto.Crypto
-import net.corda.testing.core.TestIdentity
 
 class DeserializeNetworkTest :
     DeserializationTestBase<DeserializeNetworkTest, DeserializeNetworkTest.Data>(
@@ -34,12 +34,7 @@ class DeserializeNetworkTest :
     companion object {
         @JvmStatic
         fun testData() = listOf(
-            Data(
-                Network(
-                    value = "Network 1",
-                    operator = TestIdentity.fresh("Alice").party
-                )
-            ),
+            Data(network),
         )
     }
 }

@@ -27,6 +27,12 @@ struct PolyClaimString_7 {
 }
 
 impl PolyClaimString_7 {
+    fn empty() -> PolyClaimString_7 {
+        PolyClaimString_7 {
+            value: ClaimString_7::empty(),
+        }
+    }
+
     fn equals(this: PolyClaimString_7, that: PolyClaimString_7) -> bool {
         ClaimString_7::equals(this.value, that.value)
     }

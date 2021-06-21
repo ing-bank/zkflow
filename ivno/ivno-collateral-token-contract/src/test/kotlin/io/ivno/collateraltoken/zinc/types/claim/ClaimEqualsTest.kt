@@ -31,11 +31,11 @@ class ClaimEqualsTest {
         val witness = buildJsonObject {
             put(
                 "left",
-                left.toJsonObject(ClaimSurrogate.PROPERTY_LENGTH, VALUE_LENGTH)
+                left.toJsonObject(ClaimSurrogate.PROPERTY_LENGTH, VALUE_LENGTH, false)
             )
             put(
                 "right",
-                right.toJsonObject(ClaimSurrogate.PROPERTY_LENGTH, VALUE_LENGTH)
+                right.toJsonObject(ClaimSurrogate.PROPERTY_LENGTH, VALUE_LENGTH, false)
             )
         }.toString()
 

@@ -26,6 +26,13 @@ struct ClaimString_7 {
 }
 
 impl ClaimString_7 {
+    fn empty() -> ClaimString_7 {
+        ClaimString_7 {
+            property: String_20::empty(),
+            value: String_7::empty(),
+        }
+    }
+
     fn equals(this: ClaimString_7, that: ClaimString_7) -> bool {
         String_20::equals(this.property, that.property)
             && String_7::equals(this.value, that.value)

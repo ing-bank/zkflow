@@ -1,0 +1,90 @@
+mod platform_consts;
+mod platform_integer;
+mod poly_claim_string_7;
+
+use platform_consts::U32_BYTES;
+
+use poly_claim_string_7::PolyClaimString_7;
+use poly_claim_string_7::POLY_CLAIM_STRING_7_LENGTH;
+
+const POLY_CLAIM_STRING_7_COLLECTION_2_SIZE_LENGTH: u16 = U32_BYTES;
+const POLY_CLAIM_STRING_7_COLLECTION_2_ELEMENTS_LENGTH: u16 = POLY_CLAIM_STRING_7_LENGTH * 2 as u16;
+
+const POLY_CLAIM_STRING_7_COLLECTION_2_SIZE_OFFSET: u16 = 0;
+const POLY_CLAIM_STRING_7_COLLECTION_2_ELEMENTS_OFFSET: u16
+    = POLY_CLAIM_STRING_7_COLLECTION_2_SIZE_OFFSET
+    + POLY_CLAIM_STRING_7_COLLECTION_2_SIZE_LENGTH;
+const POLY_CLAIM_STRING_7_COLLECTION_2_LENGTH: u16
+    = POLY_CLAIM_STRING_7_COLLECTION_2_ELEMENTS_OFFSET
+    + POLY_CLAIM_STRING_7_COLLECTION_2_ELEMENTS_LENGTH;
+
+type SerializedPolyClaimString_7_Collection_2 = [u8; POLY_CLAIM_STRING_7_COLLECTION_2_LENGTH];
+
+struct PolyClaimString_7_Collection_2 {
+    size: u32,
+    elements: [PolyClaimString_7; 2],
+}
+
+impl PolyClaimString_7_Collection_2 {
+    fn empty() -> PolyClaimString_7_Collection_2 {
+        PolyClaimString_7_Collection_2 {
+            size: 0 as u32,
+            elements: [PolyClaimString_7::empty(); 2],
+        }
+    }
+
+    fn equals(this: PolyClaimString_7_Collection_2, that: PolyClaimString_7_Collection_2) -> bool {
+        let mut still_equal = this.size == that.size;
+        for i in 0..2 while still_equal && i as u32 < this.size {
+            still_equal = PolyClaimString_7::equals(this.elements[i], that.elements[i]);
+        }
+        still_equal
+    }
+
+    fn contains(this: PolyClaimString_7_Collection_2, value: PolyClaimString_7) -> bool {
+        let mut found = false;
+        for i in 0..2 while !found && i as u32 < this.size {
+            found = PolyClaimString_7::equals(this.elements[i], value);
+        }
+        found
+    }
+
+    fn is_subset(this: PolyClaimString_7_Collection_2, that: PolyClaimString_7_Collection_2) -> bool {
+        let mut still_subset = this.size <= that.size;
+        for i in 0..2 while still_subset && i as u32 < this.size {
+            still_subset = contains(that, this.elements[i]);
+        }
+        still_subset
+    }
+
+    fn set_equals(this: PolyClaimString_7_Collection_2, that: PolyClaimString_7_Collection_2) -> bool {
+        is_subset(this, that) && is_subset(that, this)
+    }
+
+    fn deserialize(serialized: SerializedPolyClaimString_7_Collection_2) -> PolyClaimString_7_Collection_2 {
+        let size = {
+            let mut size_bytes = [0; POLY_CLAIM_STRING_7_COLLECTION_2_SIZE_LENGTH];
+            for i in 0..POLY_CLAIM_STRING_7_COLLECTION_2_SIZE_LENGTH {
+                size_bytes[i] = serialized[i + POLY_CLAIM_STRING_7_COLLECTION_2_SIZE_OFFSET];
+            }
+            platform_integer::parse_u32(size_bytes)
+        };
+
+        let elements = {
+            let mut element_array = [PolyClaimString_7::empty(); 2];
+            let mut element_bytes = [0; POLY_CLAIM_STRING_7_LENGTH];
+            for i in 0..2 while i as u32 < size {
+                for j in 0..POLY_CLAIM_STRING_7_LENGTH {
+                    element_bytes[j] = serialized[j + POLY_CLAIM_STRING_7_COLLECTION_2_ELEMENTS_OFFSET + (i as u16) * POLY_CLAIM_STRING_7_LENGTH];
+                }
+                element_array[i] = PolyClaimString_7::deserialize(element_bytes);
+            }
+            element_array
+        };
+
+        PolyClaimString_7_Collection_2 {
+            size: size,
+            elements: elements,
+        }
+    }
+}

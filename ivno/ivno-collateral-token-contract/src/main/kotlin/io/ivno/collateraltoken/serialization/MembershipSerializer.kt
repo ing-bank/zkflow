@@ -20,7 +20,7 @@ import kotlin.reflect.KClass
 import kotlin.reflect.cast
 
 @Serializable
-    data class MembershipSurrogate<S: Any, T: Any>(
+data class MembershipSurrogate<S: Any, T: Any>(
     val network: @Contextual Network,
     val holder: @Polymorphic AbstractParty,
     @FixedLength([IDENTITY_LENGTH])
@@ -44,7 +44,7 @@ import kotlin.reflect.cast
                     identity.map {
                         when (it) {
                             is Claim -> Claim(it.property, identityClass.cast(it.value))
-                            else -> TODO("Json encoding is not supported yet for ${it::class}")
+                            else -> TODO("BFL encoding is not supported yet for ${it::class}")
                         }
                     }.toSet(),
                     settings.map { Setting(it.property, settingsClass.cast(it.value)) }.toSet(),

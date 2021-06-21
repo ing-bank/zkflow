@@ -28,6 +28,13 @@ struct StateRef {
 }
 
 impl StateRef {
+    fn empty() -> StateRef {
+        StateRef {
+            hash: SecureHash::empty(),
+            index: 0 as u32,
+        }
+    }
+
     fn equals(this: StateRef, that: StateRef) -> bool {
         SecureHash::equals(this.hash, that.hash)
             && this.index == that.index
