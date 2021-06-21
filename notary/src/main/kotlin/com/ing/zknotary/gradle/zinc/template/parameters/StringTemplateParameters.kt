@@ -3,7 +3,7 @@ package com.ing.zknotary.gradle.zinc.template.parameters
 import com.ing.zknotary.gradle.zinc.template.TemplateParameters
 
 data class StringTemplateParameters(
-    val stringSize: Short
+    val stringSize: Int
 ) : TemplateParameters("string.zn", emptyList()) {
     override val typeName = "String_$stringSize"
 

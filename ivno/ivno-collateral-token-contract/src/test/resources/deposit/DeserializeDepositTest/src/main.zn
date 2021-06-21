@@ -1,0 +1,8 @@
+mod deposit;
+
+use deposit::Deposit;
+use deposit::SerializedDeposit;
+
+fn main(witness: SerializedDeposit) -> Deposit {
+    Deposit::deserialize(witness)
+}

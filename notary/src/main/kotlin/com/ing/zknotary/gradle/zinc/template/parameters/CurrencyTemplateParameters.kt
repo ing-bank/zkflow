@@ -5,7 +5,7 @@ import com.ing.zknotary.gradle.zinc.template.TemplateParameters
 
 object CurrencyTemplateParameters : TemplateParameters(
     "currency.zn",
-    listOf(StringTemplateParameters(CurrencySurrogate.CURRENCY_SIZE.toShort()))
+    listOf(StringTemplateParameters(CurrencySurrogate.CURRENCY_SIZE))
 ) {
     override fun getReplacements() = mapOf(
         "CURRENCY_CODE_STRING_SIZE" to CurrencySurrogate.CURRENCY_SIZE.toString(),

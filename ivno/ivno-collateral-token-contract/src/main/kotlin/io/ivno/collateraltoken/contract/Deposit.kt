@@ -8,6 +8,7 @@ import io.ivno.collateraltoken.contract.DepositSchema.DepositSchemaV1
 import io.ivno.collateraltoken.serialization.IvnoSerializers
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.LinearPointer
 import net.corda.core.contracts.LinearState
@@ -50,14 +51,14 @@ data class Deposit internal constructor(
     override val linearId: @Contextual UniqueIdentifier,
 ) : LinearState, QueryableState, ZKContractState {
 
-    @FixedLength([PARTICIPANTS_LENGTH]) override val participants: List<@Contextual AnonymousParty> = listOf(depositor, custodian, tokenIssuingEntity)
+    @Transient
+    override val participants: List<AnonymousParty> = listOf(depositor, custodian, tokenIssuingEntity)
 
     companion object {
         const val AMOUNT_INT_LENGTH = 20
         const val AMOUNT_FRAC_LENGTH = 4
         const val ACCOUNT_ID_LENGTH = 20
         const val REFERENCE_LENGTH = 20
-        const val PARTICIPANTS_LENGTH = 3
     }
 
     init {
