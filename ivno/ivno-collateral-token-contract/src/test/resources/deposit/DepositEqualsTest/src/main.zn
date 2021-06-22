@@ -1,0 +1,7 @@
+mod deposit;
+
+use deposit::Deposit;
+
+fn main(left: Deposit, right: Deposit) -> bool {
+    Deposit::equals(left, right)
+}

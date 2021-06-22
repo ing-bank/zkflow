@@ -37,7 +37,12 @@ zkp {
                             new AbstractPartyTemplateParameters("Party", PublicKeyTemplateParameters.Companion.newInstance().eddsaTemplateParameters)
                     ),
                     null
-            )
+            ),
+            new NullableTemplateParameters(
+                    "nullable.zn",
+                    new StringTemplateParameters(20),
+                    null
+            ),
     ]
 }
 

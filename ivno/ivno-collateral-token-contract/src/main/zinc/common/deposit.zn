@@ -1,0 +1,203 @@
+mod anonymous_party_ed_dsa;
+mod big_decimal_amount_linear_pointer;
+mod deposit_status;
+mod platform_instant;
+mod string_20;
+mod nullable_string_20;
+mod unique_identifier;
+
+use anonymous_party_ed_dsa::AnonymousPartyEdDSA;
+use anonymous_party_ed_dsa::ANONYMOUS_PARTY_ED_DSA_LENGTH;
+
+use big_decimal_amount_linear_pointer::BigDecimalAmountLinearPointer;
+use big_decimal_amount_linear_pointer::BIG_DECIMAL_AMOUNT_LINEAR_POINTER_LENGTH;
+
+use deposit_status::DepositStatus;
+use deposit_status::DEPOSIT_STATUS_LENGTH;
+
+use platform_instant::Instant;
+use platform_instant::INSTANT_LENGTH;
+
+use string_20::String_20;
+use string_20::STRING_20_LENGTH;
+
+use nullable_string_20::NullableString_20;
+use nullable_string_20::NULLABLE_STRING_20_LENGTH;
+
+use unique_identifier::UniqueIdentifier;
+use unique_identifier::UNIQUE_IDENTIFIER_LENGTH;
+
+const DEPOSIT_DEPOSITOR_LENGTH: u16 = ANONYMOUS_PARTY_ED_DSA_LENGTH;
+const DEPOSIT_CUSTODIAN_LENGTH: u16 = ANONYMOUS_PARTY_ED_DSA_LENGTH;
+const DEPOSIT_TOKEN_ISSUING_ENTITY_LENGTH: u16 = ANONYMOUS_PARTY_ED_DSA_LENGTH;
+const DEPOSIT_AMOUNT_LENGTH: u16 = BIG_DECIMAL_AMOUNT_LINEAR_POINTER_LENGTH;
+const DEPOSIT_REFERENCE_LENGTH: u16 = NULLABLE_STRING_20_LENGTH;
+// const DEPOSIT_STATUS_LENGTH: u16 = DEPOSIT_STATUS_LENGTH;
+const DEPOSIT_TIMESTAMP_LENGTH: u16 = INSTANT_LENGTH;
+const DEPOSIT_ACCOUNT_ID_LENGTH: u16 = STRING_20_LENGTH;
+const DEPOSIT_LINEAR_ID_LENGTH: u16 = UNIQUE_IDENTIFIER_LENGTH;
+
+const DEPOSIT_DEPOSITOR_OFFSET: u16 = 0;
+const DEPOSIT_CUSTODIAN_OFFSET: u16
+    = DEPOSIT_DEPOSITOR_OFFSET
+    + DEPOSIT_DEPOSITOR_LENGTH;
+const DEPOSIT_TOKEN_ISSUING_ENTITY_OFFSET: u16
+    = DEPOSIT_CUSTODIAN_OFFSET
+    + DEPOSIT_CUSTODIAN_LENGTH;
+const DEPOSIT_AMOUNT_OFFSET: u16
+    = DEPOSIT_TOKEN_ISSUING_ENTITY_OFFSET
+    + DEPOSIT_TOKEN_ISSUING_ENTITY_LENGTH;
+const DEPOSIT_REFERENCE_OFFSET: u16
+    = DEPOSIT_AMOUNT_OFFSET
+    + DEPOSIT_AMOUNT_LENGTH;
+const DEPOSIT_STATUS_OFFSET: u16
+    = DEPOSIT_REFERENCE_OFFSET
+    + DEPOSIT_REFERENCE_LENGTH;
+const DEPOSIT_TIMESTAMP_OFFSET: u16
+    = DEPOSIT_STATUS_OFFSET
+    + DEPOSIT_STATUS_LENGTH;
+const DEPOSIT_ACCOUNT_ID_OFFSET: u16
+    = DEPOSIT_TIMESTAMP_OFFSET
+    + DEPOSIT_TIMESTAMP_LENGTH;
+const DEPOSIT_LINEAR_ID_OFFSET: u16
+    = DEPOSIT_ACCOUNT_ID_OFFSET
+    + DEPOSIT_ACCOUNT_ID_LENGTH;
+
+// length: 1103
+const DEPOSIT_LENGTH: u16
+    = DEPOSIT_LINEAR_ID_OFFSET
+    + DEPOSIT_LINEAR_ID_LENGTH;
+
+type SerializedDeposit = [u8; DEPOSIT_LENGTH];
+
+struct Deposit {
+    depositor: AnonymousPartyEdDSA,
+    custodian: AnonymousPartyEdDSA,
+    token_issuing_entity: AnonymousPartyEdDSA,
+    amount: BigDecimalAmountLinearPointer,
+    reference: NullableString_20,
+    status: DepositStatus,
+    timestamp: Instant,
+    account_id: String_20,
+    linear_id: UniqueIdentifier,
+}
+
+impl Deposit {
+    fn new(depositor: AnonymousPartyEdDSA, custodian: AnonymousPartyEdDSA, token_issuing_entity: AnonymousPartyEdDSA, amount: BigDecimalAmountLinearPointer, reference: NullableString_20, status: DepositStatus, timestamp: Instant, account_id: String_20, linear_id: UniqueIdentifier) -> Deposit {
+        Deposit {
+            depositor: depositor,
+            custodian: custodian,
+            token_issuing_entity: token_issuing_entity,
+            amount: amount,
+            reference: reference,
+            status: status,
+            timestamp: timestamp,
+            account_id: account_id,
+            linear_id: linear_id,
+        }
+    }
+
+    fn empty() -> Deposit {
+        Deposit {
+            depositor: AnonymousPartyEdDSA::empty(),
+            custodian: AnonymousPartyEdDSA::empty(),
+            token_issuing_entity: AnonymousPartyEdDSA::empty(),
+            amount: BigDecimalAmountLinearPointer::empty(),
+            reference: NullableString_20::null(),
+            status: DepositStatus::DEPOSIT_REQUESTED,
+            timestamp: Instant::empty(),
+            account_id: String_20::empty(),
+            linear_id: UniqueIdentifier::empty()
+        }
+    }
+
+    fn equals(this: Deposit, that: Deposit) -> bool {
+        (AnonymousPartyEdDSA::equals(this.depositor, that.depositor))
+            && (AnonymousPartyEdDSA::equals(this.custodian, that.custodian))
+            && (AnonymousPartyEdDSA::equals(this.token_issuing_entity, that.token_issuing_entity))
+            && (BigDecimalAmountLinearPointer::equals(this.amount, that.amount))
+            && (NullableString_20::equals(this.reference, that.reference))
+            && (this.status == that.status)
+            && (Instant::equals(this.timestamp, that.timestamp))
+            && (String_20::equals(this.account_id, that.account_id))
+            && (UniqueIdentifier::equals(this.linear_id, that.linear_id))
+    }
+
+    fn deserialize(serialized: SerializedDeposit) -> Deposit {
+        let depositor: AnonymousPartyEdDSA = {
+            let mut depositor_bytes: [u8; DEPOSIT_DEPOSITOR_LENGTH] = [0; DEPOSIT_DEPOSITOR_LENGTH];
+            for depositor_i in 0..DEPOSIT_DEPOSITOR_LENGTH {
+                depositor_bytes[depositor_i] = serialized[depositor_i + DEPOSIT_DEPOSITOR_OFFSET];
+            }
+            AnonymousPartyEdDSA::deserialize(depositor_bytes)
+        };
+        let custodian: AnonymousPartyEdDSA = {
+            let mut custodian_bytes: [u8; DEPOSIT_CUSTODIAN_LENGTH] = [0; DEPOSIT_CUSTODIAN_LENGTH];
+            for custodian_i in 0..DEPOSIT_CUSTODIAN_LENGTH {
+                custodian_bytes[custodian_i] = serialized[custodian_i + DEPOSIT_CUSTODIAN_OFFSET];
+            }
+            AnonymousPartyEdDSA::deserialize(custodian_bytes)
+        };
+        let token_issuing_entity: AnonymousPartyEdDSA = {
+            let mut token_issuing_entity_bytes: [u8; DEPOSIT_TOKEN_ISSUING_ENTITY_LENGTH] = [0; DEPOSIT_TOKEN_ISSUING_ENTITY_LENGTH];
+            for token_issuing_entity_i in 0..DEPOSIT_TOKEN_ISSUING_ENTITY_LENGTH {
+                token_issuing_entity_bytes[token_issuing_entity_i] = serialized[token_issuing_entity_i + DEPOSIT_TOKEN_ISSUING_ENTITY_OFFSET];
+            }
+            AnonymousPartyEdDSA::deserialize(token_issuing_entity_bytes)
+        };
+        let amount: BigDecimalAmountLinearPointer = {
+            let mut amount_bytes: [u8; DEPOSIT_AMOUNT_LENGTH] = [0; DEPOSIT_AMOUNT_LENGTH];
+            for amount_i in 0..DEPOSIT_AMOUNT_LENGTH {
+                amount_bytes[amount_i] = serialized[amount_i + DEPOSIT_AMOUNT_OFFSET];
+            }
+            BigDecimalAmountLinearPointer::deserialize(amount_bytes)
+        };
+        let reference: NullableString_20 = {
+            let mut reference_bytes: [u8; DEPOSIT_REFERENCE_LENGTH] = [0; DEPOSIT_REFERENCE_LENGTH];
+            for reference_i in 0..DEPOSIT_REFERENCE_LENGTH {
+                reference_bytes[reference_i] = serialized[reference_i + DEPOSIT_REFERENCE_OFFSET];
+            }
+            NullableString_20::deserialize(reference_bytes)
+        };
+        let status: DepositStatus = {
+            let mut status_bytes: [u8; DEPOSIT_STATUS_LENGTH] = [0; DEPOSIT_STATUS_LENGTH];
+            for status_i in 0..DEPOSIT_STATUS_LENGTH {
+                status_bytes[status_i] = serialized[status_i + DEPOSIT_STATUS_OFFSET];
+            }
+            DepositStatus::deserialize(status_bytes)
+        };
+        let timestamp: Instant = {
+            let mut timestamp_bytes: [u8; DEPOSIT_TIMESTAMP_LENGTH] = [0; DEPOSIT_TIMESTAMP_LENGTH];
+            for timestamp_i in 0..DEPOSIT_TIMESTAMP_LENGTH {
+                timestamp_bytes[timestamp_i] = serialized[timestamp_i + DEPOSIT_TIMESTAMP_OFFSET];
+            }
+            Instant::deserialize(timestamp_bytes)
+        };
+        let account_id: String_20 = {
+            let mut account_id_bytes: [u8; DEPOSIT_ACCOUNT_ID_LENGTH] = [0; DEPOSIT_ACCOUNT_ID_LENGTH];
+            for account_id_i in 0..DEPOSIT_ACCOUNT_ID_LENGTH {
+                account_id_bytes[account_id_i] = serialized[account_id_i + DEPOSIT_ACCOUNT_ID_OFFSET];
+            }
+            String_20::deserialize(account_id_bytes)
+        };
+        let linear_id: UniqueIdentifier = {
+            let mut linear_id_bytes: [u8; DEPOSIT_LINEAR_ID_LENGTH] = [0; DEPOSIT_LINEAR_ID_LENGTH];
+            for linear_id_i in 0..DEPOSIT_LINEAR_ID_LENGTH {
+                linear_id_bytes[linear_id_i] = serialized[linear_id_i + DEPOSIT_LINEAR_ID_OFFSET];
+            }
+            UniqueIdentifier::deserialize(linear_id_bytes)
+        };
+
+        Deposit {
+            depositor: depositor,
+            custodian: custodian,
+            token_issuing_entity: token_issuing_entity,
+            amount: amount,
+            reference: reference,
+            status: status,
+            timestamp: timestamp,
+            account_id: account_id,
+            linear_id: linear_id,
+        }
+    }
+}
