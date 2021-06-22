@@ -1,0 +1,3 @@
+[circuit]
+name = "Deserialize Collection of String test"
+version = "0.1.0"
