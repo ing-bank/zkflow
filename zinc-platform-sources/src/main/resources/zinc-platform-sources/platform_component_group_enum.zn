@@ -1,3 +1,13 @@
+mod platform_consts;
+mod platform_integer;
+
+use platform_consts::U32_BYTES;
+use platform_integer::parse_u32;
+
+const COMPONENT_GROUP_ENUM_LENGTH: u16 = U32_BYTES;
+
+type SerializedComponentGroupEnum = [u8; COMPONENT_GROUP_ENUM_LENGTH];
+
 enum ComponentGroupEnum {
     INPUTS_GROUP = 0,
     OUTPUTS_GROUP = 1,
@@ -8,4 +18,23 @@ enum ComponentGroupEnum {
     SIGNERS_GROUP = 6,
     REFERENCES_GROUP = 7,
     PARAMETERS_GROUP = 8,
+}
+
+impl ComponentGroupEnum {
+    fn deserialize(serialized: SerializedComponentGroupEnum) -> ComponentGroupEnum {
+        let index = parse_u32(serialized);
+        assert!(index <= 9 as u32, "Not a ComponentGroupEnum");
+        match index as u8 {
+            0 => ComponentGroupEnum::INPUTS_GROUP,
+            1 => ComponentGroupEnum::OUTPUTS_GROUP,
+            2 => ComponentGroupEnum::COMMANDS_GROUP,
+            3 => ComponentGroupEnum::ATTACHMENTS_GROUP,
+            4 => ComponentGroupEnum::NOTARY_GROUP,
+            5 => ComponentGroupEnum::TIMEWINDOW_GROUP,
+            6 => ComponentGroupEnum::SIGNERS_GROUP,
+            7 => ComponentGroupEnum::REFERENCES_GROUP,
+            8 => ComponentGroupEnum::PARAMETERS_GROUP,
+            _ => ComponentGroupEnum::INPUTS_GROUP, // Should never happen (see assert) but here to make the compiler happy
+        }
+    }
 }

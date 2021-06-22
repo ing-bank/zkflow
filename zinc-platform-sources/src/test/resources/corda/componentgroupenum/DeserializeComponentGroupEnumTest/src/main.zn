@@ -1,0 +1,8 @@
+mod platform_component_group_enum;
+
+use platform_component_group_enum::ComponentGroupEnum;
+use platform_component_group_enum::SerializedComponentGroupEnum;
+
+fn main(witness: SerializedComponentGroupEnum) -> ComponentGroupEnum {
+    ComponentGroupEnum::deserialize(witness)
+}
