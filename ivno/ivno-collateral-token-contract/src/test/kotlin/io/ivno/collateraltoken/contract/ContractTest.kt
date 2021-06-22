@@ -1,5 +1,8 @@
 package io.ivno.collateraltoken.contract
 
+import com.ing.zknotary.testing.dsl.LedgerDSL
+import com.ing.zknotary.testing.dsl.TestLedgerDSLInterpreter
+import com.ing.zknotary.testing.dsl.TestTransactionDSLInterpreter
 import io.dasl.contracts.v1.crud.CrudCommands
 import io.dasl.contracts.v1.token.BigDecimalAmount
 import io.dasl.contracts.v1.token.TokenContract
@@ -27,9 +30,6 @@ import net.corda.core.node.NotaryInfo
 import net.corda.testing.common.internal.testNetworkParameters
 import net.corda.testing.core.DUMMY_NOTARY_NAME
 import net.corda.testing.core.TestIdentity
-import net.corda.testing.dsl.LedgerDSL
-import net.corda.testing.dsl.TestLedgerDSLInterpreter
-import net.corda.testing.dsl.TestTransactionDSLInterpreter
 import net.corda.testing.node.MockServices
 import org.junit.jupiter.api.BeforeEach
 import java.math.BigDecimal
@@ -242,7 +242,7 @@ abstract class ContractTest {
     ): StateAndRef<Deposit> {
         val label = SecureHash.randomSHA256().toString()
 
-        transaction {
+        zkTransaction {
             val memberships = createAllMemberships()
             reference(memberships.membershipFor(BANK_A).ref)
             reference(memberships.membershipFor(CUSTODIAN).ref)
@@ -265,7 +265,7 @@ abstract class ContractTest {
     ): StateAndRef<Deposit> {
         val label = SecureHash.randomSHA256().toString()
 
-        transaction {
+        zkTransaction {
             val memberships = createAllMemberships()
             reference(memberships.membershipFor(BANK_A).ref)
             reference(memberships.membershipFor(CUSTODIAN).ref)
@@ -289,7 +289,7 @@ abstract class ContractTest {
     ): StateAndRef<Deposit> {
         val label = SecureHash.randomSHA256().toString()
 
-        transaction {
+        zkTransaction {
             val memberships = createAllMemberships()
             reference(memberships.membershipFor(BANK_A).ref)
             reference(memberships.membershipFor(CUSTODIAN).ref)
@@ -307,6 +307,8 @@ abstract class ContractTest {
         return retrieveOutputStateAndRef(Deposit::class.java, label)
     }
 
+    // FIXME: This transaction has multiple commands.
+    //  Do they (all) need to be private (ZKP)?
     fun LedgerDSL<TestTransactionDSLInterpreter, TestLedgerDSLInterpreter>.acceptDepositPayment(
         deposit: StateAndRef<Deposit>,
         tokenType: StateAndRef<IvnoTokenType>

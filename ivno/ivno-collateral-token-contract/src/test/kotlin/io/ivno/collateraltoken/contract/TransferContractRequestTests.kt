@@ -1,5 +1,6 @@
 package io.ivno.collateraltoken.contract
 
+import com.ing.zknotary.testing.dsl.zkLedger
 import net.corda.testing.node.ledger
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
@@ -9,8 +10,8 @@ class TransferContractRequestTests : ContractTest() {
 
     @Test
     fun `On transfer requesting, the transaction must include the Request command`() {
-        services.ledger {
-            transaction {
+        services.zkLedger {
+            zkTransaction {
                 val memberships = createAllMemberships()
                 reference(memberships.membershipFor(BANK_A).ref)
                 reference(memberships.membershipFor(BANK_B).ref)
@@ -27,8 +28,8 @@ class TransferContractRequestTests : ContractTest() {
 
     @Test
     fun `On transfer requesting, zero transfer states must be consumed`() {
-        services.ledger {
-            transaction {
+        services.zkLedger {
+            zkTransaction {
                 input(TransferContract.ID, TRANSFER)
                 output(TransferContract.ID, TRANSFER)
                 command(keysOf(BANK_A), TransferContract.Request)
@@ -39,8 +40,8 @@ class TransferContractRequestTests : ContractTest() {
 
     @Test
     fun `On transfer requesting, only one transfer state must be created`() {
-        services.ledger {
-            transaction {
+        services.zkLedger {
+            zkTransaction {
                 output(TransferContract.ID, TRANSFER)
                 output(TransferContract.ID, TRANSFER)
                 command(keysOf(BANK_A), TransferContract.Request)
@@ -51,8 +52,8 @@ class TransferContractRequestTests : ContractTest() {
 
     @Test
     fun `On transfer requesting, the sender and the receiver accounts must not be the same`() {
-        services.ledger {
-            transaction {
+        services.zkLedger {
+            zkTransaction {
                 val memberships = createAllMemberships()
                 reference(memberships.membershipFor(BANK_A).ref)
                 reference(memberships.membershipFor(BANK_B).ref)
@@ -71,8 +72,8 @@ class TransferContractRequestTests : ContractTest() {
 
     @Test
     fun `On transfer requesting, the amount must be greater than zero`() {
-        services.ledger {
-            transaction {
+        services.zkLedger {
+            zkTransaction {
                 val memberships = createAllMemberships()
                 reference(memberships.membershipFor(BANK_A).ref)
                 reference(memberships.membershipFor(BANK_B).ref)
@@ -88,8 +89,8 @@ class TransferContractRequestTests : ContractTest() {
 
     @Test
     fun `On transfer requesting, the status must be REQUESTED`() {
-        services.ledger {
-            transaction {
+        services.zkLedger {
+            zkTransaction {
                 val memberships = createAllMemberships()
                 reference(memberships.membershipFor(BANK_A).ref)
                 reference(memberships.membershipFor(BANK_B).ref)
@@ -105,8 +106,8 @@ class TransferContractRequestTests : ContractTest() {
 
     @Test
     fun `On transfer requesting, the initiator must sign the transaction`() {
-        services.ledger {
-            transaction {
+        services.zkLedger {
+            zkTransaction {
                 val memberships = createAllMemberships()
                 reference(memberships.membershipFor(BANK_A).ref)
                 reference(memberships.membershipFor(BANK_B).ref)

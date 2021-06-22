@@ -1,5 +1,6 @@
 package io.ivno.collateraltoken.contract
 
+import com.ing.zknotary.testing.dsl.zkLedger
 import io.dasl.contracts.v1.crud.CrudCommands
 import io.onixlabs.corda.bnms.contract.Network
 import io.onixlabs.corda.bnms.contract.Role
@@ -13,8 +14,8 @@ class IvnoTokenTypeContractCreationTests : ContractTest() {
 
     @Test
     fun `On token type creation, the transaction must include the Create command`() {
-        services.ledger {
-            transaction {
+        services.zkLedger {
+            zkTransaction {
                 val roles = setOf(Role("TOKEN_ISSUING_ENTITY"))
                 val (membership, attestation) = createMembership(TOKEN_ISSUING_ENTITY.party, roles = roles)
                 reference(membership.ref)
@@ -29,8 +30,8 @@ class IvnoTokenTypeContractCreationTests : ContractTest() {
 
     @Test
     fun `On Ivno token type creating, a membership state must be referenced for the token issuing entity`() {
-        services.ledger {
-            transaction {
+        services.zkLedger {
+            zkTransaction {
                 val roles = setOf(Role("TOKEN_ISSUING_ENTITY"))
                 val (_, attestation) = createMembership(TOKEN_ISSUING_ENTITY.party, roles = roles)
                 reference(attestation.ref)
@@ -43,8 +44,8 @@ class IvnoTokenTypeContractCreationTests : ContractTest() {
 
     @Test
     fun `On Ivno token type creating, a membership state must be referenced for the token issuing entity (Invalid TIE on TT)`() {
-        services.ledger {
-            transaction {
+        services.zkLedger {
+            zkTransaction {
                 val roles = setOf(Role("TOKEN_ISSUING_ENTITY"))
                 val (membership, attestation) = createMembership(TOKEN_ISSUING_ENTITY.party, roles = roles)
                 reference(membership.ref)
@@ -58,8 +59,8 @@ class IvnoTokenTypeContractCreationTests : ContractTest() {
 
     @Test
     fun `On Ivno token type creating, a membership attestation state must be referenced for the token issuing entity`() {
-        services.ledger {
-            transaction {
+        services.zkLedger {
+            zkTransaction {
                 val roles = setOf(Role("TOKEN_ISSUING_ENTITY"))
                 val (membership, _) = createMembership(TOKEN_ISSUING_ENTITY.party, roles = roles)
                 reference(membership.ref)
@@ -72,8 +73,8 @@ class IvnoTokenTypeContractCreationTests : ContractTest() {
 
     @Test
     fun `On Ivno token type creating, the referenced membership attestation state must point to the referenced membership state`() {
-        services.ledger {
-            transaction {
+        services.zkLedger {
+            zkTransaction {
                 val (membership, attestation) = createMembership(
                     TOKEN_ISSUING_ENTITY.party,
                     roles = setOf(Role("TOKEN_ISSUING_ENTITY")),
@@ -90,8 +91,8 @@ class IvnoTokenTypeContractCreationTests : ContractTest() {
 
     @Test
     fun `On Ivno token type creating, the referenced membership state must possess the TOKEN_ISSUING_ENTITY role`() {
-        services.ledger {
-            transaction {
+        services.zkLedger {
+            zkTransaction {
                 val (membership, attestation) = createMembership(TOKEN_ISSUING_ENTITY.party)
                 reference(membership.ref)
                 reference(attestation.ref)
@@ -104,8 +105,8 @@ class IvnoTokenTypeContractCreationTests : ContractTest() {
 
     @Test
     fun `On Ivno token type creating, the membership attestation status must be ACCEPTED`() {
-        services.ledger {
-            transaction {
+        services.zkLedger {
+            zkTransaction {
                 val roles = setOf(Role("TOKEN_ISSUING_ENTITY"))
                 val (membership, attestation) = createMembership(
                     TOKEN_ISSUING_ENTITY.party,
@@ -123,8 +124,8 @@ class IvnoTokenTypeContractCreationTests : ContractTest() {
 
     @Test
     fun `On Ivno token type creating, the issued token type network must be equal to the membership network`() {
-        services.ledger {
-            transaction {
+        services.zkLedger {
+            zkTransaction {
                 val roles = setOf(Role("TOKEN_ISSUING_ENTITY"))
                 val (membership, attestation) = createMembership(TOKEN_ISSUING_ENTITY.party, roles = roles)
                 reference(membership.ref)
@@ -138,8 +139,8 @@ class IvnoTokenTypeContractCreationTests : ContractTest() {
 
     @Test
     fun `On Ivno token type creating, the token issuing entity must sign the transaction`() {
-        services.ledger {
-            transaction {
+        services.zkLedger {
+            zkTransaction {
                 val roles = setOf(Role("TOKEN_ISSUING_ENTITY"))
                 val (membership, attestation) = createMembership(TOKEN_ISSUING_ENTITY.party, roles = roles)
                 reference(membership.ref)

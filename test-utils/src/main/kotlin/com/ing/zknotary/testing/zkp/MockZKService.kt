@@ -1,20 +1,27 @@
 package com.ing.zknotary.testing.zkp
 
-import com.ing.zknotary.common.crypto.zinc
 import com.ing.zknotary.common.zkp.PublicInput
 import com.ing.zknotary.common.zkp.Witness
 import com.ing.zknotary.common.zkp.ZKService
+import net.corda.core.contracts.AttachmentResolutionException
+import net.corda.core.contracts.CommandWithParties
 import net.corda.core.contracts.ComponentGroupEnum
+import net.corda.core.contracts.ContractState
+import net.corda.core.contracts.StateAndRef
+import net.corda.core.contracts.TransactionResolutionException
+import net.corda.core.contracts.TransactionState
 import net.corda.core.crypto.DigestService
-import net.corda.core.serialization.SerializationFactory
+import net.corda.core.crypto.SecureHash
+import net.corda.core.node.ServiceHub
 import net.corda.core.serialization.deserialize
 import net.corda.core.serialization.serialize
 import net.corda.core.transactions.ComponentGroup
+import net.corda.core.transactions.LedgerTransaction
 import net.corda.core.transactions.WireTransaction
 import net.corda.core.utilities.OpaqueBytes
 
 @Suppress("EXPERIMENTAL_API_USAGE")
-public class MockZKService(private val digestService: DigestService) : ZKService {
+public class MockZKService(private val serviceHub: ServiceHub, private val digestService: DigestService) : ZKService {
 
     /**
      * This mock version simply returns the serialized witness, so that we can use it in `verify()`
@@ -25,10 +32,8 @@ public class MockZKService(private val digestService: DigestService) : ZKService
     }
 
     override fun verify(proof: ByteArray, publicInput: PublicInput) {
-        val serializationFactory = SerializationFactory.defaultFactory
-
         // This assumes that the proof (for testing only) is simply a serialized witness.
-        val witness = proof.deserialize<Witness>(serializationFactory)
+        val witness = proof.deserialize<Witness>()
 
         fun createComponentGroup(componentGroup: ComponentGroupEnum, components: List<ByteArray>) =
             if (components.isEmpty()) null else ComponentGroup(
@@ -71,47 +76,74 @@ public class MockZKService(private val digestService: DigestService) : ZKService
         )
 
         /*
-         * Rule 2: witness.ptx.inputs[i] contents hashed with nonce should equal publicInput.prevVtxOutputHashes[i].
+         * Rule 2: witness input and reference contents hashed with their nonce should equal the matching hash from publicInput.
          * This proves that prover did not change the contents of the input states
          */
-        witness.serializedInputUtxos.forEachIndexed { index, serializedInputUtxo ->
-            val nonceFromWitness = witness.inputUtxoNonces.getOrElse(index) {
-                error("Nonce not present in public input for input $index of tx ${wtx.id}")
-            }
-
-            val leafHashFromPublicInput = publicInput.inputHashes.getOrElse(index) {
-                error("Leaf hash not present in public input for input $index of tx ${wtx.id}")
-            }
-
-            val calculatedLeafHashFromWitness =
-                DigestService.zinc.componentHash(nonceFromWitness, OpaqueBytes(serializedInputUtxo))
-
-            if (leafHashFromPublicInput != calculatedLeafHashFromWitness) error(
-                "Calculated leaf hash ($calculatedLeafHashFromWitness} for input $index of tx ${wtx.id} does " +
-                    "not match the leaf hash from the public input ($leafHashFromPublicInput)."
-            )
-        }
+        verifyUtxoContents(witness.serializedInputUtxos, witness.inputUtxoNonces, publicInput.inputHashes)
+        verifyUtxoContents(witness.serializedReferenceUtxos, witness.referenceUtxoNonces, publicInput.referenceHashes)
 
         /*
-         * Rule 3: witness.ptx.references[i] contents hashed with nonce should equal publicreference.prevVtxOutputHashes[i].
-         * This proves that prover did not change the contents of the reference states
+         * Rule 3: The contract rules should verify
          */
-        witness.serializedReferenceUtxos.forEachIndexed { index, serializedReferenceUtxo ->
-            val nonceFromWitness = witness.referenceUtxoNonces.getOrElse(index) {
-                error("Nonce not present in public reference for reference $index of tx ${wtx.id}")
+        verifyContract(witness, wtx)
+    }
+
+    private fun verifyUtxoContents(serializedUtxos: List<ByteArray>, utxoNonces: List<SecureHash>, expectedUtxoHashes: List<SecureHash>) {
+        serializedUtxos.forEachIndexed { index, serializedReferenceUtxo ->
+            val nonceFromWitness = utxoNonces.getOrElse(index) {
+                error("Nonce not present in public input for reference $index")
             }
 
-            val leafHashFromPublicreference = publicInput.referenceHashes.getOrElse(index) {
-                error("Leaf hash not present in public reference for reference $index of tx ${wtx.id}")
+            val leafHashFromPublicreference = expectedUtxoHashes.getOrElse(index) {
+                error("Leaf hash not present in public input for reference $index")
             }
 
             val calculatedLeafHashFromWitness =
-                DigestService.zinc.componentHash(nonceFromWitness, OpaqueBytes(serializedReferenceUtxo))
+                digestService.componentHash(nonceFromWitness, OpaqueBytes(serializedReferenceUtxo))
 
             if (leafHashFromPublicreference != calculatedLeafHashFromWitness) error(
-                "Calculated leaf hash ($calculatedLeafHashFromWitness} for reference $index of tx ${wtx.id} does " +
+                "Calculated leaf hash ($calculatedLeafHashFromWitness} for reference $index does " +
                     "not match the leaf hash from the public input ($leafHashFromPublicreference)."
             )
         }
+    }
+
+    private fun verifyContract(witness: Witness, wtx: WireTransaction) {
+        val inputs = witness.serializedInputUtxos.mapIndexed { index, bytes ->
+            bytes.deserialize<TransactionState<ContractState>>()
+            StateAndRef<ContractState>(
+                bytes.deserialize(),
+                wtx.inputs[index]
+            )
+        }
+        val references = witness.serializedReferenceUtxos.mapIndexed { index, bytes ->
+            bytes.deserialize<TransactionState<ContractState>>()
+            StateAndRef<ContractState>(
+                bytes.deserialize(),
+                wtx.references[index]
+            )
+        }
+
+        val ltx = LedgerTransaction.createForSandbox(
+            inputs = inputs,
+            outputs = wtx.outputs, // witness.outputsGroup.map { it.deserialize() },
+            commands = wtx.commands.map {
+                CommandWithParties(
+                    value = it.value,
+                    signingParties = it.signers.mapNotNull { serviceHub.identityService.partyFromKey(it) },
+                    signers = it.signers
+                )
+            },
+            attachments = wtx.attachments.map { serviceHub.attachments.openAttachment(it) ?: throw AttachmentResolutionException(it) },
+            id = wtx.id,
+            notary = wtx.notary,
+            timeWindow = wtx.timeWindow,
+            privacySalt = wtx.privacySalt,
+            networkParameters = wtx.networkParametersHash?.let { serviceHub.networkParametersService.lookup(it) }
+                ?: throw TransactionResolutionException.UnknownParametersException(wtx.id, wtx.networkParametersHash!!),
+            references = references,
+            wtx.digestService
+        )
+        ltx.verify()
     }
 }

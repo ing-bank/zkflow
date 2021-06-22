@@ -2,7 +2,6 @@ package com.ing.zknotary.common.client.flows
 
 import com.ing.zknotary.common.client.flows.testflows.CreateFlow
 import com.ing.zknotary.common.client.flows.testflows.MoveBidirectionalFlow
-import com.ing.zknotary.node.services.ConfigParams
 import com.ing.zknotary.node.services.InMemoryUtxoInfoStorage
 import com.ing.zknotary.node.services.InMemoryZKVerifierTransactionStorage
 import com.ing.zknotary.node.services.ServiceNames.ZK_TX_SERVICE
@@ -10,7 +9,7 @@ import com.ing.zknotary.node.services.ServiceNames.ZK_UTXO_INFO_STORAGE
 import com.ing.zknotary.node.services.ServiceNames.ZK_VERIFIER_TX_STORAGE
 import com.ing.zknotary.notary.ZKNotaryService
 import com.ing.zknotary.testing.fixtures.contract.TestContract
-import com.ing.zknotary.testing.zkp.MockZKTransactionService
+import com.ing.zknotary.testing.zkp.MockZKTransactionCordaService
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
 import net.corda.core.node.services.Vault
@@ -46,11 +45,11 @@ class E2EFlowNonOwnedStatesTest {
                     mapOf(
                         ZK_VERIFIER_TX_STORAGE to InMemoryZKVerifierTransactionStorage::class.qualifiedName!!,
                         ZK_UTXO_INFO_STORAGE to InMemoryUtxoInfoStorage::class.qualifiedName!!,
-                        ZK_TX_SERVICE to MockZKTransactionService::class.qualifiedName!!,
-                        ConfigParams.Zinc.COMMAND_CLASS_NAMES to listOf(
-                            TestContract.Create::class.java.name,
-                            TestContract.MoveBidirectional::class.java.name
-                        ).joinToString(separator = ConfigParams.Zinc.COMMANDS_SEPARATOR)
+                        ZK_TX_SERVICE to MockZKTransactionCordaService::class.qualifiedName!!,
+                        // ConfigParams.Zinc.COMMAND_CLASS_NAMES to listOf(
+                        //     TestContract.Create::class.java.name,
+                        //     TestContract.MoveBidirectional::class.java.name
+                        // ).joinToString(separator = ConfigParams.Zinc.COMMANDS_SEPARATOR)
                     )
                 )
             ),

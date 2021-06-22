@@ -55,7 +55,7 @@ import java.util.UUID
  */
 @Suppress("TooManyFunctions", "LongParameterList", "MemberVisibilityCanBePrivate") // Copy of TransactionBuilder API
 class ZKTransactionBuilder(
-    private val builder: TransactionBuilder,
+    public val builder: TransactionBuilder,
     private val serializationSchemeId: Int = BFLSerializationScheme.SCHEME_ID,
     private val serializationProperties: Map<Any, Any> = emptyMap()
 ) {
@@ -102,7 +102,6 @@ class ZKTransactionBuilder(
 
     init {
         outputStates().forEach { enforceZKContractStates(it.data) }
-        // Cannot check Input or Reference states here though
     }
 
     private fun enforceZKContractStates(state: ContractState) {
@@ -199,8 +198,6 @@ class ZKTransactionBuilder(
     fun withItems(vararg items: Any) = apply {
         items.forEach {
             when (it) {
-                is StateAndRef<*> -> enforceZKContractStates(it.state.data)
-                is ReferencedStateAndRef<*> -> enforceZKContractStates(it.stateAndRef.state.data)
                 is TransactionState<*> -> enforceZKContractStates(it.data)
                 is StateAndContract -> enforceZKContractStates(it.state)
             }
@@ -209,12 +206,10 @@ class ZKTransactionBuilder(
     }
 
     fun addReferenceState(referencedStateAndRef: ReferencedStateAndRef<*>) = apply {
-        enforceZKContractStates(referencedStateAndRef.stateAndRef.state.data)
         builder.addReferenceState(referencedStateAndRef)
     }
 
     fun addInputState(stateAndRef: StateAndRef<*>) = apply {
-        enforceZKContractStates(stateAndRef.state.data)
         builder.addInputState(stateAndRef)
     }
 
