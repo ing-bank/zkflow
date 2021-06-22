@@ -6,6 +6,7 @@ import com.ing.zknotary.node.services.getLongFromConfig
 import net.corda.core.node.AppServiceHub
 import net.corda.core.node.ServiceHub
 import net.corda.core.node.services.CordaService
+import java.io.File
 import java.time.Duration
 
 @CordaService
