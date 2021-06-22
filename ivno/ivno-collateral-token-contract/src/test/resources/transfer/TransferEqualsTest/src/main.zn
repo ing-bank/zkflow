@@ -1,0 +1,7 @@
+mod transfer;
+
+use transfer::Transfer;
+
+fn main(left: Transfer, right: Transfer) -> bool {
+    Transfer::equals(left, right)
+}

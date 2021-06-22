@@ -11,6 +11,7 @@ import io.dasl.contracts.v1.token.TokenDescriptor
 import io.ivno.collateraltoken.contract.Deposit
 import io.ivno.collateraltoken.contract.IvnoTokenType
 import io.ivno.collateraltoken.contract.Redemption
+import io.ivno.collateraltoken.contract.Transfer
 import io.ivno.collateraltoken.serialization.IvnoTokenTypeSurrogate
 import io.ivno.collateraltoken.serialization.NetworkSurrogate
 import io.ivno.collateraltoken.serialization.PermissionSurrogate
@@ -54,6 +55,7 @@ fun IvnoTokenType.toZincJson(
     tokenIssuingEntityScheme,
 ).toString()
 fun Deposit.toZincJson() = toJsonObject().toString()
+fun Transfer.toZincJson() = toJsonObject().toString()
 
 /**
  * Extension function for encoding a nullable ByteArray to Json
@@ -206,5 +208,17 @@ fun Deposit.toJsonObject() = buildJsonObject {
     put("status", status.toJsonObject())
     put("timestamp", timestamp.toJsonObject())
     put("account_id", accountId.toJsonObject(20))
+    put("linear_id", linearId.toJsonObject())
+}
+
+fun Transfer.toJsonObject() = buildJsonObject {
+    put("current_token_holder", currentTokenHolder.toJsonObject(EdDSASurrogate.ENCODED_SIZE).polymorphic())
+    put("target_token_holder", targetTokenHolder.toJsonObject(EdDSASurrogate.ENCODED_SIZE).polymorphic())
+    put("initiator", initiator.toJsonObject())
+    put("amount", amount.toJsonObject())
+    put("status", status.toJsonObject())
+    put("timestamp", timestamp.toJsonObject())
+    put("current_token_holder_account_id", currentTokenHolderAccountId.toJsonObject(20))
+    put("target_token_holder_account_id", targetTokenHolderAccountId.toJsonObject(20))
     put("linear_id", linearId.toJsonObject())
 }

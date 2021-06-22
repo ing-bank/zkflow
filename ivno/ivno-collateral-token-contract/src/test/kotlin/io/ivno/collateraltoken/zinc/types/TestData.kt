@@ -5,6 +5,8 @@ import io.dasl.contracts.v1.token.BigDecimalAmount
 import io.ivno.collateraltoken.contract.Deposit
 import io.ivno.collateraltoken.contract.IvnoTokenType
 import io.ivno.collateraltoken.contract.Redemption
+import io.ivno.collateraltoken.contract.Transfer
+import io.ivno.collateraltoken.contract.TransferInitiator
 import net.corda.core.contracts.LinearPointer
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.identity.AnonymousParty
@@ -65,3 +67,21 @@ val redemptionWithDifferentAmountQuantity = redemption.copy(amount = amountWithD
 val redemptionWithDifferentAmountType = redemption.copy(amount = amountWithDifferentAmountType)
 val redemptionWithDifferentAccountId = redemption.copy(accountId = "another-account-id")
 val redemptionWithDifferentLinearId = redemption.copy(linearId = UniqueIdentifier(id = anotherUuid))
+
+val transfer = Transfer(
+    currentTokenHolder = anonymousParty,
+    targetTokenHolder = anonymousParty,
+    initiator = TransferInitiator.CURRENT_HOLDER,
+    amount = amount,
+    currentTokenHolderAccountId = "some-current",
+    targetTokenHolderAccountId = "some-target",
+    linearId = UniqueIdentifier(id = uuid)
+)
+val transferWithAnotherCurrentTokenHolder = transfer.copy(currentTokenHolder = anotherAnonymousParty)
+val transferWithAnotherTargetTokenHolder = transfer.copy(targetTokenHolder = anotherAnonymousParty)
+val transferWithAnotherInitiator = transfer.copy(initiator = TransferInitiator.TARGET_HOLDER)
+val transferWithDifferentAmountQuantity = transfer.copy(amount = amountWithDifferentQuantity)
+val transferWithDifferentAmountType = transfer.copy(amount = amountWithDifferentAmountType)
+val transferWithDifferentCurrentAccountId = transfer.copy(currentTokenHolderAccountId = "another-current")
+val transferWithDifferentTargetAccountId = transfer.copy(targetTokenHolderAccountId = "another-target")
+val transferWithDifferentLinearId = transfer.copy(linearId = UniqueIdentifier(id = anotherUuid))

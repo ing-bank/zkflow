@@ -1,0 +1,8 @@
+mod transfer;
+
+use transfer::Transfer;
+use transfer::SerializedTransfer;
+
+fn main(witness: SerializedTransfer) -> Transfer {
+    Transfer::deserialize(witness)
+}
