@@ -7,11 +7,11 @@ import com.ing.zknotary.gradle.zinc.template.parameters.AmountTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.AttachmentConstraintTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.BigDecimalTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.ByteArrayTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.parameters.CollectionTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.CurrencyTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.IssuedTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.LinearPointerTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.NullableTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.parameters.OptionalTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.PartyAndReferenceTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.PolyTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.SecureHashTemplateParameters
@@ -53,9 +53,9 @@ open class TemplateConfigurations {
 
     open var nullableConfigurations: List<NullableTemplateParameters<*>> = emptyList()
 
-    open var optionalConfigurations: List<OptionalTemplateParameters<*>> = emptyList()
-
     open var polyConfigurations: List<PolyTemplateParameters<*>> = emptyList()
+
+    open var collectionConfigurations: List<CollectionTemplateParameters<*>> = emptyList()
 
     /*
      * Pre-defined collection of configurations to generate zinc sources for
@@ -76,8 +76,7 @@ open class TemplateConfigurations {
             PartyAndReferenceTemplateParameters.all +
             AttachmentConstraintTemplateParameters.all +
             AttachmentConstraintTemplateParameters.polymorphic +
-            NullableTemplateParameters.fixed +
-            OptionalTemplateParameters.fixed
+            NullableTemplateParameters.fixed
     }
 
     /**
@@ -92,8 +91,8 @@ open class TemplateConfigurations {
                 amountConfigurations +
                 issuedConfigurations +
                 nullableConfigurations +
-                optionalConfigurations +
-                polyConfigurations
+                polyConfigurations +
+                collectionConfigurations
             )
             .flatMap { it.resolveAllConfigurations() }
             .distinct()

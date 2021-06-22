@@ -10,9 +10,9 @@ import com.ing.zknotary.gradle.zinc.template.parameters.AbstractPartyTemplatePar
 import com.ing.zknotary.gradle.zinc.template.parameters.AmountTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.BigDecimalTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.ByteArrayTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.parameters.CollectionTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.IssuedTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.NullableTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.parameters.OptionalTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.PublicKeyTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.StringTemplateParameters
 import com.ing.zknotary.gradle.zinc.util.CircuitConfigurator
@@ -45,7 +45,10 @@ val myIssuedConfigurations: List<IssuedTemplateParameters<*>> = listOf(
 
 val myNullableConfigurations = emptyList<NullableTemplateParameters<*>>()
 
-val myOptionalConfigurations = emptyList<OptionalTemplateParameters<*>>()
+val myCollectionConfigurations = listOf(
+    CollectionTemplateParameters(collectionSize = 3, innerTemplateParameters = StringTemplateParameters(1)),
+    CollectionTemplateParameters("collection_integer.zn", collectionSize = 3, platformModuleName = "u32")
+)
 
 val templateConfigurations = TemplateConfigurations().apply {
     stringConfigurations = myStringConfigurations
@@ -54,7 +57,7 @@ val templateConfigurations = TemplateConfigurations().apply {
     bigDecimalConfigurations = myBigDecimalConfigurations
     issuedConfigurations = myIssuedConfigurations
     nullableConfigurations = myNullableConfigurations
-    optionalConfigurations = myOptionalConfigurations
+    collectionConfigurations = myCollectionConfigurations
 }
 
 fun main(args: Array<String>) {
