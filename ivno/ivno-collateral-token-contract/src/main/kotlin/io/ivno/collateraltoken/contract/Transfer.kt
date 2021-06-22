@@ -1,7 +1,12 @@
 package io.ivno.collateraltoken.contract
 
+import com.ing.serialization.bfl.annotations.FixedLength
+import com.ing.serialization.bfl.serializers.BigDecimalSizes
 import io.dasl.contracts.v1.token.BigDecimalAmount
 import io.ivno.collateraltoken.contract.TransferSchema.TransferSchemaV1
+import kotlinx.serialization.Contextual
+import kotlinx.serialization.Polymorphic
+import kotlinx.serialization.Serializable
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.LinearPointer
 import net.corda.core.contracts.LinearState
@@ -28,17 +33,26 @@ import java.time.Instant
  * @property participants A list of [AbstractParty] for which this state is relevant.
  */
 @BelongsToContract(TransferContract::class)
+@Serializable
 data class Transfer internal constructor(
-    val currentTokenHolder: AbstractParty,
-    val targetTokenHolder: AbstractParty,
+    val currentTokenHolder: @Polymorphic AbstractParty,
+    val targetTokenHolder: @Polymorphic AbstractParty,
     val initiator: TransferInitiator,
-    val amount: BigDecimalAmount<LinearPointer<IvnoTokenType>>,
+    @BigDecimalSizes([AMOUNT_INT_LENGTH, AMOUNT_FRAC_LENGTH])
+    val amount: @Contextual BigDecimalAmount<@Contextual LinearPointer<@Contextual IvnoTokenType>>,
     val status: TransferStatus,
-    val timestamp: Instant,
+    val timestamp: @Contextual Instant,
+    @FixedLength([ACCOUNT_ID_LENGTH])
     val currentTokenHolderAccountId: String,
+    @FixedLength([ACCOUNT_ID_LENGTH])
     val targetTokenHolderAccountId: String,
-    override val linearId: UniqueIdentifier
+    override val linearId: @Contextual UniqueIdentifier
 ) : LinearState, QueryableState {
+    companion object {
+        const val AMOUNT_INT_LENGTH = 20
+        const val AMOUNT_FRAC_LENGTH = 4
+        const val ACCOUNT_ID_LENGTH = 20
+    }
 
     constructor(
         currentTokenHolder: AbstractParty,
@@ -161,10 +175,10 @@ data class Transfer internal constructor(
      */
     internal fun immutableEquals(other: Transfer): Boolean {
         return other.currentTokenHolder == currentTokenHolder &&
-            other.targetTokenHolder == targetTokenHolder &&
-            other.initiator == initiator &&
-            other.amount == amount &&
-            other.linearId == linearId
+        other.targetTokenHolder == targetTokenHolder &&
+        other.initiator == initiator &&
+        other.amount == amount &&
+        other.linearId == linearId
     }
 
     /**
