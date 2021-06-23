@@ -315,3 +315,18 @@ public fun Issued<String>.toJsonObject(encodedSize: Int, productStringSize: Int 
     put("issuer", issuer.toJsonObject(encodedSize))
     put("product", product.toJsonObject(productStringSize))
 }
+
+public fun emptyPublicKey(encodedSize: Int, schemeId: Int? = null): JsonObject = buildJsonObject {
+    schemeId?.let { put("scheme_id", "$it") }
+    put("encoded", ByteArray(0).toJsonObject(encodedSize))
+}
+
+public fun emptyAnonymousParty(publicKeyEncodedSize: Int): JsonObject = buildJsonObject {
+    put("owning_key", emptyPublicKey(publicKeyEncodedSize).polymorphic())
+}
+
+public fun Int?.toJsonObject(): JsonObject = buildJsonObject {
+    val isNull = this@toJsonObject == null
+    put("is_null", isNull)
+    put("inner", "${if (isNull) 0 else this@toJsonObject}")
+}
