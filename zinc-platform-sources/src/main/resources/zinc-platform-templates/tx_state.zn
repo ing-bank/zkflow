@@ -1,0 +1,116 @@
+// Notable input parameters:
+//   - USER_STATE_MODULE_NAME: String = module where user state is located.
+//   - USER_STATE_TYPE_NAME: String
+
+mod platform_consts;
+mod ${USER_STATE_MODULE_NAME};
+mod ${STRING_MODULE_NAME};
+mod ${PARTY_MODULE_NAME};
+mod nullable_i32;
+mod ${ATTACHMENT_CONSTRAINT_MODULE_NAME};
+
+use platform_consts::CORDA_SERDE_MAGIC_LENGTH;
+use platform_consts::STATE_SERDE_STRATEGY_ID_LENGTH;
+use ${USER_STATE_MODULE_NAME}::${USER_STATE_TYPE_NAME};
+use ${USER_STATE_MODULE_NAME}::${USER_STATE_CONSTANT_PREFIX}_LENGTH;
+use ${STRING_MODULE_NAME}::${STRING_TYPE_NAME};
+use ${STRING_MODULE_NAME}::${STRING_CONSTANT_PREFIX}_LENGTH;
+use ${PARTY_MODULE_NAME}::${PARTY_TYPE_NAME};
+use ${PARTY_MODULE_NAME}::${PARTY_CONSTANT_PREFIX}_LENGTH;
+use nullable_i32::NullableI32;
+use nullable_i32::NULLABLE_I32_LENGTH;
+use ${ATTACHMENT_CONSTRAINT_MODULE_NAME}::${ATTACHMENT_CONSTRAINT_TYPE_NAME};
+use ${ATTACHMENT_CONSTRAINT_MODULE_NAME}::${ATTACHMENT_CONSTRAINT_CONSTANT_PREFIX}_LENGTH;
+
+const DATA_OFFSET: u16
+    = CORDA_SERDE_MAGIC_LENGTH
+    + STATE_SERDE_STRATEGY_ID_LENGTH;
+const CONTRACT_OFFSET: u16
+    = DATA_OFFSET
+    + ${USER_STATE_CONSTANT_PREFIX}_LENGTH;
+const NOTARY_OFFSET: u16
+    = CONTRACT_OFFSET
+    + ${STRING_CONSTANT_PREFIX}_LENGTH;
+const ENCUMBRANCE_OFFSET: u16
+    = NOTARY_OFFSET
+    + ${PARTY_CONSTANT_PREFIX}_LENGTH;
+const CONSTRAINT_OFFSET: u16
+    = ENCUMBRANCE_OFFSET
+    + NULLABLE_I32_LENGTH;
+
+const TX_STATE_${USER_STATE_CONSTANT_PREFIX}_LENGTH: u16
+    = CONSTRAINT_OFFSET
+    + ${ATTACHMENT_CONSTRAINT_CONSTANT_PREFIX}_LENGTH;
+
+type SerializedTxState${USER_STATE_TYPE_NAME} = [u8; TX_STATE_${USER_STATE_CONSTANT_PREFIX}_LENGTH];
+
+struct TxState${USER_STATE_TYPE_NAME} {
+    data: ${USER_STATE_TYPE_NAME},
+    contract: ${STRING_TYPE_NAME},
+    notary: ${PARTY_TYPE_NAME},
+    encumbrance: NullableI32,
+    constraint: ${ATTACHMENT_CONSTRAINT_TYPE_NAME}
+}
+
+impl TxState${USER_STATE_TYPE_NAME} {
+    fn equals(this: TxState${USER_STATE_TYPE_NAME}, that: TxState${USER_STATE_TYPE_NAME}) -> bool {
+        ${USER_STATE_TYPE_NAME}::equals(this.data, that.data) &&
+        ${STRING_TYPE_NAME}::equals(this.contract, that.contract) &&
+        ${PARTY_TYPE_NAME}::equals(this.notary, that.notary) &&
+        NullableI32::equals(this.encumbrance, that.encumbrance) &&
+        ${ATTACHMENT_CONSTRAINT_TYPE_NAME}::equals(this.constraint, that.constraint)
+    }
+
+    fn deserialize(serialized: SerializedTxState${USER_STATE_TYPE_NAME}) -> TxState${USER_STATE_TYPE_NAME} {
+        let data = {
+            let mut data_bytes = [0; ${USER_STATE_CONSTANT_PREFIX}_LENGTH];
+            for i in 0..${USER_STATE_CONSTANT_PREFIX}_LENGTH {
+                data_bytes[i] = serialized[i + DATA_OFFSET];
+            }
+            ${USER_STATE_TYPE_NAME}::deserialize(data_bytes)
+        };
+        dbg!("[TxState.data] {}", data);
+
+        let contract = {
+            let mut contract_bytes = [0; ${STRING_CONSTANT_PREFIX}_LENGTH];
+            for i in 0..${STRING_CONSTANT_PREFIX}_LENGTH {
+                contract_bytes[i] = serialized[i + CONTRACT_OFFSET];
+            }
+            ${STRING_TYPE_NAME}::deserialize(contract_bytes)
+        };
+
+        let notary = {
+            let mut notary_bytes = [0; PARTY_ED_DSA_LENGTH];
+            for i in 0..PARTY_ED_DSA_LENGTH {
+                notary_bytes[i] = serialized[i + NOTARY_OFFSET];
+            }
+            ${PARTY_TYPE_NAME}::deserialize(notary_bytes)
+        };
+
+        let encumbrance = {
+            let mut encumbrance_bytes = [0; NULLABLE_I32_LENGTH];
+            for i in 0..NULLABLE_I32_LENGTH {
+                encumbrance_bytes[i] = serialized[i + ENCUMBRANCE_OFFSET];
+            }
+            NullableI32::deserialize(encumbrance_bytes)
+        };
+        dbg!("[TxState.encumbrance] {}", encumbrance);
+
+        let constraint = {
+            let mut constraint_bytes = [0; ${ATTACHMENT_CONSTRAINT_CONSTANT_PREFIX}_LENGTH];
+            for i in 0..${ATTACHMENT_CONSTRAINT_CONSTANT_PREFIX}_LENGTH {
+                constraint_bytes[i] = serialized[i + CONSTRAINT_OFFSET];
+            }
+            ${ATTACHMENT_CONSTRAINT_TYPE_NAME}::deserialize(constraint_bytes)
+        };
+        dbg!("[TxState.constraint] {}", constraint);
+
+        TxState${USER_STATE_TYPE_NAME} {
+            data: data,
+            contract: contract,
+            notary: notary,
+            encumbrance: encumbrance,
+            constraint: constraint
+        }
+    }
+}

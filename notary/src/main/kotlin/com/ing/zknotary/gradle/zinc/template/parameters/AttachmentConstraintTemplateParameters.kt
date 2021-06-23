@@ -59,8 +59,10 @@ data class AttachmentConstraintTemplateParameters(
                 publicKeyParams = it
             )
         }
-        val polymorphic = all.map {
-            PolyTemplateParameters(it)
-        }
+
+        fun selectParameters(attachmentQualifiedClassName: String) =
+            all.single { it.implementationName == attachmentQualifiedClassName.split(".").last() }
+
+        val polymorphic = all.map { it.polymorphic() }
     }
 }

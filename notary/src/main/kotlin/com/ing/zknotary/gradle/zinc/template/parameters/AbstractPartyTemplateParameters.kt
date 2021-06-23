@@ -30,5 +30,11 @@ data class AbstractPartyTemplateParameters(
                 AbstractPartyTemplateParameters(PARTY_TYPE_NAME, it),
             )
         }.flatten()
+
+        fun selectPartyParameters(schemeCodeName: String) =
+            AbstractPartyTemplateParameters(
+                PARTY_TYPE_NAME,
+                PublicKeyTemplateParameters.selectParameters(schemeCodeName)
+            )
     }
 }

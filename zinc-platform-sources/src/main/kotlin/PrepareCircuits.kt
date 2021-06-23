@@ -15,6 +15,7 @@ import com.ing.zknotary.gradle.zinc.template.parameters.IssuedTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.NullableTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.PublicKeyTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.StringTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.parameters.TxStateTemplateParameters
 import com.ing.zknotary.gradle.zinc.util.CircuitConfigurator
 import com.ing.zknotary.gradle.zinc.util.CodeGenerator
 import com.ing.zknotary.gradle.zinc.util.MerkleReplacer
@@ -65,41 +66,55 @@ fun main(args: Array<String>) {
     val projectVersion = args[1]
 
     val circuitSourcesBase = File("$root/circuits")
+    val statesPath = "states"
+    val circuitStates = circuitSourcesBase.resolve(statesPath)
     val mergedCircuitOutput = File("$root/build/circuits")
 
-    val circuits = circuitSourcesBase.listFiles { file, _ -> file?.isDirectory ?: false }?.map { it.name }
-    circuits?.forEach { circuitName ->
-        val outputPath = mergedCircuitOutput.resolve(circuitName).resolve("src")
-
-        val circuitSourcesPath = circuitSourcesBase.resolve(circuitName)
-
-        // Copy Zinc sources
-        val copier = ZincSourcesCopier(outputPath)
-        copier.copyZincCircuitSources(circuitSourcesPath, circuitName, projectVersion, ZKNotaryExtension.CONFIG_CIRCUIT_FILE)
-        copier.copyZincPlatformSources(getPlatformSources(root))
-        copier.copyZincPlatformSources(getPlatformLibs(root))
-
-        // Read the configuration
-        val configurator = CircuitConfigurator(circuitSourcesPath, ZKNotaryExtension.CONFIG_CIRCUIT_FILE)
-        configurator.generateConstsFile(outputPath)
-
-        val consts = joinConstFiles(outputPath, getPlatformSourcesPath(root))
-
-        // Render templates
-        val templateRenderer = TemplateRenderer(outputPath.toPath()) {
-            getTemplateContents(root, it.templateFile)
+    circuitSourcesBase
+        .listFiles { dir, file ->
+            dir.resolve(file).isDirectory && file != statesPath
         }
-        templateConfigurations.resolveAllTemplateParameters().forEach(templateRenderer::renderTemplate)
-        // Generate code
-        val codeGenerator = CodeGenerator(outputPath)
-        getTemplateContents(root, "merkle_template.zn").also { codeGenerator.generateMerkleUtilsCode(it, consts) }
-        getTemplateContents(root, "main_template.zn").also { codeGenerator.generateMainCode(it, consts) }
+        ?.map { it.name }
+        ?.forEach { circuitName ->
+            val outputPath = mergedCircuitOutput.resolve(circuitName).resolve("src")
+            val circuitSourcesPath = circuitSourcesBase.resolve(circuitName)
 
-        // Replace placeholders in Merkle tree functions
-        val replacer = MerkleReplacer(outputPath)
-        replacer.setCorrespondingMerkleTreeFunctionForComponentGroups(consts)
-        replacer.setCorrespondingMerkleTreeFunctionForMainTree()
-    }
+            // Read the configuration
+            val configurator = CircuitConfigurator(circuitSourcesPath, ZKNotaryExtension.CONFIG_CIRCUIT_FILE)
+            configurator.generateConstsFile(outputPath)
+
+            // Copy Zinc sources
+            val copier = ZincSourcesCopier(outputPath)
+            copier.copyZincCircuitSources(circuitSourcesPath, circuitName, projectVersion, ZKNotaryExtension.CONFIG_CIRCUIT_FILE)
+            copier.copyZincCircuitStates(getCircuitStates(circuitStates, configurator.circuitConfiguration.circuit.states))
+            copier.copyZincPlatformSources(getPlatformSources(root))
+            copier.copyZincPlatformSources(getPlatformLibs(root))
+
+            val consts = joinConstFiles(outputPath, getPlatformSourcesPath(root))
+
+            // Render templates
+            val templateRenderer = TemplateRenderer(outputPath.toPath()) {
+                getTemplateContents(root, it.templateFile)
+            }
+
+            val txStatesTemplateConfigurations = configurator.circuitConfiguration.circuit.states.map { state ->
+                // Existence of the required states is ensured during the copying.
+                TxStateTemplateParameters(state)
+            }.flatMap { it.resolveAllConfigurations() }.distinct()
+
+            (templateConfigurations.resolveAllTemplateParameters() + txStatesTemplateConfigurations)
+                .forEach(templateRenderer::renderTemplate)
+
+            // Generate code
+            val codeGenerator = CodeGenerator(outputPath)
+            getTemplateContents(root, "merkle_template.zn").also { codeGenerator.generateMerkleUtilsCode(it, consts) }
+            getTemplateContents(root, "main_template.zn").also { codeGenerator.generateMainCode(it, consts) }
+
+            // Replace placeholders in Merkle tree functions
+            val replacer = MerkleReplacer(outputPath)
+            replacer.setCorrespondingMerkleTreeFunctionForComponentGroups(consts)
+            replacer.setCorrespondingMerkleTreeFunctionForMainTree()
+        }
 
     // Render templates for test circuits
     val testTemplateRenderer =
@@ -110,6 +125,14 @@ fun main(args: Array<String>) {
 
 private fun getPlatformSourcesPath(root: String): File {
     return File("$root/src/main/resources/zinc-platform-sources")
+}
+
+private fun getCircuitStates(circuitStates: File, states: List<CircuitConfigurator.State>): List<File> {
+    return states.map { state ->
+        val module = circuitStates.resolve(state.location)
+        require(module.exists()) { "Expected ${module.absolutePath}" }
+        module
+    }
 }
 
 private fun getPlatformSources(root: String): Array<File>? {
