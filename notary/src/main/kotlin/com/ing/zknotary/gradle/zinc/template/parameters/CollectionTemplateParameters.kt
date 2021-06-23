@@ -17,7 +17,7 @@ data class CollectionTemplateParameters<T>(
     private val innerTypeName = innerTemplateParameters?.typeName
         ?: innerModuleName.removePrefix("platform_").snakeCaseToCamel()
 
-    private val numberPad = "_".takeIf { innerTypeName.matches(".*\\d".toRegex()) } ?: ""
+    private val numberPad = "_".takeIf { innerTypeName.matches(".*[\\d|[A-Z]]".toRegex()) } ?: ""
 
     override val typeName = "${innerTypeName}${numberPad}Collection_$collectionSize"
 
