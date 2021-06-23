@@ -60,17 +60,17 @@ fun Transfer.toZincJson() = toJsonObject().toString()
 /**
  * Extension function for encoding a nullable ByteArray to Json
  * @param serializedSize The size of the byte array
- * @param isEmpty Boolean flag indicating whether the nullability wrapper will be applied on the Json structure
+ * @param isNullable Boolean flag indicating whether the nullability wrapper will be applied on the Json structure
  *
  * @return the JsonObject of the byte array
  */
-fun ByteArray?.toJsonObject(serializedSize: Int, isEmpty: Boolean = true) = buildJsonObject {
+fun ByteArray?.toJsonObject(serializedSize: Int, isNullable: Boolean = false) = buildJsonObject {
     val inner = buildJsonObject {
         put("size", "${this@toJsonObject?.size ?: 0}")
         put("bytes", resizeTo(serializedSize).toJsonArray())
     }
 
-    if (isEmpty) return@toJsonObject inner
+    if (!isNullable) return@toJsonObject inner
     put("is_null", this@toJsonObject == null)
     put("inner", inner)
 }
@@ -79,11 +79,11 @@ fun ByteArray?.toJsonObject(serializedSize: Int, isEmpty: Boolean = true) = buil
  * Extension function for encoding a nullable PublicKey to Json
  * @param encodedSize The size of the inner byte array
  * @param scheme The signature scheme of the key (useful in the case of a null key)
- * @param isEmpty Boolean flag indicating whether the nullability wrapper will be applied on the Json structure
+ * @param isNullable Boolean flag indicating whether the nullability wrapper will be applied on the Json structure
  *
  * @return the JsonObject of the public key
  */
-fun PublicKey?.toJsonObject(encodedSize: Int, scheme: SignatureScheme, isEmpty: Boolean = true) = buildJsonObject {
+fun PublicKey?.toJsonObject(encodedSize: Int, scheme: SignatureScheme, isNullable: Boolean = false) = buildJsonObject {
     // In the null case there is no way to know the intended implementation class. Given the fact that there are various
     // ways of serializing empty PublicKeys depending on their scheme we need to know somehow which empty version to
     // encode to Json. Thus, the 'scheme' is explicitly passed in this function.
@@ -94,12 +94,12 @@ fun PublicKey?.toJsonObject(encodedSize: Int, scheme: SignatureScheme, isEmpty: 
 
         put(
             key = "encoded",
-            element = this@toJsonObject?.let { it.encoded.toJsonObject(encodedSize) }
-                ?: ByteArray?::toJsonObject.invoke(null, encodedSize, true)
+            element = this@toJsonObject?.encoded?.toJsonObject(encodedSize)
+                ?: ByteArray?::toJsonObject.invoke(null, encodedSize, false)
         )
     }
 
-    if (isEmpty) return@toJsonObject inner
+    if (!isNullable) return@toJsonObject inner
     put("is_null", this@toJsonObject == null)
     put("inner", inner.polymorphic())
 }
@@ -110,11 +110,11 @@ fun PublicKey?.toJsonObject(encodedSize: Int, scheme: SignatureScheme, isEmpty: 
  * @param isAnonymous Boolean flag indicating the implementation class of the abstract party (useful in the case of a
  * null abstract party)
  * @param scheme The signature scheme of the owning key (useful in the case of a null abstract party)
- * @param isEmpty Boolean flag indicating whether the nullability wrapper will be applied on the Json structure
+ * @param isNullable Boolean flag indicating whether the nullability wrapper will be applied on the Json structure
  *
  * @return the JsonObject of the abstract party
  */
-fun AbstractParty?.toJsonObject(encodedSize: Int, isAnonymous: Boolean, scheme: SignatureScheme, isEmpty: Boolean = true) = buildJsonObject {
+fun AbstractParty?.toJsonObject(encodedSize: Int, isAnonymous: Boolean, scheme: SignatureScheme, isNullable: Boolean = false) = buildJsonObject {
     // In the null case there is no way to know the intended implementation class. Given the fact that the empty
     // serialization of AnonymousParty differs from the one for Party (due to the CordaX500Name name property),
     // we need to know somehow which empty version to encode to Json. Thus, the 'isAnonymous' flag is used.
@@ -134,11 +134,11 @@ fun AbstractParty?.toJsonObject(encodedSize: Int, isAnonymous: Boolean, scheme: 
                     Crypto.findSignatureScheme(owningKey)
                 )
             }
-                ?: PublicKey?::toJsonObject.invoke(null, encodedSize, scheme, true)).polymorphic()
+                ?: PublicKey?::toJsonObject.invoke(null, encodedSize, scheme, false)).polymorphic()
         )
     }
 
-    if (isEmpty) return@toJsonObject inner
+    if (!isNullable) return@toJsonObject inner
     put("is_null", this@toJsonObject == null)
     put("inner", inner.polymorphic())
 }
@@ -163,7 +163,7 @@ fun BigDecimalAmount<LinearPointer<IvnoTokenType>>.toJsonObject() = buildJsonObj
 
 fun Network.toJsonObject(encodedSize: Int, isAnonymous: Boolean, scheme: SignatureScheme) = buildJsonObject {
     put("value", value.toJsonObject(NetworkSurrogate.VALUE_LENGTH))
-    put("operator", operator.toJsonObject(encodedSize, isAnonymous, scheme, false))
+    put("operator", operator.toJsonObject(encodedSize, isAnonymous, scheme, true))
 }
 
 fun Setting<String>.toJsonObject(size: Int) = buildJsonObject {
@@ -204,7 +204,7 @@ fun Deposit.toJsonObject() = buildJsonObject {
     put("custodian", custodian.toJsonObject(EdDSASurrogate.ENCODED_SIZE))
     put("token_issuing_entity", tokenIssuingEntity.toJsonObject(EdDSASurrogate.ENCODED_SIZE))
     put("amount", amount.toJsonObject())
-    put("reference", reference.toJsonObject(20))
+    put("reference", reference.toJsonObject(20, true))
     put("status", status.toJsonObject())
     put("timestamp", timestamp.toJsonObject())
     put("account_id", accountId.toJsonObject(20))

@@ -15,6 +15,7 @@ import com.ing.zknotary.testing.toSizedIntArray
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.modules.EmptySerializersModule
@@ -86,22 +87,40 @@ public fun AttachmentConstraint.toZincJson(encodedSize: Int? = null): String =
     toJsonObject(encodedSize).toString()
 public fun Issued<String>.toZincJson(encodedSize: Int): String =
     toJsonObject(encodedSize).toString()
+public fun Collection<String>.toZincJson(collectionSize: Int, elementSize: Int): String =
+    toJsonObject(collectionSize, elementSize).toString()
+public fun Collection<Int>.toZincJson(collectionSize: Int): String =
+    toJsonObject(collectionSize).toString()
 
-@JvmName("toJsonObject")
-public fun String.toJsonObject(size: Int): JsonObject = buildJsonObject {
-    put("chars", toSizedIntArray(size).toJsonArray())
-    put("size", "$length")
-}
-
-@JvmName("toNullableJsonObject")
-public fun String?.toJsonObject(size: Int): JsonObject = buildJsonObject {
+public fun String?.toJsonObject(size: Int, isNullable: Boolean = false): JsonObject = buildJsonObject {
     val inner = buildJsonObject {
         put("chars", toSizedIntArray(size).toJsonArray())
         put("size", "${this@toJsonObject?.length ?: 0}")
     }
 
+    if (!isNullable) return@toJsonObject inner
     put("is_null", this@toJsonObject == null)
     put("inner", inner)
+}
+
+public fun Collection<Int>.toJsonObject(collectionSize: Int): JsonObject = buildJsonObject {
+    put("size", "$size")
+    put("elements", this@toJsonObject.toIntArray().resizeTo(collectionSize).toJsonArray())
+}
+
+public fun Collection<String>.toJsonObject(collectionSize: Int, elementSize: Int): JsonObject = buildJsonObject {
+    put("size", "$size")
+    put(
+        "elements",
+        buildJsonArray {
+            map {
+                add(it.toJsonObject(elementSize))
+            }
+            repeat(collectionSize - size) {
+                add((null as String?).toJsonObject(elementSize))
+            }
+        }
+    )
 }
 
 public fun <T : Enum<T>> T.toJsonObject(): JsonPrimitive = JsonPrimitive(this.ordinal.toString())
@@ -158,7 +177,7 @@ public fun UniqueIdentifier.toJsonObject(): JsonObject = buildJsonObject {
     // input validations
     id.mostSignificantBits shouldBe 0
 
-    put("external_id", externalId.toJsonObject(UniqueIdentifierSurrogate.EXTERNAL_ID_LENGTH))
+    put("external_id", externalId.toJsonObject(UniqueIdentifierSurrogate.EXTERNAL_ID_LENGTH, true))
     put("id", "${id.leastSignificantBits}")
 }
 

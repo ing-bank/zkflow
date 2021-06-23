@@ -5,9 +5,9 @@ import com.ing.zknotary.gradle.zinc.template.TemplateConfigurations
 import com.ing.zknotary.gradle.zinc.template.parameters.AmountTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.BigDecimalTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.ByteArrayTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.parameters.CollectionTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.IssuedTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.NullableTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.parameters.OptionalTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.StringTemplateParameters
 import org.gradle.api.Project
 import org.gradle.api.tasks.Input
@@ -45,7 +45,7 @@ open class ZKNotaryExtension(project: Project) : TemplateConfigurations() {
     override var nullableConfigurations: List<NullableTemplateParameters<*>> = emptyList()
 
     @Input
-    override var optionalConfigurations: List<OptionalTemplateParameters<*>> = emptyList()
+    override var collectionConfigurations: List<CollectionTemplateParameters<*>> = emptyList()
 
     @Input
     var zincPlatformSourcesVersion: String? = "1.0-SNAPSHOT"
