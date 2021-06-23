@@ -48,7 +48,15 @@ val myNullableConfigurations = emptyList<NullableTemplateParameters<*>>()
 
 val myCollectionConfigurations = listOf(
     CollectionTemplateParameters(collectionSize = 3, innerTemplateParameters = StringTemplateParameters(1)),
-    CollectionTemplateParameters("collection_integer.zn", collectionSize = 3, platformModuleName = "u32")
+    CollectionTemplateParameters("collection_integer.zn", collectionSize = 3, platformModuleName = "u32"),
+    // Collection of participants to TestState.
+    CollectionTemplateParameters(
+        collectionSize = 2,
+        innerTemplateParameters = AbstractPartyTemplateParameters(
+            ANONYMOUS_PARTY_TYPE_NAME,
+            PublicKeyTemplateParameters.eddsaTemplateParameters
+        )
+    ),
 )
 
 val templateConfigurations = TemplateConfigurations().apply {

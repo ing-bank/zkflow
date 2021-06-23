@@ -114,6 +114,9 @@ open class CopyCircuitTask @Inject constructor() : DefaultTask() {
     @org.gradle.api.tasks.OutputDirectory
     val generatedResourcesDir: Path = projectDir.resolve("build/resources/test")
 
+    @org.gradle.api.tasks.OutputDirectory
+    val generatedCircuitsCreateDir: Path = projectDir.resolve("build/circuits/create/src")
+
     @org.gradle.api.tasks.InputDirectory
     val testClassesPath: Path = projectDir.resolve("src/test/kotlin/com/ing/zknotary/zinc/types/")
 
@@ -145,9 +148,10 @@ open class CopyCircuitTask @Inject constructor() : DefaultTask() {
                     Files.list(project.buildDir.resolve("zinc-platform-test-sources").toPath()),
                     Files.list(resourcesDir.resolve("zinc-platform-libraries")),
                     listOf("platform_consts.zn", "platform_component_group_enum.zn")
-                        .map {
-                            resourcesDir.resolve("zinc-platform-sources").resolve(it)
-                        }
+                        .map { resourcesDir.resolve("zinc-platform-sources").resolve(it) }
+                        .stream(),
+                    listOf("test_state.zn", "tx_state_test_state.zn", "string_256.zn")
+                        .map { generatedCircuitsCreateDir.resolve(it) }
                         .stream()
                 )
                     .flatMap { it.toList() }

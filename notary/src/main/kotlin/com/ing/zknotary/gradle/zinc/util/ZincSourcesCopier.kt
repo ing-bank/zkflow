@@ -28,6 +28,15 @@ class ZincSourcesCopier(private val outputPath: File) {
         }
     }
 
+    fun copyZincCircuitStates(circuitStates: List<File>) {
+        circuitStates.forEach { file ->
+            file.copyTo(
+                createOutputFile(outputPath).resolve(file.name),
+                overwrite = true
+            )
+        }
+    }
+
     fun copyZincPlatformSources(platformSources: Array<File>?) {
         platformSources?.forEach { file ->
             file.copyTo(
