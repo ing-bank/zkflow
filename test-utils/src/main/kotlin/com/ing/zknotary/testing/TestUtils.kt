@@ -1,7 +1,7 @@
 package com.ing.zknotary.testing
 
-import com.ing.zknotary.common.zkp.ZKNulls.fixedKeyPair
 import com.ing.zknotary.common.zkp.ZincZKService
+import com.ing.zknotary.testing.zkp.ZKNulls.fixedKeyPair
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.buildJsonArray
