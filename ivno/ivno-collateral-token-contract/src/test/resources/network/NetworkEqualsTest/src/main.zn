@@ -1,7 +1,7 @@
-mod network;
+mod network_poly_party_ed_dsa;
 
-use network::Network;
+use network_poly_party_ed_dsa::NetworkPolyPartyEdDSA;
 
-fn main(left: Network, right: Network) -> bool {
-    Network::equals(left, right)
+fn main(left: NetworkPolyPartyEdDSA, right: NetworkPolyPartyEdDSA) -> bool {
+    NetworkPolyPartyEdDSA::equals(left, right)
 }

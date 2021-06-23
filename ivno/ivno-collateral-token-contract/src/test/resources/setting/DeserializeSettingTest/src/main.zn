@@ -1,8 +1,8 @@
-mod setting;
+mod setting_string_7;
 
-use setting::Setting;
-use setting::SerializedSetting;
+use setting_string_7::SettingString_7;
+use setting_string_7::SerializedSettingString_7;
 
-fn main(witness: SerializedSetting) -> Setting {
-    Setting::deserialize(witness)
+fn main(witness: SerializedSettingString_7) -> SettingString_7 {
+    SettingString_7::deserialize(witness)
 }

@@ -15,8 +15,8 @@ TokenDescriptorSurrogate.serializer(),
 @Serializable
 data class TokenDescriptorSurrogate(
     @FixedLength([SYMBOL_SIZE])
-  val symbol: String,
-  val issuerName: @Contextual CordaX500Name
+    val symbol: String,
+    val issuerName: @Contextual CordaX500Name
 ) : Surrogate<TokenDescriptor> {
     override fun toOriginal() = TokenDescriptor(symbol, issuerName)
 

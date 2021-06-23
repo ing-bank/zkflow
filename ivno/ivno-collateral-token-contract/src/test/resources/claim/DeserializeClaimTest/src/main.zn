@@ -1,8 +1,8 @@
-mod poly_claim;
+mod poly_claim_string_7;
 
-use poly_claim::PolyClaim;
-use poly_claim::SerializedPolyClaim;
+use poly_claim_string_7::PolyClaimString_7;
+use poly_claim_string_7::SerializedPolyClaimString_7;
 
-fn main(witness: SerializedPolyClaim) -> PolyClaim {
-    PolyClaim::deserialize(witness)
+fn main(witness: SerializedPolyClaimString_7) -> PolyClaimString_7 {
+    PolyClaimString_7::deserialize(witness)
 }
