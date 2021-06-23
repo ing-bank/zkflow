@@ -1,6 +1,10 @@
 {
   "circuit" : {
-    "name": "create"
+    "name": "create",
+    "states" : [{
+      "location" : "test_state.zn",
+      "name" : "TestState"
+    }]
   },
   "groups" : {
     "output_group" : {

@@ -1,6 +1,10 @@
 {
   "circuit" : {
-    "name": "move"
+    "name": "move",
+    "states" : [{
+      "location" : "test_state.zn",
+      "name" : "TestState"
+    }]
   },
   "groups" : {
     "input_group" : {

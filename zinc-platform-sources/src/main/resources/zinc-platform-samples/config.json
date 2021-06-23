@@ -1,6 +1,11 @@
 {
   "circuit" : {
-    "name": "circuit-name"
+    "name": "circuit-name",
+    "states" : [{
+      "location" : "path-to-file-containing-state-respectively-of-states-folder",
+      "name" : "name",
+      "attachment_constraint" : "net.corda.core.contracts.AutomaticPlaceholderConstraint"
+    }]
   },
   "groups" : {
     "attachment_group" : {

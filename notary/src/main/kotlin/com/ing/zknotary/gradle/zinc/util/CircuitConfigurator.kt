@@ -3,6 +3,7 @@ package com.ing.zknotary.gradle.zinc.util
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.buildClassSerialDescriptor
@@ -12,6 +13,9 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.encoding.decodeStructure
 import kotlinx.serialization.json.Json
+import net.corda.core.contracts.AttachmentConstraint
+import net.corda.core.contracts.AutomaticPlaceholderConstraint
+import net.corda.core.crypto.Crypto
 import java.io.File
 
 class CircuitConfigurator(
@@ -22,7 +26,53 @@ class CircuitConfigurator(
     data class CircuitConfiguration(val circuit: Circuit, val groups: Groups)
 
     @Serializable
-    data class Circuit(val name: String)
+    data class Circuit(
+        val name: String,
+        val states: List<State> = listOf()
+    )
+
+    @Serializable
+    data class State(
+        val location: String,
+        val name: String,
+        @Transient
+        val notaryKeySchemeCodename: String =
+            Crypto.EDDSA_ED25519_SHA512.schemeCodeName,
+        @SerialName("attachment_constraint") val attachmentConstraint: String =
+            AutomaticPlaceholderConstraint::class.qualifiedName!!
+    ) {
+        init {
+            // Verify class' fields.
+            try {
+                Crypto.findSignatureScheme(notaryKeySchemeCodename)
+            } catch (e: Exception) {
+                throw IllegalArgumentException(
+                    """
+                        Value `notary_key_scheme_codename` is invalid: $notaryKeySchemeCodename
+                        Valid values are: ${Crypto.supportedSignatureSchemes().joinToString(separator = ", ") { it.schemeCodeName}}                      
+                    """.trimIndent(),
+                    e
+                )
+            }
+
+            val attachmentClass = try {
+                Class.forName(attachmentConstraint)
+            } catch (e: Exception) {
+                throw IllegalArgumentException(
+                    "Value `attachment_constraint` is invalid: $attachmentConstraint", e
+                )
+            }
+
+            if (!AttachmentConstraint::class.java.isAssignableFrom(attachmentClass)) {
+                error(
+                    """
+                        Value `attachment_constraint` is invalid: $attachmentConstraint
+                        $attachmentConstraint must implement ${AttachmentConstraint::class.qualifiedName}                   
+                    """.trimIndent()
+                )
+            }
+        }
+    }
 
     @Serializable
     data class Groups(
