@@ -49,7 +49,7 @@ internal class AmountSerializerTest {
         val original = DataWithIssued(Amount(5L, BigDecimal.ONE, issued))
         assertRoundTripSucceeds(
             original,
-            serializers = CordaSerializers +
+            serializers = CordaSerializers.module +
                 SerializersModule { contextual(AmountSerializer(IssuedSerializer(Int.serializer()))) }
         )
     }

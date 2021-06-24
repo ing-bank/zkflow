@@ -1,4 +1,4 @@
-package com.ing.zknotary.common.zkp
+package com.ing.zknotary.testing.zkp
 
 import net.corda.core.crypto.Crypto
 import net.corda.core.crypto.SignatureScheme

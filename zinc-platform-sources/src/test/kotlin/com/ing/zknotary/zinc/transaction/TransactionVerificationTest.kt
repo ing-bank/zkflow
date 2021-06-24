@@ -5,9 +5,9 @@ import com.ing.zknotary.common.serialization.bfl.BFLSerializationScheme
 import com.ing.zknotary.common.transactions.UtxoInfo
 import com.ing.zknotary.common.zkp.PublicInput
 import com.ing.zknotary.common.zkp.Witness
-import com.ing.zknotary.common.zkp.ZKNulls
 import com.ing.zknotary.common.zkp.ZincZKService
 import com.ing.zknotary.testing.fixtures.contract.TestContract
+import com.ing.zknotary.testing.zkp.ZKNulls
 import com.ing.zknotary.zinc.types.proveTimed
 import com.ing.zknotary.zinc.types.setupTimed
 import com.ing.zknotary.zinc.types.verifyTimed
@@ -30,7 +30,6 @@ import net.corda.core.transactions.WireTransaction
 import net.corda.core.utilities.loggerFor
 import net.corda.coretesting.internal.asTestContextEnv
 import net.corda.coretesting.internal.createTestSerializationEnv
-import net.corda.testing.core.TestIdentity
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
@@ -66,7 +65,7 @@ class TransactionVerificationTest {
         verificationTimeout = Duration.ofSeconds(1)
     )
 
-    private val notary = TestIdentity.fresh("Notary").party
+    private val notary = ZKNulls.NULL_PARTY
 
     init {
         if (!runOnly) {
@@ -102,6 +101,7 @@ class TransactionVerificationTest {
      * On the Zinc side, we never serialize. On deserialization, unsizing does not happen.
      */
     @Test
+    @Suppress("LongMethod")
     fun `zinc verifies full create transaction`() = withCustomSerializationEnv {
         val alice = ZKNulls.NULL_ANONYMOUS_PARTY
 

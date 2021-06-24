@@ -3,7 +3,7 @@ package com.ing.zknotary.zinc.types
 
 import com.ing.serialization.bfl.api.reified.serialize
 import com.ing.serialization.bfl.serializers.BFLSerializers
-import com.ing.zknotary.common.serialization.bfl.corda.LinearPointerSurrogate
+import com.ing.zknotary.common.serialization.bfl.serializers.CordaSerializers
 import com.ing.zknotary.common.serialization.bfl.serializers.CordaX500NameSerializer
 import com.ing.zknotary.common.serialization.bfl.serializers.PartyAndReferenceSurrogate
 import com.ing.zknotary.common.serialization.bfl.serializers.SecureHashSupportedAlgorithm
@@ -183,7 +183,7 @@ public fun UniqueIdentifier.toJsonObject(): JsonObject = buildJsonObject {
 
 public fun LinearPointer<*>.toJsonObject(): JsonObject = buildJsonObject {
     put("pointer", pointer.toJsonObject())
-    put("class_name", type.name.toJsonObject(LinearPointerSurrogate.MAX_CLASS_NAME_SIZE))
+    put("class_name", type.name.toJsonObject(CordaSerializers.CLASS_NAME_SIZE))
     put("is_resolved", isResolved)
 }
 
@@ -314,4 +314,19 @@ public fun SignatureAttachmentConstraint.toJsonObject(encodedSize: Int): JsonObj
 public fun Issued<String>.toJsonObject(encodedSize: Int, productStringSize: Int = 1): JsonObject = buildJsonObject {
     put("issuer", issuer.toJsonObject(encodedSize))
     put("product", product.toJsonObject(productStringSize))
+}
+
+public fun emptyPublicKey(encodedSize: Int, schemeId: Int? = null): JsonObject = buildJsonObject {
+    schemeId?.let { put("scheme_id", "$it") }
+    put("encoded", ByteArray(0).toJsonObject(encodedSize))
+}
+
+public fun emptyAnonymousParty(publicKeyEncodedSize: Int): JsonObject = buildJsonObject {
+    put("owning_key", emptyPublicKey(publicKeyEncodedSize).polymorphic())
+}
+
+public fun Int?.toJsonObject(): JsonObject = buildJsonObject {
+    val isNull = this@toJsonObject == null
+    put("is_null", isNull)
+    put("inner", "${if (isNull) 0 else this@toJsonObject}")
 }

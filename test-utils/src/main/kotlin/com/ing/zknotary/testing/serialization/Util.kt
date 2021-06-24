@@ -32,6 +32,6 @@ public fun <T : Any> T.serializeWithScheme(
 }
 
 public fun <T : Any> toObliviousWitness(item: T, serializersModule: SerializersModule = EmptySerializersModule): String {
-    val bytes = serialize(item, serializersModule = CordaSerializers + serializersModule)
+    val bytes = serialize(item, serializersModule = CordaSerializers.module + serializersModule)
     return bytesToWitness(bytes)
 }

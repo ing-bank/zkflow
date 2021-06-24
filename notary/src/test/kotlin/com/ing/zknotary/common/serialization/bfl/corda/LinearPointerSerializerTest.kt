@@ -31,29 +31,29 @@ internal class LinearPointerSerializerTest {
     fun `different LinearPointers should have the same size`() {
         val data1 = Data(LinearPointer(pointer = UniqueIdentifier(), type = MyLinearState::class.java))
         val data2 = Data(LinearPointer(pointer = UniqueIdentifier(), type = MyOtherLinearState::class.java))
-        assertSameSize(data1, data2, serializers = CordaSerializers)
+        assertSameSize(data1, data2, serializers = CordaSerializers.module)
     }
 
     @Test
     fun `LinearPointer with MyLinearState should be deserialized correctly`() {
         val data1 = Data(LinearPointer(pointer = UniqueIdentifier(), type = MyLinearState::class.java))
-        assertRoundTripSucceeds(data1, CordaSerializers).data.type shouldBe MyLinearState::class.java
+        assertRoundTripSucceeds(data1, CordaSerializers.module).data.type shouldBe MyLinearState::class.java
     }
 
     @Test
     fun `LinearPointer with MyOtherLinearState should be deserialized correctly`() {
         val data2 = Data(LinearPointer(pointer = UniqueIdentifier(), type = MyOtherLinearState::class.java))
-        assertRoundTripSucceeds(data2, CordaSerializers).data.type shouldBe MyOtherLinearState::class.java
+        assertRoundTripSucceeds(data2, CordaSerializers.module).data.type shouldBe MyOtherLinearState::class.java
     }
 
     @Test
     fun `validate LinearPointer with different types`() {
         val pointer = UniqueIdentifier()
         val data1 = Data(LinearPointer(pointer = pointer, type = MyLinearState::class.java))
-        val deserializedData1 = assertRoundTripSucceeds(data1, CordaSerializers)
+        val deserializedData1 = assertRoundTripSucceeds(data1, CordaSerializers.module)
 
         val data2 = Data(LinearPointer(pointer = pointer, type = MyOtherLinearState::class.java))
-        val deserializedData2 = assertRoundTripSucceeds(data2, CordaSerializers)
+        val deserializedData2 = assertRoundTripSucceeds(data2, CordaSerializers.module)
 
         // LinearPointers have the same pointer, so they're equal
         data1 shouldBe data2

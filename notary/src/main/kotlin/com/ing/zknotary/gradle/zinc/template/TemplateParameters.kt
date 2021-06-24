@@ -25,7 +25,7 @@ open class TemplateParameters(
     /**
      * Recursively resolves all configurations required in this template.
      */
-    internal fun resolveAllConfigurations(): List<TemplateParameters> =
+    fun resolveAllConfigurations(): List<TemplateParameters> =
         dependencies.flatMap { it.resolveAllConfigurations() } + this
 
     /**

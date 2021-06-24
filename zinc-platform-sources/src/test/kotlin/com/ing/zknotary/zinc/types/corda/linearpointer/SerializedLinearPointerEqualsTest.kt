@@ -74,8 +74,8 @@ class SerializedLinearPointerEqualsTest {
     }
 
     private fun toWitness(left: Data, right: Data): String {
-        val bytes = serialize(left, serializersModule = CordaSerializers) +
-            serialize(right, serializersModule = CordaSerializers)
+        val bytes = serialize(left, serializersModule = CordaSerializers.module) +
+            serialize(right, serializersModule = CordaSerializers.module)
         return "{\"witness\":${bytes.toJsonArray()}}"
     }
 

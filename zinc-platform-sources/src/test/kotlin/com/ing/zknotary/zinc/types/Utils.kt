@@ -55,12 +55,12 @@ fun toBigWitness(left: BigDecimal, right: BigDecimal) = buildJsonObject {
 }.toString()
 
 inline fun <reified T : Any> toWitness(item: T): String {
-    val bytes = serialize(item, serializersModule = CordaSerializers)
+    val bytes = serialize(item, serializersModule = CordaSerializers.module)
     return bytesToWitness(bytes)
 }
 
 fun <T : Any> toObliviousWitness(item: T, serializersModule: SerializersModule = EmptySerializersModule): String {
-    val bytes = obliviousSerialize(item, serializersModule = CordaSerializers + serializersModule)
+    val bytes = obliviousSerialize(item, serializersModule = CordaSerializers.module + serializersModule)
     return bytesToWitness(bytes)
 }
 

@@ -19,8 +19,8 @@ public inline fun <reified T : Any> assertRoundTripSucceeds(
     strategy: KSerializer<T>? = null,
     outerFixedLength: IntArray = IntArray(0)
 ): T {
-    val serialization = serialize(value, strategy, serializersModule = CordaSerializers + serializers, outerFixedLength)
-    val deserialization = deserialize<T>(serialization, strategy, serializersModule = CordaSerializers + serializers, outerFixedLength)
+    val serialization = serialize(value, strategy, serializersModule = CordaSerializers.module + serializers, outerFixedLength)
+    val deserialization = deserialize<T>(serialization, strategy, serializersModule = CordaSerializers.module + serializers, outerFixedLength)
 
     deserialization shouldBe value
     return deserialization
@@ -38,8 +38,8 @@ public inline fun <reified T : Any> assertSameSize(
 ) {
     value1 shouldNotBe value2
 
-    val serialization1 = serialize(value1, strategy, serializersModule = CordaSerializers + serializers, outerFixedLength)
-    val serialization2 = serialize(value2, strategy, serializersModule = CordaSerializers + serializers, outerFixedLength)
+    val serialization1 = serialize(value1, strategy, serializersModule = CordaSerializers.module + serializers, outerFixedLength)
+    val serialization2 = serialize(value2, strategy, serializersModule = CordaSerializers.module + serializers, outerFixedLength)
 
     serialization1 shouldNotBe serialization2
     serialization1.size shouldBe serialization2.size

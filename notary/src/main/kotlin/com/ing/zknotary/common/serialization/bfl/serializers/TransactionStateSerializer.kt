@@ -21,7 +21,8 @@ class TransactionStateSerializer<T : ContractState>(contractStateSerializer: KSe
 @Serializable
 data class TransactionStateSurrogate<T : ContractState>(
     val data: @Contextual T,
-    @FixedLength([256]) val contract: ContractClassName,
+    @FixedLength([CordaSerializers.CLASS_NAME_SIZE])
+    val contract: ContractClassName,
     val notary: @Contextual Party,
     val encumbrance: Int? = null,
     val constraint: AttachmentConstraint

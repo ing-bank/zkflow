@@ -11,3 +11,6 @@ data class PolyTemplateParameters<T : TemplateParameters>(val type: T) : Templat
     override fun getTargetFilename() = "${getModuleName()}.zn"
     override fun getReplacements() = getTypeReplacements() + type.getTypeReplacements("T_")
 }
+
+inline fun <reified T : TemplateParameters> T.polymorphic(): PolyTemplateParameters<T> =
+    PolyTemplateParameters(this)

@@ -1,5 +1,6 @@
 package com.ing.zknotary.common.zkp
 
+import com.ing.zknotary.testing.zkp.ZKNulls
 import net.corda.core.crypto.Crypto
 import org.junit.Test
 

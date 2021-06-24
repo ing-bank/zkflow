@@ -1,15 +1,19 @@
 {
   "circuit" : {
-    "name": "move"
+    "name": "move",
+    "states" : [{
+      "location" : "test_state.zn",
+      "name" : "TestState"
+    }]
   },
   "groups" : {
     "input_group" : {
       "group_size" : 1,
-      "component_size" : 1537
+      "component_size" : 1409
     },
     "output_group" : {
       "group_size" : 1,
-      "component_size" : 1537
+      "component_size" : 1409
     },
     "command_group": {
       "group_size": 1,

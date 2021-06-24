@@ -19,7 +19,7 @@ class PublicKeySerializerTest {
             it.schemeNumberID != Crypto.COMPOSITE_KEY.schemeNumberID
         }.forEach {
             val pk = Crypto.generateKeyPair(it).public
-            val ser = debugSerialize(pk, serializersModule = CordaSerializers)
+            val ser = debugSerialize(pk, serializersModule = CordaSerializers.module)
             println("${it.schemeCodeName}:\n\tPublic key size = ${pk.encoded.size}\n\tserialized size = ${ser.first.size}")
             println(ser.second)
 
