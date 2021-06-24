@@ -101,6 +101,7 @@ class TransactionVerificationTest {
      * On the Zinc side, we never serialize. On deserialization, unsizing does not happen.
      */
     @Test
+    @Suppress("LongMethod")
     fun `zinc verifies full create transaction`() = withCustomSerializationEnv {
         val alice = ZKNulls.NULL_ANONYMOUS_PARTY
 

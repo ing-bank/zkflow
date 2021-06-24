@@ -37,7 +37,7 @@ class AbstractPartySerializerTest {
                         TestIdentity.fresh("Bob").party.anonymise()
                     )
                 ),
-                serializersModule = CordaSerializers
+                serializersModule = CordaSerializers.module
             )
         }
     }

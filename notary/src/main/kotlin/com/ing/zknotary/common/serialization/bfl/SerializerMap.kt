@@ -13,7 +13,7 @@ import kotlin.reflect.KClass
 
 object SerializersModuleRegistry {
     private val log = loggerFor<SerializersModuleRegistry>()
-    private val modules = mutableListOf(CordaSerializers)
+    private val modules = mutableListOf(CordaSerializers.module)
 
     /**
      * Register a SerializersModule

@@ -9,7 +9,7 @@
   "groups" : {
     "output_group" : {
       "group_size" : 1,
-      "component_size" : 1537
+      "component_size" : 1409
     },
     "command_group": {
       "group_size": 1,

@@ -3,7 +3,7 @@ package com.ing.zknotary.zinc.types
 
 import com.ing.serialization.bfl.api.reified.serialize
 import com.ing.serialization.bfl.serializers.BFLSerializers
-import com.ing.zknotary.common.serialization.bfl.corda.LinearPointerSurrogate
+import com.ing.zknotary.common.serialization.bfl.serializers.CordaSerializers
 import com.ing.zknotary.common.serialization.bfl.serializers.CordaX500NameSerializer
 import com.ing.zknotary.common.serialization.bfl.serializers.PartyAndReferenceSurrogate
 import com.ing.zknotary.common.serialization.bfl.serializers.SecureHashSupportedAlgorithm
@@ -183,7 +183,7 @@ public fun UniqueIdentifier.toJsonObject(): JsonObject = buildJsonObject {
 
 public fun LinearPointer<*>.toJsonObject(): JsonObject = buildJsonObject {
     put("pointer", pointer.toJsonObject())
-    put("class_name", type.name.toJsonObject(LinearPointerSurrogate.MAX_CLASS_NAME_SIZE))
+    put("class_name", type.name.toJsonObject(CordaSerializers.CLASS_NAME_SIZE))
     put("is_resolved", isResolved)
 }
 

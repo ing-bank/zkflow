@@ -1,5 +1,6 @@
 package com.ing.zknotary.gradle.zinc.template.parameters
 
+import com.ing.zknotary.common.serialization.bfl.serializers.CordaSerializers
 import com.ing.zknotary.gradle.zinc.template.TemplateParameters
 import com.ing.zknotary.gradle.zinc.util.CircuitConfigurator
 import java.io.File
@@ -9,7 +10,7 @@ data class TxStateTemplateParameters(val state: CircuitConfigurator.State) : Tem
     listOf(
         AbstractPartyTemplateParameters.selectPartyParameters(state.notaryKeySchemeCodename),
         AttachmentConstraintTemplateParameters.selectParameters(state.attachmentConstraint).polymorphic(),
-        StringTemplateParameters(256),
+        StringTemplateParameters(CordaSerializers.CLASS_NAME_SIZE),
         NullableTemplateParameters("nullable_integer.zn", null, "i32")
     )
 ) {

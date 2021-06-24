@@ -150,7 +150,7 @@ open class CopyCircuitTask @Inject constructor() : DefaultTask() {
                     listOf("platform_consts.zn", "platform_component_group_enum.zn")
                         .map { resourcesDir.resolve("zinc-platform-sources").resolve(it) }
                         .stream(),
-                    listOf("test_state.zn", "tx_state_test_state.zn", "string_256.zn")
+                    listOf("test_state.zn", "tx_state_test_state.zn")
                         .map { generatedCircuitsCreateDir.resolve(it) }
                         .stream()
                 )
