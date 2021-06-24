@@ -144,7 +144,11 @@ open class CopyCircuitTask @Inject constructor() : DefaultTask() {
                 listOf(
                     Files.list(project.buildDir.resolve("zinc-platform-test-sources").toPath()),
                     Files.list(resourcesDir.resolve("zinc-platform-libraries")),
-                    listOf(resourcesDir.resolve("zinc-platform-sources").resolve("platform_consts.zn")).stream()
+                    listOf("platform_consts.zn", "platform_component_group_enum.zn")
+                        .map {
+                            resourcesDir.resolve("zinc-platform-sources").resolve(it)
+                        }
+                        .stream()
                 )
                     .flatMap { it.toList() }
                     .filter { it.toString().endsWith(".zn") }
