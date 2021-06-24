@@ -23,7 +23,12 @@ open class CopyZincCircuitSourcesTask : DefaultTask() {
                 circuitName,
                 commonFolderName,
             ).forEach {
-                copier.copyZincCircuitSources(extension.circuitSourcesBasePath.resolve(it), it, project.version.toString(), ZKNotaryExtension.CONFIG_CIRCUIT_FILE)
+                copier.copyZincCircuitSources(
+                    extension.circuitSourcesBasePath.resolve(it),
+                    it,
+                    project.version.toString(),
+                    ZKNotaryExtension.CONFIG_CIRCUIT_FILE
+                )
             }
         }
     }
