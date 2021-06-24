@@ -1,11 +1,9 @@
 package com.ing.zknotary.common.client.flows.testflows.benchmarks
 
 import com.ing.zknotary.common.client.flows.checkVault
-import com.ing.zknotary.node.services.ConfigParams
 import com.ing.zknotary.node.services.InMemoryZKVerifierTransactionStorage
 import com.ing.zknotary.node.services.ServiceNames.ZK_TX_SERVICE
 import com.ing.zknotary.node.services.ServiceNames.ZK_VERIFIER_TX_STORAGE
-import com.ing.zknotary.testing.fixtures.contract.TestContract
 import com.ing.zknotary.testing.zkp.MockZKTransactionCordaService
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
@@ -42,11 +40,6 @@ class NonZkpE2EFlowTest {
                     mapOf(
                         ZK_VERIFIER_TX_STORAGE to InMemoryZKVerifierTransactionStorage::class.qualifiedName!!,
                         ZK_TX_SERVICE to MockZKTransactionCordaService::class.qualifiedName!!,
-                        ConfigParams.Zinc.COMMAND_CLASS_NAMES to listOf(
-                            TestContract.Create::class.java.name,
-                            TestContract.Move::class.java.name
-                        )
-                            .joinToString(separator = ConfigParams.Zinc.COMMANDS_SEPARATOR)
                     )
                 )
             ),

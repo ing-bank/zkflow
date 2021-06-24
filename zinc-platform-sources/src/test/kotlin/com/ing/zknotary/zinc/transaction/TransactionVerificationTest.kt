@@ -5,7 +5,6 @@ import com.ing.zknotary.common.serialization.bfl.BFLSerializationScheme
 import com.ing.zknotary.common.transactions.UtxoInfo
 import com.ing.zknotary.common.zkp.PublicInput
 import com.ing.zknotary.common.zkp.Witness
-import com.ing.zknotary.common.zkp.ZincZKService
 import com.ing.zknotary.common.zkp.ZincZKTransactionService
 import com.ing.zknotary.testing.fixtures.contract.TestContract
 import com.ing.zknotary.testing.zkp.ZKNulls
@@ -31,13 +30,10 @@ import net.corda.core.transactions.WireTransaction
 import net.corda.core.utilities.loggerFor
 import net.corda.coretesting.internal.asTestContextEnv
 import net.corda.coretesting.internal.createTestSerializationEnv
-import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
-import java.io.File
-import java.time.Duration
 import java.time.Instant
 import kotlin.time.ExperimentalTime
 
