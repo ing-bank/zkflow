@@ -6,6 +6,7 @@ import com.ing.zknotary.common.transactions.UtxoInfo
 import com.ing.zknotary.common.zkp.PublicInput
 import com.ing.zknotary.common.zkp.Witness
 import com.ing.zknotary.common.zkp.ZincZKService
+import com.ing.zknotary.common.zkp.ZincZKTransactionService
 import com.ing.zknotary.testing.fixtures.contract.TestContract
 import com.ing.zknotary.testing.zkp.ZKNulls
 import com.ing.zknotary.zinc.types.proveTimed
@@ -30,6 +31,8 @@ import net.corda.core.transactions.WireTransaction
 import net.corda.core.utilities.loggerFor
 import net.corda.coretesting.internal.asTestContextEnv
 import net.corda.coretesting.internal.createTestSerializationEnv
+import net.corda.testing.core.TestIdentity
+import net.corda.testing.node.MockServices
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
@@ -44,26 +47,10 @@ class TransactionVerificationTest {
     private val log = loggerFor<TransactionVerificationTest>()
     private val runOnly = true
 
-    private val createCircuitFolder: String = File("build/circuits/create").absolutePath
-    private val moveCircuitFolder: String = File("build/circuits/move").absolutePath
+    private val zincZKTransactionService: ZincZKTransactionService = ZincZKTransactionService(MockServices())
 
-    private val createZKService = ZincZKService(
-        createCircuitFolder,
-        artifactFolder = createCircuitFolder,
-        buildTimeout = Duration.ofSeconds(5),
-        setupTimeout = Duration.ofSeconds(1000),
-        provingTimeout = Duration.ofSeconds(300),
-        verificationTimeout = Duration.ofSeconds(1)
-    )
-
-    private val moveZKService = ZincZKService(
-        moveCircuitFolder,
-        artifactFolder = moveCircuitFolder,
-        buildTimeout = Duration.ofSeconds(5),
-        setupTimeout = Duration.ofSeconds(1000),
-        provingTimeout = Duration.ofSeconds(300),
-        verificationTimeout = Duration.ofSeconds(1)
-    )
+    private val createZKService = zincZKTransactionService.zkServiceForCommand(TestContract.Create())
+    private val moveZKService = zincZKTransactionService.zkServiceForCommand(TestContract.Move())
 
     private val notary = ZKNulls.NULL_PARTY
 
