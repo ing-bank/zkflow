@@ -177,7 +177,10 @@ public data class TestTransactionDSLInterpreter private constructor(
         )
 
     internal fun toWireTransaction() = transactionBuilder.toWireTransaction(services)
-    internal fun toZKWireTransaction() = ZKTransactionBuilder(transactionBuilder).toWireTransaction(services)
+    internal fun toZKWireTransaction() = ZKTransactionBuilder(
+        transactionBuilder,
+        serializationSchemeId = ledgerInterpreter.serializationSchemeID
+    ).toWireTransaction(services)
 
     override fun input(stateRef: StateRef) {
         val state = ledgerInterpreter.resolveStateRef<ContractState>(stateRef)
@@ -319,12 +322,18 @@ public data class TestLedgerDSLInterpreter private constructor(
     internal val labelToOutputStateAndRefs: HashMap<String, StateAndRef<ContractState>> = HashMap(),
     private val transactionWithLocations: HashMap<SecureHash, WireTransactionWithLocation> = LinkedHashMap(),
     private val nonVerifiedTransactionWithLocations: HashMap<SecureHash, WireTransactionWithLocation> = HashMap(),
-    val zkService: ZKTransactionService
+    val zkService: ZKTransactionService,
+    val serializationSchemeID: Int
 ) : LedgerDSLInterpreter<TestTransactionDSLInterpreter> {
     val wireTransactions: List<WireTransaction> get() = transactionWithLocations.values.map { it.transaction }
 
     // We specify [labelToOutputStateAndRefs] just so that Kotlin picks the primary constructor instead of cycling
-    public constructor(services: ServiceHub, zkService: ZKTransactionService) : this(services, labelToOutputStateAndRefs = HashMap(), zkService = zkService)
+    public constructor(services: ServiceHub, zkService: ZKTransactionService, serializationSchemeID: Int) : this(
+        services,
+        labelToOutputStateAndRefs = HashMap(),
+        zkService = zkService,
+        serializationSchemeID = serializationSchemeID
+    )
 
     public companion object {
         private fun getCallerLocation(): String? {
@@ -357,7 +366,8 @@ public data class TestLedgerDSLInterpreter private constructor(
             labelToOutputStateAndRefs = HashMap(labelToOutputStateAndRefs),
             transactionWithLocations = HashMap(transactionWithLocations),
             nonVerifiedTransactionWithLocations = HashMap(nonVerifiedTransactionWithLocations),
-            zkService = zkService
+            zkService = zkService,
+            serializationSchemeID = serializationSchemeID
         )
 
     internal fun getTransaction(id: SecureHash): SignedTransaction? {
