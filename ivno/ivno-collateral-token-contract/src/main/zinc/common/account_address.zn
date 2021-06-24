@@ -1,0 +1,74 @@
+//! AccountAddress module")
+mod string_20;
+mod platform_corda_x500_name;
+
+use string_20::String_20;
+use string_20::STRING_20_LENGTH;
+
+use platform_corda_x500_name::CordaX500Name;
+use platform_corda_x500_name::CORDA_X500_NAME_LENGTH;
+
+const ACCOUNT_ADDRESS_ACCOUNT_ID_LENGTH: u16 = STRING_20_LENGTH;
+const ACCOUNT_ADDRESS_PARTY_LENGTH: u16 = CORDA_X500_NAME_LENGTH;
+
+const ACCOUNT_ADDRESS_ACCOUNT_ID_OFFSET: u16 = 0;
+const ACCOUNT_ADDRESS_PARTY_OFFSET: u16
+= ACCOUNT_ADDRESS_ACCOUNT_ID_OFFSET
+    + ACCOUNT_ADDRESS_ACCOUNT_ID_LENGTH;
+
+
+// length: 1618
+const ACCOUNT_ADDRESS_LENGTH: u16
+= ACCOUNT_ADDRESS_PARTY_OFFSET
+    + ACCOUNT_ADDRESS_PARTY_LENGTH;
+
+
+type SerializedAccountAddress = [u8; ACCOUNT_ADDRESS_LENGTH];
+
+struct AccountAddress {
+    account_id: String_20,
+    party: CordaX500Name,
+}
+
+impl AccountAddress {
+    fn empty() -> AccountAddress {
+        AccountAddress {
+            account_id: String_20::empty(),
+            party: CordaX500Name::empty()
+        }
+    }
+
+    fn equals(this: AccountAddress, that: AccountAddress) -> bool {
+        (String_20::equals(this.account_id, that.account_id))
+            && (CordaX500Name::equals(this.party, that.party))
+    }
+
+    fn deserialize(serialized: SerializedAccountAddress) -> AccountAddress {
+        let account_id: String_20 = {
+            let mut account_id_bytes: [u8; ACCOUNT_ADDRESS_ACCOUNT_ID_LENGTH] = [0; ACCOUNT_ADDRESS_ACCOUNT_ID_LENGTH];
+            for account_id_i in 0..ACCOUNT_ADDRESS_ACCOUNT_ID_LENGTH {
+                account_id_bytes[account_id_i] = serialized[account_id_i + ACCOUNT_ADDRESS_ACCOUNT_ID_OFFSET];
+            }
+            String_20::deserialize(account_id_bytes)
+        };
+        let party: CordaX500Name = {
+            let mut party_bytes: [u8; ACCOUNT_ADDRESS_PARTY_LENGTH] = [0; ACCOUNT_ADDRESS_PARTY_LENGTH];
+            for party_i in 0..ACCOUNT_ADDRESS_PARTY_LENGTH {
+                party_bytes[party_i] = serialized[party_i + ACCOUNT_ADDRESS_PARTY_OFFSET];
+            }
+            CordaX500Name::deserialize(party_bytes)
+        };
+
+        AccountAddress {
+            account_id: account_id,
+            party: party,
+        }
+    }
+
+    fn new(account_id: String_20, party: CordaX500Name) -> AccountAddress {
+        AccountAddress {
+            account_id: account_id,
+            party: party,
+        }
+    }
+}

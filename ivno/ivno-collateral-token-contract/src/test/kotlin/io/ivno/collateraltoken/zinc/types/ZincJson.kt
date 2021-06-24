@@ -6,12 +6,14 @@ import com.ing.zknotary.testing.resizeTo
 import com.ing.zknotary.testing.toJsonArray
 import com.ing.zknotary.zinc.types.polymorphic
 import com.ing.zknotary.zinc.types.toJsonObject
+import io.dasl.contracts.v1.account.AccountAddress
 import io.dasl.contracts.v1.token.BigDecimalAmount
 import io.dasl.contracts.v1.token.TokenDescriptor
 import io.ivno.collateraltoken.contract.Deposit
 import io.ivno.collateraltoken.contract.IvnoTokenType
 import io.ivno.collateraltoken.contract.Redemption
 import io.ivno.collateraltoken.contract.Transfer
+import io.ivno.collateraltoken.serialization.AccountAddressSurrogate
 import io.ivno.collateraltoken.serialization.IvnoTokenTypeSurrogate
 import io.ivno.collateraltoken.serialization.NetworkSurrogate
 import io.ivno.collateraltoken.serialization.PermissionSurrogate
@@ -56,6 +58,7 @@ fun IvnoTokenType.toZincJson(
 ).toString()
 fun Deposit.toZincJson() = toJsonObject().toString()
 fun Transfer.toZincJson() = toJsonObject().toString()
+fun AccountAddress.toZincJson() = toJsonObject().toString()
 
 /**
  * Extension function for encoding a nullable ByteArray to Json
@@ -221,4 +224,9 @@ fun Transfer.toJsonObject() = buildJsonObject {
     put("current_token_holder_account_id", currentTokenHolderAccountId.toJsonObject(20))
     put("target_token_holder_account_id", targetTokenHolderAccountId.toJsonObject(20))
     put("linear_id", linearId.toJsonObject())
+}
+
+fun AccountAddress.toJsonObject() = buildJsonObject {
+    put("account_id", accountId.toJsonObject(AccountAddressSurrogate.ACCOUNT_ID_LENGTH))
+    put("party", party.toJsonObject())
 }
