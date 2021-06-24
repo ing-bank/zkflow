@@ -1,8 +1,8 @@
-mod ivno_token_type;
+mod ivno_token_type_network_poly_party_ed_dsa_party_ed_dsa_party_ed_dsa;
 
-use ivno_token_type::IvnoTokenType;
-use ivno_token_type::SerializedIvnoTokenType;
+use ivno_token_type_network_poly_party_ed_dsa_party_ed_dsa_party_ed_dsa::IvnoTokenTypeNetworkPolyPartyEdDSAPartyEdDSAPartyEdDSA;
+use ivno_token_type_network_poly_party_ed_dsa_party_ed_dsa_party_ed_dsa::SerializedIvnoTokenTypeNetworkPolyPartyEdDSAPartyEdDSAPartyEdDSA;
 
-fn main(witness: SerializedIvnoTokenType) -> IvnoTokenType {
-    IvnoTokenType::deserialize(witness)
+fn main(witness: SerializedIvnoTokenTypeNetworkPolyPartyEdDSAPartyEdDSAPartyEdDSA) -> IvnoTokenTypeNetworkPolyPartyEdDSAPartyEdDSAPartyEdDSA {
+    IvnoTokenTypeNetworkPolyPartyEdDSAPartyEdDSAPartyEdDSA::deserialize(witness)
 }

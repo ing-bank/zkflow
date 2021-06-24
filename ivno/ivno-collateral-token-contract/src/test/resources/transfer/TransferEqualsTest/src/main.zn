@@ -1,7 +1,7 @@
-mod transfer;
+mod transfer_poly_anonymous_party_ed_dsa_poly_anonymous_party_ed_dsa;
 
-use transfer::Transfer;
+use transfer_poly_anonymous_party_ed_dsa_poly_anonymous_party_ed_dsa::TransferPolyAnonymousPartyEdDSAPolyAnonymousPartyEdDSA;
 
-fn main(left: Transfer, right: Transfer) -> bool {
-    Transfer::equals(left, right)
+fn main(left: TransferPolyAnonymousPartyEdDSAPolyAnonymousPartyEdDSA, right: TransferPolyAnonymousPartyEdDSAPolyAnonymousPartyEdDSA) -> bool {
+    TransferPolyAnonymousPartyEdDSAPolyAnonymousPartyEdDSA::equals(left, right)
 }

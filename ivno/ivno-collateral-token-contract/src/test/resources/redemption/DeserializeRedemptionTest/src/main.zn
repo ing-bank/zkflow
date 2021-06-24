@@ -1,8 +1,8 @@
-mod redemption;
+mod redemption_party_ed_dsa_party_ed_dsa_party_ed_dsa;
 
-use redemption::Redemption;
-use redemption::SerializedRedemption;
+use redemption_party_ed_dsa_party_ed_dsa_party_ed_dsa::RedemptionPartyEdDSAPartyEdDSAPartyEdDSA;
+use redemption_party_ed_dsa_party_ed_dsa_party_ed_dsa::SerializedRedemptionPartyEdDSAPartyEdDSAPartyEdDSA;
 
-fn main(witness: SerializedRedemption) -> Redemption {
-    Redemption::deserialize(witness)
+fn main(witness: SerializedRedemptionPartyEdDSAPartyEdDSAPartyEdDSA) -> RedemptionPartyEdDSAPartyEdDSAPartyEdDSA {
+    RedemptionPartyEdDSAPartyEdDSAPartyEdDSA::deserialize(witness)
 }

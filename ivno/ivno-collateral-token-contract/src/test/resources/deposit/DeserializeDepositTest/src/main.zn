@@ -1,8 +1,8 @@
-mod deposit;
+mod deposit_anonymous_party_ed_dsa_anonymous_party_ed_dsa_anonymous_party_ed_dsa;
 
-use deposit::Deposit;
-use deposit::SerializedDeposit;
+use deposit_anonymous_party_ed_dsa_anonymous_party_ed_dsa_anonymous_party_ed_dsa::DepositAnonymousPartyEdDSAAnonymousPartyEdDSAAnonymousPartyEdDSA;
+use deposit_anonymous_party_ed_dsa_anonymous_party_ed_dsa_anonymous_party_ed_dsa::SerializedDepositAnonymousPartyEdDSAAnonymousPartyEdDSAAnonymousPartyEdDSA;
 
-fn main(witness: SerializedDeposit) -> Deposit {
-    Deposit::deserialize(witness)
+fn main(witness: SerializedDepositAnonymousPartyEdDSAAnonymousPartyEdDSAAnonymousPartyEdDSA) -> DepositAnonymousPartyEdDSAAnonymousPartyEdDSAAnonymousPartyEdDSA {
+    DepositAnonymousPartyEdDSAAnonymousPartyEdDSAAnonymousPartyEdDSA::deserialize(witness)
 }

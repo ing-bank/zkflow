@@ -1,0 +1,128 @@
+mod network_poly_party_ed_dsa;
+mod party_ed_dsa;
+mod string_20;
+mod platform_consts;
+mod platform_integer;
+mod unique_identifier;
+
+use network_poly_party_ed_dsa::NetworkPolyPartyEdDSA;
+use network_poly_party_ed_dsa::NETWORK_POLY_PARTY_ED_DSA_LENGTH;
+
+use party_ed_dsa::PartyEdDSA;
+use party_ed_dsa::PARTY_ED_DSA_LENGTH;
+
+use string_20::String_20;
+use string_20::STRING_20_LENGTH;
+
+use platform_consts::U32_BYTES;
+
+use unique_identifier::UniqueIdentifier;
+use unique_identifier::UNIQUE_IDENTIFIER_LENGTH;
+
+const IVNO_TOKEN_TYPE_NETWORK_POLY_PARTY_ED_DSA_PARTY_ED_DSA_PARTY_ED_DSA_NETWORK_LENGTH: u16 = NETWORK_POLY_PARTY_ED_DSA_LENGTH;
+const IVNO_TOKEN_TYPE_NETWORK_POLY_PARTY_ED_DSA_PARTY_ED_DSA_PARTY_ED_DSA_CUSTODIAN_LENGTH: u16 = PARTY_ED_DSA_LENGTH;
+const IVNO_TOKEN_TYPE_NETWORK_POLY_PARTY_ED_DSA_PARTY_ED_DSA_PARTY_ED_DSA_TOKEN_ISSUING_ENTITY_LENGTH: u16 = PARTY_ED_DSA_LENGTH;
+const IVNO_TOKEN_TYPE_NETWORK_POLY_PARTY_ED_DSA_PARTY_ED_DSA_PARTY_ED_DSA_DISPLAY_NAME_LENGTH: u16 = STRING_20_LENGTH;
+const IVNO_TOKEN_TYPE_NETWORK_POLY_PARTY_ED_DSA_PARTY_ED_DSA_PARTY_ED_DSA_FRACTION_DIGITS_LENGTH: u16 = U32_BYTES;
+const IVNO_TOKEN_TYPE_NETWORK_POLY_PARTY_ED_DSA_PARTY_ED_DSA_PARTY_ED_DSA_LINEAR_ID_LENGTH: u16 = UNIQUE_IDENTIFIER_LENGTH;
+
+const IVNO_TOKEN_TYPE_NETWORK_POLY_PARTY_ED_DSA_PARTY_ED_DSA_PARTY_ED_DSA_NETWORK_OFFSET: u16 = 0;
+const IVNO_TOKEN_TYPE_NETWORK_POLY_PARTY_ED_DSA_PARTY_ED_DSA_PARTY_ED_DSA_CUSTODIAN_OFFSET: u16
+    = IVNO_TOKEN_TYPE_NETWORK_POLY_PARTY_ED_DSA_PARTY_ED_DSA_PARTY_ED_DSA_NETWORK_OFFSET
+    + IVNO_TOKEN_TYPE_NETWORK_POLY_PARTY_ED_DSA_PARTY_ED_DSA_PARTY_ED_DSA_NETWORK_LENGTH;
+const IVNO_TOKEN_TYPE_NETWORK_POLY_PARTY_ED_DSA_PARTY_ED_DSA_PARTY_ED_DSA_TOKEN_ISSUING_ENTITY_OFFSET: u16
+    = IVNO_TOKEN_TYPE_NETWORK_POLY_PARTY_ED_DSA_PARTY_ED_DSA_PARTY_ED_DSA_CUSTODIAN_OFFSET
+    + IVNO_TOKEN_TYPE_NETWORK_POLY_PARTY_ED_DSA_PARTY_ED_DSA_PARTY_ED_DSA_CUSTODIAN_LENGTH;
+const IVNO_TOKEN_TYPE_NETWORK_POLY_PARTY_ED_DSA_PARTY_ED_DSA_PARTY_ED_DSA_DISPLAY_NAME_OFFSET: u16
+    = IVNO_TOKEN_TYPE_NETWORK_POLY_PARTY_ED_DSA_PARTY_ED_DSA_PARTY_ED_DSA_TOKEN_ISSUING_ENTITY_OFFSET
+    + IVNO_TOKEN_TYPE_NETWORK_POLY_PARTY_ED_DSA_PARTY_ED_DSA_PARTY_ED_DSA_TOKEN_ISSUING_ENTITY_LENGTH;
+const IVNO_TOKEN_TYPE_NETWORK_POLY_PARTY_ED_DSA_PARTY_ED_DSA_PARTY_ED_DSA_FRACTION_DIGITS_OFFSET: u16
+    = IVNO_TOKEN_TYPE_NETWORK_POLY_PARTY_ED_DSA_PARTY_ED_DSA_PARTY_ED_DSA_DISPLAY_NAME_OFFSET
+    + IVNO_TOKEN_TYPE_NETWORK_POLY_PARTY_ED_DSA_PARTY_ED_DSA_PARTY_ED_DSA_DISPLAY_NAME_LENGTH;
+const IVNO_TOKEN_TYPE_NETWORK_POLY_PARTY_ED_DSA_PARTY_ED_DSA_PARTY_ED_DSA_LINEAR_ID_OFFSET: u16
+    = IVNO_TOKEN_TYPE_NETWORK_POLY_PARTY_ED_DSA_PARTY_ED_DSA_PARTY_ED_DSA_FRACTION_DIGITS_OFFSET
+    + IVNO_TOKEN_TYPE_NETWORK_POLY_PARTY_ED_DSA_PARTY_ED_DSA_PARTY_ED_DSA_FRACTION_DIGITS_LENGTH;
+const IVNO_TOKEN_TYPE_NETWORK_POLY_PARTY_ED_DSA_PARTY_ED_DSA_PARTY_ED_DSA_LENGTH: u16
+    = IVNO_TOKEN_TYPE_NETWORK_POLY_PARTY_ED_DSA_PARTY_ED_DSA_PARTY_ED_DSA_LINEAR_ID_OFFSET
+    + IVNO_TOKEN_TYPE_NETWORK_POLY_PARTY_ED_DSA_PARTY_ED_DSA_PARTY_ED_DSA_LINEAR_ID_LENGTH;
+
+type SerializedIvnoTokenTypeNetworkPolyPartyEdDSAPartyEdDSAPartyEdDSA = [u8; IVNO_TOKEN_TYPE_NETWORK_POLY_PARTY_ED_DSA_PARTY_ED_DSA_PARTY_ED_DSA_LENGTH];
+
+struct IvnoTokenTypeNetworkPolyPartyEdDSAPartyEdDSAPartyEdDSA {
+    network: NetworkPolyPartyEdDSA,
+    custodian: PartyEdDSA,
+    token_issuing_entity: PartyEdDSA,
+    display_name: String_20,
+    fraction_digits: u32,
+    linear_id: UniqueIdentifier,
+}
+
+impl IvnoTokenTypeNetworkPolyPartyEdDSAPartyEdDSAPartyEdDSA {
+    fn equals(this: IvnoTokenTypeNetworkPolyPartyEdDSAPartyEdDSAPartyEdDSA, that: IvnoTokenTypeNetworkPolyPartyEdDSAPartyEdDSAPartyEdDSA) -> bool {
+        NetworkPolyPartyEdDSA::equals(this.network, that.network)
+            && PartyEdDSA::equals(this.custodian, that.custodian)
+            && PartyEdDSA::equals(this.token_issuing_entity, that.token_issuing_entity)
+            && String_20::equals(this.display_name, that.display_name)
+            && this.fraction_digits == that.fraction_digits
+            && UniqueIdentifier::equals(this.linear_id, that.linear_id)
+    }
+
+    fn deserialize(serialized: SerializedIvnoTokenTypeNetworkPolyPartyEdDSAPartyEdDSAPartyEdDSA) -> IvnoTokenTypeNetworkPolyPartyEdDSAPartyEdDSAPartyEdDSA {
+        let ivno_network = {
+            let mut network_bytes = [0; IVNO_TOKEN_TYPE_NETWORK_POLY_PARTY_ED_DSA_PARTY_ED_DSA_PARTY_ED_DSA_NETWORK_LENGTH];
+            for i in 0..IVNO_TOKEN_TYPE_NETWORK_POLY_PARTY_ED_DSA_PARTY_ED_DSA_PARTY_ED_DSA_NETWORK_LENGTH {
+                network_bytes[i] = serialized[i + IVNO_TOKEN_TYPE_NETWORK_POLY_PARTY_ED_DSA_PARTY_ED_DSA_PARTY_ED_DSA_NETWORK_OFFSET];
+            }
+            NetworkPolyPartyEdDSA::deserialize(network_bytes)
+        };
+
+        let custodian = {
+            let mut custodian_bytes = [0; IVNO_TOKEN_TYPE_NETWORK_POLY_PARTY_ED_DSA_PARTY_ED_DSA_PARTY_ED_DSA_CUSTODIAN_LENGTH];
+            for i in 0..IVNO_TOKEN_TYPE_NETWORK_POLY_PARTY_ED_DSA_PARTY_ED_DSA_PARTY_ED_DSA_CUSTODIAN_LENGTH {
+                custodian_bytes[i] = serialized[i + IVNO_TOKEN_TYPE_NETWORK_POLY_PARTY_ED_DSA_PARTY_ED_DSA_PARTY_ED_DSA_CUSTODIAN_OFFSET];
+            }
+            PartyEdDSA::deserialize(custodian_bytes)
+        };
+
+        let token_issuing_entity = {
+            let mut token_issuing_entity_bytes = [0; IVNO_TOKEN_TYPE_NETWORK_POLY_PARTY_ED_DSA_PARTY_ED_DSA_PARTY_ED_DSA_TOKEN_ISSUING_ENTITY_LENGTH];
+            for i in 0..IVNO_TOKEN_TYPE_NETWORK_POLY_PARTY_ED_DSA_PARTY_ED_DSA_PARTY_ED_DSA_TOKEN_ISSUING_ENTITY_LENGTH {
+                token_issuing_entity_bytes[i] = serialized[i + IVNO_TOKEN_TYPE_NETWORK_POLY_PARTY_ED_DSA_PARTY_ED_DSA_PARTY_ED_DSA_TOKEN_ISSUING_ENTITY_OFFSET];
+            }
+            PartyEdDSA::deserialize(token_issuing_entity_bytes)
+        };
+
+        let display_name = {
+            let mut display_name_bytes = [0; IVNO_TOKEN_TYPE_NETWORK_POLY_PARTY_ED_DSA_PARTY_ED_DSA_PARTY_ED_DSA_DISPLAY_NAME_LENGTH];
+            for i in 0..IVNO_TOKEN_TYPE_NETWORK_POLY_PARTY_ED_DSA_PARTY_ED_DSA_PARTY_ED_DSA_DISPLAY_NAME_LENGTH {
+                display_name_bytes[i] = serialized[i + IVNO_TOKEN_TYPE_NETWORK_POLY_PARTY_ED_DSA_PARTY_ED_DSA_PARTY_ED_DSA_DISPLAY_NAME_OFFSET];
+            }
+            String_20::deserialize(display_name_bytes)
+        };
+
+        let fraction_digits = {
+            let mut fraction_digits_bytes = [0; IVNO_TOKEN_TYPE_NETWORK_POLY_PARTY_ED_DSA_PARTY_ED_DSA_PARTY_ED_DSA_FRACTION_DIGITS_LENGTH];
+            for i in 0..IVNO_TOKEN_TYPE_NETWORK_POLY_PARTY_ED_DSA_PARTY_ED_DSA_PARTY_ED_DSA_FRACTION_DIGITS_LENGTH {
+                fraction_digits_bytes[i] = serialized[i + IVNO_TOKEN_TYPE_NETWORK_POLY_PARTY_ED_DSA_PARTY_ED_DSA_PARTY_ED_DSA_FRACTION_DIGITS_OFFSET];
+            }
+            platform_integer::parse_u32(fraction_digits_bytes)
+        };
+
+        let linear_id = {
+            let mut linear_id_bytes = [0; IVNO_TOKEN_TYPE_NETWORK_POLY_PARTY_ED_DSA_PARTY_ED_DSA_PARTY_ED_DSA_LINEAR_ID_LENGTH];
+            for i in 0..IVNO_TOKEN_TYPE_NETWORK_POLY_PARTY_ED_DSA_PARTY_ED_DSA_PARTY_ED_DSA_LINEAR_ID_LENGTH {
+                linear_id_bytes[i] = serialized[i + IVNO_TOKEN_TYPE_NETWORK_POLY_PARTY_ED_DSA_PARTY_ED_DSA_PARTY_ED_DSA_LINEAR_ID_OFFSET];
+            }
+            UniqueIdentifier::deserialize(linear_id_bytes)
+        };
+
+        IvnoTokenTypeNetworkPolyPartyEdDSAPartyEdDSAPartyEdDSA {
+            network: ivno_network,
+            custodian: custodian,
+            token_issuing_entity: token_issuing_entity,
+            display_name: display_name,
+            fraction_digits: fraction_digits,
+            linear_id: linear_id,
+        }
+    }
+}

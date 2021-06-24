@@ -1,7 +1,7 @@
-mod redemption;
+mod redemption_party_ed_dsa_party_ed_dsa_party_ed_dsa;
 
-use redemption::Redemption;
+use redemption_party_ed_dsa_party_ed_dsa_party_ed_dsa::RedemptionPartyEdDSAPartyEdDSAPartyEdDSA;
 
-fn main(left: Redemption, right: Redemption) -> bool {
-    Redemption::equals(left, right)
+fn main(left: RedemptionPartyEdDSAPartyEdDSAPartyEdDSA, right: RedemptionPartyEdDSAPartyEdDSAPartyEdDSA) -> bool {
+    RedemptionPartyEdDSAPartyEdDSAPartyEdDSA::equals(left, right)
 }

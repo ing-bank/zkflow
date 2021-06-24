@@ -1,0 +1,56 @@
+mod string_20;
+mod nullable_poly_party_ed_dsa;
+
+use string_20::String_20;
+use string_20::STRING_20_LENGTH;
+
+use nullable_poly_party_ed_dsa::NullablePolyPartyEdDSA;
+use nullable_poly_party_ed_dsa::NULLABLE_POLY_PARTY_ED_DSA_LENGTH;
+
+const NETWORK_POLY_PARTY_ED_DSA_VALUE_LENGTH: u16 = STRING_20_LENGTH;
+const NETWORK_POLY_PARTY_ED_DSA_OPERATOR_LENGTH: u16 = NULLABLE_POLY_PARTY_ED_DSA_LENGTH;
+
+const NETWORK_POLY_PARTY_ED_DSA_VALUE_OFFSET: u16 = 0;
+const NETWORK_POLY_PARTY_ED_DSA_OPERATOR_OFFSET: u16
+    = NETWORK_POLY_PARTY_ED_DSA_VALUE_OFFSET
+    + NETWORK_POLY_PARTY_ED_DSA_VALUE_LENGTH;
+const NETWORK_POLY_PARTY_ED_DSA_LENGTH: u16
+    = NETWORK_POLY_PARTY_ED_DSA_OPERATOR_OFFSET
+    + NETWORK_POLY_PARTY_ED_DSA_OPERATOR_LENGTH;
+
+type SerializedNetworkPolyPartyEdDSA = [u8; NETWORK_POLY_PARTY_ED_DSA_LENGTH];
+
+struct NetworkPolyPartyEdDSA {
+    value: String_20,
+    operator: NullablePolyPartyEdDSA,
+}
+
+impl NetworkPolyPartyEdDSA {
+    fn equals(this: NetworkPolyPartyEdDSA, that: NetworkPolyPartyEdDSA) -> bool {
+        String_20::equals(this.value, that.value)
+            && NullablePolyPartyEdDSA::equals(this.operator, that.operator)
+    }
+
+    fn deserialize(serialized: SerializedNetworkPolyPartyEdDSA) -> NetworkPolyPartyEdDSA {
+        let value = {
+            let mut value_bytes = [0; NETWORK_POLY_PARTY_ED_DSA_VALUE_LENGTH];
+            for i in 0..NETWORK_POLY_PARTY_ED_DSA_VALUE_LENGTH {
+                value_bytes[i] = serialized[i + NETWORK_POLY_PARTY_ED_DSA_VALUE_OFFSET];
+            }
+            String_20::deserialize(value_bytes)
+        };
+
+        let operator = {
+            let mut operator_bytes = [0; NETWORK_POLY_PARTY_ED_DSA_OPERATOR_LENGTH];
+            for i in 0..NETWORK_POLY_PARTY_ED_DSA_OPERATOR_LENGTH {
+                operator_bytes[i] = serialized[i + NETWORK_POLY_PARTY_ED_DSA_OPERATOR_OFFSET];
+            }
+            NullablePolyPartyEdDSA::deserialize(operator_bytes)
+        };
+
+        NetworkPolyPartyEdDSA {
+            value: value,
+            operator: operator,
+        }
+    }
+}

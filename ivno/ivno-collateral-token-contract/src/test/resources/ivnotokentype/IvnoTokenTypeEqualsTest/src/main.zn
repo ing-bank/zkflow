@@ -1,7 +1,7 @@
-mod ivno_token_type;
+mod ivno_token_type_network_poly_party_ed_dsa_party_ed_dsa_party_ed_dsa;
 
-use ivno_token_type::IvnoTokenType;
+use ivno_token_type_network_poly_party_ed_dsa_party_ed_dsa_party_ed_dsa::IvnoTokenTypeNetworkPolyPartyEdDSAPartyEdDSAPartyEdDSA;
 
-fn main(left: IvnoTokenType, right: IvnoTokenType) -> bool {
-    IvnoTokenType::equals(left, right)
+fn main(left: IvnoTokenTypeNetworkPolyPartyEdDSAPartyEdDSAPartyEdDSA, right: IvnoTokenTypeNetworkPolyPartyEdDSAPartyEdDSAPartyEdDSA) -> bool {
+    IvnoTokenTypeNetworkPolyPartyEdDSAPartyEdDSAPartyEdDSA::equals(left, right)
 }

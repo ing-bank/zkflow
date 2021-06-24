@@ -1,8 +1,8 @@
-mod transfer;
+mod transfer_poly_anonymous_party_ed_dsa_poly_anonymous_party_ed_dsa;
 
-use transfer::Transfer;
-use transfer::SerializedTransfer;
+use transfer_poly_anonymous_party_ed_dsa_poly_anonymous_party_ed_dsa::TransferPolyAnonymousPartyEdDSAPolyAnonymousPartyEdDSA;
+use transfer_poly_anonymous_party_ed_dsa_poly_anonymous_party_ed_dsa::SerializedTransferPolyAnonymousPartyEdDSAPolyAnonymousPartyEdDSA;
 
-fn main(witness: SerializedTransfer) -> Transfer {
-    Transfer::deserialize(witness)
+fn main(witness: SerializedTransferPolyAnonymousPartyEdDSAPolyAnonymousPartyEdDSA) -> TransferPolyAnonymousPartyEdDSAPolyAnonymousPartyEdDSA {
+    TransferPolyAnonymousPartyEdDSAPolyAnonymousPartyEdDSA::deserialize(witness)
 }
