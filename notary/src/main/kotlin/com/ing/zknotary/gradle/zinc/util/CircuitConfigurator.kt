@@ -3,7 +3,6 @@ package com.ing.zknotary.gradle.zinc.util
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.Transient
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.buildClassSerialDescriptor
@@ -35,9 +34,7 @@ class CircuitConfigurator(
     data class State(
         val location: String,
         val name: String,
-        @Transient
-        val notaryKeySchemeCodename: String =
-            Crypto.EDDSA_ED25519_SHA512.schemeCodeName,
+        val notaryKeySchemeCodename: String = ZKFlowNetworkParameters.notaryKeySchemeCodename,
         @SerialName("attachment_constraint") val attachmentConstraint: String =
             AutomaticPlaceholderConstraint::class.qualifiedName!!
     ) {
@@ -142,7 +139,8 @@ class CircuitConfigurator(
     @Serializable
     data class SignersGroup(
         @SerialName("signer_size") val signerSize: Int,
-        @SerialName("signer_list_size") val signerListSize: Int = 1
+        @SerialName("signer_list_size") val signerListSize: Int = 1,
+        val signerKeySchemeCodename: String = ZKFlowNetworkParameters.signerKeySchemeCodename
     )
 
     @Serializable

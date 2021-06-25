@@ -14,6 +14,7 @@ import com.ing.zknotary.gradle.zinc.template.parameters.CollectionTemplateParame
 import com.ing.zknotary.gradle.zinc.template.parameters.IssuedTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.NullableTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.PublicKeyTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.parameters.SignersTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.StringTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.TxStateTemplateParameters
 import com.ing.zknotary.gradle.zinc.util.CircuitConfigurator
@@ -67,7 +68,7 @@ val templateConfigurations = TemplateConfigurations().apply {
     issuedConfigurations = myIssuedConfigurations
     nullableConfigurations = myNullableConfigurations
     collectionConfigurations = myCollectionConfigurations
-}
+}.resolveAllTemplateParameters()
 
 fun main(args: Array<String>) {
     val root = args[0]
@@ -108,9 +109,18 @@ fun main(args: Array<String>) {
             val txStatesTemplateConfigurations = configurator.circuitConfiguration.circuit.states.map { state ->
                 // Existence of the required states is ensured during the copying.
                 TxStateTemplateParameters(state)
-            }.flatMap { it.resolveAllConfigurations() }.distinct()
+            }.flatMap { it.resolveAllConfigurations() }
 
-            (templateConfigurations.resolveAllTemplateParameters() + txStatesTemplateConfigurations)
+            val signersTemplateConfigurations = SignersTemplateParameters(
+                configurator.circuitConfiguration.groups.signerGroup
+            ).resolveAllConfigurations()
+
+            (
+                templateConfigurations +
+                    txStatesTemplateConfigurations +
+                    signersTemplateConfigurations
+                )
+                .distinct()
                 .forEach(templateRenderer::renderTemplate)
 
             // Generate code
@@ -128,7 +138,7 @@ fun main(args: Array<String>) {
     val testTemplateRenderer =
         TemplateRenderer(getPlatformSourcesTestSourcesPath(root).toPath()) { getTemplateContents(root, it.templateFile) }
 
-    templateConfigurations.resolveAllTemplateParameters().forEach(testTemplateRenderer::renderTemplate)
+    templateConfigurations.forEach(testTemplateRenderer::renderTemplate)
 }
 
 private fun getPlatformSourcesPath(root: String): File {

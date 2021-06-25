@@ -69,7 +69,7 @@ impl TxState${USER_STATE_TYPE_NAME} {
             }
             ${USER_STATE_TYPE_NAME}::deserialize(data_bytes)
         };
-        dbg!("[TxState.data] {}", data);
+        // dbg!("[TxState.data] {}", data);
 
         let contract = {
             let mut contract_bytes = [0; ${STRING_CONSTANT_PREFIX}_LENGTH];
@@ -94,7 +94,7 @@ impl TxState${USER_STATE_TYPE_NAME} {
             }
             NullableI32::deserialize(encumbrance_bytes)
         };
-        dbg!("[TxState.encumbrance] {}", encumbrance);
+        // dbg!("[TxState.encumbrance] {}", encumbrance);
 
         let constraint = {
             let mut constraint_bytes = [0; ${ATTACHMENT_CONSTRAINT_CONSTANT_PREFIX}_LENGTH];
@@ -103,7 +103,7 @@ impl TxState${USER_STATE_TYPE_NAME} {
             }
             ${ATTACHMENT_CONSTRAINT_TYPE_NAME}::deserialize(constraint_bytes)
         };
-        dbg!("[TxState.constraint] {}", constraint);
+        // dbg!("[TxState.constraint] {}", constraint);
 
         TxState${USER_STATE_TYPE_NAME} {
             data: data,

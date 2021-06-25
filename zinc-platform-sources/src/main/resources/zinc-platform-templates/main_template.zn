@@ -26,12 +26,11 @@ struct PublicInput {
 }
 
 fn main(witness: Witness) -> PublicInput  {
+    // Check contract rules
+    check_contract_rules(witness);
 
     // Compute the transaction id
     let root_hash = build_merkle_tree(witness);
-
-    // Check contract rules
-    check_contract_rules(witness);
 
     PublicInput {
         transaction_id: NodeDigestDto::from_bits_to_bytes(root_hash),
