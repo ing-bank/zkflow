@@ -198,7 +198,7 @@ val attestationPointer = AttestationPointer(
     stateLinearId = someUniqueIdentifier
 )
 val anotherAttestationPointer = AttestationPointer(
-    stateRef = stateRef,
+    stateRef = anotherStateRef,
     stateClass = MyContractState::class.java,
 )
 val attestationPointerWithDifferentStateRef = AttestationPointer(
@@ -207,12 +207,12 @@ val attestationPointerWithDifferentStateRef = AttestationPointer(
     stateLinearId = someUniqueIdentifier
 )
 val attestationPointerWithDifferentStateClass = AttestationPointer(
-    stateRef = anotherStateRef,
+    stateRef = stateRef,
     stateClass = MyContractState::class.java,
     stateLinearId = someUniqueIdentifier
 )
 val attestationPointerWithDifferentStateLinearId = AttestationPointer(
-    stateRef = anotherStateRef,
+    stateRef = stateRef,
     stateClass = MyLinearState::class.java,
     stateLinearId = anotherUniqueIdentifier
 )

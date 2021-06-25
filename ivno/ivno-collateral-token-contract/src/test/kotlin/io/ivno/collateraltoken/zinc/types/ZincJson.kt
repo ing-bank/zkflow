@@ -3,6 +3,7 @@ package io.ivno.collateraltoken.zinc.types
 import com.ing.zknotary.common.serialization.bfl.serializers.CordaX500NameSurrogate
 import com.ing.zknotary.common.serialization.bfl.serializers.SecureHashSupportedAlgorithm
 import com.ing.zknotary.common.serialization.bfl.serializers.SecureHashSurrogate
+import com.ing.zknotary.common.serialization.bfl.serializers.UniqueIdentifierSurrogate
 import com.ing.zknotary.common.serialization.bfl.serializers.publickey.EdDSASurrogate
 import com.ing.zknotary.testing.resizeTo
 import com.ing.zknotary.testing.toJsonArray
@@ -16,18 +17,21 @@ import io.ivno.collateraltoken.contract.IvnoTokenType
 import io.ivno.collateraltoken.contract.Redemption
 import io.ivno.collateraltoken.contract.Transfer
 import io.ivno.collateraltoken.serialization.AccountAddressSurrogate
+import io.ivno.collateraltoken.serialization.AttestationPointerSurrogate
 import io.ivno.collateraltoken.serialization.IvnoTokenTypeSurrogate
 import io.ivno.collateraltoken.serialization.MembershipSurrogate
 import io.ivno.collateraltoken.serialization.NetworkSurrogate
 import io.ivno.collateraltoken.serialization.PermissionSurrogate
 import io.ivno.collateraltoken.serialization.RoleSurrogate
 import io.ivno.collateraltoken.serialization.SettingSurrogate
+import io.kotest.matchers.shouldBe
 import io.onixlabs.corda.bnms.contract.Network
 import io.onixlabs.corda.bnms.contract.Permission
 import io.onixlabs.corda.bnms.contract.Role
 import io.onixlabs.corda.bnms.contract.Setting
 import io.onixlabs.corda.bnms.contract.membership.Membership
 import io.onixlabs.corda.identityframework.contract.AbstractClaim
+import io.onixlabs.corda.identityframework.contract.AttestationPointer
 import io.onixlabs.corda.identityframework.contract.Claim
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonArray
@@ -35,6 +39,7 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import net.corda.core.contracts.LinearPointer
 import net.corda.core.contracts.StateRef
+import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.crypto.Crypto
 import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.SignatureScheme
@@ -93,6 +98,7 @@ fun Membership.toZincJson(
     identityValueLength,
     settingsValueLength,
 ).toString()
+fun AttestationPointer<*>.toZincJson() = toJsonObject().toString()
 
 /**
  * Extension function for encoding a nullable ByteArray to Json
@@ -201,6 +207,20 @@ fun StateRef?.toJsonObject(isNullable: Boolean = false) = buildJsonObject {
     val inner = buildJsonObject {
         put("hash", this@toJsonObject?.txhash.toJsonObject())
         put("index", "${this@toJsonObject?.index ?: 0}")
+    }
+
+    if (!isNullable) return@toJsonObject inner
+    put("is_null", this@toJsonObject == null)
+    put("inner", inner)
+}
+
+/* This method assumes that the mostSignificantBits of the id are 0 */
+fun UniqueIdentifier?.toJsonObject(isNullable: Boolean = false) = buildJsonObject {
+    val inner = buildJsonObject {
+        // input validations
+        this@toJsonObject?.let { it.id.mostSignificantBits shouldBe 0 }
+        put("external_id", this@toJsonObject?.externalId.toJsonObject(UniqueIdentifierSurrogate.EXTERNAL_ID_LENGTH, true))
+        put("id", "${this@toJsonObject?.id?.leastSignificantBits ?: 0}")
     }
 
     if (!isNullable) return@toJsonObject inner
@@ -362,4 +382,10 @@ fun Membership.toJsonObject(
     put("settings", (settings as Set<Setting<String>>).toJsonObject(MembershipSurrogate.SETTINGS_LENGTH, settingsValueLength))
     put("linear_id", linearId.toJsonObject())
     put("previous_state_ref", previousStateRef.toJsonObject(true))
+}
+
+fun AttestationPointer<*>.toJsonObject(): JsonObject = buildJsonObject {
+    put("state_ref", stateRef.toJsonObject())
+    put("state_class_name", stateClass.name.toJsonObject(AttestationPointerSurrogate.MAX_CLASS_NAME_SIZE))
+    put("state_linear_id", stateLinearId.toJsonObject(true))
 }

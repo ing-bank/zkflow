@@ -4,6 +4,7 @@ import com.ing.zknotary.gradle.zinc.template.parameters.NullableTemplateParamete
 import com.ing.zknotary.gradle.zinc.template.parameters.PolyTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.PublicKeyTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.StringTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.parameters.UniqueIdentifierTemplateParameters
 
 plugins {
     id 'com.ing.zknotary.gradle-plugin'
@@ -44,6 +45,11 @@ zkp {
                     "nullable.zn",
                     null,
                     "platform_state_ref"
+            ),
+            new NullableTemplateParameters(
+                    "nullable.zn",
+                    UniqueIdentifierTemplateParameters.INSTANCE,
+                    null
             ),
     ])
 

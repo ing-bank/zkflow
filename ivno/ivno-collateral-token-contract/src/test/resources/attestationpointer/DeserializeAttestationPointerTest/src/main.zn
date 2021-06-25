@@ -1,0 +1,8 @@
+mod attestation_pointer;
+
+use attestation_pointer::AttestationPointer;
+use attestation_pointer::SerializedAttestationPointer;
+
+fn main(witness: SerializedAttestationPointer) -> AttestationPointer {
+    AttestationPointer::deserialize(witness)
+}
