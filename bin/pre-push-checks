@@ -9,7 +9,7 @@ ROOT=$PWD
 
 # $1 Name
 # $2 Build command
-# $3 folder with respect to root
+# $3 working dir relative to root dir
 function fail_all_if_failed() {
   echo -e "${BLUE}==> ${1}${NC}"
 
@@ -19,31 +19,26 @@ function fail_all_if_failed() {
     cd "$ROOT/$3" || exit
   fi
 
-
   if ! eval "$2";
   then
-    echo -e "${RED}BUILD FAILED: ${1}$\nyou SHOULD NOT push your code${NC}"
-    exit
+    echo -e "\n${RED}BUILD FAILED: ${1}\nPlease DO NOT push your code${NC}"
+    exit 1
   fi
 }
 
-# Clean all caches in one go
-caches=(
-  zkdapp-tester/src/main/zinc/test-command
-)
-
-for c in "${caches[@]}"
-do
-  rm -rf $c
-done
+clean="clean cleanTest"
+if [ "$1" == "--noclean" ]; then clean=""; fi
 
 fail_all_if_failed \
   "Build with Gradle" \
-  "./gradlew clean cleanTest check test slowTest testReportAll --stacktrace --build-cache"
+  "./gradlew $clean check test slowTest testReportAll --stacktrace --build-cache"
+
+# Remove zkdapp-tester test-command
+rm -rf zkdapp-tester/build/zinc/test-command
 
 fail_all_if_failed \
   "zkdapp-tester - Init new circuit and Process Zinc sources with Gradle" \
-  "../gradlew processZincSources createZincDirectoriesForInputCommand --command test-command  --stacktrace --build-cache" \
+  "../gradlew $clean processZincSources createZincDirectoriesForInputCommand --command test-command  --stacktrace --build-cache" \
   "zkdapp-tester"
 
 fail_all_if_failed \
@@ -54,7 +49,7 @@ fail_all_if_failed \
 
 fail_all_if_failed \
   "Ivno - Build with Gradle" \
-  "../gradlew build --stacktrace --build-cache" \
+  "../gradlew $clean build --stacktrace --build-cache" \
   "ivno"
 
 #fail_all_if_failed \
@@ -62,4 +57,4 @@ fail_all_if_failed \
 #  "zargo build -v" \
 #  "ivno/ivno-collateral-token-contract/build/zinc/deposit-request"
 
-echo -e "${GREEN}BUILD SUCCESSFUL\nFeel free to push your code${NC}"
+echo -e "\n${GREEN}BUILD SUCCESSFUL\nFeel free to push your code${NC}"
