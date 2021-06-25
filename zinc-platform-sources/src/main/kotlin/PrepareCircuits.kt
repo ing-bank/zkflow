@@ -1,4 +1,3 @@
-
 import com.ing.zknotary.gradle.extension.ZKNotaryExtension
 import com.ing.zknotary.gradle.task.joinConstFiles
 import com.ing.zknotary.gradle.zinc.template.TemplateConfigurations
@@ -11,7 +10,9 @@ import com.ing.zknotary.gradle.zinc.template.parameters.AbstractPartyTemplatePar
 import com.ing.zknotary.gradle.zinc.template.parameters.AmountTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.BigDecimalTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.CollectionTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.parameters.IntegerTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.IssuedTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.parameters.MapTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.PublicKeyTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.SignersTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.StringTemplateParameters
@@ -61,6 +62,15 @@ val templateConfigurations = TemplateConfigurations().apply {
                 ANONYMOUS_PARTY_TYPE_NAME,
                 PublicKeyTemplateParameters.eddsaTemplateParameters
             )
+        )
+    )
+
+    addConfigurations(
+        MapTemplateParameters(
+            "StringToIntMap",
+            6,
+            StringTemplateParameters(5),
+            IntegerTemplateParameters.i32
         )
     )
 }
