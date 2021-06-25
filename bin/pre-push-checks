@@ -1,0 +1,60 @@
+#!/bin/bash
+
+BLUE='\033[0;34m'
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+NC='\033[0m' # No Color
+
+ROOT=$PWD
+
+# $1 Name
+# $2 Build command
+# $3 working dir relative to root dir
+function fail_all_if_failed() {
+  echo -e "${BLUE}==> ${1}${NC}"
+
+  if [ "$3" ];
+  then
+    echo "====> Changing dir to $ROOT/$3"
+    cd "$ROOT/$3" || exit
+  fi
+
+  if ! eval "$2";
+  then
+    echo -e "\n${RED}BUILD FAILED: ${1}\nPlease DO NOT push your code${NC}"
+    exit 1
+  fi
+}
+
+clean="clean cleanTest"
+if [ "$1" == "--noclean" ]; then clean=""; fi
+
+fail_all_if_failed \
+  "Build with Gradle" \
+  "./gradlew $clean check test slowTest testReportAll --stacktrace --build-cache"
+
+# Remove zkdapp-tester test-command
+rm -rf zkdapp-tester/build/zinc/test-command
+
+fail_all_if_failed \
+  "zkdapp-tester - Init new circuit and Process Zinc sources with Gradle" \
+  "../gradlew $clean processZincSources createZincDirectoriesForInputCommand --command test-command  --stacktrace --build-cache" \
+  "zkdapp-tester"
+
+fail_all_if_failed \
+  "zkdapp-tester - Compile test-command circuit with Zargo" \
+  "zargo build -v" \
+  "zkdapp-tester/build/zinc/test-command"
+
+
+fail_all_if_failed \
+  "Ivno - Build with Gradle" \
+  "../gradlew $clean build --stacktrace --build-cache" \
+  "ivno"
+
+#fail_all_if_failed \
+#  "Ivno - Compile deposit-request circuit with Zargo" \
+#  "zargo build -v" \
+#  "ivno/ivno-collateral-token-contract/build/zinc/deposit-request"
+
+echo -e "\n${GREEN}BUILD SUCCESSFUL\nFeel free to push your code${NC}"
