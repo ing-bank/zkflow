@@ -6,8 +6,7 @@ import net.corda.core.utilities.seconds
 import java.io.File
 import java.time.Duration
 
-@Suppress("LongParameterList")
-class CircuitMetaData(
+data class CircuitMetaData(
     val name: String,
     val componentGroupSizes: Map<ComponentGroupEnum, Int>,
     val buildFolder: File,
