@@ -24,12 +24,22 @@ data class AbstractPartyTemplateParameters(
     companion object {
         const val ANONYMOUS_PARTY_TYPE_NAME = "AnonymousParty"
         const val PARTY_TYPE_NAME = "Party"
-        val all = PublicKeyTemplateParameters.all.map {
-            listOf(
-                AbstractPartyTemplateParameters(ANONYMOUS_PARTY_TYPE_NAME, it),
-                AbstractPartyTemplateParameters(PARTY_TYPE_NAME, it),
+
+        val allAnonymousParties = PublicKeyTemplateParameters.all.map {
+            AbstractPartyTemplateParameters(ANONYMOUS_PARTY_TYPE_NAME, it)
+        }
+
+        val allParties = PublicKeyTemplateParameters.all.map {
+            AbstractPartyTemplateParameters(PARTY_TYPE_NAME, it)
+        }
+
+        val all = allAnonymousParties + allParties
+
+        fun selectAbstractPartyParameters(schemeCodeName: String) =
+            AbstractPartyTemplateParameters(
+                ANONYMOUS_PARTY_TYPE_NAME,
+                PublicKeyTemplateParameters.selectParameters(schemeCodeName)
             )
-        }.flatten()
 
         fun selectPartyParameters(schemeCodeName: String) =
             AbstractPartyTemplateParameters(
