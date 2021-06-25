@@ -26,6 +26,13 @@ struct SettingString_7 {
 }
 
 impl SettingString_7 {
+    fn empty() -> SettingString_7 {
+        SettingString_7 {
+            property: String_20::empty(),
+            value: String_7::empty(),
+        }
+    }
+
     fn equals(this: SettingString_7, that: SettingString_7) -> bool {
         String_20::equals(this.property, that.property)
             && String_7::equals(this.value, that.value)

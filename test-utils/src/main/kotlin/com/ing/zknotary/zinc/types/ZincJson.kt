@@ -263,6 +263,11 @@ public fun JsonObject.polymorphic(): JsonObject = buildJsonObject {
     put("value", this@polymorphic)
 }
 
+public fun JsonObject.optional(isNone: Boolean = false): JsonObject = buildJsonObject {
+    put("is_none", isNone)
+    put("inner", this@optional)
+}
+
 public fun PublicKey.toJsonObject(encodedSize: Int): JsonObject = buildJsonObject {
     val scheme = Crypto.findSignatureScheme(this@toJsonObject)
     if (scheme == Crypto.ECDSA_SECP256K1_SHA256 || scheme == Crypto.ECDSA_SECP256R1_SHA256) {

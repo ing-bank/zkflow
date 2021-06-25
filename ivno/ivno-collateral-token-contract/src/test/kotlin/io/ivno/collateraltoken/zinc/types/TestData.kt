@@ -8,6 +8,9 @@ import io.ivno.collateraltoken.contract.Redemption
 import io.ivno.collateraltoken.contract.Transfer
 import io.ivno.collateraltoken.contract.TransferInitiator
 import io.onixlabs.corda.identityframework.contract.AbstractClaim
+import io.onixlabs.corda.bnms.contract.Network
+import io.onixlabs.corda.bnms.contract.Setting
+import io.onixlabs.corda.bnms.contract.membership.Membership
 import io.onixlabs.corda.identityframework.contract.Claim
 import net.corda.core.contracts.LinearPointer
 import net.corda.core.contracts.StateRef
@@ -37,11 +40,43 @@ val anotherUuid = generateDifferentValueThan(uuid) {
 val stateRef = StateRef(SecureHash.zeroHash, 1)
 val anotherStateRef = StateRef(SecureHash.allOnesHash, 1)
 
+val someUniqueIdentifier = UniqueIdentifier(externalId = "some.id", id = UUID(0, 1))
+val anotherUniqueIdentifier = UniqueIdentifier(externalId = "some.other.id", id = UUID(0, 2))
+
 val amount: BigDecimalAmount<LinearPointer<IvnoTokenType>> = BigDecimalAmount(
     42, LinearPointer(UniqueIdentifier(id = uuid), IvnoTokenType::class.java)
 )
 val amountWithDifferentQuantity = amount.copy(quantity = BigDecimal.valueOf(13))
 val amountWithDifferentAmountType = amount.copy(amountType = LinearPointer(UniqueIdentifier(id = anotherUuid), IvnoTokenType::class.java))
+
+val network = Network(
+    value = "Network 1",
+    operator = party
+)
+val anotherNetworkWithDifferentValue = Network(
+    value = "Network 2",
+    operator = party
+)
+val anotherNetworkWithDifferentOperator = Network(
+    value = "Network 1",
+    operator = anotherParty
+)
+
+val ivnoTokenType = IvnoTokenType(
+    network = network,
+    custodian = party,
+    tokenIssuingEntity = anotherParty,
+    displayName = "Display Name 1",
+    fractionDigits = 1,
+    linearId = someUniqueIdentifier
+)
+val ivnoTokenTypeWithNetworkOfDifferentValue = ivnoTokenType.copy(network = anotherNetworkWithDifferentValue)
+val ivnoTokenTypeWithNetworkOfDifferentOperator = ivnoTokenType.copy(network = anotherNetworkWithDifferentOperator)
+val ivnoTokenTypeWithDifferentCustodian = ivnoTokenType.copy(custodian = anotherParty)
+val ivnoTokenTypeWithDifferentTokenIssuingEntity = ivnoTokenType.copy(tokenIssuingEntity = party)
+val ivnoTokenTypeWithDifferentDisplayName = ivnoTokenType.copy(displayName = "Display Name 2")
+val ivnoTokenTypeWithDifferentFractionDigits = ivnoTokenType.copy(fractionDigits = 2)
+val ivnoTokenTypeWithDifferentLinearId = ivnoTokenType.copy(linearId = anotherUniqueIdentifier)
 
 val deposit = Deposit(
     depositor = anonymousParty,
@@ -110,3 +145,34 @@ val abstractClaimWithPolymorphic : AbstractClaim<AbstractParty> = Claim("Propert
 val claimWithPolymorphic = abstractClaimWithPolymorphic as Claim<AbstractParty>
 val anotherAbstractClaimWithPolymorphic : AbstractClaim<AbstractParty> = Claim("Property 2", anotherParty)
 val anotherClaimWithPolymorphic = anotherAbstractClaimWithPolymorphic as Claim<AbstractParty>
+
+val stringClaimSet = setOf(Claim("Property 1", "Value 1"))
+val anotherStringClaimSet = setOf(Claim("Property 1", "Value 1"), Claim("Property 1", "Value 2"))
+val intClaimSet = setOf(Claim("Property 1", 1), Claim("Property 1", 2))
+
+val stringSettingsSet = setOf(Setting("Property 1", "Value 1"))
+val anotherStringSettingsSet = setOf(Setting("Property 1", "Value 1"), Setting("Property 2", "Value 2"))
+val intSettingsSet = setOf(Setting("Property 1", 1), Setting("Property 2", 2))
+
+val membershipWithString = Membership(
+    network,
+    party,
+    stringClaimSet,
+    stringSettingsSet,
+    someUniqueIdentifier,
+    StateRef(SecureHash.allOnesHash, 1)
+)
+val anotherMembershipWithString = membershipWithString.copy(holder = anotherParty)
+val membershipWithInt = membershipWithString.copy(identity = intClaimSet, settings = intSettingsSet)
+val anotherMembershipWithInt = membershipWithInt.copy(holder = anotherParty)
+val membershipWithIntAndString = membershipWithInt.copy(settings = stringSettingsSet)
+val anotherMembershipWithIntAndString = membershipWithIntAndString.copy(holder = anotherParty)
+
+val membership = membershipWithString
+val membershipWithNetworkOfDifferentValue = membership.copy(network = anotherNetworkWithDifferentValue)
+val membershipWithNetworkOfDifferentOperator = membership.copy(network = anotherNetworkWithDifferentOperator)
+val membershipWithDifferentHolder = membership.copy(holder = anotherParty)
+val membershipWithDifferentIdentity = membership.copy(identity = anotherStringClaimSet)
+val membershipWithDifferentSettings = membership.copy(settings = anotherStringSettingsSet)
+val membershipWithDifferentLinearId = membership.copy(linearId = anotherUniqueIdentifier)
+val membershipWithDifferentPreviousStateRef = membership.copy(previousStateRef = StateRef(SecureHash.zeroHash, 0))

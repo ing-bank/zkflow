@@ -65,6 +65,10 @@ impl ${TYPE_NAME} {
         still_subset
     }
 
+    fn set_equals(this: ${TYPE_NAME}, that: ${TYPE_NAME}) -> bool {
+        is_subset(this, that) && is_subset(that, this)
+    }
+
     fn deserialize(serialized: Serialized${TYPE_NAME}) -> ${TYPE_NAME} {
         let size = {
             let mut size_bytes = [0; ${CONSTANT_PREFIX}_SIZE_LENGTH];

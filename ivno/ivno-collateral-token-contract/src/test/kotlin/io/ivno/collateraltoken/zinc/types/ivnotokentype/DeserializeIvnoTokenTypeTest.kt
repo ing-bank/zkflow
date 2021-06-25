@@ -6,18 +6,12 @@ import com.ing.zknotary.testing.DeserializationTestBase
 import com.ing.zknotary.testing.getZincZKService
 import io.ivno.collateraltoken.contract.IvnoTokenType
 import io.ivno.collateraltoken.serialization.IvnoSerializers
-import io.ivno.collateraltoken.serialization.IvnoTokenTypeSerializer
+import io.ivno.collateraltoken.zinc.types.ivnoTokenType
 import io.ivno.collateraltoken.zinc.types.toZincJson
-import io.onixlabs.corda.bnms.contract.Network
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.modules.SerializersModule
-import kotlinx.serialization.modules.contextual
-import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.crypto.Crypto
-import net.corda.testing.core.TestIdentity
-import java.util.*
 
 class DeserializeIvnoTokenTypeTest :
     DeserializationTestBase<DeserializeIvnoTokenTypeTest, DeserializeIvnoTokenTypeTest.Data>(
@@ -42,21 +36,9 @@ class DeserializeIvnoTokenTypeTest :
     data class Data(val data: @Contextual IvnoTokenType)
 
     companion object {
-        private val alice = TestIdentity.fresh("Alice").party
-        private val bob = TestIdentity.fresh("Bob").party
-
         @JvmStatic
         fun testData() = listOf(
-            Data(
-                IvnoTokenType(
-                    Network("Network", alice),
-                    bob,
-                    alice,
-                    "Display Name",
-                    1,
-                    UniqueIdentifier(id = UUID(0, 1))
-                )
-            ),
+            Data(ivnoTokenType),
         )
     }
 }

@@ -1,4 +1,3 @@
-import com.ing.zknotary.common.serialization.bfl.serializers.publickey.EdDSASurrogate
 import com.ing.zknotary.gradle.zinc.template.parameters.AbstractPartyTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.BigDecimalTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.NullableTemplateParameters
@@ -42,6 +41,11 @@ zkp {
                     "nullable.zn",
                     new StringTemplateParameters(20),
                     null
+            ),
+            new NullableTemplateParameters(
+                    "nullable.zn",
+                    null,
+                    "platform_state_ref"
             ),
     ]
 }
