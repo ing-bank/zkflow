@@ -1,14 +1,11 @@
 package com.ing.zknotary.common.client.flows
 
 import com.ing.zknotary.common.client.flows.testflows.TestCollectZKSignaturesFlow
-import com.ing.zknotary.node.services.ConfigParams.Zinc.COMMANDS_SEPARATOR
-import com.ing.zknotary.node.services.ConfigParams.Zinc.COMMAND_CLASS_NAMES
 import com.ing.zknotary.node.services.InMemoryUtxoInfoStorage
 import com.ing.zknotary.node.services.InMemoryZKVerifierTransactionStorage
 import com.ing.zknotary.node.services.ServiceNames.ZK_TX_SERVICE
 import com.ing.zknotary.node.services.ServiceNames.ZK_UTXO_INFO_STORAGE
 import com.ing.zknotary.node.services.ServiceNames.ZK_VERIFIER_TX_STORAGE
-import com.ing.zknotary.testing.fixtures.contract.TestContract
 import com.ing.zknotary.testing.zkp.MockZKTransactionCordaService
 import io.kotest.matchers.shouldBe
 import net.corda.core.identity.CordaX500Name
@@ -44,11 +41,6 @@ class CollectSignaturesFlowTest {
                         ZK_VERIFIER_TX_STORAGE to InMemoryZKVerifierTransactionStorage::class.qualifiedName!!,
                         ZK_UTXO_INFO_STORAGE to InMemoryUtxoInfoStorage::class.qualifiedName!!,
                         ZK_TX_SERVICE to MockZKTransactionCordaService::class.qualifiedName!!,
-                        COMMAND_CLASS_NAMES to listOf(
-                            TestContract.Create::class.java.name,
-                            TestContract.Move::class.java.name
-                        )
-                            .joinToString(separator = COMMANDS_SEPARATOR)
                     )
                 )
             ),

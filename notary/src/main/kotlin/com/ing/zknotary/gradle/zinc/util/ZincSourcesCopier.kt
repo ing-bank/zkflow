@@ -6,10 +6,15 @@ import java.nio.ByteBuffer
 class ZincSourcesCopier(private val outputPath: File) {
     fun copyZincCircuitSources(circuitSources: File, circuitName: String, version: String, configFileName: String) {
         circuitSources
-            .listFiles { _, name -> name != configFileName }
+            .listFiles()
             ?.forEach { file ->
-                val copy = outputPath.resolve(file.name)
-                file.copyTo(copy, overwrite = true)
+                if (file.name == configFileName) {
+                    val copy = outputPath.parentFile.resolve(file.name)
+                    file.copyTo(copy, overwrite = true)
+                } else {
+                    val copy = outputPath.resolve(file.name)
+                    file.copyTo(copy, overwrite = true)
+                }
             }
 
         createOutputFile(outputPath.parentFile.resolve("Zargo.toml")).apply {

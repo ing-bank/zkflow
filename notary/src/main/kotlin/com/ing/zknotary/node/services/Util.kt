@@ -42,18 +42,3 @@ fun ServiceHub.getLongFromConfig(configKey: String, defaultValue: Long? = null):
         defaultValue ?: throw ex
     }
 }
-
-object ConfigParams {
-    object Zinc {
-        const val CIRCUIT_FOLDER: String = "zincCircuitFolder"
-        const val ARTIFACT_FOLDER: String = "zincArtifactFolder"
-        const val BUILD_TIMEOUT: String = "zincBuildTimeout"
-        const val SETUP_TIMEOUT: String = "zincSetupTimeout"
-        const val PROVING_TIMEOUT: String = "zincProvingTimeout"
-        const val VERIFICATION_TIMEOUT: String = "zincVerificationTimeout"
-
-        const val COMMAND_CLASS_NAMES: String = "zkCommands"
-
-        const val COMMANDS_SEPARATOR: String = ","
-    }
-}

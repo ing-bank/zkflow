@@ -13,6 +13,10 @@ import net.corda.core.serialization.CordaSerializable
 @CordaSerializable
 class UtxoInfo(
     val stateRef: StateRef,
+
+    /**
+     * Serialized type TransactionState<T: ContractState>
+     */
     val serializedContents: ByteArray,
     val nonce: SecureHash
 ) {

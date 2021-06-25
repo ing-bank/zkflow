@@ -27,7 +27,15 @@ class CircuitConfigurator(
     @Serializable
     data class Circuit(
         val name: String,
-        val states: List<State> = listOf()
+        val states: List<State> = listOf(),
+
+        /**
+         * All timeouts are in seconds
+         */
+        val buildTimeout: Int = 120,
+        val setupTimeout: Int = 3000,
+        val provingTimeout: Int = 300,
+        val verificationTimeout: Int = 3
     )
 
     @Serializable
