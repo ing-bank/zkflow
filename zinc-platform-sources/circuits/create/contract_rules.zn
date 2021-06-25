@@ -1,27 +1,20 @@
-//!
-//! EXAMPLE DOCUMENT FOR CONTRACT RULES VALIDATION
-//! PLEASE IMPLEMENT NECESSARY CHECKS FOR THE ZKDAPP CONTRACT
-//!
-mod consts;
-mod platform_consts;
 mod platform_witness;
+mod signers_anonymous_party_ed_dsa;
+mod tx_state_test_state;
 
-use platform_consts::COMMAND_GROUP_SIZE;
-use consts::INPUT_GROUP_SIZE;
-use consts::OUTPUT_GROUP_SIZE;
 use platform_witness::Witness;
+use signers_anonymous_party_ed_dsa::Signers;
+use tx_state_test_state::TxStateTestState;
 
-fn check_contract_rules(value: Witness) {
-    // Validate the number of outputs
-    // let mut output_size: u16 = 0;
-    // for i in 0..OUTPUT_GROUP_SIZE {
-    //     if !value.outputs.components[i].is_filler {
-    //         output_size = output_size + (1 as u16);
-    //     }
-    // }
-    //
-    // assert!(
-    //     output_size == (1 as u16),
-    //     "Failed requirement: the tx has only one output"
-    // );
+fn check_contract_rules(witness: Witness) {
+    let signers = Signers::deserialize(witness.signers[0]);
+    dbg!("[Create] Signers {}", signers);
+
+    let tx_test_state = TxStateTestState::deserialize(witness.outputs[0]);
+    dbg!("[Create] TxState_TestState {}", tx_test_state);
+
+    assert!(Signers::contains(signers, tx_test_state.data.owner), "[Create] Owner must sign");
+    dbg!("[Create] Owner signed");
+
+    dbg!("[Create] Contract rules verified");
 }
