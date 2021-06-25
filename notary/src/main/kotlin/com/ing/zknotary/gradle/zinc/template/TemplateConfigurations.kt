@@ -3,17 +3,12 @@ package com.ing.zknotary.gradle.zinc.template
 import com.ing.serialization.bfl.serializers.DoubleSurrogate
 import com.ing.serialization.bfl.serializers.FloatSurrogate
 import com.ing.zknotary.gradle.zinc.template.parameters.AbstractPartyTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.parameters.AmountTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.AttachmentConstraintTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.BigDecimalTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.parameters.ByteArrayTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.parameters.CollectionTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.CurrencyTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.parameters.IssuedTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.LinearPointerTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.NullableTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.PartyAndReferenceTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.parameters.PolyTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.SecureHashTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.StringTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.UniqueIdentifierTemplateParameters
@@ -41,21 +36,13 @@ open class TemplateConfigurations {
         )
     }
 
-    open var stringConfigurations: List<StringTemplateParameters> = emptyList()
+    open val templateParameters = mutableListOf<TemplateParameters>()
 
-    open var byteArrayConfigurations: List<ByteArrayTemplateParameters> = emptyList()
+    fun addConfigurations(vararg templateParameters: TemplateParameters) =
+        this.templateParameters.addAll(templateParameters)
 
-    open var bigDecimalConfigurations: List<BigDecimalTemplateParameters> = emptyList()
-
-    open var amountConfigurations: List<AmountTemplateParameters> = emptyList()
-
-    open var issuedConfigurations: List<IssuedTemplateParameters<*>> = emptyList()
-
-    open var nullableConfigurations: List<NullableTemplateParameters<*>> = emptyList()
-
-    open var polyConfigurations: List<PolyTemplateParameters<*>> = emptyList()
-
-    open var collectionConfigurations: List<CollectionTemplateParameters<*>> = emptyList()
+    fun addConfigurations(templateParameters: List<TemplateParameters>) =
+        this.templateParameters.addAll(templateParameters)
 
     /*
      * Pre-defined collection of configurations to generate zinc sources for
@@ -82,19 +69,8 @@ open class TemplateConfigurations {
     /**
      * Resolve all distinct [TemplateParameters] for this configuration.
      */
-    fun resolveAllTemplateParameters(): List<TemplateParameters> {
-        return (
-            fixedTemplateParameters +
-                stringConfigurations +
-                byteArrayConfigurations +
-                bigDecimalConfigurations +
-                amountConfigurations +
-                issuedConfigurations +
-                nullableConfigurations +
-                polyConfigurations +
-                collectionConfigurations
-            )
+    fun resolveAllTemplateParameters(): List<TemplateParameters> =
+        (fixedTemplateParameters + templateParameters)
             .flatMap { it.resolveAllConfigurations() }
             .distinct()
-    }
 }

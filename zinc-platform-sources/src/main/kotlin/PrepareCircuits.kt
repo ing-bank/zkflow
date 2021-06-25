@@ -4,15 +4,14 @@ import com.ing.zknotary.gradle.task.joinConstFiles
 import com.ing.zknotary.gradle.zinc.template.TemplateConfigurations
 import com.ing.zknotary.gradle.zinc.template.TemplateConfigurations.Companion.doubleTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.TemplateConfigurations.Companion.floatTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.TemplateParameters
 import com.ing.zknotary.gradle.zinc.template.TemplateRenderer
 import com.ing.zknotary.gradle.zinc.template.parameters.AbstractPartyTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.AbstractPartyTemplateParameters.Companion.ANONYMOUS_PARTY_TYPE_NAME
 import com.ing.zknotary.gradle.zinc.template.parameters.AmountTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.BigDecimalTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.parameters.ByteArrayTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.CollectionTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.IssuedTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.parameters.NullableTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.PublicKeyTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.SignersTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.StringTemplateParameters
@@ -21,58 +20,61 @@ import com.ing.zknotary.gradle.zinc.util.CircuitConfigurator
 import com.ing.zknotary.gradle.zinc.util.CodeGenerator
 import com.ing.zknotary.gradle.zinc.util.MerkleReplacer
 import com.ing.zknotary.gradle.zinc.util.ZincSourcesCopier
+import net.corda.core.crypto.Crypto
 import java.io.File
 
-val myBigDecimalConfigurations = listOf(
-    BigDecimalTemplateParameters(24, 6),
-    BigDecimalTemplateParameters(100, 20),
-    floatTemplateParameters,
-    doubleTemplateParameters
-)
-
-val myByteArrayConfigurations = emptyList<ByteArrayTemplateParameters>()
-
-val myAmountConfigurations = myBigDecimalConfigurations.map {
-    AmountTemplateParameters(it, 8)
-}
-
-val myStringConfigurations: List<StringTemplateParameters> = listOf(StringTemplateParameters(32))
-
-val myIssuedConfigurations: List<IssuedTemplateParameters<*>> = listOf(
-    IssuedTemplateParameters(
-        AbstractPartyTemplateParameters(ANONYMOUS_PARTY_TYPE_NAME, PublicKeyTemplateParameters.eddsaTemplateParameters),
-        StringTemplateParameters(1)
-    )
-)
-
-val myNullableConfigurations = emptyList<NullableTemplateParameters<*>>()
-
-val myCollectionConfigurations = listOf(
-    CollectionTemplateParameters(collectionSize = 3, innerTemplateParameters = StringTemplateParameters(1)),
-    CollectionTemplateParameters("collection_integer.zn", collectionSize = 3, platformModuleName = "u32"),
-    // Collection of participants to TestState.
-    CollectionTemplateParameters(
-        collectionSize = 2,
-        innerTemplateParameters = AbstractPartyTemplateParameters(
-            ANONYMOUS_PARTY_TYPE_NAME,
-            PublicKeyTemplateParameters.eddsaTemplateParameters
-        )
-    ),
-)
-
 val templateConfigurations = TemplateConfigurations().apply {
-    stringConfigurations = myStringConfigurations
-    byteArrayConfigurations = myByteArrayConfigurations
-    amountConfigurations = myAmountConfigurations
-    bigDecimalConfigurations = myBigDecimalConfigurations
-    issuedConfigurations = myIssuedConfigurations
-    nullableConfigurations = myNullableConfigurations
-    collectionConfigurations = myCollectionConfigurations
-}.resolveAllTemplateParameters()
+    // BigDecimal configurations
+    val bigDecimalTemplateParameters = listOf(
+        BigDecimalTemplateParameters(24, 6),
+        BigDecimalTemplateParameters(100, 20),
+        floatTemplateParameters,
+        doubleTemplateParameters,
+    )
+    addConfigurations(bigDecimalTemplateParameters)
+
+    // Amount configurations
+    val amountTemplateParameters = bigDecimalTemplateParameters.map { AmountTemplateParameters(it, 8) }
+    addConfigurations(amountTemplateParameters)
+
+    // String configurations
+    addConfigurations(StringTemplateParameters(32))
+
+    // Issued configurations
+    addConfigurations(
+        IssuedTemplateParameters(
+            AbstractPartyTemplateParameters.selectAbstractPartyParameters(Crypto.EDDSA_ED25519_SHA512.schemeCodeName),
+            StringTemplateParameters(1)
+        )
+    )
+
+    addConfigurations(
+        CollectionTemplateParameters(collectionSize = 3, innerTemplateParameters = StringTemplateParameters(1)),
+        CollectionTemplateParameters<TemplateParameters>("collection_integer.zn", collectionSize = 3, platformModuleName = "u32"),
+    )
+
+    // Collection of participants to TestState.
+    addConfigurations(
+        CollectionTemplateParameters(
+            collectionSize = 2,
+            innerTemplateParameters = AbstractPartyTemplateParameters(
+                ANONYMOUS_PARTY_TYPE_NAME,
+                PublicKeyTemplateParameters.eddsaTemplateParameters
+            )
+        )
+    )
+}
 
 fun main(args: Array<String>) {
     val root = args[0]
     val projectVersion = args[1]
+
+    // Render templates for circuits testing deserialization, etc.
+    TemplateRenderer(getPlatformSourcesTestSourcesPath(root).toPath()) {
+        getTemplateContents(root, it.templateFile)
+    }.apply {
+        templateConfigurations.resolveAllTemplateParameters().forEach(::renderTemplate)
+    }
 
     val circuitSourcesBase = File("$root/circuits")
     val statesPath = "states"
@@ -106,21 +108,16 @@ fun main(args: Array<String>) {
                 getTemplateContents(root, it.templateFile)
             }
 
-            val txStatesTemplateConfigurations = configurator.circuitConfiguration.circuit.states.map { state ->
-                // Existence of the required states is ensured during the copying.
-                TxStateTemplateParameters(state)
-            }.flatMap { it.resolveAllConfigurations() }
+            templateConfigurations
+                .apply {
+                    configurator.circuitConfiguration.circuit.states.forEach { state ->
+                        // Existence of the required states is ensured during the copying.
+                        addConfigurations(TxStateTemplateParameters(state))
+                    }
 
-            val signersTemplateConfigurations = SignersTemplateParameters(
-                configurator.circuitConfiguration.groups.signerGroup
-            ).resolveAllConfigurations()
-
-            (
-                templateConfigurations +
-                    txStatesTemplateConfigurations +
-                    signersTemplateConfigurations
-                )
-                .distinct()
+                    addConfigurations(SignersTemplateParameters(configurator.circuitConfiguration.groups.signerGroup))
+                }
+                .resolveAllTemplateParameters()
                 .forEach(templateRenderer::renderTemplate)
 
             // Generate code
@@ -133,12 +130,6 @@ fun main(args: Array<String>) {
             replacer.setCorrespondingMerkleTreeFunctionForComponentGroups(consts)
             replacer.setCorrespondingMerkleTreeFunctionForMainTree()
         }
-
-    // Render templates for test circuits
-    val testTemplateRenderer =
-        TemplateRenderer(getPlatformSourcesTestSourcesPath(root).toPath()) { getTemplateContents(root, it.templateFile) }
-
-    templateConfigurations.forEach(testTemplateRenderer::renderTemplate)
 }
 
 private fun getPlatformSourcesPath(root: String): File {

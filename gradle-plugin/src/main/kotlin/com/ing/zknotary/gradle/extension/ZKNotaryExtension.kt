@@ -2,13 +2,7 @@ package com.ing.zknotary.gradle.extension
 
 import com.ing.zknotary.common.zkp.CircuitMetaData
 import com.ing.zknotary.gradle.zinc.template.TemplateConfigurations
-import com.ing.zknotary.gradle.zinc.template.parameters.AmountTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.parameters.BigDecimalTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.parameters.ByteArrayTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.parameters.CollectionTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.parameters.IssuedTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.parameters.NullableTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.parameters.StringTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.TemplateParameters
 import org.gradle.api.Project
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
@@ -27,25 +21,7 @@ open class ZKNotaryExtension(project: Project) : TemplateConfigurations() {
     }
 
     @Input
-    override var stringConfigurations: List<StringTemplateParameters> = emptyList()
-
-    @Input
-    override var byteArrayConfigurations: List<ByteArrayTemplateParameters> = emptyList()
-
-    @Input
-    override var bigDecimalConfigurations: List<BigDecimalTemplateParameters> = emptyList()
-
-    @Input
-    override var amountConfigurations: List<AmountTemplateParameters> = emptyList()
-
-    @Input
-    override var issuedConfigurations: List<IssuedTemplateParameters<*>> = emptyList()
-
-    @Input
-    override var nullableConfigurations: List<NullableTemplateParameters<*>> = emptyList()
-
-    @Input
-    override var collectionConfigurations: List<CollectionTemplateParameters<*>> = emptyList()
+    override val templateParameters = mutableListOf<TemplateParameters>()
 
     @Input
     var zincPlatformSourcesVersion: String? = "1.0-SNAPSHOT"
