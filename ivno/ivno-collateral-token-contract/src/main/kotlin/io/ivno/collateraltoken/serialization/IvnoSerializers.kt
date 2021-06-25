@@ -19,6 +19,7 @@ object IvnoSerializers {
         contextual(NetworkSerializer)
         contextual(IvnoTokenTypeSerializer)
         contextual(AccountAddressSerializer)
+        contextual(AttestationPointerSerializer)
     }
 
     init {

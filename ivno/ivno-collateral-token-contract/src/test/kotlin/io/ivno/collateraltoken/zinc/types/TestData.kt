@@ -11,8 +11,14 @@ import io.onixlabs.corda.identityframework.contract.AbstractClaim
 import io.onixlabs.corda.bnms.contract.Network
 import io.onixlabs.corda.bnms.contract.Setting
 import io.onixlabs.corda.bnms.contract.membership.Membership
+import io.onixlabs.corda.identityframework.contract.AttestationPointer
 import io.onixlabs.corda.identityframework.contract.Claim
+import kotlinx.serialization.Contextual
+import kotlinx.serialization.Polymorphic
+import kotlinx.serialization.Serializable
+import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.LinearPointer
+import net.corda.core.contracts.LinearState
 import net.corda.core.contracts.StateRef
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.crypto.SecureHash
@@ -176,3 +182,38 @@ val membershipWithDifferentIdentity = membership.copy(identity = anotherStringCl
 val membershipWithDifferentSettings = membership.copy(settings = anotherStringSettingsSet)
 val membershipWithDifferentLinearId = membership.copy(linearId = anotherUniqueIdentifier)
 val membershipWithDifferentPreviousStateRef = membership.copy(previousStateRef = StateRef(SecureHash.zeroHash, 0))
+
+@Serializable
+data class MyContractState(override val participants: List<@Polymorphic AbstractParty>) : ContractState
+
+@Serializable
+data class MyLinearState(
+    override val participants: List<@Polymorphic AbstractParty>,
+    override val linearId: @Contextual UniqueIdentifier,
+) : LinearState
+
+val attestationPointer = AttestationPointer(
+    stateRef = stateRef,
+    stateClass = MyLinearState::class.java,
+    stateLinearId = someUniqueIdentifier
+)
+val anotherAttestationPointer = AttestationPointer(
+    stateRef = stateRef,
+    stateClass = MyContractState::class.java,
+)
+val attestationPointerWithDifferentStateRef = AttestationPointer(
+    stateRef = anotherStateRef,
+    stateClass = MyLinearState::class.java,
+    stateLinearId = someUniqueIdentifier
+)
+val attestationPointerWithDifferentStateClass = AttestationPointer(
+    stateRef = anotherStateRef,
+    stateClass = MyContractState::class.java,
+    stateLinearId = someUniqueIdentifier
+)
+val attestationPointerWithDifferentStateLinearId = AttestationPointer(
+    stateRef = anotherStateRef,
+    stateClass = MyLinearState::class.java,
+    stateLinearId = anotherUniqueIdentifier
+)
+
