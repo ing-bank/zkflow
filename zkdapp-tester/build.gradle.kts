@@ -9,15 +9,17 @@ plugins {
 }
 
 zkp {
-    stringConfigurations = listOf(StringTemplateParameters(33))
-    bigDecimalConfigurations = listOf(
+    addConfigurations(StringTemplateParameters(33))
+
+    val bigDecimalParameters = listOf(
         BigDecimalTemplateParameters(25, 6),
         BigDecimalTemplateParameters(102, 20)
     )
-    amountConfigurations = listOf(
-        AmountTemplateParameters(BigDecimalTemplateParameters(25, 6), 8),
-        AmountTemplateParameters(BigDecimalTemplateParameters(102, 20), 8)
-    )
+    addConfigurations(bigDecimalParameters)
+
+
+    val amountParameters = bigDecimalParameters.map { AmountTemplateParameters(it, 8) }
+    addConfigurations(amountParameters)
 }
 
 repositories {
