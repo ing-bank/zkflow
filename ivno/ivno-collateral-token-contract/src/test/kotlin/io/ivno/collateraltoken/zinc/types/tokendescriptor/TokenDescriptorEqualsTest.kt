@@ -3,8 +3,10 @@ package io.ivno.collateraltoken.zinc.types.tokendescriptor
 import com.ing.zknotary.testing.getZincZKService
 import io.dasl.contracts.v1.token.TokenDescriptor
 import io.ivno.collateraltoken.zinc.types.toJsonObject
+import io.ivno.collateraltoken.zinc.types.tokenDescriptor
+import io.ivno.collateraltoken.zinc.types.tokenDescriptorWithOtherName
+import io.ivno.collateraltoken.zinc.types.tokenDescriptorWithOtherSymbol
 import kotlinx.serialization.json.buildJsonObject
-import net.corda.core.identity.CordaX500Name
 import org.junit.jupiter.api.Test
 
 class TokenDescriptorEqualsTest {
@@ -36,11 +38,5 @@ class TokenDescriptorEqualsTest {
         }.toString()
 
         zincZKService.run(witness, "$expected")
-    }
-
-    companion object {
-        val tokenDescriptor: TokenDescriptor = TokenDescriptor("Prince", CordaX500Name.parse("O=tafkap,L=New York,C=US"))
-        val tokenDescriptorWithOtherSymbol = TokenDescriptor("Tafkap", CordaX500Name.parse("O=tafkap,L=New York,C=US"))
-        val tokenDescriptorWithOtherName = TokenDescriptor("Prince", CordaX500Name.parse("O=prince,L=New York,C=US"))
     }
 }

@@ -50,7 +50,10 @@ import java.security.PublicKey
 fun Role.toZincJson() = toJsonObject().toString()
 fun TokenDescriptor.toZincJson() = toJsonObject().toString()
 fun Permission.toZincJson() = toJsonObject().toString()
+@JvmName("BigDecimalAmountWithLinearPointerToZincJson")
 fun BigDecimalAmount<LinearPointer<IvnoTokenType>>.toZincJson() = toJsonObject().toString()
+@JvmName("BigDecimalAmountWithTokenDescriptorToZincJson")
+fun BigDecimalAmount<TokenDescriptor>.toZincJson() = toJsonObject().toString()
 fun Network.toZincJson(encodedSize: Int, isAnonymous: Boolean, scheme: SignatureScheme) =
     toJsonObject(encodedSize, isAnonymous, scheme).toString()
 fun Setting<String>.toZincJson(size: Int) = toJsonObject(size).toString()
@@ -241,7 +244,14 @@ fun Permission.toJsonObject() = buildJsonObject {
     put("value", value.toJsonObject(PermissionSurrogate.VALUE_LENGTH))
 }
 
+@JvmName("BigDecimalAmountWithLinearPointerToJsonObject")
 fun BigDecimalAmount<LinearPointer<IvnoTokenType>>.toJsonObject() = buildJsonObject {
+    put("quantity", quantity.toJsonObject(20, 4))
+    put("token", amountType.toJsonObject())
+}
+
+@JvmName("BigDecimalAmountWithTokenDescriptorToJsonObject")
+fun BigDecimalAmount<TokenDescriptor>.toJsonObject() = buildJsonObject {
     put("quantity", quantity.toJsonObject(20, 4))
     put("token", amountType.toJsonObject())
 }

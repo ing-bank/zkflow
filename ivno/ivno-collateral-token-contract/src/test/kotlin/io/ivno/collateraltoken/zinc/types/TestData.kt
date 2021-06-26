@@ -2,6 +2,7 @@ package io.ivno.collateraltoken.zinc.types
 
 import com.ing.zknotary.zinc.types.generateDifferentValueThan
 import io.dasl.contracts.v1.token.BigDecimalAmount
+import io.dasl.contracts.v1.token.TokenDescriptor
 import io.ivno.collateraltoken.contract.Deposit
 import io.ivno.collateraltoken.contract.IvnoTokenType
 import io.ivno.collateraltoken.contract.Redemption
@@ -24,6 +25,7 @@ import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.AnonymousParty
+import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
 import net.corda.testing.core.TestIdentity
 import java.math.BigDecimal
@@ -83,6 +85,11 @@ val ivnoTokenTypeWithDifferentTokenIssuingEntity = ivnoTokenType.copy(tokenIssui
 val ivnoTokenTypeWithDifferentDisplayName = ivnoTokenType.copy(displayName = "Display Name 2")
 val ivnoTokenTypeWithDifferentFractionDigits = ivnoTokenType.copy(fractionDigits = 2)
 val ivnoTokenTypeWithDifferentLinearId = ivnoTokenType.copy(linearId = anotherUniqueIdentifier)
+
+val tokenDescriptor: TokenDescriptor = TokenDescriptor("Prince", CordaX500Name.parse("O=tafkap,L=New York,C=US"))
+val anotherTokenDescriptor: TokenDescriptor = TokenDescriptor("Tafkap", CordaX500Name.parse("O=prince,L=New York,C=US"))
+val tokenDescriptorWithOtherSymbol = TokenDescriptor("Tafkap", CordaX500Name.parse("O=tafkap,L=New York,C=US"))
+val tokenDescriptorWithOtherName = TokenDescriptor("Prince", CordaX500Name.parse("O=prince,L=New York,C=US"))
 
 val deposit = Deposit(
     depositor = anonymousParty,

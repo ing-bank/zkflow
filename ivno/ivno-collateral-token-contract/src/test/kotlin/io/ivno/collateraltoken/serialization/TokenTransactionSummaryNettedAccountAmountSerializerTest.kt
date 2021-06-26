@@ -4,8 +4,9 @@ import com.ing.zknotary.testing.assertRoundTripSucceeds
 import com.ing.zknotary.testing.assertSameSize
 import io.dasl.contracts.v1.account.AccountAddress
 import io.dasl.contracts.v1.token.BigDecimalAmount
-import io.dasl.contracts.v1.token.TokenDescriptor
 import io.dasl.contracts.v1.token.TokenTransactionSummary.NettedAccountAmount
+import io.ivno.collateraltoken.zinc.types.anotherTokenDescriptor
+import io.ivno.collateraltoken.zinc.types.tokenDescriptor
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import net.corda.core.identity.CordaX500Name
@@ -22,11 +23,11 @@ class TokenTransactionSummaryNettedAccountAmountSerializerTest {
 
     private val nettedAccountAmount1 = NettedAccountAmount(
         AccountAddress(someString, someCordaX500Name),
-        BigDecimalAmount(1, TokenDescriptor(someString, someCordaX500Name))
+        BigDecimalAmount(1, tokenDescriptor)
     )
     private val nettedAccountAmount2 = NettedAccountAmount(
         AccountAddress(anotherString, anotherCordaX500Name),
-        BigDecimalAmount(42, TokenDescriptor(anotherString, anotherCordaX500Name))
+        BigDecimalAmount(42, anotherTokenDescriptor)
     )
 
     private val serializersModule = IvnoSerializers.serializersModule

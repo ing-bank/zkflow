@@ -1,0 +1,72 @@
+mod big_decimal_20_4;
+mod token_descriptor;
+
+use big_decimal_20_4::BigDecimal_20_4;
+use big_decimal_20_4::BIG_DECIMAL_20_4_LENGTH;
+
+use token_descriptor::TokenDescriptor;
+use token_descriptor::TOKEN_DESCRIPTOR_LENGTH;
+
+const BIG_DECIMAL_AMOUNT_TOKEN_DESCRIPTOR_QUANTITY_LENGTH: u16 = BIG_DECIMAL_20_4_LENGTH;
+const BIG_DECIMAL_AMOUNT_TOKEN_DESCRIPTOR_TOKEN_LENGTH: u16 = TOKEN_DESCRIPTOR_LENGTH;
+
+const BIG_DECIMAL_AMOUNT_TOKEN_DESCRIPTOR_QUANTITY_OFFSET: u16 = 0;
+const BIG_DECIMAL_AMOUNT_TOKEN_DESCRIPTOR_TOKEN_OFFSET: u16
+    = BIG_DECIMAL_AMOUNT_TOKEN_DESCRIPTOR_QUANTITY_OFFSET
+    + BIG_DECIMAL_AMOUNT_TOKEN_DESCRIPTOR_QUANTITY_LENGTH;
+
+
+const BIG_DECIMAL_AMOUNT_TOKEN_DESCRIPTOR_LENGTH: u16
+    = BIG_DECIMAL_AMOUNT_TOKEN_DESCRIPTOR_TOKEN_OFFSET
+    + BIG_DECIMAL_AMOUNT_TOKEN_DESCRIPTOR_TOKEN_LENGTH;
+
+
+type SerializedBigDecimalAmountTokenDescriptor = [u8; BIG_DECIMAL_AMOUNT_TOKEN_DESCRIPTOR_LENGTH];
+
+struct BigDecimalAmountTokenDescriptor {
+    quantity: BigDecimal_20_4,
+    token: TokenDescriptor,
+}
+
+impl BigDecimalAmountTokenDescriptor {
+    fn new(quantity: BigDecimal_20_4, token: TokenDescriptor) -> BigDecimalAmountTokenDescriptor {
+        BigDecimalAmountTokenDescriptor {
+            quantity: quantity,
+            token: token,
+        }
+    }
+
+    fn empty() -> BigDecimalAmountTokenDescriptor {
+        BigDecimalAmountTokenDescriptor {
+            quantity: BigDecimal_20_4::empty(),
+            token: TokenDescriptor::empty()
+        }
+    }
+
+    fn equals(this: BigDecimalAmountTokenDescriptor, that: BigDecimalAmountTokenDescriptor) -> bool {
+        (BigDecimal_20_4::equals(this.quantity, that.quantity))
+            && (TokenDescriptor::equals(this.token, that.token))
+    }
+
+    fn deserialize(serialized: SerializedBigDecimalAmountTokenDescriptor) -> BigDecimalAmountTokenDescriptor {
+        let quantity: BigDecimal_20_4 = {
+            let mut quantity_bytes: [u8; BIG_DECIMAL_AMOUNT_TOKEN_DESCRIPTOR_QUANTITY_LENGTH] = [0; BIG_DECIMAL_AMOUNT_TOKEN_DESCRIPTOR_QUANTITY_LENGTH];
+            for i in 0..BIG_DECIMAL_AMOUNT_TOKEN_DESCRIPTOR_QUANTITY_LENGTH {
+                quantity_bytes[i] = serialized[i + BIG_DECIMAL_AMOUNT_TOKEN_DESCRIPTOR_QUANTITY_OFFSET];
+            }
+            BigDecimal_20_4::deserialize(quantity_bytes)
+        };
+        let token: TokenDescriptor = {
+            let mut token_bytes: [u8; BIG_DECIMAL_AMOUNT_TOKEN_DESCRIPTOR_TOKEN_LENGTH] = [0; BIG_DECIMAL_AMOUNT_TOKEN_DESCRIPTOR_TOKEN_LENGTH];
+            for i in 0..BIG_DECIMAL_AMOUNT_TOKEN_DESCRIPTOR_TOKEN_LENGTH {
+                token_bytes[i] = serialized[i + BIG_DECIMAL_AMOUNT_TOKEN_DESCRIPTOR_TOKEN_OFFSET];
+            }
+            TokenDescriptor::deserialize(token_bytes)
+        };
+
+        BigDecimalAmountTokenDescriptor {
+            quantity: quantity,
+            token: token,
+        }
+    }
+}
