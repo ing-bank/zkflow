@@ -33,18 +33,19 @@ fail_all_if_failed \
   "Build with Gradle" \
   "./gradlew $clean check test slowTest testReportAll --stacktrace --build-cache"
 
-# Remove zkdapp-tester test-command
-rm -rf zkdapp-tester/build/zinc/test-command
+# Remove zkdapp-tester test circuit
+rm -rf zkdapp-tester/src/main/zinc/states/zinc_state.zn
+rm -rf zkdapp-tester/src/main/zinc/test-circuit
 
 fail_all_if_failed \
   "zkdapp-tester - Init new circuit and Process Zinc sources with Gradle" \
-  "../gradlew $clean processZincSources createZincDirectoriesForInputCommand --command test-command  --stacktrace --build-cache" \
+  "../gradlew $clean processZincSources createZincDirectoriesForCircuit --circuit test-circuit  --stacktrace --info --build-cache" \
   "zkdapp-tester"
 
 fail_all_if_failed \
   "zkdapp-tester - Compile test-command circuit with Zargo" \
   "zargo build -v" \
-  "zkdapp-tester/build/zinc/test-command"
+  "zkdapp-tester/build/zinc/test-circuit"
 
 
 fail_all_if_failed \

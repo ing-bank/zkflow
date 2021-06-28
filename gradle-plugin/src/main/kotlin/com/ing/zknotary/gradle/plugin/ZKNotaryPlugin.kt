@@ -5,7 +5,7 @@ import com.ing.zknotary.gradle.task.CopyZincCircuitSourcesForTestsTask
 import com.ing.zknotary.gradle.task.CopyZincCircuitSourcesTask
 import com.ing.zknotary.gradle.task.CopyZincPlatformLibraryTask
 import com.ing.zknotary.gradle.task.CopyZincPlatformSourcesTask
-import com.ing.zknotary.gradle.task.CreateZincDirectoriesForInputCommandTask
+import com.ing.zknotary.gradle.task.CreateZincDirectoriesForCircuitTask
 import com.ing.zknotary.gradle.task.GenerateZincPlatformCodeFromTemplatesTask
 import com.ing.zknotary.gradle.task.PrepareCircuitForCompilationTask
 import org.gradle.api.Plugin
@@ -44,9 +44,9 @@ class ZKNotaryPlugin : Plugin<Project> {
             project.pluginManager.apply("org.jetbrains.kotlin.plugin.serialization")
         }
 
-        val createZincDirsForCommandTask = project.tasks.create(
-            "createZincDirectoriesForInputCommand",
-            CreateZincDirectoriesForInputCommandTask::class.java
+        val createZincDirsForCircuitTask = project.tasks.create(
+            "createZincDirectoriesForCircuit",
+            CreateZincDirectoriesForCircuitTask::class.java
         )
 
         val copyCircuitTask = project.tasks.create("copyZincCircuitSources", CopyZincCircuitSourcesTask::class.java)
@@ -63,11 +63,11 @@ class ZKNotaryPlugin : Plugin<Project> {
             project.tasks.create("copyZincCircuitSourcesForTests", CopyZincCircuitSourcesForTestsTask::class.java)
 
         // If a new circuit is scaffolded, the processing tasks should run after it
-        copyCircuitTask.mustRunAfter(createZincDirsForCommandTask)
-        copyPlatformTask.mustRunAfter(createZincDirsForCommandTask)
-        copyPlatformLibsTask.mustRunAfter(createZincDirsForCommandTask)
-        generateFromTemplatesTask.mustRunAfter(createZincDirsForCommandTask)
-        prepareForCompilationTask.mustRunAfter(createZincDirsForCommandTask)
+        copyCircuitTask.mustRunAfter(createZincDirsForCircuitTask)
+        copyPlatformTask.mustRunAfter(createZincDirsForCircuitTask)
+        copyPlatformLibsTask.mustRunAfter(createZincDirsForCircuitTask)
+        generateFromTemplatesTask.mustRunAfter(createZincDirsForCircuitTask)
+        prepareForCompilationTask.mustRunAfter(createZincDirsForCircuitTask)
 
         prepareForCompilationTask.dependsOn(copyCircuitTask, copyPlatformTask, generateFromTemplatesTask)
         prepareForCompilationTask.mustRunAfter(copyCircuitTask, copyPlatformTask, generateFromTemplatesTask)

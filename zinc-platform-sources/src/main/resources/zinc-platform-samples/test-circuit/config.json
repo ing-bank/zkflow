@@ -1,9 +1,9 @@
 {
   "circuit" : {
-    "name": "circuit-name",
+    "name": "test-circuit",
     "states" : [{
-      "location" : "path-to-file-containing-state-respectively-of-states-folder",
-      "name" : "name",
+      "location" : "zinc_state.zn",
+      "name" : "ZincState",
       "attachment_constraint" : "net.corda.core.contracts.AutomaticPlaceholderConstraint"
     }]
   },
@@ -27,7 +27,7 @@
     "command_group": {
       "group_size": 1,
       "commands": [ {
-        "name": "command-name",
+        "name": "test-command",
         "component_size": 11
       }]
     },

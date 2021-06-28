@@ -40,9 +40,9 @@ open class GenerateZincPlatformCodeFromTemplatesTask : DefaultTask() {
 
             extension
                 .apply {
-                    configurator.circuitConfiguration.circuit.states.forEach { state ->
-                        addConfigurations(TxStateTemplateParameters(state))
-                    }
+                    configurator.circuitConfiguration.circuit.states
+                        .forEach { addConfigurations(TxStateTemplateParameters(it)) }
+
                     addConfigurations(SignersTemplateParameters(configurator.circuitConfiguration.groups.signerGroup))
                 }.resolveAllTemplateParameters()
                 .forEach(templateRenderer::renderTemplate)
