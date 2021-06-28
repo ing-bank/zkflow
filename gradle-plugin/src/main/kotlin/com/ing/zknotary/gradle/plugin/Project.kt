@@ -62,12 +62,29 @@ val Project.platformTemplates: Array<File>
             .toList().toTypedArray()
     }
 
-val Project.platformSamples: FileTree
-    get() {
-        return project.platformSourcesFileTree.matching {
-            it.include(zkNotaryExtension.platformSamplesPath + zkNotaryExtension.zincFilesGlob)
-                .include(zkNotaryExtension.platformSamplesPath + zkNotaryExtension.configFiles)
-        }
+val Project.platformSkeletonState: FileTree
+    get() = project.platformSourcesFileTree.matching {
+        it
+            .include(
+                zkNotaryExtension.platformSamplesPath +
+                    ZKNotaryExtension.SKELETON_STATE_PATH +
+                    zkNotaryExtension.zincFilesGlob
+            )
+    }
+
+val Project.platformSkeletonCircuit: FileTree
+    get() = project.platformSourcesFileTree.matching {
+        it
+            .include(
+                zkNotaryExtension.platformSamplesPath +
+                    ZKNotaryExtension.SKELETON_CIRCUIT_PATH +
+                    zkNotaryExtension.zincFilesGlob
+            )
+            .include(
+                zkNotaryExtension.platformSamplesPath +
+                    ZKNotaryExtension.SKELETON_CIRCUIT_PATH +
+                    zkNotaryExtension.configFiles
+            )
     }
 
 // It is assumed that for every zinc test a similarly named folder ending in 'Test' (e.g. <test-name>Test) exists within

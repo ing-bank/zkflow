@@ -1,9 +1,9 @@
 {
   "circuit" : {
-    "name": "test-circuit",
+    "name": "skeleton-circuit",
     "states" : [{
-      "location" : "zinc_state.zn",
-      "name" : "ZincState",
+      "location" : "skeleton_state.zn",
+      "name" : "SkeletonState",
       "attachment_constraint" : "net.corda.core.contracts.AutomaticPlaceholderConstraint"
     }]
   },
@@ -27,7 +27,7 @@
     "command_group": {
       "group_size": 1,
       "commands": [ {
-        "name": "test-command",
+        "name": "command-name",
         "component_size": 11
       }]
     },

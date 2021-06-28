@@ -34,7 +34,7 @@ fail_all_if_failed \
   "./gradlew $clean check test slowTest testReportAll --stacktrace --build-cache"
 
 # Remove zkdapp-tester test circuit
-rm -rf zkdapp-tester/src/main/zinc/states/zinc_state.zn
+rm -rf zkdapp-tester/src/main/zinc/states/skeleton_state.zn
 rm -rf zkdapp-tester/src/main/zinc/test-circuit
 
 fail_all_if_failed \

@@ -18,6 +18,9 @@ open class ZKNotaryExtension(project: Project) : TemplateConfigurations() {
 
         private const val MERGED_CIRCUIT_BUILD_PATH = "zinc"
         private const val CIRCUIT_SOURCES_BASE_PATH = "src/main/zinc"
+
+        const val SKELETON_STATE_PATH = "skeleton-states"
+        const val SKELETON_CIRCUIT_PATH = "skeleton-circuit"
     }
 
     @Input

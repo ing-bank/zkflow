@@ -1,6 +1,7 @@
 package com.ing.zknotary.gradle.task
 
-import com.ing.zknotary.gradle.plugin.platformSamples
+import com.ing.zknotary.gradle.plugin.platformSkeletonCircuit
+import com.ing.zknotary.gradle.plugin.platformSkeletonState
 import com.ing.zknotary.gradle.plugin.zkNotaryExtension
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RelativePath
@@ -28,12 +29,24 @@ open class CreateZincDirectoriesForCircuitTask : DefaultTask() {
     fun createZincDirectoriesForCircuit() {
         val extension = project.zkNotaryExtension
 
+        // skeleton-states -> statesSourcesPath
         project.copy { copy ->
-            copy.from(project.platformSamples).eachFile {
+            copy.from(project.platformSkeletonState).eachFile {
+                println(it.sourcePath)
                 @Suppress("SpreadOperator")
-                it.relativePath = RelativePath(true, *it.relativePath.segments.drop(1).toTypedArray())
+                it.relativePath = RelativePath(true, *it.relativePath.segments.drop(2).toTypedArray())
             }
-            copy.into(extension.circuitSourcesBasePath)
+            copy.into(extension.circuitSourcesBasePath.resolve(extension.statesSourcesPath))
+            copy.includeEmptyDirs = false
+        }
+
+        // skeleton-circuit -> circuitName
+        project.copy { copy ->
+            copy.from(project.platformSkeletonCircuit).eachFile {
+                @Suppress("SpreadOperator")
+                it.relativePath = RelativePath(true, *it.relativePath.segments.drop(2).toTypedArray())
+            }
+            copy.into(extension.circuitSourcesBasePath.resolve(circuitName))
             copy.includeEmptyDirs = false
         }
     }
