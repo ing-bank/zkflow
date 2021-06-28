@@ -1,8 +1,10 @@
 package io.ivno.collateraltoken.zinc.types
 
 import com.ing.zknotary.zinc.types.generateDifferentValueThan
+import io.dasl.contracts.v1.account.AccountAddress
 import io.dasl.contracts.v1.token.BigDecimalAmount
 import io.dasl.contracts.v1.token.TokenDescriptor
+import io.dasl.contracts.v1.token.TokenTransactionSummary.NettedAccountAmount
 import io.ivno.collateraltoken.contract.Deposit
 import io.ivno.collateraltoken.contract.IvnoTokenType
 import io.ivno.collateraltoken.contract.Redemption
@@ -57,6 +59,11 @@ val amount: BigDecimalAmount<LinearPointer<IvnoTokenType>> = BigDecimalAmount(
 val amountWithDifferentQuantity = amount.copy(quantity = BigDecimal.valueOf(13))
 val amountWithDifferentAmountType = amount.copy(amountType = LinearPointer(UniqueIdentifier(id = anotherUuid), IvnoTokenType::class.java))
 
+const val someString = "Prince"
+const val anotherString = "Tafkap"
+val someCordaX500Name = CordaX500Name.parse("O=tafkap,L=New York,C=US")
+val anotherCordaX500Name = CordaX500Name.parse("O=prince,L=New York,C=US")
+
 val network = Network(
     value = "Network 1",
     operator = party
@@ -86,10 +93,10 @@ val ivnoTokenTypeWithDifferentDisplayName = ivnoTokenType.copy(displayName = "Di
 val ivnoTokenTypeWithDifferentFractionDigits = ivnoTokenType.copy(fractionDigits = 2)
 val ivnoTokenTypeWithDifferentLinearId = ivnoTokenType.copy(linearId = anotherUniqueIdentifier)
 
-val tokenDescriptor: TokenDescriptor = TokenDescriptor("Prince", CordaX500Name.parse("O=tafkap,L=New York,C=US"))
-val anotherTokenDescriptor: TokenDescriptor = TokenDescriptor("Tafkap", CordaX500Name.parse("O=prince,L=New York,C=US"))
-val tokenDescriptorWithOtherSymbol = TokenDescriptor("Tafkap", CordaX500Name.parse("O=tafkap,L=New York,C=US"))
-val tokenDescriptorWithOtherName = TokenDescriptor("Prince", CordaX500Name.parse("O=prince,L=New York,C=US"))
+val tokenDescriptor: TokenDescriptor = TokenDescriptor(someString, someCordaX500Name)
+val anotherTokenDescriptor: TokenDescriptor = TokenDescriptor(anotherString, anotherCordaX500Name)
+val tokenDescriptorWithOtherSymbol = TokenDescriptor(anotherString, someCordaX500Name)
+val tokenDescriptorWithOtherName = TokenDescriptor(someString, anotherCordaX500Name)
 
 val deposit = Deposit(
     depositor = anonymousParty,
@@ -224,3 +231,23 @@ val attestationPointerWithDifferentStateLinearId = AttestationPointer(
     stateLinearId = anotherUniqueIdentifier
 )
 
+val nettedAccountAmount = NettedAccountAmount(
+    AccountAddress(someString, someCordaX500Name),
+    BigDecimalAmount(1, tokenDescriptor)
+)
+val anotherNettedAccountAmount = NettedAccountAmount(
+    AccountAddress(anotherString, anotherCordaX500Name),
+    BigDecimalAmount(42, anotherTokenDescriptor)
+)
+val nettedAccountAmountWithAccountAddressOfDifferentAccountId = nettedAccountAmount.copy(
+    accountAddress = AccountAddress(anotherString, someCordaX500Name)
+)
+val nettedAccountAmountWithAccountAddressOfDifferentParty = nettedAccountAmount.copy(
+    accountAddress = AccountAddress(someString, anotherCordaX500Name)
+)
+val nettedAccountAmountWithAmountOfDifferentQuantity= nettedAccountAmount.copy(
+    amount = BigDecimalAmount(42, tokenDescriptor)
+)
+val nettedAccountAmountWithAmountOfDifferentAmountType= nettedAccountAmount.copy(
+    amount = BigDecimalAmount(1, anotherTokenDescriptor)
+)

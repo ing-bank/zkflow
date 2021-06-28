@@ -12,6 +12,7 @@ import com.ing.zknotary.zinc.types.toJsonObject
 import io.dasl.contracts.v1.account.AccountAddress
 import io.dasl.contracts.v1.token.BigDecimalAmount
 import io.dasl.contracts.v1.token.TokenDescriptor
+import io.dasl.contracts.v1.token.TokenTransactionSummary.NettedAccountAmount
 import io.ivno.collateraltoken.contract.Deposit
 import io.ivno.collateraltoken.contract.IvnoTokenType
 import io.ivno.collateraltoken.contract.Redemption
@@ -102,6 +103,7 @@ fun Membership.toZincJson(
     settingsValueLength,
 ).toString()
 fun AttestationPointer<*>.toZincJson() = toJsonObject().toString()
+fun NettedAccountAmount.toZincJson() = toJsonObject().toString()
 
 /**
  * Extension function for encoding a nullable ByteArray to Json
@@ -398,4 +400,9 @@ fun AttestationPointer<*>.toJsonObject(): JsonObject = buildJsonObject {
     put("state_ref", stateRef.toJsonObject())
     put("state_class_name", stateClass.name.toJsonObject(AttestationPointerSurrogate.MAX_CLASS_NAME_SIZE))
     put("state_linear_id", stateLinearId.toJsonObject(true))
+}
+
+fun NettedAccountAmount.toJsonObject() = buildJsonObject {
+    put("address", accountAddress.toJsonObject())
+    put("amount", amount.toJsonObject())
 }

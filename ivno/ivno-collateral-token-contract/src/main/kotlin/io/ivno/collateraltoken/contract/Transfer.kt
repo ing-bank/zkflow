@@ -4,6 +4,7 @@ import com.ing.serialization.bfl.annotations.FixedLength
 import com.ing.serialization.bfl.serializers.BigDecimalSizes
 import io.dasl.contracts.v1.token.BigDecimalAmount
 import io.ivno.collateraltoken.contract.TransferSchema.TransferSchemaV1
+import io.ivno.collateraltoken.serialization.BigDecimalAmountSerializer
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Polymorphic
 import kotlinx.serialization.Serializable
@@ -38,8 +39,9 @@ data class Transfer internal constructor(
     val currentTokenHolder: @Polymorphic AbstractParty,
     val targetTokenHolder: @Polymorphic AbstractParty,
     val initiator: TransferInitiator,
+    @Serializable(with = BigDecimalAmountSerializer::class)
     @BigDecimalSizes([AMOUNT_INT_LENGTH, AMOUNT_FRAC_LENGTH])
-    val amount: @Contextual BigDecimalAmount<@Contextual LinearPointer<@Contextual IvnoTokenType>>,
+    val amount: BigDecimalAmount<@Contextual LinearPointer<@Contextual IvnoTokenType>>,
     val status: TransferStatus,
     val timestamp: @Contextual Instant,
     @FixedLength([ACCOUNT_ID_LENGTH])

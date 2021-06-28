@@ -4,6 +4,7 @@ import com.ing.serialization.bfl.annotations.FixedLength
 import com.ing.serialization.bfl.serializers.BigDecimalSizes
 import io.dasl.contracts.v1.token.BigDecimalAmount
 import io.ivno.collateraltoken.contract.RedemptionSchema.RedemptionSchemaV1
+import io.ivno.collateraltoken.serialization.BigDecimalAmountSerializer
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import net.corda.core.contracts.BelongsToContract
@@ -37,8 +38,9 @@ data class Redemption internal constructor(
     val redeemer: @Contextual Party,
     val custodian: @Contextual Party,
     val tokenIssuingEntity: @Contextual Party,
+    @Serializable(with = BigDecimalAmountSerializer::class)
     @BigDecimalSizes([AMOUNT_INT_LENGTH, AMOUNT_FRAC_LENGTH])
-    val amount: @Contextual BigDecimalAmount<@Contextual LinearPointer<@Contextual IvnoTokenType>>,
+    val amount: BigDecimalAmount<@Contextual LinearPointer<@Contextual IvnoTokenType>>,
     val status: RedemptionStatus,
     val timestamp: @Contextual Instant,
     @FixedLength([ACCOUNT_ID_LENGTH])
