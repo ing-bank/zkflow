@@ -1,3 +1,4 @@
 .idea
 gradle*
-test-command/
+test-circuit/
+/src/main/zinc/states/skeleton_state.zn

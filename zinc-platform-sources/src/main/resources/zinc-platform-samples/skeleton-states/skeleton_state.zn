@@ -1,0 +1,15 @@
+const SKELETON_STATE_LENGTH: u16 = 0;
+
+type SerializedSkeletonState = [u8; SKELETON_STATE_LENGTH];
+
+struct SkeletonState;
+
+impl SkeletonState {
+    fn deserialize(serialized: SerializedSkeletonState) -> SkeletonState {
+        SkeletonState
+    }
+
+    fn equals(this: SkeletonState, that: SkeletonState) -> bool {
+        true
+    }
+}

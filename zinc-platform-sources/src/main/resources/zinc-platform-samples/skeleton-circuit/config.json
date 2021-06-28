@@ -1,9 +1,9 @@
 {
   "circuit" : {
-    "name": "circuit-name",
+    "name": "skeleton-circuit",
     "states" : [{
-      "location" : "path-to-file-containing-state-respectively-of-states-folder",
-      "name" : "name",
+      "location" : "skeleton_state.zn",
+      "name" : "SkeletonState",
       "attachment_constraint" : "net.corda.core.contracts.AutomaticPlaceholderConstraint"
     }]
   },

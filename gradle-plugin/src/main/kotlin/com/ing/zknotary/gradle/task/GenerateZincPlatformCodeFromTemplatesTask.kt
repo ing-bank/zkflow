@@ -6,6 +6,8 @@ import com.ing.zknotary.gradle.plugin.getTemplateContents
 import com.ing.zknotary.gradle.plugin.platformSourcesRootPath
 import com.ing.zknotary.gradle.plugin.zkNotaryExtension
 import com.ing.zknotary.gradle.zinc.template.TemplateRenderer
+import com.ing.zknotary.gradle.zinc.template.parameters.SignersTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.parameters.TxStateTemplateParameters
 import com.ing.zknotary.gradle.zinc.util.CircuitConfigurator
 import com.ing.zknotary.gradle.zinc.util.CodeGenerator
 import org.gradle.api.DefaultTask
@@ -35,9 +37,15 @@ open class GenerateZincPlatformCodeFromTemplatesTask : DefaultTask() {
             val templateRenderer = TemplateRenderer(circuitSourceOutputPath.toPath()) { params ->
                 project.getTemplateContents(params.templateFile)
             }
-            extension.resolveAllTemplateParameters().forEach {
-                templateRenderer.renderTemplate(it)
-            }
+
+            extension
+                .apply {
+                    configurator.circuitConfiguration.circuit.states
+                        .forEach { addConfigurations(TxStateTemplateParameters(it)) }
+
+                    addConfigurations(SignersTemplateParameters(configurator.circuitConfiguration.groups.signerGroup))
+                }.resolveAllTemplateParameters()
+                .forEach(templateRenderer::renderTemplate)
         }
     }
 }
