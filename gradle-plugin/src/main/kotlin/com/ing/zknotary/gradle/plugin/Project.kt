@@ -33,6 +33,11 @@ val Project.zincCommonFolderName: String?
         return zkNotaryExtension.zincCommonFolderName.folderIfExists(zkNotaryExtension.circuitSourcesBasePath)
     }
 
+val Project.zincStatesFolderName: String?
+    get() {
+        return zkNotaryExtension.statesSourcesPath.folderIfExists(zkNotaryExtension.circuitSourcesBasePath)
+    }
+
 val Project.platformSources: Array<File>
     get() {
         return project.platformSourcesFileTree.matching { it.include(zkNotaryExtension.platformSourcesPath + zkNotaryExtension.zincFilesGlob) }
