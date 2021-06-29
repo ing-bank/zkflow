@@ -44,9 +44,12 @@ class MerkleReplacer(private val outputPath: File) {
             val componentRegex = "platform_components_(\\w+)".toRegex()
             var componentGroupName = componentRegex.find(file.name)?.groupValues?.get(1)
 
-            if (componentGroupName != "Parameters" && // TODO _probably_ we need more formal definition
+            if (componentGroupName != "parameters" && // TODO _probably_ we need more formal definition
                 componentGroupName?.endsWith("s")!!
             ) componentGroupName = componentGroupName.dropLast(1)
+
+            // Remove any non alphanumeric character from the group name (so that it can be matched to the consts.zn)
+            componentGroupName = componentGroupName.replace("_", "")
 
             val componentGroupSize = getMerkleTreeSizeForComponent(componentGroupName, constsContent)
 
