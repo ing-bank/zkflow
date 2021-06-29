@@ -43,6 +43,8 @@ class ZincZKService(
          **/
         fun completeZincCommand(command: String, timeout: Duration, input: File? = null): String {
             val process = command.toProcess(input)
+            val output = process.inputStream.bufferedReader().readText()
+            val stderr = process.errorStream.bufferedReader().readText()
             val hasCompleted = process.waitFor(timeout.seconds, TimeUnit.SECONDS)
 
             if (!hasCompleted) {
@@ -51,11 +53,10 @@ class ZincZKService(
             }
 
             return if (process.exitValue() != 0) {
-                val stderr = process.errorStream.bufferedReader().readText()
                 error("$command failed with the following output: $stderr")
             } else {
-                log.debug(process.errorStream.bufferedReader().readText())
-                process.inputStream.bufferedReader().readText()
+                log.debug(stderr)
+                output
             }
         }
 
