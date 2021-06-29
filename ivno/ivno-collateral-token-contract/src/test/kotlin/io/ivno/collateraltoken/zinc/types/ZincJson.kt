@@ -12,6 +12,7 @@ import com.ing.zknotary.zinc.types.toJsonObject
 import io.dasl.contracts.v1.account.AccountAddress
 import io.dasl.contracts.v1.token.BigDecimalAmount
 import io.dasl.contracts.v1.token.TokenDescriptor
+import io.dasl.contracts.v1.token.TokenTransactionSummary.NettedAccountAmount
 import io.ivno.collateraltoken.contract.Deposit
 import io.ivno.collateraltoken.contract.IvnoTokenType
 import io.ivno.collateraltoken.contract.Redemption
@@ -50,7 +51,10 @@ import java.security.PublicKey
 fun Role.toZincJson() = toJsonObject().toString()
 fun TokenDescriptor.toZincJson() = toJsonObject().toString()
 fun Permission.toZincJson() = toJsonObject().toString()
+@JvmName("BigDecimalAmountWithLinearPointerToZincJson")
 fun BigDecimalAmount<LinearPointer<IvnoTokenType>>.toZincJson() = toJsonObject().toString()
+@JvmName("BigDecimalAmountWithTokenDescriptorToZincJson")
+fun BigDecimalAmount<TokenDescriptor>.toZincJson() = toJsonObject().toString()
 fun Network.toZincJson(encodedSize: Int, isAnonymous: Boolean, scheme: SignatureScheme) =
     toJsonObject(encodedSize, isAnonymous, scheme).toString()
 fun Setting<String>.toZincJson(size: Int) = toJsonObject(size).toString()
@@ -99,6 +103,7 @@ fun Membership.toZincJson(
     settingsValueLength,
 ).toString()
 fun AttestationPointer<*>.toZincJson() = toJsonObject().toString()
+fun NettedAccountAmount.toZincJson() = toJsonObject().toString()
 
 /**
  * Extension function for encoding a nullable ByteArray to Json
@@ -241,7 +246,14 @@ fun Permission.toJsonObject() = buildJsonObject {
     put("value", value.toJsonObject(PermissionSurrogate.VALUE_LENGTH))
 }
 
+@JvmName("BigDecimalAmountWithLinearPointerToJsonObject")
 fun BigDecimalAmount<LinearPointer<IvnoTokenType>>.toJsonObject() = buildJsonObject {
+    put("quantity", quantity.toJsonObject(20, 4))
+    put("token", amountType.toJsonObject())
+}
+
+@JvmName("BigDecimalAmountWithTokenDescriptorToJsonObject")
+fun BigDecimalAmount<TokenDescriptor>.toJsonObject() = buildJsonObject {
     put("quantity", quantity.toJsonObject(20, 4))
     put("token", amountType.toJsonObject())
 }
@@ -388,4 +400,9 @@ fun AttestationPointer<*>.toJsonObject(): JsonObject = buildJsonObject {
     put("state_ref", stateRef.toJsonObject())
     put("state_class_name", stateClass.name.toJsonObject(AttestationPointerSurrogate.MAX_CLASS_NAME_SIZE))
     put("state_linear_id", stateLinearId.toJsonObject(true))
+}
+
+fun NettedAccountAmount.toJsonObject() = buildJsonObject {
+    put("address", accountAddress.toJsonObject())
+    put("amount", amount.toJsonObject())
 }

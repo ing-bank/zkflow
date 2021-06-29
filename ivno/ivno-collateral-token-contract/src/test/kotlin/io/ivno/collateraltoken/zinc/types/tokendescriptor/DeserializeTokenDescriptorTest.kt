@@ -6,10 +6,10 @@ import com.ing.zknotary.testing.getZincZKService
 import io.dasl.contracts.v1.token.TokenDescriptor
 import io.ivno.collateraltoken.serialization.IvnoSerializers
 import io.ivno.collateraltoken.zinc.types.toZincJson
+import io.ivno.collateraltoken.zinc.types.tokenDescriptor
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
-import net.corda.core.identity.CordaX500Name
 
 class DeserializeTokenDescriptorTest :
 DeserializationTestBase<DeserializeTokenDescriptorTest, DeserializeTokenDescriptorTest.Data>(
@@ -26,7 +26,7 @@ DeserializationTestBase<DeserializeTokenDescriptorTest, DeserializeTokenDescript
     companion object {
         @JvmStatic
         fun testData() = listOf(
-            Data(TokenDescriptor("Prince", CordaX500Name.parse("O=tafkap,L=New York,C=US"))),
+            Data(tokenDescriptor),
         )
     }
 }

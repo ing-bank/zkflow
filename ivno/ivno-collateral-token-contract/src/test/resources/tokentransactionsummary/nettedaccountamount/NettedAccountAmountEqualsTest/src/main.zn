@@ -1,0 +1,7 @@
+mod token_transaction_summary_netted_account_amount;
+
+use token_transaction_summary_netted_account_amount::TokenTransactionSummaryNettedAccountAmount;
+
+fn main(left: TokenTransactionSummaryNettedAccountAmount, right: TokenTransactionSummaryNettedAccountAmount) -> bool {
+    TokenTransactionSummaryNettedAccountAmount::equals(left, right)
+}

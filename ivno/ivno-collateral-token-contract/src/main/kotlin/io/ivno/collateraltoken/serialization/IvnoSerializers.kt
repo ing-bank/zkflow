@@ -3,7 +3,6 @@ package io.ivno.collateraltoken.serialization
 import com.ing.zknotary.common.serialization.bfl.CommandDataSerializerMap
 import com.ing.zknotary.common.serialization.bfl.ContractStateSerializerMap
 import com.ing.zknotary.common.serialization.bfl.SerializersModuleRegistry
-import com.ing.zknotary.common.serialization.bfl.corda.LinearPointerSerializer
 import io.ivno.collateraltoken.contract.Deposit
 import io.ivno.collateraltoken.contract.DepositContract
 import kotlinx.serialization.modules.SerializersModule
@@ -12,7 +11,8 @@ import net.corda.core.utilities.loggerFor
 
 object IvnoSerializers {
     val serializersModule = SerializersModule {
-        contextual(BigDecimalAmountSerializer(LinearPointerSerializer))
+        // TODO: Improve this temporary generic handling when kotlinx's handling for generic types is incorporated in BFL
+        contextual(BigDecimalAmountSerializer(BogusSerializer))
         contextual(PermissionSerializer)
         contextual(RoleSerializer)
         contextual(TokenDescriptorSerializer)
@@ -20,6 +20,7 @@ object IvnoSerializers {
         contextual(IvnoTokenTypeSerializer)
         contextual(AccountAddressSerializer)
         contextual(AttestationPointerSerializer)
+        contextual(TokenTransactionSummaryNettedAccountAmountSerializer)
     }
 
     init {

@@ -1,0 +1,8 @@
+mod token_transaction_summary_netted_account_amount;
+
+use token_transaction_summary_netted_account_amount::TokenTransactionSummaryNettedAccountAmount;
+use token_transaction_summary_netted_account_amount::SerializedTokenTransactionSummaryNettedAccountAmount;
+
+fn main(witness: SerializedTokenTransactionSummaryNettedAccountAmount) -> TokenTransactionSummaryNettedAccountAmount {
+    TokenTransactionSummaryNettedAccountAmount::deserialize(witness)
+}

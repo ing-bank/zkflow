@@ -5,6 +5,7 @@ import com.ing.serialization.bfl.serializers.BigDecimalSizes
 import com.ing.zknotary.common.contracts.ZKContractState
 import io.dasl.contracts.v1.token.BigDecimalAmount
 import io.ivno.collateraltoken.contract.DepositSchema.DepositSchemaV1
+import io.ivno.collateraltoken.serialization.BigDecimalAmountSerializer
 import io.ivno.collateraltoken.serialization.IvnoSerializers
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
@@ -43,7 +44,9 @@ data class Deposit internal constructor(
     val depositor: @Contextual AnonymousParty,
     val custodian: @Contextual AnonymousParty,
     val tokenIssuingEntity: @Contextual AnonymousParty,
-    @BigDecimalSizes([AMOUNT_INT_LENGTH, AMOUNT_FRAC_LENGTH]) val amount: @Contextual BigDecimalAmount<@Contextual LinearPointer<@Contextual IvnoTokenType>>,
+    @Serializable(with = BigDecimalAmountSerializer::class)
+    @BigDecimalSizes([AMOUNT_INT_LENGTH, AMOUNT_FRAC_LENGTH])
+    val amount: BigDecimalAmount<@Contextual LinearPointer<@Contextual IvnoTokenType>>,
     @FixedLength([REFERENCE_LENGTH]) val reference: String?,
     val status: DepositStatus,
     val timestamp: @Contextual Instant,

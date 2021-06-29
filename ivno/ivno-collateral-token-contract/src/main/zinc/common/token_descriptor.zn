@@ -31,6 +31,13 @@ struct TokenDescriptor {
 }
 
 impl TokenDescriptor {
+    fn empty() -> TokenDescriptor {
+        TokenDescriptor {
+            symbol: String_32::empty(),
+            issuer_name: CordaX500Name::empty()
+        }
+    }
+
     fn equals(this: TokenDescriptor, that: TokenDescriptor) -> bool {
         String_32::equals(this.symbol, that.symbol)
             && CordaX500Name::equals(this.issuer_name, that.issuer_name)
