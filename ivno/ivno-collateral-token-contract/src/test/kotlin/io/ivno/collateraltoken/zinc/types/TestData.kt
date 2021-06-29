@@ -11,6 +11,7 @@ import io.ivno.collateraltoken.contract.IvnoTokenType
 import io.ivno.collateraltoken.contract.Redemption
 import io.ivno.collateraltoken.contract.Transfer
 import io.ivno.collateraltoken.contract.TransferInitiator
+import io.ivno.collateraltoken.serialization.MembershipAttestationSurrogate
 import io.onixlabs.corda.bnms.contract.Network
 import io.onixlabs.corda.bnms.contract.Setting
 import io.onixlabs.corda.bnms.contract.membership.Membership
@@ -306,3 +307,13 @@ val attestationWithDifferentMetadata = attestation.copy {
 val attestationWithDifferentLinearId = attestation.copy { linearId = anotherUniqueIdentifier }
 val attestationWithoutPreviousState = attestation.copy { previousStateRef = null }
 val attestationWithDifferentPreviousState = attestation.copy { previousStateRef = anotherStateRef }
+
+val membershipAttestation = MembershipAttestationSurrogate(
+    network, attestation
+).toOriginal()
+val anotherMembershipAttestation = MembershipAttestationSurrogate(
+    anotherNetworkWithDifferentOperator,
+    attestation.copy {
+        attestor = anEvenOtherAnonymousParty
+    }
+).toOriginal()

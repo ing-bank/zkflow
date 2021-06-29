@@ -1,0 +1,8 @@
+mod membership_attestation;
+
+use membership_attestation::MembershipAttestation;
+use membership_attestation::SerializedMembershipAttestation;
+
+fn main(witness: SerializedMembershipAttestation) -> MembershipAttestation {
+    MembershipAttestation::deserialize(witness)
+}
