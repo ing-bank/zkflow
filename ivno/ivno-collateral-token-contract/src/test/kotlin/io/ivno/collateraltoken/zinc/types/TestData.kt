@@ -5,6 +5,7 @@ import io.dasl.contracts.v1.account.AccountAddress
 import io.dasl.contracts.v1.token.BigDecimalAmount
 import io.dasl.contracts.v1.token.TokenDescriptor
 import io.dasl.contracts.v1.token.TokenTransactionSummary.NettedAccountAmount
+import io.dasl.contracts.v1.token.TokenTransactionSummary.State
 import io.ivno.collateraltoken.contract.Deposit
 import io.ivno.collateraltoken.contract.IvnoTokenType
 import io.ivno.collateraltoken.contract.Redemption
@@ -31,6 +32,7 @@ import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
 import net.corda.testing.core.TestIdentity
 import java.math.BigDecimal
+import java.time.Instant
 import java.util.UUID
 import kotlin.random.Random
 
@@ -46,6 +48,9 @@ val uuid = randomUUID()
 val anotherUuid = generateDifferentValueThan(uuid) {
     randomUUID()
 }
+
+val instant: Instant = Instant.now()
+val anotherInstant: Instant = instant.plusSeconds(42)
 
 val stateRef = StateRef(SecureHash.zeroHash, 1)
 val anotherStateRef = StateRef(SecureHash.allOnesHash, 1)
@@ -251,3 +256,25 @@ val nettedAccountAmountWithAmountOfDifferentQuantity= nettedAccountAmount.copy(
 val nettedAccountAmountWithAmountOfDifferentAmountType= nettedAccountAmount.copy(
     amount = BigDecimalAmount(1, anotherTokenDescriptor)
 )
+
+val state = State(
+    listOf(party),
+    "A command",
+    listOf(nettedAccountAmount),
+    "A description",
+    instant,
+)
+val anotherState = State(
+    listOf(party, anotherParty),
+    "Another command",
+    listOf(nettedAccountAmount, anotherNettedAccountAmount),
+    "Another description",
+    anotherInstant,
+    SecureHash.zeroHash
+)
+val stateWithDifferentParticipants = state.copy(participants = anotherState.participants)
+val stateWithDifferentCommand = state.copy(command = anotherState.command)
+val stateWithDifferentAmounts = state.copy(amounts = anotherState.amounts)
+val stateWithDifferentDescription = state.copy(description = anotherState.description)
+val stateWithDifferentTransactionTime = state.copy(transactionTime = anotherState.transactionTime)
+val stateWithDifferentTransactionId = state.copy(transactionId = anotherState.transactionId)

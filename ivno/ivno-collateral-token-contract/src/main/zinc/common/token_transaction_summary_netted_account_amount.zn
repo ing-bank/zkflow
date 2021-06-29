@@ -26,6 +26,13 @@ struct TokenTransactionSummaryNettedAccountAmount {
 }
 
 impl TokenTransactionSummaryNettedAccountAmount {
+    fn empty() -> TokenTransactionSummaryNettedAccountAmount {
+        TokenTransactionSummaryNettedAccountAmount {
+            address: AccountAddress::empty(),
+            amount: BigDecimalAmountTokenDescriptor::empty(),
+        }
+    }
+
     fn equals(this: TokenTransactionSummaryNettedAccountAmount, that: TokenTransactionSummaryNettedAccountAmount) -> bool {
         AccountAddress::equals(this.address, that.address)
             && BigDecimalAmountTokenDescriptor::equals(this.amount, that.amount)

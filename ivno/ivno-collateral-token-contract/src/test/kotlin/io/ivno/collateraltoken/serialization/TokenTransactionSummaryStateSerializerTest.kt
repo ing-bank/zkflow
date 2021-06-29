@@ -3,15 +3,11 @@ package io.ivno.collateraltoken.serialization
 import com.ing.zknotary.testing.assertRoundTripSucceeds
 import com.ing.zknotary.testing.assertSameSize
 import io.dasl.contracts.v1.token.TokenTransactionSummary.State
-import io.ivno.collateraltoken.zinc.types.anotherNettedAccountAmount
-import io.ivno.collateraltoken.zinc.types.anotherParty
-import io.ivno.collateraltoken.zinc.types.nettedAccountAmount
-import io.ivno.collateraltoken.zinc.types.party
+import io.ivno.collateraltoken.zinc.types.anotherState
+import io.ivno.collateraltoken.zinc.types.state
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
-import net.corda.core.crypto.SecureHash
 import org.junit.jupiter.api.Test
-import java.time.Instant
 
 class TokenTransactionSummaryStateSerializerTest {
     @Serializable
@@ -32,23 +28,5 @@ class TokenTransactionSummaryStateSerializerTest {
 
         assertRoundTripSucceeds(data1, serializersModule)
         assertSameSize(data1, data2, serializersModule)
-    }
-
-    companion object {
-        val state = State(
-            listOf(party),
-            "A command",
-            listOf(nettedAccountAmount),
-            "A description",
-            Instant.now(),
-        )
-        val anotherState = State(
-            listOf(party, anotherParty),
-            "Another command",
-            listOf(nettedAccountAmount, anotherNettedAccountAmount),
-            "Another description",
-            Instant.now().plusSeconds(42),
-            SecureHash.zeroHash
-        )
     }
 }

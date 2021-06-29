@@ -1,8 +1,10 @@
 import com.ing.zknotary.gradle.zinc.template.parameters.AbstractPartyTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.BigDecimalTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.parameters.CollectionTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.NullableTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.PolyTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.PublicKeyTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.parameters.SecureHashTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.StringTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.UniqueIdentifierTemplateParameters
 
@@ -51,6 +53,19 @@ zkp {
                     UniqueIdentifierTemplateParameters.INSTANCE,
                     null
             ),
+            new NullableTemplateParameters(
+                    "nullable.zn",
+                    SecureHashTemplateParameters.INSTANCE,
+                    null
+            ),
+            new CollectionTemplateParameters(
+                    "collection.zn",
+                    2,
+                    new PolyTemplateParameters(
+                            new AbstractPartyTemplateParameters("Party", PublicKeyTemplateParameters.Companion.newInstance().eddsaTemplateParameters)
+                    ),
+                    null
+            )
     ])
 
     addConfigurations([7, 20, 32].collect { new StringTemplateParameters(it.shortValue()) })

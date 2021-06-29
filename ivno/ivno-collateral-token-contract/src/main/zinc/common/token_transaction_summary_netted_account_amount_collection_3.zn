@@ -1,0 +1,90 @@
+mod platform_consts;
+mod platform_integer;
+mod token_transaction_summary_netted_account_amount;
+
+use platform_consts::U32_BYTES;
+
+use token_transaction_summary_netted_account_amount::TokenTransactionSummaryNettedAccountAmount;
+use token_transaction_summary_netted_account_amount::TOKEN_TRANSACTION_SUMMARY_NETTED_ACCOUNT_AMOUNT_LENGTH;
+
+const TOKEN_TRANSACTION_SUMMARY_NETTED_ACCOUNT_AMOUNT_COLLECTION_3_SIZE_LENGTH: u16 = U32_BYTES;
+const TOKEN_TRANSACTION_SUMMARY_NETTED_ACCOUNT_AMOUNT_COLLECTION_3_ELEMENTS_LENGTH: u16 = TOKEN_TRANSACTION_SUMMARY_NETTED_ACCOUNT_AMOUNT_LENGTH * 3 as u16;
+
+const TOKEN_TRANSACTION_SUMMARY_NETTED_ACCOUNT_AMOUNT_COLLECTION_3_SIZE_OFFSET: u16 = 0;
+const TOKEN_TRANSACTION_SUMMARY_NETTED_ACCOUNT_AMOUNT_COLLECTION_3_ELEMENTS_OFFSET: u16
+    = TOKEN_TRANSACTION_SUMMARY_NETTED_ACCOUNT_AMOUNT_COLLECTION_3_SIZE_OFFSET
+    + TOKEN_TRANSACTION_SUMMARY_NETTED_ACCOUNT_AMOUNT_COLLECTION_3_SIZE_LENGTH;
+const TOKEN_TRANSACTION_SUMMARY_NETTED_ACCOUNT_AMOUNT_COLLECTION_3_LENGTH: u16
+    = TOKEN_TRANSACTION_SUMMARY_NETTED_ACCOUNT_AMOUNT_COLLECTION_3_ELEMENTS_OFFSET
+    + TOKEN_TRANSACTION_SUMMARY_NETTED_ACCOUNT_AMOUNT_COLLECTION_3_ELEMENTS_LENGTH;
+
+type SerializedTokenTransactionSummaryNettedAccountAmountCollection_3 = [u8; TOKEN_TRANSACTION_SUMMARY_NETTED_ACCOUNT_AMOUNT_COLLECTION_3_LENGTH];
+
+struct TokenTransactionSummaryNettedAccountAmountCollection_3 {
+    size: u32,
+    elements: [TokenTransactionSummaryNettedAccountAmount; 3],
+}
+
+impl TokenTransactionSummaryNettedAccountAmountCollection_3 {
+    fn empty() -> TokenTransactionSummaryNettedAccountAmountCollection_3 {
+        TokenTransactionSummaryNettedAccountAmountCollection_3 {
+            size: 0 as u32,
+            elements: [TokenTransactionSummaryNettedAccountAmount::empty(); 3],
+        }
+    }
+
+    fn equals(this: TokenTransactionSummaryNettedAccountAmountCollection_3, that: TokenTransactionSummaryNettedAccountAmountCollection_3) -> bool {
+        let mut still_equal = this.size == that.size;
+        for i in 0..3 while still_equal && i as u32 < this.size {
+            still_equal = TokenTransactionSummaryNettedAccountAmount::equals(this.elements[i], that.elements[i]);
+        }
+        still_equal
+    }
+
+    fn contains(this: TokenTransactionSummaryNettedAccountAmountCollection_3, value: TokenTransactionSummaryNettedAccountAmount) -> bool {
+        let mut found = false;
+        for i in 0..3 while !found && i as u32 < this.size {
+            found = TokenTransactionSummaryNettedAccountAmount::equals(this.elements[i], value);
+        }
+        found
+    }
+
+    fn is_subset(this: TokenTransactionSummaryNettedAccountAmountCollection_3, that: TokenTransactionSummaryNettedAccountAmountCollection_3) -> bool {
+        let mut still_subset = this.size <= that.size;
+        for i in 0..3 while still_subset && i as u32 < this.size {
+            still_subset = contains(that, this.elements[i]);
+        }
+        still_subset
+    }
+
+    fn set_equals(this: TokenTransactionSummaryNettedAccountAmountCollection_3, that: TokenTransactionSummaryNettedAccountAmountCollection_3) -> bool {
+        is_subset(this, that) && is_subset(that, this)
+    }
+
+    fn deserialize(serialized: SerializedTokenTransactionSummaryNettedAccountAmountCollection_3) -> TokenTransactionSummaryNettedAccountAmountCollection_3 {
+        let size = {
+            let mut size_bytes = [0; TOKEN_TRANSACTION_SUMMARY_NETTED_ACCOUNT_AMOUNT_COLLECTION_3_SIZE_LENGTH];
+            for i in 0..TOKEN_TRANSACTION_SUMMARY_NETTED_ACCOUNT_AMOUNT_COLLECTION_3_SIZE_LENGTH {
+                size_bytes[i] = serialized[i + TOKEN_TRANSACTION_SUMMARY_NETTED_ACCOUNT_AMOUNT_COLLECTION_3_SIZE_OFFSET];
+            }
+            platform_integer::parse_u32(size_bytes)
+        };
+
+        let elements = {
+            let mut element_array = [TokenTransactionSummaryNettedAccountAmount::empty(); 3];
+            let mut element_bytes = [0; TOKEN_TRANSACTION_SUMMARY_NETTED_ACCOUNT_AMOUNT_LENGTH];
+            for i in 0..3 while i as u32 < size {
+                for j in 0..TOKEN_TRANSACTION_SUMMARY_NETTED_ACCOUNT_AMOUNT_LENGTH {
+                    element_bytes[j] = serialized[j + TOKEN_TRANSACTION_SUMMARY_NETTED_ACCOUNT_AMOUNT_COLLECTION_3_ELEMENTS_OFFSET + (i as u16) * TOKEN_TRANSACTION_SUMMARY_NETTED_ACCOUNT_AMOUNT_LENGTH];
+                }
+                element_array[i] = TokenTransactionSummaryNettedAccountAmount::deserialize(element_bytes);
+            }
+            element_array
+        };
+
+        TokenTransactionSummaryNettedAccountAmountCollection_3 {
+            size: size,
+            elements: elements,
+        }
+    }
+}

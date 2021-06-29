@@ -5,6 +5,7 @@ import com.ing.serialization.bfl.api.reified.serialize
 import com.ing.serialization.bfl.serializers.BFLSerializers
 import com.ing.zknotary.common.serialization.bfl.serializers.CordaSerializers
 import com.ing.zknotary.common.serialization.bfl.serializers.CordaX500NameSerializer
+import com.ing.zknotary.common.serialization.bfl.serializers.CordaX500NameSurrogate
 import com.ing.zknotary.common.serialization.bfl.serializers.PartyAndReferenceSurrogate
 import com.ing.zknotary.common.serialization.bfl.serializers.SecureHashSupportedAlgorithm
 import com.ing.zknotary.common.serialization.bfl.serializers.SecureHashSurrogate
@@ -92,15 +93,9 @@ public fun Collection<String>.toZincJson(collectionSize: Int, elementSize: Int):
 public fun Collection<Int>.toZincJson(collectionSize: Int): String =
     toJsonObject(collectionSize).toString()
 
-public fun String?.toJsonObject(size: Int, isNullable: Boolean = false): JsonObject = buildJsonObject {
-    val inner = buildJsonObject {
-        put("chars", toSizedIntArray(size).toJsonArray())
-        put("size", "${this@toJsonObject?.length ?: 0}")
-    }
-
-    if (!isNullable) return@toJsonObject inner
-    put("is_null", this@toJsonObject == null)
-    put("inner", inner)
+public fun String?.toJsonObject(size: Int): JsonObject = buildJsonObject {
+    put("chars", toSizedIntArray(size).toJsonArray())
+    put("size", "${this@toJsonObject?.length ?: 0}")
 }
 
 public fun Collection<Int>.toJsonObject(collectionSize: Int): JsonObject = buildJsonObject {
@@ -130,24 +125,27 @@ public fun ByteArray.toJsonObject(serializedSize: Int): JsonObject = buildJsonOb
     put("bytes", resizeTo(serializedSize).toJsonArray())
 }
 
-public fun BigDecimal.toJsonObject(integerSize: Int = 24, fractionSize: Int = 6): JsonObject = buildJsonObject {
-    val stringRepresentation = toPlainString()
-    val integerFractionTuple = stringRepresentation.removePrefix("-").split(".")
-
+public fun BigDecimal?.toJsonObject(integerSize: Int = 24, fractionSize: Int = 6): JsonObject = buildJsonObject {
     val integer = IntArray(integerSize)
-    val startingIdx = integerSize - integerFractionTuple[0].length
-    integerFractionTuple[0].forEachIndexed { idx, char ->
-        integer[startingIdx + idx] = Character.getNumericValue(char)
-    }
-
     val fraction = IntArray(fractionSize)
-    if (integerFractionTuple.size == 2) {
-        integerFractionTuple[1].forEachIndexed { idx, char ->
-            fraction[idx] = Character.getNumericValue(char)
+
+    this@toJsonObject?.let {
+        val stringRepresentation = toPlainString()
+        val integerFractionTuple = stringRepresentation.removePrefix("-").split(".")
+
+        val startingIdx = integerSize - integerFractionTuple[0].length
+        integerFractionTuple[0].forEachIndexed { idx, char ->
+            integer[startingIdx + idx] = Character.getNumericValue(char)
+        }
+
+        if (integerFractionTuple.size == 2) {
+            integerFractionTuple[1].forEachIndexed { idx, char ->
+                fraction[idx] = Character.getNumericValue(char)
+            }
         }
     }
 
-    put("sign", "${signum()}")
+    put("sign", "${this@toJsonObject?.signum() ?: 0}")
     put("integer", integer.toJsonArray())
     put("fraction", fraction.toJsonArray())
 }
@@ -177,7 +175,7 @@ public fun UniqueIdentifier.toJsonObject(): JsonObject = buildJsonObject {
     // input validations
     id.mostSignificantBits shouldBe 0
 
-    put("external_id", externalId.toJsonObject(UniqueIdentifierSurrogate.EXTERNAL_ID_LENGTH, true))
+    put("external_id", externalId.toJsonObject(UniqueIdentifierSurrogate.EXTERNAL_ID_LENGTH).nullable(externalId == null))
     put("id", "${id.leastSignificantBits}")
 }
 
@@ -263,6 +261,11 @@ public fun JsonObject.polymorphic(): JsonObject = buildJsonObject {
     put("value", this@polymorphic)
 }
 
+public fun JsonObject.nullable(isNull: Boolean): JsonObject = buildJsonObject {
+    put("is_null", isNull)
+    put("inner", this@nullable)
+}
+
 public fun JsonObject.optional(isNone: Boolean = false): JsonObject = buildJsonObject {
     put("is_none", isNone)
     put("inner", this@optional)
@@ -277,9 +280,11 @@ public fun PublicKey.toJsonObject(encodedSize: Int): JsonObject = buildJsonObjec
     put("encoded", encoded.toJsonObject(encodedSize))
 }
 
-@JvmName("CordaX500NameJsonObject")
-public fun CordaX500Name.toJsonObject(): JsonObject = buildJsonObject {
-    val name = serialize(this@toJsonObject, strategy = CordaX500NameSerializer)
+public fun CordaX500Name?.toJsonObject(): JsonObject = buildJsonObject {
+    val name: ByteArray = this@toJsonObject?.let {
+        serialize(it, strategy = CordaX500NameSerializer)
+    } ?: ByteArray(CordaX500NameSurrogate.SIZE)
+
     put("name", name.toJsonArray())
 }
 

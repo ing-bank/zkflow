@@ -1,18 +1,19 @@
 package io.ivno.collateraltoken.zinc.types
 
-import com.ing.zknotary.common.serialization.bfl.serializers.CordaX500NameSurrogate
 import com.ing.zknotary.common.serialization.bfl.serializers.SecureHashSupportedAlgorithm
 import com.ing.zknotary.common.serialization.bfl.serializers.SecureHashSurrogate
 import com.ing.zknotary.common.serialization.bfl.serializers.UniqueIdentifierSurrogate
 import com.ing.zknotary.common.serialization.bfl.serializers.publickey.EdDSASurrogate
 import com.ing.zknotary.testing.resizeTo
 import com.ing.zknotary.testing.toJsonArray
+import com.ing.zknotary.zinc.types.nullable
 import com.ing.zknotary.zinc.types.polymorphic
 import com.ing.zknotary.zinc.types.toJsonObject
 import io.dasl.contracts.v1.account.AccountAddress
 import io.dasl.contracts.v1.token.BigDecimalAmount
 import io.dasl.contracts.v1.token.TokenDescriptor
 import io.dasl.contracts.v1.token.TokenTransactionSummary.NettedAccountAmount
+import io.dasl.contracts.v1.token.TokenTransactionSummary.State
 import io.ivno.collateraltoken.contract.Deposit
 import io.ivno.collateraltoken.contract.IvnoTokenType
 import io.ivno.collateraltoken.contract.Redemption
@@ -25,6 +26,7 @@ import io.ivno.collateraltoken.serialization.NetworkSurrogate
 import io.ivno.collateraltoken.serialization.PermissionSurrogate
 import io.ivno.collateraltoken.serialization.RoleSurrogate
 import io.ivno.collateraltoken.serialization.SettingSurrogate
+import io.ivno.collateraltoken.serialization.TokenTransactionSummaryStateSurrogate
 import io.kotest.matchers.shouldBe
 import io.onixlabs.corda.bnms.contract.Network
 import io.onixlabs.corda.bnms.contract.Permission
@@ -46,6 +48,7 @@ import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.SignatureScheme
 import net.corda.core.crypto.algorithm
 import net.corda.core.identity.AbstractParty
+import net.corda.core.identity.CordaX500Name
 import java.security.PublicKey
 
 fun Role.toZincJson() = toJsonObject().toString()
@@ -104,52 +107,40 @@ fun Membership.toZincJson(
 ).toString()
 fun AttestationPointer<*>.toZincJson() = toJsonObject().toString()
 fun NettedAccountAmount.toZincJson() = toJsonObject().toString()
+fun State.toZincJson(encodedSize: Int, isAnonymous: Boolean, scheme: SignatureScheme) =
+    toJsonObject(encodedSize, isAnonymous, scheme).toString()
 
 /**
  * Extension function for encoding a nullable ByteArray to Json
  * @param serializedSize The size of the byte array
- * @param isNullable Boolean flag indicating whether the nullability wrapper will be applied on the Json structure
  *
  * @return the JsonObject of the byte array
  */
-fun ByteArray?.toJsonObject(serializedSize: Int, isNullable: Boolean = false) = buildJsonObject {
-    val inner = buildJsonObject {
-        put("size", "${this@toJsonObject?.size ?: 0}")
-        put("bytes", resizeTo(serializedSize).toJsonArray())
-    }
-
-    if (!isNullable) return@toJsonObject inner
-    put("is_null", this@toJsonObject == null)
-    put("inner", inner)
+fun ByteArray?.toJsonObject(serializedSize: Int) = buildJsonObject {
+    put("size", "${this@toJsonObject?.size ?: 0}")
+    put("bytes", resizeTo(serializedSize).toJsonArray())
 }
 
 /**
  * Extension function for encoding a nullable PublicKey to Json
  * @param encodedSize The size of the inner byte array
  * @param scheme The signature scheme of the key (useful in the case of a null key)
- * @param isNullable Boolean flag indicating whether the nullability wrapper will be applied on the Json structure
  *
  * @return the JsonObject of the public key
  */
-fun PublicKey?.toJsonObject(encodedSize: Int, scheme: SignatureScheme, isNullable: Boolean = false) = buildJsonObject {
+fun PublicKey?.toJsonObject(encodedSize: Int, scheme: SignatureScheme) = buildJsonObject {
     // In the null case there is no way to know the intended implementation class. Given the fact that there are various
     // ways of serializing empty PublicKeys depending on their scheme we need to know somehow which empty version to
     // encode to Json. Thus, the 'scheme' is explicitly passed in this function.
-    val inner = buildJsonObject {
-        if (scheme == Crypto.ECDSA_SECP256K1_SHA256 || scheme == Crypto.ECDSA_SECP256R1_SHA256) {
-            put("scheme_id", "${this@toJsonObject?.let { scheme.schemeNumberID } ?: 0}")
-        }
-
-        put(
-            key = "encoded",
-            element = this@toJsonObject?.encoded?.toJsonObject(encodedSize)
-                ?: ByteArray?::toJsonObject.invoke(null, encodedSize, false)
-        )
+    if (scheme == Crypto.ECDSA_SECP256K1_SHA256 || scheme == Crypto.ECDSA_SECP256R1_SHA256) {
+        put("scheme_id", "${this@toJsonObject?.let { scheme.schemeNumberID } ?: 0}")
     }
 
-    if (!isNullable) return@toJsonObject inner
-    put("is_null", this@toJsonObject == null)
-    put("inner", inner.polymorphic())
+    put(
+        key = "encoded",
+        element = this@toJsonObject?.encoded?.toJsonObject(encodedSize)
+            ?: ByteArray?::toJsonObject.invoke(null, encodedSize)
+    )
 }
 
 /**
@@ -158,88 +149,63 @@ fun PublicKey?.toJsonObject(encodedSize: Int, scheme: SignatureScheme, isNullabl
  * @param isAnonymous Boolean flag indicating the implementation class of the abstract party (useful in the case of a
  * null abstract party)
  * @param scheme The signature scheme of the owning key (useful in the case of a null abstract party)
- * @param isNullable Boolean flag indicating whether the nullability wrapper will be applied on the Json structure
  *
  * @return the JsonObject of the abstract party
  */
-fun AbstractParty?.toJsonObject(encodedSize: Int, isAnonymous: Boolean, scheme: SignatureScheme, isNullable: Boolean = false) = buildJsonObject {
+fun AbstractParty?.toJsonObject(encodedSize: Int, isAnonymous: Boolean, scheme: SignatureScheme) = buildJsonObject {
     // In the null case there is no way to know the intended implementation class. Given the fact that the empty
     // serialization of AnonymousParty differs from the one for Party (due to the CordaX500Name name property),
     // we need to know somehow which empty version to encode to Json. Thus, the 'isAnonymous' flag is used.
-    val inner = buildJsonObject {
-        if (!isAnonymous) {
-            put(
-                key = "name",
-                element = this@toJsonObject?.let { nameOrNull()?.toJsonObject() }
-                    ?: ByteArray(CordaX500NameSurrogate.SIZE) { 0 }.toJsonArray()
+    if (!isAnonymous) {
+        put(
+            key = "name",
+            element = this@toJsonObject?.let { nameOrNull()?.toJsonObject() }
+                ?: CordaX500Name?::toJsonObject.invoke(null)
+        )
+    }
+    put(
+        key = "owning_key",
+        element = (this@toJsonObject?.let {
+            owningKey.toJsonObject(
+                encodedSize,
+                Crypto.findSignatureScheme(owningKey)
             )
         }
-        put(
-            key = "owning_key",
-            element = (this@toJsonObject?.let {
-                owningKey.toJsonObject(
-                    encodedSize,
-                    Crypto.findSignatureScheme(owningKey)
-                )
-            }
-                ?: PublicKey?::toJsonObject.invoke(null, encodedSize, scheme, false)).polymorphic()
-        )
-    }
-
-    if (!isNullable) return@toJsonObject inner
-    put("is_null", this@toJsonObject == null)
-    put("inner", inner.polymorphic())
+            ?: PublicKey?::toJsonObject.invoke(null, encodedSize, scheme)).polymorphic()
+    )
 }
 
-fun SecureHash?.toJsonObject(isNullable: Boolean = false): JsonObject = buildJsonObject {
-    val inner = buildJsonObject {
-        put(
-            "algorithm",
-            this@toJsonObject?.let {"${SecureHashSupportedAlgorithm.fromAlgorithm(algorithm).id}"}
-                ?: "${0.toByte()}"
-        )
-        put("bytes",
-            this@toJsonObject?.bytes.toJsonObject(SecureHashSurrogate.BYTES_SIZE)
-        )
-    }
-
-    if (!isNullable) return@toJsonObject inner
-    put("is_null", this@toJsonObject == null)
-    put("inner", inner)
+fun SecureHash?.toJsonObject(): JsonObject = buildJsonObject {
+    put(
+        "algorithm",
+        this@toJsonObject?.let {"${SecureHashSupportedAlgorithm.fromAlgorithm(algorithm).id}"}
+            ?: "${0.toByte()}"
+    )
+    put("bytes",
+        this@toJsonObject?.bytes.toJsonObject(SecureHashSurrogate.BYTES_SIZE)
+    )
 }
 
-fun StateRef?.toJsonObject(isNullable: Boolean = false) = buildJsonObject {
-    val inner = buildJsonObject {
-        put("hash", this@toJsonObject?.txhash.toJsonObject())
-        put("index", "${this@toJsonObject?.index ?: 0}")
-    }
-
-    if (!isNullable) return@toJsonObject inner
-    put("is_null", this@toJsonObject == null)
-    put("inner", inner)
+fun StateRef?.toJsonObject() = buildJsonObject {
+    put("hash", this@toJsonObject?.txhash.toJsonObject())
+    put("index", "${this@toJsonObject?.index ?: 0}")
 }
 
 /* This method assumes that the mostSignificantBits of the id are 0 */
-fun UniqueIdentifier?.toJsonObject(isNullable: Boolean = false) = buildJsonObject {
-    val inner = buildJsonObject {
-        // input validations
-        this@toJsonObject?.let { it.id.mostSignificantBits shouldBe 0 }
-        put("external_id", this@toJsonObject?.externalId.toJsonObject(UniqueIdentifierSurrogate.EXTERNAL_ID_LENGTH, true))
-        put("id", "${this@toJsonObject?.id?.leastSignificantBits ?: 0}")
-    }
-
-    if (!isNullable) return@toJsonObject inner
-    put("is_null", this@toJsonObject == null)
-    put("inner", inner)
+fun UniqueIdentifier?.toJsonObject() = buildJsonObject {
+    // input validations
+    this@toJsonObject?.let { it.id.mostSignificantBits shouldBe 0 }
+    put("external_id", this@toJsonObject?.externalId.toJsonObject(UniqueIdentifierSurrogate.EXTERNAL_ID_LENGTH).nullable(this@toJsonObject?.externalId == null))
+    put("id", "${this@toJsonObject?.id?.leastSignificantBits ?: 0}")
 }
 
 fun Role.toJsonObject() = buildJsonObject {
     put("value", value.toJsonObject(RoleSurrogate.VALUE_LENGTH))
 }
 
-fun TokenDescriptor.toJsonObject() = buildJsonObject {
-    put("symbol", symbol.toJsonObject(32))
-    put("issuer_name", issuerName.toJsonObject())
+fun TokenDescriptor?.toJsonObject() = buildJsonObject {
+    put("symbol", this@toJsonObject?.symbol.toJsonObject(32))
+    put("issuer_name", this@toJsonObject?.issuerName.toJsonObject())
 }
 
 fun Permission.toJsonObject() = buildJsonObject {
@@ -253,25 +219,19 @@ fun BigDecimalAmount<LinearPointer<IvnoTokenType>>.toJsonObject() = buildJsonObj
 }
 
 @JvmName("BigDecimalAmountWithTokenDescriptorToJsonObject")
-fun BigDecimalAmount<TokenDescriptor>.toJsonObject() = buildJsonObject {
-    put("quantity", quantity.toJsonObject(20, 4))
-    put("token", amountType.toJsonObject())
+fun BigDecimalAmount<TokenDescriptor>?.toJsonObject() = buildJsonObject {
+    put("quantity", this@toJsonObject?.quantity.toJsonObject(20, 4))
+    put("token", this@toJsonObject?.amountType.toJsonObject())
 }
 
 fun Network.toJsonObject(encodedSize: Int, isAnonymous: Boolean, scheme: SignatureScheme) = buildJsonObject {
     put("value", value.toJsonObject(NetworkSurrogate.VALUE_LENGTH))
-    put("operator", operator.toJsonObject(encodedSize, isAnonymous, scheme, true))
+    put("operator", operator.toJsonObject(encodedSize, isAnonymous, scheme).polymorphic().nullable(operator == null))
 }
 
-fun Setting<String>?.toJsonObject(size: Int, isNullable: Boolean = false) = buildJsonObject {
-    val inner = buildJsonObject {
-        put("property", this@toJsonObject?.property.toJsonObject(SettingSurrogate.PROPERTY_LENGTH))
-        put("value", this@toJsonObject?.value.toJsonObject(size))
-    }
-
-    if (!isNullable) return@toJsonObject inner
-    put("is_null", this@toJsonObject == null)
-    put("inner", inner)
+fun Setting<String>?.toJsonObject(size: Int) = buildJsonObject {
+    put("property", this@toJsonObject?.property.toJsonObject(SettingSurrogate.PROPERTY_LENGTH))
+    put("value", this@toJsonObject?.value.toJsonObject(size))
 }
 
 fun Redemption.toJsonObject() = buildJsonObject {
@@ -307,7 +267,7 @@ fun Deposit.toJsonObject() = buildJsonObject {
     put("custodian", custodian.toJsonObject(EdDSASurrogate.ENCODED_SIZE))
     put("token_issuing_entity", tokenIssuingEntity.toJsonObject(EdDSASurrogate.ENCODED_SIZE))
     put("amount", amount.toJsonObject())
-    put("reference", reference.toJsonObject(20, true))
+    put("reference", reference.toJsonObject(20).nullable(reference == null))
     put("status", status.toJsonObject())
     put("timestamp", timestamp.toJsonObject())
     put("account_id", accountId.toJsonObject(20))
@@ -326,25 +286,19 @@ fun Transfer.toJsonObject() = buildJsonObject {
     put("linear_id", linearId.toJsonObject())
 }
 
-fun AccountAddress.toJsonObject() = buildJsonObject {
-    put("account_id", accountId.toJsonObject(AccountAddressSurrogate.ACCOUNT_ID_LENGTH))
-    put("party", party.toJsonObject())
+fun AccountAddress?.toJsonObject() = buildJsonObject {
+    put("account_id", this@toJsonObject?.accountId.toJsonObject(AccountAddressSurrogate.ACCOUNT_ID_LENGTH))
+    put("party", this@toJsonObject?.party.toJsonObject())
 }
 
-fun AbstractClaim<String>.toJsonObject(propertyLength: Int, valueLength: Int) = when (this) {
-    is Claim<String> -> this.toJsonObject(propertyLength, valueLength, false).polymorphic()
-    else -> TODO("Json encoding is not supported yet for ${this::class}")
+fun AbstractClaim<String>?.toJsonObject(propertyLength: Int, valueLength: Int) = when (this) {
+    is Claim<String> -> this.toJsonObject(propertyLength, valueLength).polymorphic()
+    else -> TODO("Json encoding is not supported yet for this implementation of AbstractClaim<String>")
 }
 
-fun Claim<String>?.toJsonObject(propertyLength: Int, valueLength: Int, isNullable: Boolean = false) = buildJsonObject {
-    val inner = buildJsonObject {
-        put("property", this@toJsonObject?.property.toJsonObject(propertyLength))
-        put("value", this@toJsonObject?.value.toJsonObject(valueLength))
-    }
-
-    if (!isNullable) return@toJsonObject inner
-    put("is_null", this@toJsonObject == null)
-    put("inner", inner)
+fun Claim<String>?.toJsonObject(propertyLength: Int, valueLength: Int) = buildJsonObject {
+    put("property", this@toJsonObject?.property.toJsonObject(propertyLength))
+    put("value", this@toJsonObject?.value.toJsonObject(valueLength))
 }
 
 fun Collection<Setting<String>>.toJsonObject(collectionSize: Int, elementSize: Int): JsonObject = buildJsonObject {
@@ -393,16 +347,59 @@ fun Membership.toJsonObject(
     put("identity", (identity as Set<AbstractClaim<String>>).toJsonObject(MembershipSurrogate.IDENTITY_LENGTH ,identityPropertyLength, identityValueLength))
     put("settings", (settings as Set<Setting<String>>).toJsonObject(MembershipSurrogate.SETTINGS_LENGTH, settingsValueLength))
     put("linear_id", linearId.toJsonObject())
-    put("previous_state_ref", previousStateRef.toJsonObject(true))
+    put("previous_state_ref", previousStateRef.toJsonObject().nullable(previousStateRef == null))
 }
 
 fun AttestationPointer<*>.toJsonObject(): JsonObject = buildJsonObject {
     put("state_ref", stateRef.toJsonObject())
     put("state_class_name", stateClass.name.toJsonObject(AttestationPointerSurrogate.MAX_CLASS_NAME_SIZE))
-    put("state_linear_id", stateLinearId.toJsonObject(true))
+    put("state_linear_id", stateLinearId.toJsonObject().nullable(stateLinearId == null))
 }
 
-fun NettedAccountAmount.toJsonObject() = buildJsonObject {
-    put("address", accountAddress.toJsonObject())
-    put("amount", amount.toJsonObject())
+fun NettedAccountAmount?.toJsonObject() = buildJsonObject {
+        put("address", this@toJsonObject?.accountAddress.toJsonObject())
+        put("amount", this@toJsonObject?.amount.toJsonObject())
+}
+
+fun Collection<AbstractParty>.toJsonObject(collectionSize: Int, elementSize: Int, isAnonymous: Boolean, scheme: SignatureScheme): JsonObject = buildJsonObject {
+    put("size", "$size")
+    put(
+        "elements",
+        buildJsonArray {
+            map {
+                add(it.toJsonObject(elementSize).polymorphic())
+            }
+            repeat(collectionSize - size) {
+                add((null as AbstractParty?).toJsonObject(elementSize, isAnonymous, scheme).polymorphic())
+            }
+        }
+    )
+}
+
+fun Collection<NettedAccountAmount>.toJsonObject(collectionSize: Int): JsonObject = buildJsonObject {
+    put("size", "$size")
+    put(
+        "elements",
+        buildJsonArray {
+            map {
+                add(it.toJsonObject())
+            }
+            repeat(collectionSize - size) {
+                add((null as NettedAccountAmount?).toJsonObject())
+            }
+        }
+    )
+}
+
+fun State.toJsonObject(
+    encodedSize: Int,
+    isAnonymous: Boolean,
+    scheme: SignatureScheme,
+) = buildJsonObject {
+    put("participants", participants.toJsonObject(TokenTransactionSummaryStateSurrogate.PARTICIPANTS_LENGTH, encodedSize, isAnonymous, scheme))
+    put("command", command.toJsonObject(TokenTransactionSummaryStateSurrogate.COMMAND_LENGTH))
+    put("amounts", amounts.toJsonObject(TokenTransactionSummaryStateSurrogate.AMOUNTS_LENGTH))
+    put("description", description.toJsonObject(TokenTransactionSummaryStateSurrogate.DESCRIPTION_LENGTH))
+    put("transaction_time", transactionTime.toJsonObject())
+    put("transaction_id", transactionId.toJsonObject().nullable(transactionId == null))
 }
