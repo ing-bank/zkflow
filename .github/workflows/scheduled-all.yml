@@ -61,7 +61,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Init new circuit and Process Zinc sources with Gradle
-        run: ../gradlew processZincSources createZincDirectoriesForInputCommand --command test-command
+        run: ../gradlew processZincSources createZincDirectoriesForCircuit --circuit test-circuit
         working-directory: zkdapp-tester
         env:
           GITHUB_USERNAME: ${{ github.actor }}
