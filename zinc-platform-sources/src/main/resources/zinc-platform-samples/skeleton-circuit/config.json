@@ -7,37 +7,45 @@
       "attachment_constraint" : "net.corda.core.contracts.AutomaticPlaceholderConstraint"
     }]
   },
-  "groups" : {
-    "attachment_group" : {
-      "group_size" : 0,
-      "component_size" : 1
+  "groups": {
+    "attachment_group": {
+      "group_size": 0,
+      "component_size": 1
     },
-    "input_group" : {
-      "group_size" : 0,
-      "component_size" : 1
-    },
-    "output_group" : {
-      "group_size" : 0,
-      "component_size" : 1
-    },
-    "reference_group" : {
-      "group_size" : 0,
-      "component_size" : 1
-    },
+    "input_group": [
+      {
+        "state_name": "name",
+        "group_size": 0
+      }
+    ],
+    "output_group": [
+      {
+        "state_name": "name",
+        "group_size": 0
+      }
+    ],
+    "reference_group": [
+      {
+        "state_name": "name",
+        "group_size": 0
+      }
+    ],
     "command_group": {
       "group_size": 1,
-      "commands": [ {
-        "name": "command-name",
-        "component_size": 11
-      }]
+      "commands": [
+        {
+          "name": "command-name",
+          "component_size": 11
+        }
+      ]
     },
-    "notary_group" : {
-      "group_size" : 0
+    "notary_group": {
+      "group_size": 0
     },
-    "timewindow_group" : {
-      "group_size" : 0
+    "timewindow_group": {
+      "group_size": 0
     },
-    "signer_group" : {
+    "signer_group": {
       "signer_size": 52,
       "signer_list_size": 1
     }

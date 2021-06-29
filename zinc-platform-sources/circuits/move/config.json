@@ -7,14 +7,18 @@
     }]
   },
   "groups" : {
-    "input_group" : {
-      "group_size" : 1,
-      "component_size" : 1409
-    },
-    "output_group" : {
-      "group_size" : 1,
-      "component_size" : 1409
-    },
+    "input_group" : [
+      {
+        "state_name": "TestState",
+        "group_size": 1
+      }
+    ],
+    "output_group" : [
+      {
+        "state_name": "TestState",
+        "group_size": 1
+      }
+    ],
     "command_group": {
       "group_size": 1,
       "commands": [ {
