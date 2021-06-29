@@ -18,7 +18,8 @@ class UtxoInfo(
      * Serialized type TransactionState<T: ContractState>
      */
     val serializedContents: ByteArray,
-    val nonce: SecureHash
+    val nonce: SecureHash,
+    val stateName: String
 ) {
     /**
      * This function verifies that the serialized content hashed with the nonce matches

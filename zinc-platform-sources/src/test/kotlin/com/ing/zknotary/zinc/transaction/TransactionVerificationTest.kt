@@ -143,7 +143,7 @@ class TransactionVerificationTest {
 
         val moveWitness = Witness.fromWireTransaction(
             wtx = moveWtx,
-            inputUtxoInfos = listOf(UtxoInfo(utxo.ref, serializedUtxo.bytes, nonce)),
+            inputUtxoInfos = listOf(UtxoInfo(utxo.ref, serializedUtxo.bytes, nonce, utxo.state.data.javaClass.simpleName)),
             referenceUtxoInfos = emptyList()
         )
 
