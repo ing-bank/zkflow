@@ -1,0 +1,99 @@
+package com.ing.zknotary.gradle.zinc.template.parameters
+
+import com.ing.zknotary.gradle.zinc.template.TemplateParameters
+import com.ing.zknotary.gradle.zinc.util.CircuitConfigurator
+
+data class StateGroupTemplateParameters(val componentName: String, val states: List<CircuitConfigurator.StateGroup>) :
+    TemplateParameters(
+        if (componentName.contains("output"))
+            "platform_components_outputs_template.zn"
+        else
+            "platform_utxo_digests_template.zn",
+        listOf()
+    ) {
+
+    override val typeName = componentName.capitalize()
+
+    override fun getTargetFilename() = if (componentName.contains("output"))
+        "platform_components_outputs.zn"
+    else
+        "platform_utxo_${componentName}_digests.zn"
+
+    override fun getReplacements() = getTypeReplacements("COMPONENT_NAME_") +
+        mapOf(
+            "MODULE_PLACEHOLDER" to getContent(key = "module"),
+            "USE_DECLARATION_PLACEHOLDER" to getContent(key = "useDeclaration"),
+            "TYPE_PLACEHOLDER" to getContent(key = "serializedType"),
+            "HASH_COMPUTATION_PLACEHOLDER" to if (componentName.contains("output")) getContent(key = "leafHash") else getContent(key = "utxoHash")
+        )
+
+    private val componentGroupSize = states.sumBy { it.groupSize }
+    private val templates: Map<String, String> = mapOf(
+        "module" to "mod serialized_${"COMPONENT_NAME_MODULE_NAME"}_tx_state_${"STATE_NAME_MODULE_NAME"};\n",
+
+        "useDeclaration" to """use serialized_${"COMPONENT_NAME_MODULE_NAME"}_tx_state_${"STATE_NAME_MODULE_NAME"}::${"COMPONENT_NAME_CONSTANT_PREFIX"}_${"STATE_NAME_CONSTANT_PREFIX"}_GROUP_SIZE;
+use serialized_${"COMPONENT_NAME_MODULE_NAME"}_tx_state_${"STATE_NAME_MODULE_NAME"}::Serialized${"COMPONENT_NAME_TYPE_NAME"}${"STATE_NAME_TYPE_NAME"}${"COMPONENT_TYPE_TYPE_NAME"};""",
+
+        "serializedType" to """    ${"COMPONENT_NAME_MODULE_NAME"}_${"STATE_NAME_MODULE_NAME"}: Serialized${"COMPONENT_NAME_TYPE_NAME"}${"STATE_NAME_TYPE_NAME"}${"COMPONENT_TYPE_TYPE_NAME"},
+ """,
+        "leafHash" to """
+    let component_leaf_hashes_${"STATE_NAME_MODULE_NAME"} = serialized_${"COMPONENT_NAME_MODULE_NAME"}_tx_state_${"STATE_NAME_MODULE_NAME"}::compute_component_leaf_hashes(
+    components.${"COMPONENT_NAME_MODULE_NAME"}_${"STATE_NAME_MODULE_NAME"},
+    privacy_salt,
+    ComponentGroupEnum::${"COMPONENT_NAME_CONSTANT_PREFIX"}S_GROUP as u32,
+    element_index);
+    for i in 0 as u32..${"COMPONENT_NAME_CONSTANT_PREFIX"}_${"STATE_NAME_CONSTANT_PREFIX"}_GROUP_SIZE as u32{
+        component_leaf_hashes[element_index + i] = component_leaf_hashes_${"STATE_NAME_MODULE_NAME"}[i];
+    }
+    element_index += ${"COMPONENT_NAME_CONSTANT_PREFIX"}_${"STATE_NAME_CONSTANT_PREFIX"}_GROUP_SIZE as u32;
+ """,
+        "utxoHash" to """
+    let utxo_hashes_${"STATE_NAME_MODULE_NAME"} = serialized_${"COMPONENT_NAME_MODULE_NAME"}_tx_state_${"STATE_NAME_MODULE_NAME"}::compute_utxo_hashes(
+    utxos.${"COMPONENT_NAME_MODULE_NAME"}_${"STATE_NAME_MODULE_NAME"},
+    nonces,
+    element_index);
+
+    for i in 0 as u32..${"COMPONENT_NAME_CONSTANT_PREFIX"}_${"STATE_NAME_CONSTANT_PREFIX"}_GROUP_SIZE as u32{
+        utxo_hashes[element_index + i] = component_group_leaf_digest_from_bits_to_bytes(utxo_hashes_${"STATE_NAME_MODULE_NAME"}[i]);
+    }
+    element_index += ${"COMPONENT_NAME_CONSTANT_PREFIX"}_${"STATE_NAME_CONSTANT_PREFIX"}_GROUP_SIZE as u32;
+ """,
+    )
+
+    private fun getContent(key: String): String {
+        var content = ""
+
+        if (key == "serializedType") {
+            val structTemplate = "struct Serialized${"COMPONENT_NAME_TYPE_NAME"}${"COMPONENT_TYPE_TYPE_NAME"}{\n"
+            val emptyStructTemplate = "struct Serialized${"COMPONENT_NAME_TYPE_NAME"}${"COMPONENT_TYPE_TYPE_NAME"} { }"
+
+            content += if (componentGroupSize == 0) {
+                emptyStructTemplate.replace("COMPONENT_NAME_TYPE_NAME", componentName.snakeCaseToCamel())
+                    .replace("COMPONENT_TYPE_TYPE_NAME", if (componentName.contains("output")) "Group" else "Utxos")
+            } else {
+                structTemplate.replace("COMPONENT_NAME_TYPE_NAME", componentName.snakeCaseToCamel())
+                    .replace("COMPONENT_TYPE_TYPE_NAME", if (componentName.contains("output")) "Group" else "Utxos")
+            }
+        }
+
+        states.forEach {
+            if (componentGroupSize > 0) {
+                val name = it.name.camelToSnakeCase()
+                content += templates[key]
+                    ?.replace("STATE_NAME_CONSTANT_PREFIX", name.toUpperCase())
+                    ?.replace("STATE_NAME_MODULE_NAME", name)
+                    ?.replace("STATE_NAME_TYPE_NAME", name.snakeCaseToCamel())
+                    ?.replace("COMPONENT_NAME_CONSTANT_PREFIX", componentName.toUpperCase())
+                    ?.replace("COMPONENT_NAME_MODULE_NAME", componentName)
+                    ?.replace("COMPONENT_NAME_TYPE_NAME", componentName.snakeCaseToCamel())
+                    ?.replace("COMPONENT_TYPE_TYPE_NAME", if (componentName.contains("output")) "Group" else "Utxos")
+            }
+        }
+
+        if (key == "serializedType" && componentGroupSize > 0) {
+            content += "}\n"
+        }
+
+        return content
+    }
+}
