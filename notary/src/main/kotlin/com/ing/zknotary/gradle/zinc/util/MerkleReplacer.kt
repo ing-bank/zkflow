@@ -41,8 +41,8 @@ class MerkleReplacer(private val outputPath: File) {
             val fileContent = file.readText()
             // Find which component group
             // TODO won't it be easier to just check file name? way shorter, more stable and we use already to find component group files
-            val componentRegex = "Serialized(\\w+)(Group)".toRegex()
-            var componentGroupName = componentRegex.find(fileContent)?.groupValues?.get(1)
+            val componentRegex = "platform_components_(\\w+)".toRegex()
+            var componentGroupName = componentRegex.find(file.name)?.groupValues?.get(1)
 
             if (componentGroupName != "Parameters" && // TODO _probably_ we need more formal definition
                 componentGroupName?.endsWith("s")!!
