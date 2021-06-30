@@ -176,7 +176,7 @@ public data class TestTransactionDSLInterpreter private constructor(
             labelToIndexMap = HashMap(labelToIndexMap)
         )
 
-    internal fun toWireTransaction() = transactionBuilder.toWireTransaction(services)
+    internal fun toWireTransaction() = transactionBuilder.toWireTransaction(services, ledgerInterpreter.serializationSchemeID)
     internal fun toZKWireTransaction() = ZKTransactionBuilder(
         transactionBuilder,
         serializationSchemeId = ledgerInterpreter.serializationSchemeID
