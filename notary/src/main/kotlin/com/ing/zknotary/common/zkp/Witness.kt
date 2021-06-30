@@ -160,6 +160,8 @@ class Witness(
             val stateNames = outputs.map {
                 "output${it.data.javaClass.simpleName}".camelToSnakeCase()
             }
+
+            // TODO: Ensure that the order is the same as the deterministic order in ZKTransactionBuilder
             val serializedStateBytes =
                 componentGroups.singleOrNull { it.groupIndex == groupEnum.ordinal }?.components?.mapIndexed { index, output -> stateNames[index] to output.copyBytes() }
 
