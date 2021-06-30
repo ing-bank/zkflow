@@ -135,14 +135,14 @@ class CircuitConfigurator(
     @Serializable(with = StateGroupSerializer::class)
     data class StateGroup(
         val name: String = "",
-        val groupSize: Int = 0
+        val stateGroupSize: Int = 0
     )
 
     object StateGroupSerializer : KSerializer<StateGroup> {
         override val descriptor: SerialDescriptor =
             buildClassSerialDescriptor("group") {
                 element<String>("state_name")
-                element<Int>("group_size")
+                element<Int>("state_group_size")
             }
 
         override fun serialize(encoder: Encoder, value: StateGroup) {
@@ -152,21 +152,21 @@ class CircuitConfigurator(
         override fun deserialize(decoder: Decoder): StateGroup =
             decoder.decodeStructure(descriptor) {
                 var name = ""
-                var groupSize = 0
+                var stateGroupSize = 0
                 while (true) {
                     when (val index = decodeElementIndex(descriptor)) {
                         0 -> name = decodeStringElement(descriptor, 0)
-                        1 -> groupSize = decodeIntElement(descriptor, 1)
+                        1 -> stateGroupSize = decodeIntElement(descriptor, 1)
                         CompositeDecoder.DECODE_DONE -> break
                         else -> error("Unexpected index: $index")
                     }
                 }
 
-                if (groupSize != 0 && name == "") {
-                    error("Group with `group_size > 0` must specify `state_name`")
+                if (stateGroupSize != 0 && name == "") {
+                    error("StateGroup with `state_group_size > 0` must specify `state_name`")
                 }
 
-                StateGroup(name, groupSize)
+                StateGroup(name, stateGroupSize)
             }
     }
 
@@ -214,9 +214,9 @@ class CircuitConfigurator(
     fun generateConstsFile(outputPath: File) = createOutputFile(outputPath.resolve("consts.zn")).appendBytes(
         """
 const ATTACHMENT_GROUP_SIZE: u16 = ${circuitConfiguration.groups.attachmentGroup.groupSize};
-const INPUT_GROUP_SIZE: u16 = ${circuitConfiguration.groups.inputGroup.sumBy { it.groupSize }};
-const OUTPUT_GROUP_SIZE: u16 = ${circuitConfiguration.groups.outputGroup.sumBy { it.groupSize }};
-const REFERENCE_GROUP_SIZE: u16 = ${circuitConfiguration.groups.referenceGroup.sumBy { it.groupSize }};
+const INPUT_GROUP_SIZE: u16 = ${circuitConfiguration.groups.inputGroup.sumBy { it.stateGroupSize }};
+const OUTPUT_GROUP_SIZE: u16 = ${circuitConfiguration.groups.outputGroup.sumBy { it.stateGroupSize }};
+const REFERENCE_GROUP_SIZE: u16 = ${circuitConfiguration.groups.referenceGroup.sumBy { it.stateGroupSize }};
 const NOTARY_GROUP_SIZE: u16 = ${circuitConfiguration.groups.notaryGroup.groupSize};
 const TIMEWINDOW_GROUP_SIZE: u16 = ${circuitConfiguration.groups.timewindowGroup.groupSize};
 // This is the size of a single signer and should not contain the Corda SerializationMagic size,

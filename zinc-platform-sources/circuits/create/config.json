@@ -10,7 +10,7 @@
     "output_group" : [
       {
         "state_name": "TestState",
-        "group_size": 1
+        "state_group_size": 1
       }
     ],
     "command_group": {

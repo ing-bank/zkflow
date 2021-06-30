@@ -27,7 +27,7 @@ data class StateGroupTemplateParameters(val componentName: String, val states: L
             "HASH_COMPUTATION_PLACEHOLDER" to if (componentName.contains("output")) getContent(key = "leafHash") else getContent(key = "utxoHash")
         )
 
-    private val componentGroupSize = states.sumBy { it.groupSize }
+    private val componentGroupSize = states.sumBy { it.stateGroupSize }
     private val templates: Map<String, String> = mapOf(
         "module" to "mod serialized_${"COMPONENT_NAME_MODULE_NAME"}_tx_state_${"STATE_NAME_MODULE_NAME"};\n",
 

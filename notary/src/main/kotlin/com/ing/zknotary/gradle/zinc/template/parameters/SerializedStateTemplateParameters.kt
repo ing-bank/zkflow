@@ -15,7 +15,7 @@ data class SerializedStateTemplateParameters(val componentName: String, val stat
         mapOf(
             "COMPONENT_NAME_CONSTANT_PREFIX" to componentName.toUpperCase(),
             "COMPONENT_NAME_TYPE_NAME" to componentName.capitalize(),
-            "GROUP_SIZE_PLACEHOLDER" to state.groupSize.toString(),
+            "GROUP_SIZE_PLACEHOLDER" to state.stateGroupSize.toString(),
         ) +
         if (componentName.contains("output")) {
             mapOf(
