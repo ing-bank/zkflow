@@ -67,9 +67,9 @@ jobs:
           GITHUB_USERNAME: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Compile test-command circuit with Zargo
+      - name: Compile test circuit with Zargo
         run: zargo build -v
-        working-directory: zkdapp-tester/build/zinc/test-command
+        working-directory: zkdapp-tester/build/zinc/test-circuit
         env:
           GITHUB_USERNAME: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
