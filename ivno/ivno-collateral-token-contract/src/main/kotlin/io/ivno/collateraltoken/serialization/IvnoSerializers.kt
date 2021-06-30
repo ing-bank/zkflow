@@ -21,6 +21,7 @@ object IvnoSerializers {
         contextual(AccountAddressSerializer)
         contextual(AttestationPointerSerializer)
         contextual(TokenTransactionSummaryNettedAccountAmountSerializer)
+        contextual(TokenTransactionSummaryStateSerializer)
     }
 
     init {

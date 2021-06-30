@@ -1,0 +1,123 @@
+mod poly_party_ed_dsa_collection_2;
+mod string_20;
+mod token_transaction_summary_netted_account_amount_collection_3;
+mod platform_instant;
+mod nullable_secure_hash;
+
+use poly_party_ed_dsa_collection_2::PolyPartyEdDSA_Collection_2;
+use poly_party_ed_dsa_collection_2::POLY_PARTY_ED_DSA_COLLECTION_2_LENGTH;
+
+use string_20::String_20;
+use string_20::STRING_20_LENGTH;
+
+use token_transaction_summary_netted_account_amount_collection_3::TokenTransactionSummaryNettedAccountAmountCollection_3;
+use token_transaction_summary_netted_account_amount_collection_3::TOKEN_TRANSACTION_SUMMARY_NETTED_ACCOUNT_AMOUNT_COLLECTION_3_LENGTH;
+
+use platform_instant::Instant;
+use platform_instant::INSTANT_LENGTH;
+
+use nullable_secure_hash::NullableSecureHash;
+use nullable_secure_hash::NULLABLE_SECURE_HASH_LENGTH;
+
+const TOKEN_TRANSACTION_SUMMARY_STATE_PARTICIPANTS_LENGTH: u16 = POLY_PARTY_ED_DSA_COLLECTION_2_LENGTH;
+const TOKEN_TRANSACTION_SUMMARY_STATE_COMMAND_LENGTH: u16 = STRING_20_LENGTH;
+const TOKEN_TRANSACTION_SUMMARY_STATE_AMOUNTS_LENGTH: u16 = TOKEN_TRANSACTION_SUMMARY_NETTED_ACCOUNT_AMOUNT_COLLECTION_3_LENGTH;
+const TOKEN_TRANSACTION_SUMMARY_STATE_DESCRIPTION_LENGTH: u16 = STRING_20_LENGTH;
+const TOKEN_TRANSACTION_SUMMARY_STATE_TRANSACTION_TIME_LENGTH: u16 = INSTANT_LENGTH;
+const TOKEN_TRANSACTION_SUMMARY_STATE_TRANSACTION_ID_LENGTH: u16 = NULLABLE_SECURE_HASH_LENGTH;
+
+const TOKEN_TRANSACTION_SUMMARY_STATE_PARTICIPANTS_OFFSET: u16 = 0;
+const TOKEN_TRANSACTION_SUMMARY_STATE_COMMAND_OFFSET: u16
+    = TOKEN_TRANSACTION_SUMMARY_STATE_PARTICIPANTS_OFFSET
+    + TOKEN_TRANSACTION_SUMMARY_STATE_PARTICIPANTS_LENGTH;
+const TOKEN_TRANSACTION_SUMMARY_STATE_AMOUNTS_OFFSET: u16
+    = TOKEN_TRANSACTION_SUMMARY_STATE_COMMAND_OFFSET
+    + TOKEN_TRANSACTION_SUMMARY_STATE_COMMAND_LENGTH;
+const TOKEN_TRANSACTION_SUMMARY_STATE_DESCRIPTION_OFFSET: u16
+    = TOKEN_TRANSACTION_SUMMARY_STATE_AMOUNTS_OFFSET
+    + TOKEN_TRANSACTION_SUMMARY_STATE_AMOUNTS_LENGTH;
+const TOKEN_TRANSACTION_SUMMARY_STATE_TRANSACTION_TIME_OFFSET: u16
+    = TOKEN_TRANSACTION_SUMMARY_STATE_DESCRIPTION_OFFSET
+    + TOKEN_TRANSACTION_SUMMARY_STATE_DESCRIPTION_LENGTH;
+const TOKEN_TRANSACTION_SUMMARY_STATE_TRANSACTION_ID_OFFSET: u16
+    = TOKEN_TRANSACTION_SUMMARY_STATE_TRANSACTION_TIME_OFFSET
+    + TOKEN_TRANSACTION_SUMMARY_STATE_TRANSACTION_TIME_LENGTH;
+const TOKEN_TRANSACTION_SUMMARY_STATE_LENGTH: u16
+    = TOKEN_TRANSACTION_SUMMARY_STATE_TRANSACTION_ID_OFFSET
+    + TOKEN_TRANSACTION_SUMMARY_STATE_TRANSACTION_ID_LENGTH;
+
+type SerializedTokenTransactionSummaryState = [u8; TOKEN_TRANSACTION_SUMMARY_STATE_LENGTH];
+
+struct TokenTransactionSummaryState {
+    participants: PolyPartyEdDSA_Collection_2,
+    command: String_20,
+    amounts: TokenTransactionSummaryNettedAccountAmountCollection_3,
+    description: String_20,
+    transaction_time: Instant,
+    transaction_id: NullableSecureHash,
+}
+
+impl TokenTransactionSummaryState {
+    fn equals(this: TokenTransactionSummaryState, that: TokenTransactionSummaryState) -> bool {
+        PolyPartyEdDSA_Collection_2::equals(this.participants, that.participants)
+            && String_20::equals(this.command, that.command)
+            && TokenTransactionSummaryNettedAccountAmountCollection_3::equals(this.amounts, that.amounts)
+            && String_20::equals(this.description, that.description)
+            && Instant::equals(this.transaction_time, that.transaction_time)
+            && NullableSecureHash::equals(this.transaction_id, that.transaction_id)
+    }
+
+    fn deserialize(serialized: SerializedTokenTransactionSummaryState) -> TokenTransactionSummaryState {
+        let participants = {
+            let mut participants_bytes = [0; TOKEN_TRANSACTION_SUMMARY_STATE_PARTICIPANTS_LENGTH];
+            for i in 0..TOKEN_TRANSACTION_SUMMARY_STATE_PARTICIPANTS_LENGTH {
+                participants_bytes[i] = serialized[i + TOKEN_TRANSACTION_SUMMARY_STATE_PARTICIPANTS_OFFSET];
+            }
+            PolyPartyEdDSA_Collection_2::deserialize(participants_bytes)
+        };
+        let command = {
+            let mut command_bytes = [0; TOKEN_TRANSACTION_SUMMARY_STATE_COMMAND_LENGTH];
+            for i in 0..TOKEN_TRANSACTION_SUMMARY_STATE_COMMAND_LENGTH {
+                command_bytes[i] = serialized[i + TOKEN_TRANSACTION_SUMMARY_STATE_COMMAND_OFFSET];
+            }
+            String_20::deserialize(command_bytes)
+        };
+        let amounts = {
+            let mut amounts_bytes = [0; TOKEN_TRANSACTION_SUMMARY_STATE_AMOUNTS_LENGTH];
+            for i in 0..TOKEN_TRANSACTION_SUMMARY_STATE_AMOUNTS_LENGTH {
+                amounts_bytes[i] = serialized[i + TOKEN_TRANSACTION_SUMMARY_STATE_AMOUNTS_OFFSET];
+            }
+            TokenTransactionSummaryNettedAccountAmountCollection_3::deserialize(amounts_bytes)
+        };
+        let description = {
+            let mut description_bytes = [0; TOKEN_TRANSACTION_SUMMARY_STATE_DESCRIPTION_LENGTH];
+            for i in 0..TOKEN_TRANSACTION_SUMMARY_STATE_DESCRIPTION_LENGTH {
+                description_bytes[i] = serialized[i + TOKEN_TRANSACTION_SUMMARY_STATE_DESCRIPTION_OFFSET];
+            }
+            String_20::deserialize(description_bytes)
+        };
+        let transaction_time = {
+            let mut transaction_time_bytes = [0; TOKEN_TRANSACTION_SUMMARY_STATE_TRANSACTION_TIME_LENGTH];
+            for i in 0..TOKEN_TRANSACTION_SUMMARY_STATE_TRANSACTION_TIME_LENGTH {
+                transaction_time_bytes[i] = serialized[i + TOKEN_TRANSACTION_SUMMARY_STATE_TRANSACTION_TIME_OFFSET];
+            }
+            Instant::deserialize(transaction_time_bytes)
+        };
+        let transaction_id = {
+            let mut transaction_id_bytes = [0; TOKEN_TRANSACTION_SUMMARY_STATE_TRANSACTION_ID_LENGTH];
+            for i in 0..TOKEN_TRANSACTION_SUMMARY_STATE_TRANSACTION_ID_LENGTH {
+                transaction_id_bytes[i] = serialized[i + TOKEN_TRANSACTION_SUMMARY_STATE_TRANSACTION_ID_OFFSET];
+            }
+            NullableSecureHash::deserialize(transaction_id_bytes)
+        };
+
+        TokenTransactionSummaryState {
+            participants: participants,
+            command: command,
+            amounts: amounts,
+            description: description,
+            transaction_time: transaction_time,
+            transaction_id: transaction_id,
+        }
+    }
+}
