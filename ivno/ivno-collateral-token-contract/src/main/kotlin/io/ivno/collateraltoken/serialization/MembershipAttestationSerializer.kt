@@ -72,7 +72,11 @@ data class MembershipAttestationSurrogate(
     }
 
     companion object {
-        const val BOGUS_CONTRACT_NAME = ""
+        /**
+         * These constants are used to create a temporary [StateAndRef] of [Membership], that is needed to satisfy
+         * the public constructor of [MembershipAttestation]. These values will be discarded by that constructor.
+         */
+        const val BOGUS_CONTRACT_NAME = "BogusContract"
         const val BOGUS_NOTARY_NAME = "O=Org,L=New York,C=US"
     }
 }
