@@ -15,7 +15,9 @@ import io.onixlabs.corda.identityframework.contract.AbstractClaim
 import io.onixlabs.corda.bnms.contract.Network
 import io.onixlabs.corda.bnms.contract.Setting
 import io.onixlabs.corda.bnms.contract.membership.Membership
+import io.onixlabs.corda.identityframework.contract.Attestation
 import io.onixlabs.corda.identityframework.contract.AttestationPointer
+import io.onixlabs.corda.identityframework.contract.AttestationStatus
 import io.onixlabs.corda.identityframework.contract.Claim
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Polymorphic
@@ -43,6 +45,7 @@ val anotherParty: Party = TestIdentity.fresh("another-org").party
 
 val anonymousParty: AnonymousParty = TestIdentity.fresh("some-org").party.anonymise()
 val anotherAnonymousParty: AnonymousParty = TestIdentity.fresh("another-org").party.anonymise()
+val anEvenOtherAnonymousParty: AnonymousParty = TestIdentity.fresh("even-other-org").party.anonymise()
 
 val uuid = randomUUID()
 val anotherUuid = generateDifferentValueThan(uuid) {
@@ -278,3 +281,130 @@ val stateWithDifferentAmounts = state.copy(amounts = anotherState.amounts)
 val stateWithDifferentDescription = state.copy(description = anotherState.description)
 val stateWithDifferentTransactionTime = state.copy(transactionTime = anotherState.transactionTime)
 val stateWithDifferentTransactionId = state.copy(transactionId = anotherState.transactionId)
+
+val attestation = Attestation(
+    attestor = anonymousParty,
+    attestees = setOf(anotherAnonymousParty),
+    pointer = attestationPointer,
+    status = AttestationStatus.ACCEPTED,
+    metadata = mapOf(
+        "1" to "one",
+        "2" to "two",
+        "3" to "three"
+    ),
+    linearId = someUniqueIdentifier,
+    previousStateRef = stateRef,
+)
+
+val attestationWithDifferentAttestor = Attestation(
+    attestor = anEvenOtherAnonymousParty,
+    attestees = setOf(anotherAnonymousParty),
+    pointer = attestationPointer,
+    status = AttestationStatus.ACCEPTED,
+    metadata = mapOf(
+        "1" to "one",
+        "2" to "two",
+        "3" to "three"
+    ),
+    linearId = someUniqueIdentifier,
+    previousStateRef = stateRef,
+)
+
+val attestationWithDifferentAttestees = Attestation(
+    attestor = anonymousParty,
+    attestees = setOf(anEvenOtherAnonymousParty),
+    pointer = attestationPointer,
+    status = AttestationStatus.ACCEPTED,
+    metadata = mapOf(
+        "1" to "one",
+        "2" to "two",
+        "3" to "three"
+    ),
+    linearId = someUniqueIdentifier,
+    previousStateRef = stateRef,
+)
+
+val attestationWithDifferentPointer = Attestation(
+    attestor = anonymousParty,
+    attestees = setOf(anotherAnonymousParty),
+    pointer = anotherAttestationPointer,
+    status = AttestationStatus.ACCEPTED,
+    metadata = mapOf(
+        "1" to "one",
+        "2" to "two",
+        "3" to "three"
+    ),
+    linearId = someUniqueIdentifier,
+    previousStateRef = stateRef,
+)
+
+val attestationWithDifferentStatus = Attestation(
+    attestor = anonymousParty,
+    attestees = setOf(anotherAnonymousParty),
+    pointer = attestationPointer,
+    status = AttestationStatus.REJECTED,
+    metadata = mapOf(
+        "1" to "one",
+        "2" to "two",
+        "3" to "three"
+    ),
+    linearId = someUniqueIdentifier,
+    previousStateRef = stateRef,
+)
+
+val attestationWithDifferentMetadata = Attestation(
+    attestor = anonymousParty,
+    attestees = setOf(anotherAnonymousParty),
+    pointer = attestationPointer,
+    status = AttestationStatus.ACCEPTED,
+    metadata = mapOf(
+        "1" to "one",
+        "2" to "two",
+        "3" to "three",
+        "4" to "four"
+    ),
+    linearId = someUniqueIdentifier,
+    previousStateRef = stateRef,
+)
+
+val attestationWithDifferentLinearId = Attestation(
+    attestor = anonymousParty,
+    attestees = setOf(anotherAnonymousParty),
+    pointer = attestationPointer,
+    status = AttestationStatus.ACCEPTED,
+    metadata = mapOf(
+        "1" to "one",
+        "2" to "two",
+        "3" to "three"
+    ),
+    linearId = anotherUniqueIdentifier,
+    previousStateRef = stateRef,
+)
+
+val attestationWithoutPreviousState = Attestation(
+    attestor = anonymousParty,
+    attestees = setOf(anotherAnonymousParty),
+    pointer = attestationPointer,
+    status = AttestationStatus.ACCEPTED,
+    metadata = mapOf(
+        "1" to "one",
+        "2" to "two",
+        "3" to "three"
+    ),
+    linearId = someUniqueIdentifier,
+    previousStateRef = null,
+)
+
+val attestationWithDifferentPreviousState = Attestation(
+    attestor = anonymousParty,
+    attestees = setOf(anotherAnonymousParty),
+    pointer = attestationPointer,
+    status = AttestationStatus.ACCEPTED,
+    metadata = mapOf(
+        "1" to "one",
+        "2" to "two",
+        "3" to "three"
+    ),
+    linearId = someUniqueIdentifier,
+    previousStateRef = anotherStateRef,
+)

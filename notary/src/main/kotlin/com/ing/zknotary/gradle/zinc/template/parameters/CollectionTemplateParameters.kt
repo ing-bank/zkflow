@@ -11,6 +11,12 @@ data class CollectionTemplateParameters<T>(
     baseTemplateFile,
     listOfNotNull(innerTemplateParameters)
 ) where T : TemplateParameters {
+    constructor(collectionSize: Int, innerTemplateParameters: T) : this(
+        baseTemplateFile = "collection.zn",
+        collectionSize = collectionSize,
+        innerTemplateParameters = innerTemplateParameters,
+        platformModuleName = null
+    )
     private val innerModuleName = innerTemplateParameters?.getModuleName()
         ?: requireNotNull(platformModuleName) { "Module name must be provided for non-templated zinc sources" }
 

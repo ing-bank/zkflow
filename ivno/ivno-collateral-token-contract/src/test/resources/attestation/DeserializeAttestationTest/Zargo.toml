@@ -1,0 +1,3 @@
+[circuit]
+name = "Deserialize Attestation test"
+version = "0.1.0"

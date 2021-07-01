@@ -1,0 +1,179 @@
+// Input parameters:
+//   - TYPE_NAME: String = Name of the main struct, and suffix for Serialized struct, use camelcase
+//   - CONSTANT_PREFIX: String = prefix to use for constant names, use uppercase
+//   - CAPACITY: Int = Maximum number of entries in the map
+//   - KEY_TYPE_NAME: String = Name of the key struct, and suffix for Serialized struct, use camelcase
+//   - KEY_CONSTANT_PREFIX: String = prefix to use for constant names, use uppercase
+//   - KEY_MODULE_NAME: String = module name for the key struct
+//   - VALUE_TYPE_NAME: String = Name of the value struct, and suffix for Serialized struct, use camelcase
+//   - VALUE_CONSTANT_PREFIX: String = prefix to use for constant names, use uppercase
+//   - VALUE_MODULE_NAME: String = module name for the value struct
+
+mod platform_consts;
+mod platform_integer;
+
+mod ${KEY_MODULE_NAME};
+mod ${VALUE_MODULE_NAME};
+
+use platform_consts::U32_BYTES;
+use platform_integer::parse_u32;
+
+use ${KEY_MODULE_NAME}::${KEY_TYPE_NAME};
+use ${KEY_MODULE_NAME}::${KEY_CONSTANT_PREFIX}_LENGTH;
+
+use ${VALUE_MODULE_NAME}::${VALUE_TYPE_NAME};
+use ${VALUE_MODULE_NAME}::${VALUE_CONSTANT_PREFIX}_LENGTH;
+
+// field lengths
+const ${CONSTANT_PREFIX}_ENTRY_KEY_LENGTH: u16 = ${KEY_CONSTANT_PREFIX}_LENGTH;
+const ${CONSTANT_PREFIX}_ENTRY_VALUE_LENGTH: u16 = ${VALUE_CONSTANT_PREFIX}_LENGTH;
+
+// field offsets
+const ${CONSTANT_PREFIX}_ENTRY_KEY_OFFSET: u16
+    = 0;
+const ${CONSTANT_PREFIX}_ENTRY_VALUE_OFFSET: u16
+    = ${CONSTANT_PREFIX}_ENTRY_KEY_OFFSET
+    + ${CONSTANT_PREFIX}_ENTRY_KEY_LENGTH;
+
+// length
+const ${CONSTANT_PREFIX}_ENTRY_LENGTH: u16
+    = ${CONSTANT_PREFIX}_ENTRY_VALUE_OFFSET
+    + ${CONSTANT_PREFIX}_ENTRY_VALUE_LENGTH;
+
+type Serialized${TYPE_NAME}Entry = [u8; ${CONSTANT_PREFIX}_ENTRY_LENGTH];
+
+struct ${TYPE_NAME}Entry {
+    key: ${KEY_TYPE_NAME},
+    has_value: bool,
+    value: ${VALUE_TYPE_NAME},
+}
+
+impl ${TYPE_NAME}Entry {
+    fn new(key: ${KEY_TYPE_NAME}, value: ${VALUE_TYPE_NAME}) -> ${TYPE_NAME}Entry {
+        ${TYPE_NAME}Entry {
+            key: key,
+            has_value: true,
+            value: value,
+        }
+    }
+
+    fn empty() -> ${TYPE_NAME}Entry {
+        ${TYPE_NAME}Entry {
+            key: ${KEY_TYPE_NAME}::empty(),
+            has_value: false,
+            value: ${VALUE_TYPE_NAME}::empty(),
+        }
+    }
+
+    fn equals(this: ${TYPE_NAME}Entry, that: ${TYPE_NAME}Entry) -> bool {
+        ${KEY_TYPE_NAME}::equals(this.key, that.key)
+            && ${VALUE_TYPE_NAME}::equals(this.value, that.value)
+    }
+
+    fn deserialize(serialized: Serialized${TYPE_NAME}Entry) -> ${TYPE_NAME}Entry {
+        let key = {
+            let mut key_bytes = [0; ${CONSTANT_PREFIX}_ENTRY_KEY_LENGTH];
+            for i in 0..${CONSTANT_PREFIX}_ENTRY_KEY_LENGTH {
+                key_bytes[i] = serialized[i + ${CONSTANT_PREFIX}_ENTRY_KEY_OFFSET];
+            }
+            ${KEY_TYPE_NAME}::deserialize(key_bytes)
+        };
+        let value = {
+            let mut value_bytes = [0; ${CONSTANT_PREFIX}_ENTRY_VALUE_LENGTH];
+            for i in 0..${CONSTANT_PREFIX}_ENTRY_VALUE_LENGTH {
+                value_bytes[i] = serialized[i + ${CONSTANT_PREFIX}_ENTRY_VALUE_OFFSET];
+            }
+            ${VALUE_TYPE_NAME}::deserialize(value_bytes)
+        };
+        ${TYPE_NAME}Entry {
+            key: key,
+            has_value: true,
+            value: value,
+        }
+    }
+}
+
+// field lengths
+const ${CONSTANT_PREFIX}_SIZE_LENGTH: u16 = U32_BYTES;
+const ${CONSTANT_PREFIX}_ENTRIES_LENGTH: u16 = ${CAPACITY} as u16 * ${CONSTANT_PREFIX}_ENTRY_LENGTH;
+
+// field offsets
+const ${CONSTANT_PREFIX}_SIZE_OFFSET: u16
+    = 0;
+const ${CONSTANT_PREFIX}_ENTRIES_OFFSET: u16
+    = ${CONSTANT_PREFIX}_SIZE_OFFSET
+    + ${CONSTANT_PREFIX}_SIZE_LENGTH;
+
+// length
+const ${CONSTANT_PREFIX}_LENGTH: u16
+    = ${CONSTANT_PREFIX}_ENTRIES_OFFSET
+    + ${CONSTANT_PREFIX}_ENTRIES_LENGTH;
+
+type Serialized${TYPE_NAME} = [u8; ${CONSTANT_PREFIX}_LENGTH];
+
+struct ${TYPE_NAME} {
+    size: u32,
+    entries: [${TYPE_NAME}Entry; ${CAPACITY}],
+}
+
+impl ${TYPE_NAME} {
+    fn new(size: u32, entries: [${TYPE_NAME}Entry; ${CAPACITY}]) -> ${TYPE_NAME} {
+        ${TYPE_NAME} {
+            size: size,
+            entries: entries,
+        }
+    }
+
+    fn empty() -> ${TYPE_NAME} {
+        ${TYPE_NAME} {
+            size: 0 as u32,
+            entries: [${TYPE_NAME}Entry::empty(); ${CAPACITY}],
+        }
+    }
+
+    fn get(this: ${TYPE_NAME}, key: ${KEY_TYPE_NAME}) -> ${TYPE_NAME}Entry {
+        let mut value = ${TYPE_NAME}Entry::empty();
+        for i in 0..${CAPACITY} while !value.has_value && i as u32 < this.size {
+            if ${KEY_TYPE_NAME}::equals(this.entries[i].key, key) {
+                value = this.entries[i];
+            }
+        }
+        value
+    }
+
+    fn equals(this: ${TYPE_NAME}, that: ${TYPE_NAME}) -> bool {
+        this.size == that.size
+            && {
+                let mut entries_still_equals = true;
+                for i in 0..${CAPACITY} while entries_still_equals && i as u32 < this.size {
+                    entries_still_equals = ${TYPE_NAME}Entry::equals(this.entries[i], that.entries[i]);
+                }
+                entries_still_equals
+            }
+    }
+
+    fn deserialize(serialized: Serialized${TYPE_NAME}) -> ${TYPE_NAME} {
+        let size = {
+            let mut size_bytes = [0; ${CONSTANT_PREFIX}_SIZE_LENGTH];
+            for i in 0..${CONSTANT_PREFIX}_SIZE_LENGTH {
+                size_bytes[i] = serialized[i + ${CONSTANT_PREFIX}_SIZE_OFFSET];
+            }
+            parse_u32(size_bytes)
+        };
+        let entries = {
+            let mut entries_array = [${TYPE_NAME}Entry::empty(); ${CAPACITY}];
+            for i in 0..${CAPACITY} while i as u32 < size {
+                let mut entry_bytes = [0; ${CONSTANT_PREFIX}_ENTRY_LENGTH];
+                for j in 0..${CONSTANT_PREFIX}_ENTRY_LENGTH {
+                    entry_bytes[j] = serialized[j + i as u16 * ${CONSTANT_PREFIX}_ENTRY_LENGTH + ${CONSTANT_PREFIX}_ENTRIES_OFFSET];
+                }
+                entries_array[i] = ${TYPE_NAME}Entry::deserialize(entry_bytes);
+            }
+            entries_array
+        };
+        ${TYPE_NAME} {
+            size: size,
+            entries: entries,
+        }
+    }
+}

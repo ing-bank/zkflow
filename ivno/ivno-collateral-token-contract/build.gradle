@@ -1,6 +1,7 @@
 import com.ing.zknotary.gradle.zinc.template.parameters.AbstractPartyTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.BigDecimalTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.CollectionTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.parameters.MapTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.NullableTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.PolyTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.PublicKeyTemplateParameters
@@ -34,7 +35,10 @@ zkp {
             new NullableTemplateParameters(
                     "nullable.zn",
                     new PolyTemplateParameters(
-                            new AbstractPartyTemplateParameters("Party", PublicKeyTemplateParameters.Companion.newInstance().eddsaTemplateParameters)
+                            new AbstractPartyTemplateParameters(
+                                    "Party",
+                                    PublicKeyTemplateParameters.Companion.newInstance().eddsaTemplateParameters
+                            )
                     ),
                     null
             ),
@@ -65,7 +69,22 @@ zkp {
                             new AbstractPartyTemplateParameters("Party", PublicKeyTemplateParameters.Companion.newInstance().eddsaTemplateParameters)
                     ),
                     null
-            )
+            ),
+            new CollectionTemplateParameters(
+                     2,
+                     new PolyTemplateParameters(
+                             new AbstractPartyTemplateParameters(
+                                     "AnonymousParty",
+                                     PublicKeyTemplateParameters.Companion.newInstance().eddsaTemplateParameters
+                             )
+                     )
+             ),
+             new MapTemplateParameters(
+                     "AttestationMetadataMap",
+                     5,
+                     new StringTemplateParameters(32),
+                     new StringTemplateParameters(128)
+             )
     ])
 
     addConfigurations([7, 20, 32].collect { new StringTemplateParameters(it.shortValue()) })

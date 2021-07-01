@@ -43,6 +43,14 @@ struct AttestationPointer {
 }
 
 impl AttestationPointer {
+    fn empty() -> AttestationPointer {
+        AttestationPointer {
+            state_ref: StateRef::empty(),
+            state_class_name: AttestationPointerClassName::empty(),
+            state_linear_id: NullableUniqueIdentifier::null(),
+        }
+    }
+
     fn equals(this: AttestationPointer, that: AttestationPointer) -> bool {
         StateRef::equals(this.state_ref, that.state_ref)
             && AttestationPointerClassName::equals(this.state_class_name, that.state_class_name)
