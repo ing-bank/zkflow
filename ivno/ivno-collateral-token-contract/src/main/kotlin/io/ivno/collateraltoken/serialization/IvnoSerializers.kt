@@ -7,6 +7,7 @@ import com.ing.zknotary.common.serialization.bfl.serializers.StateRefSerializer
 import io.ivno.collateraltoken.contract.Deposit
 import io.ivno.collateraltoken.contract.DepositContract
 import io.onixlabs.corda.bnms.contract.membership.Membership
+import io.onixlabs.corda.bnms.contract.membership.MembershipAttestation
 import io.onixlabs.corda.bnms.contract.membership.MembershipContract
 import io.onixlabs.corda.identityframework.contract.AbstractClaim
 import kotlinx.serialization.KSerializer
@@ -62,6 +63,8 @@ object IvnoSerializers {
 
         CommandDataSerializerMap.register(DepositContract.Request::class, 3, DepositContract.Request.serializer())
         CommandDataSerializerMap.register(MembershipContract.Issue::class, 4, MembershipContractIssueSerializer)
+
+        ContractStateSerializerMap.register(MembershipAttestation::class, 5, MembershipAttestationSerializer)
     }
 }
 
