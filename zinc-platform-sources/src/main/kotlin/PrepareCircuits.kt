@@ -179,21 +179,18 @@ private fun getTemplateContents(root: String, templateName: String) =
 
 private fun renderStateTemplates(configurator: CircuitConfigurator, templateRenderer: TemplateRenderer) {
     templateConfigurations.apply {
-        configurator.circuitConfiguration.groups.inputGroup.forEach { stateGroup ->
-            if (stateGroup.stateGroupSize > 0)
-                addConfigurations(SerializedStateTemplateParameters("input", stateGroup))
+        configurator.circuitConfiguration.groups.inputGroup.filter { it.stateGroupSize > 0 }.forEach { stateGroup ->
+            addConfigurations(SerializedStateTemplateParameters("input", stateGroup))
         }
         addConfigurations(StateGroupTemplateParameters("input", configurator.circuitConfiguration.groups.inputGroup))
 
-        configurator.circuitConfiguration.groups.outputGroup.forEach { stateGroup ->
-            if (stateGroup.stateGroupSize > 0)
-                addConfigurations(SerializedStateTemplateParameters("output", stateGroup))
+        configurator.circuitConfiguration.groups.outputGroup.filter { it.stateGroupSize > 0 }.forEach { stateGroup ->
+            addConfigurations(SerializedStateTemplateParameters("output", stateGroup))
         }
         addConfigurations(StateGroupTemplateParameters("output", configurator.circuitConfiguration.groups.outputGroup))
 
-        configurator.circuitConfiguration.groups.referenceGroup.forEach { stateGroup ->
-            if (stateGroup.stateGroupSize > 0)
-                addConfigurations(SerializedStateTemplateParameters("reference", stateGroup))
+        configurator.circuitConfiguration.groups.referenceGroup.filter { it.stateGroupSize > 0 }.forEach { stateGroup ->
+            addConfigurations(SerializedStateTemplateParameters("reference", stateGroup))
         }
         addConfigurations(StateGroupTemplateParameters("reference", configurator.circuitConfiguration.groups.referenceGroup))
     }.resolveAllTemplateParameters()
