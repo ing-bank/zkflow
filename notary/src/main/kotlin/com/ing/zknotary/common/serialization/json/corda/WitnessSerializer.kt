@@ -1,6 +1,7 @@
 package com.ing.zknotary.common.serialization.json.corda
 
 import com.ing.dlt.zkkrypto.util.asUnsigned
+import com.ing.zknotary.common.serialization.json.corda.WitnessSerializer.toUnsignedString
 import com.ing.zknotary.common.zkp.Witness
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
@@ -105,7 +106,7 @@ object WitnessSerializer : KSerializer<Witness> {
                 return WrappedSurrogate(
                     WitnessSurrogate(
                         inputsGroup = witness.inputsGroup.map { it.map { byte -> byte.asUnsigned().toString() } },
-                        outputsGroup = witness.outputsGroup.map { it.key to it.value.map { array -> array.map { byte -> byte.asUnsigned().toString() } } }.toMap(),
+                        outputsGroup = witness.outputsGroup.map { it.key to it.value.map { array -> array.toUnsignedString() } }.toMap(),
                         commandsGroup = witness.commandsGroup.map { it.map { byte -> byte.asUnsigned().toString() } },
                         attachmentsGroup = witness.attachmentsGroup.map { it.map { byte -> byte.asUnsigned().toString() } },
                         notaryGroup = witness.notaryGroup.map { it.map { byte -> byte.asUnsigned().toString() } },
@@ -114,8 +115,8 @@ object WitnessSerializer : KSerializer<Witness> {
                         referencesGroup = witness.referencesGroup.map { it.map { byte -> byte.asUnsigned().toString() } },
                         parametersGroup = witness.parametersGroup.map { it.map { byte -> byte.asUnsigned().toString() } },
                         privacySalt = witness.privacySalt.bytes.asList().map { byte -> byte.asUnsigned().toString() },
-                        serializedInputUtxos = witness.serializedInputUtxos.map { it.key to it.value.map { array -> array.map { byte -> byte.asUnsigned().toString() } } }.toMap(),
-                        serializedReferenceUtxos = witness.serializedReferenceUtxos.map { it.key to it.value.map { array -> array.map { byte -> byte.asUnsigned().toString() } } }.toMap(),
+                        serializedInputUtxos = witness.serializedInputUtxos.map { it.key to it.value.map { array -> array.toUnsignedString() } }.toMap(),
+                        serializedReferenceUtxos = witness.serializedReferenceUtxos.map { it.key to it.value.map { array -> array.toUnsignedString() } }.toMap(),
                         inputNonces = witness.inputUtxoNonces,
                         referenceNonces = witness.referenceUtxoNonces
                     )
@@ -131,7 +132,7 @@ object WitnessSerializer : KSerializer<Witness> {
                 return WrappedSurrogateNoInputUTXO(
                     WitnessSurrogateNoInputUTXO(
                         inputsGroup = witness.inputsGroup.map { it.map { byte -> byte.asUnsigned().toString() } },
-                        outputsGroup = witness.outputsGroup.map { it.key to it.value.map { array -> array.map { byte -> byte.asUnsigned().toString() } } }.toMap(),
+                        outputsGroup = witness.outputsGroup.map { it.key to it.value.map { array -> array.toUnsignedString() } }.toMap(),
                         commandsGroup = witness.commandsGroup.map { it.map { byte -> byte.asUnsigned().toString() } },
                         attachmentsGroup = witness.attachmentsGroup.map { it.map { byte -> byte.asUnsigned().toString() } },
                         notaryGroup = witness.notaryGroup.map { it.map { byte -> byte.asUnsigned().toString() } },
@@ -140,7 +141,7 @@ object WitnessSerializer : KSerializer<Witness> {
                         referencesGroup = witness.referencesGroup.map { it.map { byte -> byte.asUnsigned().toString() } },
                         parametersGroup = witness.parametersGroup.map { it.map { byte -> byte.asUnsigned().toString() } },
                         privacySalt = witness.privacySalt.bytes.asList().map { byte -> byte.asUnsigned().toString() },
-                        serializedReferenceUtxos = witness.serializedReferenceUtxos.map { it.key to it.value.map { array -> array.map { byte -> byte.asUnsigned().toString() } } }.toMap(),
+                        serializedReferenceUtxos = witness.serializedReferenceUtxos.map { it.key to it.value.map { array -> array.toUnsignedString() } }.toMap(),
                         inputNonces = witness.inputUtxoNonces,
                         referenceNonces = witness.referenceUtxoNonces
                     )
@@ -156,7 +157,7 @@ object WitnessSerializer : KSerializer<Witness> {
                 return WrappedSurrogateNoReferenceUTXO(
                     WitnessSurrogateNoReferenceUTXO(
                         inputsGroup = witness.inputsGroup.map { it.map { byte -> byte.asUnsigned().toString() } },
-                        outputsGroup = witness.outputsGroup.map { it.key to it.value.map { array -> array.map { byte -> byte.asUnsigned().toString() } } }.toMap(),
+                        outputsGroup = witness.outputsGroup.map { it.key to it.value.map { array -> array.toUnsignedString() } }.toMap(),
                         commandsGroup = witness.commandsGroup.map { it.map { byte -> byte.asUnsigned().toString() } },
                         attachmentsGroup = witness.attachmentsGroup.map { it.map { byte -> byte.asUnsigned().toString() } },
                         notaryGroup = witness.notaryGroup.map { it.map { byte -> byte.asUnsigned().toString() } },
@@ -165,7 +166,7 @@ object WitnessSerializer : KSerializer<Witness> {
                         referencesGroup = witness.referencesGroup.map { it.map { byte -> byte.asUnsigned().toString() } },
                         parametersGroup = witness.parametersGroup.map { it.map { byte -> byte.asUnsigned().toString() } },
                         privacySalt = witness.privacySalt.bytes.asList().map { byte -> byte.asUnsigned().toString() },
-                        serializedInputUtxos = witness.serializedInputUtxos.map { it.key to it.value.map { array -> array.map { byte -> byte.asUnsigned().toString() } } }.toMap(),
+                        serializedInputUtxos = witness.serializedInputUtxos.map { it.key to it.value.map { array -> array.toUnsignedString() } }.toMap(),
                         inputNonces = witness.inputUtxoNonces,
                         referenceNonces = witness.referenceUtxoNonces
                     )
@@ -181,7 +182,7 @@ object WitnessSerializer : KSerializer<Witness> {
                 return WrappedSurrogateNoInputReferenceUTXO(
                     WitnessSurrogateNoInputReferenceUTXO(
                         inputsGroup = witness.inputsGroup.map { it.map { byte -> byte.asUnsigned().toString() } },
-                        outputsGroup = witness.outputsGroup.map { it.key to it.value.map { array -> array.map { byte -> byte.asUnsigned().toString() } } }.toMap(),
+                        outputsGroup = witness.outputsGroup.map { it.key to it.value.map { array -> array.toUnsignedString() } }.toMap(),
                         commandsGroup = witness.commandsGroup.map { it.map { byte -> byte.asUnsigned().toString() } },
                         attachmentsGroup = witness.attachmentsGroup.map { it.map { byte -> byte.asUnsigned().toString() } },
                         notaryGroup = witness.notaryGroup.map { it.map { byte -> byte.asUnsigned().toString() } },
@@ -198,21 +199,31 @@ object WitnessSerializer : KSerializer<Witness> {
         }
     }
 
+    fun ByteArray.toUnsignedString() = map { byte -> byte.asUnsigned().toString() }
+
     override val descriptor: SerialDescriptor = WrappedSurrogate.serializer().descriptor
 
     override fun serialize(encoder: Encoder, value: Witness) {
-        if (value.serializedInputUtxos.isEmpty() && value.serializedReferenceUtxos.isNotEmpty()) {
-            val surrogate = WrappedSurrogateNoInputUTXO.fromWitness(value)
-            encoder.encodeSerializableValue(WrappedSurrogateNoInputUTXO.serializer(), surrogate)
-        } else if (value.serializedInputUtxos.isNotEmpty() && value.serializedReferenceUtxos.isEmpty()) {
-            val surrogate = WrappedSurrogateNoReferenceUTXO.fromWitness(value)
-            encoder.encodeSerializableValue(WrappedSurrogateNoReferenceUTXO.serializer(), surrogate)
-        } else if (value.serializedInputUtxos.isEmpty() && value.serializedReferenceUtxos.isEmpty()) {
-            val surrogate = WrappedSurrogateNoInputReferenceUTXO.fromWitness(value)
-            encoder.encodeSerializableValue(WrappedSurrogateNoInputReferenceUTXO.serializer(), surrogate)
-        } else {
-            val surrogate = WrappedSurrogate.fromWitness(value)
-            encoder.encodeSerializableValue(WrappedSurrogate.serializer(), surrogate)
+        val isEmptyInputUTXO = value.serializedInputUtxos.isEmpty()
+        val isEmptyReferenceUTXO = value.serializedReferenceUtxos.isEmpty()
+
+        when {
+            isEmptyInputUTXO && !isEmptyReferenceUTXO -> {
+                val surrogate = WrappedSurrogateNoInputUTXO.fromWitness(value)
+                encoder.encodeSerializableValue(WrappedSurrogateNoInputUTXO.serializer(), surrogate)
+            }
+            !isEmptyInputUTXO && isEmptyReferenceUTXO -> {
+                val surrogate = WrappedSurrogateNoReferenceUTXO.fromWitness(value)
+                encoder.encodeSerializableValue(WrappedSurrogateNoReferenceUTXO.serializer(), surrogate)
+            }
+            isEmptyInputUTXO && isEmptyReferenceUTXO -> {
+                val surrogate = WrappedSurrogateNoInputReferenceUTXO.fromWitness(value)
+                encoder.encodeSerializableValue(WrappedSurrogateNoInputReferenceUTXO.serializer(), surrogate)
+            }
+            else -> {
+                val surrogate = WrappedSurrogate.fromWitness(value)
+                encoder.encodeSerializableValue(WrappedSurrogate.serializer(), surrogate)
+            }
         }
     }
 

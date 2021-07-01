@@ -144,8 +144,8 @@ class Witness(
 
                 privacySalt = wtx.privacySalt,
 
-                serializedInputUtxos = inputUtxoInfos.serializedBytesForUTXO("input"),
-                serializedReferenceUtxos = referenceUtxoInfos.serializedBytesForUTXO("reference"),
+                serializedInputUtxos = inputUtxoInfos.serializedBytesForUTXO(ComponentGroupEnum.INPUTS_GROUP),
+                serializedReferenceUtxos = referenceUtxoInfos.serializedBytesForUTXO(ComponentGroupEnum.REFERENCES_GROUP),
                 inputUtxoNonces = inputUtxoInfos.map { it.nonce },
                 referenceUtxoNonces = referenceUtxoInfos.map { it.nonce }
             )
@@ -158,7 +158,7 @@ class Witness(
 
         private fun TraversableTransaction.serializedComponentBytesForOutputGroup(groupEnum: ComponentGroupEnum): Map<String, List<ByteArray>> {
             val stateNames = outputs.map {
-                "output${it.data.javaClass.simpleName}".camelToSnakeCase()
+                it.data.javaClass.simpleName.camelToSnakeCase()
             }
 
             // TODO: Ensure that the order is the same as the deterministic order in ZKTransactionBuilder
@@ -169,8 +169,16 @@ class Witness(
                 ?.toMap() ?: emptyMap()
         }
 
-        private fun List<UtxoInfo>.serializedBytesForUTXO(componentName: String): Map<String, List<ByteArray>> {
-            return this.map { (componentName + it.stateName).camelToSnakeCase() to it.serializedContents }
+        /**
+         * Input and reference UTXOs can contain different states. Therefore their serialized bytes grouped by their state names.
+         */
+        private fun List<UtxoInfo>.serializedBytesForUTXO(groupEnum: ComponentGroupEnum): Map<String, List<ByteArray>> {
+
+            require(groupEnum == ComponentGroupEnum.INPUTS_GROUP || groupEnum == ComponentGroupEnum.REFERENCES_GROUP) { "Only input and reference groups are valid for UTXO serialization." }
+
+            // Pair each serialized state with the component group name and state name
+            return this.map { it.stateName.camelToSnakeCase() to it.serializedContents }
+                // group the serialized arrays based on their state name
                 .groupBy { it.first }.map { it.key to it.value.map { bytes -> bytes.second } }
                 .toMap()
         }
