@@ -82,9 +82,9 @@ class CircuitConfigurator(
     @Serializable
     data class Groups(
         @SerialName("attachment_group") val attachmentGroup: Group = Group(),
-        @SerialName("input_group") val inputGroup: Group = Group(),
-        @SerialName("output_group") val outputGroup: Group = Group(),
-        @SerialName("reference_group") val referenceGroup: Group = Group(),
+        @SerialName("input_group") val inputGroup: List<StateGroup> = listOf(StateGroup()),
+        @SerialName("output_group") val outputGroup: List<StateGroup> = listOf(StateGroup()),
+        @SerialName("reference_group") val referenceGroup: List<StateGroup> = listOf(StateGroup()),
         @SerialName("command_group") val commandGroup: CommandGroup,
         @SerialName("notary_group") val notaryGroup: FixedComponentSizeGroup = FixedComponentSizeGroup(),
         @SerialName("timewindow_group") val timewindowGroup: FixedComponentSizeGroup = FixedComponentSizeGroup(),
@@ -132,6 +132,44 @@ class CircuitConfigurator(
             }
     }
 
+    @Serializable(with = StateGroupSerializer::class)
+    data class StateGroup(
+        val name: String = "",
+        val stateGroupSize: Int = 0
+    )
+
+    object StateGroupSerializer : KSerializer<StateGroup> {
+        override val descriptor: SerialDescriptor =
+            buildClassSerialDescriptor("group") {
+                element<String>("state_name")
+                element<Int>("state_group_size")
+            }
+
+        override fun serialize(encoder: Encoder, value: StateGroup) {
+            TODO("Not Supported")
+        }
+
+        override fun deserialize(decoder: Decoder): StateGroup =
+            decoder.decodeStructure(descriptor) {
+                var name = ""
+                var stateGroupSize = 0
+                while (true) {
+                    when (val index = decodeElementIndex(descriptor)) {
+                        0 -> name = decodeStringElement(descriptor, 0)
+                        1 -> stateGroupSize = decodeIntElement(descriptor, 1)
+                        CompositeDecoder.DECODE_DONE -> break
+                        else -> error("Unexpected index: $index")
+                    }
+                }
+
+                if (stateGroupSize != 0 && name == "") {
+                    error("StateGroup with `state_group_size > 0` must specify `state_name`")
+                }
+
+                StateGroup(name, stateGroupSize)
+            }
+    }
+
     @Serializable
     data class CommandGroup(
         @SerialName("group_size") val groupSize: Int,
@@ -176,9 +214,9 @@ class CircuitConfigurator(
     fun generateConstsFile(outputPath: File) = createOutputFile(outputPath.resolve("consts.zn")).appendBytes(
         """
 const ATTACHMENT_GROUP_SIZE: u16 = ${circuitConfiguration.groups.attachmentGroup.groupSize};
-const INPUT_GROUP_SIZE: u16 = ${circuitConfiguration.groups.inputGroup.groupSize};
-const OUTPUT_GROUP_SIZE: u16 = ${circuitConfiguration.groups.outputGroup.groupSize};
-const REFERENCE_GROUP_SIZE: u16 = ${circuitConfiguration.groups.referenceGroup.groupSize};
+const INPUT_GROUP_SIZE: u16 = ${circuitConfiguration.groups.inputGroup.sumBy { it.stateGroupSize }};
+const OUTPUT_GROUP_SIZE: u16 = ${circuitConfiguration.groups.outputGroup.sumBy { it.stateGroupSize }};
+const REFERENCE_GROUP_SIZE: u16 = ${circuitConfiguration.groups.referenceGroup.sumBy { it.stateGroupSize }};
 const NOTARY_GROUP_SIZE: u16 = ${circuitConfiguration.groups.notaryGroup.groupSize};
 const TIMEWINDOW_GROUP_SIZE: u16 = ${circuitConfiguration.groups.timewindowGroup.groupSize};
 // This is the size of a single signer and should not contain the Corda SerializationMagic size,
@@ -186,14 +224,10 @@ const TIMEWINDOW_GROUP_SIZE: u16 = ${circuitConfiguration.groups.timewindowGroup
 const COMMAND_SIGNER_SIZE: u16 = ${circuitConfiguration.groups.signerGroup.signerSize};
 
 // Component and UTXO sizes cannot be 0, so for not present groups use 1
-const OUTPUT_COMPONENT_SIZE: u16 = ${circuitConfiguration.groups.outputGroup.componentSize};
 // A single command per circuit is currently supported.
 // TODO: Support for multiple commands is to be implemented.
 const COMMAND_COMPONENT_SIZE: u16 = ${circuitConfiguration.groups.commandGroup.commands.single().componentSize};
 const COMMAND_SIGNER_LIST_SIZE: u16 = ${circuitConfiguration.groups.signerGroup.signerListSize};
-
-const INPUT_UTXO_SIZE: u16 = ${circuitConfiguration.groups.inputGroup.componentSize};
-const REFERENCE_UTXO_SIZE: u16 = ${circuitConfiguration.groups.referenceGroup.componentSize};
         """.trimIndent().toByteArray()
     )
 }

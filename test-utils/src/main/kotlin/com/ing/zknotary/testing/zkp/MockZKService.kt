@@ -41,9 +41,15 @@ public class MockZKService(private val serviceHub: ServiceHub, private val diges
                 components.map { OpaqueBytes(it) }
             )
 
+        fun createComponentGroupForMultiState(componentGroup: ComponentGroupEnum, components: Map<String, List< ByteArray>>) =
+            if (components.isEmpty()) null else ComponentGroup(
+                componentGroup.ordinal,
+                components.flatMap { it.value }.map { OpaqueBytes(it) }
+            )
+
         fun createComponentGroups(witness: Witness) = listOf(
             createComponentGroup(ComponentGroupEnum.INPUTS_GROUP, witness.inputsGroup),
-            createComponentGroup(ComponentGroupEnum.OUTPUTS_GROUP, witness.outputsGroup),
+            createComponentGroupForMultiState(ComponentGroupEnum.OUTPUTS_GROUP, witness.outputsGroup),
             createComponentGroup(ComponentGroupEnum.COMMANDS_GROUP, witness.commandsGroup),
             createComponentGroup(ComponentGroupEnum.ATTACHMENTS_GROUP, witness.attachmentsGroup),
             createComponentGroup(ComponentGroupEnum.NOTARY_GROUP, witness.notaryGroup),
@@ -88,35 +94,39 @@ public class MockZKService(private val serviceHub: ServiceHub, private val diges
         verifyContract(witness, wtx)
     }
 
-    private fun verifyUtxoContents(serializedUtxos: List<ByteArray>, utxoNonces: List<SecureHash>, expectedUtxoHashes: List<SecureHash>) {
-        serializedUtxos.forEachIndexed { index, serializedReferenceUtxo ->
-            val nonceFromWitness = utxoNonces.getOrElse(index) {
-                error("Nonce not present in public input for reference $index")
+    private fun verifyUtxoContents(serializedUtxos: Map<String, List<ByteArray>>, utxoNonces: List<SecureHash>, expectedUtxoHashes: List<SecureHash>) {
+        serializedUtxos.forEach { (_, bytes) ->
+            bytes.forEachIndexed { index, serializedReferenceUtxo ->
+                val nonceFromWitness = utxoNonces.getOrElse(index) {
+                    error("Nonce not present in public input for reference $index")
+                }
+
+                val leafHashFromPublicreference = expectedUtxoHashes.getOrElse(index) {
+                    error("Leaf hash not present in public input for reference $index")
+                }
+
+                val calculatedLeafHashFromWitness =
+                    digestService.componentHash(nonceFromWitness, OpaqueBytes(serializedReferenceUtxo))
+
+                if (leafHashFromPublicreference != calculatedLeafHashFromWitness) error(
+                    "Calculated leaf hash ($calculatedLeafHashFromWitness} for reference $index does " +
+                        "not match the leaf hash from the public input ($leafHashFromPublicreference)."
+                )
             }
-
-            val leafHashFromPublicreference = expectedUtxoHashes.getOrElse(index) {
-                error("Leaf hash not present in public input for reference $index")
-            }
-
-            val calculatedLeafHashFromWitness =
-                digestService.componentHash(nonceFromWitness, OpaqueBytes(serializedReferenceUtxo))
-
-            if (leafHashFromPublicreference != calculatedLeafHashFromWitness) error(
-                "Calculated leaf hash ($calculatedLeafHashFromWitness} for reference $index does " +
-                    "not match the leaf hash from the public input ($leafHashFromPublicreference)."
-            )
         }
     }
 
     private fun verifyContract(witness: Witness, wtx: WireTransaction) {
-        val inputs = witness.serializedInputUtxos.mapIndexed { index, bytes ->
-            bytes.deserialize<TransactionState<ContractState>>()
-            StateAndRef<ContractState>(
-                bytes.deserialize(),
-                wtx.inputs[index]
-            )
-        }
-        val references = witness.serializedReferenceUtxos.mapIndexed { index, bytes ->
+        val inputs = witness.serializedInputUtxos.flatMap { it.value }
+            .mapIndexed { index, bytes ->
+                bytes.deserialize<TransactionState<ContractState>>()
+                StateAndRef<ContractState>(
+                    bytes.deserialize(),
+                    wtx.inputs[index]
+                )
+            }
+
+        val references = witness.serializedReferenceUtxos.flatMap { it.value }.mapIndexed { index, bytes ->
             bytes.deserialize<TransactionState<ContractState>>()
             StateAndRef<ContractState>(
                 bytes.deserialize(),

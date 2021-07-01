@@ -10,7 +10,7 @@ fn check_contract_rules(witness: Witness) {
     let signers = Signers::deserialize(witness.signers[0]);
     dbg!("[Create] Signers {}", signers);
 
-    let tx_test_state = TxStateTestState::deserialize(witness.outputs[0]);
+    let tx_test_state = TxStateTestState::deserialize(witness.outputs.test_state[0]);
     dbg!("[Create] TxState_TestState {}", tx_test_state);
 
     assert!(Signers::contains(signers, tx_test_state.data.owner), "[Create] Owner must sign");

@@ -51,7 +51,9 @@ fun ServiceHub.collectUtxoInfos(
                 .filteredComponentGroups.single { it.groupIndex == ComponentGroupEnum.OUTPUTS_GROUP.ordinal }
                 .nonces[it.index]
 
-            UtxoInfo(it, serializedUtxo, nonce)
+            val stateName = prevStx.tx.outputs[it.index].data.javaClass.name
+
+            UtxoInfo(it, serializedUtxo, nonce, stateName)
         }
 
     val collectFromUtxoInfoStorage: (StateRef) -> UtxoInfo =

@@ -14,7 +14,9 @@ import com.ing.zknotary.gradle.zinc.template.parameters.IntegerTemplateParameter
 import com.ing.zknotary.gradle.zinc.template.parameters.IssuedTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.MapTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.PublicKeyTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.parameters.SerializedStateTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.SignersTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.parameters.StateGroupTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.StringTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.TxStateTemplateParameters
 import com.ing.zknotary.gradle.zinc.util.CircuitConfigurator
@@ -130,6 +132,9 @@ fun main(args: Array<String>) {
                 .resolveAllTemplateParameters()
                 .forEach(templateRenderer::renderTemplate)
 
+            // Render multi-state templates
+            renderStateTemplates(configurator, templateRenderer)
+
             // Generate code
             val codeGenerator = CodeGenerator(outputPath)
             getTemplateContents(root, "merkle_template.zn").also { codeGenerator.generateMerkleUtilsCode(it, consts) }
@@ -171,3 +176,23 @@ private fun getTemplateContents(root: String, templateName: String) =
         .mapCatching { templates -> templates.single { it.name == templateName } ?: error("Multiple templates for $templateName found") }
         .map { it.readText() }
         .getOrThrow()
+
+private fun renderStateTemplates(configurator: CircuitConfigurator, templateRenderer: TemplateRenderer) {
+    templateConfigurations.apply {
+        configurator.circuitConfiguration.groups.inputGroup.filter { it.stateGroupSize > 0 }.forEach { stateGroup ->
+            addConfigurations(SerializedStateTemplateParameters("input", stateGroup))
+        }
+        addConfigurations(StateGroupTemplateParameters("input", configurator.circuitConfiguration.groups.inputGroup))
+
+        configurator.circuitConfiguration.groups.outputGroup.filter { it.stateGroupSize > 0 }.forEach { stateGroup ->
+            addConfigurations(SerializedStateTemplateParameters("output", stateGroup))
+        }
+        addConfigurations(StateGroupTemplateParameters("output", configurator.circuitConfiguration.groups.outputGroup))
+
+        configurator.circuitConfiguration.groups.referenceGroup.filter { it.stateGroupSize > 0 }.forEach { stateGroup ->
+            addConfigurations(SerializedStateTemplateParameters("reference", stateGroup))
+        }
+        addConfigurations(StateGroupTemplateParameters("reference", configurator.circuitConfiguration.groups.referenceGroup))
+    }.resolveAllTemplateParameters()
+        .forEach(templateRenderer::renderTemplate)
+}

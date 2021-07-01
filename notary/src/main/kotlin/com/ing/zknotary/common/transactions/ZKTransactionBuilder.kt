@@ -127,6 +127,8 @@ class ZKTransactionBuilder(
 
         // TODO: enforce sizes of the component groups.
 
+        // TODO: reorder output states, input and reference utxos deterministically to align with witness.
+
         return builder.toWireTransaction(services, serializationSchemeId, serializationProperties)
     }
 

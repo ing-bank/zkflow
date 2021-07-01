@@ -6,7 +6,9 @@ import com.ing.zknotary.gradle.plugin.getTemplateContents
 import com.ing.zknotary.gradle.plugin.platformSourcesRootPath
 import com.ing.zknotary.gradle.plugin.zkNotaryExtension
 import com.ing.zknotary.gradle.zinc.template.TemplateRenderer
+import com.ing.zknotary.gradle.zinc.template.parameters.SerializedStateTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.SignersTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.parameters.StateGroupTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.TxStateTemplateParameters
 import com.ing.zknotary.gradle.zinc.util.CircuitConfigurator
 import com.ing.zknotary.gradle.zinc.util.CodeGenerator
@@ -15,6 +17,7 @@ import org.gradle.api.tasks.TaskAction
 
 open class GenerateZincPlatformCodeFromTemplatesTask : DefaultTask() {
 
+    @Suppress("NestedBlockDepth")
     @TaskAction
     fun generateZincPlatformCodeFromTemplates() {
         val extension = project.zkNotaryExtension
@@ -44,6 +47,21 @@ open class GenerateZincPlatformCodeFromTemplatesTask : DefaultTask() {
                         .forEach { addConfigurations(TxStateTemplateParameters(it)) }
 
                     addConfigurations(SignersTemplateParameters(configurator.circuitConfiguration.groups.signerGroup))
+
+                    configurator.circuitConfiguration.groups.inputGroup.filter { it.stateGroupSize > 0 }.forEach { stateGroup ->
+                        addConfigurations(SerializedStateTemplateParameters("input", stateGroup))
+                    }
+                    addConfigurations(StateGroupTemplateParameters("input", configurator.circuitConfiguration.groups.inputGroup))
+
+                    configurator.circuitConfiguration.groups.outputGroup.filter { it.stateGroupSize > 0 }.forEach { stateGroup ->
+                        addConfigurations(SerializedStateTemplateParameters("output", stateGroup))
+                    }
+                    addConfigurations(StateGroupTemplateParameters("output", configurator.circuitConfiguration.groups.outputGroup))
+
+                    configurator.circuitConfiguration.groups.referenceGroup.filter { it.stateGroupSize > 0 }.forEach { stateGroup ->
+                        addConfigurations(SerializedStateTemplateParameters("reference", stateGroup))
+                    }
+                    addConfigurations(StateGroupTemplateParameters("reference", configurator.circuitConfiguration.groups.referenceGroup))
                 }.resolveAllTemplateParameters()
                 .forEach(templateRenderer::renderTemplate)
         }
