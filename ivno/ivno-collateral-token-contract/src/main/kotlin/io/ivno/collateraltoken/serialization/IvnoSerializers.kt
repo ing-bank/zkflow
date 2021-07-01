@@ -10,6 +10,7 @@ import io.onixlabs.corda.bnms.contract.membership.Membership
 import io.onixlabs.corda.bnms.contract.membership.MembershipAttestation
 import io.onixlabs.corda.bnms.contract.membership.MembershipContract
 import io.onixlabs.corda.identityframework.contract.AbstractClaim
+import io.onixlabs.corda.identityframework.contract.AttestationContract
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.PolymorphicSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind
@@ -50,6 +51,7 @@ object IvnoSerializers {
         }
 
         contextual(MembershipContractIssueSerializer)
+        contextual(AttestationContractIssueSerializer)
     }
 
     init {
@@ -61,10 +63,12 @@ object IvnoSerializers {
         // TODO This only works with Ints as inner types for identity and settings.
         ContractStateSerializerMap.register(Membership::class, 2, MembershipWithIntSerializer)
 
-        CommandDataSerializerMap.register(DepositContract.Request::class, 3, DepositContract.Request.serializer())
-        CommandDataSerializerMap.register(MembershipContract.Issue::class, 4, MembershipContractIssueSerializer)
+        ContractStateSerializerMap.register(MembershipAttestation::class, 3, MembershipAttestationSerializer)
 
-        ContractStateSerializerMap.register(MembershipAttestation::class, 5, MembershipAttestationSerializer)
+        CommandDataSerializerMap.register(DepositContract.Request::class, 4, DepositContract.Request.serializer())
+        CommandDataSerializerMap.register(MembershipContract.Issue::class, 5, MembershipContractIssueSerializer)
+        CommandDataSerializerMap.register(AttestationContract.Issue::class, 6, AttestationContractIssueSerializer)
+
     }
 }
 
@@ -72,4 +76,10 @@ object MembershipContractIssueSerializer: KSerializer<MembershipContract.Issue> 
     override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("dummy", PrimitiveKind.BYTE)
     override fun deserialize(decoder: Decoder): MembershipContract.Issue = MembershipContract.Issue
     override fun serialize(encoder: Encoder, value: MembershipContract.Issue) {}
+}
+
+object AttestationContractIssueSerializer: KSerializer<AttestationContract.Issue> {
+    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("dummy", PrimitiveKind.BYTE)
+    override fun deserialize(decoder: Decoder): AttestationContract.Issue = AttestationContract.Issue
+    override fun serialize(encoder: Encoder, value: AttestationContract.Issue) {}
 }
