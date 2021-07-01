@@ -96,6 +96,7 @@ dependencies {
 
     // Corda Development Dependencies
     cordaCompile "$corda_core_release_distribution:corda-core:$corda_core_release_version"
+    cordaCompile "$corda_core_release_distribution:corda-core-test-utils:$corda_core_release_version"
     cordaCompile "$onixlabs_group:onixlabs-corda-core-contract:$onixlabs_corda_core_release_version"
     cordaCompile "$onixlabs_group:onixlabs-corda-identity-framework-contract:$onixlabs_corda_idfx_release_version"
     cordaCompile "$onixlabs_group:onixlabs-corda-bnms-contract:$onixlabs_corda_bnms_release_version"

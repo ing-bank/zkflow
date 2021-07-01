@@ -6,6 +6,7 @@ import com.ing.zknotary.common.serialization.bfl.SerializersModuleRegistry
 import com.ing.zknotary.common.serialization.bfl.serializers.StateRefSerializer
 import io.ivno.collateraltoken.contract.Deposit
 import io.ivno.collateraltoken.contract.DepositContract
+import io.ivno.collateraltoken.contract.IvnoTokenType
 import io.onixlabs.corda.bnms.contract.membership.Membership
 import io.onixlabs.corda.bnms.contract.membership.MembershipAttestation
 import io.onixlabs.corda.bnms.contract.membership.MembershipContract
@@ -25,6 +26,7 @@ import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
 import net.corda.core.contracts.StateRef
 import net.corda.core.utilities.loggerFor
+import net.corda.testing.core.DummyCommandData
 
 object IvnoSerializers {
     val serializersModule = SerializersModule {
@@ -52,6 +54,7 @@ object IvnoSerializers {
 
         contextual(MembershipContractIssueSerializer)
         contextual(AttestationContractIssueSerializer)
+        contextual(DummyCommandDataIssueSerializer)
     }
 
     init {
@@ -65,10 +68,12 @@ object IvnoSerializers {
 
         ContractStateSerializerMap.register(MembershipAttestation::class, 3, MembershipAttestationSerializer)
 
-        CommandDataSerializerMap.register(DepositContract.Request::class, 4, DepositContract.Request.serializer())
-        CommandDataSerializerMap.register(MembershipContract.Issue::class, 5, MembershipContractIssueSerializer)
-        CommandDataSerializerMap.register(AttestationContract.Issue::class, 6, AttestationContractIssueSerializer)
+        ContractStateSerializerMap.register(IvnoTokenType::class, 4, IvnoTokenTypeSerializer)
 
+        CommandDataSerializerMap.register(DepositContract.Request::class, 5, DepositContract.Request.serializer())
+        CommandDataSerializerMap.register(MembershipContract.Issue::class, 6, MembershipContractIssueSerializer)
+        CommandDataSerializerMap.register(AttestationContract.Issue::class, 7, AttestationContractIssueSerializer)
+        CommandDataSerializerMap.register(DummyCommandData::class, 8, DummyCommandDataIssueSerializer)
     }
 }
 
@@ -82,4 +87,10 @@ object AttestationContractIssueSerializer: KSerializer<AttestationContract.Issue
     override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("dummy", PrimitiveKind.BYTE)
     override fun deserialize(decoder: Decoder): AttestationContract.Issue = AttestationContract.Issue
     override fun serialize(encoder: Encoder, value: AttestationContract.Issue) {}
+}
+
+object DummyCommandDataIssueSerializer: KSerializer<DummyCommandData> {
+    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("dummy", PrimitiveKind.BYTE)
+    override fun deserialize(decoder: Decoder): DummyCommandData = DummyCommandData
+    override fun serialize(encoder: Encoder, value: DummyCommandData) {}
 }
