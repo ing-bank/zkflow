@@ -11,10 +11,11 @@ import io.ivno.collateraltoken.contract.IvnoTokenType
 import io.ivno.collateraltoken.contract.Redemption
 import io.ivno.collateraltoken.contract.Transfer
 import io.ivno.collateraltoken.contract.TransferInitiator
-import io.onixlabs.corda.identityframework.contract.AbstractClaim
+import io.ivno.collateraltoken.serialization.MembershipAttestationSurrogate
 import io.onixlabs.corda.bnms.contract.Network
 import io.onixlabs.corda.bnms.contract.Setting
 import io.onixlabs.corda.bnms.contract.membership.Membership
+import io.onixlabs.corda.identityframework.contract.AbstractClaim
 import io.onixlabs.corda.identityframework.contract.Attestation
 import io.onixlabs.corda.identityframework.contract.AttestationPointer
 import io.onixlabs.corda.identityframework.contract.AttestationStatus
@@ -65,7 +66,8 @@ val amount: BigDecimalAmount<LinearPointer<IvnoTokenType>> = BigDecimalAmount(
     42, LinearPointer(UniqueIdentifier(id = uuid), IvnoTokenType::class.java)
 )
 val amountWithDifferentQuantity = amount.copy(quantity = BigDecimal.valueOf(13))
-val amountWithDifferentAmountType = amount.copy(amountType = LinearPointer(UniqueIdentifier(id = anotherUuid), IvnoTokenType::class.java))
+val amountWithDifferentAmountType =
+    amount.copy(amountType = LinearPointer(UniqueIdentifier(id = anotherUuid), IvnoTokenType::class.java))
 
 const val someString = "Prince"
 const val anotherString = "Tafkap"
@@ -157,21 +159,21 @@ val transferWithDifferentCurrentAccountId = transfer.copy(currentTokenHolderAcco
 val transferWithDifferentTargetAccountId = transfer.copy(targetTokenHolderAccountId = "another-target")
 val transferWithDifferentLinearId = transfer.copy(linearId = UniqueIdentifier(id = anotherUuid))
 
-val abstractClaimWithString : AbstractClaim<String> = Claim("Property 1", "Value 1")
+val abstractClaimWithString: AbstractClaim<String> = Claim("Property 1", "Value 1")
 val claimWithString = abstractClaimWithString as Claim<String>
-val anotherAbstractClaimWithString : AbstractClaim<String> = Claim("Property 2", "Value 2")
+val anotherAbstractClaimWithString: AbstractClaim<String> = Claim("Property 2", "Value 2")
 val anotherClaimWithString = anotherAbstractClaimWithString as Claim<String>
-val abstractClaimWithInt : AbstractClaim<Int> = Claim("Property 1", 1)
+val abstractClaimWithInt: AbstractClaim<Int> = Claim("Property 1", 1)
 val claimWithInt = abstractClaimWithInt as Claim<Int>
-val anotherAbstractClaimWithInt : AbstractClaim<Int> = Claim("Property 2", 2)
+val anotherAbstractClaimWithInt: AbstractClaim<Int> = Claim("Property 2", 2)
 val anotherClaimWithInt = anotherAbstractClaimWithInt as Claim<Int>
-val abstractClaimWithContextual : AbstractClaim<StateRef> = Claim("Property 1", stateRef)
+val abstractClaimWithContextual: AbstractClaim<StateRef> = Claim("Property 1", stateRef)
 val claimWithContextual = abstractClaimWithContextual as Claim<StateRef>
-val anotherAbstractClaimWithContextual : AbstractClaim<StateRef> = Claim("Property 2", anotherStateRef)
+val anotherAbstractClaimWithContextual: AbstractClaim<StateRef> = Claim("Property 2", anotherStateRef)
 val anotherClaimWithContextual = anotherAbstractClaimWithContextual as Claim<StateRef>
-val abstractClaimWithPolymorphic : AbstractClaim<AbstractParty> = Claim("Property 1", party)
+val abstractClaimWithPolymorphic: AbstractClaim<AbstractParty> = Claim("Property 1", party)
 val claimWithPolymorphic = abstractClaimWithPolymorphic as Claim<AbstractParty>
-val anotherAbstractClaimWithPolymorphic : AbstractClaim<AbstractParty> = Claim("Property 2", anotherParty)
+val anotherAbstractClaimWithPolymorphic: AbstractClaim<AbstractParty> = Claim("Property 2", anotherParty)
 val anotherClaimWithPolymorphic = anotherAbstractClaimWithPolymorphic as Claim<AbstractParty>
 
 val stringClaimSet = setOf(Claim("Property 1", "Value 1"))
@@ -223,21 +225,15 @@ val anotherAttestationPointer = AttestationPointer(
     stateRef = anotherStateRef,
     stateClass = MyContractState::class.java,
 )
-val attestationPointerWithDifferentStateRef = AttestationPointer(
-    stateRef = anotherStateRef,
-    stateClass = MyLinearState::class.java,
-    stateLinearId = someUniqueIdentifier
-)
-val attestationPointerWithDifferentStateClass = AttestationPointer(
-    stateRef = stateRef,
-    stateClass = MyContractState::class.java,
-    stateLinearId = someUniqueIdentifier
-)
-val attestationPointerWithDifferentStateLinearId = AttestationPointer(
-    stateRef = stateRef,
-    stateClass = MyLinearState::class.java,
-    stateLinearId = anotherUniqueIdentifier
-)
+
+val attestationPointerWithDifferentStateRef = attestationPointer.copy { stateRef = anotherStateRef }
+val attestationPointerWithDifferentStateLinearId = attestationPointer.copy { stateLinearId = anotherUniqueIdentifier }
+val attestationPointerWithDifferentStateClass = attestationPointer.builder().withStateClass(
+    MyContractState::class.java,
+).build()
+val membershipAttestationPointer = attestationPointerWithDifferentStateLinearId.builder().withStateClass(
+    Membership::class.java
+).build()
 
 val nettedAccountAmount = NettedAccountAmount(
     AccountAddress(someString, someCordaX500Name),
@@ -285,7 +281,7 @@ val stateWithDifferentTransactionId = state.copy(transactionId = anotherState.tr
 val attestation = Attestation(
     attestor = anonymousParty,
     attestees = setOf(anotherAnonymousParty),
-    pointer = attestationPointer,
+    pointer = membershipAttestationPointer,
     status = AttestationStatus.ACCEPTED,
     metadata = mapOf(
         "1" to "one",
@@ -296,115 +292,28 @@ val attestation = Attestation(
     previousStateRef = stateRef,
 )
 
-val attestationWithDifferentAttestor = Attestation(
-    attestor = anEvenOtherAnonymousParty,
-    attestees = setOf(anotherAnonymousParty),
-    pointer = attestationPointer,
-    status = AttestationStatus.ACCEPTED,
-    metadata = mapOf(
-        "1" to "one",
-        "2" to "two",
-        "3" to "three"
-    ),
-    linearId = someUniqueIdentifier,
-    previousStateRef = stateRef,
-)
-
-val attestationWithDifferentAttestees = Attestation(
-    attestor = anonymousParty,
-    attestees = setOf(anEvenOtherAnonymousParty),
-    pointer = attestationPointer,
-    status = AttestationStatus.ACCEPTED,
-    metadata = mapOf(
-        "1" to "one",
-        "2" to "two",
-        "3" to "three"
-    ),
-    linearId = someUniqueIdentifier,
-    previousStateRef = stateRef,
-)
-
-val attestationWithDifferentPointer = Attestation(
-    attestor = anonymousParty,
-    attestees = setOf(anotherAnonymousParty),
-    pointer = anotherAttestationPointer,
-    status = AttestationStatus.ACCEPTED,
-    metadata = mapOf(
-        "1" to "one",
-        "2" to "two",
-        "3" to "three"
-    ),
-    linearId = someUniqueIdentifier,
-    previousStateRef = stateRef,
-)
-
-val attestationWithDifferentStatus = Attestation(
-    attestor = anonymousParty,
-    attestees = setOf(anotherAnonymousParty),
-    pointer = attestationPointer,
-    status = AttestationStatus.REJECTED,
-    metadata = mapOf(
-        "1" to "one",
-        "2" to "two",
-        "3" to "three"
-    ),
-    linearId = someUniqueIdentifier,
-    previousStateRef = stateRef,
-)
-
-val attestationWithDifferentMetadata = Attestation(
-    attestor = anonymousParty,
-    attestees = setOf(anotherAnonymousParty),
-    pointer = attestationPointer,
-    status = AttestationStatus.ACCEPTED,
+val attestationWithDifferentAttestor = attestation.copy { attestor = anEvenOtherAnonymousParty }
+val attestationWithDifferentAttestees = attestation.copy { attestees = setOf(anEvenOtherAnonymousParty) }
+val attestationWithDifferentPointer = attestation.builder().withPointer(attestationPointer).build()
+val attestationWithDifferentStatus = attestation.copy { status = AttestationStatus.REJECTED }
+val attestationWithDifferentMetadata = attestation.copy {
     metadata = mapOf(
         "1" to "one",
         "2" to "two",
         "3" to "three",
         "4" to "four"
-    ),
-    linearId = someUniqueIdentifier,
-    previousStateRef = stateRef,
-)
+    )
+}
+val attestationWithDifferentLinearId = attestation.copy { linearId = anotherUniqueIdentifier }
+val attestationWithoutPreviousState = attestation.copy { previousStateRef = null }
+val attestationWithDifferentPreviousState = attestation.copy { previousStateRef = anotherStateRef }
 
-val attestationWithDifferentLinearId = Attestation(
-    attestor = anonymousParty,
-    attestees = setOf(anotherAnonymousParty),
-    pointer = attestationPointer,
-    status = AttestationStatus.ACCEPTED,
-    metadata = mapOf(
-        "1" to "one",
-        "2" to "two",
-        "3" to "three"
-    ),
-    linearId = anotherUniqueIdentifier,
-    previousStateRef = stateRef,
-)
-
-val attestationWithoutPreviousState = Attestation(
-    attestor = anonymousParty,
-    attestees = setOf(anotherAnonymousParty),
-    pointer = attestationPointer,
-    status = AttestationStatus.ACCEPTED,
-    metadata = mapOf(
-        "1" to "one",
-        "2" to "two",
-        "3" to "three"
-    ),
-    linearId = someUniqueIdentifier,
-    previousStateRef = null,
-)
-
-val attestationWithDifferentPreviousState = Attestation(
-    attestor = anonymousParty,
-    attestees = setOf(anotherAnonymousParty),
-    pointer = attestationPointer,
-    status = AttestationStatus.ACCEPTED,
-    metadata = mapOf(
-        "1" to "one",
-        "2" to "two",
-        "3" to "three"
-    ),
-    linearId = someUniqueIdentifier,
-    previousStateRef = anotherStateRef,
-)
+val membershipAttestation = MembershipAttestationSurrogate(
+    network, attestation
+).toOriginal()
+val anotherMembershipAttestation = MembershipAttestationSurrogate(
+    anotherNetworkWithDifferentOperator,
+    attestation.copy {
+        attestor = anEvenOtherAnonymousParty
+    }
+).toOriginal()

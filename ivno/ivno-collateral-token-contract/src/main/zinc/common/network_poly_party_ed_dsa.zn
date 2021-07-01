@@ -26,6 +26,13 @@ struct NetworkPolyPartyEdDSA {
 }
 
 impl NetworkPolyPartyEdDSA {
+    fn empty() -> NetworkPolyPartyEdDSA {
+        NetworkPolyPartyEdDSA {
+            value: String_20::empty(),
+            operator: NullablePolyPartyEdDSA::null(),
+        }
+    }
+
     fn equals(this: NetworkPolyPartyEdDSA, that: NetworkPolyPartyEdDSA) -> bool {
         String_20::equals(this.value, that.value)
             && NullablePolyPartyEdDSA::equals(this.operator, that.operator)

@@ -34,6 +34,7 @@ import io.onixlabs.corda.bnms.contract.Permission
 import io.onixlabs.corda.bnms.contract.Role
 import io.onixlabs.corda.bnms.contract.Setting
 import io.onixlabs.corda.bnms.contract.membership.Membership
+import io.onixlabs.corda.bnms.contract.membership.MembershipAttestation
 import io.onixlabs.corda.identityframework.contract.AbstractClaim
 import io.onixlabs.corda.identityframework.contract.Attestation
 import io.onixlabs.corda.identityframework.contract.AttestationPointer
@@ -112,6 +113,7 @@ fun NettedAccountAmount.toZincJson() = toJsonObject().toString()
 fun State.toZincJson(encodedSize: Int, isAnonymous: Boolean, scheme: SignatureScheme) =
     toJsonObject(encodedSize, isAnonymous, scheme).toString()
 fun Attestation<*>.toZincJson() = toJsonObject().toString()
+fun MembershipAttestation.toZincJson() = toJsonObject().toString()
 
 /**
  * Extension function for encoding a nullable ByteArray to Json
@@ -420,4 +422,9 @@ private fun Map<String, String>.toJsonObject(collectionSize: Int, keyStringSize:
         put("has_value", value != null)
         put("value", value.toJsonObject(valueStringSize))
     }
+}
+
+fun MembershipAttestation.toJsonObject(): JsonObject = buildJsonObject {
+    put("network", network.toJsonObject(EdDSASurrogate.ENCODED_SIZE, false, Crypto.EDDSA_ED25519_SHA512))
+    put("attestation", (this@toJsonObject as Attestation<Membership>).toJsonObject())
 }
