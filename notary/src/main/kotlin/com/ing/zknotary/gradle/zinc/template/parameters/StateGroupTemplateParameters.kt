@@ -34,11 +34,11 @@ data class StateGroupTemplateParameters(val componentName: String, val states: L
         "useDeclaration" to """use serialized_${"COMPONENT_NAME_MODULE_NAME"}_tx_state_${"STATE_NAME_MODULE_NAME"}::${"COMPONENT_NAME_CONSTANT_PREFIX"}_${"STATE_NAME_CONSTANT_PREFIX"}_GROUP_SIZE;
 use serialized_${"COMPONENT_NAME_MODULE_NAME"}_tx_state_${"STATE_NAME_MODULE_NAME"}::Serialized${"COMPONENT_NAME_TYPE_NAME"}${"STATE_NAME_TYPE_NAME"}${"COMPONENT_TYPE_TYPE_NAME"};""",
 
-        "serializedType" to """    ${"COMPONENT_NAME_MODULE_NAME"}_${"STATE_NAME_MODULE_NAME"}: Serialized${"COMPONENT_NAME_TYPE_NAME"}${"STATE_NAME_TYPE_NAME"}${"COMPONENT_TYPE_TYPE_NAME"},
+        "serializedType" to """    ${"STATE_NAME_MODULE_NAME"}: Serialized${"COMPONENT_NAME_TYPE_NAME"}${"STATE_NAME_TYPE_NAME"}${"COMPONENT_TYPE_TYPE_NAME"},
  """,
         "leafHash" to """
     let component_leaf_hashes_${"STATE_NAME_MODULE_NAME"} = serialized_${"COMPONENT_NAME_MODULE_NAME"}_tx_state_${"STATE_NAME_MODULE_NAME"}::compute_component_leaf_hashes(
-    components.${"COMPONENT_NAME_MODULE_NAME"}_${"STATE_NAME_MODULE_NAME"},
+    components.${"STATE_NAME_MODULE_NAME"},
     privacy_salt,
     ComponentGroupEnum::${"COMPONENT_NAME_CONSTANT_PREFIX"}S_GROUP as u32,
     element_index);
@@ -49,7 +49,7 @@ use serialized_${"COMPONENT_NAME_MODULE_NAME"}_tx_state_${"STATE_NAME_MODULE_NAM
  """,
         "utxoHash" to """
     let utxo_hashes_${"STATE_NAME_MODULE_NAME"} = serialized_${"COMPONENT_NAME_MODULE_NAME"}_tx_state_${"STATE_NAME_MODULE_NAME"}::compute_utxo_hashes(
-    utxos.${"COMPONENT_NAME_MODULE_NAME"}_${"STATE_NAME_MODULE_NAME"},
+    utxos.${"STATE_NAME_MODULE_NAME"},
     nonces,
     element_index);
 

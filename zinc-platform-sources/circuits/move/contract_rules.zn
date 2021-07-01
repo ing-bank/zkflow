@@ -26,8 +26,8 @@ fn check_contract_rules(witness: Witness) {
     // Transaction structure is ensured by construction of witness.
 
     // Transaction contents.
-    let input = TxStateTestState::deserialize(witness.serialized_input_utxos.input_test_state[0]);
-    let output = TxStateTestState::deserialize(witness.outputs.output_test_state[0]);
+    let input = TxStateTestState::deserialize(witness.serialized_input_utxos.test_state[0]);
+    let output = TxStateTestState::deserialize(witness.outputs.test_state[0]);
     assert!(input.data.value == output.data.value, "[Move] Values of input and output must equal");
     dbg!("[Move] Value of moved value verified");
 
