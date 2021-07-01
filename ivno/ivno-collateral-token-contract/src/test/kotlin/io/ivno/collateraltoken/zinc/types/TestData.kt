@@ -3,6 +3,7 @@ package io.ivno.collateraltoken.zinc.types
 import com.ing.zknotary.zinc.types.generateDifferentValueThan
 import io.dasl.contracts.v1.account.AccountAddress
 import io.dasl.contracts.v1.token.BigDecimalAmount
+import io.dasl.contracts.v1.token.TokenContract
 import io.dasl.contracts.v1.token.TokenDescriptor
 import io.dasl.contracts.v1.token.TokenTransactionSummary.NettedAccountAmount
 import io.dasl.contracts.v1.token.TokenTransactionSummary.State
@@ -306,3 +307,9 @@ val anotherMembershipAttestation = MembershipAttestationSurrogate(
         attestor = anEvenOtherParty
     }
 ).toOriginal()
+
+class MyTokenContract: TokenContract()
+
+val tokenContractCommandMove = TokenContract.Command.Move()
+val tokenContractCommandMoveWithOtherContract = TokenContract.Command.Move(MyTokenContract::class.java)
+val tokenContractCommandMoveWithoutContract = TokenContract.Command.Move(null)

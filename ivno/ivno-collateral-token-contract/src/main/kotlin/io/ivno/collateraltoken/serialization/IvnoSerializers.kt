@@ -41,6 +41,7 @@ object IvnoSerializers {
         contextual(AttestationPointerSerializer)
         contextual(TokenTransactionSummaryNettedAccountAmountSerializer)
         contextual(TokenTransactionSummaryStateSerializer)
+        contextual(TokenContractCommandMoveSerializer)
         contextual(AttestationSerializer)
         contextual(MembershipAttestationSerializer)
 

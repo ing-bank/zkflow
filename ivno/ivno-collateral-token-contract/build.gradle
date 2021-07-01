@@ -1,5 +1,6 @@
 import com.ing.zknotary.gradle.zinc.template.parameters.AbstractPartyTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.BigDecimalTemplateParameters
+import com.ing.zknotary.gradle.zinc.template.parameters.ByteArrayTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.CollectionTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.MapTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.NullableTemplateParameters
@@ -8,6 +9,7 @@ import com.ing.zknotary.gradle.zinc.template.parameters.PublicKeyTemplateParamet
 import com.ing.zknotary.gradle.zinc.template.parameters.SecureHashTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.StringTemplateParameters
 import com.ing.zknotary.gradle.zinc.template.parameters.UniqueIdentifierTemplateParameters
+import com.ing.zknotary.common.serialization.bfl.serializers.CordaSerializers
 
 plugins {
     id 'com.ing.zknotary.gradle-plugin'
@@ -62,22 +64,38 @@ zkp {
                     SecureHashTemplateParameters.INSTANCE,
                     null
             ),
+            new NullableTemplateParameters(
+                    "nullable.zn",
+                    new ByteArrayTemplateParameters(CordaSerializers.CLASS_NAME_SIZE),
+                    null
+            ),
             new CollectionTemplateParameters(
-                    "collection.zn",
                     2,
                     new PolyTemplateParameters(
-                            new AbstractPartyTemplateParameters("Party", PublicKeyTemplateParameters.Companion.newInstance().eddsaTemplateParameters)
+                            new AbstractPartyTemplateParameters(
+                                    "Party",
+                                    PublicKeyTemplateParameters.Companion.newInstance().eddsaTemplateParameters
+                            )
                     ),
-                    null
             ),
             // Needed for Attestation
             new CollectionTemplateParameters(
-                    "collection.zn",
                     1,
                     new PolyTemplateParameters(
-                            new AbstractPartyTemplateParameters("Party", PublicKeyTemplateParameters.Companion.newInstance().eddsaTemplateParameters)
+                            new AbstractPartyTemplateParameters(
+                                    "Party",
+                                    PublicKeyTemplateParameters.Companion.newInstance().eddsaTemplateParameters
+                            )
                     ),
-                    null
+            ),
+            new CollectionTemplateParameters(
+                    2,
+                    new PolyTemplateParameters(
+                            new AbstractPartyTemplateParameters(
+                                    "AnonymousParty",
+                                    PublicKeyTemplateParameters.Companion.newInstance().eddsaTemplateParameters
+                            )
+                    ),
             ),
             new MapTemplateParameters(
                     "AttestationMetadataMap",

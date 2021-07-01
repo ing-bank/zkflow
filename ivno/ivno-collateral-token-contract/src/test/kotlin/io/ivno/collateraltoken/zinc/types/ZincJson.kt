@@ -1,5 +1,6 @@
 package io.ivno.collateraltoken.zinc.types
 
+import com.ing.zknotary.common.serialization.bfl.serializers.CordaSerializers.CLASS_NAME_SIZE
 import com.ing.zknotary.common.serialization.bfl.serializers.SecureHashSupportedAlgorithm
 import com.ing.zknotary.common.serialization.bfl.serializers.SecureHashSurrogate
 import com.ing.zknotary.common.serialization.bfl.serializers.UniqueIdentifierSurrogate
@@ -12,6 +13,7 @@ import com.ing.zknotary.zinc.types.polymorphic
 import com.ing.zknotary.zinc.types.toJsonObject
 import io.dasl.contracts.v1.account.AccountAddress
 import io.dasl.contracts.v1.token.BigDecimalAmount
+import io.dasl.contracts.v1.token.TokenContract
 import io.dasl.contracts.v1.token.TokenDescriptor
 import io.dasl.contracts.v1.token.TokenTransactionSummary.NettedAccountAmount
 import io.dasl.contracts.v1.token.TokenTransactionSummary.State
@@ -115,6 +117,7 @@ fun State.toZincJson(encodedSize: Int, isAnonymous: Boolean, scheme: SignatureSc
     toJsonObject(encodedSize, isAnonymous, scheme).toString()
 fun Attestation<*>.toZincJson() = toJsonObject().toString()
 fun MembershipAttestation.toZincJson() = toJsonObject().toString()
+fun TokenContract.Command.Move.toZincJson() = toJsonObject().toString()
 
 /**
  * Extension function for encoding a nullable ByteArray to Json
@@ -428,4 +431,8 @@ private fun Map<String, String>.toJsonObject(collectionSize: Int, keyStringSize:
 fun MembershipAttestation.toJsonObject(): JsonObject = buildJsonObject {
     put("network", network.toJsonObject(EdDSASurrogate.ENCODED_SIZE, false, Crypto.EDDSA_ED25519_SHA512))
     put("attestation", (this@toJsonObject as Attestation<Membership>).toJsonObject())
+}
+
+fun TokenContract.Command.Move.toJsonObject(): JsonObject = buildJsonObject {
+    put("contract_class_name", contract?.toBytes().toJsonObject(CLASS_NAME_SIZE).nullable(contract == null))
 }
