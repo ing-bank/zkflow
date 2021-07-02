@@ -29,14 +29,30 @@ public interface OutputStateLookup {
 }
 
 /**
+ * The different verification modes available for Zinc circuits.
+ */
+public enum class VerificationMode {
+    /**
+     * Indicates to use the `run` command to verify a circuit when available, for faster execution.
+     */
+    RUN,
+
+    /**
+     * Indicates to use the `prove` and `verify` commands to verify a circuit.
+     */
+    PROVE_AND_VERIFY
+}
+
+/**
  * This interface asserts that the DSL at hand is capable of verifying its underlying construct(ledger/transaction).
  */
 @DoNotImplement
 public interface Verifies {
     /**
      * Verifies the ledger/transaction, throws if the verification fails.
+     * @param mode The [VerificationMode] to use for verification.
      */
-    public fun verifies(): EnforceVerifyOrFail
+    public fun verifies(mode: VerificationMode = VerificationMode.RUN): EnforceVerifyOrFail
 
     /**
      * Asserts that verifies() throws.

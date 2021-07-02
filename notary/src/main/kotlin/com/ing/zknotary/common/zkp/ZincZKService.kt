@@ -113,9 +113,9 @@ class ZincZKService(
         require(File(zkSetup.provingKeyPath).exists()) { "Proving key not found at ${zkSetup.provingKeyPath}." }
     }
 
-    fun run(witness: Witness, publicInput: PublicInput?): String {
+    override fun run(witness: Witness, publicInput: PublicInput): String {
         val witnessJson = Json.encodeToString(WitnessSerializer, witness)
-        val publicInputJson = if (publicInput != null) Json.encodeToString(PublicInputSerializer, publicInput) else ""
+        val publicInputJson = Json.encodeToString(PublicInputSerializer, publicInput)
         return run(witnessJson, publicInputJson)
     }
 
