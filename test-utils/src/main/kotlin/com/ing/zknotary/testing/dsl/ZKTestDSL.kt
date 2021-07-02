@@ -10,7 +10,6 @@ import com.ing.zknotary.common.transactions.zkCommandData
 import com.ing.zknotary.common.zkp.PublicInput
 import com.ing.zknotary.common.zkp.Witness
 import com.ing.zknotary.common.zkp.ZKTransactionService
-import com.ing.zknotary.common.zkp.ZincZKService
 import net.corda.core.DoNotImplement
 import net.corda.core.contracts.Attachment
 import net.corda.core.contracts.AttachmentConstraint
@@ -221,7 +220,7 @@ public data class TestTransactionDSLInterpreter private constructor(
         transactionBuilder.addCommand(command)
     }
 
-    override fun verifies(): EnforceVerifyOrFail {
+    override fun verifies(mode: VerificationMode): EnforceVerifyOrFail {
         // Verify on a copy of the transaction builder, so if it's then further modified it doesn't error due to
         // the existing signature
         val txb = transactionBuilder.copy()
@@ -232,7 +231,7 @@ public data class TestTransactionDSLInterpreter private constructor(
         if (wtx.commands.all { it.value is ZKCommandData }) {
             val zkwtx = ZKTransactionBuilder(txb).run { toZKWireTransaction() }
             log.info("Verifying ZKP for ${zkwtx.id} with $zkService")
-            zkService.proveAndVerify(services, zkwtx)
+            zkService.verify(services, zkwtx, mode)
         }
         return EnforceVerifyOrFail.Token
     }
@@ -281,9 +280,10 @@ public data class TestTransactionDSLInterpreter private constructor(
     }
 }
 
-private fun ZKTransactionService.proveAndVerify(
+private fun ZKTransactionService.verify(
     serviceHub: ServiceHub,
-    zkwtx: WireTransaction
+    zkwtx: WireTransaction,
+    mode: VerificationMode
 ) {
     val zkServiceForCommand = zkServiceForCommand(zkwtx.zkCommandData())
     val inputUtxoInfos = serviceHub.collectUtxoInfos(zkwtx.inputs)
@@ -302,15 +302,15 @@ private fun ZKTransactionService.proveAndVerify(
         referenceHashes = referenceHashes
     )
 
-    when (zkServiceForCommand) {
-        is ZincZKService -> {
+    when (mode) {
+        VerificationMode.RUN -> {
             /*
              * Contract tests should be fast, so no real circuit setup/prove/verify, only run.
              * This proves correctness, but may still fail for arcane Zinc reasons when using the real circuit.
              */
             zkServiceForCommand.run(witness, publicInput)
         }
-        else -> {
+        VerificationMode.PROVE_AND_VERIFY -> {
             val proof = zkServiceForCommand.prove(witness)
             zkServiceForCommand.verify(proof, publicInput)
         }
@@ -507,7 +507,7 @@ public data class TestLedgerDSLInterpreter private constructor(
         return services.attachments.importAttachment(attachment, "TestDSL", null)
     }
 
-    override fun verifies(): EnforceVerifyOrFail {
+    override fun verifies(mode: VerificationMode): EnforceVerifyOrFail {
         try {
             val usedInputs = mutableSetOf<StateRef>()
             services.recordTransactions(transactionsUnverified.map { SignedTransaction(it, listOf(NULL_SIGNATURE)) })
@@ -518,7 +518,7 @@ public data class TestLedgerDSLInterpreter private constructor(
                 if (wtx.commands.all { it.value is ZKCommandData }) {
                     // val zkService: ZKTransactionService = MockZKTransactionService(services)
                     // log.info("Verifying ZKP for ${wtx.id} with $zkService")
-                    zkService.proveAndVerify(services, wtx)
+                    zkService.verify(services, wtx, mode)
                 }
                 val allInputs = wtx.inputs union wtx.references
                 val doubleSpend = allInputs intersect usedInputs
