@@ -94,9 +94,13 @@ public class MockZKService(private val serviceHub: ServiceHub, private val diges
         verifyContract(witness, wtx)
     }
 
-    private fun verifyUtxoContents(serializedUtxos: Map<String, List<ByteArray>>, utxoNonces: List<SecureHash>, expectedUtxoHashes: List<SecureHash>) {
-        serializedUtxos.forEach { (_, bytes) ->
-            bytes.forEachIndexed { index, serializedReferenceUtxo ->
+    private fun verifyUtxoContents(
+        serializedUtxos: Map<String, List<ByteArray>>,
+        utxoNonces: List<SecureHash>,
+        expectedUtxoHashes: List<SecureHash>
+    ) {
+        serializedUtxos.flatMap { e -> e.value }
+            .forEachIndexed { index, serializedReferenceUtxo ->
                 val nonceFromWitness = utxoNonces.getOrElse(index) {
                     error("Nonce not present in public input for reference $index")
                 }
@@ -110,10 +114,9 @@ public class MockZKService(private val serviceHub: ServiceHub, private val diges
 
                 if (leafHashFromPublicreference != calculatedLeafHashFromWitness) error(
                     "Calculated leaf hash ($calculatedLeafHashFromWitness} for reference $index does " +
-                        "not match the leaf hash from the public input ($leafHashFromPublicreference)."
+                            "not match the leaf hash from the public input ($leafHashFromPublicreference)."
                 )
             }
-        }
     }
 
     private fun verifyContract(witness: Witness, wtx: WireTransaction) {
