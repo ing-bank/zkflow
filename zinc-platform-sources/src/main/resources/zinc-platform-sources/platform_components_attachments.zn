@@ -12,14 +12,29 @@ use merkle_utils::get_merkle_tree_from_${GROUP_SIZE_PLACEHOLDER}_component_group
 use platform_component_group_enum::ComponentGroupEnum;
 use platform_component_group_leaf_digest_dto::COMPONENT_GROUP_LEAF_DIGEST_BITS;
 use platform_component_group_leaf_digest_dto::ComponentGroupLeafDigestBits;
-use platform_consts::ATTACHMENT_COMPONENT_SIZE;
+use platform_consts::CORDA_SERDE_MAGIC_LENGTH;
 use platform_consts::BYTE_BITS;
+use platform_consts::U8_BYTES;
+use platform_consts::LIST_LENGTH_PREFIX;
 use platform_crypto_utils::compute_nonce;
 use platform_node_digest_dto::NodeDigestBits;
 use platform_node_digest_dto::NODE_DIGEST_BITS;
 use platform_privacy_salt::PrivacySaltBits;
 use std::convert::to_bits;
 use std::crypto::blake2s_multi_input;
+
+//! Attachment is a SecureHash serialized as follows:
+//! data class SecureHashSurrogate(
+//!     val algorithmId: Byte,
+//!     // Hashes expected by Corda must be at most 32 bytes long.
+//!     @FixedLength([BYTES_SIZE])
+//!     val bytes: ByteArray
+//! )
+const ATTACHMENT_COMPONENT_SIZE: u16
+    = CORDA_SERDE_MAGIC_LENGTH  // 7
+    + U8_BYTES                  // 1, algorithmId
+    + LIST_LENGTH_PREFIX        // 4
+    + 32 as u16;                // 32 = 44
 
 type SerializedAttachment = [u8; ATTACHMENT_COMPONENT_SIZE];
 type SerializedAttachmentGroup = [SerializedAttachment; ATTACHMENT_GROUP_SIZE];
