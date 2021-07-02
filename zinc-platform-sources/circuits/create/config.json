@@ -1,10 +1,13 @@
 {
   "circuit" : {
     "name": "create",
-    "states" : [{
-      "location" : "test_state.zn",
-      "name" : "TestState"
-    }]
+    "states": [
+      {
+        "javaClass": "com.ing.zknotary.testing.fixtures.contract.TestContract.TestState",
+        "zincType": "TestState",
+        "location": "test_state.zn"
+      }
+    ]
   },
   "groups" : {
     "output_group" : [

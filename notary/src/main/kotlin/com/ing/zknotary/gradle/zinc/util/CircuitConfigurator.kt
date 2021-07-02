@@ -40,8 +40,9 @@ class CircuitConfigurator(
 
     @Serializable
     data class State(
+        val javaClass: String,
+        val zincType: String,
         val location: String,
-        val name: String,
         val notaryKeySchemeCodename: String = ZKFlowNetworkParameters.notaryKeySchemeCodename,
         @SerialName("attachment_constraint") val attachmentConstraint: String =
             AutomaticPlaceholderConstraint::class.qualifiedName!!
@@ -81,7 +82,7 @@ class CircuitConfigurator(
 
     @Serializable
     data class Groups(
-        @SerialName("attachment_group") val attachmentGroup: Group = Group(),
+        @SerialName("attachment_group") val attachmentGroup: FixedComponentSizeGroup = FixedComponentSizeGroup(),
         @SerialName("input_group") val inputGroup: List<StateGroup> = listOf(StateGroup()),
         @SerialName("output_group") val outputGroup: List<StateGroup> = listOf(StateGroup()),
         @SerialName("reference_group") val referenceGroup: List<StateGroup> = listOf(StateGroup()),
@@ -134,7 +135,7 @@ class CircuitConfigurator(
 
     @Serializable(with = StateGroupSerializer::class)
     data class StateGroup(
-        val name: String = "",
+        val stateName: String = "",
         val stateGroupSize: Int = 0
     )
 

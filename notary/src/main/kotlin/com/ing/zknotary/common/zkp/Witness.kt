@@ -1,5 +1,6 @@
 package com.ing.zknotary.common.zkp
 
+import com.ing.zknotary.common.contracts.toZKCommand
 import com.ing.zknotary.common.serialization.json.corda.WitnessSerializer
 import com.ing.zknotary.common.transactions.UtxoInfo
 import com.ing.zknotary.gradle.zinc.template.TemplateParameters.Companion.camelToSnakeCase
@@ -131,53 +132,75 @@ class Witness(
             inputUtxoInfos: List<UtxoInfo>,
             referenceUtxoInfos: List<UtxoInfo>,
         ): Witness {
+            // TODO
+            //  A single command per circuit/witness is supported.
+            //  In this context we know that commands are zk commands. VERIFY.
+            val javaClass2ZincType = wtx.commands.single().toZKCommand().value.circuit.javaClass2ZincType
+
             return Witness(
-                inputsGroup = wtx.serializedComponenteBytesFor(ComponentGroupEnum.INPUTS_GROUP),
-                outputsGroup = wtx.serializedComponentBytesForOutputGroup(ComponentGroupEnum.OUTPUTS_GROUP),
-                commandsGroup = wtx.serializedComponenteBytesFor(ComponentGroupEnum.COMMANDS_GROUP),
-                attachmentsGroup = wtx.serializedComponenteBytesFor(ComponentGroupEnum.ATTACHMENTS_GROUP),
-                notaryGroup = wtx.serializedComponenteBytesFor(ComponentGroupEnum.NOTARY_GROUP),
-                timeWindowGroup = wtx.serializedComponenteBytesFor(ComponentGroupEnum.TIMEWINDOW_GROUP),
-                signersGroup = wtx.serializedComponenteBytesFor(ComponentGroupEnum.SIGNERS_GROUP),
-                referencesGroup = wtx.serializedComponenteBytesFor(ComponentGroupEnum.REFERENCES_GROUP),
-                parametersGroup = wtx.serializedComponenteBytesFor(ComponentGroupEnum.PARAMETERS_GROUP),
+                inputsGroup = wtx.serializedComponentBytesFor(ComponentGroupEnum.INPUTS_GROUP),
+                outputsGroup = wtx.serializedComponentBytesForOutputGroup(ComponentGroupEnum.OUTPUTS_GROUP, javaClass2ZincType),
+                commandsGroup = wtx.serializedComponentBytesFor(ComponentGroupEnum.COMMANDS_GROUP),
+                attachmentsGroup = wtx.serializedComponentBytesFor(ComponentGroupEnum.ATTACHMENTS_GROUP),
+                notaryGroup = wtx.serializedComponentBytesFor(ComponentGroupEnum.NOTARY_GROUP),
+                timeWindowGroup = wtx.serializedComponentBytesFor(ComponentGroupEnum.TIMEWINDOW_GROUP),
+                signersGroup = wtx.serializedComponentBytesFor(ComponentGroupEnum.SIGNERS_GROUP),
+                referencesGroup = wtx.serializedComponentBytesFor(ComponentGroupEnum.REFERENCES_GROUP),
+                parametersGroup = wtx.serializedComponentBytesFor(ComponentGroupEnum.PARAMETERS_GROUP),
 
                 privacySalt = wtx.privacySalt,
 
-                serializedInputUtxos = inputUtxoInfos.serializedBytesForUTXO(ComponentGroupEnum.INPUTS_GROUP),
-                serializedReferenceUtxos = referenceUtxoInfos.serializedBytesForUTXO(ComponentGroupEnum.REFERENCES_GROUP),
+                serializedInputUtxos = inputUtxoInfos.serializedBytesForUTXO(ComponentGroupEnum.INPUTS_GROUP, javaClass2ZincType),
+                serializedReferenceUtxos = referenceUtxoInfos.serializedBytesForUTXO(ComponentGroupEnum.REFERENCES_GROUP, javaClass2ZincType),
                 inputUtxoNonces = inputUtxoInfos.map { it.nonce },
                 referenceUtxoNonces = referenceUtxoInfos.map { it.nonce }
             )
         }
 
-        private fun TraversableTransaction.serializedComponenteBytesFor(groupEnum: ComponentGroupEnum): List<ByteArray> {
-            return componentGroups.singleOrNull { it.groupIndex == groupEnum.ordinal }?.components?.map { it.copyBytes() }
+        private fun TraversableTransaction.serializedComponentBytesFor(groupEnum: ComponentGroupEnum): List<ByteArray> {
+            return componentGroups
+                .singleOrNull { it.groupIndex == groupEnum.ordinal }
+                ?.components
+                ?.map { it.copyBytes() }
                 ?: emptyList()
         }
 
-        private fun TraversableTransaction.serializedComponentBytesForOutputGroup(groupEnum: ComponentGroupEnum): Map<String, List<ByteArray>> {
+        private fun TraversableTransaction.serializedComponentBytesForOutputGroup(
+            groupEnum: ComponentGroupEnum,
+            javaClass2ZincType: Map<String, String>
+        ): Map<String, List<ByteArray>> {
             val stateNames = outputs.map {
-                it.data.javaClass.simpleName.camelToSnakeCase()
+                // it.data.javaClass.simpleName.camelToSnakeCase()
+                val className = it.data.javaClass.canonicalName
+                javaClass2ZincType[className] ?.camelToSnakeCase() ?: error("Java class $className needs to have an associated Zinc type")
             }
 
             // TODO: Ensure that the order is the same as the deterministic order in ZKTransactionBuilder
             val serializedStateBytes =
                 componentGroups.singleOrNull { it.groupIndex == groupEnum.ordinal }?.components?.mapIndexed { index, output -> stateNames[index] to output.copyBytes() }
 
-            return serializedStateBytes?.groupBy { it.first }?.map { it.key to it.value.map { bytes -> bytes.second } }
-                ?.toMap() ?: emptyMap()
+            return serializedStateBytes
+                ?.groupBy { it.first }
+                ?.map { it.key to it.value.map { bytes -> bytes.second } }
+                ?.toMap()
+                ?: emptyMap()
         }
 
         /**
          * Input and reference UTXOs can contain different states. Therefore their serialized bytes grouped by their state names.
          */
-        private fun List<UtxoInfo>.serializedBytesForUTXO(groupEnum: ComponentGroupEnum): Map<String, List<ByteArray>> {
+        private fun List<UtxoInfo>.serializedBytesForUTXO(
+            groupEnum: ComponentGroupEnum,
+            javaClass2ZincType: Map<String, String>
+        ): Map<String, List<ByteArray>> {
 
             require(groupEnum == ComponentGroupEnum.INPUTS_GROUP || groupEnum == ComponentGroupEnum.REFERENCES_GROUP) { "Only input and reference groups are valid for UTXO serialization." }
 
             // Pair each serialized state with the component group name and state name
-            return this.map { it.stateName.camelToSnakeCase() to it.serializedContents }
+            return this.map {
+                val zincType = javaClass2ZincType[it.stateName] ?: error("Java class ${it.stateName} needs to have an associated Zinc type")
+                zincType.camelToSnakeCase() to it.serializedContents
+            }
                 // group the serialized arrays based on their state name
                 .groupBy { it.first }.map { it.key to it.value.map { bytes -> bytes.second } }
                 .toMap()

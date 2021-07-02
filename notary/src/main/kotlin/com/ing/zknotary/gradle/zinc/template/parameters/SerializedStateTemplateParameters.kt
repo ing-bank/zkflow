@@ -7,7 +7,7 @@ data class SerializedStateTemplateParameters(val componentName: String, val stat
     "serialized_tx_state.zn",
     listOf()
 ) {
-    override val typeName = state.name
+    override val typeName = state.stateName
 
     override fun getTargetFilename() = "serialized_${componentName}_tx_state_${typeName.camelToSnakeCase()}.zn"
 
@@ -47,7 +47,7 @@ use platform_nonce_digest_dto::NonceDigestBytes;
                     """.trimIndent(),
 
                 "NONCE_CALL_PLACEHOLDER" to
-                    "nonces: [NonceDigestBytes; ${componentName.toUpperCase()}_${typeName.camelToSnakeCase().toUpperCase()}_GROUP_SIZE]",
+                    "nonces: [NonceDigestBytes; ${componentName.toUpperCase()}_GROUP_SIZE]",
 
                 "NONCE_FUNCTION_PLACEHOLDER" to
                     "from_bytes_to_bits(nonces[element_index + i]),"

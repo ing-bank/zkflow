@@ -2,15 +2,15 @@
   "circuit" : {
     "name": "skeleton-circuit",
     "states" : [{
+      "javaClass": "com.company.SkeletonState",
+      "zincType": "SkeletonState",
       "location" : "skeleton_state.zn",
-      "name" : "SkeletonState",
       "attachment_constraint" : "net.corda.core.contracts.AutomaticPlaceholderConstraint"
     }]
   },
   "groups": {
     "attachment_group": {
-      "group_size": 0,
-      "component_size": 1
+      "group_size": 0
     },
     "input_group": [
       {

@@ -114,7 +114,7 @@ public class MockZKService(private val serviceHub: ServiceHub, private val diges
 
                 if (leafHashFromPublicreference != calculatedLeafHashFromWitness) error(
                     "Calculated leaf hash ($calculatedLeafHashFromWitness} for reference $index does " +
-                            "not match the leaf hash from the public input ($leafHashFromPublicreference)."
+                        "not match the leaf hash from the public input ($leafHashFromPublicreference)."
                 )
             }
     }

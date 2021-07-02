@@ -14,11 +14,15 @@ data class TxStateTemplateParameters(val state: CircuitConfigurator.State) : Tem
         NullableTemplateParameters("nullable_integer.zn", null, "i32")
     )
 ) {
-    override val typeName = state.name
+    override val typeName = state.zincType
 
     override fun getModuleName() = File(state.location).name.removeSuffix(".zn")
 
-    override fun getTargetFilename() = "tx_state_${typeName.camelToSnakeCase()}.zn"
+    override fun getTargetFilename(): String {
+        println(typeName)
+        println(typeName.camelToSnakeCase())
+        return "tx_state_${typeName.camelToSnakeCase()}.zn"
+    }
 
     override fun getReplacements() =
         getTypeReplacements("USER_STATE_") +

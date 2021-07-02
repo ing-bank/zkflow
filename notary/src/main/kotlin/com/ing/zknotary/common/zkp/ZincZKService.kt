@@ -115,6 +115,7 @@ class ZincZKService(
 
     override fun run(witness: Witness, publicInput: PublicInput): String {
         val witnessJson = Json.encodeToString(WitnessSerializer, witness)
+        println(witnessJson)
         val publicInputJson = Json.encodeToString(PublicInputSerializer, publicInput)
         return run(witnessJson, publicInputJson)
     }
