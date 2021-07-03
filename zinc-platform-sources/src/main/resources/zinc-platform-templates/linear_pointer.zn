@@ -1,5 +1,5 @@
 // Input parameters:
-//   - CLASS_NAME_STRING_SIZE: u16 = The size of the class name
+//   - CLASS_NAME_BYTE_ARRAY_SIZE: u16 = The size of the class name
 
 mod unique_identifier;
 
@@ -7,15 +7,15 @@ use unique_identifier::UniqueIdentifier;
 use unique_identifier::SerializedUniqueIdentifier;
 use unique_identifier::UNIQUE_IDENTIFIER_LENGTH;
 
-mod string_${CLASS_NAME_STRING_SIZE};
+mod byte_array_${CLASS_NAME_BYTE_ARRAY_SIZE};
 
-use string_${CLASS_NAME_STRING_SIZE}::String_${CLASS_NAME_STRING_SIZE};
-use string_${CLASS_NAME_STRING_SIZE}::SerializedString_${CLASS_NAME_STRING_SIZE};
-use string_${CLASS_NAME_STRING_SIZE}::STRING_${CLASS_NAME_STRING_SIZE}_LENGTH;
+use byte_array_${CLASS_NAME_BYTE_ARRAY_SIZE}::ByteArray_${CLASS_NAME_BYTE_ARRAY_SIZE};
+use byte_array_${CLASS_NAME_BYTE_ARRAY_SIZE}::SerializedByteArray_${CLASS_NAME_BYTE_ARRAY_SIZE};
+use byte_array_${CLASS_NAME_BYTE_ARRAY_SIZE}::BYTE_ARRAY_${CLASS_NAME_BYTE_ARRAY_SIZE}_LENGTH;
 
 // LinearPointer lengths
 const LINEAR_POINTER_POINTER_LENGTH: u16 = UNIQUE_IDENTIFIER_LENGTH;
-const LINEAR_POINTER_CLASS_NAME_LENGTH: u16 = STRING_${CLASS_NAME_STRING_SIZE}_LENGTH;
+const LINEAR_POINTER_CLASS_NAME_LENGTH: u16 = BYTE_ARRAY_${CLASS_NAME_BYTE_ARRAY_SIZE}_LENGTH;
 const LINEAR_POINTER_IS_RESOLVED_LENGTH: u16 = 1;
 
 // LinearPointer offsets
@@ -33,7 +33,7 @@ const LINEAR_POINTER_LENGTH: u16
 type SerializedLinearPointer = [u8; LINEAR_POINTER_LENGTH];
 
 // Define type alias, to make the rest of the template cleaner
-type LinearPointerClassName = String_${CLASS_NAME_STRING_SIZE};
+type LinearPointerClassName = ByteArray_${CLASS_NAME_BYTE_ARRAY_SIZE};
 
 struct LinearPointer {
     pointer: UniqueIdentifier,

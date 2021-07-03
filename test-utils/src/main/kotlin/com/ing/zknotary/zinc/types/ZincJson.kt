@@ -3,13 +3,14 @@ package com.ing.zknotary.zinc.types
 
 import com.ing.serialization.bfl.api.reified.serialize
 import com.ing.serialization.bfl.serializers.BFLSerializers
-import com.ing.zknotary.common.serialization.bfl.serializers.CordaSerializers
+import com.ing.zknotary.common.serialization.bfl.serializers.CordaSerializers.CLASS_NAME_SIZE
 import com.ing.zknotary.common.serialization.bfl.serializers.CordaX500NameSerializer
 import com.ing.zknotary.common.serialization.bfl.serializers.CordaX500NameSurrogate
 import com.ing.zknotary.common.serialization.bfl.serializers.PartyAndReferenceSurrogate
 import com.ing.zknotary.common.serialization.bfl.serializers.SecureHashSupportedAlgorithm
 import com.ing.zknotary.common.serialization.bfl.serializers.SecureHashSurrogate
 import com.ing.zknotary.common.serialization.bfl.serializers.UniqueIdentifierSurrogate
+import com.ing.zknotary.common.serialization.bfl.serializers.toBytes
 import com.ing.zknotary.testing.resizeTo
 import com.ing.zknotary.testing.toJsonArray
 import com.ing.zknotary.testing.toSizedIntArray
@@ -181,7 +182,7 @@ public fun UniqueIdentifier.toJsonObject(): JsonObject = buildJsonObject {
 
 public fun LinearPointer<*>.toJsonObject(): JsonObject = buildJsonObject {
     put("pointer", pointer.toJsonObject())
-    put("class_name", type.name.toJsonObject(CordaSerializers.CLASS_NAME_SIZE))
+    put("class_name", type.toBytes().toJsonObject(CLASS_NAME_SIZE))
     put("is_resolved", isResolved)
 }
 

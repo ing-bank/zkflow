@@ -3,7 +3,6 @@ package io.ivno.collateraltoken.serialization
 import com.ing.zknotary.common.serialization.bfl.CommandDataSerializerMap
 import com.ing.zknotary.common.serialization.bfl.ContractStateSerializerMap
 import com.ing.zknotary.common.serialization.bfl.SerializersModuleRegistry
-import com.ing.zknotary.common.serialization.bfl.serializers.StateRefSerializer
 import io.ivno.collateraltoken.contract.Deposit
 import io.ivno.collateraltoken.contract.DepositContract
 import io.ivno.collateraltoken.contract.IvnoTokenType
@@ -17,14 +16,12 @@ import kotlinx.serialization.PolymorphicSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.contextual
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
-import net.corda.core.contracts.StateRef
 import net.corda.core.utilities.loggerFor
 import net.corda.testing.core.DummyCommandData
 

@@ -1,14 +1,14 @@
 mod platform_state_ref;
-mod string_192;
+mod byte_array_100;
 mod nullable_unique_identifier;
 
 use platform_state_ref::StateRef;
 use platform_state_ref::SerializedStateRef;
 use platform_state_ref::STATE_REF_LENGTH;
 
-use string_192::String_192;
-use string_192::SerializedString_192;
-use string_192::STRING_192_LENGTH;
+use byte_array_100::ByteArray_100;
+use byte_array_100::SerializedByteArray_100;
+use byte_array_100::BYTE_ARRAY_100_LENGTH;
 
 use nullable_unique_identifier::NullableUniqueIdentifier;
 use nullable_unique_identifier::SerializedNullableUniqueIdentifier;
@@ -16,7 +16,7 @@ use nullable_unique_identifier::NULLABLE_UNIQUE_IDENTIFIER_LENGTH;
 
 // AttestationPointer lengths
 const ATTESTATION_POINTER_STATE_REF_LENGTH: u16 = STATE_REF_LENGTH;
-const ATTESTATION_POINTER_STATE_CLASS_NAME_LENGTH: u16 = STRING_192_LENGTH;
+const ATTESTATION_POINTER_STATE_CLASS_NAME_LENGTH: u16 = BYTE_ARRAY_100_LENGTH;
 const ATTESTATION_POINTER_STATE_LINEAR_ID_LENGTH: u16 = NULLABLE_UNIQUE_IDENTIFIER_LENGTH;
 
 // AttestationPointer offsets
@@ -34,7 +34,7 @@ const ATTESTATION_POINTER_LENGTH: u16
 type SerializedAttestationPointer = [u8; ATTESTATION_POINTER_LENGTH];
 
 // Define type alias, to make the rest of the template cleaner
-type AttestationPointerClassName = String_192;
+type AttestationPointerClassName = ByteArray_100;
 
 struct AttestationPointer {
     state_ref: StateRef,

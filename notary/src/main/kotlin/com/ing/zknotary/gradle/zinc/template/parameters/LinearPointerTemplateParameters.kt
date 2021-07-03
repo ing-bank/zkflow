@@ -5,7 +5,7 @@ import com.ing.zknotary.gradle.zinc.template.TemplateParameters
 
 object LinearPointerTemplateParameters : TemplateParameters(
     "linear_pointer.zn",
-    listOf(StringTemplateParameters(CordaSerializers.CLASS_NAME_SIZE))
+    listOf(ByteArrayTemplateParameters(CordaSerializers.CLASS_NAME_SIZE))
 ) {
     override fun getReplacements() = mapOf(
         "CLASS_NAME_STRING_SIZE" to CordaSerializers.CLASS_NAME_SIZE.toString(),

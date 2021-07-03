@@ -4,6 +4,8 @@ import com.ing.serialization.bfl.annotations.FixedLength
 import com.ing.serialization.bfl.api.Surrogate
 import com.ing.serialization.bfl.api.SurrogateSerializer
 import com.ing.zknotary.common.serialization.bfl.serializers.CordaSerializers
+import com.ing.zknotary.common.serialization.bfl.serializers.getOriginalClass
+import com.ing.zknotary.common.serialization.bfl.serializers.toBytes
 import io.onixlabs.corda.identityframework.contract.AttestationPointer
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
@@ -12,15 +14,16 @@ import net.corda.core.contracts.StateRef
 import net.corda.core.contracts.UniqueIdentifier
 
 @Serializable
+@Suppress("ArrayInDataClass")
 data class AttestationPointerSurrogate(
     val stateRef: @Contextual StateRef,
     @FixedLength([MAX_CLASS_NAME_SIZE])
-    val stateClassName: String,
+    val stateClassName: ByteArray,
     val stateLinearId: @Contextual UniqueIdentifier?,
 ) : Surrogate<AttestationPointer<*>> {
     override fun toOriginal() : AttestationPointer<*> {
         @Suppress("UNCHECKED_CAST")
-        val klass = Class.forName(stateClassName) as Class<ContractState>
+        val klass = stateClassName.getOriginalClass() as Class<ContractState>
         return AttestationPointer(stateRef, klass, stateLinearId)
     }
 
@@ -32,6 +35,5 @@ data class AttestationPointerSurrogate(
 object AttestationPointerSerializer :
     SurrogateSerializer<AttestationPointer<*>, AttestationPointerSurrogate>(
         AttestationPointerSurrogate.serializer(),
-        { AttestationPointerSurrogate(it.stateRef, it.stateClass.name, it.stateLinearId) }
+        { AttestationPointerSurrogate(it.stateRef, it.stateClass.toBytes(), it.stateLinearId) }
     )
-
