@@ -53,7 +53,7 @@ const COMMAND_GROUP_SIZE: u16 = 1; // For now we support only single command tra
 const REFERENCE_COMPONENT_SIZE: u16 = 48;
 const INPUT_COMPONENT_SIZE: u16 = 48;
 
-const NOTARY_COMPONENT_SIZE: u16 = 846;
+const NOTARY_COMPONENT_SIZE: u16 = 265;
 const TIMEWINDOW_COMPONENT_SIZE: u16 = 33;
 const PARAMETERS_COMPONENT_SIZE: u16 = 44;
 

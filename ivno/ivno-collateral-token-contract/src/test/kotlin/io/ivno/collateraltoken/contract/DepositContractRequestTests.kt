@@ -16,6 +16,7 @@ class DepositContractRequestTests : ContractTest() {
      */
     @Test
     fun `On deposit requesting, the transaction must include the Request command`() {
+        // services.zkLedger(zkService = MockZKTransactionService(services)) {
         services.zkLedger {
             zkTransaction {
                 val memberships = createAllMemberships()
