@@ -35,7 +35,9 @@ import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
 import org.junit.jupiter.api.BeforeEach
 import java.math.BigDecimal
+import kotlin.time.ExperimentalTime
 
+@ExperimentalTime
 abstract class ContractTest {
 
     protected companion object {

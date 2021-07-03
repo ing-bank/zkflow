@@ -60,6 +60,8 @@ import kotlin.collections.component1
 import kotlin.collections.component2
 import kotlin.collections.set
 import kotlin.reflect.full.primaryConstructor
+import kotlin.time.ExperimentalTime
+import kotlin.time.measureTime
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -104,6 +106,7 @@ public class AttachmentResolutionException(attachmentId: SecureHash) : FlowExcep
  * This interpreter builds a transaction, and [TransactionDSL.verifies] that the resolved transaction is correct. Note
  * that transactions corresponding to input states are not verified. Use [LedgerDSL.verifies] for that.
  */
+@ExperimentalTime
 public data class TestTransactionDSLInterpreter private constructor(
     override val ledgerInterpreter: TestLedgerDSLInterpreter,
     val transactionBuilder: TransactionBuilder,
@@ -280,6 +283,7 @@ public data class TestTransactionDSLInterpreter private constructor(
     }
 }
 
+@ExperimentalTime
 private fun ZKTransactionService.verify(
     serviceHub: ServiceHub,
     zkwtx: WireTransaction,
@@ -302,6 +306,8 @@ private fun ZKTransactionService.verify(
         referenceHashes = referenceHashes
     )
 
+    val log = loggerFor<ZKTransactionService>()
+
     when (mode) {
         VerificationMode.RUN -> {
             /*
@@ -311,12 +317,17 @@ private fun ZKTransactionService.verify(
             zkServiceForCommand.run(witness, publicInput)
         }
         VerificationMode.PROVE_AND_VERIFY -> {
-            val proof = zkServiceForCommand.prove(witness)
+            var proof: ByteArray
+            val provingTime = measureTime {
+                proof = zkServiceForCommand.prove(witness)
+            }
+            log.info("[prove] $provingTime")
             zkServiceForCommand.verify(proof, publicInput)
         }
     }
 }
 
+@ExperimentalTime
 public data class TestLedgerDSLInterpreter private constructor(
     val services: ServiceHub,
     internal val labelToOutputStateAndRefs: HashMap<String, StateAndRef<ContractState>> = HashMap(),

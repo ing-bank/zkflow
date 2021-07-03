@@ -45,7 +45,6 @@ class DepositContractRequestTests : ContractTest() {
                 output(DepositContract.ID, DEPOSIT)
                 fails()
                 command(keysOf(BANK_A), DepositContract.Request)
-                // verifies()
                 verifies(VerificationMode.PROVE_AND_VERIFY)
             }
         }

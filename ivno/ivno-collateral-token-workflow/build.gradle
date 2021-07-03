@@ -44,8 +44,6 @@ dependencies {
     testImplementation "$corda_group:corda-node-driver:$corda_release_version"
     testImplementation "$braid_group:braid-corda:$braid_version"
     testImplementation "$awaitility_group:awaitility:$awaitility_version"
-
-
 }
 
 //publishing {
