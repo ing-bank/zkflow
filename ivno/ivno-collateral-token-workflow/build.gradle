@@ -24,6 +24,9 @@ dependencies {
     cordaCompile "$onixlabs_group:onixlabs-corda-identity-framework-workflow:$onixlabs_corda_idfx_release_version"
     cordaCompile "$onixlabs_group:onixlabs-corda-bnms-workflow:$onixlabs_corda_bnms_release_version"
 
+
+    implementation("com.ing.zknotary:notary:1.0-SNAPSHOT")
+
     // DASL Dependencies
     implementation "$dasl_release_group:dasl-contracts:$dasl_version"
     implementation "$dasl_release_group:dasl-workflows:$dasl_version"
@@ -41,6 +44,8 @@ dependencies {
     testImplementation "$corda_group:corda-node-driver:$corda_release_version"
     testImplementation "$braid_group:braid-corda:$braid_version"
     testImplementation "$awaitility_group:awaitility:$awaitility_version"
+
+
 }
 
 //publishing {
