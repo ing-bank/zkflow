@@ -408,10 +408,10 @@ fun Attestation<*>.toJsonObject(): JsonObject = buildJsonObject {
     put("attestees", attestees.toJsonObject(AttestationSurrogate.ATTESTEES_SIZE, EdDSASurrogate.ENCODED_SIZE, true, Crypto.EDDSA_ED25519_SHA512))
     put("pointer", pointer.toJsonObject())
     put("status", status.toJsonObject())
-    put("metadata", metadata.toJsonObject(
-        collectionSize = AttestationSurrogate.METADATA_MAP_SIZE,
-        keyStringSize = AttestationSurrogate.METADATA_KEY_LENGTH,
-        valueStringSize = AttestationSurrogate.METADATA_VALUE_LENGTH))
+//    put("metadata", metadata.toJsonObject(
+//        collectionSize = AttestationSurrogate.METADATA_MAP_SIZE,
+//        keyStringSize = AttestationSurrogate.METADATA_KEY_LENGTH,
+//        valueStringSize = AttestationSurrogate.METADATA_VALUE_LENGTH))
     put("linear_id", linearId.toJsonObject())
     put("previous_state_ref", previousStateRef.toJsonObject().nullable(previousStateRef == null))
 }

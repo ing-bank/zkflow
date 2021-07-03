@@ -283,11 +283,7 @@ val attestation = Attestation(
     attestees = setOf(anotherAnonymousParty),
     pointer = membershipAttestationPointer,
     status = AttestationStatus.ACCEPTED,
-    metadata = mapOf(
-        "1" to "one",
-        "2" to "two",
-        "3" to "three"
-    ),
+    metadata = emptyMap(),
     linearId = someUniqueIdentifier,
     previousStateRef = stateRef,
 )
@@ -296,14 +292,6 @@ val attestationWithDifferentAttestor = attestation.copy { attestor = anEvenOther
 val attestationWithDifferentAttestees = attestation.copy { attestees = setOf(anEvenOtherAnonymousParty) }
 val attestationWithDifferentPointer = attestation.builder().withPointer(attestationPointer).build()
 val attestationWithDifferentStatus = attestation.copy { status = AttestationStatus.REJECTED }
-val attestationWithDifferentMetadata = attestation.copy {
-    metadata = mapOf(
-        "1" to "one",
-        "2" to "two",
-        "3" to "three",
-        "4" to "four"
-    )
-}
 val attestationWithDifferentLinearId = attestation.copy { linearId = anotherUniqueIdentifier }
 val attestationWithoutPreviousState = attestation.copy { previousStateRef = null }
 val attestationWithDifferentPreviousState = attestation.copy { previousStateRef = anotherStateRef }

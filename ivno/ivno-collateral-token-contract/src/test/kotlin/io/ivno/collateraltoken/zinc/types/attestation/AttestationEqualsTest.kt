@@ -5,7 +5,6 @@ import io.ivno.collateraltoken.zinc.types.attestation
 import io.ivno.collateraltoken.zinc.types.attestationWithDifferentAttestees
 import io.ivno.collateraltoken.zinc.types.attestationWithDifferentAttestor
 import io.ivno.collateraltoken.zinc.types.attestationWithDifferentLinearId
-import io.ivno.collateraltoken.zinc.types.attestationWithDifferentMetadata
 import io.ivno.collateraltoken.zinc.types.attestationWithDifferentPointer
 import io.ivno.collateraltoken.zinc.types.attestationWithDifferentPreviousState
 import io.ivno.collateraltoken.zinc.types.attestationWithDifferentStatus
@@ -47,7 +46,6 @@ class AttestationEqualsTest {
             Arguments.of(attestation, attestationWithDifferentAttestees, false),
             Arguments.of(attestation, attestationWithDifferentPointer, false),
             Arguments.of(attestation, attestationWithDifferentStatus, false),
-            Arguments.of(attestation, attestationWithDifferentMetadata, false),
             Arguments.of(attestation, attestationWithDifferentLinearId, false),
             Arguments.of(attestation, attestationWithoutPreviousState, false),
             Arguments.of(attestation, attestationWithDifferentPreviousState, false),
