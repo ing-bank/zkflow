@@ -1,24 +1,39 @@
 package io.ivno.collateraltoken.contract
 
+import com.ing.zknotary.common.zkp.ZincZKTransactionService
+import com.ing.zknotary.testing.dsl.VerificationMode
 import com.ing.zknotary.testing.dsl.zkLedger
 import com.ing.zknotary.testing.zkp.MockZKTransactionService
 import io.onixlabs.corda.bnms.contract.Network
 import io.onixlabs.corda.identityframework.contract.AttestationStatus
+import net.corda.core.utilities.loggerFor
 import net.corda.testing.node.ledger
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
+import kotlin.time.ExperimentalTime
+import kotlin.time.measureTime
 
 @Disabled("Re-enable once we have everything serializable and when we have zktransaction DSL")
+@ExperimentalTime
 class DepositContractRequestTests : ContractTest() {
+    private val log = loggerFor<DepositContractRequestTests>()
 
     /**
      * ING TEST
      */
+    @ExperimentalTime
     @Test
     fun `On deposit requesting, the transaction must include the Request command`() {
         // services.zkLedger(zkService = MockZKTransactionService(services)) {
         services.zkLedger {
-            zkTransaction {
+            val zkService = this.interpreter.zkService as ZincZKTransactionService
+            val time = measureTime {
+                zkService.setup(DepositContract.Request)
+            }
+            log.info("[setup] $time")
+
+            zkTransaction(){
                 val memberships = createAllMemberships()
                 reference(memberships.membershipFor(BANK_A).ref)
                 reference(memberships.membershipFor(CUSTODIAN).ref)
@@ -30,12 +45,14 @@ class DepositContractRequestTests : ContractTest() {
                 output(DepositContract.ID, DEPOSIT)
                 fails()
                 command(keysOf(BANK_A), DepositContract.Request)
-                verifies()
+                // verifies()
+                verifies(VerificationMode.PROVE_AND_VERIFY)
             }
         }
     }
 
     @Test
+    @Disabled
     fun `On deposit requesting, zero deposit states must be consumed`() {
         services.zkLedger {
             zkTransaction {
@@ -48,6 +65,7 @@ class DepositContractRequestTests : ContractTest() {
     }
 
     @Test
+    @Disabled
     fun `On deposit requesting, only one deposit state must be created`() {
         services.zkLedger {
             zkTransaction {
@@ -60,6 +78,7 @@ class DepositContractRequestTests : ContractTest() {
     }
 
     @Test
+    @Disabled
     fun `On deposit requesting, only one Ivno token type must be referenced`() {
         services.zkLedger {
             zkTransaction {
@@ -73,6 +92,7 @@ class DepositContractRequestTests : ContractTest() {
     }
 
     @Test
+    @Disabled
     fun `On deposit requesting, a membership state must be referenced for each deposit participant (BANK_A missing)`() {
         services.zkLedger {
             zkTransaction {
@@ -88,6 +108,7 @@ class DepositContractRequestTests : ContractTest() {
     }
 
     @Test
+    @Disabled
     fun `On deposit requesting, a membership state must be referenced for each deposit participant (CUSTODIAN missing)`() {
         services.zkLedger {
             zkTransaction {
@@ -103,6 +124,7 @@ class DepositContractRequestTests : ContractTest() {
     }
 
     @Test
+    @Disabled
     fun `On deposit requesting, a membership state must be referenced for each deposit participant (TOKEN_ISSUING_ENTITY missing)`() {
         services.zkLedger {
             zkTransaction {
@@ -118,6 +140,7 @@ class DepositContractRequestTests : ContractTest() {
     }
 
     @Test
+    @Disabled
     fun `On deposit requesting, a membership attestation state must be referenced for each deposit participant (BANK_A missing)`() {
         services.zkLedger {
             zkTransaction {
@@ -136,6 +159,7 @@ class DepositContractRequestTests : ContractTest() {
     }
 
     @Test
+    @Disabled
     fun `On deposit requesting, a membership attestation state must be referenced for each deposit participant (CUSTODIAN missing)`() {
         services.zkLedger {
             zkTransaction {
@@ -154,6 +178,7 @@ class DepositContractRequestTests : ContractTest() {
     }
 
     @Test
+    @Disabled
     fun `On deposit requesting, a membership attestation state must be referenced for each deposit participant (TOKEN_ISSUING_ENTITY missing)`() {
         services.zkLedger {
             zkTransaction {
@@ -172,6 +197,7 @@ class DepositContractRequestTests : ContractTest() {
     }
 
     @Test
+    @Disabled
     fun `On deposit requesting, every membership attestation status must be ACCEPTED`() {
         services.zkLedger {
             zkTransaction {
@@ -191,6 +217,7 @@ class DepositContractRequestTests : ContractTest() {
     }
 
     @Test
+    @Disabled
     fun `On deposit requesting, every membership's network must be equal to the Ivno token type network (BANK_A invalid)`() {
         services.zkLedger {
             zkTransaction {
@@ -212,6 +239,7 @@ class DepositContractRequestTests : ContractTest() {
     }
 
     @Test
+    @Disabled
     fun `On deposit requesting, every membership's network must be equal to the Ivno token type network (CUSTODIAN invalid)`() {
         services.zkLedger {
             zkTransaction {
@@ -233,6 +261,7 @@ class DepositContractRequestTests : ContractTest() {
     }
 
     @Test
+    @Disabled
     fun `On deposit requesting, every membership's network must be equal to the Ivno token type network (TOKEN_ISSUING_ENTITY invalid)`() {
         services.zkLedger {
             zkTransaction {
@@ -254,6 +283,7 @@ class DepositContractRequestTests : ContractTest() {
     }
 
     @Test
+    @Disabled
     fun `On deposit requesting, every membership attestation's network must be equal to the Ivno token type network (BANK_A invalid)`() {
         services.zkLedger {
             zkTransaction {
@@ -275,6 +305,7 @@ class DepositContractRequestTests : ContractTest() {
     }
 
     @Test
+    @Disabled
     fun `On deposit requesting, every membership attestation's network must be equal to the Ivno token type network (CUSTODIAN invalid)`() {
         services.zkLedger {
             zkTransaction {
@@ -296,6 +327,7 @@ class DepositContractRequestTests : ContractTest() {
     }
 
     @Test
+    @Disabled
     fun `On deposit requesting, every membership attestation's network must be equal to the Ivno token type network (TOKEN_ISSUING_ENTITY invalid)`() {
         services.zkLedger {
             zkTransaction {
@@ -317,6 +349,7 @@ class DepositContractRequestTests : ContractTest() {
     }
 
     @Test
+    @Disabled
     fun `On deposit requesting, every membership attestation state must point to a referenced membership state`() {
         services.zkLedger {
             zkTransaction {
@@ -337,6 +370,7 @@ class DepositContractRequestTests : ContractTest() {
     }
 
     @Test
+    @Disabled
     fun `On deposit requesting, the depositor and the custodian must not be the same participant`() {
         services.zkLedger {
             zkTransaction {
@@ -356,6 +390,7 @@ class DepositContractRequestTests : ContractTest() {
     }
 
     @Test
+    @Disabled
     fun `On deposit requesting, the amount must be greater than zero`() {
         services.zkLedger {
             zkTransaction {
@@ -375,6 +410,7 @@ class DepositContractRequestTests : ContractTest() {
     }
 
     @Test
+    @Disabled
     fun `On deposit requesting, the reference must be null`() {
         services.zkLedger {
             zkTransaction {
@@ -394,6 +430,7 @@ class DepositContractRequestTests : ContractTest() {
     }
 
     @Test
+    @Disabled
     fun `On deposit requesting, the status must be DEPOSIT_REQUESTED`() {
         services.zkLedger {
             zkTransaction {
@@ -413,6 +450,7 @@ class DepositContractRequestTests : ContractTest() {
     }
 
     @Test
+    @Disabled
     fun `On deposit requesting, the depositor must sign the transaction`() {
         services.zkLedger {
             zkTransaction {

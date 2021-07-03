@@ -1,21 +1,34 @@
 package io.ivno.collateraltoken.contract
 
+import com.ing.zknotary.common.zkp.ZincZKTransactionService
+import com.ing.zknotary.testing.dsl.VerificationMode
 import com.ing.zknotary.testing.dsl.zkLedger
 import io.dasl.contracts.v1.token.TokenContract
 import io.onixlabs.corda.bnms.contract.Network
 import io.onixlabs.corda.identityframework.contract.AttestationStatus
 import net.corda.core.contracts.UniqueIdentifier
-import net.corda.testing.node.ledger
+import net.corda.core.utilities.loggerFor
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.Instant
+import kotlin.time.ExperimentalTime
+import kotlin.time.measureTime
 
+@ExperimentalTime
 @Disabled("Re-enable once we have everything serializable and when we have zktransaction DSL")
 class DepositContractAdvanceTests : ContractTest() {
+    private val log = loggerFor<DepositContractAdvanceTests>()
 
     @Test
+    @Disabled
     fun `On deposit advancing, the transaction must include the Advance command`() {
+        // services.zkLedger(zkService = MockZKTransactionService(services)) {
         services.zkLedger {
+            val zkService = this.interpreter.zkService as ZincZKTransactionService
+            val time = measureTime {
+                zkService.setup(DepositContract.Advance)
+            }
+            log.info("[setup] $time")
             zkTransaction {
                 val memberships = createAllMemberships()
                 reference(memberships.membershipFor(BANK_A).ref)
@@ -29,12 +42,14 @@ class DepositContractAdvanceTests : ContractTest() {
                 output(DepositContract.ID, DEPOSIT.acceptDeposit())
                 fails()
                 command(keysOf(CUSTODIAN), DepositContract.Advance)
-                verifies()
+                // verifies()
+                verifies(VerificationMode.PROVE_AND_VERIFY)
             }
         }
     }
 
     @Test
+    @Disabled
     fun `On deposit advancing, only one deposit state must be consumed`() {
         services.zkLedger {
             zkTransaction {
@@ -48,6 +63,7 @@ class DepositContractAdvanceTests : ContractTest() {
     }
 
     @Test
+    @Disabled
     fun `On deposit advancing, only one deposit state must be created`() {
         services.zkLedger {
             zkTransaction {
@@ -61,6 +77,7 @@ class DepositContractAdvanceTests : ContractTest() {
     }
 
     @Test
+    @Disabled
     fun `On deposit advancing, only one token state must be created when the advance status is PAYMENT_ACCEPTED`() {
         services.zkLedger {
             zkTransaction {
@@ -81,6 +98,7 @@ class DepositContractAdvanceTests : ContractTest() {
     }
 
     @Test
+    @Disabled
     fun `On deposit advancing, only one Ivno token type must be referenced`() {
         services.zkLedger {
             zkTransaction {
@@ -101,6 +119,7 @@ class DepositContractAdvanceTests : ContractTest() {
     }
 
     @Test
+    @Disabled
     fun `On deposit advancing, a membership state must be referenced for each deposit participant (BANK_A missing)`() {
         services.zkLedger {
             zkTransaction {
@@ -120,6 +139,7 @@ class DepositContractAdvanceTests : ContractTest() {
     }
 
     @Test
+    @Disabled
     fun `On deposit advancing, a membership state must be referenced for each deposit participant (CUSTODIAN missing)`() {
         services.zkLedger {
             zkTransaction {
@@ -139,6 +159,7 @@ class DepositContractAdvanceTests : ContractTest() {
     }
 
     @Test
+    @Disabled
     fun `On deposit advancing, a membership state must be referenced for each deposit participant (TOKEN_ISSUING_ENTITY missing)`() {
         services.zkLedger {
             zkTransaction {
@@ -158,6 +179,7 @@ class DepositContractAdvanceTests : ContractTest() {
     }
 
     @Test
+    @Disabled
     fun `On deposit advancing, a membership attestation state must be referenced for each deposit participant (BANK_A missing)`() {
         services.zkLedger {
             zkTransaction {
@@ -177,6 +199,7 @@ class DepositContractAdvanceTests : ContractTest() {
     }
 
     @Test
+    @Disabled
     fun `On deposit advancing, a membership attestation state must be referenced for each deposit participant (CUSTODIAN missing)`() {
         services.zkLedger {
             zkTransaction {
@@ -196,6 +219,7 @@ class DepositContractAdvanceTests : ContractTest() {
     }
 
     @Test
+    @Disabled
     fun `On deposit advancing, a membership attestation state must be referenced for each deposit participant (TOKEN_ISSUING_ENTITY missing)`() {
         services.zkLedger {
             zkTransaction {
@@ -215,6 +239,7 @@ class DepositContractAdvanceTests : ContractTest() {
     }
 
     @Test
+    @Disabled
     fun `On deposit advancing, every membership attestation status must be ACCEPTED`() {
         services.zkLedger {
             zkTransaction {
@@ -235,6 +260,7 @@ class DepositContractAdvanceTests : ContractTest() {
     }
 
     @Test
+    @Disabled
     fun `On deposit advancing, every membership's network must be equal to the Ivno token type network (BANK_A invalid)`() {
         services.zkLedger {
             zkTransaction {
@@ -257,6 +283,7 @@ class DepositContractAdvanceTests : ContractTest() {
     }
 
     @Test
+    @Disabled
     fun `On deposit advancing, every membership's network must be equal to the Ivno token type network (CUSTODIAN invalid)`() {
         services.zkLedger {
             zkTransaction {
@@ -279,6 +306,7 @@ class DepositContractAdvanceTests : ContractTest() {
     }
 
     @Test
+    @Disabled
     fun `On deposit advancing, every membership's network must be equal to the Ivno token type network (TOKEN_ISSING_ENTITY invalid)`() {
         services.zkLedger {
             zkTransaction {
@@ -301,6 +329,7 @@ class DepositContractAdvanceTests : ContractTest() {
     }
 
     @Test
+    @Disabled
     fun `On deposit advancing, every membership attestation's network must be equal to the Ivno token type network (BANK_A invalid)`() {
         services.zkLedger {
             zkTransaction {
@@ -323,6 +352,7 @@ class DepositContractAdvanceTests : ContractTest() {
     }
 
     @Test
+    @Disabled
     fun `On deposit advancing, every membership attestation's network must be equal to the Ivno token type network (CUSTODIAN invalid)`() {
         services.zkLedger {
             zkTransaction {
@@ -345,6 +375,7 @@ class DepositContractAdvanceTests : ContractTest() {
     }
 
     @Test
+    @Disabled
     fun `On deposit advancing, every membership attestation's network must be equal to the Ivno token type network (TOKEN_ISSUING_ENTITY invalid)`() {
         services.zkLedger {
             zkTransaction {
@@ -367,6 +398,7 @@ class DepositContractAdvanceTests : ContractTest() {
     }
 
     @Test
+    @Disabled
     fun `On deposit advancing, every membership attestation state must point to a referenced membership state`() {
         services.zkLedger {
             zkTransaction {
@@ -388,6 +420,7 @@ class DepositContractAdvanceTests : ContractTest() {
     }
 
     @Test
+    @Disabled
     fun `On deposit advancing, the depositor, custodian, amount and linearId are not allowed to change`() {
         services.zkLedger {
             zkTransaction {
@@ -408,6 +441,7 @@ class DepositContractAdvanceTests : ContractTest() {
     }
 
     @Test
+    @Disabled
     fun `On deposit advancing, the output state must be able to advance from the input state`() {
         services.zkLedger {
             zkTransaction {
@@ -428,6 +462,7 @@ class DepositContractAdvanceTests : ContractTest() {
     }
 
     @Test
+    @Disabled
     fun `On deposit advancing, the reference must only change if the advanced status is DEPOSIT_ACCEPTED`() {
         services.zkLedger {
             zkTransaction {
@@ -448,6 +483,7 @@ class DepositContractAdvanceTests : ContractTest() {
     }
 
     @Test
+    @Disabled
     fun `On deposit advancing, the reference must only change if the advanced status is DEPOSIT_ACCEPTED, and must not be null`() {
         services.zkLedger {
             zkTransaction {
@@ -468,6 +504,7 @@ class DepositContractAdvanceTests : ContractTest() {
     }
 
     @Test
+    @Disabled
     fun `On deposit advancing, the created timestamp must be after the consumed timestamp`() {
         services.zkLedger {
             zkTransaction {
@@ -488,6 +525,7 @@ class DepositContractAdvanceTests : ContractTest() {
     }
 
     @Test
+    @Disabled
     fun `On deposit advancing, the referenced token type and the deposit token issuing entity must be equal`() {
         services.zkLedger {
             zkTransaction {
@@ -509,6 +547,7 @@ class DepositContractAdvanceTests : ContractTest() {
     }
 
     @Test
+    @Disabled
     fun `On deposit advancing, the token amount must be of equal value to the transfer amount`() {
         services.zkLedger {
             zkTransaction {
@@ -530,6 +569,7 @@ class DepositContractAdvanceTests : ContractTest() {
     }
 
     @Test
+    @Disabled
     fun `On deposit advancing, the required signing participants must sign the transaction (depositor must sign when issuing payment)`() {
         services.zkLedger {
             zkTransaction {
@@ -550,6 +590,7 @@ class DepositContractAdvanceTests : ContractTest() {
     }
 
     @Test
+    @Disabled
     fun `On deposit advancing, the required signing participants must sign the transaction (custodian must sign when accepting a deposit)`() {
         services.zkLedger {
             zkTransaction {
@@ -570,6 +611,7 @@ class DepositContractAdvanceTests : ContractTest() {
     }
 
     @Test
+    @Disabled
     fun `On deposit advancing, the required signing participants must sign the transaction (custodian must sign when accepting a payment)`() {
         services.zkLedger {
             zkTransaction {
@@ -591,6 +633,7 @@ class DepositContractAdvanceTests : ContractTest() {
     }
 
     @Test
+    @Disabled
     fun `On deposit advancing, the required signing participants must sign the transaction (token issuing entity must sign when accepting a payment)`() {
         services.zkLedger {
             zkTransaction {

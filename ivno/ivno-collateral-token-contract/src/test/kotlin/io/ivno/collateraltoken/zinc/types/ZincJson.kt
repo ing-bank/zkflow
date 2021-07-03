@@ -281,8 +281,8 @@ fun Deposit.toJsonObject() = buildJsonObject {
 }
 
 fun Transfer.toJsonObject() = buildJsonObject {
-    put("current_token_holder", currentTokenHolder.toJsonObject(EdDSASurrogate.ENCODED_SIZE).polymorphic())
-    put("target_token_holder", targetTokenHolder.toJsonObject(EdDSASurrogate.ENCODED_SIZE).polymorphic())
+    put("current_token_holder", currentTokenHolder.toJsonObject(EdDSASurrogate.ENCODED_SIZE))
+    put("target_token_holder", targetTokenHolder.toJsonObject(EdDSASurrogate.ENCODED_SIZE))
     put("initiator", initiator.toJsonObject())
     put("amount", amount.toJsonObject())
     put("status", status.toJsonObject())

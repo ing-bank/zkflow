@@ -15,7 +15,7 @@ class IvnoTokenTypeContractCreationTests : ContractTest() {
     @Test
     fun `On token type creation, the transaction must include the Create command`() {
         services.zkLedger {
-            zkTransaction {
+            transaction {
                 val roles = setOf(Role("TOKEN_ISSUING_ENTITY"))
                 val (membership, attestation) = createMembership(TOKEN_ISSUING_ENTITY.party, roles = roles)
                 reference(membership.ref)
@@ -31,7 +31,7 @@ class IvnoTokenTypeContractCreationTests : ContractTest() {
     @Test
     fun `On Ivno token type creating, a membership state must be referenced for the token issuing entity`() {
         services.zkLedger {
-            zkTransaction {
+            transaction {
                 val roles = setOf(Role("TOKEN_ISSUING_ENTITY"))
                 val (_, attestation) = createMembership(TOKEN_ISSUING_ENTITY.party, roles = roles)
                 reference(attestation.ref)
@@ -45,7 +45,7 @@ class IvnoTokenTypeContractCreationTests : ContractTest() {
     @Test
     fun `On Ivno token type creating, a membership state must be referenced for the token issuing entity (Invalid TIE on TT)`() {
         services.zkLedger {
-            zkTransaction {
+            transaction {
                 val roles = setOf(Role("TOKEN_ISSUING_ENTITY"))
                 val (membership, attestation) = createMembership(TOKEN_ISSUING_ENTITY.party, roles = roles)
                 reference(membership.ref)

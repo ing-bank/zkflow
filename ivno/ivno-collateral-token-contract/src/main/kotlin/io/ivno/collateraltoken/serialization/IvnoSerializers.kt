@@ -6,6 +6,8 @@ import com.ing.zknotary.common.serialization.bfl.SerializersModuleRegistry
 import io.ivno.collateraltoken.contract.Deposit
 import io.ivno.collateraltoken.contract.DepositContract
 import io.ivno.collateraltoken.contract.IvnoTokenType
+import io.ivno.collateraltoken.contract.Transfer
+import io.ivno.collateraltoken.contract.TransferContract
 import io.onixlabs.corda.bnms.contract.membership.Membership
 import io.onixlabs.corda.bnms.contract.membership.MembershipAttestation
 import io.onixlabs.corda.bnms.contract.membership.MembershipContract
@@ -62,6 +64,7 @@ object IvnoSerializers {
         SerializersModuleRegistry.register(serializersModule)
 
         ContractStateSerializerMap.register(Deposit::class, 1, Deposit.serializer())
+        ContractStateSerializerMap.register(Transfer::class, 9, Transfer.serializer())
 
         // TODO This only works with Ints as inner types for identity and settings.
         ContractStateSerializerMap.register(Membership::class, 2, MembershipWithIntSerializer)
@@ -74,6 +77,7 @@ object IvnoSerializers {
         CommandDataSerializerMap.register(MembershipContract.Issue::class, 6, MembershipContractIssueSerializer)
         CommandDataSerializerMap.register(AttestationContract.Issue::class, 7, AttestationContractIssueSerializer)
         CommandDataSerializerMap.register(DummyCommandData::class, 8, DummyCommandDataIssueSerializer)
+        CommandDataSerializerMap.register(TransferContract.Request::class, 10, TransferContract.Request.serializer())
     }
 }
 

@@ -2,6 +2,7 @@ package io.ivno.collateraltoken.contract
 
 import com.ing.serialization.bfl.annotations.FixedLength
 import com.ing.serialization.bfl.serializers.BigDecimalSizes
+import com.ing.zknotary.common.contracts.ZKContractState
 import io.dasl.contracts.v1.token.BigDecimalAmount
 import io.ivno.collateraltoken.contract.TransferSchema.TransferSchemaV1
 import io.ivno.collateraltoken.serialization.BigDecimalAmountSerializer
@@ -13,6 +14,7 @@ import net.corda.core.contracts.LinearPointer
 import net.corda.core.contracts.LinearState
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.identity.AbstractParty
+import net.corda.core.identity.AnonymousParty
 import net.corda.core.schemas.MappedSchema
 import net.corda.core.schemas.PersistentState
 import net.corda.core.schemas.QueryableState
@@ -36,8 +38,8 @@ import java.time.Instant
 @BelongsToContract(TransferContract::class)
 @Serializable
 data class Transfer internal constructor(
-    val currentTokenHolder: @Polymorphic AbstractParty,
-    val targetTokenHolder: @Polymorphic AbstractParty,
+    val currentTokenHolder: @Contextual AnonymousParty,
+    val targetTokenHolder: @Contextual AnonymousParty,
     val initiator: TransferInitiator,
     @Serializable(with = BigDecimalAmountSerializer::class)
     @BigDecimalSizes([AMOUNT_INT_LENGTH, AMOUNT_FRAC_LENGTH])
@@ -49,7 +51,7 @@ data class Transfer internal constructor(
     @FixedLength([ACCOUNT_ID_LENGTH])
     val targetTokenHolderAccountId: String,
     override val linearId: @Contextual UniqueIdentifier
-) : LinearState, QueryableState {
+) : LinearState, QueryableState, ZKContractState {
     companion object {
         const val AMOUNT_INT_LENGTH = 20
         const val AMOUNT_FRAC_LENGTH = 4
@@ -57,8 +59,8 @@ data class Transfer internal constructor(
     }
 
     constructor(
-        currentTokenHolder: AbstractParty,
-        targetTokenHolder: AbstractParty,
+        currentTokenHolder: AnonymousParty,
+        targetTokenHolder: AnonymousParty,
         initiator: TransferInitiator,
         amount: BigDecimalAmount<LinearPointer<IvnoTokenType>>,
         currentTokenHolderAccountId: String,
@@ -76,13 +78,13 @@ data class Transfer internal constructor(
         linearId
     )
 
-    override val participants: List<AbstractParty>
+    override val participants: List<AnonymousParty>
         get() = listOf(currentTokenHolder, targetTokenHolder)
 
-    private val initiatingParty: AbstractParty
+    private val initiatingParty: AnonymousParty
         get() = if (initiator == TransferInitiator.CURRENT_HOLDER) currentTokenHolder else targetTokenHolder
 
-    private val nonInitiatingParty: AbstractParty
+    private val nonInitiatingParty: AnonymousParty
         get() = if (initiator == TransferInitiator.CURRENT_HOLDER) targetTokenHolder else currentTokenHolder
 
     /**
@@ -127,7 +129,7 @@ data class Transfer internal constructor(
      *
      * @return Returns an [AbstractParty] representing the transaction counter-party.
      */
-    fun getRequiredCounterparty(): AbstractParty = when (status) {
+    fun getRequiredCounterparty(): AnonymousParty = when (status) {
         TransferStatus.REQUESTED, TransferStatus.CANCELLED -> nonInitiatingParty
         TransferStatus.ACCEPTED, TransferStatus.REJECTED -> initiatingParty
         TransferStatus.COMPLETED -> targetTokenHolder
