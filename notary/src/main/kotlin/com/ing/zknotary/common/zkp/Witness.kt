@@ -126,6 +126,28 @@ class Witness(
      */
     val referenceUtxoNonces: List<SecureHash>
 ) {
+    fun size(filter: (Byte) -> Boolean = { true }): Int {
+        val paddedByteListSize = { it: List<ByteArray> -> it.fold(0) { acc, bytes -> acc + bytes.filter(filter).size } }
+        val paddedHashListSize = { it: List<SecureHash> -> it.fold(0) { acc, hash -> acc + hash.bytes.filter(filter).size } }
+        val paddedByteMapSize = { it: Map<String, List<ByteArray>> ->
+            it.flatMap { it.value }.fold(0) { acc, bytes -> acc + bytes.filter(filter).size }
+        }
+        return inputsGroup.run(paddedByteListSize) +
+            outputsGroup.run(paddedByteMapSize) +
+            commandsGroup.run(paddedByteListSize) +
+            attachmentsGroup.run(paddedByteListSize) +
+            notaryGroup.run(paddedByteListSize) +
+            timeWindowGroup.run(paddedByteListSize) +
+            signersGroup.run(paddedByteListSize) +
+            referencesGroup.run(paddedByteListSize) +
+            parametersGroup.run(paddedByteListSize) +
+            privacySalt.size +
+            serializedInputUtxos.run(paddedByteMapSize) +
+            serializedReferenceUtxos.run(paddedByteMapSize) +
+            inputUtxoNonces.run(paddedHashListSize) +
+            referenceUtxoNonces.run(paddedHashListSize)
+    }
+
     companion object {
         fun fromWireTransaction(
             wtx: WireTransaction,

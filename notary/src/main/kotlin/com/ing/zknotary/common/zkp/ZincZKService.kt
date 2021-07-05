@@ -114,7 +114,12 @@ class ZincZKService(
     }
 
     override fun run(witness: Witness, publicInput: PublicInput): String {
+        log.info("Witness size: ${witness.size()}")
+        log.info("Padded Witness size: ${witness.size { it == 0.toByte() }}") // Assumes BFL zero-byte padding
+
         val witnessJson = Json.encodeToString(WitnessSerializer, witness)
+        log.info("Witness JSON: $witnessJson")
+
         val publicInputJson = Json.encodeToString(PublicInputSerializer, publicInput)
         return run(witnessJson, publicInputJson)
     }

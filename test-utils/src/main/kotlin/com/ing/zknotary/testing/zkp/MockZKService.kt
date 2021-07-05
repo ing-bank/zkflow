@@ -1,8 +1,10 @@
 package com.ing.zknotary.testing.zkp
 
+import com.ing.zknotary.common.serialization.json.corda.WitnessSerializer
 import com.ing.zknotary.common.zkp.PublicInput
 import com.ing.zknotary.common.zkp.Witness
 import com.ing.zknotary.common.zkp.ZKService
+import kotlinx.serialization.json.Json
 import net.corda.core.contracts.AttachmentResolutionException
 import net.corda.core.contracts.CommandWithParties
 import net.corda.core.contracts.ComponentGroupEnum
@@ -19,15 +21,22 @@ import net.corda.core.transactions.ComponentGroup
 import net.corda.core.transactions.LedgerTransaction
 import net.corda.core.transactions.WireTransaction
 import net.corda.core.utilities.OpaqueBytes
+import net.corda.core.utilities.loggerFor
 
-@Suppress("EXPERIMENTAL_API_USAGE")
+@Suppress("EXPERIMENTAL_API_USAGE", "DuplicatedCode")
 public class MockZKService(private val serviceHub: ServiceHub, private val digestService: DigestService) : ZKService {
+    private val log = loggerFor<MockZKService>()
 
     /**
      * This mock version simply returns the serialized witness, so that we can use it in `verify()`
      * to do all the verifications
      */
     override fun prove(witness: Witness): ByteArray {
+        log.info("Witness size: ${witness.size()}")
+        log.info("Padded Witness size: ${witness.size { it == 0.toByte() }}") // Assumes BFL zero-byte padding
+        val witnessJson = Json.encodeToString(WitnessSerializer, witness)
+        log.info("Witness JSON: $witnessJson")
+
         return witness.serialize().bytes
     }
 
