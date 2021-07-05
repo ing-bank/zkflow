@@ -13,6 +13,7 @@ import io.onixlabs.corda.identityframework.contract.AbstractClaim
 import io.onixlabs.corda.identityframework.contract.AttestationContract
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.PolymorphicSerializer
+import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.descriptors.SerialDescriptor
@@ -42,7 +43,9 @@ object IvnoSerializers {
         contextual(MembershipAttestationSerializer)
 
         polymorphic(AbstractClaim::class) {
-            subclass(ClaimSerializer(PolymorphicSerializer(Any::class)))
+            // TODO Discuss approach to polymorphics in AbstractClaims, for now we only support Int
+            // subclass(ClaimSerializer(PolymorphicSerializer(Any::class)))
+            subclass(ClaimSerializer(Int.serializer()))
         }
 
         polymorphic(Any::class) {

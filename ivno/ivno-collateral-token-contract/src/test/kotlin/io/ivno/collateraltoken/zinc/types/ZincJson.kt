@@ -4,6 +4,7 @@ import com.ing.zknotary.common.serialization.bfl.serializers.SecureHashSupported
 import com.ing.zknotary.common.serialization.bfl.serializers.SecureHashSurrogate
 import com.ing.zknotary.common.serialization.bfl.serializers.UniqueIdentifierSurrogate
 import com.ing.zknotary.common.serialization.bfl.serializers.publickey.EdDSASurrogate
+import com.ing.zknotary.common.serialization.bfl.serializers.toBytes
 import com.ing.zknotary.testing.resizeTo
 import com.ing.zknotary.testing.toJsonArray
 import com.ing.zknotary.zinc.types.nullable
@@ -377,7 +378,7 @@ fun Membership.toJsonObject(
 
 fun AttestationPointer<*>.toJsonObject(): JsonObject = buildJsonObject {
     put("state_ref", stateRef.toJsonObject())
-    put("state_class_name", stateClass.name.toJsonObject(AttestationPointerSurrogate.MAX_CLASS_NAME_SIZE))
+    put("state_class_name", stateClass.name.toBytes().toJsonObject(AttestationPointerSurrogate.MAX_CLASS_NAME_SIZE))
     put("state_linear_id", stateLinearId.toJsonObject().nullable(stateLinearId == null))
 }
 
@@ -405,7 +406,7 @@ fun State.toJsonObject(
 
 fun Attestation<*>.toJsonObject(): JsonObject = buildJsonObject {
     put("attestor", attestor.toJsonObject(EdDSASurrogate.ENCODED_SIZE).polymorphic())
-    put("attestees", attestees.toJsonObject(AttestationSurrogate.ATTESTEES_SIZE, EdDSASurrogate.ENCODED_SIZE, true, Crypto.EDDSA_ED25519_SHA512))
+    put("attestees", attestees.toJsonObject(AttestationSurrogate.ATTESTEES_SIZE, EdDSASurrogate.ENCODED_SIZE, false, Crypto.EDDSA_ED25519_SHA512))
     put("pointer", pointer.toJsonObject())
     put("status", status.toJsonObject())
 //    put("metadata", metadata.toJsonObject(

@@ -3,6 +3,7 @@ package com.ing.zknotary.zinc.types
 
 import com.ing.serialization.bfl.api.reified.serialize
 import com.ing.serialization.bfl.serializers.BFLSerializers
+import com.ing.zknotary.common.serialization.bfl.serializers.CordaSerializers
 import com.ing.zknotary.common.serialization.bfl.serializers.CordaSerializers.CLASS_NAME_SIZE
 import com.ing.zknotary.common.serialization.bfl.serializers.CordaX500NameSerializer
 import com.ing.zknotary.common.serialization.bfl.serializers.CordaX500NameSurrogate
@@ -283,7 +284,7 @@ public fun PublicKey.toJsonObject(encodedSize: Int): JsonObject = buildJsonObjec
 
 public fun CordaX500Name?.toJsonObject(): JsonObject = buildJsonObject {
     val name: ByteArray = this@toJsonObject?.let {
-        serialize(it, strategy = CordaX500NameSerializer)
+        serialize(it, strategy = CordaX500NameSerializer, CordaSerializers.module)
     } ?: ByteArray(CordaX500NameSurrogate.SIZE)
 
     put("name", name.toJsonArray())

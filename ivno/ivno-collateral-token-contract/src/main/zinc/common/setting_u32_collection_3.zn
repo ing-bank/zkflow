@@ -1,0 +1,90 @@
+mod platform_consts;
+mod platform_integer;
+mod setting_u32;
+
+use platform_consts::U32_BYTES;
+
+use setting_u32::SettingU32;
+use setting_u32::SETTING_U32_LENGTH;
+
+const SETTING_U32_COLLECTION_3_SIZE_LENGTH: u16 = U32_BYTES;
+const SETTING_U32_COLLECTION_3_ELEMENTS_LENGTH: u16 = SETTING_U32_LENGTH * 3 as u16;
+
+const SETTING_U32_COLLECTION_3_SIZE_OFFSET: u16 = 0;
+const SETTING_U32_COLLECTION_3_ELEMENTS_OFFSET: u16
+    = SETTING_U32_COLLECTION_3_SIZE_OFFSET
+    + SETTING_U32_COLLECTION_3_SIZE_LENGTH;
+const SETTING_U32_COLLECTION_3_LENGTH: u16
+    = SETTING_U32_COLLECTION_3_ELEMENTS_OFFSET
+    + SETTING_U32_COLLECTION_3_ELEMENTS_LENGTH;
+
+type SerializedSettingU32_Collection_3 = [u8; SETTING_U32_COLLECTION_3_LENGTH];
+
+struct SettingU32_Collection_3 {
+    size: u32,
+    elements: [SettingU32; 3],
+}
+
+impl SettingU32_Collection_3 {
+    fn empty() -> SettingU32_Collection_3 {
+        SettingU32_Collection_3 {
+            size: 0 as u32,
+            elements: [SettingU32::empty(); 3],
+        }
+    }
+
+    fn equals(this: SettingU32_Collection_3, that: SettingU32_Collection_3) -> bool {
+        let mut still_equal = this.size == that.size;
+        for i in 0..3 while still_equal && i as u32 < this.size {
+            still_equal = SettingU32::equals(this.elements[i], that.elements[i]);
+        }
+        still_equal
+    }
+
+    fn contains(this: SettingU32_Collection_3, value: SettingU32) -> bool {
+        let mut found = false;
+        for i in 0..3 while !found && i as u32 < this.size {
+            found = SettingU32::equals(this.elements[i], value);
+        }
+        found
+    }
+
+    fn is_subset(this: SettingU32_Collection_3, that: SettingU32_Collection_3) -> bool {
+        let mut still_subset = this.size <= that.size;
+        for i in 0..3 while still_subset && i as u32 < this.size {
+            still_subset = contains(that, this.elements[i]);
+        }
+        still_subset
+    }
+
+    fn set_equals(this: SettingU32_Collection_3, that: SettingU32_Collection_3) -> bool {
+        is_subset(this, that) && is_subset(that, this)
+    }
+
+    fn deserialize(serialized: SerializedSettingU32_Collection_3) -> SettingU32_Collection_3 {
+        let size = {
+            let mut size_bytes = [0; SETTING_U32_COLLECTION_3_SIZE_LENGTH];
+            for i in 0..SETTING_U32_COLLECTION_3_SIZE_LENGTH {
+                size_bytes[i] = serialized[i + SETTING_U32_COLLECTION_3_SIZE_OFFSET];
+            }
+            platform_integer::parse_u32(size_bytes)
+        };
+
+        let elements = {
+            let mut element_array = [SettingU32::empty(); 3];
+            let mut element_bytes = [0; SETTING_U32_LENGTH];
+            for i in 0..3 while i as u32 < size {
+                for j in 0..SETTING_U32_LENGTH {
+                    element_bytes[j] = serialized[j + SETTING_U32_COLLECTION_3_ELEMENTS_OFFSET + (i as u16) * SETTING_U32_LENGTH];
+                }
+                element_array[i] = SettingU32::deserialize(element_bytes);
+            }
+            element_array
+        };
+
+        SettingU32_Collection_3 {
+            size: size,
+            elements: elements,
+        }
+    }
+}

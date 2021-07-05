@@ -22,8 +22,7 @@ const MEMBERSHIP_ATTESTATION_ATTESTATION_OFFSET: u16
 // length
 const MEMBERSHIP_ATTESTATION_LENGTH: u16
     = MEMBERSHIP_ATTESTATION_ATTESTATION_OFFSET
-    + MEMBERSHIP_ATTESTATION_ATTESTATION_LENGTH
-    + 618 as u16; // TODO: Where are these extra bytes in serialized payload coming from?
+    + MEMBERSHIP_ATTESTATION_ATTESTATION_LENGTH;
 
 
 type SerializedMembershipAttestation = [u8; MEMBERSHIP_ATTESTATION_LENGTH];
@@ -34,6 +33,15 @@ struct MembershipAttestation {
 }
 
 impl MembershipAttestation {
+    fn print_structure() {
+        dbg!("[MembershipAttestation] LENGTH: {}", MEMBERSHIP_ATTESTATION_LENGTH);
+        dbg!("[MembershipAttestation] STRUCTURE");
+        dbg!("[MembershipAttestation] - NETWORK:     {}", MEMBERSHIP_ATTESTATION_NETWORK_LENGTH);
+        dbg!("[MembershipAttestation] - ATTESTATION: {}", MEMBERSHIP_ATTESTATION_ATTESTATION_LENGTH);
+        dbg!("[MembershipAttestation]");
+        Attestation::print_structure();
+    }
+
     fn new(network: NetworkPolyPartyEdDSA, an_attestation: Attestation) -> MembershipAttestation {
         MembershipAttestation {
             network: network,

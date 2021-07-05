@@ -34,6 +34,14 @@ struct ${TYPE_NAME} {
 }
 
 impl ${TYPE_NAME} {
+    fn print_structure() {
+        dbg!("[${TYPE_NAME}] LENGTH: {}", ${CONSTANT_PREFIX}_LENGTH);
+        dbg!("[${TYPE_NAME}] STRUCTURE");
+        dbg!("[${TYPE_NAME}] - SERIAL_NAME: {}", ${CONSTANT_PREFIX}_SERIAL_NAME_LENGTH);
+        dbg!("[${TYPE_NAME}] - VALUE:       {}", ${CONSTANT_PREFIX}_VALUE_LENGTH);
+        dbg!("[${TYPE_NAME}]");
+    }
+
     fn empty() -> ${TYPE_NAME} {
         ${TYPE_NAME} {
             value: ${T_TYPE_NAME}::empty(),

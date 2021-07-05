@@ -47,7 +47,7 @@ data class AttestationSurrogate(
     }
 
     companion object {
-        const val ATTESTEES_SIZE = 2
+        const val ATTESTEES_SIZE = 1
         const val METADATA_MAP_SIZE = 5
         const val METADATA_KEY_LENGTH = 32
         const val METADATA_VALUE_LENGTH = 128
