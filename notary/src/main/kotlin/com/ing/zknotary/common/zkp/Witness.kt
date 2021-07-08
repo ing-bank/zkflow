@@ -169,15 +169,14 @@ class Witness(
             groupEnum: ComponentGroupEnum,
             javaClass2ZincType: Map<String, String>
         ): Map<String, List<ByteArray>> {
-            val stateNames = outputs.map {
-                // it.data.javaClass.simpleName.camelToSnakeCase()
-                val className = it.data.javaClass.canonicalName
-                javaClass2ZincType[className] ?.camelToSnakeCase() ?: error("Java class $className needs to have an associated Zinc type")
+            val zincTypes = outputs.map {
+                val javaClass = it.data.javaClass.canonicalName
+                javaClass2ZincType[javaClass] ?.camelToSnakeCase() ?: error("Java class $javaClass needs to have an associated Zinc type")
             }
 
             // TODO: Ensure that the order is the same as the deterministic order in ZKTransactionBuilder
             val serializedStateBytes =
-                componentGroups.singleOrNull { it.groupIndex == groupEnum.ordinal }?.components?.mapIndexed { index, output -> stateNames[index] to output.copyBytes() }
+                componentGroups.singleOrNull { it.groupIndex == groupEnum.ordinal }?.components?.mapIndexed { index, output -> zincTypes[index] to output.copyBytes() }
 
             return serializedStateBytes
                 ?.groupBy { it.first }

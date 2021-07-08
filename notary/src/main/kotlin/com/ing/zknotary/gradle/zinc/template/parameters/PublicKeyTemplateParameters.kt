@@ -18,7 +18,10 @@ data class PublicKeyTemplateParameters(
     )
 ) {
     override val typeName = "${algName}PublicKey"
-    override fun getModuleName() = super.getModuleName().replace("public_key", "_public_key")
+    override fun getModuleName() = super
+        .getModuleName()
+        .replace("public_key", "_public_key")
+        .replace("__", "_")
 
     override fun getReplacements() = getTypeReplacements() + mapOf(
         "ENCODED_SIZE" to "$encodedSize",

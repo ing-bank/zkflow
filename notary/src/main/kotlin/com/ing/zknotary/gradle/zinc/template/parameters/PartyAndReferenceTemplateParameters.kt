@@ -19,7 +19,10 @@ data class PartyAndReferenceTemplateParameters(
 
     override val typeName = polyPartyParams.type.typeName + "AndReference"
 
-    override fun getModuleName() = super.getModuleName().replace("and_reference", "_and_reference")
+    override fun getModuleName() = super
+        .getModuleName()
+        .replace("and_reference", "_and_reference")
+        .replace("__", "_")
 
     override fun getReplacements() = getTypeReplacements() +
         polyPartyParams.getTypeReplacements("PARTY_") +

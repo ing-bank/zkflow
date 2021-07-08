@@ -18,11 +18,8 @@ data class TxStateTemplateParameters(val state: CircuitConfigurator.State) : Tem
 
     override fun getModuleName() = File(state.location).name.removeSuffix(".zn")
 
-    override fun getTargetFilename(): String {
-        println(typeName)
-        println(typeName.camelToSnakeCase())
-        return "tx_state_${typeName.camelToSnakeCase()}.zn"
-    }
+    override fun getTargetFilename(): String =
+        "tx_state_${typeName.camelToSnakeCase()}.zn"
 
     override fun getReplacements() =
         getTypeReplacements("USER_STATE_") +

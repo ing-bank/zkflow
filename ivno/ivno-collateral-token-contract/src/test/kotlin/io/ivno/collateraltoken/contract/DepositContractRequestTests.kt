@@ -1,6 +1,7 @@
 package io.ivno.collateraltoken.contract
 
 import com.ing.zknotary.testing.dsl.zkLedger
+import com.ing.zknotary.testing.zkp.MockZKTransactionService
 import io.onixlabs.corda.bnms.contract.Network
 import io.onixlabs.corda.identityframework.contract.AttestationStatus
 import net.corda.testing.node.ledger

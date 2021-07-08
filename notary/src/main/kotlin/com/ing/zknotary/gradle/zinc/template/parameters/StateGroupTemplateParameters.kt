@@ -79,7 +79,6 @@ use serialized_${"COMPONENT_NAME_MODULE_NAME"}_tx_state_${"STATE_NAME_MODULE_NAM
 
         states.forEach {
             if (componentGroupSize > 0) {
-                // val name = it.name.camelToSnakeCase()
                 content += templates[key]
                     ?.replace("STATE_NAME_CONSTANT_PREFIX", it.stateName.camelToSnakeCase().toUpperCase())
                     ?.replace("STATE_NAME_MODULE_NAME", it.stateName.camelToSnakeCase())
