@@ -7,7 +7,7 @@ data class SerializedStateTemplateParameters(val componentName: String, val stat
     "serialized_tx_state.zn",
     listOf()
 ) {
-    override val typeName = state.stateName
+    override val typeName = state.zincType ?: error("Java class ${state.javaClass} needs to have an associated Zinc type")
 
     override fun getTargetFilename() = "serialized_${componentName}_tx_state_${typeName.camelToSnakeCase()}.zn"
 

@@ -17,10 +17,7 @@ import net.corda.core.contracts.AutomaticPlaceholderConstraint
 import net.corda.core.crypto.Crypto
 import java.io.File
 
-class CircuitConfigurator(
-    circuitSources: File,
-    configFileName: String
-) {
+class CircuitConfigurator private constructor(val circuitConfiguration: CircuitConfiguration) {
     @Serializable
     data class CircuitConfiguration(val circuit: Circuit, val groups: Groups)
 
@@ -40,8 +37,8 @@ class CircuitConfigurator(
 
     @Serializable
     data class State(
-        val javaClass: String,
-        val zincType: String,
+        @SerialName("java_class") val javaClass: String,
+        @SerialName("zinc_type") val zincType: String,
         val location: String,
         val notaryKeySchemeCodename: String = ZKFlowNetworkParameters.notaryKeySchemeCodename,
         @SerialName("attachment_constraint") val attachmentConstraint: String =
@@ -135,14 +132,27 @@ class CircuitConfigurator(
 
     @Serializable(with = StateGroupSerializer::class)
     data class StateGroup(
-        val stateName: String = "",
-        val stateGroupSize: Int = 0
-    )
+        val javaClass: String = "",
+        val stateGroupSize: Int = 0,
+        @Transient
+        val zincType: String? = null
+    ) {
+        fun resolve(circuit: Circuit): StateGroup =
+            if (stateGroupSize > 0) {
+                copy(
+                    zincType = circuit.states.singleOrNull { it.javaClass == javaClass }
+                        ?.zincType
+                        ?: error("Circuit: ${circuit.name}; Java class $javaClass needs to have an associated Zinc type")
+                )
+            } else {
+                this
+            }
+    }
 
     object StateGroupSerializer : KSerializer<StateGroup> {
         override val descriptor: SerialDescriptor =
             buildClassSerialDescriptor("group") {
-                element<String>("state_name")
+                element<String>("java_class")
                 element<Int>("state_group_size")
             }
 
@@ -152,22 +162,22 @@ class CircuitConfigurator(
 
         override fun deserialize(decoder: Decoder): StateGroup =
             decoder.decodeStructure(descriptor) {
-                var name = ""
+                var javaClass = ""
                 var stateGroupSize = 0
                 while (true) {
                     when (val index = decodeElementIndex(descriptor)) {
-                        0 -> name = decodeStringElement(descriptor, 0)
+                        0 -> javaClass = decodeStringElement(descriptor, 0)
                         1 -> stateGroupSize = decodeIntElement(descriptor, 1)
                         CompositeDecoder.DECODE_DONE -> break
                         else -> error("Unexpected index: $index")
                     }
                 }
 
-                if (stateGroupSize != 0 && name == "") {
-                    error("StateGroup with `state_group_size > 0` must specify `state_name`")
+                if (stateGroupSize != 0 && javaClass == "") {
+                    error("StateGroup with `state_group_size > 0` must specify `java_class`")
                 }
 
-                StateGroup(name, stateGroupSize)
+                StateGroup(javaClass, stateGroupSize)
             }
     }
 
@@ -198,17 +208,28 @@ class CircuitConfigurator(
         @SerialName("group_size") val groupSize: Int = 0
     )
 
-    val circuitConfiguration: CircuitConfiguration
+    companion object {
+        fun fromSources(circuitSources: File, configFileName: String): CircuitConfigurator {
+            val configPath = circuitSources.resolve(configFileName)
+            require(configPath.exists()) { "Configuration file is expected at $configPath" }
 
-    init {
-        val configPath = circuitSources.resolve(configFileName)
-        require(configPath.exists()) { "Configuration file is expected at $configPath" }
+            // NOTE: decodeFromString fails silently if JSON is malformed.
+            val circuitConfiguration: CircuitConfiguration = Json.decodeFromString(configPath.readText())
 
-        // NOTE: decodeFromString fails silently if JSON is malformed.
-        circuitConfiguration = Json.decodeFromString(configPath.readText())
+            require(circuitConfiguration.groups.commandGroup.commands.size == 1) {
+                "Only a single command per circuit is supported FOR NOW"
+            }
 
-        require(circuitConfiguration.groups.commandGroup.commands.size == 1) {
-            "Only a single command per circuit is supported FOR NOW"
+            // Resolve stateGroups
+            return CircuitConfigurator(
+                circuitConfiguration.copy(
+                    groups = circuitConfiguration.groups.copy(
+                        outputGroup = circuitConfiguration.groups.outputGroup.map { it.resolve(circuitConfiguration.circuit) },
+                        inputGroup = circuitConfiguration.groups.inputGroup.map { it.resolve(circuitConfiguration.circuit) },
+                        referenceGroup = circuitConfiguration.groups.referenceGroup.map { it.resolve(circuitConfiguration.circuit) }
+                    )
+                )
+            )
         }
     }
 
