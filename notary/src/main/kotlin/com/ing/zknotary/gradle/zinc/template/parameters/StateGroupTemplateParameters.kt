@@ -32,7 +32,8 @@ data class StateGroupTemplateParameters(val componentName: String, val states: L
         "module" to "mod serialized_${"COMPONENT_NAME_MODULE_NAME"}_tx_state_${"STATE_NAME_MODULE_NAME"};\n",
 
         "useDeclaration" to """use serialized_${"COMPONENT_NAME_MODULE_NAME"}_tx_state_${"STATE_NAME_MODULE_NAME"}::${"COMPONENT_NAME_CONSTANT_PREFIX"}_${"STATE_NAME_CONSTANT_PREFIX"}_GROUP_SIZE;
-use serialized_${"COMPONENT_NAME_MODULE_NAME"}_tx_state_${"STATE_NAME_MODULE_NAME"}::Serialized${"COMPONENT_NAME_TYPE_NAME"}${"STATE_NAME_TYPE_NAME"}${"COMPONENT_TYPE_TYPE_NAME"};""",
+use serialized_${"COMPONENT_NAME_MODULE_NAME"}_tx_state_${"STATE_NAME_MODULE_NAME"}::Serialized${"COMPONENT_NAME_TYPE_NAME"}${"STATE_NAME_TYPE_NAME"}${"COMPONENT_TYPE_TYPE_NAME"};
+""",
 
         "serializedType" to """    ${"STATE_NAME_MODULE_NAME"}: Serialized${"COMPONENT_NAME_TYPE_NAME"}${"STATE_NAME_TYPE_NAME"}${"COMPONENT_TYPE_TYPE_NAME"},
  """,
@@ -78,11 +79,11 @@ use serialized_${"COMPONENT_NAME_MODULE_NAME"}_tx_state_${"STATE_NAME_MODULE_NAM
 
         states.forEach {
             if (componentGroupSize > 0) {
-                val name = it.name.camelToSnakeCase()
+                val zincType = it.zincType ?: error("Java class ${it.javaClass} needs to have an associated Zinc type")
                 content += templates[key]
-                    ?.replace("STATE_NAME_CONSTANT_PREFIX", name.toUpperCase())
-                    ?.replace("STATE_NAME_MODULE_NAME", name)
-                    ?.replace("STATE_NAME_TYPE_NAME", name.snakeCaseToCamel())
+                    ?.replace("STATE_NAME_CONSTANT_PREFIX", zincType.camelToSnakeCase().toUpperCase())
+                    ?.replace("STATE_NAME_MODULE_NAME", zincType.camelToSnakeCase())
+                    ?.replace("STATE_NAME_TYPE_NAME", zincType)
                     ?.replace("COMPONENT_NAME_CONSTANT_PREFIX", componentName.toUpperCase())
                     ?.replace("COMPONENT_NAME_MODULE_NAME", componentName)
                     ?.replace("COMPONENT_NAME_TYPE_NAME", componentName.snakeCaseToCamel())

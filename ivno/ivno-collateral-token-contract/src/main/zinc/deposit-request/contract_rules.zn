@@ -1,4 +1,11 @@
-//!
-//! EXAMPLE DOCUMENT FOR CONTRACT RULES VALIDATION
-//! PLEASE IMPLEMENT NECESSARY CHECKS FOR THE ZKDAPP CONTRACT
-//!
+mod platform_witness;
+// mod signers_anonymous_party_ed_dsa;
+// mod tx_state_test_state;
+
+use platform_witness::Witness;
+// use signers_anonymous_party_ed_dsa::Signers;
+// use tx_state_test_state::TxStateTestState;
+
+fn check_contract_rules(witness: Witness) {
+    dbg!("[Deposit.Request] Contract rules verified");
+}

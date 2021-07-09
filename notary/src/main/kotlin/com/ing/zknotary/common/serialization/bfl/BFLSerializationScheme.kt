@@ -16,6 +16,7 @@ import net.corda.core.utilities.ByteSequence
 import net.corda.core.utilities.loggerFor
 import java.nio.ByteBuffer
 import java.security.PublicKey
+import com.ing.serialization.bfl.api.debugSerialize as obliviousDebugSerialize
 import com.ing.serialization.bfl.api.deserialize as obliviousDeserialize
 import com.ing.serialization.bfl.api.reified.deserialize as informedDeserialize
 import com.ing.serialization.bfl.api.reified.serialize as informedSerialize
@@ -111,9 +112,12 @@ open class BFLSerializationScheme : CustomSerializationScheme {
 
                 val strategy = TransactionStateSerializer(stateStrategy)
 
+                val debugSerialization = obliviousDebugSerialize(obj, strategy, serializersModule = serializersModule)
+                // Serialization layout is accessible at debugSerialization.second
+
                 ContractStateSerializerMap.prefixWithIdentifier(
                     state::class,
-                    obliviousSerialize(obj, strategy, serializersModule = serializersModule)
+                    debugSerialization.first
                 )
             }
 

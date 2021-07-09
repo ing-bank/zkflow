@@ -103,7 +103,7 @@ fun main(args: Array<String>) {
             val circuitSourcesPath = circuitSourcesBase.resolve(circuitName)
 
             // Read the configuration
-            val configurator = CircuitConfigurator(circuitSourcesPath, ZKNotaryExtension.CONFIG_CIRCUIT_FILE)
+            val configurator = CircuitConfigurator.fromSources(circuitSourcesPath, ZKNotaryExtension.CONFIG_CIRCUIT_FILE)
             configurator.generateConstsFile(outputPath)
 
             // Copy Zinc sources

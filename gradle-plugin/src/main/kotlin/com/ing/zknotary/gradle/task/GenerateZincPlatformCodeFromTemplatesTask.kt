@@ -24,7 +24,7 @@ open class GenerateZincPlatformCodeFromTemplatesTask : DefaultTask() {
 
         project.circuitNames?.forEach { circuitName ->
             val circuitSources = extension.circuitSourcesBasePath.resolve(circuitName)
-            val configurator = CircuitConfigurator(circuitSources, ZKNotaryExtension.CONFIG_CIRCUIT_FILE)
+            val configurator = CircuitConfigurator.fromSources(circuitSources, ZKNotaryExtension.CONFIG_CIRCUIT_FILE)
 
             val circuitSourceOutputPath = extension.mergedCircuitOutputPath.resolve(circuitName).resolve("src")
 

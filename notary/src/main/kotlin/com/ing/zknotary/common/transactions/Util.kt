@@ -51,7 +51,7 @@ fun ServiceHub.collectUtxoInfos(
                 .filteredComponentGroups.single { it.groupIndex == ComponentGroupEnum.OUTPUTS_GROUP.ordinal }
                 .nonces[it.index]
 
-            val stateName = prevStx.tx.outputs[it.index].data.javaClass.name
+            val stateName = prevStx.tx.outputs[it.index].data.javaClass.canonicalName
 
             UtxoInfo(it, serializedUtxo, nonce, stateName)
         }

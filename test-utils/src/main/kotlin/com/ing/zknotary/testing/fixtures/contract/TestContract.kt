@@ -99,6 +99,10 @@ public class TestContract : Contract {
         override val circuit: CircuitMetaData = CircuitMetaDataBuilder()
             .name("SignOnly")
             .addComponentGroupSize(ComponentGroupEnum.SIGNERS_GROUP, 2)
+            .associateJavaClass2ZincType(
+                "com.ing.zknotary.testing.fixtures.contract.TestContract.TestState",
+                "TestState"
+            )
             .build()
     }
 
@@ -136,6 +140,10 @@ public class TestContract : Contract {
         override val circuit: CircuitMetaData = CircuitMetaDataBuilder()
             .name("MoveBidirectional")
             .addComponentGroupSize(ComponentGroupEnum.SIGNERS_GROUP, 2)
+            .associateJavaClass2ZincType(
+                "com.ing.zknotary.testing.fixtures.contract.TestContract.TestState",
+                "TestState"
+            )
             .build()
 
         public companion object {

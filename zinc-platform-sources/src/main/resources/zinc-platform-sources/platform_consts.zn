@@ -18,6 +18,22 @@ const U128_BYTES: u16 = 16;
 const I128_BYTES: u16 = 16;
 const U128_BITS: u16 = U128_BYTES * BYTE_BITS;
 
+const CHAR_BYTES: u16 = 2;
+
+//! Corda-side serialization-related consts.
+//! Corda prepends every serialization with 7 bytes
+//! CustomSerializationSchemeUtils.getCustomSerializationMagicFromSchemeId(SCHEME_ID).size
+const CORDA_SERDE_MAGIC_LENGTH: u16 = 7;
+const LIST_LENGTH_PREFIX: u16 = 4;
+const STRING_LENGTH_PREFIX: u16 = 2;
+const NULLABILITY_BYTES: u16 = 1;
+
+//! When a TransactionState is sent to BFLSerializationScheme,
+//! without knowing the command, extra bit of information is required
+//! to deserialize it, this bit is an int.
+//! The map between inner states of TransactionStates and ints is maintained in ContractStateSerializerMap.
+const STATE_SERDE_STRATEGY_ID_LENGTH: u16 = U32_BYTES;
+
 const BLAKE2S_DIGEST_BYTES: u16 = 32;
 
 const COMPONENT_GROUP_LEAF_DIGEST_BYTES: u16 = BLAKE2S_DIGEST_BYTES;
@@ -36,24 +52,10 @@ const COMMAND_GROUP_SIZE: u16 = 1; // For now we support only single command tra
 
 const REFERENCE_COMPONENT_SIZE: u16 = 48;
 const INPUT_COMPONENT_SIZE: u16 = 48;
-const ATTACHMENT_COMPONENT_SIZE: u16 = 1;
+const ATTACHMENT_COMPONENT_SIZE: u16
+    = CORDA_SERDE_MAGIC_LENGTH; // there must be more
 
 const NOTARY_COMPONENT_SIZE: u16 = 846;
 const TIMEWINDOW_COMPONENT_SIZE: u16 = 33;
 const PARAMETERS_COMPONENT_SIZE: u16 = 44;
-const LIST_LENGTH_PREFIX: u16 = 4;
-const STRING_LENGTH_PREFIX: u16 = 2;
 
-const NULLABILITY_BYTES: u16 = 1;
-
-const CHAR_BYTES: u16 = 2;
-
-//! Corda-side serialization-related consts.
-//! Corda prepends every serialization with 7 bytes
-//! CustomSerializationSchemeUtils.getCustomSerializationMagicFromSchemeId(SCHEME_ID).size
-const CORDA_SERDE_MAGIC_LENGTH: u16 = 7;
-//! When a TransactionState is sent to BFLSerializationScheme,
-//! without knowing the command, extra bit of information is required
-//! to deserialize it, this bit is an int.
-//! The map between inner states of TransactionStates and ints is maintained in ContractStateSerializerMap.
-const STATE_SERDE_STRATEGY_ID_LENGTH: u16 = U32_BYTES;

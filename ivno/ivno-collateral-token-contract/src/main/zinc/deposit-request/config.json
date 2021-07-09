@@ -1,23 +1,74 @@
 {
-  "circuit" : {
-    "name": "deposit-request"
+  "circuit": {
+    "name": "deposit-request",
+    "states": [
+      {
+        "java_class": "io.ivno.collateraltoken.contract.Deposit",
+        "zinc_type": "DepositAnonymousPartyEdDSAAnonymousPartyEdDSAAnonymousPartyEdDSA",
+        "location": "deposit_anonymous_party_ed_dsa_anonymous_party_ed_dsa_anonymous_party_ed_dsa.zn",
+        "attachment_constraint" : "net.corda.core.contracts.HashAttachmentConstraint"
+      },
+      {
+        "java_class": "io.onixlabs.corda.bnms.contract.membership.Membership",
+        "zinc_type": "MembershipNetworkPolyPartyEdDSAPolyPartyEdDSAPolyClaimString_7_Collection_2SettingString_7_Collection_3",
+        "location": "membership_network_poly_party_ed_dsa_poly_party_ed_dsa_poly_claim_string_7_collection_2setting_string_7_collection_3.zn",
+        "attachment_constraint" : "net.corda.core.contracts.HashAttachmentConstraint"
+      },
+      {
+        "java_class": "io.onixlabs.corda.bnms.contract.membership.MembershipAttestation",
+        "zinc_type": "MembershipAttestation",
+        "location": "membership_attestation.zn",
+        "attachment_constraint" : "net.corda.core.contracts.HashAttachmentConstraint"
+      },
+      {
+        "java_class": "io.ivno.collateraltoken.contract.IvnoTokenType",
+        "zinc_type": "IvnoTokenTypeNetworkPolyPartyEdDSAPartyEdDSAPartyEdDSA",
+        "location": "ivno_token_type_network_poly_party_ed_dsa_party_ed_dsa_party_ed_dsa.zn",
+        "attachment_constraint" : "net.corda.core.contracts.AlwaysAcceptAttachmentConstraint"
+      }
+    ]
   },
-  "groups" : {
+  "groups": {
+    "attachment_group": {
+      "group_size": 4
+    },
+    "output_group": [
+      {
+        "java_class": "io.ivno.collateraltoken.contract.Deposit",
+        "state_group_size": 1
+      }
+    ],
+    "reference_group": [
+      {
+        "java_class": "io.onixlabs.corda.bnms.contract.membership.Membership",
+        "state_group_size": 3
+      },
+      {
+        "java_class": "io.onixlabs.corda.bnms.contract.membership.MembershipAttestation",
+        "state_group_size": 3
+      },
+      {
+        "java_class": "io.ivno.collateraltoken.contract.IvnoTokenType",
+        "state_group_size": 1
+      }
+    ],
     "command_group": {
       "group_size": 1,
-      "commands": [ {
-        "name": "request",
-        "component_size": 11
-      }]
+      "commands": [
+        {
+          "name": "request",
+          "component_size": 11
+        }
+      ]
     },
-    "notary_group" : {
-      "group_size" : 1
+    "notary_group": {
+      "group_size": 1
     },
-    "timewindow_group" : {
-      "group_size" : 1
+    "timewindow_group": {
+      "group_size": 0
     },
-    "signer_group" : {
-      "signer_size": 63,
+    "signer_group": {
+      "signer_size": 52,
       "signer_list_size": 1
     }
   }

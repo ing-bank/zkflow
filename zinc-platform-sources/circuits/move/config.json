@@ -1,21 +1,22 @@
 {
   "circuit" : {
     "name": "move",
-    "states" : [{
-      "location" : "test_state.zn",
-      "name" : "TestState"
+    "states" : [      {
+      "java_class": "com.ing.zknotary.testing.fixtures.contract.TestContract.TestState",
+      "zinc_type": "TestState",
+      "location": "test_state.zn"
     }]
   },
   "groups" : {
     "input_group" : [
       {
-        "state_name": "TestState",
+        "java_class": "com.ing.zknotary.testing.fixtures.contract.TestContract.TestState",
         "state_group_size": 1
       }
     ],
     "output_group" : [
       {
-        "state_name": "TestState",
+        "java_class": "com.ing.zknotary.testing.fixtures.contract.TestContract.TestState",
         "state_group_size": 1
       }
     ],

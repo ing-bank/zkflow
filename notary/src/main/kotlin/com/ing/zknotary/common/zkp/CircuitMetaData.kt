@@ -9,6 +9,7 @@ import java.time.Duration
 data class CircuitMetaData(
     val name: String,
     val componentGroupSizes: Map<ComponentGroupEnum, Int>,
+    val javaClass2ZincType: Map<String, String>,
     val buildFolder: File,
 
     val buildTimeout: Duration,
@@ -20,11 +21,16 @@ data class CircuitMetaData(
         const val CONFIG_CIRCUIT_FILE = "config.json"
 
         fun fromConfig(circuitFolder: File, commandPos: Int = 0): CircuitMetaData {
-            val config = CircuitConfigurator(circuitFolder, CONFIG_CIRCUIT_FILE).circuitConfiguration
+            val config = CircuitConfigurator.fromSources(circuitFolder, CONFIG_CIRCUIT_FILE).circuitConfiguration
+
+            val javaClass2ZincType = config.circuit.states.associate {
+                it.javaClass to it.zincType
+            }
 
             return CircuitMetaData(
                 config.groups.commandGroup.commands[commandPos].name,
                 mapOf(ComponentGroupEnum.SIGNERS_GROUP to config.groups.signerGroup.signerListSize),
+                javaClass2ZincType,
                 circuitFolder,
                 config.circuit.buildTimeout.seconds,
                 config.circuit.setupTimeout.seconds,
