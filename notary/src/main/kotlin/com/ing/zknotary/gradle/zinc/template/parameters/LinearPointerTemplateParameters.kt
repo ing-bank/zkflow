@@ -8,6 +8,6 @@ object LinearPointerTemplateParameters : TemplateParameters(
     listOf(ByteArrayTemplateParameters(CordaSerializers.CLASS_NAME_SIZE))
 ) {
     override fun getReplacements() = mapOf(
-        "CLASS_NAME_STRING_SIZE" to CordaSerializers.CLASS_NAME_SIZE.toString(),
+        "CLASS_NAME_BYTE_ARRAY_SIZE" to CordaSerializers.CLASS_NAME_SIZE.toString(),
     )
 }
