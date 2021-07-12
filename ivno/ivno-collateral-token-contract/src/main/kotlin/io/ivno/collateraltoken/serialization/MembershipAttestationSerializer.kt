@@ -5,6 +5,7 @@ import com.ing.serialization.bfl.api.SurrogateSerializer
 import io.onixlabs.corda.bnms.contract.Network
 import io.onixlabs.corda.bnms.contract.membership.Membership
 import io.onixlabs.corda.bnms.contract.membership.MembershipAttestation
+import io.onixlabs.corda.bnms.contract.membership.MembershipContract
 import io.onixlabs.corda.identityframework.contract.Attestation
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
@@ -13,6 +14,7 @@ import net.corda.core.contracts.TransactionState
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
+import kotlin.reflect.jvm.jvmName
 
 object MembershipAttestationSerializer: SurrogateSerializer<MembershipAttestation, MembershipAttestationSurrogate>(
     MembershipAttestationSurrogate.serializer(),
@@ -50,7 +52,7 @@ data class MembershipAttestationSurrogate(
         val membershipState: StateAndRef<Membership> = StateAndRef(
             TransactionState(
                 data = membership,
-                contract = BOGUS_CONTRACT_NAME,
+                contract = MembershipContract::class.jvmName,
                 notary = bogusNotary
             ),
             attestation.pointer.stateRef
@@ -76,7 +78,6 @@ data class MembershipAttestationSurrogate(
          * These constants are used to create a temporary [StateAndRef] of [Membership], that is needed to satisfy
          * the public constructor of [MembershipAttestation]. These values will be discarded by that constructor.
          */
-        const val BOGUS_CONTRACT_NAME = "BogusContract"
         const val BOGUS_NOTARY_NAME = "O=Org,L=New York,C=US"
     }
 }

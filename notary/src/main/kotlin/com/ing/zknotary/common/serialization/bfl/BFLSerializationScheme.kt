@@ -150,11 +150,13 @@ open class BFLSerializationScheme : CustomSerializationScheme {
                 @Suppress("UNCHECKED_CAST")
                 val signers = obj as? List<PublicKey> ?: error("Signers: Expected List<PublicKey>, actual ${obj::class.simpleName}")
 
-                val circuitMetaData = context.properties[CONTEXT_KEY_CIRCUIT] as? CircuitMetaData
-                    ?: error("Context must specify circuit meta data")
-
-                val signersFixedLength = circuitMetaData.componentGroupSizes?.get(ComponentGroupEnum.SIGNERS_GROUP)
-                    ?: error("[${circuitMetaData.name}] Max number of signers must be an integer value")
+                val signersFixedLength = (context.properties[CONTEXT_KEY_CIRCUIT] as? CircuitMetaData)?.let {
+                    // ZKP transaction.
+                    it.componentGroupSizes[ComponentGroupEnum.SIGNERS_GROUP]
+                        ?: error("[${it.name}] Max number of signers must be an integer value")
+                }
+                    // Non ZKP transaction
+                    ?: signers.size
 
                 informedSerialize(
                     signers,

@@ -11,6 +11,7 @@ import io.dasl.contracts.v1.token.linearPointer
 import io.dasl.contracts.v1.token.toBigDecimalAmount
 import io.onixlabs.corda.bnms.contract.Network
 import io.onixlabs.corda.bnms.contract.Role
+import io.onixlabs.corda.bnms.contract.Setting
 import io.onixlabs.corda.bnms.contract.membership.Membership
 import io.onixlabs.corda.bnms.contract.membership.MembershipAttestation
 import io.onixlabs.corda.bnms.contract.membership.MembershipAttestationContract
@@ -22,6 +23,7 @@ import io.onixlabs.corda.bnms.contract.relationship.RelationshipContract
 import io.onixlabs.corda.bnms.contract.revocation.RevocationLockContract
 import io.onixlabs.corda.identityframework.contract.AttestationContract
 import io.onixlabs.corda.identityframework.contract.AttestationStatus
+import io.onixlabs.corda.identityframework.contract.Claim
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.AbstractParty
@@ -160,7 +162,12 @@ abstract class ContractTest {
     ): Pair<StateAndRef<Membership>, StateAndRef<MembershipAttestation>> {
         val membershipLabel = SecureHash.randomSHA256().toString()
         val attestationLabel = SecureHash.randomSHA256().toString()
-        val membership = Membership(network, holder).addRoles(*roles.toTypedArray())
+        val seedMembership = Membership(network, holder).addRoles(*roles.toTypedArray())
+
+        val membership = seedMembership.copy(
+            identity = setOf(Claim("DUMMY", 1)),
+            settings = setOf(Setting("DUMMY", 1))
+        )
 
         transaction {
             output(MembershipContract.ID, membershipLabel, membership)
