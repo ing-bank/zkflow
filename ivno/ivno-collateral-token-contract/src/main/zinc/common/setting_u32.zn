@@ -1,0 +1,65 @@
+mod platform_consts;
+mod platform_integer;
+mod string_20;
+
+use platform_consts::U32_BYTES;
+
+use platform_integer::parse_u32;
+
+use string_20::String_20;
+use string_20::STRING_20_LENGTH;
+
+const SETTING_U32_PROPERTY_LENGTH: u16 = STRING_20_LENGTH;
+const SETTING_U32_VALUE_LENGTH: u16 = U32_BYTES;
+
+const SETTING_U32_PROPERTY_OFFSET: u16 = 0;
+const SETTING_U32_VALUE_OFFSET: u16
+    = SETTING_U32_PROPERTY_OFFSET
+    + SETTING_U32_PROPERTY_LENGTH;
+const SETTING_U32_LENGTH: u16
+    = SETTING_U32_VALUE_OFFSET
+    + SETTING_U32_VALUE_LENGTH;
+
+type SerializedSettingU32 = [u8; SETTING_U32_LENGTH];
+
+struct SettingU32 {
+    property: String_20,
+    value: u32,
+}
+
+impl SettingU32 {
+    fn empty() -> SettingU32 {
+        SettingU32 {
+            property: String_20::empty(),
+            value: 0 as u32,
+        }
+    }
+
+    fn equals(this: SettingU32, that: SettingU32) -> bool {
+        String_20::equals(this.property, that.property)
+            && this.value == that.value
+    }
+
+    fn deserialize(serialized: SerializedSettingU32) -> SettingU32 {
+        let property = {
+            let mut property_bytes = [0; SETTING_U32_PROPERTY_LENGTH];
+            for i in 0..SETTING_U32_PROPERTY_LENGTH {
+                property_bytes[i] = serialized[i + SETTING_U32_PROPERTY_OFFSET];
+            }
+            String_20::deserialize(property_bytes)
+        };
+
+        let value = {
+            let mut value_bytes = [0; SETTING_U32_VALUE_LENGTH];
+            for i in 0..SETTING_U32_VALUE_LENGTH {
+                value_bytes[i] = serialized[i + SETTING_U32_VALUE_OFFSET];
+            }
+            parse_u32(value_bytes)
+        };
+
+        SettingU32 {
+            property: property,
+            value: value,
+        }
+    }
+}

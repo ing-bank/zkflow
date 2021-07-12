@@ -30,7 +30,7 @@ cordapp {
 // The numeric values refer to the lengths used by the serializable surrogates, e.g. RoleSurrogate.VALUE_LENGTH
 // If any of these lengths are changed in the respective Kotlin files, the relevant values shall be also updated here!!!
 zkp {
-     addConfigurations([
+    addConfigurations([
             new BigDecimalTemplateParameters(20, 4),
             new NullableTemplateParameters(
                     "nullable.zn",
@@ -70,21 +70,21 @@ zkp {
                     ),
                     null
             ),
+            // Needed for Attestation
             new CollectionTemplateParameters(
-                     2,
-                     new PolyTemplateParameters(
-                             new AbstractPartyTemplateParameters(
-                                     "AnonymousParty",
-                                     PublicKeyTemplateParameters.Companion.newInstance().eddsaTemplateParameters
-                             )
-                     )
-             ),
-             new MapTemplateParameters(
-                     "AttestationMetadataMap",
-                     5,
-                     new StringTemplateParameters(32),
-                     new StringTemplateParameters(128)
-             )
+                    "collection.zn",
+                    1,
+                    new PolyTemplateParameters(
+                            new AbstractPartyTemplateParameters("Party", PublicKeyTemplateParameters.Companion.newInstance().eddsaTemplateParameters)
+                    ),
+                    null
+            ),
+            new MapTemplateParameters(
+                    "AttestationMetadataMap",
+                    5,
+                    new StringTemplateParameters(32),
+                    new StringTemplateParameters(128)
+            )
     ])
 
     addConfigurations([7, 20, 32].collect { new StringTemplateParameters(it.shortValue()) })

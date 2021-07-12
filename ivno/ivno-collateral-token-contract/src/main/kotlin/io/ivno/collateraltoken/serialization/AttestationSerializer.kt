@@ -21,7 +21,7 @@ object AttestationSerializer : SurrogateSerializer<Attestation<*>, AttestationSu
             it.attestees,
             it.pointer,
             it.status,
-            it.metadata,
+            // it.metadata,
             it.linearId,
             it.previousStateRef
         )
@@ -35,19 +35,19 @@ data class AttestationSurrogate(
     val attestees: Set<@Polymorphic AbstractParty>,
     val pointer: @Contextual AttestationPointer<*>,
     val status: AttestationStatus,
-    @FixedLength([METADATA_MAP_SIZE, METADATA_KEY_LENGTH, METADATA_VALUE_LENGTH])
-    val metadata: Map<String, String>,
+//    @FixedLength([METADATA_MAP_SIZE, METADATA_KEY_LENGTH, METADATA_VALUE_LENGTH])
+//    val metadata: Map<String, String>,
     val linearId: @Contextual UniqueIdentifier,
     val previousStateRef: @Contextual StateRef?
 ) : Surrogate<Attestation<*>> {
     override fun toOriginal(): Attestation<*> {
         return Attestation(
-            attestor, attestees, pointer, status, metadata, linearId, previousStateRef
+            attestor, attestees, pointer, status, emptyMap(), linearId, previousStateRef
         )
     }
 
     companion object {
-        const val ATTESTEES_SIZE = 2
+        const val ATTESTEES_SIZE = 1
         const val METADATA_MAP_SIZE = 5
         const val METADATA_KEY_LENGTH = 32
         const val METADATA_VALUE_LENGTH = 128

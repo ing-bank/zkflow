@@ -33,6 +33,15 @@ struct MembershipAttestation {
 }
 
 impl MembershipAttestation {
+    fn print_structure() {
+        dbg!("[MembershipAttestation] LENGTH: {}", MEMBERSHIP_ATTESTATION_LENGTH);
+        dbg!("[MembershipAttestation] STRUCTURE");
+        dbg!("[MembershipAttestation] - NETWORK:     {}", MEMBERSHIP_ATTESTATION_NETWORK_LENGTH);
+        dbg!("[MembershipAttestation] - ATTESTATION: {}", MEMBERSHIP_ATTESTATION_ATTESTATION_LENGTH);
+        dbg!("[MembershipAttestation]");
+        Attestation::print_structure();
+    }
+
     fn new(network: NetworkPolyPartyEdDSA, an_attestation: Attestation) -> MembershipAttestation {
         MembershipAttestation {
             network: network,

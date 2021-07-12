@@ -1,17 +1,17 @@
 {
   "circuit": {
-    "name": "deposit-advance",
+    "name": "deposit-request",
     "states": [
       {
-        "java_class": "io.ivno.collateraltoken.contract.Deposit",
-        "zinc_type": "DepositAnonymousPartyEdDSAAnonymousPartyEdDSAAnonymousPartyEdDSA",
-        "location": "deposit_anonymous_party_ed_dsa_anonymous_party_ed_dsa_anonymous_party_ed_dsa.zn",
+        "java_class": "io.ivno.collateraltoken.contract.Transfer",
+        "zinc_type": "TransferAnonymousPartyEdDSAAnonymousPartyEdDSA",
+        "location": "transfer_anonymous_party_ed_dsa_anonymous_party_ed_dsa.zn",
         "attachment_constraint" : "net.corda.core.contracts.HashAttachmentConstraint"
       },
       {
         "java_class": "io.onixlabs.corda.bnms.contract.membership.Membership",
-        "zinc_type": "MembershipNetworkPolyPartyEdDSAPolyPartyEdDSAPolyClaimString_7_Collection_2SettingString_7_Collection_3",
-        "location": "MembershipNetworkPolyPartyEdDSAPolyPartyEdDSAPolyClaimU32_Collection_2SettingU32_Collection_3.zn",
+        "zinc_type": "MembershipNetworkPolyPartyEdDSAPolyPartyEdDSAPolyClaimU32_Collection_2SettingU32_Collection_3",
+        "location": "membership_network_poly_party_ed_dsa_poly_party_ed_dsa_poly_claim_u32_collection_2setting_u32_collection_3.zn",
         "attachment_constraint" : "net.corda.core.contracts.HashAttachmentConstraint"
       },
       {
@@ -32,26 +32,20 @@
     "attachment_group": {
       "group_size": 4
     },
-    "input_group": [
-      {
-        "java_class": "io.ivno.collateraltoken.contract.Deposit",
-        "state_group_size": 1
-      }
-    ],
     "output_group": [
       {
-        "java_class": "io.onixlabs.corda.bnms.contract.membership.Membership",
+        "java_class": "io.ivno.collateraltoken.contract.Transfer",
         "state_group_size": 1
       }
     ],
     "reference_group": [
       {
         "java_class": "io.onixlabs.corda.bnms.contract.membership.Membership",
-        "state_group_size": 3
+        "state_group_size": 2
       },
       {
         "java_class": "io.onixlabs.corda.bnms.contract.membership.MembershipAttestation",
-        "state_group_size": 3
+        "state_group_size": 2
       },
       {
         "java_class": "io.ivno.collateraltoken.contract.IvnoTokenType",
@@ -62,7 +56,7 @@
       "group_size": 1,
       "commands": [
         {
-          "name": "advance",
+          "name": "request",
           "component_size": 11
         }
       ]

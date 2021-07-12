@@ -78,5 +78,5 @@ object CordaSerializers {
      * implementation limits it to 65536. In practice however we don't expect to see class
      * names longer than the chosen limit.
      */
-    const val CLASS_NAME_SIZE: Int = 192
+    const val CLASS_NAME_SIZE: Int = 100
 }

@@ -1,16 +1,29 @@
 package io.ivno.collateraltoken.contract
 
+import com.ing.zknotary.common.zkp.ZincZKTransactionService
+import com.ing.zknotary.testing.dsl.VerificationMode
 import com.ing.zknotary.testing.dsl.zkLedger
-import net.corda.testing.node.ledger
+import com.ing.zknotary.testing.zkp.MockZKTransactionService
+import net.corda.core.utilities.loggerFor
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
+import kotlin.time.ExperimentalTime
+import kotlin.time.measureTime
 
+@ExperimentalTime
 @Disabled("Re-enable once we have everything serializable and when we have zktransaction DSL")
 class TransferContractRequestTests : ContractTest() {
+    private val log = loggerFor<TransferContractRequestTests>()
 
     @Test
     fun `On transfer requesting, the transaction must include the Request command`() {
+        // services.zkLedger(zkService = MockZKTransactionService(services)) {
         services.zkLedger {
+            val zkService = this.interpreter.zkService as ZincZKTransactionService
+            val time = measureTime {
+                zkService.setup(TransferContract.Request)
+            }
+            log.info("[setup] $time")
             zkTransaction {
                 val memberships = createAllMemberships()
                 reference(memberships.membershipFor(BANK_A).ref)
@@ -22,11 +35,13 @@ class TransferContractRequestTests : ContractTest() {
                 fails()
                 command(keysOf(BANK_A), TransferContract.Request)
                 verifies()
+                verifies(VerificationMode.PROVE_AND_VERIFY)
             }
         }
     }
 
     @Test
+    @Disabled
     fun `On transfer requesting, zero transfer states must be consumed`() {
         services.zkLedger {
             zkTransaction {
@@ -39,6 +54,7 @@ class TransferContractRequestTests : ContractTest() {
     }
 
     @Test
+    @Disabled
     fun `On transfer requesting, only one transfer state must be created`() {
         services.zkLedger {
             zkTransaction {
@@ -51,6 +67,7 @@ class TransferContractRequestTests : ContractTest() {
     }
 
     @Test
+    @Disabled
     fun `On transfer requesting, the sender and the receiver accounts must not be the same`() {
         services.zkLedger {
             zkTransaction {
@@ -62,7 +79,7 @@ class TransferContractRequestTests : ContractTest() {
                 reference(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
                 output(
                     TransferContract.ID,
-                    TRANSFER.copy(targetTokenHolder = BANK_A.party, targetTokenHolderAccountId = "12345678")
+                    TRANSFER.copy(targetTokenHolder = BANK_A.party.anonymise(), targetTokenHolderAccountId = "12345678")
                 )
                 command(keysOf(BANK_A), TransferContract.Request)
                 failsWith(TransferContract.Request.CONTRACT_RULE_PARTICIPANTS)
@@ -71,6 +88,7 @@ class TransferContractRequestTests : ContractTest() {
     }
 
     @Test
+    @Disabled
     fun `On transfer requesting, the amount must be greater than zero`() {
         services.zkLedger {
             zkTransaction {
@@ -88,6 +106,7 @@ class TransferContractRequestTests : ContractTest() {
     }
 
     @Test
+    @Disabled
     fun `On transfer requesting, the status must be REQUESTED`() {
         services.zkLedger {
             zkTransaction {
@@ -105,6 +124,7 @@ class TransferContractRequestTests : ContractTest() {
     }
 
     @Test
+    @Disabled
     fun `On transfer requesting, the initiator must sign the transaction`() {
         services.zkLedger {
             zkTransaction {

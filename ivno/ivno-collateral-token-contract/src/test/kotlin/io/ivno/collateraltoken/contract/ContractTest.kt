@@ -99,8 +99,8 @@ abstract class ContractTest {
         )
 
         val TRANSFER = Transfer(
-            BANK_A.party,
-            BANK_B.party,
+            BANK_A.party.anonymise(),
+            BANK_B.party.anonymise(),
             TransferInitiator.CURRENT_HOLDER,
             AMOUNT_OF_100_IVNO_TOKEN_POINTER,
             "12345678",

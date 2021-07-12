@@ -1,8 +1,9 @@
 package com.ing.zknotary.zinc.types.corda.txstate
 
 import com.ing.zknotary.common.serialization.bfl.BFLSerializationScheme
-import com.ing.zknotary.common.serialization.bfl.serializers.CordaSerializers
+import com.ing.zknotary.common.serialization.bfl.serializers.CordaSerializers.CLASS_NAME_SIZE
 import com.ing.zknotary.common.serialization.bfl.serializers.publickey.EdDSASurrogate
+import com.ing.zknotary.common.serialization.bfl.serializers.toBytes
 import com.ing.zknotary.testing.bytesToWitness
 import com.ing.zknotary.testing.fixtures.contract.TestContract
 import com.ing.zknotary.testing.getZincZKService
@@ -79,7 +80,7 @@ private fun TransactionState<TestContract.TestState>.toJsonObject() = buildJsonO
     //         constraint: AutomaticPlaceholderConstraint
     // }
     put("data", data.toJsonObject())
-    put("contract", contract.toJsonObject(CordaSerializers.CLASS_NAME_SIZE))
+    put("contract", contract.toBytes().toJsonObject(CLASS_NAME_SIZE))
     put("notary", notary.toJsonObject(EdDSASurrogate.ENCODED_SIZE))
     put("encumbrance", encumbrance.toJsonObject())
     if (constraint is HashAttachmentConstraint || constraint is SignatureAttachmentConstraint) {

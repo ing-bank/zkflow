@@ -4,7 +4,7 @@
 
 mod platform_consts;
 mod ${USER_STATE_MODULE_NAME};
-mod ${STRING_MODULE_NAME};
+mod ${CLASS_NAME_MODULE_NAME};
 mod ${PARTY_MODULE_NAME};
 mod nullable_i32;
 mod ${ATTACHMENT_CONSTRAINT_MODULE_NAME};
@@ -13,8 +13,8 @@ use platform_consts::CORDA_SERDE_MAGIC_LENGTH;
 use platform_consts::STATE_SERDE_STRATEGY_ID_LENGTH;
 use ${USER_STATE_MODULE_NAME}::${USER_STATE_TYPE_NAME};
 use ${USER_STATE_MODULE_NAME}::${USER_STATE_CONSTANT_PREFIX}_LENGTH;
-use ${STRING_MODULE_NAME}::${STRING_TYPE_NAME};
-use ${STRING_MODULE_NAME}::${STRING_CONSTANT_PREFIX}_LENGTH;
+use ${CLASS_NAME_MODULE_NAME}::${CLASS_NAME_TYPE_NAME};
+use ${CLASS_NAME_MODULE_NAME}::${CLASS_NAME_CONSTANT_PREFIX}_LENGTH;
 use ${PARTY_MODULE_NAME}::${PARTY_TYPE_NAME};
 use ${PARTY_MODULE_NAME}::${PARTY_CONSTANT_PREFIX}_LENGTH;
 use nullable_i32::NullableI32;
@@ -30,7 +30,7 @@ const CONTRACT_OFFSET: u16
     + ${USER_STATE_CONSTANT_PREFIX}_LENGTH;
 const NOTARY_OFFSET: u16
     = CONTRACT_OFFSET
-    + ${STRING_CONSTANT_PREFIX}_LENGTH;
+    + ${CLASS_NAME_CONSTANT_PREFIX}_LENGTH;
 const ENCUMBRANCE_OFFSET: u16
     = NOTARY_OFFSET
     + ${PARTY_CONSTANT_PREFIX}_LENGTH;
@@ -46,7 +46,7 @@ type SerializedTxState${USER_STATE_TYPE_NAME} = [u8; TX_STATE_${USER_STATE_CONST
 
 struct TxState${USER_STATE_TYPE_NAME} {
     data: ${USER_STATE_TYPE_NAME},
-    contract: ${STRING_TYPE_NAME},
+    contract: ${CLASS_NAME_TYPE_NAME},
     notary: ${PARTY_TYPE_NAME},
     encumbrance: NullableI32,
     constraint: ${ATTACHMENT_CONSTRAINT_TYPE_NAME}
@@ -55,7 +55,7 @@ struct TxState${USER_STATE_TYPE_NAME} {
 impl TxState${USER_STATE_TYPE_NAME} {
     fn equals(this: TxState${USER_STATE_TYPE_NAME}, that: TxState${USER_STATE_TYPE_NAME}) -> bool {
         ${USER_STATE_TYPE_NAME}::equals(this.data, that.data) &&
-        ${STRING_TYPE_NAME}::equals(this.contract, that.contract) &&
+        ${CLASS_NAME_TYPE_NAME}::equals(this.contract, that.contract) &&
         ${PARTY_TYPE_NAME}::equals(this.notary, that.notary) &&
         NullableI32::equals(this.encumbrance, that.encumbrance) &&
         ${ATTACHMENT_CONSTRAINT_TYPE_NAME}::equals(this.constraint, that.constraint)
@@ -72,11 +72,11 @@ impl TxState${USER_STATE_TYPE_NAME} {
         // dbg!("[TxState.data] {}", data);
 
         let contract = {
-            let mut contract_bytes = [0; ${STRING_CONSTANT_PREFIX}_LENGTH];
-            for i in 0..${STRING_CONSTANT_PREFIX}_LENGTH {
+            let mut contract_bytes = [0; ${CLASS_NAME_CONSTANT_PREFIX}_LENGTH];
+            for i in 0..${CLASS_NAME_CONSTANT_PREFIX}_LENGTH {
                 contract_bytes[i] = serialized[i + CONTRACT_OFFSET];
             }
-            ${STRING_TYPE_NAME}::deserialize(contract_bytes)
+            ${CLASS_NAME_TYPE_NAME}::deserialize(contract_bytes)
         };
 
         let notary = {

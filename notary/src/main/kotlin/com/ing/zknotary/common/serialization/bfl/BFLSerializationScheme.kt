@@ -4,6 +4,9 @@ import com.ing.zknotary.common.serialization.bfl.serializers.TimeWindowSerialize
 import com.ing.zknotary.common.serialization.bfl.serializers.TransactionStateSerializer
 import com.ing.zknotary.common.zkp.CircuitMetaData
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.contextual
+import kotlinx.serialization.modules.plus
 import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.ContractState
@@ -112,7 +115,11 @@ open class BFLSerializationScheme : CustomSerializationScheme {
 
                 val strategy = TransactionStateSerializer(stateStrategy)
 
-                val debugSerialization = obliviousDebugSerialize(obj, strategy, serializersModule = serializersModule)
+                val debugSerialization = obliviousDebugSerialize(
+                    obj,
+                    strategy,
+                    serializersModule = serializersModule + SerializersModule { contextual(strategy) }
+                )
                 // Serialization layout is accessible at debugSerialization.second
 
                 ContractStateSerializerMap.prefixWithIdentifier(

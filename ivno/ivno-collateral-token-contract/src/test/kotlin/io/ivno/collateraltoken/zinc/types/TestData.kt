@@ -43,6 +43,7 @@ fun randomUUID() = UUID(0, Random.nextInt(0, Int.MAX_VALUE).toLong())
 
 val party: Party = TestIdentity.fresh("some-org").party
 val anotherParty: Party = TestIdentity.fresh("another-org").party
+val anEvenOtherParty: Party = TestIdentity.fresh("even-other-org").party
 
 val anonymousParty: AnonymousParty = TestIdentity.fresh("some-org").party.anonymise()
 val anotherAnonymousParty: AnonymousParty = TestIdentity.fresh("another-org").party.anonymise()
@@ -279,31 +280,19 @@ val stateWithDifferentTransactionTime = state.copy(transactionTime = anotherStat
 val stateWithDifferentTransactionId = state.copy(transactionId = anotherState.transactionId)
 
 val attestation = Attestation(
-    attestor = anonymousParty,
-    attestees = setOf(anotherAnonymousParty),
+    attestor = party,
+    attestees = setOf(anotherParty),
     pointer = membershipAttestationPointer,
     status = AttestationStatus.ACCEPTED,
-    metadata = mapOf(
-        "1" to "one",
-        "2" to "two",
-        "3" to "three"
-    ),
+    metadata = emptyMap(),
     linearId = someUniqueIdentifier,
     previousStateRef = stateRef,
 )
 
-val attestationWithDifferentAttestor = attestation.copy { attestor = anEvenOtherAnonymousParty }
-val attestationWithDifferentAttestees = attestation.copy { attestees = setOf(anEvenOtherAnonymousParty) }
+val attestationWithDifferentAttestor = attestation.copy { attestor = anEvenOtherParty }
+val attestationWithDifferentAttestees = attestation.copy { attestees = setOf(anEvenOtherParty) }
 val attestationWithDifferentPointer = attestation.builder().withPointer(attestationPointer).build()
 val attestationWithDifferentStatus = attestation.copy { status = AttestationStatus.REJECTED }
-val attestationWithDifferentMetadata = attestation.copy {
-    metadata = mapOf(
-        "1" to "one",
-        "2" to "two",
-        "3" to "three",
-        "4" to "four"
-    )
-}
 val attestationWithDifferentLinearId = attestation.copy { linearId = anotherUniqueIdentifier }
 val attestationWithoutPreviousState = attestation.copy { previousStateRef = null }
 val attestationWithDifferentPreviousState = attestation.copy { previousStateRef = anotherStateRef }
@@ -314,6 +303,6 @@ val membershipAttestation = MembershipAttestationSurrogate(
 val anotherMembershipAttestation = MembershipAttestationSurrogate(
     anotherNetworkWithDifferentOperator,
     attestation.copy {
-        attestor = anEvenOtherAnonymousParty
+        attestor = anEvenOtherParty
     }
 ).toOriginal()

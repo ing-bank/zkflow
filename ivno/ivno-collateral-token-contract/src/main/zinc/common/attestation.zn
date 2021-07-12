@@ -1,17 +1,17 @@
 //! Attestation module")
-mod poly_anonymous_party_ed_dsa;
-mod poly_anonymous_party_ed_dsa_collection_2;
+mod poly_party_ed_dsa;
+mod poly_party_ed_dsa_collection_1;
 mod attestation_metadata_map;
 mod attestation_pointer;
 mod attestation_status;
 mod nullable_state_ref;
 mod unique_identifier;
 
-use poly_anonymous_party_ed_dsa::PolyAnonymousPartyEdDSA;
-use poly_anonymous_party_ed_dsa::POLY_ANONYMOUS_PARTY_ED_DSA_LENGTH;
+use poly_party_ed_dsa::PolyPartyEdDSA;
+use poly_party_ed_dsa::POLY_PARTY_ED_DSA_LENGTH;
 
-use poly_anonymous_party_ed_dsa_collection_2::PolyAnonymousPartyEdDSA_Collection_2;
-use poly_anonymous_party_ed_dsa_collection_2::POLY_ANONYMOUS_PARTY_ED_DSA_COLLECTION_2_LENGTH;
+use poly_party_ed_dsa_collection_1::PolyPartyEdDSA_Collection_1;
+use poly_party_ed_dsa_collection_1::POLY_PARTY_ED_DSA_COLLECTION_1_LENGTH;
 
 use attestation_metadata_map::AttestationMetadataMap;
 use attestation_metadata_map::ATTESTATION_METADATA_MAP_LENGTH;
@@ -29,11 +29,11 @@ use unique_identifier::UniqueIdentifier;
 use unique_identifier::UNIQUE_IDENTIFIER_LENGTH;
 
 // field lengths
-const ATTESTATION_ATTESTOR_LENGTH: u16 = POLY_ANONYMOUS_PARTY_ED_DSA_LENGTH;
-const ATTESTATION_ATTESTEES_LENGTH: u16 = POLY_ANONYMOUS_PARTY_ED_DSA_COLLECTION_2_LENGTH;
+const ATTESTATION_ATTESTOR_LENGTH: u16 = POLY_PARTY_ED_DSA_LENGTH;
+const ATTESTATION_ATTESTEES_LENGTH: u16 = POLY_PARTY_ED_DSA_COLLECTION_1_LENGTH;
 //const ATTESTATION_POINTER_LENGTH: u16 = ATTESTATION_POINTER_LENGTH;
 //const ATTESTATION_STATUS_LENGTH: u16 = ATTESTATION_STATUS_LENGTH;
-const ATTESTATION_METADATA_LENGTH: u16 = ATTESTATION_METADATA_MAP_LENGTH;
+//const ATTESTATION_METADATA_LENGTH: u16 = ATTESTATION_METADATA_MAP_LENGTH;
 const ATTESTATION_LINEAR_ID_LENGTH: u16 = UNIQUE_IDENTIFIER_LENGTH;
 const ATTESTATION_PREVIOUS_STATE_REF_LENGTH: u16 = NULLABLE_STATE_REF_LENGTH;
 
@@ -48,12 +48,15 @@ const ATTESTATION_POINTER_OFFSET: u16
 const ATTESTATION_STATUS_OFFSET: u16
     = ATTESTATION_POINTER_OFFSET
     + ATTESTATION_POINTER_LENGTH;
-const ATTESTATION_METADATA_OFFSET: u16
+// const ATTESTATION_METADATA_OFFSET: u16
+//     = ATTESTATION_STATUS_OFFSET
+//     + ATTESTATION_STATUS_LENGTH;
+// const ATTESTATION_LINEAR_ID_OFFSET: u16
+//     = ATTESTATION_METADATA_OFFSET
+//     + ATTESTATION_METADATA_LENGTH;
+const ATTESTATION_LINEAR_ID_OFFSET: u16
     = ATTESTATION_STATUS_OFFSET
     + ATTESTATION_STATUS_LENGTH;
-const ATTESTATION_LINEAR_ID_OFFSET: u16
-    = ATTESTATION_METADATA_OFFSET
-    + ATTESTATION_METADATA_LENGTH;
 const ATTESTATION_PREVIOUS_STATE_REF_OFFSET: u16
     = ATTESTATION_LINEAR_ID_OFFSET
     + ATTESTATION_LINEAR_ID_LENGTH;
@@ -67,22 +70,35 @@ const ATTESTATION_LENGTH: u16
 type SerializedAttestation = [u8; ATTESTATION_LENGTH];
 
 struct Attestation {
-    attestor: PolyAnonymousPartyEdDSA,
-    attestees: PolyAnonymousPartyEdDSA_Collection_2,
+    attestor: PolyPartyEdDSA,
+    attestees: PolyPartyEdDSA_Collection_1,
     pointer: AttestationPointer,
     status: AttestationStatus,
-    metadata: AttestationMetadataMap,
+    // metadata: AttestationMetadataMap,
     linear_id: UniqueIdentifier,
     previous_state_ref: NullableStateRef,
 }
 
 impl Attestation {
+    fn print_structure() {
+        dbg!("[Attestation] LENGTH: {}", ATTESTATION_LENGTH);
+        dbg!("[Attestation] STRUCTURE");
+        dbg!("[Attestation] - ATTESTOR:           {}", ATTESTATION_ATTESTOR_LENGTH);
+        dbg!("[Attestation] - ATTESTEES:          {}", ATTESTATION_ATTESTEES_LENGTH);
+        dbg!("[Attestation] - POINTER:            {}", ATTESTATION_POINTER_LENGTH);
+        dbg!("[Attestation] - STATUS:             {}", ATTESTATION_STATUS_LENGTH);
+        // dbg!("[Attestation] - METADATA:           {}", ATTESTATION_METADATA_LENGTH);
+        dbg!("[Attestation] - LINEAR_ID:          {}", ATTESTATION_LINEAR_ID_LENGTH);
+        dbg!("[Attestation] - PREVIOUS_STATE_REF: {}", ATTESTATION_PREVIOUS_STATE_REF_LENGTH);
+        dbg!("[Attestation]");
+    }
+
     fn new(
-        attestor: PolyAnonymousPartyEdDSA,
-        attestees: PolyAnonymousPartyEdDSA_Collection_2,
+        attestor: PolyPartyEdDSA,
+        attestees: PolyPartyEdDSA_Collection_1,
         pointer: AttestationPointer,
         status: AttestationStatus,
-        metadata: AttestationMetadataMap,
+        // metadata: AttestationMetadataMap,
         linear_id: UniqueIdentifier,
         previous_state_ref: NullableStateRef
     ) -> Attestation {
@@ -91,7 +107,7 @@ impl Attestation {
             attestees: attestees,
             pointer: pointer,
             status: status,
-            metadata: metadata,
+            // metadata: metadata,
             linear_id: linear_id,
             previous_state_ref: previous_state_ref,
         }
@@ -99,40 +115,40 @@ impl Attestation {
 
     fn empty() -> Attestation {
         Attestation {
-            attestor: PolyAnonymousPartyEdDSA::empty(),
-            attestees: PolyAnonymousPartyEdDSA_Collection_2::empty(),
+            attestor: PolyPartyEdDSA::empty(),
+            attestees: PolyPartyEdDSA_Collection_1::empty(),
             pointer: AttestationPointer::empty(),
             status: AttestationStatus::ACCEPTED,
-            metadata: AttestationMetadataMap::empty(),
+            // metadata: AttestationMetadataMap::empty(),
             linear_id: UniqueIdentifier::empty(),
             previous_state_ref: NullableStateRef::null()
         }
     }
 
     fn equals(this: Attestation, that: Attestation) -> bool {
-        (PolyAnonymousPartyEdDSA::equals(this.attestor, that.attestor))
-            && (PolyAnonymousPartyEdDSA_Collection_2::equals(this.attestees, that.attestees))
+        (PolyPartyEdDSA::equals(this.attestor, that.attestor))
+            && (PolyPartyEdDSA_Collection_1::equals(this.attestees, that.attestees))
             && (AttestationPointer::equals(this.pointer, that.pointer))
             && (this.status == that.status)
-            && (AttestationMetadataMap::equals(this.metadata, that.metadata))
+            // && (AttestationMetadataMap::equals(this.metadata, that.metadata))
             && (UniqueIdentifier::equals(this.linear_id, that.linear_id))
             && (NullableStateRef::equals(this.previous_state_ref, that.previous_state_ref))
     }
 
     fn deserialize(serialized: SerializedAttestation) -> Attestation {
-        let attestor: PolyAnonymousPartyEdDSA = {
+        let attestor: PolyPartyEdDSA = {
             let mut attestor_bytes: [u8; ATTESTATION_ATTESTOR_LENGTH] = [0; ATTESTATION_ATTESTOR_LENGTH];
             for attestor_i in 0..ATTESTATION_ATTESTOR_LENGTH {
                 attestor_bytes[attestor_i] = serialized[attestor_i + ATTESTATION_ATTESTOR_OFFSET];
             }
-            PolyAnonymousPartyEdDSA::deserialize(attestor_bytes)
+            PolyPartyEdDSA::deserialize(attestor_bytes)
         };
-        let attestees: PolyAnonymousPartyEdDSA_Collection_2 = {
+        let attestees: PolyPartyEdDSA_Collection_1 = {
             let mut attestees_bytes: [u8; ATTESTATION_ATTESTEES_LENGTH] = [0; ATTESTATION_ATTESTEES_LENGTH];
             for attestees_i in 0..ATTESTATION_ATTESTEES_LENGTH {
                 attestees_bytes[attestees_i] = serialized[attestees_i + ATTESTATION_ATTESTEES_OFFSET];
             }
-            PolyAnonymousPartyEdDSA_Collection_2::deserialize(attestees_bytes)
+            PolyPartyEdDSA_Collection_1::deserialize(attestees_bytes)
         };
         let pointer: AttestationPointer = {
             let mut pointer_bytes: [u8; ATTESTATION_POINTER_LENGTH] = [0; ATTESTATION_POINTER_LENGTH];
@@ -148,13 +164,13 @@ impl Attestation {
             }
             AttestationStatus::deserialize(status_bytes)
         };
-        let metadata: AttestationMetadataMap = {
-            let mut metadata_bytes: [u8; ATTESTATION_METADATA_LENGTH] = [0; ATTESTATION_METADATA_LENGTH];
-            for metadata_i in 0..ATTESTATION_METADATA_LENGTH {
-                metadata_bytes[metadata_i] = serialized[metadata_i + ATTESTATION_METADATA_OFFSET];
-            }
-            AttestationMetadataMap::deserialize(metadata_bytes)
-        };
+        // let metadata: AttestationMetadataMap = {
+        //     let mut metadata_bytes: [u8; ATTESTATION_METADATA_LENGTH] = [0; ATTESTATION_METADATA_LENGTH];
+        //     for metadata_i in 0..ATTESTATION_METADATA_LENGTH {
+        //         metadata_bytes[metadata_i] = serialized[metadata_i + ATTESTATION_METADATA_OFFSET];
+        //     }
+        //     AttestationMetadataMap::deserialize(metadata_bytes)
+        // };
         let linear_id: UniqueIdentifier = {
             let mut linear_id_bytes: [u8; ATTESTATION_LINEAR_ID_LENGTH] = [0; ATTESTATION_LINEAR_ID_LENGTH];
             for linear_id_i in 0..ATTESTATION_LINEAR_ID_LENGTH {
@@ -175,7 +191,7 @@ impl Attestation {
             attestees: attestees,
             pointer: pointer,
             status: status,
-            metadata: metadata,
+            // metadata: metadata,
             linear_id: linear_id,
             previous_state_ref: previous_state_ref,
         }

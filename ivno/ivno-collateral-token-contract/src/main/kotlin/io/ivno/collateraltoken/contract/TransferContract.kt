@@ -1,12 +1,17 @@
 package io.ivno.collateraltoken.contract
 
+import com.ing.zknotary.common.contracts.ZKCommandData
+import com.ing.zknotary.common.zkp.CircuitMetaData
 import io.dasl.contracts.v1.token.BigDecimalAmount
 import io.dasl.contracts.v1.token.TokenState
 import io.onixlabs.corda.bnms.contract.membership.Membership
 import io.onixlabs.corda.bnms.contract.membership.MembershipAttestation
 import io.onixlabs.corda.identityframework.contract.AttestationStatus
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import net.corda.core.contracts.*
 import net.corda.core.transactions.LedgerTransaction
+import java.io.File
 import java.math.BigDecimal
 import java.security.PublicKey
 
@@ -25,11 +30,16 @@ class TransferContract : Contract {
         }
     }
 
-    interface TransferContractCommand : CommandData {
+    interface TransferContractCommand : ZKCommandData {
         fun verify(tx: LedgerTransaction, signers: Set<PublicKey>)
     }
 
+    @Serializable
     object Request : TransferContractCommand {
+        @Transient
+        override val circuit: CircuitMetaData = CircuitMetaData.fromConfig(
+            File("${System.getProperty("user.dir")}/build/zinc/transfer-request")
+        )
 
         internal const val CONTRACT_RULE_TRANSFER_INPUTS =
             "On transfer requesting, zero transfer states must be consumed."
@@ -107,6 +117,11 @@ class TransferContract : Contract {
     }
 
     object Advance : TransferContractCommand {
+        @Transient
+        override val circuit: CircuitMetaData = CircuitMetaData.fromConfig(
+            File("${System.getProperty("user.dir")}/build/zinc/transfer-advance")
+        )
+
 
         internal const val CONTRACT_RULE_TRANSFER_INPUTS =
             "On transfer advancing, only one transfer state must be consumed."

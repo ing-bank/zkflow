@@ -52,10 +52,8 @@ const COMMAND_GROUP_SIZE: u16 = 1; // For now we support only single command tra
 
 const REFERENCE_COMPONENT_SIZE: u16 = 48;
 const INPUT_COMPONENT_SIZE: u16 = 48;
-const ATTACHMENT_COMPONENT_SIZE: u16
-    = CORDA_SERDE_MAGIC_LENGTH; // there must be more
 
-const NOTARY_COMPONENT_SIZE: u16 = 846;
+const NOTARY_COMPONENT_SIZE: u16 = 265;
 const TIMEWINDOW_COMPONENT_SIZE: u16 = 33;
 const PARAMETERS_COMPONENT_SIZE: u16 = 44;
 

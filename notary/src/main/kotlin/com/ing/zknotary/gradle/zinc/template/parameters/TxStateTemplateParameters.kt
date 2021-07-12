@@ -10,7 +10,7 @@ data class TxStateTemplateParameters(val state: CircuitConfigurator.State) : Tem
     listOf(
         AbstractPartyTemplateParameters.selectPartyParameters(state.notaryKeySchemeCodename),
         AttachmentConstraintTemplateParameters.selectParameters(state.attachmentConstraint).polymorphic(),
-        StringTemplateParameters(CordaSerializers.CLASS_NAME_SIZE),
+        ByteArrayTemplateParameters(CordaSerializers.CLASS_NAME_SIZE),
         NullableTemplateParameters("nullable_integer.zn", null, "i32")
     )
 ) {
@@ -30,6 +30,6 @@ data class TxStateTemplateParameters(val state: CircuitConfigurator.State) : Tem
                 .selectParameters(state.attachmentConstraint)
                 .polymorphic()
                 .getTypeReplacements("ATTACHMENT_CONSTRAINT_") +
-            StringTemplateParameters(CordaSerializers.CLASS_NAME_SIZE)
-                .getTypeReplacements("STRING_")
+            ByteArrayTemplateParameters(CordaSerializers.CLASS_NAME_SIZE)
+                .getTypeReplacements("CLASS_NAME_")
 }
