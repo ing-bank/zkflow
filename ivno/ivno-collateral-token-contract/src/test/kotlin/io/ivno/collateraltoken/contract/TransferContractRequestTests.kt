@@ -34,7 +34,6 @@ class TransferContractRequestTests : ContractTest() {
                 output(TransferContract.ID, TRANSFER)
                 fails()
                 command(keysOf(BANK_A), TransferContract.Request)
-                verifies()
                 verifies(VerificationMode.PROVE_AND_VERIFY)
             }
         }

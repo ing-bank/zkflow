@@ -48,6 +48,10 @@ impl BigDecimalAmountLinearPointer {
             && (LinearPointer::equals(this.token, that.token))
     }
 
+    fn compare(this: BigDecimalAmountLinearPointer, that: BigDecimalAmountLinearPointer) -> i8 {
+        BigDecimal_20_4::compare(this.quantity, that.quantity)
+    }
+
     fn deserialize(serialized: SerializedBigDecimalAmountLinearPointer) -> BigDecimalAmountLinearPointer {
         let quantity: BigDecimal_20_4 = {
             let mut quantity_bytes: [u8; BIG_DECIMAL_AMOUNT_LINEAR_POINTER_QUANTITY_LENGTH] = [0; BIG_DECIMAL_AMOUNT_LINEAR_POINTER_QUANTITY_LENGTH];

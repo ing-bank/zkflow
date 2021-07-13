@@ -28,25 +28,25 @@ dependencies {
     testImplementation "$braid_group:braid-corda:$braid_version"
 }
 
-publishing {
-    publications {
-        maven(MavenPublication) {
-            groupId = project.parent.group
-            version = project.parent.version
-            artifactId = 'ivno-collateral-token-integration'
-            from components.java
-        }
-    }
-    repositories {
-//        maven {
-//            url "${maven_repo_s3_url}"
-//            credentials(AwsCredentials) {
-//                accessKey awsCredentials.AWSAccessKeyId
-//                secretKey awsCredentials.AWSSecretKey
-//            }
+//publishing {
+//    publications {
+//        maven(MavenPublication) {
+//            groupId = project.parent.group
+//            version = project.parent.version
+//            artifactId = 'ivno-collateral-token-integration'
+//            from components.java
 //        }
-    }
-}
+//    }
+//    repositories {
+////        maven {
+////            url "${maven_repo_s3_url}"
+////            credentials(AwsCredentials) {
+////                accessKey awsCredentials.AWSAccessKeyId
+////                secretKey awsCredentials.AWSSecretKey
+////            }
+////        }
+//    }
+//}
 
 apply plugin: 'java'
 

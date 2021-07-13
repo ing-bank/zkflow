@@ -20,7 +20,6 @@ class DepositContractAdvanceTests : ContractTest() {
     private val log = loggerFor<DepositContractAdvanceTests>()
 
     @Test
-    @Disabled
     fun `On deposit advancing, the transaction must include the Advance command`() {
         // services.zkLedger(zkService = MockZKTransactionService(services)) {
         services.zkLedger {

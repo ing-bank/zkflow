@@ -35,7 +35,9 @@ import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
 import org.junit.jupiter.api.BeforeEach
 import java.math.BigDecimal
+import kotlin.time.ExperimentalTime
 
+@ExperimentalTime
 abstract class ContractTest {
 
     protected companion object {
@@ -162,12 +164,10 @@ abstract class ContractTest {
     ): Pair<StateAndRef<Membership>, StateAndRef<MembershipAttestation>> {
         val membershipLabel = SecureHash.randomSHA256().toString()
         val attestationLabel = SecureHash.randomSHA256().toString()
-        val seedMembership = Membership(network, holder).addRoles(*roles.toTypedArray())
-
-        val membership = seedMembership.copy(
-            identity = setOf(Claim("DUMMY", 1)),
-            settings = setOf(Setting("DUMMY", 1))
-        )
+        // TODO: Fix the need for setting identity and settings sets for BFL
+        val membership = Membership(network, holder, setOf(Claim("DUMMY", 1)))
+            .addRoles(*roles.toTypedArray())
+            .addSetting("Dummy", 1)
 
         transaction {
             output(MembershipContract.ID, membershipLabel, membership)

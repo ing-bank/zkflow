@@ -18,7 +18,7 @@ open class ZincZKTransactionService(services: ServiceHub) : AbstractZKTransactio
         return zkServices.getOrPut(command) {
             val metaData = command.circuit
             val circuitFolder = metaData.buildFolder
-            val artifactFolder = File(circuitFolder, "artifacts")
+            val artifactFolder = File(circuitFolder, "data")
 
             return ZincZKService(
                 circuitFolder.absolutePath,
