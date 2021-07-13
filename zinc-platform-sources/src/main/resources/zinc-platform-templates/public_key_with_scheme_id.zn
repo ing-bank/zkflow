@@ -29,6 +29,14 @@ struct ${TYPE_NAME} {
 }
 
 impl ${TYPE_NAME} {
+    fn print_structure() {
+        dbg!("[${TYPE_NAME}] LENGTH: {}", ${CONSTANT_PREFIX}_LENGTH);
+        dbg!("[${TYPE_NAME}] STRUCTURE");
+        dbg!("[${TYPE_NAME}] - SCHEME_ID: {} (CordaX500Name)", ${CONSTANT_PREFIX}_SCHEME_ID_LENGTH);
+        dbg!("[${TYPE_NAME}] - ENCODED: {} (ByteArray_${ENCODED_SIZE})", ${CONSTANT_PREFIX}_ENCODED_LENGTH);
+        dbg!("[${TYPE_NAME}]");
+    }
+
     // In Corda notation, the two versions of BCECPublicKey with different curves,
     // correspond to two signtature schemes: Crypto.ECDSA_SECP256K1_SHA256 (88 bytes)
     // and Crypto.ECDSA_SECP256R1_SHA256 (91 bytes).

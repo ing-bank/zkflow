@@ -29,6 +29,14 @@ struct ${TYPE_NAME} {
 }
 
 impl ${TYPE_NAME} {
+    fn print_structure() {
+        dbg!("[${TYPE_NAME}] LENGTH: {}", ${CONSTANT_PREFIX}_LENGTH);
+        dbg!("[${TYPE_NAME}] STRUCTURE");
+        dbg!("[${TYPE_NAME}] - OWNING_KEY: {} (${PK_TYPE_NAME})", ${CONSTANT_PREFIX}_OWNING_KEY_LENGTH);
+        dbg!("[${TYPE_NAME}]");
+        ${PK_TYPE_NAME}::print_structure();
+    }
+
     fn empty() -> ${TYPE_NAME} {
         ${TYPE_NAME} {
             owning_key: ${PK_TYPE_NAME}::empty(),
