@@ -62,6 +62,7 @@ import kotlin.collections.set
 import kotlin.reflect.full.primaryConstructor
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
+import kotlin.time.measureTimedValue
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -317,12 +318,14 @@ private fun ZKTransactionService.verify(
             zkServiceForCommand.run(witness, publicInput)
         }
         VerificationMode.PROVE_AND_VERIFY -> {
-            var proof: ByteArray
-            val provingTime = measureTime {
-                proof = zkServiceForCommand.prove(witness)
+            val timedValue = measureTimedValue {
+                zkServiceForCommand.prove(witness)
             }
-            log.info("[prove] $provingTime")
-            zkServiceForCommand.verify(proof, publicInput)
+            log.info("[prove] ${timedValue.duration}")
+            val verifyDuration = measureTime {
+                zkServiceForCommand.verify(timedValue.value, publicInput)
+            }
+            log.info("[verify] $verifyDuration")
         }
     }
 }

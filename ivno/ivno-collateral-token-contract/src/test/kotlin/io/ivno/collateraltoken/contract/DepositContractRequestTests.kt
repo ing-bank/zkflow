@@ -14,7 +14,6 @@ import org.junit.jupiter.api.Test
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
 
-@Disabled("Re-enable once we have everything serializable and when we have zktransaction DSL")
 @ExperimentalTime
 class DepositContractRequestTests : ContractTest() {
     private val log = loggerFor<DepositContractRequestTests>()
@@ -33,7 +32,7 @@ class DepositContractRequestTests : ContractTest() {
             }
             log.info("[setup] $time")
 
-            zkTransaction(){
+            zkTransaction {
                 val memberships = createAllMemberships()
                 reference(memberships.membershipFor(BANK_A).ref)
                 reference(memberships.membershipFor(CUSTODIAN).ref)

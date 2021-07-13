@@ -11,7 +11,6 @@ import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
 
 @ExperimentalTime
-@Disabled("Re-enable once we have everything serializable and when we have zktransaction DSL")
 class TransferContractRequestTests : ContractTest() {
     private val log = loggerFor<TransferContractRequestTests>()
 
