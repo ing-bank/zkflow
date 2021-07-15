@@ -1,28 +1,20 @@
 package io.ivno.collateraltoken.contract
 
-import com.ing.zknotary.common.zkp.ZincZKTransactionService
 import com.ing.zknotary.testing.dsl.VerificationMode
 import com.ing.zknotary.testing.dsl.zkLedger
-import com.ing.zknotary.testing.zkp.MockZKTransactionService
-import net.corda.core.utilities.loggerFor
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import kotlin.time.ExperimentalTime
-import kotlin.time.measureTime
 
 @ExperimentalTime
 class TransferContractRequestTests : ContractTest() {
-    private val log = loggerFor<TransferContractRequestTests>()
+    override val verificationMode = VerificationMode.PROVE_AND_VERIFY
+    override val commandData = TransferContract.Request
 
     @Test
     fun `On transfer requesting, the transaction must include the Request command`() {
         // services.zkLedger(zkService = MockZKTransactionService(services)) {
         services.zkLedger {
-            val zkService = this.interpreter.zkService as ZincZKTransactionService
-            val time = measureTime {
-                zkService.setup(TransferContract.Request)
-            }
-            log.info("[setup] $time")
             zkTransaction {
                 val memberships = createAllMemberships()
                 reference(memberships.membershipFor(BANK_A).ref)
@@ -33,7 +25,7 @@ class TransferContractRequestTests : ContractTest() {
                 output(TransferContract.ID, TRANSFER)
                 fails()
                 command(keysOf(BANK_A), TransferContract.Request)
-                verifies(VerificationMode.PROVE_AND_VERIFY)
+                verifies(verificationMode)
             }
         }
     }

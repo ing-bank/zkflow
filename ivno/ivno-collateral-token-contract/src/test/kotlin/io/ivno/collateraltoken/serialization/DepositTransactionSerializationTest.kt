@@ -3,6 +3,7 @@ package io.ivno.collateraltoken.serialization
 import com.ing.zknotary.common.contracts.ZKCommandData
 import com.ing.zknotary.common.crypto.zinc
 import com.ing.zknotary.common.serialization.bfl.BFLSerializationScheme
+import com.ing.zknotary.testing.dsl.VerificationMode
 import com.ing.zknotary.testing.serialization.getSerializationContext
 import com.ing.zknotary.testing.serialization.serializeWithScheme
 import io.ivno.collateraltoken.contract.ContractTest
@@ -10,6 +11,7 @@ import io.ivno.collateraltoken.contract.DepositContract
 import io.kotest.matchers.shouldBe
 import net.corda.core.contracts.AttachmentConstraint
 import net.corda.core.contracts.Command
+import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.HashAttachmentConstraint
 import net.corda.core.contracts.PrivacySalt
@@ -36,6 +38,9 @@ import kotlin.time.ExperimentalTime
 
 @ExperimentalTime
 class DepositTransactionSerializationTest : ContractTest() {
+    override val verificationMode: VerificationMode = VerificationMode.RUN
+    override val commandData: CommandData = DepositContract.Request
+
     @Test
     @Suppress("LongMethod")
     fun `Deposit Request transaction serializes`() = withCustomSerializationEnv {

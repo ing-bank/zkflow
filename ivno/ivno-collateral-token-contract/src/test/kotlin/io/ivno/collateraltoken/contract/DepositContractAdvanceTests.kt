@@ -1,33 +1,26 @@
 package io.ivno.collateraltoken.contract
 
-import com.ing.zknotary.common.zkp.ZincZKTransactionService
 import com.ing.zknotary.testing.dsl.VerificationMode
 import com.ing.zknotary.testing.dsl.zkLedger
 import io.dasl.contracts.v1.token.TokenContract
 import io.onixlabs.corda.bnms.contract.Network
 import io.onixlabs.corda.identityframework.contract.AttestationStatus
 import net.corda.core.contracts.UniqueIdentifier
-import net.corda.core.utilities.loggerFor
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.Instant
 import kotlin.time.ExperimentalTime
-import kotlin.time.measureTime
 
 @ExperimentalTime
 @Disabled("Re-enable once we have everything serializable and when we have zktransaction DSL")
 class DepositContractAdvanceTests : ContractTest() {
-    private val log = loggerFor<DepositContractAdvanceTests>()
+    override val verificationMode = VerificationMode.PROVE_AND_VERIFY
+    override val commandData = DepositContract.Advance
 
     @Test
     fun `On deposit advancing, the transaction must include the Advance command`() {
         // services.zkLedger(zkService = MockZKTransactionService(services)) {
         services.zkLedger {
-            val zkService = this.interpreter.zkService as ZincZKTransactionService
-            val time = measureTime {
-                zkService.setup(DepositContract.Advance)
-            }
-            log.info("[setup] $time")
             zkTransaction {
                 val memberships = createAllMemberships()
                 reference(memberships.membershipFor(BANK_A).ref)
@@ -41,8 +34,7 @@ class DepositContractAdvanceTests : ContractTest() {
                 output(DepositContract.ID, DEPOSIT.acceptDeposit())
                 fails()
                 command(keysOf(CUSTODIAN), DepositContract.Advance)
-                // verifies()
-                verifies(VerificationMode.PROVE_AND_VERIFY)
+                verifies(verificationMode)
             }
         }
     }

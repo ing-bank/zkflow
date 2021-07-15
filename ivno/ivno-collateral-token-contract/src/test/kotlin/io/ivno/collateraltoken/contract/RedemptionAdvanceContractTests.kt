@@ -1,11 +1,11 @@
 package io.ivno.collateraltoken.contract
 
+import com.ing.zknotary.testing.dsl.VerificationMode
 import com.ing.zknotary.testing.dsl.zkLedger
 import io.dasl.contracts.v1.token.TokenContract
 import io.onixlabs.corda.bnms.contract.Network
 import io.onixlabs.corda.identityframework.contract.AttestationStatus
 import net.corda.core.contracts.UniqueIdentifier
-import net.corda.testing.node.ledger
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import kotlin.time.ExperimentalTime
@@ -13,6 +13,8 @@ import kotlin.time.ExperimentalTime
 @ExperimentalTime
 @Disabled("Re-enable once we have everything serializable and when we have zktransaction DSL")
 class RedemptionAdvanceContractTests : ContractTest() {
+    override val verificationMode = VerificationMode.RUN
+    override val commandData = RedemptionContract.Advance
 
     @Test
     fun `On redemption advancing, the transaction must include the Advance command`() {
@@ -30,7 +32,7 @@ class RedemptionAdvanceContractTests : ContractTest() {
                 output(RedemptionContract.ID, REDEMPTION.completeRedemption())
                 fails()
                 command(keysOf(CUSTODIAN), RedemptionContract.Advance)
-                verifies()
+                verifies(verificationMode)
             }
         }
     }

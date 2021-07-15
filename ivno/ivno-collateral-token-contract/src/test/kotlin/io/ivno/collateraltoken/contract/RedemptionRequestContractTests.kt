@@ -1,10 +1,10 @@
 package io.ivno.collateraltoken.contract
 
+import com.ing.zknotary.testing.dsl.VerificationMode
 import com.ing.zknotary.testing.dsl.zkLedger
 import io.dasl.contracts.v1.token.TokenContract
 import io.onixlabs.corda.bnms.contract.Network
 import io.onixlabs.corda.identityframework.contract.AttestationStatus
-import net.corda.testing.node.ledger
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import kotlin.time.ExperimentalTime
@@ -12,6 +12,8 @@ import kotlin.time.ExperimentalTime
 @ExperimentalTime
 @Disabled("Re-enable once we have everything serializable and when we have zktransaction DSL")
 class RedemptionRequestContractTests : ContractTest() {
+    override val verificationMode = VerificationMode.RUN
+    override val commandData = RedemptionContract.Request
 
     @Test
     fun `On redemption requesting, the transaction must include the Request command`() {
@@ -35,7 +37,7 @@ class RedemptionRequestContractTests : ContractTest() {
                 command(keysOf(BANK_A, TOKEN_ISSUING_ENTITY), TokenContract.Command.Redeem)
                 fails()
                 command(keysOf(BANK_A, CUSTODIAN, TOKEN_ISSUING_ENTITY), RedemptionContract.Request)
-                verifies()
+                verifies(verificationMode)
             }
         }
     }

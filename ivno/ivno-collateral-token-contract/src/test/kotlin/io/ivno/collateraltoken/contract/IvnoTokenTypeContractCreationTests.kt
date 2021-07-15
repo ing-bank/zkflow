@@ -1,11 +1,11 @@
 package io.ivno.collateraltoken.contract
 
+import com.ing.zknotary.testing.dsl.VerificationMode
 import com.ing.zknotary.testing.dsl.zkLedger
 import io.dasl.contracts.v1.crud.CrudCommands
 import io.onixlabs.corda.bnms.contract.Network
 import io.onixlabs.corda.bnms.contract.Role
 import io.onixlabs.corda.identityframework.contract.AttestationStatus
-import net.corda.testing.node.ledger
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import kotlin.time.ExperimentalTime
@@ -13,6 +13,8 @@ import kotlin.time.ExperimentalTime
 @ExperimentalTime
 @Disabled("Re-enable once we have everything serializable and when we have zktransaction DSL")
 class IvnoTokenTypeContractCreationTests : ContractTest() {
+    override val verificationMode = VerificationMode.RUN
+    override val commandData = CrudCommands.Create
 
     @Test
     fun `On token type creation, the transaction must include the Create command`() {
@@ -25,7 +27,7 @@ class IvnoTokenTypeContractCreationTests : ContractTest() {
                 output(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
                 fails()
                 command(keysOf(TOKEN_ISSUING_ENTITY), CrudCommands.Create)
-                verifies()
+                verifies(verificationMode)
             }
         }
     }

@@ -1,22 +1,17 @@
 package io.ivno.collateraltoken.contract
 
-import com.ing.zknotary.common.zkp.ZincZKTransactionService
 import com.ing.zknotary.testing.dsl.VerificationMode
 import com.ing.zknotary.testing.dsl.zkLedger
-import com.ing.zknotary.testing.zkp.MockZKTransactionService
 import io.onixlabs.corda.bnms.contract.Network
 import io.onixlabs.corda.identityframework.contract.AttestationStatus
-import net.corda.core.utilities.loggerFor
-import net.corda.testing.node.ledger
-import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import kotlin.time.ExperimentalTime
-import kotlin.time.measureTime
 
 @ExperimentalTime
 class DepositContractRequestTests : ContractTest() {
-    private val log = loggerFor<DepositContractRequestTests>()
+    override val verificationMode = VerificationMode.PROVE_AND_VERIFY
+    override val commandData = DepositContract.Request
 
     /**
      * ING TEST
@@ -26,12 +21,6 @@ class DepositContractRequestTests : ContractTest() {
     fun `On deposit requesting, the transaction must include the Request command`() {
         // services.zkLedger(zkService = MockZKTransactionService(services)) {
         services.zkLedger {
-            val zkService = this.interpreter.zkService as ZincZKTransactionService
-            val time = measureTime {
-                zkService.setup(DepositContract.Request)
-            }
-            log.info("[setup] $time")
-
             zkTransaction {
                 val memberships = createAllMemberships()
                 reference(memberships.membershipFor(BANK_A).ref)
@@ -44,7 +33,7 @@ class DepositContractRequestTests : ContractTest() {
                 output(DepositContract.ID, DEPOSIT)
                 fails()
                 command(keysOf(BANK_A), DepositContract.Request)
-                verifies(VerificationMode.PROVE_AND_VERIFY)
+                verifies(verificationMode)
             }
         }
     }
