@@ -40,6 +40,7 @@ impl ${TYPE_NAME} {
         dbg!("[${TYPE_NAME}] - SERIAL_NAME: {}", ${CONSTANT_PREFIX}_SERIAL_NAME_LENGTH);
         dbg!("[${TYPE_NAME}] - VALUE:       {}", ${CONSTANT_PREFIX}_VALUE_LENGTH);
         dbg!("[${TYPE_NAME}]");
+        //${T_TYPE_NAME}::print_structure();
     }
 
     fn empty() -> ${TYPE_NAME} {

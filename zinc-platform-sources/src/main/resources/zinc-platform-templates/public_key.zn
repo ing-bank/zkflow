@@ -25,6 +25,13 @@ struct ${TYPE_NAME} {
 }
 
 impl ${TYPE_NAME} {
+    fn print_structure() {
+        dbg!("[${TYPE_NAME}] LENGTH: {}", ${CONSTANT_PREFIX}_LENGTH);
+        dbg!("[${TYPE_NAME}] STRUCTURE");
+        dbg!("[${TYPE_NAME}] - ENCODED: {} (ByteArray_${ENCODED_SIZE})", ${CONSTANT_PREFIX}_ENCODED_LENGTH);
+        dbg!("[${TYPE_NAME}]");
+    }
+
     fn empty() -> ${TYPE_NAME} {
         ${TYPE_NAME} {
             encoded: ByteArray_${ENCODED_SIZE}::empty(),

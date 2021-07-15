@@ -27,6 +27,16 @@ struct ByteArray_${ARRAY_LENGTH} {
 }
 
 impl ByteArray_${ARRAY_LENGTH} {
+    fn print_structure() {
+        dbg!("[${TYPE_NAME}] LENGTH: {}", BYTE_ARRAY_${ARRAY_LENGTH}_LENGTH);
+        dbg!("[${TYPE_NAME}] STRUCTURE");
+        dbg!("[${TYPE_NAME}] - SIZE:     {}", BYTE_ARRAY_${ARRAY_LENGTH}_SIZE_LENGTH);
+        dbg!("[${TYPE_NAME}] - BYTES: {}", BYTE_ARRAY_${ARRAY_LENGTH}_BYTES_LENGTH);
+        dbg!("[${TYPE_NAME}]   - CAPACITY: {}", ${ARRAY_LENGTH});
+        dbg!("[${TYPE_NAME}]   - ELEMENT:  1 (u8)");
+        dbg!("[${TYPE_NAME}]");
+    }
+
     fn empty() -> ByteArray_${ARRAY_LENGTH} {
         ByteArray_${ARRAY_LENGTH} {
             size: 0 as u32,

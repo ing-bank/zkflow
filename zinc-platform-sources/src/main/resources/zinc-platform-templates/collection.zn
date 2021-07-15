@@ -34,6 +34,17 @@ struct ${TYPE_NAME} {
 }
 
 impl ${TYPE_NAME} {
+    fn print_structure() {
+        dbg!("[${TYPE_NAME}] LENGTH: {}", ${CONSTANT_PREFIX}_LENGTH);
+        dbg!("[${TYPE_NAME}] STRUCTURE");
+        dbg!("[${TYPE_NAME}] - SIZE:     {}", ${CONSTANT_PREFIX}_SIZE_LENGTH);
+        dbg!("[${TYPE_NAME}] - ELEMENTS: {}", ${CONSTANT_PREFIX}_ELEMENTS_LENGTH);
+        dbg!("[${TYPE_NAME}]   - CAPACITY: {}", ${FIXED_SIZE});
+        dbg!("[${TYPE_NAME}]   - ELEMENT:  {} (${INNER_TYPE_NAME})", ${INNER_CONSTANT_PREFIX}_LENGTH);
+        dbg!("[${TYPE_NAME}]");
+        ${INNER_TYPE_NAME}::print_structure();
+    }
+
     fn empty() -> ${TYPE_NAME} {
         ${TYPE_NAME} {
             size: 0 as u32,

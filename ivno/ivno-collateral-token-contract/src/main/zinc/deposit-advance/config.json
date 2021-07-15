@@ -10,8 +10,8 @@
       },
       {
         "java_class": "io.onixlabs.corda.bnms.contract.membership.Membership",
-        "zinc_type": "MembershipNetworkPolyPartyEdDSAPolyPartyEdDSAPolyClaimString_7_Collection_2SettingString_7_Collection_3",
-        "location": "MembershipNetworkPolyPartyEdDSAPolyPartyEdDSAPolyClaimU32_Collection_2SettingU32_Collection_3.zn",
+        "zinc_type": "MembershipNetworkPolyPartyEdDSAPolyPartyEdDSAPolyClaimU32_Collection_2SettingU32_Collection_3",
+        "location": "membership_network_poly_party_ed_dsa_poly_party_ed_dsa_poly_claim_u32_collection_2setting_u32_collection_3.zn",
         "attachment_constraint" : "net.corda.core.contracts.HashAttachmentConstraint"
       },
       {

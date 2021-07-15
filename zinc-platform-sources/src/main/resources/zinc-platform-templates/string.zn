@@ -35,6 +35,16 @@ struct ${TYPE_NAME} {
 }
 
 impl ${TYPE_NAME} {
+    fn print_structure() {
+        dbg!("[${TYPE_NAME}] LENGTH: {}", ${CONSTANT_PREFIX}_LENGTH);
+        dbg!("[${TYPE_NAME}] STRUCTURE");
+        dbg!("[${TYPE_NAME}] - SIZE:     {}", ${CONSTANT_PREFIX}_SIZE_LENGTH);
+        dbg!("[${TYPE_NAME}] - CHARS: {}", ${CONSTANT_PREFIX}_CHARS_LENGTH);
+        dbg!("[${TYPE_NAME}]   - CAPACITY: {}", ${CONSTANT_PREFIX}_MAX_CHARS);
+        dbg!("[${TYPE_NAME}]   - ELEMENT:  2 (u16)");
+        dbg!("[${TYPE_NAME}]");
+    }
+
     fn empty() -> ${TYPE_NAME} {
         ${TYPE_NAME} {
             size: 0 as u16,
