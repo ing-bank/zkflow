@@ -26,7 +26,7 @@ class IvnoTokenTypeContractCreationTests : ContractTest() {
                 reference(attestation.ref)
                 output(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
                 fails()
-                command(keysOf(TOKEN_ISSUING_ENTITY), CrudCommands.Create)
+                command(keysOf(TOKEN_ISSUING_ENTITY), commandData)
                 verifies(verificationMode)
             }
         }
@@ -40,7 +40,7 @@ class IvnoTokenTypeContractCreationTests : ContractTest() {
                 val (_, attestation) = createMembership(TOKEN_ISSUING_ENTITY.party, roles = roles)
                 reference(attestation.ref)
                 output(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
-                command(keysOf(TOKEN_ISSUING_ENTITY), CrudCommands.Create)
+                command(keysOf(TOKEN_ISSUING_ENTITY), commandData)
                 failsWith(IvnoTokenTypeContract.Create.CONTRACT_RULE_MEMBERSHIP_REFERENCE)
             }
         }
@@ -55,7 +55,7 @@ class IvnoTokenTypeContractCreationTests : ContractTest() {
                 reference(membership.ref)
                 reference(attestation.ref)
                 output(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE.copy(tokenIssuingEntity = BANK_A.party))
-                command(keysOf(TOKEN_ISSUING_ENTITY), CrudCommands.Create)
+                command(keysOf(TOKEN_ISSUING_ENTITY), commandData)
                 failsWith(IvnoTokenTypeContract.Create.CONTRACT_RULE_MEMBERSHIP_REFERENCE)
             }
         }
@@ -69,7 +69,7 @@ class IvnoTokenTypeContractCreationTests : ContractTest() {
                 val (membership, _) = createMembership(TOKEN_ISSUING_ENTITY.party, roles = roles)
                 reference(membership.ref)
                 output(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
-                command(keysOf(TOKEN_ISSUING_ENTITY), CrudCommands.Create)
+                command(keysOf(TOKEN_ISSUING_ENTITY), commandData)
                 failsWith(IvnoTokenTypeContract.Create.CONTRACT_RULE_MEMBERSHIP_ATTESTATION_REFERENCE)
             }
         }
@@ -87,7 +87,7 @@ class IvnoTokenTypeContractCreationTests : ContractTest() {
                 reference(membership.ref)
                 reference(attestation.ref)
                 output(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
-                command(keysOf(TOKEN_ISSUING_ENTITY), CrudCommands.Create)
+                command(keysOf(TOKEN_ISSUING_ENTITY), commandData)
                 failsWith(IvnoTokenTypeContract.Create.CONTRACT_RULE_ATTESTATION_POINTS_TO_MEMBERSHIP)
             }
         }
@@ -101,7 +101,7 @@ class IvnoTokenTypeContractCreationTests : ContractTest() {
                 reference(membership.ref)
                 reference(attestation.ref)
                 output(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
-                command(keysOf(TOKEN_ISSUING_ENTITY), CrudCommands.Create)
+                command(keysOf(TOKEN_ISSUING_ENTITY), commandData)
                 failsWith(IvnoTokenTypeContract.Create.CONTRACT_RULE_MEMBERSHIP_ROLES)
             }
         }
@@ -120,7 +120,7 @@ class IvnoTokenTypeContractCreationTests : ContractTest() {
                 reference(membership.ref)
                 reference(attestation.ref)
                 output(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
-                command(keysOf(TOKEN_ISSUING_ENTITY), CrudCommands.Create)
+                command(keysOf(TOKEN_ISSUING_ENTITY), commandData)
                 failsWith(IvnoTokenTypeContract.Create.CONTRACT_RULE_MEMBERSHIP_ATTESTATION_STATUS)
             }
         }
@@ -135,7 +135,7 @@ class IvnoTokenTypeContractCreationTests : ContractTest() {
                 reference(membership.ref)
                 reference(attestation.ref)
                 output(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE.copy(network = Network("Invalid Network")))
-                command(keysOf(TOKEN_ISSUING_ENTITY), CrudCommands.Create)
+                command(keysOf(TOKEN_ISSUING_ENTITY), commandData)
                 failsWith(IvnoTokenTypeContract.Create.CONTRACT_RULE_MEMBERSHIP_AND_TOKEN_TYPE_NETWORK)
             }
         }
@@ -150,7 +150,7 @@ class IvnoTokenTypeContractCreationTests : ContractTest() {
                 reference(membership.ref)
                 reference(attestation.ref)
                 output(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
-                command(keysOf(BANK_A), CrudCommands.Create)
+                command(keysOf(BANK_A), commandData)
                 failsWith(IvnoTokenTypeContract.Create.CONTRACT_RULE_SIGNERS)
             }
         }

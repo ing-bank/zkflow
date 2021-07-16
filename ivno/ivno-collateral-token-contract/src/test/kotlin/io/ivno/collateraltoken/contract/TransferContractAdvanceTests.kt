@@ -30,7 +30,7 @@ class TransferContractAdvanceTests : ContractTest() {
                 input(TransferContract.ID, TRANSFER)
                 output(TransferContract.ID, TRANSFER.acceptTransfer())
                 fails()
-                command(keysOf(BANK_B), TransferContract.Advance)
+                command(keysOf(BANK_B), commandData)
                 verifies(verificationMode)
             }
         }
@@ -43,8 +43,8 @@ class TransferContractAdvanceTests : ContractTest() {
                 input(TransferContract.ID, TRANSFER)
                 input(TransferContract.ID, TRANSFER)
                 output(TransferContract.ID, TRANSFER.acceptTransfer())
-                command(keysOf(BANK_B), TransferContract.Advance)
-                failsWith(TransferContract.Advance.CONTRACT_RULE_TRANSFER_INPUTS)
+                command(keysOf(BANK_B), commandData)
+                failsWith(commandData.CONTRACT_RULE_TRANSFER_INPUTS)
             }
         }
     }
@@ -56,8 +56,8 @@ class TransferContractAdvanceTests : ContractTest() {
                 input(TransferContract.ID, TRANSFER)
                 output(TransferContract.ID, TRANSFER.acceptTransfer())
                 output(TransferContract.ID, TRANSFER.acceptTransfer())
-                command(keysOf(BANK_B), TransferContract.Advance)
-                failsWith(TransferContract.Advance.CONTRACT_RULE_TRANSFER_OUTPUTS)
+                command(keysOf(BANK_B), commandData)
+                failsWith(commandData.CONTRACT_RULE_TRANSFER_OUTPUTS)
             }
         }
     }
@@ -75,8 +75,8 @@ class TransferContractAdvanceTests : ContractTest() {
                 input(TransferContract.ID, TRANSFER.acceptTransfer())
                 output(TransferContract.ID, TRANSFER.acceptTransfer().completeTransfer())
                 output(TokenContract.CONTRACT_ID, TOKEN_100GBP_BANK_B)
-                command(keysOf(BANK_B), TransferContract.Advance)
-                failsWith(TransferContract.Advance.CONTRACT_RULE_TOKEN_INPUTS)
+                command(keysOf(BANK_B), commandData)
+                failsWith(commandData.CONTRACT_RULE_TOKEN_INPUTS)
             }
         }
     }
@@ -94,8 +94,8 @@ class TransferContractAdvanceTests : ContractTest() {
                 input(TransferContract.ID, TRANSFER.acceptTransfer())
                 input(TokenContract.CONTRACT_ID, TOKEN_100GBP_BANK_A)
                 output(TransferContract.ID, TRANSFER.acceptTransfer().completeTransfer())
-                command(keysOf(BANK_B), TransferContract.Advance)
-                failsWith(TransferContract.Advance.CONTRACT_RULE_TOKEN_OUTPUTS)
+                command(keysOf(BANK_B), commandData)
+                failsWith(commandData.CONTRACT_RULE_TOKEN_OUTPUTS)
             }
         }
     }
@@ -111,8 +111,8 @@ class TransferContractAdvanceTests : ContractTest() {
                 reference(memberships.attestationFor(BANK_B).ref)
                 input(TransferContract.ID, TRANSFER)
                 output(TransferContract.ID, TRANSFER.acceptTransfer())
-                command(keysOf(BANK_B), TransferContract.Advance)
-                failsWith(TransferContract.Advance.CONTRACT_RULE_TOKEN_TYPE_REFERENCES)
+                command(keysOf(BANK_B), commandData)
+                failsWith(commandData.CONTRACT_RULE_TOKEN_TYPE_REFERENCES)
             }
         }
     }
@@ -128,8 +128,8 @@ class TransferContractAdvanceTests : ContractTest() {
                 reference(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
                 input(TransferContract.ID, TRANSFER)
                 output(TransferContract.ID, TRANSFER.acceptTransfer())
-                command(keysOf(BANK_B), TransferContract.Advance)
-                failsWith(TransferContract.Advance.CONTRACT_RULE_MEMBERSHIP_REFERENCES)
+                command(keysOf(BANK_B), commandData)
+                failsWith(commandData.CONTRACT_RULE_MEMBERSHIP_REFERENCES)
             }
         }
     }
@@ -145,8 +145,8 @@ class TransferContractAdvanceTests : ContractTest() {
                 reference(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
                 input(TransferContract.ID, TRANSFER)
                 output(TransferContract.ID, TRANSFER.acceptTransfer())
-                command(keysOf(BANK_B), TransferContract.Advance)
-                failsWith(TransferContract.Advance.CONTRACT_RULE_MEMBERSHIP_REFERENCES)
+                command(keysOf(BANK_B), commandData)
+                failsWith(commandData.CONTRACT_RULE_MEMBERSHIP_REFERENCES)
             }
         }
     }
@@ -162,8 +162,8 @@ class TransferContractAdvanceTests : ContractTest() {
                 reference(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
                 input(TransferContract.ID, TRANSFER)
                 output(TransferContract.ID, TRANSFER.acceptTransfer())
-                command(keysOf(BANK_B), TransferContract.Advance)
-                failsWith(TransferContract.Advance.CONTRACT_RULE_MEMBERSHIP_ATTESTATION_REFERENCES)
+                command(keysOf(BANK_B), commandData)
+                failsWith(commandData.CONTRACT_RULE_MEMBERSHIP_ATTESTATION_REFERENCES)
             }
         }
     }
@@ -179,8 +179,8 @@ class TransferContractAdvanceTests : ContractTest() {
                 reference(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
                 input(TransferContract.ID, TRANSFER)
                 output(TransferContract.ID, TRANSFER.acceptTransfer())
-                command(keysOf(BANK_B), TransferContract.Advance)
-                failsWith(TransferContract.Advance.CONTRACT_RULE_MEMBERSHIP_ATTESTATION_REFERENCES)
+                command(keysOf(BANK_B), commandData)
+                failsWith(commandData.CONTRACT_RULE_MEMBERSHIP_ATTESTATION_REFERENCES)
             }
         }
     }
@@ -197,8 +197,8 @@ class TransferContractAdvanceTests : ContractTest() {
                 reference(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
                 input(TransferContract.ID, TRANSFER)
                 output(TransferContract.ID, TRANSFER.acceptTransfer())
-                command(keysOf(BANK_B), TransferContract.Advance)
-                failsWith(TransferContract.Advance.CONTRACT_RULE_MEMBERSHIP_ATTESTATION_STATUS)
+                command(keysOf(BANK_B), commandData)
+                failsWith(commandData.CONTRACT_RULE_MEMBERSHIP_ATTESTATION_STATUS)
             }
         }
     }
@@ -217,8 +217,8 @@ class TransferContractAdvanceTests : ContractTest() {
                 reference(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
                 input(TransferContract.ID, TRANSFER)
                 output(TransferContract.ID, TRANSFER.acceptTransfer())
-                command(keysOf(BANK_B), TransferContract.Advance)
-                failsWith(TransferContract.Advance.CONTRACT_RULE_MEMBERSHIP_NETWORK)
+                command(keysOf(BANK_B), commandData)
+                failsWith(commandData.CONTRACT_RULE_MEMBERSHIP_NETWORK)
             }
         }
     }
@@ -237,8 +237,8 @@ class TransferContractAdvanceTests : ContractTest() {
                 reference(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
                 input(TransferContract.ID, TRANSFER)
                 output(TransferContract.ID, TRANSFER.acceptTransfer())
-                command(keysOf(BANK_B), TransferContract.Advance)
-                failsWith(TransferContract.Advance.CONTRACT_RULE_MEMBERSHIP_NETWORK)
+                command(keysOf(BANK_B), commandData)
+                failsWith(commandData.CONTRACT_RULE_MEMBERSHIP_NETWORK)
             }
         }
     }
@@ -257,8 +257,8 @@ class TransferContractAdvanceTests : ContractTest() {
                 reference(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
                 input(TransferContract.ID, TRANSFER)
                 output(TransferContract.ID, TRANSFER.acceptTransfer())
-                command(keysOf(BANK_B), TransferContract.Advance)
-                failsWith(TransferContract.Advance.CONTRACT_RULE_MEMBERSHIP_ATTESTATION_NETWORK)
+                command(keysOf(BANK_B), commandData)
+                failsWith(commandData.CONTRACT_RULE_MEMBERSHIP_ATTESTATION_NETWORK)
             }
         }
     }
@@ -277,8 +277,8 @@ class TransferContractAdvanceTests : ContractTest() {
                 reference(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
                 input(TransferContract.ID, TRANSFER)
                 output(TransferContract.ID, TRANSFER.acceptTransfer())
-                command(keysOf(BANK_B), TransferContract.Advance)
-                failsWith(TransferContract.Advance.CONTRACT_RULE_MEMBERSHIP_ATTESTATION_NETWORK)
+                command(keysOf(BANK_B), commandData)
+                failsWith(commandData.CONTRACT_RULE_MEMBERSHIP_ATTESTATION_NETWORK)
             }
         }
     }
@@ -296,8 +296,8 @@ class TransferContractAdvanceTests : ContractTest() {
                 reference(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
                 input(TransferContract.ID, TRANSFER)
                 output(TransferContract.ID, TRANSFER.acceptTransfer())
-                command(keysOf(BANK_B), TransferContract.Advance)
-                failsWith(TransferContract.Advance.CONTRACT_RULE_MEMBERSHIP_ATTESTATIONS_POINT_TO_MEMBERSHIP_REFERENCES)
+                command(keysOf(BANK_B), commandData)
+                failsWith(commandData.CONTRACT_RULE_MEMBERSHIP_ATTESTATIONS_POINT_TO_MEMBERSHIP_REFERENCES)
             }
         }
     }
@@ -314,8 +314,8 @@ class TransferContractAdvanceTests : ContractTest() {
                 reference(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
                 input(TransferContract.ID, TRANSFER)
                 output(TransferContract.ID, TRANSFER.acceptTransfer().copy(linearId = UniqueIdentifier()))
-                command(keysOf(BANK_B), TransferContract.Advance)
-                failsWith(TransferContract.Advance.CONTRACT_RULE_CHANGES)
+                command(keysOf(BANK_B), commandData)
+                failsWith(commandData.CONTRACT_RULE_CHANGES)
             }
         }
     }
@@ -332,8 +332,8 @@ class TransferContractAdvanceTests : ContractTest() {
                 reference(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
                 input(TransferContract.ID, TRANSFER.cancelTransfer())
                 output(TransferContract.ID, TRANSFER.acceptTransfer())
-                command(keysOf(BANK_B), TransferContract.Advance)
-                failsWith(TransferContract.Advance.CONTRACT_RULE_CAN_ADVANCE)
+                command(keysOf(BANK_B), commandData)
+                failsWith(commandData.CONTRACT_RULE_CAN_ADVANCE)
             }
         }
     }
@@ -361,9 +361,9 @@ class TransferContractAdvanceTests : ContractTest() {
                 output(TokenContract.CONTRACT_ID, TOKEN_50GBP_BANK_A)
                 output(TokenContract.CONTRACT_ID, TOKEN_50GBP_BANK_B)
                 output(TransferContract.ID, TRANSFER.completeTransfer())
-                command(keysOf(BANK_A), TransferContract.Advance)
+                command(keysOf(BANK_A), commandData)
                 command(keysOf(BANK_A), TokenContract.Command.Move())
-                failsWith(TransferContract.Advance.CONTRACT_RULE_TOKEN_AMOUNT)
+                failsWith(commandData.CONTRACT_RULE_TOKEN_AMOUNT)
             }
         }
     }
@@ -390,7 +390,7 @@ class TransferContractAdvanceTests : ContractTest() {
                 input(acceptedTransfer.ref)
                 output(TokenContract.CONTRACT_ID, TOKEN_100GBP_BANK_B)
                 output(TransferContract.ID, TRANSFER.completeTransfer())
-                command(keysOf(BANK_A), TransferContract.Advance)
+                command(keysOf(BANK_A), commandData)
                 command(keysOf(BANK_A), TokenContract.Command.Move())
                 verifies()
             }
@@ -409,8 +409,8 @@ class TransferContractAdvanceTests : ContractTest() {
                 reference(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
                 input(TransferContract.ID, TRANSFER.copy(timestamp = Instant.MAX))
                 output(TransferContract.ID, TRANSFER.acceptTransfer().copy(timestamp = Instant.MIN))
-                command(keysOf(BANK_B), TransferContract.Advance)
-                failsWith(TransferContract.Advance.CONTRACT_RULE_TIMESTAMP)
+                command(keysOf(BANK_B), commandData)
+                failsWith(commandData.CONTRACT_RULE_TIMESTAMP)
             }
         }
     }
@@ -427,8 +427,8 @@ class TransferContractAdvanceTests : ContractTest() {
                 reference(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
                 input(TransferContract.ID, TRANSFER)
                 output(TransferContract.ID, TRANSFER.acceptTransfer())
-                command(keysOf(TOKEN_ISSUING_ENTITY), TransferContract.Advance)
-                failsWith(TransferContract.Advance.CONTRACT_RULE_SIGNERS)
+                command(keysOf(TOKEN_ISSUING_ENTITY), commandData)
+                failsWith(commandData.CONTRACT_RULE_SIGNERS)
             }
         }
     }

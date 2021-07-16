@@ -31,7 +31,7 @@ class RedemptionAdvanceContractTests : ContractTest() {
                 input(RedemptionContract.ID, REDEMPTION)
                 output(RedemptionContract.ID, REDEMPTION.completeRedemption())
                 fails()
-                command(keysOf(CUSTODIAN), RedemptionContract.Advance)
+                command(keysOf(CUSTODIAN), commandData)
                 verifies(verificationMode)
             }
         }
@@ -44,8 +44,8 @@ class RedemptionAdvanceContractTests : ContractTest() {
                 input(RedemptionContract.ID, REDEMPTION)
                 input(RedemptionContract.ID, REDEMPTION)
                 output(RedemptionContract.ID, REDEMPTION.completeRedemption())
-                command(keysOf(CUSTODIAN), RedemptionContract.Advance)
-                failsWith(RedemptionContract.Advance.CONTRACT_RULE_REDEMPTION_INPUTS)
+                command(keysOf(CUSTODIAN), commandData)
+                failsWith(commandData.CONTRACT_RULE_REDEMPTION_INPUTS)
             }
         }
     }
@@ -57,8 +57,8 @@ class RedemptionAdvanceContractTests : ContractTest() {
                 input(RedemptionContract.ID, REDEMPTION)
                 output(RedemptionContract.ID, REDEMPTION.completeRedemption())
                 output(RedemptionContract.ID, REDEMPTION.completeRedemption())
-                command(keysOf(CUSTODIAN), RedemptionContract.Advance)
-                failsWith(RedemptionContract.Advance.CONTRACT_RULE_REDEMPTION_OUTPUTS)
+                command(keysOf(CUSTODIAN), commandData)
+                failsWith(commandData.CONTRACT_RULE_REDEMPTION_OUTPUTS)
             }
         }
     }
@@ -79,9 +79,9 @@ class RedemptionAdvanceContractTests : ContractTest() {
                 output(RedemptionContract.ID, REDEMPTION.rejectRedemption())
                 output(TokenContract.CONTRACT_ID, TOKEN_100GBP_BANK_A)
                 output(TokenContract.CONTRACT_ID, TOKEN_100GBP_BANK_A)
-                command(keysOf(CUSTODIAN, TOKEN_ISSUING_ENTITY), RedemptionContract.Advance)
+                command(keysOf(CUSTODIAN, TOKEN_ISSUING_ENTITY), commandData)
                 command(keysOf(TOKEN_ISSUING_ENTITY), TokenContract.Command.Issue)
-                failsWith(RedemptionContract.Advance.CONTRACT_RULE_TOKEN_OUTPUTS)
+                failsWith(commandData.CONTRACT_RULE_TOKEN_OUTPUTS)
             }
         }
     }
@@ -99,8 +99,8 @@ class RedemptionAdvanceContractTests : ContractTest() {
                 reference(memberships.attestationFor(TOKEN_ISSUING_ENTITY).ref)
                 input(RedemptionContract.ID, REDEMPTION)
                 output(RedemptionContract.ID, REDEMPTION.completeRedemption())
-                command(keysOf(CUSTODIAN), RedemptionContract.Advance)
-                failsWith(RedemptionContract.Advance.CONTRACT_RULE_TOKEN_TYPE_REFERENCES)
+                command(keysOf(CUSTODIAN), commandData)
+                failsWith(commandData.CONTRACT_RULE_TOKEN_TYPE_REFERENCES)
             }
         }
     }
@@ -118,8 +118,8 @@ class RedemptionAdvanceContractTests : ContractTest() {
                 reference(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
                 input(RedemptionContract.ID, REDEMPTION)
                 output(RedemptionContract.ID, REDEMPTION.completeRedemption())
-                command(keysOf(CUSTODIAN), RedemptionContract.Advance)
-                failsWith(RedemptionContract.Advance.CONTRACT_RULE_MEMBERSHIP_REFERENCES)
+                command(keysOf(CUSTODIAN), commandData)
+                failsWith(commandData.CONTRACT_RULE_MEMBERSHIP_REFERENCES)
             }
         }
     }
@@ -137,8 +137,8 @@ class RedemptionAdvanceContractTests : ContractTest() {
                 reference(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
                 input(RedemptionContract.ID, REDEMPTION)
                 output(RedemptionContract.ID, REDEMPTION.completeRedemption())
-                command(keysOf(CUSTODIAN), RedemptionContract.Advance)
-                failsWith(RedemptionContract.Advance.CONTRACT_RULE_MEMBERSHIP_REFERENCES)
+                command(keysOf(CUSTODIAN), commandData)
+                failsWith(commandData.CONTRACT_RULE_MEMBERSHIP_REFERENCES)
             }
         }
     }
@@ -156,8 +156,8 @@ class RedemptionAdvanceContractTests : ContractTest() {
                 reference(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
                 input(RedemptionContract.ID, REDEMPTION)
                 output(RedemptionContract.ID, REDEMPTION.completeRedemption())
-                command(keysOf(CUSTODIAN), RedemptionContract.Advance)
-                failsWith(RedemptionContract.Advance.CONTRACT_RULE_MEMBERSHIP_REFERENCES)
+                command(keysOf(CUSTODIAN), commandData)
+                failsWith(commandData.CONTRACT_RULE_MEMBERSHIP_REFERENCES)
             }
         }
     }
@@ -175,8 +175,8 @@ class RedemptionAdvanceContractTests : ContractTest() {
                 reference(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
                 input(RedemptionContract.ID, REDEMPTION)
                 output(RedemptionContract.ID, REDEMPTION.completeRedemption())
-                command(keysOf(CUSTODIAN), RedemptionContract.Advance)
-                failsWith(RedemptionContract.Advance.CONTRACT_RULE_MEMBERSHIP_ATTESTATION_REFERENCES)
+                command(keysOf(CUSTODIAN), commandData)
+                failsWith(commandData.CONTRACT_RULE_MEMBERSHIP_ATTESTATION_REFERENCES)
             }
         }
     }
@@ -194,8 +194,8 @@ class RedemptionAdvanceContractTests : ContractTest() {
                 reference(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
                 input(RedemptionContract.ID, REDEMPTION)
                 output(RedemptionContract.ID, REDEMPTION.completeRedemption())
-                command(keysOf(CUSTODIAN), RedemptionContract.Advance)
-                failsWith(RedemptionContract.Advance.CONTRACT_RULE_MEMBERSHIP_ATTESTATION_REFERENCES)
+                command(keysOf(CUSTODIAN), commandData)
+                failsWith(commandData.CONTRACT_RULE_MEMBERSHIP_ATTESTATION_REFERENCES)
             }
         }
     }
@@ -213,8 +213,8 @@ class RedemptionAdvanceContractTests : ContractTest() {
                 reference(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
                 input(RedemptionContract.ID, REDEMPTION)
                 output(RedemptionContract.ID, REDEMPTION.completeRedemption())
-                command(keysOf(CUSTODIAN), RedemptionContract.Advance)
-                failsWith(RedemptionContract.Advance.CONTRACT_RULE_MEMBERSHIP_ATTESTATION_REFERENCES)
+                command(keysOf(CUSTODIAN), commandData)
+                failsWith(commandData.CONTRACT_RULE_MEMBERSHIP_ATTESTATION_REFERENCES)
             }
         }
     }
@@ -233,8 +233,8 @@ class RedemptionAdvanceContractTests : ContractTest() {
                 reference(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
                 input(RedemptionContract.ID, REDEMPTION)
                 output(RedemptionContract.ID, REDEMPTION.completeRedemption())
-                command(keysOf(CUSTODIAN), RedemptionContract.Advance)
-                failsWith(RedemptionContract.Advance.CONTRACT_RULE_MEMBERSHIP_ATTESTATION_STATUS)
+                command(keysOf(CUSTODIAN), commandData)
+                failsWith(commandData.CONTRACT_RULE_MEMBERSHIP_ATTESTATION_STATUS)
             }
         }
     }
@@ -255,8 +255,8 @@ class RedemptionAdvanceContractTests : ContractTest() {
                 reference(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
                 input(RedemptionContract.ID, REDEMPTION)
                 output(RedemptionContract.ID, REDEMPTION.completeRedemption())
-                command(keysOf(CUSTODIAN), RedemptionContract.Advance)
-                failsWith(RedemptionContract.Advance.CONTRACT_RULE_MEMBERSHIP_NETWORK)
+                command(keysOf(CUSTODIAN), commandData)
+                failsWith(commandData.CONTRACT_RULE_MEMBERSHIP_NETWORK)
             }
         }
     }
@@ -277,8 +277,8 @@ class RedemptionAdvanceContractTests : ContractTest() {
                 reference(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
                 input(RedemptionContract.ID, REDEMPTION)
                 output(RedemptionContract.ID, REDEMPTION.completeRedemption())
-                command(keysOf(CUSTODIAN), RedemptionContract.Advance)
-                failsWith(RedemptionContract.Advance.CONTRACT_RULE_MEMBERSHIP_NETWORK)
+                command(keysOf(CUSTODIAN), commandData)
+                failsWith(commandData.CONTRACT_RULE_MEMBERSHIP_NETWORK)
             }
         }
     }
@@ -299,8 +299,8 @@ class RedemptionAdvanceContractTests : ContractTest() {
                 reference(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
                 input(RedemptionContract.ID, REDEMPTION)
                 output(RedemptionContract.ID, REDEMPTION.completeRedemption())
-                command(keysOf(CUSTODIAN), RedemptionContract.Advance)
-                failsWith(RedemptionContract.Advance.CONTRACT_RULE_MEMBERSHIP_NETWORK)
+                command(keysOf(CUSTODIAN), commandData)
+                failsWith(commandData.CONTRACT_RULE_MEMBERSHIP_NETWORK)
             }
         }
     }
@@ -321,8 +321,8 @@ class RedemptionAdvanceContractTests : ContractTest() {
                 reference(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
                 input(RedemptionContract.ID, REDEMPTION)
                 output(RedemptionContract.ID, REDEMPTION.completeRedemption())
-                command(keysOf(CUSTODIAN), RedemptionContract.Advance)
-                failsWith(RedemptionContract.Advance.CONTRACT_RULE_MEMBERSHIP_ATTESTATION_NETWORK)
+                command(keysOf(CUSTODIAN), commandData)
+                failsWith(commandData.CONTRACT_RULE_MEMBERSHIP_ATTESTATION_NETWORK)
             }
         }
     }
@@ -343,8 +343,8 @@ class RedemptionAdvanceContractTests : ContractTest() {
                 reference(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
                 input(RedemptionContract.ID, REDEMPTION)
                 output(RedemptionContract.ID, REDEMPTION.completeRedemption())
-                command(keysOf(CUSTODIAN), RedemptionContract.Advance)
-                failsWith(RedemptionContract.Advance.CONTRACT_RULE_MEMBERSHIP_ATTESTATION_NETWORK)
+                command(keysOf(CUSTODIAN), commandData)
+                failsWith(commandData.CONTRACT_RULE_MEMBERSHIP_ATTESTATION_NETWORK)
             }
         }
     }
@@ -365,8 +365,8 @@ class RedemptionAdvanceContractTests : ContractTest() {
                 reference(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
                 input(RedemptionContract.ID, REDEMPTION)
                 output(RedemptionContract.ID, REDEMPTION.completeRedemption())
-                command(keysOf(CUSTODIAN), RedemptionContract.Advance)
-                failsWith(RedemptionContract.Advance.CONTRACT_RULE_MEMBERSHIP_ATTESTATION_NETWORK)
+                command(keysOf(CUSTODIAN), commandData)
+                failsWith(commandData.CONTRACT_RULE_MEMBERSHIP_ATTESTATION_NETWORK)
             }
         }
     }
@@ -386,8 +386,8 @@ class RedemptionAdvanceContractTests : ContractTest() {
                 reference(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
                 input(RedemptionContract.ID, REDEMPTION)
                 output(RedemptionContract.ID, REDEMPTION.completeRedemption())
-                command(keysOf(CUSTODIAN), RedemptionContract.Advance)
-                failsWith(RedemptionContract.Advance.CONTRACT_RULE_MEMBERSHIP_ATTESTATIONS_POINT_TO_MEMBERSHIP_REFERENCES)
+                command(keysOf(CUSTODIAN), commandData)
+                failsWith(commandData.CONTRACT_RULE_MEMBERSHIP_ATTESTATIONS_POINT_TO_MEMBERSHIP_REFERENCES)
             }
         }
     }
@@ -407,9 +407,9 @@ class RedemptionAdvanceContractTests : ContractTest() {
                 input(RedemptionContract.ID, REDEMPTION)
                 output(RedemptionContract.ID, REDEMPTION.rejectRedemption().copy(linearId = UniqueIdentifier()))
                 output(TokenContract.CONTRACT_ID, TOKEN_100GBP_BANK_A)
-                command(keysOf(CUSTODIAN, TOKEN_ISSUING_ENTITY), RedemptionContract.Advance)
+                command(keysOf(CUSTODIAN, TOKEN_ISSUING_ENTITY), commandData)
                 command(keysOf(TOKEN_ISSUING_ENTITY), TokenContract.Command.Issue)
-                failsWith(RedemptionContract.Advance.CONTRACT_RULE_CHANGES)
+                failsWith(commandData.CONTRACT_RULE_CHANGES)
             }
         }
     }
@@ -429,9 +429,9 @@ class RedemptionAdvanceContractTests : ContractTest() {
                 input(RedemptionContract.ID, REDEMPTION.rejectRedemption())
                 output(RedemptionContract.ID, REDEMPTION)
                 output(TokenContract.CONTRACT_ID, TOKEN_100GBP_BANK_A)
-                command(keysOf(CUSTODIAN, TOKEN_ISSUING_ENTITY), RedemptionContract.Advance)
+                command(keysOf(CUSTODIAN, TOKEN_ISSUING_ENTITY), commandData)
                 command(keysOf(TOKEN_ISSUING_ENTITY), TokenContract.Command.Issue)
-                failsWith(RedemptionContract.Advance.CONTRACT_RULE_CAN_ADVANCE)
+                failsWith(commandData.CONTRACT_RULE_CAN_ADVANCE)
             }
         }
     }
@@ -451,9 +451,9 @@ class RedemptionAdvanceContractTests : ContractTest() {
                 input(RedemptionContract.ID, REDEMPTION)
                 output(RedemptionContract.ID, REDEMPTION.rejectRedemption())
                 output(TokenContract.CONTRACT_ID, TOKEN_50GBP_BANK_A)
-                command(keysOf(CUSTODIAN, TOKEN_ISSUING_ENTITY), RedemptionContract.Advance)
+                command(keysOf(CUSTODIAN, TOKEN_ISSUING_ENTITY), commandData)
                 command(keysOf(TOKEN_ISSUING_ENTITY), TokenContract.Command.Issue)
-                failsWith(RedemptionContract.Advance.CONTRACT_RULE_TOKEN_AMOUNT)
+                failsWith(commandData.CONTRACT_RULE_TOKEN_AMOUNT)
             }
         }
     }
@@ -473,9 +473,9 @@ class RedemptionAdvanceContractTests : ContractTest() {
                 input(RedemptionContract.ID, REDEMPTION)
                 output(RedemptionContract.ID, REDEMPTION.rejectRedemption())
                 output(TokenContract.CONTRACT_ID, TOKEN_100GBP_BANK_B)
-                command(keysOf(CUSTODIAN, TOKEN_ISSUING_ENTITY), RedemptionContract.Advance)
+                command(keysOf(CUSTODIAN, TOKEN_ISSUING_ENTITY), commandData)
                 command(keysOf(TOKEN_ISSUING_ENTITY), TokenContract.Command.Issue)
-                failsWith(RedemptionContract.Advance.CONTRACT_RULE_TOKEN_HOLDER)
+                failsWith(commandData.CONTRACT_RULE_TOKEN_HOLDER)
             }
         }
     }
@@ -495,9 +495,9 @@ class RedemptionAdvanceContractTests : ContractTest() {
                 input(RedemptionContract.ID, REDEMPTION)
                 output(RedemptionContract.ID, REDEMPTION.rejectRedemption())
                 output(TokenContract.CONTRACT_ID, TOKEN_100GBP_BANK_A)
-                command(keysOf(TOKEN_ISSUING_ENTITY), RedemptionContract.Advance)
+                command(keysOf(TOKEN_ISSUING_ENTITY), commandData)
                 command(keysOf(TOKEN_ISSUING_ENTITY), TokenContract.Command.Issue)
-                failsWith(RedemptionContract.Advance.CONTRACT_RULE_SIGNERS)
+                failsWith(commandData.CONTRACT_RULE_SIGNERS)
             }
         }
     }
@@ -517,9 +517,9 @@ class RedemptionAdvanceContractTests : ContractTest() {
                 input(RedemptionContract.ID, REDEMPTION)
                 output(RedemptionContract.ID, REDEMPTION.rejectRedemption())
                 output(TokenContract.CONTRACT_ID, TOKEN_100GBP_BANK_A)
-                command(keysOf(CUSTODIAN), RedemptionContract.Advance)
+                command(keysOf(CUSTODIAN), commandData)
                 command(keysOf(TOKEN_ISSUING_ENTITY), TokenContract.Command.Issue)
-                failsWith(RedemptionContract.Advance.CONTRACT_RULE_SIGNERS)
+                failsWith(commandData.CONTRACT_RULE_SIGNERS)
             }
         }
     }
