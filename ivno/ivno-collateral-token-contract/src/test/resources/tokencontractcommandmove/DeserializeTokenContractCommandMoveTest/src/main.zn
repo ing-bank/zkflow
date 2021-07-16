@@ -1,0 +1,8 @@
+mod token_contract_command_move;
+
+use token_contract_command_move::TokenContractCommandMove;
+use token_contract_command_move::SerializedTokenContractCommandMove;
+
+fn main(witness: SerializedTokenContractCommandMove) -> TokenContractCommandMove {
+    TokenContractCommandMove::deserialize(witness)
+}

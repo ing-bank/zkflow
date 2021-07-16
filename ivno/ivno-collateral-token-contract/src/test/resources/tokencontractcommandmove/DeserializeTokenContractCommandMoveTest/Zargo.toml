@@ -1,0 +1,3 @@
+[circuit]
+name = "Deserialize TokenContract.Command.Move test"
+version = "0.1.0"
