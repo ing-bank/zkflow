@@ -1,33 +1,26 @@
 package io.ivno.collateraltoken.contract
 
-import com.ing.zknotary.common.zkp.ZincZKTransactionService
 import com.ing.zknotary.testing.dsl.VerificationMode
 import com.ing.zknotary.testing.dsl.zkLedger
 import io.dasl.contracts.v1.token.TokenContract
 import io.onixlabs.corda.bnms.contract.Network
 import io.onixlabs.corda.identityframework.contract.AttestationStatus
 import net.corda.core.contracts.UniqueIdentifier
-import net.corda.core.utilities.loggerFor
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.Instant
 import kotlin.time.ExperimentalTime
-import kotlin.time.measureTime
 
 @ExperimentalTime
 @Disabled("Re-enable once we have everything serializable and when we have zktransaction DSL")
 class DepositContractAdvanceTests : ContractTest() {
-    private val log = loggerFor<DepositContractAdvanceTests>()
+    override val verificationMode = VerificationMode.PROVE_AND_VERIFY
+    override val commandData = DepositContract.Advance
 
     @Test
     fun `On deposit advancing, the transaction must include the Advance command`() {
         // services.zkLedger(zkService = MockZKTransactionService(services)) {
         services.zkLedger {
-            val zkService = this.interpreter.zkService as ZincZKTransactionService
-            val time = measureTime {
-                zkService.setup(DepositContract.Advance)
-            }
-            log.info("[setup] $time")
             zkTransaction {
                 val memberships = createAllMemberships()
                 reference(memberships.membershipFor(BANK_A).ref)
@@ -40,9 +33,8 @@ class DepositContractAdvanceTests : ContractTest() {
                 input(DepositContract.ID, DEPOSIT)
                 output(DepositContract.ID, DEPOSIT.acceptDeposit())
                 fails()
-                command(keysOf(CUSTODIAN), DepositContract.Advance)
-                // verifies()
-                verifies(VerificationMode.PROVE_AND_VERIFY)
+                command(keysOf(CUSTODIAN), commandData)
+                verifies(verificationMode)
             }
         }
     }
@@ -55,8 +47,8 @@ class DepositContractAdvanceTests : ContractTest() {
                 input(DepositContract.ID, DEPOSIT)
                 input(DepositContract.ID, DEPOSIT)
                 output(DepositContract.ID, DEPOSIT.acceptDeposit())
-                command(keysOf(CUSTODIAN), DepositContract.Advance)
-                failsWith(DepositContract.Advance.CONTRACT_RULE_DEPOSIT_INPUTS)
+                command(keysOf(CUSTODIAN), commandData)
+                failsWith(commandData.CONTRACT_RULE_DEPOSIT_INPUTS)
             }
         }
     }
@@ -69,8 +61,8 @@ class DepositContractAdvanceTests : ContractTest() {
                 input(DepositContract.ID, DEPOSIT)
                 output(DepositContract.ID, DEPOSIT.acceptDeposit())
                 output(DepositContract.ID, DEPOSIT.acceptDeposit())
-                command(keysOf(CUSTODIAN), DepositContract.Advance)
-                failsWith(DepositContract.Advance.CONTRACT_RULE_DEPOSIT_OUTPUTS)
+                command(keysOf(CUSTODIAN), commandData)
+                failsWith(commandData.CONTRACT_RULE_DEPOSIT_OUTPUTS)
             }
         }
     }
@@ -90,8 +82,8 @@ class DepositContractAdvanceTests : ContractTest() {
                 reference(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
                 input(DepositContract.ID, DEPOSIT.acceptDeposit("REF").issuePayment())
                 output(DepositContract.ID, DEPOSIT.acceptDeposit("REF").issuePayment().acceptPayment())
-                command(keysOf(CUSTODIAN, TOKEN_ISSUING_ENTITY), DepositContract.Advance)
-                failsWith(DepositContract.Advance.CONTRACT_RULE_TOKEN_OUTPUTS)
+                command(keysOf(CUSTODIAN, TOKEN_ISSUING_ENTITY), commandData)
+                failsWith(commandData.CONTRACT_RULE_TOKEN_OUTPUTS)
             }
         }
     }
@@ -111,8 +103,8 @@ class DepositContractAdvanceTests : ContractTest() {
                 input(DepositContract.ID, DEPOSIT.acceptDeposit("REF").issuePayment())
                 output(DepositContract.ID, DEPOSIT.acceptDeposit("REF").issuePayment().acceptPayment())
                 output(TokenContract.CONTRACT_ID, TOKEN_100GBP_BANK_A)
-                command(keysOf(CUSTODIAN, TOKEN_ISSUING_ENTITY), DepositContract.Advance)
-                failsWith(DepositContract.Advance.CONTRACT_RULE_TOKEN_TYPE_REFERENCES)
+                command(keysOf(CUSTODIAN, TOKEN_ISSUING_ENTITY), commandData)
+                failsWith(commandData.CONTRACT_RULE_TOKEN_TYPE_REFERENCES)
             }
         }
     }
@@ -131,8 +123,8 @@ class DepositContractAdvanceTests : ContractTest() {
                 reference(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
                 input(DepositContract.ID, DEPOSIT)
                 output(DepositContract.ID, DEPOSIT.acceptDeposit())
-                command(keysOf(CUSTODIAN), DepositContract.Advance)
-                failsWith(DepositContract.Advance.CONTRACT_RULE_MEMBERSHIP_REFERENCES)
+                command(keysOf(CUSTODIAN), commandData)
+                failsWith(commandData.CONTRACT_RULE_MEMBERSHIP_REFERENCES)
             }
         }
     }
@@ -151,8 +143,8 @@ class DepositContractAdvanceTests : ContractTest() {
                 reference(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
                 input(DepositContract.ID, DEPOSIT)
                 output(DepositContract.ID, DEPOSIT.acceptDeposit())
-                command(keysOf(CUSTODIAN), DepositContract.Advance)
-                failsWith(DepositContract.Advance.CONTRACT_RULE_MEMBERSHIP_REFERENCES)
+                command(keysOf(CUSTODIAN), commandData)
+                failsWith(commandData.CONTRACT_RULE_MEMBERSHIP_REFERENCES)
             }
         }
     }
@@ -171,8 +163,8 @@ class DepositContractAdvanceTests : ContractTest() {
                 reference(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
                 input(DepositContract.ID, DEPOSIT)
                 output(DepositContract.ID, DEPOSIT.acceptDeposit())
-                command(keysOf(CUSTODIAN), DepositContract.Advance)
-                failsWith(DepositContract.Advance.CONTRACT_RULE_MEMBERSHIP_REFERENCES)
+                command(keysOf(CUSTODIAN), commandData)
+                failsWith(commandData.CONTRACT_RULE_MEMBERSHIP_REFERENCES)
             }
         }
     }
@@ -191,8 +183,8 @@ class DepositContractAdvanceTests : ContractTest() {
                 reference(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
                 input(DepositContract.ID, DEPOSIT)
                 output(DepositContract.ID, DEPOSIT.acceptDeposit())
-                command(keysOf(CUSTODIAN), DepositContract.Advance)
-                failsWith(DepositContract.Advance.CONTRACT_RULE_MEMBERSHIP_ATTESTATION_REFERENCES)
+                command(keysOf(CUSTODIAN), commandData)
+                failsWith(commandData.CONTRACT_RULE_MEMBERSHIP_ATTESTATION_REFERENCES)
             }
         }
     }
@@ -211,8 +203,8 @@ class DepositContractAdvanceTests : ContractTest() {
                 reference(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
                 input(DepositContract.ID, DEPOSIT)
                 output(DepositContract.ID, DEPOSIT.acceptDeposit())
-                command(keysOf(CUSTODIAN), DepositContract.Advance)
-                failsWith(DepositContract.Advance.CONTRACT_RULE_MEMBERSHIP_ATTESTATION_REFERENCES)
+                command(keysOf(CUSTODIAN), commandData)
+                failsWith(commandData.CONTRACT_RULE_MEMBERSHIP_ATTESTATION_REFERENCES)
             }
         }
     }
@@ -231,8 +223,8 @@ class DepositContractAdvanceTests : ContractTest() {
                 reference(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
                 input(DepositContract.ID, DEPOSIT)
                 output(DepositContract.ID, DEPOSIT.acceptDeposit())
-                command(keysOf(CUSTODIAN), DepositContract.Advance)
-                failsWith(DepositContract.Advance.CONTRACT_RULE_MEMBERSHIP_ATTESTATION_REFERENCES)
+                command(keysOf(CUSTODIAN), commandData)
+                failsWith(commandData.CONTRACT_RULE_MEMBERSHIP_ATTESTATION_REFERENCES)
             }
         }
     }
@@ -252,8 +244,8 @@ class DepositContractAdvanceTests : ContractTest() {
                 reference(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
                 input(DepositContract.ID, DEPOSIT)
                 output(DepositContract.ID, DEPOSIT.acceptDeposit())
-                command(keysOf(CUSTODIAN), DepositContract.Advance)
-                failsWith(DepositContract.Advance.CONTRACT_RULE_MEMBERSHIP_ATTESTATION_STATUS)
+                command(keysOf(CUSTODIAN), commandData)
+                failsWith(commandData.CONTRACT_RULE_MEMBERSHIP_ATTESTATION_STATUS)
             }
         }
     }
@@ -275,8 +267,8 @@ class DepositContractAdvanceTests : ContractTest() {
                 reference(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
                 input(DepositContract.ID, DEPOSIT)
                 output(DepositContract.ID, DEPOSIT.acceptDeposit())
-                command(keysOf(CUSTODIAN), DepositContract.Advance)
-                failsWith(DepositContract.Advance.CONTRACT_RULE_MEMBERSHIP_NETWORK)
+                command(keysOf(CUSTODIAN), commandData)
+                failsWith(commandData.CONTRACT_RULE_MEMBERSHIP_NETWORK)
             }
         }
     }
@@ -298,8 +290,8 @@ class DepositContractAdvanceTests : ContractTest() {
                 reference(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
                 input(DepositContract.ID, DEPOSIT)
                 output(DepositContract.ID, DEPOSIT.acceptDeposit())
-                command(keysOf(CUSTODIAN), DepositContract.Advance)
-                failsWith(DepositContract.Advance.CONTRACT_RULE_MEMBERSHIP_NETWORK)
+                command(keysOf(CUSTODIAN), commandData)
+                failsWith(commandData.CONTRACT_RULE_MEMBERSHIP_NETWORK)
             }
         }
     }
@@ -321,8 +313,8 @@ class DepositContractAdvanceTests : ContractTest() {
                 reference(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
                 input(DepositContract.ID, DEPOSIT)
                 output(DepositContract.ID, DEPOSIT.acceptDeposit())
-                command(keysOf(CUSTODIAN), DepositContract.Advance)
-                failsWith(DepositContract.Advance.CONTRACT_RULE_MEMBERSHIP_NETWORK)
+                command(keysOf(CUSTODIAN), commandData)
+                failsWith(commandData.CONTRACT_RULE_MEMBERSHIP_NETWORK)
             }
         }
     }
@@ -344,8 +336,8 @@ class DepositContractAdvanceTests : ContractTest() {
                 reference(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
                 input(DepositContract.ID, DEPOSIT)
                 output(DepositContract.ID, DEPOSIT.acceptDeposit())
-                command(keysOf(CUSTODIAN), DepositContract.Advance)
-                failsWith(DepositContract.Advance.CONTRACT_RULE_MEMBERSHIP_ATTESTATION_NETWORK)
+                command(keysOf(CUSTODIAN), commandData)
+                failsWith(commandData.CONTRACT_RULE_MEMBERSHIP_ATTESTATION_NETWORK)
             }
         }
     }
@@ -367,8 +359,8 @@ class DepositContractAdvanceTests : ContractTest() {
                 reference(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
                 input(DepositContract.ID, DEPOSIT)
                 output(DepositContract.ID, DEPOSIT.acceptDeposit())
-                command(keysOf(CUSTODIAN), DepositContract.Advance)
-                failsWith(DepositContract.Advance.CONTRACT_RULE_MEMBERSHIP_ATTESTATION_NETWORK)
+                command(keysOf(CUSTODIAN), commandData)
+                failsWith(commandData.CONTRACT_RULE_MEMBERSHIP_ATTESTATION_NETWORK)
             }
         }
     }
@@ -390,8 +382,8 @@ class DepositContractAdvanceTests : ContractTest() {
                 reference(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
                 input(DepositContract.ID, DEPOSIT)
                 output(DepositContract.ID, DEPOSIT.acceptDeposit())
-                command(keysOf(CUSTODIAN), DepositContract.Advance)
-                failsWith(DepositContract.Advance.CONTRACT_RULE_MEMBERSHIP_ATTESTATION_NETWORK)
+                command(keysOf(CUSTODIAN), commandData)
+                failsWith(commandData.CONTRACT_RULE_MEMBERSHIP_ATTESTATION_NETWORK)
             }
         }
     }
@@ -412,8 +404,8 @@ class DepositContractAdvanceTests : ContractTest() {
                 reference(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
                 input(DepositContract.ID, DEPOSIT)
                 output(DepositContract.ID, DEPOSIT.acceptDeposit())
-                command(keysOf(CUSTODIAN), DepositContract.Advance)
-                failsWith(DepositContract.Advance.CONTRACT_RULE_MEMBERSHIP_ATTESTATIONS_POINT_TO_MEMBERSHIP_REFERENCES)
+                command(keysOf(CUSTODIAN), commandData)
+                failsWith(commandData.CONTRACT_RULE_MEMBERSHIP_ATTESTATIONS_POINT_TO_MEMBERSHIP_REFERENCES)
             }
         }
     }
@@ -433,8 +425,8 @@ class DepositContractAdvanceTests : ContractTest() {
                 reference(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
                 input(DepositContract.ID, DEPOSIT)
                 output(DepositContract.ID, DEPOSIT.acceptDeposit().copy(linearId = UniqueIdentifier()))
-                command(keysOf(CUSTODIAN), DepositContract.Advance)
-                failsWith(DepositContract.Advance.CONTRACT_RULE_CHANGES)
+                command(keysOf(CUSTODIAN), commandData)
+                failsWith(commandData.CONTRACT_RULE_CHANGES)
             }
         }
     }
@@ -454,8 +446,8 @@ class DepositContractAdvanceTests : ContractTest() {
                 reference(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
                 input(DepositContract.ID, DEPOSIT.cancelDeposit())
                 output(DepositContract.ID, DEPOSIT.acceptDeposit())
-                command(keysOf(CUSTODIAN), DepositContract.Advance)
-                failsWith(DepositContract.Advance.CONTRACT_RULE_CAN_ADVANCE)
+                command(keysOf(CUSTODIAN), commandData)
+                failsWith(commandData.CONTRACT_RULE_CAN_ADVANCE)
             }
         }
     }
@@ -475,8 +467,8 @@ class DepositContractAdvanceTests : ContractTest() {
                 reference(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
                 input(DepositContract.ID, DEPOSIT)
                 output(DepositContract.ID, DEPOSIT.rejectDeposit().copy(reference = "NOT NULL"))
-                command(keysOf(CUSTODIAN), DepositContract.Advance)
-                failsWith(DepositContract.Advance.CONTRACT_RULE_REFERENCE)
+                command(keysOf(CUSTODIAN), commandData)
+                failsWith(commandData.CONTRACT_RULE_REFERENCE)
             }
         }
     }
@@ -496,8 +488,8 @@ class DepositContractAdvanceTests : ContractTest() {
                 reference(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
                 input(DepositContract.ID, DEPOSIT)
                 output(DepositContract.ID, DEPOSIT.acceptDeposit().copy(reference = null))
-                command(keysOf(CUSTODIAN), DepositContract.Advance)
-                failsWith(DepositContract.Advance.CONTRACT_RULE_REFERENCE)
+                command(keysOf(CUSTODIAN), commandData)
+                failsWith(commandData.CONTRACT_RULE_REFERENCE)
             }
         }
     }
@@ -517,8 +509,8 @@ class DepositContractAdvanceTests : ContractTest() {
                 reference(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
                 input(DepositContract.ID, DEPOSIT)
                 output(DepositContract.ID, DEPOSIT.acceptDeposit().copy(timestamp = Instant.MIN))
-                command(keysOf(CUSTODIAN), DepositContract.Advance)
-                failsWith(DepositContract.Advance.CONTRACT_RULE_TIMESTAMP)
+                command(keysOf(CUSTODIAN), commandData)
+                failsWith(commandData.CONTRACT_RULE_TIMESTAMP)
             }
         }
     }
@@ -539,8 +531,8 @@ class DepositContractAdvanceTests : ContractTest() {
                 input(DepositContract.ID, DEPOSIT.acceptDeposit("REF").issuePayment())
                 output(DepositContract.ID, DEPOSIT.acceptDeposit("REF").issuePayment().acceptPayment())
                 output(TokenContract.CONTRACT_ID, TOKEN_100GBP_BANK_A)
-                command(keysOf(TOKEN_ISSUING_ENTITY), DepositContract.Advance)
-                failsWith(DepositContract.Advance.CONTRACT_RULE_TOKEN_ISSUING_ENTITY)
+                command(keysOf(TOKEN_ISSUING_ENTITY), commandData)
+                failsWith(commandData.CONTRACT_RULE_TOKEN_ISSUING_ENTITY)
             }
         }
     }
@@ -561,8 +553,8 @@ class DepositContractAdvanceTests : ContractTest() {
                 input(DepositContract.ID, DEPOSIT.acceptDeposit("REF").issuePayment())
                 output(DepositContract.ID, DEPOSIT.acceptDeposit("REF").issuePayment().acceptPayment())
                 output(TokenContract.CONTRACT_ID, TOKEN_50GBP_BANK_A)
-                command(keysOf(TOKEN_ISSUING_ENTITY), DepositContract.Advance)
-                failsWith(DepositContract.Advance.CONTRACT_RULE_TOKEN_AMOUNT)
+                command(keysOf(TOKEN_ISSUING_ENTITY), commandData)
+                failsWith(commandData.CONTRACT_RULE_TOKEN_AMOUNT)
             }
         }
     }
@@ -582,8 +574,8 @@ class DepositContractAdvanceTests : ContractTest() {
                 reference(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
                 input(DepositContract.ID, DEPOSIT.acceptDeposit("REF"))
                 output(DepositContract.ID, DEPOSIT.acceptDeposit("REF").issuePayment())
-                command(keysOf(RANDOM_PARTY), DepositContract.Advance)
-                failsWith(DepositContract.Advance.CONTRACT_RULE_SIGNERS)
+                command(keysOf(RANDOM_PARTY), commandData)
+                failsWith(commandData.CONTRACT_RULE_SIGNERS)
             }
         }
     }
@@ -603,8 +595,8 @@ class DepositContractAdvanceTests : ContractTest() {
                 reference(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
                 input(DepositContract.ID, DEPOSIT)
                 output(DepositContract.ID, DEPOSIT.acceptDeposit("REF"))
-                command(keysOf(RANDOM_PARTY), DepositContract.Advance)
-                failsWith(DepositContract.Advance.CONTRACT_RULE_SIGNERS)
+                command(keysOf(RANDOM_PARTY), commandData)
+                failsWith(commandData.CONTRACT_RULE_SIGNERS)
             }
         }
     }
@@ -625,8 +617,8 @@ class DepositContractAdvanceTests : ContractTest() {
                 input(DepositContract.ID, DEPOSIT.acceptDeposit("REF").issuePayment())
                 output(DepositContract.ID, DEPOSIT.acceptDeposit("REF").issuePayment().acceptPayment())
                 output(TokenContract.CONTRACT_ID, TOKEN_100GBP_BANK_A)
-                command(keysOf(RANDOM_PARTY, TOKEN_ISSUING_ENTITY), DepositContract.Advance)
-                failsWith(DepositContract.Advance.CONTRACT_RULE_SIGNERS)
+                command(keysOf(RANDOM_PARTY, TOKEN_ISSUING_ENTITY), commandData)
+                failsWith(commandData.CONTRACT_RULE_SIGNERS)
             }
         }
     }
@@ -647,8 +639,8 @@ class DepositContractAdvanceTests : ContractTest() {
                 input(DepositContract.ID, DEPOSIT.acceptDeposit("REF").issuePayment())
                 output(DepositContract.ID, DEPOSIT.acceptDeposit("REF").issuePayment().acceptPayment())
                 output(TokenContract.CONTRACT_ID, TOKEN_100GBP_BANK_A)
-                command(keysOf(RANDOM_PARTY, CUSTODIAN), DepositContract.Advance)
-                failsWith(DepositContract.Advance.CONTRACT_RULE_SIGNERS)
+                command(keysOf(RANDOM_PARTY, CUSTODIAN), commandData)
+                failsWith(commandData.CONTRACT_RULE_SIGNERS)
             }
         }
     }

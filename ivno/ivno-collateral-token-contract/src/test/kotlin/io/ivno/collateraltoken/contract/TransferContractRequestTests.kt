@@ -1,28 +1,20 @@
 package io.ivno.collateraltoken.contract
 
-import com.ing.zknotary.common.zkp.ZincZKTransactionService
 import com.ing.zknotary.testing.dsl.VerificationMode
 import com.ing.zknotary.testing.dsl.zkLedger
-import com.ing.zknotary.testing.zkp.MockZKTransactionService
-import net.corda.core.utilities.loggerFor
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import kotlin.time.ExperimentalTime
-import kotlin.time.measureTime
 
 @ExperimentalTime
 class TransferContractRequestTests : ContractTest() {
-    private val log = loggerFor<TransferContractRequestTests>()
+    override val verificationMode = VerificationMode.PROVE_AND_VERIFY
+    override val commandData = TransferContract.Request
 
     @Test
     fun `On transfer requesting, the transaction must include the Request command`() {
         // services.zkLedger(zkService = MockZKTransactionService(services)) {
         services.zkLedger {
-            val zkService = this.interpreter.zkService as ZincZKTransactionService
-            val time = measureTime {
-                zkService.setup(TransferContract.Request)
-            }
-            log.info("[setup] $time")
             zkTransaction {
                 val memberships = createAllMemberships()
                 reference(memberships.membershipFor(BANK_A).ref)
@@ -32,8 +24,8 @@ class TransferContractRequestTests : ContractTest() {
                 reference(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
                 output(TransferContract.ID, TRANSFER)
                 fails()
-                command(keysOf(BANK_A), TransferContract.Request)
-                verifies(VerificationMode.PROVE_AND_VERIFY)
+                command(keysOf(BANK_A), commandData)
+                verifies(verificationMode)
             }
         }
     }
@@ -45,8 +37,8 @@ class TransferContractRequestTests : ContractTest() {
             zkTransaction {
                 input(TransferContract.ID, TRANSFER)
                 output(TransferContract.ID, TRANSFER)
-                command(keysOf(BANK_A), TransferContract.Request)
-                failsWith(TransferContract.Request.CONTRACT_RULE_TRANSFER_INPUTS)
+                command(keysOf(BANK_A), commandData)
+                failsWith(commandData.CONTRACT_RULE_TRANSFER_INPUTS)
             }
         }
     }
@@ -58,8 +50,8 @@ class TransferContractRequestTests : ContractTest() {
             zkTransaction {
                 output(TransferContract.ID, TRANSFER)
                 output(TransferContract.ID, TRANSFER)
-                command(keysOf(BANK_A), TransferContract.Request)
-                failsWith(TransferContract.Request.CONTRACT_RULE_TRANSFER_OUTPUTS)
+                command(keysOf(BANK_A), commandData)
+                failsWith(commandData.CONTRACT_RULE_TRANSFER_OUTPUTS)
             }
         }
     }
@@ -79,8 +71,8 @@ class TransferContractRequestTests : ContractTest() {
                     TransferContract.ID,
                     TRANSFER.copy(targetTokenHolder = BANK_A.party.anonymise(), targetTokenHolderAccountId = "12345678")
                 )
-                command(keysOf(BANK_A), TransferContract.Request)
-                failsWith(TransferContract.Request.CONTRACT_RULE_PARTICIPANTS)
+                command(keysOf(BANK_A), commandData)
+                failsWith(commandData.CONTRACT_RULE_PARTICIPANTS)
             }
         }
     }
@@ -97,8 +89,8 @@ class TransferContractRequestTests : ContractTest() {
                 reference(memberships.attestationFor(BANK_B).ref)
                 reference(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
                 output(TransferContract.ID, TRANSFER.copy(amount = AMOUNT_OF_ZERO_IVNO_TOKEN_POINTER))
-                command(keysOf(BANK_A), TransferContract.Request)
-                failsWith(TransferContract.Request.CONTRACT_RULE_AMOUNT)
+                command(keysOf(BANK_A), commandData)
+                failsWith(commandData.CONTRACT_RULE_AMOUNT)
             }
         }
     }
@@ -115,8 +107,8 @@ class TransferContractRequestTests : ContractTest() {
                 reference(memberships.attestationFor(BANK_B).ref)
                 reference(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
                 output(TransferContract.ID, TRANSFER.copy(status = TransferStatus.COMPLETED))
-                command(keysOf(BANK_A), TransferContract.Request)
-                failsWith(TransferContract.Request.CONTRACT_RULE_STATUS)
+                command(keysOf(BANK_A), commandData)
+                failsWith(commandData.CONTRACT_RULE_STATUS)
             }
         }
     }
@@ -133,8 +125,8 @@ class TransferContractRequestTests : ContractTest() {
                 reference(memberships.attestationFor(BANK_B).ref)
                 reference(IvnoTokenTypeContract.ID, IVNO_TOKEN_TYPE)
                 output(TransferContract.ID, TRANSFER)
-                command(keysOf(TOKEN_ISSUING_ENTITY), TransferContract.Request)
-                failsWith(TransferContract.Request.CONTRACT_RULE_SIGNERS)
+                command(keysOf(TOKEN_ISSUING_ENTITY), commandData)
+                failsWith(commandData.CONTRACT_RULE_SIGNERS)
             }
         }
     }

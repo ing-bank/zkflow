@@ -1,10 +1,10 @@
 package io.ivno.collateraltoken.contract
 
+import com.ing.zknotary.testing.dsl.VerificationMode
 import com.ing.zknotary.testing.dsl.zkLedger
 import io.dasl.contracts.v1.token.TokenContract
 import io.onixlabs.corda.bnms.contract.Network
 import io.onixlabs.corda.identityframework.contract.AttestationStatus
-import net.corda.testing.node.ledger
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import kotlin.time.ExperimentalTime
@@ -12,6 +12,8 @@ import kotlin.time.ExperimentalTime
 @ExperimentalTime
 @Disabled("Re-enable once we have everything serializable and when we have zktransaction DSL")
 class RedemptionRequestContractTests : ContractTest() {
+    override val verificationMode = VerificationMode.RUN
+    override val commandData = RedemptionContract.Request
 
     @Test
     fun `On redemption requesting, the transaction must include the Request command`() {
@@ -34,8 +36,8 @@ class RedemptionRequestContractTests : ContractTest() {
                 output(RedemptionContract.ID, REDEMPTION)
                 command(keysOf(BANK_A, TOKEN_ISSUING_ENTITY), TokenContract.Command.Redeem)
                 fails()
-                command(keysOf(BANK_A, CUSTODIAN, TOKEN_ISSUING_ENTITY), RedemptionContract.Request)
-                verifies()
+                command(keysOf(BANK_A, CUSTODIAN, TOKEN_ISSUING_ENTITY), commandData)
+                verifies(verificationMode)
             }
         }
     }
@@ -46,8 +48,8 @@ class RedemptionRequestContractTests : ContractTest() {
             zkTransaction {
                 input(RedemptionContract.ID, REDEMPTION)
                 output(RedemptionContract.ID, REDEMPTION)
-                command(keysOf(BANK_A, CUSTODIAN, TOKEN_ISSUING_ENTITY), RedemptionContract.Request)
-                failsWith(RedemptionContract.Request.CONTRACT_RULE_REDEMPTION_INPUTS)
+                command(keysOf(BANK_A, CUSTODIAN, TOKEN_ISSUING_ENTITY), commandData)
+                failsWith(commandData.CONTRACT_RULE_REDEMPTION_INPUTS)
             }
         }
     }
@@ -58,8 +60,8 @@ class RedemptionRequestContractTests : ContractTest() {
             zkTransaction {
                 output(RedemptionContract.ID, REDEMPTION)
                 output(RedemptionContract.ID, REDEMPTION)
-                command(keysOf(BANK_A, CUSTODIAN, TOKEN_ISSUING_ENTITY), RedemptionContract.Request)
-                failsWith(RedemptionContract.Request.CONTRACT_RULE_REDEMPTION_OUTPUTS)
+                command(keysOf(BANK_A, CUSTODIAN, TOKEN_ISSUING_ENTITY), commandData)
+                failsWith(commandData.CONTRACT_RULE_REDEMPTION_OUTPUTS)
             }
         }
     }
@@ -78,8 +80,8 @@ class RedemptionRequestContractTests : ContractTest() {
                 reference(memberships.attestationFor(TOKEN_ISSUING_ENTITY).ref)
                 reference(tokenType.ref)
                 output(RedemptionContract.ID, REDEMPTION)
-                command(keysOf(BANK_A, CUSTODIAN, TOKEN_ISSUING_ENTITY), RedemptionContract.Request)
-                failsWith(RedemptionContract.Request.CONTRACT_RULE_TOKEN_INPUTS)
+                command(keysOf(BANK_A, CUSTODIAN, TOKEN_ISSUING_ENTITY), commandData)
+                failsWith(commandData.CONTRACT_RULE_TOKEN_INPUTS)
             }
         }
     }
@@ -104,7 +106,7 @@ class RedemptionRequestContractTests : ContractTest() {
                 input(token.ref)
                 output(RedemptionContract.ID, REDEMPTION)
                 command(keysOf(BANK_A, TOKEN_ISSUING_ENTITY), TokenContract.Command.Redeem)
-                command(keysOf(BANK_A, CUSTODIAN, TOKEN_ISSUING_ENTITY), RedemptionContract.Request)
+                command(keysOf(BANK_A, CUSTODIAN, TOKEN_ISSUING_ENTITY), commandData)
                 verifies()
             }
         }
@@ -129,8 +131,8 @@ class RedemptionRequestContractTests : ContractTest() {
                 input(token.ref)
                 output(RedemptionContract.ID, REDEMPTION)
                 command(keysOf(BANK_A, TOKEN_ISSUING_ENTITY), TokenContract.Command.Redeem)
-                command(keysOf(BANK_A, CUSTODIAN, TOKEN_ISSUING_ENTITY), RedemptionContract.Request)
-                failsWith(RedemptionContract.Request.CONTRACT_RULE_MEMBERSHIP_REFERENCES)
+                command(keysOf(BANK_A, CUSTODIAN, TOKEN_ISSUING_ENTITY), commandData)
+                failsWith(commandData.CONTRACT_RULE_MEMBERSHIP_REFERENCES)
             }
         }
     }
@@ -154,8 +156,8 @@ class RedemptionRequestContractTests : ContractTest() {
                 input(token.ref)
                 output(RedemptionContract.ID, REDEMPTION)
                 command(keysOf(BANK_A, TOKEN_ISSUING_ENTITY), TokenContract.Command.Redeem)
-                command(keysOf(BANK_A, CUSTODIAN, TOKEN_ISSUING_ENTITY), RedemptionContract.Request)
-                failsWith(RedemptionContract.Request.CONTRACT_RULE_MEMBERSHIP_REFERENCES)
+                command(keysOf(BANK_A, CUSTODIAN, TOKEN_ISSUING_ENTITY), commandData)
+                failsWith(commandData.CONTRACT_RULE_MEMBERSHIP_REFERENCES)
             }
         }
     }
@@ -179,8 +181,8 @@ class RedemptionRequestContractTests : ContractTest() {
                 input(token.ref)
                 output(RedemptionContract.ID, REDEMPTION)
                 command(keysOf(BANK_A, TOKEN_ISSUING_ENTITY), TokenContract.Command.Redeem)
-                command(keysOf(BANK_A, CUSTODIAN, TOKEN_ISSUING_ENTITY), RedemptionContract.Request)
-                failsWith(RedemptionContract.Request.CONTRACT_RULE_MEMBERSHIP_REFERENCES)
+                command(keysOf(BANK_A, CUSTODIAN, TOKEN_ISSUING_ENTITY), commandData)
+                failsWith(commandData.CONTRACT_RULE_MEMBERSHIP_REFERENCES)
             }
         }
     }
@@ -204,8 +206,8 @@ class RedemptionRequestContractTests : ContractTest() {
                 input(token.ref)
                 output(RedemptionContract.ID, REDEMPTION)
                 command(keysOf(BANK_A, TOKEN_ISSUING_ENTITY), TokenContract.Command.Redeem)
-                command(keysOf(BANK_A, CUSTODIAN, TOKEN_ISSUING_ENTITY), RedemptionContract.Request)
-                failsWith(RedemptionContract.Request.CONTRACT_RULE_MEMBERSHIP_ATTESTATION_REFERENCES)
+                command(keysOf(BANK_A, CUSTODIAN, TOKEN_ISSUING_ENTITY), commandData)
+                failsWith(commandData.CONTRACT_RULE_MEMBERSHIP_ATTESTATION_REFERENCES)
             }
         }
     }
@@ -229,8 +231,8 @@ class RedemptionRequestContractTests : ContractTest() {
                 input(token.ref)
                 output(RedemptionContract.ID, REDEMPTION)
                 command(keysOf(BANK_A, TOKEN_ISSUING_ENTITY), TokenContract.Command.Redeem)
-                command(keysOf(BANK_A, CUSTODIAN, TOKEN_ISSUING_ENTITY), RedemptionContract.Request)
-                failsWith(RedemptionContract.Request.CONTRACT_RULE_MEMBERSHIP_ATTESTATION_REFERENCES)
+                command(keysOf(BANK_A, CUSTODIAN, TOKEN_ISSUING_ENTITY), commandData)
+                failsWith(commandData.CONTRACT_RULE_MEMBERSHIP_ATTESTATION_REFERENCES)
             }
         }
     }
@@ -254,8 +256,8 @@ class RedemptionRequestContractTests : ContractTest() {
                 input(token.ref)
                 output(RedemptionContract.ID, REDEMPTION)
                 command(keysOf(BANK_A, TOKEN_ISSUING_ENTITY), TokenContract.Command.Redeem)
-                command(keysOf(BANK_A, CUSTODIAN, TOKEN_ISSUING_ENTITY), RedemptionContract.Request)
-                failsWith(RedemptionContract.Request.CONTRACT_RULE_MEMBERSHIP_ATTESTATION_REFERENCES)
+                command(keysOf(BANK_A, CUSTODIAN, TOKEN_ISSUING_ENTITY), commandData)
+                failsWith(commandData.CONTRACT_RULE_MEMBERSHIP_ATTESTATION_REFERENCES)
             }
         }
     }
@@ -280,8 +282,8 @@ class RedemptionRequestContractTests : ContractTest() {
                 input(token.ref)
                 output(RedemptionContract.ID, REDEMPTION)
                 command(keysOf(BANK_A, TOKEN_ISSUING_ENTITY), TokenContract.Command.Redeem)
-                command(keysOf(BANK_A, CUSTODIAN, TOKEN_ISSUING_ENTITY), RedemptionContract.Request)
-                failsWith(RedemptionContract.Request.CONTRACT_RULE_MEMBERSHIP_ATTESTATION_STATUS)
+                command(keysOf(BANK_A, CUSTODIAN, TOKEN_ISSUING_ENTITY), commandData)
+                failsWith(commandData.CONTRACT_RULE_MEMBERSHIP_ATTESTATION_STATUS)
             }
         }
     }
@@ -308,8 +310,8 @@ class RedemptionRequestContractTests : ContractTest() {
                 input(token.ref)
                 output(RedemptionContract.ID, REDEMPTION)
                 command(keysOf(BANK_A, TOKEN_ISSUING_ENTITY), TokenContract.Command.Redeem)
-                command(keysOf(BANK_A, CUSTODIAN, TOKEN_ISSUING_ENTITY), RedemptionContract.Request)
-                failsWith(RedemptionContract.Request.CONTRACT_RULE_MEMBERSHIP_NETWORK)
+                command(keysOf(BANK_A, CUSTODIAN, TOKEN_ISSUING_ENTITY), commandData)
+                failsWith(commandData.CONTRACT_RULE_MEMBERSHIP_NETWORK)
             }
         }
     }
@@ -336,8 +338,8 @@ class RedemptionRequestContractTests : ContractTest() {
                 input(token.ref)
                 output(RedemptionContract.ID, REDEMPTION)
                 command(keysOf(BANK_A, TOKEN_ISSUING_ENTITY), TokenContract.Command.Redeem)
-                command(keysOf(BANK_A, CUSTODIAN, TOKEN_ISSUING_ENTITY), RedemptionContract.Request)
-                failsWith(RedemptionContract.Request.CONTRACT_RULE_MEMBERSHIP_NETWORK)
+                command(keysOf(BANK_A, CUSTODIAN, TOKEN_ISSUING_ENTITY), commandData)
+                failsWith(commandData.CONTRACT_RULE_MEMBERSHIP_NETWORK)
             }
         }
     }
@@ -364,8 +366,8 @@ class RedemptionRequestContractTests : ContractTest() {
                 input(token.ref)
                 output(RedemptionContract.ID, REDEMPTION)
                 command(keysOf(BANK_A, TOKEN_ISSUING_ENTITY), TokenContract.Command.Redeem)
-                command(keysOf(BANK_A, CUSTODIAN, TOKEN_ISSUING_ENTITY), RedemptionContract.Request)
-                failsWith(RedemptionContract.Request.CONTRACT_RULE_MEMBERSHIP_NETWORK)
+                command(keysOf(BANK_A, CUSTODIAN, TOKEN_ISSUING_ENTITY), commandData)
+                failsWith(commandData.CONTRACT_RULE_MEMBERSHIP_NETWORK)
             }
         }
     }
@@ -392,8 +394,8 @@ class RedemptionRequestContractTests : ContractTest() {
                 input(token.ref)
                 output(RedemptionContract.ID, REDEMPTION)
                 command(keysOf(BANK_A, TOKEN_ISSUING_ENTITY), TokenContract.Command.Redeem)
-                command(keysOf(BANK_A, CUSTODIAN, TOKEN_ISSUING_ENTITY), RedemptionContract.Request)
-                failsWith(RedemptionContract.Request.CONTRACT_RULE_MEMBERSHIP_ATTESTATION_NETWORK)
+                command(keysOf(BANK_A, CUSTODIAN, TOKEN_ISSUING_ENTITY), commandData)
+                failsWith(commandData.CONTRACT_RULE_MEMBERSHIP_ATTESTATION_NETWORK)
             }
         }
     }
@@ -420,8 +422,8 @@ class RedemptionRequestContractTests : ContractTest() {
                 input(token.ref)
                 output(RedemptionContract.ID, REDEMPTION)
                 command(keysOf(BANK_A, TOKEN_ISSUING_ENTITY), TokenContract.Command.Redeem)
-                command(keysOf(BANK_A, CUSTODIAN, TOKEN_ISSUING_ENTITY), RedemptionContract.Request)
-                failsWith(RedemptionContract.Request.CONTRACT_RULE_MEMBERSHIP_ATTESTATION_NETWORK)
+                command(keysOf(BANK_A, CUSTODIAN, TOKEN_ISSUING_ENTITY), commandData)
+                failsWith(commandData.CONTRACT_RULE_MEMBERSHIP_ATTESTATION_NETWORK)
             }
         }
     }
@@ -448,8 +450,8 @@ class RedemptionRequestContractTests : ContractTest() {
                 input(token.ref)
                 output(RedemptionContract.ID, REDEMPTION)
                 command(keysOf(BANK_A, TOKEN_ISSUING_ENTITY), TokenContract.Command.Redeem)
-                command(keysOf(BANK_A, CUSTODIAN, TOKEN_ISSUING_ENTITY), RedemptionContract.Request)
-                failsWith(RedemptionContract.Request.CONTRACT_RULE_MEMBERSHIP_ATTESTATION_NETWORK)
+                command(keysOf(BANK_A, CUSTODIAN, TOKEN_ISSUING_ENTITY), commandData)
+                failsWith(commandData.CONTRACT_RULE_MEMBERSHIP_ATTESTATION_NETWORK)
             }
         }
     }
@@ -475,8 +477,8 @@ class RedemptionRequestContractTests : ContractTest() {
                 input(token.ref)
                 output(RedemptionContract.ID, REDEMPTION)
                 command(keysOf(BANK_A, TOKEN_ISSUING_ENTITY), TokenContract.Command.Redeem)
-                command(keysOf(BANK_A, CUSTODIAN, TOKEN_ISSUING_ENTITY), RedemptionContract.Request)
-                failsWith(RedemptionContract.Request.CONTRACT_RULE_MEMBERSHIP_ATTESTATIONS_POINT_TO_MEMBERSHIP_REFERENCES)
+                command(keysOf(BANK_A, CUSTODIAN, TOKEN_ISSUING_ENTITY), commandData)
+                failsWith(commandData.CONTRACT_RULE_MEMBERSHIP_ATTESTATIONS_POINT_TO_MEMBERSHIP_REFERENCES)
             }
         }
     }
@@ -501,8 +503,8 @@ class RedemptionRequestContractTests : ContractTest() {
                 output(RedemptionContract.ID, REDEMPTION.copy(redeemer = CUSTODIAN.party))
                 reference(tokenType.ref)
                 command(keysOf(BANK_A, TOKEN_ISSUING_ENTITY), TokenContract.Command.Redeem)
-                command(keysOf(BANK_A, CUSTODIAN, TOKEN_ISSUING_ENTITY), RedemptionContract.Request)
-                failsWith(RedemptionContract.Request.CONTRACT_RULE_PARTICIPANTS)
+                command(keysOf(BANK_A, CUSTODIAN, TOKEN_ISSUING_ENTITY), commandData)
+                failsWith(commandData.CONTRACT_RULE_PARTICIPANTS)
             }
         }
     }
@@ -527,8 +529,8 @@ class RedemptionRequestContractTests : ContractTest() {
                 input(token.ref)
                 output(RedemptionContract.ID, REDEMPTION.copy(amount = AMOUNT_OF_200_IVNO_TOKEN_POINTER))
                 command(keysOf(BANK_A, TOKEN_ISSUING_ENTITY), TokenContract.Command.Redeem)
-                command(keysOf(BANK_A, CUSTODIAN, TOKEN_ISSUING_ENTITY), RedemptionContract.Request)
-                failsWith(RedemptionContract.Request.CONTRACT_RULE_AMOUNT)
+                command(keysOf(BANK_A, CUSTODIAN, TOKEN_ISSUING_ENTITY), commandData)
+                failsWith(commandData.CONTRACT_RULE_AMOUNT)
             }
         }
     }
@@ -553,8 +555,8 @@ class RedemptionRequestContractTests : ContractTest() {
                 input(token.ref)
                 output(RedemptionContract.ID, REDEMPTION.copy(amount = AMOUNT_OF_50_IVNO_TOKEN_POINTER))
                 command(keysOf(BANK_A, TOKEN_ISSUING_ENTITY), TokenContract.Command.Redeem)
-                command(keysOf(BANK_A, CUSTODIAN, TOKEN_ISSUING_ENTITY), RedemptionContract.Request)
-                failsWith(RedemptionContract.Request.CONTRACT_RULE_AMOUNT)
+                command(keysOf(BANK_A, CUSTODIAN, TOKEN_ISSUING_ENTITY), commandData)
+                failsWith(commandData.CONTRACT_RULE_AMOUNT)
             }
         }
     }
@@ -579,8 +581,8 @@ class RedemptionRequestContractTests : ContractTest() {
                 output(RedemptionContract.ID, REDEMPTION)
                 reference(tokenType.ref)
                 command(keysOf(BANK_A, TOKEN_ISSUING_ENTITY), TokenContract.Command.Redeem)
-                command(keysOf(CUSTODIAN, TOKEN_ISSUING_ENTITY), RedemptionContract.Request)
-                failsWith(RedemptionContract.Request.CONTRACT_RULE_SIGNERS)
+                command(keysOf(CUSTODIAN, TOKEN_ISSUING_ENTITY), commandData)
+                failsWith(commandData.CONTRACT_RULE_SIGNERS)
             }
         }
     }
@@ -605,8 +607,8 @@ class RedemptionRequestContractTests : ContractTest() {
                 output(RedemptionContract.ID, REDEMPTION)
                 reference(tokenType.ref)
                 command(keysOf(BANK_A, TOKEN_ISSUING_ENTITY), TokenContract.Command.Redeem)
-                command(keysOf(BANK_A, TOKEN_ISSUING_ENTITY), RedemptionContract.Request)
-                failsWith(RedemptionContract.Request.CONTRACT_RULE_SIGNERS)
+                command(keysOf(BANK_A, TOKEN_ISSUING_ENTITY), commandData)
+                failsWith(commandData.CONTRACT_RULE_SIGNERS)
             }
         }
     }
@@ -631,8 +633,8 @@ class RedemptionRequestContractTests : ContractTest() {
                 output(RedemptionContract.ID, REDEMPTION)
                 reference(tokenType.ref)
                 command(keysOf(BANK_A, TOKEN_ISSUING_ENTITY), TokenContract.Command.Redeem)
-                command(keysOf(BANK_A, CUSTODIAN), RedemptionContract.Request)
-                failsWith(RedemptionContract.Request.CONTRACT_RULE_SIGNERS)
+                command(keysOf(BANK_A, CUSTODIAN), commandData)
+                failsWith(commandData.CONTRACT_RULE_SIGNERS)
             }
         }
     }

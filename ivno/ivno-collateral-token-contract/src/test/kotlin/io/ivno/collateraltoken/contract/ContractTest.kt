@@ -1,8 +1,12 @@
 package io.ivno.collateraltoken.contract
 
+import com.ing.zknotary.common.contracts.ZKCommandData
+import com.ing.zknotary.common.zkp.ZincZKTransactionService
 import com.ing.zknotary.testing.dsl.LedgerDSL
 import com.ing.zknotary.testing.dsl.TestLedgerDSLInterpreter
 import com.ing.zknotary.testing.dsl.TestTransactionDSLInterpreter
+import com.ing.zknotary.testing.dsl.VerificationMode
+import com.ing.zknotary.testing.dsl.zkLedger
 import io.dasl.contracts.v1.crud.CrudCommands
 import io.dasl.contracts.v1.token.BigDecimalAmount
 import io.dasl.contracts.v1.token.TokenContract
@@ -11,7 +15,6 @@ import io.dasl.contracts.v1.token.linearPointer
 import io.dasl.contracts.v1.token.toBigDecimalAmount
 import io.onixlabs.corda.bnms.contract.Network
 import io.onixlabs.corda.bnms.contract.Role
-import io.onixlabs.corda.bnms.contract.Setting
 import io.onixlabs.corda.bnms.contract.membership.Membership
 import io.onixlabs.corda.bnms.contract.membership.MembershipAttestation
 import io.onixlabs.corda.bnms.contract.membership.MembershipAttestationContract
@@ -24,11 +27,13 @@ import io.onixlabs.corda.bnms.contract.revocation.RevocationLockContract
 import io.onixlabs.corda.identityframework.contract.AttestationContract
 import io.onixlabs.corda.identityframework.contract.AttestationStatus
 import io.onixlabs.corda.identityframework.contract.Claim
+import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.node.NotaryInfo
+import net.corda.core.utilities.loggerFor
 import net.corda.testing.common.internal.testNetworkParameters
 import net.corda.testing.core.DUMMY_NOTARY_NAME
 import net.corda.testing.core.TestIdentity
@@ -36,9 +41,13 @@ import net.corda.testing.node.MockServices
 import org.junit.jupiter.api.BeforeEach
 import java.math.BigDecimal
 import kotlin.time.ExperimentalTime
+import kotlin.time.measureTime
 
 @ExperimentalTime
 abstract class ContractTest {
+    private val myLog = loggerFor<ContractTest>()
+    abstract val verificationMode: VerificationMode
+    abstract val commandData: CommandData
 
     protected companion object {
 
@@ -152,6 +161,17 @@ abstract class ContractTest {
 
         _services = MockServices(cordapps, BANK_A, networkParameters, BANK_B)
         contracts.forEach { _services.addMockCordapp(it) }
+
+        if (verificationMode == VerificationMode.PROVE_AND_VERIFY
+            && commandData is ZKCommandData) {
+            _services.zkLedger {
+                val zkService = this.interpreter.zkService as ZincZKTransactionService
+                val time = measureTime {
+                    zkService.setup(commandData as ZKCommandData)
+                }
+                myLog.info("[setup] $time")
+            }
+        }
     }
 
     protected fun LedgerDSL<TestTransactionDSLInterpreter, TestLedgerDSLInterpreter>.createMembership(
