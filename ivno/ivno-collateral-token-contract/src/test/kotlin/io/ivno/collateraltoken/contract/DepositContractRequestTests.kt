@@ -10,7 +10,7 @@ import kotlin.time.ExperimentalTime
 
 @ExperimentalTime
 class DepositContractRequestTests : ContractTest() {
-    override val verificationMode = VerificationMode.PROVE_AND_VERIFY
+    override val verificationMode = VerificationMode.RUN
     override val commandData = DepositContract.Request
 
     /**
