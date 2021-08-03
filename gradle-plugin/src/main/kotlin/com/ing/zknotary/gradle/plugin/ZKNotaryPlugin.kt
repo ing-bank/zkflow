@@ -20,7 +20,7 @@ class ZKNotaryPlugin : Plugin<Project> {
 
         project.repositories.apply {
             // For kotlinx.serialization plugin
-            maven { it.url = URI.create("https://dl.bintray.com/kotlin/kotlin-dev/") }
+            maven { it.url = URI.create("https://plugins.gradle.org/m2/") }
 
             // For BFL
             maven {
