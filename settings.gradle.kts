@@ -24,7 +24,6 @@ pluginManagement {
         mavenLocal()
         google()
         mavenCentral()
-        maven("https://dl.bintray.com/kotlin/kotlin-dev/")
         maven("https://plugins.gradle.org/m2/")
         maven("https://software.r3.com/artifactory/corda")
     }
