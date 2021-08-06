@@ -1,0 +1,47 @@
+mod witness;
+mod consts;
+mod utils;
+
+use witness::WitnessInBits;
+use utils::get_merkle_tree_from_2_digests;
+use utils::get_merkle_tree_from_4_digests;
+use utils::get_merkle_tree_from_8_digests;
+use consts::HASH_BITS;
+use consts::REFERENCE_GROUP_SIZE;
+use consts::ATTACHMENT_GROUP_SIZE;
+use std::crypto::blake2s;
+
+fn compute_component_group_hashes(transaction_bits: WitnessInBits){
+
+    //INPUT_GROUP_SIZE = 0
+    let input_group_hash = [true; HASH_BITS];
+
+    //OUTPUT_GROUP_SIZE = 1
+    // let mut padded_leaves = [[false; HASH_BITS]; 2];
+    // for i in 0..1 {
+    //     padded_leaves[i] = blake2s(transaction_bits.outputs[0]);
+    // }
+    // let output_group_hash = get_merkle_tree_from_2_digests(padded_leaves);
+
+    // //REFERENCE_GROUP_SIZE = 1
+    // let mut padded_ref_leaves = [[false; HASH_BITS]; 8];
+    // for i in 0 as u16..REFERENCE_GROUP_SIZE {
+    //     padded_ref_leaves[i] = blake2s(transaction_bits.references[i]);
+    // }
+    // let reference_group_hash = get_merkle_tree_from_8_digests(padded_ref_leaves);
+    //
+    // //COMMAND_GROUP_SIZE = 1
+    // let mut padded__command_leaves = [[false; HASH_BITS]; 2];
+    // for i in 0..1 {
+    //     padded__command_leaves[i] = blake2s(transaction_bits.commands[0]);
+    // }
+    // let command_group_hash = get_merkle_tree_from_2_digests(padded__command_leaves);
+    //
+    // //ATTACHMENT_GROUP_SIZE = 4
+    // let mut padded_attachment_leaves = [[false; HASH_BITS]; 4];
+    // for i in 0 as u16..ATTACHMENT_GROUP_SIZE {
+    //     padded_attachment_leaves[i] = blake2s(transaction_bits.attachments[i]);
+    // }
+    // let attachment_group_hash = get_merkle_tree_from_4_digests(padded_attachment_leaves);
+
+}

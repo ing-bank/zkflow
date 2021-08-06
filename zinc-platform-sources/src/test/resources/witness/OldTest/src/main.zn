@@ -1,0 +1,9 @@
+mod witness;
+mod merkle;
+
+use witness::WitnessInBytes;
+
+fn main(transaction:WitnessInBytes){
+    let transaction_bits =  WitnessInBytes::bytes_2_bits(transaction);
+    let merkle_root = merkle::compute_component_group_hashes(transaction_bits);
+}

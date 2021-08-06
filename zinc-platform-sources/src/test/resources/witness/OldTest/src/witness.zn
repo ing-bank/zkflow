@@ -1,0 +1,164 @@
+mod consts;
+
+use std::convert::to_bits;
+
+use consts::BYTE_BITS;
+
+use consts::INPUT_GROUP_SIZE;
+use consts::OUTPUT_GROUP_SIZE;
+use consts::REFERENCE_GROUP_SIZE;
+use consts::COMMAND_GROUP_SIZE;
+use consts::ATTACHMENT_GROUP_SIZE;
+use consts::NOTARY_GROUP_SIZE;
+use consts::TIMEWINDOW_GROUP_SIZE;
+use consts::PARAMETER_GROUP_SIZE;
+use consts::SIGNER_GROUP_SIZE;
+
+use consts::INPUT_COMPONENT_SIZE_IN_BYTES;
+use consts::OUTPUT_COMPONENT_SIZE_IN_BYTES;
+use consts::REFERENCE_COMPONENT_SIZE_IN_BYTES;
+use consts::COMMAND_COMPONENT_SIZE_IN_BYTES;
+use consts::ATTACHMENT_COMPONENT_SIZE_IN_BYTES;
+use consts::NOTARY_COMPONENT_SIZE_IN_BYTES;
+use consts::TIMEWINDOW_COMPONENT_SIZE_IN_BYTES;
+use consts::PARAMETER_COMPONENT_SIZE_IN_BYTES;
+use consts::SIGNER_COMPONENT_SIZE_IN_BYTES;
+
+use consts::INPUT_COMPONENT_SIZE_IN_BITS;
+use consts::OUTPUT_COMPONENT_SIZE_IN_BITS;
+use consts::REFERENCE_COMPONENT_SIZE_IN_BITS;
+use consts::COMMAND_COMPONENT_SIZE_IN_BITS;
+use consts::ATTACHMENT_COMPONENT_SIZE_IN_BITS;
+use consts::NOTARY_COMPONENT_SIZE_IN_BITS;
+use consts::TIMEWINDOW_COMPONENT_SIZE_IN_BITS;
+use consts::PARAMETER_COMPONENT_SIZE_IN_BITS;
+use consts::SIGNER_COMPONENT_SIZE_IN_BITS;
+
+use consts::PRIVACY_SALT_BYTES;
+
+struct WitnessInBytes{
+    inputs : [[u8; INPUT_COMPONENT_SIZE_IN_BYTES]; INPUT_GROUP_SIZE],
+    outputs : [[u8; OUTPUT_COMPONENT_SIZE_IN_BYTES]; OUTPUT_GROUP_SIZE],
+    references: [[u8; REFERENCE_COMPONENT_SIZE_IN_BYTES]; REFERENCE_GROUP_SIZE],
+    commands: [[u8; COMMAND_COMPONENT_SIZE_IN_BYTES]; COMMAND_GROUP_SIZE],
+    attachments: [[u8; ATTACHMENT_COMPONENT_SIZE_IN_BYTES]; ATTACHMENT_GROUP_SIZE],
+    notary: [[u8; NOTARY_COMPONENT_SIZE_IN_BYTES]; NOTARY_GROUP_SIZE],
+    timewindow: [[u8; TIMEWINDOW_COMPONENT_SIZE_IN_BYTES]; TIMEWINDOW_GROUP_SIZE],
+    parameters: [[u8; PARAMETER_COMPONENT_SIZE_IN_BYTES]; PARAMETER_GROUP_SIZE],
+    signers: [[u8; SIGNER_COMPONENT_SIZE_IN_BYTES]; SIGNER_GROUP_SIZE],
+    privacy_salt: [u8; PRIVACY_SALT_BYTES]
+}
+
+struct WitnessInBits{
+    inputs : [[bool; INPUT_COMPONENT_SIZE_IN_BITS]; INPUT_GROUP_SIZE],
+    outputs : [[bool; OUTPUT_COMPONENT_SIZE_IN_BITS]; OUTPUT_GROUP_SIZE],
+    references: [[bool; REFERENCE_COMPONENT_SIZE_IN_BITS]; REFERENCE_GROUP_SIZE],
+    commands: [[bool; COMMAND_COMPONENT_SIZE_IN_BITS]; COMMAND_GROUP_SIZE],
+    attachments: [[bool; ATTACHMENT_COMPONENT_SIZE_IN_BITS]; ATTACHMENT_GROUP_SIZE],
+    notary: [[bool; NOTARY_COMPONENT_SIZE_IN_BITS]; NOTARY_GROUP_SIZE],
+    timewindow: [[bool; TIMEWINDOW_COMPONENT_SIZE_IN_BITS]; TIMEWINDOW_GROUP_SIZE],
+    parameters: [[bool; PARAMETER_COMPONENT_SIZE_IN_BITS]; PARAMETER_GROUP_SIZE],
+    signers: [[bool; SIGNER_COMPONENT_SIZE_IN_BITS]; SIGNER_GROUP_SIZE],
+}
+
+impl WitnessInBytes{
+
+    fn bytes_2_bits(this:WitnessInBytes) -> WitnessInBits {
+        //INPUT_GROUP_SIZE = 0
+
+        //OUTPUT_GROUP_SIZE = 1
+        let mut output_bits = [[false; OUTPUT_COMPONENT_SIZE_IN_BITS]; OUTPUT_GROUP_SIZE];
+        for i in 0..OUTPUT_GROUP_SIZE{
+            for j in 0..OUTPUT_COMPONENT_SIZE_IN_BYTES{
+                let mut bits = to_bits(this.outputs[i][j]);
+                for k in 0..BYTE_BITS as u32 {
+                    output_bits[i][BYTE_BITS as u32 * j + k] = bits[k];
+                }
+            }
+        }
+
+        //REFERENCE_GROUP_SIZE = 7
+        let mut reference_bits = [[false; REFERENCE_COMPONENT_SIZE_IN_BITS]; REFERENCE_GROUP_SIZE];
+        for i in 0..REFERENCE_GROUP_SIZE{
+            for j in 0..REFERENCE_COMPONENT_SIZE_IN_BYTES{
+                let mut bits = to_bits(this.references[i][j]);
+                for k in 0..BYTE_BITS {
+                    reference_bits[i][BYTE_BITS * j + k] = bits[k];
+                }
+            }
+        }
+
+        //COMMAND_GROUP_SIZE = 1
+        let mut command_bits = [[false; COMMAND_COMPONENT_SIZE_IN_BITS]; COMMAND_GROUP_SIZE];
+        for i in 0..COMMAND_GROUP_SIZE{
+            for j in 0..COMMAND_COMPONENT_SIZE_IN_BYTES{
+                let mut bits = to_bits(this.commands[i][j]);
+                for k in 0..BYTE_BITS {
+                    command_bits[i][BYTE_BITS * j + k] = bits[k];
+                }
+            }
+        }
+
+        //ATTACHMENT_GROUP_SIZE = 4
+        let mut attachment_bits = [[false; ATTACHMENT_COMPONENT_SIZE_IN_BITS]; ATTACHMENT_GROUP_SIZE];
+        for i in 0..ATTACHMENT_GROUP_SIZE{
+            for j in 0..ATTACHMENT_COMPONENT_SIZE_IN_BYTES{
+                let mut bits = to_bits(this.attachments[i][j]);
+                for k in 0..BYTE_BITS {
+                    attachment_bits[i][BYTE_BITS * j + k] = bits[k];
+                }
+            }
+        }
+
+        //NOTARY_GROUP_SIZE = 1
+        let mut notary_bits = [[false; NOTARY_COMPONENT_SIZE_IN_BITS]; NOTARY_GROUP_SIZE];
+        for i in 0..NOTARY_GROUP_SIZE{
+            for j in 0..NOTARY_COMPONENT_SIZE_IN_BYTES{
+                let mut bits = to_bits(this.notary[i][j]);
+                for k in 0..BYTE_BITS {
+                    notary_bits[i][BYTE_BITS * j + k] = bits[k];
+                }
+            }
+        }
+
+        //TIMEWINDOW_GROUP_SIZE = 0
+
+        //PARAMETER_GROUP_SIZE = 1
+        let mut parameter_bits = [[false; PARAMETER_COMPONENT_SIZE_IN_BITS]; PARAMETER_GROUP_SIZE];
+        for i in 0..PARAMETER_GROUP_SIZE{
+            for j in 0..PARAMETER_COMPONENT_SIZE_IN_BYTES{
+                let mut bits = to_bits(this.parameters[i][j]);
+                for k in 0..BYTE_BITS {
+                    parameter_bits[i][BYTE_BITS * j + k] = bits[k];
+                }
+            }
+        }
+
+        //SIGNER_GROUP_SIZE = 1
+        let mut signer_bits = [[false; SIGNER_COMPONENT_SIZE_IN_BITS]; SIGNER_GROUP_SIZE];
+        for i in 0..SIGNER_GROUP_SIZE{
+            for j in 0..SIGNER_COMPONENT_SIZE_IN_BYTES{
+                let mut bits = to_bits(this.signers[i][j]);
+                for k in 0..BYTE_BITS {
+                    signer_bits[i][BYTE_BITS * j + k] = bits[k];
+                }
+            }
+        }
+
+        WitnessInBits{
+            inputs: [[false; INPUT_COMPONENT_SIZE_IN_BITS]; INPUT_GROUP_SIZE],
+            outputs: output_bits,
+            references: reference_bits,
+            commands: command_bits,
+            attachments: attachment_bits,
+            notary: notary_bits,
+            timewindow: [[false; TIMEWINDOW_COMPONENT_SIZE_IN_BITS]; TIMEWINDOW_GROUP_SIZE],
+            parameters: parameter_bits,
+            signers:signer_bits,
+        }
+    }
+}
+
+impl WitnessInBits{
+
+}

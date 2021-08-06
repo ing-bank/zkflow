@@ -1,0 +1,103 @@
+mod platform_component_group_leaf_digest_dto;
+mod platform_crypto_utils;
+mod platform_node_digest_dto;
+
+use platform_component_group_leaf_digest_dto::ComponentGroupLeafDigestBits;
+use platform_component_group_leaf_digest_dto::ComponentGroupLeafDigestBytes;
+use platform_component_group_leaf_digest_dto::COMPONENT_GROUP_LEAF_DIGEST_BITS;
+use platform_crypto_utils::pedersen_to_padded_bits;
+use platform_crypto_utils::concatenate_component_group_leaf_digests;
+use platform_crypto_utils::concatenate_node_digests;
+use platform_node_digest_dto::NodeDigestBits;
+use platform_node_digest_dto::NodeDigestDto;
+use platform_node_digest_dto::NODE_DIGEST_BITS;
+use std::crypto::pedersen;
+
+        
+fn get_merkle_tree_from_2_node_digests(leaves: [NodeDigestBits; 2]) -> NodeDigestBits {
+    pedersen_to_padded_bits(pedersen(concatenate_node_digests(leaves[0], leaves[1])).0)
+}
+
+fn get_merkle_tree_from_4_node_digests(leaves: [NodeDigestBits; 4]) -> NodeDigestBits {
+    let mut new_leaves = [[false; NODE_DIGEST_BITS]; 2];
+    for i in 0..2 {
+        new_leaves[i] = pedersen_to_padded_bits(
+            pedersen(concatenate_node_digests(leaves[2 * i], leaves[2 * i + 1])).0,
+        );
+    }
+    get_merkle_tree_from_2_node_digests(new_leaves)
+}
+
+fn get_merkle_tree_from_8_node_digests(leaves: [NodeDigestBits; 8]) -> NodeDigestBits {
+    let mut new_leaves = [[false; NODE_DIGEST_BITS]; 4];
+    for i in 0..4 {
+        new_leaves[i] = pedersen_to_padded_bits(
+            pedersen(concatenate_node_digests(leaves[2 * i], leaves[2 * i + 1])).0,
+        );
+    }
+    get_merkle_tree_from_4_node_digests(new_leaves)
+}
+
+fn get_merkle_tree_from_16_node_digests(leaves: [NodeDigestBits; 16]) -> NodeDigestBits {
+    let mut new_leaves = [[false; NODE_DIGEST_BITS]; 8];
+    for i in 0..8 {
+        new_leaves[i] = pedersen_to_padded_bits(
+            pedersen(concatenate_node_digests(leaves[2 * i], leaves[2 * i + 1])).0,
+        );
+    }
+    get_merkle_tree_from_8_node_digests(new_leaves)
+}
+
+fn get_merkle_tree_from_32_node_digests(leaves: [NodeDigestBits; 32]) -> NodeDigestBits {
+    let mut new_leaves = [[false; NODE_DIGEST_BITS]; 16];
+    for i in 0..16 {
+        new_leaves[i] = pedersen_to_padded_bits(
+            pedersen(concatenate_node_digests(leaves[2 * i], leaves[2 * i + 1])).0,
+        );
+    }
+    get_merkle_tree_from_16_node_digests(new_leaves)
+}
+
+fn get_merkle_tree_from_2_component_group_leaf_digests(leaves: [ComponentGroupLeafDigestBits; 2]) -> ComponentGroupLeafDigestBits {
+    pedersen_to_padded_bits(pedersen(concatenate_component_group_leaf_digests(leaves[0], leaves[1])).0)
+}
+
+fn get_merkle_tree_from_4_component_group_leaf_digests(leaves: [ComponentGroupLeafDigestBits; 4]) -> ComponentGroupLeafDigestBits {
+    let mut new_leaves = [[false; COMPONENT_GROUP_LEAF_DIGEST_BITS]; 2];
+    for i in 0..2 {
+        new_leaves[i] = pedersen_to_padded_bits(
+            pedersen(concatenate_component_group_leaf_digests(leaves[2 * i], leaves[2 * i + 1])).0,
+        );
+    }
+    get_merkle_tree_from_2_node_digests(new_leaves)
+}
+
+fn get_merkle_tree_from_8_component_group_leaf_digests(leaves: [ComponentGroupLeafDigestBits; 8]) -> ComponentGroupLeafDigestBits {
+    let mut new_leaves = [[false; COMPONENT_GROUP_LEAF_DIGEST_BITS]; 4];
+    for i in 0..4 {
+        new_leaves[i] = pedersen_to_padded_bits(
+            pedersen(concatenate_component_group_leaf_digests(leaves[2 * i], leaves[2 * i + 1])).0,
+        );
+    }
+    get_merkle_tree_from_4_node_digests(new_leaves)
+}
+
+fn get_merkle_tree_from_16_component_group_leaf_digests(leaves: [ComponentGroupLeafDigestBits; 16]) -> ComponentGroupLeafDigestBits {
+    let mut new_leaves = [[false; COMPONENT_GROUP_LEAF_DIGEST_BITS]; 8];
+    for i in 0..8 {
+        new_leaves[i] = pedersen_to_padded_bits(
+            pedersen(concatenate_component_group_leaf_digests(leaves[2 * i], leaves[2 * i + 1])).0,
+        );
+    }
+    get_merkle_tree_from_8_node_digests(new_leaves)
+}
+
+fn get_merkle_tree_from_32_component_group_leaf_digests(leaves: [ComponentGroupLeafDigestBits; 32]) -> ComponentGroupLeafDigestBits {
+    let mut new_leaves = [[false; COMPONENT_GROUP_LEAF_DIGEST_BITS]; 16];
+    for i in 0..16 {
+        new_leaves[i] = pedersen_to_padded_bits(
+            pedersen(concatenate_component_group_leaf_digests(leaves[2 * i], leaves[2 * i + 1])).0,
+        );
+    }
+    get_merkle_tree_from_16_node_digests(new_leaves)
+}
