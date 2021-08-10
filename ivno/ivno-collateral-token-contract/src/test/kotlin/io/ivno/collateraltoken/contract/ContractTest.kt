@@ -1,10 +1,11 @@
 package io.ivno.collateraltoken.contract
 
+import TestTransactionDSLInterpreter
+import TestZKLedgerDSLInterpreter
+import TestZKTransactionDSLInterpreter
 import com.ing.zknotary.common.contracts.ZKCommandData
 import com.ing.zknotary.common.zkp.ZincZKTransactionService
 import com.ing.zknotary.testing.dsl.LedgerDSL
-import com.ing.zknotary.testing.dsl.TestLedgerDSLInterpreter
-import com.ing.zknotary.testing.dsl.TestTransactionDSLInterpreter
 import com.ing.zknotary.testing.dsl.VerificationMode
 import com.ing.zknotary.testing.dsl.zkLedger
 import io.dasl.contracts.v1.crud.CrudCommands
@@ -174,7 +175,7 @@ abstract class ContractTest {
         }
     }
 
-    protected fun LedgerDSL<TestTransactionDSLInterpreter, TestLedgerDSLInterpreter>.createMembership(
+    protected fun LedgerDSL<TestTransactionDSLInterpreter, TestZKTransactionDSLInterpreter,  TestZKLedgerDSLInterpreter>.createMembership(
         holder: AbstractParty,
         attestor: AbstractParty = BNO.party,
         network: Network = NETWORK,
@@ -226,7 +227,7 @@ abstract class ContractTest {
         return issuedMembership to issuedAttestation
     }
 
-    protected fun LedgerDSL<TestTransactionDSLInterpreter, TestLedgerDSLInterpreter>.createAllMemberships(
+    protected fun LedgerDSL<TestTransactionDSLInterpreter, TestZKTransactionDSLInterpreter,  TestZKLedgerDSLInterpreter>.createAllMemberships(
         network: Network = NETWORK,
         status: AttestationStatus = AttestationStatus.ACCEPTED
     ): Map<StateAndRef<Membership>, StateAndRef<MembershipAttestation>> {
@@ -243,7 +244,7 @@ abstract class ContractTest {
         identity: TestIdentity
     ): StateAndRef<MembershipAttestation> = values.single { it.state.data.holder == identity.party }
 
-    protected fun LedgerDSL<TestTransactionDSLInterpreter, TestLedgerDSLInterpreter>.issueTokenType(
+    protected fun LedgerDSL<TestTransactionDSLInterpreter, TestZKTransactionDSLInterpreter,  TestZKLedgerDSLInterpreter>.issueTokenType(
         tokenType: IvnoTokenType
     ): StateAndRef<IvnoTokenType> {
         val label = SecureHash.randomSHA256().toString()
@@ -263,7 +264,7 @@ abstract class ContractTest {
         return retrieveOutputStateAndRef(IvnoTokenType::class.java, label)
     }
 
-    fun LedgerDSL<TestTransactionDSLInterpreter, TestLedgerDSLInterpreter>.requestDeposit(
+    fun LedgerDSL<TestTransactionDSLInterpreter, TestZKTransactionDSLInterpreter,  TestZKLedgerDSLInterpreter>.requestDeposit(
         deposit: Deposit,
         tokenType: StateAndRef<IvnoTokenType>
     ): StateAndRef<Deposit> {
@@ -286,7 +287,7 @@ abstract class ContractTest {
         return retrieveOutputStateAndRef(Deposit::class.java, label)
     }
 
-    fun LedgerDSL<TestTransactionDSLInterpreter, TestLedgerDSLInterpreter>.acceptDeposit(
+    fun LedgerDSL<TestTransactionDSLInterpreter, TestZKTransactionDSLInterpreter,  TestZKLedgerDSLInterpreter>.acceptDeposit(
         deposit: StateAndRef<Deposit>,
         tokenType: StateAndRef<IvnoTokenType>
     ): StateAndRef<Deposit> {
@@ -310,7 +311,7 @@ abstract class ContractTest {
         return retrieveOutputStateAndRef(Deposit::class.java, label)
     }
 
-    fun LedgerDSL<TestTransactionDSLInterpreter, TestLedgerDSLInterpreter>.issueDepositPayment(
+    fun LedgerDSL<TestTransactionDSLInterpreter, TestZKTransactionDSLInterpreter,  TestZKLedgerDSLInterpreter>.issueDepositPayment(
         deposit: StateAndRef<Deposit>,
         tokenType: StateAndRef<IvnoTokenType>
     ): StateAndRef<Deposit> {
@@ -336,7 +337,7 @@ abstract class ContractTest {
 
     // FIXME: This transaction has multiple commands.
     //  Do they (all) need to be private (ZKP)?
-    fun LedgerDSL<TestTransactionDSLInterpreter, TestLedgerDSLInterpreter>.acceptDepositPayment(
+    fun LedgerDSL<TestTransactionDSLInterpreter, TestZKTransactionDSLInterpreter,  TestZKLedgerDSLInterpreter>.acceptDepositPayment(
         deposit: StateAndRef<Deposit>,
         tokenType: StateAndRef<IvnoTokenType>
     ): StateAndRef<TokenState> {
@@ -366,7 +367,7 @@ abstract class ContractTest {
         return retrieveOutputStateAndRef(TokenState::class.java, label)
     }
 
-    fun LedgerDSL<TestTransactionDSLInterpreter, TestLedgerDSLInterpreter>.requestTransfer(
+    fun LedgerDSL<TestTransactionDSLInterpreter, TestZKTransactionDSLInterpreter,  TestZKLedgerDSLInterpreter>.requestTransfer(
         transfer: Transfer,
         tokenType: StateAndRef<IvnoTokenType>
     ): StateAndRef<Transfer> {
@@ -387,7 +388,7 @@ abstract class ContractTest {
         return retrieveOutputStateAndRef(Transfer::class.java, label)
     }
 
-    fun LedgerDSL<TestTransactionDSLInterpreter, TestLedgerDSLInterpreter>.acceptTransfer(
+    fun LedgerDSL<TestTransactionDSLInterpreter, TestZKTransactionDSLInterpreter,  TestZKLedgerDSLInterpreter>.acceptTransfer(
         transfer: StateAndRef<Transfer>,
         tokenType: StateAndRef<IvnoTokenType>
     ): StateAndRef<Transfer> {

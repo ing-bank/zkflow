@@ -1,4 +1,4 @@
-package com.ing.zknotary.notary.transactions
+package com.ing.zknotary.transactions
 
 import com.ing.zknotary.testing.fixtures.contract.TestContract
 import net.corda.core.contracts.ContractState

@@ -2,8 +2,10 @@ package io.ivno.collateraltoken.contract
 
 import com.ing.zknotary.testing.dsl.VerificationMode
 import com.ing.zknotary.testing.dsl.zkLedger
+import com.ing.zknotary.testing.zkp.MockZKTransactionService
 import io.onixlabs.corda.bnms.contract.Network
 import io.onixlabs.corda.identityframework.contract.AttestationStatus
+import net.corda.testing.node.ledger
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import kotlin.time.ExperimentalTime
@@ -19,8 +21,8 @@ class DepositContractRequestTests : ContractTest() {
     @ExperimentalTime
     @Test
     fun `On deposit requesting, the transaction must include the Request command`() {
-        // services.zkLedger(zkService = MockZKTransactionService(services)) {
-        services.zkLedger {
+         services.zkLedger(zkService = MockZKTransactionService(services)) {
+//        services.zkLedger {
             zkTransaction {
                 val memberships = createAllMemberships()
                 reference(memberships.membershipFor(BANK_A).ref)

@@ -24,7 +24,7 @@ class CreateFlow(private val value: Int? = null) : FlowLogic<SignedTransaction>(
         val stateAndContract = StateAndContract(state, TestContract.PROGRAM_ID)
 
         val builder = ZKTransactionBuilder(serviceHub.networkMapCache.notaryIdentities.single())
-        builder.withItems(stateAndContract, issueCommand)
+            .withItems(stateAndContract, issueCommand)
 
         val stx = serviceHub.signInitialTransaction(builder)
         val fullySignedStx = subFlow(ZKCollectSignaturesFlow(stx, emptyList()))

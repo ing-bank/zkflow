@@ -1,5 +1,8 @@
 package com.ing.zknotary.testing.dsl
 
+import TestTransactionDSLInterpreter
+import TestZKLedgerDSLInterpreter
+import TestZKTransactionDSLInterpreter
 import com.ing.zknotary.common.crypto.zinc
 import com.ing.zknotary.common.serialization.bfl.BFLSerializationScheme
 import com.ing.zknotary.common.zkp.ZKTransactionService
@@ -22,8 +25,8 @@ public fun ServiceHub.zkLedger(
     zkService: ZKTransactionService = ZincZKTransactionService(this),
     transactionDigestService: DigestService = DigestService.zinc,
     transactionSerializationScheme: Int = BFLSerializationScheme.SCHEME_ID,
-    script: LedgerDSL<TestTransactionDSLInterpreter, TestLedgerDSLInterpreter>.() -> Unit
-): LedgerDSL<TestTransactionDSLInterpreter, TestLedgerDSLInterpreter> {
+    script: LedgerDSL<TestTransactionDSLInterpreter, TestZKTransactionDSLInterpreter, TestZKLedgerDSLInterpreter>.() -> Unit
+): LedgerDSL<TestTransactionDSLInterpreter, TestZKTransactionDSLInterpreter, TestZKLedgerDSLInterpreter> {
     val currentParameters = networkParametersService.run {
         lookup(currentHash) ?: throw IllegalStateException("Current network parameters not found, $currentHash")
     }
@@ -36,7 +39,7 @@ public fun ServiceHub.zkLedger(
     HashAgility.init(transactionDigestService.hashAlgorithm)
 
     return createTestSerializationEnv(javaClass.classLoader).asTestContextEnv {
-        val interpreter = TestLedgerDSLInterpreter(this, zkService, transactionSerializationScheme)
+        val interpreter = TestZKLedgerDSLInterpreter(this, zkService, transactionSerializationScheme)
         LedgerDSL(interpreter, notary).apply {
             script()
         }
