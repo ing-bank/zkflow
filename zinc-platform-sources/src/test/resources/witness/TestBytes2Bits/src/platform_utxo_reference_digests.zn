@@ -11,6 +11,12 @@ mod platform_component_group_enum;
 mod platform_components_references;
 
 use consts::REFERENCE_GROUP_SIZE;
+use consts::REFERENCE_STATE_1_GROUP_SIZE;
+use consts::REFERENCE_STATE_2_GROUP_SIZE;
+use consts::REFERENCE_STATE_3_GROUP_SIZE;
+use consts::REFERENCE_STATE_1_COMPONENT_SIZE;
+use consts::REFERENCE_STATE_2_COMPONENT_SIZE;
+use consts::REFERENCE_STATE_3_COMPONENT_SIZE;
 use platform_component_group_enum::ComponentGroupEnum;
 use platform_component_group_leaf_digest_dto::COMPONENT_GROUP_LEAF_DIGEST_BITS;
 use platform_component_group_leaf_digest_dto::COMPONENT_GROUP_LEAF_DIGEST_BYTES;
@@ -28,17 +34,9 @@ use platform_consts::BYTE_BITS;
 use std::crypto::blake2s_multi_input;
 use std::convert::to_bits;
 
-const REFERENCE_STATE_1_COMPONENT_SIZE: u32 = 1393;
-const REFERENCE_STATE_2_COMPONENT_SIZE: u32 = 1682;
-const REFERENCE_STATE_3_COMPONENT_SIZE: u32 = 1368;
-
-const REFERENCE_STATE_1_COMPONENT_SIZE_IN_BITS: u32 = REFERENCE_STATE_1_COMPONENT_SIZE * BYTE_BITS as u32;
-const REFERENCE_STATE_2_COMPONENT_SIZE_IN_BITS: u32 = REFERENCE_STATE_2_COMPONENT_SIZE * BYTE_BITS as u32;
-const REFERENCE_STATE_3_COMPONENT_SIZE_IN_BITS: u32 = REFERENCE_STATE_3_COMPONENT_SIZE * BYTE_BITS as u32;
-
-const REFERENCE_STATE_1_GROUP_SIZE: u32 = 3;
-const REFERENCE_STATE_2_GROUP_SIZE: u32 = 3;
-const REFERENCE_STATE_3_GROUP_SIZE: u32 = 1;
+const REFERENCE_STATE_1_COMPONENT_SIZE_IN_BITS: u16 = REFERENCE_STATE_1_COMPONENT_SIZE * BYTE_BITS;
+const REFERENCE_STATE_2_COMPONENT_SIZE_IN_BITS: u16 = REFERENCE_STATE_2_COMPONENT_SIZE * BYTE_BITS;
+const REFERENCE_STATE_3_COMPONENT_SIZE_IN_BITS: u16 = REFERENCE_STATE_3_COMPONENT_SIZE * BYTE_BITS;
 
 
 struct SerializedReferenceUtxos{
@@ -52,8 +50,8 @@ fn bytes_to_bits_state_1(bytes: [u8; REFERENCE_STATE_1_COMPONENT_SIZE]) -> [bool
 
     for i in (0 as u16)..REFERENCE_STATE_1_COMPONENT_SIZE {
         let byte_bits = to_bits(bytes[i]);
-        for j in (0 as u32)..(BYTE_BITS as u32) {
-            bits[BYTE_BITS as u32 * i + j] = byte_bits[j];
+        for j in (0 as u16)..BYTE_BITS {
+            bits[BYTE_BITS * i + j] = byte_bits[j];
         }
     }
     bits
@@ -64,8 +62,8 @@ fn bytes_to_bits_state_2(bytes: [u8; REFERENCE_STATE_2_COMPONENT_SIZE]) -> [bool
 
     for i in (0 as u16)..REFERENCE_STATE_2_COMPONENT_SIZE {
         let byte_bits = to_bits(bytes[i]);
-        for j in (0 as u32)..(BYTE_BITS as u32) {
-            bits[BYTE_BITS as u32 * i + j] = byte_bits[j];
+        for j in (0 as u16)..BYTE_BITS {
+            bits[BYTE_BITS as u16 * i + j] = byte_bits[j];
         }
     }
     bits
@@ -76,8 +74,8 @@ fn bytes_to_bits_state_3(bytes: [u8; REFERENCE_STATE_3_COMPONENT_SIZE]) -> [bool
 
     for i in (0 as u16)..REFERENCE_STATE_3_COMPONENT_SIZE {
         let byte_bits = to_bits(bytes[i]);
-        for j in (0 as u32)..(BYTE_BITS as u32) {
-            bits[BYTE_BITS as u32 * i + j] = byte_bits[j];
+        for j in (0 as u16)..BYTE_BITS {
+            bits[BYTE_BITS as u16 * i + j] = byte_bits[j];
         }
     }
     bits
@@ -94,9 +92,9 @@ fn compute_reference_utxo_digests(
     let mut utxo_hashes =
         [[0; COMPONENT_GROUP_LEAF_DIGEST_BYTES]; REFERENCE_GROUP_SIZE];
 
-    let mut element_index: u32 = 0;
+    let mut element_index: u16 = 0;
 
-    for i in (0 as u32)..(REFERENCE_STATE_1_GROUP_SIZE as u32) {
+    for i in (0 as u16)..REFERENCE_STATE_1_GROUP_SIZE {
         utxo_hashes[i] = component_group_leaf_digest_from_bits_to_bytes(blake2s_multi_input(
             from_bytes_to_bits(nonces[element_index + i]),
             bytes_to_bits_state_1(utxos.reference_state_1[i])
@@ -105,15 +103,15 @@ fn compute_reference_utxo_digests(
 
     element_index += REFERENCE_STATE_1_GROUP_SIZE;
 
-    for i in 0 as u32..REFERENCE_STATE_2_GROUP_SIZE as u32{
+    for i in (0 as u16)..REFERENCE_STATE_2_GROUP_SIZE {
         utxo_hashes[element_index + i] = component_group_leaf_digest_from_bits_to_bytes(blake2s_multi_input(
             from_bytes_to_bits(nonces[element_index + i]),
             bytes_to_bits_state_2(utxos.reference_state_2[i])
         ));
     }
-    element_index += REFERENCE_STATE_2_GROUP_SIZE as u32;
+    element_index += REFERENCE_STATE_2_GROUP_SIZE;
 
-    for i in 0 as u32..REFERENCE_STATE_3_GROUP_SIZE as u32{
+    for i in (0 as u16)..REFERENCE_STATE_3_GROUP_SIZE {
         utxo_hashes[element_index + i] = component_group_leaf_digest_from_bits_to_bytes(blake2s_multi_input(
             from_bytes_to_bits(nonces[element_index + i]),
             bytes_to_bits_state_3(utxos.reference_state_3[i])

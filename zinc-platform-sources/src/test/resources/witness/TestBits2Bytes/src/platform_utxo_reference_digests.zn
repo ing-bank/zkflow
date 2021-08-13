@@ -11,6 +11,12 @@ mod platform_component_group_enum;
 mod platform_components_references;
 
 use consts::REFERENCE_GROUP_SIZE;
+use consts::REFERENCE_STATE_1_GROUP_SIZE;
+use consts::REFERENCE_STATE_2_GROUP_SIZE;
+use consts::REFERENCE_STATE_3_GROUP_SIZE;
+use consts::REFERENCE_STATE_1_COMPONENT_SIZE;
+use consts::REFERENCE_STATE_2_COMPONENT_SIZE;
+use consts::REFERENCE_STATE_3_COMPONENT_SIZE;
 use platform_component_group_enum::ComponentGroupEnum;
 use platform_component_group_leaf_digest_dto::COMPONENT_GROUP_LEAF_DIGEST_BITS;
 use platform_component_group_leaf_digest_dto::COMPONENT_GROUP_LEAF_DIGEST_BYTES;
@@ -28,17 +34,10 @@ use platform_consts::BYTE_BITS;
 use std::crypto::blake2s_multi_input;
 use std::convert::from_bits_unsigned;
 
-const REFERENCE_STATE_1_COMPONENT_SIZE: u16 = 1393;
-const REFERENCE_STATE_2_COMPONENT_SIZE: u16 = 1682;
-const REFERENCE_STATE_3_COMPONENT_SIZE: u16 = 1368;
 
 const REFERENCE_STATE_1_COMPONENT_SIZE_IN_BITS: u16 = REFERENCE_STATE_1_COMPONENT_SIZE * BYTE_BITS;
 const REFERENCE_STATE_2_COMPONENT_SIZE_IN_BITS: u16 = REFERENCE_STATE_2_COMPONENT_SIZE * BYTE_BITS;
 const REFERENCE_STATE_3_COMPONENT_SIZE_IN_BITS: u16 = REFERENCE_STATE_3_COMPONENT_SIZE * BYTE_BITS;
-
-const REFERENCE_STATE_1_GROUP_SIZE: u16 = 3;
-const REFERENCE_STATE_2_GROUP_SIZE: u16 = 3;
-const REFERENCE_STATE_3_GROUP_SIZE: u16 = 1;
 
 
 struct SerializedReferenceUtxos{

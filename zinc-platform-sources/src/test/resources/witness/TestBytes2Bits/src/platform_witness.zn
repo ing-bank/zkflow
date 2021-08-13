@@ -43,9 +43,9 @@ struct Witness {
 
     privacy_salt: PrivacySaltBytes,
 
-    input_nonces: [NonceDigestBytes; INPUT_GROUP_SIZE],
-    reference_nonces: [NonceDigestBytes; REFERENCE_GROUP_SIZE],
-
-    serialized_input_utxos: SerializedInputUtxos,
-    serialized_reference_utxos: SerializedReferenceUtxos
+    // input_nonces: [NonceDigestBytes; INPUT_GROUP_SIZE],
+    // reference_nonces: [NonceDigestBytes; REFERENCE_GROUP_SIZE],
+    //
+    // serialized_input_utxos: SerializedInputUtxos,
+    // serialized_reference_utxos: SerializedReferenceUtxos
 }
