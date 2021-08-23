@@ -4,12 +4,14 @@ import com.ing.dlt.zkkrypto.util.asUnsigned
 import com.ing.zknotary.common.zkp.ZincZKService
 import net.corda.core.utilities.loggerFor
 import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.time.Duration
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
 
-@OptIn(ExperimentalTime::class)
+@ExperimentalTime
+@Tag("slow")
 class WitnessInBitsTest {
     private val log = loggerFor<WitnessInBitsTest>()
     private val runOnly = false
@@ -54,7 +56,7 @@ class WitnessInBitsTest {
     @Test
     fun `zinc computes the Merkle root and converts bits to bytes`() {
         val witnessJsonInBits = createSerializedWitnessInBits()
-        println("Measuring performance for Bits2bytes")
+        println("\n\nMeasuring performance for Bits2bytes")
 
         val runTimeBits2Bytes = measureTime { zincZKServiceBits2Bytes.run(witnessJsonInBits, getPublicDataJson()) }.inSeconds
 
@@ -77,7 +79,7 @@ class WitnessInBitsTest {
     @Test
     fun `zinc converts bytes to bits and computes the Merkle root`() {
         val witnessJsonInBytes = createSerializedWitnessInBytes()
-        println("Measuring performance for Bytes2Bits")
+        println("\n\nMeasuring performance for Bytes2Bits")
 
         val runTimeBytes2Bits = measureTime { zincZKServiceBytes2Bits.run(witnessJsonInBytes, getPublicDataJson()) }.inSeconds
 
@@ -98,16 +100,17 @@ class WitnessInBitsTest {
     }
 
     @Test
-    fun `zinc compares the performance of bit and byte witness`() {
+    fun `zinc compares the performance of witness-in-bits and witness-in-bytes`() {
         val witnessJsonInBytes = createSerializedWitnessInBytes()
         val witnessJsonInBits = createSerializedWitnessInBits()
 
-        println("Measuring performance for Bits2bytes")
+        println("\n\nMeasuring performance for Bits2bytes")
         val runTimeBits2Bytes = measureTime { zincZKServiceBits2Bytes.run(witnessJsonInBits, getPublicDataJson()) }.inSeconds
 
+        var proofTimeBits2Bytes = 0.0
         if (!runOnly) {
             var proofInBits: ByteArray
-            val proofTimeBits2Bytes =
+            proofTimeBits2Bytes =
                 measureTime { proofInBits = zincZKServiceBits2Bytes.prove(witnessJsonInBits) }.inSeconds
 
             val verifyTimeBits2Bytes =
@@ -120,12 +123,13 @@ class WitnessInBitsTest {
             println("Verify --> $verifyTimeBits2Bytes")
         }
 
-        println("Measuring performance for Bytes2Bits")
+        println("\nMeasuring performance for Bytes2Bits")
         val runTimeBytes2Bits = measureTime { zincZKServiceBytes2Bits.run(witnessJsonInBytes, getPublicDataJson()) }.inSeconds
 
+        var proofTimeBytes2Bits = 0.0
         if (!runOnly) {
             var proofInBytes: ByteArray
-            val proofTimeBytes2Bits =
+            proofTimeBytes2Bits =
                 measureTime { proofInBytes = zincZKServiceBytes2Bits.prove(witnessJsonInBytes) }.inSeconds
 
             val verifyTimeBytes2Bits =
@@ -136,6 +140,14 @@ class WitnessInBitsTest {
             println("Run --> $runTimeBytes2Bits")
             println("Prove --> $proofTimeBytes2Bits")
             println("Verify --> $verifyTimeBytes2Bits")
+        }
+
+        if (!runOnly) {
+            val reductionInProve = (100.0 * (proofTimeBytes2Bits - proofTimeBits2Bytes)) / proofTimeBytes2Bits
+            val reductionInSetup = (100.0 * (setupTimeBytes2Bits - setupTimeBits2Bytes)) / setupTimeBytes2Bits
+
+            println("\nReduction in setup time --> $reductionInSetup%")
+            println("Reduction in proving time --> $reductionInProve%")
         }
     }
 
