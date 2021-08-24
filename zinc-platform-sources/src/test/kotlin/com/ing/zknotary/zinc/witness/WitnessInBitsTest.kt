@@ -14,7 +14,7 @@ import kotlin.time.measureTime
 @Tag("slow")
 class WitnessInBitsTest {
     private val log = loggerFor<WitnessInBitsTest>()
-    private val runOnly = false
+    private val runOnly = true
     private val merkleRootOnly = true
 
     private val circuitFolderBits2Bytes: String = javaClass.getResource("/witness/TestBits2Bytes").path
