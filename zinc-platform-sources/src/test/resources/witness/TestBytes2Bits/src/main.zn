@@ -17,8 +17,8 @@ use platform_witness::Witness;
 
 struct PublicInput {
     transaction_id: NodeDigestBytes,
-    // input_hashes: [ComponentGroupLeafDigestBytes; INPUT_GROUP_SIZE],
-    // reference_hashes: [ComponentGroupLeafDigestBytes; REFERENCE_GROUP_SIZE],
+    input_hashes: [ComponentGroupLeafDigestBytes; INPUT_GROUP_SIZE],
+    reference_hashes: [ComponentGroupLeafDigestBytes; REFERENCE_GROUP_SIZE],
 }
 
 fn main(witness: Witness) -> PublicInput {
@@ -27,10 +27,10 @@ fn main(witness: Witness) -> PublicInput {
 
     PublicInput {
         transaction_id: NodeDigestDto::from_bits_to_bytes(root_hash),
-        // input_hashes: [[0; COMPONENT_GROUP_LEAF_DIGEST_BYTES]; INPUT_GROUP_SIZE],
-        // reference_hashes: compute_reference_utxo_digests(
-        //     witness.serialized_reference_utxos,
-        //     witness.reference_nonces,
-        // ),
+        input_hashes: [[0; COMPONENT_GROUP_LEAF_DIGEST_BYTES]; INPUT_GROUP_SIZE],
+        reference_hashes: compute_reference_utxo_digests(
+            witness.serialized_reference_utxos,
+            witness.reference_nonces,
+        ),
     }
 }

@@ -3,6 +3,7 @@
 //
 mod consts;
 mod platform_consts;
+mod platform_crypto_utils;
 mod platform_node_digest_dto;
 mod platform_nonce_digest_dto;
 mod platform_privacy_salt;
@@ -24,6 +25,7 @@ use platform_component_group_leaf_digest_dto::ComponentGroupLeafDigestBits;
 use platform_component_group_leaf_digest_dto::ComponentGroupLeafDigestBytes;
 use platform_component_group_leaf_digest_dto::component_group_leaf_digest_from_bits_to_bytes;
 use platform_components_references::SerializedReferenceGroup;
+use platform_crypto_utils::pedersen_to_padded_bits;
 use platform_node_digest_dto::NODE_DIGEST_BITS;
 use platform_node_digest_dto::NodeDigestBits;
 use platform_node_digest_dto::NodeDigestDto;
@@ -32,6 +34,7 @@ use platform_nonce_digest_dto::NonceDigestBytes;
 use platform_privacy_salt::PrivacySaltBits;
 use platform_consts::BYTE_BITS;
 use std::crypto::blake2s_multi_input;
+//use std::crypto::pedersen_multi_input;
 use std::convert::to_bits;
 
 const REFERENCE_STATE_1_COMPONENT_SIZE_IN_BITS: u16 = REFERENCE_STATE_1_COMPONENT_SIZE * BYTE_BITS;
@@ -95,6 +98,14 @@ fn compute_reference_utxo_digests(
     let mut element_index: u16 = 0;
 
     for i in (0 as u16)..REFERENCE_STATE_1_GROUP_SIZE {
+        // //compute the utxo hash with Pedersen
+        // utxo_hashes[i] = component_group_leaf_digest_from_bits_to_bytes(
+        //     pedersen_to_padded_bits(pedersen_multi_input(
+        //     from_bytes_to_bits(nonces[element_index + i]),
+        //     bytes_to_bits_state_1(utxos.reference_state_1[i])
+        //     ).0));
+
+        //compute the utxo hash with Blake2s
         utxo_hashes[i] = component_group_leaf_digest_from_bits_to_bytes(blake2s_multi_input(
             from_bytes_to_bits(nonces[element_index + i]),
             bytes_to_bits_state_1(utxos.reference_state_1[i])
@@ -104,6 +115,14 @@ fn compute_reference_utxo_digests(
     element_index += REFERENCE_STATE_1_GROUP_SIZE;
 
     for i in (0 as u16)..REFERENCE_STATE_2_GROUP_SIZE {
+        // //compute the utxo hash with Pedersen
+        // utxo_hashes[element_index + i] = component_group_leaf_digest_from_bits_to_bytes(
+        //     pedersen_to_padded_bits(pedersen_multi_input(
+        //     from_bytes_to_bits(nonces[element_index + i]),
+        //     bytes_to_bits_state_2(utxos.reference_state_2[i])
+        //     ).0));
+
+        //compute the utxo hash with Blake2s
         utxo_hashes[element_index + i] = component_group_leaf_digest_from_bits_to_bytes(blake2s_multi_input(
             from_bytes_to_bits(nonces[element_index + i]),
             bytes_to_bits_state_2(utxos.reference_state_2[i])
@@ -112,6 +131,14 @@ fn compute_reference_utxo_digests(
     element_index += REFERENCE_STATE_2_GROUP_SIZE;
 
     for i in (0 as u16)..REFERENCE_STATE_3_GROUP_SIZE {
+        // //compute the utxo hash with Pedersen
+        // utxo_hashes[element_index + i] = component_group_leaf_digest_from_bits_to_bytes(
+        //     pedersen_to_padded_bits(pedersen_multi_input(
+        //     from_bytes_to_bits(nonces[element_index + i]),
+        //     bytes_to_bits_state_3(utxos.reference_state_3[i])
+        //     ).0));
+
+        //compute the utxo hash with Blake2s
         utxo_hashes[element_index + i] = component_group_leaf_digest_from_bits_to_bytes(blake2s_multi_input(
             from_bytes_to_bits(nonces[element_index + i]),
             bytes_to_bits_state_3(utxos.reference_state_3[i])

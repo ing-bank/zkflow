@@ -12,14 +12,18 @@ use merkle_tree_utils::get_merkle_tree_from_2_component_group_leaf_digests;
 use platform_component_group_enum::ComponentGroupEnum;
 use platform_component_group_leaf_digest_dto::COMPONENT_GROUP_LEAF_DIGEST_BITS;
 use platform_component_group_leaf_digest_dto::ComponentGroupLeafDigestBits;
+use platform_component_group_leaf_digest_dto::COMPONENT_GROUP_LEAF_DIGEST_BYTES;
+use platform_component_group_leaf_digest_dto::ComponentGroupLeafDigestBytes;
 use platform_consts::INPUT_COMPONENT_SIZE;
 use platform_consts::BYTE_BITS;
 use platform_crypto_utils::compute_nonce;
+use platform_crypto_utils::pedersen_to_padded_bits;
 use platform_node_digest_dto::NodeDigestBits;
 use platform_node_digest_dto::NODE_DIGEST_BITS;
 use platform_privacy_salt::PrivacySaltBits;
 use std::convert::from_bits_unsigned;
 use std::crypto::blake2s_multi_input;
+//use std::crypto::pedersen_multi_input;
 
 const INPUT_COMPONENT_SIZE_BITS: u16 = INPUT_COMPONENT_SIZE * BYTE_BITS;
 
@@ -39,6 +43,15 @@ fn bits_to_bytes(bits: SerializedInput) -> [u8; INPUT_COMPONENT_SIZE] {
     bytes
 }
 
+fn deserialize_inputs(components: SerializedInputGroup) -> [[u8; INPUT_COMPONENT_SIZE]; INPUT_GROUP_SIZE]{
+    let mut deserialized_components = [[0 as u8; INPUT_COMPONENT_SIZE]; INPUT_GROUP_SIZE];
+
+    for i in 0..INPUT_GROUP_SIZE{
+        deserialized_components[i] = bits_to_bytes(components[i]);
+    }
+    deserialized_components
+}
+
 fn compute_leaf_hashes(
     components: SerializedInputGroup,
     privacy_salt: PrivacySaltBits,
@@ -46,11 +59,18 @@ fn compute_leaf_hashes(
     let mut component_leaf_hashes = [[false; COMPONENT_GROUP_LEAF_DIGEST_BITS]; INPUT_GROUP_SIZE];
 
     for i in (0 as u32)..(INPUT_GROUP_SIZE as u32) {
+        // //compute the leaf hash with Pedersen
+        // component_leaf_hashes[i] = pedersen_to_padded_bits(
+        //     pedersen_multi_input(
+        //     compute_nonce(privacy_salt, ComponentGroupEnum::INPUTS_GROUP as u32, i as u32),
+        //     components[i]
+        // ).0);
+
+        //compute the leaf hash with Blake2s
         component_leaf_hashes[i] = blake2s_multi_input(
             compute_nonce(privacy_salt, ComponentGroupEnum::INPUTS_GROUP as u32, i as u32),
             components[i]
         );
-        //let a = bits_to_bytes(components[i]);
     }
     component_leaf_hashes
 }
