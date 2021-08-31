@@ -6,6 +6,8 @@ import com.ing.zknotary.common.contracts.ZKOwnableState
 import com.ing.zknotary.common.serialization.bfl.CommandDataSerializerMap
 import com.ing.zknotary.common.serialization.bfl.ContractStateSerializerMap
 import com.ing.zknotary.common.zkp.CircuitMetaData
+import com.ing.zknotary.common.zkp.ZKCommandMetadata
+import com.ing.zknotary.common.zkp.commandMetadata
 import com.ing.zknotary.testing.CircuitMetaDataBuilder
 import com.ing.zknotary.testing.fixtures.contract.TestContract.Create.Companion.verifyCreate
 import com.ing.zknotary.testing.fixtures.contract.TestContract.Move.Companion.verifyMove
@@ -65,12 +67,14 @@ public class TestContract : Contract {
     // Commands
     @Serializable
     public class Create : TypeOnlyCommandData(), ZKCommandData {
-
         @Transient
         override val circuit: CircuitMetaData = CircuitMetaData.fromConfig(
             // ${System.getProperty("user.dir")} = "notary"
             File("${System.getProperty("user.dir")}/../zinc-platform-sources/build/circuits/create")
         )
+
+        @Transient
+        override val metadata: ZKCommandMetadata = commandMetadata { }
 
         public companion object {
             public fun verifyCreate(
@@ -94,6 +98,8 @@ public class TestContract : Contract {
      */
     @Serializable
     public class SignOnly : TypeOnlyCommandData(), ZKCommandData {
+        @Transient
+        override val metadata: ZKCommandMetadata = commandMetadata { }
 
         @Transient
         override val circuit: CircuitMetaData = CircuitMetaDataBuilder()
@@ -108,6 +114,8 @@ public class TestContract : Contract {
 
     @Serializable
     public class Move : TypeOnlyCommandData(), ZKCommandData {
+        @Transient
+        override val metadata: ZKCommandMetadata = commandMetadata { }
 
         @Transient
         override val circuit: CircuitMetaData = CircuitMetaData.fromConfig(
@@ -136,6 +144,9 @@ public class TestContract : Contract {
 
     @Serializable
     public class MoveBidirectional : ZKCommandData {
+        @Transient
+        override val metadata: ZKCommandMetadata = commandMetadata { }
+
         @Transient
         override val circuit: CircuitMetaData = CircuitMetaDataBuilder()
             .name("MoveBidirectional")

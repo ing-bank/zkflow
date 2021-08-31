@@ -4,6 +4,8 @@ import com.ing.zknotary.common.contracts.ZKCommandData
 import com.ing.zknotary.common.serialization.bfl.CommandDataSerializerMap
 import com.ing.zknotary.common.serialization.bfl.ContractStateSerializerMap
 import com.ing.zknotary.common.zkp.CircuitMetaData
+import com.ing.zknotary.common.zkp.ZKCommandMetadata
+import com.ing.zknotary.common.zkp.commandMetadata
 import com.ing.zknotary.testing.CircuitMetaDataBuilder
 import com.ing.zknotary.testing.fixtures.state.DummyState
 import kotlinx.serialization.Serializable
@@ -38,6 +40,9 @@ public class DummyContract : Contract {
             .name("Chill")
             .addComponentGroupSize(ComponentGroupEnum.SIGNERS_GROUP, 2)
             .build()
+
+        @Transient
+        override val metadata: ZKCommandMetadata = commandMetadata { }
     }
 
     override fun verify(tx: LedgerTransaction) {}

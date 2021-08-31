@@ -1,14 +1,20 @@
 package io.ivno.collateraltoken.contract
 
+import com.ing.zknotary.common.zkp.CircuitMetaData
 import com.ing.zknotary.testing.dsl.VerificationMode
 import com.ing.zknotary.testing.dsl.zkLedger
+import io.dasl.contracts.v1.token.TokenContract
 import com.ing.zknotary.testing.zkp.MockZKTransactionService
 import io.onixlabs.corda.bnms.contract.Network
 import io.onixlabs.corda.identityframework.contract.AttestationStatus
-import net.corda.testing.node.ledger
+import net.corda.core.utilities.seconds
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
+import java.io.File
 import kotlin.time.ExperimentalTime
+
+val TokenContract.Command.Issue.commandMetadata: CircuitMetaData
+    get() = CircuitMetaData("Foo", mapOf(), emptyMap(), File(""), 20.seconds, 20.seconds, 20.seconds, 20.seconds)
 
 @ExperimentalTime
 class DepositContractRequestTests : ContractTest() {

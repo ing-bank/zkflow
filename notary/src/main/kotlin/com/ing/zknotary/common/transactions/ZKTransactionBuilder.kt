@@ -124,9 +124,11 @@ class ZKTransactionBuilder(
      * Duplicated so that `toWireTransaction()` always uses the serialization settings
      */
     fun toWireTransaction(services: ServicesForResolution): WireTransaction {
-        val command = commands().singleOrNull() ?: error("Single command per transaction is allowed")
+        val command = commands().firstOrNull() ?: error("At least one command is required for a private transaction")
         val zkCommand = command.value as? ZKCommandData ?: error("Command must implement ZKCommandData")
         val serializationProperties = mapOf<Any, Any>(BFLSerializationScheme.CONTEXT_KEY_CIRCUIT to zkCommand.circuit)
+
+        //
 
         // TODO: enforce sizes of the component groups.
         val orderedBuilder = ordered().builder
