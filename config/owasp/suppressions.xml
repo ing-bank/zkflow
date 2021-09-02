@@ -110,4 +110,13 @@
         <cpe>cpe:/a:redhat:jgroups</cpe>
         <vulnerabilityName regex="true">^.*$</vulnerabilityName>
     </suppress>
+
+    <suppress>
+        <notes><![CDATA[
+   file name: gradle-api-6.9.1.jar
+   Part of the build, should be upgraded to 7.2 to fix, but Corda does not support that
+   ]]></notes>
+        <cpe>cpe:/a:gradle:gradle</cpe>
+        <vulnerabilityName regex="true">^.*$</vulnerabilityName>
+    </suppress>
 </suppressions>
