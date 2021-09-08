@@ -1,0 +1,86 @@
+mod platform_components_inputs;
+mod platform_components_outputs;
+mod platform_components_references;
+mod platform_components_commands;
+mod platform_components_notary;
+mod platform_components_attachments;
+mod platform_components_time_window;
+mod platform_components_parameters;
+mod platform_components_signers;
+mod platform_privacy_salt;
+mod platform_nonce_digest_dto;
+mod platform_utxo_input_digests;
+mod platform_utxo_reference_digests;
+mod consts;
+
+use consts::INPUT_GROUP_SIZE;
+use consts::REFERENCE_GROUP_SIZE;
+use platform_components_inputs::SerializedInputGroup;
+use platform_utxo_input_digests::SerializedInputUtxos;
+use platform_components_outputs::SerializedOutputGroup;
+use platform_components_references::SerializedReferenceGroup;
+use platform_utxo_reference_digests::SerializedReferenceUtxos;
+use platform_components_commands::SerializedCommandGroup;
+use platform_components_notary::SerializedNotaryGroup;
+use platform_components_attachments::SerializedAttachmentGroup;
+use platform_components_time_window::SerializedTimeWindowGroup;
+use platform_components_parameters::SerializedParametersGroup;
+use platform_components_signers::SerializedSignersGroup;
+
+use platform_components_attachments::deserialize_attachments;
+use platform_components_commands::deserialize_commands;
+use platform_components_inputs::deserialize_inputs;
+use platform_components_notary::deserialize_notary;
+use platform_components_outputs::deserialize_outputs;
+use platform_components_parameters::deserialize_parameters;
+use platform_components_references::deserialize_references;
+use platform_components_signers::deserialize_signers;
+use platform_components_time_window::deserialize_time_window;
+
+use platform_utxo_reference_digests::deserialize_reference_utxos_state_1;
+use platform_utxo_reference_digests::deserialize_reference_utxos_state_2;
+use platform_utxo_reference_digests::deserialize_reference_utxos_state_3;
+
+use platform_privacy_salt::PrivacySaltBits;
+use platform_nonce_digest_dto::NonceDigestBytes;
+use platform_nonce_digest_dto::NonceDigestBits;
+
+struct Witness {
+    inputs: SerializedInputGroup,
+    outputs: SerializedOutputGroup,
+    references: SerializedReferenceGroup,
+    commands: SerializedCommandGroup,
+    attachments: SerializedAttachmentGroup,
+    notary: SerializedNotaryGroup,
+    time_window: SerializedTimeWindowGroup,
+    parameters: SerializedParametersGroup,
+    signers: SerializedSignersGroup,
+
+    privacy_salt: PrivacySaltBits,
+
+    input_nonces: [NonceDigestBits; INPUT_GROUP_SIZE],
+    reference_nonces: [NonceDigestBits; REFERENCE_GROUP_SIZE],
+
+    serialized_input_utxos: SerializedInputUtxos,
+    serialized_reference_utxos: SerializedReferenceUtxos
+}
+
+impl Witness{
+
+    fn deserialize(this: Witness){
+        deserialize_attachments(this.attachments);
+        deserialize_commands(this.commands);
+        //deserialize_inputs(this.inputs);
+        deserialize_outputs(this.outputs);
+        deserialize_notary(this.notary);
+        deserialize_parameters(this.parameters);
+        deserialize_references(this.references);
+        deserialize_signers(this.signers);
+        //deserialize_time_window(this.time_window);
+
+        deserialize_reference_utxos_state_1(this.serialized_reference_utxos.reference_state_1);
+        deserialize_reference_utxos_state_2(this.serialized_reference_utxos.reference_state_2);
+        deserialize_reference_utxos_state_3(this.serialized_reference_utxos.reference_state_3);
+
+    }
+}

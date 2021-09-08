@@ -1,0 +1,183 @@
+//! GENERATED CODE. DO NOT EDIT
+//! Edit the template in zinc-platform-sources/src/main/resources/zinc-platform-templates/platform_utxo_digests_template.zn
+//
+mod consts;
+mod platform_consts;
+mod platform_crypto_utils;
+mod platform_node_digest_dto;
+mod platform_nonce_digest_dto;
+mod platform_privacy_salt;
+mod platform_component_group_leaf_digest_dto;
+mod platform_component_group_enum;
+mod platform_components_references;
+
+use consts::REFERENCE_GROUP_SIZE;
+use consts::REFERENCE_STATE_1_GROUP_SIZE;
+use consts::REFERENCE_STATE_2_GROUP_SIZE;
+use consts::REFERENCE_STATE_3_GROUP_SIZE;
+use consts::REFERENCE_STATE_1_COMPONENT_SIZE;
+use consts::REFERENCE_STATE_2_COMPONENT_SIZE;
+use consts::REFERENCE_STATE_3_COMPONENT_SIZE;
+use platform_component_group_enum::ComponentGroupEnum;
+use platform_component_group_leaf_digest_dto::COMPONENT_GROUP_LEAF_DIGEST_BITS;
+use platform_component_group_leaf_digest_dto::COMPONENT_GROUP_LEAF_DIGEST_BYTES;
+use platform_component_group_leaf_digest_dto::ComponentGroupLeafDigestBits;
+use platform_component_group_leaf_digest_dto::ComponentGroupLeafDigestBytes;
+use platform_component_group_leaf_digest_dto::component_group_leaf_digest_from_bits_to_bytes;
+use platform_components_references::SerializedReferenceGroup;
+use platform_crypto_utils::pedersen_to_padded_bits;
+use platform_node_digest_dto::NODE_DIGEST_BITS;
+use platform_node_digest_dto::NodeDigestBits;
+use platform_node_digest_dto::NodeDigestDto;
+use platform_nonce_digest_dto::from_bytes_to_bits;
+use platform_nonce_digest_dto::NonceDigestBits;
+use platform_privacy_salt::PrivacySaltBits;
+use platform_consts::BYTE_BITS;
+use std::crypto::blake2s_multi_input;
+//use std::crypto::pedersen_multi_input;
+use std::convert::from_bits_unsigned;
+
+
+const REFERENCE_STATE_1_COMPONENT_SIZE_IN_BITS: u16 = REFERENCE_STATE_1_COMPONENT_SIZE * BYTE_BITS;
+const REFERENCE_STATE_2_COMPONENT_SIZE_IN_BITS: u16 = REFERENCE_STATE_2_COMPONENT_SIZE * BYTE_BITS;
+const REFERENCE_STATE_3_COMPONENT_SIZE_IN_BITS: u16 = REFERENCE_STATE_3_COMPONENT_SIZE * BYTE_BITS;
+
+
+struct SerializedReferenceUtxos{
+    reference_state_1: [[bool; REFERENCE_STATE_1_COMPONENT_SIZE_IN_BITS]; REFERENCE_STATE_1_GROUP_SIZE],
+    reference_state_2: [[bool; REFERENCE_STATE_2_COMPONENT_SIZE_IN_BITS]; REFERENCE_STATE_2_GROUP_SIZE],
+    reference_state_3: [[bool; REFERENCE_STATE_3_COMPONENT_SIZE_IN_BITS]; REFERENCE_STATE_3_GROUP_SIZE],
+ }
+
+fn bits_to_bytes_state_1(bits: [bool; REFERENCE_STATE_1_COMPONENT_SIZE_IN_BITS]) -> [u8; REFERENCE_STATE_1_COMPONENT_SIZE] {
+    let mut bytes = [0 as u8; REFERENCE_STATE_1_COMPONENT_SIZE];
+
+    for i in (0 as u16)..REFERENCE_STATE_1_COMPONENT_SIZE {
+        let mut byte_bits = [false; BYTE_BITS];
+        for j in (0 as u16)..BYTE_BITS {
+            byte_bits[j] = bits[i * BYTE_BITS + j];
+        }
+        bytes[i] = from_bits_unsigned(byte_bits);
+    }
+    bytes
+}
+
+fn bits_to_bytes_state_2(bits: [bool; REFERENCE_STATE_2_COMPONENT_SIZE_IN_BITS]) -> [u8; REFERENCE_STATE_2_COMPONENT_SIZE] {
+    let mut bytes = [0 as u8; REFERENCE_STATE_2_COMPONENT_SIZE];
+
+    for i in (0 as u16)..REFERENCE_STATE_2_COMPONENT_SIZE {
+        let mut byte_bits = [false; BYTE_BITS];
+        for j in (0 as u16)..BYTE_BITS {
+            byte_bits[j] = bits[i * BYTE_BITS + j];
+        }
+        bytes[i] = from_bits_unsigned(byte_bits);
+    }
+    bytes
+}
+
+fn bits_to_bytes_state_3(bits: [bool; REFERENCE_STATE_3_COMPONENT_SIZE_IN_BITS]) -> [u8; REFERENCE_STATE_3_COMPONENT_SIZE] {
+    let mut bytes = [0 as u8; REFERENCE_STATE_3_COMPONENT_SIZE];
+
+    for i in (0 as u16)..REFERENCE_STATE_3_COMPONENT_SIZE {
+        let mut byte_bits = [false; BYTE_BITS];
+        for j in (0 as u16)..BYTE_BITS {
+            byte_bits[j] = bits[i * BYTE_BITS + j];
+        }
+        bytes[i] = from_bits_unsigned(byte_bits);
+    }
+    bytes
+}
+
+fn deserialize_reference_utxos_state_1(utxos: [[bool; REFERENCE_STATE_1_COMPONENT_SIZE_IN_BITS]; REFERENCE_STATE_1_GROUP_SIZE]) -> [[u8; REFERENCE_STATE_1_COMPONENT_SIZE]; REFERENCE_STATE_1_GROUP_SIZE]{
+    let mut deserialized_reference_utxo_state_1 = [[0 as u8; REFERENCE_STATE_1_COMPONENT_SIZE]; REFERENCE_STATE_1_GROUP_SIZE];
+
+    for i in 0..REFERENCE_STATE_1_GROUP_SIZE{
+        deserialized_reference_utxo_state_1[i] = bits_to_bytes_state_1(utxos[i]);
+    }
+
+    deserialized_reference_utxo_state_1
+}
+
+fn deserialize_reference_utxos_state_2(utxos: [[bool; REFERENCE_STATE_2_COMPONENT_SIZE_IN_BITS]; REFERENCE_STATE_2_GROUP_SIZE]) -> [[u8; REFERENCE_STATE_2_COMPONENT_SIZE]; REFERENCE_STATE_2_GROUP_SIZE]{
+    let mut deserialized_reference_utxo_state_2 = [[0 as u8; REFERENCE_STATE_2_COMPONENT_SIZE]; REFERENCE_STATE_2_GROUP_SIZE];
+
+    for i in 0..REFERENCE_STATE_2_GROUP_SIZE{
+        deserialized_reference_utxo_state_2[i] = bits_to_bytes_state_2(utxos[i]);
+    }
+
+    deserialized_reference_utxo_state_2
+}
+
+fn deserialize_reference_utxos_state_3(utxos: [[bool; REFERENCE_STATE_3_COMPONENT_SIZE_IN_BITS]; REFERENCE_STATE_3_GROUP_SIZE]) -> [[u8; REFERENCE_STATE_3_COMPONENT_SIZE]; REFERENCE_STATE_3_GROUP_SIZE]{
+    let mut deserialized_reference_utxo_state_3 = [[0 as u8; REFERENCE_STATE_3_COMPONENT_SIZE]; REFERENCE_STATE_3_GROUP_SIZE];
+
+    for i in 0..REFERENCE_STATE_3_GROUP_SIZE{
+        deserialized_reference_utxo_state_3[i] = bits_to_bytes_state_3(utxos[i]);
+    }
+
+    deserialized_reference_utxo_state_3
+}
+
+// Verify that for each input and reference, when calculating the digest of its content with the nonce for the utxo
+// it points to as provided in the public input (reference), matches the digest provided in the public input (reference).
+// This proves that we did not change the contents of the inputs (references), compared to
+// the VerifierTransaction known by the verifier, of which they were an output.
+fn compute_reference_utxo_digests(
+    utxos: SerializedReferenceUtxos,
+    nonces: [NonceDigestBits; REFERENCE_GROUP_SIZE]
+) -> [ComponentGroupLeafDigestBytes; REFERENCE_GROUP_SIZE] {
+    let mut utxo_hashes =
+        [[0; COMPONENT_GROUP_LEAF_DIGEST_BYTES]; REFERENCE_GROUP_SIZE];
+
+    let mut element_index: u16 = 0;
+
+    for i in (0 as u16)..(REFERENCE_STATE_1_GROUP_SIZE as u16) {
+        // //compute the utxo hash with Pedersen
+        // utxo_hashes[i] = component_group_leaf_digest_from_bits_to_bytes(
+        //     pedersen_to_padded_bits(pedersen_multi_input(
+        //     nonces[element_index + i],
+        //     utxos.reference_state_1[i]
+        //     ).0));
+
+        //compute the utxo hash with Blake2s
+        utxo_hashes[i] = component_group_leaf_digest_from_bits_to_bytes(blake2s_multi_input(
+            nonces[element_index + i],
+            utxos.reference_state_1[i]
+        ));
+    }
+
+    element_index += REFERENCE_STATE_1_GROUP_SIZE;
+
+    for i in 0 as u16..REFERENCE_STATE_2_GROUP_SIZE as u16{
+        // //compute the utxo hash with Pedersen
+        // utxo_hashes[element_index + i] = component_group_leaf_digest_from_bits_to_bytes(
+        //     pedersen_to_padded_bits(pedersen_multi_input(
+        //     nonces[element_index + i],
+        //     utxos.reference_state_2[i]
+        //     ).0));
+
+        //compute the utxo hash with Blake2s
+        utxo_hashes[element_index + i] = component_group_leaf_digest_from_bits_to_bytes(blake2s_multi_input(
+            nonces[element_index + i],
+            utxos.reference_state_2[i]
+        ));
+    }
+    element_index += REFERENCE_STATE_2_GROUP_SIZE;
+
+    for i in 0 as u16..REFERENCE_STATE_3_GROUP_SIZE as u16{
+        //compute the utxo hash with Pedersen
+        // utxo_hashes[element_index + i] = component_group_leaf_digest_from_bits_to_bytes(
+        //     pedersen_to_padded_bits(pedersen_multi_input(
+        //     nonces[element_index + i],
+        //     utxos.reference_state_3[i]
+        //     ).0));
+
+        //compute the utxo hash with Blake2s
+        utxo_hashes[element_index + i] = component_group_leaf_digest_from_bits_to_bytes(blake2s_multi_input(
+            nonces[element_index + i],
+            utxos.reference_state_3[i]
+        ));
+    }
+
+    utxo_hashes
+}
