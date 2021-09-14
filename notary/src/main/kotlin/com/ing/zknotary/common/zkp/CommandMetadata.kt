@@ -1,5 +1,6 @@
 package com.ing.zknotary.common.zkp
 
+import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.ContractState
 import net.corda.core.crypto.SignatureScheme
 import kotlin.reflect.KClass
@@ -33,7 +34,7 @@ class TypeCountList : ArrayList<TypeCount>() {
 }
 
 @ZKCommandMetadataDSL
-class ZKCommandMetadata {
+class ZKCommandMetadata(val commandKClass: KClass<out CommandData>) {
     /**
      * This is always true, and can't be changed
      */
@@ -106,8 +107,79 @@ class ZKCommandMetadata {
     fun timewindow() {
         timeWindow = true
     }
+
+    fun resolve(): ResolvedZKCommandMetadata {
+        return ResolvedZKCommandMetadata(
+            commandKClass,
+            notarySignatureScheme,
+            participantSignatureScheme,
+            private,
+            circuit,
+            numberOfSigners,
+            inputs.toList(),
+            references.toList(),
+            outputs.toList(),
+            userAttachments.toList(),
+            timeWindow
+        )
+    }
 }
 
-fun commandMetadata(init: ZKCommandMetadata.() -> Unit): ZKCommandMetadata {
-    return ZKCommandMetadata().apply(init)
+fun CommandData.commandMetadata(init: ZKCommandMetadata.() -> Unit): ZKCommandMetadata {
+    return ZKCommandMetadata(this::class).apply(init)
+}
+
+data class ResolvedZKCommandMetadata(
+    val commandKClass: KClass<out CommandData>,
+
+    /**
+     * The notary [SignatureScheme] type required by this circuit.
+     *
+     * This should match the [SignatureScheme] defined for the network notary
+     * in the transaction metadata. If they don't match, an error is thrown.
+     */
+    var notarySignatureScheme: SignatureScheme,
+
+    /**
+     * The participant [SignatureScheme] type required by this circuit.
+     *
+     * Due to current limitations of the ZKP circuit, only one [SignatureScheme] per circuit is allowed for transaction participants.
+     * This should be enforced at network level and therefore should match the [SignatureScheme] defined for the network notary
+     * in the transaction metadata. If they don't match, an error is thrown.
+     */
+    var participantSignatureScheme: SignatureScheme,
+
+    /**
+     * This determines whether a circuit is expected to exist for this command.
+     *
+     * If false, ZKFLow will ignore this command for the ZKP circuit in all ways, except for Merkle tree calculation.
+     */
+    var private: Boolean,
+
+    /**
+     * Infomation on the circuit and related artifacts to be used.
+     *
+     * If the command is marked private, but this is null, ZKFLow will
+     * try to find the circuit based on some default rules. If that fails,
+     * an error is thrown.
+     */
+    var circuit: ZKCircuit?,
+
+    var numberOfSigners: Int,
+
+    val inputs: List<TypeCount>,
+    val references: List<TypeCount>,
+    val outputs: List<TypeCount>,
+    val userAttachments: List<TypeCount>,
+    var timeWindow: Boolean
+) {
+    /**
+     * This is always true, and can't be changed
+     */
+    val networkParameters = true
+
+    init {
+        ZKFlow.requireSupportedSignatureScheme(participantSignatureScheme)
+        ZKFlow.requireSupportedSignatureScheme(notarySignatureScheme)
+    }
 }

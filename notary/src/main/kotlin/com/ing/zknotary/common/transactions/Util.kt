@@ -103,7 +103,7 @@ fun WireTransaction.prettyPrint(): String {
     return buf.toString()
 }
 
-fun WireTransaction.zkCommandData() = commands.single().value as ZKCommandData
+fun WireTransaction.zkCommandData() = commands.first().value as ZKCommandData
 
 @Throws(AttachmentResolutionException::class, TransactionResolutionException::class)
 @DeleteForDJVM

@@ -1,8 +1,8 @@
 package com.ing.zknotary.common.transactions
 
 import co.paralleluniverse.strands.Strand
-import com.ing.zknotary.common.contracts.ZKCommandData
 import com.ing.zknotary.common.contracts.ZKContractState
+import com.ing.zknotary.common.contracts.ZKTransactionMetadataCommandData
 import com.ing.zknotary.common.serialization.bfl.BFLSerializationScheme
 import com.ing.zknotary.common.transactions.StateOrdering.ordered
 import net.corda.core.contracts.AttachmentConstraint
@@ -125,12 +125,17 @@ class ZKTransactionBuilder(
      */
     fun toWireTransaction(services: ServicesForResolution): WireTransaction {
         val command = commands().firstOrNull() ?: error("At least one command is required for a private transaction")
-        val zkCommand = command.value as? ZKCommandData ?: error("Command must implement ZKCommandData")
-        val serializationProperties = mapOf<Any, Any>(BFLSerializationScheme.CONTEXT_KEY_CIRCUIT to zkCommand.circuit)
+        val zkCommand = command.value as? ZKTransactionMetadataCommandData
+            ?: error("This first command must implement ZKTransactionMetadataCommandData")
+        val resolvedTransactionMetadata = zkCommand.transactionMetadata.resolved()
 
+        resolvedTransactionMetadata.verify(this)
         //
+        val serializationProperties = mapOf<Any, Any>(
+            BFLSerializationScheme.CONTEXT_KEY_CIRCUIT to zkCommand.circuit,
+            BFLSerializationScheme.CONTEXT_KEY_TRANSACTION_METADATA to resolvedTransactionMetadata
+        )
 
-        // TODO: enforce sizes of the component groups.
         val orderedBuilder = ordered().builder
         return orderedBuilder.toWireTransaction(services, serializationSchemeId, serializationProperties)
     }

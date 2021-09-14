@@ -1,9 +1,9 @@
 package com.ing.zknotary.common.zkp
 
-import com.ing.zknotary.common.contracts.toZKCommand
 import com.ing.zknotary.common.serialization.json.corda.WitnessSerializer
 import com.ing.zknotary.common.transactions.StateOrdering.ordered
 import com.ing.zknotary.common.transactions.UtxoInfo
+import com.ing.zknotary.common.transactions.zkCommandData
 import com.ing.zknotary.gradle.zinc.template.TemplateParameters.Companion.camelToSnakeCase
 import kotlinx.serialization.Serializable
 import net.corda.core.contracts.ComponentGroupEnum
@@ -160,7 +160,7 @@ class Witness(
             val orderedReferenceUtxoInfos = referenceUtxoInfos.ordered()
 
             //  In this context we know that the first command is a zk command and ispect that for circuit medadata
-            val javaClass2ZincType = wtx.commands.first().toZKCommand().value.circuit.javaClass2ZincType
+            val javaClass2ZincType = wtx.zkCommandData().circuit.javaClass2ZincType
 
             return Witness(
                 inputsGroup = wtx.serializedComponentBytesFor(ComponentGroupEnum.INPUTS_GROUP),

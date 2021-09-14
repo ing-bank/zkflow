@@ -28,14 +28,12 @@ import net.corda.core.transactions.LedgerTransaction
 import java.io.File
 import java.util.Random
 
-public object TestSerializers {
-    init {
-        ContractStateSerializerMap.register(TestContract.TestState::class, 1, TestContract.TestState.serializer())
-        CommandDataSerializerMap.register(TestContract.Create::class, 2, TestContract.Create.serializer())
-        CommandDataSerializerMap.register(TestContract.Move::class, 3, TestContract.Move.serializer())
-        CommandDataSerializerMap.register(TestContract.MoveBidirectional::class, 4, TestContract.MoveBidirectional.serializer())
-        CommandDataSerializerMap.register(TestContract.SignOnly::class, 5, TestContract.SignOnly.serializer())
-    }
+public val testSerializers: Unit = run {
+    ContractStateSerializerMap.register(TestContract.TestState::class, 1, TestContract.TestState.serializer())
+    CommandDataSerializerMap.register(TestContract.Create::class, 2, TestContract.Create.serializer())
+    CommandDataSerializerMap.register(TestContract.Move::class, 3, TestContract.Move.serializer())
+    CommandDataSerializerMap.register(TestContract.MoveBidirectional::class, 4, TestContract.MoveBidirectional.serializer())
+    CommandDataSerializerMap.register(TestContract.SignOnly::class, 5, TestContract.SignOnly.serializer())
 }
 
 public class TestContract : Contract {
@@ -49,13 +47,6 @@ public class TestContract : Contract {
         override val owner: @Contextual AnonymousParty,
         val value: Int = Random().nextInt(1000)
     ) : ZKOwnableState {
-
-        init {
-            /*
-             * TODO: This is a hack to ensure that the singleton is initialized. In Kotlin they are lazy until accessed.
-             */
-            TestSerializers
-        }
 
         @FixedLength([2])
         override val participants: List<@Contextual AnonymousParty> = listOf(owner)
