@@ -45,8 +45,8 @@ class TransactionVerificationTest {
 
     private val zincZKTransactionService: ZincZKTransactionService = ZincZKTransactionService(MockServices())
 
-    private val createZKService = zincZKTransactionService.zkServiceForCommand(TestContract.Create())
-    private val moveZKService = zincZKTransactionService.zkServiceForCommand(TestContract.Move())
+    private val createZKService = zincZKTransactionService.zkServiceForTransactionMetadata(TestContract.Create())
+    private val moveZKService = zincZKTransactionService.zkServiceForTransactionMetadata(TestContract.Move())
 
     private val notary = ZKNulls.NULL_PARTY
 

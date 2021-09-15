@@ -3,8 +3,7 @@ package com.ing.zknotary.common.zkp
 import com.ing.zknotary.common.serialization.json.corda.WitnessSerializer
 import com.ing.zknotary.common.transactions.StateOrdering.ordered
 import com.ing.zknotary.common.transactions.UtxoInfo
-import com.ing.zknotary.common.transactions.zkCommandData
-import com.ing.zknotary.gradle.zinc.template.TemplateParameters.Companion.camelToSnakeCase
+import com.ing.zknotary.common.transactions.zkTransactionMetadata
 import kotlinx.serialization.Serializable
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.PrivacySalt
@@ -12,6 +11,7 @@ import net.corda.core.crypto.SecureHash
 import net.corda.core.serialization.CordaSerializable
 import net.corda.core.transactions.TraversableTransaction
 import net.corda.core.transactions.WireTransaction
+import kotlin.reflect.KClass
 
 /**
  * The witness, which is what we serialize for Zinc, contains the following items:
@@ -160,7 +160,7 @@ class Witness(
             val orderedReferenceUtxoInfos = referenceUtxoInfos.ordered()
 
             //  In this context we know that the first command is a zk command and ispect that for circuit medadata
-            val javaClass2ZincType = wtx.zkCommandData().circuit.javaClass2ZincType
+            val javaClass2ZincType = wtx.zkTransactionMetadata().javaClass2ZincType
 
             return Witness(
                 inputsGroup = wtx.serializedComponentBytesFor(ComponentGroupEnum.INPUTS_GROUP),
@@ -176,7 +176,10 @@ class Witness(
                 privacySalt = wtx.privacySalt,
 
                 serializedInputUtxos = orderedInputUtxoInfos.serializedBytesForUTXO(ComponentGroupEnum.INPUTS_GROUP, javaClass2ZincType),
-                serializedReferenceUtxos = orderedReferenceUtxoInfos.serializedBytesForUTXO(ComponentGroupEnum.REFERENCES_GROUP, javaClass2ZincType),
+                serializedReferenceUtxos = orderedReferenceUtxoInfos.serializedBytesForUTXO(
+                    ComponentGroupEnum.REFERENCES_GROUP,
+                    javaClass2ZincType
+                ),
                 inputUtxoNonces = orderedInputUtxoInfos.map { it.nonce },
                 referenceUtxoNonces = orderedReferenceUtxoInfos.map { it.nonce }
             )
@@ -192,11 +195,10 @@ class Witness(
 
         private fun TraversableTransaction.serializedComponentBytesForOutputGroup(
             groupEnum: ComponentGroupEnum,
-            javaClass2ZincType: Map<String, String>
+            javaClass2ZincType: Map<KClass<*>, ZincType>
         ): Map<String, List<ByteArray>> {
             val zincTypes = outputs.map {
-                val javaClass = it.data.javaClass.canonicalName
-                javaClass2ZincType[javaClass] ?.camelToSnakeCase() ?: error("Java class $javaClass needs to have an associated Zinc type")
+                javaClass2ZincType[it.data::class]?.typeName ?: error("Class ${it.data::class} needs to have an associated Zinc type")
             }
 
             // TODO: Ensure that the order is the same as the deterministic order in ZKTransactionBuilder
@@ -215,15 +217,15 @@ class Witness(
          */
         private fun List<UtxoInfo>.serializedBytesForUTXO(
             groupEnum: ComponentGroupEnum,
-            javaClass2ZincType: Map<String, String>
+            javaClass2ZincType: Map<KClass<*>, ZincType>
         ): Map<String, List<ByteArray>> {
 
             require(groupEnum == ComponentGroupEnum.INPUTS_GROUP || groupEnum == ComponentGroupEnum.REFERENCES_GROUP) { "Only input and reference groups are valid for UTXO serialization." }
 
             // Pair each serialized state with the component group name and state name
             return this.map {
-                val zincType = javaClass2ZincType[it.stateName] ?: error("Java class ${it.stateName} needs to have an associated Zinc type")
-                zincType.camelToSnakeCase() to it.serializedContents
+                val zincType = javaClass2ZincType[it.stateClass] ?: error("Class ${it.stateClass} needs to have an associated Zinc type")
+                zincType.typeName to it.serializedContents
             }
                 // group the serialized arrays based on their state name
                 .groupBy { it.first }.map { it.key to it.value.map { bytes -> bytes.second } }

@@ -1,6 +1,5 @@
 package com.ing.zknotary.common.contracts
 
-import com.ing.zknotary.common.zkp.CircuitMetaData
 import com.ing.zknotary.common.zkp.ZKCommandMetadata
 import com.ing.zknotary.common.zkp.ZKTransactionMetadata
 import net.corda.core.contracts.Command
@@ -16,7 +15,6 @@ interface ZKTransactionMetadataCommandData : ZKCommandData {
 }
 
 interface ZKCommandData : CommandData {
-    val circuit: CircuitMetaData
     val metadata: ZKCommandMetadata
 }
 

@@ -12,21 +12,20 @@ class ZincZKTransactionCordaService(services: AppServiceHub) : ZincZKTransaction
 @CordaService
 open class ZincZKTransactionService(services: ServiceHub) : AbstractZKTransactionService(services) {
 
-    private val zkServices = mutableMapOf<ZKCommandData, ZincZKService>()
+    private val zkServices = mutableMapOf<ResolvedZKTransactionMetadata, ZincZKService>()
 
-    override fun zkServiceForCommand(command: ZKCommandData): ZincZKService {
-        return zkServices.getOrPut(command) {
-            val metaData = command.circuit
-            val circuitFolder = metaData.buildFolder
+    override fun zkServiceForTransactionMetadata(metadata: ResolvedZKTransactionMetadata): ZincZKService {
+        return zkServices.getOrPut(metadata) {
+            val circuitFolder = metadata.buildFolder
             val artifactFolder = File(circuitFolder, "data")
 
             return ZincZKService(
                 circuitFolder.absolutePath,
                 artifactFolder.absolutePath,
-                metaData.buildTimeout,
-                metaData.setupTimeout,
-                metaData.provingTimeout,
-                metaData.verificationTimeout
+                metadata.buildTimeout,
+                metadata.setupTimeout,
+                metadata.provingTimeout,
+                metadata.verificationTimeout
             )
         }
     }
@@ -37,7 +36,7 @@ open class ZincZKTransactionService(services: ServiceHub) : AbstractZKTransactio
             cleanup(command)
         }
 
-        val zkService = zkServiceForCommand(command)
+        val zkService = zkServiceForTransactionMetadata(command)
 
         val circuit = CircuitManager.CircuitDescription("${zkService.circuitFolder}/src", zkService.artifactFolder)
         CircuitManager.register(circuit)
@@ -56,5 +55,5 @@ open class ZincZKTransactionService(services: ServiceHub) : AbstractZKTransactio
         }
     }
 
-    fun cleanup(command: ZKCommandData) = zkServiceForCommand(command).cleanup()
+    fun cleanup(command: ZKCommandData) = zkServiceForTransactionMetadata(command).cleanup()
 }

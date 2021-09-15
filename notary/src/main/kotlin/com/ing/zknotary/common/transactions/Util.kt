@@ -1,6 +1,6 @@
 package com.ing.zknotary.common.transactions
 
-import com.ing.zknotary.common.contracts.ZKCommandData
+import com.ing.zknotary.common.contracts.ZKTransactionMetadataCommandData
 import com.ing.zknotary.common.zkp.ZKTransactionService
 import com.ing.zknotary.node.services.ServiceNames
 import com.ing.zknotary.node.services.WritableUtxoInfoStorage
@@ -30,6 +30,7 @@ import net.corda.core.transactions.ContractUpgradeWireTransaction
 import net.corda.core.transactions.LedgerTransaction
 import net.corda.core.transactions.NotaryChangeWireTransaction
 import net.corda.core.transactions.SignedTransaction
+import net.corda.core.transactions.TraversableTransaction
 import net.corda.core.transactions.WireTransaction
 import net.corda.core.transactions.WireTransaction.Companion.resolveStateRefBinaryComponent
 import java.security.PublicKey
@@ -51,9 +52,9 @@ fun ServiceHub.collectUtxoInfos(
                 .filteredComponentGroups.single { it.groupIndex == ComponentGroupEnum.OUTPUTS_GROUP.ordinal }
                 .nonces[it.index]
 
-            val stateName = prevStx.tx.outputs[it.index].data.javaClass.canonicalName
+            val stateClass = prevStx.tx.outputs[it.index].data::class
 
-            UtxoInfo(it, serializedUtxo, nonce, stateName)
+            UtxoInfo(it, serializedUtxo, nonce, stateClass)
         }
 
     val collectFromUtxoInfoStorage: (StateRef) -> UtxoInfo =
@@ -103,7 +104,8 @@ fun WireTransaction.prettyPrint(): String {
     return buf.toString()
 }
 
-fun WireTransaction.zkCommandData() = commands.first().value as ZKCommandData
+fun TraversableTransaction.zkTransactionMetadata() =
+    (commands.first().value as ZKTransactionMetadataCommandData).transactionMetadata.resolved
 
 @Throws(AttachmentResolutionException::class, TransactionResolutionException::class)
 @DeleteForDJVM

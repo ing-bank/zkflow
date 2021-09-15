@@ -22,7 +22,6 @@ annotation class ZKCommandMetadataDSL
  */
 @ZKCommandMetadataDSL
 data class ZKCircuit(
-    val commandMetadata: ZKCommandMetadata,
     /**
      * This name can be anything.
      * If  null, it will be derived from the command name.
@@ -39,7 +38,8 @@ data class ResolvedZKCircuit(
     val commandKClass: KClass<out CommandData>,
     var name: String,
     /**
-     * Unless provided, this will be calculated to be `<gradle module>/src/main/zinc/<circuit.name>`
+     * Unless provided, this will be calculated to be `<gradle module>/src/main/zinc/<transaction.name>/commands/<command.name>`
+     * This is where the circuit elements for this command can be found
      */
     val buildFolder: File,
     val javaClass2ZincType: Map<KClass<*>, ZincType>,
@@ -53,15 +53,25 @@ data class ResolvedZKCircuit(
         private val DEFAULT_SETUP_TIMEOUT = 2.hours
         private val DEFAULT_PROVING_TIMEOUT = 5.minutes
         private val DEFAULT_VERIFICATION_TIMEOUT = 3.seconds
-        private val DEFAULT_CIRCUIT_BUILD_FOLDER_PARENT_PATH = "${System.getProperty("user.dir")}/build/zinc/"
+        private val DEFAULT_CIRCUIT_BUILD_FOLDER_PARENT_PATH = "${System.getProperty("user.dir")}/build/zinc/commands/"
 
-        fun resolve(circuit: ZKCircuit?): ResolvedZKCircuit? {
-            if (circuit == null) return null
+        fun resolve(commandMetadata: ZKCommandMetadata, circuit: ZKCircuit?): ResolvedZKCircuit {
+            if (circuit == null) return ResolvedZKCircuit(
+                commandKClass = commandMetadata.commandKClass,
+                javaClass2ZincType = javaClass2ZincType(commandMetadata),
+                name = commandMetadata.commandKClass.simpleName ?: error("Command classes must be a named class"),
+                buildFolder = File(DEFAULT_CIRCUIT_BUILD_FOLDER_PARENT_PATH + circuit.name),
+                buildTimeout = DEFAULT_BUILD_TIMEOUT,
+                setupTimeout = DEFAULT_SETUP_TIMEOUT,
+                provingTimeout = DEFAULT_PROVING_TIMEOUT,
+                verificationTimeout = DEFAULT_VERIFICATION_TIMEOUT
+            )
+
             return ResolvedZKCircuit(
-                commandKClass = circuit.commandMetadata.commandKClass,
-                name = circuit.name ?: circuit.commandMetadata.commandKClass.simpleName ?: error("Command classes must be a named class"),
+                commandKClass = commandMetadata.commandKClass,
+                javaClass2ZincType = javaClass2ZincType(commandMetadata),
+                name = circuit.name ?: commandMetadata.commandKClass.simpleName ?: error("Command classes must be a named class"),
                 buildFolder = circuit.buildFolder ?: File(DEFAULT_CIRCUIT_BUILD_FOLDER_PARENT_PATH + circuit.name),
-                javaClass2ZincType = javaClass2ZincType(circuit.commandMetadata),
                 buildTimeout = circuit.buildTimeout ?: DEFAULT_BUILD_TIMEOUT,
                 setupTimeout = circuit.setupTimeout ?: DEFAULT_SETUP_TIMEOUT,
                 provingTimeout = circuit.provingTimeout ?: DEFAULT_PROVING_TIMEOUT,
@@ -107,6 +117,8 @@ class TypeCountList : ArrayList<TypeCount>() {
 
 @ZKCommandMetadataDSL
 class ZKCommandMetadata(val commandKClass: KClass<out CommandData>) {
+    val commandSimpleName = commandKClass.simpleName ?: error("Command classes must be a named class")
+
     /**
      * This is always true, and can't be changed
      */
@@ -159,7 +171,7 @@ class ZKCommandMetadata(val commandKClass: KClass<out CommandData>) {
     }
 
     fun circuit(init: ZKCircuit.() -> Unit): ZKCircuit {
-        circuit = ZKCircuit(this).apply(init)
+        circuit = ZKCircuit().apply(init)
         return circuit!!
     }
 
@@ -181,20 +193,32 @@ class ZKCommandMetadata(val commandKClass: KClass<out CommandData>) {
     }
 
     fun resolve(): ResolvedZKCommandMetadata {
-
-        return ResolvedZKCommandMetadata(
-            commandKClass,
-            notarySignatureScheme,
-            participantSignatureScheme,
-            private,
-            ResolvedZKCircuit.resolve(circuit),
-            numberOfSigners,
-            inputs.toList(),
-            references.toList(),
-            outputs.toList(),
-            userAttachments.toList(),
-            timeWindow
-        )
+        return if (private) {
+            PrivateResolvedZKCommandMetadata(
+                ResolvedZKCircuit.resolve(this, circuit),
+                commandKClass,
+                numberOfSigners,
+                inputs.toList(),
+                references.toList(),
+                outputs.toList(),
+                userAttachments.toList(),
+                timeWindow,
+                notarySignatureScheme,
+                participantSignatureScheme,
+            )
+        } else {
+            PublicResolvedZKCommandMetadata(
+                commandKClass,
+                numberOfSigners,
+                inputs.toList(),
+                references.toList(),
+                outputs.toList(),
+                userAttachments.toList(),
+                timeWindow,
+                notarySignatureScheme,
+                participantSignatureScheme,
+            )
+        }
     }
 }
 
@@ -202,8 +226,8 @@ fun CommandData.commandMetadata(init: ZKCommandMetadata.() -> Unit): ZKCommandMe
     return ZKCommandMetadata(this::class).apply(init)
 }
 
-data class ResolvedZKCommandMetadata(
-    val commandKClass: KClass<out CommandData>,
+interface ResolvedCommandMetadata {
+    val commandKClass: KClass<out CommandData>
 
     /**
      * The notary [SignatureScheme] type required by this circuit.
@@ -211,7 +235,7 @@ data class ResolvedZKCommandMetadata(
      * This should match the [SignatureScheme] defined for the network notary
      * in the transaction metadata. If they don't match, an error is thrown.
      */
-    val notarySignatureScheme: SignatureScheme,
+    val notarySignatureScheme: SignatureScheme
 
     /**
      * The participant [SignatureScheme] type required by this circuit.
@@ -220,41 +244,60 @@ data class ResolvedZKCommandMetadata(
      * This should be enforced at network level and therefore should match the [SignatureScheme] defined for the network notary
      * in the transaction metadata. If they don't match, an error is thrown.
      */
-    val participantSignatureScheme: SignatureScheme,
+    val participantSignatureScheme: SignatureScheme
 
-    /**
-     * This determines whether a circuit is expected to exist for this command.
-     *
-     * If false, ZKFLow will ignore this command for the ZKP circuit in all ways, except for Merkle tree calculation.
-     */
-    val private: Boolean,
+    val numberOfSigners: Int
 
-    /**
-     * Infomation on the circuit and related artifacts to be used.
-     *
-     * If the command is marked private, but this is null, ZKFLow will
-     * try to find the circuit based on some default rules. If that fails,
-     * an error is thrown.
-     */
-    val circuit: ResolvedZKCircuit?,
-
-    val numberOfSigners: Int,
-
-    val inputs: List<TypeCount>,
-    val references: List<TypeCount>,
-    val outputs: List<TypeCount>,
-    val userAttachments: List<TypeCount>,
+    val inputs: List<TypeCount>
+    val references: List<TypeCount>
+    val outputs: List<TypeCount>
+    val userAttachments: List<TypeCount>
     val timeWindow: Boolean
-) {
+
     /**
      * This is always true, and can't be changed
      */
-    val networkParameters = true
+    val networkParameters: Boolean
+
+}
+
+abstract class ResolvedZKCommandMetadata(
+    final override val notarySignatureScheme: SignatureScheme,
+    final override val participantSignatureScheme: SignatureScheme
+) : ResolvedCommandMetadata {
+    override val networkParameters = true
 
     init {
         ZKFlow.requireSupportedSignatureScheme(participantSignatureScheme)
         ZKFlow.requireSupportedSignatureScheme(notarySignatureScheme)
     }
+
 }
 
-// class PrivateResolvedZKCommandMetadata() : ResolvedZKCommandMetadata()
+class PrivateResolvedZKCommandMetadata(
+    /**
+     * Infomation on the circuit and related artifacts to be used.
+     */
+    val circuit: ResolvedZKCircuit,
+    override val commandKClass: KClass<out CommandData>,
+    override val numberOfSigners: Int,
+    override val inputs: List<TypeCount>,
+    override val references: List<TypeCount>,
+    override val outputs: List<TypeCount>,
+    override val userAttachments: List<TypeCount>,
+    override val timeWindow: Boolean,
+    notarySignatureScheme: SignatureScheme,
+    participantSignatureScheme: SignatureScheme,
+) : ResolvedZKCommandMetadata(notarySignatureScheme, participantSignatureScheme)
+
+class PublicResolvedZKCommandMetadata(
+    override val commandKClass: KClass<out CommandData>,
+    override val numberOfSigners: Int,
+    override val inputs: List<TypeCount>,
+    override val references: List<TypeCount>,
+    override val outputs: List<TypeCount>,
+    override val userAttachments: List<TypeCount>,
+    override val timeWindow: Boolean,
+    notarySignatureScheme: SignatureScheme,
+    participantSignatureScheme: SignatureScheme,
+) : ResolvedZKCommandMetadata(notarySignatureScheme, participantSignatureScheme)

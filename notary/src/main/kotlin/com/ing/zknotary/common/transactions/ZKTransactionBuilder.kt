@@ -127,12 +127,11 @@ class ZKTransactionBuilder(
         val command = commands().firstOrNull() ?: error("At least one command is required for a private transaction")
         val zkCommand = command.value as? ZKTransactionMetadataCommandData
             ?: error("This first command must implement ZKTransactionMetadataCommandData")
-        val resolvedTransactionMetadata = zkCommand.transactionMetadata.resolved()
+        val resolvedTransactionMetadata = zkCommand.transactionMetadata.resolved
 
         resolvedTransactionMetadata.verify(this)
         //
         val serializationProperties = mapOf<Any, Any>(
-            BFLSerializationScheme.CONTEXT_KEY_CIRCUIT to zkCommand.circuit,
             BFLSerializationScheme.CONTEXT_KEY_TRANSACTION_METADATA to resolvedTransactionMetadata
         )
 

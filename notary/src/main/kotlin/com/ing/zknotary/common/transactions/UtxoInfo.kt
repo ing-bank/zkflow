@@ -4,11 +4,13 @@ import com.ing.zknotary.node.services.ServiceNames
 import com.ing.zknotary.node.services.ZKTransactionResolutionException
 import com.ing.zknotary.node.services.ZKVerifierTransactionStorage
 import com.ing.zknotary.node.services.getCordaServiceFromConfig
+import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.StateRef
 import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.algorithm
 import net.corda.core.node.ServiceHub
 import net.corda.core.serialization.CordaSerializable
+import kotlin.reflect.KClass
 
 @CordaSerializable
 class UtxoInfo(
@@ -19,7 +21,7 @@ class UtxoInfo(
      */
     val serializedContents: ByteArray,
     val nonce: SecureHash,
-    val stateName: String
+    val stateClass: KClass<out ContractState>
 ) {
     /**
      * This function verifies that the serialized content hashed with the nonce matches

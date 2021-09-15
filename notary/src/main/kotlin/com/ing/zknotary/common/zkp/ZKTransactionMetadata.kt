@@ -1,6 +1,7 @@
 package com.ing.zknotary.common.zkp
 
 import com.ing.zknotary.common.contracts.ZKCommandData
+import com.ing.zknotary.common.contracts.ZKTransactionMetadataCommandData
 import com.ing.zknotary.common.transactions.ZKTransactionBuilder
 import com.ing.zknotary.common.zkp.ZKFlow.DEFAULT_ZKFLOW_SIGNATURE_SCHEME
 import com.ing.zknotary.common.zkp.ZKFlow.requireSupportedSignatureScheme
@@ -12,6 +13,8 @@ import net.corda.core.crypto.Crypto
 import net.corda.core.crypto.SignatureScheme
 import net.corda.core.internal.lazyMapped
 import net.corda.core.internal.objectOrNewInstance
+import java.io.File
+import java.time.Duration
 import kotlin.reflect.KClass
 
 object ZKFlow {
@@ -88,8 +91,8 @@ class ZKTransactionMetadata {
         return commands.apply(init)
     }
 
-    fun resolved(): ResolvedZKTransactionMetadata {
-        return ResolvedZKTransactionMetadata(
+    val resolved: ResolvedZKTransactionMetadata by lazy {
+        ResolvedZKTransactionMetadata(
             network,
             commands.resolve()
         )
@@ -100,6 +103,15 @@ data class ResolvedZKTransactionMetadata(
     val network: ZKNetwork,
     val commands: List<ResolvedZKCommandMetadata>
 ) {
+    companion object {
+        private val DEFAULT_CIRCUIT_BUILD_FOLDER_PARENT_PATH = "${System.getProperty("user.dir")}/build/zinc/transactions/"
+    }
+
+    init {
+        require(commands.first().commandKClass is ZKTransactionMetadataCommandData) { "The first command in a ZKFLow transaction should always be a `ZKTransactionMetadataCommandData`." }
+        require(commands.first().private) { "The first command in a ZKFLow transaction should always be private." }
+    }
+
     /**
      * The total number of signers of all commands added up.
      *
@@ -125,6 +137,23 @@ data class ResolvedZKTransactionMetadata(
      * The total number of outputs in this transaction
      */
     private val outputCount = outputTypesFlattened.size
+
+    /**
+     * The aggregate list of java class to zinc type for all commands in this transaction.
+     */
+    val javaClass2ZincType: Map<KClass<*>, ZincType> = commands.fold(mapOf<KClass<*>, ZincType>()) { acc, resolvedZKCommandMetadata ->
+        acc + (resolvedZKCommandMetadata.circuit?.javaClass2ZincType ?: emptyMap())
+    }
+
+    /**
+     * The target build folder for this transaction's main.zn.
+     * The circuit parts for each command will be copied to this folder under `commands/<command.name>`.
+     */
+    val buildFolder: File = File(DEFAULT_CIRCUIT_BUILD_FOLDER_PARENT_PATH + commands.first().circuit.name)
+    val buildTimeout: Duration
+    val setupTimeout: Duration
+    val provingTimeout: Duration
+    val verificationTimeout: Duration
 
     fun verify(txb: ZKTransactionBuilder) {
         try {

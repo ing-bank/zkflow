@@ -1,6 +1,5 @@
 package com.ing.zknotary.common.transactions
 
-import com.ing.zknotary.common.contracts.ZKCommandData
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.crypto.DigestService
 import net.corda.core.crypto.MerkleTree
@@ -48,8 +47,6 @@ class ZKVerifierTransaction(
 ) : TraversableTransaction(componentGroups, digestService) {
 
     override val id: SecureHash by lazy { MerkleTree.getMerkleTree(groupHashes, digestService).hash }
-
-    val zkCommandData: ZKCommandData = commands.single().value as ZKCommandData
 
     /** Public keys that need to be fulfilled by signatures in order for the transaction to be valid. */
     val requiredSigningKeys: Set<PublicKey>
