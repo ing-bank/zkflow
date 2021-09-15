@@ -1,6 +1,6 @@
 package com.ing.zknotary.zinc.transaction
 
-import com.ing.zknotary.common.contracts.ZKCommandData
+import com.ing.zknotary.common.contracts.ZKTransactionMetadataCommandData
 import com.ing.zknotary.common.crypto.zinc
 import com.ing.zknotary.common.serialization.bfl.BFLSerializationScheme
 import com.ing.zknotary.common.zkp.ZincZKService
@@ -117,9 +117,12 @@ class TransactionBasicVerificationTest {
         val networkParametersHash = SecureHash.randomSHA256()
 
         // This functionality is duplicated from ZKTransaction.toWireTransaction()
-        val command = commands.singleOrNull() ?: error("Single command per transaction is allowed")
-        val zkCommand = command.value as? ZKCommandData ?: error("Command must implement ZKCommandData")
-        val additionalSerializationProperties = mapOf<Any, Any>(BFLSerializationScheme.CONTEXT_KEY_CIRCUIT to zkCommand.circuit)
+        val command = commands.firstOrNull() ?: error("There must be at least one command")
+        val zkCommand =
+            command.value as? ZKTransactionMetadataCommandData ?: error("Command must implement ZKTransactionMetadataCommandData")
+
+        val additionalSerializationProperties =
+            mapOf<Any, Any>(BFLSerializationScheme.CONTEXT_KEY_CIRCUIT to zkCommand.transactionMetadata.resolved)
 
         val wtxOriginal = createWtx(
             inputs,

@@ -1,6 +1,6 @@
 package com.ing.zknotary.common.zkp
 
-import com.ing.zknotary.common.contracts.ZKCommandData
+import com.ing.zknotary.common.contracts.ZKTransactionMetadataCommandData
 import net.corda.core.node.AppServiceHub
 import net.corda.core.node.ServiceHub
 import net.corda.core.node.services.CordaService
@@ -30,13 +30,13 @@ open class ZincZKTransactionService(services: ServiceHub) : AbstractZKTransactio
         }
     }
 
-    fun setup(command: ZKCommandData, force: Boolean = false) {
+    fun setup(command: ZKTransactionMetadataCommandData, force: Boolean = false) {
 
         if (force) {
             cleanup(command)
         }
 
-        val zkService = zkServiceForTransactionMetadata(command)
+        val zkService = zkServiceForTransactionMetadata(command.transactionMetadata.resolved)
 
         val circuit = CircuitManager.CircuitDescription("${zkService.circuitFolder}/src", zkService.artifactFolder)
         CircuitManager.register(circuit)
@@ -55,5 +55,5 @@ open class ZincZKTransactionService(services: ServiceHub) : AbstractZKTransactio
         }
     }
 
-    fun cleanup(command: ZKCommandData) = zkServiceForTransactionMetadata(command).cleanup()
+    fun cleanup(command: ZKTransactionMetadataCommandData) = zkServiceForTransactionMetadata(command.transactionMetadata.resolved).cleanup()
 }

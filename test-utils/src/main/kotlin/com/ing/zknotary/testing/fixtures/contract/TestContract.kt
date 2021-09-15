@@ -5,10 +5,8 @@ import com.ing.zknotary.common.contracts.ZKCommandData
 import com.ing.zknotary.common.contracts.ZKOwnableState
 import com.ing.zknotary.common.serialization.bfl.CommandDataSerializerMap
 import com.ing.zknotary.common.serialization.bfl.ContractStateSerializerMap
-import com.ing.zknotary.common.zkp.CircuitMetaData
 import com.ing.zknotary.common.zkp.ZKCommandMetadata
 import com.ing.zknotary.common.zkp.commandMetadata
-import com.ing.zknotary.testing.CircuitMetaDataBuilder
 import com.ing.zknotary.testing.fixtures.contract.TestContract.Create.Companion.verifyCreate
 import com.ing.zknotary.testing.fixtures.contract.TestContract.Move.Companion.verifyMove
 import com.ing.zknotary.testing.fixtures.contract.TestContract.MoveBidirectional.Companion.verifyMoveBidirectional
@@ -19,7 +17,6 @@ import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.CommandAndState
 import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.CommandWithParties
-import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.Contract
 import net.corda.core.contracts.ContractClassName
 import net.corda.core.contracts.TypeOnlyCommandData
@@ -59,13 +56,15 @@ public class TestContract : Contract {
     @Serializable
     public class Create : TypeOnlyCommandData(), ZKCommandData {
         @Transient
-        override val circuit: CircuitMetaData = CircuitMetaData.fromConfig(
-            // ${System.getProperty("user.dir")} = "notary"
-            File("${System.getProperty("user.dir")}/../zinc-platform-sources/build/circuits/create")
-        )
-
-        @Transient
-        override val metadata: ZKCommandMetadata = commandMetadata { }
+        override val metadata: ZKCommandMetadata = commandMetadata {
+            private = true
+            circuit {
+                buildFolder =
+                    File("${System.getProperty("user.dir")}/../zinc-platform-sources/build/circuits/create")
+            }
+            outputs { 1 of TestState::class }
+            numberOfSigners = 1
+        }
 
         public companion object {
             public fun verifyCreate(
@@ -90,29 +89,22 @@ public class TestContract : Contract {
     @Serializable
     public class SignOnly : TypeOnlyCommandData(), ZKCommandData {
         @Transient
-        override val metadata: ZKCommandMetadata = commandMetadata { }
-
-        @Transient
-        override val circuit: CircuitMetaData = CircuitMetaDataBuilder()
-            .name("SignOnly")
-            .addComponentGroupSize(ComponentGroupEnum.SIGNERS_GROUP, 2)
-            .associateJavaClass2ZincType(
-                "com.ing.zknotary.testing.fixtures.contract.TestContract.TestState",
-                "TestState"
-            )
-            .build()
+        override val metadata: ZKCommandMetadata = commandMetadata {}
     }
 
     @Serializable
     public class Move : TypeOnlyCommandData(), ZKCommandData {
         @Transient
-        override val metadata: ZKCommandMetadata = commandMetadata { }
-
-        @Transient
-        override val circuit: CircuitMetaData = CircuitMetaData.fromConfig(
-            // ${System.getProperty("user.dir")} = "notary"
-            File("${System.getProperty("user.dir")}/../zinc-platform-sources/build/circuits/move")
-        )
+        override val metadata: ZKCommandMetadata = commandMetadata {
+            private = true
+            circuit {
+                buildFolder =
+                    File("${System.getProperty("user.dir")}/../zinc-platform-sources/build/circuits/move")
+            }
+            inputs { 1 of TestState::class }
+            outputs { 1 of TestState::class }
+            numberOfSigners = 1
+        }
 
         public companion object {
             public fun verifyMove(
@@ -136,17 +128,11 @@ public class TestContract : Contract {
     @Serializable
     public class MoveBidirectional : ZKCommandData {
         @Transient
-        override val metadata: ZKCommandMetadata = commandMetadata { }
-
-        @Transient
-        override val circuit: CircuitMetaData = CircuitMetaDataBuilder()
-            .name("MoveBidirectional")
-            .addComponentGroupSize(ComponentGroupEnum.SIGNERS_GROUP, 2)
-            .associateJavaClass2ZincType(
-                "com.ing.zknotary.testing.fixtures.contract.TestContract.TestState",
-                "TestState"
-            )
-            .build()
+        override val metadata: ZKCommandMetadata = commandMetadata {
+            inputs { 2 of TestState::class }
+            outputs { 2 of TestState::class }
+            numberOfSigners = 2
+        }
 
         public companion object {
             public fun verifyMoveBidirectional(

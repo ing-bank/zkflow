@@ -10,7 +10,6 @@ class ZKCommandMetadataTest {
     @Test
     fun `ZKCommandMetadata DSL happy flow works`() {
         val cmd = object : ZKCommandData {
-            override val circuit: CircuitMetaData = DUMMY_CIRCUIT_METADATA
             override val metadata = commandMetadata {
                 circuit { name = "foo" }
 

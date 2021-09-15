@@ -27,11 +27,11 @@ data class ZKCircuit(
      * If  null, it will be derived from the command name.
      */
     var name: String? = null,
-    val buildFolder: File? = null,
-    val buildTimeout: Duration? = null,
-    val setupTimeout: Duration? = null,
-    val provingTimeout: Duration? = null,
-    val verificationTimeout: Duration? = null
+    var buildFolder: File? = null,
+    var buildTimeout: Duration? = null,
+    var setupTimeout: Duration? = null,
+    var provingTimeout: Duration? = null,
+    var verificationTimeout: Duration? = null
 )
 
 data class ResolvedZKCircuit(
@@ -59,8 +59,8 @@ data class ResolvedZKCircuit(
             if (circuit == null) return ResolvedZKCircuit(
                 commandKClass = commandMetadata.commandKClass,
                 javaClass2ZincType = javaClass2ZincType(commandMetadata),
-                name = commandMetadata.commandKClass.simpleName ?: error("Command classes must be a named class"),
-                buildFolder = File(DEFAULT_CIRCUIT_BUILD_FOLDER_PARENT_PATH + circuit.name),
+                name = commandMetadata.commandSimpleName,
+                buildFolder = File(DEFAULT_CIRCUIT_BUILD_FOLDER_PARENT_PATH + commandMetadata.commandSimpleName),
                 buildTimeout = DEFAULT_BUILD_TIMEOUT,
                 setupTimeout = DEFAULT_SETUP_TIMEOUT,
                 provingTimeout = DEFAULT_PROVING_TIMEOUT,
@@ -70,7 +70,7 @@ data class ResolvedZKCircuit(
             return ResolvedZKCircuit(
                 commandKClass = commandMetadata.commandKClass,
                 javaClass2ZincType = javaClass2ZincType(commandMetadata),
-                name = circuit.name ?: commandMetadata.commandKClass.simpleName ?: error("Command classes must be a named class"),
+                name = circuit.name ?: commandMetadata.commandSimpleName,
                 buildFolder = circuit.buildFolder ?: File(DEFAULT_CIRCUIT_BUILD_FOLDER_PARENT_PATH + circuit.name),
                 buildTimeout = circuit.buildTimeout ?: DEFAULT_BUILD_TIMEOUT,
                 setupTimeout = circuit.setupTimeout ?: DEFAULT_SETUP_TIMEOUT,
@@ -117,7 +117,7 @@ class TypeCountList : ArrayList<TypeCount>() {
 
 @ZKCommandMetadataDSL
 class ZKCommandMetadata(val commandKClass: KClass<out CommandData>) {
-    val commandSimpleName = commandKClass.simpleName ?: error("Command classes must be a named class")
+    val commandSimpleName: String by lazy { commandKClass.simpleName ?: error("Command classes must be a named class") }
 
     /**
      * This is always true, and can't be changed
@@ -228,6 +228,7 @@ fun CommandData.commandMetadata(init: ZKCommandMetadata.() -> Unit): ZKCommandMe
 
 interface ResolvedCommandMetadata {
     val commandKClass: KClass<out CommandData>
+    val commandSimpleName: String
 
     /**
      * The notary [SignatureScheme] type required by this circuit.
@@ -258,7 +259,6 @@ interface ResolvedCommandMetadata {
      * This is always true, and can't be changed
      */
     val networkParameters: Boolean
-
 }
 
 abstract class ResolvedZKCommandMetadata(
@@ -266,14 +266,15 @@ abstract class ResolvedZKCommandMetadata(
     final override val participantSignatureScheme: SignatureScheme
 ) : ResolvedCommandMetadata {
     override val networkParameters = true
+    override val commandSimpleName: String by lazy { commandKClass.simpleName ?: error("Command classes must be a named class") }
 
     init {
         ZKFlow.requireSupportedSignatureScheme(participantSignatureScheme)
         ZKFlow.requireSupportedSignatureScheme(notarySignatureScheme)
     }
-
 }
 
+@Suppress("LongParameterList") // param length caused by Corda component count
 class PrivateResolvedZKCommandMetadata(
     /**
      * Infomation on the circuit and related artifacts to be used.
@@ -290,6 +291,7 @@ class PrivateResolvedZKCommandMetadata(
     participantSignatureScheme: SignatureScheme,
 ) : ResolvedZKCommandMetadata(notarySignatureScheme, participantSignatureScheme)
 
+@Suppress("LongParameterList") // param length caused by Corda component count
 class PublicResolvedZKCommandMetadata(
     override val commandKClass: KClass<out CommandData>,
     override val numberOfSigners: Int,

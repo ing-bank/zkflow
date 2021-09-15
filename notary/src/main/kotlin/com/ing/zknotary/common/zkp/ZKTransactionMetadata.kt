@@ -16,6 +16,7 @@ import net.corda.core.internal.objectOrNewInstance
 import java.io.File
 import java.time.Duration
 import kotlin.reflect.KClass
+import kotlin.reflect.full.isSubclassOf
 
 object ZKFlow {
     val DEFAULT_ZKFLOW_SIGNATURE_SCHEME = Crypto.EDDSA_ED25519_SHA512
@@ -108,9 +109,11 @@ data class ResolvedZKTransactionMetadata(
     }
 
     init {
-        require(commands.first().commandKClass is ZKTransactionMetadataCommandData) { "The first command in a ZKFLow transaction should always be a `ZKTransactionMetadataCommandData`." }
-        require(commands.first().private) { "The first command in a ZKFLow transaction should always be private." }
+        require(commands.first().commandKClass.isSubclassOf(ZKTransactionMetadataCommandData::class)) { "The first command in a ZKFLow transaction should always be a `ZKTransactionMetadataCommandData`." }
+        require(commands.first() is PrivateResolvedZKCommandMetadata) { "The first command in a ZKFLow transaction should always be private." }
     }
+
+    val privateCommands = commands.filterIsInstance<PrivateResolvedZKCommandMetadata>()
 
     /**
      * The total number of signers of all commands added up.
@@ -142,18 +145,25 @@ data class ResolvedZKTransactionMetadata(
      * The aggregate list of java class to zinc type for all commands in this transaction.
      */
     val javaClass2ZincType: Map<KClass<*>, ZincType> = commands.fold(mapOf<KClass<*>, ZincType>()) { acc, resolvedZKCommandMetadata ->
-        acc + (resolvedZKCommandMetadata.circuit?.javaClass2ZincType ?: emptyMap())
+        if (resolvedZKCommandMetadata is PrivateResolvedZKCommandMetadata) {
+            acc + resolvedZKCommandMetadata.circuit.javaClass2ZincType
+        } else acc
     }
 
     /**
      * The target build folder for this transaction's main.zn.
      * The circuit parts for each command will be copied to this folder under `commands/<command.name>`.
      */
-    val buildFolder: File = File(DEFAULT_CIRCUIT_BUILD_FOLDER_PARENT_PATH + commands.first().circuit.name)
-    val buildTimeout: Duration
-    val setupTimeout: Duration
-    val provingTimeout: Duration
-    val verificationTimeout: Duration
+    val buildFolder: File = File(DEFAULT_CIRCUIT_BUILD_FOLDER_PARENT_PATH + commands.first().commandSimpleName)
+
+    /**
+     * Timeouts are the summed from all commands in this transaction.
+     * TODO: is this the best way?
+     */
+    val buildTimeout: Duration = Duration.ofSeconds(privateCommands.sumOf { it.circuit.buildTimeout.seconds })
+    val setupTimeout: Duration = Duration.ofSeconds(privateCommands.sumOf { it.circuit.setupTimeout.seconds })
+    val provingTimeout: Duration = Duration.ofSeconds(privateCommands.sumOf { it.circuit.provingTimeout.seconds })
+    val verificationTimeout: Duration = Duration.ofSeconds(privateCommands.sumOf { it.circuit.verificationTimeout.seconds })
 
     fun verify(txb: ZKTransactionBuilder) {
         try {
@@ -168,20 +178,25 @@ data class ResolvedZKTransactionMetadata(
         IllegalArgumentException("Transaction does not match expected structure.", cause)
 
     private fun verifyOutputs(txb: ZKTransactionBuilder) {
-        require(txb.outputStates().size == outputCount) { "Expected $outputCount outputs in transaction, found ${txb.outputStates().size}" }
-        txb.outputStates().forEachIndexed { index, transactionState ->
-            require(transactionState.data::class == outputTypesFlattened[index]) { "Unexpected output order. Expected '${outputTypesFlattened[index]}' at index $index, but found '${transactionState.data::class}'" }
+        outputTypesFlattened.forEachIndexed { index, kClass ->
+            val actualOutput = txb.outputStates().getOrElse(index) { error("Expected to find an output at index $index, nothing found") }
+            require(actualOutput.data::class == kClass) {
+                "Unexpected output order. Expected '$kClass' at index $index, but found '${actualOutput.data::class}'"
+            }
         }
     }
 
     private fun verifyCommands(txb: ZKTransactionBuilder) {
-        txb.commands().forEachIndexed { index, command ->
-            val expectedCommandMetadata = commands[index]
-            require(
-                command.value::class == expectedCommandMetadata.commandKClass
-            ) { "Command at index $index expect to be '${expectedCommandMetadata.commandKClass}', but found '${command.value::class}'" }
+        commands.forEachIndexed { index, expectedCommandMetadata ->
+            val actualCommand = txb.commands().getOrElse(index) { error("Expected to find a command at index $index, nothing found") }
 
-            require(command.signers.size == expectedCommandMetadata.numberOfSigners) { "Expected '${expectedCommandMetadata.numberOfSigners} signers, but found '${command.signers.size}'." }
+            require(actualCommand.value::class == expectedCommandMetadata.commandKClass) {
+                "Expected command at index $index to be '${expectedCommandMetadata.commandKClass}', but found '${actualCommand.value::class}'"
+            }
+
+            require(actualCommand.signers.size == expectedCommandMetadata.numberOfSigners) {
+                "Expected '${expectedCommandMetadata.numberOfSigners} signers, but found '${actualCommand.signers.size}'."
+            }
         }
     }
 }

@@ -31,6 +31,58 @@ import java.io.File
 import java.util.Random
 import kotlin.time.ExperimentalTime
 
+@ExperimentalTime
+class ZKTransactionMetadataTest {
+    private val services = MockServices()
+    private val approver = TestIdentity.fixed("Approver").party.anonymise()
+    private val issuer = TestIdentity.fixed("Issuer").party.anonymise()
+
+    @Test
+    fun `The transaction builder must match the resolved transaction metadata`() {
+        services.zkLedger(zkService = MockZKTransactionService(services)) {
+            zkTransaction {
+                output(MockAssetContract.ID, MockAssetContract.MockAsset(issuer))
+                fails()
+                output(MockAuditContract.ID, MockAuditContract.Approval(approver))
+                command(issuer.owningKey, MockAssetContract.Issue())
+                fails()
+                command(approver.owningKey, MockAuditContract.Approve())
+                verifies()
+            }
+        }
+    }
+
+    @Test
+    fun `ZKTransactionMetadata DSL happy flow works`() {
+        val transactionMetadata = transactionMetadata {
+            network {
+                attachmentConstraintType = HashAttachmentConstraint::class
+            }
+
+            commands {
+                command(TestContract.Create::class)
+                +TestContract.SignOnly::class // We also support this common patter for adding things to collections
+            }
+        }
+
+        transactionMetadata.network.attachmentConstraintType shouldBe HashAttachmentConstraint::class
+        transactionMetadata.commands[0] shouldBe TestContract.Create::class
+        transactionMetadata.commands[1] shouldBe TestContract.SignOnly::class
+    }
+
+    @Test
+    fun `Multiple commands of one type fails`() {
+        shouldThrow<IllegalArgumentException> {
+            transactionMetadata {
+                commands {
+                    +TestContract.SignOnly::class
+                    +TestContract.SignOnly::class
+                }
+            }
+        }
+    }
+}
+
 val DUMMY_CIRCUIT_METADATA = CircuitMetaData(
     name = "Dummy",
     componentGroupSizes = mapOf(),
@@ -64,6 +116,10 @@ class MockAuditContract : Contract {
         @Serializable(with = AnonymousPartySerializer::class)
         val approver: AnonymousParty
     ) : ZKContractState {
+        init {
+            // TODO: Hack!
+            mockSerializers
+        }
 
         @FixedLength([1])
         override val participants: List<@Serializable(with = AnonymousPartySerializer::class) AnonymousParty> = listOf(approver)
@@ -83,9 +139,6 @@ class MockAuditContract : Contract {
             outputs { 1 of Approval::class }
             timewindow()
         }
-
-        @Transient
-        override val circuit: CircuitMetaData = DUMMY_CIRCUIT_METADATA
     }
 
     override fun verify(tx: LedgerTransaction) {}
@@ -128,61 +181,7 @@ class MockAssetContract : Contract {
             outputs { 1 of MockAsset::class }
             timewindow()
         }
-
-        @Transient
-        override val circuit: CircuitMetaData = DUMMY_CIRCUIT_METADATA
     }
 
     override fun verify(tx: LedgerTransaction) {}
-}
-
-@ExperimentalTime
-class ZKTransactionMetadataTest {
-    private val services = MockServices()
-
-    @Test
-    fun `The transaction builder must match the resolved transaction metadata`() {
-        val approver = TestIdentity.fixed("Approver").party.anonymise()
-        val issuer = TestIdentity.fixed("Issuer").party.anonymise()
-
-        services.zkLedger(zkService = MockZKTransactionService(services)) {
-            zkTransaction {
-                output(MockAssetContract.ID, MockAssetContract.MockAsset(issuer))
-                output(MockAuditContract.ID, MockAuditContract.Approval(approver))
-                command(issuer.owningKey, MockAssetContract.Issue())
-                command(approver.owningKey, MockAuditContract.Approve())
-                verifies()
-            }
-        }
-    }
-
-    @Test
-    fun `ZKTransactionMetadata DSL happy flow works`() {
-        val transactionMetadata = transactionMetadata {
-            network {
-                attachmentConstraintType = HashAttachmentConstraint::class
-            }
-
-            commands {
-                command(TestContract.Create::class)
-                +TestContract.SignOnly::class // We also support this common patter for adding things to collections
-            }
-        }
-
-        transactionMetadata.network.attachmentConstraintType shouldBe HashAttachmentConstraint::class
-        transactionMetadata.commands[0] shouldBe TestContract.Create::class
-        transactionMetadata.commands[1] shouldBe TestContract.SignOnly::class
-    }
-
-    @Test
-    fun `Multiple commands of one type fails`() {
-        shouldThrow<IllegalArgumentException> {
-            transactionMetadata {
-                commands {
-                    +TestContract.SignOnly::class
-                    +TestContract.SignOnly::class
-                }
-            }
-        }
-    }
 }
