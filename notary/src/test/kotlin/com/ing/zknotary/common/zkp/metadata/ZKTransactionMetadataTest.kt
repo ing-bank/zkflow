@@ -1,4 +1,4 @@
-package com.ing.zknotary.common.zkp
+package com.ing.zknotary.common.zkp.metadata
 
 import com.ing.serialization.bfl.annotations.FixedLength
 import com.ing.zknotary.common.contracts.ZKCommandData
@@ -8,6 +8,7 @@ import com.ing.zknotary.common.contracts.ZKTransactionMetadataCommandData
 import com.ing.zknotary.common.serialization.bfl.CommandDataSerializerMap
 import com.ing.zknotary.common.serialization.bfl.ContractStateSerializerMap
 import com.ing.zknotary.common.serialization.bfl.serializers.AnonymousPartySerializer
+import com.ing.zknotary.common.zkp.metadata.ZKCommandList.Companion.ERROR_COMMAND_NOT_UNIQUE
 import com.ing.zknotary.testing.dsl.zkLedger
 import com.ing.zknotary.testing.fixed
 import com.ing.zknotary.testing.fixtures.contract.TestContract
@@ -99,7 +100,7 @@ class ZKTransactionMetadataTest {
                 }
             }.resolved
         }.also {
-            it.message shouldBe ResolvedZKTransactionMetadata.ERROR_COMMANDS_NOT_UNIQUE
+            it.message shouldBe ERROR_COMMAND_NOT_UNIQUE
         }
     }
 }
@@ -132,13 +133,9 @@ class MockThirdPartyNonZKPContract : Contract {
     override fun verify(tx: LedgerTransaction) {}
 }
 
-/**
- * MockAuditContract is a third party contract.
- * This means we can't annotate it, nor change its contents.
- */
 class MockAuditContract : Contract {
     companion object {
-        const val ID: ContractClassName = "com.ing.zknotary.common.zkp.MockAuditContract"
+        const val ID: ContractClassName = "com.ing.zknotary.common.zkp.metadata.MockAuditContract"
     }
 
     @Serializable
@@ -177,7 +174,7 @@ class MockAuditContract : Contract {
 
 class MockAssetContract : Contract {
     companion object {
-        const val ID: ContractClassName = "com.ing.zknotary.common.zkp.MockAssetContract"
+        const val ID: ContractClassName = "com.ing.zknotary.common.zkp.metadata.MockAssetContract"
     }
 
     @Serializable
@@ -216,6 +213,7 @@ class MockAssetContract : Contract {
 
     @Serializable
     class IssueWithNonZKPCommand : ZKCommandData, ZKTransactionMetadataCommandData {
+        @Suppress("unused") // found by reflection
         val MockThirdPartyNonZKPContract.ThirdPartyNonZKPCommand.metadata: ZKCommandMetadata
             get() = commandMetadata {
                 numberOfSigners = 7

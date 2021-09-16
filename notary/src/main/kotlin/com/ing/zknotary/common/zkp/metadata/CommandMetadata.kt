@@ -1,5 +1,7 @@
-package com.ing.zknotary.common.zkp
+package com.ing.zknotary.common.zkp.metadata
 
+import com.ing.zknotary.common.zkp.ZKFlow.DEFAULT_ZKFLOW_SIGNATURE_SCHEME
+import com.ing.zknotary.common.zkp.ZKFlow.requireSupportedSignatureScheme
 import com.ing.zknotary.gradle.zinc.template.TemplateParameters.Companion.camelToSnakeCase
 import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.ContractState
@@ -130,7 +132,7 @@ class ZKCommandMetadata(val commandKClass: KClass<out CommandData>) {
      * This should match the [SignatureScheme] defined for the network notary
      * in the transaction metadata. If they don't match, an error is thrown.
      */
-    var notarySignatureScheme: SignatureScheme = ZKFlow.DEFAULT_ZKFLOW_SIGNATURE_SCHEME
+    var notarySignatureScheme: SignatureScheme = DEFAULT_ZKFLOW_SIGNATURE_SCHEME
 
     /**
      * The participant [SignatureScheme] type required by this circuit.
@@ -139,7 +141,7 @@ class ZKCommandMetadata(val commandKClass: KClass<out CommandData>) {
      * This should be enforced at network level and therefore should match the [SignatureScheme] defined for the network notary
      * in the transaction metadata. If they don't match, an error is thrown.
      */
-    var participantSignatureScheme: SignatureScheme = ZKFlow.DEFAULT_ZKFLOW_SIGNATURE_SCHEME
+    var participantSignatureScheme: SignatureScheme = DEFAULT_ZKFLOW_SIGNATURE_SCHEME
 
     /**
      * This determines whether a circuit is expected to exist for this command.
@@ -166,8 +168,8 @@ class ZKCommandMetadata(val commandKClass: KClass<out CommandData>) {
     var timeWindow = false
 
     init {
-        ZKFlow.requireSupportedSignatureScheme(participantSignatureScheme)
-        ZKFlow.requireSupportedSignatureScheme(notarySignatureScheme)
+        requireSupportedSignatureScheme(participantSignatureScheme)
+        requireSupportedSignatureScheme(notarySignatureScheme)
     }
 
     fun circuit(init: ZKCircuit.() -> Unit): ZKCircuit {
@@ -269,8 +271,8 @@ abstract class ResolvedZKCommandMetadata(
     override val commandSimpleName: String by lazy { commandKClass.simpleName ?: error("Command classes must be a named class") }
 
     init {
-        ZKFlow.requireSupportedSignatureScheme(participantSignatureScheme)
-        ZKFlow.requireSupportedSignatureScheme(notarySignatureScheme)
+        requireSupportedSignatureScheme(participantSignatureScheme)
+        requireSupportedSignatureScheme(notarySignatureScheme)
     }
 }
 

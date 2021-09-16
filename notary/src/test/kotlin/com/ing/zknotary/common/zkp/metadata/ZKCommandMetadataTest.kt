@@ -1,4 +1,4 @@
-package com.ing.zknotary.common.zkp
+package com.ing.zknotary.common.zkp.metadata
 
 import com.ing.zknotary.common.contracts.ZKCommandData
 import com.ing.zknotary.testing.fixtures.contract.TestContract.TestState

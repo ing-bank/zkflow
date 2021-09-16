@@ -2,7 +2,7 @@ package com.ing.zknotary.common.serialization.bfl
 
 import com.ing.zknotary.common.serialization.bfl.serializers.TimeWindowSerializer
 import com.ing.zknotary.common.serialization.bfl.serializers.TransactionStateSerializer
-import com.ing.zknotary.common.zkp.ResolvedZKTransactionMetadata
+import com.ing.zknotary.common.zkp.metadata.ResolvedZKTransactionMetadata
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.contextual

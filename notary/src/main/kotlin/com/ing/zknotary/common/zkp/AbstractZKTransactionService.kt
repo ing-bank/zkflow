@@ -4,6 +4,7 @@ import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
 import com.ing.zknotary.common.transactions.ZKVerifierTransaction
 import com.ing.zknotary.common.transactions.collectUtxoInfos
 import com.ing.zknotary.common.transactions.zkTransactionMetadata
+import com.ing.zknotary.common.zkp.metadata.ResolvedZKTransactionMetadata
 import com.ing.zknotary.node.services.ServiceNames
 import com.ing.zknotary.node.services.ZKTransactionResolutionException
 import com.ing.zknotary.node.services.ZKWritableVerifierTransactionStorage

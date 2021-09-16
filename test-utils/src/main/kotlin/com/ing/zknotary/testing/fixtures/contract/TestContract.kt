@@ -3,10 +3,13 @@ package com.ing.zknotary.testing.fixtures.contract
 import com.ing.serialization.bfl.annotations.FixedLength
 import com.ing.zknotary.common.contracts.ZKCommandData
 import com.ing.zknotary.common.contracts.ZKOwnableState
+import com.ing.zknotary.common.contracts.ZKTransactionMetadataCommandData
 import com.ing.zknotary.common.serialization.bfl.CommandDataSerializerMap
 import com.ing.zknotary.common.serialization.bfl.ContractStateSerializerMap
-import com.ing.zknotary.common.zkp.ZKCommandMetadata
-import com.ing.zknotary.common.zkp.commandMetadata
+import com.ing.zknotary.common.zkp.metadata.ZKCommandMetadata
+import com.ing.zknotary.common.zkp.metadata.ZKTransactionMetadata
+import com.ing.zknotary.common.zkp.metadata.commandMetadata
+import com.ing.zknotary.common.zkp.metadata.transactionMetadata
 import com.ing.zknotary.testing.fixtures.contract.TestContract.Create.Companion.verifyCreate
 import com.ing.zknotary.testing.fixtures.contract.TestContract.Move.Companion.verifyMove
 import com.ing.zknotary.testing.fixtures.contract.TestContract.MoveBidirectional.Companion.verifyMoveBidirectional
@@ -44,6 +47,10 @@ public class TestContract : Contract {
         override val owner: @Contextual AnonymousParty,
         val value: Int = Random().nextInt(1000)
     ) : ZKOwnableState {
+        init {
+            // TODO: Hack to trigger the registration of the serializerMap above
+            testSerializers
+        }
 
         @FixedLength([2])
         override val participants: List<@Contextual AnonymousParty> = listOf(owner)
@@ -54,7 +61,14 @@ public class TestContract : Contract {
 
     // Commands
     @Serializable
-    public class Create : TypeOnlyCommandData(), ZKCommandData {
+    public class Create : TypeOnlyCommandData(), ZKCommandData, ZKTransactionMetadataCommandData {
+        @Transient
+        override val transactionMetadata: ZKTransactionMetadata = transactionMetadata {
+            commands {
+                +Create::class
+            }
+        }
+
         @Transient
         override val metadata: ZKCommandMetadata = commandMetadata {
             private = true
@@ -93,7 +107,14 @@ public class TestContract : Contract {
     }
 
     @Serializable
-    public class Move : TypeOnlyCommandData(), ZKCommandData {
+    public class Move : TypeOnlyCommandData(), ZKCommandData, ZKTransactionMetadataCommandData {
+        @Transient
+        override val transactionMetadata: ZKTransactionMetadata = transactionMetadata {
+            commands {
+                +Move::class
+            }
+        }
+
         @Transient
         override val metadata: ZKCommandMetadata = commandMetadata {
             private = true

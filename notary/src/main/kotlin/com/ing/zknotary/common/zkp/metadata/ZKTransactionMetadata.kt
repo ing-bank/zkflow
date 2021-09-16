@@ -1,15 +1,15 @@
-package com.ing.zknotary.common.zkp
+package com.ing.zknotary.common.zkp.metadata
 
 import com.ing.zknotary.common.contracts.ZKCommandData
 import com.ing.zknotary.common.contracts.ZKTransactionMetadataCommandData
 import com.ing.zknotary.common.transactions.ZKTransactionBuilder
+import com.ing.zknotary.common.zkp.ZKFlow.DEFAULT_ZKFLOW_CONTRACT_ATTACHMENT_CONSTRAINT
 import com.ing.zknotary.common.zkp.ZKFlow.DEFAULT_ZKFLOW_SIGNATURE_SCHEME
+import com.ing.zknotary.common.zkp.ZKFlow.requireSupportedContractAttachmentConstraint
 import com.ing.zknotary.common.zkp.ZKFlow.requireSupportedSignatureScheme
 import net.corda.core.contracts.AttachmentConstraint
 import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.ContractState
-import net.corda.core.contracts.SignatureAttachmentConstraint
-import net.corda.core.crypto.Crypto
 import net.corda.core.crypto.SignatureScheme
 import net.corda.core.internal.objectOrNewInstance
 import net.corda.core.utilities.loggerFor
@@ -19,20 +19,6 @@ import kotlin.reflect.KClass
 import kotlin.reflect.full.declaredMemberExtensionProperties
 import kotlin.reflect.full.extensionReceiverParameter
 import kotlin.reflect.full.isSubclassOf
-
-object ZKFlow {
-    val DEFAULT_ZKFLOW_SIGNATURE_SCHEME = Crypto.EDDSA_ED25519_SHA512
-
-    fun requireSupportedSignatureScheme(scheme: SignatureScheme) {
-        /**
-         * Initially, we only support Crypto.EDDSA_ED25519_SHA512.
-         * Later, we may support all scheme supported by Corda: `require(participantSignatureScheme in supportedSignatureSchemes())`
-         */
-        require(scheme == Crypto.EDDSA_ED25519_SHA512) {
-            "Unsupported signature scheme: ${scheme.schemeCodeName}. Only ${Crypto.EDDSA_ED25519_SHA512.schemeCodeName} is supported."
-        }
-    }
-}
 
 @DslMarker
 annotation class ZKTransactionMetadataDSL
@@ -52,12 +38,13 @@ data class ZKNotary(
 @ZKTransactionMetadataDSL
 data class ZKNetwork(
     var participantSignatureScheme: SignatureScheme = DEFAULT_ZKFLOW_SIGNATURE_SCHEME,
-    var attachmentConstraintType: KClass<out AttachmentConstraint> = SignatureAttachmentConstraint::class
+    var attachmentConstraintType: KClass<out AttachmentConstraint> = DEFAULT_ZKFLOW_CONTRACT_ATTACHMENT_CONSTRAINT
 ) {
     var notary = ZKNotary()
 
     init {
         requireSupportedSignatureScheme(participantSignatureScheme)
+        requireSupportedContractAttachmentConstraint(attachmentConstraintType)
     }
 
     fun notary(init: ZKNotary.() -> Unit) = notary.apply(init)
@@ -95,16 +82,16 @@ class ZKCommandList : ArrayList<KClass<out CommandData>>() {
                  * Metadata extension properties for non-ZKCommandData commands should be defined in one of the known commands in the command list.
                  * That way, users can define metadata for commands that they use, without those commands having to support ZKFlow.
                  */
-                findMetadata(command).resolved
+                findMetadataExtension(command).resolved
             }
         }
     }
 
-    private fun findMetadata(command: CommandData): ZKCommandMetadata {
+    private fun findMetadataExtension(command: CommandData): ZKCommandMetadata {
         forEach { otherCommand ->
             if (otherCommand != command::class) {
                 val metadataProperty = otherCommand.declaredMemberExtensionProperties.find { kProperty2 ->
-                    kProperty2.name == "metadata" &&
+                    kProperty2.name == ZKCommandData.METADATA_FIELD_NAME &&
                         kProperty2.returnType.classifier == ZKCommandMetadata::class &&
                         kProperty2.extensionReceiverParameter?.type?.classifier == command::class
                 }
@@ -157,16 +144,16 @@ data class ResolvedZKTransactionMetadata(
 
         const val ERROR_NO_COMMANDS = "There should be at least one commmand in a ZKFlow transaction"
         const val ERROR_FIRST_COMMAND_NOT_TX_METADATA =
-            "The first command in a ZKFLow transaction should always be a `ZKTransactionMetadataCommandData`."
-        const val ERROR_FIRST_COMMAND_NOT_PRIVATE = "The first command in a ZKFLow transaction should always be private."
-        const val ERROR_COMMANDS_NOT_UNIQUE = "Multiple commands of one type found. All commands in a ZKFLow transaction should be unique."
+            "The first command in a ZKFLow transaction should always be a `ZKTransactionMetadataCommandData`"
+        const val ERROR_FIRST_COMMAND_NOT_PRIVATE = "The first command in a ZKFLow transaction should always be private"
+        const val ERROR_COMMAND_NOT_UNIQUE = "Multiple commands of one type found. All commands in a ZKFLow transaction should be unique"
     }
 
     init {
         require(commands.isNotEmpty()) { ERROR_NO_COMMANDS }
         require(commands.first().commandKClass.isSubclassOf(ZKTransactionMetadataCommandData::class)) { ERROR_FIRST_COMMAND_NOT_TX_METADATA }
         require(commands.first() is PrivateResolvedZKCommandMetadata) { ERROR_FIRST_COMMAND_NOT_PRIVATE }
-        require(commands.distinctBy { it.commandKClass }.size == commands.size) { ERROR_COMMANDS_NOT_UNIQUE }
+        require(commands.distinctBy { it.commandKClass }.size == commands.size) { ERROR_COMMAND_NOT_UNIQUE }
     }
 
     private val privateCommands = commands.filterIsInstance<PrivateResolvedZKCommandMetadata>()

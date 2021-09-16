@@ -45,8 +45,9 @@ class TransactionVerificationTest {
 
     private val zincZKTransactionService: ZincZKTransactionService = ZincZKTransactionService(MockServices())
 
-    private val createZKService = zincZKTransactionService.zkServiceForTransactionMetadata(TestContract.Create())
-    private val moveZKService = zincZKTransactionService.zkServiceForTransactionMetadata(TestContract.Move())
+    private val createZKService =
+        zincZKTransactionService.zkServiceForTransactionMetadata(TestContract.Create().transactionMetadata.resolved)
+    private val moveZKService = zincZKTransactionService.zkServiceForTransactionMetadata(TestContract.Move().transactionMetadata.resolved)
 
     private val notary = ZKNulls.NULL_PARTY
 
@@ -88,8 +89,9 @@ class TransactionVerificationTest {
     fun `zinc verifies full create transaction`() = withCustomSerializationEnv {
         val alice = ZKNulls.NULL_ANONYMOUS_PARTY
 
-        val additionalSerializationPropertiesForCreate =
-            mapOf<Any, Any>(BFLSerializationScheme.CONTEXT_KEY_CIRCUIT to TestContract.Create().circuit)
+        val additionalSerializationPropertiesForCreate = mapOf<Any, Any>(
+            BFLSerializationScheme.CONTEXT_KEY_TRANSACTION_METADATA to TestContract.Create().transactionMetadata.resolved
+        )
 
         // Create TX
         val createState = TestContract.TestState(alice, value = 88)
@@ -120,8 +122,10 @@ class TransactionVerificationTest {
         // Move TX
 
         val bob = ZKNulls.NULL_ANONYMOUS_PARTY
-        val additionalSerializationPropertiesForMove =
-            mapOf<Any, Any>(BFLSerializationScheme.CONTEXT_KEY_CIRCUIT to TestContract.Move().circuit)
+
+        val additionalSerializationPropertiesForMove = mapOf<Any, Any>(
+            BFLSerializationScheme.CONTEXT_KEY_TRANSACTION_METADATA to TestContract.Move().transactionMetadata.resolved
+        )
 
         val utxo = createWtx.outRef<TestContract.TestState>(0)
         val serializedUtxo = createWtx.componentGroups.single { it.groupIndex == ComponentGroupEnum.OUTPUTS_GROUP.ordinal }.components[0]
@@ -143,7 +147,7 @@ class TransactionVerificationTest {
 
         val moveWitness = Witness.fromWireTransaction(
             wtx = moveWtx,
-            inputUtxoInfos = listOf(UtxoInfo(utxo.ref, serializedUtxo.bytes, nonce, utxo.state.data.javaClass.canonicalName)),
+            inputUtxoInfos = listOf(UtxoInfo(utxo.ref, serializedUtxo.bytes, nonce, utxo.state.data::class)),
             referenceUtxoInfos = emptyList()
         )
 

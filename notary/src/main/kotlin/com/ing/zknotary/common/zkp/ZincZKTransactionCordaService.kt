@@ -1,6 +1,7 @@
 package com.ing.zknotary.common.zkp
 
 import com.ing.zknotary.common.contracts.ZKTransactionMetadataCommandData
+import com.ing.zknotary.common.zkp.metadata.ResolvedZKTransactionMetadata
 import net.corda.core.node.AppServiceHub
 import net.corda.core.node.ServiceHub
 import net.corda.core.node.services.CordaService

@@ -4,6 +4,7 @@ import com.ing.zknotary.common.serialization.json.corda.WitnessSerializer
 import com.ing.zknotary.common.transactions.StateOrdering.ordered
 import com.ing.zknotary.common.transactions.UtxoInfo
 import com.ing.zknotary.common.transactions.zkTransactionMetadata
+import com.ing.zknotary.common.zkp.metadata.ZincType
 import kotlinx.serialization.Serializable
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.PrivacySalt
