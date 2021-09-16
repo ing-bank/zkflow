@@ -64,21 +64,6 @@ class CollectSignaturesFlowTest {
     }
 
     @Test
-    @Timeout(300)
-    fun `Signing only on Initiator side`() {
-        val p = TestCollectZKSignaturesFlow()
-        val future = miniCorpNode.startFlow(p)
-        mockNet.runNetwork()
-        val svtx = future.getOrThrow()
-
-        // Check signatures
-        svtx.sigs.size shouldBe 1
-        svtx.sigs.forEach {
-            it.verify(svtx.id)
-        }
-    }
-
-    @Test
     @Timeout(60)
     fun `Signing on two sides`() {
 

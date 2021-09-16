@@ -35,6 +35,16 @@ import net.corda.core.transactions.WireTransaction
 import net.corda.core.transactions.WireTransaction.Companion.resolveStateRefBinaryComponent
 import java.security.PublicKey
 import java.util.function.Predicate
+import kotlin.reflect.KClass
+
+/**
+ * Note that this is the Java name, which ensures it can be loaded with Class.forName.
+ * This is especially important with nested classes, which are designated as 'ContainerClass$NestedClass'
+ * when using `jave.name`. Otherwise it would be 'ContainerClass.NestedClas', which results in a ClassNotFoundException.
+ */
+
+val KClass<out ContractState>.qualifiedContractClassName: String
+    get() = java.name ?: error("Contract state classes must be a named class")
 
 fun ServiceHub.collectUtxoInfos(
     stateRefs: List<StateRef>
@@ -54,7 +64,7 @@ fun ServiceHub.collectUtxoInfos(
 
             val stateClass = prevStx.tx.outputs[it.index].data::class
 
-            UtxoInfo(it, serializedUtxo, nonce, stateClass)
+            UtxoInfo.build(it, serializedUtxo, nonce, stateClass)
         }
 
     val collectFromUtxoInfoStorage: (StateRef) -> UtxoInfo =

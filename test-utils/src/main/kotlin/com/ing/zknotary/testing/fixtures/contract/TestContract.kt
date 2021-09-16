@@ -101,13 +101,24 @@ public class TestContract : Contract {
      * This command is only used on [CollectSignaturesFlowTest]. It expects two signatures, but nothing else.
      */
     @Serializable
-    public class SignOnly : TypeOnlyCommandData(), ZKCommandData {
+    public class SignOnly : ZKTransactionMetadataCommandData {
         @Transient
-        override val metadata: ZKCommandMetadata = commandMetadata {}
+        override val transactionMetadata: ZKTransactionMetadata = transactionMetadata {
+            commands {
+                +SignOnly::class
+            }
+        }
+
+        @Transient
+        override val metadata: ZKCommandMetadata = commandMetadata {
+            private = true
+            outputs { 1 of TestState::class }
+            numberOfSigners = 2
+        }
     }
 
     @Serializable
-    public class Move : TypeOnlyCommandData(), ZKCommandData, ZKTransactionMetadataCommandData {
+    public class Move : ZKTransactionMetadataCommandData {
         @Transient
         override val transactionMetadata: ZKTransactionMetadata = transactionMetadata {
             commands {
@@ -124,7 +135,7 @@ public class TestContract : Contract {
             }
             inputs { 1 of TestState::class }
             outputs { 1 of TestState::class }
-            numberOfSigners = 1
+            numberOfSigners = 2
         }
 
         public companion object {
@@ -141,15 +152,24 @@ public class TestContract : Contract {
                 val input = tx.getInput(0) as TestState
 
                 if (input.owner.owningKey !in command.signers) throw IllegalArgumentException("Failed requirement: the input state is owned by a required command signer")
+                if (output.owner.owningKey !in command.signers) throw IllegalArgumentException("Failed requirement: the outputs state is owned by a required command signer")
                 if (input.value != output.value) throw IllegalArgumentException("Failed requirement: the value of the input and out put should be equal")
             }
         }
     }
 
     @Serializable
-    public class MoveBidirectional : ZKCommandData {
+    public class MoveBidirectional : ZKTransactionMetadataCommandData {
+        @Transient
+        override val transactionMetadata: ZKTransactionMetadata = transactionMetadata {
+            commands {
+                +MoveBidirectional::class
+            }
+        }
+
         @Transient
         override val metadata: ZKCommandMetadata = commandMetadata {
+            private = true
             inputs { 2 of TestState::class }
             outputs { 2 of TestState::class }
             numberOfSigners = 2

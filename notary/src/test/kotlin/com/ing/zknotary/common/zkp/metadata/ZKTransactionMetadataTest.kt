@@ -61,7 +61,7 @@ class ZKTransactionMetadataTest {
 
             commands {
                 +TestContract.Create::class
-                +TestContract.SignOnly::class // We also support this common patter for adding things to collections
+                +TestContract.SignOnly::class
             }
         }
 

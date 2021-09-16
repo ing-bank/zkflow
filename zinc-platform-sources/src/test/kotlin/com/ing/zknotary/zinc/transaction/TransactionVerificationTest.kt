@@ -32,11 +32,14 @@ import net.corda.coretesting.internal.asTestContextEnv
 import net.corda.coretesting.internal.createTestSerializationEnv
 import net.corda.testing.node.MockServices
 import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.time.Instant
 import kotlin.time.ExperimentalTime
 
+// TODO: re-enable this. Only disabled for draft PR discussion
+@Disabled("Temporarily disabled, until we decide on where circuit artifacts will go")
 @ExperimentalTime
 @Tag("slow")
 class TransactionVerificationTest {
@@ -147,7 +150,14 @@ class TransactionVerificationTest {
 
         val moveWitness = Witness.fromWireTransaction(
             wtx = moveWtx,
-            inputUtxoInfos = listOf(UtxoInfo(utxo.ref, serializedUtxo.bytes, nonce, utxo.state.data::class)),
+            inputUtxoInfos = listOf(
+                UtxoInfo.build(
+                    utxo.ref,
+                    serializedUtxo.bytes,
+                    nonce,
+                    utxo.state.data::class
+                )
+            ),
             referenceUtxoInfos = emptyList()
         )
 

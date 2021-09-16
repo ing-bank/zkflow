@@ -13,7 +13,7 @@ import net.corda.core.serialization.CordaSerializable
 import kotlin.reflect.KClass
 
 @CordaSerializable
-class UtxoInfo(
+class UtxoInfo private constructor(
     val stateRef: StateRef,
 
     /**
@@ -21,8 +21,22 @@ class UtxoInfo(
      */
     val serializedContents: ByteArray,
     val nonce: SecureHash,
-    val stateClass: KClass<out ContractState>
+    private val stateClassName: String
 ) {
+    companion object {
+        fun build(stateRef: StateRef, serializedContents: ByteArray, nonce: SecureHash, stateClass: KClass<out ContractState>): UtxoInfo {
+            return UtxoInfo(stateRef, serializedContents, nonce, stateClass.qualifiedContractClassName)
+        }
+    }
+
+    @Suppress("UNCHECKED_CAST") // The whole idea is that we try it and fail if not what we expect
+    val stateClass: KClass<out ContractState> by lazy {
+        Class.forName(stateClassName)
+            .kotlin
+            as? KClass<out ContractState>
+            ?: error("$stateClassName is not a ContractState")
+    }
+
     /**
      * This function verifies that the serialized content hashed with the nonce matches
      * the actual output hash for StateRef in the ZKP chain that was previously resolved
