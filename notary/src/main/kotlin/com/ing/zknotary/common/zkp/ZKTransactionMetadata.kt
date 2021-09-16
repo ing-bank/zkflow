@@ -11,11 +11,13 @@ import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.SignatureAttachmentConstraint
 import net.corda.core.crypto.Crypto
 import net.corda.core.crypto.SignatureScheme
-import net.corda.core.internal.lazyMapped
 import net.corda.core.internal.objectOrNewInstance
+import net.corda.core.utilities.loggerFor
 import java.io.File
 import java.time.Duration
 import kotlin.reflect.KClass
+import kotlin.reflect.full.declaredMemberExtensionProperties
+import kotlin.reflect.full.extensionReceiverParameter
 import kotlin.reflect.full.isSubclassOf
 
 object ZKFlow {
@@ -63,18 +65,64 @@ data class ZKNetwork(
 
 @ZKTransactionMetadataDSL
 class ZKCommandList : ArrayList<KClass<out CommandData>>() {
-    fun command(command: KClass<out CommandData>): Boolean {
-        require(!contains(command)) { "The transaction already contains a '$command'. ZKFLow transactions can only contain one of each command" }
+    private val log = loggerFor<ZKCommandList>()
 
-        return add(command)
+    class CommandNotObjectOrNoArgConstructorException(command: KClass<out CommandData>) :
+        IllegalArgumentException("Command not supported: '$command'. $ERROR_COMMAND_NOT_OBJECT_OR_NOARG")
+
+    class CommandNoMetadataFound(command: KClass<out CommandData>) :
+        IllegalArgumentException("Command not supported: '$command'. $ERROR_COMMAND_NO_METADATA_FOUND")
+
+    companion object {
+        const val ERROR_COMMAND_NOT_UNIQUE = "Multiple commands of one type found. All commands in a ZKFLow transaction should be unique"
+        const val ERROR_COMMAND_NOT_OBJECT_OR_NOARG =
+            "ZKFlow only supports commands that are objects or that have a no arguments constructor"
+        const val ERROR_COMMAND_NO_METADATA_FOUND = "No command metadata property found"
     }
 
-    operator fun KClass<out CommandData>.unaryPlus() = command(this)
+    operator fun KClass<out CommandData>.unaryPlus() {
+        require(!contains(this)) { ERROR_COMMAND_NOT_UNIQUE }
+        add(this)
+    }
 
-    fun resolve(): List<ResolvedZKCommandMetadata> {
-        return lazyMapped { kClass, _ ->
-            val command = kClass.objectOrNewInstance() as ZKCommandData
-            command.metadata.resolve()
+    val resolved: List<ResolvedZKCommandMetadata> by lazy {
+        map { kClass ->
+            val command = getCommandInstance(kClass)
+            if (command is ZKCommandData) {
+                command.metadata.resolved
+            } else {
+                /**
+                 * Metadata extension properties for non-ZKCommandData commands should be defined in one of the known commands in the command list.
+                 * That way, users can define metadata for commands that they use, without those commands having to support ZKFlow.
+                 */
+                findMetadata(command).resolved
+            }
+        }
+    }
+
+    private fun findMetadata(command: CommandData): ZKCommandMetadata {
+        forEach { otherCommand ->
+            if (otherCommand != command::class) {
+                val metadataProperty = otherCommand.declaredMemberExtensionProperties.find { kProperty2 ->
+                    kProperty2.name == "metadata" &&
+                        kProperty2.returnType.classifier == ZKCommandMetadata::class &&
+                        kProperty2.extensionReceiverParameter?.type?.classifier == command::class
+                }
+                val metadata = metadataProperty?.getter?.call(getCommandInstance(otherCommand), command) as? ZKCommandMetadata
+                if (metadata != null) return metadata
+            }
+        }
+        throw CommandNoMetadataFound(command::class)
+    }
+
+    /**
+     * TODO: see if caching this is worth it, since most likely this will be called a second time from `findMetadata`.
+     */
+    private fun getCommandInstance(kClass: KClass<out CommandData>): CommandData {
+        return try {
+            kClass.objectOrNewInstance()
+        } catch (e: IllegalArgumentException) {
+            throw CommandNotObjectOrNoArgConstructorException(kClass)
         }
     }
 }
@@ -95,7 +143,7 @@ class ZKTransactionMetadata {
     val resolved: ResolvedZKTransactionMetadata by lazy {
         ResolvedZKTransactionMetadata(
             network,
-            commands.resolve()
+            commands.resolved
         )
     }
 }
@@ -106,14 +154,22 @@ data class ResolvedZKTransactionMetadata(
 ) {
     companion object {
         private val DEFAULT_CIRCUIT_BUILD_FOLDER_PARENT_PATH = "${System.getProperty("user.dir")}/build/zinc/transactions/"
+
+        const val ERROR_NO_COMMANDS = "There should be at least one commmand in a ZKFlow transaction"
+        const val ERROR_FIRST_COMMAND_NOT_TX_METADATA =
+            "The first command in a ZKFLow transaction should always be a `ZKTransactionMetadataCommandData`."
+        const val ERROR_FIRST_COMMAND_NOT_PRIVATE = "The first command in a ZKFLow transaction should always be private."
+        const val ERROR_COMMANDS_NOT_UNIQUE = "Multiple commands of one type found. All commands in a ZKFLow transaction should be unique."
     }
 
     init {
-        require(commands.first().commandKClass.isSubclassOf(ZKTransactionMetadataCommandData::class)) { "The first command in a ZKFLow transaction should always be a `ZKTransactionMetadataCommandData`." }
-        require(commands.first() is PrivateResolvedZKCommandMetadata) { "The first command in a ZKFLow transaction should always be private." }
+        require(commands.isNotEmpty()) { ERROR_NO_COMMANDS }
+        require(commands.first().commandKClass.isSubclassOf(ZKTransactionMetadataCommandData::class)) { ERROR_FIRST_COMMAND_NOT_TX_METADATA }
+        require(commands.first() is PrivateResolvedZKCommandMetadata) { ERROR_FIRST_COMMAND_NOT_PRIVATE }
+        require(commands.distinctBy { it.commandKClass }.size == commands.size) { ERROR_COMMANDS_NOT_UNIQUE }
     }
 
-    val privateCommands = commands.filterIsInstance<PrivateResolvedZKCommandMetadata>()
+    private val privateCommands = commands.filterIsInstance<PrivateResolvedZKCommandMetadata>()
 
     /**
      * The total number of signers of all commands added up.
@@ -169,6 +225,8 @@ data class ResolvedZKTransactionMetadata(
         try {
             verifyCommands(txb)
             verifyOutputs(txb)
+            // TODO: verify all components
+            // TODO: verify that sig schemes and attachment constraints, etc. from all commands and the tx match
         } catch (e: IllegalArgumentException) {
             throw IllegalTransactionStructureException(e)
         }

@@ -18,16 +18,15 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.CommandAndState
+import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.Contract
 import net.corda.core.contracts.ContractClassName
 import net.corda.core.contracts.HashAttachmentConstraint
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.transactions.LedgerTransaction
-import net.corda.core.utilities.seconds
 import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
 import org.junit.jupiter.api.Test
-import java.io.File
 import java.util.Random
 import kotlin.time.ExperimentalTime
 
@@ -38,7 +37,7 @@ class ZKTransactionMetadataTest {
     private val issuer = TestIdentity.fixed("Issuer").party.anonymise()
 
     @Test
-    fun `The transaction builder must match the resolved transaction metadata`() {
+    fun `The transaction builder must match structure from transaction metadata`() {
         services.zkLedger(zkService = MockZKTransactionService(services)) {
             zkTransaction {
                 output(MockAssetContract.ID, MockAssetContract.MockAsset(issuer))
@@ -60,7 +59,7 @@ class ZKTransactionMetadataTest {
             }
 
             commands {
-                command(TestContract.Create::class)
+                +TestContract.Create::class
                 +TestContract.SignOnly::class // We also support this common patter for adding things to collections
             }
         }
@@ -71,34 +70,66 @@ class ZKTransactionMetadataTest {
     }
 
     @Test
+    fun `No commands fails`() {
+        shouldThrow<IllegalArgumentException> {
+            transactionMetadata {}.resolved
+        }.also {
+            it.message shouldBe ResolvedZKTransactionMetadata.ERROR_NO_COMMANDS
+        }
+    }
+
+    @Test
+    fun `Metadata extension function is found`() {
+        val metadata = transactionMetadata {
+            commands {
+                +MockAssetContract.IssueWithNonZKPCommand::class
+                +MockThirdPartyNonZKPContract.ThirdPartyNonZKPCommand::class
+            }
+        }.resolved
+        metadata.commands[1].numberOfSigners shouldBe 7
+    }
+
+    @Test
     fun `Multiple commands of one type fails`() {
         shouldThrow<IllegalArgumentException> {
             transactionMetadata {
                 commands {
-                    +TestContract.SignOnly::class
-                    +TestContract.SignOnly::class
+                    +MockAssetContract.Issue::class
+                    +MockAssetContract.Issue::class
                 }
-            }
+            }.resolved
+        }.also {
+            it.message shouldBe ResolvedZKTransactionMetadata.ERROR_COMMANDS_NOT_UNIQUE
         }
     }
 }
-
-val DUMMY_CIRCUIT_METADATA = CircuitMetaData(
-    name = "Dummy",
-    componentGroupSizes = mapOf(),
-    javaClass2ZincType = emptyMap(),
-    buildFolder = File(""),
-    buildTimeout = 1.seconds,
-    setupTimeout = 1.seconds,
-    provingTimeout = 1.seconds,
-    verificationTimeout = 1.seconds,
-)
 
 val mockSerializers = run {
     ContractStateSerializerMap.register(MockAuditContract.Approval::class, 9993, MockAuditContract.Approval.serializer())
     CommandDataSerializerMap.register(MockAssetContract.Issue::class, 9992, MockAssetContract.Issue.serializer())
     CommandDataSerializerMap.register(MockAuditContract.Approve::class, 9994, MockAuditContract.Approve.serializer())
     ContractStateSerializerMap.register(MockAssetContract.MockAsset::class, 9991, MockAssetContract.MockAsset.serializer())
+}
+
+/**
+ * MockNonZKPContract is a third party contract.
+ * This means we can't annotate it, nor change its contents.
+ */
+class MockThirdPartyNonZKPContract : Contract {
+    companion object {
+        const val ID: ContractClassName = "com.ing.zknotary.common.zkp.MockAuditContract"
+    }
+
+    /**
+     * This command is third party, and not ZKCommandData.
+     * If this command is used in a ZKFlow transaction, ZKFlow will still require
+     * command metadata, so it can determine total component group/witness size.
+     * It will look for extension functions defined in known ZKCommandData classes.
+     */
+    @Serializable
+    class ThirdPartyNonZKPCommand : CommandData
+
+    override fun verify(tx: LedgerTransaction) {}
 }
 
 /**
@@ -171,6 +202,31 @@ class MockAssetContract : Contract {
             commands {
                 +Issue::class
                 +MockAuditContract.Approve::class
+            }
+        }
+
+        @Transient
+        override val metadata = commandMetadata {
+            private = true
+            numberOfSigners = 1
+            outputs { 1 of MockAsset::class }
+            timewindow()
+        }
+    }
+
+    @Serializable
+    class IssueWithNonZKPCommand : ZKCommandData, ZKTransactionMetadataCommandData {
+        val MockThirdPartyNonZKPContract.ThirdPartyNonZKPCommand.metadata: ZKCommandMetadata
+            get() = commandMetadata {
+                numberOfSigners = 7
+                timewindow()
+            }
+
+        @Transient
+        override val transactionMetadata = transactionMetadata {
+            commands {
+                +IssueWithNonZKPCommand::class
+                +MockThirdPartyNonZKPContract.ThirdPartyNonZKPCommand::class
             }
         }
 

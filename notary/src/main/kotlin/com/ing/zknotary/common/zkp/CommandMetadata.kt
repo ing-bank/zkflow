@@ -192,8 +192,8 @@ class ZKCommandMetadata(val commandKClass: KClass<out CommandData>) {
         timeWindow = true
     }
 
-    fun resolve(): ResolvedZKCommandMetadata {
-        return if (private) {
+    val resolved: ResolvedZKCommandMetadata by lazy {
+        if (private) {
             PrivateResolvedZKCommandMetadata(
                 ResolvedZKCircuit.resolve(this, circuit),
                 commandKClass,
