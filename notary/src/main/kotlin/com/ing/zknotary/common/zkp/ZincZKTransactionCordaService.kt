@@ -45,7 +45,7 @@ open class ZincZKTransactionService(services: ServiceHub) : AbstractZKTransactio
         while (CircuitManager[circuit] == CircuitManager.Status.InProgress) {
             // An upper waiting time bound can be set up,
             // but this bound may be overly pessimistic.
-            Thread.sleep(10 * 1000)
+            Thread.sleep(10000L)
         }
 
         if (CircuitManager[circuit] == CircuitManager.Status.Outdated) {

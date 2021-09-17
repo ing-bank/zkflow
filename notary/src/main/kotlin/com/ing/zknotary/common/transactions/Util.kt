@@ -43,7 +43,7 @@ import kotlin.reflect.KClass
  * when using `jave.name`. Otherwise it would be 'ContainerClass.NestedClas', which results in a ClassNotFoundException.
  */
 
-val KClass<out ContractState>.qualifiedContractClassName: String
+val KClass<out ContractState>.qualifiedStateClassName: String
     get() = java.name ?: error("Contract state classes must be a named class")
 
 fun ServiceHub.collectUtxoInfos(

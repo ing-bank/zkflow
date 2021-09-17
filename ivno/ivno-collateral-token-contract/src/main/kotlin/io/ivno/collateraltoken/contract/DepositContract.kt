@@ -1,6 +1,7 @@
 package io.ivno.collateraltoken.contract
 
 import com.ing.zknotary.common.contracts.ZKTransactionMetadataCommandData
+import com.ing.zknotary.common.transactions.zkFLowMetadata
 import com.ing.zknotary.common.zkp.metadata.ZKCommandMetadata
 import com.ing.zknotary.common.zkp.metadata.ZKTransactionMetadata
 import com.ing.zknotary.common.zkp.metadata.commandMetadata
@@ -86,6 +87,8 @@ class DepositContract : Contract {
             "On deposit requesting, the depositor must sign the transaction."
 
         override fun verify(tx: LedgerTransaction, signers: Set<PublicKey>) = requireThat {
+            tx.zkFLowMetadata.verify(tx)
+
             val depositInputs = tx.inputsOfType<Deposit>()
             val depositOutputs = tx.outputsOfType<Deposit>()
             val tokenTypeReferences = tx.referenceInputsOfType<IvnoTokenType>()
@@ -128,6 +131,7 @@ class DepositContract : Contract {
             commands {
                 +Request::class
             }
+            numberOfCorDappsForContracts = 4
         }
 
         @Transient
@@ -202,6 +206,8 @@ class DepositContract : Contract {
             "On deposit advancing, the required signing participants must sign the transaction."
 
         override fun verify(tx: LedgerTransaction, signers: Set<PublicKey>) = requireThat {
+            tx.zkFLowMetadata.verify(tx)
+
             val depositInputs = tx.inputsOfType<Deposit>()
             val depositOutputs = tx.outputsOfType<Deposit>()
             val tokenTypeReferences = tx.referenceInputsOfType<IvnoTokenType>()
@@ -258,6 +264,7 @@ class DepositContract : Contract {
             commands {
                 +Advance::class
             }
+            numberOfCorDappsForContracts = 4
         }
 
         @Transient

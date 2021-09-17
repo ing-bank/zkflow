@@ -25,7 +25,7 @@ class UtxoInfo private constructor(
 ) {
     companion object {
         fun build(stateRef: StateRef, serializedContents: ByteArray, nonce: SecureHash, stateClass: KClass<out ContractState>): UtxoInfo {
-            return UtxoInfo(stateRef, serializedContents, nonce, stateClass.qualifiedContractClassName)
+            return UtxoInfo(stateRef, serializedContents, nonce, stateClass.qualifiedStateClassName)
         }
     }
 

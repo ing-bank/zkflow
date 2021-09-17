@@ -8,7 +8,12 @@ import com.ing.zknotary.common.contracts.ZKTransactionMetadataCommandData
 import com.ing.zknotary.common.serialization.bfl.CommandDataSerializerMap
 import com.ing.zknotary.common.serialization.bfl.ContractStateSerializerMap
 import com.ing.zknotary.common.serialization.bfl.serializers.AnonymousPartySerializer
+import com.ing.zknotary.common.transactions.zkFLowMetadata
+import com.ing.zknotary.common.zkp.ZKFlow
+import com.ing.zknotary.common.zkp.metadata.MockAssetContract.IssueWithNonZKPCommand.Companion.metadata
 import com.ing.zknotary.common.zkp.metadata.ZKCommandList.Companion.ERROR_COMMAND_NOT_UNIQUE
+import com.ing.zknotary.common.zkp.metadata.ZKTransactionMetadata.Companion.ERROR_COMMANDS_ALREADY_SET
+import com.ing.zknotary.common.zkp.metadata.ZKTransactionMetadata.Companion.ERROR_NETWORK_ALREADY_SET
 import com.ing.zknotary.testing.dsl.zkLedger
 import com.ing.zknotary.testing.fixed
 import com.ing.zknotary.testing.fixtures.contract.TestContract
@@ -23,6 +28,7 @@ import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.Contract
 import net.corda.core.contracts.ContractClassName
 import net.corda.core.contracts.HashAttachmentConstraint
+import net.corda.core.contracts.SignatureAttachmentConstraint
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.transactions.LedgerTransaction
 import net.corda.testing.core.TestIdentity
@@ -87,7 +93,41 @@ class ZKTransactionMetadataTest {
                 +MockThirdPartyNonZKPContract.ThirdPartyNonZKPCommand::class
             }
         }.resolved
-        metadata.commands[1].numberOfSigners shouldBe 7
+
+        val expectedMetadata = MockThirdPartyNonZKPContract.ThirdPartyNonZKPCommand().metadata
+        metadata.commands[1].numberOfSigners shouldBe expectedMetadata.numberOfSigners
+    }
+
+    @Test
+    fun `Adding network multiple times is illegal`() {
+        shouldThrow<IllegalStateException> {
+            transactionMetadata {
+                network {
+                    attachmentConstraintType = HashAttachmentConstraint::class
+                }
+                network {
+                    participantSignatureScheme = ZKFlow.DEFAULT_ZKFLOW_SIGNATURE_SCHEME
+                }
+            }
+        }.also {
+            it.message shouldBe ERROR_NETWORK_ALREADY_SET
+        }
+    }
+
+    @Test
+    fun `Adding commands multiple times is illegal`() {
+        shouldThrow<IllegalStateException> {
+            transactionMetadata {
+                commands {
+                    +MockAssetContract.Issue::class
+                }
+                commands {
+                    +MockThirdPartyNonZKPContract.ThirdPartyNonZKPCommand::class
+                }
+            }
+        }.also {
+            it.message shouldBe ERROR_COMMANDS_ALREADY_SET
+        }
     }
 
     @Test
@@ -108,6 +148,11 @@ class ZKTransactionMetadataTest {
 val mockSerializers = run {
     ContractStateSerializerMap.register(MockAuditContract.Approval::class, 9993, MockAuditContract.Approval.serializer())
     CommandDataSerializerMap.register(MockAssetContract.Issue::class, 9992, MockAssetContract.Issue.serializer())
+    CommandDataSerializerMap.register(
+        MockAssetContract.MoveWithIssueApprovalOutput::class,
+        9995,
+        MockAssetContract.MoveWithIssueApprovalOutput.serializer()
+    )
     CommandDataSerializerMap.register(MockAuditContract.Approve::class, 9994, MockAuditContract.Approve.serializer())
     ContractStateSerializerMap.register(MockAssetContract.MockAsset::class, 9991, MockAssetContract.MockAsset.serializer())
 }
@@ -196,6 +241,7 @@ class MockAssetContract : Contract {
     class Issue : ZKCommandData, ZKTransactionMetadataCommandData {
         @Transient
         override val transactionMetadata = transactionMetadata {
+            network { attachmentConstraintType = SignatureAttachmentConstraint::class }
             commands {
                 +Issue::class
                 +MockAuditContract.Approve::class
@@ -211,14 +257,20 @@ class MockAssetContract : Contract {
         }
     }
 
+    /**
+     * This command demonstrates how to add ZKCommandData to third party commands with an extension function.
+     * These extension functions will only be found if located within one of the know ZK commands in a transaction.
+     */
     @Serializable
     class IssueWithNonZKPCommand : ZKCommandData, ZKTransactionMetadataCommandData {
-        @Suppress("unused") // found by reflection
-        val MockThirdPartyNonZKPContract.ThirdPartyNonZKPCommand.metadata: ZKCommandMetadata
-            get() = commandMetadata {
-                numberOfSigners = 7
-                timewindow()
-            }
+        companion object {
+            @Suppress("unused") // found by reflection
+            val MockThirdPartyNonZKPContract.ThirdPartyNonZKPCommand.metadata: ZKCommandMetadata
+                get() = commandMetadata {
+                    numberOfSigners = 7
+                    timewindow()
+                }
+        }
 
         @Transient
         override val transactionMetadata = transactionMetadata {
@@ -237,5 +289,31 @@ class MockAssetContract : Contract {
         }
     }
 
-    override fun verify(tx: LedgerTransaction) {}
+    /**
+     * This command not only moves the MockAsset, but also outputs an Approval.
+     * This makes no sense and is only used to test that the correct calculation of
+     * contract attachments in a tx based on the states found in it, even if there is
+     * no command present for them.
+     */
+    @Serializable
+    class MoveWithIssueApprovalOutput : ZKCommandData, ZKTransactionMetadataCommandData {
+        @Transient
+        override val transactionMetadata = transactionMetadata {
+            commands { +MoveWithIssueApprovalOutput::class }
+            numberOfCorDappsForContracts = 1
+        }
+
+        @Transient
+        override val metadata = commandMetadata {
+            private = true
+            numberOfSigners = 1
+            outputs { 1 of MockAsset::class }
+            outputs { 1 of MockAuditContract.Approval::class }
+            timewindow()
+        }
+    }
+
+    override fun verify(tx: LedgerTransaction) {
+        tx.zkFLowMetadata.verify(tx)
+    }
 }

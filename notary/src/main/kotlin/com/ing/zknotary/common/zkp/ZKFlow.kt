@@ -12,6 +12,8 @@ object ZKFlow {
 
     fun requireSupportedContractAttachmentConstraint(constraint: KClass<out AttachmentConstraint>) {
         /**
+         * Since Corda 4, the SignatureAttachmentConstraint is the recommended constraint. For simplicity, we support only this
+         * until we are forced to do otherwise.
          */
         require(constraint == DEFAULT_ZKFLOW_CONTRACT_ATTACHMENT_CONSTRAINT) {
             "Unsupported contract attachment constraint: $constraint. Only $DEFAULT_ZKFLOW_CONTRACT_ATTACHMENT_CONSTRAINT is supported."

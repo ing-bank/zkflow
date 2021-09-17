@@ -105,7 +105,7 @@ open class BFLSerializationScheme : CustomSerializationScheme {
         logger.debug("Serializing tx component:\t${obj::class}")
 
         val transactionMetadata = context.properties[CONTEXT_KEY_TRANSACTION_METADATA] as? ResolvedZKTransactionMetadata
-        transactionMetadata ?: logger.info("No ResolvedZKTransactionMetadata found, serializing as non-ZKP transaction component: $obj")
+        transactionMetadata ?: logger.info("No ResolvedZKTransactionMetadata found, serializing as non-ZKP transaction component: ${obj::class}")
 
         val serialization = when (obj) {
             is TransactionState<*> -> {
