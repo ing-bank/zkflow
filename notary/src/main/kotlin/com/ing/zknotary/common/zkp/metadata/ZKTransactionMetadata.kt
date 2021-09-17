@@ -8,10 +8,13 @@ import com.ing.zknotary.common.zkp.ZKFlow.DEFAULT_ZKFLOW_SIGNATURE_SCHEME
 import com.ing.zknotary.common.zkp.ZKFlow.requireSupportedContractAttachmentConstraint
 import com.ing.zknotary.common.zkp.ZKFlow.requireSupportedSignatureScheme
 import net.corda.core.contracts.AttachmentConstraint
+import net.corda.core.contracts.Command
 import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.ContractState
+import net.corda.core.contracts.TransactionState
 import net.corda.core.crypto.SignatureScheme
 import net.corda.core.internal.objectOrNewInstance
+import net.corda.core.transactions.LedgerTransaction
 import net.corda.core.utilities.loggerFor
 import java.io.File
 import java.time.Duration
@@ -208,10 +211,21 @@ data class ResolvedZKTransactionMetadata(
     val provingTimeout: Duration = Duration.ofSeconds(privateCommands.sumOf { it.circuit.provingTimeout.seconds })
     val verificationTimeout: Duration = Duration.ofSeconds(privateCommands.sumOf { it.circuit.verificationTimeout.seconds })
 
+    fun verify(ltx: LedgerTransaction) {
+        try {
+            verifyCommands(ltx.commands.map { Command(it.value, it.signers) })
+            verifyOutputs(ltx.outputs)
+            // TODO: verify all components
+            // TODO: verify that sig schemes and attachment constraints, etc. from all commands and the tx match
+        } catch (e: IllegalArgumentException) {
+            throw IllegalTransactionStructureException(e)
+        }
+    }
+
     fun verify(txb: ZKTransactionBuilder) {
         try {
-            verifyCommands(txb)
-            verifyOutputs(txb)
+            verifyCommands(txb.commands())
+            verifyOutputs(txb.outputStates())
             // TODO: verify all components
             // TODO: verify that sig schemes and attachment constraints, etc. from all commands and the tx match
         } catch (e: IllegalArgumentException) {
@@ -222,18 +236,18 @@ data class ResolvedZKTransactionMetadata(
     class IllegalTransactionStructureException(cause: Throwable) :
         IllegalArgumentException("Transaction does not match expected structure.", cause)
 
-    private fun verifyOutputs(txb: ZKTransactionBuilder) {
+    private fun verifyOutputs(outputs: List<TransactionState<*>>) {
         outputTypesFlattened.forEachIndexed { index, kClass ->
-            val actualOutput = txb.outputStates().getOrElse(index) { error("Expected to find an output at index $index, nothing found") }
+            val actualOutput = outputs.getOrElse(index) { error("Expected to find an output at index $index, nothing found") }
             require(actualOutput.data::class == kClass) {
                 "Unexpected output order. Expected '$kClass' at index $index, but found '${actualOutput.data::class}'"
             }
         }
     }
 
-    private fun verifyCommands(txb: ZKTransactionBuilder) {
+    private fun verifyCommands(unverifiedCommands: List<Command<*>>) {
         commands.forEachIndexed { index, expectedCommandMetadata ->
-            val actualCommand = txb.commands().getOrElse(index) { error("Expected to find a command at index $index, nothing found") }
+            val actualCommand = unverifiedCommands.getOrElse(index) { error("Expected to find a command at index $index, nothing found") }
 
             require(actualCommand.value::class == expectedCommandMetadata.commandKClass) {
                 "Expected command at index $index to be '${expectedCommandMetadata.commandKClass}', but found '${actualCommand.value::class}'"

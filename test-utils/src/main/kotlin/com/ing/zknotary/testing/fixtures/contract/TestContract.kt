@@ -6,6 +6,7 @@ import com.ing.zknotary.common.contracts.ZKOwnableState
 import com.ing.zknotary.common.contracts.ZKTransactionMetadataCommandData
 import com.ing.zknotary.common.serialization.bfl.CommandDataSerializerMap
 import com.ing.zknotary.common.serialization.bfl.ContractStateSerializerMap
+import com.ing.zknotary.common.transactions.zkFLowMetadata
 import com.ing.zknotary.common.zkp.metadata.ZKCommandMetadata
 import com.ing.zknotary.common.zkp.metadata.ZKTransactionMetadata
 import com.ing.zknotary.common.zkp.metadata.commandMetadata
@@ -86,8 +87,7 @@ public class TestContract : Contract {
                 command: CommandWithParties<CommandData>
             ) {
                 // Transaction structure
-                if (tx.outputs.size != 1) throw IllegalArgumentException("Failed requirement: the tx has only one output")
-                if (tx.inputs.isNotEmpty()) throw IllegalArgumentException("Failed requirement: the tx has no inputs")
+                tx.zkFLowMetadata.verify(tx)
 
                 // Transaction contents
                 val output = tx.getOutput(0) as TestState
@@ -144,8 +144,7 @@ public class TestContract : Contract {
                 command: CommandWithParties<CommandData>
             ) {
                 // Transaction structure
-                if (tx.outputs.size != 1) throw IllegalArgumentException("Failed requirement: the tx has only one output")
-                if (tx.inputs.size != 1) throw IllegalArgumentException("Failed requirement: the tx has only one input")
+                tx.zkFLowMetadata.verify(tx)
 
                 // Transaction contents
                 val output = tx.getOutput(0) as TestState
@@ -181,8 +180,7 @@ public class TestContract : Contract {
                 command: CommandWithParties<CommandData>
             ) {
                 // Transaction structure
-                if (tx.outputs.size != 2) throw IllegalArgumentException("Failed requirement: the tx has two outputs")
-                if (tx.inputs.size != 2) throw IllegalArgumentException("Failed requirement: the tx has two inputs")
+                tx.zkFLowMetadata.verify(tx)
 
                 if (tx.inputStates.sumBy { (it as TestState).value } != tx.outputStates.sumBy { (it as TestState).value }) throw IllegalArgumentException(
                     "Failed requirement: amounts are not conserved"
@@ -208,8 +206,7 @@ public class TestContract : Contract {
 
     override fun verify(tx: LedgerTransaction) {
         // The transaction may have only one command, of a type defined above
-        if (tx.commands.size != 1) throw IllegalArgumentException("Failed requirement: the tx has only one command")
-        val command = tx.commands[0]
+        val command = tx.commands.first()
 
         when (command.value) {
             is Create -> verifyCreate(tx, command)

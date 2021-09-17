@@ -5,6 +5,7 @@ import com.ing.zknotary.common.contracts.ZKContractState
 import com.ing.zknotary.common.contracts.ZKTransactionMetadataCommandData
 import com.ing.zknotary.common.serialization.bfl.BFLSerializationScheme
 import com.ing.zknotary.common.transactions.StateOrdering.ordered
+import com.ing.zknotary.common.zkp.metadata.ResolvedZKTransactionMetadata
 import net.corda.core.contracts.AttachmentConstraint
 import net.corda.core.contracts.AutomaticPlaceholderConstraint
 import net.corda.core.contracts.Command
@@ -28,6 +29,7 @@ import net.corda.core.node.ServiceHub
 import net.corda.core.node.ServicesForResolution
 import net.corda.core.node.services.AttachmentId
 import net.corda.core.node.services.KeyManagementService
+import net.corda.core.transactions.LedgerTransaction
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.transactions.TraversableTransaction
@@ -39,6 +41,14 @@ import java.util.UUID
 
 val TransactionBuilder.isZKFlowTransaction get() = commands().firstOrNull { it.value is ZKTransactionMetadataCommandData } != null
 val TraversableTransaction.isZKFlowTransaction get() = commands.firstOrNull { it.value is ZKTransactionMetadataCommandData } != null
+val LedgerTransaction.isZKFlowTransaction get() = commands.firstOrNull { it.value is ZKTransactionMetadataCommandData } != null
+val LedgerTransaction.zkFLowMetadata: ResolvedZKTransactionMetadata
+    get() {
+        val zkFlowCommand =
+            commands.firstOrNull()?.value as? ZKTransactionMetadataCommandData
+                ?: error("This transaction is not a ZKFlow transaction, so no metadata was defined")
+        return zkFlowCommand.transactionMetadata.resolved
+    }
 
 /**
  * The main reason for this ZKTransactionBuilder to exist, is to ensure that the user always uses the
