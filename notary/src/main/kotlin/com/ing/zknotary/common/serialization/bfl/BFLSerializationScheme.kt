@@ -28,7 +28,6 @@ open class BFLSerializationScheme : CustomSerializationScheme {
     companion object {
         const val SCHEME_ID = 602214076
 
-        const val CONTEXT_KEY_CIRCUIT = 1
         const val CONTEXT_KEY_TRANSACTION_METADATA = 2
     }
 
@@ -106,7 +105,7 @@ open class BFLSerializationScheme : CustomSerializationScheme {
         logger.debug("Serializing tx component:\t${obj::class}")
 
         val transactionMetadata = context.properties[CONTEXT_KEY_TRANSACTION_METADATA] as? ResolvedZKTransactionMetadata
-        transactionMetadata ?: logger.info("No ResolvedZKTransactionMetadata found, serializing as non-ZKP transaction component.")
+        transactionMetadata ?: logger.info("No ResolvedZKTransactionMetadata found, serializing as non-ZKP transaction component: $obj")
 
         val serialization = when (obj) {
             is TransactionState<*> -> {

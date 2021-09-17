@@ -2,6 +2,7 @@ package io.ivno.collateraltoken.contract
 
 import com.ing.zknotary.testing.dsl.VerificationMode
 import com.ing.zknotary.testing.dsl.zkLedger
+import com.ing.zknotary.testing.zkp.MockZKTransactionService
 import io.dasl.contracts.v1.token.TokenContract
 import io.onixlabs.corda.bnms.contract.Network
 import io.onixlabs.corda.identityframework.contract.AttestationStatus
@@ -14,13 +15,13 @@ import kotlin.time.ExperimentalTime
 @ExperimentalTime
 @Disabled("Re-enable once we have everything serializable and when we have zktransaction DSL")
 class DepositContractAdvanceTests : ContractTest() {
-    override val verificationMode = VerificationMode.PROVE_AND_VERIFY
+    override val verificationMode = VerificationMode.RUN
     override val commandData = DepositContract.Advance
 
     @Test
     fun `On deposit advancing, the transaction must include the Advance command`() {
-        // services.zkLedger(zkService = MockZKTransactionService(services)) {
-        services.zkLedger {
+        services.zkLedger(zkService = MockZKTransactionService(services)) {
+        // services.zkLedger {
             zkTransaction {
                 val memberships = createAllMemberships()
                 reference(memberships.membershipFor(BANK_A).ref)

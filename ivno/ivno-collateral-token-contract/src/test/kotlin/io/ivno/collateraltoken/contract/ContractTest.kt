@@ -3,7 +3,7 @@ package io.ivno.collateraltoken.contract
 import TestTransactionDSLInterpreter
 import TestZKLedgerDSLInterpreter
 import TestZKTransactionDSLInterpreter
-import com.ing.zknotary.common.contracts.ZKCommandData
+import com.ing.zknotary.common.contracts.ZKTransactionMetadataCommandData
 import com.ing.zknotary.common.zkp.ZincZKTransactionService
 import com.ing.zknotary.testing.dsl.LedgerDSL
 import com.ing.zknotary.testing.dsl.VerificationMode
@@ -164,11 +164,12 @@ abstract class ContractTest {
         contracts.forEach { _services.addMockCordapp(it) }
 
         if (verificationMode == VerificationMode.PROVE_AND_VERIFY
-            && commandData is ZKCommandData) {
+            && commandData is ZKTransactionMetadataCommandData
+        ) {
             _services.zkLedger {
                 val zkService = this.interpreter.zkService as ZincZKTransactionService
                 val time = measureTime {
-                    zkService.setup(commandData as ZKCommandData)
+                    zkService.setup(commandData as ZKTransactionMetadataCommandData)
                 }
                 myLog.info("[setup] $time")
             }

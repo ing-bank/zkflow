@@ -30,11 +30,15 @@ import net.corda.core.node.services.AttachmentId
 import net.corda.core.node.services.KeyManagementService
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
+import net.corda.core.transactions.TraversableTransaction
 import net.corda.core.transactions.WireTransaction
 import java.security.PublicKey
 import java.time.Duration
 import java.time.Instant
 import java.util.UUID
+
+val TransactionBuilder.isZKFlowTransaction get() = commands().firstOrNull { it.value is ZKTransactionMetadataCommandData } != null
+val TraversableTransaction.isZKFlowTransaction get() = commands.firstOrNull { it.value is ZKTransactionMetadataCommandData } != null
 
 /**
  * The main reason for this ZKTransactionBuilder to exist, is to ensure that the user always uses the

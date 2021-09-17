@@ -1,6 +1,7 @@
 package io.ivno.collateraltoken.serialization
 
 import com.ing.zknotary.common.contracts.ZKCommandData
+import com.ing.zknotary.common.contracts.ZKTransactionMetadataCommandData
 import com.ing.zknotary.common.crypto.zinc
 import com.ing.zknotary.common.serialization.bfl.BFLSerializationScheme
 import com.ing.zknotary.testing.dsl.VerificationMode
@@ -60,9 +61,9 @@ class DepositTransactionSerializationTest : ContractTest() {
 
         // This functionality is duplicated from ZKTransaction.toWireTransaction()
         val singleCommand = commands.singleOrNull() ?: error("Single command per transaction is allowed")
-        val zkCommand = singleCommand.value as? ZKCommandData ?: error("Command must implement ZKCommandData")
+        val zkCommand = singleCommand.value as? ZKTransactionMetadataCommandData ?: error("Command must implement ZKTransactionMetadataCommandData")
         val additionalSerializationProperties =
-            mapOf<Any, Any>(BFLSerializationScheme.CONTEXT_KEY_CIRCUIT to zkCommand.circuit)
+            mapOf<Any, Any>(BFLSerializationScheme.CONTEXT_KEY_TRANSACTION_METADATA to zkCommand.transactionMetadata.resolved)
 
         val wtx = createWtx(
             inputs,

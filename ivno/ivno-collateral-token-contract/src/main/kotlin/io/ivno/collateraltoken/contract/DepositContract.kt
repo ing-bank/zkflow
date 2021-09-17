@@ -1,7 +1,10 @@
 package io.ivno.collateraltoken.contract
 
-import com.ing.zknotary.common.contracts.ZKCommandData
-import com.ing.zknotary.common.zkp.CircuitMetaData
+import com.ing.zknotary.common.contracts.ZKTransactionMetadataCommandData
+import com.ing.zknotary.common.zkp.metadata.ZKCommandMetadata
+import com.ing.zknotary.common.zkp.metadata.ZKTransactionMetadata
+import com.ing.zknotary.common.zkp.metadata.commandMetadata
+import com.ing.zknotary.common.zkp.metadata.transactionMetadata
 import io.dasl.contracts.v1.token.BigDecimalAmount
 import io.dasl.contracts.v1.token.TokenState
 import io.onixlabs.corda.bnms.contract.membership.Membership
@@ -17,7 +20,6 @@ import net.corda.core.transactions.LedgerTransaction
 import java.io.File
 import java.math.BigDecimal
 import java.security.PublicKey
-import net.corda.core.contracts.ComponentGroupEnum
 
 
 class DepositContract : Contract {
@@ -35,7 +37,7 @@ class DepositContract : Contract {
         }
     }
 
-    interface DepositContractCommand : ZKCommandData {
+    interface DepositContractCommand : ZKTransactionMetadataCommandData {
         fun verify(tx: LedgerTransaction, signers: Set<PublicKey>)
     }
 
@@ -122,9 +124,27 @@ class DepositContract : Contract {
         }
 
         @Transient
-        override val circuit: CircuitMetaData = CircuitMetaData.fromConfig(
-            File("${System.getProperty("user.dir")}/build/zinc/deposit-request")
-        )
+        override val transactionMetadata: ZKTransactionMetadata = transactionMetadata {
+            commands {
+                +Request::class
+            }
+        }
+
+        @Transient
+        override val metadata: ZKCommandMetadata = commandMetadata {
+            private = true
+            circuit {
+                buildFolder =
+                    File("${System.getProperty("user.dir")}/build/zinc/deposit-request")
+            }
+            outputs { 1 of Deposit::class }
+            references {
+                3 of Membership::class
+                3 of MembershipAttestation::class
+                1 of IvnoTokenType::class
+            }
+            numberOfSigners = 1
+        }
     }
 
     @Serializable
@@ -234,9 +254,27 @@ class DepositContract : Contract {
         }
 
         @Transient
-        override val circuit: CircuitMetaData = CircuitMetaData.fromConfig(
-            // ${System.getProperty("user.dir")} = "ivno/ivno-collateral-token-contract"
-            File("${System.getProperty("user.dir")}/build/zinc/deposit-advance")
-        )
+        override val transactionMetadata: ZKTransactionMetadata = transactionMetadata {
+            commands {
+                +Advance::class
+            }
+        }
+
+        @Transient
+        override val metadata: ZKCommandMetadata = commandMetadata {
+            private = true
+            circuit {
+                buildFolder =
+                    File("${System.getProperty("user.dir")}/build/zinc/deposit-advance")
+            }
+            inputs { 1 of Deposit::class }
+            outputs { 1 of Deposit::class }
+            references {
+                3 of Membership::class
+                3 of MembershipAttestation::class
+                1 of IvnoTokenType::class
+            }
+            numberOfSigners = 1
+        }
     }
 }
