@@ -3,6 +3,7 @@ package com.ing.zknotary.common.zkp.metadata
 import com.ing.zknotary.common.zkp.ZKFlow.DEFAULT_ZKFLOW_CONTRACT_ATTACHMENT_CONSTRAINT
 import com.ing.zknotary.common.zkp.ZKFlow.DEFAULT_ZKFLOW_SIGNATURE_SCHEME
 import com.ing.zknotary.common.zkp.ZKFlow.requireSupportedSignatureScheme
+import com.ing.zknotary.common.zkp.metadata.ZKCircuit.Companion.resolve
 import com.ing.zknotary.gradle.zinc.template.TemplateParameters.Companion.camelToSnakeCase
 import net.corda.core.contracts.AttachmentConstraint
 import net.corda.core.contracts.BelongsToContract
@@ -39,21 +40,6 @@ data class ZKCircuit(
     var setupTimeout: Duration? = null,
     var provingTimeout: Duration? = null,
     var verificationTimeout: Duration? = null
-)
-
-data class ResolvedZKCircuit(
-    val commandKClass: KClass<out CommandData>,
-    var name: String,
-    /**
-     * Unless provided, this will be calculated to be `<gradle module>/src/main/zinc/<transaction.name>/commands/<command.name>`
-     * This is where the circuit elements for this command can be found
-     */
-    val buildFolder: File,
-    val javaClass2ZincType: Map<KClass<*>, ZincType>,
-    val buildTimeout: Duration,
-    val setupTimeout: Duration,
-    val provingTimeout: Duration,
-    val verificationTimeout: Duration
 ) {
     companion object {
         private val DEFAULT_BUILD_TIMEOUT = 15.seconds
@@ -61,30 +47,6 @@ data class ResolvedZKCircuit(
         private val DEFAULT_PROVING_TIMEOUT = 5.minutes
         private val DEFAULT_VERIFICATION_TIMEOUT = 3.seconds
         private val DEFAULT_CIRCUIT_BUILD_FOLDER_PARENT_PATH = "${System.getProperty("user.dir")}/build/zinc/commands/"
-
-        fun resolve(commandMetadata: ZKCommandMetadata, circuit: ZKCircuit?): ResolvedZKCircuit {
-            if (circuit == null) return ResolvedZKCircuit(
-                commandKClass = commandMetadata.commandKClass,
-                javaClass2ZincType = javaClass2ZincType(commandMetadata),
-                name = commandMetadata.commandSimpleName,
-                buildFolder = File(DEFAULT_CIRCUIT_BUILD_FOLDER_PARENT_PATH + commandMetadata.commandSimpleName),
-                buildTimeout = DEFAULT_BUILD_TIMEOUT,
-                setupTimeout = DEFAULT_SETUP_TIMEOUT,
-                provingTimeout = DEFAULT_PROVING_TIMEOUT,
-                verificationTimeout = DEFAULT_VERIFICATION_TIMEOUT
-            )
-
-            return ResolvedZKCircuit(
-                commandKClass = commandMetadata.commandKClass,
-                javaClass2ZincType = javaClass2ZincType(commandMetadata),
-                name = circuit.name ?: commandMetadata.commandSimpleName,
-                buildFolder = circuit.buildFolder ?: File(DEFAULT_CIRCUIT_BUILD_FOLDER_PARENT_PATH + circuit.name),
-                buildTimeout = circuit.buildTimeout ?: DEFAULT_BUILD_TIMEOUT,
-                setupTimeout = circuit.setupTimeout ?: DEFAULT_SETUP_TIMEOUT,
-                provingTimeout = circuit.provingTimeout ?: DEFAULT_PROVING_TIMEOUT,
-                verificationTimeout = circuit.verificationTimeout ?: DEFAULT_VERIFICATION_TIMEOUT
-            )
-        }
 
         private fun javaClass2ZincType(commandMetadata: ZKCommandMetadata): Map<KClass<*>, ZincType> {
             val mapping = mutableListOf<Pair<KClass<*>, ZincType>>()
@@ -103,8 +65,56 @@ data class ResolvedZKCircuit(
                 simpleName.camelToSnakeCase()
             )
         }
+
+        /**
+         * If the circuit information is not provided, set defaults for the circuit information.
+         *
+         * This is for the scenario where a command is marked private, but there is no circuit info provided.
+         * In that case, sane defaults are used.
+         *
+         * Option 1: private = true, circuit info is provided
+         * Option 2: private = true, circuit info is NOT provided.
+         */
+        fun ZKCircuit?.resolve(commandMetadata: ZKCommandMetadata): ResolvedZKCircuit {
+            if (this == null) return ResolvedZKCircuit(
+                commandKClass = commandMetadata.commandKClass,
+                javaClass2ZincType = javaClass2ZincType(commandMetadata),
+                name = commandMetadata.commandSimpleName,
+                buildFolder = File(DEFAULT_CIRCUIT_BUILD_FOLDER_PARENT_PATH + commandMetadata.commandSimpleName),
+                buildTimeout = DEFAULT_BUILD_TIMEOUT,
+                setupTimeout = DEFAULT_SETUP_TIMEOUT,
+                provingTimeout = DEFAULT_PROVING_TIMEOUT,
+                verificationTimeout = DEFAULT_VERIFICATION_TIMEOUT
+            )
+
+            return ResolvedZKCircuit(
+                commandKClass = commandMetadata.commandKClass,
+                javaClass2ZincType = javaClass2ZincType(commandMetadata),
+                name = name ?: commandMetadata.commandSimpleName,
+                buildFolder = buildFolder ?: File(DEFAULT_CIRCUIT_BUILD_FOLDER_PARENT_PATH + name),
+                buildTimeout = buildTimeout ?: DEFAULT_BUILD_TIMEOUT,
+                setupTimeout = setupTimeout ?: DEFAULT_SETUP_TIMEOUT,
+                provingTimeout = provingTimeout ?: DEFAULT_PROVING_TIMEOUT,
+                verificationTimeout = verificationTimeout ?: DEFAULT_VERIFICATION_TIMEOUT
+            )
+        }
     }
 }
+
+data class ResolvedZKCircuit(
+    val commandKClass: KClass<out CommandData>,
+    var name: String,
+    /**
+     * Unless provided, this will be calculated to be `<gradle module>/src/main/zinc/<transaction.name>/commands/<command.name>`
+     * This is where the circuit elements for this command can be found
+     */
+    val buildFolder: File,
+    val javaClass2ZincType: Map<KClass<*>, ZincType>,
+    val buildTimeout: Duration,
+    val setupTimeout: Duration,
+    val provingTimeout: Duration,
+    val verificationTimeout: Duration
+)
 
 data class ZincType(
     val typeName: String,
@@ -209,7 +219,7 @@ class ZKCommandMetadata(val commandKClass: KClass<out CommandData>) {
     val resolved: ResolvedZKCommandMetadata by lazy {
         if (private) {
             PrivateResolvedZKCommandMetadata(
-                ResolvedZKCircuit.resolve(this, circuit),
+                circuit.resolve(this),
                 commandKClass,
                 numberOfSigners,
                 inputs.toList(),
