@@ -23,7 +23,6 @@ import net.corda.core.utilities.loggerFor
 import java.io.File
 import java.time.Duration
 import kotlin.reflect.KClass
-import kotlin.reflect.KProperty
 import kotlin.reflect.full.companionObject
 import kotlin.reflect.full.companionObjectInstance
 import kotlin.reflect.full.declaredMemberExtensionProperties
@@ -39,19 +38,6 @@ private val ContractClassName.packageName: String?
             null
         }
     }
-
-class OnlyOnce<V>(initialValue: V) {
-    private var internalValue: V = initialValue
-    private var set: Boolean = false
-
-    operator fun getValue(thisRef: Any?, property: KProperty<*>): V = internalValue
-
-    operator fun setValue(thisRef: Any?, property: KProperty<*>, value: V) {
-        if (set) throw IllegalArgumentException("Value set already")
-        this.internalValue = value
-        this.set = true
-    }
-}
 
 @DslMarker
 annotation class ZKTransactionMetadataDSL
@@ -107,7 +93,7 @@ class ZKCommandList : ArrayList<KClass<out CommandData>>() {
         add(this)
     }
 
-    val resolved: List<ResolvedZKCommandMetadata> by lazy {
+    internal val resolved: List<ResolvedZKCommandMetadata> by lazy {
         map { kClass ->
             val command = getCommandInstance(kClass)
             if (command is ZKCommandData) {
@@ -184,7 +170,7 @@ class ZKTransactionMetadata {
         return commands.apply(init)
     }
 
-    val resolved: ResolvedZKTransactionMetadata by lazy {
+    internal val resolved: ResolvedZKTransactionMetadata by lazy {
         ResolvedZKTransactionMetadata(
             network,
             commands.resolved,
@@ -194,7 +180,7 @@ class ZKTransactionMetadata {
 }
 
 @Suppress("TooManyFunctions") // TODO: Fix this once we agree on design
-data class ResolvedZKTransactionMetadata(
+internal data class ResolvedZKTransactionMetadata(
     val network: ZKNetwork,
     val commands: List<ResolvedZKCommandMetadata>,
     val numberOfCorDappsForContracts: Int?
@@ -435,7 +421,7 @@ fun transactionMetadata(init: ZKTransactionMetadata.() -> Unit): ZKTransactionMe
     return ZKTransactionMetadata().apply(init)
 }
 
-val List<TypeCount>.flattened: List<KClass<out ContractState>>
+internal val List<TypeCount>.flattened: List<KClass<out ContractState>>
     get() {
         return fold(listOf()) { acc, typeCount -> acc + List(typeCount.count) { typeCount.type } }
     }

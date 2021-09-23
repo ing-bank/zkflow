@@ -75,7 +75,7 @@ data class ZKCircuit(
          * Option 1: private = true, circuit info is provided
          * Option 2: private = true, circuit info is NOT provided.
          */
-        fun ZKCircuit?.resolve(commandMetadata: ZKCommandMetadata): ResolvedZKCircuit {
+        internal fun ZKCircuit?.resolve(commandMetadata: ZKCommandMetadata): ResolvedZKCircuit {
             if (this == null) return ResolvedZKCircuit(
                 commandKClass = commandMetadata.commandKClass,
                 javaClass2ZincType = javaClass2ZincType(commandMetadata),
@@ -101,7 +101,7 @@ data class ZKCircuit(
     }
 }
 
-data class ResolvedZKCircuit(
+internal data class ResolvedZKCircuit(
     val commandKClass: KClass<out CommandData>,
     var name: String,
     /**
@@ -216,7 +216,7 @@ class ZKCommandMetadata(val commandKClass: KClass<out CommandData>) {
         timeWindow = true
     }
 
-    val resolved: ResolvedZKCommandMetadata by lazy {
+    internal val resolved: ResolvedZKCommandMetadata by lazy {
         if (private) {
             PrivateResolvedZKCommandMetadata(
                 circuit.resolve(this),
@@ -252,7 +252,7 @@ fun CommandData.commandMetadata(init: ZKCommandMetadata.() -> Unit): ZKCommandMe
     return ZKCommandMetadata(this::class).apply(init)
 }
 
-interface ResolvedCommandMetadata {
+internal interface ResolvedCommandMetadata {
     val commandKClass: KClass<out CommandData>
     val commandSimpleName: String
 
@@ -302,7 +302,7 @@ interface ResolvedCommandMetadata {
 }
 
 /**
- * Obtain the typename of the required [ContractClass] associated with the target [ContractState], using the
+ * Obtain the typename of the required [ontractClass] associated with the target [ContractState], using the
  * [BelongsToContract] annotation by default, but falling through to checking the state's enclosing class if there is
  * one and it inherits from [Contract].
  */
@@ -316,7 +316,7 @@ val KClass<out ContractState>.requiredContractClassName: String?
         return if (Contract::class.java.isAssignableFrom(enclosingClass)) enclosingClass.typeName else null
     }
 
-abstract class ResolvedZKCommandMetadata(
+internal abstract class ResolvedZKCommandMetadata(
     final override val notarySignatureScheme: SignatureScheme,
     final override val participantSignatureScheme: SignatureScheme,
     final override val attachmentConstraintType: KClass<out AttachmentConstraint>
@@ -341,7 +341,7 @@ abstract class ResolvedZKCommandMetadata(
 }
 
 @Suppress("LongParameterList") // param length caused by Corda component count
-class PrivateResolvedZKCommandMetadata(
+internal class PrivateResolvedZKCommandMetadata(
     /**
      * Infomation on the circuit and related artifacts to be used.
      */
@@ -359,7 +359,7 @@ class PrivateResolvedZKCommandMetadata(
 ) : ResolvedZKCommandMetadata(notarySignatureScheme, participantSignatureScheme, attachmentConstraintType)
 
 @Suppress("LongParameterList") // param length caused by Corda component count
-class PublicResolvedZKCommandMetadata(
+internal class PublicResolvedZKCommandMetadata(
     override val commandKClass: KClass<out CommandData>,
     override val numberOfSigners: Int,
     override val inputs: List<TypeCount>,
