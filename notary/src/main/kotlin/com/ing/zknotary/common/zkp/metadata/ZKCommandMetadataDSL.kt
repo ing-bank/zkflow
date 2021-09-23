@@ -1,15 +1,13 @@
 package com.ing.zknotary.common.zkp.metadata
 
+import com.ing.zknotary.common.contracts.ZKCommandData
 import com.ing.zknotary.common.zkp.ZKFlow.DEFAULT_ZKFLOW_CONTRACT_ATTACHMENT_CONSTRAINT
 import com.ing.zknotary.common.zkp.ZKFlow.DEFAULT_ZKFLOW_SIGNATURE_SCHEME
 import com.ing.zknotary.common.zkp.ZKFlow.requireSupportedSignatureScheme
 import com.ing.zknotary.common.zkp.metadata.ZKCircuit.Companion.resolve
 import com.ing.zknotary.gradle.zinc.template.TemplateParameters.Companion.camelToSnakeCase
 import net.corda.core.contracts.AttachmentConstraint
-import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.CommandData
-import net.corda.core.contracts.Contract
-import net.corda.core.contracts.ContractClassName
 import net.corda.core.contracts.ContractState
 import net.corda.core.crypto.SignatureScheme
 import net.corda.core.utilities.hours
@@ -56,7 +54,7 @@ data class ZKCircuit(
             return mapping.toMap()
         }
 
-        private fun TypeCountList.toZincTypes() = map { it.type to kClassToZincType(it.type) }
+        private fun ContractStateTypeCountList.toZincTypes() = map { it.type to kClassToZincType(it.type) }
 
         private fun kClassToZincType(kClass: KClass<*>): ZincType {
             val simpleName = kClass.simpleName ?: error("classes used in transactins must be a named class")
@@ -75,7 +73,7 @@ data class ZKCircuit(
          * Option 1: private = true, circuit info is provided
          * Option 2: private = true, circuit info is NOT provided.
          */
-        internal fun ZKCircuit?.resolve(commandMetadata: ZKCommandMetadata): ResolvedZKCircuit {
+        fun ZKCircuit?.resolve(commandMetadata: ZKCommandMetadata): ResolvedZKCircuit {
             if (this == null) return ResolvedZKCircuit(
                 commandKClass = commandMetadata.commandKClass,
                 javaClass2ZincType = javaClass2ZincType(commandMetadata),
@@ -101,34 +99,30 @@ data class ZKCircuit(
     }
 }
 
-internal data class ResolvedZKCircuit(
-    val commandKClass: KClass<out CommandData>,
-    var name: String,
-    /**
-     * Unless provided, this will be calculated to be `<gradle module>/src/main/zinc/<transaction.name>/commands/<command.name>`
-     * This is where the circuit elements for this command can be found
-     */
-    val buildFolder: File,
-    val javaClass2ZincType: Map<KClass<*>, ZincType>,
-    val buildTimeout: Duration,
-    val setupTimeout: Duration,
-    val provingTimeout: Duration,
-    val verificationTimeout: Duration
-)
-
+/**
+ * Describes a Zinc type
+ *
+ * Most likely used in a mapping from Zinc type to Kotlin type, used for Zinc code generation
+ */
 data class ZincType(
+    /**
+     * The name of the type as found in (generated) Zinc
+     */
     val typeName: String,
+    /**
+     * The file where this type is defined
+     */
     val fileName: String
 )
 
 /**
  * Describes the number of occurrences for a type.
  */
-data class TypeCount(val type: KClass<out ContractState>, val count: Int)
+data class ContractStateTypeCount(val type: KClass<out ContractState>, val count: Int)
 
 @ZKCommandMetadataDSL
-class TypeCountList : ArrayList<TypeCount>() {
-    infix fun Int.of(type: KClass<out ContractState>) = add(TypeCount(type, this))
+class ContractStateTypeCountList : ArrayList<ContractStateTypeCount>() {
+    infix fun Int.of(type: KClass<out ContractState>) = add(ContractStateTypeCount(type, this))
 }
 
 @ZKCommandMetadataDSL
@@ -184,9 +178,9 @@ class ZKCommandMetadata(val commandKClass: KClass<out CommandData>) {
 
     var numberOfSigners = 0
 
-    val inputs = TypeCountList()
-    val references = TypeCountList()
-    val outputs = TypeCountList()
+    val inputs = ContractStateTypeCountList()
+    val references = ContractStateTypeCountList()
+    val outputs = ContractStateTypeCountList()
 
     /**
      * These are only the attachments the user explicitly adds themselves.
@@ -207,17 +201,17 @@ class ZKCommandMetadata(val commandKClass: KClass<out CommandData>) {
         return circuit!!
     }
 
-    fun inputs(init: TypeCountList.() -> Unit) = inputs.apply(init)
-    fun references(init: TypeCountList.() -> Unit) = references.apply(init)
-    fun outputs(init: TypeCountList.() -> Unit) = outputs.apply(init)
+    fun inputs(init: ContractStateTypeCountList.() -> Unit) = inputs.apply(init)
+    fun references(init: ContractStateTypeCountList.() -> Unit) = references.apply(init)
+    fun outputs(init: ContractStateTypeCountList.() -> Unit) = outputs.apply(init)
 
     /** Present when called, otherwise absent */
     fun timewindow() {
         timeWindow = true
     }
 
-    internal val resolved: ResolvedZKCommandMetadata by lazy {
-        if (private) {
+    fun resolved(): ResolvedZKCommandMetadata {
+        return if (private) {
             PrivateResolvedZKCommandMetadata(
                 circuit.resolve(this),
                 commandKClass,
@@ -248,126 +242,10 @@ class ZKCommandMetadata(val commandKClass: KClass<out CommandData>) {
     }
 }
 
-fun CommandData.commandMetadata(init: ZKCommandMetadata.() -> Unit): ZKCommandMetadata {
-    return ZKCommandMetadata(this::class).apply(init)
+fun ZKCommandData.commandMetadata(init: ZKCommandMetadata.() -> Unit): ResolvedZKCommandMetadata {
+    return commandMetadata(this::class, init)
 }
 
-internal interface ResolvedCommandMetadata {
-    val commandKClass: KClass<out CommandData>
-    val commandSimpleName: String
-
-    /**
-     * The notary [SignatureScheme] type required by this command.
-     *
-     * This should match the [SignatureScheme] defined for the network notary
-     * in the transaction metadata. If they don't match, an error is thrown.
-     */
-    val notarySignatureScheme: SignatureScheme
-
-    /**
-     * The participant [SignatureScheme] type required by this command.
-     *
-     * Due to current limitations of the ZKP command, only one [SignatureScheme] per command is allowed for transaction participants.
-     * This should be enforced at network level and therefore should match the [SignatureScheme] defined for the network notary
-     * in the transaction metadata. If they don't match, an error is thrown.
-     */
-    val participantSignatureScheme: SignatureScheme
-
-    /**
-     * The attachment constraint required by this command for all states
-     *
-     * Due to current limitations of the ZKP command, only one [AttachmentConstraint] per transaction is allowed.
-     * This should be enforced at network level and therefore should match the [AttachmentConstraint] defined for the network
-     * in the transaction metadata. If they don't match, an error is thrown.
-     */
-    val attachmentConstraintType: KClass<out AttachmentConstraint>
-
-    val numberOfSigners: Int
-
-    val inputs: List<TypeCount>
-    val references: List<TypeCount>
-    val outputs: List<TypeCount>
-    val numberOfUserAttachments: Int
-    val timeWindow: Boolean
-
-    /**
-     * This is always true, and can't be changed
-     */
-    val networkParameters: Boolean
-
-    /**
-     * The list of all contract Class names used by all states in this command
-     */
-    val contractClassNames: List<ContractClassName>
+fun commandMetadata(commandKClass: KClass<out CommandData>, init: ZKCommandMetadata.() -> Unit): ResolvedZKCommandMetadata {
+    return ZKCommandMetadata(commandKClass).apply(init).resolved()
 }
-
-/**
- * Obtain the typename of the required [ontractClass] associated with the target [ContractState], using the
- * [BelongsToContract] annotation by default, but falling through to checking the state's enclosing class if there is
- * one and it inherits from [Contract].
- */
-val KClass<out ContractState>.requiredContractClassName: String?
-    get() {
-        val annotation = java.getAnnotation(BelongsToContract::class.java)
-        if (annotation != null) {
-            return annotation.value.java.typeName
-        }
-        val enclosingClass = java.enclosingClass ?: return null
-        return if (Contract::class.java.isAssignableFrom(enclosingClass)) enclosingClass.typeName else null
-    }
-
-internal abstract class ResolvedZKCommandMetadata(
-    final override val notarySignatureScheme: SignatureScheme,
-    final override val participantSignatureScheme: SignatureScheme,
-    final override val attachmentConstraintType: KClass<out AttachmentConstraint>
-) : ResolvedCommandMetadata {
-    override val networkParameters = true
-    override val commandSimpleName: String by lazy { commandKClass.simpleName ?: error("Command classes must be a named class") }
-    override val contractClassNames: List<ContractClassName>
-        get() {
-            val stateTypes = (inputs.flattened + outputs.flattened + references.flattened).distinct()
-            return stateTypes.map {
-                requireNotNull(it.requiredContractClassName) {
-                    "Unable to infer Contract class name because state class $it is not annotated with " +
-                        "@BelongsToContract, and does not have an enclosing class which implements Contract."
-                }
-            }
-        }
-
-    init {
-        requireSupportedSignatureScheme(participantSignatureScheme)
-        requireSupportedSignatureScheme(notarySignatureScheme)
-    }
-}
-
-@Suppress("LongParameterList") // param length caused by Corda component count
-internal class PrivateResolvedZKCommandMetadata(
-    /**
-     * Infomation on the circuit and related artifacts to be used.
-     */
-    val circuit: ResolvedZKCircuit,
-    override val commandKClass: KClass<out CommandData>,
-    override val numberOfSigners: Int,
-    override val inputs: List<TypeCount>,
-    override val references: List<TypeCount>,
-    override val outputs: List<TypeCount>,
-    override val numberOfUserAttachments: Int,
-    override val timeWindow: Boolean,
-    notarySignatureScheme: SignatureScheme,
-    participantSignatureScheme: SignatureScheme,
-    attachmentConstraintType: KClass<out AttachmentConstraint>,
-) : ResolvedZKCommandMetadata(notarySignatureScheme, participantSignatureScheme, attachmentConstraintType)
-
-@Suppress("LongParameterList") // param length caused by Corda component count
-internal class PublicResolvedZKCommandMetadata(
-    override val commandKClass: KClass<out CommandData>,
-    override val numberOfSigners: Int,
-    override val inputs: List<TypeCount>,
-    override val references: List<TypeCount>,
-    override val outputs: List<TypeCount>,
-    override val numberOfUserAttachments: Int,
-    override val timeWindow: Boolean,
-    notarySignatureScheme: SignatureScheme,
-    participantSignatureScheme: SignatureScheme,
-    attachmentConstraintType: KClass<out AttachmentConstraint>,
-) : ResolvedZKCommandMetadata(notarySignatureScheme, participantSignatureScheme, attachmentConstraintType)

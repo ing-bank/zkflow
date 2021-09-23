@@ -7,8 +7,8 @@ import com.ing.zknotary.common.contracts.ZKTransactionMetadataCommandData
 import com.ing.zknotary.common.serialization.bfl.CommandDataSerializerMap
 import com.ing.zknotary.common.serialization.bfl.ContractStateSerializerMap
 import com.ing.zknotary.common.transactions.zkFLowMetadata
-import com.ing.zknotary.common.zkp.metadata.ZKCommandMetadata
-import com.ing.zknotary.common.zkp.metadata.ZKTransactionMetadata
+import com.ing.zknotary.common.zkp.metadata.ResolvedZKCommandMetadata
+import com.ing.zknotary.common.zkp.metadata.ResolvedZKTransactionMetadata
 import com.ing.zknotary.common.zkp.metadata.commandMetadata
 import com.ing.zknotary.common.zkp.metadata.transactionMetadata
 import com.ing.zknotary.testing.fixtures.contract.TestContract.Create.Companion.verifyCreate
@@ -63,15 +63,14 @@ public class TestContract : Contract {
     // Commands
     @Serializable
     public class Create : TypeOnlyCommandData(), ZKCommandData, ZKTransactionMetadataCommandData {
-        @Transient
-        override val transactionMetadata: ZKTransactionMetadata = transactionMetadata {
+        override val transactionMetadata: ResolvedZKTransactionMetadata by transactionMetadata {
             commands {
                 +Create::class
             }
         }
 
         @Transient
-        override val metadata: ZKCommandMetadata = commandMetadata {
+        override val metadata: ResolvedZKCommandMetadata = commandMetadata {
             private = true
             circuit {
                 buildFolder =
@@ -102,15 +101,14 @@ public class TestContract : Contract {
      */
     @Serializable
     public class SignOnly : ZKTransactionMetadataCommandData {
-        @Transient
-        override val transactionMetadata: ZKTransactionMetadata = transactionMetadata {
+        override val transactionMetadata: ResolvedZKTransactionMetadata by transactionMetadata {
             commands {
                 +SignOnly::class
             }
         }
 
         @Transient
-        override val metadata: ZKCommandMetadata = commandMetadata {
+        override val metadata: ResolvedZKCommandMetadata = commandMetadata {
             private = true
             outputs { 1 of TestState::class }
             numberOfSigners = 2
@@ -119,15 +117,14 @@ public class TestContract : Contract {
 
     @Serializable
     public class Move : ZKTransactionMetadataCommandData {
-        @Transient
-        override val transactionMetadata: ZKTransactionMetadata = transactionMetadata {
+        override val transactionMetadata: ResolvedZKTransactionMetadata by transactionMetadata {
             commands {
                 +Move::class
             }
         }
 
         @Transient
-        override val metadata: ZKCommandMetadata = commandMetadata {
+        override val metadata: ResolvedZKCommandMetadata = commandMetadata {
             private = true
             circuit {
                 buildFolder =
@@ -159,15 +156,14 @@ public class TestContract : Contract {
 
     @Serializable
     public class MoveBidirectional : ZKTransactionMetadataCommandData {
-        @Transient
-        override val transactionMetadata: ZKTransactionMetadata = transactionMetadata {
+        override val transactionMetadata: ResolvedZKTransactionMetadata by transactionMetadata {
             commands {
                 +MoveBidirectional::class
             }
         }
 
         @Transient
-        override val metadata: ZKCommandMetadata = commandMetadata {
+        override val metadata: ResolvedZKCommandMetadata = commandMetadata {
             private = true
             inputs { 2 of TestState::class }
             outputs { 2 of TestState::class }

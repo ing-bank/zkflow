@@ -1,6 +1,7 @@
 package com.ing.zknotary.common.contracts
 
-import com.ing.zknotary.common.zkp.metadata.ZKCommandMetadata
+import com.ing.zknotary.common.zkp.metadata.ResolvedZKCommandMetadata
+import com.ing.zknotary.common.zkp.metadata.ResolvedZKTransactionMetadata
 import com.ing.zknotary.common.zkp.metadata.ZKTransactionMetadata
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.CommandData
@@ -11,7 +12,7 @@ import net.corda.core.contracts.CommandWithParties
  * it is part of. Its [ZKTransactionMetadata] will be inspected to resolve all transaction metadata
  */
 interface ZKTransactionMetadataCommandData : ZKCommandData {
-    val transactionMetadata: ZKTransactionMetadata
+    val transactionMetadata: ResolvedZKTransactionMetadata
 }
 
 interface ZKCommandData : CommandData {
@@ -19,7 +20,7 @@ interface ZKCommandData : CommandData {
         const val METADATA_FIELD_NAME: String = "metadata"
     }
 
-    val metadata: ZKCommandMetadata
+    val metadata: ResolvedZKCommandMetadata
 }
 
 fun <T : CommandData> CommandWithParties<T>.toZKCommand(): Command<ZKCommandData> {

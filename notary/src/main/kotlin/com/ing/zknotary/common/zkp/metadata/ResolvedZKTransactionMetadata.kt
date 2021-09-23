@@ -1,186 +1,21 @@
 package com.ing.zknotary.common.zkp.metadata
 
-import com.ing.zknotary.common.contracts.ZKCommandData
 import com.ing.zknotary.common.contracts.ZKTransactionMetadataCommandData
 import com.ing.zknotary.common.transactions.ZKTransactionBuilder
-import com.ing.zknotary.common.zkp.ZKFlow.DEFAULT_ZKFLOW_CONTRACT_ATTACHMENT_CONSTRAINT
-import com.ing.zknotary.common.zkp.ZKFlow.DEFAULT_ZKFLOW_SIGNATURE_SCHEME
-import com.ing.zknotary.common.zkp.ZKFlow.requireSupportedContractAttachmentConstraint
-import com.ing.zknotary.common.zkp.ZKFlow.requireSupportedSignatureScheme
-import net.corda.core.contracts.AttachmentConstraint
 import net.corda.core.contracts.Command
-import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.ContractAttachment
-import net.corda.core.contracts.ContractClassName
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.TransactionState
 import net.corda.core.crypto.Crypto
-import net.corda.core.crypto.SignatureScheme
-import net.corda.core.internal.objectOrNewInstance
 import net.corda.core.transactions.LedgerTransaction
-import net.corda.core.utilities.loggerFor
 import java.io.File
 import java.time.Duration
 import kotlin.reflect.KClass
-import kotlin.reflect.full.companionObject
-import kotlin.reflect.full.companionObjectInstance
-import kotlin.reflect.full.declaredMemberExtensionProperties
-import kotlin.reflect.full.extensionReceiverParameter
 import kotlin.reflect.full.isSubclassOf
 
-private val ContractClassName.packageName: String?
-    get() {
-        val i = lastIndexOf('.')
-        return if (i != -1) {
-            substring(0, i)
-        } else {
-            null
-        }
-    }
-
-@DslMarker
-annotation class ZKTransactionMetadataDSL
-
-@ZKCommandMetadataDSL
-data class ZKNotary(
-    /**
-     * The public key type used by the notary in this network.
-     */
-    var signatureScheme: SignatureScheme = DEFAULT_ZKFLOW_SIGNATURE_SCHEME,
-) {
-    init {
-        requireSupportedSignatureScheme(signatureScheme)
-    }
-}
-
-@ZKTransactionMetadataDSL
-open class ZKNetwork(
-    var participantSignatureScheme: SignatureScheme = DEFAULT_ZKFLOW_SIGNATURE_SCHEME,
-    var attachmentConstraintType: KClass<out AttachmentConstraint> = DEFAULT_ZKFLOW_CONTRACT_ATTACHMENT_CONSTRAINT
-) {
-    var notary = ZKNotary()
-
-    init {
-        requireSupportedSignatureScheme(participantSignatureScheme)
-        requireSupportedContractAttachmentConstraint(attachmentConstraintType)
-    }
-
-    fun notary(init: ZKNotary.() -> Unit) = notary.apply(init)
-}
-
-class DefaultZKNetwork : ZKNetwork()
-
-@ZKTransactionMetadataDSL
-class ZKCommandList : ArrayList<KClass<out CommandData>>() {
-    private val log = loggerFor<ZKCommandList>()
-
-    class CommandNotObjectOrNoArgConstructorException(command: KClass<out CommandData>) :
-        IllegalArgumentException("Command not supported: '$command'. $ERROR_COMMAND_NOT_OBJECT_OR_NOARG")
-
-    class CommandNoMetadataFoundException(command: KClass<out CommandData>) :
-        IllegalArgumentException("Command not supported: '$command'. $ERROR_COMMAND_NO_METADATA_FOUND")
-
-    companion object {
-        const val ERROR_COMMAND_NOT_UNIQUE = "Multiple commands of one type found. All commands in a ZKFLow transaction should be unique"
-        const val ERROR_COMMAND_NOT_OBJECT_OR_NOARG =
-            "ZKFlow only supports commands that are objects or that have a no arguments constructor"
-        const val ERROR_COMMAND_NO_METADATA_FOUND = "No command metadata property found"
-    }
-
-    operator fun KClass<out CommandData>.unaryPlus() {
-        require(!contains(this)) { ERROR_COMMAND_NOT_UNIQUE }
-        add(this)
-    }
-
-    internal val resolved: List<ResolvedZKCommandMetadata> by lazy {
-        map { kClass ->
-            val command = getCommandInstance(kClass)
-            if (command is ZKCommandData) {
-                command.metadata.resolved
-            } else {
-                /**
-                 * Metadata extension properties for non-ZKCommandData commands should be defined in
-                 * the companion object of one of the known commands in the command list.
-                 * That way, users can define metadata for commands that they use, without those commands having to support ZKFlow.
-                 */
-                findMetadataExtension(command).resolved
-            }
-        }
-    }
-
-    private fun findMetadataExtension(command: CommandData): ZKCommandMetadata {
-        forEach { otherCommand ->
-            if (otherCommand != command::class) {
-                val metadataProperty = otherCommand.companionObject?.declaredMemberExtensionProperties?.find { kProperty2 ->
-                    kProperty2.name == ZKCommandData.METADATA_FIELD_NAME &&
-                        kProperty2.returnType.classifier == ZKCommandMetadata::class &&
-                        kProperty2.extensionReceiverParameter?.type?.classifier == command::class
-                }
-                val metadata = metadataProperty?.getter?.call(otherCommand.companionObjectInstance, command) as? ZKCommandMetadata
-                if (metadata != null) return metadata
-            }
-        }
-        throw CommandNoMetadataFoundException(command::class)
-    }
-
-    private fun getCommandInstance(kClass: KClass<out CommandData>): CommandData {
-        return try {
-            kClass.objectOrNewInstance()
-        } catch (e: IllegalArgumentException) {
-            throw CommandNotObjectOrNoArgConstructorException(kClass)
-        }
-    }
-}
-
-@ZKTransactionMetadataDSL
-class ZKTransactionMetadata {
-    var network: ZKNetwork = DefaultZKNetwork()
-    var commands: ZKCommandList = ZKCommandList()
-
-    /**
-     * The number of CorDapps required for the smart contract required for this transaction.
-     * This number is determined by the location of all contracts required by this transaction.
-     * They might be located in one CorDapp, or perhaps in multiple CorDapps.
-     *
-     * This number determines the number of ContractAttachments that will be attached to the transaction by Corda
-     *
-     * Example: if your transaction contains states from multiple contracts and these contracts are all part
-     * of your own CorDapp. In this case the number of contract attachments would be 1.
-     * Example: if your transaction contains states from both your own CorDapp's contracts and from
-     * Corda's Tokens SDK contracts. In this case, the number of contract attachments would be 2.
-     *
-     * If not set, we will do a best guess based on the contracts found in the transaction
-     */
-    var numberOfCorDappsForContracts: Int? = null
-
-    companion object {
-        const val ERROR_COMMANDS_ALREADY_SET = "Commands already set"
-        const val ERROR_NETWORK_ALREADY_SET = "Network already set"
-    }
-
-    fun network(init: ZKNetwork.() -> Unit): ZKNetwork {
-        if (network !is DefaultZKNetwork) error(ERROR_NETWORK_ALREADY_SET)
-        network = ZKNetwork().apply(init)
-        return network
-    }
-
-    fun commands(init: ZKCommandList.() -> Unit): ZKCommandList {
-        if (commands.isNotEmpty()) error(ERROR_COMMANDS_ALREADY_SET)
-        return commands.apply(init)
-    }
-
-    internal val resolved: ResolvedZKTransactionMetadata by lazy {
-        ResolvedZKTransactionMetadata(
-            network,
-            commands.resolved,
-            numberOfCorDappsForContracts
-        )
-    }
-}
-
 @Suppress("TooManyFunctions") // TODO: Fix this once we agree on design
-internal data class ResolvedZKTransactionMetadata(
+data class ResolvedZKTransactionMetadata(
     val network: ZKNetwork,
     val commands: List<ResolvedZKCommandMetadata>,
     val numberOfCorDappsForContracts: Int?
@@ -416,12 +251,3 @@ internal data class ResolvedZKTransactionMetadata(
         }
     }
 }
-
-fun transactionMetadata(init: ZKTransactionMetadata.() -> Unit): ZKTransactionMetadata {
-    return ZKTransactionMetadata().apply(init)
-}
-
-internal val List<TypeCount>.flattened: List<KClass<out ContractState>>
-    get() {
-        return fold(listOf()) { acc, typeCount -> acc + List(typeCount.count) { typeCount.type } }
-    }

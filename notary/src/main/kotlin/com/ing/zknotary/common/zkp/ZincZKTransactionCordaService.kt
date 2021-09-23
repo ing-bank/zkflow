@@ -37,7 +37,7 @@ open class ZincZKTransactionService(services: ServiceHub) : AbstractZKTransactio
             cleanup(command)
         }
 
-        val zkService = zkServiceForTransactionMetadata(command.transactionMetadata.resolved)
+        val zkService = zkServiceForTransactionMetadata(command.transactionMetadata)
 
         val circuit = CircuitManager.CircuitDescription("${zkService.circuitFolder}/src", zkService.artifactFolder)
         CircuitManager.register(circuit)
@@ -56,5 +56,5 @@ open class ZincZKTransactionService(services: ServiceHub) : AbstractZKTransactio
         }
     }
 
-    fun cleanup(command: ZKTransactionMetadataCommandData) = zkServiceForTransactionMetadata(command.transactionMetadata.resolved).cleanup()
+    fun cleanup(command: ZKTransactionMetadataCommandData) = zkServiceForTransactionMetadata(command.transactionMetadata).cleanup()
 }

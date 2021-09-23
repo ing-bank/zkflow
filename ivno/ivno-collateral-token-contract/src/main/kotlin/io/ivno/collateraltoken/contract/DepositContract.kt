@@ -126,8 +126,7 @@ class DepositContract : Contract {
             CONTRACT_RULE_SIGNERS using (depositOutput.getRequiredSigningKeys().all { it in signers })
         }
 
-        @Transient
-        override val transactionMetadata: ZKTransactionMetadata = transactionMetadata {
+        override val transactionMetadata by transactionMetadata {
             commands {
                 +Request::class
             }
@@ -135,7 +134,7 @@ class DepositContract : Contract {
         }
 
         @Transient
-        override val metadata: ZKCommandMetadata = commandMetadata {
+        override val metadata = commandMetadata {
             private = true
             circuit {
                 buildFolder =
@@ -260,7 +259,7 @@ class DepositContract : Contract {
         }
 
         @Transient
-        override val transactionMetadata: ZKTransactionMetadata = transactionMetadata {
+        override val transactionMetadata by transactionMetadata {
             commands {
                 +Advance::class
             }
@@ -268,7 +267,7 @@ class DepositContract : Contract {
         }
 
         @Transient
-        override val metadata: ZKCommandMetadata = commandMetadata {
+        override val metadata = commandMetadata {
             private = true
             circuit {
                 buildFolder =

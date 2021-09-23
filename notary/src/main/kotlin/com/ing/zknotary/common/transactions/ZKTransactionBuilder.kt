@@ -47,7 +47,7 @@ val LedgerTransaction.zkFLowMetadata: ResolvedZKTransactionMetadata
         val zkFlowCommand =
             commands.firstOrNull()?.value as? ZKTransactionMetadataCommandData
                 ?: error("This transaction is not a ZKFlow transaction, so no metadata was defined")
-        return zkFlowCommand.transactionMetadata.resolved
+        return zkFlowCommand.transactionMetadata
     }
 
 /**
@@ -141,7 +141,7 @@ class ZKTransactionBuilder(
         val command = commands().firstOrNull() ?: error("At least one command is required for a private transaction")
         val zkCommand = command.value as? ZKTransactionMetadataCommandData
             ?: error("This first command must implement ZKTransactionMetadataCommandData")
-        val resolvedTransactionMetadata = zkCommand.transactionMetadata.resolved
+        val resolvedTransactionMetadata = zkCommand.transactionMetadata
 
         resolvedTransactionMetadata.verify(this)
         //

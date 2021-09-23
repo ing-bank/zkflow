@@ -40,14 +40,14 @@ class TransferContract : Contract {
     @Serializable
     object Request : TransferContractCommand {
         @Transient
-        override val transactionMetadata: ZKTransactionMetadata = transactionMetadata {
+        override val transactionMetadata by transactionMetadata {
             commands {
                 +Request::class
             }
         }
 
         @Transient
-        override val metadata: ZKCommandMetadata = commandMetadata {
+        override val metadata = commandMetadata {
             private = true
             circuit {
                 buildFolder =
@@ -139,14 +139,14 @@ class TransferContract : Contract {
 
     object Advance : TransferContractCommand {
         @Transient
-        override val transactionMetadata: ZKTransactionMetadata = transactionMetadata {
+        override val transactionMetadata by transactionMetadata {
             commands {
                 +Advance::class
             }
         }
 
         @Transient
-        override val metadata: ZKCommandMetadata = commandMetadata {
+        override val metadata = commandMetadata {
             private = true
             circuit { buildFolder = File("${System.getProperty("user.dir")}/build/zinc/transfer-advance") }
             outputs { 1 of Transfer::class }

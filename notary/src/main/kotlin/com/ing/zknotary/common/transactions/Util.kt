@@ -2,6 +2,7 @@ package com.ing.zknotary.common.transactions
 
 import com.ing.zknotary.common.contracts.ZKTransactionMetadataCommandData
 import com.ing.zknotary.common.zkp.ZKTransactionService
+import com.ing.zknotary.common.zkp.metadata.ResolvedZKTransactionMetadata
 import com.ing.zknotary.node.services.ServiceNames
 import com.ing.zknotary.node.services.WritableUtxoInfoStorage
 import com.ing.zknotary.node.services.ZKVerifierTransactionStorage
@@ -114,8 +115,8 @@ fun WireTransaction.prettyPrint(): String {
     return buf.toString()
 }
 
-fun TraversableTransaction.zkTransactionMetadata() =
-    (commands.first().value as ZKTransactionMetadataCommandData).transactionMetadata.resolved
+fun TraversableTransaction.zkTransactionMetadata(): ResolvedZKTransactionMetadata =
+    (commands.first().value as ZKTransactionMetadataCommandData).transactionMetadata
 
 @Throws(AttachmentResolutionException::class, TransactionResolutionException::class)
 @DeleteForDJVM

@@ -63,7 +63,7 @@ class DepositTransactionSerializationTest : ContractTest() {
         val singleCommand = commands.singleOrNull() ?: error("Single command per transaction is allowed")
         val zkCommand = singleCommand.value as? ZKTransactionMetadataCommandData ?: error("Command must implement ZKTransactionMetadataCommandData")
         val additionalSerializationProperties =
-            mapOf<Any, Any>(BFLSerializationScheme.CONTEXT_KEY_TRANSACTION_METADATA to zkCommand.transactionMetadata.resolved)
+            mapOf<Any, Any>(BFLSerializationScheme.CONTEXT_KEY_TRANSACTION_METADATA to zkCommand.transactionMetadata)
 
         val wtx = createWtx(
             inputs,

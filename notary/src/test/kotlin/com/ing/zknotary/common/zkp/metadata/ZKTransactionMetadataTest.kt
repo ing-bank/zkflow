@@ -20,6 +20,7 @@ import com.ing.zknotary.testing.fixtures.contract.TestContract
 import com.ing.zknotary.testing.zkp.MockZKTransactionService
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldStartWith
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import net.corda.core.contracts.BelongsToContract
@@ -59,10 +60,47 @@ class ZKTransactionMetadataTest {
     }
 
     @Test
+    fun `Delegated caching of resolved transaction metadata works transparently`() {
+        class Command : ZKTransactionMetadataCommandData {
+            override val transactionMetadata: ResolvedZKTransactionMetadata by transactionMetadata {
+                commands {
+                    +Command::class
+                }
+            }
+            override val metadata: ResolvedZKCommandMetadata = commandMetadata {
+                private = true
+                numberOfSigners = 3
+            }
+        }
+
+        Command().transactionMetadata.commands.first().numberOfSigners shouldBe Command().metadata.numberOfSigners
+
+        class Command2 : ZKTransactionMetadataCommandData {
+            override val transactionMetadata: ResolvedZKTransactionMetadata by transactionMetadata {
+                commands {
+                    +Command::class
+                }
+            }
+            override val metadata: ResolvedZKCommandMetadata = commandMetadata {
+                private = true
+                numberOfSigners = 2
+            }
+        }
+
+        Command2().transactionMetadata.commands.first().numberOfSigners shouldBe Command().metadata.numberOfSigners
+
+        TransactionMetadataCache.resolvedTransactionMetadata[Command::class]?.commands?.first()?.commandKClass shouldBe Command::class
+    }
+
+    private fun testUncachedTransactionMetadata(init: ZKTransactionMetadata.() -> Unit): ResolvedZKTransactionMetadata {
+        return ZKTransactionMetadata().apply(init).resolve()
+    }
+
+    @Test
     fun `ZKTransactionMetadata DSL happy flow works`() {
-        val transactionMetadata = transactionMetadata {
+        val transactionMetadata = testUncachedTransactionMetadata {
             network {
-                attachmentConstraintType = HashAttachmentConstraint::class
+                attachmentConstraintType = SignatureAttachmentConstraint::class
             }
 
             commands {
@@ -71,15 +109,33 @@ class ZKTransactionMetadataTest {
             }
         }
 
-        transactionMetadata.network.attachmentConstraintType shouldBe HashAttachmentConstraint::class
-        transactionMetadata.commands[0] shouldBe TestContract.Create::class
-        transactionMetadata.commands[1] shouldBe TestContract.SignOnly::class
+        transactionMetadata.network.attachmentConstraintType shouldBe SignatureAttachmentConstraint::class
+        transactionMetadata.commands[0].commandKClass shouldBe TestContract.Create::class
+        transactionMetadata.commands[1].commandKClass shouldBe TestContract.SignOnly::class
+    }
+
+    @Test
+    fun `Diverging attachment constraints fails`() {
+        shouldThrow<IllegalArgumentException> {
+            testUncachedTransactionMetadata {
+                network {
+                    attachmentConstraintType = HashAttachmentConstraint::class
+                }
+
+                commands {
+                    +TestContract.Create::class
+                    +TestContract.SignOnly::class
+                }
+            }
+        }.also {
+            it.message shouldStartWith ResolvedZKTransactionMetadata.ERROR_ATTACHMENT_CONSTRAINT_DOES_NOT_MATCH
+        }
     }
 
     @Test
     fun `No commands fails`() {
         shouldThrow<IllegalArgumentException> {
-            transactionMetadata {}.resolved
+            testUncachedTransactionMetadata {}
         }.also {
             it.message shouldBe ResolvedZKTransactionMetadata.ERROR_NO_COMMANDS
         }
@@ -87,21 +143,22 @@ class ZKTransactionMetadataTest {
 
     @Test
     fun `Metadata extension function is found`() {
-        val metadata = transactionMetadata {
+        val metadata = testUncachedTransactionMetadata {
             commands {
                 +MockAssetContract.IssueWithNonZKPCommand::class
                 +MockThirdPartyNonZKPContract.ThirdPartyNonZKPCommand::class
             }
-        }.resolved
+        }
 
         val expectedMetadata = MockThirdPartyNonZKPContract.ThirdPartyNonZKPCommand().metadata
+        metadata.commands[1].commandKClass shouldBe MockThirdPartyNonZKPContract.ThirdPartyNonZKPCommand::class
         metadata.commands[1].numberOfSigners shouldBe expectedMetadata.numberOfSigners
     }
 
     @Test
     fun `Adding network multiple times is illegal`() {
         shouldThrow<IllegalStateException> {
-            transactionMetadata {
+            testUncachedTransactionMetadata {
                 network {
                     attachmentConstraintType = HashAttachmentConstraint::class
                 }
@@ -117,7 +174,7 @@ class ZKTransactionMetadataTest {
     @Test
     fun `Adding commands multiple times is illegal`() {
         shouldThrow<IllegalStateException> {
-            transactionMetadata {
+            testUncachedTransactionMetadata {
                 commands {
                     +MockAssetContract.Issue::class
                 }
@@ -133,12 +190,12 @@ class ZKTransactionMetadataTest {
     @Test
     fun `Multiple commands of one type fails`() {
         shouldThrow<IllegalArgumentException> {
-            transactionMetadata {
+            testUncachedTransactionMetadata {
                 commands {
                     +MockAssetContract.Issue::class
                     +MockAssetContract.Issue::class
                 }
-            }.resolved
+            }
         }.also {
             it.message shouldBe ERROR_COMMAND_NOT_UNIQUE
         }
@@ -239,8 +296,7 @@ class MockAssetContract : Contract {
 
     @Serializable
     class Issue : ZKCommandData, ZKTransactionMetadataCommandData {
-        @Transient
-        override val transactionMetadata = transactionMetadata {
+        override val transactionMetadata by transactionMetadata {
             network { attachmentConstraintType = SignatureAttachmentConstraint::class }
             commands {
                 +Issue::class
@@ -265,15 +321,14 @@ class MockAssetContract : Contract {
     class IssueWithNonZKPCommand : ZKCommandData, ZKTransactionMetadataCommandData {
         companion object {
             @Suppress("unused") // found by reflection
-            val MockThirdPartyNonZKPContract.ThirdPartyNonZKPCommand.metadata: ZKCommandMetadata
-                get() = commandMetadata {
+            val MockThirdPartyNonZKPContract.ThirdPartyNonZKPCommand.metadata: ResolvedZKCommandMetadata
+                get() = commandMetadata(this::class) {
                     numberOfSigners = 7
                     timewindow()
                 }
         }
 
-        @Transient
-        override val transactionMetadata = transactionMetadata {
+        override val transactionMetadata by transactionMetadata {
             commands {
                 +IssueWithNonZKPCommand::class
                 +MockThirdPartyNonZKPContract.ThirdPartyNonZKPCommand::class
@@ -297,8 +352,7 @@ class MockAssetContract : Contract {
      */
     @Serializable
     class MoveWithIssueApprovalOutput : ZKCommandData, ZKTransactionMetadataCommandData {
-        @Transient
-        override val transactionMetadata = transactionMetadata {
+        override val transactionMetadata by transactionMetadata {
             commands { +MoveWithIssueApprovalOutput::class }
             numberOfCorDappsForContracts = 1
         }

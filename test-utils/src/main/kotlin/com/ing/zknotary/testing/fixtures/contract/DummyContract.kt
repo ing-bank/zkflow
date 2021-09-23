@@ -3,8 +3,8 @@ package com.ing.zknotary.testing.fixtures.contract
 import com.ing.zknotary.common.contracts.ZKTransactionMetadataCommandData
 import com.ing.zknotary.common.serialization.bfl.CommandDataSerializerMap
 import com.ing.zknotary.common.serialization.bfl.ContractStateSerializerMap
-import com.ing.zknotary.common.zkp.metadata.ZKCommandMetadata
-import com.ing.zknotary.common.zkp.metadata.ZKTransactionMetadata
+import com.ing.zknotary.common.zkp.metadata.ResolvedZKCommandMetadata
+import com.ing.zknotary.common.zkp.metadata.ResolvedZKTransactionMetadata
 import com.ing.zknotary.common.zkp.metadata.commandMetadata
 import com.ing.zknotary.common.zkp.metadata.transactionMetadata
 import com.ing.zknotary.testing.fixtures.state.DummyState
@@ -33,13 +33,12 @@ public class DummyContract : Contract {
 
     @Serializable
     public class Chill : ZKTransactionMetadataCommandData {
-        @Transient
-        override val transactionMetadata: ZKTransactionMetadata = transactionMetadata {
+        override val transactionMetadata: ResolvedZKTransactionMetadata by transactionMetadata {
             commands { +Chill::class }
         }
 
         @Transient
-        override val metadata: ZKCommandMetadata = commandMetadata {
+        override val metadata: ResolvedZKCommandMetadata = commandMetadata {
             private = true
             circuit { name = "Chill" }
             numberOfSigners = 2

@@ -49,8 +49,8 @@ class TransactionVerificationTest {
     private val zincZKTransactionService: ZincZKTransactionService = ZincZKTransactionService(MockServices())
 
     private val createZKService =
-        zincZKTransactionService.zkServiceForTransactionMetadata(TestContract.Create().transactionMetadata.resolved)
-    private val moveZKService = zincZKTransactionService.zkServiceForTransactionMetadata(TestContract.Move().transactionMetadata.resolved)
+        zincZKTransactionService.zkServiceForTransactionMetadata(TestContract.Create().transactionMetadata)
+    private val moveZKService = zincZKTransactionService.zkServiceForTransactionMetadata(TestContract.Move().transactionMetadata)
 
     private val notary = ZKNulls.NULL_PARTY
 
@@ -93,7 +93,7 @@ class TransactionVerificationTest {
         val alice = ZKNulls.NULL_ANONYMOUS_PARTY
 
         val additionalSerializationPropertiesForCreate = mapOf<Any, Any>(
-            BFLSerializationScheme.CONTEXT_KEY_TRANSACTION_METADATA to TestContract.Create().transactionMetadata.resolved
+            BFLSerializationScheme.CONTEXT_KEY_TRANSACTION_METADATA to TestContract.Create().transactionMetadata
         )
 
         // Create TX
@@ -127,7 +127,7 @@ class TransactionVerificationTest {
         val bob = ZKNulls.NULL_ANONYMOUS_PARTY
 
         val additionalSerializationPropertiesForMove = mapOf<Any, Any>(
-            BFLSerializationScheme.CONTEXT_KEY_TRANSACTION_METADATA to TestContract.Move().transactionMetadata.resolved
+            BFLSerializationScheme.CONTEXT_KEY_TRANSACTION_METADATA to TestContract.Move().transactionMetadata
         )
 
         val utxo = createWtx.outRef<TestContract.TestState>(0)

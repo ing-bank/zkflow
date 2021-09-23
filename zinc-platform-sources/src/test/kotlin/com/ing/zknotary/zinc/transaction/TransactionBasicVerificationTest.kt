@@ -123,7 +123,7 @@ class TransactionBasicVerificationTest {
             command.value as? ZKTransactionMetadataCommandData ?: error("Command must implement ZKTransactionMetadataCommandData")
 
         val additionalSerializationProperties =
-            mapOf<Any, Any>(BFLSerializationScheme.CONTEXT_KEY_TRANSACTION_METADATA to zkCommand.transactionMetadata.resolved)
+            mapOf<Any, Any>(BFLSerializationScheme.CONTEXT_KEY_TRANSACTION_METADATA to zkCommand.transactionMetadata)
 
         val wtxOriginal = createWtx(
             inputs,

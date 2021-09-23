@@ -4,6 +4,7 @@ import com.ing.zknotary.common.contracts.ZKCommandData
 import com.ing.zknotary.testing.fixtures.contract.TestContract.TestState
 import com.ing.zknotary.testing.fixtures.state.DummyState
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 import org.junit.jupiter.api.Test
 
 class ZKCommandMetadataTest {
@@ -23,7 +24,8 @@ class ZKCommandMetadataTest {
             }
         }
 
-        cmd.metadata.circuit?.name shouldBe "foo"
+        cmd.metadata.shouldBeInstanceOf<PrivateResolvedZKCommandMetadata>()
+        cmd.metadata.circuit.name shouldBe "foo"
         cmd.metadata.inputs.size shouldBe 2
         cmd.metadata.inputs.first().type shouldBe DummyState::class
         cmd.metadata.inputs.first().count shouldBe 1
