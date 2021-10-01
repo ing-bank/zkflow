@@ -2,7 +2,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder
 import com.ing.zknotary.common.contracts.ZKContractState
 import com.ing.zknotary.common.transactions.ZKTransactionBuilder
 import com.ing.zknotary.common.transactions.collectUtxoInfos
-import com.ing.zknotary.common.transactions.zkCommandData
+import com.ing.zknotary.common.transactions.zkTransactionMetadata
 import com.ing.zknotary.common.zkp.PublicInput
 import com.ing.zknotary.common.zkp.Witness
 import com.ing.zknotary.common.zkp.ZKTransactionService
@@ -63,7 +63,7 @@ public fun ZKTransactionService.verify(
     zkwtx: WireTransaction,
     mode: VerificationMode
 ) {
-    val zkServiceForCommand = zkServiceForCommand(zkwtx.zkCommandData())
+    val zkServiceForCommand = zkServiceForTransactionMetadata(zkwtx.zkTransactionMetadata())
     val inputUtxoInfos = serviceHub.collectUtxoInfos(zkwtx.inputs)
     val referenceUtxoInfos = serviceHub.collectUtxoInfos(zkwtx.references)
     val witness = Witness.fromWireTransaction(

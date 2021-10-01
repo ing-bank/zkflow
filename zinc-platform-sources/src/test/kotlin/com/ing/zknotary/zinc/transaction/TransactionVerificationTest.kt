@@ -7,6 +7,7 @@ import com.ing.zknotary.common.zkp.PublicInput
 import com.ing.zknotary.common.zkp.Witness
 import com.ing.zknotary.common.zkp.ZincZKTransactionService
 import com.ing.zknotary.testing.fixtures.contract.TestContract
+import com.ing.zknotary.testing.withCustomSerializationEnv
 import com.ing.zknotary.testing.zkp.ZKNulls
 import com.ing.zknotary.zinc.types.proveTimed
 import com.ing.zknotary.zinc.types.setupTimed
@@ -28,8 +29,6 @@ import net.corda.core.serialization.SerializationMagic
 import net.corda.core.serialization.internal.CustomSerializationSchemeUtils
 import net.corda.core.transactions.WireTransaction
 import net.corda.core.utilities.loggerFor
-import net.corda.coretesting.internal.asTestContextEnv
-import net.corda.coretesting.internal.createTestSerializationEnv
 import net.corda.testing.node.MockServices
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Disabled
@@ -212,9 +211,5 @@ class TransactionVerificationTest {
                 digestService
             )
         }
-    }
-
-    private fun <R> withCustomSerializationEnv(block: () -> R): R {
-        return createTestSerializationEnv(javaClass.classLoader).asTestContextEnv { block() }
     }
 }

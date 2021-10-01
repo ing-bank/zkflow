@@ -4,7 +4,6 @@ import co.paralleluniverse.strands.Strand
 import com.ing.zknotary.common.contracts.ZKContractState
 import com.ing.zknotary.common.contracts.ZKTransactionMetadataCommandData
 import com.ing.zknotary.common.serialization.bfl.BFLSerializationScheme
-import com.ing.zknotary.common.transactions.StateOrdering.ordered
 import com.ing.zknotary.common.zkp.metadata.ResolvedZKTransactionMetadata
 import net.corda.core.contracts.AttachmentConstraint
 import net.corda.core.contracts.AutomaticPlaceholderConstraint
@@ -75,8 +74,8 @@ class ZKTransactionBuilder(
     private val serializationProperties: Map<Any, Any> = emptyMap(),
     // TransactionBuilder does not expose `inputsWithTransactionState` and `referencesWithTransactionState`, which are required for the ordered TransactionBuilder
     // to sort the states by name.
-    val inputsWithTransactionState: ArrayList<StateAndRef<ContractState>> = arrayListOf<StateAndRef<ContractState>>(),
-    val referencesWithTransactionState: ArrayList<TransactionState<ContractState>> = arrayListOf<TransactionState<ContractState>>(),
+    val inputsWithTransactionState: ArrayList<StateAndRef<ContractState>> = arrayListOf(),
+    val referencesWithTransactionState: ArrayList<TransactionState<ContractState>> = arrayListOf(),
     val window: TimeWindow? = null,
     val privacySalt: PrivacySalt = PrivacySalt(),
     val serviceHub: ServiceHub? = (Strand.currentStrand() as? FlowStateMachine<*>)?.serviceHub
@@ -144,13 +143,12 @@ class ZKTransactionBuilder(
         val resolvedTransactionMetadata = zkCommand.transactionMetadata
 
         resolvedTransactionMetadata.verify(this)
-        //
+
         val serializationProperties = mapOf<Any, Any>(
             BFLSerializationScheme.CONTEXT_KEY_TRANSACTION_METADATA to resolvedTransactionMetadata
         )
 
-        val orderedBuilder = ordered().builder
-        return orderedBuilder.toWireTransaction(services, serializationSchemeId, serializationProperties)
+        return builder.toWireTransaction(services, serializationSchemeId, serializationProperties)
     }
 
     /**
@@ -188,64 +186,6 @@ class ZKTransactionBuilder(
         val signableData = SignableData(wtx.id, signatureMetadata)
         val sig = keyManagementService.sign(signableData, publicKey)
         return SignedTransaction(wtx, listOf(sig))
-    }
-
-    /**
-     * The `inputsWithTransactionState and referencesWithTransactionState ore private members of TransactionBuilder,
-     * so we have to recreate the TransactionBuilder by adding each state individually instead of passing them to the constructor (which does not set them).
-     */
-    private fun reconstructTransactionBuilder(
-        notary: Party? = null,
-        inputs: MutableList<StateAndRef<*>> = arrayListOf(),
-        attachments: MutableList<AttachmentId> = arrayListOf(),
-        outputs: MutableList<TransactionState<ContractState>> = arrayListOf(),
-        commands: MutableList<Command<*>> = arrayListOf(),
-        window: TimeWindow? = null,
-        privacySalt: PrivacySalt = PrivacySalt(),
-        references: MutableList<ReferencedStateAndRef<*>> = arrayListOf(),
-        serviceHub: ServiceHub? = (Strand.currentStrand() as? FlowStateMachine<*>)?.serviceHub,
-    ): TransactionBuilder {
-        val transactionBuilder =
-            TransactionBuilder(notary = notary, window = window, privacySalt = privacySalt, serviceHub = serviceHub)
-        @Suppress("SpreadOperator")
-        transactionBuilder.withItems(
-            *inputs.toTypedArray(),
-            *outputs.toTypedArray(),
-            *references.toTypedArray(),
-            *commands.toTypedArray(),
-            *attachments.toTypedArray()
-        )
-        return transactionBuilder
-    }
-
-    /**
-     * Reorders the states in the underlying TransactionBuilder so that these are lexicographically ordered by their class name.
-     * In case two states have the same class name, the state that was added before the other in the ZKTransactionBuilder should come first.
-     * Zinc does not support polymorphism, this implies that List where A is an interface is an invalid input for Zinc. To pass such a list to Zinc, we group the list of states w.r.t. their type;
-     * the list will further be split into sublists containing the same type states.
-     */
-    fun ordered(): ZKTransactionBuilder {
-        // Order outputs by classname.
-        val orderedOutputs = builder.outputStates().ordered()
-
-        // Order inputs and references by their state's classname.
-        val orderedInputs = inputsWithTransactionState.ordered()
-        // combine states and references
-        val refs = referencesWithTransactionState.zip(builder.referenceStates()) { state, ref -> ReferencedStateAndRef(StateAndRef(state, ref)) }
-        val orderedRefs = refs.ordered()
-
-        val orderedBuilder = reconstructTransactionBuilder(
-            notary = notary!!,
-            outputs = orderedOutputs.toMutableList(),
-            inputs = orderedInputs.toMutableList(),
-            attachments = builder.attachments().toMutableList(),
-            commands = builder.commands().toMutableList(),
-            references = orderedRefs.toMutableList(),
-            window = window,
-            privacySalt = privacySalt,
-            serviceHub = serviceHub
-        )
-        return ZKTransactionBuilder(orderedBuilder, serializationSchemeId, serializationProperties)
     }
 
     /**

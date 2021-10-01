@@ -171,7 +171,7 @@ public data class TestTransactionDSLInterpreter private constructor(
         // the existing signature
         val txb = transactionBuilder.copy()
 
-        val wtx = toWireTransaction()
+        val wtx = txb.toWireTransaction(services)
         wtx.toLedgerTransaction(services).verify()
 
         return EnforceVerifyOrFail.Token

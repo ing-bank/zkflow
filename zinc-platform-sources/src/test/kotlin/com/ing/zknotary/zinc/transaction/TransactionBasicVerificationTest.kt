@@ -8,6 +8,7 @@ import com.ing.zknotary.testing.fixtures.contract.DummyContract
 import com.ing.zknotary.testing.fixtures.state.DummyState
 import com.ing.zknotary.testing.serialization.getSerializationContext
 import com.ing.zknotary.testing.serialization.serializeWithScheme
+import com.ing.zknotary.testing.withCustomSerializationEnv
 import io.kotest.matchers.shouldBe
 import net.corda.core.contracts.AlwaysAcceptAttachmentConstraint
 import net.corda.core.contracts.AttachmentConstraint
@@ -28,8 +29,6 @@ import net.corda.core.serialization.deserialize
 import net.corda.core.serialization.serialize
 import net.corda.core.transactions.WireTransaction
 import net.corda.core.utilities.loggerFor
-import net.corda.coretesting.internal.asTestContextEnv
-import net.corda.coretesting.internal.createTestSerializationEnv
 import net.corda.testing.core.TestIdentity
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.params.ParameterizedTest
@@ -206,10 +205,6 @@ class TransactionBasicVerificationTest {
                 digestService
             )
         }
-    }
-
-    private fun <R> withCustomSerializationEnv(block: () -> R): R {
-        return createTestSerializationEnv(javaClass.classLoader).asTestContextEnv { block() }
     }
 
     private data class ConstrainedState(val stateAndContract: StateAndContract, val constraint: AttachmentConstraint)

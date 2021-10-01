@@ -150,9 +150,8 @@ data class ResolvedZKTransactionMetadata(
         try {
             verifyCommandsAndSigners(txb.commands())
             verifyOutputs(txb.outputStates())
-            // TODO: enable this when these vals has been made public on ZkTxb in https://github.com/ingzkp/zk-notary/pull/329
-            // verifyInputs(txb.inputsWithTransactionState)
-            // verifyReferences(txb.referencesWithTransactionState)
+            verifyInputs(txb.inputsWithTransactionState)
+            verifyReferences(txb.referencesWithTransactionState)
             verifyUserAttachments(txb)
             // verifyNotary(txb)
             // verifyParameters(txb)
@@ -209,16 +208,22 @@ data class ResolvedZKTransactionMetadata(
     }
 
     private fun verifyInputs(inputs: List<StateAndRef<ContractState>>) = matchTypes(
+        componentName = "input",
         expectedTypes = commands.flatMap { it.inputs }.flattened,
         actualTypes = inputs.map { it.state.data::class }
     )
 
-    private fun verifyReferences(references: List<StateAndRef<ContractState>>) = matchTypes(
+    @JvmName("verifyReferenceTransactionStates")
+    private fun verifyReferences(references: List<TransactionState<ContractState>>) = matchTypes(
+        componentName = "reference",
         expectedTypes = commands.flatMap { it.references }.flattened,
-        actualTypes = references.map { it.state.data::class }
+        actualTypes = references.map { it.data::class }
     )
 
+    private fun verifyReferences(references: List<StateAndRef<ContractState>>) = verifyReferences(references.map { it.state })
+
     private fun verifyOutputs(outputs: List<TransactionState<*>>) = matchTypes(
+        "output",
         expectedTypes = commands.flatMap { it.outputs }.flattened,
         actualTypes = outputs.map { it.data::class }
     )
@@ -244,10 +249,10 @@ data class ResolvedZKTransactionMetadata(
         }
     }
 
-    private fun matchTypes(expectedTypes: List<KClass<*>>, actualTypes: List<KClass<*>>) {
+    private fun matchTypes(componentName: String, expectedTypes: List<KClass<*>>, actualTypes: List<KClass<*>>) {
         expectedTypes.forEachIndexed { index, expected ->
-            val actual = actualTypes.getOrElse(index) { error("Expected to find component $expected at index $index, nothing found") }
-            require(actual == expected) { "Unexpected component order. Expected '$expected' at index $index, but found '$actual'" }
+            val actual = actualTypes.getOrElse(index) { error("Expected to find $componentName $expected at index $index, nothing found") }
+            require(actual == expected) { "Unexpected $componentName order. Expected '$expected' at index $index, but found '$actual'" }
         }
     }
 }

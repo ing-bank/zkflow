@@ -1,7 +1,6 @@
 package com.ing.zknotary.common.zkp
 
 import com.ing.zknotary.common.serialization.json.corda.WitnessSerializer
-import com.ing.zknotary.common.transactions.StateOrdering.ordered
 import com.ing.zknotary.common.transactions.UtxoInfo
 import com.ing.zknotary.common.transactions.zkTransactionMetadata
 import com.ing.zknotary.common.zkp.metadata.ZincType
@@ -156,9 +155,13 @@ class Witness(
             inputUtxoInfos: List<UtxoInfo>,
             referenceUtxoInfos: List<UtxoInfo>,
         ): Witness {
-            // Reorder utxos according to the state classnames. The order will then be consistent with the order in the WireTransaction.
-            val orderedInputUtxoInfos = inputUtxoInfos.ordered()
-            val orderedReferenceUtxoInfos = referenceUtxoInfos.ordered()
+            // Reorder utxos according to be consistent with the order in the WireTransaction.
+            val orderedInputUtxoInfos = wtx.inputs.map { inputRef ->
+                inputUtxoInfos.find { it.stateRef == inputRef } ?: error("No UtxoInfo provided for input ref $inputRef")
+            }
+            val orderedReferenceUtxoInfos = wtx.references.map { referenceRef ->
+                referenceUtxoInfos.find { it.stateRef == referenceRef } ?: error("No UtxoInfo provided for reference ref $referenceRef")
+            }
 
             //  In this context we know that the first command is a zk command and ispect that for circuit medadata
             val javaClass2ZincType = wtx.zkTransactionMetadata().javaClass2ZincType
@@ -202,7 +205,6 @@ class Witness(
                 javaClass2ZincType[it.data::class]?.typeName ?: error("Class ${it.data::class} needs to have an associated Zinc type")
             }
 
-            // TODO: Ensure that the order is the same as the deterministic order in ZKTransactionBuilder
             val serializedStateBytes =
                 componentGroups.singleOrNull { it.groupIndex == groupEnum.ordinal }?.components?.mapIndexed { index, output -> zincTypes[index] to output.copyBytes() }
 

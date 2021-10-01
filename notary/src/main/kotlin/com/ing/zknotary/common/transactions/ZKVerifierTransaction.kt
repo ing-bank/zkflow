@@ -61,6 +61,11 @@ class ZKVerifierTransaction(
             }
         }
 
+    /**
+     * Normally, all these checks would also happen on construction, to guard against invalid transactions.
+     * In this case, we choose to only do this on verify, because it is an expensive operation and is always called on
+     * transaction verification anyway.
+     */
     fun verify() {
         // Check that output hashes indeed produce provided group hash
         require(
@@ -69,6 +74,16 @@ class ZKVerifierTransaction(
                 digestService
             ).hash == groupHashes[ComponentGroupEnum.OUTPUTS_GROUP.ordinal]
         )
+
+        // FIXME: Add checks that confirm all `componentGroups` contents belong to `val groupHashes`.
+        // componentGroups.forEach {
+        //     require(
+        //         MerkleTree.getMerkleTree(
+        //             it.components,
+        //             digestService
+        //         ).hash == groupHashes[ComponentGroupEnum.OUTPUTS_GROUP.ordinal]
+        //     )
+        // }
     }
 
     override fun hashCode(): Int = id.hashCode()

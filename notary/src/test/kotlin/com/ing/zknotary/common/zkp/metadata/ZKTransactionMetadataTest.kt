@@ -32,6 +32,7 @@ import net.corda.core.contracts.HashAttachmentConstraint
 import net.corda.core.contracts.SignatureAttachmentConstraint
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.transactions.LedgerTransaction
+import net.corda.testing.common.internal.testNetworkParameters
 import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
 import org.junit.jupiter.api.Test
@@ -40,18 +41,36 @@ import kotlin.time.ExperimentalTime
 
 @ExperimentalTime
 class ZKTransactionMetadataTest {
-    private val services = MockServices()
+    private val services = MockServices(
+        TestIdentity.fixed("ServiceHub"),
+        testNetworkParameters(minimumPlatformVersion = 10),
+    )
     private val approver = TestIdentity.fixed("Approver").party.anonymise()
     private val issuer = TestIdentity.fixed("Issuer").party.anonymise()
+    private val alice = TestIdentity.fixed("Alice").party.anonymise()
 
     @Test
     fun `The transaction builder must match structure from transaction metadata`() {
         services.zkLedger(zkService = MockZKTransactionService(services)) {
+            // basic checks
             zkTransaction {
-                output(MockAssetContract.ID, MockAssetContract.MockAsset(issuer))
+                output(MockAssetContract.ID, "Issued State", MockAssetContract.MockAsset(issuer))
+                fails()
+                output(MockAuditContract.ID, "Issue Approval", MockAuditContract.Approval(approver))
+                command(issuer.owningKey, MockAssetContract.Issue())
+                fails()
+                command(approver.owningKey, MockAuditContract.Approve())
+                verifies()
+            }
+
+            // also checks inputs and references
+            zkTransaction {
+                input("Issued State")
+                reference("Issue Approval")
+                output(MockAssetContract.ID, MockAssetContract.MockAsset(alice))
                 fails()
                 output(MockAuditContract.ID, MockAuditContract.Approval(approver))
-                command(issuer.owningKey, MockAssetContract.Issue())
+                command(listOf(issuer.owningKey, alice.owningKey), MockAssetContract.Move())
                 fails()
                 command(approver.owningKey, MockAuditContract.Approve())
                 verifies()
@@ -74,11 +93,12 @@ class ZKTransactionMetadataTest {
         }
 
         Command().transactionMetadata.commands.first().numberOfSigners shouldBe Command().metadata.numberOfSigners
+        TransactionMetadataCache.resolvedTransactionMetadata[Command::class]?.commands?.first()?.commandKClass shouldBe Command::class
 
         class Command2 : ZKTransactionMetadataCommandData {
             override val transactionMetadata: ResolvedZKTransactionMetadata by transactionMetadata {
                 commands {
-                    +Command::class
+                    +Command2::class
                 }
             }
             override val metadata: ResolvedZKCommandMetadata = commandMetadata {
@@ -87,9 +107,8 @@ class ZKTransactionMetadataTest {
             }
         }
 
-        Command2().transactionMetadata.commands.first().numberOfSigners shouldBe Command().metadata.numberOfSigners
-
-        TransactionMetadataCache.resolvedTransactionMetadata[Command::class]?.commands?.first()?.commandKClass shouldBe Command::class
+        Command2().transactionMetadata.commands.first().numberOfSigners shouldBe Command2().metadata.numberOfSigners
+        TransactionMetadataCache.resolvedTransactionMetadata[Command2::class]?.commands?.first()?.commandKClass shouldBe Command2::class
     }
 
     private fun testUncachedTransactionMetadata(init: ZKTransactionMetadata.() -> Unit): ResolvedZKTransactionMetadata {
@@ -205,11 +224,7 @@ class ZKTransactionMetadataTest {
 val mockSerializers = run {
     ContractStateSerializerMap.register(MockAuditContract.Approval::class, 9993, MockAuditContract.Approval.serializer())
     CommandDataSerializerMap.register(MockAssetContract.Issue::class, 9992, MockAssetContract.Issue.serializer())
-    CommandDataSerializerMap.register(
-        MockAssetContract.MoveWithIssueApprovalOutput::class,
-        9995,
-        MockAssetContract.MoveWithIssueApprovalOutput.serializer()
-    )
+    CommandDataSerializerMap.register(MockAssetContract.Move::class, 9996, MockAssetContract.Move.serializer())
     CommandDataSerializerMap.register(MockAuditContract.Approve::class, 9994, MockAuditContract.Approve.serializer())
     ContractStateSerializerMap.register(MockAssetContract.MockAsset::class, 9991, MockAssetContract.MockAsset.serializer())
 }
@@ -295,6 +310,27 @@ class MockAssetContract : Contract {
     }
 
     @Serializable
+    class Move : ZKCommandData, ZKTransactionMetadataCommandData {
+        override val transactionMetadata by transactionMetadata {
+            network { attachmentConstraintType = SignatureAttachmentConstraint::class }
+            commands {
+                +Move::class
+                +MockAuditContract.Approve::class
+            }
+        }
+
+        @Transient
+        override val metadata = commandMetadata {
+            private = true
+            numberOfSigners = 2
+            inputs { 1 of MockAsset::class }
+            outputs { 1 of MockAsset::class }
+            references { 1 of MockAuditContract.Approval::class }
+            timewindow()
+        }
+    }
+
+    @Serializable
     class Issue : ZKCommandData, ZKTransactionMetadataCommandData {
         override val transactionMetadata by transactionMetadata {
             network { attachmentConstraintType = SignatureAttachmentConstraint::class }
@@ -340,29 +376,6 @@ class MockAssetContract : Contract {
             private = true
             numberOfSigners = 1
             outputs { 1 of MockAsset::class }
-            timewindow()
-        }
-    }
-
-    /**
-     * This command not only moves the MockAsset, but also outputs an Approval.
-     * This makes no sense and is only used to test that the correct calculation of
-     * contract attachments in a tx based on the states found in it, even if there is
-     * no command present for them.
-     */
-    @Serializable
-    class MoveWithIssueApprovalOutput : ZKCommandData, ZKTransactionMetadataCommandData {
-        override val transactionMetadata by transactionMetadata {
-            commands { +MoveWithIssueApprovalOutput::class }
-            numberOfCorDappsForContracts = 1
-        }
-
-        @Transient
-        override val metadata = commandMetadata {
-            private = true
-            numberOfSigners = 1
-            outputs { 1 of MockAsset::class }
-            outputs { 1 of MockAuditContract.Approval::class }
             timewindow()
         }
     }

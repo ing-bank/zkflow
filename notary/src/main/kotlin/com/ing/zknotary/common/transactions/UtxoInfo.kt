@@ -21,6 +21,10 @@ class UtxoInfo private constructor(
      */
     val serializedContents: ByteArray,
     val nonce: SecureHash,
+
+    /**
+     * The only reason we store this as String and not KClass is because Corda serialization does not support it.
+     */
     private val stateClassName: String
 ) {
     companion object {

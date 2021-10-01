@@ -8,6 +8,8 @@ import kotlinx.serialization.Serializable
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.HashAttachmentConstraint
+import net.corda.core.contracts.StateAndRef
+import net.corda.core.contracts.StateRef
 import net.corda.core.contracts.TransactionState
 import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.AbstractParty
@@ -57,6 +59,10 @@ public data class DummyState(
                 encumbrance = 1,
                 constraint = HashAttachmentConstraint(SecureHash.zeroHash)
             )
+        }
+
+        public fun newStateAndRef(notary: Party): StateAndRef<DummyState> {
+            return StateAndRef(newTxState(notary), StateRef(SecureHash.randomSHA256(), Random.nextInt(4)))
         }
     }
 }
