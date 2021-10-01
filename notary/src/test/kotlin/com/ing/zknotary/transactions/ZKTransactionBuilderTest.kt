@@ -1,9 +1,9 @@
-package com.ing.zknotary.notary.transactions
+package com.ing.zknotary.transactions
 
 import com.ing.zknotary.common.transactions.ZKTransactionBuilder
 import com.ing.zknotary.testing.shouldHaveSamePublicApiAs
 import net.corda.core.transactions.TransactionBuilder
-import org.junit.jupiter.api.Test
+import org.junit.Test
 
 class ZKTransactionBuilderTest {
     @Test

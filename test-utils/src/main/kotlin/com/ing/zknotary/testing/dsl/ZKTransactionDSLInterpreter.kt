@@ -31,7 +31,7 @@ public interface TransactionDSLInterpreter : Verifies, OutputStateLookup {
     /**
      * A reference to the enclosing ledger{..}'s interpreter.
      */
-    public val ledgerInterpreter: LedgerDSLInterpreter<TransactionDSLInterpreter>
+    public val ledgerInterpreter: LedgerDSLInterpreter<TransactionDSLInterpreter, TransactionDSLInterpreter>
 
     /**
      * Adds an input reference to the transaction. Note that [verifies] will resolve this reference.

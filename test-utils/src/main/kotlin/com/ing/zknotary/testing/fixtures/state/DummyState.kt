@@ -11,6 +11,7 @@ import net.corda.core.contracts.HashAttachmentConstraint
 import net.corda.core.contracts.TransactionState
 import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.AbstractParty
+import net.corda.core.identity.Party
 import net.corda.testing.core.TestIdentity
 import kotlin.random.Random
 
@@ -44,6 +45,15 @@ public data class DummyState(
             return TransactionState(
                 data = any(),
                 notary = notary.party,
+                encumbrance = 1,
+                constraint = HashAttachmentConstraint(SecureHash.zeroHash)
+            )
+        }
+
+        public fun newTxState(notary: Party): TransactionState<DummyState> {
+            return TransactionState(
+                data = any(),
+                notary = notary,
                 encumbrance = 1,
                 constraint = HashAttachmentConstraint(SecureHash.zeroHash)
             )

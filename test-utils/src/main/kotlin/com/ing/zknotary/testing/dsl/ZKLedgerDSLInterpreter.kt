@@ -2,6 +2,7 @@
 
 package com.ing.zknotary.testing.dsl
 
+import com.ing.zknotary.common.transactions.ZKTransactionBuilder
 import net.corda.core.DoNotImplement
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.StateAndRef
@@ -104,7 +105,7 @@ public interface Verifies {
  * TODO (Kotlin 1.1): Use type synonyms to make the type params less unwieldy
  */
 @DoNotImplement
-public interface LedgerDSLInterpreter<out T : TransactionDSLInterpreter> : Verifies, OutputStateLookup {
+public interface LedgerDSLInterpreter<out T : TransactionDSLInterpreter, out K : TransactionDSLInterpreter> : Verifies, OutputStateLookup {
     /**
      * Creates and adds a transaction to the ledger.
      * @param transactionLabel Optional label of the transaction, to be used in diagnostic messages.
@@ -127,8 +128,8 @@ public interface LedgerDSLInterpreter<out T : TransactionDSLInterpreter> : Verif
      */
     public fun _zkTransaction(
         transactionLabel: String?,
-        transactionBuilder: TransactionBuilder,
-        dsl: T.() -> EnforceVerifyOrFail
+        transactionBuilder: ZKTransactionBuilder,
+        dsl: K.() -> EnforceVerifyOrFail
     ): WireTransaction
 
     /**
@@ -148,7 +149,7 @@ public interface LedgerDSLInterpreter<out T : TransactionDSLInterpreter> : Verif
      * Creates a local scoped copy of the ledger.
      * @param dsl The ledger DSL to be interpreted using the copy.
      */
-    public fun _tweak(dsl: LedgerDSLInterpreter<T>.() -> Unit)
+    public fun _tweak(dsl: LedgerDSLInterpreter<T, K>.() -> Unit)
 
     /**
      * Adds an attachment to the ledger.
@@ -164,8 +165,8 @@ public interface LedgerDSLInterpreter<out T : TransactionDSLInterpreter> : Verif
  * public functionality then first add your primitive to [LedgerDSLInterpreter] and then add the convenience defaults/extension
  * methods here.
  */
-public class LedgerDSL<out T : TransactionDSLInterpreter, out L : LedgerDSLInterpreter<T>>(public val interpreter: L, private val notary: Party) :
-    LedgerDSLInterpreter<TransactionDSLInterpreter> by interpreter {
+public class LedgerDSL<out T : TransactionDSLInterpreter, out K : TransactionDSLInterpreter, out L : LedgerDSLInterpreter<T, K>>(public val interpreter: L, private val notary: Party) :
+    LedgerDSLInterpreter<TransactionDSLInterpreter, TransactionDSLInterpreter> by interpreter {
 
     /**
      * Creates and adds a transaction to the ledger.
@@ -184,7 +185,7 @@ public class LedgerDSL<out T : TransactionDSLInterpreter, out L : LedgerDSLInter
     @JvmOverloads
     public fun zkTransaction(
         label: String? = null,
-        transactionBuilder: TransactionBuilder = TransactionBuilder(notary = notary),
+        transactionBuilder: ZKTransactionBuilder = ZKTransactionBuilder(notary = notary),
         dsl: TransactionDSL<TransactionDSLInterpreter>.() -> EnforceVerifyOrFail
     ): WireTransaction =
         _zkTransaction(label, transactionBuilder) { TransactionDSL(this, notary).dsl() }
@@ -201,7 +202,7 @@ public class LedgerDSL<out T : TransactionDSLInterpreter, out L : LedgerDSLInter
         _unverifiedTransaction(label, transactionBuilder) { TransactionDSL(this, notary).dsl() }
 
     /** Creates a local scoped copy of the ledger. */
-    public fun tweak(dsl: LedgerDSL<T, L>.() -> Unit): Unit = _tweak { LedgerDSL<T, L>(uncheckedCast(this), notary).dsl() }
+    public fun tweak(dsl: LedgerDSL<T, K, L>.() -> Unit): Unit = _tweak { LedgerDSL<T, K, L>(uncheckedCast(this), notary).dsl() }
 
     /**
      * Retrieves an output previously defined by [TransactionDSLInterpreter._output] with a label passed in.

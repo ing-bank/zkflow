@@ -2,6 +2,7 @@ package com.ing.zknotary.common.zkp
 
 import com.ing.zknotary.common.contracts.toZKCommand
 import com.ing.zknotary.common.serialization.json.corda.WitnessSerializer
+import com.ing.zknotary.common.transactions.StateOrdering.ordered
 import com.ing.zknotary.common.transactions.UtxoInfo
 import com.ing.zknotary.gradle.zinc.template.TemplateParameters.Companion.camelToSnakeCase
 import kotlinx.serialization.Serializable
@@ -154,10 +155,12 @@ class Witness(
             inputUtxoInfos: List<UtxoInfo>,
             referenceUtxoInfos: List<UtxoInfo>,
         ): Witness {
-            // TODO
-            //  A single command per circuit/witness is supported.
-            //  In this context we know that commands are zk commands. VERIFY.
-            val javaClass2ZincType = wtx.commands.single().toZKCommand().value.circuit.javaClass2ZincType
+            // Reorder utxos according to the state classnames. The order will then be consistent with the order in the WireTransaction.
+            val orderedInputUtxoInfos = inputUtxoInfos.ordered()
+            val orderedReferenceUtxoInfos = referenceUtxoInfos.ordered()
+
+            //  In this context we know that the first command is a zk command and ispect that for circuit medadata
+            val javaClass2ZincType = wtx.commands.first().toZKCommand().value.circuit.javaClass2ZincType
 
             return Witness(
                 inputsGroup = wtx.serializedComponentBytesFor(ComponentGroupEnum.INPUTS_GROUP),
@@ -172,10 +175,10 @@ class Witness(
 
                 privacySalt = wtx.privacySalt,
 
-                serializedInputUtxos = inputUtxoInfos.serializedBytesForUTXO(ComponentGroupEnum.INPUTS_GROUP, javaClass2ZincType),
-                serializedReferenceUtxos = referenceUtxoInfos.serializedBytesForUTXO(ComponentGroupEnum.REFERENCES_GROUP, javaClass2ZincType),
-                inputUtxoNonces = inputUtxoInfos.map { it.nonce },
-                referenceUtxoNonces = referenceUtxoInfos.map { it.nonce }
+                serializedInputUtxos = orderedInputUtxoInfos.serializedBytesForUTXO(ComponentGroupEnum.INPUTS_GROUP, javaClass2ZincType),
+                serializedReferenceUtxos = orderedReferenceUtxoInfos.serializedBytesForUTXO(ComponentGroupEnum.REFERENCES_GROUP, javaClass2ZincType),
+                inputUtxoNonces = orderedInputUtxoInfos.map { it.nonce },
+                referenceUtxoNonces = orderedReferenceUtxoInfos.map { it.nonce }
             )
         }
 

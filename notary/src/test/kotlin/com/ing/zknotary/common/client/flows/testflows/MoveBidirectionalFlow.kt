@@ -49,8 +49,7 @@ class MoveBidirectionalFlow(
         val myOutput = StateAndContract(myInput.state.data.copy(owner = counterParty.anonymise()), TestContract.PROGRAM_ID)
         val theirOutput = StateAndContract(theirInput.state.data.copy(owner = me), TestContract.PROGRAM_ID)
 
-        val builder = ZKTransactionBuilder(serviceHub.networkMapCache.notaryIdentities.single())
-        builder.withItems(myInput, theirInput, myOutput, theirOutput, command)
+        val builder = ZKTransactionBuilder(serviceHub.networkMapCache.notaryIdentities.single()).withItems(myInput, theirInput, myOutput, theirOutput, command)
 
         // Transaction creator signs transaction.
         val stx = serviceHub.signInitialTransaction(builder)
