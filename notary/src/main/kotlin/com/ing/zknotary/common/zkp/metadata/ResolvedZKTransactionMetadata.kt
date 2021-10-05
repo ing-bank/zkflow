@@ -152,7 +152,7 @@ data class ResolvedZKTransactionMetadata(
             verifyOutputs(txb.outputStates())
             verifyInputs(txb.inputsWithTransactionState)
             verifyReferences(txb.referencesWithTransactionState)
-            verifyUserAttachments(txb)
+            verifyUserAttachments(txb) // Txb determines contract attachments only in `toWireTransaction()`, so not checking here.
             // verifyNotary(txb)
             // verifyParameters(txb)
         } catch (e: IllegalArgumentException) {
@@ -161,7 +161,7 @@ data class ResolvedZKTransactionMetadata(
     }
 
     class IllegalTransactionStructureException(cause: Throwable) :
-        IllegalArgumentException("Transaction does not match expected structure.", cause)
+        IllegalArgumentException("Transaction does not match expected structure: ${cause.message}", cause)
 
     private val expectedUserAttachmentCount by lazy { commands.sumOf { it.numberOfUserAttachments } }
 
@@ -195,7 +195,7 @@ data class ResolvedZKTransactionMetadata(
         require(actualContractAttachments.size == expectedNumberOfContractAttachments) {
             val actualAttachmentsToContracts = actualContractAttachments.map { attachment ->
                 attachment as ContractAttachment
-                "${attachment.id.toHexString()} for contracts ${attachment.allContracts.joinToString(", ")}"
+                "attachment id ${attachment.id.toHexString()} for contracts ${attachment.allContracts.joinToString(", ")}"
             }.joinToString("\n")
 
             "Expected $expectedNumberOfContractAttachments contract attachments, " +

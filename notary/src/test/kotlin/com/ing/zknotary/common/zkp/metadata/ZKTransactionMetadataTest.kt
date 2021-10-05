@@ -152,6 +152,17 @@ class ZKTransactionMetadataTest {
     }
 
     @Test
+    fun `Wrong cordapp count fails`() {
+        services.zkLedger(zkService = MockZKTransactionService(services)) {
+            zkTransaction {
+                output(MockAssetContract.ID, MockAssetContract.MockAsset(issuer))
+                command(listOf(issuer.owningKey), MockAssetContract.IssueWithWrongCorDappCount())
+                failsWith("Expected ${MockAssetContract.IssueWithWrongCorDappCount().transactionMetadata.numberOfCorDappsForContracts} contract attachments, found 1")
+            }
+        }
+    }
+
+    @Test
     fun `No commands fails`() {
         shouldThrow<IllegalArgumentException> {
             testUncachedTransactionMetadata {}
@@ -224,6 +235,11 @@ class ZKTransactionMetadataTest {
 val mockSerializers = run {
     ContractStateSerializerMap.register(MockAuditContract.Approval::class, 9993, MockAuditContract.Approval.serializer())
     CommandDataSerializerMap.register(MockAssetContract.Issue::class, 9992, MockAssetContract.Issue.serializer())
+    CommandDataSerializerMap.register(
+        MockAssetContract.IssueWithWrongCorDappCount::class,
+        99998,
+        MockAssetContract.IssueWithWrongCorDappCount.serializer()
+    )
     CommandDataSerializerMap.register(MockAssetContract.Move::class, 9996, MockAssetContract.Move.serializer())
     CommandDataSerializerMap.register(MockAuditContract.Approve::class, 9994, MockAuditContract.Approve.serializer())
     ContractStateSerializerMap.register(MockAssetContract.MockAsset::class, 9991, MockAssetContract.MockAsset.serializer())
@@ -279,7 +295,6 @@ class MockAuditContract : Contract {
     class Approve : ZKCommandData {
         @Transient
         override val metadata = commandMetadata {
-            private = true
             numberOfSigners = 1
             outputs { 1 of Approval::class }
             timewindow()
@@ -301,6 +316,11 @@ class MockAssetContract : Contract {
         override val owner: AnonymousParty,
         val value: Int = Random().nextInt(1000)
     ) : ZKOwnableState {
+
+        init {
+            // TODO: Hack!
+            mockSerializers
+        }
 
         @FixedLength([1])
         override val participants: List<@Serializable(with = AnonymousPartySerializer::class) AnonymousParty> = listOf(owner)
@@ -331,7 +351,25 @@ class MockAssetContract : Contract {
     }
 
     @Serializable
-    class Issue : ZKCommandData, ZKTransactionMetadataCommandData {
+    class IssueWithWrongCorDappCount : ZKTransactionMetadataCommandData {
+        override val transactionMetadata by transactionMetadata {
+            commands {
+                +IssueWithWrongCorDappCount::class
+            }
+            numberOfCorDappsForContracts = 2
+        }
+
+        @Transient
+        override val metadata = commandMetadata {
+            private = true
+            numberOfSigners = 1
+            outputs { 1 of MockAsset::class }
+            timewindow()
+        }
+    }
+
+    @Serializable
+    class Issue : ZKTransactionMetadataCommandData {
         override val transactionMetadata by transactionMetadata {
             network { attachmentConstraintType = SignatureAttachmentConstraint::class }
             commands {

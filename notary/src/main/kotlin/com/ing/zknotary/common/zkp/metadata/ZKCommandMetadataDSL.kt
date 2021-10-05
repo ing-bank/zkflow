@@ -57,7 +57,7 @@ data class ZKCircuit(
         private fun ContractStateTypeCountList.toZincTypes() = map { it.type to kClassToZincType(it.type) }
 
         private fun kClassToZincType(kClass: KClass<*>): ZincType {
-            val simpleName = kClass.simpleName ?: error("classes used in transactins must be a named class")
+            val simpleName = kClass.simpleName ?: error("classes used in transactions must be a named class")
             return ZincType(
                 simpleName,
                 simpleName.camelToSnakeCase()
