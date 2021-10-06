@@ -81,19 +81,6 @@ data class ResolvedZKTransactionMetadata(
         commands.flatMap { it.contractClassNames }
             .map { it.packageName }.distinct().size
 
-    // /**
-    //  * The number of CorDapps required for the smart contract required for this transaction.
-    //  * This number is determined by the location of all contracts required by this transaction.
-    //  * They might be located in one CorDapp, or perhaps in multiple CorDapps.
-    //  *
-    //  * The difference with `val numberOfCorDappsForContracts` above is that this is calculated dynamically and therefore requires
-    //  * the servicehub. They should return the same number
-    //  */
-    // fun numberOfCorDappsForContracts(services: ServicesForResolution): Int =
-    //     commands.flatMap { it.contractClassNames }.distinct()
-    //         .mapNotNull { services.cordappProvider.getContractAttachmentID(it) }
-    //         .distinct().size
-
     /**
      * The aggregate list of java class to zinc type for all commands in this transaction.
      */

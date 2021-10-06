@@ -76,10 +76,10 @@ object Advance : DepositContractCommand, ZKTransactionMetaData {
             //     numberOfSigners = 2
             //     private = true // This determines whether a circuit is expected to exist for this command. If false, ZKFLow will ignore this command for the ZKP circuit in all ways, except for Merkle tree calculation.
             //     inputs {
-            //         DepositState::class to 1
+            //         1 of DepositState::class
             //     }
             //     outputs {
-            //         SomeOtherDepositContractState::class to 2
+            //         2 of SomeOtherDepositContractState::class
             //     }
             // }
         }
@@ -92,11 +92,11 @@ object Advance : DepositContractCommand, ZKTransactionMetaData {
         numberOfSigners = 2
         private = true // This determines whether a circuit is expected to exist for this command. If false, ZKFLow will ignore this command for the ZKP circuit in all ways, except for Merkle tree calculation.
         inputs {
-            DepositState::class to 1
+           1 of DepositState::class
         }
         outputs {
-            DepositState::class to 1
-            SomeOtherDepositContractState::class to 2
+            1 of DepositState::class to 1
+            2 of SomeOtherDepositContractState::class
         }
     }
 }
@@ -112,7 +112,7 @@ val TokenContract.Command.Issue.commandMetadata: ZKCommandMetadata
         private = false
         numberOfSigners = 1
         outputs {
-            TokenState::class to 1
+            1 of TokenState::class
         }
     }
 ```

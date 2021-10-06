@@ -8,7 +8,8 @@ import kotlin.reflect.KClass
 
 internal val List<ContractStateTypeCount>.flattened: List<KClass<out ContractState>>
     get() {
-        return fold(listOf()) { acc, typeCount -> acc + List(typeCount.count) { typeCount.type } }
+        // return fold(listOf()) { acc, typeCount -> acc + List(typeCount.count) { typeCount.type } }
+        return flatMap { typeCount -> List(typeCount.count) { typeCount.type } }
     }
 
 internal val ContractClassName.packageName: String?
@@ -29,9 +30,13 @@ internal val ContractClassName.packageName: String?
 internal val KClass<out ContractState>.requiredContractClassName: String?
     get() {
         val annotation = java.getAnnotation(BelongsToContract::class.java)
-        if (annotation != null) {
-            return annotation.value.java.typeName
+        val enclosingClass = java.enclosingClass
+
+        return if (annotation != null) {
+            annotation.value.java.typeName
+        } else if (enclosingClass != null && Contract::class.java.isAssignableFrom(enclosingClass)) {
+            enclosingClass.typeName
+        } else {
+            null
         }
-        val enclosingClass = java.enclosingClass ?: return null
-        return if (Contract::class.java.isAssignableFrom(enclosingClass)) enclosingClass.typeName else null
     }

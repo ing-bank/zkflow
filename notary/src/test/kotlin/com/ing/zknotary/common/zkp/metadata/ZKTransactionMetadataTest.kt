@@ -295,6 +295,7 @@ class MockAuditContract : Contract {
     class Approve : ZKCommandData {
         @Transient
         override val metadata = commandMetadata {
+            private = true
             numberOfSigners = 1
             outputs { 1 of Approval::class }
             timewindow()
