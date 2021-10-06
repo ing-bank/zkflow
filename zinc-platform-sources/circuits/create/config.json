@@ -3,7 +3,7 @@
     "name": "create",
     "states": [
       {
-        "java_class": "com.ing.zknotary.testing.fixtures.contract.TestContract.TestState",
+        "java_class": "com.ing.zkflow.testing.fixtures.contract.TestContract.TestState",
         "zinc_type": "TestState",
         "location": "test_state.zn"
       }
@@ -12,7 +12,7 @@
   "groups" : {
     "output_group" : [
       {
-        "java_class": "com.ing.zknotary.testing.fixtures.contract.TestContract.TestState",
+        "java_class": "com.ing.zkflow.testing.fixtures.contract.TestContract.TestState",
         "state_group_size": 1
       }
     ],

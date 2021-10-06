@@ -1,6 +1,6 @@
 package io.ivno.collateraltoken.zinc.types.role
 
-import com.ing.zknotary.testing.getZincZKService
+import com.ing.zkflow.testing.getZincZKService
 import io.ivno.collateraltoken.zinc.types.toJsonObject
 import io.onixlabs.corda.bnms.contract.Role
 import kotlinx.serialization.json.buildJsonObject

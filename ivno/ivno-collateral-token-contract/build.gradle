@@ -1,18 +1,8 @@
-import com.ing.zknotary.gradle.zinc.template.parameters.AbstractPartyTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.parameters.BigDecimalTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.parameters.ByteArrayTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.parameters.CollectionTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.parameters.MapTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.parameters.NullableTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.parameters.PolyTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.parameters.PublicKeyTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.parameters.SecureHashTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.parameters.StringTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.parameters.UniqueIdentifierTemplateParameters
-import com.ing.zknotary.common.serialization.bfl.serializers.CordaSerializers
+import com.ing.zkflow.common.serialization.bfl.serializers.CordaSerializers
+import com.ing.zkflow.gradle.zinc.template.parameters.*
 
 plugins {
-    id 'com.ing.zknotary.gradle-plugin'
+    id 'com.ing.zkflow.gradle-plugin'
 }
 
 cordapp {
@@ -131,7 +121,7 @@ dependencies {
     testImplementation "$corda_group:corda-node-driver:$corda_release_version"
 
     // ZKFlow Test dependencies
-    testImplementation "com.ing.zknotary:test-utils"
+    testImplementation "com.ing.zkflow:test-utils"
     testImplementation("io.kotest:kotest-assertions-core:4.3.1")
 
     // kotlinx dependencies

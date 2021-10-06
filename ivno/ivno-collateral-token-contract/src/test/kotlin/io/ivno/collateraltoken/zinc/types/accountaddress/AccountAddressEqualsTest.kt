@@ -1,6 +1,6 @@
 package io.ivno.collateraltoken.zinc.types.accountaddress
 
-import com.ing.zknotary.testing.getZincZKService
+import com.ing.zkflow.testing.getZincZKService
 import io.dasl.contracts.v1.account.AccountAddress
 import io.ivno.collateraltoken.zinc.types.toJsonObject
 import kotlinx.serialization.json.buildJsonObject

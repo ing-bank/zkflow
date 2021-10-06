@@ -1,8 +1,8 @@
 package io.ivno.collateraltoken.contract
 
-import com.ing.zknotary.testing.dsl.VerificationMode
-import com.ing.zknotary.testing.dsl.zkLedger
-import com.ing.zknotary.testing.zkp.MockZKTransactionService
+import com.ing.zkflow.testing.dsl.VerificationMode
+import com.ing.zkflow.testing.dsl.zkLedger
+import com.ing.zkflow.testing.zkp.MockZKTransactionService
 import io.dasl.contracts.v1.token.TokenContract
 import io.onixlabs.corda.bnms.contract.Network
 import io.onixlabs.corda.identityframework.contract.AttestationStatus

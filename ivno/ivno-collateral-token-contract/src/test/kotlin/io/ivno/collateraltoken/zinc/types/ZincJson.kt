@@ -1,16 +1,16 @@
 package io.ivno.collateraltoken.zinc.types
 
-import com.ing.zknotary.common.serialization.bfl.serializers.CordaSerializers.CLASS_NAME_SIZE
-import com.ing.zknotary.common.serialization.bfl.serializers.SecureHashSupportedAlgorithm
-import com.ing.zknotary.common.serialization.bfl.serializers.SecureHashSurrogate
-import com.ing.zknotary.common.serialization.bfl.serializers.UniqueIdentifierSurrogate
-import com.ing.zknotary.common.serialization.bfl.serializers.publickey.EdDSASurrogate
-import com.ing.zknotary.common.serialization.bfl.serializers.toBytes
-import com.ing.zknotary.testing.resizeTo
-import com.ing.zknotary.testing.toJsonArray
-import com.ing.zknotary.zinc.types.nullable
-import com.ing.zknotary.zinc.types.polymorphic
-import com.ing.zknotary.zinc.types.toJsonObject
+import com.ing.zkflow.common.serialization.bfl.serializers.CordaSerializers.CLASS_NAME_SIZE
+import com.ing.zkflow.common.serialization.bfl.serializers.SecureHashSupportedAlgorithm
+import com.ing.zkflow.common.serialization.bfl.serializers.SecureHashSurrogate
+import com.ing.zkflow.common.serialization.bfl.serializers.UniqueIdentifierSurrogate
+import com.ing.zkflow.common.serialization.bfl.serializers.publickey.EdDSASurrogate
+import com.ing.zkflow.common.serialization.bfl.serializers.toBytes
+import com.ing.zkflow.testing.resizeTo
+import com.ing.zkflow.testing.toJsonArray
+import com.ing.zkflow.zinc.types.nullable
+import com.ing.zkflow.zinc.types.polymorphic
+import com.ing.zkflow.zinc.types.toJsonObject
 import io.dasl.contracts.v1.account.AccountAddress
 import io.dasl.contracts.v1.token.BigDecimalAmount
 import io.dasl.contracts.v1.token.TokenContract

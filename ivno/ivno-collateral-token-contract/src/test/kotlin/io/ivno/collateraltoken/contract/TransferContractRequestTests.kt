@@ -1,8 +1,8 @@
 package io.ivno.collateraltoken.contract
 
-import com.ing.zknotary.testing.dsl.VerificationMode
-import com.ing.zknotary.testing.dsl.zkLedger
-import com.ing.zknotary.testing.zkp.MockZKTransactionService
+import com.ing.zkflow.testing.dsl.VerificationMode
+import com.ing.zkflow.testing.dsl.zkLedger
+import com.ing.zkflow.testing.zkp.MockZKTransactionService
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import kotlin.time.ExperimentalTime

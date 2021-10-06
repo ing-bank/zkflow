@@ -1,10 +1,10 @@
 package io.ivno.collateraltoken.contract
 
-import com.ing.zknotary.common.contracts.ZKTransactionMetadataCommandData
-import com.ing.zknotary.common.zkp.metadata.ZKCommandMetadata
-import com.ing.zknotary.common.zkp.metadata.ZKTransactionMetadata
-import com.ing.zknotary.common.zkp.metadata.commandMetadata
-import com.ing.zknotary.common.zkp.metadata.transactionMetadata
+import com.ing.zkflow.common.contracts.ZKTransactionMetadataCommandData
+import com.ing.zkflow.common.zkp.metadata.ZKCommandMetadata
+import com.ing.zkflow.common.zkp.metadata.ZKTransactionMetadata
+import com.ing.zkflow.common.zkp.metadata.commandMetadata
+import com.ing.zkflow.common.zkp.metadata.transactionMetadata
 import io.dasl.contracts.v1.token.BigDecimalAmount
 import io.dasl.contracts.v1.token.TokenState
 import io.onixlabs.corda.bnms.contract.membership.Membership

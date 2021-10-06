@@ -1,6 +1,6 @@
 package io.ivno.collateraltoken.zinc.types.tokencontractcommandmove
 
-import com.ing.zknotary.testing.getZincZKService
+import com.ing.zkflow.testing.getZincZKService
 import io.dasl.contracts.v1.token.TokenContract
 import io.ivno.collateraltoken.zinc.types.toJsonObject
 import io.ivno.collateraltoken.zinc.types.tokenContractCommandMove

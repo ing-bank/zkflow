@@ -1,8 +1,8 @@
 package io.ivno.collateraltoken.serialization
 
-import com.ing.zknotary.common.serialization.bfl.CommandDataSerializerMap
-import com.ing.zknotary.common.serialization.bfl.ContractStateSerializerMap
-import com.ing.zknotary.common.serialization.bfl.SerializersModuleRegistry
+import com.ing.zkflow.common.serialization.bfl.CommandDataSerializerMap
+import com.ing.zkflow.common.serialization.bfl.ContractStateSerializerMap
+import com.ing.zkflow.common.serialization.bfl.SerializersModuleRegistry
 import io.ivno.collateraltoken.contract.Deposit
 import io.ivno.collateraltoken.contract.DepositContract
 import io.ivno.collateraltoken.contract.IvnoTokenType

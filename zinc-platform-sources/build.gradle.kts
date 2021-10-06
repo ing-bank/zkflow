@@ -2,7 +2,6 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
-import javax.inject.Inject
 import kotlin.streams.toList
 
 plugins {
@@ -13,7 +12,7 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":notary")) // required for Zinc com.ing.zknotary.gradle.zinc.template renderer
+    implementation(project(":notary")) // required for Zinc com.ing.zkflow.gradle.zinc.template renderer
     implementation(project(":gradle-plugin"))
 
     val zkkryptoVersion: String by project
@@ -118,7 +117,7 @@ open class CopyCircuitTask @Inject constructor() : DefaultTask() {
     val generatedCircuitsCreateDir: Path = projectDir.resolve("build/circuits/create/src")
 
     @org.gradle.api.tasks.InputDirectory
-    val testClassesPath: Path = projectDir.resolve("src/test/kotlin/com/ing/zknotary/zinc/types/")
+    val testClassesPath: Path = projectDir.resolve("src/test/kotlin/com/ing/zkflow/zinc/types/")
 
     private fun findTestsInSubdirectory(rootDir: File, subDir: String? = null): List<String> {
         val baseDir = subDir?.let { rootDir.resolve(it) } ?: rootDir

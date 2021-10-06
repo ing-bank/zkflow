@@ -1,7 +1,7 @@
 package io.ivno.collateraltoken.serialization
 
-import com.ing.zknotary.testing.assertRoundTripSucceeds
-import com.ing.zknotary.testing.assertSameSize
+import com.ing.zkflow.testing.assertRoundTripSucceeds
+import com.ing.zkflow.testing.assertSameSize
 import io.dasl.contracts.v1.token.TokenTransactionSummary.State
 import io.ivno.collateraltoken.zinc.types.anotherState
 import io.ivno.collateraltoken.zinc.types.state

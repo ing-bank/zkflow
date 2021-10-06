@@ -1,6 +1,6 @@
 package io.ivno.collateraltoken.zinc.types.tokentransactionsummary.nettedaccountamount
 
-import com.ing.zknotary.testing.getZincZKService
+import com.ing.zkflow.testing.getZincZKService
 import io.dasl.contracts.v1.token.TokenTransactionSummary.NettedAccountAmount
 import io.ivno.collateraltoken.zinc.types.nettedAccountAmount
 import io.ivno.collateraltoken.zinc.types.nettedAccountAmountWithAccountAddressOfDifferentAccountId

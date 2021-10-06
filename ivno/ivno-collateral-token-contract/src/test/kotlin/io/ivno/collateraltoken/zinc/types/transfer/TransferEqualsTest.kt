@@ -1,6 +1,6 @@
 package io.ivno.collateraltoken.zinc.types.transfer
 
-import com.ing.zknotary.testing.getZincZKService
+import com.ing.zkflow.testing.getZincZKService
 import io.ivno.collateraltoken.contract.Transfer
 import io.ivno.collateraltoken.zinc.types.toJsonObject
 import io.ivno.collateraltoken.zinc.types.transfer

@@ -3,9 +3,9 @@ package io.ivno.collateraltoken.serialization
 import com.ing.serialization.bfl.annotations.FixedLength
 import com.ing.serialization.bfl.api.Surrogate
 import com.ing.serialization.bfl.api.SurrogateSerializer
-import com.ing.zknotary.common.serialization.bfl.serializers.CordaSerializers.CLASS_NAME_SIZE
-import com.ing.zknotary.common.serialization.bfl.serializers.getOriginalClass
-import com.ing.zknotary.common.serialization.bfl.serializers.toBytes
+import com.ing.zkflow.common.serialization.bfl.serializers.CordaSerializers.CLASS_NAME_SIZE
+import com.ing.zkflow.common.serialization.bfl.serializers.getOriginalClass
+import com.ing.zkflow.common.serialization.bfl.serializers.toBytes
 import io.dasl.contracts.v1.token.TokenContract
 import kotlinx.serialization.Serializable
 import net.corda.core.contracts.Contract

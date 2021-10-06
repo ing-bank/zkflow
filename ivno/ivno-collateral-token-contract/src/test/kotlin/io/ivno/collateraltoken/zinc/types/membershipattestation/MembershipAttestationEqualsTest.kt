@@ -1,6 +1,6 @@
 package io.ivno.collateraltoken.zinc.types.membershipattestation
 
-import com.ing.zknotary.testing.getZincZKService
+import com.ing.zkflow.testing.getZincZKService
 import io.ivno.collateraltoken.zinc.types.anotherMembershipAttestation
 import io.ivno.collateraltoken.zinc.types.membershipAttestation
 import io.ivno.collateraltoken.zinc.types.toJsonObject

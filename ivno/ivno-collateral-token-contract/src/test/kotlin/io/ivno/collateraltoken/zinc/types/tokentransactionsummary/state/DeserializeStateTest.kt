@@ -1,9 +1,9 @@
 package io.ivno.collateraltoken.zinc.types.tokentransactionsummary.state
 
-import com.ing.zknotary.common.serialization.bfl.serializers.publickey.EdDSASurrogate
-import com.ing.zknotary.common.zkp.ZincZKService
-import com.ing.zknotary.testing.DeserializationTestBase
-import com.ing.zknotary.testing.getZincZKService
+import com.ing.zkflow.common.serialization.bfl.serializers.publickey.EdDSASurrogate
+import com.ing.zkflow.common.zkp.ZincZKService
+import com.ing.zkflow.testing.DeserializationTestBase
+import com.ing.zkflow.testing.getZincZKService
 import io.dasl.contracts.v1.token.TokenTransactionSummary.State
 import io.ivno.collateraltoken.serialization.IvnoSerializers
 import io.ivno.collateraltoken.zinc.types.state

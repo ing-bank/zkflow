@@ -1,8 +1,8 @@
 package io.ivno.collateraltoken.serialization
 
 import com.ing.serialization.bfl.annotations.FixedLength
-import com.ing.zknotary.testing.assertRoundTripSucceeds
-import com.ing.zknotary.testing.assertSameSize
+import com.ing.zkflow.testing.assertRoundTripSucceeds
+import com.ing.zkflow.testing.assertSameSize
 import io.onixlabs.corda.bnms.contract.Setting
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.serializer

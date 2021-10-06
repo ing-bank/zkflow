@@ -1,11 +1,11 @@
-import com.ing.zknotary.gradle.task.CreateZincDirectoriesForCircuitTask
-import com.ing.zknotary.gradle.zinc.template.parameters.BigDecimalTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.parameters.AmountTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.parameters.StringTemplateParameters
+import com.ing.zkflow.gradle.task.CreateZincDirectoriesForCircuitTask
+import com.ing.zkflow.gradle.zinc.template.parameters.BigDecimalTemplateParameters
+import com.ing.zkflow.gradle.zinc.template.parameters.AmountTemplateParameters
+import com.ing.zkflow.gradle.zinc.template.parameters.StringTemplateParameters
 
 plugins {
     kotlin("jvm") version "1.4.30"
-    id("com.ing.zknotary.gradle-plugin")
+    id("com.ing.zkflow.gradle-plugin")
 }
 
 zkp {
@@ -41,10 +41,10 @@ dependencies {
 tasks.matching {
     it.name == "processZincSources" ||
         it is CreateZincDirectoriesForCircuitTask
-//            it is com.ing.zknotary.gradle.task.CopyZincCircuitSourcesTask ||
-//            it is com.ing.zknotary.gradle.task.CopyZincPlatformSourcesTask ||
-//            it is com.ing.zknotary.gradle.task.GenerateZincPlatformCodeFromTemplatesTask ||
-//            it is com.ing.zknotary.gradle.task.PrepareCircuitForCompilationTask
+//            it is com.ing.zkflow.gradle.task.CopyZincCircuitSourcesTask ||
+//            it is com.ing.zkflow.gradle.task.CopyZincPlatformSourcesTask ||
+//            it is com.ing.zkflow.gradle.task.GenerateZincPlatformCodeFromTemplatesTask ||
+//            it is com.ing.zkflow.gradle.task.PrepareCircuitForCompilationTask
 }.forEach {
     val parentProject = gradle.includedBuild(project.rootDir.parentFile.name)
     it.mustRunAfter(parentProject.task(":zinc-platform-sources:assemble"))
