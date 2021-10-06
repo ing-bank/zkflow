@@ -7,6 +7,7 @@ import com.ing.zknotary.common.zkp.PublicInput
 import com.ing.zknotary.common.zkp.Witness
 import com.ing.zknotary.common.zkp.ZincZKTransactionService
 import com.ing.zknotary.testing.fixtures.contract.TestContract
+import com.ing.zknotary.testing.withCustomSerializationEnv
 import com.ing.zknotary.testing.zkp.ZKNulls
 import com.ing.zknotary.zinc.types.proveTimed
 import com.ing.zknotary.zinc.types.setupTimed
@@ -28,15 +29,16 @@ import net.corda.core.serialization.SerializationMagic
 import net.corda.core.serialization.internal.CustomSerializationSchemeUtils
 import net.corda.core.transactions.WireTransaction
 import net.corda.core.utilities.loggerFor
-import net.corda.coretesting.internal.asTestContextEnv
-import net.corda.coretesting.internal.createTestSerializationEnv
 import net.corda.testing.node.MockServices
 import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.time.Instant
 import kotlin.time.ExperimentalTime
 
+// TODO: re-enable this. Only disabled for draft PR discussion
+@Disabled("Temporarily disabled, until we decide on where circuit artifacts will go")
 @ExperimentalTime
 @Tag("slow")
 class TransactionVerificationTest {
@@ -45,8 +47,9 @@ class TransactionVerificationTest {
 
     private val zincZKTransactionService: ZincZKTransactionService = ZincZKTransactionService(MockServices())
 
-    private val createZKService = zincZKTransactionService.zkServiceForCommand(TestContract.Create())
-    private val moveZKService = zincZKTransactionService.zkServiceForCommand(TestContract.Move())
+    private val createZKService =
+        zincZKTransactionService.zkServiceForTransactionMetadata(TestContract.Create().transactionMetadata)
+    private val moveZKService = zincZKTransactionService.zkServiceForTransactionMetadata(TestContract.Move().transactionMetadata)
 
     private val notary = ZKNulls.NULL_PARTY
 
@@ -88,8 +91,9 @@ class TransactionVerificationTest {
     fun `zinc verifies full create transaction`() = withCustomSerializationEnv {
         val alice = ZKNulls.NULL_ANONYMOUS_PARTY
 
-        val additionalSerializationPropertiesForCreate =
-            mapOf<Any, Any>(BFLSerializationScheme.CONTEXT_KEY_CIRCUIT to TestContract.Create().circuit)
+        val additionalSerializationPropertiesForCreate = mapOf<Any, Any>(
+            BFLSerializationScheme.CONTEXT_KEY_TRANSACTION_METADATA to TestContract.Create().transactionMetadata
+        )
 
         // Create TX
         val createState = TestContract.TestState(alice, value = 88)
@@ -120,8 +124,10 @@ class TransactionVerificationTest {
         // Move TX
 
         val bob = ZKNulls.NULL_ANONYMOUS_PARTY
-        val additionalSerializationPropertiesForMove =
-            mapOf<Any, Any>(BFLSerializationScheme.CONTEXT_KEY_CIRCUIT to TestContract.Move().circuit)
+
+        val additionalSerializationPropertiesForMove = mapOf<Any, Any>(
+            BFLSerializationScheme.CONTEXT_KEY_TRANSACTION_METADATA to TestContract.Move().transactionMetadata
+        )
 
         val utxo = createWtx.outRef<TestContract.TestState>(0)
         val serializedUtxo = createWtx.componentGroups.single { it.groupIndex == ComponentGroupEnum.OUTPUTS_GROUP.ordinal }.components[0]
@@ -143,7 +149,14 @@ class TransactionVerificationTest {
 
         val moveWitness = Witness.fromWireTransaction(
             wtx = moveWtx,
-            inputUtxoInfos = listOf(UtxoInfo(utxo.ref, serializedUtxo.bytes, nonce, utxo.state.data.javaClass.canonicalName)),
+            inputUtxoInfos = listOf(
+                UtxoInfo.build(
+                    utxo.ref,
+                    serializedUtxo.bytes,
+                    nonce,
+                    utxo.state.data::class
+                )
+            ),
             referenceUtxoInfos = emptyList()
         )
 
@@ -198,9 +211,5 @@ class TransactionVerificationTest {
                 digestService
             )
         }
-    }
-
-    private fun <R> withCustomSerializationEnv(block: () -> R): R {
-        return createTestSerializationEnv(javaClass.classLoader).asTestContextEnv { block() }
     }
 }

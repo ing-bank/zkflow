@@ -1,7 +1,8 @@
 package com.ing.zknotary.common.transactions
 
-import com.ing.zknotary.common.contracts.ZKCommandData
+import com.ing.zknotary.common.contracts.ZKTransactionMetadataCommandData
 import com.ing.zknotary.common.zkp.ZKTransactionService
+import com.ing.zknotary.common.zkp.metadata.ResolvedZKTransactionMetadata
 import com.ing.zknotary.node.services.ServiceNames
 import com.ing.zknotary.node.services.WritableUtxoInfoStorage
 import com.ing.zknotary.node.services.ZKVerifierTransactionStorage
@@ -30,10 +31,21 @@ import net.corda.core.transactions.ContractUpgradeWireTransaction
 import net.corda.core.transactions.LedgerTransaction
 import net.corda.core.transactions.NotaryChangeWireTransaction
 import net.corda.core.transactions.SignedTransaction
+import net.corda.core.transactions.TraversableTransaction
 import net.corda.core.transactions.WireTransaction
 import net.corda.core.transactions.WireTransaction.Companion.resolveStateRefBinaryComponent
 import java.security.PublicKey
 import java.util.function.Predicate
+import kotlin.reflect.KClass
+
+/**
+ * Note that this is the Java name, which ensures it can be loaded with Class.forName.
+ * This is especially important with nested classes, which are designated as 'ContainerClass$NestedClass'
+ * when using `jave.name`. Otherwise it would be 'ContainerClass.NestedClas', which results in a ClassNotFoundException.
+ */
+
+val KClass<out ContractState>.qualifiedStateClassName: String
+    get() = java.name ?: error("Contract state classes must be a named class")
 
 fun ServiceHub.collectUtxoInfos(
     stateRefs: List<StateRef>
@@ -51,9 +63,9 @@ fun ServiceHub.collectUtxoInfos(
                 .filteredComponentGroups.single { it.groupIndex == ComponentGroupEnum.OUTPUTS_GROUP.ordinal }
                 .nonces[it.index]
 
-            val stateName = prevStx.tx.outputs[it.index].data.javaClass.canonicalName
+            val stateClass = prevStx.tx.outputs[it.index].data::class
 
-            UtxoInfo(it, serializedUtxo, nonce, stateName)
+            UtxoInfo.build(it, serializedUtxo, nonce, stateClass)
         }
 
     val collectFromUtxoInfoStorage: (StateRef) -> UtxoInfo =
@@ -103,7 +115,8 @@ fun WireTransaction.prettyPrint(): String {
     return buf.toString()
 }
 
-fun WireTransaction.zkCommandData() = commands.single().value as ZKCommandData
+fun TraversableTransaction.zkTransactionMetadata(): ResolvedZKTransactionMetadata =
+    (commands.first().value as ZKTransactionMetadataCommandData).transactionMetadata
 
 @Throws(AttachmentResolutionException::class, TransactionResolutionException::class)
 @DeleteForDJVM

@@ -1,10 +1,10 @@
 package com.ing.zknotary.common.transactions
 
 import co.paralleluniverse.strands.Strand
-import com.ing.zknotary.common.contracts.ZKCommandData
 import com.ing.zknotary.common.contracts.ZKContractState
+import com.ing.zknotary.common.contracts.ZKTransactionMetadataCommandData
 import com.ing.zknotary.common.serialization.bfl.BFLSerializationScheme
-import com.ing.zknotary.common.transactions.StateOrdering.ordered
+import com.ing.zknotary.common.zkp.metadata.ResolvedZKTransactionMetadata
 import net.corda.core.contracts.AttachmentConstraint
 import net.corda.core.contracts.AutomaticPlaceholderConstraint
 import net.corda.core.contracts.Command
@@ -28,13 +28,26 @@ import net.corda.core.node.ServiceHub
 import net.corda.core.node.ServicesForResolution
 import net.corda.core.node.services.AttachmentId
 import net.corda.core.node.services.KeyManagementService
+import net.corda.core.transactions.LedgerTransaction
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
+import net.corda.core.transactions.TraversableTransaction
 import net.corda.core.transactions.WireTransaction
 import java.security.PublicKey
 import java.time.Duration
 import java.time.Instant
 import java.util.UUID
+
+val TransactionBuilder.isZKFlowTransaction get() = commands().firstOrNull { it.value is ZKTransactionMetadataCommandData } != null
+val TraversableTransaction.isZKFlowTransaction get() = commands.firstOrNull { it.value is ZKTransactionMetadataCommandData } != null
+val LedgerTransaction.isZKFlowTransaction get() = commands.firstOrNull { it.value is ZKTransactionMetadataCommandData } != null
+val LedgerTransaction.zkFLowMetadata: ResolvedZKTransactionMetadata
+    get() {
+        val zkFlowCommand =
+            commands.firstOrNull()?.value as? ZKTransactionMetadataCommandData
+                ?: error("This transaction is not a ZKFlow transaction, so no metadata was defined")
+        return zkFlowCommand.transactionMetadata
+    }
 
 /**
  * The main reason for this ZKTransactionBuilder to exist, is to ensure that the user always uses the
@@ -61,8 +74,8 @@ class ZKTransactionBuilder(
     private val serializationProperties: Map<Any, Any> = emptyMap(),
     // TransactionBuilder does not expose `inputsWithTransactionState` and `referencesWithTransactionState`, which are required for the ordered TransactionBuilder
     // to sort the states by name.
-    val inputsWithTransactionState: ArrayList<StateAndRef<ContractState>> = arrayListOf<StateAndRef<ContractState>>(),
-    val referencesWithTransactionState: ArrayList<TransactionState<ContractState>> = arrayListOf<TransactionState<ContractState>>(),
+    val inputsWithTransactionState: ArrayList<StateAndRef<ContractState>> = arrayListOf(),
+    val referencesWithTransactionState: ArrayList<TransactionState<ContractState>> = arrayListOf(),
     val window: TimeWindow? = null,
     val privacySalt: PrivacySalt = PrivacySalt(),
     val serviceHub: ServiceHub? = (Strand.currentStrand() as? FlowStateMachine<*>)?.serviceHub
@@ -124,13 +137,18 @@ class ZKTransactionBuilder(
      * Duplicated so that `toWireTransaction()` always uses the serialization settings
      */
     fun toWireTransaction(services: ServicesForResolution): WireTransaction {
-        val command = commands().singleOrNull() ?: error("Single command per transaction is allowed")
-        val zkCommand = command.value as? ZKCommandData ?: error("Command must implement ZKCommandData")
-        val serializationProperties = mapOf<Any, Any>(BFLSerializationScheme.CONTEXT_KEY_CIRCUIT to zkCommand.circuit)
+        val command = commands().firstOrNull() ?: error("At least one command is required for a private transaction")
+        val zkCommand = command.value as? ZKTransactionMetadataCommandData
+            ?: error("This first command must implement ZKTransactionMetadataCommandData")
+        val resolvedTransactionMetadata = zkCommand.transactionMetadata
 
-        // TODO: enforce sizes of the component groups.
-        val orderedBuilder = ordered().builder
-        return orderedBuilder.toWireTransaction(services, serializationSchemeId, serializationProperties)
+        resolvedTransactionMetadata.verify(this)
+
+        val serializationProperties = mapOf<Any, Any>(
+            BFLSerializationScheme.CONTEXT_KEY_TRANSACTION_METADATA to resolvedTransactionMetadata
+        )
+
+        return builder.toWireTransaction(services, serializationSchemeId, serializationProperties)
     }
 
     /**
@@ -168,64 +186,6 @@ class ZKTransactionBuilder(
         val signableData = SignableData(wtx.id, signatureMetadata)
         val sig = keyManagementService.sign(signableData, publicKey)
         return SignedTransaction(wtx, listOf(sig))
-    }
-
-    /**
-     * The `inputsWithTransactionState and referencesWithTransactionState ore private members of TransactionBuilder,
-     * so we have to recreate the TransactionBuilder by adding each state individually instead of passing them to the constructor (which does not set them).
-     */
-    private fun reconstructTransactionBuilder(
-        notary: Party? = null,
-        inputs: MutableList<StateAndRef<*>> = arrayListOf(),
-        attachments: MutableList<AttachmentId> = arrayListOf(),
-        outputs: MutableList<TransactionState<ContractState>> = arrayListOf(),
-        commands: MutableList<Command<*>> = arrayListOf(),
-        window: TimeWindow? = null,
-        privacySalt: PrivacySalt = PrivacySalt(),
-        references: MutableList<ReferencedStateAndRef<*>> = arrayListOf(),
-        serviceHub: ServiceHub? = (Strand.currentStrand() as? FlowStateMachine<*>)?.serviceHub,
-    ): TransactionBuilder {
-        val transactionBuilder =
-            TransactionBuilder(notary = notary, window = window, privacySalt = privacySalt, serviceHub = serviceHub)
-        @Suppress("SpreadOperator")
-        transactionBuilder.withItems(
-            *inputs.toTypedArray(),
-            *outputs.toTypedArray(),
-            *references.toTypedArray(),
-            *commands.toTypedArray(),
-            *attachments.toTypedArray()
-        )
-        return transactionBuilder
-    }
-
-    /**
-     * Reorders the states in the underlying TransactionBuilder so that these are lexicographically ordered by their class name.
-     * In case two states have the same class name, the state that was added before the other in the ZKTransactionBuilder should come first.
-     * Zinc does not support polymorphism, this implies that List where A is an interface is an invalid input for Zinc. To pass such a list to Zinc, we group the list of states w.r.t. their type;
-     * the list will further be split into sublists containing the same type states.
-     */
-    fun ordered(): ZKTransactionBuilder {
-        // Order outputs by classname.
-        val orderedOutputs = builder.outputStates().ordered()
-
-        // Order inputs and references by their state's classname.
-        val orderedInputs = inputsWithTransactionState.ordered()
-        // combine states and references
-        val refs = referencesWithTransactionState.zip(builder.referenceStates()) { state, ref -> ReferencedStateAndRef(StateAndRef(state, ref)) }
-        val orderedRefs = refs.ordered()
-
-        val orderedBuilder = reconstructTransactionBuilder(
-            notary = notary!!,
-            outputs = orderedOutputs.toMutableList(),
-            inputs = orderedInputs.toMutableList(),
-            attachments = builder.attachments().toMutableList(),
-            commands = builder.commands().toMutableList(),
-            references = orderedRefs.toMutableList(),
-            window = window,
-            privacySalt = privacySalt,
-            serviceHub = serviceHub
-        )
-        return ZKTransactionBuilder(orderedBuilder, serializationSchemeId, serializationProperties)
     }
 
     /**

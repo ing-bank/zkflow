@@ -1,6 +1,5 @@
 package com.ing.zknotary.gradle.extension
 
-import com.ing.zknotary.common.zkp.CircuitMetaData
 import com.ing.zknotary.gradle.zinc.template.TemplateConfigurations
 import com.ing.zknotary.gradle.zinc.template.TemplateParameters
 import org.gradle.api.Project
@@ -14,7 +13,11 @@ open class ZKNotaryExtension(project: Project) : TemplateConfigurations() {
     companion object {
         const val NAME = "zkp"
 
-        const val CONFIG_CIRCUIT_FILE = CircuitMetaData.CONFIG_CIRCUIT_FILE
+        /**
+         *  FIXME: obsolete, but kept here until we rebuild Zinc code generation to use the ZKTransactionMetadata
+         *  instead of this (with the configurator class,  which can then also be deleted).
+         */
+        const val CONFIG_CIRCUIT_FILE = "config.json"
 
         private const val MERGED_CIRCUIT_BUILD_PATH = "zinc"
         private const val CIRCUIT_SOURCES_BASE_PATH = "src/main/zinc"

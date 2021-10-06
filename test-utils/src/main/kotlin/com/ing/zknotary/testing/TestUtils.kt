@@ -11,9 +11,15 @@ import net.corda.core.crypto.SignatureScheme
 import net.corda.core.crypto.toStringShort
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.internal.unspecifiedCountry
+import net.corda.coretesting.internal.asTestContextEnv
+import net.corda.coretesting.internal.createTestSerializationEnv
 import net.corda.testing.core.TestIdentity
 import java.io.File
 import java.time.Duration
+
+public fun <R> Any.withCustomSerializationEnv(block: () -> R): R {
+    return createTestSerializationEnv(this.javaClass.classLoader).asTestContextEnv { block() }
+}
 
 public fun TestIdentity.Companion.fixed(
     organisation: String,

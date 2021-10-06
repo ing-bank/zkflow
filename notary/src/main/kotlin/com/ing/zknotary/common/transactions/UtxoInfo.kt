@@ -4,14 +4,16 @@ import com.ing.zknotary.node.services.ServiceNames
 import com.ing.zknotary.node.services.ZKTransactionResolutionException
 import com.ing.zknotary.node.services.ZKVerifierTransactionStorage
 import com.ing.zknotary.node.services.getCordaServiceFromConfig
+import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.StateRef
 import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.algorithm
 import net.corda.core.node.ServiceHub
 import net.corda.core.serialization.CordaSerializable
+import kotlin.reflect.KClass
 
 @CordaSerializable
-class UtxoInfo(
+class UtxoInfo private constructor(
     val stateRef: StateRef,
 
     /**
@@ -19,8 +21,26 @@ class UtxoInfo(
      */
     val serializedContents: ByteArray,
     val nonce: SecureHash,
-    val stateName: String
+
+    /**
+     * The only reason we store this as String and not KClass is because Corda serialization does not support it.
+     */
+    private val stateClassName: String
 ) {
+    companion object {
+        fun build(stateRef: StateRef, serializedContents: ByteArray, nonce: SecureHash, stateClass: KClass<out ContractState>): UtxoInfo {
+            return UtxoInfo(stateRef, serializedContents, nonce, stateClass.qualifiedStateClassName)
+        }
+    }
+
+    @Suppress("UNCHECKED_CAST") // The whole idea is that we try it and fail if not what we expect
+    val stateClass: KClass<out ContractState> by lazy {
+        Class.forName(stateClassName)
+            .kotlin
+            as? KClass<out ContractState>
+            ?: error("$stateClassName is not a ContractState")
+    }
+
     /**
      * This function verifies that the serialized content hashed with the nonce matches
      * the actual output hash for StateRef in the ZKP chain that was previously resolved

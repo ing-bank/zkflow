@@ -1,7 +1,10 @@
 package io.ivno.collateraltoken.contract
 
-import com.ing.zknotary.common.contracts.ZKCommandData
-import com.ing.zknotary.common.zkp.CircuitMetaData
+import com.ing.zknotary.common.contracts.ZKTransactionMetadataCommandData
+import com.ing.zknotary.common.zkp.metadata.ZKCommandMetadata
+import com.ing.zknotary.common.zkp.metadata.ZKTransactionMetadata
+import com.ing.zknotary.common.zkp.metadata.commandMetadata
+import com.ing.zknotary.common.zkp.metadata.transactionMetadata
 import io.dasl.contracts.v1.token.BigDecimalAmount
 import io.dasl.contracts.v1.token.TokenState
 import io.onixlabs.corda.bnms.contract.membership.Membership
@@ -30,16 +33,34 @@ class TransferContract : Contract {
         }
     }
 
-    interface TransferContractCommand : ZKCommandData {
+    interface TransferContractCommand : ZKTransactionMetadataCommandData {
         fun verify(tx: LedgerTransaction, signers: Set<PublicKey>)
     }
 
     @Serializable
     object Request : TransferContractCommand {
         @Transient
-        override val circuit: CircuitMetaData = CircuitMetaData.fromConfig(
-            File("${System.getProperty("user.dir")}/build/zinc/transfer-request")
-        )
+        override val transactionMetadata by transactionMetadata {
+            commands {
+                +Request::class
+            }
+        }
+
+        @Transient
+        override val metadata = commandMetadata {
+            private = true
+            circuit {
+                buildFolder =
+                    File("${System.getProperty("user.dir")}/build/zinc/transfer-request")
+            }
+            outputs { 1 of Transfer::class }
+            references {
+                2 of Membership::class
+                2 of MembershipAttestation::class
+                1 of IvnoTokenType::class
+            }
+            numberOfSigners = 1
+        }
 
         internal const val CONTRACT_RULE_TRANSFER_INPUTS =
             "On transfer requesting, zero transfer states must be consumed."
@@ -118,10 +139,24 @@ class TransferContract : Contract {
 
     object Advance : TransferContractCommand {
         @Transient
-        override val circuit: CircuitMetaData = CircuitMetaData.fromConfig(
-            File("${System.getProperty("user.dir")}/build/zinc/transfer-advance")
-        )
+        override val transactionMetadata by transactionMetadata {
+            commands {
+                +Advance::class
+            }
+        }
 
+        @Transient
+        override val metadata = commandMetadata {
+            private = true
+            circuit { buildFolder = File("${System.getProperty("user.dir")}/build/zinc/transfer-advance") }
+            outputs { 1 of Transfer::class }
+            references {
+                2 of Membership::class
+                2 of MembershipAttestation::class
+                1 of IvnoTokenType::class
+            }
+            numberOfSigners = 1
+        }
 
         internal const val CONTRACT_RULE_TRANSFER_INPUTS =
             "On transfer advancing, only one transfer state must be consumed."

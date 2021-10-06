@@ -2,13 +2,12 @@ package com.ing.zknotary.common.serialization.bfl
 
 import com.ing.zknotary.common.serialization.bfl.serializers.TimeWindowSerializer
 import com.ing.zknotary.common.serialization.bfl.serializers.TransactionStateSerializer
-import com.ing.zknotary.common.zkp.CircuitMetaData
+import com.ing.zknotary.common.zkp.metadata.ResolvedZKTransactionMetadata
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.contextual
 import kotlinx.serialization.modules.plus
 import net.corda.core.contracts.CommandData
-import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.TimeWindow
 import net.corda.core.contracts.TransactionState
@@ -29,7 +28,7 @@ open class BFLSerializationScheme : CustomSerializationScheme {
     companion object {
         const val SCHEME_ID = 602214076
 
-        const val CONTEXT_KEY_CIRCUIT = 1
+        const val CONTEXT_KEY_TRANSACTION_METADATA = 2
     }
 
     override fun getSchemeId(): Int {
@@ -105,6 +104,9 @@ open class BFLSerializationScheme : CustomSerializationScheme {
     override fun <T : Any> serialize(obj: T, context: SerializationSchemeContext): ByteSequence {
         logger.debug("Serializing tx component:\t${obj::class}")
 
+        val transactionMetadata = context.properties[CONTEXT_KEY_TRANSACTION_METADATA] as? ResolvedZKTransactionMetadata
+        transactionMetadata ?: logger.info("No ResolvedZKTransactionMetadata found, serializing as non-ZKP transaction component: ${obj::class}")
+
         val serialization = when (obj) {
             is TransactionState<*> -> {
                 val state = obj.data
@@ -157,13 +159,7 @@ open class BFLSerializationScheme : CustomSerializationScheme {
                 @Suppress("UNCHECKED_CAST")
                 val signers = obj as? List<PublicKey> ?: error("Signers: Expected List<PublicKey>, actual ${obj::class.simpleName}")
 
-                val signersFixedLength = (context.properties[CONTEXT_KEY_CIRCUIT] as? CircuitMetaData)?.let {
-                    // ZKP transaction.
-                    it.componentGroupSizes[ComponentGroupEnum.SIGNERS_GROUP]
-                        ?: error("[${it.name}] Max number of signers must be an integer value")
-                }
-                    // Non ZKP transaction
-                    ?: signers.size
+                val signersFixedLength = transactionMetadata?.numberOfSigners ?: signers.size
 
                 informedSerialize(
                     signers,

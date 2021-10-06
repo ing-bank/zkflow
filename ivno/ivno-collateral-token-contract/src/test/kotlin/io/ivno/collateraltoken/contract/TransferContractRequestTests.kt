@@ -2,6 +2,7 @@ package io.ivno.collateraltoken.contract
 
 import com.ing.zknotary.testing.dsl.VerificationMode
 import com.ing.zknotary.testing.dsl.zkLedger
+import com.ing.zknotary.testing.zkp.MockZKTransactionService
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import kotlin.time.ExperimentalTime
@@ -14,8 +15,8 @@ class TransferContractRequestTests : ContractTest() {
     @Test
     @Disabled
     fun `On transfer requesting, the transaction must include the Request command`() {
-        // services.zkLedger(zkService = MockZKTransactionService(services)) {
-        services.zkLedger {
+        services.zkLedger(zkService = MockZKTransactionService(services)) {
+        // services.zkLedger {
             zkTransaction {
                 val memberships = createAllMemberships()
                 reference(memberships.membershipFor(BANK_A).ref)

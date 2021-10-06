@@ -7,6 +7,7 @@ import com.ing.zknotary.common.serialization.bfl.serializers.toBytes
 import com.ing.zknotary.testing.bytesToWitness
 import com.ing.zknotary.testing.fixtures.contract.TestContract
 import com.ing.zknotary.testing.getZincZKService
+import com.ing.zknotary.testing.withCustomSerializationEnv
 import com.ing.zknotary.testing.zkp.ZKNulls
 import com.ing.zknotary.zinc.types.emptyAnonymousParty
 import com.ing.zknotary.zinc.types.toJsonObject
@@ -23,8 +24,6 @@ import net.corda.core.serialization.SerializationFactory
 import net.corda.core.serialization.SerializationMagic
 import net.corda.core.serialization.internal.CustomSerializationSchemeUtils
 import net.corda.core.serialization.serialize
-import net.corda.coretesting.internal.asTestContextEnv
-import net.corda.coretesting.internal.createTestSerializationEnv
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import kotlin.time.ExperimentalTime
@@ -52,10 +51,6 @@ class DeserializeTxStateTestStateTest {
         // This has to be here, otherwise an Exception stating that
         // No tests are found will be thrown.
         assert(true)
-    }
-
-    private fun <R> withCustomSerializationEnv(block: () -> R): R {
-        return createTestSerializationEnv(javaClass.classLoader).asTestContextEnv { block() }
     }
 
     companion object {

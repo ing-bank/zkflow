@@ -3,10 +3,14 @@ package com.ing.zknotary.testing.fixtures.contract
 import com.ing.serialization.bfl.annotations.FixedLength
 import com.ing.zknotary.common.contracts.ZKCommandData
 import com.ing.zknotary.common.contracts.ZKOwnableState
+import com.ing.zknotary.common.contracts.ZKTransactionMetadataCommandData
 import com.ing.zknotary.common.serialization.bfl.CommandDataSerializerMap
 import com.ing.zknotary.common.serialization.bfl.ContractStateSerializerMap
-import com.ing.zknotary.common.zkp.CircuitMetaData
-import com.ing.zknotary.testing.CircuitMetaDataBuilder
+import com.ing.zknotary.common.transactions.zkFLowMetadata
+import com.ing.zknotary.common.zkp.metadata.ResolvedZKCommandMetadata
+import com.ing.zknotary.common.zkp.metadata.ResolvedZKTransactionMetadata
+import com.ing.zknotary.common.zkp.metadata.commandMetadata
+import com.ing.zknotary.common.zkp.metadata.transactionMetadata
 import com.ing.zknotary.testing.fixtures.contract.TestContract.Create.Companion.verifyCreate
 import com.ing.zknotary.testing.fixtures.contract.TestContract.Move.Companion.verifyMove
 import com.ing.zknotary.testing.fixtures.contract.TestContract.MoveBidirectional.Companion.verifyMoveBidirectional
@@ -17,7 +21,6 @@ import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.CommandAndState
 import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.CommandWithParties
-import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.Contract
 import net.corda.core.contracts.ContractClassName
 import net.corda.core.contracts.TypeOnlyCommandData
@@ -26,14 +29,12 @@ import net.corda.core.transactions.LedgerTransaction
 import java.io.File
 import java.util.Random
 
-public object TestSerializers {
-    init {
-        ContractStateSerializerMap.register(TestContract.TestState::class, 1, TestContract.TestState.serializer())
-        CommandDataSerializerMap.register(TestContract.Create::class, 2, TestContract.Create.serializer())
-        CommandDataSerializerMap.register(TestContract.Move::class, 3, TestContract.Move.serializer())
-        CommandDataSerializerMap.register(TestContract.MoveBidirectional::class, 4, TestContract.MoveBidirectional.serializer())
-        CommandDataSerializerMap.register(TestContract.SignOnly::class, 5, TestContract.SignOnly.serializer())
-    }
+public val testSerializers: Unit = run {
+    ContractStateSerializerMap.register(TestContract.TestState::class, 1, TestContract.TestState.serializer())
+    CommandDataSerializerMap.register(TestContract.Create::class, 2, TestContract.Create.serializer())
+    CommandDataSerializerMap.register(TestContract.Move::class, 3, TestContract.Move.serializer())
+    CommandDataSerializerMap.register(TestContract.MoveBidirectional::class, 4, TestContract.MoveBidirectional.serializer())
+    CommandDataSerializerMap.register(TestContract.SignOnly::class, 5, TestContract.SignOnly.serializer())
 }
 
 public class TestContract : Contract {
@@ -47,12 +48,9 @@ public class TestContract : Contract {
         override val owner: @Contextual AnonymousParty,
         val value: Int = Random().nextInt(1000)
     ) : ZKOwnableState {
-
         init {
-            /*
-             * TODO: This is a hack to ensure that the singleton is initialized. In Kotlin they are lazy until accessed.
-             */
-            TestSerializers
+            // TODO: Hack to trigger the registration of the serializerMap above
+            testSerializers
         }
 
         @FixedLength([2])
@@ -64,13 +62,23 @@ public class TestContract : Contract {
 
     // Commands
     @Serializable
-    public class Create : TypeOnlyCommandData(), ZKCommandData {
+    public class Create : TypeOnlyCommandData(), ZKCommandData, ZKTransactionMetadataCommandData {
+        override val transactionMetadata: ResolvedZKTransactionMetadata by transactionMetadata {
+            commands {
+                +Create::class
+            }
+        }
 
         @Transient
-        override val circuit: CircuitMetaData = CircuitMetaData.fromConfig(
-            // ${System.getProperty("user.dir")} = "notary"
-            File("${System.getProperty("user.dir")}/../zinc-platform-sources/build/circuits/create")
-        )
+        override val metadata: ResolvedZKCommandMetadata = commandMetadata {
+            private = true
+            circuit {
+                buildFolder =
+                    File("${System.getProperty("user.dir")}/../zinc-platform-sources/build/circuits/create")
+            }
+            outputs { 1 of TestState::class }
+            numberOfSigners = 1
+        }
 
         public companion object {
             public fun verifyCreate(
@@ -78,8 +86,7 @@ public class TestContract : Contract {
                 command: CommandWithParties<CommandData>
             ) {
                 // Transaction structure
-                if (tx.outputs.size != 1) throw IllegalArgumentException("Failed requirement: the tx has only one output")
-                if (tx.inputs.isNotEmpty()) throw IllegalArgumentException("Failed requirement: the tx has no inputs")
+                tx.zkFLowMetadata.verify(tx)
 
                 // Transaction contents
                 val output = tx.getOutput(0) as TestState
@@ -93,27 +100,40 @@ public class TestContract : Contract {
      * This command is only used on [CollectSignaturesFlowTest]. It expects two signatures, but nothing else.
      */
     @Serializable
-    public class SignOnly : TypeOnlyCommandData(), ZKCommandData {
+    public class SignOnly : ZKTransactionMetadataCommandData {
+        override val transactionMetadata: ResolvedZKTransactionMetadata by transactionMetadata {
+            commands {
+                +SignOnly::class
+            }
+        }
 
         @Transient
-        override val circuit: CircuitMetaData = CircuitMetaDataBuilder()
-            .name("SignOnly")
-            .addComponentGroupSize(ComponentGroupEnum.SIGNERS_GROUP, 2)
-            .associateJavaClass2ZincType(
-                "com.ing.zknotary.testing.fixtures.contract.TestContract.TestState",
-                "TestState"
-            )
-            .build()
+        override val metadata: ResolvedZKCommandMetadata = commandMetadata {
+            private = true
+            outputs { 1 of TestState::class }
+            numberOfSigners = 2
+        }
     }
 
     @Serializable
-    public class Move : TypeOnlyCommandData(), ZKCommandData {
+    public class Move : ZKTransactionMetadataCommandData {
+        override val transactionMetadata: ResolvedZKTransactionMetadata by transactionMetadata {
+            commands {
+                +Move::class
+            }
+        }
 
         @Transient
-        override val circuit: CircuitMetaData = CircuitMetaData.fromConfig(
-            // ${System.getProperty("user.dir")} = "notary"
-            File("${System.getProperty("user.dir")}/../zinc-platform-sources/build/circuits/move")
-        )
+        override val metadata: ResolvedZKCommandMetadata = commandMetadata {
+            private = true
+            circuit {
+                buildFolder =
+                    File("${System.getProperty("user.dir")}/../zinc-platform-sources/build/circuits/move")
+            }
+            inputs { 1 of TestState::class }
+            outputs { 1 of TestState::class }
+            numberOfSigners = 2
+        }
 
         public companion object {
             public fun verifyMove(
@@ -121,30 +141,34 @@ public class TestContract : Contract {
                 command: CommandWithParties<CommandData>
             ) {
                 // Transaction structure
-                if (tx.outputs.size != 1) throw IllegalArgumentException("Failed requirement: the tx has only one output")
-                if (tx.inputs.size != 1) throw IllegalArgumentException("Failed requirement: the tx has only one input")
+                tx.zkFLowMetadata.verify(tx)
 
                 // Transaction contents
                 val output = tx.getOutput(0) as TestState
                 val input = tx.getInput(0) as TestState
 
                 if (input.owner.owningKey !in command.signers) throw IllegalArgumentException("Failed requirement: the input state is owned by a required command signer")
+                if (output.owner.owningKey !in command.signers) throw IllegalArgumentException("Failed requirement: the outputs state is owned by a required command signer")
                 if (input.value != output.value) throw IllegalArgumentException("Failed requirement: the value of the input and out put should be equal")
             }
         }
     }
 
     @Serializable
-    public class MoveBidirectional : ZKCommandData {
+    public class MoveBidirectional : ZKTransactionMetadataCommandData {
+        override val transactionMetadata: ResolvedZKTransactionMetadata by transactionMetadata {
+            commands {
+                +MoveBidirectional::class
+            }
+        }
+
         @Transient
-        override val circuit: CircuitMetaData = CircuitMetaDataBuilder()
-            .name("MoveBidirectional")
-            .addComponentGroupSize(ComponentGroupEnum.SIGNERS_GROUP, 2)
-            .associateJavaClass2ZincType(
-                "com.ing.zknotary.testing.fixtures.contract.TestContract.TestState",
-                "TestState"
-            )
-            .build()
+        override val metadata: ResolvedZKCommandMetadata = commandMetadata {
+            private = true
+            inputs { 2 of TestState::class }
+            outputs { 2 of TestState::class }
+            numberOfSigners = 2
+        }
 
         public companion object {
             public fun verifyMoveBidirectional(
@@ -152,8 +176,7 @@ public class TestContract : Contract {
                 command: CommandWithParties<CommandData>
             ) {
                 // Transaction structure
-                if (tx.outputs.size != 2) throw IllegalArgumentException("Failed requirement: the tx has two outputs")
-                if (tx.inputs.size != 2) throw IllegalArgumentException("Failed requirement: the tx has two inputs")
+                tx.zkFLowMetadata.verify(tx)
 
                 if (tx.inputStates.sumBy { (it as TestState).value } != tx.outputStates.sumBy { (it as TestState).value }) throw IllegalArgumentException(
                     "Failed requirement: amounts are not conserved"
@@ -179,8 +202,7 @@ public class TestContract : Contract {
 
     override fun verify(tx: LedgerTransaction) {
         // The transaction may have only one command, of a type defined above
-        if (tx.commands.size != 1) throw IllegalArgumentException("Failed requirement: the tx has only one command")
-        val command = tx.commands[0]
+        val command = tx.commands.first()
 
         when (command.value) {
             is Create -> verifyCreate(tx, command)

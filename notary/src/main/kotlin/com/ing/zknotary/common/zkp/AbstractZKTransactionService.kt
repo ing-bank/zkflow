@@ -1,10 +1,10 @@
 package com.ing.zknotary.common.zkp
 
-import com.ing.zknotary.common.contracts.ZKCommandData
 import com.ing.zknotary.common.transactions.SignedZKVerifierTransaction
 import com.ing.zknotary.common.transactions.ZKVerifierTransaction
 import com.ing.zknotary.common.transactions.collectUtxoInfos
-import com.ing.zknotary.common.transactions.zkCommandData
+import com.ing.zknotary.common.transactions.zkTransactionMetadata
+import com.ing.zknotary.common.zkp.metadata.ResolvedZKTransactionMetadata
 import com.ing.zknotary.node.services.ServiceNames
 import com.ing.zknotary.node.services.ZKTransactionResolutionException
 import com.ing.zknotary.node.services.ZKWritableVerifierTransactionStorage
@@ -35,13 +35,13 @@ abstract class AbstractZKTransactionService(val serviceHub: ServiceHub) : ZKTran
             serviceHub.collectUtxoInfos(wtx.references)
         )
 
-        val zkService = zkServiceForCommand(wtx.zkCommandData())
+        val zkService = zkServiceForTransactionMetadata(wtx.zkTransactionMetadata())
         val proof = zkService.prove(witness)
 
         return ZKVerifierTransaction.fromWireTransaction(wtx, proof)
     }
 
-    abstract override fun zkServiceForCommand(command: ZKCommandData): ZKService
+    abstract override fun zkServiceForTransactionMetadata(metadata: ResolvedZKTransactionMetadata): ZKService
 
     override fun verify(svtx: SignedZKVerifierTransaction, checkSufficientSignatures: Boolean) {
         val vtx = svtx.tx
@@ -50,7 +50,7 @@ abstract class AbstractZKTransactionService(val serviceHub: ServiceHub) : ZKTran
         vtx.verify()
 
         // Check proof
-        zkServiceForCommand(vtx.zkCommandData).verify(vtx.proof, calculatePublicInput(vtx))
+        zkServiceForTransactionMetadata(vtx.zkTransactionMetadata()).verify(vtx.proof, calculatePublicInput(vtx))
 
         // Check signatures
         if (checkSufficientSignatures) {
