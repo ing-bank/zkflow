@@ -3,7 +3,7 @@ package com.ing.zkflow.gradle.task
 import com.ing.zkflow.gradle.plugin.circuitNames
 import com.ing.zkflow.gradle.plugin.zincCommonFolderName
 import com.ing.zkflow.gradle.plugin.zincTestFolderNames
-import com.ing.zkflow.gradle.plugin.zkNotaryExtension
+import com.ing.zkflow.gradle.plugin.zkFlowExtension
 import com.ing.zkflow.gradle.zinc.util.ZincSourcesCopier
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
@@ -13,7 +13,7 @@ open class CopyZincCircuitSourcesForTestsTask : DefaultTask() {
 
     @TaskAction
     fun createCopyZincSources() {
-        val extension = project.zkNotaryExtension
+        val extension = project.zkFlowExtension
         val commonFolderName = project.zincCommonFolderName
 
         project.zincTestFolderNames.forEach { testFolder ->

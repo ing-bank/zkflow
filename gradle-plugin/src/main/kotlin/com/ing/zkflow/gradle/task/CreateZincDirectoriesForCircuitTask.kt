@@ -2,7 +2,7 @@ package com.ing.zkflow.gradle.task
 
 import com.ing.zkflow.gradle.plugin.platformSkeletonCircuit
 import com.ing.zkflow.gradle.plugin.platformSkeletonState
-import com.ing.zkflow.gradle.plugin.zkNotaryExtension
+import com.ing.zkflow.gradle.plugin.zkFlowExtension
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RelativePath
 import org.gradle.api.tasks.Input
@@ -27,7 +27,7 @@ open class CreateZincDirectoriesForCircuitTask : DefaultTask() {
 
     @TaskAction
     fun createZincDirectoriesForCircuit() {
-        val extension = project.zkNotaryExtension
+        val extension = project.zkFlowExtension
 
         // skeleton-states -> statesSourcesPath
         project.copy { copy ->

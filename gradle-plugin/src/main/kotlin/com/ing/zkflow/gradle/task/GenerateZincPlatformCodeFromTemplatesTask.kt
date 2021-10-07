@@ -4,7 +4,7 @@ import com.ing.zkflow.gradle.extension.ZKFlowExtension
 import com.ing.zkflow.gradle.plugin.circuitNames
 import com.ing.zkflow.gradle.plugin.getTemplateContents
 import com.ing.zkflow.gradle.plugin.platformSourcesRootPath
-import com.ing.zkflow.gradle.plugin.zkNotaryExtension
+import com.ing.zkflow.gradle.plugin.zkFlowExtension
 import com.ing.zkflow.gradle.zinc.template.TemplateRenderer
 import com.ing.zkflow.gradle.zinc.template.parameters.SerializedStateTemplateParameters
 import com.ing.zkflow.gradle.zinc.template.parameters.SignersTemplateParameters
@@ -20,7 +20,7 @@ open class GenerateZincPlatformCodeFromTemplatesTask : DefaultTask() {
     @Suppress("NestedBlockDepth")
     @TaskAction
     fun generateZincPlatformCodeFromTemplates() {
-        val extension = project.zkNotaryExtension
+        val extension = project.zkFlowExtension
 
         project.circuitNames?.forEach { circuitName ->
             val circuitSources = extension.circuitSourcesBasePath.resolve(circuitName)

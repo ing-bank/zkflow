@@ -10,11 +10,11 @@ val Project.platformSourcesFileTree: FileTree
     get() {
         return configurations.getByName("zinc")
             .files
-            .single { it.name.contains("zinc-platform-sources-${zkNotaryExtension.zincPlatformSourcesVersion}") }
+            .single { it.name.contains("zinc-platform-sources-${zkFlowExtension.zincPlatformSourcesVersion}") }
             .let { project.zipTree(it) }
     }
 
-val Project.zkNotaryExtension: ZKFlowExtension
+val Project.zkFlowExtension: ZKFlowExtension
     get() {
         return extensions.findByType(ZKFlowExtension::class.java)
             ?: error("ZKFlowExtension was not loaded")
@@ -22,25 +22,25 @@ val Project.zkNotaryExtension: ZKFlowExtension
 
 val Project.circuitNames: List<String>?
     get() {
-        return zkNotaryExtension.circuitSourcesBasePath
+        return zkFlowExtension.circuitSourcesBasePath
             .listFiles { file, _ -> file?.isDirectory ?: false }?.map { it.name }
-            ?.filterNot { it == zkNotaryExtension.zincCommonFolderName }
-            ?.filterNot { it == zkNotaryExtension.statesSourcesPath }
+            ?.filterNot { it == zkFlowExtension.zincCommonFolderName }
+            ?.filterNot { it == zkFlowExtension.statesSourcesPath }
     }
 
 val Project.zincCommonFolderName: String?
     get() {
-        return zkNotaryExtension.zincCommonFolderName.folderIfExists(zkNotaryExtension.circuitSourcesBasePath)
+        return zkFlowExtension.zincCommonFolderName.folderIfExists(zkFlowExtension.circuitSourcesBasePath)
     }
 
 val Project.zincStatesFolderName: String?
     get() {
-        return zkNotaryExtension.statesSourcesPath.folderIfExists(zkNotaryExtension.circuitSourcesBasePath)
+        return zkFlowExtension.statesSourcesPath.folderIfExists(zkFlowExtension.circuitSourcesBasePath)
     }
 
 val Project.platformSources: Array<File>
     get() {
-        return project.platformSourcesFileTree.matching { it.include(zkNotaryExtension.platformSourcesPath + zkNotaryExtension.zincFilesGlob) }
+        return project.platformSourcesFileTree.matching { it.include(zkFlowExtension.platformSourcesPath + zkFlowExtension.zincFilesGlob) }
             .toList().toTypedArray()
     }
 
@@ -52,13 +52,13 @@ val Project.platformSourcesRootPath: File
 
 val Project.platformLibraries: Array<File>
     get() {
-        return project.platformSourcesFileTree.matching { it.include(zkNotaryExtension.platformLibrariesPath + zkNotaryExtension.zincFilesGlob) }
+        return project.platformSourcesFileTree.matching { it.include(zkFlowExtension.platformLibrariesPath + zkFlowExtension.zincFilesGlob) }
             .toList().toTypedArray()
     }
 
 val Project.platformTemplates: Array<File>
     get() {
-        return project.platformSourcesFileTree.matching { it.include(zkNotaryExtension.platformTemplatesPath + zkNotaryExtension.zincFilesGlob) }
+        return project.platformSourcesFileTree.matching { it.include(zkFlowExtension.platformTemplatesPath + zkFlowExtension.zincFilesGlob) }
             .toList().toTypedArray()
     }
 
@@ -66,9 +66,9 @@ val Project.platformSkeletonState: FileTree
     get() = project.platformSourcesFileTree.matching {
         it
             .include(
-                zkNotaryExtension.platformSamplesPath +
+                zkFlowExtension.platformSamplesPath +
                     ZKFlowExtension.SKELETON_STATE_PATH +
-                    zkNotaryExtension.zincFilesGlob
+                    zkFlowExtension.zincFilesGlob
             )
     }
 
@@ -76,14 +76,14 @@ val Project.platformSkeletonCircuit: FileTree
     get() = project.platformSourcesFileTree.matching {
         it
             .include(
-                zkNotaryExtension.platformSamplesPath +
+                zkFlowExtension.platformSamplesPath +
                     ZKFlowExtension.SKELETON_CIRCUIT_PATH +
-                    zkNotaryExtension.zincFilesGlob
+                    zkFlowExtension.zincFilesGlob
             )
             .include(
-                zkNotaryExtension.platformSamplesPath +
+                zkFlowExtension.platformSamplesPath +
                     ZKFlowExtension.SKELETON_CIRCUIT_PATH +
-                    zkNotaryExtension.configFiles
+                    zkFlowExtension.configFiles
             )
     }
 
@@ -92,7 +92,7 @@ val Project.platformSkeletonCircuit: FileTree
 // 'src/main.zn')
 val Project.zincTestFolderNames: List<File>
     get() {
-        return zkNotaryExtension.generatedTestResourcesDir.walkTopDown().filter { it.name.endsWith("Test") }.toList()
+        return zkFlowExtension.generatedTestResourcesDir.walkTopDown().filter { it.name.endsWith("Test") }.toList()
     }
 
 fun Project.getTemplateContents(templateFileName: String): String {

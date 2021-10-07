@@ -17,7 +17,7 @@ dependencies {
 
 gradlePlugin {
     plugins {
-        create("zkNotaryPlugin") {
+        create("zkFlowPlugin") {
             id = "com.ing.zkflow.gradle-plugin"
             implementationClass = "com.ing.zkflow.gradle.plugin.ZKFlowPlugin"
         }
