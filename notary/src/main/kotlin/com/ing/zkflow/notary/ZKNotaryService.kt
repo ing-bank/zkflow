@@ -82,8 +82,8 @@ open class ZKNotaryService(final override val services: ServiceHubInternal, over
     )
 
     init {
-        if (services.networkParameters.minimumPlatformVersion < 6) {
-            throw IllegalStateException("The ZKNotaryService is compatible with Corda version 6 or greater")
+        if (services.networkParameters.minimumPlatformVersion < 10) {
+            throw IllegalStateException("The ZKNotaryService is compatible with Corda platform version 10 or greater")
         }
     }
 
