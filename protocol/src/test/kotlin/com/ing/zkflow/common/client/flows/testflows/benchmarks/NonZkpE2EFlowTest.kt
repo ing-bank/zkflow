@@ -1,6 +1,7 @@
 package com.ing.zkflow.common.client.flows.testflows.benchmarks
 
 import com.ing.zkflow.common.client.flows.checkVault
+import com.ing.zkflow.common.zkp.ZKFlow
 import com.ing.zkflow.node.services.InMemoryZKVerifierTransactionStorage
 import com.ing.zkflow.node.services.ServiceNames.ZK_TX_SERVICE
 import com.ing.zkflow.node.services.ServiceNames.ZK_VERIFIER_TX_STORAGE
@@ -49,7 +50,7 @@ class NonZkpE2EFlowTest {
                     validating = true
                 )
             ),
-            networkParameters = testNetworkParameters(minimumPlatformVersion = 6)
+            networkParameters = testNetworkParameters(minimumPlatformVersion = ZKFlow.REQUIRED_PLATFORM_VERSION)
         )
         mockNet = MockNetwork(mockNetworkParameters)
         notaryNode = mockNet.notaryNodes.first()

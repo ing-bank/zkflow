@@ -9,6 +9,7 @@ import com.ing.zkflow.common.serialization.bfl.ContractStateSerializerMap
 import com.ing.zkflow.common.transactions.UtxoInfo
 import com.ing.zkflow.common.transactions.ZKTransactionBuilder
 import com.ing.zkflow.common.zkp.Witness
+import com.ing.zkflow.common.zkp.ZKFlow
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
 import com.ing.zkflow.common.zkp.metadata.commandMetadata
@@ -123,7 +124,7 @@ class ZKTransactionOrderingTest {
 
     private fun createWireTransaction(): WireTransaction = withCustomSerializationEnv {
         val cordappPackages = listOf(LocalContract.PROGRAM_ID.packageName, DummyContract.PROGRAM_ID.packageName).mapNotNull { it }
-        val networkParameters = testNetworkParameters(minimumPlatformVersion = 10)
+        val networkParameters = testNetworkParameters(minimumPlatformVersion = ZKFlow.REQUIRED_PLATFORM_VERSION)
         val firstIdentity = TestIdentity(CordaX500Name("TestIdentity", "", "GB"))
         val mockServices = MockServices(
             cordappPackages,

@@ -1,6 +1,7 @@
 package com.ing.zkflow.common.client.flows
 
 import com.ing.zkflow.common.client.flows.testflows.TestNotarisationFlow
+import com.ing.zkflow.common.zkp.ZKFlow
 import com.ing.zkflow.node.services.InMemoryUtxoInfoStorage
 import com.ing.zkflow.node.services.InMemoryZKVerifierTransactionStorage
 import com.ing.zkflow.node.services.ServiceNames.ZK_TX_SERVICE
@@ -49,7 +50,7 @@ class NotarisationFlowTest {
             notarySpecs = listOf(
                 MockNetworkNotarySpec(DUMMY_NOTARY_NAME, validating = false, className = ZKNotaryService::class.java.name)
             ),
-            networkParameters = testNetworkParameters(minimumPlatformVersion = 6)
+            networkParameters = testNetworkParameters(minimumPlatformVersion = ZKFlow.REQUIRED_PLATFORM_VERSION)
         )
         mockNet = MockNetwork(mockNetworkParameters)
         notaryNode = mockNet.notaryNodes.first()

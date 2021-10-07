@@ -43,7 +43,7 @@ import kotlin.time.ExperimentalTime
 class ZKTransactionMetadataTest {
     private val services = MockServices(
         TestIdentity.fixed("ServiceHub"),
-        testNetworkParameters(minimumPlatformVersion = 10),
+        testNetworkParameters(minimumPlatformVersion = ZKFlow.REQUIRED_PLATFORM_VERSION),
     )
     private val approver = TestIdentity.fixed("Approver").party.anonymise()
     private val issuer = TestIdentity.fixed("Issuer").party.anonymise()

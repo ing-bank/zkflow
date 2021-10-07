@@ -2,6 +2,7 @@ package com.ing.zkflow.common.client.flows
 
 import com.ing.zkflow.common.client.flows.testflows.CreateFlow
 import com.ing.zkflow.common.client.flows.testflows.MoveBidirectionalFlow
+import com.ing.zkflow.common.zkp.ZKFlow
 import com.ing.zkflow.node.services.InMemoryUtxoInfoStorage
 import com.ing.zkflow.node.services.InMemoryZKVerifierTransactionStorage
 import com.ing.zkflow.node.services.ServiceNames.ZK_TX_SERVICE
@@ -46,10 +47,6 @@ class E2EFlowNonOwnedStatesTest {
                         ZK_VERIFIER_TX_STORAGE to InMemoryZKVerifierTransactionStorage::class.qualifiedName!!,
                         ZK_UTXO_INFO_STORAGE to InMemoryUtxoInfoStorage::class.qualifiedName!!,
                         ZK_TX_SERVICE to MockZKTransactionCordaService::class.qualifiedName!!,
-                        // ConfigParams.Zinc.COMMAND_CLASS_NAMES to listOf(
-                        //     TestContract.Create::class.java.name,
-                        //     TestContract.MoveBidirectional::class.java.name
-                        // ).joinToString(separator = ConfigParams.Zinc.COMMANDS_SEPARATOR)
                     )
                 )
             ),
@@ -60,7 +57,7 @@ class E2EFlowNonOwnedStatesTest {
                     className = ZKNotaryService::class.java.name
                 )
             ),
-            networkParameters = testNetworkParameters(minimumPlatformVersion = 6)
+            networkParameters = testNetworkParameters(minimumPlatformVersion = ZKFlow.REQUIRED_PLATFORM_VERSION)
         )
         mockNet = MockNetwork(mockNetworkParameters)
         notaryNode = mockNet.notaryNodes.first()

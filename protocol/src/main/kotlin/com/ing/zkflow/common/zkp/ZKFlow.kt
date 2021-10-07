@@ -7,6 +7,8 @@ import net.corda.core.crypto.SignatureScheme
 import kotlin.reflect.KClass
 
 object ZKFlow {
+    val REQUIRED_PLATFORM_VERSION = 10 // Corda 4.8
+
     val DEFAULT_ZKFLOW_SIGNATURE_SCHEME = Crypto.EDDSA_ED25519_SHA512
     val DEFAULT_ZKFLOW_CONTRACT_ATTACHMENT_CONSTRAINT = SignatureAttachmentConstraint::class
 

@@ -56,7 +56,7 @@ class ZincDigestAlgorithm : DigestAlgorithm {
     }
 
     /**
-     * We use Blake for nonces as well. TODO double-check
+     * We use Blake for nonces as well.
      */
     override fun nonceDigest(bytes: ByteArray): ByteArray = componentDigest(bytes)
 }

@@ -61,7 +61,7 @@ abstract class IntegrationTest {
                 override fun nextPort(): Int = port++
             },
             networkParameters = testNetworkParameters(
-                minimumPlatformVersion = 8
+                minimumPlatformVersion = ZKFlow.REQUIRED_PLATFORM_VERSION
             )
         )
 

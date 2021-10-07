@@ -4,6 +4,7 @@ import TestTransactionDSLInterpreter
 import TestZKLedgerDSLInterpreter
 import TestZKTransactionDSLInterpreter
 import com.ing.zkflow.common.contracts.ZKTransactionMetadataCommandData
+import com.ing.zkflow.common.zkp.ZKFlow
 import com.ing.zkflow.common.zkp.ZincZKTransactionService
 import com.ing.zkflow.testing.dsl.LedgerDSL
 import com.ing.zkflow.testing.dsl.VerificationMode
@@ -156,7 +157,7 @@ abstract class ContractTest {
     @BeforeEach
     private fun setup() {
         val networkParameters = testNetworkParameters(
-            minimumPlatformVersion = 5,
+            minimumPlatformVersion = ZKFlow.REQUIRED_PLATFORM_VERSION,
             notaries = listOf(NotaryInfo(TestIdentity(DUMMY_NOTARY_NAME, 20).party, true))
         )
 
