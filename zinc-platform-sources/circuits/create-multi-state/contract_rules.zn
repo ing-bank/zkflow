@@ -1,0 +1,26 @@
+mod platform_witness;
+mod signers_anonymous_party_ed_dsa;
+mod tx_state_test_state1;
+mod tx_state_test_state2;
+
+use platform_witness::Witness;
+use signers_anonymous_party_ed_dsa::Signers;
+use tx_state_test_state1::TxStateTestState1;
+use tx_state_test_state2::TxStateTestState2;
+
+fn check_contract_rules(witness: Witness) {
+    let signers = Signers::deserialize(witness.signers[0]);
+    dbg!("[Create] Signers {}", signers);
+
+    let tx_test_state1 = TxStateTestState1::deserialize(witness.outputs.test_state1[0]);
+    dbg!("[Create] TxState_TestState1 {}", tx_test_state1);
+
+    assert!(Signers::contains(signers, tx_test_state1.data.owner), "[Create] Owner must sign");
+    dbg!("[Create] Owner signed");
+
+    let tx_test_state2 = TxStateTestState2::deserialize(witness.outputs.test_state2[0]);
+    dbg!("[Create] TxState_TestState2 {}", tx_test_state2);
+
+    // assert!(tx_test_state2.data.list.elements[0] == 42 as i32, "[Create] First element of the list should be 42.");
+
+    dbg!("[Create] Contract rules verified");
