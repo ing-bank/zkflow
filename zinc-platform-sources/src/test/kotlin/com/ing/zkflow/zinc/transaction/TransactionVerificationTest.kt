@@ -2,18 +2,13 @@ package com.ing.zkflow.zinc.transaction
 
 import com.ing.zkflow.common.crypto.zinc
 import com.ing.zkflow.common.serialization.bfl.BFLSerializationScheme
-import com.ing.zkflow.common.transactions.UtxoInfo
-import com.ing.zkflow.common.zkp.PublicInput
-import com.ing.zkflow.common.zkp.Witness
 import com.ing.zkflow.common.zkp.ZincZKTransactionService
+import com.ing.zkflow.testing.dsl.VerificationMode
+import com.ing.zkflow.testing.dsl.zkLedger
 import com.ing.zkflow.testing.fixtures.contract.TestContract
-import com.ing.zkflow.testing.withCustomSerializationEnv
 import com.ing.zkflow.testing.zkp.ZKNulls
-import com.ing.zkflow.zinc.types.proveTimed
 import com.ing.zkflow.zinc.types.setupTimed
-import com.ing.zkflow.zinc.types.verifyTimed
 import net.corda.core.contracts.Command
-import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.PrivacySalt
 import net.corda.core.contracts.StateAndContract
 import net.corda.core.contracts.StateRef
@@ -29,16 +24,14 @@ import net.corda.core.serialization.SerializationMagic
 import net.corda.core.serialization.internal.CustomSerializationSchemeUtils
 import net.corda.core.transactions.WireTransaction
 import net.corda.core.utilities.loggerFor
+import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
 import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.time.Instant
 import kotlin.time.ExperimentalTime
 
-// TODO: re-enable this. Only disabled for draft PR discussion
-@Disabled("Temporarily disabled, until we decide on where circuit artifacts will go")
 @ExperimentalTime
 @Tag("slow")
 class TransactionVerificationTest {
@@ -52,6 +45,10 @@ class TransactionVerificationTest {
     private val moveZKService = zincZKTransactionService.zkServiceForTransactionMetadata(TestContract.Move().transactionMetadata)
 
     private val notary = ZKNulls.NULL_PARTY
+
+    private val cordapps = listOf(
+        "com.ing.zkflow.testing.fixtures.contract"
+    )
 
     init {
         if (!runOnly) {
@@ -86,91 +83,30 @@ class TransactionVerificationTest {
      * On the Kotlin side, serialization and deserialization sizes and unsizes respectively, invisibly for the user.
      * On the Zinc side, we never serialize. On deserialization, unsizing does not happen.
      */
+    @ExperimentalTime
     @Test
-    @Suppress("LongMethod")
-    fun `zinc verifies full create transaction`() = withCustomSerializationEnv {
-        val alice = ZKNulls.NULL_ANONYMOUS_PARTY
-
-        val additionalSerializationPropertiesForCreate = mapOf<Any, Any>(
-            BFLSerializationScheme.CONTEXT_KEY_TRANSACTION_METADATA to TestContract.Create().transactionMetadata
-        )
-
-        // Create TX
-        val createState = TestContract.TestState(alice, value = 88)
-        val createWtx = createWtx(
-            outputs = listOf(StateAndContract(createState, TestContract.PROGRAM_ID)),
-            commands = listOf(Command(TestContract.Create(), alice.owningKey)),
-            additionalSerializationProperties = additionalSerializationPropertiesForCreate
-        )
-
-        val createWitness = Witness.fromWireTransaction(
-            wtx = createWtx,
-            emptyList(), emptyList()
-        )
-
-        val createPublicInput = PublicInput(
-            transactionId = createWtx.id,
-            inputHashes = emptyList(),
-            referenceHashes = emptyList()
-        )
-
-        createZKService.run(createWitness, createPublicInput)
-
-        if (!runOnly) {
-            val createProof = createZKService.proveTimed(createWitness, log)
-            createZKService.verifyTimed(createProof, createPublicInput, log)
-        }
-
-        // Move TX
-
+    fun `dsl test`() {
+        val alice = TestIdentity.fresh("Alice").party.anonymise()
         val bob = ZKNulls.NULL_ANONYMOUS_PARTY
-
-        val additionalSerializationPropertiesForMove = mapOf<Any, Any>(
-            BFLSerializationScheme.CONTEXT_KEY_TRANSACTION_METADATA to TestContract.Move().transactionMetadata
-        )
-
-        val utxo = createWtx.outRef<TestContract.TestState>(0)
-        val serializedUtxo = createWtx.componentGroups.single { it.groupIndex == ComponentGroupEnum.OUTPUTS_GROUP.ordinal }.components[0]
-        val nonce = createWtx.buildFilteredTransaction { true }
-            .filteredComponentGroups.single { it.groupIndex == ComponentGroupEnum.OUTPUTS_GROUP.ordinal }
-            .nonces.first()
-        val inputHash = createWtx.componentGroups
-            .single { it.groupIndex == ComponentGroupEnum.OUTPUTS_GROUP.ordinal }.components.first().run {
-                createWtx.digestService.componentHash(nonce, this)
+        val services = MockServices(cordapps)
+        // services.zkLedger(zkService = MockZKTransactionService(services)) {
+        services.zkLedger {
+            val createState = TestContract.TestState(alice, value = 88)
+            val createTx = zkTransaction {
+                output(TestContract.PROGRAM_ID, createState)
+                command(alice.owningKey, TestContract.Create())
+                timeWindow(time = Instant.EPOCH)
+                verifies(VerificationMode.RUN)
             }
-
-        val moveState = TestContract.TestState(bob, value = createState.value)
-        val moveWtx = createWtx(
-            inputs = listOf(utxo.ref),
-            outputs = listOf(StateAndContract(moveState, TestContract.PROGRAM_ID)),
-            commands = listOf(Command(TestContract.Move(), listOf(alice.owningKey, bob.owningKey))),
-            additionalSerializationProperties = additionalSerializationPropertiesForMove
-        )
-
-        val moveWitness = Witness.fromWireTransaction(
-            wtx = moveWtx,
-            inputUtxoInfos = listOf(
-                UtxoInfo.build(
-                    utxo.ref,
-                    serializedUtxo.bytes,
-                    nonce,
-                    utxo.state.data::class
-                )
-            ),
-            referenceUtxoInfos = emptyList()
-        )
-
-        val movePublicInput = PublicInput(
-            transactionId = moveWtx.id,
-            inputHashes = listOf(inputHash),
-            referenceHashes = emptyList()
-        )
-
-        moveZKService.run(moveWitness, movePublicInput)
-
-        if (!runOnly) {
-            val moveProof = moveZKService.proveTimed(moveWitness, log)
-            moveZKService.verifyTimed(moveProof, movePublicInput, log)
+            val utxo = createTx.outRef<TestContract.TestState>(0)
+            zkTransaction {
+                val moveState = TestContract.TestState(bob, value = createState.value)
+                input(utxo.ref)
+                output(TestContract.PROGRAM_ID, moveState)
+                timeWindow(time = Instant.EPOCH)
+                command(listOf(alice.owningKey, bob.owningKey), TestContract.Move())
+                verifies(VerificationMode.RUN)
+            }
         }
     }
 
