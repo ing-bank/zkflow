@@ -12,7 +12,7 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":notary")) // required for Zinc com.ing.zkflow.gradle.zinc.template renderer
+    implementation(project(":protocol")) // required for Zinc com.ing.zkflow.gradle.zinc.template renderer
     implementation(project(":gradle-plugin"))
 
     val zkkryptoVersion: String by project

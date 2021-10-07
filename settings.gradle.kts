@@ -29,7 +29,7 @@ pluginManagement {
     }
 }
 
-include("notary")
+include("protocol")
 include("zinc-platform-sources")
 include("gradle-plugin")
 include("test-utils")

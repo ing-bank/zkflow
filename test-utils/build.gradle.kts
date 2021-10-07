@@ -8,7 +8,7 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":notary"))
+    implementation(project(":protocol"))
 
     val cordaReleaseGroup: String by project
     val cordaVersion: String by project

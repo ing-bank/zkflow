@@ -39,7 +39,7 @@ class ZKFlowPlugin : Plugin<Project> {
                 "zinc",
                 "com.ing.zkflow:zinc-platform-sources:${extension.zincPlatformSourcesVersion}"
             )
-            project.dependencies.add("implementation", "com.ing.zkflow:notary:${extension.notaryVersion}")
+            project.dependencies.add("implementation", "com.ing.zkflow:protocol:${extension.notaryVersion}")
 
             project.pluginManager.apply("org.jetbrains.kotlin.plugin.serialization")
         }

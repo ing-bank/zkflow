@@ -25,7 +25,7 @@ dependencies {
     cordaCompile "$onixlabs_group:onixlabs-corda-bnms-workflow:$onixlabs_corda_bnms_release_version"
 
 
-    implementation("com.ing.zkflow:notary:1.0-SNAPSHOT")
+    implementation("com.ing.zkflow:protocol:1.0-SNAPSHOT")
 
     // DASL Dependencies
     implementation "$dasl_release_group:dasl-contracts:$dasl_version"

@@ -5,7 +5,7 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":notary"))
+    implementation(project(":protocol"))
 
     val kotlinxSerializationBflVersion: String by project
     implementation("com.ing.serialization.bfl:kotlinx-serialization-bfl:$kotlinxSerializationBflVersion")
