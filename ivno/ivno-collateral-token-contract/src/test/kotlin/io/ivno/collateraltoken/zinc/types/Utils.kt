@@ -1,6 +1,6 @@
 package io.ivno.collateraltoken.zinc.types
 
-import com.ing.zknotary.zinc.types.optional
+import com.ing.zkflow.zinc.types.optional
 import io.onixlabs.corda.bnms.contract.Setting
 import io.onixlabs.corda.identityframework.contract.AbstractClaim
 import io.onixlabs.corda.identityframework.contract.Attestation

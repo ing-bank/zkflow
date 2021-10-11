@@ -1,9 +1,9 @@
 package io.ivno.collateraltoken.zinc.types.bigdecimalamount
 
 import com.ing.serialization.bfl.serializers.BigDecimalSizes
-import com.ing.zknotary.common.zkp.ZincZKService
-import com.ing.zknotary.testing.DeserializationTestBase
-import com.ing.zknotary.testing.getZincZKService
+import com.ing.zkflow.common.zkp.ZincZKService
+import com.ing.zkflow.testing.DeserializationTestBase
+import com.ing.zkflow.testing.getZincZKService
 import io.dasl.contracts.v1.token.BigDecimalAmount
 import io.dasl.contracts.v1.token.TokenDescriptor
 import io.ivno.collateraltoken.serialization.BigDecimalAmountSerializer

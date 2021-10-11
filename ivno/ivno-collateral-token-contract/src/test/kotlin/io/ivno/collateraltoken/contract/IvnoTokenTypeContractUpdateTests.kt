@@ -1,6 +1,6 @@
 package io.ivno.collateraltoken.contract
 
-import com.ing.zknotary.testing.dsl.VerificationMode
+import com.ing.zkflow.testing.dsl.VerificationMode
 import io.dasl.contracts.v1.crud.CrudCommands
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test

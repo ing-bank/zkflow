@@ -3,11 +3,12 @@ package io.ivno.collateraltoken.contract
 import TestTransactionDSLInterpreter
 import TestZKLedgerDSLInterpreter
 import TestZKTransactionDSLInterpreter
-import com.ing.zknotary.common.contracts.ZKTransactionMetadataCommandData
-import com.ing.zknotary.common.zkp.ZincZKTransactionService
-import com.ing.zknotary.testing.dsl.LedgerDSL
-import com.ing.zknotary.testing.dsl.VerificationMode
-import com.ing.zknotary.testing.dsl.zkLedger
+import com.ing.zkflow.common.contracts.ZKTransactionMetadataCommandData
+import com.ing.zkflow.common.zkp.ZKFlow
+import com.ing.zkflow.common.zkp.ZincZKTransactionService
+import com.ing.zkflow.testing.dsl.LedgerDSL
+import com.ing.zkflow.testing.dsl.VerificationMode
+import com.ing.zkflow.testing.dsl.zkLedger
 import io.dasl.contracts.v1.crud.CrudCommands
 import io.dasl.contracts.v1.token.BigDecimalAmount
 import io.dasl.contracts.v1.token.TokenContract
@@ -156,7 +157,7 @@ abstract class ContractTest {
     @BeforeEach
     private fun setup() {
         val networkParameters = testNetworkParameters(
-            minimumPlatformVersion = 5,
+            minimumPlatformVersion = ZKFlow.REQUIRED_PLATFORM_VERSION,
             notaries = listOf(NotaryInfo(TestIdentity(DUMMY_NOTARY_NAME, 20).party, true))
         )
 

@@ -1,28 +1,28 @@
-import com.ing.zknotary.gradle.extension.ZKNotaryExtension
-import com.ing.zknotary.gradle.task.joinConstFiles
-import com.ing.zknotary.gradle.zinc.template.TemplateConfigurations
-import com.ing.zknotary.gradle.zinc.template.TemplateConfigurations.Companion.doubleTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.TemplateConfigurations.Companion.floatTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.TemplateParameters
-import com.ing.zknotary.gradle.zinc.template.TemplateRenderer
-import com.ing.zknotary.gradle.zinc.template.parameters.AbstractPartyTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.parameters.AbstractPartyTemplateParameters.Companion.ANONYMOUS_PARTY_TYPE_NAME
-import com.ing.zknotary.gradle.zinc.template.parameters.AmountTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.parameters.BigDecimalTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.parameters.CollectionTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.parameters.IntegerTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.parameters.IssuedTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.parameters.MapTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.parameters.PublicKeyTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.parameters.SerializedStateTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.parameters.SignersTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.parameters.StateGroupTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.parameters.StringTemplateParameters
-import com.ing.zknotary.gradle.zinc.template.parameters.TxStateTemplateParameters
-import com.ing.zknotary.gradle.zinc.util.CircuitConfigurator
-import com.ing.zknotary.gradle.zinc.util.CodeGenerator
-import com.ing.zknotary.gradle.zinc.util.MerkleReplacer
-import com.ing.zknotary.gradle.zinc.util.ZincSourcesCopier
+import com.ing.zkflow.gradle.extension.ZKFlowExtension
+import com.ing.zkflow.gradle.task.joinConstFiles
+import com.ing.zkflow.gradle.zinc.template.TemplateConfigurations
+import com.ing.zkflow.gradle.zinc.template.TemplateConfigurations.Companion.doubleTemplateParameters
+import com.ing.zkflow.gradle.zinc.template.TemplateConfigurations.Companion.floatTemplateParameters
+import com.ing.zkflow.gradle.zinc.template.TemplateParameters
+import com.ing.zkflow.gradle.zinc.template.TemplateRenderer
+import com.ing.zkflow.gradle.zinc.template.parameters.AbstractPartyTemplateParameters
+import com.ing.zkflow.gradle.zinc.template.parameters.AbstractPartyTemplateParameters.Companion.ANONYMOUS_PARTY_TYPE_NAME
+import com.ing.zkflow.gradle.zinc.template.parameters.AmountTemplateParameters
+import com.ing.zkflow.gradle.zinc.template.parameters.BigDecimalTemplateParameters
+import com.ing.zkflow.gradle.zinc.template.parameters.CollectionTemplateParameters
+import com.ing.zkflow.gradle.zinc.template.parameters.IntegerTemplateParameters
+import com.ing.zkflow.gradle.zinc.template.parameters.IssuedTemplateParameters
+import com.ing.zkflow.gradle.zinc.template.parameters.MapTemplateParameters
+import com.ing.zkflow.gradle.zinc.template.parameters.PublicKeyTemplateParameters
+import com.ing.zkflow.gradle.zinc.template.parameters.SerializedStateTemplateParameters
+import com.ing.zkflow.gradle.zinc.template.parameters.SignersTemplateParameters
+import com.ing.zkflow.gradle.zinc.template.parameters.StateGroupTemplateParameters
+import com.ing.zkflow.gradle.zinc.template.parameters.StringTemplateParameters
+import com.ing.zkflow.gradle.zinc.template.parameters.TxStateTemplateParameters
+import com.ing.zkflow.gradle.zinc.util.CircuitConfigurator
+import com.ing.zkflow.gradle.zinc.util.CodeGenerator
+import com.ing.zkflow.gradle.zinc.util.MerkleReplacer
+import com.ing.zkflow.gradle.zinc.util.ZincSourcesCopier
 import net.corda.core.crypto.Crypto
 import java.io.File
 
@@ -103,12 +103,12 @@ fun main(args: Array<String>) {
             val circuitSourcesPath = circuitSourcesBase.resolve(circuitName)
 
             // Read the configuration
-            val configurator = CircuitConfigurator.fromSources(circuitSourcesPath, ZKNotaryExtension.CONFIG_CIRCUIT_FILE)
+            val configurator = CircuitConfigurator.fromSources(circuitSourcesPath, ZKFlowExtension.CONFIG_CIRCUIT_FILE)
             configurator.generateConstsFile(outputPath)
 
             // Copy Zinc sources
             val copier = ZincSourcesCopier(outputPath)
-            copier.copyZincCircuitSources(circuitSourcesPath, circuitName, projectVersion, ZKNotaryExtension.CONFIG_CIRCUIT_FILE)
+            copier.copyZincCircuitSources(circuitSourcesPath, circuitName, projectVersion, ZKFlowExtension.CONFIG_CIRCUIT_FILE)
             copier.copyZincCircuitStates(getCircuitStates(circuitStates, configurator.circuitConfiguration.circuit.states))
             copier.copyZincPlatformSources(getPlatformSources(root))
             copier.copyZincPlatformSources(getPlatformLibs(root))

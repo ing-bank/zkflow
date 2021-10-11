@@ -1,6 +1,6 @@
 package io.ivno.collateraltoken.zinc.types
 
-import com.ing.zknotary.zinc.types.generateDifferentValueThan
+import com.ing.zkflow.zinc.types.generateDifferentValueThan
 import io.dasl.contracts.v1.account.AccountAddress
 import io.dasl.contracts.v1.token.BigDecimalAmount
 import io.dasl.contracts.v1.token.TokenContract

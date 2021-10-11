@@ -1,4 +1,4 @@
-[![PRs and merges to master](https://github.com/ingzkp/zk-notary/actions/workflows/on-push.yml/badge.svg)](https://github.com/ingzkp/zk-notary/actions/workflows/on-push.yml) [![Nightly build](https://github.com/ingzkp/zk-notary/actions/workflows/scheduled-all.yml/badge.svg)](https://github.com/ingzkp/zk-notary/actions/workflows/scheduled-all.yml)
+[![PRs and merges to master](https://github.com/ingzkp/zkflow/actions/workflows/on-push.yml/badge.svg)](https://github.com/ingzkp/zkflow/actions/workflows/on-push.yml) [![Nightly build](https://github.com/ingzkp/zkflow/actions/workflows/scheduled-all.yml/badge.svg)](https://github.com/ingzkp/zkflow/actions/workflows/scheduled-all.yml)
 
 ## Testing best practices
 

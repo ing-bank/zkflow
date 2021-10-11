@@ -5,7 +5,7 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":notary"))
+    implementation(project(":protocol"))
 
     val kotlinxSerializationBflVersion: String by project
     implementation("com.ing.serialization.bfl:kotlinx-serialization-bfl:$kotlinxSerializationBflVersion")
@@ -17,9 +17,9 @@ dependencies {
 
 gradlePlugin {
     plugins {
-        create("zkNotaryPlugin") {
-            id = "com.ing.zknotary.gradle-plugin"
-            implementationClass = "com.ing.zknotary.gradle.plugin.ZKNotaryPlugin"
+        create("zkFlowPlugin") {
+            id = "com.ing.zkflow.gradle-plugin"
+            implementationClass = "com.ing.zkflow.gradle.plugin.ZKFlowPlugin"
         }
     }
 }
@@ -29,7 +29,7 @@ publishing {
     repositories {
         maven {
             name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/ingzkp/zk-notary")
+            url = uri("https://maven.pkg.github.com/ingzkp/zkflow")
             credentials {
                 username = System.getenv("GITHUB_USERNAME")
                 password = System.getenv("GITHUB_TOKEN")

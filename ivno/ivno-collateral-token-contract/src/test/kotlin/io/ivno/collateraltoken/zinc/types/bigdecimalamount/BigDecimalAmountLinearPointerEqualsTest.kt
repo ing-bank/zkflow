@@ -1,6 +1,6 @@
 package io.ivno.collateraltoken.zinc.types.bigdecimalamount
 
-import com.ing.zknotary.testing.getZincZKService
+import com.ing.zkflow.testing.getZincZKService
 import io.dasl.contracts.v1.token.BigDecimalAmount
 import io.ivno.collateraltoken.contract.IvnoTokenType
 import io.ivno.collateraltoken.zinc.types.toJsonObject

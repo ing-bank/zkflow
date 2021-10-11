@@ -1,6 +1,6 @@
 package io.ivno.collateraltoken.zinc.types.redemption
 
-import com.ing.zknotary.testing.getZincZKService
+import com.ing.zkflow.testing.getZincZKService
 import io.ivno.collateraltoken.contract.Redemption
 import io.ivno.collateraltoken.zinc.types.redemption
 import io.ivno.collateraltoken.zinc.types.redemptionWithAnotherCustodian

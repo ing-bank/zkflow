@@ -1,6 +1,6 @@
 package io.ivno.collateraltoken.zinc.types.claim
 
-import com.ing.zknotary.testing.getZincZKService
+import com.ing.zkflow.testing.getZincZKService
 import io.ivno.collateraltoken.serialization.ClaimSurrogate
 import io.ivno.collateraltoken.zinc.types.toJsonObject
 import io.onixlabs.corda.identityframework.contract.Claim

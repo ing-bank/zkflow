@@ -1,10 +1,10 @@
 package io.ivno.collateraltoken.zinc.types.membership
 
 import com.ing.serialization.bfl.annotations.FixedLength
-import com.ing.zknotary.common.serialization.bfl.serializers.publickey.EdDSASurrogate
-import com.ing.zknotary.common.zkp.ZincZKService
-import com.ing.zknotary.testing.DeserializationTestBase
-import com.ing.zknotary.testing.getZincZKService
+import com.ing.zkflow.common.serialization.bfl.serializers.publickey.EdDSASurrogate
+import com.ing.zkflow.common.zkp.ZincZKService
+import com.ing.zkflow.testing.DeserializationTestBase
+import com.ing.zkflow.testing.getZincZKService
 import io.ivno.collateraltoken.serialization.ClaimSerializer
 import io.ivno.collateraltoken.serialization.ClaimSurrogate
 import io.ivno.collateraltoken.serialization.MembershipSerializer

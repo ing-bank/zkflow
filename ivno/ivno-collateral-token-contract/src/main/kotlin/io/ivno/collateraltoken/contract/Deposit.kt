@@ -2,7 +2,7 @@ package io.ivno.collateraltoken.contract
 
 import com.ing.serialization.bfl.annotations.FixedLength
 import com.ing.serialization.bfl.serializers.BigDecimalSizes
-import com.ing.zknotary.common.contracts.ZKContractState
+import com.ing.zkflow.common.contracts.ZKContractState
 import io.dasl.contracts.v1.token.BigDecimalAmount
 import io.ivno.collateraltoken.contract.DepositSchema.DepositSchemaV1
 import io.ivno.collateraltoken.serialization.BigDecimalAmountSerializer

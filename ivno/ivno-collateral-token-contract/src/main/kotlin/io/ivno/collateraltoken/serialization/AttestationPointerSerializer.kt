@@ -3,9 +3,9 @@ package io.ivno.collateraltoken.serialization
 import com.ing.serialization.bfl.annotations.FixedLength
 import com.ing.serialization.bfl.api.Surrogate
 import com.ing.serialization.bfl.api.SurrogateSerializer
-import com.ing.zknotary.common.serialization.bfl.serializers.CordaSerializers
-import com.ing.zknotary.common.serialization.bfl.serializers.getOriginalClass
-import com.ing.zknotary.common.serialization.bfl.serializers.toBytes
+import com.ing.zkflow.common.serialization.bfl.serializers.CordaSerializers
+import com.ing.zkflow.common.serialization.bfl.serializers.getOriginalClass
+import com.ing.zkflow.common.serialization.bfl.serializers.toBytes
 import io.onixlabs.corda.identityframework.contract.AttestationPointer
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable

@@ -1,6 +1,6 @@
 package io.ivno.collateraltoken.zinc.types.attestationpointer
 
-import com.ing.zknotary.testing.getZincZKService
+import com.ing.zkflow.testing.getZincZKService
 import io.ivno.collateraltoken.zinc.types.attestationPointer
 import io.ivno.collateraltoken.zinc.types.attestationPointerWithDifferentStateClass
 import io.ivno.collateraltoken.zinc.types.attestationPointerWithDifferentStateLinearId

@@ -150,7 +150,7 @@ abstract class FlowTest {
                     TestCordapp.findCordapp("io.dasl.workflows")
                 ),
                 networkParameters = testNetworkParameters(
-                    minimumPlatformVersion = 8
+                    minimumPlatformVersion = ZKFlow.REQUIRED_PLATFORM_VERSION
                 )
             )
         )

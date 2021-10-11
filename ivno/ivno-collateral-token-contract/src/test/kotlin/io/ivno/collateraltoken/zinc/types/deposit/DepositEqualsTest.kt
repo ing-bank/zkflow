@@ -1,6 +1,6 @@
 package io.ivno.collateraltoken.zinc.types.deposit
 
-import com.ing.zknotary.testing.getZincZKService
+import com.ing.zkflow.testing.getZincZKService
 import io.ivno.collateraltoken.contract.Deposit
 import io.ivno.collateraltoken.zinc.types.deposit
 import io.ivno.collateraltoken.zinc.types.depositWithAnotherCustodian

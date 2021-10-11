@@ -1,12 +1,12 @@
 package io.ivno.collateraltoken.serialization
 
-import com.ing.zknotary.common.contracts.ZKTransactionMetadataCommandData
-import com.ing.zknotary.common.crypto.zinc
-import com.ing.zknotary.common.serialization.bfl.BFLSerializationScheme
-import com.ing.zknotary.testing.dsl.VerificationMode
-import com.ing.zknotary.testing.serialization.getSerializationContext
-import com.ing.zknotary.testing.serialization.serializeWithScheme
-import com.ing.zknotary.testing.withCustomSerializationEnv
+import com.ing.zkflow.common.contracts.ZKTransactionMetadataCommandData
+import com.ing.zkflow.common.crypto.zinc
+import com.ing.zkflow.common.serialization.bfl.BFLSerializationScheme
+import com.ing.zkflow.testing.dsl.VerificationMode
+import com.ing.zkflow.testing.serialization.getSerializationContext
+import com.ing.zkflow.testing.serialization.serializeWithScheme
+import com.ing.zkflow.testing.withCustomSerializationEnv
 import io.ivno.collateraltoken.contract.ContractTest
 import io.ivno.collateraltoken.contract.DepositContract
 import io.kotest.matchers.shouldBe
