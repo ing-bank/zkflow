@@ -1,8 +1,6 @@
 package com.ing.zkflow.testing.fixtures.contract
 
 import com.ing.zkflow.common.contracts.ZKTransactionMetadataCommandData
-import com.ing.zkflow.common.serialization.bfl.CommandDataSerializerMap
-import com.ing.zkflow.common.serialization.bfl.ContractStateSerializerMap
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
 import com.ing.zkflow.common.zkp.metadata.commandMetadata
@@ -17,9 +15,9 @@ import net.corda.core.transactions.LedgerTransaction
 
 public object DummySerializers {
     init {
-        ContractStateSerializerMap.register(DummyState::class, 9999, DummyState.serializer())
-        CommandDataSerializerMap.register(DummyContract.Relax::class, 9998, DummyContract.Relax.serializer())
-        CommandDataSerializerMap.register(DummyContract.Chill::class, 9997, DummyContract.Chill.serializer())
+        com.ing.zkflow.serialization.ContractStateSerializerMap.register(DummyState::class, 9999, DummyState.serializer())
+        com.ing.zkflow.serialization.CommandDataSerializerMap.register(DummyContract.Relax::class, 9998, DummyContract.Relax.serializer())
+        com.ing.zkflow.serialization.CommandDataSerializerMap.register(DummyContract.Chill::class, 9997, DummyContract.Chill.serializer())
     }
 }
 

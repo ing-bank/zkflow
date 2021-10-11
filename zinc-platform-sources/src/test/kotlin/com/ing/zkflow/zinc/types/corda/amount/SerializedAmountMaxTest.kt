@@ -4,8 +4,8 @@ import com.ing.serialization.bfl.annotations.FixedLength
 import com.ing.serialization.bfl.api.reified.serialize
 import com.ing.serialization.bfl.serializers.BFLSerializers
 import com.ing.serialization.bfl.serializers.CurrencySerializer
-import com.ing.zkflow.common.serialization.bfl.corda.AmountSerializer
 import com.ing.zkflow.common.zkp.ZKRunException
+import com.ing.zkflow.serialization.bfl.corda.AmountSerializer
 import com.ing.zkflow.testing.getZincZKService
 import com.ing.zkflow.testing.toJsonArray
 import com.ing.zkflow.zinc.types.proveTimed

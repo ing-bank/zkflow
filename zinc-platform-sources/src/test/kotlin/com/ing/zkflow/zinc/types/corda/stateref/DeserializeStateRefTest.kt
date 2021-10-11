@@ -1,7 +1,7 @@
 package com.ing.zkflow.zinc.types.corda.stateref
 
-import com.ing.zkflow.common.crypto.ZINC
 import com.ing.zkflow.common.zkp.ZincZKService
+import com.ing.zkflow.crypto.ZINC
 import com.ing.zkflow.testing.DeserializationTestBase
 import com.ing.zkflow.testing.getZincZKService
 import com.ing.zkflow.zinc.types.toZincJson

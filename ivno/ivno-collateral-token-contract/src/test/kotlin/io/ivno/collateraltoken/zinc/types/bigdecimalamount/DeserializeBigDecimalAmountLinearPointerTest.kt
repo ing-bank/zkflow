@@ -1,7 +1,7 @@
 package io.ivno.collateraltoken.zinc.types.bigdecimalamount
 
 import com.ing.serialization.bfl.serializers.BigDecimalSizes
-import com.ing.zkflow.common.serialization.bfl.corda.LinearPointerSerializer
+import com.ing.zkflow.serialization.bfl.corda.LinearPointerSerializer
 import com.ing.zkflow.common.zkp.ZincZKService
 import com.ing.zkflow.testing.DeserializationTestBase
 import com.ing.zkflow.testing.getZincZKService

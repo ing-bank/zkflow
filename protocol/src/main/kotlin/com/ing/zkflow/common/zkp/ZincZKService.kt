@@ -1,7 +1,7 @@
 package com.ing.zkflow.common.zkp
 
-import com.ing.zkflow.common.serialization.json.corda.PublicInputSerializer
-import com.ing.zkflow.common.serialization.json.corda.WitnessSerializer
+import com.ing.zkflow.serialization.zinc.json.PublicInputSerializer
+import com.ing.zkflow.serialization.zinc.json.WitnessSerializer
 import kotlinx.serialization.json.Json
 import net.corda.core.utilities.loggerFor
 import java.io.File
@@ -149,7 +149,7 @@ class ZincZKService(
 
     private fun assertOutputEqualsExpected(circuitOutput: String, expectedOutput: String) {
         val actualJson = if (circuitOutput.isNotBlank()) Json.parseToJsonElement(circuitOutput) else null
-        log.debug("Public Data (run): \n$actualJson")
+        log.trace("Public Data (run): \n$actualJson")
 
         if (expectedOutput.isNotEmpty()) {
             val expectedJson = Json.parseToJsonElement(expectedOutput)
@@ -183,7 +183,7 @@ class ZincZKService(
         } catch (e: IllegalStateException) {
             throw ZKProvingException("Could not create proof. Cause: $e\n")
         } finally {
-            log.debug("Public Data (prove): \n${publicData.readText()}")
+            log.trace("Public Data (prove): \n${publicData.readText()}")
             publicData.delete()
         }
     }

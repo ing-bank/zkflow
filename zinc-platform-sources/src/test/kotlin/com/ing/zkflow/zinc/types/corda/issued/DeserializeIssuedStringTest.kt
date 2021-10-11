@@ -1,9 +1,9 @@
 package com.ing.zkflow.zinc.types.corda.issued
 
 import com.ing.serialization.bfl.annotations.FixedLength
-import com.ing.zkflow.common.serialization.bfl.corda.IssuedSerializer
-import com.ing.zkflow.common.serialization.bfl.serializers.PartyAndReferenceSurrogate
-import com.ing.zkflow.common.serialization.bfl.serializers.publickey.EdDSASurrogate
+import com.ing.zkflow.serialization.bfl.corda.IssuedSerializer
+import com.ing.zkflow.serialization.bfl.serializers.PartyAndReferenceSurrogate
+import com.ing.zkflow.serialization.bfl.serializers.publickey.EdDSASurrogate
 import com.ing.zkflow.testing.DeserializationTestBase
 import com.ing.zkflow.testing.getZincZKService
 import com.ing.zkflow.zinc.types.toZincJson

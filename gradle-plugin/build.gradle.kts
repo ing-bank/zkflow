@@ -5,10 +5,8 @@ plugins {
 }
 
 dependencies {
+    implementation(project(":compilation"))
     implementation(project(":protocol"))
-
-    val kotlinxSerializationBflVersion: String by project
-    implementation("com.ing.serialization.bfl:kotlinx-serialization-bfl:$kotlinxSerializationBflVersion")
 
     // Loaded so we can apply the plugin on project we are applied on.
     val kotlinVersion: String by project

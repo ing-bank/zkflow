@@ -1,11 +1,11 @@
 package io.ivno.collateraltoken.zinc.types
 
-import com.ing.zkflow.common.serialization.bfl.serializers.CordaSerializers.CLASS_NAME_SIZE
-import com.ing.zkflow.common.serialization.bfl.serializers.SecureHashSupportedAlgorithm
-import com.ing.zkflow.common.serialization.bfl.serializers.SecureHashSurrogate
-import com.ing.zkflow.common.serialization.bfl.serializers.UniqueIdentifierSurrogate
-import com.ing.zkflow.common.serialization.bfl.serializers.publickey.EdDSASurrogate
-import com.ing.zkflow.common.serialization.bfl.serializers.toBytes
+import com.ing.zkflow.serialization.bfl.serializers.CordaSerializers.CLASS_NAME_SIZE
+import com.ing.zkflow.serialization.bfl.serializers.SecureHashSupportedAlgorithm
+import com.ing.zkflow.serialization.bfl.serializers.SecureHashSurrogate
+import com.ing.zkflow.serialization.bfl.serializers.UniqueIdentifierSurrogate
+import com.ing.zkflow.serialization.bfl.serializers.publickey.EdDSASurrogate
+import com.ing.zkflow.serialization.bfl.serializers.toBytes
 import com.ing.zkflow.testing.resizeTo
 import com.ing.zkflow.testing.toJsonArray
 import com.ing.zkflow.zinc.types.nullable

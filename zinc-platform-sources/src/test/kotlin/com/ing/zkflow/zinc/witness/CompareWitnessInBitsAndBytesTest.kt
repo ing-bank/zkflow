@@ -1,9 +1,11 @@
 package com.ing.zkflow.zinc.witness
 
 import net.corda.core.utilities.loggerFor
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.io.File
 
+@Disabled("This is a benchmark. Should only be enabled for benchmarks")
 class CompareWitnessInBitsAndBytesTest {
     private val log = loggerFor<CompareWitnessInBitsAndBytesTest>()
 

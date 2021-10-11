@@ -1,5 +1,5 @@
-import com.ing.zkflow.common.serialization.bfl.serializers.CordaSerializers
-import com.ing.zkflow.gradle.zinc.template.parameters.*
+import com.ing.zkflow.serialization.bfl.serializers.CordaSerializers
+import com.ing.zkflow.compilation.zinc.template.parameters.*
 
 plugins {
     id 'com.ing.zkflow.gradle-plugin'

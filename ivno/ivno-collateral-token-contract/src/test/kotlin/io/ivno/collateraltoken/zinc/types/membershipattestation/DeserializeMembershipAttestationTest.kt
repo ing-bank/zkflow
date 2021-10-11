@@ -1,6 +1,6 @@
 package io.ivno.collateraltoken.zinc.types.membershipattestation
 
-import com.ing.zkflow.common.serialization.bfl.serializers.CordaSerializers
+import com.ing.zkflow.serialization.bfl.serializers.CordaSerializers
 import com.ing.zkflow.common.zkp.ZincZKService
 import com.ing.zkflow.testing.DeserializationTestBase
 import com.ing.zkflow.testing.getZincZKService

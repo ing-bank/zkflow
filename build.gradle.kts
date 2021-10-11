@@ -156,7 +156,6 @@ subprojects {
             // Testing
             val junit5Version: String by project
             val kotestVersion: String by project
-
             add("testImplementation", "org.junit.jupiter:junit-jupiter-api:$junit5Version")
             add("testImplementation", "org.junit.jupiter:junit-jupiter-params:$junit5Version")
             add("testRuntimeOnly", "org.junit.jupiter:junit-jupiter-engine")

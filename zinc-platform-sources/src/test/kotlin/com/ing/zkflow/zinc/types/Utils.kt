@@ -4,11 +4,11 @@ import com.ing.serialization.bfl.annotations.FixedLength
 import com.ing.serialization.bfl.api.reified.serialize
 import com.ing.serialization.bfl.serializers.BFLSerializers
 import com.ing.serialization.bfl.serializers.CurrencySerializer
-import com.ing.zkflow.common.serialization.bfl.corda.AmountSerializer
-import com.ing.zkflow.common.serialization.bfl.serializers.CordaSerializers
 import com.ing.zkflow.common.zkp.PublicInput
 import com.ing.zkflow.common.zkp.Witness
 import com.ing.zkflow.common.zkp.ZincZKService
+import com.ing.zkflow.serialization.bfl.corda.AmountSerializer
+import com.ing.zkflow.serialization.bfl.serializers.CordaSerializers
 import com.ing.zkflow.testing.bytesToWitness
 import com.ing.zkflow.testing.toJsonArray
 import kotlinx.serialization.Contextual

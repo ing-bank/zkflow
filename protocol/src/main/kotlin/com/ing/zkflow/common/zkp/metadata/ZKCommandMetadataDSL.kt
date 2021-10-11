@@ -5,7 +5,7 @@ import com.ing.zkflow.common.zkp.ZKFlow.DEFAULT_ZKFLOW_CONTRACT_ATTACHMENT_CONST
 import com.ing.zkflow.common.zkp.ZKFlow.DEFAULT_ZKFLOW_SIGNATURE_SCHEME
 import com.ing.zkflow.common.zkp.ZKFlow.requireSupportedSignatureScheme
 import com.ing.zkflow.common.zkp.metadata.ZKCircuit.Companion.resolve
-import com.ing.zkflow.gradle.zinc.template.TemplateParameters.Companion.camelToSnakeCase
+import com.ing.zkflow.util.camelToSnakeCase
 import net.corda.core.contracts.AttachmentConstraint
 import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.ContractState

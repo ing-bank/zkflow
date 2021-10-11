@@ -1,6 +1,6 @@
 package com.ing.zkflow.zinc.types.corda.attachmentconstraint
 
-import com.ing.zkflow.common.serialization.bfl.serializers.publickey.BCECSurrogate
+import com.ing.zkflow.serialization.bfl.serializers.publickey.BCECSurrogate
 import com.ing.zkflow.testing.getZincZKService
 import com.ing.zkflow.zinc.types.generateDifferentValueThan
 import com.ing.zkflow.zinc.types.toJsonObject

@@ -1,10 +1,10 @@
 package io.ivno.collateraltoken.serialization
 
-import com.ing.zkflow.common.serialization.bfl.serializers.AnonymousPartySerializer
-import com.ing.zkflow.common.serialization.bfl.serializers.PartySerializer
-import com.ing.zkflow.common.serialization.bfl.serializers.StateRefSerializer
-import com.ing.zkflow.testing.assertRoundTripSucceeds
-import com.ing.zkflow.testing.assertSameSize
+import com.ing.zkflow.serialization.bfl.serializers.AnonymousPartySerializer
+import com.ing.zkflow.serialization.bfl.serializers.PartySerializer
+import com.ing.zkflow.serialization.bfl.serializers.StateRefSerializer
+import com.ing.zkflow.serialization.bfl.assertRoundTripSucceeds
+import com.ing.zkflow.serialization.bfl.assertSameSize
 import io.ivno.collateraltoken.zinc.types.abstractClaimWithContextual
 import io.ivno.collateraltoken.zinc.types.abstractClaimWithInt
 import io.ivno.collateraltoken.zinc.types.abstractClaimWithPolymorphic

@@ -1,7 +1,7 @@
 package com.ing.zkflow.testing.serialization
 
 import com.ing.serialization.bfl.api.serialize
-import com.ing.zkflow.common.serialization.bfl.serializers.CordaSerializers
+import com.ing.zkflow.serialization.bfl.serializers.CordaSerializers
 import com.ing.zkflow.testing.bytesToWitness
 import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule

@@ -1,8 +1,8 @@
 package com.ing.zkflow.zinc.hashes
 
 import com.ing.dlt.zkkrypto.util.asUnsigned
-import com.ing.zkflow.common.crypto.blake2s256
 import com.ing.zkflow.common.zkp.ZincZKService
+import com.ing.zkflow.crypto.blake2s256
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import net.corda.core.crypto.DigestService

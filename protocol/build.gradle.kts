@@ -21,9 +21,13 @@ cordapp {
 }
 
 dependencies {
+    // These are required for our implementation and included in the JAR, we also expose their API for modules that depend on us.
+    api(project(":utils"))
+    api(project(":crypto"))
+
     val kotlinxSerializationVersion: String by project
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:$kotlinxSerializationVersion")
+    api("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
+    api("org.jetbrains.kotlinx:kotlinx-serialization-core:$kotlinxSerializationVersion")
 
     val kotlinxSerializationBflVersion: String by project
     api("com.ing.serialization.bfl:kotlinx-serialization-bfl:$kotlinxSerializationBflVersion")
@@ -35,13 +39,9 @@ dependencies {
     cordaRuntime("$cordaReleaseGroup:corda:$cordaVersion")
     cordaCompile("$cordaReleaseGroup:corda-node:$cordaVersion")
     cordaCompile("$cordaReleaseGroup:corda-jackson:$cordaVersion")
+
     testImplementation("$cordaReleaseGroup:corda-node-driver:$cordaVersion")
     testImplementation("$cordaReleaseGroup:corda-test-utils:$cordaVersion")
-
-    val zkkryptoVersion: String by project
-    implementation("com.ing.dlt:zkkrypto:$zkkryptoVersion")
-
-    // ZKP dependencies
     testImplementation(project(":test-utils"))
 }
 

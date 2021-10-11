@@ -1,10 +1,10 @@
 package com.ing.zkflow.testing.zkp
 
-import com.ing.zkflow.common.crypto.zinc
-import com.ing.zkflow.common.crypto.zincAlgorithm
 import com.ing.zkflow.common.zkp.AbstractZKTransactionService
 import com.ing.zkflow.common.zkp.ZKService
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
+import com.ing.zkflow.crypto.zinc
+import com.ing.zkflow.crypto.zincAlgorithm
 import net.corda.core.crypto.DigestService
 import net.corda.core.internal.HashAgility
 import net.corda.core.node.AppServiceHub

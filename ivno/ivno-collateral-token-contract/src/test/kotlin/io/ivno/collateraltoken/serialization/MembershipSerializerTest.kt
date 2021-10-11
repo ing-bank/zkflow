@@ -1,8 +1,8 @@
 package io.ivno.collateraltoken.serialization
 
 import com.ing.serialization.bfl.annotations.FixedLength
-import com.ing.zkflow.testing.assertRoundTripSucceeds
-import com.ing.zkflow.testing.assertSameSize
+import com.ing.zkflow.serialization.bfl.assertRoundTripSucceeds
+import com.ing.zkflow.serialization.bfl.assertSameSize
 import io.ivno.collateraltoken.zinc.types.anotherMembershipWithInt
 import io.ivno.collateraltoken.zinc.types.anotherMembershipWithString
 import io.ivno.collateraltoken.zinc.types.anotherMembershipWithIntAndString

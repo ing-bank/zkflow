@@ -1,9 +1,9 @@
 package com.ing.zkflow.testing.zkp
 
-import com.ing.zkflow.common.serialization.json.corda.WitnessSerializer
 import com.ing.zkflow.common.zkp.PublicInput
 import com.ing.zkflow.common.zkp.Witness
 import com.ing.zkflow.common.zkp.ZKService
+import com.ing.zkflow.serialization.zinc.json.WitnessSerializer
 import kotlinx.serialization.json.Json
 import net.corda.core.contracts.AttachmentResolutionException
 import net.corda.core.contracts.CommandWithParties
@@ -50,7 +50,7 @@ public class MockZKService(private val serviceHub: ServiceHub, private val diges
                 components.map { OpaqueBytes(it) }
             )
 
-        fun createComponentGroupForMultiState(componentGroup: ComponentGroupEnum, components: Map<String, List< ByteArray>>) =
+        fun createComponentGroupForMultiState(componentGroup: ComponentGroupEnum, components: Map<String, List<ByteArray>>) =
             if (components.isEmpty()) null else ComponentGroup(
                 componentGroup.ordinal,
                 components.flatMap { it.value }.map { OpaqueBytes(it) }

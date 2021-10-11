@@ -1,7 +1,8 @@
 package com.ing.zkflow.gradle.extension
 
-import com.ing.zkflow.gradle.zinc.template.TemplateConfigurations
-import com.ing.zkflow.gradle.zinc.template.TemplateParameters
+import com.ing.zkflow.compilation.ZKFlowCompilationDefaults
+import com.ing.zkflow.compilation.zinc.template.TemplateConfigurations
+import com.ing.zkflow.compilation.zinc.template.TemplateParameters
 import org.gradle.api.Project
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
@@ -17,7 +18,7 @@ open class ZKFlowExtension(project: Project) : TemplateConfigurations() {
          *  FIXME: obsolete, but kept here until we rebuild Zinc code generation to use the ZKTransactionMetadata
          *  instead of this (with the configurator class,  which can then also be deleted).
          */
-        const val CONFIG_CIRCUIT_FILE = "config.json"
+        const val CONFIG_CIRCUIT_FILE = ZKFlowCompilationDefaults.DEFAULT_CONFIG_CIRCUIT_FILE
 
         private const val MERGED_CIRCUIT_BUILD_PATH = "zinc"
         private const val CIRCUIT_SOURCES_BASE_PATH = "src/main/zinc"

@@ -1,7 +1,7 @@
 package com.ing.zkflow.zinc.types.corda.party
 
-import com.ing.zkflow.common.serialization.bfl.serializers.publickey.BCRSASurrogate
 import com.ing.zkflow.common.zkp.ZincZKService
+import com.ing.zkflow.serialization.bfl.serializers.publickey.BCRSASurrogate
 import com.ing.zkflow.testing.DeserializationTestBase
 import com.ing.zkflow.testing.getZincZKService
 import com.ing.zkflow.zinc.types.toZincJson

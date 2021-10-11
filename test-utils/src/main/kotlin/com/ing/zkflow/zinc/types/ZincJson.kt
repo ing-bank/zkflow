@@ -3,19 +3,18 @@ package com.ing.zkflow.zinc.types
 
 import com.ing.serialization.bfl.api.reified.serialize
 import com.ing.serialization.bfl.serializers.BFLSerializers
-import com.ing.zkflow.common.serialization.bfl.serializers.CordaSerializers
-import com.ing.zkflow.common.serialization.bfl.serializers.CordaSerializers.CLASS_NAME_SIZE
-import com.ing.zkflow.common.serialization.bfl.serializers.CordaX500NameSerializer
-import com.ing.zkflow.common.serialization.bfl.serializers.CordaX500NameSurrogate
-import com.ing.zkflow.common.serialization.bfl.serializers.PartyAndReferenceSurrogate
-import com.ing.zkflow.common.serialization.bfl.serializers.SecureHashSupportedAlgorithm
-import com.ing.zkflow.common.serialization.bfl.serializers.SecureHashSurrogate
-import com.ing.zkflow.common.serialization.bfl.serializers.UniqueIdentifierSurrogate
-import com.ing.zkflow.common.serialization.bfl.serializers.toBytes
+import com.ing.zkflow.serialization.bfl.serializers.CordaSerializers
+import com.ing.zkflow.serialization.bfl.serializers.CordaSerializers.CLASS_NAME_SIZE
+import com.ing.zkflow.serialization.bfl.serializers.CordaX500NameSerializer
+import com.ing.zkflow.serialization.bfl.serializers.CordaX500NameSurrogate
+import com.ing.zkflow.serialization.bfl.serializers.PartyAndReferenceSurrogate
+import com.ing.zkflow.serialization.bfl.serializers.SecureHashSupportedAlgorithm
+import com.ing.zkflow.serialization.bfl.serializers.SecureHashSurrogate
+import com.ing.zkflow.serialization.bfl.serializers.UniqueIdentifierSurrogate
+import com.ing.zkflow.serialization.bfl.serializers.toBytes
 import com.ing.zkflow.testing.resizeTo
 import com.ing.zkflow.testing.toJsonArray
 import com.ing.zkflow.testing.toSizedIntArray
-import io.kotest.matchers.shouldBe
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
@@ -51,6 +50,7 @@ import java.time.ZonedDateTime
 import java.util.Currency
 import java.util.Date
 import javax.security.auth.x500.X500Principal
+import kotlin.test.assertEquals
 
 public fun BigDecimal.toZincJson(integerSize: Int = 24, fractionSize: Int = 6): String = toJsonObject(integerSize, fractionSize).toString()
 public inline fun <reified T : Any> Amount<T>.toZincJson(
@@ -164,7 +164,7 @@ public inline fun <reified T : Any> Amount<T>.toJsonObject(
     val tokenTypeHashJson = token.javaClass.sha256().toJsonArray()
     val tokenJson = serialize(token, serializersModule = BFLSerializers + serializersModule).toJsonArray()
 
-    tokenJson.size shouldBe tokenSize
+    assertEquals(tokenSize, tokenJson.size)
 
     put("quantity", "$quantity")
     put("display_token_size", displayTokenSizeJson)
@@ -175,7 +175,7 @@ public inline fun <reified T : Any> Amount<T>.toJsonObject(
 /* This method assumes that the mostSignificantBits of the id are 0 */
 public fun UniqueIdentifier.toJsonObject(): JsonObject = buildJsonObject {
     // input validations
-    id.mostSignificantBits shouldBe 0
+    assertEquals(0, id.mostSignificantBits)
 
     put("external_id", externalId.toJsonObject(UniqueIdentifierSurrogate.EXTERNAL_ID_LENGTH).nullable(externalId == null))
     put("id", "${id.leastSignificantBits}")

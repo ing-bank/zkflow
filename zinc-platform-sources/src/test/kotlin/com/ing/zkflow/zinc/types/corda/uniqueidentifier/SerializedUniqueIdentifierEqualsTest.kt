@@ -1,7 +1,7 @@
 package com.ing.zkflow.zinc.types.corda.uniqueidentifier
 
 import com.ing.serialization.bfl.api.reified.serialize
-import com.ing.zkflow.common.serialization.bfl.serializers.CordaSerializers
+import com.ing.zkflow.serialization.bfl.serializers.CordaSerializers
 import com.ing.zkflow.testing.getZincZKService
 import com.ing.zkflow.testing.toJsonArray
 import kotlinx.serialization.Contextual

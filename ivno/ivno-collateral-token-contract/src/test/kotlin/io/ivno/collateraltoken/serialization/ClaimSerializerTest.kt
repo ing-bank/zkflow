@@ -1,9 +1,9 @@
 package io.ivno.collateraltoken.serialization
 
 import com.ing.serialization.bfl.annotations.FixedLength
-import com.ing.zkflow.common.serialization.bfl.serializers.StateRefSerializer
-import com.ing.zkflow.testing.assertRoundTripSucceeds
-import com.ing.zkflow.testing.assertSameSize
+import com.ing.zkflow.serialization.bfl.serializers.StateRefSerializer
+import com.ing.zkflow.serialization.bfl.assertRoundTripSucceeds
+import com.ing.zkflow.serialization.bfl.assertSameSize
 import io.ivno.collateraltoken.zinc.types.anotherClaimWithContextual
 import io.ivno.collateraltoken.zinc.types.anotherClaimWithInt
 import io.ivno.collateraltoken.zinc.types.anotherClaimWithPolymorphic

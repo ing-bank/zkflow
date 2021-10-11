@@ -1,8 +1,8 @@
 package io.ivno.collateraltoken.serialization
 
 import com.ing.zkflow.common.contracts.ZKTransactionMetadataCommandData
-import com.ing.zkflow.common.crypto.zinc
-import com.ing.zkflow.common.serialization.bfl.BFLSerializationScheme
+import com.ing.zkflow.crypto.zinc
+import com.ing.zkflow.serialization.BFLSerializationScheme
 import com.ing.zkflow.testing.dsl.VerificationMode
 import com.ing.zkflow.testing.serialization.getSerializationContext
 import com.ing.zkflow.testing.serialization.serializeWithScheme
