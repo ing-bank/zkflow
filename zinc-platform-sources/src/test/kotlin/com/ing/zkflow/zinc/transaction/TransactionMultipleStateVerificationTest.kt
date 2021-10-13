@@ -63,15 +63,19 @@ class TransactionMultipleStateVerificationTest {
                 timeWindow(time = Instant.EPOCH)
                 verifies(VerificationMode.RUN)
             }
-//            val utxo = createTx.outRef<TestContract.TestState>(0)
-//            zkTransaction {
-//                val moveState = TestContract.TestState(bob, value = createState.value)
-//                input(utxo.ref)
-//                output(TestContract.PROGRAM_ID, moveState)
-//                timeWindow(time = Instant.EPOCH)
-//                command(listOf(alice.owningKey, bob.owningKey), TestContract.Move())
-//                verifies(VerificationMode.RUN)
-//            }
+            val utxo1 = createTx.outRef<TestMultipleStateContract.TestState1>(0)
+            val utxo2 = createTx.outRef<TestMultipleStateContract.TestState2>(1)
+            val moveState1 = TestMultipleStateContract.TestState1(bob, value = createState1.value)
+            val moveState2 = TestMultipleStateContract.TestState2(bob, value = createState2.value, list = createState2.list)
+            zkTransaction {
+                input(utxo1.ref)
+                input(utxo2.ref)
+                output(TestMultipleStateContract.PROGRAM_ID, moveState1)
+                output(TestMultipleStateContract.PROGRAM_ID, moveState2)
+                timeWindow(time = Instant.EPOCH)
+                command(listOf(alice.owningKey, bob.owningKey), TestMultipleStateContract.Move())
+                verifies(VerificationMode.RUN)
+            }
         }
     }
 }

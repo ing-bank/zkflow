@@ -152,7 +152,7 @@ public class TestMultipleStateContract : Contract {
                 1 of TestMultipleStateContract.TestState1::class
                 1 of TestMultipleStateContract.TestState2::class
             }
-            numberOfSigners = 1
+            numberOfSigners = 2
         }
         public companion object {
             public fun verifyMove(
@@ -162,7 +162,7 @@ public class TestMultipleStateContract : Contract {
                 tx.zkFLowMetadata.verify(tx)
                 // Transaction structure
                 if (tx.outputs.size != 2) throw IllegalArgumentException("Failed requirement: the tx has exactly two outputs")
-                if (tx.inputs.size != 1) throw IllegalArgumentException("Failed requirement: the tx has exactly two inputs")
+                if (tx.inputs.size != 2) throw IllegalArgumentException("Failed requirement: the tx has exactly two inputs")
 
                 // Transaction contents
                 val output1 = tx.getOutput(0) as TestState1

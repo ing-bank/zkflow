@@ -9,6 +9,22 @@ use tx_state_test_state1::TxStateTestState1;
 use tx_state_test_state2::TxStateTestState2;
 
 fn check_contract_rules(witness: Witness) {
+    // public fun verifyCreate(
+    //     tx: LedgerTransaction,
+    //     command: CommandWithParties<CommandData>
+    // ) {
+    //     tx.zkFLowMetadata.verify(tx)
+    //     // Transaction structure
+    //     if (tx.outputs.size != 2) throw IllegalArgumentException("Failed requirement: the tx has exactly two outputs")
+    //     if (tx.inputs.isNotEmpty()) throw IllegalArgumentException("Failed requirement: the tx has no inputs")
+
+    //     // Transaction contents
+    //     val output1 = tx.getOutput(0) as TestState1
+    //     val output2 = tx.getOutput(1) as TestState2
+    //     if (output1.owner.owningKey !in command.signers) throw IllegalArgumentException("Failed requirement: the first output state is owned by the command signer")
+    //     if (output2.owner.owningKey !in command.signers) throw IllegalArgumentException("Failed requirement: the second output state is owned by the command signer")
+    // }
+
     let signers = Signers::deserialize(witness.signers[0]);
     dbg!("[Create] Signers {}", signers);
 
