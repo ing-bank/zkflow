@@ -1,6 +1,6 @@
 {
   "circuit" : {
-    "name": "create",
+    "name": "create-multi-state",
     "states": [
       {
         "java_class": "com.ing.zknotary.testing.fixtures.contract.TestMultipleStateContract.TestState1",
@@ -23,7 +23,7 @@
     "output_group" : [
       {
         "java_class": "com.ing.zknotary.testing.fixtures.contract.TestMultipleStateContract.TestState1",
-        "state_group_size": 2
+        "state_group_size": 1
       },
       {
         "java_class": "com.ing.zknotary.testing.fixtures.contract.TestMultipleStateContract.TestState2",
@@ -33,7 +33,7 @@
     "command_group": {
       "group_size": 1,
       "commands": [ {
-        "name": "create",
+        "name": "create-multi-state",
         "component_size": 11
       }]
     },

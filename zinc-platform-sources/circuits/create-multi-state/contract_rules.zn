@@ -24,3 +24,4 @@ fn check_contract_rules(witness: Witness) {
     // assert!(tx_test_state2.data.list.elements[0] == 42 as i32, "[Create] First element of the list should be 42.");
 
     dbg!("[Create] Contract rules verified");
+}
