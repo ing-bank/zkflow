@@ -51,6 +51,7 @@ const TEST_STATE2_LENGTH: u16
 
 
 struct TestState2 {
+    owner: AnonymousPartyEdDSA,
     value : i32,
     list:  I32_Collection_2,
     participants: AnonymousPartyEdDSA_Collection_2,
@@ -97,6 +98,7 @@ impl TestState2 {
         dbg!("[Create] Participants = {}", participants);
 
         TestState2 {
+            owner: owner,
             value: value,
             list:  list,
             participants: participants,
@@ -104,6 +106,7 @@ impl TestState2 {
     }
 
     fn equals(this: TestState2, that: TestState2) -> bool {
+            AnonymousPartyEdDSA::equals(this.owner, that.owner) &&
             this.value == that.value  &&
             I32_Collection_2::equals(this.list, that.list) &&
             AnonymousPartyEdDSA_Collection_2::equals(this.participants, that.participants)

@@ -37,5 +37,8 @@ fn check_contract_rules(witness: Witness) {
     assert!(Signers::contains(signers, input.data.owner), "[Move] Owner must sign");
     dbg!("[Move] Owner of consumed state signed");
 
+
+    // assert!(tx_test_state2.data.list.elements[0] == 42 as i32, "[Create] First element of the list should be 42.");
+
     dbg!("[Move] Contract rules are verified");
 }
