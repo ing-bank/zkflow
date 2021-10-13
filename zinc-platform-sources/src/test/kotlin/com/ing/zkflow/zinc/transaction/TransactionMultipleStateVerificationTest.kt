@@ -3,8 +3,8 @@ package com.ing.zknotary.zinc.transaction
 import com.ing.zkflow.common.zkp.ZincZKTransactionService
 import com.ing.zkflow.testing.dsl.VerificationMode
 import com.ing.zkflow.testing.dsl.zkLedger
+import com.ing.zkflow.testing.fixtures.contract.TestMultipleStateContract
 import com.ing.zkflow.testing.zkp.ZKNulls
-import com.ing.zknotary.testing.fixtures.contract.TestMultipleStateContract
 import net.corda.core.utilities.loggerFor
 import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
@@ -23,7 +23,7 @@ class TransactionMultipleStateVerificationTest {
     private val notary = ZKNulls.NULL_PARTY
 
     private val cordapps = listOf(
-        "com.ing.zknotary.testing.fixtures.contract"
+        "com.ing.zkflow.testing.fixtures.contract"
     )
 
     /**
