@@ -4,6 +4,7 @@ import co.paralleluniverse.fibers.Suspendable
 import com.ing.zkflow.client.flows.ResolveZKTransactionsFlow
 import com.ing.zkflow.common.transactions.ZKVerifierTransaction
 import com.ing.zkflow.common.transactions.dependencies
+import com.ing.zkflow.common.zkp.ZKFlow
 import com.ing.zkflow.notary.NotaryZKConfig
 import com.ing.zkflow.notary.ZKNotarisationPayload
 import com.ing.zkflow.notary.ZKNotaryService
@@ -40,8 +41,8 @@ class ZKNotaryServiceFlow(
     }
 
     init {
-        if (service.services.networkParameters.minimumPlatformVersion < 6) {
-            throw IllegalStateException("The ZKNotaryService is compatible with Corda version 6 or greater")
+        if (service.services.networkParameters.minimumPlatformVersion < ZKFlow.REQUIRED_PLATFORM_VERSION) {
+            throw IllegalStateException("The ZKNotaryService is compatible with Corda version ${ZKFlow.REQUIRED_PLATFORM_VERSION} or greater")
         }
     }
 

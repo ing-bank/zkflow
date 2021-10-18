@@ -28,6 +28,7 @@ import com.ing.zkflow.compilation.zinc.util.ZincSourcesCopier
 import net.corda.core.crypto.Crypto
 import java.io.File
 
+@Suppress("MagicNumber") // Magic numbers will be removed when generating zinc based on Kotlin size annotations
 val templateConfigurations = getTemplateConfiguration()
 
 fun main(args: Array<String>) {

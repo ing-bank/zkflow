@@ -1,6 +1,7 @@
 package com.ing.zkflow.notary
 
 import co.paralleluniverse.fibers.Suspendable
+import com.ing.zkflow.common.zkp.ZKFlow
 import com.ing.zkflow.node.services.ServiceNames
 import com.ing.zkflow.node.services.getCordaServiceFromConfig
 import com.ing.zkflow.notary.flows.ZKNotaryServiceFlow
@@ -82,8 +83,8 @@ open class ZKNotaryService(final override val services: ServiceHubInternal, over
     )
 
     init {
-        if (services.networkParameters.minimumPlatformVersion < 10) {
-            throw IllegalStateException("The ZKNotaryService is compatible with Corda platform version 10 or greater")
+        if (services.networkParameters.minimumPlatformVersion < ZKFlow.REQUIRED_PLATFORM_VERSION) {
+            throw IllegalStateException("The ZKNotaryService is compatible with Corda version ${ZKFlow.REQUIRED_PLATFORM_VERSION} or greater")
         }
     }
 

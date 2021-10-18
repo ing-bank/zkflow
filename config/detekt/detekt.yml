@@ -394,4 +394,9 @@ style:
   active: true
   UnusedPrivateMember:
     active: true
+  UnusedPrivateClass:
+    active: true
+  MagicNumber:
+    active: true
+    excludes: [ '**/test/**', '**/test-utils/**', '**/commonTest/**', '**/jvmTest/**', '**/jsTest/**', '**/iosTest/**' ]
 

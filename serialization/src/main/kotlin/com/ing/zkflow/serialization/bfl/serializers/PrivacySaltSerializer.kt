@@ -15,6 +15,7 @@ object PrivacySaltSerializer : SurrogateSerializer<PrivacySalt, PrivacySaltSurro
 @Serializable
 data class PrivacySaltSurrogate(
     // Hashes expected by Corda must be at most 32 bytes long.
+    @Suppress("MagicNumber")
     @FixedLength([32])
     val bytes: ByteArray
 ) : Surrogate<PrivacySalt> {

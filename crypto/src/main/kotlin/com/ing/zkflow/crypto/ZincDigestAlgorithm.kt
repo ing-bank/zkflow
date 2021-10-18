@@ -32,10 +32,14 @@ import org.bouncycastle.crypto.digests.Blake2sDigest
  * This could cause unexpected security issues and might also cause problems if the output length of the respective hash algos is different.
  */
 class ZincDigestAlgorithm : DigestAlgorithm {
+    companion object {
+        const val DIGEST_LENGTH = 32
+    }
+
     override val algorithm = "ZINC"
 
     // This is Blake's length, can be different for Pedersen
-    override val digestLength = 32
+    override val digestLength = DIGEST_LENGTH
 
     private val pedersen = PedersenHash.zinc()
 

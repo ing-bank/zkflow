@@ -12,6 +12,7 @@ fn get_merkle_tree_from_2_$digestSnakeCase(leaves: [${digestCamelCase}Bits; 2]) 
 }
 """
     if (fullMerkleLeaves > 2) {
+        @Suppress("MagicNumber")
         var leaves = 4
         do {
             val levelUp = leaves / 2

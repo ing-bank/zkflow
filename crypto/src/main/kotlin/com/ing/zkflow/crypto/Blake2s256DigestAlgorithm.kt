@@ -7,9 +7,13 @@ import net.corda.core.crypto.internal.DigestAlgorithmFactory
 import org.bouncycastle.crypto.digests.Blake2sDigest
 
 class Blake2s256DigestAlgorithm : DigestAlgorithm {
+    companion object {
+        const val DIGEST_LENGTH = 32
+    }
+
     override val algorithm = "BLAKE2S256"
 
-    override val digestLength = 32
+    override val digestLength = DIGEST_LENGTH
 
     override fun digest(bytes: ByteArray): ByteArray {
         val digest = Blake2sDigest(null, digestLength, null, "12345678".toByteArray())
