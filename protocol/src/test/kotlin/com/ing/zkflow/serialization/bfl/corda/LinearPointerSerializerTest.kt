@@ -50,10 +50,10 @@ internal class LinearPointerSerializerTest {
     fun `validate LinearPointer with different types`() {
         val pointer = UniqueIdentifier()
         val data1 = Data(LinearPointer(pointer = pointer, type = MyLinearState::class.java))
-        val deserializedData1 = assertRoundTripSucceeds(data1, CordaSerializers.module)
+        assertRoundTripSucceeds(data1, CordaSerializers.module)
 
         val data2 = Data(LinearPointer(pointer = pointer, type = MyOtherLinearState::class.java))
-        val deserializedData2 = assertRoundTripSucceeds(data2, CordaSerializers.module)
+        assertRoundTripSucceeds(data2, CordaSerializers.module)
 
         // LinearPointers have the same pointer, so they're equal
         data1 shouldBe data2
