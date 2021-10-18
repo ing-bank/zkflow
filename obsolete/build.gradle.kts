@@ -2,11 +2,13 @@ plugins {
     kotlin("jvm")
     id("maven-publish")
     id("java-library")
+    kotlin("plugin.serialization") // TODO: Required only for CircuitConfigurator. Remove when that is removed.
 }
 
 dependencies {
-    implementation(project(":protocol"))
-    implementation(project(":obsolete")) // TODO: Required only for CircuitConfigurator. Remove when that is removed.
+    val kotlinxSerializationVersion: String by project
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:$kotlinxSerializationVersion")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
 
     val cordaReleaseGroup: String by project
     val cordaVersion: String by project

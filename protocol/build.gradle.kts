@@ -53,7 +53,7 @@ dependencies {
 // TODO: This should probably become a fat jar at some point, with its dependencies included
 publishing {
     publications {
-        create<MavenPublication>("zkNotary") {
+        create<MavenPublication>("zkFlow") {
             from(components["java"])
         }
     }

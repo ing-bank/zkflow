@@ -255,3 +255,10 @@ const COMMAND_SIGNER_LIST_SIZE: u16 = ${circuitConfiguration.groups.signerGroup.
         """.trimIndent().toByteArray()
     )
 }
+
+private fun createOutputFile(targetFile: File): File {
+    targetFile.parentFile?.mkdirs()
+    targetFile.delete()
+    targetFile.createNewFile()
+    return targetFile
+}
