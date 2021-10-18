@@ -4,9 +4,7 @@ import com.ing.zkflow.testing.getZincZKService
 import com.ing.zkflow.zinc.types.toJsonObject
 import kotlinx.serialization.json.buildJsonObject
 import org.junit.jupiter.api.Test
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
 class ByteArrayEqualsTest {
     private val zincZKService = getZincZKService<ByteArrayEqualsTest>()
 

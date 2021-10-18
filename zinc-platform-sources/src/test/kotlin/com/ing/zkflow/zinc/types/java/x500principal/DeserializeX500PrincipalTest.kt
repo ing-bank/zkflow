@@ -7,9 +7,7 @@ import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.Test
 import javax.security.auth.x500.X500Principal
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
 class DeserializeX500PrincipalTest {
     private val zincZKService = getZincZKService<DeserializeX500PrincipalTest>()
 

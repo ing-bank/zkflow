@@ -11,9 +11,7 @@ import kotlinx.serialization.Serializable
 import net.corda.core.utilities.loggerFor
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
 internal class SerializedStringEqualsTest {
     private val log = loggerFor<SerializedStringEqualsTest>()
     private val zincZKService = getZincZKService<SerializedStringEqualsTest>()

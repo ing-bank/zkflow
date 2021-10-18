@@ -11,7 +11,6 @@ import io.ivno.collateraltoken.serialization.TokenDescriptorSerializer
 import io.ivno.collateraltoken.zinc.types.toZincJson
 import io.ivno.collateraltoken.zinc.types.tokenDescriptor
 import kotlinx.serialization.Contextual
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.contextual
@@ -22,8 +21,7 @@ class DeserializeBigDecimalAmountTokenDescriptorTest :
     ) {
     override fun getZincZKService(): ZincZKService = getZincZKService<DeserializeBigDecimalAmountTokenDescriptorTest>()
 
-    @ExperimentalSerializationApi
-    override fun getSerializersModule() = SerializersModule {
+        override fun getSerializersModule() = SerializersModule {
         contextual(BigDecimalAmountSerializer(TokenDescriptorSerializer))
         contextual(TokenDescriptorSerializer)
     }

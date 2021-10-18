@@ -42,7 +42,6 @@ import java.security.PublicKey
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import kotlin.reflect.full.primaryConstructor
-import kotlin.time.ExperimentalTime
 
 /**
  * This interpreter builds a transaction, and [TransactionDSL.verifies] that the resolved transaction is correct. Note
@@ -51,7 +50,6 @@ import kotlin.time.ExperimentalTime
  * To build the transaction a `TransactionBuilder` is used.
  */
 @Suppress("TooManyFunctions")
-@ExperimentalTime
 public data class TestTransactionDSLInterpreter private constructor(
     override val ledgerInterpreter: TestZKLedgerDSLInterpreter,
     val transactionBuilder: TransactionBuilder,

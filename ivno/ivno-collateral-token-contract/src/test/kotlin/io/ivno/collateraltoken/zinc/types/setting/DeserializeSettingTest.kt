@@ -8,7 +8,6 @@ import io.ivno.collateraltoken.serialization.SettingSerializer
 import io.ivno.collateraltoken.zinc.types.toZincJson
 import io.onixlabs.corda.bnms.contract.Setting
 import kotlinx.serialization.Contextual
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.modules.SerializersModule
@@ -22,8 +21,7 @@ class DeserializeSettingTest :
     ) {
     override fun getZincZKService(): ZincZKService = getZincZKService<DeserializeSettingTest>()
 
-    @ExperimentalSerializationApi
-    override fun getSerializersModule() = SerializersModule { contextual(SettingSerializer(String.serializer())) }
+        override fun getSerializersModule() = SerializersModule { contextual(SettingSerializer(String.serializer())) }
 
     @Serializable
     data class Data(@FixedLength([VALUE_LENGTH]) val data: @Contextual Setting<String>)

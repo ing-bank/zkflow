@@ -7,7 +7,6 @@ import io.ivno.collateraltoken.contract.Deposit
 import io.ivno.collateraltoken.serialization.IvnoSerializers
 import io.ivno.collateraltoken.zinc.types.deposit
 import io.ivno.collateraltoken.zinc.types.toZincJson
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 
 class DeserializeDepositTest :
@@ -16,8 +15,7 @@ DeserializationTestBase<DeserializeDepositTest, DeserializeDepositTest.Data>(
 ) {
     override fun getZincZKService(): ZincZKService = getZincZKService<DeserializeDepositTest>()
 
-    @ExperimentalSerializationApi
-    override fun getSerializersModule() = IvnoSerializers.serializersModule
+        override fun getSerializersModule() = IvnoSerializers.serializersModule
 
     @Serializable
     data class Data(val data: Deposit)

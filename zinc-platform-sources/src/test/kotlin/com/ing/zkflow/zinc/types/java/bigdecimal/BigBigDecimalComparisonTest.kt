@@ -11,9 +11,7 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.math.BigInteger
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
 class BigBigDecimalComparisonTest {
     private val log = loggerFor<BigBigDecimalComparisonTest>()
     private val zincZKService = getZincZKService<BigBigDecimalComparisonTest>()

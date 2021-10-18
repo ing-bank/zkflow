@@ -7,9 +7,7 @@ import io.onixlabs.corda.bnms.contract.Network
 import io.onixlabs.corda.identityframework.contract.AttestationStatus
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
 class DepositContractRequestTests : ContractTest() {
     override val verificationMode = VerificationMode.RUN
     override val commandData = DepositContract.Request
@@ -17,8 +15,7 @@ class DepositContractRequestTests : ContractTest() {
     /**
      * ING TEST
      */
-    @ExperimentalTime
-    @Test
+        @Test
     fun `On deposit requesting, the transaction must include the Request command`() {
         services.zkLedger(zkService = MockZKTransactionService(services)) {
         // services.zkLedger {

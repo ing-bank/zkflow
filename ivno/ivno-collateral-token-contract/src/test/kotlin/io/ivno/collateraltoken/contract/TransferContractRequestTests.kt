@@ -5,9 +5,7 @@ import com.ing.zkflow.testing.dsl.zkLedger
 import com.ing.zkflow.testing.zkp.MockZKTransactionService
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
 class TransferContractRequestTests : ContractTest() {
     override val verificationMode = VerificationMode.RUN
     override val commandData = TransferContract.Request

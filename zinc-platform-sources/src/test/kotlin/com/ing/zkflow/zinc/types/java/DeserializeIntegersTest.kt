@@ -6,10 +6,8 @@ import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.Test
 import java.util.UUID
-import kotlin.time.ExperimentalTime
 
 @ExperimentalUnsignedTypes
-@ExperimentalTime
 class DeserializeIntegersTest {
     private val zincZKService = getZincZKService<DeserializeIntegersTest>()
 

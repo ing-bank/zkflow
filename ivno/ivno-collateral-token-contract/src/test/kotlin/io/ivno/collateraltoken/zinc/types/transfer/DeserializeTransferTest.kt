@@ -7,7 +7,6 @@ import io.ivno.collateraltoken.contract.Transfer
 import io.ivno.collateraltoken.serialization.IvnoSerializers
 import io.ivno.collateraltoken.zinc.types.toZincJson
 import io.ivno.collateraltoken.zinc.types.transfer
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 
 class DeserializeTransferTest :
@@ -16,8 +15,7 @@ DeserializationTestBase<DeserializeTransferTest, DeserializeTransferTest.Data>(
 ) {
     override fun getZincZKService(): ZincZKService = getZincZKService<DeserializeTransferTest>()
 
-    @ExperimentalSerializationApi
-    override fun getSerializersModule() = IvnoSerializers.serializersModule
+        override fun getSerializersModule() = IvnoSerializers.serializersModule
 
     @Serializable
     data class Data(val data: Transfer)

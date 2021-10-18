@@ -3,9 +3,7 @@ package com.ing.zkflow.zinc.types.corda.attachmentconstraint
 import com.ing.zkflow.testing.getZincZKService
 import kotlinx.serialization.json.buildJsonObject
 import org.junit.jupiter.api.Test
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
 /**
  * This test has been added to stress out a peculiar behavior encountered when running equality tests for objects being
  * treated as empty structures in zinc.

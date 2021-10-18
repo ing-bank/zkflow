@@ -10,9 +10,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.time.Duration
 import java.time.Instant
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
 class DeserializeTimeWindowTest {
     private val zincZKService = getZincZKService<DeserializeTimeWindowTest>()
 

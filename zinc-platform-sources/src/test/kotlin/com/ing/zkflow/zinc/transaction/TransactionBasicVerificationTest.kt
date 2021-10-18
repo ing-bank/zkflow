@@ -37,10 +37,8 @@ import java.io.File
 import java.time.Duration
 import java.time.Instant
 import kotlin.random.Random
-import kotlin.time.ExperimentalTime
 
 // @Disabled("Temporarily disabled, until we decide on where circuit artifacts will go")
-@ExperimentalTime
 @Tag("slow")
 class TransactionBasicVerificationTest {
     private val log = loggerFor<TransactionBasicVerificationTest>()

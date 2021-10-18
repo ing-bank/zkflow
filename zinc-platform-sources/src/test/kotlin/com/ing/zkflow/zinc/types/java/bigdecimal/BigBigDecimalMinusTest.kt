@@ -11,9 +11,7 @@ import net.corda.core.utilities.loggerFor
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 import java.time.Duration
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
 class BigBigDecimalMinusTest {
     private val log = loggerFor<BigBigDecimalMinusTest>()
     private val zincZKService = getZincZKService<BigBigDecimalMinusTest>(

@@ -9,9 +9,7 @@ import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import net.corda.core.contracts.StateRef
 import net.corda.core.crypto.SecureHash
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
 class DeserializeStateRefTest :
     DeserializationTestBase<DeserializeStateRefTest, DeserializeStateRefTest.Data>({ it.data.toZincJson() }) {
     override fun getZincZKService(): ZincZKService = getZincZKService<DeserializeStateRefTest>()

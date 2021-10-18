@@ -10,9 +10,7 @@ import kotlinx.serialization.Serializable
 import net.corda.core.crypto.Crypto
 import net.corda.core.identity.AbstractParty
 import net.corda.testing.core.TestIdentity
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
 class DeserializeAnonymousPartyBCSphincs256Test :
     DeserializationTestBase<DeserializeAnonymousPartyBCSphincs256Test, DeserializeAnonymousPartyBCSphincs256Test.Data>({
         it.data.toZincJson(BCSphincs256Surrogate.ENCODED_SIZE)

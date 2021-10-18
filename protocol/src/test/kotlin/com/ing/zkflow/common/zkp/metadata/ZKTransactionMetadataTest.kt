@@ -35,9 +35,7 @@ import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
 import org.junit.jupiter.api.Test
 import java.util.Random
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
 class ZKTransactionMetadataTest {
     private val services = MockServices(
         TestIdentity.fixed("ServiceHub"),

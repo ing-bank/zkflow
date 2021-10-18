@@ -4,9 +4,7 @@ import com.ing.zkflow.testing.dsl.VerificationMode
 import io.dasl.contracts.v1.crud.CrudCommands
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
 @Disabled("Re-enable once we have everything serializable and when we have zktransaction DSL")
 class IvnoTokenTypeContractUpdateTests : ContractTest() {
     override val verificationMode = VerificationMode.RUN

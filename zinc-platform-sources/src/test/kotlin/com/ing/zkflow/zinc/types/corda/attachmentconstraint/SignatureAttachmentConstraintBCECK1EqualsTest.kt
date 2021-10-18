@@ -9,9 +9,7 @@ import net.corda.core.contracts.SignatureAttachmentConstraint
 import net.corda.core.crypto.Crypto
 import org.junit.jupiter.api.Test
 import java.security.PublicKey
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
 class SignatureAttachmentConstraintBCECK1EqualsTest {
     private val zincZKService = getZincZKService<SignatureAttachmentConstraintBCECK1EqualsTest>()
 

@@ -22,6 +22,10 @@ dependencies {
     testImplementation(project(":test-utils"))
 }
 
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+    kotlinOptions.freeCompilerArgs += "-Xopt-in=kotlinx.serialization.ExperimentalSerializationApi"
+}
+
 publishing {
     publications {
         create<MavenPublication>("zkSerialization") {

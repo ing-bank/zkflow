@@ -7,9 +7,7 @@ import net.corda.core.contracts.TimeWindow
 import org.junit.jupiter.api.Test
 import java.time.Instant
 import java.time.temporal.ChronoUnit
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
 class TimeWindowEqualsTest {
     private val zincZKService = getZincZKService<TimeWindowEqualsTest>()
 

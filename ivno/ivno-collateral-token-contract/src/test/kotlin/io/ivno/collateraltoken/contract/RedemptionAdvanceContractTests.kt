@@ -8,9 +8,7 @@ import io.onixlabs.corda.identityframework.contract.AttestationStatus
 import net.corda.core.contracts.UniqueIdentifier
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
 @Disabled("Re-enable once we have everything serializable and when we have zktransaction DSL")
 class RedemptionAdvanceContractTests : ContractTest() {
     override val verificationMode = VerificationMode.RUN

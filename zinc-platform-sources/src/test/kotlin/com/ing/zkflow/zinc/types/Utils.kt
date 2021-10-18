@@ -14,18 +14,14 @@ import com.ing.zkflow.testing.toJsonArray
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.contextual
-import kotlinx.serialization.modules.plus
 import net.corda.core.contracts.Amount
 import org.slf4j.Logger
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.util.Currency
-import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
-import com.ing.serialization.bfl.api.serialize as obliviousSerialize
 
 inline fun <reified T : Any, reified U : Any> toWitness(left: Amount<T>, right: Amount<U>) =
     buildJsonObject {
@@ -56,11 +52,6 @@ fun toBigWitness(left: BigDecimal, right: BigDecimal) = buildJsonObject {
 
 inline fun <reified T : Any> toWitness(item: T): String {
     val bytes = serialize(item, serializersModule = CordaSerializers.module)
-    return bytesToWitness(bytes)
-}
-
-fun <T : Any> toObliviousWitness(item: T, serializersModule: SerializersModule = EmptySerializersModule): String {
-    val bytes = obliviousSerialize(item, serializersModule = CordaSerializers.module + serializersModule)
     return bytesToWitness(bytes)
 }
 
@@ -106,7 +97,6 @@ fun makeBigDecimal(bytes: ByteArray, sign: Int) = BigDecimal(BigInteger(sign, by
 
 fun makeBigDecimal(string: String, scale: Int) = BigDecimal(BigInteger(string), scale)
 
-@ExperimentalTime
 fun ZincZKService.setupTimed(log: Logger) {
     val time = measureTime {
         this.setup()
@@ -114,7 +104,6 @@ fun ZincZKService.setupTimed(log: Logger) {
     log.debug("[setup] $time")
 }
 
-@ExperimentalTime
 fun ZincZKService.proveTimed(witness: Witness, log: Logger): ByteArray {
     var proof: ByteArray
     val time = measureTime {
@@ -124,7 +113,6 @@ fun ZincZKService.proveTimed(witness: Witness, log: Logger): ByteArray {
     return proof
 }
 
-@ExperimentalTime
 fun ZincZKService.proveTimed(witnessJson: String, log: Logger): ByteArray {
     var proof: ByteArray
     val time = measureTime {
@@ -134,7 +122,6 @@ fun ZincZKService.proveTimed(witnessJson: String, log: Logger): ByteArray {
     return proof
 }
 
-@ExperimentalTime
 fun ZincZKService.verifyTimed(proof: ByteArray, publicInputJson: String, log: Logger) {
     val time = measureTime {
         this.verify(proof, publicInputJson)
@@ -142,7 +129,6 @@ fun ZincZKService.verifyTimed(proof: ByteArray, publicInputJson: String, log: Lo
     log.debug("[verify] $time")
 }
 
-@ExperimentalTime
 fun ZincZKService.verifyTimed(proof: ByteArray, publicInput: PublicInput, log: Logger) {
     val time = measureTime {
         this.verify(proof, publicInput)

@@ -7,9 +7,7 @@ import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import net.corda.core.contracts.PrivacySalt
 import org.junit.jupiter.api.Test
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
 class DeserializePrivacySaltTest {
     private val zincZKService = getZincZKService<DeserializePrivacySaltTest>()
 

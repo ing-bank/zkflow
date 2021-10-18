@@ -28,9 +28,7 @@ import net.corda.core.serialization.internal.CustomSerializationSchemeUtils
 import net.corda.core.serialization.serialize
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
 class DeserializeTxStateTestStateTest {
     private val zincZKService = getZincZKService<DeserializeTxStateTestStateTest>()
 

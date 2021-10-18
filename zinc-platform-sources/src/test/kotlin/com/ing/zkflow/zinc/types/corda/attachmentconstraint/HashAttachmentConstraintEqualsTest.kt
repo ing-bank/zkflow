@@ -7,9 +7,7 @@ import kotlinx.serialization.json.buildJsonObject
 import net.corda.core.contracts.HashAttachmentConstraint
 import net.corda.core.crypto.SecureHash
 import org.junit.jupiter.api.Test
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
 class HashAttachmentConstraintEqualsTest {
     private val zincZKService = getZincZKService<HashAttachmentConstraintEqualsTest>()
 

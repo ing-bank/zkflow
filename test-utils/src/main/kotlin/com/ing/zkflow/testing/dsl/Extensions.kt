@@ -16,9 +16,7 @@ import net.corda.coretesting.internal.createTestSerializationEnv
 import net.corda.testing.common.internal.addNotary
 import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.internal.MockNetworkParametersStorage
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
 @JvmOverloads
 public fun ServiceHub.zkLedger(
     notary: Party = TestIdentity.fresh("ledger notary").party,

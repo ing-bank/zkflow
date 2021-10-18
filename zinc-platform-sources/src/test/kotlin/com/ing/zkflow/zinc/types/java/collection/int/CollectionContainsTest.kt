@@ -12,9 +12,7 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
 class CollectionContainsTest {
     private val log = loggerFor<CollectionContainsTest>()
     private val zincZKService = getZincZKService<CollectionContainsTest>()

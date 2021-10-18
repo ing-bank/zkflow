@@ -42,7 +42,6 @@ import net.corda.testing.node.MockServices
 import org.junit.Test
 import kotlin.random.Random
 import kotlin.test.assertTrue
-import kotlin.time.ExperimentalTime
 
 object LocalSerializers {
     init {
@@ -50,7 +49,6 @@ object LocalSerializers {
     }
 }
 
-@ExperimentalTime
 /**
  * Test the order of states imposed by the ZKTransactionBuilder. We would like to assert that the ordering of states by
  * classname is maintained in the ZKTransactionBuilder, in the WireTransaction that it generates, and in the Witness generated

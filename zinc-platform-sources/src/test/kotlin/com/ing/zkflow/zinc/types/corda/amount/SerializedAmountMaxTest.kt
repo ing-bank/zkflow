@@ -15,7 +15,6 @@ import com.ing.zkflow.zinc.types.verifyTimed
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import kotlinx.serialization.Contextual
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
@@ -31,10 +30,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.util.Currency
 import java.util.Locale
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
-@ExperimentalSerializationApi
 class SerializedAmountMaxTest {
     private val log = loggerFor<SerializedAmountMaxTest>()
     private val zincZKService = getZincZKService<SerializedAmountMaxTest>()

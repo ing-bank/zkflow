@@ -6,14 +6,12 @@ import com.ing.zkflow.testing.getZincZKService
 import io.dasl.contracts.v1.token.TokenContract
 import io.ivno.collateraltoken.serialization.IvnoSerializers
 import io.ivno.collateraltoken.zinc.types.toZincJson
-import kotlinx.serialization.ExperimentalSerializationApi
 
 class DeserializeTokenContractCommandMoveTest :
     DeserializationTestBase<DeserializeTokenContractCommandMoveTest, TokenContract.Command.Move>(
         { it.toZincJson() }
     ) {
     override fun getZincZKService(): ZincZKService = getZincZKService<DeserializeTokenContractCommandMoveTest>()
-    @ExperimentalSerializationApi
     override fun getSerializersModule() = IvnoSerializers.serializersModule
 
     companion object {

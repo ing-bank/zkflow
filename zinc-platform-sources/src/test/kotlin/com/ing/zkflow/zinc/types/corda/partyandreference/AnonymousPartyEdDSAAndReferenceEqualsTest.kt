@@ -12,9 +12,7 @@ import net.corda.core.utilities.OpaqueBytes
 import net.corda.testing.core.TestIdentity
 import org.junit.jupiter.api.Test
 import kotlin.random.Random
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
 class AnonymousPartyEdDSAAndReferenceEqualsTest {
     private val zincZKService = getZincZKService<AnonymousPartyEdDSAAndReferenceEqualsTest>()
 

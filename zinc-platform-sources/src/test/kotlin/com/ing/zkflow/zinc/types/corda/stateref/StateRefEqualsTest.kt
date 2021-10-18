@@ -6,9 +6,7 @@ import kotlinx.serialization.json.buildJsonObject
 import net.corda.core.contracts.StateRef
 import net.corda.core.crypto.SecureHash
 import org.junit.jupiter.api.Test
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
 class StateRefEqualsTest {
     private val zincZKService = getZincZKService<StateRefEqualsTest>()
 

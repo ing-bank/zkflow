@@ -10,9 +10,7 @@ import net.corda.core.contracts.UniqueIdentifier
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.Instant
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
 @Disabled("Re-enable once we have everything serializable and when we have zktransaction DSL")
 class DepositContractAdvanceTests : ContractTest() {
     override val verificationMode = VerificationMode.RUN

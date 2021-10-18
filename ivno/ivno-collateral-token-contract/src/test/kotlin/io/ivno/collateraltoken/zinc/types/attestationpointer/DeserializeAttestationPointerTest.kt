@@ -8,7 +8,6 @@ import io.ivno.collateraltoken.zinc.types.attestationPointer
 import io.ivno.collateraltoken.zinc.types.toZincJson
 import io.onixlabs.corda.identityframework.contract.AttestationPointer
 import kotlinx.serialization.Contextual
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 
 class DeserializeAttestationPointerTest :
@@ -19,8 +18,7 @@ class DeserializeAttestationPointerTest :
     ) {
     override fun getZincZKService(): ZincZKService = getZincZKService<DeserializeAttestationPointerTest>()
 
-    @ExperimentalSerializationApi
-    override fun getSerializersModule() = IvnoSerializers.serializersModule
+        override fun getSerializersModule() = IvnoSerializers.serializersModule
 
     @Serializable
     data class Data(val data: @Contextual AttestationPointer<*>)

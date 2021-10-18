@@ -7,7 +7,6 @@ import io.dasl.contracts.v1.account.AccountAddress
 import io.ivno.collateraltoken.serialization.IvnoSerializers
 import io.ivno.collateraltoken.zinc.types.toZincJson
 import kotlinx.serialization.Contextual
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import net.corda.core.identity.CordaX500Name
 
@@ -17,8 +16,7 @@ DeserializationTestBase<DeserializeAccountAddressTest, DeserializeAccountAddress
 ) {
     override fun getZincZKService(): ZincZKService = getZincZKService<DeserializeAccountAddressTest>()
 
-    @ExperimentalSerializationApi
-    override fun getSerializersModule() = IvnoSerializers.serializersModule
+        override fun getSerializersModule() = IvnoSerializers.serializersModule
 
     @Serializable
     data class Data(val data: @Contextual AccountAddress)

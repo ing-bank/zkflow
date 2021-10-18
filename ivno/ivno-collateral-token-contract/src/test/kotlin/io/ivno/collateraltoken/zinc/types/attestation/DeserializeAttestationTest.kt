@@ -9,7 +9,6 @@ import io.ivno.collateraltoken.zinc.types.attestation
 import io.ivno.collateraltoken.zinc.types.toZincJson
 import io.onixlabs.corda.identityframework.contract.Attestation
 import kotlinx.serialization.Contextual
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.plus
 
@@ -19,8 +18,7 @@ class DeserializeAttestationTest :
     ) {
     override fun getZincZKService(): ZincZKService = getZincZKService<DeserializeAttestationTest>()
 
-    @ExperimentalSerializationApi
-    override fun getSerializersModule() = IvnoSerializers.serializersModule + CordaSerializers.module
+        override fun getSerializersModule() = IvnoSerializers.serializersModule + CordaSerializers.module
 
     @Serializable
     data class Data(val data: @Contextual Attestation<*>)

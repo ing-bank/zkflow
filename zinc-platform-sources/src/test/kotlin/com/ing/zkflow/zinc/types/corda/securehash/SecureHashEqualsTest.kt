@@ -6,9 +6,7 @@ import com.ing.zkflow.zinc.types.toJsonObject
 import kotlinx.serialization.json.buildJsonObject
 import net.corda.core.crypto.SecureHash
 import org.junit.jupiter.api.Test
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
 class SecureHashEqualsTest {
     private val zincZKService = getZincZKService<SecureHashEqualsTest>()
 

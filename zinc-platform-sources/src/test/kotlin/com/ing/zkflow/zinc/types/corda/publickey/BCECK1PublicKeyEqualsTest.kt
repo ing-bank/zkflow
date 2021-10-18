@@ -8,9 +8,7 @@ import kotlinx.serialization.json.buildJsonObject
 import net.corda.core.crypto.Crypto
 import org.junit.jupiter.api.Test
 import java.security.PublicKey
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
 class BCECK1PublicKeyEqualsTest {
     private val zincZKService = getZincZKService<BCECK1PublicKeyEqualsTest>()
 

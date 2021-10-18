@@ -15,9 +15,7 @@ import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.util.Currency
 import java.util.Locale
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
 class AmountPlusTest {
     private val log = loggerFor<AmountPlusTest>()
     private val zincZKService = getZincZKService<AmountPlusTest>()

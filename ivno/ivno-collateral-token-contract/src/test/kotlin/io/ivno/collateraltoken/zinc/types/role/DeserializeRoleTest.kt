@@ -7,7 +7,6 @@ import io.ivno.collateraltoken.serialization.IvnoSerializers
 import io.ivno.collateraltoken.zinc.types.toZincJson
 import io.onixlabs.corda.bnms.contract.Role
 import kotlinx.serialization.Contextual
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 
 
@@ -19,8 +18,7 @@ class DeserializeRoleTest :
     ) {
     override fun getZincZKService(): ZincZKService = getZincZKService<DeserializeRoleTest>()
 
-    @ExperimentalSerializationApi
-    override fun getSerializersModule() = IvnoSerializers.serializersModule
+        override fun getSerializersModule() = IvnoSerializers.serializersModule
 
     @Serializable
     data class Data(val data: @Contextual Role)

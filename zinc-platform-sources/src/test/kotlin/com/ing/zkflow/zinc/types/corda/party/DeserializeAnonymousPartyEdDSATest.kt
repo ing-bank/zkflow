@@ -10,9 +10,7 @@ import kotlinx.serialization.Serializable
 import net.corda.core.crypto.Crypto
 import net.corda.core.identity.AbstractParty
 import net.corda.testing.core.TestIdentity
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
 class DeserializeAnonymousPartyEdDSATest :
     DeserializationTestBase<DeserializeAnonymousPartyEdDSATest, DeserializeAnonymousPartyEdDSATest.Data>({
         it.data.toZincJson(EdDSASurrogate.ENCODED_SIZE)

@@ -42,10 +42,8 @@ import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
 import org.junit.jupiter.api.BeforeEach
 import java.math.BigDecimal
-import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
 
-@ExperimentalTime
 abstract class ContractTest {
     private val myLog = loggerFor<ContractTest>()
     abstract val verificationMode: VerificationMode

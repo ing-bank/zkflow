@@ -8,9 +8,7 @@ import net.corda.core.crypto.Crypto
 import net.corda.core.identity.AnonymousParty
 import net.corda.testing.core.TestIdentity
 import org.junit.jupiter.api.Test
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
 class AnonymousPartyBCECK1EqualsTest {
     private val zincZKService = getZincZKService<AnonymousPartyBCECK1EqualsTest>()
 

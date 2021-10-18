@@ -199,10 +199,7 @@ subprojects {
                     javaParameters = true   // Useful for reflection.
                     freeCompilerArgs =
                         listOf(
-                            "-Xjvm-default=compatibility",
-                            "-Xopt-in=kotlinx.serialization.ExperimentalSerializationApi",
-                            "-Xopt-in=kotlin.ExperimentalUnsignedTypes",
-                            "-Xopt-in=kotlin.ExperimentalTime"
+                            "-Xjvm-default=compatibility"
                         )
                 }
             }

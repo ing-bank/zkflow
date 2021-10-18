@@ -8,7 +8,6 @@ import io.ivno.collateraltoken.serialization.IvnoSerializers
 import io.ivno.collateraltoken.zinc.types.nettedAccountAmount
 import io.ivno.collateraltoken.zinc.types.toZincJson
 import kotlinx.serialization.Contextual
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 
 class DeserializeNettedAccountAmountTest :
@@ -19,8 +18,7 @@ class DeserializeNettedAccountAmountTest :
     ) {
     override fun getZincZKService(): ZincZKService = getZincZKService<DeserializeNettedAccountAmountTest>()
 
-    @ExperimentalSerializationApi
-    override fun getSerializersModule() = IvnoSerializers.serializersModule
+        override fun getSerializersModule() = IvnoSerializers.serializersModule
 
     @Serializable
     data class Data(val data: @Contextual NettedAccountAmount)

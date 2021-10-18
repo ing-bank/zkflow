@@ -10,9 +10,7 @@ import kotlinx.serialization.json.buildJsonObject
 import net.corda.core.contracts.UniqueIdentifier
 import org.junit.jupiter.api.Test
 import java.util.UUID
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
 class SerializedUniqueIdentifierEqualsTest {
     private val zincZKService = getZincZKService<SerializedUniqueIdentifierEqualsTest>()
 

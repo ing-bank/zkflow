@@ -17,9 +17,7 @@ import net.corda.core.utilities.loggerFor
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 import java.util.UUID
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
 class SerializedLinearPointerEqualsTest {
     private val log = loggerFor<SerializedLinearPointerEqualsTest>()
     private val zincZKService = getZincZKService<SerializedLinearPointerEqualsTest>()

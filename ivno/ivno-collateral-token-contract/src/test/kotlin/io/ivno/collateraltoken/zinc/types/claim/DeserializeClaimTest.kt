@@ -9,7 +9,6 @@ import io.ivno.collateraltoken.serialization.ClaimSurrogate
 import io.ivno.collateraltoken.zinc.types.toZincJson
 import io.onixlabs.corda.identityframework.contract.AbstractClaim
 import io.onixlabs.corda.identityframework.contract.Claim
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Polymorphic
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.serializer
@@ -25,8 +24,7 @@ class DeserializeClaimTest :
     ) {
     override fun getZincZKService(): ZincZKService = getZincZKService<DeserializeClaimTest>()
 
-    @ExperimentalSerializationApi
-    override fun getSerializersModule() = SerializersModule {
+        override fun getSerializersModule() = SerializersModule {
         polymorphic(AbstractClaim::class) {
             subclass(ClaimSerializer(String.serializer()))
         }

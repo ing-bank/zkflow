@@ -9,9 +9,7 @@ import net.corda.core.utilities.loggerFor
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
 class BigDecimalEqualsTest {
     private val log = loggerFor<BigDecimalEqualsTest>()
     private val zincZKService = getZincZKService<BigDecimalEqualsTest>()

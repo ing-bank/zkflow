@@ -5,9 +5,7 @@ import com.ing.zkflow.zinc.types.toJsonObject
 import kotlinx.serialization.json.buildJsonObject
 import org.junit.jupiter.api.Test
 import java.util.Date
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
 class DateEqualsTest {
     private val zincZKService = getZincZKService<DateEqualsTest>()
 

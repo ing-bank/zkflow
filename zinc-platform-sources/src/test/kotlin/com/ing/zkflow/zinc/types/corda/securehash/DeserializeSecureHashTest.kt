@@ -8,9 +8,7 @@ import com.ing.zkflow.zinc.types.toZincJson
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import net.corda.core.crypto.SecureHash
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
 class DeserializeSecureHashTest :
     DeserializationTestBase<DeserializeSecureHashTest, DeserializeSecureHashTest.Data>({ it.data.toZincJson() }) {
     override fun getZincZKService(): ZincZKService = getZincZKService<DeserializeSecureHashTest>()

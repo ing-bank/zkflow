@@ -8,9 +8,7 @@ import io.onixlabs.corda.bnms.contract.Role
 import io.onixlabs.corda.identityframework.contract.AttestationStatus
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
 @Disabled("Re-enable once we have everything serializable and when we have zktransaction DSL")
 class IvnoTokenTypeContractCreationTests : ContractTest() {
     override val verificationMode = VerificationMode.RUN

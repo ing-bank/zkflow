@@ -32,10 +32,8 @@ import net.corda.testing.core.TestIdentity
 import org.junit.jupiter.api.Test
 import java.time.Instant
 import kotlin.random.Random
-import kotlin.time.ExperimentalTime
 
 
-@ExperimentalTime
 class DepositTransactionSerializationTest : ContractTest() {
     override val verificationMode: VerificationMode = VerificationMode.RUN
     override val commandData: CommandData = DepositContract.Request

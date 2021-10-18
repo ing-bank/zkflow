@@ -17,9 +17,7 @@ import org.junit.jupiter.api.assertThrows
 import java.math.BigDecimal
 import java.util.Currency
 import java.util.Locale
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
 class SerializedAmountPlusTest {
     private val log = loggerFor<SerializedAmountPlusTest>()
     private val zincZKService = getZincZKService<SerializedAmountPlusTest>()

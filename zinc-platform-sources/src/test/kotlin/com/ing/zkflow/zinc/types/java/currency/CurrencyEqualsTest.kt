@@ -6,9 +6,7 @@ import kotlinx.serialization.json.buildJsonObject
 import org.junit.jupiter.api.Test
 import java.util.Currency
 import java.util.Locale
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
 class CurrencyEqualsTest {
     private val zincZKService = getZincZKService<CurrencyEqualsTest>()
 

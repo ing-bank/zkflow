@@ -49,11 +49,9 @@ import java.security.PublicKey
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import kotlin.reflect.full.primaryConstructor
-import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
 import kotlin.time.measureTimedValue
 
-@ExperimentalTime
 /**
  * TODO: This copies a lot of logic from ZKTransactionService implementations.
  *  @mvdbos please check if this can be replaced by calls to the actual service.
@@ -108,7 +106,6 @@ public fun ZKTransactionService.verify(
  * that transactions corresponding to input states are not verified. Use [LedgerDSL.verifies] for that.
  * A `ZKTransactionBuilder` is used to construct
  */
-@ExperimentalTime
 @Suppress("TooManyFunctions")
 public data class TestZKTransactionDSLInterpreter private constructor(
     override val ledgerInterpreter: TestZKLedgerDSLInterpreter,

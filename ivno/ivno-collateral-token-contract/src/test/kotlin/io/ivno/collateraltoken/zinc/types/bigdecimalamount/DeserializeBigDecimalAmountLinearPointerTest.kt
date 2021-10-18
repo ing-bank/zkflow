@@ -10,7 +10,6 @@ import io.ivno.collateraltoken.contract.IvnoTokenType
 import io.ivno.collateraltoken.serialization.BigDecimalAmountSerializer
 import io.ivno.collateraltoken.zinc.types.toZincJson
 import kotlinx.serialization.Contextual
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.contextual
@@ -24,8 +23,7 @@ DeserializationTestBase<DeserializeBigDecimalAmountLinearPointerTest, Deserializ
 ) {
     override fun getZincZKService(): ZincZKService = getZincZKService<DeserializeBigDecimalAmountLinearPointerTest>()
 
-    @ExperimentalSerializationApi
-    override fun getSerializersModule() = SerializersModule { contextual(BigDecimalAmountSerializer(LinearPointerSerializer)) }
+        override fun getSerializersModule() = SerializersModule { contextual(BigDecimalAmountSerializer(LinearPointerSerializer)) }
 
     @Serializable
     data class Data(@BigDecimalSizes([20, 4]) val data: @Contextual BigDecimalAmount<@Contextual LinearPointer<@Contextual IvnoTokenType>>)
