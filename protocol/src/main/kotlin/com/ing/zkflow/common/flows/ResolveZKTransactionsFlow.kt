@@ -1,7 +1,6 @@
 package com.ing.zkflow.common.flows
 
 import co.paralleluniverse.fibers.Suspendable
-import com.ing.zkflow.common.transactions.SignedZKVerifierTransaction
 import com.ing.zkflow.node.services.ZKTransactionsResolver
 import net.corda.core.DeleteForDJVM
 import net.corda.core.crypto.SecureHash
@@ -34,10 +33,10 @@ class ResolveZKTransactionsFlow constructor(
             }
 
         val batchMode = counterpartyPlatformVersion >= PlatformVersionSwitches.BATCH_DOWNLOAD_COUNTERPARTY_BACKCHAIN
-        logger.debug { "ResolveTransactionsFlow.call(): Otherside Platform Version = '$counterpartyPlatformVersion': Batch mode = $batchMode" }
+        logger.debug { "ResolveZKTransactionsFlow.call(): Otherside Platform Version = '$counterpartyPlatformVersion': Batch mode = $batchMode" }
 
-        fetchMissingAttachments(initialTx)
-// TODO        fetchMissingNetworkParameters(initialTx)
+        // Removed fetchMissingAttachments(initialTx) and fetchMissingNetworkParameters(initialTx), seemed unnecessary.
+        // If weird things start to happen, add them back from original ResolveTransactionsFlow.
 
         val resolver = ZKTransactionsResolver(this)
         resolver.downloadDependencies(batchMode)
@@ -47,33 +46,5 @@ class ResolveZKTransactionsFlow constructor(
 
         // In ZKP mode we don't need to record any states although we still need to save ZKP backchain.
         resolver.recordDependencies(StatesToRecord.NONE)
-    }
-
-    /**
-     * Fetches the set of attachments required to verify the given transaction. If these are not already present, they will be fetched from
-     * a remote peer.
-     *
-     * @param transaction The transaction to fetch attachments for
-     * @return True if any attachments were fetched from a remote peer, false otherwise
-     */
-    // TODO: This could be done in parallel with other fetches for extra speed.
-    @Suspendable
-    fun fetchMissingAttachments(transaction: SignedTransaction?): Boolean {
-        // TODO attachments are not supported yet
-        return false
-    }
-
-    /**
-     * Fetches the network parameters under which the given transaction was created. Note that if the transaction was created pre-V4, or if
-     * the counterparty does not understand that network parameters may need to be fetched, no parameters will be requested.
-     *
-     * @param transaction The transaction to fetch the network parameters for, if the parameters are not already present
-     * @return True if the network parameters were fetched from a remote peer, false otherwise
-     */
-    // TODO This can also be done in parallel. See comment to [fetchMissingAttachments] above.
-    @Suspendable
-    fun fetchMissingNetworkParameters(transaction: SignedZKVerifierTransaction): Boolean {
-        // TODO network parameters are not supported yet
-        return false
     }
 }
