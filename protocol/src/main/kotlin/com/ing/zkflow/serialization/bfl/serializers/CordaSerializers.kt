@@ -10,7 +10,6 @@ import kotlinx.serialization.modules.contextual
 import kotlinx.serialization.modules.polymorphic
 import net.corda.core.contracts.AlwaysAcceptAttachmentConstraint
 import net.corda.core.contracts.AttachmentConstraint
-import net.corda.core.contracts.AutomaticHashConstraint
 import net.corda.core.contracts.AutomaticPlaceholderConstraint
 import net.corda.core.contracts.HashAttachmentConstraint
 import net.corda.core.contracts.SignatureAttachmentConstraint
@@ -37,7 +36,6 @@ object CordaSerializers {
             subclass(WhitelistedByZoneAttachmentConstraint::class, WhitelistedByZoneAttachmentConstraintSerializer)
             subclass(AutomaticPlaceholderConstraint::class, AutomaticPlaceholderConstraintSerializer)
             subclass(SignatureAttachmentConstraint::class, SignatureAttachmentConstraintSerializer)
-            subclass(AutomaticHashConstraint::class, AutomaticHashConstraintSerializer)
         }
 
         polymorphic(PublicKey::class) {

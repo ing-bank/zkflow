@@ -6,7 +6,6 @@ import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import net.corda.core.contracts.AlwaysAcceptAttachmentConstraint
-import net.corda.core.contracts.AutomaticHashConstraint
 import net.corda.core.contracts.AutomaticPlaceholderConstraint
 import net.corda.core.contracts.HashAttachmentConstraint
 import net.corda.core.contracts.SignatureAttachmentConstraint
@@ -52,12 +51,6 @@ data class SignatureAttachmentConstraintSurrogate(
     }
 }
 
-@Serializable
-@SerialName("j")
-object AutomaticHashConstraintSurrogate : Surrogate<AutomaticHashConstraint> {
-    override fun toOriginal() = AutomaticHashConstraint
-}
-
 object AlwaysAcceptAttachmentConstraintSerializer :
     SurrogateSerializer<AlwaysAcceptAttachmentConstraint, AlwaysAcceptAttachmentConstraintSurrogate>(
         AlwaysAcceptAttachmentConstraintSurrogate.serializer(),
@@ -86,10 +79,4 @@ object SignatureAttachmentConstraintSerializer :
     SurrogateSerializer<SignatureAttachmentConstraint, SignatureAttachmentConstraintSurrogate>(
         SignatureAttachmentConstraintSurrogate.serializer(),
         { SignatureAttachmentConstraintSurrogate(publicKey = it.key) }
-    )
-
-object AutomaticHashConstraintSerializer :
-    SurrogateSerializer<AutomaticHashConstraint, AutomaticHashConstraintSurrogate>(
-        AutomaticHashConstraintSurrogate.serializer(),
-        { AutomaticHashConstraintSurrogate }
     )

@@ -6,7 +6,6 @@ import com.ing.zkflow.serialization.bfl.assertSameSize
 import kotlinx.serialization.Serializable
 import net.corda.core.contracts.AlwaysAcceptAttachmentConstraint
 import net.corda.core.contracts.AttachmentConstraint
-import net.corda.core.contracts.AutomaticHashConstraint
 import net.corda.core.contracts.AutomaticPlaceholderConstraint
 import net.corda.core.contracts.HashAttachmentConstraint
 import net.corda.core.contracts.SignatureAttachmentConstraint
@@ -36,7 +35,7 @@ class AttachmentConstraintSerializerTest {
             ),
             Pair(SimpleData(AlwaysAcceptAttachmentConstraint), SimpleData(WhitelistedByZoneAttachmentConstraint)),
             Pair(SimpleData(WhitelistedByZoneAttachmentConstraint), SimpleData(AutomaticPlaceholderConstraint)),
-            Pair(SimpleData(AutomaticPlaceholderConstraint), SimpleData(AutomaticHashConstraint)),
+            Pair(SimpleData(AutomaticPlaceholderConstraint), SimpleData(WhitelistedByZoneAttachmentConstraint)),
         )
 
         @JvmStatic
@@ -61,7 +60,7 @@ class AttachmentConstraintSerializerTest {
             ),
             Pair(Data(listOf(AlwaysAcceptAttachmentConstraint)), Data(listOf(WhitelistedByZoneAttachmentConstraint))),
             Pair(Data(listOf(WhitelistedByZoneAttachmentConstraint)), Data(listOf(AutomaticPlaceholderConstraint))),
-            Pair(Data(listOf(AutomaticPlaceholderConstraint)), Data(listOf(AutomaticHashConstraint))),
+            Pair(Data(listOf(AutomaticPlaceholderConstraint)), Data(listOf(WhitelistedByZoneAttachmentConstraint))),
         )
     }
 

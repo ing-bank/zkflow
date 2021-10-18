@@ -51,7 +51,6 @@ data class AttachmentConstraintTemplateParameters(
             ),
             AttachmentConstraintTemplateParameters(ATTACHMENT_CONSTRAINT_TEMPLATE, "WhitelistedByZoneAttachmentConstraint"),
             AttachmentConstraintTemplateParameters(ATTACHMENT_CONSTRAINT_TEMPLATE, "AutomaticPlaceholderConstraint"),
-            AttachmentConstraintTemplateParameters(ATTACHMENT_CONSTRAINT_TEMPLATE, "AutomaticHashConstraint")
         ) + PublicKeyTemplateParameters.all.map {
             AttachmentConstraintTemplateParameters(
                 baseTemplateFile = ATTACHMENT_CONSTRAINT_TEMPLATE_WITH_PUBLIC_KEY,
