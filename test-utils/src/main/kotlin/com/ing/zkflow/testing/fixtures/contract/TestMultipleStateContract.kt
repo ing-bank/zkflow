@@ -30,10 +30,10 @@ import java.util.Random
 
 public object TestMultipleStateContractSerializers {
     init {
-        ContractStateSerializerMap.register(TestMultipleStateContract.TestState1::class, 1, TestMultipleStateContract.TestState1.serializer())
-        ContractStateSerializerMap.register(TestMultipleStateContract.TestState2::class, 2, TestMultipleStateContract.TestState2.serializer())
-        CommandDataSerializerMap.register(TestMultipleStateContract.Create::class, 3, TestMultipleStateContract.Create.serializer())
-        CommandDataSerializerMap.register(TestMultipleStateContract.Move::class, 4, TestMultipleStateContract.Move.serializer())
+        ContractStateSerializerMap.register(TestMultipleStateContract.TestState1::class, 6, TestMultipleStateContract.TestState1.serializer())
+        ContractStateSerializerMap.register(TestMultipleStateContract.TestState2::class, 7, TestMultipleStateContract.TestState2.serializer())
+        CommandDataSerializerMap.register(TestMultipleStateContract.Create::class, 8, TestMultipleStateContract.Create.serializer())
+        CommandDataSerializerMap.register(TestMultipleStateContract.Move::class, 9, TestMultipleStateContract.Move.serializer())
     }
 }
 
