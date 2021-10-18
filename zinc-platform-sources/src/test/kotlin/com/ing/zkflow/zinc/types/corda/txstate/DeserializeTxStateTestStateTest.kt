@@ -10,6 +10,7 @@ import com.ing.zkflow.testing.getZincZKService
 import com.ing.zkflow.testing.withCustomSerializationEnv
 import com.ing.zkflow.testing.zkp.ZKNulls
 import com.ing.zkflow.zinc.types.emptyAnonymousParty
+import com.ing.zkflow.zinc.types.polymorphic
 import com.ing.zkflow.zinc.types.toJsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -19,6 +20,7 @@ import net.corda.core.contracts.HashAttachmentConstraint
 import net.corda.core.contracts.SignatureAttachmentConstraint
 import net.corda.core.contracts.StateAndContract
 import net.corda.core.contracts.TransactionState
+import net.corda.core.crypto.SecureHash
 import net.corda.core.serialization.SerializationDefaults
 import net.corda.core.serialization.SerializationFactory
 import net.corda.core.serialization.SerializationMagic
@@ -61,7 +63,7 @@ class DeserializeTxStateTestStateTest {
                 TestContract.PROGRAM_ID
             )
         ).map {
-            TransactionState(it.state, it.contract, ZKNulls.NULL_PARTY)
+            TransactionState(it.state, it.contract, ZKNulls.NULL_PARTY, constraint = HashAttachmentConstraint(SecureHash.zeroHash))
         }
     }
 }
@@ -79,7 +81,7 @@ private fun TransactionState<TestContract.TestState>.toJsonObject() = buildJsonO
     put("notary", notary.toJsonObject(EdDSASurrogate.ENCODED_SIZE))
     put("encumbrance", encumbrance.toJsonObject())
     if (constraint is HashAttachmentConstraint || constraint is SignatureAttachmentConstraint) {
-        put("constraint", constraint.toJsonObject())
+        put("constraint", constraint.toJsonObject().polymorphic())
     }
 }
 
