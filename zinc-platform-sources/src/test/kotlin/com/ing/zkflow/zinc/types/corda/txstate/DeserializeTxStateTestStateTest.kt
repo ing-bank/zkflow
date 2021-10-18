@@ -1,6 +1,6 @@
 package com.ing.zkflow.zinc.types.corda.txstate
 
-import com.ing.zkflow.serialization.BFLSerializationScheme
+import com.ing.zkflow.common.serialization.BFLSerializationScheme
 import com.ing.zkflow.serialization.bfl.serializers.CordaSerializers.CLASS_NAME_SIZE
 import com.ing.zkflow.serialization.bfl.serializers.publickey.EdDSASurrogate
 import com.ing.zkflow.serialization.bfl.serializers.toBytes

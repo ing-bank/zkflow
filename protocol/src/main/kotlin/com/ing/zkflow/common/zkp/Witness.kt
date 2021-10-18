@@ -1,9 +1,9 @@
 package com.ing.zkflow.common.zkp
 
+import com.ing.zkflow.common.serialization.zinc.json.WitnessSerializer
 import com.ing.zkflow.common.transactions.UtxoInfo
 import com.ing.zkflow.common.transactions.zkTransactionMetadata
 import com.ing.zkflow.common.zkp.metadata.ZincType
-import com.ing.zkflow.serialization.zinc.json.WitnessSerializer
 import kotlinx.serialization.Serializable
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.PrivacySalt

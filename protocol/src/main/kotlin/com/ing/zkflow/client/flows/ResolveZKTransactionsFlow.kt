@@ -1,4 +1,4 @@
-package com.ing.zkflow.common.flows
+package com.ing.zkflow.client.flows
 
 import co.paralleluniverse.fibers.Suspendable
 import com.ing.zkflow.node.services.ZKTransactionsResolver

@@ -1,8 +1,8 @@
 package com.ing.zkflow.node.services
 
 import co.paralleluniverse.fibers.Suspendable
-import com.ing.zkflow.common.flows.FetchZKTransactionsFlow
-import com.ing.zkflow.common.flows.ResolveZKTransactionsFlow
+import com.ing.zkflow.client.flows.FetchZKTransactionsFlow
+import com.ing.zkflow.client.flows.ResolveZKTransactionsFlow
 import com.ing.zkflow.common.transactions.SignedZKVerifierTransaction
 import com.ing.zkflow.common.transactions.dependencies
 import com.ing.zkflow.common.zkp.ZKTransactionService

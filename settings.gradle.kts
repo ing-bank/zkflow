@@ -31,6 +31,7 @@ pluginManagement {
 
 include("utils")
 include("crypto")
+include("serialization")
 include("compilation")
 include("protocol")
 include("zinc-platform-sources")

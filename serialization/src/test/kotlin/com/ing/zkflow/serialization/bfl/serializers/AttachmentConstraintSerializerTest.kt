@@ -1,4 +1,4 @@
-package com.ing.zkflow.serialization
+package com.ing.zkflow.serialization.bfl.serializers
 
 import com.ing.serialization.bfl.annotations.FixedLength
 import com.ing.zkflow.serialization.bfl.assertRoundTripSucceeds

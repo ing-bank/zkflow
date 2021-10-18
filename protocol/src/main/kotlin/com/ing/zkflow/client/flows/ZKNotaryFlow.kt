@@ -1,8 +1,6 @@
 package com.ing.zkflow.client.flows
 
 import co.paralleluniverse.fibers.Suspendable
-import com.ing.zkflow.common.flows.FetchZKDataFlow
-import com.ing.zkflow.common.flows.ZKDataVendingFlow
 import com.ing.zkflow.common.transactions.SignedZKVerifierTransaction
 import com.ing.zkflow.notary.ZKNotarisationPayload
 import net.corda.core.crypto.TransactionSignature

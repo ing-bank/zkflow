@@ -24,13 +24,11 @@ dependencies {
     // These are required for our implementation and included in the JAR, we also expose their API for modules that depend on us.
     api(project(":utils"))
     api(project(":crypto"))
+    api(project(":serialization"))
 
+    // For Witness JSON serialization
     val kotlinxSerializationVersion: String by project
     api("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
-    api("org.jetbrains.kotlinx:kotlinx-serialization-core:$kotlinxSerializationVersion")
-
-    val kotlinxSerializationBflVersion: String by project
-    api("com.ing.serialization.bfl:kotlinx-serialization-bfl:$kotlinxSerializationBflVersion")
 
     // Corda dependencies.
     val cordaReleaseGroup: String by project

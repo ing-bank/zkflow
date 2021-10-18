@@ -1,7 +1,7 @@
 package com.ing.zkflow.common.zkp
 
-import com.ing.zkflow.serialization.zinc.json.PublicInputSerializer
-import com.ing.zkflow.serialization.zinc.json.WitnessSerializer
+import com.ing.zkflow.common.serialization.zinc.json.PublicInputSerializer
+import com.ing.zkflow.common.serialization.zinc.json.WitnessSerializer
 import kotlinx.serialization.json.Json
 import net.corda.core.utilities.loggerFor
 import java.io.File

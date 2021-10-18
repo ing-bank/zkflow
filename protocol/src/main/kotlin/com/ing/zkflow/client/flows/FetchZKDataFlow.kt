@@ -1,8 +1,8 @@
-package com.ing.zkflow.common.flows
+package com.ing.zkflow.client.flows
 
 import co.paralleluniverse.fibers.Suspendable
-import com.ing.zkflow.common.flows.FetchZKDataFlow.DownloadedVsRequestedDataMismatch
-import com.ing.zkflow.common.flows.FetchZKDataFlow.HashNotFound
+import com.ing.zkflow.client.flows.FetchZKDataFlow.DownloadedVsRequestedDataMismatch
+import com.ing.zkflow.client.flows.FetchZKDataFlow.HashNotFound
 import com.ing.zkflow.common.transactions.SignedZKVerifierTransaction
 import com.ing.zkflow.node.services.ServiceNames
 import com.ing.zkflow.node.services.ZKVerifierTransactionStorage
@@ -23,8 +23,6 @@ import net.corda.core.utilities.UntrustworthyData
 import net.corda.core.utilities.debug
 import net.corda.core.utilities.trace
 import net.corda.core.utilities.unwrap
-import java.util.ArrayList
-import java.util.LinkedHashSet
 
 /**
  * An abstract flow for fetching typed data from a remote peer.
@@ -238,10 +236,14 @@ class FetchZKTransactionsFlow(requests: Set<SecureHash>, otherSide: FlowSession)
 }
 
 class FetchBatchZKTransactionsFlow(requests: Set<SecureHash>, otherSide: FlowSession) :
-    FetchZKDataFlow<MaybeSerializedSignedZKVerifierTransaction, MaybeSerializedSignedZKVerifierTransaction>(requests, otherSide, DataType.BATCH_TRANSACTION) {
+    FetchZKDataFlow<MaybeSerializedSignedZKVerifierTransaction, MaybeSerializedSignedZKVerifierTransaction>(
+        requests, otherSide,
+        DataType.BATCH_TRANSACTION
+    ) {
 
     override fun load(txid: SecureHash): MaybeSerializedSignedZKVerifierTransaction? {
-        val tran = serviceHub.getCordaServiceFromConfig<ZKVerifierTransactionStorage>(ServiceNames.ZK_VERIFIER_TX_STORAGE).getTransaction(txid)
+        val tran =
+            serviceHub.getCordaServiceFromConfig<ZKVerifierTransactionStorage>(ServiceNames.ZK_VERIFIER_TX_STORAGE).getTransaction(txid)
         return if (tran == null) {
             null
         } else {

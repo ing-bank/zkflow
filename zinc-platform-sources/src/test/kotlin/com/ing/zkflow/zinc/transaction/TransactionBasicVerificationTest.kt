@@ -1,9 +1,9 @@
 package com.ing.zkflow.zinc.transaction
 
 import com.ing.zkflow.common.contracts.ZKTransactionMetadataCommandData
+import com.ing.zkflow.common.serialization.BFLSerializationScheme
 import com.ing.zkflow.common.zkp.ZincZKService
 import com.ing.zkflow.crypto.zinc
-import com.ing.zkflow.serialization.BFLSerializationScheme
 import com.ing.zkflow.testing.fixtures.contract.DummyContract
 import com.ing.zkflow.testing.fixtures.state.DummyState
 import com.ing.zkflow.testing.serialization.getSerializationContext

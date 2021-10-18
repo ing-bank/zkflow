@@ -1,4 +1,4 @@
-package com.ing.zkflow.serialization.zinc.json
+package com.ing.zkflow.common.serialization.zinc.json
 
 import com.ing.dlt.zkkrypto.util.asUnsigned
 import kotlinx.serialization.KSerializer

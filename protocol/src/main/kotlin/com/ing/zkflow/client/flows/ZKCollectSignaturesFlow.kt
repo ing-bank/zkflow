@@ -1,8 +1,6 @@
 package com.ing.zkflow.client.flows
 
 import co.paralleluniverse.fibers.Suspendable
-import com.ing.zkflow.common.flows.ZKReceiveTransactionProposalFlow
-import com.ing.zkflow.common.flows.ZKSendTransactionProposal
 import com.ing.zkflow.common.transactions.zkToLedgerTransaction
 import com.ing.zkflow.common.transactions.zkVerify
 import com.ing.zkflow.common.zkp.ZKTransactionService

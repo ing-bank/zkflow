@@ -4,9 +4,9 @@ import co.paralleluniverse.fibers.Suspendable
 import com.ing.zkflow.client.flows.ZKCollectSignaturesFlow
 import com.ing.zkflow.client.flows.ZKFinalityFlow
 import com.ing.zkflow.client.flows.ZKReceiveFinalityFlow
+import com.ing.zkflow.client.flows.ZKReceiveStateAndRefFlow
+import com.ing.zkflow.client.flows.ZKSendStateAndRefFlow
 import com.ing.zkflow.client.flows.ZKSignTransactionFlow
-import com.ing.zkflow.common.flows.ZKReceiveStateAndRefFlow
-import com.ing.zkflow.common.flows.ZKSendStateAndRefFlow
 import com.ing.zkflow.common.transactions.ZKTransactionBuilder
 import com.ing.zkflow.common.transactions.signInitialTransaction
 import com.ing.zkflow.common.transactions.zkVerify

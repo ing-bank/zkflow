@@ -1,4 +1,4 @@
-package com.ing.zkflow.serialization.zinc.json
+package com.ing.zkflow.common.serialization.zinc.json
 
 import com.ing.zkflow.common.zkp.PublicInput
 import kotlinx.serialization.KSerializer

@@ -1,9 +1,9 @@
 package com.ing.zkflow.testing.zkp
 
+import com.ing.zkflow.common.serialization.zinc.json.WitnessSerializer
 import com.ing.zkflow.common.zkp.PublicInput
 import com.ing.zkflow.common.zkp.Witness
 import com.ing.zkflow.common.zkp.ZKService
-import com.ing.zkflow.serialization.zinc.json.WitnessSerializer
 import kotlinx.serialization.json.Json
 import net.corda.core.contracts.AttachmentResolutionException
 import net.corda.core.contracts.CommandWithParties

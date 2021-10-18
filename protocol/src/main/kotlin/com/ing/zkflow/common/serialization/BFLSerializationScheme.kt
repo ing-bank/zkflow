@@ -1,6 +1,9 @@
-package com.ing.zkflow.serialization
+package com.ing.zkflow.common.serialization
 
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
+import com.ing.zkflow.serialization.CommandDataSerializerMap
+import com.ing.zkflow.serialization.ContractStateSerializerMap
+import com.ing.zkflow.serialization.SerializersModuleRegistry
 import com.ing.zkflow.serialization.bfl.serializers.TimeWindowSerializer
 import com.ing.zkflow.serialization.bfl.serializers.TransactionStateSerializer
 import kotlinx.serialization.KSerializer
@@ -40,7 +43,7 @@ open class BFLSerializationScheme : CustomSerializationScheme {
     private val cordaSerdeMagicLength =
         CustomSerializationSchemeUtils.getCustomSerializationMagicFromSchemeId(SCHEME_ID).size
 
-    private val serializersModule = com.ing.zkflow.serialization.SerializersModuleRegistry.merged
+    private val serializersModule = SerializersModuleRegistry.merged
 
     override fun <T : Any> deserialize(
         bytes: ByteSequence,
@@ -52,7 +55,7 @@ open class BFLSerializationScheme : CustomSerializationScheme {
 
         return when {
             TransactionState::class.java.isAssignableFrom(clazz) -> {
-                val (stateStrategy, message) = com.ing.zkflow.serialization.ContractStateSerializerMap.extractSerializerAndSerializedData(
+                val (stateStrategy, message) = ContractStateSerializerMap.extractSerializerAndSerializedData(
                     serializedData
                 )
 
@@ -85,7 +88,7 @@ open class BFLSerializationScheme : CustomSerializationScheme {
             }
 
             CommandData::class.java.isAssignableFrom(clazz) -> {
-                val (commandStrategy, message) = com.ing.zkflow.serialization.CommandDataSerializerMap.extractSerializerAndSerializedData(
+                val (commandStrategy, message) = CommandDataSerializerMap.extractSerializerAndSerializedData(
                     serializedData
                 )
 
@@ -120,7 +123,7 @@ open class BFLSerializationScheme : CustomSerializationScheme {
                 // The following cast is OK, its validity is guaranteed by the inner structure of `ContractStateSerializerMap`.
                 // If `[]`-access succeeds, then the cast MUST also succeed.
                 @Suppress("UNCHECKED_CAST")
-                val stateStrategy = com.ing.zkflow.serialization.ContractStateSerializerMap[state::class] as KSerializer<ContractState>
+                val stateStrategy = ContractStateSerializerMap[state::class] as KSerializer<ContractState>
 
                 val strategy = TransactionStateSerializer(stateStrategy)
 
@@ -131,14 +134,14 @@ open class BFLSerializationScheme : CustomSerializationScheme {
                 )
                 // Serialization layout is accessible at debugSerialization.second
 
-                com.ing.zkflow.serialization.ContractStateSerializerMap.prefixWithIdentifier(
+                ContractStateSerializerMap.prefixWithIdentifier(
                     state::class,
                     debugSerialization.first
                 )
             }
 
             is CommandData -> {
-                com.ing.zkflow.serialization.CommandDataSerializerMap.prefixWithIdentifier(
+                CommandDataSerializerMap.prefixWithIdentifier(
                     obj::class,
                     obliviousSerialize(obj, serializersModule = serializersModule)
                 )
