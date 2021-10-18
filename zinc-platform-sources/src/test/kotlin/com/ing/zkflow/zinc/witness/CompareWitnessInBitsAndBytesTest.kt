@@ -34,8 +34,8 @@ class CompareWitnessInBitsAndBytesTest {
             val proveBits2Bytes = proveRegex.find(timingBits2Bytes)?.groupValues?.get(2)?.toFloat()
             val proveBytes2Bits = proveRegex.find(timingBytes2Bits)?.groupValues?.get(2)?.toFloat()
 
-            val reductionInProve = (100.0 * (proveBytes2Bits?.minus(proveBits2Bytes!!)!!)) / proveBytes2Bits!!
-            val reductionInSetup = (100.0 * (setupBytes2Bits?.minus(setupBits2Bytes!!)!!)) / setupBytes2Bits!!
+            val reductionInProve = (100.0 * (proveBytes2Bits?.minus(proveBits2Bytes!!)!!)) / proveBytes2Bits
+            val reductionInSetup = (100.0 * (setupBytes2Bits?.minus(setupBits2Bytes!!)!!)) / setupBytes2Bits
 
             println("\nReduction in setup time --> $reductionInSetup%")
             println("Reduction in proving time --> $reductionInProve%")

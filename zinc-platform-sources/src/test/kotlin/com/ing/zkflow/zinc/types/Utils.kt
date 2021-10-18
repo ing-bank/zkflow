@@ -65,6 +65,7 @@ data class WrappedAmountCurrency(
     val wrappedValue: @Contextual Amount<@Contextual Currency>
 )
 
+@Suppress("UNCHECKED_CAST") // If the token is of type, Amount is too
 inline fun <reified T : Any> Amount<T>.toJsonArray() =
     when (this.token) {
         is String -> serialize(

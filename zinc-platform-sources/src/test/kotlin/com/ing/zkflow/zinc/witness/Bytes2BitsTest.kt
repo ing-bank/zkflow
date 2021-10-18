@@ -9,10 +9,9 @@ import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.io.File
 import java.time.Duration
-import kotlin.time.ExperimentalTime
+import kotlin.time.DurationUnit
 import kotlin.time.measureTime
 
-@ExperimentalTime
 @Tag("slow")
 @Disabled("This is a benchmark. Should only be enabled for benchmarks")
 class Bytes2BitsTest {
@@ -34,7 +33,7 @@ class Bytes2BitsTest {
 
     init {
         if (!runOnly) {
-            setupTimeBytes2Bits = measureTime { zincZKService.setup() }.inSeconds
+            setupTimeBytes2Bits = measureTime { zincZKService.setup() }.toDouble(DurationUnit.SECONDS)
         }
     }
 
@@ -46,8 +45,7 @@ class Bytes2BitsTest {
     @Test
     fun `zinc converts bytes to bits and computes the Merkle root`() {
         val witnessJsonInBytes = createSerializedWitnessInBytes()
-        val runTimeBytes2Bits =
-            measureTime { zincZKService.run(witnessJsonInBytes, getPublicDataJson(merkleRootOnly)) }.inSeconds
+        measureTime { zincZKService.run(witnessJsonInBytes, getPublicDataJson(merkleRootOnly)) }.toDouble(DurationUnit.SECONDS)
 
         if (!runOnly) {
             val timeResults = File(circuitFolder).resolve("timings.txt")
@@ -55,10 +53,10 @@ class Bytes2BitsTest {
 
             var proofInBytes: ByteArray
             val proofTimeBytes2Bits =
-                measureTime { proofInBytes = zincZKService.prove(witnessJsonInBytes) }.inSeconds
+                measureTime { proofInBytes = zincZKService.prove(witnessJsonInBytes) }.toDouble(DurationUnit.SECONDS)
 
             val verifyTimeBytes2Bits =
-                measureTime { zincZKService.verify(proofInBytes, getPublicDataJson(merkleRootOnly)) }.inSeconds
+                measureTime { zincZKService.verify(proofInBytes, getPublicDataJson(merkleRootOnly)) }.toDouble(DurationUnit.SECONDS)
 
             timeResults.appendText("Setup : $setupTimeBytes2Bits")
             timeResults.appendText("Prove : $proofTimeBytes2Bits")
