@@ -170,8 +170,9 @@ subprojects {
                 ktlint(ktlintVersion)
             }
             kotlinGradle {
-                target("*.gradle.kts") // default target for kotlinGradle
-                ktlint() // or ktfmt() or prettier()
+                target("*.gradle.kts")
+                val ktlintVersion: String by project
+                ktlint(ktlintVersion)
             }
         }
 
@@ -189,6 +190,7 @@ subprojects {
                 it.dependsOn(":checkJavaVersion")
                 it.dependsOn("spotlessApply") // Autofix before check
                 it.dependsOn("spotlessCheck") // Fail on remaining non-autofixable issues
+                it.dependsOn(":detekt")
             }
 
             withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
@@ -212,7 +214,6 @@ subprojects {
 
             // This applies to all test types, both fast and slow
             withType<Test> {
-                dependsOn(":detekt")
                 dependsOn(":checkZincVersion")
                 dependsOn(":zinc-platform-sources:circuits") // Make sure that the Zinc circuit is ready to use when running tests
 
