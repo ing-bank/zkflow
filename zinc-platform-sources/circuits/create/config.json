@@ -12,7 +12,7 @@
   },
   "groups" : {
     "attachment_group": {
-      "group_size": 1
+      "group_size": 0
     },
     "output_group" : [
       {
