@@ -391,4 +391,7 @@ potential-bugs:
 
 # Style is disabled, since we use ktlint for that (for now)
 style:
-  active: false
+  active: true
+  UnusedPrivateMember:
+    active: true
+

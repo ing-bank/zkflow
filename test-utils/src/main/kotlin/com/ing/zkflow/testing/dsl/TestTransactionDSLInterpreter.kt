@@ -1,3 +1,5 @@
+@file:Suppress("DuplicatedCode") // Duplication of this DSL is unavoidable due to Corda's design
+
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import com.ing.zkflow.common.zkp.ZKTransactionService
 import com.ing.zkflow.testing.dsl.DuplicateOutputLabel
@@ -30,7 +32,6 @@ import net.corda.core.serialization.internal.AttachmentsClassLoaderCache
 import net.corda.core.serialization.internal.AttachmentsClassLoaderCacheImpl
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
-import net.corda.core.utilities.loggerFor
 import net.corda.node.services.DbTransactionsResolver
 import net.corda.node.services.attachments.NodeAttachmentTrustCalculator
 import net.corda.node.services.persistence.AttachmentStorageInternal
@@ -60,8 +61,6 @@ public data class TestTransactionDSLInterpreter private constructor(
         ledgerInterpreter: TestZKLedgerDSLInterpreter,
         transactionBuilder: TransactionBuilder
     ) : this(ledgerInterpreter, transactionBuilder, HashMap())
-
-    private val log = loggerFor<TestZKTransactionDSLInterpreter>()
 
     // Implementing [ServiceHubCoreInternal] allows better use in internal Corda tests
     val services: ServiceHubCoreInternal = object : ServiceHubCoreInternal, ServiceHub by ledgerInterpreter.services {

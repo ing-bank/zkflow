@@ -3,7 +3,6 @@ package com.ing.zkflow.client.flows
 import co.paralleluniverse.fibers.Suspendable
 import com.ing.zkflow.common.transactions.zkToLedgerTransaction
 import com.ing.zkflow.common.transactions.zkVerify
-import com.ing.zkflow.common.zkp.ZKTransactionService
 import net.corda.core.crypto.TransactionSignature
 import net.corda.core.crypto.isFulfilledBy
 import net.corda.core.crypto.toStringShort
@@ -293,8 +292,6 @@ abstract class ZKSignTransactionFlow @JvmOverloads constructor(
     private val otherSideSession: FlowSession,
     override val progressTracker: ProgressTracker = tracker()
 ) : FlowLogic<SignedTransaction>() {
-
-    private lateinit var zkService: ZKTransactionService
 
     companion object {
         object RECEIVING : ProgressTracker.Step("Receiving transaction proposal for signing.")

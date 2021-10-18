@@ -2,7 +2,6 @@ package com.ing.zkflow.zinc.witness
 
 import com.ing.dlt.zkkrypto.util.asUnsigned
 import com.ing.zkflow.common.zkp.ZincZKService
-import net.corda.core.utilities.loggerFor
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Tag
@@ -15,7 +14,6 @@ import kotlin.time.measureTime
 @Tag("slow")
 @Disabled("This is a benchmark. Should only be enabled for benchmarks")
 class Bytes2BitsTest {
-    private val log = loggerFor<Bytes2BitsTest>()
     private val runOnly = true
     private val merkleRootOnly = false
 
