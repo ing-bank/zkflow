@@ -1,6 +1,5 @@
-package com.ing.zknotary.zinc.transaction
+package com.ing.zkflow.zinc.transaction
 
-import com.ing.zkflow.common.zkp.ZincZKTransactionService
 import com.ing.zkflow.testing.dsl.VerificationMode
 import com.ing.zkflow.testing.dsl.zkLedger
 import com.ing.zkflow.testing.fixtures.contract.TestMultipleStateContract
@@ -18,15 +17,14 @@ import kotlin.time.ExperimentalTime
 class TransactionMultipleStateVerificationTest {
     private val log = loggerFor<TransactionMultipleStateVerificationTest>()
 
-    private val zincZKTransactionService: ZincZKTransactionService = ZincZKTransactionService(MockServices())
-
-    private val notary = ZKNulls.NULL_PARTY
-
     private val cordapps = listOf(
         "com.ing.zkflow.testing.fixtures.contract"
     )
 
     /**
+     *
+     * This is the multi-state version of `TransactionVerificationTest` in order to show that zinc can handle multiple state types.
+     *
      * The witness, which is what we serialize for Zinc, contains the following items:
      *
      * * Already serialized & sized componentgroups, e.g. groups of bytearrays of the WireTransaction.
@@ -48,7 +46,7 @@ class TransactionMultipleStateVerificationTest {
      */
     @ExperimentalTime
     @Test
-    fun `dsl test`() {
+    fun `create and move verify`() {
         val alice = TestIdentity.fresh("Alice").party.anonymise()
         val bob = ZKNulls.NULL_ANONYMOUS_PARTY
         val services = MockServices(cordapps)

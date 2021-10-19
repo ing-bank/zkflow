@@ -1,5 +1,4 @@
 package com.ing.zkflow.zinc.transaction
-import com.ing.zkflow.common.zkp.ZincZKTransactionService
 import com.ing.zkflow.testing.dsl.VerificationMode
 import com.ing.zkflow.testing.dsl.zkLedger
 import com.ing.zkflow.testing.fixtures.contract.TestContract
@@ -16,10 +15,6 @@ import kotlin.time.ExperimentalTime
 @Tag("slow")
 class TransactionVerificationTest {
     private val log = loggerFor<TransactionVerificationTest>()
-
-    private val zincZKTransactionService: ZincZKTransactionService = ZincZKTransactionService(MockServices())
-
-    private val notary = ZKNulls.NULL_PARTY
 
     private val cordapps = listOf(
         "com.ing.zkflow.testing.fixtures.contract"
@@ -47,7 +42,7 @@ class TransactionVerificationTest {
      */
     @ExperimentalTime
     @Test
-    fun `dsl test`() {
+    fun `create and move verify`() {
         val alice = TestIdentity.fresh("Alice").party.anonymise()
         val bob = ZKNulls.NULL_ANONYMOUS_PARTY
         val services = MockServices(cordapps)
