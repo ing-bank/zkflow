@@ -14,7 +14,6 @@ import kotlin.time.ExperimentalTime
 @ExperimentalTime
 @Tag("slow")
 class TransactionVerificationTest {
-    private val log = loggerFor<TransactionVerificationTest>()
 
     private val cordapps = listOf(
         "com.ing.zkflow.testing.fixtures.contract"
