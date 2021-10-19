@@ -6,6 +6,7 @@ import com.ing.zkflow.common.zkp.ZincZKService
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import kotlin.time.measureTime
+import kotlin.time.measureTimedValue
 
 /**
  * this is used to get the logger for the caller of the caller.
@@ -21,21 +22,19 @@ public fun ZincZKService.setupTimed(log: Logger = loggerForMyCaller) {
 }
 
 public fun ZincZKService.proveTimed(witness: Witness, log: Logger = loggerForMyCaller): ByteArray {
-    var proof: ByteArray
-    val time = measureTime {
-        proof = this.prove(witness)
+    val timedValue = measureTimedValue {
+        this.prove(witness)
     }
-    log.debug("[prove] $time")
-    return proof
+    log.debug("[prove] ${timedValue.duration}")
+    return timedValue.value
 }
 
 public fun ZincZKService.proveTimed(witnessJson: String, log: Logger = loggerForMyCaller): ByteArray {
-    var proof: ByteArray
-    val time = measureTime {
-        proof = this.prove(witnessJson)
+    val timedValue = measureTimedValue {
+        this.prove(witnessJson)
     }
-    log.debug("[prove] $time")
-    return proof
+    log.debug("[prove] ${timedValue.duration}")
+    return timedValue.value
 }
 
 public fun ZincZKService.verifyTimed(proof: ByteArray, publicInputJson: String, log: Logger = loggerForMyCaller) {

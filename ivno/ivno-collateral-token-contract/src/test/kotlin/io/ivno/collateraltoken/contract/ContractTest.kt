@@ -42,6 +42,7 @@ import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
 import org.junit.jupiter.api.BeforeEach
 import java.math.BigDecimal
+import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
 
 abstract class ContractTest {
@@ -152,6 +153,7 @@ abstract class ContractTest {
     private lateinit var _services: MockServices
     protected val services: MockServices get() = _services
 
+    @ExperimentalTime
     @BeforeEach
     private fun setup() {
         val networkParameters = testNetworkParameters(
