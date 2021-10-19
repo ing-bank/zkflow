@@ -50,7 +50,7 @@ open class BFLSerializationScheme : CustomSerializationScheme {
         clazz: Class<T>,
         context: SerializationSchemeContext
     ): T {
-        logger.debug("Deserializing tx component:\t$clazz")
+        logger.trace("Deserializing tx component:\t$clazz")
         val serializedData = bytes.bytes.drop(cordaSerdeMagicLength).toByteArray()
 
         return when {
@@ -110,7 +110,7 @@ open class BFLSerializationScheme : CustomSerializationScheme {
     }
 
     override fun <T : Any> serialize(obj: T, context: SerializationSchemeContext): ByteSequence {
-        logger.debug("Serializing tx component:\t${obj::class}")
+        logger.trace("Serializing tx component:\t${obj::class}")
 
         val transactionMetadata =
             context.properties[CONTEXT_KEY_TRANSACTION_METADATA] as? ResolvedZKTransactionMetadata

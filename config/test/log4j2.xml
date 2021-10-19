@@ -6,7 +6,7 @@
         <Console name="Console-Appender" target="SYSTEM_OUT">
             <PatternLayout>
                 <pattern>
-                    %highlight{[%level{length=1}] %-5r %-20.20c{1} - %msg}{TRACE=dim white,INFO=normal}%n
+                    %highlight{[%level{length=1}] %-5r %-0.30c{1} - %msg}{TRACE=dim white,INFO=normal}%n
                 </pattern>>
             </PatternLayout>
         </Console>

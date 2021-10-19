@@ -55,7 +55,6 @@ class ZincZKService(
             return if (process.exitValue() != 0) {
                 error("$command failed with the following output: $stderr")
             } else {
-                log.debug(stderr)
                 output
             }
         }
@@ -114,11 +113,11 @@ class ZincZKService(
     }
 
     override fun run(witness: Witness, publicInput: PublicInput): String {
-        log.info("Witness size: ${witness.size()}")
-        log.info("Padded Witness size: ${witness.size { it == 0.toByte() }}") // Assumes BFL zero-byte padding
+        log.debug("Witness size: ${witness.size()}")
+        log.debug("Padded Witness size: ${witness.size { it == 0.toByte() }}") // Assumes BFL zero-byte padding
 
         val witnessJson = Json.encodeToString(WitnessSerializer, witness)
-        log.info("Witness JSON: $witnessJson")
+        log.trace("Witness JSON: $witnessJson")
 
         val publicInputJson = Json.encodeToString(PublicInputSerializer, publicInput)
         return run(witnessJson, publicInputJson)
