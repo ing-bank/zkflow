@@ -4,8 +4,6 @@ import com.ing.serialization.bfl.annotations.FixedLength
 import com.ing.serialization.bfl.api.reified.serialize
 import com.ing.serialization.bfl.serializers.BFLSerializers
 import com.ing.serialization.bfl.serializers.CurrencySerializer
-import com.ing.zkflow.common.zkp.PublicInput
-import com.ing.zkflow.common.zkp.Witness
 import com.ing.zkflow.common.zkp.ZincZKService
 import com.ing.zkflow.serialization.bfl.corda.AmountSerializer
 import com.ing.zkflow.serialization.bfl.serializers.CordaSerializers
@@ -103,36 +101,4 @@ fun ZincZKService.setupTimed(log: Logger) {
         this.setup()
     }
     log.debug("[setup] $time")
-}
-
-fun ZincZKService.proveTimed(witness: Witness, log: Logger): ByteArray {
-    var proof: ByteArray
-    val time = measureTime {
-        proof = this.prove(witness)
-    }
-    log.debug("[prove] $time")
-    return proof
-}
-
-fun ZincZKService.proveTimed(witnessJson: String, log: Logger): ByteArray {
-    var proof: ByteArray
-    val time = measureTime {
-        proof = this.prove(witnessJson)
-    }
-    log.debug("[prove] $time")
-    return proof
-}
-
-fun ZincZKService.verifyTimed(proof: ByteArray, publicInputJson: String, log: Logger) {
-    val time = measureTime {
-        this.verify(proof, publicInputJson)
-    }
-    log.debug("[verify] $time")
-}
-
-fun ZincZKService.verifyTimed(proof: ByteArray, publicInput: PublicInput, log: Logger) {
-    val time = measureTime {
-        this.verify(proof, publicInput)
-    }
-    log.debug("[verify] $time")
 }

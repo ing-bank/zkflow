@@ -4,26 +4,24 @@ import com.ing.serialization.bfl.api.reified.serialize
 import com.ing.zkflow.serialization.bfl.serializers.CordaSerializers
 import com.ing.zkflow.testing.getZincZKService
 import com.ing.zkflow.testing.toJsonArray
-import com.ing.zkflow.zinc.types.proveTimed
-import com.ing.zkflow.zinc.types.setupTimed
-import com.ing.zkflow.zinc.types.verifyTimed
+import com.ing.zkflow.testing.zkp.proveTimed
+import com.ing.zkflow.testing.zkp.setupTimed
+import com.ing.zkflow.testing.zkp.verifyTimed
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import net.corda.core.contracts.LinearPointer
 import net.corda.core.contracts.LinearState
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.identity.AbstractParty
-import net.corda.core.utilities.loggerFor
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 import java.util.UUID
 
 class SerializedLinearPointerEqualsTest {
-    private val log = loggerFor<SerializedLinearPointerEqualsTest>()
     private val zincZKService = getZincZKService<SerializedLinearPointerEqualsTest>()
 
     init {
-        zincZKService.setupTimed(log)
+        zincZKService.setupTimed()
     }
 
     @AfterAll
@@ -66,8 +64,8 @@ class SerializedLinearPointerEqualsTest {
         val areEqual = data1.id == data2.id
         val expected = "$areEqual"
 
-        zincZKService.proveTimed(witness, log).let {
-            zincZKService.verifyTimed(it, expected, log)
+        zincZKService.proveTimed(witness).let {
+            zincZKService.verifyTimed(it, expected)
         }
     }
 

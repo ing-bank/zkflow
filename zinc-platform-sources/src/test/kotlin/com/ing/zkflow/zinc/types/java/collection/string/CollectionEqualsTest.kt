@@ -1,23 +1,21 @@
 package com.ing.zkflow.zinc.types.java.collection.string
 
 import com.ing.zkflow.testing.getZincZKService
-import com.ing.zkflow.zinc.types.proveTimed
-import com.ing.zkflow.zinc.types.setupTimed
+import com.ing.zkflow.testing.zkp.proveTimed
+import com.ing.zkflow.testing.zkp.setupTimed
+import com.ing.zkflow.testing.zkp.verifyTimed
 import com.ing.zkflow.zinc.types.toJsonObject
-import com.ing.zkflow.zinc.types.verifyTimed
 import kotlinx.serialization.json.buildJsonObject
-import net.corda.core.utilities.loggerFor
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 
 class CollectionEqualsTest {
-    private val log = loggerFor<CollectionEqualsTest>()
     private val zincZKService = getZincZKService<CollectionEqualsTest>()
 
     init {
-        zincZKService.setupTimed(log)
+        zincZKService.setupTimed()
     }
 
     @AfterAll
@@ -34,8 +32,8 @@ class CollectionEqualsTest {
         }.toString()
         val expected = "\"${if (testList1 == testList2) 0 else 1}\""
 
-        zincZKService.proveTimed(input, log).let {
-            zincZKService.verifyTimed(it, expected, log)
+        zincZKService.proveTimed(input).let {
+            zincZKService.verifyTimed(it, expected)
         }
     }
 
