@@ -1,8 +1,0 @@
-mod attestation;
-
-use attestation::Attestation;
-use attestation::SerializedAttestation;
-
-fn main(witness: SerializedAttestation) -> Attestation {
-    Attestation::deserialize(witness)
-}

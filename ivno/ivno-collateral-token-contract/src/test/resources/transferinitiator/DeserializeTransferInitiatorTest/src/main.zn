@@ -1,8 +1,0 @@
-mod transfer_initiator;
-
-use transfer_initiator::TransferInitiator;
-use transfer_initiator::SerializedTransferInitiator;
-
-fn main(witness: SerializedTransferInitiator) -> TransferInitiator {
-    TransferInitiator::deserialize(witness)
-}

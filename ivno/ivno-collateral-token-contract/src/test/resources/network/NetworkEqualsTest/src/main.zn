@@ -1,7 +1,0 @@
-mod network_poly_party_ed_dsa;
-
-use network_poly_party_ed_dsa::NetworkPolyPartyEdDSA;
-
-fn main(left: NetworkPolyPartyEdDSA, right: NetworkPolyPartyEdDSA) -> bool {
-    NetworkPolyPartyEdDSA::equals(left, right)
-}

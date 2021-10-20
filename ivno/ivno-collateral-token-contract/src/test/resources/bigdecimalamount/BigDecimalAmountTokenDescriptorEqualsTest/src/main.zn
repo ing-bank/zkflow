@@ -1,7 +1,0 @@
-mod big_decimal_amount_token_descriptor;
-
-use big_decimal_amount_token_descriptor::BigDecimalAmountTokenDescriptor;
-
-fn main(left: BigDecimalAmountTokenDescriptor, right: BigDecimalAmountTokenDescriptor) -> bool {
-    BigDecimalAmountTokenDescriptor::equals(left, right)
-}

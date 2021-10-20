@@ -47,15 +47,4 @@ fail_all_if_failed \
   "zargo build -v" \
   "zkdapp-tester/build/zinc/test-circuit"
 
-
-fail_all_if_failed \
-  "Ivno - Build with Gradle" \
-  "../gradlew $clean build --stacktrace --build-cache" \
-  "ivno"
-
-#fail_all_if_failed \
-#  "Ivno - Compile deposit-request circuit with Zargo" \
-#  "zargo build -v" \
-#  "ivno/ivno-collateral-token-contract/build/zinc/deposit-request"
-
 echo -e "\n${GREEN}BUILD SUCCESSFUL\nFeel free to push your code${NC}"

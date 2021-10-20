@@ -1,8 +1,0 @@
-mod account_address;
-
-use account_address::AccountAddress;
-use account_address::SerializedAccountAddress;
-
-fn main(witness: SerializedAccountAddress) -> AccountAddress {
-    AccountAddress::deserialize(witness)
-}

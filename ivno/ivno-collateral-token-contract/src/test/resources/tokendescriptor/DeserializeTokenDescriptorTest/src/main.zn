@@ -1,8 +1,0 @@
-mod token_descriptor;
-
-use token_descriptor::TokenDescriptor;
-use token_descriptor::SerializedTokenDescriptor;
-
-fn main(witness: SerializedTokenDescriptor) -> TokenDescriptor {
-    TokenDescriptor::deserialize(witness)
-}

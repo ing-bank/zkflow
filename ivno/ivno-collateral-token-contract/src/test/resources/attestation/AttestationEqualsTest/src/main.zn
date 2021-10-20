@@ -1,7 +1,0 @@
-mod attestation;
-
-use attestation::Attestation;
-
-fn main(left: Attestation, right: Attestation) -> bool {
-    Attestation::equals(left, right)
-}

@@ -1,7 +1,0 @@
-mod big_decimal_amount_linear_pointer;
-
-use big_decimal_amount_linear_pointer::BigDecimalAmountLinearPointer;
-
-fn main(left: BigDecimalAmountLinearPointer, right: BigDecimalAmountLinearPointer) -> bool {
-    BigDecimalAmountLinearPointer::equals(left, right)
-}

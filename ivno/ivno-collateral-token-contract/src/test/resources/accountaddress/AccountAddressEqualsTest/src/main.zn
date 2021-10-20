@@ -1,7 +1,0 @@
-mod account_address;
-
-use account_address::AccountAddress;
-
-fn main(left: AccountAddress, right: AccountAddress) -> bool {
-    AccountAddress::equals(left, right)
-}

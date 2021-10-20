@@ -1,7 +1,0 @@
-mod setting_string_7;
-
-use setting_string_7::SettingString_7;
-
-fn main(left: SettingString_7, right: SettingString_7) -> bool {
-    SettingString_7::equals(left, right)
-}

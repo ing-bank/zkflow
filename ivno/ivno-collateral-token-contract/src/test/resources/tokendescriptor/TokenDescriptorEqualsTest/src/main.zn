@@ -1,7 +1,0 @@
-mod token_descriptor;
-
-use token_descriptor::TokenDescriptor;
-
-fn main(left: TokenDescriptor, right: TokenDescriptor) -> bool {
-    TokenDescriptor::equals(left, right)
-}

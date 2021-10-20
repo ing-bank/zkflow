@@ -1,8 +1,0 @@
-mod permission;
-
-use permission::Permission;
-use permission::SerializedPermission;
-
-fn main(witness: SerializedPermission) -> Permission {
-    Permission::deserialize(witness)
-}

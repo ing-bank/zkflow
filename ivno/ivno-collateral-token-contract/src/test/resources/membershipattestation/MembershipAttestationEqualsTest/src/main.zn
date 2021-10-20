@@ -1,7 +1,0 @@
-mod membership_attestation;
-
-use membership_attestation::MembershipAttestation;
-
-fn main(left: MembershipAttestation, right: MembershipAttestation) -> bool {
-    MembershipAttestation::equals(left, right)
-}

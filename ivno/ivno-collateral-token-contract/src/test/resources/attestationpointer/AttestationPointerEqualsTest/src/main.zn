@@ -1,7 +1,0 @@
-mod attestation_pointer;
-
-use attestation_pointer::AttestationPointer;
-
-fn main(left: AttestationPointer, right: AttestationPointer) -> bool {
-    AttestationPointer::equals(left, right)
-}

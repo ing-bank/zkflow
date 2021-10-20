@@ -1,8 +1,0 @@
-mod token_transaction_summary_state;
-
-use token_transaction_summary_state::TokenTransactionSummaryState;
-use token_transaction_summary_state::SerializedTokenTransactionSummaryState;
-
-fn main(witness: SerializedTokenTransactionSummaryState) -> TokenTransactionSummaryState {
-    TokenTransactionSummaryState::deserialize(witness)
-}

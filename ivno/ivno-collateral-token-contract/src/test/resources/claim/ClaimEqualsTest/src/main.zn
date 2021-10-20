@@ -1,7 +1,0 @@
-mod claim_string_7;
-
-use claim_string_7::ClaimString_7;
-
-fn main(left: ClaimString_7, right: ClaimString_7) -> bool {
-    ClaimString_7::equals(left, right)
-}
