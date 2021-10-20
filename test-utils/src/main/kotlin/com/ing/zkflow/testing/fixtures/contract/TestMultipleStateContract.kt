@@ -4,13 +4,13 @@ import com.ing.serialization.bfl.annotations.FixedLength
 import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.contracts.ZKOwnableState
 import com.ing.zkflow.common.contracts.ZKTransactionMetadataCommandData
-import com.ing.zkflow.common.serialization.bfl.CommandDataSerializerMap
-import com.ing.zkflow.common.serialization.bfl.ContractStateSerializerMap
 import com.ing.zkflow.common.transactions.zkFLowMetadata
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
 import com.ing.zkflow.common.zkp.metadata.commandMetadata
 import com.ing.zkflow.common.zkp.metadata.transactionMetadata
+import com.ing.zkflow.serialization.CommandDataSerializerMap
+import com.ing.zkflow.serialization.ContractStateSerializerMap
 import com.ing.zkflow.testing.fixtures.contract.TestMultipleStateContract.Create.Companion.verifyCreate
 import com.ing.zkflow.testing.fixtures.contract.TestMultipleStateContract.Move.Companion.verifyMove
 import kotlinx.serialization.Contextual
@@ -91,7 +91,7 @@ public class TestMultipleStateContract : Contract {
     public class Create : TypeOnlyCommandData(), ZKCommandData, ZKTransactionMetadataCommandData {
         override val transactionMetadata: ResolvedZKTransactionMetadata by transactionMetadata {
             commands {
-                +TestMultipleStateContract.Create::class
+                +Create::class
             }
         }
 
@@ -103,8 +103,8 @@ public class TestMultipleStateContract : Contract {
                     File("${System.getProperty("user.dir")}/../zinc-platform-sources/build/circuits/create-multi-state")
             }
             outputs {
-                1 of TestMultipleStateContract.TestState1::class
-                1 of TestMultipleStateContract.TestState2::class
+                1 of TestState1::class
+                1 of TestState2::class
             }
             numberOfSigners = 1
         }
@@ -115,9 +115,6 @@ public class TestMultipleStateContract : Contract {
                 command: CommandWithParties<CommandData>
             ) {
                 tx.zkFLowMetadata.verify(tx)
-                // Transaction structure
-                if (tx.outputs.size != 2) throw IllegalArgumentException("Failed requirement: the tx has exactly two outputs")
-                if (tx.inputs.isNotEmpty()) throw IllegalArgumentException("Failed requirement: the tx has no inputs")
 
                 // Transaction contents
                 val output1 = tx.getOutput(0) as TestState1
@@ -133,7 +130,7 @@ public class TestMultipleStateContract : Contract {
 
         override val transactionMetadata: ResolvedZKTransactionMetadata by transactionMetadata {
             commands {
-                +TestMultipleStateContract.Move::class
+                +Move::class
             }
         }
 
@@ -145,12 +142,12 @@ public class TestMultipleStateContract : Contract {
                     File("${System.getProperty("user.dir")}/../zinc-platform-sources/build/circuits/move-multi-state")
             }
             inputs {
-                1 of TestMultipleStateContract.TestState1::class
-                1 of TestMultipleStateContract.TestState2::class
+                1 of TestState1::class
+                1 of TestState2::class
             }
             outputs {
-                1 of TestMultipleStateContract.TestState1::class
-                1 of TestMultipleStateContract.TestState2::class
+                1 of TestState1::class
+                1 of TestState2::class
             }
             numberOfSigners = 2
         }
@@ -160,9 +157,6 @@ public class TestMultipleStateContract : Contract {
                 command: CommandWithParties<CommandData>
             ) {
                 tx.zkFLowMetadata.verify(tx)
-                // Transaction structure
-                if (tx.outputs.size != 2) throw IllegalArgumentException("Failed requirement: the tx has exactly two outputs")
-                if (tx.inputs.size != 2) throw IllegalArgumentException("Failed requirement: the tx has exactly two inputs")
 
                 // Transaction contents
                 val output1 = tx.getOutput(0) as TestState1

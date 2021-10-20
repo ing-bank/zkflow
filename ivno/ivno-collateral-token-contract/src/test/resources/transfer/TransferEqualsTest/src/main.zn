@@ -1,7 +1,0 @@
-mod transfer_anonymous_party_ed_dsa_anonymous_party_ed_dsa;
-
-use transfer_anonymous_party_ed_dsa_anonymous_party_ed_dsa::TransferAnonymousPartyEdDSAAnonymousPartyEdDSA;
-
-fn main(left: TransferAnonymousPartyEdDSAAnonymousPartyEdDSA, right: TransferAnonymousPartyEdDSAAnonymousPartyEdDSA) -> bool {
-    TransferAnonymousPartyEdDSAAnonymousPartyEdDSA::equals(left, right)
-}

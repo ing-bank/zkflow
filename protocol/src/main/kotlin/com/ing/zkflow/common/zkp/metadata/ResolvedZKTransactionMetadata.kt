@@ -21,6 +21,7 @@ data class ResolvedZKTransactionMetadata(
     val numberOfCorDappsForContracts: Int?
 ) {
     companion object {
+        @Suppress("unused") // Will be re-enabled once ZincPoet is used
         private val DEFAULT_CIRCUIT_BUILD_FOLDER_PARENT_PATH = "${System.getProperty("user.dir")}/build/zinc/transactions/"
 
         const val ERROR_NO_COMMANDS = "There should be at least one commmand in a ZKFlow transaction"

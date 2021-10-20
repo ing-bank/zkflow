@@ -1,6 +1,6 @@
 package com.ing.zkflow.zinc.types.corda.party
 
-import com.ing.zkflow.common.serialization.bfl.serializers.publickey.BCECSurrogate
+import com.ing.zkflow.serialization.bfl.serializers.publickey.BCECSurrogate
 import com.ing.zkflow.testing.getZincZKService
 import com.ing.zkflow.zinc.types.toJsonObject
 import kotlinx.serialization.json.buildJsonObject
@@ -8,9 +8,7 @@ import net.corda.core.crypto.Crypto
 import net.corda.core.identity.Party
 import net.corda.testing.core.TestIdentity
 import org.junit.jupiter.api.Test
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
 class PartyBCECK1EqualsTest {
     private val zincZKService = getZincZKService<PartyBCECK1EqualsTest>()
 

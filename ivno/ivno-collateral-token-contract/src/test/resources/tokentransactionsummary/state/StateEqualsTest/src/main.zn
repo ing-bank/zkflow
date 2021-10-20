@@ -1,7 +1,0 @@
-mod token_transaction_summary_state;
-
-use token_transaction_summary_state::TokenTransactionSummaryState;
-
-fn main(left: TokenTransactionSummaryState, right: TokenTransactionSummaryState) -> bool {
-    TokenTransactionSummaryState::equals(left, right)
-}

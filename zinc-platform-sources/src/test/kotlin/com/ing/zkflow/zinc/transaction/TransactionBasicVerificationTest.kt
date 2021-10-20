@@ -1,9 +1,8 @@
 package com.ing.zkflow.zinc.transaction
 
 import com.ing.zkflow.common.contracts.ZKTransactionMetadataCommandData
-import com.ing.zkflow.common.crypto.zinc
-import com.ing.zkflow.common.serialization.bfl.BFLSerializationScheme
-import com.ing.zkflow.common.zkp.ZincZKService
+import com.ing.zkflow.common.serialization.BFLSerializationScheme
+import com.ing.zkflow.crypto.zinc
 import com.ing.zkflow.testing.fixtures.contract.DummyContract
 import com.ing.zkflow.testing.fixtures.state.DummyState
 import com.ing.zkflow.testing.serialization.getSerializationContext
@@ -28,34 +27,16 @@ import net.corda.core.serialization.SerializationFactory
 import net.corda.core.serialization.deserialize
 import net.corda.core.serialization.serialize
 import net.corda.core.transactions.WireTransaction
-import net.corda.core.utilities.loggerFor
 import net.corda.testing.core.TestIdentity
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
-import java.io.File
-import java.time.Duration
 import java.time.Instant
 import kotlin.random.Random
-import kotlin.time.ExperimentalTime
 
 // @Disabled("Temporarily disabled, until we decide on where circuit artifacts will go")
-@ExperimentalTime
 @Tag("slow")
 class TransactionBasicVerificationTest {
-    private val log = loggerFor<TransactionBasicVerificationTest>()
-
-    private val circuitFolder: String = File("build/circuits/create").absolutePath
-
-    private val zincZKService = ZincZKService(
-        circuitFolder,
-        artifactFolder = circuitFolder,
-        buildTimeout = Duration.ofSeconds(5),
-        setupTimeout = Duration.ofSeconds(300),
-        provingTimeout = Duration.ofSeconds(300),
-        verificationTimeout = Duration.ofSeconds(1)
-    )
-
     companion object {
         @JvmStatic
         fun attachmentConstraints() = listOf(

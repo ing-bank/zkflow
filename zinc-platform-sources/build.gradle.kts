@@ -6,24 +6,19 @@ import kotlin.streams.toList
 
 plugins {
     kotlin("jvm")
-    java
     id("maven-publish")
-    kotlin("plugin.serialization")
+    kotlin("plugin.serialization") // Only used for tests. Consider moving tests to a separate module for speed?
 }
 
 dependencies {
-    implementation(project(":protocol")) // required for Zinc com.ing.zkflow.gradle.zinc.template renderer
-    implementation(project(":gradle-plugin"))
+    implementation(project(":compilation")) // Only used for PrepareCircuits.kt, which is only used for test circuits
+    implementation(project(":obsolete")) // TODO: Required only for CircuitConfigurator. Remove when that is removed.
 
-    val zkkryptoVersion: String by project
-    testImplementation("com.ing.dlt:zkkrypto:$zkkryptoVersion")
+    val cordaReleaseGroup: String by project
+    val cordaVersion: String by project
+    compileOnly("$cordaReleaseGroup:corda-core:$cordaVersion")
 
-    val kotlinxSerializationVersion: String by project
-    testImplementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
-
-    val kotlinxSerializationBflVersion: String by project
-    testImplementation("com.ing.serialization.bfl:kotlinx-serialization-bfl:$kotlinxSerializationBflVersion")
-
+    testImplementation(project(":protocol"))
     testImplementation(project(":test-utils"))
 }
 
@@ -46,6 +41,11 @@ publishing {
     }
 }
 
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+    kotlinOptions.freeCompilerArgs += "-Xopt-in=kotlin.time.ExperimentalTime"
+    kotlinOptions.freeCompilerArgs += "-Xopt-in=kotlin.ExperimentalUnsignedTypes"
+}
+
 kotlin.sourceSets {
     main {
         kotlin.srcDirs += File("src/main/kotlin")
@@ -63,7 +63,7 @@ task("prepareCircuits", JavaExec::class) {
     inputs.dir(projectDir.resolve("src/main/resources"))
     inputs.dir(circuitSourcesBase)
     outputs.dir(mergedCircuitOutput)
-    main = "PrepareCircuitsKt"
+    main = "com.ing.zkflow.PrepareCircuitsKt"
     classpath = sourceSets["main"].runtimeClasspath
     args(root, project.version)
 }

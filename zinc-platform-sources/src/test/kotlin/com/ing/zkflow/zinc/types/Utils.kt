@@ -4,28 +4,22 @@ import com.ing.serialization.bfl.annotations.FixedLength
 import com.ing.serialization.bfl.api.reified.serialize
 import com.ing.serialization.bfl.serializers.BFLSerializers
 import com.ing.serialization.bfl.serializers.CurrencySerializer
-import com.ing.zkflow.common.serialization.bfl.corda.AmountSerializer
-import com.ing.zkflow.common.serialization.bfl.serializers.CordaSerializers
-import com.ing.zkflow.common.zkp.PublicInput
-import com.ing.zkflow.common.zkp.Witness
 import com.ing.zkflow.common.zkp.ZincZKService
+import com.ing.zkflow.serialization.bfl.corda.AmountSerializer
+import com.ing.zkflow.serialization.bfl.serializers.CordaSerializers
 import com.ing.zkflow.testing.bytesToWitness
 import com.ing.zkflow.testing.toJsonArray
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.contextual
-import kotlinx.serialization.modules.plus
 import net.corda.core.contracts.Amount
 import org.slf4j.Logger
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.util.Currency
-import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
-import com.ing.serialization.bfl.api.serialize as obliviousSerialize
 
 inline fun <reified T : Any, reified U : Any> toWitness(left: Amount<T>, right: Amount<U>) =
     buildJsonObject {
@@ -59,11 +53,6 @@ inline fun <reified T : Any> toWitness(item: T): String {
     return bytesToWitness(bytes)
 }
 
-fun <T : Any> toObliviousWitness(item: T, serializersModule: SerializersModule = EmptySerializersModule): String {
-    val bytes = obliviousSerialize(item, serializersModule = CordaSerializers.module + serializersModule)
-    return bytesToWitness(bytes)
-}
-
 @Serializable
 data class WrappedAmountString(
     val wrappedValue: @Contextual Amount<String>
@@ -74,6 +63,7 @@ data class WrappedAmountCurrency(
     val wrappedValue: @Contextual Amount<@Contextual Currency>
 )
 
+@Suppress("UNCHECKED_CAST") // If the token is of type, Amount is too
 inline fun <reified T : Any> Amount<T>.toJsonArray() =
     when (this.token) {
         is String -> serialize(
@@ -106,46 +96,9 @@ fun makeBigDecimal(bytes: ByteArray, sign: Int) = BigDecimal(BigInteger(sign, by
 
 fun makeBigDecimal(string: String, scale: Int) = BigDecimal(BigInteger(string), scale)
 
-@ExperimentalTime
 fun ZincZKService.setupTimed(log: Logger) {
     val time = measureTime {
         this.setup()
     }
     log.debug("[setup] $time")
-}
-
-@ExperimentalTime
-fun ZincZKService.proveTimed(witness: Witness, log: Logger): ByteArray {
-    var proof: ByteArray
-    val time = measureTime {
-        proof = this.prove(witness)
-    }
-    log.debug("[prove] $time")
-    return proof
-}
-
-@ExperimentalTime
-fun ZincZKService.proveTimed(witnessJson: String, log: Logger): ByteArray {
-    var proof: ByteArray
-    val time = measureTime {
-        proof = this.prove(witnessJson)
-    }
-    log.debug("[prove] $time")
-    return proof
-}
-
-@ExperimentalTime
-fun ZincZKService.verifyTimed(proof: ByteArray, publicInputJson: String, log: Logger) {
-    val time = measureTime {
-        this.verify(proof, publicInputJson)
-    }
-    log.debug("[verify] $time")
-}
-
-@ExperimentalTime
-fun ZincZKService.verifyTimed(proof: ByteArray, publicInput: PublicInput, log: Logger) {
-    val time = measureTime {
-        this.verify(proof, publicInput)
-    }
-    log.debug("[verify] $time")
 }

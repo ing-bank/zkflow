@@ -29,6 +29,11 @@ pluginManagement {
     }
 }
 
+include("utils")
+include("obsolete")
+include("crypto")
+include("serialization")
+include("compilation")
 include("protocol")
 include("zinc-platform-sources")
 include("gradle-plugin")

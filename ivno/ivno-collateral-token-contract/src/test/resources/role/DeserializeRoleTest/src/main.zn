@@ -1,8 +1,0 @@
-mod role;
-
-use role::Role;
-use role::SerializedRole;
-
-fn main(witness: SerializedRole) -> Role {
-    Role::deserialize(witness)
-}

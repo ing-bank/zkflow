@@ -1,8 +1,0 @@
-mod transfer_anonymous_party_ed_dsa_anonymous_party_ed_dsa;
-
-use transfer_anonymous_party_ed_dsa_anonymous_party_ed_dsa::TransferAnonymousPartyEdDSAAnonymousPartyEdDSA;
-use transfer_anonymous_party_ed_dsa_anonymous_party_ed_dsa::SerializedTransferAnonymousPartyEdDSAAnonymousPartyEdDSA;
-
-fn main(witness: SerializedTransferAnonymousPartyEdDSAAnonymousPartyEdDSA) -> TransferAnonymousPartyEdDSAAnonymousPartyEdDSA {
-    TransferAnonymousPartyEdDSAAnonymousPartyEdDSA::deserialize(witness)
-}

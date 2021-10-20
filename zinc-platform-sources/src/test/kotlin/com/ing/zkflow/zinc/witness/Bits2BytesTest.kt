@@ -1,19 +1,18 @@
 package com.ing.zkflow.zinc.witness
 
 import com.ing.zkflow.common.zkp.ZincZKService
-import net.corda.core.utilities.loggerFor
 import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.io.File
 import java.time.Duration
-import kotlin.time.ExperimentalTime
+import kotlin.time.DurationUnit
 import kotlin.time.measureTime
 
-@ExperimentalTime
 @Tag("slow")
+@Disabled("This is a benchmark. Should only be enabled for benchmarks")
 class Bits2BytesTest {
-    private val log = loggerFor<Bits2BytesTest>()
     private val runOnly = true
     private val merkleRootOnly = false
 
@@ -31,7 +30,7 @@ class Bits2BytesTest {
 
     init {
         if (!runOnly) {
-            setupTimeBits2Bytes = measureTime { zincZKService.setup() }.inSeconds
+            setupTimeBits2Bytes = measureTime { zincZKService.setup() }.toDouble(DurationUnit.SECONDS)
         }
     }
 
@@ -39,10 +38,11 @@ class Bits2BytesTest {
     fun `remove zinc files`() {
         zincZKService.cleanup()
     }
+
     @Test
     fun `zinc computes the Merkle root and converts bits to bytes`() {
         val witnessJson = createSerializedWitnessInBits()
-        val runTimeBits2Bytes = measureTime { zincZKService.run(witnessJson, getPublicDataJson(merkleRootOnly)) }.inSeconds
+        measureTime { zincZKService.run(witnessJson, getPublicDataJson(merkleRootOnly)) }.toDouble(DurationUnit.SECONDS)
 
         if (!runOnly) {
             val timeResults = File(circuitFolder).resolve("timings.txt")
@@ -50,10 +50,10 @@ class Bits2BytesTest {
 
             var proofInBits: ByteArray
             val proofTimeBits2Bytes =
-                measureTime { proofInBits = zincZKService.prove(witnessJson) }.inSeconds
+                measureTime { proofInBits = zincZKService.prove(witnessJson) }.toDouble(DurationUnit.SECONDS)
 
             val verifyTimeBits2Bytes =
-                measureTime { zincZKService.verify(proofInBits, getPublicDataJson(merkleRootOnly)) }.inSeconds
+                measureTime { zincZKService.verify(proofInBits, getPublicDataJson(merkleRootOnly)) }.toDouble(DurationUnit.SECONDS)
 
             timeResults.appendText("Setup : $setupTimeBits2Bytes")
             timeResults.appendText("Prove : $proofTimeBits2Bytes")
@@ -80,9 +80,21 @@ class Bits2BytesTest {
                 ",\"input_nonces\": ${witness.inputNonces.map { it.map { byte -> byte.toBits() }.flatten() }}," +
                     "\"reference_nonces\": ${witness.referenceNonces.map { it.map { byte -> byte.toBits() }.flatten() }}," +
                     "\"serialized_reference_utxos\": {" +
-                    " \"reference_state_1\": ${witness.serializedReferenceUTXOs.referenceState1.map { it.map { byte -> byte.toBits() }.flatten() }}," +
-                    " \"reference_state_2\": ${witness.serializedReferenceUTXOs.referenceState2.map { it.map { byte -> byte.toBits() }.flatten() }}," +
-                    " \"reference_state_3\": ${witness.serializedReferenceUTXOs.referenceState3.map { it.map { byte -> byte.toBits() }.flatten() }}" +
+                    " \"reference_state_1\": ${
+                    witness.serializedReferenceUTXOs.referenceState1.map {
+                        it.map { byte -> byte.toBits() }.flatten()
+                    }
+                    }," +
+                    " \"reference_state_2\": ${
+                    witness.serializedReferenceUTXOs.referenceState2.map {
+                        it.map { byte -> byte.toBits() }.flatten()
+                    }
+                    }," +
+                    " \"reference_state_3\": ${
+                    witness.serializedReferenceUTXOs.referenceState3.map {
+                        it.map { byte -> byte.toBits() }.flatten()
+                    }
+                    }" +
                     "}" +
                     "} }"
             } else {

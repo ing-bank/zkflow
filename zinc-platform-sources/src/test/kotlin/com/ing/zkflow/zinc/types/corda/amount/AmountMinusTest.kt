@@ -2,30 +2,26 @@ package com.ing.zkflow.zinc.types.corda.amount
 
 import com.ing.zkflow.common.zkp.ZKProvingException
 import com.ing.zkflow.testing.getZincZKService
-import com.ing.zkflow.zinc.types.proveTimed
-import com.ing.zkflow.zinc.types.setupTimed
+import com.ing.zkflow.testing.zkp.proveTimed
+import com.ing.zkflow.testing.zkp.setupTimed
+import com.ing.zkflow.testing.zkp.verifyTimed
 import com.ing.zkflow.zinc.types.toWitness
 import com.ing.zkflow.zinc.types.toZincJson
-import com.ing.zkflow.zinc.types.verifyTimed
 import net.corda.core.contracts.Amount
-import net.corda.core.utilities.loggerFor
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.util.Currency
 import java.util.Locale
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
 class AmountMinusTest {
-    private val log = loggerFor<AmountMinusTest>()
     private val zincZKService = getZincZKService<AmountMinusTest>()
     private val dummyToken = Currency.getInstance(Locale.UK)
     private val anotherDummyToken = Currency.getInstance(Locale.FRANCE)
 
     init {
-        zincZKService.setupTimed(log)
+        zincZKService.setupTimed()
     }
 
     @AfterAll
@@ -41,7 +37,7 @@ class AmountMinusTest {
         val input = toWitness(left, right)
 
         val exception = Assertions.assertThrows(ZKProvingException::class.java) {
-            zincZKService.proveTimed(input, log)
+            zincZKService.proveTimed(input)
         }
 
         Assertions.assertTrue(
@@ -58,7 +54,7 @@ class AmountMinusTest {
         val input = toWitness(left, right)
 
         val exception = Assertions.assertThrows(ZKProvingException::class.java) {
-            zincZKService.proveTimed(input, log)
+            zincZKService.proveTimed(input)
         }
 
         Assertions.assertTrue(
@@ -75,8 +71,8 @@ class AmountMinusTest {
         val input = toWitness(left, right)
         val expected = left.minus(right).toZincJson()
 
-        zincZKService.proveTimed(input, log).let {
-            zincZKService.verifyTimed(it, expected, log)
+        zincZKService.proveTimed(input).let {
+            zincZKService.verifyTimed(it, expected)
         }
     }
 }

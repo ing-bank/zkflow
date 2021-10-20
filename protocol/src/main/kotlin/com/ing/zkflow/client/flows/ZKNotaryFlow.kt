@@ -1,8 +1,6 @@
 package com.ing.zkflow.client.flows
 
 import co.paralleluniverse.fibers.Suspendable
-import com.ing.zkflow.common.flows.FetchZKDataFlow
-import com.ing.zkflow.common.flows.ZKDataVendingFlow
 import com.ing.zkflow.common.transactions.SignedZKVerifierTransaction
 import com.ing.zkflow.notary.ZKNotarisationPayload
 import net.corda.core.crypto.TransactionSignature
@@ -81,7 +79,7 @@ open class ZKNotaryFlow(
      */
     private fun isZKValidating(notaryParty: Party): Boolean {
         // TODO invent smart way of checking if notary is ZK validating
-        return true
+        return serviceHub.networkMapCache.isNotary(notaryParty)
     }
 
     /**
@@ -109,9 +107,13 @@ open class ZKNotaryFlow(
      * The [NotarySendTransactionFlow] flow is similar to [SendTransactionFlow], but uses [NotarisationPayload] as the
      * initial message, and retries message delivery.
      */
-    private class ZKNotarySendTransactionFlow(otherSide: FlowSession, payload: ZKNotarisationPayload) : ZKDataVendingFlow(otherSide, payload) {
+    private class ZKNotarySendTransactionFlow(otherSide: FlowSession, payload: ZKNotarisationPayload) :
+        ZKDataVendingFlow(otherSide, payload) {
         @Suspendable
-        override fun sendPayloadAndReceiveDataRequest(otherSideSession: FlowSession, payload: Any): UntrustworthyData<FetchZKDataFlow.Request> {
+        override fun sendPayloadAndReceiveDataRequest(
+            otherSideSession: FlowSession,
+            payload: Any
+        ): UntrustworthyData<FetchZKDataFlow.Request> {
             return otherSideSession.sendAndReceiveWithRetryCustom(payload)
         }
 

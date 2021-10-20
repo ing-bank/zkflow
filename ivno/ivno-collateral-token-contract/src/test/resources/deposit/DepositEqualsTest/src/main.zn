@@ -1,7 +1,0 @@
-mod deposit_anonymous_party_ed_dsa_anonymous_party_ed_dsa_anonymous_party_ed_dsa;
-
-use deposit_anonymous_party_ed_dsa_anonymous_party_ed_dsa_anonymous_party_ed_dsa::DepositAnonymousPartyEdDSAAnonymousPartyEdDSAAnonymousPartyEdDSA;
-
-fn main(left: DepositAnonymousPartyEdDSAAnonymousPartyEdDSAAnonymousPartyEdDSA, right: DepositAnonymousPartyEdDSAAnonymousPartyEdDSAAnonymousPartyEdDSA) -> bool {
-    DepositAnonymousPartyEdDSAAnonymousPartyEdDSAAnonymousPartyEdDSA::equals(left, right)
-}

@@ -1,8 +1,8 @@
 package com.ing.zkflow.node.services
 
 import co.paralleluniverse.fibers.Suspendable
-import com.ing.zkflow.common.flows.FetchZKTransactionsFlow
-import com.ing.zkflow.common.flows.ResolveZKTransactionsFlow
+import com.ing.zkflow.client.flows.FetchZKTransactionsFlow
+import com.ing.zkflow.client.flows.ResolveZKTransactionsFlow
 import com.ing.zkflow.common.transactions.SignedZKVerifierTransaction
 import com.ing.zkflow.common.transactions.dependencies
 import com.ing.zkflow.common.zkp.ZKTransactionService
@@ -68,11 +68,16 @@ class ZKTransactionsResolver(private val flow: ResolveZKTransactionsFlow) : Tran
                 // Do not keep in memory as this bloats the checkpoint. Write each item to the database.
                 transactionStorage.addUnverifiedTransaction(downloaded)
 
-                // The write locks are only released over a suspend, so need to keep track of whether the flow has been suspended to ensure
-                // that locks are not held beyond each while loop iteration (as doing this would result in a deadlock due to claiming locks
-                // in the wrong order)
-                val suspendedViaParams = flow.fetchMissingNetworkParameters(downloaded)
-                suspended = suspended || suspendedViaParams
+                /*
+                 * TODO: As in ResolveZKTransactionsFlow, removed the fetching of missing network params without side effects for now.
+                 * Validate and put back if required.
+                 *
+                 * // The write locks are only released over a suspend, so need to keep track of whether the flow has been suspended to ensure
+                 * // that locks are not held beyond each while loop iteration (as doing this would result in a deadlock due to claiming locks
+                 * // in the wrong order)
+                 * val suspendedViaParams = flow.fetchMissingNetworkParameters(downloaded)
+                 * suspended = suspended || suspendedViaParams
+                 */
 
                 // Add all input states and reference input states to the work queue.
                 nextRequests.addAll(dependencies)

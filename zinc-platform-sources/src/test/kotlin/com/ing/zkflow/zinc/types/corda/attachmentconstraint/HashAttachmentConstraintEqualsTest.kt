@@ -1,15 +1,13 @@
 package com.ing.zkflow.zinc.types.corda.attachmentconstraint
 
-import com.ing.zkflow.common.crypto.ZINC
+import com.ing.zkflow.crypto.ZINC
 import com.ing.zkflow.testing.getZincZKService
 import com.ing.zkflow.zinc.types.toJsonObject
 import kotlinx.serialization.json.buildJsonObject
 import net.corda.core.contracts.HashAttachmentConstraint
 import net.corda.core.crypto.SecureHash
 import org.junit.jupiter.api.Test
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
 class HashAttachmentConstraintEqualsTest {
     private val zincZKService = getZincZKService<HashAttachmentConstraintEqualsTest>()
 

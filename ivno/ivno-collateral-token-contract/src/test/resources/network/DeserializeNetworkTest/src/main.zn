@@ -1,8 +1,0 @@
-mod network_poly_party_ed_dsa;
-
-use network_poly_party_ed_dsa::NetworkPolyPartyEdDSA;
-use network_poly_party_ed_dsa::SerializedNetworkPolyPartyEdDSA;
-
-fn main(witness: SerializedNetworkPolyPartyEdDSA) -> NetworkPolyPartyEdDSA {
-    NetworkPolyPartyEdDSA::deserialize(witness)
-}

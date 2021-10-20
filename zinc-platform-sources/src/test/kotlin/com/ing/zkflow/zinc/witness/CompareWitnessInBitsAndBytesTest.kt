@@ -1,12 +1,11 @@
 package com.ing.zkflow.zinc.witness
 
-import net.corda.core.utilities.loggerFor
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.io.File
 
+@Disabled("This is a benchmark. Should only be enabled for benchmarks")
 class CompareWitnessInBitsAndBytesTest {
-    private val log = loggerFor<CompareWitnessInBitsAndBytesTest>()
-
     private val circuitFolderBits2Bytes: String = javaClass.getResource("/witness/TestBits2Bytes").path
     private val circuitFolderBytes2Bits: String = javaClass.getResource("/witness/TestBytes2Bits").path
 
@@ -32,8 +31,8 @@ class CompareWitnessInBitsAndBytesTest {
             val proveBits2Bytes = proveRegex.find(timingBits2Bytes)?.groupValues?.get(2)?.toFloat()
             val proveBytes2Bits = proveRegex.find(timingBytes2Bits)?.groupValues?.get(2)?.toFloat()
 
-            val reductionInProve = (100.0 * (proveBytes2Bits?.minus(proveBits2Bytes!!)!!)) / proveBytes2Bits!!
-            val reductionInSetup = (100.0 * (setupBytes2Bits?.minus(setupBits2Bytes!!)!!)) / setupBytes2Bits!!
+            val reductionInProve = (100.0 * (proveBytes2Bits?.minus(proveBits2Bytes!!)!!)) / proveBytes2Bits
+            val reductionInSetup = (100.0 * (setupBytes2Bits?.minus(setupBits2Bytes!!)!!)) / setupBytes2Bits
 
             println("\nReduction in setup time --> $reductionInSetup%")
             println("Reduction in proving time --> $reductionInProve%")

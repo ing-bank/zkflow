@@ -9,9 +9,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import org.junit.jupiter.api.Test
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
 internal class StringToIntMapTest {
     private val zincZKService = getZincZKService<StringToIntMapTest>()
 

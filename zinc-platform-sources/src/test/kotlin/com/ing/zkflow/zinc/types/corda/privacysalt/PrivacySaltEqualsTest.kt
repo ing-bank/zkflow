@@ -6,9 +6,7 @@ import com.ing.zkflow.zinc.types.toJsonObject
 import kotlinx.serialization.json.buildJsonObject
 import net.corda.core.contracts.PrivacySalt
 import org.junit.jupiter.api.Test
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
 class PrivacySaltEqualsTest {
     private val zincZKService = getZincZKService<PrivacySaltEqualsTest>()
 

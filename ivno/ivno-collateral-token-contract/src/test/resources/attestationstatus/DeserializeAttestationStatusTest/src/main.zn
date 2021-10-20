@@ -1,8 +1,0 @@
-mod attestation_status;
-
-use attestation_status::AttestationStatus;
-use attestation_status::SerializedAttestationStatus;
-
-fn main(witness: SerializedAttestationStatus) -> AttestationStatus {
-    AttestationStatus::deserialize(witness)
-}

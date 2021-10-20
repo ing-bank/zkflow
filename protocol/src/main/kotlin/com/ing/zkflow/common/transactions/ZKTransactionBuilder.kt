@@ -3,7 +3,7 @@ package com.ing.zkflow.common.transactions
 import co.paralleluniverse.strands.Strand
 import com.ing.zkflow.common.contracts.ZKContractState
 import com.ing.zkflow.common.contracts.ZKTransactionMetadataCommandData
-import com.ing.zkflow.common.serialization.bfl.BFLSerializationScheme
+import com.ing.zkflow.common.serialization.BFLSerializationScheme
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
 import net.corda.core.contracts.AttachmentConstraint
 import net.corda.core.contracts.AutomaticPlaceholderConstraint

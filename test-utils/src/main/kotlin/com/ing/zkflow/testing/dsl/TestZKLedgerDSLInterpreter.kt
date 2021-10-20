@@ -23,14 +23,12 @@ import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.transactions.WireTransaction
 import net.corda.testing.core.dummyCommand
 import java.io.InputStream
-import kotlin.time.ExperimentalTime
 
 /**
  *  A ledger interpreter that supports both standard and zk transactions. The appropriate transaction DSL interpreter is called
  *  depending on the type of transaction.
  */
 @Suppress("TooManyFunctions")
-@ExperimentalTime
 public data class TestZKLedgerDSLInterpreter private constructor(
     val services: ServiceHub,
     internal val labelToOutputStateAndRefs: HashMap<String, StateAndRef<ContractState>> = HashMap(),

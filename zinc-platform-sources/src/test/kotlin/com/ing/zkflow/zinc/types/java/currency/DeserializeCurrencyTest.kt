@@ -8,9 +8,7 @@ import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.Test
 import java.util.Currency
 import java.util.Locale
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
 class DeserializeCurrencyTest {
     private val zincZKService = getZincZKService<DeserializeCurrencyTest>()
 

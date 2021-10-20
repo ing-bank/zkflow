@@ -1,6 +1,6 @@
 package com.ing.zkflow.zinc.types.corda.attachmentconstraint
 
-import com.ing.zkflow.common.serialization.bfl.serializers.publickey.BCECSurrogate
+import com.ing.zkflow.serialization.bfl.serializers.publickey.BCECSurrogate
 import com.ing.zkflow.testing.getZincZKService
 import com.ing.zkflow.zinc.types.generateDifferentValueThan
 import com.ing.zkflow.zinc.types.toJsonObject
@@ -9,9 +9,7 @@ import net.corda.core.contracts.SignatureAttachmentConstraint
 import net.corda.core.crypto.Crypto
 import org.junit.jupiter.api.Test
 import java.security.PublicKey
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
 class SignatureAttachmentConstraintBCECK1EqualsTest {
     private val zincZKService = getZincZKService<SignatureAttachmentConstraintBCECK1EqualsTest>()
 

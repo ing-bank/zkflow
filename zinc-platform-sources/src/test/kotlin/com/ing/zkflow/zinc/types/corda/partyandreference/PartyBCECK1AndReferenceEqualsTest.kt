@@ -1,7 +1,7 @@
 package com.ing.zkflow.zinc.types.corda.partyandreference
 
-import com.ing.zkflow.common.serialization.bfl.serializers.PartyAndReferenceSurrogate
-import com.ing.zkflow.common.serialization.bfl.serializers.publickey.BCECSurrogate
+import com.ing.zkflow.serialization.bfl.serializers.PartyAndReferenceSurrogate
+import com.ing.zkflow.serialization.bfl.serializers.publickey.BCECSurrogate
 import com.ing.zkflow.testing.getZincZKService
 import com.ing.zkflow.zinc.types.generateDifferentValueThan
 import com.ing.zkflow.zinc.types.toJsonObject
@@ -12,9 +12,7 @@ import net.corda.core.utilities.OpaqueBytes
 import net.corda.testing.core.TestIdentity
 import org.junit.jupiter.api.Test
 import kotlin.random.Random
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
 class PartyBCECK1AndReferenceEqualsTest {
     private val zincZKService = getZincZKService<PartyBCECK1AndReferenceEqualsTest>()
 

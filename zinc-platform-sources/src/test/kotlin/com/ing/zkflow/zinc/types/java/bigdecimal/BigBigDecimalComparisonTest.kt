@@ -1,25 +1,21 @@
 package com.ing.zkflow.zinc.types.java.bigdecimal
 
 import com.ing.zkflow.testing.getZincZKService
+import com.ing.zkflow.testing.zkp.proveTimed
+import com.ing.zkflow.testing.zkp.setupTimed
+import com.ing.zkflow.testing.zkp.verifyTimed
 import com.ing.zkflow.zinc.types.makeBigDecimal
-import com.ing.zkflow.zinc.types.proveTimed
-import com.ing.zkflow.zinc.types.setupTimed
 import com.ing.zkflow.zinc.types.toBigWitness
-import com.ing.zkflow.zinc.types.verifyTimed
-import net.corda.core.utilities.loggerFor
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.math.BigInteger
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
 class BigBigDecimalComparisonTest {
-    private val log = loggerFor<BigBigDecimalComparisonTest>()
     private val zincZKService = getZincZKService<BigBigDecimalComparisonTest>()
 
     init {
-        zincZKService.setupTimed(log)
+        zincZKService.setupTimed()
     }
 
     @AfterAll
@@ -35,8 +31,8 @@ class BigBigDecimalComparisonTest {
         val input = toBigWitness(left, right)
         val expected = "\"${left.compareTo(right)}\""
 
-        zincZKService.proveTimed(input, log).let {
-            zincZKService.verifyTimed(it, expected, log)
+        zincZKService.proveTimed(input).let {
+            zincZKService.verifyTimed(it, expected)
         }
     }
 
@@ -48,8 +44,8 @@ class BigBigDecimalComparisonTest {
         val input = toBigWitness(left, right)
         val expected = "\"${left.compareTo(right)}\""
 
-        zincZKService.proveTimed(input, log).let {
-            zincZKService.verifyTimed(it, expected, log)
+        zincZKService.proveTimed(input).let {
+            zincZKService.verifyTimed(it, expected)
         }
     }
 
@@ -61,8 +57,8 @@ class BigBigDecimalComparisonTest {
         val input = toBigWitness(left, right)
         val expected = "\"${left.compareTo(right)}\""
 
-        zincZKService.proveTimed(input, log).let {
-            zincZKService.verifyTimed(it, expected, log)
+        zincZKService.proveTimed(input).let {
+            zincZKService.verifyTimed(it, expected)
         }
     }
 
@@ -74,8 +70,8 @@ class BigBigDecimalComparisonTest {
         val input = toBigWitness(left, right)
         val expected = "\"${left.compareTo(right)}\""
 
-        zincZKService.proveTimed(input, log).let {
-            zincZKService.verifyTimed(it, expected, log)
+        zincZKService.proveTimed(input).let {
+            zincZKService.verifyTimed(it, expected)
         }
     }
 
@@ -87,8 +83,8 @@ class BigBigDecimalComparisonTest {
         val input = toBigWitness(left, right)
         val expected = "\"${left.compareTo(right)}\""
 
-        zincZKService.proveTimed(input, log).let {
-            zincZKService.verifyTimed(it, expected, log)
+        zincZKService.proveTimed(input).let {
+            zincZKService.verifyTimed(it, expected)
         }
     }
 
@@ -100,8 +96,8 @@ class BigBigDecimalComparisonTest {
         val input = toBigWitness(left, right)
         val expected = "\"${left.compareTo(right)}\""
 
-        zincZKService.proveTimed(input, log).let {
-            zincZKService.verifyTimed(it, expected, log)
+        zincZKService.proveTimed(input).let {
+            zincZKService.verifyTimed(it, expected)
         }
     }
 
@@ -113,8 +109,8 @@ class BigBigDecimalComparisonTest {
         val input = toBigWitness(left, right)
         val expected = "\"${left.compareTo(right)}\""
 
-        zincZKService.proveTimed(input, log).let {
-            zincZKService.verifyTimed(it, expected, log)
+        zincZKService.proveTimed(input).let {
+            zincZKService.verifyTimed(it, expected)
         }
     }
 
@@ -126,8 +122,8 @@ class BigBigDecimalComparisonTest {
         val input = toBigWitness(left, right)
         val expected = "\"${left.compareTo(right)}\""
 
-        zincZKService.proveTimed(input, log).let {
-            zincZKService.verifyTimed(it, expected, log)
+        zincZKService.proveTimed(input).let {
+            zincZKService.verifyTimed(it, expected)
         }
     }
 
@@ -139,8 +135,8 @@ class BigBigDecimalComparisonTest {
         val input = toBigWitness(left, right)
         val expected = "\"${left.compareTo(right)}\""
 
-        zincZKService.proveTimed(input, log).let {
-            zincZKService.verifyTimed(it, expected, log)
+        zincZKService.proveTimed(input).let {
+            zincZKService.verifyTimed(it, expected)
         }
     }
 
@@ -152,8 +148,8 @@ class BigBigDecimalComparisonTest {
         val input = toBigWitness(left, right)
         val expected = "\"${left.compareTo(right)}\""
 
-        zincZKService.proveTimed(input, log).let {
-            zincZKService.verifyTimed(it, expected, log)
+        zincZKService.proveTimed(input).let {
+            zincZKService.verifyTimed(it, expected)
         }
     }
 
@@ -165,8 +161,8 @@ class BigBigDecimalComparisonTest {
         val input = toBigWitness(left, right)
         val expected = "\"${left.compareTo(right)}\""
 
-        zincZKService.proveTimed(input, log).let {
-            zincZKService.verifyTimed(it, expected, log)
+        zincZKService.proveTimed(input).let {
+            zincZKService.verifyTimed(it, expected)
         }
     }
 
@@ -178,8 +174,8 @@ class BigBigDecimalComparisonTest {
         val input = toBigWitness(left, right)
         val expected = "\"${left.compareTo(right)}\""
 
-        zincZKService.proveTimed(input, log).let {
-            zincZKService.verifyTimed(it, expected, log)
+        zincZKService.proveTimed(input).let {
+            zincZKService.verifyTimed(it, expected)
         }
     }
 
@@ -191,8 +187,8 @@ class BigBigDecimalComparisonTest {
         val input = toBigWitness(left, right)
         val expected = "\"${left.compareTo(right)}\""
 
-        zincZKService.proveTimed(input, log).let {
-            zincZKService.verifyTimed(it, expected, log)
+        zincZKService.proveTimed(input).let {
+            zincZKService.verifyTimed(it, expected)
         }
     }
 
@@ -204,8 +200,8 @@ class BigBigDecimalComparisonTest {
         val input = toBigWitness(left, right)
         val expected = "\"${left.compareTo(right)}\""
 
-        zincZKService.proveTimed(input, log).let {
-            zincZKService.verifyTimed(it, expected, log)
+        zincZKService.proveTimed(input).let {
+            zincZKService.verifyTimed(it, expected)
         }
     }
 
@@ -217,8 +213,8 @@ class BigBigDecimalComparisonTest {
         val input = toBigWitness(left, right)
         val expected = "\"${left.compareTo(right)}\""
 
-        zincZKService.proveTimed(input, log).let {
-            zincZKService.verifyTimed(it, expected, log)
+        zincZKService.proveTimed(input).let {
+            zincZKService.verifyTimed(it, expected)
         }
     }
 
@@ -230,8 +226,8 @@ class BigBigDecimalComparisonTest {
         val input = toBigWitness(left, right)
         val expected = "\"${left.compareTo(right)}\""
 
-        zincZKService.proveTimed(input, log).let {
-            zincZKService.verifyTimed(it, expected, log)
+        zincZKService.proveTimed(input).let {
+            zincZKService.verifyTimed(it, expected)
         }
     }
 
@@ -243,8 +239,8 @@ class BigBigDecimalComparisonTest {
         val input = toBigWitness(left, right)
         val expected = "\"${left.compareTo(right)}\""
 
-        zincZKService.proveTimed(input, log).let {
-            zincZKService.verifyTimed(it, expected, log)
+        zincZKService.proveTimed(input).let {
+            zincZKService.verifyTimed(it, expected)
         }
     }
 
@@ -256,8 +252,8 @@ class BigBigDecimalComparisonTest {
         val input = toBigWitness(left, right)
         val expected = "\"${left.compareTo(right)}\""
 
-        zincZKService.proveTimed(input, log).let {
-            zincZKService.verifyTimed(it, expected, log)
+        zincZKService.proveTimed(input).let {
+            zincZKService.verifyTimed(it, expected)
         }
     }
 }

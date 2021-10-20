@@ -6,10 +6,9 @@ import com.ing.zkflow.testing.getZincZKService
 import com.ing.zkflow.zinc.types.toZincJson
 import net.corda.core.contracts.ComponentGroupEnum
 
-class DeserializeComponentGroupEnumTest :
-    DeserializationTestBase<DeserializeComponentGroupEnumTest, ComponentGroupEnum>(
-        { it.toZincJson() }
-    ) {
+class DeserializeComponentGroupEnumTest : DeserializationTestBase <DeserializeComponentGroupEnumTest, ComponentGroupEnum>(
+    { it.toZincJson() }
+) {
     override fun getZincZKService(): ZincZKService = getZincZKService<DeserializeComponentGroupEnumTest>()
 
     companion object {

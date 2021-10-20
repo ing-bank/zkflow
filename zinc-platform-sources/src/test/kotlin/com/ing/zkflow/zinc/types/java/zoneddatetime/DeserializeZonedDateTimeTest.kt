@@ -11,9 +11,7 @@ import java.time.Year
 import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
 class DeserializeZonedDateTimeTest {
     private val zincZKService = getZincZKService<DeserializeZonedDateTimeTest>()
 

@@ -1,7 +1,0 @@
-mod role;
-
-use role::Role;
-
-fn main(left: Role, right: Role) -> bool {
-    Role::equals(left, right)
-}

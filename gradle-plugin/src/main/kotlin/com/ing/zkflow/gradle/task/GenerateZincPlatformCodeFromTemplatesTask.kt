@@ -1,17 +1,18 @@
 package com.ing.zkflow.gradle.task
 
+import com.ing.zkflow.compilation.joinConstFiles
+import com.ing.zkflow.compilation.zinc.template.TemplateRenderer
+import com.ing.zkflow.compilation.zinc.template.parameters.SerializedStateTemplateParameters
+import com.ing.zkflow.compilation.zinc.template.parameters.SignersTemplateParameters
+import com.ing.zkflow.compilation.zinc.template.parameters.StateGroupTemplateParameters
+import com.ing.zkflow.compilation.zinc.template.parameters.TxStateTemplateParameters
+import com.ing.zkflow.compilation.zinc.util.CircuitConfigurator
+import com.ing.zkflow.compilation.zinc.util.CodeGenerator
 import com.ing.zkflow.gradle.extension.ZKFlowExtension
 import com.ing.zkflow.gradle.plugin.circuitNames
 import com.ing.zkflow.gradle.plugin.getTemplateContents
 import com.ing.zkflow.gradle.plugin.platformSourcesRootPath
 import com.ing.zkflow.gradle.plugin.zkFlowExtension
-import com.ing.zkflow.gradle.zinc.template.TemplateRenderer
-import com.ing.zkflow.gradle.zinc.template.parameters.SerializedStateTemplateParameters
-import com.ing.zkflow.gradle.zinc.template.parameters.SignersTemplateParameters
-import com.ing.zkflow.gradle.zinc.template.parameters.StateGroupTemplateParameters
-import com.ing.zkflow.gradle.zinc.template.parameters.TxStateTemplateParameters
-import com.ing.zkflow.gradle.zinc.util.CircuitConfigurator
-import com.ing.zkflow.gradle.zinc.util.CodeGenerator
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
 

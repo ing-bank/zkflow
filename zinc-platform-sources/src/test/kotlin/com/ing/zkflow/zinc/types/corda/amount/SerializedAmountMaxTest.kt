@@ -4,18 +4,17 @@ import com.ing.serialization.bfl.annotations.FixedLength
 import com.ing.serialization.bfl.api.reified.serialize
 import com.ing.serialization.bfl.serializers.BFLSerializers
 import com.ing.serialization.bfl.serializers.CurrencySerializer
-import com.ing.zkflow.common.serialization.bfl.corda.AmountSerializer
 import com.ing.zkflow.common.zkp.ZKRunException
+import com.ing.zkflow.serialization.bfl.corda.AmountSerializer
 import com.ing.zkflow.testing.getZincZKService
 import com.ing.zkflow.testing.toJsonArray
-import com.ing.zkflow.zinc.types.proveTimed
+import com.ing.zkflow.testing.zkp.proveTimed
+import com.ing.zkflow.testing.zkp.verifyTimed
 import com.ing.zkflow.zinc.types.sha256
 import com.ing.zkflow.zinc.types.toZincJson
-import com.ing.zkflow.zinc.types.verifyTimed
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import kotlinx.serialization.Contextual
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
@@ -24,19 +23,14 @@ import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.contextual
 import kotlinx.serialization.modules.plus
 import net.corda.core.contracts.Amount
-import net.corda.core.utilities.loggerFor
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.util.Currency
 import java.util.Locale
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
-@ExperimentalSerializationApi
 class SerializedAmountMaxTest {
-    private val log = loggerFor<SerializedAmountMaxTest>()
     private val zincZKService = getZincZKService<SerializedAmountMaxTest>()
 
     init {
@@ -87,8 +81,8 @@ class SerializedAmountMaxTest {
 
         verifyZincRunResults(witnessBytes, expected, expectedAmount)
 
-        zincZKService.proveTimed(witnessBytes.toJsonWitness(), log).let {
-            zincZKService.verifyTimed(it, expected, log)
+        zincZKService.proveTimed(witnessBytes.toJsonWitness()).let {
+            zincZKService.verifyTimed(it, expected)
         }
     }
 

@@ -21,12 +21,14 @@ cordapp {
 }
 
 dependencies {
-    val kotlinxSerializationVersion: String by project
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:$kotlinxSerializationVersion")
+    // These are required for our implementation and included in the JAR, we also expose their API for modules that depend on us.
+    api(project(":utils"))
+    api(project(":crypto"))
+    api(project(":serialization"))
 
-    val kotlinxSerializationBflVersion: String by project
-    api("com.ing.serialization.bfl:kotlinx-serialization-bfl:$kotlinxSerializationBflVersion")
+    // For Witness JSON serialization
+    val kotlinxSerializationVersion: String by project
+    api("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
 
     // Corda dependencies.
     val cordaReleaseGroup: String by project
@@ -35,14 +37,14 @@ dependencies {
     cordaRuntime("$cordaReleaseGroup:corda:$cordaVersion")
     cordaCompile("$cordaReleaseGroup:corda-node:$cordaVersion")
     cordaCompile("$cordaReleaseGroup:corda-jackson:$cordaVersion")
+
     testImplementation("$cordaReleaseGroup:corda-node-driver:$cordaVersion")
     testImplementation("$cordaReleaseGroup:corda-test-utils:$cordaVersion")
-
-    val zkkryptoVersion: String by project
-    implementation("com.ing.dlt:zkkrypto:$zkkryptoVersion")
-
-    // ZKP dependencies
     testImplementation(project(":test-utils"))
+}
+
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+    kotlinOptions.freeCompilerArgs += "-Xopt-in=kotlinx.serialization.ExperimentalSerializationApi"
 }
 
 // TODO: We will have to enable explicitApi soon:
@@ -55,7 +57,7 @@ dependencies {
 // TODO: This should probably become a fat jar at some point, with its dependencies included
 publishing {
     publications {
-        create<MavenPublication>("zkNotary") {
+        create<MavenPublication>("zkFlow") {
             from(components["java"])
         }
     }

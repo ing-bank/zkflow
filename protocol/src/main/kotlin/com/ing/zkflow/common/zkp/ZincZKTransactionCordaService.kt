@@ -1,6 +1,7 @@
 package com.ing.zkflow.common.zkp
 
 import com.ing.zkflow.common.contracts.ZKTransactionMetadataCommandData
+import com.ing.zkflow.common.zkp.ZKFlow.CIRCUITMANAGER_MAX_SETUP_WAIT_TIME_SECONDS
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
 import net.corda.core.node.AppServiceHub
 import net.corda.core.node.ServiceHub
@@ -45,7 +46,7 @@ open class ZincZKTransactionService(services: ServiceHub) : AbstractZKTransactio
         while (CircuitManager[circuit] == CircuitManager.Status.InProgress) {
             // An upper waiting time bound can be set up,
             // but this bound may be overly pessimistic.
-            Thread.sleep(10000L)
+            Thread.sleep(CIRCUITMANAGER_MAX_SETUP_WAIT_TIME_SECONDS.toLong())
         }
 
         if (CircuitManager[circuit] == CircuitManager.Status.Outdated) {

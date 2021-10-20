@@ -11,9 +11,7 @@ import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.identity.AbstractParty
 import org.junit.jupiter.api.Test
 import java.util.UUID
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
 class DeserializeLinearPointerTest {
     private val zincZKService = getZincZKService<DeserializeLinearPointerTest>()
 

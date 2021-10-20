@@ -1,12 +1,12 @@
 package com.ing.zkflow.testing.fixtures.contract
 
 import com.ing.zkflow.common.contracts.ZKTransactionMetadataCommandData
-import com.ing.zkflow.common.serialization.bfl.CommandDataSerializerMap
-import com.ing.zkflow.common.serialization.bfl.ContractStateSerializerMap
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
 import com.ing.zkflow.common.zkp.metadata.commandMetadata
 import com.ing.zkflow.common.zkp.metadata.transactionMetadata
+import com.ing.zkflow.serialization.CommandDataSerializerMap
+import com.ing.zkflow.serialization.ContractStateSerializerMap
 import com.ing.zkflow.testing.fixtures.state.DummyState
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient

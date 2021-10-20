@@ -50,6 +50,7 @@ class DeserializeNullableIntegersTest {
             postfix = "}"
         ) { propertyName ->
             "\"${propertyName[0]}_${propertyName.substring(1)}\": " + buildJsonObject {
+                @Suppress("UNCHECKED_CAST") // simply removing the 'out' variance annotation. Seems always necessary for using KProperty1.
                 val inner = when (propertyName) {
                     "i128" -> "-170141183460469231722463931679029329921"
                     "u128" -> "0x7fffffffffffffff8000000000000000"

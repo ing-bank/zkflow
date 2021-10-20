@@ -1,17 +1,15 @@
 package com.ing.zkflow.zinc.transaction
+
 import com.ing.zkflow.testing.dsl.VerificationMode
 import com.ing.zkflow.testing.dsl.zkLedger
 import com.ing.zkflow.testing.fixtures.contract.TestContract
 import com.ing.zkflow.testing.zkp.ZKNulls
-import net.corda.core.utilities.loggerFor
 import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.time.Instant
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
 @Tag("slow")
 class TransactionVerificationTest {
 
@@ -39,7 +37,6 @@ class TransactionVerificationTest {
      * On the Kotlin side, serialization and deserialization sizes and unsizes respectively, invisibly for the user.
      * On the Zinc side, we never serialize. On deserialization, unsizing does not happen.
      */
-    @ExperimentalTime
     @Test
     fun `create and move verify`() {
         val alice = TestIdentity.fresh("Alice").party.anonymise()

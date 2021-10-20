@@ -1,8 +1,6 @@
 package com.ing.zkflow.client.flows
 
 import co.paralleluniverse.fibers.Suspendable
-import com.ing.zkflow.common.flows.SendNotarisedTransactionPayloadFlow
-import com.ing.zkflow.common.flows.ZKReceiveNotarisedTransactionPayloadFlow
 import com.ing.zkflow.common.transactions.NotarisedTransactionPayload
 import com.ing.zkflow.common.transactions.SignedZKVerifierTransaction
 import com.ing.zkflow.common.transactions.prove

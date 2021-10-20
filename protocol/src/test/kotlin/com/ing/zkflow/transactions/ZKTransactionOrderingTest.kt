@@ -3,9 +3,6 @@ package com.ing.zkflow.transactions
 import com.ing.serialization.bfl.annotations.FixedLength
 import com.ing.zkflow.common.contracts.ZKContractState
 import com.ing.zkflow.common.contracts.ZKTransactionMetadataCommandData
-import com.ing.zkflow.common.crypto.BLAKE2S256
-import com.ing.zkflow.common.serialization.bfl.CommandDataSerializerMap
-import com.ing.zkflow.common.serialization.bfl.ContractStateSerializerMap
 import com.ing.zkflow.common.transactions.UtxoInfo
 import com.ing.zkflow.common.transactions.ZKTransactionBuilder
 import com.ing.zkflow.common.zkp.Witness
@@ -15,6 +12,7 @@ import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
 import com.ing.zkflow.common.zkp.metadata.commandMetadata
 import com.ing.zkflow.common.zkp.metadata.packageName
 import com.ing.zkflow.common.zkp.metadata.transactionMetadata
+import com.ing.zkflow.crypto.BLAKE2S256
 import com.ing.zkflow.testing.fixtures.contract.DummyContract
 import com.ing.zkflow.testing.fixtures.state.DummyState
 import com.ing.zkflow.testing.withCustomSerializationEnv
@@ -44,15 +42,13 @@ import net.corda.testing.node.MockServices
 import org.junit.Test
 import kotlin.random.Random
 import kotlin.test.assertTrue
-import kotlin.time.ExperimentalTime
 
 object LocalSerializers {
     init {
-        CommandDataSerializerMap.register(LocalContract.Create::class, 4000, LocalContract.Create.serializer())
+        com.ing.zkflow.serialization.CommandDataSerializerMap.register(LocalContract.Create::class, 4000, LocalContract.Create.serializer())
     }
 }
 
-@ExperimentalTime
 /**
  * Test the order of states imposed by the ZKTransactionBuilder. We would like to assert that the ordering of states by
  * classname is maintained in the ZKTransactionBuilder, in the WireTransaction that it generates, and in the Witness generated
@@ -254,7 +250,7 @@ class DummyZKStateA(
 
 object DummyZKStateASerializer {
     init {
-        ContractStateSerializerMap.register(DummyZKStateA::class, 2000, DummyZKStateA.serializer())
+        com.ing.zkflow.serialization.ContractStateSerializerMap.register(DummyZKStateA::class, 2000, DummyZKStateA.serializer())
     }
 }
 
@@ -294,6 +290,6 @@ class DummyZKStateB(
 
 object DummyZKStateBSerializer {
     init {
-        ContractStateSerializerMap.register(DummyZKStateB::class, 2001, DummyZKStateB.serializer())
+        com.ing.zkflow.serialization.ContractStateSerializerMap.register(DummyZKStateB::class, 2001, DummyZKStateB.serializer())
     }
 }

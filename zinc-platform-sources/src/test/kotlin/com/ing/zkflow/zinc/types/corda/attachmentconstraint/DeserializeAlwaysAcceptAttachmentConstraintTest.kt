@@ -9,12 +9,11 @@ import kotlinx.serialization.Serializable
 import net.corda.core.contracts.AlwaysAcceptAttachmentConstraint
 import net.corda.core.contracts.AttachmentConstraint
 
-class DeserializeAlwaysAcceptAttachmentConstraintTest :
-    DeserializationTestBase<DeserializeAlwaysAcceptAttachmentConstraintTest, DeserializeAlwaysAcceptAttachmentConstraintTest.Data>(
-        {
-            it.data.toZincJson()
-        }
-    ) {
+class DeserializeAlwaysAcceptAttachmentConstraintTest : DeserializationTestBase <DeserializeAlwaysAcceptAttachmentConstraintTest, DeserializeAlwaysAcceptAttachmentConstraintTest.Data>(
+    {
+        it.data.toZincJson()
+    }
+) {
     override fun getZincZKService(): ZincZKService = getZincZKService<DeserializeAlwaysAcceptAttachmentConstraintTest>()
 
     @Serializable

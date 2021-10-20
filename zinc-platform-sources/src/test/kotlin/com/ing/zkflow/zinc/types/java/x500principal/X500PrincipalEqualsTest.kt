@@ -5,9 +5,7 @@ import com.ing.zkflow.zinc.types.toJsonObject
 import kotlinx.serialization.json.buildJsonObject
 import org.junit.jupiter.api.Test
 import javax.security.auth.x500.X500Principal
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
 class X500PrincipalEqualsTest {
     private val zincZKService = getZincZKService<X500PrincipalEqualsTest>()
 

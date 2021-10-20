@@ -4,22 +4,18 @@ import com.ing.serialization.bfl.annotations.FixedLength
 import com.ing.serialization.bfl.api.reified.serialize
 import com.ing.zkflow.testing.getZincZKService
 import com.ing.zkflow.testing.toJsonArray
-import com.ing.zkflow.zinc.types.proveTimed
-import com.ing.zkflow.zinc.types.setupTimed
-import com.ing.zkflow.zinc.types.verifyTimed
+import com.ing.zkflow.testing.zkp.proveTimed
+import com.ing.zkflow.testing.zkp.setupTimed
+import com.ing.zkflow.testing.zkp.verifyTimed
 import kotlinx.serialization.Serializable
-import net.corda.core.utilities.loggerFor
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
 internal class SerializedStringEqualsTest {
-    private val log = loggerFor<SerializedStringEqualsTest>()
     private val zincZKService = getZincZKService<SerializedStringEqualsTest>()
 
     init {
-        zincZKService.setupTimed(log)
+        zincZKService.setupTimed()
     }
 
     @AfterAll
@@ -33,8 +29,8 @@ internal class SerializedStringEqualsTest {
         val input = data.toWitnessJson()
         val expected = "${data.first == data.second}"
 
-        zincZKService.proveTimed(input, log).let {
-            zincZKService.verifyTimed(it, expected, log)
+        zincZKService.proveTimed(input).let {
+            zincZKService.verifyTimed(it, expected)
         }
     }
 
@@ -44,8 +40,8 @@ internal class SerializedStringEqualsTest {
         val input = data.toWitnessJson()
         val expected = "${data.first == data.second}"
 
-        zincZKService.proveTimed(input, log).let {
-            zincZKService.verifyTimed(it, expected, log)
+        zincZKService.proveTimed(input).let {
+            zincZKService.verifyTimed(it, expected)
         }
     }
 
@@ -55,8 +51,8 @@ internal class SerializedStringEqualsTest {
         val input = data.toWitnessJson()
         val expected = "${data.first == data.second}"
 
-        zincZKService.proveTimed(input, log).let {
-            zincZKService.verifyTimed(it, expected, log)
+        zincZKService.proveTimed(input).let {
+            zincZKService.verifyTimed(it, expected)
         }
     }
 
@@ -66,8 +62,8 @@ internal class SerializedStringEqualsTest {
         val input = data.toWitnessJson()
         val expected = "${data.first == data.second}"
 
-        zincZKService.proveTimed(input, log).let {
-            zincZKService.verifyTimed(it, expected, log)
+        zincZKService.proveTimed(input).let {
+            zincZKService.verifyTimed(it, expected)
         }
     }
 

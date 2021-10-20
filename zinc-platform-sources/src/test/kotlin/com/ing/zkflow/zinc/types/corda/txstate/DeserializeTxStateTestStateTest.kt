@@ -1,9 +1,9 @@
 package com.ing.zkflow.zinc.types.corda.txstate
 
-import com.ing.zkflow.common.serialization.bfl.BFLSerializationScheme
-import com.ing.zkflow.common.serialization.bfl.serializers.CordaSerializers.CLASS_NAME_SIZE
-import com.ing.zkflow.common.serialization.bfl.serializers.publickey.EdDSASurrogate
-import com.ing.zkflow.common.serialization.bfl.serializers.toBytes
+import com.ing.zkflow.common.serialization.BFLSerializationScheme
+import com.ing.zkflow.serialization.bfl.serializers.CordaSerializers.CLASS_NAME_SIZE
+import com.ing.zkflow.serialization.bfl.serializers.publickey.EdDSASurrogate
+import com.ing.zkflow.serialization.bfl.serializers.toBytes
 import com.ing.zkflow.testing.bytesToWitness
 import com.ing.zkflow.testing.fixtures.contract.TestContract
 import com.ing.zkflow.testing.getZincZKService
@@ -28,9 +28,7 @@ import net.corda.core.serialization.internal.CustomSerializationSchemeUtils
 import net.corda.core.serialization.serialize
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
 class DeserializeTxStateTestStateTest {
     private val zincZKService = getZincZKService<DeserializeTxStateTestStateTest>()
 

@@ -4,13 +4,13 @@ import com.ing.serialization.bfl.annotations.FixedLength
 import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.contracts.ZKOwnableState
 import com.ing.zkflow.common.contracts.ZKTransactionMetadataCommandData
-import com.ing.zkflow.common.serialization.bfl.CommandDataSerializerMap
-import com.ing.zkflow.common.serialization.bfl.ContractStateSerializerMap
 import com.ing.zkflow.common.transactions.zkFLowMetadata
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
 import com.ing.zkflow.common.zkp.metadata.commandMetadata
 import com.ing.zkflow.common.zkp.metadata.transactionMetadata
+import com.ing.zkflow.serialization.CommandDataSerializerMap
+import com.ing.zkflow.serialization.ContractStateSerializerMap
 import com.ing.zkflow.testing.fixtures.contract.TestContract.Create.Companion.verifyCreate
 import com.ing.zkflow.testing.fixtures.contract.TestContract.Move.Companion.verifyMove
 import com.ing.zkflow.testing.fixtures.contract.TestContract.MoveBidirectional.Companion.verifyMoveBidirectional
@@ -33,7 +33,11 @@ public val testSerializers: Unit = run {
     ContractStateSerializerMap.register(TestContract.TestState::class, 1, TestContract.TestState.serializer())
     CommandDataSerializerMap.register(TestContract.Create::class, 2, TestContract.Create.serializer())
     CommandDataSerializerMap.register(TestContract.Move::class, 3, TestContract.Move.serializer())
-    CommandDataSerializerMap.register(TestContract.MoveBidirectional::class, 4, TestContract.MoveBidirectional.serializer())
+    CommandDataSerializerMap.register(
+        TestContract.MoveBidirectional::class,
+        4,
+        TestContract.MoveBidirectional.serializer()
+    )
     CommandDataSerializerMap.register(TestContract.SignOnly::class, 5, TestContract.SignOnly.serializer())
 }
 

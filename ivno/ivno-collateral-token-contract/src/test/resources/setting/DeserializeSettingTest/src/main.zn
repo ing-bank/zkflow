@@ -1,8 +1,0 @@
-mod setting_string_7;
-
-use setting_string_7::SettingString_7;
-use setting_string_7::SerializedSettingString_7;
-
-fn main(witness: SerializedSettingString_7) -> SettingString_7 {
-    SettingString_7::deserialize(witness)
-}

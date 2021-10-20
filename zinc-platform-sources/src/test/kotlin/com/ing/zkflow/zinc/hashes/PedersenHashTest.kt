@@ -1,8 +1,8 @@
 package com.ing.zkflow.zinc.hashes
 
 import com.ing.dlt.zkkrypto.util.asUnsigned
-import com.ing.zkflow.common.crypto.pedersen
 import com.ing.zkflow.common.zkp.ZincZKService
+import com.ing.zkflow.crypto.pedersen
 import net.corda.core.crypto.DigestService
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test

@@ -4,29 +4,25 @@ plugins {
     kotlin("jvm")
     id("maven-publish")
     id("java-library")
-    kotlin("plugin.serialization")
+    kotlin("plugin.serialization") // Required for serializable fixtures
 }
 
 dependencies {
-    implementation(project(":protocol"))
+    // We explicitly don't provide the protocol as part of our JAR: users of test-utils should have the protocol on their class path already
+    compileOnly(project(":protocol"))
 
     val cordaReleaseGroup: String by project
     val cordaVersion: String by project
     api("$cordaReleaseGroup:corda-test-utils:$cordaVersion")
     api("$cordaReleaseGroup:corda-node-driver:$cordaVersion")
 
-    val kotlinxSerializationVersion: String by project
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:$kotlinxSerializationVersion")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
-
-    val kotlinxSerializationBflVersion: String by project
-    implementation("com.ing.serialization.bfl:kotlinx-serialization-bfl:$kotlinxSerializationBflVersion")
-
-    val kotestVersion: String by project
-    implementation("io.kotest:kotest-assertions-core:$kotestVersion")
-
     val junit5Version: String by project
     implementation("org.junit.jupiter:junit-jupiter-params:$junit5Version")
+}
+
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+    kotlinOptions.freeCompilerArgs += "-Xopt-in=kotlin.time.ExperimentalTime"
+    kotlinOptions.freeCompilerArgs += "-Xopt-in=kotlinx.serialization.ExperimentalSerializationApi"
 }
 
 kotlin {

@@ -1,7 +1,7 @@
 package com.ing.zkflow.gradle.plugin
 
+import com.ing.zkflow.compilation.folderIfExists
 import com.ing.zkflow.gradle.extension.ZKFlowExtension
-import com.ing.zkflow.gradle.task.folderIfExists
 import org.gradle.api.Project
 import org.gradle.api.file.FileTree
 import java.io.File

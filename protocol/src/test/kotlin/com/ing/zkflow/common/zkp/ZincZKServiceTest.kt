@@ -1,16 +1,12 @@
 package com.ing.zkflow.common.zkp
 
-import net.corda.core.utilities.loggerFor
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 import java.io.File
 import java.time.Duration
 import kotlin.test.assertFailsWith
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
 class ZincZKServiceTest {
-    private val log = loggerFor<ZincZKServiceTest>()
     private val circuitFolder = javaClass.getResource("/ZincZKService").path
     private val zincZKService = ZincZKService(
         circuitFolder,

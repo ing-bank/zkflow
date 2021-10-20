@@ -1,6 +1,6 @@
 package com.ing.zkflow.testing.zkp
 
-import com.ing.zkflow.common.serialization.json.corda.WitnessSerializer
+import com.ing.zkflow.common.serialization.zinc.json.WitnessSerializer
 import com.ing.zkflow.common.zkp.PublicInput
 import com.ing.zkflow.common.zkp.Witness
 import com.ing.zkflow.common.zkp.ZKService
@@ -32,10 +32,10 @@ public class MockZKService(private val serviceHub: ServiceHub, private val diges
      * to do all the verifications
      */
     override fun prove(witness: Witness): ByteArray {
-        log.info("Witness size: ${witness.size()}")
-        log.info("Padded Witness size: ${witness.size { it == 0.toByte() }}") // Assumes BFL zero-byte padding
+        log.debug("Witness size: ${witness.size()}")
+        log.debug("Padded Witness size: ${witness.size { it == 0.toByte() }}") // Assumes BFL zero-byte padding
         val witnessJson = Json.encodeToString(WitnessSerializer, witness)
-        log.info("Witness JSON: $witnessJson")
+        log.trace("Witness JSON: $witnessJson")
 
         return witness.serialize().bytes
     }
@@ -50,7 +50,7 @@ public class MockZKService(private val serviceHub: ServiceHub, private val diges
                 components.map { OpaqueBytes(it) }
             )
 
-        fun createComponentGroupForMultiState(componentGroup: ComponentGroupEnum, components: Map<String, List< ByteArray>>) =
+        fun createComponentGroupForMultiState(componentGroup: ComponentGroupEnum, components: Map<String, List<ByteArray>>) =
             if (components.isEmpty()) null else ComponentGroup(
                 componentGroup.ordinal,
                 components.flatMap { it.value }.map { OpaqueBytes(it) }

@@ -5,10 +5,8 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":protocol"))
-
-    val kotlinxSerializationBflVersion: String by project
-    implementation("com.ing.serialization.bfl:kotlinx-serialization-bfl:$kotlinxSerializationBflVersion")
+    implementation(project(":compilation"))
+    implementation(project(":obsolete")) // TODO: Required only for CircuitConfigurator. Remove when that is removed.
 
     // Loaded so we can apply the plugin on project we are applied on.
     val kotlinVersion: String by project

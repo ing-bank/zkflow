@@ -1,7 +1,0 @@
-mod token_contract_command_move;
-
-use token_contract_command_move::TokenContractCommandMove;
-
-fn main(left: TokenContractCommandMove, right: TokenContractCommandMove) -> bool {
-    TokenContractCommandMove::equals(left, right)
-}

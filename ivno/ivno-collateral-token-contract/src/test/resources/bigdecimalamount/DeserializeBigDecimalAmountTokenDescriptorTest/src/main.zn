@@ -1,8 +1,0 @@
-mod big_decimal_amount_token_descriptor;
-
-use big_decimal_amount_token_descriptor::BigDecimalAmountTokenDescriptor;
-use big_decimal_amount_token_descriptor::SerializedBigDecimalAmountTokenDescriptor;
-
-fn main(witness: SerializedBigDecimalAmountTokenDescriptor) -> BigDecimalAmountTokenDescriptor {
-    BigDecimalAmountTokenDescriptor::deserialize(witness)
-}

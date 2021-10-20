@@ -5,15 +5,13 @@ import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.contracts.ZKContractState
 import com.ing.zkflow.common.contracts.ZKOwnableState
 import com.ing.zkflow.common.contracts.ZKTransactionMetadataCommandData
-import com.ing.zkflow.common.serialization.bfl.CommandDataSerializerMap
-import com.ing.zkflow.common.serialization.bfl.ContractStateSerializerMap
-import com.ing.zkflow.common.serialization.bfl.serializers.AnonymousPartySerializer
 import com.ing.zkflow.common.transactions.zkFLowMetadata
 import com.ing.zkflow.common.zkp.ZKFlow
 import com.ing.zkflow.common.zkp.metadata.MockAssetContract.IssueWithNonZKPCommand.Companion.metadata
 import com.ing.zkflow.common.zkp.metadata.ZKCommandList.Companion.ERROR_COMMAND_NOT_UNIQUE
 import com.ing.zkflow.common.zkp.metadata.ZKTransactionMetadata.Companion.ERROR_COMMANDS_ALREADY_SET
 import com.ing.zkflow.common.zkp.metadata.ZKTransactionMetadata.Companion.ERROR_NETWORK_ALREADY_SET
+import com.ing.zkflow.serialization.bfl.serializers.AnonymousPartySerializer
 import com.ing.zkflow.testing.dsl.zkLedger
 import com.ing.zkflow.testing.fixed
 import com.ing.zkflow.testing.fixtures.contract.TestContract
@@ -37,9 +35,7 @@ import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
 import org.junit.jupiter.api.Test
 import java.util.Random
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
 class ZKTransactionMetadataTest {
     private val services = MockServices(
         TestIdentity.fixed("ServiceHub"),
@@ -233,16 +229,32 @@ class ZKTransactionMetadataTest {
 }
 
 val mockSerializers = run {
-    ContractStateSerializerMap.register(MockAuditContract.Approval::class, 9993, MockAuditContract.Approval.serializer())
-    CommandDataSerializerMap.register(MockAssetContract.Issue::class, 9992, MockAssetContract.Issue.serializer())
-    CommandDataSerializerMap.register(
+    com.ing.zkflow.serialization.ContractStateSerializerMap.register(
+        MockAuditContract.Approval::class,
+        9993,
+        MockAuditContract.Approval.serializer()
+    )
+    com.ing.zkflow.serialization.CommandDataSerializerMap.register(
+        MockAssetContract.Issue::class,
+        9992,
+        MockAssetContract.Issue.serializer()
+    )
+    com.ing.zkflow.serialization.CommandDataSerializerMap.register(
         MockAssetContract.IssueWithWrongCorDappCount::class,
         99998,
         MockAssetContract.IssueWithWrongCorDappCount.serializer()
     )
-    CommandDataSerializerMap.register(MockAssetContract.Move::class, 9996, MockAssetContract.Move.serializer())
-    CommandDataSerializerMap.register(MockAuditContract.Approve::class, 9994, MockAuditContract.Approve.serializer())
-    ContractStateSerializerMap.register(MockAssetContract.MockAsset::class, 9991, MockAssetContract.MockAsset.serializer())
+    com.ing.zkflow.serialization.CommandDataSerializerMap.register(MockAssetContract.Move::class, 9996, MockAssetContract.Move.serializer())
+    com.ing.zkflow.serialization.CommandDataSerializerMap.register(
+        MockAuditContract.Approve::class,
+        9994,
+        MockAuditContract.Approve.serializer()
+    )
+    com.ing.zkflow.serialization.ContractStateSerializerMap.register(
+        MockAssetContract.MockAsset::class,
+        9991,
+        MockAssetContract.MockAsset.serializer()
+    )
 }
 
 /**

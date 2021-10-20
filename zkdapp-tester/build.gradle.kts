@@ -1,7 +1,7 @@
 import com.ing.zkflow.gradle.task.CreateZincDirectoriesForCircuitTask
-import com.ing.zkflow.gradle.zinc.template.parameters.BigDecimalTemplateParameters
-import com.ing.zkflow.gradle.zinc.template.parameters.AmountTemplateParameters
-import com.ing.zkflow.gradle.zinc.template.parameters.StringTemplateParameters
+import com.ing.zkflow.compilation.zinc.template.parameters.BigDecimalTemplateParameters
+import com.ing.zkflow.compilation.zinc.template.parameters.AmountTemplateParameters
+import com.ing.zkflow.compilation.zinc.template.parameters.StringTemplateParameters
 
 plugins {
     kotlin("jvm") version "1.4.30"

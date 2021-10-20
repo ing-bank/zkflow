@@ -1,7 +1,7 @@
 package com.ing.zkflow.zinc.types.corda.partyandreference
 
-import com.ing.zkflow.common.serialization.bfl.serializers.PartyAndReferenceSurrogate
-import com.ing.zkflow.common.serialization.bfl.serializers.publickey.EdDSASurrogate
+import com.ing.zkflow.serialization.bfl.serializers.PartyAndReferenceSurrogate
+import com.ing.zkflow.serialization.bfl.serializers.publickey.EdDSASurrogate
 import com.ing.zkflow.testing.DeserializationTestBase
 import com.ing.zkflow.testing.getZincZKService
 import com.ing.zkflow.zinc.types.toZincJson
@@ -13,10 +13,9 @@ import net.corda.core.utilities.OpaqueBytes
 import net.corda.testing.core.TestIdentity
 import kotlin.random.Random
 
-class DeserializeAnonymousPartyEdDSAAndReferenceTest :
-    DeserializationTestBase<DeserializeAnonymousPartyEdDSAAndReferenceTest, DeserializeAnonymousPartyEdDSAAndReferenceTest.Data>({
-        it.data.toZincJson(EdDSASurrogate.ENCODED_SIZE)
-    }) {
+class DeserializeAnonymousPartyEdDSAAndReferenceTest : DeserializationTestBase <DeserializeAnonymousPartyEdDSAAndReferenceTest, DeserializeAnonymousPartyEdDSAAndReferenceTest.Data>({
+    it.data.toZincJson(EdDSASurrogate.ENCODED_SIZE)
+}) {
     override fun getZincZKService() = getZincZKService<DeserializeAnonymousPartyEdDSAAndReferenceTest>()
 
     @Serializable

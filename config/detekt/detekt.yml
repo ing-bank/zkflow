@@ -391,4 +391,12 @@ potential-bugs:
 
 # Style is disabled, since we use ktlint for that (for now)
 style:
-  active: false
+  active: true
+  UnusedPrivateMember:
+    active: true
+  UnusedPrivateClass:
+    active: true
+  MagicNumber:
+    active: true
+    excludes: [ '**/test/**', '**/test-utils/**', '**/commonTest/**', '**/jvmTest/**', '**/jsTest/**', '**/iosTest/**' ]
+

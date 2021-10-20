@@ -7,9 +7,7 @@ import org.junit.jupiter.api.Test
 import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
 class ZonedDateTimeEqualsTest {
     private val zincZKService = getZincZKService<ZonedDateTimeEqualsTest>()
 
