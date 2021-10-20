@@ -1,3 +1,4 @@
+@file:Suppress("MagicNumber") // Magic numbers will be removed when generating zinc based on Kotlin size annotations
 package com.ing.zkflow
 
 import com.ing.zkflow.compilation.ZKFlowCompilationDefaults
@@ -28,7 +29,6 @@ import com.ing.zkflow.compilation.zinc.util.ZincSourcesCopier
 import net.corda.core.crypto.Crypto
 import java.io.File
 
-@Suppress("MagicNumber") // Magic numbers will be removed when generating zinc based on Kotlin size annotations
 val templateConfigurations = getTemplateConfiguration()
 
 fun main(args: Array<String>) {
@@ -140,7 +140,11 @@ private fun getTemplateContents(root: String, templateName: String) =
         .map { it.readText() }
         .getOrThrow()
 
-private fun renderStateTemplates(configurator: CircuitConfigurator, templateRenderer: TemplateRenderer, templateConfigurationsForCircuit: TemplateConfigurations) {
+private fun renderStateTemplates(
+    configurator: CircuitConfigurator,
+    templateRenderer: TemplateRenderer,
+    templateConfigurationsForCircuit: TemplateConfigurations
+) {
     templateConfigurationsForCircuit.apply {
         configurator.circuitConfiguration.groups.inputGroup.filter { it.stateGroupSize > 0 }.forEach { stateGroup ->
             addConfigurations(SerializedStateTemplateParameters("input", stateGroup))
