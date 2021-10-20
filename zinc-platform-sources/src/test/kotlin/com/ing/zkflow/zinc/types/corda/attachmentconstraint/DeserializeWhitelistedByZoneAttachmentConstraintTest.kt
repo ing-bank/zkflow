@@ -10,10 +10,10 @@ import net.corda.core.contracts.AttachmentConstraint
 import net.corda.core.contracts.WhitelistedByZoneAttachmentConstraint
 
 class DeserializeWhitelistedByZoneAttachmentConstraintTest : DeserializationTestBase <DeserializeWhitelistedByZoneAttachmentConstraintTest, DeserializeWhitelistedByZoneAttachmentConstraintTest.Data>(
-        {
-            it.data.toZincJson()
-        }
-    ) {
+    {
+        it.data.toZincJson()
+    }
+) {
     override fun getZincZKService(): ZincZKService = getZincZKService<DeserializeWhitelistedByZoneAttachmentConstraintTest>()
 
     @Serializable

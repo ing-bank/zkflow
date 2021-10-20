@@ -12,10 +12,10 @@ import net.corda.core.contracts.SignatureAttachmentConstraint
 import net.corda.core.crypto.Crypto
 
 class DeserializeSignatureAttachmentConstraintBCECK1Test : DeserializationTestBase <DeserializeSignatureAttachmentConstraintBCECK1Test, DeserializeSignatureAttachmentConstraintBCECK1Test.Data>(
-        {
-            it.data.toZincJson(BCECSurrogate.ENCODED_SIZE)
-        }
-    ) {
+    {
+        it.data.toZincJson(BCECSurrogate.ENCODED_SIZE)
+    }
+) {
     override fun getZincZKService(): ZincZKService = getZincZKService<DeserializeSignatureAttachmentConstraintBCECK1Test>()
 
     @Serializable

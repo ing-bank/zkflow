@@ -8,10 +8,10 @@ import com.ing.zkflow.zinc.types.toZincJson
 import kotlinx.serialization.Serializable
 
 class DeserializeCollectionTest : DeserializationTestBase <DeserializeCollectionTest, DeserializeCollectionTest.Data>(
-        {
-            it.data.toZincJson(FIXED_LIST_SIZE, FIXED_STRING_SIZE)
-        }
-    ) {
+    {
+        it.data.toZincJson(FIXED_LIST_SIZE, FIXED_STRING_SIZE)
+    }
+) {
     override fun getZincZKService(): ZincZKService = getZincZKService<DeserializeCollectionTest>()
 
     @Serializable

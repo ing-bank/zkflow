@@ -14,8 +14,8 @@ import net.corda.testing.core.TestIdentity
 import kotlin.random.Random
 
 class DeserializeAnonymousPartyBCECR1AndReferenceTest : DeserializationTestBase <DeserializeAnonymousPartyBCECR1AndReferenceTest, DeserializeAnonymousPartyBCECR1AndReferenceTest.Data>({
-        it.data.toZincJson(BCECSurrogate.ENCODED_SIZE)
-    }) {
+    it.data.toZincJson(BCECSurrogate.ENCODED_SIZE)
+}) {
     override fun getZincZKService() = getZincZKService<DeserializeAnonymousPartyBCECR1AndReferenceTest>()
 
     @Serializable

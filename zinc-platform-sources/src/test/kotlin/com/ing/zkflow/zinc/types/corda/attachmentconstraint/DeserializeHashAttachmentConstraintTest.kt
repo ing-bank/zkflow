@@ -11,10 +11,10 @@ import net.corda.core.contracts.HashAttachmentConstraint
 import net.corda.core.crypto.SecureHash
 
 class DeserializeHashAttachmentConstraintTest : DeserializationTestBase <DeserializeHashAttachmentConstraintTest, DeserializeHashAttachmentConstraintTest.Data>(
-        {
-            it.data.toZincJson()
-        }
-    ) {
+    {
+        it.data.toZincJson()
+    }
+) {
     override fun getZincZKService(): ZincZKService = getZincZKService<DeserializeHashAttachmentConstraintTest>()
 
     @Serializable
