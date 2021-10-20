@@ -5,11 +5,15 @@
       {
         "java_class": "com.ing.zkflow.testing.fixtures.contract.TestContract.TestState",
         "zinc_type": "TestState",
-        "location": "test_state.zn"
+        "location": "test_state.zn",
+        "attachment_constraint" : "net.corda.core.contracts.HashAttachmentConstraint"
       }
     ]
   },
   "groups" : {
+    "attachment_group": {
+      "group_size": 1
+    },
     "output_group" : [
       {
         "java_class": "com.ing.zkflow.testing.fixtures.contract.TestContract.TestState",

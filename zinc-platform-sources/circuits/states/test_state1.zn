@@ -1,0 +1,94 @@
+mod platform_consts;
+mod anonymous_party_ed_dsa;
+mod anonymous_party_ed_dsa_collection_2;
+mod platform_integer;
+
+use platform_consts::U32_BYTES;
+use platform_consts::I32_BYTES;
+use platform_consts::LIST_LENGTH_PREFIX;
+use platform_consts::CORDA_SERDE_MAGIC_LENGTH;
+use anonymous_party_ed_dsa::AnonymousPartyEdDSA;
+use anonymous_party_ed_dsa::ANONYMOUS_PARTY_ED_DSA_LENGTH;
+use anonymous_party_ed_dsa_collection_2::AnonymousPartyEdDSA_Collection_2;
+use anonymous_party_ed_dsa_collection_2::ANONYMOUS_PARTY_ED_DSA_COLLECTION_2_LENGTH;
+
+// public data class TestState(
+//     override val owner: @Contextual AnonymousParty,
+//     val value: Int = Random().nextInt(1000)
+// ) : ZKOwnableState {
+//
+//     @FixedLength([2]) override val participants: List<@Contextual AnonymousParty> = listOf(owner)
+//
+//     override fun withNewOwner(newOwner: AnonymousParty): CommandAndState =
+//     CommandAndState(Move(), copy(owner = newOwner))
+// }
+
+const STATE_PARTICIPANTS_SIZE: u16 = 2;
+
+//! TestState lengths
+const OWNER_LENGTH: u16 = ANONYMOUS_PARTY_ED_DSA_LENGTH;
+const VALUE_LENGTH: u16 = I32_BYTES;
+const PARTICIPANTS_LENGTH: u16 = ANONYMOUS_PARTY_ED_DSA_COLLECTION_2_LENGTH;
+
+//! TestState offsets
+const OWNER_OFFSET: u16 = 0;
+const VALUE_OFFSET: u16
+    = OWNER_OFFSET
+    + OWNER_LENGTH;
+const PARTICIPANTS_OFFSET: u16
+    = VALUE_OFFSET
+    + VALUE_LENGTH;
+const TEST_STATE1_LENGTH: u16
+    = PARTICIPANTS_OFFSET
+    + PARTICIPANTS_LENGTH;
+
+struct TestState1 {
+    owner: AnonymousPartyEdDSA,
+    value: i32,
+    participants: AnonymousPartyEdDSA_Collection_2,
+}
+
+type SerializedTestState1 = [u8; TEST_STATE1_LENGTH];
+
+impl TestState1 {
+    fn deserialize(serialized: SerializedTestState1) -> TestState1 {
+        let owner = {
+            let mut owner_bytes = [0; ANONYMOUS_PARTY_ED_DSA_LENGTH];
+            for i in 0..ANONYMOUS_PARTY_ED_DSA_LENGTH {
+                owner_bytes[i] = serialized[i + OWNER_OFFSET];
+            }
+            AnonymousPartyEdDSA::deserialize(owner_bytes)
+        };
+        dbg!("[Create] Owner = {}", owner);
+
+        let value = {
+            let mut value_bytes = [0; I32_BYTES];
+            for i in 0..VALUE_LENGTH {
+                value_bytes[i] = serialized[i + VALUE_OFFSET];
+            }
+            platform_integer::parse_i32(value_bytes)
+        };
+        dbg!("[Create] Value = {}", value);
+
+        let participants = {
+            let mut participants_bytes = [0; ANONYMOUS_PARTY_ED_DSA_COLLECTION_2_LENGTH];
+            for i in 0..ANONYMOUS_PARTY_ED_DSA_COLLECTION_2_LENGTH {
+                participants_bytes[i] = serialized[i + PARTICIPANTS_OFFSET];
+            }
+            AnonymousPartyEdDSA_Collection_2::deserialize(participants_bytes)
+        };
+        dbg!("[Create] Participants = {}", participants);
+
+        TestState1 {
+            owner: owner,
+            value: value,
+            participants: participants,
+        }
+    }
+
+    fn equals(this: TestState1, that: TestState1) -> bool {
+        AnonymousPartyEdDSA::equals(this.owner, that.owner) &&
+            this.value == that.value &&
+            AnonymousPartyEdDSA_Collection_2::equals(this.participants, that.participants)
+    }
+}

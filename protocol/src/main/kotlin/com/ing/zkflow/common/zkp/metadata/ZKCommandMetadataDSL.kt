@@ -59,7 +59,7 @@ data class ZKCircuit(
         private fun kClassToZincType(kClass: KClass<*>): ZincType {
             val simpleName = kClass.simpleName ?: error("classes used in transactions must be a named class")
             return ZincType(
-                simpleName,
+                simpleName.camelToSnakeCase(),
                 simpleName.camelToSnakeCase()
             )
         }

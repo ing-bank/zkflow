@@ -1,0 +1,60 @@
+{
+  "circuit" : {
+    "name": "move-multi-state",
+    "states" : [      {
+      "java_class": "com.ing.zknotary.testing.fixtures.contract.TestContract.TestState1",
+      "zinc_type": "TestState1",
+      "location": "test_state1.zn",
+      "attachment_constraint" : "net.corda.core.contracts.HashAttachmentConstraint"
+    },
+      {
+        "java_class": "com.ing.zknotary.testing.fixtures.contract.TestContract.TestState2",
+        "zinc_type": "TestState2",
+        "location": "test_state2.zn",
+        "attachment_constraint" : "net.corda.core.contracts.HashAttachmentConstraint"
+      }
+    ]
+  },
+  "groups" : {
+    "attachment_group": {
+      "group_size": 1
+    },
+    "input_group" : [
+      {
+        "java_class": "com.ing.zknotary.testing.fixtures.contract.TestContract.TestState1",
+        "state_group_size": 1
+      },
+      {
+        "java_class": "com.ing.zknotary.testing.fixtures.contract.TestContract.TestState2",
+        "state_group_size": 1
+      }
+    ],
+    "output_group" : [
+      {
+        "java_class": "com.ing.zknotary.testing.fixtures.contract.TestContract.TestState1",
+        "state_group_size": 1
+      },
+      {
+        "java_class": "com.ing.zknotary.testing.fixtures.contract.TestContract.TestState2",
+        "state_group_size": 1
+      }
+    ],
+    "command_group": {
+      "group_size": 1,
+      "commands": [ {
+        "name": "move-multi-state",
+        "component_size": 11
+      }]
+    },
+    "notary_group" : {
+      "group_size" : 1
+    },
+    "timewindow_group" : {
+      "group_size" : 1
+    },
+    "signer_group" : {
+      "signer_size": 52,
+      "signer_list_size": 2
+    }
+  }
+}

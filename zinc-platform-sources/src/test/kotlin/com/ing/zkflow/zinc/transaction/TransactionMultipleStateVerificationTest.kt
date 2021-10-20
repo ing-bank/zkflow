@@ -1,7 +1,8 @@
 package com.ing.zkflow.zinc.transaction
+
 import com.ing.zkflow.testing.dsl.VerificationMode
 import com.ing.zkflow.testing.dsl.zkLedger
-import com.ing.zkflow.testing.fixtures.contract.TestContract
+import com.ing.zkflow.testing.fixtures.contract.TestMultipleStateContract
 import com.ing.zkflow.testing.zkp.ZKNulls
 import net.corda.core.utilities.loggerFor
 import net.corda.testing.core.TestIdentity
@@ -13,13 +14,16 @@ import kotlin.time.ExperimentalTime
 
 @ExperimentalTime
 @Tag("slow")
-class TransactionVerificationTest {
+class TransactionMultipleStateVerificationTest {
 
     private val cordapps = listOf(
         "com.ing.zkflow.testing.fixtures.contract"
     )
 
     /**
+     *
+     * This is the multi-state version of `TransactionVerificationTest` in order to show that zinc can handle multiple state types.
+     *
      * The witness, which is what we serialize for Zinc, contains the following items:
      *
      * * Already serialized & sized componentgroups, e.g. groups of bytearrays of the WireTransaction.
@@ -47,20 +51,26 @@ class TransactionVerificationTest {
         val services = MockServices(cordapps)
         // services.zkLedger(zkService = MockZKTransactionService(services)) {
         services.zkLedger {
-            val createState = TestContract.TestState(alice, value = 88)
+            val createState1 = TestMultipleStateContract.TestState1(alice, value = 88)
+            val createState2 = TestMultipleStateContract.TestState2(alice, value = 99, list = listOf(42, 43))
             val createTx = zkTransaction {
-                output(TestContract.PROGRAM_ID, createState)
-                command(alice.owningKey, TestContract.Create())
+                output(TestMultipleStateContract.PROGRAM_ID, createState1)
+                output(TestMultipleStateContract.PROGRAM_ID, createState2)
+                command(alice.owningKey, TestMultipleStateContract.Create())
                 timeWindow(time = Instant.EPOCH)
                 verifies(VerificationMode.RUN)
             }
-            val utxo = createTx.outRef<TestContract.TestState>(0)
+            val utxo1 = createTx.outRef<TestMultipleStateContract.TestState1>(0)
+            val utxo2 = createTx.outRef<TestMultipleStateContract.TestState2>(1)
+            val moveState1 = TestMultipleStateContract.TestState1(bob, value = createState1.value)
+            val moveState2 = TestMultipleStateContract.TestState2(bob, value = createState2.value, list = createState2.list)
             zkTransaction {
-                val moveState = TestContract.TestState(bob, value = createState.value)
-                input(utxo.ref)
-                output(TestContract.PROGRAM_ID, moveState)
+                input(utxo1.ref)
+                input(utxo2.ref)
+                output(TestMultipleStateContract.PROGRAM_ID, moveState1)
+                output(TestMultipleStateContract.PROGRAM_ID, moveState2)
                 timeWindow(time = Instant.EPOCH)
-                command(listOf(alice.owningKey, bob.owningKey), TestContract.Move())
+                command(listOf(alice.owningKey, bob.owningKey), TestMultipleStateContract.Move())
                 verifies(VerificationMode.RUN)
             }
         }

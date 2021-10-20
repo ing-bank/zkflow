@@ -26,56 +26,7 @@ import com.ing.zkflow.gradle.zinc.util.ZincSourcesCopier
 import net.corda.core.crypto.Crypto
 import java.io.File
 
-val templateConfigurations = TemplateConfigurations().apply {
-    // BigDecimal configurations
-    val bigDecimalTemplateParameters = listOf(
-        BigDecimalTemplateParameters(24, 6),
-        BigDecimalTemplateParameters(100, 20),
-        floatTemplateParameters,
-        doubleTemplateParameters,
-    )
-    addConfigurations(bigDecimalTemplateParameters)
-
-    // Amount configurations
-    val amountTemplateParameters = bigDecimalTemplateParameters.map { AmountTemplateParameters(it, 8) }
-    addConfigurations(amountTemplateParameters)
-
-    // String configurations
-    addConfigurations(StringTemplateParameters(32))
-
-    // Issued configurations
-    addConfigurations(
-        IssuedTemplateParameters(
-            AbstractPartyTemplateParameters.selectAbstractPartyParameters(Crypto.EDDSA_ED25519_SHA512.schemeCodeName),
-            StringTemplateParameters(1)
-        )
-    )
-
-    addConfigurations(
-        CollectionTemplateParameters(collectionSize = 3, innerTemplateParameters = StringTemplateParameters(1)),
-        CollectionTemplateParameters<TemplateParameters>("collection_integer.zn", collectionSize = 3, platformModuleName = "u32"),
-    )
-
-    // Collection of participants to TestState.
-    addConfigurations(
-        CollectionTemplateParameters(
-            collectionSize = 2,
-            innerTemplateParameters = AbstractPartyTemplateParameters(
-                ANONYMOUS_PARTY_TYPE_NAME,
-                PublicKeyTemplateParameters.eddsaTemplateParameters
-            )
-        )
-    )
-
-    addConfigurations(
-        MapTemplateParameters(
-            "StringToIntMap",
-            6,
-            StringTemplateParameters(5),
-            IntegerTemplateParameters.i32
-        )
-    )
-}
+val templateConfigurations = getTemplateConfiguration()
 
 fun main(args: Array<String>) {
     val root = args[0]
@@ -120,20 +71,20 @@ fun main(args: Array<String>) {
                 getTemplateContents(root, it.templateFile)
             }
 
-            templateConfigurations
-                .apply {
-                    configurator.circuitConfiguration.circuit.states.forEach { state ->
-                        // Existence of the required states is ensured during the copying.
-                        addConfigurations(TxStateTemplateParameters(state))
-                    }
-
-                    addConfigurations(SignersTemplateParameters(configurator.circuitConfiguration.groups.signerGroup))
+            val templateConfigurationsForCircuit = getTemplateConfiguration()
+            templateConfigurationsForCircuit.apply {
+                configurator.circuitConfiguration.circuit.states.forEach { state ->
+                    // Existence of the required states is ensured during the copying.
+                    addConfigurations(TxStateTemplateParameters(state))
                 }
+
+                addConfigurations(SignersTemplateParameters(configurator.circuitConfiguration.groups.signerGroup))
+            }
                 .resolveAllTemplateParameters()
                 .forEach(templateRenderer::renderTemplate)
 
             // Render multi-state templates
-            renderStateTemplates(configurator, templateRenderer)
+            renderStateTemplates(configurator, templateRenderer, templateConfigurationsForCircuit)
 
             // Generate code
             val codeGenerator = CodeGenerator(outputPath)
@@ -172,13 +123,17 @@ private fun getPlatformSourcesTestSourcesPath(root: String): File {
 }
 
 private fun getTemplateContents(root: String, templateName: String) =
-    runCatching { File("$root/src/main/resources/zinc-platform-templates").listFiles() ?: error("Templates must be accessible") }
-        .mapCatching { templates -> templates.single { it.name == templateName } ?: error("Multiple templates for $templateName found") }
+    runCatching {
+        File("$root/src/main/resources/zinc-platform-templates").listFiles() ?: error("Templates must be accessible")
+    }
+        .mapCatching { templates ->
+            templates.single { it.name == templateName } ?: error("Multiple templates for $templateName found")
+        }
         .map { it.readText() }
         .getOrThrow()
 
-private fun renderStateTemplates(configurator: CircuitConfigurator, templateRenderer: TemplateRenderer) {
-    templateConfigurations.apply {
+private fun renderStateTemplates(configurator: CircuitConfigurator, templateRenderer: TemplateRenderer, templateConfigurationsForCircuit: TemplateConfigurations) {
+    templateConfigurationsForCircuit.apply {
         configurator.circuitConfiguration.groups.inputGroup.filter { it.stateGroupSize > 0 }.forEach { stateGroup ->
             addConfigurations(SerializedStateTemplateParameters("input", stateGroup))
         }
@@ -192,7 +147,74 @@ private fun renderStateTemplates(configurator: CircuitConfigurator, templateRend
         configurator.circuitConfiguration.groups.referenceGroup.filter { it.stateGroupSize > 0 }.forEach { stateGroup ->
             addConfigurations(SerializedStateTemplateParameters("reference", stateGroup))
         }
-        addConfigurations(StateGroupTemplateParameters("reference", configurator.circuitConfiguration.groups.referenceGroup))
+        addConfigurations(
+            StateGroupTemplateParameters(
+                "reference",
+                configurator.circuitConfiguration.groups.referenceGroup
+            )
+        )
     }.resolveAllTemplateParameters()
         .forEach(templateRenderer::renderTemplate)
+}
+
+private fun getTemplateConfiguration(): TemplateConfigurations {
+    return TemplateConfigurations().apply {
+        // BigDecimal configurations
+        val bigDecimalTemplateParameters = listOf(
+            BigDecimalTemplateParameters(24, 6),
+            BigDecimalTemplateParameters(100, 20),
+            floatTemplateParameters,
+            doubleTemplateParameters,
+        )
+        addConfigurations(bigDecimalTemplateParameters)
+
+        // Amount configurations
+        val amountTemplateParameters = bigDecimalTemplateParameters.map { AmountTemplateParameters(it, 8) }
+        addConfigurations(amountTemplateParameters)
+
+        // String configurations
+        addConfigurations(StringTemplateParameters(32))
+
+        // Issued configurations
+        addConfigurations(
+            IssuedTemplateParameters(
+                AbstractPartyTemplateParameters.selectAbstractPartyParameters(Crypto.EDDSA_ED25519_SHA512.schemeCodeName),
+                StringTemplateParameters(1)
+            )
+        )
+
+        addConfigurations(
+            CollectionTemplateParameters(collectionSize = 3, innerTemplateParameters = StringTemplateParameters(1)),
+            CollectionTemplateParameters<TemplateParameters>(
+                "collection_integer.zn",
+                collectionSize = 3,
+                platformModuleName = "u32"
+            ),
+            CollectionTemplateParameters<TemplateParameters>(
+                "collection_integer.zn",
+                collectionSize = 2,
+                platformModuleName = "i32"
+            )
+        )
+
+        // Collection of participants to TestState.
+        addConfigurations(
+            CollectionTemplateParameters(
+                collectionSize = 2,
+                innerTemplateParameters = AbstractPartyTemplateParameters(
+                    ANONYMOUS_PARTY_TYPE_NAME,
+                    PublicKeyTemplateParameters.eddsaTemplateParameters
+                )
+            )
+        )
+
+        addConfigurations(
+            MapTemplateParameters(
+                "StringToIntMap",
+                6,
+                StringTemplateParameters(5),
+                IntegerTemplateParameters.i32
+            )
+        )
+    }
 }
