@@ -72,7 +72,7 @@ abstract class SerializerMap<T : Any> {
     }
 
     operator fun get(klass: KClass<*>): KSerializer<out T> =
-        obj2Id[klass]?.let { objId2Serializer[it] } ?: error("$klass is not registered")
+        obj2Id[klass]?.let { objId2Serializer[it] } ?: throw SerializerMapError.ClassNotRegistered(klass)
 
     private fun extractSerializedData(message: ByteArray): ByteArray = message.drop(Int.SIZE_BYTES).toByteArray()
     private fun extractIdentifier(message: ByteArray): Int = ByteBuffer.wrap(message.copyOfRange(0, Int.SIZE_BYTES)).int

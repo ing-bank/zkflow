@@ -1,26 +1,27 @@
 package com.ing.zkflow.compilation.zinc.template.parameters
 
+import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
 import com.ing.zkflow.compilation.zinc.template.NamedType
 import com.ing.zkflow.compilation.zinc.template.TemplateParameters
-import com.ing.zkflow.compilation.zinc.util.CircuitConfigurator
 
 class SignersTemplateParameters(
-    signersGroup: CircuitConfigurator.SignersGroup
+    metadata: ResolvedZKTransactionMetadata,
 ) : NamedType, TemplateParameters(
     "signers.zn",
     listOf(
         CollectionTemplateParameters(
             innerTemplateParameters = AbstractPartyTemplateParameters
-                .selectAbstractPartyParameters(signersGroup.signerKeySchemeCodename),
-            collectionSize = signersGroup.signerListSize
+                .selectAbstractPartyParameters(metadata.network.participantSignatureScheme.schemeCodeName),
+            collectionSize = metadata.numberOfSigners
         )
     )
 ) {
-    private val signerTemplateParameters: AbstractPartyTemplateParameters = AbstractPartyTemplateParameters.selectAbstractPartyParameters(signersGroup.signerKeySchemeCodename)
+    private val signerTemplateParameters: AbstractPartyTemplateParameters =
+        AbstractPartyTemplateParameters.selectAbstractPartyParameters(metadata.network.participantSignatureScheme.schemeCodeName)
     private val collectionTemplateParameters: CollectionTemplateParameters<AbstractPartyTemplateParameters> =
         CollectionTemplateParameters(
             innerTemplateParameters = signerTemplateParameters,
-            collectionSize = signersGroup.signerListSize
+            collectionSize = metadata.numberOfSigners
         )
 
     override val typeName = "Signers${signerTemplateParameters.typeName}"

@@ -4,8 +4,10 @@ import com.ing.zkflow.common.serialization.zinc.json.WitnessSerializer
 import com.ing.zkflow.common.transactions.UtxoInfo
 import com.ing.zkflow.common.transactions.zkTransactionMetadata
 import com.ing.zkflow.common.zkp.metadata.ZincType
+import com.ing.zkflow.util.camelToSnakeCase
 import kotlinx.serialization.Serializable
 import net.corda.core.contracts.ComponentGroupEnum
+import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.PrivacySalt
 import net.corda.core.crypto.SecureHash
 import net.corda.core.serialization.CordaSerializable
@@ -199,10 +201,10 @@ class Witness(
 
         private fun TraversableTransaction.serializedComponentBytesForOutputGroup(
             groupEnum: ComponentGroupEnum,
-            javaClass2ZincType: Map<KClass<*>, ZincType>
+            javaClass2ZincType: Map<KClass<out ContractState>, ZincType>
         ): Map<String, List<ByteArray>> {
             val zincTypes = outputs.map {
-                javaClass2ZincType[it.data::class]?.typeName ?: error("Class ${it.data::class} needs to have an associated Zinc type")
+                javaClass2ZincType[it.data::class]?.typeName?.camelToSnakeCase() ?: error("Class ${it.data::class} needs to have an associated Zinc type")
             }
 
             val serializedStateBytes =
@@ -220,7 +222,7 @@ class Witness(
          */
         private fun List<UtxoInfo>.serializedBytesForUTXO(
             groupEnum: ComponentGroupEnum,
-            javaClass2ZincType: Map<KClass<*>, ZincType>
+            javaClass2ZincType: Map<KClass<out ContractState>, ZincType>
         ): Map<String, List<ByteArray>> {
 
             require(groupEnum == ComponentGroupEnum.INPUTS_GROUP || groupEnum == ComponentGroupEnum.REFERENCES_GROUP) { "Only input and reference groups are valid for UTXO serialization." }
@@ -228,7 +230,7 @@ class Witness(
             // Pair each serialized state with the component group name and state name
             return this.map {
                 val zincType = javaClass2ZincType[it.stateClass] ?: error("Class ${it.stateClass} needs to have an associated Zinc type")
-                zincType.typeName to it.serializedContents
+                zincType.typeName.camelToSnakeCase() to it.serializedContents
             }
                 // group the serialized arrays based on their state name
                 .groupBy { it.first }.map { it.key to it.value.map { bytes -> bytes.second } }

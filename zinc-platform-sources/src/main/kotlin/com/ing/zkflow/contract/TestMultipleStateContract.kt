@@ -1,7 +1,7 @@
-package com.ing.zkflow.testing.fixtures.contract
+@file:Suppress("MagicNumber") // This is actually test code, but for platform sources needs to be in main
+package com.ing.zkflow.contract
 
 import com.ing.serialization.bfl.annotations.FixedLength
-import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.contracts.ZKOwnableState
 import com.ing.zkflow.common.contracts.ZKTransactionMetadataCommandData
 import com.ing.zkflow.common.transactions.zkFLowMetadata
@@ -9,13 +9,15 @@ import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
 import com.ing.zkflow.common.zkp.metadata.commandMetadata
 import com.ing.zkflow.common.zkp.metadata.transactionMetadata
+import com.ing.zkflow.contract.TestMultipleStateContract.Create.Companion.verifyCreate
+import com.ing.zkflow.contract.TestMultipleStateContract.Move.Companion.verifyMove
 import com.ing.zkflow.serialization.CommandDataSerializerMap
 import com.ing.zkflow.serialization.ContractStateSerializerMap
-import com.ing.zkflow.testing.fixtures.contract.TestMultipleStateContract.Create.Companion.verifyCreate
-import com.ing.zkflow.testing.fixtures.contract.TestMultipleStateContract.Move.Companion.verifyMove
+import com.ing.zkflow.serialization.bfl.DummyCommandDataSerializer
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
+import net.corda.core.contracts.AlwaysAcceptAttachmentConstraint
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.CommandAndState
 import net.corda.core.contracts.CommandData
@@ -25,26 +27,18 @@ import net.corda.core.contracts.ContractClassName
 import net.corda.core.contracts.TypeOnlyCommandData
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.transactions.LedgerTransaction
+import net.corda.testing.core.DummyCommandData
 import java.io.File
 import java.util.Random
 
-public object TestMultipleStateContractSerializers {
-    init {
-        ContractStateSerializerMap.register(TestMultipleStateContract.TestState1::class, 6, TestMultipleStateContract.TestState1.serializer())
-        ContractStateSerializerMap.register(TestMultipleStateContract.TestState2::class, 7, TestMultipleStateContract.TestState2.serializer())
-        CommandDataSerializerMap.register(TestMultipleStateContract.Create::class, 8, TestMultipleStateContract.Create.serializer())
-        CommandDataSerializerMap.register(TestMultipleStateContract.Move::class, 9, TestMultipleStateContract.Move.serializer())
-    }
-}
-
-public class TestMultipleStateContract : Contract {
-    public companion object {
-        public const val PROGRAM_ID: ContractClassName = "com.ing.zkflow.testing.fixtures.contract.TestMultipleStateContract"
+class TestMultipleStateContract : Contract {
+    companion object {
+        const val PROGRAM_ID: ContractClassName = "com.ing.zkflow.contract.TestMultipleStateContract"
     }
 
     @Serializable
     @BelongsToContract(TestMultipleStateContract::class)
-    public data class TestState1(
+    data class TestState1(
         override val owner: @Contextual AnonymousParty,
         val value: Int = Random().nextInt(1000)
     ) : ZKOwnableState {
@@ -56,7 +50,7 @@ public class TestMultipleStateContract : Contract {
             TestMultipleStateContractSerializers
         }
 
-        @FixedLength([2])
+        @FixedLength([1])
         override val participants: List<@Contextual AnonymousParty> = listOf(owner)
 
         override fun withNewOwner(newOwner: AnonymousParty): CommandAndState =
@@ -65,7 +59,7 @@ public class TestMultipleStateContract : Contract {
 
     @Serializable
     @BelongsToContract(TestMultipleStateContract::class)
-    public data class TestState2(
+    data class TestState2(
         override val owner: @Contextual AnonymousParty,
         val value: Int = Random().nextInt(1000),
         @FixedLength([2])
@@ -79,7 +73,7 @@ public class TestMultipleStateContract : Contract {
             TestMultipleStateContractSerializers
         }
 
-        @FixedLength([2])
+        @FixedLength([1])
         override val participants: List<@Contextual AnonymousParty> = listOf(owner)
 
         override fun withNewOwner(newOwner: AnonymousParty): CommandAndState =
@@ -88,33 +82,13 @@ public class TestMultipleStateContract : Contract {
 
     // Commands
     @Serializable
-    public class Create : TypeOnlyCommandData(), ZKCommandData, ZKTransactionMetadataCommandData {
-        override val transactionMetadata: ResolvedZKTransactionMetadata by transactionMetadata {
-            commands {
-                +Create::class
-            }
-        }
-
-        @Transient
-        override val metadata: ResolvedZKCommandMetadata = commandMetadata {
-            private = true
-            circuit {
-                buildFolder =
-                    File("${System.getProperty("user.dir")}/../zinc-platform-sources/build/circuits/create-multi-state")
-            }
-            outputs {
-                1 of TestState1::class
-                1 of TestState2::class
-            }
-            numberOfSigners = 1
-        }
-
-        public companion object {
-            public fun verifyCreate(
+    class Create : TypeOnlyCommandData() {
+        companion object {
+            fun verifyCreate(
                 tx: LedgerTransaction,
                 command: CommandWithParties<CommandData>
             ) {
-                tx.zkFLowMetadata.verify(tx)
+                // tx.zkFLowMetadata.verify(tx)
 
                 // Transaction contents
                 val output1 = tx.getOutput(0) as TestState1
@@ -126,9 +100,12 @@ public class TestMultipleStateContract : Contract {
     }
 
     @Serializable
-    public class Move : TypeOnlyCommandData(), ZKCommandData, ZKTransactionMetadataCommandData {
+    class Move : ZKTransactionMetadataCommandData {
 
         override val transactionMetadata: ResolvedZKTransactionMetadata by transactionMetadata {
+            network {
+                attachmentConstraintType = AlwaysAcceptAttachmentConstraint::class // to simplify DSL tests
+            }
             commands {
                 +Move::class
             }
@@ -136,10 +113,12 @@ public class TestMultipleStateContract : Contract {
 
         @Transient
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
+            attachmentConstraintType = AlwaysAcceptAttachmentConstraint::class // to simplify DSL tests
             private = true
             circuit {
+                name = "move_multi_state"
                 buildFolder =
-                    File("${System.getProperty("user.dir")}/../zinc-platform-sources/build/circuits/move-multi-state")
+                    File("${System.getProperty("user.dir")}/../zinc-platform-sources/build/circuits/move_multi_state")
             }
             inputs {
                 1 of TestState1::class
@@ -151,8 +130,9 @@ public class TestMultipleStateContract : Contract {
             }
             numberOfSigners = 2
         }
-        public companion object {
-            public fun verifyMove(
+
+        companion object {
+            fun verifyMove(
                 tx: LedgerTransaction,
                 command: CommandWithParties<CommandData>
             ) {
@@ -185,5 +165,23 @@ public class TestMultipleStateContract : Contract {
                 throw IllegalStateException("No valid command found")
             }
         }
+    }
+}
+
+object TestMultipleStateContractSerializers {
+    init {
+        CommandDataSerializerMap.register(DummyCommandData::class, 176540, DummyCommandDataSerializer)
+        ContractStateSerializerMap.register(
+            TestMultipleStateContract.TestState1::class,
+            6,
+            TestMultipleStateContract.TestState1.serializer()
+        )
+        ContractStateSerializerMap.register(
+            TestMultipleStateContract.TestState2::class,
+            7,
+            TestMultipleStateContract.TestState2.serializer()
+        )
+        CommandDataSerializerMap.register(TestMultipleStateContract.Create::class, 8, TestMultipleStateContract.Create.serializer())
+        CommandDataSerializerMap.register(TestMultipleStateContract.Move::class, 9, TestMultipleStateContract.Move.serializer())
     }
 }

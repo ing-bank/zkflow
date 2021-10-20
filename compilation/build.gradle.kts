@@ -6,7 +6,6 @@ plugins {
 
 dependencies {
     implementation(project(":protocol"))
-    implementation(project(":obsolete")) // TODO: Required only for CircuitConfigurator. Remove when that is removed.
 
     val cordaReleaseGroup: String by project
     val cordaVersion: String by project

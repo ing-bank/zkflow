@@ -1,14 +1,13 @@
 package com.ing.zkflow.gradle.task
 
+import com.ing.zkflow.common.zkp.metadata.TransactionMetadataCache.findMetadataByCircuitName
 import com.ing.zkflow.compilation.joinConstFiles
 import com.ing.zkflow.compilation.zinc.template.TemplateRenderer
 import com.ing.zkflow.compilation.zinc.template.parameters.SerializedStateTemplateParameters
 import com.ing.zkflow.compilation.zinc.template.parameters.SignersTemplateParameters
 import com.ing.zkflow.compilation.zinc.template.parameters.StateGroupTemplateParameters
 import com.ing.zkflow.compilation.zinc.template.parameters.TxStateTemplateParameters
-import com.ing.zkflow.compilation.zinc.util.CircuitConfigurator
 import com.ing.zkflow.compilation.zinc.util.CodeGenerator
-import com.ing.zkflow.gradle.extension.ZKFlowExtension
 import com.ing.zkflow.gradle.plugin.circuitNames
 import com.ing.zkflow.gradle.plugin.getTemplateContents
 import com.ing.zkflow.gradle.plugin.platformSourcesRootPath
@@ -24,15 +23,14 @@ open class GenerateZincPlatformCodeFromTemplatesTask : DefaultTask() {
         val extension = project.zkFlowExtension
 
         project.circuitNames?.forEach { circuitName ->
-            val circuitSources = extension.circuitSourcesBasePath.resolve(circuitName)
-            val configurator = CircuitConfigurator.fromSources(circuitSources, ZKFlowExtension.CONFIG_CIRCUIT_FILE)
-
+            val metadata = findMetadataByCircuitName(circuitName)
             val circuitSourceOutputPath = extension.mergedCircuitOutputPath.resolve(circuitName).resolve("src")
 
-            // Generate consts file
-            configurator.generateConstsFile(circuitSourceOutputPath)
+            val codeGenerator = CodeGenerator(circuitSourceOutputPath, metadata)
 
-            val codeGenerator = CodeGenerator(circuitSourceOutputPath)
+            // Generate consts file
+            codeGenerator.generateConstsFile()
+
             val consts = joinConstFiles(circuitSourceOutputPath, project.platformSourcesRootPath)
 
             codeGenerator.generateMerkleUtilsCode(project.getTemplateContents(extension.merkleTemplate), consts)
@@ -44,25 +42,47 @@ open class GenerateZincPlatformCodeFromTemplatesTask : DefaultTask() {
 
             extension
                 .apply {
-                    configurator.circuitConfiguration.circuit.states
-                        .forEach { addConfigurations(TxStateTemplateParameters(it)) }
-
-                    addConfigurations(SignersTemplateParameters(configurator.circuitConfiguration.groups.signerGroup))
-
-                    configurator.circuitConfiguration.groups.inputGroup.filter { it.stateGroupSize > 0 }.forEach { stateGroup ->
-                        addConfigurations(SerializedStateTemplateParameters("input", stateGroup))
+                    metadata.javaClass2ZincType.forEach { (_, zincType) ->
+                        addConfigurations(TxStateTemplateParameters(metadata, zincType))
                     }
-                    addConfigurations(StateGroupTemplateParameters("input", configurator.circuitConfiguration.groups.inputGroup))
 
-                    configurator.circuitConfiguration.groups.outputGroup.filter { it.stateGroupSize > 0 }.forEach { stateGroup ->
-                        addConfigurations(SerializedStateTemplateParameters("output", stateGroup))
-                    }
-                    addConfigurations(StateGroupTemplateParameters("output", configurator.circuitConfiguration.groups.outputGroup))
+                    addConfigurations(SignersTemplateParameters(metadata))
 
-                    configurator.circuitConfiguration.groups.referenceGroup.filter { it.stateGroupSize > 0 }.forEach { stateGroup ->
-                        addConfigurations(SerializedStateTemplateParameters("reference", stateGroup))
+                    metadata.inputTypeGroups.filter { it.count > 0 }.forEach { contractStateTypeCount ->
+                        addConfigurations(
+                            SerializedStateTemplateParameters(
+                                "input",
+                                contractStateTypeCount,
+                                metadata.javaClass2ZincType[contractStateTypeCount.type]
+                                    ?: error("No Zinc Type defined for ${contractStateTypeCount.type}")
+                            )
+                        )
                     }
-                    addConfigurations(StateGroupTemplateParameters("reference", configurator.circuitConfiguration.groups.referenceGroup))
+                    addConfigurations(StateGroupTemplateParameters("input", metadata.inputTypeGroups, metadata.javaClass2ZincType))
+
+                    metadata.outputTypeGroups.filter { it.count > 0 }.forEach { contractStateTypeCount ->
+                        addConfigurations(
+                            SerializedStateTemplateParameters(
+                                "output",
+                                contractStateTypeCount,
+                                metadata.javaClass2ZincType[contractStateTypeCount.type]
+                                    ?: error("No Zinc Type defined for ${contractStateTypeCount.type}")
+                            )
+                        )
+                    }
+                    addConfigurations(StateGroupTemplateParameters("output", metadata.outputTypeGroups, metadata.javaClass2ZincType))
+
+                    metadata.referenceTypeGroups.filter { it.count > 0 }.forEach { contractStateTypeCount ->
+                        addConfigurations(
+                            SerializedStateTemplateParameters(
+                                "reference",
+                                contractStateTypeCount,
+                                metadata.javaClass2ZincType[contractStateTypeCount.type]
+                                    ?: error("No Zinc Type defined for ${contractStateTypeCount.type}")
+                            )
+                        )
+                    }
+                    addConfigurations(StateGroupTemplateParameters("reference", metadata.referenceTypeGroups, metadata.javaClass2ZincType))
                 }.resolveAllTemplateParameters()
                 .forEach(templateRenderer::renderTemplate)
         }

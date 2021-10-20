@@ -9,6 +9,7 @@ import com.ing.zkflow.node.services.ZKVerifierTransactionStorage
 import com.ing.zkflow.node.services.getCordaServiceFromConfig
 import net.corda.core.DeleteForDJVM
 import net.corda.core.contracts.Attachment
+import net.corda.core.contracts.AttachmentConstraint
 import net.corda.core.contracts.AttachmentResolutionException
 import net.corda.core.contracts.CommandWithParties
 import net.corda.core.contracts.ComponentGroupEnum
@@ -46,6 +47,9 @@ import kotlin.reflect.KClass
 
 val KClass<out ContractState>.qualifiedStateClassName: String
     get() = java.name ?: error("Contract state classes must be a named class")
+
+val KClass<out AttachmentConstraint>.qualifiedConstraintClassName: String
+    get() = java.name ?: error("Attachment constraint classes must be a named class")
 
 fun ServiceHub.collectUtxoInfos(
     stateRefs: List<StateRef>

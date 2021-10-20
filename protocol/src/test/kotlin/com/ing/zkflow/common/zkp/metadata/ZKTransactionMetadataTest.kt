@@ -21,6 +21,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldStartWith
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
+import net.corda.core.contracts.AlwaysAcceptAttachmentConstraint
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.CommandAndState
 import net.corda.core.contracts.CommandData
@@ -115,7 +116,7 @@ class ZKTransactionMetadataTest {
     fun `ZKTransactionMetadata DSL happy flow works`() {
         val transactionMetadata = testUncachedTransactionMetadata {
             network {
-                attachmentConstraintType = SignatureAttachmentConstraint::class
+                attachmentConstraintType = AlwaysAcceptAttachmentConstraint::class
             }
 
             commands {
@@ -124,7 +125,7 @@ class ZKTransactionMetadataTest {
             }
         }
 
-        transactionMetadata.network.attachmentConstraintType shouldBe SignatureAttachmentConstraint::class
+        transactionMetadata.network.attachmentConstraintType shouldBe AlwaysAcceptAttachmentConstraint::class
         transactionMetadata.commands[0].commandKClass shouldBe TestContract.Create::class
         transactionMetadata.commands[1].commandKClass shouldBe TestContract.SignOnly::class
     }

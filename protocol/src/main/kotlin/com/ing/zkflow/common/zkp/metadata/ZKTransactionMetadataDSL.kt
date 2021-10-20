@@ -169,8 +169,17 @@ class ZKTransactionMetadata {
     }
 }
 
-internal object TransactionMetadataCache {
-    internal val resolvedTransactionMetadata = mutableMapOf<KClass<out ZKTransactionMetadataCommandData>, ResolvedZKTransactionMetadata>()
+object TransactionMetadataCache {
+    val resolvedTransactionMetadata = mutableMapOf<KClass<out ZKTransactionMetadataCommandData>, ResolvedZKTransactionMetadata>()
+
+    fun findMetadataByCircuitName(circuitName: String) =
+        resolvedTransactionMetadata.entries.find { cacheEntry ->
+            cacheEntry.value.commands.any { command ->
+                command is PrivateResolvedZKCommandMetadata &&
+                    command.commandKClass == cacheEntry.key &&
+                    command.circuit.name == circuitName
+            }
+        }?.value ?: error("Could not find metadata for circuit with name $circuitName")
 }
 
 class CachedResolvedTransactionMetadataDelegate(

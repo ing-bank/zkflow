@@ -4,6 +4,7 @@ import com.ing.zkflow.common.zkp.ZKFlow
 import net.corda.core.contracts.AttachmentConstraint
 import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.ContractClassName
+import net.corda.core.contracts.ContractState
 import net.corda.core.crypto.SignatureScheme
 import java.io.File
 import java.time.Duration
@@ -17,7 +18,7 @@ data class ResolvedZKCircuit(
      * This is where the circuit elements for this command can be found
      */
     val buildFolder: File,
-    val javaClass2ZincType: Map<KClass<*>, ZincType>,
+    val javaClass2ZincType: Map<KClass<out ContractState>, ZincType>,
     val buildTimeout: Duration,
     val setupTimeout: Duration,
     val provingTimeout: Duration,

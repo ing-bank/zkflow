@@ -33,7 +33,9 @@ repositories {
 
 dependencies {
     implementation(kotlin("stdlib"))
+    testImplementation("com.ing.zkflow:test-utils:1.0-SNAPSHOT")
 }
+
 
 // Normally this build is run after the included build, but this ensures that all dependencies
 // exist at build time. This is not necessary when using the real maven dependencies instead

@@ -1,6 +1,6 @@
 mod platform_consts;
 mod anonymous_party_ed_dsa;
-mod anonymous_party_ed_dsa_collection_2;
+mod anonymous_party_ed_dsa_collection_1;
 mod platform_integer;
 
 use platform_consts::U32_BYTES;
@@ -9,8 +9,8 @@ use platform_consts::LIST_LENGTH_PREFIX;
 use platform_consts::CORDA_SERDE_MAGIC_LENGTH;
 use anonymous_party_ed_dsa::AnonymousPartyEdDSA;
 use anonymous_party_ed_dsa::ANONYMOUS_PARTY_ED_DSA_LENGTH;
-use anonymous_party_ed_dsa_collection_2::AnonymousPartyEdDSA_Collection_2;
-use anonymous_party_ed_dsa_collection_2::ANONYMOUS_PARTY_ED_DSA_COLLECTION_2_LENGTH;
+use anonymous_party_ed_dsa_collection_1::AnonymousPartyEdDSA_Collection_1;
+use anonymous_party_ed_dsa_collection_1::ANONYMOUS_PARTY_ED_DSA_COLLECTION_1_LENGTH;
 
 // public data class TestState(
 //     override val owner: @Contextual AnonymousParty,
@@ -23,12 +23,10 @@ use anonymous_party_ed_dsa_collection_2::ANONYMOUS_PARTY_ED_DSA_COLLECTION_2_LEN
 //     CommandAndState(Move(), copy(owner = newOwner))
 // }
 
-const STATE_PARTICIPANTS_SIZE: u16 = 2;
-
 //! TestState lengths
 const OWNER_LENGTH: u16 = ANONYMOUS_PARTY_ED_DSA_LENGTH;
 const VALUE_LENGTH: u16 = I32_BYTES;
-const PARTICIPANTS_LENGTH: u16 = ANONYMOUS_PARTY_ED_DSA_COLLECTION_2_LENGTH;
+const PARTICIPANTS_LENGTH: u16 = ANONYMOUS_PARTY_ED_DSA_COLLECTION_1_LENGTH;
 
 //! TestState offsets
 const OWNER_OFFSET: u16 = 0;
@@ -45,7 +43,7 @@ const TEST_STATE_LENGTH: u16
 struct TestState {
     owner: AnonymousPartyEdDSA,
     value: i32,
-    participants: AnonymousPartyEdDSA_Collection_2,
+    participants: AnonymousPartyEdDSA_Collection_1,
 }
 
 type SerializedTestState = [u8; TEST_STATE_LENGTH];
@@ -71,11 +69,11 @@ impl TestState {
         dbg!("[Create] Value = {}", value);
 
         let participants = {
-            let mut participants_bytes = [0; ANONYMOUS_PARTY_ED_DSA_COLLECTION_2_LENGTH];
-            for i in 0..ANONYMOUS_PARTY_ED_DSA_COLLECTION_2_LENGTH {
+            let mut participants_bytes = [0; ANONYMOUS_PARTY_ED_DSA_COLLECTION_1_LENGTH];
+            for i in 0..ANONYMOUS_PARTY_ED_DSA_COLLECTION_1_LENGTH {
                 participants_bytes[i] = serialized[i + PARTICIPANTS_OFFSET];
             }
-            AnonymousPartyEdDSA_Collection_2::deserialize(participants_bytes)
+            AnonymousPartyEdDSA_Collection_1::deserialize(participants_bytes)
         };
         dbg!("[Create] Participants = {}", participants);
 
@@ -89,6 +87,6 @@ impl TestState {
     fn equals(this: TestState, that: TestState) -> bool {
         AnonymousPartyEdDSA::equals(this.owner, that.owner) &&
             this.value == that.value &&
-            AnonymousPartyEdDSA_Collection_2::equals(this.participants, that.participants)
+            AnonymousPartyEdDSA_Collection_1::equals(this.participants, that.participants)
     }
 }

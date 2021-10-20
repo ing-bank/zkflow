@@ -1,11 +1,18 @@
 package com.ing.zkflow.compilation.zinc.template.parameters
 
+import com.ing.zkflow.common.zkp.metadata.ContractStateTypeCount
+import com.ing.zkflow.common.zkp.metadata.ZincType
 import com.ing.zkflow.compilation.zinc.template.TemplateParameters
-import com.ing.zkflow.compilation.zinc.util.CircuitConfigurator
 import com.ing.zkflow.util.camelToSnakeCase
 import com.ing.zkflow.util.snakeCaseToCamel
+import net.corda.core.contracts.ContractState
+import kotlin.reflect.KClass
 
-data class StateGroupTemplateParameters(val componentName: String, val states: List<CircuitConfigurator.StateGroup>) :
+data class StateGroupTemplateParameters(
+    val componentName: String,
+    val contractStateTypeCounts: List<ContractStateTypeCount>,
+    val javaClass2ZincType: Map<KClass<out ContractState>, ZincType>
+) :
     TemplateParameters(
         if (componentName.contains("output"))
             "platform_components_outputs_template.zn"
@@ -29,7 +36,7 @@ data class StateGroupTemplateParameters(val componentName: String, val states: L
             "HASH_COMPUTATION_PLACEHOLDER" to if (componentName.contains("output")) getContent(key = "leafHash") else getContent(key = "utxoHash")
         )
 
-    private val componentGroupSize = states.sumBy { it.stateGroupSize }
+    private val componentGroupSize = contractStateTypeCounts.sumBy { it.count }
     private val templates: Map<String, String> = mapOf(
         "module" to "mod serialized_${"COMPONENT_NAME_MODULE_NAME"}_tx_state_${"STATE_NAME_MODULE_NAME"};\n",
 
@@ -79,9 +86,11 @@ use serialized_${"COMPONENT_NAME_MODULE_NAME"}_tx_state_${"STATE_NAME_MODULE_NAM
             }
         }
 
-        states.forEach {
+        contractStateTypeCounts.forEach {
             if (componentGroupSize > 0) {
-                val zincType = it.zincType ?: error("Java class ${it.javaClass} needs to have an associated Zinc type")
+                val zincType = javaClass2ZincType[it.type]?.typeName
+                    ?: error("No Zinc Type defined for ${it.type}")
+                // val zincType = it.zincType ?: error("Java class ${it.javaClass} needs to have an associated Zinc type")
                 content += templates[key]
                     ?.replace("STATE_NAME_CONSTANT_PREFIX", zincType.camelToSnakeCase().toUpperCase())
                     ?.replace("STATE_NAME_MODULE_NAME", zincType.camelToSnakeCase())
