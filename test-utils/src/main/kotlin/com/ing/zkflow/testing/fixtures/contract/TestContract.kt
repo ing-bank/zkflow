@@ -9,6 +9,8 @@ import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
 import com.ing.zkflow.common.zkp.metadata.commandMetadata
 import com.ing.zkflow.common.zkp.metadata.transactionMetadata
+import com.ing.zkflow.serialization.CommandDataSerializerMap
+import com.ing.zkflow.serialization.ContractStateSerializerMap
 import com.ing.zkflow.testing.fixtures.contract.TestContract.Create.Companion.verifyCreate
 import com.ing.zkflow.testing.fixtures.contract.TestContract.Move.Companion.verifyMove
 import com.ing.zkflow.testing.fixtures.contract.TestContract.MoveBidirectional.Companion.verifyMoveBidirectional
@@ -28,15 +30,15 @@ import java.io.File
 import java.util.Random
 
 public val testSerializers: Unit = run {
-    com.ing.zkflow.serialization.ContractStateSerializerMap.register(TestContract.TestState::class, 1, TestContract.TestState.serializer())
-    com.ing.zkflow.serialization.CommandDataSerializerMap.register(TestContract.Create::class, 2, TestContract.Create.serializer())
-    com.ing.zkflow.serialization.CommandDataSerializerMap.register(TestContract.Move::class, 3, TestContract.Move.serializer())
-    com.ing.zkflow.serialization.CommandDataSerializerMap.register(
+    ContractStateSerializerMap.register(TestContract.TestState::class, 1, TestContract.TestState.serializer())
+    CommandDataSerializerMap.register(TestContract.Create::class, 2, TestContract.Create.serializer())
+    CommandDataSerializerMap.register(TestContract.Move::class, 3, TestContract.Move.serializer())
+    CommandDataSerializerMap.register(
         TestContract.MoveBidirectional::class,
         4,
         TestContract.MoveBidirectional.serializer()
     )
-    com.ing.zkflow.serialization.CommandDataSerializerMap.register(TestContract.SignOnly::class, 5, TestContract.SignOnly.serializer())
+    CommandDataSerializerMap.register(TestContract.SignOnly::class, 5, TestContract.SignOnly.serializer())
 }
 
 public class TestContract : Contract {

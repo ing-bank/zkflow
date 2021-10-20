@@ -5,6 +5,8 @@ import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
 import com.ing.zkflow.common.zkp.metadata.commandMetadata
 import com.ing.zkflow.common.zkp.metadata.transactionMetadata
+import com.ing.zkflow.serialization.CommandDataSerializerMap
+import com.ing.zkflow.serialization.ContractStateSerializerMap
 import com.ing.zkflow.testing.fixtures.state.DummyState
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
@@ -15,9 +17,9 @@ import net.corda.core.transactions.LedgerTransaction
 
 public object DummySerializers {
     init {
-        com.ing.zkflow.serialization.ContractStateSerializerMap.register(DummyState::class, 9999, DummyState.serializer())
-        com.ing.zkflow.serialization.CommandDataSerializerMap.register(DummyContract.Relax::class, 9998, DummyContract.Relax.serializer())
-        com.ing.zkflow.serialization.CommandDataSerializerMap.register(DummyContract.Chill::class, 9997, DummyContract.Chill.serializer())
+        ContractStateSerializerMap.register(DummyState::class, 9999, DummyState.serializer())
+        CommandDataSerializerMap.register(DummyContract.Relax::class, 9998, DummyContract.Relax.serializer())
+        CommandDataSerializerMap.register(DummyContract.Chill::class, 9997, DummyContract.Chill.serializer())
     }
 }
 
