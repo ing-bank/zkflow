@@ -6,10 +6,9 @@ import com.ing.zkflow.testing.getZincZKService
 import com.ing.zkflow.zinc.types.toZincJson
 import io.ivno.collateraltoken.contract.RedemptionStatus
 
-class DeserializeRedemptionStatusTest :
-    DeserializationTestBase<DeserializeRedemptionStatusTest, RedemptionStatus>(
-        { it.toZincJson() }
-    ) {
+class DeserializeRedemptionStatusTest : DeserializationTestBase<DeserializeRedemptionStatusTest, RedemptionStatus>(
+    { it.toZincJson() }
+) {
     override fun getZincZKService(): ZincZKService = getZincZKService<DeserializeRedemptionStatusTest>()
 
     companion object {

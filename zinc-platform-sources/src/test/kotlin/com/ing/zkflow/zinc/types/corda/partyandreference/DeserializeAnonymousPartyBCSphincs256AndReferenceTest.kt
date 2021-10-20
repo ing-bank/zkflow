@@ -13,8 +13,7 @@ import net.corda.core.utilities.OpaqueBytes
 import net.corda.testing.core.TestIdentity
 import kotlin.random.Random
 
-class DeserializeAnonymousPartyBCSphincs256AndReferenceTest :
-    DeserializationTestBase<DeserializeAnonymousPartyBCSphincs256AndReferenceTest, DeserializeAnonymousPartyBCSphincs256AndReferenceTest.Data>({
+class DeserializeAnonymousPartyBCSphincs256AndReferenceTest : DeserializationTestBase <DeserializeAnonymousPartyBCSphincs256AndReferenceTest, DeserializeAnonymousPartyBCSphincs256AndReferenceTest.Data>({
         it.data.toZincJson(BCSphincs256Surrogate.ENCODED_SIZE)
     }) {
     override fun getZincZKService() = getZincZKService<DeserializeAnonymousPartyBCSphincs256AndReferenceTest>()

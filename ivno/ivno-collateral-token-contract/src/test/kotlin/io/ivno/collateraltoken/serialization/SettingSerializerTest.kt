@@ -18,16 +18,21 @@ class SettingSerializerTest {
         val setting2: Setting<Int>
     )
 
-    private val settingWitString1 : Setting<String> = Setting("Property 1", "Value 1")
-    private val settingWitString2 : Setting<String> = Setting("Property 2", "Value 2")
+    private val settingWitString1: Setting<String> = Setting("Property 1", "Value 1")
+    private val settingWitString2: Setting<String> = Setting("Property 2", "Value 2")
 
-    private val settingWitInt1 : Setting<Int> = Setting("Property 1", 1)
-    private val settingWitInt2 : Setting<Int> = Setting("Property 2", 2)
+    private val settingWitInt1: Setting<Int> = Setting("Property 1", 1)
+    private val settingWitInt2: Setting<Int> = Setting("Property 2", 2)
 
     @Test
     fun `serialize and deserialize Setting with String directly`() {
         assertRoundTripSucceeds(settingWitString1, strategy = SettingSerializer(String.serializer()), outerFixedLength = intArrayOf(7))
-        assertSameSize(settingWitString1, settingWitString2, strategy = SettingSerializer(String.serializer()), outerFixedLength = intArrayOf(7))
+        assertSameSize(
+            settingWitString1,
+            settingWitString2,
+            strategy = SettingSerializer(String.serializer()),
+            outerFixedLength = intArrayOf(7)
+        )
     }
 
     @Test

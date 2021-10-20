@@ -9,8 +9,7 @@ import kotlinx.serialization.Serializable
 import net.corda.core.contracts.AttachmentConstraint
 import net.corda.core.contracts.AutomaticPlaceholderConstraint
 
-class DeserializeAutomaticPlaceholderConstraintTest :
-    DeserializationTestBase<DeserializeAutomaticPlaceholderConstraintTest, DeserializeAutomaticPlaceholderConstraintTest.Data>(
+class DeserializeAutomaticPlaceholderConstraintTest : DeserializationTestBase <DeserializeAutomaticPlaceholderConstraintTest, DeserializeAutomaticPlaceholderConstraintTest.Data>(
         {
             it.data.toZincJson()
         }

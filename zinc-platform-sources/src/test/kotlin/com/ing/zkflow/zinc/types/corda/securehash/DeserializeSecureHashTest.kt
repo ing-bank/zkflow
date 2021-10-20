@@ -9,8 +9,7 @@ import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import net.corda.core.crypto.SecureHash
 
-class DeserializeSecureHashTest :
-    DeserializationTestBase<DeserializeSecureHashTest, DeserializeSecureHashTest.Data>({ it.data.toZincJson() }) {
+class DeserializeSecureHashTest : DeserializationTestBase <DeserializeSecureHashTest, DeserializeSecureHashTest.Data>({ it.data.toZincJson() }) {
     override fun getZincZKService(): ZincZKService = getZincZKService<DeserializeSecureHashTest>()
 
     @Serializable

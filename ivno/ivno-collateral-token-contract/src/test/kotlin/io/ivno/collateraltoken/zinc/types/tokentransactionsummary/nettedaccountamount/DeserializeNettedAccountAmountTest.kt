@@ -18,7 +18,7 @@ class DeserializeNettedAccountAmountTest :
     ) {
     override fun getZincZKService(): ZincZKService = getZincZKService<DeserializeNettedAccountAmountTest>()
 
-        override fun getSerializersModule() = IvnoSerializers.serializersModule
+    override fun getSerializersModule() = IvnoSerializers.serializersModule
 
     @Serializable
     data class Data(val data: @Contextual NettedAccountAmount)

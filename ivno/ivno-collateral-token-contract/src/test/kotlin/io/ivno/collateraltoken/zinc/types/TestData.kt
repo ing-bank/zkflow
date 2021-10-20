@@ -251,10 +251,10 @@ val nettedAccountAmountWithAccountAddressOfDifferentAccountId = nettedAccountAmo
 val nettedAccountAmountWithAccountAddressOfDifferentParty = nettedAccountAmount.copy(
     accountAddress = AccountAddress(someString, anotherCordaX500Name)
 )
-val nettedAccountAmountWithAmountOfDifferentQuantity= nettedAccountAmount.copy(
+val nettedAccountAmountWithAmountOfDifferentQuantity = nettedAccountAmount.copy(
     amount = BigDecimalAmount(42, tokenDescriptor)
 )
-val nettedAccountAmountWithAmountOfDifferentAmountType= nettedAccountAmount.copy(
+val nettedAccountAmountWithAmountOfDifferentAmountType = nettedAccountAmount.copy(
     amount = BigDecimalAmount(1, anotherTokenDescriptor)
 )
 
@@ -308,7 +308,7 @@ val anotherMembershipAttestation = MembershipAttestationSurrogate(
     }
 ).toOriginal()
 
-class MyTokenContract: TokenContract()
+class MyTokenContract : TokenContract()
 
 val tokenContractCommandMove = TokenContract.Command.Move()
 val tokenContractCommandMoveWithOtherContract = TokenContract.Command.Move(MyTokenContract::class.java)

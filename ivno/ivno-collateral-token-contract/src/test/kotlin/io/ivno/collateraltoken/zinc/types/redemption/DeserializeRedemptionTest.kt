@@ -9,13 +9,12 @@ import io.ivno.collateraltoken.zinc.types.redemption
 import io.ivno.collateraltoken.zinc.types.toZincJson
 import kotlinx.serialization.Serializable
 
-class DeserializeRedemptionTest :
-DeserializationTestBase<DeserializeRedemptionTest, DeserializeRedemptionTest.Data>(
+class DeserializeRedemptionTest : DeserializationTestBase<DeserializeRedemptionTest, DeserializeRedemptionTest.Data>(
     { it.data.toZincJson() }
 ) {
     override fun getZincZKService(): ZincZKService = getZincZKService<DeserializeRedemptionTest>()
 
-        override fun getSerializersModule() = IvnoSerializers.serializersModule
+    override fun getSerializersModule() = IvnoSerializers.serializersModule
 
     @Serializable
     data class Data(val data: Redemption)

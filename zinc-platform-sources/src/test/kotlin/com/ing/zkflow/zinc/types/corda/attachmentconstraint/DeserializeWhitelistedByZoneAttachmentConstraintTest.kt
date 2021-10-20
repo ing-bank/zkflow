@@ -9,8 +9,7 @@ import kotlinx.serialization.Serializable
 import net.corda.core.contracts.AttachmentConstraint
 import net.corda.core.contracts.WhitelistedByZoneAttachmentConstraint
 
-class DeserializeWhitelistedByZoneAttachmentConstraintTest :
-    DeserializationTestBase<DeserializeWhitelistedByZoneAttachmentConstraintTest, DeserializeWhitelistedByZoneAttachmentConstraintTest.Data>(
+class DeserializeWhitelistedByZoneAttachmentConstraintTest : DeserializationTestBase <DeserializeWhitelistedByZoneAttachmentConstraintTest, DeserializeWhitelistedByZoneAttachmentConstraintTest.Data>(
         {
             it.data.toZincJson()
         }

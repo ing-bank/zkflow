@@ -18,12 +18,12 @@ import net.corda.core.contracts.UniqueIdentifier
 import java.util.UUID
 
 class DeserializeBigDecimalAmountLinearPointerTest :
-DeserializationTestBase<DeserializeBigDecimalAmountLinearPointerTest, DeserializeBigDecimalAmountLinearPointerTest.Data>(
-    { it.data.toZincJson() }
-) {
+    DeserializationTestBase<DeserializeBigDecimalAmountLinearPointerTest, DeserializeBigDecimalAmountLinearPointerTest.Data>(
+        { it.data.toZincJson() }
+    ) {
     override fun getZincZKService(): ZincZKService = getZincZKService<DeserializeBigDecimalAmountLinearPointerTest>()
 
-        override fun getSerializersModule() = SerializersModule { contextual(BigDecimalAmountSerializer(LinearPointerSerializer)) }
+    override fun getSerializersModule() = SerializersModule { contextual(BigDecimalAmountSerializer(LinearPointerSerializer)) }
 
     @Serializable
     data class Data(@BigDecimalSizes([20, 4]) val data: @Contextual BigDecimalAmount<@Contextual LinearPointer<@Contextual IvnoTokenType>>)

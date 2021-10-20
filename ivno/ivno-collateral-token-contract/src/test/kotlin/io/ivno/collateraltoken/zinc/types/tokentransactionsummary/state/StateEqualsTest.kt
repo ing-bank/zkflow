@@ -35,7 +35,7 @@ class StateEqualsTest {
             put(
                 "left",
                 left.toJsonObject(
-                    encodedSize =  EdDSASurrogate.ENCODED_SIZE,
+                    encodedSize = EdDSASurrogate.ENCODED_SIZE,
                     isAnonymous = false,
                     scheme = Crypto.EDDSA_ED25519_SHA512
                 )
@@ -43,7 +43,7 @@ class StateEqualsTest {
             put(
                 "right",
                 right.toJsonObject(
-                    encodedSize =  EdDSASurrogate.ENCODED_SIZE,
+                    encodedSize = EdDSASurrogate.ENCODED_SIZE,
                     isAnonymous = false,
                     scheme = Crypto.EDDSA_ED25519_SHA512
                 )

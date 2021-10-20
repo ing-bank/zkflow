@@ -12,19 +12,18 @@ import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import net.corda.core.crypto.Crypto
 
-class DeserializeNetworkTest :
-    DeserializationTestBase<DeserializeNetworkTest, DeserializeNetworkTest.Data>(
-        {
-            it.data.toZincJson(
-                encodedSize =  EdDSASurrogate.ENCODED_SIZE,
-                isAnonymous = false,
-                scheme = Crypto.EDDSA_ED25519_SHA512
-            )
-        }
-    ) {
+class DeserializeNetworkTest : DeserializationTestBase<DeserializeNetworkTest, DeserializeNetworkTest.Data>(
+    {
+        it.data.toZincJson(
+            encodedSize = EdDSASurrogate.ENCODED_SIZE,
+            isAnonymous = false,
+            scheme = Crypto.EDDSA_ED25519_SHA512
+        )
+    }
+) {
     override fun getZincZKService(): ZincZKService = getZincZKService<DeserializeNetworkTest>()
 
-        override fun getSerializersModule() = IvnoSerializers.serializersModule
+    override fun getSerializersModule() = IvnoSerializers.serializersModule
 
     @Serializable
     data class Data(val data: @Contextual Network)

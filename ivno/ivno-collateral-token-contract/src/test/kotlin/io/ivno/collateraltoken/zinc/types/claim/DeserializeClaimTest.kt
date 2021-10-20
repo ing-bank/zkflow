@@ -16,15 +16,14 @@ import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
 
-class DeserializeClaimTest :
-    DeserializationTestBase<DeserializeClaimTest, DeserializeClaimTest.Data>(
-        {
-            it.data.toZincJson(ClaimSurrogate.PROPERTY_LENGTH, VALUE_LENGTH)
-        }
-    ) {
+class DeserializeClaimTest : DeserializationTestBase<DeserializeClaimTest, DeserializeClaimTest.Data>(
+    {
+        it.data.toZincJson(ClaimSurrogate.PROPERTY_LENGTH, VALUE_LENGTH)
+    }
+) {
     override fun getZincZKService(): ZincZKService = getZincZKService<DeserializeClaimTest>()
 
-        override fun getSerializersModule() = SerializersModule {
+    override fun getSerializersModule() = SerializersModule {
         polymorphic(AbstractClaim::class) {
             subclass(ClaimSerializer(String.serializer()))
         }

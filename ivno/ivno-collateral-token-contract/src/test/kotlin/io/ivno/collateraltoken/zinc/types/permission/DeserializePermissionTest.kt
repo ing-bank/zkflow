@@ -9,15 +9,14 @@ import io.onixlabs.corda.bnms.contract.Permission
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 
-class DeserializePermissionTest :
-    DeserializationTestBase<DeserializePermissionTest, DeserializePermissionTest.Data>(
-        {
-            it.data.toZincJson()
-        }
-    ) {
+class DeserializePermissionTest : DeserializationTestBase<DeserializePermissionTest, DeserializePermissionTest.Data>(
+    {
+        it.data.toZincJson()
+    }
+) {
     override fun getZincZKService(): ZincZKService = getZincZKService<DeserializePermissionTest>()
 
-        override fun getSerializersModule() = IvnoSerializers.serializersModule
+    override fun getSerializersModule() = IvnoSerializers.serializersModule
 
     @Serializable
     data class Data(val data: @Contextual Permission)

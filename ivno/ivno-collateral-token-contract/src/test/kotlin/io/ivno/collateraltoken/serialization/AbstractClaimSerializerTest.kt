@@ -62,7 +62,12 @@ class AbstractClaimSerializerTest {
     @Test
     fun `serialize and deserialize AbstractClaim`() {
         val data1 = ClaimData(abstractClaimWithString, abstractClaimWithInt, abstractClaimWithContextual, abstractClaimWithPolymorphic)
-        val data2 = ClaimData(anotherAbstractClaimWithString, anotherAbstractClaimWithInt, anotherAbstractClaimWithContextual, anotherAbstractClaimWithPolymorphic)
+        val data2 = ClaimData(
+            anotherAbstractClaimWithString,
+            anotherAbstractClaimWithInt,
+            anotherAbstractClaimWithContextual,
+            anotherAbstractClaimWithPolymorphic
+        )
 
         assertRoundTripSucceeds(data1, serializersModule)
         assertSameSize(data1, data2, serializersModule)

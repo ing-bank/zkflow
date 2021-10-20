@@ -39,7 +39,12 @@ class ClaimSerializerTest {
     @Test
     fun `serialize and deserialize Claim with String directly`() {
         assertRoundTripSucceeds(claimWithString, strategy = ClaimSerializer(String.serializer()), outerFixedLength = intArrayOf(7))
-        assertSameSize(claimWithString, anotherClaimWithString, strategy = ClaimSerializer(String.serializer()), outerFixedLength = intArrayOf(7))
+        assertSameSize(
+            claimWithString,
+            anotherClaimWithString,
+            strategy = ClaimSerializer(String.serializer()),
+            outerFixedLength = intArrayOf(7)
+        )
     }
 
     @Test
@@ -57,7 +62,11 @@ class ClaimSerializerTest {
     @Test
     fun `serialize and deserialize Claim with Polymorphic directly`() {
         assertRoundTripSucceeds(claimWithPolymorphic, strategy = ClaimSerializer(PolymorphicSerializer(AbstractParty::class)))
-        assertSameSize(claimWithPolymorphic, anotherClaimWithPolymorphic, strategy = ClaimSerializer(PolymorphicSerializer(AbstractParty::class)))
+        assertSameSize(
+            claimWithPolymorphic,
+            anotherClaimWithPolymorphic,
+            strategy = ClaimSerializer(PolymorphicSerializer(AbstractParty::class))
+        )
     }
 
     @Test

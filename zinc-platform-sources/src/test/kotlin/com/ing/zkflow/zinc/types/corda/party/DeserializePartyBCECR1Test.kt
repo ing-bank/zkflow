@@ -11,8 +11,7 @@ import net.corda.core.crypto.Crypto
 import net.corda.core.identity.AbstractParty
 import net.corda.testing.core.TestIdentity
 
-class DeserializePartyBCECR1Test :
-    DeserializationTestBase<DeserializePartyBCECR1Test, DeserializePartyBCECR1Test.Data>({
+class DeserializePartyBCECR1Test : DeserializationTestBase <DeserializePartyBCECR1Test, DeserializePartyBCECR1Test.Data>({
         it.data.toZincJson(BCECSurrogate.ENCODED_SIZE)
     }) {
     override fun getZincZKService(): ZincZKService = getZincZKService<DeserializePartyBCECR1Test>()

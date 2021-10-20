@@ -10,8 +10,7 @@ import kotlinx.serialization.Serializable
 import net.corda.core.contracts.StateRef
 import net.corda.core.crypto.SecureHash
 
-class DeserializeStateRefTest :
-    DeserializationTestBase<DeserializeStateRefTest, DeserializeStateRefTest.Data>({ it.data.toZincJson() }) {
+class DeserializeStateRefTest : DeserializationTestBase <DeserializeStateRefTest, DeserializeStateRefTest.Data>({ it.data.toZincJson() }) {
     override fun getZincZKService(): ZincZKService = getZincZKService<DeserializeStateRefTest>()
 
     @Serializable

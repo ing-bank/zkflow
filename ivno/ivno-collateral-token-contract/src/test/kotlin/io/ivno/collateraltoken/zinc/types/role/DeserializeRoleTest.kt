@@ -10,15 +10,14 @@ import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 
 
-class DeserializeRoleTest :
-    DeserializationTestBase<DeserializeRoleTest, DeserializeRoleTest.Data>(
-        {
-            it.data.toZincJson()
-        }
-    ) {
+class DeserializeRoleTest : DeserializationTestBase<DeserializeRoleTest, DeserializeRoleTest.Data>(
+    {
+        it.data.toZincJson()
+    }
+) {
     override fun getZincZKService(): ZincZKService = getZincZKService<DeserializeRoleTest>()
 
-        override fun getSerializersModule() = IvnoSerializers.serializersModule
+    override fun getSerializersModule() = IvnoSerializers.serializersModule
 
     @Serializable
     data class Data(val data: @Contextual Role)

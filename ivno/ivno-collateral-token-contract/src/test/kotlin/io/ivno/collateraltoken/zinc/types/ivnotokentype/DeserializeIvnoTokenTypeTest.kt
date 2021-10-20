@@ -12,23 +12,22 @@ import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import net.corda.core.crypto.Crypto
 
-class DeserializeIvnoTokenTypeTest :
-    DeserializationTestBase<DeserializeIvnoTokenTypeTest, DeserializeIvnoTokenTypeTest.Data>(
-        {
-            it.data.toZincJson(
-                networkEncodedSize = EdDSASurrogate.ENCODED_SIZE,
-                isAnonymous = false,
-                networkScheme = Crypto.EDDSA_ED25519_SHA512,
-                custodianEncodedSize = EdDSASurrogate.ENCODED_SIZE,
-                custodianScheme = Crypto.EDDSA_ED25519_SHA512,
-                tokenIssuingEntityEncodedSize = EdDSASurrogate.ENCODED_SIZE,
-                tokenIssuingEntityScheme = Crypto.EDDSA_ED25519_SHA512,
-            )
-        }
-    ) {
+class DeserializeIvnoTokenTypeTest : DeserializationTestBase<DeserializeIvnoTokenTypeTest, DeserializeIvnoTokenTypeTest.Data>(
+    {
+        it.data.toZincJson(
+            networkEncodedSize = EdDSASurrogate.ENCODED_SIZE,
+            isAnonymous = false,
+            networkScheme = Crypto.EDDSA_ED25519_SHA512,
+            custodianEncodedSize = EdDSASurrogate.ENCODED_SIZE,
+            custodianScheme = Crypto.EDDSA_ED25519_SHA512,
+            tokenIssuingEntityEncodedSize = EdDSASurrogate.ENCODED_SIZE,
+            tokenIssuingEntityScheme = Crypto.EDDSA_ED25519_SHA512,
+        )
+    }
+) {
     override fun getZincZKService(): ZincZKService = getZincZKService<DeserializeIvnoTokenTypeTest>()
 
-        override fun getSerializersModule() = IvnoSerializers.serializersModule
+    override fun getSerializersModule() = IvnoSerializers.serializersModule
 
     @Serializable
     data class Data(val data: @Contextual IvnoTokenType)

@@ -18,7 +18,7 @@ class DeserializeMembershipAttestationTest :
     ) {
     override fun getZincZKService(): ZincZKService = getZincZKService<DeserializeMembershipAttestationTest>()
 
-        override fun getSerializersModule() = IvnoSerializers.serializersModule + CordaSerializers.module
+    override fun getSerializersModule() = IvnoSerializers.serializersModule + CordaSerializers.module
 
     @Serializable
     data class Data(val data: @Contextual MembershipAttestation)

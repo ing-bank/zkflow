@@ -11,8 +11,7 @@ import net.corda.core.contracts.AttachmentConstraint
 import net.corda.core.contracts.SignatureAttachmentConstraint
 import net.corda.core.crypto.Crypto
 
-class DeserializeSignatureAttachmentConstraintBCECK1Test :
-    DeserializationTestBase<DeserializeSignatureAttachmentConstraintBCECK1Test, DeserializeSignatureAttachmentConstraintBCECK1Test.Data>(
+class DeserializeSignatureAttachmentConstraintBCECK1Test : DeserializationTestBase <DeserializeSignatureAttachmentConstraintBCECK1Test, DeserializeSignatureAttachmentConstraintBCECK1Test.Data>(
         {
             it.data.toZincJson(BCECSurrogate.ENCODED_SIZE)
         }

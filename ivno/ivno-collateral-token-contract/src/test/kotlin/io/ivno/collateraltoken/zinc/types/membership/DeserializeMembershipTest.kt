@@ -22,25 +22,24 @@ import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
 import net.corda.core.crypto.Crypto
 
-class DeserializeMembershipTest :
-    DeserializationTestBase<DeserializeMembershipTest, DeserializeMembershipTest.Data>(
-        {
-            it.data.toZincJson(
-                networkEncodedSize = EdDSASurrogate.ENCODED_SIZE,
-                isNetworkAnonymous = false,
-                networkScheme = Crypto.EDDSA_ED25519_SHA512,
-                holderEncodedSize = EdDSASurrogate.ENCODED_SIZE,
-                isHolderAnonymous = false,
-                holderScheme = Crypto.EDDSA_ED25519_SHA512,
-                identityPropertyLength = ClaimSurrogate.PROPERTY_LENGTH,
-                identityValueLength = IDENTITY_VALUE_LENGTH,
-                settingsValueLength = SETTINGS_VALUE_LENGTH,
-            )
-        }
-    ) {
+class DeserializeMembershipTest : DeserializationTestBase<DeserializeMembershipTest, DeserializeMembershipTest.Data>(
+    {
+        it.data.toZincJson(
+            networkEncodedSize = EdDSASurrogate.ENCODED_SIZE,
+            isNetworkAnonymous = false,
+            networkScheme = Crypto.EDDSA_ED25519_SHA512,
+            holderEncodedSize = EdDSASurrogate.ENCODED_SIZE,
+            isHolderAnonymous = false,
+            holderScheme = Crypto.EDDSA_ED25519_SHA512,
+            identityPropertyLength = ClaimSurrogate.PROPERTY_LENGTH,
+            identityValueLength = IDENTITY_VALUE_LENGTH,
+            settingsValueLength = SETTINGS_VALUE_LENGTH,
+        )
+    }
+) {
     override fun getZincZKService(): ZincZKService = getZincZKService<DeserializeMembershipTest>()
 
-        override fun getSerializersModule() = SerializersModule {
+    override fun getSerializersModule() = SerializersModule {
         polymorphic(AbstractClaim::class) {
             subclass(ClaimSerializer(String.serializer()))
         }

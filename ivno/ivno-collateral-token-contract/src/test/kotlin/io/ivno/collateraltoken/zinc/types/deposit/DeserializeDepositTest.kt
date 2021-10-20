@@ -9,13 +9,12 @@ import io.ivno.collateraltoken.zinc.types.deposit
 import io.ivno.collateraltoken.zinc.types.toZincJson
 import kotlinx.serialization.Serializable
 
-class DeserializeDepositTest :
-DeserializationTestBase<DeserializeDepositTest, DeserializeDepositTest.Data>(
+class DeserializeDepositTest : DeserializationTestBase<DeserializeDepositTest, DeserializeDepositTest.Data>(
     { it.data.toZincJson() }
 ) {
     override fun getZincZKService(): ZincZKService = getZincZKService<DeserializeDepositTest>()
 
-        override fun getSerializersModule() = IvnoSerializers.serializersModule
+    override fun getSerializersModule() = IvnoSerializers.serializersModule
 
     @Serializable
     data class Data(val data: Deposit)

@@ -17,7 +17,7 @@ import net.corda.core.identity.AbstractParty
 fun Set<Setting<String>>.toJsonArray(size: Int, valueLength: Int): JsonArray = buildJsonArray {
     map { add(it.toJsonObject(valueLength).optional()) }
     addJsonArray {
-        repeat(size-this@toJsonArray.size) {
+        repeat(size - this@toJsonArray.size) {
 
         }
     }
@@ -26,29 +26,29 @@ fun Set<Setting<String>>.toJsonArray(size: Int, valueLength: Int): JsonArray = b
 fun Set<AbstractClaim<String>>.toJsonArray(size: Int, propertyLength: Int, valueLength: Int): JsonArray = buildJsonArray {
     map { add(it.toJsonObject(propertyLength, valueLength).optional()) }
     addJsonArray {
-        repeat(size-this@toJsonArray.size) {
+        repeat(size - this@toJsonArray.size) {
 
         }
     }
 }
 
-data class AttestationPointerBuilder<T: ContractState>(
+data class AttestationPointerBuilder<T : ContractState>(
     var stateRef: StateRef,
     var stateClass: Class<T>,
     var stateLinearId: UniqueIdentifier? = null
 ) {
-    constructor(p: AttestationPointer<T>): this(p.stateRef, p.stateClass, p.stateLinearId)
+    constructor(p: AttestationPointer<T>) : this(p.stateRef, p.stateClass, p.stateLinearId)
 
-    fun <S: ContractState> withStateClass(newStateClass: Class<S>) = AttestationPointerBuilder(
+    fun <S : ContractState> withStateClass(newStateClass: Class<S>) = AttestationPointerBuilder(
         stateRef, newStateClass, stateLinearId
     )
 
     fun build() = AttestationPointer(stateRef, stateClass, stateLinearId)
 }
 
-fun <T: ContractState> AttestationPointer<T>.builder() = AttestationPointerBuilder(this)
+fun <T : ContractState> AttestationPointer<T>.builder() = AttestationPointerBuilder(this)
 
-fun <T: ContractState> AttestationPointer<T>.copy(transform: AttestationPointerBuilder<T>.() -> Unit) =
+fun <T : ContractState> AttestationPointer<T>.copy(transform: AttestationPointerBuilder<T>.() -> Unit) =
     builder().apply(transform).build()
 
 data class AttestationBuilder<T : ContractState>(
@@ -61,17 +61,17 @@ data class AttestationBuilder<T : ContractState>(
     var previousStateRef: StateRef?
 ) {
     constructor(attestation: Attestation<T>) :
-            this(
-                attestation.attestor,
-                attestation.attestees,
-                attestation.pointer,
-                attestation.status,
-                attestation.metadata,
-                attestation.linearId,
-                attestation.previousStateRef
-            )
+        this(
+            attestation.attestor,
+            attestation.attestees,
+            attestation.pointer,
+            attestation.status,
+            attestation.metadata,
+            attestation.linearId,
+            attestation.previousStateRef
+        )
 
-    fun <S: ContractState> withPointer(newPointer: AttestationPointer<S>) = AttestationBuilder(
+    fun <S : ContractState> withPointer(newPointer: AttestationPointer<S>) = AttestationBuilder(
         attestor, attestees, newPointer, status, metadata, linearId, previousStateRef
     )
 
@@ -80,7 +80,7 @@ data class AttestationBuilder<T : ContractState>(
     )
 }
 
-fun <T: ContractState> Attestation<T>.builder() = AttestationBuilder(this)
+fun <T : ContractState> Attestation<T>.builder() = AttestationBuilder(this)
 
-fun <T: ContractState> Attestation<T>.copy(transform: AttestationBuilder<T>.() -> Unit) =
+fun <T : ContractState> Attestation<T>.copy(transform: AttestationBuilder<T>.() -> Unit) =
     builder().apply(transform).build()

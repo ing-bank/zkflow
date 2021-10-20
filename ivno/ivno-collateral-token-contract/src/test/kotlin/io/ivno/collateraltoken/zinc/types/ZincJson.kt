@@ -60,12 +60,15 @@ import java.security.PublicKey
 fun Role.toZincJson() = toJsonObject().toString()
 fun TokenDescriptor.toZincJson() = toJsonObject().toString()
 fun Permission.toZincJson() = toJsonObject().toString()
+
 @JvmName("BigDecimalAmountWithLinearPointerToZincJson")
 fun BigDecimalAmount<LinearPointer<IvnoTokenType>>.toZincJson() = toJsonObject().toString()
+
 @JvmName("BigDecimalAmountWithTokenDescriptorToZincJson")
 fun BigDecimalAmount<TokenDescriptor>.toZincJson() = toJsonObject().toString()
 fun Network.toZincJson(encodedSize: Int, isAnonymous: Boolean, scheme: SignatureScheme) =
     toJsonObject(encodedSize, isAnonymous, scheme).toString()
+
 fun Setting<String>.toZincJson(size: Int) = toJsonObject(size).toString()
 fun Redemption.toZincJson() = toJsonObject().toString()
 fun IvnoTokenType.toZincJson(
@@ -85,11 +88,13 @@ fun IvnoTokenType.toZincJson(
     tokenIssuingEntityEncodedSize,
     tokenIssuingEntityScheme,
 ).toString()
+
 fun Deposit.toZincJson() = toJsonObject().toString()
 fun Transfer.toZincJson() = toJsonObject().toString()
 fun AccountAddress.toZincJson() = toJsonObject().toString()
 fun AbstractClaim<String>.toZincJson(propertyLength: Int, valueLength: Int) =
     toJsonObject(propertyLength, valueLength).toString()
+
 fun Membership.toZincJson(
     networkEncodedSize: Int,
     isNetworkAnonymous: Boolean,
@@ -111,10 +116,12 @@ fun Membership.toZincJson(
     identityValueLength,
     settingsValueLength,
 ).toString()
+
 fun AttestationPointer<*>.toZincJson() = toJsonObject().toString()
 fun NettedAccountAmount.toZincJson() = toJsonObject().toString()
 fun State.toZincJson(encodedSize: Int, isAnonymous: Boolean, scheme: SignatureScheme) =
     toJsonObject(encodedSize, isAnonymous, scheme).toString()
+
 fun Attestation<*>.toZincJson() = toJsonObject().toString()
 fun MembershipAttestation.toZincJson() = toJsonObject().toString()
 fun TokenContract.Command.Move.toZincJson() = toJsonObject().toString()
@@ -187,10 +194,11 @@ fun AbstractParty?.toJsonObject(encodedSize: Int, isAnonymous: Boolean, scheme: 
 fun SecureHash?.toJsonObject(): JsonObject = buildJsonObject {
     put(
         "algorithm",
-        this@toJsonObject?.let {"${SecureHashSupportedAlgorithm.fromAlgorithm(algorithm).id}"}
+        this@toJsonObject?.let { "${SecureHashSupportedAlgorithm.fromAlgorithm(algorithm).id}" }
             ?: "${0.toByte()}"
     )
-    put("bytes",
+    put(
+        "bytes",
         this@toJsonObject?.bytes.toJsonObject(SecureHashSurrogate.BYTES_SIZE)
     )
 }
@@ -204,7 +212,11 @@ fun StateRef?.toJsonObject() = buildJsonObject {
 fun UniqueIdentifier?.toJsonObject() = buildJsonObject {
     // input validations
     this@toJsonObject?.let { it.id.mostSignificantBits shouldBe 0 }
-    put("external_id", this@toJsonObject?.externalId.toJsonObject(UniqueIdentifierSurrogate.EXTERNAL_ID_LENGTH).nullable(this@toJsonObject?.externalId == null))
+    put(
+        "external_id",
+        this@toJsonObject?.externalId.toJsonObject(UniqueIdentifierSurrogate.EXTERNAL_ID_LENGTH)
+            .nullable(this@toJsonObject?.externalId == null)
+    )
     put("id", "${this@toJsonObject?.id?.leastSignificantBits ?: 0}")
 }
 
@@ -310,7 +322,7 @@ fun Claim<String>?.toJsonObject(propertyLength: Int, valueLength: Int) = buildJs
     put("value", this@toJsonObject?.value.toJsonObject(valueLength))
 }
 
-private fun <T: Any> Collection<T>.collectionToJsonObject(
+private fun <T : Any> Collection<T>.collectionToJsonObject(
     collectionSize: Int,
     itemToJsonObject: (T?) -> JsonObject,
 ): JsonObject = buildJsonObject {
@@ -332,14 +344,14 @@ private fun <K, V> Map<K, V>.mapToJsonObject(collectionSize: Int, entryToJsonObj
     put("size", "$size")
     put(
         "entries",
-       buildJsonArray {
-           map {
-               add(entryToJsonObject.invoke(it.key, it.value))
-           }
-           repeat(collectionSize - size) {
-               add(entryToJsonObject.invoke(null, null))
-           }
-       }
+        buildJsonArray {
+            map {
+                add(entryToJsonObject.invoke(it.key, it.value))
+            }
+            repeat(collectionSize - size) {
+                add(entryToJsonObject.invoke(null, null))
+            }
+        }
     )
 }
 
@@ -347,18 +359,20 @@ fun Collection<Setting<String>>.toJsonObject(collectionSize: Int, elementSize: I
     it.toJsonObject(elementSize)
 }
 
-fun Collection<AbstractClaim<String>>.toJsonObject(collectionSize: Int, propertyLength: Int, valueLength: Int): JsonObject = collectionToJsonObject(collectionSize) {
-    it?.toJsonObject(propertyLength, valueLength)
-        ?: (null as Claim<String>?).toJsonObject(propertyLength, valueLength).polymorphic()
-}
+fun Collection<AbstractClaim<String>>.toJsonObject(collectionSize: Int, propertyLength: Int, valueLength: Int): JsonObject =
+    collectionToJsonObject(collectionSize) {
+        it?.toJsonObject(propertyLength, valueLength)
+            ?: (null as Claim<String>?).toJsonObject(propertyLength, valueLength).polymorphic()
+    }
 
-fun Collection<AbstractParty>.toJsonObject(collectionSize: Int, elementSize: Int, isAnonymous: Boolean, scheme: SignatureScheme) = collectionToJsonObject(collectionSize) {
-    it.toJsonObject(
-        encodedSize = elementSize,
-        isAnonymous = isAnonymous,
-        scheme = scheme
-    ).polymorphic()
-}
+fun Collection<AbstractParty>.toJsonObject(collectionSize: Int, elementSize: Int, isAnonymous: Boolean, scheme: SignatureScheme) =
+    collectionToJsonObject(collectionSize) {
+        it.toJsonObject(
+            encodedSize = elementSize,
+            isAnonymous = isAnonymous,
+            scheme = scheme
+        ).polymorphic()
+    }
 
 fun Membership.toJsonObject(
     networkEncodedSize: Int,
@@ -373,7 +387,14 @@ fun Membership.toJsonObject(
 ) = buildJsonObject {
     put("network", network.toJsonObject(networkEncodedSize, isNetworkAnonymous, networkScheme))
     put("holder", holder.toJsonObject(holderEncodedSize, isHolderAnonymous, holderScheme).polymorphic())
-    put("identity", (identity as Set<AbstractClaim<String>>).toJsonObject(MembershipSurrogate.IDENTITY_LENGTH ,identityPropertyLength, identityValueLength))
+    put(
+        "identity",
+        (identity as Set<AbstractClaim<String>>).toJsonObject(
+            MembershipSurrogate.IDENTITY_LENGTH,
+            identityPropertyLength,
+            identityValueLength
+        )
+    )
     put("settings", (settings as Set<Setting<String>>).toJsonObject(MembershipSurrogate.SETTINGS_LENGTH, settingsValueLength))
     put("linear_id", linearId.toJsonObject())
     put("previous_state_ref", previousStateRef.toJsonObject().nullable(previousStateRef == null))
@@ -386,8 +407,8 @@ fun AttestationPointer<*>.toJsonObject(): JsonObject = buildJsonObject {
 }
 
 fun NettedAccountAmount?.toJsonObject() = buildJsonObject {
-        put("address", this@toJsonObject?.accountAddress.toJsonObject())
-        put("amount", this@toJsonObject?.amount.toJsonObject())
+    put("address", this@toJsonObject?.accountAddress.toJsonObject())
+    put("amount", this@toJsonObject?.amount.toJsonObject())
 }
 
 fun Collection<NettedAccountAmount>.toJsonObject(collectionSize: Int): JsonObject = collectionToJsonObject(collectionSize) {
@@ -399,7 +420,10 @@ fun State.toJsonObject(
     isAnonymous: Boolean,
     scheme: SignatureScheme,
 ) = buildJsonObject {
-    put("participants", participants.toJsonObject(TokenTransactionSummaryStateSurrogate.PARTICIPANTS_LENGTH, encodedSize, isAnonymous, scheme))
+    put(
+        "participants",
+        participants.toJsonObject(TokenTransactionSummaryStateSurrogate.PARTICIPANTS_LENGTH, encodedSize, isAnonymous, scheme)
+    )
     put("command", command.toJsonObject(TokenTransactionSummaryStateSurrogate.COMMAND_LENGTH))
     put("amounts", amounts.toJsonObject(TokenTransactionSummaryStateSurrogate.AMOUNTS_LENGTH))
     put("description", description.toJsonObject(TokenTransactionSummaryStateSurrogate.DESCRIPTION_LENGTH))
@@ -409,7 +433,10 @@ fun State.toJsonObject(
 
 fun Attestation<*>.toJsonObject(): JsonObject = buildJsonObject {
     put("attestor", attestor.toJsonObject(EdDSASurrogate.ENCODED_SIZE).polymorphic())
-    put("attestees", attestees.toJsonObject(AttestationSurrogate.ATTESTEES_SIZE, EdDSASurrogate.ENCODED_SIZE, false, Crypto.EDDSA_ED25519_SHA512))
+    put(
+        "attestees",
+        attestees.toJsonObject(AttestationSurrogate.ATTESTEES_SIZE, EdDSASurrogate.ENCODED_SIZE, false, Crypto.EDDSA_ED25519_SHA512)
+    )
     put("pointer", pointer.toJsonObject())
     put("status", status.toJsonObject())
 //    put("metadata", metadata.toJsonObject(
@@ -420,13 +447,14 @@ fun Attestation<*>.toJsonObject(): JsonObject = buildJsonObject {
     put("previous_state_ref", previousStateRef.toJsonObject().nullable(previousStateRef == null))
 }
 
-private fun Map<String, String>.toJsonObject(collectionSize: Int, keyStringSize: Int, valueStringSize: Int): JsonObject = mapToJsonObject(collectionSize) { key, value ->
-    buildJsonObject {
-        put("key", key.toJsonObject(keyStringSize))
-        put("has_value", value != null)
-        put("value", value.toJsonObject(valueStringSize))
+private fun Map<String, String>.toJsonObject(collectionSize: Int, keyStringSize: Int, valueStringSize: Int): JsonObject =
+    mapToJsonObject(collectionSize) { key, value ->
+        buildJsonObject {
+            put("key", key.toJsonObject(keyStringSize))
+            put("has_value", value != null)
+            put("value", value.toJsonObject(valueStringSize))
+        }
     }
-}
 
 fun MembershipAttestation.toJsonObject(): JsonObject = buildJsonObject {
     put("network", network.toJsonObject(EdDSASurrogate.ENCODED_SIZE, false, Crypto.EDDSA_ED25519_SHA512))

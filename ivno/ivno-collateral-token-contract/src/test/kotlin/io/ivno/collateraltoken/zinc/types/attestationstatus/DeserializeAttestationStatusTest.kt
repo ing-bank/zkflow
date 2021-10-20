@@ -6,10 +6,9 @@ import com.ing.zkflow.testing.getZincZKService
 import com.ing.zkflow.zinc.types.toZincJson
 import io.onixlabs.corda.identityframework.contract.AttestationStatus
 
-class DeserializeAttestationStatusTest :
-    DeserializationTestBase<DeserializeAttestationStatusTest, AttestationStatus>(
-        { it.toZincJson() }
-    ) {
+class DeserializeAttestationStatusTest : DeserializationTestBase<DeserializeAttestationStatusTest, AttestationStatus>(
+    { it.toZincJson() }
+) {
     override fun getZincZKService(): ZincZKService = getZincZKService<DeserializeAttestationStatusTest>()
 
     companion object {

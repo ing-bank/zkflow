@@ -10,8 +10,7 @@ import net.corda.core.contracts.AttachmentConstraint
 import net.corda.core.contracts.HashAttachmentConstraint
 import net.corda.core.crypto.SecureHash
 
-class DeserializeHashAttachmentConstraintTest :
-    DeserializationTestBase<DeserializeHashAttachmentConstraintTest, DeserializeHashAttachmentConstraintTest.Data>(
+class DeserializeHashAttachmentConstraintTest : DeserializationTestBase <DeserializeHashAttachmentConstraintTest, DeserializeHashAttachmentConstraintTest.Data>(
         {
             it.data.toZincJson()
         }

@@ -13,8 +13,7 @@ import net.corda.core.utilities.OpaqueBytes
 import net.corda.testing.core.TestIdentity
 import kotlin.random.Random
 
-class DeserializeAnonymousPartyEdDSAAndReferenceTest :
-    DeserializationTestBase<DeserializeAnonymousPartyEdDSAAndReferenceTest, DeserializeAnonymousPartyEdDSAAndReferenceTest.Data>({
+class DeserializeAnonymousPartyEdDSAAndReferenceTest : DeserializationTestBase <DeserializeAnonymousPartyEdDSAAndReferenceTest, DeserializeAnonymousPartyEdDSAAndReferenceTest.Data>({
         it.data.toZincJson(EdDSASurrogate.ENCODED_SIZE)
     }) {
     override fun getZincZKService() = getZincZKService<DeserializeAnonymousPartyEdDSAAndReferenceTest>()

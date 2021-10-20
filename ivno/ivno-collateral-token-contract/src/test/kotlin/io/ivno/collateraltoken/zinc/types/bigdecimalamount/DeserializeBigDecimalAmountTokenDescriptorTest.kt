@@ -21,7 +21,7 @@ class DeserializeBigDecimalAmountTokenDescriptorTest :
     ) {
     override fun getZincZKService(): ZincZKService = getZincZKService<DeserializeBigDecimalAmountTokenDescriptorTest>()
 
-        override fun getSerializersModule() = SerializersModule {
+    override fun getSerializersModule() = SerializersModule {
         contextual(BigDecimalAmountSerializer(TokenDescriptorSerializer))
         contextual(TokenDescriptorSerializer)
     }

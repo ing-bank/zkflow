@@ -13,15 +13,14 @@ import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.contextual
 
-class DeserializeSettingTest :
-    DeserializationTestBase<DeserializeSettingTest, DeserializeSettingTest.Data>(
-        {
-            it.data.toZincJson(VALUE_LENGTH)
-        }
-    ) {
+class DeserializeSettingTest : DeserializationTestBase<DeserializeSettingTest, DeserializeSettingTest.Data>(
+    {
+        it.data.toZincJson(VALUE_LENGTH)
+    }
+) {
     override fun getZincZKService(): ZincZKService = getZincZKService<DeserializeSettingTest>()
 
-        override fun getSerializersModule() = SerializersModule { contextual(SettingSerializer(String.serializer())) }
+    override fun getSerializersModule() = SerializersModule { contextual(SettingSerializer(String.serializer())) }
 
     @Serializable
     data class Data(@FixedLength([VALUE_LENGTH]) val data: @Contextual Setting<String>)
@@ -30,6 +29,6 @@ class DeserializeSettingTest :
         const val VALUE_LENGTH = 7
 
         @JvmStatic
-        fun testData() = listOf(Data(Setting("Property","Value")))
+        fun testData() = listOf(Data(Setting("Property", "Value")))
     }
 }

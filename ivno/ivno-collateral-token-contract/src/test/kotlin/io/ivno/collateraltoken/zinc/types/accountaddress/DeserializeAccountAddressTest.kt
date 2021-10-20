@@ -10,13 +10,12 @@ import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import net.corda.core.identity.CordaX500Name
 
-class DeserializeAccountAddressTest :
-DeserializationTestBase<DeserializeAccountAddressTest, DeserializeAccountAddressTest.Data>(
+class DeserializeAccountAddressTest : DeserializationTestBase<DeserializeAccountAddressTest, DeserializeAccountAddressTest.Data>(
     { it.data.toZincJson() }
 ) {
     override fun getZincZKService(): ZincZKService = getZincZKService<DeserializeAccountAddressTest>()
 
-        override fun getSerializersModule() = IvnoSerializers.serializersModule
+    override fun getSerializersModule() = IvnoSerializers.serializersModule
 
     @Serializable
     data class Data(val data: @Contextual AccountAddress)

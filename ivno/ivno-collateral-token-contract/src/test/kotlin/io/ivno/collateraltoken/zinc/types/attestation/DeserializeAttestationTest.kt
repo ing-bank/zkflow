@@ -12,13 +12,12 @@ import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.plus
 
-class DeserializeAttestationTest :
-    DeserializationTestBase<DeserializeAttestationTest, DeserializeAttestationTest.Data>(
-        { it.data.toZincJson() }
-    ) {
+class DeserializeAttestationTest : DeserializationTestBase<DeserializeAttestationTest, DeserializeAttestationTest.Data>(
+    { it.data.toZincJson() }
+) {
     override fun getZincZKService(): ZincZKService = getZincZKService<DeserializeAttestationTest>()
 
-        override fun getSerializersModule() = IvnoSerializers.serializersModule + CordaSerializers.module
+    override fun getSerializersModule() = IvnoSerializers.serializersModule + CordaSerializers.module
 
     @Serializable
     data class Data(val data: @Contextual Attestation<*>)
