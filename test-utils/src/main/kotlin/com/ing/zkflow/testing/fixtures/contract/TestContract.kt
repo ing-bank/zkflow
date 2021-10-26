@@ -1,7 +1,6 @@
 package com.ing.zkflow.testing.fixtures.contract
 
 import com.ing.serialization.bfl.annotations.FixedLength
-import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.contracts.ZKOwnableState
 import com.ing.zkflow.common.contracts.ZKTransactionMetadataCommandData
 import com.ing.zkflow.common.transactions.zkFLowMetadata
@@ -24,24 +23,10 @@ import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.CommandWithParties
 import net.corda.core.contracts.Contract
 import net.corda.core.contracts.ContractClassName
-import net.corda.core.contracts.TypeOnlyCommandData
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.transactions.LedgerTransaction
 import java.io.File
 import java.util.Random
-
-public val testSerializers: Unit = run {
-    ContractStateSerializerMap.register(TestContract.TestState2::class, 1121212121, TestContract.TestState2.serializer())
-    ContractStateSerializerMap.register(TestContract.TestState::class, 1, TestContract.TestState.serializer())
-    CommandDataSerializerMap.register(TestContract.Create::class, 2, TestContract.Create.serializer())
-    CommandDataSerializerMap.register(TestContract.Move::class, 3, TestContract.Move.serializer())
-    CommandDataSerializerMap.register(
-        TestContract.MoveBidirectional::class,
-        4,
-        TestContract.MoveBidirectional.serializer()
-    )
-    CommandDataSerializerMap.register(TestContract.SignOnly::class, 5, TestContract.SignOnly.serializer())
-}
 
 public class TestContract : Contract {
     public companion object {
@@ -55,8 +40,7 @@ public class TestContract : Contract {
         val value: Int = Random().nextInt(1000)
     ) : ZKOwnableState {
         init {
-            // TODO: Hack to trigger the registration of the serializerMap above
-            testSerializers
+            ContractStateSerializerMap.register(this::class)
         }
 
         public companion object {
@@ -70,30 +54,9 @@ public class TestContract : Contract {
             CommandAndState(Move(), copy(owner = newOwner))
     }
 
-    /**
-     * Used only MoveBidirectional command
-     */
-    @Serializable
-    @BelongsToContract(TestContract::class)
-    public data class TestState2(
-        override val owner: @Contextual AnonymousParty,
-        val value: Int = Random().nextInt(1000)
-    ) : ZKOwnableState {
-        init {
-            // TODO: Hack to trigger the registration of the serializerMap above
-            testSerializers
-        }
-
-        @FixedLength([1])
-        override val participants: List<@Contextual AnonymousParty> = listOf(owner)
-
-        override fun withNewOwner(newOwner: AnonymousParty): CommandAndState =
-            CommandAndState(Move(), copy(owner = newOwner))
-    }
-
     // Commands
     @Serializable
-    public class Create : TypeOnlyCommandData(), ZKCommandData, ZKTransactionMetadataCommandData {
+    public class Create : ZKTransactionMetadataCommandData {
         override val transactionMetadata: ResolvedZKTransactionMetadata by transactionMetadata {
             network {
                 attachmentConstraintType = AlwaysAcceptAttachmentConstraint::class
@@ -113,6 +76,10 @@ public class TestContract : Contract {
             outputs { 1 of TestState::class }
             numberOfSigners = 1
             attachmentConstraintType = AlwaysAcceptAttachmentConstraint::class
+        }
+
+        init {
+            CommandDataSerializerMap.register(this::class)
         }
 
         public companion object {
@@ -152,6 +119,10 @@ public class TestContract : Contract {
             numberOfSigners = 2
             attachmentConstraintType = AlwaysAcceptAttachmentConstraint::class
         }
+
+        init {
+            CommandDataSerializerMap.register(this::class)
+        }
     }
 
     @Serializable
@@ -176,6 +147,10 @@ public class TestContract : Contract {
             outputs { 1 of TestState::class }
             numberOfSigners = 2
             attachmentConstraintType = AlwaysAcceptAttachmentConstraint::class
+        }
+
+        init {
+            CommandDataSerializerMap.register(this::class)
         }
 
         public companion object {
@@ -216,15 +191,17 @@ public class TestContract : Contract {
             }
             private = true
             inputs {
-                1 of TestState::class
-                1 of TestState2::class
+                2 of TestState::class
             }
             outputs {
-                1 of TestState::class
-                1 of TestState2::class
+                2 of TestState::class
             }
             numberOfSigners = 2
             attachmentConstraintType = AlwaysAcceptAttachmentConstraint::class
+        }
+
+        init {
+            CommandDataSerializerMap.register(this::class)
         }
 
         public companion object {
@@ -238,9 +215,6 @@ public class TestContract : Contract {
                 // Transaction contents
                 if (tx.inputsOfType<TestState>().sumBy { it.value } != tx.outputsOfType<TestState>().sumBy { it.value }) throw IllegalArgumentException(
                     "Failed requirement: amounts are not conserved for TestState"
-                )
-                if (tx.inputsOfType<TestState2>().sumBy { it.value } != tx.outputsOfType<TestState2>().sumBy { it.value }) throw IllegalArgumentException(
-                    "Failed requirement: amounts are not conserved for TestState2"
                 )
 
                 tx.inputStates.forEachIndexed { index, input ->

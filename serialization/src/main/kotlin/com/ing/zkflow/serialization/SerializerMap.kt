@@ -4,6 +4,7 @@ import com.ing.zkflow.serialization.bfl.serializers.CordaSerializers
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.overwriteWith
+import kotlinx.serialization.serializer
 import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.ContractState
 import net.corda.core.utilities.loggerFor
@@ -45,15 +46,24 @@ abstract class SerializerMap<T : Any> {
     private val obj2Id = mutableMapOf<KClass<out T>, Int>()
     private val objId2Serializer = mutableMapOf<Int, KSerializer<out T>>()
 
-    fun register(klass: KClass<out T>, id: Int, strategy: KSerializer<out T>) {
-        log.debug("Registering serializer $strategy for $klass")
-        obj2Id.put(klass, id)?.let { throw SerializerMapError.ClassAlreadyRegistered(klass, it) }
-        objId2Serializer.put(id, strategy)?.let {
-            throw SerializerMapError.IdAlreadyRegistered(
-                id,
-                klass,
-                it.descriptor.serialName
-            )
+    fun register(klass: KClass<out T>, strategy: KSerializer<out T>? = null) {
+        @Suppress("UNCHECKED_CAST") // If the serializer is found, we know it is for KClass<out T>, so we know it is KSerializer<out T>
+        val serializer = strategy ?: SerializersModuleRegistry.merged.serializer(klass.java) as KSerializer<out T>
+
+        val id = klass.hashCode() // Should be deterministic enough
+
+        if (obj2Id[klass] == id && objId2Serializer[id] == serializer) {
+            return // Idempotent if same args
+        } else {
+            log.debug("Registering serializer $serializer for $klass")
+            obj2Id.put(klass, id)?.let { throw SerializerMapError.ClassAlreadyRegistered(klass, it) }
+            objId2Serializer.put(id, serializer)?.let {
+                throw SerializerMapError.IdAlreadyRegistered(
+                    id,
+                    klass,
+                    it.descriptor.serialName
+                )
+            }
         }
     }
 

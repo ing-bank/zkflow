@@ -11,6 +11,8 @@ import com.ing.zkflow.common.zkp.metadata.MockAssetContract.IssueWithNonZKPComma
 import com.ing.zkflow.common.zkp.metadata.ZKCommandList.Companion.ERROR_COMMAND_NOT_UNIQUE
 import com.ing.zkflow.common.zkp.metadata.ZKTransactionMetadata.Companion.ERROR_COMMANDS_ALREADY_SET
 import com.ing.zkflow.common.zkp.metadata.ZKTransactionMetadata.Companion.ERROR_NETWORK_ALREADY_SET
+import com.ing.zkflow.serialization.CommandDataSerializerMap
+import com.ing.zkflow.serialization.ContractStateSerializerMap
 import com.ing.zkflow.serialization.bfl.serializers.AnonymousPartySerializer
 import com.ing.zkflow.testing.dsl.zkLedger
 import com.ing.zkflow.testing.fixed
@@ -230,32 +232,6 @@ class ZKTransactionMetadataTest {
 }
 
 val mockSerializers = run {
-    com.ing.zkflow.serialization.ContractStateSerializerMap.register(
-        MockAuditContract.Approval::class,
-        9993,
-        MockAuditContract.Approval.serializer()
-    )
-    com.ing.zkflow.serialization.CommandDataSerializerMap.register(
-        MockAssetContract.Issue::class,
-        9992,
-        MockAssetContract.Issue.serializer()
-    )
-    com.ing.zkflow.serialization.CommandDataSerializerMap.register(
-        MockAssetContract.IssueWithWrongCorDappCount::class,
-        99998,
-        MockAssetContract.IssueWithWrongCorDappCount.serializer()
-    )
-    com.ing.zkflow.serialization.CommandDataSerializerMap.register(MockAssetContract.Move::class, 9996, MockAssetContract.Move.serializer())
-    com.ing.zkflow.serialization.CommandDataSerializerMap.register(
-        MockAuditContract.Approve::class,
-        9994,
-        MockAuditContract.Approve.serializer()
-    )
-    com.ing.zkflow.serialization.ContractStateSerializerMap.register(
-        MockAssetContract.MockAsset::class,
-        9991,
-        MockAssetContract.MockAsset.serializer()
-    )
 }
 
 /**
@@ -291,8 +267,7 @@ class MockAuditContract : Contract {
         val approver: AnonymousParty
     ) : ZKContractState {
         init {
-            // TODO: Hack!
-            mockSerializers
+            ContractStateSerializerMap.register(this::class)
         }
 
         @FixedLength([1])
@@ -306,6 +281,10 @@ class MockAuditContract : Contract {
      */
     @Serializable
     class Approve : ZKCommandData {
+        init {
+            CommandDataSerializerMap.register(this::class)
+        }
+
         @Transient
         override val metadata = commandMetadata {
             private = true
@@ -332,8 +311,7 @@ class MockAssetContract : Contract {
     ) : ZKOwnableState {
 
         init {
-            // TODO: Hack!
-            mockSerializers
+            ContractStateSerializerMap.register(this::class)
         }
 
         @FixedLength([1])
@@ -345,6 +323,10 @@ class MockAssetContract : Contract {
 
     @Serializable
     class Move : ZKCommandData, ZKTransactionMetadataCommandData {
+        init {
+            CommandDataSerializerMap.register(this::class)
+        }
+
         override val transactionMetadata by transactionMetadata {
             network { attachmentConstraintType = SignatureAttachmentConstraint::class }
             commands {
@@ -366,6 +348,10 @@ class MockAssetContract : Contract {
 
     @Serializable
     class IssueWithWrongCorDappCount : ZKTransactionMetadataCommandData {
+        init {
+            CommandDataSerializerMap.register(this::class)
+        }
+
         override val transactionMetadata by transactionMetadata {
             commands {
                 +IssueWithWrongCorDappCount::class
@@ -384,6 +370,10 @@ class MockAssetContract : Contract {
 
     @Serializable
     class Issue : ZKTransactionMetadataCommandData {
+        init {
+            CommandDataSerializerMap.register(this::class)
+        }
+
         override val transactionMetadata by transactionMetadata {
             network { attachmentConstraintType = SignatureAttachmentConstraint::class }
             commands {

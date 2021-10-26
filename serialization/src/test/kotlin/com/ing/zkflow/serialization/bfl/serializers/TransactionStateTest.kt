@@ -44,19 +44,6 @@ class TransactionStateTest {
     }
 }
 
-val mockSerializers = run {
-    ContractStateSerializerMap.register(
-        MockAssetContract.MockAsset::class,
-        1239993,
-        MockAssetContract.MockAsset.serializer()
-    )
-    CommandDataSerializerMap.register(
-        MockAssetContract.Issue::class,
-        1239991,
-        MockAssetContract.Issue.serializer()
-    )
-}
-
 private class MockAssetContract : Contract {
     @Serializable
     @BelongsToContract(MockAssetContract::class)
@@ -71,8 +58,7 @@ private class MockAssetContract : Contract {
         override val participants: List<@Serializable(with = AnonymousPartySerializer::class) AnonymousParty> = listOf(owner)
 
         init {
-            // TODO: Hack!
-            mockSerializers
+            ContractStateSerializerMap.register(this::class)
         }
 
         companion object {
@@ -90,7 +76,11 @@ private class MockAssetContract : Contract {
     }
 
     @Serializable
-    class Issue : CommandData
+    class Issue : CommandData {
+        init {
+            CommandDataSerializerMap.register(this::class)
+        }
+    }
 
     override fun verify(tx: LedgerTransaction) {}
 }

@@ -13,7 +13,6 @@ import com.ing.zkflow.contract.TestMultipleStateContract.Create.Companion.verify
 import com.ing.zkflow.contract.TestMultipleStateContract.Move.Companion.verifyMove
 import com.ing.zkflow.serialization.CommandDataSerializerMap
 import com.ing.zkflow.serialization.ContractStateSerializerMap
-import com.ing.zkflow.serialization.bfl.DummyCommandDataSerializer
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
@@ -27,7 +26,6 @@ import net.corda.core.contracts.ContractClassName
 import net.corda.core.contracts.TypeOnlyCommandData
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.transactions.LedgerTransaction
-import net.corda.testing.core.DummyCommandData
 import java.io.File
 import java.util.Random
 
@@ -44,10 +42,7 @@ class TestMultipleStateContract : Contract {
     ) : ZKOwnableState {
 
         init {
-            /*
-             * TODO: This is a hack to ensure that the singleton is initialized. In Kotlin they are lazy until accessed.
-             */
-            TestMultipleStateContractSerializers
+            ContractStateSerializerMap.register(this::class)
         }
 
         @FixedLength([1])
@@ -67,10 +62,7 @@ class TestMultipleStateContract : Contract {
     ) : ZKOwnableState {
 
         init {
-            /*
-             * TODO: This is a hack to ensure that the singleton is initialized. In Kotlin they are lazy until accessed.
-             */
-            TestMultipleStateContractSerializers
+            ContractStateSerializerMap.register(this::class)
         }
 
         @FixedLength([1])
@@ -83,6 +75,10 @@ class TestMultipleStateContract : Contract {
     // Commands
     @Serializable
     class Create : TypeOnlyCommandData() {
+        init {
+            CommandDataSerializerMap.register(this::class)
+        }
+
         companion object {
             fun verifyCreate(
                 tx: LedgerTransaction,
@@ -101,6 +97,9 @@ class TestMultipleStateContract : Contract {
 
     @Serializable
     class Move : ZKTransactionMetadataCommandData {
+        init {
+            CommandDataSerializerMap.register(this::class)
+        }
 
         override val transactionMetadata: ResolvedZKTransactionMetadata by transactionMetadata {
             network {
@@ -165,23 +164,5 @@ class TestMultipleStateContract : Contract {
                 throw IllegalStateException("No valid command found")
             }
         }
-    }
-}
-
-object TestMultipleStateContractSerializers {
-    init {
-        CommandDataSerializerMap.register(DummyCommandData::class, 176540, DummyCommandDataSerializer)
-        ContractStateSerializerMap.register(
-            TestMultipleStateContract.TestState1::class,
-            6,
-            TestMultipleStateContract.TestState1.serializer()
-        )
-        ContractStateSerializerMap.register(
-            TestMultipleStateContract.TestState2::class,
-            7,
-            TestMultipleStateContract.TestState2.serializer()
-        )
-        CommandDataSerializerMap.register(TestMultipleStateContract.Create::class, 8, TestMultipleStateContract.Create.serializer())
-        CommandDataSerializerMap.register(TestMultipleStateContract.Move::class, 9, TestMultipleStateContract.Move.serializer())
     }
 }
