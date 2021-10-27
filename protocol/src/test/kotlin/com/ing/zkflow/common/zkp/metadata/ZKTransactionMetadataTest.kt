@@ -318,7 +318,7 @@ class MockAssetContract : Contract {
         override val participants: List<@Serializable(with = AnonymousPartySerializer::class) AnonymousParty> = listOf(owner)
 
         override fun withNewOwner(newOwner: AnonymousParty): CommandAndState =
-            CommandAndState(TestContract.Move(), copy(owner = newOwner))
+            CommandAndState(Move(), copy(owner = newOwner))
     }
 
     @Serializable

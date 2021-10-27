@@ -1,0 +1,23 @@
+mod platform_witness;
+mod signers_anonymous_party_ed_dsa;
+mod tx_state_mock_asset;
+
+use platform_witness::Witness;
+use signers_anonymous_party_ed_dsa::Signers;
+use tx_state_mock_asset::TxStateTestState;
+
+fn check_contract_rules(witness: Witness) {
+    let input = TxStateMockAsset::deserialize(witness.serialized_input_utxos.mock_asset[0]);
+    let output = TxStateMockAsset::deserialize(witness.outputs.mock_asset[0]);
+
+    assert!(input.data.value == output.data.value, "[Move] Values of input and output must equal");
+    dbg!("[Move] Value of moved value verified");
+
+    let signers = Signers::deserialize(witness.signers[0]);
+    dbg!("[Move] Signers {}", signers);
+
+    assert!(Signers::contains(signers, input.data.owner), "[Move] Owner must sign");
+    dbg!("[Move] Owner of consumed state signed");
+
+    dbg!("[Move] Contract rules are verified");
+}
