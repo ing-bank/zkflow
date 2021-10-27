@@ -6,6 +6,7 @@ import com.ing.zkflow.common.zkp.metadata.ZKTransactionMetadata
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.CommandWithParties
+import java.util.ServiceLoader
 
 /**
  * Any command that implements this interface is expected to be the first command in a ZKP transaction
@@ -26,4 +27,11 @@ interface ZKCommandData : CommandData {
 fun <T : CommandData> CommandWithParties<T>.toZKCommand(): Command<ZKCommandData> {
     require(value is ZKCommandData) { "CommandData must implement ZKCommandData" }
     return Command(value as ZKCommandData, signers)
+}
+
+fun loadResolvedTransactionMetadata(): List<ResolvedZKTransactionMetadata> {
+    return ServiceLoader.load(ZKTransactionMetadataCommandData::class.java)
+        .map {
+            it.transactionMetadata
+        }
 }
