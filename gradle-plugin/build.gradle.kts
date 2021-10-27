@@ -11,6 +11,9 @@ dependencies {
     // Loaded so we can apply the plugin on project we are applied on.
     val kotlinVersion: String by project
     runtimeOnly("org.jetbrains.kotlin.plugin.serialization:org.jetbrains.kotlin.plugin.serialization.gradle.plugin:$kotlinVersion")
+
+    val kspVersion: String by project
+    runtimeOnly("com.google.devtools.ksp:com.google.devtools.ksp.gradle.plugin:$kspVersion")
 }
 
 gradlePlugin {

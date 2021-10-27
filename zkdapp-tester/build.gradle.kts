@@ -4,7 +4,7 @@ import com.ing.zkflow.compilation.zinc.template.parameters.AmountTemplateParamet
 import com.ing.zkflow.compilation.zinc.template.parameters.StringTemplateParameters
 
 plugins {
-    kotlin("jvm") version "1.4.30"
+    kotlin("jvm") version "1.5.31"
     id("com.ing.zkflow.gradle-plugin")
 }
 
