@@ -19,7 +19,7 @@ dependencies {
 
 publishing {
     publications {
-        create<MavenPublication>("zkTransactionCompilerPlugin") {
+        create<MavenPublication>("kspCompilerPlugin") {
             from(components["java"])
         }
     }

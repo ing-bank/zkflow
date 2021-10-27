@@ -1,6 +1,7 @@
-package com.ing.zkflow.zktransaction
+package com.ing.zkflow.ksp.txmetadata
 
 import com.ing.zkflow.common.contracts.ZKTransactionMetadataCommandData
+import com.ing.zkflow.ksp.CompositeSymbolProcessorProvider
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import com.tschuchort.compiletesting.symbolProcessorProviders
@@ -62,7 +63,7 @@ internal class ZKTransactionMetadataProcessorTest {
     ) = KotlinCompilation().apply {
         sources = listOf(kotlinSource)
 
-        symbolProcessorProviders = listOf(ZKTransactionMetadataProcessorProvider())
+        symbolProcessorProviders = listOf(CompositeSymbolProcessorProvider())
 
         inheritClassPath = true
         messageOutputStream = BufferedOutputStream(outputStream) // see diagnostics in real time

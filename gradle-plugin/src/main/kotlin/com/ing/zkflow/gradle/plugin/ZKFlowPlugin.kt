@@ -45,7 +45,7 @@ class ZKFlowPlugin : Plugin<Project> {
             project.pluginManager.apply("org.jetbrains.kotlin.plugin.serialization")
 
             project.pluginManager.apply("com.google.devtools.ksp")
-            project.dependencies.add("ksp", "com.ing.zkflow:zktransaction-compiler-plugin:${extension.notaryVersion}")
+            project.dependencies.add("ksp", "com.ing.zkflow:ksp-compiler-plugin:${extension.notaryVersion}")
         }
 
         val createZincDirsForCircuitTask = project.tasks.create(

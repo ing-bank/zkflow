@@ -1,4 +1,4 @@
-package com.ing.zkflow.zktransaction
+package com.ing.zkflow.txmetadata
 
 import com.google.devtools.ksp.getAllSuperTypes
 import com.google.devtools.ksp.symbol.KSClassDeclaration
