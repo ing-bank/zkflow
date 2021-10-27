@@ -15,6 +15,7 @@ import java.net.URI
 
 @Suppress("unused")
 class ZKFlowPlugin : Plugin<Project> {
+    @Suppress("LongMethod")
     override fun apply(project: Project) {
         val extension = project.extensions.create(ZKFlowExtension.NAME, ZKFlowExtension::class.java, project)
 
@@ -42,6 +43,9 @@ class ZKFlowPlugin : Plugin<Project> {
             project.dependencies.add("implementation", "com.ing.zkflow:protocol:${extension.notaryVersion}")
 
             project.pluginManager.apply("org.jetbrains.kotlin.plugin.serialization")
+
+            project.pluginManager.apply("com.google.devtools.ksp")
+            project.dependencies.add("ksp", "com.ing.zkflow:ksp-compiler-plugin:${extension.notaryVersion}")
         }
 
         val createZincDirsForCircuitTask = project.tasks.create(
