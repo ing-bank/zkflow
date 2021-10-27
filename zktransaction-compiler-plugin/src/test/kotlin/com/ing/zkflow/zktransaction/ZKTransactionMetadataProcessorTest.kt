@@ -1,12 +1,11 @@
 package com.ing.zkflow.zktransaction
 
-import com.ing.zkflow.common.contracts.ZKTransactionMetadata
 import com.ing.zkflow.common.contracts.ZKTransactionMetadataCommandData
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import com.tschuchort.compiletesting.symbolProcessorProviders
+import io.kotest.matchers.paths.shouldNotExist
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldContain
 import net.corda.core.internal.readText
 import org.junit.jupiter.api.Test
 import java.io.BufferedOutputStream
@@ -44,18 +43,17 @@ internal class ZKTransactionMetadataProcessorTest {
     }
 
     @Test
-    fun `ZKTransactionProcessor should fail for classes that do not implement ZKTransactionMetadataCommandData`() {
+    fun `ZKTransactionProcessor should ignore classes that do not implement ZKTransactionMetadataCommandData`() {
         val outputStream = ByteArrayOutputStream()
-        val result = compile(invalidKotlinSource, outputStream)
+        val result = compile(regularKotlinSource, outputStream)
 
         // In case of error, show output
         if (result.exitCode != KotlinCompilation.ExitCode.OK) {
             println(outputStream)
         }
 
-        result.exitCode shouldBe KotlinCompilation.ExitCode.COMPILATION_ERROR
-        outputStream.toString("UTF-8") shouldContain "The following classes are annotated with @${ZKTransactionMetadata::class.simpleName}," +
-            " but don't implement ${ZKTransactionMetadataCommandData::class.qualifiedName}: com.ing.zkflow.zktransaction.InvalidZKCommand"
+        result.exitCode shouldBe KotlinCompilation.ExitCode.OK
+        result.getMetaInfServicesPath().shouldNotExist()
     }
 
     private fun compile(
@@ -72,22 +70,22 @@ internal class ZKTransactionMetadataProcessorTest {
 
     companion object {
         private fun KotlinCompilation.Result.getGeneratedMetaInfServices() =
+            getMetaInfServicesPath().readText(StandardCharsets.UTF_8)
+
+        private fun KotlinCompilation.Result.getMetaInfServicesPath() =
             Paths.get("${outputDirectory.absolutePath}/../ksp/sources/resources/META-INF/services/${ZKTransactionMetadataCommandData::class.java.canonicalName}")
-                .readText(StandardCharsets.UTF_8)
 
         private val correctKotlinSource = SourceFile.kotlin(
             "TestCommand.kt",
             """
                 package com.ing.zkflow.zktransaction
                 
-                import com.ing.zkflow.common.contracts.ZKTransactionMetadata
                 import com.ing.zkflow.common.contracts.ZKTransactionMetadataCommandData
                 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
                 import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
                 import com.ing.zkflow.common.zkp.metadata.commandMetadata
                 import com.ing.zkflow.common.zkp.metadata.transactionMetadata
 
-                @ZKTransactionMetadata
                 class TestCommand: ZKTransactionMetadataCommandData {
                     override val transactionMetadata: ResolvedZKTransactionMetadata by transactionMetadata {
                         commands { +TestCommand::class }
@@ -108,7 +106,6 @@ internal class ZKTransactionMetadataProcessorTest {
             """
                 package com.ing.zkflow.zktransaction
                 
-                import com.ing.zkflow.common.contracts.ZKTransactionMetadata
                 import com.ing.zkflow.common.contracts.ZKTransactionMetadataCommandData
                 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
                 import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
@@ -116,7 +113,6 @@ internal class ZKTransactionMetadataProcessorTest {
                 import com.ing.zkflow.common.zkp.metadata.transactionMetadata
 
                 class Container {
-                    @ZKTransactionMetadata
                     class TestNestedCommand: ZKTransactionMetadataCommandData {
                         override val transactionMetadata: ResolvedZKTransactionMetadata by transactionMetadata {
                             commands { +TestNestedCommand::class }
@@ -133,15 +129,12 @@ internal class ZKTransactionMetadataProcessorTest {
             """
         )
 
-        private val invalidKotlinSource = SourceFile.kotlin(
-            "InvalidZKCommand.kt",
+        private val regularKotlinSource = SourceFile.kotlin(
+            "NotACommand.kt",
             """
                 package com.ing.zkflow.zktransaction
                 
-                import com.ing.zkflow.common.contracts.ZKTransactionMetadata
-
-                @ZKTransactionMetadata
-                class InvalidZKCommand
+                class NotACommand
             """
         )
     }

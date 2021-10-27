@@ -8,14 +8,6 @@ import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.CommandWithParties
 
 /**
- * This annotation registers implementations of [ZKTransactionMetadataCommandData] to automatic
- * circuit generation during build
- */
-@Retention(AnnotationRetention.RUNTIME)
-@Target(AnnotationTarget.CLASS)
-annotation class ZKTransactionMetadata
-
-/**
  * Any command that implements this interface is expected to be the first command in a ZKP transaction
  * it is part of. Its [ZKTransactionMetadata] will be inspected to resolve all transaction metadata
  */
