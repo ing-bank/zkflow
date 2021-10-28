@@ -4,24 +4,41 @@ import com.google.devtools.ksp.getAllSuperTypes
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSFile
-import com.google.devtools.ksp.symbol.KSVisitorVoid
+import com.google.devtools.ksp.symbol.KSNode
 import com.ing.zkflow.common.contracts.ZKTransactionMetadataCommandData
+import com.ing.zkflow.ksp.KSAbstractVisitor
 
-class ZKTransactionMetadataVisitor : KSVisitorVoid() {
-    internal val zkTransactionMetadataClasses = mutableListOf<KSClassDeclaration>()
+data class ScopedDeclaration(
+    val parent: ScopedDeclaration?,
+    val declaration: KSClassDeclaration,
+) {
+    fun qualifiedName(): String {
+        return parent?.let {
+            "${parent.qualifiedName()}$${declaration.simpleName.asString()}"
+        } ?: "${declaration.packageName.asString()}.${declaration.simpleName.asString()}"
+    }
+}
 
-    override fun visitFile(file: KSFile, data: Unit) {
+class ZKTransactionMetadataVisitor : KSAbstractVisitor<ScopedDeclaration?, Unit>() {
+    internal val zkTransactionMetadataClasses = mutableListOf<ScopedDeclaration>()
+
+    override fun defaultVisit(annotated: KSNode, data: ScopedDeclaration?) {
+        return
+    }
+
+    override fun visitFile(file: KSFile, data: ScopedDeclaration?) {
         visitDeclarationSequence(file.declarations, data)
     }
 
-    override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: Unit) {
+    override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: ScopedDeclaration?) {
+        val scopedDeclaration = ScopedDeclaration(data, classDeclaration)
         if (classDeclaration.implementsZKTransactionMetadataCommandData()) {
-            zkTransactionMetadataClasses.add(classDeclaration)
+            zkTransactionMetadataClasses.add(scopedDeclaration)
         }
-        visitDeclarationSequence(classDeclaration.declarations, data)
+        visitDeclarationSequence(classDeclaration.declarations, scopedDeclaration)
     }
 
-    private fun visitDeclarationSequence(declarations: Sequence<KSDeclaration>, data: Unit) {
+    private fun visitDeclarationSequence(declarations: Sequence<KSDeclaration>, data: ScopedDeclaration?) {
         declarations
             .filterIsInstance<KSClassDeclaration>()
             .forEach {

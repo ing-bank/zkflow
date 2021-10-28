@@ -40,7 +40,7 @@ internal class ZKTransactionMetadataProcessorTest {
         }
 
         result.exitCode shouldBe KotlinCompilation.ExitCode.OK
-        result.getGeneratedMetaInfServices() shouldBe "com.ing.zkflow.zktransaction.Container.TestNestedCommand\n"
+        result.getGeneratedMetaInfServices() shouldBe "com.ing.zkflow.zktransaction.Container\$TestNestedCommand\n"
     }
 
     @Test
