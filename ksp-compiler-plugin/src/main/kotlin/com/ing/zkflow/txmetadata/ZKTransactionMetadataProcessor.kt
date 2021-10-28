@@ -4,7 +4,6 @@ import com.google.devtools.ksp.processing.Dependencies
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.symbol.KSAnnotated
-import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSFile
 import com.ing.zkflow.common.contracts.ZKTransactionMetadataCommandData
 import com.ing.zkflow.ksp.KotlinSymbolProcessor
@@ -23,25 +22,25 @@ class ZKTransactionMetadataProcessor(
         if (zkMetadataClasses.isNotEmpty()) {
             createMetaInfServicesFile(zkMetadataClasses)
                 .appendText(
-                    zkMetadataClasses.joinToString("\n") { "${it.qualifiedName?.asString()}\n" }
+                    zkMetadataClasses.joinToString("\n") { "${it.qualifiedName()}\n" }
                 )
         }
 
         return emptyList()
     }
 
-    private fun getAllInstancesOfZKTransactionMetadataCommandData(ksFile: KSFile): List<KSClassDeclaration> {
+    private fun getAllInstancesOfZKTransactionMetadataCommandData(ksFile: KSFile): List<ScopedDeclaration> {
         val visitor = ZKTransactionMetadataVisitor()
-        visitor.visitFile(ksFile, Unit)
+        visitor.visitFile(ksFile, null)
         return visitor.zkTransactionMetadataClasses
     }
 
     @Suppress("SpreadOperator")
-    private fun createMetaInfServicesFile(correctlyAnnotatedTransactions: List<KSClassDeclaration>) =
+    private fun createMetaInfServicesFile(correctlyAnnotatedTransactions: List<ScopedDeclaration>) =
         environment.codeGenerator.createNewFile(
             Dependencies(
                 false,
-                *correctlyAnnotatedTransactions.mapNotNull { it.containingFile }.toList().toTypedArray()
+                *correctlyAnnotatedTransactions.mapNotNull { it.declaration.containingFile }.toList().toTypedArray()
             ),
             "META-INF/services",
             ZKTransactionMetadataCommandData::class.packageName,
