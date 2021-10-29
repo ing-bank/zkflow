@@ -2,10 +2,7 @@ package com.ing.zkflow.testing.dsl
 
 import TestTransactionDSLInterpreter
 import TestZKLedgerDSLInterpreter
-import TestZKTransactionDSLInterpreter
 import com.ing.zkflow.common.serialization.BFLSerializationScheme
-import com.ing.zkflow.common.zkp.ZKTransactionService
-import com.ing.zkflow.common.zkp.ZincZKTransactionService
 import com.ing.zkflow.crypto.zinc
 import com.ing.zkflow.serialization.SerializersModuleRegistry
 import com.ing.zkflow.serialization.bfl.TestCordaSerializers
@@ -22,7 +19,7 @@ import net.corda.testing.node.internal.MockNetworkParametersStorage
 @JvmOverloads
 public fun ServiceHub.zkLedger(
     notary: Party = TestIdentity.fresh("ledger notary").party,
-    zkService: ZKTransactionService = ZincZKTransactionService(this),
+    zkService: TestDSLZKTransactionService = TestDSLZincZKTransactionService(this),
     transactionDigestService: DigestService = DigestService.zinc,
     transactionSerializationScheme: Int = BFLSerializationScheme.SCHEME_ID,
     script: LedgerDSL<TestTransactionDSLInterpreter, TestZKTransactionDSLInterpreter, TestZKLedgerDSLInterpreter>.() -> Unit

@@ -4,12 +4,17 @@ import com.ing.zkflow.common.serialization.zinc.json.PublicInputSerializer
 import com.ing.zkflow.common.serialization.zinc.json.WitnessSerializer
 import kotlinx.serialization.json.Json
 import net.corda.core.utilities.loggerFor
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.File.createTempFile
 import java.io.IOException
 import java.time.Duration
 import java.util.concurrent.TimeUnit
+import kotlin.time.measureTime
+import kotlin.time.measureTimedValue
 
+@Suppress("TooManyFunctions")
 class ZincZKService(
     val circuitFolder: String,
     val artifactFolder: String,
@@ -113,8 +118,7 @@ class ZincZKService(
     }
 
     override fun run(witness: Witness, publicInput: PublicInput): String {
-        log.debug("Witness size: ${witness.size()}")
-        log.debug("Padded Witness size: ${witness.size { it == 0.toByte() }}") // Assumes BFL zero-byte padding
+        log.debug("Witness size: ${witness.size()}, of which padding bytes: ${witness.size { it == 0.toByte() }}") // Assumes BFL zero-byte padding
 
         val witnessJson = Json.encodeToString(WitnessSerializer, witness)
         log.trace("Witness JSON: $witnessJson")
@@ -159,6 +163,34 @@ class ZincZKService(
                     "Actual: \n$actualJson"
             )
         }
+    }
+
+    /**
+     * this is used to get the logger for the caller of the caller.
+     */
+    private val loggerForMyCaller: Logger
+        get() = LoggerFactory.getLogger(Throwable().stackTrace[2].className)
+
+    fun setupTimed(log: Logger = loggerForMyCaller) {
+        val time = measureTime {
+            this.setup()
+        }
+        log.debug("[setup] $time")
+    }
+
+    fun proveTimed(witnessJson: String, log: Logger = loggerForMyCaller): ByteArray {
+        val timedValue = measureTimedValue {
+            this.prove(witnessJson)
+        }
+        log.debug("[prove] ${timedValue.duration}")
+        return timedValue.value
+    }
+
+    fun verifyTimed(proof: ByteArray, publicInputJson: String, log: Logger = loggerForMyCaller) {
+        val time = measureTime {
+            this.verify(proof, publicInputJson)
+        }
+        log.debug("[verify] $time")
     }
 
     override fun prove(witness: Witness): ByteArray {

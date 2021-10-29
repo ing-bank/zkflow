@@ -1,5 +1,6 @@
 package com.ing.zkflow.testing.zkp
 
+import com.ing.zkflow.common.contracts.ZKTransactionMetadataCommandData
 import com.ing.zkflow.common.zkp.AbstractZKTransactionService
 import com.ing.zkflow.common.zkp.ZKService
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
@@ -20,7 +21,10 @@ public open class MockZKTransactionService(serviceHub: ServiceHub) : AbstractZKT
         HashAgility.init(zincAlgorithm)
     }
 
-    private val zkService: ZKService = MockZKService(serviceHub, DigestService.zinc)
+    override fun zkServiceForTransactionMetadata(metadata: ResolvedZKTransactionMetadata): ZKService =
+        MockZKService(serviceHub, DigestService.zinc)
 
-    override fun zkServiceForTransactionMetadata(metadata: ResolvedZKTransactionMetadata): ZKService = zkService
+    override fun setup(command: ZKTransactionMetadataCommandData, force: Boolean) {
+        // Do nothing
+    }
 }

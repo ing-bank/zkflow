@@ -41,6 +41,7 @@ class ZKFlowPlugin : Plugin<Project> {
                 "com.ing.zkflow:zinc-platform-sources:${extension.zincPlatformSourcesVersion}"
             )
             project.dependencies.add("implementation", "com.ing.zkflow:protocol:${extension.notaryVersion}")
+            project.dependencies.add("implementation", "com.ing.zkflow:compilation:${extension.notaryVersion}")
 
             project.pluginManager.apply("org.jetbrains.kotlin.plugin.serialization")
 
@@ -77,6 +78,9 @@ class ZKFlowPlugin : Plugin<Project> {
         prepareForCompilationTask.mustRunAfter(copyCircuitTask, copyPlatformTask, generateFromTemplatesTask)
 
         project.tasks.create("processZincSources") {
+            it.dependsOn("classes")
+            it.mustRunAfter("classes")
+
             it.dependsOn("copyZincPlatformLibraries")
             it.dependsOn("copyZincPlatformSources")
             it.dependsOn("generateZincPlatformCodeFromTemplates")

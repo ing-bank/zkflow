@@ -1,6 +1,7 @@
 package com.ing.zkflow.common.zkp
 
 import com.ing.zkflow.common.util.includedLastModified
+import net.corda.core.utilities.loggerFor
 import java.io.File
 
 /**
@@ -26,6 +27,8 @@ import java.io.File
 object CircuitManager {
     const val metadataPath = "__circuit_metadata__"
 
+    private val log = loggerFor<CircuitManager>()
+
     enum class Status {
         Outdated,
         UpToDate,
@@ -44,6 +47,7 @@ object CircuitManager {
         val metadataFile = File("$artifactFolder/$metadataPath")
 
         if (!metadataFile.exists()) {
+            log.debug("Circuit outdated: No metadata file found")
             circuits[circuitDescription] = Status.Outdated
             return
         }
@@ -58,8 +62,8 @@ object CircuitManager {
 
         // Check if the source has not been changed after the artifacts have been generated.
         if (lastModifiedSourceRecorded < lastModifiedSource) {
+            log.debug("Circuit outdated: source modified: '$circuitFolder'")
             metadataFile.delete()
-
             circuits[circuitDescription] = Status.Outdated
             return
         }
@@ -69,18 +73,16 @@ object CircuitManager {
             val (path, lastModified) = it.split(":")
             val artifactFile = File(path)
 
-            if (
-                !artifactFile.exists() ||
-                lastModified.toLong() < artifactFile.lastModified()
-            ) {
+            if (!artifactFile.exists() || lastModified.toLong() < artifactFile.lastModified()) {
+                log.debug("Circuit outdated: artifact path does not exist: $path, or artifact file changed after cached artifact modified timestamp")
                 metadataFile.delete()
-
                 circuits[circuitDescription] = Status.Outdated
                 return
             }
         }
 
         // lastModifiedRecorded = lastModifiedSource
+        log.debug("Circuit up-to-date")
         circuits[circuitDescription] = Status.UpToDate
     }
 
@@ -105,12 +107,15 @@ object CircuitManager {
         val metadataFile = File("$artifactFolder/$metadataPath")
         metadataFile.writeText("$lastModifiedSource")
 
+        log.debug("Circuit source cache metadata written for: $circuitFolder")
+
         File(artifactFolder).walkTopDown()
             .filter { it.isFile && it.name != metadataPath }
             .forEach {
                 metadataFile.appendText("\n${it.absolutePath}:${it.lastModified()}")
             }
 
+        log.debug("Circuit artifact cache metadata written for: $artifactFolder")
         circuits[circuitDescription] = Status.UpToDate
     }
 }

@@ -4,9 +4,6 @@ import com.ing.serialization.bfl.annotations.FixedLength
 import com.ing.serialization.bfl.api.reified.serialize
 import com.ing.zkflow.testing.getZincZKService
 import com.ing.zkflow.testing.toJsonArray
-import com.ing.zkflow.testing.zkp.proveTimed
-import com.ing.zkflow.testing.zkp.setupTimed
-import com.ing.zkflow.testing.zkp.verifyTimed
 import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test

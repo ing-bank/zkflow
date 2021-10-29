@@ -14,10 +14,10 @@ import com.ing.zkflow.common.zkp.metadata.ZKTransactionMetadata.Companion.ERROR_
 import com.ing.zkflow.serialization.CommandDataSerializerMap
 import com.ing.zkflow.serialization.ContractStateSerializerMap
 import com.ing.zkflow.serialization.bfl.serializers.AnonymousPartySerializer
+import com.ing.zkflow.testing.dsl.TestDSLMockZKTransactionService
 import com.ing.zkflow.testing.dsl.zkLedger
 import com.ing.zkflow.testing.fixed
 import com.ing.zkflow.testing.fixtures.contract.TestContract
-import com.ing.zkflow.testing.zkp.MockZKTransactionService
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldStartWith
@@ -50,7 +50,7 @@ class ZKTransactionMetadataTest {
 
     @Test
     fun `The transaction builder must match structure from transaction metadata`() {
-        services.zkLedger(zkService = MockZKTransactionService(services)) {
+        services.zkLedger(zkService = TestDSLMockZKTransactionService(services)) {
             // basic checks
             zkTransaction {
                 output(MockAssetContract.ID, "Issued State", MockAssetContract.MockAsset(issuer))
@@ -152,7 +152,7 @@ class ZKTransactionMetadataTest {
 
     @Test
     fun `Wrong cordapp count fails`() {
-        services.zkLedger(zkService = MockZKTransactionService(services)) {
+        services.zkLedger(zkService = TestDSLMockZKTransactionService(services)) {
             zkTransaction {
                 output(MockAssetContract.ID, MockAssetContract.MockAsset(issuer))
                 command(listOf(issuer.owningKey), MockAssetContract.IssueWithWrongCorDappCount())
@@ -322,7 +322,7 @@ class MockAssetContract : Contract {
     }
 
     @Serializable
-    class Move : ZKCommandData, ZKTransactionMetadataCommandData {
+    class Move : ZKTransactionMetadataCommandData {
         init {
             CommandDataSerializerMap.register(this::class)
         }

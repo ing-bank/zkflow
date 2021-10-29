@@ -1,4 +1,10 @@
-@file:Suppress("FunctionName", "FunctionNaming", "FunctionParameterNaming", "LongParameterList", "TooManypublic functions") // Copy of Corda API
+@file:Suppress(
+    "FunctionName",
+    "FunctionNaming",
+    "FunctionParameterNaming",
+    "LongParameterList",
+    "TooManypublic functions"
+) // Copy of Corda API
 
 package com.ing.zkflow.testing.dsl
 
@@ -165,7 +171,10 @@ public interface LedgerDSLInterpreter<out T : TransactionDSLInterpreter, out K :
  * public functionality then first add your primitive to [LedgerDSLInterpreter] and then add the convenience defaults/extension
  * methods here.
  */
-public class LedgerDSL<out T : TransactionDSLInterpreter, out K : TransactionDSLInterpreter, out L : LedgerDSLInterpreter<T, K>>(public val interpreter: L, private val notary: Party) :
+public class LedgerDSL<out T : TransactionDSLInterpreter, out K : TransactionDSLInterpreter, out L : LedgerDSLInterpreter<T, K>>(
+    public val interpreter: L,
+    private val notary: Party
+) :
     LedgerDSLInterpreter<TransactionDSLInterpreter, TransactionDSLInterpreter> by interpreter {
 
     /**

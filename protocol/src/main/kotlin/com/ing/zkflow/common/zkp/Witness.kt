@@ -165,7 +165,6 @@ class Witness(
                 referenceUtxoInfos.find { it.stateRef == referenceRef } ?: error("No UtxoInfo provided for reference ref $referenceRef")
             }
 
-            //  In this context we know that the first command is a zk command and ispect that for circuit medadata
             val javaClass2ZincType = wtx.zkTransactionMetadata().javaClass2ZincType
 
             return Witness(

@@ -3,7 +3,6 @@ package com.ing.zkflow
 
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
 import com.ing.zkflow.common.zkp.metadata.TransactionMetadataCache
-import com.ing.zkflow.compilation.ZKFlowCompilationDefaults
 import com.ing.zkflow.compilation.joinConstFiles
 import com.ing.zkflow.compilation.zinc.template.TemplateConfigurations
 import com.ing.zkflow.compilation.zinc.template.TemplateConfigurations.Companion.doubleTemplateParameters
@@ -61,7 +60,6 @@ fun main(args: Array<String>) {
             val circuitSourcesPath = circuitSourcesBase.resolve(circuitName)
 
             // Required to initialize the metadata cache
-            // TODO: find a way to automate this, perhaps using the serviceloader being added by PP
             TestContract.Create().transactionMetadata
             TestContract.Move().transactionMetadata
             TestMultipleStateContract.Move().transactionMetadata
@@ -76,8 +74,7 @@ fun main(args: Array<String>) {
             copier.copyZincCircuitSources(
                 circuitSourcesPath,
                 circuitName,
-                projectVersion,
-                ZKFlowCompilationDefaults.DEFAULT_CONFIG_CIRCUIT_FILE
+                projectVersion
             )
 
             copier.copyZincCircuitStates(getCircuitStates(circuitStatesPath, metadata))

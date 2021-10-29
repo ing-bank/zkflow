@@ -1,11 +1,11 @@
 @file:Suppress("DuplicatedCode") // Duplication of this DSL is unavoidable due to Corda's design
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder
-import com.ing.zkflow.common.zkp.ZKTransactionService
 import com.ing.zkflow.testing.dsl.DuplicateOutputLabel
 import com.ing.zkflow.testing.dsl.EnforceVerifyOrFail
 import com.ing.zkflow.testing.dsl.LedgerDSL
 import com.ing.zkflow.testing.dsl.OutputStateLookup
+import com.ing.zkflow.testing.dsl.TestDSLZKTransactionService
 import com.ing.zkflow.testing.dsl.TransactionDSL
 import com.ing.zkflow.testing.dsl.TransactionDSLInterpreter
 import com.ing.zkflow.testing.dsl.VerificationMode
@@ -113,7 +113,7 @@ public data class TestTransactionDSLInterpreter private constructor(
     }
 
     // Hack to reuse the LedgerInterpreter's ZKTransactionService with the local ServiceHub, so transaction resolution will work.
-    private val zkService: ZKTransactionService = ledgerInterpreter.zkService::class.primaryConstructor!!.call(services)
+    private val zkService: TestDSLZKTransactionService = ledgerInterpreter.zkService::class.primaryConstructor!!.call(services)
 
     private fun copy(): TestTransactionDSLInterpreter =
         TestTransactionDSLInterpreter(

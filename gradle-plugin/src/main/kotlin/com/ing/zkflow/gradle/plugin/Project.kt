@@ -1,5 +1,6 @@
 package com.ing.zkflow.gradle.plugin
 
+import com.ing.zkflow.compilation.ZKFlowCompilationDefaults
 import com.ing.zkflow.compilation.folderIfExists
 import com.ing.zkflow.gradle.extension.ZKFlowExtension
 import org.gradle.api.Project
@@ -62,12 +63,18 @@ val Project.platformTemplates: Array<File>
             .toList().toTypedArray()
     }
 
+val Project.platformTemplatesRootPath: File
+    get() {
+        return project.platformTemplates.sortedArray().firstOrNull()?.parentFile?.absoluteFile
+            ?: error("Platform Templates are empty")
+    }
+
 val Project.platformSkeletonState: FileTree
     get() = project.platformSourcesFileTree.matching {
         it
             .include(
                 zkFlowExtension.platformSamplesPath +
-                    ZKFlowExtension.SKELETON_STATE_PATH +
+                    ZKFlowCompilationDefaults.SKELETON_STATE_PATH +
                     zkFlowExtension.zincFilesGlob
             )
     }
@@ -77,13 +84,8 @@ val Project.platformSkeletonCircuit: FileTree
         it
             .include(
                 zkFlowExtension.platformSamplesPath +
-                    ZKFlowExtension.SKELETON_CIRCUIT_PATH +
+                    ZKFlowCompilationDefaults.SKELETON_CIRCUIT_PATH +
                     zkFlowExtension.zincFilesGlob
-            )
-            .include(
-                zkFlowExtension.platformSamplesPath +
-                    ZKFlowExtension.SKELETON_CIRCUIT_PATH +
-                    zkFlowExtension.configFiles
             )
     }
 

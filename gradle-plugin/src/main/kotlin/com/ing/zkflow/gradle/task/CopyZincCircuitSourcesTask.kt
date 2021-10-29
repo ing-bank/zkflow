@@ -1,7 +1,6 @@
 package com.ing.zkflow.gradle.task
 
 import com.ing.zkflow.compilation.zinc.util.ZincSourcesCopier
-import com.ing.zkflow.gradle.extension.ZKFlowExtension
 import com.ing.zkflow.gradle.plugin.circuitNames
 import com.ing.zkflow.gradle.plugin.zincCommonFolderName
 import com.ing.zkflow.gradle.plugin.zincStatesFolderName
@@ -30,8 +29,7 @@ open class CopyZincCircuitSourcesTask : DefaultTask() {
                 copier.copyZincCircuitSources(
                     extension.circuitSourcesBasePath.resolve(it),
                     it,
-                    project.version.toString(),
-                    ZKFlowExtension.CONFIG_CIRCUIT_FILE
+                    project.version.toString()
                 )
             }
         }

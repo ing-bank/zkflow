@@ -4,9 +4,6 @@ import com.ing.serialization.bfl.api.reified.serialize
 import com.ing.zkflow.serialization.bfl.serializers.CordaSerializers
 import com.ing.zkflow.testing.getZincZKService
 import com.ing.zkflow.testing.toJsonArray
-import com.ing.zkflow.testing.zkp.proveTimed
-import com.ing.zkflow.testing.zkp.setupTimed
-import com.ing.zkflow.testing.zkp.verifyTimed
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import net.corda.core.contracts.LinearPointer

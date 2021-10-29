@@ -37,14 +37,14 @@ class TransactionVerificationTest {
         val bob = ZKNulls.NULL_ANONYMOUS_PARTY
         val services = MockServices(listOf("com.ing.zkflow.testing.fixtures.contract"))
 
-        // services.zkLedger(zkService = MockZKTransactionService(services)) {
+        // services.zkLedger(zkService = TestDSLMockZKTransactionService(services)) {
         services.zkLedger {
             val createState = TestContract.TestState(alice, value = 88)
             zkTransaction {
                 input(TestContract.PROGRAM_ID, createState)
                 output(TestContract.PROGRAM_ID, createState.withNewOwner(bob).ownableState)
                 command(listOf(alice.owningKey, bob.owningKey), TestContract.Move())
-                verifies(VerificationMode.RUN)
+                verifies(VerificationMode.PROVE_AND_VERIFY)
             }
         }
     }

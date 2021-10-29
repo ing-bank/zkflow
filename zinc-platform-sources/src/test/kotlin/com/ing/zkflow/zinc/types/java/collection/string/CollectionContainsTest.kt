@@ -1,9 +1,6 @@
 package com.ing.zkflow.zinc.types.java.collection.string
 
 import com.ing.zkflow.testing.getZincZKService
-import com.ing.zkflow.testing.zkp.proveTimed
-import com.ing.zkflow.testing.zkp.setupTimed
-import com.ing.zkflow.testing.zkp.verifyTimed
 import com.ing.zkflow.zinc.types.toJsonObject
 import kotlinx.serialization.json.buildJsonObject
 import org.junit.jupiter.api.AfterAll
