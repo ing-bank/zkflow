@@ -72,6 +72,9 @@ class ZKFlowPlugin : Plugin<Project> {
         copyPlatformTask.mustRunAfter(createZincDirsForCircuitTask)
         copyPlatformLibsTask.mustRunAfter(createZincDirsForCircuitTask)
         generateFromTemplatesTask.mustRunAfter(createZincDirsForCircuitTask)
+        generateFromTemplatesTask
+            .dependsOn("compileKotlin") // So the command metadata can be found
+            .mustRunAfter("compileKotlin")
         prepareForCompilationTask.mustRunAfter(createZincDirsForCircuitTask)
 
         prepareForCompilationTask.dependsOn(copyCircuitTask, copyPlatformTask, generateFromTemplatesTask)
@@ -80,6 +83,10 @@ class ZKFlowPlugin : Plugin<Project> {
         project.tasks.create("processZincSources") {
             it.dependsOn("classes")
             it.mustRunAfter("classes")
+            it.dependsOn("kspKotlin") // So the command metadata can be found
+            it.mustRunAfter("kspKotlin")
+            it.dependsOn("compileKotlin") // So the command metadata can be found
+            it.mustRunAfter("compileKotlin")
 
             it.dependsOn("copyZincPlatformLibraries")
             it.dependsOn("copyZincPlatformSources")
@@ -94,7 +101,9 @@ class ZKFlowPlugin : Plugin<Project> {
         copyZincCircuitSourcesForTestsTask.mustRunAfter("assemble", "processTestResources")
 
         project.afterEvaluate {
-            it.tasks.getByPath("test").dependsOn("copyZincCircuitSourcesForTests").mustRunAfter("copyZincCircuitSourcesForTests")
+            it.tasks.getByPath("test")
+                .dependsOn("copyZincCircuitSourcesForTests")
+                .mustRunAfter("copyZincCircuitSourcesForTests")
         }
     }
 }

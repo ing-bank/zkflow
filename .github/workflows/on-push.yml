@@ -61,7 +61,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: zkdapp-tester - Build with Gradle
-        run: ../gradlew build --stacktrace --info --build-cache
+        run: ./gradlew build --stacktrace --info --build-cache
         working-directory: zkdapp-tester
         env:
           GITHUB_USERNAME: ${{ github.actor }}

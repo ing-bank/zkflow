@@ -13,7 +13,7 @@ cordapp {
     targetPlatformVersion.set(platformVersion.toInt())
     minimumPlatformVersion.set(platformVersion.toInt())
     workflow {
-        name.set("Zk Notary App")
+        name.set("ZKFlow Protocol App")
         vendor.set("ING Bank NV")
         licence.set("Apache License, Version 2.0")
         versionId.set(1)
