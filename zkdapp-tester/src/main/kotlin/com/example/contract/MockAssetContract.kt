@@ -15,7 +15,7 @@ import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.CommandAndState
 import net.corda.core.contracts.Contract
 import net.corda.core.contracts.ContractClassName
-import net.corda.core.contracts.SignatureAttachmentConstraint
+import net.corda.core.contracts.AlwaysAcceptAttachmentConstraint
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.transactions.LedgerTransaction
 import java.util.Random
@@ -51,7 +51,7 @@ class MockAssetContract : Contract {
         }
 
         override val transactionMetadata by transactionMetadata {
-            network { attachmentConstraintType = SignatureAttachmentConstraint::class }
+            network { attachmentConstraintType = AlwaysAcceptAttachmentConstraint::class }
             commands {
                 +Move::class
             }
@@ -59,6 +59,7 @@ class MockAssetContract : Contract {
 
         @Transient
         override val metadata = commandMetadata {
+            attachmentConstraintType = AlwaysAcceptAttachmentConstraint::class
             private = true
             numberOfSigners = 2
             inputs { 1 of MockAsset::class }
@@ -74,7 +75,7 @@ class MockAssetContract : Contract {
         }
 
         override val transactionMetadata by transactionMetadata {
-            network { attachmentConstraintType = SignatureAttachmentConstraint::class }
+            network { attachmentConstraintType = AlwaysAcceptAttachmentConstraint::class }
             commands {
                 +Issue::class
             }
@@ -83,6 +84,7 @@ class MockAssetContract : Contract {
         @Transient
         override val metadata = commandMetadata {
             private = true
+            attachmentConstraintType = AlwaysAcceptAttachmentConstraint::class
             numberOfSigners = 1
             outputs { 1 of MockAsset::class }
             timewindow()

@@ -4,7 +4,7 @@ mod tx_state_mock_asset;
 
 use platform_witness::Witness;
 use signers_anonymous_party_ed_dsa::Signers;
-use tx_state_mock_asset::TxStateTestState;
+use tx_state_mock_asset::TxStateMockAsset;
 
 fn check_contract_rules(witness: Witness) {
     let input = TxStateMockAsset::deserialize(witness.serialized_input_utxos.mock_asset[0]);

@@ -35,7 +35,7 @@ const VALUE_OFFSET: u16
 const PARTICIPANTS_OFFSET: u16
     = VALUE_OFFSET
     + VALUE_LENGTH;
-const TEST_STATE_LENGTH: u16
+const MOCK_ASSET_LENGTH: u16
     = PARTICIPANTS_OFFSET
     + PARTICIPANTS_LENGTH;
 
@@ -45,7 +45,7 @@ struct MockAsset {
     participants: AnonymousPartyEdDSA_Collection_1,
 }
 
-type SerializedMockAsset = [u8; TEST_STATE_LENGTH];
+type SerializedMockAsset = [u8; MOCK_ASSET_LENGTH];
 
 impl MockAsset {
     fn deserialize(serialized: SerializedMockAsset) -> MockAsset {

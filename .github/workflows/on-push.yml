@@ -60,19 +60,12 @@ jobs:
           GITHUB_USERNAME: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-#      - name: zkdapp-tester - Init new circuit and Process Zinc sources with Gradle
-#        run: ../gradlew processZincSources createZincDirectoriesForCircuit --circuit test-circuit  --stacktrace --info --build-cache
-#        working-directory: zkdapp-tester
-#        env:
-#          GITHUB_USERNAME: ${{ github.actor }}
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#
-#      - name: zkdapp-tester - Compile test-command circuit with Zargo
-#        run: zargo build -v
-#        working-directory: zkdapp-tester/build/zinc/test-circuit
-#        env:
-#          GITHUB_USERNAME: ${{ github.actor }}
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: zkdapp-tester - Build with Gradle
+        run: ../gradlew build --stacktrace --info --build-cache
+        working-directory: zkdapp-tester
+        env:
+          GITHUB_USERNAME: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload JUnit test report
         if: always()

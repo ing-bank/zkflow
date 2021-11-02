@@ -1,7 +1,4 @@
 import com.ing.zkflow.gradle.task.CreateZincDirectoriesForCircuitTask
-import com.ing.zkflow.compilation.zinc.template.parameters.BigDecimalTemplateParameters
-import com.ing.zkflow.compilation.zinc.template.parameters.AmountTemplateParameters
-import com.ing.zkflow.compilation.zinc.template.parameters.StringTemplateParameters
 
 plugins {
     kotlin("jvm") version "1.5.31"
@@ -9,17 +6,7 @@ plugins {
 }
 
 zkp {
-    addConfigurations(StringTemplateParameters(33))
-
-    val bigDecimalParameters = listOf(
-        BigDecimalTemplateParameters(25, 6),
-        BigDecimalTemplateParameters(102, 20)
-    )
-    addConfigurations(bigDecimalParameters)
-
-
-    val amountParameters = bigDecimalParameters.map { AmountTemplateParameters(it, 8) }
-    addConfigurations(amountParameters)
+    zkFlowTemplateConfigurationClass = "com.example.ZKFlowTemplateConfiguration"
 }
 
 repositories {
@@ -33,7 +20,14 @@ repositories {
 
 dependencies {
     implementation(kotlin("stdlib"))
+
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.7.0")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
     testImplementation("com.ing.zkflow:test-utils:1.0-SNAPSHOT")
+}
+
+tasks.test {
+    useJUnitPlatform()
 }
 
 // Normally this build is run after the included build, but this ensures that all dependencies
