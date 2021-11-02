@@ -173,10 +173,20 @@ class ZKTransactionMetadata {
 object TransactionMetadataCache {
     val resolvedTransactionMetadata = mutableMapOf<KClass<out ZKTransactionMetadataCommandData>, ResolvedZKTransactionMetadata>()
 
+    private var metadataIsInitialized = false
+
+    private fun initResolvedTransactionMetadata() {
+        if (!metadataIsInitialized) {
+            ServiceLoader.load(ZKTransactionMetadataCommandData::class.java).forEach {
+                it.transactionMetadata
+            }
+            metadataIsInitialized = true
+            println("Commands in TransactionMetadataCache: ${resolvedTransactionMetadata.keys.joinToString(", ")}")
+        }
+    }
+
     fun findMetadataByCircuitName(circuitName: String): ResolvedZKTransactionMetadata {
-        println("SEARCHING FOR: $circuitName")
-        ServiceLoader.load(ZKTransactionMetadataCommandData::class.java).reload() // Just to be sure
-        ServiceLoader.load(ZKTransactionMetadataCommandData::class.java).iterator().forEach { println("LOADED: ${it::class}") }
+        initResolvedTransactionMetadata()
 
         return resolvedTransactionMetadata.entries.find { cacheEntry ->
             cacheEntry.value.commands.any { command ->

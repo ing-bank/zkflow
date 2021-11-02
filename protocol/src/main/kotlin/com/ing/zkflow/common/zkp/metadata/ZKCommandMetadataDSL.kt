@@ -44,7 +44,7 @@ data class ZKCircuit(
         private val DEFAULT_SETUP_TIMEOUT = 2.hours
         private val DEFAULT_PROVING_TIMEOUT = 5.minutes
         private val DEFAULT_VERIFICATION_TIMEOUT = 3.seconds
-        private val DEFAULT_CIRCUIT_BUILD_FOLDER_PARENT_PATH = "${System.getProperty("user.dir")}/build/zinc/commands/"
+        private val DEFAULT_CIRCUIT_BUILD_FOLDER_PARENT_PATH = "${System.getProperty("user.dir")}/build/zinc/"
 
         private fun javaClass2ZincType(commandMetadata: ZKCommandMetadata): Map<KClass<out ContractState>, ZincType> {
             val mapping = mutableListOf<Pair<KClass<out ContractState>, ZincType>>()
@@ -78,7 +78,7 @@ data class ZKCircuit(
                 commandKClass = commandMetadata.commandKClass,
                 javaClass2ZincType = javaClass2ZincType(commandMetadata),
                 name = commandMetadata.commandSimpleName.camelToSnakeCase(),
-                buildFolder = File(DEFAULT_CIRCUIT_BUILD_FOLDER_PARENT_PATH + commandMetadata.commandSimpleName),
+                buildFolder = File(DEFAULT_CIRCUIT_BUILD_FOLDER_PARENT_PATH + commandMetadata.commandSimpleName.camelToSnakeCase()),
                 buildTimeout = DEFAULT_BUILD_TIMEOUT,
                 setupTimeout = DEFAULT_SETUP_TIMEOUT,
                 provingTimeout = DEFAULT_PROVING_TIMEOUT,
