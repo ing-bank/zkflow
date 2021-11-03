@@ -8,17 +8,19 @@ import com.ing.zkflow.gradle.plugin.zkFlowExtension
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.tasks.InputFiles
-import org.gradle.api.tasks.OutputDirectories
 import org.gradle.api.tasks.TaskAction
 
 open class CopyZincPlatformSourcesAndLibraryTask : DefaultTask() {
     private val extension = project.zkFlowExtension
 
+    init {
+        // used to have the actual zinc build dirs as output dirs, but that would make this task always out of date.
+        // We really only care about outdated inputs.
+        this.outputs.upToDateWhen { true }
+    }
+
     @InputFiles
     val platformSource: Configuration = project.configurations.getByName("zinc")
-
-    @OutputDirectories
-    val zincOutputs = project.circuitNames?.map { extension.mergedCircuitOutputPath.resolve(it).resolve("src") }
 
     @TaskAction
     fun createCopyZincSources() {

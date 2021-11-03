@@ -47,10 +47,10 @@ val TraversableTransaction.zkFLowMetadata: ResolvedZKTransactionMetadata
     get() = zkTransactionMetadataCommandData.transactionMetadata
 val TraversableTransaction.zkTransactionMetadataCommandData: ZKTransactionMetadataCommandData
     get() = commands.firstOrNull()?.value as? ZKTransactionMetadataCommandData
-        ?: error("This transaction is not a ZKFlow transaction, so no metadata was defined")
+        ?: error("No ZKTransactionMetadataCommandDat was found on this transaction, so it is not a ZKFlow transaction")
 val LedgerTransaction.zkTransactionMetadataCommandData: ZKTransactionMetadataCommandData
     get() = commands.firstOrNull()?.value as? ZKTransactionMetadataCommandData
-        ?: error("This transaction is not a ZKFlow transaction, so no metadata was defined")
+        ?: error("No ZKTransactionMetadataCommandDat was found on this transaction, so it is not a ZKFlow transaction")
 
 /**
  * The main reason for this ZKTransactionBuilder to exist, is to ensure that the user always uses the

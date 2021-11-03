@@ -29,11 +29,12 @@ public class TestDSLZincZKTransactionService(serviceHub: ServiceHub) : TestDSLZK
                 run(wtx)
             }
             VerificationMode.PROVE_AND_VERIFY -> {
-                setupTimed(wtx.zkTransactionMetadataCommandData) // Should be idempotent
-                val proof = proveTimed(wtx)
-                verifyTimed(SignedZKVerifierTransaction(proof), false)
-                // This fails because `getUtxoHashes access the config to find ZKVtxStorage service
-                // zkServiceForTransactionMetadata(wtx.zkFLowMetadata).verifyTimed(proof, calculatePublicInput(wtx))
+                setup(wtx.zkTransactionMetadataCommandData) // Should be idempotent
+                val proof = prove(wtx)
+                verify(SignedZKVerifierTransaction(proof), false)
+            }
+            VerificationMode.MOCK -> {
+                TestDSLMockZKTransactionService(serviceHub).run(wtx)
             }
         }
     }

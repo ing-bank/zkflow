@@ -55,7 +55,7 @@ open class ZincZKTransactionService(services: ServiceHub) : AbstractZKTransactio
             zkService.cleanup()
             CircuitManager.inProgress(circuit)
             log.debug("Circuit outdated, starting setup")
-            zkService.setup()
+            zkService.setupTimed()
             log.debug("Circuit setup complete, caching it")
             CircuitManager.cache(circuit)
         }

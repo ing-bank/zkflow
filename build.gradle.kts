@@ -33,7 +33,7 @@ plugins {
     idea
     kotlin("jvm") apply false
     id("com.diffplug.spotless") apply false
-    id("io.gitlab.arturbosch.detekt")
+    id("io.gitlab.arturbosch.detekt") apply false
     id("org.owasp.dependencycheck") version "6.1.1"
 }
 
@@ -107,20 +107,6 @@ val testReportAll = tasks.register<TestReport>("testReportAll") {
     })
 }
 
-tasks.withType<io.gitlab.arturbosch.detekt.Detekt> {
-    // Target version of the generated JVM bytecode. It is used for type resolution.
-    jvmTarget = "1.8"
-    config.setFrom("${rootDir}/config/detekt/detekt.yml")
-
-    parallel = true
-
-    source(files(rootProject.projectDir))
-    include("**/*.kt")
-    exclude("**/*.kts")
-    exclude("**/resources/")
-    exclude("**/build/")
-    exclude("ivno/*")
-}
 
 idea {
     module {
@@ -137,6 +123,7 @@ subprojects {
     plugins.withType(JavaPlugin::class.java) {
         // Make sure the project has the necessary plugins loaded
         plugins.apply {
+            apply("io.gitlab.arturbosch.detekt")
             apply("com.diffplug.spotless")
             /* TODO: Aggregated Jacoco report
              * https://docs.gradle.org/6.5.1/samples/sample_jvm_multi_project_with_code_coverage.html for aggregate coverage report
@@ -190,7 +177,7 @@ subprojects {
                 it.dependsOn(":checkJavaVersion")
                 it.dependsOn("spotlessApply") // Autofix before check
                 it.dependsOn("spotlessCheck") // Fail on remaining non-autofixable issues
-                it.dependsOn(":detekt")
+                it.dependsOn("detekt")
             }
 
             withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
@@ -204,6 +191,20 @@ subprojects {
                             "-Xjvm-default=compatibility"
                         )
                 }
+            }
+
+            withType<io.gitlab.arturbosch.detekt.Detekt> {
+                // Target version of the generated JVM bytecode. It is used for type resolution.
+                jvmTarget = "1.8"
+                config.setFrom("${rootDir}/config/detekt/detekt.yml")
+
+                parallel = true
+
+                source(files(projectDir))
+                include("**/*.kt")
+                exclude("**/*.kts")
+                exclude("**/resources/")
+                exclude("**/build/")
             }
 
             withType<Jar> {

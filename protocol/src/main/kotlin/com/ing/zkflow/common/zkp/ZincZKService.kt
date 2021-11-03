@@ -194,7 +194,11 @@ class ZincZKService(
     }
 
     override fun prove(witness: Witness): ByteArray {
+        log.debug("Witness size: ${witness.size()}, of which padding bytes: ${witness.size { it == 0.toByte() }}") // Assumes BFL zero-byte padding
+
         val witnessJson = Json.encodeToString(WitnessSerializer, witness)
+        log.trace("Witness JSON: $witnessJson")
+
         return prove(witnessJson)
     }
 

@@ -7,16 +7,14 @@ import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
 import org.junit.jupiter.api.Test
 import java.time.Instant
-import kotlin.test.assertTrue
 
-class TransactionVerificationTest {
+class MockAssetContractTest {
     @Test
     fun `create and move verify`() {
         val alice = TestIdentity.fresh("Alice").party.anonymise()
         val bob = ZKNulls.NULL_ANONYMOUS_PARTY
         val services = MockServices(listOf("com.example.contract"))
 
-        // services.zkLedger(zkService = TestDSLMockZKTransactionService(services)) {
         services.zkLedger {
             val createState = MockAssetContract.MockAsset(alice, value = 88)
             zkTransaction {
@@ -27,6 +25,5 @@ class TransactionVerificationTest {
                 verifies(VerificationMode.PROVE_AND_VERIFY)
             }
         }
-        assertTrue(true)
     }
 }

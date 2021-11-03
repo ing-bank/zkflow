@@ -181,7 +181,6 @@ object TransactionMetadataCache {
                 it.transactionMetadata
             }
             metadataIsInitialized = true
-            println("Commands in TransactionMetadataCache: ${resolvedTransactionMetadata.keys.joinToString(", ")}")
         }
     }
 

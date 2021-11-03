@@ -6,11 +6,8 @@ import com.ing.zkflow.compilation.ZKFlowCompilationDefaults.MERGED_CIRCUIT_BUILD
 import com.ing.zkflow.compilation.ZKFlowCompilationDefaults.PLATFORM_SOURCES_PATH
 import com.ing.zkflow.compilation.ZKFlowCompilationDefaults.PLATFORM_TEMPLATES_PATH
 import com.ing.zkflow.compilation.zinc.template.TemplateConfigurations
-import com.ing.zkflow.compilation.zinc.template.TemplateParameters
 import org.gradle.api.Project
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputDirectory
-import org.gradle.api.tasks.OutputDirectory
 import java.io.File
 
 open class ZKFlowExtension(project: Project) : TemplateConfigurations() {
@@ -20,21 +17,15 @@ open class ZKFlowExtension(project: Project) : TemplateConfigurations() {
     }
 
     @Input
-    override val templateParameters = mutableListOf<TemplateParameters>()
-
-    @Input
     var zincPlatformSourcesVersion: String? = "1.0-SNAPSHOT"
 
     @Input
     var notaryVersion: String? = "1.0-SNAPSHOT"
 
-    @OutputDirectory
     val mergedCircuitOutputPath: File = project.buildDir.resolve(MERGED_CIRCUIT_BUILD_PATH)
 
-    @InputDirectory
     val circuitSourcesBasePath: File = project.projectDir.resolve(CIRCUIT_SOURCES_BASE_PATH)
 
-    @OutputDirectory
     val generatedTestResourcesDir: File = project.buildDir.resolve("resources/test")
 
     /**

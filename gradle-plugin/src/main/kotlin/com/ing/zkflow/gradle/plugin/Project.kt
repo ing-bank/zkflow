@@ -7,12 +7,16 @@ import org.gradle.api.Project
 import org.gradle.api.file.FileTree
 import java.io.File
 
-val Project.platformSourcesFileTree: FileTree
+val Project.platformSourcesDir: File
     get() {
         return configurations.getByName("zinc")
             .files
             .single { it.name.contains("zinc-platform-sources-${zkFlowExtension.zincPlatformSourcesVersion}") }
-            .let { project.zipTree(it) }
+    }
+
+val Project.platformSourcesFileTree: FileTree
+    get() {
+        return platformSourcesDir.let { project.zipTree(it) }
     }
 
 val Project.zkFlowExtension: ZKFlowExtension

@@ -39,55 +39,6 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import kotlin.reflect.full.primaryConstructor
 
-// /**
-//  * TODO: This copies a lot of logic from ZKTransactionService implementations.
-//  *  @mvdbos please check if this can be replaced by calls to the actual service.
-//  */
-// public fun ZKTransactionService.verify(
-//     serviceHub: ServiceHub,
-//     zkwtx: WireTransaction,
-//     mode: VerificationMode
-// ) {
-//     val zkServiceForCommand = zkServiceForTransactionMetadata(zkwtx.zkTransactionMetadata())
-//     val inputUtxoInfos = serviceHub.collectUtxoInfos(zkwtx.inputs)
-//     val referenceUtxoInfos = serviceHub.collectUtxoInfos(zkwtx.references)
-//     val witness = Witness.fromWireTransaction(
-//         zkwtx,
-//         inputUtxoInfos,
-//         referenceUtxoInfos
-//     )
-//
-//     val inputHashes = inputUtxoInfos.map { zkwtx.digestService.componentHash(it.nonce, OpaqueBytes(it.serializedContents)) }
-//     val referenceHashes = referenceUtxoInfos.map { zkwtx.digestService.componentHash(it.nonce, OpaqueBytes(it.serializedContents)) }
-//     val publicInput = PublicInput(
-//         transactionId = zkwtx.id,
-//         inputHashes = inputHashes,
-//         referenceHashes = referenceHashes
-//     )
-//
-//     val log = loggerFor<ZKTransactionService>()
-//
-//     when (mode) {
-//         VerificationMode.RUN -> {
-//             /*
-//              * Contract tests should be fast, so no real circuit setup/prove/verify, only run.
-//              * This proves correctness, but may still fail for arcane Zinc reasons when using the real circuit.
-//              */
-//             zkServiceForCommand.run(witness, publicInput)
-//         }
-//         VerificationMode.PROVE_AND_VERIFY -> {
-//             val timedValue = measureTimedValue {
-//                 zkServiceForCommand.prove(witness)
-//             }
-//             log.info("[prove] ${timedValue.duration}")
-//             val verifyDuration = measureTime {
-//                 zkServiceForCommand.verify(timedValue.value, publicInput)
-//             }
-//             log.info("[verify] $verifyDuration")
-//         }
-//     }
-// }
-
 /**
  * This interpreter builds a zk transaction, and [TransactionDSL.verifies] that the resolved transaction is correct. Note
  * that transactions corresponding to input states are not verified. Use [LedgerDSL.verifies] for that.
@@ -222,7 +173,7 @@ public data class TestZKTransactionDSLInterpreter private constructor(
         val ltx = wtx.toLedgerTransaction(services)
         ltx.verify()
 
-        log.info("Verifying ZKP for ${wtx.id} with $zkService")
+        log.info("Creating and verifying ZKP for ${wtx.id}")
         zkService.verify(wtx, mode)
 
         return EnforceVerifyOrFail.Token
