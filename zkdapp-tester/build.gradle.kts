@@ -1,12 +1,27 @@
-import com.ing.zkflow.gradle.task.CreateZincDirectoriesForCircuitTask
-
 plugins {
     kotlin("jvm") version "1.5.31"
     id("com.ing.zkflow.gradle-plugin")
+    id("net.corda.plugins.cordapp") version "5.0.12"
 }
 
 zkp {
     zkFlowTemplateConfigurationClass = "com.example.ZKFlowTemplateConfiguration"
+}
+cordapp {
+    targetPlatformVersion(10)
+    minimumPlatformVersion(10)
+    contract {
+        name("Example contracts")
+        vendor("Example Org")
+        licence("Apache license, version 2.0")
+        versionId(1)
+    }
+    workflow {
+        name("Example workflows")
+        vendor("Example Org")
+        licence("Apache license, version 2.0")
+        versionId(1)
+    }
 }
 
 repositories {
@@ -14,34 +29,62 @@ repositories {
     maven("https://jitpack.io")
     maven("https://software.r3.com/artifactory/corda")
     maven("https://repo.gradle.org/gradle/libs-releases")
-    jcenter()
     mavenCentral()
 }
 
 dependencies {
-    implementation(kotlin("stdlib"))
+    val kotlinVersion = "1.5.31"
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlinVersion")
+    implementation("org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
 
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.7.0")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
+    val cordaReleaseGroup = "net.corda"
+    val cordaVersion = "4.8"
+    cordaCompile("$cordaReleaseGroup:corda-core:$cordaVersion")
+    cordaRuntime("$cordaReleaseGroup:corda:$cordaVersion")
+    cordaCompile("$cordaReleaseGroup:corda-node:$cordaVersion")
+    cordaCompile("$cordaReleaseGroup:corda-jackson:$cordaVersion")
+
+    testImplementation("$cordaReleaseGroup:corda-node-driver:$cordaVersion")
+    testImplementation("$cordaReleaseGroup:corda-test-utils:$cordaVersion")
+
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.1")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.8.1")
+
     testImplementation("com.ing.zkflow:test-utils:1.0-SNAPSHOT")
 }
 
 tasks.test {
     useJUnitPlatform()
+
+    testLogging {
+        events("passed", "skipped", "failed")
+        showStandardStreams = true
+    }
+
+    // Set the default log4j config file for tests
+    systemProperty("log4j.configurationFile", "${project.buildDir}/resources/test/log4j2.xml")
+
+    // Allow setting a custom log4j config file
+    val logConfigPath = System.getProperty("log4j.configurationFile")
+    if (logConfigPath != null) {
+        systemProperty("log4j.configurationFile", logConfigPath)
+    }
+
+    // This file determines for the standard java.util.logging how and what is logged to the console
+    // This is to configure logging that does not go through slf4j/log4j, like JUnit platform logging.
+    systemProperty(
+        "java.util.logging.config.file",
+        "${project.buildDir}/resources/test/logging-test.properties"
+    )
 }
 
-// Normally this build is run after the included build, but this ensures that all dependencies
-// exist at build time. This is not necessary when using the real maven dependencies instead
-// of a composite build.
-tasks.matching {
-    it.name == "processZincSources" ||
-        it is CreateZincDirectoriesForCircuitTask
-//            it is com.ing.zkflow.gradle.task.CopyZincCircuitSourcesTask ||
-//            it is com.ing.zkflow.gradle.task.CopyZincPlatformSourcesTask ||
-//            it is com.ing.zkflow.gradle.task.GenerateZincPlatformCodeFromTemplatesTask ||
-//            it is com.ing.zkflow.gradle.task.PrepareCircuitForCompilationTask
-}.forEach {
-    val parentProject = gradle.includedBuild(project.rootDir.parentFile.name)
-    it.mustRunAfter(parentProject.task(":zinc-platform-sources:assemble"))
-    it.dependsOn(parentProject.task(":zinc-platform-sources:assemble"))
+val testConfigResourcesDir = "${rootProject.rootDir}/config/test"
+sourceSets {
+    test {
+        resources {
+            srcDir(testConfigResourcesDir)
+        }
+    }
 }
