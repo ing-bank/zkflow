@@ -16,6 +16,11 @@ dependencies {
     runtimeOnly("com.google.devtools.ksp:com.google.devtools.ksp.gradle.plugin:$kspVersion")
 }
 
+tasks.compileKotlin {
+    kotlinOptions.allWarningsAsErrors =
+        false // Because we can't suppress the warning about multiple Kotlin versions, caused by the Gradle plugin API
+}
+
 gradlePlugin {
     plugins {
         create("zkFlowPlugin") {

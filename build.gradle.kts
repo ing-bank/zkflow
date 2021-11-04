@@ -186,10 +186,10 @@ subprojects {
                     apiVersion = "1.4"
                     jvmTarget = "1.8"
                     javaParameters = true   // Useful for reflection.
-                    freeCompilerArgs =
-                        listOf(
-                            "-Xjvm-default=compatibility"
-                        )
+                    freeCompilerArgs = listOf(
+                        "-Xjvm-default=compatibility"
+                    )
+                    allWarningsAsErrors = true
                 }
             }
 
