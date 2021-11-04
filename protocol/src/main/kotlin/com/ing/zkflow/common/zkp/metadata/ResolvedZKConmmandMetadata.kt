@@ -83,7 +83,7 @@ abstract class ResolvedZKCommandMetadata(
     override val commandSimpleName: String by lazy { commandKClass.simpleName ?: error("Command classes must be a named class") }
     override val contractClassNames: List<ContractClassName>
         get() {
-            val stateTypes = (inputs.flattened + outputs.flattened + references.flattened).distinct()
+            val stateTypes = (inputs.expanded + outputs.expanded + references.expanded).distinct()
             return stateTypes.map {
                 requireNotNull(it.requiredContractClassName) {
                     "Unable to infer Contract class name because state class $it is not annotated with " +

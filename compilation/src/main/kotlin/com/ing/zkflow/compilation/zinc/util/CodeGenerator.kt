@@ -33,7 +33,7 @@ const INPUT_GROUP_SIZE: u16 = ${metadata.inputs.size};
 const OUTPUT_GROUP_SIZE: u16 = ${metadata.outputs.size};
 const REFERENCE_GROUP_SIZE: u16 = ${metadata.references.size};
 const NOTARY_GROUP_SIZE: u16 = $NOTARY_GROUP_SIZE;
-const TIMEWINDOW_GROUP_SIZE: u16 = ${if (metadata.timewindow) 1 else 0};
+const TIMEWINDOW_GROUP_SIZE: u16 = ${if (metadata.hasTimeWindow) 1 else 0};
 // This is the size of a single signer and should not contain the Corda SerializationMagic size,
 // we use platform_consts::CORDA_SERDE_MAGIC_LENGTH for that
 

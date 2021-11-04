@@ -38,7 +38,7 @@ open class GenerateZincPlatformCodeFromTemplatesTask : DefaultTask() {
                 project.platformTemplatesRootPath.absolutePath,
                 project.projectDir.resolve(extension.circuitSourcesBasePath).absolutePath,
                 project.buildDir.resolve(extension.mergedCircuitOutputPath).absolutePath,
-                extension.zkFlowTemplateConfigurationClass
+                extension.zkFlowTemplateConfigurationClassName
             )
         }
     }

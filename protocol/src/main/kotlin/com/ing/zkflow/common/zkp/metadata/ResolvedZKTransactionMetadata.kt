@@ -81,13 +81,13 @@ data class ResolvedZKTransactionMetadata(
     val attachmentCount: Int by lazy { numberOfContractAttachments + numberOfUserAttachments }
 
     val inputTypeGroups = commands.flatMap { it.inputs }
-    val inputs = inputTypeGroups.flattened
+    val inputs = inputTypeGroups.expanded
 
     val referenceTypeGroups = commands.flatMap { it.references }
-    val references = referenceTypeGroups.flattened
+    val references = referenceTypeGroups.expanded
 
     val outputTypeGroups = commands.flatMap { it.outputs }
-    val outputs = outputTypeGroups.flattened
+    val outputs = outputTypeGroups.expanded
 
     val commandClasses = commands.map { it.commandKClass }
 
@@ -99,7 +99,7 @@ data class ResolvedZKTransactionMetadata(
      */
     val numberOfSigners: Int by lazy { commands.sumOf { it.numberOfSigners } }
 
-    val timewindow: Boolean = commands.any { it.timeWindow }
+    val hasTimeWindow: Boolean = commands.any { it.timeWindow }
 
     /**
      * The aggregate list of java class to zinc type for all commands in this transaction.

@@ -32,7 +32,7 @@ open class ZKFlowExtension(project: Project) : TemplateConfigurations() {
      * The class where the GenerateZincPlatformCodeFromTemplatesJavaExecTask can find the template configuration
      */
     @Input
-    var zkFlowTemplateConfigurationClass: String? = null
+    var zkFlowTemplateConfigurationClassName: String? = null
 
     @Input
     var zincCommonFolderName = "common"

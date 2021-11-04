@@ -90,7 +90,6 @@ use serialized_${"COMPONENT_NAME_MODULE_NAME"}_tx_state_${"STATE_NAME_MODULE_NAM
             if (componentGroupSize > 0) {
                 val zincType = javaClass2ZincType[it.type]?.typeName
                     ?: error("No Zinc Type defined for ${it.type}")
-                // val zincType = it.zincType ?: error("Java class ${it.javaClass} needs to have an associated Zinc type")
                 content += templates[key]
                     ?.replace("STATE_NAME_CONSTANT_PREFIX", zincType.camelToSnakeCase().toUpperCase())
                     ?.replace("STATE_NAME_MODULE_NAME", zincType.camelToSnakeCase())

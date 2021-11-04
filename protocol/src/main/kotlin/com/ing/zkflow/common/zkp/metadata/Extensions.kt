@@ -6,7 +6,7 @@ import net.corda.core.contracts.ContractClassName
 import net.corda.core.contracts.ContractState
 import kotlin.reflect.KClass
 
-internal val List<ContractStateTypeCount>.flattened: List<KClass<out ContractState>>
+internal val List<ContractStateTypeCount>.expanded: List<KClass<out ContractState>>
     get() = flatMap { typeCount -> List(typeCount.count) { typeCount.type } }
 
 internal val ContractClassName.packageName: String?
