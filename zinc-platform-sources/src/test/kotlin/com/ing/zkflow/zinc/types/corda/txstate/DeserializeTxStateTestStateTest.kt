@@ -6,6 +6,7 @@ import com.ing.zkflow.serialization.bfl.serializers.publickey.EdDSASurrogate
 import com.ing.zkflow.serialization.bfl.serializers.toBytes
 import com.ing.zkflow.testing.bytesToWitness
 import com.ing.zkflow.testing.fixtures.contract.TestContract
+import com.ing.zkflow.testing.fixtures.contract.TestContract.TestState.Companion.PARTICIPANT_COUNT
 import com.ing.zkflow.testing.getZincZKService
 import com.ing.zkflow.testing.withCustomSerializationEnv
 import com.ing.zkflow.testing.zkp.ZKNulls
@@ -16,11 +17,11 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import kotlinx.serialization.json.putJsonObject
+import net.corda.core.contracts.AlwaysAcceptAttachmentConstraint
 import net.corda.core.contracts.HashAttachmentConstraint
 import net.corda.core.contracts.SignatureAttachmentConstraint
 import net.corda.core.contracts.StateAndContract
 import net.corda.core.contracts.TransactionState
-import net.corda.core.crypto.SecureHash
 import net.corda.core.serialization.SerializationDefaults
 import net.corda.core.serialization.SerializationFactory
 import net.corda.core.serialization.SerializationMagic
@@ -61,7 +62,7 @@ class DeserializeTxStateTestStateTest {
                 TestContract.PROGRAM_ID
             )
         ).map {
-            TransactionState(it.state, it.contract, ZKNulls.NULL_PARTY, constraint = HashAttachmentConstraint(SecureHash.zeroHash))
+            TransactionState(it.state, it.contract, ZKNulls.NULL_PARTY, constraint = AlwaysAcceptAttachmentConstraint)
         }
     }
 }
@@ -93,7 +94,7 @@ private fun TestContract.TestState.toJsonObject() = buildJsonObject {
         putJsonArray("elements") {
             (
                 participants.map { it.toJsonObject(EdDSASurrogate.ENCODED_SIZE) } +
-                    List(2 - participants.size) { emptyAnonymousParty(EdDSASurrogate.ENCODED_SIZE) }
+                    List(PARTICIPANT_COUNT - participants.size) { emptyAnonymousParty(EdDSASurrogate.ENCODED_SIZE) }
                 ).forEach { add(it) }
         }
     }

@@ -1,8 +1,51 @@
 package com.ing.zkflow.compilation.zinc.util
 
+import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
+import net.corda.core.crypto.Crypto
 import java.io.File
 
-class CodeGenerator(private val outputPath: File) {
+class CodeGenerator(
+    private val outputPath: File,
+    private val metadata: ResolvedZKTransactionMetadata
+) {
+    companion object {
+        /**
+         * There is always exactly one notary.
+         */
+        const val NOTARY_GROUP_SIZE = 1
+
+        val PUBKEY_SIZES = mapOf(
+            Crypto.EDDSA_ED25519_SHA512 to 52
+        )
+
+        /**
+         * This seems to be always 11. Commands are always objects without serialized properties.
+         */
+        const val COMMAND_COMPONENT_SIZE = 11
+    }
+
+    // TODO: signer size should be determined automatically based on serialized size of the pubkey used
+    // Until we have that, we maintain an internal map here to look it up.
+    fun generateConstsFile() = createOutputFile(outputPath.resolve("consts.zn")).appendBytes(
+        """
+const ATTACHMENT_GROUP_SIZE: u16 = ${metadata.attachmentCount};
+const INPUT_GROUP_SIZE: u16 = ${metadata.inputs.size};
+const OUTPUT_GROUP_SIZE: u16 = ${metadata.outputs.size};
+const REFERENCE_GROUP_SIZE: u16 = ${metadata.references.size};
+const NOTARY_GROUP_SIZE: u16 = $NOTARY_GROUP_SIZE;
+const TIMEWINDOW_GROUP_SIZE: u16 = ${if (metadata.hasTimeWindow) 1 else 0};
+// This is the size of a single signer and should not contain the Corda SerializationMagic size,
+// we use platform_consts::CORDA_SERDE_MAGIC_LENGTH for that
+
+const COMMAND_SIGNER_SIZE: u16 = ${PUBKEY_SIZES[metadata.network.participantSignatureScheme]};
+
+// Component and UTXO sizes cannot be 0, so for not present groups use 1
+// A single command per circuit is currently supported.
+// TODO: Support for multiple commands is to be implemented.
+const COMMAND_COMPONENT_SIZE: u16 = $COMMAND_COMPONENT_SIZE;
+const COMMAND_SIGNER_LIST_SIZE: u16 = ${metadata.numberOfSigners};
+        """.trimIndent().toByteArray()
+    )
 
     fun generateMerkleUtilsCode(templateContents: String, constsContent: String) {
         val targetFile = createOutputFile(outputPath.resolve("merkle_utils.zn"))

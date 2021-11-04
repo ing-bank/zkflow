@@ -1,18 +1,9 @@
+package com.ing.zkflow.testing.dsl
+
+import TestZKLedgerDSLInterpreter
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import com.ing.zkflow.common.contracts.ZKContractState
 import com.ing.zkflow.common.transactions.ZKTransactionBuilder
-import com.ing.zkflow.common.transactions.collectUtxoInfos
-import com.ing.zkflow.common.transactions.zkTransactionMetadata
-import com.ing.zkflow.common.zkp.PublicInput
-import com.ing.zkflow.common.zkp.Witness
-import com.ing.zkflow.common.zkp.ZKTransactionService
-import com.ing.zkflow.testing.dsl.DuplicateOutputLabel
-import com.ing.zkflow.testing.dsl.EnforceVerifyOrFail
-import com.ing.zkflow.testing.dsl.LedgerDSL
-import com.ing.zkflow.testing.dsl.OutputStateLookup
-import com.ing.zkflow.testing.dsl.TransactionDSL
-import com.ing.zkflow.testing.dsl.TransactionDSLInterpreter
-import com.ing.zkflow.testing.dsl.VerificationMode
 import net.corda.core.contracts.AttachmentConstraint
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.CommandData
@@ -35,8 +26,6 @@ import net.corda.core.node.services.TransactionStorage
 import net.corda.core.serialization.internal.AttachmentsClassLoaderCache
 import net.corda.core.serialization.internal.AttachmentsClassLoaderCacheImpl
 import net.corda.core.transactions.SignedTransaction
-import net.corda.core.transactions.WireTransaction
-import net.corda.core.utilities.OpaqueBytes
 import net.corda.core.utilities.loggerFor
 import net.corda.node.services.DbTransactionsResolver
 import net.corda.node.services.attachments.NodeAttachmentTrustCalculator
@@ -49,57 +38,6 @@ import java.security.PublicKey
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import kotlin.reflect.full.primaryConstructor
-import kotlin.time.measureTime
-import kotlin.time.measureTimedValue
-
-/**
- * TODO: This copies a lot of logic from ZKTransactionService implementations.
- *  @mvdbos please check if this can be replaced by calls to the actual service.
- */
-public fun ZKTransactionService.verify(
-    serviceHub: ServiceHub,
-    zkwtx: WireTransaction,
-    mode: VerificationMode
-) {
-    val zkServiceForCommand = zkServiceForTransactionMetadata(zkwtx.zkTransactionMetadata())
-    val inputUtxoInfos = serviceHub.collectUtxoInfos(zkwtx.inputs)
-    val referenceUtxoInfos = serviceHub.collectUtxoInfos(zkwtx.references)
-    val witness = Witness.fromWireTransaction(
-        zkwtx,
-        inputUtxoInfos,
-        referenceUtxoInfos
-    )
-
-    val inputHashes = inputUtxoInfos.map { zkwtx.digestService.componentHash(it.nonce, OpaqueBytes(it.serializedContents)) }
-    val referenceHashes = referenceUtxoInfos.map { zkwtx.digestService.componentHash(it.nonce, OpaqueBytes(it.serializedContents)) }
-    val publicInput = PublicInput(
-        transactionId = zkwtx.id,
-        inputHashes = inputHashes,
-        referenceHashes = referenceHashes
-    )
-
-    val log = loggerFor<ZKTransactionService>()
-
-    when (mode) {
-        VerificationMode.RUN -> {
-            /*
-             * Contract tests should be fast, so no real circuit setup/prove/verify, only run.
-             * This proves correctness, but may still fail for arcane Zinc reasons when using the real circuit.
-             */
-            zkServiceForCommand.run(witness, publicInput)
-        }
-        VerificationMode.PROVE_AND_VERIFY -> {
-            val timedValue = measureTimedValue {
-                zkServiceForCommand.prove(witness)
-            }
-            log.info("[prove] ${timedValue.duration}")
-            val verifyDuration = measureTime {
-                zkServiceForCommand.verify(timedValue.value, publicInput)
-            }
-            log.info("[verify] $verifyDuration")
-        }
-    }
-}
 
 /**
  * This interpreter builds a zk transaction, and [TransactionDSL.verifies] that the resolved transaction is correct. Note
@@ -171,7 +109,7 @@ public data class TestZKTransactionDSLInterpreter private constructor(
     }
 
     // Hack to reuse the LedgerInterpreter's ZKTransactionService with the local ServiceHub, so transaction resolution will work.
-    private val zkService: ZKTransactionService = ledgerInterpreter.zkService::class.primaryConstructor!!.call(services)
+    private val zkService: TestDSLZKTransactionService = ledgerInterpreter.zkService::class.primaryConstructor!!.call(services)
 
     private fun copy(): TestZKTransactionDSLInterpreter =
         TestZKTransactionDSLInterpreter(
@@ -235,8 +173,8 @@ public data class TestZKTransactionDSLInterpreter private constructor(
         val ltx = wtx.toLedgerTransaction(services)
         ltx.verify()
 
-        log.info("Verifying ZKP for ${wtx.id} with $zkService")
-        zkService.verify(services, wtx, mode)
+        log.info("Creating and verifying ZKP for ${wtx.id}")
+        zkService.verify(wtx, mode)
 
         return EnforceVerifyOrFail.Token
     }

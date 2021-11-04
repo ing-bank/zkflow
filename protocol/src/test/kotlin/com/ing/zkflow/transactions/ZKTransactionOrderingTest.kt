@@ -13,6 +13,8 @@ import com.ing.zkflow.common.zkp.metadata.commandMetadata
 import com.ing.zkflow.common.zkp.metadata.packageName
 import com.ing.zkflow.common.zkp.metadata.transactionMetadata
 import com.ing.zkflow.crypto.BLAKE2S256
+import com.ing.zkflow.serialization.CommandDataSerializerMap
+import com.ing.zkflow.serialization.ContractStateSerializerMap
 import com.ing.zkflow.testing.fixtures.contract.DummyContract
 import com.ing.zkflow.testing.fixtures.state.DummyState
 import com.ing.zkflow.testing.withCustomSerializationEnv
@@ -42,12 +44,6 @@ import net.corda.testing.node.MockServices
 import org.junit.Test
 import kotlin.random.Random
 import kotlin.test.assertTrue
-
-object LocalSerializers {
-    init {
-        com.ing.zkflow.serialization.CommandDataSerializerMap.register(LocalContract.Create::class, 4000, LocalContract.Create.serializer())
-    }
-}
 
 /**
  * Test the order of states imposed by the ZKTransactionBuilder. We would like to assert that the ordering of states by
@@ -182,9 +178,8 @@ class LocalContract : Contract {
 
     @Serializable
     class Create : ZKTransactionMetadataCommandData {
-
         init {
-            LocalSerializers
+            CommandDataSerializerMap.register(this::class)
         }
 
         override val transactionMetadata: ResolvedZKTransactionMetadata by transactionMetadata {
@@ -222,9 +217,8 @@ class DummyZKStateA(
     @FixedLength([2]) val set: Set<Int>,
     @FixedLength([2]) override val participants: List<@Contextual AnonymousParty>
 ) : ZKContractState {
-
     init {
-        DummyZKStateASerializer
+        ContractStateSerializerMap.register(this::class)
     }
 
     companion object {
@@ -248,12 +242,6 @@ class DummyZKStateA(
     }
 }
 
-object DummyZKStateASerializer {
-    init {
-        com.ing.zkflow.serialization.ContractStateSerializerMap.register(DummyZKStateA::class, 2000, DummyZKStateA.serializer())
-    }
-}
-
 @Serializable
 @BelongsToContract(LocalContract::class)
 @Suppress("EqualsWithHashCodeExist")
@@ -262,9 +250,8 @@ class DummyZKStateB(
     @FixedLength([2]) val set: Set<Int>,
     @FixedLength([2]) override val participants: List<@Contextual AnonymousParty>
 ) : ZKContractState {
-
     init {
-        DummyZKStateBSerializer
+        ContractStateSerializerMap.register(this::class)
     }
 
     companion object {
@@ -285,11 +272,5 @@ class DummyZKStateB(
                 constraint = AlwaysAcceptAttachmentConstraint
             )
         }
-    }
-}
-
-object DummyZKStateBSerializer {
-    init {
-        com.ing.zkflow.serialization.ContractStateSerializerMap.register(DummyZKStateB::class, 2001, DummyZKStateB.serializer())
     }
 }

@@ -10,13 +10,13 @@ plugins {
 
 cordapp {
     val platformVersion: String by project
-    targetPlatformVersion.set(platformVersion.toInt())
-    minimumPlatformVersion.set(platformVersion.toInt())
+    targetPlatformVersion(platformVersion.toInt())
+    minimumPlatformVersion(platformVersion.toInt())
     workflow {
-        name.set("Zk Notary App")
-        vendor.set("ING Bank NV")
-        licence.set("Apache License, Version 2.0")
-        versionId.set(1)
+        name("ZKFlow Protocol App")
+        vendor("ING Bank NV")
+        licence("Apache License, Version 2.0")
+        versionId(1)
     }
 }
 
@@ -44,6 +44,7 @@ dependencies {
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+    kotlinOptions.freeCompilerArgs += "-Xopt-in=kotlin.time.ExperimentalTime"
     kotlinOptions.freeCompilerArgs += "-Xopt-in=kotlinx.serialization.ExperimentalSerializationApi"
 }
 

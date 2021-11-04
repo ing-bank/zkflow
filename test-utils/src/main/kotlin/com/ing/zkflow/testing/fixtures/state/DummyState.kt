@@ -1,8 +1,8 @@
 package com.ing.zkflow.testing.fixtures.state
 
 import com.ing.serialization.bfl.annotations.FixedLength
+import com.ing.zkflow.serialization.ContractStateSerializerMap
 import com.ing.zkflow.testing.fixtures.contract.DummyContract
-import com.ing.zkflow.testing.fixtures.contract.DummySerializers
 import kotlinx.serialization.Polymorphic
 import kotlinx.serialization.Serializable
 import net.corda.core.contracts.BelongsToContract
@@ -25,10 +25,7 @@ public data class DummyState(
     @FixedLength([2]) override val participants: List<@Polymorphic AbstractParty>
 ) : ContractState {
     init {
-        /*
-         * TODO: This is a hack to ensure that the singleton is initialized. In Kotlin they are lazy until accessed.
-         */
-        DummySerializers
+        ContractStateSerializerMap.register(this::class)
     }
 
     public companion object {

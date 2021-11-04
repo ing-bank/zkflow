@@ -12,14 +12,12 @@ plugins {
 
 dependencies {
     implementation(project(":compilation")) // Only used for PrepareCircuits.kt, which is only used for test circuits
-    implementation(project(":obsolete")) // TODO: Required only for CircuitConfigurator. Remove when that is removed.
+    implementation(project(":protocol"))
+    implementation(project(":test-utils"))
 
     val cordaReleaseGroup: String by project
     val cordaVersion: String by project
     compileOnly("$cordaReleaseGroup:corda-core:$cordaVersion")
-
-    testImplementation(project(":protocol"))
-    testImplementation(project(":test-utils"))
 }
 
 publishing {

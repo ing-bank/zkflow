@@ -6,6 +6,7 @@ import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
 import net.corda.core.node.AppServiceHub
 import net.corda.core.node.ServiceHub
 import net.corda.core.node.services.CordaService
+import net.corda.core.utilities.loggerFor
 import java.io.File
 
 @CordaService
@@ -13,8 +14,8 @@ class ZincZKTransactionCordaService(services: AppServiceHub) : ZincZKTransaction
 
 @CordaService
 open class ZincZKTransactionService(services: ServiceHub) : AbstractZKTransactionService(services) {
-
     private val zkServices = mutableMapOf<ResolvedZKTransactionMetadata, ZincZKService>()
+    private val log = loggerFor<ZincZKTransactionService>()
 
     override fun zkServiceForTransactionMetadata(metadata: ResolvedZKTransactionMetadata): ZincZKService {
         return zkServices.getOrPut(metadata) {
@@ -32,8 +33,7 @@ open class ZincZKTransactionService(services: ServiceHub) : AbstractZKTransactio
         }
     }
 
-    fun setup(command: ZKTransactionMetadataCommandData, force: Boolean = false) {
-
+    override fun setup(command: ZKTransactionMetadataCommandData, force: Boolean) {
         if (force) {
             cleanup(command)
         }
@@ -44,15 +44,19 @@ open class ZincZKTransactionService(services: ServiceHub) : AbstractZKTransactio
         CircuitManager.register(circuit)
 
         while (CircuitManager[circuit] == CircuitManager.Status.InProgress) {
+            log.debug("CircuitManager in progress. Waiting $CIRCUITMANAGER_MAX_SETUP_WAIT_TIME_SECONDS seconds")
             // An upper waiting time bound can be set up,
             // but this bound may be overly pessimistic.
             Thread.sleep(CIRCUITMANAGER_MAX_SETUP_WAIT_TIME_SECONDS.toLong())
         }
 
         if (CircuitManager[circuit] == CircuitManager.Status.Outdated) {
+            log.debug("Circuit outdated, cleaning up")
             zkService.cleanup()
             CircuitManager.inProgress(circuit)
-            zkService.setup()
+            log.debug("Circuit outdated, starting setup")
+            zkService.setupTimed()
+            log.debug("Circuit setup complete, caching it")
             CircuitManager.cache(circuit)
         }
     }

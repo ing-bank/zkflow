@@ -4,7 +4,6 @@ import com.ing.serialization.bfl.annotations.FixedLength
 import com.ing.serialization.bfl.api.reified.serialize
 import com.ing.serialization.bfl.serializers.BFLSerializers
 import com.ing.serialization.bfl.serializers.CurrencySerializer
-import com.ing.zkflow.common.zkp.ZincZKService
 import com.ing.zkflow.serialization.bfl.corda.AmountSerializer
 import com.ing.zkflow.serialization.bfl.serializers.CordaSerializers
 import com.ing.zkflow.testing.bytesToWitness
@@ -15,11 +14,9 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.contextual
 import net.corda.core.contracts.Amount
-import org.slf4j.Logger
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.util.Currency
-import kotlin.time.measureTime
 
 inline fun <reified T : Any, reified U : Any> toWitness(left: Amount<T>, right: Amount<U>) =
     buildJsonObject {
@@ -95,10 +92,3 @@ fun BigDecimal.toJsonArray() = serialize(this.wrap(), serializersModule = BFLSer
 fun makeBigDecimal(bytes: ByteArray, sign: Int) = BigDecimal(BigInteger(sign, bytes))
 
 fun makeBigDecimal(string: String, scale: Int) = BigDecimal(BigInteger(string), scale)
-
-fun ZincZKService.setupTimed(log: Logger) {
-    val time = measureTime {
-        this.setup()
-    }
-    log.debug("[setup] $time")
-}

@@ -1,22 +1,28 @@
 package com.ing.zkflow.compilation.zinc.template.parameters
 
+import com.ing.zkflow.common.zkp.metadata.ContractStateTypeCount
+import com.ing.zkflow.common.zkp.metadata.ZincType
 import com.ing.zkflow.compilation.zinc.template.TemplateParameters
-import com.ing.zkflow.compilation.zinc.util.CircuitConfigurator
 import com.ing.zkflow.util.camelToSnakeCase
 
-data class SerializedStateTemplateParameters(val componentName: String, val state: CircuitConfigurator.StateGroup) : TemplateParameters(
+data class SerializedStateTemplateParameters(
+    val componentName: String,
+    val typeCount: ContractStateTypeCount,
+    val zincType: ZincType
+) : TemplateParameters(
     "serialized_tx_state.zn",
     listOf()
 ) {
-    override val typeName = state.zincType ?: error("Java class ${state.javaClass} needs to have an associated Zinc type")
+    override val typeName = zincType.typeName
 
+    // TODO: Consider adding the command/circuit name to this filename to better support multiple commands. Waiting for ZincPoet
     override fun getTargetFilename() = "serialized_${componentName}_tx_state_${typeName.camelToSnakeCase()}.zn"
 
     override fun getReplacements() = getTypeReplacements("STATE_NAME_") +
         mapOf(
             "COMPONENT_NAME_CONSTANT_PREFIX" to componentName.toUpperCase(),
             "COMPONENT_NAME_TYPE_NAME" to componentName.capitalize(),
-            "GROUP_SIZE_PLACEHOLDER" to state.stateGroupSize.toString(),
+            "GROUP_SIZE_PLACEHOLDER" to typeCount.count.toString(),
         ) +
         if (componentName.contains("output")) {
             mapOf(

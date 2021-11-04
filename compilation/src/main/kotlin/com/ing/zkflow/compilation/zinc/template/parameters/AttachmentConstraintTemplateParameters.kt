@@ -59,6 +59,9 @@ data class AttachmentConstraintTemplateParameters(
             )
         }
 
+        // TODO: this fails for SignatureAttachmentConstraint: there will be multiple matches.
+        // This bug slipped through the cracks because all tests use HashAttachmentConstraint
+        // Fix later, or not relevant because all this code will go away with ZincPoet
         fun selectParameters(attachmentQualifiedClassName: String) =
             all.single { it.implementationName == attachmentQualifiedClassName.split(".").last() }
 

@@ -8,15 +8,9 @@ import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
-import java.time.Instant
 
 @Tag("slow")
 class TransactionVerificationTest {
-
-    private val cordapps = listOf(
-        "com.ing.zkflow.testing.fixtures.contract"
-    )
-
     /**
      * The witness, which is what we serialize for Zinc, contains the following items:
      *
@@ -41,22 +35,13 @@ class TransactionVerificationTest {
     fun `create and move verify`() {
         val alice = TestIdentity.fresh("Alice").party.anonymise()
         val bob = ZKNulls.NULL_ANONYMOUS_PARTY
-        val services = MockServices(cordapps)
-        // services.zkLedger(zkService = MockZKTransactionService(services)) {
+        val services = MockServices(listOf("com.ing.zkflow.testing.fixtures.contract"))
+
         services.zkLedger {
             val createState = TestContract.TestState(alice, value = 88)
-            val createTx = zkTransaction {
-                output(TestContract.PROGRAM_ID, createState)
-                command(alice.owningKey, TestContract.Create())
-                timeWindow(time = Instant.EPOCH)
-                verifies(VerificationMode.RUN)
-            }
-            val utxo = createTx.outRef<TestContract.TestState>(0)
             zkTransaction {
-                val moveState = TestContract.TestState(bob, value = createState.value)
-                input(utxo.ref)
-                output(TestContract.PROGRAM_ID, moveState)
-                timeWindow(time = Instant.EPOCH)
+                input(TestContract.PROGRAM_ID, createState)
+                output(TestContract.PROGRAM_ID, createState.withNewOwner(bob).ownableState)
                 command(listOf(alice.owningKey, bob.owningKey), TestContract.Move())
                 verifies(VerificationMode.RUN)
             }

@@ -4,6 +4,7 @@ import com.ing.zkflow.common.zkp.ZKFlow
 import net.corda.core.contracts.AttachmentConstraint
 import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.ContractClassName
+import net.corda.core.contracts.ContractState
 import net.corda.core.crypto.SignatureScheme
 import java.io.File
 import java.time.Duration
@@ -17,7 +18,7 @@ data class ResolvedZKCircuit(
      * This is where the circuit elements for this command can be found
      */
     val buildFolder: File,
-    val javaClass2ZincType: Map<KClass<*>, ZincType>,
+    val javaClass2ZincType: Map<KClass<out ContractState>, ZincType>,
     val buildTimeout: Duration,
     val setupTimeout: Duration,
     val provingTimeout: Duration,
@@ -82,7 +83,7 @@ abstract class ResolvedZKCommandMetadata(
     override val commandSimpleName: String by lazy { commandKClass.simpleName ?: error("Command classes must be a named class") }
     override val contractClassNames: List<ContractClassName>
         get() {
-            val stateTypes = (inputs.flattened + outputs.flattened + references.flattened).distinct()
+            val stateTypes = (inputs.expanded + outputs.expanded + references.expanded).distinct()
             return stateTypes.map {
                 requireNotNull(it.requiredContractClassName) {
                     "Unable to infer Contract class name because state class $it is not annotated with " +

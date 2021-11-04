@@ -1,7 +1,6 @@
 package com.ing.zkflow.testing.fixtures.contract
 
 import com.ing.serialization.bfl.annotations.FixedLength
-import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.contracts.ZKOwnableState
 import com.ing.zkflow.common.contracts.ZKTransactionMetadataCommandData
 import com.ing.zkflow.common.transactions.zkFLowMetadata
@@ -17,29 +16,17 @@ import com.ing.zkflow.testing.fixtures.contract.TestContract.MoveBidirectional.C
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
+import net.corda.core.contracts.AlwaysAcceptAttachmentConstraint
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.CommandAndState
 import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.CommandWithParties
 import net.corda.core.contracts.Contract
 import net.corda.core.contracts.ContractClassName
-import net.corda.core.contracts.TypeOnlyCommandData
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.transactions.LedgerTransaction
 import java.io.File
 import java.util.Random
-
-public val testSerializers: Unit = run {
-    ContractStateSerializerMap.register(TestContract.TestState::class, 1, TestContract.TestState.serializer())
-    CommandDataSerializerMap.register(TestContract.Create::class, 2, TestContract.Create.serializer())
-    CommandDataSerializerMap.register(TestContract.Move::class, 3, TestContract.Move.serializer())
-    CommandDataSerializerMap.register(
-        TestContract.MoveBidirectional::class,
-        4,
-        TestContract.MoveBidirectional.serializer()
-    )
-    CommandDataSerializerMap.register(TestContract.SignOnly::class, 5, TestContract.SignOnly.serializer())
-}
 
 public class TestContract : Contract {
     public companion object {
@@ -53,11 +40,14 @@ public class TestContract : Contract {
         val value: Int = Random().nextInt(1000)
     ) : ZKOwnableState {
         init {
-            // TODO: Hack to trigger the registration of the serializerMap above
-            testSerializers
+            ContractStateSerializerMap.register(this::class)
         }
 
-        @FixedLength([2])
+        public companion object {
+            public const val PARTICIPANT_COUNT: Int = 1
+        }
+
+        @FixedLength([PARTICIPANT_COUNT])
         override val participants: List<@Contextual AnonymousParty> = listOf(owner)
 
         override fun withNewOwner(newOwner: AnonymousParty): CommandAndState =
@@ -66,8 +56,11 @@ public class TestContract : Contract {
 
     // Commands
     @Serializable
-    public class Create : TypeOnlyCommandData(), ZKCommandData, ZKTransactionMetadataCommandData {
+    public class Create : ZKTransactionMetadataCommandData {
         override val transactionMetadata: ResolvedZKTransactionMetadata by transactionMetadata {
+            network {
+                attachmentConstraintType = AlwaysAcceptAttachmentConstraint::class
+            }
             commands {
                 +Create::class
             }
@@ -82,6 +75,11 @@ public class TestContract : Contract {
             }
             outputs { 1 of TestState::class }
             numberOfSigners = 1
+            attachmentConstraintType = AlwaysAcceptAttachmentConstraint::class
+        }
+
+        init {
+            CommandDataSerializerMap.register(this::class)
         }
 
         public companion object {
@@ -106,6 +104,9 @@ public class TestContract : Contract {
     @Serializable
     public class SignOnly : ZKTransactionMetadataCommandData {
         override val transactionMetadata: ResolvedZKTransactionMetadata by transactionMetadata {
+            network {
+                attachmentConstraintType = AlwaysAcceptAttachmentConstraint::class
+            }
             commands {
                 +SignOnly::class
             }
@@ -116,12 +117,20 @@ public class TestContract : Contract {
             private = true
             outputs { 1 of TestState::class }
             numberOfSigners = 2
+            attachmentConstraintType = AlwaysAcceptAttachmentConstraint::class
+        }
+
+        init {
+            CommandDataSerializerMap.register(this::class)
         }
     }
 
     @Serializable
     public class Move : ZKTransactionMetadataCommandData {
         override val transactionMetadata: ResolvedZKTransactionMetadata by transactionMetadata {
+            network {
+                attachmentConstraintType = AlwaysAcceptAttachmentConstraint::class
+            }
             commands {
                 +Move::class
             }
@@ -137,6 +146,11 @@ public class TestContract : Contract {
             inputs { 1 of TestState::class }
             outputs { 1 of TestState::class }
             numberOfSigners = 2
+            attachmentConstraintType = AlwaysAcceptAttachmentConstraint::class
+        }
+
+        init {
+            CommandDataSerializerMap.register(this::class)
         }
 
         public companion object {
@@ -161,6 +175,9 @@ public class TestContract : Contract {
     @Serializable
     public class MoveBidirectional : ZKTransactionMetadataCommandData {
         override val transactionMetadata: ResolvedZKTransactionMetadata by transactionMetadata {
+            network {
+                attachmentConstraintType = AlwaysAcceptAttachmentConstraint::class
+            }
             commands {
                 +MoveBidirectional::class
             }
@@ -168,10 +185,23 @@ public class TestContract : Contract {
 
         @Transient
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
+            circuit {
+                buildFolder =
+                    File("${System.getProperty("user.dir")}/../zinc-platform-sources/build/circuits/move_bidirectional")
+            }
             private = true
-            inputs { 2 of TestState::class }
-            outputs { 2 of TestState::class }
+            inputs {
+                2 of TestState::class
+            }
+            outputs {
+                2 of TestState::class
+            }
             numberOfSigners = 2
+            attachmentConstraintType = AlwaysAcceptAttachmentConstraint::class
+        }
+
+        init {
+            CommandDataSerializerMap.register(this::class)
         }
 
         public companion object {
@@ -182,23 +212,21 @@ public class TestContract : Contract {
                 // Transaction structure
                 tx.zkFLowMetadata.verify(tx)
 
-                if (tx.inputStates.sumBy { (it as TestState).value } != tx.outputStates.sumBy { (it as TestState).value }) throw IllegalArgumentException(
-                    "Failed requirement: amounts are not conserved"
+                // Transaction contents
+                if (tx.inputsOfType<TestState>().sumBy { it.value } != tx.outputsOfType<TestState>().sumBy { it.value }) throw IllegalArgumentException(
+                    "Failed requirement: amounts are not conserved for TestState"
                 )
 
                 tx.inputStates.forEachIndexed { index, input ->
-                    // Transaction contents
-                    val output = tx.getOutput(index) as TestState
-                    input as TestState
+                    val output = tx.getOutput(index) as ZKOwnableState
+                    input as ZKOwnableState
 
                     if (input.owner.owningKey == output.owner.owningKey) throw IllegalArgumentException("Failed requirement: input state $index changes ownership")
-                    if ((tx.outputStates.reversed()[index] as TestState).owner.owningKey != input.owner.owningKey) throw IllegalArgumentException(
+                    if ((tx.outputStates.reversed()[index] as ZKOwnableState).owner.owningKey != input.owner.owningKey) throw IllegalArgumentException(
                         "Failed requirement: ownership of input $index should swap ownership"
                     )
 
                     if (input.owner.owningKey !in command.signers) throw IllegalArgumentException("Failed requirement: input state $index is owned by a required command signer")
-
-                    if (input.value != output.value) throw IllegalArgumentException("Failed requirement: the value of the input and out put should be equal")
                 }
             }
         }

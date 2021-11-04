@@ -1,4 +1,4 @@
-package com.ing.zkflow.zktransaction
+package zkdapp
 
 import com.ing.zkflow.common.contracts.ZKTransactionMetadataCommandData
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata

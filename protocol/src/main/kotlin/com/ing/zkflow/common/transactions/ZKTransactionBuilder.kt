@@ -42,12 +42,15 @@ val TransactionBuilder.isZKFlowTransaction get() = commands().firstOrNull { it.v
 val TraversableTransaction.isZKFlowTransaction get() = commands.firstOrNull { it.value is ZKTransactionMetadataCommandData } != null
 val LedgerTransaction.isZKFlowTransaction get() = commands.firstOrNull { it.value is ZKTransactionMetadataCommandData } != null
 val LedgerTransaction.zkFLowMetadata: ResolvedZKTransactionMetadata
-    get() {
-        val zkFlowCommand =
-            commands.firstOrNull()?.value as? ZKTransactionMetadataCommandData
-                ?: error("This transaction is not a ZKFlow transaction, so no metadata was defined")
-        return zkFlowCommand.transactionMetadata
-    }
+    get() = zkTransactionMetadataCommandData.transactionMetadata
+val TraversableTransaction.zkFLowMetadata: ResolvedZKTransactionMetadata
+    get() = zkTransactionMetadataCommandData.transactionMetadata
+val TraversableTransaction.zkTransactionMetadataCommandData: ZKTransactionMetadataCommandData
+    get() = commands.firstOrNull()?.value as? ZKTransactionMetadataCommandData
+        ?: error("No ZKTransactionMetadataCommandDat was found on this transaction, so it is not a ZKFlow transaction")
+val LedgerTransaction.zkTransactionMetadataCommandData: ZKTransactionMetadataCommandData
+    get() = commands.firstOrNull()?.value as? ZKTransactionMetadataCommandData
+        ?: error("No ZKTransactionMetadataCommandDat was found on this transaction, so it is not a ZKFlow transaction")
 
 /**
  * The main reason for this ZKTransactionBuilder to exist, is to ensure that the user always uses the
@@ -230,10 +233,18 @@ class ZKTransactionBuilder(
     fun withItems(vararg items: Any) = apply {
         items.forEach {
             when (it) {
-                is StateAndRef<*> -> { inputsWithTransactionState.add(it) }
-                is ReferencedStateAndRef<*> -> { referencesWithTransactionState.add(it.stateAndRef.state) }
-                is TransactionState<*> -> { enforceZKContractStates(it.data) }
-                is StateAndContract -> { enforceZKContractStates(it.state) }
+                is StateAndRef<*> -> {
+                    inputsWithTransactionState.add(it)
+                }
+                is ReferencedStateAndRef<*> -> {
+                    referencesWithTransactionState.add(it.stateAndRef.state)
+                }
+                is TransactionState<*> -> {
+                    enforceZKContractStates(it.data)
+                }
+                is StateAndContract -> {
+                    enforceZKContractStates(it.state)
+                }
             }
         }
         builder.withItems(*items)

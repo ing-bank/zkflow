@@ -1,11 +1,13 @@
-import com.ing.zkflow.common.contracts.ZKCommandData
+
 import com.ing.zkflow.common.transactions.ZKTransactionBuilder
-import com.ing.zkflow.common.zkp.ZKTransactionService
+import com.ing.zkflow.common.transactions.isZKFlowTransaction
 import com.ing.zkflow.testing.dsl.AttachmentResolutionException
 import com.ing.zkflow.testing.dsl.DoubleSpentInputs
 import com.ing.zkflow.testing.dsl.DuplicateOutputLabel
 import com.ing.zkflow.testing.dsl.EnforceVerifyOrFail
 import com.ing.zkflow.testing.dsl.LedgerDSLInterpreter
+import com.ing.zkflow.testing.dsl.TestDSLZKTransactionService
+import com.ing.zkflow.testing.dsl.TestZKTransactionDSLInterpreter
 import com.ing.zkflow.testing.dsl.VerificationMode
 import net.corda.core.contracts.Attachment
 import net.corda.core.contracts.ContractState
@@ -34,13 +36,13 @@ public data class TestZKLedgerDSLInterpreter private constructor(
     internal val labelToOutputStateAndRefs: HashMap<String, StateAndRef<ContractState>> = HashMap(),
     private val transactionWithLocations: HashMap<SecureHash, WireTransactionWithLocation> = LinkedHashMap(),
     private val nonVerifiedTransactionWithLocations: HashMap<SecureHash, WireTransactionWithLocation> = HashMap(),
-    val zkService: ZKTransactionService,
+    val zkService: TestDSLZKTransactionService,
     val serializationSchemeID: Int
 ) : LedgerDSLInterpreter<TestTransactionDSLInterpreter, TestZKTransactionDSLInterpreter> {
     val wireTransactions: List<WireTransaction> get() = transactionWithLocations.values.map { it.transaction }
 
     // We specify [labelToOutputStateAndRefs] just so that Kotlin picks the primary constructor instead of cycling
-    public constructor(services: ServiceHub, zkService: ZKTransactionService, serializationSchemeID: Int) : this(
+    public constructor(services: ServiceHub, zkService: TestDSLZKTransactionService, serializationSchemeID: Int) : this(
         services,
         labelToOutputStateAndRefs = HashMap(),
         zkService = zkService,
@@ -245,10 +247,8 @@ public data class TestZKLedgerDSLInterpreter private constructor(
                 val wtx = value.transaction
                 val ltx = wtx.toLedgerTransaction(services)
                 ltx.verify()
-                if (wtx.commands.all { it.value is ZKCommandData }) {
-                    // val zkService: ZKTransactionService = MockZKTransactionService(services)
-                    // log.info("Verifying ZKP for ${wtx.id} with $zkService")
-                    zkService.verify(services, wtx, mode)
+                if (wtx.isZKFlowTransaction) {
+                    zkService.verify(wtx, mode)
                 }
                 val allInputs = wtx.inputs union wtx.references
                 val doubleSpend = allInputs intersect usedInputs

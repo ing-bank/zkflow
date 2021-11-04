@@ -4,17 +4,12 @@ import java.io.File
 import java.nio.ByteBuffer
 
 public class ZincSourcesCopier(private val outputPath: File) {
-    public fun copyZincCircuitSources(circuitSources: File, circuitName: String, version: String, configFileName: String) {
+    public fun copyZincCircuitSources(circuitSources: File, circuitName: String, version: String) {
         circuitSources
             .listFiles()
             ?.forEach { file ->
-                if (file.name == configFileName) {
-                    val copy = outputPath.parentFile.resolve(file.name)
-                    file.copyTo(copy, overwrite = true)
-                } else {
-                    val copy = outputPath.resolve(file.name)
-                    file.copyTo(copy, overwrite = true)
-                }
+                val copy = outputPath.resolve(file.name)
+                file.copyTo(copy, overwrite = true)
             }
 
         createOutputFile(outputPath.parentFile.resolve("Zargo.toml")).apply {

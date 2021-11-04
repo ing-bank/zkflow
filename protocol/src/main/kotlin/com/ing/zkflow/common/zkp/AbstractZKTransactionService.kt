@@ -36,7 +36,7 @@ abstract class AbstractZKTransactionService(val serviceHub: ServiceHub) : ZKTran
         )
 
         val zkService = zkServiceForTransactionMetadata(wtx.zkTransactionMetadata())
-        val proof = zkService.prove(witness)
+        val proof = zkService.proveTimed(witness)
 
         return ZKVerifierTransaction.fromWireTransaction(wtx, proof)
     }
@@ -50,7 +50,7 @@ abstract class AbstractZKTransactionService(val serviceHub: ServiceHub) : ZKTran
         vtx.verify()
 
         // Check proof
-        zkServiceForTransactionMetadata(vtx.zkTransactionMetadata()).verify(vtx.proof, calculatePublicInput(vtx))
+        zkServiceForTransactionMetadata(vtx.zkTransactionMetadata()).verifyTimed(vtx.proof, calculatePublicInput(vtx))
 
         // Check signatures
         if (checkSufficientSignatures) {
@@ -66,7 +66,7 @@ abstract class AbstractZKTransactionService(val serviceHub: ServiceHub) : ZKTran
         }
     }
 
-    private fun calculatePublicInput(tx: TraversableTransaction): PublicInput {
+    open fun calculatePublicInput(tx: TraversableTransaction): PublicInput {
         // Fetch the UTXO hashes from the svtx's pointed to by the inputs and references.
         // This confirms that we have a validated backchain stored for them.
         val inputHashes = getUtxoHashes(tx.inputs)

@@ -30,7 +30,6 @@ pluginManagement {
 }
 
 include("utils")
-include("obsolete")
 include("crypto")
 include("serialization")
 include("compilation")

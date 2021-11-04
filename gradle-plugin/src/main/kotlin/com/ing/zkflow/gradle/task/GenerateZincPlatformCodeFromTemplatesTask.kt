@@ -1,70 +1,45 @@
 package com.ing.zkflow.gradle.task
 
-import com.ing.zkflow.compilation.joinConstFiles
-import com.ing.zkflow.compilation.zinc.template.TemplateRenderer
-import com.ing.zkflow.compilation.zinc.template.parameters.SerializedStateTemplateParameters
-import com.ing.zkflow.compilation.zinc.template.parameters.SignersTemplateParameters
-import com.ing.zkflow.compilation.zinc.template.parameters.StateGroupTemplateParameters
-import com.ing.zkflow.compilation.zinc.template.parameters.TxStateTemplateParameters
-import com.ing.zkflow.compilation.zinc.util.CircuitConfigurator
-import com.ing.zkflow.compilation.zinc.util.CodeGenerator
-import com.ing.zkflow.gradle.extension.ZKFlowExtension
-import com.ing.zkflow.gradle.plugin.circuitNames
-import com.ing.zkflow.gradle.plugin.getTemplateContents
 import com.ing.zkflow.gradle.plugin.platformSourcesRootPath
+import com.ing.zkflow.gradle.plugin.platformTemplatesRootPath
 import com.ing.zkflow.gradle.plugin.zkFlowExtension
 import org.gradle.api.DefaultTask
+import org.gradle.api.artifacts.Configuration
+import org.gradle.api.plugins.JavaPluginConvention
+import org.gradle.api.tasks.InputDirectory
+import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.TaskAction
 
 open class GenerateZincPlatformCodeFromTemplatesTask : DefaultTask() {
+    private val extension = project.zkFlowExtension
 
-    @Suppress("NestedBlockDepth")
+    init {
+        // used to have the actual zinc build dirs as output dirs, but that would make this task always out of date.
+        // We really only care about outdated inputs.
+        this.outputs.upToDateWhen { true }
+    }
+
+    @InputFiles
+    val platformSource: Configuration = project.configurations.getByName("zinc")
+
+    @InputDirectory
+    val zincSources = extension.circuitSourcesBasePath
+
     @TaskAction
     fun generateZincPlatformCodeFromTemplates() {
-        val extension = project.zkFlowExtension
+        project.javaexec {
+            val javaPlugin = project.convention.getPlugin(JavaPluginConvention::class.java)
+            val main = javaPlugin.sourceSets.findByName("main") ?: error("Can't find main sourceset")
 
-        project.circuitNames?.forEach { circuitName ->
-            val circuitSources = extension.circuitSourcesBasePath.resolve(circuitName)
-            val configurator = CircuitConfigurator.fromSources(circuitSources, ZKFlowExtension.CONFIG_CIRCUIT_FILE)
-
-            val circuitSourceOutputPath = extension.mergedCircuitOutputPath.resolve(circuitName).resolve("src")
-
-            // Generate consts file
-            configurator.generateConstsFile(circuitSourceOutputPath)
-
-            val codeGenerator = CodeGenerator(circuitSourceOutputPath)
-            val consts = joinConstFiles(circuitSourceOutputPath, project.platformSourcesRootPath)
-
-            codeGenerator.generateMerkleUtilsCode(project.getTemplateContents(extension.merkleTemplate), consts)
-            codeGenerator.generateMainCode(project.getTemplateContents(extension.mainTemplate), consts)
-
-            val templateRenderer = TemplateRenderer(circuitSourceOutputPath.toPath()) { params ->
-                project.getTemplateContents(params.templateFile)
-            }
-
-            extension
-                .apply {
-                    configurator.circuitConfiguration.circuit.states
-                        .forEach { addConfigurations(TxStateTemplateParameters(it)) }
-
-                    addConfigurations(SignersTemplateParameters(configurator.circuitConfiguration.groups.signerGroup))
-
-                    configurator.circuitConfiguration.groups.inputGroup.filter { it.stateGroupSize > 0 }.forEach { stateGroup ->
-                        addConfigurations(SerializedStateTemplateParameters("input", stateGroup))
-                    }
-                    addConfigurations(StateGroupTemplateParameters("input", configurator.circuitConfiguration.groups.inputGroup))
-
-                    configurator.circuitConfiguration.groups.outputGroup.filter { it.stateGroupSize > 0 }.forEach { stateGroup ->
-                        addConfigurations(SerializedStateTemplateParameters("output", stateGroup))
-                    }
-                    addConfigurations(StateGroupTemplateParameters("output", configurator.circuitConfiguration.groups.outputGroup))
-
-                    configurator.circuitConfiguration.groups.referenceGroup.filter { it.stateGroupSize > 0 }.forEach { stateGroup ->
-                        addConfigurations(SerializedStateTemplateParameters("reference", stateGroup))
-                    }
-                    addConfigurations(StateGroupTemplateParameters("reference", configurator.circuitConfiguration.groups.referenceGroup))
-                }.resolveAllTemplateParameters()
-                .forEach(templateRenderer::renderTemplate)
+            it.main = "com.ing.zkflow.compilation.GenerateZincPlatformCodeFromTemplatesJavaExecTaskKt"
+            it.classpath = main.runtimeClasspath
+            it.args(
+                project.platformSourcesRootPath.absolutePath,
+                project.platformTemplatesRootPath.absolutePath,
+                project.projectDir.resolve(extension.circuitSourcesBasePath).absolutePath,
+                project.buildDir.resolve(extension.mergedCircuitOutputPath).absolutePath,
+                extension.zkFlowTemplateConfigurationClassName
+            )
         }
     }
 }

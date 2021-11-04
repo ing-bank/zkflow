@@ -44,23 +44,23 @@ data class ZKCircuit(
         private val DEFAULT_SETUP_TIMEOUT = 2.hours
         private val DEFAULT_PROVING_TIMEOUT = 5.minutes
         private val DEFAULT_VERIFICATION_TIMEOUT = 3.seconds
-        private val DEFAULT_CIRCUIT_BUILD_FOLDER_PARENT_PATH = "${System.getProperty("user.dir")}/build/zinc/commands/"
+        private val DEFAULT_CIRCUIT_BUILD_FOLDER_PARENT_PATH = "${System.getProperty("user.dir")}/build/zinc/"
 
-        private fun javaClass2ZincType(commandMetadata: ZKCommandMetadata): Map<KClass<*>, ZincType> {
-            val mapping = mutableListOf<Pair<KClass<*>, ZincType>>()
+        private fun javaClass2ZincType(commandMetadata: ZKCommandMetadata): Map<KClass<out ContractState>, ZincType> {
+            val mapping = mutableListOf<Pair<KClass<out ContractState>, ZincType>>()
             mapping += commandMetadata.inputs.toZincTypes()
             mapping += commandMetadata.references.toZincTypes()
             mapping += commandMetadata.outputs.toZincTypes()
             return mapping.toMap()
         }
 
-        private fun ContractStateTypeCountList.toZincTypes() = map { it.type to kClassToZincType(it.type) }
+        private fun ContractStateTypeCountList.toZincTypes() = map { it.type to stateKClassToZincType(it.type) }
 
-        private fun kClassToZincType(kClass: KClass<*>): ZincType {
+        private fun stateKClassToZincType(kClass: KClass<out ContractState>): ZincType {
             val simpleName = kClass.simpleName ?: error("classes used in transactions must be a named class")
             return ZincType(
-                simpleName.camelToSnakeCase(),
-                simpleName.camelToSnakeCase()
+                simpleName,
+                simpleName.camelToSnakeCase() + ".zn"
             )
         }
 
@@ -77,8 +77,8 @@ data class ZKCircuit(
             if (this == null) return ResolvedZKCircuit(
                 commandKClass = commandMetadata.commandKClass,
                 javaClass2ZincType = javaClass2ZincType(commandMetadata),
-                name = commandMetadata.commandSimpleName,
-                buildFolder = File(DEFAULT_CIRCUIT_BUILD_FOLDER_PARENT_PATH + commandMetadata.commandSimpleName),
+                name = commandMetadata.commandSimpleName.camelToSnakeCase(),
+                buildFolder = File(DEFAULT_CIRCUIT_BUILD_FOLDER_PARENT_PATH + commandMetadata.commandSimpleName.camelToSnakeCase()),
                 buildTimeout = DEFAULT_BUILD_TIMEOUT,
                 setupTimeout = DEFAULT_SETUP_TIMEOUT,
                 provingTimeout = DEFAULT_PROVING_TIMEOUT,
@@ -88,7 +88,7 @@ data class ZKCircuit(
             return ResolvedZKCircuit(
                 commandKClass = commandMetadata.commandKClass,
                 javaClass2ZincType = javaClass2ZincType(commandMetadata),
-                name = name ?: commandMetadata.commandSimpleName,
+                name = name ?: commandMetadata.commandSimpleName.camelToSnakeCase(),
                 buildFolder = buildFolder ?: File(DEFAULT_CIRCUIT_BUILD_FOLDER_PARENT_PATH + name),
                 buildTimeout = buildTimeout ?: DEFAULT_BUILD_TIMEOUT,
                 setupTimeout = setupTimeout ?: DEFAULT_SETUP_TIMEOUT,

@@ -3,6 +3,7 @@ package com.ing.zkflow.common.serialization
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
 import com.ing.zkflow.serialization.CommandDataSerializerMap
 import com.ing.zkflow.serialization.ContractStateSerializerMap
+import com.ing.zkflow.serialization.SerializerMapError
 import com.ing.zkflow.serialization.SerializersModuleRegistry
 import com.ing.zkflow.serialization.bfl.serializers.TimeWindowSerializer
 import com.ing.zkflow.serialization.bfl.serializers.TransactionStateSerializer
@@ -10,6 +11,7 @@ import kotlinx.serialization.KSerializer
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.contextual
 import kotlinx.serialization.modules.plus
+import kotlinx.serialization.serializer
 import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.TimeWindow
@@ -114,8 +116,6 @@ open class BFLSerializationScheme : CustomSerializationScheme {
 
         val transactionMetadata =
             context.properties[CONTEXT_KEY_TRANSACTION_METADATA] as? ResolvedZKTransactionMetadata
-        transactionMetadata
-            ?: logger.info("No ResolvedZKTransactionMetadata found, serializing as non-ZKP transaction component: ${obj::class}")
 
         val serialization = when (obj) {
             is TransactionState<*> -> {
@@ -134,6 +134,9 @@ open class BFLSerializationScheme : CustomSerializationScheme {
                 )
                 // Serialization layout is accessible at debugSerialization.second
 
+                /**
+                 * TransactionState is always serialized with BFL, even  in non-ZKP txs, so they can be consumed by ZKP txs
+                 */
                 ContractStateSerializerMap.prefixWithIdentifier(
                     state::class,
                     debugSerialization.first
@@ -141,9 +144,18 @@ open class BFLSerializationScheme : CustomSerializationScheme {
             }
 
             is CommandData -> {
+                // The following cast is OK, its validity is guaranteed by the inner structure of `ContractStateSerializerMap`.
+                // If `[]`-access succeeds, then the cast MUST also succeed.
+                @Suppress("UNCHECKED_CAST")
+                val commandStrategy = try {
+                    CommandDataSerializerMap[obj::class]
+                } catch (e: SerializerMapError.ClassNotRegistered) {
+                    serializersModule.serializer(obj::class.java)
+                } as KSerializer<CommandData>
+
                 CommandDataSerializerMap.prefixWithIdentifier(
                     obj::class,
-                    obliviousSerialize(obj, serializersModule = serializersModule)
+                    obliviousSerialize(obj, commandStrategy, serializersModule = serializersModule)
                 )
             }
 

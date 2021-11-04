@@ -62,14 +62,6 @@ data class ResolvedZKTransactionMetadata(
     private val privateCommands by lazy { commands.filterIsInstance<PrivateResolvedZKCommandMetadata>() }
 
     /**
-     * The total number of signers of all commands added up.
-     *
-     * In theory, they may overlap (be the same PublicKeys), but we can't determine that easily.
-     * Possible future optimization.
-     */
-    val numberOfSigners: Int by lazy { commands.sumOf { it.numberOfSigners } }
-
-    /**
      * Best guess based on contract class names found in this transaction.
      *
      * There are many problems with this, so will probably cause errors on verification.
@@ -82,11 +74,38 @@ data class ResolvedZKTransactionMetadata(
         commands.flatMap { it.contractClassNames }
             .map { it.packageName }.distinct().size
 
+    private val numberOfContractAttachments = numberOfCorDappsForContracts ?: guessNumberOfCordappsForContracts()
+
+    private val numberOfUserAttachments by lazy { commands.sumOf { it.numberOfUserAttachments } }
+
+    val attachmentCount: Int by lazy { numberOfContractAttachments + numberOfUserAttachments }
+
+    val inputTypeGroups = commands.flatMap { it.inputs }
+    val inputs = inputTypeGroups.expanded
+
+    val referenceTypeGroups = commands.flatMap { it.references }
+    val references = referenceTypeGroups.expanded
+
+    val outputTypeGroups = commands.flatMap { it.outputs }
+    val outputs = outputTypeGroups.expanded
+
+    val commandClasses = commands.map { it.commandKClass }
+
+    /**
+     * The total number of signers of all commands added up.
+     *
+     * In theory, they may overlap (be the same PublicKeys), but we can't determine that easily.
+     * Possible future optimization.
+     */
+    val numberOfSigners: Int by lazy { commands.sumOf { it.numberOfSigners } }
+
+    val hasTimeWindow: Boolean = commands.any { it.timeWindow }
+
     /**
      * The aggregate list of java class to zinc type for all commands in this transaction.
      */
-    val javaClass2ZincType: Map<KClass<*>, ZincType> by lazy {
-        commands.fold(mapOf<KClass<*>, ZincType>()) { acc, resolvedZKCommandMetadata ->
+    val javaClass2ZincType: Map<KClass<out ContractState>, ZincType> by lazy {
+        commands.fold(mapOf()) { acc, resolvedZKCommandMetadata ->
             if (resolvedZKCommandMetadata is PrivateResolvedZKCommandMetadata) {
                 acc + resolvedZKCommandMetadata.circuit.javaClass2ZincType
             } else acc
@@ -151,8 +170,6 @@ data class ResolvedZKTransactionMetadata(
     class IllegalTransactionStructureException(cause: Throwable) :
         IllegalArgumentException("Transaction does not match expected structure: ${cause.message}", cause)
 
-    private val expectedUserAttachmentCount by lazy { commands.sumOf { it.numberOfUserAttachments } }
-
     /**
      * In the transaction builder, contract attachments are not yet determined and added.
      * This happens during toWireTransaction, so only verifying user-added attachments here.
@@ -163,8 +180,8 @@ data class ResolvedZKTransactionMetadata(
     }
 
     private fun verifyUserAttachmentCount(userAttachmentCount: Int) {
-        require(userAttachmentCount == expectedUserAttachmentCount) {
-            "Expected $expectedUserAttachmentCount user attachments. Found $userAttachmentCount"
+        require(userAttachmentCount == numberOfUserAttachments) {
+            "Expected $numberOfUserAttachments user attachments. Found $userAttachmentCount"
         }
     }
 
@@ -178,15 +195,13 @@ data class ResolvedZKTransactionMetadata(
     private fun verifyAttachments(ltx: LedgerTransaction) {
         val (actualContractAttachments, actualUserAttachments) = ltx.attachments.partition { it is ContractAttachment }
 
-        val expectedNumberOfContractAttachments = numberOfCorDappsForContracts ?: guessNumberOfCordappsForContracts()
-
-        require(actualContractAttachments.size == expectedNumberOfContractAttachments) {
+        require(actualContractAttachments.size == numberOfContractAttachments) {
             val actualAttachmentsToContracts = actualContractAttachments.map { attachment ->
                 attachment as ContractAttachment
                 "attachment id ${attachment.id.toHexString()} for contracts ${attachment.allContracts.joinToString(", ")}"
             }.joinToString("\n")
 
-            "Expected $expectedNumberOfContractAttachments contract attachments, " +
+            "Expected $numberOfContractAttachments contract attachments, " +
                 "found ${actualContractAttachments.size}: $actualAttachmentsToContracts. " +
                 "If the number of contract attachments found is correct, please set or adjust `ZKTransactionMetadata.numberOfCorDappsForContracts` to match the attachments found. " +
                 "If the number of contract attachments found is incorrect, please make sure the transaction matches the expected value."
@@ -195,26 +210,32 @@ data class ResolvedZKTransactionMetadata(
         verifyUserAttachmentCount(actualUserAttachments.size)
     }
 
-    private fun verifyInputs(inputs: List<StateAndRef<ContractState>>) = matchTypes(
-        componentName = "input",
-        expectedTypes = commands.flatMap { it.inputs }.flattened,
-        actualTypes = inputs.map { it.state.data::class }
-    )
+    private fun verifyInputs(inputs: List<StateAndRef<ContractState>>) {
+        matchTypes(
+            componentName = "input",
+            expectedTypes = this.inputs,
+            actualTypes = inputs.map { it.state.data::class }
+        )
+    }
 
     @JvmName("verifyReferenceTransactionStates")
-    private fun verifyReferences(references: List<TransactionState<ContractState>>) = matchTypes(
-        componentName = "reference",
-        expectedTypes = commands.flatMap { it.references }.flattened,
-        actualTypes = references.map { it.data::class }
-    )
+    private fun verifyReferences(references: List<TransactionState<ContractState>>) {
+        matchTypes(
+            componentName = "reference",
+            expectedTypes = this.references,
+            actualTypes = references.map { it.data::class }
+        )
+    }
 
     private fun verifyReferences(references: List<StateAndRef<ContractState>>) = verifyReferences(references.map { it.state })
 
-    private fun verifyOutputs(outputs: List<TransactionState<*>>) = matchTypes(
-        "output",
-        expectedTypes = commands.flatMap { it.outputs }.flattened,
-        actualTypes = outputs.map { it.data::class }
-    )
+    private fun verifyOutputs(outputs: List<TransactionState<*>>) {
+        matchTypes(
+            "output",
+            expectedTypes = this.outputs,
+            actualTypes = outputs.map { it.data::class }
+        )
+    }
 
     private fun verifyCommandsAndSigners(unverifiedCommands: List<Command<*>>) {
         commands.forEachIndexed { index, expectedCommandMetadata ->

@@ -1,9 +1,6 @@
 package com.ing.zkflow.zinc.types.corda.amount
 
 import com.ing.zkflow.testing.getZincZKService
-import com.ing.zkflow.testing.zkp.proveTimed
-import com.ing.zkflow.testing.zkp.setupTimed
-import com.ing.zkflow.testing.zkp.verifyTimed
 import com.ing.zkflow.zinc.types.toWitness
 import net.corda.core.contracts.Amount
 import org.junit.jupiter.api.AfterAll

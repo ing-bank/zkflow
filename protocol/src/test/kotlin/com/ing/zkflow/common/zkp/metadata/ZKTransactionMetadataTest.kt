@@ -11,16 +11,19 @@ import com.ing.zkflow.common.zkp.metadata.MockAssetContract.IssueWithNonZKPComma
 import com.ing.zkflow.common.zkp.metadata.ZKCommandList.Companion.ERROR_COMMAND_NOT_UNIQUE
 import com.ing.zkflow.common.zkp.metadata.ZKTransactionMetadata.Companion.ERROR_COMMANDS_ALREADY_SET
 import com.ing.zkflow.common.zkp.metadata.ZKTransactionMetadata.Companion.ERROR_NETWORK_ALREADY_SET
+import com.ing.zkflow.serialization.CommandDataSerializerMap
+import com.ing.zkflow.serialization.ContractStateSerializerMap
 import com.ing.zkflow.serialization.bfl.serializers.AnonymousPartySerializer
+import com.ing.zkflow.testing.dsl.TestDSLMockZKTransactionService
 import com.ing.zkflow.testing.dsl.zkLedger
 import com.ing.zkflow.testing.fixed
 import com.ing.zkflow.testing.fixtures.contract.TestContract
-import com.ing.zkflow.testing.zkp.MockZKTransactionService
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldStartWith
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
+import net.corda.core.contracts.AlwaysAcceptAttachmentConstraint
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.CommandAndState
 import net.corda.core.contracts.CommandData
@@ -47,7 +50,7 @@ class ZKTransactionMetadataTest {
 
     @Test
     fun `The transaction builder must match structure from transaction metadata`() {
-        services.zkLedger(zkService = MockZKTransactionService(services)) {
+        services.zkLedger(zkService = TestDSLMockZKTransactionService(services)) {
             // basic checks
             zkTransaction {
                 output(MockAssetContract.ID, "Issued State", MockAssetContract.MockAsset(issuer))
@@ -115,7 +118,7 @@ class ZKTransactionMetadataTest {
     fun `ZKTransactionMetadata DSL happy flow works`() {
         val transactionMetadata = testUncachedTransactionMetadata {
             network {
-                attachmentConstraintType = SignatureAttachmentConstraint::class
+                attachmentConstraintType = AlwaysAcceptAttachmentConstraint::class
             }
 
             commands {
@@ -124,7 +127,7 @@ class ZKTransactionMetadataTest {
             }
         }
 
-        transactionMetadata.network.attachmentConstraintType shouldBe SignatureAttachmentConstraint::class
+        transactionMetadata.network.attachmentConstraintType shouldBe AlwaysAcceptAttachmentConstraint::class
         transactionMetadata.commands[0].commandKClass shouldBe TestContract.Create::class
         transactionMetadata.commands[1].commandKClass shouldBe TestContract.SignOnly::class
     }
@@ -149,7 +152,7 @@ class ZKTransactionMetadataTest {
 
     @Test
     fun `Wrong cordapp count fails`() {
-        services.zkLedger(zkService = MockZKTransactionService(services)) {
+        services.zkLedger(zkService = TestDSLMockZKTransactionService(services)) {
             zkTransaction {
                 output(MockAssetContract.ID, MockAssetContract.MockAsset(issuer))
                 command(listOf(issuer.owningKey), MockAssetContract.IssueWithWrongCorDappCount())
@@ -229,32 +232,6 @@ class ZKTransactionMetadataTest {
 }
 
 val mockSerializers = run {
-    com.ing.zkflow.serialization.ContractStateSerializerMap.register(
-        MockAuditContract.Approval::class,
-        9993,
-        MockAuditContract.Approval.serializer()
-    )
-    com.ing.zkflow.serialization.CommandDataSerializerMap.register(
-        MockAssetContract.Issue::class,
-        9992,
-        MockAssetContract.Issue.serializer()
-    )
-    com.ing.zkflow.serialization.CommandDataSerializerMap.register(
-        MockAssetContract.IssueWithWrongCorDappCount::class,
-        99998,
-        MockAssetContract.IssueWithWrongCorDappCount.serializer()
-    )
-    com.ing.zkflow.serialization.CommandDataSerializerMap.register(MockAssetContract.Move::class, 9996, MockAssetContract.Move.serializer())
-    com.ing.zkflow.serialization.CommandDataSerializerMap.register(
-        MockAuditContract.Approve::class,
-        9994,
-        MockAuditContract.Approve.serializer()
-    )
-    com.ing.zkflow.serialization.ContractStateSerializerMap.register(
-        MockAssetContract.MockAsset::class,
-        9991,
-        MockAssetContract.MockAsset.serializer()
-    )
 }
 
 /**
@@ -290,8 +267,7 @@ class MockAuditContract : Contract {
         val approver: AnonymousParty
     ) : ZKContractState {
         init {
-            // TODO: Hack!
-            mockSerializers
+            ContractStateSerializerMap.register(this::class)
         }
 
         @FixedLength([1])
@@ -305,6 +281,10 @@ class MockAuditContract : Contract {
      */
     @Serializable
     class Approve : ZKCommandData {
+        init {
+            CommandDataSerializerMap.register(this::class)
+        }
+
         @Transient
         override val metadata = commandMetadata {
             private = true
@@ -331,19 +311,22 @@ class MockAssetContract : Contract {
     ) : ZKOwnableState {
 
         init {
-            // TODO: Hack!
-            mockSerializers
+            ContractStateSerializerMap.register(this::class)
         }
 
         @FixedLength([1])
         override val participants: List<@Serializable(with = AnonymousPartySerializer::class) AnonymousParty> = listOf(owner)
 
         override fun withNewOwner(newOwner: AnonymousParty): CommandAndState =
-            CommandAndState(TestContract.Move(), copy(owner = newOwner))
+            CommandAndState(Move(), copy(owner = newOwner))
     }
 
     @Serializable
-    class Move : ZKCommandData, ZKTransactionMetadataCommandData {
+    class Move : ZKTransactionMetadataCommandData {
+        init {
+            CommandDataSerializerMap.register(this::class)
+        }
+
         override val transactionMetadata by transactionMetadata {
             network { attachmentConstraintType = SignatureAttachmentConstraint::class }
             commands {
@@ -365,6 +348,10 @@ class MockAssetContract : Contract {
 
     @Serializable
     class IssueWithWrongCorDappCount : ZKTransactionMetadataCommandData {
+        init {
+            CommandDataSerializerMap.register(this::class)
+        }
+
         override val transactionMetadata by transactionMetadata {
             commands {
                 +IssueWithWrongCorDappCount::class
@@ -383,6 +370,10 @@ class MockAssetContract : Contract {
 
     @Serializable
     class Issue : ZKTransactionMetadataCommandData {
+        init {
+            CommandDataSerializerMap.register(this::class)
+        }
+
         override val transactionMetadata by transactionMetadata {
             network { attachmentConstraintType = SignatureAttachmentConstraint::class }
             commands {

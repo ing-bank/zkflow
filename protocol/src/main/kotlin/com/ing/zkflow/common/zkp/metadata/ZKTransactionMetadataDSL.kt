@@ -10,6 +10,7 @@ import net.corda.core.contracts.AttachmentConstraint
 import net.corda.core.contracts.CommandData
 import net.corda.core.crypto.SignatureScheme
 import net.corda.core.internal.objectOrNewInstance
+import java.util.ServiceLoader
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
@@ -169,8 +170,31 @@ class ZKTransactionMetadata {
     }
 }
 
-internal object TransactionMetadataCache {
-    internal val resolvedTransactionMetadata = mutableMapOf<KClass<out ZKTransactionMetadataCommandData>, ResolvedZKTransactionMetadata>()
+object TransactionMetadataCache {
+    val resolvedTransactionMetadata = mutableMapOf<KClass<out ZKTransactionMetadataCommandData>, ResolvedZKTransactionMetadata>()
+
+    private var metadataIsInitialized = false
+
+    private fun initResolvedTransactionMetadata() {
+        if (!metadataIsInitialized) {
+            ServiceLoader.load(ZKTransactionMetadataCommandData::class.java).forEach {
+                it.transactionMetadata
+            }
+            metadataIsInitialized = true
+        }
+    }
+
+    fun findMetadataByCircuitName(circuitName: String): ResolvedZKTransactionMetadata {
+        initResolvedTransactionMetadata()
+
+        return resolvedTransactionMetadata.entries.find { cacheEntry ->
+            cacheEntry.value.commands.any { command ->
+                command is PrivateResolvedZKCommandMetadata &&
+                    command.commandKClass == cacheEntry.key &&
+                    command.circuit.name == circuitName
+            }
+        }?.value ?: error("Could not find metadata for circuit with name $circuitName")
+    }
 }
 
 class CachedResolvedTransactionMetadataDelegate(
