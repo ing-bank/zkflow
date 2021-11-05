@@ -3,9 +3,10 @@ package com.ing.zkflow.common.transactions
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.crypto.DigestService
 import net.corda.core.crypto.MerkleTree
+import net.corda.core.crypto.PartialMerkleTree
 import net.corda.core.crypto.SecureHash
 import net.corda.core.serialization.CordaSerializable
-import net.corda.core.transactions.ComponentGroup
+import net.corda.core.transactions.FilteredComponentGroup
 import net.corda.core.transactions.FilteredTransaction
 import net.corda.core.transactions.TraversableTransaction
 import net.corda.core.transactions.WireTransaction
@@ -14,7 +15,9 @@ import java.util.function.Predicate
 
 @Suppress("LongParameterList")
 @CordaSerializable
-class ZKVerifierTransaction(
+class ZKVerifierTransaction internal constructor(
+    override val id: SecureHash,
+
     val proof: ByteArray,
 
     // Outputs are not visible in a normal FilteredTransaction, so we 'leak' some info here: the amount of outputs.
@@ -30,23 +33,18 @@ class ZKVerifierTransaction(
     val outputHashes: List<SecureHash>,
 
     /**
-     * This value will contain as many hashes as there are component groups,
-     * otherwise fail.
-     * Order of the elements corresponds to the order groups listed in ComponentGroupEnum.
-     *
-     * TODO: when we revert back to the normal WireTransaction instead of ZKProverTransaction,
-     * this will become 'dynamic' again to support unknown groups. This should be reflected in Zinc and in
-     * ZKVerifierTransaction
+     * This value will contain as many hashes as there are component groups, otherwise fail.
+     * Order of the elements corresponds to the order of groups listed in ComponentGroupEnum.
      */
     val groupHashes: List<SecureHash>,
 
-    digestService: DigestService,
+    val filteredComponentGroups: List<FilteredComponentGroup>,
 
-    componentGroups: List<ComponentGroup>
-
-) : TraversableTransaction(componentGroups, digestService) {
-
-    override val id: SecureHash by lazy { MerkleTree.getMerkleTree(groupHashes, digestService).hash }
+    digestService: DigestService
+) : TraversableTransaction(
+    filteredComponentGroups,
+    digestService
+) { // Preferably we directly extend FilteredTransaction, but its constructors are internal
 
     /** Public keys that need to be fulfilled by signatures in order for the transaction to be valid. */
     val requiredSigningKeys: Set<PublicKey>
@@ -64,10 +62,20 @@ class ZKVerifierTransaction(
     /**
      * Normally, all these checks would also happen on construction, to guard against invalid transactions.
      * In this case, we choose to only do this on verify, because it is an expensive operation and is always called on
-     * transaction verification anyway.
+     * transaction verification anyway, which always happens just before it is stored in verified storage.
+     *
+     * Much of this is directly lifted from FilteredTransaction because we can't extend it because its constructors are internal
      */
     fun verify() {
-        // Check that output hashes indeed produce provided group hash
+
+        require(groupHashes.isNotEmpty()) { "At least one component group hash is required" }
+        // Verify the top level Merkle tree (group hashes are its leaves, including allOnesHash for empty list or null
+        // components in WireTransaction).
+        require(MerkleTree.getMerkleTree(groupHashes, digestService).hash == id) {
+            "Top level Merkle tree cannot be verified against transaction's id"
+        }
+
+        // Check that output hashes indeed produce provided group hash for output group
         require(
             MerkleTree.getMerkleTree(
                 outputHashes,
@@ -75,15 +83,22 @@ class ZKVerifierTransaction(
             ).hash == groupHashes[ComponentGroupEnum.OUTPUTS_GROUP.ordinal]
         )
 
-        // FIXME: Add checks that confirm all `componentGroups` contents belong to `val groupHashes`.
-        // componentGroups.forEach {
-        //     require(
-        //         MerkleTree.getMerkleTree(
-        //             it.components,
-        //             digestService
-        //         ).hash == groupHashes[ComponentGroupEnum.OUTPUTS_GROUP.ordinal]
-        //     )
-        // }
+        // Compute partial Merkle roots for each filtered component and verify each of the partial Merkle trees.
+        filteredComponentGroups.forEach { (groupIndex, components, nonces, groupPartialTree) ->
+            require(groupIndex < groupHashes.size) { "There is no matching component group hash for group $groupIndex" }
+            val groupMerkleRoot = groupHashes[groupIndex]
+            require(groupMerkleRoot == PartialMerkleTree.rootAndUsedHashes(groupPartialTree.root, mutableListOf())) {
+                "Partial Merkle tree root and advertised full Merkle tree root for component group $groupIndex do not match"
+            }
+            require(
+                groupPartialTree.verify(
+                    groupMerkleRoot,
+                    components.mapIndexed { index, component -> digestService.componentHash(nonces[index], component) }
+                )
+            ) {
+                "Visible components in group $groupIndex cannot be verified against their partial Merkle tree"
+            }
+        }
     }
 
     override fun hashCode(): Int = id.hashCode()
@@ -97,15 +112,16 @@ class ZKVerifierTransaction(
             val ftx = FilteredTransaction.buildFilteredTransaction(wtx, Predicate { true })
 
             return ZKVerifierTransaction(
+                id = ftx.id,
                 proof = proof,
                 outputHashes = outputHashes(wtx, ftx),
                 groupHashes = ftx.groupHashes,
                 digestService = wtx.digestService,
-                componentGroups = createComponentGroups(ftx)
+                filteredComponentGroups = createComponentGroups(ftx)
             )
         }
 
-        private fun createComponentGroups(ftx: FilteredTransaction): List<ComponentGroup> {
+        private fun createComponentGroups(ftx: FilteredTransaction): List<FilteredComponentGroup> {
 
             /*
              * We hide all groups except ones mentioned below.
