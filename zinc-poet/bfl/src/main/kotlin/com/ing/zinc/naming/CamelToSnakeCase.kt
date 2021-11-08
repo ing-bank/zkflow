@@ -1,6 +1,6 @@
 package com.ing.zinc.naming
 
-import com.ing.zinc.bfl.BflPrimitive.Companion.isPrimiviteIdentifier
+import com.ing.zinc.bfl.BflPrimitive.Companion.isPrimitiveIdentifier
 import java.util.Locale
 
 /**
@@ -21,7 +21,7 @@ fun String.camelToSnakeCase(): String {
 private fun checkAndCombinePrimitiveTypes(
     acc: Pair<MutableList<Part>, Part>,
     part: Part
-): Part = if (isPrimiviteIdentifier(acc.second.part.toLowerCase(Locale.getDefault()) + part.part)) {
+): Part = if (isPrimitiveIdentifier(acc.second.part.toLowerCase(Locale.getDefault()) + part.part)) {
     combinePrimitiveTypes(acc, part)
 } else part
 
@@ -126,7 +126,7 @@ private class PartBuilder {
     /**
      * Build the actual [Part].
      */
-    fun toPart(): Part {
+    fun build(): Part {
         require(size > 0) {
             "Cannot generate a string from an empty part."
         }
@@ -143,7 +143,7 @@ private fun splitCamelParts(input: String): List<Part> {
     val partBuilder = PartBuilder()
     for (codePoint in input.codePoints()) {
         if (!partBuilder.isCompatible(codePoint)) {
-            val part = partBuilder.toPart()
+            val part = partBuilder.build()
             partBuilder.reset()
             // When going from UPPER_CASE to LOWER_CASE take the last character of the UPPER_CASE part as the first
             // character of the next part.
@@ -158,7 +158,7 @@ private fun splitCamelParts(input: String): List<Part> {
         }
         partBuilder.add(codePoint)
     }
-    parts.add(partBuilder.toPart())
+    parts.add(partBuilder.build())
     // Construct the output
     return parts
 }

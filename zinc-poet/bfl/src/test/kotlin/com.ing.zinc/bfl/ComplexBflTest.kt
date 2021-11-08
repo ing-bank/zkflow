@@ -1,9 +1,7 @@
 package com.ing.zinc.bfl
 
-import com.ing.zinc.bfl.BflType.Companion.BITS_PER_BYTE
-import com.ing.zinc.bfl.BflType.Companion.SERIALIZED_VAR
-import com.ing.zinc.bfl.ZincExecutor.createImports
-import com.ing.zinc.bfl.ZincExecutor.generateCircuitBase
+import com.ing.zinc.bfl.ZincExecutor.generateDeserializeCircuit
+import com.ing.zinc.bfl.ZincExecutor.generateWitness
 import com.ing.zinc.bfl.ZincExecutor.runCommand
 import com.ing.zinc.bfl.dsl.EnumBuilder.Companion.enum
 import com.ing.zinc.bfl.dsl.ListBuilder.Companion.asciiString
@@ -11,27 +9,19 @@ import com.ing.zinc.bfl.dsl.ListBuilder.Companion.byteArray
 import com.ing.zinc.bfl.dsl.ListBuilder.Companion.utfString
 import com.ing.zinc.bfl.dsl.OptionBuilder.Companion.option
 import com.ing.zinc.bfl.dsl.StructBuilder.Companion.struct
-import com.ing.zinc.bfl.generator.CodeGenerationOptions
-import com.ing.zinc.bfl.generator.WitnessGroupOptions
-import com.ing.zinc.bfl.generator.ZincGenerator.zincSourceFile
-import com.ing.zinc.poet.ZincArray.Companion.zincArray
-import com.ing.zinc.poet.ZincConstant
-import com.ing.zinc.poet.ZincFile
-import com.ing.zinc.poet.ZincFile.Companion.zincFile
-import com.ing.zinc.poet.ZincPrimitive
-import com.ing.zinc.toByteBoundary
+import com.ing.zkflow.util.requireInstanceOf
 import io.kotest.matchers.shouldBe
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonObject
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.nio.file.Path
-import kotlin.io.path.ExperimentalPathApi
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
-@ExperimentalPathApi
 class ComplexBflTest {
     private fun bigDecimal(integerSize: Int, fractionSize: Int) = struct {
-        id = "BigDecimal_${integerSize}_$fractionSize"
+        name = "BigDecimal_${integerSize}_$fractionSize"
         field {
             name = "sign"
             type = BflPrimitive.I8
@@ -47,7 +37,7 @@ class ComplexBflTest {
     }
 
     private fun amount(tokenType: BflType) = struct {
-        id = "${tokenType.id}Amount"
+        name = "${tokenType.id}Amount"
         field {
             name = "quantity"
             type = BflPrimitive.I64
@@ -67,14 +57,14 @@ class ComplexBflTest {
     }
 
     private fun stateType() = enum {
-        id = "StateType"
+        name = "StateType"
         variant("START")
         variant("BUSY")
         variant("END")
     }
 
     private fun publicKey() = struct {
-        id = "PublicKey"
+        name = "PublicKey"
         field {
             name = "scheme_id"
             type = BflPrimitive.U32
@@ -86,7 +76,7 @@ class ComplexBflTest {
     }
 
     private fun abstractParty() = struct {
-        id = "Party"
+        name = "Party"
         field {
             name = "name"
             type = option {
@@ -100,7 +90,7 @@ class ComplexBflTest {
     }
 
     private fun uniqueIdentifier() = struct {
-        id = "UniqueIdentifier"
+        name = "UniqueIdentifier"
         field {
             name = "external_id"
             type = option {
@@ -114,7 +104,7 @@ class ComplexBflTest {
     }
 
     private fun linearPointer() = struct {
-        id = "LinearPointer"
+        name = "LinearPointer"
         field {
             name = "pointer"
             type = uniqueIdentifier()
@@ -130,7 +120,7 @@ class ComplexBflTest {
     }
 
     private fun transaction() = struct {
-        id = "Transaction"
+        name = "Transaction"
         field {
             name = "state"
             type = stateType()
@@ -152,101 +142,75 @@ class ComplexBflTest {
     @Test
     fun `Complex large object should deserialize correctly`(@TempDir tempDir: Path) {
         // val tempDir = Files.createTempDirectory(this::class.simpleName)
-        tempDir.generateHashAndDeserializeCircuit(transaction())
+        tempDir.generateDeserializeCircuit(transaction())
+        tempDir.generateWitness(SERIALIZED) {
+            // state
+            bytes(0, 0, 0, 1)
+            // amount<linearpointer>
+            // amount.quantity
+            bytes(0, 0, 0, 0, 0, 0, 0, 12)
+            // amount.display_token_size
+            // amount.display_token_size.sign
+            bytes(1)
+            // amount.display_token_size.integer
+            // amount.display_token_size.integer.size
+            bytes(0, 0, 0, 1)
+            // amount.display_token_size.integer.values
+            bytes(*IntArray(100) { 7 })
+            // amount.display_token_size.fraction
+            // amount.display_token_size.fraction.size
+            bytes(0, 0, 0, 1)
+            // amount.display_token_size.fraction.values
+            bytes(*IntArray(20) { 8 })
+            // amount.token_type_hash
+            // amount.token_type_hash.size
+            bytes(0, 0, 0, 32)
+            // amount.token_type_hash.values
+            bytes(*IntArray(32) { 9 })
+            // amount.token
+            // amount.token.pointer
+            // amount.token.pointer.external_id
+            // amount.token.pointer.external_id.has_value
+            bits(1)
+            // amount.token.pointer.external_id.value.size
+            bytes(0, 2)
+            // amount.token.pointer.external_id.value.values
+            bytes(0, 97, 0, 97).bytes(*IntArray(96))
+            // amount.token.pointer.id
+            bytes(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10)
+            // amount.token.class_name
+            // amount.token.class_name.size
+            bytes(0, 2)
+            // amount.token.class_name.values
+            bytes(97, 97).bytes(*IntArray(190))
+            // amount.token.is_resolved
+            bits(1)
+            // and the rest
+            bytes(*IntArray(364))
+        }
 
-        val (_, stderr) = tempDir.runCommand("zargo run", 10)
+        val (stdout, stderr) = tempDir.runCommand("zargo run", 10)
 
         stderr shouldBe ""
+
+        val output = stdout.parseJson().jsonObject
+        output.pathElement("state") shouldBe JsonPrimitive("1")
+        output.pathElement("amount", "quantity") shouldBe JsonPrimitive("12")
+        output.pathElement("amount", "display_token_size", "fraction", "size") shouldBe JsonPrimitive("1")
+        output.pathElement("amount", "token_type_hash", "size") shouldBe JsonPrimitive("32")
+        output.pathElement("amount", "token", "is_resolved") shouldBe JsonPrimitive(true)
     }
+}
 
-    private fun Path.generateHashAndDeserializeCircuit(module: BflStruct) {
-        val options = CodeGenerationOptions(
-            listOf(
-                WitnessGroupOptions(
-                    "TransactionList",
-                    module.bitSize.toByteBoundary(),
-                    "((WITNESS_BIT_LENGTH - 1 as u24) / $BITS_PER_BYTE as u24 + 1 as u24) * $BITS_PER_BYTE as u24"
-                ),
-                WitnessGroupOptions("transaction", module),
-            )
-        )
-        // generate src/consts.zn
-        val constsFile = zincSourceFile("consts.zn", generateConstsFile(options, module))
-        // generate base circuit
-        generateCircuitBase(module, options)
-        // generate src/main.zn
-        generateMain(module, constsFile, options.witnessGroupOptions.first())
-    }
-
-    private fun Path.generateMain(
-        module: BflStruct,
-        constsFile: ZincFile,
-        witnessGroupOptions: WitnessGroupOptions,
-    ) {
-        zincSourceFile("main.zn") {
-            module.allModules {
-                createImports(this)
-            }
-            use {
-                path = "std::crypto::blake2s"
-            }
-
-            mod {
-                this.module = "consts"
-            }
-            constsFile.getFileItems().asSequence()
-                .filterIsInstance<ZincConstant>()
-                .forEach {
-                    use {
-                        path = "consts::${it.getName()}"
-                    }
-                }
-            newLine()
-            function {
-                name = "main"
-                parameter {
-                    name = SERIALIZED_VAR
-                    type = witnessGroupOptions.witnessType
-                }
-                returnType = zincArray {
-                    elementType = module.toZincId()
-                    size = "TRANSACTION_COUNT"
-                }
-                body = """
-                        let hash = blake2s($SERIALIZED_VAR);
-                        // dbg!("{}", hash);
-    
-                        let mut transactions = [${module.id}::empty(); TRANSACTION_COUNT];
-                        for k in (0 as u24)..TRANSACTION_COUNT {
-                            let bit_offset = k * TRANSACTION_BIT_LENGTH;
-                            transactions[k] = ${module.id}::${witnessGroupOptions.deserializeMethodName}($SERIALIZED_VAR, bit_offset);
-                        }
-                        transactions
-                """.trimIndent()
-            }
+fun JsonObject.pathElement(vararg field: String): JsonElement {
+    var previousField: String? = null
+    return field.fold(this as JsonElement) { acc, fieldName ->
+        val obj = acc.requireInstanceOf<JsonObject> {
+            "Expected field $previousField to be an object"
         }
-    }
-
-    private fun generateConstsFile(
-        options: CodeGenerationOptions,
-        module: BflStruct
-    ) = zincFile {
-        constant {
-            name = "TRANSACTION_BIT_LENGTH"
-            type = ZincPrimitive.U24
-            initialization = "${module.bitSize} as u24"
+        previousField = fieldName
+        requireNotNull(obj[fieldName]) {
+            "Expected field $fieldName to be present"
         }
-        constant {
-            name = "TRANSACTION_COUNT"
-            type = ZincPrimitive.U16
-            initialization = "2 as u16"
-            comment = "replace"
-        }
-        constant {
-            name = "WITNESS_BIT_LENGTH"
-            type = ZincPrimitive.U24
-            initialization = "TRANSACTION_COUNT as u24 * TRANSACTION_BIT_LENGTH"
-        }
-        options.addConstants(this)
     }
 }

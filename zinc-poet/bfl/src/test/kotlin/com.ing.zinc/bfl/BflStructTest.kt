@@ -1,6 +1,5 @@
 package com.ing.zinc.bfl
 
-import com.ing.zinc.bfl.BflType.Companion.SERIALIZED_VAR
 import com.ing.zinc.bfl.ZincExecutor.createImports
 import com.ing.zinc.bfl.ZincExecutor.generateCircuitBase
 import com.ing.zinc.bfl.ZincExecutor.generateDeserializeCircuit
@@ -9,6 +8,7 @@ import com.ing.zinc.bfl.ZincExecutor.generateEqualsCircuit
 import com.ing.zinc.bfl.ZincExecutor.generateNewCircuit
 import com.ing.zinc.bfl.ZincExecutor.generateWitness
 import com.ing.zinc.bfl.ZincExecutor.runCommand
+import com.ing.zinc.bfl.dsl.StructBuilder.Companion.struct
 import com.ing.zinc.bfl.generator.ZincGenerator.zincSourceFile
 import com.ing.zinc.poet.ZincMethod.Companion.zincMethod
 import com.ing.zinc.poet.ZincPrimitive
@@ -17,16 +17,23 @@ import kotlinx.serialization.json.JsonPrimitive
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.nio.file.Path
-import kotlin.io.path.ExperimentalPathApi
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
-@ExperimentalPathApi
 internal class BflStructTest {
+    @Test
+    fun `BflStruct deserialize method should deserialize an empty struct correctly`(@TempDir tempDir: Path) {
+        tempDir.generateDeserializeCircuit(struct { name = "EmptyStruct" })
+        tempDir.generateWitness(SERIALIZED) { }
+
+        val (stdout, stderr) = tempDir.runCommand("zargo run")
+
+        stderr shouldBe ""
+        stdout.parseJson() shouldBe emptyJsonObject
+    }
+
     @Test
     fun `BflStruct deserialize method should deserialize correctly with witness 1`(@TempDir tempDir: Path) {
         tempDir.generateDeserializeCircuit(structWithPrimitiveFields)
-        tempDir.generateWitness(SERIALIZED_VAR) {
+        tempDir.generateWitness(SERIALIZED) {
             bytes(1, 0, 0, 0)
             bits(1)
         }
@@ -40,7 +47,7 @@ internal class BflStructTest {
     @Test
     fun `BflStruct deserialize method should deserializes correctly with witness 2`(@TempDir tempDir: Path) {
         tempDir.generateDeserializeCircuit(structWithPrimitiveFields)
-        tempDir.generateWitness(SERIALIZED_VAR) {
+        tempDir.generateWitness(SERIALIZED) {
             bytes(0, 0, 0, 0)
             bits(0)
         }
@@ -102,7 +109,7 @@ internal class BflStructTest {
     @Test
     fun `BflStruct deserialize method should deserialize correctly with arrays`(@TempDir tempDir: Path) {
         tempDir.generateDeserializeCircuit(structWithArrayFieldsOfPrimitives)
-        tempDir.generateWitness(SERIALIZED_VAR) {
+        tempDir.generateWitness(SERIALIZED) {
             bytes(
                 0, 0, 0, 5, // 5
                 0, 0, 0, 12, // 12
@@ -170,7 +177,7 @@ internal class BflStructTest {
     @Test
     fun `BflStruct deserialize method should deserialize correctly with struct`(@TempDir tempDir: Path) {
         tempDir.generateDeserializeCircuit(structWithStructField)
-        tempDir.generateWitness(SERIALIZED_VAR) {
+        tempDir.generateWitness(SERIALIZED) {
             bytes(1, 0, 0, 0)
             bits(1)
         }

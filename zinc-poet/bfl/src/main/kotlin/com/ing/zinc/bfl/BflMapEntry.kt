@@ -6,12 +6,12 @@ data class BflMapEntry(
 ) : BflStruct(
     "${keyType.typeName()}To${valueType.typeName()}MapEntry",
     listOf(
-        Field(keyFieldName, keyType),
-        Field(valueFieldName, valueType),
+        Field(KEY_FIELD, keyType),
+        Field(VALUE_FIELD, valueType),
     )
 ) {
     companion object {
-        const val keyFieldName = "key"
-        const val valueFieldName = "value"
+        const val KEY_FIELD = "key"
+        const val VALUE_FIELD = "value"
     }
 }

@@ -1,6 +1,5 @@
 package com.ing.zinc.bfl
 
-import com.ing.zinc.bfl.BflType.Companion.SERIALIZED_VAR
 import com.ing.zinc.bfl.ZincExecutor.createImports
 import com.ing.zinc.bfl.ZincExecutor.generateCircuitBase
 import com.ing.zinc.bfl.ZincExecutor.generateDeserializeCircuit
@@ -16,16 +15,12 @@ import org.junit.jupiter.api.io.TempDir
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import java.nio.file.Path
-import kotlin.io.path.ExperimentalPathApi
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
-@ExperimentalPathApi
 internal class BflOptionTest {
     @Test
     fun `Option of bool should deserialize correctly`(@TempDir tempDir: Path) {
         tempDir.generateDeserializeCircuit(booleanOption)
-        tempDir.generateWitness(SERIALIZED_VAR) {
+        tempDir.generateWitness(SERIALIZED) {
             bits(
                 1, // true
                 0 // false
@@ -41,7 +36,7 @@ internal class BflOptionTest {
     @Test
     fun `Option of i8 should deserialize correctly`(@TempDir tempDir: Path) {
         tempDir.generateDeserializeCircuit(intOption)
-        tempDir.generateWitness(SERIALIZED_VAR) {
+        tempDir.generateWitness(SERIALIZED) {
             bits(1) // true
             bytes(255) // -1
         }

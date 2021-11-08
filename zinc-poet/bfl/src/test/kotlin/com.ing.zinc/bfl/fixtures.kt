@@ -29,14 +29,14 @@ sealed class DataInterface {
 
     companion object {
         val intData = struct {
-            id = "IntData"
+            name = "IntData"
             field {
                 name = "value"
                 type = BflPrimitive.I32
             }
         }
         val boolData = struct {
-            id = "BoolData"
+            name = "BoolData"
             field {
                 name = "value"
                 type = BflPrimitive.Bool
@@ -58,7 +58,7 @@ internal val intOption = option {
 }
 
 internal val structWithPrimitiveFields = struct {
-    id = "StructWithPrimitiveFields"
+    name = "StructWithPrimitiveFields"
     field {
         name = "foo"
         type = BflPrimitive.U32
@@ -70,7 +70,7 @@ internal val structWithPrimitiveFields = struct {
 }
 
 internal val structWithArrayFieldsOfPrimitives = struct {
-    id = "StructWithArrayFields"
+    name = "StructWithArrayFields"
     field {
         name = "foo"
         type = array {
@@ -88,7 +88,7 @@ internal val structWithArrayFieldsOfPrimitives = struct {
 }
 
 internal val structWithStructField = struct {
-    id = "StructWithStructField"
+    name = "StructWithStructField"
     field {
         name = "baz"
         type = structWithPrimitiveFields
@@ -123,6 +123,8 @@ internal val mapOfEnumToString = map {
     keyType = thingsEnum
     valueType = utfString(2)
 }
+
+internal val emptyJsonObject = buildJsonObject { }
 
 internal val testDataListOfArrays = listOf(jsonArrayOf(5, 8))
     .asZincJsonObjectList(2, jsonArrayOf(0, 0))

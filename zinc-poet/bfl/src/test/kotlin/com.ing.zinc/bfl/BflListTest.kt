@@ -1,6 +1,6 @@
 package com.ing.zinc.bfl
 
-import com.ing.zinc.bfl.BflType.Companion.SERIALIZED_VAR
+import com.ing.zinc.bfl.BflList.Companion.ELEMENT
 import com.ing.zinc.bfl.ZincExecutor.createImports
 import com.ing.zinc.bfl.ZincExecutor.generateCircuitBase
 import com.ing.zinc.bfl.ZincExecutor.generateDeserializeCircuit
@@ -15,16 +15,12 @@ import kotlinx.serialization.json.put
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.nio.file.Path
-import kotlin.io.path.ExperimentalPathApi
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
-@ExperimentalPathApi
 internal class BflListTest {
     @Test
     fun `List of Bools deserialize method should deserialize correctly`(@TempDir tempDir: Path) {
         tempDir.generateDeserializeCircuit(listOfBools)
-        tempDir.generateWitness(SERIALIZED_VAR) {
+        tempDir.generateWitness(SERIALIZED) {
             bytes(0, 0, 0, 1) // size: 1
             bits(
                 1, // values[0]: true
@@ -41,7 +37,7 @@ internal class BflListTest {
     @Test
     fun `List of Enums deserialize method should deserialize correctly and bogus should be skipped`(@TempDir tempDir: Path) {
         tempDir.generateDeserializeCircuit(listOfEnums)
-        tempDir.generateWitness(SERIALIZED_VAR) {
+        tempDir.generateWitness(SERIALIZED) {
             bytes(
                 0, 0, 0, 1, // size: 1
                 0, 0, 0, 1, // values[0]: SOMETHING
@@ -58,7 +54,7 @@ internal class BflListTest {
     @Test
     fun `List of arrays deserialize method should deserialize correctly`(@TempDir tempDir: Path) {
         tempDir.generateDeserializeCircuit(listOfArraysOfU8)
-        tempDir.generateWitness(SERIALIZED_VAR) {
+        tempDir.generateWitness(SERIALIZED) {
             bytes(
                 0, 0, 0, 1,
                 5, 8,
@@ -75,7 +71,7 @@ internal class BflListTest {
     @Test
     fun `List of structs deserialize method should deserialize correctly`(@TempDir tempDir: Path) {
         tempDir.generateDeserializeCircuit(listOfStructWithStructField)
-        tempDir.generateWitness(SERIALIZED_VAR) {
+        tempDir.generateWitness(SERIALIZED) {
             bytes(0, 0, 0, 1)
             bytes(0, 0, 0, 1).bits(1)
             bytes(0, 0, 0, 0).bits(0)
@@ -114,7 +110,7 @@ internal class BflListTest {
         tempDir.generateContainsCircuit(listOfStructWithStructField)
         tempDir.generateWitness {
             put("list", testDataListOfStructWithStructs)
-            put("element", structStructJson(true, 1))
+            put(ELEMENT, structStructJson(true, 1))
         }
 
         val (stdout, stderr) = tempDir.runCommand("zargo run")
@@ -128,7 +124,7 @@ internal class BflListTest {
         tempDir.generateContainsCircuit(listOfStructWithStructField)
         tempDir.generateWitness {
             put("list", testDataListOfStructWithStructs)
-            put("element", structStructJson(true, 13))
+            put(ELEMENT, structStructJson(true, 13))
         }
 
         val (stdout, stderr) = tempDir.runCommand("zargo run")
@@ -230,7 +226,7 @@ internal class BflListTest {
     fun `List of structs add method should append an element to a list that is not full`(@TempDir tempDir: Path) {
         tempDir.generateAddCircuit(listOfStructWithStructField)
         tempDir.generateWitness {
-            put("element", structStructJson(true, 1))
+            put(ELEMENT, structStructJson(true, 1))
         }
 
         val (stdout, stderr) = tempDir.runCommand("zargo run")
@@ -266,7 +262,7 @@ internal class BflListTest {
         tempDir.generateAllEqualsCircuit(listOfStructWithStructField)
         tempDir.generateWitness {
             put("list", testDataDuplicateListOfStructWithStructs)
-            put("element", structStructJson(true, 1))
+            put(ELEMENT, structStructJson(true, 1))
         }
 
         val (stdout, stderr) = tempDir.runCommand("zargo run")
@@ -280,7 +276,7 @@ internal class BflListTest {
         tempDir.generateAllEqualsCircuit(listOfStructWithStructField)
         tempDir.generateWitness {
             put("list", testDataLargerListOfStructWithStructs)
-            put("element", structStructJson(true, 1))
+            put(ELEMENT, structStructJson(true, 1))
         }
 
         val (stdout, stderr) = tempDir.runCommand("zargo run")
@@ -455,7 +451,7 @@ internal class BflListTest {
             function {
                 name = "main"
                 parameter { name = "list"; type = module.toZincId() }
-                parameter { name = "element"; type = module.elementType.toZincId() }
+                parameter { name = ELEMENT; type = module.elementType.toZincId() }
                 returnType = ZincPrimitive.Bool
                 body = "list.contains(element)"
             }
@@ -508,7 +504,7 @@ internal class BflListTest {
             }
             function {
                 name = "main"
-                parameter { name = "element"; type = module.elementType.toZincId() }
+                parameter { name = ELEMENT; type = module.elementType.toZincId() }
                 returnType = module.toZincId()
                 body = """
                     let mut out = ${module.id}::empty();
@@ -544,7 +540,7 @@ internal class BflListTest {
             function {
                 name = "main"
                 parameter { name = "list"; type = module.toZincId() }
-                parameter { name = "element"; type = module.elementType.toZincId() }
+                parameter { name = ELEMENT; type = module.elementType.toZincId() }
                 returnType = ZincPrimitive.Bool
                 body = "list.all_equals(element)"
             }

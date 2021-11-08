@@ -1,6 +1,6 @@
 package com.ing.zinc.bfl
 
-import com.ing.zinc.bfl.BflType.Companion.BITS_PER_BYTE
+import com.ing.zinc.bfl.generator.WitnessGroupOptions
 import java.util.Locale
 
 @Suppress("MagicNumber")
@@ -8,45 +8,50 @@ enum class BflPrimitive(
     override val id: String,
     override val bitSize: Int,
 ) : BflType {
-    U8("u8", 1 * BITS_PER_BYTE),
-    U16("u16", 2 * BITS_PER_BYTE),
-    U24("u24", 3 * BITS_PER_BYTE),
-    U32("u32", 4 * BITS_PER_BYTE),
-    U64("u64", 8 * BITS_PER_BYTE),
-    U128("u128", 16 * BITS_PER_BYTE),
-    I8("i8", 1 * BITS_PER_BYTE),
-    I16("i16", 2 * BITS_PER_BYTE),
-    I32("i32", 4 * BITS_PER_BYTE),
-    I64("i64", 8 * BITS_PER_BYTE),
-    I128("i128", 16 * BITS_PER_BYTE),
+    U8("u8", 8),
+    U16("u16", 16),
+    U24("u24", 24),
+    U32("u32", 32),
+    U64("u64", 64),
+    U128("u128", 128),
+    I8("i8", 8),
+    I16("i16", 16),
+    I32("i32", 32),
+    I64("i64", 64),
+    I128("i128", 128),
     Bool("bool", 1);
 
     override fun typeName() = id.capitalize(Locale.getDefault())
 
-    override fun deserializeExpr(options: DeserializationOptions): String {
+    override fun deserializeExpr(
+        witnessGroupOptions: WitnessGroupOptions,
+        offset: String,
+        variablePrefix: String,
+    ): String {
         return when (this) {
-            Bool -> "${options.bitArrayVariable}[${options.offset}]"
+            Bool -> "$SERIALIZED[$offset]"
             U8, U16, U24, U32, U64, U128 -> {
-                generateParseIntegerFromBits(options, false)
+                generateParseIntegerFromBits(offset, variablePrefix, false)
             }
             I8, I16, I32, I64, I128 -> {
-                generateParseIntegerFromBits(options, true)
+                generateParseIntegerFromBits(offset, variablePrefix, true)
             }
         }
     }
 
     private fun generateParseIntegerFromBits(
-        options: DeserializationOptions,
+        offset: String,
+        variablePrefix: String,
         isSigned: Boolean
     ): String {
         val bSize = sizeExpr()
-        val bits = options.generateVariable("bits")
-        val i = options.generateVariable("i")
+        val bits = "${variablePrefix}_bits"
+        val i = "${variablePrefix}_i"
         return """
             {
                 let mut $bits: [bool; $bSize] = [false; $bSize];
                 for $i in (0 as u24)..$bSize {
-                    $bits[$i] = ${options.bitArrayVariable}[$i + ${options.offset}];
+                    $bits[$i] = $SERIALIZED[$i + $offset];
                 }
                 std::convert::${if (isSigned) "from_bits_signed" else "from_bits_unsigned"}($bits)
             }
@@ -70,7 +75,7 @@ enum class BflPrimitive(
     }
 
     companion object {
-        fun isPrimiviteIdentifier(identifier: String): Boolean {
+        fun isPrimitiveIdentifier(identifier: String): Boolean {
             return values().find { it.id == identifier } != null
         }
     }

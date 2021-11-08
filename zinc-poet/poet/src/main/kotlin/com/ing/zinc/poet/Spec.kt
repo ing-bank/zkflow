@@ -22,8 +22,8 @@ interface ZincType {
 }
 
 object Self : ZincType {
-    private const val selfReference = "Self"
-    override fun getId(): String = selfReference
+    private const val SELF_REFERENCE = "Self"
+    override fun getId(): String = SELF_REFERENCE
 }
 
 data class Indentation(
@@ -32,6 +32,9 @@ data class Indentation(
     companion object {
         val Int.spaces: Indentation
             get() = Indentation(this)
+
+        val Int.tabs: Indentation
+            get() = Indentation(this * 4)
     }
 }
 

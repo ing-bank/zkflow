@@ -1,6 +1,5 @@
 package com.ing.zinc.bfl
 
-import com.ing.zinc.bfl.BflType.Companion.SERIALIZED_VAR
 import com.ing.zinc.bfl.ZincExecutor.createImports
 import com.ing.zinc.bfl.ZincExecutor.generateCircuitBase
 import com.ing.zinc.bfl.ZincExecutor.generateDeserializeCircuit
@@ -11,16 +10,12 @@ import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.nio.file.Path
-import kotlin.io.path.ExperimentalPathApi
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
-@ExperimentalPathApi
 internal class BflMapTest {
     @Test
     fun `Map of enum to string should deserialize correctly`(@TempDir tempDir: Path) {
         tempDir.generateDeserializeCircuit(mapOfEnumToString)
-        tempDir.generateWitness(SERIALIZED_VAR) {
+        tempDir.generateWitness(SERIALIZED) {
             bytes(
                 0, 0, 0, 2, // Map size: 2
                 0, 0, 0, 0, // Things.NOTHING

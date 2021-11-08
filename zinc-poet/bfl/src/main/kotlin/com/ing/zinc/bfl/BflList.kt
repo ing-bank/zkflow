@@ -1,6 +1,5 @@
 package com.ing.zinc.bfl
 
-import com.ing.zinc.bfl.BflType.Companion.SERIALIZED_VAR
 import com.ing.zinc.bfl.generator.CodeGenerationOptions
 import com.ing.zinc.bfl.generator.WitnessGroupOptions
 import com.ing.zinc.poet.Indentation.Companion.spaces
@@ -17,15 +16,21 @@ import java.util.Objects
 open class BflList(
     open val capacity: Int,
     val elementType: BflType,
-    id: String? = null,
+    id: String,
     val sizeType: BflPrimitive = BflPrimitive.U32
 ) : BflStruct(
-    id ?: "${elementType.typeName()}List$capacity",
+    id,
     listOf(
-        Field(sizeFieldName, sizeType),
-        Field(valuesFieldName, BflArray(capacity, elementType))
+        Field(SIZE_FIELD, sizeType),
+        Field(VALUES_FIELD, BflArray(capacity, elementType))
     )
 ) {
+    constructor(capacity: Int, elementType: BflType) : this(
+        capacity,
+        elementType,
+        "${elementType.typeName()}List$capacity"
+    )
+
     override fun equals(other: Any?) =
         when (other) {
             is BflList -> capacity == other.capacity && elementType == other.elementType
@@ -56,26 +61,23 @@ open class BflList(
 
     override fun generateFieldDeserialization(
         witnessGroupOptions: WitnessGroupOptions,
-        field: Field,
-        witnessIndex: String?
+        field: FieldWithParentStruct,
+        witnessIndex: String
     ): String {
-        return if (field.name == valuesFieldName) {
-            val offset = field.generateConstant("offset") + (witnessIndex?.let { " + $it" } ?: "")
+        return if (field.name == VALUES_FIELD) {
+            val offset = field.generateConstant(OFFSET) + " + $witnessIndex"
             val variablePrefix = field.name
             val array = "${variablePrefix}_array"
             val i = "${variablePrefix}_i"
             val deserializedItem = elementType.deserializeExpr(
-                DeserializationOptions(
-                    witnessGroupOptions,
-                    SERIALIZED_VAR,
-                    "$i as u24 * ${elementType.sizeExpr()} + $offset",
-                    array
-                )
+                witnessGroupOptions,
+                offset = "$i as u24 * ${elementType.sizeExpr()} + $offset",
+                variablePrefix = array
             )
             val deserializedField = """
             {
                 let mut $array: [${elementType.id}; $capacity] = [${elementType.defaultExpr()}; $capacity];
-                for $i in (0 as ${sizeType.id})..$capacity while $i < $sizeFieldName {
+                for $i in (0 as ${sizeType.id})..$capacity while $i < $SIZE_FIELD {
                     $array[$i] = ${deserializedItem.indent(20.spaces)};
                 }
                 $array
@@ -87,11 +89,11 @@ open class BflList(
         }
     }
 
-    override fun generateFieldEquals(field: Field): String {
-        return if (field.name == valuesFieldName) {
+    override fun generateFieldEquals(field: FieldWithParentStruct): String {
+        return if (field.name == VALUES_FIELD) {
             val selfValues = "self.${field.name}"
             val otherValues = "other.${field.name}"
-            val selfSize = "self.$sizeFieldName"
+            val selfSize = "self.$SIZE_FIELD"
             val prefix = selfValues
                 .replace("self.", "")
                 .replace("[.\\[\\]]".toRegex(), "_")
@@ -117,7 +119,7 @@ open class BflList(
     open fun generateListOfMethod(codeGenerationOptions: CodeGenerationOptions): ZincFunction {
         val fieldAssignments = fields.joinToString("\n") {
             when (it.name) {
-                sizeFieldName -> "${it.name}: $capacity as ${sizeType.id},"
+                SIZE_FIELD -> "${it.name}: $capacity as ${sizeType.id},"
                 else -> "${it.name}: ${it.name},"
             }
         }
@@ -125,7 +127,7 @@ open class BflList(
             name = "list_of"
             addParameters(
                 fields
-                    .filterNot { it.name == sizeFieldName }
+                    .filterNot { it.name == SIZE_FIELD }
                     .map { zincParameter { name = it.name; type = it.type.toZincId() } }
             )
             returnType = Self
@@ -140,15 +142,15 @@ open class BflList(
 
     @ZincMethod(order = 45)
     @Suppress("unused")
-    internal fun generateContainsMethod(codeGenerationOptions: CodeGenerationOptions): ZincFunction = zincMethod {
+    internal fun generateContainsMethod(): ZincFunction = zincMethod {
         name = "contains"
-        parameter { name = "element"; type = elementType.toZincId() }
+        parameter { name = ELEMENT; type = elementType.toZincId() }
         returnType = ZincPrimitive.Bool
         comment = "Checks whether `self` contains the given `element`."
         body = """
             let mut contains_element: bool = false;
-            for i in (0 as ${sizeType.id})..$capacity while !contains_element && i < self.$sizeFieldName {
-                contains_element = ${elementType.equalsExpr("self.$valuesFieldName[i]", "element").indent(16.spaces)};
+            for i in (0 as ${sizeType.id})..$capacity while !contains_element && i < self.$SIZE_FIELD {
+                contains_element = ${elementType.equalsExpr("self.$VALUES_FIELD[i]", ELEMENT).indent(16.spaces)};
             }
             contains_element
         """.trimIndent()
@@ -162,21 +164,21 @@ open class BflList(
         returnType = elementType.toZincId()
         comment = "Return element at `index`."
         body = """
-            assert!(index < self.$sizeFieldName, "Index out of bounds!");
-            self.$valuesFieldName[index]
+            assert!(index < self.$SIZE_FIELD, "Index out of bounds!");
+            self.$VALUES_FIELD[index]
         """.trimIndent()
     }
 
     @ZincMethod(order = 50)
     @Suppress("unused")
-    internal fun generateIsSubsetOfMethod(codeGenerationOptions: CodeGenerationOptions): ZincFunction = zincMethod {
+    internal fun generateIsSubsetOfMethod(): ZincFunction = zincMethod {
         name = "is_subset_of"
         parameter { name = "other"; type = Self }
         returnType = ZincPrimitive.Bool
         comment = "Checks whether `self` is a subset of `other`."
         body = """
             let mut still_subset: bool = true;
-            for i in (0 as ${sizeType.id})..$capacity while still_subset && i < self.$sizeFieldName {
+            for i in (0 as ${sizeType.id})..$capacity while still_subset && i < self.$SIZE_FIELD {
                 still_subset = other.contains(self.get(i));
             }
             still_subset
@@ -188,19 +190,19 @@ open class BflList(
      */
     @ZincMethod(order = 65)
     @Suppress("unused")
-    internal fun generateAddMethod(codeGenerationOptions: CodeGenerationOptions): ZincFunction = zincMethod {
+    internal fun generateAddMethod(): ZincFunction = zincMethod {
         mutable = true
         name = "add"
-        parameter { name = "element"; type = elementType.toZincId() }
+        parameter { name = ELEMENT; type = elementType.toZincId() }
         returnType = Self
         comment = """
             Add `element` to `self`.
             Panics when there is no capacity.
         """.trimIndent()
         body = """
-            assert!(self.$sizeFieldName < $capacity as ${sizeType.id}, "List out of capacity!");
-            self.$valuesFieldName[self.$sizeFieldName] = element;
-            self.$sizeFieldName = self.$sizeFieldName + 1 as ${sizeType.id};
+            assert!(self.$SIZE_FIELD < $capacity as ${sizeType.id}, "List out of capacity!");
+            self.$VALUES_FIELD[self.$SIZE_FIELD] = element;
+            self.$SIZE_FIELD = self.$SIZE_FIELD + 1 as ${sizeType.id};
             self
         """.trimIndent()
     }
@@ -210,16 +212,16 @@ open class BflList(
      */
     @ZincMethod(order = 70)
     @Suppress("unused")
-    internal fun generateIsDistinctMethod(codeGenerationOptions: CodeGenerationOptions): ZincFunction = zincMethod {
+    internal fun generateIsDistinctMethod(): ZincFunction = zincMethod {
         name = "is_distinct"
         returnType = ZincPrimitive.Bool
         comment = "Checks whether all elements in `self` are distinct."
         body = """
             let mut still_distinct: ${BflPrimitive.Bool.id} = true;
-            for i in (0 as ${sizeType.id})..$capacity while i < self.$sizeFieldName && still_distinct {
+            for i in (0 as ${sizeType.id})..$capacity while i < self.$SIZE_FIELD && still_distinct {
                 let element = self.get(i);
                 for j in (0 as ${sizeType.id})..$capacity while j < i && still_distinct {
-                    still_distinct = !(${elementType.equalsExpr("self.$valuesFieldName[i]", "self.$valuesFieldName[j]").indent(20.spaces)});
+                    still_distinct = !(${elementType.equalsExpr("self.$VALUES_FIELD[i]", "self.$VALUES_FIELD[j]").indent(20.spaces)});
                 }
             }
             still_distinct
@@ -228,11 +230,11 @@ open class BflList(
 
     @ZincMethod(order = 72)
     @Suppress("unused")
-    internal fun generateAllEqualsMethod(codeGenerationOptions: CodeGenerationOptions): ZincFunction {
-        val equalsExpr = elementType.equalsExpr("self.$valuesFieldName[i]", "element")
+    internal fun generateAllEqualsMethod(): ZincFunction {
+        val equalsExpr = elementType.equalsExpr("self.$VALUES_FIELD[i]", ELEMENT)
         return zincMethod {
             name = "all_equals"
-            parameter { name = "element"; type = elementType.toZincId() }
+            parameter { name = ELEMENT; type = elementType.toZincId() }
             returnType = ZincPrimitive.Bool
             comment = """
                 Checks whether all elements in `self` are equal to `element`.
@@ -242,7 +244,7 @@ open class BflList(
             """.trimIndent()
             body = """
                 let mut still_equals = true;
-                for i in (0 as ${sizeType.id})..$capacity while still_equals && i < self.$sizeFieldName {
+                for i in (0 as ${sizeType.id})..$capacity while still_equals && i < self.$SIZE_FIELD {
                     still_equals = ${equalsExpr.indent(20.spaces)};
                 }
                 still_equals
@@ -252,7 +254,7 @@ open class BflList(
 
     @ZincMethodList(order = 60)
     @Suppress("unused")
-    internal fun generateExtractFieldMethods(codeGenerationOptions: CodeGenerationOptions): List<ZincFunction> {
+    internal fun generateExtractFieldMethods(): List<ZincFunction> {
         return (elementType as? BflStruct)
             ?.getRecursiveFields()
             ?.map(this@BflList::generateExtractFieldMethod)
@@ -260,11 +262,11 @@ open class BflList(
     }
 
     private fun generateExtractFieldMethod(
-        field: Field,
+        field: BflStructField,
     ): ZincFunction {
         val fieldListType = BflList(capacity, field.type)
         return zincMethod {
-            name = "extract_${field.name.replace(".", "_")}"
+            name = "extract_".withFieldSuffix(field)
             returnType = fieldListType.toZincId()
             comment = """
                 Returns a new List with the `${field.name}` field of each element.
@@ -274,10 +276,10 @@ open class BflList(
             """.trimIndent()
             body = """
                 let mut result: ${fieldListType.id} = ${fieldListType.defaultExpr()};
-                for i in (0 as ${sizeType.id})..$capacity while i < self.$sizeFieldName {
-                    result.$valuesFieldName[i] = self.$valuesFieldName[i].${field.name};
+                for i in (0 as ${sizeType.id})..$capacity while i < self.$SIZE_FIELD {
+                    result.$VALUES_FIELD[i] = self.$VALUES_FIELD[i].${field.name};
                 }
-                result.$sizeFieldName = self.$sizeFieldName;
+                result.$SIZE_FIELD = self.$SIZE_FIELD;
                 result
             """.trimIndent()
         }
@@ -285,17 +287,17 @@ open class BflList(
 
     @ZincMethodList(order = 80)
     @Suppress("unused")
-    internal fun generateIndexOfSingleByFieldMethods(codeGenerationOptions: CodeGenerationOptions): List<ZincFunction> {
+    internal fun generateIndexOfSingleByFieldMethods(): List<ZincFunction> {
         return (elementType as? BflStruct)?.getRecursiveFields()?.map(this@BflList::generateIndexOfSingleByFieldMethod)
             ?: emptyList()
     }
 
     private fun generateIndexOfSingleByFieldMethod(
-        field: Field,
+        field: BflStructField,
     ): ZincFunction {
-        val equalsExpr = field.type.equalsExpr("self.$valuesFieldName[i].${field.name}", "by")
+        val equalsExpr = field.type.equalsExpr("self.$VALUES_FIELD[i].${field.name}", "by")
         return zincMethod {
-            name = "index_of_single_by_${field.name.replace(".", "_")}"
+            name = "index_of_single_by_".withFieldSuffix(field)
             parameter { name = "by"; type = field.type.toZincId() }
             returnType = sizeType.toZincId()
             comment = """
@@ -308,7 +310,7 @@ open class BflList(
             body = """
                 let mut found: bool = false;
                 let mut result: ${sizeType.id} = ${sizeType.defaultExpr()};
-                for i in (0 as ${sizeType.id})..$capacity while i < self.$sizeFieldName {
+                for i in (0 as ${sizeType.id})..$capacity while i < self.$SIZE_FIELD {
                     if ${equalsExpr.indent(20.spaces)} {
                         assert!(!found, "Multiple matches found for field ${field.name}");
                         result = i;
@@ -323,12 +325,12 @@ open class BflList(
 
     @ZincMethodList(order = 81)
     @Suppress("unused")
-    internal fun generateSingleByFieldMethods(codeGenerationOptions: CodeGenerationOptions): List<ZincFunction> {
+    internal fun generateSingleByFieldMethods(): List<ZincFunction> {
         return (elementType as? BflStruct)?.run {
             getRecursiveFields().map { field ->
-                val equalsExpr = field.type.equalsExpr("self.$valuesFieldName[i].${field.name}", "by")
+                val equalsExpr = field.type.equalsExpr("self.$VALUES_FIELD[i].${field.name}", "by")
                 zincMethod {
-                    name = "single_by_${field.name.replace(".", "_")}"
+                    name = "single_by_".withFieldSuffix(field)
                     parameter { name = "by"; type = field.type.toZincId() }
                     returnType = elementType.toZincId()
                     comment = """
@@ -341,10 +343,10 @@ open class BflList(
                     body = """
                         let mut found: bool = false;
                         let mut result: ${elementType.id} = ${elementType.defaultExpr()};
-                        for i in (0 as ${sizeType.id})..$capacity while i < self.$sizeFieldName {
+                        for i in (0 as ${sizeType.id})..$capacity while i < self.$SIZE_FIELD {
                             if ${equalsExpr.indent(28.spaces)} {
                                 assert!(!found, "Multiple matches found for field ${field.name}");
-                                result = self.$valuesFieldName[i];
+                                result = self.$VALUES_FIELD[i];
                                 found = true
                             }
                         }
@@ -359,10 +361,11 @@ open class BflList(
     override fun accept(visitor: TypeVisitor) {
         super.accept(visitor)
         /**
-         * visit list types for all fields, as used in [generateExtractFieldMethods]
+         * When the [elementType] is a [BflStruct], visit list types for all struct fields, as they are used in
+         * [generateExtractFieldMethods]
          */
-        (elementType as? BflStruct)?.let {
-            it.getRecursiveFields().forEach { field ->
+        if (elementType is BflStruct) {
+            elementType.getRecursiveFields().forEach { field ->
                 val fieldListType = BflList(capacity, field.type)
                 visitor.visitType(fieldListType)
             }
@@ -370,7 +373,12 @@ open class BflList(
     }
 
     companion object {
-        const val sizeFieldName = "size"
-        const val valuesFieldName = "values"
+        const val SIZE_FIELD = "size"
+        const val VALUES_FIELD = "values"
+        const val ELEMENT = "element"
+
+        private fun String.withFieldSuffix(field: BflStructField): String {
+            return this + field.name.replace(".", "_")
+        }
     }
 }

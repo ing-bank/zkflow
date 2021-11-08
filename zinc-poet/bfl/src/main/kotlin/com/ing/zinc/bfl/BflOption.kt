@@ -1,7 +1,5 @@
 package com.ing.zinc.bfl
 
-import com.ing.zinc.bfl.BflType.Companion.SERIALIZED_VAR
-import com.ing.zinc.bfl.generator.CodeGenerationOptions
 import com.ing.zinc.bfl.generator.WitnessGroupOptions
 import com.ing.zinc.poet.Indentation.Companion.spaces
 import com.ing.zinc.poet.Self
@@ -11,24 +9,22 @@ import com.ing.zinc.poet.indent
 data class BflOption(val innerType: BflType) : BflStruct(
     "${innerType.typeName()}Option",
     listOf(
-        Field(hasValueFieldName, BflPrimitive.Bool),
-        Field(valueFieldName, innerType)
+        Field(HAS_VALUE_FIELD, BflPrimitive.Bool),
+        Field(VALUE_FIELD, innerType)
     )
 ) {
     override fun generateFieldDeserialization(
         witnessGroupOptions: WitnessGroupOptions,
-        field: Field,
-        witnessIndex: String?
+        field: FieldWithParentStruct,
+        witnessIndex: String
     ): String {
-        return if (field.name == valueFieldName) {
-            val offset = field.generateConstant("offset") + (witnessIndex?.let { " + $it" } ?: "")
-            val deserializedField = field.type.deserializeExpr(
-                DeserializationOptions(witnessGroupOptions, SERIALIZED_VAR, offset, field.name)
-            )
+        return if (field.name == VALUE_FIELD) {
+            val offset = field.generateConstant(OFFSET) + " + $witnessIndex"
+            val deserializedField = field.type.deserializeExpr(witnessGroupOptions, offset, field.name)
             // 'has_value' is deserialized before 'value', so can be used in this block
             return """
                 let ${field.name}: ${field.type.id} = {
-                    if $hasValueFieldName {
+                    if $HAS_VALUE_FIELD {
                         ${deserializedField.indent(24.spaces)}
                     } else {
                         ${field.type.defaultExpr().indent(24.spaces)}
@@ -40,9 +36,9 @@ data class BflOption(val innerType: BflType) : BflStruct(
         }
     }
 
-    override fun generateFieldEquals(field: Field): String {
-        return if (field.name == valueFieldName) {
-            "(!self.$hasValueFieldName || ${super.generateFieldEquals(field)})"
+    override fun generateFieldEquals(field: FieldWithParentStruct): String {
+        return if (field.name == VALUE_FIELD) {
+            "(!self.$HAS_VALUE_FIELD || ${super.generateFieldEquals(field)})"
         } else {
             super.generateFieldEquals(field)
         }
@@ -50,17 +46,17 @@ data class BflOption(val innerType: BflType) : BflStruct(
 
     @ZincMethod(order = 50)
     @Suppress("unused")
-    internal fun generateSomeMethod(codeGenerationOptions: CodeGenerationOptions): ZincFunction = ZincFunction.zincFunction {
+    internal fun generateSomeMethod(): ZincFunction = ZincFunction.zincFunction {
         name = "some"
-        parameter { name = valueFieldName; type = innerType.toZincId() }
+        parameter { name = VALUE_FIELD; type = innerType.toZincId() }
         returnType = Self
         comment = """
-            Construct an $id, with the given `$valueFieldName`.
+            Construct an $id, with the given `$VALUE_FIELD`.
         """.trimIndent()
         body = """
             Self {
-                $hasValueFieldName: true,
-                $valueFieldName: $valueFieldName
+                $HAS_VALUE_FIELD: true,
+                $VALUE_FIELD: $VALUE_FIELD
             }
         """.trimIndent()
     }
@@ -70,7 +66,7 @@ data class BflOption(val innerType: BflType) : BflStruct(
     }
 
     companion object {
-        const val hasValueFieldName = "has_value"
-        const val valueFieldName = "value"
+        const val HAS_VALUE_FIELD = "has_value"
+        const val VALUE_FIELD = "value"
     }
 }

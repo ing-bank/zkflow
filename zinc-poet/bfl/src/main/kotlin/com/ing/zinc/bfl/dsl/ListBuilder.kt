@@ -7,13 +7,13 @@ import com.ing.zinc.bfl.BflType
 class ListBuilder {
     var capacity: Int? = null
     var elementType: BflType? = null
-    var id: String? = null
+    var name: String? = null
     var sizeType: BflPrimitive? = null
 
     fun build() = BflList(
         requireNotNull(capacity) { "List property capacity is missing" },
         requireNotNull(elementType) { "List property elementType is missing" },
-        id,
+        name ?: "${elementType!!.typeName()}List$capacity",
         sizeType ?: BflPrimitive.U32
     )
 
@@ -23,21 +23,21 @@ class ListBuilder {
         fun utfString(maxSize: Int): BflList = list {
             capacity = maxSize
             elementType = BflPrimitive.U16
-            id = "String$capacity"
+            name = "String$capacity"
             sizeType = BflPrimitive.U16
         }
 
         fun asciiString(maxSize: Int): BflList = list {
             capacity = maxSize
             elementType = BflPrimitive.U8
-            id = "String$capacity"
+            name = "String$capacity"
             sizeType = BflPrimitive.U16
         }
 
         fun byteArray(maxSize: Int): BflList = list {
             capacity = maxSize
             elementType = BflPrimitive.U8
-            id = "ByteArray$maxSize"
+            name = "ByteArray$maxSize"
         }
     }
 }

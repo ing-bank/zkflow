@@ -2,14 +2,13 @@ package com.ing.zinc.bfl.generator
 
 import com.ing.zinc.bfl.BflModule
 import com.ing.zinc.poet.ZincFile
+import com.ing.zkflow.util.ensureDirectory
+import com.ing.zkflow.util.ensureFile
 import java.nio.file.Path
-import kotlin.io.path.ExperimentalPathApi
-import kotlin.io.path.createDirectory
 import kotlin.io.path.createFile
 import kotlin.io.path.notExists
 import kotlin.io.path.writeText
 
-@ExperimentalPathApi
 object ZincGenerator {
     internal fun Path.createZargoToml(circuitName: String = "test-circuit", version: String = "0.1.0") {
         resolve("Zargo.toml")
@@ -42,14 +41,6 @@ object ZincGenerator {
         return zincSourceFile("${module.getModuleName()}.zn", module.generateZincFile(codeGenerationOptions))
     }
 
-    internal fun Path.ensureFile(fileName: String): Path {
-        val file = resolve(fileName)
-        if (file.notExists()) {
-            file.createFile()
-        }
-        return file
-    }
-
     internal fun Path.zincFileIfNotExists(fileName: String, init: ZincFile.Builder.() -> Unit): Path {
         val file = ensureDirectory("src")
             .resolve(fileName)
@@ -61,13 +52,5 @@ object ZincGenerator {
                 )
         }
         return file
-    }
-
-    internal fun Path.ensureDirectory(directoryName: String): Path {
-        val srcDir = resolve(directoryName)
-        if (srcDir.notExists()) {
-            srcDir.createDirectory()
-        }
-        return srcDir
     }
 }

@@ -1,5 +1,6 @@
 package com.ing.zinc.bfl
 
+import com.ing.zinc.bfl.generator.WitnessGroupOptions
 import com.ing.zinc.poet.Indentation.Companion.spaces
 import com.ing.zinc.poet.indent
 
@@ -12,15 +13,17 @@ data class BflArray(
     override val bitSize = arraySize * elementType.bitSize
 
     override fun typeName() = "${elementType.typeName()}Array$arraySize"
-
-    override fun deserializeExpr(options: DeserializationOptions): String {
-        val array = options.generateVariable("array")
-        val i = options.generateVariable("i")
+    override fun deserializeExpr(
+        witnessGroupOptions: WitnessGroupOptions,
+        offset: String,
+        variablePrefix: String
+    ): String {
+        val array = "${variablePrefix}_array"
+        val i = "${variablePrefix}_i"
         val deserializeExpr = elementType.deserializeExpr(
-            options.copy(
-                offset = "$i * ${elementType.bitSize} as u24 + ${options.offset}",
-                variablePrefix = array
-            )
+            witnessGroupOptions,
+            offset = "$i * ${elementType.bitSize} as u24 + $offset",
+            variablePrefix = array
         )
         return """
             {

@@ -1,33 +1,29 @@
 package com.ing.zinc.bfl
 
-import com.ing.zinc.bfl.BflType.Companion.BITS_PER_BYTE
-import com.ing.zinc.bfl.BflType.Companion.SERIALIZED_VAR
 import com.ing.zinc.bfl.generator.CodeGenerationOptions
 import com.ing.zinc.bfl.generator.WitnessGroupOptions
 import com.ing.zinc.naming.camelToSnakeCase
 import com.ing.zinc.poet.Indentation.Companion.spaces
 import com.ing.zinc.poet.Self
-import com.ing.zinc.poet.ZincArray.Companion.zincArray
 import com.ing.zinc.poet.ZincConstant
 import com.ing.zinc.poet.ZincFile
 import com.ing.zinc.poet.ZincFunction
 import com.ing.zinc.poet.ZincFunction.Companion.zincFunction
 import com.ing.zinc.poet.ZincMethod.Companion.zincMethod
 import com.ing.zinc.poet.ZincPrimitive
-import com.ing.zinc.poet.ZincTypeDef
 import com.ing.zinc.poet.indent
-import java.util.Locale
 import java.util.Objects
 
 @Suppress("TooManyFunctions")
 open class BflStruct(
     override val id: String,
-    val fields: List<Field>,
-    override val customMethods: Collection<ZincFunction> = emptyList()
-) : BflType, BflModule {
+    fields: List<BflStructField>,
+) : BflModule {
+    val fields: List<FieldWithParentStruct>
+
     init {
-        fields.forEach {
-            it.struct = this
+        this.fields = fields.map {
+            FieldWithParentStruct(it.name, it.type, this)
         }
     }
 
@@ -54,31 +50,13 @@ open class BflStruct(
         .filterIsInstance<BflModule>()
         .toList()
 
-    /**
-     * @property name The name of this field in the zinc struct (camel-case)
-     * @property type The type of this field
-     * @property struct The struct this field is a member of
-     */
-    data class Field(
-        val name: String,
-        val type: BflType,
-    ) {
-        internal var struct: BflStruct? = null
+    override val bitSize: Int = this.fields.sumOf { it.type.bitSize }
 
-        /**
-         * Generate a constant for this field with an optional [suffix].
-         */
-        fun generateConstant(suffix: String? = null): String {
-            val actualSuffix = suffix?.let { "_${it.toUpperCase(Locale.getDefault())}" }
-            return "${struct!!.id.camelToSnakeCase().toUpperCase(Locale.getDefault())}_${name.toUpperCase(Locale.getDefault())}$actualSuffix"
-        }
-    }
-
-    override val bitSize: Int = fields.sumOf { it.type.bitSize }
-
-    override fun deserializeExpr(options: DeserializationOptions): String {
-        return options.deserializeModule(this)
-    }
+    override fun deserializeExpr(
+        witnessGroupOptions: WitnessGroupOptions,
+        offset: String,
+        variablePrefix: String
+    ): String = "$id::${witnessGroupOptions.deserializeMethodName}($SERIALIZED, $offset)"
 
     override fun defaultExpr(): String = "$id::empty()"
 
@@ -95,30 +73,28 @@ open class BflStruct(
 
     internal open fun generateFieldDeserialization(
         witnessGroupOptions: WitnessGroupOptions,
-        field: Field,
-        witnessIndex: String?
+        field: FieldWithParentStruct,
+        witnessIndex: String
     ): String {
-        val offset = field.generateConstant("offset") + (witnessIndex?.let { " + $it" } ?: "")
-        val deserializedField = field.type.deserializeExpr(
-            DeserializationOptions(witnessGroupOptions, SERIALIZED_VAR, offset, field.name)
-        )
+        val offset = field.generateConstant(OFFSET) + " + $witnessIndex"
+        val deserializedField = field.type.deserializeExpr(witnessGroupOptions, offset, field.name)
         return "let ${field.name}: ${field.type.id} = $deserializedField;"
     }
 
     override fun generateZincFile(codeGenerationOptions: CodeGenerationOptions) = ZincFile.zincFile {
         comment("$id module")
         newLine()
+        mod {
+            module = CONSTS
+        }
         val modulesToImport = getModulesToImport()
         for (mod in modulesToImport) {
             mod { module = mod.id.camelToSnakeCase() }
         }
-        mod {
-            module = "consts"
-        }
         if (modulesToImport.isNotEmpty()) { newLine() }
         for (module in modulesToImport) {
             use { path = "${module.getModuleName()}::${module.id}" }
-            use { path = "${module.getModuleName()}::${module.serializedTypeDef.getName()}" }
+            use { path = "${module.getModuleName()}::${module.getSerializedTypeDef().getName()}" }
             use { path = "${module.getModuleName()}::${module.getLengthConstant()}" }
             newLine()
         }
@@ -131,9 +107,7 @@ open class BflStruct(
         comment("length: ${fields.fold(0) { acc, field -> acc + field.type.bitSize }} bit(s)")
         add(generateLengthConstant())
         newLine()
-        add(generateByteLengthConstant())
-        newLine()
-        add(serializedTypeDef)
+        add(getSerializedTypeDef())
         newLine()
         struct {
             name = id
@@ -151,10 +125,19 @@ open class BflStruct(
         }
     }
 
+    private fun constructSelf(fieldsGenerator: () -> String): String = if (fields.isEmpty()) {
+        "Self"
+    } else {
+        """
+            Self {
+                ${fieldsGenerator().indent(16.spaces)}
+            }
+        """.trimIndent()
+    }
+
     @ZincMethod(order = 10)
     @Suppress("unused")
     open fun generateNewMethod(codeGenerationOptions: CodeGenerationOptions): ZincFunction {
-        val fieldAssignments = fields.joinToString("\n") { "${it.name}: ${it.name}," }
         return zincFunction {
             name = "new"
             for (field in fields) {
@@ -164,35 +147,30 @@ open class BflStruct(
             comment = """
                 Constructs a new $id, from the fields [${fields.joinToString { it.name }}] 
             """.trimIndent()
-            body = """
-                Self {
-                    ${fieldAssignments.indent(20.spaces)}
-                }
-            """.trimIndent()
+            body = constructSelf {
+                fields.joinToString("\n") { "${it.name}: ${it.name}," }
+            }
         }
     }
 
     @ZincMethod(order = 20)
     @Suppress("unused")
     open fun generateEmptyMethod(codeGenerationOptions: CodeGenerationOptions): ZincFunction {
-        val defaultFields = fields.joinToString("\n") {
-            "${it.name}: ${it.type.defaultExpr()},"
-        }
         return zincFunction {
             name = "empty"
             returnType = Self
             comment = """
                 Constructs a default instance of $id, with all fields set to default values. 
             """.trimIndent()
-            body = """
-                Self {
-                    ${defaultFields.indent(20.spaces)}
+            body = constructSelf {
+                fields.joinToString("\n") {
+                    "${it.name}: ${it.type.defaultExpr()},"
                 }
-            """.trimIndent()
+            }
         }
     }
 
-    open fun generateFieldEquals(field: Field) =
+    open fun generateFieldEquals(field: FieldWithParentStruct) =
         "(${field.type.equalsExpr("self.${field.name}", "other.${field.name}")})"
 
     @ZincMethod(order = 30)
@@ -204,14 +182,10 @@ open class BflStruct(
         comment = """
             Checks whether `self` and `other` are equal.
         """.trimIndent()
-        body = fields.joinToString("\n&& ") { generateFieldEquals(it) }
-    }
-
-    override val serializedTypeDef: ZincTypeDef = ZincTypeDef.zincTypeDef {
-        name = "Serialized$id"
-        type = zincArray {
-            elementType = ZincPrimitive.Bool
-            size = getLengthConstant()
+        body = if (fields.isNotEmpty()) {
+            fields.joinToString("\n&& ") { generateFieldEquals(it) }
+        } else {
+            "true"
         }
     }
 
@@ -220,27 +194,25 @@ open class BflStruct(
     fun generateDeserializeMethod(codeGenerationOptions: CodeGenerationOptions): List<ZincFunction> {
         return codeGenerationOptions.witnessGroupOptions.map {
             val fieldDeserializations = fields.fold(Pair("", 0)) { acc: Pair<String, Int>, field ->
-                val implementation = generateFieldDeserialization(it, field, "offset")
+                val implementation = generateFieldDeserialization(it, field, OFFSET)
                 Pair(
                     "${acc.first}$implementation\n",
                     acc.second + field.type.bitSize
                 )
             }.first
-            val fieldAssignments = fields.joinToString("\n") { "${it.name}: ${it.name}," }
             zincFunction {
                 name = it.deserializeMethodName
-                parameter { name = SERIALIZED_VAR; type = it.witnessType }
-                parameter { name = "offset"; type = ZincPrimitive.U24 }
+                parameter { name = SERIALIZED; type = it.witnessType }
+                parameter { name = OFFSET; type = ZincPrimitive.U24 }
                 returnType = Self
                 comment = """
-                    Deserialize ${aOrAn()} $id from the ${it.witnessGroupName.capitalize()} group `$SERIALIZED_VAR`, at `offset`.
+                    Deserialize ${aOrAn()} $id from the ${it.name.capitalize()} group `$SERIALIZED`, at `offset`.
                 """.trimIndent()
-                body = """
-                    ${fieldDeserializations.indent(20.spaces)}
-                    Self {
-                        ${fieldAssignments.indent(24.spaces)}
+                body =
+                    fieldDeserializations + "\n" +
+                    constructSelf {
+                        fields.joinToString("\n") { "${it.name}: ${it.name}," }
                     }
-                """.trimIndent()
             }
         }
     }
@@ -256,16 +228,16 @@ open class BflStruct(
         }
 
     private fun generateFieldOffsetConstants(): List<ZincConstant> {
-        var previous: Field? = null
+        var previous: FieldWithParentStruct? = null
         return fields.map { field ->
             val itsPrevious = previous
             previous = field
             ZincConstant.zincConstant {
-                name = field.generateConstant("offset")
+                name = field.generateConstant(OFFSET)
                 type = ZincPrimitive.U24
                 initialization = itsPrevious?.let {
                     """
-                        ${it.generateConstant("offset")}
+                        ${it.generateConstant(OFFSET)}
                         + ${it.generateConstant("length")}
                     """.trimIndent()
                 } ?: "0 as u24"
@@ -274,27 +246,23 @@ open class BflStruct(
     }
 
     private fun generateLengthConstant(): ZincConstant {
-        val lastField = fields.last()
-        return ZincConstant.zincConstant {
+        return fields.lastOrNull()?.let { lastField ->
+            ZincConstant.zincConstant {
+                name = getLengthConstant()
+                type = ZincPrimitive.U24
+                initialization = """
+                    ${lastField.generateConstant(OFFSET)}
+                    + ${lastField.generateConstant("length")}
+                """.trimIndent()
+            }
+        } ?: ZincConstant.zincConstant {
             name = getLengthConstant()
             type = ZincPrimitive.U24
-            initialization = """
-                ${lastField.generateConstant("offset")}
-                + ${lastField.generateConstant("length")}
-            """.trimIndent()
+            initialization = "0 as u24"
         }
     }
 
-    private fun generateByteLengthConstant(): ZincConstant {
-        val byteSize = bitSize / BITS_PER_BYTE + if (bitSize % BITS_PER_BYTE == 0) 0 else 1
-        return ZincConstant.zincConstant {
-            name = getLengthConstant().replace("_LENGTH", "_BYTE_LENGTH")
-            type = ZincPrimitive.U24
-            initialization = "$byteSize"
-        }
-    }
-
-    internal fun getRecursiveFields(): List<Field> {
+    internal fun getRecursiveFields(): List<BflStructField> {
         return fields.flatMap { field ->
             val fieldFields = (field.type as? BflStruct)?.let { struct ->
                 struct.getRecursiveFields().map {

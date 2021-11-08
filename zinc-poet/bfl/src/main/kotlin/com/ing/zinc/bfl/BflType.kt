@@ -1,5 +1,6 @@
 package com.ing.zinc.bfl
 
+import com.ing.zinc.bfl.generator.WitnessGroupOptions
 import com.ing.zinc.poet.ZincType.Companion.id
 
 /**
@@ -14,7 +15,7 @@ interface BflType {
     val id: String
 
     /**
-     * Number of bytes in bfl-serialized form for instances of this type.
+     * Number of bits in bfl-serialized form for instances of this type.
      */
     val bitSize: Int
 
@@ -24,10 +25,17 @@ interface BflType {
     fun typeName(): String
 
     /**
-     * Generate an expression to deserialize this type from a byte array.
-     * @param options the options for this deserialization
+     * Generate an expression to deserialize this type from a specific witness group.
+     *
+     * @param witnessGroupOptions the options for this witness group
+     * @param offset the bit offset in the bit array
+     * @param variablePrefix prefix to use for local variables, to avoid name clashes
      */
-    fun deserializeExpr(options: DeserializationOptions): String
+    fun deserializeExpr(
+        witnessGroupOptions: WitnessGroupOptions,
+        offset: String,
+        variablePrefix: String,
+    ): String
 
     /**
      * Generate a null expression for this type.
@@ -45,12 +53,6 @@ interface BflType {
     fun sizeExpr(): String = "$bitSize as u24"
 
     fun accept(visitor: TypeVisitor)
-
-    companion object {
-        const val SERIALIZED_VAR = "serialized"
-        const val BITS_PER_BYTE = 8
-        const val BYTES_PER_INT = 4
-    }
 }
 
 fun BflType.aOrAn() = if ("AEIOH".contains(id[0])) "an" else "a"

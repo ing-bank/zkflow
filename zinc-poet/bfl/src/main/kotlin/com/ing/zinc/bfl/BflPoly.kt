@@ -7,12 +7,12 @@ data class BflPoly(
 ) : BflStruct(
     "${innerType.typeName()}Poly",
     listOf(
-        Field(serialNameFieldName, utfString(1)),
-        Field(innerFieldName, innerType)
+        Field(SERIAL_NAME_FIELD, utfString(1)),
+        Field(INNER_FIELD, innerType)
     )
 ) {
     companion object {
-        const val serialNameFieldName = "serial_name"
-        const val innerFieldName = "inner"
+        const val SERIAL_NAME_FIELD = "serial_name"
+        const val INNER_FIELD = "inner"
     }
 }
