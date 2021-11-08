@@ -6,6 +6,9 @@ import kotlinx.serialization.descriptors.nullable
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 
+/**
+ * Every nullable type must be serialized with an object inheriting from this class.
+ */
 abstract class NullableSerializer<T>(valueSerializer: KSerializerWithDefault<T>) : KSerializerWithDefault<T?> {
     @Serializable
     private data class NullableValue<T>(

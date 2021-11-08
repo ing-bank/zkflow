@@ -9,10 +9,12 @@ import java.io.DataOutputStream
 
 interface BinaryFixedLengthScheme {
     fun <T> encodeToBinary(serializer: SerializationStrategy<T>, value: T): ByteArray
-
     fun <T> decodeFromBinary(deserializer: DeserializationStrategy<T>, data: ByteArray): T
 }
 
+/**
+ * Scheme serializing a value into a fixed length sequence of bits.
+ */
 object BitBinaryFixedLengthScheme : BinaryFixedLengthScheme {
     override fun <T> encodeToBinary(serializer: SerializationStrategy<T>, value: T): ByteArray =
         ByteArrayOutputStream().use { output ->
@@ -30,6 +32,9 @@ object BitBinaryFixedLengthScheme : BinaryFixedLengthScheme {
         }
 }
 
+/**
+ * Scheme serializing a value into a fixed length sequence of bytes.
+ */
 object ByteBinaryFixedLengthScheme : BinaryFixedLengthScheme {
     override fun <T> encodeToBinary(serializer: SerializationStrategy<T>, value: T): ByteArray =
         ByteArrayOutputStream().use { output ->
