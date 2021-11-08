@@ -1,5 +1,7 @@
 package com.ing.zkflow.common.zkp
 
+import com.ing.zkflow.crypto.IdentifyingDigestAlgorithm
+import com.ing.zkflow.crypto.ZincDigestAlgorithm
 import net.corda.core.contracts.AttachmentConstraint
 import net.corda.core.contracts.SignatureAttachmentConstraint
 import net.corda.core.crypto.Crypto
@@ -11,6 +13,7 @@ object ZKFlow {
 
     val DEFAULT_ZKFLOW_SIGNATURE_SCHEME = Crypto.EDDSA_ED25519_SHA512
     val DEFAULT_ZKFLOW_CONTRACT_ATTACHMENT_CONSTRAINT = SignatureAttachmentConstraint::class
+    val DEFAULT_ZKFLOW_DIGEST_IDENTIFIER: IdentifyingDigestAlgorithm = ZincDigestAlgorithm()
 
     const val CIRCUITMANAGER_MAX_SETUP_WAIT_TIME_SECONDS = 10000 // seconds
 
@@ -31,6 +34,15 @@ object ZKFlow {
          */
         require(scheme == Crypto.EDDSA_ED25519_SHA512) {
             "Unsupported signature scheme: ${scheme.schemeCodeName}. Only ${Crypto.EDDSA_ED25519_SHA512.schemeCodeName} is supported."
+        }
+    }
+
+    fun requireSupportedDigestService(digestIdentifier: IdentifyingDigestAlgorithm) {
+        /**
+         * Initially, we only support ZincDigestAlgorithm. This may become more flexible later, depending on use case needs
+         */
+        require(digestIdentifier == DEFAULT_ZKFLOW_DIGEST_IDENTIFIER) {
+            "Unsupported digest: $digestIdentifier. Only $DEFAULT_ZKFLOW_DIGEST_IDENTIFIER is supported."
         }
     }
 }

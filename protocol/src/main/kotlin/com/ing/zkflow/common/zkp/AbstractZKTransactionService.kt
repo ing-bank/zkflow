@@ -35,8 +35,7 @@ abstract class AbstractZKTransactionService(val serviceHub: ServiceHub) : ZKTran
             serviceHub.collectUtxoInfos(wtx.references)
         )
 
-        val zkService = zkServiceForTransactionMetadata(wtx.zkTransactionMetadata())
-        val proof = zkService.proveTimed(witness)
+        val proof = zkServiceForTransactionMetadata(wtx.zkTransactionMetadata()).proveTimed(witness)
 
         return ZKVerifierTransaction.fromWireTransaction(wtx, proof)
     }

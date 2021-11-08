@@ -3,9 +3,12 @@ package com.ing.zkflow.common.zkp.metadata
 import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.contracts.ZKTransactionMetadataCommandData
 import com.ing.zkflow.common.zkp.ZKFlow.DEFAULT_ZKFLOW_CONTRACT_ATTACHMENT_CONSTRAINT
+import com.ing.zkflow.common.zkp.ZKFlow.DEFAULT_ZKFLOW_DIGEST_IDENTIFIER
 import com.ing.zkflow.common.zkp.ZKFlow.DEFAULT_ZKFLOW_SIGNATURE_SCHEME
 import com.ing.zkflow.common.zkp.ZKFlow.requireSupportedContractAttachmentConstraint
+import com.ing.zkflow.common.zkp.ZKFlow.requireSupportedDigestService
 import com.ing.zkflow.common.zkp.ZKFlow.requireSupportedSignatureScheme
+import com.ing.zkflow.crypto.IdentifyingDigestAlgorithm
 import net.corda.core.contracts.AttachmentConstraint
 import net.corda.core.contracts.CommandData
 import net.corda.core.crypto.SignatureScheme
@@ -38,13 +41,15 @@ data class ZKNotary(
 @ZKTransactionMetadataDSL
 open class ZKNetwork(
     var participantSignatureScheme: SignatureScheme = DEFAULT_ZKFLOW_SIGNATURE_SCHEME,
-    var attachmentConstraintType: KClass<out AttachmentConstraint> = DEFAULT_ZKFLOW_CONTRACT_ATTACHMENT_CONSTRAINT
+    var attachmentConstraintType: KClass<out AttachmentConstraint> = DEFAULT_ZKFLOW_CONTRACT_ATTACHMENT_CONSTRAINT,
+    var digestService: IdentifyingDigestAlgorithm = DEFAULT_ZKFLOW_DIGEST_IDENTIFIER
 ) {
     var notary = ZKNotary()
 
     init {
         requireSupportedSignatureScheme(participantSignatureScheme)
         requireSupportedContractAttachmentConstraint(attachmentConstraintType)
+        requireSupportedDigestService(digestService)
     }
 
     fun notary(init: ZKNotary.() -> Unit) = notary.apply(init)
