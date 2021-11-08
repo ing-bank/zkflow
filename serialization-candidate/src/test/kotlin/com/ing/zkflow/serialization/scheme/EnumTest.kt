@@ -1,11 +1,11 @@
 package com.ing.zkflow.serialization.scheme
 
-import com.ing.zkflow.serialization.serializer.DefaultedSerializer
+import com.ing.zkflow.engine.SerdeEngine
 import com.ing.zkflow.serialization.serializer.FixedLengthListSerializer
 import com.ing.zkflow.serialization.serializer.NullableSerializer
 import com.ing.zkflow.serialization.serializer.SerializerTest
+import com.ing.zkflow.serialization.serializer.SerializerWithDefault
 import com.ing.zkflow.serialization.serializer.WrappedKSerializer
-import engine.SerdeEngine
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.Serializable
 import org.junit.jupiter.params.ParameterizedTest
@@ -49,7 +49,7 @@ class EnumTest : SerializerTest {
 
         object Enums_0 : FixedLengthListSerializer<Option?>(5, Enums_1)
         object Enums_1 : NullableSerializer<Option>(Enums_2)
-        object Enums_2 : DefaultedSerializer<Option>(Enums_3, Option.SECOND)
+        object Enums_2 : SerializerWithDefault<Option>(Enums_3, Option.SECOND)
         object Enums_3 : WrappedKSerializer<Option>(Option.serializer())
     }
 }

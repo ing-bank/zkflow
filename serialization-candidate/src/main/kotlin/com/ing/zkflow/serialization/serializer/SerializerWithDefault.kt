@@ -5,7 +5,7 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 
-open class DefaultedSerializer<T>(valueSerializer: KSerializer<T>, override val default: T) :
+abstract class SerializerWithDefault<T>(valueSerializer: KSerializer<T>, override val default: T) :
     KSerializerWithDefault<T> {
 
     private val strategy = valueSerializer

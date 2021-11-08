@@ -7,7 +7,7 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import java.math.BigDecimal
 
-abstract class FixedLengthFloatingPointSerializer<T : Any> (
+sealed class FixedLengthFloatingPointSerializer<T : Any> (
     integerPrecision: Int,
     fractionPrecision: Int,
     private val conversion: (T) -> BigDecimal
@@ -33,7 +33,7 @@ abstract class FixedLengthFloatingPointSerializer<T : Any> (
         }
     }
 
-    override val descriptor: SerialDescriptor = buildClassSerialDescriptor("BoundedBigDecimal") {
+    override val descriptor: SerialDescriptor = buildClassSerialDescriptor("FixedLengthFloatingPoint") {
         element("kind", Byte.serializer().descriptor)
         element("sign", Byte.serializer().descriptor)
         element("integer", integerSerializer.descriptor)
@@ -96,19 +96,30 @@ abstract class FixedLengthFloatingPointSerializer<T : Any> (
         }
         return BigDecimal(digit)
     }
-}
 
-open class BigDecimalSerializer(integerPrecision: Int, fractionPrecision: Int) :
-    FixedLengthFloatingPointSerializer<BigDecimal>(integerPrecision, fractionPrecision, { it }) {
-    override val default: BigDecimal = BigDecimal.ZERO
-}
 
-@Suppress("MagicNumber")
-object DoubleSerializer : FixedLengthFloatingPointSerializer<Double>(309, 325, { it.toBigDecimal() }) {
-    override val default = 0.0
-}
+    companion object {
+        const val DoubleIntegerPartMaxPrecision = 309
+        const val DoubleFractionPartMaxPrecision = 325
 
-@Suppress("MagicNumber")
-object FloatSerializer : FixedLengthFloatingPointSerializer<Float>(39, 46, { it.toBigDecimal() }) {
-    override val default = 0.0.toFloat()
+        const val FloatIntegerPartMaxPrecision = 39
+        const val FloatFractionPartMaxPrecision = 46
+    }
+
+    // Variants.
+    open class BigDecimalSerializer(integerPrecision: Int, fractionPrecision: Int) :
+        FixedLengthFloatingPointSerializer<BigDecimal>(integerPrecision, fractionPrecision, { it }) {
+        override val default: BigDecimal = BigDecimal.ZERO
+    }
+
+    object DoubleSerializer : FixedLengthFloatingPointSerializer<Double>(
+        DoubleIntegerPartMaxPrecision, DoubleFractionPartMaxPrecision, { it.toBigDecimal() }) {
+        override val default = 0.0
+    }
+
+    @Suppress("MagicNumber")
+    object FloatSerializer : FixedLengthFloatingPointSerializer<Float>(
+        FloatIntegerPartMaxPrecision, FloatFractionPartMaxPrecision, { it.toBigDecimal() }) {
+        override val default = 0.0.toFloat()
+    }
 }

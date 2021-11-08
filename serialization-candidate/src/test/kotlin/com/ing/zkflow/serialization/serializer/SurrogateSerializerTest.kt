@@ -1,6 +1,6 @@
 package com.ing.zkflow.serialization.serializer
 
-import engine.SerdeEngine
+import com.ing.zkflow.engine.SerdeEngine
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.Serializable
 import org.junit.jupiter.params.ParameterizedTest
@@ -43,7 +43,7 @@ class SurrogateSerializerTest : SerializerTest {
     ) {
         object List_0 : FixedLengthListSerializer<PublicKey>(5, List_1)
 
-        object List_1 : DefaultedSerializer<PublicKey>(
+        object List_1 : SerializerWithDefault<PublicKey>(
             RSAKey512Serializer,
             KeyPairGenerator.getInstance("RSA").run {
                 initialize(512)

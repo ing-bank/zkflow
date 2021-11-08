@@ -9,14 +9,12 @@ import kotlinx.serialization.encoding.Encoder
 import java.nio.ByteBuffer
 
 /**
- * UTF chars are serialized as 2 bytes.
+ * UTF8 chars are serialized as Char.SIZE_BYTES bytes.
  */
 object UTF8CharSerializer : KSerializerWithDefault<Char> {
     override val default = '-'
 
-    private const val utfCharLength = 2
-
-    override val descriptor: SerialDescriptor = buildClassSerialDescriptor("utfChar") {
+    override val descriptor: SerialDescriptor = buildClassSerialDescriptor("UTF8Char") {
         element("0", Byte.serializer().descriptor)
         element("1", Byte.serializer().descriptor)
     }
@@ -30,10 +28,10 @@ object UTF8CharSerializer : KSerializerWithDefault<Char> {
     }
 
     override fun deserialize(decoder: Decoder): Char = decoder.run {
-        (0 until utfCharLength)
+        (0 until Char.SIZE_BYTES)
             .map { decodeByte() }
-            .let { enc ->
-                ByteBuffer.wrap(enc.toByteArray()).char
+            .let { dec ->
+                ByteBuffer.wrap(dec.toByteArray()).char
             }
     }
 }

@@ -1,14 +1,15 @@
 package com.ing.zkflow.serialization.serializer.char
 
+import com.ing.zkflow.engine.SerdeEngine
 import com.ing.zkflow.serialization.serializer.FixedLengthListSerializer
 import com.ing.zkflow.serialization.serializer.NullableSerializer
 import com.ing.zkflow.serialization.serializer.SerializerTest
 import com.ing.zkflow.serialization.serializer.WrappedKSerializerWithDefault
-import engine.SerdeEngine
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.Serializable
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
+import kotlin.test.assertFailsWith
 
 class ASCIICharSerializerTest : SerializerTest {
     private val char = 'q'
@@ -30,6 +31,15 @@ class ASCIICharSerializerTest : SerializerTest {
     @MethodSource("engines")
     fun `Class with List ASCII Char must be (de)serializable`(engine: SerdeEngine) {
         engine.assertRoundTrip(ContainsChars.serializer(), ContainsChars())
+    }
+
+    @ParameterizedTest
+    @MethodSource("engines")
+    fun `Multi byte chars should fail`(engine: SerdeEngine) {
+        val char = 'ā'
+        assertFailsWith<IllegalArgumentException>("Value `$char` is not an ASCII character") {
+            engine.serialize(ASCIICharSerializer, char)
+        }
     }
 
     @Serializable

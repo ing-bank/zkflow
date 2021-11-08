@@ -1,6 +1,6 @@
 package com.ing.zkflow.serialization.serializer
 
-import engine.SerdeEngine
+import com.ing.zkflow.engine.SerdeEngine
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.Serializable
 import org.junit.jupiter.params.ParameterizedTest

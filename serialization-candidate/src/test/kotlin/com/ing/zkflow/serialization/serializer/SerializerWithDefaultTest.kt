@@ -1,13 +1,13 @@
 package com.ing.zkflow.serialization.serializer
 
-import engine.SerdeEngine
+import com.ing.zkflow.engine.SerdeEngine
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.serializer
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 
-class DefaultedSerializerTest : SerializerTest {
+class SerializerWithDefaultTest : SerializerTest {
     @ParameterizedTest
     @MethodSource("engines")
     fun `Class with defaulted serializer must be (de)serializable`(engine: SerdeEngine) {
@@ -26,7 +26,7 @@ class DefaultedSerializerTest : SerializerTest {
         @Serializable(with = List_0::class)
         val list: List<Int> = emptyList()
     ) {
-        object List_0 : FixedLengthListSerializer<Int>(10, SerializerWithDefault)
-        object SerializerWithDefault : DefaultedSerializer<Int>(Int.serializer(), 0)
+        object List_0 : FixedLengthListSerializer<Int>(10, List_1)
+        object List_1 : SerializerWithDefault<Int>(Int.serializer(), 0)
     }
 }

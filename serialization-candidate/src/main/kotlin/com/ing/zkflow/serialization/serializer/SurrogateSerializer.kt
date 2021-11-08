@@ -5,7 +5,7 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 
-open class SurrogateSerializer<T, S : Surrogate<T>>(
+abstract class SurrogateSerializer<T, S : Surrogate<T>>(
     private val strategy: KSerializer<S>,
     val toSurrogate: (T) -> S
 ) : KSerializer<T> {

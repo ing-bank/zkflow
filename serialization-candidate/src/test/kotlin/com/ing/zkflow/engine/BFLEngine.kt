@@ -1,11 +1,10 @@
-package engine
+package com.ing.zkflow.engine
 
-import com.ing.zkflow.serialization.scheme.BFLScheme
 import com.ing.zkflow.serialization.utils.binary.Representation
 import kotlinx.serialization.KSerializer
 
 open class BFLEngine(representation: Representation) : SerdeEngine {
-    private val engine = BFLScheme(representation)
+    private val engine = representation.serializationScheme
 
     override fun <T> serialize(strategy: KSerializer<T>, value: T, shouldPrint: Boolean): ByteArray {
         if (shouldPrint) { println("Serializing:\n$value") }

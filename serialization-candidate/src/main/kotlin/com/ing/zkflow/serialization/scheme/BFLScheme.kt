@@ -8,7 +8,7 @@ import java.io.ByteArrayOutputStream
 import java.io.DataInputStream
 import java.io.DataOutputStream
 
-open class BFLScheme internal constructor(private val representation: Representation) {
+abstract class BFLScheme(private val representation: Representation) {
     fun <T> encodeToBinary(serializer: SerializationStrategy<T>, value: T): ByteArray =
         ByteArrayOutputStream().use { output ->
             DataOutputStream(output).use { stream ->

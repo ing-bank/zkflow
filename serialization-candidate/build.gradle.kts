@@ -12,23 +12,17 @@ dependencies {
 }
 
 tasks {
-    test {
-        useJUnitPlatform()
-    }
-
     compileKotlin {
         kotlinOptions {
             freeCompilerArgs +=
-                listOf(
-                    "-Xopt-in=kotlinx.serialization.ExperimentalSerializationApi"
-                )
+                "-Xopt-in=kotlinx.serialization.ExperimentalSerializationApi"
         }
     }
 }
 
 publishing {
     publications {
-        create<MavenPublication>("zkBFL") {
+        create<MavenPublication>("zkSerializationCandidate") {
             from(components["java"])
         }
     }

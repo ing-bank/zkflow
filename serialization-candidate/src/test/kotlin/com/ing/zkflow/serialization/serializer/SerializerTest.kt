@@ -1,6 +1,6 @@
 package com.ing.zkflow.serialization.serializer
 
-import engine.BFLEngine
+import com.ing.zkflow.engine.BFLEngine
 
 interface SerializerTest {
     companion object {

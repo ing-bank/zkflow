@@ -1,10 +1,10 @@
 package com.ing.zkflow.serialization.serializer.char
 
+import com.ing.zkflow.engine.SerdeEngine
 import com.ing.zkflow.serialization.serializer.FixedLengthListSerializer
 import com.ing.zkflow.serialization.serializer.NullableSerializer
 import com.ing.zkflow.serialization.serializer.SerializerTest
 import com.ing.zkflow.serialization.serializer.WrappedKSerializerWithDefault
-import engine.SerdeEngine
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.Serializable
 import org.junit.jupiter.params.ParameterizedTest
@@ -21,14 +21,14 @@ class UTF8CharSerializerTest : SerializerTest {
 
     @ParameterizedTest
     @MethodSource("engines")
-    fun `UTF chars must have equal length serialization`(engine: SerdeEngine) {
+    fun `UTF8 chars must have equal length serialization`(engine: SerdeEngine) {
         engine.serialize(UTF8CharSerializer, char).size shouldBe
             engine.serialize(UTF8CharSerializer, 'z').size
     }
 
     @ParameterizedTest
     @MethodSource("engines")
-    fun `Class with List UTF Char must be (de)serializable`(engine: SerdeEngine) {
+    fun `Class with List UTF8 char must be (de)serializable`(engine: SerdeEngine) {
         engine.assertRoundTrip(ContainsChars.serializer(), ContainsChars())
     }
 

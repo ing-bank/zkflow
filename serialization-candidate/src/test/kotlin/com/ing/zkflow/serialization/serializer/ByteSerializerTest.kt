@@ -1,9 +1,9 @@
 package com.ing.zkflow.serialization.serializer
 
+import com.ing.zkflow.engine.BFLEngine
+import com.ing.zkflow.engine.SerdeEngine
 import com.ing.zkflow.serialization.utils.binary.Representation
 import com.ing.zkflow.serialization.utils.binary.binary
-import engine.BFLEngine
-import engine.SerdeEngine
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.Serializable
 import org.junit.jupiter.params.ParameterizedTest

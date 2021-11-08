@@ -1,7 +1,7 @@
 package com.ing.zkflow.serialization.scheme
 
-import com.ing.zkflow.serialization.serializer.DoubleSerializer
-import com.ing.zkflow.serialization.serializer.FloatSerializer
+import com.ing.zkflow.serialization.serializer.FixedLengthFloatingPointSerializer.DoubleSerializer
+import com.ing.zkflow.serialization.serializer.FixedLengthFloatingPointSerializer.FloatSerializer
 import com.ing.zkflow.serialization.serializer.char.ASCIICharSerializer
 import com.ing.zkflow.serialization.serializer.char.UTF8CharSerializer
 import com.ing.zkflow.serialization.serializer.string.FixedLengthASCIIStringSerializer

@@ -1,4 +1,4 @@
-package engine
+package com.ing.zkflow.engine
 
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.KSerializer

@@ -1,8 +1,8 @@
 package com.ing.zkflow.serialization.scheme
 
+import com.ing.zkflow.engine.BFLEngine
 import com.ing.zkflow.serialization.serializer.string.FixedLengthUTF8StringSerializer
 import com.ing.zkflow.serialization.utils.binary.Representation
-import engine.BFLEngine
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
