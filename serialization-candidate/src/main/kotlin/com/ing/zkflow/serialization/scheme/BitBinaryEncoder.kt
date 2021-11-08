@@ -7,8 +7,6 @@ import com.ing.zkflow.serialization.serializer.char.UTF8CharSerializer
 import com.ing.zkflow.serialization.serializer.string.FixedLengthASCIIStringSerializer
 import com.ing.zkflow.serialization.serializer.string.FixedLengthUTF8StringSerializer
 import com.ing.zkflow.serialization.utils.WILL_NOT_IMPLEMENT
-import com.ing.zkflow.serialization.utils.binary.Representation
-import com.ing.zkflow.serialization.utils.binary.binary
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.AbstractEncoder
 import kotlinx.serialization.encoding.CompositeEncoder
@@ -17,26 +15,53 @@ import kotlinx.serialization.modules.SerializersModule
 import java.io.DataOutput
 
 @Suppress("TooManyFunctions")
-internal class BinaryEncoder(
+internal class BitBinaryEncoder(
     private val output: DataOutput,
-    private val representation: Representation
 ) : AbstractEncoder() {
+    companion object {
+        const val binaryStringPadChar = '0'
+    }
+
     override val serializersModule: SerializersModule = EmptySerializersModule
 
     override fun encodeBoolean(value: Boolean) =
-        output.write(value.binary(representation))
+        output.write(byteArrayOf(if (value) 1 else 0))
 
-    override fun encodeByte(value: Byte) =
-        output.write(value.binary(representation))
+    @Suppress("MagicNumber")
+    override fun encodeByte(value: Byte) = Integer
+        .toBinaryString(value.toInt() and 0xFF)
+        .padStart(Byte.SIZE_BITS, binaryStringPadChar)
+        .toCharArray()
+        .map { "$it".toByte() }
+        .toByteArray()
+        .let { output.write(it) }
 
     override fun encodeShort(value: Short) =
-        output.write(value.binary(representation))
+        Integer
+            .toBinaryString(value.toInt())
+            .padStart(Short.SIZE_BITS, binaryStringPadChar)
+            .toCharArray()
+            .map { "$it".toByte() }
+            .toByteArray()
+            .let { output.write(it) }
 
     override fun encodeInt(value: Int) =
-        output.write(value.binary(representation))
+        Integer
+            .toBinaryString(value)
+            .padStart(Int.SIZE_BITS, binaryStringPadChar)
+            .toCharArray()
+            .map { "$it".toByte() }
+            .toByteArray()
+            .let { output.write(it) }
 
     override fun encodeLong(value: Long) =
-        output.write(value.binary(representation))
+        java.lang.Long
+            .toBinaryString(value)
+            .padStart(Long.SIZE_BITS, binaryStringPadChar)
+            .toCharArray()
+            .map { "$it".toByte() }
+            .toByteArray()
+            .let { output.write(it) }
 
     override fun encodeEnum(enumDescriptor: SerialDescriptor, index: Int) =
         encodeInt(index)

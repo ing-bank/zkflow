@@ -2,13 +2,11 @@ package com.ing.zkflow.serialization.scheme
 
 import com.ing.zkflow.engine.BFLEngine
 import com.ing.zkflow.serialization.serializer.string.FixedLengthUTF8StringSerializer
-import com.ing.zkflow.serialization.utils.binary.Representation
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
 class BFLStringDirectTest {
-    private val representation = Representation.BYTES
-    private val engine = BFLEngine(representation)
+    private val engine = BFLEngine.Bytes
 
     private val string = "a的"
     private val direct = (

@@ -3,17 +3,14 @@ package com.ing.zkflow.serialization.scheme
 import com.ing.zkflow.engine.BFLEngine
 import com.ing.zkflow.serialization.serializer.IntSerializer
 import com.ing.zkflow.serialization.serializer.SerializerTest
-import com.ing.zkflow.serialization.utils.binary.Representation
-import com.ing.zkflow.serialization.utils.binary.binary
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
 class BFLDirectIntTest : SerializerTest {
-    private val representation = Representation.BYTES
-    private val engine = BFLEngine(representation)
+    private val engine = BFLEngine.Bytes
 
     private val int = 1024
-    private val direct = int.binary(representation)
+    private val direct = byteArrayOf(0, 0, 4, 0)
 
     @Test
     fun `Int direct encoding and serialization must coincide`() {

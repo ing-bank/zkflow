@@ -24,7 +24,6 @@ object ASCIICharSerializer : KSerializerWithDefault<Char> {
     override fun deserialize(decoder: Decoder): Char =
         decoder.decodeByte().toInt().toChar()
 
-
     private const val MAX_ASCII_CODE = 255
 
     fun serializes(char: Char): Boolean =
