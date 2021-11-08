@@ -6,7 +6,7 @@ import net.corda.core.crypto.DigestService
 import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.internal.DigestAlgorithmFactory
 
-class PedersenDigestAlgorithm : DigestAlgorithm {
+class ZincPedersenDigestAlgorithm : DigestAlgorithm {
     private val pedersen = PedersenHash.zinc()
 
     override val algorithm = "PEDERSEN"
@@ -19,7 +19,7 @@ class PedersenDigestAlgorithm : DigestAlgorithm {
     override fun nonceDigest(bytes: ByteArray): ByteArray = digest(bytes)
 }
 
-val pedersenAlgorithm = DigestAlgorithmFactory.registerClass(PedersenDigestAlgorithm::class.java.name)
+val pedersenAlgorithm = DigestAlgorithmFactory.registerClass(ZincPedersenDigestAlgorithm::class.java.name)
 val DigestService.Companion.pedersen: DigestService by lazy { DigestService(pedersenAlgorithm) }
 val SecureHash.Companion.PEDERSEN: String
     get() = pedersenAlgorithm
