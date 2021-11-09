@@ -20,13 +20,13 @@ internal sealed class BinaryEncoder(
 ) : AbstractEncoder() {
     class BitBinaryEncoder(output: DataOutput) : BinaryEncoder(output) {
         companion object {
-            const val binaryStringPadChar = '0'
+            const val BINARY_STRING_PAD_CHAR = '0'
         }
 
         @Suppress("MagicNumber")
         override fun encodeByte(value: Byte) = Integer
             .toBinaryString(value.toInt() and 0xFF)
-            .padStart(Byte.SIZE_BITS, binaryStringPadChar)
+            .padStart(Byte.SIZE_BITS, BINARY_STRING_PAD_CHAR)
             .toCharArray()
             .map { "$it".toByte() }
             .toByteArray()
@@ -35,7 +35,7 @@ internal sealed class BinaryEncoder(
         override fun encodeShort(value: Short) =
             Integer
                 .toBinaryString(value.toInt())
-                .padStart(Short.SIZE_BITS, binaryStringPadChar)
+                .padStart(Short.SIZE_BITS, BINARY_STRING_PAD_CHAR)
                 .toCharArray()
                 .map { "$it".toByte() }
                 .toByteArray()
@@ -44,7 +44,7 @@ internal sealed class BinaryEncoder(
         override fun encodeInt(value: Int) =
             Integer
                 .toBinaryString(value)
-                .padStart(Int.SIZE_BITS, binaryStringPadChar)
+                .padStart(Int.SIZE_BITS, BINARY_STRING_PAD_CHAR)
                 .toCharArray()
                 .map { "$it".toByte() }
                 .toByteArray()
@@ -53,7 +53,7 @@ internal sealed class BinaryEncoder(
         override fun encodeLong(value: Long) =
             java.lang.Long
                 .toBinaryString(value)
-                .padStart(Long.SIZE_BITS, binaryStringPadChar)
+                .padStart(Long.SIZE_BITS, BINARY_STRING_PAD_CHAR)
                 .toCharArray()
                 .map { "$it".toByte() }
                 .toByteArray()

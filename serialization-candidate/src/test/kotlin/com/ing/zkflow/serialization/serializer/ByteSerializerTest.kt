@@ -1,6 +1,5 @@
 package com.ing.zkflow.serialization.serializer
 
-import com.ing.zkflow.engine.BFLEngine
 import com.ing.zkflow.engine.SerdeEngine
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.Serializable
@@ -9,22 +8,11 @@ import org.junit.jupiter.params.provider.MethodSource
 
 class ByteSerializerTest : SerializerTest {
     private val byte = 16.toByte()
-    private val byteAsByte = byteArrayOf(16)
-    private val byteAsBits = byteArrayOf(0, 0, 0, 1, 0, 0, 0, 0)
 
     @ParameterizedTest
     @MethodSource("engines")
-    fun `Byte must be serializable`(engine: SerdeEngine) {
-        when (engine) {
-            is BFLEngine.Bytes -> {
-                engine.serialize(ByteSerializer, byte) shouldBe byteAsByte
-                engine.deserialize(ByteSerializer, byteAsByte) shouldBe byte
-            }
-            is BFLEngine.Bits -> {
-                engine.serialize(ByteSerializer, byte) shouldBe byteAsBits
-                engine.deserialize(ByteSerializer, byteAsBits) shouldBe byte
-            }
-        }
+    fun `Int must be serializable`(engine: SerdeEngine) {
+        engine.assertRoundTrip(ByteSerializer, byte)
     }
 
     @ParameterizedTest

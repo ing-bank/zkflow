@@ -1,17 +1,12 @@
-package com.ing.zkflow.serialization.scheme
+package com.ing.zkflow.serialization.serializer
 
 import com.ing.zkflow.engine.SerdeEngine
-import com.ing.zkflow.serialization.serializer.FixedLengthListSerializer
-import com.ing.zkflow.serialization.serializer.NullableSerializer
-import com.ing.zkflow.serialization.serializer.SerializerTest
-import com.ing.zkflow.serialization.serializer.SerializerWithDefault
-import com.ing.zkflow.serialization.serializer.WrappedKSerializer
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.Serializable
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 
-class EnumTest : SerializerTest {
+class EnumSerializationTest : SerializerTest {
     @Serializable
     enum class Option {
         FIRST,

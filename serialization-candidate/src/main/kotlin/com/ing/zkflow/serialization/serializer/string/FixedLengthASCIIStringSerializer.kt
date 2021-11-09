@@ -16,7 +16,7 @@ open class FixedLengthASCIIStringSerializer(private val maxLength: Int) : KSeria
     override fun serialize(encoder: Encoder, value: String) {
         val asList = value.toList()
 
-        asList.filterNot { ASCIICharSerializer.serializes(it) }.let { nonASCII ->
+        asList.filterNot { ASCIICharSerializer.supports(it) }.let { nonASCII ->
             require(nonASCII.isEmpty()) {
                 "String to be encoded as ASCII `$value` contains non ASCII characters: ${nonASCII.joinToString(separator = ", "){ "`$it`" }} "
             }

@@ -16,7 +16,7 @@ object ASCIICharSerializer : KSerializerWithDefault<Char> {
     override val descriptor: SerialDescriptor = Byte.serializer().descriptor
 
     override fun serialize(encoder: Encoder, value: Char) {
-        require(serializes(value)) { "Value `$value` is not an ASCII character" }
+        require(supports(value)) { "Value `$value` is not an ASCII character" }
 
         encoder.encodeByte(value.toInt().toByte())
     }
@@ -26,6 +26,6 @@ object ASCIICharSerializer : KSerializerWithDefault<Char> {
 
     private const val MAX_ASCII_CODE = 255
 
-    fun serializes(char: Char): Boolean =
+    fun supports(char: Char): Boolean =
         char.toInt() in 0..MAX_ASCII_CODE
 }

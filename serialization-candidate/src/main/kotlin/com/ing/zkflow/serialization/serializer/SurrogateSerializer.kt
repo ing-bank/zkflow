@@ -10,6 +10,9 @@ import kotlinx.serialization.encoding.Encoder
  * via an intermediate class consisting of serializable elements.
  * This serializer specifies how non-natively serializable types must be converted
  * to such intermediate serializable representations.
+ *
+ * User will have to specify an appropriate surrogate class and a conversion function `toSurrogate`
+ * by annotating the type in question with @Converter annotation.
  */
 abstract class SurrogateSerializer<T, S : Surrogate<T>>(
     private val strategy: KSerializer<S>,

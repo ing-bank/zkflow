@@ -98,11 +98,11 @@ sealed class FixedLengthFloatingPointSerializer<T : Any> (
     }
 
     companion object {
-        const val DoubleIntegerPartMaxPrecision = 309
-        const val DoubleFractionPartMaxPrecision = 325
+        const val DOUBLE_INTEGER_PART_MAX_PRECISION = 309
+        const val DOUBLE_FRACTION_PART_MAX_PRECISION = 325
 
-        const val FloatIntegerPartMaxPrecision = 39
-        const val FloatFractionPartMaxPrecision = 46
+        const val FLOAT_INTEGER_PART_MAX_PRECISION = 39
+        const val FLOAT_FRACTION_PART_MAX_PRECISION = 46
     }
 
     // Variants.
@@ -112,14 +112,14 @@ sealed class FixedLengthFloatingPointSerializer<T : Any> (
     }
 
     object DoubleSerializer : FixedLengthFloatingPointSerializer<Double>(
-        DoubleIntegerPartMaxPrecision, DoubleFractionPartMaxPrecision, { it.toBigDecimal() }
+        DOUBLE_INTEGER_PART_MAX_PRECISION, DOUBLE_FRACTION_PART_MAX_PRECISION, { it.toBigDecimal() }
     ) {
         override val default = 0.0
     }
 
     @Suppress("MagicNumber")
     object FloatSerializer : FixedLengthFloatingPointSerializer<Float>(
-        FloatIntegerPartMaxPrecision, FloatFractionPartMaxPrecision, { it.toBigDecimal() }
+        FLOAT_INTEGER_PART_MAX_PRECISION, FLOAT_FRACTION_PART_MAX_PRECISION, { it.toBigDecimal() }
     ) {
         override val default = 0.0.toFloat()
     }
