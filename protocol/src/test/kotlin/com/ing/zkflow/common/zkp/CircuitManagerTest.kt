@@ -18,7 +18,7 @@ class CircuitManagerTest {
 
     @Test
     fun `metadata outdated`() {
-        val outdatedMetadataFile = File("$artifact/${CircuitManager.metadataPath}")
+        val outdatedMetadataFile = File("$artifact/${CircuitManager.METADATA_PATH}")
         outdatedMetadataFile.writeText("0")
 
         CircuitManager.register(id)
@@ -35,7 +35,7 @@ class CircuitManagerTest {
         val artifactFile = File("$artifact/dummy.txt")
         artifactFile.writeText("Come with me if you want to live")
 
-        val metadataFile = File("$artifact/${CircuitManager.metadataPath}")
+        val metadataFile = File("$artifact/${CircuitManager.METADATA_PATH}")
         metadataFile.writeText("$lastModified")
         metadataFile.appendText("\n${artifactFile.absolutePath}:${artifactFile.lastModified()}")
 

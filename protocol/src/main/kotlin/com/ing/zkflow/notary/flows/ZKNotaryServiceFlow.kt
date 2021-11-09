@@ -37,7 +37,7 @@ class ZKNotaryServiceFlow(
 ) : FlowLogic<Void?>(), IdempotentFlow {
     companion object {
         // TODO: Determine an appropriate limit and also enforce in the network parameters and the transaction builder.
-        private const val maxAllowedStatesInTx = 10_000
+        private const val MAX_ALLOWED_STATES_IN_TX = 10_000
     }
 
     init {
@@ -141,8 +141,8 @@ class ZKNotaryServiceFlow(
 
     /** Checks whether the number of input states is too large. */
     private fun checkMaxStateCount(states: List<StateRef>) {
-        require(states.size < maxAllowedStatesInTx) {
-            "A transaction cannot have more than $maxAllowedStatesInTx " +
+        require(states.size < MAX_ALLOWED_STATES_IN_TX) {
+            "A transaction cannot have more than $MAX_ALLOWED_STATES_IN_TX " +
                 "inputs or references, received: ${states.size}"
         }
     }

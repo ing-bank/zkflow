@@ -25,7 +25,7 @@ import java.io.File
  * at the moment of caching the current artifacts are aligned with the current source.
  */
 object CircuitManager {
-    const val metadataPath = "__circuit_metadata__"
+    const val METADATA_PATH = "__circuit_metadata__"
 
     private val log = loggerFor<CircuitManager>()
 
@@ -44,7 +44,7 @@ object CircuitManager {
     fun register(circuitDescription: CircuitDescription) {
         val (circuitFolder, artifactFolder) = circuitDescription
 
-        val metadataFile = File("$artifactFolder/$metadataPath")
+        val metadataFile = File("$artifactFolder/$METADATA_PATH")
 
         if (!metadataFile.exists()) {
             log.debug("Circuit outdated: No metadata file found")
@@ -104,13 +104,13 @@ object CircuitManager {
         // Find the last time files in the source folder have been modified.
         val lastModifiedSource = File(circuitFolder).includedLastModified ?: error("No files in the source directory")
 
-        val metadataFile = File("$artifactFolder/$metadataPath")
+        val metadataFile = File("$artifactFolder/$METADATA_PATH")
         metadataFile.writeText("$lastModifiedSource")
 
         log.debug("Circuit source cache metadata written for: $circuitFolder")
 
         File(artifactFolder).walkTopDown()
-            .filter { it.isFile && it.name != metadataPath }
+            .filter { it.isFile && it.name != METADATA_PATH }
             .forEach {
                 metadataFile.appendText("\n${it.absolutePath}:${it.lastModified()}")
             }
