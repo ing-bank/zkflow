@@ -19,7 +19,7 @@ object BitBinaryFixedLengthScheme : BinaryFixedLengthScheme {
     override fun <T> encodeToBinary(serializer: SerializationStrategy<T>, value: T): ByteArray =
         ByteArrayOutputStream().use { output ->
             DataOutputStream(output).use { stream ->
-                BitBinaryEncoder(stream).encodeSerializableValue(serializer, value)
+                BinaryEncoder.BitBinaryEncoder(stream).encodeSerializableValue(serializer, value)
             }
             output.toByteArray()
         }
@@ -27,7 +27,7 @@ object BitBinaryFixedLengthScheme : BinaryFixedLengthScheme {
     override fun <T> decodeFromBinary(deserializer: DeserializationStrategy<T>, data: ByteArray): T =
         ByteArrayInputStream(data).use { input ->
             DataInputStream(input).use { stream ->
-                BitBinaryDecoder(stream).decodeSerializableValue(deserializer)
+                BinaryDecoder.BitBinaryDecoder(stream).decodeSerializableValue(deserializer)
             }
         }
 }
@@ -39,7 +39,7 @@ object ByteBinaryFixedLengthScheme : BinaryFixedLengthScheme {
     override fun <T> encodeToBinary(serializer: SerializationStrategy<T>, value: T): ByteArray =
         ByteArrayOutputStream().use { output ->
             DataOutputStream(output).use { stream ->
-                ByteBinaryEncoder(stream).encodeSerializableValue(serializer, value)
+                BinaryEncoder.ByteBinaryEncoder(stream).encodeSerializableValue(serializer, value)
             }
             output.toByteArray()
         }
@@ -47,7 +47,7 @@ object ByteBinaryFixedLengthScheme : BinaryFixedLengthScheme {
     override fun <T> decodeFromBinary(deserializer: DeserializationStrategy<T>, data: ByteArray): T =
         ByteArrayInputStream(data).use { input ->
             DataInputStream(input).use { stream ->
-                ByteBinaryDecoder(stream).decodeSerializableValue(deserializer)
+                BinaryDecoder.ByteBinaryDecoder(stream).decodeSerializableValue(deserializer)
             }
         }
 }
