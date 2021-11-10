@@ -52,14 +52,22 @@ interface BflType {
      */
     fun sizeExpr(): String = "$bitSize as u24"
 
+    /**
+     * Apply [visitor] to all types this [BflType] depends on.
+     */
     fun accept(visitor: TypeVisitor)
 }
 
-fun BflType.aOrAn() = if ("AEIOH".contains(id[0])) "an" else "a"
-
+/**
+ * Visitor for [BflType]s.
+ *
+ * [TypeVisitor] can be used to extract information from a [BflType] and all dependant types.
+ */
 fun interface TypeVisitor {
     fun visitType(type: BflType)
 }
+
+internal fun BflType.aOrAn() = if ("AEIOH".contains(id[0])) "an" else "a"
 
 fun Sequence<BflType>.allModules(transform: BflModule.() -> Unit) {
     flatMap { it.resolveAllTypes() }

@@ -81,6 +81,14 @@ open class BflStruct(
         return "let ${field.name}: ${field.type.id} = $deserializedField;"
     }
 
+    override fun generateMethods(codeGenerationOptions: CodeGenerationOptions): List<ZincFunction> {
+        return listOf(
+            generateNewMethod(codeGenerationOptions),
+            generateEmptyMethod(codeGenerationOptions),
+            generateEqualsMethod(codeGenerationOptions),
+        ) + generateDeserializeMethods(codeGenerationOptions)
+    }
+
     override fun generateZincFile(codeGenerationOptions: CodeGenerationOptions) = ZincFile.zincFile {
         comment("$id module")
         newLine()
@@ -121,7 +129,8 @@ open class BflStruct(
         newLine()
         impl {
             name = id
-            addFunctions(this@BflStruct.getAllMethods(codeGenerationOptions).toList())
+            addFunctions(generateMethods(codeGenerationOptions))
+            addFunctions(getRegisteredMethods())
         }
     }
 
@@ -135,8 +144,6 @@ open class BflStruct(
         """.trimIndent()
     }
 
-    @ZincMethod(order = 10)
-    @Suppress("unused")
     open fun generateNewMethod(codeGenerationOptions: CodeGenerationOptions): ZincFunction {
         return zincFunction {
             name = "new"
@@ -153,8 +160,6 @@ open class BflStruct(
         }
     }
 
-    @ZincMethod(order = 20)
-    @Suppress("unused")
     open fun generateEmptyMethod(codeGenerationOptions: CodeGenerationOptions): ZincFunction {
         return zincFunction {
             name = "empty"
@@ -173,8 +178,6 @@ open class BflStruct(
     open fun generateFieldEquals(field: FieldWithParentStruct) =
         "(${field.type.equalsExpr("self.${field.name}", "other.${field.name}")})"
 
-    @ZincMethod(order = 30)
-    @Suppress("unused")
     open fun generateEqualsMethod(codeGenerationOptions: CodeGenerationOptions) = zincMethod {
         name = "equals"
         parameter { name = "other"; type = Self }
@@ -189,9 +192,7 @@ open class BflStruct(
         }
     }
 
-    @ZincMethodList(order = 100)
-    @Suppress("unused")
-    fun generateDeserializeMethod(codeGenerationOptions: CodeGenerationOptions): List<ZincFunction> {
+    open fun generateDeserializeMethods(codeGenerationOptions: CodeGenerationOptions): List<ZincFunction> {
         return codeGenerationOptions.witnessGroupOptions.map {
             val fieldDeserializations = fields.fold(Pair("", 0)) { acc: Pair<String, Int>, field ->
                 val implementation = generateFieldDeserialization(it, field, OFFSET)

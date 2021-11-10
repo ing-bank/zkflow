@@ -8,13 +8,7 @@ import com.ing.zinc.poet.ZincFile
 import com.ing.zinc.poet.ZincFunction
 import com.ing.zinc.poet.ZincPrimitive
 import com.ing.zinc.poet.ZincTypeDef
-import com.ing.zkflow.util.requireInstanceOf
-import com.ing.zkflow.util.requireNotNull
 import java.util.Locale
-import kotlin.reflect.KFunction
-import kotlin.reflect.full.findAnnotation
-import kotlin.reflect.full.memberFunctions
-import kotlin.reflect.jvm.isAccessible
 
 /**
  * A [BflModule] is a [BflType] for which Zinc code can be generated.
@@ -36,6 +30,13 @@ interface BflModule : BflType {
      * @param codeGenerationOptions
      */
     fun generateZincFile(codeGenerationOptions: CodeGenerationOptions): ZincFile
+
+    /**
+     * Generate methods that must be added to this struct or enum.
+     *
+     * NOTE: when overriding this method, include super first.
+     */
+    fun generateMethods(codeGenerationOptions: CodeGenerationOptions): List<ZincFunction>
 
     companion object {
         private val methodsPerModuleRegistry: MutableMap<String, MutableMap<String, ZincFunction>> = mutableMapOf()
@@ -79,76 +80,4 @@ internal fun BflModule.getSerializedTypeDef(): ZincTypeDef = ZincTypeDef.zincTyp
         elementType = ZincPrimitive.Bool
         size = getLengthConstant()
     }
-}
-
-/**
- * This annotation marks a method as generating a zinc method.
- *
- * The method should not accept any parameters, and return a [String] or [ZincFunction] or [ZincMethod] with the zinc function implementation.
- */
-@Target(AnnotationTarget.FUNCTION)
-@Retention(AnnotationRetention.RUNTIME)
-annotation class ZincMethod(
-    val order: Int
-)
-
-/**
- * This annotation marks a method as generating a list of zinc methods.
- *
- * The method should not accept any parameters, and return a [List<ZincFunction>] with the zinc function implementations.
- */
-@Target(AnnotationTarget.FUNCTION)
-@Retention(AnnotationRetention.RUNTIME)
-annotation class ZincMethodList(
-    val order: Int
-)
-
-internal fun <T : BflModule> T.getAllMethods(codeGenerationOptions: CodeGenerationOptions): Sequence<ZincFunction> {
-    val methodsFromAnnotations: Sequence<ZincFunction> = getAllZincMethodGenerators()
-        .flatMap { method ->
-            when (val result = invokeZincMethodGenerator(method, codeGenerationOptions)) {
-                null -> throw IllegalArgumentException("Unsupported zinc function type: null on ${this::class.qualifiedName}::${method.name}()")
-                is List<*> -> result.map {
-                    it.requireNotNull {
-                        "Unsupported zinc function type: null on ${this::class.qualifiedName}::${method.name}()"
-                    }.requireInstanceOf {
-                        "Unsupported zinc function type: ${result::class.qualifiedName} on ${this::class.qualifiedName}::${method.name}()"
-                    }
-                }
-                else -> listOf(
-                    result.requireInstanceOf {
-                        "Unsupported zinc function type: ${result::class.qualifiedName} on ${this::class.qualifiedName}::${method.name}()"
-                    }
-                )
-            }
-        }
-    return methodsFromAnnotations + getRegisteredMethods()
-}
-
-private fun <T : BflModule> T.invokeZincMethodGenerator(
-    method: KFunction<*>,
-    codeGenerationOptions: CodeGenerationOptions
-) = when (method.parameters.size) {
-    1 -> method.call(this)
-    2 -> method.call(this, codeGenerationOptions)
-    else -> error("Methods annotated with ${ZincMethod::class.simpleName} or ${ZincMethodList::class.simpleName} should take either no arguments, or a single ${CodeGenerationOptions::class.simpleName} as argument")
-}
-
-private fun <T : BflModule> T.getAllZincMethodGenerators(): Sequence<KFunction<*>> {
-    return getOrderedZincMethods()
-        .sortedBy { it.second }
-        .map { it.first }
-}
-
-private fun <T : BflModule> T.getOrderedZincMethods(): Sequence<Pair<KFunction<*>, Int>> {
-    return this::class.memberFunctions
-        .asSequence()
-        .onEach { it.isAccessible = true }
-        .flatMap { method ->
-            method.findAnnotation<ZincMethod>()?.let {
-                sequenceOf(Pair(method, it.order))
-            } ?: method.findAnnotation<ZincMethodList>()?.let {
-                sequenceOf(Pair(method, it.order))
-            } ?: emptySequence()
-        }
 }

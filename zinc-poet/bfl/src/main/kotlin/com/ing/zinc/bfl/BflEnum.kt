@@ -40,9 +40,11 @@ data class BflEnum(
         // NOOP
     }
 
-    @ZincMethodList(order = 100)
-    @Suppress("unused")
-    fun generateDeserializeMethod(codeGenerationOptions: CodeGenerationOptions): List<ZincFunction> {
+    override fun generateMethods(codeGenerationOptions: CodeGenerationOptions): List<ZincFunction> {
+        return generateDeserializeMethods(codeGenerationOptions)
+    }
+
+    private fun generateDeserializeMethods(codeGenerationOptions: CodeGenerationOptions): List<ZincFunction> {
         return codeGenerationOptions.witnessGroupOptions.map {
             val variantClauses = variants.mapIndexed { index: Int, variant: String ->
                 "$index => $id::$variant,"
@@ -98,7 +100,8 @@ data class BflEnum(
         newLine()
         impl {
             name = id
-            addFunctions(this@BflEnum.getAllMethods(codeGenerationOptions).toList())
+            addFunctions(generateMethods(codeGenerationOptions))
+            addFunctions(getRegisteredMethods())
         }
     }
 }

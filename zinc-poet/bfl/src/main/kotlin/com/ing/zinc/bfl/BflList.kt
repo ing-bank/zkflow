@@ -114,8 +114,21 @@ open class BflList(
         }
     }
 
-    @ZincMethod(order = 10)
-    @Suppress("unused")
+    override fun generateMethods(codeGenerationOptions: CodeGenerationOptions): List<ZincFunction> {
+        return super.generateMethods(codeGenerationOptions) + listOf(
+            generateListOfMethod(codeGenerationOptions),
+            generateGetMethod(codeGenerationOptions),
+            generateAddMethod(),
+            generateAllEqualsMethod(),
+            generateContainsMethod(),
+            generateIsSubsetOfMethod(),
+            generateIsDistinctMethod(),
+        ) +
+            generateExtractFieldMethods() +
+            generateIndexOfSingleByFieldMethods() +
+            generateSingleByFieldMethods()
+    }
+
     open fun generateListOfMethod(codeGenerationOptions: CodeGenerationOptions): ZincFunction {
         val fieldAssignments = fields.joinToString("\n") {
             when (it.name) {
@@ -140,9 +153,7 @@ open class BflList(
         }
     }
 
-    @ZincMethod(order = 45)
-    @Suppress("unused")
-    internal fun generateContainsMethod(): ZincFunction = zincMethod {
+    private fun generateContainsMethod(): ZincFunction = zincMethod {
         name = "contains"
         parameter { name = ELEMENT; type = elementType.toZincId() }
         returnType = ZincPrimitive.Bool
@@ -156,8 +167,6 @@ open class BflList(
         """.trimIndent()
     }
 
-    @ZincMethod(order = 40)
-    @Suppress("unused")
     open fun generateGetMethod(codeGenerationOptions: CodeGenerationOptions): ZincFunction = zincMethod {
         name = "get"
         parameter { name = "index"; type = sizeType.toZincId() }
@@ -169,9 +178,7 @@ open class BflList(
         """.trimIndent()
     }
 
-    @ZincMethod(order = 50)
-    @Suppress("unused")
-    internal fun generateIsSubsetOfMethod(): ZincFunction = zincMethod {
+    private fun generateIsSubsetOfMethod(): ZincFunction = zincMethod {
         name = "is_subset_of"
         parameter { name = "other"; type = Self }
         returnType = ZincPrimitive.Bool
@@ -188,9 +195,7 @@ open class BflList(
     /**
      * TODO the add method does not work when the value isn't returned, so not really mutable?
      */
-    @ZincMethod(order = 65)
-    @Suppress("unused")
-    internal fun generateAddMethod(): ZincFunction = zincMethod {
+    private fun generateAddMethod(): ZincFunction = zincMethod {
         mutable = true
         name = "add"
         parameter { name = ELEMENT; type = elementType.toZincId() }
@@ -210,9 +215,7 @@ open class BflList(
     /**
      * This implementation is O(n^2).
      */
-    @ZincMethod(order = 70)
-    @Suppress("unused")
-    internal fun generateIsDistinctMethod(): ZincFunction = zincMethod {
+    private fun generateIsDistinctMethod(): ZincFunction = zincMethod {
         name = "is_distinct"
         returnType = ZincPrimitive.Bool
         comment = "Checks whether all elements in `self` are distinct."
@@ -228,9 +231,7 @@ open class BflList(
         """.trimIndent()
     }
 
-    @ZincMethod(order = 72)
-    @Suppress("unused")
-    internal fun generateAllEqualsMethod(): ZincFunction {
+    private fun generateAllEqualsMethod(): ZincFunction {
         val equalsExpr = elementType.equalsExpr("self.$VALUES_FIELD[i]", ELEMENT)
         return zincMethod {
             name = "all_equals"
@@ -252,9 +253,7 @@ open class BflList(
         }
     }
 
-    @ZincMethodList(order = 60)
-    @Suppress("unused")
-    internal fun generateExtractFieldMethods(): List<ZincFunction> {
+    private fun generateExtractFieldMethods(): List<ZincFunction> {
         return (elementType as? BflStruct)
             ?.getRecursiveFields()
             ?.map(this@BflList::generateExtractFieldMethod)
@@ -285,9 +284,7 @@ open class BflList(
         }
     }
 
-    @ZincMethodList(order = 80)
-    @Suppress("unused")
-    internal fun generateIndexOfSingleByFieldMethods(): List<ZincFunction> {
+    private fun generateIndexOfSingleByFieldMethods(): List<ZincFunction> {
         return (elementType as? BflStruct)?.getRecursiveFields()?.map(this@BflList::generateIndexOfSingleByFieldMethod)
             ?: emptyList()
     }
@@ -323,9 +320,7 @@ open class BflList(
         }
     }
 
-    @ZincMethodList(order = 81)
-    @Suppress("unused")
-    internal fun generateSingleByFieldMethods(): List<ZincFunction> {
+    private fun generateSingleByFieldMethods(): List<ZincFunction> {
         return (elementType as? BflStruct)?.run {
             getRecursiveFields().map { field ->
                 val equalsExpr = field.type.equalsExpr("self.$VALUES_FIELD[i].${field.name}", "by")

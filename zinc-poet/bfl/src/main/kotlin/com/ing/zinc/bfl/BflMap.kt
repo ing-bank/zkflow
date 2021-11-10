@@ -1,5 +1,6 @@
 package com.ing.zinc.bfl
 
+import com.ing.zinc.bfl.generator.CodeGenerationOptions
 import com.ing.zinc.poet.Indentation.Companion.spaces
 import com.ing.zinc.poet.ZincFunction
 import com.ing.zinc.poet.ZincMethod.Companion.zincMethod
@@ -21,9 +22,12 @@ data class BflMap(
             .distinctBy { it.id }
     }
 
-    @ZincMethod(order = 50)
-    @Suppress("unused")
-    fun generateTryGetMethod(): ZincFunction {
+    override fun generateMethods(codeGenerationOptions: CodeGenerationOptions): List<ZincFunction> {
+        return super.generateMethods(codeGenerationOptions) +
+            listOf(generateTryGetMethod())
+    }
+
+    private fun generateTryGetMethod(): ZincFunction {
         val mapEntryKey = "self.$VALUES_FIELD[i].${BflMapEntry.KEY_FIELD}"
         val mapEntryValue = "self.$VALUES_FIELD[i].${BflMapEntry.VALUE_FIELD}"
         return zincMethod {
