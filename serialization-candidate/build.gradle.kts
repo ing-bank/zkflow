@@ -7,6 +7,8 @@ plugins {
 dependencies {
     testImplementation(kotlin("test"))
 
+    implementation(project(":annotations"))
+
     val kotlinxSerializationVersion: String by project
     api("org.jetbrains.kotlinx:kotlinx-serialization-core:$kotlinxSerializationVersion")
 }
@@ -14,8 +16,7 @@ dependencies {
 tasks {
     compileKotlin {
         kotlinOptions {
-            freeCompilerArgs +=
-                "-Xopt-in=kotlinx.serialization.ExperimentalSerializationApi"
+            freeCompilerArgs += "-Xopt-in=kotlinx.serialization.ExperimentalSerializationApi"
         }
     }
 }

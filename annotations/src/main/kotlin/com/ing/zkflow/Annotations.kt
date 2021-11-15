@@ -1,6 +1,5 @@
 package com.ing.zkflow
 
-import com.ing.zkflow.serialization.serializer.Surrogate
 import kotlin.reflect.KClass
 
 // User domain                         Serde domain                              Zinc domain
@@ -77,3 +76,11 @@ annotation class ZKP
  */
 @Target(AnnotationTarget.TYPE)
 annotation class BigDecimalSize(val integerPart: Int, val fractionPart: Int)
+
+/**
+ * Surrogate is a specific representation of a class, such representation should allow for simpler serialization.
+ * This definition also ensures all surrogate classes can convert itself back to originals.
+ */
+interface Surrogate<T> {
+    fun toOriginal(): T
+}
