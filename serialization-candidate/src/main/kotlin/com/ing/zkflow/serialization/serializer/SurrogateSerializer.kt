@@ -1,5 +1,6 @@
 package com.ing.zkflow.serialization.serializer
 
+import com.ing.zkflow.Surrogate
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
@@ -29,8 +30,4 @@ abstract class SurrogateSerializer<T, S : Surrogate<T>>(
         val surrogate = toSurrogate(value)
         encoder.encodeSerializableValue(strategy, surrogate)
     }
-}
-
-interface Surrogate<T> {
-    fun toOriginal(): T
 }

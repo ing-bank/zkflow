@@ -4,26 +4,22 @@ plugins {
     id("maven-publish")
 }
 
-dependencies {
-    testImplementation(kotlin("test"))
-
-    implementation(project(":annotations"))
-
-    val kotlinxSerializationVersion: String by project
-    api("org.jetbrains.kotlinx:kotlinx-serialization-core:$kotlinxSerializationVersion")
+repositories {
+    maven("https://oss.sonatype.org/content/repositories/snapshots/")
 }
 
-tasks {
-    compileKotlin {
-        kotlinOptions {
-            freeCompilerArgs += "-Xopt-in=kotlinx.serialization.ExperimentalSerializationApi"
-        }
-    }
+dependencies {
+    val arrowMetaVersion: String by project
+    implementation("io.arrow-kt:arrow-meta:$arrowMetaVersion")
+
+    implementation(project(":serialization-candidate"))
+    implementation(project(":annotations"))
+    implementation(project(":utils"))
 }
 
 publishing {
     publications {
-        create<MavenPublication>("zkSerializationCandidate") {
+        create<MavenPublication>("zkArrowPlugin") {
             from(components["java"])
         }
     }
