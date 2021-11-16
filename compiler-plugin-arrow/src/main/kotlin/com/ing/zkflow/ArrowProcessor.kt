@@ -20,4 +20,4 @@ class ArrowProcessor : Meta {
     }
 }
 
-internal val SerdeLogger = FileLogger.to("/tmp/serde-annotations.log")
+internal val SerdeLogger = FileLogger("/tmp/serde-annotations.log")

@@ -1,5 +1,6 @@
 package com.ing.zkflow.serialization.serializer
 
+import com.ing.zkflow.Surrogate
 import com.ing.zkflow.engine.SerdeEngine
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.Serializable

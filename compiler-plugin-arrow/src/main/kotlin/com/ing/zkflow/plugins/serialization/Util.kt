@@ -26,7 +26,7 @@ inline fun <reified T> KtAnnotated.annotationSingleArgOrNull(): String? =
 fun <T : Any> KClass<T>.implementsInterface(interfaceClass: KClass<*>): Boolean =
     allSuperclasses.contains(interfaceClass)
 
-fun KtClass.verifyZKP() {
+fun KtClass.isCorrectClassTypeForZKPAnnotation(): Boolean {
     require(!(isAnnotation() || isInterface())) {
         "Review class definition `${this.name}`. Classes annotated with ${ZKP::class.simpleName} may not be annotation classes, interfaces or abstract classes"
     }
@@ -34,6 +34,8 @@ fun KtClass.verifyZKP() {
     require(typeParameters.isEmpty()) {
         "Review class definition `${this.name}`. Classes annotated with ${ZKP::class.simpleName} may not contain generics"
     }
+
+    return true
 }
 
 /**

@@ -3,10 +3,6 @@ plugins {
     id("maven-publish")
 }
 
-dependencies {
-    implementation(project(":serialization-candidate"))
-}
-
 publishing {
     publications {
         create<MavenPublication>("zkAnnotations") {

@@ -18,16 +18,17 @@ import org.jetbrains.kotlin.psi.KtParameter
  * https://speakerdeck.com/heyitsmohit/writing-kotlin-compiler-plugins-with-arrow-meta
  */
 
-@Suppress("TopLevelPropertyNaming")
-private const val processingUnit = "Classes Annotation"
+private const val PROCESSING_UNIT = "Classes Annotation"
 
 /**
  * Annotates every constructor property with @Serializable and generate an appropriate sequence of serializing objects.
  */
 val Meta.ClassAnnotator: CliPlugin
-    get() = processingUnit {
+    get() = PROCESSING_UNIT {
         meta(
-            classDeclaration(this, match = { element.validate() }) { (ktClass, _) ->
+            classDeclaration(this, match = {
+                element.verifyAnnotationCorrectness()
+            }) { (ktClass, _) ->
                 if (!ktClass.hasExplicitPrimaryConstructor()) {
                     Transform.replace(
                         replacing = ktClass,
@@ -41,7 +42,7 @@ val Meta.ClassAnnotator: CliPlugin
                     val primaryConstructor = ktClass.primaryConstructor ?: error("Primary constructor for ${ktClass.name} must be present")
 
                     val (parameters, serializingObjects) = ktClass
-                        .processConstructorParameters(ctx)
+                        .extractConstructorParameters(ctx)
                         .deconstructIntoDefinitionsAndSerializers()
 
                     Transform.replace(
@@ -63,24 +64,27 @@ val Meta.ClassAnnotator: CliPlugin
         )
     }
 
-private fun KtClass.validate(): Boolean {
-    SerdeLogger.log(processingUnit)
+/**
+ * Verbosely verifies whether a ZKP annotation is applicable to the class.
+ */
+private fun KtClass.verifyAnnotationCorrectness(): Boolean {
+    SerdeLogger.log(PROCESSING_UNIT)
     SerdeLogger.log("Considering:\n$text")
 
-    val applicability = if (hasAnnotation<ZKP>()) { verifyZKP(); true } else { false }
+    val applicability = hasAnnotation<ZKP>() && isCorrectClassTypeForZKPAnnotation()
 
     SerdeLogger.log("WILL${if (applicability) " " else " NOT "}process")
 
     return applicability
 }
 
-private fun KtClass.processConstructorParameters(ctx: CompilerContext): List<ConstructorParameter> =
+private fun KtClass.extractConstructorParameters(ctx: CompilerContext): List<ConstructorParameter> =
     primaryConstructorParameters.fold(mutableListOf()) { acc, param ->
-        acc += param.process(ctx)
+        acc += param.intoConstructorParameter(ctx)
         acc
     }
 
-private fun KtParameter.process(ctx: CompilerContext): ConstructorParameter {
+private fun KtParameter.intoConstructorParameter(ctx: CompilerContext): ConstructorParameter {
     if (!hasValOrVar()) {
         return ConstructorParameter.Self(text)
     }
@@ -90,7 +94,7 @@ private fun KtParameter.process(ctx: CompilerContext): ConstructorParameter {
     val annotatedType = typeReference
     require(annotatedType != null) { "Cannot infer the type of $text" }
 
-    val description = annotatedType.process()
+    val description = annotatedType.buildSerializingObjectsHierarchy()
     val support = description(paramName)
 
     val redefinition = ctx.ktPsiElementFactory.createProperty(

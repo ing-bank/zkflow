@@ -5,10 +5,9 @@ import java.time.Instant
 import kotlin.math.min
 import kotlin.reflect.KClass
 
-class FileLogger private constructor(path: String) {
+class FileLogger(path: String) {
     companion object {
-        fun forClass(klass: KClass<*>) = FileLogger("/tmp/${klass.simpleName ?: error("Cannot create a logger for an anonymous class")}")
-        fun to(path: String) = FileLogger(path)
+        fun forClass(klass: KClass<*>) = FileLogger("/${System.getProperty("java.io.tempdir")}/${klass.simpleName ?: error("Cannot create a logger for an anonymous class")}")
 
         private const val EXCERPT_LENGTH = 500
     }

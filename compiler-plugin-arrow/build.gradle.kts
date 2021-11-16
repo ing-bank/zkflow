@@ -9,13 +9,6 @@ repositories {
 }
 
 dependencies {
-    implementation(kotlin("stdlib"))
-    implementation(kotlin("compiler-embeddable"))
-    implementation(kotlin("reflect"))
-
-    val kotlinxSerializationVersion: String by project
-    api("org.jetbrains.kotlinx:kotlinx-serialization-core:$kotlinxSerializationVersion")
-
     val arrowMetaVersion: String by project
     implementation("io.arrow-kt:arrow-meta:$arrowMetaVersion")
 

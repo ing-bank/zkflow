@@ -14,16 +14,17 @@ import org.jetbrains.kotlin.psi.psiUtil.containingClass
 import org.jetbrains.kotlin.psi.psiUtil.containingClassOrObject
 import org.jetbrains.kotlin.util.isOrdinaryClass
 
-@Suppress("TopLevelPropertyNaming")
-private const val processingUnit = "Property Annotator"
+private const val PROCESSING_UNIT = "Property Annotator"
 
 /**
  * Annotates all non-constructor properties as @Transient  to exclude them from serialization.
  */
 val Meta.PropertyAnnotator: CliPlugin
-    get() = processingUnit {
+    get() = PROCESSING_UNIT {
         meta(
-            property(this, match = { element.validate() }) { (ktProperty, _) ->
+            property(this, match = {
+                element.verifyAnnotationCorrectness()
+            }) { (ktProperty, _) ->
                 Transform.replace<KtProperty>(
                     replacing = ktProperty,
                     newDeclarations = listOf(
@@ -35,15 +36,17 @@ val Meta.PropertyAnnotator: CliPlugin
         )
     }
 
-private fun KtProperty.validate(): Boolean {
-    SerdeLogger.log(processingUnit)
+/**
+ * Verbosely verifies whether the property is a part of a ZKP annotated class.
+ */
+private fun KtProperty.verifyAnnotationCorrectness(): Boolean {
+    SerdeLogger.log(PROCESSING_UNIT)
     SerdeLogger.logShort("Considering:\n$text")
 
     val applicability = containingClassOrObject?.isOrdinaryClass ?: false &&
-        containingClass()
-            ?.let {
-                if (it.hasAnnotation<ZKP>()) { it.verifyZKP(); true } else { false }
-            } ?: false
+        containingClass()?.let {
+            it.hasAnnotation<ZKP>() && it.isCorrectClassTypeForZKPAnnotation()
+        } ?: false
 
     SerdeLogger.log("WILL${if (applicability) " " else " NOT "}process")
 

@@ -1,6 +1,8 @@
 package com.ing.zkflow.plugins.serialization
 
 import com.ing.zkflow.SerdeLogger
+import com.ing.zkflow.plugins.serialization.serializingobject.Processors
+import com.ing.zkflow.plugins.serialization.serializingobject.SerializingObject
 import org.jetbrains.kotlin.psi.KtTypeReference
 
 // Compiler plugins are invoked at a stage past syntactical verification,
@@ -8,13 +10,17 @@ import org.jetbrains.kotlin.psi.KtTypeReference
 // Nevertheless, this is just a fallback because, respective descriptors are not available,
 // if these statements are not true, then this functionality is better be re-implemented using descriptors.
 
-fun KtTypeReference.process(): SerializingObject =
-    innerProcess(ignoreNullability = false, depth = 0)
+/**
+ * Builds a hierarchy of serializing objects and returns its root.
+ */
+fun KtTypeReference.buildSerializingObjectsHierarchy(): SerializingObject =
+    innerBuildSerializingObjectsHierarchy(ignoreNullability = false, depth = 0)
 
 /**
- * Recursively process the type tree to build a serializing object for the type.
+ * Recursively process the type tree to build a hierarchy of serializing objects.
+ * Returns the root of the tree.
  */
-private fun KtTypeReference.innerProcess(ignoreNullability: Boolean = false, depth: Int = 0): SerializingObject {
+private fun KtTypeReference.innerBuildSerializingObjectsHierarchy(ignoreNullability: Boolean = false, depth: Int = 0): SerializingObject {
     val type = typeElement
     require(type != null) { "Cannot infer type of: $text" }
     val tab = "|-${List(depth){"-"}.joinToString(separator = "", postfix = " ")}"
@@ -27,7 +33,7 @@ private fun KtTypeReference.innerProcess(ignoreNullability: Boolean = false, dep
 
     // • Strip nullability.
     if (root.isNullable) {
-        return innerProcess(ignoreNullability = true, depth + 1).wrapNull()
+        return innerBuildSerializingObjectsHierarchy(ignoreNullability = true, depth + 1).wrapNull()
     }
 
     // • Invariant: root.isNullable = false
@@ -37,7 +43,7 @@ private fun KtTypeReference.innerProcess(ignoreNullability: Boolean = false, dep
 
     // • Strip outer type.
     val children = type.typeArgumentsAsTypes.map {
-        it.innerProcess(ignoreNullability = false, depth + 1).let { so ->
+        it.innerBuildSerializingObjectsHierarchy(ignoreNullability = false, depth + 1).let { so ->
             if (root.isCollection) so.wrapDefault() else so
         }
     }

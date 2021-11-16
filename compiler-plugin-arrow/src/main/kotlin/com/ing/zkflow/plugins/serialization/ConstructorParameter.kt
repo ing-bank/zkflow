@@ -1,5 +1,7 @@
 package com.ing.zkflow.plugins.serialization
 
+import com.ing.zkflow.plugins.serialization.serializingobject.SerializationSupport
+
 /**
  * Every constructor parameter of a class can be either a true parameter or a property parameter.
  * In the latter case, the parameter requires a sequence of serializing objects.
