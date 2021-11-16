@@ -14,6 +14,6 @@ sealed class ConstructorParameter(val definition: String) {
     }
 
     class Serializable(definition: String, support: SerializationSupport) : ConstructorParameter(definition) {
-        override val serializingObjects = support.objects
+        override val serializingObjects = support.serializingObjectKotlinDefinitions
     }
 }

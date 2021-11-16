@@ -1,7 +1,7 @@
-package com.ing.zkflow.plugins.serialization
+package com.ing.zkflow.plugins.serialization.serializingobject
 
 /**
- * Tracker to keep track of serializing objects hierarchies.
+ * Tracker is used to uniquely identify objects in the hierarchy of serializing objects.
  *
  * This class serves the following purpose:
  * For a type, a tracker, say, `Name_0` is initialized,
@@ -16,7 +16,17 @@ data class Tracker(val name: String, val coordinates: List<Coordinate>) {
     fun numeric(nth: Int = 0) = Tracker(name, coordinates + Coordinate.Numeric().next(nth))
 }
 
+/**
+ * A utility class allowing two kinds of linear "coordinates"
+ * and sequential progression for each type.
+ *
+ * A Numeric coordinate is a natural number, i.e., 1, 2, 3,...
+ * A Literal coordinate is an n-letter composition of the English alphabet letters, i.e., A, B, ... C, AA, AB, ... ZZ, AAA, ...
+ */
 sealed class Coordinate {
+    abstract fun next(): Coordinate
+    abstract fun next(times: Int): Coordinate
+
     data class Numeric(private val i: Int = 0) : Coordinate() {
         override fun next() = Numeric(i + 1)
         override fun next(times: Int) = Numeric(i + times)
@@ -56,7 +66,4 @@ sealed class Coordinate {
 
         override fun toString() = s.joinToString(separator = "")
     }
-
-    abstract fun next(): Coordinate
-    abstract fun next(times: Int): Coordinate
 }

@@ -7,7 +7,6 @@ import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.KtTypeElement
 import org.jetbrains.kotlin.psi.KtTypeReference
 import kotlin.reflect.KClass
-import kotlin.reflect.full.allSuperclasses
 
 /**
  * Major source of inspiration
@@ -22,9 +21,6 @@ inline fun <reified T> KtAnnotated.annotationOrNull(): KtAnnotationEntry? =
 
 inline fun <reified T> KtAnnotated.annotationSingleArgOrNull(): String? =
     annotationOrNull<T>()?.run { valueArguments.single().asElement().text.trim() }
-
-fun <T : Any> KClass<T>.implementsInterface(interfaceClass: KClass<*>): Boolean =
-    allSuperclasses.contains(interfaceClass)
 
 fun KtClass.isCorrectClassTypeForZKPAnnotation(): Boolean {
     require(!(isAnnotation() || isInterface())) {

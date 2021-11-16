@@ -228,7 +228,7 @@ internal object Processors {
         }?.let { (surrogateType, conversionProvider) ->
             // If conversion provider is PRESENT
             // => serialize the class via a surrogate.
-            TypeSerializingObject.FuzzyType(typeRef) { self, outer ->
+            TypeSerializingObject.UserType(typeRef) { self, outer ->
                 """
                 object $outer: ${SurrogateSerializer::class.qualifiedName}<${self.cleanTypeDeclaration}, ${surrogateType.text.trim()}>(
                     ${surrogateType.extractRootType().type}.serializer(),
@@ -244,7 +244,7 @@ internal object Processors {
             // As of now, any class different from above cases is considered to have been annotated with com.ing.zkflow.annotations.ZKP
             // and thus be serializable. If this assumption is incorrect, a compilation error will be thrown by kotlinx.serialization.
 
-            TypeSerializingObject.FuzzyType(typeRef) { self, outer ->
+            TypeSerializingObject.UserType(typeRef) { self, outer ->
                 val type = self.original.typeElement?.extractRootType()?.type ?: error("Cannot infer type of `${self.original}`")
                 "object $outer: ${WrappedKSerializer::class.qualifiedName}<${self.cleanTypeDeclaration}>($type.serializer())"
             }

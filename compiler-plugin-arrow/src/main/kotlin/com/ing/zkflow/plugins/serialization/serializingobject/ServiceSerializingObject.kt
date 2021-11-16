@@ -1,6 +1,5 @@
 package com.ing.zkflow.plugins.serialization.serializingobject
 
-import com.ing.zkflow.plugins.serialization.Tracker
 import com.ing.zkflow.serialization.serializer.KSerializerWithDefault
 import com.ing.zkflow.serialization.serializer.NullableSerializer
 

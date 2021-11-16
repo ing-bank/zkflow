@@ -2,17 +2,16 @@ package com.ing.zkflow.plugins.serialization.serializingobject
 
 import com.ing.zkflow.Default
 import com.ing.zkflow.Resolver
-import com.ing.zkflow.plugins.serialization.Tracker
 import com.ing.zkflow.plugins.serialization.annotationOrNull
 import com.ing.zkflow.plugins.serialization.annotationSingleArgOrNull
 import com.ing.zkflow.plugins.serialization.attachAnnotation
 import com.ing.zkflow.plugins.serialization.cleanTypeDeclaration
-import com.ing.zkflow.plugins.serialization.implementsInterface
 import com.ing.zkflow.serialization.serializer.KSerializerWithDefault
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.KSerializer
 import org.jetbrains.kotlin.psi.KtTypeReference
 import kotlin.reflect.KClass
+import kotlin.reflect.full.isSubclassOf
 
 /**
  * TypeSerializingObjects provide serializers for either explicitly known types, such as List, Int, Map, etc.
@@ -47,9 +46,9 @@ sealed class TypeSerializingObject : SerializingObject() {
         private val children: List<SerializingObject>,
         private val construction: (self: ExplicitType, outer: Tracker, inner: List<Tracker>) -> String
     ) : TypeSerializingObject() {
-        private val hasDefault = serializer.implementsInterface(KSerializerWithDefault::class)
+        private val hasDefault = serializer.isSubclassOf(KSerializerWithDefault::class)
 
-        // TODO replace with those as in FuzzyType?
+        // TODO replace with those as in UserType?
         override val cleanTypeDeclaration: String by lazy {
             children
                 .joinToString(separator = ", ") { it.cleanTypeDeclaration }
@@ -94,9 +93,9 @@ sealed class TypeSerializingObject : SerializingObject() {
     /**
      * Represents a serializing object for user classes and 3rd party classes.
      */
-    class FuzzyType internal constructor(
+    class UserType internal constructor(
         override val original: KtTypeReference,
-        private val construction: (self: FuzzyType, outer: Tracker) -> String
+        private val construction: (self: UserType, outer: Tracker) -> String
     ) : TypeSerializingObject() {
         override val cleanTypeDeclaration: String by lazy { original.cleanTypeDeclaration(ignoreNullability = true) }
         override val redeclaration: String by lazy { original.attachAnnotation(Contextual::class) }
