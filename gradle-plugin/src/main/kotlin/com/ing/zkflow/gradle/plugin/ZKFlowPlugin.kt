@@ -10,6 +10,8 @@ import com.ing.zkflow.gradle.task.PrepareCircuitForCompilationTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPlugin
+import org.jetbrains.kotlin.gradle.dsl.KotlinCompile
+import java.io.File
 import java.net.URI
 
 @Suppress("unused")
@@ -41,11 +43,36 @@ class ZKFlowPlugin : Plugin<Project> {
             )
             project.dependencies.add("implementation", "com.ing.zkflow:protocol:${extension.notaryVersion}")
             project.dependencies.add("implementation", "com.ing.zkflow:compilation:${extension.notaryVersion}")
+            project.dependencies.add("implementation", "com.ing.zkflow:annotations:${extension.notaryVersion}")
 
             project.pluginManager.apply("org.jetbrains.kotlin.plugin.serialization")
 
+            // KSP.
             project.pluginManager.apply("com.google.devtools.ksp")
             project.dependencies.add("ksp", "com.ing.zkflow:compiler-plugin-ksp:${extension.notaryVersion}")
+
+            // Arrow.
+            val log = File("/tmp/apply-plugin.log")
+            log.appendText("Hello\n")
+
+            project
+                .tasks
+                .filterIsInstance<KotlinCompile<*>>()
+                .forEach { task ->
+                    log.appendText("${task.name}\n")
+                    log.appendText("Before: \n\t ${task.kotlinOptions.freeCompilerArgs.joinToString(separator = "\n\t") { it }}\n")
+
+                    // TODO this must be resolved differently, only works because `zkdapp-tester` includes the parent build.
+                    val libPath = File(System.getProperty("user.dir"))
+                        .resolve("..")
+                        .resolve("compiler-plugin-arrow/build/libs/compiler-plugin-arrow-${extension.notaryVersion}.jar")
+
+                    task.kotlinOptions.freeCompilerArgs += "-Xplugin=$libPath"
+
+                    log.appendText("After: \n\t ${task.kotlinOptions.freeCompilerArgs.joinToString(separator = "\n\t") { it }}\n")
+                }
+
+            project.dependencies.add("implementation", "com.ing.zkflow:serialization-candidate:${extension.notaryVersion}")
         }
 
         val createZincDirsForCircuitTask = project.tasks.create(
