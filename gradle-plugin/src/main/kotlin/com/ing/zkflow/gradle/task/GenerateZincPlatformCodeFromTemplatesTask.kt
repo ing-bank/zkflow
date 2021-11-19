@@ -16,7 +16,7 @@ open class GenerateZincPlatformCodeFromTemplatesTask : DefaultTask() {
     init {
         // used to have the actual zinc build dirs as output dirs, but that would make this task always out of date.
         // We really only care about outdated inputs.
-        this.outputs.upToDateWhen { true }
+        this.outputs.upToDateWhen { false }
     }
 
     @InputFiles
