@@ -52,15 +52,18 @@ class ZKFlowPlugin : Plugin<Project> {
             project.dependencies.add("ksp", "com.ing.zkflow:compiler-plugin-ksp:${extension.notaryVersion}")
 
             // Arrow.
-            val log = File("/tmp/apply-plugin.log")
-            log.appendText("Hello\n")
-
             project
                 .tasks
                 .filterIsInstance<KotlinCompile<*>>()
                 .forEach { task ->
-                    log.appendText("${task.name}\n")
-                    log.appendText("Before: \n\t ${task.kotlinOptions.freeCompilerArgs.joinToString(separator = "\n\t") { it }}\n")
+                    task.logger.lifecycle("Modifying free compiler arguments to apply compiler-plugin-arrow-${extension.notaryVersion}.jar")
+                    task.logger.quiet(
+                        "[${task.name}] Before:${
+                        task.kotlinOptions.freeCompilerArgs
+                            .joinToString(separator = "\n\t") { it }
+                            .let { if (it.isNotBlank()) "\n\t$it" else it }
+                        }"
+                    )
 
                     // TODO this must be resolved differently, only works because `zkdapp-tester` includes the parent build.
                     val libPath = File(System.getProperty("user.dir"))
@@ -69,7 +72,13 @@ class ZKFlowPlugin : Plugin<Project> {
 
                     task.kotlinOptions.freeCompilerArgs += "-Xplugin=$libPath"
 
-                    log.appendText("After: \n\t ${task.kotlinOptions.freeCompilerArgs.joinToString(separator = "\n\t") { it }}\n")
+                    task.logger.quiet(
+                        "[${task.name}] After:${
+                        task.kotlinOptions.freeCompilerArgs
+                            .joinToString(separator = "\n\t") { it }
+                            .let { if (it.isNotBlank()) "\n\t$it" else it }
+                        }"
+                    )
                 }
 
             project.dependencies.add("implementation", "com.ing.zkflow:serialization-candidate:${extension.notaryVersion}")
