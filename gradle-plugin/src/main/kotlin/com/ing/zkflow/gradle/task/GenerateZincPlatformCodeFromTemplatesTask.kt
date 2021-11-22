@@ -14,8 +14,9 @@ open class GenerateZincPlatformCodeFromTemplatesTask : DefaultTask() {
     private val extension = project.zkFlowExtension
 
     init {
-        // used to have the actual zinc build dirs as output dirs, but that would make this task always out of date.
-        // We really only care about outdated inputs.
+        // Used to have the actual zinc build dirs as output dirs, but that would make this task always out of date.
+        // We temporarily mark all outputs as always outdated, so we can be sure everything is generated after a clean.
+        // These tasks will be replaced by the zinc-poet logic later.
         this.outputs.upToDateWhen { false }
     }
 

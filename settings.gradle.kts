@@ -18,10 +18,6 @@ pluginManagement {
         val cordaGradlePluginsVersion: String by settings
         id("net.corda.plugins.cordapp") version cordaGradlePluginsVersion apply false
         id("net.corda.plugins.quasar-utils") version cordaGradlePluginsVersion apply false
-
-        // Only applied in gradle-plugin-arrow
-        val buildConfigPluginVersion: String by settings
-        id("com.github.gmazzo.buildconfig") version buildConfigPluginVersion apply false
     }
 
     repositories { // Only for these plugins. Repos for other dependencies should be defined in build.gradle.kts
