@@ -5,8 +5,6 @@ import org.jetbrains.kotlin.psi.KtAnnotated
 import org.jetbrains.kotlin.psi.KtAnnotationEntry
 import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.KtTypeElement
-import org.jetbrains.kotlin.psi.KtTypeReference
-import kotlin.reflect.KClass
 
 /**
  * Major source of inspiration
@@ -54,59 +52,3 @@ fun KtTypeElement.extractRootType(): TypeDefinition =
         }
 
 data class TypeDefinition(val type: String, val isNullable: Boolean, val isCollection: Boolean)
-
-/**
- * Recursively build the clean type tree.
- * E.g. for  `List<@Annotation CustomType<Int>>`:
- * 1. `List<@Annotation CustomType<Int>>` -> List
- * 2. `CustomType<Int>` -> CustomType
- * 3. `Int` -> Int
- * =. List<CustomType<Int>>
- */
-fun KtTypeReference.cleanTypeDeclaration(ignoreNullability: Boolean): String {
-    val type = typeElement
-    require(type != null) { "Cannot infer type of: `$text`" }
-
-    val rootType = type.extractRootType()
-    val nullability = if (ignoreNullability) "" else if (rootType.isNullable) "?" else ""
-
-    return if (type.typeArgumentsAsTypes.isEmpty()) {
-        "${rootType.type}$nullability"
-    } else {
-        "${rootType.type}${
-        type.typeArgumentsAsTypes.joinToString(
-            prefix = "<",
-            separator = ", ",
-            postfix = ">"
-        ) { it.cleanTypeDeclaration(ignoreNullability = false) }
-        }$nullability"
-    }
-}
-/**
- * Recursively build the clean type tree.
- * E.g. for  `List<@Annotation CustomType<Int>>`:
- * 1. `List<@Annotation CustomType<Int>>` -> List
- * 2. `CustomType<Int>` -> CustomType
- * 3. `Int` -> Int
- */
-fun KtTypeReference.attachAnnotation(annotation: KClass<*>): String {
-    val type = typeElement
-    require(type != null) { "Cannot infer type of: `$text`" }
-
-    val annotationsDeclaration = (annotationEntries.map { it.text } + "@${annotation.qualifiedName}").joinToString(separator = " ")
-
-    val rootType = type.extractRootType()
-    val nullability = if (rootType.isNullable) "?" else ""
-
-    return if (type.typeArgumentsAsTypes.isEmpty()) {
-        "$annotationsDeclaration ${rootType.type}$nullability"
-    } else {
-        "$annotationsDeclaration ${rootType.type}${
-        type.typeArgumentsAsTypes.joinToString(
-            prefix = "<",
-            separator = ", ",
-            postfix = ">"
-        ) { it.attachAnnotation(annotation) }
-        }$nullability"
-    }
-}

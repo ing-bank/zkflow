@@ -4,7 +4,6 @@ import arrow.meta.CliPlugin
 import arrow.meta.Meta
 import arrow.meta.phases.CompilerContext
 import com.ing.zkflow.plugins.serialization.ClassAnnotator
-import com.ing.zkflow.plugins.serialization.PropertyAnnotator
 import com.ing.zkflow.util.FileLogger
 
 class ArrowProcessor : Meta {
@@ -15,7 +14,7 @@ class ArrowProcessor : Meta {
             // Such behavior has been observed for annotated/ClassString.
             //
             ClassAnnotator,
-            PropertyAnnotator
+            // PropertyAnnotator
         )
     }
 }

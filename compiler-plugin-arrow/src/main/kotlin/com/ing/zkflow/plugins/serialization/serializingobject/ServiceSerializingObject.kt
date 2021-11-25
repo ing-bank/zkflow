@@ -1,7 +1,7 @@
 package com.ing.zkflow.plugins.serialization.serializingobject
 
-import com.ing.zkflow.serialization.serializer.KSerializerWithDefault
 import com.ing.zkflow.serialization.serializer.NullableSerializer
+import com.ing.zkflow.serialization.serializer.SerializerWithDefault
 
 /**
  * Service serializing objects provide wrappings for nullable types and types that require a default value.
@@ -41,7 +41,7 @@ sealed class ServiceSerializingObject : SerializingObject() {
         override val cleanTypeDeclaration = child.cleanTypeDeclaration
         override val redeclaration = child.redeclaration
         override val construction = { outer: Tracker, inner: Tracker ->
-            "object $outer: ${KSerializerWithDefault::class.qualifiedName}<$cleanTypeDeclaration>($inner, $defaultProvider.default)"
+            "object $outer: ${SerializerWithDefault::class.qualifiedName}<$cleanTypeDeclaration>($inner, $defaultProvider.default)"
         }
     }
 }

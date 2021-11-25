@@ -96,7 +96,7 @@ internal object Processors {
             }
 
             typeRef.annotationSingleArgOrNull<UTF8>()?.let { maxLength ->
-                TypeSerializingObject.ExplicitType(
+                return@ToSerializingObject TypeSerializingObject.ExplicitType(
                     typeRef, FixedLengthUTF8StringSerializer::class, String::class.simpleName!!, emptyList()
                 ) { _, outer, _ ->
                     "object $outer: ${FixedLengthUTF8StringSerializer::class.qualifiedName}($maxLength)"
