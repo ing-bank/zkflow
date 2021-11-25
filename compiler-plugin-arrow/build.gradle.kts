@@ -19,7 +19,7 @@ dependencies {
 
 publishing {
     publications {
-        create<MavenPublication>("zkArrowPlugin") {
+        create<MavenPublication>("arrowCompilerPlugin") {
             from(components["java"])
         }
     }
