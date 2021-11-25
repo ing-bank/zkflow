@@ -47,7 +47,6 @@ sealed class TypeSerializingObject : SerializingObject() {
     ) : TypeSerializingObject() {
         private val hasDefault = serializer.isSubclassOf(KSerializerWithDefault::class)
 
-        // TODO replace with those as in UserType?
         override val cleanTypeDeclaration: String by lazy {
             children
                 .joinToString(separator = ", ") { it.cleanTypeDeclaration }
