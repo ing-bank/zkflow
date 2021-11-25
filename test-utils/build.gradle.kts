@@ -16,8 +16,13 @@ dependencies {
     api("$cordaReleaseGroup:corda-test-utils:$cordaVersion")
     api("$cordaReleaseGroup:corda-node-driver:$cordaVersion")
 
+    implementation(project(":serialization-candidate"))
+
     val junit5Version: String by project
     implementation("org.junit.jupiter:junit-jupiter-params:$junit5Version")
+
+    val kotestVersion: String by project
+    implementation("io.kotest:kotest-assertions-core:$kotestVersion")
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
