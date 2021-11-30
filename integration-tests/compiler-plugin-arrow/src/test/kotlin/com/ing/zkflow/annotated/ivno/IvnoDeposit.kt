@@ -15,7 +15,6 @@ import com.ing.zkflow.annotated.ivno.infra.NetworkAnonymousOperatorConverter
 import com.ing.zkflow.annotated.ivno.infra.NetworkEdDSAAnonymousOperator
 import com.ing.zkflow.annotated.ivno.infra.UniqueIdentifierConverter
 import com.ing.zkflow.annotated.ivno.infra.UniqueIdentifierSurrogate
-import kotlinx.serialization.Transient
 import net.corda.core.contracts.LinearPointer
 import net.corda.core.contracts.LinearState
 import net.corda.core.contracts.UniqueIdentifier
@@ -60,6 +59,5 @@ data class IvnoTokenType(
     val fractionDigits: Int = 0,
     override val linearId: @Converter<UniqueIdentifier, UniqueIdentifierSurrogate>(UniqueIdentifierConverter::class) UniqueIdentifier = UniqueIdentifier()
 ) : LinearState {
-    @Transient
     override val participants: List<AbstractParty> = setOf(tokenIssuingEntity, custodian).toList()
 }

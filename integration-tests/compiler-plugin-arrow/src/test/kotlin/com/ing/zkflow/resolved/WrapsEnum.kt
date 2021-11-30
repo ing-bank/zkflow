@@ -19,12 +19,12 @@ data class WrapsEnum(
     object Option_0 : WrappedKSerializer<Option>(Option.serializer())
 }
 
-// There will also be a resolved version for Optio as below.
+// There will also be a resolved version for Option as below.
 // This version is commented out because, in compiler's eyes, this will be a different class,
 // while we want to use the original one. This version is for the sake of completeness.
 //
 // @kotlinx.serialization.Serializable
-// enum class Flag {
+// enum class Option {
 //     FIRST,
 //     SECOND
 // }

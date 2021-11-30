@@ -28,7 +28,7 @@ val Meta.PropertyAnnotator: CliPlugin
                 Transform.replace<KtProperty>(
                     replacing = ktProperty,
                     newDeclarations = listOf(
-                        Transient::class.qualifiedName!!.annotationEntry,
+                        "@${Transient::class.qualifiedName!!}".annotationEntry,
                         ktProperty.scope()
                     )
                 ).also { SerdeLogger.log("Updating class properties:\n$it") }
@@ -48,7 +48,7 @@ private fun KtProperty.verifyAnnotationCorrectness(): Boolean {
             it.hasAnnotation<ZKP>() && it.isCorrectClassTypeForZKPAnnotation()
         } ?: false
 
-    SerdeLogger.log("WILL${if (applicability) " " else " NOT "}process")
+    SerdeLogger.log("(PROP) ${if (applicability) "SHALL" else "WILL NOT"} process")
 
     return applicability
 }
