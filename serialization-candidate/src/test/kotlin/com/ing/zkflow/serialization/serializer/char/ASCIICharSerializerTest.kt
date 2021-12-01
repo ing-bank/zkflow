@@ -1,9 +1,9 @@
 package com.ing.zkflow.serialization.serializer.char
 
-import com.ing.zkflow.engine.SerdeEngine
+import com.ing.zkflow.serialization.SerializerTest
+import com.ing.zkflow.serialization.engine.SerdeEngine
 import com.ing.zkflow.serialization.serializer.FixedLengthListSerializer
 import com.ing.zkflow.serialization.serializer.NullableSerializer
-import com.ing.zkflow.serialization.serializer.SerializerTest
 import com.ing.zkflow.serialization.serializer.WrappedKSerializerWithDefault
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.Serializable

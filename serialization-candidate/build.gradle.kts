@@ -6,6 +6,7 @@ plugins {
 
 dependencies {
     testImplementation(kotlin("test"))
+    testImplementation(project(":test-utils"))
 
     implementation(project(":annotations"))
 

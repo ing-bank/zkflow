@@ -1,11 +1,11 @@
-package com.ing.zkflow.engine
+package com.ing.zkflow.serialization.engine
 
 import com.ing.zkflow.serialization.scheme.BinaryFixedLengthScheme
 import com.ing.zkflow.serialization.scheme.BitBinaryFixedLengthScheme
 import com.ing.zkflow.serialization.scheme.ByteBinaryFixedLengthScheme
 import kotlinx.serialization.KSerializer
 
-open class BFLEngine(private val scheme: BinaryFixedLengthScheme) : SerdeEngine {
+public open class BFLEngine(private val scheme: BinaryFixedLengthScheme) : SerdeEngine {
 
     override fun <T> serialize(strategy: KSerializer<T>, value: T, shouldPrint: Boolean): ByteArray {
         if (shouldPrint) { println("Serializing:\n$value") }
@@ -22,6 +22,6 @@ open class BFLEngine(private val scheme: BinaryFixedLengthScheme) : SerdeEngine 
         }
     }
 
-    object Bits : BFLEngine(BitBinaryFixedLengthScheme)
-    object Bytes : BFLEngine(ByteBinaryFixedLengthScheme)
+    public object Bits : BFLEngine(BitBinaryFixedLengthScheme)
+    public object Bytes : BFLEngine(ByteBinaryFixedLengthScheme)
 }

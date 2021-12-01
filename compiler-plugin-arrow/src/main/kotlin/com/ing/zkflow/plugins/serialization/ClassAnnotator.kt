@@ -73,7 +73,7 @@ private fun KtClass.verifyAnnotationCorrectness(): Boolean {
 
     val applicability = hasAnnotation<ZKP>() && isCorrectClassTypeForZKPAnnotation()
 
-    SerdeLogger.log("WILL${if (applicability) " " else " NOT "}process")
+    SerdeLogger.log("(CLASS) ${if (applicability) "SHALL" else "WILL NOT"} process")
 
     return applicability
 }

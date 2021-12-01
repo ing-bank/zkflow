@@ -148,9 +148,9 @@ class ZKFlowPlugin : Plugin<Project> {
 
                 task.logger.quiet(
                     "[${task.name}] Arrow compiler plugin application:${
-                        task.kotlinOptions.freeCompilerArgs
-                            .joinToString(separator = "\n\t") { it }
-                            .let { if (it.isNotBlank()) "\n\t$it" else it }
+                    task.kotlinOptions.freeCompilerArgs
+                        .joinToString(separator = "\n\t") { it }
+                        .let { if (it.isNotBlank()) "\n\t$it" else it }
                     }"
                 )
             }

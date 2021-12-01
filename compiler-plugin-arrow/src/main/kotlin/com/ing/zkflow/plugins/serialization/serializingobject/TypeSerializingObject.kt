@@ -4,8 +4,7 @@ import com.ing.zkflow.Default
 import com.ing.zkflow.Resolver
 import com.ing.zkflow.plugins.serialization.annotationOrNull
 import com.ing.zkflow.plugins.serialization.annotationSingleArgOrNull
-import com.ing.zkflow.plugins.serialization.attachAnnotation
-import com.ing.zkflow.plugins.serialization.cleanTypeDeclaration
+import com.ing.zkflow.plugins.serialization.extractRootType
 import com.ing.zkflow.serialization.serializer.KSerializerWithDefault
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.KSerializer
@@ -48,7 +47,6 @@ sealed class TypeSerializingObject : SerializingObject() {
     ) : TypeSerializingObject() {
         private val hasDefault = serializer.isSubclassOf(KSerializerWithDefault::class)
 
-        // TODO replace with those as in UserType?
         override val cleanTypeDeclaration: String by lazy {
             children
                 .joinToString(separator = ", ") { it.cleanTypeDeclaration }
@@ -97,9 +95,75 @@ sealed class TypeSerializingObject : SerializingObject() {
         override val original: KtTypeReference,
         private val construction: (self: UserType, outer: Tracker) -> String
     ) : TypeSerializingObject() {
-        override val cleanTypeDeclaration: String by lazy { original.cleanTypeDeclaration(ignoreNullability = true) }
-        override val redeclaration: String by lazy { original.attachAnnotation(Contextual::class) }
+        override val cleanTypeDeclaration: String by lazy {
+            deriveCleanTypeDeclaration(original, ignoreNullability = true)
+        }
+
+        override val redeclaration: String by lazy {
+            attachContextualAnnotation(original, ignoreNullability = true)
+        }
 
         override fun invoke(outer: Tracker) = SerializationSupport(outer, construction(this, outer))
+
+        /**
+         * Recursively build the clean type tree.
+         * E.g. for  `List<@Annotation CustomType<Int>>`:
+         * 1. `List<@Annotation CustomType<Int>>` -> List
+         * 2. `CustomType<Int>` -> CustomType
+         * 3. `Int` -> Int
+         * =. List<CustomType<Int>>
+         */
+        private fun deriveCleanTypeDeclaration(typeReference: KtTypeReference, ignoreNullability: Boolean): String {
+            val type = typeReference.typeElement
+            require(type != null) { "Cannot infer type of: `${typeReference.text}`" }
+
+            val rootType = type.extractRootType()
+            val nullability = if (ignoreNullability) "" else if (rootType.isNullable) "?" else ""
+
+            return if (type.typeArgumentsAsTypes.isEmpty()) {
+                "${rootType.type}$nullability"
+            } else {
+                "${rootType.type}${
+                type.typeArgumentsAsTypes.joinToString(
+                    prefix = "<",
+                    separator = ", ",
+                    postfix = ">"
+                ) { deriveCleanTypeDeclaration(it, ignoreNullability = false) }
+                }$nullability"
+            }
+        }
+
+        /**
+         * Recursively attach `Contextual` annotation.
+         * E.g. for  `List<@Annotation CustomType<Int>>`:
+         * 1. `List<@Annotation CustomType<Int>>` -> @Contextual List
+         * 2. `CustomType<Int>` -> @Contextual CustomType
+         * 3. `Int` -> @Contextual Int
+         * =. @Contextual List<@Contextual CustomType<@Contextual Int>>
+         */
+        private fun attachContextualAnnotation(typeReference: KtTypeReference, ignoreNullability: Boolean): String {
+            val type = typeReference.typeElement
+            require(type != null) { "Cannot infer type of: `${typeReference.text}`" }
+
+            val annotationsDeclaration = (
+                typeReference.annotationEntries.map { it.text } +
+                    "@${Contextual::class.qualifiedName!!}"
+                ).joinToString(separator = " ")
+
+            val rootType = type.extractRootType()
+            val nullability = if (ignoreNullability) "" else if (rootType.isNullable) "?" else ""
+
+            return if (type.typeArgumentsAsTypes.isEmpty()) {
+                "$annotationsDeclaration ${rootType.type}$nullability"
+            } else {
+                "$annotationsDeclaration ${rootType.type}${
+                type.typeArgumentsAsTypes.joinToString(
+                    prefix = "<",
+                    separator = ", ",
+                    postfix = ">"
+                ) { attachContextualAnnotation(it, ignoreNullability = false) }
+                }$nullability"
+            }
+        }
     }
 }
