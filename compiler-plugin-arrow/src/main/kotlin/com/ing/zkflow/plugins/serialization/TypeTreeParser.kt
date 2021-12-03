@@ -44,7 +44,7 @@ private fun KtTypeReference.innerBuildSerializingObjectsHierarchy(ignoreNullabil
     // • Strip outer type.
     val children = type.typeArgumentsAsTypes.map {
         it.innerBuildSerializingObjectsHierarchy(ignoreNullability = false, depth + 1).let { so ->
-            if (root.isCollection) so.wrapDefault() else so
+            if (root.isSupportedCollection) so.wrapDefault() else so
         }
     }
 

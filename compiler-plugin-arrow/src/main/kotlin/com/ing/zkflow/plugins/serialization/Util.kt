@@ -1,6 +1,7 @@
 package com.ing.zkflow.plugins.serialization
 
 import com.ing.zkflow.ZKP
+import com.ing.zkflow.plugins.serialization.serializingobject.Processors
 import org.jetbrains.kotlin.psi.KtAnnotated
 import org.jetbrains.kotlin.psi.KtAnnotationEntry
 import org.jetbrains.kotlin.psi.KtClass
@@ -47,8 +48,11 @@ fun KtTypeElement.extractRootType(): TypeDefinition =
             val isNullable = it.last() == '?'
             // Drop the last `?` if present.
             val type = if (isNullable) it.substring(0, it.lastIndex) else it
-            val isCollection = type in setOf(List::class.simpleName!!)
-            TypeDefinition(type, isNullable, isCollection)
+            TypeDefinition(type, isNullable)
         }
 
-data class TypeDefinition(val type: String, val isNullable: Boolean, val isCollection: Boolean)
+data class TypeDefinition(val type: String, val isNullable: Boolean) {
+    val isSupportedCollection: Boolean by lazy {
+        type in Processors.genericCollections.keys
+    }
+}

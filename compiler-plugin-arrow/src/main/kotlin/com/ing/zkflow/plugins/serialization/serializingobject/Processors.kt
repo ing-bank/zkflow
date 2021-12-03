@@ -29,10 +29,17 @@ import org.jetbrains.kotlin.psi.KtTypeReference
 import java.math.BigDecimal
 
 /**
- * This object lists all routines for constructing serializing objects given the type of a parameter.
+ * This object
+ * - ties together types and a generic functionality to generate appropriate serializing objects.
+ * - offers convenient methods to access generated serializing objects for a given type reference.
  */
 internal object Processors {
-    private val native: Map<String, ToSerializingObject> = mapOf(
+    /**
+     * Processors of the types that are not decomposable any further.
+     * I.e., "simple types" such as Boolean, Int, String, etc.,
+     * and specialized collection such as ByteArray, IntArray, etc.
+     */
+    private val unitTypes: Map<String, ToSerializingObject> = mapOf(
         //
         //
         // Simple types.
@@ -107,8 +114,45 @@ internal object Processors {
         },
         //
         //
-        // Generic collections.
+        // Specialized collections, i.e., collections of primitive types.
         //
+        ByteArray::class.simpleName!! to ToSerializingObject { typeRef, _ ->
+            // Require com.ing.zkflow.annotations.Size annotation.
+            val maxSize = typeRef.annotationSingleArgOrNull<Size>()?.toInt()
+                ?: error("Ill-defined type `${typeRef.text}`. ${ByteArray::class.simpleName} must be annotated with ${Size::class.simpleName}")
+
+            TypeSerializingObject.ExplicitType(
+                typeRef, FixedLengthByteArraySerializer::class, ByteArray::class.simpleName!!, emptyList()
+            ) { _, outer, _ ->
+                "object $outer: ${FixedLengthByteArraySerializer::class.qualifiedName}($maxSize)"
+            }
+        },
+        //
+        // Floating point types.
+        //
+        BigDecimal::class.simpleName!! to ToSerializingObject { typeRef, _ ->
+            // Require com.ing.zkflow.annotations.BigDecimalSize annotation.
+            val (integerPart, fractionPart) = typeRef.annotationOrNull<BigDecimalSize>()?.run {
+                val integerPart = valueArguments[0].asElement().text.trim().toInt()
+                val fractionPart = valueArguments[1].asElement().text.trim().toInt()
+                Pair(integerPart, fractionPart)
+            } ?: error("Ill-defined type `${typeRef.text}`. ${BigDecimal::class.simpleName} must be annotated with ${BigDecimalSize::class.simpleName}")
+
+            TypeSerializingObject.ExplicitType(
+                typeRef,
+                FixedLengthFloatingPointSerializer.BigDecimalSerializer::class,
+                BigDecimal::class.simpleName!!,
+                emptyList()
+            ) { _, outer, _ ->
+                "object $outer: ${FixedLengthFloatingPointSerializer.BigDecimalSerializer::class.qualifiedName}($integerPart, $fractionPart)"
+            }
+        }
+    )
+
+    /**
+     * Generic collections for which serializing objects can be constructed.
+     */
+    internal val genericCollections: Map<String, ToSerializingObject> = mapOf(
         List::class.simpleName!! to ToSerializingObject { typeRef, children ->
             // Require com.ing.zkflow.annotations.Size annotation.
             val maxSize = typeRef.annotationSingleArgOrNull<Size>()?.toInt()
@@ -162,44 +206,24 @@ internal object Processors {
                 """.trimIndent()
             }
         },
-        //
-        //
-        // Specialized collections, i.e., collections of primitive types.
-        //
-        ByteArray::class.simpleName!! to ToSerializingObject { typeRef, _ ->
-            // Require com.ing.zkflow.annotations.Size annotation.
-            val maxSize = typeRef.annotationSingleArgOrNull<Size>()?.toInt()
-                ?: error("Ill-defined type `${typeRef.text}`. ${ByteArray::class.simpleName} must be annotated with ${Size::class.simpleName}")
-
-            TypeSerializingObject.ExplicitType(
-                typeRef, FixedLengthByteArraySerializer::class, ByteArray::class.simpleName!!, emptyList()
-            ) { _, outer, _ ->
-                "object $outer: ${FixedLengthByteArraySerializer::class.qualifiedName}($maxSize)"
-            }
-        },
-        //
-        // Floating point types.
-        //
-        BigDecimal::class.simpleName!! to ToSerializingObject { typeRef, _ ->
-            // Require com.ing.zkflow.annotations.BigDecimalSize annotation.
-            val (integerPart, fractionPart) = typeRef.annotationOrNull<BigDecimalSize>()?.run {
-                val integerPart = valueArguments[0].asElement().text.trim().toInt()
-                val fractionPart = valueArguments[1].asElement().text.trim().toInt()
-                Pair(integerPart, fractionPart)
-            } ?: error("Ill-defined type `${typeRef.text}`. ${BigDecimal::class.simpleName} must be annotated with ${BigDecimalSize::class.simpleName}")
-
-            TypeSerializingObject.ExplicitType(
-                typeRef,
-                FixedLengthFloatingPointSerializer.BigDecimalSerializer::class,
-                BigDecimal::class.simpleName!!,
-                emptyList()
-            ) { _, outer, _ ->
-                "object $outer: ${FixedLengthFloatingPointSerializer.BigDecimalSerializer::class.qualifiedName}($integerPart, $fractionPart)"
-            }
-        }
     )
 
-    private val rest = ToSerializingObject { typeRef, _ ->
+    /**
+     * Convenience variable joining together all supported types ensuring no uniqueness of the keys.
+     */
+    private val native: Map<String, ToSerializingObject> by lazy {
+        val intersection = unitTypes.keys.intersect(genericCollections.keys)
+        require(intersection.isEmpty()) {
+            "Key of unit types and generic collections do intersect on $intersection"
+        }
+
+        unitTypes + genericCollections
+    }
+
+    /**
+     * All types which are not supported natively are treated as user types.
+     */
+    private val userType = ToSerializingObject { typeRef, _ ->
         // Here we process 3rd party classes or own serializable classes.
         // • To process a 3rd type via a surrogate, minimally com.ing.zkflow.annotations.Converter or com.ing.zkflow.annotations.Resolver must be present.
         //   At this step, only conversion will be taken into account, respective surrogate will be wrapped into
@@ -256,7 +280,7 @@ internal object Processors {
     fun forNativeType(type: String, typeRef: KtTypeReference, children: List<SerializingObject>) =
         native[type]?.invoke(typeRef, children) ?: error("No native processor for `$type`")
 
-    fun forNonNativeType(typeRef: KtTypeReference) = rest(typeRef, emptyList())
+    fun forNonNativeType(typeRef: KtTypeReference) = userType(typeRef, emptyList())
 }
 
 fun interface ToSerializingObject {
