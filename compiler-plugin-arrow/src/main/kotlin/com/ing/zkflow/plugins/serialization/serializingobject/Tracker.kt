@@ -60,8 +60,8 @@ sealed class Coordinate {
             }
 
         override fun next(times: Int): Coordinate {
-            require(times >= 1) { "Argument must be >= 1" }
-            return if (times == 1) next() else next().next(times - 1)
+            require(times >= 0) { "Argument for Tracker must be non-negative" }
+            return if (times == 0) this else next().next(times - 1)
         }
 
         override fun toString() = s.joinToString(separator = "")
