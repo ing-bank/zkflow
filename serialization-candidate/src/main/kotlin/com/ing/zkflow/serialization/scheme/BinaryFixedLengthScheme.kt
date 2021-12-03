@@ -8,14 +8,22 @@ import java.io.DataInputStream
 import java.io.DataOutputStream
 
 interface BinaryFixedLengthScheme {
+    val unit: Unit
     fun <T> encodeToBinary(serializer: SerializationStrategy<T>, value: T): ByteArray
     fun <T> decodeFromBinary(deserializer: DeserializationStrategy<T>, data: ByteArray): T
+
+    enum class Unit {
+        BITS,
+        BYTES
+    }
 }
 
 /**
  * Scheme serializing a value into a fixed length sequence of bits.
  */
 object BitBinaryFixedLengthScheme : BinaryFixedLengthScheme {
+    override val unit = BinaryFixedLengthScheme.Unit.BITS
+
     override fun <T> encodeToBinary(serializer: SerializationStrategy<T>, value: T): ByteArray =
         ByteArrayOutputStream().use { output ->
             DataOutputStream(output).use { stream ->
@@ -36,6 +44,8 @@ object BitBinaryFixedLengthScheme : BinaryFixedLengthScheme {
  * Scheme serializing a value into a fixed length sequence of bytes.
  */
 object ByteBinaryFixedLengthScheme : BinaryFixedLengthScheme {
+    override val unit = BinaryFixedLengthScheme.Unit.BYTES
+
     override fun <T> encodeToBinary(serializer: SerializationStrategy<T>, value: T): ByteArray =
         ByteArrayOutputStream().use { output ->
             DataOutputStream(output).use { stream ->
