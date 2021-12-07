@@ -4,6 +4,7 @@ import com.ing.zinc.bfl.generator.CodeGenerationOptions
 import com.ing.zinc.bfl.generator.WitnessGroupOptions
 import com.ing.zinc.naming.camelToSnakeCase
 import com.ing.zinc.poet.Indentation.Companion.spaces
+import com.ing.zinc.poet.Indentation.Companion.tabs
 import com.ing.zinc.poet.Self
 import com.ing.zinc.poet.ZincConstant
 import com.ing.zinc.poet.ZincFile
@@ -37,7 +38,11 @@ open class BflStruct(
 
     override fun hashCode() = Objects.hash(id, fields)
 
-    override fun toString(): String = "struct $id"
+    override fun toString(): String = """
+        struct $id {
+            ${fields.joinToString("\n") { "${it.name}: ${it.type.id}," }.indent(3.tabs)}
+        }
+    """.trimIndent()
 
     open fun getModulesToImport() = fields.asSequence()
         .flatMap {

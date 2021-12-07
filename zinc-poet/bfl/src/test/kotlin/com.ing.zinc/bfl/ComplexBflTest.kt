@@ -6,7 +6,7 @@ import com.ing.zinc.bfl.ZincExecutor.runCommand
 import com.ing.zinc.bfl.dsl.EnumBuilder.Companion.enum
 import com.ing.zinc.bfl.dsl.ListBuilder.Companion.asciiString
 import com.ing.zinc.bfl.dsl.ListBuilder.Companion.byteArray
-import com.ing.zinc.bfl.dsl.ListBuilder.Companion.utfString
+import com.ing.zinc.bfl.dsl.ListBuilder.Companion.utf8String
 import com.ing.zinc.bfl.dsl.OptionBuilder.Companion.option
 import com.ing.zinc.bfl.dsl.StructBuilder.Companion.struct
 import com.ing.zkflow.util.requireInstanceOf
@@ -94,7 +94,7 @@ class ComplexBflTest {
         field {
             name = "external_id"
             type = option {
-                innerType = utfString(50)
+                innerType = utf8String(50)
             }
         }
         field {
@@ -146,7 +146,7 @@ class ComplexBflTest {
         tempDir.generateWitness(SERIALIZED) {
             // state
             bytes(0, 0, 0, 1)
-            // amount<linearpointer>
+            // amount<LinearPointer>
             // amount.quantity
             bytes(0, 0, 0, 0, 0, 0, 0, 12)
             // amount.display_token_size

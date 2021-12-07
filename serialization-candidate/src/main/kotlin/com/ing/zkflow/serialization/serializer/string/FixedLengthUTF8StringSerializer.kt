@@ -1,6 +1,7 @@
 package com.ing.zkflow.serialization.serializer.string
 
-import com.ing.zkflow.serialization.serializer.FixedLengthListSerializer
+import com.ing.zkflow.serialization.FixedLengthType
+import com.ing.zkflow.serialization.serializer.FixedLengthCollectionSerializer
 import com.ing.zkflow.serialization.serializer.KSerializerWithDefault
 import com.ing.zkflow.serialization.serializer.char.UTF8CharSerializer
 import kotlinx.serialization.descriptors.SerialDescriptor
@@ -13,7 +14,7 @@ import kotlinx.serialization.encoding.Encoder
 open class FixedLengthUTF8StringSerializer(private val maxLength: Int) : KSerializerWithDefault<String> {
     override val default = ""
 
-    private val strategy = FixedLengthListSerializer(maxLength, UTF8CharSerializer)
+    private val strategy = FixedLengthCollectionSerializer(maxLength, UTF8CharSerializer, FixedLengthType.UTF8_STRING)
     override val descriptor: SerialDescriptor = strategy.descriptor
 
     override fun serialize(encoder: Encoder, value: String) {

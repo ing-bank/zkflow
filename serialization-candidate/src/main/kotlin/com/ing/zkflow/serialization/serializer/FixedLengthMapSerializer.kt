@@ -1,5 +1,6 @@
 package com.ing.zkflow.serialization.serializer
 
+import com.ing.zkflow.serialization.FixedLengthType
 import kotlinx.serialization.builtins.PairSerializer
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
@@ -15,10 +16,11 @@ open class FixedLengthMapSerializer<K : Any, V>(
     private val defaultKey = keySerializer.default
     private val defaultValue = valueSerializer.default
 
-    val strategy = FixedLengthListSerializer(
+    private val strategy = FixedLengthCollectionSerializer(
         maxSize,
         PairSerializer(keySerializer, valueSerializer),
-        Pair(defaultKey, defaultValue)
+        Pair(defaultKey, defaultValue),
+        FixedLengthType.MAP
     )
 
     override val descriptor: SerialDescriptor = strategy.descriptor

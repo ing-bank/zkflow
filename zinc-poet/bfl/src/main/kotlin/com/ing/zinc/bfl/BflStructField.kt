@@ -25,4 +25,24 @@ data class FieldWithParentStruct(
         val typeName = struct.id.camelToSnakeCase()
         return "${typeName}_${name}_$suffix".toUpperCase(Locale.getDefault())
     }
+
+    /**
+     * This equals implementation was added to avoid infinite recursion or [StackOverflowError] on the [struct] field.
+     */
+    override fun equals(other: Any?): Boolean {
+        return when (other) {
+            is FieldWithParentStruct -> name == other.name && type == other.type && struct.id == other.struct.id
+            else -> false
+        }
+    }
+
+    /**
+     * This equals implementation was added to avoid infinite recursion or [StackOverflowError] on the [struct] field.
+     */
+    override fun hashCode(): Int {
+        var result = name.hashCode()
+        result = 31 * result + type.hashCode()
+        result = 31 * result + struct.id.hashCode()
+        return result
+    }
 }

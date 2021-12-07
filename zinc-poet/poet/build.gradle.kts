@@ -1,6 +1,6 @@
 plugins {
     kotlin("jvm")
-    `java-library`
+    id("java-library")
     id("maven-publish")
 }
 

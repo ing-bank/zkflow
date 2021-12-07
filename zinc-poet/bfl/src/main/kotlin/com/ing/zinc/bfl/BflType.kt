@@ -21,6 +21,8 @@ interface BflType {
 
     /**
      * Name of the type when used to generate a new struct name.
+     *
+     * e.g. U8Array12 for `[u8; 12]`
      */
     fun typeName(): String
 
@@ -96,4 +98,4 @@ private fun BflType.resolveAllTypes(): Sequence<BflType> {
     return types.asSequence()
 }
 
-internal fun BflType.toZincId() = id(id)
+fun BflType.toZincId() = id(id)

@@ -69,12 +69,12 @@ internal fun BflModule.getRegisteredMethods(): Collection<ZincFunction> = getReg
 /**
  * Return a name for a Constant holding the number of bits in the serialized form of this [BflModule].
  */
-internal fun BflModule.getLengthConstant(): String = "${id.camelToSnakeCase().toUpperCase(Locale.getDefault())}_LENGTH"
+fun BflModule.getLengthConstant(): String = "${id.camelToSnakeCase().toUpperCase(Locale.getDefault())}_LENGTH"
 
 /**
  * The type definition for the serialized form of this [BflModule].
  */
-internal fun BflModule.getSerializedTypeDef(): ZincTypeDef = ZincTypeDef.zincTypeDef {
+fun BflModule.getSerializedTypeDef(): ZincTypeDef = ZincTypeDef.zincTypeDef {
     name = "Serialized$id"
     type = ZincArray.zincArray {
         elementType = ZincPrimitive.Bool
