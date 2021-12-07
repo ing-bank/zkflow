@@ -31,7 +31,7 @@ internal sealed class BinaryDecoder(internal val input: DataInput) : AbstractDec
             .toLong(2)
             .toInt()
 
-        // Usually bit conversion is performed by built-in methods via treating the bit string as it if was a larger type,
+        // Usually bit conversion is performed by built-in methods via treating the bit string as if it was a larger type,
         // e.g., Byte is parsed as Int and then converted to Byte, otherwise the built-in methods fails for edge cases.
         // In case of Long, there is no larger numeric type, so it is parsed byte-wise.
         override fun decodeLong(): Long = input

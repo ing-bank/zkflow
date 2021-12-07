@@ -42,12 +42,12 @@ open class FixedLengthListSerializer<T>(
     private fun <T> List<T>.extend(newSize: Int, default: T) = when {
         size < newSize -> List(newSize) { if (it < size) { this[it] } else { default } }
         size == newSize -> this
-        size > newSize -> error("List size is greater than $newSize")
+        size > newSize -> error("List size ($size) is greater than $newSize")
         else -> error("List extend: unreachable")
     }
 
     private fun <T> List<T>.shrink(newSize: Int) = when {
-        size < newSize -> error("List size is smaller than $newSize")
+        size < newSize -> error("List size ($size) is smaller than $newSize")
         size == newSize -> this
         size > newSize -> this.subList(0, newSize)
         else -> error("List shrink: unreachable")

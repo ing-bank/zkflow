@@ -5,6 +5,7 @@ import com.ing.zkflow.serialization.engine.SerdeEngine
 import com.ing.zkflow.serialization.serializer.IntSerializer
 import com.ing.zkflow.serialization.serializer.WrappedKSerializerWithDefault
 import com.ing.zkflow.serialization.serializer.char.ASCIICharSerializer
+import com.ing.zkflow.serialization.serializer.char.UTF8CharSerializer
 import com.ing.zkflow.serialization.serializer.string.FixedLengthUTF8StringSerializer
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.Contextual
@@ -18,13 +19,17 @@ data class WrapsBasics(
     @Serializable(with = Char_0::class)
     val char: @Contextual Char = 'z',
 
+    @Serializable(with = Char_1::class)
+    val utf8Char: @Contextual Char = '的',
+
     @Serializable(with = Int_0::class)
     val int: @Contextual Int = 0,
-) {
+
     @Serializable(with = String_0::class)
     val string: @Contextual String = "䶖万"
-
+) {
     object Char_0 : WrappedKSerializerWithDefault<Char>(ASCIICharSerializer)
+    object Char_1 : WrappedKSerializerWithDefault<Char>(UTF8CharSerializer)
     object Int_0 : WrappedKSerializerWithDefault<Int>(IntSerializer)
     object String_0 : FixedLengthUTF8StringSerializer(5)
 }

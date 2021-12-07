@@ -14,11 +14,12 @@ dependencies {
     api("org.jetbrains.kotlinx:kotlinx-serialization-core:$kotlinxSerializationVersion")
 }
 
-tasks {
-    compileKotlin {
-        kotlinOptions {
-            freeCompilerArgs += "-Xopt-in=kotlinx.serialization.ExperimentalSerializationApi"
-        }
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+    kotlinOptions {
+        // IR backend is needed for Unsigned integer types support
+        useIR = true
+        freeCompilerArgs += "-Xopt-in=kotlinx.serialization.ExperimentalSerializationApi"
+        freeCompilerArgs += "-Xopt-in=kotlin.ExperimentalUnsignedTypes"
     }
 }
 
