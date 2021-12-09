@@ -1,13 +1,13 @@
 package com.ing.zinc.bfl
 
-import com.ing.zinc.bfl.dsl.ListBuilder.Companion.utfString
+import com.ing.zinc.bfl.dsl.ListBuilder.Companion.utf8String
 
 data class BflPoly(
     val innerType: BflType
 ) : BflStruct(
     "${innerType.typeName()}Poly",
     listOf(
-        Field(SERIAL_NAME_FIELD, utfString(1)),
+        Field(SERIAL_NAME_FIELD, utf8String(1)),
         Field(INNER_FIELD, innerType)
     )
 ) {

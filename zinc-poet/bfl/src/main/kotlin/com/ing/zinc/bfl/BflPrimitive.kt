@@ -75,8 +75,16 @@ enum class BflPrimitive(
     }
 
     companion object {
+        private fun tryFromIdentifier(identifier: String): BflPrimitive? {
+            return values().find { it.id == identifier }
+        }
+
+        fun fromIdentifier(identifier: String): BflPrimitive {
+            return tryFromIdentifier(identifier) ?: throw IllegalArgumentException("Not a primitive type: `$identifier`")
+        }
+
         fun isPrimitiveIdentifier(identifier: String): Boolean {
-            return values().find { it.id == identifier } != null
+            return tryFromIdentifier(identifier) != null
         }
     }
 }

@@ -11,6 +11,7 @@ buildscript {
             maven("https://repo.gradle.org/gradle/libs-releases")
             maven("https://software.r3.com/artifactory/corda")
             maven("https://plugins.gradle.org/m2/")
+            maven("https://oss.sonatype.org/content/repositories/snapshots/") // for arrow-meta
 
             maven {
                 name = "BinaryFixedLengthSerializationRepo"

@@ -4,10 +4,6 @@ plugins {
     id("maven-publish")
 }
 
-repositories {
-    maven("https://oss.sonatype.org/content/repositories/snapshots/")
-}
-
 dependencies {
     val arrowMetaVersion: String by project
     implementation("io.arrow-kt:arrow-meta:$arrowMetaVersion")
