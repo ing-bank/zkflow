@@ -22,7 +22,9 @@ class ByteEncodingTest {
         @JvmStatic
         fun data() = listOf(
             Triple(ByteBinaryFixedLengthScheme, 16, byteArrayOf(16)),
-            Triple(BitBinaryFixedLengthScheme, 16, byteArrayOf(0, 0, 0, 1, 0, 0, 0, 0))
+            Triple(BitBinaryFixedLengthScheme, 16, byteArrayOf(0, 0, 0, 1, 0, 0, 0, 0)),
+            Triple(ByteBinaryFixedLengthScheme, -1, byteArrayOf(-1)),
+            Triple(BitBinaryFixedLengthScheme, -1, ByteArray(8) { 1 })
         )
     }
 }

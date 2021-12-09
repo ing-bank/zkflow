@@ -32,9 +32,10 @@ internal sealed class BinaryEncoder(
             .toByteArray()
             .let { output.write(it) }
 
+        @Suppress("MagicNumber")
         override fun encodeShort(value: Short) =
             Integer
-                .toBinaryString(value.toInt())
+                .toBinaryString(value.toInt() and 0xFFFF)
                 .padStart(Short.SIZE_BITS, BINARY_STRING_PAD_CHAR)
                 .toCharArray()
                 .map { "$it".toByte() }

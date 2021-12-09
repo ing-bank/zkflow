@@ -41,14 +41,12 @@ class SerializedAmountMaxTest {
     }
 
     @Test
-    @ExperimentalUnsignedTypes
     fun `get max amount`() {
         val expectedAmount = Amount(250, frenchCurrency)
         verifyMaxAmountTest(expectedAmount)
     }
 
     @Test
-    @ExperimentalUnsignedTypes
     fun `get max amount should fail for incompatible tokens`() {
         val expectedAmount = Amount(250, canadianCurrency)
         assertThrows<ZKRunException> {
@@ -84,7 +82,6 @@ class SerializedAmountMaxTest {
         }
     }
 
-    @ExperimentalUnsignedTypes
     private fun verifyZincRunResults(
         witnessBytes: ByteArray,
         expected: String,
