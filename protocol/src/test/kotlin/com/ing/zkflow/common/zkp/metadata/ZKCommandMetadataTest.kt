@@ -18,8 +18,8 @@ class ZKCommandMetadataTest {
                 private = true
 
                 inputs {
-                    1 of DummyState::class
-                    1 of TestState::class
+                    1 private DummyState::class
+                    1 private TestState::class
                 }
             }
         }

@@ -117,13 +117,25 @@ data class ZincType(
 )
 
 /**
+ * Defines a component visibility inside transaction
+ * "Public" components are plaintext and visible to everybody during tx creation and backchain validation, but not available inside ZKP circuit due to performance optimization
+ * "Private" components are shielded by ZKP and only visible to transaction participants, they are available inside ZKP circuit but not during backchain validation
+ * "Mixed" components are visible both in ZKP circuit and plaintext transaction, they are used when we essentially public components are checked inside ZKP circuit
+ */
+enum class ZkpVisibility {
+    Public, Private, Mixed
+}
+
+/**
  * Describes the number of occurrences for a type.
  */
-data class ContractStateTypeCount(val type: KClass<out ContractState>, val count: Int)
+data class ContractStateTypeCount(val type: KClass<out ContractState>, val visibility: ZkpVisibility, val count: Int)
 
 @ZKCommandMetadataDSL
 class ContractStateTypeCountList : ArrayList<ContractStateTypeCount>() {
-    infix fun Int.of(type: KClass<out ContractState>) = add(ContractStateTypeCount(type, this))
+    infix fun Int.public(type: KClass<out ContractState>) = add(ContractStateTypeCount(type, ZkpVisibility.Public, this))
+    infix fun Int.private(type: KClass<out ContractState>) = add(ContractStateTypeCount(type, ZkpVisibility.Private, this))
+    infix fun Int.mixed(type: KClass<out ContractState>) = add(ContractStateTypeCount(type, ZkpVisibility.Mixed, this))
 }
 
 @ZKCommandMetadataDSL

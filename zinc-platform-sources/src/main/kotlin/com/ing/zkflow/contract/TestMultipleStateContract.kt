@@ -120,12 +120,12 @@ class TestMultipleStateContract : Contract {
                     File("${System.getProperty("user.dir")}/../zinc-platform-sources/build/circuits/move_multi_state")
             }
             inputs {
-                1 of TestState1::class
-                1 of TestState2::class
+                1 private TestState1::class
+                1 private TestState2::class
             }
             outputs {
-                1 of TestState1::class
-                1 of TestState2::class
+                1 private TestState1::class
+                1 private TestState2::class
             }
             numberOfSigners = 2
         }

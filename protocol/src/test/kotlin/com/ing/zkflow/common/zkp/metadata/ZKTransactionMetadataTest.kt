@@ -289,7 +289,7 @@ class MockAuditContract : Contract {
         override val metadata = commandMetadata {
             private = true
             numberOfSigners = 1
-            outputs { 1 of Approval::class }
+            outputs { 1 private Approval::class }
             timewindow()
         }
     }
@@ -339,9 +339,9 @@ class MockAssetContract : Contract {
         override val metadata = commandMetadata {
             private = true
             numberOfSigners = 2
-            inputs { 1 of MockAsset::class }
-            outputs { 1 of MockAsset::class }
-            references { 1 of MockAuditContract.Approval::class }
+            inputs { 1 private MockAsset::class }
+            outputs { 1 private MockAsset::class }
+            references { 1 private MockAuditContract.Approval::class }
             timewindow()
         }
     }
@@ -363,7 +363,7 @@ class MockAssetContract : Contract {
         override val metadata = commandMetadata {
             private = true
             numberOfSigners = 1
-            outputs { 1 of MockAsset::class }
+            outputs { 1 private MockAsset::class }
             timewindow()
         }
     }
@@ -386,7 +386,7 @@ class MockAssetContract : Contract {
         override val metadata = commandMetadata {
             private = true
             numberOfSigners = 1
-            outputs { 1 of MockAsset::class }
+            outputs { 1 private MockAsset::class }
             timewindow()
         }
     }
@@ -417,7 +417,7 @@ class MockAssetContract : Contract {
         override val metadata = commandMetadata {
             private = true
             numberOfSigners = 1
-            outputs { 1 of MockAsset::class }
+            outputs { 1 private MockAsset::class }
             timewindow()
         }
     }
