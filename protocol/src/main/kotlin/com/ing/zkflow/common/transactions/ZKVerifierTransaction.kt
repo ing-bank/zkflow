@@ -106,7 +106,12 @@ class ZKVerifierTransaction internal constructor(
 
     companion object {
 
-        fun fromWireTransaction(wtx: WireTransaction, zkFiltering: Predicate<Any>, proof: ByteArray): ZKVerifierTransaction {
+        fun fromWireTransaction(wtx: WireTransaction, proof: ByteArray): ZKVerifierTransaction {
+
+            wtx.zkTransactionMetadata() // <- contains visibility modifiers per component
+
+            // TODO filter the component groups based on visibility data from 'zkTransactionMetadata' via FilteredTransaction or somehow else
+            val zkFiltering = Predicate<Any> { true }
 
             // Here we don't need to filter anything, we only create FTX to be able to access hashes (they are internal in WTX)
             val ftx = FilteredTransaction.buildFilteredTransaction(wtx, zkFiltering)

@@ -15,7 +15,6 @@ import net.corda.core.utilities.minutes
 import net.corda.core.utilities.seconds
 import java.io.File
 import java.time.Duration
-import java.util.function.Predicate
 import kotlin.reflect.KClass
 
 @DslMarker
@@ -189,11 +188,6 @@ class ZKCommandMetadata(val commandKClass: KClass<out CommandData>) {
      */
     var circuit: ZKCircuit? = null
 
-    /**
-     * Defines which transaction components should be "hidden" with ZKP
-     */
-    var zkFiltering: Predicate<Any> = Predicate { true }
-
     var numberOfSigners = 0
 
     val inputs = ContractStateTypeCountList()
@@ -232,7 +226,6 @@ class ZKCommandMetadata(val commandKClass: KClass<out CommandData>) {
         return if (private) {
             PrivateResolvedZKCommandMetadata(
                 circuit.resolve(this),
-                zkFiltering,
                 commandKClass,
                 numberOfSigners,
                 inputs.toList(),
