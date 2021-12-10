@@ -29,15 +29,18 @@ abstract class AbstractZKTransactionService(val serviceHub: ServiceHub) : ZKTran
         wtx: WireTransaction
     ): ZKVerifierTransaction {
 
+        val zkTransactionMetadata = wtx.zkTransactionMetadata()
+
         val witness = Witness.fromWireTransaction(
             wtx,
+            zkTransactionMetadata.zkFiltering,
             serviceHub.collectUtxoInfos(wtx.inputs),
             serviceHub.collectUtxoInfos(wtx.references)
         )
 
-        val proof = zkServiceForTransactionMetadata(wtx.zkTransactionMetadata()).proveTimed(witness)
+        val proof = zkServiceForTransactionMetadata(zkTransactionMetadata).proveTimed(witness)
 
-        return ZKVerifierTransaction.fromWireTransaction(wtx, proof)
+        return ZKVerifierTransaction.fromWireTransaction(wtx, zkTransactionMetadata.zkFiltering, proof)
     }
 
     abstract override fun zkServiceForTransactionMetadata(metadata: ResolvedZKTransactionMetadata): ZKService

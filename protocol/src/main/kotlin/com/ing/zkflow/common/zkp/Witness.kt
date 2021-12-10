@@ -13,6 +13,7 @@ import net.corda.core.crypto.SecureHash
 import net.corda.core.serialization.CordaSerializable
 import net.corda.core.transactions.TraversableTransaction
 import net.corda.core.transactions.WireTransaction
+import java.util.function.Predicate
 import kotlin.reflect.KClass
 
 /**
@@ -154,9 +155,14 @@ class Witness(
     companion object {
         fun fromWireTransaction(
             wtx: WireTransaction,
+            zkpFiltering: Predicate<Any> = Predicate { true },
             inputUtxoInfos: List<UtxoInfo>,
             referenceUtxoInfos: List<UtxoInfo>,
         ): Witness {
+
+            // TODO Filter out public components
+            zkpFiltering.negate()
+
             // Reorder utxos according to be consistent with the order in the WireTransaction.
             val orderedInputUtxoInfos = wtx.inputs.map { inputRef ->
                 inputUtxoInfos.find { it.stateRef == inputRef } ?: error("No UtxoInfo provided for input ref $inputRef")

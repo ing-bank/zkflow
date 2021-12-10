@@ -16,9 +16,9 @@ public class TestDSLZincZKTransactionService(serviceHub: ServiceHub) : TestDSLZK
 
     override fun run(wtx: WireTransaction) {
         val witness = Witness.fromWireTransaction(
-            wtx,
-            serviceHub.collectUtxoInfos(wtx.inputs),
-            serviceHub.collectUtxoInfos(wtx.references)
+            wtx = wtx,
+            inputUtxoInfos = serviceHub.collectUtxoInfos(wtx.inputs),
+            referenceUtxoInfos = serviceHub.collectUtxoInfos(wtx.references)
         )
         zkServiceForTransactionMetadata(wtx.zkTransactionMetadata()).run(witness, calculatePublicInput(wtx))
     }

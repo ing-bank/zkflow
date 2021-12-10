@@ -106,10 +106,10 @@ class ZKVerifierTransaction internal constructor(
 
     companion object {
 
-        fun fromWireTransaction(wtx: WireTransaction, proof: ByteArray): ZKVerifierTransaction {
+        fun fromWireTransaction(wtx: WireTransaction, zkFiltering: Predicate<Any>, proof: ByteArray): ZKVerifierTransaction {
 
             // Here we don't need to filter anything, we only create FTX to be able to access hashes (they are internal in WTX)
-            val ftx = FilteredTransaction.buildFilteredTransaction(wtx, Predicate { true })
+            val ftx = FilteredTransaction.buildFilteredTransaction(wtx, zkFiltering)
 
             return ZKVerifierTransaction(
                 id = ftx.id,

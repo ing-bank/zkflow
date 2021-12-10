@@ -11,6 +11,7 @@ import net.corda.core.crypto.Crypto
 import net.corda.core.transactions.LedgerTransaction
 import java.io.File
 import java.time.Duration
+import java.util.function.Predicate
 import kotlin.reflect.KClass
 import kotlin.reflect.full.isSubclassOf
 
@@ -114,6 +115,11 @@ data class ResolvedZKTransactionMetadata(
             } else acc
         }
     }
+
+    /**
+     * Defines which transaction components should be "hidden" with ZKP
+     */
+    val zkFiltering: Predicate<Any> = privateCommands.first().zkFiltering
 
     /**
      * The target build folder for this transaction's main.zn.

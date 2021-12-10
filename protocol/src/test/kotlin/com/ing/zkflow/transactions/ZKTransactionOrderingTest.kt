@@ -145,7 +145,11 @@ class ZKTransactionOrderingTest {
 
     @Test
     fun `Witness ordering is consistent with WireTransaction`() = withCustomSerializationEnv {
-        val witness = Witness.fromWireTransaction(wtx, inputUtxoInfos, refUtxoInfos)
+        val witness = Witness.fromWireTransaction(
+            wtx = wtx,
+            inputUtxoInfos = inputUtxoInfos,
+            referenceUtxoInfos = refUtxoInfos
+        )
 
         // compare inputs
         val actualDeserializedInputs = witness.inputsGroup.map { it.deserialize<StateRef>() }

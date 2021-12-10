@@ -15,6 +15,7 @@ import net.corda.core.utilities.minutes
 import net.corda.core.utilities.seconds
 import java.io.File
 import java.time.Duration
+import java.util.function.Predicate
 import kotlin.reflect.KClass
 
 @DslMarker
@@ -168,13 +169,18 @@ class ZKCommandMetadata(val commandKClass: KClass<out CommandData>) {
     var private = false
 
     /**
-     * Infomation on the circuit and related artifacts to be used.
+     * Information on the circuit and related artifacts to be used.
      *
      * If the command is marked private, but this is null, ZKFLow will
      * try to find the circuit based on some default rules. If that fails,
      * an error is thrown.
      */
     var circuit: ZKCircuit? = null
+
+    /**
+     * Defines which transaction components should be "hidden" with ZKP
+     */
+    var zkFiltering: Predicate<Any> = Predicate { true }
 
     var numberOfSigners = 0
 
@@ -214,6 +220,7 @@ class ZKCommandMetadata(val commandKClass: KClass<out CommandData>) {
         return if (private) {
             PrivateResolvedZKCommandMetadata(
                 circuit.resolve(this),
+                zkFiltering,
                 commandKClass,
                 numberOfSigners,
                 inputs.toList(),

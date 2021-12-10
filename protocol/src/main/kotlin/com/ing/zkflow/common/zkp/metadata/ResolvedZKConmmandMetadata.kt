@@ -8,6 +8,7 @@ import net.corda.core.contracts.ContractState
 import net.corda.core.crypto.SignatureScheme
 import java.io.File
 import java.time.Duration
+import java.util.function.Predicate
 import kotlin.reflect.KClass
 
 data class ResolvedZKCircuit(
@@ -101,9 +102,13 @@ abstract class ResolvedZKCommandMetadata(
 @Suppress("LongParameterList") // param length caused by Corda component count
 class PrivateResolvedZKCommandMetadata(
     /**
-     * Infomation on the circuit and related artifacts to be used.
+     * Information on the circuit and related artifacts to be used.
      */
     val circuit: ResolvedZKCircuit,
+    /**
+     * Defines which transaction components should be "hidden" with ZKP
+     */
+    val zkFiltering: Predicate<Any>,
     override val commandKClass: KClass<out CommandData>,
     override val numberOfSigners: Int,
     override val inputs: List<ContractStateTypeCount>,
