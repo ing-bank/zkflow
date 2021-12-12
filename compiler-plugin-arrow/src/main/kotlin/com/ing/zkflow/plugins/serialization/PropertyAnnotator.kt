@@ -5,7 +5,6 @@ import arrow.meta.Meta
 import arrow.meta.invoke
 import arrow.meta.quotes.Transform
 import arrow.meta.quotes.property
-import arrow.meta.quotes.scope
 import com.ing.zkflow.SerdeLogger
 import com.ing.zkflow.ZKP
 import kotlinx.serialization.Transient
@@ -24,14 +23,23 @@ val Meta.PropertyAnnotator: CliPlugin
         meta(
             property(this, match = {
                 element.verifyAnnotationCorrectness()
-            }) { (ktProperty, _) ->
-                Transform.replace<KtProperty>(
+            }) { (ktProperty, descriptor) ->
+                // Arrow has troubles with comments and doc strings, remove them altogether.
+                val allComments = "((['\"])(?:(?!\\2|\\\\).|\\\\.)*\\2)|\\/\\/[^\\n]*|\\/\\*(?:[^*]|\\*(?!\\/))*\\*\\/".toRegex()
+                val propertyClearDeclaration = ktProperty.text
+                    .replace(allComments, "")
+                    .trimIndent()
+                    .lines()
+                    .filterNot { it.isBlank() }
+                    .joinToString(separator = "\n")
+
+                Transform.replace(
                     replacing = ktProperty,
-                    newDeclarations = listOf(
-                        "@${Transient::class.qualifiedName!!}".annotationEntry,
-                        ktProperty.scope()
-                    )
-                ).also { SerdeLogger.log("Updating class properties:\n$it") }
+                    newDeclaration = """
+                        ${"@${Transient::class.qualifiedName!!}".annotationEntry}
+                        $propertyClearDeclaration
+                    """.trimIndent().property(descriptor).also { SerdeLogger.log("Updating class properties:\n$it") }
+                )
             }
         )
     }
