@@ -173,13 +173,13 @@ internal object Processors {
         //
         ByteArray::class.simpleName!! to ToSerializingObject { typeRef, _ ->
             // Require com.ing.zkflow.annotations.Size annotation.
-            val maxSize = typeRef.annotationSingleArgOrNull<Size>()?.toInt()
+            val maxSizeArgument = typeRef.annotationSingleArgOrNull<Size>()
                 ?: error("Ill-defined type `${typeRef.text}`. ${ByteArray::class.simpleName} must be annotated with ${Size::class.simpleName}")
 
             TypeSerializingObject.ExplicitType(
                 typeRef, FixedLengthByteArraySerializer::class, ByteArray::class.simpleName!!, emptyList()
             ) { _, outer, _ ->
-                "object $outer: ${FixedLengthByteArraySerializer::class.qualifiedName}($maxSize)"
+                "object $outer: ${FixedLengthByteArraySerializer::class.qualifiedName}($maxSizeArgument)"
             }
         },
         //
