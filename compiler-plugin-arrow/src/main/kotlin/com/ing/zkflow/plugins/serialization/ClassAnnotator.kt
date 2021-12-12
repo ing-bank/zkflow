@@ -10,6 +10,8 @@ import arrow.meta.quotes.scope
 import com.ing.zkflow.SerdeLogger
 import com.ing.zkflow.ZKP
 import kotlinx.serialization.Serializable
+import org.jetbrains.kotlin.lexer.KtTokens
+import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.KtParameter
 
@@ -44,6 +46,16 @@ val Meta.ClassAnnotator: CliPlugin
                     val (parameters, serializingObjects) = ktClass
                         .extractConstructorParameters(ctx)
                         .deconstructIntoDefinitionsAndSerializers()
+
+                    val kind: Name = (
+                        when {
+                            value.isSealed() -> "sealed "
+                            value.isData() -> "data "
+                            value.hasModifier(KtTokens.OPEN_KEYWORD) -> "open "
+                            else -> "/* empty? */"
+                        } +
+                            value.getClassOrInterfaceKeyword()?.text
+                        ).let(Name::identifier)
 
                     Transform.replace(
                         replacing = ktClass,
