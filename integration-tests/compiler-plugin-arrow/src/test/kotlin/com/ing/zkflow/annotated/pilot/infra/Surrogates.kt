@@ -1,6 +1,6 @@
 @file:Suppress("ClassName")
 
-package com.ing.zkflow.annotated.ivno.infra
+package com.ing.zkflow.annotated.pilot.infra
 
 import com.ing.zkflow.ASCII
 import com.ing.zkflow.BigDecimalSize
@@ -52,7 +52,7 @@ data class EdDSAParty(
 @ZKP
 data class NetworkEdDSAAnonymousOperator(
     val value: @ASCII(10) String,
-    val operator: @Default<EdDSAAnonymousParty>(EdDSAAnonymousPartyDefaultProvider::class) EdDSAAnonymousParty?
+    val operator: @Default<AnonymousPartySurrogate_EdDSA>(EdDSAAnonymousPartyDefaultProvider::class) AnonymousPartySurrogate_EdDSA?
 ) : Surrogate<Network> {
     override fun toOriginal() = Network(value, operator?.toOriginal())
 }
