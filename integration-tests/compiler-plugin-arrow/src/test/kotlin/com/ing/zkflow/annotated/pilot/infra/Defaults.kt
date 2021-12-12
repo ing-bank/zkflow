@@ -17,3 +17,7 @@ object EdDSAAnonymousPartyDefaultProvider : DefaultProvider<AnonymousPartySurrog
 }
 
 val fixedCordaX500Name = CordaX500Name.parse("O=BOGUS,L=New York,C=US")
+
+object SecureHashSHA256DefaultProvider : DefaultProvider<SecureHash> {
+    override val default = SecureHash.zeroHash
+}

@@ -86,7 +86,13 @@ object LinearPointerConverter_IvnoTokenType : ConversionProvider<
 }
 
 object SecureHashConverter_SHA256 : ConversionProvider<SecureHash, SecureHashSHA256Surrogate> {
-    override fun from(original: SecureHash) = SecureHashSHA256Surrogate(original.bytes)
+    override fun from(original: SecureHash): SecureHashSHA256Surrogate {
+        require(original is SecureHash.SHA256) {
+            "${this::class.qualifiedName} expects a ${SecureHash.SHA256::class.qualifiedName} subtype of ${SecureHash::class.qualifiedName}"
+        }
+
+        return SecureHashSHA256Surrogate(original.bytes)
+    }
 }
 
 object AmountConverter_IssuedTokenType : ConversionProvider<
