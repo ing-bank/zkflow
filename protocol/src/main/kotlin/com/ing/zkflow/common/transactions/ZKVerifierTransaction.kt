@@ -1,5 +1,7 @@
 package com.ing.zkflow.common.transactions
 
+import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
+import com.ing.zkflow.common.zkp.metadata.ZkpVisibility
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.crypto.DigestService
 import net.corda.core.crypto.MerkleTree
@@ -10,8 +12,8 @@ import net.corda.core.transactions.FilteredComponentGroup
 import net.corda.core.transactions.FilteredTransaction
 import net.corda.core.transactions.TraversableTransaction
 import net.corda.core.transactions.WireTransaction
+import net.corda.core.utilities.OpaqueBytes
 import java.security.PublicKey
-import java.util.function.Predicate
 
 @Suppress("LongParameterList")
 @CordaSerializable
@@ -108,13 +110,15 @@ class ZKVerifierTransaction internal constructor(
 
         fun fromWireTransaction(wtx: WireTransaction, proof: ByteArray): ZKVerifierTransaction {
 
-            wtx.zkTransactionMetadata() // <- contains visibility modifiers per component
-
-            // TODO filter the component groups based on visibility data from 'zkTransactionMetadata' via FilteredTransaction or somehow else
-            val zkFiltering = Predicate<Any> { true }
-
             // Here we don't need to filter anything, we only create FTX to be able to access hashes (they are internal in WTX)
-            val ftx = FilteredTransaction.buildFilteredTransaction(wtx, zkFiltering)
+            val ftx = FilteredTransaction.buildFilteredTransaction(wtx) { true }
+
+            // Filter the component groups based on visibility data from 'zkTransactionMetadata'
+            val filteredComponentGroups = filterWithoutFun(
+                wtx,
+                ftx.filteredComponentGroups.associate { it.groupIndex to it.nonces },
+                wtx.zkTransactionMetadata()
+            )
 
             return ZKVerifierTransaction(
                 id = ftx.id,
@@ -122,28 +126,8 @@ class ZKVerifierTransaction internal constructor(
                 outputHashes = outputHashes(wtx, ftx),
                 groupHashes = ftx.groupHashes,
                 digestService = wtx.digestService,
-                filteredComponentGroups = createComponentGroups(ftx)
+                filteredComponentGroups = filteredComponentGroups
             )
-        }
-
-        private fun createComponentGroups(ftx: FilteredTransaction): List<FilteredComponentGroup> {
-
-            /*
-             * We hide all groups except ones mentioned below.
-             * For hidden groups we only store group hashes. No components, nonces or anything else
-            */
-            return ftx.filteredComponentGroups.filter {
-                it.groupIndex in listOf(
-                    ComponentGroupEnum.INPUTS_GROUP.ordinal,
-                    ComponentGroupEnum.REFERENCES_GROUP.ordinal,
-                    ComponentGroupEnum.NOTARY_GROUP.ordinal,
-                    ComponentGroupEnum.TIMEWINDOW_GROUP.ordinal,
-                    ComponentGroupEnum.PARAMETERS_GROUP.ordinal,
-
-                    ComponentGroupEnum.SIGNERS_GROUP.ordinal,
-                    ComponentGroupEnum.COMMANDS_GROUP.ordinal
-                )
-            }
         }
 
         private fun outputHashes(wtx: WireTransaction, ftx: FilteredTransaction): List<SecureHash> {
@@ -153,6 +137,102 @@ class ZKVerifierTransaction internal constructor(
                 .components.mapIndexed { componentIndex, component ->
                     wtx.digestService.componentHash(nonces[componentIndex], component)
                 }
+        }
+
+        @Suppress("ComplexMethod")
+        private fun filterWithoutFun(
+            wtx: WireTransaction,
+            availableComponentNonces: Map<Int, List<SecureHash>>,
+            zkTransactionMetadata: ResolvedZKTransactionMetadata
+        ): List<FilteredComponentGroup> {
+            val filteredSerialisedComponents: MutableMap<Int, MutableList<OpaqueBytes>> = hashMapOf()
+            val filteredComponentNonces: MutableMap<Int, MutableList<SecureHash>> = hashMapOf()
+            val filteredComponentHashes: MutableMap<Int, MutableList<SecureHash>> = hashMapOf() // Required for partial Merkle tree generation.
+            var signersIncluded = false
+
+            fun componentHash(wtx: WireTransaction, groupIndex: Int, componentIndex: Int): SecureHash {
+                val componentBytes = wtx.componentGroups.first { it.groupIndex == groupIndex }.components[componentIndex]
+                return wtx.digestService.componentHash(availableComponentNonces[groupIndex]!![componentIndex], componentBytes)
+            }
+
+            fun filter(groupIndex: Int, componentIndex: Int) {
+                if (zkTransactionMetadata.getComponentVisibility(groupIndex, componentIndex) == ZkpVisibility.Private) return
+
+                val group = filteredSerialisedComponents[groupIndex]
+                // Because the filter passed, we know there is a match. We also use first Vs single as the init function
+                // of WireTransaction ensures there are no duplicated groups.
+                val serialisedComponent = wtx.componentGroups.first { it.groupIndex == groupIndex }.components[componentIndex]
+                if (group == null) {
+                    // As all of the helper Map structures, like availableComponentNonces, availableComponentHashes
+                    // and groupsMerkleRoots, are computed lazily via componentGroups.forEach, there should always be
+                    // a match on Map.get ensuring it will never return null.
+                    filteredSerialisedComponents[groupIndex] = mutableListOf(serialisedComponent)
+                    filteredComponentNonces[groupIndex] = mutableListOf(availableComponentNonces[groupIndex]!![componentIndex])
+                    filteredComponentHashes[groupIndex] = mutableListOf(componentHash(wtx, groupIndex, componentIndex))
+                } else {
+                    group.add(serialisedComponent)
+                    // If the group[componentGroupIndex] existed, then we guarantee that
+                    // filteredComponentNonces[componentGroupIndex] and filteredComponentHashes[componentGroupIndex] are not null.
+                    filteredComponentNonces[groupIndex]!!.add(availableComponentNonces[groupIndex]!![componentIndex])
+                    filteredComponentHashes[groupIndex]!!.add(componentHash(wtx, groupIndex, componentIndex))
+                }
+                // If at least one command is visible, then all command-signers should be visible as well.
+                // This is required for visibility purposes, see FilteredTransaction.checkAllCommandsVisible() for more details.
+                if (groupIndex == ComponentGroupEnum.COMMANDS_GROUP.ordinal && !signersIncluded) {
+                    signersIncluded = true
+                    val signersGroupIndex = ComponentGroupEnum.SIGNERS_GROUP.ordinal
+                    // There exist commands, thus the signers group is not empty.
+                    val signersGroupComponents = wtx.componentGroups.first { it.groupIndex == signersGroupIndex }
+                    filteredSerialisedComponents[signersGroupIndex] = signersGroupComponents.components.toMutableList()
+                    filteredComponentNonces[signersGroupIndex] = availableComponentNonces[signersGroupIndex]!!.toMutableList()
+                    filteredComponentHashes[signersGroupIndex] = wtx.componentGroups.first { it.groupIndex == signersGroupIndex }.components.indices.map { index -> componentHash(wtx, signersGroupIndex, index) }.toMutableList()
+                }
+            }
+
+            fun updateFilteredComponents() {
+                wtx.inputs.indices.forEach { internalIndex -> filter(ComponentGroupEnum.INPUTS_GROUP.ordinal, internalIndex) }
+                wtx.outputs.indices.forEach { internalIndex -> filter(ComponentGroupEnum.OUTPUTS_GROUP.ordinal, internalIndex) }
+                wtx.commands.indices.forEach { internalIndex -> filter(ComponentGroupEnum.COMMANDS_GROUP.ordinal, internalIndex) }
+                wtx.attachments.indices.forEach { internalIndex -> filter(ComponentGroupEnum.ATTACHMENTS_GROUP.ordinal, internalIndex) }
+                if (wtx.notary != null) filter(ComponentGroupEnum.NOTARY_GROUP.ordinal, 0)
+                if (wtx.timeWindow != null) filter(ComponentGroupEnum.TIMEWINDOW_GROUP.ordinal, 0)
+                // Note that because [inputs] and [references] share the same type [StateRef], we use a wrapper for references [ReferenceStateRef],
+                // when filtering. Thus, to filter-in all [references] based on type, one should use the wrapper type [ReferenceStateRef] and not [StateRef].
+                // Similar situation is for network parameters hash and attachments, one should use wrapper [NetworkParametersHash] and not [SecureHash].
+                wtx.references.indices.forEach { internalIndex -> filter(ComponentGroupEnum.REFERENCES_GROUP.ordinal, internalIndex) }
+                wtx.networkParametersHash?.let { filter(ComponentGroupEnum.PARAMETERS_GROUP.ordinal, 0) }
+                // It is highlighted that because there is no a signers property in TraversableTransaction,
+                // one cannot specifically filter them in or out.
+                // The above is very important to ensure someone won't filter out the signers component group if at least one
+                // command is included in a FilteredTransaction.
+
+                // It's sometimes possible that when we receive a WireTransaction for which there is a new or more unknown component groups,
+                // we decide to filter and attach this field to a FilteredTransaction.
+                // An example would be to redact certain contract state types, but otherwise leave a transaction alone,
+                // including the unknown new components.
+                wtx.componentGroups
+                    .filter { it.groupIndex >= ComponentGroupEnum.values().size }
+                    .forEach { componentGroup -> componentGroup.components.indices.forEach { internalIndex -> filter(componentGroup.groupIndex, internalIndex) } }
+            }
+
+            fun createPartialMerkleTree(componentGroupIndex: Int): PartialMerkleTree {
+                return PartialMerkleTree.build(
+                    // TODO here we've already calculated these hashed so need to store them somewhere locally to not recalculate
+                    MerkleTree.getMerkleTree(wtx.componentGroups.first { it.groupIndex == componentGroupIndex }.components.indices.map { index -> componentHash(wtx, componentGroupIndex, index) }.toMutableList(), wtx.digestService),
+                    filteredComponentHashes[componentGroupIndex]!!
+                )
+            }
+
+            fun createFilteredComponentGroups(): List<FilteredComponentGroup> {
+                updateFilteredComponents()
+                val filteredComponentGroups: MutableList<FilteredComponentGroup> = mutableListOf()
+                filteredSerialisedComponents.forEach { (groupIndex, value) ->
+                    filteredComponentGroups.add(FilteredComponentGroup(groupIndex, value, filteredComponentNonces[groupIndex]!!, createPartialMerkleTree(groupIndex)))
+                }
+                return filteredComponentGroups
+            }
+
+            return createFilteredComponentGroups()
         }
     }
 }

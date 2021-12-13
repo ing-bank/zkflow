@@ -3,6 +3,7 @@ package com.ing.zkflow.common.zkp.metadata
 import com.ing.zkflow.common.contracts.ZKTransactionMetadataCommandData
 import com.ing.zkflow.common.transactions.ZKTransactionBuilder
 import net.corda.core.contracts.Command
+import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.ContractAttachment
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.StateAndRef
@@ -265,6 +266,23 @@ data class ResolvedZKTransactionMetadata(
         expectedTypes.forEachIndexed { index, expected ->
             val actual = actualTypes.getOrElse(index) { error("Expected to find $componentName $expected at index $index, nothing found") }
             require(actual == expected) { "Unexpected $componentName order. Expected '$expected' at index $index, but found '$actual'" }
+        }
+    }
+
+    fun getComponentVisibility(groupIndex: Int, componentIndex: Int): ZkpVisibility {
+        return when (groupIndex) {
+            ComponentGroupEnum.INPUTS_GROUP.ordinal -> ZkpVisibility.Public // References are always visible, to know State's visibility call 'getUtxoVisibility'
+            ComponentGroupEnum.REFERENCES_GROUP.ordinal -> ZkpVisibility.Public // References are always visible, to know State's visibility call 'getUtxoVisibility'
+            ComponentGroupEnum.OUTPUTS_GROUP.ordinal -> outputTypeGroups[componentIndex].visibility
+            else -> ZkpVisibility.Public // all other groups have visibility 'Public' by default at the moment, may change in future
+        }
+    }
+
+    fun getUtxoVisibility(groupIndex: Int, componentIndex: Int): ZkpVisibility {
+        return when (groupIndex) {
+            ComponentGroupEnum.INPUTS_GROUP.ordinal -> inputTypeGroups[componentIndex].visibility
+            ComponentGroupEnum.REFERENCES_GROUP.ordinal -> referenceTypeGroups[componentIndex].visibility
+            else -> error("Only Inputs and References UTXOs are allowed")
         }
     }
 }
