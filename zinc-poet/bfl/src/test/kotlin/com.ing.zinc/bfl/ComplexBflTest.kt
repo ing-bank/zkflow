@@ -2,7 +2,7 @@ package com.ing.zinc.bfl
 
 import com.ing.zinc.bfl.ZincExecutor.generateDeserializeCircuit
 import com.ing.zinc.bfl.ZincExecutor.generateWitness
-import com.ing.zinc.bfl.ZincExecutor.runCommand
+import com.ing.zinc.bfl.ZincExecutor.runCommandAndLogTime
 import com.ing.zinc.bfl.dsl.EnumBuilder.Companion.enum
 import com.ing.zinc.bfl.dsl.ListBuilder.Companion.asciiString
 import com.ing.zinc.bfl.dsl.ListBuilder.Companion.byteArray
@@ -189,7 +189,7 @@ class ComplexBflTest {
             bytes(*IntArray(364))
         }
 
-        val (stdout, stderr) = tempDir.runCommand("zargo run", 10)
+        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run", 10)
 
         stderr shouldBe ""
 

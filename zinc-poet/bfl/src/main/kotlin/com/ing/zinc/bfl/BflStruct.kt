@@ -19,24 +19,28 @@ import java.util.Objects
 open class BflStruct(
     override val id: String,
     fields: List<BflStructField>,
+    private val functions: List<ZincFunction>,
+    private val isDeserializable: Boolean,
 ) : BflModule {
-    val fields: List<FieldWithParentStruct>
+    constructor(id: String, fields: List<BflStructField>) : this(id, fields, emptyList(), true)
+    constructor(id: String, fields: List<BflStructField>, isDeserializable: Boolean) : this(id, fields, emptyList(), isDeserializable)
 
-    init {
-        this.fields = fields.map {
-            FieldWithParentStruct(it.name, it.type, this)
-        }
+    val fields: List<FieldWithParentStruct> = fields.map {
+        FieldWithParentStruct(it.name, it.type, this)
     }
 
     override fun typeName() = id
 
     override fun equals(other: Any?) =
         when (other) {
-            is BflStruct -> id == other.id && fields == other.fields
+            is BflStruct ->
+                id == other.id &&
+                    fields == other.fields &&
+                    isDeserializable == other.isDeserializable
             else -> false
         }
 
-    override fun hashCode() = Objects.hash(id, fields)
+    override fun hashCode() = Objects.hash(id, fields, isDeserializable)
 
     override fun toString(): String = """
         struct $id {
@@ -60,8 +64,9 @@ open class BflStruct(
     override fun deserializeExpr(
         witnessGroupOptions: WitnessGroupOptions,
         offset: String,
-        variablePrefix: String
-    ): String = "$id::${witnessGroupOptions.deserializeMethodName}($SERIALIZED, $offset)"
+        variablePrefix: String,
+        witnessVariable: String
+    ): String = "$id::${witnessGroupOptions.deserializeMethodName}($witnessVariable, $offset)"
 
     override fun defaultExpr(): String = "$id::empty()"
 
@@ -79,10 +84,11 @@ open class BflStruct(
     internal open fun generateFieldDeserialization(
         witnessGroupOptions: WitnessGroupOptions,
         field: FieldWithParentStruct,
-        witnessIndex: String
+        witnessIndex: String,
+        witnessVariable: String
     ): String {
         val offset = field.generateConstant(OFFSET) + " + $witnessIndex"
-        val deserializedField = field.type.deserializeExpr(witnessGroupOptions, offset, field.name)
+        val deserializedField = field.type.deserializeExpr(witnessGroupOptions, offset, field.name, witnessVariable)
         return "let ${field.name}: ${field.type.id} = $deserializedField;"
     }
 
@@ -91,7 +97,11 @@ open class BflStruct(
             generateNewMethod(codeGenerationOptions),
             generateEmptyMethod(codeGenerationOptions),
             generateEqualsMethod(codeGenerationOptions),
-        ) + generateDeserializeMethods(codeGenerationOptions)
+        ) + if (isDeserializable) {
+            generateDeserializeMethods(codeGenerationOptions)
+        } else {
+            emptyList()
+        } + functions
     }
 
     override fun generateZincFile(codeGenerationOptions: CodeGenerationOptions) = ZincFile.zincFile {
@@ -104,24 +114,30 @@ open class BflStruct(
         for (mod in modulesToImport) {
             mod { module = mod.id.camelToSnakeCase() }
         }
-        if (modulesToImport.isNotEmpty()) { newLine() }
-        for (module in modulesToImport) {
-            use { path = "${module.getModuleName()}::${module.id}" }
-            use { path = "${module.getModuleName()}::${module.getSerializedTypeDef().getName()}" }
-            use { path = "${module.getModuleName()}::${module.getLengthConstant()}" }
+        if (modulesToImport.isNotEmpty()) {
             newLine()
         }
-        comment("field lengths")
-        addAll(generateFieldLengthConstants())
-        newLine()
-        comment("field offsets")
-        addAll(generateFieldOffsetConstants())
-        newLine()
-        comment("length: ${fields.fold(0) { acc, field -> acc + field.type.bitSize }} bit(s)")
-        add(generateLengthConstant())
-        newLine()
-        add(getSerializedTypeDef())
-        newLine()
+        for (module in modulesToImport) {
+            use { path = "${module.getModuleName()}::${module.id}" }
+            if (isDeserializable && ((module !is BflStruct) || module.isDeserializable)) {
+                use { path = "${module.getModuleName()}::${module.getSerializedTypeDef().getName()}" }
+                use { path = "${module.getModuleName()}::${module.getLengthConstant()}" }
+            }
+            newLine()
+        }
+        if (isDeserializable) {
+            comment("field lengths")
+            addAll(generateFieldLengthConstants())
+            newLine()
+            comment("field offsets")
+            addAll(generateFieldOffsetConstants())
+            newLine()
+            comment("length: ${fields.fold(0) { acc, field -> acc + field.type.bitSize }} bit(s)")
+            add(generateLengthConstant())
+            newLine()
+            add(getSerializedTypeDef())
+            newLine()
+        }
         struct {
             name = id
             for (field in fields) {
@@ -200,7 +216,7 @@ open class BflStruct(
     open fun generateDeserializeMethods(codeGenerationOptions: CodeGenerationOptions): List<ZincFunction> {
         return codeGenerationOptions.witnessGroupOptions.map {
             val fieldDeserializations = fields.fold(Pair("", 0)) { acc: Pair<String, Int>, field ->
-                val implementation = generateFieldDeserialization(it, field, OFFSET)
+                val implementation = generateFieldDeserialization(it, field, OFFSET, SERIALIZED)
                 Pair(
                     "${acc.first}$implementation\n",
                     acc.second + field.type.bitSize
@@ -212,7 +228,7 @@ open class BflStruct(
                 parameter { name = OFFSET; type = ZincPrimitive.U24 }
                 returnType = Self
                 comment = """
-                    Deserialize ${aOrAn()} $id from the ${it.name.capitalize()} group `$SERIALIZED`, at `offset`.
+                    Deserialize ${aOrAn()} $id from the ${it.name.capitalize()} group `$SERIALIZED`, at `$OFFSET`.
                 """.trimIndent()
                 body =
                     fieldDeserializations + "\n" +

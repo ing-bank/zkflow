@@ -27,14 +27,15 @@ enum class BflPrimitive(
         witnessGroupOptions: WitnessGroupOptions,
         offset: String,
         variablePrefix: String,
+        witnessVariable: String
     ): String {
         return when (this) {
-            Bool -> "$SERIALIZED[$offset]"
+            Bool -> "$witnessVariable[$offset]"
             U8, U16, U24, U32, U64, U128 -> {
-                generateParseIntegerFromBits(offset, variablePrefix, false)
+                generateParseIntegerFromBits(offset, variablePrefix, false, witnessVariable)
             }
             I8, I16, I32, I64, I128 -> {
-                generateParseIntegerFromBits(offset, variablePrefix, true)
+                generateParseIntegerFromBits(offset, variablePrefix, true, witnessVariable)
             }
         }
     }
@@ -42,7 +43,8 @@ enum class BflPrimitive(
     private fun generateParseIntegerFromBits(
         offset: String,
         variablePrefix: String,
-        isSigned: Boolean
+        isSigned: Boolean,
+        witnessVariable: String
     ): String {
         val bSize = sizeExpr()
         val bits = "${variablePrefix}_bits"
@@ -51,7 +53,7 @@ enum class BflPrimitive(
             {
                 let mut $bits: [bool; $bSize] = [false; $bSize];
                 for $i in (0 as u24)..$bSize {
-                    $bits[$i] = $SERIALIZED[$i + $offset];
+                    $bits[$i] = $witnessVariable[$i + $offset];
                 }
                 std::convert::${if (isSigned) "from_bits_signed" else "from_bits_unsigned"}($bits)
             }

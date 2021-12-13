@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" contentScriptType="application/ecmascript" contentStyleType="text/css" height="92px" preserveAspectRatio="none" style="width:176px;height:92px;background:#000000;" version="1.1" viewBox="0 0 176 92" width="176px" zoomAndPan="magnify"><defs/><g><rect fill="#33FF02" height="21.2969" style="stroke: #33FF02; stroke-width: 1.0;" width="170" x="5" y="5"/><text fill="#000000" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="168" x="6" y="20">[From string (line 2) ]</text><text fill="#33FF02" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="0" x="10" y="40.2969"/><text fill="#33FF02" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="79" x="5" y="56.5938">@startuml</text><text fill="#33FF02" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="130" x="5" y="72.8906">!theme lightgray</text><text fill="#FF0000" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="106" x="10" y="89.1875">Syntax Error?</text><!--
+@startuml
+!theme lightgray
+
+component Witness
+component SerializedOutputGroup
+component input_staterefs
+component reference_staterefs
+component SerializedInputUtxos
+component SerializedReferenceUtxos
+component DeserializedOutputGroup
+component DeserializedInputUtxos
+component DeserializedReferenceUtxos
+component InputGroup
+component ReferenceGroup
+component LedgerTransaction
+
+Witness - -> input_staterefs
+Witness - -> reference_staterefs
+Witness - -> SerializedInputUtxos
+Witness - -> SerializedOutputGroup
+Witness - -> SerializedReferenceUtxos
+SerializedInputUtxos - -> DeserializedInputUtxos
+SerializedOutputGroup - -> DeserializedOutputGroup
+SerializedReferenceUtxos - -> DeserializedReferenceUtxos
+input_staterefs - - -> InputGroup
+DeserializedInputUtxos - -> InputGroup
+reference_staterefs - - -> ReferenceGroup
+DeserializedReferenceUtxos - -> ReferenceGroup
+InputGroup - -> LedgerTransaction
+DeserializedOutputGroup - - -> LedgerTransaction
+ReferenceGroup - -> LedgerTransaction
+@enduml
+
+PlantUML version 1.2019.07(Mon Jun 24 21:59:20 CEST 2019)
+(GPL source distribution)
+Java Runtime: OpenJDK Runtime Environment
+JVM: OpenJDK 64-Bit Server VM
+Java Version: 11.0.13+8-post-Debian-1
+Operating System: Linux
+OS Version: 5.15.0-2-amd64
+Default Encoding: UTF-8
+Language: en
+Country: US
+--></g></svg>

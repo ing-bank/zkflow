@@ -17,7 +17,7 @@ inline fun <T : Any> T?.requireNotNull(message: () -> String): T = when (this) {
  * @param T Type contained in Collection
  * @return Non-empty collection
  */
-inline fun <T : Any> Collection<T>.requireNotEmpty(message: () -> String) = ifEmpty {
+inline fun <T : Collection<Any>> T.requireNotEmpty(message: () -> String): T = ifEmpty {
     throw IllegalArgumentException(message())
 }
 
@@ -27,8 +27,12 @@ inline fun <T : Any> Collection<T>.requireNotEmpty(message: () -> String) = ifEm
  * @param T Required type
  * @return Instance of T
  */
-inline fun <reified T : Any> Any.requireInstanceOf(message: () -> String) = if (T::class.isInstance(this)) {
+inline fun <reified T : Any> Any.requireInstanceOf(message: (Any) -> String) = if (T::class.isInstance(this)) {
     this as T
 } else {
-    throw IllegalArgumentException(message())
+    throw IllegalArgumentException(message(this))
+}
+
+inline fun <reified T : Any> Any.requireInstanceOf() = requireInstanceOf<T>() {
+    "Expected a ${T::class.qualifiedName}, but got a ${it::class.qualifiedName} instead."
 }

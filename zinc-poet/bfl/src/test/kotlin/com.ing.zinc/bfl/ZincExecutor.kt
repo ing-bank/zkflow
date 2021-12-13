@@ -9,12 +9,10 @@ import com.ing.zinc.poet.ZincFile
 import com.ing.zinc.poet.ZincPrimitive
 import com.ing.zkflow.util.ensureDirectory
 import com.ing.zkflow.util.ensureFile
+import com.ing.zkflow.util.runCommand
 import kotlinx.serialization.json.JsonObjectBuilder
 import kotlinx.serialization.json.buildJsonObject
-import java.io.File
-import java.io.FileReader
 import java.nio.file.Path
-import java.util.concurrent.TimeUnit
 import java.util.logging.Logger
 import kotlin.io.path.writeText
 import kotlin.time.measureTime
@@ -43,26 +41,15 @@ object ZincExecutor {
         newLine()
     }
 
-    fun Path.runCommand(command: String, timeoutInSeconds: Long = 5): Pair<String, String> {
-        val workingDir: File = toFile()
-        val stdout = workingDir.resolve("stdout")
-        val stderr = workingDir.resolve("stderr")
-
-        val processBuilder: ProcessBuilder = ProcessBuilder(*command.split(" ").toTypedArray())
-            .directory(workingDir)
-            .redirectOutput(ProcessBuilder.Redirect.to(stdout))
-            .redirectError(ProcessBuilder.Redirect.to(stderr))
+    fun Path.runCommandAndLogTime(command: String, timeoutInSeconds: Long = 5): Pair<String, String> {
+        val output: Pair<String, String>
 
         val time = measureTime {
-            processBuilder.start()
-                .waitFor(timeoutInSeconds, TimeUnit.SECONDS)
+            output = this.runCommand(command, timeoutInSeconds)
         }
-        log.info("[$this] took $time")
+        log.info("[$command] took $time")
 
-        return Pair(
-            FileReader(stdout.path).readText(),
-            FileReader(stderr.path).readText()
-        )
+        return output
     }
 
     private val log = Logger.getLogger(ZincExecutor::class.qualifiedName)
@@ -81,7 +68,7 @@ object ZincExecutor {
         // generate Zargo.toml
         createZargoToml(this::class.simpleName!!)
         // generate consts.zn
-        zincFileIfNotExists("consts.zn") {
+        zincFileIfNotExists("$CONSTS.zn") {
             options.witnessGroupOptions.forEach {
                 add(it.witnessSizeConstant)
             }

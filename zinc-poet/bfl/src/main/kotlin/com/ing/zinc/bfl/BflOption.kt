@@ -17,11 +17,12 @@ data class BflOption(val innerType: BflType) : BflStruct(
     override fun generateFieldDeserialization(
         witnessGroupOptions: WitnessGroupOptions,
         field: FieldWithParentStruct,
-        witnessIndex: String
+        witnessIndex: String,
+        witnessVariable: String
     ): String {
         return if (field.name == VALUE_FIELD) {
             val offset = field.generateConstant(OFFSET) + " + $witnessIndex"
-            val deserializedField = field.type.deserializeExpr(witnessGroupOptions, offset, field.name)
+            val deserializedField = field.type.deserializeExpr(witnessGroupOptions, offset, field.name, witnessVariable)
             // 'has_value' is deserialized before 'value', so can be used in this block
             return """
                 let ${field.name}: ${field.type.id} = {
@@ -33,7 +34,7 @@ data class BflOption(val innerType: BflType) : BflStruct(
                 };
             """.trimIndent()
         } else {
-            super.generateFieldDeserialization(witnessGroupOptions, field, witnessIndex)
+            super.generateFieldDeserialization(witnessGroupOptions, field, witnessIndex, witnessVariable)
         }
     }
 

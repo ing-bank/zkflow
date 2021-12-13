@@ -275,6 +275,40 @@ val circuit = circuitMetadata {
 Below, for completeness the `Witness` format is described. We don't expect any changes needed here.
 
 ```rust
+// Map<ContractState.name, TransactionState<ContractState>>
+struct SerializedOutputGroup {
+    memberships: [[bool; CORDA_MAGIC_BYTES + MEMBERSHIP_TRANSACTION_STATE_LENGTH]; 1],
+}
+// List<StateRef>
+typedef SerializedInputGroup = [[bool; CORDA_MAGIC_BYTES + STATE_REF_LENGTH]; <NUMBER_OF_INPUTS>];
+// List<StateRef>
+typedef SerializedReferenceGroup = [[bool; CORDA_MAGIC_BYTES + STATE_REF_LENGTH]; <NUMBER_OF_REFERENCES>];
+
+struct Command {
+  id: u32
+}
+// List<CommandData>
+typedef SerializedCommandGroup = [[bool; CORDA_MAGIC_BYTES + COMMAND_LENGTH]; <NUMBER_OF_COMMANDS>];
+// List<SecureHash>
+typedef SerializedAttachmentGroup = [[bool; CORDA_MAGIC_BYTES + SECURE_HASH_LENGTH]; <NUMBER_OF_ATTACHMENTS>];
+// List<Party>
+typedef SerializedNotaryGroup = [[bool; CORDA_MAGIC_BYTES + PARTY_LENGTH]; 1];
+// List<TimeWindow>
+typedef SerializedTimeWindowGroup = [[bool; CORDA_MAGIC_BYTES + TIME_WINDOW_LENGTH]; 0 or 1];
+// List<SecureHash>
+typedef SerializedParametersGroup = [[bool; CORDA_MAGIC_BYTES + SECURE_HASH_LENGTH]; 1];
+// List<List<PublicKey>>
+typedef SerializedSignersGroup = [[bool; CORDA_MAGIC_BYTES + ED_DSA_PUBLIC_KEY]; <NUMBER_OF_SIGNERS>];
+// Map<ContractState.name, TransactionState<ContractState>>
+struct SerializedInputUtxos {
+    deposits: [[bool; CORDA_MAGIC_BYTES + DEPOSIT_TRANSACTION_STATE_LENGTH]; 1],
+}
+// Map<ContractState.name, TransactionState<ContractState>>
+struct SerializedReferenceUtxos {
+    memberships: [[bool; CORDA_MAGIC_BYTES + MEMBERSHIP_TRANSACTION_STATE_LENGTH]; 3],
+    membership_attestations: [[bool; CORDA_MAGIC_BYTES + MEMBERSHIP_ATTESTATION_TRANSACTION_STATE_LENGTH]; 3],
+    ivno_token_types: [[bool; CORDA_MAGIC_BYTES + IVNO_TOKEN_TYPE_TRANSACTION_STATE_LENGTH]; 1],
+}
 struct Witness {
     inputs: SerializedInputGroup,
     outputs: SerializedOutputGroup,
@@ -295,8 +329,47 @@ struct Witness {
     serialized_reference_utxos: SerializedReferenceUtxos
 }
 ```
+The next diagram shows how input, output and references are converted from `Witness` to `LedgerTransaction`. 
 
-from this configuration and the given witness, we can generate the following `LedgerTransaction`
+```plantuml
+@startuml
+' !theme lightgray
+
+component Witness
+component SerializedOutputGroup
+component input_staterefs
+component reference_staterefs
+component SerializedInputUtxos
+component SerializedReferenceUtxos
+component DeserializedOutputGroup
+component DeserializedInputUtxos
+component DeserializedReferenceUtxos
+component InputGroup
+component ReferenceGroup
+' component OutputGroup
+component LedgerTransaction
+
+Witness --> input_staterefs
+Witness --> reference_staterefs
+Witness --> SerializedInputUtxos
+Witness --> SerializedOutputGroup
+Witness --> SerializedReferenceUtxos
+SerializedInputUtxos --> DeserializedInputUtxos
+SerializedOutputGroup --> DeserializedOutputGroup
+SerializedReferenceUtxos --> DeserializedReferenceUtxos
+input_staterefs ---> InputGroup
+DeserializedInputUtxos --> InputGroup
+reference_staterefs ---> ReferenceGroup
+DeserializedReferenceUtxos --> ReferenceGroup
+' DeserializedOutputGroup --> OutputGroup
+InputGroup --> LedgerTransaction
+' OutputGroup --> LedgerTransaction
+DeserializedOutputGroup ---> LedgerTransaction
+ReferenceGroup --> LedgerTransaction
+@enduml
+```
+
+from this configuration and the given `Witness`, we can generate the following `LedgerTransaction`
 
 ```rust
 struct DepositTransactionState {

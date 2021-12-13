@@ -3,7 +3,7 @@ package com.ing.zinc.bfl
 import com.ing.zinc.bfl.DataInterface.Companion.polyIntData
 import com.ing.zinc.bfl.ZincExecutor.generateDeserializeCircuit
 import com.ing.zinc.bfl.ZincExecutor.generateWitness
-import com.ing.zinc.bfl.ZincExecutor.runCommand
+import com.ing.zinc.bfl.ZincExecutor.runCommandAndLogTime
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -22,7 +22,7 @@ internal class BflPolyTest {
             )
         }
 
-        val (stdout, stderr) = tempDir.runCommand("zargo run")
+        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run")
 
         stderr shouldBe ""
         stdout.parseJson() shouldBe buildJsonObject {

@@ -10,7 +10,7 @@ import kotlin.io.path.notExists
 import kotlin.io.path.writeText
 
 object ZincGenerator {
-    internal fun Path.createZargoToml(circuitName: String = "test-circuit", version: String = "0.1.0") {
+    fun Path.createZargoToml(circuitName: String = "test-circuit", version: String = "0.1.0") {
         resolve("Zargo.toml")
             .createFile()
             .writeText(

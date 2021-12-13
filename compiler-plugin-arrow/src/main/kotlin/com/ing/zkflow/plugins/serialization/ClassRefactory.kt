@@ -23,7 +23,6 @@ class ClassRefactory(
     private val ktClass = classDeclaration.value
     private val typeResolver = TypeQuasiResolver(ktClass.containingKtFile.importList)
 
-
     companion object {
         /**
          * Verbosely verifies whether a ZKP annotation is applicable to the class.

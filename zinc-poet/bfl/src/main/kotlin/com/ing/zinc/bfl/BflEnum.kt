@@ -29,8 +29,9 @@ data class BflEnum(
     override fun deserializeExpr(
         witnessGroupOptions: WitnessGroupOptions,
         offset: String,
-        variablePrefix: String
-    ): String = "$id::${witnessGroupOptions.deserializeMethodName}($SERIALIZED, $offset)"
+        variablePrefix: String,
+        witnessVariable: String
+    ): String = "$id::${witnessGroupOptions.deserializeMethodName}($witnessVariable, $offset)"
 
     override fun defaultExpr() = "$id::${variants[0]}"
 
@@ -49,7 +50,12 @@ data class BflEnum(
             val variantClauses = variants.mapIndexed { index: Int, variant: String ->
                 "$index => $id::$variant,"
             }.joinToString("\n") { variant -> variant }
-            val deserializeIndex = BflPrimitive.U32.deserializeExpr(it, OFFSET, SERIALIZED)
+            val deserializeIndex = BflPrimitive.U32.deserializeExpr(
+                witnessGroupOptions = it,
+                offset = OFFSET,
+                variablePrefix = SERIALIZED,
+                witnessVariable = SERIALIZED
+            )
             zincFunction {
                 name = it.deserializeMethodName
                 parameter { name = SERIALIZED; type = it.witnessType }

@@ -1,7 +1,10 @@
 package com.ing.zkflow.util
 
+import java.io.File
+import java.io.FileReader
 import java.nio.file.Files
 import java.nio.file.Path
+import java.util.concurrent.TimeUnit
 
 /**
  * Verify whether [fileName] is a regular file at the given [Path], otherwise it is created.
@@ -36,3 +39,36 @@ fun Path.ensureDirectory(directoryName: String): Path {
     }
     return directory
 }
+
+/**
+ * Run [command] in [this] directory, abort after [timeoutInSeconds].
+ * Captures and returns stdout and stderr as strings.
+ * @receiver The working directory
+ * @param command The command to execute
+ * @param timeoutInSeconds The timeout in seconds
+ * @return Pair with stdout and stderr
+ */
+@Suppress("SpreadOperator", "MagicNumber")
+fun Path.runCommand(command: String, timeoutInSeconds: Long = 5): Pair<String, String> {
+    val workingDir: File = toFile()
+    val stdout = workingDir.resolve("stdout")
+    val stderr = workingDir.resolve("stderr")
+
+    val processBuilder: ProcessBuilder = ProcessBuilder(*command.split(" ").toTypedArray())
+        .directory(workingDir)
+        .redirectOutput(ProcessBuilder.Redirect.to(stdout))
+        .redirectError(ProcessBuilder.Redirect.to(stderr))
+
+    if (!processBuilder.start()
+        .waitFor(timeoutInSeconds, TimeUnit.SECONDS)
+    ) {
+        throw InterruptedCommandException(command, timeoutInSeconds)
+    }
+
+    return Pair(
+        FileReader(stdout.path).readText(),
+        FileReader(stderr.path).readText()
+    )
+}
+
+class InterruptedCommandException(command: String, timeoutInSeconds: Long) : RuntimeException("Command '$command' was interrupted after $timeoutInSeconds seconds")

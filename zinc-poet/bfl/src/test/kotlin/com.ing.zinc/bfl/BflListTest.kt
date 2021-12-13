@@ -5,7 +5,7 @@ import com.ing.zinc.bfl.ZincExecutor.createImports
 import com.ing.zinc.bfl.ZincExecutor.generateCircuitBase
 import com.ing.zinc.bfl.ZincExecutor.generateDeserializeCircuit
 import com.ing.zinc.bfl.ZincExecutor.generateWitness
-import com.ing.zinc.bfl.ZincExecutor.runCommand
+import com.ing.zinc.bfl.ZincExecutor.runCommandAndLogTime
 import com.ing.zinc.bfl.generator.ZincGenerator.zincSourceFile
 import com.ing.zinc.poet.ZincPrimitive
 import io.kotest.matchers.shouldBe
@@ -28,7 +28,7 @@ internal class BflListTest {
             )
         }
 
-        val (stdout, stderr) = tempDir.runCommand("zargo run")
+        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run")
 
         stderr shouldBe ""
         stdout.parseJson() shouldBe listOf(true).asZincJsonBooleanList(2)
@@ -45,7 +45,7 @@ internal class BflListTest {
             )
         }
 
-        val (stdout, stderr) = tempDir.runCommand("zargo run")
+        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run")
 
         stderr shouldBe ""
         stdout.parseJson() shouldBe listOf(1).asZincJsonNumberList(2)
@@ -62,7 +62,7 @@ internal class BflListTest {
             )
         }
 
-        val (stdout, stderr) = tempDir.runCommand("zargo run")
+        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run")
 
         stderr shouldBe ""
         stdout.parseJson() shouldBe testDataListOfArrays
@@ -77,7 +77,7 @@ internal class BflListTest {
             bytes(0, 0, 0, 0).bits(0)
         }
 
-        val (stdout, stderr) = tempDir.runCommand("zargo run")
+        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run")
 
         stderr shouldBe ""
         stdout.parseJson() shouldBe testDataListOfStructWithStructs
@@ -88,7 +88,7 @@ internal class BflListTest {
         tempDir.generateGetCircuit(listOfStructWithStructField, 0)
         tempDir.generateWitness { put("list", testDataListOfStructWithStructs) }
 
-        val (stdout, stderr) = tempDir.runCommand("zargo run")
+        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run")
 
         stderr shouldBe ""
         stdout.parseJson() shouldBe structStructJson(true, 1)
@@ -99,7 +99,7 @@ internal class BflListTest {
         tempDir.generateGetCircuit(listOfStructWithStructField, 1)
         tempDir.generateWitness { put("list", testDataListOfStructWithStructs) }
 
-        val (stdout, stderr) = tempDir.runCommand("zargo run")
+        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run")
 
         stderr shouldContain "Index out of bounds"
         stdout shouldBe ""
@@ -113,7 +113,7 @@ internal class BflListTest {
             put(ELEMENT, structStructJson(true, 1))
         }
 
-        val (stdout, stderr) = tempDir.runCommand("zargo run")
+        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run")
 
         stderr shouldBe ""
         stdout.parseJson() shouldBe JsonPrimitive(true)
@@ -127,7 +127,7 @@ internal class BflListTest {
             put(ELEMENT, structStructJson(true, 13))
         }
 
-        val (stdout, stderr) = tempDir.runCommand("zargo run")
+        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run")
 
         stderr shouldBe ""
         stdout.parseJson() shouldBe JsonPrimitive(false)
@@ -141,7 +141,7 @@ internal class BflListTest {
             put("that", testDataListOfStructWithStructs)
         }
 
-        val (stdout, stderr) = tempDir.runCommand("zargo run")
+        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run")
 
         stderr shouldBe ""
         stdout.parseJson() shouldBe JsonPrimitive(true)
@@ -155,7 +155,7 @@ internal class BflListTest {
             put("that", testDataListOfStructWithStructs)
         }
 
-        val (stdout, stderr) = tempDir.runCommand("zargo run")
+        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run")
 
         stderr shouldBe ""
         stdout.parseJson() shouldBe JsonPrimitive(true)
@@ -169,7 +169,7 @@ internal class BflListTest {
             put("that", testDataLargerListOfStructWithStructs)
         }
 
-        val (stdout, stderr) = tempDir.runCommand("zargo run")
+        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run")
 
         stderr shouldBe ""
         stdout.parseJson() shouldBe JsonPrimitive(true)
@@ -183,7 +183,7 @@ internal class BflListTest {
             put("that", testDataListOfStructWithStructs)
         }
 
-        val (stdout, stderr) = tempDir.runCommand("zargo run")
+        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run")
 
         stderr shouldBe ""
         stdout.parseJson() shouldBe JsonPrimitive(false)
@@ -194,7 +194,7 @@ internal class BflListTest {
         tempDir.generateExtractFieldCircuit(listOfStructWithStructField, "baz_foo", BflPrimitive.U32)
         tempDir.generateWitness { put("this", testDataLargerListOfStructWithStructs) }
 
-        val (stdout, stderr) = tempDir.runCommand("zargo run")
+        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run")
 
         stderr shouldBe ""
         stdout.parseJson() shouldBe listOf(1, 13).asZincJsonNumberList(2, 0)
@@ -205,7 +205,7 @@ internal class BflListTest {
         tempDir.generateExtractFieldCircuit(listOfStructWithStructField, "baz_bar", BflPrimitive.Bool)
         tempDir.generateWitness { put("this", testDataListOfStructWithStructs) }
 
-        val (stdout, stderr) = tempDir.runCommand("zargo run")
+        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run")
 
         stderr shouldBe ""
         stdout.parseJson() shouldBe listOf(true).asZincJsonBooleanList(2, false)
@@ -216,7 +216,7 @@ internal class BflListTest {
         tempDir.generateExtractFieldCircuit(listOfStructWithStructField, "baz", structWithPrimitiveFields)
         tempDir.generateWitness { put("this", testDataLargerListOfStructWithStructs) }
 
-        val (stdout, stderr) = tempDir.runCommand("zargo run")
+        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run")
 
         stderr shouldBe ""
         stdout.parseJson() shouldBe testDataLargerListOfStructs
@@ -229,7 +229,7 @@ internal class BflListTest {
             put(ELEMENT, structStructJson(true, 1))
         }
 
-        val (stdout, stderr) = tempDir.runCommand("zargo run")
+        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run")
 
         stderr shouldBe ""
         stdout.parseJson() shouldBe testDataListOfStructWithStructs
@@ -240,7 +240,7 @@ internal class BflListTest {
         tempDir.generateIsDistinctCircuit(listOfStructWithStructField)
         tempDir.generateWitness { put("this", testDataDuplicateListOfStructWithStructs) }
 
-        val (stdout, stderr) = tempDir.runCommand("zargo run")
+        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run")
 
         stderr shouldBe ""
         stdout.parseJson() shouldBe JsonPrimitive(false)
@@ -251,7 +251,7 @@ internal class BflListTest {
         tempDir.generateIsDistinctCircuit(listOfStructWithStructField)
         tempDir.generateWitness { put("this", testDataLargerListOfStructWithStructs) }
 
-        val (stdout, stderr) = tempDir.runCommand("zargo run")
+        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run")
 
         stderr shouldBe ""
         stdout.parseJson() shouldBe JsonPrimitive(true)
@@ -265,7 +265,7 @@ internal class BflListTest {
             put(ELEMENT, structStructJson(true, 1))
         }
 
-        val (stdout, stderr) = tempDir.runCommand("zargo run")
+        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run")
 
         stderr shouldBe ""
         stdout.parseJson() shouldBe JsonPrimitive(true)
@@ -279,7 +279,7 @@ internal class BflListTest {
             put(ELEMENT, structStructJson(true, 1))
         }
 
-        val (stdout, stderr) = tempDir.runCommand("zargo run")
+        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run")
 
         stderr shouldBe ""
         stdout.parseJson() shouldBe JsonPrimitive(false)
@@ -293,7 +293,7 @@ internal class BflListTest {
             put("by", "13")
         }
 
-        val (stdout, stderr) = tempDir.runCommand("zargo run")
+        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run")
 
         stderr shouldBe ""
         stdout.parseJson() shouldBe JsonPrimitive("1")
@@ -307,7 +307,7 @@ internal class BflListTest {
             put("by", true)
         }
 
-        val (stdout, stderr) = tempDir.runCommand("zargo run")
+        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run")
 
         stderr shouldBe ""
         stdout.parseJson() shouldBe JsonPrimitive("0")
@@ -321,7 +321,7 @@ internal class BflListTest {
             put("by", primitiveStructJson(true, 13))
         }
 
-        val (stdout, stderr) = tempDir.runCommand("zargo run")
+        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run")
 
         stderr shouldBe ""
         stdout.parseJson() shouldBe JsonPrimitive("1")
@@ -335,7 +335,7 @@ internal class BflListTest {
             put("by", "1")
         }
 
-        val (stdout, stderr) = tempDir.runCommand("zargo run")
+        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run")
 
         stderr shouldContain "Multiple matches found for field baz.foo"
         stdout shouldBe ""
@@ -349,7 +349,7 @@ internal class BflListTest {
             put("by", "2")
         }
 
-        val (stdout, stderr) = tempDir.runCommand("zargo run")
+        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run")
 
         stderr shouldContain "No match found for field baz.foo"
         stdout shouldBe ""
@@ -363,7 +363,7 @@ internal class BflListTest {
             put("by", "13")
         }
 
-        val (stdout, stderr) = tempDir.runCommand("zargo run")
+        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run")
 
         stderr shouldBe ""
         stdout.parseJson() shouldBe structStructJson(true, 13)
@@ -377,7 +377,7 @@ internal class BflListTest {
             put("by", true)
         }
 
-        val (stdout, stderr) = tempDir.runCommand("zargo run")
+        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run")
 
         stderr shouldBe ""
         stdout.parseJson() shouldBe structStructJson(true, 1)
@@ -391,7 +391,7 @@ internal class BflListTest {
             put("by", primitiveStructJson(true, 13))
         }
 
-        val (stdout, stderr) = tempDir.runCommand("zargo run")
+        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run")
 
         stderr shouldBe ""
         stdout.parseJson() shouldBe structStructJson(true, 13)
@@ -405,7 +405,7 @@ internal class BflListTest {
             put("by", "1")
         }
 
-        val (stdout, stderr) = tempDir.runCommand("zargo run")
+        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run")
 
         stderr shouldContain "Multiple matches found for field baz.foo"
         stdout shouldBe ""
@@ -419,7 +419,7 @@ internal class BflListTest {
             put("by", "2")
         }
 
-        val (stdout, stderr) = tempDir.runCommand("zargo run")
+        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run")
 
         stderr shouldContain "No match found for field baz.foo"
         stdout shouldBe ""
