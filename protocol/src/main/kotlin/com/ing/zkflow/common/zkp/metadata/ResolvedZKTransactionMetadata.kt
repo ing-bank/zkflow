@@ -11,6 +11,7 @@ import net.corda.core.contracts.TransactionState
 import net.corda.core.crypto.Crypto
 import net.corda.core.transactions.LedgerTransaction
 import java.io.File
+import java.lang.IndexOutOfBoundsException
 import java.time.Duration
 import kotlin.reflect.KClass
 import kotlin.reflect.full.isSubclassOf
@@ -273,16 +274,25 @@ data class ResolvedZKTransactionMetadata(
         return when (groupIndex) {
             ComponentGroupEnum.INPUTS_GROUP.ordinal -> ZkpVisibility.Public // References are always visible, to know State's visibility call 'getUtxoVisibility'
             ComponentGroupEnum.REFERENCES_GROUP.ordinal -> ZkpVisibility.Public // References are always visible, to know State's visibility call 'getUtxoVisibility'
-            ComponentGroupEnum.OUTPUTS_GROUP.ordinal -> outputTypeGroups[componentIndex].visibility
+            ComponentGroupEnum.OUTPUTS_GROUP.ordinal -> getVisibility(outputTypeGroups, componentIndex)
             else -> ZkpVisibility.Public // all other groups have visibility 'Public' by default at the moment, may change in future
         }
     }
 
     fun getUtxoVisibility(groupIndex: Int, componentIndex: Int): ZkpVisibility {
         return when (groupIndex) {
-            ComponentGroupEnum.INPUTS_GROUP.ordinal -> inputTypeGroups[componentIndex].visibility
-            ComponentGroupEnum.REFERENCES_GROUP.ordinal -> referenceTypeGroups[componentIndex].visibility
+            ComponentGroupEnum.INPUTS_GROUP.ordinal -> getVisibility(inputTypeGroups, componentIndex)
+            ComponentGroupEnum.REFERENCES_GROUP.ordinal -> getVisibility(referenceTypeGroups, componentIndex)
             else -> error("Only Inputs and References UTXOs are allowed")
         }
+    }
+
+    private fun getVisibility(group: List<ContractStateTypeCount>, componentIndex: Int): ZkpVisibility {
+        var count = 0
+        group.forEach {
+            count += it.count
+            if (count >= componentIndex) return it.visibility
+        }
+        throw IndexOutOfBoundsException("component index: $componentIndex, components count: $count")
     }
 }
