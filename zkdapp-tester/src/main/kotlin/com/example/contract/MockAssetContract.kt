@@ -62,8 +62,8 @@ class MockAssetContract : Contract {
             attachmentConstraintType = AlwaysAcceptAttachmentConstraint::class
             private = true
             numberOfSigners = 2
-            inputs { 1 of MockAsset::class }
-            outputs { 1 of MockAsset::class }
+            inputs { 1 private MockAsset::class }
+            outputs { 1 private MockAsset::class }
             timewindow()
         }
     }
@@ -86,7 +86,7 @@ class MockAssetContract : Contract {
             private = true
             attachmentConstraintType = AlwaysAcceptAttachmentConstraint::class
             numberOfSigners = 1
-            outputs { 1 of MockAsset::class }
+            outputs { 1 private MockAsset::class }
             timewindow()
         }
     }
