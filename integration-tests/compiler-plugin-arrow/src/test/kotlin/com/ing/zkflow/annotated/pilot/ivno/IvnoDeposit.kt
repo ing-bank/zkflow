@@ -1,20 +1,20 @@
-package com.ing.zkflow.annotated.ivno
+package com.ing.zkflow.annotated.pilot.ivno
 
 import com.ing.zkflow.ASCII
 import com.ing.zkflow.Converter
 import com.ing.zkflow.ZKP
-import com.ing.zkflow.annotated.ivno.deps.BigDecimalAmount
-import com.ing.zkflow.annotated.ivno.deps.Network
-import com.ing.zkflow.annotated.ivno.infra.BigDecimalAmountConverter_LinearPointer_IvnoTokenType
-import com.ing.zkflow.annotated.ivno.infra.BigDecimalAmountSurrogate_LinearPointer_IvnoTokenType
-import com.ing.zkflow.annotated.ivno.infra.EdDSAParty
-import com.ing.zkflow.annotated.ivno.infra.EdDSAPartyConverter
-import com.ing.zkflow.annotated.ivno.infra.InstantConverter
-import com.ing.zkflow.annotated.ivno.infra.InstantSurrogate
-import com.ing.zkflow.annotated.ivno.infra.NetworkAnonymousOperatorConverter
-import com.ing.zkflow.annotated.ivno.infra.NetworkEdDSAAnonymousOperator
-import com.ing.zkflow.annotated.ivno.infra.UniqueIdentifierConverter
-import com.ing.zkflow.annotated.ivno.infra.UniqueIdentifierSurrogate
+import com.ing.zkflow.annotated.pilot.infra.BigDecimalAmountConverter_LinearPointer_IvnoTokenType
+import com.ing.zkflow.annotated.pilot.infra.BigDecimalAmountSurrogate_LinearPointer_IvnoTokenType
+import com.ing.zkflow.annotated.pilot.infra.EdDSAParty
+import com.ing.zkflow.annotated.pilot.infra.EdDSAPartyConverter
+import com.ing.zkflow.annotated.pilot.infra.InstantConverter
+import com.ing.zkflow.annotated.pilot.infra.InstantSurrogate
+import com.ing.zkflow.annotated.pilot.infra.NetworkAnonymousOperatorConverter
+import com.ing.zkflow.annotated.pilot.infra.NetworkEdDSAAnonymousOperator
+import com.ing.zkflow.annotated.pilot.infra.UniqueIdentifierConverter
+import com.ing.zkflow.annotated.pilot.infra.UniqueIdentifierSurrogate
+import com.ing.zkflow.annotated.pilot.ivno.deps.BigDecimalAmount
+import com.ing.zkflow.annotated.pilot.ivno.deps.Network
 import net.corda.core.contracts.LinearPointer
 import net.corda.core.contracts.LinearState
 import net.corda.core.contracts.UniqueIdentifier
@@ -60,4 +60,7 @@ data class IvnoTokenType(
     override val linearId: @Converter<UniqueIdentifier, UniqueIdentifierSurrogate>(UniqueIdentifierConverter::class) UniqueIdentifier = UniqueIdentifier()
 ) : LinearState {
     override val participants: List<AbstractParty> = setOf(tokenIssuingEntity, custodian).toList()
+
+    val testFieldWithGetter: Int get() = 0
+    val testFieldNoGetter: Int = 0
 }

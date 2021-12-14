@@ -1,25 +1,30 @@
 @file:Suppress("ClassName")
 
-package com.ing.zkflow.annotated.ivno.infra
+package com.ing.zkflow.annotated.pilot.infra
 
 import com.ing.zkflow.ConversionProvider
-import com.ing.zkflow.annotated.ivno.IvnoTokenType
-import com.ing.zkflow.annotated.ivno.deps.BigDecimalAmount
-import com.ing.zkflow.annotated.ivno.deps.Network
+import com.ing.zkflow.annotated.pilot.ivno.IvnoTokenType
+import com.ing.zkflow.annotated.pilot.ivno.deps.BigDecimalAmount
+import com.ing.zkflow.annotated.pilot.ivno.deps.Network
+import com.ing.zkflow.annotated.pilot.r3.types.IssuedTokenType
+import net.corda.core.contracts.Amount
+// import com.ing.zkflow.annotated.pilot.r3.types.IssuedTokenType
 import net.corda.core.contracts.LinearPointer
 import net.corda.core.contracts.UniqueIdentifier
+import net.corda.core.crypto.SecureHash
+import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.Party
 import java.time.Instant
 import java.util.UUID
 
-object EdDSAAnonymousPartyConverter : ConversionProvider<AnonymousParty, EdDSAAnonymousParty> {
-    override fun from(original: AnonymousParty): EdDSAAnonymousParty {
+object AnonymousPartyConverter_EdDSA : ConversionProvider<AnonymousParty, AnonymousPartySurrogate_EdDSA> {
+    override fun from(original: AnonymousParty): AnonymousPartySurrogate_EdDSA {
         require(original.owningKey.algorithm == "EdDSA") {
             "This converter only accepts parties with EdDSA keys"
         }
 
-        return EdDSAAnonymousParty(original.owningKey.encoded)
+        return AnonymousPartySurrogate_EdDSA(original.owningKey.encoded)
     }
 }
 
@@ -43,7 +48,7 @@ object NetworkAnonymousOperatorConverter : ConversionProvider<Network, NetworkEd
             original.operator
         } else {
             null
-        }?.let { EdDSAAnonymousPartyConverter.from(it) }
+        }?.let { AnonymousPartyConverter_EdDSA.from(it) }
 
         return NetworkEdDSAAnonymousOperator(original.value, operator)
     }
@@ -78,4 +83,35 @@ object LinearPointerConverter_IvnoTokenType : ConversionProvider<
         > {
     override fun from(original: LinearPointer<IvnoTokenType>) =
         LinearPointerSurrogate_IvnoTokenType(original.pointer, original.type.canonicalName, original.isResolved)
+}
+
+object SecureHashConverter_SHA256 : ConversionProvider<SecureHash, SecureHashSHA256Surrogate> {
+    override fun from(original: SecureHash): SecureHashSHA256Surrogate {
+        require(original is SecureHash.SHA256) {
+            "${this::class.qualifiedName} expects a ${SecureHash.SHA256::class.qualifiedName} subtype of ${SecureHash::class.qualifiedName}"
+        }
+
+        return SecureHashSHA256Surrogate(original.bytes)
+    }
+}
+
+object AmountConverter_IssuedTokenType : ConversionProvider<
+        Amount<IssuedTokenType>,
+        AmountSurrogate_IssuedTokenType
+        > {
+    override fun from(original: Amount<IssuedTokenType>) =
+        AmountSurrogate_IssuedTokenType(original.quantity, original.displayTokenSize, original.token)
+}
+
+object EdDSAAbstractPartyConverter : ConversionProvider<AbstractParty, EdDSAAbstractParty> {
+    override fun from(original: AbstractParty): EdDSAAbstractParty {
+        require(original.owningKey.algorithm == "EdDSA") {
+            "This converter only accepts parties with EdDSA keys"
+        }
+
+        return EdDSAAbstractParty(
+            original.nameOrNull()?.toString(),
+            original.owningKey.encoded
+        )
+    }
 }

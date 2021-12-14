@@ -1,22 +1,22 @@
 @file:Suppress("ClassName")
 
-package com.ing.zkflow.resolved.ivno
+package com.ing.zkflow.resolved.pilot.ivno
 
-import com.ing.zkflow.annotated.ivno.DepositStatus
-import com.ing.zkflow.annotated.ivno.IvnoTokenType
-import com.ing.zkflow.annotated.ivno.deps.BigDecimalAmount
-import com.ing.zkflow.annotated.ivno.infra.BigDecimalAmountConverter_LinearPointer_IvnoTokenType
-import com.ing.zkflow.annotated.ivno.infra.BigDecimalAmountSurrogate_LinearPointer_IvnoTokenType
-import com.ing.zkflow.annotated.ivno.infra.EdDSAParty
-import com.ing.zkflow.annotated.ivno.infra.EdDSAPartyConverter
-import com.ing.zkflow.annotated.ivno.infra.InstantConverter
-import com.ing.zkflow.annotated.ivno.infra.InstantSurrogate
-import com.ing.zkflow.annotated.ivno.infra.UniqueIdentifierConverter
-import com.ing.zkflow.annotated.ivno.infra.UniqueIdentifierSurrogate
-import com.ing.zkflow.annotated.ivno.infra.fixedCordaX500Name
-import com.ing.zkflow.annotated.ivno.infra.fixedKeyPair
+import com.ing.zkflow.annotated.pilot.infra.BigDecimalAmountConverter_LinearPointer_IvnoTokenType
+import com.ing.zkflow.annotated.pilot.infra.BigDecimalAmountSurrogate_LinearPointer_IvnoTokenType
+import com.ing.zkflow.annotated.pilot.infra.EdDSAParty
+import com.ing.zkflow.annotated.pilot.infra.EdDSAPartyConverter
+import com.ing.zkflow.annotated.pilot.infra.InstantConverter
+import com.ing.zkflow.annotated.pilot.infra.InstantSurrogate
+import com.ing.zkflow.annotated.pilot.infra.UniqueIdentifierConverter
+import com.ing.zkflow.annotated.pilot.infra.UniqueIdentifierSurrogate
+import com.ing.zkflow.annotated.pilot.infra.fixedCordaX500Name
+import com.ing.zkflow.annotated.pilot.ivno.DepositStatus
+import com.ing.zkflow.annotated.pilot.ivno.IvnoTokenType
+import com.ing.zkflow.annotated.pilot.ivno.deps.BigDecimalAmount
 import com.ing.zkflow.serialization.SerializerTest
 import com.ing.zkflow.serialization.engine.SerdeEngine
+import com.ing.zkflow.testing.zkp.ZKNulls.fixedKeyPair
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
@@ -83,7 +83,7 @@ class IvnoDepositTest : SerializerTest {
 
     private val uuid = UniqueIdentifier()
 
-    private val deposit = com.ing.zkflow.annotated.ivno.IvnoDeposit(
+    private val deposit = com.ing.zkflow.annotated.pilot.ivno.IvnoDeposit(
         depositor = party,
         custodian = party,
         tokenIssuingEntity = party,
@@ -111,14 +111,14 @@ class IvnoDepositTest : SerializerTest {
 
     @ParameterizedTest
     @MethodSource("engines")
-    fun `IvnoDeposit make a round trip`(engine: SerdeEngine) {
-        engine.assertRoundTrip(com.ing.zkflow.annotated.ivno.IvnoDeposit.serializer(), deposit)
+    fun `IvnoDeposit makes a round trip`(engine: SerdeEngine) {
+        engine.assertRoundTrip(com.ing.zkflow.annotated.pilot.ivno.IvnoDeposit.serializer(), deposit)
     }
 
     @ParameterizedTest
     @MethodSource("engines")
     fun `IvnoDeposit generated and manual serializations must coincide`(engine: SerdeEngine) {
-        engine.serialize(com.ing.zkflow.annotated.ivno.IvnoDeposit.serializer(), deposit) shouldBe
+        engine.serialize(com.ing.zkflow.annotated.pilot.ivno.IvnoDeposit.serializer(), deposit) shouldBe
             engine.serialize(IvnoDeposit.serializer(), resolvedDeposit)
     }
 }
