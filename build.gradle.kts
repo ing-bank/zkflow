@@ -134,6 +134,11 @@ subprojects {
             apply("idea")
         }
 
+        configure<JacocoPluginExtension> {
+            val jacocoToolVersion: String by project
+            toolVersion = jacocoToolVersion
+        }
+
         // Load the necessary dependencies
         dependencies.apply {
             val kotlinVersion: String by project
