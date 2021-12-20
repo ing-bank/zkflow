@@ -5,7 +5,7 @@ plugins {
 }
 
 dependencies {
-    testImplementation(kotlin("test"))
+    testImplementation(kotlin("test-junit5"))
     testImplementation(project(":test-utils"))
 
     implementation(project(":annotations"))
@@ -16,8 +16,6 @@ dependencies {
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
     kotlinOptions {
-        // IR backend is needed for Unsigned integer types support
-        useIR = true
         freeCompilerArgs += "-Xopt-in=kotlinx.serialization.ExperimentalSerializationApi"
         freeCompilerArgs += "-Xopt-in=kotlin.ExperimentalUnsignedTypes"
     }
