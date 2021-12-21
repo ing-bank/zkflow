@@ -7,8 +7,6 @@ import com.ing.zkflow.annotated.pilot.infra.AmountConverter_IssuedTokenType
 import com.ing.zkflow.annotated.pilot.infra.AmountSurrogate_IssuedTokenType
 import com.ing.zkflow.annotated.pilot.infra.EdDSAAbstractParty
 import com.ing.zkflow.annotated.pilot.infra.EdDSAAbstractPartyConverter
-import com.ing.zkflow.annotated.pilot.infra.InstantConverter
-import com.ing.zkflow.annotated.pilot.infra.InstantSurrogate
 import com.ing.zkflow.annotated.pilot.infra.SecureHashConverter_SHA256
 import com.ing.zkflow.annotated.pilot.infra.SecureHashSHA256DefaultProvider
 import com.ing.zkflow.annotated.pilot.infra.SecureHashSHA256Surrogate
@@ -26,9 +24,9 @@ data class CBDCToken(
         @Default<SecureHash>(SecureHashSHA256DefaultProvider::class)
         @Converter<SecureHash, SecureHashSHA256Surrogate>(SecureHashConverter_SHA256::class)
         SecureHash? = SecureHash.zeroHash,
-    val issueDate: @Converter<Instant, InstantSurrogate>(InstantConverter::class) Instant = Instant.now(),
+    val issueDate: Instant = Instant.now(),
 
-    val lastInterestAccrualDate: @Converter<Instant, InstantSurrogate>(InstantConverter::class) Instant = issueDate,
+    val lastInterestAccrualDate: Instant = issueDate,
 
     val usageCount: Int = 0
 ) : AbstractFungibleToken() { // , ReissuableState<CBDCToken> // this is commented out for simplification, it is just an interface with no fields.

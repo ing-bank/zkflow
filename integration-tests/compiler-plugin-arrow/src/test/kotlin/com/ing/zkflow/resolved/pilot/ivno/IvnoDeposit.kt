@@ -6,8 +6,6 @@ import com.ing.zkflow.annotated.pilot.infra.BigDecimalAmountConverter_LinearPoin
 import com.ing.zkflow.annotated.pilot.infra.BigDecimalAmountSurrogate_LinearPointer_IvnoTokenType
 import com.ing.zkflow.annotated.pilot.infra.EdDSAParty
 import com.ing.zkflow.annotated.pilot.infra.EdDSAPartyConverter
-import com.ing.zkflow.annotated.pilot.infra.InstantConverter
-import com.ing.zkflow.annotated.pilot.infra.InstantSurrogate
 import com.ing.zkflow.annotated.pilot.infra.UniqueIdentifierConverter
 import com.ing.zkflow.annotated.pilot.infra.UniqueIdentifierSurrogate
 import com.ing.zkflow.annotated.pilot.infra.fixedCordaX500Name
@@ -65,9 +63,7 @@ data class IvnoDeposit(
 
     object Status_0 : com.ing.zkflow.serialization.serializer.WrappedKSerializer<DepositStatus>(DepositStatus.serializer())
 
-    object Timestamp_0 : com.ing.zkflow.serialization.serializer.SurrogateSerializer<Instant, InstantSurrogate>(
-        InstantSurrogate.serializer(), { InstantConverter.from(it) }
-    )
+    object Timestamp_0 : com.ing.zkflow.serialization.serializer.WrappedKSerializer<Instant>(com.ing.zkflow.serialization.serializer.InstantSerializer)
 
     object AccountId_0 : com.ing.zkflow.serialization.serializer.string.FixedLengthASCIIStringSerializer(10)
 

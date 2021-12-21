@@ -39,7 +39,6 @@ sealed class TypeSerializingObject(private val contextualizedOriginal: Contextua
     class ExplicitType internal constructor(
         contextualizedOriginal: ContextualizedKtTypeReference,
         serializer: KClass<out KSerializer<*>>,
-        // private val type: String,
         private val children: List<SerializingObject>,
         private val construction: (self: ExplicitType, outer: Tracker, inner: List<Tracker>) -> String
     ) : TypeSerializingObject(contextualizedOriginal) {

@@ -7,8 +7,6 @@ import com.ing.zkflow.annotated.pilot.infra.BigDecimalAmountConverter_LinearPoin
 import com.ing.zkflow.annotated.pilot.infra.BigDecimalAmountSurrogate_LinearPointer_IvnoTokenType
 import com.ing.zkflow.annotated.pilot.infra.EdDSAParty
 import com.ing.zkflow.annotated.pilot.infra.EdDSAPartyConverter
-import com.ing.zkflow.annotated.pilot.infra.InstantConverter
-import com.ing.zkflow.annotated.pilot.infra.InstantSurrogate
 import com.ing.zkflow.annotated.pilot.infra.NetworkAnonymousOperatorConverter
 import com.ing.zkflow.annotated.pilot.infra.NetworkEdDSAAnonymousOperator
 import com.ing.zkflow.annotated.pilot.infra.UniqueIdentifierConverter
@@ -34,7 +32,7 @@ data class IvnoDeposit constructor(
     //
     val reference: @ASCII(10) String?,
     val status: DepositStatus,
-    val timestamp: @Converter<Instant, InstantSurrogate>(InstantConverter::class) Instant,
+    val timestamp: Instant,
     val accountId: @ASCII(10) String,
     val linearId: @Converter<UniqueIdentifier, UniqueIdentifierSurrogate>(UniqueIdentifierConverter::class) UniqueIdentifier
 )

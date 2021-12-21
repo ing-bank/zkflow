@@ -10,6 +10,7 @@ import com.ing.zkflow.UTF8
 import com.ing.zkflow.UTF8Char
 import com.ing.zkflow.plugins.serialization.serializingobject.SerializingObject
 import com.ing.zkflow.plugins.serialization.serializingobject.TypeSerializingObject
+import com.ing.zkflow.serialization.UUIDSerializer
 import com.ing.zkflow.serialization.serializer.BooleanSerializer
 import com.ing.zkflow.serialization.serializer.ByteSerializer
 import com.ing.zkflow.serialization.serializer.FixedLengthByteArraySerializer
@@ -17,6 +18,7 @@ import com.ing.zkflow.serialization.serializer.FixedLengthFloatingPointSerialize
 import com.ing.zkflow.serialization.serializer.FixedLengthListSerializer
 import com.ing.zkflow.serialization.serializer.FixedLengthMapSerializer
 import com.ing.zkflow.serialization.serializer.FixedLengthSetSerializer
+import com.ing.zkflow.serialization.serializer.InstantSerializer
 import com.ing.zkflow.serialization.serializer.IntSerializer
 import com.ing.zkflow.serialization.serializer.LongSerializer
 import com.ing.zkflow.serialization.serializer.ShortSerializer
@@ -33,6 +35,8 @@ import com.ing.zkflow.serialization.serializer.string.FixedLengthASCIIStringSeri
 import com.ing.zkflow.serialization.serializer.string.FixedLengthUTF8StringSerializer
 import org.jetbrains.kotlin.psi.KtValueArgument
 import java.math.BigDecimal
+import java.time.Instant
+import java.util.UUID
 
 /**
  * This object
@@ -45,7 +49,7 @@ internal object Processors {
      * I.e., "simple types" such as Boolean, Int, String, etc.,
      * and specialized collection such as ByteArray, IntArray, etc.
      */
-    private val unitTypes: Map<String, ToSerializingObject> = mapOf(
+    private val standardTypes: Map<String, ToSerializingObject> = mapOf(
         //
         //
         // Simple types.
@@ -54,7 +58,6 @@ internal object Processors {
             TypeSerializingObject.ExplicitType(
                 contextualizedOriginal,
                 WrappedKSerializerWithDefault::class,
-                // Boolean::class.simpleName!!,
                 emptyList()
             ) { _, outer, _ ->
                 "object $outer: ${WrappedKSerializerWithDefault::class.qualifiedName}<${Boolean::class.simpleName}>(${BooleanSerializer::class.qualifiedName})"
@@ -65,7 +68,6 @@ internal object Processors {
             TypeSerializingObject.ExplicitType(
                 contextualizedOriginal,
                 WrappedKSerializerWithDefault::class,
-                // Byte::class.simpleName!!,
                 emptyList()
             ) { _, outer, _ ->
                 "object $outer: ${WrappedKSerializerWithDefault::class.qualifiedName}<${Byte::class.simpleName}>(${ByteSerializer::class.qualifiedName})"
@@ -76,7 +78,6 @@ internal object Processors {
             TypeSerializingObject.ExplicitType(
                 contextualizedOriginal,
                 WrappedKSerializerWithDefault::class,
-                // UByte::class.simpleName!!,
                 emptyList()
             ) { _, outer, _ ->
                 "object $outer: ${WrappedKSerializerWithDefault::class.qualifiedName}<${UByte::class.simpleName}>(${UByteSerializer::class.qualifiedName})"
@@ -87,7 +88,6 @@ internal object Processors {
             TypeSerializingObject.ExplicitType(
                 contextualizedOriginal,
                 WrappedKSerializerWithDefault::class,
-                // Short::class.simpleName!!,
                 emptyList()
             ) { _, outer, _ ->
                 "object $outer: ${WrappedKSerializerWithDefault::class.qualifiedName}<${Short::class.simpleName}>(${ShortSerializer::class.qualifiedName})"
@@ -98,7 +98,6 @@ internal object Processors {
             TypeSerializingObject.ExplicitType(
                 contextualizedOriginal,
                 WrappedKSerializerWithDefault::class,
-                // UShort::class.simpleName!!,
                 emptyList()
             ) { _, outer, _ ->
                 "object $outer: ${WrappedKSerializerWithDefault::class.qualifiedName}<${UShort::class.simpleName}>(${UShortSerializer::class.qualifiedName})"
@@ -109,7 +108,6 @@ internal object Processors {
             TypeSerializingObject.ExplicitType(
                 contextualizedOriginal,
                 WrappedKSerializerWithDefault::class,
-                // Int::class.simpleName!!,
                 emptyList()
             ) { _, outer, _ ->
                 "object $outer: ${WrappedKSerializerWithDefault::class.qualifiedName}<${Int::class.simpleName}>(${IntSerializer::class.qualifiedName})"
@@ -120,7 +118,6 @@ internal object Processors {
             TypeSerializingObject.ExplicitType(
                 contextualizedOriginal,
                 WrappedKSerializerWithDefault::class,
-                // UInt::class.simpleName!!,
                 emptyList()
             ) { _, outer, _ ->
                 "object $outer: ${WrappedKSerializerWithDefault::class.qualifiedName}<${UInt::class.simpleName}>(${UIntSerializer::class.qualifiedName})"
@@ -131,7 +128,6 @@ internal object Processors {
             TypeSerializingObject.ExplicitType(
                 contextualizedOriginal,
                 WrappedKSerializerWithDefault::class,
-                // Long::class.simpleName!!,
                 emptyList()
             ) { _, outer, _ ->
                 "object $outer: ${WrappedKSerializerWithDefault::class.qualifiedName}<${Long::class.simpleName}>(${LongSerializer::class.qualifiedName})"
@@ -142,7 +138,6 @@ internal object Processors {
             TypeSerializingObject.ExplicitType(
                 contextualizedOriginal,
                 WrappedKSerializerWithDefault::class,
-                // ULong::class.simpleName!!,
                 emptyList()
             ) { _, outer, _ ->
                 "object $outer: ${WrappedKSerializerWithDefault::class.qualifiedName}<${ULong::class.simpleName}>(${ULongSerializer::class.qualifiedName})"
@@ -155,7 +150,6 @@ internal object Processors {
                 return@ToSerializingObject TypeSerializingObject.ExplicitType(
                     contextualizedOriginal,
                     WrappedKSerializerWithDefault::class,
-                    // Char::class.simpleName!!,
                     emptyList()
                 ) { _, outer, _ ->
                     "object $outer: ${WrappedKSerializerWithDefault::class.qualifiedName}<${Char::class.simpleName}>(${ASCIICharSerializer::class.qualifiedName})"
@@ -166,7 +160,6 @@ internal object Processors {
                 return@ToSerializingObject TypeSerializingObject.ExplicitType(
                     contextualizedOriginal,
                     WrappedKSerializerWithDefault::class,
-                    // Char::class.simpleName!!,
                     emptyList()
                 ) { _, outer, _ ->
                     "object $outer: ${WrappedKSerializerWithDefault::class.qualifiedName}<${Char::class.simpleName}>(${UTF8CharSerializer::class.qualifiedName})"
@@ -182,7 +175,6 @@ internal object Processors {
                 return@ToSerializingObject TypeSerializingObject.ExplicitType(
                     contextualizedOriginal,
                     FixedLengthASCIIStringSerializer::class,
-                    // String::class.simpleName!!,
                     emptyList()
                 ) { _, outer, _ ->
                     "object $outer: ${FixedLengthASCIIStringSerializer::class.qualifiedName}($maxLength)"
@@ -193,7 +185,6 @@ internal object Processors {
                 return@ToSerializingObject TypeSerializingObject.ExplicitType(
                     contextualizedOriginal,
                     FixedLengthUTF8StringSerializer::class,
-                    // String::class.simpleName!!,
                     emptyList()
                 ) { _, outer, _ ->
                     "object $outer: ${FixedLengthUTF8StringSerializer::class.qualifiedName}($maxLength)"
@@ -214,32 +205,14 @@ internal object Processors {
             TypeSerializingObject.ExplicitType(
                 contextualizedOriginal,
                 FixedLengthByteArraySerializer::class,
-                // ByteArray::class.simpleName!!,
                 emptyList()
             ) { _, outer, _ ->
                 "object $outer: ${FixedLengthByteArraySerializer::class.qualifiedName}($maxSizeArgument)"
             }
-        },
+        }
         //
         // Floating point types.
         //
-        BigDecimal::class.qualifiedName!! to ToSerializingObject { contextualizedOriginal, _ ->
-            // Require com.ing.zkflow.annotations.BigDecimalSize annotation.
-            val (integerPart, fractionPart) = contextualizedOriginal.annotationOrNull<BigDecimalSize>()?.run {
-                val integerPart = valueArguments[0].asElement().text.trim().toInt()
-                val fractionPart = valueArguments[1].asElement().text.trim().toInt()
-                Pair(integerPart, fractionPart)
-            } ?: error("Ill-defined type `${contextualizedOriginal.ktTypeReference.text}`. ${BigDecimal::class.simpleName} must be annotated with ${BigDecimalSize::class.simpleName}")
-
-            TypeSerializingObject.ExplicitType(
-                contextualizedOriginal,
-                FixedLengthFloatingPointSerializer.BigDecimalSerializer::class,
-                // BigDecimal::class.simpleName!!,
-                emptyList()
-            ) { _, outer, _ ->
-                "object $outer: ${FixedLengthFloatingPointSerializer.BigDecimalSerializer::class.qualifiedName}($integerPart, $fractionPart)"
-            }
-        }
     )
 
     /**
@@ -256,7 +229,6 @@ internal object Processors {
             TypeSerializingObject.ExplicitType(
                 contextualizedOriginal,
                 FixedLengthListSerializer::class,
-                // List::class.simpleName!!,
                 listOf(item)
             ) { _, outer, inner ->
                 val single = inner.singleOrNull() ?: error(" List must have a single parametrizing object")
@@ -274,7 +246,6 @@ internal object Processors {
             TypeSerializingObject.ExplicitType(
                 contextualizedOriginal,
                 FixedLengthSetSerializer::class,
-                // Set::class.simpleName!!,
                 listOf(item)
             ) { _, outer, inner ->
                 val single = inner.singleOrNull() ?: error(" Set must have a single parametrizing object")
@@ -293,7 +264,6 @@ internal object Processors {
             TypeSerializingObject.ExplicitType(
                 contextualizedOriginal,
                 FixedLengthMapSerializer::class,
-                // Map::class.simpleName!!,
                 listOf(key, value)
             ) { _, outer, inner ->
                 val keyTracker = inner.getOrNull(0)
@@ -311,15 +281,58 @@ internal object Processors {
     )
 
     /**
+     * Other types not from Kotlin standard library.
+     */
+    private val extendedTypes: Map<String, ToSerializingObject> = mapOf(
+        BigDecimal::class.qualifiedName!! to ToSerializingObject { contextualizedOriginal, _ ->
+            // Require com.ing.zkflow.annotations.BigDecimalSize annotation.
+            val (integerPart, fractionPart) = contextualizedOriginal.annotationOrNull<BigDecimalSize>()?.run {
+                val integerPart = valueArguments[0].asElement().text.trim().toInt()
+                val fractionPart = valueArguments[1].asElement().text.trim().toInt()
+                Pair(integerPart, fractionPart)
+            } ?: error("Ill-defined type `${contextualizedOriginal.ktTypeReference.text}`. ${BigDecimal::class.simpleName} must be annotated with ${BigDecimalSize::class.simpleName}")
+
+            TypeSerializingObject.ExplicitType(
+                contextualizedOriginal,
+                FixedLengthFloatingPointSerializer.BigDecimalSerializer::class,
+                emptyList()
+            ) { _, outer, _ ->
+                "object $outer: ${FixedLengthFloatingPointSerializer.BigDecimalSerializer::class.qualifiedName}($integerPart, $fractionPart)"
+            }
+        },
+
+        Instant::class.qualifiedName!! to ToSerializingObject { contextualizedOriginal, _ ->
+            TypeSerializingObject.ExplicitType(
+                contextualizedOriginal,
+                InstantSerializer::class,
+                emptyList()
+            ) { _, outer, _ ->
+                "object $outer: ${WrappedKSerializerWithDefault::class.qualifiedName}<${Instant::class.qualifiedName}>(${InstantSerializer::class.qualifiedName})"
+            }
+        },
+
+        UUID::class.qualifiedName!! to ToSerializingObject { contextualizedOriginal, _ ->
+            TypeSerializingObject.ExplicitType(
+                contextualizedOriginal,
+                UUIDSerializer::class,
+                emptyList()
+            ) { _, outer, _ ->
+                "object $outer: ${WrappedKSerializerWithDefault::class.qualifiedName}<${UUID::class.qualifiedName}>(${UUIDSerializer::class.qualifiedName})"
+            }
+        }
+    )
+
+    /**
      * Convenience variable joining together all supported types ensuring no uniqueness of the keys.
      */
     private val native: Map<String, ToSerializingObject> by lazy {
-        val intersection = unitTypes.keys.intersect(genericCollections.keys)
-        require(intersection.isEmpty()) {
-            "Key of unit types and generic collections do intersect on $intersection"
-        }
+        listOf(standardTypes, extendedTypes, genericCollections).fold(mapOf()) { allTypes, theseTypes ->
+            require(allTypes.keys.intersect(theseTypes.keys).isEmpty()) {
+                "Keys are not unique across different types"
+            }
 
-        unitTypes + genericCollections
+            allTypes + theseTypes
+        }
     }
 
     /**

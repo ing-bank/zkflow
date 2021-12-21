@@ -15,8 +15,6 @@ import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.Party
-import java.time.Instant
-import java.util.UUID
 
 object AnonymousPartyConverter_EdDSA : ConversionProvider<AnonymousParty, AnonymousPartySurrogate_EdDSA> {
     override fun from(original: AnonymousParty): AnonymousPartySurrogate_EdDSA {
@@ -52,16 +50,6 @@ object NetworkAnonymousOperatorConverter : ConversionProvider<Network, NetworkEd
 
         return NetworkEdDSAAnonymousOperator(original.value, operator)
     }
-}
-
-object InstantConverter : ConversionProvider<Instant, InstantSurrogate> {
-    override fun from(original: Instant) =
-        InstantSurrogate(original.epochSecond, original.nano)
-}
-
-object UUIDConverter : ConversionProvider<UUID, UUIDSurrogate> {
-    override fun from(original: UUID) =
-        UUIDSurrogate(original.mostSignificantBits, original.leastSignificantBits)
 }
 
 object UniqueIdentifierConverter : ConversionProvider<UniqueIdentifier, UniqueIdentifierSurrogate> {
