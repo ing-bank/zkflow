@@ -78,47 +78,47 @@ private fun getTemplateContents(templateRootPath: File, templateName: String) =
         .map { it.readText() }
         .getOrThrow()
 
-private fun renderStateTemplates(
+fun renderStateTemplates(
     metadata: ResolvedZKTransactionMetadata,
     templateRenderer: TemplateRenderer,
     templateConfigurationsForCircuit: TemplateConfigurations
 ) {
     templateConfigurationsForCircuit.apply {
-        metadata.inputTypeGroups.filter { it.count > 0 }.forEach { contractStateTypeCount ->
+        metadata.privateInputTypeGroups.forEach { (type, count) ->
             addConfigurations(
                 SerializedStateTemplateParameters(
                     "input",
-                    contractStateTypeCount,
-                    metadata.javaClass2ZincType[contractStateTypeCount.type]
-                        ?: error("No Zinc Type defined for ${contractStateTypeCount.type}")
+                    count,
+                    metadata.javaClass2ZincType[type]
+                        ?: error("No Zinc Type defined for $type")
                 )
             )
         }
-        addConfigurations(StateGroupTemplateParameters("input", metadata.inputTypeGroups, metadata.javaClass2ZincType))
+        addConfigurations(StateGroupTemplateParameters("input", metadata.privateInputTypeGroups, metadata.javaClass2ZincType))
 
-        metadata.outputTypeGroups.filter { it.count > 0 }.forEach { contractStateTypeCount ->
+        metadata.privateOutputTypeGroups.forEach { (type, count) ->
             addConfigurations(
                 SerializedStateTemplateParameters(
                     "output",
-                    contractStateTypeCount,
-                    metadata.javaClass2ZincType[contractStateTypeCount.type]
-                        ?: error("No Zinc Type defined for ${contractStateTypeCount.type}")
+                    count,
+                    metadata.javaClass2ZincType[type]
+                        ?: error("No Zinc Type defined for $type")
                 )
             )
         }
-        addConfigurations(StateGroupTemplateParameters("output", metadata.outputTypeGroups, metadata.javaClass2ZincType))
+        addConfigurations(StateGroupTemplateParameters("output", metadata.privateOutputTypeGroups, metadata.javaClass2ZincType))
 
-        metadata.referenceTypeGroups.filter { it.count > 0 }.forEach { contractStateTypeCount ->
+        metadata.privateReferenceTypeGroups.forEach { (type, count) ->
             addConfigurations(
                 SerializedStateTemplateParameters(
                     "reference",
-                    contractStateTypeCount,
-                    metadata.javaClass2ZincType[contractStateTypeCount.type]
-                        ?: error("No Zinc Type defined for ${contractStateTypeCount.type}")
+                    count,
+                    metadata.javaClass2ZincType[type]
+                        ?: error("No Zinc Type defined for $type")
                 )
             )
         }
-        addConfigurations(StateGroupTemplateParameters("reference", metadata.referenceTypeGroups, metadata.javaClass2ZincType))
+        addConfigurations(StateGroupTemplateParameters("reference", metadata.privateReferenceTypeGroups, metadata.javaClass2ZincType))
     }.resolveAllTemplateParameters()
         .forEach(templateRenderer::renderTemplate)
 }

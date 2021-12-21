@@ -48,13 +48,13 @@ data class ZKCircuit(
 
         private fun javaClass2ZincType(commandMetadata: ZKCommandMetadata): Map<KClass<out ContractState>, ZincType> {
             val mapping = mutableListOf<Pair<KClass<out ContractState>, ZincType>>()
-            mapping += commandMetadata.inputs.toZincTypes()
-            mapping += commandMetadata.references.toZincTypes()
-            mapping += commandMetadata.outputs.toZincTypes()
+            mapping += commandMetadata.privateInputs.toZincTypes()
+            mapping += commandMetadata.privateReferences.toZincTypes()
+            mapping += commandMetadata.privateOutputs.toZincTypes()
             return mapping.toMap()
         }
 
-        private fun ContractStateTypeCountList.toZincTypes() = map { it.type to stateKClassToZincType(it.type) }
+        private fun ZKProtectedComponentList.toZincTypes() = map { it.type to stateKClassToZincType(it.type) }
 
         private fun stateKClassToZincType(kClass: KClass<out ContractState>): ZincType {
             val simpleName = kClass.simpleName ?: error("classes used in transactions must be a named class")
@@ -116,35 +116,34 @@ data class ZincType(
 )
 
 /**
- * Defines a component visibility inside transaction
- * "Public" components are plaintext and visible to everybody during tx creation and backchain validation, but not available inside ZKP circuit due to performance optimization
- * "Private" components are shielded by ZKP and only visible to transaction participants, they are available inside ZKP circuit but not during backchain validation
- * "Mixed" components are visible both in ZKP circuit and plaintext transaction, they are used when we essentially public components are checked inside ZKP circuit
+ * Defines a component visibility inside transaction.
+ * "Public" components are plaintext and visible to everybody during tx creation and backchain validation, but not available inside ZKP circuit due to performance optimization.
+ * "Private" components are shielded by ZKP and only visible to transaction participants, they are available inside ZKP circuit but not during backchain validation.
+ * "Mixed" components are visible both in ZKP circuit and plaintext transaction, they are used when we essentially public components are checked inside ZKP circuit.
+ * For now we only use "Private" and "Mixed" in our DSL.
  */
 enum class ZkpVisibility {
     Public, Private, Mixed
 }
 
 /**
- * Describes the number of occurrences for a type.
+ * Describes the private component at a certain index in transaction's component list.
  */
-data class ContractStateTypeCount(val type: KClass<out ContractState>, val visibility: ZkpVisibility, val count: Int)
+data class ZKProtectedComponent(val type: KClass<out ContractState>, val visibility: ZkpVisibility, val index: Int)
 
 @ZKCommandMetadataDSL
-class ContractStateTypeCountList : ArrayList<ContractStateTypeCount>() {
-    infix fun Int.public(type: KClass<out ContractState>) = add(ContractStateTypeCount(type, ZkpVisibility.Public, this))
-    infix fun Int.private(type: KClass<out ContractState>) = add(ContractStateTypeCount(type, ZkpVisibility.Private, this))
-    infix fun Int.mixed(type: KClass<out ContractState>) = add(ContractStateTypeCount(type, ZkpVisibility.Mixed, this))
+class ZKProtectedComponentList : ArrayList<ZKProtectedComponent>() {
+    infix fun Int.private(type: KClass<out ContractState>) = add(ZKProtectedComponent(type, ZkpVisibility.Private, this))
+    infix fun Int.mixed(type: KClass<out ContractState>) = add(ZKProtectedComponent(type, ZkpVisibility.Mixed, this))
 }
 
+/**
+ * Only ZK-Protected (i.e. Private or Mixed) components should be listed here.
+ * Components that are not mentioned here are considered Public by default and will be publicly visible.
+ */
 @ZKCommandMetadataDSL
 class ZKCommandMetadata(val commandKClass: KClass<out CommandData>) {
     val commandSimpleName: String by lazy { commandKClass.simpleName ?: error("Command classes must be a named class") }
-
-    /**
-     * This is always true, and can't be changed
-     */
-    val networkParameters = true
 
     /**
      * The notary [SignatureScheme] type required by this command.
@@ -173,13 +172,6 @@ class ZKCommandMetadata(val commandKClass: KClass<out CommandData>) {
     var attachmentConstraintType: KClass<out AttachmentConstraint> = DEFAULT_ZKFLOW_CONTRACT_ATTACHMENT_CONSTRAINT
 
     /**
-     * This determines whether a circuit is expected to exist for this command.
-     *
-     * If false, ZKFLow will ignore this command for the ZKP circuit in all ways, except for Merkle tree calculation.
-     */
-    var private = false
-
-    /**
      * Information on the circuit and related artifacts to be used.
      *
      * If the command is marked private, but this is null, ZKFLow will
@@ -190,9 +182,9 @@ class ZKCommandMetadata(val commandKClass: KClass<out CommandData>) {
 
     var numberOfSigners = 0
 
-    val inputs = ContractStateTypeCountList()
-    val references = ContractStateTypeCountList()
-    val outputs = ContractStateTypeCountList()
+    val privateInputs = ZKProtectedComponentList()
+    val privateReferences = ZKProtectedComponentList()
+    val privateOutputs = ZKProtectedComponentList()
 
     /**
      * These are only the attachments the user explicitly adds themselves.
@@ -213,45 +205,24 @@ class ZKCommandMetadata(val commandKClass: KClass<out CommandData>) {
         return circuit!!
     }
 
-    fun inputs(init: ContractStateTypeCountList.() -> Unit) = inputs.apply(init)
-    fun references(init: ContractStateTypeCountList.() -> Unit) = references.apply(init)
-    fun outputs(init: ContractStateTypeCountList.() -> Unit) = outputs.apply(init)
+    fun privateInputs(init: ZKProtectedComponentList.() -> Unit) = privateInputs.apply(init)
+    fun privateReferences(init: ZKProtectedComponentList.() -> Unit) = privateReferences.apply(init)
+    fun privateOutputs(init: ZKProtectedComponentList.() -> Unit) = privateOutputs.apply(init)
 
-    /** Present when called, otherwise absent */
-    fun timewindow() {
-        timeWindow = true
-    }
-
-    fun resolved(): ResolvedZKCommandMetadata {
-        return if (private) {
-            PrivateResolvedZKCommandMetadata(
-                circuit.resolve(this),
-                commandKClass,
-                numberOfSigners,
-                inputs.toList(),
-                references.toList(),
-                outputs.toList(),
-                numberOfUserAttachments,
-                timeWindow,
-                notarySignatureScheme,
-                participantSignatureScheme,
-                attachmentConstraintType
-            )
-        } else {
-            PublicResolvedZKCommandMetadata(
-                commandKClass,
-                numberOfSigners,
-                inputs.toList(),
-                references.toList(),
-                outputs.toList(),
-                numberOfUserAttachments,
-                timeWindow,
-                notarySignatureScheme,
-                participantSignatureScheme,
-                attachmentConstraintType
-            )
-        }
-    }
+    fun resolved(): ResolvedZKCommandMetadata =
+        PrivateResolvedZKCommandMetadata(
+            circuit.resolve(this),
+            commandKClass,
+            numberOfSigners,
+            privateInputs.toList(),
+            privateReferences.toList(),
+            privateOutputs.toList(),
+            numberOfUserAttachments,
+            timeWindow,
+            notarySignatureScheme,
+            participantSignatureScheme,
+            attachmentConstraintType
+        )
 }
 
 fun ZKCommandData.commandMetadata(init: ZKCommandMetadata.() -> Unit): ResolvedZKCommandMetadata {

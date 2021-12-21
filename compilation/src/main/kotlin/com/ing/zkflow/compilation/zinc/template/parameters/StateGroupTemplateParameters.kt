@@ -1,6 +1,5 @@
 package com.ing.zkflow.compilation.zinc.template.parameters
 
-import com.ing.zkflow.common.zkp.metadata.ContractStateTypeCount
 import com.ing.zkflow.common.zkp.metadata.ZincType
 import com.ing.zkflow.compilation.zinc.template.TemplateParameters
 import com.ing.zkflow.util.camelToSnakeCase
@@ -10,7 +9,7 @@ import kotlin.reflect.KClass
 
 data class StateGroupTemplateParameters(
     val componentName: String,
-    val contractStateTypeCounts: List<ContractStateTypeCount>,
+    val contractStateTypeCounts: Map<KClass<out ContractState>, Int>,
     val javaClass2ZincType: Map<KClass<out ContractState>, ZincType>
 ) :
     TemplateParameters(
@@ -36,7 +35,7 @@ data class StateGroupTemplateParameters(
             "HASH_COMPUTATION_PLACEHOLDER" to if (componentName.contains("output")) getContent(key = "leafHash") else getContent(key = "utxoHash")
         )
 
-    private val componentGroupSize = contractStateTypeCounts.sumBy { it.count }
+    private val componentGroupSize = contractStateTypeCounts.values.sumBy { it }
     private val templates: Map<String, String> = mapOf(
         "module" to "mod serialized_${"COMPONENT_NAME_MODULE_NAME"}_tx_state_${"STATE_NAME_MODULE_NAME"};\n",
 
@@ -86,10 +85,10 @@ use serialized_${"COMPONENT_NAME_MODULE_NAME"}_tx_state_${"STATE_NAME_MODULE_NAM
             }
         }
 
-        contractStateTypeCounts.forEach {
+        contractStateTypeCounts.forEach { (type, _) ->
             if (componentGroupSize > 0) {
-                val zincType = javaClass2ZincType[it.type]?.typeName
-                    ?: error("No Zinc Type defined for ${it.type}")
+                val zincType = javaClass2ZincType[type]?.typeName
+                    ?: error("No Zinc Type defined for $type")
                 content += templates[key]
                     ?.replace("STATE_NAME_CONSTANT_PREFIX", zincType.camelToSnakeCase().toUpperCase())
                     ?.replace("STATE_NAME_MODULE_NAME", zincType.camelToSnakeCase())

@@ -15,9 +15,8 @@ class ZKCommandMetadataTest {
                 circuit { name = "foo" }
 
                 numberOfSigners = 2
-                private = true
 
-                inputs {
+                privateInputs {
                     1 private DummyState::class
                     1 private TestState::class
                 }
@@ -26,8 +25,8 @@ class ZKCommandMetadataTest {
 
         cmd.metadata.shouldBeInstanceOf<PrivateResolvedZKCommandMetadata>()
         cmd.metadata.circuit.name shouldBe "foo"
-        cmd.metadata.inputs.size shouldBe 2
-        cmd.metadata.inputs.first().type shouldBe DummyState::class
-        cmd.metadata.inputs.first().count shouldBe 1
+        cmd.metadata.privateInputs.size shouldBe 2
+        cmd.metadata.privateInputs.first().type shouldBe DummyState::class
+        cmd.metadata.privateInputs.first().index shouldBe 1
     }
 }

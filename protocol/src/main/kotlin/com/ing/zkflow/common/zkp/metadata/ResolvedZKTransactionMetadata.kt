@@ -11,7 +11,6 @@ import net.corda.core.contracts.TransactionState
 import net.corda.core.crypto.Crypto
 import net.corda.core.transactions.LedgerTransaction
 import java.io.File
-import java.lang.IndexOutOfBoundsException
 import java.time.Duration
 import kotlin.reflect.KClass
 import kotlin.reflect.full.isSubclassOf
@@ -82,19 +81,14 @@ data class ResolvedZKTransactionMetadata(
 
     val attachmentCount: Int by lazy { numberOfContractAttachments + numberOfUserAttachments }
 
-    val inputTypeGroups = commands.flatMap { it.inputs }
-    val inputs = inputTypeGroups.expanded
-    val numberOfInputs = inputTypeGroups.sumOf(ContractStateTypeCount::count)
+    val privateInputs = commands.flatMap { it.privateInputs }.distinct()
+    val privateInputTypeGroups = countTypes(privateInputs)
 
-    val referenceTypeGroups = commands.flatMap { it.references }
-    val references = referenceTypeGroups.expanded
-    val numberOfReferences = referenceTypeGroups.sumOf(ContractStateTypeCount::count)
+    val privateReferences = commands.flatMap { it.privateReferences }.distinct()
+    val privateReferenceTypeGroups = countTypes(privateReferences)
 
-    val outputTypeGroups = commands.flatMap { it.outputs }
-    val outputs = outputTypeGroups.expanded
-    val numberOfOutputs = outputTypeGroups.sumOf(ContractStateTypeCount::count)
-
-    val commandClasses = commands.map { it.commandKClass }
+    val privateOutputs = commands.flatMap { it.privateOutputs }.distinct()
+    val privateOutputTypeGroups = countTypes(privateOutputs)
 
     /**
      * The total number of signers of all commands added up.
@@ -218,7 +212,7 @@ data class ResolvedZKTransactionMetadata(
     private fun verifyInputs(inputs: List<StateAndRef<ContractState>>) {
         matchTypes(
             componentName = "input",
-            expectedTypes = this.inputs,
+            expectedTypes = this.privateInputs.map { it.type },
             actualTypes = inputs.map { it.state.data::class }
         )
     }
@@ -227,7 +221,7 @@ data class ResolvedZKTransactionMetadata(
     private fun verifyReferences(references: List<TransactionState<ContractState>>) {
         matchTypes(
             componentName = "reference",
-            expectedTypes = this.references,
+            expectedTypes = this.privateReferences.map { it.type },
             actualTypes = references.map { it.data::class }
         )
     }
@@ -237,7 +231,7 @@ data class ResolvedZKTransactionMetadata(
     private fun verifyOutputs(outputs: List<TransactionState<*>>) {
         matchTypes(
             "output",
-            expectedTypes = this.outputs,
+            expectedTypes = this.privateOutputs.map { it.type },
             actualTypes = outputs.map { it.data::class }
         )
     }
@@ -264,6 +258,7 @@ data class ResolvedZKTransactionMetadata(
     }
 
     private fun matchTypes(componentName: String, expectedTypes: List<KClass<*>>, actualTypes: List<KClass<*>>) {
+        require(expectedTypes.size == actualTypes.size) { "Expected types size (${expectedTypes.size}) has different length than actual size (${actualTypes.size})" }
         expectedTypes.forEachIndexed { index, expected ->
             val actual = actualTypes.getOrElse(index) { error("Expected to find $componentName $expected at index $index, nothing found") }
             require(actual == expected) { "Unexpected $componentName order. Expected '$expected' at index $index, but found '$actual'" }
@@ -274,25 +269,29 @@ data class ResolvedZKTransactionMetadata(
         return when (groupIndex) {
             ComponentGroupEnum.INPUTS_GROUP.ordinal -> ZkpVisibility.Public // References are always visible, to know State's visibility call 'getUtxoVisibility'
             ComponentGroupEnum.REFERENCES_GROUP.ordinal -> ZkpVisibility.Public // References are always visible, to know State's visibility call 'getUtxoVisibility'
-            ComponentGroupEnum.OUTPUTS_GROUP.ordinal -> getVisibility(outputTypeGroups, componentIndex)
+            ComponentGroupEnum.OUTPUTS_GROUP.ordinal -> getVisibility(privateOutputs, componentIndex)
             else -> ZkpVisibility.Public // all other groups have visibility 'Public' by default at the moment, may change in future
         }
     }
 
     fun getUtxoVisibility(groupIndex: Int, componentIndex: Int): ZkpVisibility {
         return when (groupIndex) {
-            ComponentGroupEnum.INPUTS_GROUP.ordinal -> getVisibility(inputTypeGroups, componentIndex)
-            ComponentGroupEnum.REFERENCES_GROUP.ordinal -> getVisibility(referenceTypeGroups, componentIndex)
+            ComponentGroupEnum.INPUTS_GROUP.ordinal -> getVisibility(privateInputs, componentIndex)
+            ComponentGroupEnum.REFERENCES_GROUP.ordinal -> getVisibility(privateReferences, componentIndex)
             else -> error("Only Inputs and References UTXOs are allowed")
         }
     }
 
-    private fun getVisibility(group: List<ContractStateTypeCount>, componentIndex: Int): ZkpVisibility {
-        var count = 0
-        group.forEach {
-            count += it.count
-            if (count >= componentIndex) return it.visibility
+    private fun getVisibility(group: List<ZKProtectedComponent>, componentIndex: Int): ZkpVisibility {
+        return group.find { it.index == componentIndex }?.visibility ?: ZkpVisibility.Public // Everything visible by default unless explicitly marked as Private/Mixed
+    }
+
+    private fun countTypes(components: List<ZKProtectedComponent>): Map<KClass<out ContractState>, Int> {
+        val result = mutableMapOf<KClass<out ContractState>, Int>()
+
+        components.forEach {
+            result[it.type] = result.getOrDefault(it.type, 0) + 1
         }
-        throw IndexOutOfBoundsException("component index: $componentIndex, components count: $count")
+        return result
     }
 }

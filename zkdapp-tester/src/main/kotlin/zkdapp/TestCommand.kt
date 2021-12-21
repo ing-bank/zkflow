@@ -17,7 +17,6 @@ class TestCommand: ZKTransactionMetadataCommandData {
 
     @Transient
     override val metadata: ResolvedZKCommandMetadata = commandMetadata {
-        private = true
         circuit { name = "TestCommand" }
         numberOfSigners = 1
     }

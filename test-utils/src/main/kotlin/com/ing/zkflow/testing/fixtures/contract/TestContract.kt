@@ -68,12 +68,11 @@ public class TestContract : Contract {
 
         @Transient
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
-            private = true
             circuit {
                 buildFolder =
                     File("${System.getProperty("user.dir")}/../zinc-platform-sources/build/circuits/create")
             }
-            outputs { 1 private TestState::class }
+            privateOutputs { 1 private TestState::class }
             numberOfSigners = 1
             attachmentConstraintType = AlwaysAcceptAttachmentConstraint::class
         }
@@ -114,8 +113,7 @@ public class TestContract : Contract {
 
         @Transient
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
-            private = true
-            outputs { 1 private TestState::class }
+            privateOutputs { 1 private TestState::class }
             numberOfSigners = 2
             attachmentConstraintType = AlwaysAcceptAttachmentConstraint::class
         }
@@ -138,13 +136,12 @@ public class TestContract : Contract {
 
         @Transient
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
-            private = true
             circuit {
                 buildFolder =
                     File("${System.getProperty("user.dir")}/../zinc-platform-sources/build/circuits/move")
             }
-            inputs { 1 private TestState::class }
-            outputs { 1 private TestState::class }
+            privateInputs { 1 private TestState::class }
+            privateOutputs { 1 private TestState::class }
             numberOfSigners = 2
             attachmentConstraintType = AlwaysAcceptAttachmentConstraint::class
         }
@@ -189,12 +186,13 @@ public class TestContract : Contract {
                 buildFolder =
                     File("${System.getProperty("user.dir")}/../zinc-platform-sources/build/circuits/move_bidirectional")
             }
-            private = true
-            inputs {
-                2 private TestState::class
+            privateInputs {
+                0 private TestState::class
+                1 private TestState::class
             }
-            outputs {
-                2 private TestState::class
+            privateOutputs {
+                0 private TestState::class
+                1 private TestState::class
             }
             numberOfSigners = 2
             attachmentConstraintType = AlwaysAcceptAttachmentConstraint::class

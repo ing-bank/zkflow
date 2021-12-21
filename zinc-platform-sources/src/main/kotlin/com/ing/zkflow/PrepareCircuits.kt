@@ -4,6 +4,7 @@ package com.ing.zkflow
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
 import com.ing.zkflow.common.zkp.metadata.TransactionMetadataCache
 import com.ing.zkflow.compilation.joinConstFiles
+import com.ing.zkflow.compilation.renderStateTemplates
 import com.ing.zkflow.compilation.zinc.template.TemplateConfigurations
 import com.ing.zkflow.compilation.zinc.template.TemplateConfigurations.Companion.doubleTemplateParameters
 import com.ing.zkflow.compilation.zinc.template.TemplateConfigurations.Companion.floatTemplateParameters
@@ -18,9 +19,7 @@ import com.ing.zkflow.compilation.zinc.template.parameters.IntegerTemplateParame
 import com.ing.zkflow.compilation.zinc.template.parameters.IssuedTemplateParameters
 import com.ing.zkflow.compilation.zinc.template.parameters.MapTemplateParameters
 import com.ing.zkflow.compilation.zinc.template.parameters.PublicKeyTemplateParameters
-import com.ing.zkflow.compilation.zinc.template.parameters.SerializedStateTemplateParameters
 import com.ing.zkflow.compilation.zinc.template.parameters.SignersTemplateParameters
-import com.ing.zkflow.compilation.zinc.template.parameters.StateGroupTemplateParameters
 import com.ing.zkflow.compilation.zinc.template.parameters.StringTemplateParameters
 import com.ing.zkflow.compilation.zinc.template.parameters.TxStateTemplateParameters
 import com.ing.zkflow.compilation.zinc.util.CodeGenerator
@@ -147,51 +146,6 @@ private fun getTemplateContents(root: String, templateName: String) =
         }
         .map { it.readText() }
         .getOrThrow()
-
-private fun renderStateTemplates(
-    metadata: ResolvedZKTransactionMetadata,
-    templateRenderer: TemplateRenderer,
-    templateConfigurationsForCircuit: TemplateConfigurations
-) {
-    templateConfigurationsForCircuit.apply {
-        metadata.inputTypeGroups.filter { it.count > 0 }.forEach { contractStateTypeCount ->
-            addConfigurations(
-                SerializedStateTemplateParameters(
-                    "input",
-                    contractStateTypeCount,
-                    metadata.javaClass2ZincType[contractStateTypeCount.type]
-                        ?: error("No Zinc Type defined for ${contractStateTypeCount.type}")
-                )
-            )
-        }
-        addConfigurations(StateGroupTemplateParameters("input", metadata.inputTypeGroups, metadata.javaClass2ZincType))
-
-        metadata.outputTypeGroups.filter { it.count > 0 }.forEach { contractStateTypeCount ->
-            addConfigurations(
-                SerializedStateTemplateParameters(
-                    "output",
-                    contractStateTypeCount,
-                    metadata.javaClass2ZincType[contractStateTypeCount.type]
-                        ?: error("No Zinc Type defined for ${contractStateTypeCount.type}")
-                )
-            )
-        }
-        addConfigurations(StateGroupTemplateParameters("output", metadata.outputTypeGroups, metadata.javaClass2ZincType))
-
-        metadata.referenceTypeGroups.filter { it.count > 0 }.forEach { contractStateTypeCount ->
-            addConfigurations(
-                SerializedStateTemplateParameters(
-                    "reference",
-                    contractStateTypeCount,
-                    metadata.javaClass2ZincType[contractStateTypeCount.type]
-                        ?: error("No Zinc Type defined for ${contractStateTypeCount.type}")
-                )
-            )
-        }
-        addConfigurations(StateGroupTemplateParameters("reference", metadata.referenceTypeGroups, metadata.javaClass2ZincType))
-    }.resolveAllTemplateParameters()
-        .forEach(templateRenderer::renderTemplate)
-}
 
 private fun getTemplateConfiguration(): TemplateConfigurations {
     return TemplateConfigurations().apply {

@@ -29,9 +29,9 @@ class CodeGenerator(
     fun generateConstsFile() = createOutputFile(outputPath.resolve("consts.zn")).appendBytes(
         """
 const ATTACHMENT_GROUP_SIZE: u16 = ${metadata.attachmentCount};
-const INPUT_GROUP_SIZE: u16 = ${metadata.inputs.size};
-const OUTPUT_GROUP_SIZE: u16 = ${metadata.outputs.size};
-const REFERENCE_GROUP_SIZE: u16 = ${metadata.references.size};
+const INPUT_GROUP_SIZE: u16 = ${metadata.privateInputs.size};
+const OUTPUT_GROUP_SIZE: u16 = ${metadata.privateOutputs.size};
+const REFERENCE_GROUP_SIZE: u16 = ${metadata.privateReferences.size};
 const NOTARY_GROUP_SIZE: u16 = $NOTARY_GROUP_SIZE;
 const TIMEWINDOW_GROUP_SIZE: u16 = ${if (metadata.hasTimeWindow) 1 else 0};
 // This is the size of a single signer and should not contain the Corda SerializationMagic size,

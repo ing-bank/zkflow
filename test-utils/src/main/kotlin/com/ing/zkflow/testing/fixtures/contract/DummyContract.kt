@@ -33,7 +33,6 @@ public class DummyContract : Contract {
 
         @Transient
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
-            private = true
             circuit { name = "Chill" }
             numberOfSigners = 2
         }

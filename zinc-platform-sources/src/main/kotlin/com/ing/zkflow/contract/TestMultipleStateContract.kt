@@ -113,17 +113,16 @@ class TestMultipleStateContract : Contract {
         @Transient
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
             attachmentConstraintType = AlwaysAcceptAttachmentConstraint::class // to simplify DSL tests
-            private = true
             circuit {
                 name = "move_multi_state"
                 buildFolder =
                     File("${System.getProperty("user.dir")}/../zinc-platform-sources/build/circuits/move_multi_state")
             }
-            inputs {
+            privateInputs {
                 1 private TestState1::class
                 1 private TestState2::class
             }
-            outputs {
+            privateOutputs {
                 1 private TestState1::class
                 1 private TestState2::class
             }

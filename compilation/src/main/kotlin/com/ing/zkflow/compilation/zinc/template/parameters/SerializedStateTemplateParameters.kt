@@ -1,13 +1,12 @@
 package com.ing.zkflow.compilation.zinc.template.parameters
 
-import com.ing.zkflow.common.zkp.metadata.ContractStateTypeCount
 import com.ing.zkflow.common.zkp.metadata.ZincType
 import com.ing.zkflow.compilation.zinc.template.TemplateParameters
 import com.ing.zkflow.util.camelToSnakeCase
 
 data class SerializedStateTemplateParameters(
     val componentName: String,
-    val typeCount: ContractStateTypeCount,
+    val typeCount: Int,
     val zincType: ZincType
 ) : TemplateParameters(
     "serialized_tx_state.zn",
@@ -22,7 +21,7 @@ data class SerializedStateTemplateParameters(
         mapOf(
             "COMPONENT_NAME_CONSTANT_PREFIX" to componentName.toUpperCase(),
             "COMPONENT_NAME_TYPE_NAME" to componentName.capitalize(),
-            "GROUP_SIZE_PLACEHOLDER" to typeCount.count.toString(),
+            "GROUP_SIZE_PLACEHOLDER" to typeCount.toString(),
         ) +
         if (componentName.contains("output")) {
             mapOf(

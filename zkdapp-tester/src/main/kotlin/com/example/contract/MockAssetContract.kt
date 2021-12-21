@@ -60,11 +60,10 @@ class MockAssetContract : Contract {
         @Transient
         override val metadata = commandMetadata {
             attachmentConstraintType = AlwaysAcceptAttachmentConstraint::class
-            private = true
             numberOfSigners = 2
-            inputs { 1 private MockAsset::class }
-            outputs { 1 private MockAsset::class }
-            timewindow()
+            privateInputs { 1 private MockAsset::class }
+            privateOutputs { 1 private MockAsset::class }
+            timeWindow = true
         }
     }
 
@@ -83,11 +82,10 @@ class MockAssetContract : Contract {
 
         @Transient
         override val metadata = commandMetadata {
-            private = true
             attachmentConstraintType = AlwaysAcceptAttachmentConstraint::class
             numberOfSigners = 1
-            outputs { 1 private MockAsset::class }
-            timewindow()
+            privateOutputs { 1 private MockAsset::class }
+            timeWindow = true
         }
     }
 

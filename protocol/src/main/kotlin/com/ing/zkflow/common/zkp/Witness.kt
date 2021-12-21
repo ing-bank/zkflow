@@ -102,14 +102,14 @@ class Witness(
     /**
      * The serialized UTXOs (TransactionState<T: ContractState>) pointed to by the serialized stateRefs of the inputsGroup parameter.
      *
-     * They should be indexed indentically to the inputsGroup parameter.
+     * They should be indexed identically to the inputsGroup parameter.
      */
     val serializedInputUtxos: Map<String, List<ByteArray>>,
 
     /**
      * The serialized UTXOs (TransactionState<T: ContractState>) pointed to by the serialized stateRefs of the referencesGroup parameter.
      *
-     * They should be indexed indentically to the referencesGroup parameter.
+     * They should be indexed identically to the referencesGroup parameter.
      */
     val serializedReferenceUtxos: Map<String, List<ByteArray>>,
 
@@ -117,7 +117,7 @@ class Witness(
      * The nonce hashes ([SecureHash]) for the UTXOs pointed to by the serialized stateRefs of the inputsGroup parameter.
      * Note that these are *not* serialized or sized, since [SecureHash] is already a list of bytes that is fixed size.
      *
-     * They should be indexed indentically to the inputsGroup parameter.
+     * They should be indexed identically to the inputsGroup parameter.
      */
     val inputUtxoNonces: List<SecureHash>,
 

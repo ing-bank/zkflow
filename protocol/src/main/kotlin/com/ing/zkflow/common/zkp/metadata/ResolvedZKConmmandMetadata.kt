@@ -57,9 +57,9 @@ internal interface ResolvedCommandMetadata {
 
     val numberOfSigners: Int
 
-    val inputs: List<ContractStateTypeCount>
-    val references: List<ContractStateTypeCount>
-    val outputs: List<ContractStateTypeCount>
+    val privateInputs: List<ZKProtectedComponent>
+    val privateReferences: List<ZKProtectedComponent>
+    val privateOutputs: List<ZKProtectedComponent>
     val numberOfUserAttachments: Int
     val timeWindow: Boolean
 
@@ -83,7 +83,7 @@ abstract class ResolvedZKCommandMetadata(
     override val commandSimpleName: String by lazy { commandKClass.simpleName ?: error("Command classes must be a named class") }
     override val contractClassNames: List<ContractClassName>
         get() {
-            val stateTypes = (inputs.expanded + outputs.expanded + references.expanded).distinct()
+            val stateTypes = (privateInputs + privateOutputs + privateReferences).map { it.type }.distinct()
             return stateTypes.map {
                 requireNotNull(it.requiredContractClassName) {
                     "Unable to infer Contract class name because state class $it is not annotated with " +
@@ -106,23 +106,9 @@ class PrivateResolvedZKCommandMetadata(
     val circuit: ResolvedZKCircuit,
     override val commandKClass: KClass<out CommandData>,
     override val numberOfSigners: Int,
-    override val inputs: List<ContractStateTypeCount>,
-    override val references: List<ContractStateTypeCount>,
-    override val outputs: List<ContractStateTypeCount>,
-    override val numberOfUserAttachments: Int,
-    override val timeWindow: Boolean,
-    notarySignatureScheme: SignatureScheme,
-    participantSignatureScheme: SignatureScheme,
-    attachmentConstraintType: KClass<out AttachmentConstraint>,
-) : ResolvedZKCommandMetadata(notarySignatureScheme, participantSignatureScheme, attachmentConstraintType)
-
-@Suppress("LongParameterList") // param length caused by Corda component count
-class PublicResolvedZKCommandMetadata(
-    override val commandKClass: KClass<out CommandData>,
-    override val numberOfSigners: Int,
-    override val inputs: List<ContractStateTypeCount>,
-    override val references: List<ContractStateTypeCount>,
-    override val outputs: List<ContractStateTypeCount>,
+    override val privateInputs: List<ZKProtectedComponent>,
+    override val privateReferences: List<ZKProtectedComponent>,
+    override val privateOutputs: List<ZKProtectedComponent>,
     override val numberOfUserAttachments: Int,
     override val timeWindow: Boolean,
     notarySignatureScheme: SignatureScheme,

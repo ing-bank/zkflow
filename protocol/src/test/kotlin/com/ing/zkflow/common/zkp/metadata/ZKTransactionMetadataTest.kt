@@ -86,7 +86,6 @@ class ZKTransactionMetadataTest {
                 }
             }
             override val metadata: ResolvedZKCommandMetadata = commandMetadata {
-                private = true
                 numberOfSigners = 3
             }
         }
@@ -101,7 +100,6 @@ class ZKTransactionMetadataTest {
                 }
             }
             override val metadata: ResolvedZKCommandMetadata = commandMetadata {
-                private = true
                 numberOfSigners = 2
             }
         }
@@ -287,10 +285,9 @@ class MockAuditContract : Contract {
 
         @Transient
         override val metadata = commandMetadata {
-            private = true
             numberOfSigners = 1
-            outputs { 1 private Approval::class }
-            timewindow()
+            privateOutputs { 1 private Approval::class }
+            timeWindow = true
         }
     }
 
@@ -337,12 +334,11 @@ class MockAssetContract : Contract {
 
         @Transient
         override val metadata = commandMetadata {
-            private = true
             numberOfSigners = 2
-            inputs { 1 private MockAsset::class }
-            outputs { 1 private MockAsset::class }
-            references { 1 private MockAuditContract.Approval::class }
-            timewindow()
+            privateInputs { 1 private MockAsset::class }
+            privateOutputs { 1 private MockAsset::class }
+            privateReferences { 1 private MockAuditContract.Approval::class }
+            timeWindow = true
         }
     }
 
@@ -361,10 +357,9 @@ class MockAssetContract : Contract {
 
         @Transient
         override val metadata = commandMetadata {
-            private = true
             numberOfSigners = 1
-            outputs { 1 private MockAsset::class }
-            timewindow()
+            privateOutputs { 1 private MockAsset::class }
+            timeWindow = true
         }
     }
 
@@ -384,10 +379,9 @@ class MockAssetContract : Contract {
 
         @Transient
         override val metadata = commandMetadata {
-            private = true
             numberOfSigners = 1
-            outputs { 1 private MockAsset::class }
-            timewindow()
+            privateOutputs { 1 private MockAsset::class }
+            timeWindow = true
         }
     }
 
@@ -402,7 +396,7 @@ class MockAssetContract : Contract {
             val MockThirdPartyNonZKPContract.ThirdPartyNonZKPCommand.metadata: ResolvedZKCommandMetadata
                 get() = commandMetadata(this::class) {
                     numberOfSigners = 7
-                    timewindow()
+                    timeWindow = true
                 }
         }
 
@@ -415,10 +409,9 @@ class MockAssetContract : Contract {
 
         @Transient
         override val metadata = commandMetadata {
-            private = true
             numberOfSigners = 1
-            outputs { 1 private MockAsset::class }
-            timewindow()
+            privateOutputs { 1 private MockAsset::class }
+            timeWindow = true
         }
     }
 
