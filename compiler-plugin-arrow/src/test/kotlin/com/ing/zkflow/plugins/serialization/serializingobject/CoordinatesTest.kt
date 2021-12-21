@@ -21,6 +21,6 @@ class CoordinatesTest {
         literal.next(2).toString() shouldBe "C"
         literal.next(25).toString() shouldBe "Z"
         literal.next(26).toString() shouldBe "AA"
-        literal.next(27).toString() shouldBe "AB"
+        literal.next(25).next(2).toString() shouldBe "AB"
     }
 }
