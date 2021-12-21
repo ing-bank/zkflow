@@ -5,7 +5,7 @@ import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.psi.KtImportList
 import org.jetbrains.kotlin.psi.KtVisitor
 
-data class TypeQuasiResolver(val imports: KtImportList?) {
+class TypeQuasiResolver(private val imports: KtImportList?) {
     init {
         imports?.accept(CollectWildcardImports, Unit)?.let { wildcardImports ->
             SerdeLogger.log(wildcardImports.joinToString(separator = "\n"))

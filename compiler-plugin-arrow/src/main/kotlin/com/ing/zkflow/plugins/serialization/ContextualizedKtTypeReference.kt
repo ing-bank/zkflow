@@ -9,7 +9,7 @@ import kotlin.reflect.KClass
 /**
  * Class attaching type-resolution context for a [KtTypeReference]
  */
-data class ContextualizedKtTypeReference(
+class ContextualizedKtTypeReference(
     /**
      * TypeReference may be a reference to a single native type (as defined in [Processors])
      * and, in case of user types, a generic parametrized type, e.g., @SomeAnnotation SomeUserType<@SomeAnnotation AnotherUserType>
