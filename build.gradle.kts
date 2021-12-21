@@ -34,7 +34,7 @@ plugins {
     idea
     kotlin("jvm") apply false
     id("com.diffplug.spotless") apply false
-    id("io.gitlab.arturbosch.detekt") apply false
+    id("io.gitlab.arturbosch.detekt")
     id("org.owasp.dependencycheck") version "6.1.1"
 }
 
@@ -116,6 +116,26 @@ idea {
     }
 }
 
+val detektAll by tasks.registering(io.gitlab.arturbosch.detekt.Detekt::class) {
+    description = "Run detekt over whole code base without the starting overhead for each module."
+    // Target version of the generated JVM bytecode. It is used for type resolution.
+    jvmTarget = "1.8"
+    config.setFrom("${rootDir}/config/detekt/detekt.yml")
+
+    parallel = true
+
+    source(files(projectDir))
+    include("**/*.kt")
+    exclude("**/*.kts")
+    exclude("**/resources/**")
+    exclude("**/build/**")
+
+    reports {
+        xml.enabled = false
+        html.enabled = true
+    }
+}
+
 subprojects {
     val repos: groovy.lang.Closure<RepositoryHandler> by rootProject.extra
     repositories(repos)
@@ -124,7 +144,7 @@ subprojects {
     plugins.withType(JavaPlugin::class.java) {
         // Make sure the project has the necessary plugins loaded
         plugins.apply {
-            apply("io.gitlab.arturbosch.detekt")
+            // apply("io.gitlab.arturbosch.detekt")
             apply("com.diffplug.spotless")
             /* TODO: Aggregated Jacoco report
              * https://docs.gradle.org/6.5.1/samples/sample_jvm_multi_project_with_code_coverage.html for aggregate coverage report
@@ -183,7 +203,7 @@ subprojects {
                 it.dependsOn(":checkJavaVersion")
                 it.dependsOn("spotlessApply") // Autofix before check
                 it.dependsOn("spotlessCheck") // Fail on remaining non-autofixable issues
-                it.dependsOn("detekt")
+                it.dependsOn(":detektAll")
             }
 
             withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
@@ -199,19 +219,19 @@ subprojects {
                 }
             }
 
-            withType<io.gitlab.arturbosch.detekt.Detekt> {
-                // Target version of the generated JVM bytecode. It is used for type resolution.
-                jvmTarget = "1.8"
-                config.setFrom("${rootDir}/config/detekt/detekt.yml")
-
-                parallel = true
-
-                source(files(projectDir))
-                include("**/*.kt")
-                exclude("**/*.kts")
-                exclude("**/resources/")
-                exclude("**/build/")
-            }
+            // withType<io.gitlab.arturbosch.detekt.Detekt> {
+            //     // Target version of the generated JVM bytecode. It is used for type resolution.
+            //     jvmTarget = "1.8"
+            //     config.setFrom("${rootDir}/config/detekt/detekt.yml")
+            //
+            //     parallel = true
+            //
+            //     source(files(projectDir))
+            //     include("**/*.kt")
+            //     exclude("**/*.kts")
+            //     exclude("**/resources/")
+            //     exclude("**/build/")
+            // }
 
             withType<Jar> {
                 // This makes the JAR's SHA-256 hash repeatable.
