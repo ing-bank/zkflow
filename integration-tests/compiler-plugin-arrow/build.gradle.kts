@@ -35,8 +35,8 @@ dependencies {
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
     // Generated class files are not recreated upon changes in compiler-plugin-arrow, therefor we always clean the
     // build, to enforce rebuild of classes with the updated compiler plugin.
-    dependsOn += "clean"
-    dependsOn += ":compiler-plugin-arrow:assemble"
+    mustRunAfter("clean", ":compiler-plugin-arrow:assemble")
+
     kotlinOptions {
         // IR backend is needed for Unsigned integer types support for kotlin 1.4, in $rootDir/build.gradle.kts:185 we
         // explicitly enforce 1.4.

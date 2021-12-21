@@ -14,6 +14,8 @@ dependencies {
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+    mustRunAfter("clean")
+
     kotlinOptions {
         freeCompilerArgs += "-Xopt-in=kotlin.ExperimentalUnsignedTypes"
     }
