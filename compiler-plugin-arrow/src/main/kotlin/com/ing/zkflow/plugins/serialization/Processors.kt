@@ -1,4 +1,4 @@
-package com.ing.zkflow.plugins.serialization.serializingobject
+package com.ing.zkflow.plugins.serialization
 
 import com.ing.zkflow.ASCII
 import com.ing.zkflow.ASCIIChar
@@ -8,9 +8,8 @@ import com.ing.zkflow.Resolver
 import com.ing.zkflow.Size
 import com.ing.zkflow.UTF8
 import com.ing.zkflow.UTF8Char
-import com.ing.zkflow.plugins.serialization.annotationOrNull
-import com.ing.zkflow.plugins.serialization.annotationSingleArgOrNull
-import com.ing.zkflow.plugins.serialization.extractRootType
+import com.ing.zkflow.plugins.serialization.serializingobject.SerializingObject
+import com.ing.zkflow.plugins.serialization.serializingobject.TypeSerializingObject
 import com.ing.zkflow.serialization.serializer.BooleanSerializer
 import com.ing.zkflow.serialization.serializer.ByteSerializer
 import com.ing.zkflow.serialization.serializer.FixedLengthByteArraySerializer
@@ -32,7 +31,7 @@ import com.ing.zkflow.serialization.serializer.char.ASCIICharSerializer
 import com.ing.zkflow.serialization.serializer.char.UTF8CharSerializer
 import com.ing.zkflow.serialization.serializer.string.FixedLengthASCIIStringSerializer
 import com.ing.zkflow.serialization.serializer.string.FixedLengthUTF8StringSerializer
-import org.jetbrains.kotlin.psi.KtTypeReference
+import org.jetbrains.kotlin.psi.KtValueArgument
 import java.math.BigDecimal
 
 /**
@@ -51,133 +50,172 @@ internal object Processors {
         //
         // Simple types.
         //
-        Boolean::class.simpleName!! to ToSerializingObject { typeRef, _ ->
+        Boolean::class.simpleName!! to ToSerializingObject { contextualizedOriginal, _ ->
             TypeSerializingObject.ExplicitType(
-                typeRef,
+                contextualizedOriginal,
                 WrappedKSerializerWithDefault::class,
-                Boolean::class.simpleName!!,
+                // Boolean::class.simpleName!!,
                 emptyList()
             ) { _, outer, _ ->
                 "object $outer: ${WrappedKSerializerWithDefault::class.qualifiedName}<${Boolean::class.simpleName}>(${BooleanSerializer::class.qualifiedName})"
             }
         },
         //
-        Byte::class.simpleName!! to ToSerializingObject { typeRef, _ ->
+        Byte::class.simpleName!! to ToSerializingObject { contextualizedOriginal, _ ->
             TypeSerializingObject.ExplicitType(
-                typeRef, WrappedKSerializerWithDefault::class, Byte::class.simpleName!!, emptyList()
+                contextualizedOriginal,
+                WrappedKSerializerWithDefault::class,
+                // Byte::class.simpleName!!,
+                emptyList()
             ) { _, outer, _ ->
                 "object $outer: ${WrappedKSerializerWithDefault::class.qualifiedName}<${Byte::class.simpleName}>(${ByteSerializer::class.qualifiedName})"
             }
         },
         //
-        UByte::class.simpleName!! to ToSerializingObject { typeRef, _ ->
+        UByte::class.simpleName!! to ToSerializingObject { contextualizedOriginal, _ ->
             TypeSerializingObject.ExplicitType(
-                typeRef, WrappedKSerializerWithDefault::class, UByte::class.simpleName!!, emptyList()
+                contextualizedOriginal,
+                WrappedKSerializerWithDefault::class,
+                // UByte::class.simpleName!!,
+                emptyList()
             ) { _, outer, _ ->
                 "object $outer: ${WrappedKSerializerWithDefault::class.qualifiedName}<${UByte::class.simpleName}>(${UByteSerializer::class.qualifiedName})"
             }
         },
         //
-        Short::class.simpleName!! to ToSerializingObject { typeRef, _ ->
+        Short::class.simpleName!! to ToSerializingObject { contextualizedOriginal, _ ->
             TypeSerializingObject.ExplicitType(
-                typeRef, WrappedKSerializerWithDefault::class, Short::class.simpleName!!, emptyList()
+                contextualizedOriginal,
+                WrappedKSerializerWithDefault::class,
+                // Short::class.simpleName!!,
+                emptyList()
             ) { _, outer, _ ->
                 "object $outer: ${WrappedKSerializerWithDefault::class.qualifiedName}<${Short::class.simpleName}>(${ShortSerializer::class.qualifiedName})"
             }
         },
         //
-        UShort::class.simpleName!! to ToSerializingObject { typeRef, _ ->
+        UShort::class.simpleName!! to ToSerializingObject { contextualizedOriginal, _ ->
             TypeSerializingObject.ExplicitType(
-                typeRef, WrappedKSerializerWithDefault::class, UShort::class.simpleName!!, emptyList()
+                contextualizedOriginal,
+                WrappedKSerializerWithDefault::class,
+                // UShort::class.simpleName!!,
+                emptyList()
             ) { _, outer, _ ->
                 "object $outer: ${WrappedKSerializerWithDefault::class.qualifiedName}<${UShort::class.simpleName}>(${UShortSerializer::class.qualifiedName})"
             }
         },
         //
-        Int::class.simpleName!! to ToSerializingObject { typeRef, _ ->
+        Int::class.simpleName!! to ToSerializingObject { contextualizedOriginal, _ ->
             TypeSerializingObject.ExplicitType(
-                typeRef, WrappedKSerializerWithDefault::class, Int::class.simpleName!!, emptyList()
+                contextualizedOriginal,
+                WrappedKSerializerWithDefault::class,
+                // Int::class.simpleName!!,
+                emptyList()
             ) { _, outer, _ ->
                 "object $outer: ${WrappedKSerializerWithDefault::class.qualifiedName}<${Int::class.simpleName}>(${IntSerializer::class.qualifiedName})"
             }
         },
         //
-        UInt::class.simpleName!! to ToSerializingObject { typeRef, _ ->
+        UInt::class.simpleName!! to ToSerializingObject { contextualizedOriginal, _ ->
             TypeSerializingObject.ExplicitType(
-                typeRef, WrappedKSerializerWithDefault::class, UInt::class.simpleName!!, emptyList()
+                contextualizedOriginal,
+                WrappedKSerializerWithDefault::class,
+                // UInt::class.simpleName!!,
+                emptyList()
             ) { _, outer, _ ->
                 "object $outer: ${WrappedKSerializerWithDefault::class.qualifiedName}<${UInt::class.simpleName}>(${UIntSerializer::class.qualifiedName})"
             }
         },
         //
-        Long::class.simpleName!! to ToSerializingObject { typeRef, _ ->
+        Long::class.simpleName!! to ToSerializingObject { contextualizedOriginal, _ ->
             TypeSerializingObject.ExplicitType(
-                typeRef, WrappedKSerializerWithDefault::class, Long::class.simpleName!!, emptyList()
+                contextualizedOriginal,
+                WrappedKSerializerWithDefault::class,
+                // Long::class.simpleName!!,
+                emptyList()
             ) { _, outer, _ ->
                 "object $outer: ${WrappedKSerializerWithDefault::class.qualifiedName}<${Long::class.simpleName}>(${LongSerializer::class.qualifiedName})"
             }
         },
         //
-        ULong::class.simpleName!! to ToSerializingObject { typeRef, _ ->
+        ULong::class.simpleName!! to ToSerializingObject { contextualizedOriginal, _ ->
             TypeSerializingObject.ExplicitType(
-                typeRef, WrappedKSerializerWithDefault::class, ULong::class.simpleName!!, emptyList()
+                contextualizedOriginal,
+                WrappedKSerializerWithDefault::class,
+                // ULong::class.simpleName!!,
+                emptyList()
             ) { _, outer, _ ->
                 "object $outer: ${WrappedKSerializerWithDefault::class.qualifiedName}<${ULong::class.simpleName}>(${ULongSerializer::class.qualifiedName})"
             }
         },
         //
-        Char::class.simpleName!! to ToSerializingObject { typeRef, _ ->
+        Char::class.simpleName!! to ToSerializingObject { contextualizedOriginal, _ ->
             // Require com.ing.zkflow.annotations.ASCIIChar/com.ing.zkflow.annotations.UTF8Char annotation.
-            typeRef.annotationOrNull<ASCIIChar>()?.let {
+            contextualizedOriginal.annotationOrNull<ASCIIChar>()?.let {
                 return@ToSerializingObject TypeSerializingObject.ExplicitType(
-                    typeRef, WrappedKSerializerWithDefault::class, Char::class.simpleName!!, emptyList()
+                    contextualizedOriginal,
+                    WrappedKSerializerWithDefault::class,
+                    // Char::class.simpleName!!,
+                    emptyList()
                 ) { _, outer, _ ->
                     "object $outer: ${WrappedKSerializerWithDefault::class.qualifiedName}<${Char::class.simpleName}>(${ASCIICharSerializer::class.qualifiedName})"
                 }
             }
 
-            typeRef.annotationOrNull<UTF8Char>()?.let {
+            contextualizedOriginal.annotationOrNull<UTF8Char>()?.let {
                 return@ToSerializingObject TypeSerializingObject.ExplicitType(
-                    typeRef, WrappedKSerializerWithDefault::class, Char::class.simpleName!!, emptyList()
+                    contextualizedOriginal,
+                    WrappedKSerializerWithDefault::class,
+                    // Char::class.simpleName!!,
+                    emptyList()
                 ) { _, outer, _ ->
                     "object $outer: ${WrappedKSerializerWithDefault::class.qualifiedName}<${Char::class.simpleName}>(${UTF8CharSerializer::class.qualifiedName})"
                 }
             }
 
-            error("Char `${typeRef.text}` must be annotated with either ${UTF8Char::class.simpleName} or ${ASCIIChar::class.simpleName} annotations")
+            error("Char `${contextualizedOriginal.ktTypeReference.text}` must be annotated with either ${UTF8Char::class.simpleName} or ${ASCIIChar::class.simpleName} annotations")
         },
         //
-        String::class.simpleName!! to ToSerializingObject { typeRef, _ ->
+        String::class.simpleName!! to ToSerializingObject { contextualizedOriginal, _ ->
             // Require com.ing.zkflow.annotations.ASCII/com.ing.zkflow.annotations.UTF8 annotation.
-            typeRef.annotationSingleArgOrNull<ASCII>()?.let { maxLength ->
+            contextualizedOriginal.annotationSingleArgOrNull<ASCII>()?.let { maxLength ->
                 return@ToSerializingObject TypeSerializingObject.ExplicitType(
-                    typeRef, FixedLengthASCIIStringSerializer::class, String::class.simpleName!!, emptyList()
+                    contextualizedOriginal,
+                    FixedLengthASCIIStringSerializer::class,
+                    // String::class.simpleName!!,
+                    emptyList()
                 ) { _, outer, _ ->
                     "object $outer: ${FixedLengthASCIIStringSerializer::class.qualifiedName}($maxLength)"
                 }
             }
 
-            typeRef.annotationSingleArgOrNull<UTF8>()?.let { maxLength ->
+            contextualizedOriginal.annotationSingleArgOrNull<UTF8>()?.let { maxLength ->
                 return@ToSerializingObject TypeSerializingObject.ExplicitType(
-                    typeRef, FixedLengthUTF8StringSerializer::class, String::class.simpleName!!, emptyList()
+                    contextualizedOriginal,
+                    FixedLengthUTF8StringSerializer::class,
+                    // String::class.simpleName!!,
+                    emptyList()
                 ) { _, outer, _ ->
                     "object $outer: ${FixedLengthUTF8StringSerializer::class.qualifiedName}($maxLength)"
                 }
             }
 
-            error("String `${typeRef.text}` must be annotated with either ${UTF8::class.simpleName} or ${ASCII::class.simpleName} annotations")
+            error("String `${contextualizedOriginal.ktTypeReference.text}` must be annotated with either ${UTF8::class.simpleName} or ${ASCII::class.simpleName} annotations")
         },
         //
         //
         // Specialized collections, i.e., collections of primitive types.
         //
-        ByteArray::class.simpleName!! to ToSerializingObject { typeRef, _ ->
+        ByteArray::class.simpleName!! to ToSerializingObject { contextualizedOriginal, _ ->
             // Require com.ing.zkflow.annotations.Size annotation.
-            val maxSizeArgument = typeRef.annotationSingleArgOrNull<Size>()
-                ?: error("Ill-defined type `${typeRef.text}`. ${ByteArray::class.simpleName} must be annotated with ${Size::class.simpleName}")
+            val maxSizeArgument = contextualizedOriginal.annotationSingleArgOrNull<Size>()
+                ?: error("Ill-defined type `${contextualizedOriginal.ktTypeReference.text}`. ${ByteArray::class.simpleName} must be annotated with ${Size::class.simpleName}")
 
             TypeSerializingObject.ExplicitType(
-                typeRef, FixedLengthByteArraySerializer::class, ByteArray::class.simpleName!!, emptyList()
+                contextualizedOriginal,
+                FixedLengthByteArraySerializer::class,
+                // ByteArray::class.simpleName!!,
+                emptyList()
             ) { _, outer, _ ->
                 "object $outer: ${FixedLengthByteArraySerializer::class.qualifiedName}($maxSizeArgument)"
             }
@@ -185,18 +223,18 @@ internal object Processors {
         //
         // Floating point types.
         //
-        BigDecimal::class.simpleName!! to ToSerializingObject { typeRef, _ ->
+        BigDecimal::class.qualifiedName!! to ToSerializingObject { contextualizedOriginal, _ ->
             // Require com.ing.zkflow.annotations.BigDecimalSize annotation.
-            val (integerPart, fractionPart) = typeRef.annotationOrNull<BigDecimalSize>()?.run {
+            val (integerPart, fractionPart) = contextualizedOriginal.annotationOrNull<BigDecimalSize>()?.run {
                 val integerPart = valueArguments[0].asElement().text.trim().toInt()
                 val fractionPart = valueArguments[1].asElement().text.trim().toInt()
                 Pair(integerPart, fractionPart)
-            } ?: error("Ill-defined type `${typeRef.text}`. ${BigDecimal::class.simpleName} must be annotated with ${BigDecimalSize::class.simpleName}")
+            } ?: error("Ill-defined type `${contextualizedOriginal.ktTypeReference.text}`. ${BigDecimal::class.simpleName} must be annotated with ${BigDecimalSize::class.simpleName}")
 
             TypeSerializingObject.ExplicitType(
-                typeRef,
+                contextualizedOriginal,
                 FixedLengthFloatingPointSerializer.BigDecimalSerializer::class,
-                BigDecimal::class.simpleName!!,
+                // BigDecimal::class.simpleName!!,
                 emptyList()
             ) { _, outer, _ ->
                 "object $outer: ${FixedLengthFloatingPointSerializer.BigDecimalSerializer::class.qualifiedName}($integerPart, $fractionPart)"
@@ -208,46 +246,55 @@ internal object Processors {
      * Generic collections for which serializing objects can be constructed.
      */
     internal val genericCollections: Map<String, ToSerializingObject> = mapOf(
-        List::class.simpleName!! to ToSerializingObject { typeRef, children ->
+        List::class.simpleName!! to ToSerializingObject { contextualizedOriginal, children ->
             // Require com.ing.zkflow.annotations.Size annotation.
-            val maxSize = typeRef.annotationSingleArgOrNull<Size>()?.toInt()
-                ?: error("Ill-defined type `${typeRef.text}`. ${List::class.simpleName} must be annotated with ${Size::class.simpleName}")
+            val maxSize = contextualizedOriginal.annotationSingleArgOrNull<Size>()?.toInt()
+                ?: error("Ill-defined type `${contextualizedOriginal.ktTypeReference.text}`. ${List::class.simpleName} must be annotated with ${Size::class.simpleName}")
             val item = children.singleOrNull()
                 ?: error("${FixedLengthListSerializer::class.qualifiedName} requires exactly one child")
 
             TypeSerializingObject.ExplicitType(
-                typeRef, FixedLengthListSerializer::class, List::class.simpleName!!, listOf(item)
+                contextualizedOriginal,
+                FixedLengthListSerializer::class,
+                // List::class.simpleName!!,
+                listOf(item)
             ) { _, outer, inner ->
                 val single = inner.singleOrNull() ?: error(" List must have a single parametrizing object")
                 "object $outer: ${FixedLengthListSerializer::class.qualifiedName}<${item.cleanTypeDeclaration}>($maxSize, $single)"
             }
         },
         //
-        Set::class.simpleName!! to ToSerializingObject { typeRef, children ->
+        Set::class.simpleName!! to ToSerializingObject { contextualizedOriginal, children ->
             // Require com.ing.zkflow.annotations.Size annotation.
-            val maxSize = typeRef.annotationSingleArgOrNull<Size>()?.toInt()
-                ?: error("Ill-defined type `${typeRef.text}`. ${Set::class.simpleName} must be annotated with ${Size::class.simpleName}")
+            val maxSize = contextualizedOriginal.annotationSingleArgOrNull<Size>()?.toInt()
+                ?: error("Ill-defined type `${contextualizedOriginal.ktTypeReference.text}`. ${Set::class.simpleName} must be annotated with ${Size::class.simpleName}")
             val item = children.singleOrNull()
                 ?: error("${FixedLengthSetSerializer::class.qualifiedName} requires exactly one child")
 
             TypeSerializingObject.ExplicitType(
-                typeRef, FixedLengthSetSerializer::class, Set::class.simpleName!!, listOf(item)
+                contextualizedOriginal,
+                FixedLengthSetSerializer::class,
+                // Set::class.simpleName!!,
+                listOf(item)
             ) { _, outer, inner ->
                 val single = inner.singleOrNull() ?: error(" Set must have a single parametrizing object")
                 "object $outer: ${FixedLengthSetSerializer::class.qualifiedName}<${item.cleanTypeDeclaration}>($maxSize, $single)"
             }
         },
         //
-        Map::class.simpleName!! to ToSerializingObject { typeRef, children ->
+        Map::class.simpleName!! to ToSerializingObject { contextualizedOriginal, children ->
             // Require com.ing.zkflow.annotations.Size annotation.
-            val maxSize = typeRef.annotationSingleArgOrNull<Size>()?.toInt()
-                ?: error("Ill-defined type `${typeRef.text}`. ${Map::class.simpleName} must be annotated with ${Size::class.simpleName}(max collection size)")
+            val maxSize = contextualizedOriginal.annotationSingleArgOrNull<Size>()?.toInt()
+                ?: error("Ill-defined type `${contextualizedOriginal.ktTypeReference.text}`. ${Map::class.simpleName} must be annotated with ${Size::class.simpleName}(max collection size)")
 
             val key = children.getOrNull(0) ?: error("Map requires a key descriptor")
             val value = children.getOrNull(1) ?: error("Map requires a value descriptor")
 
             TypeSerializingObject.ExplicitType(
-                typeRef, FixedLengthMapSerializer::class, Map::class.simpleName!!, listOf(key, value)
+                contextualizedOriginal,
+                FixedLengthMapSerializer::class,
+                // Map::class.simpleName!!,
+                listOf(key, value)
             ) { _, outer, inner ->
                 val keyTracker = inner.getOrNull(0)
                     ?: error("To describe ${Map::class.qualifiedName}, names for key and value are required")
@@ -278,66 +325,73 @@ internal object Processors {
     /**
      * All types which are not supported natively are treated as user types.
      */
-    private val userType = ToSerializingObject { typeRef, _ ->
+    private val userType = ToSerializingObject { contextualizedOriginal, _ ->
         // Here we process 3rd party classes or own serializable classes.
         // • To process a 3rd type via a surrogate, minimally com.ing.zkflow.annotations.Converter or com.ing.zkflow.annotations.Resolver must be present.
         //   At this step, only conversion will be taken into account, respective surrogate will be wrapped into
         //   a defaulted serializer if required.
         // • Own classes must be verified to have been annotated with a com.ing.zkflow.annotations.ZKP annotation to be serializable.
-        with(typeRef) {
+        with(contextualizedOriginal) {
             annotationOrNull<Converter<*, *>>()?.let {
                 // Surrogate class is the _second_ type argument.
                 // Conversion provider is the _first_ and _only_ argument.
                 // TODO Ideally surrogate class can be deduced from the conversion provider.
-                val surrogate = it.typeArguments.getOrNull(1)?.typeReference?.typeElement
-                    ?: error("Cannot resolve surrogate type for $it; expected as the second type argument")
-                val conversionProvider = it.valueArguments.single().asElement().text
+                val surrogate = ContextualizedKtTypeReference(
+                    it.typeArguments.getOrNull(1)?.typeReference
+                        ?: error("Cannot resolve surrogate type for $it; expected as the second type argument"),
+                    typeResolver
+                )
+                val conversionProvider = it.valueArguments.single() as KtValueArgument
 
                 Pair(surrogate, conversionProvider)
             }
                 ?: annotationOrNull<Resolver<*, *>>()?.let {
-                    val surrogate = it.typeArguments.getOrNull(1)?.typeReference?.typeElement
-                        ?: error("Cannot resolve surrogate type for $it; expected as the second type argument")
-                    val conversionProvider = it.valueArguments[1]!!.asElement().text
+                    val surrogate = ContextualizedKtTypeReference(
+                        it.typeArguments.getOrNull(1)?.typeReference
+                            ?: error("Cannot resolve surrogate type for $it; expected as the second type argument"),
+                        typeResolver
+                    )
+                    // it is safe to `!!` because now we're past code validity verification step,
+                    // that is, all function signatures are ensured.
+                    val conversionProvider = it.valueArguments[1]!! as KtValueArgument
 
                     Pair(surrogate, conversionProvider)
                 }
-        }?.let {
-            Pair(it.first, it.second.replace("::class", "").trim())
-        }?.let { (surrogateType, conversionProvider) ->
+        }?.let { (surrogate, conversionProviderClass) ->
+            Pair(surrogate, surrogate.resolveClass(conversionProviderClass))
+        }?.let { (surrogate, conversionProvider) ->
             // If conversion provider is PRESENT
             // => serialize the class via a surrogate.
-            TypeSerializingObject.UserType(typeRef) { self, outer ->
+            TypeSerializingObject.UserType(contextualizedOriginal) { self, outer ->
                 """
-                object $outer: ${SurrogateSerializer::class.qualifiedName}<${self.cleanTypeDeclaration}, ${surrogateType.text.trim()}>(
-                    ${surrogateType.extractRootType().type}.serializer(),
-                    { $conversionProvider.from(it) }
+                object $outer: ${SurrogateSerializer::class.qualifiedName}<${self.cleanTypeDeclaration}, ${surrogate.cleanTypeDeclaration}>(
+                    ${surrogate.cleanTypeDeclaration}.serializer(), { ${conversionProvider.type}.from(it) }
                 )
                 """.trimIndent()
             }
         } ?: run {
             // If conversion provider is ABSENT
             // => this class may be own class annotated with com.ing.zkflow.annotations.ZKP, to be checked.
-            // REMARK: we have only reference to the current type of a parameter, not the actual class definition,
-            // thus we can't directly check on this typeRef if ZKP annotation is present.
+            // REMARK: we have only a reference to the current type of the parameter, not the actual class definition,
+            // thus we can't directly check on this contextualizedOriginal if ZKP annotation is present.
             // As of now, any class different from above cases is considered to have been annotated with com.ing.zkflow.annotations.ZKP
             // and thus be serializable. If this assumption is incorrect, a compilation error will be thrown by kotlinx.serialization.
 
-            TypeSerializingObject.UserType(typeRef) { self, outer ->
-                val type = self.original.typeElement?.extractRootType()?.type ?: error("Cannot infer type of `${self.original}`")
-                "object $outer: ${WrappedKSerializer::class.qualifiedName}<${self.cleanTypeDeclaration}>($type.serializer())"
+            TypeSerializingObject.UserType(contextualizedOriginal) { self, outer ->
+                "object $outer: ${WrappedKSerializer::class.qualifiedName}<${self.cleanTypeDeclaration}>(${self.cleanTypeDeclaration}.serializer())"
             }
         }
     }
 
-    fun isNonNative(type: String) = !native.keys.contains(type)
+    fun isUserType(type: String) = !native.keys.contains(type)
 
-    fun forNativeType(type: String, typeRef: KtTypeReference, children: List<SerializingObject>) =
-        native[type]?.invoke(typeRef, children) ?: error("No native processor for `$type`")
+    fun forNativeType(contextualizedOriginal: ContextualizedKtTypeReference, children: List<SerializingObject>) = with(contextualizedOriginal) {
+        native[rootType.type]?.invoke(contextualizedOriginal, children) ?: error("No native processor for `${rootType.type}`")
+    }
 
-    fun forNonNativeType(typeRef: KtTypeReference) = userType(typeRef, emptyList())
+    fun forUserType(contextualizedOriginal: ContextualizedKtTypeReference) = userType(contextualizedOriginal, emptyList())
 }
 
 fun interface ToSerializingObject {
-    operator fun invoke(typeRef: KtTypeReference, children: List<SerializingObject>): SerializingObject
+    operator fun invoke(contextualizedOriginal: ContextualizedKtTypeReference, children: List<SerializingObject>): SerializingObject
 }
