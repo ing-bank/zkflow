@@ -36,6 +36,9 @@ plugins {
     id("com.diffplug.spotless") apply false
     id("io.gitlab.arturbosch.detekt")
     id("org.owasp.dependencycheck") version "6.1.1"
+    // id("myproject.jacoco-aggregation")
+    // jacoco
+    id("org.kordamp.gradle.jacoco") version "0.46.0"
 }
 
 repositories {
@@ -136,6 +139,8 @@ val detektAll by tasks.registering(io.gitlab.arturbosch.detekt.Detekt::class) {
     }
 }
 
+
+
 subprojects {
     val repos: groovy.lang.Closure<RepositoryHandler> by rootProject.extra
     repositories(repos)
@@ -144,20 +149,19 @@ subprojects {
     plugins.withType(JavaPlugin::class.java) {
         // Make sure the project has the necessary plugins loaded
         plugins.apply {
-            // apply("io.gitlab.arturbosch.detekt")
             apply("com.diffplug.spotless")
             /* TODO: Aggregated Jacoco report
              * https://docs.gradle.org/6.5.1/samples/sample_jvm_multi_project_with_code_coverage.html for aggregate coverage report
              * https://gist.github.com/tsjensen/d8b9ab9e6314ae2f63f4955c44399dad
              */
-            apply("jacoco")
+            // apply("jacoco")
             apply("idea")
         }
 
-        configure<JacocoPluginExtension> {
-            val jacocoToolVersion: String by project
-            toolVersion = jacocoToolVersion
-        }
+        // configure<JacocoPluginExtension> {
+        //     val jacocoToolVersion: String by project
+        //     toolVersion = jacocoToolVersion
+        // }
 
         // Load the necessary dependencies
         dependencies.apply {
@@ -218,20 +222,6 @@ subprojects {
                     allWarningsAsErrors = true
                 }
             }
-
-            // withType<io.gitlab.arturbosch.detekt.Detekt> {
-            //     // Target version of the generated JVM bytecode. It is used for type resolution.
-            //     jvmTarget = "1.8"
-            //     config.setFrom("${rootDir}/config/detekt/detekt.yml")
-            //
-            //     parallel = true
-            //
-            //     source(files(projectDir))
-            //     include("**/*.kt")
-            //     exclude("**/*.kts")
-            //     exclude("**/resources/")
-            //     exclude("**/build/")
-            // }
 
             withType<Jar> {
                 // This makes the JAR's SHA-256 hash repeatable.

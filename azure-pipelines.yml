@@ -45,12 +45,18 @@ steps:
       jdkArchitectureOption: 'x64'
       publishJUnitResults: true
       testResultsFiles: '**/TEST-*.xml'
-      #      codeCoverageToolOption: JaCoCo
-      tasks: 'check test slowTest testReport'
+      # codeCoverageToolOption: JaCoCo # Broken because it expects hardcoded 'build.gradle'
+      tasks: 'check test slowTest testReport aggregateJacocoReport'
       options: '--stacktrace --info --build-cache'
     env:
       GITHUB_USERNAME: $(github.username)
       GITHUB_TOKEN: $(github.token)
+
+  - task: PublishCodeCoverageResults@1
+    inputs:
+      codeCoverageTool: 'JaCoCo'
+      summaryFileLocation: '$(Build.SourcesDirectory)/**/build/reports/jacoco/aggregate/jacocoTestReport.xml'
+      reportDirectory: '$(Build.SourcesDirectory)/**/build/reports/jacoco/aggregate/html'
 
   - task: PublishPipelineArtifact@1
     displayName: 'Publish detekt report'
