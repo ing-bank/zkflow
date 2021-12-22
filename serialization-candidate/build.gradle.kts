@@ -2,6 +2,11 @@ plugins {
     kotlin("jvm")
     kotlin("plugin.serialization")
     id("maven-publish")
+    jacoco
+}
+
+jacoco {
+    toolVersion = "0.8.7"
 }
 
 repositories {
