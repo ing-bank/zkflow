@@ -46,7 +46,7 @@ steps:
       publishJUnitResults: true
       testResultsFiles: '**/TEST-*.xml'
       # codeCoverageToolOption: JaCoCo # Broken because it expects hardcoded 'build.gradle'
-      tasks: 'check test slowTest testReport aggregateJacocoReport'
+      tasks: 'check test testReport jacocoRootReport'
       options: '--stacktrace --info --build-cache'
     env:
       GITHUB_USERNAME: $(github.username)
