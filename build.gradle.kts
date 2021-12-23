@@ -141,16 +141,16 @@ jacoco {
     toolVersion = "0.8.7"
 }
 
+
 tasks.register("jacocoRootReport", JacocoReport::class) {
-    dependsOn(subprojects.map { it.tasks.withType<Test>() })
-
     val subProjectReportTasks = subprojects.map { it.tasks.withType<JacocoReport>() }
-    dependsOn(subprojects.map { subProjectReportTasks })
-
     val subprojectSourceDirs = subProjectReportTasks.flatMap { it.map { report -> report.sourceDirectories } }
     val subprojectAdditionalSourceDirs = subProjectReportTasks.flatMap { it.map { report -> report.additionalSourceDirs } }
     val subProjectClassDirectories = subProjectReportTasks.flatMap { it.map { report -> report.classDirectories } }
     val subProjectExecutionData = subProjectReportTasks.flatMap { it.map { report -> report.executionData } }
+
+    dependsOn(subprojects.map { it.tasks.withType<Test>() })
+    dependsOn(subprojects.map { subProjectReportTasks })
 
     additionalSourceDirs.setFrom(subprojectAdditionalSourceDirs)
     sourceDirectories.setFrom(subprojectSourceDirs)
@@ -166,36 +166,35 @@ tasks.register("jacocoRootReport", JacocoReport::class) {
     setOnlyIf { true }
 }
 
-// tasks.register("jacocoRootCoverageVerification", JacocoCoverageVerification::class) {
-//     violationRules {
-//         rule {
-//             element = "CLASS"
-//             // excludes = jacocoExcludes
-//             limit {
-//                 counter = "LINE"
-//                 minimum = "0.6".toBigDecimal()
-//             }
-//         }
-//     }
-// }
+tasks.register("jacocoRootCoverageVerification", JacocoCoverageVerification::class) {
+    val subProjectReportTasks = subprojects.map { it.tasks.withType<JacocoReport>() }
+    val subprojectSourceDirs = subProjectReportTasks.flatMap { it.map { report -> report.sourceDirectories } }
+    val subprojectAdditionalSourceDirs = subProjectReportTasks.flatMap { it.map { report -> report.additionalSourceDirs } }
+    val subProjectClassDirectories = subProjectReportTasks.flatMap { it.map { report -> report.classDirectories } }
+    val subProjectExecutionData = subProjectReportTasks.flatMap { it.map { report -> report.executionData } }
+    additionalSourceDirs.setFrom(subprojectAdditionalSourceDirs)
+    sourceDirectories.setFrom(subprojectSourceDirs)
+    classDirectories.setFrom(subProjectClassDirectories)
+    executionData.setFrom(subProjectExecutionData)
 
-// config {
-//     coverage {
-//         jacoco {
-//             excludes = setOf(
-//                 "**/com/ing/zkflow/client/flows/**", "com.ing.zkflow.client.flows.*"
-//             )
-//         }
-//     }
-// }
+    violationRules {
+        rule {
+            element = "BUNDLE"
+            limit {
+                counter = "LINE"
+                minimum = "0.99".toBigDecimal()
+            }
+        }
+    }
+}
 
 subprojects {
     val repos: groovy.lang.Closure<RepositoryHandler> by rootProject.extra
     repositories(repos)
 
-// If a subproject has the Java plugin loaded, we set the test config on it.
+    // If a subproject has the Java plugin loaded, we set the test config on it.
     plugins.withType(JavaPlugin::class.java) {
-// Make sure the project has the necessary plugins loaded
+        // Make sure the project has the necessary plugins loaded
         plugins.apply {
             apply("com.diffplug.spotless")
             apply("idea")
