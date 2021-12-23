@@ -6,7 +6,6 @@ import arrow.meta.invoke
 import arrow.meta.quotes.Transform
 import arrow.meta.quotes.property
 import com.ing.zkflow.SerdeLogger
-import com.ing.zkflow.ZKP
 import kotlinx.serialization.Transient
 import org.jetbrains.kotlin.psi.KtConstantExpression
 import org.jetbrains.kotlin.psi.KtExpression
@@ -55,7 +54,7 @@ private fun KtProperty.verifyAnnotationCorrectness(): Boolean {
     SerdeLogger.logShort("Considering:\n$text")
 
     val applicability = (containingClassOrObject?.isOrdinaryClass ?: false) &&
-        (containingClass()?.let { it.hasAnnotation<ZKP>() && it.isCorrectClassTypeForZKPAnnotation() } ?: false) &&
+        (containingClass()?.let { ClassRefactory.verifyAnnotationCorrectness(PROCESSING_UNIT, it) } ?: false) &&
         hasBackingField()
 
     SerdeLogger.log("(PROP) ${if (applicability) "SHALL" else "WILL NOT"} process")

@@ -6,8 +6,6 @@ import com.ing.zkflow.annotated.pilot.infra.AmountConverter_IssuedTokenType
 import com.ing.zkflow.annotated.pilot.infra.AmountSurrogate_IssuedTokenType
 import com.ing.zkflow.annotated.pilot.infra.EdDSAAbstractParty
 import com.ing.zkflow.annotated.pilot.infra.EdDSAAbstractPartyConverter
-import com.ing.zkflow.annotated.pilot.infra.InstantConverter
-import com.ing.zkflow.annotated.pilot.infra.InstantSurrogate
 import com.ing.zkflow.annotated.pilot.infra.SecureHashConverter_SHA256
 import com.ing.zkflow.annotated.pilot.infra.SecureHashSHA256DefaultProvider
 import com.ing.zkflow.annotated.pilot.infra.SecureHashSHA256Surrogate
@@ -67,15 +65,9 @@ data class CBDCToken(
         { SecureHashConverter_SHA256.from(it) }
     )
 
-    object IssueDate_0 : com.ing.zkflow.serialization.serializer.SurrogateSerializer<Instant, InstantSurrogate>(
-        InstantSurrogate.serializer(),
-        { InstantConverter.from(it) }
-    )
+    object IssueDate_0 : com.ing.zkflow.serialization.serializer.WrappedKSerializer<Instant>(com.ing.zkflow.serialization.serializer.InstantSerializer)
 
-    object LastInterestAccrualDate_0 : com.ing.zkflow.serialization.serializer.SurrogateSerializer<Instant, InstantSurrogate>(
-        InstantSurrogate.serializer(),
-        { InstantConverter.from(it) }
-    )
+    object LastInterestAccrualDate_0 : com.ing.zkflow.serialization.serializer.WrappedKSerializer<Instant>(com.ing.zkflow.serialization.serializer.InstantSerializer)
 
     object UsageCount_0 : com.ing.zkflow.serialization.serializer.WrappedKSerializerWithDefault<Int>(com.ing.zkflow.serialization.serializer.IntSerializer)
 }

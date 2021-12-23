@@ -24,7 +24,6 @@ import net.corda.core.identity.Party
 import java.math.BigDecimal
 import java.security.KeyFactory
 import java.security.spec.X509EncodedKeySpec
-import java.time.Instant
 import java.util.UUID
 
 @ZKP
@@ -62,25 +61,9 @@ data class NetworkEdDSAAnonymousOperator(
 }
 
 @ZKP
-data class InstantSurrogate(
-    val seconds: Long,
-    val nanos: Int
-) : Surrogate<Instant> {
-    override fun toOriginal(): Instant = Instant.ofEpochSecond(seconds, nanos.toLong())
-}
-
-@ZKP
-data class UUIDSurrogate(
-    val mostSigBits: Long,
-    val leastSigBits: Long
-) : Surrogate<UUID> {
-    override fun toOriginal(): UUID = UUID(mostSigBits, leastSigBits)
-}
-
-@ZKP
 data class UniqueIdentifierSurrogate(
     val externalId: @ASCII(10) String?,
-    val id: @Converter<UUID, UUIDSurrogate>(UUIDConverter::class) UUID
+    val id: UUID
 ) : Surrogate<UniqueIdentifier> {
     override fun toOriginal() = UniqueIdentifier(externalId, id)
 }
