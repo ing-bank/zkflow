@@ -16,14 +16,16 @@ data class BflArray(
     override fun deserializeExpr(
         witnessGroupOptions: WitnessGroupOptions,
         offset: String,
-        variablePrefix: String
+        variablePrefix: String,
+        witnessVariable: String
     ): String {
         val array = "${variablePrefix}_array"
         val i = "${variablePrefix}_i"
         val deserializeExpr = elementType.deserializeExpr(
             witnessGroupOptions,
             offset = "$i * ${elementType.bitSize} as u24 + $offset",
-            variablePrefix = array
+            variablePrefix = array,
+            witnessVariable = witnessVariable
         )
         return """
             {

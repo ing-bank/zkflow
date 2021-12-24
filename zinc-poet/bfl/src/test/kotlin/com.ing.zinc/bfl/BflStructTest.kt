@@ -7,8 +7,7 @@ import com.ing.zinc.bfl.ZincExecutor.generateEmptyCircuit
 import com.ing.zinc.bfl.ZincExecutor.generateEqualsCircuit
 import com.ing.zinc.bfl.ZincExecutor.generateNewCircuit
 import com.ing.zinc.bfl.ZincExecutor.generateWitness
-import com.ing.zinc.bfl.ZincExecutor.runCommand
-import com.ing.zinc.bfl.dsl.StructBuilder.Companion.struct
+import com.ing.zinc.bfl.ZincExecutor.runCommandAndLogTime
 import com.ing.zinc.bfl.generator.ZincGenerator.zincSourceFile
 import com.ing.zinc.poet.ZincMethod.Companion.zincMethod
 import com.ing.zinc.poet.ZincPrimitive
@@ -20,17 +19,6 @@ import java.nio.file.Path
 
 internal class BflStructTest {
     @Test
-    fun `BflStruct deserialize method should deserialize an empty struct correctly`(@TempDir tempDir: Path) {
-        tempDir.generateDeserializeCircuit(struct { name = "EmptyStruct" })
-        tempDir.generateWitness(SERIALIZED) { }
-
-        val (stdout, stderr) = tempDir.runCommand("zargo run")
-
-        stderr shouldBe ""
-        stdout.parseJson() shouldBe emptyJsonObject
-    }
-
-    @Test
     fun `BflStruct deserialize method should deserialize correctly with witness 1`(@TempDir tempDir: Path) {
         tempDir.generateDeserializeCircuit(structWithPrimitiveFields)
         tempDir.generateWitness(SERIALIZED) {
@@ -38,7 +26,7 @@ internal class BflStructTest {
             bits(1)
         }
 
-        val (stdout, stderr) = tempDir.runCommand("zargo run")
+        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run")
 
         stderr shouldBe ""
         stdout.parseJson() shouldBe primitiveStructJson(true, 16777216)
@@ -52,7 +40,7 @@ internal class BflStructTest {
             bits(0)
         }
 
-        val (stdout, stderr) = tempDir.runCommand("zargo run")
+        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run")
 
         stderr shouldBe ""
         stdout.parseJson() shouldBe primitiveStructJson(false, 0)
@@ -62,7 +50,7 @@ internal class BflStructTest {
     fun `BflStruct new method should instantiate a correct struct`(@TempDir tempDir: Path) {
         tempDir.generateNewCircuit(structWithPrimitiveFields, "35 as u32, true")
 
-        val (stdout, stderr) = tempDir.runCommand("zargo run")
+        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run")
 
         stderr shouldBe ""
         stdout.parseJson() shouldBe primitiveStructJson(true, 35)
@@ -72,7 +60,7 @@ internal class BflStructTest {
     fun `BflStruct empty method should instantiate an empty struct`(@TempDir tempDir: Path) {
         tempDir.generateEmptyCircuit(structWithPrimitiveFields)
 
-        val (stdout, stderr) = tempDir.runCommand("zargo run")
+        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run")
 
         stderr shouldBe ""
         stdout.parseJson() shouldBe primitiveStructJson(false, 0)
@@ -86,7 +74,7 @@ internal class BflStructTest {
             put("right", primitiveStructJson(false, 0))
         }
 
-        val (stdout, stderr) = tempDir.runCommand("zargo run")
+        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run")
 
         stderr shouldBe ""
         stdout.parseJson() shouldBe JsonPrimitive(true)
@@ -100,7 +88,7 @@ internal class BflStructTest {
             put("right", primitiveStructJson(true, 1))
         }
 
-        val (stdout, stderr) = tempDir.runCommand("zargo run")
+        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run")
 
         stderr shouldBe ""
         stdout.parseJson() shouldBe JsonPrimitive(false)
@@ -120,7 +108,7 @@ internal class BflStructTest {
             )
         }
 
-        val (stdout, stderr) = tempDir.runCommand("zargo run")
+        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run")
 
         stderr shouldBe ""
         stdout.parseJson() shouldBe arrayStructJson(listOf(false, true), listOf(5, 12))
@@ -130,7 +118,7 @@ internal class BflStructTest {
     fun `BflStruct new method should instantiate a correct struct with arrays`(@TempDir tempDir: Path) {
         tempDir.generateNewCircuit(structWithArrayFieldsOfPrimitives, "[35 as u32, 13 as u32], [true, false]")
 
-        val (stdout, stderr) = tempDir.runCommand("zargo run")
+        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run")
 
         stderr shouldBe ""
         stdout.parseJson() shouldBe arrayStructJson(listOf(true, false), listOf(35, 13))
@@ -140,7 +128,7 @@ internal class BflStructTest {
     fun `BflStruct empty method should instantiate an empty struct with arrays`(@TempDir tempDir: Path) {
         tempDir.generateEmptyCircuit(structWithArrayFieldsOfPrimitives)
 
-        val (stdout, stderr) = tempDir.runCommand("zargo run")
+        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run")
 
         stderr shouldBe ""
         stdout.parseJson() shouldBe arrayStructJson(listOf(false, false), listOf(0, 0))
@@ -154,7 +142,7 @@ internal class BflStructTest {
             put("right", arrayStructJson(listOf(false, false), listOf(0, 0)))
         }
 
-        val (stdout, stderr) = tempDir.runCommand("zargo run")
+        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run")
 
         stderr shouldBe ""
         stdout.parseJson() shouldBe JsonPrimitive(true)
@@ -168,7 +156,7 @@ internal class BflStructTest {
             put("right", arrayStructJson(listOf(false, false), listOf(0, 1)))
         }
 
-        val (stdout, stderr) = tempDir.runCommand("zargo run")
+        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run")
 
         stderr shouldBe ""
         stdout.parseJson() shouldBe JsonPrimitive(false)
@@ -182,7 +170,7 @@ internal class BflStructTest {
             bits(1)
         }
 
-        val (stdout, stderr) = tempDir.runCommand("zargo run")
+        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run")
 
         stderr shouldBe ""
         stdout.parseJson() shouldBe structStructJson(true, 16777216)
@@ -192,7 +180,7 @@ internal class BflStructTest {
     fun `BflStruct new method should instantiate a correct struct with struct`(@TempDir tempDir: Path) {
         tempDir.generateNewCircuit(structWithStructField, "${structWithPrimitiveFields.id}::new(35 as u32, true)")
 
-        val (stdout, stderr) = tempDir.runCommand("zargo run")
+        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run")
 
         stderr shouldBe ""
         stdout.parseJson() shouldBe structStructJson(true, 35)
@@ -202,7 +190,7 @@ internal class BflStructTest {
     fun `BflStruct empty method should instantiate an empty struct with struct`(@TempDir tempDir: Path) {
         tempDir.generateEmptyCircuit(structWithStructField)
 
-        val (stdout, stderr) = tempDir.runCommand("zargo run")
+        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run")
 
         stderr shouldBe ""
         stdout.parseJson() shouldBe structStructJson(false, 0)
@@ -216,7 +204,7 @@ internal class BflStructTest {
             put("right", structStructJson(false, 0))
         }
 
-        val (stdout, stderr) = tempDir.runCommand("zargo run")
+        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run")
 
         stderr shouldBe ""
         stdout.parseJson() shouldBe JsonPrimitive(true)
@@ -230,7 +218,7 @@ internal class BflStructTest {
             put("right", structStructJson(true, 1))
         }
 
-        val (stdout, stderr) = tempDir.runCommand("zargo run")
+        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run")
 
         stderr shouldBe ""
         stdout.parseJson() shouldBe JsonPrimitive(false)
@@ -243,7 +231,7 @@ internal class BflStructTest {
             put("this", arrayStructJson(listOf(false, true), listOf(0, 0)))
         }
 
-        val (stdout, stderr) = tempDir.runCommand("zargo run")
+        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run")
 
         stderr shouldBe ""
         stdout.parseJson() shouldBe JsonPrimitive(true)

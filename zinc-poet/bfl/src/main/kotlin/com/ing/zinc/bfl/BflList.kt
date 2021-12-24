@@ -62,7 +62,8 @@ open class BflList(
     override fun generateFieldDeserialization(
         witnessGroupOptions: WitnessGroupOptions,
         field: FieldWithParentStruct,
-        witnessIndex: String
+        witnessIndex: String,
+        witnessVariable: String
     ): String {
         return if (field.name == VALUES_FIELD) {
             val offset = field.generateConstant(OFFSET) + " + $witnessIndex"
@@ -72,7 +73,8 @@ open class BflList(
             val deserializedItem = elementType.deserializeExpr(
                 witnessGroupOptions,
                 offset = "$i as u24 * ${elementType.sizeExpr()} + $offset",
-                variablePrefix = array
+                variablePrefix = array,
+                witnessVariable = witnessVariable
             )
             val deserializedField = """
             {
@@ -85,7 +87,7 @@ open class BflList(
             """.trimIndent()
             "let ${field.name}: ${field.type.id} = $deserializedField;"
         } else {
-            super.generateFieldDeserialization(witnessGroupOptions, field, witnessIndex)
+            super.generateFieldDeserialization(witnessGroupOptions, field, witnessIndex, witnessVariable)
         }
     }
 

@@ -82,12 +82,15 @@ data class ResolvedZKTransactionMetadata(
 
     val inputTypeGroups = commands.flatMap { it.inputs }
     val inputs = inputTypeGroups.expanded
+    val numberOfInputs = inputTypeGroups.sumOf(ContractStateTypeCount::count)
 
     val referenceTypeGroups = commands.flatMap { it.references }
     val references = referenceTypeGroups.expanded
+    val numberOfReferences = referenceTypeGroups.sumOf(ContractStateTypeCount::count)
 
     val outputTypeGroups = commands.flatMap { it.outputs }
     val outputs = outputTypeGroups.expanded
+    val numberOfOutputs = outputTypeGroups.sumOf(ContractStateTypeCount::count)
 
     val commandClasses = commands.map { it.commandKClass }
 

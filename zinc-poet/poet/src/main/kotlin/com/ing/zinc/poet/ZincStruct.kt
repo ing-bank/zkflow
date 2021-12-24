@@ -1,6 +1,8 @@
 package com.ing.zinc.poet
 
 import com.ing.zinc.poet.Indentation.Companion.spaces
+import com.ing.zkflow.util.requireNotEmpty
+import com.ing.zkflow.util.requireNotNull
 
 interface ZincStruct : ZincType, ZincFileItem {
     fun getName(): String
@@ -26,8 +28,10 @@ interface ZincStruct : ZincType, ZincFileItem {
         }
 
         fun build(): ZincStruct = ImmutableZincStruct(
-            requireNotNull(name) { "Required value `name` is null." },
-            fields.toList(),
+            name.requireNotNull { "Required value `name` is null." },
+            // Zinc allows empty structs, but raises unexpected error messages that cannot be traced back to empty structs.
+            // Therefor we forbid constructing empty structs here.
+            fields.toList().requireNotEmpty { "Struct `$name` has no fields." },
         )
     }
 

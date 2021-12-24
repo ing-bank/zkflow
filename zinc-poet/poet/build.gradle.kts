@@ -5,6 +5,8 @@ plugins {
 }
 
 dependencies {
+    implementation(project(":utils"))
+
     val kotlinxSerializationVersion: String by project
     testImplementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
 }

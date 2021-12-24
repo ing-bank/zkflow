@@ -5,7 +5,7 @@ import com.ing.zinc.bfl.ZincExecutor.generateCircuitBase
 import com.ing.zinc.bfl.ZincExecutor.generateDeserializeCircuit
 import com.ing.zinc.bfl.ZincExecutor.generateEqualsCircuit
 import com.ing.zinc.bfl.ZincExecutor.generateWitness
-import com.ing.zinc.bfl.ZincExecutor.runCommand
+import com.ing.zinc.bfl.ZincExecutor.runCommandAndLogTime
 import com.ing.zinc.bfl.generator.ZincGenerator.zincSourceFile
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.json.JsonPrimitive
@@ -27,7 +27,7 @@ internal class BflOptionTest {
             )
         }
 
-        val (stdout, stderr) = tempDir.runCommand("zargo run")
+        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run")
 
         stderr shouldBe ""
         stdout.parseJson() shouldBe zincJsonOptionOf(JsonPrimitive(false))
@@ -41,7 +41,7 @@ internal class BflOptionTest {
             bytes(255) // -1
         }
 
-        val (stdout, stderr) = tempDir.runCommand("zargo run")
+        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run")
 
         stderr shouldBe ""
         stdout.parseJson() shouldBe zincJsonOptionOf(JsonPrimitive("-1"))
@@ -53,7 +53,7 @@ internal class BflOptionTest {
         tempDir.generateSomeCircuit(intOption)
         tempDir.generateWitness { put("some_value", "$value") }
 
-        val (stdout, stderr) = tempDir.runCommand("zargo run")
+        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run")
 
         stderr shouldBe ""
         stdout.parseJson() shouldBe zincJsonOptionOf(JsonPrimitive("$value"))
@@ -67,7 +67,7 @@ internal class BflOptionTest {
             put("right", zincJsonOptionOf(JsonPrimitive("1"), false))
         }
 
-        val (stdout, stderr) = tempDir.runCommand("zargo run")
+        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run")
 
         stderr shouldBe ""
         stdout.parseJson() shouldBe JsonPrimitive(true)
@@ -81,7 +81,7 @@ internal class BflOptionTest {
             put("right", zincJsonOptionOf(JsonPrimitive("1")))
         }
 
-        val (stdout, stderr) = tempDir.runCommand("zargo run")
+        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run")
 
         stderr shouldBe ""
         stdout.parseJson() shouldBe JsonPrimitive(false)
@@ -95,7 +95,7 @@ internal class BflOptionTest {
             put("right", zincJsonOptionOf(JsonPrimitive("1")))
         }
 
-        val (stdout, stderr) = tempDir.runCommand("zargo run")
+        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run")
 
         stderr shouldBe ""
         stdout.parseJson() shouldBe JsonPrimitive(false)
@@ -109,7 +109,7 @@ internal class BflOptionTest {
             put("right", zincJsonOptionOf(JsonPrimitive("1")))
         }
 
-        val (stdout, stderr) = tempDir.runCommand("zargo run")
+        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run")
 
         stderr shouldBe ""
         stdout.parseJson() shouldBe JsonPrimitive(true)

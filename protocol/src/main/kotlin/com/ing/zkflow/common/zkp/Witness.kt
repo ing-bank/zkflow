@@ -217,7 +217,7 @@ class Witness(
         }
 
         /**
-         * Input and reference UTXOs can contain different states. Therefore their serialized bytes grouped by their state names.
+         * Input and reference UTXOs can contain different states. Therefor their serialized bytes grouped by their state names.
          */
         private fun List<UtxoInfo>.serializedBytesForUTXO(
             groupEnum: ComponentGroupEnum,

@@ -37,6 +37,7 @@ interface BflType {
         witnessGroupOptions: WitnessGroupOptions,
         offset: String,
         variablePrefix: String,
+        witnessVariable: String // = SERIALIZED
     ): String
 
     /**

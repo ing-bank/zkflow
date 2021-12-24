@@ -4,7 +4,7 @@ import com.ing.zinc.bfl.ZincExecutor.createImports
 import com.ing.zinc.bfl.ZincExecutor.generateCircuitBase
 import com.ing.zinc.bfl.ZincExecutor.generateDeserializeCircuit
 import com.ing.zinc.bfl.ZincExecutor.generateWitness
-import com.ing.zinc.bfl.ZincExecutor.runCommand
+import com.ing.zinc.bfl.ZincExecutor.runCommandAndLogTime
 import com.ing.zinc.bfl.generator.ZincGenerator.zincSourceFile
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
@@ -27,7 +27,7 @@ internal class BflMapTest {
             )
         }
 
-        val (stdout, stderr) = tempDir.runCommand("zargo run")
+        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run")
 
         stderr shouldBe ""
         stdout.parseJson() shouldBe mapOf(
@@ -49,7 +49,7 @@ internal class BflMapTest {
             )
         }
 
-        val (stdout, stderr) = tempDir.runCommand("zargo run")
+        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run")
 
         stderr shouldBe ""
         stdout.parseJson() shouldBe zincJsonOptionOf("ab".asZincJsonString(2))
@@ -68,7 +68,7 @@ internal class BflMapTest {
             )
         }
 
-        val (stdout, stderr) = tempDir.runCommand("zargo run")
+        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run")
 
         stderr shouldBe ""
         stdout.parseJson() shouldBe zincJsonOptionOf("".asZincJsonString(2), false)

@@ -1,0 +1,35 @@
+@startuml
+!theme lightgray
+
+component Witness
+component SerializedOutputGroup
+component input_staterefs
+component reference_staterefs
+component SerializedInputUtxos
+component SerializedReferenceUtxos
+component DeserializedOutputGroup
+component DeserializedInputUtxos
+component DeserializedReferenceUtxos
+component InputGroup
+component ReferenceGroup
+' component OutputGroup
+component LedgerTransaction
+
+Witness --> input_staterefs
+Witness --> reference_staterefs
+Witness --> SerializedInputUtxos
+Witness --> SerializedOutputGroup
+Witness --> SerializedReferenceUtxos
+SerializedInputUtxos --> DeserializedInputUtxos
+SerializedOutputGroup --> DeserializedOutputGroup
+SerializedReferenceUtxos --> DeserializedReferenceUtxos
+input_staterefs ---> InputGroup
+DeserializedInputUtxos --> InputGroup
+reference_staterefs ---> ReferenceGroup
+DeserializedReferenceUtxos --> ReferenceGroup
+' DeserializedOutputGroup --> OutputGroup
+InputGroup --> LedgerTransaction
+' OutputGroup --> LedgerTransaction
+DeserializedOutputGroup ---> LedgerTransaction
+ReferenceGroup --> LedgerTransaction
+@enduml
