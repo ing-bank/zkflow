@@ -84,3 +84,16 @@ annotation class BigDecimalSize(val integerPart: Int, val fractionPart: Int)
 interface Surrogate<T> {
     fun toOriginal(): T
 }
+
+/**
+ * Allow user to define own hash types.
+ */
+annotation class HashSize(val size: Int)
+
+/**
+ * A predefined SHA256 type
+ */
+@Target(AnnotationTarget.TYPE)
+@Suppress("MagicNumber")
+@HashSize(32)
+annotation class Sha256
