@@ -4,6 +4,10 @@ plugins {
     id("maven-publish")
 }
 
+repositories {
+    maven("https://software.r3.com/artifactory/corda")
+}
+
 dependencies {
     testImplementation(kotlin("test-junit5"))
     testImplementation(project(":test-utils"))
@@ -12,6 +16,9 @@ dependencies {
 
     val kotlinxSerializationVersion: String by project
     api("org.jetbrains.kotlinx:kotlinx-serialization-core:$kotlinxSerializationVersion")
+
+    val cordaVersion: String by project
+    implementation("net.corda:corda-core:$cordaVersion")
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
