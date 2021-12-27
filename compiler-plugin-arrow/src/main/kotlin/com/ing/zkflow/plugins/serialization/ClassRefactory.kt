@@ -21,7 +21,7 @@ class ClassRefactory(
     private val ctx: CompilerContext
 ) {
     private val ktClass = classDeclaration.value
-    private val typeResolver = TypeQuasiResolver(ktClass.containingKtFile.importList)
+    private val typeResolver = BestEffortTypeResolver(ktClass.containingKtFile)
 
     companion object {
         /**

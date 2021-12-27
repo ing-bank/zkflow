@@ -1,9 +1,9 @@
 package com.ing.zkflow.plugins.serialization
 
 import org.jetbrains.kotlin.psi.KtAnnotationEntry
+import org.jetbrains.kotlin.psi.KtElement
 import org.jetbrains.kotlin.psi.KtTypeElement
 import org.jetbrains.kotlin.psi.KtTypeReference
-import org.jetbrains.kotlin.psi.KtValueArgument
 import kotlin.reflect.KClass
 
 /**
@@ -15,13 +15,13 @@ class ContextualizedKtTypeReference(
      * and, in case of user types, a generic parametrized type, e.g., @SomeAnnotation SomeUserType<@SomeAnnotation AnotherUserType>
      */
     val ktTypeReference: KtTypeReference,
-    val typeResolver: TypeQuasiResolver
+    val typeResolver: BestEffortTypeResolver
 ) {
     val ktTypeElement: KtTypeElement by lazy {
         ktTypeReference.typeElement ?: error("Cannot infer type of: ${ktTypeReference.text}")
     }
 
-    val rootType: ResolvedType by lazy {
+    val rootType: ContextualType by lazy {
         with(ktTypeElement) {
             // KtTypeElement does not have annotations attached to the outer type.
             // Its typeArguments are TypeReferences, their text representation does contain annotations.
@@ -34,10 +34,7 @@ class ContextualizedKtTypeReference(
                     // Drop the last `?` if present.
                     val simpleName = if (isNullable) it.substring(0, it.lastIndex) else it
 
-                    // Try to resolve to a fully qualified name defaulting to the simple name.
-                    typeResolver.resolve(simpleName)?.let { fqName ->
-                        ResolvedType.FullyResolved("$fqName", isNullable)
-                    } ?: ResolvedType.AsIs(simpleName, isNullable)
+                    ContextualType(typeResolver.resolve(simpleName), isNullable)
                 }
         }
     }
@@ -50,18 +47,12 @@ class ContextualizedKtTypeReference(
     }
 
     /**
-     * Resolve a reference to a KClass within the context of this [ktTypeReference].
+     * Resolve a [KtElement] within the context of this [ktTypeReference].
      */
-    fun resolveClass(argument: KtValueArgument): ResolvedType = with(argument.text) {
-        require(endsWith("::class")) {
-            "Expected an argument of type ${KClass::class.qualifiedName}, got $this"
-        }
+    fun resolveClass(argument: KtElement): BestEffortResolvedType = with(argument.text) {
+        val simpleName = trim().replace("::class", "").trimStart('@').trim()
 
-        val simpleName = replace("::class", "").trim()
-
-        typeResolver.resolve(simpleName)?.let { fqName ->
-            ResolvedType.FullyResolved("$fqName", false)
-        } ?: ResolvedType.AsIs(simpleName, false)
+        typeResolver.resolve(simpleName)
     }
 
     /**
@@ -129,17 +120,12 @@ class ContextualizedKtTypeReference(
     }
 }
 
-sealed class ResolvedType private constructor(val type: String, val isNullable: Boolean) {
-    abstract fun stripNullability(): ResolvedType
+data class ContextualType(val bestEffortResolvedType: BestEffortResolvedType, val isNullable: Boolean) {
+    fun stripNullability(): ContextualType = copy(isNullable = false)
+
+    val type = bestEffortResolvedType.asString()
 
     val isSupportedCollection: Boolean by lazy {
         type in Processors.genericCollections.keys
-    }
-
-    class FullyResolved(type: String, isNullable: Boolean) : ResolvedType(type, isNullable) {
-        override fun stripNullability() = FullyResolved(type, isNullable = false)
-    }
-    class AsIs(type: String, isNullable: Boolean) : ResolvedType(type, isNullable) {
-        override fun stripNullability() = AsIs(type, isNullable = false)
     }
 }
