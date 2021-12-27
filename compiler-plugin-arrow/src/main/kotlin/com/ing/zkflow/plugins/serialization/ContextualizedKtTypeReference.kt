@@ -111,13 +111,9 @@ class ContextualizedKtTypeReference(
         }$nullability"
     }
 
-    inline fun <reified T> annotationSingleArgOrNull(): String? = with(ktTypeReference) {
-        annotationOrNull<T>()?.run { valueArguments.single().asElement().text.trim() }
-    }
+    inline fun <reified T> annotationSingleArgOrNull(): String? = ktTypeReference.annotationSingleArgOrNull<T>()
 
-    inline fun <reified T> annotationOrNull(): KtAnnotationEntry? = with(ktTypeReference) {
-        annotationEntries.singleOrNull { "${it.shortName}" == T::class.simpleName }
-    }
+    inline fun <reified T> annotationOrNull(): KtAnnotationEntry? = ktTypeReference.annotationOrNull<T>()
 }
 
 data class ContextualType(val bestEffortResolvedType: BestEffortResolvedType, val isNullable: Boolean) {
