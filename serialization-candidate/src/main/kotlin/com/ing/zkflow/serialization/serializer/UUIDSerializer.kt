@@ -1,7 +1,5 @@
-package com.ing.zkflow.serialization
+package com.ing.zkflow.serialization.serializer
 
-import com.ing.zkflow.serialization.serializer.KSerializerWithDefault
-import com.ing.zkflow.serialization.serializer.LongSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
