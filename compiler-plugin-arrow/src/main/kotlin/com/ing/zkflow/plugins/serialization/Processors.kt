@@ -8,8 +8,10 @@ import com.ing.zkflow.HashSize
 import com.ing.zkflow.Resolver
 import com.ing.zkflow.SerdeLogger
 import com.ing.zkflow.Size
+import com.ing.zkflow.Surrogate
 import com.ing.zkflow.UTF8
 import com.ing.zkflow.UTF8Char
+import com.ing.zkflow.ZKP
 import com.ing.zkflow.plugins.serialization.serializingobject.SerializingObject
 import com.ing.zkflow.plugins.serialization.serializingobject.TypeSerializingObject
 import com.ing.zkflow.serialization.serializer.BooleanSerializer
@@ -41,7 +43,6 @@ import org.jetbrains.kotlin.psi.KtValueArgument
 import java.math.BigDecimal
 import java.time.Instant
 import java.util.UUID
-import kotlin.reflect.full.findAnnotation
 
 /**
  * This object
@@ -452,11 +453,24 @@ internal object Processors {
             }
         } ?: run {
             // If conversion provider is ABSENT
-            // => this class may be own class annotated with com.ing.zkflow.annotations.ZKP, to be checked.
-            // REMARK: we have only a reference to the current type of the parameter, not the actual class definition,
-            // thus we can't directly check on this contextualizedOriginal if ZKP annotation is present.
-            // As of now, any class different from above cases is considered to have been annotated with com.ing.zkflow.annotations.ZKP
-            // and thus be serializable. If this assumption is incorrect, a compilation error will be thrown by kotlinx.serialization.
+            // => this class may be own class annotated with com.ing.zkflow.annotations.ZKP, verify this.
+            val errorSerializerAbsentFor: (fqName: String) -> Nothing = {
+                error(
+                    """
+                    Class $it is not serializable;
+                    For own classes, annotate it with `${ZKP::class.qualifiedName}`,
+                    for 3rd-party classes, introduce an appropriate ${Surrogate::class.qualifiedName}")
+                    """.trimIndent()
+                )
+            }
+
+            with(contextualizedOriginal.rootType.bestEffortResolvedType) {
+                when (this) {
+                    is BestEffortResolvedType.AsIs -> errorSerializerAbsentFor(simpleName)
+                    is BestEffortResolvedType.FullyQualified -> findAnnotation<ZKP>() ?: errorSerializerAbsentFor("$fqName")
+                    is BestEffortResolvedType.FullyResolved -> findAnnotation<ZKP>() ?: errorSerializerAbsentFor("$fqName")
+                }
+            }
 
             TypeSerializingObject.UserType(contextualizedOriginal) { self, outer ->
                 "object $outer: ${WrappedKSerializer::class.qualifiedName}<${self.cleanTypeDeclaration}>(${self.cleanTypeDeclaration}.serializer())"
