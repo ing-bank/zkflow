@@ -6,9 +6,6 @@ import com.ing.zkflow.annotated.pilot.infra.AmountConverter_IssuedTokenType
 import com.ing.zkflow.annotated.pilot.infra.AmountSurrogate_IssuedTokenType
 import com.ing.zkflow.annotated.pilot.infra.EdDSAAbstractParty
 import com.ing.zkflow.annotated.pilot.infra.EdDSAAbstractPartyConverter
-import com.ing.zkflow.annotated.pilot.infra.SecureHashConverter_SHA256
-import com.ing.zkflow.annotated.pilot.infra.SecureHashSHA256DefaultProvider
-import com.ing.zkflow.annotated.pilot.infra.SecureHashSHA256Surrogate
 import com.ing.zkflow.annotated.pilot.infra.fixedCordaX500Name
 import com.ing.zkflow.annotated.pilot.r3.states.AbstractFungibleToken
 import com.ing.zkflow.annotated.pilot.r3.types.IssuedTokenType
@@ -56,14 +53,7 @@ data class CBDCToken(
         TokenTypeJarHash_1
     )
 
-    object TokenTypeJarHash_1 : com.ing.zkflow.serialization.serializer.SerializerWithDefault<SecureHash>(
-        TokenTypeJarHash_2, SecureHashSHA256DefaultProvider.default
-    )
-
-    object TokenTypeJarHash_2 : com.ing.zkflow.serialization.serializer.SurrogateSerializer<SecureHash, SecureHashSHA256Surrogate>(
-        SecureHashSHA256Surrogate.serializer(),
-        { SecureHashConverter_SHA256.from(it) }
-    )
+    object TokenTypeJarHash_1 : com.ing.zkflow.serialization.serializer.SecureHashSerializer("Sha256", 32)
 
     object IssueDate_0 : com.ing.zkflow.serialization.serializer.WrappedKSerializer<Instant>(com.ing.zkflow.serialization.serializer.InstantSerializer)
 

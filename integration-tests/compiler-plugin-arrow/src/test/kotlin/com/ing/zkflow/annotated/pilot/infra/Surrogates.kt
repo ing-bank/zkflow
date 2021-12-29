@@ -16,7 +16,6 @@ import com.ing.zkflow.annotated.pilot.r3.types.IssuedTokenType
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.LinearPointer
 import net.corda.core.contracts.UniqueIdentifier
-import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.CordaX500Name
@@ -88,20 +87,6 @@ data class LinearPointerSurrogate_IvnoTokenType(
         @Suppress("UNCHECKED_CAST")
         val klass = Class.forName(className) as Class<IvnoTokenType>
         return LinearPointer(pointer, klass, isResolved)
-    }
-}
-
-@Suppress("ArrayInDataClass")
-@ZKP
-data class SecureHashSHA256Surrogate(
-    val bytes: @Size(BYTES_SIZE) ByteArray
-) : Surrogate<SecureHash> {
-    override fun toOriginal(): SecureHash {
-        return SecureHash.SHA256(bytes)
-    }
-
-    companion object {
-        const val BYTES_SIZE = 32
     }
 }
 
