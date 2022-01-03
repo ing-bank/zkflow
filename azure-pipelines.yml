@@ -10,7 +10,7 @@ trigger:
       - feature/*
 
 pool:
-  vmImage: ubuntu-latest
+  name: NeoZKP
 
 variables:
   GRADLE_USER_HOME: $(Pipeline.Workspace)/.gradle
