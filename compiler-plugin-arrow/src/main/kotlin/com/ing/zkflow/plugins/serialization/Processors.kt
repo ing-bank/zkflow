@@ -4,13 +4,16 @@ import com.ing.zkflow.ASCII
 import com.ing.zkflow.ASCIIChar
 import com.ing.zkflow.BigDecimalSize
 import com.ing.zkflow.Converter
+import com.ing.zkflow.HashSize
 import com.ing.zkflow.Resolver
+import com.ing.zkflow.SerdeLogger
 import com.ing.zkflow.Size
+import com.ing.zkflow.Surrogate
 import com.ing.zkflow.UTF8
 import com.ing.zkflow.UTF8Char
+import com.ing.zkflow.ZKP
 import com.ing.zkflow.plugins.serialization.serializingobject.SerializingObject
 import com.ing.zkflow.plugins.serialization.serializingobject.TypeSerializingObject
-import com.ing.zkflow.serialization.UUIDSerializer
 import com.ing.zkflow.serialization.serializer.BooleanSerializer
 import com.ing.zkflow.serialization.serializer.ByteSerializer
 import com.ing.zkflow.serialization.serializer.FixedLengthByteArraySerializer
@@ -21,18 +24,21 @@ import com.ing.zkflow.serialization.serializer.FixedLengthSetSerializer
 import com.ing.zkflow.serialization.serializer.InstantSerializer
 import com.ing.zkflow.serialization.serializer.IntSerializer
 import com.ing.zkflow.serialization.serializer.LongSerializer
+import com.ing.zkflow.serialization.serializer.SecureHashSerializer
 import com.ing.zkflow.serialization.serializer.ShortSerializer
 import com.ing.zkflow.serialization.serializer.SurrogateSerializer
 import com.ing.zkflow.serialization.serializer.UByteSerializer
 import com.ing.zkflow.serialization.serializer.UIntSerializer
 import com.ing.zkflow.serialization.serializer.ULongSerializer
 import com.ing.zkflow.serialization.serializer.UShortSerializer
+import com.ing.zkflow.serialization.serializer.UUIDSerializer
 import com.ing.zkflow.serialization.serializer.WrappedKSerializer
 import com.ing.zkflow.serialization.serializer.WrappedKSerializerWithDefault
 import com.ing.zkflow.serialization.serializer.char.ASCIICharSerializer
 import com.ing.zkflow.serialization.serializer.char.UTF8CharSerializer
 import com.ing.zkflow.serialization.serializer.string.FixedLengthASCIIStringSerializer
 import com.ing.zkflow.serialization.serializer.string.FixedLengthUTF8StringSerializer
+import net.corda.core.crypto.SecureHash
 import org.jetbrains.kotlin.psi.KtValueArgument
 import java.math.BigDecimal
 import java.time.Instant
@@ -319,6 +325,69 @@ internal object Processors {
             ) { _, outer, _ ->
                 "object $outer: ${WrappedKSerializerWithDefault::class.qualifiedName}<${UUID::class.qualifiedName}>(${UUIDSerializer::class.qualifiedName})"
             }
+        },
+
+        /**
+         *   An annotation specifying a hashing algorithm is required.
+         *   To find such an annotation and the respective length we follow these steps:
+         *   - get all annotations,
+         *   - loop through them,
+         *   - resolve each annotation,
+         *   - examine each annotation by looking for [HashSize] annotation,
+         *   - two options are possible (a) and (b)
+         *   (a) say, there is such an annotation @A, annotation name is used as the hash algorithm name,
+         *   (a) get `size` field of [HashSize]
+         *   (a) create a SecureHashSerializer(`A`, `length`)
+         *   (b) there is no such annotation
+         *   (b) recurse to the [forUserType]
+         */
+        SecureHash::class.qualifiedName!! to ToSerializingObject { contextualOriginal, _ ->
+            val hashSpecs = contextualOriginal.ktTypeReference
+                .annotationEntries
+                .filter {
+                    // By convention SecureHash-specific annotation must have neither type parameters nor value arguments
+                    it.typeArguments.isEmpty() && it.valueArguments.isEmpty()
+                }
+                .mapNotNull { possibleHashAnnotation ->
+                    SerdeLogger.log("Resolving ${possibleHashAnnotation.text}")
+                    val resolved = contextualOriginal.resolveClass(possibleHashAnnotation)
+                    SerdeLogger.log("Resolved to $resolved")
+
+                    val hashSize = when (resolved) {
+                        is BestEffortResolvedType.AsIs -> null
+                        is BestEffortResolvedType.FullyQualified -> {
+                            resolved.findAnnotation<HashSize>()?.valueArguments?.single()?.asElement()?.text
+                                ?: error("${SecureHash::class.qualifiedName} must be annotated with a hash specific annotation, i.e., an annotation class itself annotated with ${HashSize::class.qualifiedName} annotation")
+                        }
+                        is BestEffortResolvedType.FullyResolved -> {
+                            resolved.findAnnotation<HashSize>()?.size?.toString()
+                                ?: error("${SecureHash::class.qualifiedName} must be annotated with a hash specific annotation, i.e., an annotation class itself annotated with ${HashSize::class.qualifiedName} annotation")
+                        }
+                    }
+
+                    hashSize?.let {
+                        Pair(possibleHashAnnotation.text.replace("@", ""), it)
+                    }
+                }
+
+            when (hashSpecs.size) {
+                0 -> {
+                    // SecureHash has no hash specific annotation, recurse to treating it as a generic user type.
+                    forUserType(contextualOriginal)
+                }
+                1 -> {
+                    val (algorithm, size) = hashSpecs.single()
+
+                    TypeSerializingObject.ExplicitType(
+                        contextualOriginal,
+                        SecureHashSerializer::class,
+                        emptyList()
+                    ) { _, outer, _ ->
+                        "object $outer: ${SecureHashSerializer::class.qualifiedName}(\"$algorithm\", $size)"
+                    }
+                }
+                else -> error("Hash spec annotations are not repeatable, got ${hashSpecs.joinToString(separator = ", ") { "${it.first}(size = ${it.second})" }}")
+            }
         }
     )
 
@@ -378,17 +447,30 @@ internal object Processors {
             TypeSerializingObject.UserType(contextualizedOriginal) { self, outer ->
                 """
                 object $outer: ${SurrogateSerializer::class.qualifiedName}<${self.cleanTypeDeclaration}, ${surrogate.cleanTypeDeclaration}>(
-                    ${surrogate.cleanTypeDeclaration}.serializer(), { ${conversionProvider.type}.from(it) }
+                    ${surrogate.cleanTypeDeclaration}.serializer(), { ${conversionProvider.asString()}.from(it) }
                 )
                 """.trimIndent()
             }
         } ?: run {
             // If conversion provider is ABSENT
-            // => this class may be own class annotated with com.ing.zkflow.annotations.ZKP, to be checked.
-            // REMARK: we have only a reference to the current type of the parameter, not the actual class definition,
-            // thus we can't directly check on this contextualizedOriginal if ZKP annotation is present.
-            // As of now, any class different from above cases is considered to have been annotated with com.ing.zkflow.annotations.ZKP
-            // and thus be serializable. If this assumption is incorrect, a compilation error will be thrown by kotlinx.serialization.
+            // => this class may be own class annotated with com.ing.zkflow.annotations.ZKP, verify this.
+            val errorSerializerAbsentFor: (fqName: String) -> Nothing = {
+                error(
+                    """
+                    Class $it is not serializable;
+                    For own classes, annotate it with `${ZKP::class.qualifiedName}`,
+                    for 3rd-party classes, introduce an appropriate ${Surrogate::class.qualifiedName}")
+                    """.trimIndent()
+                )
+            }
+
+            with(contextualizedOriginal.rootType.bestEffortResolvedType) {
+                when (this) {
+                    is BestEffortResolvedType.AsIs -> errorSerializerAbsentFor(simpleName)
+                    is BestEffortResolvedType.FullyQualified -> findAnnotation<ZKP>() ?: errorSerializerAbsentFor("$fqName")
+                    is BestEffortResolvedType.FullyResolved -> findAnnotation<ZKP>() ?: errorSerializerAbsentFor("$fqName")
+                }
+            }
 
             TypeSerializingObject.UserType(contextualizedOriginal) { self, outer ->
                 "object $outer: ${WrappedKSerializer::class.qualifiedName}<${self.cleanTypeDeclaration}>(${self.cleanTypeDeclaration}.serializer())"

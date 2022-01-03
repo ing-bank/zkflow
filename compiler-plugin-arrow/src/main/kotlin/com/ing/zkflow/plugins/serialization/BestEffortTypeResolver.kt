@@ -1,11 +1,15 @@
 package com.ing.zkflow.plugins.serialization
 
+import com.ing.zkflow.SerdeIndex
 import com.ing.zkflow.SerdeLogger
 import org.jetbrains.kotlin.name.FqName
+import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtImportList
 import org.jetbrains.kotlin.psi.KtVisitor
 
-class TypeQuasiResolver(private val imports: KtImportList?) {
+class BestEffortTypeResolver(ktFile: KtFile) {
+    private val imports: KtImportList? = ktFile.importList
+
     init {
         imports?.accept(CollectWildcardImports, Unit)?.let { wildcardImports ->
             SerdeLogger.log(wildcardImports.joinToString(separator = "\n"))
@@ -15,8 +19,23 @@ class TypeQuasiResolver(private val imports: KtImportList?) {
         }
     }
 
-    fun resolve(simpleName: String): FqName? {
-        return imports?.accept(TypeResolverVisitor, simpleName)
+    fun resolve(simpleName: String): BestEffortResolvedType {
+        imports?.accept(TypeResolverVisitor, simpleName)?.let {
+            try {
+                // Try if the class has been imported from `compiled` imports.
+                val kclass = Class.forName(it.toString()).kotlin
+                BestEffortResolvedType.FullyResolved(kclass)
+            } catch (e: ClassNotFoundException) {
+                // Class has been imported from the userspace.
+                null
+            }
+        }?.let { return it }
+
+        SerdeIndex[simpleName]?.let {
+            return BestEffortResolvedType.FullyQualified(it.fqName, it.annotations)
+        }
+
+        return BestEffortResolvedType.AsIs(simpleName)
     }
 }
 

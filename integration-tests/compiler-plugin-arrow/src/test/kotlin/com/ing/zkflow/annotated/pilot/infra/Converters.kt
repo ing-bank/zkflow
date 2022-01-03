@@ -11,7 +11,6 @@ import net.corda.core.contracts.Amount
 // import com.ing.zkflow.annotated.pilot.r3.types.IssuedTokenType
 import net.corda.core.contracts.LinearPointer
 import net.corda.core.contracts.UniqueIdentifier
-import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.Party
@@ -71,16 +70,6 @@ object LinearPointerConverter_IvnoTokenType : ConversionProvider<
         > {
     override fun from(original: LinearPointer<IvnoTokenType>) =
         LinearPointerSurrogate_IvnoTokenType(original.pointer, original.type.canonicalName, original.isResolved)
-}
-
-object SecureHashConverter_SHA256 : ConversionProvider<SecureHash, SecureHashSHA256Surrogate> {
-    override fun from(original: SecureHash): SecureHashSHA256Surrogate {
-        require(original is SecureHash.SHA256) {
-            "${this::class.qualifiedName} expects a ${SecureHash.SHA256::class.qualifiedName} subtype of ${SecureHash::class.qualifiedName}"
-        }
-
-        return SecureHashSHA256Surrogate(original.bytes)
-    }
 }
 
 object AmountConverter_IssuedTokenType : ConversionProvider<

@@ -26,6 +26,8 @@ class ZKFlowPlugin : Plugin<Project> {
 
             // For arrow
             maven { it.url = URI.create("https://oss.sonatype.org/content/repositories/snapshots/") }
+            // For Arrow to enable bespoke treatment of the Corda classes.
+            maven { it.url = URI.create("https://software.r3.com/artifactory/corda") }
 
             // For BFL
             maven {
@@ -125,7 +127,8 @@ class ZKFlowPlugin : Plugin<Project> {
                     Pair(ZKFLOW_GROUP, "annotations"),
                     Pair(ZKFLOW_GROUP, "serialization-candidate"),
                     Pair("org.jetbrains.kotlinx", "kotlinx-serialization-core-jvm"),
-                    Pair("io.arrow-kt", "arrow-meta")
+                    Pair("io.arrow-kt", "arrow-meta"),
+                    Pair("net.corda", "corda-core")
                 )
 
                 val resolvedArtifacts = arrowCompilerPluginConfiguration.resolvedConfiguration.resolvedArtifacts
