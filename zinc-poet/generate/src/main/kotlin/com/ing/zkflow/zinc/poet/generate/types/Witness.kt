@@ -145,7 +145,7 @@ class Witness(
                 val fieldAssignments = transactionMetadata.commands.joinToString("\n") {
                     "${getCommandFieldName(it)}: ${getCommandFieldName(it)},"
                 }
-                name = "${COMMAND_GROUP}_from_$SIGNERS"
+                name = commandGroupFromSigners
                 parameter {
                     name = "signers"
                     type = zincArray {
@@ -172,7 +172,7 @@ class Witness(
                         $INPUTS: self.deserialize_$INPUTS(),
                         $OUTPUTS: self.$OUTPUTS.deserialize(),
                         $REFERENCES: self.deserialize_$REFERENCES(),
-                        $COMMANDS: ${COMMAND_GROUP}_from_$SIGNERS($SIGNERS),
+                        $COMMANDS: $commandGroupFromSigners($SIGNERS),
                         $ATTACHMENTS: self.deserialize_$ATTACHMENTS(),
                         $NOTARY: self.deserialize_$NOTARY()[0],
                         ${if (transactionMetadata.hasTimeWindow) "$TIME_WINDOW: self.deserialize_$TIME_WINDOW()," else "// $TIME_WINDOW not present"}
@@ -318,5 +318,7 @@ class Witness(
         internal const val REFERENCE_NONCES = "reference_nonces"
         internal const val SERIALIZED_INPUT_UTXOS = "serialized_input_utxos"
         internal const val SERIALIZED_REFERENCE_UTXOS = "serialized_reference_utxos"
+
+        internal val commandGroupFromSigners = "${COMMAND_GROUP.camelToSnakeCase()}_from_$SIGNERS"
     }
 }
