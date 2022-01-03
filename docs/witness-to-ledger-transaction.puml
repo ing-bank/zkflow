@@ -1,5 +1,5 @@
 @startuml
-!theme lightgray
+' !theme lightgray
 
 component Witness
 component SerializedOutputGroup
