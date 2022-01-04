@@ -1,6 +1,8 @@
-package com.ing.zkflow.serialization.serializer
+package com.ing.zkflow.serialization.serializer.corda
 
 import com.ing.zkflow.Surrogate
+import com.ing.zkflow.serialization.serializer.KSerializerWithDefault
+import com.ing.zkflow.serialization.serializer.NullableSerializer
 import com.ing.zkflow.serialization.serializer.string.FixedLengthUTF8StringSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.SerialDescriptor
@@ -8,16 +10,22 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import net.corda.core.identity.CordaX500Name
 
-class CordaX500NameSerializer : KSerializerWithDefault<CordaX500Name> {
+object CordaX500NameSerializer : KSerializerWithDefault<CordaX500Name> {
     @Suppress("ArrayInDataClass", "ClassName")
     @Serializable
     private data class CordaX500NameSurrogate(
-        val commonName: @Serializable(with = CommonNameSerializer_0::class) String?,
-        val organisationUnit: @Serializable(with = OrganisationUnitSerializer_0::class) String?,
-        val organisation: @Serializable(with = OrganisationSerializer_0::class) String,
-        val locality: @Serializable(with = LocalitySerializer_0::class) String,
-        val state: @Serializable(with = StateSerializer_0::class) String?,
-        val country: @Serializable(with = CountrySerializer_0::class) String
+        @Serializable(with = CommonNameSerializer_0::class)
+        val commonName: String?,
+        @Serializable(with = OrganisationUnitSerializer_0::class)
+        val organisationUnit: String?,
+        @Serializable(with = OrganisationSerializer_0::class)
+        val organisation: String,
+        @Serializable(with = LocalitySerializer_0::class)
+        val locality: String,
+        @Serializable(with = StateSerializer_0::class)
+        val state: String?,
+        @Serializable(with = CountrySerializer_0::class)
+        val country: String
     ) : Surrogate<CordaX500Name> {
 
         object CommonNameSerializer_0 : NullableSerializer<String>(CommonNameSerializer_1)
@@ -43,7 +51,9 @@ class CordaX500NameSerializer : KSerializerWithDefault<CordaX500Name> {
         }
     }
 
-    override val default = CordaX500Name(null, null, "", "", null, "")
+    // `organization` value must contain at least two characters.
+    // `country` value must be a valid country code.
+    override val default = CordaX500Name(null, null, "XX", "", null, "NL")
 
     private val strategy = CordaX500NameSurrogate.serializer()
     override val descriptor: SerialDescriptor = strategy.descriptor
