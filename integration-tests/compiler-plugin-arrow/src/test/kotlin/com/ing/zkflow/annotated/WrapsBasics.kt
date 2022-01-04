@@ -1,9 +1,9 @@
 package com.ing.zkflow.annotated
 
-import com.ing.zkflow.ASCIIChar
-import com.ing.zkflow.UTF8
-import com.ing.zkflow.UTF8Char
-import com.ing.zkflow.ZKP
+import com.ing.zkflow.annotations.ASCIIChar
+import com.ing.zkflow.annotations.UTF8
+import com.ing.zkflow.annotations.UTF8Char
+import com.ing.zkflow.annotations.ZKP
 
 @ZKP
 data class WrapsBasics(

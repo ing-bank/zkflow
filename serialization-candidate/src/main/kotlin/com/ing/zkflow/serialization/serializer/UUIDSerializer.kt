@@ -10,12 +10,12 @@ object UUIDSerializer : KSerializerWithDefault<UUID> {
     override val default: UUID = UUID(0, 0)
 
     @Serializable
-    data class Surrogate(
+    private data class Surrogate(
         val mostSignificantBits: @Serializable(with = LongSerializer::class) Long,
         val leastSignificantBits: @Serializable(with = LongSerializer::class) Long
     )
 
-    val strategy = Surrogate.serializer()
+    private val strategy = Surrogate.serializer()
     override val descriptor: SerialDescriptor = strategy.descriptor
 
     override fun serialize(encoder: Encoder, value: UUID) {

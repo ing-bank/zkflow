@@ -2,8 +2,8 @@ package com.ing.zkflow.annotated
 
 import com.ing.zkflow.Default
 import com.ing.zkflow.DefaultProvider
-import com.ing.zkflow.Size
-import com.ing.zkflow.ZKP
+import com.ing.zkflow.annotations.Size
+import com.ing.zkflow.annotations.ZKP
 
 @ZKP
 data class WrapsOwnNullable(

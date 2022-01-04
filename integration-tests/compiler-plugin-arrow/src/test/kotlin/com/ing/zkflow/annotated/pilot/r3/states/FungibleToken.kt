@@ -1,13 +1,13 @@
 package com.ing.zkflow.annotated.pilot.r3.states
 
 import com.ing.zkflow.Converter
-import com.ing.zkflow.Sha256
-import com.ing.zkflow.ZKP
 import com.ing.zkflow.annotated.pilot.infra.AmountConverter_IssuedTokenType
 import com.ing.zkflow.annotated.pilot.infra.AmountSurrogate_IssuedTokenType
 import com.ing.zkflow.annotated.pilot.infra.EdDSAAbstractParty
 import com.ing.zkflow.annotated.pilot.infra.EdDSAAbstractPartyConverter
 import com.ing.zkflow.annotated.pilot.r3.types.IssuedTokenType
+import com.ing.zkflow.annotations.ZKP
+import com.ing.zkflow.annotations.corda.Sha256
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.FungibleState
 import net.corda.core.crypto.SecureHash

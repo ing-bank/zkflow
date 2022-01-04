@@ -53,7 +53,7 @@ data class CBDCToken(
         TokenTypeJarHash_1
     )
 
-    object TokenTypeJarHash_1 : com.ing.zkflow.serialization.serializer.SecureHashSerializer("Sha256", 32)
+    object TokenTypeJarHash_1 : com.ing.zkflow.serialization.serializer.corda.SecureHashSerializer("Sha256", 32)
 
     object IssueDate_0 : com.ing.zkflow.serialization.serializer.WrappedKSerializer<Instant>(com.ing.zkflow.serialization.serializer.InstantSerializer)
 

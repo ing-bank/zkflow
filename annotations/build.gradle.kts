@@ -3,6 +3,11 @@ plugins {
     id("maven-publish")
 }
 
+dependencies {
+    val cordaVersion: String by project
+    implementation("net.corda:corda-core:$cordaVersion")
+}
+
 publishing {
     publications {
         create<MavenPublication>("zkAnnotations") {

@@ -1,9 +1,9 @@
 package com.ing.zkflow.annotated.pilot.r3.types
 
 import com.ing.zkflow.Converter
-import com.ing.zkflow.ZKP
 import com.ing.zkflow.annotated.pilot.infra.EdDSAParty
 import com.ing.zkflow.annotated.pilot.infra.EdDSAPartyConverter
+import com.ing.zkflow.annotations.ZKP
 import net.corda.core.identity.Party
 
 // Open classes may be extended provided no values are overridden.

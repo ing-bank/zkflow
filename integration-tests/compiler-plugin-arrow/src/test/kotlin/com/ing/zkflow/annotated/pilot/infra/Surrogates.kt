@@ -2,17 +2,17 @@
 
 package com.ing.zkflow.annotated.pilot.infra
 
-import com.ing.zkflow.ASCII
-import com.ing.zkflow.BigDecimalSize
 import com.ing.zkflow.Converter
 import com.ing.zkflow.Default
-import com.ing.zkflow.Size
 import com.ing.zkflow.Surrogate
-import com.ing.zkflow.ZKP
 import com.ing.zkflow.annotated.pilot.ivno.IvnoTokenType
 import com.ing.zkflow.annotated.pilot.ivno.deps.BigDecimalAmount
 import com.ing.zkflow.annotated.pilot.ivno.deps.Network
 import com.ing.zkflow.annotated.pilot.r3.types.IssuedTokenType
+import com.ing.zkflow.annotations.ASCII
+import com.ing.zkflow.annotations.BigDecimalSize
+import com.ing.zkflow.annotations.Size
+import com.ing.zkflow.annotations.ZKP
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.LinearPointer
 import net.corda.core.contracts.UniqueIdentifier

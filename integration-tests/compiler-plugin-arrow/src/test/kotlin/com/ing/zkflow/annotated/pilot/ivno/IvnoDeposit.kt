@@ -1,8 +1,6 @@
 package com.ing.zkflow.annotated.pilot.ivno
 
-import com.ing.zkflow.ASCII
 import com.ing.zkflow.Converter
-import com.ing.zkflow.ZKP
 import com.ing.zkflow.annotated.pilot.infra.BigDecimalAmountConverter_LinearPointer_IvnoTokenType
 import com.ing.zkflow.annotated.pilot.infra.BigDecimalAmountSurrogate_LinearPointer_IvnoTokenType
 import com.ing.zkflow.annotated.pilot.infra.EdDSAParty
@@ -13,6 +11,8 @@ import com.ing.zkflow.annotated.pilot.infra.UniqueIdentifierConverter
 import com.ing.zkflow.annotated.pilot.infra.UniqueIdentifierSurrogate
 import com.ing.zkflow.annotated.pilot.ivno.deps.BigDecimalAmount
 import com.ing.zkflow.annotated.pilot.ivno.deps.Network
+import com.ing.zkflow.annotations.ASCII
+import com.ing.zkflow.annotations.ZKP
 import net.corda.core.contracts.LinearPointer
 import net.corda.core.contracts.LinearState
 import net.corda.core.contracts.UniqueIdentifier

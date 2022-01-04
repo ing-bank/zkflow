@@ -1,6 +1,6 @@
 package com.ing.zkflow.serialization.serializer
 
-import com.ing.zkflow.Sha256
+import com.ing.zkflow.annotations.corda.Sha256
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder

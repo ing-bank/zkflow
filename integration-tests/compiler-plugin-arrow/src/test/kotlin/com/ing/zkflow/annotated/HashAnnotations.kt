@@ -1,8 +1,8 @@
 package com.ing.zkflow.annotated
 
-import com.ing.zkflow.HashSize
-import com.ing.zkflow.Sha256
-import com.ing.zkflow.ZKP
+import com.ing.zkflow.annotations.ZKP
+import com.ing.zkflow.annotations.corda.HashSize
+import com.ing.zkflow.annotations.corda.Sha256
 import net.corda.core.crypto.SecureHash
 
 @ZKP

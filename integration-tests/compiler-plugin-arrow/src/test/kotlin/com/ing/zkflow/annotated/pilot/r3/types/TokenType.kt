@@ -1,7 +1,7 @@
 package com.ing.zkflow.annotated.pilot.r3.types
 
-import com.ing.zkflow.ASCII
-import com.ing.zkflow.ZKP
+import com.ing.zkflow.annotations.ASCII
+import com.ing.zkflow.annotations.ZKP
 import net.corda.core.contracts.TokenizableAssetInfo
 import java.math.BigDecimal
 

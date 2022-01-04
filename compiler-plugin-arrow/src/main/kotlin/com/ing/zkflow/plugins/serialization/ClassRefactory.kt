@@ -5,7 +5,7 @@ import arrow.meta.quotes.Scope
 import arrow.meta.quotes.classorobject.ClassDeclaration
 import arrow.meta.quotes.scope
 import com.ing.zkflow.SerdeLogger
-import com.ing.zkflow.ZKP
+import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.plugins.serialization.serializingobject.SerializingObject
 import kotlinx.serialization.Serializable
 import org.jetbrains.kotlin.lexer.KtTokens
