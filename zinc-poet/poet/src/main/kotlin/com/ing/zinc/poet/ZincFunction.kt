@@ -14,6 +14,7 @@ interface ZincFunction : ZincFileItem {
      */
     fun getComment(): ZincComment?
 
+    @ZincDslMarker
     class Builder {
         var name: String? = null
         private val parameters: MutableList<ZincParameter> = mutableListOf()

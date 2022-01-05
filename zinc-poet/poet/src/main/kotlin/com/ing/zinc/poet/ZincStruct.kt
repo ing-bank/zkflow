@@ -8,6 +8,7 @@ interface ZincStruct : ZincType, ZincFileItem {
     fun getName(): String
     fun getFields(): List<ZincField>
 
+    @ZincDslMarker
     class Builder {
         var name: String? = null
         private val fields: MutableList<ZincField> = mutableListOf()

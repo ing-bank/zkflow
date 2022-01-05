@@ -5,6 +5,7 @@ interface ZincFile {
     // TODO generating a plain string is not the fastest method, maybe use [PrintWriter]?
     fun generate(): String
 
+    @ZincDslMarker
     @Suppress("TooManyFunctions")
     class Builder {
         private val fileItems: MutableList<ZincFileItem> = mutableListOf()

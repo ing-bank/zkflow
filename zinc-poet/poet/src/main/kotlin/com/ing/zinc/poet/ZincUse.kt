@@ -3,6 +3,7 @@ package com.ing.zinc.poet
 interface ZincUse : ZincFileItem {
     fun getPath(): String
 
+    @ZincDslMarker
     class Builder {
         var path: String? = null
 

@@ -9,6 +9,7 @@ interface ZincMethod : ZincFunction {
      */
     fun isMutable(): Boolean
 
+    @ZincDslMarker
     class Builder {
         var name: String? = null
         private val parameters: MutableList<ZincParameter> = mutableListOf()

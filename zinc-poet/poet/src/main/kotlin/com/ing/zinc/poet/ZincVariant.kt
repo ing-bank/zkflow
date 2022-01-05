@@ -4,6 +4,7 @@ interface ZincVariant {
     fun getName(): String
     fun getOrdinal(): Int
 
+    @ZincDslMarker
     class Builder {
         var name: String? = null
         var ordinal: Int? = null

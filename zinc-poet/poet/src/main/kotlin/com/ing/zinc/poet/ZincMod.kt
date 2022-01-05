@@ -3,6 +3,7 @@ package com.ing.zinc.poet
 interface ZincMod : ZincFileItem {
     fun getModule(): String
 
+    @ZincDslMarker
     class Builder {
         var module: String? = null
 

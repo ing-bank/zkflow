@@ -44,3 +44,10 @@ data class Indentation(
 fun String.indent(indentation: Indentation): String {
     return replace("\n", "\n${"".padStart(indentation.spaces)}")
 }
+
+/**
+ * This marker provides scope control for the DSL.
+ * For more information see: https://kotlinlang.org/docs/type-safe-builders.html#scope-control-dslmarker
+ */
+@DslMarker
+annotation class ZincDslMarker
