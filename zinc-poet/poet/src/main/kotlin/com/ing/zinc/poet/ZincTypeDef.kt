@@ -4,6 +4,7 @@ interface ZincTypeDef : ZincType, ZincFileItem {
     fun getName(): String
     fun getType(): ZincType
 
+    @ZincDslMarker
     class Builder {
         var name: String? = null
         var type: ZincType? = null

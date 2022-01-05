@@ -6,6 +6,7 @@ interface ZincImpl : ZincFileItem {
     fun getName(): String
     fun getMethods(): List<ZincFunction>
 
+    @ZincDslMarker
     class Builder {
         var name: String? = null
         private val methods: MutableList<ZincFunction> = mutableListOf()

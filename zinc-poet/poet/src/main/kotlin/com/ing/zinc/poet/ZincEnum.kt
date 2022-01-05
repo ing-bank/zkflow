@@ -6,6 +6,7 @@ interface ZincEnum : ZincType, ZincFileItem {
     fun getName(): String
     fun getVariants(): List<ZincVariant>
 
+    @ZincDslMarker
     class Builder {
         var name: String? = null
         private val variants: MutableList<ZincVariant> = mutableListOf()

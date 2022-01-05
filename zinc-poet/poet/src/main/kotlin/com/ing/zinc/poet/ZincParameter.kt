@@ -5,6 +5,7 @@ interface ZincParameter {
     fun getType(): ZincType
     fun isMutable(): Boolean
 
+    @ZincDslMarker
     class Builder {
         var name: String? = null
         var type: ZincType? = null

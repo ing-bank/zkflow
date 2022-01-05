@@ -9,6 +9,7 @@ interface ZincConstant : ZincFileItem {
     fun getInitialization(): String
     fun getComment(): ZincComment?
 
+    @ZincDslMarker
     class Builder {
         var name: String? = null
         var type: ZincType? = null

@@ -4,6 +4,7 @@ interface ZincArray : ZincType {
     fun getElementType(): ZincType
     fun getSize(): String
 
+    @ZincDslMarker
     class Builder {
         var elementType: ZincType? = null
         var size: String? = null

@@ -4,6 +4,7 @@ import com.ing.zinc.bfl.BflStructField
 import com.ing.zinc.bfl.BflType
 import com.ing.zinc.bfl.Field
 
+@BflDslMarker
 class FieldBuilder {
     var name: String? = null
     var type: BflType? = null

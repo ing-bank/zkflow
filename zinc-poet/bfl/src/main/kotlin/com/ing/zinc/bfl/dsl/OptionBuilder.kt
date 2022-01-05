@@ -3,6 +3,7 @@ package com.ing.zinc.bfl.dsl
 import com.ing.zinc.bfl.BflOption
 import com.ing.zinc.bfl.BflType
 
+@BflDslMarker
 class OptionBuilder {
     var innerType: BflType? = null
 
