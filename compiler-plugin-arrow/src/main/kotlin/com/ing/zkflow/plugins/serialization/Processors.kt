@@ -364,9 +364,129 @@ internal object Processors {
                         emptyList()
                     ) { _, outer, _ ->
                         "object $outer: ${SecureHashSerializer::class.qualifiedName}(\"$algorithm\", $size)"
+                    }.also {
+                        SerdeLogger.log("Type ${contextualOriginal.ktTypeReference.text} processed successfully")
                     }
                 }
-                else -> error("Hash spec annotations are not repeatable, got ${hashSpecs.joinToString(separator = ", ") { "${it.first}(size = ${it.second})" }}")
+                else -> error("Hash spec annotations are not repeatable, got [${metaAnnotations.joinToString(separator = ", ") { it.root }}] (size = ${metaAnnotations.size})")
+            }
+        },
+
+        /**
+         * Ban the usage of [AbstractParty].
+         */
+        // AbstractParty::class.qualifiedName!! to ToSerializingObject { _, _ ->
+        //     error(
+        //         """
+        //         Usage of ${AbstractParty::class.qualifiedName} is not permitted.
+        //         Select either ${AnonymousParty::class.qualifiedName} or ${Party::class.qualifiedName}
+        //         """.trimIndent()
+        //     )
+        // }
+
+        /**
+         * To serialize [AnonymousParty], a single annotation annotated with [SignatureSpec] must be present.
+         * Otherwise, recurse to [forUserType].
+         */
+        AnonymousParty::class.qualifiedName!! to ToSerializingObject { contextualOriginal, _ ->
+            val metaAnnotations = contextualOriginal.findMetaAnnotation<SignatureSpec>()
+            when (metaAnnotations.size) {
+                0 -> {
+                    // AnonymousParty has no signature specific annotations, recurse to treating it as a generic user type.
+                    SerdeLogger.log("Re-cursing to default treatment of ${contextualOriginal.ktTypeReference.text}")
+                    forUserType(contextualOriginal)
+                }
+                1 -> {
+                    val cordaSignatureId = when (val meta = metaAnnotations.single()) {
+                        is BestEffortResolvedAnnotation.Instruction -> error(
+                            """
+                            User defined signature schemes are prohibited.
+                            Scheme ${meta.root} has no corresponding Corda signature scheme.
+                            """.trimIndent()
+                        )
+                        is BestEffortResolvedAnnotation.Compiled<*> -> (meta.annotation as SignatureSpec).cordaSignatureId
+                    }
+
+                    TypeSerializingObject.ExplicitType(
+                        contextualOriginal,
+                        AnonymousPartySerializer::class,
+                        emptyList()
+                    ) { _, outer, _ ->
+                        "object $outer: ${AnonymousPartySerializer::class.qualifiedName}($cordaSignatureId)"
+                    }.also {
+                        SerdeLogger.log("Type ${contextualOriginal.ktTypeReference.text} processed successfully")
+                    }
+                }
+                else -> error("Signature spec annotations are not repeatable, got [${metaAnnotations.joinToString(separator = ", ") { it.root }}] (size = ${metaAnnotations.size})")
+            }
+        },
+
+        /**
+         * To serialize [Party], several annotations may be present:
+         * - a single annotation annotated with [SignatureSpec]
+         * - zero or one annotation annotated with [CordaX500NameSpec]
+         * Otherwise, recurse to [forUserType].
+         */
+        Party::class.qualifiedName!! to ToSerializingObject { contextualOriginal, _ ->
+            // Look for signature specification:
+            val metaSignatureAnnotations = contextualOriginal.findMetaAnnotation<SignatureSpec>()
+
+            val cordaSignatureId = when (metaSignatureAnnotations.size) {
+                0 -> {
+                    // AnonymousParty has no signature specific annotations, recurse to treating it as a generic user type.
+                    SerdeLogger.log("Re-cursing to default treatment of ${contextualOriginal.ktTypeReference.text}")
+                    return@ToSerializingObject forUserType(contextualOriginal)
+                }
+                1 -> when (val meta = metaSignatureAnnotations.single()) {
+                    is BestEffortResolvedAnnotation.Instruction -> error(
+                        """
+                        User defined signature schemes are prohibited.
+                        Scheme ${meta.root} has no corresponding Corda signature scheme.
+                        """.trimIndent()
+                    )
+                    is BestEffortResolvedAnnotation.Compiled<*> -> (meta.annotation as SignatureSpec).cordaSignatureId
+                }
+                else -> error("Signature spec annotations are not repeatable, got [${metaSignatureAnnotations.joinToString(separator = ", ") { it.root }}] (size = ${metaSignatureAnnotations.size})")
+            }
+
+            // Look for CordaX500Name specification:
+            val nameSpecAnnotations = contextualOriginal.findAnnotation<CordaX500NameSpec<*>>()
+
+            val inner: (Tracker) -> String = if (nameSpecAnnotations == null) {
+                //
+                // if none, use the default CordaX500NameSerializer
+                { tracker -> "object $tracker: ${WrappedKSerializerWithDefault::class.qualifiedName}<${CordaX500Name::class.qualifiedName}>(${CordaX500NameSerializer::class.qualifiedName})" }
+            } else {
+                //
+                // if single, parse its arguments and create a chain of serializing objects.
+                val surrogate = ContextualizedKtTypeReference(
+                    nameSpecAnnotations.typeArguments.firstOrNull()?.typeReference
+                        ?: error("Cannot resolve surrogate type for $nameSpecAnnotations; expected as the second type argument"),
+                    contextualOriginal.typeResolver
+                )
+                val conversionProvider = surrogate.resolveClass(nameSpecAnnotations.valueArguments.single() as KtValueArgument);
+
+                { tracker: Tracker ->
+                    """
+                    object $tracker : ${SerializerWithDefault::class.qualifiedName}<${CordaX500Name::class.qualifiedName}>(${tracker.next()}, ${CordaX500NameSerializer::class.qualifiedName}.default)
+                    object ${tracker.next()} : ${SurrogateSerializer::class.qualifiedName}<${CordaX500Name::class.qualifiedName}, CordaX500NameSurrogate>(
+                        ${surrogate.cleanTypeDeclaration}.serializer(), { ${conversionProvider.asString()}.from(it) }
+                    )
+                    """.trimIndent()
+                }
+            }
+
+            TypeSerializingObject.ExplicitType(
+                contextualOriginal,
+                PartySerializer::class,
+                emptyList()
+            ) { _, outer, _ ->
+                """
+                object $outer: ${PartySerializer::class.qualifiedName}($cordaSignatureId, ${outer.next()})
+                ${inner(outer.next())} 
+                """.trimIndent()
+            }.also {
+                SerdeLogger.log("Type ${contextualOriginal.ktTypeReference.text} processed successfully")
             }
         }
     )

@@ -13,6 +13,7 @@ import net.corda.core.contracts.LinearPointer
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.AnonymousParty
+import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
 
 object AnonymousPartyConverter_EdDSA : ConversionProvider<AnonymousParty, AnonymousPartySurrogate_EdDSA> {
@@ -91,4 +92,9 @@ object EdDSAAbstractPartyConverter : ConversionProvider<AbstractParty, EdDSAAbst
             original.owningKey.encoded
         )
     }
+}
+
+object CordaX500NameConverter : ConversionProvider<CordaX500Name, CordaX500NameSurrogate> {
+    override fun from(original: CordaX500Name): CordaX500NameSurrogate =
+        CordaX500NameSurrogate("$original")
 }

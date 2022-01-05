@@ -16,6 +16,7 @@ import com.ing.zkflow.annotations.ZKP
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.LinearPointer
 import net.corda.core.contracts.UniqueIdentifier
+import net.corda.core.crypto.Crypto
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.CordaX500Name
@@ -28,12 +29,10 @@ import java.util.UUID
 @ZKP
 @Suppress("ArrayInDataClass")
 data class AnonymousPartySurrogate_EdDSA(
-    val encodedEdDSA: @Size(32) ByteArray
+    val encodedEdDSA: @Size(44) ByteArray
 ) : Surrogate<AnonymousParty> {
     override fun toOriginal() = AnonymousParty(
-        KeyFactory
-            .getInstance("EdDSA")
-            .generatePublic(X509EncodedKeySpec(encodedEdDSA))
+        Crypto.decodePublicKey(Crypto.EDDSA_ED25519_SHA512, encodedEdDSA)
     )
 }
 
@@ -45,9 +44,7 @@ data class EdDSAParty(
 ) : Surrogate<Party> {
     override fun toOriginal() = Party(
         CordaX500Name.parse(cordaX500Name),
-        KeyFactory
-            .getInstance("EdDSA")
-            .generatePublic(X509EncodedKeySpec(encodedEdDSA))
+        Crypto.decodePublicKey(Crypto.EDDSA_ED25519_SHA512, encodedEdDSA)
     )
 }
 
@@ -114,4 +111,13 @@ data class EdDSAAbstractParty(
             ?.let { Party(CordaX500Name.parse(cordaX500Name), key) }
             ?: AnonymousParty(key)
     }
+}
+
+@ZKP
+@Suppress("ClassName")
+data class CordaX500NameSurrogate(
+    val concat: @ASCII(20) String
+) : Surrogate<CordaX500Name> {
+    override fun toOriginal(): CordaX500Name =
+        CordaX500Name.parse(concat)
 }
