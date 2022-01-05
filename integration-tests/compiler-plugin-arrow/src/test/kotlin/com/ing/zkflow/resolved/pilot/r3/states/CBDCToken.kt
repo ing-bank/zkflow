@@ -4,8 +4,8 @@ package com.ing.zkflow.resolved.pilot.r3.states
 
 import com.ing.zkflow.annotated.pilot.infra.AmountConverter_IssuedTokenType
 import com.ing.zkflow.annotated.pilot.infra.AmountSurrogate_IssuedTokenType
-import com.ing.zkflow.annotated.pilot.infra.EdDSAAbstractParty
-import com.ing.zkflow.annotated.pilot.infra.EdDSAAbstractPartyConverter
+import com.ing.zkflow.annotated.pilot.infra.EdDSAParty
+import com.ing.zkflow.annotated.pilot.infra.EdDSAPartyConverter
 import com.ing.zkflow.annotated.pilot.infra.fixedCordaX500Name
 import com.ing.zkflow.annotated.pilot.r3.states.AbstractFungibleToken
 import com.ing.zkflow.annotated.pilot.r3.types.IssuedTokenType
@@ -19,7 +19,6 @@ import kotlinx.serialization.Serializable
 import net.corda.core.contracts.Amount
 import net.corda.core.crypto.Crypto
 import net.corda.core.crypto.SecureHash
-import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -29,13 +28,13 @@ import java.time.Instant
 @Serializable
 data class CBDCToken(
     @Serializable(with = Amount_0::class) override val amount: @Contextual Amount<@Contextual IssuedTokenType>,
-    @Serializable(with = Holder_0::class) override val holder: @Contextual AbstractParty,
+    @Serializable(with = Holder_0::class) override val holder: @Contextual Party,
     @Serializable(with = TokenTypeJarHash_0::class) override val tokenTypeJarHash: @Contextual SecureHash? = SecureHash.zeroHash,
     @Serializable(with = IssueDate_0::class) val issueDate: @Contextual Instant = Instant.now(),
     @Serializable(with = LastInterestAccrualDate_0::class) val lastInterestAccrualDate: @Contextual Instant = issueDate,
     @Serializable(with = UsageCount_0::class) val usageCount: @Contextual Int = 0
 ) : AbstractFungibleToken() { // , ReissuableState<CBDCToken>
-    override fun withNewHolder(newHolder: AbstractParty): AbstractFungibleToken {
+    override fun withNewHolder(newHolder: Party): AbstractFungibleToken {
         return CBDCToken(amount, newHolder, tokenTypeJarHash = tokenTypeJarHash)
     }
 
@@ -44,9 +43,9 @@ data class CBDCToken(
         { AmountConverter_IssuedTokenType.from(it) }
     )
 
-    object Holder_0 : com.ing.zkflow.serialization.serializer.SurrogateSerializer<AbstractParty, EdDSAAbstractParty>(
-        EdDSAAbstractParty.serializer(),
-        { EdDSAAbstractPartyConverter.from(it) }
+    object Holder_0 : com.ing.zkflow.serialization.serializer.SurrogateSerializer<Party, EdDSAParty>(
+        EdDSAParty.serializer(),
+        { EdDSAPartyConverter.from(it) }
     )
 
     object TokenTypeJarHash_0 : com.ing.zkflow.serialization.serializer.NullableSerializer<SecureHash>(

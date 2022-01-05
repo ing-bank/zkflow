@@ -17,13 +17,10 @@ import net.corda.core.contracts.Amount
 import net.corda.core.contracts.LinearPointer
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.crypto.Crypto
-import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
 import java.math.BigDecimal
-import java.security.KeyFactory
-import java.security.spec.X509EncodedKeySpec
 import java.util.UUID
 
 @ZKP
@@ -94,23 +91,6 @@ data class AmountSurrogate_IssuedTokenType(
     val token: IssuedTokenType
 ) : Surrogate<Amount<IssuedTokenType>> {
     override fun toOriginal(): Amount<IssuedTokenType> = Amount(quantity, displayTokenSize, token)
-}
-
-@ZKP
-@Suppress("ArrayInDataClass")
-data class EdDSAAbstractParty(
-    val cordaX500Name: @ASCII(50) String?,
-    val encodedEdDSA: @Size(44) ByteArray
-) : Surrogate<AbstractParty> {
-    override fun toOriginal(): AbstractParty {
-        val key = KeyFactory
-            .getInstance("EdDSA")
-            .generatePublic(X509EncodedKeySpec(encodedEdDSA))
-
-        return cordaX500Name
-            ?.let { Party(CordaX500Name.parse(cordaX500Name), key) }
-            ?: AnonymousParty(key)
-    }
 }
 
 @ZKP

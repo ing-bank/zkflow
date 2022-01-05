@@ -375,14 +375,14 @@ internal object Processors {
         /**
          * Ban the usage of [AbstractParty].
          */
-        // AbstractParty::class.qualifiedName!! to ToSerializingObject { _, _ ->
-        //     error(
-        //         """
-        //         Usage of ${AbstractParty::class.qualifiedName} is not permitted.
-        //         Select either ${AnonymousParty::class.qualifiedName} or ${Party::class.qualifiedName}
-        //         """.trimIndent()
-        //     )
-        // }
+        AbstractParty::class.qualifiedName!! to ToSerializingObject { _, _ ->
+            error(
+                """
+                Usage of ${AbstractParty::class.qualifiedName} is not permitted.
+                Select either ${AnonymousParty::class.qualifiedName} or ${Party::class.qualifiedName}
+                """.trimIndent()
+            )
+        },
 
         /**
          * To serialize [AnonymousParty], a single annotation annotated with [SignatureSpec] must be present.
