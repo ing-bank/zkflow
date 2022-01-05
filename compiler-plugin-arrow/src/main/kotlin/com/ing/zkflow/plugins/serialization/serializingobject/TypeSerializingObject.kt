@@ -18,8 +18,8 @@ sealed class TypeSerializingObject(private val contextualizedOriginal: Contextua
     override fun wrapDefault(): SerializingObject {
         // Inspect annotations to find either @com.ing.zkflow.Default or @com.ing.zkflow.Resolver
         val defaultProvider = with(contextualizedOriginal) {
-            annotationSingleArgOrNull<Default<*>>()
-                ?: annotationOrNull<Resolver<*, *>>()?.let {
+            annotationSingleArgument<Default<*>>()
+                ?: findAnnotation<Resolver<*, *>>()?.let {
                     it.valueArguments.getOrNull(0)?.asElement()?.text
                 }
                 ?: error("Element ${ktTypeReference.text} requires either a ${Default::class} or ${Resolver::class} annotation")

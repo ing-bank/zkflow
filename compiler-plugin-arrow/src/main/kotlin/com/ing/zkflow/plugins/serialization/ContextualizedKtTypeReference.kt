@@ -1,5 +1,6 @@
 package com.ing.zkflow.plugins.serialization
 
+import com.ing.zkflow.SerdeLogger
 import org.jetbrains.kotlin.psi.KtAnnotationEntry
 import org.jetbrains.kotlin.psi.KtElement
 import org.jetbrains.kotlin.psi.KtTypeElement
@@ -50,9 +51,12 @@ class ContextualizedKtTypeReference(
      * Resolve a [KtElement] within the context of this [ktTypeReference].
      */
     fun resolveClass(argument: KtElement): BestEffortResolvedType = with(argument.text) {
+        SerdeLogger.log("Resolving $this")
         val simpleName = trim().replace("::class", "").trimStart('@').trim()
 
-        typeResolver.resolve(simpleName)
+        typeResolver.resolve(simpleName).also {
+            SerdeLogger.log("Resolved to $it")
+        }
     }
 
     /**
@@ -111,7 +115,9 @@ class ContextualizedKtTypeReference(
         }$nullability"
     }
 
-    inline fun <reified T> annotationSingleArgOrNull(): String? = ktTypeReference.annotationSingleArgOrNull<T>()
+    inline fun <reified T> annotationSingleArgument(): String? = ktTypeReference.annotationSingleArgument<T>()
+
+    inline fun <reified T> findAnnotation(): KtAnnotationEntry? = ktTypeReference.findAnnotation<T>()
 
     inline fun <reified T> annotationOrNull(): KtAnnotationEntry? = ktTypeReference.annotationOrNull<T>()
 }
