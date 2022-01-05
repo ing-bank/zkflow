@@ -5,7 +5,11 @@ import com.ing.zinc.bfl.BflPrimitive
 import com.ing.zinc.bfl.dsl.StructBuilder.Companion.struct
 import com.ing.zinc.naming.camelToSnakeCase
 import com.ing.zkflow.util.runCommand
-import com.ing.zkflow.zinc.poet.generate.types.CommandGroupFactory.COMMAND
+import com.ing.zkflow.zinc.poet.generate.types.CommandGroupFactory
+import com.ing.zkflow.zinc.poet.generate.types.CommandGroupFactory.Companion.COMMAND
+import com.ing.zkflow.zinc.poet.generate.types.LedgerTransactionFactory
+import com.ing.zkflow.zinc.poet.generate.types.StandardTypes
+import com.ing.zkflow.zinc.poet.generate.types.StateAndRefsGroupFactory
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import org.junit.jupiter.api.Tag
@@ -32,11 +36,21 @@ internal class CircuitGeneratorTest {
         }
     }
 
+    private val standardTypes = StandardTypes(zincTypeResolver)
+
+    private val commandGroupFactory = CommandGroupFactory(standardTypes)
+
     @ExperimentalTime
     @Test
     @Tag("slow")
     fun `generateCircuitFor should generate a working circuit`(@TempDir tempDir: Path) {
-        val circuitGenerator = CircuitGenerator(zincTypeResolver, BuildPathProvider.withPath(tempDir))
+        val circuitGenerator = CircuitGenerator(
+            BuildPathProvider.withPath(tempDir),
+            LedgerTransactionFactory(commandGroupFactory, standardTypes),
+            StandardTypes(zincTypeResolver),
+            StateAndRefsGroupFactory(standardTypes),
+            zincTypeResolver,
+        )
 
         logExecutionTime("Generating the circuit") {
             circuitGenerator.generateCircuitFor(MyContract.MyFirstCommand())

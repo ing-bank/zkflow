@@ -86,10 +86,6 @@ data class SerializedStateGroup(
             "$CORDA_MAGIC_BITS_SIZE_CONSTANT + ${stateType.getLengthConstant()}"
         }
 
-    private fun stateTypeFieldName(stateType: BflModule) = stateType.typeName()
-        .removeSuffix("TransactionState")
-        .camelToSnakeCase()
-
     override fun generateMethods(codeGenerationOptions: CodeGenerationOptions): List<ZincFunction> {
         return listOf(
             generateDeserializeMethod(),
@@ -103,8 +99,9 @@ data class SerializedStateGroup(
         returnType = deserializedStruct.toZincId()
         val fieldDeserializations = transactionStateLists.joinToString("\n") {
             val bflList = it.type as BflList
-            val stateTypeId = bflList.elementType.id
-            val deserializeMethodName = "deserialize_from_${groupName}_${stateTypeId.camelToSnakeCase()}"
+            val stateType = bflList.elementType
+            val stateTypeId = stateType.id
+            val deserializeMethodName = "deserialize_from_${groupName}_${stateTypeFieldName(stateType as BflModule)}"
             val array = "${it.name}_array"
             val i = "${it.name}_i"
             """

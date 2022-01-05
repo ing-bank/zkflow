@@ -21,9 +21,10 @@ open class BflStruct(
     fields: List<BflStructField>,
     private val functions: List<ZincFunction>,
     private val isDeserializable: Boolean,
+    private val additionalImports: List<BflModule>
 ) : BflModule {
-    constructor(id: String, fields: List<BflStructField>) : this(id, fields, emptyList(), true)
-    constructor(id: String, fields: List<BflStructField>, isDeserializable: Boolean) : this(id, fields, emptyList(), isDeserializable)
+    constructor(id: String, fields: List<BflStructField>) : this(id, fields, emptyList(), true, emptyList())
+    constructor(id: String, fields: List<BflStructField>, isDeserializable: Boolean) : this(id, fields, emptyList(), isDeserializable, emptyList())
 
     val fields: List<FieldWithParentStruct> = fields.map {
         FieldWithParentStruct(it.name, it.type, this)
@@ -48,16 +49,18 @@ open class BflStruct(
         }
     """.trimIndent()
 
-    open fun getModulesToImport() = fields.asSequence()
+    open fun getModulesToImport() = (getFieldTypesToImport() + additionalImports)
+        .distinctBy { it.id }
+        .filterIsInstance<BflModule>()
+        .toList()
+
+    private fun getFieldTypesToImport() = fields.asSequence()
         .flatMap {
             when (val type = it.type) {
                 is BflArray -> listOf(type.elementType)
                 else -> listOf(type)
             }
         }
-        .distinctBy { it.id }
-        .filterIsInstance<BflModule>()
-        .toList()
 
     override val bitSize: Int = this.fields.sumOf { it.type.bitSize }
 

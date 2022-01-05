@@ -1,9 +1,11 @@
 package com.ing.zkflow.zinc.poet.generate.types
 
+import com.ing.zinc.bfl.BflModule
 import com.ing.zinc.bfl.BflPrimitive
 import com.ing.zinc.bfl.BflType
 import com.ing.zinc.bfl.dsl.ArrayBuilder.Companion.array
 import com.ing.zinc.bfl.dsl.ListBuilder.Companion.byteArray
+import com.ing.zinc.bfl.dsl.ListBuilder.Companion.list
 import com.ing.zinc.bfl.dsl.OptionBuilder.Companion.option
 import com.ing.zinc.bfl.dsl.StructBuilder.Companion.struct
 import com.ing.zkflow.serialization.bfl.serializers.CordaSerializers.CLASS_NAME_SIZE
@@ -11,8 +13,26 @@ import com.ing.zkflow.serialization.bfl.serializers.SecureHashSurrogate
 import com.ing.zkflow.zinc.poet.generate.ZincTypeResolver
 import net.corda.core.contracts.SignatureAttachmentConstraint
 import net.corda.core.identity.Party
+import java.security.PublicKey
 
-class StandardTypes(private val typeResolver: ZincTypeResolver) {
+class StandardTypes(
+    private val zincTypeResolver: ZincTypeResolver,
+) {
+    val notaryModule: BflModule by lazy {
+        zincTypeResolver.zincTypeOf(Party::class) // TODO("PartyEdDSA")
+    }
+
+    val signerModule: BflModule by lazy {
+        zincTypeResolver.zincTypeOf(PublicKey::class)
+    }
+
+    internal fun getSignerListModule(
+        numberOfSigners: Int
+    ) = list {
+        capacity = numberOfSigners
+        elementType = signerModule
+    }
+
     internal fun transactionState(stateType: BflType) = struct {
         name = "${stateType.id}TransactionState"
         field {
@@ -25,7 +45,7 @@ class StandardTypes(private val typeResolver: ZincTypeResolver) {
         }
         field {
             name = "notary"
-            type = typeResolver.zincTypeOf(Party::class) // TODO("PartyEdDSA")
+            type = notaryModule
         }
         field {
             name = "encumbrance"
@@ -35,7 +55,7 @@ class StandardTypes(private val typeResolver: ZincTypeResolver) {
         }
         field {
             name = "constraint"
-            type = typeResolver.zincTypeOf(SignatureAttachmentConstraint::class) // TODO("SignatureAttachmentConstraint")
+            type = zincTypeResolver.zincTypeOf(SignatureAttachmentConstraint::class) // TODO("SignatureAttachmentConstraint")
         }
     }
 

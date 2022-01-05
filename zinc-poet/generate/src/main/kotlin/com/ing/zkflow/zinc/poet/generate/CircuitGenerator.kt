@@ -13,38 +13,52 @@ import com.ing.zinc.bfl.toZincId
 import com.ing.zinc.poet.ZincPrimitive
 import com.ing.zkflow.common.contracts.ZKTransactionMetadataCommandData
 import com.ing.zkflow.common.zkp.metadata.ContractStateTypeCount
+import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
 import com.ing.zkflow.util.requireNotNull
 import com.ing.zkflow.zinc.poet.generate.types.LedgerTransactionFactory
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes
+import com.ing.zkflow.zinc.poet.generate.types.StateAndRefsGroupFactory
 import com.ing.zkflow.zinc.poet.generate.types.Witness
 import net.corda.core.contracts.ContractState
-import net.corda.core.identity.Party
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
-import java.security.PublicKey
 import java.util.Locale
 import kotlin.reflect.KClass
 
 class CircuitGenerator(
+    private val buildPathProvider: BuildPathProvider,
+    private val ledgerTransactionFactory: LedgerTransactionFactory,
+    private val standardTypes: StandardTypes,
+    private val stateAndRefsGroupFactory: StateAndRefsGroupFactory,
     private val zincTypeResolver: ZincTypeResolver,
-    private val buildPathProvider: BuildPathProvider
 ) {
-    private val standardTypes = StandardTypes(zincTypeResolver)
-    private val ledgerTransactionFactory = LedgerTransactionFactory()
-
-    private fun Map<KClass<out ContractState>, Int>.toZincTransactionState(): Map<BflModule, Int> = entries.associate {
-        standardTypes.transactionState(zincTypeResolver.zincTypeOf(it.key)) to it.value
+    private fun Map<KClass<out ContractState>, Int>.toZincType(): Map<BflModule, Int> = entries.associate {
+        zincTypeResolver.zincTypeOf(it.key) to it.value
     }
 
     fun generateCircuitFor(zkTransaction: ZKTransactionMetadataCommandData) {
         val transactionMetadata = zkTransaction.transactionMetadata
-        val inputs = transactionMetadata.commands.flatMap { it.inputs }.sumClasses()
-        val outputs = transactionMetadata.commands.flatMap { it.outputs }.sumClasses()
-        val references = transactionMetadata.commands.flatMap { it.references }.sumClasses()
+        val inputs = transactionMetadata.commands.flatMap { it.inputs }.sumClasses().toZincType()
+        val outputs = transactionMetadata.commands.flatMap { it.outputs }.sumClasses().toZincType()
+        val references = transactionMetadata.commands.flatMap { it.references }.sumClasses().toZincType()
 
-        val witness = createWitness(zkTransaction, inputs, outputs, references)
-        val ledgerTransaction =
-            ledgerTransactionFactory.createLedgerTransaction(inputs, references, transactionMetadata, witness)
+        val witness = createWitness(transactionMetadata, inputs, outputs, references)
+        val inputGroup = stateAndRefsGroupFactory.createStructWithStateAndRefs(
+            "InputGroup",
+            inputs,
+            witness.serializedInputUtxos.deserializedStruct
+        )
+        val referenceGroup = stateAndRefsGroupFactory.createStructWithStateAndRefs(
+            "ReferenceGroup",
+            references,
+            witness.serializedReferenceUtxos.deserializedStruct
+        )
+        val ledgerTransaction = ledgerTransactionFactory.createLedgerTransaction(
+            inputGroup,
+            referenceGroup,
+            transactionMetadata,
+            witness
+        )
 
         val codeGenerationOptions = CodeGenerationOptions(witness.getWitnessConfigurations())
         val circuitName = zkTransaction.circuitName()
@@ -107,18 +121,17 @@ class CircuitGenerator(
     }
 
     private fun createWitness(
-        zkTransaction: ZKTransactionMetadataCommandData,
-        inputs: Map<KClass<out ContractState>, Int>,
-        outputs: Map<KClass<out ContractState>, Int>,
-        references: Map<KClass<out ContractState>, Int>
+        transactionMetadata: ResolvedZKTransactionMetadata,
+        inputs: Map<BflModule, Int>,
+        outputs: Map<BflModule, Int>,
+        references: Map<BflModule, Int>
     ): Witness {
         return Witness(
-            zkTransaction,
-            inputs.toZincTransactionState(),
-            outputs.toZincTransactionState(),
-            references.toZincTransactionState(),
-            zincTypeResolver.zincTypeOf(Party::class),
-            zincTypeResolver.zincTypeOf(PublicKey::class),
+            transactionMetadata,
+            inputs,
+            outputs,
+            references,
+            standardTypes,
         )
     }
 
