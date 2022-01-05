@@ -3,6 +3,7 @@ package com.ing.zinc.bfl.dsl
 import com.ing.zinc.bfl.BflEnum
 import kotlin.reflect.KClass
 
+@BflDslMarker
 class EnumBuilder {
     var name: String? = null
     private val variants: MutableList<String> = mutableListOf()

@@ -4,6 +4,7 @@ import com.ing.zinc.bfl.BflList
 import com.ing.zinc.bfl.BflPrimitive
 import com.ing.zinc.bfl.BflType
 
+@BflDslMarker
 class ListBuilder {
     var capacity: Int? = null
     var elementType: BflType? = null

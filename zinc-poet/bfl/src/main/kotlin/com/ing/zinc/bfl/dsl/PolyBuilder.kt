@@ -3,6 +3,7 @@ package com.ing.zinc.bfl.dsl
 import com.ing.zinc.bfl.BflPoly
 import com.ing.zinc.bfl.BflType
 
+@BflDslMarker
 class PolyBuilder {
     var innerType: BflType? = null
 

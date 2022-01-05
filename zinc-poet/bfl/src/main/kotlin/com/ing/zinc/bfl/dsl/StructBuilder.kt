@@ -5,6 +5,7 @@ import com.ing.zinc.bfl.BflStructField
 import com.ing.zinc.poet.ZincFunction
 import com.ing.zinc.poet.ZincMethod
 
+@BflDslMarker
 class StructBuilder {
     var name: String? = null
     private val fields: MutableList<BflStructField> = mutableListOf()

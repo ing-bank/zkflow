@@ -3,6 +3,7 @@ package com.ing.zinc.bfl.dsl
 import com.ing.zinc.bfl.BflMap
 import com.ing.zinc.bfl.BflType
 
+@BflDslMarker
 class MapBuilder {
     var capacity: Int? = null
     var keyType: BflType? = null

@@ -3,6 +3,7 @@ package com.ing.zinc.bfl.dsl
 import com.ing.zinc.bfl.BflArray
 import com.ing.zinc.bfl.BflType
 
+@BflDslMarker
 class ArrayBuilder {
     var capacity: Int? = null
     var elementType: BflType? = null
