@@ -4,8 +4,6 @@ package com.ing.zkflow.resolved.pilot.ivno
 
 import com.ing.zkflow.annotated.pilot.infra.BigDecimalAmountConverter_LinearPointer_IvnoTokenType
 import com.ing.zkflow.annotated.pilot.infra.BigDecimalAmountSurrogate_LinearPointer_IvnoTokenType
-import com.ing.zkflow.annotated.pilot.infra.EdDSAParty
-import com.ing.zkflow.annotated.pilot.infra.EdDSAPartyConverter
 import com.ing.zkflow.annotated.pilot.infra.UniqueIdentifierConverter
 import com.ing.zkflow.annotated.pilot.infra.UniqueIdentifierSurrogate
 import com.ing.zkflow.annotated.pilot.infra.fixedCordaX500Name
@@ -14,6 +12,7 @@ import com.ing.zkflow.annotated.pilot.ivno.IvnoTokenType
 import com.ing.zkflow.annotated.pilot.ivno.deps.BigDecimalAmount
 import com.ing.zkflow.serialization.SerializerTest
 import com.ing.zkflow.serialization.engine.SerdeEngine
+import com.ing.zkflow.serialization.serializer.WrappedKSerializerWithDefault
 import com.ing.zkflow.testing.zkp.ZKNulls.fixedKeyPair
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.Contextual
@@ -21,6 +20,7 @@ import kotlinx.serialization.Serializable
 import net.corda.core.contracts.LinearPointer
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.crypto.Crypto
+import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -40,17 +40,14 @@ data class IvnoDeposit(
     @Serializable(with = AccountId_0::class) val accountId: @Contextual String,
     @Serializable(with = LinearId_0::class) val linearId: @Contextual UniqueIdentifier
 ) {
-    object Depositor_0 : com.ing.zkflow.serialization.serializer.SurrogateSerializer<Party, EdDSAParty>(
-        EdDSAParty.serializer(), { EdDSAPartyConverter.from(it) }
-    )
+    object Depositor_0 : com.ing.zkflow.serialization.serializer.corda.PartySerializer(4, Depositor_1)
+    object Depositor_1 : WrappedKSerializerWithDefault<CordaX500Name>(com.ing.zkflow.serialization.serializer.corda.CordaX500NameSerializer)
 
-    object Custodian_0 : com.ing.zkflow.serialization.serializer.SurrogateSerializer<Party, EdDSAParty>(
-        EdDSAParty.serializer(), { EdDSAPartyConverter.from(it) }
-    )
+    object Custodian_0 : com.ing.zkflow.serialization.serializer.corda.PartySerializer(4, Custodian_1)
+    object Custodian_1 : WrappedKSerializerWithDefault<CordaX500Name>(com.ing.zkflow.serialization.serializer.corda.CordaX500NameSerializer)
 
-    object TokenIssuingEntity_0 : com.ing.zkflow.serialization.serializer.SurrogateSerializer<Party, EdDSAParty>(
-        EdDSAParty.serializer(), { EdDSAPartyConverter.from(it) }
-    )
+    object TokenIssuingEntity_0 : com.ing.zkflow.serialization.serializer.corda.PartySerializer(4, TokenIssuingEntity_1)
+    object TokenIssuingEntity_1 : WrappedKSerializerWithDefault<CordaX500Name>(com.ing.zkflow.serialization.serializer.corda.CordaX500NameSerializer)
 
     object Amount_0 : com.ing.zkflow.serialization.serializer.SurrogateSerializer<BigDecimalAmount<LinearPointer<IvnoTokenType>>, BigDecimalAmountSurrogate_LinearPointer_IvnoTokenType>(
         BigDecimalAmountSurrogate_LinearPointer_IvnoTokenType.serializer(),

@@ -4,14 +4,13 @@ package com.ing.zkflow.resolved.pilot.r3.states
 
 import com.ing.zkflow.annotated.pilot.infra.AmountConverter_IssuedTokenType
 import com.ing.zkflow.annotated.pilot.infra.AmountSurrogate_IssuedTokenType
-import com.ing.zkflow.annotated.pilot.infra.EdDSAParty
-import com.ing.zkflow.annotated.pilot.infra.EdDSAPartyConverter
 import com.ing.zkflow.annotated.pilot.infra.fixedCordaX500Name
 import com.ing.zkflow.annotated.pilot.r3.states.AbstractFungibleToken
 import com.ing.zkflow.annotated.pilot.r3.types.IssuedTokenType
 import com.ing.zkflow.annotated.pilot.r3.types.TokenType
 import com.ing.zkflow.serialization.SerializerTest
 import com.ing.zkflow.serialization.engine.SerdeEngine
+import com.ing.zkflow.serialization.serializer.WrappedKSerializerWithDefault
 import com.ing.zkflow.testing.zkp.ZKNulls.fixedKeyPair
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.Contextual
@@ -19,6 +18,7 @@ import kotlinx.serialization.Serializable
 import net.corda.core.contracts.Amount
 import net.corda.core.crypto.Crypto
 import net.corda.core.crypto.SecureHash
+import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -43,10 +43,8 @@ data class CBDCToken(
         { AmountConverter_IssuedTokenType.from(it) }
     )
 
-    object Holder_0 : com.ing.zkflow.serialization.serializer.SurrogateSerializer<Party, EdDSAParty>(
-        EdDSAParty.serializer(),
-        { EdDSAPartyConverter.from(it) }
-    )
+    object Holder_0 : com.ing.zkflow.serialization.serializer.corda.PartySerializer(4, Holder_1)
+    object Holder_1 : WrappedKSerializerWithDefault<CordaX500Name>(com.ing.zkflow.serialization.serializer.corda.CordaX500NameSerializer)
 
     object TokenTypeJarHash_0 : com.ing.zkflow.serialization.serializer.NullableSerializer<SecureHash>(
         TokenTypeJarHash_1
