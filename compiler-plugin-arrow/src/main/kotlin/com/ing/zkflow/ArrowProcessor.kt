@@ -14,10 +14,12 @@ class ArrowProcessor : Meta {
     override fun intercept(ctx: CompilerContext): List<CliPlugin> {
         return listOf(
             UserClassesIndexer,
+            //
             // IMPORTANT
             // PropertyAnnotator must be called first to add @kotlinx.serialization.Transient annotations/
             //
             PropertyAnnotator,
+            //
             ClassAnnotator,
         )
     }
@@ -31,6 +33,8 @@ internal object SerdeIndex {
     private val index = mutableMapOf<FqName, List<KtAnnotationEntry>>()
 
     fun register(fqName: FqName, annotations: List<KtAnnotationEntry>) {
+        SerdeLogger.log("$fqName")
+
         require(index.putIfAbsent(fqName, annotations) == null) {
             "Class $fqName has been already registered"
         }

@@ -27,19 +27,19 @@ class ClassRefactory(
         /**
          * Verbosely verifies whether a ZKP annotation is applicable to the class.
          */
-        fun verifyAnnotationCorrectness(processingUnit: String, ktClass: KtClass, short: Boolean = false): Boolean = with(ktClass) {
-            SerdeLogger.log(processingUnit)
-            if (short) {
-                SerdeLogger.logShort("Considering:\n$text")
-            } else {
-                SerdeLogger.log("Considering:\n$text")
+        fun verifyAnnotationCorrectness(ktClass: KtClass, short: Boolean = false): Boolean = with(ktClass) {
+            SerdeLogger.run {
+                startPhase("Validate class")
+                log("Considering:\n`$text`", short)
             }
 
             val applicability = hasAnnotation<ZKP>() && isCorrectClassTypeForZKPAnnotation()
-
-            SerdeLogger.log("(CLASS) ${if (applicability) "SHALL" else "WILL NOT"} process")
-
-            return applicability
+            return applicability.also {
+                SerdeLogger.run {
+                    log(if (applicability) "ACCEPTED" else "DISMISSED")
+                    stopPhase()
+                }
+            }
         }
 
         private fun KtClass.isCorrectClassTypeForZKPAnnotation(): Boolean {
@@ -70,6 +70,8 @@ class ClassRefactory(
      * Build a class redeclaration for a class with a non-empty primary constructor.
      */
     private fun buildClassDeclaration(primaryConstructor: KtPrimaryConstructor): ClassDeclaration {
+        SerdeLogger.startPhase("Rebuilding class")
+
         val (constructorParameters, serializingObjects) = primaryConstructor.valueParameters.fold(listOf<ConstructorParameter>()) { acc, ktParameter ->
             acc + buildConstructorParameter(ktParameter)
         }.let {
@@ -109,7 +111,15 @@ class ClassRefactory(
             |   
             |   $serializingObjects
             |}
-            """.`class`.also { SerdeLogger.log("Updating class parameter properties:\n$it") }
+            """.`class`.also {
+                SerdeLogger.run {
+                    startPhase("Update class definition")
+                    log("Updating class parameter properties:\n`$it`")
+                    stopPhase()
+                }
+            }
+        }.also {
+            SerdeLogger.stopPhase()
         }
     }
 
@@ -118,6 +128,10 @@ class ClassRefactory(
      * annotation and a sequence of serializing objects.
      */
     private fun buildConstructorParameter(ktParameter: KtParameter): ConstructorParameter = with(ktParameter) {
+        SerdeLogger.run {
+            startPhase("Building constructor parameter")
+            log("┌${ktParameter.text}")
+        }
         if (!ktParameter.hasValOrVar()) {
             return ConstructorParameter.Self(text)
         }
@@ -138,7 +152,9 @@ class ClassRefactory(
             "@${Serializable::class.qualifiedName}(with = ${support.serializer}) ${it.text}"
         }
 
-        return ConstructorParameter.Serializable(constructorParameter, support)
+        return ConstructorParameter.Serializable(constructorParameter, support).also {
+            SerdeLogger.stopPhase()
+        }
     }
 
     /**
@@ -154,12 +170,21 @@ class ClassRefactory(
 
         val tree = "|-${List(depth){"-"}.joinToString(separator = "", postfix = " ")}"
         val tab = "| ${List(depth){" "}.joinToString(separator = "", postfix = " ")}"
-        SerdeLogger.log("$tree${if (ignoreNullability) typeRef.ktTypeElement.text.substring(0 until typeRef.ktTypeElement.textLength - 1) else typeRef.ktTypeElement.text}")
+
+        SerdeLogger.run {
+            pushPrefix(tree)
+            log(if (ignoreNullability) typeRef.ktTypeElement.text.substring(0 until typeRef.ktTypeElement.textLength - 1) else typeRef.ktTypeElement.text)
+            popPrefix()
+        }
 
         val resolvedRootType = typeRef.rootType.let {
             if (ignoreNullability) it.stripNullability() else it
         }
-        SerdeLogger.log("${tab}Root type has been resolved to ${resolvedRootType.type}")
+
+        SerdeLogger.run {
+            pushPrefix(tab)
+            log("Root type has been resolved to `${resolvedRootType.type}`")
+        }
 
         // • Strip nullability.
         if (resolvedRootType.isNullable) {
@@ -179,6 +204,8 @@ class ClassRefactory(
             }
         }
 
-        return Processors.forNativeType(ContextualizedKtTypeReference(this, typeResolver), children)
+        return Processors.forNativeType(ContextualizedKtTypeReference(this, typeResolver), children).also {
+            SerdeLogger.popPrefix()
+        }
     }
 }

@@ -15,7 +15,7 @@ import org.jetbrains.kotlin.psi.psiUtil.containingClass
 import org.jetbrains.kotlin.psi.psiUtil.containingClassOrObject
 import org.jetbrains.kotlin.util.isOrdinaryClass
 
-private const val PROCESSING_UNIT = "Property Annotator"
+private const val PROCESSING_UNIT = "PROPERTY ANNOTATOR"
 
 /**
  * Annotates all non-constructor properties as @Transient  to exclude them from serialization.
@@ -24,6 +24,8 @@ val Meta.PropertyAnnotator: CliPlugin
     get() = PROCESSING_UNIT {
         meta(
             property(this, match = {
+                SerdeLogger.mergePhase(PROCESSING_UNIT)
+
                 element.verifyAnnotationCorrectness()
             }) { (ktProperty, _) ->
                 // Arrow has troubles with comments and doc strings, remove them altogether.
@@ -40,7 +42,13 @@ val Meta.PropertyAnnotator: CliPlugin
                     newDeclaration = """
                         ${"@${Transient::class.qualifiedName!!}".annotationEntry}
                         $propertyClearDeclaration
-                    """.trimIndent().property(descriptor).also { SerdeLogger.log("Updating class properties:\n$it") }
+                    """.trimIndent().property(descriptor).also {
+                        SerdeLogger.run {
+                            startPhase("Update class property")
+                            log("$it")
+                            stopPhase()
+                        }
+                    }
                 )
             }
         )
@@ -50,16 +58,26 @@ val Meta.PropertyAnnotator: CliPlugin
  * Verbosely verifies whether the property is a part of a ZKP annotated class.
  */
 private fun KtProperty.verifyAnnotationCorrectness(): Boolean {
-    SerdeLogger.log(PROCESSING_UNIT)
-    SerdeLogger.logShort("Considering:\n$text")
+    SerdeLogger.run {
+        startPhase("Validate property")
+        log("Considering:\n`$text`")
+    }
 
     val applicability = (containingClassOrObject?.isOrdinaryClass ?: false) &&
-        (containingClass()?.let { ClassRefactory.verifyAnnotationCorrectness(PROCESSING_UNIT, it) } ?: false) &&
+        (
+            containingClass()?.let {
+                SerdeLogger.log("Examine the parent class")
+                ClassRefactory.verifyAnnotationCorrectness(it)
+            } ?: false
+            ) &&
         hasBackingField()
 
-    SerdeLogger.log("(PROP) ${if (applicability) "SHALL" else "WILL NOT"} process")
-
-    return applicability
+    return applicability.also {
+        SerdeLogger.run {
+            log(if (applicability) "ACCEPTED" else "DISMISSED")
+            stopPhase()
+        }
+    }
 }
 
 private fun KtProperty.hasBackingField(): Boolean {
