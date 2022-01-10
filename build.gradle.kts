@@ -35,7 +35,6 @@ plugins {
     id("com.diffplug.spotless") apply false
     id("io.gitlab.arturbosch.detekt")
     id("org.owasp.dependencycheck") version "6.1.1"
-    // id("org.kordamp.gradle.jacoco") version "0.46.0"
     jacoco
 }
 
@@ -88,24 +87,12 @@ task("checkZincVersion") {
 }
 
 // This task generates an aggregate test report from all subprojects
-// EXCLUDING NIGHTLY TESTS
 val testReport = tasks.register<TestReport>("testReport") {
     destinationDir = file("$buildDir/reports/tests/test")
     reportOn(subprojects.flatMap {
-        it.tasks.matching { task -> task is Test && task.name != "nightlyTest" && task.name != "allTests" }
-            .map { test -> test as Test; test.binaryResultsDirectory }
+        it.tasks.matching { task -> task is Test }.map { test -> test as Test; test.binaryResultsDirectory }
     })
 }
-
-// This task generates an aggregate test report from all subprojects
-// INCLUDING NIGHTLY TESTS
-// val testReportAll = tasks.register<TestReport>("testReportAll") {
-//     destinationDir = file("$buildDir/reports/tests/test")
-//     reportOn(subprojects.flatMap {
-//         it.tasks.filterIsInstance<Test>()
-//             .map { test -> test as Test; test.binaryResultsDirectory }
-//     })
-// }
 
 idea {
     module {
@@ -135,9 +122,9 @@ val detektAll by tasks.registering(io.gitlab.arturbosch.detekt.Detekt::class) {
 }
 
 jacoco {
-    toolVersion = "0.8.7"
+    val jacocoToolVersion: String by project
+    toolVersion = jacocoToolVersion
 }
-
 
 tasks.register("jacocoRootReport", JacocoReport::class) {
     val subProjectReportTasks = subprojects.map { it.tasks.withType<JacocoReport>() }
@@ -157,7 +144,7 @@ tasks.register("jacocoRootReport", JacocoReport::class) {
     reports {
         xml.isEnabled = true
         html.isEnabled = true
-        xml.destination = file("${buildDir}/reports/jacoco/jacocoTestReport.xml")
+        xml.destination = file("${buildDir}/reports/jacoco/aggregate/jacocoTestReport.xml")
         html.destination = file("${buildDir}/reports/jacoco/aggregate/html")
     }
     setOnlyIf { true }
@@ -188,6 +175,8 @@ tasks.register("jacocoRootCoverageVerification", JacocoCoverageVerification::cla
 subprojects {
     val repos: groovy.lang.Closure<RepositoryHandler> by rootProject.extra
     repositories(repos)
+
+    val subproject = this
 
     // If a subproject has the Java plugin loaded, we set the test config on it.
     plugins.withType(JavaPlugin::class.java) {
@@ -233,6 +222,13 @@ subprojects {
                 resources {
                     srcDir(testConfigResourcesDir)
                 }
+            }
+        }
+
+        this@subprojects.afterEvaluate {
+            subproject.extensions.findByType(JacocoPluginExtension::class)?.let {
+                val jacocoToolVersion: String by project
+                it.toolVersion = jacocoToolVersion
             }
         }
 
@@ -291,6 +287,7 @@ subprojects {
 //                dependsOn(":zinc-platform-sources:circuits") // Make sure that the Zinc circuit is ready to use when running tests
 
                 val cores = Runtime.getRuntime().availableProcessors()
+                setForkEvery(100)
                 maxParallelForks = (Runtime.getRuntime().availableProcessors() / 2).takeIf { it > 0 } ?: 1
                 logger.info("Using $cores cores to run $maxParallelForks test forks.")
 

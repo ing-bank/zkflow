@@ -18,12 +18,12 @@ variables:
 steps:
   - task: Cache@2
     inputs:
-      key: '"gradle" | "$(Agent.OS)" | **/*.gradle.kts | **/gradle.properties'
+      key: 'gradle | "$(Agent.OS)" | **/*.gradle.kts | **/gradle.properties'
       restoreKeys: |
         gradle | "$(Agent.OS)"
         gradle
       path: $(GRADLE_USER_HOME)
-    displayName: Cache Gradle packages
+    displayName: Configure gradle caching
 
   - task: Bash@3
     displayName: 'Install Zinc in PATH'
@@ -58,6 +58,7 @@ steps:
       targetType: 'inline'
       script: |
         ls -al $(Build.SourcesDirectory)/build/reports/jacoco/aggregate/
+        ls -al $(Build.SourcesDirectory)/build/reports/jacoco/
 
   - task: PublishCodeCoverageResults@1
     inputs:
