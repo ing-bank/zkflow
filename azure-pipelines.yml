@@ -45,7 +45,7 @@ steps:
       jdkArchitectureOption: 'x64'
       publishJUnitResults: true
       testResultsFiles: '**/TEST-*.xml'
-      # codeCoverageToolOption: JaCoCo # Broken because it expects hardcoded 'build.gradle'
+      # codeCoverageToolOption: JaCoCo # Broken because it expects hardcoded 'build.gradle' instead of 'build.gradle.kts'
       tasks: 'check test testReport jacocoRootReport'
       options: '--stacktrace --info --build-cache'
     env:

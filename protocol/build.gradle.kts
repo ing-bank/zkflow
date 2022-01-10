@@ -8,31 +8,6 @@ plugins {
     kotlin("plugin.serialization")
     jacoco
 }
-jacoco {
-    toolVersion = "0.8.7"
-}
-
-fun ConfigurableFileCollection.exclude(excludes: List<String>) = setFrom(files(files.map { fileTree(it) { exclude(excludes) } }))
-val jacocoExcludes = listOf<String>(
-    // "**/com/ing/zkflow/client/flows/**"
-)
-
-project.afterEvaluate {
-    tasks.jacocoTestCoverageVerification {
-        sourceDirectories.exclude(jacocoExcludes)
-        classDirectories.exclude(jacocoExcludes)
-        additionalClassDirs.exclude(jacocoExcludes)
-    }
-}
-
-
-project.afterEvaluate {
-    tasks.jacocoTestReport {
-        sourceDirectories.exclude(jacocoExcludes)
-        classDirectories.exclude(jacocoExcludes)
-        additionalClassDirs.exclude(jacocoExcludes)
-    }
-}
 
 cordapp {
     val platformVersion: String by project
@@ -73,8 +48,6 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach 
     kotlinOptions.freeCompilerArgs += "-Xopt-in=kotlin.time.ExperimentalTime"
     kotlinOptions.freeCompilerArgs += "-Xopt-in=kotlinx.serialization.ExperimentalSerializationApi"
 }
-
-
 
 // TODO: We will have to enable explicitApi soon:
 // https://kotlinlang.org/docs/reference/whatsnew14.html#explicit-api-mode-for-library-authors

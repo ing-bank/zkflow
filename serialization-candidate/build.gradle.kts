@@ -5,13 +5,13 @@ plugins {
     jacoco
 }
 
-jacoco {
-    toolVersion = "0.8.7"
-}
-
-repositories {
-    maven("https://software.r3.com/artifactory/corda")
-}
+// jacoco {
+//     toolVersion = "0.8.7"
+// }
+//
+// repositories {
+//     maven("https://software.r3.com/artifactory/corda")
+// }
 
 dependencies {
     testImplementation(kotlin("test-junit5"))

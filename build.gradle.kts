@@ -24,8 +24,7 @@ buildscript {
         }
     }
 
-    @Suppress("UNCHECKED_CAST")
-    this.repositories(repos as groovy.lang.Closure<Any>)
+    @Suppress("UNCHECKED_CAST") this.repositories(repos as groovy.lang.Closure<Any>)
 
 }
 
@@ -65,10 +64,8 @@ task("checkJavaVersion") {
 val zincVersionRegex = ".*ZINC_VERSION: \"v(.*)\".*".toRegex()
 val zincVersionOutputRegex = "^znc (.*)$".toRegex()
 task("checkZincVersion") {
-    val requiredZincVersion = projectDir.resolve(".github/workflows/on-push.yml").readLines()
-        .filter { it.matches(zincVersionRegex) }
-        .map { it.replace(zincVersionRegex, "$1") }
-        .single()
+    val requiredZincVersion = projectDir.resolve(".github/workflows/on-push.yml").readLines().filter { it.matches(zincVersionRegex) }
+        .map { it.replace(zincVersionRegex, "$1") }.single()
     ByteArrayOutputStream().use { os ->
         val result = exec {
             executable = "znc"
@@ -182,7 +179,7 @@ tasks.register("jacocoRootCoverageVerification", JacocoCoverageVerification::cla
             element = "BUNDLE"
             limit {
                 counter = "LINE"
-                minimum = "0.99".toBigDecimal()
+                minimum = "1.00".toBigDecimal()
             }
         }
     }
@@ -200,7 +197,7 @@ subprojects {
             apply("idea")
         }
 
-// Load the necessary dependencies
+        // Load the necessary dependencies
         dependencies.apply {
             val kotlinVersion: String by project
             add("implementation", "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
@@ -236,6 +233,28 @@ subprojects {
                 resources {
                     srcDir(testConfigResourcesDir)
                 }
+            }
+        }
+
+        fun ConfigurableFileCollection.exclude(excludes: List<String>) = setFrom(files(files.map { fileTree(it) { exclude(excludes) } }))
+        val jacocoConfigExcludesFile = "${rootProject.rootDir}/config/jacoco/excludes"
+        val jacocoExcludes = File(jacocoConfigExcludesFile).readLines().filterNot { it.startsWith("#") }
+
+        // This must be afterEvaluate, otherwise the excludes won't be applied.
+        this@subprojects.afterEvaluate {
+            this.tasks.withType<JacocoCoverageVerification> {
+                sourceDirectories.exclude(jacocoExcludes)
+                classDirectories.exclude(jacocoExcludes)
+                additionalClassDirs.exclude(jacocoExcludes)
+            }
+        }
+
+        // This must be afterEvaluate, otherwise the excludes won't be applied.
+        this@subprojects.afterEvaluate {
+            this.tasks.withType<JacocoReport> {
+                sourceDirectories.exclude(jacocoExcludes)
+                classDirectories.exclude(jacocoExcludes)
+                additionalClassDirs.exclude(jacocoExcludes)
             }
         }
 
@@ -288,17 +307,17 @@ subprojects {
                     systemProperty("MockZKP", true)
                 }
 
-// Set the default log4j config file for tests
+                // Set the default log4j config file for tests
                 systemProperty("log4j.configurationFile", "${project.buildDir}/resources/test/log4j2.xml")
 
-// Allow setting a custom log4j config file
+                // Allow setting a custom log4j config file
                 val logConfigPath = System.getProperty("log4j.configurationFile")
                 if (logConfigPath != null) {
                     systemProperty("log4j.configurationFile", logConfigPath)
                 }
 
-// This file determines for the standard java.util.logging how and what is logged to the console
-// This is to configure logging that does not go through slf4j/log4j, like JUnit platform logging.
+                // This file determines for the standard java.util.logging how and what is logged to the console
+                // This is to configure logging that does not go through slf4j/log4j, like JUnit platform logging.
                 systemProperty(
                     "java.util.logging.config.file", "${project.buildDir}/resources/test/logging-test.properties"
                 )
@@ -306,23 +325,21 @@ subprojects {
 
             task<Test>("fastTest") {
                 useJUnitPlatform {
-excludeTags("slow")
-}
-this.extensions.findByType(JacocoTaskExtension::class)?.let {
-it.isEnabled = false
-}
-}
+                    excludeTags("slow")
+                }
+                this.extensions.findByType(JacocoTaskExtension::class)?.let {
+                    it.isEnabled = false
+                }
+            }
 
-matching { it is Test && it.name == "test" }.forEach { test ->
-test as Test
-// We have a separate task for fast tests
-test.useJUnitPlatform()
-test.extensions.findByType(JacocoTaskExtension::class)?.let {
-it.excludes = listOf(
-"com.ing.zkflow.client.flows.*"
-)
-}
-}
-}
-}
+            matching { it is Test && it.name == "test" }.forEach { test ->
+                test as Test
+                test.useJUnitPlatform()
+
+                test.extensions.findByType(JacocoTaskExtension::class)?.let {
+                    it.isEnabled = false
+                }
+            }
+        }
+    }
 }
