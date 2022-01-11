@@ -25,7 +25,6 @@ buildscript {
     }
 
     @Suppress("UNCHECKED_CAST") this.repositories(repos as groovy.lang.Closure<Any>)
-
 }
 
 plugins {
@@ -281,7 +280,6 @@ subprojects {
                 isReproducibleFileOrder = true
             }
 
-            // This applies to all test types, both fast and slow
             withType<Test> {
                 dependsOn(":checkZincVersion")
 //                dependsOn(":zinc-platform-sources:circuits") // Make sure that the Zinc circuit is ready to use when running tests

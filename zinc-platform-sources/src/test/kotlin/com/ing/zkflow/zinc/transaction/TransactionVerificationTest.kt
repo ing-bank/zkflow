@@ -6,10 +6,8 @@ import com.ing.zkflow.testing.fixtures.contract.TestContract
 import com.ing.zkflow.testing.zkp.ZKNulls
 import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 
-@Tag("slow")
 class TransactionVerificationTest {
     /**
      * The witness, which is what we serialize for Zinc, contains the following items:

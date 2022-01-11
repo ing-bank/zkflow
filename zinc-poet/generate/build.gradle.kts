@@ -3,6 +3,7 @@ plugins {
     id("java-library")
     kotlin("plugin.serialization")
     id("maven-publish")
+    jacoco
 }
 
 dependencies {

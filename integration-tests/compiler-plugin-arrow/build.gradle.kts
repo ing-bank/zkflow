@@ -2,6 +2,7 @@ plugins {
     kotlin("jvm")
     id("java-library")
     kotlin("plugin.serialization")
+    jacoco
 }
 
 // This will prevent conflicts for between the original artifacts and their tests.

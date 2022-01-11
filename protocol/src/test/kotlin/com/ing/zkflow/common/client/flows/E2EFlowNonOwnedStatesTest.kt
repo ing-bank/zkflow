@@ -25,7 +25,6 @@ import net.corda.testing.node.MockNetworkParameters
 import net.corda.testing.node.StartedMockNode
 import net.corda.testing.node.internal.cordappWithPackages
 import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 
 class E2EFlowNonOwnedStatesTest {
@@ -77,7 +76,6 @@ class E2EFlowNonOwnedStatesTest {
     }
 
     @Test
-    @Tag("slow")
     fun `End2End test with ZKP notary - non-owned states`() {
         // Initiator creates a state they want to trade
         val createStxMiniCorpNode = createNewState(miniCorpNode)

@@ -3,6 +3,7 @@ plugins {
     id("idea")
     id("java-library")
     id("maven-publish")
+    jacoco
 }
 
 dependencies {
