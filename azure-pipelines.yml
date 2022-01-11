@@ -52,14 +52,6 @@ steps:
       GITHUB_USERNAME: $(github.username)
       GITHUB_TOKEN: $(github.token)
 
-  - task: Bash@3
-    displayName: 'Show jacoco report dir contents'
-    inputs:
-      targetType: 'inline'
-      script: |
-        ls -al $(Build.SourcesDirectory)/build/reports/jacoco/aggregate/
-        ls -al $(Build.SourcesDirectory)/build/reports/jacoco/
-
   - task: PublishCodeCoverageResults@1
     inputs:
       codeCoverageTool: 'JaCoCo'

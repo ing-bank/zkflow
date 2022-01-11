@@ -320,15 +320,6 @@ subprojects {
                 )
             }
 
-            task<Test>("fastTest") {
-                useJUnitPlatform {
-                    excludeTags("slow")
-                }
-                this.extensions.findByType(JacocoTaskExtension::class)?.let {
-                    it.isEnabled = false
-                }
-            }
-
             matching { it is Test && it.name == "test" }.forEach { test ->
                 test as Test
                 test.useJUnitPlatform()
