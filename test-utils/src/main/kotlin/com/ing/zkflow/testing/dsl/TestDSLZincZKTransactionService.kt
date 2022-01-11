@@ -3,7 +3,6 @@ package com.ing.zkflow.testing.dsl
 import com.ing.zkflow.common.transactions.SignedZKVerifierTransaction
 import com.ing.zkflow.common.transactions.collectUtxoInfos
 import com.ing.zkflow.common.transactions.zkTransactionMetadata
-import com.ing.zkflow.common.transactions.zkTransactionMetadataCommandData
 import com.ing.zkflow.common.zkp.PublicInput
 import com.ing.zkflow.common.zkp.Witness
 import com.ing.zkflow.common.zkp.ZincZKTransactionService
@@ -20,7 +19,9 @@ public class TestDSLZincZKTransactionService(serviceHub: ServiceHub) : TestDSLZK
             inputUtxoInfos = serviceHub.collectUtxoInfos(wtx.inputs),
             referenceUtxoInfos = serviceHub.collectUtxoInfos(wtx.references)
         )
-        zkServiceForTransactionMetadata(wtx.zkTransactionMetadata()).run(witness, calculatePublicInput(wtx))
+        wtx.zkTransactionMetadata().commands.forEach {
+            zkServiceForCommandMetadata(it).run(witness, calculatePublicInput(wtx))
+        }
     }
 
     public override fun verify(wtx: WireTransaction, mode: VerificationMode) {
@@ -29,7 +30,9 @@ public class TestDSLZincZKTransactionService(serviceHub: ServiceHub) : TestDSLZK
                 run(wtx)
             }
             VerificationMode.PROVE_AND_VERIFY -> {
-                setup(wtx.zkTransactionMetadataCommandData) // Should be idempotent
+                wtx.zkTransactionMetadata().commands.forEach {
+                    setup(it) // Should be idempotent
+                }
                 val proof = prove(wtx)
                 verify(SignedZKVerifierTransaction(proof), false)
             }

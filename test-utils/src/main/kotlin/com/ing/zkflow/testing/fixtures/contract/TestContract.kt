@@ -1,13 +1,11 @@
 package com.ing.zkflow.testing.fixtures.contract
 
 import com.ing.serialization.bfl.annotations.FixedLength
+import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.contracts.ZKOwnableState
-import com.ing.zkflow.common.contracts.ZKTransactionMetadataCommandData
-import com.ing.zkflow.common.transactions.zkFLowMetadata
+import com.ing.zkflow.common.transactions.zkTransactionMetadata
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
-import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
 import com.ing.zkflow.common.zkp.metadata.commandMetadata
-import com.ing.zkflow.common.zkp.metadata.transactionMetadata
 import com.ing.zkflow.serialization.CommandDataSerializerMap
 import com.ing.zkflow.serialization.ContractStateSerializerMap
 import com.ing.zkflow.testing.fixtures.contract.TestContract.Create.Companion.verifyCreate
@@ -16,7 +14,6 @@ import com.ing.zkflow.testing.fixtures.contract.TestContract.MoveBidirectional.C
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
-import net.corda.core.contracts.AlwaysAcceptAttachmentConstraint
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.CommandAndState
 import net.corda.core.contracts.CommandData
@@ -56,15 +53,7 @@ public class TestContract : Contract {
 
     // Commands
     @Serializable
-    public class Create : ZKTransactionMetadataCommandData {
-        override val transactionMetadata: ResolvedZKTransactionMetadata by transactionMetadata {
-            network {
-                attachmentConstraintType = AlwaysAcceptAttachmentConstraint::class
-            }
-            commands {
-                +Create::class
-            }
-        }
+    public class Create : ZKCommandData {
 
         @Transient
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
@@ -74,7 +63,6 @@ public class TestContract : Contract {
             }
             privateOutputs { 1 private TestState::class }
             numberOfSigners = 1
-            attachmentConstraintType = AlwaysAcceptAttachmentConstraint::class
         }
 
         init {
@@ -87,7 +75,7 @@ public class TestContract : Contract {
                 command: CommandWithParties<CommandData>
             ) {
                 // Transaction structure
-                tx.zkFLowMetadata.verify(tx)
+                tx.zkTransactionMetadata().verify(tx)
 
                 // Transaction contents
                 val output = tx.getOutput(0) as TestState
@@ -101,21 +89,12 @@ public class TestContract : Contract {
      * This command is only used on [CollectSignaturesFlowTest]. It expects two signatures, but nothing else.
      */
     @Serializable
-    public class SignOnly : ZKTransactionMetadataCommandData {
-        override val transactionMetadata: ResolvedZKTransactionMetadata by transactionMetadata {
-            network {
-                attachmentConstraintType = AlwaysAcceptAttachmentConstraint::class
-            }
-            commands {
-                +SignOnly::class
-            }
-        }
+    public class SignOnly : ZKCommandData {
 
         @Transient
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
             privateOutputs { 1 private TestState::class }
             numberOfSigners = 2
-            attachmentConstraintType = AlwaysAcceptAttachmentConstraint::class
         }
 
         init {
@@ -124,15 +103,7 @@ public class TestContract : Contract {
     }
 
     @Serializable
-    public class Move : ZKTransactionMetadataCommandData {
-        override val transactionMetadata: ResolvedZKTransactionMetadata by transactionMetadata {
-            network {
-                attachmentConstraintType = AlwaysAcceptAttachmentConstraint::class
-            }
-            commands {
-                +Move::class
-            }
-        }
+    public class Move : ZKCommandData {
 
         @Transient
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
@@ -143,7 +114,6 @@ public class TestContract : Contract {
             privateInputs { 1 private TestState::class }
             privateOutputs { 1 private TestState::class }
             numberOfSigners = 2
-            attachmentConstraintType = AlwaysAcceptAttachmentConstraint::class
         }
 
         init {
@@ -156,7 +126,7 @@ public class TestContract : Contract {
                 command: CommandWithParties<CommandData>
             ) {
                 // Transaction structure
-                tx.zkFLowMetadata.verify(tx)
+                tx.zkTransactionMetadata().verify(tx)
 
                 // Transaction contents
                 val output = tx.getOutput(0) as TestState
@@ -170,15 +140,7 @@ public class TestContract : Contract {
     }
 
     @Serializable
-    public class MoveBidirectional : ZKTransactionMetadataCommandData {
-        override val transactionMetadata: ResolvedZKTransactionMetadata by transactionMetadata {
-            network {
-                attachmentConstraintType = AlwaysAcceptAttachmentConstraint::class
-            }
-            commands {
-                +MoveBidirectional::class
-            }
-        }
+    public class MoveBidirectional : ZKCommandData {
 
         @Transient
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
@@ -195,7 +157,6 @@ public class TestContract : Contract {
                 1 private TestState::class
             }
             numberOfSigners = 2
-            attachmentConstraintType = AlwaysAcceptAttachmentConstraint::class
         }
 
         init {
@@ -208,7 +169,7 @@ public class TestContract : Contract {
                 command: CommandWithParties<CommandData>
             ) {
                 // Transaction structure
-                tx.zkFLowMetadata.verify(tx)
+                tx.zkTransactionMetadata().verify(tx)
 
                 // Transaction contents
                 if (tx.inputsOfType<TestState>().sumBy { it.value } != tx.outputsOfType<TestState>().sumBy { it.value }) throw IllegalArgumentException(

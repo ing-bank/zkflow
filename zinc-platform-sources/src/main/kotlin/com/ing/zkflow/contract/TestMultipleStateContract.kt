@@ -2,13 +2,11 @@
 package com.ing.zkflow.contract
 
 import com.ing.serialization.bfl.annotations.FixedLength
+import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.contracts.ZKOwnableState
-import com.ing.zkflow.common.contracts.ZKTransactionMetadataCommandData
-import com.ing.zkflow.common.transactions.zkFLowMetadata
+import com.ing.zkflow.common.transactions.zkTransactionMetadata
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
-import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
 import com.ing.zkflow.common.zkp.metadata.commandMetadata
-import com.ing.zkflow.common.zkp.metadata.transactionMetadata
 import com.ing.zkflow.contract.TestMultipleStateContract.Create.Companion.verifyCreate
 import com.ing.zkflow.contract.TestMultipleStateContract.Move.Companion.verifyMove
 import com.ing.zkflow.serialization.CommandDataSerializerMap
@@ -96,23 +94,16 @@ class TestMultipleStateContract : Contract {
     }
 
     @Serializable
-    class Move : ZKTransactionMetadataCommandData {
+    class Move : ZKCommandData {
         init {
             CommandDataSerializerMap.register(this::class)
         }
 
-        override val transactionMetadata: ResolvedZKTransactionMetadata by transactionMetadata {
+        @Transient
+        override val metadata: ResolvedZKCommandMetadata = commandMetadata {
             network {
                 attachmentConstraintType = AlwaysAcceptAttachmentConstraint::class // to simplify DSL tests
             }
-            commands {
-                +Move::class
-            }
-        }
-
-        @Transient
-        override val metadata: ResolvedZKCommandMetadata = commandMetadata {
-            attachmentConstraintType = AlwaysAcceptAttachmentConstraint::class // to simplify DSL tests
             circuit {
                 name = "move_multi_state"
                 buildFolder =
@@ -134,7 +125,7 @@ class TestMultipleStateContract : Contract {
                 tx: LedgerTransaction,
                 command: CommandWithParties<CommandData>
             ) {
-                tx.zkFLowMetadata.verify(tx)
+                tx.zkTransactionMetadata().verify(tx)
 
                 // Transaction contents
                 val output1 = tx.getOutput(0) as TestState1

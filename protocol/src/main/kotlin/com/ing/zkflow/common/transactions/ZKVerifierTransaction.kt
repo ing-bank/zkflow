@@ -20,7 +20,7 @@ import java.security.PublicKey
 class ZKVerifierTransaction internal constructor(
     override val id: SecureHash,
 
-    val proof: ByteArray,
+    val proofs: Map<String, ByteArray>,
 
     // Outputs are not visible in a normal FilteredTransaction, so we 'leak' some info here: the amount of outputs.
     // Outputs are the leaf hashes of the outputs component group. This is the only group where:
@@ -108,7 +108,7 @@ class ZKVerifierTransaction internal constructor(
 
     companion object {
 
-        fun fromWireTransaction(wtx: WireTransaction, proof: ByteArray): ZKVerifierTransaction {
+        fun fromWireTransaction(wtx: WireTransaction, proofs: Map<String, ByteArray>): ZKVerifierTransaction {
 
             // Here we don't need to filter anything, we only create FTX to be able to access hashes (they are internal in WTX)
             val ftx = FilteredTransaction.buildFilteredTransaction(wtx) { true }
@@ -122,7 +122,7 @@ class ZKVerifierTransaction internal constructor(
 
             return ZKVerifierTransaction(
                 id = ftx.id,
-                proof = proof,
+                proofs = proofs,
                 outputHashes = outputHashes(wtx, ftx),
                 groupHashes = ftx.groupHashes,
                 digestService = wtx.digestService,

@@ -1,10 +1,9 @@
 package com.ing.zkflow.common.transactions
 
 import co.paralleluniverse.strands.Strand
+import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.contracts.ZKContractState
-import com.ing.zkflow.common.contracts.ZKTransactionMetadataCommandData
 import com.ing.zkflow.common.serialization.BFLSerializationScheme
-import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
 import net.corda.core.contracts.AttachmentConstraint
 import net.corda.core.contracts.AutomaticPlaceholderConstraint
 import net.corda.core.contracts.Command
@@ -28,29 +27,13 @@ import net.corda.core.node.ServiceHub
 import net.corda.core.node.ServicesForResolution
 import net.corda.core.node.services.AttachmentId
 import net.corda.core.node.services.KeyManagementService
-import net.corda.core.transactions.LedgerTransaction
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
-import net.corda.core.transactions.TraversableTransaction
 import net.corda.core.transactions.WireTransaction
 import java.security.PublicKey
 import java.time.Duration
 import java.time.Instant
 import java.util.UUID
-
-val TransactionBuilder.isZKFlowTransaction get() = commands().firstOrNull { it.value is ZKTransactionMetadataCommandData } != null
-val TraversableTransaction.isZKFlowTransaction get() = commands.firstOrNull { it.value is ZKTransactionMetadataCommandData } != null
-val LedgerTransaction.isZKFlowTransaction get() = commands.firstOrNull { it.value is ZKTransactionMetadataCommandData } != null
-val LedgerTransaction.zkFLowMetadata: ResolvedZKTransactionMetadata
-    get() = zkTransactionMetadataCommandData.transactionMetadata
-val TraversableTransaction.zkFLowMetadata: ResolvedZKTransactionMetadata
-    get() = zkTransactionMetadataCommandData.transactionMetadata
-val TraversableTransaction.zkTransactionMetadataCommandData: ZKTransactionMetadataCommandData
-    get() = commands.firstOrNull()?.value as? ZKTransactionMetadataCommandData
-        ?: error("No ZKTransactionMetadataCommandDat was found on this transaction, so it is not a ZKFlow transaction")
-val LedgerTransaction.zkTransactionMetadataCommandData: ZKTransactionMetadataCommandData
-    get() = commands.firstOrNull()?.value as? ZKTransactionMetadataCommandData
-        ?: error("No ZKTransactionMetadataCommandDat was found on this transaction, so it is not a ZKFlow transaction")
 
 /**
  * The main reason for this ZKTransactionBuilder to exist, is to ensure that the user always uses the
@@ -140,12 +123,10 @@ class ZKTransactionBuilder(
      * Duplicated so that `toWireTransaction()` always uses the serialization settings
      */
     fun toWireTransaction(services: ServicesForResolution): WireTransaction {
-        val command = commands().firstOrNull() ?: error("At least one command is required for a private transaction")
-        val zkCommand = command.value as? ZKTransactionMetadataCommandData
-            ?: error("This first command must implement ZKTransactionMetadataCommandData")
-        val resolvedTransactionMetadata = zkCommand.transactionMetadata
 
-        resolvedTransactionMetadata.verify(this)
+        val resolvedTransactionMetadata = commands().filterIsInstance(ZKCommandData::class.java).map { it.metadata }
+
+        resolvedTransactionMetadata.forEach { it.verify(this) }
 
         val serializationProperties = mapOf<Any, Any>(
             BFLSerializationScheme.CONTEXT_KEY_TRANSACTION_METADATA to resolvedTransactionMetadata

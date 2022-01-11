@@ -2,9 +2,12 @@ package com.ing.zkflow.common.zkp.metadata
 
 import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.zkp.ZKFlow.DEFAULT_ZKFLOW_CONTRACT_ATTACHMENT_CONSTRAINT
+import com.ing.zkflow.common.zkp.ZKFlow.DEFAULT_ZKFLOW_DIGEST_IDENTIFIER
 import com.ing.zkflow.common.zkp.ZKFlow.DEFAULT_ZKFLOW_SIGNATURE_SCHEME
 import com.ing.zkflow.common.zkp.ZKFlow.requireSupportedSignatureScheme
 import com.ing.zkflow.common.zkp.metadata.ZKCircuit.Companion.resolve
+import com.ing.zkflow.common.zkp.metadata.ZKNetwork.Companion.resolve
+import com.ing.zkflow.crypto.IdentifyingDigestAlgorithm
 import com.ing.zkflow.util.camelToSnakeCase
 import net.corda.core.contracts.AttachmentConstraint
 import net.corda.core.contracts.CommandData
@@ -23,7 +26,7 @@ annotation class ZKCommandMetadataDSL
 /**
  * This class describes the circuit associated  with this command.
  *
- * It containts information about locations, artifacts, etc., so that
+ * It contains information about locations, artifacts, etc., so that
  * ZKFLow knows how to use it.
  */
 @ZKCommandMetadataDSL
@@ -99,6 +102,41 @@ data class ZKCircuit(
     }
 }
 
+@ZKCommandMetadataDSL
+data class ZKNotary(
+    /**
+     * The public key type used by the notary in this network.
+     */
+    var signatureScheme: SignatureScheme = DEFAULT_ZKFLOW_SIGNATURE_SCHEME,
+) {
+    init {
+        requireSupportedSignatureScheme(signatureScheme)
+    }
+}
+
+@ZKCommandMetadataDSL
+data class ZKNetwork(
+    var participantSignatureScheme: SignatureScheme = DEFAULT_ZKFLOW_SIGNATURE_SCHEME,
+    var attachmentConstraintType: KClass<out AttachmentConstraint> = DEFAULT_ZKFLOW_CONTRACT_ATTACHMENT_CONSTRAINT,
+    var digestService: IdentifyingDigestAlgorithm = DEFAULT_ZKFLOW_DIGEST_IDENTIFIER
+) {
+    var notary = ZKNotary()
+    fun notary(init: ZKNotary.() -> Unit) = notary.apply(init)
+
+    companion object {
+        fun ZKNetwork?.resolve(): ResolvedZKNetwork {
+            return if (this == null) ResolvedZKNetwork(
+                DEFAULT_ZKFLOW_SIGNATURE_SCHEME,
+                DEFAULT_ZKFLOW_CONTRACT_ATTACHMENT_CONSTRAINT,
+                DEFAULT_ZKFLOW_DIGEST_IDENTIFIER,
+                ZKNotary()
+            )
+            else
+                ResolvedZKNetwork(participantSignatureScheme, attachmentConstraintType, digestService, notary)
+        }
+    }
+}
+
 /**
  * Describes a Zinc type
  *
@@ -146,32 +184,6 @@ class ZKCommandMetadata(val commandKClass: KClass<out CommandData>) {
     val commandSimpleName: String by lazy { commandKClass.simpleName ?: error("Command classes must be a named class") }
 
     /**
-     * The notary [SignatureScheme] type required by this command.
-     *
-     * This should match the [SignatureScheme] defined for the network notary
-     * in the transaction metadata. If they don't match, an error is thrown.
-     */
-    var notarySignatureScheme: SignatureScheme = DEFAULT_ZKFLOW_SIGNATURE_SCHEME
-
-    /**
-     * The participant [SignatureScheme] type required by this command.
-     *
-     * Due to current limitations of the ZKP command, only one [SignatureScheme] per command is allowed for transaction participants.
-     * This should be enforced at network level and therefore should match the [SignatureScheme] defined for the network notary
-     * in the transaction metadata. If they don't match, an error is thrown.
-     */
-    var participantSignatureScheme: SignatureScheme = DEFAULT_ZKFLOW_SIGNATURE_SCHEME
-
-    /**
-     * The attachment constraint required by this command for all states
-     *
-     * Due to current limitations of the ZKP command, only one [AttachmentConstraint] per transaction is allowed.
-     * This should be enforced at network level and therefore should match the [AttachmentConstraint] defined for the network
-     * in the transaction metadata. If they don't match, an error is thrown.
-     */
-    var attachmentConstraintType: KClass<out AttachmentConstraint> = DEFAULT_ZKFLOW_CONTRACT_ATTACHMENT_CONSTRAINT
-
-    /**
      * Information on the circuit and related artifacts to be used.
      *
      * If the command is marked private, but this is null, ZKFLow will
@@ -180,29 +192,24 @@ class ZKCommandMetadata(val commandKClass: KClass<out CommandData>) {
      */
     var circuit: ZKCircuit? = null
 
+    var zkNetwork: ZKNetwork? = null
+
     var numberOfSigners = 0
 
     val privateInputs = ZKProtectedComponentList()
     val privateReferences = ZKProtectedComponentList()
     val privateOutputs = ZKProtectedComponentList()
 
-    /**
-     * These are only the attachments the user explicitly adds themselves.
-     *
-     * Contract attachments and other default attachments are added at transaction metadata level.
-     */
-    var numberOfUserAttachments = 0
-
     var timeWindow = false
-
-    init {
-        requireSupportedSignatureScheme(participantSignatureScheme)
-        requireSupportedSignatureScheme(notarySignatureScheme)
-    }
 
     fun circuit(init: ZKCircuit.() -> Unit): ZKCircuit {
         circuit = ZKCircuit().apply(init)
         return circuit!!
+    }
+
+    fun network(init: ZKNetwork.() -> Unit): ZKNetwork {
+        zkNetwork = ZKNetwork().apply(init)
+        return zkNetwork!!
     }
 
     fun privateInputs(init: ZKProtectedComponentList.() -> Unit) = privateInputs.apply(init)
@@ -210,18 +217,15 @@ class ZKCommandMetadata(val commandKClass: KClass<out CommandData>) {
     fun privateOutputs(init: ZKProtectedComponentList.() -> Unit) = privateOutputs.apply(init)
 
     fun resolved(): ResolvedZKCommandMetadata =
-        PrivateResolvedZKCommandMetadata(
+        ResolvedZKCommandMetadata(
             circuit.resolve(this),
             commandKClass,
             numberOfSigners,
             privateInputs.toList(),
             privateReferences.toList(),
             privateOutputs.toList(),
-            numberOfUserAttachments,
             timeWindow,
-            notarySignatureScheme,
-            participantSignatureScheme,
-            attachmentConstraintType
+            zkNetwork.resolve()
         )
 }
 

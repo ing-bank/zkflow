@@ -2,7 +2,6 @@ package com.example.contract
 
 import com.ing.serialization.bfl.annotations.FixedLength
 import com.ing.zkflow.common.contracts.ZKOwnableState
-import com.ing.zkflow.common.contracts.ZKTransactionMetadataCommandData
 import com.ing.zkflow.common.transactions.zkFLowMetadata
 import com.ing.zkflow.common.zkp.metadata.commandMetadata
 import com.ing.zkflow.common.zkp.metadata.transactionMetadata

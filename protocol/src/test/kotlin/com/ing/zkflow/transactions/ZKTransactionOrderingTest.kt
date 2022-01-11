@@ -1,17 +1,15 @@
 package com.ing.zkflow.transactions
 
 import com.ing.serialization.bfl.annotations.FixedLength
+import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.contracts.ZKContractState
-import com.ing.zkflow.common.contracts.ZKTransactionMetadataCommandData
 import com.ing.zkflow.common.transactions.UtxoInfo
 import com.ing.zkflow.common.transactions.ZKTransactionBuilder
 import com.ing.zkflow.common.zkp.Witness
 import com.ing.zkflow.common.zkp.ZKFlow
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
-import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
 import com.ing.zkflow.common.zkp.metadata.commandMetadata
 import com.ing.zkflow.common.zkp.metadata.packageName
-import com.ing.zkflow.common.zkp.metadata.transactionMetadata
 import com.ing.zkflow.crypto.BLAKE2S256
 import com.ing.zkflow.serialization.CommandDataSerializerMap
 import com.ing.zkflow.serialization.ContractStateSerializerMap
@@ -181,13 +179,9 @@ class LocalContract : Contract {
     }
 
     @Serializable
-    class Create : ZKTransactionMetadataCommandData {
+    class Create : ZKCommandData {
         init {
             CommandDataSerializerMap.register(this::class)
-        }
-
-        override val transactionMetadata: ResolvedZKTransactionMetadata by transactionMetadata {
-            commands { +Create::class }
         }
 
         @Transient

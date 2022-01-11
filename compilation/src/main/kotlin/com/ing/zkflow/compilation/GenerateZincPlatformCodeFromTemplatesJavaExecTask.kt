@@ -1,7 +1,7 @@
 package com.ing.zkflow.compilation
 
-import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
-import com.ing.zkflow.common.zkp.metadata.TransactionMetadataCache
+import com.ing.zkflow.common.zkp.metadata.CommandMetadataCache
+import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.compilation.ZKFlowCompilationDefaults.CIRCUIT_SOURCES_STATES_PATH
 import com.ing.zkflow.compilation.zinc.template.TemplateConfigurations
 import com.ing.zkflow.compilation.zinc.template.TemplateRenderer
@@ -27,7 +27,7 @@ fun main(args: Array<String>) {
         }
         ?.map { it.name }
         ?.forEach { circuitName ->
-            val metadata = TransactionMetadataCache.findMetadataByCircuitName(circuitName)
+            val metadata = CommandMetadataCache.findCommandMetadata(circuitName)
             val circuitSourceOutputPath = mergedCircuitOutput.resolve(circuitName).resolve("src")
 
             val codeGenerator = CodeGenerator(circuitSourceOutputPath, metadata)
@@ -45,7 +45,7 @@ fun main(args: Array<String>) {
             val templateConfigurationsForCircuit = getTemplateConfiguration(zkFlowTemplateConfigurationClass)
 
             templateConfigurationsForCircuit.apply {
-                metadata.javaClass2ZincType.forEach { (_, zincType) ->
+                metadata.circuit.javaClass2ZincType.forEach { (_, zincType) ->
                     addConfigurations(TxStateTemplateParameters(metadata, zincType))
                 }
 
@@ -79,7 +79,7 @@ private fun getTemplateContents(templateRootPath: File, templateName: String) =
         .getOrThrow()
 
 fun renderStateTemplates(
-    metadata: ResolvedZKTransactionMetadata,
+    metadata: ResolvedZKCommandMetadata,
     templateRenderer: TemplateRenderer,
     templateConfigurationsForCircuit: TemplateConfigurations
 ) {
@@ -89,36 +89,36 @@ fun renderStateTemplates(
                 SerializedStateTemplateParameters(
                     "input",
                     count,
-                    metadata.javaClass2ZincType[type]
+                    metadata.circuit.javaClass2ZincType[type]
                         ?: error("No Zinc Type defined for $type")
                 )
             )
         }
-        addConfigurations(StateGroupTemplateParameters("input", metadata.privateInputTypeGroups, metadata.javaClass2ZincType))
+        addConfigurations(StateGroupTemplateParameters("input", metadata.privateInputTypeGroups, metadata.circuit.javaClass2ZincType))
 
         metadata.privateOutputTypeGroups.forEach { (type, count) ->
             addConfigurations(
                 SerializedStateTemplateParameters(
                     "output",
                     count,
-                    metadata.javaClass2ZincType[type]
+                    metadata.circuit.javaClass2ZincType[type]
                         ?: error("No Zinc Type defined for $type")
                 )
             )
         }
-        addConfigurations(StateGroupTemplateParameters("output", metadata.privateOutputTypeGroups, metadata.javaClass2ZincType))
+        addConfigurations(StateGroupTemplateParameters("output", metadata.privateOutputTypeGroups, metadata.circuit.javaClass2ZincType))
 
         metadata.privateReferenceTypeGroups.forEach { (type, count) ->
             addConfigurations(
                 SerializedStateTemplateParameters(
                     "reference",
                     count,
-                    metadata.javaClass2ZincType[type]
+                    metadata.circuit.javaClass2ZincType[type]
                         ?: error("No Zinc Type defined for $type")
                 )
             )
         }
-        addConfigurations(StateGroupTemplateParameters("reference", metadata.privateReferenceTypeGroups, metadata.javaClass2ZincType))
+        addConfigurations(StateGroupTemplateParameters("reference", metadata.privateReferenceTypeGroups, metadata.circuit.javaClass2ZincType))
     }.resolveAllTemplateParameters()
         .forEach(templateRenderer::renderTemplate)
 }

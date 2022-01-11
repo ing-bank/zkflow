@@ -1,6 +1,6 @@
 package com.ing.zkflow.common.transactions
 
-import com.ing.zkflow.common.contracts.ZKTransactionMetadataCommandData
+import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.zkp.ZKTransactionService
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
 import com.ing.zkflow.node.services.ServiceNames
@@ -32,11 +32,11 @@ import net.corda.core.transactions.ContractUpgradeWireTransaction
 import net.corda.core.transactions.LedgerTransaction
 import net.corda.core.transactions.NotaryChangeWireTransaction
 import net.corda.core.transactions.SignedTransaction
+import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.transactions.TraversableTransaction
 import net.corda.core.transactions.WireTransaction
 import net.corda.core.transactions.WireTransaction.Companion.resolveStateRefBinaryComponent
 import java.security.PublicKey
-import java.util.function.Predicate
 import kotlin.reflect.KClass
 
 /**
@@ -63,7 +63,7 @@ fun ServiceHub.collectUtxoInfos(
                 .componentGroups.single { it.groupIndex == ComponentGroupEnum.OUTPUTS_GROUP.ordinal }
                 .components[it.index].copyBytes()
 
-            val nonce = prevStx.buildFilteredTransaction(Predicate { true })
+            val nonce = prevStx.buildFilteredTransaction { true }
                 .filteredComponentGroups.single { it.groupIndex == ComponentGroupEnum.OUTPUTS_GROUP.ordinal }
                 .nonces[it.index]
 
@@ -119,8 +119,14 @@ fun WireTransaction.prettyPrint(): String {
     return buf.toString()
 }
 
+val TransactionBuilder.isZKFlowTransaction get() = commands().firstOrNull { it.value is ZKCommandData } != null
+val TraversableTransaction.isZKFlowTransaction get() = commands.firstOrNull { it.value is ZKCommandData } != null
+val LedgerTransaction.isZKFlowTransaction get() = commands.firstOrNull { it.value is ZKCommandData } != null
+
 fun TraversableTransaction.zkTransactionMetadata(): ResolvedZKTransactionMetadata =
-    (commands.first().value as ZKTransactionMetadataCommandData).transactionMetadata
+    ResolvedZKTransactionMetadata(commands.filter { it.value is ZKCommandData }.map { (it.value as ZKCommandData).metadata })
+fun LedgerTransaction.zkTransactionMetadata(): ResolvedZKTransactionMetadata =
+    ResolvedZKTransactionMetadata(commands.filter { it.value is ZKCommandData }.map { (it.value as ZKCommandData).metadata })
 
 @Throws(AttachmentResolutionException::class, TransactionResolutionException::class)
 @DeleteForDJVM

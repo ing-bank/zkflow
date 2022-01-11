@@ -1,8 +1,8 @@
 @file:Suppress("MagicNumber") // Magic numbers will be removed when generating zinc based on Kotlin size annotations
 package com.ing.zkflow
 
-import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
-import com.ing.zkflow.common.zkp.metadata.TransactionMetadataCache
+import com.ing.zkflow.common.zkp.metadata.CommandMetadataCache
+import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.compilation.joinConstFiles
 import com.ing.zkflow.compilation.renderStateTemplates
 import com.ing.zkflow.compilation.zinc.template.TemplateConfigurations
@@ -25,8 +25,6 @@ import com.ing.zkflow.compilation.zinc.template.parameters.TxStateTemplateParame
 import com.ing.zkflow.compilation.zinc.util.CodeGenerator
 import com.ing.zkflow.compilation.zinc.util.MerkleReplacer
 import com.ing.zkflow.compilation.zinc.util.ZincSourcesCopier
-import com.ing.zkflow.contract.TestMultipleStateContract
-import com.ing.zkflow.testing.fixtures.contract.TestContract
 import net.corda.core.crypto.Crypto
 import java.io.File
 
@@ -34,8 +32,8 @@ val templateConfigurations = getTemplateConfiguration()
 
 @Suppress("LongMethod") // Just fixing it now, will be thrown away anyway soon
 fun main(args: Array<String>) {
-    val root = args[0]
-    val projectVersion = args[1]
+    val root = "/home/eee/IdeaProjects/zk-notary/zinc-platform-sources" // args[0]
+    val projectVersion = args.size.toString()
 
     // Render templates for circuits testing deserialization, etc.
     TemplateRenderer(getPlatformSourcesTestSourcesPath(root).toPath()) {
@@ -58,12 +56,7 @@ fun main(args: Array<String>) {
             val outputPath = mergedCircuitOutput.resolve(circuitName).resolve("src")
             val circuitSourcesPath = circuitSourcesBase.resolve(circuitName)
 
-            // Required to initialize the metadata cache
-            TestContract.Create().transactionMetadata
-            TestContract.Move().transactionMetadata
-            TestMultipleStateContract.Move().transactionMetadata
-
-            val metadata = TransactionMetadataCache.findMetadataByCircuitName(circuitName)
+            val metadata = CommandMetadataCache.findCommandMetadata(circuitName)
 
             val codeGenerator = CodeGenerator(outputPath, metadata)
             codeGenerator.generateConstsFile()
@@ -90,7 +83,7 @@ fun main(args: Array<String>) {
             val templateConfigurationsForCircuit = getTemplateConfiguration()
 
             templateConfigurationsForCircuit.apply {
-                metadata.javaClass2ZincType.forEach { (_, zincType) ->
+                metadata.circuit.javaClass2ZincType.forEach { (_, zincType) ->
                     addConfigurations(TxStateTemplateParameters(metadata, zincType))
                 }
 
@@ -117,8 +110,8 @@ private fun getPlatformSourcesPath(root: String): File {
     return File("$root/src/main/resources/zinc-platform-sources")
 }
 
-private fun getCircuitStates(circuitStatesPath: File, metadata: ResolvedZKTransactionMetadata): List<File> {
-    return metadata.javaClass2ZincType.map { (_, zincType) ->
+private fun getCircuitStates(circuitStatesPath: File, metadata: ResolvedZKCommandMetadata): List<File> {
+    return metadata.circuit.javaClass2ZincType.map { (_, zincType) ->
         val module = circuitStatesPath.resolve(zincType.fileName)
         require(module.exists()) { "Expected ${module.absolutePath}" }
         module

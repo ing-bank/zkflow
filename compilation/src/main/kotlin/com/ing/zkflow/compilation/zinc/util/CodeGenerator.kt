@@ -1,12 +1,12 @@
 package com.ing.zkflow.compilation.zinc.util
 
-import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
+import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import net.corda.core.crypto.Crypto
 import java.io.File
 
 class CodeGenerator(
     private val outputPath: File,
-    private val metadata: ResolvedZKTransactionMetadata
+    private val metadata: ResolvedZKCommandMetadata
 ) {
     companion object {
         /**
@@ -28,12 +28,11 @@ class CodeGenerator(
     // Until we have that, we maintain an internal map here to look it up.
     fun generateConstsFile() = createOutputFile(outputPath.resolve("consts.zn")).appendBytes(
         """
-const ATTACHMENT_GROUP_SIZE: u16 = ${metadata.attachmentCount};
 const INPUT_GROUP_SIZE: u16 = ${metadata.privateInputs.size};
 const OUTPUT_GROUP_SIZE: u16 = ${metadata.privateOutputs.size};
 const REFERENCE_GROUP_SIZE: u16 = ${metadata.privateReferences.size};
 const NOTARY_GROUP_SIZE: u16 = $NOTARY_GROUP_SIZE;
-const TIMEWINDOW_GROUP_SIZE: u16 = ${if (metadata.hasTimeWindow) 1 else 0};
+const TIMEWINDOW_GROUP_SIZE: u16 = ${if (metadata.timeWindow) 1 else 0};
 // This is the size of a single signer and should not contain the Corda SerializationMagic size,
 // we use platform_consts::CORDA_SERDE_MAGIC_LENGTH for that
 
