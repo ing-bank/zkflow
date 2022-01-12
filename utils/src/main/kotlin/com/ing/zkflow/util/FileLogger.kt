@@ -20,24 +20,40 @@ class FileLogger(path: String) {
     private fun outerPrefix(): String =
         phaseStack.take(max(0, phaseStack.lastIndex)).joinToString(separator = "") { it.prefix() }
 
-    fun pushPrefix(prefix: String) =
-        phaseStack.lastOrNull()?.pushPrefix(prefix)
-
-    fun popPrefix() =
-        phaseStack.lastOrNull()?.popPrefix()
-
     /**
-     * Starts a phase if only the last phase has a different name.
+     * Run [block] with given [prefix].
      */
-    fun startPhase(name: String) {
-        if (phaseStack.lastOrNull()?.name != name) {
-            val phase = Phase(name).also { log(it.announcement) }
-            phaseStack += phase
+    fun <T> withLogPrefix(prefix: String, block: (FileLogger) -> T): T {
+        phaseStack.lastOrNull()?.pushPrefix(prefix)
+        return try {
+            block(this)
+        } finally {
+            phaseStack.lastOrNull()?.popPrefix()
         }
     }
 
-    fun stopPhase() {
+    /**
+     * Starts a new phase.
+     */
+    private fun startPhase(name: String) {
+        val phase = Phase(name).also { log(it.announcement) }
+        phaseStack += phase
+    }
+
+    private fun stopPhase() {
         phaseStack.removeLastOrNull()
+    }
+
+    /**
+     * Run [block] in a new phase with [name].
+     */
+    fun <T> logPhase(name: String, block: (FileLogger) -> T): T {
+        startPhase(name)
+        return try {
+            block(this)
+        } finally {
+            stopPhase()
+        }
     }
 
     /**

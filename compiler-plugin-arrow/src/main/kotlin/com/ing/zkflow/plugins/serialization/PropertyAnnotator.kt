@@ -29,7 +29,8 @@ val Meta.PropertyAnnotator: CliPlugin
                 element.verifyAnnotationCorrectness()
             }) { (ktProperty, _) ->
                 // Arrow has troubles with comments and doc strings, remove them altogether.
-                val allComments = "((['\"])(?:(?!\\2|\\\\).|\\\\.)*\\2)|\\/\\/[^\\n]*|\\/\\*(?:[^*]|\\*(?!\\/))*\\*\\/".toRegex()
+                val allComments =
+                    "((['\"])(?:(?!\\2|\\\\).|\\\\.)*\\2)|\\/\\/[^\\n]*|\\/\\*(?:[^*]|\\*(?!\\/))*\\*\\/".toRegex()
                 val propertyClearDeclaration = ktProperty.text
                     .replace(allComments, "")
                     .trimIndent()
@@ -43,10 +44,8 @@ val Meta.PropertyAnnotator: CliPlugin
                         ${"@${Transient::class.qualifiedName!!}".annotationEntry}
                         $propertyClearDeclaration
                     """.trimIndent().property(descriptor).also {
-                        SerdeLogger.run {
-                            startPhase("Update class property")
-                            log("$it")
-                            stopPhase()
+                        SerdeLogger.logPhase("Update class property") { logger ->
+                            logger.log("$it")
                         }
                     }
                 )
@@ -57,11 +56,8 @@ val Meta.PropertyAnnotator: CliPlugin
 /**
  * Verbosely verifies whether the property is a part of a ZKP annotated class.
  */
-private fun KtProperty.verifyAnnotationCorrectness(): Boolean {
-    SerdeLogger.run {
-        startPhase("Validate property")
-        log("Considering:\n`$text`")
-    }
+private fun KtProperty.verifyAnnotationCorrectness(): Boolean = SerdeLogger.logPhase("Validate property") { logger ->
+    logger.log("Considering:\n`$text`")
 
     val applicability = (containingClassOrObject?.isOrdinaryClass ?: false) &&
         (
@@ -72,12 +68,8 @@ private fun KtProperty.verifyAnnotationCorrectness(): Boolean {
             ) &&
         hasBackingField()
 
-    return applicability.also {
-        SerdeLogger.run {
-            log(if (applicability) "ACCEPTED" else "DISMISSED")
-            stopPhase()
-        }
-    }
+    logger.log(if (applicability) "ACCEPTED" else "DISMISSED")
+    applicability
 }
 
 private fun KtProperty.hasBackingField(): Boolean {
