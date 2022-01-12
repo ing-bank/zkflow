@@ -220,6 +220,7 @@ class ZincZKService(
         } finally {
             log.trace("Public Data (prove): \n${publicData.readText()}")
             publicData.delete()
+            witnessFile.delete()
         }
     }
 

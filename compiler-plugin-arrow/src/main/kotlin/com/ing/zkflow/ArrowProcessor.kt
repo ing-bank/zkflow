@@ -9,6 +9,9 @@ import com.ing.zkflow.plugins.serialization.UserClassesIndexer
 import com.ing.zkflow.util.FileLogger
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.psi.KtAnnotationEntry
+import java.time.Instant
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 
 class ArrowProcessor : Meta {
     override fun intercept(ctx: CompilerContext): List<CliPlugin> {
@@ -25,7 +28,13 @@ class ArrowProcessor : Meta {
     }
 }
 
-internal val SerdeLogger = FileLogger("/tmp/serde-annotations.log")
+internal val SerdeLogger: FileLogger by lazy {
+    val timestamp = DateTimeFormatter
+        .ofPattern("yyyy-MM-dd.HH-mm-ss.SSS")
+        .withZone(ZoneOffset.UTC)
+        .format(Instant.now())
+    FileLogger("/tmp/serde-annotations.$timestamp.log")
+}
 
 internal object SerdeIndex {
     data class UserClass(val fqName: FqName, val annotations: List<KtAnnotationEntry>)
@@ -46,7 +55,8 @@ internal object SerdeIndex {
 
     override fun toString(): String =
         index.entries.joinToString(separator = "\n") { entry ->
-            val annotations = entry.value.joinToString(separator = ", ", prefix = "[", postfix = "]") { ann -> ann.text }
+            val annotations =
+                entry.value.joinToString(separator = ", ", prefix = "[", postfix = "]") { ann -> ann.text }
             "${entry.key}: $annotations"
         }
 }
