@@ -4,14 +4,13 @@ package com.ing.zkflow.resolved.pilot.r3.states
 
 import com.ing.zkflow.annotated.pilot.infra.AmountConverter_IssuedTokenType
 import com.ing.zkflow.annotated.pilot.infra.AmountSurrogate_IssuedTokenType
-import com.ing.zkflow.annotated.pilot.infra.EdDSAAbstractParty
-import com.ing.zkflow.annotated.pilot.infra.EdDSAAbstractPartyConverter
 import com.ing.zkflow.annotated.pilot.infra.fixedCordaX500Name
 import com.ing.zkflow.annotated.pilot.r3.states.AbstractFungibleToken
 import com.ing.zkflow.annotated.pilot.r3.types.IssuedTokenType
 import com.ing.zkflow.annotated.pilot.r3.types.TokenType
 import com.ing.zkflow.serialization.SerializerTest
 import com.ing.zkflow.serialization.engine.SerdeEngine
+import com.ing.zkflow.serialization.serializer.WrappedKSerializerWithDefault
 import com.ing.zkflow.testing.zkp.ZKNulls.fixedKeyPair
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.Contextual
@@ -19,7 +18,7 @@ import kotlinx.serialization.Serializable
 import net.corda.core.contracts.Amount
 import net.corda.core.crypto.Crypto
 import net.corda.core.crypto.SecureHash
-import net.corda.core.identity.AbstractParty
+import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -29,13 +28,13 @@ import java.time.Instant
 @Serializable
 data class CBDCToken(
     @Serializable(with = Amount_0::class) override val amount: @Contextual Amount<@Contextual IssuedTokenType>,
-    @Serializable(with = Holder_0::class) override val holder: @Contextual AbstractParty,
+    @Serializable(with = Holder_0::class) override val holder: @Contextual Party,
     @Serializable(with = TokenTypeJarHash_0::class) override val tokenTypeJarHash: @Contextual SecureHash? = SecureHash.zeroHash,
     @Serializable(with = IssueDate_0::class) val issueDate: @Contextual Instant = Instant.now(),
     @Serializable(with = LastInterestAccrualDate_0::class) val lastInterestAccrualDate: @Contextual Instant = issueDate,
     @Serializable(with = UsageCount_0::class) val usageCount: @Contextual Int = 0
 ) : AbstractFungibleToken() { // , ReissuableState<CBDCToken>
-    override fun withNewHolder(newHolder: AbstractParty): AbstractFungibleToken {
+    override fun withNewHolder(newHolder: Party): AbstractFungibleToken {
         return CBDCToken(amount, newHolder, tokenTypeJarHash = tokenTypeJarHash)
     }
 
@@ -44,16 +43,14 @@ data class CBDCToken(
         { AmountConverter_IssuedTokenType.from(it) }
     )
 
-    object Holder_0 : com.ing.zkflow.serialization.serializer.SurrogateSerializer<AbstractParty, EdDSAAbstractParty>(
-        EdDSAAbstractParty.serializer(),
-        { EdDSAAbstractPartyConverter.from(it) }
-    )
+    object Holder_0 : com.ing.zkflow.serialization.serializer.corda.PartySerializer(4, Holder_1)
+    object Holder_1 : WrappedKSerializerWithDefault<CordaX500Name>(com.ing.zkflow.serialization.serializer.corda.CordaX500NameSerializer)
 
     object TokenTypeJarHash_0 : com.ing.zkflow.serialization.serializer.NullableSerializer<SecureHash>(
         TokenTypeJarHash_1
     )
 
-    object TokenTypeJarHash_1 : com.ing.zkflow.serialization.serializer.SecureHashSerializer("Sha256", 32)
+    object TokenTypeJarHash_1 : com.ing.zkflow.serialization.serializer.corda.SecureHashSerializer("Sha256", 32)
 
     object IssueDate_0 : com.ing.zkflow.serialization.serializer.WrappedKSerializer<Instant>(com.ing.zkflow.serialization.serializer.InstantSerializer)
 

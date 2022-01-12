@@ -1,12 +1,15 @@
-package com.ing.zkflow.serialization.serializer
+package com.ing.zkflow.serialization.serializer.corda
 
-import com.ing.zkflow.Sha256
+import com.ing.zkflow.annotations.corda.Sha256
+import com.ing.zkflow.serialization.serializer.FixedLengthByteArraySerializer
+import com.ing.zkflow.serialization.serializer.KSerializerWithDefault
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import net.corda.core.crypto.SecureHash
 
-open class SecureHashSerializer(private val algorithm: String, private val hashLength: Int) : KSerializerWithDefault<SecureHash> {
+open class SecureHashSerializer(private val algorithm: String, private val hashLength: Int) :
+    KSerializerWithDefault<SecureHash> {
     private val strategy = FixedLengthByteArraySerializer(hashLength)
     override val descriptor: SerialDescriptor = strategy.descriptor
 

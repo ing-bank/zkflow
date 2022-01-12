@@ -2,38 +2,34 @@
 
 package com.ing.zkflow.annotated.pilot.infra
 
-import com.ing.zkflow.ASCII
-import com.ing.zkflow.BigDecimalSize
 import com.ing.zkflow.Converter
 import com.ing.zkflow.Default
-import com.ing.zkflow.Size
 import com.ing.zkflow.Surrogate
-import com.ing.zkflow.ZKP
 import com.ing.zkflow.annotated.pilot.ivno.IvnoTokenType
 import com.ing.zkflow.annotated.pilot.ivno.deps.BigDecimalAmount
 import com.ing.zkflow.annotated.pilot.ivno.deps.Network
 import com.ing.zkflow.annotated.pilot.r3.types.IssuedTokenType
+import com.ing.zkflow.annotations.ASCII
+import com.ing.zkflow.annotations.BigDecimalSize
+import com.ing.zkflow.annotations.Size
+import com.ing.zkflow.annotations.ZKP
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.LinearPointer
 import net.corda.core.contracts.UniqueIdentifier
-import net.corda.core.identity.AbstractParty
+import net.corda.core.crypto.Crypto
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
 import java.math.BigDecimal
-import java.security.KeyFactory
-import java.security.spec.X509EncodedKeySpec
 import java.util.UUID
 
 @ZKP
 @Suppress("ArrayInDataClass")
 data class AnonymousPartySurrogate_EdDSA(
-    val encodedEdDSA: @Size(32) ByteArray
+    val encodedEdDSA: @Size(44) ByteArray
 ) : Surrogate<AnonymousParty> {
     override fun toOriginal() = AnonymousParty(
-        KeyFactory
-            .getInstance("EdDSA")
-            .generatePublic(X509EncodedKeySpec(encodedEdDSA))
+        Crypto.decodePublicKey(Crypto.EDDSA_ED25519_SHA512, encodedEdDSA)
     )
 }
 
@@ -45,9 +41,7 @@ data class EdDSAParty(
 ) : Surrogate<Party> {
     override fun toOriginal() = Party(
         CordaX500Name.parse(cordaX500Name),
-        KeyFactory
-            .getInstance("EdDSA")
-            .generatePublic(X509EncodedKeySpec(encodedEdDSA))
+        Crypto.decodePublicKey(Crypto.EDDSA_ED25519_SHA512, encodedEdDSA)
     )
 }
 
@@ -100,18 +94,10 @@ data class AmountSurrogate_IssuedTokenType(
 }
 
 @ZKP
-@Suppress("ArrayInDataClass")
-data class EdDSAAbstractParty(
-    val cordaX500Name: @ASCII(50) String?,
-    val encodedEdDSA: @Size(44) ByteArray
-) : Surrogate<AbstractParty> {
-    override fun toOriginal(): AbstractParty {
-        val key = KeyFactory
-            .getInstance("EdDSA")
-            .generatePublic(X509EncodedKeySpec(encodedEdDSA))
-
-        return cordaX500Name
-            ?.let { Party(CordaX500Name.parse(cordaX500Name), key) }
-            ?: AnonymousParty(key)
-    }
+@Suppress("ClassName")
+data class CordaX500NameSurrogate(
+    val concat: @ASCII(20) String
+) : Surrogate<CordaX500Name> {
+    override fun toOriginal(): CordaX500Name =
+        CordaX500Name.parse(concat)
 }

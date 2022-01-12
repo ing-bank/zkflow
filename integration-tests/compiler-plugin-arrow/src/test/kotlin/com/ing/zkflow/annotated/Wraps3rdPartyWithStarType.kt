@@ -3,9 +3,9 @@ package com.ing.zkflow.annotated
 import com.ing.zkflow.ConversionProvider
 import com.ing.zkflow.DefaultProvider
 import com.ing.zkflow.Resolver
-import com.ing.zkflow.Size
 import com.ing.zkflow.Surrogate
-import com.ing.zkflow.ZKP
+import com.ing.zkflow.annotations.Size
+import com.ing.zkflow.annotations.ZKP
 
 @ZKP
 data class Wraps3rdPartyWithStar(

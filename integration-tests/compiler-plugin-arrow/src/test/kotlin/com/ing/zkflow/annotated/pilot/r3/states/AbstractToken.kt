@@ -33,7 +33,7 @@ interface AbstractToken : ContractState {
     val issuer: Party get() = issuedTokenType.issuer
 
     /** For creating a copy of an existing [AbstractToken] with a new holder. */
-    fun withNewHolder(newHolder: AbstractParty): AbstractToken
+    fun withNewHolder(newHolder: Party): AbstractToken
 
     /** The hash of a CorDapp JAR which implements the [TokenType] specified by the type parameter [T]. */
     val tokenTypeJarHash: SecureHash?

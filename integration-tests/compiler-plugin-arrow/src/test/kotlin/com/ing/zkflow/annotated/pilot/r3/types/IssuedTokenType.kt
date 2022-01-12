@@ -1,9 +1,7 @@
 package com.ing.zkflow.annotated.pilot.r3.types
 
-import com.ing.zkflow.Converter
-import com.ing.zkflow.ZKP
-import com.ing.zkflow.annotated.pilot.infra.EdDSAParty
-import com.ing.zkflow.annotated.pilot.infra.EdDSAPartyConverter
+import com.ing.zkflow.annotations.ZKP
+import com.ing.zkflow.annotations.corda.EdDSA
 import net.corda.core.identity.Party
 
 // Open classes may be extended provided no values are overridden.
@@ -12,6 +10,6 @@ import net.corda.core.identity.Party
 
 @ZKP
 data class IssuedTokenType(
-    val issuer: @Converter<Party, EdDSAParty>(EdDSAPartyConverter::class) Party,
+    val issuer: @EdDSA Party,
     val tokenType: TokenType
 ) : TokenType(tokenType.tokenIdentifier, tokenType.fractionDigits)

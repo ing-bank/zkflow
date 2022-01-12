@@ -10,12 +10,12 @@ object InstantSerializer : KSerializerWithDefault<Instant> {
     override val default: Instant = Instant.MIN
 
     @Serializable
-    data class Surrogate(
+    private data class Surrogate(
         val seconds: @Serializable(with = LongSerializer::class) Long,
         val nanos: @Serializable(with = IntSerializer::class) Int
     )
 
-    val strategy = Surrogate.serializer()
+    private val strategy = Surrogate.serializer()
     override val descriptor: SerialDescriptor = strategy.descriptor
 
     override fun serialize(encoder: Encoder, value: Instant) {

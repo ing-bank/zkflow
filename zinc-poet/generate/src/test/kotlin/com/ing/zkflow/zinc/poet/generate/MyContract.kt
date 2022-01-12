@@ -1,6 +1,6 @@
 package com.ing.zkflow.zinc.poet.generate
 
-import com.ing.zkflow.ZKP
+import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.common.contracts.ZKTransactionMetadataCommandData
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata

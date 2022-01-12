@@ -11,8 +11,12 @@ import org.jetbrains.kotlin.psi.KtAnnotationEntry
 inline fun <reified T> KtAnnotated.hasAnnotation(): Boolean =
     annotationEntries.any { "${it.shortName}" == T::class.simpleName }
 
-inline fun <reified T> KtAnnotated.annotationOrNull(): KtAnnotationEntry? =
+inline fun <reified T> KtAnnotated.findAnnotation(): KtAnnotationEntry? =
     annotationEntries.singleOrNull { "${it.shortName}" == T::class.simpleName }
 
-inline fun <reified T> KtAnnotated.annotationSingleArgOrNull(): String? =
-    annotationOrNull<T>()?.valueArguments?.singleOrNull()?.asElement()?.text?.trim()
+/**
+ * Find annotation `T`, if it has a single argument, return it,
+ * in all other cases, return null.
+ */
+inline fun <reified T> KtAnnotated.annotationSingleArgument(): String? =
+    findAnnotation<T>()?.valueArguments?.singleOrNull()?.asElement()?.text?.trim()

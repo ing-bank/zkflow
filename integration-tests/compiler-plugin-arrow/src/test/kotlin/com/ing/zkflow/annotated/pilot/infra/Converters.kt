@@ -11,8 +11,8 @@ import net.corda.core.contracts.Amount
 // import com.ing.zkflow.annotated.pilot.r3.types.IssuedTokenType
 import net.corda.core.contracts.LinearPointer
 import net.corda.core.contracts.UniqueIdentifier
-import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.AnonymousParty
+import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
 
 object AnonymousPartyConverter_EdDSA : ConversionProvider<AnonymousParty, AnonymousPartySurrogate_EdDSA> {
@@ -80,15 +80,7 @@ object AmountConverter_IssuedTokenType : ConversionProvider<
         AmountSurrogate_IssuedTokenType(original.quantity, original.displayTokenSize, original.token)
 }
 
-object EdDSAAbstractPartyConverter : ConversionProvider<AbstractParty, EdDSAAbstractParty> {
-    override fun from(original: AbstractParty): EdDSAAbstractParty {
-        require(original.owningKey.algorithm == "EdDSA") {
-            "This converter only accepts parties with EdDSA keys"
-        }
-
-        return EdDSAAbstractParty(
-            original.nameOrNull()?.toString(),
-            original.owningKey.encoded
-        )
-    }
+object CordaX500NameConverter : ConversionProvider<CordaX500Name, CordaX500NameSurrogate> {
+    override fun from(original: CordaX500Name): CordaX500NameSurrogate =
+        CordaX500NameSurrogate("$original")
 }

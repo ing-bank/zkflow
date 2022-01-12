@@ -1,17 +1,16 @@
 package com.ing.zkflow.annotated.pilot.r3.states
 
 import com.ing.zkflow.Converter
-import com.ing.zkflow.Sha256
-import com.ing.zkflow.ZKP
 import com.ing.zkflow.annotated.pilot.infra.AmountConverter_IssuedTokenType
 import com.ing.zkflow.annotated.pilot.infra.AmountSurrogate_IssuedTokenType
-import com.ing.zkflow.annotated.pilot.infra.EdDSAAbstractParty
-import com.ing.zkflow.annotated.pilot.infra.EdDSAAbstractPartyConverter
 import com.ing.zkflow.annotated.pilot.r3.types.IssuedTokenType
+import com.ing.zkflow.annotations.ZKP
+import com.ing.zkflow.annotations.corda.EdDSA
+import com.ing.zkflow.annotations.corda.Sha256
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.FungibleState
 import net.corda.core.crypto.SecureHash
-import net.corda.core.identity.AbstractParty
+import net.corda.core.identity.Party
 import net.corda.core.schemas.MappedSchema
 import net.corda.core.schemas.PersistentState
 import net.corda.core.schemas.QueryableState
@@ -28,10 +27,10 @@ data class FungibleToken constructor(
     override val amount: @Converter<Amount<IssuedTokenType>, AmountSurrogate_IssuedTokenType>(
         AmountConverter_IssuedTokenType::class
     ) Amount<IssuedTokenType>,
-    override val holder: @Converter<AbstractParty, EdDSAAbstractParty>(EdDSAAbstractPartyConverter::class) AbstractParty,
+    override val holder: @EdDSA Party,
     override val tokenTypeJarHash: @Sha256 SecureHash? = SecureHash.zeroHash
 ) : AbstractFungibleToken() {
-    override fun withNewHolder(newHolder: AbstractParty): FungibleToken {
+    override fun withNewHolder(newHolder: Party): FungibleToken {
         return FungibleToken(amount, newHolder, tokenTypeJarHash = tokenTypeJarHash)
     }
 }

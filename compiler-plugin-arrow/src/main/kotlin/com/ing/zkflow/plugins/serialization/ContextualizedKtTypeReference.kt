@@ -1,5 +1,6 @@
 package com.ing.zkflow.plugins.serialization
 
+import com.ing.zkflow.SerdeLogger
 import org.jetbrains.kotlin.psi.KtAnnotationEntry
 import org.jetbrains.kotlin.psi.KtElement
 import org.jetbrains.kotlin.psi.KtTypeElement
@@ -50,9 +51,12 @@ class ContextualizedKtTypeReference(
      * Resolve a [KtElement] within the context of this [ktTypeReference].
      */
     fun resolveClass(argument: KtElement): BestEffortResolvedType = with(argument.text) {
+        SerdeLogger.log("Resolving $this")
         val simpleName = trim().replace("::class", "").trimStart('@').trim()
 
-        typeResolver.resolve(simpleName)
+        typeResolver.resolve(simpleName).also {
+            SerdeLogger.log("Resolved to $it")
+        }
     }
 
     /**
@@ -111,9 +115,47 @@ class ContextualizedKtTypeReference(
         }$nullability"
     }
 
-    inline fun <reified T> annotationSingleArgOrNull(): String? = ktTypeReference.annotationSingleArgOrNull<T>()
+    inline fun <reified T> annotationSingleArgument(): String? = ktTypeReference.annotationSingleArgument<T>()
 
-    inline fun <reified T> annotationOrNull(): KtAnnotationEntry? = ktTypeReference.annotationOrNull<T>()
+    inline fun <reified T> findAnnotation(): KtAnnotationEntry? = ktTypeReference.findAnnotation<T>()
+
+    /**
+     * - Inspect annotations of [ktTypeReference],
+     * - resolve it,
+     * - look for a specified annotation `T` of the resolved annotation,
+     * - combine them into a list and return.
+     *
+     * Searches only 1 level deep.
+     */
+    internal inline fun <reified T : Annotation> findMetaAnnotation(): List<BestEffortResolvedAnnotation> {
+        SerdeLogger.log(
+            """
+            Inspecting `${ktTypeReference.text}`:
+                annotations: [${ktTypeReference.annotationEntries.joinToString(separator = ", ") { it.text }}]
+            Looking for a meta-annotation ${T::class.qualifiedName!!} 
+            """.trimIndent()
+        )
+
+        return ktTypeReference
+            .annotationEntries
+            .mapNotNull { annotation ->
+                when (val resolved = resolveClass(annotation)) {
+                    is BestEffortResolvedType.AsIs -> null
+                    is BestEffortResolvedType.FullyQualified -> {
+                        resolved.findAnnotation<T>()?.let { ktAnnotationEntry ->
+                            BestEffortResolvedAnnotation.Instruction("${resolved.fqName}", ktAnnotationEntry)
+                        }
+                    }
+                    is BestEffortResolvedType.FullyResolved -> {
+                        resolved.findAnnotation<T>()?.let { type ->
+                            BestEffortResolvedAnnotation.Compiled("${resolved.fqName}", type)
+                        }
+                    }
+                }
+            }.also {
+                SerdeLogger.log("Meta annotations: [${it.joinToString {ma -> "$ma" }}]")
+            }
+    }
 }
 
 data class ContextualType(val bestEffortResolvedType: BestEffortResolvedType, val isNullable: Boolean) {

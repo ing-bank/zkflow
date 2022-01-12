@@ -1,18 +1,21 @@
 package com.ing.zkflow.plugins.serialization
 
-import com.ing.zkflow.ASCII
-import com.ing.zkflow.ASCIIChar
-import com.ing.zkflow.BigDecimalSize
 import com.ing.zkflow.Converter
-import com.ing.zkflow.HashSize
 import com.ing.zkflow.Resolver
 import com.ing.zkflow.SerdeLogger
-import com.ing.zkflow.Size
 import com.ing.zkflow.Surrogate
-import com.ing.zkflow.UTF8
-import com.ing.zkflow.UTF8Char
-import com.ing.zkflow.ZKP
+import com.ing.zkflow.annotations.ASCII
+import com.ing.zkflow.annotations.ASCIIChar
+import com.ing.zkflow.annotations.BigDecimalSize
+import com.ing.zkflow.annotations.Size
+import com.ing.zkflow.annotations.UTF8
+import com.ing.zkflow.annotations.UTF8Char
+import com.ing.zkflow.annotations.ZKP
+import com.ing.zkflow.annotations.corda.CordaX500NameSpec
+import com.ing.zkflow.annotations.corda.HashSize
+import com.ing.zkflow.annotations.corda.SignatureSpec
 import com.ing.zkflow.plugins.serialization.serializingobject.SerializingObject
+import com.ing.zkflow.plugins.serialization.serializingobject.Tracker
 import com.ing.zkflow.plugins.serialization.serializingobject.TypeSerializingObject
 import com.ing.zkflow.serialization.serializer.BooleanSerializer
 import com.ing.zkflow.serialization.serializer.ByteSerializer
@@ -24,7 +27,7 @@ import com.ing.zkflow.serialization.serializer.FixedLengthSetSerializer
 import com.ing.zkflow.serialization.serializer.InstantSerializer
 import com.ing.zkflow.serialization.serializer.IntSerializer
 import com.ing.zkflow.serialization.serializer.LongSerializer
-import com.ing.zkflow.serialization.serializer.SecureHashSerializer
+import com.ing.zkflow.serialization.serializer.SerializerWithDefault
 import com.ing.zkflow.serialization.serializer.ShortSerializer
 import com.ing.zkflow.serialization.serializer.SurrogateSerializer
 import com.ing.zkflow.serialization.serializer.UByteSerializer
@@ -36,9 +39,17 @@ import com.ing.zkflow.serialization.serializer.WrappedKSerializer
 import com.ing.zkflow.serialization.serializer.WrappedKSerializerWithDefault
 import com.ing.zkflow.serialization.serializer.char.ASCIICharSerializer
 import com.ing.zkflow.serialization.serializer.char.UTF8CharSerializer
+import com.ing.zkflow.serialization.serializer.corda.AnonymousPartySerializer
+import com.ing.zkflow.serialization.serializer.corda.CordaX500NameSerializer
+import com.ing.zkflow.serialization.serializer.corda.PartySerializer
+import com.ing.zkflow.serialization.serializer.corda.SecureHashSerializer
 import com.ing.zkflow.serialization.serializer.string.FixedLengthASCIIStringSerializer
 import com.ing.zkflow.serialization.serializer.string.FixedLengthUTF8StringSerializer
 import net.corda.core.crypto.SecureHash
+import net.corda.core.identity.AbstractParty
+import net.corda.core.identity.AnonymousParty
+import net.corda.core.identity.CordaX500Name
+import net.corda.core.identity.Party
 import org.jetbrains.kotlin.psi.KtValueArgument
 import java.math.BigDecimal
 import java.time.Instant
@@ -152,7 +163,7 @@ internal object Processors {
         //
         Char::class.simpleName!! to ToSerializingObject { contextualizedOriginal, _ ->
             // Require com.ing.zkflow.annotations.ASCIIChar/com.ing.zkflow.annotations.UTF8Char annotation.
-            contextualizedOriginal.annotationOrNull<ASCIIChar>()?.let {
+            contextualizedOriginal.findAnnotation<ASCIIChar>()?.let {
                 return@ToSerializingObject TypeSerializingObject.ExplicitType(
                     contextualizedOriginal,
                     WrappedKSerializerWithDefault::class,
@@ -162,7 +173,7 @@ internal object Processors {
                 }
             }
 
-            contextualizedOriginal.annotationOrNull<UTF8Char>()?.let {
+            contextualizedOriginal.findAnnotation<UTF8Char>()?.let {
                 return@ToSerializingObject TypeSerializingObject.ExplicitType(
                     contextualizedOriginal,
                     WrappedKSerializerWithDefault::class,
@@ -177,7 +188,7 @@ internal object Processors {
         //
         String::class.simpleName!! to ToSerializingObject { contextualizedOriginal, _ ->
             // Require com.ing.zkflow.annotations.ASCII/com.ing.zkflow.annotations.UTF8 annotation.
-            contextualizedOriginal.annotationSingleArgOrNull<ASCII>()?.let { maxLength ->
+            contextualizedOriginal.annotationSingleArgument<ASCII>()?.let { maxLength ->
                 return@ToSerializingObject TypeSerializingObject.ExplicitType(
                     contextualizedOriginal,
                     FixedLengthASCIIStringSerializer::class,
@@ -187,7 +198,7 @@ internal object Processors {
                 }
             }
 
-            contextualizedOriginal.annotationSingleArgOrNull<UTF8>()?.let { maxLength ->
+            contextualizedOriginal.annotationSingleArgument<UTF8>()?.let { maxLength ->
                 return@ToSerializingObject TypeSerializingObject.ExplicitType(
                     contextualizedOriginal,
                     FixedLengthUTF8StringSerializer::class,
@@ -205,7 +216,7 @@ internal object Processors {
         //
         ByteArray::class.simpleName!! to ToSerializingObject { contextualizedOriginal, _ ->
             // Require com.ing.zkflow.annotations.Size annotation.
-            val maxSizeArgument = contextualizedOriginal.annotationSingleArgOrNull<Size>()
+            val maxSizeArgument = contextualizedOriginal.annotationSingleArgument<Size>()
                 ?: error("Ill-defined type `${contextualizedOriginal.ktTypeReference.text}`. ${ByteArray::class.simpleName} must be annotated with ${Size::class.simpleName}")
 
             TypeSerializingObject.ExplicitType(
@@ -227,7 +238,7 @@ internal object Processors {
     internal val genericCollections: Map<String, ToSerializingObject> = mapOf(
         List::class.simpleName!! to ToSerializingObject { contextualizedOriginal, children ->
             // Require com.ing.zkflow.annotations.Size annotation.
-            val maxSize = contextualizedOriginal.annotationSingleArgOrNull<Size>()?.toInt()
+            val maxSize = contextualizedOriginal.annotationSingleArgument<Size>()?.toInt()
                 ?: error("Ill-defined type `${contextualizedOriginal.ktTypeReference.text}`. ${List::class.simpleName} must be annotated with ${Size::class.simpleName}")
             val item = children.singleOrNull()
                 ?: error("${FixedLengthListSerializer::class.qualifiedName} requires exactly one child")
@@ -244,7 +255,7 @@ internal object Processors {
         //
         Set::class.simpleName!! to ToSerializingObject { contextualizedOriginal, children ->
             // Require com.ing.zkflow.annotations.Size annotation.
-            val maxSize = contextualizedOriginal.annotationSingleArgOrNull<Size>()?.toInt()
+            val maxSize = contextualizedOriginal.annotationSingleArgument<Size>()?.toInt()
                 ?: error("Ill-defined type `${contextualizedOriginal.ktTypeReference.text}`. ${Set::class.simpleName} must be annotated with ${Size::class.simpleName}")
             val item = children.singleOrNull()
                 ?: error("${FixedLengthSetSerializer::class.qualifiedName} requires exactly one child")
@@ -261,7 +272,7 @@ internal object Processors {
         //
         Map::class.simpleName!! to ToSerializingObject { contextualizedOriginal, children ->
             // Require com.ing.zkflow.annotations.Size annotation.
-            val maxSize = contextualizedOriginal.annotationSingleArgOrNull<Size>()?.toInt()
+            val maxSize = contextualizedOriginal.annotationSingleArgument<Size>()?.toInt()
                 ?: error("Ill-defined type `${contextualizedOriginal.ktTypeReference.text}`. ${Map::class.simpleName} must be annotated with ${Size::class.simpleName}(max collection size)")
 
             val key = children.getOrNull(0) ?: error("Map requires a key descriptor")
@@ -290,16 +301,16 @@ internal object Processors {
      * Other types not from Kotlin standard library.
      */
     private val extendedTypes: Map<String, ToSerializingObject> = mapOf(
-        BigDecimal::class.qualifiedName!! to ToSerializingObject { contextualizedOriginal, _ ->
+        BigDecimal::class.qualifiedName!! to ToSerializingObject { contextualOriginal, _ ->
             // Require com.ing.zkflow.annotations.BigDecimalSize annotation.
-            val (integerPart, fractionPart) = contextualizedOriginal.annotationOrNull<BigDecimalSize>()?.run {
+            val (integerPart, fractionPart) = contextualOriginal.findAnnotation<BigDecimalSize>()?.run {
                 val integerPart = valueArguments[0].asElement().text.trim().toInt()
                 val fractionPart = valueArguments[1].asElement().text.trim().toInt()
                 Pair(integerPart, fractionPart)
-            } ?: error("Ill-defined type `${contextualizedOriginal.ktTypeReference.text}`. ${BigDecimal::class.simpleName} must be annotated with ${BigDecimalSize::class.simpleName}")
+            } ?: error("Ill-defined type `${contextualOriginal.ktTypeReference.text}`. ${BigDecimal::class.simpleName} must be annotated with ${BigDecimalSize::class.simpleName}")
 
             TypeSerializingObject.ExplicitType(
-                contextualizedOriginal,
+                contextualOriginal,
                 FixedLengthFloatingPointSerializer.BigDecimalSerializer::class,
                 emptyList()
             ) { _, outer, _ ->
@@ -307,9 +318,9 @@ internal object Processors {
             }
         },
 
-        Instant::class.qualifiedName!! to ToSerializingObject { contextualizedOriginal, _ ->
+        Instant::class.qualifiedName!! to ToSerializingObject { contextualOriginal, _ ->
             TypeSerializingObject.ExplicitType(
-                contextualizedOriginal,
+                contextualOriginal,
                 InstantSerializer::class,
                 emptyList()
             ) { _, outer, _ ->
@@ -317,9 +328,9 @@ internal object Processors {
             }
         },
 
-        UUID::class.qualifiedName!! to ToSerializingObject { contextualizedOriginal, _ ->
+        UUID::class.qualifiedName!! to ToSerializingObject { contextualOriginal, _ ->
             TypeSerializingObject.ExplicitType(
-                contextualizedOriginal,
+                contextualOriginal,
                 UUIDSerializer::class,
                 emptyList()
             ) { _, outer, _ ->
@@ -328,55 +339,24 @@ internal object Processors {
         },
 
         /**
-         *   An annotation specifying a hashing algorithm is required.
-         *   To find such an annotation and the respective length we follow these steps:
-         *   - get all annotations,
-         *   - loop through them,
-         *   - resolve each annotation,
-         *   - examine each annotation by looking for [HashSize] annotation,
-         *   - two options are possible (a) and (b)
-         *   (a) say, there is such an annotation @A, annotation name is used as the hash algorithm name,
-         *   (a) get `size` field of [HashSize]
-         *   (a) create a SecureHashSerializer(`A`, `length`)
-         *   (b) there is no such annotation
-         *   (b) recurse to the [forUserType]
+         * To serialize [SecureHash], a single annotation annotated with [HashSize] must be present.
+         * Otherwise, recurse to [forUserType].
          */
         SecureHash::class.qualifiedName!! to ToSerializingObject { contextualOriginal, _ ->
-            val hashSpecs = contextualOriginal.ktTypeReference
-                .annotationEntries
-                .filter {
-                    // By convention SecureHash-specific annotation must have neither type parameters nor value arguments
-                    it.typeArguments.isEmpty() && it.valueArguments.isEmpty()
-                }
-                .mapNotNull { possibleHashAnnotation ->
-                    SerdeLogger.log("Resolving ${possibleHashAnnotation.text}")
-                    val resolved = contextualOriginal.resolveClass(possibleHashAnnotation)
-                    SerdeLogger.log("Resolved to $resolved")
-
-                    val hashSize = when (resolved) {
-                        is BestEffortResolvedType.AsIs -> null
-                        is BestEffortResolvedType.FullyQualified -> {
-                            resolved.findAnnotation<HashSize>()?.valueArguments?.single()?.asElement()?.text
-                                ?: error("${SecureHash::class.qualifiedName} must be annotated with a hash specific annotation, i.e., an annotation class itself annotated with ${HashSize::class.qualifiedName} annotation")
-                        }
-                        is BestEffortResolvedType.FullyResolved -> {
-                            resolved.findAnnotation<HashSize>()?.size?.toString()
-                                ?: error("${SecureHash::class.qualifiedName} must be annotated with a hash specific annotation, i.e., an annotation class itself annotated with ${HashSize::class.qualifiedName} annotation")
-                        }
-                    }
-
-                    hashSize?.let {
-                        Pair(possibleHashAnnotation.text.replace("@", ""), it)
-                    }
-                }
-
-            when (hashSpecs.size) {
+            val metaAnnotations = contextualOriginal.findMetaAnnotation<HashSize>()
+            when (metaAnnotations.size) {
                 0 -> {
                     // SecureHash has no hash specific annotation, recurse to treating it as a generic user type.
+                    SerdeLogger.log("Re-cursing to default treatment of ${contextualOriginal.ktTypeReference.text}")
                     forUserType(contextualOriginal)
                 }
                 1 -> {
-                    val (algorithm, size) = hashSpecs.single()
+                    val meta = metaAnnotations.single()
+                    val algorithm = meta.root.split(".").last()
+                    val size = when (meta) {
+                        is BestEffortResolvedAnnotation.Instruction -> meta.annotation.valueArguments.single().asElement().text
+                        is BestEffortResolvedAnnotation.Compiled<*> -> (meta.annotation as HashSize).size.toString()
+                    }
 
                     TypeSerializingObject.ExplicitType(
                         contextualOriginal,
@@ -384,9 +364,129 @@ internal object Processors {
                         emptyList()
                     ) { _, outer, _ ->
                         "object $outer: ${SecureHashSerializer::class.qualifiedName}(\"$algorithm\", $size)"
+                    }.also {
+                        SerdeLogger.log("Type ${contextualOriginal.ktTypeReference.text} processed successfully")
                     }
                 }
-                else -> error("Hash spec annotations are not repeatable, got ${hashSpecs.joinToString(separator = ", ") { "${it.first}(size = ${it.second})" }}")
+                else -> error("Hash spec annotations are not repeatable, got [${metaAnnotations.joinToString(separator = ", ") { it.root }}] (size = ${metaAnnotations.size})")
+            }
+        },
+
+        /**
+         * Ban the usage of [AbstractParty].
+         */
+        AbstractParty::class.qualifiedName!! to ToSerializingObject { _, _ ->
+            error(
+                """
+                Usage of ${AbstractParty::class.qualifiedName} is not permitted.
+                Select either ${AnonymousParty::class.qualifiedName} or ${Party::class.qualifiedName}
+                """.trimIndent()
+            )
+        },
+
+        /**
+         * To serialize [AnonymousParty], a single annotation annotated with [SignatureSpec] must be present.
+         * Otherwise, recurse to [forUserType].
+         */
+        AnonymousParty::class.qualifiedName!! to ToSerializingObject { contextualOriginal, _ ->
+            val metaAnnotations = contextualOriginal.findMetaAnnotation<SignatureSpec>()
+            when (metaAnnotations.size) {
+                0 -> {
+                    // AnonymousParty has no signature specific annotations, recurse to treating it as a generic user type.
+                    SerdeLogger.log("Re-cursing to default treatment of ${contextualOriginal.ktTypeReference.text}")
+                    forUserType(contextualOriginal)
+                }
+                1 -> {
+                    val cordaSignatureId = when (val meta = metaAnnotations.single()) {
+                        is BestEffortResolvedAnnotation.Instruction -> error(
+                            """
+                            User defined signature schemes are prohibited.
+                            Scheme ${meta.root} has no corresponding Corda signature scheme.
+                            """.trimIndent()
+                        )
+                        is BestEffortResolvedAnnotation.Compiled<*> -> (meta.annotation as SignatureSpec).cordaSignatureId
+                    }
+
+                    TypeSerializingObject.ExplicitType(
+                        contextualOriginal,
+                        AnonymousPartySerializer::class,
+                        emptyList()
+                    ) { _, outer, _ ->
+                        "object $outer: ${AnonymousPartySerializer::class.qualifiedName}($cordaSignatureId)"
+                    }.also {
+                        SerdeLogger.log("Type ${contextualOriginal.ktTypeReference.text} processed successfully")
+                    }
+                }
+                else -> error("Signature spec annotations are not repeatable, got [${metaAnnotations.joinToString(separator = ", ") { it.root }}] (size = ${metaAnnotations.size})")
+            }
+        },
+
+        /**
+         * To serialize [Party], several annotations may be present:
+         * - a single annotation annotated with [SignatureSpec]
+         * - zero or one annotation annotated with [CordaX500NameSpec]
+         * Otherwise, recurse to [forUserType].
+         */
+        Party::class.qualifiedName!! to ToSerializingObject { contextualOriginal, _ ->
+            // Look for signature specification:
+            val metaSignatureAnnotations = contextualOriginal.findMetaAnnotation<SignatureSpec>()
+
+            val cordaSignatureId = when (metaSignatureAnnotations.size) {
+                0 -> {
+                    // AnonymousParty has no signature specific annotations, recurse to treating it as a generic user type.
+                    SerdeLogger.log("Re-cursing to default treatment of ${contextualOriginal.ktTypeReference.text}")
+                    return@ToSerializingObject forUserType(contextualOriginal)
+                }
+                1 -> when (val meta = metaSignatureAnnotations.single()) {
+                    is BestEffortResolvedAnnotation.Instruction -> error(
+                        """
+                        User defined signature schemes are prohibited.
+                        Scheme ${meta.root} has no corresponding Corda signature scheme.
+                        """.trimIndent()
+                    )
+                    is BestEffortResolvedAnnotation.Compiled<*> -> (meta.annotation as SignatureSpec).cordaSignatureId
+                }
+                else -> error("Signature spec annotations are not repeatable, got [${metaSignatureAnnotations.joinToString(separator = ", ") { it.root }}] (size = ${metaSignatureAnnotations.size})")
+            }
+
+            // Look for CordaX500Name specification:
+            val nameSpecAnnotations = contextualOriginal.findAnnotation<CordaX500NameSpec<*>>()
+
+            val inner: (Tracker) -> String = if (nameSpecAnnotations == null) {
+                //
+                // if none, use the default CordaX500NameSerializer
+                { tracker -> "object $tracker: ${WrappedKSerializerWithDefault::class.qualifiedName}<${CordaX500Name::class.qualifiedName}>(${CordaX500NameSerializer::class.qualifiedName})" }
+            } else {
+                //
+                // if single, parse its arguments and create a chain of serializing objects.
+                val surrogate = ContextualizedKtTypeReference(
+                    nameSpecAnnotations.typeArguments.firstOrNull()?.typeReference
+                        ?: error("Cannot resolve surrogate type for $nameSpecAnnotations; expected as the second type argument"),
+                    contextualOriginal.typeResolver
+                )
+                val conversionProvider = surrogate.resolveClass(nameSpecAnnotations.valueArguments.single() as KtValueArgument);
+
+                { tracker: Tracker ->
+                    """
+                    object $tracker : ${SerializerWithDefault::class.qualifiedName}<${CordaX500Name::class.qualifiedName}>(${tracker.next()}, ${CordaX500NameSerializer::class.qualifiedName}.default)
+                    object ${tracker.next()} : ${SurrogateSerializer::class.qualifiedName}<${CordaX500Name::class.qualifiedName}, CordaX500NameSurrogate>(
+                        ${surrogate.cleanTypeDeclaration}.serializer(), { ${conversionProvider.asString()}.from(it) }
+                    )
+                    """.trimIndent()
+                }
+            }
+
+            TypeSerializingObject.ExplicitType(
+                contextualOriginal,
+                PartySerializer::class,
+                emptyList()
+            ) { _, outer, _ ->
+                """
+                object $outer: ${PartySerializer::class.qualifiedName}($cordaSignatureId, ${outer.next()})
+                ${inner(outer.next())} 
+                """.trimIndent()
+            }.also {
+                SerdeLogger.log("Type ${contextualOriginal.ktTypeReference.text} processed successfully")
             }
         }
     )
@@ -407,14 +507,14 @@ internal object Processors {
     /**
      * All types which are not supported natively are treated as user types.
      */
-    private val userType = ToSerializingObject { contextualizedOriginal, _ ->
+    private val userType = ToSerializingObject { contextualOriginal, _ ->
         // Here we process 3rd party classes or own serializable classes.
         // • To process a 3rd type via a surrogate, minimally com.ing.zkflow.annotations.Converter or com.ing.zkflow.annotations.Resolver must be present.
         //   At this step, only conversion will be taken into account, respective surrogate will be wrapped into
         //   a defaulted serializer if required.
         // • Own classes must be verified to have been annotated with a com.ing.zkflow.annotations.ZKP annotation to be serializable.
-        with(contextualizedOriginal) {
-            annotationOrNull<Converter<*, *>>()?.let {
+        with(contextualOriginal) {
+            findAnnotation<Converter<*, *>>()?.let {
                 // Surrogate class is the _second_ type argument.
                 // Conversion provider is the _first_ and _only_ argument.
                 // TODO Ideally surrogate class can be deduced from the conversion provider.
@@ -427,7 +527,7 @@ internal object Processors {
 
                 Pair(surrogate, conversionProvider)
             }
-                ?: annotationOrNull<Resolver<*, *>>()?.let {
+                ?: findAnnotation<Resolver<*, *>>()?.let {
                     val surrogate = ContextualizedKtTypeReference(
                         it.typeArguments.getOrNull(1)?.typeReference
                             ?: error("Cannot resolve surrogate type for $it; expected as the second type argument"),
@@ -444,7 +544,7 @@ internal object Processors {
         }?.let { (surrogate, conversionProvider) ->
             // If conversion provider is PRESENT
             // => serialize the class via a surrogate.
-            TypeSerializingObject.UserType(contextualizedOriginal) { self, outer ->
+            TypeSerializingObject.UserType(contextualOriginal) { self, outer ->
                 """
                 object $outer: ${SurrogateSerializer::class.qualifiedName}<${self.cleanTypeDeclaration}, ${surrogate.cleanTypeDeclaration}>(
                     ${surrogate.cleanTypeDeclaration}.serializer(), { ${conversionProvider.asString()}.from(it) }
@@ -459,12 +559,12 @@ internal object Processors {
                     """
                     Class $it is not serializable;
                     For own classes, annotate it with `${ZKP::class.qualifiedName}`,
-                    for 3rd-party classes, introduce an appropriate ${Surrogate::class.qualifiedName}")
+                    for 3rd-party classes, introduce an appropriate ${Surrogate::class.qualifiedName}"
                     """.trimIndent()
                 )
             }
 
-            with(contextualizedOriginal.rootType.bestEffortResolvedType) {
+            with(contextualOriginal.rootType.bestEffortResolvedType) {
                 when (this) {
                     is BestEffortResolvedType.AsIs -> errorSerializerAbsentFor(simpleName)
                     is BestEffortResolvedType.FullyQualified -> findAnnotation<ZKP>() ?: errorSerializerAbsentFor("$fqName")
@@ -472,7 +572,7 @@ internal object Processors {
                 }
             }
 
-            TypeSerializingObject.UserType(contextualizedOriginal) { self, outer ->
+            TypeSerializingObject.UserType(contextualOriginal) { self, outer ->
                 "object $outer: ${WrappedKSerializer::class.qualifiedName}<${self.cleanTypeDeclaration}>(${self.cleanTypeDeclaration}.serializer())"
             }
         }

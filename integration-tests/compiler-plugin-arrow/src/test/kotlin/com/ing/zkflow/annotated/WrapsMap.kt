@@ -1,8 +1,8 @@
 package com.ing.zkflow.annotated
 
-import com.ing.zkflow.ASCII
-import com.ing.zkflow.Size
-import com.ing.zkflow.ZKP
+import com.ing.zkflow.annotations.ASCII
+import com.ing.zkflow.annotations.Size
+import com.ing.zkflow.annotations.ZKP
 
 @ZKP
 data class WrapsMap(

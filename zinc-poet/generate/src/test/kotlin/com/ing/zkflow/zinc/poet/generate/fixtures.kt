@@ -8,12 +8,12 @@ import com.ing.zinc.bfl.dsl.ListBuilder.Companion.utf8String
 import com.ing.zinc.bfl.dsl.MapBuilder.Companion.map
 import com.ing.zinc.bfl.dsl.OptionBuilder.Companion.option
 import com.ing.zinc.bfl.dsl.StructBuilder.Companion.struct
-import com.ing.zkflow.ASCII
-import com.ing.zkflow.ASCIIChar
-import com.ing.zkflow.Size
-import com.ing.zkflow.UTF8
-import com.ing.zkflow.UTF8Char
-import com.ing.zkflow.ZKP
+import com.ing.zkflow.annotations.ASCII
+import com.ing.zkflow.annotations.ASCIIChar
+import com.ing.zkflow.annotations.Size
+import com.ing.zkflow.annotations.UTF8
+import com.ing.zkflow.annotations.UTF8Char
+import com.ing.zkflow.annotations.ZKP
 
 @ZKP
 data class ClassWithBoolean(val boolean: Boolean)

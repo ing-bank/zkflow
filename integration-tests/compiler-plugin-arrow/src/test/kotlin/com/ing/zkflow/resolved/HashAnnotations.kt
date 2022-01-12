@@ -13,8 +13,8 @@ data class HashAnnotations(
     @kotlinx.serialization.Serializable(with = Sha256_0::class) val sha256: @kotlinx.serialization.Contextual SecureHash = SecureHash.zeroHash,
     @kotlinx.serialization.Serializable(with = FancyHash_0::class) val fancyHash: @kotlinx.serialization.Contextual SecureHash = SecureHash.HASH("FancyHash", ByteArray(8) { 0 })
 ) {
-    object Sha256_0 : com.ing.zkflow.serialization.serializer.SecureHashSerializer("Sha256", 32)
-    object FancyHash_0 : com.ing.zkflow.serialization.serializer.SecureHashSerializer("FancyHash", 8)
+    object Sha256_0 : com.ing.zkflow.serialization.serializer.corda.SecureHashSerializer("Sha256", 32)
+    object FancyHash_0 : com.ing.zkflow.serialization.serializer.corda.SecureHashSerializer("FancyHash", 8)
 }
 
 class HashAnnotationsTest : SerializerTest {

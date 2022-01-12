@@ -2,6 +2,7 @@ package com.ing.zkflow
 
 import com.ing.zkflow.annotated.pilot.ivno.IvnoTokenType
 import com.ing.zkflow.annotated.pilot.r3.types.TokenType
+import com.ing.zkflow.annotations.ZKP
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.Transient
 import org.junit.jupiter.params.ParameterizedTest

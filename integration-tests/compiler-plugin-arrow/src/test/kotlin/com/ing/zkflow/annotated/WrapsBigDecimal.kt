@@ -1,7 +1,7 @@
 package com.ing.zkflow.annotated
 
-import com.ing.zkflow.BigDecimalSize
-import com.ing.zkflow.ZKP
+import com.ing.zkflow.annotations.BigDecimalSize
+import com.ing.zkflow.annotations.ZKP
 import java.math.BigDecimal
 
 @ZKP
