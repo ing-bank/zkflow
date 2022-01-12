@@ -15,7 +15,7 @@ import net.corda.core.crypto.Crypto
  * Unfortunately, values like [Crypto.EDDSA_ED25519_SHA512.schemeNumberID] cannot be used directly for id
  * when defining a corresponding signature specification, because they're contained in values constructed at compile time.
  */
-annotation class SignatureSpec constructor(val cordaSignatureId: Int)
+annotation class SignatureSpec(val cordaSignatureId: Int)
 
 @Target(AnnotationTarget.TYPE)
 @Suppress("MagicNumber")

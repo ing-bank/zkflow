@@ -21,7 +21,7 @@ interface ConversionProvider<T : Any, S : Surrogate<T>> {
 
 @Target(AnnotationTarget.TYPE)
 // TODO get rid of S here and com.ing.zkflow.Resolver
-annotation class Converter<T : Any, S : Surrogate<T>>(val provider: KClass<out ConversionProvider<T, out Surrogate<T>>>)
+annotation class Converter<T : Any, S : Surrogate<T>>(val provider: KClass<out ConversionProvider<T, out S>>)
 
 /**
  * Conveniently define default provider and resolver.
@@ -29,7 +29,7 @@ annotation class Converter<T : Any, S : Surrogate<T>>(val provider: KClass<out C
 @Target(AnnotationTarget.TYPE)
 annotation class Resolver<T : Any, S : Surrogate<T>>(
     val defaultProvider: KClass<out DefaultProvider<T>>,
-    val converterProvider: KClass<out ConversionProvider<T, out Surrogate<T>>>
+    val converterProvider: KClass<out ConversionProvider<T, out S>>
 )
 
 /**
