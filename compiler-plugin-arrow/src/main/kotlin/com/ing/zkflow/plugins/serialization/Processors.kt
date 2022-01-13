@@ -343,21 +343,42 @@ internal object Processors {
          * Otherwise, recurse to [forUserType].
          */
         SecureHash::class.qualifiedName!! to ToSerializingObject { contextualOriginal, _ ->
-            val metaAnnotations = contextualOriginal.findMetaAnnotation<HashSize>()
-            when (metaAnnotations.size) {
+            val hashSpecs = contextualOriginal.ktTypeReference
+                .annotationEntries
+                .filter {
+                    // By convention SecureHash-specific annotation must have neither type parameters nor value arguments
+                    it.typeArguments.isEmpty() && it.valueArguments.isEmpty()
+                }
+                .mapNotNull { possibleHashAnnotation ->
+                    SerdeLogger.log("Resolving annotation ${possibleHashAnnotation.text}")
+                    val resolved = contextualOriginal.resolveClass(possibleHashAnnotation)
+                    SerdeLogger.log("Annotation resolved to $resolved")
+
+                    val hashSize = when (resolved) {
+                        is BestEffortResolvedType.AsIs -> null
+                        is BestEffortResolvedType.FullyQualified -> {
+                            resolved.findAnnotation<HashSize>()?.valueArguments?.single()?.asElement()?.text
+                                ?: error("${SecureHash::class.qualifiedName} must be annotated with a hash specific annotation, i.e., an annotation class itself annotated with ${HashSize::class.qualifiedName} annotation")
+                        }
+                        is BestEffortResolvedType.FullyResolved -> {
+                            resolved.findAnnotation<HashSize>()?.size?.toString()
+                                ?: error("${SecureHash::class.qualifiedName} must be annotated with a hash specific annotation, i.e., an annotation class itself annotated with ${HashSize::class.qualifiedName} annotation")
+                        }
+                    }
+
+                    hashSize?.let {
+                        Pair(possibleHashAnnotation.text.replace("@", ""), it)
+                    }
+                }
+
+            when (hashSpecs.size) {
                 0 -> {
                     // SecureHash has no hash specific annotation, recurse to treating it as a generic user type.
-                    SerdeLogger.log("Re-cursing to default treatment of ${contextualOriginal.ktTypeReference.text}")
+                    SerdeLogger.log("${SecureHash::class.simpleName} has insufficient special annotations.\nTreat it as a general user type.")
                     forUserType(contextualOriginal)
                 }
                 1 -> {
-                    val meta = metaAnnotations.single()
-                    val algorithm = meta.root.split(".").last()
-                    val size = when (meta) {
-                        is BestEffortResolvedAnnotation.Instruction -> meta.annotation.valueArguments.single().asElement().text
-                        is BestEffortResolvedAnnotation.Compiled<*> -> (meta.annotation as HashSize).size.toString()
-                    }
-
+                    val (algorithm, size) = hashSpecs.single()
                     TypeSerializingObject.ExplicitType(
                         contextualOriginal,
                         SecureHashSerializer::class,
@@ -365,10 +386,10 @@ internal object Processors {
                     ) { _, outer, _ ->
                         "object $outer: ${SecureHashSerializer::class.qualifiedName}(\"$algorithm\", $size)"
                     }.also {
-                        SerdeLogger.log("Type ${contextualOriginal.ktTypeReference.text} processed successfully")
+                        SerdeLogger.log("SUCCESS")
                     }
                 }
-                else -> error("Hash spec annotations are not repeatable, got [${metaAnnotations.joinToString(separator = ", ") { it.root }}] (size = ${metaAnnotations.size})")
+                else -> error("Hash spec annotations are not repeatable, got ${hashSpecs.joinToString(separator = ", ") { "${it.first}(size = ${it.second})" }}")
             }
         },
 

@@ -6,9 +6,10 @@ import arrow.meta.invoke
 import arrow.meta.quotes.Transform
 import arrow.meta.quotes.classDeclaration
 import com.ing.zkflow.SerdeIndex
+import com.ing.zkflow.SerdeLogger
 import org.jetbrains.kotlin.name.Name
 
-private const val PROCESSING_UNIT = "User Classes Indexer"
+private const val PROCESSING_UNIT = "USER CLASS INDEXER"
 
 /**
  * Indexes every user class for further type resolution.
@@ -16,16 +17,20 @@ private const val PROCESSING_UNIT = "User Classes Indexer"
 val Meta.UserClassesIndexer: CliPlugin
     get() = PROCESSING_UNIT {
         meta(
-            classDeclaration(this, match = {
-                val className = element.name
+            classDeclaration(
+                this, match = {
+                    SerdeLogger.mergePhase(PROCESSING_UNIT)
 
-                if (className != null) {
-                    val fqName = element.containingKtFile.packageFqName.child(Name.identifier(className))
-                    SerdeIndex.register(fqName, element.annotationEntries)
+                    val className = element.name
+
+                    if (className != null) {
+                        val fqName = element.containingKtFile.packageFqName.child(Name.identifier(className))
+                        SerdeIndex.register(fqName, element.annotationEntries)
+                    }
+
+                    false
                 }
-
-                false
-            }) { (ktClass, _) ->
+            ) { (ktClass, _) ->
                 // This function will never be called.
                 Transform.replace(
                     replacing = ktClass,
