@@ -1,11 +1,9 @@
 package com.ing.zkflow.zinc.poet.generate
 
 import com.ing.zkflow.annotations.ZKP
-import com.ing.zkflow.common.contracts.ZKTransactionMetadataCommandData
+import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
-import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
 import com.ing.zkflow.common.zkp.metadata.commandMetadata
-import com.ing.zkflow.common.zkp.metadata.transactionMetadata
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.Contract
 import net.corda.core.contracts.ContractState
@@ -15,28 +13,28 @@ import net.corda.core.transactions.LedgerTransaction
 object MyContract : Contract {
     override fun verify(tx: LedgerTransaction) {}
 
-    class MyFirstCommand : ZKTransactionMetadataCommandData {
-        override val transactionMetadata: ResolvedZKTransactionMetadata by transactionMetadata {
-            commands {
-                +MyFirstCommand::class
-            }
-        }
+    class MyFirstCommand : ZKCommandData {
 
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
-            private = true
             circuit {
                 name = this::class.simpleName!!
             }
             numberOfSigners = 1
             inputs {
-                2 of MyState::class
-                1 of MyOtherState::class
+                0 private MyState::class
+                1 private MyState::class
+                2 private MyOtherState::class
             }
             outputs {
-                3 of MyState::class
+                0 private MyState::class
+                1 private MyState::class
+                2 private MyState::class
             }
             references {
-                4 of MyState::class
+                0 private MyState::class
+                1 private MyState::class
+                2 private MyState::class
+                3 private MyState::class
             }
         }
     }

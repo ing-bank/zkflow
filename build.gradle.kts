@@ -222,7 +222,7 @@ subprojects {
             // This applies to all test types, both fast and slow
             withType<Test> {
                 dependsOn(":checkZincVersion")
-                dependsOn(":zinc-platform-sources:circuits") // Make sure that the Zinc circuit is ready to use when running tests
+//                dependsOn(":zinc-platform-sources:circuits") // Make sure that the Zinc circuit is ready to use when running tests
 
                 val cores = Runtime.getRuntime().availableProcessors()
                 maxParallelForks = (Runtime.getRuntime().availableProcessors() / 2).takeIf { it > 0 } ?: 1

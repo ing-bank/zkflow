@@ -4,12 +4,11 @@ import com.ing.zinc.bfl.BflModule
 import com.ing.zinc.bfl.BflStruct
 import com.ing.zinc.bfl.dsl.ArrayBuilder.Companion.array
 import com.ing.zinc.bfl.dsl.StructBuilder.Companion.struct
-import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
+import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.nonceDigest
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.privacySalt
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.secureHash
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.timeWindow
-import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.ATTACHMENTS
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.COMMANDS
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.INPUTS
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.INPUT_NONCES
@@ -29,24 +28,23 @@ class LedgerTransactionFactory(
     fun createLedgerTransaction(
         inputGroup: BflModule,
         referencesGroup: BflModule,
-        transactionMetadata: ResolvedZKTransactionMetadata,
+        commandMetadata: ResolvedZKCommandMetadata,
         witness: Witness,
     ): BflStruct = struct {
         name = LEDGER_TRANSACTION
         field { name = INPUTS; type = inputGroup }
         field { name = OUTPUTS; type = witness.serializedOutputGroup.deserializedStruct }
         field { name = REFERENCES; type = referencesGroup }
-        field { name = COMMANDS; type = commandGroupFactory.createCommandGroup(transactionMetadata) }
-        field { name = ATTACHMENTS; type = array { capacity = transactionMetadata.attachmentCount; elementType = secureHash } }
+        field { name = COMMANDS; type = commandGroupFactory.createCommandGroup(commandMetadata) }
         field { name = NOTARY; type = standardTypes.notaryModule }
-        if (transactionMetadata.hasTimeWindow) {
+        if (commandMetadata.timeWindow) {
             field { name = TIME_WINDOW; type = timeWindow }
         }
-        field { name = SIGNERS; type = array { capacity = transactionMetadata.numberOfSigners; elementType = standardTypes.signerModule } }
         field { name = PARAMETERS; type = secureHash }
+        field { name = SIGNERS; type = array { capacity = commandMetadata.numberOfSigners; elementType = standardTypes.signerModule } }
         field { name = PRIVACY_SALT + "_field"; type = privacySalt }
-        field { name = INPUT_NONCES; type = array { capacity = transactionMetadata.numberOfInputs; elementType = nonceDigest } }
-        field { name = REFERENCE_NONCES; type = array { capacity = transactionMetadata.numberOfReferences; elementType = nonceDigest } }
+        field { name = INPUT_NONCES; type = array { capacity = commandMetadata.privateInputs.size; elementType = nonceDigest } }
+        field { name = REFERENCE_NONCES; type = array { capacity = commandMetadata.privateReferences.size; elementType = nonceDigest } }
         isDeserializable = false
     }
 

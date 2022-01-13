@@ -43,7 +43,7 @@ class ZKCommandMetadataTest {
 
                 numberOfSigners = 2
 
-                privateInputs {
+                inputs {
                     1 private DummyState::class
                     1 private TestState::class
                 }
@@ -115,7 +115,7 @@ class MockAuditContract : Contract {
         @Transient
         override val metadata = commandMetadata {
             numberOfSigners = 1
-            privateOutputs { 1 private Approval::class }
+            outputs { 1 private Approval::class }
             timeWindow = true
         }
     }
@@ -156,9 +156,9 @@ class MockAssetContract : Contract {
         @Transient
         override val metadata = commandMetadata {
             numberOfSigners = 2
-            privateInputs { 1 private MockAsset::class }
-            privateOutputs { 1 private MockAsset::class }
-            privateReferences { 1 private MockAuditContract.Approval::class }
+            inputs { 1 private MockAsset::class }
+            outputs { 1 private MockAsset::class }
+            references { 1 private MockAuditContract.Approval::class }
             timeWindow = true
 
             network {
@@ -176,7 +176,7 @@ class MockAssetContract : Contract {
         @Transient
         override val metadata = commandMetadata {
             numberOfSigners = 1
-            privateOutputs { 1 private MockAsset::class }
+            outputs { 1 private MockAsset::class }
             timeWindow = true
         }
     }
@@ -190,7 +190,7 @@ class MockAssetContract : Contract {
         @Transient
         override val metadata = commandMetadata {
             numberOfSigners = 1
-            privateOutputs { 1 private MockAsset::class }
+            outputs { 1 private MockAsset::class }
             timeWindow = true
         }
     }
@@ -213,7 +213,7 @@ class MockAssetContract : Contract {
         @Transient
         override val metadata = commandMetadata {
             numberOfSigners = 1
-            privateOutputs { 1 private MockAsset::class }
+            outputs { 1 private MockAsset::class }
             timeWindow = true
         }
     }

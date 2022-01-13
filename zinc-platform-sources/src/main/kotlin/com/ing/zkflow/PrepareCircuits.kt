@@ -32,7 +32,7 @@ val templateConfigurations = getTemplateConfiguration()
 
 @Suppress("LongMethod") // Just fixing it now, will be thrown away anyway soon
 fun main(args: Array<String>) {
-    val root = "/home/eee/IdeaProjects/zk-notary/zinc-platform-sources" // args[0]
+    val root = args[0]
     val projectVersion = args.size.toString()
 
     // Render templates for circuits testing deserialization, etc.

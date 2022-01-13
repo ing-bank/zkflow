@@ -23,9 +23,9 @@ data class ResolvedZKTransactionMetadata(
         require(commands.map { it.network }.distinct().size == 1) { ERROR_NETWORKS_DO_NOT_MATCH }
     }
 
-    val privateInputs = commands.flatMap { it.privateInputs }.distinct()
-    val privateReferences = commands.flatMap { it.privateReferences }.distinct()
-    val privateOutputs = commands.flatMap { it.privateOutputs }.distinct()
+    val privateInputs = commands.fold(mutableListOf<ZKProtectedComponent>()) { acc, command -> mergeComponentVisibility(acc, command.privateInputs) }
+    val privateReferences = commands.fold(mutableListOf<ZKProtectedComponent>()) { acc, command -> mergeComponentVisibility(acc, command.privateReferences) }
+    val privateOutputs = commands.fold(mutableListOf<ZKProtectedComponent>()) { acc, command -> mergeComponentVisibility(acc, command.privateOutputs) }
 
     /**
      * The total number of signers of all commands added up.
@@ -76,5 +76,22 @@ data class ResolvedZKTransactionMetadata(
 
     private fun getVisibility(group: List<ZKProtectedComponent>, componentIndex: Int): ZkpVisibility {
         return group.find { it.index == componentIndex }?.visibility ?: ZkpVisibility.Public // Everything visible by default unless explicitly marked as Private/Mixed
+    }
+
+    private fun mergeComponentVisibility(
+        acc: MutableList<ZKProtectedComponent>,
+        components: List<ZKProtectedComponent>
+    ): MutableList<ZKProtectedComponent> {
+        components.forEach { new ->
+            val existing = acc.find { it.index == new.index }
+            if (existing == null)
+                acc.add(new)
+            else if (existing.visibility.ordinal < new.visibility.ordinal) {
+                // we choose the lowest visibility requested
+                acc.remove(existing)
+                acc.add(new)
+            }
+        }
+        return acc
     }
 }

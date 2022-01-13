@@ -123,12 +123,12 @@ data class ResolvedZKCommandMetadata(
      */
     fun verify(txb: ZKTransactionBuilder) {
         try {
-//            verifyCommandsAndSigners(txb.commands())
+            // TODO verifyCommandsAndSigners(txb.commands())
             verifyOutputs(txb.outputStates())
             verifyInputs(txb.inputsWithTransactionState)
             verifyReferences(txb.referencesWithTransactionState)
-            // verifyNotary(txb)
-            // verifyParameters(txb)
+            // TODO verifyNotary(txb)
+            // TODO verifyParameters(txb)
         } catch (e: IllegalArgumentException) {
             throw IllegalTransactionStructureException(e)
         }

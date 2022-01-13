@@ -161,7 +161,7 @@ data class ZincType(
  * For now we only use "Private" and "Mixed" in our DSL.
  */
 enum class ZkpVisibility {
-    Public, Private, Mixed
+    Private, Mixed, Public
 }
 
 /**
@@ -212,9 +212,9 @@ class ZKCommandMetadata(val commandKClass: KClass<out CommandData>) {
         return zkNetwork!!
     }
 
-    fun privateInputs(init: ZKProtectedComponentList.() -> Unit) = privateInputs.apply(init)
-    fun privateReferences(init: ZKProtectedComponentList.() -> Unit) = privateReferences.apply(init)
-    fun privateOutputs(init: ZKProtectedComponentList.() -> Unit) = privateOutputs.apply(init)
+    fun inputs(init: ZKProtectedComponentList.() -> Unit) = privateInputs.apply(init)
+    fun references(init: ZKProtectedComponentList.() -> Unit) = privateReferences.apply(init)
+    fun outputs(init: ZKProtectedComponentList.() -> Unit) = privateOutputs.apply(init)
 
     fun resolved(): ResolvedZKCommandMetadata =
         ResolvedZKCommandMetadata(
