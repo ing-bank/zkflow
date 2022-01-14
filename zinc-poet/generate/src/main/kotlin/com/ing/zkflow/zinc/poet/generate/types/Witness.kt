@@ -23,14 +23,25 @@ import com.ing.zinc.poet.ZincType.Companion.id
 import com.ing.zinc.poet.indent
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
 import com.ing.zkflow.util.bitsToByteBoundary
+import com.ing.zkflow.zinc.poet.generate.COMPUTE_NONCE
+import com.ing.zkflow.zinc.poet.generate.CRYPTO_UTILS
 import com.ing.zkflow.zinc.poet.generate.types.CommandGroupFactory.Companion.COMMAND_GROUP
 import com.ing.zkflow.zinc.poet.generate.types.CommandGroupFactory.Companion.FROM_SIGNERS
 import com.ing.zkflow.zinc.poet.generate.types.LedgerTransactionFactory.Companion.LEDGER_TRANSACTION
+import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.componentGroupEnum
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.nonceDigest
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.privacySalt
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.secureHash
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.stateRef
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.timeWindow
+import net.corda.core.contracts.ComponentGroupEnum
+
+private data class Group(
+    val name: String,
+    val module: BflType,
+    val groupSize: Int,
+    val componentGroup: ComponentGroupEnum
+)
 
 @Suppress("TooManyFunctions")
 class Witness(
@@ -44,12 +55,23 @@ class Witness(
         standardTypes.transactionState(stateType) to count
     }.toMap()
 
-    internal val serializedOutputGroup = SerializedStateGroup(OUTPUTS, "OutputGroup", outputs.toTransactionStates())
-    internal val serializedInputUtxos = SerializedStateGroup(SERIALIZED_INPUT_UTXOS, "InputUtxos", inputs.toTransactionStates())
-    internal val serializedReferenceUtxos = SerializedStateGroup(SERIALIZED_REFERENCE_UTXOS, "ReferenceUtxos", references.toTransactionStates())
+    internal val serializedOutputGroup = SerializedStateGroup(OUTPUTS, "OutputGroup", outputs.toTransactionStates(), ComponentGroupEnum.OUTPUTS_GROUP)
+    internal val serializedInputUtxos = SerializedStateGroup(SERIALIZED_INPUT_UTXOS, "InputUtxos", inputs.toTransactionStates(), ComponentGroupEnum.INPUTS_GROUP)
+    internal val serializedReferenceUtxos = SerializedStateGroup(SERIALIZED_REFERENCE_UTXOS, "ReferenceUtxos", references.toTransactionStates(), ComponentGroupEnum.REFERENCES_GROUP)
 
     private val dependencies =
-        listOf(stateRef, secureHash, privacySalt, timeWindow, standardTypes.notaryModule, standardTypes.signerModule, nonceDigest)
+        listOf(stateRef, secureHash, privacySalt, timeWindow, standardTypes.notaryModule, standardTypes.signerModule, nonceDigest, componentGroupEnum)
+
+    private val standardComponentGroups = listOfNotNull(
+        Group(INPUTS, stateRef, transactionMetadata.numberOfInputs, ComponentGroupEnum.INPUTS_GROUP),
+        Group(REFERENCES, stateRef, transactionMetadata.numberOfReferences, ComponentGroupEnum.REFERENCES_GROUP),
+        Group(COMMANDS, BflPrimitive.U32, transactionMetadata.commands.size, ComponentGroupEnum.COMMANDS_GROUP),
+        Group(ATTACHMENTS, secureHash, transactionMetadata.attachmentCount, ComponentGroupEnum.ATTACHMENTS_GROUP),
+        Group(NOTARY, standardTypes.notaryModule, 1, ComponentGroupEnum.NOTARY_GROUP),
+        if (transactionMetadata.hasTimeWindow) Group(TIME_WINDOW, timeWindow, 1, ComponentGroupEnum.TIMEWINDOW_GROUP) else null,
+        Group(SIGNERS, standardTypes.signerModule, transactionMetadata.numberOfSigners, ComponentGroupEnum.SIGNERS_GROUP),
+        Group(PARAMETERS, secureHash, 1, ComponentGroupEnum.PARAMETERS_GROUP),
+    )
 
     private fun arrayOfSerializedData(capacity: Int, module: BflModule): ZincArray {
         val paddingBits = module.bitSize.bitsToByteBoundary() - module.bitSize
@@ -108,6 +130,10 @@ class Witness(
             use { path = "${it.camelToSnakeCase()}::$it" }
             newLine()
         }
+        mod { module = CRYPTO_UTILS }
+        use { path = "$CRYPTO_UTILS::$COMPUTE_NONCE" }
+        use { path = "std::crypto::blake2s_multi_input" }
+        newLine()
         struct {
             name = Witness::class.java.simpleName
             field { name = INPUTS; type = arrayOfSerializedData(transactionMetadata.numberOfInputs, stateRef) }
@@ -119,8 +145,8 @@ class Witness(
             if (transactionMetadata.hasTimeWindow) {
                 field { name = TIME_WINDOW; type = arrayOfSerializedData(1, timeWindow) }
             }
-            field { name = PARAMETERS; type = arrayOfSerializedData(1, secureHash) }
             field { name = SIGNERS; type = arrayOfSerializedData(transactionMetadata.numberOfSigners, standardTypes.signerModule) }
+            field { name = PARAMETERS; type = arrayOfSerializedData(1, secureHash) }
             field { name = PRIVACY_SALT; type = privacySalt.getSerializedTypeDef() }
             field { name = INPUT_NONCES; type = arrayOfNonceDigests(transactionMetadata.numberOfInputs) }
             field { name = REFERENCE_NONCES; type = arrayOfNonceDigests(transactionMetadata.numberOfReferences) }
@@ -143,8 +169,8 @@ class Witness(
             WitnessGroupOptions.cordaWrapped(ATTACHMENTS, secureHash),
             WitnessGroupOptions.cordaWrapped(NOTARY, standardTypes.notaryModule),
             if (transactionMetadata.hasTimeWindow) WitnessGroupOptions.cordaWrapped(TIME_WINDOW, timeWindow) else null,
-            WitnessGroupOptions.cordaWrapped(PARAMETERS, secureHash),
             WitnessGroupOptions.cordaWrapped(SIGNERS, standardTypes.signerModule),
+            WitnessGroupOptions.cordaWrapped(PARAMETERS, secureHash),
             WitnessGroupOptions(PRIVACY_SALT, privacySalt),
             WitnessGroupOptions(INPUT_NONCES, nonceDigest),
             WitnessGroupOptions(REFERENCE_NONCES, nonceDigest),
@@ -160,7 +186,13 @@ class Witness(
     }
 
     override fun generateMethods(codeGenerationOptions: CodeGenerationOptions): List<ZincFunction> = generateDeserializeMethodsForArraysOfByteArrays(codeGenerationOptions) +
+        generateComputeLeafHashesMethodForArraysOfByteArrays() +
+        generateComputeLeafHashesMethodForSerializedGroups() +
+        generateDeserializeMethod(codeGenerationOptions)
+
+    private fun generateDeserializeMethod(codeGenerationOptions: CodeGenerationOptions) =
         zincMethod {
+            comment = "Deserialize ${Witness::class.java.simpleName} into a $LEDGER_TRANSACTION."
             name = "deserialize"
             returnType = id(LEDGER_TRANSACTION)
             val deserializePrivacySalt = generateDeserializeExpression(
@@ -171,63 +203,99 @@ class Witness(
                 offset = "0 as u24"
             )
             body = """
-                    let $SIGNERS = self.deserialize_$SIGNERS();
-                    let $INPUTS = InputGroup::from_states_and_refs(
-                        self.$SERIALIZED_INPUT_UTXOS.deserialize(),
-                        self.deserialize_$INPUTS(),
-                    );
-                    let $REFERENCES = ReferenceGroup::from_states_and_refs(
-                        self.$SERIALIZED_REFERENCE_UTXOS.deserialize(),
-                        self.deserialize_$REFERENCES(),
-                    );
-                    
-                    $LEDGER_TRANSACTION {
-                        $INPUTS: $INPUTS,
-                        $OUTPUTS: self.$OUTPUTS.deserialize(),
-                        $REFERENCES: $REFERENCES,
-                        $COMMANDS: $COMMAND_GROUP::$FROM_SIGNERS($SIGNERS),
-                        $ATTACHMENTS: self.deserialize_$ATTACHMENTS(),
-                        $NOTARY: self.deserialize_$NOTARY()[0],
-                        ${if (transactionMetadata.hasTimeWindow) "$TIME_WINDOW: self.deserialize_$TIME_WINDOW()," else "// $TIME_WINDOW not present"}
-                        $PARAMETERS: self.deserialize_$PARAMETERS()[0],
-                        $SIGNERS: $SIGNERS,
-                        ${PRIVACY_SALT}_field: $deserializePrivacySalt,
-                        $INPUT_NONCES: self.$INPUT_NONCES,
-                        $REFERENCE_NONCES: self.$REFERENCE_NONCES,
-                    }
+                let $SIGNERS = self.deserialize_$SIGNERS();
+                let $INPUTS = InputGroup::from_states_and_refs(
+                    self.$SERIALIZED_INPUT_UTXOS.deserialize(),
+                    self.deserialize_$INPUTS(),
+                );
+                let $REFERENCES = ReferenceGroup::from_states_and_refs(
+                    self.$SERIALIZED_REFERENCE_UTXOS.deserialize(),
+                    self.deserialize_$REFERENCES(),
+                );
+
+                $LEDGER_TRANSACTION {
+                    $INPUTS: $INPUTS,
+                    $OUTPUTS: self.$OUTPUTS.deserialize(),
+                    $REFERENCES: $REFERENCES,
+                    $COMMANDS: $COMMAND_GROUP::$FROM_SIGNERS($SIGNERS),
+                    $ATTACHMENTS: self.deserialize_$ATTACHMENTS(),
+                    $NOTARY: self.deserialize_$NOTARY()[0],
+                    ${if (transactionMetadata.hasTimeWindow) "$TIME_WINDOW: self.deserialize_$TIME_WINDOW()," else "// $TIME_WINDOW not present"}
+                    $SIGNERS: $SIGNERS,
+                    $PARAMETERS: self.deserialize_$PARAMETERS()[0],
+                    ${PRIVACY_SALT}_field: $deserializePrivacySalt,
+                    $INPUT_NONCES: self.$INPUT_NONCES,
+                    $REFERENCE_NONCES: self.$REFERENCE_NONCES,
+                }
             """.trimIndent()
         }
 
     private fun generateDeserializeMethodsForArraysOfByteArrays(codeGenerationOptions: CodeGenerationOptions): List<ZincFunction> {
-        return listOfNotNull(
-            Triple(INPUTS, stateRef, transactionMetadata.numberOfInputs),
-            Triple(REFERENCES, stateRef, transactionMetadata.numberOfReferences),
-            Triple(COMMANDS, BflPrimitive.U32, transactionMetadata.commands.size),
-            Triple(ATTACHMENTS, secureHash, transactionMetadata.attachmentCount),
-            Triple(NOTARY, standardTypes.notaryModule, 1),
-            if (transactionMetadata.hasTimeWindow) Triple(TIME_WINDOW, timeWindow, 1) else null,
-            Triple(PARAMETERS, secureHash, 1),
-            Triple(SIGNERS, standardTypes.signerModule, transactionMetadata.numberOfSigners),
-        ).map {
+        return standardComponentGroups.map {
             val deserializeExpression = generateDeserializeExpression(
                 codeGenerationOptions,
-                groupName = it.first,
-                bflType = it.second,
-                witnessVariable = "self.${it.first}[i]",
+                groupName = it.name,
+                bflType = it.module,
+                witnessVariable = "self.${it.name}[i]",
                 offset = CORDA_MAGIC_BITS_SIZE_CONSTANT
             )
             zincMethod {
-                name = "deserialize_${it.first}"
+                comment = "Deserialize ${it.name} from the ${Witness::class.java.simpleName}."
+                name = "deserialize_${it.name}"
                 returnType = zincArray {
-                    elementType = it.second.toZincId()
-                    size = "${it.third}"
+                    elementType = it.module.toZincId()
+                    size = "${it.groupSize}"
                 }
                 body = """
-                    let mut ${it.first}_array: [${it.second.id}; ${it.third}] = [${it.second.defaultExpr()}; ${it.third}];
-                    for i in 0..${it.third} {
-                        ${it.first}_array[i] = ${deserializeExpression.indent(24.spaces)};
+                    let mut ${it.name}_array: [${it.module.id}; ${it.groupSize}] = [${it.module.defaultExpr()}; ${it.groupSize}];
+                    for i in 0..${it.groupSize} {
+                        ${it.name}_array[i] = ${deserializeExpression.indent(24.spaces)};
                     }
-                    ${it.first}_array
+                    ${it.name}_array
+                """.trimIndent()
+            }
+        }
+    }
+
+    private fun generateComputeLeafHashesMethodForArraysOfByteArrays(): List<ZincFunction> {
+        return standardComponentGroups.map {
+            zincMethod {
+                comment = "Compute the ${it.name} leaf hashes."
+                name = "compute_${it.name}_leaf_hashes"
+                returnType = zincArray {
+                    elementType = nonceDigest.getSerializedTypeDef()
+                    size = "${it.groupSize}"
+                }
+                body = """
+                    let mut ${it.name}_leaf_hashes = [[false; ${nonceDigest.getLengthConstant()}]; ${it.groupSize}];
+                    for i in (0 as u32)..${it.groupSize} {
+                        ${it.name}_leaf_hashes[i] = blake2s_multi_input(
+                            compute_nonce(self.$PRIVACY_SALT, ${componentGroupEnum.id}::${it.componentGroup.name} as u32, i),
+                            self.${it.name}[i],
+                        );
+                    }
+                    ${it.name}_leaf_hashes
+                """.trimIndent()
+            }
+        }
+    }
+
+    private fun generateComputeLeafHashesMethodForSerializedGroups(): List<ZincFunction> {
+        return listOf(
+            Pair(inputs, SERIALIZED_INPUT_UTXOS),
+            Pair(outputs, OUTPUTS),
+            Pair(references, SERIALIZED_REFERENCE_UTXOS),
+        ).map {
+            val arraySize = it.first.values.sum()
+            zincMethod {
+                comment = "Compute the ${it.second} leaf hashes."
+                name = "compute_${it.second}_leaf_hashes"
+                returnType = zincArray {
+                    elementType = nonceDigest.getSerializedTypeDef()
+                    size = "$arraySize"
+                }
+                body = """
+                    self.${it.second}.compute_leaf_hashes(self.$PRIVACY_SALT)
                 """.trimIndent()
             }
         }
@@ -287,8 +355,8 @@ class Witness(
         internal const val ATTACHMENTS = "attachments"
         internal const val NOTARY = "notary"
         internal const val TIME_WINDOW = "time_window"
-        internal const val PARAMETERS = "parameters"
         internal const val SIGNERS = "signers"
+        internal const val PARAMETERS = "parameters"
         internal const val PRIVACY_SALT = "privacy_salt"
         internal const val INPUT_NONCES = "input_nonces"
         internal const val REFERENCE_NONCES = "reference_nonces"

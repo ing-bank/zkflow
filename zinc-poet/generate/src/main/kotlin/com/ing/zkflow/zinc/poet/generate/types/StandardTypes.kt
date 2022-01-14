@@ -4,6 +4,7 @@ import com.ing.zinc.bfl.BflModule
 import com.ing.zinc.bfl.BflPrimitive
 import com.ing.zinc.bfl.BflType
 import com.ing.zinc.bfl.dsl.ArrayBuilder.Companion.array
+import com.ing.zinc.bfl.dsl.EnumBuilder.Companion.enumOf
 import com.ing.zinc.bfl.dsl.ListBuilder.Companion.byteArray
 import com.ing.zinc.bfl.dsl.ListBuilder.Companion.list
 import com.ing.zinc.bfl.dsl.OptionBuilder.Companion.option
@@ -11,6 +12,7 @@ import com.ing.zinc.bfl.dsl.StructBuilder.Companion.struct
 import com.ing.zkflow.serialization.bfl.serializers.CordaSerializers.CLASS_NAME_SIZE
 import com.ing.zkflow.serialization.bfl.serializers.SecureHashSurrogate
 import com.ing.zkflow.zinc.poet.generate.ZincTypeResolver
+import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.SignatureAttachmentConstraint
 import net.corda.core.identity.Party
 import java.security.PublicKey
@@ -140,5 +142,6 @@ class StandardTypes(
                 type = BflPrimitive.U32
             }
         }
+        internal val componentGroupEnum = enumOf(ComponentGroupEnum::class)
     }
 }
