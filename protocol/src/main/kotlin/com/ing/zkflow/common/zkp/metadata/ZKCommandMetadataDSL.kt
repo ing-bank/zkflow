@@ -159,9 +159,14 @@ data class ZincType(
  * "Private" components are shielded by ZKP and only visible to transaction participants, they are available inside ZKP circuit but not during backchain validation.
  * "Mixed" components are visible both in ZKP circuit and plaintext transaction, they are used when we essentially public components are checked inside ZKP circuit.
  * For now we only use "Private" and "Mixed" in our DSL.
+ * Smallest ordinal is most restrictive, larger is least restrictive
  */
 enum class ZkpVisibility {
     Private, Mixed, Public
+}
+
+fun ZkpVisibility.isStricterThan(other: ZkpVisibility): Boolean {
+    return this < other
 }
 
 /**
@@ -171,8 +176,14 @@ data class ZKProtectedComponent(val type: KClass<out ContractState>, val visibil
 
 @ZKCommandMetadataDSL
 class ZKProtectedComponentList : ArrayList<ZKProtectedComponent>() {
-    infix fun Int.private(type: KClass<out ContractState>) = add(ZKProtectedComponent(type, ZkpVisibility.Private, this))
-    infix fun Int.mixed(type: KClass<out ContractState>) = add(ZKProtectedComponent(type, ZkpVisibility.Mixed, this))
+    infix fun ZKProtectedComponentList.private(type: KClass<out ContractState>): Pair<KClass<out ContractState>, ZkpVisibility> = type to ZkpVisibility.Private
+    infix fun ZKProtectedComponentList.mixed(type: KClass<out ContractState>): Pair<KClass<out ContractState>, ZkpVisibility> = type to ZkpVisibility.Mixed
+    infix fun Pair<KClass<out ContractState>, ZkpVisibility>.at(index: Int) = add(ZKProtectedComponent(this.first, this.second, index))
+
+    override fun add(element: ZKProtectedComponent): Boolean {
+        if (any { it.index == element.index }) error("Component visibility is already set for index ${element.index}")
+        return super.add(element)
+    }
 }
 
 /**

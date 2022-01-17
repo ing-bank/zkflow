@@ -23,6 +23,7 @@ import net.corda.core.contracts.SignatureAttachmentConstraint
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.transactions.LedgerTransaction
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import java.util.Random
 
 class ZKCommandMetadataTest {
@@ -44,8 +45,8 @@ class ZKCommandMetadataTest {
                 numberOfSigners = 2
 
                 inputs {
-                    1 private DummyState::class
-                    1 private TestState::class
+                    private(DummyState::class) at 0
+                    private(TestState::class) at 1
                 }
             }
         }
@@ -54,7 +55,58 @@ class ZKCommandMetadataTest {
         cmd.metadata.circuit.name shouldBe "foo"
         cmd.metadata.privateInputs.size shouldBe 2
         cmd.metadata.privateInputs.first().type shouldBe DummyState::class
-        cmd.metadata.privateInputs.first().index shouldBe 1
+        cmd.metadata.privateInputs.first().index shouldBe 0
+        cmd.metadata.privateInputs.last().type shouldBe TestState::class
+        cmd.metadata.privateInputs.last().index shouldBe 1
+    }
+
+    @Test()
+    fun `ZKCommandMetadata DSL rejects duplicate indexes`() {
+
+        assertThrows<IllegalStateException> {
+            object : ZKCommandData {
+                override val metadata = commandMetadata {
+                    circuit { name = "foo" }
+
+                    numberOfSigners = 2
+
+                    inputs {
+                        private(DummyState::class) at 1
+                        private(TestState::class) at 1
+                    }
+                }
+            }
+        }
+
+        assertThrows<IllegalStateException> {
+            object : ZKCommandData {
+                override val metadata = commandMetadata {
+                    circuit { name = "foo" }
+
+                    numberOfSigners = 2
+
+                    references {
+                        private(DummyState::class) at 0
+                        private(TestState::class) at 0
+                    }
+                }
+            }
+        }
+
+        assertThrows<IllegalStateException> {
+            object : ZKCommandData {
+                override val metadata = commandMetadata {
+                    circuit { name = "foo" }
+
+                    numberOfSigners = 2
+
+                    outputs {
+                        private(DummyState::class) at 21
+                        private(TestState::class) at 21
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -115,7 +167,7 @@ class MockAuditContract : Contract {
         @Transient
         override val metadata = commandMetadata {
             numberOfSigners = 1
-            outputs { 1 private Approval::class }
+            outputs { private(Approval::class) at 0 }
             timeWindow = true
         }
     }
@@ -156,9 +208,9 @@ class MockAssetContract : Contract {
         @Transient
         override val metadata = commandMetadata {
             numberOfSigners = 2
-            inputs { 1 private MockAsset::class }
-            outputs { 1 private MockAsset::class }
-            references { 1 private MockAuditContract.Approval::class }
+            inputs { private(MockAsset::class) at 0 }
+            outputs { private(MockAsset::class) at 0 }
+            references { private(MockAuditContract.Approval::class) at 0 }
             timeWindow = true
 
             network {
@@ -176,7 +228,7 @@ class MockAssetContract : Contract {
         @Transient
         override val metadata = commandMetadata {
             numberOfSigners = 1
-            outputs { 1 private MockAsset::class }
+            outputs { private(MockAsset::class) at 0 }
             timeWindow = true
         }
     }
@@ -190,7 +242,7 @@ class MockAssetContract : Contract {
         @Transient
         override val metadata = commandMetadata {
             numberOfSigners = 1
-            outputs { 1 private MockAsset::class }
+            outputs { private(MockAsset::class) at 0 }
             timeWindow = true
         }
     }
@@ -213,7 +265,7 @@ class MockAssetContract : Contract {
         @Transient
         override val metadata = commandMetadata {
             numberOfSigners = 1
-            outputs { 1 private MockAsset::class }
+            outputs { private(MockAsset::class) at 0 }
             timeWindow = true
         }
     }

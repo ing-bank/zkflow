@@ -1,11 +1,11 @@
 package com.ing.zkflow.common.zkp.metadata
 
+import com.ing.zkflow.common.transactions.ZKTransactionBuilder
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.ContractState
 import net.corda.core.transactions.LedgerTransaction
 import kotlin.reflect.KClass
 
-@Suppress("TooManyFunctions") // TODO: Fix this once we agree on design
 data class ResolvedZKTransactionMetadata(
     val commands: List<ResolvedZKCommandMetadata>
 ) {
@@ -57,6 +57,10 @@ data class ResolvedZKTransactionMetadata(
         commands.forEach { it.verify(ltx) }
     }
 
+    fun verify(ltx: ZKTransactionBuilder) {
+        commands.forEach { it.verify(ltx) }
+    }
+
     fun getComponentVisibility(groupIndex: Int, componentIndex: Int): ZkpVisibility {
         return when (groupIndex) {
             ComponentGroupEnum.INPUTS_GROUP.ordinal -> ZkpVisibility.Public // References are always visible, to know State's visibility call 'getUtxoVisibility'
@@ -84,9 +88,9 @@ data class ResolvedZKTransactionMetadata(
     ): MutableList<ZKProtectedComponent> {
         components.forEach { new ->
             val existing = acc.find { it.index == new.index }
-            if (existing == null)
+            if (existing == null) {
                 acc.add(new)
-            else if (existing.visibility.ordinal < new.visibility.ordinal) {
+            } else if (existing.visibility.isStricterThan(new.visibility)) {
                 // we choose the lowest visibility requested
                 acc.remove(existing)
                 acc.add(new)

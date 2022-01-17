@@ -21,20 +21,20 @@ object MyContract : Contract {
             }
             numberOfSigners = 1
             inputs {
-                0 private MyState::class
-                1 private MyState::class
-                2 private MyOtherState::class
+                private(MyState::class) at 0
+                private(MyState::class) at 1
+                private(MyOtherState::class) at 2
             }
             outputs {
-                0 private MyState::class
-                1 private MyState::class
-                2 private MyState::class
+                private(MyState::class) at 0
+                private(MyState::class) at 1
+                private(MyState::class) at 2
             }
             references {
-                0 private MyState::class
-                1 private MyState::class
-                2 private MyState::class
-                3 private MyState::class
+                private(MyState::class) at 0
+                private(MyState::class) at 1
+                private(MyState::class) at 2
+                private(MyState::class) at 3
             }
         }
     }

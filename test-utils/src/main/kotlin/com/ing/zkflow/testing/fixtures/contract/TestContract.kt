@@ -61,7 +61,7 @@ public class TestContract : Contract {
                 buildFolder =
                     File("${System.getProperty("user.dir")}/../zinc-platform-sources/build/circuits/create")
             }
-            outputs { 1 private TestState::class }
+            outputs { private(TestState::class) at 0 }
             numberOfSigners = 1
         }
 
@@ -93,7 +93,7 @@ public class TestContract : Contract {
 
         @Transient
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
-            outputs { 1 private TestState::class }
+            outputs { private(TestState::class) at 0 }
             numberOfSigners = 2
         }
 
@@ -111,8 +111,8 @@ public class TestContract : Contract {
                 buildFolder =
                     File("${System.getProperty("user.dir")}/../zinc-platform-sources/build/circuits/move")
             }
-            inputs { 1 private TestState::class }
-            outputs { 1 private TestState::class }
+            inputs { private(TestState::class) at 0 }
+            outputs { private(TestState::class) at 0 }
             numberOfSigners = 2
         }
 
@@ -149,12 +149,12 @@ public class TestContract : Contract {
                     File("${System.getProperty("user.dir")}/../zinc-platform-sources/build/circuits/move_bidirectional")
             }
             inputs {
-                0 private TestState::class
-                1 private TestState::class
+                private(TestState::class) at 0
+                private(TestState::class) at 1
             }
             outputs {
-                0 private TestState::class
-                1 private TestState::class
+                private(TestState::class) at 0
+                private(TestState::class) at 1
             }
             numberOfSigners = 2
         }

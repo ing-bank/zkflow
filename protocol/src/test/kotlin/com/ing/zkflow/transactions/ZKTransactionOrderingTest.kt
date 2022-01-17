@@ -188,23 +188,23 @@ class LocalContract : Contract {
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
             numberOfSigners = 1
             outputs {
-                0 private DummyZKStateA::class
-                1 private DummyZKStateA::class
-                2 private DummyZKStateB::class
-                3 private DummyZKStateB::class
+                private(DummyZKStateA::class) at 0
+                private(DummyZKStateA::class) at 1
+                private(DummyZKStateB::class) at 2
+                private(DummyZKStateB::class) at 3
             }
             inputs {
-                0 private DummyZKStateB::class
-                1 private DummyZKStateB::class
-                2 private DummyZKStateA::class
-                3 private DummyZKStateA::class
+                private(DummyZKStateB::class) at 0
+                private(DummyZKStateB::class) at 1
+                private(DummyZKStateA::class) at 2
+                private(DummyZKStateA::class) at 3
             }
             references {
-                0 mixed DummyZKStateB::class
-                1 mixed DummyZKStateB::class
-                2 mixed DummyState::class
-                3 mixed DummyZKStateA::class
-                4 mixed DummyZKStateA::class
+                mixed(DummyZKStateB::class) at 0
+                mixed(DummyZKStateB::class) at 1
+                mixed(DummyState::class) at 2
+                mixed(DummyZKStateA::class) at 3
+                mixed(DummyZKStateA::class) at 4
             }
         }
     }

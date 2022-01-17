@@ -15,12 +15,11 @@ import net.corda.core.transactions.WireTransaction
 import net.corda.core.utilities.OpaqueBytes
 import java.security.PublicKey
 
-@Suppress("LongParameterList")
 @CordaSerializable
 class ZKVerifierTransaction internal constructor(
     override val id: SecureHash,
 
-    val proofs: Map<String, ByteArray>,
+    val proofs: Map<ZKCommandClassName, Proof>,
 
     // Outputs are not visible in a normal FilteredTransaction, so we 'leak' some info here: the amount of outputs.
     // Outputs are the leaf hashes of the outputs component group. This is the only group where:

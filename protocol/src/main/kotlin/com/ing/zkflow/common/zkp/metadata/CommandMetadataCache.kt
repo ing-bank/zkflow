@@ -3,6 +3,7 @@ package com.ing.zkflow.common.zkp.metadata
 import com.ing.zkflow.common.contracts.ZKCommandData
 import java.util.ServiceLoader
 
+// TODO: check if this is still required for Zinc code generation
 object CommandMetadataCache {
 
     val metadata = mutableMapOf<String, ResolvedZKCommandMetadata>()

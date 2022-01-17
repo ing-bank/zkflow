@@ -1,7 +1,6 @@
 package com.ing.zkflow.common.transactions
 
 import co.paralleluniverse.strands.Strand
-import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.contracts.ZKContractState
 import com.ing.zkflow.common.serialization.BFLSerializationScheme
 import net.corda.core.contracts.AttachmentConstraint
@@ -124,9 +123,8 @@ class ZKTransactionBuilder(
      */
     fun toWireTransaction(services: ServicesForResolution): WireTransaction {
 
-        val resolvedTransactionMetadata = commands().filterIsInstance(ZKCommandData::class.java).map { it.metadata }
-
-        resolvedTransactionMetadata.forEach { it.verify(this) }
+        val resolvedTransactionMetadata = this.zkTransactionMetadata()
+        resolvedTransactionMetadata.verify(this)
 
         val serializationProperties = mapOf<Any, Any>(
             BFLSerializationScheme.CONTEXT_KEY_TRANSACTION_METADATA to resolvedTransactionMetadata

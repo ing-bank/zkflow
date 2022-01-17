@@ -1,3 +1,4 @@
+@file:Suppress("TooManyFunctions")
 package com.ing.zkflow.common.transactions
 
 import com.ing.zkflow.common.contracts.ZKCommandData
@@ -50,6 +51,12 @@ val KClass<out ContractState>.qualifiedStateClassName: String
 
 val KClass<out AttachmentConstraint>.qualifiedConstraintClassName: String
     get() = java.name ?: error("Attachment constraint classes must be a named class")
+
+/**
+ * Fully qualified name of ZKCommand class
+ */
+typealias ZKCommandClassName = String
+typealias Proof = ByteArray
 
 fun ServiceHub.collectUtxoInfos(
     stateRefs: List<StateRef>
@@ -119,14 +126,16 @@ fun WireTransaction.prettyPrint(): String {
     return buf.toString()
 }
 
-val TransactionBuilder.isZKFlowTransaction get() = commands().firstOrNull { it.value is ZKCommandData } != null
-val TraversableTransaction.isZKFlowTransaction get() = commands.firstOrNull { it.value is ZKCommandData } != null
-val LedgerTransaction.isZKFlowTransaction get() = commands.firstOrNull { it.value is ZKCommandData } != null
+val TransactionBuilder.isZKFlowTransaction get() = commands().any { it.value is ZKCommandData }
+val TraversableTransaction.isZKFlowTransaction get() = commands.any { it.value is ZKCommandData }
+val LedgerTransaction.isZKFlowTransaction get() = commands.any { it.value is ZKCommandData }
 
 fun TraversableTransaction.zkTransactionMetadata(): ResolvedZKTransactionMetadata =
     ResolvedZKTransactionMetadata(commands.filter { it.value is ZKCommandData }.map { (it.value as ZKCommandData).metadata })
 fun LedgerTransaction.zkTransactionMetadata(): ResolvedZKTransactionMetadata =
     ResolvedZKTransactionMetadata(commands.filter { it.value is ZKCommandData }.map { (it.value as ZKCommandData).metadata })
+fun ZKTransactionBuilder.zkTransactionMetadata(): ResolvedZKTransactionMetadata =
+    ResolvedZKTransactionMetadata(commands().filter { it.value is ZKCommandData }.map { (it.value as ZKCommandData).metadata })
 
 @Throws(AttachmentResolutionException::class, TransactionResolutionException::class)
 @DeleteForDJVM
