@@ -2,9 +2,7 @@ package com.ing.zkflow.zinc.poet.generate.types
 
 import com.ing.zinc.bfl.BflModule
 import com.ing.zinc.bfl.BflPrimitive
-import com.ing.zinc.bfl.BflType
 import com.ing.zinc.bfl.CONSTS
-import com.ing.zinc.bfl.CORDA_MAGIC_BITS_SIZE_CONSTANT
 import com.ing.zinc.bfl.TypeVisitor
 import com.ing.zinc.bfl.generator.CodeGenerationOptions
 import com.ing.zinc.bfl.generator.WitnessGroupOptions
@@ -12,17 +10,12 @@ import com.ing.zinc.bfl.getLengthConstant
 import com.ing.zinc.bfl.getSerializedTypeDef
 import com.ing.zinc.bfl.toZincId
 import com.ing.zinc.naming.camelToSnakeCase
-import com.ing.zinc.poet.Indentation.Companion.spaces
-import com.ing.zinc.poet.ZincArray
 import com.ing.zinc.poet.ZincArray.Companion.zincArray
 import com.ing.zinc.poet.ZincFile
 import com.ing.zinc.poet.ZincFunction
 import com.ing.zinc.poet.ZincMethod.Companion.zincMethod
-import com.ing.zinc.poet.ZincPrimitive
 import com.ing.zinc.poet.ZincType.Companion.id
-import com.ing.zinc.poet.indent
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
-import com.ing.zkflow.util.bitsToByteBoundary
 import com.ing.zkflow.zinc.poet.generate.COMPUTE_LEAF_HASHES
 import com.ing.zkflow.zinc.poet.generate.COMPUTE_NONCE
 import com.ing.zkflow.zinc.poet.generate.COMPUTE_UTXO_HASHES
@@ -37,13 +30,6 @@ import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.secureHas
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.stateRef
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.timeWindow
 import net.corda.core.contracts.ComponentGroupEnum
-
-private data class Group(
-    val name: String,
-    val module: BflType,
-    val groupSize: Int,
-    val componentGroup: ComponentGroupEnum
-)
 
 @Suppress("TooManyFunctions")
 class Witness(
@@ -64,36 +50,27 @@ class Witness(
     private val dependencies =
         listOf(stateRef, secureHash, privacySalt, timeWindow, standardTypes.notaryModule, standardTypes.signerModule, nonceDigest, componentGroupEnum)
 
+    private val inputGroup = WitnessGroup(INPUTS, stateRef, transactionMetadata.numberOfInputs, ComponentGroupEnum.INPUTS_GROUP)
+    private val referenceGroup = WitnessGroup(REFERENCES, stateRef, transactionMetadata.numberOfReferences, ComponentGroupEnum.REFERENCES_GROUP)
+    private val commandGroup = WitnessGroup(COMMANDS, BflPrimitive.U32, transactionMetadata.commands.size, ComponentGroupEnum.COMMANDS_GROUP)
+    private val attachmentGroup = WitnessGroup(ATTACHMENTS, secureHash, transactionMetadata.attachmentCount, ComponentGroupEnum.ATTACHMENTS_GROUP)
+    private val notaryGroup = WitnessGroup(NOTARY, standardTypes.notaryModule, 1, ComponentGroupEnum.NOTARY_GROUP)
+    private val timeWindowGroup = WitnessGroup(TIME_WINDOW, timeWindow, 1, ComponentGroupEnum.TIMEWINDOW_GROUP)
+    private val signerGroup = WitnessGroup(SIGNERS, standardTypes.signerModule, transactionMetadata.numberOfSigners, ComponentGroupEnum.SIGNERS_GROUP)
+    private val parameterGroup = WitnessGroup(PARAMETERS, secureHash, 1, ComponentGroupEnum.PARAMETERS_GROUP)
+
     private val standardComponentGroups = listOfNotNull(
-        Group(INPUTS, stateRef, transactionMetadata.numberOfInputs, ComponentGroupEnum.INPUTS_GROUP),
-        Group(REFERENCES, stateRef, transactionMetadata.numberOfReferences, ComponentGroupEnum.REFERENCES_GROUP),
-        Group(COMMANDS, BflPrimitive.U32, transactionMetadata.commands.size, ComponentGroupEnum.COMMANDS_GROUP),
-        Group(ATTACHMENTS, secureHash, transactionMetadata.attachmentCount, ComponentGroupEnum.ATTACHMENTS_GROUP),
-        Group(NOTARY, standardTypes.notaryModule, 1, ComponentGroupEnum.NOTARY_GROUP),
-        if (transactionMetadata.hasTimeWindow) Group(TIME_WINDOW, timeWindow, 1, ComponentGroupEnum.TIMEWINDOW_GROUP) else null,
-        Group(SIGNERS, standardTypes.signerModule, transactionMetadata.numberOfSigners, ComponentGroupEnum.SIGNERS_GROUP),
-        Group(PARAMETERS, secureHash, 1, ComponentGroupEnum.PARAMETERS_GROUP),
+        inputGroup,
+        referenceGroup,
+        commandGroup,
+        attachmentGroup,
+        notaryGroup,
+        if (transactionMetadata.hasTimeWindow) {
+            timeWindowGroup
+        } else null,
+        signerGroup,
+        parameterGroup,
     )
-
-    private fun arrayOfSerializedData(capacity: Int, module: BflModule): ZincArray {
-        val paddingBits = module.bitSize.bitsToByteBoundary() - module.bitSize
-        return if (paddingBits > 0) {
-            arrayOfSerializedData(capacity, "${module.getLengthConstant()} + $paddingBits as u24")
-        } else {
-            arrayOfSerializedData(capacity, module.getLengthConstant())
-        }
-    }
-
-    private fun arrayOfSerializedData(capacity: Int, type: BflType) =
-        arrayOfSerializedData(capacity, "${type.bitSize.bitsToByteBoundary()} as u24")
-
-    private fun arrayOfSerializedData(capacity: Int, stateSize: String) = zincArray {
-        size = capacity.toString()
-        elementType = zincArray {
-            size = "$CORDA_MAGIC_BITS_SIZE_CONSTANT + $stateSize"
-            elementType = ZincPrimitive.Bool
-        }
-    }
 
     private fun arrayOfNonceDigests(capacity: Int) = zincArray {
         size = "$capacity"
@@ -138,17 +115,17 @@ class Witness(
         newLine()
         struct {
             name = Witness::class.java.simpleName
-            field { name = INPUTS; type = arrayOfSerializedData(transactionMetadata.numberOfInputs, stateRef) }
+            field { name = INPUTS; type = inputGroup.arrayOfSerializedData() }
             field { name = OUTPUTS; type = serializedOutputGroup.toZincId() }
-            field { name = REFERENCES; type = arrayOfSerializedData(transactionMetadata.numberOfReferences, stateRef) }
-            field { name = COMMANDS; type = arrayOfSerializedData(transactionMetadata.commands.size, BflPrimitive.U32) }
-            field { name = ATTACHMENTS; type = arrayOfSerializedData(transactionMetadata.attachmentCount, secureHash) }
-            field { name = NOTARY; type = arrayOfSerializedData(1, standardTypes.notaryModule) }
+            field { name = REFERENCES; type = referenceGroup.arrayOfSerializedData() }
+            field { name = COMMANDS; type = commandGroup.arrayOfSerializedData() }
+            field { name = ATTACHMENTS; type = attachmentGroup.arrayOfSerializedData() }
+            field { name = NOTARY; type = notaryGroup.arrayOfSerializedData() }
             if (transactionMetadata.hasTimeWindow) {
-                field { name = TIME_WINDOW; type = arrayOfSerializedData(1, timeWindow) }
+                field { name = TIME_WINDOW; type = timeWindowGroup.arrayOfSerializedData() }
             }
-            field { name = SIGNERS; type = arrayOfSerializedData(transactionMetadata.numberOfSigners, standardTypes.signerModule) }
-            field { name = PARAMETERS; type = arrayOfSerializedData(1, secureHash) }
+            field { name = SIGNERS; type = signerGroup.arrayOfSerializedData() }
+            field { name = PARAMETERS; type = parameterGroup.arrayOfSerializedData() }
             field { name = PRIVACY_SALT; type = privacySalt.toZincId() }
             field { name = INPUT_NONCES; type = arrayOfNonceDigests(transactionMetadata.numberOfInputs) }
             field { name = REFERENCE_NONCES; type = arrayOfNonceDigests(transactionMetadata.numberOfReferences) }
@@ -163,19 +140,9 @@ class Witness(
     }
 
     fun getWitnessConfigurations(): List<WitnessGroupOptions> {
-        return listOfNotNull(
-            WitnessGroupOptions.cordaWrapped(INPUTS, stateRef),
-            // outputs
-            WitnessGroupOptions.cordaWrapped(REFERENCES, stateRef),
-            WitnessGroupOptions.cordaWrapped(COMMANDS, BflPrimitive.U32),
-            WitnessGroupOptions.cordaWrapped(ATTACHMENTS, secureHash),
-            WitnessGroupOptions.cordaWrapped(NOTARY, standardTypes.notaryModule),
-            if (transactionMetadata.hasTimeWindow) WitnessGroupOptions.cordaWrapped(TIME_WINDOW, timeWindow) else null,
-            WitnessGroupOptions.cordaWrapped(SIGNERS, standardTypes.signerModule),
-            WitnessGroupOptions.cordaWrapped(PARAMETERS, secureHash),
-            // serialized_input_utxos
-            // serialized_reference_utxos
-        ) + outputs.keys.map {
+        return standardComponentGroups.map {
+            it.witnessGroupOptions
+        } + outputs.keys.map {
             WitnessGroupOptions.cordaWrapped("${OUTPUTS}_${it.id.camelToSnakeCase()}", standardTypes.transactionState(it))
         } + inputs.keys.map {
             WitnessGroupOptions.cordaWrapped("${SERIALIZED_INPUT_UTXOS}_${it.id.camelToSnakeCase()}", standardTypes.transactionState(it))
@@ -184,11 +151,12 @@ class Witness(
         }
     }
 
-    override fun generateMethods(codeGenerationOptions: CodeGenerationOptions): List<ZincFunction> = generateDeserializeMethodsForArraysOfByteArrays(codeGenerationOptions) +
-        generateComputeLeafHashesMethodForArraysOfByteArrays() +
-        generateComputeLeafHashesMethodForUtxos() +
-        generateComputeLeafHashesMethodForOutputs() +
-        generateDeserializeMethod()
+    override fun generateMethods(codeGenerationOptions: CodeGenerationOptions): List<ZincFunction> =
+        standardComponentGroups.map(WitnessGroup::generateDeserializeMethod) +
+            standardComponentGroups.map(WitnessGroup::generateHashesMethod) +
+            generateComputeHashesMethodForUtxos() +
+            generateComputeHashesMethodForOutputs() +
+            generateDeserializeMethod()
 
     private fun generateDeserializeMethod() =
         zincMethod {
@@ -223,57 +191,7 @@ class Witness(
             """.trimIndent()
         }
 
-    private fun generateDeserializeMethodsForArraysOfByteArrays(codeGenerationOptions: CodeGenerationOptions): List<ZincFunction> {
-        return standardComponentGroups.map {
-            val deserializeExpression = generateDeserializeExpression(
-                codeGenerationOptions,
-                groupName = it.name,
-                bflType = it.module,
-                witnessVariable = "self.${it.name}[i]",
-                offset = CORDA_MAGIC_BITS_SIZE_CONSTANT
-            )
-            zincMethod {
-                comment = "Deserialize ${it.name} from the ${Witness::class.java.simpleName}."
-                name = "deserialize_${it.name}"
-                returnType = zincArray {
-                    elementType = it.module.toZincId()
-                    size = "${it.groupSize}"
-                }
-                body = """
-                    let mut ${it.name}_array: [${it.module.id}; ${it.groupSize}] = [${it.module.defaultExpr()}; ${it.groupSize}];
-                    for i in 0..${it.groupSize} {
-                        ${it.name}_array[i] = ${deserializeExpression.indent(24.spaces)};
-                    }
-                    ${it.name}_array
-                """.trimIndent()
-            }
-        }
-    }
-
-    private fun generateComputeLeafHashesMethodForArraysOfByteArrays(): List<ZincFunction> {
-        return standardComponentGroups.map {
-            zincMethod {
-                comment = "Compute the ${it.name} leaf hashes."
-                name = "compute_${it.name}_leaf_hashes"
-                returnType = zincArray {
-                    elementType = nonceDigest.toZincId()
-                    size = "${it.groupSize}"
-                }
-                body = """
-                    let mut ${it.name}_leaf_hashes = [[false; ${nonceDigest.getLengthConstant()}]; ${it.groupSize}];
-                    for i in (0 as u32)..${it.groupSize} {
-                        ${it.name}_leaf_hashes[i] = blake2s_multi_input(
-                            $COMPUTE_NONCE(self.$PRIVACY_SALT, ${componentGroupEnum.id}::${it.componentGroup.name} as u32, i),
-                            self.${it.name}[i],
-                        );
-                    }
-                    ${it.name}_leaf_hashes
-                """.trimIndent()
-            }
-        }
-    }
-
-    private fun generateComputeLeafHashesMethodForUtxos(): List<ZincFunction> {
+    private fun generateComputeHashesMethodForUtxos(): List<ZincFunction> {
         return listOf(
             Triple(inputs, SERIALIZED_INPUT_UTXOS, INPUT_NONCES),
             Triple(references, SERIALIZED_REFERENCE_UTXOS, REFERENCE_NONCES),
@@ -281,7 +199,7 @@ class Witness(
             val arraySize = it.first.values.sum()
             zincMethod {
                 comment = "Compute the ${it.second} leaf hashes."
-                name = "compute_${it.second}_leaf_hashes"
+                name = "compute_${it.second}_hashes"
                 returnType = zincArray {
                     elementType = nonceDigest.toZincId()
                     size = "$arraySize"
@@ -293,7 +211,7 @@ class Witness(
         }
     }
 
-    private fun generateComputeLeafHashesMethodForOutputs(): List<ZincFunction> {
+    private fun generateComputeHashesMethodForOutputs(): List<ZincFunction> {
         return listOf(
             Pair(outputs, OUTPUTS),
         ).map {
@@ -314,19 +232,6 @@ class Witness(
                 """.trimIndent()
             }
         }
-    }
-
-    private fun generateDeserializeExpression(
-        codeGenerationOptions: CodeGenerationOptions,
-        groupName: String,
-        bflType: BflType,
-        witnessVariable: String,
-        offset: String
-    ): String {
-        val witnessGroup: WitnessGroupOptions = codeGenerationOptions.witnessGroupOptions.single { witnessGroup ->
-            witnessGroup.deserializeMethodName.endsWith(groupName)
-        }
-        return bflType.deserializeExpr(witnessGroup, offset, groupName, witnessVariable)
     }
 
     override val id: String = Witness::class.java.simpleName
