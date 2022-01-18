@@ -24,17 +24,14 @@ import com.ing.zinc.poet.indent
 import com.ing.zkflow.util.bitsToByteBoundary
 import com.ing.zkflow.zinc.poet.generate.COMPUTE_NONCE
 import com.ing.zkflow.zinc.poet.generate.CRYPTO_UTILS
-import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.componentGroupEnum
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.nonceDigest
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.privacySalt
-import net.corda.core.contracts.ComponentGroupEnum
 
 @Suppress("TooManyFunctions")
 data class SerializedStateGroup(
     private val groupName: String,
     private val baseName: String,
     private val transactionStates: Map<BflModule, Int>,
-    private val componentGroup: ComponentGroupEnum,
 ) : BflModule {
     private val serializedStructName: String = "Serialized$baseName"
     internal val deserializedStruct = struct {
@@ -44,6 +41,7 @@ data class SerializedStateGroup(
     }
 
     private val transactionStateLists: List<BflStructField> = transactionStates.toFieldList()
+    private val groupSize = transactionStates.values.sum()
 
     override fun generateZincFile(codeGenerationOptions: CodeGenerationOptions): ZincFile = ZincFile.zincFile {
         mod { module = CONSTS }
@@ -63,7 +61,7 @@ data class SerializedStateGroup(
         mod { module = deserializedStruct.getModuleName() }
         use { path = "${deserializedStruct.getModuleName()}::${deserializedStruct.id}" }
         newLine()
-        listOf(privacySalt, nonceDigest, componentGroupEnum).forEach {
+        listOf(privacySalt, nonceDigest).forEach {
             mod { module = it.getModuleName() }
             use { path = "${it.getModuleName()}::${it.id}" }
             use { path = "${it.getModuleName()}::${it.getSerializedTypeDef().getName()}" }
@@ -183,14 +181,12 @@ data class SerializedStateGroup(
     }
 
     private fun generateComputeLeafHashes() = zincMethod {
-        val outputGroupSize = transactionStates.values.sum()
-
         var groupOffset = 0
         val fieldHashes = transactionStates.entries.fold("") { acc, (stateType, count) ->
             val result = """
                 for i in (0 as u32)..$count {
                     component_leaf_hashes[i + $groupOffset as u32] = blake2s_multi_input(
-                        compute_nonce(privacy_salt_bits, ${componentGroupEnum.id}::${componentGroup.name} as u32, i + $groupOffset as u32),
+                        nonces[i + $groupOffset as u32],
                         self.${stateTypeFieldName(stateType)}[i],
                     );
                 }
@@ -200,15 +196,18 @@ data class SerializedStateGroup(
         }
         name = "compute_leaf_hashes"
         parameter {
-            name = "privacy_salt_bits"
-            type = privacySalt.getSerializedTypeDef()
+            name = "nonces"
+            type = zincArray {
+                elementType = nonceDigest.toZincId()
+                size = "$groupSize"
+            }
         }
         returnType = zincArray {
-            elementType = nonceDigest.getSerializedTypeDef()
-            size = "$outputGroupSize"
+            elementType = nonceDigest.toZincId()
+            size = "$groupSize"
         }
         body = """
-            let mut component_leaf_hashes = [[false; ${nonceDigest.getLengthConstant()}]; $outputGroupSize]; 
+            let mut component_leaf_hashes = [${nonceDigest.defaultExpr()}; $groupSize];
             ${fieldHashes.indent(12.spaces)}
             component_leaf_hashes
         """.trimIndent()

@@ -3,6 +3,7 @@ package com.ing.zkflow.zinc.poet.generate.types
 import com.ing.zinc.bfl.BflModule
 import com.ing.zinc.bfl.BflPrimitive
 import com.ing.zinc.bfl.BflType
+import com.ing.zinc.bfl.BflTypeDef
 import com.ing.zinc.bfl.dsl.ArrayBuilder.Companion.array
 import com.ing.zinc.bfl.dsl.EnumBuilder.Companion.enumOf
 import com.ing.zinc.bfl.dsl.ListBuilder.Companion.byteArray
@@ -100,26 +101,20 @@ class StandardTypes(
                 }
             }
         }
-        internal val nonceDigest = struct {
-            name = "NonceDigest"
-            field {
-                name = "bytes"
-                type = array {
-                    capacity = 32
-                    elementType = BflPrimitive.U8
-                }
+        internal val nonceDigest = BflTypeDef(
+            "NonceDigest",
+            array {
+                capacity = 32 * Byte.SIZE_BITS
+                elementType = BflPrimitive.Bool
             }
-        }
-        internal val privacySalt = struct {
-            name = "PrivacySalt"
-            field {
-                name = "bytes"
-                type = array {
-                    capacity = 32
-                    elementType = BflPrimitive.U8 // TODO shouldn't we keep this as bitarray?
-                }
+        )
+        internal val privacySalt = BflTypeDef(
+            "PrivacySalt",
+            array {
+                capacity = 32 * Byte.SIZE_BITS
+                elementType = BflPrimitive.Bool
             }
-        }
+        )
         internal val secureHash = struct {
             name = "SecureHash"
             field {

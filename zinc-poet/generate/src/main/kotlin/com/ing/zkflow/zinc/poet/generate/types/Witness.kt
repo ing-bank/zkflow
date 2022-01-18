@@ -55,9 +55,9 @@ class Witness(
         standardTypes.transactionState(stateType) to count
     }.toMap()
 
-    internal val serializedOutputGroup = SerializedStateGroup(OUTPUTS, "OutputGroup", outputs.toTransactionStates(), ComponentGroupEnum.OUTPUTS_GROUP)
-    internal val serializedInputUtxos = SerializedStateGroup(SERIALIZED_INPUT_UTXOS, "InputUtxos", inputs.toTransactionStates(), ComponentGroupEnum.INPUTS_GROUP)
-    internal val serializedReferenceUtxos = SerializedStateGroup(SERIALIZED_REFERENCE_UTXOS, "ReferenceUtxos", references.toTransactionStates(), ComponentGroupEnum.REFERENCES_GROUP)
+    internal val serializedOutputGroup = SerializedStateGroup(OUTPUTS, "OutputGroup", outputs.toTransactionStates())
+    internal val serializedInputUtxos = SerializedStateGroup(SERIALIZED_INPUT_UTXOS, "InputUtxos", inputs.toTransactionStates())
+    internal val serializedReferenceUtxos = SerializedStateGroup(SERIALIZED_REFERENCE_UTXOS, "ReferenceUtxos", references.toTransactionStates())
 
     private val dependencies =
         listOf(stateRef, secureHash, privacySalt, timeWindow, standardTypes.notaryModule, standardTypes.signerModule, nonceDigest, componentGroupEnum)
@@ -147,7 +147,7 @@ class Witness(
             }
             field { name = SIGNERS; type = arrayOfSerializedData(transactionMetadata.numberOfSigners, standardTypes.signerModule) }
             field { name = PARAMETERS; type = arrayOfSerializedData(1, secureHash) }
-            field { name = PRIVACY_SALT; type = privacySalt.getSerializedTypeDef() }
+            field { name = PRIVACY_SALT; type = privacySalt.toZincId() }
             field { name = INPUT_NONCES; type = arrayOfNonceDigests(transactionMetadata.numberOfInputs) }
             field { name = REFERENCE_NONCES; type = arrayOfNonceDigests(transactionMetadata.numberOfReferences) }
             field { name = SERIALIZED_INPUT_UTXOS; type = serializedInputUtxos.toZincId() }
@@ -171,9 +171,6 @@ class Witness(
             if (transactionMetadata.hasTimeWindow) WitnessGroupOptions.cordaWrapped(TIME_WINDOW, timeWindow) else null,
             WitnessGroupOptions.cordaWrapped(SIGNERS, standardTypes.signerModule),
             WitnessGroupOptions.cordaWrapped(PARAMETERS, secureHash),
-            WitnessGroupOptions(PRIVACY_SALT, privacySalt),
-            WitnessGroupOptions(INPUT_NONCES, nonceDigest),
-            WitnessGroupOptions(REFERENCE_NONCES, nonceDigest),
             // serialized_input_utxos
             // serialized_reference_utxos
         ) + outputs.keys.map {
@@ -187,21 +184,15 @@ class Witness(
 
     override fun generateMethods(codeGenerationOptions: CodeGenerationOptions): List<ZincFunction> = generateDeserializeMethodsForArraysOfByteArrays(codeGenerationOptions) +
         generateComputeLeafHashesMethodForArraysOfByteArrays() +
-        generateComputeLeafHashesMethodForSerializedGroups() +
-        generateDeserializeMethod(codeGenerationOptions)
+        generateComputeLeafHashesMethodForUtxos() +
+        generateComputeLeafHashesMethodForOutputs() +
+        generateDeserializeMethod()
 
-    private fun generateDeserializeMethod(codeGenerationOptions: CodeGenerationOptions) =
+    private fun generateDeserializeMethod() =
         zincMethod {
             comment = "Deserialize ${Witness::class.java.simpleName} into a $LEDGER_TRANSACTION."
             name = "deserialize"
             returnType = id(LEDGER_TRANSACTION)
-            val deserializePrivacySalt = generateDeserializeExpression(
-                codeGenerationOptions,
-                groupName = PRIVACY_SALT,
-                bflType = privacySalt,
-                witnessVariable = "self.$PRIVACY_SALT",
-                offset = "0 as u24"
-            )
             body = """
                 let $SIGNERS = self.deserialize_$SIGNERS();
                 let $INPUTS = InputGroup::from_states_and_refs(
@@ -223,7 +214,7 @@ class Witness(
                     ${if (transactionMetadata.hasTimeWindow) "$TIME_WINDOW: self.deserialize_$TIME_WINDOW()," else "// $TIME_WINDOW not present"}
                     $SIGNERS: $SIGNERS,
                     $PARAMETERS: self.deserialize_$PARAMETERS()[0],
-                    ${PRIVACY_SALT}_field: $deserializePrivacySalt,
+                    ${PRIVACY_SALT}_field: self.$PRIVACY_SALT,
                     $INPUT_NONCES: self.$INPUT_NONCES,
                     $REFERENCE_NONCES: self.$REFERENCE_NONCES,
                 }
@@ -263,7 +254,7 @@ class Witness(
                 comment = "Compute the ${it.name} leaf hashes."
                 name = "compute_${it.name}_leaf_hashes"
                 returnType = zincArray {
-                    elementType = nonceDigest.getSerializedTypeDef()
+                    elementType = nonceDigest.toZincId()
                     size = "${it.groupSize}"
                 }
                 body = """
@@ -280,22 +271,44 @@ class Witness(
         }
     }
 
-    private fun generateComputeLeafHashesMethodForSerializedGroups(): List<ZincFunction> {
+    private fun generateComputeLeafHashesMethodForUtxos(): List<ZincFunction> {
         return listOf(
-            Pair(inputs, SERIALIZED_INPUT_UTXOS),
-            Pair(outputs, OUTPUTS),
-            Pair(references, SERIALIZED_REFERENCE_UTXOS),
+            Triple(inputs, SERIALIZED_INPUT_UTXOS, INPUT_NONCES),
+            Triple(references, SERIALIZED_REFERENCE_UTXOS, REFERENCE_NONCES),
         ).map {
             val arraySize = it.first.values.sum()
             zincMethod {
                 comment = "Compute the ${it.second} leaf hashes."
                 name = "compute_${it.second}_leaf_hashes"
                 returnType = zincArray {
-                    elementType = nonceDigest.getSerializedTypeDef()
+                    elementType = nonceDigest.toZincId()
                     size = "$arraySize"
                 }
                 body = """
-                    self.${it.second}.compute_leaf_hashes(self.$PRIVACY_SALT)
+                    self.${it.second}.compute_leaf_hashes(self.${it.third})
+                """.trimIndent()
+            }
+        }
+    }
+
+    private fun generateComputeLeafHashesMethodForOutputs(): List<ZincFunction> {
+        return listOf(
+            Pair(outputs, OUTPUTS),
+        ).map {
+            val arraySize = it.first.values.sum()
+            zincMethod {
+                comment = "Compute the ${it.second} leaf hashes."
+                name = "compute_${it.second}_leaf_hashes"
+                returnType = zincArray {
+                    elementType = nonceDigest.toZincId()
+                    size = "$arraySize"
+                }
+                body = """
+                    let mut nonces = [${nonceDigest.id}; ${transactionMetadata.numberOfOutputs}];
+                    for i in (0 as u32)..${transactionMetadata.numberOfOutputs} {
+                        nonces[i] = compute_nonce(self.$PRIVACY_SALT, ${componentGroupEnum.id}::${ComponentGroupEnum.OUTPUTS_GROUP.name} as u32, i);
+                    }
+                    self.${it.second}.compute_leaf_hashes(nonces)
                 """.trimIndent()
             }
         }
