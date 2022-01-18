@@ -23,7 +23,9 @@ import com.ing.zinc.poet.ZincType.Companion.id
 import com.ing.zinc.poet.indent
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
 import com.ing.zkflow.util.bitsToByteBoundary
+import com.ing.zkflow.zinc.poet.generate.COMPUTE_LEAF_HASHES
 import com.ing.zkflow.zinc.poet.generate.COMPUTE_NONCE
+import com.ing.zkflow.zinc.poet.generate.COMPUTE_UTXO_HASHES
 import com.ing.zkflow.zinc.poet.generate.CRYPTO_UTILS
 import com.ing.zkflow.zinc.poet.generate.types.CommandGroupFactory.Companion.COMMAND_GROUP
 import com.ing.zkflow.zinc.poet.generate.types.CommandGroupFactory.Companion.FROM_SIGNERS
@@ -261,7 +263,7 @@ class Witness(
                     let mut ${it.name}_leaf_hashes = [[false; ${nonceDigest.getLengthConstant()}]; ${it.groupSize}];
                     for i in (0 as u32)..${it.groupSize} {
                         ${it.name}_leaf_hashes[i] = blake2s_multi_input(
-                            compute_nonce(self.$PRIVACY_SALT, ${componentGroupEnum.id}::${it.componentGroup.name} as u32, i),
+                            $COMPUTE_NONCE(self.$PRIVACY_SALT, ${componentGroupEnum.id}::${it.componentGroup.name} as u32, i),
                             self.${it.name}[i],
                         );
                     }
@@ -285,7 +287,7 @@ class Witness(
                     size = "$arraySize"
                 }
                 body = """
-                    self.${it.second}.compute_leaf_hashes(self.${it.third})
+                    self.${it.second}.$COMPUTE_UTXO_HASHES(self.${it.third})
                 """.trimIndent()
             }
         }
@@ -306,9 +308,9 @@ class Witness(
                 body = """
                     let mut nonces = [${nonceDigest.id}; ${transactionMetadata.numberOfOutputs}];
                     for i in (0 as u32)..${transactionMetadata.numberOfOutputs} {
-                        nonces[i] = compute_nonce(self.$PRIVACY_SALT, ${componentGroupEnum.id}::${ComponentGroupEnum.OUTPUTS_GROUP.name} as u32, i);
+                        nonces[i] = $COMPUTE_NONCE(self.$PRIVACY_SALT, ${componentGroupEnum.id}::${ComponentGroupEnum.OUTPUTS_GROUP.name} as u32, i);
                     }
-                    self.${it.second}.compute_leaf_hashes(nonces)
+                    self.${it.second}.$COMPUTE_LEAF_HASHES(nonces)
                 """.trimIndent()
             }
         }

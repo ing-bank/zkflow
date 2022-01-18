@@ -22,7 +22,9 @@ import com.ing.zinc.poet.ZincMethod.Companion.zincMethod
 import com.ing.zinc.poet.ZincPrimitive
 import com.ing.zinc.poet.indent
 import com.ing.zkflow.util.bitsToByteBoundary
+import com.ing.zkflow.zinc.poet.generate.COMPUTE_LEAF_HASHES
 import com.ing.zkflow.zinc.poet.generate.COMPUTE_NONCE
+import com.ing.zkflow.zinc.poet.generate.COMPUTE_UTXO_HASHES
 import com.ing.zkflow.zinc.poet.generate.CRYPTO_UTILS
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.nonceDigest
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.privacySalt
@@ -107,7 +109,7 @@ data class SerializedStateGroup(
             generateDeserializeMethod(),
             generateEmptyMethod(),
             generateEqualsMethod(),
-            generateComputeLeafHashes(),
+            generateComputeHashes(),
         )
     }
 
@@ -180,7 +182,7 @@ data class SerializedStateGroup(
         """.trimIndent()
     }
 
-    private fun generateComputeLeafHashes() = zincMethod {
+    private fun generateComputeHashes() = zincMethod {
         var groupOffset = 0
         val fieldHashes = transactionStates.entries.fold("") { acc, (stateType, count) ->
             val result = """
@@ -194,7 +196,7 @@ data class SerializedStateGroup(
             groupOffset += count
             acc + "\n" + result + "\n"
         }
-        name = "compute_leaf_hashes"
+        name = if (baseName.endsWith("Utxos")) COMPUTE_UTXO_HASHES else COMPUTE_LEAF_HASHES
         parameter {
             name = "nonces"
             type = zincArray {
