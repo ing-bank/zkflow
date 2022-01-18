@@ -21,13 +21,16 @@ val Meta.ClassAnnotator: CliPlugin
     get() = PROCESSING_UNIT {
         meta(
             classDeclaration(this, match = {
-                SerdeLogger.mergePhase(PROCESSING_UNIT)
-                ClassRefactory.verifyAnnotationCorrectness(element)
+                SerdeLogger.phase(PROCESSING_UNIT) {
+                    ClassRefactory.verifyAnnotationCorrectness(element)
+                }
             }) { (ktClass, _) ->
-                Transform.replace(
-                    replacing = ktClass,
-                    newDeclarations = ClassRefactory(this, ctx).newDeclarations
-                )
+                SerdeLogger.phase(PROCESSING_UNIT) {
+                    Transform.replace(
+                        replacing = ktClass,
+                        newDeclarations = ClassRefactory(this, ctx).newDeclarations
+                    )
+                }
             }
         )
     }
