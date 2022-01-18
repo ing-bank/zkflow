@@ -104,14 +104,14 @@ class StandardTypes(
         internal val nonceDigest = BflTypeDef(
             "NonceDigest",
             array {
-                capacity = 32 * Byte.SIZE_BITS
+                capacity = 32 * Byte.SIZE_BITS // TODO size depends on the used hashing algorithm
                 elementType = BflPrimitive.Bool
             }
         )
         internal val privacySalt = BflTypeDef(
             "PrivacySalt",
             array {
-                capacity = 32 * Byte.SIZE_BITS
+                capacity = 32 * Byte.SIZE_BITS // TODO size depends on the used hashing algorithm
                 elementType = BflPrimitive.Bool
             }
         )
