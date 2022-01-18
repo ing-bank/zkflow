@@ -2,21 +2,18 @@ package com.ing.zkflow.zinc.poet.generate
 
 import com.ing.zinc.bfl.BflModule
 import com.ing.zinc.bfl.BflStruct
-import com.ing.zinc.bfl.CONSTS
-import com.ing.zinc.bfl.CORDA_MAGIC_BITS_SIZE
-import com.ing.zinc.bfl.CORDA_MAGIC_BITS_SIZE_CONSTANT_NAME
 import com.ing.zinc.bfl.allModules
 import com.ing.zinc.bfl.generator.CodeGenerationOptions
 import com.ing.zinc.bfl.generator.ZincGenerator.createZargoToml
 import com.ing.zinc.bfl.generator.ZincGenerator.zincSourceFile
 import com.ing.zinc.bfl.toZincId
-import com.ing.zinc.poet.ZincPrimitive
 import com.ing.zkflow.common.contracts.ZKTransactionMetadataCommandData
 import com.ing.zkflow.common.zkp.metadata.ContractStateTypeCount
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
 import com.ing.zkflow.util.requireNotNull
 import com.ing.zkflow.zinc.poet.generate.types.LedgerTransactionFactory
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes
+import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.componentGroupEnum
 import com.ing.zkflow.zinc.poet.generate.types.StateAndRefsGroupFactory
 import com.ing.zkflow.zinc.poet.generate.types.Witness
 import net.corda.core.contracts.ContractState
@@ -25,12 +22,15 @@ import java.nio.file.Path
 import java.util.Locale
 import kotlin.reflect.KClass
 
+@Suppress("LongParameterList")
 class CircuitGenerator(
     private val buildPathProvider: BuildPathProvider,
     private val ledgerTransactionFactory: LedgerTransactionFactory,
     private val standardTypes: StandardTypes,
     private val stateAndRefsGroupFactory: StateAndRefsGroupFactory,
     private val zincTypeResolver: ZincTypeResolver,
+    private val constsFactory: ConstsFactory,
+    private val cryptoUtilsFactory: CryptoUtilsFactory,
 ) {
     private fun Map<KClass<out ContractState>, Int>.toZincType(): Map<BflModule, Int> = entries.associate {
         zincTypeResolver.zincTypeOf(it.key) to it.value
@@ -74,8 +74,10 @@ class CircuitGenerator(
             buildPath.zincSourceFile(this, codeGenerationOptions)
         }
 
-        generateConsts(buildPath, codeGenerationOptions)
+        constsFactory.generateConsts(buildPath, codeGenerationOptions)
+        cryptoUtilsFactory.generateCryptoUtils(buildPath)
         generateMain(buildPath, witness, ledgerTransaction)
+        buildPath.zincSourceFile(componentGroupEnum, codeGenerationOptions)
         logger.info("... done")
     }
 
@@ -99,23 +101,6 @@ class CircuitGenerator(
                 }
                 returnType = ledgerTransaction.toZincId()
                 body = "input.deserialize()"
-            }
-        }
-    }
-
-    private fun generateConsts(
-        buildPath: Path,
-        codeGenerationOptions: CodeGenerationOptions
-    ) {
-        buildPath.zincSourceFile("$CONSTS.zn") {
-            constant {
-                name = CORDA_MAGIC_BITS_SIZE_CONSTANT_NAME
-                type = ZincPrimitive.U24
-                initialization = "$CORDA_MAGIC_BITS_SIZE"
-                comment = "Number of bits in Corda serialization header"
-            }
-            codeGenerationOptions.witnessGroupOptions.forEach {
-                add(it.witnessSizeConstant)
             }
         }
     }

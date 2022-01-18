@@ -11,8 +11,8 @@ import com.ing.zinc.bfl.dsl.StructBuilder.Companion.struct
 import com.ing.zinc.bfl.generator.CodeGenerationOptions
 import com.ing.zinc.bfl.generator.WitnessGroupOptions
 import com.ing.zinc.bfl.getLengthConstant
+import com.ing.zinc.bfl.getSerializedTypeDef
 import com.ing.zinc.bfl.toZincId
-import com.ing.zinc.naming.camelToSnakeCase
 import com.ing.zinc.poet.Indentation.Companion.spaces
 import com.ing.zinc.poet.ZincArray.Companion.zincArray
 import com.ing.zinc.poet.ZincFile
@@ -22,6 +22,12 @@ import com.ing.zinc.poet.ZincMethod.Companion.zincMethod
 import com.ing.zinc.poet.ZincPrimitive
 import com.ing.zinc.poet.indent
 import com.ing.zkflow.util.bitsToByteBoundary
+import com.ing.zkflow.zinc.poet.generate.COMPUTE_LEAF_HASHES
+import com.ing.zkflow.zinc.poet.generate.COMPUTE_NONCE
+import com.ing.zkflow.zinc.poet.generate.COMPUTE_UTXO_HASHES
+import com.ing.zkflow.zinc.poet.generate.CRYPTO_UTILS
+import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.nonceDigest
+import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.privacySalt
 
 @Suppress("TooManyFunctions")
 data class SerializedStateGroup(
@@ -37,6 +43,7 @@ data class SerializedStateGroup(
     }
 
     private val transactionStateLists: List<BflStructField> = transactionStates.toFieldList()
+    private val groupSize = transactionStates.values.sum()
 
     override fun generateZincFile(codeGenerationOptions: CodeGenerationOptions): ZincFile = ZincFile.zincFile {
         mod { module = CONSTS }
@@ -53,8 +60,19 @@ data class SerializedStateGroup(
             use { path = "${stateList.getModuleName()}::${stateList.id}" }
             newLine()
         }
-        mod { module = deserializedStruct.id.camelToSnakeCase() }
-        use { path = "${deserializedStruct.id.camelToSnakeCase()}::${deserializedStruct.id}" }
+        mod { module = deserializedStruct.getModuleName() }
+        use { path = "${deserializedStruct.getModuleName()}::${deserializedStruct.id}" }
+        newLine()
+        listOf(privacySalt, nonceDigest).forEach {
+            mod { module = it.getModuleName() }
+            use { path = "${it.getModuleName()}::${it.id}" }
+            use { path = "${it.getModuleName()}::${it.getSerializedTypeDef().getName()}" }
+            use { path = "${it.getModuleName()}::${it.getLengthConstant()}" }
+            newLine()
+        }
+        mod { module = CRYPTO_UTILS }
+        use { path = "$CRYPTO_UTILS::$COMPUTE_NONCE" }
+        use { path = "std::crypto::blake2s_multi_input" }
         newLine()
         struct {
             name = serializedStructName
@@ -91,6 +109,7 @@ data class SerializedStateGroup(
             generateDeserializeMethod(),
             generateEmptyMethod(),
             generateEqualsMethod(),
+            generateComputeHashes(),
         )
     }
 
@@ -160,6 +179,39 @@ data class SerializedStateGroup(
         returnType = ZincPrimitive.Bool
         body = """
             ${fieldEquals.indent(12.spaces)}
+        """.trimIndent()
+    }
+
+    private fun generateComputeHashes() = zincMethod {
+        var groupOffset = 0
+        val fieldHashes = transactionStates.entries.fold("") { acc, (stateType, count) ->
+            val result = """
+                for i in (0 as u32)..$count {
+                    component_leaf_hashes[i + $groupOffset as u32] = blake2s_multi_input(
+                        nonces[i + $groupOffset as u32],
+                        self.${stateTypeFieldName(stateType)}[i],
+                    );
+                }
+            """.trimIndent()
+            groupOffset += count
+            acc + "\n" + result + "\n"
+        }
+        name = if (baseName.endsWith("Utxos")) COMPUTE_UTXO_HASHES else COMPUTE_LEAF_HASHES
+        parameter {
+            name = "nonces"
+            type = zincArray {
+                elementType = nonceDigest.toZincId()
+                size = "$groupSize"
+            }
+        }
+        returnType = zincArray {
+            elementType = nonceDigest.toZincId()
+            size = "$groupSize"
+        }
+        body = """
+            let mut component_leaf_hashes = [${nonceDigest.defaultExpr()}; $groupSize];
+            ${fieldHashes.indent(12.spaces)}
+            component_leaf_hashes
         """.trimIndent()
     }
 

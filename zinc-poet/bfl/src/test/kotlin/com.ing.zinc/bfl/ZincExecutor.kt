@@ -94,54 +94,54 @@ object ZincExecutor {
                 name = "main"
                 parameter { name = SERIALIZED; type = witnessGroupOptions.witnessType }
                 returnType = module.toZincId()
-                body = "${module.id}::${witnessGroupOptions.deserializeMethodName}($SERIALIZED, 0 as u24)"
+                body = module.deserializeExpr(witnessGroupOptions, "0 as u24", SERIALIZED, SERIALIZED)
             }
         }
     }
 
-    fun Path.generateEqualsCircuit(struct: BflStruct) {
-        generateCircuitBase(struct)
+    fun Path.generateEqualsCircuit(module: BflModule) {
+        generateCircuitBase(module)
         // generate src/main.zn
         zincSourceFile("main.zn") {
-            struct.allModules {
+            module.allModules {
                 createImports(this)
             }
             function {
                 name = "main"
-                parameter { name = "left"; type = struct.toZincId() }
-                parameter { name = "right"; type = struct.toZincId() }
+                parameter { name = "left"; type = module.toZincId() }
+                parameter { name = "right"; type = module.toZincId() }
                 returnType = ZincPrimitive.Bool
-                body = "left.equals(right)"
+                body = module.equalsExpr("left", "right")
             }
         }
     }
 
-    fun Path.generateEmptyCircuit(struct: BflStruct) {
-        generateCircuitBase(struct)
+    fun Path.generateEmptyCircuit(module: BflModule) {
+        generateCircuitBase(module)
         // generate src/main.zn
         zincSourceFile("main.zn") {
-            struct.allModules {
+            module.allModules {
                 createImports(this)
             }
             function {
                 name = "main"
-                returnType = struct.toZincId()
-                body = "${struct.id}::empty()"
+                returnType = module.toZincId()
+                body = module.defaultExpr()
             }
         }
     }
 
-    fun Path.generateNewCircuit(struct: BflStruct, initializer: String) {
-        generateCircuitBase(struct)
+    fun Path.generateNewCircuit(module: BflModule, vararg initializer: String) {
+        generateCircuitBase(module)
         // generate src/main.zn
         zincSourceFile("main.zn") {
-            struct.allModules {
+            module.allModules {
                 createImports(this)
             }
             function {
                 name = "main"
-                returnType = struct.toZincId()
-                body = "${struct.id}::new($initializer)"
+                returnType = module.toZincId()
+                body = "${module.id}::new(${initializer.joinToString { it }})"
             }
         }
     }

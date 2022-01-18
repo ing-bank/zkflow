@@ -42,8 +42,8 @@ class LedgerTransactionFactory(
         if (transactionMetadata.hasTimeWindow) {
             field { name = TIME_WINDOW; type = timeWindow }
         }
-        field { name = PARAMETERS; type = secureHash }
         field { name = SIGNERS; type = array { capacity = transactionMetadata.numberOfSigners; elementType = standardTypes.signerModule } }
+        field { name = PARAMETERS; type = secureHash }
         field { name = PRIVACY_SALT + "_field"; type = privacySalt }
         field { name = INPUT_NONCES; type = array { capacity = transactionMetadata.numberOfInputs; elementType = nonceDigest } }
         field { name = REFERENCE_NONCES; type = array { capacity = transactionMetadata.numberOfReferences; elementType = nonceDigest } }

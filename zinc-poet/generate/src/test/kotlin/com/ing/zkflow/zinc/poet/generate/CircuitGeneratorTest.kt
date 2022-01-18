@@ -27,7 +27,7 @@ internal class CircuitGeneratorTest {
         override fun zincTypeOf(kClass: KClass<*>): BflModule {
             return struct {
                 name = kClass.simpleName
-                // Just a random field, to make zinc happy. Zinc is not so good with empty structs.
+                // Just a random field, to make zinc happy. Zinc has issues with empty structs.
                 field {
                     name = "bogus"
                     type = BflPrimitive.U8
@@ -50,6 +50,8 @@ internal class CircuitGeneratorTest {
             StandardTypes(zincTypeResolver),
             StateAndRefsGroupFactory(standardTypes),
             zincTypeResolver,
+            ConstsFactory(),
+            CryptoUtilsFactory(),
         )
 
         logExecutionTime("Generating the circuit") {
