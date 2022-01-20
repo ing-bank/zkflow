@@ -65,13 +65,10 @@ class WrapsPartiesTest : SerializerTest {
     @ParameterizedTest
     @MethodSource("engines")
     fun `WrapsParties generated and manual serializations must coincide`(engine: SerdeEngine) {
-        val a = engine.serialize(
+        engine.serialize(
             com.ing.zkflow.annotated.WrapsParties.serializer(),
             com.ing.zkflow.annotated.WrapsParties()
-        )
-        val b = engine.serialize(WrapsParties.serializer(), WrapsParties())
-
-        a.size shouldBe b.size
-        a shouldBe b
+        ) shouldBe
+            engine.serialize(WrapsParties.serializer(), WrapsParties())
     }
 }

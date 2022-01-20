@@ -42,6 +42,7 @@ import com.ing.zkflow.serialization.serializer.char.UTF8CharSerializer
 import com.ing.zkflow.serialization.serializer.corda.AnonymousPartySerializer
 import com.ing.zkflow.serialization.serializer.corda.CordaX500NameSerializer
 import com.ing.zkflow.serialization.serializer.corda.PartySerializer
+import com.ing.zkflow.serialization.serializer.corda.PublicKeySerializer
 import com.ing.zkflow.serialization.serializer.corda.SecureHashSerializer
 import com.ing.zkflow.serialization.serializer.string.FixedLengthASCIIStringSerializer
 import com.ing.zkflow.serialization.serializer.string.FixedLengthUTF8StringSerializer
@@ -52,6 +53,7 @@ import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
 import org.jetbrains.kotlin.psi.KtValueArgument
 import java.math.BigDecimal
+import java.security.PublicKey
 import java.time.Instant
 import java.util.UUID
 
@@ -394,6 +396,28 @@ internal object Processors {
         },
 
         /**
+         * To serialize [PublicKey], a single annotation annotated with [SignatureSpec] must be present,
+         * Otherwise, recurse to [forUserType]
+         */
+        PublicKey::class.qualifiedName!! to ToSerializingObject { contextualOriginal, _ ->
+            contextualOriginal.findCordaSignatureId()?.let { cordaSignatureId ->
+                TypeSerializingObject.ExplicitType(
+                    contextualOriginal,
+                    PublicKeySerializer::class,
+                    emptyList()
+                ) { _, outer, _ ->
+                    "object $outer: ${PublicKeySerializer::class.qualifiedName}($cordaSignatureId)"
+                }.also {
+                    SerdeLogger.log("Type ${contextualOriginal.ktTypeReference.text} processed successfully")
+                }
+            } ?: run {
+                // PublicKey has no signature specific annotations, recurse to treating it as a generic user type.
+                SerdeLogger.log("Re-cursing to default treatment of ${contextualOriginal.ktTypeReference.text}")
+                forUserType(contextualOriginal)
+            }
+        },
+
+        /**
          * Ban the usage of [AbstractParty].
          */
         AbstractParty::class.qualifiedName!! to ToSerializingObject { _, _ ->
@@ -410,35 +434,20 @@ internal object Processors {
          * Otherwise, recurse to [forUserType].
          */
         AnonymousParty::class.qualifiedName!! to ToSerializingObject { contextualOriginal, _ ->
-            val metaAnnotations = contextualOriginal.findMetaAnnotation<SignatureSpec>()
-            when (metaAnnotations.size) {
-                0 -> {
-                    // AnonymousParty has no signature specific annotations, recurse to treating it as a generic user type.
-                    SerdeLogger.log("Re-cursing to default treatment of ${contextualOriginal.ktTypeReference.text}")
-                    forUserType(contextualOriginal)
+            contextualOriginal.findCordaSignatureId()?.let { cordaSignatureId ->
+                TypeSerializingObject.ExplicitType(
+                    contextualOriginal,
+                    AnonymousPartySerializer::class,
+                    emptyList()
+                ) { _, outer, _ ->
+                    "object $outer: ${AnonymousPartySerializer::class.qualifiedName}($cordaSignatureId)"
+                }.also {
+                    SerdeLogger.log("Type ${contextualOriginal.ktTypeReference.text} processed successfully")
                 }
-                1 -> {
-                    val cordaSignatureId = when (val meta = metaAnnotations.single()) {
-                        is BestEffortResolvedAnnotation.Instruction -> error(
-                            """
-                            User defined signature schemes are prohibited.
-                            Scheme ${meta.root} has no corresponding Corda signature scheme.
-                            """.trimIndent()
-                        )
-                        is BestEffortResolvedAnnotation.Compiled<*> -> (meta.annotation as SignatureSpec).cordaSignatureId
-                    }
-
-                    TypeSerializingObject.ExplicitType(
-                        contextualOriginal,
-                        AnonymousPartySerializer::class,
-                        emptyList()
-                    ) { _, outer, _ ->
-                        "object $outer: ${AnonymousPartySerializer::class.qualifiedName}($cordaSignatureId)"
-                    }.also {
-                        SerdeLogger.log("Type ${contextualOriginal.ktTypeReference.text} processed successfully")
-                    }
-                }
-                else -> error("Signature spec annotations are not repeatable, got [${metaAnnotations.joinToString(separator = ", ") { it.root }}] (size = ${metaAnnotations.size})")
+            } ?: run {
+                // AnonymousParty has no signature specific annotations, recurse to treating it as a generic user type.
+                SerdeLogger.log("Re-cursing to default treatment of ${contextualOriginal.ktTypeReference.text}")
+                forUserType(contextualOriginal)
             }
         },
 
@@ -449,25 +458,10 @@ internal object Processors {
          * Otherwise, recurse to [forUserType].
          */
         Party::class.qualifiedName!! to ToSerializingObject { contextualOriginal, _ ->
-            // Look for signature specification:
-            val metaSignatureAnnotations = contextualOriginal.findMetaAnnotation<SignatureSpec>()
-
-            val cordaSignatureId = when (metaSignatureAnnotations.size) {
-                0 -> {
-                    // AnonymousParty has no signature specific annotations, recurse to treating it as a generic user type.
-                    SerdeLogger.log("Re-cursing to default treatment of ${contextualOriginal.ktTypeReference.text}")
-                    return@ToSerializingObject forUserType(contextualOriginal)
-                }
-                1 -> when (val meta = metaSignatureAnnotations.single()) {
-                    is BestEffortResolvedAnnotation.Instruction -> error(
-                        """
-                        User defined signature schemes are prohibited.
-                        Scheme ${meta.root} has no corresponding Corda signature scheme.
-                        """.trimIndent()
-                    )
-                    is BestEffortResolvedAnnotation.Compiled<*> -> (meta.annotation as SignatureSpec).cordaSignatureId
-                }
-                else -> error("Signature spec annotations are not repeatable, got [${metaSignatureAnnotations.joinToString(separator = ", ") { it.root }}] (size = ${metaSignatureAnnotations.size})")
+            val cordaSignatureId = contextualOriginal.findCordaSignatureId() ?: run {
+                // Party has no signature specific annotations, recurse to treating it as a generic user type.
+                SerdeLogger.log("Re-cursing to default treatment of ${contextualOriginal.ktTypeReference.text}")
+                return@ToSerializingObject forUserType(contextualOriginal)
             }
 
             // Look for CordaX500Name specification:
@@ -606,6 +600,29 @@ internal object Processors {
     }
 
     fun forUserType(contextualizedOriginal: ContextualizedKtTypeReference) = userType(contextualizedOriginal, emptyList())
+
+    /**
+     * Utility function: Look for a single signature id specification.
+     */
+    private fun ContextualizedKtTypeReference.findCordaSignatureId(): Int? {
+        val metaAnnotations = findMetaAnnotation<SignatureSpec>()
+        return when (metaAnnotations.size) {
+            0 -> {
+                // This KtTypeReference has no signature specific annotations.
+                null
+            }
+            1 -> when (val meta = metaAnnotations.single()) {
+                is BestEffortResolvedAnnotation.Instruction -> error(
+                    """
+                        User defined signature schemes are prohibited.
+                        Scheme ${meta.root} has no corresponding Corda signature scheme.
+                    """.trimIndent()
+                )
+                is BestEffortResolvedAnnotation.Compiled<*> -> (meta.annotation as SignatureSpec).cordaSignatureId
+            }
+            else -> error("Signature spec annotations are not repeatable, got [${metaAnnotations.joinToString(separator = ", ") { it.root }}] (size = ${metaAnnotations.size})")
+        }
+    }
 }
 
 fun interface ToSerializingObject {

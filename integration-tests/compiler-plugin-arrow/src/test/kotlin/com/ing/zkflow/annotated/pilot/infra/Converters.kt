@@ -14,6 +14,7 @@ import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
+import java.security.PublicKey
 
 object AnonymousPartyConverter_EdDSA : ConversionProvider<AnonymousParty, AnonymousPartySurrogate_EdDSA> {
     override fun from(original: AnonymousParty): AnonymousPartySurrogate_EdDSA {
@@ -83,4 +84,22 @@ object AmountConverter_IssuedTokenType : ConversionProvider<
 object CordaX500NameConverter : ConversionProvider<CordaX500Name, CordaX500NameSurrogate> {
     override fun from(original: CordaX500Name): CordaX500NameSurrogate =
         CordaX500NameSurrogate("$original")
+}
+
+object EdDSAPublicKeyConverter : ConversionProvider<PublicKey, EdDSAPublicKeySurrogate> {
+    override fun from(original: PublicKey): EdDSAPublicKeySurrogate {
+        require(original.encoded.size == 44) {
+            "`${original.algorithm}` key encoding must be 44 bytes long; got ${original.encoded.size}"
+        }
+
+        // Ignore first 12 bytes.
+        // For more information see Specs can be found in [X509EncodedKeySpec] (/java/security/spec/X509EncodedKeySpec.java).
+        // The tail 32 bytes are the actual key.
+        val key = original.encoded.copyOfRange(12, 44)
+        require(key.size == 32) {
+            "`${original.algorithm}` key must be 32 bytes long"
+        }
+
+        return EdDSAPublicKeySurrogate(key)
+    }
 }
