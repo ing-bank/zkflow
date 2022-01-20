@@ -84,15 +84,21 @@ internal class ZincImplTest {
                     true
                 }
                 
-                fn method1(self) -> bool {
+                fn method1(
+                    self,
+                ) -> bool {
                     true
                 }
                 
-                fn method2(self) -> bool {
+                fn method2(
+                    self,
+                ) -> bool {
                     true
                 }
                 
-                fn method3(self) -> bool {
+                fn method3(
+                    self,
+                ) -> bool {
                     true
                 }
             }

@@ -87,7 +87,12 @@ internal class ZincMethodTest {
         actual.generate() shouldBe """
             // Just some test function.
             // For fun.
-            fn some_method(mut self, param1: u8, param2: u8, param3: u8) -> bool {
+            fn some_method(
+                mut self,
+                param1: u8,
+                param2: u8,
+                param3: u8,
+            ) -> bool {
                 true
             }
         """.trimIndent()

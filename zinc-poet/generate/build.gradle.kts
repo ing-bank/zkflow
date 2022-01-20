@@ -7,6 +7,7 @@ plugins {
 }
 
 dependencies {
+    implementation(project(":utils"))
     implementation(project(":zinc-poet:bfl"))
     implementation(project(":zinc-poet:poet"))
     implementation(project(":protocol"))

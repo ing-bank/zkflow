@@ -13,7 +13,7 @@ import kotlin.reflect.KClass
 private object MyZincTypeResolved : ZincTypeResolver {
     override fun zincTypeOf(kClass: KClass<*>): BflModule {
         return struct {
-            name = "${kClass::simpleName}"
+            name = kClass.simpleName
             field {
                 name = "bogus"
                 type = BflPrimitive.Bool

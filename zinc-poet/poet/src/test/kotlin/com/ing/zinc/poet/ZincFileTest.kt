@@ -20,7 +20,9 @@ internal class ZincFileTest {
                 test_field: bool,
             }
             impl TestStruct {
-                fn test_method(self) -> bool {
+                fn test_method(
+                    self,
+                ) -> bool {
                     true
                 }
             }

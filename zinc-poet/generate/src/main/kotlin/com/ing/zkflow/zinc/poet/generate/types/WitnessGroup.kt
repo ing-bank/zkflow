@@ -37,7 +37,8 @@ internal data class WitnessGroup(
 
     val witnessGroupOptions: WitnessGroupOptions = WitnessGroupOptions.cordaWrapped(name, module)
 
-    fun generateDeserializeMethod(): ZincFunction {
+    fun generateDeserializeMethod(): ZincFunction? {
+        if (groupSize == 0) return null
         val deserializeExpression = module.deserializeExpr(
             witnessGroupOptions,
             offset = CORDA_MAGIC_BITS_SIZE_CONSTANT,
@@ -61,22 +62,25 @@ internal data class WitnessGroup(
         }
     }
 
-    fun generateHashesMethod(): ZincFunction = zincMethod {
-        comment = "Compute the ${this@WitnessGroup.name} leaf hashes."
-        name = "compute_${this@WitnessGroup.name}_leaf_hashes"
-        returnType = zincArray {
-            elementType = nonceDigest.toZincId()
-            size = "$groupSize"
-        }
-        body = """
-            let mut ${this@WitnessGroup.name}_leaf_hashes = [[false; ${nonceDigest.getLengthConstant()}]; $groupSize];
-            for i in (0 as u32)..$groupSize {
-                ${this@WitnessGroup.name}_leaf_hashes[i] = blake2s_multi_input(
-                    $COMPUTE_NONCE(self.$PRIVACY_SALT, ${componentGroupEnum.id}::${componentGroup.name} as u32, i),
-                    self.${this@WitnessGroup.name}[i],
-                );
+    fun generateHashesMethod(): ZincFunction? {
+        if (groupSize == 0) return null
+        return zincMethod {
+            comment = "Compute the ${this@WitnessGroup.name} leaf hashes."
+            name = "compute_${this@WitnessGroup.name}_leaf_hashes"
+            returnType = zincArray {
+                elementType = nonceDigest.toZincId()
+                size = "$groupSize"
             }
-            ${this@WitnessGroup.name}_leaf_hashes
-        """.trimIndent()
+            body = """
+                let mut ${this@WitnessGroup.name}_leaf_hashes = [[false; ${nonceDigest.getLengthConstant()}]; $groupSize];
+                for i in (0 as u32)..$groupSize {
+                    ${this@WitnessGroup.name}_leaf_hashes[i] = blake2s_multi_input(
+                        $COMPUTE_NONCE(self.$PRIVACY_SALT, ${componentGroupEnum.id}::${componentGroup.name} as u32, i),
+                        self.${this@WitnessGroup.name}[i],
+                    );
+                }
+                ${this@WitnessGroup.name}_leaf_hashes
+            """.trimIndent()
+        }
     }
 }

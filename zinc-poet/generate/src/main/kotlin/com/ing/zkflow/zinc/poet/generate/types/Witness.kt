@@ -10,12 +10,15 @@ import com.ing.zinc.bfl.getLengthConstant
 import com.ing.zinc.bfl.getSerializedTypeDef
 import com.ing.zinc.bfl.toZincId
 import com.ing.zinc.naming.camelToSnakeCase
+import com.ing.zinc.poet.Indentation.Companion.spaces
 import com.ing.zinc.poet.ZincArray.Companion.zincArray
 import com.ing.zinc.poet.ZincFile
 import com.ing.zinc.poet.ZincFunction
 import com.ing.zinc.poet.ZincMethod.Companion.zincMethod
 import com.ing.zinc.poet.ZincType.Companion.id
+import com.ing.zinc.poet.indent
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
+import com.ing.zkflow.util.ifOrNull
 import com.ing.zkflow.zinc.poet.generate.COMPUTE_LEAF_HASHES
 import com.ing.zkflow.zinc.poet.generate.COMPUTE_NONCE
 import com.ing.zkflow.zinc.poet.generate.COMPUTE_UTXO_HASHES
@@ -48,7 +51,10 @@ class Witness(
     internal val serializedReferenceUtxos = SerializedStateGroup(SERIALIZED_REFERENCE_UTXOS, "ReferenceUtxos", references.toTransactionStates())
 
     private val dependencies =
-        listOf(stateRef, secureHash, privacySalt, timeWindow, standardTypes.notaryModule, standardTypes.signerModule, nonceDigest, componentGroupEnum)
+        listOfNotNull(
+            stateRef, secureHash, privacySalt, ifOrNull(commandMetadata.timeWindow) { timeWindow },
+            standardTypes.notaryModule, standardTypes.signerModule, nonceDigest, componentGroupEnum
+        )
 
     private val inputGroup = WitnessGroup(INPUTS, stateRef, commandMetadata.privateInputs.size, ComponentGroupEnum.INPUTS_GROUP)
     private val referenceGroup = WitnessGroup(REFERENCES, stateRef, commandMetadata.privateReferences.size, ComponentGroupEnum.REFERENCES_GROUP)
@@ -56,20 +62,18 @@ class Witness(
     // private val attachmentGroup = WitnessGroup(ATTACHMENTS, secureHash, 0, ComponentGroupEnum.ATTACHMENTS_GROUP)
     private val notaryGroup = WitnessGroup(NOTARY, standardTypes.notaryModule, 1, ComponentGroupEnum.NOTARY_GROUP)
     private val timeWindowGroup = WitnessGroup(TIME_WINDOW, timeWindow, 1, ComponentGroupEnum.TIMEWINDOW_GROUP)
-    private val signerGroup = WitnessGroup(SIGNERS, standardTypes.signerModule, commandMetadata.numberOfSigners, ComponentGroupEnum.SIGNERS_GROUP)
     private val parameterGroup = WitnessGroup(PARAMETERS, secureHash, 1, ComponentGroupEnum.PARAMETERS_GROUP)
+    private val signerGroup = WitnessGroup(SIGNERS, standardTypes.signerModule, commandMetadata.numberOfSigners, ComponentGroupEnum.SIGNERS_GROUP)
 
     private val standardComponentGroups = listOfNotNull(
-        inputGroup,
-        referenceGroup,
+        ifOrNull(commandMetadata.privateInputs.isNotEmpty()) { inputGroup },
+        ifOrNull(commandMetadata.privateInputs.isNotEmpty()) { referenceGroup },
         commandGroup,
-        // attachmentGroup,
+        // ifOrNull(commandMetadata.attachmentCount > 0) { attachmentGroup },
         notaryGroup,
-        if (commandMetadata.timeWindow) {
-            timeWindowGroup
-        } else null,
-        signerGroup,
+        ifOrNull(commandMetadata.timeWindow) { timeWindowGroup },
         parameterGroup,
+        signerGroup,
     )
 
     private fun arrayOfNonceDigests(capacity: Int) = zincArray {
@@ -77,16 +81,23 @@ class Witness(
         elementType = nonceDigest.toZincId()
     }
 
-    @Suppress("LongMethod")
+    @Suppress("LongMethod", "ComplexMethod")
     override fun generateZincFile(codeGenerationOptions: CodeGenerationOptions): ZincFile = ZincFile.zincFile {
         mod { module = CONSTS }
         newLine()
-        listOf(serializedOutputGroup, serializedInputUtxos, serializedReferenceUtxos).forEach {
+        listOfNotNull(
+            ifOrNull(commandMetadata.privateOutputs.isNotEmpty()) { serializedOutputGroup },
+            ifOrNull(commandMetadata.privateInputs.isNotEmpty()) { serializedInputUtxos },
+            ifOrNull(commandMetadata.privateReferences.isNotEmpty()) { serializedReferenceUtxos },
+        ).forEach {
             mod { module = it.getModuleName() }
             use { path = "${it.getModuleName()}::${it.id}" }
             newLine()
         }
-        listOf("InputGroup", "ReferenceGroup").forEach {
+        listOfNotNull(
+            ifOrNull(commandMetadata.privateInputs.isNotEmpty()) { "InputGroup" },
+            ifOrNull(commandMetadata.privateReferences.isNotEmpty()) { "ReferenceGroup" },
+        ).forEach {
             mod { module = it.camelToSnakeCase() }
             use { path = "${it.camelToSnakeCase()}::$it" }
         }
@@ -114,22 +125,38 @@ class Witness(
         newLine()
         struct {
             name = Witness::class.java.simpleName
-            field { name = INPUTS; type = inputGroup.arrayOfSerializedData() }
-            field { name = OUTPUTS; type = serializedOutputGroup.toZincId() }
-            field { name = REFERENCES; type = referenceGroup.arrayOfSerializedData() }
+            if (commandMetadata.privateInputs.isNotEmpty()) {
+                field { name = INPUTS; type = inputGroup.arrayOfSerializedData() }
+            }
+            if (commandMetadata.privateOutputs.isNotEmpty()) {
+                field { name = OUTPUTS; type = serializedOutputGroup.toZincId() }
+            }
+            if (commandMetadata.privateReferences.isNotEmpty()) {
+                field { name = REFERENCES; type = referenceGroup.arrayOfSerializedData() }
+            }
             field { name = COMMANDS; type = commandGroup.arrayOfSerializedData() }
-            // field { name = ATTACHMENTS; type = attachmentGroup.arrayOfSerializedData() }
+//            if (commandMetadata.attachmentCount > 0) {
+//                field { name = ATTACHMENTS; type = attachmentGroup.arrayOfSerializedData() }
+//            }
             field { name = NOTARY; type = notaryGroup.arrayOfSerializedData() }
             if (commandMetadata.timeWindow) {
                 field { name = TIME_WINDOW; type = timeWindowGroup.arrayOfSerializedData() }
             }
-            field { name = SIGNERS; type = signerGroup.arrayOfSerializedData() }
             field { name = PARAMETERS; type = parameterGroup.arrayOfSerializedData() }
+            field { name = SIGNERS; type = signerGroup.arrayOfSerializedData() }
             field { name = PRIVACY_SALT; type = privacySalt.toZincId() }
-            field { name = INPUT_NONCES; type = arrayOfNonceDigests(commandMetadata.privateInputs.size) }
-            field { name = REFERENCE_NONCES; type = arrayOfNonceDigests(commandMetadata.privateReferences.size) }
-            field { name = SERIALIZED_INPUT_UTXOS; type = serializedInputUtxos.toZincId() }
-            field { name = SERIALIZED_REFERENCE_UTXOS; type = serializedReferenceUtxos.toZincId() }
+            if (commandMetadata.privateInputs.isNotEmpty()) {
+                field { name = INPUT_NONCES; type = arrayOfNonceDigests(commandMetadata.privateInputs.size) }
+            }
+            if (commandMetadata.privateReferences.isNotEmpty()) {
+                field { name = REFERENCE_NONCES; type = arrayOfNonceDigests(commandMetadata.privateReferences.size) }
+            }
+            if (commandMetadata.privateInputs.isNotEmpty()) {
+                field { name = SERIALIZED_INPUT_UTXOS; type = serializedInputUtxos.toZincId() }
+            }
+            if (commandMetadata.privateReferences.isNotEmpty()) {
+                field { name = SERIALIZED_REFERENCE_UTXOS; type = serializedReferenceUtxos.toZincId() }
+            }
         }
         newLine()
         impl {
@@ -151,8 +178,8 @@ class Witness(
     }
 
     override fun generateMethods(codeGenerationOptions: CodeGenerationOptions): List<ZincFunction> =
-        standardComponentGroups.map(WitnessGroup::generateDeserializeMethod) +
-            standardComponentGroups.map(WitnessGroup::generateHashesMethod) +
+        standardComponentGroups.mapNotNull(WitnessGroup::generateDeserializeMethod) +
+            standardComponentGroups.mapNotNull(WitnessGroup::generateHashesMethod) +
             generateComputeHashesMethodForUtxos() +
             generateComputeHashesMethodForOutputs() +
             generateDeserializeMethod()
@@ -163,37 +190,53 @@ class Witness(
             name = "deserialize"
             returnType = id(LEDGER_TRANSACTION)
             body = """
-                    let $SIGNERS = self.deserialize_$SIGNERS();
-                    let $INPUTS = InputGroup::from_states_and_refs(
-                        self.$SERIALIZED_INPUT_UTXOS.deserialize(),
-                        self.deserialize_$INPUTS(),
-                    );
-                    let $REFERENCES = ReferenceGroup::from_states_and_refs(
-                        self.$SERIALIZED_REFERENCE_UTXOS.deserialize(),
-                        self.deserialize_$REFERENCES(),
-                    );
-                    
-                    $LEDGER_TRANSACTION {
-                        $INPUTS: $INPUTS,
-                        $OUTPUTS: self.$OUTPUTS.deserialize(),
-                        $REFERENCES: $REFERENCES,
-                        $COMMANDS: $COMMAND_GROUP::$FROM_SIGNERS($SIGNERS),
-                        // $ATTACHMENTS: self.deserialize_$ATTACHMENTS(),
-                        $NOTARY: self.deserialize_$NOTARY()[0],
-                        ${if (commandMetadata.timeWindow) "$TIME_WINDOW: self.deserialize_$TIME_WINDOW()," else "// $TIME_WINDOW not present"}
-                        $PARAMETERS: self.deserialize_$PARAMETERS()[0],
-                        $SIGNERS: $SIGNERS,
-                        ${PRIVACY_SALT}_field: self.$PRIVACY_SALT,
-                        $INPUT_NONCES: self.$INPUT_NONCES,
-                        $REFERENCE_NONCES: self.$REFERENCE_NONCES,
-                    }
+                let $SIGNERS = self.deserialize_$SIGNERS();
+                ${if (commandMetadata.privateInputs.isNotEmpty()) {
+                """
+                        let $INPUTS = InputGroup::from_states_and_refs(
+                            self.$SERIALIZED_INPUT_UTXOS.deserialize(),
+                            self.deserialize_$INPUTS(),
+                        );
+                """.trimIndent().indent(20.spaces)
+            } else {
+                "// $INPUTS not present"
+            }}
+                ${if (commandMetadata.privateReferences.isNotEmpty()) {
+                """
+                        let $REFERENCES = ReferenceGroup::from_states_and_refs(
+                            self.$SERIALIZED_REFERENCE_UTXOS.deserialize(),
+                            self.deserialize_$REFERENCES(),
+                        );
+                """.trimIndent().indent(20.spaces)
+            } else {
+                "// $REFERENCES not present"
+            }}
+
+                $LEDGER_TRANSACTION {
+                    ${if (commandMetadata.privateInputs.isNotEmpty()) "$INPUTS: $INPUTS," else "// $INPUTS not present"}
+                    ${if (commandMetadata.privateOutputs.isNotEmpty()) "$OUTPUTS: self.$OUTPUTS.deserialize()," else "// $OUTPUTS not present"}
+                    ${if (commandMetadata.privateReferences.isNotEmpty()) "$REFERENCES: $REFERENCES," else "// $REFERENCES not present"}
+                    $COMMANDS: $COMMAND_GROUP::$FROM_SIGNERS($SIGNERS),
+                    // $ATTACHMENTS: self.deserialize_$ATTACHMENTS(),
+                    $NOTARY: self.deserialize_$NOTARY()[0],
+                    ${if (commandMetadata.timeWindow) "$TIME_WINDOW: self.deserialize_$TIME_WINDOW()[0]," else "// $TIME_WINDOW not present"}
+                    $PARAMETERS: self.deserialize_$PARAMETERS()[0],
+                    $SIGNERS: $SIGNERS,
+                    ${PRIVACY_SALT}_field: self.$PRIVACY_SALT,
+                    ${if (commandMetadata.privateInputs.isNotEmpty()) "$INPUT_NONCES: self.$INPUT_NONCES," else "// $INPUT_NONCES not present"}
+                    ${if (commandMetadata.privateReferences.isNotEmpty()) "$REFERENCE_NONCES: self.$REFERENCE_NONCES," else "// $REFERENCE_NONCES not present"}
+                }
             """.trimIndent()
         }
 
     private fun generateComputeHashesMethodForUtxos(): List<ZincFunction> {
-        return listOf(
-            Triple(inputs, SERIALIZED_INPUT_UTXOS, INPUT_NONCES),
-            Triple(references, SERIALIZED_REFERENCE_UTXOS, REFERENCE_NONCES),
+        return listOfNotNull(
+            ifOrNull(commandMetadata.privateInputs.isEmpty()) {
+                Triple(inputs, SERIALIZED_INPUT_UTXOS, INPUT_NONCES)
+            },
+            ifOrNull(commandMetadata.privateReferences.isEmpty()) {
+                Triple(references, SERIALIZED_REFERENCE_UTXOS, REFERENCE_NONCES)
+            },
         ).map {
             val arraySize = it.first.values.sum()
             zincMethod {
@@ -211,8 +254,8 @@ class Witness(
     }
 
     private fun generateComputeHashesMethodForOutputs(): List<ZincFunction> {
-        return listOf(
-            Pair(outputs, OUTPUTS),
+        return listOfNotNull(
+            ifOrNull(commandMetadata.privateOutputs.isEmpty()) { Pair(outputs, OUTPUTS) },
         ).map {
             val arraySize = it.first.values.sum()
             zincMethod {
@@ -258,7 +301,11 @@ class Witness(
     }
 
     override fun accept(visitor: TypeVisitor) {
-        listOf(serializedOutputGroup, serializedInputUtxos, serializedReferenceUtxos).forEach { type ->
+        listOfNotNull(
+            ifOrNull(commandMetadata.privateOutputs.isNotEmpty()) { serializedOutputGroup },
+            ifOrNull(commandMetadata.privateInputs.isNotEmpty()) { serializedInputUtxos },
+            ifOrNull(commandMetadata.privateReferences.isNotEmpty()) { serializedReferenceUtxos },
+        ).forEach { type ->
             visitor.visitType(type)
         }
         dependencies.forEach { dependency ->
@@ -274,8 +321,8 @@ class Witness(
         internal const val ATTACHMENTS = "attachments"
         internal const val NOTARY = "notary"
         internal const val TIME_WINDOW = "time_window"
-        internal const val SIGNERS = "signers"
         internal const val PARAMETERS = "parameters"
+        internal const val SIGNERS = "signers"
         internal const val PRIVACY_SALT = "privacy_salt"
         internal const val INPUT_NONCES = "input_nonces"
         internal const val REFERENCE_NONCES = "reference_nonces"

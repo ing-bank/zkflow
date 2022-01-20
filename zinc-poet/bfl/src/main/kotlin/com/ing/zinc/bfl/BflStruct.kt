@@ -172,14 +172,14 @@ open class BflStruct(
         return zincFunction {
             name = "new"
             for (field in fields) {
-                parameter { name = field.name; type = field.type.toZincId() }
+                parameter { name = "p_${field.name}"; type = field.type.toZincId() }
             }
             returnType = Self
             comment = """
-                Constructs a new $id, from the fields [${fields.joinToString { it.name }}] 
+                Constructs a new $id, from the fields [${fields.joinToString { "p_${it.name}" }}]
             """.trimIndent()
             body = constructSelf {
-                fields.joinToString("\n") { "${it.name}: ${it.name}," }
+                fields.joinToString("\n") { "${it.name}: p_${it.name}," }
             }
         }
     }

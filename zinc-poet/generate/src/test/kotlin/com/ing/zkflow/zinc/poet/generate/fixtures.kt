@@ -3,6 +3,7 @@ package com.ing.zkflow.zinc.poet.generate
 import com.ing.zinc.bfl.BflPrimitive
 import com.ing.zinc.bfl.dsl.EnumBuilder.Companion.enum
 import com.ing.zinc.bfl.dsl.ListBuilder.Companion.asciiString
+import com.ing.zinc.bfl.dsl.ListBuilder.Companion.byteArray
 import com.ing.zinc.bfl.dsl.ListBuilder.Companion.list
 import com.ing.zinc.bfl.dsl.ListBuilder.Companion.utf8String
 import com.ing.zinc.bfl.dsl.MapBuilder.Companion.map
@@ -141,4 +142,67 @@ val enumWithNumbers = enum {
     variant("ONE")
     variant("TWO")
     variant("THREE")
+}
+val structWithPublicKey = struct {
+    name = "ClassWithPublicKey"
+    field {
+        name = "pk"
+        type = struct {
+            name = "PublicKeyEdDsaEd25519Sha512"
+            field {
+                name = "bytes"
+                type = byteArray(44)
+            }
+        }
+    }
+}
+val structWithAnonymousParty = struct {
+    name = "ClassWithAnonymousParty"
+    field {
+        name = "party"
+        type = struct {
+            name = "AnonymousPartyEdDsaEd25519Sha512"
+            field {
+                name = "public_key"
+                type = struct {
+                    name = "PublicKeyEdDsaEd25519Sha512"
+                    field {
+                        name = "bytes"
+                        type = byteArray(44)
+                    }
+                }
+            }
+        }
+    }
+}
+val structWithParty = struct {
+    name = "ClassWithParty"
+    field {
+        name = "party"
+        type = struct {
+            name = "PartyEdDsaEd25519Sha512"
+            field {
+                name = "corda_x_500_name"
+                type = struct {
+                    name = "CordaX500NameSerializer_CordaX500NameSurrogate"
+                    field { name = "common_name"; type = option { innerType = utf8String(64) } }
+                    field { name = "organisation_unit"; type = option { innerType = utf8String(64) } }
+                    field { name = "organisation"; type = utf8String(128) }
+                    field { name = "locality"; type = utf8String(64) }
+                    field { name = "state"; type = option { innerType = utf8String(64) } }
+                    field { name = "country"; type = utf8String(2) }
+                }
+            }
+            field {
+                name = "public_key"
+                type = struct {
+                    name = "PublicKeyEdDsaEd25519Sha512"
+                    field {
+                        name = "bytes"
+                        type = byteArray(44)
+                    }
+                }
+            }
+        }
+    }
 }

@@ -32,10 +32,22 @@ class LedgerTransactionFactory(
         witness: Witness,
     ): BflStruct = struct {
         name = LEDGER_TRANSACTION
-        field { name = INPUTS; type = inputGroup }
-        field { name = OUTPUTS; type = witness.serializedOutputGroup.deserializedStruct }
-        field { name = REFERENCES; type = referencesGroup }
+        if (commandMetadata.privateInputs.isNotEmpty()) {
+            field { name = INPUTS; type = inputGroup }
+        }
+        if (commandMetadata.privateOutputs.isNotEmpty()) {
+            field { name = OUTPUTS; type = witness.serializedOutputGroup.deserializedStruct }
+        }
+        if (commandMetadata.privateReferences.isNotEmpty()) {
+            field { name = REFERENCES; type = referencesGroup }
+        }
         field { name = COMMANDS; type = commandGroupFactory.createCommandGroup(commandMetadata) }
+//        if (commandMetadata.attachmentCount > 0) {
+//            field {
+//                name = ATTACHMENTS; type =
+//                    array { capacity = commandMetadata.attachmentCount; elementType = secureHash }
+//            }
+//        }
         field { name = NOTARY; type = standardTypes.notaryModule }
         if (commandMetadata.timeWindow) {
             field { name = TIME_WINDOW; type = timeWindow }
@@ -43,8 +55,18 @@ class LedgerTransactionFactory(
         field { name = PARAMETERS; type = secureHash }
         field { name = SIGNERS; type = array { capacity = commandMetadata.numberOfSigners; elementType = standardTypes.signerModule } }
         field { name = PRIVACY_SALT + "_field"; type = privacySalt }
-        field { name = INPUT_NONCES; type = array { capacity = commandMetadata.privateInputs.size; elementType = nonceDigest } }
-        field { name = REFERENCE_NONCES; type = array { capacity = commandMetadata.privateReferences.size; elementType = nonceDigest } }
+        if (commandMetadata.privateInputs.isNotEmpty()) {
+            field {
+                name = INPUT_NONCES; type =
+                    array { capacity = commandMetadata.privateInputs.size; elementType = nonceDigest }
+            }
+        }
+        if (commandMetadata.privateReferences.isNotEmpty()) {
+            field {
+                name = REFERENCE_NONCES; type =
+                    array { capacity = commandMetadata.privateReferences.size; elementType = nonceDigest }
+            }
+        }
         isDeserializable = false
     }
 
