@@ -20,3 +20,10 @@ inline fun <reified T> KtAnnotated.findAnnotation(): KtAnnotationEntry? =
  */
 inline fun <reified T> KtAnnotated.annotationSingleArgument(): String? =
     findAnnotation<T>()?.valueArguments?.singleOrNull()?.asElement()?.text?.trim()
+
+/**
+ * Apply [block] when [predicate] is true, otherwise return [this].
+ */
+fun <T> T.applyWhen(predicate: Boolean, block: T.() -> T): T {
+    return if (predicate) block() else this
+}

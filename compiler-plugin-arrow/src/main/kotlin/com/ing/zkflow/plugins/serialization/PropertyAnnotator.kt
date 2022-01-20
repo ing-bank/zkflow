@@ -24,31 +24,33 @@ val Meta.PropertyAnnotator: CliPlugin
     get() = PROCESSING_UNIT {
         meta(
             property(this, match = {
-                SerdeLogger.mergePhase(PROCESSING_UNIT)
-
-                element.verifyAnnotationCorrectness()
+                SerdeLogger.phase(PROCESSING_UNIT) {
+                    element.verifyAnnotationCorrectness()
+                }
             }) { (ktProperty, _) ->
-                // Arrow has troubles with comments and doc strings, remove them altogether.
-                val allComments =
-                    "((['\"])(?:(?!\\2|\\\\).|\\\\.)*\\2)|\\/\\/[^\\n]*|\\/\\*(?:[^*]|\\*(?!\\/))*\\*\\/".toRegex()
-                val propertyClearDeclaration = ktProperty.text
-                    .replace(allComments, "")
-                    .trimIndent()
-                    .lines()
-                    .filterNot { it.isBlank() }
-                    .joinToString(separator = "\n")
+                SerdeLogger.phase(PROCESSING_UNIT) { logger ->
+                    // Arrow has troubles with comments and doc strings, remove them altogether.
+                    val allComments =
+                        "((['\"])(?:(?!\\2|\\\\).|\\\\.)*\\2)|\\/\\/[^\\n]*|\\/\\*(?:[^*]|\\*(?!\\/))*\\*\\/".toRegex()
+                    val propertyClearDeclaration = ktProperty.text
+                        .replace(allComments, "")
+                        .trimIndent()
+                        .lines()
+                        .filterNot { it.isBlank() }
+                        .joinToString(separator = "\n")
 
-                Transform.replace(
-                    replacing = ktProperty,
-                    newDeclaration = """
+                    Transform.replace(
+                        replacing = ktProperty,
+                        newDeclaration = """
                         ${"@${Transient::class.qualifiedName!!}".annotationEntry}
                         $propertyClearDeclaration
-                    """.trimIndent().property(descriptor).also {
-                        SerdeLogger.logPhase("Update class property") { logger ->
-                            logger.log("$it")
+                        """.trimIndent().property(descriptor).also {
+                            logger.phase("Update class property") { logger ->
+                                logger.log("$it")
+                            }
                         }
-                    }
-                )
+                    )
+                }
             }
         )
     }
@@ -56,7 +58,7 @@ val Meta.PropertyAnnotator: CliPlugin
 /**
  * Verbosely verifies whether the property is a part of a ZKP annotated class.
  */
-private fun KtProperty.verifyAnnotationCorrectness(): Boolean = SerdeLogger.logPhase("Validate property") { logger ->
+private fun KtProperty.verifyAnnotationCorrectness(): Boolean = SerdeLogger.phase("Validate property") { logger ->
     logger.log("Considering:\n`$text`")
 
     val applicability = (containingClassOrObject?.isOrdinaryClass ?: false) &&

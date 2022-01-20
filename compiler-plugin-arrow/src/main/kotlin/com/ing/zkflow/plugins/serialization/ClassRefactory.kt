@@ -28,7 +28,7 @@ class ClassRefactory(
          * Verbosely verifies whether a ZKP annotation is applicable to the class.
          */
         fun verifyAnnotationCorrectness(ktClass: KtClass, short: Boolean = false): Boolean = with(ktClass) {
-            SerdeLogger.logPhase("Validate class") { logger ->
+            SerdeLogger.phase("Validate class") { logger ->
                 logger.log("Considering:\n`$text`", short)
                 val applicability = hasAnnotation<ZKP>() && isCorrectClassTypeForZKPAnnotation()
                 logger.log(if (applicability) "ACCEPTED" else "DISMISSED")
@@ -64,8 +64,7 @@ class ClassRefactory(
      * Build a class redeclaration for a class with a non-empty primary constructor.
      */
     private fun buildClassDeclaration(primaryConstructor: KtPrimaryConstructor): ClassDeclaration =
-        SerdeLogger.logPhase("Rebuilding class") { _ ->
-
+        SerdeLogger.phase("Rebuilding class") { logger ->
             val (constructorParameters, serializingObjects) = primaryConstructor.valueParameters.fold(listOf<ConstructorParameter>()) { acc, ktParameter ->
                 acc + buildConstructorParameter(ktParameter)
             }.let {
@@ -106,7 +105,7 @@ class ClassRefactory(
                 |   $serializingObjects
                 |}
                 """.`class`.also {
-                    SerdeLogger.logPhase("Update class definition") { logger ->
+                    logger.phase("Update class definition") { logger ->
                         logger.log("Updating class parameter properties:\n`$it`")
                     }
                 }
@@ -118,11 +117,11 @@ class ClassRefactory(
      * annotation and a sequence of serializing objects.
      */
     private fun buildConstructorParameter(ktParameter: KtParameter): ConstructorParameter = with(ktParameter) {
-        SerdeLogger.logPhase("Building constructor parameter") { logger ->
-            logger.log("┌${ktParameter.text}")
+        SerdeLogger.phase("Building constructor parameter") { logger ->
+            logger.log(ktParameter.text)
 
             if (!ktParameter.hasValOrVar()) {
-                return@logPhase ConstructorParameter.Self(text)
+                return@phase ConstructorParameter.Self(text)
             }
 
             val paramName = ktParameter.name?.capitalize() ?: error("Cannot infer the name of parameter $text")
@@ -156,29 +155,22 @@ class ClassRefactory(
     ): SerializingObject = with(ktTypeReference) {
         val typeRef = ContextualizedKtTypeReference(this, typeResolver)
 
-        val tree = "|-${List(depth) { "-" }.joinToString(separator = "", postfix = " ")}"
-        val tab = "| ${List(depth) { " " }.joinToString(separator = "", postfix = " ")}"
+        val logMessage = typeRef.ktTypeElement.text.applyWhen(ignoreNullability) { removeSuffix("?") }
+        SerdeLogger.phase("Building type `$logMessage`") { logger ->
+            val resolvedRootType = typeRef.rootType.let {
+                if (ignoreNullability) it.stripNullability() else it
+            }
 
-        SerdeLogger.withLogPrefix(tree) { logger ->
-            logger.log(if (ignoreNullability) typeRef.ktTypeElement.text.substring(0 until typeRef.ktTypeElement.textLength - 1) else typeRef.ktTypeElement.text)
-        }
-
-        val resolvedRootType = typeRef.rootType.let {
-            if (ignoreNullability) it.stripNullability() else it
-        }
-
-        return SerdeLogger.withLogPrefix(tab) { logger ->
             logger.log("Root type has been resolved to `${resolvedRootType.type}`")
-
             // • Strip nullability.
             if (resolvedRootType.isNullable) {
-                return@withLogPrefix buildSerializingObject(this, ignoreNullability = true, depth + 1).wrapNull()
+                return@phase buildSerializingObject(this, ignoreNullability = true, depth + 1).wrapNull()
             }
 
             // • Invariant: root.isNullable = false
 
             if (Processors.isUserType(resolvedRootType.type)) {
-                return@withLogPrefix Processors.forUserType(typeRef)
+                return@phase Processors.forUserType(typeRef)
             }
 
             // • Strip outer type.

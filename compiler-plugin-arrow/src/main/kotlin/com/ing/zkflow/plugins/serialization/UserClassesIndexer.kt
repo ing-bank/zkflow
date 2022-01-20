@@ -19,23 +19,25 @@ val Meta.UserClassesIndexer: CliPlugin
         meta(
             classDeclaration(
                 this, match = {
-                    SerdeLogger.mergePhase(PROCESSING_UNIT)
+                    SerdeLogger.phase(PROCESSING_UNIT) {
+                        val className = element.name
 
-                    val className = element.name
+                        if (className != null) {
+                            val fqName = element.containingKtFile.packageFqName.child(Name.identifier(className))
+                            SerdeIndex.register(fqName, element.annotationEntries)
+                        }
 
-                    if (className != null) {
-                        val fqName = element.containingKtFile.packageFqName.child(Name.identifier(className))
-                        SerdeIndex.register(fqName, element.annotationEntries)
+                        false
                     }
-
-                    false
                 }
             ) { (ktClass, _) ->
-                // This function will never be called.
-                Transform.replace(
-                    replacing = ktClass,
-                    newDeclaration = identity()
-                )
+                SerdeLogger.phase(PROCESSING_UNIT) {
+                    // This function will never be called.
+                    Transform.replace(
+                        replacing = ktClass,
+                        newDeclaration = identity()
+                    )
+                }
             }
         )
     }
