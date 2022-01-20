@@ -21,6 +21,9 @@ import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
 import java.math.BigDecimal
+import java.security.KeyFactory
+import java.security.PublicKey
+import java.security.spec.X509EncodedKeySpec
 import java.util.UUID
 
 @ZKP
@@ -100,4 +103,25 @@ data class CordaX500NameSurrogate(
 ) : Surrogate<CordaX500Name> {
     override fun toOriginal(): CordaX500Name =
         CordaX500Name.parse(concat)
+}
+
+@ZKP
+@Suppress("ClassName", "ArrayInDataClass")
+data class EdDSAPublicKeySurrogate(
+    val key: @Size(32) ByteArray
+) : Surrogate<PublicKey> {
+    override fun toOriginal(): PublicKey =
+        KeyFactory
+            .getInstance("EdDSA")
+            .generatePublic(X509EncodedKeySpec(algorithmIdentifier + key))
+
+    companion object {
+        /**
+         * This is a hack to directly specify algorithm identifier to make the encoding agree with X509 specification.
+         * Specs can be found in [X509EncodedKeySpec] (/java/security/spec/X509EncodedKeySpec.java).
+         * This way direct construction is avoided, because it does not seem straightforward.
+         * Encoding construction can be found in net.i2p.crypto.eddsa.EdDSAPublicKey.getEncoded.
+         */
+        val algorithmIdentifier = byteArrayOf(48, 42, 48, 5, 6, 3, 43, 101, 112, 3, 33, 0)
+    }
 }
