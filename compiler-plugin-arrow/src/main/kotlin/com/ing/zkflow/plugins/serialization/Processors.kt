@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package com.ing.zkflow.plugins.serialization
 
 import com.ing.zkflow.Converter
@@ -26,6 +28,7 @@ import com.ing.zkflow.serialization.serializer.FixedLengthMapSerializer
 import com.ing.zkflow.serialization.serializer.FixedLengthSetSerializer
 import com.ing.zkflow.serialization.serializer.InstantSerializer
 import com.ing.zkflow.serialization.serializer.IntSerializer
+import com.ing.zkflow.serialization.serializer.KSerializerWithDefault
 import com.ing.zkflow.serialization.serializer.LongSerializer
 import com.ing.zkflow.serialization.serializer.SerializerWithDefault
 import com.ing.zkflow.serialization.serializer.ShortSerializer
@@ -39,13 +42,26 @@ import com.ing.zkflow.serialization.serializer.WrappedKSerializer
 import com.ing.zkflow.serialization.serializer.WrappedKSerializerWithDefault
 import com.ing.zkflow.serialization.serializer.char.ASCIICharSerializer
 import com.ing.zkflow.serialization.serializer.char.UTF8CharSerializer
+import com.ing.zkflow.serialization.serializer.corda.AlwaysAcceptAttachmentConstraintSerializer
 import com.ing.zkflow.serialization.serializer.corda.AnonymousPartySerializer
+import com.ing.zkflow.serialization.serializer.corda.AutomaticHashConstraintSerializer
+import com.ing.zkflow.serialization.serializer.corda.AutomaticPlaceholderConstraintSerializer
 import com.ing.zkflow.serialization.serializer.corda.CordaX500NameSerializer
+import com.ing.zkflow.serialization.serializer.corda.HashAttachmentConstraintSerializer
 import com.ing.zkflow.serialization.serializer.corda.PartySerializer
 import com.ing.zkflow.serialization.serializer.corda.PublicKeySerializer
 import com.ing.zkflow.serialization.serializer.corda.SecureHashSerializer
+import com.ing.zkflow.serialization.serializer.corda.SignatureAttachmentConstraintSerializer
+import com.ing.zkflow.serialization.serializer.corda.WhitelistedByZoneAttachmentConstraintSerializer
 import com.ing.zkflow.serialization.serializer.string.FixedLengthASCIIStringSerializer
 import com.ing.zkflow.serialization.serializer.string.FixedLengthUTF8StringSerializer
+import net.corda.core.contracts.AlwaysAcceptAttachmentConstraint
+import net.corda.core.contracts.AttachmentConstraint
+import net.corda.core.contracts.AutomaticHashConstraint
+import net.corda.core.contracts.AutomaticPlaceholderConstraint
+import net.corda.core.contracts.HashAttachmentConstraint
+import net.corda.core.contracts.SignatureAttachmentConstraint
+import net.corda.core.contracts.WhitelistedByZoneAttachmentConstraint
 import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.AnonymousParty
@@ -345,53 +361,20 @@ internal object Processors {
          * Otherwise, recurse to [forUserType].
          */
         SecureHash::class.qualifiedName!! to ToSerializingObject { contextualOriginal, _ ->
-            val hashSpecs = contextualOriginal.ktTypeReference
-                .annotationEntries
-                .filter {
-                    // By convention SecureHash-specific annotation must have neither type parameters nor value arguments
-                    it.typeArguments.isEmpty() && it.valueArguments.isEmpty()
+            contextualOriginal.findHashAlgorithmAndSize()?.let { (algorithm, hashSize) ->
+                TypeSerializingObject.ExplicitType(
+                    contextualOriginal,
+                    SecureHashSerializer::class,
+                    emptyList()
+                ) { _, outer, _ ->
+                    "object $outer: ${SecureHashSerializer::class.qualifiedName}(\"$algorithm\", $hashSize)"
+                }.also {
+                    SerdeLogger.log("Type ${contextualOriginal.ktTypeReference.text} processed successfully")
                 }
-                .mapNotNull { possibleHashAnnotation ->
-                    SerdeLogger.log("Resolving annotation ${possibleHashAnnotation.text}")
-                    val resolved = contextualOriginal.resolveClass(possibleHashAnnotation)
-                    SerdeLogger.log("Annotation resolved to $resolved")
-
-                    val hashSize = when (resolved) {
-                        is BestEffortResolvedType.AsIs -> null
-                        is BestEffortResolvedType.FullyQualified -> {
-                            resolved.findAnnotation<HashSize>()?.valueArguments?.single()?.asElement()?.text
-                                ?: error("${SecureHash::class.qualifiedName} must be annotated with a hash specific annotation, i.e., an annotation class itself annotated with ${HashSize::class.qualifiedName} annotation")
-                        }
-                        is BestEffortResolvedType.FullyResolved -> {
-                            resolved.findAnnotation<HashSize>()?.size?.toString()
-                                ?: error("${SecureHash::class.qualifiedName} must be annotated with a hash specific annotation, i.e., an annotation class itself annotated with ${HashSize::class.qualifiedName} annotation")
-                        }
-                    }
-
-                    hashSize?.let {
-                        Pair(possibleHashAnnotation.text.replace("@", ""), it)
-                    }
-                }
-
-            when (hashSpecs.size) {
-                0 -> {
-                    // SecureHash has no hash specific annotation, recurse to treating it as a generic user type.
-                    SerdeLogger.log("${SecureHash::class.simpleName} has insufficient special annotations.\nTreat it as a general user type.")
-                    forUserType(contextualOriginal)
-                }
-                1 -> {
-                    val (algorithm, size) = hashSpecs.single()
-                    TypeSerializingObject.ExplicitType(
-                        contextualOriginal,
-                        SecureHashSerializer::class,
-                        emptyList()
-                    ) { _, outer, _ ->
-                        "object $outer: ${SecureHashSerializer::class.qualifiedName}(\"$algorithm\", $size)"
-                    }.also {
-                        SerdeLogger.log("SUCCESS")
-                    }
-                }
-                else -> error("Hash spec annotations are not repeatable, got ${hashSpecs.joinToString(separator = ", ") { "${it.first}(size = ${it.second})" }}")
+            } ?: run {
+                // SecureHash has no signature specific annotations, recurse to treating it as a generic user type.
+                SerdeLogger.log("Re-cursing to default treatment of ${contextualOriginal.ktTypeReference.text}")
+                forUserType(contextualOriginal)
             }
         },
 
@@ -423,8 +406,8 @@ internal object Processors {
         AbstractParty::class.qualifiedName!! to ToSerializingObject { _, _ ->
             error(
                 """
-                Usage of ${AbstractParty::class.qualifiedName} is not permitted.
-                Select either ${AnonymousParty::class.qualifiedName} or ${Party::class.qualifiedName}
+                Usage of `${AbstractParty::class.qualifiedName}` is not permitted.
+                Select either `${AnonymousParty::class.qualifiedName}` or `${Party::class.qualifiedName}`.
                 """.trimIndent()
             )
         },
@@ -503,7 +486,81 @@ internal object Processors {
             }.also {
                 SerdeLogger.log("Type ${contextualOriginal.ktTypeReference.text} processed successfully")
             }
-        }
+        },
+
+        /**
+         * Ban the usage of [AttachmentConstraint].
+         */
+        AttachmentConstraint::class.qualifiedName!! to ToSerializingObject { _, _ ->
+            error(
+                """
+                Usage of interface `${AttachmentConstraint::class.qualifiedName}` is not permitted.
+                Select one of the classes implementing the interface:
+                `${AlwaysAcceptAttachmentConstraint::class.qualifiedName}`
+                `${HashAttachmentConstraint::class.qualifiedName}`
+                `${WhitelistedByZoneAttachmentConstraint::class.qualifiedName}`
+                `${AutomaticHashConstraint::class.qualifiedName}` (deprecated, use `${AutomaticPlaceholderConstraint::class.qualifiedName}`)
+                `${AutomaticPlaceholderConstraint::class.qualifiedName}`
+                `${SignatureAttachmentConstraint::class.qualifiedName}`
+                """.trimIndent()
+            )
+        },
+
+        /**
+         * The following attachment constraints require no further annotations.
+         */
+        AlwaysAcceptAttachmentConstraint::class.qualifiedName!! to
+            buildAttachmentConstraintToSerializingObject<AlwaysAcceptAttachmentConstraint, AlwaysAcceptAttachmentConstraintSerializer>(),
+        WhitelistedByZoneAttachmentConstraint::class.qualifiedName!! to
+            buildAttachmentConstraintToSerializingObject<WhitelistedByZoneAttachmentConstraint, WhitelistedByZoneAttachmentConstraintSerializer>(),
+        AutomaticHashConstraint::class.qualifiedName!! to
+            buildAttachmentConstraintToSerializingObject<AutomaticHashConstraint, AutomaticHashConstraintSerializer>(),
+        AutomaticPlaceholderConstraint::class.qualifiedName!! to
+            buildAttachmentConstraintToSerializingObject<AutomaticPlaceholderConstraint, AutomaticPlaceholderConstraintSerializer>(),
+
+        /**
+         * To serialize [HashAttachmentConstraint], a single annotation annotated with [HashSize] must be present.
+         * Otherwise, recurse to [forUserType].
+         */
+        HashAttachmentConstraint::class.qualifiedName!! to ToSerializingObject { contextualOriginal, _ ->
+            contextualOriginal.findHashAlgorithmAndSize()?.let { (algorithm, hashSize) ->
+                TypeSerializingObject.ExplicitType(
+                    contextualOriginal,
+                    HashAttachmentConstraintSerializer::class,
+                    emptyList()
+                ) { _, outer, _ ->
+                    "object $outer: ${HashAttachmentConstraintSerializer::class.qualifiedName}(\"$algorithm\", $hashSize)"
+                }.also {
+                    SerdeLogger.log("Type ${contextualOriginal.ktTypeReference.text} processed successfully")
+                }
+            } ?: run {
+                // SecureHash has no signature specific annotations, recurse to treating it as a generic user type.
+                SerdeLogger.log("Re-cursing to default treatment of ${contextualOriginal.ktTypeReference.text}")
+                forUserType(contextualOriginal)
+            }
+        },
+
+        /**
+         * To serialize [SignatureAttachmentConstraint], a single annotation annotated with [SignatureSpec] must be present,
+         * Otherwise, recurse to [forUserType]
+         */
+        SignatureAttachmentConstraint::class.qualifiedName!! to ToSerializingObject { contextualOriginal, _ ->
+            contextualOriginal.findCordaSignatureId()?.let { cordaSignatureId ->
+                TypeSerializingObject.ExplicitType(
+                    contextualOriginal,
+                    SignatureAttachmentConstraintSerializer::class,
+                    emptyList()
+                ) { _, outer, _ ->
+                    "object $outer: ${SignatureAttachmentConstraintSerializer::class.qualifiedName}($cordaSignatureId)"
+                }.also {
+                    SerdeLogger.log("Type ${contextualOriginal.ktTypeReference.text} processed successfully")
+                }
+            } ?: run {
+                // SignatureAttachmentConstraint has no signature specific annotations, recurse to treating it as a generic user type.
+                SerdeLogger.log("Re-cursing to default treatment of ${contextualOriginal.ktTypeReference.text}")
+                forUserType(contextualOriginal)
+            }
+        },
     )
 
     /**
@@ -621,6 +678,45 @@ internal object Processors {
                 is BestEffortResolvedAnnotation.Compiled<*> -> (meta.annotation as SignatureSpec).cordaSignatureId
             }
             else -> error("Signature spec annotations are not repeatable, got [${metaAnnotations.joinToString(separator = ", ") { it.root }}] (size = ${metaAnnotations.size})")
+        }
+    }
+
+    /**
+     * Utility function: Look for a single signature id specification.
+     */
+    private fun ContextualizedKtTypeReference.findHashAlgorithmAndSize(): Pair<String, Int>? {
+        val metaAnnotations = findMetaAnnotation<HashSize>()
+        return when (metaAnnotations.size) {
+            0 -> {
+                // This KtTypeReference has no hash size specific annotations.
+                null
+            }
+            1 -> {
+                val meta = metaAnnotations.single()
+                val algorithm = meta.root.split(".").last()
+
+                val hashSize = when (meta) {
+                    is BestEffortResolvedAnnotation.Instruction -> meta.annotation.valueArguments.single()
+                        .asElement().text.toInt()
+                    is BestEffortResolvedAnnotation.Compiled<*> -> (meta.annotation as HashSize).size
+                }
+
+                Pair(algorithm, hashSize)
+            }
+            else -> error("HashSize annotations are not repeatable, got [${metaAnnotations.joinToString(separator = ", ") { it.root }}] (size = ${metaAnnotations.size})")
+        }
+    }
+
+    /**
+     * Utility function building serializing object for an object [AttachmentConstraint]'s.
+     */
+    private inline fun <reified A : AttachmentConstraint, reified S : KSerializerWithDefault<out A>> buildAttachmentConstraintToSerializingObject() = ToSerializingObject { contextualOriginal, _ ->
+        TypeSerializingObject.ExplicitType(
+            contextualOriginal, S::class, emptyList()
+        ) { _, outer, _ ->
+            "object $outer: ${WrappedKSerializerWithDefault::class.qualifiedName}<${A::class.qualifiedName!!}>(${S::class.qualifiedName})"
+        }.also {
+            SerdeLogger.log("Type ${contextualOriginal.ktTypeReference.text} processed successfully")
         }
     }
 }
