@@ -7,6 +7,7 @@ import com.ing.zinc.bfl.generator.CodeGenerationOptions
 import com.ing.zinc.bfl.generator.ZincGenerator.createZargoToml
 import com.ing.zinc.bfl.generator.ZincGenerator.zincSourceFile
 import com.ing.zinc.bfl.toZincId
+import com.ing.zinc.poet.ZincPrimitive
 import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.common.zkp.metadata.ZKTypedElement
@@ -96,11 +97,24 @@ class CircuitGenerator(
         ledgerTransaction: BflStruct
     ) {
         buildPath.zincSourceFile("main.zn") {
-            mod { module = witness.getModuleName() }
-            use { path = "${witness.getModuleName()}::${witness.id}" }
-            newLine()
-            mod { module = ledgerTransaction.getModuleName() }
-            use { path = "${ledgerTransaction.getModuleName()}::${ledgerTransaction.id}" }
+            listOf(witness, ledgerTransaction, witness.publicInput)
+                .sortedBy { it.getModuleName() }
+                .forEach { dependency ->
+                    mod { module = dependency.getModuleName() }
+                    use { path = "${dependency.getModuleName()}::${dependency.id}" }
+                    newLine()
+                }
+
+            function {
+                comment = "TODO"
+                name = "verify"
+                parameter {
+                    name = "tx"
+                    type = ledgerTransaction.toZincId()
+                }
+                returnType = ZincPrimitive.Unit
+                body = ""
+            }
             newLine()
             function {
                 name = "main"
@@ -108,8 +122,12 @@ class CircuitGenerator(
                     name = "input"
                     type = witness.toZincId()
                 }
-                returnType = ledgerTransaction.toZincId()
-                body = "input.deserialize()"
+                returnType = witness.publicInput.toZincId()
+                body = """
+                    let tx = input.deserialize();
+                    verify(tx);
+                    input.generate_hashes()
+                """.trimIndent()
             }
         }
     }

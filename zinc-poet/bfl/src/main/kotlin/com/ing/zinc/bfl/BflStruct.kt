@@ -20,7 +20,7 @@ open class BflStruct(
     override val id: String,
     fields: List<BflStructField>,
     private val functions: List<ZincFunction>,
-    private val isDeserializable: Boolean,
+    val isDeserializable: Boolean,
     private val additionalImports: List<BflModule>
 ) : BflModule {
     constructor(id: String, fields: List<BflStructField>) : this(id, fields, emptyList(), true, emptyList())
@@ -45,7 +45,7 @@ open class BflStruct(
 
     override fun toString(): String = """
         struct $id {
-            ${fields.joinToString("\n") { "${it.name}: ${it.type.id}," }.indent(3.tabs)}
+            ${fields.joinToString("\n") { "${it.name}: ${it.type}," }.indent(3.tabs)}
         }
     """.trimIndent()
 

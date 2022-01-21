@@ -2,6 +2,7 @@ package com.ing.zkflow.zinc.poet.generate.types
 
 import com.ing.zinc.bfl.BflModule
 import com.ing.zinc.bfl.BflPrimitive
+import com.ing.zinc.bfl.BflStruct
 import com.ing.zinc.bfl.BflType
 import com.ing.zinc.bfl.BflTypeDef
 import com.ing.zinc.bfl.dsl.ArrayBuilder.Companion.array
@@ -10,23 +11,40 @@ import com.ing.zinc.bfl.dsl.ListBuilder.Companion.byteArray
 import com.ing.zinc.bfl.dsl.ListBuilder.Companion.list
 import com.ing.zinc.bfl.dsl.OptionBuilder.Companion.option
 import com.ing.zinc.bfl.dsl.StructBuilder.Companion.struct
+import com.ing.zkflow.annotations.ZKP
+import com.ing.zkflow.annotations.corda.EdDSA
 import com.ing.zkflow.serialization.bfl.serializers.CordaSerializers.CLASS_NAME_SIZE
 import com.ing.zkflow.serialization.bfl.serializers.SecureHashSurrogate
 import com.ing.zkflow.zinc.poet.generate.ZincTypeResolver
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.SignatureAttachmentConstraint
-import net.corda.core.identity.Party
+import net.corda.core.identity.AnonymousParty
 import java.security.PublicKey
+
+@ZKP
+private data class WrapsParty(val party: @EdDSA AnonymousParty)
+
+@ZKP
+private data class WrapsPublicKey(val publicKey: @EdDSA PublicKey)
+
+@ZKP
+private data class WrapsSignatureAttachmentConstraint(val constraint: @EdDSA SignatureAttachmentConstraint)
+
+private fun BflModule.getSingleFieldType(): BflModule = (this as BflStruct).fields.single().type as BflModule
 
 class StandardTypes(
     private val zincTypeResolver: ZincTypeResolver,
 ) {
     val notaryModule: BflModule by lazy {
-        zincTypeResolver.zincTypeOf(Party::class) // TODO("PartyEdDSA")
+        zincTypeResolver.zincTypeOf(WrapsParty::class).getSingleFieldType()
     }
 
     val signerModule: BflModule by lazy {
-        zincTypeResolver.zincTypeOf(PublicKey::class)
+        zincTypeResolver.zincTypeOf(WrapsPublicKey::class).getSingleFieldType()
+    }
+
+    private val signatureAttachmentConstraint: BflModule by lazy {
+        zincTypeResolver.zincTypeOf(WrapsSignatureAttachmentConstraint::class).getSingleFieldType()
     }
 
     internal fun getSignerListModule(
@@ -58,7 +76,7 @@ class StandardTypes(
         }
         field {
             name = "constraint"
-            type = zincTypeResolver.zincTypeOf(SignatureAttachmentConstraint::class) // TODO("SignatureAttachmentConstraint")
+            type = signatureAttachmentConstraint
         }
     }
 
@@ -101,6 +119,7 @@ class StandardTypes(
                 }
             }
         }
+        // TODO Should be [SecureHash]?
         internal val nonceDigest = BflTypeDef(
             "NonceDigest",
             array {
@@ -108,6 +127,7 @@ class StandardTypes(
                 elementType = BflPrimitive.Bool
             }
         )
+        // TODO Should be [SecureHash]?
         internal val privacySalt = BflTypeDef(
             "PrivacySalt",
             array {

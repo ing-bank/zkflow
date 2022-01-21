@@ -15,6 +15,10 @@ import com.ing.zkflow.annotations.Size
 import com.ing.zkflow.annotations.UTF8
 import com.ing.zkflow.annotations.UTF8Char
 import com.ing.zkflow.annotations.ZKP
+import com.ing.zkflow.annotations.corda.EdDSA
+import net.corda.core.identity.AnonymousParty
+import net.corda.core.identity.Party
+import java.security.PublicKey
 
 @ZKP
 data class ClassWithBoolean(val boolean: Boolean)
@@ -37,7 +41,7 @@ data class ClassWithULong(val ulong: ULong)
 @ZKP
 data class ClassWithAsciiChar(val asciiChar: @ASCIIChar Char)
 @ZKP
-data class ClassWithUtf8Char(val utF8Char: @UTF8Char Char)
+data class ClassWithUtf8Char(val utf8Char: @UTF8Char Char)
 @ZKP
 data class ClassWithAsciiString(val asciiString: @ASCII(8) String)
 @ZKP
@@ -52,6 +56,12 @@ data class ClassWithSetOfInt(val set: @Size(8) Set<Int>)
 data class ClassWithMapOfStringToInt(val map: @Size(8) Map<@ASCII(8) String, Int>)
 @ZKP
 enum class EnumWithNumbers { ONE, TWO, THREE }
+@ZKP
+data class ClassWithPublicKey(val pk: @EdDSA PublicKey)
+@ZKP
+data class ClassWithAnonymousParty(val party: @EdDSA AnonymousParty)
+@ZKP
+data class ClassWithParty(val party: @EdDSA Party)
 
 val structWithBoolean = struct {
     name = "ClassWithBoolean"
@@ -91,24 +101,24 @@ val structWithULong = struct {
 }
 val structWithAsciiChar = struct {
     name = "ClassWithAsciiChar"
-    field { name = "asciiChar"; type = BflPrimitive.I8 }
+    field { name = "ascii_char"; type = BflPrimitive.I8 }
 }
 val structWithUtf8Char = struct {
     name = "ClassWithUtf8Char"
-    field { name = "utF8Char"; type = BflPrimitive.I16 }
+    field { name = "utf_8_char"; type = BflPrimitive.I16 }
 }
 val structWithAsciiString = struct {
     name = "ClassWithAsciiString"
-    field { name = "asciiString"; type = asciiString(8) }
+    field { name = "ascii_string"; type = asciiString(8) }
 }
 val structWithUtf8String = struct {
     name = "ClassWithUtf8String"
-    field { name = "utf8String"; type = utf8String(8) }
+    field { name = "utf_8_string"; type = utf8String(8) }
 }
 val structWithNullableInt = struct {
     name = "ClassWithNullableInt"
     field {
-        name = "nullableInt"
+        name = "nullable_int"
         type = option { innerType = BflPrimitive.I32 }
     }
 }

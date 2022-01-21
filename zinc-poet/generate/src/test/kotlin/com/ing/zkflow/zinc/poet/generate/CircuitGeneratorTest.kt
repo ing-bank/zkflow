@@ -1,40 +1,34 @@
 package com.ing.zkflow.zinc.poet.generate
 
-import com.ing.zinc.bfl.BflModule
-import com.ing.zinc.bfl.BflPrimitive
-import com.ing.zinc.bfl.dsl.StructBuilder.Companion.struct
-import com.ing.zinc.naming.camelToSnakeCase
 import com.ing.zkflow.util.runCommand
 import com.ing.zkflow.zinc.poet.generate.types.CommandGroupFactory
-import com.ing.zkflow.zinc.poet.generate.types.CommandGroupFactory.Companion.COMMAND
 import com.ing.zkflow.zinc.poet.generate.types.LedgerTransactionFactory
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes
 import com.ing.zkflow.zinc.poet.generate.types.StateAndRefsGroupFactory
+import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.COMMANDS
+import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.INPUTS
+import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.NOTARY
+import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.OUTPUTS
+import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.PARAMETERS
+import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.REFERENCES
+import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.SERIALIZED_INPUT_UTXOS
+import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.SERIALIZED_REFERENCE_UTXOS
+import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.SIGNERS
+import io.kotest.matchers.maps.shouldContainKeys
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldContain
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
-import kotlin.reflect.KClass
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
 
 internal class CircuitGeneratorTest {
-    private val zincTypeResolver = object : ZincTypeResolver {
-        override fun zincTypeOf(kClass: KClass<*>): BflModule {
-            return struct {
-                name = kClass.simpleName
-                // Just a random field, to make zinc happy. Zinc has issues with empty structs.
-                field {
-                    name = "bogus"
-                    type = BflPrimitive.U8
-                }
-            }
-        }
-    }
+    private val zincTypeResolver = ZincTypeGeneratorResolver(ZincTypeGenerator)
 
     private val standardTypes = StandardTypes(zincTypeResolver)
 
@@ -47,7 +41,7 @@ internal class CircuitGeneratorTest {
         val circuitGenerator = CircuitGenerator(
             BuildPathProvider.withPath(tempDir),
             LedgerTransactionFactory(commandGroupFactory, standardTypes),
-            StandardTypes(zincTypeResolver),
+            standardTypes,
             StateAndRefsGroupFactory(standardTypes),
             zincTypeResolver,
             ConstsFactory(),
@@ -59,11 +53,15 @@ internal class CircuitGeneratorTest {
         }
 
         val result = logExecutionTime("Running the circuit using `zargo run`") {
-            tempDir.runCommand("zargo run", 60)
+            tempDir.runCommand("zargo run", 120)
         }
 
         result.second shouldBe ""
-        result.first shouldContain MyContract.MyFirstCommand().metadata.commandSimpleName.removeSuffix(COMMAND).camelToSnakeCase()
+        val publicInput = Json.parseToJsonElement(result.first) as JsonObject
+        println(publicInput.keys)
+        publicInput.shouldContainKeys(
+            INPUTS, OUTPUTS, REFERENCES, SERIALIZED_INPUT_UTXOS, SERIALIZED_REFERENCE_UTXOS, COMMANDS, PARAMETERS, SIGNERS, NOTARY
+        )
     }
 
     companion object {

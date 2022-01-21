@@ -3,6 +3,7 @@ package com.ing.zkflow.serialization.serializer.corda
 import com.ing.zkflow.serialization.serializer.FixedLengthByteArraySerializer
 import com.ing.zkflow.serialization.serializer.KSerializerWithDefault
 import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import net.corda.core.crypto.Crypto
@@ -20,6 +21,14 @@ open class PublicKeySerializer(cordaSignatureId: Int) : KSerializerWithDefault<P
             Crypto.ECDSA_SECP256R1_SHA256.schemeNumberID to 91,
             Crypto.EDDSA_ED25519_SHA512.schemeNumberID to 44,
             Crypto.SPHINCS256_SHA256.schemeNumberID to 1097,
+        )
+
+        val schemeIdName = mapOf(
+            Crypto.RSA_SHA256.schemeNumberID to "Rsa",
+            Crypto.ECDSA_SECP256K1_SHA256.schemeNumberID to "EcDsaK1",
+            Crypto.ECDSA_SECP256R1_SHA256.schemeNumberID to "EcDsaR1",
+            Crypto.EDDSA_ED25519_SHA512.schemeNumberID to "EdDsa",
+            Crypto.SPHINCS256_SHA256.schemeNumberID to "Sphincs",
         )
 
         /**
@@ -41,10 +50,15 @@ open class PublicKeySerializer(cordaSignatureId: Int) : KSerializerWithDefault<P
     private val cordaSignatureScheme = Crypto.findSignatureScheme(cordaSignatureId)
     private val encodedSize = schemeIdSize[cordaSignatureId]
         ?: error("Verify mapping between Corda signature schemes and public key annotations")
+    internal val algorithmNameIdentifier = schemeIdName[cordaSignatureId]
+        ?: throw IllegalArgumentException("No schemeIdName mapping defined for id '$cordaSignatureId'.")
     override val default: PublicKey = fixedPublicKey(cordaSignatureScheme)
 
     private val strategy = FixedLengthByteArraySerializer(encodedSize)
-    override val descriptor: SerialDescriptor = strategy.descriptor
+
+    override val descriptor: SerialDescriptor = buildClassSerialDescriptor("PublicKey$algorithmNameIdentifier") {
+        element("bytes", strategy.descriptor)
+    }
 
     override fun serialize(encoder: Encoder, value: PublicKey) = with(value.encoded) {
         require(size == encodedSize) {

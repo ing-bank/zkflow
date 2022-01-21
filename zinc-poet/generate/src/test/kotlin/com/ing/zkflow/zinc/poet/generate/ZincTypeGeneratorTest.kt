@@ -46,7 +46,10 @@ class ZincTypeGeneratorTest {
             Arguments.of(ClassWithListOfInt.serializer().descriptor, structWithListOfInt),
             Arguments.of(ClassWithSetOfInt.serializer().descriptor, structWithSetOfInt),
             Arguments.of(ClassWithMapOfStringToInt.serializer().descriptor, structWithMapOfStringToInt),
-            Arguments.of(EnumWithNumbers.serializer().descriptor, enumWithNumbers)
+            Arguments.of(EnumWithNumbers.serializer().descriptor, enumWithNumbers),
+            Arguments.of(ClassWithPublicKey.serializer().descriptor, structWithPublicKey),
+            Arguments.of(ClassWithAnonymousParty.serializer().descriptor, structWithAnonymousParty),
+            Arguments.of(ClassWithParty.serializer().descriptor, structWithParty),
         )
 
         @JvmStatic

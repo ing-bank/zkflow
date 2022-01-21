@@ -16,7 +16,7 @@ open class PartySerializer(cordaSignatureId: Int, cordaX500NameSerializer: KSeri
 
     // Impossible to use surrogates because respective serializing objects must be constructed from the received parameters,
     // i.e., `cordaSignatureId`, `cordaX500NameSerializer`.
-    override val descriptor: SerialDescriptor = buildClassSerialDescriptor("Party") {
+    override val descriptor: SerialDescriptor = buildClassSerialDescriptor("Party${publicKeyStrategy.algorithmNameIdentifier}") {
         element("cordaX500Name", cordaX500NameStrategy.descriptor)
         element("publicKey", publicKeyStrategy.descriptor)
     }

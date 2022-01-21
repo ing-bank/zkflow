@@ -25,6 +25,8 @@ internal data class WitnessGroup(
     val groupSize: Int,
     val componentGroup: ComponentGroupEnum
 ) {
+    val witnessGroupOptions: WitnessGroupOptions = WitnessGroupOptions.cordaWrapped(name, module)
+
     fun arrayOfSerializedData(): ZincArray {
         return zincArray {
             size = groupSize.toString()
@@ -34,8 +36,6 @@ internal data class WitnessGroup(
             }
         }
     }
-
-    val witnessGroupOptions: WitnessGroupOptions = WitnessGroupOptions.cordaWrapped(name, module)
 
     fun generateDeserializeMethod(): ZincFunction? {
         if (groupSize == 0) return null

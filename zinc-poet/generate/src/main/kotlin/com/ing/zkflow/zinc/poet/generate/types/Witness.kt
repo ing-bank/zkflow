@@ -2,6 +2,7 @@ package com.ing.zkflow.zinc.poet.generate.types
 
 import com.ing.zinc.bfl.BflModule
 import com.ing.zinc.bfl.BflPrimitive
+import com.ing.zinc.bfl.BflStruct
 import com.ing.zinc.bfl.CONSTS
 import com.ing.zinc.bfl.TypeVisitor
 import com.ing.zinc.bfl.generator.CodeGenerationOptions
@@ -50,11 +51,13 @@ class Witness(
     internal val serializedInputUtxos = SerializedStateGroup(SERIALIZED_INPUT_UTXOS, "InputUtxos", inputs.toTransactionStates())
     internal val serializedReferenceUtxos = SerializedStateGroup(SERIALIZED_REFERENCE_UTXOS, "ReferenceUtxos", references.toTransactionStates())
 
+    val publicInput = PublicInputFactory(commandMetadata).create()
+
     private val dependencies =
         listOfNotNull(
             stateRef, secureHash, privacySalt, ifOrNull(commandMetadata.timeWindow) { timeWindow },
-            standardTypes.notaryModule, standardTypes.signerModule, nonceDigest, componentGroupEnum
-        )
+            standardTypes.notaryModule, standardTypes.signerModule, nonceDigest, componentGroupEnum, publicInput
+        ).sortedBy { it.getModuleName() }
 
     private val inputGroup = WitnessGroup(INPUTS, stateRef, commandMetadata.privateInputs.size, ComponentGroupEnum.INPUTS_GROUP)
     private val referenceGroup = WitnessGroup(REFERENCES, stateRef, commandMetadata.privateReferences.size, ComponentGroupEnum.REFERENCES_GROUP)
@@ -104,8 +107,10 @@ class Witness(
         dependencies.forEach { dependency ->
             mod { module = dependency.getModuleName() }
             use { path = "${dependency.getModuleName()}::${dependency.id}" }
-            use { path = "${dependency.getModuleName()}::${dependency.getLengthConstant()}" }
-            use { path = "${dependency.getModuleName()}::${dependency.getSerializedTypeDef().getName()}" }
+            if ((dependency is BflStruct && dependency.isDeserializable) || (dependency !is BflStruct)) {
+                use { path = "${dependency.getModuleName()}::${dependency.getLengthConstant()}" }
+                use { path = "${dependency.getModuleName()}::${dependency.getSerializedTypeDef().getName()}" }
+            }
             newLine()
         }
         (
@@ -182,35 +187,38 @@ class Witness(
             standardComponentGroups.mapNotNull(WitnessGroup::generateHashesMethod) +
             generateComputeHashesMethodForUtxos() +
             generateComputeHashesMethodForOutputs() +
-            generateDeserializeMethod()
+            generateDeserializeMethod() +
+            generateGenerateHashesMethod()
 
     private fun generateDeserializeMethod() =
         zincMethod {
             comment = "Deserialize ${Witness::class.java.simpleName} into a $LEDGER_TRANSACTION."
             name = "deserialize"
             returnType = id(LEDGER_TRANSACTION)
-            body = """
-                let $SIGNERS = self.deserialize_$SIGNERS();
-                ${if (commandMetadata.privateInputs.isNotEmpty()) {
+            val deserializeInputs = if (commandMetadata.privateInputs.isNotEmpty()) {
                 """
-                        let $INPUTS = InputGroup::from_states_and_refs(
-                            self.$SERIALIZED_INPUT_UTXOS.deserialize(),
-                            self.deserialize_$INPUTS(),
-                        );
-                """.trimIndent().indent(20.spaces)
+                    let $INPUTS = InputGroup::from_states_and_refs(
+                        self.$SERIALIZED_INPUT_UTXOS.deserialize(),
+                        self.deserialize_$INPUTS(),
+                    );
+                """.trimIndent()
             } else {
                 "// $INPUTS not present"
-            }}
-                ${if (commandMetadata.privateReferences.isNotEmpty()) {
+            }
+            val deserializeReferences = if (commandMetadata.privateReferences.isNotEmpty()) {
                 """
-                        let $REFERENCES = ReferenceGroup::from_states_and_refs(
-                            self.$SERIALIZED_REFERENCE_UTXOS.deserialize(),
-                            self.deserialize_$REFERENCES(),
-                        );
-                """.trimIndent().indent(20.spaces)
+                    let $REFERENCES = ReferenceGroup::from_states_and_refs(
+                        self.$SERIALIZED_REFERENCE_UTXOS.deserialize(),
+                        self.deserialize_$REFERENCES(),
+                    );
+                """.trimIndent()
             } else {
                 "// $REFERENCES not present"
-            }}
+            }
+            body = """
+                let $SIGNERS = self.deserialize_$SIGNERS();
+                ${deserializeInputs.indent(16.spaces)}
+                ${deserializeReferences.indent(16.spaces)}
 
                 $LEDGER_TRANSACTION {
                     ${if (commandMetadata.privateInputs.isNotEmpty()) "$INPUTS: $INPUTS," else "// $INPUTS not present"}
@@ -229,12 +237,35 @@ class Witness(
             """.trimIndent()
         }
 
+    private fun generateGenerateHashesMethod() = zincMethod {
+        val hashInitializers = listOf(
+            Pair(commandMetadata.privateInputs.size, "$INPUTS: self.compute_${INPUTS}_leaf_hashes(),"),
+            Pair(commandMetadata.privateOutputs.size, "$OUTPUTS: self.compute_${OUTPUTS}_leaf_hashes(),"),
+            Pair(commandMetadata.privateReferences.size, "$REFERENCES: self.compute_${REFERENCES}_leaf_hashes(),"),
+            Pair(1, "$COMMANDS: self.compute_${COMMANDS}_leaf_hashes(),"),
+            // Pair(commandMetadata.attachmentCount, "$ATTACHMENTS: self.compute_${ATTACHMENTS}_leaf_hashes(),"),
+            Pair(1, "$NOTARY: self.compute_${NOTARY}_leaf_hashes(),"),
+            Pair(if (commandMetadata.timeWindow) 1 else 0, "$TIME_WINDOW: self.compute_${TIME_WINDOW}_leaf_hashes(),"),
+            Pair(commandMetadata.numberOfSigners, "$SIGNERS: self.compute_${SIGNERS}_leaf_hashes(),"),
+            Pair(1, "$PARAMETERS: self.compute_${PARAMETERS}_leaf_hashes(),"),
+            Pair(commandMetadata.privateInputs.size, "$SERIALIZED_INPUT_UTXOS: self.compute_${SERIALIZED_INPUT_UTXOS}_hashes(),"),
+            Pair(commandMetadata.privateReferences.size, "$SERIALIZED_REFERENCE_UTXOS: self.compute_${SERIALIZED_REFERENCE_UTXOS}_hashes(),"),
+        ).filter { it.first > 0 }.joinToString("\n") { it.second }
+        name = "generate_hashes"
+        returnType = publicInput.toZincId()
+        body = """
+            ${publicInput.id} {
+                ${hashInitializers.indent(16.spaces)}
+            }
+        """.trimIndent()
+    }
+
     private fun generateComputeHashesMethodForUtxos(): List<ZincFunction> {
         return listOfNotNull(
-            ifOrNull(commandMetadata.privateInputs.isEmpty()) {
+            ifOrNull(commandMetadata.privateInputs.isNotEmpty()) {
                 Triple(inputs, SERIALIZED_INPUT_UTXOS, INPUT_NONCES)
             },
-            ifOrNull(commandMetadata.privateReferences.isEmpty()) {
+            ifOrNull(commandMetadata.privateReferences.isNotEmpty()) {
                 Triple(references, SERIALIZED_REFERENCE_UTXOS, REFERENCE_NONCES)
             },
         ).map {
@@ -255,7 +286,7 @@ class Witness(
 
     private fun generateComputeHashesMethodForOutputs(): List<ZincFunction> {
         return listOfNotNull(
-            ifOrNull(commandMetadata.privateOutputs.isEmpty()) { Pair(outputs, OUTPUTS) },
+            ifOrNull(commandMetadata.privateOutputs.isNotEmpty()) { Pair(outputs, OUTPUTS) },
         ).map {
             val arraySize = it.first.values.sum()
             zincMethod {
@@ -266,10 +297,12 @@ class Witness(
                     size = "$arraySize"
                 }
                 body = """
-                    let mut nonces = [${nonceDigest.id}; ${commandMetadata.privateOutputs.size}];
+                    let mut nonces = [${nonceDigest.defaultExpr()}; ${commandMetadata.privateOutputs.size}];
+
                     for i in (0 as u32)..${commandMetadata.privateOutputs.size} {
                         nonces[i] = $COMPUTE_NONCE(self.$PRIVACY_SALT, ${componentGroupEnum.id}::${ComponentGroupEnum.OUTPUTS_GROUP.name} as u32, i);
                     }
+
                     self.${it.second}.$COMPUTE_LEAF_HASHES(nonces)
                 """.trimIndent()
             }
