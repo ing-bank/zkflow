@@ -15,6 +15,7 @@ repositories {
 dependencies {
     testImplementation(project(":annotations"))
     testImplementation(project(":test-utils"))
+    testImplementation(project(":protocol"))
     testImplementation(project(":serialization-candidate"))
 
     val cordaVersion: String by project
