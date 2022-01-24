@@ -8,6 +8,7 @@ import com.google.devtools.ksp.symbol.KSFile
 import com.ing.zkflow.common.contracts.ZKTransactionMetadataCommandData
 import com.ing.zkflow.ksp.KotlinSymbolProcessor
 import com.ing.zkflow.serialization.ZKContractStateSerializerMapProvider
+import com.ing.zkflow.serialization.ZkCommandDataSerializerMapProvider
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
@@ -48,7 +49,9 @@ class ZKTransactionMetadataProcessor(
             .filterIsInstance<ZKPrimitive.Command>()
             .map { it.declaration }
             .ifNotEmpty {
-                // createIndexOf<CommandData>(it)
+                val providerClassName = createProviderOf<CommandData>(it)
+                registerProvider<ZkCommandDataSerializerMapProvider>(providerClassName)
+
                 createMetaInfServicesFile(it)
             }
 
@@ -78,13 +81,13 @@ class ZKTransactionMetadataProcessor(
         val className = "${T::class.simpleName}SerializerMapProvider$uid"
         val superinterface = when (T::class) {
             ContractState::class -> ZKContractStateSerializerMapProvider::class
-            CommandData::class -> ZKContractStateSerializerMapProvider::class
+            CommandData::class -> ZkCommandDataSerializerMapProvider::class
             else -> error("Indexes of only either `${ContractState::class.qualifiedName}` or `${CommandData::class.qualifiedName}` can be built")
         }
 
         FileSpec.builder(packageName, className)
             .addType(
-                TypeSpec.objectBuilder(className)
+                TypeSpec.classBuilder(className)
                     .addSuperinterface(superinterface)
                     .addFunction(
                         FunSpec.builder("list")

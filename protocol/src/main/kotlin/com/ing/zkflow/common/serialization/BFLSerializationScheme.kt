@@ -38,19 +38,19 @@ open class BFLSerializationScheme : CustomSerializationScheme {
         const val SCHEME_ID = 602214076
 
         const val CONTEXT_KEY_TRANSACTION_METADATA = 2
-    }
 
-    private object ZkContractStateSerializerMap : SerializerMap<ContractState>()
-    private object ZkCommandDataSerializerMap : SerializerMap<CommandData>()
+        object ZkContractStateSerializerMap : SerializerMap<ContractState>()
+        object ZkCommandDataSerializerMap : SerializerMap<CommandData>()
 
-    init {
-        ServiceLoader.load(ZKContractStateSerializerMapProvider::class.java)
-            .flatMap { it.list() }
-            .forEach { ZkContractStateSerializerMap.register(it.first, it.second) }
+        init {
+            ServiceLoader.load(ZKContractStateSerializerMapProvider::class.java)
+                .flatMap { it.list() }
+                .forEach { ZkContractStateSerializerMap.register(it.first, it.second) }
 
-        ServiceLoader.load(ZkCommandDataSerializerMapProvider::class.java)
-            .flatMap { it.list() }
-            .forEach { ZkCommandDataSerializerMap.register(it.first, it.second) }
+            ServiceLoader.load(ZkCommandDataSerializerMapProvider::class.java)
+                .flatMap { it.list() }
+                .forEach { ZkCommandDataSerializerMap.register(it.first, it.second) }
+        }
     }
 
     override fun getSchemeId(): Int {
