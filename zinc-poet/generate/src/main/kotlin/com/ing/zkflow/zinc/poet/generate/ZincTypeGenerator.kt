@@ -134,7 +134,7 @@ private fun String.startsWithUppercase(): Boolean {
 }
 
 @Suppress("UNCHECKED_CAST")
-private inline fun <reified T : Annotation> SerialDescriptor.findAnnotation(): T? = annotations.firstOrNull { it is T } as T?
+private inline fun <reified T : Annotation> SerialDescriptor.findAnnotation(): T? = annotations.singleOrNull { it is T } as T?
 
 private inline fun <reified T : Annotation> SerialDescriptor.getAnnotation(): T = requireNotNull(findAnnotation()) {
     "Annotation ${T::class} not found on $serialName"

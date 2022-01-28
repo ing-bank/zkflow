@@ -1,6 +1,5 @@
 package com.ing.zkflow.zinc.poet.generate.types
 
-import com.ing.zinc.bfl.BflModule
 import com.ing.zinc.bfl.BflStruct
 import com.ing.zinc.bfl.dsl.ArrayBuilder.Companion.array
 import com.ing.zinc.bfl.dsl.StructBuilder.Companion.struct
@@ -26,20 +25,18 @@ class LedgerTransactionFactory(
     private val standardTypes: StandardTypes,
 ) {
     fun createLedgerTransaction(
-        inputGroup: BflModule,
-        referencesGroup: BflModule,
         commandMetadata: ResolvedZKCommandMetadata,
-        witness: Witness,
+        witnessGroupsContainer: WitnessGroupsContainer,
     ): BflStruct = struct {
         name = LEDGER_TRANSACTION
         if (commandMetadata.privateInputs.isNotEmpty()) {
-            field { name = INPUTS; type = inputGroup }
+            field { name = INPUTS; type = witnessGroupsContainer.serializedInputUtxos.ledgerGroup }
         }
         if (commandMetadata.privateOutputs.isNotEmpty()) {
-            field { name = OUTPUTS; type = witness.serializedOutputGroup.deserializedStruct }
+            field { name = OUTPUTS; type = witnessGroupsContainer.serializedOutputGroup.deserializedGroup }
         }
         if (commandMetadata.privateReferences.isNotEmpty()) {
-            field { name = REFERENCES; type = referencesGroup }
+            field { name = REFERENCES; type = witnessGroupsContainer.serializedReferenceUtxos.ledgerGroup }
         }
         field { name = COMMANDS; type = commandGroupFactory.createCommandGroup(commandMetadata) }
 //        if (commandMetadata.attachmentCount > 0) {

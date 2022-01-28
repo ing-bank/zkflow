@@ -60,7 +60,7 @@ class CommandGroupFactory(
     private fun generateFromSignersFunction(
         metadata: ResolvedZKCommandMetadata,
     ) = zincFunction {
-        val fieldConstructors = getFieldConstructors(metadata)
+        val fieldConstructors = generateFieldConstructors(metadata)
         val fieldAssignments = "${getCommandFieldName(metadata)}: ${getCommandFieldName(metadata)},"
         name = FROM_SIGNERS
         parameter {
@@ -81,16 +81,16 @@ class CommandGroupFactory(
         comment = "Construct $COMMAND_GROUP from an array with all $SIGNERS"
     }
 
-    private fun getFieldConstructors(
-        metadata: ResolvedZKCommandMetadata,
+    private fun generateFieldConstructors(
+        commandMetadata: ResolvedZKCommandMetadata,
     ): String {
-        val fieldName = getCommandFieldName(metadata)
-        val fieldType = getCommandTypeName(metadata)
-        val signerListModule = standardTypes.getSignerListModule(metadata.numberOfSigners).id
+        val fieldName = getCommandFieldName(commandMetadata)
+        val fieldType = getCommandTypeName(commandMetadata)
+        val signerListModule = standardTypes.getSignerListModule(commandMetadata.numberOfSigners).id
         return """
             let $fieldName: $fieldType = {
-                let mut ${fieldName}_array: [${standardTypes.signerModule.id}; ${metadata.numberOfSigners}] = [${standardTypes.signerModule.defaultExpr()}; ${metadata.numberOfSigners}];
-                for i in (0 as u8)..${metadata.numberOfSigners} {
+                let mut ${fieldName}_array: [${standardTypes.signerModule.id}; ${commandMetadata.numberOfSigners}] = [${standardTypes.signerModule.defaultExpr()}; ${commandMetadata.numberOfSigners}];
+                for i in (0 as u8)..${commandMetadata.numberOfSigners} {
                     ${fieldName}_array[i] = signers[i];
                 }
                 $fieldType::new($signerListModule::list_of(${fieldName}_array))

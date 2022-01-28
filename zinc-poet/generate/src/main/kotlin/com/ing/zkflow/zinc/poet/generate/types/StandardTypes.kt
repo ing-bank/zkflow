@@ -11,6 +11,8 @@ import com.ing.zinc.bfl.dsl.ListBuilder.Companion.byteArray
 import com.ing.zinc.bfl.dsl.ListBuilder.Companion.list
 import com.ing.zinc.bfl.dsl.OptionBuilder.Companion.option
 import com.ing.zinc.bfl.dsl.StructBuilder.Companion.struct
+import com.ing.zinc.bfl.generator.WitnessGroupOptions
+import com.ing.zinc.naming.camelToSnakeCase
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.annotations.corda.EdDSA
 import com.ing.zkflow.serialization.bfl.serializers.CordaSerializers.CLASS_NAME_SIZE
@@ -53,6 +55,18 @@ class StandardTypes(
         capacity = numberOfSigners
         elementType = signerModule
     }
+
+    internal fun toWitnessGroupOptions(groupName: String, states: Map<BflModule, Int>): List<WitnessGroupOptions> = states.keys.map {
+        WitnessGroupOptions.cordaWrapped(
+            "${groupName}_${it.id.camelToSnakeCase()}",
+            transactionState(it)
+        )
+    }
+
+    internal fun toTransactionStates(states: Map<BflModule, Int>): Map<BflModule, Int> =
+        states.map { (stateType, count) ->
+            transactionState(stateType) to count
+        }.toMap()
 
     internal fun transactionState(stateType: BflType) = struct {
         name = "${stateType.id}TransactionState"

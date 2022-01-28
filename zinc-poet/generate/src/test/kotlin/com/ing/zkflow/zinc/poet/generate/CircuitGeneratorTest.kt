@@ -58,7 +58,7 @@ internal class CircuitGeneratorTest {
 
         result.second shouldBe ""
         val publicInput = Json.parseToJsonElement(result.first) as JsonObject
-        println(publicInput.keys)
+
         publicInput.shouldContainKeys(
             INPUTS, OUTPUTS, REFERENCES, SERIALIZED_INPUT_UTXOS, SERIALIZED_REFERENCE_UTXOS, COMMANDS, PARAMETERS, SIGNERS, NOTARY
         )
