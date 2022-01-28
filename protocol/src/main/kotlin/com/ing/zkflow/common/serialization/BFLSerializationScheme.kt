@@ -3,8 +3,11 @@ package com.ing.zkflow.common.serialization
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
 import com.ing.zkflow.serialization.CommandDataSerializerMap
 import com.ing.zkflow.serialization.ContractStateSerializerMap
+import com.ing.zkflow.serialization.SerializerMap
 import com.ing.zkflow.serialization.SerializerMapError
 import com.ing.zkflow.serialization.SerializersModuleRegistry
+import com.ing.zkflow.serialization.ZKContractStateSerializerMapProvider
+import com.ing.zkflow.serialization.ZkCommandDataSerializerMapProvider
 import com.ing.zkflow.serialization.bfl.serializers.TimeWindowSerializer
 import com.ing.zkflow.serialization.bfl.serializers.TransactionStateSerializer
 import kotlinx.serialization.KSerializer
@@ -23,6 +26,7 @@ import net.corda.core.utilities.ByteSequence
 import net.corda.core.utilities.loggerFor
 import java.nio.ByteBuffer
 import java.security.PublicKey
+import java.util.ServiceLoader
 import com.ing.serialization.bfl.api.debugSerialize as obliviousDebugSerialize
 import com.ing.serialization.bfl.api.deserialize as obliviousDeserialize
 import com.ing.serialization.bfl.api.reified.deserialize as informedDeserialize
@@ -34,6 +38,19 @@ open class BFLSerializationScheme : CustomSerializationScheme {
         const val SCHEME_ID = 602214076
 
         const val CONTEXT_KEY_TRANSACTION_METADATA = 2
+    }
+
+    private object ZkContractStateSerializerMap : SerializerMap<ContractState>()
+    private object ZkCommandDataSerializerMap : SerializerMap<CommandData>()
+
+    init {
+        ServiceLoader.load(ZKContractStateSerializerMapProvider::class.java)
+            .flatMap { it.list() }
+            .forEach { ZkContractStateSerializerMap.register(it.first, it.second) }
+
+        ServiceLoader.load(ZkCommandDataSerializerMapProvider::class.java)
+            .flatMap { it.list() }
+            .forEach { ZkCommandDataSerializerMap.register(it.first, it.second) }
     }
 
     override fun getSchemeId(): Int {
