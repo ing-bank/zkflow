@@ -22,7 +22,7 @@ internal class ZKTransactionMetadataProcessorTest {
 
         // In case of error, show output
         if (result.exitCode != KotlinCompilation.ExitCode.OK) {
-            println(outputStream)
+            reportError(result, outputStream)
         }
 
         result.exitCode shouldBe KotlinCompilation.ExitCode.OK
@@ -36,7 +36,7 @@ internal class ZKTransactionMetadataProcessorTest {
 
         // In case of error, show output
         if (result.exitCode != KotlinCompilation.ExitCode.OK) {
-            println(outputStream)
+            reportError(result, outputStream)
         }
 
         result.exitCode shouldBe KotlinCompilation.ExitCode.OK
@@ -50,7 +50,7 @@ internal class ZKTransactionMetadataProcessorTest {
 
         // In case of error, show output
         if (result.exitCode != KotlinCompilation.ExitCode.OK) {
-            println(outputStream)
+            reportError(result, outputStream)
         }
 
         result.exitCode shouldBe KotlinCompilation.ExitCode.OK
@@ -68,6 +68,15 @@ internal class ZKTransactionMetadataProcessorTest {
         inheritClassPath = true
         messageOutputStream = BufferedOutputStream(outputStream) // see diagnostics in real time
     }.compile()
+
+    private fun reportError(result: KotlinCompilation.Result, outputStream: ByteArrayOutputStream) =
+        println(
+            """
+            Compilation failed:
+            Compilation messages: ${result.messages}
+            Output stream: $outputStream
+            """.trimIndent()
+        )
 
     companion object {
         private fun KotlinCompilation.Result.getGeneratedMetaInfServices() =
