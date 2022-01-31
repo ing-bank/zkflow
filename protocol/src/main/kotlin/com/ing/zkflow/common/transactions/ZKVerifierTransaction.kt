@@ -118,7 +118,7 @@ class ZKVerifierTransaction internal constructor(
             )
 
             return ZKVerifierTransaction(
-                id = ftx.id,
+                id = wtx.id,
                 proofs = proofs,
                 outputHashes = outputHashes(wtx, ftx),
                 groupHashes = ftx.groupHashes,
@@ -136,98 +136,70 @@ class ZKVerifierTransaction internal constructor(
                 }
         }
 
-        @Suppress("ComplexMethod")
         private fun filterPrivateComponents(
             wtx: WireTransaction,
             availableComponentNonces: Map<Int, List<SecureHash>>,
         ): List<FilteredComponentGroup> {
-            val zkTransactionMetadata = wtx.zkTransactionMetadata()
+
             val filteredSerialisedComponents: MutableMap<Int, MutableList<OpaqueBytes>> = hashMapOf()
             val filteredComponentNonces: MutableMap<Int, MutableList<SecureHash>> = hashMapOf()
             val filteredComponentHashes: MutableMap<Int, MutableList<SecureHash?>> = hashMapOf() // Required for partial Merkle tree generation.
-            var signersIncluded = false
 
-            fun componentHash(wtx: WireTransaction, groupIndex: Int, componentIndex: Int): SecureHash {
-                val componentBytes = wtx.componentGroups.first { it.groupIndex == groupIndex }.components[componentIndex]
-                return wtx.digestService.componentHash(availableComponentNonces[groupIndex]!![componentIndex], componentBytes)
-            }
+            val zkTransactionMetadata = wtx.zkTransactionMetadata()
 
-            fun filter(groupIndex: Int, componentIndex: Int) {
-                if (zkTransactionMetadata.getComponentVisibility(groupIndex, componentIndex) == ZkpVisibility.Private) return
+            wtx.componentGroups.forEach { componentGroup ->
+                val groupIndex = componentGroup.groupIndex
 
-                val group = filteredSerialisedComponents[groupIndex]
-                // Because the filter passed, we know there is a match. We also use first Vs single as the init function
-                // of WireTransaction ensures there are no duplicated groups.
-                val serialisedComponent = wtx.componentGroups.first { it.groupIndex == groupIndex }.components[componentIndex]
-                if (group == null) {
-                    // As all of the helper Map structures, like availableComponentNonces, availableComponentHashes
-                    // and groupsMerkleRoots, are computed lazily via componentGroups.forEach, there should always be
-                    // a match on Map.get ensuring it will never return null.
-                    filteredSerialisedComponents[groupIndex] = mutableListOf(serialisedComponent)
-                    filteredComponentNonces[groupIndex] = mutableListOf(availableComponentNonces[groupIndex]!![componentIndex])
-                    filteredComponentHashes[groupIndex] = mutableListOfNulls(wtx.componentGroups.first { it.groupIndex == groupIndex }.components.size)
-                    filteredComponentHashes[groupIndex]!![componentIndex] = componentHash(wtx, groupIndex, componentIndex)
-                } else {
-                    group.add(serialisedComponent)
-                    // If the group[componentGroupIndex] existed, then we guarantee that
-                    // filteredComponentNonces[componentGroupIndex] and filteredComponentHashes[componentGroupIndex] are not null.
-                    filteredComponentNonces[groupIndex]!!.add(availableComponentNonces[groupIndex]!![componentIndex])
-                    filteredComponentHashes[groupIndex]!![componentIndex] = componentHash(wtx, groupIndex, componentIndex)
-                }
-                // If at least one command is visible, then all command-signers should be visible as well.
-                // This is required for visibility purposes, see FilteredTransaction.checkAllCommandsVisible() for more details.
-                if (groupIndex == ComponentGroupEnum.COMMANDS_GROUP.ordinal && !signersIncluded) {
-                    signersIncluded = true
-                    val signersGroupIndex = ComponentGroupEnum.SIGNERS_GROUP.ordinal
-                    // There exist commands, thus the signers group is not empty.
-                    val signersGroupComponents = wtx.componentGroups.first { it.groupIndex == signersGroupIndex }
-                    filteredSerialisedComponents[signersGroupIndex] = signersGroupComponents.components.toMutableList()
-                    filteredComponentNonces[signersGroupIndex] = availableComponentNonces[signersGroupIndex]!!.toMutableList()
-                    filteredComponentHashes[signersGroupIndex] = wtx.componentGroups.first { it.groupIndex == signersGroupIndex }.components.indices.map { index -> componentHash(wtx, signersGroupIndex, index) }.toMutableList()
+                componentGroup.components.forEachIndexed { componentIndex, serialisedComponent ->
+                    if (zkTransactionMetadata.getComponentVisibility(groupIndex, componentIndex) != ZkpVisibility.Private) {
+
+                        // Init lists if they don't exist
+                        if (!filteredSerialisedComponents.containsKey(groupIndex)) {
+                            filteredSerialisedComponents[groupIndex] = mutableListOf()
+                            filteredComponentNonces[groupIndex] = mutableListOf()
+                            filteredComponentHashes[groupIndex] = mutableListOfNulls(wtx.componentGroups.first { it.groupIndex == groupIndex }.components.size)
+                        }
+
+                        // So now we are quite sure they are not null
+                        filteredSerialisedComponents[groupIndex]!!.add(serialisedComponent)
+                        filteredComponentNonces[groupIndex]!!.add(availableComponentNonces[groupIndex]!![componentIndex])
+                        filteredComponentHashes[groupIndex]!![componentIndex] = componentHash(wtx, availableComponentNonces, groupIndex, componentIndex)
+                    }
                 }
             }
 
-            fun updateFilteredComponents() {
-                wtx.inputs.indices.forEach { internalIndex -> filter(ComponentGroupEnum.INPUTS_GROUP.ordinal, internalIndex) }
-                wtx.outputs.indices.forEach { internalIndex -> filter(ComponentGroupEnum.OUTPUTS_GROUP.ordinal, internalIndex) }
-                wtx.commands.indices.forEach { internalIndex -> filter(ComponentGroupEnum.COMMANDS_GROUP.ordinal, internalIndex) }
-                wtx.attachments.indices.forEach { internalIndex -> filter(ComponentGroupEnum.ATTACHMENTS_GROUP.ordinal, internalIndex) }
-                wtx.references.indices.forEach { internalIndex -> filter(ComponentGroupEnum.REFERENCES_GROUP.ordinal, internalIndex) }
-                wtx.networkParametersHash?.let { filter(ComponentGroupEnum.PARAMETERS_GROUP.ordinal, 0) }
-                wtx.notary ?.let { filter(ComponentGroupEnum.NOTARY_GROUP.ordinal, 0) }
-                wtx.timeWindow ?.let { filter(ComponentGroupEnum.TIMEWINDOW_GROUP.ordinal, 0) }
-            }
-
-            fun createPartialMerkleTree(componentGroupIndex: Int): PartialMerkleTree {
-                return PartialMerkleTree.build(
-                    // we've already calculated filtered hashes, so we only need to calculate missing ones
-                    MerkleTree.getMerkleTree(
-                        wtx.componentGroups.first { it.groupIndex == componentGroupIndex }.components.indices.map {
-                            componentIndex ->
-                            filteredComponentHashes[componentGroupIndex]?.get(componentIndex) ?: componentHash(wtx, componentGroupIndex, componentIndex)
-                        }.toMutableList(),
-                        wtx.digestService
-                    ),
-                    filteredComponentHashes[componentGroupIndex]!!.filterNotNull()
+            val filteredComponentGroups: MutableList<FilteredComponentGroup> = mutableListOf()
+            filteredSerialisedComponents.forEach { (groupIndex, value) ->
+                filteredComponentGroups.add(
+                    FilteredComponentGroup(groupIndex, value, filteredComponentNonces[groupIndex]!!, createPartialMerkleTree(wtx, availableComponentNonces, filteredComponentHashes, groupIndex))
                 )
             }
-
-            fun createFilteredComponentGroups(): List<FilteredComponentGroup> {
-                updateFilteredComponents()
-                val filteredComponentGroups: MutableList<FilteredComponentGroup> = mutableListOf()
-                filteredSerialisedComponents.forEach { (groupIndex, value) ->
-                    filteredComponentGroups.add(FilteredComponentGroup(groupIndex, value, filteredComponentNonces[groupIndex]!!, createPartialMerkleTree(groupIndex)))
-                }
-                return filteredComponentGroups
-            }
-
-            return createFilteredComponentGroups()
+            return filteredComponentGroups
         }
 
         private fun mutableListOfNulls(size: Int): MutableList<SecureHash?> {
             val list = ArrayList<SecureHash?>(size)
             (0..size).forEach { _ -> list.add(null) }
             return list
+        }
+
+        private fun componentHash(wtx: WireTransaction, nonces: Map<Int, List<SecureHash>>, groupIndex: Int, componentIndex: Int): SecureHash {
+            val componentBytes = wtx.componentGroups.first { it.groupIndex == groupIndex }.components[componentIndex]
+            return wtx.digestService.componentHash(nonces[groupIndex]!![componentIndex], componentBytes)
+        }
+
+        private fun createPartialMerkleTree(wtx: WireTransaction, nonces: Map<Int, List<SecureHash>>, hashes: Map<Int, List<SecureHash?>>, groupIndex: Int): PartialMerkleTree {
+            return PartialMerkleTree.build(
+                // we've already calculated filtered hashes, so we only need to calculate missing ones
+                MerkleTree.getMerkleTree(
+                    wtx.componentGroups.first { it.groupIndex == groupIndex }.components.indices.map {
+                        componentIndex ->
+                        hashes[groupIndex]?.get(componentIndex) ?: componentHash(wtx, nonces, groupIndex, componentIndex)
+                    }.toMutableList(),
+                    wtx.digestService
+                ),
+                hashes[groupIndex]!!.filterNotNull()
+            )
         }
     }
 }

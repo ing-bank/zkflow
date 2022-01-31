@@ -164,7 +164,7 @@ data class ResolvedZKCommandMetadata(
         matchTypes(
             componentName = "input",
             expectedTypes = this.privateInputs.map { it.type },
-            actualTypes = inputs.map { it.state.data::class }
+            actualTypes = inputs.filterIndexed { index, _ -> privateInputs.any { it.index == index } }.map { it.state.data::class }
         )
     }
 
@@ -173,7 +173,7 @@ data class ResolvedZKCommandMetadata(
         matchTypes(
             componentName = "reference",
             expectedTypes = this.privateReferences.map { it.type },
-            actualTypes = references.map { it.data::class }
+            actualTypes = references.filterIndexed { index, _ -> privateReferences.any { it.index == index } }.map { it.data::class }
         )
     }
 
@@ -183,7 +183,7 @@ data class ResolvedZKCommandMetadata(
         matchTypes(
             "output",
             expectedTypes = this.privateOutputs.map { it.type },
-            actualTypes = outputs.map { it.data::class }
+            actualTypes = outputs.filterIndexed { index, _ -> privateOutputs.any { it.index == index } }.map { it.data::class }
         )
     }
 
