@@ -1,12 +1,15 @@
 package com.ing.zkflow.txmetadata
 
-import com.google.devtools.ksp.processing.Dependencies
 import com.google.devtools.ksp.processing.Resolver
+import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.symbol.KSAnnotated
-import com.google.devtools.ksp.symbol.KSFile
+import com.ing.zkflow.common.contracts.ZKOwnableState
 import com.ing.zkflow.common.contracts.ZKTransactionMetadataCommandData
-import com.ing.zkflow.ksp.KotlinSymbolProcessor
+import com.ing.zkflow.ksp.ImplementationsVisitor
+import com.ing.zkflow.ksp.ImplementationsVisitor.Companion.toMapOfLists
+import com.ing.zkflow.ksp.MetaInfServicesBuilder
+import com.ing.zkflow.ksp.ScopedDeclaration
 import com.ing.zkflow.serialization.ZKContractStateSerializerMapProvider
 import com.ing.zkflow.serialization.ZkCommandDataSerializerMapProvider
 import com.squareup.kotlinpoet.FileSpec
@@ -22,60 +25,64 @@ import com.squareup.kotlinpoet.withIndent
 import kotlinx.serialization.KSerializer
 import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.ContractState
-import net.corda.core.internal.packageName
-import java.io.OutputStream
-import java.nio.charset.StandardCharsets
 import kotlin.math.absoluteValue
 import kotlin.random.Random
 import kotlin.reflect.KClass
 
 class ZKTransactionMetadataProcessor(
     private val environment: SymbolProcessorEnvironment
-) : KotlinSymbolProcessor {
-    override fun process(resolver: Resolver, allKotlinFiles: Sequence<KSFile>): List<KSAnnotated> {
-        val zkPrimitivesIndex = allKotlinFiles
-            .flatMap(this::indexZKPrimitives)
+) : SymbolProcessor {
+    private val zkCommandMetaInfServicesBuilder: MetaInfServicesBuilder = MetaInfServicesBuilder(
+        environment.codeGenerator,
+        ZKTransactionMetadataCommandData::class
+    )
+    private val zkContractStateMapMetaInfServicesBuilder: MetaInfServicesBuilder = MetaInfServicesBuilder(
+        environment.codeGenerator,
+        ZKContractStateSerializerMapProvider::class
+    )
+    private val zkCommandDataMapMetaInfServicesBuilder: MetaInfServicesBuilder = MetaInfServicesBuilder(
+        environment.codeGenerator,
+        ZkCommandDataSerializerMapProvider::class
+    )
+    private val implementationsVisitor = ImplementationsVisitor(
+        listOf(
+            ZKOwnableState::class,
+            ZKTransactionMetadataCommandData::class,
+            ZKContractStateSerializerMapProvider::class,
+            ZkCommandDataSerializerMapProvider::class
+        )
+    )
+
+    override fun process(resolver: Resolver): List<KSAnnotated> {
+        println("Handling: ${resolver.getNewFiles().joinToString { it.toString() }}")
+        val implementations = resolver.getNewFiles()
+            .flatMap { implementationsVisitor.visitFile(it, null) }
             .toList()
+            .toMapOfLists()
 
-        zkPrimitivesIndex
-            .filterIsInstance<ZKPrimitive.State>()
-            .map { it.declaration }
-            .ifNotEmpty {
-                val providerClassName = createProviderOf<ContractState>(it)
-                registerProvider<ZKContractStateSerializerMapProvider>(providerClassName)
+        implementations.forEach { (interfaceClass, implementations) ->
+            when (interfaceClass) {
+                ZKOwnableState::class -> {
+                    createProviderOf<ContractState>(implementations)
+                }
+                ZKTransactionMetadataCommandData::class -> {
+                    createProviderOf<CommandData>(implementations)
+                    zkCommandMetaInfServicesBuilder.createOrUpdate(implementations)
+                }
+                ZKContractStateSerializerMapProvider::class -> {
+                    zkContractStateMapMetaInfServicesBuilder.createOrUpdate(implementations)
+                }
+                ZkCommandDataSerializerMapProvider::class -> {
+                    zkCommandDataMapMetaInfServicesBuilder.createOrUpdate(implementations)
+                }
+                else -> throw IllegalArgumentException("Unexpected interface $interfaceClass")
             }
-
-        zkPrimitivesIndex
-            .filterIsInstance<ZKPrimitive.Command>()
-            .map { it.declaration }
-            .ifNotEmpty {
-                val providerClassName = createProviderOf<CommandData>(it)
-                registerProvider<ZkCommandDataSerializerMapProvider>(providerClassName)
-
-                createMetaInfServicesFile(it)
-            }
+        }
 
         return emptyList()
     }
 
-    private fun indexZKPrimitives(ksFile: KSFile): List<ZKPrimitive> =
-        ZKPrimitivesVisitor().visitFile(ksFile, null)
-
-    @Suppress("SpreadOperator")
-    private fun createMetaInfServicesFile(correctlyAnnotatedTransactions: List<ScopedDeclaration>) =
-        environment.codeGenerator.createNewFile(
-            Dependencies(
-                false,
-                *correctlyAnnotatedTransactions.mapNotNull { it.declaration.containingFile }.toList().toTypedArray()
-            ),
-            "META-INF/services",
-            ZKTransactionMetadataCommandData::class.packageName,
-            ZKTransactionMetadataCommandData::class.simpleName!!
-        ).appendText(
-            correctlyAnnotatedTransactions.joinToString("\n") { "${it.java.qualifiedName}\n" }
-        )
-
-    private inline fun <reified T> createProviderOf(declarations: List<ScopedDeclaration>): String {
+    private inline fun <reified T> createProviderOf(declarations: List<ScopedDeclaration>) {
         val uid = Random.nextInt().absoluteValue
         val packageName = "com.ing.zkflow.serialization"
         val className = "${T::class.simpleName}SerializerMapProvider$uid"
@@ -122,24 +129,5 @@ class ZKTransactionMetadataProcessor(
             )
             .build()
             .writeTo(codeGenerator = environment.codeGenerator, aggregating = false)
-
-        return "$packageName.$className"
-    }
-
-    private inline fun <reified T> registerProvider(providerClassName: String) =
-        environment.codeGenerator.createNewFile(
-            Dependencies(false),
-            "META-INF/services",
-            T::class.packageName, T::class.simpleName!!
-        ).appendText(providerClassName)
-}
-
-private fun OutputStream.appendText(text: String) = use {
-    write(text.toByteArray(StandardCharsets.UTF_8))
-}
-
-private fun <T> List<T>.ifNotEmpty(process: (it: List<T>) -> Unit) {
-    if (isNotEmpty()) {
-        process(this)
     }
 }

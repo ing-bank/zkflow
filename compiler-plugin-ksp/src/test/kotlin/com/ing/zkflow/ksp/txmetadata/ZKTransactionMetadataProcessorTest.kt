@@ -2,11 +2,14 @@ package com.ing.zkflow.ksp.txmetadata
 
 import com.ing.zkflow.common.contracts.ZKTransactionMetadataCommandData
 import com.ing.zkflow.ksp.CompositeSymbolProcessorProvider
+import com.ing.zkflow.serialization.ZKContractStateSerializerMapProvider
+import com.ing.zkflow.serialization.ZkCommandDataSerializerMapProvider
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import com.tschuchort.compiletesting.symbolProcessorProviders
 import io.kotest.matchers.paths.shouldNotExist
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldStartWith
 import net.corda.core.internal.readText
 import org.junit.jupiter.api.Test
 import java.io.BufferedOutputStream
@@ -18,7 +21,7 @@ internal class ZKTransactionMetadataProcessorTest {
     @Test
     fun `ZKTransactionProcessor should correctly register stuff`() {
         val outputStream = ByteArrayOutputStream()
-        val result = compile(correctKotlinSource, outputStream)
+        val result = compile(kotlinFileWithCommand, outputStream)
 
         // In case of error, show output
         if (result.exitCode != KotlinCompilation.ExitCode.OK) {
@@ -26,7 +29,8 @@ internal class ZKTransactionMetadataProcessorTest {
         }
 
         result.exitCode shouldBe KotlinCompilation.ExitCode.OK
-        result.getGeneratedMetaInfServices() shouldBe "com.ing.zkflow.zktransaction.TestCommand\n"
+        result.getGeneratedMetaInfServices<ZKTransactionMetadataCommandData>() shouldBe "com.ing.zkflow.zktransaction.TestCommand"
+        result.getGeneratedMetaInfServices<ZkCommandDataSerializerMapProvider>() shouldStartWith "com.ing.zkflow.serialization.CommandDataSerializerMapProvider"
     }
 
     @Test
@@ -40,7 +44,8 @@ internal class ZKTransactionMetadataProcessorTest {
         }
 
         result.exitCode shouldBe KotlinCompilation.ExitCode.OK
-        result.getGeneratedMetaInfServices() shouldBe "com.ing.zkflow.zktransaction.Container\$TestNestedCommand\n"
+        result.getGeneratedMetaInfServices<ZKTransactionMetadataCommandData>() shouldBe "com.ing.zkflow.zktransaction.Container\$TestNestedCommand"
+        result.getGeneratedMetaInfServices<ZkCommandDataSerializerMapProvider>() shouldStartWith "com.ing.zkflow.serialization.CommandDataSerializerMapProvider"
     }
 
     @Test
@@ -54,7 +59,21 @@ internal class ZKTransactionMetadataProcessorTest {
         }
 
         result.exitCode shouldBe KotlinCompilation.ExitCode.OK
-        result.getMetaInfServicesPath().shouldNotExist()
+        result.getMetaInfServicesPath<ZKTransactionMetadataCommandData>().shouldNotExist()
+    }
+
+    @Test
+    fun `ZKTransactionProcessor should correctly detect state classes`() {
+        val outputStream = ByteArrayOutputStream()
+        val result = compile(kotlinFileWithStateClass, outputStream)
+
+        // In case of error, show output
+        if (result.exitCode != KotlinCompilation.ExitCode.OK) {
+            reportError(result, outputStream)
+        }
+
+        result.exitCode shouldBe KotlinCompilation.ExitCode.OK
+        result.getGeneratedMetaInfServices<ZKContractStateSerializerMapProvider>() shouldStartWith "com.ing.zkflow.serialization.ContractStateSerializerMapProvider"
     }
 
     private fun compile(
@@ -79,13 +98,13 @@ internal class ZKTransactionMetadataProcessorTest {
         )
 
     companion object {
-        private fun KotlinCompilation.Result.getGeneratedMetaInfServices() =
-            getMetaInfServicesPath().readText(StandardCharsets.UTF_8)
+        private inline fun <reified T : Any> KotlinCompilation.Result.getGeneratedMetaInfServices() =
+            getMetaInfServicesPath<T>().readText(StandardCharsets.UTF_8)
 
-        private fun KotlinCompilation.Result.getMetaInfServicesPath() =
-            Paths.get("${outputDirectory.absolutePath}/../ksp/sources/resources/META-INF/services/${ZKTransactionMetadataCommandData::class.java.canonicalName}")
+        private inline fun <reified T : Any> KotlinCompilation.Result.getMetaInfServicesPath() =
+            Paths.get("${outputDirectory.absolutePath}/../ksp/sources/resources/META-INF/services/${T::class.java.canonicalName}")
 
-        private val correctKotlinSource = SourceFile.kotlin(
+        private val kotlinFileWithCommand = SourceFile.kotlin(
             "TestCommand.kt",
             """
                 package com.ing.zkflow.zktransaction
@@ -146,6 +165,45 @@ internal class ZKTransactionMetadataProcessorTest {
                 
                 class NotACommand
             """
+        )
+
+        private val kotlinFileWithStateClass = SourceFile.kotlin(
+            "TestState.kt",
+            """
+                package com.ing.zkflow.zktransaction
+                
+                import com.ing.zkflow.common.contracts.ZKOwnableState
+                import com.ing.zkflow.common.contracts.ZKTransactionMetadataCommandData
+                import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
+                import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
+                import com.ing.zkflow.common.zkp.metadata.commandMetadata
+                import com.ing.zkflow.common.zkp.metadata.transactionMetadata
+                import net.corda.core.contracts.CommandAndState
+                import net.corda.core.identity.AnonymousParty
+                
+                class TestCommand: ZKTransactionMetadataCommandData {
+                    override val transactionMetadata: ResolvedZKTransactionMetadata by transactionMetadata {
+                        commands { +TestCommand::class }
+                    }
+                
+                    @Transient
+                    override val metadata: ResolvedZKCommandMetadata = commandMetadata {
+                        private = true
+                        circuit { name = "TestCommand" }
+                        numberOfSigners = 1
+                    }
+                
+                    data class TestState(
+                        override val owner: AnonymousParty
+                    ): ZKOwnableState {
+                        override fun withNewOwner(newOwner: AnonymousParty): CommandAndState {
+                            return CommandAndState(TestCommand(), copy(owner = newOwner))
+                        }
+                
+                        override val participants: List<AnonymousParty> = listOf(owner)
+                    }
+                }
+            """.trimIndent()
         )
     }
 }
