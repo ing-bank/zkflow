@@ -16,7 +16,7 @@ class MetaInfServicesProcessor<T : Any>(
     private val codeGenerator: CodeGenerator,
     override val interfaceClass: KClass<T>,
 ) : ImplementationsProcessor<T> {
-    private var allDiscoveredImplementations = mutableListOf<ScopedDeclaration>()
+    private val allDiscoveredImplementations = mutableListOf<ScopedDeclaration>()
 
     @Suppress("SpreadOperator")
     override fun process(implementations: List<ScopedDeclaration>): List<KSAnnotated> {

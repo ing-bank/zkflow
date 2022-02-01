@@ -6,6 +6,7 @@ import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSNode
 import com.ing.zkflow.ksp.KSAbstractVisitor
+import com.ing.zkflow.util.merge
 import kotlin.reflect.KClass
 
 /**
@@ -13,8 +14,8 @@ import kotlin.reflect.KClass
  */
 class ImplementationsVisitor(
     private val interfaceClasses: List<KClass<*>>
-) : KSAbstractVisitor<ScopedDeclaration?, List<Pair<KClass<*>, ScopedDeclaration>>>() {
-    override fun defaultVisit(annotated: KSNode, data: ScopedDeclaration?) = emptyList<Pair<KClass<*>, ScopedDeclaration>>()
+) : KSAbstractVisitor<ScopedDeclaration?, Map<KClass<*>, List<ScopedDeclaration>>>() {
+    override fun defaultVisit(annotated: KSNode, data: ScopedDeclaration?) = emptyMap<KClass<*>, List<ScopedDeclaration>>()
 
     override fun visitFile(file: KSFile, data: ScopedDeclaration?) =
         visitDeclarationSequence(file.declarations, data)
@@ -22,42 +23,24 @@ class ImplementationsVisitor(
     override fun visitClassDeclaration(
         classDeclaration: KSClassDeclaration,
         data: ScopedDeclaration?
-    ): List<Pair<KClass<*>, ScopedDeclaration>> {
+    ): Map<KClass<*>, List<ScopedDeclaration>> {
         val scopedDeclaration = ScopedDeclaration(data, classDeclaration)
 
         val implementations = classDeclaration.getAllSuperTypes().mapNotNull { superType ->
             interfaceClasses.find { interfaceClass ->
                 interfaceClass.qualifiedName == superType.declaration.qualifiedName?.asString()
             }?.let {
-                Pair(it, scopedDeclaration)
+                Pair(it, listOf(scopedDeclaration))
             }
-        }.toList()
+        }.toMap()
 
-        return implementations +
-            visitDeclarationSequence(classDeclaration.declarations, scopedDeclaration)
+        return implementations.merge(visitDeclarationSequence(classDeclaration.declarations, scopedDeclaration))
     }
 
-    private fun visitDeclarationSequence(declarations: Sequence<KSDeclaration>, data: ScopedDeclaration?): List<Pair<KClass<*>, ScopedDeclaration>> {
-        return declarations
+    private fun visitDeclarationSequence(declarations: Sequence<KSDeclaration>, data: ScopedDeclaration?): Map<KClass<*>, List<ScopedDeclaration>> =
+        declarations
             .filterIsInstance<KSClassDeclaration>()
-            .flatMap { visitClassDeclaration(it, data) }
-            .toList()
-    }
-
-    companion object {
-        /**
-         * Convenience function to convert from a list of pairs to a map with a list.
-         */
-        fun List<Pair<KClass<*>, ScopedDeclaration>>.toMapOfLists(): Map<KClass<*>, List<ScopedDeclaration>> {
-            return this.fold(mutableMapOf()) { acc, (interfaceClass, implementation) ->
-                val implementations = acc[interfaceClass]?.let {
-                    it + implementation
-                } ?: listOf(implementation)
-                acc[interfaceClass] = implementations
-                acc
-            }
-        }
-    }
+            .fold(emptyMap()) { acc, file -> acc.merge(visitClassDeclaration(file, data)) }
 }
 
 /**

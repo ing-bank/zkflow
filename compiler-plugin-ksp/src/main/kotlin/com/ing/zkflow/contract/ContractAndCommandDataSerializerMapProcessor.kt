@@ -23,16 +23,16 @@ import kotlin.math.absoluteValue
 import kotlin.random.Random
 import kotlin.reflect.KClass
 
-class ContractAndCommandDataSerializerMapProcessor<I : Any, T : Any>(
-    override val interfaceClass: KClass<I>,
-    private val superClass: KClass<T>,
+class ContractAndCommandDataSerializerMapProcessor<T : Any>(
+    override val interfaceClass: KClass<T>,
+    private val producerInterface: KClass<in T>,
     private val codeGenerator: CodeGenerator
-) : ImplementationsProcessor<I> {
+) : ImplementationsProcessor<T> {
     override fun process(implementations: List<ScopedDeclaration>): List<KSAnnotated> {
         val uid = Random.nextInt().absoluteValue
         val packageName = "com.ing.zkflow.serialization"
-        val className = "${superClass.simpleName}SerializerMapProvider$uid"
-        val superinterface = when (superClass) {
+        val className = "${producerInterface.simpleName}SerializerMapProvider$uid"
+        val superinterface = when (producerInterface) {
             ContractState::class -> ZKContractStateSerializerMapProvider::class
             CommandData::class -> ZkCommandDataSerializerMapProvider::class
             else -> error("Indexes of only either `${ContractState::class.qualifiedName}` or `${CommandData::class.qualifiedName}` can be built")
@@ -49,10 +49,10 @@ class ContractAndCommandDataSerializerMapProcessor<I : Any, T : Any>(
                                 List::class.asClassName().parameterizedBy(
                                     Pair::class.asClassName().parameterizedBy(
                                         KClass::class.asClassName().parameterizedBy(
-                                            WildcardTypeName.producerOf(superClass)
+                                            WildcardTypeName.producerOf(producerInterface)
                                         ),
                                         KSerializer::class.asClassName().parameterizedBy(
-                                            WildcardTypeName.producerOf(superClass)
+                                            WildcardTypeName.producerOf(producerInterface)
                                         )
                                     )
                                 )
