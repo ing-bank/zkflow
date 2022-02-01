@@ -1,7 +1,8 @@
-package com.ing.zkflow.ksp
+package com.ing.zkflow.ksp.implementations
 
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.Dependencies
+import com.google.devtools.ksp.symbol.KSAnnotated
 import net.corda.core.internal.packageName
 import java.io.OutputStream
 import java.nio.charset.StandardCharsets
@@ -11,16 +12,14 @@ import kotlin.reflect.KClass
  * This is a stateful generator of "META-INF/services/" files.
  * It remembers previous state, and renders the file including the previous state.
  */
-class MetaInfServicesBuilder(
+class MetaInfServicesProcessor<T : Any>(
     private val codeGenerator: CodeGenerator,
-    private val interfaceClass: KClass<*>,
-) {
+    override val interfaceClass: KClass<T>,
+) : ImplementationsProcessor<T> {
     private var allDiscoveredImplementations = mutableListOf<ScopedDeclaration>()
 
     @Suppress("SpreadOperator")
-    fun createOrUpdate(
-        implementations: List<ScopedDeclaration>
-    ) {
+    override fun process(implementations: List<ScopedDeclaration>): List<KSAnnotated> {
         allDiscoveredImplementations.addAll(implementations)
         codeGenerator.createNewFile(
             Dependencies(
@@ -37,9 +36,12 @@ class MetaInfServicesBuilder(
                 .map { it.java.qualifiedName }
                 .joinToString("\n") { it }
         )
+        return emptyList()
     }
-}
 
-private fun OutputStream.appendText(text: String) = use {
-    write(text.toByteArray(StandardCharsets.UTF_8))
+    companion object {
+        private fun OutputStream.appendText(text: String) = use {
+            write(text.toByteArray(StandardCharsets.UTF_8))
+        }
+    }
 }

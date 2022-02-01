@@ -1,10 +1,11 @@
-package com.ing.zkflow.ksp
+package com.ing.zkflow.ksp.implementations
 
 import com.google.devtools.ksp.getAllSuperTypes
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSNode
+import com.ing.zkflow.ksp.KSAbstractVisitor
 import kotlin.reflect.KClass
 
 /**
