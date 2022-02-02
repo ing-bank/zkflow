@@ -111,7 +111,7 @@ public class TestContract : Contract {
                 buildFolder =
                     File("${System.getProperty("user.dir")}/../zinc-platform-sources/build/circuits/move")
             }
-            inputs { private(TestState::class) at 0 }
+            inputs { TestState::class at 0 }
             outputs { TestState::class at 0 }
             numberOfSigners = 2
         }
@@ -149,8 +149,8 @@ public class TestContract : Contract {
                     File("${System.getProperty("user.dir")}/../zinc-platform-sources/build/circuits/move_bidirectional")
             }
             inputs {
-                private(TestState::class) at 0
-                private(TestState::class) at 1
+                TestState::class at 0
+                TestState::class at 1
             }
             outputs {
                 TestState::class at 0

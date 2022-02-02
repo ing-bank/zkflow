@@ -3,6 +3,10 @@ package com.ing.zkflow.common.transactions
 import co.paralleluniverse.strands.Strand
 import com.ing.zkflow.common.contracts.ZKContractState
 import com.ing.zkflow.common.serialization.BFLSerializationScheme
+import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
+import com.ing.zkflow.node.services.ServiceNames
+import com.ing.zkflow.node.services.ZKVerifierTransactionStorage
+import com.ing.zkflow.node.services.getCordaServiceFromConfig
 import net.corda.core.contracts.AttachmentConstraint
 import net.corda.core.contracts.AutomaticPlaceholderConstraint
 import net.corda.core.contracts.Command
@@ -126,11 +130,32 @@ class ZKTransactionBuilder(
         val resolvedTransactionMetadata = this.zkTransactionMetadata()
         resolvedTransactionMetadata.verify(this)
 
+        enforcePrivateInputsAndReferences(resolvedTransactionMetadata, services)
+
         val serializationProperties = mapOf<Any, Any>(
             BFLSerializationScheme.CONTEXT_KEY_TRANSACTION_METADATA to resolvedTransactionMetadata
         )
 
         return builder.toWireTransaction(services, serializationSchemeId, serializationProperties)
+    }
+
+    private fun enforcePrivateInputsAndReferences(
+        resolvedTransactionMetadata: ResolvedZKTransactionMetadata,
+        services: ServicesForResolution
+    ) {
+        val stateRefs = (resolvedTransactionMetadata.privateInputs + resolvedTransactionMetadata.privateReferences).filter { it.forcePrivate }
+
+        if (stateRefs.isNotEmpty()) {
+            val serviceHub = serviceHub ?: if (services is ServiceHub) services else error("ServiceHub is required to enforce inputs visibility")
+            val zkStorage = serviceHub.getCordaServiceFromConfig<ZKVerifierTransactionStorage>(ServiceNames.ZK_VERIFIER_TX_STORAGE)
+
+            stateRefs.forEach {
+                val stateRef = inputStates()[it.index]
+                val tx = zkStorage.getTransaction(stateRef.txhash)?.tx ?: error("Transaction not found with ID: ${stateRef.txhash}")
+                val isPrivate = tx.zkTransactionMetadata().privateOutputs.find { output -> output.index == stateRef.index }?.private ?: false
+                if (!isPrivate) error("Utxo $stateRef should be private, but it is public")
+            }
+        }
     }
 
     /**

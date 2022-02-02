@@ -45,8 +45,8 @@ class ZKCommandMetadataTest {
                 numberOfSigners = 2
 
                 inputs {
-                    private(DummyState::class) at 0
-                    private(TestState::class) at 1
+                    DummyState::class at 0
+                    TestState::class at 1
                 }
             }
         }
@@ -71,8 +71,8 @@ class ZKCommandMetadataTest {
                     numberOfSigners = 2
 
                     inputs {
-                        private(DummyState::class) at 1
-                        private(TestState::class) at 1
+                        DummyState::class at 1
+                        TestState::class at 1
                     }
                 }
             }
@@ -86,8 +86,8 @@ class ZKCommandMetadataTest {
                     numberOfSigners = 2
 
                     references {
-                        private(DummyState::class) at 0
-                        private(TestState::class) at 0
+                        DummyState::class at 0
+                        TestState::class at 0
                     }
                 }
             }
@@ -208,9 +208,9 @@ class MockAssetContract : Contract {
         @Transient
         override val metadata = commandMetadata {
             numberOfSigners = 2
-            inputs { private(MockAsset::class) at 0 }
+            inputs { MockAsset::class at 0 }
             outputs { MockAsset::class at 0 }
-            references { private(MockAuditContract.Approval::class) at 0 }
+            references { MockAuditContract.Approval::class at 0 }
             timeWindow = true
 
             network {
