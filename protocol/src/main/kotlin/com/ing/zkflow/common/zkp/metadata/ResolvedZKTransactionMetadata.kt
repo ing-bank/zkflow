@@ -65,7 +65,7 @@ data class ResolvedZKTransactionMetadata(
         return when (groupIndex) {
             ComponentGroupEnum.INPUTS_GROUP.ordinal -> true // References are always visible, to get State's visibility call 'getUtxoVisibility'
             ComponentGroupEnum.REFERENCES_GROUP.ordinal -> true // References are always visible, to get State's visibility call 'getUtxoVisibility'
-            ComponentGroupEnum.OUTPUTS_GROUP.ordinal -> getVisibility(privateOutputs, componentIndex) != ZkpVisibility.Private
+            ComponentGroupEnum.OUTPUTS_GROUP.ordinal -> privateOutputs.find { it.index == componentIndex }?.private?.not() ?: true
             // ComponentGroupEnum.SIGNERS_GROUP.ordinal -> Signers visibility depends on Commands visibility, now we don't support private Commands so both groups are always Public
             else -> true // all other groups have visibility 'Public' by default at the moment, may change in future
         }
@@ -73,20 +73,12 @@ data class ResolvedZKTransactionMetadata(
 
     fun isVisibleInWitness(groupIndex: Int, componentIndex: Int): Boolean {
         return when (groupIndex) {
-            ComponentGroupEnum.INPUTS_GROUP.ordinal -> getVisibility(privateInputs, componentIndex) // Here we return UTXO visibility, not StateRef visibility (StateRefs are always visible)
-            ComponentGroupEnum.REFERENCES_GROUP.ordinal -> getVisibility(privateReferences, componentIndex) // Here we return UTXO visibility, not StateRef visibility (StateRefs are always visible)
-            ComponentGroupEnum.OUTPUTS_GROUP.ordinal -> getVisibility(privateOutputs, componentIndex) != ZkpVisibility.Public
+            ComponentGroupEnum.INPUTS_GROUP.ordinal -> privateInputs.any { it.index == componentIndex } // Here we return UTXO visibility, not StateRef visibility (StateRefs never go to witness)
+            ComponentGroupEnum.REFERENCES_GROUP.ordinal -> privateReferences.any { it.index == componentIndex } // Here we return UTXO visibility, not StateRef visibility (StateRefs never go to witness)
+            ComponentGroupEnum.OUTPUTS_GROUP.ordinal -> privateOutputs.any { it.index == componentIndex }
             // ComponentGroupEnum.SIGNERS_GROUP.ordinal -> Signers visibility depends on Commands visibility, now we don't support private Commands so both groups are always Public
             else -> false // all other groups have visibility 'Public' by default at the moment, may change in future
         }
-    }
-
-    private fun getVisibility(group: List<ZKProtectedComponent>, componentIndex: Int): ZkpVisibility {
-        return group.find { it.index == componentIndex }?.visibility ?: ZkpVisibility.Public // Everything is public by default unless explicitly marked as Private/Mixed
-    }
-
-    private fun getVisibility(group: List<ZKReference>, componentIndex: Int): Boolean {
-        return group.find { it.index == componentIndex }?.forcePrivate ?: false // Everything is public by default unless explicitly marked as Private/Mixed
     }
 
     fun isOnlyPrivateUtxoAllowed(groupIndex: Int, componentIndex: Int): Boolean {
@@ -105,7 +97,7 @@ data class ResolvedZKTransactionMetadata(
             val existing = acc.find { it.index == new.index }
             if (existing == null) {
                 acc.add(new)
-            } else if (existing.visibility.isStricterThan(new.visibility)) {
+            } else if (new.private) {
                 // we choose the most private visibility requested
                 acc.remove(existing)
                 acc.add(new)

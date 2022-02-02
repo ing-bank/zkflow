@@ -153,22 +153,6 @@ data class ZincType(
     val fileName: String
 )
 
-/**
- * Defines a component visibility inside transaction.
- * "Public" components are plaintext and visible to everybody during tx creation and backchain validation, but not available inside ZKP circuit due to performance optimization.
- * "Private" components are shielded by ZKP and only visible to transaction participants, they are available inside ZKP circuit but not during backchain validation.
- * "Mixed" components are visible both in ZKP circuit and plaintext transaction, they are used when we essentially public components are checked inside ZKP circuit.
- * For now we only use "Private" and "Mixed" in our DSL.
- * Smallest ordinal is most restrictive, larger is least restrictive
- */
-enum class ZkpVisibility {
-    Private, Mixed, Public
-}
-
-fun ZkpVisibility.isStricterThan(other: ZkpVisibility): Boolean {
-    return this < other
-}
-
 interface ZKTypedElement {
     val type: KClass<out ContractState>
 }
@@ -181,7 +165,7 @@ data class ZKReference(override val type: KClass<out ContractState>, val forcePr
 /**
  * Describes the private component at a certain index in transaction's component list.
  */
-data class ZKProtectedComponent(override val type: KClass<out ContractState>, val visibility: ZkpVisibility, val index: Int) : ZKTypedElement
+data class ZKProtectedComponent(override val type: KClass<out ContractState>, val private: Boolean, val index: Int) : ZKTypedElement
 
 @ZKCommandMetadataDSL
 class ZKReferenceList : ArrayList<ZKReference>() {
@@ -200,10 +184,10 @@ class ZKReferenceList : ArrayList<ZKReference>() {
 @ZKCommandMetadataDSL
 class ZKProtectedComponentList : ArrayList<ZKProtectedComponent>() {
 
-    fun public(type: KClass<out ContractState>): Pair<KClass<out ContractState>, ZkpVisibility> = type to ZkpVisibility.Mixed
+    fun public(type: KClass<out ContractState>): Pair<KClass<out ContractState>, Boolean> = type to false
 
-    infix fun KClass<out ContractState>.at(index: Int) = add(ZKProtectedComponent(this, ZkpVisibility.Private, index))
-    infix fun Pair<KClass<out ContractState>, ZkpVisibility>.at(index: Int) = add(ZKProtectedComponent(this.first, this.second, index))
+    infix fun KClass<out ContractState>.at(index: Int) = add(ZKProtectedComponent(this, true, index))
+    infix fun Pair<KClass<out ContractState>, Boolean>.at(index: Int) = add(ZKProtectedComponent(this.first, this.second, index))
 
     override fun add(element: ZKProtectedComponent): Boolean {
         if (any { it.index == element.index }) error("Component visibility is already set for index ${element.index}")
