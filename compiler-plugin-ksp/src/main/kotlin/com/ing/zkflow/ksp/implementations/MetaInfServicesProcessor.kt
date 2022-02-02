@@ -3,9 +3,8 @@ package com.ing.zkflow.ksp.implementations
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.Dependencies
 import com.google.devtools.ksp.symbol.KSAnnotated
+import com.ing.zkflow.util.appendText
 import net.corda.core.internal.packageName
-import java.io.OutputStream
-import java.nio.charset.StandardCharsets
 import kotlin.reflect.KClass
 
 /**
@@ -37,11 +36,5 @@ class MetaInfServicesProcessor<T : Any>(
                 .joinToString("\n") { it }
         )
         return emptyList()
-    }
-
-    companion object {
-        private fun OutputStream.appendText(text: String) = use {
-            write(text.toByteArray(StandardCharsets.UTF_8))
-        }
     }
 }

@@ -17,30 +17,22 @@ class ContractAndCommandDataSymbolProcessorFactory(
         environment.codeGenerator,
         ZKTransactionMetadataCommandData::class
     )
-    private val zkContractStateMapMetaInfServicesProcessor = MetaInfServicesProcessor(
-        environment.codeGenerator,
-        ZKContractStateSerializerMapProvider::class
-    )
-    private val zkCommandDataMapMetaInfServicesProcessor = MetaInfServicesProcessor(
-        environment.codeGenerator,
-        ZkCommandDataSerializerMapProvider::class
-    )
     private val contractStateMapProcessor = ContractAndCommandDataSerializerMapProcessor(
         ZKOwnableState::class,
         ContractState::class,
+        ZKContractStateSerializerMapProvider::class,
         environment.codeGenerator
     )
     private val commandDataMapProcessor = ContractAndCommandDataSerializerMapProcessor(
         ZKTransactionMetadataCommandData::class,
         CommandData::class,
+        ZkCommandDataSerializerMapProvider::class,
         environment.codeGenerator
     )
 
     val get = ImplementationsSymbolProcessor(
         listOf(
             zkCommandMetaInfServicesProcessor,
-            zkContractStateMapMetaInfServicesProcessor,
-            zkCommandDataMapMetaInfServicesProcessor,
             contractStateMapProcessor,
             commandDataMapProcessor
         )
