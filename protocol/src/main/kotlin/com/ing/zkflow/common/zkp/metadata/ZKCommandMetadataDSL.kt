@@ -57,7 +57,7 @@ data class ZKCircuit(
             return mapping.toMap()
         }
 
-        private fun ZKProtectedComponentList.toZincTypes() = map { it.type to stateKClassToZincType(it.type) }
+        private fun List<ZKTypedElement>.toZincTypes() = map { it.type to stateKClassToZincType(it.type) }
 
         private fun stateKClassToZincType(kClass: KClass<out ContractState>): ZincType {
             val simpleName = kClass.simpleName ?: error("classes used in transactions must be a named class")
@@ -169,15 +169,40 @@ fun ZkpVisibility.isStricterThan(other: ZkpVisibility): Boolean {
     return this < other
 }
 
+interface ZKTypedElement {
+    val type: KClass<out ContractState>
+}
+
+/**
+ * Describes the StateRefs (inputs or references) contents of which that should be available inside ZKP circuit
+ */
+data class ZKReference(override val type: KClass<out ContractState>, val forcePrivate: Boolean, val index: Int) : ZKTypedElement
+
 /**
  * Describes the private component at a certain index in transaction's component list.
  */
-data class ZKProtectedComponent(val type: KClass<out ContractState>, val visibility: ZkpVisibility, val index: Int)
+data class ZKProtectedComponent(override val type: KClass<out ContractState>, val visibility: ZkpVisibility, val index: Int) : ZKTypedElement
+
+@ZKCommandMetadataDSL
+class ZKReferenceList : ArrayList<ZKReference>() {
+
+    fun private(type: KClass<out ContractState>): Pair<KClass<out ContractState>, Boolean> = type to true
+
+    infix fun KClass<out ContractState>.at(index: Int) = (this to false).at(index)
+    infix fun Pair<KClass<out ContractState>, Boolean>.at(index: Int) = add(ZKReference(this.first, this.second, index))
+
+    override fun add(element: ZKReference): Boolean {
+        if (any { it.index == element.index }) error("Component visibility is already set for index ${element.index}")
+        return super.add(element)
+    }
+}
 
 @ZKCommandMetadataDSL
 class ZKProtectedComponentList : ArrayList<ZKProtectedComponent>() {
-    infix fun ZKProtectedComponentList.private(type: KClass<out ContractState>): Pair<KClass<out ContractState>, ZkpVisibility> = type to ZkpVisibility.Private
-    infix fun ZKProtectedComponentList.mixed(type: KClass<out ContractState>): Pair<KClass<out ContractState>, ZkpVisibility> = type to ZkpVisibility.Mixed
+
+    fun public(type: KClass<out ContractState>): Pair<KClass<out ContractState>, ZkpVisibility> = type to ZkpVisibility.Mixed
+
+    infix fun KClass<out ContractState>.at(index: Int) = add(ZKProtectedComponent(this, ZkpVisibility.Private, index))
     infix fun Pair<KClass<out ContractState>, ZkpVisibility>.at(index: Int) = add(ZKProtectedComponent(this.first, this.second, index))
 
     override fun add(element: ZKProtectedComponent): Boolean {
@@ -207,8 +232,8 @@ class ZKCommandMetadata(val commandKClass: KClass<out CommandData>) {
 
     var numberOfSigners = 0
 
-    val privateInputs = ZKProtectedComponentList()
-    val privateReferences = ZKProtectedComponentList()
+    val privateInputs = ZKReferenceList()
+    val privateReferences = ZKReferenceList()
     val privateOutputs = ZKProtectedComponentList()
 
     var timeWindow = false
@@ -223,8 +248,8 @@ class ZKCommandMetadata(val commandKClass: KClass<out CommandData>) {
         return zkNetwork!!
     }
 
-    fun inputs(init: ZKProtectedComponentList.() -> Unit) = privateInputs.apply(init)
-    fun references(init: ZKProtectedComponentList.() -> Unit) = privateReferences.apply(init)
+    fun inputs(init: ZKReferenceList.() -> Unit) = privateInputs.apply(init)
+    fun references(init: ZKReferenceList.() -> Unit) = privateReferences.apply(init)
     fun outputs(init: ZKProtectedComponentList.() -> Unit) = privateOutputs.apply(init)
 
     fun resolved(): ResolvedZKCommandMetadata =

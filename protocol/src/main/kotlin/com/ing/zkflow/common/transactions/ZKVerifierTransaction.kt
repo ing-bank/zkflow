@@ -1,6 +1,5 @@
 package com.ing.zkflow.common.transactions
 
-import com.ing.zkflow.common.zkp.metadata.ZkpVisibility
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.crypto.DigestService
 import net.corda.core.crypto.MerkleTree
@@ -151,7 +150,7 @@ class ZKVerifierTransaction internal constructor(
                 val groupIndex = componentGroup.groupIndex
 
                 componentGroup.components.forEachIndexed { componentIndex, serialisedComponent ->
-                    if (zkTransactionMetadata.getComponentVisibility(groupIndex, componentIndex) != ZkpVisibility.Private) {
+                    if (zkTransactionMetadata.isVisibleInPublicTransaction(groupIndex, componentIndex)) {
 
                         // Init lists if they don't exist
                         if (!filteredSerialisedComponents.containsKey(groupIndex)) {

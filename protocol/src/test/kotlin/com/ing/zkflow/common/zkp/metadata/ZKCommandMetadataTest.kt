@@ -101,8 +101,8 @@ class ZKCommandMetadataTest {
                     numberOfSigners = 2
 
                     outputs {
-                        private(DummyState::class) at 21
-                        private(TestState::class) at 21
+                        DummyState::class at 21
+                        TestState::class at 21
                     }
                 }
             }
@@ -167,7 +167,7 @@ class MockAuditContract : Contract {
         @Transient
         override val metadata = commandMetadata {
             numberOfSigners = 1
-            outputs { private(Approval::class) at 0 }
+            outputs { Approval::class at 0 }
             timeWindow = true
         }
     }
@@ -209,7 +209,7 @@ class MockAssetContract : Contract {
         override val metadata = commandMetadata {
             numberOfSigners = 2
             inputs { private(MockAsset::class) at 0 }
-            outputs { private(MockAsset::class) at 0 }
+            outputs { MockAsset::class at 0 }
             references { private(MockAuditContract.Approval::class) at 0 }
             timeWindow = true
 
@@ -228,7 +228,7 @@ class MockAssetContract : Contract {
         @Transient
         override val metadata = commandMetadata {
             numberOfSigners = 1
-            outputs { private(MockAsset::class) at 0 }
+            outputs { MockAsset::class at 0 }
             timeWindow = true
         }
     }
@@ -242,7 +242,7 @@ class MockAssetContract : Contract {
         @Transient
         override val metadata = commandMetadata {
             numberOfSigners = 1
-            outputs { private(MockAsset::class) at 0 }
+            outputs { MockAsset::class at 0 }
             timeWindow = true
         }
     }
@@ -265,7 +265,7 @@ class MockAssetContract : Contract {
         @Transient
         override val metadata = commandMetadata {
             numberOfSigners = 1
-            outputs { private(MockAsset::class) at 0 }
+            outputs { MockAsset::class at 0 }
             timeWindow = true
         }
     }

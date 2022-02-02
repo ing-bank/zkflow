@@ -26,9 +26,9 @@ object MyContract : Contract {
                 private(MyOtherState::class) at 2
             }
             outputs {
-                private(MyState::class) at 0
-                private(MyState::class) at 1
-                private(MyState::class) at 2
+                MyState::class at 0
+                MyState::class at 1
+                MyState::class at 2
             }
             references {
                 private(MyState::class) at 0

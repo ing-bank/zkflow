@@ -15,11 +15,6 @@ import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
-import net.corda.core.contracts.AlwaysAcceptAttachmentConstraint
-import net.corda.core.contracts.StateAndRef
-import net.corda.core.contracts.StateRef
-import net.corda.core.contracts.TransactionState
-import net.corda.core.crypto.SecureHash
 import net.corda.testing.common.internal.testNetworkParameters
 import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
@@ -50,7 +45,7 @@ class ZKVerifierTransactionTest {
                             File("${System.getProperty("user.dir")}/../zinc-platform-sources/build/circuits/move")
                     }
                     outputs {
-                        private(TestState::class) at 1
+                        TestState::class at 1
                     }
                     numberOfSigners = 2
                 }
@@ -95,7 +90,7 @@ class ZKVerifierTransactionTest {
                             File("${System.getProperty("user.dir")}/../zinc-platform-sources/build/circuits/move")
                     }
                     outputs {
-                        private(TestState::class) at 0
+                        TestState::class at 0
                     }
                     numberOfSigners = 2
                 }
@@ -146,9 +141,9 @@ class ZKVerifierTransactionTest {
                             File("${System.getProperty("user.dir")}/../zinc-platform-sources/build/circuits/move")
                     }
                     outputs {
-                        private(TestState::class) at 2
-                        mixed(TestState::class) at 3
-                        private(TestState::class) at 4
+                        TestState::class at 2
+                        public(TestState::class) at 3
+                        TestState::class at 4
                     }
                     numberOfSigners = 2
                 }

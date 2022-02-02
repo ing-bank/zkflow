@@ -23,8 +23,8 @@ data class ResolvedZKTransactionMetadata(
         require(commands.map { it.network }.distinct().size == 1) { ERROR_NETWORKS_DO_NOT_MATCH }
     }
 
-    val privateInputs = commands.fold(mutableListOf<ZKProtectedComponent>()) { acc, command -> mergeComponentVisibility(acc, command.privateInputs) }
-    val privateReferences = commands.fold(mutableListOf<ZKProtectedComponent>()) { acc, command -> mergeComponentVisibility(acc, command.privateReferences) }
+    val privateInputs = commands.fold(mutableListOf<ZKReference>()) { acc, command -> mergeUtxoVisibility(acc, command.privateInputs) }
+    val privateReferences = commands.fold(mutableListOf<ZKReference>()) { acc, command -> mergeUtxoVisibility(acc, command.privateReferences) }
     val privateOutputs = commands.fold(mutableListOf<ZKProtectedComponent>()) { acc, command -> mergeComponentVisibility(acc, command.privateOutputs) }
 
     /**
@@ -61,26 +61,40 @@ data class ResolvedZKTransactionMetadata(
         commands.forEach { it.verify(ltx) }
     }
 
-    fun getComponentVisibility(groupIndex: Int, componentIndex: Int): ZkpVisibility {
+    fun isVisibleInPublicTransaction(groupIndex: Int, componentIndex: Int): Boolean {
         return when (groupIndex) {
-            ComponentGroupEnum.INPUTS_GROUP.ordinal -> ZkpVisibility.Public // References are always visible, to know State's visibility call 'getUtxoVisibility'
-            ComponentGroupEnum.REFERENCES_GROUP.ordinal -> ZkpVisibility.Public // References are always visible, to know State's visibility call 'getUtxoVisibility'
-            ComponentGroupEnum.OUTPUTS_GROUP.ordinal -> getVisibility(privateOutputs, componentIndex)
+            ComponentGroupEnum.INPUTS_GROUP.ordinal -> true // References are always visible, to get State's visibility call 'getUtxoVisibility'
+            ComponentGroupEnum.REFERENCES_GROUP.ordinal -> true // References are always visible, to get State's visibility call 'getUtxoVisibility'
+            ComponentGroupEnum.OUTPUTS_GROUP.ordinal -> getVisibility(privateOutputs, componentIndex) != ZkpVisibility.Private
             // ComponentGroupEnum.SIGNERS_GROUP.ordinal -> Signers visibility depends on Commands visibility, now we don't support private Commands so both groups are always Public
-            else -> ZkpVisibility.Public // all other groups have visibility 'Public' by default at the moment, may change in future
+            else -> true // all other groups have visibility 'Public' by default at the moment, may change in future
         }
     }
 
-    fun getUtxoVisibility(groupIndex: Int, componentIndex: Int): ZkpVisibility {
+    fun isVisibleInWitness(groupIndex: Int, componentIndex: Int): Boolean {
         return when (groupIndex) {
-            ComponentGroupEnum.INPUTS_GROUP.ordinal -> getVisibility(privateInputs, componentIndex)
-            ComponentGroupEnum.REFERENCES_GROUP.ordinal -> getVisibility(privateReferences, componentIndex)
-            else -> error("Only Inputs and References UTXOs are allowed")
+            ComponentGroupEnum.INPUTS_GROUP.ordinal -> getVisibility(privateInputs, componentIndex) // Here we return UTXO visibility, not StateRef visibility (StateRefs are always visible)
+            ComponentGroupEnum.REFERENCES_GROUP.ordinal -> getVisibility(privateReferences, componentIndex) // Here we return UTXO visibility, not StateRef visibility (StateRefs are always visible)
+            ComponentGroupEnum.OUTPUTS_GROUP.ordinal -> getVisibility(privateOutputs, componentIndex) != ZkpVisibility.Public
+            // ComponentGroupEnum.SIGNERS_GROUP.ordinal -> Signers visibility depends on Commands visibility, now we don't support private Commands so both groups are always Public
+            else -> false // all other groups have visibility 'Public' by default at the moment, may change in future
         }
     }
 
     private fun getVisibility(group: List<ZKProtectedComponent>, componentIndex: Int): ZkpVisibility {
-        return group.find { it.index == componentIndex }?.visibility ?: ZkpVisibility.Public // Everything visible by default unless explicitly marked as Private/Mixed
+        return group.find { it.index == componentIndex }?.visibility ?: ZkpVisibility.Public // Everything is public by default unless explicitly marked as Private/Mixed
+    }
+
+    private fun getVisibility(group: List<ZKReference>, componentIndex: Int): Boolean {
+        return group.find { it.index == componentIndex }?.forcePrivate ?: false // Everything is public by default unless explicitly marked as Private/Mixed
+    }
+
+    fun isOnlyPrivateUtxoAllowed(groupIndex: Int, componentIndex: Int): Boolean {
+        return when (groupIndex) {
+            ComponentGroupEnum.INPUTS_GROUP.ordinal -> privateInputs.find { it.index == componentIndex }?.forcePrivate ?: false // We don't care about utxo visibility unless specifically marked with 'forcePrivate'
+            ComponentGroupEnum.REFERENCES_GROUP.ordinal -> privateReferences.find { it.index == componentIndex }?.forcePrivate ?: false // We don't care about utxo visibility unless specifically marked with 'forcePrivate'
+            else -> error("Only Inputs and References UTXOs are allowed")
+        }
     }
 
     private fun mergeComponentVisibility(
@@ -92,7 +106,24 @@ data class ResolvedZKTransactionMetadata(
             if (existing == null) {
                 acc.add(new)
             } else if (existing.visibility.isStricterThan(new.visibility)) {
-                // we choose the lowest visibility requested
+                // we choose the most private visibility requested
+                acc.remove(existing)
+                acc.add(new)
+            }
+        }
+        return acc
+    }
+
+    private fun mergeUtxoVisibility(
+        acc: MutableList<ZKReference>,
+        components: List<ZKReference>
+    ): MutableList<ZKReference> {
+        components.forEach { new ->
+            val existing = acc.find { it.index == new.index }
+            if (existing == null) {
+                acc.add(new)
+            } else if (new.forcePrivate) {
+                // we choose the most private visibility requested
                 acc.remove(existing)
                 acc.add(new)
             }

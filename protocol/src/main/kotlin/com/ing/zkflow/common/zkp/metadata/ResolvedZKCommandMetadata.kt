@@ -68,8 +68,8 @@ data class ResolvedZKCommandMetadata(
     val circuit: ResolvedZKCircuit,
     val commandKClass: KClass<out CommandData>,
     val numberOfSigners: Int,
-    val privateInputs: List<ZKProtectedComponent>,
-    val privateReferences: List<ZKProtectedComponent>,
+    val privateInputs: List<ZKReference>,
+    val privateReferences: List<ZKReference>,
     val privateOutputs: List<ZKProtectedComponent>,
     val timeWindow: Boolean,
     val network: ResolvedZKNetwork
@@ -91,7 +91,7 @@ data class ResolvedZKCommandMetadata(
     val privateReferenceTypeGroups = countTypes(privateReferences)
     val privateOutputTypeGroups = countTypes(privateOutputs)
 
-    private fun countTypes(components: List<ZKProtectedComponent>): Map<KClass<out ContractState>, Int> {
+    private fun countTypes(components: List<ZKTypedElement>): Map<KClass<out ContractState>, Int> {
         val result = mutableMapOf<KClass<out ContractState>, Int>()
 
         components.forEach {
