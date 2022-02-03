@@ -15,6 +15,8 @@ import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
+import net.corda.core.contracts.ComponentGroupEnum
+import net.corda.core.crypto.PartialMerkleTree
 import net.corda.testing.common.internal.testNetworkParameters
 import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
@@ -65,6 +67,13 @@ class ZKVerifierTransactionTest {
 
             vtx.outputHashes.size shouldBe 2
             vtx.outputs.size shouldBe 1
+
+            val outputsGroup = vtx.filteredComponentGroups.find { it.groupIndex == ComponentGroupEnum.OUTPUTS_GROUP.ordinal }!!
+            outputsGroup.components.size shouldBe 1
+            assert(outputsGroup.partialMerkleTree.root is PartialMerkleTree.PartialTree.Node)
+            val rootNode = outputsGroup.partialMerkleTree.root as PartialMerkleTree.PartialTree.Node
+            assert(rootNode.left is PartialMerkleTree.PartialTree.IncludedLeaf) // means that output 0 is public (included in a tx)
+            assert(rootNode.right is PartialMerkleTree.PartialTree.Leaf) // means that output 1 is private
 
             vtx.outputs.map { it.data } shouldContain publicOutput
             vtx.outputs.map { it.data } shouldNotContain privateOutput
