@@ -3,6 +3,7 @@ package com.ing.zkflow.contract
 import com.ing.zkflow.common.contracts.ZKTransactionMetadataCommandData
 import com.ing.zkflow.serialization.ZKContractStateSerializerMapProvider
 import com.ing.zkflow.serialization.ZkCommandDataSerializerMapProvider
+import com.ing.zkflow.stateandcommanddata.ContractStateAndCommandDataSymbolProcessorProvider
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import com.tschuchort.compiletesting.symbolProcessorProviders
@@ -16,7 +17,7 @@ import java.io.ByteArrayOutputStream
 import java.nio.charset.StandardCharsets
 import java.nio.file.Paths
 
-internal class ContractAndCommandDataSymbolProcessorProviderTest {
+internal class ContractStateAndCommandDataSymbolProcessorProviderTest {
     @Test
     fun `ZKTransactionProcessor should correctly register stuff`() {
         val outputStream = ByteArrayOutputStream()
@@ -81,7 +82,7 @@ internal class ContractAndCommandDataSymbolProcessorProviderTest {
     ) = KotlinCompilation().apply {
         sources = listOf(kotlinSource)
 
-        symbolProcessorProviders = listOf(ContractAndCommandDataSymbolProcessorProvider())
+        symbolProcessorProviders = listOf(ContractStateAndCommandDataSymbolProcessorProvider())
 
         inheritClassPath = true
         messageOutputStream = BufferedOutputStream(outputStream) // see diagnostics in real time

@@ -1,14 +1,10 @@
-package com.ing.zkflow.contract
+package com.ing.zkflow.stateandcommanddata
 
 import com.google.devtools.ksp.processing.CodeGenerator
-import com.google.devtools.ksp.processing.Dependencies
-import com.google.devtools.ksp.symbol.KSAnnotated
 import com.ing.zkflow.ksp.implementations.ImplementationsProcessor
+import com.ing.zkflow.ksp.implementations.Registration
 import com.ing.zkflow.ksp.implementations.ScopedDeclaration
-import com.ing.zkflow.serialization.ZKContractStateSerializerMapProvider
 import com.ing.zkflow.serialization.ZKDataProvider
-import com.ing.zkflow.serialization.ZkCommandDataSerializerMapProvider
-import com.ing.zkflow.util.appendText
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
@@ -20,34 +16,26 @@ import com.squareup.kotlinpoet.buildCodeBlock
 import com.squareup.kotlinpoet.ksp.writeTo
 import com.squareup.kotlinpoet.withIndent
 import kotlinx.serialization.KSerializer
-import net.corda.core.contracts.CommandData
-import net.corda.core.contracts.ContractState
-import net.corda.core.internal.packageName
 import kotlin.math.absoluteValue
 import kotlin.random.Random
 import kotlin.reflect.KClass
 
-class ContractAndCommandDataSerializerMapProcessor<T : Any>(
+class ContractStateAndCommandDataSerializerMapProcessor<T : Any>(
     override val interfaceClass: KClass<T>,
     private val producerInterface: KClass<in T>,
     private val mapProviderInterface: KClass<out ZKDataProvider<in T>>,
     private val codeGenerator: CodeGenerator
 ) : ImplementationsProcessor<T> {
-    private val allRegisteredProviders = mutableListOf<String>()
 
-    override fun process(implementations: List<ScopedDeclaration>): List<KSAnnotated> {
+    override fun process(implementations: List<ScopedDeclaration>): Registration {
         val uid = Random.nextInt().absoluteValue
         val packageName = "com.ing.zkflow.serialization"
         val className = "${producerInterface.simpleName}SerializerMapProvider$uid"
-        val superinterface = when (producerInterface) {
-            ContractState::class -> ZKContractStateSerializerMapProvider::class
-            CommandData::class -> ZkCommandDataSerializerMapProvider::class
-            else -> error("Indexes of only either `${ContractState::class.qualifiedName}` or `${CommandData::class.qualifiedName}` can be built")
-        }
+
         FileSpec.builder(packageName, className)
             .addType(
                 TypeSpec.classBuilder(className)
-                    .addSuperinterface(superinterface)
+                    .addSuperinterface(mapProviderInterface)
                     .addFunction(
                         FunSpec.builder("list")
                             .addModifiers(KModifier.OVERRIDE)
@@ -87,18 +75,6 @@ class ContractAndCommandDataSerializerMapProcessor<T : Any>(
             .build()
             .writeTo(codeGenerator = codeGenerator, aggregating = false)
 
-        registerProvider("$packageName.$className")
-
-        return emptyList()
-    }
-
-    private fun registerProvider(providerClassName: String) {
-        allRegisteredProviders.add(providerClassName)
-        codeGenerator.createNewFile(
-            Dependencies(false),
-            "META-INF/services",
-            mapProviderInterface.packageName,
-            mapProviderInterface.simpleName!!
-        ).appendText(allRegisteredProviders.joinToString("\n") { it })
+        return Registration(mapProviderInterface, listOf("$packageName.$className"))
     }
 }

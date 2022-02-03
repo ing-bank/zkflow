@@ -1,5 +1,6 @@
 package com.ing.zkflow.ksp.implementations
 
+import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.symbol.KSAnnotated
@@ -13,9 +14,11 @@ import kotlin.reflect.KClass
  * [ImplementationsProcessor]s.
  */
 class ImplementationsSymbolProcessor(
-    private val implementationsProcessors: List<ImplementationsProcessor<*>>
+    codeGenerator: CodeGenerator,
+    private val implementationsProcessors: List<ImplementationsProcessor<*>>,
 ) : SymbolProcessor {
     private val visitedFiles: MutableSet<KSFile> = mutableSetOf()
+    private val metaInfServiceRegister = MetaInfServiceRegister(codeGenerator)
 
     private val implementationsVisitor = ImplementationsVisitor(
         implementationsProcessors.map { it.interfaceClass }.distinct()
@@ -29,20 +32,23 @@ class ImplementationsSymbolProcessor(
         val newFiles = allFiles.complement(visitedFiles)
         visitedFiles.addAll(newFiles)
 
-        val implementations: Map<KClass<*>, List<ScopedDeclaration>> = newFiles
-            .fold(emptyMap()) { acc, file ->
+        newFiles
+            .fold(emptyMap<KClass<*>, List<ScopedDeclaration>>()) { acc, file ->
                 acc.merge(implementationsVisitor.visitFile(file, null))
             }
-
-        return implementations.flatMap { (interfaceClass, implementations) ->
-            if (implementations.isNotEmpty()) {
+            .forEach { (kClass, implementations) ->
                 implementationsProcessors
-                    .filter { it.interfaceClass == interfaceClass }
-                    .flatMap { it.process(implementations) }
-            } else {
-                emptyList()
+                    .filter { it.interfaceClass == kClass }
+                    .map { it.process(implementations) }
+                    .forEach {
+                        @Suppress("SpreadOperator")
+                        metaInfServiceRegister.addImplementation(it.providerClass, *it.implementations.toTypedArray())
+                    }
             }
-        }
+
+        metaInfServiceRegister.emit()
+
+        return emptyList()
     }
 
     /**

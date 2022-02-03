@@ -23,7 +23,7 @@ class TestTokenContractTest : SerializerTest {
             TestTokenContract.Create(),
             shouldPrint = true
         ) { _, _ ->
-            // because Create command contains no fields, the mere fact of it serialized and deserialized
+            // because Create command contains no fields, the mere fact of it being serialized and deserialized
             // means the round trip is successful.
         }
     }
