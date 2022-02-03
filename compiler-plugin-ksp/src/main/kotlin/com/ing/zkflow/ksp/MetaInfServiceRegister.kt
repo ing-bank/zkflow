@@ -1,4 +1,4 @@
-package com.ing.zkflow.ksp.implementations
+package com.ing.zkflow.ksp
 
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.Dependencies

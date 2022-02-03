@@ -5,6 +5,7 @@ import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSFile
+import com.ing.zkflow.ksp.MetaInfServiceRegister
 import com.ing.zkflow.util.merge
 import kotlin.reflect.KClass
 

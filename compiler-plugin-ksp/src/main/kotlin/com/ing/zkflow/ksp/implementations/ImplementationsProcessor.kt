@@ -7,7 +7,7 @@ import kotlin.reflect.KClass
  */
 interface ImplementationsProcessor<T : Any> {
     val interfaceClass: KClass<T>
-    fun process(implementations: List<ScopedDeclaration>): Registration
+    fun process(implementations: List<ScopedDeclaration>): ServiceLoaderRegistration
 }
 
-data class Registration(val providerClass: KClass<*>, val implementations: List<String>)
+data class ServiceLoaderRegistration(val providerClass: KClass<*>, val implementations: List<String>)
