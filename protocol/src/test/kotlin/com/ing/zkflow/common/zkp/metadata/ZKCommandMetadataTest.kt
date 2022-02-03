@@ -28,14 +28,6 @@ import java.util.Random
 
 class ZKCommandMetadataTest {
 
-//    private val services = MockServices(
-//        TestIdentity.fixed("ServiceHub"),
-//        testNetworkParameters(minimumPlatformVersion = ZKFlow.REQUIRED_PLATFORM_VERSION),
-//    )
-//    private val approver = TestIdentity.fixed("Approver").party.anonymise()
-//    private val issuer = TestIdentity.fixed("Issuer").party.anonymise()
-//    private val alice = TestIdentity.fixed("Alice").party.anonymise()
-
     @Test
     fun `ZKCommandMetadata DSL happy flow works`() {
         val cmd = object : ZKCommandData {
@@ -108,9 +100,6 @@ class ZKCommandMetadataTest {
             }
         }
     }
-}
-
-val mockSerializers = run {
 }
 
 /**
