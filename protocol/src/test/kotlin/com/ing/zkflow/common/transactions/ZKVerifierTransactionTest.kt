@@ -19,7 +19,6 @@ import net.corda.testing.common.internal.testNetworkParameters
 import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
 import org.junit.jupiter.api.Test
-import java.io.File
 
 class ZKVerifierTransactionTest {
 
@@ -40,14 +39,10 @@ class ZKVerifierTransactionTest {
 
                 @Transient
                 override val metadata: ResolvedZKCommandMetadata = commandMetadata {
-                    circuit {
-                        buildFolder =
-                            File("${System.getProperty("user.dir")}/../zinc-platform-sources/build/circuits/move")
-                    }
                     outputs {
                         TestState::class at 1
                     }
-                    numberOfSigners = 2
+                    numberOfSigners = 1
                 }
 
                 init {
@@ -85,14 +80,10 @@ class ZKVerifierTransactionTest {
 
                 @Transient
                 override val metadata: ResolvedZKCommandMetadata = commandMetadata {
-                    circuit {
-                        buildFolder =
-                            File("${System.getProperty("user.dir")}/../zinc-platform-sources/build/circuits/move")
-                    }
                     outputs {
                         TestState::class at 0
                     }
-                    numberOfSigners = 2
+                    numberOfSigners = 1
                 }
 
                 init {
@@ -136,16 +127,12 @@ class ZKVerifierTransactionTest {
 
                 @Transient
                 override val metadata: ResolvedZKCommandMetadata = commandMetadata {
-                    circuit {
-                        buildFolder =
-                            File("${System.getProperty("user.dir")}/../zinc-platform-sources/build/circuits/move")
-                    }
                     outputs {
                         TestState::class at 2
                         public(TestState::class) at 3
                         TestState::class at 4
                     }
-                    numberOfSigners = 2
+                    numberOfSigners = 1
                 }
 
                 init {
@@ -183,5 +170,3 @@ class ZKVerifierTransactionTest {
         }
     }
 }
-
-val mockSerializers = run {}
