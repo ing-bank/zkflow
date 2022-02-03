@@ -84,6 +84,36 @@ public class TestContract : Contract {
         }
     }
 
+    @Serializable
+    public class CreatePublic : ZKCommandData {
+
+        @Transient
+        override val metadata: ResolvedZKCommandMetadata = commandMetadata {
+            outputs {
+                public(TestState::class) at 0
+            }
+            numberOfSigners = 1
+        }
+
+        init {
+            CommandDataSerializerMap.register(this::class)
+        }
+
+        public companion object {
+            public fun verify(
+                tx: LedgerTransaction,
+                command: CommandWithParties<CommandData>
+            ) {
+                // Transaction structure
+                tx.zkTransactionMetadata().verify(tx)
+
+                // Transaction contents
+                val output = tx.getOutput(0) as TestState
+                if (output.owner.owningKey !in command.signers) throw IllegalArgumentException("Failed requirement: the output state is owned by the command signer")
+            }
+        }
+    }
+
     /**
      *
      * This command is only used on [CollectSignaturesFlowTest]. It expects two signatures, but nothing else.
@@ -122,6 +152,39 @@ public class TestContract : Contract {
 
         public companion object {
             public fun verifyMove(
+                tx: LedgerTransaction,
+                command: CommandWithParties<CommandData>
+            ) {
+                // Transaction structure
+                tx.zkTransactionMetadata().verify(tx)
+
+                // Transaction contents
+                val output = tx.getOutput(0) as TestState
+                val input = tx.getInput(0) as TestState
+
+                if (input.owner.owningKey !in command.signers) throw IllegalArgumentException("Failed requirement: the input state is owned by a required command signer")
+                if (output.owner.owningKey !in command.signers) throw IllegalArgumentException("Failed requirement: the outputs state is owned by a required command signer")
+                if (input.value != output.value) throw IllegalArgumentException("Failed requirement: the value of the input and out put should be equal")
+            }
+        }
+    }
+
+    @Serializable
+    public class MovePrivateOnly : ZKCommandData {
+
+        @Transient
+        override val metadata: ResolvedZKCommandMetadata = commandMetadata {
+            inputs { private(TestState::class) at 0 }
+            outputs { TestState::class at 0 }
+            numberOfSigners = 2
+        }
+
+        init {
+            CommandDataSerializerMap.register(this::class)
+        }
+
+        public companion object {
+            public fun verify(
                 tx: LedgerTransaction,
                 command: CommandWithParties<CommandData>
             ) {
@@ -197,7 +260,9 @@ public class TestContract : Contract {
 
         when (command.value) {
             is Create -> verifyCreate(tx, command)
+            is CreatePublic -> CreatePublic.verify(tx, command)
             is Move -> verifyMove(tx, command)
+            is MovePrivateOnly -> MovePrivateOnly.verify(tx, command)
             is MoveBidirectional -> verifyMoveBidirectional(tx, command)
             is SignOnly -> {
             }

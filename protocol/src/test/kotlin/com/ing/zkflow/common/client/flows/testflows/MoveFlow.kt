@@ -5,6 +5,7 @@ import com.ing.zkflow.client.flows.ZKCollectSignaturesFlow
 import com.ing.zkflow.client.flows.ZKFinalityFlow
 import com.ing.zkflow.client.flows.ZKReceiveFinalityFlow
 import com.ing.zkflow.client.flows.ZKSignTransactionFlow
+import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.transactions.ZKTransactionBuilder
 import com.ing.zkflow.common.transactions.signInitialTransaction
 import com.ing.zkflow.testing.fixtures.contract.TestContract
@@ -21,7 +22,8 @@ import net.corda.core.transactions.SignedTransaction
 @InitiatingFlow
 class MoveFlow(
     private val createStx: SignedTransaction,
-    private val newOwner: Party
+    private val newOwner: Party,
+    private val moveCommand: ZKCommandData = TestContract.Move()
 ) : FlowLogic<SignedTransaction>() {
 
     @Suspendable
@@ -30,7 +32,7 @@ class MoveFlow(
 
         val me = serviceHub.myInfo.legalIdentities.single()
         val stateAndRef = createStx.coreTransaction.outRef<TestContract.TestState>(0)
-        val command = Command(TestContract.Move(), listOf(newOwner, me).map { it.owningKey })
+        val command = Command(moveCommand, listOf(newOwner, me).map { it.owningKey })
         val stateAndContract = StateAndContract(stateAndRef.state.data.copy(owner = newOwner.anonymise()), TestContract.PROGRAM_ID)
 
         val builder = ZKTransactionBuilder(serviceHub.networkMapCache.notaryIdentities.single())
