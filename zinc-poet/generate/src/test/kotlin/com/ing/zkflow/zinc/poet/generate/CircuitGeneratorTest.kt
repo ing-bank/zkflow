@@ -43,6 +43,7 @@ internal class CircuitGeneratorTest {
 
     @ExperimentalTime
     @Test
+    @Disabled
     @Tag("slow")
     fun `generateCircuitFor should generate a working circuit`(@TempDir tempDir: Path) {
         val circuitGenerator = CircuitGenerator(

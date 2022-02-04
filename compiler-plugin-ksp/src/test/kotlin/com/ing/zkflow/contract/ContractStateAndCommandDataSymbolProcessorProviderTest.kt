@@ -1,6 +1,6 @@
 package com.ing.zkflow.contract
 
-import com.ing.zkflow.common.contracts.ZKTransactionMetadataCommandData
+import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.serialization.ZKContractStateSerializerMapProvider
 import com.ing.zkflow.serialization.ZkCommandDataSerializerMapProvider
 import com.ing.zkflow.stateandcommanddata.ContractStateAndCommandDataSymbolProcessorProvider
@@ -29,7 +29,7 @@ internal class ContractStateAndCommandDataSymbolProcessorProviderTest {
         }
 
         result.exitCode shouldBe KotlinCompilation.ExitCode.OK
-        result.getGeneratedMetaInfServices<ZKTransactionMetadataCommandData>() shouldBe "com.ing.zkflow.zktransaction.TestCommand"
+        result.getGeneratedMetaInfServices<ZKCommandData>() shouldBe "com.ing.zkflow.zktransaction.TestCommand"
         result.getGeneratedMetaInfServices<ZkCommandDataSerializerMapProvider>() shouldStartWith "com.ing.zkflow.serialization.CommandDataSerializerMapProvider"
     }
 
@@ -44,7 +44,7 @@ internal class ContractStateAndCommandDataSymbolProcessorProviderTest {
         }
 
         result.exitCode shouldBe KotlinCompilation.ExitCode.OK
-        result.getGeneratedMetaInfServices<ZKTransactionMetadataCommandData>() shouldBe "com.ing.zkflow.zktransaction.Container\$TestNestedCommand"
+        result.getGeneratedMetaInfServices<ZKCommandData>() shouldBe "com.ing.zkflow.zktransaction.Container\$TestNestedCommand"
         result.getGeneratedMetaInfServices<ZkCommandDataSerializerMapProvider>() shouldStartWith "com.ing.zkflow.serialization.CommandDataSerializerMapProvider"
     }
 
@@ -59,7 +59,7 @@ internal class ContractStateAndCommandDataSymbolProcessorProviderTest {
         }
 
         result.exitCode shouldBe KotlinCompilation.ExitCode.OK
-        result.getMetaInfServicesPath<ZKTransactionMetadataCommandData>().shouldNotExist()
+        result.getMetaInfServicesPath<ZKCommandData>().shouldNotExist()
     }
 
     @Test
@@ -109,20 +109,14 @@ internal class ContractStateAndCommandDataSymbolProcessorProviderTest {
             """
                 package com.ing.zkflow.zktransaction
                 
-                import com.ing.zkflow.common.contracts.ZKTransactionMetadataCommandData
+                import com.ing.zkflow.common.contracts.ZKCommandData
                 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
-                import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
                 import com.ing.zkflow.common.zkp.metadata.commandMetadata
-                import com.ing.zkflow.common.zkp.metadata.transactionMetadata
 
-                class TestCommand: ZKTransactionMetadataCommandData {
-                    override val transactionMetadata: ResolvedZKTransactionMetadata by transactionMetadata {
-                        commands { +TestCommand::class }
-                    }
+                class TestCommand: ZKCommandData {
                     
                     @Transient
                     override val metadata: ResolvedZKCommandMetadata = commandMetadata {
-                        private = true
                         circuit { name = "TestCommand" }
                         numberOfSigners = 1
                     }
@@ -135,21 +129,15 @@ internal class ContractStateAndCommandDataSymbolProcessorProviderTest {
             """
                 package com.ing.zkflow.zktransaction
                 
-                import com.ing.zkflow.common.contracts.ZKTransactionMetadataCommandData
+                import com.ing.zkflow.common.contracts.ZKCommandData
                 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
-                import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
                 import com.ing.zkflow.common.zkp.metadata.commandMetadata
-                import com.ing.zkflow.common.zkp.metadata.transactionMetadata
-
+                
                 class Container {
-                    class TestNestedCommand: ZKTransactionMetadataCommandData {
-                        override val transactionMetadata: ResolvedZKTransactionMetadata by transactionMetadata {
-                            commands { +TestNestedCommand::class }
-                        }
+                    class TestNestedCommand: ZKCommandData {
                         
                         @Transient
                         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
-                            private = true
                             circuit { name = "TestNestedCommand" }
                             numberOfSigners = 1
                         }
@@ -173,22 +161,15 @@ internal class ContractStateAndCommandDataSymbolProcessorProviderTest {
                 package com.ing.zkflow.zktransaction
                 
                 import com.ing.zkflow.common.contracts.ZKOwnableState
-                import com.ing.zkflow.common.contracts.ZKTransactionMetadataCommandData
                 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
-                import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
                 import com.ing.zkflow.common.zkp.metadata.commandMetadata
-                import com.ing.zkflow.common.zkp.metadata.transactionMetadata
                 import net.corda.core.contracts.CommandAndState
                 import net.corda.core.identity.AnonymousParty
                 
-                class TestCommand: ZKTransactionMetadataCommandData {
-                    override val transactionMetadata: ResolvedZKTransactionMetadata by transactionMetadata {
-                        commands { +TestCommand::class }
-                    }
+                class TestCommand: ZKCommandData {
                 
                     @Transient
                     override val metadata: ResolvedZKCommandMetadata = commandMetadata {
-                        private = true
                         circuit { name = "TestCommand" }
                         numberOfSigners = 1
                     }

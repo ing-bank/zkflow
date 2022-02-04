@@ -7,12 +7,8 @@ import com.ing.zinc.bfl.generator.CodeGenerationOptions
 import com.ing.zinc.bfl.generator.ZincGenerator.createZargoToml
 import com.ing.zinc.bfl.generator.ZincGenerator.zincSourceFile
 import com.ing.zinc.bfl.toZincId
-import com.ing.zinc.poet.ZincPrimitive
 import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
-import com.ing.zkflow.common.contracts.ZKTransactionMetadataCommandData
-import com.ing.zkflow.common.zkp.metadata.ContractStateTypeCount
-import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
 import com.ing.zkflow.util.requireNotNull
 import com.ing.zkflow.zinc.poet.generate.types.LedgerTransactionFactory
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes

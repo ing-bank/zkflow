@@ -3,10 +3,9 @@ package com.ing.zkflow
 import com.ing.zkflow.annotations.ASCII
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.annotations.corda.EdDSA
+import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.contracts.ZKOwnableState
-import com.ing.zkflow.common.contracts.ZKTransactionMetadataCommandData
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
-import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
 import com.ing.zkflow.serialization.serializer.corda.PublicKeySerializer
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.CommandAndState
@@ -39,17 +38,13 @@ class TestTokenContract : Contract {
 
     // Commands
     @ZKP
-    class Create : ZKTransactionMetadataCommandData {
-        override val transactionMetadata: ResolvedZKTransactionMetadata
-            get() = TODO("Not yet implemented")
+    class Create : ZKCommandData {
         override val metadata: ResolvedZKCommandMetadata
             get() = TODO("Not yet implemented")
     }
 
     @ZKP
-    class Move : ZKTransactionMetadataCommandData {
-        override val transactionMetadata: ResolvedZKTransactionMetadata
-            get() = TODO("Not yet implemented")
+    class Move : ZKCommandData {
         override val metadata: ResolvedZKCommandMetadata
             get() = TODO("Not yet implemented")
     }
