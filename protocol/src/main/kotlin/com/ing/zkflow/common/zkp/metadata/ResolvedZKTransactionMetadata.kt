@@ -50,7 +50,7 @@ data class ResolvedZKTransactionMetadata(
         require(commands.isNotEmpty()) { ERROR_NO_COMMANDS }
         require(commands.distinctBy { it.commandKClass }.size == commands.size) { ERROR_COMMAND_NOT_UNIQUE }
         verifyCommandsMatchNetwork()
-// TODO        TODO("TODO: Verify components visibility is aligned among different commands")
+        // TODO        TODO("TODO: Verify components visibility is aligned among different commands")
     }
 
     fun verify(ltx: LedgerTransaction) {

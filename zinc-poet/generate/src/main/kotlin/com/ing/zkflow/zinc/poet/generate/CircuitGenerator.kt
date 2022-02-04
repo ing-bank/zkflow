@@ -9,15 +9,19 @@ import com.ing.zinc.bfl.generator.ZincGenerator.zincSourceFile
 import com.ing.zinc.bfl.toZincId
 import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
+import com.ing.zkflow.common.zkp.metadata.ZKTypedElement
 import com.ing.zkflow.util.requireNotNull
 import com.ing.zkflow.zinc.poet.generate.types.LedgerTransactionFactory
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.componentGroupEnum
 import com.ing.zkflow.zinc.poet.generate.types.StateAndRefsGroupFactory
 import com.ing.zkflow.zinc.poet.generate.types.Witness
+import net.corda.core.contracts.ContractState
+import net.corda.core.internal.deleteRecursively
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
 import java.util.Locale
+import kotlin.reflect.KClass
 
 @Suppress("LongParameterList")
 class CircuitGenerator(
@@ -30,12 +34,11 @@ class CircuitGenerator(
     private val cryptoUtilsFactory: CryptoUtilsFactory,
 ) {
 
-    fun generateCircuitFor(zkCommand: ZKCommandData) {
-        val commandMetadata = zkCommand.metadata
+    fun generateCircuitFor(commandMetadata: ResolvedZKCommandMetadata) {
         // TODO this is a dirty hack just to make API ends meet, zinc-poet should be changed to operate on individual components instead of lists per type
-        val zincInputs = commandMetadata.privateInputs.associate { zincTypeResolver.zincTypeOf(it.type) to 1 }
-        val zincOutputs = commandMetadata.privateOutputs.associate { zincTypeResolver.zincTypeOf(it.type) to 1 }
-        val zincReferences = commandMetadata.privateReferences.associate { zincTypeResolver.zincTypeOf(it.type) to 1 }
+        val zincInputs = commandMetadata.privateInputs.toBflModuleMap()
+        val zincOutputs = commandMetadata.privateOutputs.toBflModuleMap()
+        val zincReferences = commandMetadata.privateReferences.toBflModuleMap()
 
         val witness = createWitness(commandMetadata, zincInputs, zincOutputs, zincReferences)
         val inputGroup = stateAndRefsGroupFactory.createStructWithStateAndRefs(
@@ -56,9 +59,11 @@ class CircuitGenerator(
         )
 
         val codeGenerationOptions = CodeGenerationOptions(witness.getWitnessConfigurations())
-        val circuitName = zkCommand.circuitName()
+
+        val circuitName = commandMetadata.circuit.name
 
         val buildPath = buildPathProvider.getBuildPath(commandMetadata)
+        buildPath.deleteRecursively()
         buildPath.toFile().mkdirs()
 
         logger.info("Generating circuit $circuitName in folder $buildPath")
@@ -74,6 +79,15 @@ class CircuitGenerator(
         generateMain(buildPath, witness, ledgerTransaction)
         buildPath.zincSourceFile(componentGroupEnum, codeGenerationOptions)
         logger.info("... done")
+    }
+
+    private fun List<ZKTypedElement>.toBflModuleMap(): Map<BflModule, Int> {
+        return this.fold<ZKTypedElement, MutableMap<KClass<out ContractState>, Int>>(mutableMapOf()) { acc, zkReference: ZKTypedElement ->
+            acc[zkReference.type] = acc[zkReference.type]?.let { it + 1 } ?: 1
+            acc
+        }.mapKeys {
+            zincTypeResolver.zincTypeOf(it.key)
+        }
     }
 
     private fun generateMain(

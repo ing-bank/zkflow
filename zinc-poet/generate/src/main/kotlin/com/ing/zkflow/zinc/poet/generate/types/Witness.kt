@@ -52,8 +52,8 @@ class Witness(
 
     private val inputGroup = WitnessGroup(INPUTS, stateRef, commandMetadata.privateInputs.size, ComponentGroupEnum.INPUTS_GROUP)
     private val referenceGroup = WitnessGroup(REFERENCES, stateRef, commandMetadata.privateReferences.size, ComponentGroupEnum.REFERENCES_GROUP)
-    private val commandGroup = WitnessGroup(COMMANDS, BflPrimitive.U32, 0, ComponentGroupEnum.COMMANDS_GROUP)
-    private val attachmentGroup = WitnessGroup(ATTACHMENTS, secureHash, 0, ComponentGroupEnum.ATTACHMENTS_GROUP)
+    private val commandGroup = WitnessGroup(COMMANDS, BflPrimitive.U32, 1, ComponentGroupEnum.COMMANDS_GROUP)
+    // private val attachmentGroup = WitnessGroup(ATTACHMENTS, secureHash, 0, ComponentGroupEnum.ATTACHMENTS_GROUP)
     private val notaryGroup = WitnessGroup(NOTARY, standardTypes.notaryModule, 1, ComponentGroupEnum.NOTARY_GROUP)
     private val timeWindowGroup = WitnessGroup(TIME_WINDOW, timeWindow, 1, ComponentGroupEnum.TIMEWINDOW_GROUP)
     private val signerGroup = WitnessGroup(SIGNERS, standardTypes.signerModule, commandMetadata.numberOfSigners, ComponentGroupEnum.SIGNERS_GROUP)
@@ -63,7 +63,7 @@ class Witness(
         inputGroup,
         referenceGroup,
         commandGroup,
-        attachmentGroup,
+        // attachmentGroup,
         notaryGroup,
         if (commandMetadata.timeWindow) {
             timeWindowGroup
@@ -118,7 +118,7 @@ class Witness(
             field { name = OUTPUTS; type = serializedOutputGroup.toZincId() }
             field { name = REFERENCES; type = referenceGroup.arrayOfSerializedData() }
             field { name = COMMANDS; type = commandGroup.arrayOfSerializedData() }
-            field { name = ATTACHMENTS; type = attachmentGroup.arrayOfSerializedData() }
+            // field { name = ATTACHMENTS; type = attachmentGroup.arrayOfSerializedData() }
             field { name = NOTARY; type = notaryGroup.arrayOfSerializedData() }
             if (commandMetadata.timeWindow) {
                 field { name = TIME_WINDOW; type = timeWindowGroup.arrayOfSerializedData() }
@@ -178,7 +178,7 @@ class Witness(
                         $OUTPUTS: self.$OUTPUTS.deserialize(),
                         $REFERENCES: $REFERENCES,
                         $COMMANDS: $COMMAND_GROUP::$FROM_SIGNERS($SIGNERS),
-                        $ATTACHMENTS: self.deserialize_$ATTACHMENTS(),
+                        // $ATTACHMENTS: self.deserialize_$ATTACHMENTS(),
                         $NOTARY: self.deserialize_$NOTARY()[0],
                         ${if (commandMetadata.timeWindow) "$TIME_WINDOW: self.deserialize_$TIME_WINDOW()," else "// $TIME_WINDOW not present"}
                         $PARAMETERS: self.deserialize_$PARAMETERS()[0],

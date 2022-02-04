@@ -12,7 +12,6 @@ import com.ing.zkflow.zinc.poet.generate.types.StandardTypes
 import com.ing.zkflow.zinc.poet.generate.types.StateAndRefsGroupFactory
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
@@ -43,7 +42,6 @@ internal class CircuitGeneratorTest {
 
     @ExperimentalTime
     @Test
-    @Disabled
     @Tag("slow")
     fun `generateCircuitFor should generate a working circuit`(@TempDir tempDir: Path) {
         val circuitGenerator = CircuitGenerator(
@@ -57,7 +55,7 @@ internal class CircuitGeneratorTest {
         )
 
         logExecutionTime("Generating the circuit") {
-            circuitGenerator.generateCircuitFor(MyContract.MyFirstCommand())
+            circuitGenerator.generateCircuitFor(MyContract.MyFirstCommand().metadata)
         }
 
         val result = logExecutionTime("Running the circuit using `zargo run`") {
@@ -73,11 +71,12 @@ internal class CircuitGeneratorTest {
 
         @ExperimentalTime
         private fun <T> logExecutionTime(message: String, block: () -> T): T {
+            logger.info("Started: $message")
             val out: T
             val time = measureTime {
                 out = block()
             }
-            logger.info("$message took $time")
+            logger.info("Finished: $message in $time")
             return out
         }
     }

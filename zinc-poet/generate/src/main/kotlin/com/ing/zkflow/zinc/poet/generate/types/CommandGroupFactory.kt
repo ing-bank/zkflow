@@ -10,7 +10,6 @@ import com.ing.zinc.poet.ZincArray.Companion.zincArray
 import com.ing.zinc.poet.ZincFunction.Companion.zincFunction
 import com.ing.zinc.poet.indent
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
-import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.SIGNERS
 
 class CommandGroupFactory(
@@ -31,51 +30,44 @@ class CommandGroupFactory(
     }
 
     fun createCommandGroup(
-        transactionMetadata: ResolvedZKCommandMetadata,
+        metadata: ResolvedZKCommandMetadata,
     ): BflStruct {
-        transactionMetadata.commandSimpleName // just to unclench linter
+        metadata.commandSimpleName // just to unclench linter
         return struct {
             // TODO implement private/mixed commands
-//            name = COMMAND_GROUP
-//            transactionMetadata.commands.map {
-//                struct {
-//                    name = getCommandTypeName(it)
-//                    field {
-//                        name = "signers"
-//                        type = standardTypes.getSignerListModule(it.numberOfSigners)
-//                    }
-//                    isDeserializable = false
-//                }
-//            }.forEach {
-//                field {
-//                    name = it.id.getCommandFieldName()
-//                    type = it
-//                }
-//            }
-//            isDeserializable = false
-//            // Import types used in the [generateFromSignersFunction] function
-//            addImport(standardTypes.signerModule)
-//            transactionMetadata.commands.forEach {
-//                addImport(standardTypes.getSignerListModule(it.numberOfSigners))
-//            }
-//            addFunction(generateFromSignersFunction(transactionMetadata))
+            name = COMMAND_GROUP
+            val commandTypeName = getCommandTypeName(metadata)
+            field {
+                name = commandTypeName.getCommandFieldName()
+                type = struct {
+                    name = commandTypeName
+                    field {
+                        name = "signers"
+                        type = standardTypes.getSignerListModule(metadata.numberOfSigners)
+                    }
+                    isDeserializable = false
+                }
+            }
+            isDeserializable = false
+            // Import types used in the [generateFromSignersFunction] function
+            addImport(standardTypes.signerModule)
+            addImport(standardTypes.getSignerListModule(metadata.numberOfSigners))
+            addFunction(generateFromSignersFunction(metadata))
         }
     }
 
     @Suppress("UnusedPrivateMember")
     private fun generateFromSignersFunction(
-        transactionMetadata: ResolvedZKTransactionMetadata,
+        metadata: ResolvedZKCommandMetadata,
     ) = zincFunction {
-        val fieldConstructors = getFieldConstructors(transactionMetadata)
-        val fieldAssignments = transactionMetadata.commands.joinToString("\n") {
-            "${getCommandFieldName(it)}: ${getCommandFieldName(it)},"
-        }
+        val fieldConstructors = getFieldConstructors(metadata)
+        val fieldAssignments = "${getCommandFieldName(metadata)}: ${getCommandFieldName(metadata)},"
         name = FROM_SIGNERS
         parameter {
             name = "signers"
             type = zincArray {
                 elementType = standardTypes.signerModule.toZincId()
-                size = "${transactionMetadata.numberOfSigners}"
+                size = "${metadata.numberOfSigners}"
             }
         }
         returnType = Self
@@ -90,25 +82,19 @@ class CommandGroupFactory(
     }
 
     private fun getFieldConstructors(
-        transactionMetadata: ResolvedZKTransactionMetadata,
+        metadata: ResolvedZKCommandMetadata,
     ): String {
-        var signerCount = 0
-        val fieldConstructors = transactionMetadata.commands.joinToString("\n") {
-            val fieldName = getCommandFieldName(it)
-            val fieldType = getCommandTypeName(it)
-            val signerListModule = standardTypes.getSignerListModule(it.numberOfSigners).id
-            val result = """
-                let $fieldName: $fieldType = {
-                    let mut ${fieldName}_array: [${standardTypes.signerModule.id}; ${it.numberOfSigners}] = [${standardTypes.signerModule.defaultExpr()}; ${it.numberOfSigners}];
-                    for i in (0 as u8)..${it.numberOfSigners} {
-                        ${fieldName}_array[i] = signers[i + $signerCount];
-                    }
-                    $fieldType::new($signerListModule::list_of(${fieldName}_array))
-                };
-            """.trimIndent()
-            signerCount += it.numberOfSigners
-            result
-        }
-        return fieldConstructors
+        val fieldName = getCommandFieldName(metadata)
+        val fieldType = getCommandTypeName(metadata)
+        val signerListModule = standardTypes.getSignerListModule(metadata.numberOfSigners).id
+        return """
+            let $fieldName: $fieldType = {
+                let mut ${fieldName}_array: [${standardTypes.signerModule.id}; ${metadata.numberOfSigners}] = [${standardTypes.signerModule.defaultExpr()}; ${metadata.numberOfSigners}];
+                for i in (0 as u8)..${metadata.numberOfSigners} {
+                    ${fieldName}_array[i] = signers[i];
+                }
+                $fieldType::new($signerListModule::list_of(${fieldName}_array))
+            };
+        """.trimIndent()
     }
 }
