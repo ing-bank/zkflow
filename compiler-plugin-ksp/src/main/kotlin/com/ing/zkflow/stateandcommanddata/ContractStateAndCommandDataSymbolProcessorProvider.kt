@@ -3,8 +3,8 @@ package com.ing.zkflow.stateandcommanddata
 import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.processing.SymbolProcessorProvider
+import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.contracts.ZKOwnableState
-import com.ing.zkflow.common.contracts.ZKTransactionMetadataCommandData
 import com.ing.zkflow.ksp.implementations.ImplementationsSymbolProcessor
 import com.ing.zkflow.serialization.ZKContractStateSerializerMapProvider
 import com.ing.zkflow.serialization.ZkCommandDataSerializerMapProvider
@@ -14,7 +14,7 @@ import net.corda.core.contracts.ContractState
 class ContractStateAndCommandDataSymbolProcessorProvider : SymbolProcessorProvider {
     override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor {
         val zkCommandMetaInfServicesProcessor = TransactionMetaDataProcessor(
-            ZKTransactionMetadataCommandData::class
+            ZKCommandData::class
         )
 
         val contractStateMapProcessor = ContractStateAndCommandDataSerializerMapProcessor(
@@ -24,7 +24,7 @@ class ContractStateAndCommandDataSymbolProcessorProvider : SymbolProcessorProvid
             environment.codeGenerator
         )
         val commandDataMapProcessor = ContractStateAndCommandDataSerializerMapProcessor(
-            ZKTransactionMetadataCommandData::class,
+            ZKCommandData::class,
             CommandData::class,
             ZkCommandDataSerializerMapProvider::class,
             environment.codeGenerator

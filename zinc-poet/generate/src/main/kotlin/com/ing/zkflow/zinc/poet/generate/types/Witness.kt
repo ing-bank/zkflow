@@ -15,7 +15,7 @@ import com.ing.zinc.poet.ZincFile
 import com.ing.zinc.poet.ZincFunction
 import com.ing.zinc.poet.ZincMethod.Companion.zincMethod
 import com.ing.zinc.poet.ZincType.Companion.id
-import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
+import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.zinc.poet.generate.COMPUTE_LEAF_HASHES
 import com.ing.zkflow.zinc.poet.generate.COMPUTE_NONCE
 import com.ing.zkflow.zinc.poet.generate.COMPUTE_UTXO_HASHES
@@ -33,7 +33,7 @@ import net.corda.core.contracts.ComponentGroupEnum
 
 @Suppress("TooManyFunctions")
 class Witness(
-    private val transactionMetadata: ResolvedZKTransactionMetadata,
+    private val commandMetadata: ResolvedZKCommandMetadata,
     private val inputs: Map<BflModule, Int>,
     private val outputs: Map<BflModule, Int>,
     private val references: Map<BflModule, Int>,
@@ -50,13 +50,13 @@ class Witness(
     private val dependencies =
         listOf(stateRef, secureHash, privacySalt, timeWindow, standardTypes.notaryModule, standardTypes.signerModule, nonceDigest, componentGroupEnum)
 
-    private val inputGroup = WitnessGroup(INPUTS, stateRef, transactionMetadata.numberOfInputs, ComponentGroupEnum.INPUTS_GROUP)
-    private val referenceGroup = WitnessGroup(REFERENCES, stateRef, transactionMetadata.numberOfReferences, ComponentGroupEnum.REFERENCES_GROUP)
-    private val commandGroup = WitnessGroup(COMMANDS, BflPrimitive.U32, transactionMetadata.commands.size, ComponentGroupEnum.COMMANDS_GROUP)
-    private val attachmentGroup = WitnessGroup(ATTACHMENTS, secureHash, transactionMetadata.attachmentCount, ComponentGroupEnum.ATTACHMENTS_GROUP)
+    private val inputGroup = WitnessGroup(INPUTS, stateRef, commandMetadata.privateInputs.size, ComponentGroupEnum.INPUTS_GROUP)
+    private val referenceGroup = WitnessGroup(REFERENCES, stateRef, commandMetadata.privateReferences.size, ComponentGroupEnum.REFERENCES_GROUP)
+    private val commandGroup = WitnessGroup(COMMANDS, BflPrimitive.U32, 0, ComponentGroupEnum.COMMANDS_GROUP)
+    private val attachmentGroup = WitnessGroup(ATTACHMENTS, secureHash, 0, ComponentGroupEnum.ATTACHMENTS_GROUP)
     private val notaryGroup = WitnessGroup(NOTARY, standardTypes.notaryModule, 1, ComponentGroupEnum.NOTARY_GROUP)
     private val timeWindowGroup = WitnessGroup(TIME_WINDOW, timeWindow, 1, ComponentGroupEnum.TIMEWINDOW_GROUP)
-    private val signerGroup = WitnessGroup(SIGNERS, standardTypes.signerModule, transactionMetadata.numberOfSigners, ComponentGroupEnum.SIGNERS_GROUP)
+    private val signerGroup = WitnessGroup(SIGNERS, standardTypes.signerModule, commandMetadata.numberOfSigners, ComponentGroupEnum.SIGNERS_GROUP)
     private val parameterGroup = WitnessGroup(PARAMETERS, secureHash, 1, ComponentGroupEnum.PARAMETERS_GROUP)
 
     private val standardComponentGroups = listOfNotNull(
@@ -65,7 +65,7 @@ class Witness(
         commandGroup,
         attachmentGroup,
         notaryGroup,
-        if (transactionMetadata.hasTimeWindow) {
+        if (commandMetadata.timeWindow) {
             timeWindowGroup
         } else null,
         signerGroup,
@@ -98,12 +98,11 @@ class Witness(
             newLine()
         }
         (
-            listOf(LEDGER_TRANSACTION, COMMAND_GROUP) + transactionMetadata.commands.flatMap {
+            listOf(LEDGER_TRANSACTION, COMMAND_GROUP) +
                 listOf(
-                    CommandGroupFactory.getCommandTypeName(it),
-                    standardTypes.getSignerListModule(it.numberOfSigners).id,
-                )
-            }.distinct()
+                    CommandGroupFactory.getCommandTypeName(commandMetadata),
+                    standardTypes.getSignerListModule(commandMetadata.numberOfSigners).id,
+                ).distinct()
             ).forEach {
             mod { module = it.camelToSnakeCase() }
             use { path = "${it.camelToSnakeCase()}::$it" }
@@ -121,14 +120,14 @@ class Witness(
             field { name = COMMANDS; type = commandGroup.arrayOfSerializedData() }
             field { name = ATTACHMENTS; type = attachmentGroup.arrayOfSerializedData() }
             field { name = NOTARY; type = notaryGroup.arrayOfSerializedData() }
-            if (transactionMetadata.hasTimeWindow) {
+            if (commandMetadata.timeWindow) {
                 field { name = TIME_WINDOW; type = timeWindowGroup.arrayOfSerializedData() }
             }
             field { name = SIGNERS; type = signerGroup.arrayOfSerializedData() }
             field { name = PARAMETERS; type = parameterGroup.arrayOfSerializedData() }
             field { name = PRIVACY_SALT; type = privacySalt.toZincId() }
-            field { name = INPUT_NONCES; type = arrayOfNonceDigests(transactionMetadata.numberOfInputs) }
-            field { name = REFERENCE_NONCES; type = arrayOfNonceDigests(transactionMetadata.numberOfReferences) }
+            field { name = INPUT_NONCES; type = arrayOfNonceDigests(commandMetadata.privateInputs.size) }
+            field { name = REFERENCE_NONCES; type = arrayOfNonceDigests(commandMetadata.privateReferences.size) }
             field { name = SERIALIZED_INPUT_UTXOS; type = serializedInputUtxos.toZincId() }
             field { name = SERIALIZED_REFERENCE_UTXOS; type = serializedReferenceUtxos.toZincId() }
         }
@@ -164,30 +163,30 @@ class Witness(
             name = "deserialize"
             returnType = id(LEDGER_TRANSACTION)
             body = """
-                let $SIGNERS = self.deserialize_$SIGNERS();
-                let $INPUTS = InputGroup::from_states_and_refs(
-                    self.$SERIALIZED_INPUT_UTXOS.deserialize(),
-                    self.deserialize_$INPUTS(),
-                );
-                let $REFERENCES = ReferenceGroup::from_states_and_refs(
-                    self.$SERIALIZED_REFERENCE_UTXOS.deserialize(),
-                    self.deserialize_$REFERENCES(),
-                );
-
-                $LEDGER_TRANSACTION {
-                    $INPUTS: $INPUTS,
-                    $OUTPUTS: self.$OUTPUTS.deserialize(),
-                    $REFERENCES: $REFERENCES,
-                    $COMMANDS: $COMMAND_GROUP::$FROM_SIGNERS($SIGNERS),
-                    $ATTACHMENTS: self.deserialize_$ATTACHMENTS(),
-                    $NOTARY: self.deserialize_$NOTARY()[0],
-                    ${if (transactionMetadata.hasTimeWindow) "$TIME_WINDOW: self.deserialize_$TIME_WINDOW()," else "// $TIME_WINDOW not present"}
-                    $SIGNERS: $SIGNERS,
-                    $PARAMETERS: self.deserialize_$PARAMETERS()[0],
-                    ${PRIVACY_SALT}_field: self.$PRIVACY_SALT,
-                    $INPUT_NONCES: self.$INPUT_NONCES,
-                    $REFERENCE_NONCES: self.$REFERENCE_NONCES,
-                }
+                    let $SIGNERS = self.deserialize_$SIGNERS();
+                    let $INPUTS = InputGroup::from_states_and_refs(
+                        self.$SERIALIZED_INPUT_UTXOS.deserialize(),
+                        self.deserialize_$INPUTS(),
+                    );
+                    let $REFERENCES = ReferenceGroup::from_states_and_refs(
+                        self.$SERIALIZED_REFERENCE_UTXOS.deserialize(),
+                        self.deserialize_$REFERENCES(),
+                    );
+                    
+                    $LEDGER_TRANSACTION {
+                        $INPUTS: $INPUTS,
+                        $OUTPUTS: self.$OUTPUTS.deserialize(),
+                        $REFERENCES: $REFERENCES,
+                        $COMMANDS: $COMMAND_GROUP::$FROM_SIGNERS($SIGNERS),
+                        $ATTACHMENTS: self.deserialize_$ATTACHMENTS(),
+                        $NOTARY: self.deserialize_$NOTARY()[0],
+                        ${if (commandMetadata.timeWindow) "$TIME_WINDOW: self.deserialize_$TIME_WINDOW()," else "// $TIME_WINDOW not present"}
+                        $PARAMETERS: self.deserialize_$PARAMETERS()[0],
+                        $SIGNERS: $SIGNERS,
+                        ${PRIVACY_SALT}_field: self.$PRIVACY_SALT,
+                        $INPUT_NONCES: self.$INPUT_NONCES,
+                        $REFERENCE_NONCES: self.$REFERENCE_NONCES,
+                    }
             """.trimIndent()
         }
 
@@ -224,8 +223,8 @@ class Witness(
                     size = "$arraySize"
                 }
                 body = """
-                    let mut nonces = [${nonceDigest.id}; ${transactionMetadata.numberOfOutputs}];
-                    for i in (0 as u32)..${transactionMetadata.numberOfOutputs} {
+                    let mut nonces = [${nonceDigest.id}; ${commandMetadata.privateOutputs.size}];
+                    for i in (0 as u32)..${commandMetadata.privateOutputs.size} {
                         nonces[i] = $COMPUTE_NONCE(self.$PRIVACY_SALT, ${componentGroupEnum.id}::${ComponentGroupEnum.OUTPUTS_GROUP.name} as u32, i);
                     }
                     self.${it.second}.$COMPUTE_LEAF_HASHES(nonces)

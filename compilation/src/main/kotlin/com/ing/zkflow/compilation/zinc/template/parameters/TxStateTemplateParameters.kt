@@ -1,14 +1,14 @@
 package com.ing.zkflow.compilation.zinc.template.parameters
 
 import com.ing.zkflow.common.transactions.qualifiedConstraintClassName
-import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
+import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.common.zkp.metadata.ZincType
 import com.ing.zkflow.compilation.zinc.template.TemplateParameters
 import com.ing.zkflow.serialization.bfl.serializers.CordaSerializers
 import com.ing.zkflow.util.camelToSnakeCase
 import java.io.File
 
-data class TxStateTemplateParameters(val metadata: ResolvedZKTransactionMetadata, val typeInfo: ZincType) :
+data class TxStateTemplateParameters(val metadata: ResolvedZKCommandMetadata, val typeInfo: ZincType) :
     TemplateParameters(
         "tx_state.zn",
         listOf(

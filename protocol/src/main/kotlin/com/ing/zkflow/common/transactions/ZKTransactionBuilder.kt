@@ -2,9 +2,11 @@ package com.ing.zkflow.common.transactions
 
 import co.paralleluniverse.strands.Strand
 import com.ing.zkflow.common.contracts.ZKContractState
-import com.ing.zkflow.common.contracts.ZKTransactionMetadataCommandData
 import com.ing.zkflow.common.serialization.BFLSerializationScheme
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
+import com.ing.zkflow.node.services.ServiceNames
+import com.ing.zkflow.node.services.ZKVerifierTransactionStorage
+import com.ing.zkflow.node.services.getCordaServiceFromConfig
 import net.corda.core.contracts.AttachmentConstraint
 import net.corda.core.contracts.AutomaticPlaceholderConstraint
 import net.corda.core.contracts.Command
@@ -28,29 +30,13 @@ import net.corda.core.node.ServiceHub
 import net.corda.core.node.ServicesForResolution
 import net.corda.core.node.services.AttachmentId
 import net.corda.core.node.services.KeyManagementService
-import net.corda.core.transactions.LedgerTransaction
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
-import net.corda.core.transactions.TraversableTransaction
 import net.corda.core.transactions.WireTransaction
 import java.security.PublicKey
 import java.time.Duration
 import java.time.Instant
 import java.util.UUID
-
-val TransactionBuilder.isZKFlowTransaction get() = commands().firstOrNull { it.value is ZKTransactionMetadataCommandData } != null
-val TraversableTransaction.isZKFlowTransaction get() = commands.firstOrNull { it.value is ZKTransactionMetadataCommandData } != null
-val LedgerTransaction.isZKFlowTransaction get() = commands.firstOrNull { it.value is ZKTransactionMetadataCommandData } != null
-val LedgerTransaction.zkFLowMetadata: ResolvedZKTransactionMetadata
-    get() = zkTransactionMetadataCommandData.transactionMetadata
-val TraversableTransaction.zkFLowMetadata: ResolvedZKTransactionMetadata
-    get() = zkTransactionMetadataCommandData.transactionMetadata
-val TraversableTransaction.zkTransactionMetadataCommandData: ZKTransactionMetadataCommandData
-    get() = commands.firstOrNull()?.value as? ZKTransactionMetadataCommandData
-        ?: error("No ZKTransactionMetadataCommandDat was found on this transaction, so it is not a ZKFlow transaction")
-val LedgerTransaction.zkTransactionMetadataCommandData: ZKTransactionMetadataCommandData
-    get() = commands.firstOrNull()?.value as? ZKTransactionMetadataCommandData
-        ?: error("No ZKTransactionMetadataCommandDat was found on this transaction, so it is not a ZKFlow transaction")
 
 /**
  * The main reason for this ZKTransactionBuilder to exist, is to ensure that the user always uses the
@@ -140,18 +126,36 @@ class ZKTransactionBuilder(
      * Duplicated so that `toWireTransaction()` always uses the serialization settings
      */
     fun toWireTransaction(services: ServicesForResolution): WireTransaction {
-        val command = commands().firstOrNull() ?: error("At least one command is required for a private transaction")
-        val zkCommand = command.value as? ZKTransactionMetadataCommandData
-            ?: error("This first command must implement ZKTransactionMetadataCommandData")
-        val resolvedTransactionMetadata = zkCommand.transactionMetadata
 
+        val resolvedTransactionMetadata = this.zkTransactionMetadata()
         resolvedTransactionMetadata.verify(this)
+
+        enforcePrivateInputsAndReferences(resolvedTransactionMetadata, services)
 
         val serializationProperties = mapOf<Any, Any>(
             BFLSerializationScheme.CONTEXT_KEY_TRANSACTION_METADATA to resolvedTransactionMetadata
         )
 
         return builder.toWireTransaction(services, serializationSchemeId, serializationProperties)
+    }
+
+    private fun enforcePrivateInputsAndReferences(
+        resolvedTransactionMetadata: ResolvedZKTransactionMetadata,
+        services: ServicesForResolution
+    ) {
+        val stateRefs = (resolvedTransactionMetadata.privateInputs + resolvedTransactionMetadata.privateReferences).filter { it.forcePrivate }
+
+        if (stateRefs.isNotEmpty()) {
+            val serviceHub = serviceHub ?: if (services is ServiceHub) services else error("ServiceHub is required to enforce inputs visibility")
+            val zkStorage = serviceHub.getCordaServiceFromConfig<ZKVerifierTransactionStorage>(ServiceNames.ZK_VERIFIER_TX_STORAGE)
+
+            stateRefs.forEach {
+                val stateRef = inputStates()[it.index]
+                val tx = zkStorage.getTransaction(stateRef.txhash)?.tx ?: error("Transaction not found with ID: ${stateRef.txhash}")
+                val isPrivate = tx.zkTransactionMetadata().privateOutputs.find { output -> output.index == stateRef.index }?.private ?: false
+                if (!isPrivate) error("Utxo $stateRef should be private, but it is public")
+            }
+        }
     }
 
     /**

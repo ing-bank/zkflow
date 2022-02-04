@@ -31,35 +31,38 @@ class CommandGroupFactory(
     }
 
     fun createCommandGroup(
-        transactionMetadata: ResolvedZKTransactionMetadata,
+        transactionMetadata: ResolvedZKCommandMetadata,
     ): BflStruct {
+        transactionMetadata.commandSimpleName // just to unclench linter
         return struct {
-            name = COMMAND_GROUP
-            transactionMetadata.commands.map {
-                struct {
-                    name = getCommandTypeName(it)
-                    field {
-                        name = "signers"
-                        type = standardTypes.getSignerListModule(it.numberOfSigners)
-                    }
-                    isDeserializable = false
-                }
-            }.forEach {
-                field {
-                    name = it.id.getCommandFieldName()
-                    type = it
-                }
-            }
-            isDeserializable = false
-            // Import types used in the [generateFromSignersFunction] function
-            addImport(standardTypes.signerModule)
-            transactionMetadata.commands.forEach {
-                addImport(standardTypes.getSignerListModule(it.numberOfSigners))
-            }
-            addFunction(generateFromSignersFunction(transactionMetadata))
+            // TODO implement private/mixed commands
+//            name = COMMAND_GROUP
+//            transactionMetadata.commands.map {
+//                struct {
+//                    name = getCommandTypeName(it)
+//                    field {
+//                        name = "signers"
+//                        type = standardTypes.getSignerListModule(it.numberOfSigners)
+//                    }
+//                    isDeserializable = false
+//                }
+//            }.forEach {
+//                field {
+//                    name = it.id.getCommandFieldName()
+//                    type = it
+//                }
+//            }
+//            isDeserializable = false
+//            // Import types used in the [generateFromSignersFunction] function
+//            addImport(standardTypes.signerModule)
+//            transactionMetadata.commands.forEach {
+//                addImport(standardTypes.getSignerListModule(it.numberOfSigners))
+//            }
+//            addFunction(generateFromSignersFunction(transactionMetadata))
         }
     }
 
+    @Suppress("UnusedPrivateMember")
     private fun generateFromSignersFunction(
         transactionMetadata: ResolvedZKTransactionMetadata,
     ) = zincFunction {

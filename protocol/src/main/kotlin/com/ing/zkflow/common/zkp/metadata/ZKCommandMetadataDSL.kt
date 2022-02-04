@@ -2,9 +2,12 @@ package com.ing.zkflow.common.zkp.metadata
 
 import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.zkp.ZKFlow.DEFAULT_ZKFLOW_CONTRACT_ATTACHMENT_CONSTRAINT
+import com.ing.zkflow.common.zkp.ZKFlow.DEFAULT_ZKFLOW_DIGEST_IDENTIFIER
 import com.ing.zkflow.common.zkp.ZKFlow.DEFAULT_ZKFLOW_SIGNATURE_SCHEME
 import com.ing.zkflow.common.zkp.ZKFlow.requireSupportedSignatureScheme
 import com.ing.zkflow.common.zkp.metadata.ZKCircuit.Companion.resolve
+import com.ing.zkflow.common.zkp.metadata.ZKNetwork.Companion.resolve
+import com.ing.zkflow.crypto.IdentifyingDigestAlgorithm
 import com.ing.zkflow.util.camelToSnakeCase
 import net.corda.core.contracts.AttachmentConstraint
 import net.corda.core.contracts.CommandData
@@ -23,7 +26,7 @@ annotation class ZKCommandMetadataDSL
 /**
  * This class describes the circuit associated  with this command.
  *
- * It containts information about locations, artifacts, etc., so that
+ * It contains information about locations, artifacts, etc., so that
  * ZKFLow knows how to use it.
  */
 @ZKCommandMetadataDSL
@@ -48,13 +51,13 @@ data class ZKCircuit(
 
         private fun javaClass2ZincType(commandMetadata: ZKCommandMetadata): Map<KClass<out ContractState>, ZincType> {
             val mapping = mutableListOf<Pair<KClass<out ContractState>, ZincType>>()
-            mapping += commandMetadata.inputs.toZincTypes()
-            mapping += commandMetadata.references.toZincTypes()
-            mapping += commandMetadata.outputs.toZincTypes()
+            mapping += commandMetadata.privateInputs.toZincTypes()
+            mapping += commandMetadata.privateReferences.toZincTypes()
+            mapping += commandMetadata.privateOutputs.toZincTypes()
             return mapping.toMap()
         }
 
-        private fun ContractStateTypeCountList.toZincTypes() = map { it.type to stateKClassToZincType(it.type) }
+        private fun List<ZKTypedElement>.toZincTypes() = map { it.type to stateKClassToZincType(it.type) }
 
         private fun stateKClassToZincType(kClass: KClass<out ContractState>): ZincType {
             val simpleName = kClass.simpleName ?: error("classes used in transactions must be a named class")
@@ -99,6 +102,41 @@ data class ZKCircuit(
     }
 }
 
+@ZKCommandMetadataDSL
+data class ZKNotary(
+    /**
+     * The public key type used by the notary in this network.
+     */
+    var signatureScheme: SignatureScheme = DEFAULT_ZKFLOW_SIGNATURE_SCHEME,
+) {
+    init {
+        requireSupportedSignatureScheme(signatureScheme)
+    }
+}
+
+@ZKCommandMetadataDSL
+data class ZKNetwork(
+    var participantSignatureScheme: SignatureScheme = DEFAULT_ZKFLOW_SIGNATURE_SCHEME,
+    var attachmentConstraintType: KClass<out AttachmentConstraint> = DEFAULT_ZKFLOW_CONTRACT_ATTACHMENT_CONSTRAINT,
+    var digestService: IdentifyingDigestAlgorithm = DEFAULT_ZKFLOW_DIGEST_IDENTIFIER
+) {
+    var notary = ZKNotary()
+    fun notary(init: ZKNotary.() -> Unit) = notary.apply(init)
+
+    companion object {
+        fun ZKNetwork?.resolve(): ResolvedZKNetwork {
+            return if (this == null) ResolvedZKNetwork(
+                DEFAULT_ZKFLOW_SIGNATURE_SCHEME,
+                DEFAULT_ZKFLOW_CONTRACT_ATTACHMENT_CONSTRAINT,
+                DEFAULT_ZKFLOW_DIGEST_IDENTIFIER,
+                ZKNotary()
+            )
+            else
+                ResolvedZKNetwork(participantSignatureScheme, attachmentConstraintType, digestService, notary)
+        }
+    }
+}
+
 /**
  * Describes a Zinc type
  *
@@ -115,60 +153,58 @@ data class ZincType(
     val fileName: String
 )
 
-/**
- * Describes the number of occurrences for a type.
- */
-data class ContractStateTypeCount(val type: KClass<out ContractState>, val count: Int)
-
-@ZKCommandMetadataDSL
-class ContractStateTypeCountList : ArrayList<ContractStateTypeCount>() {
-    infix fun Int.of(type: KClass<out ContractState>) = add(ContractStateTypeCount(type, this))
+interface ZKTypedElement {
+    val type: KClass<out ContractState>
 }
 
+/**
+ * Describes the StateRefs (inputs or references) contents of which that should be available inside ZKP circuit
+ */
+data class ZKReference(override val type: KClass<out ContractState>, val forcePrivate: Boolean, val index: Int) : ZKTypedElement
+
+/**
+ * Describes the private component at a certain index in transaction's component list.
+ */
+data class ZKProtectedComponent(override val type: KClass<out ContractState>, val private: Boolean, val index: Int) : ZKTypedElement
+
+@ZKCommandMetadataDSL
+class ZKReferenceList : ArrayList<ZKReference>() {
+
+    fun private(type: KClass<out ContractState>): Pair<KClass<out ContractState>, Boolean> = type to true
+    fun any(type: KClass<out ContractState>): Pair<KClass<out ContractState>, Boolean> = type to false
+
+    infix fun Pair<KClass<out ContractState>, Boolean>.at(index: Int) = add(ZKReference(this.first, this.second, index))
+
+    override fun add(element: ZKReference): Boolean {
+        if (any { it.index == element.index }) error("Component visibility is already set for index ${element.index}")
+        return super.add(element)
+    }
+}
+
+@ZKCommandMetadataDSL
+class ZKProtectedComponentList : ArrayList<ZKProtectedComponent>() {
+
+    fun public(type: KClass<out ContractState>): Pair<KClass<out ContractState>, Boolean> = type to false
+    fun private(type: KClass<out ContractState>): Pair<KClass<out ContractState>, Boolean> = type to true
+
+    infix fun Pair<KClass<out ContractState>, Boolean>.at(index: Int) = add(ZKProtectedComponent(this.first, this.second, index))
+
+    override fun add(element: ZKProtectedComponent): Boolean {
+        if (any { it.index == element.index }) error("Component visibility is already set for index ${element.index}")
+        return super.add(element)
+    }
+}
+
+/**
+ * Only ZK-Protected (i.e. Private or Mixed) components should be listed here.
+ * Components that are not mentioned here are considered Public by default and will be publicly visible.
+ */
 @ZKCommandMetadataDSL
 class ZKCommandMetadata(val commandKClass: KClass<out CommandData>) {
     val commandSimpleName: String by lazy { commandKClass.simpleName ?: error("Command classes must be a named class") }
 
     /**
-     * This is always true, and can't be changed
-     */
-    val networkParameters = true
-
-    /**
-     * The notary [SignatureScheme] type required by this command.
-     *
-     * This should match the [SignatureScheme] defined for the network notary
-     * in the transaction metadata. If they don't match, an error is thrown.
-     */
-    var notarySignatureScheme: SignatureScheme = DEFAULT_ZKFLOW_SIGNATURE_SCHEME
-
-    /**
-     * The participant [SignatureScheme] type required by this command.
-     *
-     * Due to current limitations of the ZKP command, only one [SignatureScheme] per command is allowed for transaction participants.
-     * This should be enforced at network level and therefore should match the [SignatureScheme] defined for the network notary
-     * in the transaction metadata. If they don't match, an error is thrown.
-     */
-    var participantSignatureScheme: SignatureScheme = DEFAULT_ZKFLOW_SIGNATURE_SCHEME
-
-    /**
-     * The attachment constraint required by this command for all states
-     *
-     * Due to current limitations of the ZKP command, only one [AttachmentConstraint] per transaction is allowed.
-     * This should be enforced at network level and therefore should match the [AttachmentConstraint] defined for the network
-     * in the transaction metadata. If they don't match, an error is thrown.
-     */
-    var attachmentConstraintType: KClass<out AttachmentConstraint> = DEFAULT_ZKFLOW_CONTRACT_ATTACHMENT_CONSTRAINT
-
-    /**
-     * This determines whether a circuit is expected to exist for this command.
-     *
-     * If false, ZKFLow will ignore this command for the ZKP circuit in all ways, except for Merkle tree calculation.
-     */
-    var private = false
-
-    /**
-     * Infomation on the circuit and related artifacts to be used.
+     * Information on the circuit and related artifacts to be used.
      *
      * If the command is marked private, but this is null, ZKFLow will
      * try to find the circuit based on some default rules. If that fails,
@@ -176,70 +212,41 @@ class ZKCommandMetadata(val commandKClass: KClass<out CommandData>) {
      */
     var circuit: ZKCircuit? = null
 
+    var zkNetwork: ZKNetwork? = null
+
     var numberOfSigners = 0
 
-    val inputs = ContractStateTypeCountList()
-    val references = ContractStateTypeCountList()
-    val outputs = ContractStateTypeCountList()
-
-    /**
-     * These are only the attachments the user explicitly adds themselves.
-     *
-     * Contract attachments and other default attachments are added at transaction metadata level.
-     */
-    var numberOfUserAttachments = 0
+    val privateInputs = ZKReferenceList()
+    val privateReferences = ZKReferenceList()
+    val privateOutputs = ZKProtectedComponentList()
 
     var timeWindow = false
-
-    init {
-        requireSupportedSignatureScheme(participantSignatureScheme)
-        requireSupportedSignatureScheme(notarySignatureScheme)
-    }
 
     fun circuit(init: ZKCircuit.() -> Unit): ZKCircuit {
         circuit = ZKCircuit().apply(init)
         return circuit!!
     }
 
-    fun inputs(init: ContractStateTypeCountList.() -> Unit) = inputs.apply(init)
-    fun references(init: ContractStateTypeCountList.() -> Unit) = references.apply(init)
-    fun outputs(init: ContractStateTypeCountList.() -> Unit) = outputs.apply(init)
-
-    /** Present when called, otherwise absent */
-    fun timewindow() {
-        timeWindow = true
+    fun network(init: ZKNetwork.() -> Unit): ZKNetwork {
+        zkNetwork = ZKNetwork().apply(init)
+        return zkNetwork!!
     }
 
-    fun resolved(): ResolvedZKCommandMetadata {
-        return if (private) {
-            PrivateResolvedZKCommandMetadata(
-                circuit.resolve(this),
-                commandKClass,
-                numberOfSigners,
-                inputs.toList(),
-                references.toList(),
-                outputs.toList(),
-                numberOfUserAttachments,
-                timeWindow,
-                notarySignatureScheme,
-                participantSignatureScheme,
-                attachmentConstraintType
-            )
-        } else {
-            PublicResolvedZKCommandMetadata(
-                commandKClass,
-                numberOfSigners,
-                inputs.toList(),
-                references.toList(),
-                outputs.toList(),
-                numberOfUserAttachments,
-                timeWindow,
-                notarySignatureScheme,
-                participantSignatureScheme,
-                attachmentConstraintType
-            )
-        }
-    }
+    fun inputs(init: ZKReferenceList.() -> Unit) = privateInputs.apply(init)
+    fun references(init: ZKReferenceList.() -> Unit) = privateReferences.apply(init)
+    fun outputs(init: ZKProtectedComponentList.() -> Unit) = privateOutputs.apply(init)
+
+    fun resolved(): ResolvedZKCommandMetadata =
+        ResolvedZKCommandMetadata(
+            circuit.resolve(this),
+            commandKClass,
+            numberOfSigners,
+            privateInputs.toList(),
+            privateReferences.toList(),
+            privateOutputs.toList(),
+            timeWindow,
+            zkNetwork.resolve()
+        )
 }
 
 fun ZKCommandData.commandMetadata(init: ZKCommandMetadata.() -> Unit): ResolvedZKCommandMetadata {

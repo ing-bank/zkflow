@@ -1,11 +1,11 @@
 package com.ing.zkflow.compilation.zinc.template.parameters
 
-import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
+import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.compilation.zinc.template.NamedType
 import com.ing.zkflow.compilation.zinc.template.TemplateParameters
 
 class SignersTemplateParameters(
-    metadata: ResolvedZKTransactionMetadata,
+    metadata: ResolvedZKCommandMetadata,
 ) : NamedType, TemplateParameters(
     "signers.zn",
     listOf(

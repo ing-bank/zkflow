@@ -1,13 +1,11 @@
 package com.ing.zkflow.testing.fixtures.contract
 
 import com.ing.serialization.bfl.annotations.FixedLength
+import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.contracts.ZKOwnableState
-import com.ing.zkflow.common.contracts.ZKTransactionMetadataCommandData
-import com.ing.zkflow.common.transactions.zkFLowMetadata
+import com.ing.zkflow.common.transactions.zkTransactionMetadata
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
-import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
 import com.ing.zkflow.common.zkp.metadata.commandMetadata
-import com.ing.zkflow.common.zkp.metadata.transactionMetadata
 import com.ing.zkflow.serialization.CommandDataSerializerMap
 import com.ing.zkflow.serialization.ContractStateSerializerMap
 import com.ing.zkflow.testing.fixtures.contract.TestContract.Create.Companion.verifyCreate
@@ -16,7 +14,6 @@ import com.ing.zkflow.testing.fixtures.contract.TestContract.MoveBidirectional.C
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
-import net.corda.core.contracts.AlwaysAcceptAttachmentConstraint
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.CommandAndState
 import net.corda.core.contracts.CommandData
@@ -56,26 +53,16 @@ public class TestContract : Contract {
 
     // Commands
     @Serializable
-    public class Create : ZKTransactionMetadataCommandData {
-        override val transactionMetadata: ResolvedZKTransactionMetadata by transactionMetadata {
-            network {
-                attachmentConstraintType = AlwaysAcceptAttachmentConstraint::class
-            }
-            commands {
-                +Create::class
-            }
-        }
+    public class Create : ZKCommandData {
 
         @Transient
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
-            private = true
             circuit {
                 buildFolder =
                     File("${System.getProperty("user.dir")}/../zinc-platform-sources/build/circuits/create")
             }
-            outputs { 1 of TestState::class }
+            outputs { private(TestState::class) at 0 }
             numberOfSigners = 1
-            attachmentConstraintType = AlwaysAcceptAttachmentConstraint::class
         }
 
         init {
@@ -88,7 +75,37 @@ public class TestContract : Contract {
                 command: CommandWithParties<CommandData>
             ) {
                 // Transaction structure
-                tx.zkFLowMetadata.verify(tx)
+                tx.zkTransactionMetadata().verify(tx)
+
+                // Transaction contents
+                val output = tx.getOutput(0) as TestState
+                if (output.owner.owningKey !in command.signers) throw IllegalArgumentException("Failed requirement: the output state is owned by the command signer")
+            }
+        }
+    }
+
+    @Serializable
+    public class CreatePublic : ZKCommandData {
+
+        @Transient
+        override val metadata: ResolvedZKCommandMetadata = commandMetadata {
+            outputs {
+                public(TestState::class) at 0
+            }
+            numberOfSigners = 1
+        }
+
+        init {
+            CommandDataSerializerMap.register(this::class)
+        }
+
+        public companion object {
+            public fun verify(
+                tx: LedgerTransaction,
+                command: CommandWithParties<CommandData>
+            ) {
+                // Transaction structure
+                tx.zkTransactionMetadata().verify(tx)
 
                 // Transaction contents
                 val output = tx.getOutput(0) as TestState
@@ -102,22 +119,12 @@ public class TestContract : Contract {
      * This command is only used on [CollectSignaturesFlowTest]. It expects two signatures, but nothing else.
      */
     @Serializable
-    public class SignOnly : ZKTransactionMetadataCommandData {
-        override val transactionMetadata: ResolvedZKTransactionMetadata by transactionMetadata {
-            network {
-                attachmentConstraintType = AlwaysAcceptAttachmentConstraint::class
-            }
-            commands {
-                +SignOnly::class
-            }
-        }
+    public class SignOnly : ZKCommandData {
 
         @Transient
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
-            private = true
-            outputs { 1 of TestState::class }
+            outputs { private(TestState::class) at 0 }
             numberOfSigners = 2
-            attachmentConstraintType = AlwaysAcceptAttachmentConstraint::class
         }
 
         init {
@@ -126,27 +133,17 @@ public class TestContract : Contract {
     }
 
     @Serializable
-    public class Move : ZKTransactionMetadataCommandData {
-        override val transactionMetadata: ResolvedZKTransactionMetadata by transactionMetadata {
-            network {
-                attachmentConstraintType = AlwaysAcceptAttachmentConstraint::class
-            }
-            commands {
-                +Move::class
-            }
-        }
+    public class Move : ZKCommandData {
 
         @Transient
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
-            private = true
             circuit {
                 buildFolder =
                     File("${System.getProperty("user.dir")}/../zinc-platform-sources/build/circuits/move")
             }
-            inputs { 1 of TestState::class }
-            outputs { 1 of TestState::class }
+            inputs { any(TestState::class) at 0 }
+            outputs { private(TestState::class) at 0 }
             numberOfSigners = 2
-            attachmentConstraintType = AlwaysAcceptAttachmentConstraint::class
         }
 
         init {
@@ -159,7 +156,7 @@ public class TestContract : Contract {
                 command: CommandWithParties<CommandData>
             ) {
                 // Transaction structure
-                tx.zkFLowMetadata.verify(tx)
+                tx.zkTransactionMetadata().verify(tx)
 
                 // Transaction contents
                 val output = tx.getOutput(0) as TestState
@@ -173,15 +170,40 @@ public class TestContract : Contract {
     }
 
     @Serializable
-    public class MoveBidirectional : ZKTransactionMetadataCommandData {
-        override val transactionMetadata: ResolvedZKTransactionMetadata by transactionMetadata {
-            network {
-                attachmentConstraintType = AlwaysAcceptAttachmentConstraint::class
-            }
-            commands {
-                +MoveBidirectional::class
+    public class MovePrivateOnly : ZKCommandData {
+
+        @Transient
+        override val metadata: ResolvedZKCommandMetadata = commandMetadata {
+            inputs { private(TestState::class) at 0 }
+            outputs { private(TestState::class) at 0 }
+            numberOfSigners = 2
+        }
+
+        init {
+            CommandDataSerializerMap.register(this::class)
+        }
+
+        public companion object {
+            public fun verify(
+                tx: LedgerTransaction,
+                command: CommandWithParties<CommandData>
+            ) {
+                // Transaction structure
+                tx.zkTransactionMetadata().verify(tx)
+
+                // Transaction contents
+                val output = tx.getOutput(0) as TestState
+                val input = tx.getInput(0) as TestState
+
+                if (input.owner.owningKey !in command.signers) throw IllegalArgumentException("Failed requirement: the input state is owned by a required command signer")
+                if (output.owner.owningKey !in command.signers) throw IllegalArgumentException("Failed requirement: the outputs state is owned by a required command signer")
+                if (input.value != output.value) throw IllegalArgumentException("Failed requirement: the value of the input and out put should be equal")
             }
         }
+    }
+
+    @Serializable
+    public class MoveBidirectional : ZKCommandData {
 
         @Transient
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
@@ -189,15 +211,15 @@ public class TestContract : Contract {
                 buildFolder =
                     File("${System.getProperty("user.dir")}/../zinc-platform-sources/build/circuits/move_bidirectional")
             }
-            private = true
             inputs {
-                2 of TestState::class
+                any(TestState::class) at 0
+                any(TestState::class) at 1
             }
             outputs {
-                2 of TestState::class
+                private(TestState::class) at 0
+                private(TestState::class) at 1
             }
             numberOfSigners = 2
-            attachmentConstraintType = AlwaysAcceptAttachmentConstraint::class
         }
 
         init {
@@ -210,7 +232,7 @@ public class TestContract : Contract {
                 command: CommandWithParties<CommandData>
             ) {
                 // Transaction structure
-                tx.zkFLowMetadata.verify(tx)
+                tx.zkTransactionMetadata().verify(tx)
 
                 // Transaction contents
                 if (tx.inputsOfType<TestState>().sumBy { it.value } != tx.outputsOfType<TestState>().sumBy { it.value }) throw IllegalArgumentException(
@@ -238,7 +260,9 @@ public class TestContract : Contract {
 
         when (command.value) {
             is Create -> verifyCreate(tx, command)
+            is CreatePublic -> CreatePublic.verify(tx, command)
             is Move -> verifyMove(tx, command)
+            is MovePrivateOnly -> MovePrivateOnly.verify(tx, command)
             is MoveBidirectional -> verifyMoveBidirectional(tx, command)
             is SignOnly -> {
             }

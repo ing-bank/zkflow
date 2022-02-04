@@ -1,6 +1,7 @@
+@file:Suppress("TooManyFunctions")
 package com.ing.zkflow.common.transactions
 
-import com.ing.zkflow.common.contracts.ZKTransactionMetadataCommandData
+import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.zkp.ZKTransactionService
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
 import com.ing.zkflow.node.services.ServiceNames
@@ -32,11 +33,11 @@ import net.corda.core.transactions.ContractUpgradeWireTransaction
 import net.corda.core.transactions.LedgerTransaction
 import net.corda.core.transactions.NotaryChangeWireTransaction
 import net.corda.core.transactions.SignedTransaction
+import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.transactions.TraversableTransaction
 import net.corda.core.transactions.WireTransaction
 import net.corda.core.transactions.WireTransaction.Companion.resolveStateRefBinaryComponent
 import java.security.PublicKey
-import java.util.function.Predicate
 import kotlin.reflect.KClass
 
 /**
@@ -51,6 +52,12 @@ val KClass<out ContractState>.qualifiedStateClassName: String
 val KClass<out AttachmentConstraint>.qualifiedConstraintClassName: String
     get() = java.name ?: error("Attachment constraint classes must be a named class")
 
+/**
+ * Fully qualified name of ZKCommand class
+ */
+typealias ZKCommandClassName = String
+typealias Proof = ByteArray
+
 fun ServiceHub.collectUtxoInfos(
     stateRefs: List<StateRef>
 ): List<UtxoInfo> {
@@ -63,7 +70,7 @@ fun ServiceHub.collectUtxoInfos(
                 .componentGroups.single { it.groupIndex == ComponentGroupEnum.OUTPUTS_GROUP.ordinal }
                 .components[it.index].copyBytes()
 
-            val nonce = prevStx.buildFilteredTransaction(Predicate { true })
+            val nonce = prevStx.buildFilteredTransaction { true }
                 .filteredComponentGroups.single { it.groupIndex == ComponentGroupEnum.OUTPUTS_GROUP.ordinal }
                 .nonces[it.index]
 
@@ -119,8 +126,16 @@ fun WireTransaction.prettyPrint(): String {
     return buf.toString()
 }
 
+val TransactionBuilder.isZKFlowTransaction get() = commands().any { it.value is ZKCommandData }
+val TraversableTransaction.isZKFlowTransaction get() = commands.any { it.value is ZKCommandData }
+val LedgerTransaction.isZKFlowTransaction get() = commands.any { it.value is ZKCommandData }
+
 fun TraversableTransaction.zkTransactionMetadata(): ResolvedZKTransactionMetadata =
-    (commands.first().value as ZKTransactionMetadataCommandData).transactionMetadata
+    ResolvedZKTransactionMetadata(commands.filter { it.value is ZKCommandData }.map { (it.value as ZKCommandData).metadata })
+fun LedgerTransaction.zkTransactionMetadata(): ResolvedZKTransactionMetadata =
+    ResolvedZKTransactionMetadata(commands.filter { it.value is ZKCommandData }.map { (it.value as ZKCommandData).metadata })
+fun ZKTransactionBuilder.zkTransactionMetadata(): ResolvedZKTransactionMetadata =
+    ResolvedZKTransactionMetadata(commands().filter { it.value is ZKCommandData }.map { (it.value as ZKCommandData).metadata })
 
 @Throws(AttachmentResolutionException::class, TransactionResolutionException::class)
 @DeleteForDJVM

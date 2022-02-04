@@ -1,10 +1,8 @@
 package com.ing.zkflow.testing.fixtures.contract
 
-import com.ing.zkflow.common.contracts.ZKTransactionMetadataCommandData
+import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
-import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
 import com.ing.zkflow.common.zkp.metadata.commandMetadata
-import com.ing.zkflow.common.zkp.metadata.transactionMetadata
 import com.ing.zkflow.serialization.CommandDataSerializerMap
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
@@ -26,14 +24,10 @@ public class DummyContract : Contract {
     }
 
     @Serializable
-    public class Chill : ZKTransactionMetadataCommandData {
-        override val transactionMetadata: ResolvedZKTransactionMetadata by transactionMetadata {
-            commands { +Chill::class }
-        }
+    public class Chill : ZKCommandData {
 
         @Transient
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
-            private = true
             circuit { name = "Chill" }
             numberOfSigners = 2
         }

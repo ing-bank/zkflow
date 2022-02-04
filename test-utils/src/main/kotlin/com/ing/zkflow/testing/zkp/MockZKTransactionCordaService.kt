@@ -1,9 +1,8 @@
 package com.ing.zkflow.testing.zkp
 
-import com.ing.zkflow.common.contracts.ZKTransactionMetadataCommandData
 import com.ing.zkflow.common.zkp.AbstractZKTransactionService
 import com.ing.zkflow.common.zkp.ZKService
-import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
+import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.crypto.zinc
 import com.ing.zkflow.crypto.zincAlgorithm
 import net.corda.core.crypto.DigestService
@@ -21,10 +20,10 @@ public open class MockZKTransactionService(serviceHub: ServiceHub) : AbstractZKT
         HashAgility.init(zincAlgorithm)
     }
 
-    override fun zkServiceForTransactionMetadata(metadata: ResolvedZKTransactionMetadata): ZKService =
+    override fun zkServiceForCommandMetadata(metadata: ResolvedZKCommandMetadata): ZKService =
         MockZKService(serviceHub, DigestService.zinc)
 
-    override fun setup(command: ZKTransactionMetadataCommandData, force: Boolean) {
+    override fun setup(command: ResolvedZKCommandMetadata, force: Boolean) {
         // Do nothing
     }
 }

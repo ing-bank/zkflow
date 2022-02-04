@@ -3,6 +3,7 @@ package com.ing.zkflow.common.client.flows.testflows
 import co.paralleluniverse.fibers.Suspendable
 import com.ing.zkflow.client.flows.ZKCollectSignaturesFlow
 import com.ing.zkflow.client.flows.ZKFinalityFlow
+import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.transactions.ZKTransactionBuilder
 import com.ing.zkflow.common.transactions.signInitialTransaction
 import com.ing.zkflow.testing.fixtures.contract.TestContract
@@ -13,14 +14,14 @@ import net.corda.core.flows.InitiatingFlow
 import net.corda.core.transactions.SignedTransaction
 
 @InitiatingFlow
-class CreateFlow(private val value: Int? = null) : FlowLogic<SignedTransaction>() {
+class CreateFlow(private val value: Int? = null, private val createCommand: ZKCommandData = TestContract.Create()) : FlowLogic<SignedTransaction>() {
 
     @Suspendable
     override fun call(): SignedTransaction {
 
         val me = serviceHub.myInfo.legalIdentities.single().anonymise()
         val state = if (value != null) TestContract.TestState(me, value) else TestContract.TestState(me)
-        val issueCommand = Command(TestContract.Create(), me.owningKey) //
+        val issueCommand = Command(createCommand, me.owningKey) //
         val stateAndContract = StateAndContract(state, TestContract.PROGRAM_ID)
 
         val builder = ZKTransactionBuilder(serviceHub.networkMapCache.notaryIdentities.single())

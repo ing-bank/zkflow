@@ -1,8 +1,7 @@
 package com.ing.zkflow.common.zkp
 
-import com.ing.zkflow.common.contracts.ZKTransactionMetadataCommandData
 import com.ing.zkflow.common.zkp.ZKFlow.CIRCUITMANAGER_MAX_SETUP_WAIT_TIME_SECONDS
-import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
+import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import net.corda.core.node.AppServiceHub
 import net.corda.core.node.ServiceHub
 import net.corda.core.node.services.CordaService
@@ -14,31 +13,31 @@ class ZincZKTransactionCordaService(services: AppServiceHub) : ZincZKTransaction
 
 @CordaService
 open class ZincZKTransactionService(services: ServiceHub) : AbstractZKTransactionService(services) {
-    private val zkServices = mutableMapOf<ResolvedZKTransactionMetadata, ZincZKService>()
+    private val zkServices = mutableMapOf<ResolvedZKCommandMetadata, ZincZKService>()
     private val log = loggerFor<ZincZKTransactionService>()
 
-    override fun zkServiceForTransactionMetadata(metadata: ResolvedZKTransactionMetadata): ZincZKService {
+    override fun zkServiceForCommandMetadata(metadata: ResolvedZKCommandMetadata): ZincZKService {
         return zkServices.getOrPut(metadata) {
-            val circuitFolder = metadata.buildFolder
+            val circuitFolder = metadata.circuit.buildFolder
             val artifactFolder = File(circuitFolder, "data")
 
             return ZincZKService(
                 circuitFolder.absolutePath,
                 artifactFolder.absolutePath,
-                metadata.buildTimeout,
-                metadata.setupTimeout,
-                metadata.provingTimeout,
-                metadata.verificationTimeout
+                metadata.circuit.buildTimeout,
+                metadata.circuit.setupTimeout,
+                metadata.circuit.provingTimeout,
+                metadata.circuit.verificationTimeout
             )
         }
     }
 
-    override fun setup(command: ZKTransactionMetadataCommandData, force: Boolean) {
+    override fun setup(command: ResolvedZKCommandMetadata, force: Boolean) {
         if (force) {
             cleanup(command)
         }
 
-        val zkService = zkServiceForTransactionMetadata(command.transactionMetadata)
+        val zkService = zkServiceForCommandMetadata(command)
 
         val circuit = CircuitManager.CircuitDescription("${zkService.circuitFolder}/src", zkService.artifactFolder)
         CircuitManager.register(circuit)
@@ -61,5 +60,5 @@ open class ZincZKTransactionService(services: ServiceHub) : AbstractZKTransactio
         }
     }
 
-    fun cleanup(command: ZKTransactionMetadataCommandData) = zkServiceForTransactionMetadata(command.transactionMetadata).cleanup()
+    fun cleanup(command: ResolvedZKCommandMetadata) = zkServiceForCommandMetadata(command).cleanup()
 }

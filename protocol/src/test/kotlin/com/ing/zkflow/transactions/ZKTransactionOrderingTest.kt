@@ -1,17 +1,15 @@
 package com.ing.zkflow.transactions
 
 import com.ing.serialization.bfl.annotations.FixedLength
+import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.contracts.ZKContractState
-import com.ing.zkflow.common.contracts.ZKTransactionMetadataCommandData
 import com.ing.zkflow.common.transactions.UtxoInfo
 import com.ing.zkflow.common.transactions.ZKTransactionBuilder
 import com.ing.zkflow.common.zkp.Witness
 import com.ing.zkflow.common.zkp.ZKFlow
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
-import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
 import com.ing.zkflow.common.zkp.metadata.commandMetadata
 import com.ing.zkflow.common.zkp.metadata.packageName
-import com.ing.zkflow.common.zkp.metadata.transactionMetadata
 import com.ing.zkflow.crypto.BLAKE2S256
 import com.ing.zkflow.serialization.CommandDataSerializerMap
 import com.ing.zkflow.serialization.ContractStateSerializerMap
@@ -145,7 +143,11 @@ class ZKTransactionOrderingTest {
 
     @Test
     fun `Witness ordering is consistent with WireTransaction`() = withCustomSerializationEnv {
-        val witness = Witness.fromWireTransaction(wtx, inputUtxoInfos, refUtxoInfos)
+        val witness = Witness.fromWireTransaction(
+            wtx = wtx,
+            inputUtxoInfos = inputUtxoInfos,
+            referenceUtxoInfos = refUtxoInfos
+        )
 
         // compare inputs
         val actualDeserializedInputs = witness.inputsGroup.map { it.deserialize<StateRef>() }
@@ -177,31 +179,32 @@ class LocalContract : Contract {
     }
 
     @Serializable
-    class Create : ZKTransactionMetadataCommandData {
+    class Create : ZKCommandData {
         init {
             CommandDataSerializerMap.register(this::class)
         }
 
-        override val transactionMetadata: ResolvedZKTransactionMetadata by transactionMetadata {
-            commands { +Create::class }
-        }
-
         @Transient
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
-            private = true
             numberOfSigners = 1
             outputs {
-                2 of DummyZKStateA::class
-                2 of DummyZKStateB::class
+                private(DummyZKStateA::class) at 0
+                private(DummyZKStateA::class) at 1
+                private(DummyZKStateB::class) at 2
+                private(DummyZKStateB::class) at 3
             }
             inputs {
-                2 of DummyZKStateB::class
-                2 of DummyZKStateA::class
+                any(DummyZKStateB::class) at 0
+                any(DummyZKStateB::class) at 1
+                any(DummyZKStateA::class) at 2
+                any(DummyZKStateA::class) at 3
             }
             references {
-                2 of DummyZKStateB::class
-                1 of DummyState::class
-                2 of DummyZKStateA::class
+                any(DummyZKStateB::class) at 0
+                any(DummyZKStateB::class) at 1
+                any(DummyState::class) at 2
+                any(DummyZKStateA::class) at 3
+                any(DummyZKStateA::class) at 4
             }
         }
     }

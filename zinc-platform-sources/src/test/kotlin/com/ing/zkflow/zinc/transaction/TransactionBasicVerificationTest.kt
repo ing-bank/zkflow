@@ -1,6 +1,6 @@
 package com.ing.zkflow.zinc.transaction
 
-import com.ing.zkflow.common.contracts.ZKTransactionMetadataCommandData
+import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.serialization.BFLSerializationScheme
 import com.ing.zkflow.crypto.zinc
 import com.ing.zkflow.testing.fixtures.contract.DummyContract
@@ -99,11 +99,10 @@ class TransactionBasicVerificationTest {
 
         // This functionality is duplicated from ZKTransaction.toWireTransaction()
         val command = commands.firstOrNull() ?: error("There must be at least one command")
-        val zkCommand =
-            command.value as? ZKTransactionMetadataCommandData ?: error("Command must implement ZKTransactionMetadataCommandData")
+        val zkCommand = command.value as? ZKCommandData ?: error("Command must implement ZKTransactionMetadataCommandData")
 
         val additionalSerializationProperties =
-            mapOf<Any, Any>(BFLSerializationScheme.CONTEXT_KEY_TRANSACTION_METADATA to zkCommand.transactionMetadata)
+            mapOf<Any, Any>(BFLSerializationScheme.CONTEXT_KEY_TRANSACTION_METADATA to zkCommand.metadata)
 
         val wtxOriginal = createWtx(
             inputs,

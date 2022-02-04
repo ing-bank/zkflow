@@ -2,7 +2,6 @@ package com.example.contract
 
 import com.ing.serialization.bfl.annotations.FixedLength
 import com.ing.zkflow.common.contracts.ZKOwnableState
-import com.ing.zkflow.common.contracts.ZKTransactionMetadataCommandData
 import com.ing.zkflow.common.transactions.zkFLowMetadata
 import com.ing.zkflow.common.zkp.metadata.commandMetadata
 import com.ing.zkflow.common.zkp.metadata.transactionMetadata
@@ -60,11 +59,10 @@ class MockAssetContract : Contract {
         @Transient
         override val metadata = commandMetadata {
             attachmentConstraintType = AlwaysAcceptAttachmentConstraint::class
-            private = true
             numberOfSigners = 2
-            inputs { 1 of MockAsset::class }
-            outputs { 1 of MockAsset::class }
-            timewindow()
+            inputs { 1 private MockAsset::class }
+            outputs { 1 private MockAsset::class }
+            timeWindow = true
         }
     }
 
@@ -83,11 +81,10 @@ class MockAssetContract : Contract {
 
         @Transient
         override val metadata = commandMetadata {
-            private = true
             attachmentConstraintType = AlwaysAcceptAttachmentConstraint::class
             numberOfSigners = 1
-            outputs { 1 of MockAsset::class }
-            timewindow()
+            outputs { 1 private MockAsset::class }
+            timeWindow = true
         }
     }
 

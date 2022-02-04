@@ -102,14 +102,14 @@ class Witness(
     /**
      * The serialized UTXOs (TransactionState<T: ContractState>) pointed to by the serialized stateRefs of the inputsGroup parameter.
      *
-     * They should be indexed indentically to the inputsGroup parameter.
+     * They should be indexed identically to the inputsGroup parameter.
      */
     val serializedInputUtxos: Map<String, List<ByteArray>>,
 
     /**
      * The serialized UTXOs (TransactionState<T: ContractState>) pointed to by the serialized stateRefs of the referencesGroup parameter.
      *
-     * They should be indexed indentically to the referencesGroup parameter.
+     * They should be indexed identically to the referencesGroup parameter.
      */
     val serializedReferenceUtxos: Map<String, List<ByteArray>>,
 
@@ -117,7 +117,7 @@ class Witness(
      * The nonce hashes ([SecureHash]) for the UTXOs pointed to by the serialized stateRefs of the inputsGroup parameter.
      * Note that these are *not* serialized or sized, since [SecureHash] is already a list of bytes that is fixed size.
      *
-     * They should be indexed indentically to the inputsGroup parameter.
+     * They should be indexed identically to the inputsGroup parameter.
      */
     val inputUtxoNonces: List<SecureHash>,
 
@@ -157,19 +157,25 @@ class Witness(
             inputUtxoInfos: List<UtxoInfo>,
             referenceUtxoInfos: List<UtxoInfo>,
         ): Witness {
+
+            val metadata = wtx.zkTransactionMetadata()
+            val privateInputIndexes = metadata.privateInputs.map { it.index }
+            val privateReferencesIndexes = metadata.privateReferences.map { it.index }
+            val privateOutputIndexes = metadata.privateOutputs.map { it.index }
+
             // Reorder utxos according to be consistent with the order in the WireTransaction.
             val orderedInputUtxoInfos = wtx.inputs.map { inputRef ->
                 inputUtxoInfos.find { it.stateRef == inputRef } ?: error("No UtxoInfo provided for input ref $inputRef")
-            }
+            }.filterIndexed { index, _ -> privateInputIndexes.contains(index) }
             val orderedReferenceUtxoInfos = wtx.references.map { referenceRef ->
                 referenceUtxoInfos.find { it.stateRef == referenceRef } ?: error("No UtxoInfo provided for reference ref $referenceRef")
-            }
+            }.filterIndexed { index, _ -> privateReferencesIndexes.contains(index) }
 
             val javaClass2ZincType = wtx.zkTransactionMetadata().javaClass2ZincType
 
             return Witness(
                 inputsGroup = wtx.serializedComponentBytesFor(ComponentGroupEnum.INPUTS_GROUP),
-                outputsGroup = wtx.serializedComponentBytesForOutputGroup(ComponentGroupEnum.OUTPUTS_GROUP, javaClass2ZincType),
+                outputsGroup = wtx.serializedComponentBytesForOutputGroup(ComponentGroupEnum.OUTPUTS_GROUP, javaClass2ZincType, privateOutputIndexes),
                 commandsGroup = wtx.serializedComponentBytesFor(ComponentGroupEnum.COMMANDS_GROUP),
                 attachmentsGroup = wtx.serializedComponentBytesFor(ComponentGroupEnum.ATTACHMENTS_GROUP),
                 notaryGroup = wtx.serializedComponentBytesFor(ComponentGroupEnum.NOTARY_GROUP),
@@ -200,14 +206,20 @@ class Witness(
 
         private fun TraversableTransaction.serializedComponentBytesForOutputGroup(
             groupEnum: ComponentGroupEnum,
-            javaClass2ZincType: Map<KClass<out ContractState>, ZincType>
+            javaClass2ZincType: Map<KClass<out ContractState>, ZincType>,
+            privateOutputIndexes: List<Int>
         ): Map<String, List<ByteArray>> {
-            val zincTypes = outputs.map {
+
+            val privateOutputs = outputs.filterIndexed { index, _ -> privateOutputIndexes.contains(index) }
+
+            val zincTypes = privateOutputs.map {
                 javaClass2ZincType[it.data::class]?.typeName?.camelToSnakeCase() ?: error("Class ${it.data::class} needs to have an associated Zinc type")
             }
 
             val serializedStateBytes =
-                componentGroups.singleOrNull { it.groupIndex == groupEnum.ordinal }?.components?.mapIndexed { index, output -> zincTypes[index] to output.copyBytes() }
+                componentGroups.singleOrNull { it.groupIndex == groupEnum.ordinal }?.components
+                    ?.filterIndexed { index, _ -> privateOutputIndexes.contains(index) }
+                    ?.mapIndexed { index, output -> zincTypes[index] to output.copyBytes() }
 
             return serializedStateBytes
                 ?.groupBy { it.first }

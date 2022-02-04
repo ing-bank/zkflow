@@ -1,10 +1,11 @@
 package com.ing.zkflow.common.zkp
 
+import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.transactions.SignedZKVerifierTransaction
 import com.ing.zkflow.common.transactions.ZKVerifierTransaction
 import com.ing.zkflow.common.transactions.collectUtxoInfos
 import com.ing.zkflow.common.transactions.zkTransactionMetadata
-import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
+import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.node.services.ServiceNames
 import com.ing.zkflow.node.services.ZKTransactionResolutionException
 import com.ing.zkflow.node.services.ZKWritableVerifierTransactionStorage
@@ -29,18 +30,26 @@ abstract class AbstractZKTransactionService(val serviceHub: ServiceHub) : ZKTran
         wtx: WireTransaction
     ): ZKVerifierTransaction {
 
+        val zkTransactionMetadata = wtx.zkTransactionMetadata()
+
         val witness = Witness.fromWireTransaction(
             wtx,
             serviceHub.collectUtxoInfos(wtx.inputs),
             serviceHub.collectUtxoInfos(wtx.references)
         )
 
-        val proof = zkServiceForTransactionMetadata(wtx.zkTransactionMetadata()).proveTimed(witness)
+        val proofs = mutableMapOf<String, ByteArray>()
 
-        return ZKVerifierTransaction.fromWireTransaction(wtx, proof)
+        zkTransactionMetadata.commands.forEach { command ->
+            val commandName = command.commandKClass.qualifiedName!!
+            if (!proofs.containsKey(commandName))
+                proofs[commandName] = zkServiceForCommandMetadata(command).proveTimed(witness)
+        }
+
+        return ZKVerifierTransaction.fromWireTransaction(wtx, proofs)
     }
 
-    abstract override fun zkServiceForTransactionMetadata(metadata: ResolvedZKTransactionMetadata): ZKService
+    abstract override fun zkServiceForCommandMetadata(metadata: ResolvedZKCommandMetadata): ZKService
 
     override fun verify(svtx: SignedZKVerifierTransaction, checkSufficientSignatures: Boolean) {
         val vtx = svtx.tx
@@ -48,8 +57,16 @@ abstract class AbstractZKTransactionService(val serviceHub: ServiceHub) : ZKTran
         // Check transaction structure first, so we fail fast
         vtx.verify()
 
-        // Check proof
-        zkServiceForTransactionMetadata(vtx.zkTransactionMetadata()).verifyTimed(vtx.proof, calculatePublicInput(vtx))
+        // Check there is a proof for each ZKCommand
+        vtx.commands.forEach { command ->
+            if (command.value is ZKCommandData) require(vtx.proofs.containsKey(command.value::class.qualifiedName)) { "Proof is missing for command ${command.value}" }
+        }
+
+        // Check proofs
+        vtx.proofs.forEach { (commandClassName, proof) ->
+            val command = vtx.commands.single { it.value::class.qualifiedName == commandClassName }.value as ZKCommandData
+            zkServiceForCommandMetadata(command.metadata).verifyTimed(proof, calculatePublicInput(vtx))
+        }
 
         // Check signatures
         if (checkSufficientSignatures) {

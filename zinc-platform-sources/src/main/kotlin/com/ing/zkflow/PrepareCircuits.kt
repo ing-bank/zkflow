@@ -1,9 +1,10 @@
 @file:Suppress("MagicNumber") // Magic numbers will be removed when generating zinc based on Kotlin size annotations
 package com.ing.zkflow
 
-import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
-import com.ing.zkflow.common.zkp.metadata.TransactionMetadataCache
+import com.ing.zkflow.common.zkp.metadata.CommandMetadataCache
+import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.compilation.joinConstFiles
+import com.ing.zkflow.compilation.renderStateTemplates
 import com.ing.zkflow.compilation.zinc.template.TemplateConfigurations
 import com.ing.zkflow.compilation.zinc.template.TemplateConfigurations.Companion.doubleTemplateParameters
 import com.ing.zkflow.compilation.zinc.template.TemplateConfigurations.Companion.floatTemplateParameters
@@ -18,16 +19,12 @@ import com.ing.zkflow.compilation.zinc.template.parameters.IntegerTemplateParame
 import com.ing.zkflow.compilation.zinc.template.parameters.IssuedTemplateParameters
 import com.ing.zkflow.compilation.zinc.template.parameters.MapTemplateParameters
 import com.ing.zkflow.compilation.zinc.template.parameters.PublicKeyTemplateParameters
-import com.ing.zkflow.compilation.zinc.template.parameters.SerializedStateTemplateParameters
 import com.ing.zkflow.compilation.zinc.template.parameters.SignersTemplateParameters
-import com.ing.zkflow.compilation.zinc.template.parameters.StateGroupTemplateParameters
 import com.ing.zkflow.compilation.zinc.template.parameters.StringTemplateParameters
 import com.ing.zkflow.compilation.zinc.template.parameters.TxStateTemplateParameters
 import com.ing.zkflow.compilation.zinc.util.CodeGenerator
 import com.ing.zkflow.compilation.zinc.util.MerkleReplacer
 import com.ing.zkflow.compilation.zinc.util.ZincSourcesCopier
-import com.ing.zkflow.contract.TestMultipleStateContract
-import com.ing.zkflow.testing.fixtures.contract.TestContract
 import net.corda.core.crypto.Crypto
 import java.io.File
 
@@ -36,7 +33,7 @@ val templateConfigurations = getTemplateConfiguration()
 @Suppress("LongMethod") // Just fixing it now, will be thrown away anyway soon
 fun main(args: Array<String>) {
     val root = args[0]
-    val projectVersion = args[1]
+    val projectVersion = args.size.toString()
 
     // Render templates for circuits testing deserialization, etc.
     TemplateRenderer(getPlatformSourcesTestSourcesPath(root).toPath()) {
@@ -59,12 +56,7 @@ fun main(args: Array<String>) {
             val outputPath = mergedCircuitOutput.resolve(circuitName).resolve("src")
             val circuitSourcesPath = circuitSourcesBase.resolve(circuitName)
 
-            // Required to initialize the metadata cache
-            TestContract.Create().transactionMetadata
-            TestContract.Move().transactionMetadata
-            TestMultipleStateContract.Move().transactionMetadata
-
-            val metadata = TransactionMetadataCache.findMetadataByCircuitName(circuitName)
+            val metadata = CommandMetadataCache.findCommandMetadata(circuitName)
 
             val codeGenerator = CodeGenerator(outputPath, metadata)
             codeGenerator.generateConstsFile()
@@ -91,7 +83,7 @@ fun main(args: Array<String>) {
             val templateConfigurationsForCircuit = getTemplateConfiguration()
 
             templateConfigurationsForCircuit.apply {
-                metadata.javaClass2ZincType.forEach { (_, zincType) ->
+                metadata.circuit.javaClass2ZincType.forEach { (_, zincType) ->
                     addConfigurations(TxStateTemplateParameters(metadata, zincType))
                 }
 
@@ -118,8 +110,8 @@ private fun getPlatformSourcesPath(root: String): File {
     return File("$root/src/main/resources/zinc-platform-sources")
 }
 
-private fun getCircuitStates(circuitStatesPath: File, metadata: ResolvedZKTransactionMetadata): List<File> {
-    return metadata.javaClass2ZincType.map { (_, zincType) ->
+private fun getCircuitStates(circuitStatesPath: File, metadata: ResolvedZKCommandMetadata): List<File> {
+    return metadata.circuit.javaClass2ZincType.map { (_, zincType) ->
         val module = circuitStatesPath.resolve(zincType.fileName)
         require(module.exists()) { "Expected ${module.absolutePath}" }
         module
@@ -147,51 +139,6 @@ private fun getTemplateContents(root: String, templateName: String) =
         }
         .map { it.readText() }
         .getOrThrow()
-
-private fun renderStateTemplates(
-    metadata: ResolvedZKTransactionMetadata,
-    templateRenderer: TemplateRenderer,
-    templateConfigurationsForCircuit: TemplateConfigurations
-) {
-    templateConfigurationsForCircuit.apply {
-        metadata.inputTypeGroups.filter { it.count > 0 }.forEach { contractStateTypeCount ->
-            addConfigurations(
-                SerializedStateTemplateParameters(
-                    "input",
-                    contractStateTypeCount,
-                    metadata.javaClass2ZincType[contractStateTypeCount.type]
-                        ?: error("No Zinc Type defined for ${contractStateTypeCount.type}")
-                )
-            )
-        }
-        addConfigurations(StateGroupTemplateParameters("input", metadata.inputTypeGroups, metadata.javaClass2ZincType))
-
-        metadata.outputTypeGroups.filter { it.count > 0 }.forEach { contractStateTypeCount ->
-            addConfigurations(
-                SerializedStateTemplateParameters(
-                    "output",
-                    contractStateTypeCount,
-                    metadata.javaClass2ZincType[contractStateTypeCount.type]
-                        ?: error("No Zinc Type defined for ${contractStateTypeCount.type}")
-                )
-            )
-        }
-        addConfigurations(StateGroupTemplateParameters("output", metadata.outputTypeGroups, metadata.javaClass2ZincType))
-
-        metadata.referenceTypeGroups.filter { it.count > 0 }.forEach { contractStateTypeCount ->
-            addConfigurations(
-                SerializedStateTemplateParameters(
-                    "reference",
-                    contractStateTypeCount,
-                    metadata.javaClass2ZincType[contractStateTypeCount.type]
-                        ?: error("No Zinc Type defined for ${contractStateTypeCount.type}")
-                )
-            )
-        }
-        addConfigurations(StateGroupTemplateParameters("reference", metadata.referenceTypeGroups, metadata.javaClass2ZincType))
-    }.resolveAllTemplateParameters()
-        .forEach(templateRenderer::renderTemplate)
-}
 
 private fun getTemplateConfiguration(): TemplateConfigurations {
     return TemplateConfigurations().apply {
