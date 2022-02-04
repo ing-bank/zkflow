@@ -55,17 +55,17 @@ jobs:
           echo "$GITHUB_WORKSPACE/zinc-linux/" >> $GITHUB_PATH
 
       - name: Build with Gradle
-        run: ./gradlew check dependencyCheckAggregate test slowTest nightlyTest testReportAll jacocoTestReport --build-cache --stacktrace --info
+        run: ./gradlew check dependencyCheckAggregate test testReport jacocoRootReport --build-cache --stacktrace --info
         env:
           GITHUB_USERNAME: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: zkdapp-tester - Build with Gradle
-        run: ./gradlew build --stacktrace --info --build-cache
-        working-directory: zkdapp-tester
-        env:
-          GITHUB_USERNAME: ${{ github.actor }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#      - name: zkdapp-tester - Build with Gradle
+#        run: ./gradlew build --stacktrace --info --build-cache
+#        working-directory: zkdapp-tester
+#        env:
+#          GITHUB_USERNAME: ${{ github.actor }}
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload JUnit test report
         if: always()
