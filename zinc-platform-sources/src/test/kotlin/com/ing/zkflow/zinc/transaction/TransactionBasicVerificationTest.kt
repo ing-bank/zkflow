@@ -28,14 +28,12 @@ import net.corda.core.serialization.deserialize
 import net.corda.core.serialization.serialize
 import net.corda.core.transactions.WireTransaction
 import net.corda.testing.core.TestIdentity
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.time.Instant
 import kotlin.random.Random
 
 // @Disabled("Temporarily disabled, until we decide on where circuit artifacts will go")
-@Tag("slow")
 class TransactionBasicVerificationTest {
     companion object {
         @JvmStatic

@@ -2,10 +2,7 @@ plugins {
     kotlin("jvm")
     kotlin("plugin.serialization")
     id("maven-publish")
-}
-
-repositories {
-    maven("https://software.r3.com/artifactory/corda")
+    jacoco
 }
 
 dependencies {

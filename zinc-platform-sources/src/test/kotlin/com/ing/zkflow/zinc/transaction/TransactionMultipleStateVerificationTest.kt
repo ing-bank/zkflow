@@ -6,13 +6,11 @@ import com.ing.zkflow.testing.dsl.zkLedger
 import com.ing.zkflow.testing.zkp.ZKNulls
 import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 
 /**
  * This is the multi-state version of `TransactionVerificationTest` in order to show that zinc can handle multiple state types.
  */
-@Tag("slow")
 class TransactionMultipleStateVerificationTest {
     @Test
     fun `create and move verify`() {

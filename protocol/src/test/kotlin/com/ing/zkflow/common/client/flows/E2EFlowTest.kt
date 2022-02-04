@@ -22,7 +22,6 @@ import net.corda.testing.node.MockNetworkParameters
 import net.corda.testing.node.StartedMockNode
 import net.corda.testing.node.internal.cordappWithPackages
 import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 
 class E2EFlowTest {
@@ -74,7 +73,6 @@ class E2EFlowTest {
     }
 
     @Test
-    @Tag("slow")
     fun `End2End test with ZKP notary`() {
         val createFlow = CreateFlow()
         val createFuture = miniCorpNode.startFlow(createFlow)

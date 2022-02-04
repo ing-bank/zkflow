@@ -55,7 +55,7 @@ jobs:
           echo "$GITHUB_WORKSPACE/zinc-linux/" >> $GITHUB_PATH
 
       - name: Build with Gradle
-        run: ./gradlew check test slowTest testReport --stacktrace --info --build-cache
+        run: ./gradlew check test testReport jacocoRootReport --stacktrace --info --build-cache
         env:
           GITHUB_USERNAME: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

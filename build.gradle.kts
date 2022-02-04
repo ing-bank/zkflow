@@ -24,9 +24,7 @@ buildscript {
         }
     }
 
-    @Suppress("UNCHECKED_CAST")
-    this.repositories(repos as groovy.lang.Closure<Any>)
-
+    @Suppress("UNCHECKED_CAST") this.repositories(repos as groovy.lang.Closure<Any>)
 }
 
 plugins {
@@ -34,8 +32,9 @@ plugins {
     idea
     kotlin("jvm") apply false
     id("com.diffplug.spotless") apply false
-    id("io.gitlab.arturbosch.detekt") apply false
+    id("io.gitlab.arturbosch.detekt")
     id("org.owasp.dependencycheck") version "6.1.1"
+    jacoco
 }
 
 repositories {
@@ -63,10 +62,8 @@ task("checkJavaVersion") {
 val zincVersionRegex = ".*ZINC_VERSION: \"v(.*)\".*".toRegex()
 val zincVersionOutputRegex = "^znc (.*)$".toRegex()
 task("checkZincVersion") {
-    val requiredZincVersion = projectDir.resolve(".github/workflows/on-push.yml").readLines()
-        .filter { it.matches(zincVersionRegex) }
-        .map { it.replace(zincVersionRegex, "$1") }
-        .single()
+    val requiredZincVersion = projectDir.resolve(".github/workflows/on-push.yml").readLines().filter { it.matches(zincVersionRegex) }
+        .map { it.replace(zincVersionRegex, "$1") }.single()
     ByteArrayOutputStream().use { os ->
         val result = exec {
             executable = "znc"
@@ -89,25 +86,12 @@ task("checkZincVersion") {
 }
 
 // This task generates an aggregate test report from all subprojects
-// EXCLUDING NIGHTLY TESTS
 val testReport = tasks.register<TestReport>("testReport") {
     destinationDir = file("$buildDir/reports/tests/test")
     reportOn(subprojects.flatMap {
-        it.tasks.matching { task -> task is Test && task.name != "nightlyTest" && task.name != "allTests" }
-            .map { test -> test as Test; test.binaryResultsDirectory }
+        it.tasks.matching { task -> task is Test }.map { test -> test as Test; test.binaryResultsDirectory }
     })
 }
-
-// This task generates an aggregate test report from all subprojects
-// INCLUDING NIGHTLY TESTS
-val testReportAll = tasks.register<TestReport>("testReportAll") {
-    destinationDir = file("$buildDir/reports/tests/test")
-    reportOn(subprojects.flatMap {
-        it.tasks.filterIsInstance<Test>()
-            .map { test -> test as Test; test.binaryResultsDirectory }
-    })
-}
-
 
 idea {
     module {
@@ -116,27 +100,89 @@ idea {
     }
 }
 
+val detektAll by tasks.registering(io.gitlab.arturbosch.detekt.Detekt::class) {
+    description = "Run detekt over whole code base without the starting overhead for each module."
+    // Target version of the generated JVM bytecode. It is used for type resolution.
+    jvmTarget = "1.8"
+    config.setFrom("${rootDir}/config/detekt/detekt.yml")
+
+    parallel = true
+
+    source(files(projectDir))
+    include("**/*.kt")
+    exclude("**/*.kts")
+    exclude("**/resources/**")
+    exclude("**/build/**")
+
+    reports {
+        xml.enabled = false
+        html.enabled = true
+    }
+}
+
+jacoco {
+    val jacocoToolVersion: String by project
+    toolVersion = jacocoToolVersion
+}
+
+tasks.register("jacocoRootReport", JacocoReport::class) {
+    val subProjectReportTasks = subprojects.map { it.tasks.withType<JacocoReport>() }
+    val subprojectSourceDirs = subProjectReportTasks.flatMap { it.map { report -> report.sourceDirectories } }
+    val subprojectAdditionalSourceDirs = subProjectReportTasks.flatMap { it.map { report -> report.additionalSourceDirs } }
+    val subProjectClassDirectories = subProjectReportTasks.flatMap { it.map { report -> report.classDirectories } }
+    val subProjectExecutionData = subProjectReportTasks.flatMap { it.map { report -> report.executionData } }
+
+    dependsOn(subprojects.map { it.tasks.withType<Test>() })
+    dependsOn(subprojects.map { subProjectReportTasks })
+
+    additionalSourceDirs.setFrom(subprojectAdditionalSourceDirs)
+    sourceDirectories.setFrom(subprojectSourceDirs)
+    classDirectories.setFrom(subProjectClassDirectories)
+    executionData.setFrom(subProjectExecutionData)
+
+    reports {
+        xml.isEnabled = true
+        html.isEnabled = true
+        xml.destination = file("${buildDir}/reports/jacoco/aggregate/jacocoTestReport.xml")
+        html.destination = file("${buildDir}/reports/jacoco/aggregate/html")
+    }
+    setOnlyIf { true }
+}
+
+tasks.register("jacocoRootCoverageVerification", JacocoCoverageVerification::class) {
+    val subProjectReportTasks = subprojects.map { it.tasks.withType<JacocoReport>() }
+    val subprojectSourceDirs = subProjectReportTasks.flatMap { it.map { report -> report.sourceDirectories } }
+    val subprojectAdditionalSourceDirs = subProjectReportTasks.flatMap { it.map { report -> report.additionalSourceDirs } }
+    val subProjectClassDirectories = subProjectReportTasks.flatMap { it.map { report -> report.classDirectories } }
+    val subProjectExecutionData = subProjectReportTasks.flatMap { it.map { report -> report.executionData } }
+    additionalSourceDirs.setFrom(subprojectAdditionalSourceDirs)
+    sourceDirectories.setFrom(subprojectSourceDirs)
+    classDirectories.setFrom(subProjectClassDirectories)
+    executionData.setFrom(subProjectExecutionData)
+
+    violationRules {
+        rule {
+            element = "BUNDLE"
+            limit {
+                counter = "LINE"
+                minimum = "1.00".toBigDecimal()
+            }
+        }
+    }
+}
+
 subprojects {
     val repos: groovy.lang.Closure<RepositoryHandler> by rootProject.extra
     repositories(repos)
+
+    val subproject = this
 
     // If a subproject has the Java plugin loaded, we set the test config on it.
     plugins.withType(JavaPlugin::class.java) {
         // Make sure the project has the necessary plugins loaded
         plugins.apply {
-            apply("io.gitlab.arturbosch.detekt")
             apply("com.diffplug.spotless")
-            /* TODO: Aggregated Jacoco report
-             * https://docs.gradle.org/6.5.1/samples/sample_jvm_multi_project_with_code_coverage.html for aggregate coverage report
-             * https://gist.github.com/tsjensen/d8b9ab9e6314ae2f63f4955c44399dad
-             */
-            apply("jacoco")
             apply("idea")
-        }
-
-        configure<JacocoPluginExtension> {
-            val jacocoToolVersion: String by project
-            toolVersion = jacocoToolVersion
         }
 
         // Load the necessary dependencies
@@ -178,12 +224,41 @@ subprojects {
             }
         }
 
+        this@subprojects.afterEvaluate {
+            subproject.extensions.findByType(JacocoPluginExtension::class)?.let {
+                val jacocoToolVersion: String by project
+                it.toolVersion = jacocoToolVersion
+            }
+        }
+
+        fun ConfigurableFileCollection.exclude(excludes: List<String>) = setFrom(files(files.map { fileTree(it) { exclude(excludes) } }))
+        val jacocoConfigExcludesFile = "${rootProject.rootDir}/config/jacoco/excludes"
+        val jacocoExcludes = File(jacocoConfigExcludesFile).readLines().filterNot { it.startsWith("#") }
+
+        // This must be afterEvaluate, otherwise the excludes won't be applied.
+        this@subprojects.afterEvaluate {
+            this.tasks.withType<JacocoCoverageVerification> {
+                sourceDirectories.exclude(jacocoExcludes)
+                classDirectories.exclude(jacocoExcludes)
+                additionalClassDirs.exclude(jacocoExcludes)
+            }
+        }
+
+        // This must be afterEvaluate, otherwise the excludes won't be applied.
+        this@subprojects.afterEvaluate {
+            this.tasks.withType<JacocoReport> {
+                sourceDirectories.exclude(jacocoExcludes)
+                classDirectories.exclude(jacocoExcludes)
+                additionalClassDirs.exclude(jacocoExcludes)
+            }
+        }
+
         this@subprojects.tasks.apply {
             matching { it is JavaCompile || it is org.jetbrains.kotlin.gradle.tasks.KotlinCompile }.forEach {
                 it.dependsOn(":checkJavaVersion")
                 it.dependsOn("spotlessApply") // Autofix before check
                 it.dependsOn("spotlessCheck") // Fail on remaining non-autofixable issues
-                it.dependsOn("detekt")
+                it.dependsOn(":detektAll")
             }
 
             withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
@@ -199,32 +274,18 @@ subprojects {
                 }
             }
 
-            withType<io.gitlab.arturbosch.detekt.Detekt> {
-                // Target version of the generated JVM bytecode. It is used for type resolution.
-                jvmTarget = "1.8"
-                config.setFrom("${rootDir}/config/detekt/detekt.yml")
-
-                parallel = true
-
-                source(files(projectDir))
-                include("**/*.kt")
-                exclude("**/*.kts")
-                exclude("**/resources/")
-                exclude("**/build/")
-            }
-
             withType<Jar> {
                 // This makes the JAR's SHA-256 hash repeatable.
                 isPreserveFileTimestamps = false
                 isReproducibleFileOrder = true
             }
 
-            // This applies to all test types, both fast and slow
             withType<Test> {
                 dependsOn(":checkZincVersion")
 //                dependsOn(":zinc-platform-sources:circuits") // Make sure that the Zinc circuit is ready to use when running tests
 
                 val cores = Runtime.getRuntime().availableProcessors()
+                setForkEvery(100)
                 maxParallelForks = (Runtime.getRuntime().availableProcessors() / 2).takeIf { it > 0 } ?: 1
                 logger.info("Using $cores cores to run $maxParallelForks test forks.")
 
@@ -253,45 +314,16 @@ subprojects {
                 // This file determines for the standard java.util.logging how and what is logged to the console
                 // This is to configure logging that does not go through slf4j/log4j, like JUnit platform logging.
                 systemProperty(
-                    "java.util.logging.config.file",
-                    "${project.buildDir}/resources/test/logging-test.properties"
+                    "java.util.logging.config.file", "${project.buildDir}/resources/test/logging-test.properties"
                 )
             }
 
-            task<Test>("slowTest") {
-                val root = project.rootDir.absolutePath
-                inputs.dir("$root/zinc-platform-sources/circuits")
+            matching { it is Test && it.name == "test" }.forEach { test ->
+                test as Test
+                test.useJUnitPlatform()
 
-                useJUnitPlatform {
-                    includeTags("slow")
-                }
-                shouldRunAfter("test")
-            }
-
-            task<Test>("nightlyTest") {
-                val root = project.rootDir.absolutePath
-                inputs.dir("$root/zinc-platform-sources/circuits")
-
-                useJUnitPlatform {
-                    includeTags("nightly")
-                }
-                shouldRunAfter("test")
-                shouldRunAfter("slowTest")
-
-                // If running OWASP checks, run it first, so the build fails faster
-                mustRunAfter(":dependencyCheckAggregate")
-            }
-
-            task<Test>("allTests") {
-                dependsOn("test", "slowTest", "nightlyTest")
-            }
-
-            matching { it is Test && it.name == "test" }.forEach {
-                it as Test
-                // We have a separate task for slow tests
-                it.useJUnitPlatform {
-                    excludeTags("slow")
-                    excludeTags("nightly")
+                test.extensions.findByType(JacocoTaskExtension::class)?.let {
+                    it.isEnabled = false
                 }
             }
         }

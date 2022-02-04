@@ -3,14 +3,12 @@ package com.ing.zkflow.zinc.witness
 import com.ing.zkflow.common.zkp.ZincZKService
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Disabled
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.io.File
 import java.time.Duration
 import kotlin.time.DurationUnit
 import kotlin.time.measureTime
 
-@Tag("slow")
 @Disabled("This is a benchmark. Should only be enabled for benchmarks")
 class Bits2BytesTest {
     private val runOnly = true

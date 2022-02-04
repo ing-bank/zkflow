@@ -2,6 +2,7 @@ plugins {
     kotlin("jvm")
     id("maven-publish")
     id("java-library")
+    jacoco
 }
 
 kotlin {
