@@ -15,6 +15,16 @@ dependencies {
 
     val kspTestingVersion: String by project
     testImplementation("com.github.tschuchortdev:kotlin-compile-testing-ksp:$kspTestingVersion")
+
+    val kotlinPoetVersion: String by project
+    implementation("com.squareup:kotlinpoet:$kotlinPoetVersion")
+    implementation("com.squareup:kotlinpoet-ksp:$kotlinPoetVersion")
+}
+
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+    kotlinOptions {
+        freeCompilerArgs += "-Xopt-in=com.squareup.kotlinpoet.ksp.KotlinPoetKspPreview"
+    }
 }
 
 publishing {

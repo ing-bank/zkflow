@@ -38,6 +38,18 @@ object SerializersModuleRegistry {
     }
 }
 
+/**
+ * Interface to allow registration of serializers through providers.
+ * At runtime, all such providers will be picked up and injected to
+ * [BFLSerializationScheme]
+ */
+interface ZKDataProvider<T : Any> {
+    fun list(): List<Pair<KClass<out T>, KSerializer<out T>>>
+}
+
+interface ZKContractStateSerializerMapProvider : ZKDataProvider<ContractState>
+interface ZkCommandDataSerializerMapProvider : ZKDataProvider<CommandData>
+
 object ContractStateSerializerMap : SerializerMap<ContractState>()
 object CommandDataSerializerMap : SerializerMap<CommandData>()
 

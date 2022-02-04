@@ -1,4 +1,4 @@
-package com.ing.zkflow.annotated.contract
+package com.ing.zkflow
 
 import com.ing.zkflow.annotations.ASCII
 import com.ing.zkflow.annotations.ZKP
@@ -18,11 +18,12 @@ import net.corda.core.transactions.LedgerTransaction
 
 class TestTokenContract : Contract {
     companion object {
-        const val PROGRAM_ID: ContractClassName = "com.ing.zkflow.annotated.contract.TestTokenContract"
+        const val PROGRAM_ID: ContractClassName = "TestTokenContract"
     }
 
     @ZKP
     @BelongsToContract(TestTokenContract::class)
+    @Suppress("MagicNumber")
     data class TestTokenState(
         override val owner: @EdDSA AnonymousParty =
             AnonymousParty(PublicKeySerializer.fixedPublicKey(Crypto.EDDSA_ED25519_SHA512)),
@@ -37,6 +38,7 @@ class TestTokenContract : Contract {
     }
 
     // Commands
+    @ZKP
     class Create : ZKTransactionMetadataCommandData {
         override val transactionMetadata: ResolvedZKTransactionMetadata
             get() = TODO("Not yet implemented")
@@ -44,6 +46,7 @@ class TestTokenContract : Contract {
             get() = TODO("Not yet implemented")
     }
 
+    @ZKP
     class Move : ZKTransactionMetadataCommandData {
         override val transactionMetadata: ResolvedZKTransactionMetadata
             get() = TODO("Not yet implemented")
