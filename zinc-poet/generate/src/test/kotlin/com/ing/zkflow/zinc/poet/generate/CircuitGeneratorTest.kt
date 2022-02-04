@@ -12,6 +12,7 @@ import com.ing.zkflow.zinc.poet.generate.types.StandardTypes
 import com.ing.zkflow.zinc.poet.generate.types.StateAndRefsGroupFactory
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir

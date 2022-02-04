@@ -42,7 +42,7 @@ class ZKVerifierTransactionTest {
                 @Transient
                 override val metadata: ResolvedZKCommandMetadata = commandMetadata {
                     outputs {
-                        TestState::class at 1
+                        private(TestState::class) at 1
                     }
                     numberOfSigners = 1
                 }
@@ -90,7 +90,7 @@ class ZKVerifierTransactionTest {
                 @Transient
                 override val metadata: ResolvedZKCommandMetadata = commandMetadata {
                     outputs {
-                        TestState::class at 0
+                        private(TestState::class) at 0
                     }
                     numberOfSigners = 1
                 }
@@ -137,9 +137,9 @@ class ZKVerifierTransactionTest {
                 @Transient
                 override val metadata: ResolvedZKCommandMetadata = commandMetadata {
                     outputs {
-                        TestState::class at 2
+                        private(TestState::class) at 2
                         public(TestState::class) at 3
-                        TestState::class at 4
+                        private(TestState::class) at 4
                     }
                     numberOfSigners = 1
                 }

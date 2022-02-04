@@ -171,8 +171,8 @@ data class ZKProtectedComponent(override val type: KClass<out ContractState>, va
 class ZKReferenceList : ArrayList<ZKReference>() {
 
     fun private(type: KClass<out ContractState>): Pair<KClass<out ContractState>, Boolean> = type to true
+    fun any(type: KClass<out ContractState>): Pair<KClass<out ContractState>, Boolean> = type to false
 
-    infix fun KClass<out ContractState>.at(index: Int) = (this to false).at(index)
     infix fun Pair<KClass<out ContractState>, Boolean>.at(index: Int) = add(ZKReference(this.first, this.second, index))
 
     override fun add(element: ZKReference): Boolean {
@@ -185,8 +185,8 @@ class ZKReferenceList : ArrayList<ZKReference>() {
 class ZKProtectedComponentList : ArrayList<ZKProtectedComponent>() {
 
     fun public(type: KClass<out ContractState>): Pair<KClass<out ContractState>, Boolean> = type to false
+    fun private(type: KClass<out ContractState>): Pair<KClass<out ContractState>, Boolean> = type to true
 
-    infix fun KClass<out ContractState>.at(index: Int) = add(ZKProtectedComponent(this, true, index))
     infix fun Pair<KClass<out ContractState>, Boolean>.at(index: Int) = add(ZKProtectedComponent(this.first, this.second, index))
 
     override fun add(element: ZKProtectedComponent): Boolean {

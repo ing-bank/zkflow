@@ -61,7 +61,7 @@ public class TestContract : Contract {
                 buildFolder =
                     File("${System.getProperty("user.dir")}/../zinc-platform-sources/build/circuits/create")
             }
-            outputs { TestState::class at 0 }
+            outputs { private(TestState::class) at 0 }
             numberOfSigners = 1
         }
 
@@ -123,7 +123,7 @@ public class TestContract : Contract {
 
         @Transient
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
-            outputs { TestState::class at 0 }
+            outputs { private(TestState::class) at 0 }
             numberOfSigners = 2
         }
 
@@ -141,8 +141,8 @@ public class TestContract : Contract {
                 buildFolder =
                     File("${System.getProperty("user.dir")}/../zinc-platform-sources/build/circuits/move")
             }
-            inputs { TestState::class at 0 }
-            outputs { TestState::class at 0 }
+            inputs { any(TestState::class) at 0 }
+            outputs { private(TestState::class) at 0 }
             numberOfSigners = 2
         }
 
@@ -175,7 +175,7 @@ public class TestContract : Contract {
         @Transient
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
             inputs { private(TestState::class) at 0 }
-            outputs { TestState::class at 0 }
+            outputs { private(TestState::class) at 0 }
             numberOfSigners = 2
         }
 
@@ -212,12 +212,12 @@ public class TestContract : Contract {
                     File("${System.getProperty("user.dir")}/../zinc-platform-sources/build/circuits/move_bidirectional")
             }
             inputs {
-                TestState::class at 0
-                TestState::class at 1
+                any(TestState::class) at 0
+                any(TestState::class) at 1
             }
             outputs {
-                TestState::class at 0
-                TestState::class at 1
+                private(TestState::class) at 0
+                private(TestState::class) at 1
             }
             numberOfSigners = 2
         }
