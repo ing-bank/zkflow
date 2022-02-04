@@ -25,13 +25,22 @@ steps:
       path: $(GRADLE_USER_HOME)
     displayName: Configure gradle caching
 
+  - task: DownloadGitHubRelease@0
+    displayName: 'Fetch Zinc from Github'
+    inputs:
+      connection: 'Github Public Repo Access'
+      userRepository: 'ingzkp/zinc'
+      defaultVersionType: 'latest'
+      itemPattern: 'zinc-linux.tar.gz'
+      downloadPath: '$(System.ArtifactsDirectory)'
+
   - task: Bash@3
     displayName: 'Install Zinc in PATH'
     inputs:
       targetType: 'inline'
       script: |
         mkdir $(Pipeline.Workspace)/
-        tar xvzf lib/zinc-linux.tar.gz --directory $(Pipeline.Workspace)
+        tar xvzf $(System.ArtifactsDirectory)/zinc-linux.tar.gz --directory $(Pipeline.Workspace)
         echo "##vso[task.prependpath]$(Pipeline.Workspace)/zinc-linux/"
 
   - task: Gradle@2
