@@ -189,15 +189,11 @@ class ComplexBflTest {
             bytes(*IntArray(364))
         }
 
-        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run", 60)
+        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run", 10)
 
         stderr shouldBe ""
 
-        val output = try {
-            stdout.parseJson().jsonObject
-        } catch (e: Exception) {
-            fail("Invalid JSON: '$stdout'", e)
-        }
+        val output = stdout.parseJson().jsonObject
         output.pathElement("state") shouldBe JsonPrimitive("1")
         output.pathElement("amount", "quantity") shouldBe JsonPrimitive("12")
         output.pathElement("amount", "display_token_size", "fraction", "size") shouldBe JsonPrimitive("1")
