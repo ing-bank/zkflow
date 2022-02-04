@@ -1,5 +1,6 @@
 package com.ing.zkflow.zinc.poet.generate
 
+import com.ing.zinc.bfl.BflModule
 import com.ing.zinc.bfl.BflStruct
 import com.ing.zinc.bfl.allModules
 import com.ing.zinc.bfl.generator.CodeGenerationOptions
@@ -64,25 +65,24 @@ class CircuitGenerator(
 
         constsFactory.generateConsts(buildPath, codeGenerationOptions)
         cryptoUtilsFactory.generateCryptoUtils(buildPath)
-        generateMain(buildPath, witness, ledgerTransaction)
+        generateContractRules(buildPath, ledgerTransaction)
+        generateMain(buildPath, witness)
         buildPath.zincSourceFile(componentGroupEnum, codeGenerationOptions)
         logger.info("... done")
     }
 
-    private fun generateMain(
+    private fun generateContractRules(
         buildPath: Path,
-        witness: Witness,
         ledgerTransaction: BflStruct
     ) {
-        buildPath.zincSourceFile("main.zn") {
-            listOf(witness, ledgerTransaction, witness.publicInput)
+        buildPath.zincSourceFile("contract_rules.zn") {
+            listOf(ledgerTransaction, ledgerTransaction.fields.single { it.name == "commands" }.type as BflModule)
                 .sortedBy { it.getModuleName() }
                 .forEach { dependency ->
                     mod { module = dependency.getModuleName() }
                     use { path = "${dependency.getModuleName()}::${dependency.id}" }
                     newLine()
                 }
-
             function {
                 comment = "TODO"
                 name = "verify"
@@ -91,9 +91,28 @@ class CircuitGenerator(
                     type = ledgerTransaction.toZincId()
                 }
                 returnType = ZincPrimitive.Unit
-                body = ""
+                body = """
+                    // TODO Your assertions go here.
+                    assert!(true != false, "Reality is in an inconsistent state.");
+                """.trimIndent()
             }
+        }
+    }
+
+    private fun generateMain(
+        buildPath: Path,
+        witness: Witness
+    ) {
+        buildPath.zincSourceFile("main.zn") {
+            mod { module = "contract_rules" }
             newLine()
+            listOf(witness, witness.publicInput)
+                .sortedBy { it.getModuleName() }
+                .forEach { dependency ->
+                    mod { module = dependency.getModuleName() }
+                    use { path = "${dependency.getModuleName()}::${dependency.id}" }
+                    newLine()
+                }
             function {
                 name = "main"
                 parameter {
@@ -103,7 +122,7 @@ class CircuitGenerator(
                 returnType = witness.publicInput.toZincId()
                 body = """
                     let tx = input.deserialize();
-                    verify(tx);
+                    contract_rules::verify(tx);
                     input.generate_hashes()
                 """.trimIndent()
             }
