@@ -19,6 +19,7 @@ import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.REFERENCES
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.REFERENCE_NONCES
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.SIGNERS
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.TIME_WINDOW
+import com.ing.zkflow.zinc.poet.generate.types.witness.WitnessGroupsContainer
 
 class LedgerTransactionFactory(
     private val commandGroupFactory: CommandGroupFactory,

@@ -23,6 +23,8 @@ import com.ing.zkflow.zinc.poet.generate.types.LedgerTransactionFactory.Companio
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.componentGroupEnum
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.nonceDigest
 import com.ing.zkflow.zinc.poet.generate.types.witness.StandardComponentWitnessGroup
+import com.ing.zkflow.zinc.poet.generate.types.witness.WitnessGroup
+import com.ing.zkflow.zinc.poet.generate.types.witness.WitnessGroupsContainer
 
 @Suppress("TooManyFunctions")
 class Witness(

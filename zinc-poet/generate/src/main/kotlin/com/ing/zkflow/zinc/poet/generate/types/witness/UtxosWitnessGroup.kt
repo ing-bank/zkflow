@@ -12,7 +12,6 @@ import com.ing.zkflow.zinc.poet.generate.COMPUTE_UTXO_HASHES
 import com.ing.zkflow.zinc.poet.generate.types.SerializedStateGroup
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes
 import com.ing.zkflow.zinc.poet.generate.types.StateAndRefsGroupFactory
-import com.ing.zkflow.zinc.poet.generate.types.WitnessGroup
 
 data class UtxosWitnessGroup(
     override val groupName: String,

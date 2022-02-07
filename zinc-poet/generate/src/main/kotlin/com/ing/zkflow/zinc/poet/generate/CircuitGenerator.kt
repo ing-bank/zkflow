@@ -14,7 +14,7 @@ import com.ing.zkflow.zinc.poet.generate.types.StandardTypes
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.componentGroupEnum
 import com.ing.zkflow.zinc.poet.generate.types.StateAndRefsGroupFactory
 import com.ing.zkflow.zinc.poet.generate.types.Witness
-import com.ing.zkflow.zinc.poet.generate.types.WitnessGroupsContainer
+import com.ing.zkflow.zinc.poet.generate.types.witness.WitnessGroupsContainer
 import net.corda.core.internal.deleteRecursively
 import org.slf4j.LoggerFactory
 import java.nio.file.Path

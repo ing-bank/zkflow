@@ -5,7 +5,6 @@ import com.ing.zinc.bfl.generator.WitnessGroupOptions
 import com.ing.zinc.bfl.toZincId
 import com.ing.zinc.poet.ZincFunction
 import com.ing.zinc.poet.ZincType
-import com.ing.zkflow.zinc.poet.generate.types.WitnessGroup
 
 internal data class TypedWitnessGroup(
     override val groupName: String,

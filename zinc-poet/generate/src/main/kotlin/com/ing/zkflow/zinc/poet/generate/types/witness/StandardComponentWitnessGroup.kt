@@ -18,7 +18,6 @@ import com.ing.zinc.poet.indent
 import com.ing.zkflow.zinc.poet.generate.COMPUTE_NONCE
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes
 import com.ing.zkflow.zinc.poet.generate.types.Witness
-import com.ing.zkflow.zinc.poet.generate.types.WitnessGroup
 import net.corda.core.contracts.ComponentGroupEnum
 
 internal data class StandardComponentWitnessGroup(

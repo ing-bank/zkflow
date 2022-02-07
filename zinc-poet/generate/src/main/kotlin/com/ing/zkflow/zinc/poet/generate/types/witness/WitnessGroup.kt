@@ -1,4 +1,4 @@
-package com.ing.zkflow.zinc.poet.generate.types
+package com.ing.zkflow.zinc.poet.generate.types.witness
 
 import com.ing.zinc.bfl.BflType
 import com.ing.zinc.bfl.generator.WitnessGroupOptions

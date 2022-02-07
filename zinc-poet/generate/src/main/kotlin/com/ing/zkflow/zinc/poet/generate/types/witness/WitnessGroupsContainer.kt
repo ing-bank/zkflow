@@ -1,4 +1,4 @@
-package com.ing.zkflow.zinc.poet.generate.types
+package com.ing.zkflow.zinc.poet.generate.types.witness
 
 import com.ing.zinc.bfl.BflModule
 import com.ing.zinc.bfl.BflPrimitive
@@ -6,11 +6,13 @@ import com.ing.zinc.bfl.dsl.ArrayBuilder.Companion.array
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.common.zkp.metadata.ZKTypedElement
 import com.ing.zkflow.zinc.poet.generate.ZincTypeResolver
+import com.ing.zkflow.zinc.poet.generate.types.StandardTypes
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.nonceDigest
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.privacySalt
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.secureHash
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.stateRef
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.timeWindow
+import com.ing.zkflow.zinc.poet.generate.types.StateAndRefsGroupFactory
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.COMMANDS
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.INPUTS
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.INPUT_NONCES
@@ -24,10 +26,6 @@ import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.SERIALIZED_INPU
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.SERIALIZED_REFERENCE_UTXOS
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.SIGNERS
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.TIME_WINDOW
-import com.ing.zkflow.zinc.poet.generate.types.witness.OutputStateWitnessGroup
-import com.ing.zkflow.zinc.poet.generate.types.witness.StandardComponentWitnessGroup
-import com.ing.zkflow.zinc.poet.generate.types.witness.TypedWitnessGroup
-import com.ing.zkflow.zinc.poet.generate.types.witness.UtxosWitnessGroup
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.ContractState
 import kotlin.reflect.KClass
