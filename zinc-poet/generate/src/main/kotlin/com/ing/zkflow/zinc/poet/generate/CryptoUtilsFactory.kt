@@ -5,7 +5,7 @@ import com.ing.zinc.bfl.generator.ZincGenerator.zincSourceFile
 import com.ing.zinc.bfl.getLengthConstant
 import com.ing.zinc.bfl.toZincId
 import com.ing.zinc.poet.ZincPrimitive
-import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.nonceDigest
+import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.digest
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.privacySalt
 import java.nio.file.Path
 
@@ -17,7 +17,7 @@ class CryptoUtilsFactory {
         buildPath: Path,
     ) {
         buildPath.zincSourceFile("$CRYPTO_UTILS.zn") {
-            for (it in listOf(privacySalt, nonceDigest)) {
+            for (it in listOf(privacySalt, digest)) {
                 mod { module = it.getModuleName() }
                 use { path = "${it.getModuleName()}::${it.id}" }
                 use { path = "${it.getModuleName()}::${it.getLengthConstant()}" }
@@ -43,7 +43,7 @@ class CryptoUtilsFactory {
                     name = "internal_index"
                     type = ZincPrimitive.U32
                 }
-                returnType = nonceDigest.toZincId()
+                returnType = digest.toZincId()
                 body = """
                     let mut nonce = [false; ${privacySalt.getLengthConstant()} + $U32_BITS + $U32_BITS];
                     for i in 0..${privacySalt.getLengthConstant()} {

@@ -32,7 +32,7 @@ data class UtxosWitnessGroup(
         comment = "Compute the $groupName leaf hashes."
         name = "compute_${groupName}_hashes"
         returnType = ZincArray.zincArray {
-            elementType = StandardTypes.nonceDigest.toZincId()
+            elementType = StandardTypes.digest.toZincId()
             size = "$groupSize"
         }
         body = """

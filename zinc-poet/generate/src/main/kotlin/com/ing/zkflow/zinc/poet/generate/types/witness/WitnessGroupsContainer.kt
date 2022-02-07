@@ -7,7 +7,7 @@ import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.common.zkp.metadata.ZKTypedElement
 import com.ing.zkflow.zinc.poet.generate.ZincTypeResolver
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes
-import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.nonceDigest
+import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.digest
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.privacySalt
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.secureHash
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.timeWindow
@@ -109,7 +109,7 @@ class WitnessGroupsContainer(
     companion object {
         private fun arrayOfNonceDigests(count: Int) = array {
             capacity = count
-            elementType = nonceDigest
+            elementType = digest
         }
     }
 }

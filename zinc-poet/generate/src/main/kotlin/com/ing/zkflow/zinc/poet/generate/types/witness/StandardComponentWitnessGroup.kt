@@ -67,11 +67,11 @@ internal data class StandardComponentWitnessGroup(
         comment = "Compute the $groupName leaf hashes."
         name = "compute_${groupName}_leaf_hashes"
         returnType = ZincArray.zincArray {
-            elementType = StandardTypes.nonceDigest.toZincId()
+            elementType = StandardTypes.digest.toZincId()
             size = "$groupSize"
         }
         body = """
-            let mut ${groupName}_leaf_hashes = [[false; ${StandardTypes.nonceDigest.getLengthConstant()}]; $groupSize];
+            let mut ${groupName}_leaf_hashes = [[false; ${StandardTypes.digest.getLengthConstant()}]; $groupSize];
             for i in (0 as u32)..$groupSize {
                 ${groupName}_leaf_hashes[i] = blake2s_multi_input(
                     $COMPUTE_NONCE(self.${Witness.PRIVACY_SALT}, ${StandardTypes.componentGroupEnum.id}::${componentGroup.name} as u32, i),

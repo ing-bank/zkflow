@@ -26,7 +26,7 @@ import com.ing.zkflow.zinc.poet.generate.COMPUTE_LEAF_HASHES
 import com.ing.zkflow.zinc.poet.generate.COMPUTE_NONCE
 import com.ing.zkflow.zinc.poet.generate.COMPUTE_UTXO_HASHES
 import com.ing.zkflow.zinc.poet.generate.CRYPTO_UTILS
-import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.nonceDigest
+import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.digest
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.privacySalt
 
 @Suppress("TooManyFunctions")
@@ -63,7 +63,7 @@ data class SerializedStateGroup(
         mod { module = deserializedStruct.getModuleName() }
         use { path = "${deserializedStruct.getModuleName()}::${deserializedStruct.id}" }
         newLine()
-        listOf(privacySalt, nonceDigest).forEach {
+        listOf(privacySalt, digest).forEach {
             mod { module = it.getModuleName() }
             use { path = "${it.getModuleName()}::${it.id}" }
             use { path = "${it.getModuleName()}::${it.getSerializedTypeDef().getName()}" }
@@ -200,16 +200,16 @@ data class SerializedStateGroup(
         parameter {
             name = "nonces"
             type = zincArray {
-                elementType = nonceDigest.toZincId()
+                elementType = digest.toZincId()
                 size = "$groupSize"
             }
         }
         returnType = zincArray {
-            elementType = nonceDigest.toZincId()
+            elementType = digest.toZincId()
             size = "$groupSize"
         }
         body = """
-            let mut component_leaf_hashes = [${nonceDigest.defaultExpr()}; $groupSize];
+            let mut component_leaf_hashes = [${digest.defaultExpr()}; $groupSize];
             ${fieldHashes.indent(12.spaces)}
             component_leaf_hashes
         """.trimIndent()

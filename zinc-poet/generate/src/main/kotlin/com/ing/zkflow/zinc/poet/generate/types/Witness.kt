@@ -18,8 +18,8 @@ import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.zinc.poet.generate.COMPUTE_NONCE
 import com.ing.zkflow.zinc.poet.generate.CRYPTO_UTILS
 import com.ing.zkflow.zinc.poet.generate.types.LedgerTransactionFactory.Companion.LEDGER_TRANSACTION
+import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.digest
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.componentGroupEnum
-import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.nonceDigest
 import com.ing.zkflow.zinc.poet.generate.types.witness.StandardComponentWitnessGroup
 import com.ing.zkflow.zinc.poet.generate.types.witness.WitnessGroup
 import com.ing.zkflow.zinc.poet.generate.types.witness.WitnessGroupsContainer
@@ -36,7 +36,7 @@ class Witness(
 
     private val dependencies = (
         witnessGroups.flatMap { it.dependencies } +
-            listOf(componentGroupEnum, nonceDigest, publicInput)
+            listOf(componentGroupEnum, digest, publicInput)
         )
         .filterIsInstance<BflModule>()
         .distinctBy { it.id }
@@ -50,7 +50,7 @@ class Witness(
             .forEach { dependency ->
                 mod { module = dependency.getModuleName() }
                 use { path = "${dependency.getModuleName()}::${dependency.id}" }
-                if (dependency == nonceDigest) {
+                if (dependency == digest) {
                     use { path = "${dependency.getModuleName()}::${dependency.getLengthConstant()}" }
                 }
                 newLine()

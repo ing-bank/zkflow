@@ -21,7 +21,7 @@ class PublicInputFactory(
                         name = witnessGroup.groupName
                         type = array {
                             capacity = groupSize.toInt()
-                            elementType = StandardTypes.nonceDigest
+                            elementType = StandardTypes.digest
                         }
                     }
                 }

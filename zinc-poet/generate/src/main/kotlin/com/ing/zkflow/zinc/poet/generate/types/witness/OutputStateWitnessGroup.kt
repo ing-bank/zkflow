@@ -36,11 +36,11 @@ data class OutputStateWitnessGroup(
         comment = "Compute the $groupName leaf hashes."
         name = "compute_${groupName}_leaf_hashes"
         returnType = ZincArray.zincArray {
-            elementType = StandardTypes.nonceDigest.toZincId()
+            elementType = StandardTypes.digest.toZincId()
             size = "$groupSize"
         }
         body = """
-            let mut nonces = [${StandardTypes.nonceDigest.defaultExpr()}; $groupSize];
+            let mut nonces = [${StandardTypes.digest.defaultExpr()}; $groupSize];
 
             for i in (0 as u32)..$groupSize {
                 nonces[i] = $COMPUTE_NONCE(self.${Witness.PRIVACY_SALT}, ${StandardTypes.componentGroupEnum.id}::${ComponentGroupEnum.OUTPUTS_GROUP.name} as u32, i);

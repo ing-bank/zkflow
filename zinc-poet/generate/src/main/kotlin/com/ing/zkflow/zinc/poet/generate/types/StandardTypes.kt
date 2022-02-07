@@ -138,19 +138,17 @@ class StandardTypes(
                 }
             }
         }
-        // TODO Should be [SecureHash]?
-        internal val nonceDigest = BflTypeDef(
-            "NonceDigest",
+        internal val digest = BflTypeDef(
+            "Digest",
             array {
                 capacity = 32 * Byte.SIZE_BITS // TODO size depends on the used hashing algorithm
                 elementType = BflPrimitive.Bool
             }
         )
-        // TODO Should be [SecureHash]?
         internal val privacySalt = BflTypeDef(
             "PrivacySalt",
             array {
-                capacity = 32 * Byte.SIZE_BITS // TODO size depends on the used hashing algorithm
+                capacity = 32 * Byte.SIZE_BITS // Size is [PrivacySalt.MINIMUM_SIZE]
                 elementType = BflPrimitive.Bool
             }
         )
