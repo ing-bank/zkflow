@@ -2,10 +2,8 @@ package com.ing.zkflow.zinc.poet.generate
 
 import com.ing.zkflow.common.zkp.metadata.CommandMetadataCache
 import com.ing.zkflow.util.ensureDirectory
-import com.ing.zkflow.zinc.poet.generate.types.CommandGroupFactory
 import com.ing.zkflow.zinc.poet.generate.types.LedgerTransactionFactory
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes
-import com.ing.zkflow.zinc.poet.generate.types.StateAndRefsGroupFactory
 import net.corda.core.internal.exists
 import org.slf4j.LoggerFactory
 import java.nio.file.Files
@@ -69,15 +67,12 @@ private fun validateDiscoveredCircuits(circuitNames: List<String>) {
 private fun instantiate(): CircuitGenerator {
     val zincTypeResolver = ZincTypeGeneratorResolver(ZincTypeGenerator)
     val standardTypes = StandardTypes(zincTypeResolver)
-    val commandGroupFactory = CommandGroupFactory(standardTypes)
     return CircuitGenerator(
         BuildPathProvider.Default,
         LedgerTransactionFactory(
-            commandGroupFactory,
             standardTypes
         ),
         standardTypes,
-        StateAndRefsGroupFactory(standardTypes),
         zincTypeResolver,
         ConstsFactory(),
         CryptoUtilsFactory()

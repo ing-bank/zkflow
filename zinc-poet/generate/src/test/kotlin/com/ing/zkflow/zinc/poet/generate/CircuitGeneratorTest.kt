@@ -1,16 +1,12 @@
 package com.ing.zkflow.zinc.poet.generate
 
 import com.ing.zkflow.util.runCommand
-import com.ing.zkflow.zinc.poet.generate.types.CommandGroupFactory
 import com.ing.zkflow.zinc.poet.generate.types.LedgerTransactionFactory
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes
-import com.ing.zkflow.zinc.poet.generate.types.StateAndRefsGroupFactory
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.COMMANDS
-import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.INPUTS
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.NOTARY
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.OUTPUTS
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.PARAMETERS
-import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.REFERENCES
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.SERIALIZED_INPUT_UTXOS
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.SERIALIZED_REFERENCE_UTXOS
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.SIGNERS
@@ -32,17 +28,14 @@ internal class CircuitGeneratorTest {
 
     private val standardTypes = StandardTypes(zincTypeResolver)
 
-    private val commandGroupFactory = CommandGroupFactory(standardTypes)
-
     @ExperimentalTime
     @Test
     @Tag("slow")
     fun `generateCircuitFor should generate a working circuit`(@TempDir tempDir: Path) {
         val circuitGenerator = CircuitGenerator(
             BuildPathProvider.withPath(tempDir),
-            LedgerTransactionFactory(commandGroupFactory, standardTypes),
+            LedgerTransactionFactory(standardTypes),
             standardTypes,
-            StateAndRefsGroupFactory(standardTypes),
             zincTypeResolver,
             ConstsFactory(),
             CryptoUtilsFactory(),
@@ -60,7 +53,7 @@ internal class CircuitGeneratorTest {
         val publicInput = Json.parseToJsonElement(result.first) as JsonObject
 
         publicInput.shouldContainKeys(
-            INPUTS, OUTPUTS, REFERENCES, SERIALIZED_INPUT_UTXOS, SERIALIZED_REFERENCE_UTXOS, COMMANDS, PARAMETERS, SIGNERS, NOTARY
+            OUTPUTS, SERIALIZED_INPUT_UTXOS, SERIALIZED_REFERENCE_UTXOS, COMMANDS, PARAMETERS, SIGNERS, NOTARY
         )
     }
 

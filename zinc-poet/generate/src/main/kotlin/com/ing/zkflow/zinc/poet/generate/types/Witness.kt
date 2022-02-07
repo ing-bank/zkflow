@@ -17,8 +17,6 @@ import com.ing.zinc.poet.indent
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.zinc.poet.generate.COMPUTE_NONCE
 import com.ing.zkflow.zinc.poet.generate.CRYPTO_UTILS
-import com.ing.zkflow.zinc.poet.generate.types.CommandGroupFactory.Companion.COMMAND_GROUP
-import com.ing.zkflow.zinc.poet.generate.types.CommandGroupFactory.Companion.FROM_SIGNERS
 import com.ing.zkflow.zinc.poet.generate.types.LedgerTransactionFactory.Companion.LEDGER_TRANSACTION
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.componentGroupEnum
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.nonceDigest
@@ -34,7 +32,7 @@ class Witness(
 ) : BflModule {
     private val witnessGroups = witnessGroupsContainer.witnessGroups
 
-    internal val publicInput = PublicInputFactory(commandMetadata).create()
+    internal val publicInput = PublicInputFactory(witnessGroupsContainer).create()
 
     private val dependencies = (
         witnessGroups.flatMap { it.dependencies } +
@@ -60,9 +58,7 @@ class Witness(
         (
             listOfNotNull(
                 LEDGER_TRANSACTION,
-                COMMAND_GROUP,
             ) + listOf(
-                CommandGroupFactory.getCommandTypeName(commandMetadata),
                 standardTypes.getSignerListModule(commandMetadata.numberOfSigners).id,
             )
             ).distinct().sortedBy { it }
@@ -110,45 +106,18 @@ class Witness(
             comment = "Deserialize ${Witness::class.java.simpleName} into a $LEDGER_TRANSACTION."
             name = "deserialize"
             returnType = id(LEDGER_TRANSACTION)
-            val deserializeInputs = if (commandMetadata.privateInputs.isNotEmpty()) {
-                """
-                    let $INPUTS = InputGroup::from_states_and_refs(
-                        self.$SERIALIZED_INPUT_UTXOS.deserialize(),
-                        self.deserialize_$INPUTS(),
-                    );
-                """.trimIndent()
-            } else {
-                "// $INPUTS not present"
-            }
-            val deserializeReferences = if (commandMetadata.privateReferences.isNotEmpty()) {
-                """
-                    let $REFERENCES = ReferenceGroup::from_states_and_refs(
-                        self.$SERIALIZED_REFERENCE_UTXOS.deserialize(),
-                        self.deserialize_$REFERENCES(),
-                    );
-                """.trimIndent()
-            } else {
-                "// $REFERENCES not present"
-            }
 
             body = """
                 let $SIGNERS = self.deserialize_$SIGNERS();
-                ${deserializeInputs.indent(16.spaces)}
-                ${deserializeReferences.indent(16.spaces)}
 
                 $LEDGER_TRANSACTION {
-                    ${if (commandMetadata.privateInputs.isNotEmpty()) "$INPUTS: $INPUTS," else "// $INPUTS not present"}
+                    ${if (commandMetadata.privateInputs.isNotEmpty()) "$INPUTS: self.$SERIALIZED_INPUT_UTXOS.deserialize()," else "// $INPUTS not present"}
                     ${if (commandMetadata.privateOutputs.isNotEmpty()) "$OUTPUTS: self.$OUTPUTS.deserialize()," else "// $OUTPUTS not present"}
-                    ${if (commandMetadata.privateReferences.isNotEmpty()) "$REFERENCES: $REFERENCES," else "// $REFERENCES not present"}
-                    $COMMANDS: $COMMAND_GROUP::$FROM_SIGNERS($SIGNERS),
-                    // $ATTACHMENTS: self.deserialize_$ATTACHMENTS(),
+                    ${if (commandMetadata.privateReferences.isNotEmpty()) "$REFERENCES: self.$SERIALIZED_REFERENCE_UTXOS.deserialize()," else "// $REFERENCES not present"}
                     $NOTARY: self.deserialize_$NOTARY()[0],
                     ${if (commandMetadata.timeWindow) "$TIME_WINDOW: self.deserialize_$TIME_WINDOW()[0]," else "// $TIME_WINDOW not present"}
                     $PARAMETERS: self.deserialize_$PARAMETERS()[0],
                     $SIGNERS: $SIGNERS,
-                    ${PRIVACY_SALT}_field: self.$PRIVACY_SALT,
-                    ${if (commandMetadata.privateInputs.isNotEmpty()) "$INPUT_NONCES: self.$INPUT_NONCES," else "// $INPUT_NONCES not present"}
-                    ${if (commandMetadata.privateReferences.isNotEmpty()) "$REFERENCE_NONCES: self.$REFERENCE_NONCES," else "// $REFERENCE_NONCES not present"}
                 }
             """.trimIndent()
         }
@@ -203,7 +172,6 @@ class Witness(
         internal const val INPUTS = "inputs"
         internal const val REFERENCES = "references"
         internal const val COMMANDS = "commands"
-        internal const val ATTACHMENTS = "attachments"
         internal const val NOTARY = "notary"
         internal const val TIME_WINDOW = "time_window"
         internal const val PARAMETERS = "parameters"

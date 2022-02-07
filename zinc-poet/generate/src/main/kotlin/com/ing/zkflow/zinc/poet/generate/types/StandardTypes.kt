@@ -94,18 +94,6 @@ class StandardTypes(
         }
     }
 
-    internal fun stateAndRef(stateType: BflType) = struct {
-        name = "${stateType.id}StateAndRef"
-        field {
-            name = "state"
-            type = transactionState(stateType)
-        }
-        field {
-            name = "reference"
-            type = stateRef
-        }
-    }
-
     companion object {
         private val instant = struct {
             name = "Instant"
@@ -158,17 +146,6 @@ class StandardTypes(
             field {
                 name = "bytes"
                 type = byteArray(SecureHashSurrogate.BYTES_SIZE)
-            }
-        }
-        internal val stateRef = struct {
-            name = "StateRef"
-            field {
-                name = "hash"
-                type = secureHash
-            }
-            field {
-                name = "index"
-                type = BflPrimitive.U32
             }
         }
         internal val componentGroupEnum = enumOf(ComponentGroupEnum::class)

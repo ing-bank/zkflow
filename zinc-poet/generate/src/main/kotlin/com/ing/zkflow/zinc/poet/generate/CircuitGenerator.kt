@@ -1,6 +1,5 @@
 package com.ing.zkflow.zinc.poet.generate
 
-import com.ing.zinc.bfl.BflModule
 import com.ing.zinc.bfl.BflStruct
 import com.ing.zinc.bfl.allModules
 import com.ing.zinc.bfl.generator.CodeGenerationOptions
@@ -12,7 +11,6 @@ import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.zinc.poet.generate.types.LedgerTransactionFactory
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.componentGroupEnum
-import com.ing.zkflow.zinc.poet.generate.types.StateAndRefsGroupFactory
 import com.ing.zkflow.zinc.poet.generate.types.Witness
 import com.ing.zkflow.zinc.poet.generate.types.witness.WitnessGroupsContainer
 import net.corda.core.internal.deleteRecursively
@@ -24,7 +22,6 @@ class CircuitGenerator(
     private val buildPathProvider: BuildPathProvider,
     private val ledgerTransactionFactory: LedgerTransactionFactory,
     private val standardTypes: StandardTypes,
-    private val stateAndRefsGroupFactory: StateAndRefsGroupFactory,
     private val zincTypeResolver: ZincTypeResolver,
     private val constsFactory: ConstsFactory,
     private val cryptoUtilsFactory: CryptoUtilsFactory,
@@ -33,7 +30,6 @@ class CircuitGenerator(
         val witnessGroups = WitnessGroupsContainer(
             commandMetadata,
             standardTypes,
-            stateAndRefsGroupFactory,
             zincTypeResolver
         )
         val witness = Witness(
@@ -76,7 +72,7 @@ class CircuitGenerator(
         ledgerTransaction: BflStruct
     ) {
         buildPath.zincSourceFile("contract_rules.zn") {
-            listOf(ledgerTransaction, ledgerTransaction.fields.single { it.name == "commands" }.type as BflModule)
+            listOf(ledgerTransaction)
                 .sortedBy { it.getModuleName() }
                 .forEach { dependency ->
                     mod { module = dependency.getModuleName() }

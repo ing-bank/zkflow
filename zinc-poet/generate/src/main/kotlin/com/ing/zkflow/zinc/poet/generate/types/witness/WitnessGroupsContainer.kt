@@ -10,17 +10,13 @@ import com.ing.zkflow.zinc.poet.generate.types.StandardTypes
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.nonceDigest
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.privacySalt
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.secureHash
-import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.stateRef
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.timeWindow
-import com.ing.zkflow.zinc.poet.generate.types.StateAndRefsGroupFactory
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.COMMANDS
-import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.INPUTS
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.INPUT_NONCES
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.NOTARY
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.OUTPUTS
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.PARAMETERS
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.PRIVACY_SALT
-import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.REFERENCES
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.REFERENCE_NONCES
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.SERIALIZED_INPUT_UTXOS
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.SERIALIZED_REFERENCE_UTXOS
@@ -34,21 +30,14 @@ import kotlin.reflect.KClass
 class WitnessGroupsContainer(
     commandMetadata: ResolvedZKCommandMetadata,
     standardTypes: StandardTypes,
-    stateAndRefsGroupFactory: StateAndRefsGroupFactory,
     private val zincTypeResolver: ZincTypeResolver,
 ) {
     private val inputs = commandMetadata.privateInputs.toBflModuleMap()
     private val outputs = commandMetadata.privateOutputs.toBflModuleMap()
     private val references = commandMetadata.privateReferences.toBflModuleMap()
 
-    private val inputGroup =
-        StandardComponentWitnessGroup(INPUTS, stateRef, commandMetadata.privateInputs.size, ComponentGroupEnum.INPUTS_GROUP)
-    private val referenceGroup =
-        StandardComponentWitnessGroup(REFERENCES, stateRef, commandMetadata.privateReferences.size, ComponentGroupEnum.REFERENCES_GROUP)
     private val commandGroup =
         StandardComponentWitnessGroup(COMMANDS, BflPrimitive.U32, 1, ComponentGroupEnum.COMMANDS_GROUP)
-//    private val attachmentGroup =
-//        StandardComponentWitnessGroup(ATTACHMENTS, secureHash, commandMetadata.attachmentCount, ComponentGroupEnum.ATTACHMENTS_GROUP)
     private val notaryGroup =
         StandardComponentWitnessGroup(NOTARY, standardTypes.notaryModule, 1, ComponentGroupEnum.NOTARY_GROUP)
     private val timeWindowGroup =
@@ -82,7 +71,6 @@ class WitnessGroupsContainer(
         inputs,
         INPUT_NONCES,
         standardTypes,
-        stateAndRefsGroupFactory,
     )
     internal val serializedReferenceUtxos = UtxosWitnessGroup(
         SERIALIZED_REFERENCE_UTXOS,
@@ -90,15 +78,11 @@ class WitnessGroupsContainer(
         references,
         REFERENCE_NONCES,
         standardTypes,
-        stateAndRefsGroupFactory,
     )
 
     val witnessGroups: List<WitnessGroup> = listOfNotNull(
-        inputGroup,
         serializedOutputGroup,
-        referenceGroup,
         commandGroup,
-        // attachmentGroup,
         notaryGroup,
         timeWindowGroup,
         signerGroup,
