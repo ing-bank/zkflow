@@ -15,19 +15,21 @@ import com.ing.zinc.bfl.generator.WitnessGroupOptions
 import com.ing.zinc.naming.camelToSnakeCase
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.annotations.corda.EdDSA
+import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.serialization.bfl.serializers.CordaSerializers.CLASS_NAME_SIZE
 import com.ing.zkflow.serialization.bfl.serializers.SecureHashSurrogate
 import com.ing.zkflow.zinc.poet.generate.ZincTypeResolver
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.SignatureAttachmentConstraint
+import net.corda.core.crypto.Crypto
 import net.corda.core.identity.AnonymousParty
 import java.security.PublicKey
 
 @ZKP
-private data class WrapsParty(val party: @EdDSA AnonymousParty)
+private data class WrapsEdDsaParty(val party: @EdDSA AnonymousParty)
 
 @ZKP
-private data class WrapsPublicKey(val publicKey: @EdDSA PublicKey)
+private data class WrapsEdDsaPublicKey(val publicKey: @EdDSA PublicKey)
 
 @ZKP
 private data class WrapsSignatureAttachmentConstraint(val constraint: @EdDSA SignatureAttachmentConstraint)
@@ -37,38 +39,53 @@ private fun BflModule.getSingleFieldType(): BflModule = (this as BflStruct).fiel
 class StandardTypes(
     private val zincTypeResolver: ZincTypeResolver,
 ) {
-    val notaryModule: BflModule by lazy {
-        zincTypeResolver.zincTypeOf(WrapsParty::class).getSingleFieldType()
+    private val edDsaPartyNotaryModule by lazy { zincTypeResolver.zincTypeOf(WrapsEdDsaParty::class).getSingleFieldType() }
+    fun notaryModule(metadata: ResolvedZKCommandMetadata): BflModule {
+        require(metadata.network.notary.signatureScheme == Crypto.EDDSA_ED25519_SHA512) {
+            "Currently only EDDSA_ED25519_SHA512 is supported as signature scheme for notary."
+        }
+        return edDsaPartyNotaryModule
     }
 
-    val signerModule: BflModule by lazy {
-        zincTypeResolver.zincTypeOf(WrapsPublicKey::class).getSingleFieldType()
+    private val edDsaPublicKeySignerModule by lazy { zincTypeResolver.zincTypeOf(WrapsEdDsaPublicKey::class).getSingleFieldType() }
+    fun signerModule(metadata: ResolvedZKCommandMetadata): BflModule {
+        require(metadata.network.participantSignatureScheme == Crypto.EDDSA_ED25519_SHA512) {
+            "Currently only EDDSA_ED25519_SHA512 is supported as signature scheme for signers."
+        }
+        return edDsaPublicKeySignerModule
     }
 
-    private val signatureAttachmentConstraint: BflModule by lazy {
+    private val signatureAttachmentConstraint by lazy {
         zincTypeResolver.zincTypeOf(WrapsSignatureAttachmentConstraint::class).getSingleFieldType()
+    }
+    private fun attachmentConstraintModule(metadata: ResolvedZKCommandMetadata): BflModule {
+        require(metadata.network.attachmentConstraintType == SignatureAttachmentConstraint::class) {
+            "Currently only ${SignatureAttachmentConstraint::class.simpleName} is supported as attachment constraint."
+        }
+        return signatureAttachmentConstraint
     }
 
     internal fun getSignerListModule(
-        numberOfSigners: Int
+        numberOfSigners: Int,
+        commandMetadata: ResolvedZKCommandMetadata
     ) = list {
         capacity = numberOfSigners
-        elementType = signerModule
+        elementType = signerModule(commandMetadata)
     }
 
-    internal fun toWitnessGroupOptions(groupName: String, states: Map<BflModule, Int>): List<WitnessGroupOptions> = states.keys.map {
+    internal fun toWitnessGroupOptions(groupName: String, states: Map<BflModule, Int>, commandMetadata: ResolvedZKCommandMetadata): List<WitnessGroupOptions> = states.keys.map {
         WitnessGroupOptions.cordaWrapped(
             "${groupName}_${it.id.camelToSnakeCase()}",
-            transactionState(it)
+            transactionState(it, commandMetadata)
         )
     }
 
-    internal fun toTransactionStates(states: Map<BflModule, Int>): Map<BflModule, Int> =
+    internal fun toTransactionStates(states: Map<BflModule, Int>, commandMetadata: ResolvedZKCommandMetadata): Map<BflModule, Int> =
         states.map { (stateType, count) ->
-            transactionState(stateType) to count
+            transactionState(stateType, commandMetadata) to count
         }.toMap()
 
-    internal fun transactionState(stateType: BflType) = struct {
+    internal fun transactionState(stateType: BflType, commandMetadata: ResolvedZKCommandMetadata) = struct {
         name = "${stateType.id}TransactionState"
         field {
             name = "data"
@@ -80,7 +97,7 @@ class StandardTypes(
         }
         field {
             name = "notary"
-            type = notaryModule
+            type = notaryModule(commandMetadata)
         }
         field {
             name = "encumbrance"
@@ -90,7 +107,7 @@ class StandardTypes(
         }
         field {
             name = "constraint"
-            type = signatureAttachmentConstraint
+            type = attachmentConstraintModule(commandMetadata)
         }
     }
 

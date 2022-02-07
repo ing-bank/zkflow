@@ -59,7 +59,7 @@ class Witness(
             listOfNotNull(
                 LEDGER_TRANSACTION,
             ) + listOf(
-                standardTypes.getSignerListModule(commandMetadata.numberOfSigners).id,
+                standardTypes.getSignerListModule(commandMetadata.numberOfSigners, commandMetadata).id,
             )
             ).distinct().sortedBy { it }
             .forEach {

@@ -32,12 +32,12 @@ class LedgerTransactionFactory(
         if (commandMetadata.privateReferences.isNotEmpty()) {
             field { name = REFERENCES; type = witnessGroupsContainer.serializedReferenceUtxos.deserializedGroup }
         }
-        field { name = NOTARY; type = standardTypes.notaryModule }
+        field { name = NOTARY; type = standardTypes.notaryModule(commandMetadata) }
         if (commandMetadata.timeWindow) {
             field { name = TIME_WINDOW; type = timeWindow }
         }
         field { name = PARAMETERS; type = secureHash }
-        field { name = SIGNERS; type = array { capacity = commandMetadata.numberOfSigners; elementType = standardTypes.signerModule } }
+        field { name = SIGNERS; type = array { capacity = commandMetadata.numberOfSigners; elementType = standardTypes.signerModule(commandMetadata) } }
         isDeserializable = false
     }
 
