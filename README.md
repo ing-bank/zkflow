@@ -1,4 +1,4 @@
-[![PRs and merges to master](https://github.com/ingzkp/zkflow/actions/workflows/on-push.yml/badge.svg)](https://github.com/ingzkp/zkflow/actions/workflows/on-push.yml) [![Nightly build](https://github.com/ingzkp/zkflow/actions/workflows/scheduled-all.yml/badge.svg)](https://github.com/ingzkp/zkflow/actions/workflows/scheduled-all.yml)
+[![Build Status](https://dev.azure.com/NeoZKP/zkflow/_apis/build/status/ZKFLow%20PRs%20and%20mergest%20to%20master?branchName=master)](https://dev.azure.com/NeoZKP/zkflow/_build/latest?definitionId=1&branchName=master)
 
 ## Testing best practices
 
