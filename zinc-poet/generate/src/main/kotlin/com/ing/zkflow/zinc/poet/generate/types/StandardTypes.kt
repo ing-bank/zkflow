@@ -40,30 +40,27 @@ class StandardTypes(
     private val zincTypeResolver: ZincTypeResolver,
 ) {
     private val edDsaPartyNotaryModule by lazy { zincTypeResolver.zincTypeOf(WrapsEdDsaParty::class).getSingleFieldType() }
-    fun notaryModule(metadata: ResolvedZKCommandMetadata): BflModule {
-        require(metadata.network.notary.signatureScheme == Crypto.EDDSA_ED25519_SHA512) {
-            "Currently only EDDSA_ED25519_SHA512 is supported as signature scheme for notary."
+    fun notaryModule(metadata: ResolvedZKCommandMetadata): BflModule =
+        when (val signatureScheme = metadata.network.notary.signatureScheme) {
+            Crypto.EDDSA_ED25519_SHA512 -> edDsaPartyNotaryModule
+            else -> error("Enable ${signatureScheme.schemeCodeName} for notaryModule in ${StandardTypes::class}")
         }
-        return edDsaPartyNotaryModule
-    }
 
     private val edDsaPublicKeySignerModule by lazy { zincTypeResolver.zincTypeOf(WrapsEdDsaPublicKey::class).getSingleFieldType() }
-    fun signerModule(metadata: ResolvedZKCommandMetadata): BflModule {
-        require(metadata.network.participantSignatureScheme == Crypto.EDDSA_ED25519_SHA512) {
-            "Currently only EDDSA_ED25519_SHA512 is supported as signature scheme for signers."
+    fun signerModule(metadata: ResolvedZKCommandMetadata): BflModule =
+        when (val signatureScheme = metadata.network.participantSignatureScheme) {
+            Crypto.EDDSA_ED25519_SHA512 -> edDsaPublicKeySignerModule
+            else -> error("Enable ${signatureScheme.schemeCodeName} for signerModule in ${StandardTypes::class}")
         }
-        return edDsaPublicKeySignerModule
-    }
 
     private val signatureAttachmentConstraint by lazy {
         zincTypeResolver.zincTypeOf(WrapsSignatureAttachmentConstraint::class).getSingleFieldType()
     }
-    private fun attachmentConstraintModule(metadata: ResolvedZKCommandMetadata): BflModule {
-        require(metadata.network.attachmentConstraintType == SignatureAttachmentConstraint::class) {
-            "Currently only ${SignatureAttachmentConstraint::class.simpleName} is supported as attachment constraint."
+    private fun attachmentConstraintModule(metadata: ResolvedZKCommandMetadata): BflModule =
+        when (val attachmentConstraintClass = metadata.network.attachmentConstraintType) {
+            SignatureAttachmentConstraint::class -> signatureAttachmentConstraint
+            else -> error("Enable $attachmentConstraintClass for attachmentConstraintModule in ${StandardTypes::class}")
         }
-        return signatureAttachmentConstraint
-    }
 
     internal fun getSignerListModule(
         numberOfSigners: Int,

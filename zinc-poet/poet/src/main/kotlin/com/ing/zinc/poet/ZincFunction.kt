@@ -62,12 +62,12 @@ interface ZincFunction : ZincFileItem {
             override fun getBody(): String = body
             override fun getComment(): ZincComment? = comment
             override fun generate(): String {
-                val parameterString = getParameters().joinToString("\n") {
-                    "${if (it.isMutable()) "mut " else ""}${it.getName()}: ${it.getType().getId()},"
+                val parameterString = getParameters().joinToString(",\n") {
+                    "${if (it.isMutable()) "mut " else ""}${it.getName()}: ${it.getType().getId()}"
                 }
                 val definitionString = if (getParameters().isNotEmpty()) """
                     fn ${getName()}(
-                        ${parameterString.indent(24.spaces)}
+                        ${parameterString.indent(24.spaces)},
                     )
                 """.trimIndent() else """
                     fn ${getName()}()

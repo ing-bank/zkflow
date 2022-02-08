@@ -6,7 +6,16 @@ import com.ing.zinc.bfl.toZincId
 import com.ing.zinc.poet.ZincFunction
 import com.ing.zinc.poet.ZincType
 
-internal data class TypedWitnessGroup(
+/**
+ * This [WitnessGroup] is used to capture witness fields containing additional data used in the hashing functions.
+ * There will be no hashes calculated for this group.
+ *
+ * Witness fields:
+ * - privacy_salt
+ * - input_nonces
+ * - reference_nonces
+ */
+internal data class HashingMetadataWitnessGroup(
     override val groupName: String,
     val module: BflType,
     private val groupSize: Int,

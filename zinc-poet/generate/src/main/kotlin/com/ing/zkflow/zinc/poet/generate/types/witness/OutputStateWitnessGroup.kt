@@ -15,8 +15,7 @@ import com.ing.zkflow.zinc.poet.generate.types.StandardTypes
 import com.ing.zkflow.zinc.poet.generate.types.Witness
 import net.corda.core.contracts.ComponentGroupEnum
 
-@Suppress("TooManyFunctions")
-data class OutputStateWitnessGroup(
+internal data class OutputStateWitnessGroup(
     override val groupName: String,
     private val baseName: String,
     private val states: Map<BflModule, Int>,

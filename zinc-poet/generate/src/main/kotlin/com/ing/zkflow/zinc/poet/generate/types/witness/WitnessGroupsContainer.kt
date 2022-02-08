@@ -26,7 +26,6 @@ import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.ContractState
 import kotlin.reflect.KClass
 
-@Suppress("TooManyFunctions")
 class WitnessGroupsContainer(
     commandMetadata: ResolvedZKCommandMetadata,
     standardTypes: StandardTypes,
@@ -47,13 +46,13 @@ class WitnessGroupsContainer(
     private val parameterGroup =
         StandardComponentWitnessGroup(PARAMETERS, secureHash, 1, ComponentGroupEnum.PARAMETERS_GROUP)
 
-    private val privacySaltGroup = TypedWitnessGroup(PRIVACY_SALT, privacySalt, 1)
-    private val inputNoncesGroup = TypedWitnessGroup(
+    private val privacySaltGroup = HashingMetadataWitnessGroup(PRIVACY_SALT, privacySalt, 1)
+    private val inputNoncesGroup = HashingMetadataWitnessGroup(
         INPUT_NONCES,
         arrayOfNonceDigests(commandMetadata.privateInputs.size),
         commandMetadata.privateInputs.size
     )
-    private val referenceNoncesGroup = TypedWitnessGroup(
+    private val referenceNoncesGroup = HashingMetadataWitnessGroup(
         REFERENCE_NONCES,
         arrayOfNonceDigests(commandMetadata.privateReferences.size),
         commandMetadata.privateReferences.size

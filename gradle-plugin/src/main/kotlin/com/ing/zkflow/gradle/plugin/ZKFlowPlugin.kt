@@ -5,9 +5,9 @@ import com.ing.zkflow.gradle.task.CopyZincCircuitSourcesForTestsTask
 import com.ing.zkflow.gradle.task.CopyZincCircuitSourcesTask
 import com.ing.zkflow.gradle.task.CopyZincPlatformSourcesAndLibraryTask
 import com.ing.zkflow.gradle.task.CreateZincDirectoriesForCircuitTask
+import com.ing.zkflow.gradle.task.GenerateZincCircuitsTask
 import com.ing.zkflow.gradle.task.GenerateZincPlatformCodeFromTemplatesTask
 import com.ing.zkflow.gradle.task.PrepareCircuitForCompilationTask
-import com.ing.zkflow.gradle.task.GenerateZincCircuitsTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration

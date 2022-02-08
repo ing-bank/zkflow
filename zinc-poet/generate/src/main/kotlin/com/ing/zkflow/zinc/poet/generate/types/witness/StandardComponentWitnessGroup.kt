@@ -10,7 +10,6 @@ import com.ing.zinc.bfl.toZincId
 import com.ing.zinc.poet.Indentation.Companion.spaces
 import com.ing.zinc.poet.ZincArray
 import com.ing.zinc.poet.ZincFunction
-import com.ing.zinc.poet.ZincMethod
 import com.ing.zinc.poet.ZincMethod.Companion.zincMethod
 import com.ing.zinc.poet.ZincPrimitive
 import com.ing.zinc.poet.ZincType
@@ -45,7 +44,7 @@ internal data class StandardComponentWitnessGroup(
             variablePrefix = groupName,
             witnessVariable = "self.$groupName[i]"
         )
-        return ZincMethod.zincMethod {
+        return zincMethod {
             comment =
                 "Deserialize $groupName from the ${Witness::class.java.simpleName}."
             name = "deserialize_$groupName"

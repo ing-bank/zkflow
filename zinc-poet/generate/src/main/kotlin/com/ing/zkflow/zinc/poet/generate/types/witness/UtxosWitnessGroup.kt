@@ -12,7 +12,7 @@ import com.ing.zkflow.zinc.poet.generate.COMPUTE_UTXO_HASHES
 import com.ing.zkflow.zinc.poet.generate.types.SerializedStateGroup
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes
 
-data class UtxosWitnessGroup(
+internal data class UtxosWitnessGroup(
     override val groupName: String,
     private val baseName: String,
     private val states: Map<BflModule, Int>,

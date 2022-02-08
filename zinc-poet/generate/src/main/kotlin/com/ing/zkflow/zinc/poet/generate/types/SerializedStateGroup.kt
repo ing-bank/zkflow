@@ -7,12 +7,15 @@ import com.ing.zinc.bfl.CONSTS
 import com.ing.zinc.bfl.CORDA_MAGIC_BITS_SIZE
 import com.ing.zinc.bfl.CORDA_MAGIC_BITS_SIZE_CONSTANT
 import com.ing.zinc.bfl.TypeVisitor
+import com.ing.zinc.bfl.dsl.FieldBuilder.Companion.field
+import com.ing.zinc.bfl.dsl.ListBuilder.Companion.list
 import com.ing.zinc.bfl.dsl.StructBuilder.Companion.struct
 import com.ing.zinc.bfl.generator.CodeGenerationOptions
 import com.ing.zinc.bfl.generator.WitnessGroupOptions
 import com.ing.zinc.bfl.getLengthConstant
 import com.ing.zinc.bfl.getSerializedTypeDef
 import com.ing.zinc.bfl.toZincId
+import com.ing.zinc.naming.camelToSnakeCase
 import com.ing.zinc.poet.Indentation.Companion.spaces
 import com.ing.zinc.poet.ZincArray.Companion.zincArray
 import com.ing.zinc.poet.ZincFile
@@ -241,5 +244,21 @@ data class SerializedStateGroup(
         transactionStateLists.forEach {
             visitor.visitType(it.type)
         }
+    }
+
+    companion object {
+        private fun Map<BflModule, Int>.toFieldList(): List<BflStructField> = map { (stateType, count) ->
+            field {
+                name = stateTypeFieldName(stateType)
+                type = list {
+                    capacity = count
+                    elementType = stateType
+                }
+            }
+        }
+
+        private fun stateTypeFieldName(stateType: BflModule) = stateType.typeName()
+            .removeSuffix("TransactionState")
+            .camelToSnakeCase()
     }
 }
