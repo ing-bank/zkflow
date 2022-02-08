@@ -62,8 +62,7 @@ task("checkJavaVersion") {
 val zincVersionRegex = ".*ZINC_VERSION: \"v(.*)\".*".toRegex()
 val zincVersionOutputRegex = "^znc (.*)$".toRegex()
 task("checkZincVersion") {
-    val requiredZincVersion = projectDir.resolve(".github/workflows/on-push.yml").readLines().filter { it.matches(zincVersionRegex) }
-        .map { it.replace(zincVersionRegex, "$1") }.single()
+    val zincVersion: String by project
     ByteArrayOutputStream().use { os ->
         val result = exec {
             executable = "znc"
@@ -72,13 +71,13 @@ task("checkZincVersion") {
         }
         if (result.exitValue != 0) {
             throw IllegalStateException(
-                "ERROR: Zinc was not found on this system, please install Zinc version '$requiredZincVersion'."
+                "ERROR: Zinc was not found on this system, please install Zinc version '$zincVersion'."
             )
         } else {
             val zincVersion = os.toString().trim().replace(zincVersionOutputRegex, "$1")
-            if (zincVersion != requiredZincVersion) {
+            if (zincVersion != zincVersion) {
                 throw IllegalStateException(
-                    "ERROR: Zinc version '$requiredZincVersion' required, but '$zincVersion' found. Please update zinc."
+                    "ERROR: Zinc version '$zincVersion' required, but '$zincVersion' found. Please update zinc."
                 )
             }
         }
