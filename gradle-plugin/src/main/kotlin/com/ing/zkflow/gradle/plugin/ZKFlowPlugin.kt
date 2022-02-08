@@ -7,7 +7,7 @@ import com.ing.zkflow.gradle.task.CopyZincPlatformSourcesAndLibraryTask
 import com.ing.zkflow.gradle.task.CreateZincDirectoriesForCircuitTask
 import com.ing.zkflow.gradle.task.GenerateZincPlatformCodeFromTemplatesTask
 import com.ing.zkflow.gradle.task.PrepareCircuitForCompilationTask
-import com.ing.zkflow.gradle.task.ZincPoetTask
+import com.ing.zkflow.gradle.task.GenerateZincCircuitsTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
@@ -58,18 +58,6 @@ class ZKFlowPlugin : Plugin<Project> {
             project.pluginManager.apply("com.google.devtools.ksp")
             project.dependencies.add("ksp", extension.zkflow("compiler-plugin-ksp"))
 
-            // We need to add 'build/generated/ksp/src/main/resources' to the main sourceSet, because otherwise
-            // the generated META-INF/services file is not picked up by the `zincPoet` task.
-            // TODO The below code does not work, as a workaround we do this in [ZincPoetTask]
-            // // project.pluginManager.withPlugin("org.jetbrains.kotlin.jvm") {
-            // project.pluginManager.withPlugin("org.gradle.java") {
-            //     with(project.property("sourceSets") as SourceSetContainer) {
-            //         with(getByName("main")) {
-            //             resources.srcDir(project.layout.buildDirectory.dir("generated/ksp/src/main/resources"))
-            //         }
-            //     }
-            // }
-
             // Arrow.
             applyArrowCompilerPlugin(project, extension)
         }
@@ -87,8 +75,8 @@ class ZKFlowPlugin : Plugin<Project> {
             "generateZincPlatformCodeFromTemplates",
             GenerateZincPlatformCodeFromTemplatesTask::class.java
         )
-        val zincPoetTask = project.tasks.create("zincPoet", ZincPoetTask::class.java)
-        zincPoetTask
+        val generateZincCircuitsTask = project.tasks.create("generateZincCircuits", GenerateZincCircuitsTask::class.java)
+        generateZincCircuitsTask
             .dependsOn(COMPILE_KOTLIN) // So the command metadata can be found
             .mustRunAfter(COMPILE_KOTLIN)
 

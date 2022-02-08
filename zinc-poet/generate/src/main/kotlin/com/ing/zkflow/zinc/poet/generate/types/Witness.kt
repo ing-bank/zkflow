@@ -18,8 +18,8 @@ import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.zinc.poet.generate.COMPUTE_NONCE
 import com.ing.zkflow.zinc.poet.generate.CRYPTO_UTILS
 import com.ing.zkflow.zinc.poet.generate.types.LedgerTransactionFactory.Companion.LEDGER_TRANSACTION
-import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.digest
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.componentGroupEnum
+import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.digest
 import com.ing.zkflow.zinc.poet.generate.types.witness.StandardComponentWitnessGroup
 import com.ing.zkflow.zinc.poet.generate.types.witness.WitnessGroup
 import com.ing.zkflow.zinc.poet.generate.types.witness.WitnessGroupsContainer
