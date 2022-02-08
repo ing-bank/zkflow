@@ -1,8 +1,0 @@
-mod anonymous_party_bcsphincs256_and_reference;
-
-use anonymous_party_bcsphincs256_and_reference::AnonymousPartyBCSphincs256AndReference;
-use anonymous_party_bcsphincs256_and_reference::SerializedAnonymousPartyBCSphincs256AndReference;
-
-fn main(witness: SerializedAnonymousPartyBCSphincs256AndReference) -> AnonymousPartyBCSphincs256AndReference {
-    AnonymousPartyBCSphincs256AndReference::deserialize(witness)
-}

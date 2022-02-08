@@ -1,8 +1,0 @@
-# Ignore standard zargo outputs
-**/data/proof.txt
-**/data/proving-key
-**/data/public-data.json
-**/data/verifying-key.txt
-
-# Ignore Corda test artifacts for the circuit
-artifacts

@@ -1,7 +1,0 @@
-mod platform_zoned_date_time;
-
-use platform_zoned_date_time::ZonedDateTime;
-
-fn main(left: ZonedDateTime, right: ZonedDateTime) -> bool {
-    ZonedDateTime::equals(left, right)
-}

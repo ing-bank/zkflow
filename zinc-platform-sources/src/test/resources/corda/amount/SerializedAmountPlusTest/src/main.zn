@@ -1,7 +1,0 @@
-mod amount_8_big_decimal_100_20;
-use amount_8_big_decimal_100_20::Amount_8_BigDecimal_100_20;
-use amount_8_big_decimal_100_20::SerializedAmount_8_BigDecimal_100_20;
-
-fn main(left: SerializedAmount_8_BigDecimal_100_20, right: SerializedAmount_8_BigDecimal_100_20) -> Amount_8_BigDecimal_100_20 {
-    Amount_8_BigDecimal_100_20::plus(Amount_8_BigDecimal_100_20::deserialize(left), Amount_8_BigDecimal_100_20::deserialize(right))
-}

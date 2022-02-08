@@ -5,8 +5,8 @@ plugins {
 }
 
 zkp {
-    zkFlowTemplateConfigurationClassName = "com.example.ZKFlowTemplateConfiguration"
 }
+
 cordapp {
     targetPlatformVersion(10)
     minimumPlatformVersion(10)

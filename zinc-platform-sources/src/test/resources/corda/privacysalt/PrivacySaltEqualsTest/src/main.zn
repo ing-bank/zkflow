@@ -1,7 +1,0 @@
-mod platform_privacy_salt;
-
-use platform_privacy_salt::PrivacySalt;
-
-fn main(left: PrivacySalt, right: PrivacySalt) -> bool {
-    PrivacySalt::equals(left, right)
-}

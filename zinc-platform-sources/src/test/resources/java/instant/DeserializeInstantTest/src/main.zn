@@ -1,8 +1,0 @@
-mod platform_instant;
-
-use platform_instant::Instant;
-use platform_instant::SerializedInstant;
-
-fn main(witness: SerializedInstant) -> Instant {
-    Instant::deserialize(witness)
-}

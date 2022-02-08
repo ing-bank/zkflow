@@ -1,8 +1,0 @@
-mod string_1_collection_3;
-
-use string_1_collection_3::String_1_Collection_3;
-use string_1_collection_3::SerializedString_1_Collection_3;
-
-fn main(witness: SerializedString_1_Collection_3) -> String_1_Collection_3 {
-    String_1_Collection_3::deserialize(witness)
-}

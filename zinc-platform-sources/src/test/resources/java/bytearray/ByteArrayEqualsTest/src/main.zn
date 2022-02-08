@@ -1,7 +1,0 @@
-mod byte_array_32;
-
-use byte_array_32::ByteArray_32;
-
-fn main(left: ByteArray_32, right: ByteArray_32) -> bool {
-    ByteArray_32::equals(left, right)
-}

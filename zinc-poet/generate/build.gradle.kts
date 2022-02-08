@@ -11,7 +11,6 @@ dependencies {
     implementation(project(":zinc-poet:bfl"))
     implementation(project(":zinc-poet:poet"))
     implementation(project(":protocol"))
-    implementation(project(":serialization")) // TODO remove when serialization-candidate is mainline or code is generated completely from serial descriptors
     implementation(project(":serialization-candidate"))
     implementation(project(":annotations"))
 

@@ -1,8 +1,0 @@
-mod tx_state_test_state;
-
-use tx_state_test_state::TxStateTestState;
-use tx_state_test_state::SerializedTxStateTestState;
-
-fn main(witness: SerializedTxStateTestState) -> TxStateTestState {
-    TxStateTestState::deserialize(witness)
-}

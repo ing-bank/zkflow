@@ -1,8 +1,0 @@
-mod party_bcsphincs256_and_reference;
-
-use party_bcsphincs256_and_reference::PartyBCSphincs256AndReference;
-use party_bcsphincs256_and_reference::SerializedPartyBCSphincs256AndReference;
-
-fn main(witness: SerializedPartyBCSphincs256AndReference) -> PartyBCSphincs256AndReference {
-    PartyBCSphincs256AndReference::deserialize(witness)
-}
