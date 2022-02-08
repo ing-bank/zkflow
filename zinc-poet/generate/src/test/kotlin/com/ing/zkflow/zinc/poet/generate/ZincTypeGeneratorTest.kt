@@ -50,6 +50,9 @@ class ZincTypeGeneratorTest {
             Arguments.of(ClassWithPublicKey.serializer().descriptor, structWithPublicKey),
             Arguments.of(ClassWithAnonymousParty.serializer().descriptor, structWithAnonymousParty),
             Arguments.of(ClassWithParty.serializer().descriptor, structWithParty),
+            Arguments.of(ClassWithSecureHash.serializer().descriptor, structWithSecureHash),
+            Arguments.of(ClassWithSignatureAttachmentConstraint.serializer().descriptor, structWithSignatureAttachmentConstraint),
+            Arguments.of(ClassWithHashAttachmentConstraint.serializer().descriptor, structWithHashAttachmentConstraint),
         )
 
         @JvmStatic
