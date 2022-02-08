@@ -3,6 +3,8 @@
 # Add steps that build, run tests, deploy, and more:
 # https://aka.ms/yaml
 
+trigger: none # We don't want this to trigger on any push, only scheduled
+
 schedules:
 - cron: "0 0 * * *"
   displayName: Nightly build
