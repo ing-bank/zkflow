@@ -1,0 +1,90 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+schedules:
+- cron: "0 0 * * *"
+  displayName: Nightly build
+  branches:
+    include:
+    - master
+    
+pool:
+  name: NeoZKP
+
+variables:
+  GRADLE_USER_HOME: $(Pipeline.Workspace)/.gradle
+
+steps:
+  - task: DownloadGitHubRelease@0
+    displayName: 'Fetch Zinc from Github'
+    inputs:
+      connection: 'Github Public Repo Access'
+      userRepository: 'ingzkp/zinc'
+      defaultVersionType: 'latest'
+      itemPattern: 'zinc-linux.tar.gz'
+      downloadPath: '$(System.ArtifactsDirectory)'
+
+  - task: Bash@3
+    displayName: 'Install Zinc in PATH'
+    inputs:
+      targetType: 'inline'
+      script: |
+        mkdir $(Pipeline.Workspace)/
+        tar xvzf $(System.ArtifactsDirectory)/zinc-linux.tar.gz --directory $(Pipeline.Workspace)
+        echo "##vso[task.prependpath]$(Pipeline.Workspace)/zinc-linux/"
+
+  - task: Gradle@2
+    displayName: 'ZKFlow build'
+    inputs:
+      workingDirectory: ''
+      gradleWrapperFile: 'gradlew'
+      gradleOptions: '-Xmx3072m'
+      javaHomeOption: 'JDKVersion'
+      jdkVersionOption: '1.8'
+      jdkArchitectureOption: 'x64'
+      publishJUnitResults: true
+      testResultsFiles: '**/TEST-*.xml'
+      # codeCoverageToolOption: JaCoCo # Broken because it expects hardcoded 'build.gradle' instead of 'build.gradle.kts'
+      tasks: 'check test testReport jacocoRootReport'
+      options: '--no-build-cache --rerun-tasks --no-daemon --no-parallel'
+    env:
+      GITHUB_USERNAME: $(github.username)
+      GITHUB_TOKEN: $(github.token)
+
+  - task: PublishCodeCoverageResults@1
+    inputs:
+      codeCoverageTool: 'JaCoCo'
+      summaryFileLocation: '$(Build.SourcesDirectory)/build/reports/jacoco/aggregate/jacocoTestReport.xml'
+      reportDirectory: '$(Build.SourcesDirectory)/build/reports/jacoco/aggregate/html'
+
+  - task: PublishPipelineArtifact@1
+    displayName: 'Publish detekt report'
+    inputs:
+      targetPath: '$(Build.SourcesDirectory)/build/reports/detekt'
+      artifact: 'Detekt report'
+      publishLocation: 'pipeline'
+
+#  - task: Gradle@2
+#    displayName: 'ZKDapp Tester build'
+#    inputs:
+#      workingDirectory: 'zkdapp-tester'
+#      gradleWrapperFile: 'gradlew'
+#      gradleOptions: '-Xmx3072m'
+#      javaHomeOption: 'JDKVersion'
+#      jdkVersionOption: '1.8'
+#      jdkArchitectureOption: 'x64'
+#      publishJUnitResults: true
+#      testResultsFiles: '**/TEST-*.xml'
+#      tasks: 'build'
+#      options: '--no-build-cache --rerun-tasks --no-daemon --no-parallel'
+#    env:
+#      GITHUB_USERNAME: $(github.username)
+#      GITHUB_TOKEN: $(github.token)
+
+  - script: |
+      # stop the Gradle daemon to ensure no files are left open (impacting the save cache operation later)
+      ./gradlew --stop
+    displayName: Stop Gradle daemon
+    condition: always()
