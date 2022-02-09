@@ -4,6 +4,7 @@ import com.ing.zkflow.annotations.corda.Sha256
 import com.ing.zkflow.serialization.serializer.FixedLengthByteArraySerializer
 import com.ing.zkflow.serialization.serializer.KSerializerWithDefault
 import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import net.corda.core.crypto.SecureHash
@@ -11,7 +12,9 @@ import net.corda.core.crypto.SecureHash
 open class SecureHashSerializer(private val algorithm: String, private val hashLength: Int) :
     KSerializerWithDefault<SecureHash> {
     private val strategy = FixedLengthByteArraySerializer(hashLength)
-    override val descriptor: SerialDescriptor = strategy.descriptor
+    override val descriptor: SerialDescriptor = buildClassSerialDescriptor("SecureHash$algorithm") {
+        element("bytes", strategy.descriptor)
+    }
 
     companion object {
         val sha256Algorithm = Sha256::class.simpleName

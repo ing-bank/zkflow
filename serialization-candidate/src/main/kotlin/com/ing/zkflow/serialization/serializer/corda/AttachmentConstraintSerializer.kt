@@ -5,6 +5,7 @@ package com.ing.zkflow.serialization.serializer.corda
 import com.ing.zkflow.serialization.serializer.ImmutableObjectSerializer
 import com.ing.zkflow.serialization.serializer.KSerializerWithDefault
 import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import net.corda.core.contracts.AlwaysAcceptAttachmentConstraint
@@ -22,7 +23,9 @@ object AutomaticPlaceholderConstraintSerializer : KSerializerWithDefault<Automat
 open class HashAttachmentConstraintSerializer(algorithm: String, hashLength: Int) : KSerializerWithDefault<HashAttachmentConstraint> {
     private val strategy = SecureHashSerializer(algorithm, hashLength)
     override val default = HashAttachmentConstraint(strategy.default)
-    override val descriptor: SerialDescriptor = strategy.descriptor
+    override val descriptor: SerialDescriptor = buildClassSerialDescriptor("HashAttachmentConstraint$algorithm") {
+        element("attachmentId", strategy.descriptor)
+    }
 
     override fun serialize(encoder: Encoder, value: HashAttachmentConstraint) =
         encoder.encodeSerializableValue(strategy, value.attachmentId)
@@ -34,7 +37,9 @@ open class HashAttachmentConstraintSerializer(algorithm: String, hashLength: Int
 open class SignatureAttachmentConstraintSerializer(cordaSignatureId: Int) : KSerializerWithDefault<SignatureAttachmentConstraint> {
     private val strategy = PublicKeySerializer(cordaSignatureId)
     override val default = SignatureAttachmentConstraint(strategy.default)
-    override val descriptor: SerialDescriptor = strategy.descriptor
+    override val descriptor: SerialDescriptor = buildClassSerialDescriptor("SignatureAttachmentConstraint${strategy.algorithmNameIdentifier}") {
+        element("key", strategy.descriptor)
+    }
 
     override fun serialize(encoder: Encoder, value: SignatureAttachmentConstraint) =
         encoder.encodeSerializableValue(strategy, value.key)

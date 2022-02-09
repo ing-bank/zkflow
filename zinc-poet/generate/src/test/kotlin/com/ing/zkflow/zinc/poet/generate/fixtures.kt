@@ -16,6 +16,10 @@ import com.ing.zkflow.annotations.UTF8
 import com.ing.zkflow.annotations.UTF8Char
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.annotations.corda.EdDSA
+import com.ing.zkflow.annotations.corda.Sha256
+import net.corda.core.contracts.HashAttachmentConstraint
+import net.corda.core.contracts.SignatureAttachmentConstraint
+import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.Party
 import java.security.PublicKey
@@ -62,6 +66,12 @@ data class ClassWithPublicKey(val pk: @EdDSA PublicKey)
 data class ClassWithAnonymousParty(val party: @EdDSA AnonymousParty)
 @ZKP
 data class ClassWithParty(val party: @EdDSA Party)
+@ZKP
+data class ClassWithSecureHash(val hash: @Sha256 SecureHash)
+@ZKP
+data class ClassWithSignatureAttachmentConstraint(val constraint: @EdDSA SignatureAttachmentConstraint)
+@ZKP
+data class ClassWithHashAttachmentConstraint(val constraint: @Sha256 HashAttachmentConstraint)
 
 val structWithBoolean = struct {
     name = "ClassWithBoolean"
@@ -153,17 +163,18 @@ val enumWithNumbers = enum {
     variant("TWO")
     variant("THREE")
 }
+val publicKeyEdDsa = struct {
+    name = "PublicKeyEdDsaEd25519Sha512"
+    field {
+        name = "bytes"
+        type = byteArray(44)
+    }
+}
 val structWithPublicKey = struct {
     name = "ClassWithPublicKey"
     field {
         name = "pk"
-        type = struct {
-            name = "PublicKeyEdDsaEd25519Sha512"
-            field {
-                name = "bytes"
-                type = byteArray(44)
-            }
-        }
+        type = publicKeyEdDsa
     }
 }
 val structWithAnonymousParty = struct {
@@ -174,13 +185,7 @@ val structWithAnonymousParty = struct {
             name = "AnonymousPartyEdDsaEd25519Sha512"
             field {
                 name = "public_key"
-                type = struct {
-                    name = "PublicKeyEdDsaEd25519Sha512"
-                    field {
-                        name = "bytes"
-                        type = byteArray(44)
-                    }
-                }
+                type = publicKeyEdDsa
             }
         }
     }
@@ -205,13 +210,47 @@ val structWithParty = struct {
             }
             field {
                 name = "public_key"
-                type = struct {
-                    name = "PublicKeyEdDsaEd25519Sha512"
-                    field {
-                        name = "bytes"
-                        type = byteArray(44)
-                    }
-                }
+                type = publicKeyEdDsa
+            }
+        }
+    }
+}
+val secureHashSha256 = struct {
+    name = "SecureHashSha256"
+    field {
+        name = "bytes"
+        type = byteArray(32)
+    }
+}
+val structWithSecureHash = struct {
+    name = "ClassWithSecureHash"
+    field {
+        name = "hash"
+        type = secureHashSha256
+    }
+}
+val structWithSignatureAttachmentConstraint = struct {
+    name = "ClassWithSignatureAttachmentConstraint"
+    field {
+        name = "constraint"
+        type = struct {
+            name = "SignatureAttachmentConstraintEdDsaEd25519Sha512"
+            field {
+                name = "key"
+                type = publicKeyEdDsa
+            }
+        }
+    }
+}
+val structWithHashAttachmentConstraint = struct {
+    name = "ClassWithHashAttachmentConstraint"
+    field {
+        name = "constraint"
+        type = struct {
+            name = "HashAttachmentConstraintSha256"
+            field {
+                name = "attachment_id"
+                type = secureHashSha256
             }
         }
     }
