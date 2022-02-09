@@ -1,0 +1,3 @@
+<FindBugsFilter>
+    <!-- Exclude everything, except explicitly INCLUDED -->
+</FindBugsFilter>

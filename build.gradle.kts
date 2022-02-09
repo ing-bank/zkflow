@@ -35,7 +35,12 @@ plugins {
     id("io.gitlab.arturbosch.detekt")
     id("org.owasp.dependencycheck") version "6.1.1"
     jacoco
+    id("com.github.spotbugs") version "4.8.0" apply false
 }
+
+// dependencies {
+//     spotbugsPlugins("com.h3xstream.findsecbugs:findsecbugs-plugin:1.11.0")
+// }
 
 repositories {
     jcenter()
@@ -182,6 +187,8 @@ subprojects {
         plugins.apply {
             apply("com.diffplug.spotless")
             apply("idea")
+            apply("com.github.spotbugs")
+
         }
 
         // Load the necessary dependencies
@@ -198,6 +205,48 @@ subprojects {
             add("testImplementation", "org.junit.jupiter:junit-jupiter-params:$junit5Version")
             add("testRuntimeOnly", "org.junit.jupiter:junit-jupiter-engine")
             add("testImplementation", "io.kotest:kotest-assertions-core:$kotestVersion")
+
+
+            add("spotbugsPlugins", "com.h3xstream.findsecbugs:findsecbugs-plugin:1.11.0")
+            add("implementation", "com.github.spotbugs:spotbugs-annotations:4.5.3")
+
+        }
+
+        configure<com.github.spotbugs.snom.SpotBugsExtension> {
+            toolVersion.set("4.5.3")
+            showProgress.set(false)
+            effort.set(com.github.spotbugs.snom.Effort.MAX)
+            reportLevel.set(com.github.spotbugs.snom.Confidence.DEFAULT)
+            includeFilter.set(rootProject.projectDir.resolve("config/spotbugs/spotbugs-security-include.xml"))
+            excludeFilter.set(rootProject.projectDir.resolve("config/spotbugs/spotbugs-security-exclude.xml"))
+            extraArgs.set(listOf("-quiet", "-longBugCodes"))
+        }
+
+        val spotbugsReport by tasks.registering {
+            onlyIf {
+                tasks.findByName("spotbugsMain")?.state?.failure != null
+            }
+            doLast {
+                println()
+                projectDir.resolve("build/reports/spotbugs/main.txt").readLines().forEach {
+                    println(it)
+                }
+            }
+        }
+
+        tasks.withType<com.github.spotbugs.snom.SpotBugsTask>().configureEach {
+            reports {
+                create("text") {
+                    required.set(true)
+                }
+                create("html") {
+                    required.set(true)
+                }
+                create("xml") {
+                    isEnabled = false
+                }
+            }
+            finalizedBy(spotbugsReport)
         }
 
         configure<com.diffplug.gradle.spotless.SpotlessExtension> {
