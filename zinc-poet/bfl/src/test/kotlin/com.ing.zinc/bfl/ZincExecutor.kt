@@ -3,8 +3,8 @@ package com.ing.zinc.bfl
 import com.ing.zinc.bfl.generator.CodeGenerationOptions
 import com.ing.zinc.bfl.generator.WitnessGroupOptions
 import com.ing.zinc.bfl.generator.ZincGenerator.createZargoToml
-import com.ing.zinc.bfl.generator.ZincGenerator.zincFileIfNotExists
 import com.ing.zinc.bfl.generator.ZincGenerator.zincSourceFile
+import com.ing.zinc.bfl.generator.ZincGenerator.zincSourceFileIfNotExists
 import com.ing.zinc.poet.ZincFile
 import com.ing.zinc.poet.ZincPrimitive
 import com.ing.zkflow.util.ensureDirectory
@@ -68,7 +68,7 @@ object ZincExecutor {
         // generate Zargo.toml
         createZargoToml(this::class.simpleName!!)
         // generate consts.zn
-        zincFileIfNotExists("$CONSTS.zn") {
+        zincSourceFileIfNotExists("$CONSTS.zn") {
             options.witnessGroupOptions.forEach {
                 add(it.witnessSizeConstant)
             }

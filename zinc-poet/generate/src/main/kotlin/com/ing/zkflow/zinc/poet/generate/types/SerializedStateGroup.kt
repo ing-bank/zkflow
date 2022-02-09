@@ -7,12 +7,15 @@ import com.ing.zinc.bfl.CONSTS
 import com.ing.zinc.bfl.CORDA_MAGIC_BITS_SIZE
 import com.ing.zinc.bfl.CORDA_MAGIC_BITS_SIZE_CONSTANT
 import com.ing.zinc.bfl.TypeVisitor
+import com.ing.zinc.bfl.dsl.FieldBuilder.Companion.field
+import com.ing.zinc.bfl.dsl.ListBuilder.Companion.list
 import com.ing.zinc.bfl.dsl.StructBuilder.Companion.struct
 import com.ing.zinc.bfl.generator.CodeGenerationOptions
 import com.ing.zinc.bfl.generator.WitnessGroupOptions
 import com.ing.zinc.bfl.getLengthConstant
 import com.ing.zinc.bfl.getSerializedTypeDef
 import com.ing.zinc.bfl.toZincId
+import com.ing.zinc.naming.camelToSnakeCase
 import com.ing.zinc.poet.Indentation.Companion.spaces
 import com.ing.zinc.poet.ZincArray.Companion.zincArray
 import com.ing.zinc.poet.ZincFile
@@ -26,7 +29,7 @@ import com.ing.zkflow.zinc.poet.generate.COMPUTE_LEAF_HASHES
 import com.ing.zkflow.zinc.poet.generate.COMPUTE_NONCE
 import com.ing.zkflow.zinc.poet.generate.COMPUTE_UTXO_HASHES
 import com.ing.zkflow.zinc.poet.generate.CRYPTO_UTILS
-import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.nonceDigest
+import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.digest
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.privacySalt
 
 @Suppress("TooManyFunctions")
@@ -63,7 +66,7 @@ data class SerializedStateGroup(
         mod { module = deserializedStruct.getModuleName() }
         use { path = "${deserializedStruct.getModuleName()}::${deserializedStruct.id}" }
         newLine()
-        listOf(privacySalt, nonceDigest).forEach {
+        listOf(privacySalt, digest).forEach {
             mod { module = it.getModuleName() }
             use { path = "${it.getModuleName()}::${it.id}" }
             use { path = "${it.getModuleName()}::${it.getSerializedTypeDef().getName()}" }
@@ -200,16 +203,16 @@ data class SerializedStateGroup(
         parameter {
             name = "nonces"
             type = zincArray {
-                elementType = nonceDigest.toZincId()
+                elementType = digest.toZincId()
                 size = "$groupSize"
             }
         }
         returnType = zincArray {
-            elementType = nonceDigest.toZincId()
+            elementType = digest.toZincId()
             size = "$groupSize"
         }
         body = """
-            let mut component_leaf_hashes = [${nonceDigest.defaultExpr()}; $groupSize];
+            let mut component_leaf_hashes = [${digest.defaultExpr()}; $groupSize];
             ${fieldHashes.indent(12.spaces)}
             component_leaf_hashes
         """.trimIndent()
@@ -241,5 +244,21 @@ data class SerializedStateGroup(
         transactionStateLists.forEach {
             visitor.visitType(it.type)
         }
+    }
+
+    companion object {
+        private fun Map<BflModule, Int>.toFieldList(): List<BflStructField> = map { (stateType, count) ->
+            field {
+                name = stateTypeFieldName(stateType)
+                type = list {
+                    capacity = count
+                    elementType = stateType
+                }
+            }
+        }
+
+        private fun stateTypeFieldName(stateType: BflModule) = stateType.typeName()
+            .removeSuffix("TransactionState")
+            .camelToSnakeCase()
     }
 }

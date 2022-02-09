@@ -10,6 +10,7 @@ import com.ing.zinc.bfl.dsl.ListBuilder.Companion.utf8String
 import com.ing.zinc.bfl.dsl.MapBuilder.Companion.map
 import com.ing.zinc.bfl.dsl.OptionBuilder.Companion.option
 import com.ing.zinc.bfl.dsl.StructBuilder.Companion.struct
+import com.ing.zinc.naming.camelToSnakeCase
 import com.ing.zkflow.serialization.FixedLengthType
 import com.ing.zkflow.serialization.serializer.SizeAnnotation
 import kotlinx.serialization.descriptors.SerialDescriptor
@@ -75,7 +76,7 @@ object ZincTypeGenerator {
         name = descriptor.typeName
         for (elementIndex in 0 until descriptor.elementsCount) {
             field {
-                name = descriptor.getElementName(elementIndex)
+                name = descriptor.getElementName(elementIndex).camelToSnakeCase()
                 type = generate(descriptor.getElementDescriptor(elementIndex))
             }
         }
@@ -133,7 +134,7 @@ private fun String.startsWithUppercase(): Boolean {
 }
 
 @Suppress("UNCHECKED_CAST")
-private inline fun <reified T : Annotation> SerialDescriptor.findAnnotation(): T? = annotations.firstOrNull { it is T } as T?
+private inline fun <reified T : Annotation> SerialDescriptor.findAnnotation(): T? = annotations.singleOrNull { it is T } as T?
 
 private inline fun <reified T : Annotation> SerialDescriptor.getAnnotation(): T = requireNotNull(findAnnotation()) {
     "Annotation ${T::class} not found on $serialName"

@@ -7,7 +7,6 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 class TestCommand : ZKCommandData {
-
     @Transient
     override val metadata: ResolvedZKCommandMetadata = commandMetadata {
         circuit { name = "TestCommand" }

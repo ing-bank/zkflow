@@ -3,6 +3,7 @@ package com.ing.zkflow.serialization.serializer.corda
 import com.ing.zkflow.serialization.serializer.FixedLengthByteArraySerializer
 import com.ing.zkflow.serialization.serializer.KSerializerWithDefault
 import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import net.corda.core.crypto.Crypto
@@ -10,6 +11,7 @@ import net.corda.core.crypto.SignatureScheme
 import java.security.KeyPairGenerator
 import java.security.PublicKey
 import java.security.SecureRandom
+import java.util.Locale
 
 open class PublicKeySerializer(cordaSignatureId: Int) : KSerializerWithDefault<PublicKey> {
     companion object {
@@ -41,10 +43,22 @@ open class PublicKeySerializer(cordaSignatureId: Int) : KSerializerWithDefault<P
     private val cordaSignatureScheme = Crypto.findSignatureScheme(cordaSignatureId)
     private val encodedSize = schemeIdSize[cordaSignatureId]
         ?: error("Verify mapping between Corda signature schemes and public key annotations")
+    internal val algorithmNameIdentifier = Crypto.findSignatureScheme(cordaSignatureId).schemeCodeName
+        .toLowerCase(Locale.getDefault())
+        .split("_")
+        .joinToString("") {
+            it.replace("rsa", "Rsa")
+                .replace("dsa", "Dsa")
+                .capitalize(Locale.getDefault())
+        }
+
     override val default: PublicKey = fixedPublicKey(cordaSignatureScheme)
 
     private val strategy = FixedLengthByteArraySerializer(encodedSize)
-    override val descriptor: SerialDescriptor = strategy.descriptor
+
+    override val descriptor: SerialDescriptor = buildClassSerialDescriptor("PublicKey$algorithmNameIdentifier") {
+        element("bytes", strategy.descriptor)
+    }
 
     override fun serialize(encoder: Encoder, value: PublicKey) = with(value.encoded) {
         require(size == encodedSize) {

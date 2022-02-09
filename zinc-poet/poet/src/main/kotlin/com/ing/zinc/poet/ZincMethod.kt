@@ -65,10 +65,12 @@ interface ZincMethod : ZincFunction {
                     getParameters().map {
                         "${if (it.isMutable()) "mut " else ""}${it.getName()}: ${it.getType().getId()}"
                     }
-                val parameterString = parameters.joinToString(", ") { it }
+                val parameterString = parameters.joinToString(",\n") { it }
                 val commentString = getComment()?.let { it.generate() + "\n" } ?: ""
                 return commentString + """
-                    fn ${getName()}($parameterString) -> ${getReturnType().getId()} {
+                    fn ${getName()}(
+                        ${parameterString.indent(24.spaces)},
+                    ) -> ${getReturnType().getId()} {
                         ${getBody().indent(24.spaces)}
                     }
                 """.trimIndent()

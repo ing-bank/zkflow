@@ -1,6 +1,8 @@
 package com.example.contract
 
 import com.ing.serialization.bfl.annotations.FixedLength
+import com.ing.zkflow.annotations.ZKP
+import com.ing.zkflow.annotations.corda.EdDSA
 import com.ing.zkflow.common.contracts.ZKOwnableState
 import com.ing.zkflow.common.transactions.zkFLowMetadata
 import com.ing.zkflow.common.zkp.metadata.commandMetadata
@@ -24,11 +26,10 @@ class MockAssetContract : Contract {
         const val ID: ContractClassName = "com.example.contract.MockAssetContract"
     }
 
-    @Serializable
+    @ZKP
     @BelongsToContract(MockAssetContract::class)
     data class MockAsset(
-        @Serializable(with = AnonymousPartySerializer::class)
-        override val owner: AnonymousParty,
+        override val owner: @EdDSA AnonymousParty,
         val value: Int = Random().nextInt()
     ) : ZKOwnableState {
 
@@ -36,8 +37,7 @@ class MockAssetContract : Contract {
             ContractStateSerializerMap.register(this::class)
         }
 
-        @FixedLength([1])
-        override val participants: List<@Serializable(with = AnonymousPartySerializer::class) AnonymousParty> = listOf(owner)
+        override val participants: List<AnonymousParty> = listOf(owner)
 
         override fun withNewOwner(newOwner: AnonymousParty): CommandAndState =
             CommandAndState(Move(), copy(owner = newOwner))

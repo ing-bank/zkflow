@@ -84,7 +84,11 @@ internal class ZincFunctionTest {
         actual.generate() shouldBe """
             // Just some test function.
             // For fun.
-            fn some_function(param1: u8, param2: u8, param3: u8) -> bool {
+            fn some_function(
+                param1: u8,
+                param2: u8,
+                param3: u8,
+            ) -> bool {
                 true
             }
         """.trimIndent()

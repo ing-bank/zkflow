@@ -20,7 +20,7 @@ open class BflStruct(
     override val id: String,
     fields: List<BflStructField>,
     private val functions: List<ZincFunction>,
-    private val isDeserializable: Boolean,
+    val isDeserializable: Boolean,
     private val additionalImports: List<BflModule>
 ) : BflModule {
     constructor(id: String, fields: List<BflStructField>) : this(id, fields, emptyList(), true, emptyList())
@@ -45,7 +45,7 @@ open class BflStruct(
 
     override fun toString(): String = """
         struct $id {
-            ${fields.joinToString("\n") { "${it.name}: ${it.type.id}," }.indent(3.tabs)}
+            ${fields.joinToString("\n") { "${it.name}: ${it.type}," }.indent(3.tabs)}
         }
     """.trimIndent()
 
@@ -172,14 +172,14 @@ open class BflStruct(
         return zincFunction {
             name = "new"
             for (field in fields) {
-                parameter { name = field.name; type = field.type.toZincId() }
+                parameter { name = "p_${field.name}"; type = field.type.toZincId() }
             }
             returnType = Self
             comment = """
-                Constructs a new $id, from the fields [${fields.joinToString { it.name }}] 
+                Constructs a new $id, from the fields [${fields.joinToString { "p_${it.name}" }}]
             """.trimIndent()
             body = constructSelf {
-                fields.joinToString("\n") { "${it.name}: ${it.name}," }
+                fields.joinToString("\n") { "${it.name}: p_${it.name}," }
             }
         }
     }

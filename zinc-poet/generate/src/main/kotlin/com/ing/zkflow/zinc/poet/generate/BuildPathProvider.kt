@@ -7,7 +7,7 @@ interface BuildPathProvider {
     fun getBuildPath(metadata: ResolvedZKCommandMetadata): Path
 
     companion object {
-        val Default = BuildPathFromMetadataProvider()
+        val Default = BuildPathFromMetadataProvider
 
         fun withPath(path: Path) = object : BuildPathProvider {
             override fun getBuildPath(metadata: ResolvedZKCommandMetadata) = path

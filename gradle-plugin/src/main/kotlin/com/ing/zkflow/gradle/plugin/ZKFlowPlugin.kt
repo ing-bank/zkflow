@@ -5,6 +5,7 @@ import com.ing.zkflow.gradle.task.CopyZincCircuitSourcesForTestsTask
 import com.ing.zkflow.gradle.task.CopyZincCircuitSourcesTask
 import com.ing.zkflow.gradle.task.CopyZincPlatformSourcesAndLibraryTask
 import com.ing.zkflow.gradle.task.CreateZincDirectoriesForCircuitTask
+import com.ing.zkflow.gradle.task.GenerateZincCircuitsTask
 import com.ing.zkflow.gradle.task.GenerateZincPlatformCodeFromTemplatesTask
 import com.ing.zkflow.gradle.task.PrepareCircuitForCompilationTask
 import org.gradle.api.Plugin
@@ -47,6 +48,9 @@ class ZKFlowPlugin : Plugin<Project> {
             project.dependencies.add(IMPLEMENTATION, extension.zkflow("protocol"))
             project.dependencies.add(IMPLEMENTATION, extension.zkflow("compilation"))
             project.dependencies.add(IMPLEMENTATION, extension.zkflow("annotations"))
+            project.dependencies.add(IMPLEMENTATION, extension.zkflow("poet"))
+            project.dependencies.add(IMPLEMENTATION, extension.zkflow("bfl"))
+            project.dependencies.add(IMPLEMENTATION, extension.zkflow("generate"))
 
             project.pluginManager.apply("org.jetbrains.kotlin.plugin.serialization")
 
@@ -71,6 +75,10 @@ class ZKFlowPlugin : Plugin<Project> {
             "generateZincPlatformCodeFromTemplates",
             GenerateZincPlatformCodeFromTemplatesTask::class.java
         )
+        val generateZincCircuitsTask = project.tasks.create("generateZincCircuits", GenerateZincCircuitsTask::class.java)
+        generateZincCircuitsTask
+            .dependsOn(COMPILE_KOTLIN) // So the command metadata can be found
+            .mustRunAfter(COMPILE_KOTLIN)
 
         val prepareForCompilationTask =
             project.tasks.create("prepareCircuitForCompilation", PrepareCircuitForCompilationTask::class.java)
@@ -147,7 +155,7 @@ class ZKFlowPlugin : Plugin<Project> {
                         artifact.moduleVersion.id.group == ZKFLOW_GROUP && artifact.moduleVersion.id.name == "compiler-plugin-arrow"
                     }
 
-                task.kotlinOptions.freeCompilerArgs += listOf("-Xplugin", compilerPluginArrow.file.absolutePath)
+                task.kotlinOptions.freeCompilerArgs += listOf("-Xplugin=${compilerPluginArrow.file.absolutePath}")
 
                 task.logger.quiet(
                     "[${task.name}] Arrow compiler plugin application:${

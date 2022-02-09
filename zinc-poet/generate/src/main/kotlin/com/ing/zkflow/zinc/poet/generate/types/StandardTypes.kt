@@ -2,6 +2,7 @@ package com.ing.zkflow.zinc.poet.generate.types
 
 import com.ing.zinc.bfl.BflModule
 import com.ing.zinc.bfl.BflPrimitive
+import com.ing.zinc.bfl.BflStruct
 import com.ing.zinc.bfl.BflType
 import com.ing.zinc.bfl.BflTypeDef
 import com.ing.zinc.bfl.dsl.ArrayBuilder.Companion.array
@@ -10,33 +11,78 @@ import com.ing.zinc.bfl.dsl.ListBuilder.Companion.byteArray
 import com.ing.zinc.bfl.dsl.ListBuilder.Companion.list
 import com.ing.zinc.bfl.dsl.OptionBuilder.Companion.option
 import com.ing.zinc.bfl.dsl.StructBuilder.Companion.struct
+import com.ing.zinc.bfl.generator.WitnessGroupOptions
+import com.ing.zinc.naming.camelToSnakeCase
+import com.ing.zkflow.annotations.ZKP
+import com.ing.zkflow.annotations.corda.EdDSA
+import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.serialization.bfl.serializers.CordaSerializers.CLASS_NAME_SIZE
 import com.ing.zkflow.serialization.bfl.serializers.SecureHashSurrogate
 import com.ing.zkflow.zinc.poet.generate.ZincTypeResolver
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.SignatureAttachmentConstraint
-import net.corda.core.identity.Party
+import net.corda.core.crypto.Crypto
+import net.corda.core.identity.AnonymousParty
 import java.security.PublicKey
+
+@ZKP
+private data class WrapsEdDsaParty(val party: @EdDSA AnonymousParty)
+
+@ZKP
+private data class WrapsEdDsaPublicKey(val publicKey: @EdDSA PublicKey)
+
+@ZKP
+private data class WrapsSignatureAttachmentConstraint(val constraint: @EdDSA SignatureAttachmentConstraint)
+
+private fun BflModule.getSingleFieldType(): BflModule = (this as BflStruct).fields.single().type as BflModule
 
 class StandardTypes(
     private val zincTypeResolver: ZincTypeResolver,
 ) {
-    val notaryModule: BflModule by lazy {
-        zincTypeResolver.zincTypeOf(Party::class) // TODO("PartyEdDSA")
-    }
+    private val edDsaPartyNotaryModule by lazy { zincTypeResolver.zincTypeOf(WrapsEdDsaParty::class).getSingleFieldType() }
+    fun notaryModule(metadata: ResolvedZKCommandMetadata): BflModule =
+        when (val signatureScheme = metadata.network.notary.signatureScheme) {
+            Crypto.EDDSA_ED25519_SHA512 -> edDsaPartyNotaryModule
+            else -> error("Enable ${signatureScheme.schemeCodeName} for notaryModule in ${StandardTypes::class}")
+        }
 
-    val signerModule: BflModule by lazy {
-        zincTypeResolver.zincTypeOf(PublicKey::class)
+    private val edDsaPublicKeySignerModule by lazy { zincTypeResolver.zincTypeOf(WrapsEdDsaPublicKey::class).getSingleFieldType() }
+    fun signerModule(metadata: ResolvedZKCommandMetadata): BflModule =
+        when (val signatureScheme = metadata.network.participantSignatureScheme) {
+            Crypto.EDDSA_ED25519_SHA512 -> edDsaPublicKeySignerModule
+            else -> error("Enable ${signatureScheme.schemeCodeName} for signerModule in ${StandardTypes::class}")
+        }
+
+    private val signatureAttachmentConstraint by lazy {
+        zincTypeResolver.zincTypeOf(WrapsSignatureAttachmentConstraint::class).getSingleFieldType()
     }
+    private fun attachmentConstraintModule(metadata: ResolvedZKCommandMetadata): BflModule =
+        when (val attachmentConstraintClass = metadata.network.attachmentConstraintType) {
+            SignatureAttachmentConstraint::class -> signatureAttachmentConstraint
+            else -> error("Enable $attachmentConstraintClass for attachmentConstraintModule in ${StandardTypes::class}")
+        }
 
     internal fun getSignerListModule(
-        numberOfSigners: Int
+        numberOfSigners: Int,
+        commandMetadata: ResolvedZKCommandMetadata
     ) = list {
         capacity = numberOfSigners
-        elementType = signerModule
+        elementType = signerModule(commandMetadata)
     }
 
-    internal fun transactionState(stateType: BflType) = struct {
+    internal fun toWitnessGroupOptions(groupName: String, states: Map<BflModule, Int>, commandMetadata: ResolvedZKCommandMetadata): List<WitnessGroupOptions> = states.keys.map {
+        WitnessGroupOptions.cordaWrapped(
+            "${groupName}_${it.id.camelToSnakeCase()}",
+            transactionState(it, commandMetadata)
+        )
+    }
+
+    internal fun toTransactionStates(states: Map<BflModule, Int>, commandMetadata: ResolvedZKCommandMetadata): Map<BflModule, Int> =
+        states.map { (stateType, count) ->
+            transactionState(stateType, commandMetadata) to count
+        }.toMap()
+
+    internal fun transactionState(stateType: BflType, commandMetadata: ResolvedZKCommandMetadata) = struct {
         name = "${stateType.id}TransactionState"
         field {
             name = "data"
@@ -48,7 +94,7 @@ class StandardTypes(
         }
         field {
             name = "notary"
-            type = notaryModule
+            type = notaryModule(commandMetadata)
         }
         field {
             name = "encumbrance"
@@ -58,19 +104,7 @@ class StandardTypes(
         }
         field {
             name = "constraint"
-            type = zincTypeResolver.zincTypeOf(SignatureAttachmentConstraint::class) // TODO("SignatureAttachmentConstraint")
-        }
-    }
-
-    internal fun stateAndRef(stateType: BflType) = struct {
-        name = "${stateType.id}StateAndRef"
-        field {
-            name = "state"
-            type = transactionState(stateType)
-        }
-        field {
-            name = "reference"
-            type = stateRef
+            type = attachmentConstraintModule(commandMetadata)
         }
     }
 
@@ -101,8 +135,8 @@ class StandardTypes(
                 }
             }
         }
-        internal val nonceDigest = BflTypeDef(
-            "NonceDigest",
+        internal val digest = BflTypeDef(
+            "Digest",
             array {
                 capacity = 32 * Byte.SIZE_BITS // TODO size depends on the used hashing algorithm
                 elementType = BflPrimitive.Bool
@@ -111,7 +145,7 @@ class StandardTypes(
         internal val privacySalt = BflTypeDef(
             "PrivacySalt",
             array {
-                capacity = 32 * Byte.SIZE_BITS // TODO size depends on the used hashing algorithm
+                capacity = 32 * Byte.SIZE_BITS // Size is [PrivacySalt.MINIMUM_SIZE]
                 elementType = BflPrimitive.Bool
             }
         )
@@ -124,17 +158,6 @@ class StandardTypes(
             field {
                 name = "bytes"
                 type = byteArray(SecureHashSurrogate.BYTES_SIZE)
-            }
-        }
-        internal val stateRef = struct {
-            name = "StateRef"
-            field {
-                name = "hash"
-                type = secureHash
-            }
-            field {
-                name = "index"
-                type = BflPrimitive.U32
             }
         }
         internal val componentGroupEnum = enumOf(ComponentGroupEnum::class)
