@@ -234,13 +234,18 @@ subprojects {
             }
         }
 
+        tasks.getByName("spotbugsTest") {
+            onlyIf { false } // Don't scan test code
+        }
+
         tasks.withType<com.github.spotbugs.snom.SpotBugsTask>().configureEach {
             reports {
                 create("text") {
                     required.set(true)
                 }
                 create("html") {
-                    required.set(true)
+                    required.set(false)
+                    isEnabled = false
                 }
                 create("xml") {
                     isEnabled = false
