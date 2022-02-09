@@ -11,9 +11,11 @@ import com.ing.zkflow.compilation.zinc.template.parameters.StateGroupTemplatePar
 import com.ing.zkflow.compilation.zinc.template.parameters.TxStateTemplateParameters
 import com.ing.zkflow.compilation.zinc.util.CodeGenerator
 import com.ing.zkflow.compilation.zinc.util.MerkleReplacer
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import java.io.File
 
 @Suppress("LongMethod", "MagicNumber") // Just fixing it now, will be thrown away anyway soon for ZincPoet
+@SuppressFBWarnings("PATH_TRAVERSAL_IN", justification = "WONTFIX: will be thrown away anyway soon for ZincPoet")
 fun main(args: Array<String>) {
     val platformSourcesPath = File(args[0])
     val platformTemplatesPath = File(args[1])

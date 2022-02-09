@@ -1,3 +1,5 @@
 <FindBugsFilter>
-    <!-- Exclude everything, except explicitly INCLUDED -->
+<!--    <Match>-->
+<!--        <Bug pattern="PATH_TRAVERSAL_IN"/>-->
+<!--    </Match>-->
 </FindBugsFilter>

@@ -6,8 +6,10 @@ import com.ing.zkflow.common.zkp.metadata.ZincType
 import com.ing.zkflow.compilation.zinc.template.TemplateParameters
 import com.ing.zkflow.serialization.bfl.serializers.CordaSerializers
 import com.ing.zkflow.util.camelToSnakeCase
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import java.io.File
 
+@SuppressFBWarnings("PATH_TRAVERSAL_IN", justification = "WONTFIX: will be thrown away anyway soon for ZincPoet")
 data class TxStateTemplateParameters(val metadata: ResolvedZKCommandMetadata, val typeInfo: ZincType) :
     TemplateParameters(
         "tx_state.zn",

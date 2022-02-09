@@ -9,6 +9,7 @@ import com.ing.zkflow.common.zkp.metadata.ZKCircuit.Companion.resolve
 import com.ing.zkflow.common.zkp.metadata.ZKNetwork.Companion.resolve
 import com.ing.zkflow.crypto.IdentifyingDigestAlgorithm
 import com.ing.zkflow.util.camelToSnakeCase
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import net.corda.core.contracts.AttachmentConstraint
 import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.ContractState
@@ -76,6 +77,7 @@ data class ZKCircuit(
          * Option 1: private = true, circuit info is provided
          * Option 2: private = true, circuit info is NOT provided.
          */
+        @SuppressFBWarnings("PATH_TRAVERSAL_IN", justification = "False positive: folders are calculated")
         fun ZKCircuit?.resolve(commandMetadata: ZKCommandMetadata): ResolvedZKCircuit {
             if (this == null) return ResolvedZKCircuit(
                 commandKClass = commandMetadata.commandKClass,

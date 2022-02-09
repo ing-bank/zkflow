@@ -8,6 +8,7 @@ import com.ing.zkflow.gradle.task.CreateZincDirectoriesForCircuitTask
 import com.ing.zkflow.gradle.task.GenerateZincCircuitsTask
 import com.ing.zkflow.gradle.task.GenerateZincPlatformCodeFromTemplatesTask
 import com.ing.zkflow.gradle.task.PrepareCircuitForCompilationTask
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
@@ -16,6 +17,7 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinCompile
 import java.net.URI
 
 @Suppress("unused")
+@SuppressFBWarnings("HARD_CODE_PASSWORD", justification = "False positive")
 class ZKFlowPlugin : Plugin<Project> {
     @Suppress("LongMethod")
     override fun apply(project: Project) {
