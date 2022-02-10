@@ -1,11 +1,9 @@
 package com.ing.zkflow.common.zkp
 
-import com.ing.zkflow.common.serialization.zinc.json.WitnessSerializer
 import com.ing.zkflow.common.transactions.UtxoInfo
 import com.ing.zkflow.common.transactions.zkTransactionMetadata
 import com.ing.zkflow.common.zkp.metadata.ZincType
 import com.ing.zkflow.util.camelToSnakeCase
-import kotlinx.serialization.Serializable
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.PrivacySalt
@@ -41,7 +39,6 @@ import kotlin.reflect.KClass
  */
 
 @CordaSerializable
-@Serializable(with = WitnessSerializer::class)
 @Suppress("LongParameterList")
 class Witness(
     /**
@@ -200,7 +197,10 @@ class Witness(
             return componentGroups
                 .singleOrNull { it.groupIndex == groupEnum.ordinal }
                 ?.components
-                ?.map { it.copyBytes() }
+                // filter private components
+                ?.filterIndexed { index, _ ->
+                    zkTransactionMetadata().isVisibleInWitness(groupEnum.ordinal, index)
+                }?.map { it.copyBytes() }
                 ?: emptyList()
         }
 
