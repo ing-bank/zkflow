@@ -32,7 +32,7 @@ data class ResolvedZKNetwork(
      * This should be enforced at network level and therefore should match the [AttachmentConstraint] defined for the network
      * in the transaction metadata. If they don't match, an error is thrown.
      */
-    val attachmentConstraintType: ResolvedZKAttachmentConstraint,
+    val attachmentConstraintType: ZKAttachmentConstraint,
 
     val digestService: IdentifyingDigestAlgorithm,
 
