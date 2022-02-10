@@ -38,10 +38,6 @@ plugins {
     id("com.github.spotbugs") version "4.8.0" apply false
 }
 
-// dependencies {
-//     spotbugsPlugins("com.h3xstream.findsecbugs:findsecbugs-plugin:1.11.0")
-// }
-
 repositories {
     jcenter()
 }
