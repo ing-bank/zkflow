@@ -1,8 +1,11 @@
 package com.ing.zkflow.common.zkp.metadata
 
+import com.ing.zkflow.annotations.corda.HashSize
 import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.zkp.ZKFlow.DEFAULT_ZKFLOW_CONTRACT_ATTACHMENT_CONSTRAINT
 import com.ing.zkflow.common.zkp.ZKFlow.DEFAULT_ZKFLOW_DIGEST_IDENTIFIER
+import com.ing.zkflow.common.zkp.ZKFlow.DEFAULT_ZKFLOW_HASH_ATTACHMENT_HASHING_ALGORITHM
+import com.ing.zkflow.common.zkp.ZKFlow.DEFAULT_ZKFLOW_SIGNATURE_ATTACHMENT_CONSTRAINT_SIGNATURE_SCHEME
 import com.ing.zkflow.common.zkp.ZKFlow.DEFAULT_ZKFLOW_SIGNATURE_SCHEME
 import com.ing.zkflow.common.zkp.ZKFlow.requireSupportedSignatureScheme
 import com.ing.zkflow.common.zkp.metadata.ZKCircuit.Companion.resolve
@@ -13,6 +16,8 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import net.corda.core.contracts.AttachmentConstraint
 import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.ContractState
+import net.corda.core.contracts.HashAttachmentConstraint
+import net.corda.core.contracts.SignatureAttachmentConstraint
 import net.corda.core.crypto.SignatureScheme
 import net.corda.core.utilities.hours
 import net.corda.core.utilities.minutes
@@ -119,22 +124,93 @@ data class ZKNotary(
 @ZKCommandMetadataDSL
 data class ZKNetwork(
     var participantSignatureScheme: SignatureScheme = DEFAULT_ZKFLOW_SIGNATURE_SCHEME,
-    var attachmentConstraintType: KClass<out AttachmentConstraint> = DEFAULT_ZKFLOW_CONTRACT_ATTACHMENT_CONSTRAINT,
     var digestService: IdentifyingDigestAlgorithm = DEFAULT_ZKFLOW_DIGEST_IDENTIFIER
 ) {
     var notary = ZKNotary()
     fun notary(init: ZKNotary.() -> Unit) = notary.apply(init)
 
+    /**
+     * One may specify attachment constraint either by setting the class directly if such constraint requires no extra parameters,
+     * or by invoking an appropriate function.
+     */
+    private var zkAttachmentConstraintType: ZKAttachmentConstraint = ZKAttachmentConstraint.default
+    // This field has a utility function to improve UX and won't be used for resolution.
+    var attachmentConstraintType: KClass<out AttachmentConstraint> = ZKAttachmentConstraint.default.kClass
+        set(value) {
+            when (value) {
+                SignatureAttachmentConstraint::class -> error("To modify `${SignatureAttachmentConstraint::class.qualifiedName}` use `signatureAttachmentConstraint { ... }`")
+                HashAttachmentConstraint::class -> error("To modify `${HashAttachmentConstraint::class.qualifiedName}` use `hashAttachmentConstraint { ... }`")
+                else -> {
+                    field = value
+                    zkAttachmentConstraintType = ZKAttachmentConstraint.OnlyType(value)
+                }
+            }
+        }
+    fun signatureAttachmentConstraint(init: ZKAttachmentConstraint.SignatureAttachment.() -> Unit): ZKAttachmentConstraint {
+        zkAttachmentConstraintType = ZKAttachmentConstraint.SignatureAttachment().apply(init)
+        return zkAttachmentConstraintType
+    }
+    fun hashAttachmentConstraint(init: ZKAttachmentConstraint.HashAttachment.() -> Unit): ZKAttachmentConstraint {
+        zkAttachmentConstraintType = ZKAttachmentConstraint.HashAttachment().apply(init)
+        return zkAttachmentConstraintType
+    }
+
     companion object {
         fun ZKNetwork?.resolve(): ResolvedZKNetwork {
             return if (this == null) ResolvedZKNetwork(
                 DEFAULT_ZKFLOW_SIGNATURE_SCHEME,
-                DEFAULT_ZKFLOW_CONTRACT_ATTACHMENT_CONSTRAINT,
+                ZKAttachmentConstraint.default,
                 DEFAULT_ZKFLOW_DIGEST_IDENTIFIER,
                 ZKNotary()
             )
             else
-                ResolvedZKNetwork(participantSignatureScheme, attachmentConstraintType, digestService, notary)
+                ResolvedZKNetwork(participantSignatureScheme, zkAttachmentConstraintType, digestService, notary)
+        }
+    }
+}
+
+/**
+ * This class facilitates configuration of the attachment constraint as part of the configuration of the zk network.
+ * E.g.:
+ * network {
+ *      signatureAttachmentConstraint {
+ *          signatureScheme = ZKFlow.DEFAULT_ZKFLOW_SIGNATURE_ATTACHMENT_CONSTRAINT_SIGNATURE_SCHEME
+ *     }
+ *     hashAttachmentConstraint {
+ *          algorithm = Sha256::class
+ *    }
+ *    attachmentConstraintType = SignatureAttachmentConstraint::class // fails
+ *    attachmentConstraintType = AutomaticPlaceholderConstraint::class // works
+ * }
+ */
+@ZKCommandMetadataDSL
+sealed class ZKAttachmentConstraint private constructor(val kClass: KClass<out AttachmentConstraint>) {
+    class SignatureAttachment(var signatureScheme: SignatureScheme = DEFAULT_ZKFLOW_SIGNATURE_ATTACHMENT_CONSTRAINT_SIGNATURE_SCHEME) : ZKAttachmentConstraint(SignatureAttachmentConstraint::class)
+    class HashAttachment(algorithm: KClass<out Annotation> = DEFAULT_ZKFLOW_HASH_ATTACHMENT_HASHING_ALGORITHM) : ZKAttachmentConstraint(HashAttachmentConstraint::class) {
+        internal var hashLength: Int = deduceHashLength(algorithm)
+        var algorithm: KClass<out Annotation> = algorithm
+            set(value) {
+                hashLength = deduceHashLength(value)
+                field = value
+            }
+
+        private fun deduceHashLength(algorithm: KClass<out Annotation>): Int {
+            val hashSizeAnnotations = algorithm.annotations.filterIsInstance<HashSize>()
+            when (hashSizeAnnotations.size) {
+                0 -> error("Hash class `${algorithm.qualifiedName}` must have a `${HashSize::class.qualifiedName}` annotation")
+                1 -> return hashSizeAnnotations.single().size
+                else -> error("Hash class `${algorithm.qualifiedName}` must have a _single_ `${HashSize::class.qualifiedName}` annotation")
+            }
+        }
+    }
+
+    class OnlyType(attachmentConstraintType: KClass<out AttachmentConstraint>) : ZKAttachmentConstraint(attachmentConstraintType)
+
+    companion object {
+        val default = when (DEFAULT_ZKFLOW_CONTRACT_ATTACHMENT_CONSTRAINT) {
+            SignatureAttachmentConstraint::class -> SignatureAttachment()
+            HashAttachmentConstraint::class -> HashAttachment()
+            else -> OnlyType(DEFAULT_ZKFLOW_CONTRACT_ATTACHMENT_CONSTRAINT)
         }
     }
 }

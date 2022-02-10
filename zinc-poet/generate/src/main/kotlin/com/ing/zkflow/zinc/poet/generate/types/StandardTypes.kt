@@ -57,7 +57,7 @@ class StandardTypes(
         zincTypeResolver.zincTypeOf(WrapsSignatureAttachmentConstraint::class).getSingleFieldType()
     }
     private fun attachmentConstraintModule(metadata: ResolvedZKCommandMetadata): BflModule =
-        when (val attachmentConstraintClass = metadata.network.attachmentConstraintType) {
+        when (val attachmentConstraintClass = metadata.network.attachmentConstraintType.kClass) {
             SignatureAttachmentConstraint::class -> signatureAttachmentConstraint
             else -> error("Enable $attachmentConstraintClass for attachmentConstraintModule in ${StandardTypes::class}")
         }
