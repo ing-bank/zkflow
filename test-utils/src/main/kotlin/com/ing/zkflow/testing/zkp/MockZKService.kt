@@ -4,27 +4,17 @@ import com.ing.zkflow.common.serialization.zinc.json.WitnessSerializer
 import com.ing.zkflow.common.zkp.PublicInput
 import com.ing.zkflow.common.zkp.Witness
 import com.ing.zkflow.common.zkp.ZKService
-import kotlinx.serialization.json.Json
-import net.corda.core.contracts.AttachmentResolutionException
-import net.corda.core.contracts.CommandWithParties
 import net.corda.core.contracts.ComponentGroupEnum
-import net.corda.core.contracts.ContractState
-import net.corda.core.contracts.StateAndRef
-import net.corda.core.contracts.TransactionResolutionException
-import net.corda.core.contracts.TransactionState
+import net.corda.core.contracts.PrivacySalt
 import net.corda.core.crypto.DigestService
 import net.corda.core.crypto.SecureHash
-import net.corda.core.node.ServiceHub
 import net.corda.core.serialization.deserialize
 import net.corda.core.serialization.serialize
-import net.corda.core.transactions.ComponentGroup
-import net.corda.core.transactions.LedgerTransaction
-import net.corda.core.transactions.WireTransaction
 import net.corda.core.utilities.OpaqueBytes
 import net.corda.core.utilities.loggerFor
 
 @Suppress("EXPERIMENTAL_API_USAGE", "DuplicatedCode")
-public class MockZKService(private val serviceHub: ServiceHub, private val digestService: DigestService) : ZKService {
+public class MockZKService(private val digestService: DigestService) : ZKService {
     private val log = loggerFor<MockZKService>()
 
     /**
@@ -33,7 +23,7 @@ public class MockZKService(private val serviceHub: ServiceHub, private val diges
      */
     override fun prove(witness: Witness): ByteArray {
         log.debug("Witness size: ${witness.size()}, of which padding bytes: ${witness.size { it == 0.toByte() }}") // Assumes BFL zero-byte padding
-        val witnessJson = Json.encodeToString(WitnessSerializer, witness)
+        val witnessJson = WitnessSerializer.fromWitness(witness)
         log.trace("Witness JSON: $witnessJson")
 
         return witness.serialize().bytes
@@ -43,63 +33,44 @@ public class MockZKService(private val serviceHub: ServiceHub, private val diges
         // This assumes that the proof (for testing only) is simply a serialized witness.
         val witness = proof.deserialize<Witness>()
 
-        fun createComponentGroup(componentGroup: ComponentGroupEnum, components: List<ByteArray>) =
-            if (components.isEmpty()) null else ComponentGroup(
-                componentGroup.ordinal,
-                components.map { OpaqueBytes(it) }
-            )
-
-        fun createComponentGroupForMultiState(componentGroup: ComponentGroupEnum, components: Map<String, List<ByteArray>>) =
-            if (components.isEmpty()) null else ComponentGroup(
-                componentGroup.ordinal,
-                components.flatMap { it.value }.map { OpaqueBytes(it) }
-            )
-
-        fun createComponentGroups(witness: Witness) = listOf(
-            createComponentGroup(ComponentGroupEnum.INPUTS_GROUP, witness.inputsGroup),
-            createComponentGroupForMultiState(ComponentGroupEnum.OUTPUTS_GROUP, witness.outputsGroup),
-            createComponentGroup(ComponentGroupEnum.COMMANDS_GROUP, witness.commandsGroup),
-            createComponentGroup(ComponentGroupEnum.ATTACHMENTS_GROUP, witness.attachmentsGroup),
-            createComponentGroup(ComponentGroupEnum.NOTARY_GROUP, witness.notaryGroup),
-            createComponentGroup(ComponentGroupEnum.TIMEWINDOW_GROUP, witness.timeWindowGroup),
-            createComponentGroup(ComponentGroupEnum.SIGNERS_GROUP, witness.signersGroup),
-            createComponentGroup(ComponentGroupEnum.REFERENCES_GROUP, witness.referencesGroup),
-            createComponentGroup(ComponentGroupEnum.PARAMETERS_GROUP, witness.parametersGroup)
-        ).mapNotNull { it }
-
-        val wtx = WireTransaction(
-            createComponentGroups(witness),
-            witness.privacySalt,
-            digestService
-        )
-
         /*
-         * Rule 1: The recalculated Merkle root should match the one from the instance vtx.
-         *
-         * In this case on the Corda side, a ZKProverTransaction id is lazily recalculated always. This means it is
-         * always a direct representation of the ptx contents so we don't have to do a recalculation.
-         * On the Zinc side, we will need explicit recalculation based on the witness transaction components.
-         *
-         * Here, we simply compare the witness.ptx.id with the instance.currentVtxId.
-         * This proves that the inputs whose contents have been verified to be unchanged, are also part of the vtx
-         * being verified.
+         * Rule 1: The recalculated component leaf hashes should match the ones from the instance vtx.
          */
-        if (publicInput.transactionId != wtx.id) error(
-            "The calculated Merkle root from the witness (${wtx.id}) does not match " +
-                "the expected transaction id from the public input (${publicInput.transactionId})."
-        )
+        verifyLeafHashesForComponentGroup(witness.outputsGroup.flatMap { e -> e.value }, publicInput.outputComponentHashes, witness.privacySalt, ComponentGroupEnum.OUTPUTS_GROUP.ordinal)
 
         /*
          * Rule 2: witness input and reference contents hashed with their nonce should equal the matching hash from publicInput.
          * This proves that prover did not change the contents of the input states
          */
-        verifyUtxoContents(witness.serializedInputUtxos, witness.inputUtxoNonces, publicInput.inputHashes)
-        verifyUtxoContents(witness.serializedReferenceUtxos, witness.referenceUtxoNonces, publicInput.referenceHashes)
+        verifyUtxoContents(witness.serializedInputUtxos, witness.inputUtxoNonces, publicInput.inputUtxoHashes)
+        verifyUtxoContents(witness.serializedReferenceUtxos, witness.referenceUtxoNonces, publicInput.referenceUtxoHashes)
 
         /*
          * Rule 3: The contract rules should verify
          */
-        verifyContract(witness, wtx)
+        // TODO: Contract verification is temporarily disabled since verification requires constructing a ledger transaction with (almost) full list of components.
+        // It should be re-implemented wrt the new visibility rules.
+    }
+
+    private fun verifyLeafHashesForComponentGroup(serializedComponents: List<ByteArray>, expectedComponentHashes: List<SecureHash>, privacySalt: PrivacySalt, groupIndex: Int) {
+        serializedComponents.forEachIndexed { index, serializedComponent ->
+            val calculatedNonceFromWitness =
+                serializedComponent.let { digestService.computeNonce(privacySalt, groupIndex, index) } // TODO
+
+            val leafHashFromPublicInput = serializedComponent.let {
+                expectedComponentHashes.getOrElse(index) {
+                    error("Leaf hash not present in public input for component group $groupIndex component $index")
+                }
+            }
+
+            val calculatedLeafHashFromWitness =
+                calculatedNonceFromWitness.let { digestService.componentHash(it, OpaqueBytes(serializedComponent)) }
+
+            if (leafHashFromPublicInput != calculatedLeafHashFromWitness) error(
+                "Calculated leaf hash ($calculatedLeafHashFromWitness} for reference $index does " +
+                    "not match the leaf hash from the public input ($leafHashFromPublicInput)."
+            )
+        }
     }
 
     private fun verifyUtxoContents(
@@ -125,46 +96,5 @@ public class MockZKService(private val serviceHub: ServiceHub, private val diges
                         "not match the leaf hash from the public input ($leafHashFromPublicreference)."
                 )
             }
-    }
-
-    private fun verifyContract(witness: Witness, wtx: WireTransaction) {
-        val inputs = witness.serializedInputUtxos.flatMap { it.value }
-            .mapIndexed { index, bytes ->
-                bytes.deserialize<TransactionState<ContractState>>()
-                StateAndRef<ContractState>(
-                    bytes.deserialize(),
-                    wtx.inputs[index]
-                )
-            }
-
-        val references = witness.serializedReferenceUtxos.flatMap { it.value }.mapIndexed { index, bytes ->
-            bytes.deserialize<TransactionState<ContractState>>()
-            StateAndRef<ContractState>(
-                bytes.deserialize(),
-                wtx.references[index]
-            )
-        }
-
-        val ltx = LedgerTransaction.createForSandbox(
-            inputs = inputs,
-            outputs = wtx.outputs, // witness.outputsGroup.map { it.deserialize() },
-            commands = wtx.commands.map {
-                CommandWithParties(
-                    value = it.value,
-                    signingParties = it.signers.mapNotNull { serviceHub.identityService.partyFromKey(it) },
-                    signers = it.signers
-                )
-            },
-            attachments = wtx.attachments.map { serviceHub.attachments.openAttachment(it) ?: throw AttachmentResolutionException(it) },
-            id = wtx.id,
-            notary = wtx.notary,
-            timeWindow = wtx.timeWindow,
-            privacySalt = wtx.privacySalt,
-            networkParameters = wtx.networkParametersHash?.let { serviceHub.networkParametersService.lookup(it) }
-                ?: throw TransactionResolutionException.UnknownParametersException(wtx.id, wtx.networkParametersHash!!),
-            references = references,
-            wtx.digestService
-        )
-        ltx.verify()
     }
 }

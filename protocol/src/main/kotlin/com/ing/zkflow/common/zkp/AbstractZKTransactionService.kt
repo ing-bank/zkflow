@@ -10,6 +10,7 @@ import com.ing.zkflow.node.services.ServiceNames
 import com.ing.zkflow.node.services.ZKTransactionResolutionException
 import com.ing.zkflow.node.services.ZKWritableVerifierTransactionStorage
 import com.ing.zkflow.node.services.getCordaServiceFromConfig
+import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.StateRef
 import net.corda.core.crypto.SecureHash
 import net.corda.core.node.ServiceHub
@@ -82,16 +83,25 @@ abstract class AbstractZKTransactionService(val serviceHub: ServiceHub) : ZKTran
         }
     }
 
-    open fun calculatePublicInput(tx: TraversableTransaction): PublicInput {
+    open fun calculatePublicInput(tx: ZKVerifierTransaction): PublicInput {
         // Fetch the UTXO hashes from the svtx's pointed to by the inputs and references.
         // This confirms that we have a validated backchain stored for them.
         val inputHashes = getUtxoHashes(tx.inputs)
         val referenceHashes = getUtxoHashes(tx.references)
 
         return PublicInput(
-            tx.id,
-            inputHashes = inputHashes,
-            referenceHashes = referenceHashes
+            inputComponentHashes = tx.publicInputHashes[ComponentGroupEnum.INPUTS_GROUP.ordinal].orEmpty(),
+            outputComponentHashes = tx.outputHashes,
+            referenceComponentHashes = tx.publicInputHashes[ComponentGroupEnum.REFERENCES_GROUP.ordinal].orEmpty(),
+            attachmentComponentHashes = tx.publicInputHashes[ComponentGroupEnum.ATTACHMENTS_GROUP.ordinal].orEmpty(),
+            commandComponentHashes = tx.publicInputHashes[ComponentGroupEnum.COMMANDS_GROUP.ordinal].orEmpty(),
+            notaryComponentHashes = tx.publicInputHashes[ComponentGroupEnum.NOTARY_GROUP.ordinal].orEmpty(),
+            parametersComponentHashes = tx.publicInputHashes[ComponentGroupEnum.PARAMETERS_GROUP.ordinal].orEmpty(),
+            timeWindowComponentHashes = tx.publicInputHashes[ComponentGroupEnum.TIMEWINDOW_GROUP.ordinal].orEmpty(),
+            signersComponentHashes = tx.publicInputHashes[ComponentGroupEnum.SIGNERS_GROUP.ordinal].orEmpty(),
+
+            inputUtxoHashes = inputHashes,
+            referenceUtxoHashes = referenceHashes
         )
     }
 

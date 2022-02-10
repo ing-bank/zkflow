@@ -1,17 +1,17 @@
 package com.ing.zkflow.testing.dsl
 
 import com.ing.zkflow.common.transactions.SignedZKVerifierTransaction
+import com.ing.zkflow.common.transactions.ZKVerifierTransaction
 import com.ing.zkflow.common.transactions.collectUtxoInfos
 import com.ing.zkflow.common.transactions.zkTransactionMetadata
 import com.ing.zkflow.common.zkp.PublicInput
 import com.ing.zkflow.common.zkp.Witness
 import com.ing.zkflow.common.zkp.ZincZKTransactionService
 import net.corda.core.node.ServiceHub
-import net.corda.core.transactions.TraversableTransaction
 import net.corda.core.transactions.WireTransaction
 
 public class TestDSLZincZKTransactionService(serviceHub: ServiceHub) : TestDSLZKTransactionService, ZincZKTransactionService(serviceHub) {
-    public override fun calculatePublicInput(tx: TraversableTransaction): PublicInput = calculatePublicInput(serviceHub, tx)
+    public override fun calculatePublicInput(tx: ZKVerifierTransaction): PublicInput = calculatePublicInput(serviceHub, tx)
 
     override fun run(wtx: WireTransaction) {
         val witness = Witness.fromWireTransaction(
@@ -19,8 +19,12 @@ public class TestDSLZincZKTransactionService(serviceHub: ServiceHub) : TestDSLZK
             inputUtxoInfos = serviceHub.collectUtxoInfos(wtx.inputs),
             referenceUtxoInfos = serviceHub.collectUtxoInfos(wtx.references)
         )
+
+        val proofs = mutableMapOf<String, ByteArray>()
+
         wtx.zkTransactionMetadata().commands.forEach {
-            zkServiceForCommandMetadata(it).run(witness, calculatePublicInput(wtx))
+            val vtx = ZKVerifierTransaction.fromWireTransaction(wtx, proofs)
+            zkServiceForCommandMetadata(it).run(witness, calculatePublicInput(vtx))
         }
     }
 
