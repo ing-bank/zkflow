@@ -169,6 +169,20 @@ data class ZKNetwork(
     }
 }
 
+/**
+ * This class facilitates configuration of the attachment constraint as part of the configuration of the zk network.
+ * E.g.:
+ * network {
+ *      signatureAttachmentConstraint {
+ *          signatureScheme = ZKFlow.DEFAULT_ZKFLOW_SIGNATURE_ATTACHMENT_CONSTRAINT_SIGNATURE_SCHEME
+ *     }
+ *     hashAttachmentConstraint {
+ *          algorithm = Sha256::class
+ *    }
+ *    attachmentConstraintType = SignatureAttachmentConstraint::class // fails
+ *    attachmentConstraintType = AutomaticPlaceholderConstraint::class // works
+ * }
+ */
 @ZKCommandMetadataDSL
 sealed class ZKAttachmentConstraint private constructor(val kClass: KClass<out AttachmentConstraint>) {
     class SignatureAttachment(var signatureScheme: SignatureScheme = DEFAULT_ZKFLOW_SIGNATURE_ATTACHMENT_CONSTRAINT_SIGNATURE_SCHEME) : ZKAttachmentConstraint(SignatureAttachmentConstraint::class)
