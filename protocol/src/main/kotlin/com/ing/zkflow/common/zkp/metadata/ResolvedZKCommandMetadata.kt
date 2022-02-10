@@ -32,7 +32,7 @@ data class ResolvedZKNetwork(
      * This should be enforced at network level and therefore should match the [AttachmentConstraint] defined for the network
      * in the transaction metadata. If they don't match, an error is thrown.
      */
-    val attachmentConstraintType: KClass<out AttachmentConstraint>,
+    val attachmentConstraintType: ResolvedZKAttachmentConstraint,
 
     val digestService: IdentifyingDigestAlgorithm,
 
@@ -41,7 +41,6 @@ data class ResolvedZKNetwork(
     init {
         ZKFlow.requireSupportedSignatureScheme(participantSignatureScheme)
         ZKFlow.requireSupportedSignatureScheme(notary.signatureScheme)
-        ZKFlow.requireSupportedContractAttachmentConstraint(attachmentConstraintType)
         ZKFlow.requireSupportedDigestService(digestService)
     }
 }

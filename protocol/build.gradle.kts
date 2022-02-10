@@ -26,6 +26,7 @@ dependencies {
     api(project(":utils"))
     api(project(":crypto"))
     api(project(":serialization"))
+    api(project(":annotations"))
 
     // For Witness JSON serialization
     val kotlinxSerializationVersion: String by project

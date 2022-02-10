@@ -16,7 +16,7 @@ data class TxStateTemplateParameters(val metadata: ResolvedZKCommandMetadata, va
         listOf(
             AbstractPartyTemplateParameters.selectPartyParameters(metadata.network.notary.signatureScheme.schemeCodeName),
             AttachmentConstraintTemplateParameters.selectParameters(
-                metadata.network.attachmentConstraintType.qualifiedConstraintClassName
+                metadata.network.attachmentConstraintType.attachmentConstraintType.qualifiedConstraintClassName
             ).polymorphic(),
             ByteArrayTemplateParameters(CordaSerializers.CLASS_NAME_SIZE),
             NullableTemplateParameters("nullable_integer.zn", null, "i32")
@@ -35,7 +35,7 @@ data class TxStateTemplateParameters(val metadata: ResolvedZKCommandMetadata, va
                 .selectPartyParameters(metadata.network.notary.signatureScheme.schemeCodeName)
                 .getTypeReplacements("PARTY_") +
             AttachmentConstraintTemplateParameters
-                .selectParameters(metadata.network.attachmentConstraintType.qualifiedConstraintClassName)
+                .selectParameters(metadata.network.attachmentConstraintType.attachmentConstraintType.qualifiedConstraintClassName)
                 .polymorphic()
                 .getTypeReplacements("ATTACHMENT_CONSTRAINT_") +
             ByteArrayTemplateParameters(CordaSerializers.CLASS_NAME_SIZE)
