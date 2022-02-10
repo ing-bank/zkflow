@@ -189,7 +189,7 @@ class ComplexBflTest {
             bytes(*IntArray(364))
         }
 
-        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run", 10)
+        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run", 20)
 
         stderr shouldBe ""
 

@@ -2,6 +2,7 @@ package com.ing.zkflow.common.zkp
 
 import com.ing.zkflow.common.serialization.zinc.json.PublicInputSerializer
 import com.ing.zkflow.common.serialization.zinc.json.WitnessSerializer
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import kotlinx.serialization.json.Json
 import net.corda.core.utilities.loggerFor
 import org.slf4j.Logger
@@ -15,6 +16,11 @@ import kotlin.time.measureTime
 import kotlin.time.measureTimedValue
 
 @Suppress("TooManyFunctions")
+@SuppressFBWarnings(
+    "PATH_TRAVERSAL_IN",
+    "COMMAND_INJECTION",
+    justification = "Paths can only come from command classes. Zinc commands are hardcoded, processing fun is private"
+)
 class ZincZKService(
     val circuitFolder: String,
     val artifactFolder: String,
@@ -46,7 +52,7 @@ class ZincZKService(
         /**
          * Returns output of the command execution.
          **/
-        fun completeZincCommand(command: String, timeout: Duration, input: File? = null): String {
+        private fun completeZincCommand(command: String, timeout: Duration, input: File? = null): String {
             val process = command.toProcess(input)
             val output = process.inputStream.bufferedReader().readText()
             val stderr = process.errorStream.bufferedReader().readText()

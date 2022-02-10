@@ -1,6 +1,7 @@
 package com.ing.zkflow.common.zkp
 
 import com.ing.zkflow.common.util.includedLastModified
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import net.corda.core.utilities.loggerFor
 import java.io.File
 
@@ -24,6 +25,10 @@ import java.io.File
  * Metadata file is constructed when `cache()` is called. It is assumed that
  * at the moment of caching the current artifacts are aligned with the current source.
  */
+@SuppressFBWarnings(
+    "PATH_TRAVERSAL_IN",
+    justification = "Paths can only come from command classes"
+)
 object CircuitManager {
     const val METADATA_PATH = "__circuit_metadata__"
 

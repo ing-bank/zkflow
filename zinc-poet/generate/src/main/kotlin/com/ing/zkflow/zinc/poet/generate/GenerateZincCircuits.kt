@@ -4,6 +4,7 @@ import com.ing.zkflow.common.zkp.metadata.CommandMetadataCache
 import com.ing.zkflow.util.ensureDirectory
 import com.ing.zkflow.zinc.poet.generate.types.LedgerTransactionFactory
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import net.corda.core.internal.exists
 import org.slf4j.LoggerFactory
 import java.nio.file.Files
@@ -24,6 +25,7 @@ private fun Array<String>.multiple(key: String): List<String> = asSequence()
     .map { it[1] }
     .toList()
 
+@SuppressFBWarnings("PATH_TRAVERSAL_IN", justification = "Src path is intentional param")
 fun main(args: Array<String>) {
     val logger = LoggerFactory.getLogger("zincPoet")
 

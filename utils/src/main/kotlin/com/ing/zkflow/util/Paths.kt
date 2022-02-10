@@ -1,5 +1,6 @@
 package com.ing.zkflow.util
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import java.io.File
 import java.io.FileReader
 import java.nio.file.Files
@@ -49,6 +50,7 @@ fun Path.ensureDirectory(directoryName: String): Path {
  * @return Pair with stdout and stderr
  */
 @Suppress("SpreadOperator", "MagicNumber")
+@SuppressFBWarnings("COMMAND_INJECTION", "PATH_TRAVERSAL_IN", justification = "This is the whole point of this utility")
 fun Path.runCommand(command: String, timeoutInSeconds: Long = 5): Pair<String, String> {
     val workingDir: File = toFile()
     val stdout = workingDir.resolve("stdout")

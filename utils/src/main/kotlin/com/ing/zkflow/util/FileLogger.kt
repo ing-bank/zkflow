@@ -1,14 +1,26 @@
 package com.ing.zkflow.util
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import java.io.File
+import java.time.Instant
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 import java.util.Stack
 import kotlin.math.min
 import kotlin.reflect.KClass
 
-class FileLogger(path: String) {
-    companion object {
-        fun forClass(klass: KClass<*>) = FileLogger("/${System.getProperty("java.io.tempdir")}/${klass.simpleName ?: error("Cannot create a logger for an anonymous class")}")
+@SuppressFBWarnings("PATH_TRAVERSAL_IN", justification = "Path is always calculated from class name")
+class FileLogger constructor(klass: KClass<*>, withTimeStamp: Boolean = false) {
+    private val tmpDir = System.getProperty("java.io.tempdir") ?: "/tmp"
+    private val path = when (withTimeStamp) {
+        true -> {
+            val timestamp = DateTimeFormatter.ofPattern("yyyy-MM-dd.HH-mm-ss.SSS").withZone(ZoneOffset.UTC).format(Instant.now())
+            "/$tmpDir/${klass.simpleName ?: error("Cannot create a logger for an anonymous class")}.$timestamp.log"
+        }
+        false -> "/$tmpDir/${klass.simpleName ?: error("Cannot create a logger for an anonymous class")}.log"
+    }
 
+    private companion object {
         private const val EXCERPT_LENGTH = 500
     }
 

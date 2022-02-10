@@ -11,6 +11,7 @@ import com.ing.zkflow.serialization.ContractStateSerializerMap
 import com.ing.zkflow.testing.fixtures.contract.TestContract.Create.Companion.verifyCreate
 import com.ing.zkflow.testing.fixtures.contract.TestContract.Move.Companion.verifyMove
 import com.ing.zkflow.testing.fixtures.contract.TestContract.MoveBidirectional.Companion.verifyMoveBidirectional
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
@@ -25,6 +26,7 @@ import net.corda.core.transactions.LedgerTransaction
 import java.io.File
 import java.util.Random
 
+@SuppressFBWarnings("PREDICTABLE_RANDOM", "PATH_TRAVERSAL_IN", justification = "Test code")
 public class TestContract : Contract {
     public companion object {
         public const val PROGRAM_ID: ContractClassName = "com.ing.zkflow.testing.fixtures.contract.TestContract"

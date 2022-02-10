@@ -9,9 +9,6 @@ import com.ing.zkflow.plugins.serialization.UserClassesIndexer
 import com.ing.zkflow.util.FileLogger
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.psi.KtAnnotationEntry
-import java.time.Instant
-import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
 
 class ArrowProcessor : Meta {
     override fun intercept(ctx: CompilerContext): List<CliPlugin> {
@@ -29,11 +26,7 @@ class ArrowProcessor : Meta {
 }
 
 internal val SerdeLogger: FileLogger by lazy {
-    val timestamp = DateTimeFormatter
-        .ofPattern("yyyy-MM-dd.HH-mm-ss.SSS")
-        .withZone(ZoneOffset.UTC)
-        .format(Instant.now())
-    FileLogger("/tmp/serde-annotations.$timestamp.log")
+    FileLogger(ArrowProcessor::class, withTimeStamp = true)
 }
 
 internal object SerdeIndex {
