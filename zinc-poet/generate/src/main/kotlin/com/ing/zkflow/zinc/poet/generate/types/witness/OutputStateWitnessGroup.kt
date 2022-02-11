@@ -5,7 +5,7 @@ import com.ing.zinc.bfl.BflType
 import com.ing.zinc.bfl.generator.WitnessGroupOptions
 import com.ing.zinc.bfl.toZincId
 import com.ing.zinc.poet.ZincArray
-import com.ing.zinc.poet.ZincMethod
+import com.ing.zinc.poet.ZincMethod.Companion.zincMethod
 import com.ing.zinc.poet.ZincType
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.zinc.poet.generate.COMPUTE_LEAF_HASHES
@@ -31,7 +31,7 @@ internal data class OutputStateWitnessGroup(
 
     override val dependencies: List<BflType> = listOf(serializedGroup, deserializedGroup)
     override val serializedType: ZincType = serializedGroup.toZincId()
-    override val generateHashesMethod = ZincMethod.zincMethod {
+    override val generateHashesMethod = zincMethod {
         comment = "Compute the $groupName leaf hashes."
         name = "compute_${groupName}_leaf_hashes"
         returnType = ZincArray.zincArray {

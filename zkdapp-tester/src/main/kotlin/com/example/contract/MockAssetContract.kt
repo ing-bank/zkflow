@@ -6,9 +6,6 @@ import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.contracts.ZKOwnableState
 import com.ing.zkflow.common.transactions.zkTransactionMetadata
 import com.ing.zkflow.common.zkp.metadata.commandMetadata
-import com.ing.zkflow.serialization.CommandDataSerializerMap
-import com.ing.zkflow.serialization.ContractStateSerializerMap
-import net.corda.core.contracts.AlwaysAcceptAttachmentConstraint
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.CommandAndState
 import net.corda.core.contracts.Contract
@@ -28,11 +25,6 @@ class MockAssetContract : Contract {
         override val owner: @EdDSA AnonymousParty,
         val value: Int = Random().nextInt()
     ) : ZKOwnableState {
-
-        init {
-            ContractStateSerializerMap.register(this::class)
-        }
-
         override val participants: List<AnonymousParty> = listOf(owner)
 
         override fun withNewOwner(newOwner: AnonymousParty): CommandAndState =
@@ -41,14 +33,7 @@ class MockAssetContract : Contract {
 
     @ZKP
     class Move : ZKCommandData {
-        init {
-            CommandDataSerializerMap.register(this::class)
-        }
-
         override val metadata = commandMetadata {
-            network {
-                attachmentConstraintType = AlwaysAcceptAttachmentConstraint::class
-            }
             numberOfSigners = 2
             inputs {
                 any(MockAsset::class) at 0
@@ -62,14 +47,7 @@ class MockAssetContract : Contract {
 
     @ZKP
     class Issue : ZKCommandData {
-        init {
-            CommandDataSerializerMap.register(this::class)
-        }
-
         override val metadata = commandMetadata {
-            network {
-                attachmentConstraintType = AlwaysAcceptAttachmentConstraint::class
-            }
             numberOfSigners = 1
             outputs {
                 private(MockAsset::class) at 0

@@ -1,19 +1,16 @@
-mod platform_witness;
-mod signers_anonymous_party_ed_dsa;
-mod tx_state_mock_asset;
+mod ledger_transaction;
+use ledger_transaction::LedgerTransaction;
 
-use platform_witness::Witness;
-use signers_anonymous_party_ed_dsa::Signers;
-use tx_state_mock_asset::TxStateMockAsset;
-
-fn check_contract_rules(witness: Witness) {
-    let signers = Signers::deserialize(witness.signers[0]);
+fn verify(
+    tx: LedgerTransaction,
+) -> () {
+    let signers = tx.signers;
     dbg!("[Create] Signers {}", signers);
 
-    let tx_mock_asset = TxStateMockAsset::deserialize(witness.outputs.mock_asset[0]);
+    let tx_mock_asset = tx.outputs.mock_asset_contract_mock_asset.get(0 as u32);
     dbg!("[Create] TxState_MockAsset {}", tx_mock_asset);
 
-    assert!(Signers::contains(signers, tx_mock_asset.data.owner), "[Create] Owner must sign");
+    assert!(signers.contains(tx_mock_asset.data.owner.public_key), "[Create] Owner must sign");
     dbg!("[Create] Owner signed");
 
     dbg!("[Create] Contract rules verified");

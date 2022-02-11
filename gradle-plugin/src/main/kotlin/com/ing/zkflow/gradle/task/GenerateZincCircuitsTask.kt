@@ -36,7 +36,7 @@ open class GenerateZincCircuitsTask : DefaultTask() {
             // We need to add 'build/generated/ksp/src/main/resources' to the main sourceSet, because otherwise
             // the generated META-INF/services file is not picked up by the `zincPoet` task.
             // It would be nicest if KSP already did this, however it doesn't.
-            it.classpath = main.runtimeClasspath.plus(project.files(generatedKspResources))
+            it.classpath = main.runtimeClasspath + project.files(generatedKspResources)
             it.args(
                 "$SRC_DIR=$zincSources",
                 *circuitNames.map { "$CIRCUIT=$it" }.toTypedArray()

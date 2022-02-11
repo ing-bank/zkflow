@@ -1,7 +1,6 @@
 package com.ing.zkflow.zinc.poet.generate.types
 
 import com.ing.zinc.bfl.BflStruct
-import com.ing.zinc.bfl.dsl.ArrayBuilder.Companion.array
 import com.ing.zinc.bfl.dsl.StructBuilder.Companion.struct
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.secureHash
@@ -37,7 +36,7 @@ class LedgerTransactionFactory(
             field { name = TIME_WINDOW; type = timeWindow }
         }
         field { name = PARAMETERS; type = secureHash }
-        field { name = SIGNERS; type = array { capacity = commandMetadata.numberOfSigners; elementType = standardTypes.signerModule(commandMetadata) } }
+        field { name = SIGNERS; type = standardTypes.signerList(commandMetadata) }
         isDeserializable = false
     }
 

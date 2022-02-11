@@ -101,15 +101,11 @@ class Witness(
             generateDeserializeMethod() +
             generateGenerateHashesMethod()
 
-    private fun generateDeserializeMethod() =
-        zincMethod {
-            comment = "Deserialize ${Witness::class.java.simpleName} into a $LEDGER_TRANSACTION."
-            name = "deserialize"
-            returnType = id(LEDGER_TRANSACTION)
-
-            body = """
-                let $SIGNERS = self.deserialize_$SIGNERS();
-
+    private fun generateDeserializeMethod() = zincMethod {
+        comment = "Deserialize ${Witness::class.java.simpleName} into a $LEDGER_TRANSACTION."
+        name = "deserialize"
+        returnType = id(LEDGER_TRANSACTION)
+        body = """
                 $LEDGER_TRANSACTION {
                     ${if (commandMetadata.privateInputs.isNotEmpty()) "$INPUTS: self.$SERIALIZED_INPUT_UTXOS.deserialize()," else "// $INPUTS not present"}
                     ${if (commandMetadata.privateOutputs.isNotEmpty()) "$OUTPUTS: self.$OUTPUTS.deserialize()," else "// $OUTPUTS not present"}
@@ -117,10 +113,10 @@ class Witness(
                     $NOTARY: self.deserialize_$NOTARY()[0],
                     ${if (commandMetadata.timeWindow) "$TIME_WINDOW: self.deserialize_$TIME_WINDOW()[0]," else "// $TIME_WINDOW not present"}
                     $PARAMETERS: self.deserialize_$PARAMETERS()[0],
-                    $SIGNERS: $SIGNERS,
+                    $SIGNERS: ${standardTypes.signerList(commandMetadata).id}::list_of(self.deserialize_$SIGNERS()),
                 }
-            """.trimIndent()
-        }
+        """.trimIndent()
+    }
 
     private fun generateGenerateHashesMethod() = zincMethod {
         val hashInitializers = witnessGroups.mapNotNull { witnessGroup ->
