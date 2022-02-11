@@ -2,7 +2,8 @@ package com.ing.zkflow.common.transactions
 
 import co.paralleluniverse.strands.Strand
 import com.ing.zkflow.common.contracts.ZKContractState
-import com.ing.zkflow.common.serialization.BFLSerializationScheme
+import com.ing.zkflow.common.network.ZKNetworkParameters
+import com.ing.zkflow.common.network.ZKNetworkParametersServiceLoader
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
 import com.ing.zkflow.node.services.ServiceNames
 import com.ing.zkflow.node.services.ZKVerifierTransactionStorage
@@ -59,8 +60,8 @@ import java.util.UUID
 @Suppress("TooManyFunctions", "LongParameterList", "MemberVisibilityCanBePrivate") // Copy of TransactionBuilder API
 class ZKTransactionBuilder(
     val builder: TransactionBuilder,
-    private val serializationSchemeId: Int = BFLSerializationScheme.SCHEME_ID,
-    private val serializationProperties: Map<Any, Any> = emptyMap(),
+    // private val serializationSchemeId: Int = BFLSerializationScheme.SCHEME_ID,
+    private val zkNetworkParameters: ZKNetworkParameters? = null,
     // TransactionBuilder does not expose `inputsWithTransactionState` and `referencesWithTransactionState`, which are required for the ordered TransactionBuilder
     // to sort the states by name.
     val inputsWithTransactionState: ArrayList<StateAndRef<ContractState>> = arrayListOf(),
@@ -108,6 +109,10 @@ class ZKTransactionBuilder(
     ) : this(notary, lockId, inputs, attachments, outputs, commands, window, privacySalt, arrayListOf())
 
     constructor(notary: Party) : this(notary, window = null)
+    constructor(notary: Party, zkNetworkParameters: ZKNetworkParameters) : this(
+        TransactionBuilder(notary, window = null),
+        zkNetworkParameters = zkNetworkParameters
+    )
 
     init {
         outputStates().forEach { enforceZKContractStates(it.data) }
@@ -117,7 +122,10 @@ class ZKTransactionBuilder(
         require(state is ZKContractState) { "Can only use ZKContractStates as output" }
     }
 
-    private companion object {
+    companion object {
+        const val CONTEXT_KEY_ZK_NETWORK_PARAMETERS = 192837465
+        const val CONTEXT_KEY_TRANSACTION_METADATA = 2
+
         // Copied from private `TransactionBuilder.defaultLockId`
         private fun defaultLockId() = (Strand.currentStrand() as? FlowStateMachine<*>)?.id?.uuid ?: UUID.randomUUID()
     }
@@ -132,27 +140,33 @@ class ZKTransactionBuilder(
 
         enforcePrivateInputsAndReferences(resolvedTransactionMetadata, services)
 
+        val zkNetworkParameters = zkNetworkParameters ?: ZKNetworkParametersServiceLoader.parameters
+
         val serializationProperties = mapOf<Any, Any>(
-            BFLSerializationScheme.CONTEXT_KEY_TRANSACTION_METADATA to resolvedTransactionMetadata
+            CONTEXT_KEY_TRANSACTION_METADATA to resolvedTransactionMetadata,
+            CONTEXT_KEY_ZK_NETWORK_PARAMETERS to zkNetworkParameters
         )
 
-        return builder.toWireTransaction(services, serializationSchemeId, serializationProperties)
+        return builder.toWireTransaction(services, zkNetworkParameters.serializationSchemeId, serializationProperties)
     }
 
     private fun enforcePrivateInputsAndReferences(
         resolvedTransactionMetadata: ResolvedZKTransactionMetadata,
         services: ServicesForResolution
     ) {
-        val stateRefs = (resolvedTransactionMetadata.privateInputs + resolvedTransactionMetadata.privateReferences).filter { it.forcePrivate }
+        val stateRefs =
+            (resolvedTransactionMetadata.privateInputs + resolvedTransactionMetadata.privateReferences).filter { it.forcePrivate }
 
         if (stateRefs.isNotEmpty()) {
-            val serviceHub = serviceHub ?: if (services is ServiceHub) services else error("ServiceHub is required to enforce inputs visibility")
+            val serviceHub =
+                serviceHub ?: if (services is ServiceHub) services else error("ServiceHub is required to enforce inputs visibility")
             val zkStorage = serviceHub.getCordaServiceFromConfig<ZKVerifierTransactionStorage>(ServiceNames.ZK_VERIFIER_TX_STORAGE)
 
             stateRefs.forEach {
                 val stateRef = inputStates()[it.index]
                 val tx = zkStorage.getTransaction(stateRef.txhash)?.tx ?: error("Transaction not found with ID: ${stateRef.txhash}")
-                val isPrivate = tx.zkTransactionMetadata().privateOutputs.find { output -> output.index == stateRef.index }?.private ?: false
+                val isPrivate =
+                    tx.zkTransactionMetadata().privateOutputs.find { output -> output.index == stateRef.index }?.private ?: false
                 if (!isPrivate) error("Utxo $stateRef should be private, but it is public")
             }
         }
@@ -207,8 +221,7 @@ class ZKTransactionBuilder(
    */
     fun copy(): ZKTransactionBuilder = ZKTransactionBuilder(
         builder.copy(),
-        serializationSchemeId,
-        serializationProperties,
+        zkNetworkParameters,
         inputsWithTransactionState,
         referencesWithTransactionState,
         window,

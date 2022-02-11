@@ -19,7 +19,6 @@ import net.corda.core.contracts.CommandAndState
 import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.Contract
 import net.corda.core.contracts.ContractClassName
-import net.corda.core.contracts.SignatureAttachmentConstraint
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.transactions.LedgerTransaction
 import org.junit.jupiter.api.Test
@@ -201,10 +200,6 @@ class MockAssetContract : Contract {
             outputs { private(MockAsset::class) at 0 }
             references { any(MockAuditContract.Approval::class) at 0 }
             timeWindow = true
-
-            network {
-                attachmentConstraintType = SignatureAttachmentConstraint::class
-            }
         }
     }
 

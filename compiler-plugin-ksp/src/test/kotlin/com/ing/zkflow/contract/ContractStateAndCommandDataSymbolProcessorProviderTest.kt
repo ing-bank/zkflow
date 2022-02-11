@@ -1,23 +1,18 @@
 package com.ing.zkflow.contract
 
 import com.ing.zkflow.common.contracts.ZKCommandData
+import com.ing.zkflow.ksp.ProcessorTest
 import com.ing.zkflow.serialization.ZKContractStateSerializerMapProvider
 import com.ing.zkflow.serialization.ZkCommandDataSerializerMapProvider
-import com.ing.zkflow.stateandcommanddata.ContractStateAndCommandDataSymbolProcessorProvider
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
-import com.tschuchort.compiletesting.symbolProcessorProviders
 import io.kotest.matchers.paths.shouldNotExist
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldStartWith
-import net.corda.core.internal.readText
 import org.junit.jupiter.api.Test
-import java.io.BufferedOutputStream
 import java.io.ByteArrayOutputStream
-import java.nio.charset.StandardCharsets
-import java.nio.file.Paths
 
-internal class ContractStateAndCommandDataSymbolProcessorProviderTest {
+internal class ContractStateAndCommandDataSymbolProcessorProviderTest : ProcessorTest() {
     @Test
     fun `ZKTransactionProcessor should correctly register commands`() {
         val outputStream = ByteArrayOutputStream()
@@ -57,7 +52,7 @@ internal class ContractStateAndCommandDataSymbolProcessorProviderTest {
         }
 
         result.exitCode shouldBe KotlinCompilation.ExitCode.OK
-        result.getMetaInfServicesPath<ZKCommandData>().shouldNotExist()
+        result.getMetaInfServicesPath<ZKCommandData>()?.shouldNotExist()
     }
 
     @Test
@@ -74,34 +69,7 @@ internal class ContractStateAndCommandDataSymbolProcessorProviderTest {
         result.getGeneratedMetaInfServices<ZKContractStateSerializerMapProvider>() shouldStartWith "com.ing.zkflow.serialization.ContractStateSerializerMapProvider"
     }
 
-    private fun compile(
-        kotlinSource: SourceFile,
-        outputStream: ByteArrayOutputStream
-    ) = KotlinCompilation().apply {
-        sources = listOf(kotlinSource)
-
-        symbolProcessorProviders = listOf(ContractStateAndCommandDataSymbolProcessorProvider())
-
-        inheritClassPath = true
-        messageOutputStream = BufferedOutputStream(outputStream) // see diagnostics in real time
-    }.compile()
-
-    private fun reportError(result: KotlinCompilation.Result, outputStream: ByteArrayOutputStream) =
-        println(
-            """
-            Compilation failed:
-            Compilation messages: ${result.messages}
-            Output stream: $outputStream
-            """.trimIndent()
-        )
-
     companion object {
-        private inline fun <reified T : Any> KotlinCompilation.Result.getGeneratedMetaInfServices() =
-            getMetaInfServicesPath<T>().readText(StandardCharsets.UTF_8)
-
-        private inline fun <reified T : Any> KotlinCompilation.Result.getMetaInfServicesPath() =
-            Paths.get("${outputDirectory.absolutePath}/../ksp/sources/resources/META-INF/services/${T::class.java.canonicalName}")
-
         private val kotlinFileWithCommand = SourceFile.kotlin(
             "TestCommand.kt",
             """

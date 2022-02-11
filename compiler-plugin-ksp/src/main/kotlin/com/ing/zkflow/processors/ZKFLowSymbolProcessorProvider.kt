@@ -1,4 +1,4 @@
-package com.ing.zkflow.stateandcommanddata
+package com.ing.zkflow.processors
 
 import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
@@ -11,10 +11,12 @@ import com.ing.zkflow.serialization.ZkCommandDataSerializerMapProvider
 import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.ContractState
 
-class ContractStateAndCommandDataSymbolProcessorProvider : SymbolProcessorProvider {
+class ZKFLowSymbolProcessorProvider : SymbolProcessorProvider {
     override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor {
+        val zkNetworkParametersProviderProcessor = ZKNetworkParametersProviderProcessor()
+
         val contractStateMapProcessor = ContractStateAndCommandDataSerializerMapProcessor(
-            ZKOwnableState::class,
+            ZKOwnableState::class, // TODO: should this not just be ZKContractState? This is too specific
             ContractState::class,
             ZKContractStateSerializerMapProvider::class,
             environment.codeGenerator
@@ -30,7 +32,8 @@ class ContractStateAndCommandDataSymbolProcessorProvider : SymbolProcessorProvid
             environment.codeGenerator,
             listOf(
                 contractStateMapProcessor,
-                commandDataMapProcessor
+                commandDataMapProcessor,
+                zkNetworkParametersProviderProcessor
             )
         )
     }

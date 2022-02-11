@@ -25,6 +25,8 @@ dependencies {
 
     val arrowMetaVersion: String by project
     kotlinCompilerPluginClasspath("io.arrow-kt:arrow-meta:$arrowMetaVersion")
+
+    testImplementation(project(":test-utils"))
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {

@@ -24,7 +24,7 @@ class CircuitGenerator(
     private val standardTypes: StandardTypes,
     private val zincTypeResolver: ZincTypeResolver,
     private val constsFactory: ConstsFactory,
-    private val cryptoUtilsFactory: CryptoUtilsFactory,
+    private val cryptoUtilsFactory: CryptoUtilsFactory
 ) {
     fun generateCircuitFor(commandMetadata: ResolvedZKCommandMetadata) {
         val witnessGroups = WitnessGroupsContainer(

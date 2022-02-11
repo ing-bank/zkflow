@@ -1,5 +1,6 @@
 package com.ing.zkflow.zinc.poet.generate
 
+import com.ing.zkflow.testing.zkp.MockZKNetworkParameters
 import com.ing.zkflow.util.runCommand
 import com.ing.zkflow.zinc.poet.generate.types.CommandContextFactory
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes
@@ -26,7 +27,7 @@ import kotlin.time.measureTime
 internal class CircuitGeneratorTest {
     private val zincTypeResolver = ZincTypeGeneratorResolver(ZincTypeGenerator)
 
-    private val standardTypes = StandardTypes(zincTypeResolver)
+    private val standardTypes = StandardTypes(zincTypeResolver, MockZKNetworkParameters)
 
     @ExperimentalTime
     @Test
@@ -38,7 +39,7 @@ internal class CircuitGeneratorTest {
             standardTypes,
             zincTypeResolver,
             ConstsFactory(),
-            CryptoUtilsFactory(),
+            CryptoUtilsFactory()
         )
 
         logExecutionTime("Generating the circuit") {

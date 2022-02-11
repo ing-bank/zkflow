@@ -1,5 +1,6 @@
 package com.ing.zkflow.zinc.poet.generate
 
+import com.ing.zkflow.common.network.ZKNetworkParametersServiceLoader
 import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.serialization.ZkCommandDataSerializerMapProvider
@@ -68,7 +69,8 @@ private fun validateDiscoveredCircuits(circuitNames: List<String>) {
 
 private val circuitGenerator: CircuitGenerator by lazy {
     val zincTypeResolver = ZincTypeGeneratorResolver(ZincTypeGenerator)
-    val standardTypes = StandardTypes(zincTypeResolver)
+    val zkNetworkParameters = ZKNetworkParametersServiceLoader.parameters
+    val standardTypes = StandardTypes(zincTypeResolver, zkNetworkParameters)
     CircuitGenerator(
         BuildPathProvider.Default,
         CommandContextFactory(

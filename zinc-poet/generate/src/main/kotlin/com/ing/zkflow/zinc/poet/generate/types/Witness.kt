@@ -59,7 +59,7 @@ class Witness(
             listOfNotNull(
                 COMMAND_CONTEXT,
             ) + listOf(
-                standardTypes.getSignerListModule(commandMetadata.numberOfSigners, commandMetadata).id,
+                standardTypes.getSignerListModule(commandMetadata.numberOfSigners).id,
             )
             ).distinct().sortedBy { it }
             .forEach {

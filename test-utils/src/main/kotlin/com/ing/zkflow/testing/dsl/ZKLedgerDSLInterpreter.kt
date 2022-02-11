@@ -8,6 +8,7 @@
 
 package com.ing.zkflow.testing.dsl
 
+import com.ing.zkflow.common.network.ZKNetworkParameters
 import com.ing.zkflow.common.transactions.ZKTransactionBuilder
 import net.corda.core.DoNotImplement
 import net.corda.core.contracts.ContractState
@@ -186,9 +187,9 @@ public interface LedgerDSLInterpreter<out T : TransactionDSLInterpreter, out K :
  */
 public class LedgerDSL<out T : TransactionDSLInterpreter, out K : TransactionDSLInterpreter, out L : LedgerDSLInterpreter<T, K>>(
     public val interpreter: L,
-    private val notary: Party
-) :
-    LedgerDSLInterpreter<TransactionDSLInterpreter, TransactionDSLInterpreter> by interpreter {
+    private val notary: Party,
+    private val zkNetworkParameters: ZKNetworkParameters,
+) : LedgerDSLInterpreter<TransactionDSLInterpreter, TransactionDSLInterpreter> by interpreter {
 
     /**
      * Creates and adds a transaction to the ledger.
@@ -207,7 +208,10 @@ public class LedgerDSL<out T : TransactionDSLInterpreter, out K : TransactionDSL
     @JvmOverloads
     public fun zkTransaction(
         label: String? = null,
-        transactionBuilder: ZKTransactionBuilder = ZKTransactionBuilder(notary = notary),
+        transactionBuilder: ZKTransactionBuilder = ZKTransactionBuilder(
+            TransactionBuilder(notary = notary),
+            zkNetworkParameters = zkNetworkParameters
+        ),
         dsl: TransactionDSL<TransactionDSLInterpreter>.() -> EnforceVerifyOrFail
     ): WireTransaction =
         _zkTransaction(label, transactionBuilder) { TransactionDSL(this, notary).dsl() }
@@ -224,7 +228,8 @@ public class LedgerDSL<out T : TransactionDSLInterpreter, out K : TransactionDSL
         _unverifiedTransaction(label, transactionBuilder) { TransactionDSL(this, notary).dsl() }
 
     /** Creates a local scoped copy of the ledger. */
-    public fun tweak(dsl: LedgerDSL<T, K, L>.() -> Unit): Unit = _tweak { LedgerDSL<T, K, L>(uncheckedCast(this), notary).dsl() }
+    public fun tweak(dsl: LedgerDSL<T, K, L>.() -> Unit): Unit =
+        _tweak { LedgerDSL<T, K, L>(uncheckedCast(this), notary, zkNetworkParameters).dsl() }
 
     /**
      * Retrieves an output previously defined by [TransactionDSLInterpreter._output] with a label passed in.

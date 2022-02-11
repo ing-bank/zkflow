@@ -1,5 +1,7 @@
 package com.ing.zkflow.common.serialization
 
+import com.ing.zkflow.common.network.ZKNetworkParameters
+import com.ing.zkflow.common.transactions.ZKTransactionBuilder
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
 import com.ing.zkflow.serialization.CommandDataSerializerMap
 import com.ing.zkflow.serialization.ContractStateSerializerMap
@@ -8,6 +10,7 @@ import com.ing.zkflow.serialization.SerializerMapError
 import com.ing.zkflow.serialization.SerializersModuleRegistry
 import com.ing.zkflow.serialization.ZKContractStateSerializerMapProvider
 import com.ing.zkflow.serialization.ZkCommandDataSerializerMapProvider
+import com.ing.zkflow.serialization.bfl.serializers.PartySerializer
 import com.ing.zkflow.serialization.bfl.serializers.TimeWindowSerializer
 import com.ing.zkflow.serialization.bfl.serializers.TransactionStateSerializer
 import kotlinx.serialization.KSerializer
@@ -19,6 +22,7 @@ import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.TimeWindow
 import net.corda.core.contracts.TransactionState
+import net.corda.core.identity.Party
 import net.corda.core.serialization.CustomSerializationScheme
 import net.corda.core.serialization.SerializationSchemeContext
 import net.corda.core.serialization.internal.CustomSerializationSchemeUtils
@@ -36,8 +40,6 @@ import com.ing.serialization.bfl.api.serialize as obliviousSerialize
 open class BFLSerializationScheme : CustomSerializationScheme {
     companion object {
         const val SCHEME_ID = 602214076
-
-        const val CONTEXT_KEY_TRANSACTION_METADATA = 2
 
         object ZkContractStateSerializerMap : SerializerMap<ContractState>()
         object ZkCommandDataSerializerMap : SerializerMap<CommandData>()
@@ -128,15 +130,24 @@ open class BFLSerializationScheme : CustomSerializationScheme {
         }
     }
 
+    @Suppress("LongMethod") // TODO: split into smaller functions
     override fun <T : Any> serialize(obj: T, context: SerializationSchemeContext): ByteSequence {
         logger.trace("Serializing tx component:\t${obj::class}")
 
         val transactionMetadata =
-            context.properties[CONTEXT_KEY_TRANSACTION_METADATA] as? ResolvedZKTransactionMetadata
+            context.properties[ZKTransactionBuilder.CONTEXT_KEY_TRANSACTION_METADATA] as? ResolvedZKTransactionMetadata
+        val zkNetworkParameters =
+            context.properties[ZKTransactionBuilder.CONTEXT_KEY_ZK_NETWORK_PARAMETERS] as? ZKNetworkParameters
+                ?: error("ZKNetworkParameters must be defined")
 
         val serialization = when (obj) {
             is TransactionState<*> -> {
                 val state = obj.data
+
+                // Confirm that the TransactionState fields match the zkNetworkParameters
+                zkNetworkParameters.attachmentConstraintType.validate(obj.constraint)
+                zkNetworkParameters.notaryInfo.validate(obj.notary)
+
                 // The following cast is OK, its validity is guaranteed by the inner structure of `ContractStateSerializerMap`.
                 // If `[]`-access succeeds, then the cast MUST also succeed.
                 @Suppress("UNCHECKED_CAST")
@@ -198,12 +209,31 @@ open class BFLSerializationScheme : CustomSerializationScheme {
                 @Suppress("UNCHECKED_CAST")
                 val signers = obj as? List<PublicKey> ?: error("Signers: Expected List<PublicKey>, actual ${obj::class.simpleName}")
 
+                /*
+                 * Using the actual (non-fixed) signers.size when there is to tx metadata is ok,
+                 * because that means we are serializing a fully non-zkp transaction.
+                 * The serialized signers list of a non-zkp tx wwill never be used as input to a circuit,
+                 * only TransactionStates (outputs) will ever be used as input.
+                 */
                 val signersFixedLength = transactionMetadata?.numberOfSigners ?: signers.size
 
                 informedSerialize(
                     signers,
                     serializersModule = serializersModule,
                     outerFixedLength = intArrayOf(signersFixedLength)
+                )
+            }
+
+            is Party -> {
+                /*
+                 * The Notary component group
+                 */
+                zkNetworkParameters.notaryInfo.validate(obj)
+
+                informedSerialize(
+                    obj,
+                    PartySerializer,
+                    serializersModule = serializersModule
                 )
             }
 
