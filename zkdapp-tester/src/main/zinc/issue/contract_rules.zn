@@ -1,13 +1,13 @@
-mod ledger_transaction;
-use ledger_transaction::LedgerTransaction;
+mod command_context;
+use command_context::CommandContext;
 
 fn verify(
-    tx: LedgerTransaction,
+    ctx: CommandContext,
 ) -> () {
-    let signers = tx.signers;
+    let signers = ctx.signers;
     dbg!("[Create] Signers {}", signers);
 
-    let tx_mock_asset = tx.outputs.mock_asset_contract_mock_asset.get(0 as u32);
+    let tx_mock_asset = ctx.outputs.mock_asset_contract_mock_asset.get(0 as u32);
     dbg!("[Create] TxState_MockAsset {}", tx_mock_asset);
 
     assert!(signers.contains(tx_mock_asset.data.owner.public_key), "[Create] Owner must sign");

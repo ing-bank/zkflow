@@ -8,7 +8,7 @@ import com.ing.zinc.bfl.generator.ZincGenerator.zincSourceFile
 import com.ing.zinc.bfl.toZincId
 import com.ing.zinc.poet.ZincPrimitive
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
-import com.ing.zkflow.zinc.poet.generate.types.LedgerTransactionFactory
+import com.ing.zkflow.zinc.poet.generate.types.CommandContextFactory
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.componentGroupEnum
 import com.ing.zkflow.zinc.poet.generate.types.Witness
@@ -20,7 +20,7 @@ import java.nio.file.Path
 @Suppress("LongParameterList")
 class CircuitGenerator(
     private val buildPathProvider: BuildPathProvider,
-    private val ledgerTransactionFactory: LedgerTransactionFactory,
+    private val commandContextFactory: CommandContextFactory,
     private val standardTypes: StandardTypes,
     private val zincTypeResolver: ZincTypeResolver,
     private val constsFactory: ConstsFactory,
@@ -38,7 +38,7 @@ class CircuitGenerator(
             standardTypes,
         )
 
-        val ledgerTransaction = ledgerTransactionFactory.createLedgerTransaction(
+        val commandContext = commandContextFactory.createCommandContext(
             commandMetadata,
             witnessGroups
         )
@@ -55,13 +55,13 @@ class CircuitGenerator(
 
         buildPath.createZargoToml(circuitName, "1.0.0")
 
-        sequenceOf(witness, ledgerTransaction).allModules {
+        sequenceOf(witness, commandContext).allModules {
             buildPath.zincSourceFile(this, codeGenerationOptions)
         }
 
         constsFactory.generateConsts(buildPath, codeGenerationOptions)
         cryptoUtilsFactory.generateCryptoUtils(buildPath)
-        generateContractRules(buildPath, ledgerTransaction)
+        generateContractRules(buildPath, commandContext)
         generateMain(buildPath, witness)
         buildPath.zincSourceFile(componentGroupEnum, codeGenerationOptions)
         logger.info("... done")
@@ -69,10 +69,10 @@ class CircuitGenerator(
 
     private fun generateContractRules(
         buildPath: Path,
-        ledgerTransaction: BflStruct
+        zkCommandContext: BflStruct
     ) {
         buildPath.zincSourceFile("contract_rules.zn") {
-            listOf(ledgerTransaction)
+            listOf(zkCommandContext)
                 .sortedBy { it.getModuleName() }
                 .forEach { dependency ->
                     mod { module = dependency.getModuleName() }
@@ -83,8 +83,8 @@ class CircuitGenerator(
                 comment = "TODO"
                 name = "verify"
                 parameter {
-                    name = "tx"
-                    type = ledgerTransaction.toZincId()
+                    name = "ctx"
+                    type = zkCommandContext.toZincId()
                 }
                 returnType = ZincPrimitive.Unit
                 body = """

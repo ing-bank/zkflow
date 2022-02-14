@@ -4,7 +4,7 @@ import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.serialization.ZkCommandDataSerializerMapProvider
 import com.ing.zkflow.util.ensureDirectory
-import com.ing.zkflow.zinc.poet.generate.types.LedgerTransactionFactory
+import com.ing.zkflow.zinc.poet.generate.types.CommandContextFactory
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import net.corda.core.internal.exists
@@ -37,28 +37,22 @@ private val metadata: List<ResolvedZKCommandMetadata> by lazy {
 
 @SuppressFBWarnings("PATH_TRAVERSAL_IN", justification = "Src path is intentional param")
 fun main(args: Array<String>) {
-    println("Arguments: ${args.joinToString("", "[\n", "]") { "\t`$it`\n" }}")
-
     val srcDir = args.single(SRC_DIR)
     val circuitNames = args.multiple(CIRCUIT)
 
     validateDiscoveredCircuits(circuitNames)
 
-    println("Discovered ${metadata.size} circuits")
     metadata.forEach {
         val circuitName = it.circuit.name
-        println("Generating circuit: $circuitName")
         circuitGenerator.generateCircuitFor(it)
-        val sourceContractRules = Paths.get(srcDir).resolve(circuitName).resolve(CONTRACT_RULES_ZN)
+        val sourceContractRules = Paths.get(srcDir).ensureDirectory(circuitName).resolve(CONTRACT_RULES_ZN)
         val targetContractRules = it.circuit.buildFolder.toPath().resolve("src").resolve(CONTRACT_RULES_ZN)
         if (sourceContractRules.exists()) {
             Files.copy(sourceContractRules, targetContractRules, StandardCopyOption.REPLACE_EXISTING)
         } else {
-            println("No $CONTRACT_RULES_ZN defined for circuit $circuitName, copying generated one...")
-            Paths.get(srcDir).ensureDirectory(circuitName)
+            // No $CONTRACT_RULES_ZN defined for circuit $circuitName, copying generated one...
             Files.copy(targetContractRules, sourceContractRules)
         }
-        println("Copying $CONTRACT_RULES_ZN for $circuitName")
     }
 }
 
@@ -68,7 +62,7 @@ private fun validateDiscoveredCircuits(circuitNames: List<String>) {
     }.toSet()
     if (!discoveredCircuitNames.containsAll(circuitNames)) {
         val missingCircuits = circuitNames - discoveredCircuitNames
-        println("The following circuits are required, but are not loaded via ${ZkCommandDataSerializerMapProvider::class}: $missingCircuits")
+        error("The following circuits are required, but are not loaded via ${ZkCommandDataSerializerMapProvider::class}: $missingCircuits")
     }
 }
 
@@ -77,7 +71,7 @@ private val circuitGenerator: CircuitGenerator by lazy {
     val standardTypes = StandardTypes(zincTypeResolver)
     CircuitGenerator(
         BuildPathProvider.Default,
-        LedgerTransactionFactory(
+        CommandContextFactory(
             standardTypes
         ),
         standardTypes,

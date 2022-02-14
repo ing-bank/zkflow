@@ -17,7 +17,7 @@ import com.ing.zinc.poet.indent
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.zinc.poet.generate.COMPUTE_NONCE
 import com.ing.zkflow.zinc.poet.generate.CRYPTO_UTILS
-import com.ing.zkflow.zinc.poet.generate.types.LedgerTransactionFactory.Companion.LEDGER_TRANSACTION
+import com.ing.zkflow.zinc.poet.generate.types.CommandContextFactory.Companion.COMMAND_CONTEXT
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.componentGroupEnum
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.digest
 import com.ing.zkflow.zinc.poet.generate.types.witness.StandardComponentWitnessGroup
@@ -57,7 +57,7 @@ class Witness(
             }
         (
             listOfNotNull(
-                LEDGER_TRANSACTION,
+                COMMAND_CONTEXT,
             ) + listOf(
                 standardTypes.getSignerListModule(commandMetadata.numberOfSigners, commandMetadata).id,
             )
@@ -102,11 +102,11 @@ class Witness(
             generateGenerateHashesMethod()
 
     private fun generateDeserializeMethod() = zincMethod {
-        comment = "Deserialize ${Witness::class.java.simpleName} into a $LEDGER_TRANSACTION."
+        comment = "Deserialize ${Witness::class.java.simpleName} into a $COMMAND_CONTEXT."
         name = "deserialize"
-        returnType = id(LEDGER_TRANSACTION)
+        returnType = id(COMMAND_CONTEXT)
         body = """
-                $LEDGER_TRANSACTION {
+                $COMMAND_CONTEXT {
                     ${if (commandMetadata.privateInputs.isNotEmpty()) "$INPUTS: self.$SERIALIZED_INPUT_UTXOS.deserialize()," else "// $INPUTS not present"}
                     ${if (commandMetadata.privateOutputs.isNotEmpty()) "$OUTPUTS: self.$OUTPUTS.deserialize()," else "// $OUTPUTS not present"}
                     ${if (commandMetadata.privateReferences.isNotEmpty()) "$REFERENCES: self.$SERIALIZED_REFERENCE_UTXOS.deserialize()," else "// $REFERENCES not present"}

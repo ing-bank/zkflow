@@ -4,9 +4,6 @@ plugins {
     id("net.corda.plugins.cordapp") version "5.0.12"
 }
 
-zkp {
-}
-
 cordapp {
     targetPlatformVersion(10)
     minimumPlatformVersion(10)

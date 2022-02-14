@@ -14,14 +14,14 @@ import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.SIGNERS
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.TIME_WINDOW
 import com.ing.zkflow.zinc.poet.generate.types.witness.WitnessGroupsContainer
 
-class LedgerTransactionFactory(
+class CommandContextFactory(
     private val standardTypes: StandardTypes,
 ) {
-    fun createLedgerTransaction(
+    fun createCommandContext(
         commandMetadata: ResolvedZKCommandMetadata,
         witnessGroupsContainer: WitnessGroupsContainer,
     ): BflStruct = struct {
-        name = LEDGER_TRANSACTION
+        name = COMMAND_CONTEXT
         if (commandMetadata.privateInputs.isNotEmpty()) {
             field { name = INPUTS; type = witnessGroupsContainer.serializedInputUtxos.deserializedGroup }
         }
@@ -41,6 +41,6 @@ class LedgerTransactionFactory(
     }
 
     companion object {
-        const val LEDGER_TRANSACTION = "LedgerTransaction"
+        const val COMMAND_CONTEXT = "CommandContext"
     }
 }

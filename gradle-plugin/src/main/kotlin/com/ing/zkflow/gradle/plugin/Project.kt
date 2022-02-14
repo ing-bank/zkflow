@@ -13,6 +13,4 @@ val Project.circuitNames: List<String>?
     get() {
         return zkFlowExtension.circuitSourcesBasePath
             .listFiles { file, _ -> file?.isDirectory ?: false }?.map { it.name }
-            ?.filterNot { it == zkFlowExtension.zincCommonFolderName }
-            ?.filterNot { it == zkFlowExtension.statesSourcesPath }
     }
