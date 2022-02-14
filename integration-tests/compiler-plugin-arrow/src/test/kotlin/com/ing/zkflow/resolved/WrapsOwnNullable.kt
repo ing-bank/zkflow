@@ -7,7 +7,7 @@ import com.ing.zkflow.serialization.engine.SerdeEngine
 import com.ing.zkflow.serialization.serializer.FixedLengthListSerializer
 import com.ing.zkflow.serialization.serializer.NullableSerializer
 import com.ing.zkflow.serialization.serializer.SerializerWithDefault
-import com.ing.zkflow.serialization.serializer.WrappedKSerializer
+import com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializer
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -28,7 +28,7 @@ data class WrapsOwnNullable(
     object MyList_3 : FixedLengthListSerializer<Flag?>(2, MyList_4)
     object MyList_4 : NullableSerializer<Flag>(MyList_5)
     object MyList_5 : SerializerWithDefault<Flag>(MyList_6, DefaultFlag.default)
-    object MyList_6 : WrappedKSerializer<Flag>(Flag.serializer())
+    object MyList_6 : WrappedFixedLengthKSerializer<Flag>(Flag.serializer(), Flag::class)
 }
 
 // There will also be a resolved version for Flag as below.

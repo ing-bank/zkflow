@@ -1,12 +1,13 @@
 package com.ing.zkflow.serialization.serializer
 
+import com.ing.zkflow.serialization.FixedLengthKSerializerWithDefault
+import com.ing.zkflow.serialization.toFixedLengthSerialDescriptorOrThrow
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import java.util.UUID
 
-object UUIDSerializer : KSerializerWithDefault<UUID> {
+object UUIDSerializer : FixedLengthKSerializerWithDefault<UUID> {
     override val default: UUID = UUID(0, 0)
 
     @Serializable
@@ -16,7 +17,7 @@ object UUIDSerializer : KSerializerWithDefault<UUID> {
     )
 
     private val strategy = Surrogate.serializer()
-    override val descriptor: SerialDescriptor = strategy.descriptor
+    override val descriptor = strategy.descriptor.toFixedLengthSerialDescriptorOrThrow()
 
     override fun serialize(encoder: Encoder, value: UUID) {
         val surrogate = Surrogate(value.mostSignificantBits, value.leastSignificantBits)

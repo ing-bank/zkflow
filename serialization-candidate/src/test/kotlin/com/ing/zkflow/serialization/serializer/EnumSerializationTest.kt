@@ -41,11 +41,11 @@ class EnumSerializationTest : SerializerTest {
         @Serializable(with = Enums_0::class)
         val enums: List<Option?> = listOf(Option.SECOND, null)
     ) {
-        object Enum_0 : WrappedKSerializer<Option>(Option.serializer())
+        object Enum_0 : WrappedFixedLengthKSerializer<Option>(Option.serializer(), Option::class)
 
         object Enums_0 : FixedLengthListSerializer<Option?>(5, Enums_1)
         object Enums_1 : NullableSerializer<Option>(Enums_2)
         object Enums_2 : SerializerWithDefault<Option>(Enums_3, Option.SECOND)
-        object Enums_3 : WrappedKSerializer<Option>(Option.serializer())
+        object Enums_3 : WrappedFixedLengthKSerializer<Option>(Option.serializer(), Option::class)
     }
 }

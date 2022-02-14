@@ -23,11 +23,7 @@ fun SerialDescriptor.toFixedLengthSerialDescriptorOrThrow(parentSerialName: Stri
         if (elementsCount == 0) {
             // If no elements are present we cannot attach a size to the descriptor rendering it impossible
             // to convert `SerialDescriptor` to `FixedLengthSerialDescriptor`
-            error(
-                """
-                `SerialDescriptor` `$fullSerialName` cannot be converted to `FixedLengthSerialDescriptor`
-                """.trimIndent()
-            )
+            error(" `SerialDescriptor` `$fullSerialName` cannot be converted to `FixedLengthSerialDescriptor`")
         } else {
             FixedLengthSerialDescriptor(
                 this,

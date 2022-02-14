@@ -8,7 +8,7 @@ package com.ing.zkflow.plugins.serialization.serializingobject
  * entry: Param_0
  * serializingObjectKotlinDefinitions:
  *      `Param_0: FixedLengthList(5, Param_1)`
- *      `Param_1: WrappedKSerializer(IntSerializer)`
+ *      `Param_1: WrappedFixedLengthKSerializer(IntSerializer)`
  */
 data class SerializationSupport(private val entry: Tracker, val serializingObjectKotlinDefinitions: List<String>) {
     constructor(entry: Tracker, value: String) : this(entry, listOf(value))

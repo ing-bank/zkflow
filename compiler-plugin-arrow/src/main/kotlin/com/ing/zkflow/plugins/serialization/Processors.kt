@@ -19,6 +19,7 @@ import com.ing.zkflow.annotations.corda.SignatureSpec
 import com.ing.zkflow.plugins.serialization.serializingobject.SerializingObject
 import com.ing.zkflow.plugins.serialization.serializingobject.Tracker
 import com.ing.zkflow.plugins.serialization.serializingobject.TypeSerializingObject
+import com.ing.zkflow.serialization.FixedLengthKSerializerWithDefault
 import com.ing.zkflow.serialization.serializer.BooleanSerializer
 import com.ing.zkflow.serialization.serializer.ByteSerializer
 import com.ing.zkflow.serialization.serializer.FixedLengthByteArraySerializer
@@ -28,7 +29,6 @@ import com.ing.zkflow.serialization.serializer.FixedLengthMapSerializer
 import com.ing.zkflow.serialization.serializer.FixedLengthSetSerializer
 import com.ing.zkflow.serialization.serializer.InstantSerializer
 import com.ing.zkflow.serialization.serializer.IntSerializer
-import com.ing.zkflow.serialization.serializer.KSerializerWithDefault
 import com.ing.zkflow.serialization.serializer.LongSerializer
 import com.ing.zkflow.serialization.serializer.SerializerWithDefault
 import com.ing.zkflow.serialization.serializer.ShortSerializer
@@ -38,8 +38,8 @@ import com.ing.zkflow.serialization.serializer.UIntSerializer
 import com.ing.zkflow.serialization.serializer.ULongSerializer
 import com.ing.zkflow.serialization.serializer.UShortSerializer
 import com.ing.zkflow.serialization.serializer.UUIDSerializer
-import com.ing.zkflow.serialization.serializer.WrappedKSerializer
-import com.ing.zkflow.serialization.serializer.WrappedKSerializerWithDefault
+import com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializer
+import com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializerWithDefault
 import com.ing.zkflow.serialization.serializer.char.ASCIICharSerializer
 import com.ing.zkflow.serialization.serializer.char.UTF8CharSerializer
 import com.ing.zkflow.serialization.serializer.corda.AlwaysAcceptAttachmentConstraintSerializer
@@ -92,90 +92,90 @@ internal object Processors {
         Boolean::class.simpleName!! to ToSerializingObject { contextualizedOriginal, _ ->
             TypeSerializingObject.ExplicitType(
                 contextualizedOriginal,
-                WrappedKSerializerWithDefault::class,
+                WrappedFixedLengthKSerializerWithDefault::class,
                 emptyList()
             ) { _, outer, _ ->
-                "object $outer: ${WrappedKSerializerWithDefault::class.qualifiedName}<${Boolean::class.simpleName}>(${BooleanSerializer::class.qualifiedName})"
+                "object $outer: ${WrappedFixedLengthKSerializerWithDefault::class.qualifiedName}<${Boolean::class.simpleName}>(${BooleanSerializer::class.qualifiedName})"
             }
         },
         //
         Byte::class.simpleName!! to ToSerializingObject { contextualizedOriginal, _ ->
             TypeSerializingObject.ExplicitType(
                 contextualizedOriginal,
-                WrappedKSerializerWithDefault::class,
+                WrappedFixedLengthKSerializerWithDefault::class,
                 emptyList()
             ) { _, outer, _ ->
-                "object $outer: ${WrappedKSerializerWithDefault::class.qualifiedName}<${Byte::class.simpleName}>(${ByteSerializer::class.qualifiedName})"
+                "object $outer: ${WrappedFixedLengthKSerializerWithDefault::class.qualifiedName}<${Byte::class.simpleName}>(${ByteSerializer::class.qualifiedName})"
             }
         },
         //
         UByte::class.simpleName!! to ToSerializingObject { contextualizedOriginal, _ ->
             TypeSerializingObject.ExplicitType(
                 contextualizedOriginal,
-                WrappedKSerializerWithDefault::class,
+                WrappedFixedLengthKSerializerWithDefault::class,
                 emptyList()
             ) { _, outer, _ ->
-                "object $outer: ${WrappedKSerializerWithDefault::class.qualifiedName}<${UByte::class.simpleName}>(${UByteSerializer::class.qualifiedName})"
+                "object $outer: ${WrappedFixedLengthKSerializerWithDefault::class.qualifiedName}<${UByte::class.simpleName}>(${UByteSerializer::class.qualifiedName})"
             }
         },
         //
         Short::class.simpleName!! to ToSerializingObject { contextualizedOriginal, _ ->
             TypeSerializingObject.ExplicitType(
                 contextualizedOriginal,
-                WrappedKSerializerWithDefault::class,
+                WrappedFixedLengthKSerializerWithDefault::class,
                 emptyList()
             ) { _, outer, _ ->
-                "object $outer: ${WrappedKSerializerWithDefault::class.qualifiedName}<${Short::class.simpleName}>(${ShortSerializer::class.qualifiedName})"
+                "object $outer: ${WrappedFixedLengthKSerializerWithDefault::class.qualifiedName}<${Short::class.simpleName}>(${ShortSerializer::class.qualifiedName})"
             }
         },
         //
         UShort::class.simpleName!! to ToSerializingObject { contextualizedOriginal, _ ->
             TypeSerializingObject.ExplicitType(
                 contextualizedOriginal,
-                WrappedKSerializerWithDefault::class,
+                WrappedFixedLengthKSerializerWithDefault::class,
                 emptyList()
             ) { _, outer, _ ->
-                "object $outer: ${WrappedKSerializerWithDefault::class.qualifiedName}<${UShort::class.simpleName}>(${UShortSerializer::class.qualifiedName})"
+                "object $outer: ${WrappedFixedLengthKSerializerWithDefault::class.qualifiedName}<${UShort::class.simpleName}>(${UShortSerializer::class.qualifiedName})"
             }
         },
         //
         Int::class.simpleName!! to ToSerializingObject { contextualizedOriginal, _ ->
             TypeSerializingObject.ExplicitType(
                 contextualizedOriginal,
-                WrappedKSerializerWithDefault::class,
+                WrappedFixedLengthKSerializerWithDefault::class,
                 emptyList()
             ) { _, outer, _ ->
-                "object $outer: ${WrappedKSerializerWithDefault::class.qualifiedName}<${Int::class.simpleName}>(${IntSerializer::class.qualifiedName})"
+                "object $outer: ${WrappedFixedLengthKSerializerWithDefault::class.qualifiedName}<${Int::class.simpleName}>(${IntSerializer::class.qualifiedName})"
             }
         },
         //
         UInt::class.simpleName!! to ToSerializingObject { contextualizedOriginal, _ ->
             TypeSerializingObject.ExplicitType(
                 contextualizedOriginal,
-                WrappedKSerializerWithDefault::class,
+                WrappedFixedLengthKSerializerWithDefault::class,
                 emptyList()
             ) { _, outer, _ ->
-                "object $outer: ${WrappedKSerializerWithDefault::class.qualifiedName}<${UInt::class.simpleName}>(${UIntSerializer::class.qualifiedName})"
+                "object $outer: ${WrappedFixedLengthKSerializerWithDefault::class.qualifiedName}<${UInt::class.simpleName}>(${UIntSerializer::class.qualifiedName})"
             }
         },
         //
         Long::class.simpleName!! to ToSerializingObject { contextualizedOriginal, _ ->
             TypeSerializingObject.ExplicitType(
                 contextualizedOriginal,
-                WrappedKSerializerWithDefault::class,
+                WrappedFixedLengthKSerializerWithDefault::class,
                 emptyList()
             ) { _, outer, _ ->
-                "object $outer: ${WrappedKSerializerWithDefault::class.qualifiedName}<${Long::class.simpleName}>(${LongSerializer::class.qualifiedName})"
+                "object $outer: ${WrappedFixedLengthKSerializerWithDefault::class.qualifiedName}<${Long::class.simpleName}>(${LongSerializer::class.qualifiedName})"
             }
         },
         //
         ULong::class.simpleName!! to ToSerializingObject { contextualizedOriginal, _ ->
             TypeSerializingObject.ExplicitType(
                 contextualizedOriginal,
-                WrappedKSerializerWithDefault::class,
+                WrappedFixedLengthKSerializerWithDefault::class,
                 emptyList()
             ) { _, outer, _ ->
-                "object $outer: ${WrappedKSerializerWithDefault::class.qualifiedName}<${ULong::class.simpleName}>(${ULongSerializer::class.qualifiedName})"
+                "object $outer: ${WrappedFixedLengthKSerializerWithDefault::class.qualifiedName}<${ULong::class.simpleName}>(${ULongSerializer::class.qualifiedName})"
             }
         },
         //
@@ -184,20 +184,20 @@ internal object Processors {
             contextualizedOriginal.findAnnotation<ASCIIChar>()?.let {
                 return@ToSerializingObject TypeSerializingObject.ExplicitType(
                     contextualizedOriginal,
-                    WrappedKSerializerWithDefault::class,
+                    WrappedFixedLengthKSerializerWithDefault::class,
                     emptyList()
                 ) { _, outer, _ ->
-                    "object $outer: ${WrappedKSerializerWithDefault::class.qualifiedName}<${Char::class.simpleName}>(${ASCIICharSerializer::class.qualifiedName})"
+                    "object $outer: ${WrappedFixedLengthKSerializerWithDefault::class.qualifiedName}<${Char::class.simpleName}>(${ASCIICharSerializer::class.qualifiedName})"
                 }
             }
 
             contextualizedOriginal.findAnnotation<UTF8Char>()?.let {
                 return@ToSerializingObject TypeSerializingObject.ExplicitType(
                     contextualizedOriginal,
-                    WrappedKSerializerWithDefault::class,
+                    WrappedFixedLengthKSerializerWithDefault::class,
                     emptyList()
                 ) { _, outer, _ ->
-                    "object $outer: ${WrappedKSerializerWithDefault::class.qualifiedName}<${Char::class.simpleName}>(${UTF8CharSerializer::class.qualifiedName})"
+                    "object $outer: ${WrappedFixedLengthKSerializerWithDefault::class.qualifiedName}<${Char::class.simpleName}>(${UTF8CharSerializer::class.qualifiedName})"
                 }
             }
 
@@ -342,7 +342,7 @@ internal object Processors {
                 InstantSerializer::class,
                 emptyList()
             ) { _, outer, _ ->
-                "object $outer: ${WrappedKSerializerWithDefault::class.qualifiedName}<${Instant::class.qualifiedName}>(${InstantSerializer::class.qualifiedName})"
+                "object $outer: ${WrappedFixedLengthKSerializerWithDefault::class.qualifiedName}<${Instant::class.qualifiedName}>(${InstantSerializer::class.qualifiedName})"
             }
         },
 
@@ -352,7 +352,7 @@ internal object Processors {
                 UUIDSerializer::class,
                 emptyList()
             ) { _, outer, _ ->
-                "object $outer: ${WrappedKSerializerWithDefault::class.qualifiedName}<${UUID::class.qualifiedName}>(${UUIDSerializer::class.qualifiedName})"
+                "object $outer: ${WrappedFixedLengthKSerializerWithDefault::class.qualifiedName}<${UUID::class.qualifiedName}>(${UUIDSerializer::class.qualifiedName})"
             }
         },
 
@@ -453,7 +453,7 @@ internal object Processors {
             val inner: (Tracker) -> String = if (nameSpecAnnotations == null) {
                 //
                 // if none, use the default CordaX500NameSerializer
-                { tracker -> "object $tracker: ${WrappedKSerializerWithDefault::class.qualifiedName}<${CordaX500Name::class.qualifiedName}>(${CordaX500NameSerializer::class.qualifiedName})" }
+                { tracker -> "object $tracker: ${WrappedFixedLengthKSerializerWithDefault::class.qualifiedName}<${CordaX500Name::class.qualifiedName}>(${CordaX500NameSerializer::class.qualifiedName})" }
             } else {
                 //
                 // if single, parse its arguments and create a chain of serializing objects.
@@ -645,7 +645,12 @@ internal object Processors {
             }
 
             TypeSerializingObject.UserType(contextualOriginal) { self, outer ->
-                "object $outer: ${WrappedKSerializer::class.qualifiedName}<${self.cleanTypeDeclaration}>(${self.cleanTypeDeclaration}.serializer())"
+                """
+                    object $outer: ${WrappedFixedLengthKSerializer::class.qualifiedName}<${self.cleanTypeDeclaration}>(
+                        ${self.cleanTypeDeclaration}.serializer(),
+                        ${self.cleanTypeDeclaration}::class
+                    )
+                """.trimIndent()
             }
         }
     }
@@ -710,11 +715,11 @@ internal object Processors {
     /**
      * Utility function building serializing object for an object [AttachmentConstraint]'s.
      */
-    private inline fun <reified A : AttachmentConstraint, reified S : KSerializerWithDefault<out A>> buildAttachmentConstraintToSerializingObject() = ToSerializingObject { contextualOriginal, _ ->
+    private inline fun <reified A : AttachmentConstraint, reified S : FixedLengthKSerializerWithDefault<out A>> buildAttachmentConstraintToSerializingObject() = ToSerializingObject { contextualOriginal, _ ->
         TypeSerializingObject.ExplicitType(
             contextualOriginal, S::class, emptyList()
         ) { _, outer, _ ->
-            "object $outer: ${WrappedKSerializerWithDefault::class.qualifiedName}<${A::class.qualifiedName!!}>(${S::class.qualifiedName})"
+            "object $outer: ${WrappedFixedLengthKSerializerWithDefault::class.qualifiedName}<${A::class.qualifiedName!!}>(${S::class.qualifiedName})"
         }.also {
             SerdeLogger.log("Type ${contextualOriginal.ktTypeReference.text} processed successfully")
         }

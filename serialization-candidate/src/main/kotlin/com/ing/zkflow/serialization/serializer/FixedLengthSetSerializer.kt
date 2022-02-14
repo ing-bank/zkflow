@@ -1,14 +1,14 @@
 package com.ing.zkflow.serialization.serializer
 
+import com.ing.zkflow.serialization.FixedLengthKSerializerWithDefault
 import com.ing.zkflow.serialization.FixedLengthType
-import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 
 open class FixedLengthSetSerializer<T : Any>(
     maxSize: Int,
-    valueSerializer: KSerializerWithDefault<T>,
-) : KSerializerWithDefault<Set<T>> {
+    valueSerializer: FixedLengthKSerializerWithDefault<T>,
+) : FixedLengthKSerializerWithDefault<Set<T>> {
     /**
      * Sets must be serialized as lists to achieve fixed length, because maps may not contain duplicate keys.
      */
@@ -17,7 +17,7 @@ open class FixedLengthSetSerializer<T : Any>(
 
     private val strategy = FixedLengthCollectionSerializer(maxSize, valueSerializer, FixedLengthType.SET)
 
-    override val descriptor: SerialDescriptor = strategy.descriptor
+    override val descriptor = strategy.descriptor
 
     override fun serialize(encoder: Encoder, value: Set<T>) =
         strategy.serialize(encoder, value.toList())

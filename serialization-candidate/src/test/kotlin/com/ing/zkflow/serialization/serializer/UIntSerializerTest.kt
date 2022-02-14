@@ -39,6 +39,6 @@ class UIntSerializerTest : SerializerTest {
     ) {
         object UInt_0 : FixedLengthListSerializer<UInt?>(5, UInt_1)
         object UInt_1 : NullableSerializer<UInt>(UInt_2)
-        object UInt_2 : WrappedKSerializerWithDefault<UInt>(UIntSerializer)
+        object UInt_2 : WrappedFixedLengthKSerializerWithDefault<UInt>(UIntSerializer)
     }
 }

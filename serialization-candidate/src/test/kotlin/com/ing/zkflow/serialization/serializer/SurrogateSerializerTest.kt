@@ -2,7 +2,9 @@ package com.ing.zkflow.serialization.serializer
 
 import com.ing.zkflow.Surrogate
 import com.ing.zkflow.serialization.SerializerTest
+import com.ing.zkflow.serialization.engine.BFLEngine
 import com.ing.zkflow.serialization.engine.SerdeEngine
+import com.ing.zkflow.serialization.toFixedLengthSerialDescriptorOrThrow
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.Serializable
 import org.junit.jupiter.params.ParameterizedTest
@@ -38,12 +40,24 @@ class SurrogateSerializerTest : SerializerTest {
         engine.assertRoundTrip(ContainsListOfPublicKey2.serializer(), ContainsListOfPublicKey2(List(2) { getRsaPubKey() }))
     }
 
+    @ParameterizedTest
+    @MethodSource("engines")
+    fun `Sizes for PublicKeys must match`(engine: BFLEngine) {
+        val expectedRsaKeyEncodedBytesSize = Int.SIZE_BYTES + RSAKeySurrogate.RSA_ENCODED_SIZE
+        RSAKey512Serializer.descriptor.byteSize shouldBe expectedRsaKeyEncodedBytesSize
+        engine.serialize(RSAKey512Serializer, getRsaPubKey()).size shouldBe expectedRsaKeyEncodedBytesSize * engine.bytesScaler
+
+        val expectedListRsaKeysBytesSize = Int.SIZE_BYTES + ContainsListOfPublicKey2.MAX_KEYS * expectedRsaKeyEncodedBytesSize
+        ContainsListOfPublicKey2.serializer().descriptor.toFixedLengthSerialDescriptorOrThrow().byteSize shouldBe expectedListRsaKeysBytesSize
+        engine.serialize(ContainsListOfPublicKey2.serializer(), ContainsListOfPublicKey2(List(2) { getRsaPubKey() })).size shouldBe expectedListRsaKeysBytesSize * engine.bytesScaler
+    }
+
     @Serializable
     data class ContainsListOfPublicKey2(
         @Serializable(with = List_0::class)
         val list: List<PublicKey>
     ) {
-        object List_0 : FixedLengthListSerializer<PublicKey>(5, List_1)
+        object List_0 : FixedLengthListSerializer<PublicKey>(MAX_KEYS, List_1)
 
         object List_1 : SerializerWithDefault<PublicKey>(
             RSAKey512Serializer,
@@ -52,6 +66,10 @@ class SurrogateSerializerTest : SerializerTest {
                 genKeyPair().public as RSAPublicKeyImpl
             }
         )
+
+        companion object {
+            const val MAX_KEYS = 5
+        }
     }
 
     @Suppress("ArrayInDataClass")
@@ -66,38 +84,13 @@ class SurrogateSerializerTest : SerializerTest {
 
         companion object {
             fun from(pk: PublicKey) = RSAKeySurrogate(pk.encoded)
+            const val RSA_ENCODED_SIZE = 94
         }
 
-        object EncodedSerializer : FixedLengthByteArraySerializer(94)
+        object EncodedSerializer : FixedLengthByteArraySerializer(RSA_ENCODED_SIZE)
     }
 
     object RSAKey512Serializer : SurrogateSerializer<PublicKey, RSAKeySurrogate>(
         RSAKeySurrogate.serializer(), { RSAKeySurrogate.from(it) }
     )
-
-    // @Disabled("enable when list serialization error reporting will be fixed")
-    // @Test
-    // fun `Class with lists of the different PublicKeys must fail`() {
-    //     val rsaKeyGen = KeyPairGenerator
-    //         .getInstance("RSA")
-    //         .also { it.initialize(512) }
-    //     val rsaPK = rsaKeyGen.genKeyPair().public
-    //     val dsaKeyGen = KeyPairGenerator
-    //         .getInstance("DSA")
-    //         .also { it.initialize(512) }
-    //     val dsaPK = dsaKeyGen.genKeyPair().public
-    //
-    //     val keys = listOf(dsaPK, rsaPK, dsaPK)
-    //
-    //     val e = assertThrows<IllegalArgumentException> {
-    //         engine.assertRoundTrip(ContainsListOfPublicKey2(keys), ContainsListOfPublicKey2.serializer())
-    //     }
-    //     println(e.message)
-    // }
-
-    // @Test
-    // fun `structures must be parsable`() {
-    //     walk(ContainsListOfPublicKey2.serializer().descriptor)
-    //     assert(true)
-    // }
 }

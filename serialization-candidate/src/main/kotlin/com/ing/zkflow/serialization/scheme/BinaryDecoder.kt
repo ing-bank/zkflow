@@ -1,6 +1,5 @@
 package com.ing.zkflow.serialization.scheme
 
-import com.ing.zkflow.serialization.utils.WILL_NOT_IMPLEMENT
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.AbstractDecoder
 import kotlinx.serialization.encoding.CompositeDecoder
@@ -47,6 +46,11 @@ internal sealed class BinaryDecoder(internal val input: DataInput) : AbstractDec
                 ByteBuffer.wrap(it).long
             }
 
+        override fun decodeBoolean(): Boolean {
+            input.skipBytes(BinaryEncoder.BitBinaryEncoder.BOOLEAN_PADDING)
+            return input.readBoolean()
+        }
+
         override fun beginStructure(descriptor: SerialDescriptor): CompositeDecoder =
             BitBinaryDecoder(input)
 
@@ -62,6 +66,7 @@ internal sealed class BinaryDecoder(internal val input: DataInput) : AbstractDec
         override fun decodeShort(): Short = input.readShort()
         override fun decodeInt(): Int = input.readInt()
         override fun decodeLong(): Long = input.readLong()
+        override fun decodeBoolean(): Boolean = input.readBoolean()
         override fun beginStructure(descriptor: SerialDescriptor): CompositeDecoder =
             ByteBinaryDecoder(input)
     }
@@ -69,7 +74,6 @@ internal sealed class BinaryDecoder(internal val input: DataInput) : AbstractDec
     override val serializersModule: SerializersModule = EmptySerializersModule
 
     override fun decodeSequentially(): Boolean = true
-    override fun decodeBoolean(): Boolean = input.readBoolean()
     override fun decodeEnum(enumDescriptor: SerialDescriptor): Int = decodeInt()
 
     override fun decodeFloat(): Float {

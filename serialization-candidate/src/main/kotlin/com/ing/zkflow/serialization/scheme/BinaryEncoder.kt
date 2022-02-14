@@ -6,7 +6,6 @@ import com.ing.zkflow.serialization.serializer.char.ASCIICharSerializer
 import com.ing.zkflow.serialization.serializer.char.UTF8CharSerializer
 import com.ing.zkflow.serialization.serializer.string.FixedLengthASCIIStringSerializer
 import com.ing.zkflow.serialization.serializer.string.FixedLengthUTF8StringSerializer
-import com.ing.zkflow.serialization.utils.WILL_NOT_IMPLEMENT
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.AbstractEncoder
 import kotlinx.serialization.encoding.CompositeEncoder
@@ -21,6 +20,7 @@ internal sealed class BinaryEncoder(
     class BitBinaryEncoder(output: DataOutput) : BinaryEncoder(output) {
         companion object {
             const val BINARY_STRING_PAD_CHAR = '0'
+            const val BOOLEAN_PADDING = 7
         }
 
         @Suppress("MagicNumber")
@@ -59,6 +59,8 @@ internal sealed class BinaryEncoder(
                 .map { "$it".toByte() }
                 .toByteArray()
                 .let { output.write(it) }
+
+        override fun encodeBoolean(value: Boolean) = (List(BOOLEAN_PADDING) { false } + value).forEach { output.writeBoolean(it) }
     }
 
     class ByteBinaryEncoder(output: DataOutput) : BinaryEncoder(output) {
@@ -66,11 +68,11 @@ internal sealed class BinaryEncoder(
         override fun encodeShort(value: Short) = output.writeShort(value.toInt())
         override fun encodeInt(value: Int) = output.writeInt(value)
         override fun encodeLong(value: Long) = output.writeLong(value)
+        override fun encodeBoolean(value: Boolean) = output.writeBoolean(value)
     }
 
     override val serializersModule: SerializersModule = EmptySerializersModule
 
-    override fun encodeBoolean(value: Boolean) = output.writeBoolean(value)
     override fun encodeEnum(enumDescriptor: SerialDescriptor, index: Int) = encodeInt(index)
 
     override fun encodeFloat(value: Float) {

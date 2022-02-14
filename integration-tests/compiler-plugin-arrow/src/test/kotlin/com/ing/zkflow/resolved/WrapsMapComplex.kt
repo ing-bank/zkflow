@@ -22,7 +22,7 @@ data class WrapsMapComplex(
     )
     object Map_0_A_0 : com.ing.zkflow.serialization.serializer.string.FixedLengthUTF8StringSerializer(13)
     object Map_0_B_0 : com.ing.zkflow.serialization.serializer.SerializerWithDefault<Baz>(Map_0_B_1, Baz.Default.default)
-    object Map_0_B_1 : com.ing.zkflow.serialization.serializer.WrappedKSerializer<Baz>(Baz.serializer())
+    object Map_0_B_1 : com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializer<Baz>(Baz.serializer(), Baz::class)
 }
 
 // There will also be a resolved version for Baz as below.
@@ -37,7 +37,7 @@ data class WrapsMapComplex(
 //         override val default: Baz = Baz(0)
 //     }
 //
-//     object Id_0: com.ing.zkflow.serialization.serializer.WrappedKSerializerWithDefault<Int>(com.ing.zkflow.serialization.serializer.IntSerializer)
+//     object Id_0: com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializerWithDefault<Int>(com.ing.zkflow.serialization.serializer.IntSerializer)
 // }
 
 class WrapsMapComplexTest : SerializerTest {

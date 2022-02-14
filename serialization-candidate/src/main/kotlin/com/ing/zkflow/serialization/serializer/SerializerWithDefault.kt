@@ -1,21 +1,20 @@
 package com.ing.zkflow.serialization.serializer
 
-import kotlinx.serialization.KSerializer
-import kotlinx.serialization.descriptors.SerialDescriptor
+import com.ing.zkflow.serialization.FixedLengthKSerializer
+import com.ing.zkflow.serialization.FixedLengthKSerializerWithDefault
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 
 /**
  * This serializer must be used to attach a default value to any serializer not-implementing
- * KSerializerWithDefault (and thus not defining a default value).
+ * FixedLengthKSerializerWithDefault (and thus not defining a default value).
  * Such cases include 3rd party classes, user classes and some native classes.
  * To attach this serializer to a type, it must be annotated with @Default annotation.
  */
-abstract class SerializerWithDefault<T>(valueSerializer: KSerializer<T>, override val default: T) :
-    KSerializerWithDefault<T> {
-
+abstract class SerializerWithDefault<T>(valueSerializer: FixedLengthKSerializer<T>, override val default: T) :
+    FixedLengthKSerializerWithDefault<T> {
     private val strategy = valueSerializer
-    override val descriptor: SerialDescriptor = strategy.descriptor
+    override val descriptor = strategy.descriptor
 
     override fun serialize(encoder: Encoder, value: T) =
         encoder.encodeSerializableValue(strategy, value)

@@ -1,20 +1,21 @@
 package com.ing.zkflow.serialization.serializer.corda
 
 import com.ing.zkflow.annotations.corda.Sha256
+import com.ing.zkflow.serialization.FixedLengthKSerializerWithDefault
 import com.ing.zkflow.serialization.serializer.FixedLengthByteArraySerializer
-import com.ing.zkflow.serialization.serializer.KSerializerWithDefault
-import kotlinx.serialization.descriptors.SerialDescriptor
+import com.ing.zkflow.serialization.toFixedLengthSerialDescriptorOrThrow
 import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import net.corda.core.crypto.SecureHash
 
 open class SecureHashSerializer(private val algorithm: String, private val hashLength: Int) :
-    KSerializerWithDefault<SecureHash> {
+    FixedLengthKSerializerWithDefault<SecureHash> {
     private val strategy = FixedLengthByteArraySerializer(hashLength)
-    override val descriptor: SerialDescriptor = buildClassSerialDescriptor("SecureHash$algorithm") {
+
+    override val descriptor = buildClassSerialDescriptor("SecureHash$algorithm") {
         element("bytes", strategy.descriptor)
-    }
+    }.toFixedLengthSerialDescriptorOrThrow()
 
     companion object {
         val sha256Algorithm = Sha256::class.simpleName

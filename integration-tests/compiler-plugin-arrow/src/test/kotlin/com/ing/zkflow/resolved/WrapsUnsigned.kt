@@ -10,7 +10,7 @@ import com.ing.zkflow.serialization.serializer.UByteSerializer
 import com.ing.zkflow.serialization.serializer.UIntSerializer
 import com.ing.zkflow.serialization.serializer.ULongSerializer
 import com.ing.zkflow.serialization.serializer.UShortSerializer
-import com.ing.zkflow.serialization.serializer.WrappedKSerializerWithDefault
+import com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializerWithDefault
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
@@ -39,14 +39,14 @@ data class WrapsUnsigned(
     val ulong: @Contextual ULong = 1U,
 ) {
 
-    object Byte_0 : WrappedKSerializerWithDefault<Byte>(ByteSerializer)
-    object UByte_0 : WrappedKSerializerWithDefault<UByte>(UByteSerializer)
-    object Short_0 : WrappedKSerializerWithDefault<Short>(ShortSerializer)
-    object UShort_0 : WrappedKSerializerWithDefault<UShort>(UShortSerializer)
-    object Int_0 : WrappedKSerializerWithDefault<Int>(IntSerializer)
-    object UInt_0 : WrappedKSerializerWithDefault<UInt>(UIntSerializer)
-    object Long_0 : WrappedKSerializerWithDefault<Long>(LongSerializer)
-    object ULong_0 : WrappedKSerializerWithDefault<ULong>(ULongSerializer)
+    object Byte_0 : WrappedFixedLengthKSerializerWithDefault<Byte>(ByteSerializer)
+    object UByte_0 : WrappedFixedLengthKSerializerWithDefault<UByte>(UByteSerializer)
+    object Short_0 : WrappedFixedLengthKSerializerWithDefault<Short>(ShortSerializer)
+    object UShort_0 : WrappedFixedLengthKSerializerWithDefault<UShort>(UShortSerializer)
+    object Int_0 : WrappedFixedLengthKSerializerWithDefault<Int>(IntSerializer)
+    object UInt_0 : WrappedFixedLengthKSerializerWithDefault<UInt>(UIntSerializer)
+    object Long_0 : WrappedFixedLengthKSerializerWithDefault<Long>(LongSerializer)
+    object ULong_0 : WrappedFixedLengthKSerializerWithDefault<ULong>(ULongSerializer)
 }
 
 class WrapsUnsignedTest : SerializerTest {

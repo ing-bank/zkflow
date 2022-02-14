@@ -4,7 +4,7 @@ import com.ing.zkflow.serialization.SerializerTest
 import com.ing.zkflow.serialization.engine.SerdeEngine
 import com.ing.zkflow.serialization.serializer.SerializerWithDefault
 import com.ing.zkflow.serialization.serializer.SurrogateSerializer
-import com.ing.zkflow.serialization.serializer.WrappedKSerializerWithDefault
+import com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializerWithDefault
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.Serializable
 import net.corda.core.crypto.Crypto
@@ -40,7 +40,7 @@ class PartySerializerTest : SerializerTest {
         @Serializable(with = CustomParty_0::class) val customParty: Party,
     ) {
         object Party_0 : PartySerializer(scheme.schemeNumberID, Party_1)
-        object Party_1 : WrappedKSerializerWithDefault<CordaX500Name>(CordaX500NameSerializer)
+        object Party_1 : WrappedFixedLengthKSerializerWithDefault<CordaX500Name>(CordaX500NameSerializer)
 
         object CustomParty_0 : PartySerializer(scheme.schemeNumberID, CustomParty_1)
         object CustomParty_1 : SerializerWithDefault<CordaX500Name>(CustomParty_2, CordaX500NameSerializer.default)

@@ -39,6 +39,6 @@ class ByteSerializerTest : SerializerTest {
     ) {
         object Bytes_0 : FixedLengthListSerializer<Byte?>(5, Bytes_1)
         object Bytes_1 : NullableSerializer<Byte>(Bytes_2)
-        object Bytes_2 : WrappedKSerializerWithDefault<Byte>(ByteSerializer)
+        object Bytes_2 : WrappedFixedLengthKSerializerWithDefault<Byte>(ByteSerializer)
     }
 }

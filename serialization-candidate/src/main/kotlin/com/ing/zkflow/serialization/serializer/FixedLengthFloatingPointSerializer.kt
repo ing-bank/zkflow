@@ -1,7 +1,7 @@
 package com.ing.zkflow.serialization.serializer
 
-import kotlinx.serialization.builtins.serializer
-import kotlinx.serialization.descriptors.SerialDescriptor
+import com.ing.zkflow.serialization.FixedLengthKSerializerWithDefault
+import com.ing.zkflow.serialization.toFixedLengthSerialDescriptorOrThrow
 import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
@@ -11,7 +11,7 @@ sealed class FixedLengthFloatingPointSerializer<T : Any> (
     integerPrecision: Int,
     fractionPrecision: Int,
     private val conversion: (T) -> BigDecimal
-) : KSerializerWithDefault<T> {
+) : FixedLengthKSerializerWithDefault<T> {
 
     private val integerSerializer = FixedLengthByteArraySerializer(integerPrecision)
     private val fractionSerializer = FixedLengthByteArraySerializer(fractionPrecision)
@@ -33,12 +33,13 @@ sealed class FixedLengthFloatingPointSerializer<T : Any> (
         }
     }
 
-    override val descriptor: SerialDescriptor = buildClassSerialDescriptor("FixedLengthFloatingPoint") {
-        element("kind", Byte.serializer().descriptor)
-        element("sign", Byte.serializer().descriptor)
-        element("integer", integerSerializer.descriptor)
-        element("fraction", fractionSerializer.descriptor)
-    }
+    override val descriptor =
+        buildClassSerialDescriptor("FixedLengthFloatingPoint") {
+            element("kind", ByteSerializer.descriptor)
+            element("sign", ByteSerializer.descriptor)
+            element("integer", integerSerializer.descriptor)
+            element("fraction", fractionSerializer.descriptor)
+        }.toFixedLengthSerialDescriptorOrThrow()
 
     override fun serialize(encoder: Encoder, value: T) {
         val (sign, integer, fraction) = conversion(value).asByteTriple()

@@ -16,7 +16,7 @@ data class WrapsSetComplex(
 ) {
     object Set_0 : com.ing.zkflow.serialization.serializer.FixedLengthSetSerializer<Baz>(5, Set_1)
     object Set_1 : com.ing.zkflow.serialization.serializer.SerializerWithDefault<Baz>(Set_2, Baz.Default.default)
-    object Set_2 : com.ing.zkflow.serialization.serializer.WrappedKSerializer<Baz>(Baz.serializer())
+    object Set_2 : com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializer<Baz>(Baz.serializer(), Baz::class)
 }
 
 // There will also be a resolved version for Baz as below.
@@ -31,7 +31,7 @@ data class WrapsSetComplex(
 //         override val default: Baz = Baz(0)
 //     }
 //
-//     object Id_0: com.ing.zkflow.serialization.serializer.WrappedKSerializerWithDefault<Int>(com.ing.zkflow.serialization.serializer.IntSerializer)
+//     object Id_0: com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializerWithDefault<Int>(com.ing.zkflow.serialization.serializer.IntSerializer)
 // }
 
 class WrapsSetComplexTest : SerializerTest {

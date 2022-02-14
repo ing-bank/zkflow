@@ -5,7 +5,7 @@ import com.ing.zkflow.serialization.engine.SerdeEngine
 import com.ing.zkflow.serialization.serializer.FixedLengthListSerializer
 import com.ing.zkflow.serialization.serializer.IntSerializer
 import com.ing.zkflow.serialization.serializer.NullableSerializer
-import com.ing.zkflow.serialization.serializer.WrappedKSerializerWithDefault
+import com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializerWithDefault
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -29,7 +29,7 @@ data class WrapsManyNullables(
     object MyList_4 : NullableSerializer<List<Int?>>(MyList_5)
     object MyList_5 : FixedLengthListSerializer<Int?>(5, MyList_6)
     object MyList_6 : NullableSerializer<Int>(MyList_7)
-    object MyList_7 : WrappedKSerializerWithDefault<Int>(IntSerializer)
+    object MyList_7 : WrappedFixedLengthKSerializerWithDefault<Int>(IntSerializer)
 }
 
 class WrapsManyNullablesTest : SerializerTest {

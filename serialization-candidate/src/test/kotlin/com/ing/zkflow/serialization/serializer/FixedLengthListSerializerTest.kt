@@ -1,7 +1,9 @@
 package com.ing.zkflow.serialization.serializer
 
 import com.ing.zkflow.serialization.SerializerTest
+import com.ing.zkflow.serialization.engine.BFLEngine
 import com.ing.zkflow.serialization.engine.SerdeEngine
+import com.ing.zkflow.serialization.toFixedLengthSerialDescriptorOrThrow
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.Serializable
 import org.junit.jupiter.params.ParameterizedTest
@@ -29,11 +31,27 @@ class FixedLengthListSerializerTest : SerializerTest {
         engine.assertRoundTrip(ContainsList.serializer(), ContainsList())
     }
 
+    @ParameterizedTest
+    @MethodSource("engines")
+    fun `Sizes for List(Int) must match`(engine: BFLEngine) {
+        val expectedBytesSize = (UIntSerializer.descriptor.byteSize + MAX_SIZE * Int.SIZE_BYTES)
+
+        InstanceSerializer.descriptor.byteSize shouldBe expectedBytesSize
+        engine.serialize(InstanceSerializer, list).size shouldBe expectedBytesSize * engine.bytesScaler
+
+        ContainsList.serializer().descriptor.toFixedLengthSerialDescriptorOrThrow().byteSize shouldBe expectedBytesSize
+        engine.serialize(ContainsList.serializer(), ContainsList()).size shouldBe expectedBytesSize * engine.bytesScaler
+    }
+
     @Serializable
     data class ContainsList(
         @Serializable(with = InstanceSerializer::class)
         val innerList: List<Int> = listOf(1, 2)
     )
 
-    object InstanceSerializer : FixedLengthListSerializer<Int>(10, IntSerializer)
+    companion object {
+        const val MAX_SIZE = 10
+    }
+
+    object InstanceSerializer : FixedLengthListSerializer<Int>(MAX_SIZE, IntSerializer)
 }

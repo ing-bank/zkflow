@@ -1,7 +1,8 @@
 package com.ing.zkflow.serialization.serializer
 
+import com.ing.zkflow.serialization.FixedLengthKSerializerWithDefault
+import com.ing.zkflow.serialization.FixedLengthSerialDescriptor
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.nullable
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
@@ -9,7 +10,8 @@ import kotlinx.serialization.encoding.Encoder
 /**
  * Every nullable type must be serialized with an object inheriting from this class.
  */
-abstract class NullableSerializer<T>(valueSerializer: KSerializerWithDefault<T>) : KSerializerWithDefault<T?> {
+abstract class NullableSerializer<T>(valueSerializer: FixedLengthKSerializerWithDefault<T>) :
+    FixedLengthKSerializerWithDefault<T?> {
     @Serializable
     private data class NullableValue<T>(
         val isNull: Boolean,
@@ -19,7 +21,10 @@ abstract class NullableSerializer<T>(valueSerializer: KSerializerWithDefault<T>)
     override val default = valueSerializer.default
 
     private val strategy = NullableValue.serializer(valueSerializer)
-    override val descriptor: SerialDescriptor = strategy.descriptor.nullable
+    override val descriptor = FixedLengthSerialDescriptor(
+        strategy.descriptor.nullable,
+        BooleanSerializer.descriptor.byteSize + valueSerializer.descriptor.byteSize
+    )
 
     override fun serialize(encoder: Encoder, value: T?) =
         encoder.encodeSerializableValue(strategy, NullableValue(value == null, value ?: default))

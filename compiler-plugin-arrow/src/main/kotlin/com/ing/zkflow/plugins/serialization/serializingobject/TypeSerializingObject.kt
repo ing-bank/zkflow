@@ -3,7 +3,7 @@ package com.ing.zkflow.plugins.serialization.serializingobject
 import com.ing.zkflow.Default
 import com.ing.zkflow.Resolver
 import com.ing.zkflow.plugins.serialization.ContextualizedKtTypeReference
-import com.ing.zkflow.serialization.serializer.KSerializerWithDefault
+import com.ing.zkflow.serialization.FixedLengthKSerializerWithDefault
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.KSerializer
 import kotlin.reflect.KClass
@@ -42,7 +42,7 @@ sealed class TypeSerializingObject(private val contextualizedOriginal: Contextua
         private val children: List<SerializingObject>,
         private val construction: (self: ExplicitType, outer: Tracker, inner: List<Tracker>) -> String
     ) : TypeSerializingObject(contextualizedOriginal) {
-        private val hasDefault = serializer.isSubclassOf(KSerializerWithDefault::class)
+        private val hasDefault = serializer.isSubclassOf(FixedLengthKSerializerWithDefault::class)
 
         override fun invoke(outer: Tracker): SerializationSupport {
             val inners = when (children.size) {

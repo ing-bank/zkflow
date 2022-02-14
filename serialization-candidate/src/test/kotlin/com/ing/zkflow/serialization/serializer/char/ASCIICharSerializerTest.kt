@@ -4,7 +4,7 @@ import com.ing.zkflow.serialization.SerializerTest
 import com.ing.zkflow.serialization.engine.SerdeEngine
 import com.ing.zkflow.serialization.serializer.FixedLengthListSerializer
 import com.ing.zkflow.serialization.serializer.NullableSerializer
-import com.ing.zkflow.serialization.serializer.WrappedKSerializerWithDefault
+import com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializerWithDefault
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.Serializable
 import org.junit.jupiter.params.ParameterizedTest
@@ -52,6 +52,6 @@ class ASCIICharSerializerTest : SerializerTest {
     ) {
         object Char_0 : FixedLengthListSerializer<Char?>(5, Char_1)
         object Char_1 : NullableSerializer<Char>(Char_2)
-        object Char_2 : WrappedKSerializerWithDefault<Char>(ASCIICharSerializer)
+        object Char_2 : WrappedFixedLengthKSerializerWithDefault<Char>(ASCIICharSerializer)
     }
 }

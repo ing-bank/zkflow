@@ -39,6 +39,6 @@ class UByteSerializerTest : SerializerTest {
     ) {
         object UBytes_0 : FixedLengthListSerializer<UByte?>(5, UBytes_1)
         object UBytes_1 : NullableSerializer<UByte>(UBytes_2)
-        object UBytes_2 : WrappedKSerializerWithDefault<UByte>(UByteSerializer)
+        object UBytes_2 : WrappedFixedLengthKSerializerWithDefault<UByte>(UByteSerializer)
     }
 }
