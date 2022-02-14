@@ -3,6 +3,7 @@ package com.ing.zkflow.common.network
 import com.ing.zkflow.annotations.corda.HashSize
 import com.ing.zkflow.common.zkp.ZKFlow
 import com.ing.zkflow.util.requireInstanceOf
+import net.corda.core.contracts.AlwaysAcceptAttachmentConstraint
 import net.corda.core.contracts.AttachmentConstraint
 import net.corda.core.contracts.HashAttachmentConstraint
 import net.corda.core.contracts.SignatureAttachmentConstraint
@@ -12,6 +13,12 @@ import kotlin.reflect.KClass
 
 sealed class ZKAttachmentConstraintType private constructor(val kClass: KClass<out AttachmentConstraint>) {
     abstract fun validate(attachmentConstraint: AttachmentConstraint)
+
+    object AlwaysAcceptAttachmentConstraintType : ZKAttachmentConstraintType(AlwaysAcceptAttachmentConstraint::class) {
+        override fun validate(attachmentConstraint: AttachmentConstraint) {
+            // Always valid
+        }
+    }
 
     class SignatureAttachmentConstraintType(private val signatureScheme: SignatureScheme = ZKFlow.DEFAULT_ZKFLOW_SIGNATURE_ATTACHMENT_CONSTRAINT_SIGNATURE_SCHEME) :
         ZKAttachmentConstraintType(SignatureAttachmentConstraint::class) {

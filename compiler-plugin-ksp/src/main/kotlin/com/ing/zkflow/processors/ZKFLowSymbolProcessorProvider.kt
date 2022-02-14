@@ -21,6 +21,7 @@ class ZKFLowSymbolProcessorProvider : SymbolProcessorProvider {
             ZKContractStateSerializerMapProvider::class,
             environment.codeGenerator
         )
+
         val commandDataMapProcessor = ContractStateAndCommandDataSerializerMapProcessor(
             ZKCommandData::class,
             CommandData::class,

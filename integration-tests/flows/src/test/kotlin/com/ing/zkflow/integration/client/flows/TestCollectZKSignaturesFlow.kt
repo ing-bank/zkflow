@@ -1,4 +1,4 @@
-package com.ing.zkflow.common.client.flows.testflows
+package com.ing.zkflow.integration.client.flows
 
 import co.paralleluniverse.fibers.Suspendable
 import com.ing.zkflow.client.flows.ZKCollectSignaturesFlow

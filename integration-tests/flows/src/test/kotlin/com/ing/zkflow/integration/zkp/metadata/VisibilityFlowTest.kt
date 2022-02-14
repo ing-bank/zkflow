@@ -1,10 +1,15 @@
-package com.ing.zkflow.common.client.flows.testflows.benchmarks
+package com.ing.zkflow.integration.zkp.metadata
 
-import com.ing.zkflow.common.client.flows.checkVault
 import com.ing.zkflow.common.zkp.ZKFlow
+import com.ing.zkflow.integration.client.flows.testflows.CreateFlow
+import com.ing.zkflow.integration.client.flows.testflows.MoveFlow
+import com.ing.zkflow.node.services.InMemoryUtxoInfoStorage
 import com.ing.zkflow.node.services.InMemoryZKVerifierTransactionStorage
 import com.ing.zkflow.node.services.ServiceNames.ZK_TX_SERVICE
+import com.ing.zkflow.node.services.ServiceNames.ZK_UTXO_INFO_STORAGE
 import com.ing.zkflow.node.services.ServiceNames.ZK_VERIFIER_TX_STORAGE
+import com.ing.zkflow.notary.ZKNotaryService
+import com.ing.zkflow.testing.fixtures.contract.TestContract
 import com.ing.zkflow.testing.zkp.MockZKTransactionCordaService
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
@@ -18,11 +23,10 @@ import net.corda.testing.node.MockNetworkParameters
 import net.corda.testing.node.StartedMockNode
 import net.corda.testing.node.internal.cordappWithPackages
 import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 
-@Disabled("Only enable when using it as a benchmark for E2EFlowTest")
-class NonZkpE2EFlowTest {
+class VisibilityFlowTest {
     private val mockNet: MockNetwork
     private val notaryNode: StartedMockNode
     private val megaCorpNode: StartedMockNode
@@ -39,6 +43,7 @@ class NonZkpE2EFlowTest {
                 cordappWithPackages("com.ing.zkflow").withConfig(
                     mapOf(
                         ZK_VERIFIER_TX_STORAGE to InMemoryZKVerifierTransactionStorage::class.qualifiedName!!,
+                        ZK_UTXO_INFO_STORAGE to InMemoryUtxoInfoStorage::class.qualifiedName!!,
                         ZK_TX_SERVICE to MockZKTransactionCordaService::class.qualifiedName!!,
                     )
                 )
@@ -46,7 +51,8 @@ class NonZkpE2EFlowTest {
             notarySpecs = listOf(
                 MockNetworkNotarySpec(
                     DUMMY_NOTARY_NAME,
-                    validating = true
+                    validating = false,
+                    className = ZKNotaryService::class.java.name
                 )
             ),
             networkParameters = testNetworkParameters(minimumPlatformVersion = ZKFlow.REQUIRED_PLATFORM_VERSION)
@@ -69,30 +75,41 @@ class NonZkpE2EFlowTest {
     }
 
     @Test
-    fun `End2End test with normal notary as benchmark`() {
-        val createFlow = NonZkpCreateFlow()
-        val createFuture = miniCorpNode.startFlow(createFlow)
+    @Tag("slow")
+    fun `Test enforce visibility`() {
+        val createPublicFlow = CreateFlow(createCommand = TestContract.CreatePublic())
+        val createPublicFuture = miniCorpNode.startFlow(createPublicFlow)
         mockNet.runNetwork()
-        val createStx = createFuture.getOrThrow()
+        val createPublicStx = createPublicFuture.getOrThrow()
 
-        checkVault(createStx, null, miniCorpNode)
-
-        val moveFuture = miniCorpNode.startFlow(NonZkpMoveFlow(createStx, megaCorp))
+        val createPrivateFlow = CreateFlow(createCommand = TestContract.Create()) // this command creates private output
+        val createPrivateFuture = miniCorpNode.startFlow(createPrivateFlow)
         mockNet.runNetwork()
-        val moveStx = moveFuture.getOrThrow()
+        val createPrivateStx = createPrivateFuture.getOrThrow()
+        createPrivateStx.tx
 
-        checkVault(moveStx, miniCorpNode, megaCorpNode)
+        // MovePrivateOnly should fail for public asset, work for private asset
 
-        val moveBackFuture = megaCorpNode.startFlow(NonZkpMoveFlow(moveStx, miniCorp))
+        try {
+            val moveFuture = miniCorpNode.startFlow(MoveFlow(createPublicStx, megaCorp, moveCommand = TestContract.MovePrivateOnly()))
+            mockNet.runNetwork()
+            moveFuture.getOrThrow()
+        } catch (fex: IllegalStateException) {
+            assert(fex.message!!.contains("should be private, but it is public"))
+        }
+
+        val movePrivateOnlyFuture = miniCorpNode.startFlow(MoveFlow(createPrivateStx, megaCorp, moveCommand = TestContract.MovePrivateOnly()))
         mockNet.runNetwork()
-        val moveBackStx = moveBackFuture.getOrThrow()
+        val movePrivateStx = movePrivateOnlyFuture.getOrThrow()
 
-        checkVault(moveBackStx, megaCorpNode, miniCorpNode)
+        // Move should work for both
 
-        val finalMoveFuture = miniCorpNode.startFlow(NonZkpMoveFlow(moveBackStx, thirdParty))
+        val movePrivateFuture = miniCorpNode.startFlow(MoveFlow(movePrivateStx, megaCorp, moveCommand = TestContract.Move()))
         mockNet.runNetwork()
-        val finalTx = finalMoveFuture.getOrThrow()
+        movePrivateFuture.getOrThrow()
 
-        checkVault(finalTx, miniCorpNode, thirdPartyNode)
+        val movePublicFuture = miniCorpNode.startFlow(MoveFlow(createPublicStx, megaCorp, moveCommand = TestContract.Move()))
+        mockNet.runNetwork()
+        movePublicFuture.getOrThrow()
     }
 }

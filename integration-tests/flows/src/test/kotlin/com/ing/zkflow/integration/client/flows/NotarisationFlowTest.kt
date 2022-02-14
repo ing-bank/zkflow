@@ -1,16 +1,15 @@
-package com.ing.zkflow.common.zkp.metadata
+package com.ing.zkflow.integration.client.flows
 
-import com.ing.zkflow.common.client.flows.testflows.CreateFlow
-import com.ing.zkflow.common.client.flows.testflows.MoveFlow
 import com.ing.zkflow.common.zkp.ZKFlow
+import com.ing.zkflow.integration.client.flows.testflows.TestNotarisationFlow
 import com.ing.zkflow.node.services.InMemoryUtxoInfoStorage
 import com.ing.zkflow.node.services.InMemoryZKVerifierTransactionStorage
 import com.ing.zkflow.node.services.ServiceNames.ZK_TX_SERVICE
 import com.ing.zkflow.node.services.ServiceNames.ZK_UTXO_INFO_STORAGE
 import com.ing.zkflow.node.services.ServiceNames.ZK_VERIFIER_TX_STORAGE
 import com.ing.zkflow.notary.ZKNotaryService
-import com.ing.zkflow.testing.fixtures.contract.TestContract
 import com.ing.zkflow.testing.zkp.MockZKTransactionCordaService
+import io.kotest.matchers.shouldBe
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
 import net.corda.core.utilities.getOrThrow
@@ -23,18 +22,16 @@ import net.corda.testing.node.MockNetworkParameters
 import net.corda.testing.node.StartedMockNode
 import net.corda.testing.node.internal.cordappWithPackages
 import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Timeout
 
-class VisibilityFlowTest {
+class NotarisationFlowTest {
     private val mockNet: MockNetwork
     private val notaryNode: StartedMockNode
     private val megaCorpNode: StartedMockNode
     private val miniCorpNode: StartedMockNode
-    private val thirdPartyNode: StartedMockNode
     private val megaCorp: Party
     private val miniCorp: Party
-    private val thirdParty: Party
     private val notary: Party
 
     init {
@@ -49,11 +46,7 @@ class VisibilityFlowTest {
                 )
             ),
             notarySpecs = listOf(
-                MockNetworkNotarySpec(
-                    DUMMY_NOTARY_NAME,
-                    validating = false,
-                    className = ZKNotaryService::class.java.name
-                )
+                MockNetworkNotarySpec(DUMMY_NOTARY_NAME, validating = false, className = ZKNotaryService::class.java.name)
             ),
             networkParameters = testNetworkParameters(minimumPlatformVersion = ZKFlow.REQUIRED_PLATFORM_VERSION)
         )
@@ -61,11 +54,9 @@ class VisibilityFlowTest {
         notaryNode = mockNet.notaryNodes.first()
         megaCorpNode = mockNet.createPartyNode(CordaX500Name("MegaCorp", "London", "GB"))
         miniCorpNode = mockNet.createPartyNode(CordaX500Name("MiniCorp", "London", "GB"))
-        thirdPartyNode = mockNet.createPartyNode(CordaX500Name("ThirdParty", "London", "GB"))
         notary = notaryNode.info.singleIdentity()
         megaCorp = megaCorpNode.info.singleIdentity()
         miniCorp = miniCorpNode.info.singleIdentity()
-        thirdParty = thirdPartyNode.info.singleIdentity()
     }
 
     @AfterAll
@@ -75,41 +66,23 @@ class VisibilityFlowTest {
     }
 
     @Test
-    @Tag("slow")
-    fun `Test enforce visibility`() {
-        val createPublicFlow = CreateFlow(createCommand = TestContract.CreatePublic())
-        val createPublicFuture = miniCorpNode.startFlow(createPublicFlow)
+    @Timeout(30)
+    fun `Notary signing`() {
+        val createFlow = TestNotarisationFlow()
+        val future = miniCorpNode.startFlow(createFlow)
         mockNet.runNetwork()
-        val createPublicStx = createPublicFuture.getOrThrow()
+        val svtx = future.getOrThrow()
 
-        val createPrivateFlow = CreateFlow(createCommand = TestContract.Create()) // this command creates private output
-        val createPrivateFuture = miniCorpNode.startFlow(createPrivateFlow)
-        mockNet.runNetwork()
-        val createPrivateStx = createPrivateFuture.getOrThrow()
-        createPrivateStx.tx
-
-        // MovePrivateOnly should fail for public asset, work for private asset
-
-        try {
-            val moveFuture = miniCorpNode.startFlow(MoveFlow(createPublicStx, megaCorp, moveCommand = TestContract.MovePrivateOnly()))
-            mockNet.runNetwork()
-            moveFuture.getOrThrow()
-        } catch (fex: IllegalStateException) {
-            assert(fex.message!!.contains("should be private, but it is public"))
+        // Check ZKP Tx signatures
+        svtx.sigs.size shouldBe 2
+        svtx.sigs.forEach {
+            it.verify(svtx.id)
         }
 
-        val movePrivateOnlyFuture = miniCorpNode.startFlow(MoveFlow(createPrivateStx, megaCorp, moveCommand = TestContract.MovePrivateOnly()))
-        mockNet.runNetwork()
-        val movePrivateStx = movePrivateOnlyFuture.getOrThrow()
+        // Check that notary sig is here
 
-        // Move should work for both
-
-        val movePrivateFuture = miniCorpNode.startFlow(MoveFlow(movePrivateStx, megaCorp, moveCommand = TestContract.Move()))
-        mockNet.runNetwork()
-        movePrivateFuture.getOrThrow()
-
-        val movePublicFuture = miniCorpNode.startFlow(MoveFlow(createPublicStx, megaCorp, moveCommand = TestContract.Move()))
-        mockNet.runNetwork()
-        movePublicFuture.getOrThrow()
+        svtx.sigs.filter {
+            it.by == notaryNode.info.legalIdentities.single().owningKey
+        }.size shouldBe 1
     }
 }

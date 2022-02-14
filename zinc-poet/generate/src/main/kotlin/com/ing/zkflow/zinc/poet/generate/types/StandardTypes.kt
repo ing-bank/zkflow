@@ -15,11 +15,13 @@ import com.ing.zinc.bfl.generator.WitnessGroupOptions
 import com.ing.zinc.naming.camelToSnakeCase
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.annotations.corda.EdDSA
+import com.ing.zkflow.annotations.corda.Sha256
 import com.ing.zkflow.common.network.ZKNetworkParameters
 import com.ing.zkflow.serialization.bfl.serializers.CordaSerializers.CLASS_NAME_SIZE
 import com.ing.zkflow.serialization.bfl.serializers.SecureHashSurrogate
 import com.ing.zkflow.zinc.poet.generate.ZincTypeResolver
 import net.corda.core.contracts.ComponentGroupEnum
+import net.corda.core.contracts.HashAttachmentConstraint
 import net.corda.core.contracts.SignatureAttachmentConstraint
 import net.corda.core.crypto.Crypto
 import net.corda.core.identity.AnonymousParty
@@ -33,6 +35,9 @@ private data class WrapsEdDsaPublicKey(val publicKey: @EdDSA PublicKey)
 
 @ZKP
 private data class WrapsSignatureAttachmentConstraint(val constraint: @EdDSA SignatureAttachmentConstraint)
+
+@ZKP
+private data class WrapsHashAttachmentConstraint(val constraint: @Sha256 HashAttachmentConstraint)
 
 private fun BflModule.getSingleFieldType(): BflModule = (this as BflStruct).fields.single().type as BflModule
 
@@ -63,9 +68,14 @@ class StandardTypes(
         zincTypeResolver.zincTypeOf(WrapsSignatureAttachmentConstraint::class).getSingleFieldType()
     }
 
+    private val hashAttachmentConstraint by lazy {
+        zincTypeResolver.zincTypeOf(WrapsHashAttachmentConstraint::class).getSingleFieldType()
+    }
+
     private fun attachmentConstraintModule(): BflModule =
         when (val attachmentConstraintClass = zkNetworkParameters.attachmentConstraintType.kClass) {
             SignatureAttachmentConstraint::class -> signatureAttachmentConstraint
+            HashAttachmentConstraint::class -> hashAttachmentConstraint
             else -> error("Enable $attachmentConstraintClass for attachmentConstraintModule in ${StandardTypes::class}")
         }
 

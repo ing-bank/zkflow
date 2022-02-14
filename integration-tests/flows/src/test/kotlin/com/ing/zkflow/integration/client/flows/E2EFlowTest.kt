@@ -1,20 +1,17 @@
-package com.ing.zkflow.common.client.flows
+package com.ing.zkflow.integration.client.flows
 
-import com.ing.zkflow.common.client.flows.testflows.CreateFlow
-import com.ing.zkflow.common.client.flows.testflows.MoveBidirectionalFlow
 import com.ing.zkflow.common.zkp.ZKFlow
+import com.ing.zkflow.integration.client.flows.testflows.CreateFlow
+import com.ing.zkflow.integration.client.flows.testflows.MoveFlow
 import com.ing.zkflow.node.services.InMemoryUtxoInfoStorage
 import com.ing.zkflow.node.services.InMemoryZKVerifierTransactionStorage
 import com.ing.zkflow.node.services.ServiceNames.ZK_TX_SERVICE
 import com.ing.zkflow.node.services.ServiceNames.ZK_UTXO_INFO_STORAGE
 import com.ing.zkflow.node.services.ServiceNames.ZK_VERIFIER_TX_STORAGE
 import com.ing.zkflow.notary.ZKNotaryService
-import com.ing.zkflow.testing.fixtures.contract.TestContract
 import com.ing.zkflow.testing.zkp.MockZKTransactionCordaService
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
-import net.corda.core.node.services.Vault
-import net.corda.core.transactions.SignedTransaction
 import net.corda.core.utilities.getOrThrow
 import net.corda.testing.common.internal.testNetworkParameters
 import net.corda.testing.core.DUMMY_NOTARY_NAME
@@ -27,7 +24,7 @@ import net.corda.testing.node.internal.cordappWithPackages
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 
-class E2EFlowNonOwnedStatesTest {
+class E2EFlowTest {
     private val mockNet: MockNetwork
     private val notaryNode: StartedMockNode
     private val megaCorpNode: StartedMockNode
@@ -76,43 +73,30 @@ class E2EFlowNonOwnedStatesTest {
     }
 
     @Test
-    fun `End2End test with ZKP notary - non-owned states`() {
-        // Initiator creates a state they want to trade
-        val createStxMiniCorpNode = createNewState(miniCorpNode)
-        val miniCorpStateAndRef = createStxMiniCorpNode.coreTransaction.outRef<TestContract.TestState>(0)
-
-        // Start the trade. We expect counterparty to trade a state of identical value
-        val moveFuture = miniCorpNode.startFlow(
-            MoveBidirectionalFlow(
-                miniCorpStateAndRef,
-                megaCorp
-            )
-        )
-        mockNet.runNetwork()
-        val moveStx = moveFuture.getOrThrow()
-
-        checkVault(miniCorpNode, Vault.StateStatus.CONSUMED, miniCorpStateAndRef.ref)
-        checkVault(
-            miniCorpNode,
-            Vault.StateStatus.UNCONSUMED,
-            moveStx.tx.filterOutRefs<TestContract.TestState> { it.owner == miniCorp.anonymise() }.single().ref
-        )
-        checkVault(
-            megaCorpNode,
-            Vault.StateStatus.UNCONSUMED,
-            moveStx.tx.filterOutRefs<TestContract.TestState> {
-                it == miniCorpStateAndRef.state.data.withNewOwner(megaCorp.anonymise()).ownableState
-            }.single().ref
-        )
-    }
-
-    private fun createNewState(owner: StartedMockNode): SignedTransaction {
+    fun `End2End test with ZKP notary`() {
         val createFlow = CreateFlow()
-        val createFuture = owner.startFlow(createFlow)
+        val createFuture = miniCorpNode.startFlow(createFlow)
         mockNet.runNetwork()
         val createStx = createFuture.getOrThrow()
 
-        checkVault(createStx, null, owner)
-        return createStx
+        checkVault(createStx, null, miniCorpNode)
+
+        val moveFuture = miniCorpNode.startFlow(MoveFlow(createStx, megaCorp))
+        mockNet.runNetwork()
+        val moveStx = moveFuture.getOrThrow()
+
+        checkVault(moveStx, miniCorpNode, megaCorpNode)
+
+        val moveBackFuture = megaCorpNode.startFlow(MoveFlow(moveStx, miniCorp))
+        mockNet.runNetwork()
+        val moveBackStx = moveBackFuture.getOrThrow()
+
+        checkVault(moveBackStx, megaCorpNode, miniCorpNode)
+
+        val finalMoveFuture = miniCorpNode.startFlow(MoveFlow(moveBackStx, thirdParty))
+        mockNet.runNetwork()
+        val finalTx = finalMoveFuture.getOrThrow()
+
+        checkVault(finalTx, miniCorpNode, thirdPartyNode)
     }
 }

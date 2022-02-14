@@ -8,7 +8,7 @@ import com.ing.zkflow.common.zkp.ZKFlow
 import net.corda.core.crypto.DigestAlgorithm
 import net.corda.core.crypto.SignatureScheme
 
-class ZKNetworkParamsProvider : ZKNetworkParametersProvider {
+class ZKDappTesterZKNetworkParamsProvider : ZKNetworkParametersProvider {
     override val parameters: ZKNetworkParameters = object : ZKNetworkParameters {
         override val participantSignatureScheme: SignatureScheme = ZKFlow.DEFAULT_ZKFLOW_SIGNATURE_SCHEME
         override val attachmentConstraintType: ZKAttachmentConstraintType = ZKFlow.DEFAULT_ZKFLOW_CONTRACT_ATTACHMENT_CONSTRAINT_TYPE

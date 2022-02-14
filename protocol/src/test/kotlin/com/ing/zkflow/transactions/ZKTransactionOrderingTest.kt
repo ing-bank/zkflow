@@ -3,6 +3,9 @@ package com.ing.zkflow.transactions
 import com.ing.serialization.bfl.annotations.FixedLength
 import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.contracts.ZKContractState
+import com.ing.zkflow.common.network.ZKAttachmentConstraintType
+import com.ing.zkflow.common.network.ZKNetworkParameters
+import com.ing.zkflow.common.network.ZKNotaryInfo
 import com.ing.zkflow.common.transactions.UtxoInfo
 import com.ing.zkflow.common.transactions.ZKTransactionBuilder
 import com.ing.zkflow.common.zkp.Witness
@@ -28,7 +31,9 @@ import net.corda.core.contracts.ReferencedStateAndRef
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.StateRef
 import net.corda.core.contracts.TransactionState
+import net.corda.core.crypto.DigestAlgorithm
 import net.corda.core.crypto.SecureHash
+import net.corda.core.crypto.SignatureScheme
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
@@ -44,8 +49,8 @@ import kotlin.random.Random
 import kotlin.test.assertTrue
 
 /**
- * Test the order of states imposed by the ZKTransactionBuilder. We would like to assert that the ordering of states by
- * classname is maintained in the ZKTransactionBuilder, in the WireTransaction that it generates, and in the Witness generated
+ * Test the order of states imposed by the ZKTransactionBuilder. We would like to assert that the ordering of states
+ * is consistent across ZKTransactionBuilder, in the WireTransaction that it generates, and in the Witness generated
  * from the WireTransaction.
  */
 class ZKTransactionOrderingTest {
@@ -93,7 +98,17 @@ class ZKTransactionOrderingTest {
             refUtxoInfos.addAll(refs.map { generateUtxoInfo(it.stateAndRef) })
         }
 
-        zkBuilder = ZKTransactionBuilder(notary).apply {
+        val networkParams = object : ZKNetworkParameters {
+            override val participantSignatureScheme: SignatureScheme = ZKFlow.DEFAULT_ZKFLOW_SIGNATURE_SCHEME
+
+            override val attachmentConstraintType: ZKAttachmentConstraintType =
+                ZKAttachmentConstraintType.AlwaysAcceptAttachmentConstraintType
+            override val notaryInfo: ZKNotaryInfo = ZKNotaryInfo(ZKFlow.DEFAULT_ZKFLOW_NOTARY_SIGNATURE_SCHEME)
+            override val digestAlgorithm: DigestAlgorithm = ZKFlow.DEFAULT_ZKFLOW_DIGEST_IDENTIFIER
+            override val serializationSchemeId: Int = ZKFlow.DEFAULT_SERIALIZATION_SCHEME_ID
+        }
+
+        zkBuilder = ZKTransactionBuilder(notary, networkParams).apply {
             outputs.forEach { addOutputState(it, LocalContract.PROGRAM_ID, AlwaysAcceptAttachmentConstraint) }
             inputs.forEach { addInputState(it) }
             refs.forEach { addReferenceState(it) }

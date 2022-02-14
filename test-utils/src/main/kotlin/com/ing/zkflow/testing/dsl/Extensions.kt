@@ -31,7 +31,7 @@ public fun ServiceHub.zkLedger(
         (networkParametersService as MockNetworkParametersStorage).setCurrentParametersUnverified(newParameters)
     }
 
-    HashAgility.init(zkNetworkParameters.digestAlgorithm.algorithm)
+    HashAgility.init(null, zkNetworkParameters.digestAlgorithm::class.java.name)
 
     // TODO: this should not be registered here, since it should not be aware of BFL, but until we have a better loading mechanism this is the least bad place
     SerializersModuleRegistry.register(TestCordaSerializers.module)

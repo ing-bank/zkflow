@@ -1,4 +1,4 @@
-package com.ing.zkflow.common.client.flows
+package com.ing.zkflow.integration.client.flows
 
 import com.ing.zkflow.testing.fixtures.contract.TestContract
 import io.kotest.matchers.shouldBe
