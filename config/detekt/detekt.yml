@@ -389,7 +389,7 @@ potential-bugs:
   WrongEqualsTypeParameter:
     active: true
 
-# Style is disabled, since we use ktlint for that (for now)
+# Style is mostly disabled, since we use ktlint for that (for now). Only adding things ktlint doesn't cover.
 style:
   active: true
   UnusedPrivateMember:
