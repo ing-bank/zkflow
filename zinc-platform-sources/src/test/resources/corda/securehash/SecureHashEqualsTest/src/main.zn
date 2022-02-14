@@ -1,7 +1,0 @@
-mod secure_hash;
-
-use secure_hash::SecureHash;
-
-fn main(left: SecureHash, right: SecureHash) -> bool {
-    SecureHash::equals(left, right)
-}

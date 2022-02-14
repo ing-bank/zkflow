@@ -1,8 +1,0 @@
-mod secure_hash;
-
-use secure_hash::SecureHash;
-use secure_hash::SerializedSecureHash;
-
-fn main(witness: SerializedSecureHash) -> SecureHash {
-    SecureHash::deserialize(witness)
-}

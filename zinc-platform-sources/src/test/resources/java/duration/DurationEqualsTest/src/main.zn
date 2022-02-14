@@ -1,7 +1,0 @@
-mod platform_duration;
-
-use platform_duration::Duration;
-
-fn main(left: Duration, right: Duration) -> bool {
-    Duration::equals(left, right)
-}

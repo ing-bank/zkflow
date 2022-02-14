@@ -53,6 +53,11 @@ class StandardTypes(
             else -> error("Enable ${signatureScheme.schemeCodeName} for signerModule in ${StandardTypes::class}")
         }
 
+    fun signerList(metadata: ResolvedZKCommandMetadata) = list {
+        capacity = metadata.numberOfSigners
+        elementType = signerModule(metadata)
+    }
+
     private val signatureAttachmentConstraint by lazy {
         zincTypeResolver.zincTypeOf(WrapsSignatureAttachmentConstraint::class).getSingleFieldType()
     }

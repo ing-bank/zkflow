@@ -19,7 +19,7 @@ import java.nio.file.Paths
 
 internal class ContractStateAndCommandDataSymbolProcessorProviderTest {
     @Test
-    fun `ZKTransactionProcessor should correctly register stuff`() {
+    fun `ZKTransactionProcessor should correctly register commands`() {
         val outputStream = ByteArrayOutputStream()
         val result = compile(kotlinFileWithCommand, outputStream)
 
@@ -29,12 +29,11 @@ internal class ContractStateAndCommandDataSymbolProcessorProviderTest {
         }
 
         result.exitCode shouldBe KotlinCompilation.ExitCode.OK
-        result.getGeneratedMetaInfServices<ZKCommandData>() shouldBe "com.ing.zkflow.zktransaction.TestCommand"
         result.getGeneratedMetaInfServices<ZkCommandDataSerializerMapProvider>() shouldStartWith "com.ing.zkflow.serialization.CommandDataSerializerMapProvider"
     }
 
     @Test
-    fun `ZKTransactionProcessor should correctly register stuff for nested classes`() {
+    fun `ZKTransactionProcessor should correctly register commands for nested classes`() {
         val outputStream = ByteArrayOutputStream()
         val result = compile(nestedKotlinSource, outputStream)
 
@@ -44,7 +43,6 @@ internal class ContractStateAndCommandDataSymbolProcessorProviderTest {
         }
 
         result.exitCode shouldBe KotlinCompilation.ExitCode.OK
-        result.getGeneratedMetaInfServices<ZKCommandData>() shouldBe "com.ing.zkflow.zktransaction.Container\$TestNestedCommand"
         result.getGeneratedMetaInfServices<ZkCommandDataSerializerMapProvider>() shouldStartWith "com.ing.zkflow.serialization.CommandDataSerializerMapProvider"
     }
 

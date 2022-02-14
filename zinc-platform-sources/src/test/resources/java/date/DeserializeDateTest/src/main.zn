@@ -1,8 +1,0 @@
-mod platform_date;
-
-use platform_date::Date;
-use platform_date::SerializedDate;
-
-fn main(witness: SerializedDate) -> Date {
-    Date::deserialize(witness)
-}

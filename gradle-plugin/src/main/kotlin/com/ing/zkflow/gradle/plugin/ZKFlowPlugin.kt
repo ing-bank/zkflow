@@ -1,13 +1,7 @@
 package com.ing.zkflow.gradle.plugin
 
 import com.ing.zkflow.gradle.extension.ZKFlowExtension
-import com.ing.zkflow.gradle.task.CopyZincCircuitSourcesForTestsTask
-import com.ing.zkflow.gradle.task.CopyZincCircuitSourcesTask
-import com.ing.zkflow.gradle.task.CopyZincPlatformSourcesAndLibraryTask
-import com.ing.zkflow.gradle.task.CreateZincDirectoriesForCircuitTask
 import com.ing.zkflow.gradle.task.GenerateZincCircuitsTask
-import com.ing.zkflow.gradle.task.GenerateZincPlatformCodeFromTemplatesTask
-import com.ing.zkflow.gradle.task.PrepareCircuitForCompilationTask
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -45,10 +39,7 @@ class ZKFlowPlugin : Plugin<Project> {
 
         project.plugins.withType(JavaPlugin::class.java) {
             // Add the required dependencies to consumer projects
-            project.configurations.create(ZINC)
-            project.dependencies.add(ZINC, extension.zkflow("zinc-platform-sources", extension.zincPlatformSourcesVersion))
             project.dependencies.add(IMPLEMENTATION, extension.zkflow("protocol"))
-            project.dependencies.add(IMPLEMENTATION, extension.zkflow("compilation"))
             project.dependencies.add(IMPLEMENTATION, extension.zkflow("annotations"))
             project.dependencies.add(IMPLEMENTATION, extension.zkflow("poet"))
             project.dependencies.add(IMPLEMENTATION, extension.zkflow("bfl"))
@@ -64,58 +55,12 @@ class ZKFlowPlugin : Plugin<Project> {
             applyArrowCompilerPlugin(project, extension)
         }
 
-        val createZincDirsForCircuitTask = project.tasks.create(
-            "createZincDirectoriesForCircuit",
-            CreateZincDirectoriesForCircuitTask::class.java
-        )
-
-        val copyCircuitTask = project.tasks.create("copyZincCircuitSources", CopyZincCircuitSourcesTask::class.java)
-        val copyPlatformTask =
-            project.tasks.create("copyZincPlatformSourcesAndLibs", CopyZincPlatformSourcesAndLibraryTask::class.java)
-
-        val generateFromTemplatesTask = project.tasks.create(
-            "generateZincPlatformCodeFromTemplates",
-            GenerateZincPlatformCodeFromTemplatesTask::class.java
-        )
-        val generateZincCircuitsTask = project.tasks.create("generateZincCircuits", GenerateZincCircuitsTask::class.java)
+        val generateZincCircuitsTask = project.tasks.create(GENERATE_ZINC_CIRCUITS, GenerateZincCircuitsTask::class.java)
         generateZincCircuitsTask
             .dependsOn(COMPILE_KOTLIN) // So the command metadata can be found
             .mustRunAfter(COMPILE_KOTLIN)
 
-        val prepareForCompilationTask =
-            project.tasks.create("prepareCircuitForCompilation", PrepareCircuitForCompilationTask::class.java)
-        val copyZincCircuitSourcesForTestsTask =
-            project.tasks.create("copyZincCircuitSourcesForTests", CopyZincCircuitSourcesForTestsTask::class.java)
-
-        // If a new circuit is scaffolded, the processing tasks should run after it
-        copyCircuitTask.mustRunAfter(createZincDirsForCircuitTask)
-        copyPlatformTask.mustRunAfter(createZincDirsForCircuitTask)
-        generateFromTemplatesTask.mustRunAfter(createZincDirsForCircuitTask)
-        generateFromTemplatesTask
-            .dependsOn(COMPILE_KOTLIN) // So the command metadata can be found
-            .mustRunAfter(COMPILE_KOTLIN)
-        prepareForCompilationTask.mustRunAfter(createZincDirsForCircuitTask)
-
-        prepareForCompilationTask.dependsOn(copyCircuitTask, copyPlatformTask, generateFromTemplatesTask)
-        prepareForCompilationTask.mustRunAfter(copyCircuitTask, copyPlatformTask, generateFromTemplatesTask)
-
-        project.tasks.create(PROCESS_ZINC_SOURCES) {
-            it.dependsOn(copyPlatformTask)
-            it.dependsOn(copyCircuitTask)
-            it.dependsOn(generateFromTemplatesTask)
-            it.dependsOn(prepareForCompilationTask)
-        }
-
-        project.tasks.getByPath(ASSEMBLE).dependsOn(PROCESS_ZINC_SOURCES)
-
-        copyZincCircuitSourcesForTestsTask.dependsOn(ASSEMBLE, PROCESS_TEST_RESOURCES)
-        copyZincCircuitSourcesForTestsTask.mustRunAfter(ASSEMBLE, PROCESS_TEST_RESOURCES)
-
-        project.afterEvaluate {
-            it.tasks.getByPath("test")
-                .dependsOn("copyZincCircuitSourcesForTests")
-                .mustRunAfter("copyZincCircuitSourcesForTests")
-        }
+        project.tasks.getByPath(ASSEMBLE).dependsOn(GENERATE_ZINC_CIRCUITS)
     }
 
     private fun applyArrowCompilerPlugin(
@@ -174,9 +119,7 @@ class ZKFlowPlugin : Plugin<Project> {
         const val ASSEMBLE = "assemble"
         const val COMPILE_KOTLIN = "compileKotlin"
         const val IMPLEMENTATION = "implementation"
-        const val PROCESS_TEST_RESOURCES = "processTestResources"
-        const val PROCESS_ZINC_SOURCES = "processZincSources"
-        const val ZINC = "zinc"
+        const val GENERATE_ZINC_CIRCUITS = "generateZincCircuits"
         const val ZKFLOW_GROUP = "com.ing.zkflow"
 
         private fun ZKFlowExtension.zkflow(artifact: String, version: String? = this.notaryVersion) = "$ZKFLOW_GROUP:$artifact:$version"

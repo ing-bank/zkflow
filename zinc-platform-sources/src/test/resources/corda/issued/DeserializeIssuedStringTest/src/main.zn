@@ -1,8 +1,0 @@
-mod issued_string_1;
-
-use issued_string_1::IssuedString_1;
-use issued_string_1::SerializedIssuedString_1;
-
-fn main(witness: SerializedIssuedString_1) -> IssuedString_1 {
-    IssuedString_1::deserialize(witness)
-}

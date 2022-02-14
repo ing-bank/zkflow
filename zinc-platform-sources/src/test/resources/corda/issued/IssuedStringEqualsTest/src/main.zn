@@ -1,7 +1,0 @@
-mod issued_string_1;
-
-use issued_string_1::IssuedString_1;
-
-fn main(left: IssuedString_1, right: IssuedString_1) -> bool {
-    IssuedString_1::equals(left, right)
-}

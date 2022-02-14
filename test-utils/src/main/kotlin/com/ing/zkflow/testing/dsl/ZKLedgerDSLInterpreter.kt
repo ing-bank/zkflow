@@ -57,7 +57,7 @@ public enum class VerificationMode {
     PROVE_AND_VERIFY,
 
     /**
-     * Indicates that the TransactionService will use mock verificaton, by essentially only doing
+     * Indicates that the TransactionService will use mock verification, by essentially only doing
      * the normal Corda transaction verification on the JVM.
      */
     MOCK

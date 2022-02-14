@@ -1,8 +1,0 @@
-mod platform_zoned_date_time;
-
-use platform_zoned_date_time::ZonedDateTime;
-use platform_zoned_date_time::SerializedZonedDateTime;
-
-fn main(witness: SerializedZonedDateTime) -> ZonedDateTime {
-    ZonedDateTime::deserialize(witness)
-}

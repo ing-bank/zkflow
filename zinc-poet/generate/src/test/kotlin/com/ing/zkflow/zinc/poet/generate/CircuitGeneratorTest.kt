@@ -1,7 +1,7 @@
 package com.ing.zkflow.zinc.poet.generate
 
 import com.ing.zkflow.util.runCommand
-import com.ing.zkflow.zinc.poet.generate.types.LedgerTransactionFactory
+import com.ing.zkflow.zinc.poet.generate.types.CommandContextFactory
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.COMMANDS
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.NOTARY
@@ -34,7 +34,7 @@ internal class CircuitGeneratorTest {
     fun `generateCircuitFor should generate a working circuit`(@TempDir tempDir: Path) {
         val circuitGenerator = CircuitGenerator(
             BuildPathProvider.withPath(tempDir),
-            LedgerTransactionFactory(standardTypes),
+            CommandContextFactory(standardTypes),
             standardTypes,
             zincTypeResolver,
             ConstsFactory(),

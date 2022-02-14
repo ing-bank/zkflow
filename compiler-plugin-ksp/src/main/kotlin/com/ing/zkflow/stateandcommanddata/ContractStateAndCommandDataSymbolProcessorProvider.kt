@@ -13,10 +13,6 @@ import net.corda.core.contracts.ContractState
 
 class ContractStateAndCommandDataSymbolProcessorProvider : SymbolProcessorProvider {
     override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor {
-        val zkCommandMetaInfServicesProcessor = TransactionMetaDataProcessor(
-            ZKCommandData::class
-        )
-
         val contractStateMapProcessor = ContractStateAndCommandDataSerializerMapProcessor(
             ZKOwnableState::class,
             ContractState::class,
@@ -33,7 +29,6 @@ class ContractStateAndCommandDataSymbolProcessorProvider : SymbolProcessorProvid
         return ImplementationsSymbolProcessor(
             environment.codeGenerator,
             listOf(
-                zkCommandMetaInfServicesProcessor,
                 contractStateMapProcessor,
                 commandDataMapProcessor
             )

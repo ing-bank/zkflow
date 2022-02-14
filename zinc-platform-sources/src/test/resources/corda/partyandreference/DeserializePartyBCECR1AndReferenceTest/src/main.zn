@@ -1,8 +1,0 @@
-mod party_bcec_and_reference;
-
-use party_bcec_and_reference::PartyBCECAndReference;
-use party_bcec_and_reference::SerializedPartyBCECAndReference;
-
-fn main(witness: SerializedPartyBCECAndReference) -> PartyBCECAndReference {
-    PartyBCECAndReference::deserialize(witness)
-}

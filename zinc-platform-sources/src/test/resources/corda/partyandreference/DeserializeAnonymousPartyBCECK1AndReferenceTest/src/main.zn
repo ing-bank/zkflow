@@ -1,8 +1,0 @@
-mod anonymous_party_bcec_and_reference;
-
-use anonymous_party_bcec_and_reference::AnonymousPartyBCECAndReference;
-use anonymous_party_bcec_and_reference::SerializedAnonymousPartyBCECAndReference;
-
-fn main(witness: SerializedAnonymousPartyBCECAndReference) -> AnonymousPartyBCECAndReference {
-    AnonymousPartyBCECAndReference::deserialize(witness)
-}

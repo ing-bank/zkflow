@@ -1,7 +1,0 @@
-mod platform_time_window;
-
-use platform_time_window::TimeWindow;
-
-fn main(left: TimeWindow, right: TimeWindow) -> bool {
-    TimeWindow::equals(left, right)
-}

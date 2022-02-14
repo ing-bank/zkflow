@@ -5,7 +5,6 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":compilation"))
     implementation(project(":protocol"))
     implementation(project(":zinc-poet:generate"))
     compileOnly(kotlin("gradle-plugin-api"))

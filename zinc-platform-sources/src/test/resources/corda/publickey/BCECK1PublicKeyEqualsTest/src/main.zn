@@ -1,7 +1,0 @@
-mod bcec_public_key;
-
-use bcec_public_key::BCECPublicKey;
-
-fn main(left: BCECPublicKey, right: BCECPublicKey) -> bool {
-    BCECPublicKey::equals(left, right)
-}

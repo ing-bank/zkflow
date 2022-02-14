@@ -1,7 +1,0 @@
-mod platform_date;
-
-use platform_date::Date;
-
-fn main(left: Date, right: Date) -> bool {
-    Date::equals(left, right)
-}

@@ -17,7 +17,7 @@ import com.ing.zinc.poet.indent
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.zinc.poet.generate.COMPUTE_NONCE
 import com.ing.zkflow.zinc.poet.generate.CRYPTO_UTILS
-import com.ing.zkflow.zinc.poet.generate.types.LedgerTransactionFactory.Companion.LEDGER_TRANSACTION
+import com.ing.zkflow.zinc.poet.generate.types.CommandContextFactory.Companion.COMMAND_CONTEXT
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.componentGroupEnum
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.digest
 import com.ing.zkflow.zinc.poet.generate.types.witness.StandardComponentWitnessGroup
@@ -57,7 +57,7 @@ class Witness(
             }
         (
             listOfNotNull(
-                LEDGER_TRANSACTION,
+                COMMAND_CONTEXT,
             ) + listOf(
                 standardTypes.getSignerListModule(commandMetadata.numberOfSigners, commandMetadata).id,
             )
@@ -101,26 +101,22 @@ class Witness(
             generateDeserializeMethod() +
             generateGenerateHashesMethod()
 
-    private fun generateDeserializeMethod() =
-        zincMethod {
-            comment = "Deserialize ${Witness::class.java.simpleName} into a $LEDGER_TRANSACTION."
-            name = "deserialize"
-            returnType = id(LEDGER_TRANSACTION)
-
-            body = """
-                let $SIGNERS = self.deserialize_$SIGNERS();
-
-                $LEDGER_TRANSACTION {
+    private fun generateDeserializeMethod() = zincMethod {
+        comment = "Deserialize ${Witness::class.java.simpleName} into a $COMMAND_CONTEXT."
+        name = "deserialize"
+        returnType = id(COMMAND_CONTEXT)
+        body = """
+                $COMMAND_CONTEXT {
                     ${if (commandMetadata.privateInputs.isNotEmpty()) "$INPUTS: self.$SERIALIZED_INPUT_UTXOS.deserialize()," else "// $INPUTS not present"}
                     ${if (commandMetadata.privateOutputs.isNotEmpty()) "$OUTPUTS: self.$OUTPUTS.deserialize()," else "// $OUTPUTS not present"}
                     ${if (commandMetadata.privateReferences.isNotEmpty()) "$REFERENCES: self.$SERIALIZED_REFERENCE_UTXOS.deserialize()," else "// $REFERENCES not present"}
                     $NOTARY: self.deserialize_$NOTARY()[0],
                     ${if (commandMetadata.timeWindow) "$TIME_WINDOW: self.deserialize_$TIME_WINDOW()[0]," else "// $TIME_WINDOW not present"}
                     $PARAMETERS: self.deserialize_$PARAMETERS()[0],
-                    $SIGNERS: $SIGNERS,
+                    $SIGNERS: ${standardTypes.signerList(commandMetadata).id}::list_of(self.deserialize_$SIGNERS()),
                 }
-            """.trimIndent()
-        }
+        """.trimIndent()
+    }
 
     private fun generateGenerateHashesMethod() = zincMethod {
         val hashInitializers = witnessGroups.mapNotNull { witnessGroup ->

@@ -1,9 +1,0 @@
-//!
-//! The 'Amount' main module.
-//!
-mod amount_8_big_decimal_24_6;
-use amount_8_big_decimal_24_6::Amount_8_BigDecimal_24_6;
-
-fn main(left: Amount_8_BigDecimal_24_6, right: Amount_8_BigDecimal_24_6) -> Amount_8_BigDecimal_24_6 {
-    Amount_8_BigDecimal_24_6::plus(left, right)
-}
