@@ -17,6 +17,7 @@ import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.annotations.corda.EdDSA
 import com.ing.zkflow.annotations.corda.Sha256
 import com.ing.zkflow.common.network.ZKNetworkParameters
+import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.serialization.bfl.serializers.CordaSerializers.CLASS_NAME_SIZE
 import com.ing.zkflow.serialization.bfl.serializers.SecureHashSurrogate
 import com.ing.zkflow.zinc.poet.generate.ZincTypeResolver
@@ -61,7 +62,7 @@ class StandardTypes(
 
     fun signerList(metadata: ResolvedZKCommandMetadata) = list {
         capacity = metadata.numberOfSigners
-        elementType = signerModule(metadata)
+        elementType = signerModule()
     }
 
     private val signatureAttachmentConstraint by lazy {

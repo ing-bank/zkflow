@@ -31,7 +31,7 @@ class CommandContextFactory(
         if (commandMetadata.privateReferences.isNotEmpty()) {
             field { name = REFERENCES; type = witnessGroupsContainer.serializedReferenceUtxos.deserializedGroup }
         }
-        field { name = NOTARY; type = standardTypes.notaryModule(commandMetadata) }
+        field { name = NOTARY; type = standardTypes.notaryModule() }
         if (commandMetadata.timeWindow) {
             field { name = TIME_WINDOW; type = timeWindow }
         }
