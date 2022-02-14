@@ -4,7 +4,7 @@ package com.ing.zkflow.resolved
 
 import com.ing.zkflow.serialization.SerializerTest
 import com.ing.zkflow.serialization.engine.SerdeEngine
-import com.ing.zkflow.serialization.serializer.WrappedKSerializerWithDefault
+import com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializerWithDefault
 import com.ing.zkflow.serialization.serializer.corda.AlwaysAcceptAttachmentConstraintSerializer
 import com.ing.zkflow.serialization.serializer.corda.AutomaticHashConstraintSerializer
 import com.ing.zkflow.serialization.serializer.corda.AutomaticPlaceholderConstraintSerializer
@@ -38,11 +38,11 @@ data class WrapsAttachmentConstraints(
         PublicKeySerializer.fixedPublicKey(Crypto.EDDSA_ED25519_SHA512)
     ),
 ) {
-    object AlwaysAcceptAttachmentConstraint_0 : WrappedKSerializerWithDefault<AlwaysAcceptAttachmentConstraint>(AlwaysAcceptAttachmentConstraintSerializer)
+    object AlwaysAcceptAttachmentConstraint_0 : WrappedFixedLengthKSerializerWithDefault<AlwaysAcceptAttachmentConstraint>(AlwaysAcceptAttachmentConstraintSerializer)
     object HashAttachmentConstraint_0 : HashAttachmentConstraintSerializer("Sha256", 32)
-    object WhitelistedByZoneAttachmentConstraint_0 : WrappedKSerializerWithDefault<WhitelistedByZoneAttachmentConstraint>(WhitelistedByZoneAttachmentConstraintSerializer)
-    object AutomaticHashConstraint_0 : WrappedKSerializerWithDefault<AutomaticHashConstraint>(AutomaticHashConstraintSerializer)
-    object AutomaticPlaceholderConstraint_0 : WrappedKSerializerWithDefault<AutomaticPlaceholderConstraint>(AutomaticPlaceholderConstraintSerializer)
+    object WhitelistedByZoneAttachmentConstraint_0 : WrappedFixedLengthKSerializerWithDefault<WhitelistedByZoneAttachmentConstraint>(WhitelistedByZoneAttachmentConstraintSerializer)
+    object AutomaticHashConstraint_0 : WrappedFixedLengthKSerializerWithDefault<AutomaticHashConstraint>(AutomaticHashConstraintSerializer)
+    object AutomaticPlaceholderConstraint_0 : WrappedFixedLengthKSerializerWithDefault<AutomaticPlaceholderConstraint>(AutomaticPlaceholderConstraintSerializer)
     object SignatureAttachmentConstraint_0 : SignatureAttachmentConstraintSerializer(4)
 }
 

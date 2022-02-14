@@ -15,7 +15,7 @@ data class WrapsMap(
     object Map_0 : com.ing.zkflow.serialization.serializer.FixedLengthMapSerializer<Int, String?>(
         5, Map_0_A_0, Map_0_B_0
     )
-    object Map_0_A_0 : com.ing.zkflow.serialization.serializer.WrappedKSerializerWithDefault<Int>(com.ing.zkflow.serialization.serializer.IntSerializer)
+    object Map_0_A_0 : com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializerWithDefault<Int>(com.ing.zkflow.serialization.serializer.IntSerializer)
     object Map_0_B_0 : com.ing.zkflow.serialization.serializer.NullableSerializer<String>(Map_0_B_1)
     object Map_0_B_1 : com.ing.zkflow.serialization.serializer.string.FixedLengthASCIIStringSerializer(10)
 }

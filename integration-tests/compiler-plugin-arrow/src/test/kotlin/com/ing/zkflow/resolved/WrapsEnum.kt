@@ -3,7 +3,7 @@ package com.ing.zkflow.resolved
 import com.ing.zkflow.annotated.Option
 import com.ing.zkflow.serialization.SerializerTest
 import com.ing.zkflow.serialization.engine.SerdeEngine
-import com.ing.zkflow.serialization.serializer.WrappedKSerializer
+import com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializer
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
@@ -16,7 +16,7 @@ data class WrapsEnum(
     @Serializable(with = Option_0::class)
     val option: @Contextual Option = Option.FIRST
 ) {
-    object Option_0 : WrappedKSerializer<Option>(Option.serializer())
+    object Option_0 : WrappedFixedLengthKSerializer<Option>(Option.serializer(), Option::class)
 }
 
 // There will also be a resolved version for Option as below.

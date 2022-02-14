@@ -10,7 +10,7 @@ import com.ing.zkflow.annotated.pilot.r3.types.IssuedTokenType
 import com.ing.zkflow.annotated.pilot.r3.types.TokenType
 import com.ing.zkflow.serialization.SerializerTest
 import com.ing.zkflow.serialization.engine.SerdeEngine
-import com.ing.zkflow.serialization.serializer.WrappedKSerializerWithDefault
+import com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializerWithDefault
 import com.ing.zkflow.testing.zkp.ZKNulls.fixedKeyPair
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.Contextual
@@ -44,7 +44,7 @@ data class CBDCToken(
     )
 
     object Holder_0 : com.ing.zkflow.serialization.serializer.corda.PartySerializer(4, Holder_1)
-    object Holder_1 : WrappedKSerializerWithDefault<CordaX500Name>(com.ing.zkflow.serialization.serializer.corda.CordaX500NameSerializer)
+    object Holder_1 : WrappedFixedLengthKSerializerWithDefault<CordaX500Name>(com.ing.zkflow.serialization.serializer.corda.CordaX500NameSerializer)
 
     object TokenTypeJarHash_0 : com.ing.zkflow.serialization.serializer.NullableSerializer<SecureHash>(
         TokenTypeJarHash_1
@@ -52,11 +52,11 @@ data class CBDCToken(
 
     object TokenTypeJarHash_1 : com.ing.zkflow.serialization.serializer.corda.SecureHashSerializer("Sha256", 32)
 
-    object IssueDate_0 : com.ing.zkflow.serialization.serializer.WrappedKSerializer<Instant>(com.ing.zkflow.serialization.serializer.InstantSerializer)
+    object IssueDate_0 : WrappedFixedLengthKSerializerWithDefault<Instant>(com.ing.zkflow.serialization.serializer.InstantSerializer)
 
-    object LastInterestAccrualDate_0 : com.ing.zkflow.serialization.serializer.WrappedKSerializer<Instant>(com.ing.zkflow.serialization.serializer.InstantSerializer)
+    object LastInterestAccrualDate_0 : WrappedFixedLengthKSerializerWithDefault<Instant>(com.ing.zkflow.serialization.serializer.InstantSerializer)
 
-    object UsageCount_0 : com.ing.zkflow.serialization.serializer.WrappedKSerializerWithDefault<Int>(com.ing.zkflow.serialization.serializer.IntSerializer)
+    object UsageCount_0 : WrappedFixedLengthKSerializerWithDefault<Int>(com.ing.zkflow.serialization.serializer.IntSerializer)
 }
 
 class CBDCTokenTest : SerializerTest {

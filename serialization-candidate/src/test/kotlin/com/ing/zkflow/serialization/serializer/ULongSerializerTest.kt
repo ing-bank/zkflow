@@ -39,6 +39,6 @@ class ULongSerializerTest : SerializerTest {
     ) {
         object ULong_0 : FixedLengthListSerializer<ULong?>(5, ULong_1)
         object ULong_1 : NullableSerializer<ULong>(ULong_2)
-        object ULong_2 : WrappedKSerializerWithDefault<ULong>(ULongSerializer)
+        object ULong_2 : WrappedFixedLengthKSerializerWithDefault<ULong>(ULongSerializer)
     }
 }

@@ -1,8 +1,8 @@
 package com.ing.zkflow.serialization.serializer.corda
 
+import com.ing.zkflow.serialization.FixedLengthKSerializerWithDefault
 import com.ing.zkflow.serialization.serializer.FixedLengthByteArraySerializer
-import com.ing.zkflow.serialization.serializer.KSerializerWithDefault
-import kotlinx.serialization.descriptors.SerialDescriptor
+import com.ing.zkflow.serialization.toFixedLengthSerialDescriptorOrThrow
 import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
@@ -13,7 +13,7 @@ import java.security.PublicKey
 import java.security.SecureRandom
 import java.util.Locale
 
-open class PublicKeySerializer(cordaSignatureId: Int) : KSerializerWithDefault<PublicKey> {
+open class PublicKeySerializer(cordaSignatureId: Int) : FixedLengthKSerializerWithDefault<PublicKey> {
     companion object {
         @Suppress("MagicNumber")
         val schemeIdSize = mapOf(
@@ -56,9 +56,9 @@ open class PublicKeySerializer(cordaSignatureId: Int) : KSerializerWithDefault<P
 
     private val strategy = FixedLengthByteArraySerializer(encodedSize)
 
-    override val descriptor: SerialDescriptor = buildClassSerialDescriptor("PublicKey$algorithmNameIdentifier") {
+    override val descriptor = buildClassSerialDescriptor("PublicKey$algorithmNameIdentifier") {
         element("bytes", strategy.descriptor)
-    }
+    }.toFixedLengthSerialDescriptorOrThrow()
 
     override fun serialize(encoder: Encoder, value: PublicKey) = with(value.encoded) {
         require(size == encodedSize) {

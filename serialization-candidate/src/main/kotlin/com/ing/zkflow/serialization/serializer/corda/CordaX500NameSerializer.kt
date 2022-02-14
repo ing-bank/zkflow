@@ -1,16 +1,16 @@
 package com.ing.zkflow.serialization.serializer.corda
 
 import com.ing.zkflow.Surrogate
-import com.ing.zkflow.serialization.serializer.KSerializerWithDefault
+import com.ing.zkflow.serialization.FixedLengthKSerializerWithDefault
 import com.ing.zkflow.serialization.serializer.NullableSerializer
 import com.ing.zkflow.serialization.serializer.string.FixedLengthUTF8StringSerializer
+import com.ing.zkflow.serialization.toFixedLengthSerialDescriptorOrThrow
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import net.corda.core.identity.CordaX500Name
 
-object CordaX500NameSerializer : KSerializerWithDefault<CordaX500Name> {
+object CordaX500NameSerializer : FixedLengthKSerializerWithDefault<CordaX500Name> {
     @Suppress("ArrayInDataClass", "ClassName")
     @Serializable
     private data class CordaX500NameSurrogate(
@@ -56,7 +56,7 @@ object CordaX500NameSerializer : KSerializerWithDefault<CordaX500Name> {
     override val default = CordaX500Name(null, null, "XX", "", null, "NL")
 
     private val strategy = CordaX500NameSurrogate.serializer()
-    override val descriptor: SerialDescriptor = strategy.descriptor
+    override val descriptor = strategy.descriptor.toFixedLengthSerialDescriptorOrThrow()
 
     override fun serialize(encoder: Encoder, value: CordaX500Name) = with(value) {
         encoder.encodeSerializableValue(strategy, CordaX500NameSurrogate(commonName, organisationUnit, organisation, locality, state, country))

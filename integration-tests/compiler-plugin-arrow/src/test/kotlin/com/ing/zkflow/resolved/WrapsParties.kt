@@ -41,7 +41,7 @@ data class WrapsParties constructor (
         com.ing.zkflow.annotated.pilot.infra.AnonymousPartySurrogate_EdDSA.serializer(), { AnonymousPartyConverter_EdDSA.from(it) }
     )
     object Party_0 : com.ing.zkflow.serialization.serializer.corda.PartySerializer(4, Party_1)
-    object Party_1 : com.ing.zkflow.serialization.serializer.WrappedKSerializerWithDefault<CordaX500Name>(com.ing.zkflow.serialization.serializer.corda.CordaX500NameSerializer)
+    object Party_1 : com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializerWithDefault<CordaX500Name>(com.ing.zkflow.serialization.serializer.corda.CordaX500NameSerializer)
     object PartyCX500Custom_0 : com.ing.zkflow.serialization.serializer.corda.PartySerializer(4, PartyCX500Custom_1)
     object PartyCX500Custom_1 : com.ing.zkflow.serialization.serializer.SerializerWithDefault<CordaX500Name>(PartyCX500Custom_2, com.ing.zkflow.serialization.serializer.corda.CordaX500NameSerializer.default)
     object PartyCX500Custom_2 : com.ing.zkflow.serialization.serializer.SurrogateSerializer<CordaX500Name, CordaX500NameSurrogate>(

@@ -1,12 +1,13 @@
 package com.ing.zkflow.serialization.serializer
 
+import com.ing.zkflow.serialization.FixedLengthKSerializerWithDefault
+import com.ing.zkflow.serialization.toFixedLengthSerialDescriptorOrThrow
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import java.time.Instant
 
-object InstantSerializer : KSerializerWithDefault<Instant> {
+object InstantSerializer : FixedLengthKSerializerWithDefault<Instant> {
     override val default: Instant = Instant.MIN
 
     @Serializable
@@ -16,7 +17,7 @@ object InstantSerializer : KSerializerWithDefault<Instant> {
     )
 
     private val strategy = Surrogate.serializer()
-    override val descriptor: SerialDescriptor = strategy.descriptor
+    override val descriptor = strategy.descriptor.toFixedLengthSerialDescriptorOrThrow()
 
     override fun serialize(encoder: Encoder, value: Instant) {
         val surrogate = Surrogate(value.epochSecond, value.nano)

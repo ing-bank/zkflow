@@ -28,6 +28,6 @@ class SerializerWithDefaultTest : SerializerTest {
         val list: List<Int> = emptyList()
     ) {
         object List_0 : FixedLengthListSerializer<Int>(10, List_1)
-        object List_1 : SerializerWithDefault<Int>(Int.serializer(), 0)
+        object List_1 : SerializerWithDefault<Int>(IntSerializer, 0)
     }
 }

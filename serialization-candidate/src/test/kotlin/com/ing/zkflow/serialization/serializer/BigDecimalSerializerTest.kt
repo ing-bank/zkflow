@@ -1,8 +1,10 @@
 package com.ing.zkflow.serialization.serializer
 
 import com.ing.zkflow.serialization.SerializerTest
+import com.ing.zkflow.serialization.engine.BFLEngine
 import com.ing.zkflow.serialization.engine.SerdeEngine
 import com.ing.zkflow.serialization.serializer.FixedLengthFloatingPointSerializer.BigDecimalSerializer
+import com.ing.zkflow.serialization.toFixedLengthSerialDescriptorOrThrow
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.Serializable
 import org.junit.jupiter.params.ParameterizedTest
@@ -29,11 +31,29 @@ class BigDecimalSerializerTest : SerializerTest {
         engine.assertRoundTrip(ContainsBigDecimal.serializer(), ContainsBigDecimal())
     }
 
+    @ParameterizedTest
+    @MethodSource("engines")
+    fun `Sizes for BigDecimals must match`(engine: BFLEngine) {
+        // integer, fractional parts are serialized as bytes arrays with max size PRECISION,
+        // additionally, `kind` and `sign` of the big integer are serialized.
+        val expectedBytesSize = Byte.SIZE_BYTES + Byte.SIZE_BYTES + 2 * (UIntSerializer.descriptor.byteSize + PRECISION * Byte.SIZE_BYTES)
+
+        InstanceSerializer.descriptor.byteSize shouldBe expectedBytesSize
+        engine.serialize(InstanceSerializer, BigDecimal.ONE).size shouldBe expectedBytesSize * engine.bytesScaler
+
+        ContainsBigDecimal.serializer().descriptor.toFixedLengthSerialDescriptorOrThrow().byteSize shouldBe expectedBytesSize
+        engine.serialize(ContainsBigDecimal.serializer(), ContainsBigDecimal()).size shouldBe expectedBytesSize * engine.bytesScaler
+    }
+
     @Serializable
     data class ContainsBigDecimal(
         @Serializable(with = InstanceSerializer::class)
         val bigDecimal: BigDecimal = BigDecimal.TEN
     )
 
-    object InstanceSerializer : BigDecimalSerializer(10, 10)
+    companion object {
+        const val PRECISION = 10
+    }
+
+    object InstanceSerializer : BigDecimalSerializer(PRECISION, PRECISION)
 }

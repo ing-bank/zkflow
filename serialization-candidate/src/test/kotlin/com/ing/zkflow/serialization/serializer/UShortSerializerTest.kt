@@ -39,6 +39,6 @@ class UShortSerializerTest : SerializerTest {
     ) {
         object UShort_0 : FixedLengthListSerializer<UShort?>(5, UShort_1)
         object UShort_1 : NullableSerializer<UShort>(UShort_2)
-        object UShort_2 : WrappedKSerializerWithDefault<UShort>(UShortSerializer)
+        object UShort_2 : WrappedFixedLengthKSerializerWithDefault<UShort>(UShortSerializer)
     }
 }

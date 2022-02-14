@@ -1,31 +1,32 @@
 package com.ing.zkflow.serialization.serializer
 
+import com.ing.zkflow.serialization.FixedLengthKSerializerWithDefault
+import com.ing.zkflow.serialization.FixedLengthSerialDescriptor
 import com.ing.zkflow.serialization.FixedLengthType
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
-import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 
 internal class FixedLengthCollectionSerializer<T>(
     private val maxSize: Int,
-    private val valueSerializer: KSerializer<T>,
-    private val itemDefault: T,
+    private val valueSerializer: FixedLengthKSerializerWithDefault<T>,
     fixedLengthType: FixedLengthType
-) : KSerializerWithDefault<List<T>> {
-    constructor(maxSize: Int, valueSerializer: KSerializerWithDefault<T>, fixedLengthType: FixedLengthType) : this(maxSize, valueSerializer, valueSerializer.default, fixedLengthType)
+) : FixedLengthKSerializerWithDefault<List<T>> {
 
     override val default = emptyList<T>()
 
-    override val descriptor: SerialDescriptor = buildClassSerialDescriptor(fixedLengthType.serialName) {
-        element("size", UInt.serializer().descriptor)
-        element("list", ListSerializer(valueSerializer).descriptor)
-        annotations = listOf(
-            SizeAnnotation(maxSize)
-        )
-    }
+    override val descriptor = FixedLengthSerialDescriptor(
+        buildClassSerialDescriptor(fixedLengthType.serialName) {
+            element("size", UInt.serializer().descriptor)
+            element("list", ListSerializer(valueSerializer).descriptor)
+            annotations = listOf(
+                SizeAnnotation(maxSize)
+            )
+        },
+        UIntSerializer.descriptor.byteSize + maxSize * valueSerializer.descriptor.byteSize
+    )
 
     override fun serialize(encoder: Encoder, value: List<T>) =
         encoder.run {
@@ -36,7 +37,7 @@ internal class FixedLengthCollectionSerializer<T>(
                     }
                 }
             )
-            value.extend(maxSize, itemDefault).forEach {
+            value.extend(maxSize, valueSerializer.default).forEach {
                 encodeSerializableValue(valueSerializer, it)
             }
         }

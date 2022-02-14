@@ -39,6 +39,6 @@ class LongSerializerTest : SerializerTest {
     ) {
         object Long_0 : FixedLengthListSerializer<Long?>(5, Long_1)
         object Long_1 : NullableSerializer<Long>(Long_2)
-        object Long_2 : WrappedKSerializerWithDefault<Long>(LongSerializer)
+        object Long_2 : WrappedFixedLengthKSerializerWithDefault<Long>(LongSerializer)
     }
 }

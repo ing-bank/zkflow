@@ -5,7 +5,7 @@ import com.ing.zkflow.Surrogate
 import com.ing.zkflow.serialization.SerializerTest
 import com.ing.zkflow.serialization.engine.SerdeEngine
 import com.ing.zkflow.serialization.serializer.SurrogateSerializer
-import com.ing.zkflow.serialization.serializer.WrappedKSerializer
+import com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializerWithDefault
 import com.ing.zkflow.serialization.serializer.string.FixedLengthASCIIStringSerializer
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.Serializable
@@ -39,7 +39,7 @@ class CordaX500NameSerializerTest : SerializerTest {
         @Serializable(with = DefaultCordaX500Name::class) val defaultCordaX500Name: CordaX500Name,
         @Serializable(with = CustomCordaX500Name::class) val customCordaX500Name: CordaX500Name,
     ) {
-        object DefaultCordaX500Name : WrappedKSerializer<CordaX500Name>(CordaX500NameSerializer)
+        object DefaultCordaX500Name : WrappedFixedLengthKSerializerWithDefault<CordaX500Name>(CordaX500NameSerializer)
         object CustomCordaX500Name : SurrogateSerializer<CordaX500Name, CordaX500NameSurrogate>(
             CordaX500NameSurrogate.serializer(), { CordaX500NameConverter.from(it) }
         )

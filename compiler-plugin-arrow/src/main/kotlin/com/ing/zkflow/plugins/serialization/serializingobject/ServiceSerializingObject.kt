@@ -32,7 +32,7 @@ sealed class ServiceSerializingObject : SerializingObject() {
     }
 
     /**
-     * Attaches to a child serializing object a default value by constructing a KSerializerWithDefault object.
+     * Attaches to a child serializing object a default value by constructing a FixedLengthKSerializerWithDefault object.
      */
     class WithDefault internal constructor(
         override val child: SerializingObject,

@@ -6,6 +6,15 @@ import com.ing.zkflow.serialization.scheme.ByteBinaryFixedLengthScheme
 import kotlinx.serialization.KSerializer
 
 public open class BFLEngine(private val scheme: BinaryFixedLengthScheme) : SerdeEngine {
+    /**
+     * A scale factor `s` expected to solve the equation
+     * `s` * `expected size in bytes` = `size of the serialization in bytes\bits`
+     */
+    public val bytesScaler: Int = when (scheme.unit) {
+        BinaryFixedLengthScheme.Unit.BITS -> 8
+        BinaryFixedLengthScheme.Unit.BYTES -> 1
+    }
+
     override fun <T> serialize(strategy: KSerializer<T>, value: T, shouldPrint: Boolean): ByteArray {
         if (shouldPrint) { println("Serializing:\n$value") }
         return scheme.encodeToBinary(strategy, value).also {

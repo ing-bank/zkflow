@@ -39,6 +39,6 @@ class IntSerializerTest : SerializerTest {
     ) {
         object Int_0 : FixedLengthListSerializer<Int?>(5, Int_1)
         object Int_1 : NullableSerializer<Int>(Int_2)
-        object Int_2 : WrappedKSerializerWithDefault<Int>(IntSerializer)
+        object Int_2 : WrappedFixedLengthKSerializerWithDefault<Int>(IntSerializer)
     }
 }
