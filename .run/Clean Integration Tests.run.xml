@@ -12,6 +12,7 @@
         <list>
           <option value=":integration-tests:compiler-plugin-arrow:clean" />
           <option value=":integration-tests:compiler-plugin-arrow:test" />
+          <option value=":integration-tests:contracts:test" />
         </list>
       </option>
       <option name="vmOptions" />

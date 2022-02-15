@@ -1,7 +1,5 @@
 package com.ing.zkflow
 
-import com.ing.zkflow.annotated.pilot.ivno.IvnoTokenType
-import com.ing.zkflow.annotated.pilot.r3.types.TokenType
 import com.ing.zkflow.annotations.ZKP
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.Transient
@@ -24,10 +22,6 @@ class PropertyAnnotatorTest {
             Case(ClassWithProperties::class, "thisPropertyHasBackingField", true),
             Case(ClassWithProperties::class, "noBackingField1", false),
             Case(ClassWithProperties::class, "noBackingField2", false),
-            //
-            // Properties from actual classes.
-            Case(IvnoTokenType::class, "participants", true),
-            Case(TokenType::class, "displayTokenSize", false)
         )
 
         class Case(

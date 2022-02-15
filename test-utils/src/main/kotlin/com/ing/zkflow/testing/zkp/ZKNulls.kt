@@ -27,6 +27,9 @@ public object ZKNulls {
         }
     }
 
+    public fun fixedAnonymousParty(signatureScheme: SignatureScheme): AnonymousParty =
+        AnonymousParty(fixedKeyPair(signatureScheme).public)
+
     // TODO: Make a function accepting a signature scheme
     public val NULL_PUBLIC_KEY: PublicKey = fixedKeyPair(Crypto.EDDSA_ED25519_SHA512).public
     public val NULL_ANONYMOUS_PARTY: AnonymousParty = AnonymousParty(NULL_PUBLIC_KEY)
