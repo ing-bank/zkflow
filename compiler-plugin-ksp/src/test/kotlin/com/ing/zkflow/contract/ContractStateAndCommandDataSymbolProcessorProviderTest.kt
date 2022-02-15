@@ -52,7 +52,7 @@ internal class ContractStateAndCommandDataSymbolProcessorProviderTest : Processo
         }
 
         result.exitCode shouldBe KotlinCompilation.ExitCode.OK
-        result.getMetaInfServicesPath<ZKCommandData>()?.shouldNotExist()
+        result.getMetaInfServicesPath<ZKCommandData>().shouldNotExist()
     }
 
     @Test

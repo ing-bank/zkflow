@@ -171,8 +171,6 @@ class ZKCommandMetadata(val commandKClass: KClass<out CommandData>) {
      */
     var circuit: ZKCircuit? = null
 
-    // var zkNetwork: ZKNetwork? = null
-
     var numberOfSigners = 0
 
     val privateInputs = ZKReferenceList()
@@ -186,11 +184,6 @@ class ZKCommandMetadata(val commandKClass: KClass<out CommandData>) {
         return circuit!!
     }
 
-    // fun network(init: ZKNetwork.() -> Unit): ZKNetwork {
-    //     zkNetwork = ZKNetwork().apply(init)
-    //     return zkNetwork!!
-    // }
-
     fun inputs(init: ZKReferenceList.() -> Unit) = privateInputs.apply(init)
     fun references(init: ZKReferenceList.() -> Unit) = privateReferences.apply(init)
     fun outputs(init: ZKProtectedComponentList.() -> Unit) = privateOutputs.apply(init)
@@ -202,8 +195,7 @@ class ZKCommandMetadata(val commandKClass: KClass<out CommandData>) {
         privateInputs.toList(),
         privateReferences.toList(),
         privateOutputs.toList(),
-        timeWindow,
-        // zkNetwork.resolve()
+        timeWindow
     )
 }
 

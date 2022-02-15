@@ -38,7 +38,7 @@ class WitnessGroupsContainer(
     private val commandGroup =
         StandardComponentWitnessGroup(COMMANDS, BflPrimitive.U32, 1, ComponentGroupEnum.COMMANDS_GROUP)
     private val notaryGroup =
-        StandardComponentWitnessGroup(NOTARY, standardTypes.notaryModule(), 1, ComponentGroupEnum.NOTARY_GROUP)
+        StandardComponentWitnessGroup(NOTARY, standardTypes.notaryModule, 1, ComponentGroupEnum.NOTARY_GROUP)
     private val timeWindowGroup =
         StandardComponentWitnessGroup(
             TIME_WINDOW,
@@ -49,7 +49,7 @@ class WitnessGroupsContainer(
     private val signerGroup =
         StandardComponentWitnessGroup(
             SIGNERS,
-            standardTypes.signerModule(),
+            standardTypes.signerModule,
             commandMetadata.numberOfSigners,
             ComponentGroupEnum.SIGNERS_GROUP
         )

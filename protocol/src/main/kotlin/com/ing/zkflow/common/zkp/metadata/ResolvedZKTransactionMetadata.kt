@@ -15,14 +15,7 @@ data class ResolvedZKTransactionMetadata(
 
         const val ERROR_NO_COMMANDS = "There should be at least one commmand in a ZKFlow transaction"
         const val ERROR_COMMAND_NOT_UNIQUE = "Multiple commands of one type found. All commands in a ZKFLow transaction should be unique"
-
-        // const val ERROR_NETWORKS_DO_NOT_MATCH = "All commands should belong to the same ZKNetwork"
-        // const val ERROR_ATTACHMENT_CONSTRAINT_DOES_NOT_MATCH = "The attachment constraint of all commands should match the network"
     }
-
-    // private fun verifyCommandsMatchNetwork() {
-    //     require(commands.map { it.network }.distinct().size == 1) { ERROR_NETWORKS_DO_NOT_MATCH }
-    // }
 
     val privateInputs = commands.fold(mutableListOf<ZKReference>()) { acc, command -> mergeUtxoVisibility(acc, command.privateInputs) }
     val privateReferences =
@@ -52,7 +45,6 @@ data class ResolvedZKTransactionMetadata(
     init {
         require(commands.isNotEmpty()) { ERROR_NO_COMMANDS }
         require(commands.distinctBy { it.commandKClass }.size == commands.size) { ERROR_COMMAND_NOT_UNIQUE }
-        // verifyCommandsMatchNetwork()
         // TODO        TODO("TODO: Verify components visibility is aligned among different commands")
     }
 

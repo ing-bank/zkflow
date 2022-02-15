@@ -1,7 +1,8 @@
 package com.ing.zkflow.common.serialization
 
 import com.ing.zkflow.common.network.ZKNetworkParameters
-import com.ing.zkflow.common.transactions.ZKTransactionBuilder
+import com.ing.zkflow.common.serialization.ZKCustomSerializationScheme.Companion.CONTEXT_KEY_TRANSACTION_METADATA
+import com.ing.zkflow.common.serialization.ZKCustomSerializationScheme.Companion.CONTEXT_KEY_ZK_NETWORK_PARAMETERS
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
 import com.ing.zkflow.serialization.CommandDataSerializerMap
 import com.ing.zkflow.serialization.ContractStateSerializerMap
@@ -135,9 +136,9 @@ open class BFLSerializationScheme : CustomSerializationScheme {
         logger.trace("Serializing tx component:\t${obj::class}")
 
         val transactionMetadata =
-            context.properties[ZKTransactionBuilder.CONTEXT_KEY_TRANSACTION_METADATA] as? ResolvedZKTransactionMetadata
+            context.properties[CONTEXT_KEY_TRANSACTION_METADATA] as? ResolvedZKTransactionMetadata
         val zkNetworkParameters =
-            context.properties[ZKTransactionBuilder.CONTEXT_KEY_ZK_NETWORK_PARAMETERS] as? ZKNetworkParameters
+            context.properties[CONTEXT_KEY_ZK_NETWORK_PARAMETERS] as? ZKNetworkParameters
                 ?: error("ZKNetworkParameters must be defined")
 
         val serialization = when (obj) {

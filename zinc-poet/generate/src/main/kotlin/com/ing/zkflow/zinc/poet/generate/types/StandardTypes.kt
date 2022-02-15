@@ -47,22 +47,24 @@ class StandardTypes(
     private val zkNetworkParameters: ZKNetworkParameters
 ) {
     private val edDsaPartyNotaryModule by lazy { zincTypeResolver.zincTypeOf(WrapsEdDsaParty::class).getSingleFieldType() }
-    fun notaryModule(): BflModule =
+    val notaryModule: BflModule by lazy {
         when (val signatureScheme = zkNetworkParameters.notaryInfo.signatureScheme) {
             Crypto.EDDSA_ED25519_SHA512 -> edDsaPartyNotaryModule
             else -> error("Enable ${signatureScheme.schemeCodeName} for notaryModule in ${StandardTypes::class}")
         }
+    }
 
     private val edDsaPublicKeySignerModule by lazy { zincTypeResolver.zincTypeOf(WrapsEdDsaPublicKey::class).getSingleFieldType() }
-    fun signerModule(): BflModule =
+    val signerModule: BflModule by lazy {
         when (val signatureScheme = zkNetworkParameters.participantSignatureScheme) {
             Crypto.EDDSA_ED25519_SHA512 -> edDsaPublicKeySignerModule
             else -> error("Enable ${signatureScheme.schemeCodeName} for signerModule in ${StandardTypes::class}")
         }
+    }
 
     fun signerList(metadata: ResolvedZKCommandMetadata) = list {
         capacity = metadata.numberOfSigners
-        elementType = signerModule()
+        elementType = signerModule
     }
 
     private val signatureAttachmentConstraint by lazy {
@@ -84,7 +86,7 @@ class StandardTypes(
         numberOfSigners: Int
     ) = list {
         capacity = numberOfSigners
-        elementType = signerModule()
+        elementType = signerModule
     }
 
     internal fun toWitnessGroupOptions(groupName: String, states: Map<BflModule, Int>): List<WitnessGroupOptions> = states.keys.map {
@@ -111,7 +113,7 @@ class StandardTypes(
         }
         field {
             name = "notary"
-            type = notaryModule()
+            type = notaryModule
         }
         field {
             name = "encumbrance"

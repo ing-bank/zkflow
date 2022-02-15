@@ -4,6 +4,8 @@ import co.paralleluniverse.strands.Strand
 import com.ing.zkflow.common.contracts.ZKContractState
 import com.ing.zkflow.common.network.ZKNetworkParameters
 import com.ing.zkflow.common.network.ZKNetworkParametersServiceLoader
+import com.ing.zkflow.common.serialization.ZKCustomSerializationScheme.Companion.CONTEXT_KEY_TRANSACTION_METADATA
+import com.ing.zkflow.common.serialization.ZKCustomSerializationScheme.Companion.CONTEXT_KEY_ZK_NETWORK_PARAMETERS
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
 import com.ing.zkflow.node.services.ServiceNames
 import com.ing.zkflow.node.services.ZKVerifierTransactionStorage
@@ -60,7 +62,6 @@ import java.util.UUID
 @Suppress("TooManyFunctions", "LongParameterList", "MemberVisibilityCanBePrivate") // Copy of TransactionBuilder API
 class ZKTransactionBuilder(
     val builder: TransactionBuilder,
-    // private val serializationSchemeId: Int = BFLSerializationScheme.SCHEME_ID,
     private val zkNetworkParameters: ZKNetworkParameters? = null,
     // TransactionBuilder does not expose `inputsWithTransactionState` and `referencesWithTransactionState`, which are required for the ordered TransactionBuilder
     // to sort the states by name.
@@ -123,9 +124,6 @@ class ZKTransactionBuilder(
     }
 
     companion object {
-        const val CONTEXT_KEY_ZK_NETWORK_PARAMETERS = 192837465
-        const val CONTEXT_KEY_TRANSACTION_METADATA = 2
-
         // Copied from private `TransactionBuilder.defaultLockId`
         private fun defaultLockId() = (Strand.currentStrand() as? FlowStateMachine<*>)?.id?.uuid ?: UUID.randomUUID()
     }

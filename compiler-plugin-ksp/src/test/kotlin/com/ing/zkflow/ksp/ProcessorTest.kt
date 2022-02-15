@@ -35,11 +35,11 @@ abstract class ProcessorTest {
 
     companion object {
         @JvmStatic
-        protected inline fun <reified T : Any> KotlinCompilation.Result.getGeneratedMetaInfServices(): String? =
-            getMetaInfServicesPath<T>()?.readText(StandardCharsets.UTF_8)
+        protected inline fun <reified T : Any> KotlinCompilation.Result.getGeneratedMetaInfServices(): String =
+            getMetaInfServicesPath<T>().readText(StandardCharsets.UTF_8)
 
         @JvmStatic
-        protected inline fun <reified T : Any> KotlinCompilation.Result.getMetaInfServicesPath(): Path? =
+        protected inline fun <reified T : Any> KotlinCompilation.Result.getMetaInfServicesPath(): Path =
             Paths.get("${outputDirectory.absolutePath}/../ksp/sources/resources/META-INF/services/${T::class.java.canonicalName}")
     }
 }

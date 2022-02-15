@@ -11,36 +11,6 @@ import java.io.File
 import java.time.Duration
 import kotlin.reflect.KClass
 
-// data class ResolvedZKNetwork(
-//     /**
-//      * The participant [SignatureScheme] type required by this command.
-//      *
-//      * Due to current limitations of the ZKP command, only one [SignatureScheme] per command is allowed for transaction participants.
-//      * This should be enforced at network level and therefore should match the [SignatureScheme] defined for the network notary
-//      * in the transaction metadata. If they don't match, an error is thrown.
-//      */
-//     val participantSignatureScheme: SignatureScheme,
-//
-//     /**
-//      * The attachment constraint required by this command for all states
-//      *
-//      * Due to current limitations of the ZKP command, only one [AttachmentConstraint] per transaction is allowed.
-//      * This should be enforced at network level and therefore should match the [AttachmentConstraint] defined for the network
-//      * in the transaction metadata. If they don't match, an error is thrown.
-//      */
-//     val attachmentConstraintType: ZKAttachmentConstraintType,
-//
-//     val digestService: IdentifyingDigestAlgorithm,
-//
-//     val notary: ZKNotaryInfo
-// ) {
-//     init {
-//         ZKFlow.requireSupportedSignatureScheme(participantSignatureScheme)
-//         ZKFlow.requireSupportedSignatureScheme(notary.signatureScheme)
-//         ZKFlow.requireSupportedDigestService(digestService)
-//     }
-// }
-
 data class ResolvedZKCircuit(
     val commandKClass: KClass<out CommandData>,
     var name: String,
@@ -67,7 +37,6 @@ data class ResolvedZKCommandMetadata(
     val privateReferences: List<ZKReference>,
     val privateOutputs: List<ZKProtectedComponent>,
     val timeWindow: Boolean,
-    // val network: ResolvedZKNetwork
 ) {
     val networkParameters = true
     val commandSimpleName: String by lazy { commandKClass.simpleName ?: error("Command classes must be a named class") }
@@ -100,12 +69,12 @@ data class ResolvedZKCommandMetadata(
      */
     fun verify(ltx: LedgerTransaction) {
         try {
-//            verifyCommandsAndSigners(ltx.commands.map { Command(it.value, it.signers) })
+            // TODO verifyCommandsAndSigners(ltx.commands.map { Command(it.value, it.signers) })
             verifyOutputs(ltx.outputs)
             verifyInputs(ltx.inputs)
             verifyReferences(ltx.references)
-            // verifyNotary(ltx.notary)
-            // verifyParameters(ltx)
+            // TODO verifyNotary(ltx.notary)
+            // TODO verifyParameters(ltx)
         } catch (e: IllegalArgumentException) {
             throw IllegalTransactionStructureException(e)
         }
