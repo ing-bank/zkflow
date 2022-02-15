@@ -122,7 +122,8 @@ public data class TestTransactionDSLInterpreter private constructor(
             labelToIndexMap = HashMap(labelToIndexMap)
         )
 
-    internal fun toWireTransaction() = transactionBuilder.toWireTransaction(services, ledgerInterpreter.serializationSchemeID)
+    internal fun toWireTransaction() =
+        transactionBuilder.toWireTransaction(services, ledgerInterpreter.zkNetworkParameters.serializationSchemeId)
 
     override fun input(stateRef: StateRef) {
         val state = ledgerInterpreter.resolveStateRef<ContractState>(stateRef)

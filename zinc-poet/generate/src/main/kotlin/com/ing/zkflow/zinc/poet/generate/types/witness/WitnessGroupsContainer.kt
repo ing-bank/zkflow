@@ -38,11 +38,21 @@ class WitnessGroupsContainer(
     private val commandGroup =
         StandardComponentWitnessGroup(COMMANDS, BflPrimitive.U32, 1, ComponentGroupEnum.COMMANDS_GROUP)
     private val notaryGroup =
-        StandardComponentWitnessGroup(NOTARY, standardTypes.notaryModule(commandMetadata), 1, ComponentGroupEnum.NOTARY_GROUP)
+        StandardComponentWitnessGroup(NOTARY, standardTypes.notaryModule, 1, ComponentGroupEnum.NOTARY_GROUP)
     private val timeWindowGroup =
-        StandardComponentWitnessGroup(TIME_WINDOW, timeWindow, if (commandMetadata.timeWindow) 1 else 0, ComponentGroupEnum.TIMEWINDOW_GROUP)
+        StandardComponentWitnessGroup(
+            TIME_WINDOW,
+            timeWindow,
+            if (commandMetadata.timeWindow) 1 else 0,
+            ComponentGroupEnum.TIMEWINDOW_GROUP
+        )
     private val signerGroup =
-        StandardComponentWitnessGroup(SIGNERS, standardTypes.signerModule(commandMetadata), commandMetadata.numberOfSigners, ComponentGroupEnum.SIGNERS_GROUP)
+        StandardComponentWitnessGroup(
+            SIGNERS,
+            standardTypes.signerModule,
+            commandMetadata.numberOfSigners,
+            ComponentGroupEnum.SIGNERS_GROUP
+        )
     private val parameterGroup =
         StandardComponentWitnessGroup(PARAMETERS, secureHash, 1, ComponentGroupEnum.PARAMETERS_GROUP)
 
@@ -63,7 +73,6 @@ class WitnessGroupsContainer(
         "OutputGroup",
         outputs,
         standardTypes,
-        commandMetadata,
     )
     internal val serializedInputUtxos = UtxosWitnessGroup(
         SERIALIZED_INPUT_UTXOS,
@@ -71,7 +80,6 @@ class WitnessGroupsContainer(
         inputs,
         INPUT_NONCES,
         standardTypes,
-        commandMetadata,
     )
     internal val serializedReferenceUtxos = UtxosWitnessGroup(
         SERIALIZED_REFERENCE_UTXOS,
@@ -79,7 +87,6 @@ class WitnessGroupsContainer(
         references,
         REFERENCE_NONCES,
         standardTypes,
-        commandMetadata,
     )
 
     val witnessGroups: List<WitnessGroup> = listOfNotNull(

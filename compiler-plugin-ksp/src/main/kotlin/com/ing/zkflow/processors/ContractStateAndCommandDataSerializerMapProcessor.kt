@@ -1,4 +1,4 @@
-package com.ing.zkflow.stateandcommanddata
+package com.ing.zkflow.processors
 
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.ing.zkflow.ksp.implementations.ImplementationsProcessor

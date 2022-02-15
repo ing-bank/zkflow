@@ -10,6 +10,7 @@ import com.ing.zkflow.testing.fixed
 import com.ing.zkflow.testing.fixtures.contract.TestContract
 import com.ing.zkflow.testing.fixtures.contract.TestContract.TestState
 import com.ing.zkflow.testing.withCustomSerializationEnv
+import com.ing.zkflow.testing.zkp.MockZKNetworkParameters
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
@@ -31,6 +32,7 @@ class ZKVerifierTransactionTest {
     )
     private val notary = TestIdentity.fixed("Notary").party
     private val alice = TestIdentity.fixed("Alice").party.anonymise()
+    private val zkNetworkParameters = MockZKNetworkParameters
 
     @Test
     fun `test filtering outputs 1`() {
@@ -55,7 +57,7 @@ class ZKVerifierTransactionTest {
             val publicOutput = TestState(alice, 0)
             val privateOutput = TestState(alice, 1)
 
-            val txbuilder = ZKTransactionBuilder(notary)
+            val txbuilder = ZKTransactionBuilder(notary, zkNetworkParameters)
             txbuilder.addCommand(TestZKCommand(), alice.owningKey)
             txbuilder.addOutputState(publicOutput) // at 0
             txbuilder.addOutputState(privateOutput) // at 1
@@ -105,7 +107,7 @@ class ZKVerifierTransactionTest {
             val publicOutput2 = TestState(alice, 2)
             val publicOutput3 = TestState(alice, 3)
 
-            val txbuilder = ZKTransactionBuilder(notary)
+            val txbuilder = ZKTransactionBuilder(notary, zkNetworkParameters)
             txbuilder.addCommand(TestZKCommand(), alice.owningKey)
             txbuilder.addOutputState(privateOutput) // at 0
             txbuilder.addOutputState(publicOutput1) // at 1
@@ -155,7 +157,7 @@ class ZKVerifierTransactionTest {
             val publicOutput3 = TestState(alice, 3)
             val privateOutput4 = TestState(alice, 4)
 
-            val txbuilder = ZKTransactionBuilder(notary)
+            val txbuilder = ZKTransactionBuilder(notary, zkNetworkParameters)
             txbuilder.addCommand(TestZKCommand(), alice.owningKey)
             txbuilder.addOutputState(publicOutput0) // at 0
             txbuilder.addOutputState(publicOutput1) // at 1

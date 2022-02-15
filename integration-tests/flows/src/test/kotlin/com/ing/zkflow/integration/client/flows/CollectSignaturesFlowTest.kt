@@ -1,6 +1,5 @@
-package com.ing.zkflow.common.client.flows
+package com.ing.zkflow.integration.client.flows
 
-import com.ing.zkflow.common.client.flows.testflows.TestCollectZKSignaturesFlow
 import com.ing.zkflow.node.services.InMemoryUtxoInfoStorage
 import com.ing.zkflow.node.services.InMemoryZKVerifierTransactionStorage
 import com.ing.zkflow.node.services.ServiceNames.ZK_TX_SERVICE

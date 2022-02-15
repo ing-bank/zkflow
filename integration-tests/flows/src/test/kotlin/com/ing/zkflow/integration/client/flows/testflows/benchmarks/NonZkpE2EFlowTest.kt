@@ -1,14 +1,10 @@
-package com.ing.zkflow.common.client.flows
+package com.ing.zkflow.common.client.flows.testflows.benchmarks
 
-import com.ing.zkflow.common.client.flows.testflows.CreateFlow
-import com.ing.zkflow.common.client.flows.testflows.MoveFlow
 import com.ing.zkflow.common.zkp.ZKFlow
-import com.ing.zkflow.node.services.InMemoryUtxoInfoStorage
+import com.ing.zkflow.integration.client.flows.checkVault
 import com.ing.zkflow.node.services.InMemoryZKVerifierTransactionStorage
 import com.ing.zkflow.node.services.ServiceNames.ZK_TX_SERVICE
-import com.ing.zkflow.node.services.ServiceNames.ZK_UTXO_INFO_STORAGE
 import com.ing.zkflow.node.services.ServiceNames.ZK_VERIFIER_TX_STORAGE
-import com.ing.zkflow.notary.ZKNotaryService
 import com.ing.zkflow.testing.zkp.MockZKTransactionCordaService
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
@@ -22,9 +18,11 @@ import net.corda.testing.node.MockNetworkParameters
 import net.corda.testing.node.StartedMockNode
 import net.corda.testing.node.internal.cordappWithPackages
 import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 
-class E2EFlowTest {
+@Disabled("Only enable when using it as a benchmark for E2EFlowTest")
+class NonZkpE2EFlowTest {
     private val mockNet: MockNetwork
     private val notaryNode: StartedMockNode
     private val megaCorpNode: StartedMockNode
@@ -41,7 +39,6 @@ class E2EFlowTest {
                 cordappWithPackages("com.ing.zkflow").withConfig(
                     mapOf(
                         ZK_VERIFIER_TX_STORAGE to InMemoryZKVerifierTransactionStorage::class.qualifiedName!!,
-                        ZK_UTXO_INFO_STORAGE to InMemoryUtxoInfoStorage::class.qualifiedName!!,
                         ZK_TX_SERVICE to MockZKTransactionCordaService::class.qualifiedName!!,
                     )
                 )
@@ -49,8 +46,7 @@ class E2EFlowTest {
             notarySpecs = listOf(
                 MockNetworkNotarySpec(
                     DUMMY_NOTARY_NAME,
-                    validating = false,
-                    className = ZKNotaryService::class.java.name
+                    validating = true
                 )
             ),
             networkParameters = testNetworkParameters(minimumPlatformVersion = ZKFlow.REQUIRED_PLATFORM_VERSION)
@@ -73,27 +69,27 @@ class E2EFlowTest {
     }
 
     @Test
-    fun `End2End test with ZKP notary`() {
-        val createFlow = CreateFlow()
+    fun `End2End test with normal notary as benchmark`() {
+        val createFlow = NonZkpCreateFlow()
         val createFuture = miniCorpNode.startFlow(createFlow)
         mockNet.runNetwork()
         val createStx = createFuture.getOrThrow()
 
         checkVault(createStx, null, miniCorpNode)
 
-        val moveFuture = miniCorpNode.startFlow(MoveFlow(createStx, megaCorp))
+        val moveFuture = miniCorpNode.startFlow(NonZkpMoveFlow(createStx, megaCorp))
         mockNet.runNetwork()
         val moveStx = moveFuture.getOrThrow()
 
         checkVault(moveStx, miniCorpNode, megaCorpNode)
 
-        val moveBackFuture = megaCorpNode.startFlow(MoveFlow(moveStx, miniCorp))
+        val moveBackFuture = megaCorpNode.startFlow(NonZkpMoveFlow(moveStx, miniCorp))
         mockNet.runNetwork()
         val moveBackStx = moveBackFuture.getOrThrow()
 
         checkVault(moveBackStx, megaCorpNode, miniCorpNode)
 
-        val finalMoveFuture = miniCorpNode.startFlow(MoveFlow(moveBackStx, thirdParty))
+        val finalMoveFuture = miniCorpNode.startFlow(NonZkpMoveFlow(moveBackStx, thirdParty))
         mockNet.runNetwork()
         val finalTx = finalMoveFuture.getOrThrow()
 

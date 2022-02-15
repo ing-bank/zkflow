@@ -1,4 +1,5 @@
 
+import com.ing.zkflow.common.network.ZKNetworkParameters
 import com.ing.zkflow.common.transactions.ZKTransactionBuilder
 import com.ing.zkflow.common.transactions.isZKFlowTransaction
 import com.ing.zkflow.testing.dsl.AttachmentResolutionException
@@ -37,16 +38,16 @@ public data class TestZKLedgerDSLInterpreter private constructor(
     private val transactionWithLocations: HashMap<SecureHash, WireTransactionWithLocation> = LinkedHashMap(),
     private val nonVerifiedTransactionWithLocations: HashMap<SecureHash, WireTransactionWithLocation> = HashMap(),
     val zkService: TestDSLZKTransactionService,
-    val serializationSchemeID: Int
+    val zkNetworkParameters: ZKNetworkParameters
 ) : LedgerDSLInterpreter<TestTransactionDSLInterpreter, TestZKTransactionDSLInterpreter> {
     val wireTransactions: List<WireTransaction> get() = transactionWithLocations.values.map { it.transaction }
 
     // We specify [labelToOutputStateAndRefs] just so that Kotlin picks the primary constructor instead of cycling
-    public constructor(services: ServiceHub, zkService: TestDSLZKTransactionService, serializationSchemeID: Int) : this(
+    public constructor(services: ServiceHub, zkService: TestDSLZKTransactionService, zkNetworkParameters: ZKNetworkParameters) : this(
         services,
         labelToOutputStateAndRefs = HashMap(),
         zkService = zkService,
-        serializationSchemeID = serializationSchemeID
+        zkNetworkParameters = zkNetworkParameters
     )
 
     public companion object {
@@ -81,7 +82,7 @@ public data class TestZKLedgerDSLInterpreter private constructor(
             transactionWithLocations = HashMap(transactionWithLocations),
             nonVerifiedTransactionWithLocations = HashMap(nonVerifiedTransactionWithLocations),
             zkService = zkService,
-            serializationSchemeID = serializationSchemeID
+            zkNetworkParameters = zkNetworkParameters
         )
 
     internal fun getTransaction(id: SecureHash): SignedTransaction? {
