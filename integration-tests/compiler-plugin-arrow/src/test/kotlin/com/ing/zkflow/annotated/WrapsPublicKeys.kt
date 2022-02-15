@@ -1,8 +1,8 @@
 package com.ing.zkflow.annotated
 
 import com.ing.zkflow.Converter
-import com.ing.zkflow.annotated.pilot.infra.EdDSAPublicKeyConverter
-import com.ing.zkflow.annotated.pilot.infra.EdDSAPublicKeySurrogate
+import com.ing.zkflow.PublicKey_EdDSA
+import com.ing.zkflow.PublicKey_EdDSA_Converter
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.annotations.corda.EcDSA_K1
 import com.ing.zkflow.annotations.corda.EdDSA
@@ -15,7 +15,7 @@ import java.security.PublicKey
 data class WrapsPublicKeys(
     val eddsa: @EdDSA PublicKey = pkEdDSA,
     val ecdsaK1: @EcDSA_K1 PublicKey = pkEcDSA_K1,
-    val pkFullyCustom: @Converter<PublicKey, EdDSAPublicKeySurrogate>(EdDSAPublicKeyConverter::class) PublicKey = pkEdDSA,
+    val pkFullyCustom: @Converter<PublicKey, PublicKey_EdDSA>(PublicKey_EdDSA_Converter::class) PublicKey = pkEdDSA,
 ) {
     companion object {
         private val pkEdDSA: PublicKey = PublicKeySerializer.fixedPublicKey(Crypto.EDDSA_ED25519_SHA512)

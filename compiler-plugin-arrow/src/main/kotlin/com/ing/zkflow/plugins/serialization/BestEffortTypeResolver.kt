@@ -23,8 +23,8 @@ class BestEffortTypeResolver(ktFile: KtFile) {
         imports?.accept(TypeResolverVisitor, simpleName)?.let {
             try {
                 // Try if the class has been imported from `compiled` imports.
-                val kclass = Class.forName(it.toString()).kotlin
-                BestEffortResolvedType.FullyResolved(kclass)
+                val kClass = Class.forName(it.toString()).kotlin
+                BestEffortResolvedType.FullyResolved(kClass)
             } catch (e: ClassNotFoundException) {
                 // Class has been imported from the userspace.
                 null
