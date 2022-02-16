@@ -447,7 +447,7 @@ class UpgradeParentV2ToParent : ZKTransactionMetadataCommandData {
     }
 
     init {
-        CommandDataSerializerMap.register(this::class)
+        BFLSerializationScheme.ZkCommandDataSerializerMap.register(this::class)
     }
 }
 ```

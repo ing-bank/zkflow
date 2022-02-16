@@ -3,11 +3,11 @@ package com.ing.zkflow.testing.fixtures.contract
 import com.ing.serialization.bfl.annotations.FixedLength
 import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.contracts.ZKOwnableState
+import com.ing.zkflow.common.serialization.BFLSerializationScheme.Companion.ZkCommandDataSerializerMap
+import com.ing.zkflow.common.serialization.BFLSerializationScheme.Companion.ZkContractStateSerializerMap
 import com.ing.zkflow.common.transactions.zkTransactionMetadata
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.common.zkp.metadata.commandMetadata
-import com.ing.zkflow.serialization.CommandDataSerializerMap
-import com.ing.zkflow.serialization.ContractStateSerializerMap
 import com.ing.zkflow.testing.fixtures.contract.TestContract.Create.Companion.verifyCreate
 import com.ing.zkflow.testing.fixtures.contract.TestContract.Move.Companion.verifyMove
 import com.ing.zkflow.testing.fixtures.contract.TestContract.MoveBidirectional.Companion.verifyMoveBidirectional
@@ -39,7 +39,7 @@ public class TestContract : Contract {
         val value: Int = Random().nextInt(1000)
     ) : ZKOwnableState {
         init {
-            ContractStateSerializerMap.register(this::class)
+            ZkContractStateSerializerMap.register(this::class)
         }
 
         public companion object {
@@ -68,7 +68,7 @@ public class TestContract : Contract {
         }
 
         init {
-            CommandDataSerializerMap.register(this::class)
+            ZkCommandDataSerializerMap.register(this::class)
         }
 
         public companion object {
@@ -98,7 +98,7 @@ public class TestContract : Contract {
         }
 
         init {
-            CommandDataSerializerMap.register(this::class)
+            ZkCommandDataSerializerMap.register(this::class)
         }
 
         public companion object {
@@ -130,7 +130,7 @@ public class TestContract : Contract {
         }
 
         init {
-            CommandDataSerializerMap.register(this::class)
+            ZkCommandDataSerializerMap.register(this::class)
         }
     }
 
@@ -149,7 +149,7 @@ public class TestContract : Contract {
         }
 
         init {
-            CommandDataSerializerMap.register(this::class)
+            ZkCommandDataSerializerMap.register(this::class)
         }
 
         public companion object {
@@ -182,7 +182,7 @@ public class TestContract : Contract {
         }
 
         init {
-            CommandDataSerializerMap.register(this::class)
+            ZkCommandDataSerializerMap.register(this::class)
         }
 
         public companion object {
@@ -225,7 +225,7 @@ public class TestContract : Contract {
         }
 
         init {
-            CommandDataSerializerMap.register(this::class)
+            ZkCommandDataSerializerMap.register(this::class)
         }
 
         public companion object {

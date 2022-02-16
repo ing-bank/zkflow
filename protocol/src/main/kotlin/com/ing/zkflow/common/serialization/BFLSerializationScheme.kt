@@ -4,8 +4,6 @@ import com.ing.zkflow.common.network.ZKNetworkParameters
 import com.ing.zkflow.common.serialization.ZKCustomSerializationScheme.Companion.CONTEXT_KEY_TRANSACTION_METADATA
 import com.ing.zkflow.common.serialization.ZKCustomSerializationScheme.Companion.CONTEXT_KEY_ZK_NETWORK_PARAMETERS
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
-import com.ing.zkflow.serialization.CommandDataSerializerMap
-import com.ing.zkflow.serialization.ContractStateSerializerMap
 import com.ing.zkflow.serialization.SerializerMap
 import com.ing.zkflow.serialization.SerializerMapError
 import com.ing.zkflow.serialization.SerializersModuleRegistry
@@ -77,7 +75,7 @@ open class BFLSerializationScheme : CustomSerializationScheme {
 
         return when {
             TransactionState::class.java.isAssignableFrom(clazz) -> {
-                val (stateStrategy, message) = ContractStateSerializerMap.extractSerializerAndSerializedData(
+                val (stateStrategy, message) = ZkContractStateSerializerMap.extractSerializerAndSerializedData(
                     serializedData
                 )
 
@@ -110,7 +108,7 @@ open class BFLSerializationScheme : CustomSerializationScheme {
             }
 
             CommandData::class.java.isAssignableFrom(clazz) -> {
-                val (commandStrategy, message) = CommandDataSerializerMap.extractSerializerAndSerializedData(
+                val (commandStrategy, message) = ZkCommandDataSerializerMap.extractSerializerAndSerializedData(
                     serializedData
                 )
 
@@ -152,7 +150,7 @@ open class BFLSerializationScheme : CustomSerializationScheme {
                 // The following cast is OK, its validity is guaranteed by the inner structure of `ContractStateSerializerMap`.
                 // If `[]`-access succeeds, then the cast MUST also succeed.
                 @Suppress("UNCHECKED_CAST")
-                val stateStrategy = ContractStateSerializerMap[state::class] as KSerializer<ContractState>
+                val stateStrategy = ZkContractStateSerializerMap[state::class] as KSerializer<ContractState>
 
                 val strategy = TransactionStateSerializer(stateStrategy)
 
@@ -166,7 +164,7 @@ open class BFLSerializationScheme : CustomSerializationScheme {
                 /**
                  * TransactionState is always serialized with BFL, even  in non-ZKP txs, so they can be consumed by ZKP txs
                  */
-                ContractStateSerializerMap.prefixWithIdentifier(
+                ZkContractStateSerializerMap.prefixWithIdentifier(
                     state::class,
                     debugSerialization.first
                 )
@@ -177,12 +175,12 @@ open class BFLSerializationScheme : CustomSerializationScheme {
                 // If `[]`-access succeeds, then the cast MUST also succeed.
                 @Suppress("UNCHECKED_CAST")
                 val commandStrategy = try {
-                    CommandDataSerializerMap[obj::class]
+                    ZkCommandDataSerializerMap[obj::class]
                 } catch (e: SerializerMapError.ClassNotRegistered) {
                     serializersModule.serializer(obj::class.java)
                 } as KSerializer<CommandData>
 
-                CommandDataSerializerMap.prefixWithIdentifier(
+                ZkCommandDataSerializerMap.prefixWithIdentifier(
                     obj::class,
                     obliviousSerialize(obj, commandStrategy, serializersModule = serializersModule)
                 )

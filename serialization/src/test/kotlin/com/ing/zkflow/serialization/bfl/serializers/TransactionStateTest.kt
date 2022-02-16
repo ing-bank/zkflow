@@ -1,8 +1,6 @@
 package com.ing.zkflow.serialization.bfl.serializers
 
 import com.ing.serialization.bfl.annotations.FixedLength
-import com.ing.zkflow.serialization.CommandDataSerializerMap
-import com.ing.zkflow.serialization.ContractStateSerializerMap
 import com.ing.zkflow.serialization.bfl.assertRoundTripSucceeds
 import com.ing.zkflow.serialization.bfl.assertSameSize
 import kotlinx.serialization.Serializable
@@ -10,7 +8,6 @@ import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.contextual
 import kotlinx.serialization.modules.plus
 import net.corda.core.contracts.BelongsToContract
-import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.Contract
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.SignatureAttachmentConstraint
@@ -57,10 +54,6 @@ private class MockAssetContract : Contract {
         @FixedLength([1])
         override val participants: List<@Serializable(with = AnonymousPartySerializer::class) AnonymousParty> = listOf(owner)
 
-        init {
-            ContractStateSerializerMap.register(this::class)
-        }
-
         companion object {
             fun newTxState(): TransactionState<MockAsset> {
                 val notary = TestIdentity.fresh("Notary")
@@ -72,13 +65,6 @@ private class MockAssetContract : Contract {
                     constraint = SignatureAttachmentConstraint(notary.publicKey)
                 )
             }
-        }
-    }
-
-    @Serializable
-    class Issue : CommandData {
-        init {
-            CommandDataSerializerMap.register(this::class)
         }
     }
 
