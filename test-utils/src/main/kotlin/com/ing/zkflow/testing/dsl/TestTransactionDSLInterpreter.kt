@@ -1,6 +1,7 @@
 @file:Suppress("DuplicatedCode") // Duplication of this DSL is unavoidable due to Corda's design
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder
+import com.ing.zkflow.common.serialization.ZKCustomSerializationScheme
 import com.ing.zkflow.testing.dsl.DuplicateOutputLabel
 import com.ing.zkflow.testing.dsl.EnforceVerifyOrFail
 import com.ing.zkflow.testing.dsl.LedgerDSL
@@ -32,6 +33,7 @@ import net.corda.core.serialization.internal.AttachmentsClassLoaderCache
 import net.corda.core.serialization.internal.AttachmentsClassLoaderCacheImpl
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
+import net.corda.core.transactions.WireTransaction
 import net.corda.node.services.DbTransactionsResolver
 import net.corda.node.services.attachments.NodeAttachmentTrustCalculator
 import net.corda.node.services.persistence.AttachmentStorageInternal
@@ -122,8 +124,16 @@ public data class TestTransactionDSLInterpreter private constructor(
             labelToIndexMap = HashMap(labelToIndexMap)
         )
 
-    internal fun toWireTransaction() =
-        transactionBuilder.toWireTransaction(services, ledgerInterpreter.zkNetworkParameters.serializationSchemeId)
+    internal fun toWireTransaction(): WireTransaction {
+        val serializationProperties = mapOf<Any, Any>(
+            ZKCustomSerializationScheme.CONTEXT_KEY_ZK_NETWORK_PARAMETERS to ledgerInterpreter.zkNetworkParameters
+        )
+        return transactionBuilder.toWireTransaction(
+            services,
+            ledgerInterpreter.zkNetworkParameters.serializationSchemeId,
+            serializationProperties
+        )
+    }
 
     override fun input(stateRef: StateRef) {
         val state = ledgerInterpreter.resolveStateRef<ContractState>(stateRef)
