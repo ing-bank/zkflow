@@ -32,7 +32,7 @@ class ZKVerifierTransactionTest {
     )
     private val notary = TestIdentity.fixed("Notary").party
     private val alice = TestIdentity.fixed("Alice").party.anonymise()
-    private val zkNetworkParameters = MockZKNetworkParameters
+    private val zkNetworkParameters = MockZKNetworkParameters()
 
     @Test
     fun `test filtering outputs 1`() {
