@@ -17,10 +17,6 @@ dependencies {
     testImplementation(project(":test-utils"))
     testImplementation(project(":protocol"))
 
-    val cordaVersion: String by project
-    testImplementation("net.corda:corda-core:$cordaVersion")
-    testImplementation("net.corda:corda-node-driver:$cordaVersion")
-
     implementation(project(":compiler-plugin-ksp"))
     ksp(project(":compiler-plugin-ksp"))
 }

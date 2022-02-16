@@ -25,7 +25,8 @@ dependencies {
     // These are required for our implementation and included in the JAR, we also expose their API for modules that depend on us.
     api(project(":utils"))
     api(project(":crypto"))
-    api(project(":serialization"))
+    api(project(":serialization")) // TODO: Remove when superseded by serialization-candidate
+    api(project(":serialization-candidate"))
     api(project(":annotations"))
 
     // For Witness JSON serialization

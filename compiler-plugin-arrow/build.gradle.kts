@@ -13,6 +13,7 @@ dependencies {
     implementation(project(":annotations"))
     implementation(project(":utils"))
 
+    // TODO: Check if we can make this compileOnly
     val cordaVersion: String by project
     implementation("net.corda:corda-core:$cordaVersion")
 }
