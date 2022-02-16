@@ -14,9 +14,8 @@ dependencies {
     val kotlinxSerializationVersion: String by project
     api("org.jetbrains.kotlinx:kotlinx-serialization-core:$kotlinxSerializationVersion")
 
-    // TODO: check if this can be made compileOnly
     val cordaVersion: String by project
-    implementation("net.corda:corda-core:$cordaVersion")
+    compileOnly("net.corda:corda-core:$cordaVersion")
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {

@@ -18,6 +18,8 @@ dependencies {
     testImplementation(project(":protocol"))
     testImplementation(project(":integration-tests:fixtures"))
 
+    val cordaVersion: String by project
+    kotlinCompilerPluginClasspath("net.corda:corda-core:$cordaVersion")
     kotlinCompilerPluginClasspath(project(":utils"))
     kotlinCompilerPluginClasspath(project(":annotations"))
     kotlinCompilerPluginClasspath(project(":serialization-candidate"))

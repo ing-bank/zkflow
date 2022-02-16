@@ -37,11 +37,13 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
 
     val cordaReleaseGroup = "net.corda"
-    val cordaVersion = "4.8"
+    val cordaVersion = "4.8.5"
     cordaCompile("$cordaReleaseGroup:corda-core:$cordaVersion")
     cordaRuntime("$cordaReleaseGroup:corda:$cordaVersion")
     cordaCompile("$cordaReleaseGroup:corda-node:$cordaVersion")
     cordaCompile("$cordaReleaseGroup:corda-jackson:$cordaVersion")
+
+    kotlinCompilerPluginClasspath("net.corda:corda-core:$cordaVersion")
 
     testImplementation("$cordaReleaseGroup:corda-node-driver:$cordaVersion")
     testImplementation("$cordaReleaseGroup:corda-test-utils:$cordaVersion")

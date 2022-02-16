@@ -18,9 +18,10 @@ dependencies {
     implementation(project(":protocol"))
 
     val cordaVersion: String by project
-    implementation("net.corda:corda-core:$cordaVersion")
+    compileOnly("net.corda:corda-core:$cordaVersion")
 
     val kotlinxSerializationVersion: String by project
+    kotlinCompilerPluginClasspath("net.corda:corda-core:$cordaVersion")
     kotlinCompilerPluginClasspath(project(":utils"))
     kotlinCompilerPluginClasspath(project(":annotations"))
     kotlinCompilerPluginClasspath(project(":serialization-candidate"))
