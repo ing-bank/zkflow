@@ -76,22 +76,22 @@ steps:
       artifact: 'Detekt report'
       publishLocation: 'pipeline'
 
-#  - task: Gradle@2
-#    displayName: 'ZKDapp Tester build'
-#    inputs:
-#      workingDirectory: 'zkdapp-tester'
-#      gradleWrapperFile: 'gradlew'
-#      gradleOptions: '-Xmx3072m'
-#      javaHomeOption: 'JDKVersion'
-#      jdkVersionOption: '1.8'
-#      jdkArchitectureOption: 'x64'
-#      publishJUnitResults: true
-#      testResultsFiles: '**/TEST-*.xml'
-#      tasks: 'build'
-#      options: '--no-build-cache --rerun-tasks --no-daemon --no-parallel'
-#    env:
-#      GITHUB_USERNAME: $(github.username)
-#      GITHUB_TOKEN: $(github.token)
+  - task: Gradle@2
+    displayName: 'ZKDapp Tester build'
+    inputs:
+      workingDirectory: 'zkdapp-tester'
+      gradleWrapperFile: 'gradlew'
+      gradleOptions: '-Xmx3072m'
+      javaHomeOption: 'JDKVersion'
+      jdkVersionOption: '1.8'
+      jdkArchitectureOption: 'x64'
+      publishJUnitResults: true
+      testResultsFiles: '**/TEST-*.xml'
+      tasks: 'build'
+      options: '--no-build-cache --rerun-tasks --no-daemon --no-parallel'
+    env:
+      GITHUB_USERNAME: $(github.username)
+      GITHUB_TOKEN: $(github.token)
 
   - script: |
       # stop the Gradle daemon to ensure no files are left open (impacting the save cache operation later)
