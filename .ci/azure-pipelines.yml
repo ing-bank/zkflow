@@ -38,6 +38,14 @@ steps:
         tar xvzf $(System.ArtifactsDirectory)/zinc-linux.tar.gz --directory $(Pipeline.Workspace)
         echo "##vso[task.prependpath]$(Pipeline.Workspace)/zinc-linux/"
 
+  - task: Bash@3
+    displayName: 'Confirm Zinc in PATH'
+    inputs:
+      targetType: 'inline'
+      script: |
+        echo $PATH
+        znc --version
+
   - task: Gradle@2
     displayName: 'ZKFlow build'
     inputs:

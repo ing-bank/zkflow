@@ -60,26 +60,29 @@ task("checkJavaVersion") {
     }
 }
 
-val zincVersionRegex = ".*ZINC_VERSION: \"v(.*)\".*".toRegex()
 val zincVersionOutputRegex = "^znc (.*)$".toRegex()
 task("checkZincVersion") {
-    val zincVersion: String by project
-    ByteArrayOutputStream().use { os ->
-        val result = exec {
-            executable = "znc"
-            args = listOf("--version")
-            standardOutput = os
-        }
-        if (result.exitValue != 0) {
-            throw IllegalStateException(
-                "ERROR: Zinc was not found on this system, please install Zinc version '$zincVersion'."
-            )
-        } else {
-            val zincVersion = os.toString().trim().replace(zincVersionOutputRegex, "$1")
-            if (zincVersion != zincVersion) {
+    doLast {
+        val zincVersion: String by project
+        ByteArrayOutputStream().use { os ->
+            val result = exec {
+                executable = "znc"
+                args = listOf("--version")
+                standardOutput = os
+                errorOutput = os
+                isIgnoreExitValue = true
+            }
+            if (result.exitValue != 0) {
                 throw IllegalStateException(
-                    "ERROR: Zinc version '$zincVersion' required, but '$zincVersion' found. Please update zinc."
+                    "ERROR: Zinc was not found on this system, please install Zinc version '$zincVersion'."
                 )
+            } else {
+                val actualZincVersion = os.toString().trim().replace(zincVersionOutputRegex, "$1")
+                if (actualZincVersion != zincVersion) {
+                    throw IllegalStateException(
+                        "ERROR: Zinc version '$zincVersion' required, but '$actualZincVersion' found. Please update zinc."
+                    )
+                }
             }
         }
     }
@@ -187,33 +190,6 @@ subprojects {
 
         }
 
-        configurations.implementation {
-            // Exclude dependencies of corda that we don't need. For security reasons mostly: less vulnerabilities
-            // We can do this, because users of ZKFlow will include all of the cordaCompile and cordaRuntime deps themselves:
-            // https://docs.r3.com/en/platform/corda/4.8/open-source/cordapp-build-systems.html#set-corda-dependencies
-
-            exclude("org.apache.activemq", "artemis-server")
-
-            // Apache Shiro: authentication, authorization and session management.
-            exclude("org.apache.shiro", "shiro-core")
-
-            exclude("org.hibernate", "hibernate-core")
-
-            // Corda DB migrations
-            exclude("com.fasterxml.jackson.core", "jackson-databind")
-            // We don't use web server
-            exclude("io.netty", "netty-codec")
-
-            // For H2 database support in persistence
-            exclude("com.h2database", "h2")
-
-            // Hibernate: an object relational mapper for writing state objects to the database automatically.
-            exclude("org.hibernate", "hibernate-core")
-
-            exclude("net.corda", "corda-shell")
-            exclude("net.corda", "corda-rpc")
-        }
-
         // Load the necessary dependencies
         dependencies.apply {
             val kotlinVersion: String by project
@@ -229,10 +205,8 @@ subprojects {
             add("testRuntimeOnly", "org.junit.jupiter:junit-jupiter-engine")
             add("testImplementation", "io.kotest:kotest-assertions-core:$kotestVersion")
 
-
             add("spotbugsPlugins", "com.h3xstream.findsecbugs:findsecbugs-plugin:1.11.0")
             add("implementation", "com.github.spotbugs:spotbugs-annotations:4.5.3")
-
         }
 
         configure<com.github.spotbugs.snom.SpotBugsExtension> {
