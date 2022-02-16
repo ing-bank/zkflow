@@ -14,7 +14,7 @@ cordapp {
     targetPlatformVersion(platformVersion.toInt())
     minimumPlatformVersion(platformVersion.toInt())
     workflow {
-        name("ZKFlow Protocol App")
+        name("ZKFlow Protocol Flows and Services")
         vendor("ING Bank NV")
         licence("Apache License, Version 2.0")
         versionId(1)
@@ -36,9 +36,11 @@ dependencies {
     val cordaReleaseGroup: String by project
     val cordaVersion: String by project
     cordaCompile("$cordaReleaseGroup:corda-core:$cordaVersion")
-    cordaRuntime("$cordaReleaseGroup:corda:$cordaVersion")
     cordaCompile("$cordaReleaseGroup:corda-node:$cordaVersion")
-    cordaCompile("$cordaReleaseGroup:corda-jackson:$cordaVersion")
+    cordaRuntime("$cordaReleaseGroup:corda:$cordaVersion")
+
+    val log4jVersion: String by project
+    cordaCompile("org.apache.logging.log4j:log4j-slf4j-impl:$log4jVersion")
 
     testImplementation("$cordaReleaseGroup:corda-node-driver:$cordaVersion")
     testImplementation("$cordaReleaseGroup:corda-test-utils:$cordaVersion")

@@ -187,6 +187,33 @@ subprojects {
 
         }
 
+        configurations.implementation {
+            // Exclude dependencies of corda that we don't need. For security reasons mostly: less vulnerabilities
+            // We can do this, because users of ZKFlow will include all of the cordaCompile and cordaRuntime deps themselves:
+            // https://docs.r3.com/en/platform/corda/4.8/open-source/cordapp-build-systems.html#set-corda-dependencies
+
+            exclude("org.apache.activemq", "artemis-server")
+
+            // Apache Shiro: authentication, authorization and session management.
+            exclude("org.apache.shiro", "shiro-core")
+
+            exclude("org.hibernate", "hibernate-core")
+
+            // Corda DB migrations
+            exclude("com.fasterxml.jackson.core", "jackson-databind")
+            // We don't use web server
+            exclude("io.netty", "netty-codec")
+
+            // For H2 database support in persistence
+            exclude("com.h2database", "h2")
+
+            // Hibernate: an object relational mapper for writing state objects to the database automatically.
+            exclude("org.hibernate", "hibernate-core")
+
+            exclude("net.corda", "corda-shell")
+            exclude("net.corda", "corda-rpc")
+        }
+
         // Load the necessary dependencies
         dependencies.apply {
             val kotlinVersion: String by project
