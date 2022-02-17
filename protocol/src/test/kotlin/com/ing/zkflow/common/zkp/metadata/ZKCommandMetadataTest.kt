@@ -4,9 +4,9 @@ import com.ing.serialization.bfl.annotations.FixedLength
 import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.contracts.ZKContractState
 import com.ing.zkflow.common.contracts.ZKOwnableState
+import com.ing.zkflow.common.serialization.BFLSerializationScheme.Companion.ZkCommandDataSerializerMap
+import com.ing.zkflow.common.serialization.BFLSerializationScheme.Companion.ZkContractStateSerializerMap
 import com.ing.zkflow.common.transactions.zkTransactionMetadata
-import com.ing.zkflow.serialization.CommandDataSerializerMap
-import com.ing.zkflow.serialization.ContractStateSerializerMap
 import com.ing.zkflow.serialization.bfl.serializers.AnonymousPartySerializer
 import com.ing.zkflow.testing.fixtures.contract.TestContract.TestState
 import com.ing.zkflow.testing.fixtures.state.DummyState
@@ -134,7 +134,7 @@ class MockAuditContract : Contract {
         val approver: AnonymousParty
     ) : ZKContractState {
         init {
-            ContractStateSerializerMap.register(this::class)
+            ZkContractStateSerializerMap.register(this::class)
         }
 
         @FixedLength([1])
@@ -149,7 +149,7 @@ class MockAuditContract : Contract {
     @Serializable
     class Approve : ZKCommandData {
         init {
-            CommandDataSerializerMap.register(this::class)
+            ZkCommandDataSerializerMap.register(this::class)
         }
 
         @Transient
@@ -177,7 +177,7 @@ class MockAssetContract : Contract {
     ) : ZKOwnableState {
 
         init {
-            ContractStateSerializerMap.register(this::class)
+            ZkContractStateSerializerMap.register(this::class)
         }
 
         @FixedLength([1])
@@ -190,7 +190,7 @@ class MockAssetContract : Contract {
     @Serializable
     class Move : ZKCommandData {
         init {
-            CommandDataSerializerMap.register(this::class)
+            ZkCommandDataSerializerMap.register(this::class)
         }
 
         @Transient
@@ -206,7 +206,7 @@ class MockAssetContract : Contract {
     @Serializable
     class IssueWithWrongCorDappCount : ZKCommandData {
         init {
-            CommandDataSerializerMap.register(this::class)
+            ZkCommandDataSerializerMap.register(this::class)
         }
 
         @Transient
@@ -220,7 +220,7 @@ class MockAssetContract : Contract {
     @Serializable
     class Issue : ZKCommandData {
         init {
-            CommandDataSerializerMap.register(this::class)
+            ZkCommandDataSerializerMap.register(this::class)
         }
 
         @Transient

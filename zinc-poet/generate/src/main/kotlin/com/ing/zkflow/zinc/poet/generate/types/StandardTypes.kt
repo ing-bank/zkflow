@@ -21,6 +21,7 @@ import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.serialization.bfl.serializers.CordaSerializers.CLASS_NAME_SIZE
 import com.ing.zkflow.serialization.bfl.serializers.SecureHashSurrogate
 import com.ing.zkflow.zinc.poet.generate.ZincTypeResolver
+import net.corda.core.contracts.AlwaysAcceptAttachmentConstraint
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.HashAttachmentConstraint
 import net.corda.core.contracts.SignatureAttachmentConstraint
@@ -39,6 +40,9 @@ private data class WrapsSignatureAttachmentConstraint(val constraint: @EdDSA Sig
 
 @ZKP
 private data class WrapsHashAttachmentConstraint(val constraint: @Sha256 HashAttachmentConstraint)
+
+@ZKP
+private data class WrapsAlwaysAcceptAttachmentConstraint(val constraint: AlwaysAcceptAttachmentConstraint)
 
 private fun BflModule.getSingleFieldType(): BflModule = (this as BflStruct).fields.single().type as BflModule
 
@@ -75,10 +79,15 @@ class StandardTypes(
         zincTypeResolver.zincTypeOf(WrapsHashAttachmentConstraint::class).getSingleFieldType()
     }
 
+    private val alwaysAcceptAttachmentConstraint by lazy {
+        zincTypeResolver.zincTypeOf(WrapsAlwaysAcceptAttachmentConstraint::class).getSingleFieldType()
+    }
+
     private fun attachmentConstraintModule(): BflModule =
         when (val attachmentConstraintClass = zkNetworkParameters.attachmentConstraintType.kClass) {
             SignatureAttachmentConstraint::class -> signatureAttachmentConstraint
             HashAttachmentConstraint::class -> hashAttachmentConstraint
+            AlwaysAcceptAttachmentConstraint::class -> alwaysAcceptAttachmentConstraint
             else -> error("Enable $attachmentConstraintClass for attachmentConstraintModule in ${StandardTypes::class}")
         }
 

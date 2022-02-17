@@ -11,6 +11,7 @@ sealed class SerializerMapError(message: String) : IllegalArgumentException(mess
 
     class ClassNotRegistered : SerializerMapError {
         constructor(klass: KClass<*>) : super("No registration for Class ${klass.qualifiedName}")
+        constructor(klass: KClass<*>, message: String) : super("No registration for Class ${klass.qualifiedName}. $message")
         constructor(id: Int) : super("No Class registered for id = $id")
     }
 }

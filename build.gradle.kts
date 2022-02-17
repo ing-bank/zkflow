@@ -60,26 +60,29 @@ task("checkJavaVersion") {
     }
 }
 
-val zincVersionRegex = ".*ZINC_VERSION: \"v(.*)\".*".toRegex()
 val zincVersionOutputRegex = "^znc (.*)$".toRegex()
 task("checkZincVersion") {
-    val zincVersion: String by project
-    ByteArrayOutputStream().use { os ->
-        val result = exec {
-            executable = "znc"
-            args = listOf("--version")
-            standardOutput = os
-        }
-        if (result.exitValue != 0) {
-            throw IllegalStateException(
-                "ERROR: Zinc was not found on this system, please install Zinc version '$zincVersion'."
-            )
-        } else {
-            val zincVersion = os.toString().trim().replace(zincVersionOutputRegex, "$1")
-            if (zincVersion != zincVersion) {
+    doLast {
+        val zincVersion: String by project
+        ByteArrayOutputStream().use { os ->
+            val result = exec {
+                executable = "znc"
+                args = listOf("--version")
+                standardOutput = os
+                errorOutput = os
+                isIgnoreExitValue = true
+            }
+            if (result.exitValue != 0) {
                 throw IllegalStateException(
-                    "ERROR: Zinc version '$zincVersion' required, but '$zincVersion' found. Please update zinc."
+                    "ERROR: Zinc was not found on this system, please install Zinc version '$zincVersion'."
                 )
+            } else {
+                val actualZincVersion = os.toString().trim().replace(zincVersionOutputRegex, "$1")
+                if (actualZincVersion != zincVersion) {
+                    throw IllegalStateException(
+                        "ERROR: Zinc version '$zincVersion' required, but '$actualZincVersion' found. Please update zinc."
+                    )
+                }
             }
         }
     }
@@ -202,10 +205,8 @@ subprojects {
             add("testRuntimeOnly", "org.junit.jupiter:junit-jupiter-engine")
             add("testImplementation", "io.kotest:kotest-assertions-core:$kotestVersion")
 
-
             add("spotbugsPlugins", "com.h3xstream.findsecbugs:findsecbugs-plugin:1.11.0")
             add("implementation", "com.github.spotbugs:spotbugs-annotations:4.5.3")
-
         }
 
         configure<com.github.spotbugs.snom.SpotBugsExtension> {

@@ -11,17 +11,16 @@ dependencies {
     implementation(project(":zinc-poet:bfl"))
     implementation(project(":zinc-poet:poet"))
     implementation(project(":protocol"))
-    implementation(project(":serialization-candidate"))
-    implementation(project(":annotations"))
 
     val kotlinxSerializationVersion: String by project
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:$kotlinxSerializationVersion")
     testImplementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
 
+    val cordaVersion: String by project
+    kotlinCompilerPluginClasspath("net.corda:corda-core:$cordaVersion")
     kotlinCompilerPluginClasspath(project(":utils"))
     kotlinCompilerPluginClasspath(project(":annotations"))
     kotlinCompilerPluginClasspath(project(":serialization-candidate"))
-    kotlinCompilerPluginClasspath("org.jetbrains.kotlinx:kotlinx-serialization-core-jvm:$kotlinxSerializationVersion")
 
     val arrowMetaVersion: String by project
     kotlinCompilerPluginClasspath("io.arrow-kt:arrow-meta:$arrowMetaVersion")

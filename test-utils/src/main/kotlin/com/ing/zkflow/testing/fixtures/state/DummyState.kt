@@ -1,7 +1,7 @@
 package com.ing.zkflow.testing.fixtures.state
 
 import com.ing.serialization.bfl.annotations.FixedLength
-import com.ing.zkflow.serialization.ContractStateSerializerMap
+import com.ing.zkflow.common.serialization.BFLSerializationScheme.Companion.ZkContractStateSerializerMap
 import com.ing.zkflow.testing.fixtures.contract.DummyContract
 import kotlinx.serialization.Polymorphic
 import kotlinx.serialization.Serializable
@@ -25,7 +25,7 @@ public data class DummyState(
     @FixedLength([2]) override val participants: List<@Polymorphic AbstractParty>
 ) : ContractState {
     init {
-        ContractStateSerializerMap.register(this::class)
+        ZkContractStateSerializerMap.register(this::class)
     }
 
     public companion object {

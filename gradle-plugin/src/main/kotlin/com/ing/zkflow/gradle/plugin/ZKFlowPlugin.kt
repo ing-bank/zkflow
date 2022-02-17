@@ -83,7 +83,6 @@ class ZKFlowPlugin : Plugin<Project> {
                     Pair(ZKFLOW_GROUP, "serialization-candidate"),
                     Pair("org.jetbrains.kotlinx", "kotlinx-serialization-core-jvm"),
                     Pair("io.arrow-kt", "arrow-meta"),
-                    Pair("net.corda", "corda-core")
                 )
 
                 val resolvedArtifacts = arrowCompilerPluginConfiguration.resolvedConfiguration.resolvedArtifacts

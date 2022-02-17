@@ -1,11 +1,11 @@
 package com.ing.zkflow.common.transactions
 
 import com.ing.zkflow.common.contracts.ZKCommandData
+import com.ing.zkflow.common.serialization.BFLSerializationScheme.Companion.ZkCommandDataSerializerMap
 import com.ing.zkflow.common.zkp.ZKFlow
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.common.zkp.metadata.commandMetadata
 import com.ing.zkflow.common.zkp.metadata.packageName
-import com.ing.zkflow.serialization.CommandDataSerializerMap
 import com.ing.zkflow.testing.fixed
 import com.ing.zkflow.testing.fixtures.contract.TestContract
 import com.ing.zkflow.testing.fixtures.contract.TestContract.TestState
@@ -32,7 +32,7 @@ class ZKVerifierTransactionTest {
     )
     private val notary = TestIdentity.fixed("Notary").party
     private val alice = TestIdentity.fixed("Alice").party.anonymise()
-    private val zkNetworkParameters = MockZKNetworkParameters
+    private val zkNetworkParameters = MockZKNetworkParameters()
 
     @Test
     fun `test filtering outputs 1`() {
@@ -50,7 +50,7 @@ class ZKVerifierTransactionTest {
                 }
 
                 init {
-                    CommandDataSerializerMap.register(this::class)
+                    ZkCommandDataSerializerMap.register(this::class)
                 }
             }
 
@@ -98,7 +98,7 @@ class ZKVerifierTransactionTest {
                 }
 
                 init {
-                    CommandDataSerializerMap.register(this::class)
+                    ZkCommandDataSerializerMap.register(this::class)
                 }
             }
 
@@ -147,7 +147,7 @@ class ZKVerifierTransactionTest {
                 }
 
                 init {
-                    CommandDataSerializerMap.register(this::class)
+                    ZkCommandDataSerializerMap.register(this::class)
                 }
             }
 

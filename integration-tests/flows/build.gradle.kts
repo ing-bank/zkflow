@@ -14,24 +14,8 @@ repositories {
 }
 
 dependencies {
-    // implementation(project(":annotations"))
-    implementation(project(":test-utils"))
-    implementation(project(":protocol"))
-    // implementation(project(":serialization-candidate"))
-
-    val cordaVersion: String by project
-    implementation("net.corda:corda-core:$cordaVersion")
-
-    // val kotlinxSerializationVersion: String by project
-    // implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:$kotlinxSerializationVersion")
-
-    // kotlinCompilerPluginClasspath(project(":utils"))
-    // kotlinCompilerPluginClasspath(project(":annotations"))
-    // kotlinCompilerPluginClasspath(project(":serialization-candidate"))
-    // kotlinCompilerPluginClasspath("org.jetbrains.kotlinx:kotlinx-serialization-core-jvm:$kotlinxSerializationVersion")
-    //
-    // val arrowMetaVersion: String by project
-    // kotlinCompilerPluginClasspath("io.arrow-kt:arrow-meta:$arrowMetaVersion")
+    testImplementation(project(":test-utils"))
+    testImplementation(project(":protocol"))
 
     implementation(project(":compiler-plugin-ksp"))
     ksp(project(":compiler-plugin-ksp"))

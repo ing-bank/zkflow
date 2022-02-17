@@ -1,5 +1,7 @@
 package com.ing.zkflow.zinc.poet.generate
 
+import com.ing.zkflow.common.network.ZKAttachmentConstraintType
+import com.ing.zkflow.common.zkp.ZKFlow.DEFAULT_ZKFLOW_HASH_ATTACHMENT_HASHING_ALGORITHM
 import com.ing.zkflow.testing.zkp.MockZKNetworkParameters
 import com.ing.zkflow.util.runCommand
 import com.ing.zkflow.zinc.poet.generate.types.CommandContextFactory
@@ -27,7 +29,14 @@ import kotlin.time.measureTime
 internal class CircuitGeneratorTest {
     private val zincTypeResolver = ZincTypeGeneratorResolver(ZincTypeGenerator)
 
-    private val standardTypes = StandardTypes(zincTypeResolver, MockZKNetworkParameters)
+    private val standardTypes = StandardTypes(
+        zincTypeResolver,
+        MockZKNetworkParameters(
+            attachmentConstraintType = ZKAttachmentConstraintType.HashAttachmentConstraintType(
+                DEFAULT_ZKFLOW_HASH_ATTACHMENT_HASHING_ALGORITHM
+            ) // TODO: set this back to alwaysaccept once Zinc Poet allows it.
+        )
+    )
 
     @ExperimentalTime
     @Test
@@ -47,7 +56,7 @@ internal class CircuitGeneratorTest {
         }
 
         val result = logExecutionTime("Running the circuit using `zargo run`") {
-            tempDir.runCommand("zargo run", 120)
+            tempDir.runCommand("zargo run", 240)
         }
 
         result.second shouldBe ""

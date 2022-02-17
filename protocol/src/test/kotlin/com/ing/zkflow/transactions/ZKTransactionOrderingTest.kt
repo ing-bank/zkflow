@@ -6,6 +6,8 @@ import com.ing.zkflow.common.contracts.ZKContractState
 import com.ing.zkflow.common.network.ZKAttachmentConstraintType
 import com.ing.zkflow.common.network.ZKNetworkParameters
 import com.ing.zkflow.common.network.ZKNotaryInfo
+import com.ing.zkflow.common.serialization.BFLSerializationScheme.Companion.ZkCommandDataSerializerMap
+import com.ing.zkflow.common.serialization.BFLSerializationScheme.Companion.ZkContractStateSerializerMap
 import com.ing.zkflow.common.transactions.UtxoInfo
 import com.ing.zkflow.common.transactions.ZKTransactionBuilder
 import com.ing.zkflow.common.zkp.Witness
@@ -14,8 +16,6 @@ import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.common.zkp.metadata.commandMetadata
 import com.ing.zkflow.common.zkp.metadata.packageName
 import com.ing.zkflow.crypto.BLAKE2S256
-import com.ing.zkflow.serialization.CommandDataSerializerMap
-import com.ing.zkflow.serialization.ContractStateSerializerMap
 import com.ing.zkflow.testing.fixtures.contract.DummyContract
 import com.ing.zkflow.testing.fixtures.state.DummyState
 import com.ing.zkflow.testing.withCustomSerializationEnv
@@ -196,7 +196,7 @@ class LocalContract : Contract {
     @Serializable
     class Create : ZKCommandData {
         init {
-            CommandDataSerializerMap.register(this::class)
+            ZkCommandDataSerializerMap.register(this::class)
         }
 
         @Transient
@@ -236,7 +236,7 @@ class DummyZKStateA(
     @FixedLength([2]) override val participants: List<@Contextual AnonymousParty>
 ) : ZKContractState {
     init {
-        ContractStateSerializerMap.register(this::class)
+        ZkContractStateSerializerMap.register(this::class)
     }
 
     companion object {
@@ -269,7 +269,7 @@ class DummyZKStateB(
     @FixedLength([2]) override val participants: List<@Contextual AnonymousParty>
 ) : ZKContractState {
     init {
-        ContractStateSerializerMap.register(this::class)
+        ZkContractStateSerializerMap.register(this::class)
     }
 
     companion object {

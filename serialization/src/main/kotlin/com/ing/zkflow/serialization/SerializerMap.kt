@@ -50,9 +50,6 @@ interface ZKDataProvider<T : Any> {
 interface ZKContractStateSerializerMapProvider : ZKDataProvider<ContractState>
 interface ZkCommandDataSerializerMapProvider : ZKDataProvider<CommandData>
 
-object ContractStateSerializerMap : SerializerMap<ContractState>()
-object CommandDataSerializerMap : SerializerMap<CommandData>()
-
 abstract class SerializerMap<T : Any> {
     private val log = LoggerFactory.getLogger(this::class.java)
     private val obj2Id = mutableMapOf<KClass<out T>, Int>()
@@ -94,7 +91,10 @@ abstract class SerializerMap<T : Any> {
     }
 
     operator fun get(klass: KClass<*>): KSerializer<out T> =
-        obj2Id[klass]?.let { objId2Serializer[it] } ?: throw SerializerMapError.ClassNotRegistered(klass)
+        obj2Id[klass]?.let { objId2Serializer[it] } ?: throw SerializerMapError.ClassNotRegistered(
+            klass,
+            "Registered: ${obj2Id.keys.map { it.qualifiedName }.joinToString(", ")}"
+        )
 
     private fun extractSerializedData(message: ByteArray): ByteArray = message.drop(Int.SIZE_BYTES).toByteArray()
     private fun extractIdentifier(message: ByteArray): Int = ByteBuffer.wrap(message.copyOfRange(0, Int.SIZE_BYTES)).int
