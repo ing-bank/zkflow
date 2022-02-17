@@ -10,7 +10,7 @@ import com.ing.zkflow.client.flows.ZKSignTransactionFlow
 import com.ing.zkflow.common.transactions.ZKTransactionBuilder
 import com.ing.zkflow.common.transactions.signInitialTransaction
 import com.ing.zkflow.common.transactions.zkVerify
-import com.ing.zkflow.testing.fixtures.contract.TestContract
+import com.ing.zkflow.integration.contract.TestContract
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.StateAndContract

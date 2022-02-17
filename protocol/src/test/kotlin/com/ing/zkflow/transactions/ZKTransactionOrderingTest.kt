@@ -13,14 +13,13 @@ import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.common.zkp.metadata.commandMetadata
 import com.ing.zkflow.common.zkp.metadata.packageName
 import com.ing.zkflow.crypto.BLAKE2S256
-import com.ing.zkflow.testing.fixtures.contract.DummyContract
-import com.ing.zkflow.testing.fixtures.state.DummyState
 import com.ing.zkflow.testing.withCustomSerializationEnv
 import io.kotest.matchers.shouldBe
 import net.corda.core.contracts.AlwaysAcceptAttachmentConstraint
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.Contract
 import net.corda.core.contracts.ContractState
+import net.corda.core.contracts.HashAttachmentConstraint
 import net.corda.core.contracts.ReferencedStateAndRef
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.StateRef
@@ -28,6 +27,7 @@ import net.corda.core.contracts.TransactionState
 import net.corda.core.crypto.DigestAlgorithm
 import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.SignatureScheme
+import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
@@ -120,7 +120,7 @@ class ZKTransactionOrderingTest {
     }
 
     private fun createWireTransaction(): WireTransaction = withTestSerializationEnvIfNotSet {
-        val cordappPackages = listOf(LocalContract.PROGRAM_ID.packageName, DummyContract.PROGRAM_ID.packageName).mapNotNull { it }
+        val cordappPackages = listOf(LocalContract.PROGRAM_ID.packageName).mapNotNull { it }
         val networkParameters = testNetworkParameters(minimumPlatformVersion = ZKFlow.REQUIRED_PLATFORM_VERSION)
         val firstIdentity = TestIdentity(CordaX500Name("TestIdentity", "", "GB"))
         val mockServices = MockServices(
@@ -265,6 +265,48 @@ class DummyZKStateB(
                 encumbrance = 1,
                 constraint = AlwaysAcceptAttachmentConstraint
             )
+        }
+    }
+}
+
+@BelongsToContract(LocalContract::class)
+public data class DummyState(
+    val value: Int,
+    val set: Set<Int>,
+    override val participants: List<AbstractParty>
+) : ContractState {
+    public companion object {
+        public fun any(): DummyState {
+            val alice = TestIdentity.fresh("Alice")
+            return DummyState(
+                Random.nextInt(),
+                IntArray(Random.nextInt(1, 3)) { Random.nextInt() }.toSet(),
+                listOf(alice.party)
+            )
+        }
+
+        public fun newTxState(): TransactionState<DummyState> {
+            val notary = TestIdentity.fresh("Notary")
+
+            return TransactionState(
+                data = any(),
+                notary = notary.party,
+                encumbrance = 1,
+                constraint = HashAttachmentConstraint(SecureHash.zeroHash)
+            )
+        }
+
+        public fun newTxState(notary: Party): TransactionState<DummyState> {
+            return TransactionState(
+                data = any(),
+                notary = notary,
+                encumbrance = 1,
+                constraint = HashAttachmentConstraint(SecureHash.zeroHash)
+            )
+        }
+
+        public fun newStateAndRef(notary: Party): StateAndRef<DummyState> {
+            return StateAndRef(newTxState(notary), StateRef(SecureHash.randomSHA256(), Random.nextInt(4)))
         }
     }
 }

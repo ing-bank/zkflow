@@ -17,6 +17,15 @@ dependencies {
     testImplementation(project(":test-utils"))
     testImplementation(project(":protocol"))
 
+    val cordaVersion: String by project
+    kotlinCompilerPluginClasspath("net.corda:corda-core:$cordaVersion")
+    kotlinCompilerPluginClasspath(project(":utils"))
+    kotlinCompilerPluginClasspath(project(":annotations"))
+    kotlinCompilerPluginClasspath(project(":serialization-candidate"))
+
+    val arrowMetaVersion: String by project
+    kotlinCompilerPluginClasspath("io.arrow-kt:arrow-meta:$arrowMetaVersion")
+
     implementation(project(":compiler-plugin-ksp"))
     ksp(project(":compiler-plugin-ksp"))
 }

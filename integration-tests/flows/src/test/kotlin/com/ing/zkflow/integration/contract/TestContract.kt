@@ -1,20 +1,17 @@
-package com.ing.zkflow.testing.fixtures.contract
+package com.ing.zkflow.integration.contract
 
-import com.ing.serialization.bfl.annotations.FixedLength
+import com.ing.zkflow.annotations.Size
+import com.ing.zkflow.annotations.ZKP
+import com.ing.zkflow.annotations.corda.EdDSA
 import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.contracts.ZKOwnableState
-import com.ing.zkflow.common.serialization.BFLSerializationScheme.Companion.ZkCommandDataSerializerMap
-import com.ing.zkflow.common.serialization.BFLSerializationScheme.Companion.ZkContractStateSerializerMap
 import com.ing.zkflow.common.transactions.zkTransactionMetadata
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.common.zkp.metadata.commandMetadata
-import com.ing.zkflow.testing.fixtures.contract.TestContract.Create.Companion.verifyCreate
-import com.ing.zkflow.testing.fixtures.contract.TestContract.Move.Companion.verifyMove
-import com.ing.zkflow.testing.fixtures.contract.TestContract.MoveBidirectional.Companion.verifyMoveBidirectional
+import com.ing.zkflow.integration.contract.TestContract.Create.Companion.verifyCreate
+import com.ing.zkflow.integration.contract.TestContract.Move.Companion.verifyMove
+import com.ing.zkflow.integration.contract.TestContract.MoveBidirectional.Companion.verifyMoveBidirectional
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
-import kotlinx.serialization.Contextual
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.Transient
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.CommandAndState
 import net.corda.core.contracts.CommandData
@@ -27,37 +24,30 @@ import java.io.File
 import java.util.Random
 
 @SuppressFBWarnings("PREDICTABLE_RANDOM", "PATH_TRAVERSAL_IN", justification = "Test code")
-public class TestContract : Contract {
-    public companion object {
-        public const val PROGRAM_ID: ContractClassName = "com.ing.zkflow.testing.fixtures.contract.TestContract"
+class TestContract : Contract {
+    companion object {
+        const val PROGRAM_ID: ContractClassName = "com.ing.zkflow.testing.fixtures.contract.TestContract"
     }
 
-    @Serializable
     @BelongsToContract(TestContract::class)
-    public data class TestState(
-        override val owner: @Contextual AnonymousParty,
+    @ZKP
+    data class TestState(
+        override val owner: @EdDSA AnonymousParty,
         val value: Int = Random().nextInt(1000)
     ) : ZKOwnableState {
-        init {
-            ZkContractStateSerializerMap.register(this::class)
+        companion object {
+            const val PARTICIPANT_COUNT: Int = 1
         }
 
-        public companion object {
-            public const val PARTICIPANT_COUNT: Int = 1
-        }
-
-        @FixedLength([PARTICIPANT_COUNT])
-        override val participants: List<@Contextual AnonymousParty> = listOf(owner)
+        override val participants: @Size(PARTICIPANT_COUNT) List<@EdDSA AnonymousParty> = listOf(owner)
 
         override fun withNewOwner(newOwner: AnonymousParty): CommandAndState =
             CommandAndState(Move(), copy(owner = newOwner))
     }
 
     // Commands
-    @Serializable
-    public class Create : ZKCommandData {
-
-        @Transient
+    @ZKP
+    class Create : ZKCommandData {
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
             circuit {
                 buildFolder =
@@ -67,12 +57,8 @@ public class TestContract : Contract {
             numberOfSigners = 1
         }
 
-        init {
-            ZkCommandDataSerializerMap.register(this::class)
-        }
-
-        public companion object {
-            public fun verifyCreate(
+        companion object {
+            fun verifyCreate(
                 tx: LedgerTransaction,
                 command: CommandWithParties<CommandData>
             ) {
@@ -86,10 +72,8 @@ public class TestContract : Contract {
         }
     }
 
-    @Serializable
-    public class CreatePublic : ZKCommandData {
-
-        @Transient
+    @ZKP
+    class CreatePublic : ZKCommandData {
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
             outputs {
                 public(TestState::class) at 0
@@ -97,12 +81,8 @@ public class TestContract : Contract {
             numberOfSigners = 1
         }
 
-        init {
-            ZkCommandDataSerializerMap.register(this::class)
-        }
-
-        public companion object {
-            public fun verify(
+        companion object {
+            fun verify(
                 tx: LedgerTransaction,
                 command: CommandWithParties<CommandData>
             ) {
@@ -120,24 +100,16 @@ public class TestContract : Contract {
      *
      * This command is only used on [CollectSignaturesFlowTest]. It expects two signatures, but nothing else.
      */
-    @Serializable
-    public class SignOnly : ZKCommandData {
-
-        @Transient
+    @ZKP
+    class SignOnly : ZKCommandData {
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
             outputs { private(TestState::class) at 0 }
             numberOfSigners = 2
         }
-
-        init {
-            ZkCommandDataSerializerMap.register(this::class)
-        }
     }
 
-    @Serializable
-    public class Move : ZKCommandData {
-
-        @Transient
+    @ZKP
+    class Move : ZKCommandData {
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
             circuit {
                 buildFolder =
@@ -148,12 +120,8 @@ public class TestContract : Contract {
             numberOfSigners = 2
         }
 
-        init {
-            ZkCommandDataSerializerMap.register(this::class)
-        }
-
-        public companion object {
-            public fun verifyMove(
+        companion object {
+            fun verifyMove(
                 tx: LedgerTransaction,
                 command: CommandWithParties<CommandData>
             ) {
@@ -171,22 +139,16 @@ public class TestContract : Contract {
         }
     }
 
-    @Serializable
-    public class MovePrivateOnly : ZKCommandData {
-
-        @Transient
+    @ZKP
+    class MovePrivateOnly : ZKCommandData {
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
             inputs { private(TestState::class) at 0 }
             outputs { private(TestState::class) at 0 }
             numberOfSigners = 2
         }
 
-        init {
-            ZkCommandDataSerializerMap.register(this::class)
-        }
-
-        public companion object {
-            public fun verify(
+        companion object {
+            fun verify(
                 tx: LedgerTransaction,
                 command: CommandWithParties<CommandData>
             ) {
@@ -204,10 +166,8 @@ public class TestContract : Contract {
         }
     }
 
-    @Serializable
-    public class MoveBidirectional : ZKCommandData {
-
-        @Transient
+    @ZKP
+    class MoveBidirectional : ZKCommandData {
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
             circuit {
                 buildFolder =
@@ -224,12 +184,8 @@ public class TestContract : Contract {
             numberOfSigners = 2
         }
 
-        init {
-            ZkCommandDataSerializerMap.register(this::class)
-        }
-
-        public companion object {
-            public fun verifyMoveBidirectional(
+        companion object {
+            fun verifyMoveBidirectional(
                 tx: LedgerTransaction,
                 command: CommandWithParties<CommandData>
             ) {
@@ -237,7 +193,9 @@ public class TestContract : Contract {
                 tx.zkTransactionMetadata().verify(tx)
 
                 // Transaction contents
-                if (tx.inputsOfType<TestState>().sumBy { it.value } != tx.outputsOfType<TestState>().sumBy { it.value }) throw IllegalArgumentException(
+                if (tx.inputsOfType<TestState>().sumBy { it.value } != tx.outputsOfType<TestState>()
+                    .sumBy { it.value }
+                ) throw IllegalArgumentException(
                     "Failed requirement: amounts are not conserved for TestState"
                 )
 

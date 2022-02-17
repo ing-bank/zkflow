@@ -1,33 +1,53 @@
 package com.ing.zkflow.common.transactions
 
 import com.ing.zkflow.common.contracts.ZKCommandData
+import com.ing.zkflow.common.contracts.ZKContractState
 import com.ing.zkflow.common.zkp.ZKFlow
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.common.zkp.metadata.commandMetadata
 import com.ing.zkflow.common.zkp.metadata.packageName
 import com.ing.zkflow.testing.fixed
-import com.ing.zkflow.testing.fixtures.contract.TestContract
-import com.ing.zkflow.testing.fixtures.contract.TestContract.TestState
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
+import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.ComponentGroupEnum
+import net.corda.core.contracts.Contract
 import net.corda.core.crypto.PartialMerkleTree
+import net.corda.core.identity.AnonymousParty
+import net.corda.core.transactions.LedgerTransaction
 import net.corda.testing.common.internal.testNetworkParameters
 import net.corda.testing.core.TestIdentity
 import net.corda.testing.internal.withTestSerializationEnvIfNotSet
 import net.corda.testing.node.MockServices
 import org.junit.jupiter.api.Test
+import java.util.Random
 
 class ZKVerifierTransactionTest {
 
     private val services = MockServices(
-        listOfNotNull(TestContract.PROGRAM_ID.packageName),
+        listOfNotNull(LocalContract.PROGRAM_ID.packageName),
         TestIdentity.fixed("ServiceHub"),
         testNetworkParameters(minimumPlatformVersion = ZKFlow.REQUIRED_PLATFORM_VERSION),
     )
     private val notary = TestIdentity.fixed("Notary").party
     private val alice = TestIdentity.fixed("Alice").party.anonymise()
+
+    class LocalContract : Contract {
+        companion object {
+            const val PROGRAM_ID = "com.ing.zkflow.common.transactions.LocalContract"
+        }
+
+        override fun verify(tx: LedgerTransaction) {}
+    }
+
+    @BelongsToContract(LocalContract::class)
+    data class TestState(
+        val owner: AnonymousParty,
+        val value: Int = Random().nextInt(1000)
+    ) : ZKContractState {
+        override val participants: List<AnonymousParty> = listOf(owner)
+    }
 
     @Test
     fun testFilterOutputs1() {

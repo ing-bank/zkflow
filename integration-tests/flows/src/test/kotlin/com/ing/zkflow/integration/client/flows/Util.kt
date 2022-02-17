@@ -1,6 +1,6 @@
 package com.ing.zkflow.integration.client.flows
 
-import com.ing.zkflow.testing.fixtures.contract.TestContract
+import com.ing.zkflow.integration.contract.TestContract
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import net.corda.core.contracts.StateRef
