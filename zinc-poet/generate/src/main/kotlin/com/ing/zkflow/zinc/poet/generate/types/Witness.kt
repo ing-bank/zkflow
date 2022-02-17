@@ -133,7 +133,7 @@ class Witness(
     private fun generateGenerateHashesMethod() = zincMethod {
         val hashInitializers = witnessGroups.mapNotNull { witnessGroup ->
             witnessGroup.generateHashesMethod?.getName()?.let { hashFunctionName ->
-                "${witnessGroup.groupName}: self.$hashFunctionName(),"
+                "${witnessGroup.publicInputFieldName}: self.$hashFunctionName(),"
             }
         }.joinToString("\n") { it }
         name = "generate_hashes"

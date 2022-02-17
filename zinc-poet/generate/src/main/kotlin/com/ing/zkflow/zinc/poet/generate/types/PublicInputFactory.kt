@@ -19,7 +19,7 @@ class PublicInputFactory(
                 witnessGroup.generateHashesMethod?.let {
                     val groupSize = (it.getReturnType() as ZincArray).getSize()
                     field {
-                        name = witnessGroup.groupName
+                        name = witnessGroup.publicInputFieldName
                         type = array {
                             capacity = groupSize.toInt()
                             elementType = StandardTypes.digest.getSerializedBflTypeDef()

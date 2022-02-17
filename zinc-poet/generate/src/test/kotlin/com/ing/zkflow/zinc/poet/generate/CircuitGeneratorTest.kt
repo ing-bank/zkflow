@@ -13,7 +13,8 @@ import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.PARAMETERS
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.SERIALIZED_INPUT_UTXOS
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.SERIALIZED_REFERENCE_UTXOS
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.SIGNERS
-import io.kotest.matchers.maps.shouldContainKeys
+import com.ing.zkflow.zinc.poet.generate.types.witness.toPublicInputFieldName
+import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -62,8 +63,9 @@ internal class CircuitGeneratorTest {
         result.second shouldBe ""
         val publicInput = Json.parseToJsonElement(result.first) as JsonObject
 
-        publicInput.shouldContainKeys(
-            OUTPUTS, SERIALIZED_INPUT_UTXOS, SERIALIZED_REFERENCE_UTXOS, COMMANDS, PARAMETERS, SIGNERS, NOTARY
+        publicInput.keys.shouldContainAll(
+            listOf(OUTPUTS, SERIALIZED_INPUT_UTXOS, SERIALIZED_REFERENCE_UTXOS, COMMANDS, PARAMETERS, SIGNERS, NOTARY)
+                .map { it.toPublicInputFieldName() }
         )
     }
 
