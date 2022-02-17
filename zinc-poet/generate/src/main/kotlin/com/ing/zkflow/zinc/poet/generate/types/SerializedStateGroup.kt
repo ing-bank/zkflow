@@ -17,12 +17,14 @@ import com.ing.zinc.bfl.getSerializedTypeDef
 import com.ing.zinc.bfl.toZincId
 import com.ing.zinc.naming.camelToSnakeCase
 import com.ing.zinc.poet.Indentation.Companion.spaces
+import com.ing.zinc.poet.ZincArray
 import com.ing.zinc.poet.ZincArray.Companion.zincArray
 import com.ing.zinc.poet.ZincFile
 import com.ing.zinc.poet.ZincFunction
 import com.ing.zinc.poet.ZincFunction.Companion.zincFunction
 import com.ing.zinc.poet.ZincMethod.Companion.zincMethod
 import com.ing.zinc.poet.ZincPrimitive
+import com.ing.zinc.poet.ZincStruct.Companion.zincStruct
 import com.ing.zinc.poet.indent
 import com.ing.zkflow.util.bitsToByteBoundary
 import com.ing.zkflow.zinc.poet.generate.COMPUTE_LEAF_HASHES
@@ -77,26 +79,28 @@ data class SerializedStateGroup(
         use { path = "$CRYPTO_UTILS::$COMPUTE_NONCE" }
         use { path = "std::crypto::blake2s_multi_input" }
         newLine()
-        struct {
-            name = serializedStructName
-            transactionStates.forEach { (stateType, count) ->
-                val paddingBits = stateType.bitSize.bitsToByteBoundary() - stateType.bitSize
-                field {
-                    name = stateTypeFieldName(stateType)
-                    type = zincArray {
-                        size = count.toString()
-                        elementType = zincArray {
-                            size = getSerializedBitSize(paddingBits, stateType)
-                            elementType = ZincPrimitive.Bool
-                        }
-                    }
-                }
-            }
-        }
+        add(toZincType())
         newLine()
         impl {
             name = serializedStructName
             addFunctions(generateMethods(codeGenerationOptions))
+        }
+    }
+
+    override fun toZincType() = zincStruct {
+        name = serializedStructName
+        transactionStates.forEach { (stateType, count) ->
+            val paddingBits = stateType.bitSize.bitsToByteBoundary() - stateType.bitSize
+            field {
+                name = stateTypeFieldName(stateType)
+                type = zincArray {
+                    size = count.toString()
+                    elementType = zincArray {
+                        size = getSerializedBitSize(paddingBits, stateType)
+                        elementType = ZincPrimitive.Bool
+                    }
+                }
+            }
         }
     }
 
@@ -187,6 +191,7 @@ data class SerializedStateGroup(
 
     private fun generateComputeHashes() = zincMethod {
         var groupOffset = 0
+        val serializedDigest = StandardTypes.digest.getSerializedTypeDef().getType() as ZincArray
         val fieldHashes = transactionStates.entries.fold("") { acc, (stateType, count) ->
             val result = """
                 for i in (0 as u32)..$count {
@@ -203,16 +208,16 @@ data class SerializedStateGroup(
         parameter {
             name = "nonces"
             type = zincArray {
-                elementType = digest.toZincId()
+                elementType = digest.getSerializedTypeDef()
                 size = "$groupSize"
             }
         }
         returnType = zincArray {
-            elementType = digest.toZincId()
+            elementType = digest.getSerializedTypeDef()
             size = "$groupSize"
         }
         body = """
-            let mut component_leaf_hashes = [${digest.defaultExpr()}; $groupSize];
+            let mut component_leaf_hashes: [${digest.getSerializedTypeDef().getName()}; $groupSize] = [[false; ${serializedDigest.getSize()}]; $groupSize];
             ${fieldHashes.indent(12.spaces)}
             component_leaf_hashes
         """.trimIndent()

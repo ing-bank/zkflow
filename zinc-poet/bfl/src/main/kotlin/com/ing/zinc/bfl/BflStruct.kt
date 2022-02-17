@@ -12,6 +12,8 @@ import com.ing.zinc.poet.ZincFunction
 import com.ing.zinc.poet.ZincFunction.Companion.zincFunction
 import com.ing.zinc.poet.ZincMethod.Companion.zincMethod
 import com.ing.zinc.poet.ZincPrimitive
+import com.ing.zinc.poet.ZincStruct
+import com.ing.zinc.poet.ZincStruct.Companion.zincStruct
 import com.ing.zinc.poet.indent
 import java.util.Objects
 
@@ -295,6 +297,16 @@ open class BflStruct(
                 }
             } ?: emptyList()
             fieldFields + field
+        }
+    }
+
+    override fun toZincType(): ZincStruct = zincStruct {
+        name = this@BflStruct.id
+        this@BflStruct.fields.forEach {
+            field {
+                name = it.name
+                type = it.type.toZincType()
+            }
         }
     }
 }

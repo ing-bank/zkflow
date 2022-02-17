@@ -166,15 +166,15 @@ class StandardTypes(
         internal val digest = BflTypeDef(
             "Digest",
             array {
-                capacity = 32 * Byte.SIZE_BITS // TODO size depends on the used hashing algorithm
-                elementType = BflPrimitive.Bool
+                capacity = 32 // TODO size depends on the used hashing algorithm
+                elementType = BflPrimitive.I8
             }
         )
         internal val privacySalt = BflTypeDef(
             "PrivacySalt",
             array {
-                capacity = 32 * Byte.SIZE_BITS // Size is [PrivacySalt.MINIMUM_SIZE]
-                elementType = BflPrimitive.Bool
+                capacity = 32 // Size is [PrivacySalt.MINIMUM_SIZE]
+                elementType = BflPrimitive.I8
             }
         )
         internal val secureHash = struct {

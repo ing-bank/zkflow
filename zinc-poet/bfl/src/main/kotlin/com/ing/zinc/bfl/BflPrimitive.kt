@@ -1,6 +1,7 @@
 package com.ing.zinc.bfl
 
 import com.ing.zinc.bfl.generator.WitnessGroupOptions
+import com.ing.zinc.poet.ZincPrimitive
 import java.util.Locale
 
 @Suppress("MagicNumber")
@@ -19,7 +20,7 @@ enum class BflPrimitive(
     I32("i32", 32),
     I64("i64", 64),
     I128("i128", 128),
-    Bool("bool", 1);
+    Bool("bool", 8);
 
     override fun typeName() = id.capitalize(Locale.getDefault())
 
@@ -74,6 +75,21 @@ enum class BflPrimitive(
 
     override fun accept(visitor: TypeVisitor) {
         // NOOP
+    }
+
+    override fun toZincType(): ZincPrimitive = when (this) {
+        U8 -> ZincPrimitive.U8
+        U16 -> ZincPrimitive.U16
+        U24 -> ZincPrimitive.U24
+        U32 -> ZincPrimitive.U32
+        U64 -> ZincPrimitive.U64
+        U128 -> ZincPrimitive.U128
+        I8 -> ZincPrimitive.I8
+        I16 -> ZincPrimitive.I16
+        I32 -> ZincPrimitive.I32
+        I64 -> ZincPrimitive.I64
+        I128 -> ZincPrimitive.I128
+        Bool -> ZincPrimitive.Bool
     }
 
     companion object {

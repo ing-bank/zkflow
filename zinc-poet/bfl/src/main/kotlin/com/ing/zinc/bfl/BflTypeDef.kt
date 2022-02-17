@@ -6,6 +6,7 @@ import com.ing.zinc.poet.ZincFile
 import com.ing.zinc.poet.ZincFile.Companion.zincFile
 import com.ing.zinc.poet.ZincFunction
 import com.ing.zinc.poet.ZincPrimitive
+import com.ing.zinc.poet.ZincTypeDef
 
 class BflTypeDef(
     override val id: String,
@@ -58,5 +59,10 @@ class BflTypeDef(
 
     override fun accept(visitor: TypeVisitor) {
         visitor.visitType(typeDef)
+    }
+
+    override fun toZincType(): ZincTypeDef = ZincTypeDef.zincTypeDef {
+        name = this@BflTypeDef.typeName()
+        type = this@BflTypeDef.typeDef.toZincType()
     }
 }

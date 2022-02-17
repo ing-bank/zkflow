@@ -3,7 +3,7 @@ package com.ing.zkflow.zinc.poet.generate
 import com.ing.zinc.bfl.CONSTS
 import com.ing.zinc.bfl.generator.ZincGenerator.zincSourceFile
 import com.ing.zinc.bfl.getLengthConstant
-import com.ing.zinc.bfl.toZincId
+import com.ing.zinc.bfl.getSerializedTypeDef
 import com.ing.zinc.poet.ZincPrimitive
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.digest
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.privacySalt
@@ -19,7 +19,7 @@ class CryptoUtilsFactory {
         buildPath.zincSourceFile("$CRYPTO_UTILS.zn") {
             for (it in listOf(privacySalt, digest)) {
                 mod { module = it.getModuleName() }
-                use { path = "${it.getModuleName()}::${it.id}" }
+                use { path = "${it.getModuleName()}::${it.getSerializedTypeDef().getName()}" }
                 use { path = "${it.getModuleName()}::${it.getLengthConstant()}" }
                 newLine()
             }
@@ -33,7 +33,7 @@ class CryptoUtilsFactory {
                 name = COMPUTE_NONCE
                 parameter {
                     name = "privacy_salt_bits"
-                    type = privacySalt.toZincId()
+                    type = privacySalt.getSerializedTypeDef()
                 }
                 parameter {
                     name = "group_index"
@@ -43,7 +43,7 @@ class CryptoUtilsFactory {
                     name = "internal_index"
                     type = ZincPrimitive.U32
                 }
-                returnType = digest.toZincId()
+                returnType = digest.getSerializedTypeDef()
                 body = """
                     let mut nonce = [false; ${privacySalt.getLengthConstant()} + $U32_BITS + $U32_BITS];
                     for i in 0..${privacySalt.getLengthConstant()} {

@@ -2,6 +2,7 @@ package com.ing.zinc.bfl
 
 import com.ing.zinc.bfl.generator.WitnessGroupOptions
 import com.ing.zinc.poet.Indentation.Companion.spaces
+import com.ing.zinc.poet.ZincArray.Companion.zincArray
 import com.ing.zinc.poet.indent
 
 data class BflArray(
@@ -64,5 +65,10 @@ data class BflArray(
 
     override fun accept(visitor: TypeVisitor) {
         visitor.visitType(elementType)
+    }
+
+    override fun toZincType() = zincArray {
+        elementType = this@BflArray.elementType.toZincId()
+        size = "${this@BflArray.arraySize}"
     }
 }

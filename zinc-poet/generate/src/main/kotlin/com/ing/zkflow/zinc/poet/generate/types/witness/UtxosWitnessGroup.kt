@@ -3,9 +3,10 @@ package com.ing.zkflow.zinc.poet.generate.types.witness
 import com.ing.zinc.bfl.BflModule
 import com.ing.zinc.bfl.BflType
 import com.ing.zinc.bfl.generator.WitnessGroupOptions
+import com.ing.zinc.bfl.getSerializedTypeDef
 import com.ing.zinc.bfl.toZincId
-import com.ing.zinc.poet.ZincArray
-import com.ing.zinc.poet.ZincMethod
+import com.ing.zinc.poet.ZincArray.Companion.zincArray
+import com.ing.zinc.poet.ZincMethod.Companion.zincMethod
 import com.ing.zinc.poet.ZincType
 import com.ing.zkflow.zinc.poet.generate.COMPUTE_UTXO_HASHES
 import com.ing.zkflow.zinc.poet.generate.types.SerializedStateGroup
@@ -26,15 +27,13 @@ internal data class UtxosWitnessGroup(
     override val options: List<WitnessGroupOptions> = standardTypes.toWitnessGroupOptions(groupName, states)
     override val dependencies: List<BflType> = listOf(serializedGroup, deserializedGroup)
     override val serializedType: ZincType = serializedGroup.toZincId()
-    override val generateHashesMethod = ZincMethod.zincMethod {
+    override val generateHashesMethod = zincMethod {
         comment = "Compute the $groupName leaf hashes."
         name = "compute_${groupName}_hashes"
-        returnType = ZincArray.zincArray {
-            elementType = StandardTypes.digest.toZincId()
+        returnType = zincArray {
+            elementType = StandardTypes.digest.getSerializedTypeDef()
             size = "$groupSize"
         }
-        body = """
-            self.$groupName.$COMPUTE_UTXO_HASHES(self.$noncesVariable)
-        """.trimIndent()
+        body = "self.$groupName.$COMPUTE_UTXO_HASHES(self.$noncesVariable)"
     }
 }

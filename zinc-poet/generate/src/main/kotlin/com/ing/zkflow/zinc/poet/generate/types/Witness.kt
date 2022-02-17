@@ -6,12 +6,14 @@ import com.ing.zinc.bfl.TypeVisitor
 import com.ing.zinc.bfl.generator.CodeGenerationOptions
 import com.ing.zinc.bfl.generator.WitnessGroupOptions
 import com.ing.zinc.bfl.getLengthConstant
+import com.ing.zinc.bfl.getSerializedTypeDef
 import com.ing.zinc.bfl.toZincId
 import com.ing.zinc.naming.camelToSnakeCase
 import com.ing.zinc.poet.Indentation.Companion.spaces
 import com.ing.zinc.poet.ZincFile
 import com.ing.zinc.poet.ZincFunction
 import com.ing.zinc.poet.ZincMethod.Companion.zincMethod
+import com.ing.zinc.poet.ZincStruct.Companion.zincStruct
 import com.ing.zinc.poet.ZincType.Companion.id
 import com.ing.zinc.poet.indent
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
@@ -20,6 +22,7 @@ import com.ing.zkflow.zinc.poet.generate.CRYPTO_UTILS
 import com.ing.zkflow.zinc.poet.generate.types.CommandContextFactory.Companion.COMMAND_CONTEXT
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.componentGroupEnum
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.digest
+import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.privacySalt
 import com.ing.zkflow.zinc.poet.generate.types.witness.StandardComponentWitnessGroup
 import com.ing.zkflow.zinc.poet.generate.types.witness.WitnessGroup
 import com.ing.zkflow.zinc.poet.generate.types.witness.WitnessGroupsContainer
@@ -50,9 +53,16 @@ class Witness(
             .forEach { dependency ->
                 mod { module = dependency.getModuleName() }
                 use { path = "${dependency.getModuleName()}::${dependency.id}" }
-                if (dependency == digest) {
-                    use { path = "${dependency.getModuleName()}::${dependency.getLengthConstant()}" }
+                when (dependency) {
+                    digest -> {
+                        use { path = "${dependency.getModuleName()}::${dependency.getLengthConstant()}" }
+                        use { path = "${dependency.getModuleName()}::${dependency.getSerializedTypeDef().getId()}" }
+                    }
+                    privacySalt -> {
+                        use { path = "${dependency.getModuleName()}::${dependency.getSerializedTypeDef().getId()}" }
+                    }
                 }
+
                 newLine()
             }
         (
@@ -71,19 +81,21 @@ class Witness(
         use { path = "$CRYPTO_UTILS::$COMPUTE_NONCE" }
         use { path = "std::crypto::blake2s_multi_input" }
         newLine()
-        struct {
-            name = Witness::class.java.simpleName
-            witnessGroups.forEach {
-                field {
-                    name = it.groupName
-                    type = it.serializedType
-                }
-            }
-        }
+        add(toZincType())
         newLine()
         impl {
             name = Witness::class.java.simpleName
             addFunctions(generateMethods(codeGenerationOptions))
+        }
+    }
+
+    override fun toZincType() = zincStruct {
+        name = Witness::class.java.simpleName
+        witnessGroups.forEach {
+            field {
+                name = it.groupName
+                type = it.serializedType
+            }
         }
     }
 

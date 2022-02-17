@@ -76,7 +76,7 @@ data class BflEnum(
         }
     }
 
-    private val enumDef: ZincEnum = ZincEnum.zincEnum {
+    override fun toZincType() = ZincEnum.zincEnum {
         name = id
         variants.forEachIndexed { index, variant ->
             variant {
@@ -102,7 +102,7 @@ data class BflEnum(
         }
         add(getSerializedTypeDef())
         newLine()
-        add(enumDef)
+        add(this@BflEnum.toZincType())
         newLine()
         impl {
             name = id

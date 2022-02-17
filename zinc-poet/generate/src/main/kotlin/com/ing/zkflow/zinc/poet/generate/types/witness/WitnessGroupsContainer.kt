@@ -3,6 +3,8 @@ package com.ing.zkflow.zinc.poet.generate.types.witness
 import com.ing.zinc.bfl.BflModule
 import com.ing.zinc.bfl.BflPrimitive
 import com.ing.zinc.bfl.dsl.ArrayBuilder.Companion.array
+import com.ing.zinc.bfl.getSerializedTypeDef
+import com.ing.zinc.poet.ZincArray.Companion.zincArray
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.common.zkp.metadata.ZKTypedElement
 import com.ing.zkflow.zinc.poet.generate.ZincTypeResolver
@@ -56,16 +58,22 @@ class WitnessGroupsContainer(
     private val parameterGroup =
         StandardComponentWitnessGroup(PARAMETERS, secureHash, 1, ComponentGroupEnum.PARAMETERS_GROUP)
 
-    private val privacySaltGroup = HashingMetadataWitnessGroup(PRIVACY_SALT, privacySalt, 1)
+    private val privacySaltGroup = HashingMetadataWitnessGroup(PRIVACY_SALT, privacySalt, privacySalt.getSerializedTypeDef(), 1)
+
+    private val numberOfInputs = commandMetadata.privateInputs.size
     private val inputNoncesGroup = HashingMetadataWitnessGroup(
         INPUT_NONCES,
-        arrayOfNonceDigests(commandMetadata.privateInputs.size),
-        commandMetadata.privateInputs.size
+        arrayOfNonceDigests(numberOfInputs),
+        arrayOfSerializedNonceDigests(numberOfInputs),
+        numberOfInputs
     )
+
+    private val numberOfReferences = commandMetadata.privateReferences.size
     private val referenceNoncesGroup = HashingMetadataWitnessGroup(
         REFERENCE_NONCES,
-        arrayOfNonceDigests(commandMetadata.privateReferences.size),
-        commandMetadata.privateReferences.size
+        arrayOfNonceDigests(numberOfReferences),
+        arrayOfSerializedNonceDigests(numberOfReferences),
+        numberOfReferences
     )
 
     internal val serializedOutputGroup = OutputStateWitnessGroup(
@@ -116,6 +124,11 @@ class WitnessGroupsContainer(
         private fun arrayOfNonceDigests(count: Int) = array {
             capacity = count
             elementType = digest
+        }
+
+        private fun arrayOfSerializedNonceDigests(count: Int) = zincArray {
+            size = "$count"
+            elementType = digest.getSerializedTypeDef()
         }
     }
 }

@@ -1,6 +1,9 @@
 package com.ing.zinc.bfl
 
 import com.ing.zinc.bfl.generator.WitnessGroupOptions
+import com.ing.zinc.poet.ZincEnum
+import com.ing.zinc.poet.ZincStruct
+import com.ing.zinc.poet.ZincType
 import com.ing.zinc.poet.ZincType.Companion.id
 
 /**
@@ -59,6 +62,14 @@ interface BflType {
      * Apply [visitor] to all types this [BflType] depends on.
      */
     fun accept(visitor: TypeVisitor)
+
+    /**
+     * Convert this type to a [ZincType].
+     * Not all [BflType]s can be completely represented as a [ZincType], f.e. [BflModule] instances
+     * represent a whole file. In these cases they will be converted either to a [ZincStruct] or a
+     * [ZincEnum].
+     */
+    fun toZincType(): ZincType
 }
 
 /**
