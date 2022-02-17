@@ -11,7 +11,7 @@ public data class MockZKNetworkParameters(
     override val participantSignatureScheme: SignatureScheme = ZKFlow.DEFAULT_ZKFLOW_SIGNATURE_SCHEME,
 
     /**
-     * Here we don't use the preferred SignatureAttachmentConstraint, because AlwaysAcceptAttachmentConstraintType place nicer with the
+     * Here we don't use the preferred SignatureAttachmentConstraint, because AlwaysAcceptAttachmentConstraintType plays nicer with the
      * standard constraint logic for transactions built with the test DSL.
      */
     override val attachmentConstraintType: ZKAttachmentConstraintType = ZKAttachmentConstraintType.AlwaysAcceptAttachmentConstraintType,

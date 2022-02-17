@@ -1,7 +1,6 @@
 package com.ing.zkflow.common.transactions
 
 import com.ing.zkflow.common.contracts.ZKCommandData
-import com.ing.zkflow.common.serialization.BFLSerializationScheme.Companion.ZkCommandDataSerializerMap
 import com.ing.zkflow.common.zkp.ZKFlow
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.common.zkp.metadata.commandMetadata
@@ -9,17 +8,14 @@ import com.ing.zkflow.common.zkp.metadata.packageName
 import com.ing.zkflow.testing.fixed
 import com.ing.zkflow.testing.fixtures.contract.TestContract
 import com.ing.zkflow.testing.fixtures.contract.TestContract.TestState
-import com.ing.zkflow.testing.withCustomSerializationEnv
-import com.ing.zkflow.testing.zkp.MockZKNetworkParameters
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.Transient
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.crypto.PartialMerkleTree
 import net.corda.testing.common.internal.testNetworkParameters
 import net.corda.testing.core.TestIdentity
+import net.corda.testing.internal.withTestSerializationEnvIfNotSet
 import net.corda.testing.node.MockServices
 import org.junit.jupiter.api.Test
 
@@ -32,36 +28,27 @@ class ZKVerifierTransactionTest {
     )
     private val notary = TestIdentity.fixed("Notary").party
     private val alice = TestIdentity.fixed("Alice").party.anonymise()
-    private val zkNetworkParameters = MockZKNetworkParameters()
 
     @Test
-    fun `test filtering outputs 1`() {
-        withCustomSerializationEnv {
-
-            @Serializable
+    fun testFilterOutputs1() {
+        withTestSerializationEnvIfNotSet {
             class TestZKCommand : ZKCommandData {
-
-                @Transient
                 override val metadata: ResolvedZKCommandMetadata = commandMetadata {
                     outputs {
                         private(TestState::class) at 1
                     }
                     numberOfSigners = 1
                 }
-
-                init {
-                    ZkCommandDataSerializerMap.register(this::class)
-                }
             }
 
             val publicOutput = TestState(alice, 0)
             val privateOutput = TestState(alice, 1)
 
-            val txbuilder = ZKTransactionBuilder(notary, zkNetworkParameters)
+            val txbuilder = ZKTransactionBuilder(notary)
             txbuilder.addCommand(TestZKCommand(), alice.owningKey)
             txbuilder.addOutputState(publicOutput) // at 0
             txbuilder.addOutputState(privateOutput) // at 1
-            val wtx = txbuilder.toWireTransaction(services)
+            val wtx = txbuilder.toWireTransactionWithDefaultCordaSerializationForTesting(services)
             val proofs = mapOf<ZKCommandClassName, Proof>()
             val vtx = ZKVerifierTransaction.fromWireTransaction(wtx, proofs)
 
@@ -83,22 +70,14 @@ class ZKVerifierTransactionTest {
     }
 
     @Test
-    fun `test filtering outputs 2`() {
-        withCustomSerializationEnv {
-
-            @Serializable
+    fun testFilterOutputs2() {
+        withTestSerializationEnvIfNotSet {
             class TestZKCommand : ZKCommandData {
-
-                @Transient
                 override val metadata: ResolvedZKCommandMetadata = commandMetadata {
                     outputs {
                         private(TestState::class) at 0
                     }
                     numberOfSigners = 1
-                }
-
-                init {
-                    ZkCommandDataSerializerMap.register(this::class)
                 }
             }
 
@@ -107,13 +86,13 @@ class ZKVerifierTransactionTest {
             val publicOutput2 = TestState(alice, 2)
             val publicOutput3 = TestState(alice, 3)
 
-            val txbuilder = ZKTransactionBuilder(notary, zkNetworkParameters)
+            val txbuilder = ZKTransactionBuilder(notary)
             txbuilder.addCommand(TestZKCommand(), alice.owningKey)
             txbuilder.addOutputState(privateOutput) // at 0
             txbuilder.addOutputState(publicOutput1) // at 1
             txbuilder.addOutputState(publicOutput2) // at 2
             txbuilder.addOutputState(publicOutput3) // at 3
-            val wtx = txbuilder.toWireTransaction(services)
+            val wtx = txbuilder.toWireTransactionWithDefaultCordaSerializationForTesting(services)
             val proofs = mapOf<ZKCommandClassName, Proof>()
             val vtx = ZKVerifierTransaction.fromWireTransaction(wtx, proofs)
 
@@ -130,13 +109,9 @@ class ZKVerifierTransactionTest {
     }
 
     @Test
-    fun `test filtering outputs 3`() {
-        withCustomSerializationEnv {
-
-            @Serializable
+    fun testFilterOutputs3() {
+        withTestSerializationEnvIfNotSet {
             class TestZKCommand : ZKCommandData {
-
-                @Transient
                 override val metadata: ResolvedZKCommandMetadata = commandMetadata {
                     outputs {
                         private(TestState::class) at 2
@@ -144,10 +119,6 @@ class ZKVerifierTransactionTest {
                         private(TestState::class) at 4
                     }
                     numberOfSigners = 1
-                }
-
-                init {
-                    ZkCommandDataSerializerMap.register(this::class)
                 }
             }
 
@@ -157,14 +128,14 @@ class ZKVerifierTransactionTest {
             val publicOutput3 = TestState(alice, 3)
             val privateOutput4 = TestState(alice, 4)
 
-            val txbuilder = ZKTransactionBuilder(notary, zkNetworkParameters)
+            val txbuilder = ZKTransactionBuilder(notary)
             txbuilder.addCommand(TestZKCommand(), alice.owningKey)
             txbuilder.addOutputState(publicOutput0) // at 0
             txbuilder.addOutputState(publicOutput1) // at 1
             txbuilder.addOutputState(privateOutput2) // at 2
             txbuilder.addOutputState(publicOutput3) // at 3
             txbuilder.addOutputState(privateOutput4) // at 4
-            val wtx = txbuilder.toWireTransaction(services)
+            val wtx = txbuilder.toWireTransactionWithDefaultCordaSerializationForTesting(services)
             val proofs = mapOf<ZKCommandClassName, Proof>()
             val vtx = ZKVerifierTransaction.fromWireTransaction(wtx, proofs)
 

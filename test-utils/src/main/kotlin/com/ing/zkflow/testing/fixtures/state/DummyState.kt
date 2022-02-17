@@ -1,10 +1,6 @@
 package com.ing.zkflow.testing.fixtures.state
 
-import com.ing.serialization.bfl.annotations.FixedLength
-import com.ing.zkflow.common.serialization.BFLSerializationScheme.Companion.ZkContractStateSerializerMap
 import com.ing.zkflow.testing.fixtures.contract.DummyContract
-import kotlinx.serialization.Polymorphic
-import kotlinx.serialization.Serializable
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.HashAttachmentConstraint
@@ -17,17 +13,10 @@ import net.corda.core.identity.Party
 import net.corda.testing.core.TestIdentity
 import kotlin.random.Random
 
-@Serializable
 @BelongsToContract(DummyContract::class)
 public data class DummyState(
-    val value: Int,
-    @FixedLength([2]) val set: Set<Int>,
-    @FixedLength([2]) override val participants: List<@Polymorphic AbstractParty>
+    val value: Int, val set: Set<Int>, override val participants: List<AbstractParty>
 ) : ContractState {
-    init {
-        ZkContractStateSerializerMap.register(this::class)
-    }
-
     public companion object {
         public fun any(): DummyState {
             val alice = TestIdentity.fresh("Alice")

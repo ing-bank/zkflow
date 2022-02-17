@@ -28,6 +28,7 @@ import net.corda.core.crypto.SignableData
 import net.corda.core.crypto.SignatureMetadata
 import net.corda.core.identity.Party
 import net.corda.core.internal.FlowStateMachine
+import net.corda.core.internal.VisibleForTesting
 import net.corda.core.internal.requiredContractClassName
 import net.corda.core.node.ServiceHub
 import net.corda.core.node.ServicesForResolution
@@ -132,20 +133,41 @@ class ZKTransactionBuilder(
      * Duplicated so that `toWireTransaction()` always uses the serialization settings
      */
     fun toWireTransaction(services: ServicesForResolution): WireTransaction {
-
-        val resolvedTransactionMetadata = this.zkTransactionMetadata()
-        resolvedTransactionMetadata.verify(this)
-
-        enforcePrivateInputsAndReferences(resolvedTransactionMetadata, services)
-
+        val resolvedTransactionMetadata = this.verify(services)
         val zkNetworkParameters = zkNetworkParameters ?: ZKNetworkParametersServiceLoader.parameters
 
-        val serializationProperties = mapOf<Any, Any>(
-            CONTEXT_KEY_TRANSACTION_METADATA to resolvedTransactionMetadata,
+        val serializationProperties = mutableMapOf<Any, Any>(
             CONTEXT_KEY_ZK_NETWORK_PARAMETERS to zkNetworkParameters
-        )
+        ).also {
+            if (resolvedTransactionMetadata != null) {
+                it[CONTEXT_KEY_TRANSACTION_METADATA] = resolvedTransactionMetadata
+            }
+        }
 
         return builder.toWireTransaction(services, zkNetworkParameters.serializationSchemeId, serializationProperties)
+    }
+
+    /**
+     * This function should only ever be used for testing. It is required to test without custom serialization.
+     */
+    @VisibleForTesting
+    internal fun toWireTransactionWithDefaultCordaSerializationForTesting(services: ServicesForResolution): WireTransaction {
+        verify(services)
+
+        return builder.toWireTransaction(services)
+    }
+
+    private fun verify(services: ServicesForResolution): ResolvedZKTransactionMetadata? {
+        return if (this.hasZKCommandData) {
+            val resolvedTransactionMetadata = this.zkTransactionMetadata()
+
+            resolvedTransactionMetadata.verify(this)
+            enforcePrivateInputsAndReferences(resolvedTransactionMetadata, services)
+
+            resolvedTransactionMetadata
+        } else {
+            null
+        }
     }
 
     private fun enforcePrivateInputsAndReferences(

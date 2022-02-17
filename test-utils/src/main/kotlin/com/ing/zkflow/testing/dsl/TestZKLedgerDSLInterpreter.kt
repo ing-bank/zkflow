@@ -1,7 +1,7 @@
 
 import com.ing.zkflow.common.network.ZKNetworkParameters
 import com.ing.zkflow.common.transactions.ZKTransactionBuilder
-import com.ing.zkflow.common.transactions.isZKFlowTransaction
+import com.ing.zkflow.common.transactions.hasZKCommandData
 import com.ing.zkflow.testing.dsl.AttachmentResolutionException
 import com.ing.zkflow.testing.dsl.DoubleSpentInputs
 import com.ing.zkflow.testing.dsl.DuplicateOutputLabel
@@ -248,7 +248,7 @@ public data class TestZKLedgerDSLInterpreter private constructor(
                 val wtx = value.transaction
                 val ltx = wtx.toLedgerTransaction(services)
                 ltx.verify()
-                if (wtx.isZKFlowTransaction) {
+                if (wtx.hasZKCommandData) {
                     zkService.verify(wtx, mode)
                 }
                 val allInputs = wtx.inputs union wtx.references

@@ -1,13 +1,10 @@
 package com.ing.zkflow.transactions
 
-import com.ing.serialization.bfl.annotations.FixedLength
 import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.contracts.ZKContractState
 import com.ing.zkflow.common.network.ZKAttachmentConstraintType
 import com.ing.zkflow.common.network.ZKNetworkParameters
 import com.ing.zkflow.common.network.ZKNotaryInfo
-import com.ing.zkflow.common.serialization.BFLSerializationScheme.Companion.ZkCommandDataSerializerMap
-import com.ing.zkflow.common.serialization.BFLSerializationScheme.Companion.ZkContractStateSerializerMap
 import com.ing.zkflow.common.transactions.UtxoInfo
 import com.ing.zkflow.common.transactions.ZKTransactionBuilder
 import com.ing.zkflow.common.zkp.Witness
@@ -20,9 +17,6 @@ import com.ing.zkflow.testing.fixtures.contract.DummyContract
 import com.ing.zkflow.testing.fixtures.state.DummyState
 import com.ing.zkflow.testing.withCustomSerializationEnv
 import io.kotest.matchers.shouldBe
-import kotlinx.serialization.Contextual
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.Transient
 import net.corda.core.contracts.AlwaysAcceptAttachmentConstraint
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.Contract
@@ -43,6 +37,7 @@ import net.corda.core.transactions.LedgerTransaction
 import net.corda.core.transactions.WireTransaction
 import net.corda.testing.common.internal.testNetworkParameters
 import net.corda.testing.core.TestIdentity
+import net.corda.testing.internal.withTestSerializationEnvIfNotSet
 import net.corda.testing.node.MockServices
 import org.junit.Test
 import kotlin.random.Random
@@ -63,7 +58,6 @@ class ZKTransactionOrderingTest {
     private val wtx: WireTransaction
 
     init {
-
         val notary = TestIdentity.fresh("Notary").party
 
         // outputs
@@ -93,10 +87,8 @@ class ZKTransactionOrderingTest {
             ReferencedStateAndRef(StateAndRef(DummyZKStateB.newTxState(notary), StateRef(SecureHash.randomSHA256(), 1)))
         refs.addAll(listOf(refB1, refB2, ref1, refA1, refA2))
 
-        withCustomSerializationEnv {
-            inputUtxoInfos.addAll(inputs.map { generateUtxoInfo(it) } as MutableList<UtxoInfo>)
-            refUtxoInfos.addAll(refs.map { generateUtxoInfo(it.stateAndRef) })
-        }
+        inputUtxoInfos.addAll(inputs.map { generateUtxoInfo(it) } as MutableList<UtxoInfo>)
+        refUtxoInfos.addAll(refs.map { generateUtxoInfo(it.stateAndRef) })
 
         val networkParams = object : ZKNetworkParameters {
             override val participantSignatureScheme: SignatureScheme = ZKFlow.DEFAULT_ZKFLOW_SIGNATURE_SCHEME
@@ -118,8 +110,8 @@ class ZKTransactionOrderingTest {
         wtx = createWireTransaction()
     }
 
-    private fun generateUtxoInfo(stateAndRef: StateAndRef<ContractState>): UtxoInfo {
-        return UtxoInfo.build(
+    private fun generateUtxoInfo(stateAndRef: StateAndRef<ContractState>): UtxoInfo = withTestSerializationEnvIfNotSet {
+        UtxoInfo.build(
             stateRef = stateAndRef.ref,
             serializedContents = stateAndRef.state.serialize().bytes,
             nonce = SecureHash.zeroHashFor(SecureHash.BLAKE2S256),
@@ -127,7 +119,7 @@ class ZKTransactionOrderingTest {
         )
     }
 
-    private fun createWireTransaction(): WireTransaction = withCustomSerializationEnv {
+    private fun createWireTransaction(): WireTransaction = withTestSerializationEnvIfNotSet {
         val cordappPackages = listOf(LocalContract.PROGRAM_ID.packageName, DummyContract.PROGRAM_ID.packageName).mapNotNull { it }
         val networkParameters = testNetworkParameters(minimumPlatformVersion = ZKFlow.REQUIRED_PLATFORM_VERSION)
         val firstIdentity = TestIdentity(CordaX500Name("TestIdentity", "", "GB"))
@@ -136,7 +128,7 @@ class ZKTransactionOrderingTest {
             firstIdentity,
             networkParameters
         )
-        zkBuilder.toWireTransaction(mockServices)
+        zkBuilder.toWireTransactionWithDefaultCordaSerializationForTesting(mockServices)
     }
 
     /*
@@ -193,13 +185,7 @@ class LocalContract : Contract {
         const val PROGRAM_ID = "com.ing.zkflow.transactions.LocalContract"
     }
 
-    @Serializable
     class Create : ZKCommandData {
-        init {
-            ZkCommandDataSerializerMap.register(this::class)
-        }
-
-        @Transient
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
             numberOfSigners = 1
             outputs {
@@ -227,18 +213,13 @@ class LocalContract : Contract {
     override fun verify(tx: LedgerTransaction) {}
 }
 
-@Serializable
 @BelongsToContract(LocalContract::class)
 @Suppress("EqualsWithHashCodeExist")
 class DummyZKStateA(
     val value: Int,
-    @FixedLength([2]) val set: Set<Int>,
-    @FixedLength([2]) override val participants: List<@Contextual AnonymousParty>
+    val set: Set<Int>,
+    override val participants: List<AnonymousParty>
 ) : ZKContractState {
-    init {
-        ZkContractStateSerializerMap.register(this::class)
-    }
-
     companion object {
         fun newState(): DummyZKStateA {
             val alice = TestIdentity.fresh("Alice")
@@ -260,18 +241,13 @@ class DummyZKStateA(
     }
 }
 
-@Serializable
 @BelongsToContract(LocalContract::class)
 @Suppress("EqualsWithHashCodeExist")
 class DummyZKStateB(
     val value: Int,
-    @FixedLength([2]) val set: Set<Int>,
-    @FixedLength([2]) override val participants: List<@Contextual AnonymousParty>
+    val set: Set<Int>,
+    override val participants: List<AnonymousParty>
 ) : ZKContractState {
-    init {
-        ZkContractStateSerializerMap.register(this::class)
-    }
-
     companion object {
         fun newState(): DummyZKStateB {
             val alice = TestIdentity.fresh("Alice")
