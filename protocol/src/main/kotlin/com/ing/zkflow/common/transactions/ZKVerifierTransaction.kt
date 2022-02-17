@@ -40,7 +40,8 @@ class ZKVerifierTransaction internal constructor(
 
     val filteredComponentGroups: List<FilteredComponentGroup>,
 
-    val publicInputHashes: Map<Int, List<SecureHash>>,
+    @Transient
+    val privateComponentHashes: Map<Int, List<SecureHash>>,
 
     digestService: DigestService
 ) : TraversableTransaction(
@@ -124,8 +125,8 @@ class ZKVerifierTransaction internal constructor(
                 proofs = proofs,
                 outputHashes = outputHashes(wtx, ftx),
                 groupHashes = ftx.groupHashes,
-                publicInputHashes = computePublicInputHashes(wtx, ftx),
                 digestService = wtx.digestService,
+                privateComponentHashes = getPrivateComponentHashes(wtx, ftx),
                 filteredComponentGroups = filteredComponentGroups
             )
         }
@@ -205,14 +206,10 @@ class ZKVerifierTransaction internal constructor(
             )
         }
 
-        // TODO: Not sure if here is the right place for this?
-        private fun computePublicInputHashes(wtx: WireTransaction, ftx: FilteredTransaction): Map<Int, List<SecureHash>> {
+        private fun getPrivateComponentHashes(wtx: WireTransaction, ftx: FilteredTransaction): Map<Int, List<SecureHash>> {
 
             val publicInputHashes: MutableMap<Int, List<SecureHash>> = mutableMapOf()
 
-            publicInputHashes[ComponentGroupEnum.INPUTS_GROUP.ordinal] = getHashesForPrivateComponents(wtx, ftx, ComponentGroupEnum.INPUTS_GROUP)
-            publicInputHashes[ComponentGroupEnum.OUTPUTS_GROUP.ordinal] = getHashesForPrivateComponents(wtx, ftx, ComponentGroupEnum.OUTPUTS_GROUP)
-            publicInputHashes[ComponentGroupEnum.REFERENCES_GROUP.ordinal] = getHashesForPrivateComponents(wtx, ftx, ComponentGroupEnum.REFERENCES_GROUP)
             publicInputHashes[ComponentGroupEnum.ATTACHMENTS_GROUP.ordinal] = getHashesForPrivateComponents(wtx, ftx, ComponentGroupEnum.ATTACHMENTS_GROUP)
             publicInputHashes[ComponentGroupEnum.COMMANDS_GROUP.ordinal] = getHashesForPrivateComponents(wtx, ftx, ComponentGroupEnum.COMMANDS_GROUP)
             publicInputHashes[ComponentGroupEnum.NOTARY_GROUP.ordinal] = getHashesForPrivateComponents(wtx, ftx, ComponentGroupEnum.NOTARY_GROUP)
@@ -229,16 +226,19 @@ class ZKVerifierTransaction internal constructor(
             return if (ftx.filteredComponentGroups.find { it.groupIndex == groupEnum.ordinal } == null)
                 emptyList()
             else {
+                val componentGroup = wtx.componentGroups.find { it.groupIndex == groupEnum.ordinal }
+                val filteredComponentGroup = componentGroup?.components?.filterIndexed { index, _ ->
+                    zkTransactionMetadata.isVisibleInWitness(groupEnum.ordinal, index)
+                }
+
+                val componentIndices = filteredComponentGroup?.map { component ->
+                    componentGroup.components.indexOf(component)
+                }
                 val nonces = ftx.filteredComponentGroups.find { it.groupIndex == groupEnum.ordinal }!!.nonces
-                wtx.componentGroups
-                    .find { it.groupIndex == groupEnum.ordinal }!!
-                    .components
-                    .mapIndexed { componentIndex, component ->
-                        wtx.digestService.componentHash(nonces[componentIndex], component)
-                    }
-                    .filterIndexed { componentIndex, _ ->
-                        zkTransactionMetadata.isVisibleInWitness(groupEnum.ordinal, componentIndex)
-                    }
+
+                filteredComponentGroup?.mapIndexed { index, bytes ->
+                    wtx.digestService.componentHash(nonces[componentIndices?.get(index)!!], bytes)
+                } ?: emptyList()
             }
         }
     }
