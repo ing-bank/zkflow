@@ -3,7 +3,7 @@ package com.ing.zinc.bfl.generator
 import com.ing.zinc.bfl.BflPrimitive
 import com.ing.zinc.bfl.BflType
 import com.ing.zinc.bfl.CONSTS
-import com.ing.zinc.bfl.CORDA_MAGIC_BITS_SIZE
+import com.ing.zinc.bfl.CORDA_MAGIC_BYTES_SIZE
 import com.ing.zinc.bfl.dsl.ArrayBuilder.Companion.array
 import com.ing.zinc.bfl.dsl.StructBuilder.Companion.struct
 import com.ing.zinc.naming.camelToSnakeCase
@@ -56,24 +56,22 @@ data class WitnessGroupOptions(
     val deserializeMethodName: String = "deserialize_from_${name.camelToSnakeCase()}"
 
     companion object {
-        fun cordaWrapped(groupName: String, stateClass: BflType): WitnessGroupOptions {
-            return WitnessGroupOptions(
-                groupName,
-                struct {
-                    name = groupName
-                    field {
-                        name = "corda_magic_bits"
-                        type = array {
-                            capacity = CORDA_MAGIC_BITS_SIZE
-                            elementType = BflPrimitive.Bool
-                        }
-                    }
-                    field {
-                        name = "state_class"
-                        type = stateClass
+        fun cordaWrapped(groupName: String, stateClass: BflType): WitnessGroupOptions = WitnessGroupOptions(
+            groupName,
+            struct {
+                name = groupName
+                field {
+                    name = "corda_magic_bits"
+                    type = array {
+                        capacity = CORDA_MAGIC_BYTES_SIZE
+                        elementType = BflPrimitive.I8
                     }
                 }
-            )
-        }
+                field {
+                    name = "state_class"
+                    type = stateClass
+                }
+            }
+        )
     }
 }

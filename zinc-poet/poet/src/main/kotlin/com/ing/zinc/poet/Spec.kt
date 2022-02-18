@@ -1,16 +1,33 @@
 package com.ing.zinc.poet
 
 /**
- * Mark as top-level element in a ZincFile.
+ * [ZincFileItem]s represent zinc code that can be rendered into a [ZincFile].
  */
 interface ZincFileItem {
+    /**
+     * Render this [ZincFileItem] for inclusion in a [ZincFile].
+     */
     fun generate(): String
 }
 
+/**
+ * Represents a zinc type.
+ *
+ * [ZincType]s can be composed into more complex types, for example with [ZincArray] or [ZincStruct].
+ */
 interface ZincType {
+    /**
+     * Returns the identifier of the [ZincType] as used in actual zinc code.
+     */
     fun getId(): String
 
     companion object {
+        /**
+         * A [ZincType] with the given [id].
+         * This can be used to 'import' existing structs, enums or type definitions into other zinc-poet entities.
+         * Before using this, always investigate whether any of the other [ZincType] implementations can be used.
+         * E.g. for primitive types always use [ZincPrimitive].
+         */
         data class ZincTypeIdentifier(
             private val id: String
         ) : ZincType {
@@ -21,6 +38,9 @@ interface ZincType {
     }
 }
 
+/**
+ * A special [ZincType] that represents the `Self` zinc keyword.
+ */
 object Self : ZincType {
     private const val SELF_REFERENCE = "Self"
     override fun getId(): String = SELF_REFERENCE

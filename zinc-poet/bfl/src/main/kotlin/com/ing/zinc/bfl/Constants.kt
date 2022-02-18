@@ -6,8 +6,10 @@ const val CONSTS = "consts"
 const val OFFSET = "offset"
 /** Variable name for the variable that holds the serialized witness group. */
 const val SERIALIZED = "serialized"
+/** Number of bytes that corda prepends to serialized witness groups. */
+const val CORDA_MAGIC_BYTES_SIZE = 7
 /** Number of bits that corda prepends to serialized witness groups. */
-const val CORDA_MAGIC_BITS_SIZE = 7 * Byte.SIZE_BITS
+const val CORDA_MAGIC_BITS_SIZE = CORDA_MAGIC_BYTES_SIZE * Byte.SIZE_BITS
 /** Constant name of the constant that holds the number of bits that corda prepends to serialized witness groups. */
 const val CORDA_MAGIC_BITS_SIZE_CONSTANT_NAME = "CORDA_MAGIC_BITS_SIZE"
 /** Import for the CORDA_MAGIC_BITS_SIZE constant. */

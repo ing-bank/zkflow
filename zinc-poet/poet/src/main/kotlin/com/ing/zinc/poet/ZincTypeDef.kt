@@ -1,7 +1,21 @@
 package com.ing.zinc.poet
 
+/**
+ * A [ZincType] that represents a type alias definition, e.g.
+
+ * ```
+ * type BitArray16 = [bool; 16];
+ * ```
+ */
 interface ZincTypeDef : ZincType, ZincFileItem {
+    /**
+     * The alias for the defined type.
+     */
     fun getName(): String
+
+    /**
+     * The actual type.
+     */
     fun getType(): ZincType
 
     @ZincDslMarker

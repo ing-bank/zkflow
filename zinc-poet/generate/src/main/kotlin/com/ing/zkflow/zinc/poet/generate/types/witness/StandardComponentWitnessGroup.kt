@@ -5,10 +5,11 @@ import com.ing.zinc.bfl.BflType
 import com.ing.zinc.bfl.CONSTS
 import com.ing.zinc.bfl.CORDA_MAGIC_BITS_SIZE_CONSTANT
 import com.ing.zinc.bfl.generator.WitnessGroupOptions
-import com.ing.zinc.bfl.getLengthConstant
+import com.ing.zinc.bfl.getSerializedTypeDef
 import com.ing.zinc.bfl.toZincId
 import com.ing.zinc.poet.Indentation.Companion.spaces
 import com.ing.zinc.poet.ZincArray
+import com.ing.zinc.poet.ZincArray.Companion.zincArray
 import com.ing.zinc.poet.ZincFunction
 import com.ing.zinc.poet.ZincMethod.Companion.zincMethod
 import com.ing.zinc.poet.ZincPrimitive
@@ -16,6 +17,7 @@ import com.ing.zinc.poet.ZincType
 import com.ing.zinc.poet.indent
 import com.ing.zkflow.zinc.poet.generate.COMPUTE_NONCE
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes
+import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.digest
 import com.ing.zkflow.zinc.poet.generate.types.Witness
 import net.corda.core.contracts.ComponentGroupEnum
 
@@ -28,9 +30,9 @@ internal data class StandardComponentWitnessGroup(
     override val isPresent: Boolean = groupSize > 0
     override val options = listOf(WitnessGroupOptions.cordaWrapped(groupName, module))
     override val dependencies: List<BflType> = listOfNotNull(module as? BflModule)
-    override val serializedType: ZincType = ZincArray.zincArray {
+    override val serializedType: ZincType = zincArray {
         size = groupSize.toString()
-        elementType = ZincArray.zincArray {
+        elementType = zincArray {
             size = "$CONSTS::${options[0].witnessSizeConstant.getName()}"
             elementType = ZincPrimitive.Bool
         }
@@ -48,7 +50,7 @@ internal data class StandardComponentWitnessGroup(
             comment =
                 "Deserialize $groupName from the ${Witness::class.java.simpleName}."
             name = "deserialize_$groupName"
-            returnType = ZincArray.zincArray {
+            returnType = zincArray {
                 elementType = module.toZincId()
                 size = "$groupSize"
             }
@@ -63,20 +65,23 @@ internal data class StandardComponentWitnessGroup(
     }
 
     override val generateHashesMethod: ZincFunction = zincMethod {
+        val serializedDigest = digest.getSerializedTypeDef().getType() as ZincArray
         comment = "Compute the $groupName leaf hashes."
         name = "compute_${groupName}_leaf_hashes"
-        returnType = ZincArray.zincArray {
-            elementType = StandardTypes.digest.toZincId()
+        returnType = zincArray {
+            elementType = digest.getSerializedTypeDef()
             size = "$groupSize"
         }
         body = """
-            let mut ${groupName}_leaf_hashes = [[false; ${StandardTypes.digest.getLengthConstant()}]; $groupSize];
+            let mut ${groupName}_leaf_hashes: [${digest.getSerializedTypeDef().getName()}; $groupSize] = [[false; ${serializedDigest.getSize()}]; $groupSize];
+
             for i in (0 as u32)..$groupSize {
                 ${groupName}_leaf_hashes[i] = blake2s_multi_input(
                     $COMPUTE_NONCE(self.${Witness.PRIVACY_SALT}, ${StandardTypes.componentGroupEnum.id}::${componentGroup.name} as u32, i),
                     self.$groupName[i],
                 );
             }
+
             ${groupName}_leaf_hashes
         """.trimIndent()
     }

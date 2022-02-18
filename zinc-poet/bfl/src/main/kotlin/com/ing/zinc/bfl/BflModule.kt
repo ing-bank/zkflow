@@ -3,11 +3,12 @@ package com.ing.zinc.bfl
 import com.ing.zinc.bfl.BflModule.Companion.getRegisteredMethodsFor
 import com.ing.zinc.bfl.generator.CodeGenerationOptions
 import com.ing.zinc.naming.camelToSnakeCase
-import com.ing.zinc.poet.ZincArray
+import com.ing.zinc.poet.ZincArray.Companion.zincArray
 import com.ing.zinc.poet.ZincFile
 import com.ing.zinc.poet.ZincFunction
 import com.ing.zinc.poet.ZincPrimitive
 import com.ing.zinc.poet.ZincTypeDef
+import com.ing.zinc.poet.ZincTypeDef.Companion.zincTypeDef
 import java.util.Locale
 
 /**
@@ -45,7 +46,7 @@ interface BflModule : BflType {
          * Registers a [method] for a module with id [moduleId].
          *
          * This is an extension mechanism to allow registering methods for [BflModule] instances that are not even
-         * created yet, or will be automatically created, f.e. using reflection.
+         * created yet, or will be automatically created, e.g. using reflection.
          */
         fun registerMethod(moduleId: String, method: ZincFunction) {
             val methodsRegistry = methodsPerModuleRegistry.getOrPut(moduleId) { mutableMapOf() }
@@ -74,10 +75,12 @@ fun BflModule.getLengthConstant(): String = "${id.camelToSnakeCase().toUpperCase
 /**
  * The type definition for the serialized form of this [BflModule].
  */
-fun BflModule.getSerializedTypeDef(): ZincTypeDef = ZincTypeDef.zincTypeDef {
+fun BflModule.getSerializedTypeDef(): ZincTypeDef = zincTypeDef {
     name = "Serialized$id"
-    type = ZincArray.zincArray {
+    type = zincArray {
         elementType = ZincPrimitive.Bool
         size = getLengthConstant()
     }
 }
+
+fun BflModule.getSerializedBflTypeDef() = BflTypeDef("Serialized$id", BflArray(bitSize, BflPrimitive.Bool))

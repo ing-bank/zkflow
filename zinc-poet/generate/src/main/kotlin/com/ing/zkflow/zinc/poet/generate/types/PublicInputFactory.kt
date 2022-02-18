@@ -3,6 +3,7 @@ package com.ing.zkflow.zinc.poet.generate.types
 import com.ing.zinc.bfl.BflStruct
 import com.ing.zinc.bfl.dsl.ArrayBuilder.Companion.array
 import com.ing.zinc.bfl.dsl.StructBuilder.Companion.struct
+import com.ing.zinc.bfl.getSerializedBflTypeDef
 import com.ing.zinc.poet.ZincArray
 import com.ing.zkflow.zinc.poet.generate.types.witness.WitnessGroupsContainer
 
@@ -21,7 +22,7 @@ class PublicInputFactory(
                         name = witnessGroup.groupName
                         type = array {
                             capacity = groupSize.toInt()
-                            elementType = StandardTypes.digest
+                            elementType = StandardTypes.digest.getSerializedBflTypeDef()
                         }
                     }
                 }

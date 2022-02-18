@@ -186,7 +186,7 @@ class ComplexBflTest {
             // amount.token.is_resolved
             bits(1)
             // and the rest
-            bytes(*IntArray(364))
+            bytes(*IntArray(366))
         }
 
         val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run", 60)
