@@ -30,14 +30,16 @@ val Meta.PropertyAnnotator: CliPlugin
             }) { (ktProperty, _) ->
                 SerdeLogger.phase(PROCESSING_UNIT) { logger ->
                     // Arrow has troubles with comments and doc strings, remove them altogether.
-                    val allComments =
-                        "((['\"])(?:(?!\\2|\\\\).|\\\\.)*\\2)|\\/\\/[^\\n]*|\\/\\*(?:[^*]|\\*(?!\\/))*\\*\\/".toRegex()
-                    val propertyClearDeclaration = ktProperty.text
-                        .replace(allComments, "")
-                        .trimIndent()
-                        .lines()
-                        .filterNot { it.isBlank() }
-                        .joinToString(separator = "\n")
+                    // This approach has a small risk of removing too much, causing compilation errors.
+                    // On the other hand, leaving comments in has caused issues in the past.
+                    val propertyClearDeclaration = ktProperty.docComment?.let {
+                        ktProperty.text
+                            .replace(it.text, "")
+                            .trimIndent()
+                            .lines()
+                            .filterNot { it.isBlank() }
+                            .joinToString(separator = "\n")
+                    } ?: ktProperty.text
 
                     Transform.replace(
                         replacing = ktProperty,
