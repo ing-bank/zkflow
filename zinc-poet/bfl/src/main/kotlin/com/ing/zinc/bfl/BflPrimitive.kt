@@ -31,7 +31,7 @@ enum class BflPrimitive(
         witnessVariable: String
     ): String {
         return when (this) {
-            Bool -> "$witnessVariable[$offset]"
+            Bool -> "$witnessVariable[$offset + 7 as u24]"
             U8, U16, U24, U32, U64, U128 -> {
                 generateParseIntegerFromBits(offset, variablePrefix, false, witnessVariable)
             }

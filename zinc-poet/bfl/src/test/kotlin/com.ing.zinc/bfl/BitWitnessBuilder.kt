@@ -42,8 +42,8 @@ private sealed class WitnessPart {
         override fun generateBooleanSequence(): List<Boolean> {
             return bits.flatMap {
                 listOf(
-                    it == 1, false, false, false,
-                    false, false, false, false
+                    false, false, false, false,
+                    false, false, false, it == 1
                 )
             }
         }

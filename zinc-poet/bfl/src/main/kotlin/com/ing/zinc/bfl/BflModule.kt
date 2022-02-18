@@ -46,7 +46,7 @@ interface BflModule : BflType {
          * Registers a [method] for a module with id [moduleId].
          *
          * This is an extension mechanism to allow registering methods for [BflModule] instances that are not even
-         * created yet, or will be automatically created, f.e. using reflection.
+         * created yet, or will be automatically created, e.g. using reflection.
          */
         fun registerMethod(moduleId: String, method: ZincFunction) {
             val methodsRegistry = methodsPerModuleRegistry.getOrPut(moduleId) { mutableMapOf() }

@@ -7,7 +7,9 @@ import com.ing.zinc.poet.ZincType
 import com.ing.zinc.poet.ZincType.Companion.id
 
 /**
- * Represents a type.
+ * Represents a Kotlin type in zinc that can be deserialized from blf-serialized bit array.
+ *
+ * [BflType]s can be used to generate zinc code, e.g. with [deserializeExpr], [defaultExpr], [equalsExpr] and [sizeExpr].
  */
 interface BflType {
     /**
@@ -65,7 +67,7 @@ interface BflType {
 
     /**
      * Convert this type to a [ZincType].
-     * Not all [BflType]s can be completely represented as a [ZincType], f.e. [BflModule] instances
+     * Not all [BflType]s can be completely represented as a [ZincType], e.g. [BflModule] instances
      * represent a whole file. In these cases they will be converted either to a [ZincStruct] or a
      * [ZincEnum].
      */

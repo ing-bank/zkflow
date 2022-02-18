@@ -8,41 +8,49 @@ import com.ing.zinc.poet.ZincFunction
 import com.ing.zinc.poet.ZincPrimitive
 import com.ing.zinc.poet.ZincTypeDef
 
-class BflTypeDef(
+/**
+ * [BflTypeDef] is a [BflType] that represents a [BflModule] for type definitions.
+ *
+ * This type can be used to `upgrade` a [BflType] which is not a [BflModule] to a [BflModule].
+ *
+ * The generated module will contain this type definition, and also a type definition for the serialized data. All
+ * other methods are delegated to the [typeDeclaration].
+ */
+data class BflTypeDef(
     override val id: String,
-    private val typeDef: BflType,
+    private val typeDeclaration: BflType,
 ) : BflModule {
     override fun generateZincFile(codeGenerationOptions: CodeGenerationOptions): ZincFile = zincFile {
-        if (typeDef is BflModule) {
-            mod { module = typeDef.getModuleName() }
-            use { path = "${typeDef.getModuleName()}::${typeDef.id}" }
-            use { path = "${typeDef.getModuleName()}::${typeDef.getSerializedTypeDef().getName()}" }
-            use { path = "${typeDef.getModuleName()}::${typeDef.getLengthConstant()}" }
+        if (typeDeclaration is BflModule) {
+            mod { module = typeDeclaration.getModuleName() }
+            use { path = "${typeDeclaration.getModuleName()}::${typeDeclaration.id}" }
+            use { path = "${typeDeclaration.getModuleName()}::${typeDeclaration.getSerializedTypeDef().getName()}" }
+            use { path = "${typeDeclaration.getModuleName()}::${typeDeclaration.getLengthConstant()}" }
             newLine()
             constant {
                 name = getLengthConstant()
                 type = ZincPrimitive.U24
-                initialization = typeDef.getLengthConstant()
+                initialization = typeDeclaration.getLengthConstant()
             }
             newLine()
         } else {
             constant {
                 name = getLengthConstant()
                 type = ZincPrimitive.U24
-                initialization = "${typeDef.bitSize} as u24"
+                initialization = "${typeDeclaration.bitSize} as u24"
             }
         }
         add(getSerializedTypeDef())
         newLine()
         type {
             name = id
-            type = typeDef.toZincId()
+            type = typeDeclaration.toZincId()
         }
     }
 
     override fun generateMethods(codeGenerationOptions: CodeGenerationOptions): List<ZincFunction> = emptyList()
 
-    override val bitSize: Int = typeDef.bitSize
+    override val bitSize: Int = typeDeclaration.bitSize
 
     override fun typeName(): String = id
 
@@ -51,18 +59,18 @@ class BflTypeDef(
         offset: String,
         variablePrefix: String,
         witnessVariable: String
-    ): String = typeDef.deserializeExpr(witnessGroupOptions, offset, variablePrefix, witnessVariable)
+    ): String = typeDeclaration.deserializeExpr(witnessGroupOptions, offset, variablePrefix, witnessVariable)
 
-    override fun defaultExpr(): String = typeDef.defaultExpr()
+    override fun defaultExpr(): String = typeDeclaration.defaultExpr()
 
-    override fun equalsExpr(self: String, other: String): String = typeDef.equalsExpr(self, other)
+    override fun equalsExpr(self: String, other: String): String = typeDeclaration.equalsExpr(self, other)
 
     override fun accept(visitor: TypeVisitor) {
-        visitor.visitType(typeDef)
+        visitor.visitType(typeDeclaration)
     }
 
     override fun toZincType(): ZincTypeDef = ZincTypeDef.zincTypeDef {
         name = this@BflTypeDef.typeName()
-        type = this@BflTypeDef.typeDef.toZincType()
+        type = this@BflTypeDef.typeDeclaration.toZincType()
     }
 }
