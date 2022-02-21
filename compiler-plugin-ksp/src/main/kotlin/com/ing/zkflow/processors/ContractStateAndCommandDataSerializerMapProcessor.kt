@@ -4,7 +4,7 @@ import com.google.devtools.ksp.processing.CodeGenerator
 import com.ing.zkflow.ksp.implementations.ImplementationsProcessor
 import com.ing.zkflow.ksp.implementations.ScopedDeclaration
 import com.ing.zkflow.ksp.implementations.ServiceLoaderRegistration
-import com.ing.zkflow.serialization.ZKDataProvider
+import com.ing.zkflow.serialization.infra.ZKDataProvider
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
@@ -29,7 +29,7 @@ class ContractStateAndCommandDataSerializerMapProcessor<T : Any>(
 
     override fun process(implementations: List<ScopedDeclaration>): ServiceLoaderRegistration {
         val uid = Random.nextInt().absoluteValue
-        val packageName = "com.ing.zkflow.serialization"
+        val packageName = "com.ing.zkflow.serialization.infra"
         val className = "${producerInterface.simpleName}SerializerMapProvider$uid"
 
         FileSpec.builder(packageName, className)

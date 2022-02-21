@@ -3,7 +3,7 @@ package com.ing.zkflow.zinc.poet.generate
 import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.network.ZKNetworkParametersServiceLoader
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
-import com.ing.zkflow.serialization.ZkCommandDataSerializerMapProvider
+import com.ing.zkflow.serialization.infra.ZkCommandDataSerializerMapProvider
 import com.ing.zkflow.util.ensureDirectory
 import com.ing.zkflow.zinc.poet.generate.types.CommandContextFactory
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes

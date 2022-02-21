@@ -2,8 +2,8 @@ package com.ing.zkflow.contract
 
 import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.ksp.ProcessorTest
-import com.ing.zkflow.serialization.ZKContractStateSerializerMapProvider
-import com.ing.zkflow.serialization.ZkCommandDataSerializerMapProvider
+import com.ing.zkflow.serialization.infra.ZKContractStateSerializerMapProvider
+import com.ing.zkflow.serialization.infra.ZkCommandDataSerializerMapProvider
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import io.kotest.matchers.paths.shouldNotExist
@@ -24,7 +24,7 @@ internal class ContractStateAndCommandDataSymbolProcessorProviderTest : Processo
         }
 
         result.exitCode shouldBe KotlinCompilation.ExitCode.OK
-        result.getGeneratedMetaInfServices<ZkCommandDataSerializerMapProvider>() shouldStartWith "com.ing.zkflow.serialization.CommandDataSerializerMapProvider"
+        result.getGeneratedMetaInfServices<ZkCommandDataSerializerMapProvider>() shouldStartWith "com.ing.zkflow.serialization.infra.CommandDataSerializerMapProvider"
     }
 
     @Test
@@ -38,7 +38,7 @@ internal class ContractStateAndCommandDataSymbolProcessorProviderTest : Processo
         }
 
         result.exitCode shouldBe KotlinCompilation.ExitCode.OK
-        result.getGeneratedMetaInfServices<ZkCommandDataSerializerMapProvider>() shouldStartWith "com.ing.zkflow.serialization.CommandDataSerializerMapProvider"
+        result.getGeneratedMetaInfServices<ZkCommandDataSerializerMapProvider>() shouldStartWith "com.ing.zkflow.serialization.infra.CommandDataSerializerMapProvider"
     }
 
     @Test
@@ -66,7 +66,7 @@ internal class ContractStateAndCommandDataSymbolProcessorProviderTest : Processo
         }
 
         result.exitCode shouldBe KotlinCompilation.ExitCode.OK
-        result.getGeneratedMetaInfServices<ZKContractStateSerializerMapProvider>() shouldStartWith "com.ing.zkflow.serialization.ContractStateSerializerMapProvider"
+        result.getGeneratedMetaInfServices<ZKContractStateSerializerMapProvider>() shouldStartWith "com.ing.zkflow.serialization.infra.ContractStateSerializerMapProvider"
     }
 
     companion object {

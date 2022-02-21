@@ -6,8 +6,8 @@ import com.google.devtools.ksp.processing.SymbolProcessorProvider
 import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.contracts.ZKOwnableState
 import com.ing.zkflow.ksp.implementations.ImplementationsSymbolProcessor
-import com.ing.zkflow.serialization.ZKContractStateSerializerMapProvider
-import com.ing.zkflow.serialization.ZkCommandDataSerializerMapProvider
+import com.ing.zkflow.serialization.infra.ZKContractStateSerializerMapProvider
+import com.ing.zkflow.serialization.infra.ZkCommandDataSerializerMapProvider
 import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.ContractState
 

@@ -85,7 +85,7 @@ internal sealed class BinaryEncoder(
         WILL_NOT_IMPLEMENT("To encode Char, use ${ASCIICharSerializer::class.qualifiedName} or ${UTF8CharSerializer::class.qualifiedName}")
     }
     override fun encodeString(value: String) {
-        WILL_NOT_IMPLEMENT("To encode Char, use ${FixedLengthASCIIStringSerializer::class.qualifiedName} or ${FixedLengthUTF8StringSerializer::class.qualifiedName}")
+        WILL_NOT_IMPLEMENT("To encode String, use ${FixedLengthASCIIStringSerializer::class.qualifiedName} or ${FixedLengthUTF8StringSerializer::class.qualifiedName}")
     }
 
     override fun beginCollection(descriptor: SerialDescriptor, collectionSize: Int): CompositeEncoder {
