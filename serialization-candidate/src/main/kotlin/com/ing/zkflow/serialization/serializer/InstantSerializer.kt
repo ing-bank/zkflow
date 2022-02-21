@@ -12,8 +12,8 @@ object InstantSerializer : FixedLengthKSerializerWithDefault<Instant> {
 
     @Serializable
     private data class Surrogate(
-        val seconds: @Serializable(with = LongSerializer::class) Long,
-        val nanos: @Serializable(with = IntSerializer::class) Int
+        @Serializable(with = LongSerializer::class) val seconds: Long,
+        @Serializable(with = IntSerializer::class) val nanos: Int
     )
 
     private val strategy = Surrogate.serializer()
