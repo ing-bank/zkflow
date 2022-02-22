@@ -2,9 +2,6 @@ package com.ing.zkflow.transactions
 
 import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.contracts.ZKContractState
-import com.ing.zkflow.common.network.ZKAttachmentConstraintType
-import com.ing.zkflow.common.network.ZKNetworkParameters
-import com.ing.zkflow.common.network.ZKNotaryInfo
 import com.ing.zkflow.common.transactions.UtxoInfo
 import com.ing.zkflow.common.transactions.ZKTransactionBuilder
 import com.ing.zkflow.common.zkp.Witness
@@ -14,6 +11,7 @@ import com.ing.zkflow.common.zkp.metadata.commandMetadata
 import com.ing.zkflow.common.zkp.metadata.packageName
 import com.ing.zkflow.crypto.BLAKE2S256
 import com.ing.zkflow.testing.withCustomSerializationEnv
+import com.ing.zkflow.testing.zkp.MockZKNetworkParameters
 import io.kotest.matchers.shouldBe
 import net.corda.core.contracts.AlwaysAcceptAttachmentConstraint
 import net.corda.core.contracts.BelongsToContract
@@ -24,9 +22,7 @@ import net.corda.core.contracts.ReferencedStateAndRef
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.StateRef
 import net.corda.core.contracts.TransactionState
-import net.corda.core.crypto.DigestAlgorithm
 import net.corda.core.crypto.SecureHash
-import net.corda.core.crypto.SignatureScheme
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.CordaX500Name
@@ -90,17 +86,7 @@ class ZKTransactionOrderingTest {
         inputUtxoInfos.addAll(inputs.map { generateUtxoInfo(it) } as MutableList<UtxoInfo>)
         refUtxoInfos.addAll(refs.map { generateUtxoInfo(it.stateAndRef) })
 
-        val networkParams = object : ZKNetworkParameters {
-            override val participantSignatureScheme: SignatureScheme = ZKFlow.DEFAULT_ZKFLOW_SIGNATURE_SCHEME
-
-            override val attachmentConstraintType: ZKAttachmentConstraintType =
-                ZKAttachmentConstraintType.AlwaysAcceptAttachmentConstraintType
-            override val notaryInfo: ZKNotaryInfo = ZKNotaryInfo(ZKFlow.DEFAULT_ZKFLOW_NOTARY_SIGNATURE_SCHEME)
-            override val digestAlgorithm: DigestAlgorithm = ZKFlow.DEFAULT_ZKFLOW_DIGEST_IDENTIFIER
-            override val serializationSchemeId: Int = ZKFlow.DEFAULT_SERIALIZATION_SCHEME_ID
-        }
-
-        zkBuilder = ZKTransactionBuilder(notary, networkParams).apply {
+        zkBuilder = ZKTransactionBuilder(notary, MockZKNetworkParameters()).apply {
             outputs.forEach { addOutputState(it, LocalContract.PROGRAM_ID, AlwaysAcceptAttachmentConstraint) }
             inputs.forEach { addInputState(it) }
             refs.forEach { addReferenceState(it) }

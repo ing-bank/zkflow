@@ -2,11 +2,14 @@ package com.ing.zkflow.common.transactions
 
 import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.contracts.ZKContractState
+import com.ing.zkflow.common.network.ZKAttachmentConstraintType
 import com.ing.zkflow.common.zkp.ZKFlow
+import com.ing.zkflow.common.zkp.ZKFlow.DEFAULT_ZKFLOW_HASH_ATTACHMENT_HASHING_ALGORITHM
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.common.zkp.metadata.commandMetadata
 import com.ing.zkflow.common.zkp.metadata.packageName
 import com.ing.zkflow.testing.fixed
+import com.ing.zkflow.testing.zkp.MockZKNetworkParameters
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
@@ -32,6 +35,9 @@ class ZKVerifierTransactionTest {
     )
     private val notary = TestIdentity.fixed("Notary").party
     private val alice = TestIdentity.fixed("Alice").party.anonymise()
+    private val zkNetworkParameters = MockZKNetworkParameters(
+        attachmentConstraintType = ZKAttachmentConstraintType.HashAttachmentConstraintType(DEFAULT_ZKFLOW_HASH_ATTACHMENT_HASHING_ALGORITHM)
+    )
 
     class LocalContract : Contract {
         companion object {
@@ -64,7 +70,7 @@ class ZKVerifierTransactionTest {
             val publicOutput = TestState(alice, 0)
             val privateOutput = TestState(alice, 1)
 
-            val txbuilder = ZKTransactionBuilder(notary)
+            val txbuilder = ZKTransactionBuilder(notary, zkNetworkParameters)
             txbuilder.addCommand(TestZKCommand(), alice.owningKey)
             txbuilder.addOutputState(publicOutput) // at 0
             txbuilder.addOutputState(privateOutput) // at 1
