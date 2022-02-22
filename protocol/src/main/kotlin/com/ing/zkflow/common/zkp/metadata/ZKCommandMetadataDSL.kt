@@ -173,9 +173,9 @@ class ZKCommandMetadata(val commandKClass: KClass<out CommandData>) {
 
     var numberOfSigners = 0
 
-    val privateInputs = ZKReferenceList()
-    val privateReferences = ZKReferenceList()
-    val privateOutputs = ZKProtectedComponentList()
+    internal val privateInputs = ZKReferenceList()
+    internal val privateReferences = ZKReferenceList()
+    internal val privateOutputs = ZKProtectedComponentList()
 
     var timeWindow = false
 
