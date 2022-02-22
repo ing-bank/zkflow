@@ -86,14 +86,14 @@ abstract class AbstractZKTransactionService(val serviceHub: ServiceHub) : ZKTran
     open fun calculatePublicInput(tx: ZKVerifierTransaction, commandMetadata: ResolvedZKCommandMetadata): PublicInput {
         // Fetch the UTXO hashes from the svtx's pointed to by the inputs and references.
         // This confirms that we have a validated backchain stored for them.
-        val privateInputIndices = commandMetadata.privateInputs.map { it.index }
+        val privateInputIndices = commandMetadata.inputs.map { it.index }
         val privateInputHashes = getUtxoHashes(tx.inputs).filterIndexed { index, _ -> privateInputIndices.contains(index) }
 
-        val privateReferenceIndices = commandMetadata.privateReferences.map { it.index }
+        val privateReferenceIndices = commandMetadata.references.map { it.index }
         val privateReferenceHashes = getUtxoHashes(tx.references).filterIndexed { index, _ -> privateReferenceIndices.contains(index) }
 
         // Fetch output component hashes for private outputs of the command
-        val privateOutputIndices = commandMetadata.privateOutputs.map { it.index }
+        val privateOutputIndices = commandMetadata.outputs.map { it.index }
         val privateOutputHashes = tx.outputHashes.filterIndexed { index, _ ->
             privateOutputIndices.contains(index)
         }

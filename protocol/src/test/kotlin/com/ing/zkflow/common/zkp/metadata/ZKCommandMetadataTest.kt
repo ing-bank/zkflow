@@ -35,11 +35,11 @@ class ZKCommandMetadataTest {
 
         cmd.metadata.shouldBeInstanceOf<ResolvedZKCommandMetadata>()
         cmd.metadata.circuit.name shouldBe "foo"
-        cmd.metadata.privateInputs.size shouldBe 2
-        cmd.metadata.privateInputs.first().type shouldBe MockAuditContract.Approval::class
-        cmd.metadata.privateInputs.first().index shouldBe 0
-        cmd.metadata.privateInputs.last().type shouldBe MockAssetContract.MockAsset::class
-        cmd.metadata.privateInputs.last().index shouldBe 1
+        cmd.metadata.inputs.size shouldBe 2
+        cmd.metadata.inputs.first().type shouldBe MockAuditContract.Approval::class
+        cmd.metadata.inputs.first().index shouldBe 0
+        cmd.metadata.inputs.last().type shouldBe MockAssetContract.MockAsset::class
+        cmd.metadata.inputs.last().index shouldBe 1
     }
 
     @Test

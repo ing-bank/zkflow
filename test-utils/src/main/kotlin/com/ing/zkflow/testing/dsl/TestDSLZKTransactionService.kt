@@ -18,20 +18,20 @@ public interface TestDSLZKTransactionService {
 
     public fun calculatePublicInput(serviceHub: ServiceHub, tx: ZKVerifierTransaction, commandMetadata: ResolvedZKCommandMetadata): PublicInput {
 
-        val privateInputIndices = commandMetadata.privateInputs.map { it.index }
+        val privateInputIndices = commandMetadata.inputs.map { it.index }
         val privateInputHashes =
             serviceHub.collectUtxoInfos(tx.inputs)
                 .map { tx.digestService.componentHash(it.nonce, OpaqueBytes(it.serializedContents)) }
                 .filterIndexed { index, _ -> privateInputIndices.contains(index) }
 
-        val privateReferenceIndices = commandMetadata.privateReferences.map { it.index }
+        val privateReferenceIndices = commandMetadata.references.map { it.index }
         val privateReferenceHashes =
             serviceHub.collectUtxoInfos(tx.references)
                 .map { tx.digestService.componentHash(it.nonce, OpaqueBytes(it.serializedContents)) }
                 .filterIndexed { index, _ -> privateReferenceIndices.contains(index) }
 
         // Fetch output component hashes for private outputs of the command
-        val privateOutputIndices = commandMetadata.privateOutputs.map { it.index }
+        val privateOutputIndices = commandMetadata.outputs.map { it.index }
         val privateOutputHashes = tx.outputHashes.filterIndexed { index, _ ->
             privateOutputIndices.contains(index)
         }

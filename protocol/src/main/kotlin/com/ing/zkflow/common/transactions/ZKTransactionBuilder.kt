@@ -181,7 +181,7 @@ class ZKTransactionBuilder(
     //     services: ServicesForResolution
     // ) {
     //     val stateRefs =
-    //         (resolvedTransactionMetadata.privateInputs + resolvedTransactionMetadata.privateReferences).filter { it.forcePrivate }
+    //         (resolvedTransactionMetadata.inputs + resolvedTransactionMetadata.reference).filter { it.forcePrivate }
     //
     //     if (stateRefs.isNotEmpty()) {
     //         val serviceHub =

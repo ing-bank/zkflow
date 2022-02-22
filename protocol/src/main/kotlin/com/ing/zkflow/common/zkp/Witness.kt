@@ -157,9 +157,9 @@ class Witness(
             metadata: ResolvedZKCommandMetadata
         ): Witness {
 
-            val privateInputIndexes = metadata.privateInputs.map { it.index }
-            val privateReferencesIndexes = metadata.privateReferences.map { it.index }
-            val privateOutputIndexes = metadata.privateOutputs.map { it.index }
+            val privateInputIndexes = metadata.inputs.map { it.index }
+            val privateReferencesIndexes = metadata.references.map { it.index }
+            val privateOutputIndexes = metadata.outputs.map { it.index }
 
             // Reorder utxos according to be consistent with the order in the WireTransaction.
             val orderedInputUtxoInfos = wtx.inputs.map { inputRef ->

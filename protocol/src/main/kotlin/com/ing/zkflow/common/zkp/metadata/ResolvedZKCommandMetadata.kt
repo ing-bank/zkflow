@@ -33,16 +33,16 @@ data class ResolvedZKCommandMetadata(
     val circuit: ResolvedZKCircuit,
     val commandKClass: KClass<out CommandData>,
     val numberOfSigners: Int,
-    val privateInputs: List<ZKReference>,
-    val privateReferences: List<ZKReference>,
-    val privateOutputs: List<ZKProtectedComponent>,
+    val inputs: List<ZKReference>,
+    val references: List<ZKReference>,
+    val outputs: List<ZKProtectedComponent>,
     val timeWindow: Boolean,
 ) {
     val networkParameters = true
     val commandSimpleName: String by lazy { commandKClass.simpleName ?: error("Command classes must be a named class") }
     val contractClassNames: List<ContractClassName>
         get() {
-            val stateTypes = (privateInputs + privateOutputs + privateReferences).map { it.type }.distinct()
+            val stateTypes = (inputs + outputs + references).map { it.type }.distinct()
             return stateTypes.map {
                 requireNotNull(it.requiredContractClassName) {
                     "Unable to infer Contract class name because state class $it is not annotated with " +
@@ -51,9 +51,9 @@ data class ResolvedZKCommandMetadata(
             }
         }
 
-    val privateInputTypeGroups = countTypes(privateInputs)
-    val privateReferenceTypeGroups = countTypes(privateReferences)
-    val privateOutputTypeGroups = countTypes(privateOutputs)
+    val privateInputTypeGroups = countTypes(inputs)
+    val privateReferenceTypeGroups = countTypes(references)
+    val privateOutputTypeGroups = countTypes(outputs)
 
     private fun countTypes(components: List<ZKTypedElement>): Map<KClass<out ContractState>, Int> {
         val result = mutableMapOf<KClass<out ContractState>, Int>()
@@ -127,8 +127,8 @@ data class ResolvedZKCommandMetadata(
     private fun verifyInputs(inputs: List<StateAndRef<ContractState>>) {
         matchTypes(
             componentName = "input",
-            expectedTypes = this.privateInputs.map { it.type },
-            actualTypes = inputs.filterIndexed { index, _ -> privateInputs.any { it.index == index } }.map { it.state.data::class }
+            expectedTypes = this.inputs.map { it.type },
+            actualTypes = inputs.filterIndexed { index, _ -> this.inputs.any { it.index == index } }.map { it.state.data::class }
         )
     }
 
@@ -136,8 +136,8 @@ data class ResolvedZKCommandMetadata(
     private fun verifyReferences(references: List<TransactionState<ContractState>>) {
         matchTypes(
             componentName = "reference",
-            expectedTypes = this.privateReferences.map { it.type },
-            actualTypes = references.filterIndexed { index, _ -> privateReferences.any { it.index == index } }.map { it.data::class }
+            expectedTypes = this.references.map { it.type },
+            actualTypes = references.filterIndexed { index, _ -> this.references.any { it.index == index } }.map { it.data::class }
         )
     }
 
@@ -146,8 +146,8 @@ data class ResolvedZKCommandMetadata(
     private fun verifyOutputs(outputs: List<TransactionState<*>>) {
         matchTypes(
             "output",
-            expectedTypes = this.privateOutputs.map { it.type },
-            actualTypes = outputs.filterIndexed { index, _ -> privateOutputs.any { it.index == index } }.map { it.data::class }
+            expectedTypes = this.outputs.map { it.type },
+            actualTypes = outputs.filterIndexed { index, _ -> this.outputs.any { it.index == index } }.map { it.data::class }
         )
     }
 

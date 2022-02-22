@@ -155,13 +155,14 @@ class ZKVerifierTransaction internal constructor(
                 val groupIndex = componentGroup.groupIndex
 
                 componentGroup.components.forEachIndexed { componentIndex, serialisedComponent ->
-                    if (zkTransactionMetadata.isVisibleInPublicTransaction(groupIndex, componentIndex)) {
+                    if (zkTransactionMetadata.isVisibleInFilteredComponentGroup(groupIndex, componentIndex)) {
 
                         // Init lists if they don't exist
                         if (!filteredSerialisedComponents.containsKey(groupIndex)) {
                             filteredSerialisedComponents[groupIndex] = mutableListOf()
                             filteredComponentNonces[groupIndex] = mutableListOf()
-                            filteredComponentHashes[groupIndex] = mutableListOfNulls(wtx.componentGroups.first { it.groupIndex == groupIndex }.components.size)
+                            filteredComponentHashes[groupIndex] =
+                                mutableListOfNulls(wtx.componentGroups.first { it.groupIndex == groupIndex }.components.size)
                         }
 
                         // So now we are quite sure they are not null

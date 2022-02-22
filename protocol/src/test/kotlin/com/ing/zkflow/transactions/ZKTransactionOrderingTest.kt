@@ -154,7 +154,7 @@ class ZKTransactionOrderingTest {
             val actualDeserializedOutputs =
                 witness.outputsGroup.flatMap { it.value }.map { it.deserialize<TransactionState<ContractState>>().data }
 
-            val commandOutputIndices = command.privateOutputs.map { it.index }
+            val commandOutputIndices = command.outputs.map { it.index }
             val commandOutputs = wtx.outputStates.filterIndexed { index, _ ->
                 commandOutputIndices.contains(index)
             }
@@ -166,7 +166,7 @@ class ZKTransactionOrderingTest {
             actualDeserializedRefs shouldBe emptyList()
 
             // compare utxos
-            val commandInputIndices = command.privateInputs.map { it.index }
+            val commandInputIndices = command.inputs.map { it.index }
             val commandInputUtxos = inputUtxoInfos.filterIndexed { index, _ ->
                 commandInputIndices.contains(index)
             }
@@ -175,7 +175,7 @@ class ZKTransactionOrderingTest {
                 bytes shouldBe commandInputUtxos[index].serializedContents
             }
 
-            val commandReferenceIndices = command.privateReferences.map { it.index }
+            val commandReferenceIndices = command.references.map { it.index }
             val commandReferenceUtxos = refUtxoInfos.filterIndexed { index, _ ->
                 commandReferenceIndices.contains(index)
             }
