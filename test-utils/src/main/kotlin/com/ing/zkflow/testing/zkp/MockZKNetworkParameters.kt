@@ -15,7 +15,6 @@ public data class MockZKNetworkParameters(
      * standard constraint logic for transactions built with the test DSL.
      */
     override val attachmentConstraintType: ZKAttachmentConstraintType = ZKAttachmentConstraintType.AlwaysAcceptAttachmentConstraintType,
-    // ZKAttachmentConstraintType.HashAttachmentConstraintType(DEFAULT_ZKFLOW_HASH_ATTACHMENT_HASHING_ALGORITHM),
     override val notaryInfo: ZKNotaryInfo = ZKNotaryInfo(ZKFlow.DEFAULT_ZKFLOW_NOTARY_SIGNATURE_SCHEME),
     override val digestAlgorithm: DigestAlgorithm = ZKFlow.DEFAULT_ZKFLOW_DIGEST_IDENTIFIER,
     override val serializationSchemeId: Int = ZKFlow.DEFAULT_SERIALIZATION_SCHEME_ID

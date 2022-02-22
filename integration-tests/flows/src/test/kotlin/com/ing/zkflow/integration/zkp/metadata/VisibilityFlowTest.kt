@@ -88,17 +88,25 @@ class VisibilityFlowTest {
         val createPrivateStx = createPrivateFuture.getOrThrow()
         createPrivateStx.tx
 
-        // MovePrivateOnly should fail for public asset, work for private asset
+        /*
+         * TODO: https://dev.azure.com/INGNeo/ING%20Neo%20-%20ZKFlow/_workitems/edit/11072/
+         * Disabled because it breaks DSL tests that do not have access to cordapp config and therefore  will not work with
+         * `serviceHub.getCordaServiceFromConfig`. Perhaps this should not be hard-enforced here based on metadata, but
+         * soft-enforced at flow level, so that it is overridable by the user if allowed by the cordapp builder? It allows warning,
+         * but not breaking. It also means zktxbuilder does not need access to the storage.
+         * Alternatively, we stop using the CordaService for this, but use the Java SPI for these services?
+        */
+        // // MovePrivateOnly should fail for public asset, work for private asset
+        // try {
+        //     val moveFuture = miniCorpNode.startFlow(MoveFlow(createPublicStx, megaCorp, moveCommand = TestContract.MovePrivateOnly()))
+        //     mockNet.runNetwork()
+        //     moveFuture.getOrThrow()
+        // } catch (fex: IllegalStateException) {
+        //     assert(fex.message!!.contains("should be private, but it is public"))
+        // }
 
-        try {
-            val moveFuture = miniCorpNode.startFlow(MoveFlow(createPublicStx, megaCorp, moveCommand = TestContract.MovePrivateOnly()))
-            mockNet.runNetwork()
-            moveFuture.getOrThrow()
-        } catch (fex: IllegalStateException) {
-            assert(fex.message!!.contains("should be private, but it is public"))
-        }
-
-        val movePrivateOnlyFuture = miniCorpNode.startFlow(MoveFlow(createPrivateStx, megaCorp, moveCommand = TestContract.MovePrivateOnly()))
+        val movePrivateOnlyFuture =
+            miniCorpNode.startFlow(MoveFlow(createPrivateStx, megaCorp, moveCommand = TestContract.MovePrivateOnly()))
         mockNet.runNetwork()
         val movePrivateStx = movePrivateOnlyFuture.getOrThrow()
 
