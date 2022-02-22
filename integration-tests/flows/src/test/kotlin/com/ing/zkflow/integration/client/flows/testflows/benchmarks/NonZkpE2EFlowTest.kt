@@ -1,9 +1,7 @@
-package com.ing.zkflow.common.client.flows.testflows.benchmarks
+package com.ing.zkflow.integration.client.flows.testflows.benchmarks
 
 import com.ing.zkflow.common.zkp.ZKFlow
 import com.ing.zkflow.integration.client.flows.checkVault
-import com.ing.zkflow.integration.client.flows.testflows.benchmarks.NonZkpCreateFlow
-import com.ing.zkflow.integration.client.flows.testflows.benchmarks.NonZkpMoveFlow
 import com.ing.zkflow.node.services.InMemoryZKVerifierTransactionStorage
 import com.ing.zkflow.node.services.ServiceNames.ZK_TX_SERVICE
 import com.ing.zkflow.node.services.ServiceNames.ZK_VERIFIER_TX_STORAGE

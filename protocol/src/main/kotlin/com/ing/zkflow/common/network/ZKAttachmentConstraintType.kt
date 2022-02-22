@@ -11,12 +11,17 @@ import net.corda.core.crypto.Crypto
 import net.corda.core.crypto.SignatureScheme
 import kotlin.reflect.KClass
 
+/**
+ * This only implements AlwaysAcceptAttachmentConstraint, SignatureAttachmentConstraint and HashAttachmentConstraint.
+ * The reason is that we currently only support SignatureAttachmentConstraint for production use and need to support
+ * AlwaysAcceptAttachmentConstraint and HashAttachmentConstraint for testing only.
+ */
 sealed class ZKAttachmentConstraintType private constructor(val kClass: KClass<out AttachmentConstraint>) {
     abstract fun validate(attachmentConstraint: AttachmentConstraint)
 
     object AlwaysAcceptAttachmentConstraintType : ZKAttachmentConstraintType(AlwaysAcceptAttachmentConstraint::class) {
         override fun validate(attachmentConstraint: AttachmentConstraint) {
-            // Always valid
+            attachmentConstraint.requireInstanceOf<AlwaysAcceptAttachmentConstraint>()
         }
     }
 

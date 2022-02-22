@@ -176,7 +176,7 @@ class TestContractWithZKPAnnotations : Contract {
 
                 // Transaction contents
                 if (tx.inputsOfType<TestState>().sumBy { it.value } != tx.outputsOfType<TestState>()
-                        .sumBy { it.value }
+                    .sumBy { it.value }
                 ) throw IllegalArgumentException(
                     "Failed requirement: amounts are not conserved for TestState"
                 )
