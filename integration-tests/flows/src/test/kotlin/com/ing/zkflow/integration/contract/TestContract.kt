@@ -23,7 +23,6 @@ import net.corda.core.contracts.Contract
 import net.corda.core.contracts.ContractClassName
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.transactions.LedgerTransaction
-import java.io.File
 import java.util.Random
 
 /*
@@ -63,10 +62,6 @@ class TestContract : Contract {
 
         @Transient
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
-            circuit {
-                buildFolder =
-                    File("${System.getProperty("user.dir")}/../zinc-platform-sources/build/circuits/create")
-            }
             outputs { private(TestState::class) at 0 }
             numberOfSigners = 1
         }
@@ -143,10 +138,6 @@ class TestContract : Contract {
 
         @Transient
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
-            circuit {
-                buildFolder =
-                    File("${System.getProperty("user.dir")}/../zinc-platform-sources/build/circuits/move")
-            }
             inputs { any(TestState::class) at 0 }
             outputs { private(TestState::class) at 0 }
             numberOfSigners = 2
@@ -213,10 +204,6 @@ class TestContract : Contract {
 
         @Transient
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
-            circuit {
-                buildFolder =
-                    File("${System.getProperty("user.dir")}/../zinc-platform-sources/build/circuits/move_bidirectional")
-            }
             inputs {
                 any(TestState::class) at 0
                 any(TestState::class) at 1
@@ -242,7 +229,7 @@ class TestContract : Contract {
 
                 // Transaction contents
                 if (tx.inputsOfType<TestState>().sumBy { it.value } != tx.outputsOfType<TestState>()
-                        .sumBy { it.value }
+                    .sumBy { it.value }
                 ) throw IllegalArgumentException(
                     "Failed requirement: amounts are not conserved for TestState"
                 )

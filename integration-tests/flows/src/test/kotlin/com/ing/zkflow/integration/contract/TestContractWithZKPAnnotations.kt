@@ -7,9 +7,9 @@ import com.ing.zkflow.common.contracts.ZKOwnableState
 import com.ing.zkflow.common.transactions.zkTransactionMetadata
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.common.zkp.metadata.commandMetadata
-import com.ing.zkflow.integration.contract.TestContract.Create.Companion.verifyCreate
-import com.ing.zkflow.integration.contract.TestContract.Move.Companion.verifyMove
-import com.ing.zkflow.integration.contract.TestContract.MoveBidirectional.Companion.verifyMoveBidirectional
+import com.ing.zkflow.integration.contract.TestContractWithZKPAnnotations.Create.Companion.verifyCreate
+import com.ing.zkflow.integration.contract.TestContractWithZKPAnnotations.Move.Companion.verifyMove
+import com.ing.zkflow.integration.contract.TestContractWithZKPAnnotations.MoveBidirectional.Companion.verifyMoveBidirectional
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.CommandAndState
@@ -19,7 +19,6 @@ import net.corda.core.contracts.Contract
 import net.corda.core.contracts.ContractClassName
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.transactions.LedgerTransaction
-import java.io.File
 import java.util.Random
 
 @SuppressFBWarnings("PREDICTABLE_RANDOM", "PATH_TRAVERSAL_IN", justification = "Test code")
@@ -44,10 +43,6 @@ class TestContractWithZKPAnnotations : Contract {
     @ZKP
     class Create : ZKCommandData {
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
-            circuit {
-                buildFolder =
-                    File("${System.getProperty("user.dir")}/../zinc-platform-sources/build/circuits/create")
-            }
             outputs { private(TestState::class) at 0 }
             numberOfSigners = 1
         }
@@ -106,10 +101,6 @@ class TestContractWithZKPAnnotations : Contract {
     @ZKP
     class Move : ZKCommandData {
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
-            circuit {
-                buildFolder =
-                    File("${System.getProperty("user.dir")}/../zinc-platform-sources/build/circuits/move")
-            }
             inputs { any(TestState::class) at 0 }
             outputs { private(TestState::class) at 0 }
             numberOfSigners = 2
@@ -164,10 +155,6 @@ class TestContractWithZKPAnnotations : Contract {
     @ZKP
     class MoveBidirectional : ZKCommandData {
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
-            circuit {
-                buildFolder =
-                    File("${System.getProperty("user.dir")}/../zinc-platform-sources/build/circuits/move_bidirectional")
-            }
             inputs {
                 any(TestState::class) at 0
                 any(TestState::class) at 1
@@ -189,7 +176,7 @@ class TestContractWithZKPAnnotations : Contract {
 
                 // Transaction contents
                 if (tx.inputsOfType<TestState>().sumBy { it.value } != tx.outputsOfType<TestState>()
-                    .sumBy { it.value }
+                        .sumBy { it.value }
                 ) throw IllegalArgumentException(
                     "Failed requirement: amounts are not conserved for TestState"
                 )
