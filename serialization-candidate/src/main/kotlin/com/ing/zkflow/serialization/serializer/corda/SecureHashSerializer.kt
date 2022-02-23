@@ -1,5 +1,6 @@
 package com.ing.zkflow.serialization.serializer.corda
 
+import com.ing.zkflow.annotations.corda.HashSize
 import com.ing.zkflow.annotations.corda.Sha256
 import com.ing.zkflow.serialization.FixedLengthKSerializerWithDefault
 import com.ing.zkflow.serialization.serializer.FixedLengthByteArraySerializer
@@ -9,6 +10,7 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import net.corda.core.crypto.SecureHash
 
+// TODO accept hash annotation class
 open class SecureHashSerializer(private val algorithm: String, private val hashLength: Int) :
     FixedLengthKSerializerWithDefault<SecureHash> {
     private val strategy = FixedLengthByteArraySerializer(hashLength)
@@ -18,7 +20,8 @@ open class SecureHashSerializer(private val algorithm: String, private val hashL
     }.toFixedLengthSerialDescriptorOrThrow()
 
     companion object {
-        val sha256Algorithm = Sha256::class.simpleName
+        val sha256Algorithm = Sha256::class.simpleName!!
+        val sha256HashLength = (Sha256::class.annotations.single { it is HashSize } as HashSize).size
     }
 
     override val default: SecureHash = if (algorithm == sha256Algorithm) {
