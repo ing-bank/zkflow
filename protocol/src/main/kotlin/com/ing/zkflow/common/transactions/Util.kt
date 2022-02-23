@@ -1,4 +1,5 @@
 @file:Suppress("TooManyFunctions")
+
 package com.ing.zkflow.common.transactions
 
 import com.ing.zkflow.common.contracts.ZKCommandData
@@ -33,7 +34,6 @@ import net.corda.core.transactions.ContractUpgradeWireTransaction
 import net.corda.core.transactions.LedgerTransaction
 import net.corda.core.transactions.NotaryChangeWireTransaction
 import net.corda.core.transactions.SignedTransaction
-import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.transactions.TraversableTransaction
 import net.corda.core.transactions.WireTransaction
 import net.corda.core.transactions.WireTransaction.Companion.resolveStateRefBinaryComponent
@@ -126,16 +126,26 @@ fun WireTransaction.prettyPrint(): String {
     return buf.toString()
 }
 
-val TransactionBuilder.isZKFlowTransaction get() = commands().any { it.value is ZKCommandData }
-val TraversableTransaction.isZKFlowTransaction get() = commands.any { it.value is ZKCommandData }
-val LedgerTransaction.isZKFlowTransaction get() = commands.any { it.value is ZKCommandData }
+val ZKTransactionBuilder.hasZKCommandData get() = commands().any { it.value is ZKCommandData }
+val TraversableTransaction.hasZKCommandData get() = commands.any { it.value is ZKCommandData }
+val LedgerTransaction.hasZKCommandData get() = commands.any { it.value is ZKCommandData }
+
+val ZKTransactionBuilder.commandMetadata
+    get() = commands().filter { it.value is ZKCommandData }.map { (it.value as ZKCommandData).metadata }
+val TraversableTransaction.commandMetadata
+    get() = commands.filter { it.value is ZKCommandData }.map { (it.value as ZKCommandData).metadata }
+val LedgerTransaction.commandMetadata
+    get() = commands.filter { it.value is ZKCommandData }.map { (it.value as ZKCommandData).metadata }
+private const val TX_CONTAINS_NO_COMMANDS_WITH_METADATA = "This transaction does not contain any commands with metadata"
 
 fun TraversableTransaction.zkTransactionMetadata(): ResolvedZKTransactionMetadata =
-    ResolvedZKTransactionMetadata(commands.filter { it.value is ZKCommandData }.map { (it.value as ZKCommandData).metadata })
+    if (this.hasZKCommandData) ResolvedZKTransactionMetadata(this.commandMetadata) else error(TX_CONTAINS_NO_COMMANDS_WITH_METADATA)
+
 fun LedgerTransaction.zkTransactionMetadata(): ResolvedZKTransactionMetadata =
-    ResolvedZKTransactionMetadata(commands.filter { it.value is ZKCommandData }.map { (it.value as ZKCommandData).metadata })
+    if (this.hasZKCommandData) ResolvedZKTransactionMetadata(this.commandMetadata) else error(TX_CONTAINS_NO_COMMANDS_WITH_METADATA)
+
 fun ZKTransactionBuilder.zkTransactionMetadata(): ResolvedZKTransactionMetadata =
-    ResolvedZKTransactionMetadata(commands().filter { it.value is ZKCommandData }.map { (it.value as ZKCommandData).metadata })
+    if (this.hasZKCommandData) ResolvedZKTransactionMetadata(this.commandMetadata) else error(TX_CONTAINS_NO_COMMANDS_WITH_METADATA)
 
 @Throws(AttachmentResolutionException::class, TransactionResolutionException::class)
 @DeleteForDJVM

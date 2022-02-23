@@ -1,7 +1,7 @@
-package com.ing.zkflow.common.client.flows.testflows.benchmarks
+package com.ing.zkflow.integration.client.flows.testflows.benchmarks
 
 import co.paralleluniverse.fibers.Suspendable
-import com.ing.zkflow.testing.fixtures.contract.TestContract
+import com.ing.zkflow.integration.contract.TestContract
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.StateAndContract
 import net.corda.core.flows.CollectSignaturesFlow

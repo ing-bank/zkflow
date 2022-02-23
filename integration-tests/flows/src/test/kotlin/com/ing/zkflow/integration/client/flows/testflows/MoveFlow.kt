@@ -8,7 +8,7 @@ import com.ing.zkflow.client.flows.ZKSignTransactionFlow
 import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.transactions.ZKTransactionBuilder
 import com.ing.zkflow.common.transactions.signInitialTransaction
-import com.ing.zkflow.testing.fixtures.contract.TestContract
+import com.ing.zkflow.integration.contract.TestContract
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.StateAndContract
 import net.corda.core.contracts.requireThat

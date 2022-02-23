@@ -32,10 +32,11 @@ internal class CircuitGeneratorTest {
 
     private val standardTypes = StandardTypes(
         zincTypeResolver,
+        // TODO: set this back to alwaysaccept once Zinc Poet allows it: currently it does not support empty structs
         MockZKNetworkParameters(
             attachmentConstraintType = ZKAttachmentConstraintType.HashAttachmentConstraintType(
                 DEFAULT_ZKFLOW_HASH_ATTACHMENT_HASHING_ALGORITHM
-            ) // TODO: set this back to alwaysaccept once Zinc Poet allows it.
+            )
         )
     )
 

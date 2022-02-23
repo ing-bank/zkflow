@@ -6,10 +6,6 @@ import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.CommandWithParties
 
 interface ZKCommandData : CommandData {
-    companion object {
-        const val METADATA_FIELD_NAME: String = "metadata"
-    }
-
     val metadata: ResolvedZKCommandMetadata
 }
 

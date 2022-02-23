@@ -1,4 +1,4 @@
-package com.ing.zkflow.common.client.flows.testflows.benchmarks
+package com.ing.zkflow.integration.client.flows.testflows.benchmarks
 
 import com.ing.zkflow.common.zkp.ZKFlow
 import com.ing.zkflow.integration.client.flows.checkVault

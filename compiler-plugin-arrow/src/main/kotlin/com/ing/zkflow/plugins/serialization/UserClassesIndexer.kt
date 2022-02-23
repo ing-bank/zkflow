@@ -7,7 +7,6 @@ import arrow.meta.quotes.Transform
 import arrow.meta.quotes.classDeclaration
 import com.ing.zkflow.SerdeIndex
 import com.ing.zkflow.SerdeLogger
-import org.jetbrains.kotlin.name.Name
 
 private const val PROCESSING_UNIT = "USER CLASS INDEXER"
 
@@ -20,11 +19,8 @@ val Meta.UserClassesIndexer: CliPlugin
             classDeclaration(
                 this, match = {
                     SerdeLogger.phase(PROCESSING_UNIT) {
-                        val className = element.name
-
-                        if (className != null) {
-                            val fqName = element.containingKtFile.packageFqName.child(Name.identifier(className))
-                            SerdeIndex.register(fqName, element.annotationEntries)
+                        if (element.fqName != null) {
+                            SerdeIndex.register(element.fqName!!, element.annotationEntries)
                         }
 
                         false

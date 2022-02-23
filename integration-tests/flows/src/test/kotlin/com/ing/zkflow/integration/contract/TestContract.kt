@@ -1,4 +1,4 @@
-package com.ing.zkflow.testing.fixtures.contract
+package com.ing.zkflow.integration.contract
 
 import com.ing.serialization.bfl.annotations.FixedLength
 import com.ing.zkflow.common.contracts.ZKCommandData
@@ -8,9 +8,9 @@ import com.ing.zkflow.common.serialization.BFLSerializationScheme.Companion.ZkCo
 import com.ing.zkflow.common.transactions.zkTransactionMetadata
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.common.zkp.metadata.commandMetadata
-import com.ing.zkflow.testing.fixtures.contract.TestContract.Create.Companion.verifyCreate
-import com.ing.zkflow.testing.fixtures.contract.TestContract.Move.Companion.verifyMove
-import com.ing.zkflow.testing.fixtures.contract.TestContract.MoveBidirectional.Companion.verifyMoveBidirectional
+import com.ing.zkflow.integration.contract.TestContract.Create.Companion.verifyCreate
+import com.ing.zkflow.integration.contract.TestContract.Move.Companion.verifyMove
+import com.ing.zkflow.integration.contract.TestContract.MoveBidirectional.Companion.verifyMoveBidirectional
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
@@ -23,18 +23,21 @@ import net.corda.core.contracts.Contract
 import net.corda.core.contracts.ContractClassName
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.transactions.LedgerTransaction
-import java.io.File
 import java.util.Random
 
+/*
+ * TODO: When the new BFLSerializationScheme is in place, this class can be replaced with TestContractWithZKPAnnotations.
+ * TestContractWithZKPAnnotations can then be renamed to TestContract
+ */
 @SuppressFBWarnings("PREDICTABLE_RANDOM", "PATH_TRAVERSAL_IN", justification = "Test code")
-public class TestContract : Contract {
-    public companion object {
-        public const val PROGRAM_ID: ContractClassName = "com.ing.zkflow.testing.fixtures.contract.TestContract"
+class TestContract : Contract {
+    companion object {
+        const val PROGRAM_ID: ContractClassName = "com.ing.zkflow.integration.contract.TestContract"
     }
 
     @Serializable
     @BelongsToContract(TestContract::class)
-    public data class TestState(
+    data class TestState(
         override val owner: @Contextual AnonymousParty,
         val value: Int = Random().nextInt(1000)
     ) : ZKOwnableState {
@@ -42,8 +45,8 @@ public class TestContract : Contract {
             ZkContractStateSerializerMap.register(this::class)
         }
 
-        public companion object {
-            public const val PARTICIPANT_COUNT: Int = 1
+        companion object {
+            const val PARTICIPANT_COUNT: Int = 1
         }
 
         @FixedLength([PARTICIPANT_COUNT])
@@ -55,14 +58,10 @@ public class TestContract : Contract {
 
     // Commands
     @Serializable
-    public class Create : ZKCommandData {
+    class Create : ZKCommandData {
 
         @Transient
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
-            circuit {
-                buildFolder =
-                    File("${System.getProperty("user.dir")}/../zinc-platform-sources/build/circuits/create")
-            }
             outputs { private(TestState::class) at 0 }
             numberOfSigners = 1
         }
@@ -71,8 +70,8 @@ public class TestContract : Contract {
             ZkCommandDataSerializerMap.register(this::class)
         }
 
-        public companion object {
-            public fun verifyCreate(
+        companion object {
+            fun verifyCreate(
                 tx: LedgerTransaction,
                 command: CommandWithParties<CommandData>
             ) {
@@ -87,7 +86,7 @@ public class TestContract : Contract {
     }
 
     @Serializable
-    public class CreatePublic : ZKCommandData {
+    class CreatePublic : ZKCommandData {
 
         @Transient
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
@@ -101,8 +100,8 @@ public class TestContract : Contract {
             ZkCommandDataSerializerMap.register(this::class)
         }
 
-        public companion object {
-            public fun verify(
+        companion object {
+            fun verify(
                 tx: LedgerTransaction,
                 command: CommandWithParties<CommandData>
             ) {
@@ -121,7 +120,7 @@ public class TestContract : Contract {
      * This command is only used on [CollectSignaturesFlowTest]. It expects two signatures, but nothing else.
      */
     @Serializable
-    public class SignOnly : ZKCommandData {
+    class SignOnly : ZKCommandData {
 
         @Transient
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
@@ -135,14 +134,10 @@ public class TestContract : Contract {
     }
 
     @Serializable
-    public class Move : ZKCommandData {
+    class Move : ZKCommandData {
 
         @Transient
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
-            circuit {
-                buildFolder =
-                    File("${System.getProperty("user.dir")}/../zinc-platform-sources/build/circuits/move")
-            }
             inputs { any(TestState::class) at 0 }
             outputs { private(TestState::class) at 0 }
             numberOfSigners = 2
@@ -152,8 +147,8 @@ public class TestContract : Contract {
             ZkCommandDataSerializerMap.register(this::class)
         }
 
-        public companion object {
-            public fun verifyMove(
+        companion object {
+            fun verifyMove(
                 tx: LedgerTransaction,
                 command: CommandWithParties<CommandData>
             ) {
@@ -172,7 +167,7 @@ public class TestContract : Contract {
     }
 
     @Serializable
-    public class MovePrivateOnly : ZKCommandData {
+    class MovePrivateOnly : ZKCommandData {
 
         @Transient
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
@@ -185,8 +180,8 @@ public class TestContract : Contract {
             ZkCommandDataSerializerMap.register(this::class)
         }
 
-        public companion object {
-            public fun verify(
+        companion object {
+            fun verify(
                 tx: LedgerTransaction,
                 command: CommandWithParties<CommandData>
             ) {
@@ -205,14 +200,10 @@ public class TestContract : Contract {
     }
 
     @Serializable
-    public class MoveBidirectional : ZKCommandData {
+    class MoveBidirectional : ZKCommandData {
 
         @Transient
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
-            circuit {
-                buildFolder =
-                    File("${System.getProperty("user.dir")}/../zinc-platform-sources/build/circuits/move_bidirectional")
-            }
             inputs {
                 any(TestState::class) at 0
                 any(TestState::class) at 1
@@ -228,8 +219,8 @@ public class TestContract : Contract {
             ZkCommandDataSerializerMap.register(this::class)
         }
 
-        public companion object {
-            public fun verifyMoveBidirectional(
+        companion object {
+            fun verifyMoveBidirectional(
                 tx: LedgerTransaction,
                 command: CommandWithParties<CommandData>
             ) {
@@ -237,7 +228,9 @@ public class TestContract : Contract {
                 tx.zkTransactionMetadata().verify(tx)
 
                 // Transaction contents
-                if (tx.inputsOfType<TestState>().sumBy { it.value } != tx.outputsOfType<TestState>().sumBy { it.value }) throw IllegalArgumentException(
+                if (tx.inputsOfType<TestState>().sumBy { it.value } != tx.outputsOfType<TestState>()
+                    .sumBy { it.value }
+                ) throw IllegalArgumentException(
                     "Failed requirement: amounts are not conserved for TestState"
                 )
 
