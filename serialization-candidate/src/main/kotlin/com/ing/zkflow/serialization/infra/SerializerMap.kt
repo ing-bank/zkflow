@@ -38,6 +38,9 @@ abstract class SerializerMap<T : Any> {
     private val obj2Id = mutableMapOf<KClass<out T>, Int>()
     private val objId2Serializer = mutableMapOf<Int, KSerializer<out T>>()
 
+    // TODO Should this exhibit behavior similar to map?
+    //  i.e. return if serializer is register for klass, replace it and return the previous version,
+    //  otherwise, register it and return null?
     fun register(klass: KClass<out T>, serializer: KSerializer<out T>) {
         log.debug("Registering serializer `$serializer` for `${klass.qualifiedName}`")
         val id = klass.hashCode() // Should be deterministic enough
