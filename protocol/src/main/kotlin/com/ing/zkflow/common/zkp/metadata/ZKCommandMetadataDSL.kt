@@ -117,14 +117,20 @@ interface ZKTypedElement {
 }
 
 /**
- * Describes the inputs and references that should be available inside ZKP circuit and/or private
+ * Describes the inputs and references that should be available inside ZKP circuit and if it should be forced to be private.
  */
-data class ZKReference(override val type: KClass<out ContractState>, val forcePrivate: Boolean, val index: Int) : ZKTypedElement
+data class ZKReference(override val type: KClass<out ContractState>, val index: Int, internal val forcePrivate: Boolean) : ZKTypedElement {
+    fun mustBePrivate() = forcePrivate
+}
 
 /**
- * Describes the private component at a certain index in transaction's component list.
+ * Describes an output ContractState at a certain index in transaction's component list and whether it should be private to the ZKP circuit or also
+ * visible in the transaction Merkle tree.
  */
-data class ZKProtectedComponent(override val type: KClass<out ContractState>, val private: Boolean, val index: Int) : ZKTypedElement
+data class ZKProtectedComponent(override val type: KClass<out ContractState>, val index: Int, internal val private: Boolean) :
+    ZKTypedElement {
+    fun mustBePrivate() = private
+}
 
 /**
  * A list of input or references UTXOs that this ZKCommand needs to have access to.
@@ -156,7 +162,7 @@ class ZKReferenceList : ArrayList<ZKReference>() {
      */
     fun any(type: KClass<out ContractState>): Pair<KClass<out ContractState>, Boolean> = type to false
 
-    infix fun Pair<KClass<out ContractState>, Boolean>.at(index: Int) = add(ZKReference(this.first, this.second, index))
+    infix fun Pair<KClass<out ContractState>, Boolean>.at(index: Int) = add(ZKReference(this.first, index, this.second))
 
     override fun add(element: ZKReference): Boolean {
         if (any { it.index == element.index }) error("Component visibility is already set for index ${element.index}")
@@ -186,7 +192,7 @@ class ZKProtectedComponentList : ArrayList<ZKProtectedComponent>() {
     fun public(type: KClass<out ContractState>): Pair<KClass<out ContractState>, Boolean> = type to false
     fun private(type: KClass<out ContractState>): Pair<KClass<out ContractState>, Boolean> = type to true
 
-    infix fun Pair<KClass<out ContractState>, Boolean>.at(index: Int) = add(ZKProtectedComponent(this.first, this.second, index))
+    infix fun Pair<KClass<out ContractState>, Boolean>.at(index: Int) = add(ZKProtectedComponent(this.first, index, this.second))
 
     override fun add(element: ZKProtectedComponent): Boolean {
         if (any { it.index == element.index }) error("Component visibility is already set for index ${element.index}")

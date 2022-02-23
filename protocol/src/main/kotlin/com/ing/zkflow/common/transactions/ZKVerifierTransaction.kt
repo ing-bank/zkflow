@@ -107,6 +107,11 @@ class ZKVerifierTransaction internal constructor(
     override fun hashCode(): Int = id.hashCode()
     override fun equals(other: Any?) = if (other !is ZKVerifierTransaction) false else (this.id == other.id)
 
+    @Suppress("UNUSED_PARAMETER") // TODO @Aleksei: remove suppression when function body implemented
+    fun isPrivateComponent(outputsGroup: ComponentGroupEnum, index: Int): Boolean {
+        return true // TODO @Aleksei: Implement based on improved PartialMerkleTree. Now always returns true, so ZKTransactionBuilder checks succeed
+    }
+
     companion object {
 
         fun fromWireTransaction(wtx: WireTransaction, proofs: Map<String, ByteArray>): ZKVerifierTransaction {

@@ -128,6 +128,7 @@ fun WireTransaction.prettyPrint(): String {
 
 val ZKTransactionBuilder.hasZKCommandData get() = commands().any { it.value is ZKCommandData }
 val TraversableTransaction.hasZKCommandData get() = commands.any { it.value is ZKCommandData }
+val TraversableTransaction.hasPrivateComponents get() = hasZKCommandData
 val LedgerTransaction.hasZKCommandData get() = commands.any { it.value is ZKCommandData }
 
 val ZKTransactionBuilder.commandMetadata

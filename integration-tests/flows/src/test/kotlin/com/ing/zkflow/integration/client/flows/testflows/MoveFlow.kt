@@ -9,6 +9,8 @@ import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.transactions.ZKTransactionBuilder
 import com.ing.zkflow.common.transactions.signInitialTransaction
 import com.ing.zkflow.integration.contract.TestContract
+import com.ing.zkflow.node.services.ServiceNames
+import com.ing.zkflow.node.services.getCordaServiceFromConfig
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.StateAndContract
 import net.corda.core.contracts.requireThat
@@ -37,6 +39,7 @@ class MoveFlow(
 
         val builder = ZKTransactionBuilder(serviceHub.networkMapCache.notaryIdentities.single())
         builder.withItems(stateAndRef, stateAndContract, command)
+        builder.enforcePrivateInputsAndReferences(serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_VERIFIER_TX_STORAGE))
 
         // Transaction creator signs transaction.
         val selfSignedStx = serviceHub.signInitialTransaction(builder)
