@@ -20,7 +20,7 @@ object SerializersModuleRegistry {
      * Register a SerializersModule
      */
     fun register(module: SerializersModule) {
-        log.debug("Registering SerializersModule: $module")
+        log.debug("[I will be obsolete] Registering SerializersModule: $module")
         modules.add(module)
     }
 
@@ -64,7 +64,7 @@ abstract class SerializerMap<T : Any> {
         if (obj2Id[klass] == id && objId2Serializer[id] == serializer) {
             return // Idempotent if same args
         } else {
-            log.debug("Registering serializer $serializer for $klass")
+            log.debug("[I will be obsolete] Registering serializer $serializer for $klass")
             obj2Id.put(klass, id)?.let { throw SerializerMapError.ClassAlreadyRegistered(klass, it) }
             objId2Serializer.put(id, serializer)?.let {
                 throw SerializerMapError.IdAlreadyRegistered(
