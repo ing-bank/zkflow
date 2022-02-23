@@ -56,7 +56,7 @@ data class ResolvedZKTransactionMetadata(
         commands.forEach { it.verify(ltx) }
     }
 
-    fun isVisibleInFilteredComponentGroup(groupIndex: Int, componentIndex: Int): Boolean {
+    fun shouldBeVisibleInFilteredComponentGroup(groupIndex: Int, componentIndex: Int): Boolean {
         return when (groupIndex) {
             /*
              * Options:

@@ -147,12 +147,13 @@ class ZKVerifierTransaction internal constructor(
 
         private fun filterPrivateComponents(
             wtx: WireTransaction,
-            availableComponentNonces: Map<Int, List<SecureHash>>,
+            allWireTransactionComponentNonces: Map<Int, List<SecureHash>>,
         ): List<FilteredComponentGroup> {
 
-            val filteredSerialisedComponents: MutableMap<Int, MutableList<OpaqueBytes>> = hashMapOf()
-            val filteredComponentNonces: MutableMap<Int, MutableList<SecureHash>> = hashMapOf()
-            val filteredComponentHashes: MutableMap<Int, MutableList<SecureHash?>> = hashMapOf() // Required for partial Merkle tree generation.
+            val visibleSerialisedComponents: MutableMap<Int, MutableList<OpaqueBytes>> = hashMapOf()
+            val visibleComponentNonces: MutableMap<Int, MutableList<SecureHash>> = hashMapOf()
+            val visibleComponentHashes: MutableMap<Int, MutableList<SecureHash?>> =
+                hashMapOf() // Required for partial Merkle tree generation.
 
             val zkTransactionMetadata = wtx.zkTransactionMetadata()
 
@@ -160,28 +161,39 @@ class ZKVerifierTransaction internal constructor(
                 val groupIndex = componentGroup.groupIndex
 
                 componentGroup.components.forEachIndexed { componentIndex, serialisedComponent ->
-                    if (zkTransactionMetadata.isVisibleInFilteredComponentGroup(groupIndex, componentIndex)) {
+                    if (zkTransactionMetadata.shouldBeVisibleInFilteredComponentGroup(groupIndex, componentIndex)) {
 
                         // Init lists if they don't exist
-                        if (!filteredSerialisedComponents.containsKey(groupIndex)) {
-                            filteredSerialisedComponents[groupIndex] = mutableListOf()
-                            filteredComponentNonces[groupIndex] = mutableListOf()
-                            filteredComponentHashes[groupIndex] =
+                        if (!visibleSerialisedComponents.containsKey(groupIndex)) {
+                            visibleSerialisedComponents[groupIndex] = mutableListOf()
+                            visibleComponentNonces[groupIndex] = mutableListOf()
+                            visibleComponentHashes[groupIndex] =
                                 mutableListOfNulls(wtx.componentGroups.first { it.groupIndex == groupIndex }.components.size)
                         }
 
                         // So now we are quite sure they are not null
-                        filteredSerialisedComponents[groupIndex]!!.add(serialisedComponent)
-                        filteredComponentNonces[groupIndex]!!.add(availableComponentNonces[groupIndex]!![componentIndex])
-                        filteredComponentHashes[groupIndex]!![componentIndex] = componentHash(wtx, availableComponentNonces, groupIndex, componentIndex)
+                        visibleSerialisedComponents[groupIndex]!!.add(serialisedComponent)
+                        visibleComponentNonces[groupIndex]!!.add(allWireTransactionComponentNonces[groupIndex]!![componentIndex])
+                        visibleComponentHashes[groupIndex]!![componentIndex] =
+                            componentHash(wtx, allWireTransactionComponentNonces, groupIndex, componentIndex)
                     }
                 }
             }
 
             val filteredComponentGroups: MutableList<FilteredComponentGroup> = mutableListOf()
-            filteredSerialisedComponents.forEach { (groupIndex, value) ->
+            visibleSerialisedComponents.forEach { (groupIndex, visibleSerializedComponents) ->
                 filteredComponentGroups.add(
-                    FilteredComponentGroup(groupIndex, value, filteredComponentNonces[groupIndex]!!, createPartialMerkleTree(wtx, availableComponentNonces, filteredComponentHashes, groupIndex))
+                    FilteredComponentGroup(
+                        groupIndex = groupIndex,
+                        components = visibleSerializedComponents,
+                        nonces = visibleComponentNonces[groupIndex]!!,
+                        partialMerkleTree = createPartialMerkleTree(
+                            wtx = wtx,
+                            nonces = allWireTransactionComponentNonces,
+                            hashes = visibleComponentHashes,
+                            groupIndex = groupIndex
+                        )
+                    )
                 )
             }
             return filteredComponentGroups
