@@ -2,18 +2,15 @@ package com.ing.zkflow.common.contract
 
 import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.contracts.ZKContractState
-import com.ing.zkflow.common.network.ZKAttachmentConstraintType
 import com.ing.zkflow.common.serialization.BFLSerializationSchemeCandidate
 import com.ing.zkflow.common.serialization.BFLSerializationSchemeCandidate.Companion.ZkCommandDataSerializerMap
 import com.ing.zkflow.common.serialization.BFLSerializationSchemeCandidate.Companion.ZkContractStateSerializerMap
-import com.ing.zkflow.common.transactions.ZKTransactionBuilder
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.common.zkp.metadata.commandMetadata
 import com.ing.zkflow.serialization.serializer.IntSerializer
 import com.ing.zkflow.serialization.serializer.corda.AnonymousPartySerializer
 import com.ing.zkflow.testing.dsl.VerificationMode
 import com.ing.zkflow.testing.dsl.zkLedger
-import com.ing.zkflow.testing.fixed
 import com.ing.zkflow.testing.zkp.MockZKNetworkParameters
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
@@ -28,9 +25,7 @@ import org.junit.jupiter.api.Test
 import java.util.Random
 
 class BFLSerializationWithDSLTest {
-    private val notary = TestIdentity.fixed("Notary", Crypto.EDDSA_ED25519_SHA512).party
     private val zkNetworkParameters = MockZKNetworkParameters(
-        attachmentConstraintType = ZKAttachmentConstraintType.HashAttachmentConstraintType(),
         serializationSchemeId = BFLSerializationSchemeCandidate.SCHEME_ID
     )
 
@@ -42,11 +37,8 @@ class BFLSerializationWithDSLTest {
 
         val aliceAsset = TestState(alice)
 
-        val txbuilder = ZKTransactionBuilder(notary, zkNetworkParameters)
-        println(txbuilder)
-
-        services.zkLedger {
-            zkTransaction(transactionBuilder = txbuilder) {
+        services.zkLedger(zkNetworkParameters = zkNetworkParameters) {
+            zkTransaction {
                 input(LocalContract.PROGRAM_ID, aliceAsset)
                 output(LocalContract.PROGRAM_ID, aliceAsset.copy(owner = bob))
                 command(listOf(alice.owningKey, bob.owningKey), LocalContract.Move())
