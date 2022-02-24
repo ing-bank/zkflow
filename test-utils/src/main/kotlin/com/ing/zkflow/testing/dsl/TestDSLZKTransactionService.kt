@@ -37,9 +37,7 @@ public interface TestDSLZKTransactionService {
         }
 
         return PublicInput(
-            inputComponentHashes = emptyList(), // StateRefs are always public
             outputComponentHashes = privateOutputHashes,
-            referenceComponentHashes = emptyList(), // StateRefs are always public
             attachmentComponentHashes = tx.privateComponentHashes[ComponentGroupEnum.ATTACHMENTS_GROUP.ordinal].orEmpty(),
             commandComponentHashes = tx.privateComponentHashes[ComponentGroupEnum.COMMANDS_GROUP.ordinal].orEmpty(),
             notaryComponentHashes = tx.privateComponentHashes[ComponentGroupEnum.NOTARY_GROUP.ordinal].orEmpty(),

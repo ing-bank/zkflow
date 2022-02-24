@@ -146,10 +146,6 @@ class ZKTransactionOrderingTest {
                 command
             )
 
-            // StateRefs never go to witness
-            val actualDeserializedInputs = witness.inputsGroup.map { it.deserialize<StateRef>() }
-            actualDeserializedInputs shouldBe emptyList()
-
             // compare outputs
             val actualDeserializedOutputs =
                 witness.outputsGroup.flatMap { it.value }.map { it.deserialize<TransactionState<ContractState>>().data }
@@ -160,10 +156,6 @@ class ZKTransactionOrderingTest {
             }
 
             actualDeserializedOutputs.zip(commandOutputs) { a, b -> assertTrue(dummyStatesAreEqual(a, b)) }
-
-            // StateRefs never go to witness
-            val actualDeserializedRefs = witness.referencesGroup.map { it.deserialize<StateRef>() }
-            actualDeserializedRefs shouldBe emptyList()
 
             // compare utxos
             val commandInputIndices = command.inputs.map { it.index }

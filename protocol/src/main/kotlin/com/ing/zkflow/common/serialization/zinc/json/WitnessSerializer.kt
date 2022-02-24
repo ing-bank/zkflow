@@ -8,11 +8,6 @@ import kotlinx.serialization.json.putJsonObject
 @Suppress("ComplexMethod", "LongMethod")
 object WitnessSerializer {
     fun fromWitness(witness: Witness): String = buildJsonObject {
-        if (witness.inputsGroup.isNotEmpty())
-            put(
-                "inputs",
-                JsonArray(witness.inputsGroup.toJsonArray())
-            )
         if (witness.outputsGroup.isNotEmpty())
             putJsonObject("outputs") {
                 witness.outputsGroup.forEach {
@@ -43,11 +38,6 @@ object WitnessSerializer {
             put(
                 "signers",
                 JsonArray(witness.signersGroup.toJsonArray())
-            )
-        if (witness.referencesGroup.isNotEmpty())
-            put(
-                "references",
-                JsonArray(witness.referencesGroup.toJsonArray())
             )
         if (witness.parametersGroup.isNotEmpty())
             put(

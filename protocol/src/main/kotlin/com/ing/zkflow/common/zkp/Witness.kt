@@ -48,11 +48,6 @@ class Witness(
      */
 
     /**
-     * Serialized List<StateRef>
-     */
-    val inputsGroup: List<ByteArray>,
-
-    /**
      * Serialized Map<ContractState.name, TransactionState<ContractState>>
      */
     val outputsGroup: Map<String, List<ByteArray>>,
@@ -81,11 +76,6 @@ class Witness(
      * Serialized List<List<PublicKey>>
      */
     val signersGroup: List<ByteArray>,
-
-    /**
-     * Serialized List<StateRef>
-     */
-    val referencesGroup: List<ByteArray>,
 
     /**
      * Serialized List<SecureHash>
@@ -133,14 +123,12 @@ class Witness(
         val paddedByteMapSize = { it: Map<String, List<ByteArray>> ->
             it.flatMap { it.value }.fold(0) { acc, bytes -> acc + bytes.filter(filter).size }
         }
-        return inputsGroup.run(paddedByteListSize) +
-            outputsGroup.run(paddedByteMapSize) +
+        return outputsGroup.run(paddedByteMapSize) +
             commandsGroup.run(paddedByteListSize) +
             attachmentsGroup.run(paddedByteListSize) +
             notaryGroup.run(paddedByteListSize) +
             timeWindowGroup.run(paddedByteListSize) +
             signersGroup.run(paddedByteListSize) +
-            referencesGroup.run(paddedByteListSize) +
             parametersGroup.run(paddedByteListSize) +
             privacySalt.size +
             serializedInputUtxos.run(paddedByteMapSize) +
@@ -173,14 +161,12 @@ class Witness(
             val javaClass2ZincType = wtx.zkTransactionMetadata().javaClass2ZincType
 
             return Witness(
-                inputsGroup = emptyList(), // StateRefs never go to witness
                 outputsGroup = wtx.serializedComponentBytesForOutputGroup(ComponentGroupEnum.OUTPUTS_GROUP, javaClass2ZincType, privateOutputIndexes),
                 commandsGroup = wtx.serializedComponentBytesFor(ComponentGroupEnum.COMMANDS_GROUP),
                 attachmentsGroup = wtx.serializedComponentBytesFor(ComponentGroupEnum.ATTACHMENTS_GROUP),
                 notaryGroup = wtx.serializedComponentBytesFor(ComponentGroupEnum.NOTARY_GROUP),
                 timeWindowGroup = wtx.serializedComponentBytesFor(ComponentGroupEnum.TIMEWINDOW_GROUP),
                 signersGroup = wtx.serializedComponentBytesFor(ComponentGroupEnum.SIGNERS_GROUP),
-                referencesGroup = emptyList(), // StateRefs never go to witness
                 parametersGroup = wtx.serializedComponentBytesFor(ComponentGroupEnum.PARAMETERS_GROUP),
 
                 privacySalt = wtx.privacySalt,

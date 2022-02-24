@@ -6,19 +6,9 @@ import net.corda.core.serialization.CordaSerializable
 @CordaSerializable
 data class PublicInput(
     /**
-     * Leaf hash [SecureHash] of input components
-     */
-    val inputComponentHashes: List<SecureHash>,
-
-    /**
      * Leaf hash [SecureHash] of output components
      */
     val outputComponentHashes: List<SecureHash>,
-
-    /**
-     * Leaf hash [SecureHash] of reference components
-     */
-    val referenceComponentHashes: List<SecureHash>,
 
     /**
      * Leaf hash [SecureHash] of attachment components

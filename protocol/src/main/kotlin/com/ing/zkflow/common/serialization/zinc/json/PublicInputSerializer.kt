@@ -6,20 +6,10 @@ import kotlinx.serialization.json.buildJsonObject
 
 object PublicInputSerializer {
     fun fromPublicInput(publicInput: PublicInput): String = buildJsonObject {
-        if (publicInput.inputComponentHashes.isNotEmpty())
-            put(
-                "input_hashes",
-                JsonArray(publicInput.inputComponentHashes.toJsonArray())
-            )
         if (publicInput.outputComponentHashes.isNotEmpty())
             put(
                 "output_hashes",
                 JsonArray(publicInput.outputComponentHashes.toJsonArray())
-            )
-        if (publicInput.referenceComponentHashes.isNotEmpty())
-            put(
-                "reference_hashes",
-                JsonArray(publicInput.referenceComponentHashes.toJsonArray())
             )
         if (publicInput.attachmentComponentHashes.isNotEmpty())
             put(
