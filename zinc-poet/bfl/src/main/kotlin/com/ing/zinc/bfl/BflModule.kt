@@ -6,9 +6,13 @@ import com.ing.zinc.naming.camelToSnakeCase
 import com.ing.zinc.poet.ZincArray.Companion.zincArray
 import com.ing.zinc.poet.ZincFile
 import com.ing.zinc.poet.ZincFunction
+import com.ing.zinc.poet.ZincMod
+import com.ing.zinc.poet.ZincMod.Companion.zincMod
 import com.ing.zinc.poet.ZincPrimitive
 import com.ing.zinc.poet.ZincTypeDef
 import com.ing.zinc.poet.ZincTypeDef.Companion.zincTypeDef
+import com.ing.zinc.poet.ZincUse
+import com.ing.zinc.poet.ZincUse.Companion.zincUse
 import java.util.Locale
 
 /**
@@ -70,17 +74,22 @@ internal fun BflModule.getRegisteredMethods(): Collection<ZincFunction> = getReg
 /**
  * Return a name for a Constant holding the number of bits in the serialized form of this [BflModule].
  */
-fun BflModule.getLengthConstant(): String = "${id.camelToSnakeCase().toUpperCase(Locale.getDefault())}_LENGTH"
+fun BflModule.getLengthConstant(): String = "${typeName().camelToSnakeCase().toUpperCase(Locale.getDefault())}_LENGTH"
 
 /**
  * The type definition for the serialized form of this [BflModule].
  */
 fun BflModule.getSerializedTypeDef(): ZincTypeDef = zincTypeDef {
-    name = "Serialized$id"
+    name = "Serialized${typeName()}"
     type = zincArray {
         elementType = ZincPrimitive.Bool
         size = getLengthConstant()
     }
 }
 
-fun BflModule.getSerializedBflTypeDef() = BflTypeDef("Serialized$id", BflArray(bitSize, BflPrimitive.Bool))
+fun BflModule.getSerializedBflTypeDef() = BflTypeDef("Serialized${typeName()}", BflArray(bitSize, BflPrimitive.Bool))
+
+fun BflModule.mod(): ZincMod = zincMod { module = getModuleName() }
+fun BflModule.use(): ZincUse = zincUse { path = "${getModuleName()}::${typeName()}" }
+fun BflModule.useLengthConstant(): ZincUse = zincUse { path = "${getModuleName()}::${getLengthConstant()}" }
+fun BflModule.useSerialized(): ZincUse = zincUse { path = "${getModuleName()}::${getSerializedBflTypeDef().typeName()}" }

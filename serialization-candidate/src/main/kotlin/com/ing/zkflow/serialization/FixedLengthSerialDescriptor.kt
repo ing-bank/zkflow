@@ -19,18 +19,11 @@ fun SerialDescriptor.toFixedLengthSerialDescriptorOrThrow(parentSerialName: Stri
     return if (this is FixedLengthSerialDescriptor) {
         this
     } else {
-        // `this` is just a SerialDescriptor.
-        if (elementsCount == 0) {
-            // If no elements are present we cannot attach a size to the descriptor rendering it impossible
-            // to convert `SerialDescriptor` to `FixedLengthSerialDescriptor`
-            error(" `SerialDescriptor` `$fullSerialName` cannot be converted to `FixedLengthSerialDescriptor`")
-        } else {
-            FixedLengthSerialDescriptor(
-                this,
-                elementDescriptors.fold(0) { acc, serialDescriptor ->
-                    acc + serialDescriptor.toFixedLengthSerialDescriptorOrThrow(fullSerialName).byteSize
-                }
-            )
-        }
+        FixedLengthSerialDescriptor(
+            this,
+            elementDescriptors.fold(0) { acc, serialDescriptor ->
+                acc + serialDescriptor.toFixedLengthSerialDescriptorOrThrow(fullSerialName).byteSize
+            }
+        )
     }
 }

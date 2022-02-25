@@ -1,7 +1,6 @@
 package com.ing.zkflow.zinc.poet.generate.types.witness
 
 import com.ing.zinc.bfl.BflModule
-import com.ing.zinc.bfl.BflPrimitive
 import com.ing.zinc.bfl.dsl.ArrayBuilder.Companion.array
 import com.ing.zinc.bfl.getSerializedTypeDef
 import com.ing.zinc.poet.ZincArray.Companion.zincArray
@@ -38,7 +37,7 @@ class WitnessGroupsContainer(
     private val references = commandMetadata.privateReferences.toBflModuleMap()
 
     private val commandGroup =
-        StandardComponentWitnessGroup(COMMANDS, BflPrimitive.U32, 1, ComponentGroupEnum.COMMANDS_GROUP)
+        StandardComponentWitnessGroup(COMMANDS, zincTypeResolver.zincTypeOf(commandMetadata.commandKClass), 1, ComponentGroupEnum.COMMANDS_GROUP)
     private val notaryGroup =
         StandardComponentWitnessGroup(NOTARY, standardTypes.notaryModule, 1, ComponentGroupEnum.NOTARY_GROUP)
     private val timeWindowGroup =

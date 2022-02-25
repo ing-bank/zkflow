@@ -1,6 +1,7 @@
 package com.ing.zkflow.zinc.poet.generate
 
 import com.ing.zinc.bfl.BflType
+import com.ing.zinc.bfl.BflUnit
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.builtins.serializer
@@ -29,6 +30,8 @@ class ZincTypeGeneratorTest {
     companion object {
         @JvmStatic
         fun fixturesProvider(): List<Arguments> = listOf(
+            Arguments.of(ClassWithoutFields.serializer().descriptor, BflUnit),
+            Arguments.of(ClassWithClassWithoutFields.serializer().descriptor, structWithUnit),
             Arguments.of(ClassWithBoolean.serializer().descriptor, structWithBoolean),
             Arguments.of(ClassWithByte.serializer().descriptor, structWithByte),
             Arguments.of(ClassWithUByte.serializer().descriptor, structWithUByte),

@@ -5,9 +5,11 @@ import com.ing.zinc.bfl.CONSTS
 import com.ing.zinc.bfl.TypeVisitor
 import com.ing.zinc.bfl.generator.CodeGenerationOptions
 import com.ing.zinc.bfl.generator.WitnessGroupOptions
-import com.ing.zinc.bfl.getLengthConstant
-import com.ing.zinc.bfl.getSerializedTypeDef
+import com.ing.zinc.bfl.mod
 import com.ing.zinc.bfl.toZincId
+import com.ing.zinc.bfl.use
+import com.ing.zinc.bfl.useLengthConstant
+import com.ing.zinc.bfl.useSerialized
 import com.ing.zinc.naming.camelToSnakeCase
 import com.ing.zinc.poet.Indentation.Companion.spaces
 import com.ing.zinc.poet.ZincFile
@@ -49,34 +51,30 @@ class Witness(
     override fun generateZincFile(codeGenerationOptions: CodeGenerationOptions): ZincFile = ZincFile.zincFile {
         mod { module = CONSTS }
         newLine()
-        dependencies
+        (dependencies + standardTypes.getSignerListModule(commandMetadata.numberOfSigners))
+            .distinctBy { it.id }
+            .sortedBy { it.id }
             .forEach { dependency ->
-                mod { module = dependency.getModuleName() }
-                use { path = "${dependency.getModuleName()}::${dependency.id}" }
+                add(dependency.mod())
+                add(dependency.use())
                 when (dependency) {
                     digest -> {
-                        use { path = "${dependency.getModuleName()}::${dependency.getLengthConstant()}" }
-                        use { path = "${dependency.getModuleName()}::${dependency.getSerializedTypeDef().getId()}" }
+                        add(dependency.useLengthConstant())
+                        add(dependency.useSerialized())
                     }
                     privacySalt -> {
-                        use { path = "${dependency.getModuleName()}::${dependency.getSerializedTypeDef().getId()}" }
+                        add(dependency.useSerialized())
                     }
                 }
-
                 newLine()
             }
-        (
-            listOfNotNull(
-                COMMAND_CONTEXT,
-            ) + listOf(
-                standardTypes.getSignerListModule(commandMetadata.numberOfSigners).id,
-            )
-            ).distinct().sortedBy { it }
-            .forEach {
-                mod { module = it.camelToSnakeCase() }
-                use { path = "${it.camelToSnakeCase()}::$it" }
-                newLine()
-            }
+        listOfNotNull(
+            COMMAND_CONTEXT,
+        ).forEach {
+            mod { module = it.camelToSnakeCase() }
+            use { path = "${it.camelToSnakeCase()}::$it" }
+            newLine()
+        }
         mod { module = CRYPTO_UTILS }
         use { path = "$CRYPTO_UTILS::$COMPUTE_NONCE" }
         use { path = "std::crypto::blake2s_multi_input" }

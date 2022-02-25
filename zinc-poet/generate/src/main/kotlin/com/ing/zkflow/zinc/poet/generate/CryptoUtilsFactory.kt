@@ -4,6 +4,9 @@ import com.ing.zinc.bfl.CONSTS
 import com.ing.zinc.bfl.generator.ZincGenerator.zincSourceFile
 import com.ing.zinc.bfl.getLengthConstant
 import com.ing.zinc.bfl.getSerializedTypeDef
+import com.ing.zinc.bfl.mod
+import com.ing.zinc.bfl.useLengthConstant
+import com.ing.zinc.bfl.useSerialized
 import com.ing.zinc.poet.ZincPrimitive
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.digest
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.privacySalt
@@ -18,9 +21,9 @@ class CryptoUtilsFactory {
     ) {
         buildPath.zincSourceFile("$CRYPTO_UTILS.zn") {
             for (it in listOf(privacySalt, digest)) {
-                mod { module = it.getModuleName() }
-                use { path = "${it.getModuleName()}::${it.getSerializedTypeDef().getName()}" }
-                use { path = "${it.getModuleName()}::${it.getLengthConstant()}" }
+                add(it.mod())
+                add(it.useSerialized())
+                add(it.useLengthConstant())
                 newLine()
             }
             mod { module = CONSTS }

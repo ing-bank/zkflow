@@ -22,10 +22,10 @@ data class BflTypeDef(
 ) : BflModule {
     override fun generateZincFile(codeGenerationOptions: CodeGenerationOptions): ZincFile = zincFile {
         if (typeDeclaration is BflModule) {
-            mod { module = typeDeclaration.getModuleName() }
-            use { path = "${typeDeclaration.getModuleName()}::${typeDeclaration.id}" }
-            use { path = "${typeDeclaration.getModuleName()}::${typeDeclaration.getSerializedTypeDef().getName()}" }
-            use { path = "${typeDeclaration.getModuleName()}::${typeDeclaration.getLengthConstant()}" }
+            add(typeDeclaration.mod())
+            add(typeDeclaration.use())
+            add(typeDeclaration.useSerialized())
+            add(typeDeclaration.useLengthConstant())
             newLine()
             constant {
                 name = getLengthConstant()

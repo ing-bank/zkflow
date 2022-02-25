@@ -2,7 +2,6 @@ package com.ing.zinc.bfl
 
 import com.ing.zinc.bfl.generator.CodeGenerationOptions
 import com.ing.zinc.bfl.generator.WitnessGroupOptions
-import com.ing.zinc.naming.camelToSnakeCase
 import com.ing.zinc.poet.Indentation.Companion.spaces
 import com.ing.zinc.poet.Indentation.Companion.tabs
 import com.ing.zinc.poet.Self
@@ -117,16 +116,16 @@ open class BflStruct(
         }
         val modulesToImport = getModulesToImport()
         for (mod in modulesToImport) {
-            mod { module = mod.id.camelToSnakeCase() }
+            mod { module = mod.getModuleName() }
         }
         if (modulesToImport.isNotEmpty()) {
             newLine()
         }
         for (module in modulesToImport) {
-            use { path = "${module.getModuleName()}::${module.id}" }
+            add(module.use())
             if (isDeserializable && ((module !is BflStruct) || module.isDeserializable)) {
-                use { path = "${module.getModuleName()}::${module.getSerializedTypeDef().getName()}" }
-                use { path = "${module.getModuleName()}::${module.getLengthConstant()}" }
+                add(module.useSerialized())
+                add(module.useLengthConstant())
             }
             newLine()
         }

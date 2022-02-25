@@ -29,22 +29,10 @@ import net.corda.core.crypto.Crypto
 import net.corda.core.identity.AnonymousParty
 import java.security.PublicKey
 
-@ZKP
-private data class WrapsEdDsaParty(val party: @EdDSA AnonymousParty)
-
-@ZKP
-private data class WrapsEdDsaPublicKey(val publicKey: @EdDSA PublicKey)
-
-@ZKP
-private data class WrapsSignatureAttachmentConstraint(val constraint: @EdDSA SignatureAttachmentConstraint)
-
-@ZKP
-private data class WrapsHashAttachmentConstraint(val constraint: @Sha256 HashAttachmentConstraint)
-
-@ZKP
-private data class WrapsAlwaysAcceptAttachmentConstraint(val constraint: AlwaysAcceptAttachmentConstraint)
-
-private fun BflModule.getSingleFieldType(): BflModule = (this as BflStruct).fields.single().type as BflModule
+private fun BflModule.getSingleFieldType(): BflModule = when (this) {
+    is BflStruct -> fields.single().type as BflModule
+    else -> this
+}
 
 class StandardTypes(
     private val zincTypeResolver: ZincTypeResolver,
@@ -191,3 +179,18 @@ class StandardTypes(
         internal val componentGroupEnum = enumOf(ComponentGroupEnum::class)
     }
 }
+
+@ZKP
+private data class WrapsEdDsaParty(val party: @EdDSA AnonymousParty)
+
+@ZKP
+private data class WrapsEdDsaPublicKey(val publicKey: @EdDSA PublicKey)
+
+@ZKP
+private data class WrapsSignatureAttachmentConstraint(val constraint: @EdDSA SignatureAttachmentConstraint)
+
+@ZKP
+private data class WrapsHashAttachmentConstraint(val constraint: @Sha256 HashAttachmentConstraint)
+
+@ZKP
+private data class WrapsAlwaysAcceptAttachmentConstraint(val constraint: AlwaysAcceptAttachmentConstraint)

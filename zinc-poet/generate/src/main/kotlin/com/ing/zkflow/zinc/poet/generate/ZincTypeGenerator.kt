@@ -1,8 +1,11 @@
 package com.ing.zkflow.zinc.poet.generate
 
+import com.ing.zinc.bfl.BflModule
 import com.ing.zinc.bfl.BflPrimitive
 import com.ing.zinc.bfl.BflType
+import com.ing.zinc.bfl.BflUnit
 import com.ing.zinc.bfl.dsl.EnumBuilder.Companion.enum
+import com.ing.zinc.bfl.dsl.FieldBuilder.Companion.field
 import com.ing.zinc.bfl.dsl.ListBuilder.Companion.asciiString
 import com.ing.zinc.bfl.dsl.ListBuilder.Companion.byteArray
 import com.ing.zinc.bfl.dsl.ListBuilder.Companion.list
@@ -72,13 +75,20 @@ object ZincTypeGenerator {
         }
     }
 
-    private fun createStruct(descriptor: SerialDescriptor) = struct {
-        name = descriptor.typeName
-        for (elementIndex in 0 until descriptor.elementsCount) {
+    private fun createStruct(descriptor: SerialDescriptor): BflModule {
+        val fields = (0 until descriptor.elementsCount).mapNotNull { elementIndex ->
             field {
                 name = descriptor.getElementName(elementIndex).camelToSnakeCase()
                 type = generate(descriptor.getElementDescriptor(elementIndex))
             }
+        }
+        return if (fields.isNotEmpty()) {
+            struct {
+                name = descriptor.typeName
+                addFields(fields)
+            }
+        } else {
+            BflUnit
         }
     }
 
