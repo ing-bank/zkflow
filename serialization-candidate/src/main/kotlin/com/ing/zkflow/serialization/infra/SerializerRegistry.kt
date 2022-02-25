@@ -18,6 +18,7 @@ import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.HashAttachmentConstraint
 import net.corda.core.contracts.SignatureAttachmentConstraint
 import net.corda.core.contracts.WhitelistedByZoneAttachmentConstraint
+import net.corda.core.internal.uncheckedCast
 import org.slf4j.LoggerFactory
 import kotlin.reflect.KClass
 
@@ -38,9 +39,6 @@ abstract class SerializerMap<T : Any> {
     private val obj2Id = mutableMapOf<KClass<out T>, Int>()
     private val objId2Serializer = mutableMapOf<Int, KSerializer<out T>>()
 
-    // TODO Should this exhibit behavior similar to map?
-    //  i.e. return if serializer is register for klass, replace it and return the previous version,
-    //  otherwise, register it and return null?
     fun register(klass: KClass<out T>, serializer: KSerializer<out T>) {
         log.debug("Registering serializer `$serializer` for `${klass.qualifiedName}`")
         val id = klass.hashCode() // Should be deterministic enough
@@ -51,20 +49,20 @@ abstract class SerializerMap<T : Any> {
         }
     }
 
-    fun tryRegister(klass: KClass<out T>, serializer: KSerializer<out T>) {
-        try { register(klass, serializer) } catch (_: SerializerMapError) {
-            log.trace("Serializer $serializer has already been registered for `${klass::qualifiedName}`. Skipping.")
-        }
-    }
-
     fun identify(klass: KClass<*>): Int =
         obj2Id[klass] ?: throw SerializerMapError.ClassNotRegistered(klass)
 
-    fun retrieve(id: Int): KSerializer<out T> =
-        objId2Serializer[id] ?: throw SerializerMapError.ClassNotRegistered(id)
+    // The following cast is OK, its validity is guaranteed by the inner structure of `ContractStateSerializerMap`.
+    // If `[]`-access succeeds, then the cast MUST also succeed.
+    @Suppress("UNCHECKED_CAST")
+    fun retrieve(id: Int): KSerializer<T> =
+        (objId2Serializer[id] ?: throw SerializerMapError.ClassNotRegistered(id)) as KSerializer<T>
 
-    operator fun get(klass: KClass<*>): KSerializer<out T> =
-        obj2Id[klass]?.let { objId2Serializer[it] } ?: throw SerializerMapError.ClassNotRegistered(klass)
+    // The following cast is OK, its validity is guaranteed by the inner structure of `ContractStateSerializerMap`.
+    // If `[]`-access succeeds, then the cast MUST also succeed.
+    @Suppress("UNCHECKED_CAST")
+    operator fun get(klass: KClass<*>): KSerializer<T> =
+        (obj2Id[klass]?.let { objId2Serializer[it] } ?: throw SerializerMapError.ClassNotRegistered(klass)) as KSerializer<T>
 }
 
 object AttachmentConstraintSerializerMap {
