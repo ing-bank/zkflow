@@ -1,10 +1,20 @@
 package com.ing.zkflow.crypto
 
+import com.ing.zkflow.annotations.corda.HashSize
+import com.ing.zkflow.crypto.Blake2s256DigestAlgorithm.Companion.DIGEST_LENGTH
 import net.corda.core.crypto.DigestAlgorithm
 import net.corda.core.crypto.DigestService
 import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.internal.DigestAlgorithmFactory
 import org.bouncycastle.crypto.digests.Blake2sDigest
+
+/**
+ * A predefined BLAKE2S256 hash type.
+ */
+@Target(AnnotationTarget.TYPE)
+@Suppress("MagicNumber")
+@HashSize(32) // Should equal Blake2s256DigestAlgorithm.DIGEST_LENGTH
+annotation class Blake2s256
 
 class Blake2s256DigestAlgorithm : DigestAlgorithm {
     companion object {

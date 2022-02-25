@@ -15,6 +15,8 @@ dependencies {
 
     val zkkryptoVersion: String by project
     api("com.ing.dlt:zkkrypto:$zkkryptoVersion")
+
+    api(project(":annotations"))
 }
 
 publishing {
