@@ -18,7 +18,6 @@ import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.HashAttachmentConstraint
 import net.corda.core.contracts.SignatureAttachmentConstraint
 import net.corda.core.contracts.WhitelistedByZoneAttachmentConstraint
-import net.corda.core.internal.uncheckedCast
 import org.slf4j.LoggerFactory
 import kotlin.reflect.KClass
 
@@ -34,38 +33,55 @@ interface ZKDataProvider<T : Any> {
 interface ZKContractStateSerializerMapProvider : ZKDataProvider<ContractState>
 interface ZkCommandDataSerializerMapProvider : ZKDataProvider<CommandData>
 
-abstract class SerializerMap<T : Any> {
+abstract class SerializerRegistry<T : Any> {
     private val log = LoggerFactory.getLogger(this::class.java)
     private val obj2Id = mutableMapOf<KClass<out T>, Int>()
     private val objId2Serializer = mutableMapOf<Int, KSerializer<out T>>()
 
+    /**
+     * Register a class and associated serializer
+     *
+     * Note that both parameters have a 'out' variance annotation on T.
+     * This is because we want to allow registering implementations of T, not just T itself. Example would be
+     * a SerializerRegistry<AttachmentConstraint> where we register a HashAttachmentConstraint. This would fail without the
+     * variance annotation.
+     *
+     * Also note that when we retrieve the serializer for class, we don't actually care that it is a serializer for the implementation of T
+     * or for T. And we can know for sure that it is a T. This is why we can safely cast to T without the variance annotation on retrieval.
+     */
     fun register(klass: KClass<out T>, serializer: KSerializer<out T>) {
         log.debug("Registering serializer `$serializer` for `${klass.qualifiedName}`")
         val id = klass.hashCode() // Should be deterministic enough
-
         obj2Id.put(klass, id)?.let { throw SerializerMapError.ClassAlreadyRegistered(klass, it) }
         objId2Serializer.put(id, serializer)?.let {
             throw SerializerMapError.IdAlreadyRegistered(id, klass, it.descriptor.serialName)
         }
     }
 
-    fun identify(klass: KClass<*>): Int =
-        obj2Id[klass] ?: throw SerializerMapError.ClassNotRegistered(klass)
+    fun identify(klass: KClass<*>): Int = obj2Id[klass] ?: throw SerializerMapError.ClassNotRegistered(klass)
 
-    // The following cast is OK, its validity is guaranteed by the inner structure of `ContractStateSerializerMap`.
-    // If `[]`-access succeeds, then the cast MUST also succeed.
+    /**
+     * Note that when we retrieve the serializer for class, we don't actually care that it is a serializer for the implementation of T
+     * or for T. And we can know for sure that it is a T. This is why we can safely cast to T without the variance annotation on retrieval.
+     */
     @Suppress("UNCHECKED_CAST")
-    fun retrieve(id: Int): KSerializer<T> =
-        (objId2Serializer[id] ?: throw SerializerMapError.ClassNotRegistered(id)) as KSerializer<T>
+    operator fun get(id: Int): KSerializer<T> = (objId2Serializer[id] ?: throw SerializerMapError.ClassNotRegistered(id)) as KSerializer<T>
 
-    // The following cast is OK, its validity is guaranteed by the inner structure of `ContractStateSerializerMap`.
-    // If `[]`-access succeeds, then the cast MUST also succeed.
-    @Suppress("UNCHECKED_CAST")
-    operator fun get(klass: KClass<*>): KSerializer<T> =
-        (obj2Id[klass]?.let { objId2Serializer[it] } ?: throw SerializerMapError.ClassNotRegistered(klass)) as KSerializer<T>
+    operator fun get(klass: KClass<out T>): KSerializer<T> = get(identify(klass))
 }
 
-object AttachmentConstraintSerializerMap {
+/**
+ * Register a class and associated serializer
+ *
+ * Note that both parameters have a 'out' variance annotation on T.
+ * This is because we want to allow registering implementations of T, not just T itself. Example would be
+ * a SerializerRegistry<AttachmentConstraint> where we register a HashAttachmentConstraint. This would fail without the
+ * variance annotation.
+ *
+ * Also note that when we retrieve the serializer for class, we don't actually care that it is a serializer for the implementation of T
+ * or for T. And we can know for sure that it is a T. This is why we can safely cast to T without the variance annotation on retrieval.
+ */
+object AttachmentConstraintSerializerRegistry {
     private val log = LoggerFactory.getLogger(this::class.java)
     private val obj2Id = mutableMapOf<KClass<out AttachmentConstraint>, Int>()
     private val objId2Serializer = mutableMapOf<Int, GetAttachmentConstraintSerializer>()
@@ -76,7 +92,9 @@ object AttachmentConstraintSerializerMap {
             require(metadata.hashAttachmentConstraintSpec != null) {
                 "Insufficient metadata to construct ${HashAttachmentConstraintSerializer::class.qualifiedName} "
             }
-            HashAttachmentConstraintSerializer(metadata.hashAttachmentConstraintSpec.algorithm, metadata.hashAttachmentConstraintSpec.hashLength)
+            HashAttachmentConstraintSerializer(
+                metadata.hashAttachmentConstraintSpec.algorithm, metadata.hashAttachmentConstraintSpec.hashLength
+            )
         }
         register(WhitelistedByZoneAttachmentConstraint::class) { WhitelistedByZoneAttachmentConstraintSerializer }
         register(AutomaticHashConstraint::class) { AutomaticHashConstraintSerializer }
@@ -94,19 +112,25 @@ object AttachmentConstraintSerializerMap {
 
         val id = klass.hashCode()
         obj2Id.put(klass, id)?.let { throw SerializerMapError.ClassAlreadyRegistered(klass, it) }
-        objId2Serializer.put(id, generator)?.let {
-            throw SerializerMapError.IdAlreadyRegistered(id, klass, null)
-        }
+
+        objId2Serializer.put(id, generator)?.let { throw SerializerMapError.IdAlreadyRegistered(id, klass, null) }
     }
 
     fun identify(klass: KClass<*>): Int =
         obj2Id[klass] ?: throw SerializerMapError.ClassNotRegistered(klass)
 
-    fun retrieve(id: Int): GetAttachmentConstraintSerializer =
-        objId2Serializer[id] ?: throw SerializerMapError.ClassNotRegistered(id)
+    /**
+     * Note that when we retrieve the serializer for class, we don't actually care that it is a serializer for the implementation of T
+     * or for T. And we can know for sure that it is a T. This is why we can safely cast to T without the variance annotation on retrieval.
+     */
+    @Suppress("UNCHECKED_CAST")
+    operator fun get(id: Int): (metadata: AttachmentConstraintMetadata) -> KSerializer<AttachmentConstraint> =
+        { metadata ->
+            (objId2Serializer[id] ?: throw SerializerMapError.ClassNotRegistered(id)).invoke(metadata) as KSerializer<AttachmentConstraint>
+        }
 
-    operator fun get(attachmentConstraintKClass: KClass<out AttachmentConstraint>): GetAttachmentConstraintSerializer =
-        obj2Id[attachmentConstraintKClass]?.let { objId2Serializer[it] } ?: throw SerializerMapError.ClassNotRegistered(attachmentConstraintKClass)
+    operator fun get(attachmentConstraintKClass: KClass<out AttachmentConstraint>):
+        (metadata: AttachmentConstraintMetadata) -> KSerializer<AttachmentConstraint> = get(identify(attachmentConstraintKClass))
 }
 
 fun interface GetAttachmentConstraintSerializer {

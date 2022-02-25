@@ -5,13 +5,13 @@ import com.ing.zkflow.serialization.serializer.string.FixedLengthASCIIStringSeri
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class SecureHashSerializationMetadata(
+open class SecureHashSerializationMetadata(
     @Serializable(with = Algorithm::class) val algorithm: String,
     @Serializable(with = IntSerializer::class) val hashSize: Int,
 ) {
     object Algorithm : FixedLengthASCIIStringSerializer(MAX_ALGORITHM_LENGTH)
 
     companion object {
-        const val MAX_ALGORITHM_LENGTH: Int = 100
+        const val MAX_ALGORITHM_LENGTH: Int = 10
     }
 }

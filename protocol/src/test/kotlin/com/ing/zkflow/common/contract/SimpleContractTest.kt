@@ -10,6 +10,7 @@ import com.ing.zkflow.common.zkp.metadata.commandMetadata
 import com.ing.zkflow.serialization.bfl.serializers.AnonymousPartySerializer
 import com.ing.zkflow.testing.dsl.VerificationMode
 import com.ing.zkflow.testing.dsl.zkLedger
+import com.ing.zkflow.util.tryNonFailing
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import net.corda.core.contracts.BelongsToContract
@@ -51,7 +52,9 @@ class LocalContract : Contract {
     @Serializable
     class Move : ZKCommandData {
         init {
-            ZkCommandDataSerializerMap.register(this::class)
+            tryNonFailing {
+                ZkCommandDataSerializerMap.register(this::class)
+            }
         }
 
         @Transient
@@ -77,6 +80,8 @@ data class TestState(
     override val participants: List<@Serializable(with = AnonymousPartySerializer::class) AnonymousParty> = listOf(owner)
 
     init {
-        BFLSerializationScheme.Companion.ZkContractStateSerializerMap.register(this::class)
+        tryNonFailing {
+            BFLSerializationScheme.Companion.ZkContractStateSerializerMap.register(this::class)
+        }
     }
 }

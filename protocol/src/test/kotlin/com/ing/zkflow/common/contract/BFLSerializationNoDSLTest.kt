@@ -4,8 +4,8 @@ import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.contracts.ZKContractState
 import com.ing.zkflow.common.network.ZKAttachmentConstraintType
 import com.ing.zkflow.common.serialization.BFLSerializationSchemeCandidate
-import com.ing.zkflow.common.serialization.BFLSerializationSchemeCandidate.Companion.ZkCommandDataSerializerMap
-import com.ing.zkflow.common.serialization.BFLSerializationSchemeCandidate.Companion.ZkContractStateSerializerMap
+import com.ing.zkflow.common.serialization.BFLSerializationSchemeCandidate.Companion.ZkCommandDataSerializerRegistry
+import com.ing.zkflow.common.serialization.BFLSerializationSchemeCandidate.Companion.ZkContractStateSerializerRegistry
 import com.ing.zkflow.common.transactions.ZKTransactionBuilder
 import com.ing.zkflow.common.zkp.ZKFlow
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
@@ -16,6 +16,7 @@ import com.ing.zkflow.serialization.serializer.corda.AnonymousPartySerializer
 import com.ing.zkflow.testing.fixed
 import com.ing.zkflow.testing.withCustomSerializationEnv
 import com.ing.zkflow.testing.zkp.MockZKNetworkParameters
+import com.ing.zkflow.util.tryNonFailing
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import net.corda.core.contracts.BelongsToContract
@@ -67,7 +68,9 @@ class BFLSerializationNoDSLTest {
         override val participants: List<AnonymousParty> = listOf(owner)
 
         init {
-            ZkContractStateSerializerMap.tryRegister(this::class, serializer())
+            tryNonFailing {
+                ZkContractStateSerializerRegistry.register(this::class, serializer())
+            }
         }
     }
 
@@ -81,7 +84,9 @@ class BFLSerializationNoDSLTest {
         @Serializable
         class Issue : ZKCommandData {
             init {
-                ZkCommandDataSerializerMap.tryRegister(this::class, serializer())
+                tryNonFailing {
+                    ZkCommandDataSerializerRegistry.register(this::class, serializer())
+                }
             }
 
             @Transient
