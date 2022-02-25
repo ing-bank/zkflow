@@ -8,6 +8,7 @@ import com.ing.zkflow.serialization.SerializersModuleRegistry
 import com.ing.zkflow.serialization.bfl.TestCordaSerializers
 import com.ing.zkflow.serialization.serializer.corda.DummyCommandDataSerializer
 import com.ing.zkflow.testing.zkp.MockZKNetworkParameters
+import com.ing.zkflow.util.tryNonFailing
 import net.corda.core.identity.Party
 import net.corda.core.internal.HashAgility
 import net.corda.core.node.ServiceHub
@@ -37,8 +38,10 @@ public fun ServiceHub.zkLedger(
     HashAgility.init(null, zkNetworkParameters.digestAlgorithm::class.java.name)
 
     // Register some test serializers that are required for DSL-inserted transaction components
-    SerializersModuleRegistry.register(TestCordaSerializers.module)
-    ZkCommandDataSerializerRegistry.register(DummyCommandData::class, DummyCommandDataSerializer)
+    SerializersModuleRegistry.register(TestCordaSerializers.module) // TODO: Remove this when old BFL is decommed
+    tryNonFailing {
+        ZkCommandDataSerializerRegistry.register(DummyCommandData::class, DummyCommandDataSerializer)
+    }
 
     return createTestSerializationEnv(javaClass.classLoader).asTestContextEnv {
         val interpreter = TestZKLedgerDSLInterpreter(this, zkService, zkNetworkParameters)
