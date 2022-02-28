@@ -14,12 +14,16 @@ import com.ing.zinc.bfl.generator.CodeGenerationOptions
 import com.ing.zinc.bfl.generator.WitnessGroupOptions
 import com.ing.zinc.bfl.getLengthConstant
 import com.ing.zinc.bfl.getSerializedTypeDef
+import com.ing.zinc.bfl.mod
 import com.ing.zinc.bfl.toZincId
+import com.ing.zinc.bfl.use
+import com.ing.zinc.bfl.useLengthConstant
+import com.ing.zinc.bfl.useSerialized
 import com.ing.zinc.naming.camelToSnakeCase
 import com.ing.zinc.poet.Indentation.Companion.spaces
 import com.ing.zinc.poet.ZincArray
 import com.ing.zinc.poet.ZincArray.Companion.zincArray
-import com.ing.zinc.poet.ZincFile
+import com.ing.zinc.poet.ZincFile.Companion.zincFile
 import com.ing.zinc.poet.ZincFunction
 import com.ing.zinc.poet.ZincFunction.Companion.zincFunction
 import com.ing.zinc.poet.ZincMethod.Companion.zincMethod
@@ -50,29 +54,29 @@ data class SerializedStateGroup(
     private val transactionStateLists: List<BflStructField> = transactionStates.toFieldList()
     private val groupSize = transactionStates.values.sum()
 
-    override fun generateZincFile(codeGenerationOptions: CodeGenerationOptions): ZincFile = ZincFile.zincFile {
+    override fun generateZincFile(codeGenerationOptions: CodeGenerationOptions) = zincFile {
         mod { module = CONSTS }
         newLine()
         transactionStates.forEach { (stateType, _) ->
-            mod { module = stateType.getModuleName() }
-            use { path = "${stateType.getModuleName()}::${stateType.id}" }
-            use { path = "${stateType.getModuleName()}::${stateType.getLengthConstant()}" }
+            add(stateType.mod())
+            add(stateType.use())
+            add(stateType.useLengthConstant())
             newLine()
         }
         transactionStateLists.forEach {
             val stateList = it.type as BflModule // Safe cast, because it is generated with transactionStates.toFieldList()
-            mod { module = stateList.getModuleName() }
-            use { path = "${stateList.getModuleName()}::${stateList.id}" }
+            add(stateList.mod())
+            add(stateList.use())
             newLine()
         }
-        mod { module = deserializedStruct.getModuleName() }
-        use { path = "${deserializedStruct.getModuleName()}::${deserializedStruct.id}" }
+        add(deserializedStruct.mod())
+        add(deserializedStruct.use())
         newLine()
         listOf(privacySalt, digest).forEach {
-            mod { module = it.getModuleName() }
-            use { path = "${it.getModuleName()}::${it.id}" }
-            use { path = "${it.getModuleName()}::${it.getSerializedTypeDef().getName()}" }
-            use { path = "${it.getModuleName()}::${it.getLengthConstant()}" }
+            add(it.mod())
+            add(it.use())
+            add(it.useSerialized())
+            add(it.useLengthConstant())
             newLine()
         }
         mod { module = CRYPTO_UTILS }

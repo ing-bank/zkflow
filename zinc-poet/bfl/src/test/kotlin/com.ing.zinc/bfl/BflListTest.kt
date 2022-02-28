@@ -6,6 +6,7 @@ import com.ing.zinc.bfl.ZincExecutor.generateCircuitBase
 import com.ing.zinc.bfl.ZincExecutor.generateDeserializeCircuit
 import com.ing.zinc.bfl.ZincExecutor.generateWitness
 import com.ing.zinc.bfl.ZincExecutor.runCommandAndLogTime
+import com.ing.zinc.bfl.dsl.ListBuilder.Companion.list
 import com.ing.zinc.bfl.generator.ZincGenerator.zincSourceFile
 import com.ing.zinc.poet.ZincPrimitive
 import io.kotest.matchers.shouldBe
@@ -17,6 +18,23 @@ import org.junit.jupiter.api.io.TempDir
 import java.nio.file.Path
 
 internal class BflListTest {
+    @Test
+    fun `List of Units should deserialize correctly`(@TempDir tempDir: Path) {
+        val listOfUnits = list {
+            elementType = BflUnit
+            capacity = 2
+        }
+        tempDir.generateDeserializeCircuit(listOfUnits)
+        tempDir.generateWitness(SERIALIZED) {
+            bytes(0, 0, 0, 1)
+        }
+
+        val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run")
+
+        stderr shouldBe ""
+        stdout.parseJson() shouldBe listOf(JsonPrimitive("unit")).asZincJsonObjectList(2, JsonPrimitive("unit"))
+    }
+
     @Test
     fun `List of Bools deserialize method should deserialize correctly`(@TempDir tempDir: Path) {
         tempDir.generateDeserializeCircuit(listOfBools)

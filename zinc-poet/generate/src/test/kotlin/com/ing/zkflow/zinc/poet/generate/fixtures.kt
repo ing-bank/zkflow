@@ -1,6 +1,7 @@
 package com.ing.zkflow.zinc.poet.generate
 
 import com.ing.zinc.bfl.BflPrimitive
+import com.ing.zinc.bfl.BflUnit
 import com.ing.zinc.bfl.dsl.EnumBuilder.Companion.enum
 import com.ing.zinc.bfl.dsl.ListBuilder.Companion.asciiString
 import com.ing.zinc.bfl.dsl.ListBuilder.Companion.byteArray
@@ -24,6 +25,10 @@ import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.Party
 import java.security.PublicKey
 
+@ZKP
+class ClassWithoutFields
+@ZKP
+data class ClassWithClassWithoutFields(val c: ClassWithoutFields)
 @ZKP
 data class ClassWithBoolean(val boolean: Boolean)
 @ZKP
@@ -73,6 +78,10 @@ data class ClassWithSignatureAttachmentConstraint(val constraint: @EdDSA Signatu
 @ZKP
 data class ClassWithHashAttachmentConstraint(val constraint: @Sha256 HashAttachmentConstraint)
 
+val structWithUnit = struct {
+    name = "ClassWithClassWithoutFields"
+    field { name = "c"; type = BflUnit }
+}
 val structWithBoolean = struct {
     name = "ClassWithBoolean"
     field { name = "boolean"; type = BflPrimitive.Bool }

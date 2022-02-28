@@ -1,7 +1,6 @@
 package com.ing.zkflow.zinc.poet.generate
 
 import com.ing.zkflow.common.network.ZKAttachmentConstraintType
-import com.ing.zkflow.common.zkp.ZKFlow.DEFAULT_ZKFLOW_HASH_ATTACHMENT_HASHING_ALGORITHM
 import com.ing.zkflow.testing.zkp.MockZKNetworkParameters
 import com.ing.zkflow.util.runCommand
 import com.ing.zkflow.zinc.poet.generate.types.CommandContextFactory
@@ -32,11 +31,8 @@ internal class CircuitGeneratorTest {
 
     private val standardTypes = StandardTypes(
         zincTypeResolver,
-        // TODO: set this back to alwaysaccept once Zinc Poet allows it: currently it does not support empty structs
         MockZKNetworkParameters(
-            attachmentConstraintType = ZKAttachmentConstraintType.HashAttachmentConstraintType(
-                DEFAULT_ZKFLOW_HASH_ATTACHMENT_HASHING_ALGORITHM
-            )
+            attachmentConstraintType = ZKAttachmentConstraintType.AlwaysAcceptAttachmentConstraintType
         )
     )
 

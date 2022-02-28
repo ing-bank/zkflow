@@ -2,12 +2,11 @@ package com.ing.zinc.bfl
 
 import com.ing.zinc.bfl.generator.CodeGenerationOptions
 import com.ing.zinc.bfl.generator.WitnessGroupOptions
-import com.ing.zinc.naming.camelToSnakeCase
 import com.ing.zinc.poet.Indentation.Companion.spaces
 import com.ing.zinc.poet.Indentation.Companion.tabs
 import com.ing.zinc.poet.Self
 import com.ing.zinc.poet.ZincConstant
-import com.ing.zinc.poet.ZincFile
+import com.ing.zinc.poet.ZincFile.Companion.zincFile
 import com.ing.zinc.poet.ZincFunction
 import com.ing.zinc.poet.ZincFunction.Companion.zincFunction
 import com.ing.zinc.poet.ZincMethod.Companion.zincMethod
@@ -109,7 +108,7 @@ open class BflStruct(
         } + functions
     }
 
-    override fun generateZincFile(codeGenerationOptions: CodeGenerationOptions) = ZincFile.zincFile {
+    override fun generateZincFile(codeGenerationOptions: CodeGenerationOptions) = zincFile {
         comment("$id module")
         newLine()
         mod {
@@ -117,16 +116,16 @@ open class BflStruct(
         }
         val modulesToImport = getModulesToImport()
         for (mod in modulesToImport) {
-            mod { module = mod.id.camelToSnakeCase() }
+            mod { module = mod.getModuleName() }
         }
         if (modulesToImport.isNotEmpty()) {
             newLine()
         }
         for (module in modulesToImport) {
-            use { path = "${module.getModuleName()}::${module.id}" }
+            add(module.use())
             if (isDeserializable && ((module !is BflStruct) || module.isDeserializable)) {
-                use { path = "${module.getModuleName()}::${module.getSerializedTypeDef().getName()}" }
-                use { path = "${module.getModuleName()}::${module.getLengthConstant()}" }
+                add(module.useSerialized())
+                add(module.useLengthConstant())
             }
             newLine()
         }

@@ -13,6 +13,7 @@ import net.corda.core.transactions.LedgerTransaction
 object MyContract : Contract {
     override fun verify(tx: LedgerTransaction) {}
 
+    @ZKP
     class MyFirstCommand : ZKCommandData {
 
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {

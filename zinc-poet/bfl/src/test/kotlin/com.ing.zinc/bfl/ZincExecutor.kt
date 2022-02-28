@@ -34,10 +34,10 @@ object ZincExecutor {
     }
 
     fun ZincFile.Builder.createImports(module: BflModule) {
-        mod { this.module = module.getModuleName() }
+        add(module.mod())
         newLine()
-        use { path = "${module.getModuleName()}::${module.id}" }
-        use { path = "${module.getModuleName()}::${module.getSerializedTypeDef().getName()}" }
+        add(module.use())
+        add(module.useSerialized())
         newLine()
     }
 

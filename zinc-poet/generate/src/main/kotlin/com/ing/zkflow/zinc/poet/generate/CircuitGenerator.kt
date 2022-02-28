@@ -5,7 +5,9 @@ import com.ing.zinc.bfl.allModules
 import com.ing.zinc.bfl.generator.CodeGenerationOptions
 import com.ing.zinc.bfl.generator.ZincGenerator.createZargoToml
 import com.ing.zinc.bfl.generator.ZincGenerator.zincSourceFile
+import com.ing.zinc.bfl.mod
 import com.ing.zinc.bfl.toZincId
+import com.ing.zinc.bfl.use
 import com.ing.zinc.poet.ZincPrimitive
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.zinc.poet.generate.types.CommandContextFactory
@@ -75,8 +77,8 @@ class CircuitGenerator(
             listOf(zkCommandContext)
                 .sortedBy { it.getModuleName() }
                 .forEach { dependency ->
-                    mod { module = dependency.getModuleName() }
-                    use { path = "${dependency.getModuleName()}::${dependency.id}" }
+                    add(dependency.mod())
+                    add(dependency.use())
                     newLine()
                 }
             function {
@@ -105,8 +107,8 @@ class CircuitGenerator(
             listOf(witness, witness.publicInput)
                 .sortedBy { it.getModuleName() }
                 .forEach { dependency ->
-                    mod { module = dependency.getModuleName() }
-                    use { path = "${dependency.getModuleName()}::${dependency.id}" }
+                    add(dependency.mod())
+                    add(dependency.use())
                     newLine()
                 }
             function {
