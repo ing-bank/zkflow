@@ -8,8 +8,7 @@ plugins {
 
 dependencies {
     implementation(project(":utils"))
-    implementation(project(":zinc-poet:bfl"))
-    implementation(project(":zinc-poet:poet"))
+    api(project(":zinc-poet:zinc-bfl"))
     implementation(project(":protocol"))
 
     val kotlinxSerializationVersion: String by project

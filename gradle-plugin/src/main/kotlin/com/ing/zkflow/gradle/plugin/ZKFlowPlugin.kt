@@ -41,9 +41,8 @@ class ZKFlowPlugin : Plugin<Project> {
             // Add the required dependencies to consumer projects
             project.dependencies.add(IMPLEMENTATION, extension.zkflow("protocol"))
             project.dependencies.add(IMPLEMENTATION, extension.zkflow("annotations"))
-            project.dependencies.add(IMPLEMENTATION, extension.zkflow("poet"))
-            project.dependencies.add(IMPLEMENTATION, extension.zkflow("bfl"))
-            project.dependencies.add(IMPLEMENTATION, extension.zkflow("generate"))
+            // TODO zinc-code-generation is only needed at compile time, by the gradlePlugin, so compileOnly sounds better...
+            project.dependencies.add(IMPLEMENTATION, extension.zkflow("zinc-code-generation"))
 
             project.pluginManager.apply("org.jetbrains.kotlin.plugin.serialization")
 

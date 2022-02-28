@@ -7,7 +7,7 @@ plugins {
 
 dependencies {
     implementation(project(":utils"))
-    implementation(project(":zinc-poet:poet"))
+    api(project(":zinc-poet:zinc-poet"))
 
     val kotlinxSerializationVersion: String by project
     testImplementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
