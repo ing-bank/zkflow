@@ -5,6 +5,14 @@ import net.corda.core.crypto.SignatureScheme
 
 interface ZKNetworkParameters {
     /**
+     * The version of these ZKNetworkParameters.
+     *
+     * This is used to load the networkparameters used to create a transaction when it is deserialized from storage
+     * or when it is received in a backchain.
+     */
+    val version: Int
+
+    /**
      * The participant [SignatureScheme] type required by this ZKFlow CorDapp. All parties on the network must use this scheme.
      */
     val participantSignatureScheme: SignatureScheme

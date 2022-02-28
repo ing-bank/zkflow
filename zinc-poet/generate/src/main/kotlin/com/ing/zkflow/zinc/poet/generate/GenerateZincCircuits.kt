@@ -69,7 +69,7 @@ private fun validateDiscoveredCircuits(circuitNames: List<String>) {
 
 private val circuitGenerator: CircuitGenerator by lazy {
     val zincTypeResolver = ZincTypeGeneratorResolver(ZincTypeGenerator)
-    val zkNetworkParameters = ZKNetworkParametersServiceLoader.parameters
+    val zkNetworkParameters = ZKNetworkParametersServiceLoader.latest
     val standardTypes = StandardTypes(zincTypeResolver, zkNetworkParameters)
     CircuitGenerator(
         BuildPathProvider.Default,

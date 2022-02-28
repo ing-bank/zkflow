@@ -1,6 +1,6 @@
 package com.ing.zkflow.network
 
-import com.ing.zkflow.common.network.ZKNetworkParametersProvider
+import com.ing.zkflow.common.network.ZKNetworkParameters
 import com.ing.zkflow.ksp.ProcessorTest
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
@@ -20,12 +20,12 @@ internal class ZKNetworkParametersProviderProcessorTest : ProcessorTest() {
         }
 
         result.exitCode shouldBe KotlinCompilation.ExitCode.OK
-        result.getGeneratedMetaInfServices<ZKNetworkParametersProvider>() shouldBe "com.ing.zkflow.network.TestNetworkParamsProvider"
+        result.getGeneratedMetaInfServices<ZKNetworkParameters>() shouldBe "com.ing.zkflow.network.TestNetworkParams"
     }
 
     companion object {
         private val kotlinFileWithProvider = SourceFile.kotlin(
-            "TestNetworkParamsProvider.kt",
+            "TestNetworkParams.kt",
             """
                 package com.ing.zkflow.network
 
@@ -37,14 +37,13 @@ internal class ZKNetworkParametersProviderProcessorTest : ProcessorTest() {
                 import net.corda.core.crypto.DigestAlgorithm
                 import net.corda.core.crypto.SignatureScheme
 
-                class TestNetworkParamsProvider : ZKNetworkParametersProvider {
-                    override val parameters: ZKNetworkParameters = object : ZKNetworkParameters {
+                class TestNetworkParams : ZKNetworkParameters {
+                        override val version: Int = 1
                         override val participantSignatureScheme: SignatureScheme = ZKFlow.DEFAULT_ZKFLOW_SIGNATURE_SCHEME
                         override val attachmentConstraintType: ZKAttachmentConstraintType = ZKFlow.DEFAULT_ZKFLOW_CONTRACT_ATTACHMENT_CONSTRAINT_TYPE
                         override val notaryInfo: ZKNotaryInfo = ZKNotaryInfo(ZKFlow.DEFAULT_ZKFLOW_NOTARY_SIGNATURE_SCHEME)
                         override val digestAlgorithm: DigestAlgorithm = ZKFlow.DEFAULT_ZKFLOW_DIGEST_IDENTIFIER
                         override val serializationSchemeId: Int = ZKFlow.DEFAULT_SERIALIZATION_SCHEME_ID
-                    }
                 }
         """
         )
