@@ -13,7 +13,7 @@ import net.corda.core.contracts.ContractState
 
 class ZKFLowSymbolProcessorProvider : SymbolProcessorProvider {
     override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor {
-        val zkNetworkParametersProviderProcessor = ZKNetworkParametersProviderProcessor()
+        val zkNetworkParametersProviderProcessor = ZKNetworkParametersProcessor()
 
         val contractStateMapProcessor = ContractStateAndCommandDataSerializerMapProcessor(
             ZKOwnableState::class, // TODO: should this not just be ZKContractState? This is too specific

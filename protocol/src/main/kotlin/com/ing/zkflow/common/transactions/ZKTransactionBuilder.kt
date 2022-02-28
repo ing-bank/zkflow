@@ -131,7 +131,7 @@ class ZKTransactionBuilder(
      */
     fun toWireTransaction(services: ServicesForResolution): WireTransaction {
         val resolvedTransactionMetadata = this.verify(services)
-        val zkNetworkParameters = zkNetworkParameters ?: ZKNetworkParametersServiceLoader.parameters
+        val zkNetworkParameters = zkNetworkParameters ?: ZKNetworkParametersServiceLoader.latest
 
         val serializationProperties = mutableMapOf<Any, Any>(
             CONTEXT_KEY_ZK_NETWORK_PARAMETERS to zkNetworkParameters
