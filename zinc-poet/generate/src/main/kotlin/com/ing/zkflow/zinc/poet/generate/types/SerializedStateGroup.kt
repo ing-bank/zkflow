@@ -23,7 +23,7 @@ import com.ing.zinc.naming.camelToSnakeCase
 import com.ing.zinc.poet.Indentation.Companion.spaces
 import com.ing.zinc.poet.ZincArray
 import com.ing.zinc.poet.ZincArray.Companion.zincArray
-import com.ing.zinc.poet.ZincFile
+import com.ing.zinc.poet.ZincFile.Companion.zincFile
 import com.ing.zinc.poet.ZincFunction
 import com.ing.zinc.poet.ZincFunction.Companion.zincFunction
 import com.ing.zinc.poet.ZincMethod.Companion.zincMethod
@@ -54,7 +54,7 @@ data class SerializedStateGroup(
     private val transactionStateLists: List<BflStructField> = transactionStates.toFieldList()
     private val groupSize = transactionStates.values.sum()
 
-    override fun generateZincFile(codeGenerationOptions: CodeGenerationOptions): ZincFile = ZincFile.zincFile {
+    override fun generateZincFile(codeGenerationOptions: CodeGenerationOptions) = zincFile {
         mod { module = CONSTS }
         newLine()
         transactionStates.forEach { (stateType, _) ->

@@ -6,7 +6,7 @@ import com.ing.zinc.poet.Indentation.Companion.spaces
 import com.ing.zinc.poet.Indentation.Companion.tabs
 import com.ing.zinc.poet.Self
 import com.ing.zinc.poet.ZincConstant
-import com.ing.zinc.poet.ZincFile
+import com.ing.zinc.poet.ZincFile.Companion.zincFile
 import com.ing.zinc.poet.ZincFunction
 import com.ing.zinc.poet.ZincFunction.Companion.zincFunction
 import com.ing.zinc.poet.ZincMethod.Companion.zincMethod
@@ -108,7 +108,7 @@ open class BflStruct(
         } + functions
     }
 
-    override fun generateZincFile(codeGenerationOptions: CodeGenerationOptions) = ZincFile.zincFile {
+    override fun generateZincFile(codeGenerationOptions: CodeGenerationOptions) = zincFile {
         comment("$id module")
         newLine()
         mod {

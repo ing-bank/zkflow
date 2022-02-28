@@ -12,7 +12,7 @@ import com.ing.zinc.bfl.useLengthConstant
 import com.ing.zinc.bfl.useSerialized
 import com.ing.zinc.naming.camelToSnakeCase
 import com.ing.zinc.poet.Indentation.Companion.spaces
-import com.ing.zinc.poet.ZincFile
+import com.ing.zinc.poet.ZincFile.Companion.zincFile
 import com.ing.zinc.poet.ZincFunction
 import com.ing.zinc.poet.ZincMethod.Companion.zincMethod
 import com.ing.zinc.poet.ZincStruct.Companion.zincStruct
@@ -48,7 +48,7 @@ class Witness(
         .sortedBy { it.id }
 
     @Suppress("LongMethod", "ComplexMethod")
-    override fun generateZincFile(codeGenerationOptions: CodeGenerationOptions): ZincFile = ZincFile.zincFile {
+    override fun generateZincFile(codeGenerationOptions: CodeGenerationOptions) = zincFile {
         mod { module = CONSTS }
         newLine()
         (dependencies + standardTypes.getSignerListModule(commandMetadata.numberOfSigners))
