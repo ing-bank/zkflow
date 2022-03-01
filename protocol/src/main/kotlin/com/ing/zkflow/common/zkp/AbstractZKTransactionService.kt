@@ -94,18 +94,18 @@ abstract class AbstractZKTransactionService(val serviceHub: ServiceHub) : ZKTran
 
         // Fetch output component hashes for private outputs of the command
         val privateOutputIndices = commandMetadata.outputs.map { it.index }
-        val privateOutputHashes = tx.outputHashes.filterIndexed { index, _ ->
+        val privateOutputHashes = tx.outputHashes().filterIndexed { index, _ ->
             privateOutputIndices.contains(index)
         }
 
         return PublicInput(
             outputComponentHashes = privateOutputHashes,
-            attachmentComponentHashes = tx.privateComponentHashes[ComponentGroupEnum.ATTACHMENTS_GROUP.ordinal].orEmpty(),
-            commandComponentHashes = tx.privateComponentHashes[ComponentGroupEnum.COMMANDS_GROUP.ordinal].orEmpty(),
-            notaryComponentHashes = tx.privateComponentHashes[ComponentGroupEnum.NOTARY_GROUP.ordinal].orEmpty(),
-            parametersComponentHashes = tx.privateComponentHashes[ComponentGroupEnum.PARAMETERS_GROUP.ordinal].orEmpty(),
-            timeWindowComponentHashes = tx.privateComponentHashes[ComponentGroupEnum.TIMEWINDOW_GROUP.ordinal].orEmpty(),
-            signersComponentHashes = tx.privateComponentHashes[ComponentGroupEnum.SIGNERS_GROUP.ordinal].orEmpty(),
+            attachmentComponentHashes = tx.privateComponentHashes(ComponentGroupEnum.ATTACHMENTS_GROUP.ordinal),
+            commandComponentHashes = tx.privateComponentHashes(ComponentGroupEnum.COMMANDS_GROUP.ordinal),
+            notaryComponentHashes = tx.privateComponentHashes(ComponentGroupEnum.NOTARY_GROUP.ordinal),
+            parametersComponentHashes = tx.privateComponentHashes(ComponentGroupEnum.PARAMETERS_GROUP.ordinal),
+            timeWindowComponentHashes = tx.privateComponentHashes(ComponentGroupEnum.TIMEWINDOW_GROUP.ordinal),
+            signersComponentHashes = tx.privateComponentHashes(ComponentGroupEnum.SIGNERS_GROUP.ordinal),
 
             inputUtxoHashes = privateInputHashes,
             referenceUtxoHashes = privateReferenceHashes
@@ -124,7 +124,7 @@ abstract class AbstractZKTransactionService(val serviceHub: ServiceHub) : ZKTran
              *
              * These values will be used as part of the instance when verifying the proof.
              */
-            prevVtx.tx.outputHashes[stateRef.index]
+            prevVtx.tx.outputHashes()[stateRef.index]
             /*
              * Now the verifier calls currentVtx.proof.verify(currentVtx.id, prevVtx.outputHashes).
              *

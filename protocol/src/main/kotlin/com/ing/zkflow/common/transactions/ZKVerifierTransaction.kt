@@ -3,10 +3,8 @@ package com.ing.zkflow.common.transactions
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.crypto.DigestService
 import net.corda.core.crypto.MerkleTree
-import net.corda.core.crypto.PartialMerkleTree
 import net.corda.core.crypto.SecureHash
 import net.corda.core.serialization.CordaSerializable
-import net.corda.core.transactions.FilteredComponentGroup
 import net.corda.core.transactions.FilteredTransaction
 import net.corda.core.transactions.TraversableTransaction
 import net.corda.core.transactions.WireTransaction
@@ -17,32 +15,8 @@ import java.security.PublicKey
 @CordaSerializable
 class ZKVerifierTransaction internal constructor(
     override val id: SecureHash,
-
     val proofs: Map<ZKCommandClassName, Proof>,
-
-    // Outputs are not visible in a normal FilteredTransaction, so we 'leak' some info here: the amount of outputs.
-    // Outputs are the leaf hashes of the outputs component group. This is the only group where:
-    // * we don't provide the leaf contents but provide the leaf hashes. In other cases we provide either all contents
-    //   of all leaves, or we provide nothing (hide all leaves completely) and we just use the component group hash
-    //   to build the Merkle tree. In the case of outputs, verifiers need to
-    //   be able to see the component leaf hashes of past transactions in the backchain, so that they can:
-    //   * For each input StateRef in the head transaction, find the matching output hash in the previous tx. Then for the proof verification
-    //     they provide this list of output hashes (for the inputs being consumed) as public input. The circuit will enforce
-    //     that for each input contents from the witness,  when combined with their nonce, should hash to the same hash as
-    //     provided for that input in the public input.
-    val outputHashes: List<SecureHash>,
-
-    /**
-     * This value will contain as many hashes as there are component groups, otherwise fail.
-     * Order of the elements corresponds to the order of groups listed in ComponentGroupEnum.
-     */
-    val groupHashes: List<SecureHash>,
-
-    val filteredComponentGroups: List<FilteredComponentGroup>,
-
-    @Transient
-    val privateComponentHashes: Map<Int, List<SecureHash>>,
-
+    val filteredComponentGroups: List<ZKFilteredComponentGroup>,
     digestService: DigestService
 ) : TraversableTransaction(
     filteredComponentGroups,
@@ -70,6 +44,7 @@ class ZKVerifierTransaction internal constructor(
      * Much of this is directly lifted from FilteredTransaction because we can't extend it because its constructors are internal
      */
     fun verify() {
+        val groupHashes = getGroupHashes()
 
         require(groupHashes.isNotEmpty()) { "At least one component group hash is required" }
         // Verify the top level Merkle tree (group hashes are its leaves, including allOnesHash for empty list or null
@@ -77,32 +52,25 @@ class ZKVerifierTransaction internal constructor(
         require(MerkleTree.getMerkleTree(groupHashes, digestService).hash == id) {
             "Top level Merkle tree cannot be verified against transaction's id"
         }
-
-        // Check that output hashes indeed produce provided group hash for output group
-        require(
-            MerkleTree.getMerkleTree(
-                outputHashes,
-                digestService
-            ).hash == groupHashes[ComponentGroupEnum.OUTPUTS_GROUP.ordinal]
-        )
-
-        // Compute partial Merkle roots for each filtered component and verify each of the partial Merkle trees.
-        filteredComponentGroups.forEach { (groupIndex, components, nonces, groupPartialTree) ->
-            require(groupIndex < groupHashes.size) { "There is no matching component group hash for group $groupIndex" }
-            val groupMerkleRoot = groupHashes[groupIndex]
-            require(groupMerkleRoot == PartialMerkleTree.rootAndUsedHashes(groupPartialTree.root, mutableListOf())) {
-                "Partial Merkle tree root and advertised full Merkle tree root for component group $groupIndex do not match"
-            }
-            require(
-                groupPartialTree.verify(
-                    groupMerkleRoot,
-                    components.mapIndexed { index, component -> digestService.componentHash(nonces[index], component) }
-                )
-            ) {
-                "Visible components in group $groupIndex cannot be verified against their partial Merkle tree"
-            }
-        }
     }
+
+    private fun getGroupHashes(): List<SecureHash> {
+        val listOfLeaves = mutableListOf<SecureHash>()
+        // Even if empty and not used, we should at least send oneHashes for each known
+        // or received but unknown (thus, bigger than known ordinal) component groups.
+        val allOnesHash = digestService.allOnesHash
+        for (i in 0..filteredComponentGroups.maxOf { it.groupIndex }) {
+            val root = filteredComponentGroups.find { it.groupIndex == i }?.merkleTree(digestService)?.hash ?: allOnesHash
+            listOfLeaves.add(root)
+        }
+        return listOfLeaves
+    }
+
+    fun outputHashes(): List<SecureHash> =
+        filteredComponentGroups.find { it.groupIndex == ComponentGroupEnum.OUTPUTS_GROUP.ordinal }?.allComponentHashes(digestService) ?: emptyList()
+
+    fun privateComponentHashes(groupIndex: Int): List<SecureHash> =
+        filteredComponentGroups.find { it.groupIndex == groupIndex }?.privateComponentHashes?.values?.toList() ?: emptyList()
 
     override fun hashCode(): Int = id.hashCode()
     override fun equals(other: Any?) = if (other !is ZKVerifierTransaction) false else (this.id == other.id)
@@ -125,127 +93,50 @@ class ZKVerifierTransaction internal constructor(
                 ftx.filteredComponentGroups.associate { it.groupIndex to it.nonces }
             )
 
-            return ZKVerifierTransaction(
+            val result = ZKVerifierTransaction(
                 id = wtx.id,
                 proofs = proofs,
-                outputHashes = outputHashes(wtx, ftx),
-                groupHashes = ftx.groupHashes,
                 digestService = wtx.digestService,
-                privateComponentHashes = getPrivateComponentHashes(wtx, ftx),
                 filteredComponentGroups = filteredComponentGroups
             )
-        }
 
-        private fun outputHashes(wtx: WireTransaction, ftx: FilteredTransaction): List<SecureHash> {
-            val nonces = ftx.filteredComponentGroups.find { it.groupIndex == ComponentGroupEnum.OUTPUTS_GROUP.ordinal }!!.nonces
-            return wtx.componentGroups
-                .find { it.groupIndex == ComponentGroupEnum.OUTPUTS_GROUP.ordinal }!!
-                .components.mapIndexed { componentIndex, component ->
-                    wtx.digestService.componentHash(nonces[componentIndex], component)
-                }
+            return result
         }
 
         private fun filterPrivateComponents(
             wtx: WireTransaction,
-            availableComponentNonces: Map<Int, List<SecureHash>>,
-        ): List<FilteredComponentGroup> {
-
-            val filteredSerialisedComponents: MutableMap<Int, MutableList<OpaqueBytes>> = hashMapOf()
-            val filteredComponentNonces: MutableMap<Int, MutableList<SecureHash>> = hashMapOf()
-            val filteredComponentHashes: MutableMap<Int, MutableList<SecureHash?>> = hashMapOf() // Required for partial Merkle tree generation.
-
+            allWireTransactionComponentNonces: Map<Int, List<SecureHash>>,
+        ): List<ZKFilteredComponentGroup> {
             val zkTransactionMetadata = wtx.zkTransactionMetadata()
 
-            wtx.componentGroups.forEach { componentGroup ->
+            return wtx.componentGroups.map { componentGroup ->
                 val groupIndex = componentGroup.groupIndex
 
+                val visibleSerialisedComponents: MutableList<OpaqueBytes> = mutableListOf()
+                val visibleComponentNonces: MutableList<SecureHash> = mutableListOf()
+                val privateComponentHashes: MutableMap<Int, SecureHash> = LinkedHashMap()
+
                 componentGroup.components.forEachIndexed { componentIndex, serialisedComponent ->
-                    if (zkTransactionMetadata.isVisibleInFilteredComponentGroup(groupIndex, componentIndex)) {
-
-                        // Init lists if they don't exist
-                        if (!filteredSerialisedComponents.containsKey(groupIndex)) {
-                            filteredSerialisedComponents[groupIndex] = mutableListOf()
-                            filteredComponentNonces[groupIndex] = mutableListOf()
-                            filteredComponentHashes[groupIndex] =
-                                mutableListOfNulls(wtx.componentGroups.first { it.groupIndex == groupIndex }.components.size)
-                        }
-
-                        // So now we are quite sure they are not null
-                        filteredSerialisedComponents[groupIndex]!!.add(serialisedComponent)
-                        filteredComponentNonces[groupIndex]!!.add(availableComponentNonces[groupIndex]!![componentIndex])
-                        filteredComponentHashes[groupIndex]!![componentIndex] = componentHash(wtx, availableComponentNonces, groupIndex, componentIndex)
+                    if (zkTransactionMetadata.shouldBeVisibleInFilteredComponentGroup(groupIndex, componentIndex)) {
+                        visibleSerialisedComponents.add(serialisedComponent)
+                        visibleComponentNonces.add(allWireTransactionComponentNonces[groupIndex]!![componentIndex])
+                    } else {
+                        privateComponentHashes[componentIndex] = componentHash(wtx, allWireTransactionComponentNonces, groupIndex, componentIndex)
                     }
                 }
-            }
 
-            val filteredComponentGroups: MutableList<FilteredComponentGroup> = mutableListOf()
-            filteredSerialisedComponents.forEach { (groupIndex, value) ->
-                filteredComponentGroups.add(
-                    FilteredComponentGroup(groupIndex, value, filteredComponentNonces[groupIndex]!!, createPartialMerkleTree(wtx, availableComponentNonces, filteredComponentHashes, groupIndex))
+                ZKFilteredComponentGroup(
+                    groupIndex = groupIndex,
+                    components = visibleSerialisedComponents,
+                    nonces = visibleComponentNonces,
+                    privateComponentHashes = privateComponentHashes
                 )
             }
-            return filteredComponentGroups
-        }
-
-        private fun mutableListOfNulls(size: Int): MutableList<SecureHash?> {
-            val list = ArrayList<SecureHash?>(size)
-            (0..size).forEach { _ -> list.add(null) }
-            return list
         }
 
         private fun componentHash(wtx: WireTransaction, nonces: Map<Int, List<SecureHash>>, groupIndex: Int, componentIndex: Int): SecureHash {
             val componentBytes = wtx.componentGroups.first { it.groupIndex == groupIndex }.components[componentIndex]
             return wtx.digestService.componentHash(nonces[groupIndex]!![componentIndex], componentBytes)
-        }
-
-        private fun createPartialMerkleTree(wtx: WireTransaction, nonces: Map<Int, List<SecureHash>>, hashes: Map<Int, List<SecureHash?>>, groupIndex: Int): PartialMerkleTree {
-            return PartialMerkleTree.build(
-                // we've already calculated filtered hashes, so we only need to calculate missing ones
-                MerkleTree.getMerkleTree(
-                    wtx.componentGroups.first { it.groupIndex == groupIndex }.components.indices.map {
-                        componentIndex ->
-                        hashes[groupIndex]?.get(componentIndex) ?: componentHash(wtx, nonces, groupIndex, componentIndex)
-                    }.toMutableList(),
-                    wtx.digestService
-                ),
-                hashes[groupIndex]!!.filterNotNull()
-            )
-        }
-
-        private fun getPrivateComponentHashes(wtx: WireTransaction, ftx: FilteredTransaction): Map<Int, List<SecureHash>> {
-
-            val publicInputHashes: MutableMap<Int, List<SecureHash>> = mutableMapOf()
-
-            publicInputHashes[ComponentGroupEnum.ATTACHMENTS_GROUP.ordinal] = getHashesForPrivateComponents(wtx, ftx, ComponentGroupEnum.ATTACHMENTS_GROUP)
-            publicInputHashes[ComponentGroupEnum.COMMANDS_GROUP.ordinal] = getHashesForPrivateComponents(wtx, ftx, ComponentGroupEnum.COMMANDS_GROUP)
-            publicInputHashes[ComponentGroupEnum.NOTARY_GROUP.ordinal] = getHashesForPrivateComponents(wtx, ftx, ComponentGroupEnum.NOTARY_GROUP)
-            publicInputHashes[ComponentGroupEnum.PARAMETERS_GROUP.ordinal] = getHashesForPrivateComponents(wtx, ftx, ComponentGroupEnum.PARAMETERS_GROUP)
-            publicInputHashes[ComponentGroupEnum.TIMEWINDOW_GROUP.ordinal] = getHashesForPrivateComponents(wtx, ftx, ComponentGroupEnum.TIMEWINDOW_GROUP)
-            publicInputHashes[ComponentGroupEnum.SIGNERS_GROUP.ordinal] = getHashesForPrivateComponents(wtx, ftx, ComponentGroupEnum.SIGNERS_GROUP)
-
-            return publicInputHashes
-        }
-
-        private fun getHashesForPrivateComponents(wtx: WireTransaction, ftx: FilteredTransaction, groupEnum: ComponentGroupEnum,): List<SecureHash> {
-            val zkTransactionMetadata = wtx.zkTransactionMetadata()
-
-            return if (ftx.filteredComponentGroups.find { it.groupIndex == groupEnum.ordinal } == null)
-                emptyList()
-            else {
-                val componentGroup = wtx.componentGroups.find { it.groupIndex == groupEnum.ordinal }
-                val filteredComponentGroup = componentGroup?.components?.filterIndexed { index, _ ->
-                    zkTransactionMetadata.isVisibleInWitness(groupEnum.ordinal, index)
-                }
-
-                val componentIndices = filteredComponentGroup?.map { component ->
-                    componentGroup.components.indexOf(component)
-                }
-                val nonces = ftx.filteredComponentGroups.find { it.groupIndex == groupEnum.ordinal }!!.nonces
-
-                filteredComponentGroup?.mapIndexed { index, bytes ->
-                    wtx.digestService.componentHash(nonces[componentIndices?.get(index)!!], bytes)
-                } ?: emptyList()
-            }
         }
     }
 }
