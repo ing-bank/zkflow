@@ -2,7 +2,7 @@ trigger:
   branches:
     include:
       - master
-        #      - feature/* # Already covered by branch validation rules on master 
+        #      - feature/* # Already covered by branch validation rules on master
 
 pool:
   name: NeoZKP
