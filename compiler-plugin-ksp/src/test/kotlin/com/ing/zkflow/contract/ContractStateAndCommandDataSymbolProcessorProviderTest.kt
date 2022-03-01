@@ -1,9 +1,9 @@
 package com.ing.zkflow.contract
 
 import com.ing.zkflow.common.contracts.ZKCommandData
+import com.ing.zkflow.common.serialization.CommandDataSerializerRegistryProvider
+import com.ing.zkflow.common.serialization.ContractStateSerializerRegistryProvider
 import com.ing.zkflow.ksp.ProcessorTest
-import com.ing.zkflow.serialization.infra.ZKContractStateSerializerMapProvider
-import com.ing.zkflow.serialization.infra.ZkCommandDataSerializerMapProvider
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import io.kotest.matchers.paths.shouldNotExist
@@ -24,7 +24,7 @@ internal class ContractStateAndCommandDataSymbolProcessorProviderTest : Processo
         }
 
         result.exitCode shouldBe KotlinCompilation.ExitCode.OK
-        result.getGeneratedMetaInfServices<ZkCommandDataSerializerMapProvider>() shouldStartWith "com.ing.zkflow.serialization.infra.CommandDataSerializerMapProvider"
+        result.getGeneratedMetaInfServices<CommandDataSerializerRegistryProvider>() shouldStartWith "com.ing.zkflow.serialization.infra.ZKCommandDataSerializerRegistryProvider"
     }
 
     @Test
@@ -38,7 +38,7 @@ internal class ContractStateAndCommandDataSymbolProcessorProviderTest : Processo
         }
 
         result.exitCode shouldBe KotlinCompilation.ExitCode.OK
-        result.getGeneratedMetaInfServices<ZkCommandDataSerializerMapProvider>() shouldStartWith "com.ing.zkflow.serialization.infra.CommandDataSerializerMapProvider"
+        result.getGeneratedMetaInfServices<CommandDataSerializerRegistryProvider>() shouldStartWith "com.ing.zkflow.serialization.infra.ZKCommandDataSerializerRegistryProvider"
     }
 
     @Test
@@ -56,9 +56,9 @@ internal class ContractStateAndCommandDataSymbolProcessorProviderTest : Processo
     }
 
     @Test
-    fun `ZKTransactionProcessor should correctly detect state classes`() {
+    fun `ZKTransactionProcessor should correctly detect ZKContractState classes`() {
         val outputStream = ByteArrayOutputStream()
-        val result = compile(kotlinFileWithStateClass, outputStream)
+        val result = compile(kotlinFileWithZKContractStateClass, outputStream)
 
         // In case of error, show output
         if (result.exitCode != KotlinCompilation.ExitCode.OK) {
@@ -66,7 +66,7 @@ internal class ContractStateAndCommandDataSymbolProcessorProviderTest : Processo
         }
 
         result.exitCode shouldBe KotlinCompilation.ExitCode.OK
-        result.getGeneratedMetaInfServices<ZKContractStateSerializerMapProvider>() shouldStartWith "com.ing.zkflow.serialization.infra.ContractStateSerializerMapProvider"
+        result.getGeneratedMetaInfServices<ContractStateSerializerRegistryProvider>() shouldStartWith "com.ing.zkflow.serialization.infra.ZKContractStateSerializerRegistryProvider"
     }
 
     companion object {
@@ -121,35 +121,25 @@ internal class ContractStateAndCommandDataSymbolProcessorProviderTest : Processo
             """
         )
 
-        private val kotlinFileWithStateClass = SourceFile.kotlin(
+        private val kotlinFileWithZKContractStateClass = SourceFile.kotlin(
             "TestState.kt",
             """
                 package com.ing.zkflow.zktransaction
                 
                 import com.ing.zkflow.common.contracts.ZKOwnableState
-                import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
-                import com.ing.zkflow.common.zkp.metadata.commandMetadata
                 import net.corda.core.contracts.CommandAndState
                 import net.corda.core.identity.AnonymousParty
                 
-                class TestCommand: ZKCommandData {
-                
-                    @Transient
-                    override val metadata: ResolvedZKCommandMetadata = commandMetadata {
-                        circuit { name = "TestCommand" }
-                        numberOfSigners = 1
+                data class TestState(
+                    override val owner: AnonymousParty
+                ): ZKOwnableState {
+                    override fun withNewOwner(newOwner: AnonymousParty): CommandAndState {
+                        return CommandAndState(TestCommand(), copy(owner = newOwner))
                     }
-                
-                    data class TestState(
-                        override val owner: AnonymousParty
-                    ): ZKOwnableState {
-                        override fun withNewOwner(newOwner: AnonymousParty): CommandAndState {
-                            return CommandAndState(TestCommand(), copy(owner = newOwner))
-                        }
-                
-                        override val participants: List<AnonymousParty> = listOf(owner)
-                    }
+            
+                    override val participants: List<AnonymousParty> = listOf(owner)
                 }
+               
             """.trimIndent()
         )
     }

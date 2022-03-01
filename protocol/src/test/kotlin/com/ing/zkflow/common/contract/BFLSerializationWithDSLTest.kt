@@ -3,8 +3,8 @@ package com.ing.zkflow.common.contract
 import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.contracts.ZKContractState
 import com.ing.zkflow.common.serialization.BFLSerializationSchemeCandidate
-import com.ing.zkflow.common.serialization.BFLSerializationSchemeCandidate.Companion.ZkCommandDataSerializerRegistry
-import com.ing.zkflow.common.serialization.BFLSerializationSchemeCandidate.Companion.ZkContractStateSerializerRegistry
+import com.ing.zkflow.common.serialization.BFLSerializationSchemeCandidate.Companion.CommandDataSerializerRegistry
+import com.ing.zkflow.common.serialization.BFLSerializationSchemeCandidate.Companion.ContractStateSerializerRegistry
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.common.zkp.metadata.commandMetadata
 import com.ing.zkflow.serialization.serializer.IntSerializer
@@ -60,7 +60,7 @@ class BFLSerializationWithDSLTest {
         override val participants: List<AnonymousParty> = listOf(owner)
 
         init {
-            tryNonFailing { ZkContractStateSerializerRegistry.register(this::class, serializer()) }
+            tryNonFailing { ContractStateSerializerRegistry.register(this::class, serializer()) }
         }
     }
 
@@ -74,7 +74,7 @@ class BFLSerializationWithDSLTest {
         @Serializable
         class Move : ZKCommandData {
             init {
-                tryNonFailing { ZkCommandDataSerializerRegistry.register(this::class, serializer()) }
+                tryNonFailing { CommandDataSerializerRegistry.register(this::class, serializer()) }
             }
 
             @Transient

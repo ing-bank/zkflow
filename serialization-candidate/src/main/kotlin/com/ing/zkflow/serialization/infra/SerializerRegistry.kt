@@ -1,7 +1,9 @@
-@file:Suppress("DEPRECATION")
+@file:Suppress("DEPRECATION") // For AutomaticHashConstraint
 
-package com.ing.zkflow.serialization.infra
+package com.ing.zkflow.common.serialization
 
+import com.ing.zkflow.serialization.infra.AttachmentConstraintMetadata
+import com.ing.zkflow.serialization.infra.SerializerMapError
 import com.ing.zkflow.serialization.serializer.corda.AlwaysAcceptAttachmentConstraintSerializer
 import com.ing.zkflow.serialization.serializer.corda.AutomaticHashConstraintSerializer
 import com.ing.zkflow.serialization.serializer.corda.AutomaticPlaceholderConstraintSerializer
@@ -26,12 +28,12 @@ import kotlin.reflect.KClass
  * At runtime, all such providers will be picked up and injected to
  * [BFLSerializationScheme]
  */
-interface ZKDataProvider<T : Any> {
+interface ZKDataRegistryProvider<T : Any> {
     fun list(): List<Pair<KClass<out T>, KSerializer<out T>>>
 }
 
-interface ZKContractStateSerializerMapProvider : ZKDataProvider<ContractState>
-interface ZkCommandDataSerializerMapProvider : ZKDataProvider<CommandData>
+interface ContractStateSerializerRegistryProvider : ZKDataRegistryProvider<ContractState>
+interface CommandDataSerializerRegistryProvider : ZKDataRegistryProvider<CommandData>
 
 abstract class SerializerRegistry<T : Any> {
     private val log = LoggerFactory.getLogger(this::class.java)
@@ -129,8 +131,8 @@ object AttachmentConstraintSerializerRegistry {
             (objId2Serializer[id] ?: throw SerializerMapError.ClassNotRegistered(id)).invoke(metadata) as KSerializer<AttachmentConstraint>
         }
 
-    operator fun get(attachmentConstraintKClass: KClass<out AttachmentConstraint>):
-        (metadata: AttachmentConstraintMetadata) -> KSerializer<AttachmentConstraint> = get(identify(attachmentConstraintKClass))
+    operator fun get(attachmentConstraintKClass: KClass<out AttachmentConstraint>): (metadata: AttachmentConstraintMetadata) -> KSerializer<AttachmentConstraint> =
+        get(identify(attachmentConstraintKClass))
 }
 
 fun interface GetAttachmentConstraintSerializer {

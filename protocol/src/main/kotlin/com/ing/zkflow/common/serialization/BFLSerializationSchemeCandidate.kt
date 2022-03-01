@@ -4,16 +4,12 @@ import com.ing.zkflow.common.network.ZKAttachmentConstraintType
 import com.ing.zkflow.common.network.ZKNetworkParameters
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
 import com.ing.zkflow.serialization.infra.AttachmentConstraintMetadata
-import com.ing.zkflow.serialization.infra.AttachmentConstraintSerializerRegistry
 import com.ing.zkflow.serialization.infra.CommandDataSerializationMetadata
 import com.ing.zkflow.serialization.infra.HashAttachmentConstraintSpec
 import com.ing.zkflow.serialization.infra.NotarySerializationMetadata
 import com.ing.zkflow.serialization.infra.SecureHashSerializationMetadata
-import com.ing.zkflow.serialization.infra.SerializerRegistry
 import com.ing.zkflow.serialization.infra.SignersSerializationMetadata
 import com.ing.zkflow.serialization.infra.TransactionStateSerializationMetadata
-import com.ing.zkflow.serialization.infra.ZKContractStateSerializerMapProvider
-import com.ing.zkflow.serialization.infra.ZkCommandDataSerializerMapProvider
 import com.ing.zkflow.serialization.infra.unwrapSerialization
 import com.ing.zkflow.serialization.infra.wrapSerialization
 import com.ing.zkflow.serialization.scheme.BinaryFixedLengthScheme
@@ -52,20 +48,20 @@ open class BFLSerializationSchemeCandidate : CustomSerializationScheme {
     companion object {
         const val SCHEME_ID = 713325187
 
-        object ZkContractStateSerializerRegistry : SerializerRegistry<ContractState>()
-        object ZkCommandDataSerializerRegistry : SerializerRegistry<CommandData>()
+        object ContractStateSerializerRegistry : SerializerRegistry<ContractState>()
+        object CommandDataSerializerRegistry : SerializerRegistry<CommandData>()
 
         init {
             val log = LoggerFactory.getLogger(this::class.java)
-            log.debug("Populating `${ZkContractStateSerializerRegistry::class.simpleName}`")
-            ServiceLoader.load(ZKContractStateSerializerMapProvider::class.java).flatMap { it.list() }
-                .also { if (it.isEmpty()) log.debug("No ZK states founds") }
-                .forEach { ZkContractStateSerializerRegistry.register(it.first, it.second) }
+            log.debug("Populating `${ContractStateSerializerRegistry::class.simpleName}`")
+            ServiceLoader.load(ContractStateSerializerRegistryProvider::class.java).flatMap { it.list() }
+                .also { if (it.isEmpty()) log.debug("No ContractStates registered in ContractStateSerializerRegistry") }
+                .forEach { ContractStateSerializerRegistry.register(it.first, it.second) }
 
-            log.debug("Populating `${ZkCommandDataSerializerRegistry::class.simpleName}`")
-            ServiceLoader.load(ZkCommandDataSerializerMapProvider::class.java).flatMap { it.list() }
-                .also { if (it.isEmpty()) log.debug("No ZK Commands founds") }
-                .forEach { ZkCommandDataSerializerRegistry.register(it.first, it.second) }
+            log.debug("Populating `${CommandDataSerializerRegistry::class.simpleName}`")
+            ServiceLoader.load(CommandDataSerializerRegistryProvider::class.java).flatMap { it.list() }
+                .also { if (it.isEmpty()) log.debug("No CommandData registered in CommandDataSerializerRegistry") }
+                .forEach { CommandDataSerializerRegistry.register(it.first, it.second) }
         }
     }
 
@@ -152,12 +148,12 @@ open class BFLSerializationSchemeCandidate : CustomSerializationScheme {
     }
 
     private fun serializeCommandData(obj: CommandData): ByteArray {
-        val commandDataSerializer = ZkCommandDataSerializerRegistry[obj::class]
+        val commandDataSerializer = CommandDataSerializerRegistry[obj::class]
 
         return scheme.encodeToBinary(commandDataSerializer, obj).wrapSerialization(
             scheme,
             CommandDataSerializationMetadata(
-                serializerId = ZkCommandDataSerializerRegistry.identify(obj::class)
+                serializerId = CommandDataSerializerRegistry.identify(obj::class)
             ),
             CommandDataSerializationMetadata.serializer()
         )
@@ -167,7 +163,7 @@ open class BFLSerializationSchemeCandidate : CustomSerializationScheme {
         val (metadata, data) = serializedData.unwrapSerialization(scheme, CommandDataSerializationMetadata.serializer())
         val serialization = data.toByteArray()
 
-        val commandDataSerializer = ZkCommandDataSerializerRegistry[metadata.serializerId]
+        val commandDataSerializer = CommandDataSerializerRegistry[metadata.serializerId]
 
         return scheme.decodeFromBinary(commandDataSerializer, serialization)
     }
@@ -196,13 +192,13 @@ open class BFLSerializationSchemeCandidate : CustomSerializationScheme {
             AttachmentConstraintSerializerRegistry[attachmentConstraintType.kClass](attachmentConstraintMetadata)
 
         val transactionStateSerializer = TransactionStateSerializer(
-            ZkContractStateSerializerRegistry[state::class], notarySerializer, attachmentConstraintSerializer
+            ContractStateSerializerRegistry[state::class], notarySerializer, attachmentConstraintSerializer
         )
 
         return scheme.encodeToBinary(transactionStateSerializer, obj).wrapSerialization(
             scheme,
             TransactionStateSerializationMetadata(
-                serializerId = ZkContractStateSerializerRegistry.identify(state::class),
+                serializerId = ContractStateSerializerRegistry.identify(state::class),
                 notarySignatureSchemeId,
                 attachmentConstraintMetadata
             ),
@@ -221,7 +217,7 @@ open class BFLSerializationSchemeCandidate : CustomSerializationScheme {
             .invoke(metadata.attachmentConstraintMetadata)
 
         val transactionStateSerializer = TransactionStateSerializer(
-            ZkContractStateSerializerRegistry[metadata.serializerId],
+            ContractStateSerializerRegistry[metadata.serializerId],
             notarySerializer,
             attachmentConstraintSerializer
         )

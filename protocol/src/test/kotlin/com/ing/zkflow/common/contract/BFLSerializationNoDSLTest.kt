@@ -4,8 +4,8 @@ import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.contracts.ZKContractState
 import com.ing.zkflow.common.network.ZKAttachmentConstraintType
 import com.ing.zkflow.common.serialization.BFLSerializationSchemeCandidate
-import com.ing.zkflow.common.serialization.BFLSerializationSchemeCandidate.Companion.ZkCommandDataSerializerRegistry
-import com.ing.zkflow.common.serialization.BFLSerializationSchemeCandidate.Companion.ZkContractStateSerializerRegistry
+import com.ing.zkflow.common.serialization.BFLSerializationSchemeCandidate.Companion.CommandDataSerializerRegistry
+import com.ing.zkflow.common.serialization.BFLSerializationSchemeCandidate.Companion.ContractStateSerializerRegistry
 import com.ing.zkflow.common.transactions.ZKTransactionBuilder
 import com.ing.zkflow.common.zkp.ZKFlow
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
@@ -69,7 +69,7 @@ class BFLSerializationNoDSLTest {
 
         init {
             tryNonFailing {
-                ZkContractStateSerializerRegistry.register(this::class, serializer())
+                ContractStateSerializerRegistry.register(this::class, serializer())
             }
         }
     }
@@ -85,7 +85,7 @@ class BFLSerializationNoDSLTest {
         class Issue : ZKCommandData {
             init {
                 tryNonFailing {
-                    ZkCommandDataSerializerRegistry.register(this::class, serializer())
+                    CommandDataSerializerRegistry.register(this::class, serializer())
                 }
             }
 

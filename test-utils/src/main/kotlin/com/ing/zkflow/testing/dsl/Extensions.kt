@@ -3,7 +3,7 @@ package com.ing.zkflow.testing.dsl
 import TestTransactionDSLInterpreter
 import TestZKLedgerDSLInterpreter
 import com.ing.zkflow.common.network.ZKNetworkParameters
-import com.ing.zkflow.common.serialization.BFLSerializationSchemeCandidate.Companion.ZkCommandDataSerializerRegistry
+import com.ing.zkflow.common.serialization.BFLSerializationSchemeCandidate.Companion.CommandDataSerializerRegistry
 import com.ing.zkflow.serialization.SerializersModuleRegistry
 import com.ing.zkflow.serialization.bfl.TestCordaSerializers
 import com.ing.zkflow.serialization.serializer.corda.DummyCommandDataSerializer
@@ -40,7 +40,7 @@ public fun ServiceHub.zkLedger(
     // Register some test serializers that are required for DSL-inserted transaction components
     SerializersModuleRegistry.register(TestCordaSerializers.module) // TODO: Remove this when old BFL is decommed
     tryNonFailing {
-        ZkCommandDataSerializerRegistry.register(DummyCommandData::class, DummyCommandDataSerializer)
+        CommandDataSerializerRegistry.register(DummyCommandData::class, DummyCommandDataSerializer)
     }
 
     return createTestSerializationEnv(javaClass.classLoader).asTestContextEnv {
