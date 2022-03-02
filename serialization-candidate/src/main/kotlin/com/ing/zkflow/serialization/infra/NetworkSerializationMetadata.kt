@@ -4,6 +4,6 @@ import com.ing.zkflow.serialization.serializer.IntSerializer
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class NotarySerializationMetadata(
-    @Serializable(with = IntSerializer::class) val notarySignatureSchemeId: Int,
+data class NetworkSerializationMetadata(
+    @Serializable(with = IntSerializer::class) val networkMetadataId: Int,
 )

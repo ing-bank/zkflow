@@ -2,7 +2,8 @@
 
 package com.ing.zkflow.common.serialization
 
-import com.ing.zkflow.serialization.infra.AttachmentConstraintMetadata
+import com.ing.zkflow.common.network.ZKAttachmentConstraintType
+import com.ing.zkflow.common.network.ZKNetworkParameters
 import com.ing.zkflow.serialization.infra.SerializerMapError
 import com.ing.zkflow.serialization.serializer.corda.AlwaysAcceptAttachmentConstraintSerializer
 import com.ing.zkflow.serialization.serializer.corda.AutomaticHashConstraintSerializer
@@ -90,22 +91,22 @@ object AttachmentConstraintSerializerRegistry {
 
     init {
         register(AlwaysAcceptAttachmentConstraint::class) { AlwaysAcceptAttachmentConstraintSerializer }
-        register(HashAttachmentConstraint::class) { metadata ->
-            require(metadata.hashAttachmentConstraintSpec != null) {
+        register(HashAttachmentConstraint::class) { networkParameters ->
+            generateSpecForHashAttachmentConstraint(networkParameters.attachmentConstraintType)?.let {
+                HashAttachmentConstraintSerializer(it.algorithm, it.hashLength)
+            } ?: throw IllegalArgumentException(
                 "Insufficient metadata to construct ${HashAttachmentConstraintSerializer::class.qualifiedName} "
-            }
-            HashAttachmentConstraintSerializer(
-                metadata.hashAttachmentConstraintSpec.algorithm, metadata.hashAttachmentConstraintSpec.hashLength
             )
         }
         register(WhitelistedByZoneAttachmentConstraint::class) { WhitelistedByZoneAttachmentConstraintSerializer }
         register(AutomaticHashConstraint::class) { AutomaticHashConstraintSerializer }
         register(AutomaticPlaceholderConstraint::class) { AutomaticPlaceholderConstraintSerializer }
-        register(SignatureAttachmentConstraint::class) { metadata ->
-            require(metadata.signatureAttachmentConstraintSignatureSchemeId != null) {
+        register(SignatureAttachmentConstraint::class) { networkParameters ->
+            getSignatureSchemeIdForSignatureAttachmentConstraint(networkParameters.attachmentConstraintType)?.let { signatureSchemeId ->
+                SignatureAttachmentConstraintSerializer(signatureSchemeId)
+            } ?: throw IllegalArgumentException(
                 "Insufficient metadata to construct ${SignatureAttachmentConstraint::class.qualifiedName} "
-            }
-            SignatureAttachmentConstraintSerializer(metadata.signatureAttachmentConstraintSignatureSchemeId)
+            )
         }
     }
 
@@ -126,15 +127,31 @@ object AttachmentConstraintSerializerRegistry {
      * or for T. And we can know for sure that it is a T. This is why we can safely cast to T without the variance annotation on retrieval.
      */
     @Suppress("UNCHECKED_CAST")
-    operator fun get(id: Int): (metadata: AttachmentConstraintMetadata) -> KSerializer<AttachmentConstraint> =
-        { metadata ->
-            (objId2Serializer[id] ?: throw SerializerMapError.ClassNotRegistered(id)).invoke(metadata) as KSerializer<AttachmentConstraint>
+    operator fun get(id: Int): (networkParameters: ZKNetworkParameters) -> KSerializer<AttachmentConstraint> =
+        { networkParameters ->
+            (objId2Serializer[id] ?: throw SerializerMapError.ClassNotRegistered(id)).invoke(networkParameters) as KSerializer<AttachmentConstraint>
         }
 
-    operator fun get(attachmentConstraintKClass: KClass<out AttachmentConstraint>): (metadata: AttachmentConstraintMetadata) -> KSerializer<AttachmentConstraint> =
+    operator fun get(attachmentConstraintKClass: KClass<out AttachmentConstraint>): (networkParameters: ZKNetworkParameters) -> KSerializer<AttachmentConstraint> =
         get(identify(attachmentConstraintKClass))
+
+    private data class HashAttachmentConstraintSpec(
+        val algorithm: String,
+        val hashLength: Int
+    )
+
+    private fun generateSpecForHashAttachmentConstraint(attachmentConstraintType: ZKAttachmentConstraintType): HashAttachmentConstraintSpec? =
+        (attachmentConstraintType as? ZKAttachmentConstraintType.HashAttachmentConstraintType)?.let {
+            HashAttachmentConstraintSpec(
+                it.kClass.qualifiedName!!,
+                it.digestLength
+            )
+        }
+
+    private fun getSignatureSchemeIdForSignatureAttachmentConstraint(attachmentConstraintType: ZKAttachmentConstraintType): Int? =
+        (attachmentConstraintType as? ZKAttachmentConstraintType.SignatureAttachmentConstraintType)?.signatureScheme?.schemeNumberID
 }
 
 fun interface GetAttachmentConstraintSerializer {
-    operator fun invoke(metadata: AttachmentConstraintMetadata): KSerializer<out AttachmentConstraint>
+    operator fun invoke(zkNetworkParameters: ZKNetworkParameters): KSerializer<out AttachmentConstraint>
 }

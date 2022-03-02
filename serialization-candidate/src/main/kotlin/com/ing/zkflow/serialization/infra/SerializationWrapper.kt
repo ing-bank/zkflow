@@ -53,5 +53,7 @@ fun <M : Any> ByteArray.unwrapSerialization(scheme: BinaryFixedLengthScheme, met
  * For a given sequence of bytes, this function derives a fixed length serializer which
  * will attempt exhausting the full sequence.
  */
+// TODO Why not make this a ByteArray deserializer instead of a List deserializer?
+// TODO This is a hack, since FixedLengthListSerializer prepends the size, hence the 'serializationLength - Int.SIZE_BYTES'
 private fun exactLengthListByteDeserializer(serializationLength: Int) =
     FixedLengthListSerializer(serializationLength - Int.SIZE_BYTES, ByteSerializer)

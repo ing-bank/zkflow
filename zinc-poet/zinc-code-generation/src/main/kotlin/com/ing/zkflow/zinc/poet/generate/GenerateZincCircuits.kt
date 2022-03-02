@@ -2,7 +2,7 @@ package com.ing.zkflow.zinc.poet.generate
 
 import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.network.ZKNetworkParametersServiceLoader
-import com.ing.zkflow.common.serialization.ZkCommandDataSerializerRegistryProvider
+import com.ing.zkflow.common.serialization.CommandDataSerializerRegistryProvider
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.util.ensureDirectory
 import com.ing.zkflow.zinc.poet.generate.types.CommandContextFactory
@@ -30,7 +30,7 @@ private fun Array<String>.multiple(key: String): List<String> = asSequence()
     .toList()
 
 private val metadata: List<ResolvedZKCommandMetadata> by lazy {
-    ServiceLoader.load(ZkCommandDataSerializerRegistryProvider::class.java)
+    ServiceLoader.load(CommandDataSerializerRegistryProvider::class.java)
         .flatMap { it.list() }
         .mapNotNull { it.first.createInstance() as? ZKCommandData }
         .map { it.metadata }
@@ -63,7 +63,7 @@ private fun validateDiscoveredCircuits(circuitNames: List<String>) {
     }.toSet()
     if (!discoveredCircuitNames.containsAll(circuitNames)) {
         val missingCircuits = circuitNames - discoveredCircuitNames
-        error("The following circuits are required, but are not loaded via ${ZkCommandDataSerializerRegistryProvider::class}: $missingCircuits")
+        error("The following circuits are required, but are not loaded via ${CommandDataSerializerRegistryProvider::class}: $missingCircuits")
     }
 }
 
