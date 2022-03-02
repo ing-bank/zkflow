@@ -4,6 +4,7 @@ import net.corda.core.KeepForDJVM
 import net.corda.core.crypto.DigestService
 import net.corda.core.crypto.MerkleTree
 import net.corda.core.crypto.SecureHash
+import net.corda.core.crypto.algorithm
 import net.corda.core.serialization.CordaSerializable
 import net.corda.core.transactions.ComponentGroup
 import net.corda.core.utilities.OpaqueBytes
@@ -11,6 +12,10 @@ import net.corda.core.utilities.OpaqueBytes
 @KeepForDJVM
 @CordaSerializable
 /**
+ * ZKFilteredComponentGroup consists of public component serialized bytes (plus respective nonces) and hashes of private components.
+ * When we build Merkle tree for the group we first place private hashes according to their indexes (key in map) and
+ * then "fill holes" with public components hashes in the provided order.
+ *
  * @privateComponentHashes maps private component index to component hash
  * @components contains only public components
  * @nonces contains only public components' nonces in the same order as in components list
@@ -23,6 +28,7 @@ data class ZKFilteredComponentGroup(
 ) : ComponentGroup(groupIndex, components) {
     init {
         check(components.size == nonces.size) { "Size of transaction components and nonces do not match" }
+        check(privateComponentHashes.values.distinctBy { it.algorithm }.size == 1) { "All private components hashes should have the same algorithm" }
     }
 
     @Transient

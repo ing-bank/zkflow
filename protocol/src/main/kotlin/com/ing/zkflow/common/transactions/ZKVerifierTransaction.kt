@@ -66,47 +66,44 @@ class ZKVerifierTransaction internal constructor(
         return listOfLeaves
     }
 
+    /**
+     * Convenience interface to get output hashes, that are often used in the protocol
+     */
     fun outputHashes(): List<SecureHash> =
         filteredComponentGroups.find { it.groupIndex == ComponentGroupEnum.OUTPUTS_GROUP.ordinal }?.allComponentHashes(digestService) ?: emptyList()
 
+    /**
+     * Convenience interface to get private component hashes, to be used in the public input generation
+     */
     fun privateComponentHashes(groupIndex: Int): List<SecureHash> =
         filteredComponentGroups.find { it.groupIndex == groupIndex }?.privateComponentHashes?.values?.toList() ?: emptyList()
 
     override fun hashCode(): Int = id.hashCode()
     override fun equals(other: Any?) = if (other !is ZKVerifierTransaction) false else (this.id == other.id)
 
-    @Suppress("UNUSED_PARAMETER") // TODO @Aleksei: remove suppression when function body implemented
-    fun isPrivateComponent(outputsGroup: ComponentGroupEnum, index: Int): Boolean {
-        return true // TODO @Aleksei: Implement based on improved PartialMerkleTree. Now always returns true, so ZKTransactionBuilder checks succeed
-    }
+    fun isPrivateComponent(group: ComponentGroupEnum, index: Int): Boolean
+        = filteredComponentGroups.find { it.groupIndex == group.ordinal }?.privateComponentHashes?.contains(index) ?: false
 
     companion object {
 
         fun fromWireTransaction(wtx: WireTransaction, proofs: Map<String, ByteArray>): ZKVerifierTransaction {
-
-            // Here we don't need to filter anything, we only create FTX to be able to access hashes (they are internal in WTX)
-            val ftx = FilteredTransaction.buildFilteredTransaction(wtx) { true }
-
-            // Filter the component groups based on visibility data from 'zkTransactionMetadata'
-            val filteredComponentGroups = filterPrivateComponents(
-                wtx,
-                ftx.filteredComponentGroups.associate { it.groupIndex to it.nonces }
-            )
-
-            val result = ZKVerifierTransaction(
+            return ZKVerifierTransaction(
                 id = wtx.id,
                 proofs = proofs,
                 digestService = wtx.digestService,
-                filteredComponentGroups = filteredComponentGroups
+                filteredComponentGroups = filterPrivateComponents(wtx)
             )
-
-            return result
         }
 
-        private fun filterPrivateComponents(
-            wtx: WireTransaction,
-            allWireTransactionComponentNonces: Map<Int, List<SecureHash>>,
-        ): List<ZKFilteredComponentGroup> {
+        /**
+         * Filters the component groups based on visibility data from 'zkTransactionMetadata'
+         */
+        private fun filterPrivateComponents(wtx: WireTransaction): List<ZKFilteredComponentGroup> {
+
+            // Here we don't need to filter anything, we only create FTX to be able to access hashes (they are internal in WTX)
+            val ftx = FilteredTransaction.buildFilteredTransaction(wtx) { true }
+            val allWireTransactionComponentNonces: Map<Int, List<SecureHash>> = ftx.filteredComponentGroups.associate { it.groupIndex to it.nonces }
+
             val zkTransactionMetadata = wtx.zkTransactionMetadata()
 
             return wtx.componentGroups.map { componentGroup ->
@@ -121,7 +118,10 @@ class ZKVerifierTransaction internal constructor(
                         visibleSerialisedComponents.add(serialisedComponent)
                         visibleComponentNonces.add(allWireTransactionComponentNonces[groupIndex]!![componentIndex])
                     } else {
-                        privateComponentHashes[componentIndex] = componentHash(wtx, allWireTransactionComponentNonces, groupIndex, componentIndex)
+                        privateComponentHashes[componentIndex] = wtx.digestService.componentHash(
+                            allWireTransactionComponentNonces[groupIndex]!![componentIndex],
+                            serialisedComponent
+                        )
                     }
                 }
 
@@ -132,11 +132,6 @@ class ZKVerifierTransaction internal constructor(
                     privateComponentHashes = privateComponentHashes
                 )
             }
-        }
-
-        private fun componentHash(wtx: WireTransaction, nonces: Map<Int, List<SecureHash>>, groupIndex: Int, componentIndex: Int): SecureHash {
-            val componentBytes = wtx.componentGroups.first { it.groupIndex == groupIndex }.components[componentIndex]
-            return wtx.digestService.componentHash(nonces[groupIndex]!![componentIndex], componentBytes)
         }
     }
 }
