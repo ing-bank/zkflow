@@ -67,13 +67,15 @@ class ZKVerifierTransaction internal constructor(
     }
 
     /**
-     * Convenience interface to get output hashes, that are often used in the protocol
+     * Convenience interface to get output hashes, that are often used in the protocol.
+     * We cannot use lazy val here because delegated properties cannot be transient and we don't want to serialize them
      */
     fun outputHashes(): List<SecureHash> =
         filteredComponentGroups.find { it.groupIndex == ComponentGroupEnum.OUTPUTS_GROUP.ordinal }?.allComponentHashes(digestService) ?: emptyList()
 
     /**
      * Convenience interface to get private component hashes, to be used in the public input generation
+     * We cannot use lazy val here because delegated properties cannot be transient and we don't want to serialize them
      */
     fun privateComponentHashes(groupIndex: Int): List<SecureHash> =
         filteredComponentGroups.find { it.groupIndex == groupIndex }?.privateComponentHashes?.values?.toList() ?: emptyList()
@@ -109,28 +111,37 @@ class ZKVerifierTransaction internal constructor(
             return wtx.componentGroups.map { componentGroup ->
                 val groupIndex = componentGroup.groupIndex
 
-                val visibleSerialisedComponents: MutableList<OpaqueBytes> = mutableListOf()
-                val visibleComponentNonces: MutableList<SecureHash> = mutableListOf()
-                val privateComponentHashes: MutableMap<Int, SecureHash> = LinkedHashMap()
+                if(wtx.hasPrivateComponents) {
+                    val visibleSerialisedComponents: MutableList<OpaqueBytes> = mutableListOf()
+                    val visibleComponentNonces: MutableList<SecureHash> = mutableListOf()
+                    val privateComponentHashes: MutableMap<Int, SecureHash> = LinkedHashMap()
 
-                componentGroup.components.forEachIndexed { componentIndex, serialisedComponent ->
-                    if (zkTransactionMetadata.shouldBeVisibleInFilteredComponentGroup(groupIndex, componentIndex)) {
-                        visibleSerialisedComponents.add(serialisedComponent)
-                        visibleComponentNonces.add(allWireTransactionComponentNonces[groupIndex]!![componentIndex])
-                    } else {
-                        privateComponentHashes[componentIndex] = wtx.digestService.componentHash(
-                            allWireTransactionComponentNonces[groupIndex]!![componentIndex],
-                            serialisedComponent
-                        )
+                    componentGroup.components.forEachIndexed { componentIndex, serialisedComponent ->
+                        if (zkTransactionMetadata.shouldBeVisibleInFilteredComponentGroup(groupIndex, componentIndex)) {
+                            visibleSerialisedComponents.add(serialisedComponent)
+                            visibleComponentNonces.add(allWireTransactionComponentNonces[groupIndex]!![componentIndex])
+                        } else {
+                            privateComponentHashes[componentIndex] = wtx.digestService.componentHash(
+                                allWireTransactionComponentNonces[groupIndex]!![componentIndex],
+                                serialisedComponent
+                            )
+                        }
                     }
-                }
 
-                ZKFilteredComponentGroup(
-                    groupIndex = groupIndex,
-                    components = visibleSerialisedComponents,
-                    nonces = visibleComponentNonces,
-                    privateComponentHashes = privateComponentHashes
-                )
+                    ZKFilteredComponentGroup(
+                        groupIndex = groupIndex,
+                        components = visibleSerialisedComponents,
+                        nonces = visibleComponentNonces,
+                        privateComponentHashes = privateComponentHashes
+                    )
+                } else {
+                    ZKFilteredComponentGroup(
+                        groupIndex = groupIndex,
+                        components = componentGroup.components,
+                        nonces = allWireTransactionComponentNonces[groupIndex]!!,
+                        privateComponentHashes = emptyMap()
+                    )
+                }
             }
         }
     }

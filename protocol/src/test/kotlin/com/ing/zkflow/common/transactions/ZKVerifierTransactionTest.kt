@@ -84,7 +84,7 @@ class ZKVerifierTransactionTest {
             vtx.outputs.size shouldBe 1
 
             val outputsGroup = vtx.filteredComponentGroups.find { it.groupIndex == ComponentGroupEnum.OUTPUTS_GROUP.ordinal }!!
-            outputsGroup.components.size shouldBe 1
+            outputsGroup.publicComponents.size shouldBe 1
             outputsGroup.privateComponentHashes.size shouldBe 1
             assert(outputsGroup.merkleTree(vtx.digestService) is MerkleTree.Node)
             val rootNode = outputsGroup.merkleTree(vtx.digestService) as MerkleTree.Node
