@@ -11,15 +11,13 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import net.corda.core.crypto.SecureHash
 
+object SHA256SecureHashSerializationMetadata : SecureHashSerializationMetadata(SHA256_ALGORITHM.hashCode())
 @Suppress("MagicNumber") // There is no constant provided by Corda for SHA256 length, but we know it can only be 32.
-object SHA256SecureHashSerializationMetadata : SecureHashSerializationMetadata(SHA256_ALGORITHM, 32)
-object SHA256SecureHashSerializer : SecureHashSerializer(
-    SHA256SecureHashSerializationMetadata.algorithm,
-    SHA256SecureHashSerializationMetadata.hashSize
-)
+object SHA256SecureHashSerializer : SecureHashSerializer(SHA256_ALGORITHM, 32)
 
 open class SecureHashSerializer(private val algorithm: String, private val hashLength: Int) :
     FixedLengthKSerializerWithDefault<SecureHash> {
+
     companion object {
         val SHA256_ALGORITHM = Sha256::class.simpleName!!
     }

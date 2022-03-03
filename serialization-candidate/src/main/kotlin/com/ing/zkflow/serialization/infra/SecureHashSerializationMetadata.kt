@@ -1,17 +1,13 @@
 package com.ing.zkflow.serialization.infra
 
 import com.ing.zkflow.serialization.serializer.IntSerializer
-import com.ing.zkflow.serialization.serializer.string.FixedLengthASCIIStringSerializer
 import kotlinx.serialization.Serializable
+import net.corda.core.crypto.SecureHash
 
 @Serializable
 open class SecureHashSerializationMetadata(
-    @Serializable(with = Algorithm::class) val algorithm: String,
-    @Serializable(with = IntSerializer::class) val hashSize: Int,
-) {
-    object Algorithm : FixedLengthASCIIStringSerializer(MAX_ALGORITHM_LENGTH)
+    @Serializable(with = IntSerializer::class) val hashAlgorithmId: Int,
+)
 
-    companion object {
-        const val MAX_ALGORITHM_LENGTH: Int = 10
-    }
-}
+val SecureHash.HASH.algorithmId: Int
+    get() = algorithm.hashCode()

@@ -11,6 +11,7 @@ import com.ing.zkflow.serialization.serializer.corda.AutomaticPlaceholderConstra
 import com.ing.zkflow.serialization.serializer.corda.HashAttachmentConstraintSerializer
 import com.ing.zkflow.serialization.serializer.corda.SignatureAttachmentConstraintSerializer
 import com.ing.zkflow.serialization.serializer.corda.WhitelistedByZoneAttachmentConstraintSerializer
+import com.ing.zkflow.util.requireNotNull
 import kotlinx.serialization.KSerializer
 import net.corda.core.contracts.AlwaysAcceptAttachmentConstraint
 import net.corda.core.contracts.AttachmentConstraint
@@ -163,7 +164,9 @@ object AttachmentConstraintSerializerRegistry {
  * See https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html#hashCode()
  */
 val KClass<*>.stableId: Int
-    get() = qualifiedName!!.hashCode()
+    get() = qualifiedName.requireNotNull {
+        "'${this}' local class or a class of an anonymous object is not supported"
+    }.hashCode()
 
 fun interface GetAttachmentConstraintSerializer {
     operator fun invoke(zkNetworkParameters: ZKNetworkParameters): KSerializer<out AttachmentConstraint>

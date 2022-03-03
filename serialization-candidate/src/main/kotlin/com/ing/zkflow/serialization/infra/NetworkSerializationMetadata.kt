@@ -5,5 +5,5 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class NetworkSerializationMetadata(
-    @Serializable(with = IntSerializer::class) val networkMetadataId: Int,
+    @Serializable(with = IntSerializer::class) val networkParametersVersion: Int,
 )

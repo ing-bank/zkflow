@@ -5,21 +5,27 @@ import com.ing.zkflow.common.network.ZKNetworkParametersServiceLoader
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
 import com.ing.zkflow.serialization.infra.CommandDataSerializationMetadata
 import com.ing.zkflow.serialization.infra.NetworkSerializationMetadata
+import com.ing.zkflow.serialization.infra.SecureHashSerializationMetadata
 import com.ing.zkflow.serialization.infra.SignersSerializationMetadata
 import com.ing.zkflow.serialization.infra.TransactionStateSerializationMetadata
+import com.ing.zkflow.serialization.infra.algorithmId
 import com.ing.zkflow.serialization.infra.unwrapSerialization
 import com.ing.zkflow.serialization.infra.wrapSerialization
 import com.ing.zkflow.serialization.scheme.BinaryFixedLengthScheme
 import com.ing.zkflow.serialization.scheme.ByteBinaryFixedLengthScheme
 import com.ing.zkflow.serialization.serializer.FixedLengthListSerializer
 import com.ing.zkflow.serialization.serializer.corda.CordaX500NameSerializer
+import com.ing.zkflow.serialization.serializer.corda.HashAlgorithmRegistry
 import com.ing.zkflow.serialization.serializer.corda.PartySerializer
 import com.ing.zkflow.serialization.serializer.corda.PublicKeySerializer
+import com.ing.zkflow.serialization.serializer.corda.SHA256SecureHashSerializationMetadata
 import com.ing.zkflow.serialization.serializer.corda.SHA256SecureHashSerializer
+import com.ing.zkflow.serialization.serializer.corda.StateRefSerializer
 import com.ing.zkflow.serialization.serializer.corda.TimeWindowSerializer
 import com.ing.zkflow.serialization.serializer.corda.TransactionStateSerializer
 import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.ContractState
+import net.corda.core.contracts.StateRef
 import net.corda.core.contracts.TimeWindow
 import net.corda.core.contracts.TransactionState
 import net.corda.core.crypto.SecureHash
@@ -75,7 +81,7 @@ open class BFLSerializationSchemeCandidate : CustomSerializationScheme {
                 is CommandData -> serializeCommandData(obj)
                 is TimeWindow -> serializeTimeWindow(obj)
                 is Party -> serializeNotary(obj, zkNetworkParameters)
-                // is StateRef -> serializeStateRef(obj, zkNetworkParameters)
+                is StateRef -> serializeStateRef(obj)
                 is List<*> -> serializeSignersList(obj, zkNetworkParameters, context.transactionMetadata)
                 else -> error("Don't know how to serialize ${obj::class.qualifiedName}")
             }.wrapSerialization(
@@ -93,18 +99,18 @@ open class BFLSerializationSchemeCandidate : CustomSerializationScheme {
         val (metadata, data) = wrappedSerializedData.unwrapSerialization(scheme, NetworkSerializationMetadata.serializer())
         val serializedData = data.toByteArray()
 
-        val networkMetadata = ZKNetworkParametersServiceLoader.getVersion(metadata.networkMetadataId)
-            ?: error("ZKNetworkParameters version '${metadata.networkMetadataId}' not found")
+        val zkNetworkParameters = ZKNetworkParametersServiceLoader.getVersion(metadata.networkParametersVersion)
+            ?: error("ZKNetworkParameters version '${metadata.networkParametersVersion}' not found")
 
         @Suppress("UNCHECKED_CAST") // If we managed to deserialize it, we know it will match T
         return when {
             SecureHash::class.java.isAssignableFrom(clazz) -> deserializeSecureHash(serializedData) as T
-            Party::class.java.isAssignableFrom(clazz) -> deserializeNotary(serializedData, networkMetadata) as T
-            // StateRef::class.java.isAssignableFrom(clazz) -> deserializeStateRef(serializedData) as T
+            Party::class.java.isAssignableFrom(clazz) -> deserializeNotary(serializedData, zkNetworkParameters) as T
+            StateRef::class.java.isAssignableFrom(clazz) -> deserializeStateRef(serializedData) as T
             TimeWindow::class.java.isAssignableFrom(clazz) -> deserializeTimeWindow(serializedData) as T
-            TransactionState::class.java.isAssignableFrom(clazz) -> deserializeTransactionState(serializedData, networkMetadata) as T
+            TransactionState::class.java.isAssignableFrom(clazz) -> deserializeTransactionState(serializedData, zkNetworkParameters) as T
             CommandData::class.java.isAssignableFrom(clazz) -> deserializeCommandData(serializedData) as T
-            List::class.java.isAssignableFrom(clazz) -> deserializeSignersList(serializedData, networkMetadata) as T
+            List::class.java.isAssignableFrom(clazz) -> deserializeSignersList(serializedData, zkNetworkParameters) as T
             else -> error("Don't know how to deserialize ${clazz.canonicalName}")
         }
     }
@@ -231,31 +237,29 @@ open class BFLSerializationSchemeCandidate : CustomSerializationScheme {
     private fun deserializeTimeWindow(serializedData: ByteArray) =
         scheme.decodeFromBinary(TimeWindowSerializer, serializedData)
 
-//    private fun serializeStateRef(obj: StateRef, zkNetworkParameters: ZKNetworkParameters): ByteArray {
-//        require(obj.txhash.algorithm == zkNetworkParameters.digestAlgorithm.algorithm)
-//        zkNetworkParameters.digestAlgorithm.digestLength
-//
-//        val secureHashMetadata = when (val txhash = obj.txhash) {
-//            is SecureHash.SHA256 -> SHA256SecureHashSerializationMetadata
-//            is SecureHash.HASH -> SecureHashSerializationMetadata(txhash.algorithm, txhash.size)
-//        }
-//
-//        val hashSerializer = SecureHashSerializer(secureHashMetadata.algorithm, secureHashMetadata.hashSize)
-//
-//        return scheme.encodeToBinary(StateRefSerializer(hashSerializer), obj).wrapSerialization(
-//            scheme, secureHashMetadata, SecureHashSerializationMetadata.serializer()
-//        )
-//    }
-//
-//    private fun deserializeStateRef(serializedData: ByteArray): StateRef {
-//        val (metadata, data) = serializedData.unwrapSerialization(scheme, SecureHashSerializationMetadata.serializer())
-//        val serialization = data.toByteArray()
-//
-//        val secureHashSerializer = SecureHashSerializer(metadata.algorithm, metadata.hashSize)
-//        val stateRefSerializer = StateRefSerializer(secureHashSerializer)
-//
-//        return scheme.decodeFromBinary(stateRefSerializer, serialization)
-//    }
+    private fun serializeStateRef(obj: StateRef): ByteArray {
+        val secureHashMetadata = when (val txhash = obj.txhash) {
+            is SecureHash.SHA256 -> SHA256SecureHashSerializationMetadata
+            is SecureHash.HASH -> SecureHashSerializationMetadata(txhash.algorithmId)
+        }
+
+        val secureHashSerializer = HashAlgorithmRegistry[secureHashMetadata.hashAlgorithmId]
+        val stateRefSerializer = StateRefSerializer(secureHashSerializer)
+
+        return scheme.encodeToBinary(stateRefSerializer, obj).wrapSerialization(
+            scheme, secureHashMetadata, SecureHashSerializationMetadata.serializer()
+        )
+    }
+
+    private fun deserializeStateRef(serializedData: ByteArray): StateRef {
+        val (secureHashMetadata, data) = serializedData.unwrapSerialization(scheme, SecureHashSerializationMetadata.serializer())
+        val serialization = data.toByteArray()
+
+        val secureHashSerializer = HashAlgorithmRegistry[secureHashMetadata.hashAlgorithmId]
+        val stateRefSerializer = StateRefSerializer(secureHashSerializer)
+
+        return scheme.decodeFromBinary(stateRefSerializer, serialization)
+    }
 
     private fun serializeNotary(obj: Party, zkNetworkParameters: ZKNetworkParameters): ByteArray {
         val notarySignatureSchemeId = zkNetworkParameters.notaryInfo.signatureScheme.schemeNumberID
