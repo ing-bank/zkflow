@@ -52,9 +52,11 @@ abstract class SerializerRegistry<T : Any> {
      * Also note that when we retrieve the serializer for class, we don't actually care that it is a serializer for the implementation of T
      * or for T. And we can know for sure that it is a T. This is why we can safely cast to T without the variance annotation on retrieval.
      */
+    @Synchronized
     fun register(klass: KClass<out T>, serializer: KSerializer<out T>) {
         log.debug("Registering serializer `$serializer` for `${klass.qualifiedName}`")
-        val id = klass.hashCode() // Should be deterministic enough
+
+        val id = klass.stableId
         obj2Id.put(klass, id)?.let { throw SerializerMapError.ClassAlreadyRegistered(klass, it) }
         objId2Serializer.put(id, serializer)?.let {
             throw SerializerMapError.IdAlreadyRegistered(id, klass, it.descriptor.serialName)
@@ -110,10 +112,11 @@ object AttachmentConstraintSerializerRegistry {
         }
     }
 
+    @Synchronized
     private fun register(klass: KClass<out AttachmentConstraint>, generator: GetAttachmentConstraintSerializer) {
         log.debug("Registering generator for $klass")
 
-        val id = klass.hashCode()
+        val id = klass.stableId
         obj2Id.put(klass, id)?.let { throw SerializerMapError.ClassAlreadyRegistered(klass, it) }
 
         objId2Serializer.put(id, generator)?.let { throw SerializerMapError.IdAlreadyRegistered(id, klass, null) }
@@ -151,6 +154,16 @@ object AttachmentConstraintSerializerRegistry {
     private fun getSignatureSchemeIdForSignatureAttachmentConstraint(attachmentConstraintType: ZKAttachmentConstraintType): Int? =
         (attachmentConstraintType as? ZKAttachmentConstraintType.SignatureAttachmentConstraintType)?.signatureScheme?.schemeNumberID
 }
+
+/**
+ * Generate a stable ID for this class.
+ * This should be stable across different -versions of- JVMs.
+ * In general hashCode() does not fulfill this requirement, but
+ * hashCode() is stable for Strings in Java.
+ * See https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html#hashCode()
+ */
+val KClass<*>.stableId: Int
+    get() = qualifiedName!!.hashCode()
 
 fun interface GetAttachmentConstraintSerializer {
     operator fun invoke(zkNetworkParameters: ZKNetworkParameters): KSerializer<out AttachmentConstraint>
