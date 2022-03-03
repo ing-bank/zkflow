@@ -104,12 +104,12 @@ class ZKVerifierTransaction internal constructor(
 
             // Here we don't need to filter anything, we only create FTX to be able to access hashes (they are internal in WTX)
             val ftx = FilteredTransaction.buildFilteredTransaction(wtx) { true }
-
+            val zkTransactionMetadata = wtx.zkTransactionMetadataOrNull()
             return wtx.componentGroups.map { componentGroup ->
                 fromComponentGroup(
                     componentGroup,
                     ftx.filteredComponentGroups.find { it.groupIndex == componentGroup.groupIndex }!!,
-                    wtx.zkTransactionMetadataOrNull()
+                    zkTransactionMetadata
                 )
             }
         }
