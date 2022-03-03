@@ -144,6 +144,9 @@ private const val TX_CONTAINS_NO_COMMANDS_WITH_METADATA = "This transaction does
 fun TraversableTransaction.zkTransactionMetadata(): ResolvedZKTransactionMetadata =
     if (this.hasZKCommandData) ResolvedZKTransactionMetadata(this.commandMetadata) else error(TX_CONTAINS_NO_COMMANDS_WITH_METADATA)
 
+fun TraversableTransaction.zkTransactionMetadataOrNull(): ResolvedZKTransactionMetadata? =
+    if (this.hasZKCommandData) ResolvedZKTransactionMetadata(this.commandMetadata) else null
+
 fun LedgerTransaction.zkTransactionMetadata(): ResolvedZKTransactionMetadata =
     if (this.hasZKCommandData) ResolvedZKTransactionMetadata(this.commandMetadata) else error(TX_CONTAINS_NO_COMMANDS_WITH_METADATA)
 

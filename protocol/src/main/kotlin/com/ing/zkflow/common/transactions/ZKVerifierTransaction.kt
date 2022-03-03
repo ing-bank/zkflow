@@ -1,5 +1,6 @@
 package com.ing.zkflow.common.transactions
 
+import com.ing.zkflow.common.transactions.ZKFilteredComponentGroup.Companion.fromComponentGroup
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.crypto.DigestService
 import net.corda.core.crypto.MerkleTree
@@ -8,7 +9,6 @@ import net.corda.core.serialization.CordaSerializable
 import net.corda.core.transactions.FilteredTransaction
 import net.corda.core.transactions.TraversableTransaction
 import net.corda.core.transactions.WireTransaction
-import net.corda.core.utilities.OpaqueBytes
 import java.security.PublicKey
 
 @Suppress("LongParameterList")
@@ -104,42 +104,13 @@ class ZKVerifierTransaction internal constructor(
 
             // Here we don't need to filter anything, we only create FTX to be able to access hashes (they are internal in WTX)
             val ftx = FilteredTransaction.buildFilteredTransaction(wtx) { true }
-            val allWireTransactionComponentNonces: Map<Int, List<SecureHash>> = ftx.allComponentNonces()
 
             return wtx.componentGroups.map { componentGroup ->
-                val groupIndex = componentGroup.groupIndex
-
-                if (wtx.hasPrivateComponents) {
-                    val zkTransactionMetadata = wtx.zkTransactionMetadata()
-
-                    val visibleSerialisedComponents: MutableList<OpaqueBytes> = mutableListOf()
-                    val visibleComponentNonces: MutableList<SecureHash> = mutableListOf()
-                    val privateComponentHashes: MutableMap<Int, SecureHash> = LinkedHashMap()
-
-                    componentGroup.components.forEachIndexed { componentIndex, serialisedComponent ->
-                        if (zkTransactionMetadata.shouldBeVisibleInFilteredComponentGroup(groupIndex, componentIndex)) {
-                            visibleSerialisedComponents.add(serialisedComponent)
-                            visibleComponentNonces.add(allWireTransactionComponentNonces[groupIndex]!![componentIndex])
-                        } else {
-                            privateComponentHashes[componentIndex] =
-                                ftx.filteredComponentGroups.find { it.groupIndex == groupIndex }!!.partialMerkleTree.getComponentHash(componentIndex)
-                        }
-                    }
-
-                    ZKFilteredComponentGroup(
-                        groupIndex = groupIndex,
-                        components = visibleSerialisedComponents,
-                        nonces = visibleComponentNonces,
-                        privateComponentHashes = privateComponentHashes
-                    )
-                } else {
-                    ZKFilteredComponentGroup(
-                        groupIndex = groupIndex,
-                        components = componentGroup.components,
-                        nonces = allWireTransactionComponentNonces[groupIndex]!!,
-                        privateComponentHashes = emptyMap()
-                    )
-                }
+                fromComponentGroup(
+                    componentGroup,
+                    ftx.filteredComponentGroups.find { it.groupIndex == componentGroup.groupIndex }!!,
+                    wtx.zkTransactionMetadataOrNull()
+                )
             }
         }
     }

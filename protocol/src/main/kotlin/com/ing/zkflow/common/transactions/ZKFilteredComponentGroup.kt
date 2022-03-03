@@ -1,5 +1,6 @@
 package com.ing.zkflow.common.transactions
 
+import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
 import net.corda.core.KeepForDJVM
 import net.corda.core.crypto.DigestService
 import net.corda.core.crypto.MerkleTree
@@ -7,6 +8,7 @@ import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.algorithm
 import net.corda.core.serialization.CordaSerializable
 import net.corda.core.transactions.ComponentGroup
+import net.corda.core.transactions.FilteredComponentGroup
 import net.corda.core.utilities.OpaqueBytes
 
 @KeepForDJVM
@@ -84,5 +86,47 @@ data class ZKFilteredComponentGroup(
         }
 
         return allComponentHashes.map { it!! }
+    }
+
+    companion object {
+
+        fun fromComponentGroup(
+            componentGroup: ComponentGroup,
+            filteredComponentGroup: FilteredComponentGroup,
+            zkTransactionMetadata: ResolvedZKTransactionMetadata?
+        ): ZKFilteredComponentGroup {
+            val groupIndex = componentGroup.groupIndex
+            val allComponentNonces: List<SecureHash> = filteredComponentGroup.nonces
+
+            return if (zkTransactionMetadata != null) {
+                val visibleSerialisedComponents: MutableList<OpaqueBytes> = mutableListOf()
+                val visibleComponentNonces: MutableList<SecureHash> = mutableListOf()
+                val privateComponentHashes: MutableMap<Int, SecureHash> = LinkedHashMap()
+
+                componentGroup.components.forEachIndexed { componentIndex, serialisedComponent ->
+                    if (zkTransactionMetadata.shouldBeVisibleInFilteredComponentGroup(groupIndex, componentIndex)) {
+                        visibleSerialisedComponents.add(serialisedComponent)
+                        visibleComponentNonces.add(allComponentNonces[componentIndex])
+                    } else {
+                        privateComponentHashes[componentIndex] =
+                            filteredComponentGroup.partialMerkleTree.getComponentHash(componentIndex)
+                    }
+                }
+
+                ZKFilteredComponentGroup(
+                    groupIndex = groupIndex,
+                    components = visibleSerialisedComponents,
+                    nonces = visibleComponentNonces,
+                    privateComponentHashes = privateComponentHashes
+                )
+            } else {
+                ZKFilteredComponentGroup(
+                    groupIndex = groupIndex,
+                    components = componentGroup.components,
+                    nonces = allComponentNonces,
+                    privateComponentHashes = emptyMap()
+                )
+            }
+        }
     }
 }
