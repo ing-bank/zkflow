@@ -7,8 +7,6 @@ import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.transactions.ZKTransactionBuilder
 import com.ing.zkflow.common.transactions.signInitialTransaction
 import com.ing.zkflow.integration.contract.TestContract
-import com.ing.zkflow.node.services.ServiceNames
-import com.ing.zkflow.node.services.getCordaServiceFromConfig
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.StateAndContract
 import net.corda.core.flows.FlowLogic
@@ -28,7 +26,6 @@ class CreateFlow(private val value: Int? = null, private val createCommand: ZKCo
 
         val builder = ZKTransactionBuilder(serviceHub.networkMapCache.notaryIdentities.single())
             .withItems(stateAndContract, issueCommand)
-        builder.enforcePrivateInputsAndReferences(serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_VERIFIER_TX_STORAGE))
 
         val stx = serviceHub.signInitialTransaction(builder)
         val fullySignedStx = subFlow(ZKCollectSignaturesFlow(stx, emptyList()))

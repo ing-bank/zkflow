@@ -7,12 +7,10 @@ import com.ing.zkflow.common.network.ZKNetworkParametersServiceLoader
 import com.ing.zkflow.common.serialization.ZKCustomSerializationScheme.Companion.CONTEXT_KEY_TRANSACTION_METADATA
 import com.ing.zkflow.common.serialization.ZKCustomSerializationScheme.Companion.CONTEXT_KEY_ZK_NETWORK_PARAMETERS
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
-import com.ing.zkflow.node.services.ZKVerifierTransactionStorage
 import net.corda.core.contracts.AttachmentConstraint
 import net.corda.core.contracts.AutomaticPlaceholderConstraint
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.CommandData
-import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.ContractClassName
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.PrivacySalt
@@ -132,8 +130,8 @@ class ZKTransactionBuilder(
      * Duplicated so that `toWireTransaction()` always uses the serialization settings
      */
     fun toWireTransaction(services: ServicesForResolution): WireTransaction {
-        val resolvedTransactionMetadata = this.verify()
-        val zkNetworkParameters = zkNetworkParameters ?: ZKNetworkParametersServiceLoader.parameters
+        val resolvedTransactionMetadata = this.verify(services)
+        val zkNetworkParameters = zkNetworkParameters ?: ZKNetworkParametersServiceLoader.latest
 
         val serializationProperties = mutableMapOf<Any, Any>(
             CONTEXT_KEY_ZK_NETWORK_PARAMETERS to zkNetworkParameters
@@ -151,42 +149,55 @@ class ZKTransactionBuilder(
      */
     @VisibleForTesting
     internal fun toWireTransactionWithDefaultCordaSerializationForTesting(services: ServicesForResolution): WireTransaction {
-        verify()
+        verify(services)
+
         return builder.toWireTransaction(services)
     }
 
-    private fun verify(): ResolvedZKTransactionMetadata? {
+    @Suppress("UnusedPrivateMember", "UNUSED_PARAMETER") // Remove suppression when re-enabling `enforcePrivateInputsAndReferences`
+    private fun verify(services: ServicesForResolution): ResolvedZKTransactionMetadata? {
         return if (this.hasZKCommandData) {
             val resolvedTransactionMetadata = this.zkTransactionMetadata()
+
             resolvedTransactionMetadata.verify(this)
+            /*
+             * TODO: https://dev.azure.com/INGNeo/ING%20Neo%20-%20ZKFlow/_workitems/edit/11072/
+             * Disabled because it breaks DSL tests that do not have access to cordapp config and therefore  will not work with
+             * `serviceHub.getCordaServiceFromConfig`. Perhaps this should not be hard-enforced here based on metadata, but
+             * soft-enforced at flow level, so that it is overridable by the user if allowed by the cordapp builder? It allows warning,
+             * but not breaking. It also means zktxbuilder does not need access to the storage.
+             * Alternatively, we stop using the CordaService for this, but use the Java SPI for these services?
+            */
+            // enforcePrivateInputsAndReferences(resolvedTransactionMetadata, services)
+
             resolvedTransactionMetadata
         } else {
             null
         }
     }
 
-    fun enforcePrivateInputsAndReferences(
-        zkVerifierTransactionStorage: ZKVerifierTransactionStorage
-    ) {
-        if (this.hasZKCommandData) {
-            val resolvedTransactionMetadata = this.zkTransactionMetadata()
-            val privateInputIndexes = resolvedTransactionMetadata.inputs.filter { it.mustBePrivate() }.map { it.index }
-            val privateReferenceIndexes = (resolvedTransactionMetadata.references).filter { it.mustBePrivate() }.map { it.index }
-
-            enforcePrivateUtxoForStateRefs(zkVerifierTransactionStorage, inputStates().filter { it.index in privateInputIndexes })
-            enforcePrivateUtxoForStateRefs(zkVerifierTransactionStorage, referenceStates().filter { it.index in privateReferenceIndexes })
-        }
-    }
-
-    private fun enforcePrivateUtxoForStateRefs(zkVerifierTransactionStorage: ZKVerifierTransactionStorage, stateRefs: List<StateRef>) {
-        stateRefs.forEach { stateRef ->
-            val tx = zkVerifierTransactionStorage.getTransaction(stateRef.txhash)?.tx
-                ?: error("Transaction not found with ID: ${stateRef.txhash}")
-            require(tx.isPrivateComponent(ComponentGroupEnum.OUTPUTS_GROUP, stateRef.index)) {
-                "UTXO for StateRef '$stateRef' should be private, but it is public"
-            }
-        }
-    }
+    // private fun enforcePrivateInputsAndReferences(
+    //     resolvedTransactionMetadata: ResolvedZKTransactionMetadata,
+    //     services: ServicesForResolution
+    // ) {
+    //     val stateRefs =
+    //         (resolvedTransactionMetadata.privateInputs + resolvedTransactionMetadata.privateReferences).filter { it.forcePrivate }
+    //
+    //     if (stateRefs.isNotEmpty()) {
+    //         val serviceHub =
+    //             serviceHub ?: if (services is ServiceHub) services else error("ServiceHub is required to enforce inputs visibility")
+    //         val zkStorage = serviceHub.getCordaServiceFromConfig<ZKVerifierTransactionStorage>(ServiceNames.ZK_VERIFIER_TX_STORAGE)
+    //
+    //         stateRefs.forEach {
+    //             val stateRef =
+    //                 inputStates()[it.index] // TODO: Should this not also check referenceStates(), since it is mixed in stateRefs?
+    //             val tx = zkStorage.getTransaction(stateRef.txhash)?.tx ?: error("Transaction not found with ID: ${stateRef.txhash}")
+    //             val isPrivate =
+    //                 tx.zkTransactionMetadata().privateOutputs.find { output -> output.index == stateRef.index }?.private ?: false
+    //             if (!isPrivate) error("Utxo $stateRef should be private, but it is public")
+    //         }
+    //     }
+    // }
 
     /**
      * This function is purposely disabled and only present for API compatibility with [TransactionBuilder].
