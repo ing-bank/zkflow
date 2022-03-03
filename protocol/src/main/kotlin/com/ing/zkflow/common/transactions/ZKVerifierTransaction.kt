@@ -106,12 +106,12 @@ class ZKVerifierTransaction internal constructor(
             val ftx = FilteredTransaction.buildFilteredTransaction(wtx) { true }
             val allWireTransactionComponentNonces: Map<Int, List<SecureHash>> = ftx.filteredComponentGroups.associate { it.groupIndex to it.nonces }
 
-            val zkTransactionMetadata = wtx.zkTransactionMetadata()
-
             return wtx.componentGroups.map { componentGroup ->
                 val groupIndex = componentGroup.groupIndex
 
                 if (wtx.hasPrivateComponents) {
+                    val zkTransactionMetadata = wtx.zkTransactionMetadata()
+
                     val visibleSerialisedComponents: MutableList<OpaqueBytes> = mutableListOf()
                     val visibleComponentNonces: MutableList<SecureHash> = mutableListOf()
                     val privateComponentHashes: MutableMap<Int, SecureHash> = LinkedHashMap()
