@@ -104,7 +104,7 @@ class ZKVerifierTransaction internal constructor(
 
             // Here we don't need to filter anything, we only create FTX to be able to access hashes (they are internal in WTX)
             val ftx = FilteredTransaction.buildFilteredTransaction(wtx) { true }
-            val allWireTransactionComponentNonces: Map<Int, List<SecureHash>> = ftx.filteredComponentGroups.associate { it.groupIndex to it.nonces }
+            val allWireTransactionComponentNonces: Map<Int, List<SecureHash>> = ftx.allComponentNonces()
 
             return wtx.componentGroups.map { componentGroup ->
                 val groupIndex = componentGroup.groupIndex
@@ -121,10 +121,8 @@ class ZKVerifierTransaction internal constructor(
                             visibleSerialisedComponents.add(serialisedComponent)
                             visibleComponentNonces.add(allWireTransactionComponentNonces[groupIndex]!![componentIndex])
                         } else {
-                            privateComponentHashes[componentIndex] = wtx.digestService.componentHash(
-                                allWireTransactionComponentNonces[groupIndex]!![componentIndex],
-                                serialisedComponent
-                            )
+                            privateComponentHashes[componentIndex] =
+                                ftx.filteredComponentGroups.find { it.groupIndex == groupIndex }!!.partialMerkleTree.getComponentHash(componentIndex)
                         }
                     }
 
