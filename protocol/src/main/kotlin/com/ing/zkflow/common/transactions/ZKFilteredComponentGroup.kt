@@ -28,7 +28,9 @@ data class ZKFilteredComponentGroup(
 ) : ComponentGroup(groupIndex, components) {
     init {
         check(components.size == nonces.size) { "Size of transaction components and nonces do not match" }
-        check(privateComponentHashes.values.distinctBy { it.algorithm }.size == 1) { "All private components hashes should have the same algorithm" }
+        if (privateComponentHashes.isNotEmpty()) {
+            check(privateComponentHashes.values.distinctBy { it.algorithm }.size == 1) { "All private components hashes should have the same algorithm" }
+        }
     }
 
     @Transient

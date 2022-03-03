@@ -83,8 +83,8 @@ class ZKVerifierTransaction internal constructor(
     override fun hashCode(): Int = id.hashCode()
     override fun equals(other: Any?) = if (other !is ZKVerifierTransaction) false else (this.id == other.id)
 
-    fun isPrivateComponent(group: ComponentGroupEnum, index: Int): Boolean
-        = filteredComponentGroups.find { it.groupIndex == group.ordinal }?.privateComponentHashes?.contains(index) ?: false
+    fun isPrivateComponent(group: ComponentGroupEnum, index: Int): Boolean =
+        filteredComponentGroups.find { it.groupIndex == group.ordinal }?.privateComponentHashes?.contains(index) ?: false
 
     companion object {
 
@@ -111,7 +111,7 @@ class ZKVerifierTransaction internal constructor(
             return wtx.componentGroups.map { componentGroup ->
                 val groupIndex = componentGroup.groupIndex
 
-                if(wtx.hasPrivateComponents) {
+                if (wtx.hasPrivateComponents) {
                     val visibleSerialisedComponents: MutableList<OpaqueBytes> = mutableListOf()
                     val visibleComponentNonces: MutableList<SecureHash> = mutableListOf()
                     val privateComponentHashes: MutableMap<Int, SecureHash> = LinkedHashMap()

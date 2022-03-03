@@ -132,7 +132,7 @@ class ZKTransactionBuilder(
      * Duplicated so that `toWireTransaction()` always uses the serialization settings
      */
     fun toWireTransaction(services: ServicesForResolution): WireTransaction {
-        val resolvedTransactionMetadata = this.verify(services)
+        val resolvedTransactionMetadata = this.verify()
         val zkNetworkParameters = zkNetworkParameters ?: ZKNetworkParametersServiceLoader.latest
 
         val serializationProperties = mutableMapOf<Any, Any>(
