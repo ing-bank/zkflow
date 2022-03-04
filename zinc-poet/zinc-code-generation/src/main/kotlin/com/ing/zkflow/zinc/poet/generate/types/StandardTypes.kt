@@ -12,17 +12,13 @@ import com.ing.zinc.bfl.dsl.OptionBuilder.Companion.option
 import com.ing.zinc.bfl.dsl.StructBuilder.Companion.struct
 import com.ing.zinc.bfl.generator.WitnessGroupOptions
 import com.ing.zinc.naming.camelToSnakeCase
-import com.ing.zkflow.common.network.ZKAttachmentConstraintType
 import com.ing.zkflow.common.network.ZKNetworkParameters
+import com.ing.zkflow.common.network.attachmentConstraintSerializer
+import com.ing.zkflow.common.network.notarySerializer
+import com.ing.zkflow.common.network.signerSerializer
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.serialization.bfl.serializers.CordaSerializers.CLASS_NAME_SIZE
 import com.ing.zkflow.serialization.bfl.serializers.SecureHashSurrogate
-import com.ing.zkflow.serialization.serializer.corda.AlwaysAcceptAttachmentConstraintSerializer
-import com.ing.zkflow.serialization.serializer.corda.CordaX500NameSerializer
-import com.ing.zkflow.serialization.serializer.corda.HashAttachmentConstraintSerializer
-import com.ing.zkflow.serialization.serializer.corda.PartySerializer
-import com.ing.zkflow.serialization.serializer.corda.PublicKeySerializer
-import com.ing.zkflow.serialization.serializer.corda.SignatureAttachmentConstraintSerializer
 import com.ing.zkflow.zinc.poet.generate.ZincTypeGenerator
 import net.corda.core.contracts.ComponentGroupEnum
 
@@ -31,18 +27,13 @@ class StandardTypes(
 ) {
     val notaryModule by lazy {
         ZincTypeGenerator.generate(
-            PartySerializer(
-                zkNetworkParameters.notaryInfo.signatureScheme.schemeNumberID,
-                CordaX500NameSerializer
-            ).descriptor
+            zkNetworkParameters.notarySerializer.descriptor
         )
     }
 
     val signerModule by lazy {
         ZincTypeGenerator.generate(
-            PublicKeySerializer(
-                zkNetworkParameters.participantSignatureScheme.schemeNumberID
-            ).descriptor
+            zkNetworkParameters.signerSerializer.descriptor
         )
     }
 
@@ -52,18 +43,7 @@ class StandardTypes(
     }
 
     private val attachmentConstraintModule: BflType by lazy {
-        ZincTypeGenerator.generate(
-            when (val attachmentConstraintType = zkNetworkParameters.attachmentConstraintType) {
-                ZKAttachmentConstraintType.AlwaysAcceptAttachmentConstraintType -> AlwaysAcceptAttachmentConstraintSerializer.descriptor
-                is ZKAttachmentConstraintType.HashAttachmentConstraintType -> HashAttachmentConstraintSerializer(
-                    attachmentConstraintType.algorithm.simpleName!!, // TODO this should be a string with algorithmName
-                    attachmentConstraintType.digestLength
-                ).descriptor
-                is ZKAttachmentConstraintType.SignatureAttachmentConstraintType -> SignatureAttachmentConstraintSerializer(
-                    attachmentConstraintType.signatureScheme.schemeNumberID
-                ).descriptor
-            }
-        )
+        ZincTypeGenerator.generate(zkNetworkParameters.attachmentConstraintSerializer.descriptor)
     }
 
     internal fun toWitnessGroupOptions(groupName: String, states: Map<BflModule, Int>): List<WitnessGroupOptions> = states.keys.map {
