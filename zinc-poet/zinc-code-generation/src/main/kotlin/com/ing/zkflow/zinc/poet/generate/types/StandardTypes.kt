@@ -2,7 +2,6 @@ package com.ing.zkflow.zinc.poet.generate.types
 
 import com.ing.zinc.bfl.BflModule
 import com.ing.zinc.bfl.BflPrimitive
-import com.ing.zinc.bfl.BflStruct
 import com.ing.zinc.bfl.BflType
 import com.ing.zinc.bfl.BflTypeDef
 import com.ing.zinc.bfl.dsl.ArrayBuilder.Companion.array
@@ -13,45 +12,38 @@ import com.ing.zinc.bfl.dsl.OptionBuilder.Companion.option
 import com.ing.zinc.bfl.dsl.StructBuilder.Companion.struct
 import com.ing.zinc.bfl.generator.WitnessGroupOptions
 import com.ing.zinc.naming.camelToSnakeCase
-import com.ing.zkflow.annotations.ZKP
-import com.ing.zkflow.annotations.corda.EdDSA
-import com.ing.zkflow.annotations.corda.Sha256
+import com.ing.zkflow.common.network.ZKAttachmentConstraintType
 import com.ing.zkflow.common.network.ZKNetworkParameters
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.serialization.bfl.serializers.CordaSerializers.CLASS_NAME_SIZE
 import com.ing.zkflow.serialization.bfl.serializers.SecureHashSurrogate
-import com.ing.zkflow.zinc.poet.generate.ZincTypeResolver
-import net.corda.core.contracts.AlwaysAcceptAttachmentConstraint
+import com.ing.zkflow.serialization.serializer.corda.AlwaysAcceptAttachmentConstraintSerializer
+import com.ing.zkflow.serialization.serializer.corda.CordaX500NameSerializer
+import com.ing.zkflow.serialization.serializer.corda.HashAttachmentConstraintSerializer
+import com.ing.zkflow.serialization.serializer.corda.PartySerializer
+import com.ing.zkflow.serialization.serializer.corda.PublicKeySerializer
+import com.ing.zkflow.serialization.serializer.corda.SignatureAttachmentConstraintSerializer
+import com.ing.zkflow.zinc.poet.generate.ZincTypeGenerator
 import net.corda.core.contracts.ComponentGroupEnum
-import net.corda.core.contracts.HashAttachmentConstraint
-import net.corda.core.contracts.SignatureAttachmentConstraint
-import net.corda.core.crypto.Crypto
-import net.corda.core.identity.AnonymousParty
-import java.security.PublicKey
-
-private fun BflModule.getSingleFieldType(): BflModule = when (this) {
-    is BflStruct -> fields.single().type as BflModule
-    else -> this
-}
 
 class StandardTypes(
-    private val zincTypeResolver: ZincTypeResolver,
     private val zkNetworkParameters: ZKNetworkParameters
 ) {
-    private val edDsaPartyNotaryModule by lazy { zincTypeResolver.zincTypeOf(WrapsEdDsaParty::class).getSingleFieldType() }
-    val notaryModule: BflModule by lazy {
-        when (val signatureScheme = zkNetworkParameters.notaryInfo.signatureScheme) {
-            Crypto.EDDSA_ED25519_SHA512 -> edDsaPartyNotaryModule
-            else -> error("Enable ${signatureScheme.schemeCodeName} for notaryModule in ${StandardTypes::class}")
-        }
+    val notaryModule by lazy {
+        ZincTypeGenerator.generate(
+            PartySerializer(
+                zkNetworkParameters.notaryInfo.signatureScheme.schemeNumberID,
+                CordaX500NameSerializer
+            ).descriptor
+        )
     }
 
-    private val edDsaPublicKeySignerModule by lazy { zincTypeResolver.zincTypeOf(WrapsEdDsaPublicKey::class).getSingleFieldType() }
-    val signerModule: BflModule by lazy {
-        when (val signatureScheme = zkNetworkParameters.participantSignatureScheme) {
-            Crypto.EDDSA_ED25519_SHA512 -> edDsaPublicKeySignerModule
-            else -> error("Enable ${signatureScheme.schemeCodeName} for signerModule in ${StandardTypes::class}")
-        }
+    val signerModule by lazy {
+        ZincTypeGenerator.generate(
+            PublicKeySerializer(
+                zkNetworkParameters.participantSignatureScheme.schemeNumberID
+            ).descriptor
+        )
     }
 
     fun signerList(metadata: ResolvedZKCommandMetadata) = list {
@@ -59,31 +51,19 @@ class StandardTypes(
         elementType = signerModule
     }
 
-    private val signatureAttachmentConstraint by lazy {
-        zincTypeResolver.zincTypeOf(WrapsSignatureAttachmentConstraint::class).getSingleFieldType()
-    }
-
-    private val hashAttachmentConstraint by lazy {
-        zincTypeResolver.zincTypeOf(WrapsHashAttachmentConstraint::class).getSingleFieldType()
-    }
-
-    private val alwaysAcceptAttachmentConstraint by lazy {
-        zincTypeResolver.zincTypeOf(WrapsAlwaysAcceptAttachmentConstraint::class).getSingleFieldType()
-    }
-
-    private fun attachmentConstraintModule(): BflModule =
-        when (val attachmentConstraintClass = zkNetworkParameters.attachmentConstraintType.kClass) {
-            SignatureAttachmentConstraint::class -> signatureAttachmentConstraint
-            HashAttachmentConstraint::class -> hashAttachmentConstraint
-            AlwaysAcceptAttachmentConstraint::class -> alwaysAcceptAttachmentConstraint
-            else -> error("Enable $attachmentConstraintClass for attachmentConstraintModule in ${StandardTypes::class}")
-        }
-
-    internal fun getSignerListModule(
-        numberOfSigners: Int
-    ) = list {
-        capacity = numberOfSigners
-        elementType = signerModule
+    private val attachmentConstraintModule: BflType by lazy {
+        ZincTypeGenerator.generate(
+            when (val attachmentConstraintType = zkNetworkParameters.attachmentConstraintType) {
+                ZKAttachmentConstraintType.AlwaysAcceptAttachmentConstraintType -> AlwaysAcceptAttachmentConstraintSerializer.descriptor
+                is ZKAttachmentConstraintType.HashAttachmentConstraintType -> HashAttachmentConstraintSerializer(
+                    attachmentConstraintType.algorithm.simpleName!!, // TODO this should be a string with algorithmName
+                    attachmentConstraintType.digestLength
+                ).descriptor
+                is ZKAttachmentConstraintType.SignatureAttachmentConstraintType -> SignatureAttachmentConstraintSerializer(
+                    attachmentConstraintType.signatureScheme.schemeNumberID
+                ).descriptor
+            }
+        )
     }
 
     internal fun toWitnessGroupOptions(groupName: String, states: Map<BflModule, Int>): List<WitnessGroupOptions> = states.keys.map {
@@ -120,7 +100,7 @@ class StandardTypes(
         }
         field {
             name = "constraint"
-            type = attachmentConstraintModule()
+            type = attachmentConstraintModule
         }
     }
 
@@ -179,18 +159,3 @@ class StandardTypes(
         internal val componentGroupEnum = enumOf(ComponentGroupEnum::class)
     }
 }
-
-@ZKP
-private data class WrapsEdDsaParty(val party: @EdDSA AnonymousParty)
-
-@ZKP
-private data class WrapsEdDsaPublicKey(val publicKey: @EdDSA PublicKey)
-
-@ZKP
-private data class WrapsSignatureAttachmentConstraint(val constraint: @EdDSA SignatureAttachmentConstraint)
-
-@ZKP
-private data class WrapsHashAttachmentConstraint(val constraint: @Sha256 HashAttachmentConstraint)
-
-@ZKP
-private data class WrapsAlwaysAcceptAttachmentConstraint(val constraint: AlwaysAcceptAttachmentConstraint)

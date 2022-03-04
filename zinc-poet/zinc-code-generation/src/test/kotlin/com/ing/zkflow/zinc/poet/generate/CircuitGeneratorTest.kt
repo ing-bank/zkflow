@@ -30,7 +30,6 @@ internal class CircuitGeneratorTest {
     private val zincTypeResolver = ZincTypeGeneratorResolver(ZincTypeGenerator)
 
     private val standardTypes = StandardTypes(
-        zincTypeResolver,
         MockZKNetworkParameters(
             attachmentConstraintType = ZKAttachmentConstraintType.AlwaysAcceptAttachmentConstraintType
         )
