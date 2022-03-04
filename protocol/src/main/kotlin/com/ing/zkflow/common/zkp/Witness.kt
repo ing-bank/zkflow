@@ -1,11 +1,10 @@
 package com.ing.zkflow.common.zkp
 
-import com.ing.zkflow.common.serialization.zinc.json.WitnessSerializer
 import com.ing.zkflow.common.transactions.UtxoInfo
 import com.ing.zkflow.common.transactions.zkTransactionMetadata
+import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.common.zkp.metadata.ZincType
 import com.ing.zkflow.util.camelToSnakeCase
-import kotlinx.serialization.Serializable
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.PrivacySalt
@@ -41,18 +40,12 @@ import kotlin.reflect.KClass
  */
 
 @CordaSerializable
-@Serializable(with = WitnessSerializer::class)
 @Suppress("LongParameterList")
 class Witness(
     /**
      * These groups match the groups defined in [ComponentGroupEnum].
      * They contain the serialized form of [TraversableTransaction] components.
      */
-
-    /**
-     * Serialized List<StateRef>
-     */
-    val inputsGroup: List<ByteArray>,
 
     /**
      * Serialized Map<ContractState.name, TransactionState<ContractState>>
@@ -83,11 +76,6 @@ class Witness(
      * Serialized List<List<PublicKey>>
      */
     val signersGroup: List<ByteArray>,
-
-    /**
-     * Serialized List<StateRef>
-     */
-    val referencesGroup: List<ByteArray>,
 
     /**
      * Serialized List<SecureHash>
@@ -135,14 +123,12 @@ class Witness(
         val paddedByteMapSize = { it: Map<String, List<ByteArray>> ->
             it.flatMap { it.value }.fold(0) { acc, bytes -> acc + bytes.filter(filter).size }
         }
-        return inputsGroup.run(paddedByteListSize) +
-            outputsGroup.run(paddedByteMapSize) +
+        return outputsGroup.run(paddedByteMapSize) +
             commandsGroup.run(paddedByteListSize) +
             attachmentsGroup.run(paddedByteListSize) +
             notaryGroup.run(paddedByteListSize) +
             timeWindowGroup.run(paddedByteListSize) +
             signersGroup.run(paddedByteListSize) +
-            referencesGroup.run(paddedByteListSize) +
             parametersGroup.run(paddedByteListSize) +
             privacySalt.size +
             serializedInputUtxos.run(paddedByteMapSize) +
@@ -156,40 +142,37 @@ class Witness(
             wtx: WireTransaction,
             inputUtxoInfos: List<UtxoInfo>,
             referenceUtxoInfos: List<UtxoInfo>,
+            metadata: ResolvedZKCommandMetadata
         ): Witness {
-
-            val metadata = wtx.zkTransactionMetadata()
-            val privateInputIndexes = metadata.privateInputs.map { it.index }
-            val privateReferencesIndexes = metadata.privateReferences.map { it.index }
-            val privateOutputIndexes = metadata.privateOutputs.map { it.index }
 
             // Reorder utxos according to be consistent with the order in the WireTransaction.
             val orderedInputUtxoInfos = wtx.inputs.map { inputRef ->
                 inputUtxoInfos.find { it.stateRef == inputRef } ?: error("No UtxoInfo provided for input ref $inputRef")
-            }.filterIndexed { index, _ -> privateInputIndexes.contains(index) }
+            }
+
             val orderedReferenceUtxoInfos = wtx.references.map { referenceRef ->
                 referenceUtxoInfos.find { it.stateRef == referenceRef } ?: error("No UtxoInfo provided for reference ref $referenceRef")
-            }.filterIndexed { index, _ -> privateReferencesIndexes.contains(index) }
+            }
 
+            // TODO: replace javaClass2ZincType with ZincTypeResolver and remove implementation of javaClass2ZincType from ZKCircuit and ResolvedZKTransactionMetadata
             val javaClass2ZincType = wtx.zkTransactionMetadata().javaClass2ZincType
 
             return Witness(
-                inputsGroup = wtx.serializedComponentBytesFor(ComponentGroupEnum.INPUTS_GROUP),
-                outputsGroup = wtx.serializedComponentBytesForOutputGroup(ComponentGroupEnum.OUTPUTS_GROUP, javaClass2ZincType, privateOutputIndexes),
+                outputsGroup = wtx.serializedComponentBytesForOutputGroup(ComponentGroupEnum.OUTPUTS_GROUP, javaClass2ZincType, metadata),
                 commandsGroup = wtx.serializedComponentBytesFor(ComponentGroupEnum.COMMANDS_GROUP),
                 attachmentsGroup = wtx.serializedComponentBytesFor(ComponentGroupEnum.ATTACHMENTS_GROUP),
                 notaryGroup = wtx.serializedComponentBytesFor(ComponentGroupEnum.NOTARY_GROUP),
                 timeWindowGroup = wtx.serializedComponentBytesFor(ComponentGroupEnum.TIMEWINDOW_GROUP),
                 signersGroup = wtx.serializedComponentBytesFor(ComponentGroupEnum.SIGNERS_GROUP),
-                referencesGroup = wtx.serializedComponentBytesFor(ComponentGroupEnum.REFERENCES_GROUP),
                 parametersGroup = wtx.serializedComponentBytesFor(ComponentGroupEnum.PARAMETERS_GROUP),
 
                 privacySalt = wtx.privacySalt,
 
-                serializedInputUtxos = orderedInputUtxoInfos.serializedBytesForUTXO(ComponentGroupEnum.INPUTS_GROUP, javaClass2ZincType),
+                serializedInputUtxos = orderedInputUtxoInfos.serializedBytesForUTXO(ComponentGroupEnum.INPUTS_GROUP, javaClass2ZincType, metadata),
                 serializedReferenceUtxos = orderedReferenceUtxoInfos.serializedBytesForUTXO(
                     ComponentGroupEnum.REFERENCES_GROUP,
-                    javaClass2ZincType
+                    javaClass2ZincType,
+                    metadata
                 ),
                 inputUtxoNonces = orderedInputUtxoInfos.map { it.nonce },
                 referenceUtxoNonces = orderedReferenceUtxoInfos.map { it.nonce }
@@ -200,17 +183,23 @@ class Witness(
             return componentGroups
                 .singleOrNull { it.groupIndex == groupEnum.ordinal }
                 ?.components
-                ?.map { it.copyBytes() }
+                // filter private components
+                ?.filterIndexed { index, _ ->
+                    zkTransactionMetadata().isVisibleInWitness(groupEnum.ordinal, index)
+                }?.map { it.copyBytes() }
                 ?: emptyList()
         }
 
         private fun TraversableTransaction.serializedComponentBytesForOutputGroup(
             groupEnum: ComponentGroupEnum,
             javaClass2ZincType: Map<KClass<out ContractState>, ZincType>,
-            privateOutputIndexes: List<Int>
+            metadata: ResolvedZKCommandMetadata
         ): Map<String, List<ByteArray>> {
 
-            val privateOutputs = outputs.filterIndexed { index, _ -> privateOutputIndexes.contains(index) }
+            // TODO: Use isWisibleInWitness function in here.
+
+            val privateOutputIndices = metadata.outputs.map { it.index }
+            val privateOutputs = outputs.filterIndexed { index, _ -> privateOutputIndices.contains(index) }
 
             val zincTypes = privateOutputs.map {
                 javaClass2ZincType[it.data::class]?.typeName?.camelToSnakeCase() ?: error("Class ${it.data::class} needs to have an associated Zinc type")
@@ -218,7 +207,9 @@ class Witness(
 
             val serializedStateBytes =
                 componentGroups.singleOrNull { it.groupIndex == groupEnum.ordinal }?.components
-                    ?.filterIndexed { index, _ -> privateOutputIndexes.contains(index) }
+                    // Filter private outputs
+                    ?.filterIndexed { index, _ -> privateOutputIndices.contains(index) }
+                    // Pair each serialized output state with the state name
                     ?.mapIndexed { index, output -> zincTypes[index] to output.copyBytes() }
 
             return serializedStateBytes
@@ -233,16 +224,27 @@ class Witness(
          */
         private fun List<UtxoInfo>.serializedBytesForUTXO(
             groupEnum: ComponentGroupEnum,
-            javaClass2ZincType: Map<KClass<out ContractState>, ZincType>
+            javaClass2ZincType: Map<KClass<out ContractState>, ZincType>,
+            metadata: ResolvedZKCommandMetadata
         ): Map<String, List<ByteArray>> {
+
+            // TODO: Use isWisibleInWitness function in here.
 
             require(groupEnum == ComponentGroupEnum.INPUTS_GROUP || groupEnum == ComponentGroupEnum.REFERENCES_GROUP) { "Only input and reference groups are valid for UTXO serialization." }
 
-            // Pair each serialized state with the component group name and state name
-            return this.map {
-                val zincType = javaClass2ZincType[it.stateClass] ?: error("Class ${it.stateClass} needs to have an associated Zinc type")
-                zincType.typeName.camelToSnakeCase() to it.serializedContents
+            val privateUTXOIndices = if (groupEnum == ComponentGroupEnum.INPUTS_GROUP) {
+                metadata.inputs.map { it.index }
+            } else {
+                metadata.references.map { it.index }
             }
+
+            // Filter private UTXOs
+            return this.filterIndexed { index, _ -> privateUTXOIndices.contains(index) }
+                // Pair each serialized state with the component group name and state name
+                .map {
+                    val zincType = javaClass2ZincType[it.stateClass] ?: error("Class ${it.stateClass} needs to have an associated Zinc type")
+                    zincType.typeName.camelToSnakeCase() to it.serializedContents
+                }
                 // group the serialized arrays based on their state name
                 .groupBy { it.first }.map { it.key to it.value.map { bytes -> bytes.second } }
                 .toMap()

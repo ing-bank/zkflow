@@ -31,6 +31,7 @@ class TestNotarisationFlow(val signers: List<Party> = emptyList()) : FlowLogic<S
 
         val builder = ZKTransactionBuilder(serviceHub.networkMapCache.notaryIdentities.single())
         builder.withItems(stateAndContract, issueCommand)
+        builder.enforcePrivateInputsAndReferences(serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_VERIFIER_TX_STORAGE))
 
         val stx = subFlow(ZKCollectSignaturesFlow(serviceHub.signInitialTransaction(builder), signers.map { initiateFlow(it) }))
 

@@ -32,9 +32,9 @@ class WitnessGroupsContainer(
     standardTypes: StandardTypes,
     private val zincTypeResolver: ZincTypeResolver,
 ) {
-    private val inputs = commandMetadata.privateInputs.toBflModuleMap()
-    private val outputs = commandMetadata.privateOutputs.toBflModuleMap()
-    private val references = commandMetadata.privateReferences.toBflModuleMap()
+    private val inputs = commandMetadata.inputs.toBflModuleMap()
+    private val outputs = commandMetadata.outputs.toBflModuleMap()
+    private val references = commandMetadata.references.toBflModuleMap()
 
     private val commandGroup =
         StandardComponentWitnessGroup(COMMANDS, zincTypeResolver.zincTypeOf(commandMetadata.commandKClass), 1, ComponentGroupEnum.COMMANDS_GROUP)
@@ -59,7 +59,7 @@ class WitnessGroupsContainer(
 
     private val privacySaltGroup = HashingMetadataWitnessGroup(PRIVACY_SALT, privacySalt, privacySalt.getSerializedTypeDef(), 1)
 
-    private val numberOfInputs = commandMetadata.privateInputs.size
+    private val numberOfInputs = commandMetadata.inputs.size
     private val inputNoncesGroup = HashingMetadataWitnessGroup(
         INPUT_NONCES,
         arrayOfNonceDigests(numberOfInputs),
@@ -67,7 +67,7 @@ class WitnessGroupsContainer(
         numberOfInputs
     )
 
-    private val numberOfReferences = commandMetadata.privateReferences.size
+    private val numberOfReferences = commandMetadata.references.size
     private val referenceNoncesGroup = HashingMetadataWitnessGroup(
         REFERENCE_NONCES,
         arrayOfNonceDigests(numberOfReferences),

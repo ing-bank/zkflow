@@ -126,10 +126,10 @@ class ZincZKService(
     override fun run(witness: Witness, publicInput: PublicInput): String {
         log.debug("Witness size: ${witness.size()}, of which padding bytes: ${witness.size { it == 0.toByte() }}") // Assumes BFL zero-byte padding
 
-        val witnessJson = Json.encodeToString(WitnessSerializer, witness)
+        val witnessJson = WitnessSerializer.fromWitness(witness)
         log.trace("Witness JSON: $witnessJson")
 
-        val publicInputJson = Json.encodeToString(PublicInputSerializer, publicInput)
+        val publicInputJson = PublicInputSerializer.fromPublicInput(publicInput)
         return run(witnessJson, publicInputJson)
     }
 
@@ -202,7 +202,7 @@ class ZincZKService(
     override fun prove(witness: Witness): ByteArray {
         log.debug("Witness size: ${witness.size()}, of which padding bytes: ${witness.size { it == 0.toByte() }}") // Assumes BFL zero-byte padding
 
-        val witnessJson = Json.encodeToString(WitnessSerializer, witness)
+        val witnessJson = WitnessSerializer.fromWitness(witness)
         log.trace("Witness JSON: $witnessJson")
 
         return prove(witnessJson)
@@ -231,7 +231,7 @@ class ZincZKService(
     }
 
     override fun verify(proof: ByteArray, publicInput: PublicInput) {
-        val publicInputJson = Json.encodeToString(PublicInputSerializer, publicInput)
+        val publicInputJson = PublicInputSerializer.fromPublicInput(publicInput)
         return verify(proof, publicInputJson)
     }
 

@@ -49,7 +49,7 @@ class UtxoInfo private constructor(
         val zkTxStorage: ZKVerifierTransactionStorage =
             serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_VERIFIER_TX_STORAGE)
 
-        val resolvedOutput = zkTxStorage.getTransaction(stateRef.txhash)?.tx?.outputHashes?.get(stateRef.index)
+        val resolvedOutput = zkTxStorage.getTransaction(stateRef.txhash)?.tx?.outputHashes()?.get(stateRef.index)
             ?: ZKTransactionResolutionException(stateRef.txhash)
 
         val calculatedUtxoHash = SecureHash.componentHashAs(

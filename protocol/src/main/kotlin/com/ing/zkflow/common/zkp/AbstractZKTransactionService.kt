@@ -10,6 +10,7 @@ import com.ing.zkflow.node.services.ServiceNames
 import com.ing.zkflow.node.services.ZKTransactionResolutionException
 import com.ing.zkflow.node.services.ZKWritableVerifierTransactionStorage
 import com.ing.zkflow.node.services.getCordaServiceFromConfig
+import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.StateRef
 import net.corda.core.crypto.SecureHash
 import net.corda.core.node.ServiceHub
@@ -31,19 +32,19 @@ abstract class AbstractZKTransactionService(val serviceHub: ServiceHub) : ZKTran
     ): ZKVerifierTransaction {
 
         val zkTransactionMetadata = wtx.zkTransactionMetadata()
-
-        val witness = Witness.fromWireTransaction(
-            wtx,
-            serviceHub.collectUtxoInfos(wtx.inputs),
-            serviceHub.collectUtxoInfos(wtx.references)
-        )
-
         val proofs = mutableMapOf<String, ByteArray>()
 
         zkTransactionMetadata.commands.forEach { command ->
             val commandName = command.commandKClass.qualifiedName!!
-            if (!proofs.containsKey(commandName))
+            if (!proofs.containsKey(commandName)) {
+                val witness = Witness.fromWireTransaction(
+                    wtx,
+                    serviceHub.collectUtxoInfos(wtx.inputs),
+                    serviceHub.collectUtxoInfos(wtx.references),
+                    command
+                )
                 proofs[commandName] = zkServiceForCommandMetadata(command).proveTimed(witness)
+            }
         }
 
         return ZKVerifierTransaction.fromWireTransaction(wtx, proofs)
@@ -65,7 +66,7 @@ abstract class AbstractZKTransactionService(val serviceHub: ServiceHub) : ZKTran
         // Check proofs
         vtx.proofs.forEach { (commandClassName, proof) ->
             val command = vtx.commands.single { it.value::class.qualifiedName == commandClassName }.value as ZKCommandData
-            zkServiceForCommandMetadata(command.metadata).verifyTimed(proof, calculatePublicInput(vtx))
+            zkServiceForCommandMetadata(command.metadata).verifyTimed(proof, calculatePublicInput(vtx, command.metadata))
         }
 
         // Check signatures
@@ -82,16 +83,32 @@ abstract class AbstractZKTransactionService(val serviceHub: ServiceHub) : ZKTran
         }
     }
 
-    open fun calculatePublicInput(tx: TraversableTransaction): PublicInput {
+    open fun calculatePublicInput(tx: ZKVerifierTransaction, commandMetadata: ResolvedZKCommandMetadata): PublicInput {
         // Fetch the UTXO hashes from the svtx's pointed to by the inputs and references.
         // This confirms that we have a validated backchain stored for them.
-        val inputHashes = getUtxoHashes(tx.inputs)
-        val referenceHashes = getUtxoHashes(tx.references)
+        val privateInputIndices = commandMetadata.inputs.map { it.index }
+        val privateInputHashes = getUtxoHashes(tx.inputs).filterIndexed { index, _ -> privateInputIndices.contains(index) }
+
+        val privateReferenceIndices = commandMetadata.references.map { it.index }
+        val privateReferenceHashes = getUtxoHashes(tx.references).filterIndexed { index, _ -> privateReferenceIndices.contains(index) }
+
+        // Fetch output component hashes for private outputs of the command
+        val privateOutputIndices = commandMetadata.outputs.map { it.index }
+        val privateOutputHashes = tx.outputHashes().filterIndexed { index, _ ->
+            privateOutputIndices.contains(index)
+        }
 
         return PublicInput(
-            tx.id,
-            inputHashes = inputHashes,
-            referenceHashes = referenceHashes
+            outputComponentHashes = privateOutputHashes,
+            attachmentComponentHashes = tx.privateComponentHashes(ComponentGroupEnum.ATTACHMENTS_GROUP.ordinal),
+            commandComponentHashes = tx.privateComponentHashes(ComponentGroupEnum.COMMANDS_GROUP.ordinal),
+            notaryComponentHashes = tx.privateComponentHashes(ComponentGroupEnum.NOTARY_GROUP.ordinal),
+            parametersComponentHashes = tx.privateComponentHashes(ComponentGroupEnum.PARAMETERS_GROUP.ordinal),
+            timeWindowComponentHashes = tx.privateComponentHashes(ComponentGroupEnum.TIMEWINDOW_GROUP.ordinal),
+            signersComponentHashes = tx.privateComponentHashes(ComponentGroupEnum.SIGNERS_GROUP.ordinal),
+
+            inputUtxoHashes = privateInputHashes,
+            referenceUtxoHashes = privateReferenceHashes
         )
     }
 
@@ -107,7 +124,7 @@ abstract class AbstractZKTransactionService(val serviceHub: ServiceHub) : ZKTran
              *
              * These values will be used as part of the instance when verifying the proof.
              */
-            prevVtx.tx.outputHashes[stateRef.index]
+            prevVtx.tx.outputHashes()[stateRef.index]
             /*
              * Now the verifier calls currentVtx.proof.verify(currentVtx.id, prevVtx.outputHashes).
              *

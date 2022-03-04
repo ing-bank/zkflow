@@ -17,11 +17,11 @@ data class ResolvedZKTransactionMetadata(
         const val ERROR_COMMAND_NOT_UNIQUE = "Multiple commands of one type found. All commands in a ZKFLow transaction should be unique"
     }
 
-    val privateInputs = commands.fold(mutableListOf<ZKReference>()) { acc, command -> mergeUtxoVisibility(acc, command.privateInputs) }
-    val privateReferences =
-        commands.fold(mutableListOf<ZKReference>()) { acc, command -> mergeUtxoVisibility(acc, command.privateReferences) }
-    val privateOutputs =
-        commands.fold(mutableListOf<ZKProtectedComponent>()) { acc, command -> mergeComponentVisibility(acc, command.privateOutputs) }
+    val inputs = commands.fold(mutableListOf<ZKReference>()) { acc, command -> mergeUtxoVisibility(acc, command.inputs) }
+    val references =
+        commands.fold(mutableListOf<ZKReference>()) { acc, command -> mergeUtxoVisibility(acc, command.references) }
+    val outputs =
+        commands.fold(mutableListOf<ZKProtectedComponent>()) { acc, command -> mergeComponentVisibility(acc, command.outputs) }
 
     /**
      * The total number of signers of all commands added up.
@@ -56,30 +56,39 @@ data class ResolvedZKTransactionMetadata(
         commands.forEach { it.verify(ltx) }
     }
 
-    fun isVisibleInPublicTransaction(groupIndex: Int, componentIndex: Int): Boolean {
+    fun shouldBeVisibleInFilteredComponentGroup(groupIndex: Int, componentIndex: Int): Boolean {
         return when (groupIndex) {
-            ComponentGroupEnum.INPUTS_GROUP.ordinal -> true // References are always visible, to get State's visibility call 'getUtxoVisibility'
-            ComponentGroupEnum.REFERENCES_GROUP.ordinal -> true // References are always visible, to get State's visibility call 'getUtxoVisibility'
-            ComponentGroupEnum.OUTPUTS_GROUP.ordinal -> privateOutputs.find { it.index == componentIndex }?.private?.not() ?: true
-            // ComponentGroupEnum.SIGNERS_GROUP.ordinal -> Signers visibility depends on Commands visibility, now we don't support private Commands so both groups are always Public
+            /*
+             * Options:
+             * - private == true: not visible
+             * - private == false: visible
+             * - not mentioned at all: visible
+             */
+            ComponentGroupEnum.OUTPUTS_GROUP.ordinal -> outputs.find { it.index == componentIndex }?.private?.not() ?: true
             else -> true // all other groups have visibility 'Public' by default at the moment, may change in future
         }
     }
 
+    /**
+     * If a component is mentioned in any way in the metadata, it should be present in the witness.
+     * Otherwise, it will not be present in the witness.
+     */
     fun isVisibleInWitness(groupIndex: Int, componentIndex: Int): Boolean {
         return when (groupIndex) {
-            ComponentGroupEnum.INPUTS_GROUP.ordinal -> privateInputs.any { it.index == componentIndex } // Here we return UTXO visibility, not StateRef visibility (StateRefs never go to witness)
-            ComponentGroupEnum.REFERENCES_GROUP.ordinal -> privateReferences.any { it.index == componentIndex } // Here we return UTXO visibility, not StateRef visibility (StateRefs never go to witness)
-            ComponentGroupEnum.OUTPUTS_GROUP.ordinal -> privateOutputs.any { it.index == componentIndex }
-            // ComponentGroupEnum.SIGNERS_GROUP.ordinal -> Signers visibility depends on Commands visibility, now we don't support private Commands so both groups are always Public
-            else -> false // all other groups have visibility 'Public' by default at the moment, may change in future
+            ComponentGroupEnum.INPUTS_GROUP.ordinal -> inputs.any { it.index == componentIndex } // Here we return UTXO visibility, not StateRef visibility (StateRefs never go to witness)
+            ComponentGroupEnum.REFERENCES_GROUP.ordinal -> references.any { it.index == componentIndex } // Here we return UTXO visibility, not StateRef visibility (StateRefs never go to witness)
+            ComponentGroupEnum.OUTPUTS_GROUP.ordinal -> outputs.any { it.index == componentIndex }
+            else -> false // other groups are not part of the witness for now, may change in the future.
         }
     }
 
+    // TODO: can this be deleted?
     fun isOnlyPrivateUtxoAllowed(groupIndex: Int, componentIndex: Int): Boolean {
         return when (groupIndex) {
-            ComponentGroupEnum.INPUTS_GROUP.ordinal -> privateInputs.find { it.index == componentIndex }?.forcePrivate ?: false // We don't care about utxo visibility unless specifically marked with 'forcePrivate'
-            ComponentGroupEnum.REFERENCES_GROUP.ordinal -> privateReferences.find { it.index == componentIndex }?.forcePrivate ?: false // We don't care about utxo visibility unless specifically marked with 'forcePrivate'
+            ComponentGroupEnum.INPUTS_GROUP.ordinal -> inputs.find { it.index == componentIndex }?.forcePrivate
+                ?: false // We don't care about utxo visibility unless specifically marked with 'forcePrivate'
+            ComponentGroupEnum.REFERENCES_GROUP.ordinal -> references.find { it.index == componentIndex }?.forcePrivate
+                ?: false // We don't care about utxo visibility unless specifically marked with 'forcePrivate'
             else -> error("Only Inputs and References UTXOs are allowed")
         }
     }

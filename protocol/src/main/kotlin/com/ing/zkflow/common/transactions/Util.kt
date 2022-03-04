@@ -21,6 +21,7 @@ import net.corda.core.contracts.TransactionResolutionException
 import net.corda.core.contracts.TransactionState
 import net.corda.core.contracts.TransactionVerificationException
 import net.corda.core.crypto.DigestService
+import net.corda.core.crypto.PartialMerkleTree
 import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.algorithm
 import net.corda.core.flows.FlowException
@@ -31,6 +32,7 @@ import net.corda.core.node.NetworkParameters
 import net.corda.core.node.ServiceHub
 import net.corda.core.serialization.SerializedBytes
 import net.corda.core.transactions.ContractUpgradeWireTransaction
+import net.corda.core.transactions.FilteredTransaction
 import net.corda.core.transactions.LedgerTransaction
 import net.corda.core.transactions.NotaryChangeWireTransaction
 import net.corda.core.transactions.SignedTransaction
@@ -128,6 +130,7 @@ fun WireTransaction.prettyPrint(): String {
 
 val ZKTransactionBuilder.hasZKCommandData get() = commands().any { it.value is ZKCommandData }
 val TraversableTransaction.hasZKCommandData get() = commands.any { it.value is ZKCommandData }
+val TraversableTransaction.hasPrivateComponents get() = hasZKCommandData
 val LedgerTransaction.hasZKCommandData get() = commands.any { it.value is ZKCommandData }
 
 val ZKTransactionBuilder.commandMetadata
@@ -141,11 +144,49 @@ private const val TX_CONTAINS_NO_COMMANDS_WITH_METADATA = "This transaction does
 fun TraversableTransaction.zkTransactionMetadata(): ResolvedZKTransactionMetadata =
     if (this.hasZKCommandData) ResolvedZKTransactionMetadata(this.commandMetadata) else error(TX_CONTAINS_NO_COMMANDS_WITH_METADATA)
 
+fun TraversableTransaction.zkTransactionMetadataOrNull(): ResolvedZKTransactionMetadata? =
+    if (this.hasZKCommandData) ResolvedZKTransactionMetadata(this.commandMetadata) else null
+
 fun LedgerTransaction.zkTransactionMetadata(): ResolvedZKTransactionMetadata =
     if (this.hasZKCommandData) ResolvedZKTransactionMetadata(this.commandMetadata) else error(TX_CONTAINS_NO_COMMANDS_WITH_METADATA)
 
 fun ZKTransactionBuilder.zkTransactionMetadata(): ResolvedZKTransactionMetadata =
     if (this.hasZKCommandData) ResolvedZKTransactionMetadata(this.commandMetadata) else error(TX_CONTAINS_NO_COMMANDS_WITH_METADATA)
+
+fun FilteredTransaction.allComponentNonces(): Map<Int, List<SecureHash>> {
+    return filteredComponentGroups.associate { it.groupIndex to it.nonces }
+}
+
+/**
+ * This method correctly works only for full binary tree (for PartialMerkleTree it is not always the case),
+ *
+ */
+
+fun PartialMerkleTree.getComponentHash(componentIndex: Int): SecureHash {
+
+    fun getHeight(tree: PartialMerkleTree.PartialTree, level: Int = 0): Int {
+        return when (tree) {
+            is PartialMerkleTree.PartialTree.IncludedLeaf -> level
+            is PartialMerkleTree.PartialTree.Node -> getHeight(tree.left, level + 1)
+            is PartialMerkleTree.PartialTree.Leaf -> error("getHeight only works correctly with full trees")
+        }
+    }
+
+    val height = getHeight(root)
+    var mask = 1 shl (height - 1)
+    var node = root
+    if (height != 0) {
+        while (mask != 0) {
+            node = if (mask and componentIndex == 0)
+                (node as PartialMerkleTree.PartialTree.Node).left
+            else
+                (node as PartialMerkleTree.PartialTree.Node).right
+            mask = mask shr 1
+        }
+    }
+    require(node is PartialMerkleTree.PartialTree.IncludedLeaf) { "Tree branch is longer than expected" }
+    return node.hash
+}
 
 @Throws(AttachmentResolutionException::class, TransactionResolutionException::class)
 @DeleteForDJVM

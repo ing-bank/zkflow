@@ -6,17 +6,47 @@ import net.corda.core.serialization.CordaSerializable
 @CordaSerializable
 data class PublicInput(
     /**
-     * The id of the transaction to verify the proof for
+     * Leaf hash [SecureHash] of output components
      */
-    val transactionId: SecureHash,
+    val outputComponentHashes: List<SecureHash>,
+
+    /**
+     * Leaf hash [SecureHash] of attachment components
+     */
+    val attachmentComponentHashes: List<SecureHash>,
+
+    /**
+     * Leaf hash [SecureHash] of command components
+     */
+    val commandComponentHashes: List<SecureHash>,
+
+    /**
+     * Leaf hash [SecureHash] of notary components
+     */
+    val notaryComponentHashes: List<SecureHash>,
+
+    /**
+     * Leaf hash [SecureHash] of parameters components
+     */
+    val parametersComponentHashes: List<SecureHash>,
+
+    /**
+     * Leaf hash [SecureHash] of timewindow components
+     */
+    val timeWindowComponentHashes: List<SecureHash>,
+
+    /**
+     * Leaf hash [SecureHash] of signer components
+     */
+    val signersComponentHashes: List<SecureHash>,
 
     /**
      * Leaf hash [SecureHash] of the UTXO pointed to by the input at index [Int]
      */
-    val inputHashes: List<SecureHash>,
+    val inputUtxoHashes: List<SecureHash>,
 
     /**
      * Leaf hash [SecureHash] of the UTXO pointed to by the reference at index [Int]
      */
-    val referenceHashes: List<SecureHash>
+    val referenceUtxoHashes: List<SecureHash>
 )

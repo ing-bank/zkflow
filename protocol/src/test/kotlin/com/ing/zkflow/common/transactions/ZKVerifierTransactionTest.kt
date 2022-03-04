@@ -16,7 +16,7 @@ import io.kotest.matchers.shouldBe
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.Contract
-import net.corda.core.crypto.PartialMerkleTree
+import net.corda.core.crypto.MerkleTree
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.transactions.LedgerTransaction
 import net.corda.testing.common.internal.testNetworkParameters
@@ -80,15 +80,18 @@ class ZKVerifierTransactionTest {
 
             vtx.verify()
 
-            vtx.outputHashes.size shouldBe 2
+            vtx.outputHashes().size shouldBe 2
             vtx.outputs.size shouldBe 1
 
             val outputsGroup = vtx.filteredComponentGroups.find { it.groupIndex == ComponentGroupEnum.OUTPUTS_GROUP.ordinal }!!
             outputsGroup.components.size shouldBe 1
-            assert(outputsGroup.partialMerkleTree.root is PartialMerkleTree.PartialTree.Node)
-            val rootNode = outputsGroup.partialMerkleTree.root as PartialMerkleTree.PartialTree.Node
-            assert(rootNode.left is PartialMerkleTree.PartialTree.IncludedLeaf) // means that output 0 is public (included in a tx)
-            assert(rootNode.right is PartialMerkleTree.PartialTree.Leaf) // means that output 1 is private
+            outputsGroup.privateComponentHashes.size shouldBe 1
+            assert(outputsGroup.merkleTree(vtx.digestService) is MerkleTree.Node)
+            val rootNode = outputsGroup.merkleTree(vtx.digestService) as MerkleTree.Node
+
+            // means that there are only 2 leaves
+            assert(rootNode.left is MerkleTree.Leaf)
+            assert(rootNode.right is MerkleTree.Leaf)
 
             vtx.outputs.map { it.data } shouldContain publicOutput
             vtx.outputs.map { it.data } shouldNotContain privateOutput
@@ -124,7 +127,7 @@ class ZKVerifierTransactionTest {
 
             vtx.verify()
 
-            vtx.outputHashes.size shouldBe 4
+            vtx.outputHashes().size shouldBe 4
             vtx.outputs.size shouldBe 3
 
             vtx.outputs.map { it.data } shouldContain publicOutput1
@@ -167,7 +170,7 @@ class ZKVerifierTransactionTest {
 
             vtx.verify()
 
-            vtx.outputHashes.size shouldBe 5
+            vtx.outputHashes().size shouldBe 5
             vtx.outputs.size shouldBe 3
 
             vtx.outputs.map { it.data } shouldContain publicOutput0

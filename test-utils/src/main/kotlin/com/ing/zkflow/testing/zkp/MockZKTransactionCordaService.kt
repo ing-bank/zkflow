@@ -21,7 +21,7 @@ public open class MockZKTransactionService(serviceHub: ServiceHub) : AbstractZKT
     }
 
     override fun zkServiceForCommandMetadata(metadata: ResolvedZKCommandMetadata): ZKService =
-        MockZKService(serviceHub, DigestService.zinc)
+        MockZKService(DigestService.zinc)
 
     override fun setup(command: ResolvedZKCommandMetadata, force: Boolean) {
         // Do nothing

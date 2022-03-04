@@ -44,9 +44,9 @@ data class ZKCircuit(
 
         private fun javaClass2ZincType(commandMetadata: ZKCommandMetadata): Map<KClass<out ContractState>, ZincType> {
             val mapping = mutableListOf<Pair<KClass<out ContractState>, ZincType>>()
-            mapping += commandMetadata.privateInputs.toZincTypes()
-            mapping += commandMetadata.privateReferences.toZincTypes()
-            mapping += commandMetadata.privateOutputs.toZincTypes()
+            mapping += commandMetadata.inputs.toZincTypes()
+            mapping += commandMetadata.references.toZincTypes()
+            mapping += commandMetadata.outputs.toZincTypes()
             return mapping.toMap()
         }
 
@@ -117,22 +117,52 @@ interface ZKTypedElement {
 }
 
 /**
- * Describes the StateRefs (inputs or references) contents of which that should be available inside ZKP circuit
+ * Describes the inputs and references that should be available inside ZKP circuit and if it should be forced to be private.
  */
-data class ZKReference(override val type: KClass<out ContractState>, val forcePrivate: Boolean, val index: Int) : ZKTypedElement
+data class ZKReference(override val type: KClass<out ContractState>, val index: Int, internal val forcePrivate: Boolean) : ZKTypedElement {
+    fun mustBePrivate() = forcePrivate
+}
 
 /**
- * Describes the private component at a certain index in transaction's component list.
+ * Describes an output ContractState at a certain index in transaction's component list and whether it should be private to the ZKP circuit or also
+ * visible in the transaction Merkle tree.
  */
-data class ZKProtectedComponent(override val type: KClass<out ContractState>, val private: Boolean, val index: Int) : ZKTypedElement
+data class ZKProtectedComponent(override val type: KClass<out ContractState>, val index: Int, internal val private: Boolean) :
+    ZKTypedElement {
+    fun mustBePrivate() = private
+}
 
+/**
+ * A list of input or references UTXOs that this ZKCommand needs to have access to.
+ *
+ * When building a [WireTransaction], this information is used to determine whether it
+ * should be enforced that for each [StateRef], its UTXO was private in the transaction that created it.
+ * For each StateRef there are three options:
+ * - private: the UTXO will NOT be allowed to be public in the transaction that created it.
+ * - any: the UTXO WILL be allowed to be public in the transaction that created it.
+ * - not mentioned at all: the UTXO WILL be allowed to be public in the transaction that created it.
+ *
+ * When building a [ZKVerifierTransaction], this information is used to determine which UTXOs
+ * should be present in the witness. For each UTXO there are three options:
+ * - private: the UTXO is: present in the witness
+ * - any: the UTXO is present in the witness
+ * - not mentioned at all: the UTXO is NOT present in the witness
+ */
 @ZKCommandMetadataDSL
 class ZKReferenceList : ArrayList<ZKReference>() {
-
+    /**
+     * The UTXO for a `private` reference is present in the witness.
+     * That UTXO will NOT be allowed to be public in the transaction that created it.
+     */
     fun private(type: KClass<out ContractState>): Pair<KClass<out ContractState>, Boolean> = type to true
+
+    /**
+     * The UTXO for an `any` reference is present in the witness.
+     * That UTXO WILL be allowed to be public in the transaction that created it.
+     */
     fun any(type: KClass<out ContractState>): Pair<KClass<out ContractState>, Boolean> = type to false
 
-    infix fun Pair<KClass<out ContractState>, Boolean>.at(index: Int) = add(ZKReference(this.first, this.second, index))
+    infix fun Pair<KClass<out ContractState>, Boolean>.at(index: Int) = add(ZKReference(this.first, index, this.second))
 
     override fun add(element: ZKReference): Boolean {
         if (any { it.index == element.index }) error("Component visibility is already set for index ${element.index}")
@@ -140,13 +170,29 @@ class ZKReferenceList : ArrayList<ZKReference>() {
     }
 }
 
+/**
+ * A list of input or references UTXOs that this ZKCommand needs to have access to.
+ *
+ * When building a [WireTransaction], this information is used to determine whether it
+ * should be enforced that for each relevant [StateRef], its UTXO was private in the transaction that created it.
+ * For each reference there are three options:
+ * - private: the UTXO will NOT be allowed to be public in the transaction that created it.
+ * - any: the UTXO WILL be allowed to be public in the transaction that created it.
+ * - not mentioned at all: the UTXO WILL be allowed to be public in the transaction that created it.
+ *
+ * When building a [ZKVerifierTransaction], this information is used to determine which UTXOs
+ * should be present in the witness. For each reference there are three options:
+ * - private: the UTXO is: present in the witness
+ * - any: the UTXO is present in the witness
+ * - not mentioned at all: the UTXO is NOT present in the witness
+ */
 @ZKCommandMetadataDSL
 class ZKProtectedComponentList : ArrayList<ZKProtectedComponent>() {
 
     fun public(type: KClass<out ContractState>): Pair<KClass<out ContractState>, Boolean> = type to false
     fun private(type: KClass<out ContractState>): Pair<KClass<out ContractState>, Boolean> = type to true
 
-    infix fun Pair<KClass<out ContractState>, Boolean>.at(index: Int) = add(ZKProtectedComponent(this.first, this.second, index))
+    infix fun Pair<KClass<out ContractState>, Boolean>.at(index: Int) = add(ZKProtectedComponent(this.first, index, this.second))
 
     override fun add(element: ZKProtectedComponent): Boolean {
         if (any { it.index == element.index }) error("Component visibility is already set for index ${element.index}")
@@ -173,9 +219,9 @@ class ZKCommandMetadata(val commandKClass: KClass<out CommandData>) {
 
     var numberOfSigners = 0
 
-    internal val privateInputs = ZKReferenceList()
-    internal val privateReferences = ZKReferenceList()
-    internal val privateOutputs = ZKProtectedComponentList()
+    internal val inputs = ZKReferenceList()
+    internal val references = ZKReferenceList()
+    internal val outputs = ZKProtectedComponentList()
 
     var timeWindow = false
 
@@ -184,17 +230,17 @@ class ZKCommandMetadata(val commandKClass: KClass<out CommandData>) {
         return circuit!!
     }
 
-    fun inputs(init: ZKReferenceList.() -> Unit) = privateInputs.apply(init)
-    fun references(init: ZKReferenceList.() -> Unit) = privateReferences.apply(init)
-    fun outputs(init: ZKProtectedComponentList.() -> Unit) = privateOutputs.apply(init)
+    fun inputs(init: ZKReferenceList.() -> Unit) = inputs.apply(init)
+    fun references(init: ZKReferenceList.() -> Unit) = references.apply(init)
+    fun outputs(init: ZKProtectedComponentList.() -> Unit) = outputs.apply(init)
 
     fun resolved(): ResolvedZKCommandMetadata = ResolvedZKCommandMetadata(
         circuit.resolve(this),
         commandKClass,
         numberOfSigners,
-        privateInputs.toList(),
-        privateReferences.toList(),
-        privateOutputs.toList(),
+        inputs.toList(),
+        references.toList(),
+        outputs.toList(),
         timeWindow
     )
 }

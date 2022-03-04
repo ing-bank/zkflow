@@ -88,7 +88,7 @@ class ZKNotaryServiceFlow(
     }
 
     private fun handleBackPressure(tx: ZKVerifierTransaction) {
-        val eta = service.getEstimatedWaitTime(tx.inputs.size + tx.references.size + tx.outputHashes.size)
+        val eta = service.getEstimatedWaitTime(tx.inputs.size + tx.references.size + tx.outputHashes().size)
         // We don't have to check if counterparty can handle backpressure because we already require
         // platform version >= MIN_PLATFORM_VERSION_FOR_BACKPRESSURE_MESSAGE anyway
         if (eta > etaThreshold) {

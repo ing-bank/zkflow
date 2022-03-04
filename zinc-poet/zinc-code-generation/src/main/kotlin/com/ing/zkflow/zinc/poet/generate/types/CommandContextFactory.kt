@@ -22,13 +22,13 @@ class CommandContextFactory(
         witnessGroupsContainer: WitnessGroupsContainer,
     ): BflStruct = struct {
         name = COMMAND_CONTEXT
-        if (commandMetadata.privateInputs.isNotEmpty()) {
+        if (commandMetadata.inputs.isNotEmpty()) {
             field { name = INPUTS; type = witnessGroupsContainer.serializedInputUtxos.deserializedGroup }
         }
-        if (commandMetadata.privateOutputs.isNotEmpty()) {
+        if (commandMetadata.outputs.isNotEmpty()) {
             field { name = OUTPUTS; type = witnessGroupsContainer.serializedOutputGroup.deserializedGroup }
         }
-        if (commandMetadata.privateReferences.isNotEmpty()) {
+        if (commandMetadata.references.isNotEmpty()) {
             field { name = REFERENCES; type = witnessGroupsContainer.serializedReferenceUtxos.deserializedGroup }
         }
         field { name = NOTARY; type = standardTypes.notaryModule }

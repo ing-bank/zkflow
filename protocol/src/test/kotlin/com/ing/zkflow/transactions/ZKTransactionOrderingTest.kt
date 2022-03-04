@@ -4,6 +4,7 @@ import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.contracts.ZKContractState
 import com.ing.zkflow.common.transactions.UtxoInfo
 import com.ing.zkflow.common.transactions.ZKTransactionBuilder
+import com.ing.zkflow.common.transactions.zkTransactionMetadata
 import com.ing.zkflow.common.zkp.Witness
 import com.ing.zkflow.common.zkp.ZKFlow
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
@@ -135,33 +136,44 @@ class ZKTransactionOrderingTest {
     }
 
     @Test
-    fun `Witness ordering is consistent with WireTransaction`() = withCustomSerializationEnv {
-        val witness = Witness.fromWireTransaction(
-            wtx = wtx,
-            inputUtxoInfos = inputUtxoInfos,
-            referenceUtxoInfos = refUtxoInfos
-        )
+    fun `Witness ordering per command is consistent with WireTransaction`() = withCustomSerializationEnv {
 
-        // compare inputs
-        val actualDeserializedInputs = witness.inputsGroup.map { it.deserialize<StateRef>() }
-        actualDeserializedInputs shouldBe wtx.inputs
+        wtx.zkTransactionMetadata().commands.forEach { command ->
+            val witness = Witness.fromWireTransaction(
+                wtx = wtx,
+                inputUtxoInfos = inputUtxoInfos,
+                referenceUtxoInfos = refUtxoInfos,
+                command
+            )
 
-        // compare outputs
-        val actualDeserializedOutputs =
-            witness.outputsGroup.flatMap { it.value }.map { it.deserialize<TransactionState<ContractState>>().data }
-        actualDeserializedOutputs.zip(wtx.outputStates) { a, b -> assertTrue(dummyStatesAreEqual(a, b)) }
+            // compare outputs
+            val actualDeserializedOutputs =
+                witness.outputsGroup.flatMap { it.value }.map { it.deserialize<TransactionState<ContractState>>().data }
 
-        // compare refs
-        val actualDeserializedRefs = witness.referencesGroup.map { it.deserialize<StateRef>() }
-        actualDeserializedRefs shouldBe wtx.references
+            val commandOutputIndices = command.outputs.map { it.index }
+            val commandOutputs = wtx.outputStates.filterIndexed { index, _ ->
+                commandOutputIndices.contains(index)
+            }
 
-        // compare utxos
-        witness.serializedInputUtxos.flatMap { it.value }.forEachIndexed { index, bytes ->
-            bytes shouldBe inputUtxoInfos[index].serializedContents
-        }
+            actualDeserializedOutputs.zip(commandOutputs) { a, b -> assertTrue(dummyStatesAreEqual(a, b)) }
 
-        witness.serializedReferenceUtxos.flatMap { it.value }.forEachIndexed { index, bytes ->
-            bytes shouldBe refUtxoInfos[index].serializedContents
+            // compare utxos
+            val commandInputIndices = command.inputs.map { it.index }
+            val commandInputUtxos = inputUtxoInfos.filterIndexed { index, _ ->
+                commandInputIndices.contains(index)
+            }
+
+            witness.serializedInputUtxos.flatMap { it.value }.forEachIndexed { index, bytes ->
+                bytes shouldBe commandInputUtxos[index].serializedContents
+            }
+
+            val commandReferenceIndices = command.references.map { it.index }
+            val commandReferenceUtxos = refUtxoInfos.filterIndexed { index, _ ->
+                commandReferenceIndices.contains(index)
+            }
+            witness.serializedReferenceUtxos.flatMap { it.value }.forEachIndexed { index, bytes ->
+                bytes shouldBe commandReferenceUtxos[index].serializedContents
+            }
         }
     }
 }
