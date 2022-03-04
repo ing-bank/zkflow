@@ -1,10 +1,10 @@
 package com.ing.zkflow.processors
 
 import com.google.devtools.ksp.processing.CodeGenerator
+import com.ing.zkflow.common.serialization.ZKDataRegistryProvider
 import com.ing.zkflow.ksp.implementations.ImplementationsProcessor
 import com.ing.zkflow.ksp.implementations.ScopedDeclaration
 import com.ing.zkflow.ksp.implementations.ServiceLoaderRegistration
-import com.ing.zkflow.serialization.ZKDataProvider
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
@@ -20,17 +20,16 @@ import kotlin.math.absoluteValue
 import kotlin.random.Random
 import kotlin.reflect.KClass
 
-class ContractStateAndCommandDataSerializerMapProcessor<T : Any>(
+class ContractStateAndCommandDataSerializerRegistryProcessor<T : Any>(
     override val interfaceClass: KClass<T>,
-    private val producerInterface: KClass<in T>,
-    private val mapProviderInterface: KClass<out ZKDataProvider<in T>>,
+    private val mapProviderInterface: KClass<out ZKDataRegistryProvider<in T>>,
     private val codeGenerator: CodeGenerator
 ) : ImplementationsProcessor<T> {
 
     override fun process(implementations: List<ScopedDeclaration>): ServiceLoaderRegistration {
         val uid = Random.nextInt().absoluteValue
-        val packageName = "com.ing.zkflow.serialization"
-        val className = "${producerInterface.simpleName}SerializerMapProvider$uid"
+        val packageName = "com.ing.zkflow.serialization.infra"
+        val className = "${interfaceClass.simpleName}SerializerRegistryProvider$uid"
 
         FileSpec.builder(packageName, className)
             .addType(
@@ -39,15 +38,14 @@ class ContractStateAndCommandDataSerializerMapProcessor<T : Any>(
                     .addFunction(
                         FunSpec.builder("list")
                             .addModifiers(KModifier.OVERRIDE)
-                            // Build type List<Pair<KClass<out T>, KSerializer<out T>>>
                             .returns(
                                 List::class.asClassName().parameterizedBy(
                                     Pair::class.asClassName().parameterizedBy(
                                         KClass::class.asClassName().parameterizedBy(
-                                            WildcardTypeName.producerOf(producerInterface)
+                                            WildcardTypeName.producerOf(interfaceClass)
                                         ),
                                         KSerializer::class.asClassName().parameterizedBy(
-                                            WildcardTypeName.producerOf(producerInterface)
+                                            WildcardTypeName.producerOf(interfaceClass)
                                         )
                                     )
                                 )

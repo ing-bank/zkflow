@@ -28,6 +28,7 @@ dependencies {
     api(project(":serialization")) // TODO: Remove when superseded by serialization-candidate
     api(project(":serialization-candidate"))
     api(project(":annotations"))
+    api(project(":serialization-candidate"))
 
     // For Witness JSON serialization
     val kotlinxSerializationVersion: String by project
@@ -39,6 +40,7 @@ dependencies {
     cordaCompile("$cordaReleaseGroup:corda-core:$cordaVersion")
     cordaCompile("$cordaReleaseGroup:corda-node:$cordaVersion")
     cordaRuntime("$cordaReleaseGroup:corda:$cordaVersion")
+    cordaCompile("$cordaReleaseGroup:corda-test-utils:$cordaVersion")
 
     val log4jVersion: String by project
     cordaCompile("org.apache.logging.log4j:log4j-slf4j-impl:$log4jVersion")

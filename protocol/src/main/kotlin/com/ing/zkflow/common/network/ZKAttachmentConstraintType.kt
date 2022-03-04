@@ -25,7 +25,7 @@ sealed class ZKAttachmentConstraintType private constructor(val kClass: KClass<o
         }
     }
 
-    class SignatureAttachmentConstraintType(private val signatureScheme: SignatureScheme = ZKFlow.DEFAULT_ZKFLOW_SIGNATURE_ATTACHMENT_CONSTRAINT_SIGNATURE_SCHEME) :
+    class SignatureAttachmentConstraintType(val signatureScheme: SignatureScheme = ZKFlow.DEFAULT_ZKFLOW_SIGNATURE_ATTACHMENT_CONSTRAINT_SIGNATURE_SCHEME) :
         ZKAttachmentConstraintType(SignatureAttachmentConstraint::class) {
         override fun validate(attachmentConstraint: AttachmentConstraint) {
             attachmentConstraint.requireInstanceOf<SignatureAttachmentConstraint>().also {
@@ -36,7 +36,7 @@ sealed class ZKAttachmentConstraintType private constructor(val kClass: KClass<o
 
     class HashAttachmentConstraintType(algorithm: KClass<out Annotation> = ZKFlow.DEFAULT_ZKFLOW_HASH_ATTACHMENT_HASHING_ALGORITHM) :
         ZKAttachmentConstraintType(HashAttachmentConstraint::class) {
-        private val digestLength: Int by lazy { getDigestLengthFromAnnotation(algorithm) }
+        val digestLength: Int by lazy { getDigestLengthFromAnnotation(algorithm) }
 
         override fun validate(attachmentConstraint: AttachmentConstraint) {
             attachmentConstraint.requireInstanceOf<HashAttachmentConstraint>().also {

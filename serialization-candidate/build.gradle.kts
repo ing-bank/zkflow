@@ -10,11 +10,13 @@ dependencies {
     testImplementation(project(":test-utils"))
 
     implementation(project(":annotations"))
+    implementation(project(":crypto"))
 
     val kotlinxSerializationVersion: String by project
     api("org.jetbrains.kotlinx:kotlinx-serialization-core:$kotlinxSerializationVersion")
 
     val cordaVersion: String by project
+    compileOnly("net.corda:corda-test-utils:$cordaVersion")
     compileOnly("net.corda:corda-core:$cordaVersion")
 }
 

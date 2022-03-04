@@ -12,8 +12,8 @@ object UUIDSerializer : FixedLengthKSerializerWithDefault<UUID> {
 
     @Serializable
     private data class Surrogate(
-        val mostSignificantBits: @Serializable(with = LongSerializer::class) Long,
-        val leastSignificantBits: @Serializable(with = LongSerializer::class) Long
+        @Serializable(with = LongSerializer::class) val mostSignificantBits: Long,
+        @Serializable(with = LongSerializer::class) val leastSignificantBits: Long
     )
 
     private val strategy = Surrogate.serializer()

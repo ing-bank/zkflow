@@ -14,18 +14,12 @@ object CordaX500NameSerializer : FixedLengthKSerializerWithDefault<CordaX500Name
     @Suppress("ArrayInDataClass", "ClassName")
     @Serializable
     private data class CordaX500NameSurrogate(
-        @Serializable(with = CommonNameSerializer_0::class)
-        val commonName: String?,
-        @Serializable(with = OrganisationUnitSerializer_0::class)
-        val organisationUnit: String?,
-        @Serializable(with = OrganisationSerializer_0::class)
-        val organisation: String,
-        @Serializable(with = LocalitySerializer_0::class)
-        val locality: String,
-        @Serializable(with = StateSerializer_0::class)
-        val state: String?,
-        @Serializable(with = CountrySerializer_0::class)
-        val country: String
+        @Serializable(with = CommonNameSerializer_0::class) val commonName: String?,
+        @Serializable(with = OrganisationUnitSerializer_0::class) val organisationUnit: String?,
+        @Serializable(with = OrganisationSerializer_0::class) val organisation: String,
+        @Serializable(with = LocalitySerializer_0::class) val locality: String,
+        @Serializable(with = StateSerializer_0::class) val state: String?,
+        @Serializable(with = CountrySerializer_0::class) val country: String
     ) : Surrogate<CordaX500Name> {
 
         object CommonNameSerializer_0 : NullableSerializer<String>(CommonNameSerializer_1)

@@ -3,15 +3,19 @@ package com.ing.zkflow.testing.dsl
 import TestTransactionDSLInterpreter
 import TestZKLedgerDSLInterpreter
 import com.ing.zkflow.common.network.ZKNetworkParameters
+import com.ing.zkflow.common.serialization.BFLSerializationSchemeCandidate.Companion.CommandDataSerializerRegistry
 import com.ing.zkflow.serialization.SerializersModuleRegistry
 import com.ing.zkflow.serialization.bfl.TestCordaSerializers
+import com.ing.zkflow.serialization.serializer.corda.DummyCommandDataSerializer
 import com.ing.zkflow.testing.zkp.MockZKNetworkParameters
+import com.ing.zkflow.util.tryNonFailing
 import net.corda.core.identity.Party
 import net.corda.core.internal.HashAgility
 import net.corda.core.node.ServiceHub
 import net.corda.coretesting.internal.asTestContextEnv
 import net.corda.coretesting.internal.createTestSerializationEnv
 import net.corda.testing.common.internal.addNotary
+import net.corda.testing.core.DummyCommandData
 import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.internal.MockNetworkParametersStorage
 
@@ -33,8 +37,11 @@ public fun ServiceHub.zkLedger(
 
     HashAgility.init(null, zkNetworkParameters.digestAlgorithm::class.java.name)
 
-    // TODO: this should not be registered here, since it should not be aware of BFL, but until we have a better loading mechanism this is the least bad place
-    SerializersModuleRegistry.register(TestCordaSerializers.module)
+    // Register some test serializers that are required for DSL-inserted transaction components
+    SerializersModuleRegistry.register(TestCordaSerializers.module) // TODO: Remove this when old BFL is decommed
+    tryNonFailing {
+        CommandDataSerializerRegistry.register(DummyCommandData::class, DummyCommandDataSerializer)
+    }
 
     return createTestSerializationEnv(javaClass.classLoader).asTestContextEnv {
         val interpreter = TestZKLedgerDSLInterpreter(this, zkService, zkNetworkParameters)
