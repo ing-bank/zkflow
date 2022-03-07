@@ -53,7 +53,7 @@ internal class CircuitGeneratorTest {
         }
 
         val result = logExecutionTime("Running the circuit using `zargo run`") {
-            tempDir.runCommand("zargo run", 240)
+            tempDir.runCommand("zargo run", 600)
         }
 
         result.second shouldBe ""

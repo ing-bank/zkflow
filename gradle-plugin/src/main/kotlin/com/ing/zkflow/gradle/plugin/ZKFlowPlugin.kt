@@ -68,7 +68,7 @@ class ZKFlowPlugin : Plugin<Project> {
     ) {
         val arrowCompilerPluginConfiguration: Configuration = project.configurations.create(ARROW_COMPILER_PLUGIN)
         project.dependencies.add(ARROW_COMPILER_PLUGIN, extension.zkflow("compiler-plugin-arrow"))
-        project.dependencies.add(IMPLEMENTATION, extension.zkflow("serialization-candidate"))
+        project.dependencies.add(IMPLEMENTATION, extension.zkflow("serialization"))
 
         project
             .tasks
@@ -79,7 +79,7 @@ class ZKFlowPlugin : Plugin<Project> {
                 val toInclude = listOf(
                     Pair(ZKFLOW_GROUP, "utils"),
                     Pair(ZKFLOW_GROUP, "annotations"),
-                    Pair(ZKFLOW_GROUP, "serialization-candidate"),
+                    Pair(ZKFLOW_GROUP, "serialization"),
                     Pair("org.jetbrains.kotlinx", "kotlinx-serialization-core-jvm"),
                     Pair("io.arrow-kt", "arrow-meta"),
                 )
