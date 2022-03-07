@@ -9,8 +9,8 @@ import com.ing.zkflow.common.zkp.metadata.ZKTypedElement
 import com.ing.zkflow.zinc.poet.generate.ZincTypeResolver
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.digest
+import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.parametersSecureHash
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.privacySalt
-import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.secureHash
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.timeWindow
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.COMMANDS
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.INPUT_NONCES
@@ -55,7 +55,7 @@ class WitnessGroupsContainer(
             ComponentGroupEnum.SIGNERS_GROUP
         )
     private val parameterGroup =
-        StandardComponentWitnessGroup(PARAMETERS, secureHash, 1, ComponentGroupEnum.PARAMETERS_GROUP)
+        StandardComponentWitnessGroup(PARAMETERS, parametersSecureHash, 1, ComponentGroupEnum.PARAMETERS_GROUP)
 
     private val privacySaltGroup = HashingMetadataWitnessGroup(PRIVACY_SALT, privacySalt, privacySalt.getSerializedTypeDef(), 1)
 

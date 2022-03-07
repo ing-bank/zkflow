@@ -6,9 +6,7 @@ import com.ing.zinc.bfl.BflType
 import com.ing.zinc.bfl.BflTypeDef
 import com.ing.zinc.bfl.dsl.ArrayBuilder.Companion.array
 import com.ing.zinc.bfl.dsl.EnumBuilder.Companion.enumOf
-import com.ing.zinc.bfl.dsl.ListBuilder.Companion.byteArray
 import com.ing.zinc.bfl.dsl.ListBuilder.Companion.list
-import com.ing.zinc.bfl.dsl.OptionBuilder.Companion.option
 import com.ing.zinc.bfl.dsl.StructBuilder.Companion.struct
 import com.ing.zinc.bfl.generator.WitnessGroupOptions
 import com.ing.zinc.naming.camelToSnakeCase
@@ -17,8 +15,9 @@ import com.ing.zkflow.common.network.attachmentConstraintSerializer
 import com.ing.zkflow.common.network.notarySerializer
 import com.ing.zkflow.common.network.signerSerializer
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
-import com.ing.zkflow.serialization.bfl.serializers.CordaSerializers.CLASS_NAME_SIZE
-import com.ing.zkflow.serialization.bfl.serializers.SecureHashSurrogate
+import com.ing.zkflow.serialization.serializer.corda.SHA256SecureHashSerializer
+import com.ing.zkflow.serialization.serializer.corda.TimeWindowSerializer
+import com.ing.zkflow.serialization.serializer.corda.TransactionStateSurrogate
 import com.ing.zkflow.zinc.poet.generate.ZincTypeGenerator
 import net.corda.core.contracts.ComponentGroupEnum
 
@@ -66,7 +65,7 @@ class StandardTypes(
         }
         field {
             name = "contract"
-            type = byteArray(CLASS_NAME_SIZE)
+            type = contractClassName
         }
         field {
             name = "notary"
@@ -74,9 +73,7 @@ class StandardTypes(
         }
         field {
             name = "encumbrance"
-            type = option {
-                innerType = BflPrimitive.I32
-            }
+            type = encumbrance
         }
         field {
             name = "constraint"
@@ -85,31 +82,10 @@ class StandardTypes(
     }
 
     companion object {
-        private val instant = struct {
-            name = "Instant"
-            field {
-                name = "seconds"
-                type = BflPrimitive.U64
-            }
-            field {
-                name = "nanos"
-                type = BflPrimitive.U32
-            }
-        }
-        internal val timeWindow = struct {
-            name = "TimeWindow"
-            field {
-                name = "from_time"
-                type = option {
-                    innerType = instant
-                }
-            }
-            field {
-                name = "until_time"
-                type = option {
-                    innerType = instant
-                }
-            }
+        internal val timeWindow by lazy {
+            ZincTypeGenerator.generate(
+                TimeWindowSerializer.descriptor
+            )
         }
         internal val digest = BflTypeDef(
             "Digest",
@@ -125,16 +101,21 @@ class StandardTypes(
                 elementType = BflPrimitive.I8
             }
         )
-        internal val secureHash = struct {
-            name = "SecureHash"
-            field {
-                name = "algorithm"
-                type = BflPrimitive.U8
-            }
-            field {
-                name = "bytes"
-                type = byteArray(SecureHashSurrogate.BYTES_SIZE)
-            }
+        // NetworkParameters hash. Hardcoded to be SHA-256 in Corda.
+        val parametersSecureHash by lazy {
+            ZincTypeGenerator.generate(
+                SHA256SecureHashSerializer.descriptor
+            )
+        }
+        private val contractClassName by lazy {
+            ZincTypeGenerator.generate(
+                TransactionStateSurrogate.Companion.ContractClassName.descriptor
+            )
+        }
+        private val encumbrance by lazy {
+            ZincTypeGenerator.generate(
+                TransactionStateSurrogate.Companion.Encumbrance.descriptor
+            )
         }
         internal val componentGroupEnum = enumOf(ComponentGroupEnum::class)
     }
