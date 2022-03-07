@@ -56,12 +56,7 @@ class StateVisibilityContractTest {
     fun `Move any to private`() {
         services.zkLedger {
             transaction {
-                output(LocalContract.PROGRAM_ID, "Alice's Explicitly Public Asset", aliceAsset)
-                command(listOf(alice.owningKey), LocalContract.CreatePublicExplicitly())
-                verifies(MOCK)
-            }
-            transaction {
-                input("Alice's Explicitly Public Asset")
+                input(LocalContract.PROGRAM_ID, aliceAsset)
                 output(LocalContract.PROGRAM_ID, bobAsset)
                 command(listOf(alice.owningKey, bob.owningKey), LocalContract.MoveAnyToPrivate())
                 verifies(MOCK)
@@ -110,16 +105,10 @@ class StateVisibilityContractTest {
     fun `tx expects a private input utxo - fails on implicitly public input utxo`() {
         services.zkLedger {
             transaction {
-                output(LocalContract.PROGRAM_ID, "Alice's Implicitly Public Asset", aliceAsset)
-                command(listOf(alice.owningKey), LocalContract.CreatePublicImplicitly())
-                verifies(MOCK)
-            }
-            transaction {
-                input("Alice's Implicitly Public Asset")
+                input(LocalContract.PROGRAM_ID, aliceAsset)
                 output(LocalContract.PROGRAM_ID, bobAsset)
                 command(listOf(alice.owningKey, bob.owningKey), LocalContract.MoveFullyPrivate())
-                val alicesPublicAssetRef = retrieveOutputStateAndRef(ContractState::class.java, "Alice's Public Asset").ref
-                `fails with`("UTXO for StateRef '$alicesPublicAssetRef' should be private, but it is public")
+                `fails with`("should be private, but it is public")
             }
         }
     }

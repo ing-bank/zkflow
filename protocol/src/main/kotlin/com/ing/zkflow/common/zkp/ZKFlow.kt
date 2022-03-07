@@ -24,7 +24,7 @@ object ZKFlow {
 
     val DEFAULT_ZKFLOW_DIGEST_IDENTIFIER: IdentifyingDigestAlgorithm = ZincDigestAlgorithm()
 
-    val DEFAULT_SERIALIZATION_SCHEME_ID = BFLSerializationScheme.SCHEME_ID
+    const val DEFAULT_SERIALIZATION_SCHEME_ID = BFLSerializationScheme.SCHEME_ID
 
     const val CIRCUITMANAGER_MAX_SETUP_WAIT_TIME_SECONDS = 10000 // seconds
 

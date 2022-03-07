@@ -1,6 +1,8 @@
 
 import com.ing.zkflow.common.network.ZKNetworkParameters
+import com.ing.zkflow.common.transactions.SignedZKVerifierTransaction
 import com.ing.zkflow.common.transactions.ZKTransactionBuilder
+import com.ing.zkflow.common.transactions.ZKVerifierTransaction
 import com.ing.zkflow.common.transactions.hasZKCommandData
 import com.ing.zkflow.node.services.ZKWritableVerifierTransactionStorage
 import com.ing.zkflow.testing.dsl.TestZKTransactionDSLInterpreter
@@ -157,6 +159,14 @@ public class TestZKLedgerDSLInterpreter private constructor(
         }
         transactionMap[wireTransaction.id] =
             WireTransactionWithLocation(transactionLabel, wireTransaction, transactionLocation)
+
+        /*
+         * We can use fake/empty proofs here when storing the zkvtx.
+         * This is because we never verify them for old txs in the DSL: we create and verify proofs when creating txs.
+         */
+        zkVerifierTransactionStorage.addTransaction(
+            SignedZKVerifierTransaction(ZKVerifierTransaction.fromWireTransaction(wireTransaction, emptyMap()))
+        )
 
         return wireTransaction
     }
