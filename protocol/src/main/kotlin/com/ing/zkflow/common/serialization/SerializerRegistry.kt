@@ -94,13 +94,7 @@ object AttachmentConstraintSerializerRegistry {
 
     init {
         register(AlwaysAcceptAttachmentConstraint::class) { AlwaysAcceptAttachmentConstraintSerializer }
-        register(HashAttachmentConstraint::class) { networkParameters ->
-            generateSpecForHashAttachmentConstraint(networkParameters.attachmentConstraintType)?.let {
-                HashAttachmentConstraintSerializer(it.algorithm, it.hashLength)
-            } ?: throw IllegalArgumentException(
-                "Insufficient metadata to construct ${HashAttachmentConstraintSerializer::class.qualifiedName} "
-            )
-        }
+        register(HashAttachmentConstraint::class) { HashAttachmentConstraintSerializer }
         register(WhitelistedByZoneAttachmentConstraint::class) { WhitelistedByZoneAttachmentConstraintSerializer }
         register(AutomaticHashConstraint::class) { AutomaticHashConstraintSerializer }
         register(AutomaticPlaceholderConstraint::class) { AutomaticPlaceholderConstraintSerializer }
@@ -138,19 +132,6 @@ object AttachmentConstraintSerializerRegistry {
 
     operator fun get(attachmentConstraintKClass: KClass<out AttachmentConstraint>): (networkParameters: ZKNetworkParameters) -> KSerializer<AttachmentConstraint> =
         get(identify(attachmentConstraintKClass))
-
-    private data class HashAttachmentConstraintSpec(
-        val algorithm: String,
-        val hashLength: Int
-    )
-
-    private fun generateSpecForHashAttachmentConstraint(attachmentConstraintType: ZKAttachmentConstraintType): HashAttachmentConstraintSpec? =
-        (attachmentConstraintType as? ZKAttachmentConstraintType.HashAttachmentConstraintType)?.let {
-            HashAttachmentConstraintSpec(
-                it.kClass.qualifiedName!!,
-                it.digestLength
-            )
-        }
 
     private fun getSignatureSchemeIdForSignatureAttachmentConstraint(attachmentConstraintType: ZKAttachmentConstraintType): Int? =
         (attachmentConstraintType as? ZKAttachmentConstraintType.SignatureAttachmentConstraintType)?.signatureScheme?.schemeNumberID

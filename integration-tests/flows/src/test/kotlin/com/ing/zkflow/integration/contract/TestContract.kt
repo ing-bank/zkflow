@@ -1,10 +1,9 @@
 package com.ing.zkflow.integration.contract
 
-import com.ing.serialization.bfl.annotations.FixedLength
+import com.ing.zkflow.annotations.ZKP
+import com.ing.zkflow.annotations.corda.EdDSA
 import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.contracts.ZKOwnableState
-import com.ing.zkflow.common.serialization.BFLSerializationScheme.Companion.ZkCommandDataSerializerMap
-import com.ing.zkflow.common.serialization.BFLSerializationScheme.Companion.ZkContractStateSerializerMap
 import com.ing.zkflow.common.transactions.zkTransactionMetadata
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.common.zkp.metadata.commandMetadata
@@ -12,9 +11,6 @@ import com.ing.zkflow.integration.contract.TestContract.Create.Companion.verifyC
 import com.ing.zkflow.integration.contract.TestContract.Move.Companion.verifyMove
 import com.ing.zkflow.integration.contract.TestContract.MoveBidirectional.Companion.verifyMoveBidirectional
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
-import kotlinx.serialization.Contextual
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.Transient
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.CommandAndState
 import net.corda.core.contracts.CommandData
@@ -25,49 +21,30 @@ import net.corda.core.identity.AnonymousParty
 import net.corda.core.transactions.LedgerTransaction
 import java.util.Random
 
-/*
- * TODO: When the new BFLSerializationScheme is in place, this class can be replaced with TestContractWithZKPAnnotations.
- * TestContractWithZKPAnnotations can then be renamed to TestContract
- */
 @SuppressFBWarnings("PREDICTABLE_RANDOM", "PATH_TRAVERSAL_IN", justification = "Test code")
 class TestContract : Contract {
     companion object {
         const val PROGRAM_ID: ContractClassName = "com.ing.zkflow.integration.contract.TestContract"
     }
 
-    @Serializable
     @BelongsToContract(TestContract::class)
+    @ZKP
     data class TestState(
-        override val owner: @Contextual AnonymousParty,
+        override val owner: @EdDSA AnonymousParty,
         val value: Int = Random().nextInt(1000)
     ) : ZKOwnableState {
-        init {
-            ZkContractStateSerializerMap.register(this::class)
-        }
-
-        companion object {
-            const val PARTICIPANT_COUNT: Int = 1
-        }
-
-        @FixedLength([PARTICIPANT_COUNT])
-        override val participants: List<@Contextual AnonymousParty> = listOf(owner)
+        override val participants: List<AnonymousParty> = listOf(owner)
 
         override fun withNewOwner(newOwner: AnonymousParty): CommandAndState =
             CommandAndState(Move(), copy(owner = newOwner))
     }
 
     // Commands
-    @Serializable
+    @ZKP
     class Create : ZKCommandData {
-
-        @Transient
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
             outputs { private(TestState::class) at 0 }
             numberOfSigners = 1
-        }
-
-        init {
-            ZkCommandDataSerializerMap.register(this::class)
         }
 
         companion object {
@@ -85,19 +62,13 @@ class TestContract : Contract {
         }
     }
 
-    @Serializable
+    @ZKP
     class CreatePublic : ZKCommandData {
-
-        @Transient
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
             outputs {
                 public(TestState::class) at 0
             }
             numberOfSigners = 1
-        }
-
-        init {
-            ZkCommandDataSerializerMap.register(this::class)
         }
 
         companion object {
@@ -119,32 +90,20 @@ class TestContract : Contract {
      *
      * This command is only used on [CollectSignaturesFlowTest]. It expects two signatures, but nothing else.
      */
-    @Serializable
+    @ZKP
     class SignOnly : ZKCommandData {
-
-        @Transient
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
             outputs { private(TestState::class) at 0 }
             numberOfSigners = 2
         }
-
-        init {
-            ZkCommandDataSerializerMap.register(this::class)
-        }
     }
 
-    @Serializable
+    @ZKP
     class Move : ZKCommandData {
-
-        @Transient
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
             inputs { any(TestState::class) at 0 }
             outputs { private(TestState::class) at 0 }
             numberOfSigners = 2
-        }
-
-        init {
-            ZkCommandDataSerializerMap.register(this::class)
         }
 
         companion object {
@@ -166,18 +125,12 @@ class TestContract : Contract {
         }
     }
 
-    @Serializable
+    @ZKP
     class MovePrivateOnly : ZKCommandData {
-
-        @Transient
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
             inputs { private(TestState::class) at 0 }
             outputs { private(TestState::class) at 0 }
             numberOfSigners = 2
-        }
-
-        init {
-            ZkCommandDataSerializerMap.register(this::class)
         }
 
         companion object {
@@ -199,10 +152,8 @@ class TestContract : Contract {
         }
     }
 
-    @Serializable
+    @ZKP
     class MoveBidirectional : ZKCommandData {
-
-        @Transient
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
             inputs {
                 any(TestState::class) at 0
@@ -213,10 +164,6 @@ class TestContract : Contract {
                 private(TestState::class) at 1
             }
             numberOfSigners = 2
-        }
-
-        init {
-            ZkCommandDataSerializerMap.register(this::class)
         }
 
         companion object {

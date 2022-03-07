@@ -3,9 +3,9 @@ package com.ing.zkflow.common.contract
 import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.contracts.ZKContractState
 import com.ing.zkflow.common.network.ZKAttachmentConstraintType
-import com.ing.zkflow.common.serialization.BFLSerializationSchemeCandidate
-import com.ing.zkflow.common.serialization.BFLSerializationSchemeCandidate.Companion.CommandDataSerializerRegistry
-import com.ing.zkflow.common.serialization.BFLSerializationSchemeCandidate.Companion.ContractStateSerializerRegistry
+import com.ing.zkflow.common.serialization.BFLSerializationScheme
+import com.ing.zkflow.common.serialization.BFLSerializationScheme.Companion.CommandDataSerializerRegistry
+import com.ing.zkflow.common.serialization.BFLSerializationScheme.Companion.ContractStateSerializerRegistry
 import com.ing.zkflow.common.transactions.ZKTransactionBuilder
 import com.ing.zkflow.common.zkp.ZKFlow
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
@@ -41,7 +41,7 @@ class BFLSerializationNoDSLTest {
 
     private val zkNetworkParameters = MockZKNetworkParameters(
         attachmentConstraintType = ZKAttachmentConstraintType.HashAttachmentConstraintType(),
-        serializationSchemeId = BFLSerializationSchemeCandidate.SCHEME_ID
+        serializationSchemeId = BFLSerializationScheme.SCHEME_ID
     )
 
     @Test

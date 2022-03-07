@@ -9,7 +9,7 @@ dependencies {
     val arrowMetaVersion: String by project
     implementation("io.arrow-kt:arrow-meta:$arrowMetaVersion")
 
-    implementation(project(":serialization-candidate"))
+    implementation(project(":serialization"))
     implementation(project(":annotations"))
     implementation(project(":utils"))
 

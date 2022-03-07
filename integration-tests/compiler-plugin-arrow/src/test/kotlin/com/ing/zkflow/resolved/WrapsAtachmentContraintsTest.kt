@@ -38,9 +38,14 @@ data class WrapsAttachmentConstraints(
         PublicKeySerializer.fixedPublicKey(Crypto.EDDSA_ED25519_SHA512)
     ),
 ) {
-    object AlwaysAcceptAttachmentConstraint_0 : WrappedFixedLengthKSerializerWithDefault<AlwaysAcceptAttachmentConstraint>(AlwaysAcceptAttachmentConstraintSerializer)
-    object HashAttachmentConstraint_0 : HashAttachmentConstraintSerializer("Sha256", 32)
-    object WhitelistedByZoneAttachmentConstraint_0 : WrappedFixedLengthKSerializerWithDefault<WhitelistedByZoneAttachmentConstraint>(WhitelistedByZoneAttachmentConstraintSerializer)
+    object AlwaysAcceptAttachmentConstraint_0 :
+        WrappedFixedLengthKSerializerWithDefault<AlwaysAcceptAttachmentConstraint>(AlwaysAcceptAttachmentConstraintSerializer)
+
+    object HashAttachmentConstraint_0 :
+        WrappedFixedLengthKSerializerWithDefault<HashAttachmentConstraint>(HashAttachmentConstraintSerializer)
+
+    object WhitelistedByZoneAttachmentConstraint_0 :
+        WrappedFixedLengthKSerializerWithDefault<WhitelistedByZoneAttachmentConstraint>(WhitelistedByZoneAttachmentConstraintSerializer)
     object AutomaticHashConstraint_0 : WrappedFixedLengthKSerializerWithDefault<AutomaticHashConstraint>(AutomaticHashConstraintSerializer)
     object AutomaticPlaceholderConstraint_0 : WrappedFixedLengthKSerializerWithDefault<AutomaticPlaceholderConstraint>(AutomaticPlaceholderConstraintSerializer)
     object SignatureAttachmentConstraint_0 : SignatureAttachmentConstraintSerializer(4)

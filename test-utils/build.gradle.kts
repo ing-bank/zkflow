@@ -16,7 +16,7 @@ dependencies {
     api("$cordaReleaseGroup:corda-test-utils:$cordaVersion")
     api("$cordaReleaseGroup:corda-node-driver:$cordaVersion")
 
-    implementation(project(":serialization-candidate"))
+    implementation(project(":serialization"))
 
     val junit5Version: String by project
     implementation("org.junit.jupiter:junit-jupiter-params:$junit5Version")

@@ -1,10 +1,5 @@
 package com.ing.zkflow.testing.serialization
 
-import com.ing.serialization.bfl.api.serialize
-import com.ing.zkflow.serialization.bfl.serializers.CordaSerializers
-import com.ing.zkflow.testing.bytesToWitness
-import kotlinx.serialization.modules.EmptySerializersModule
-import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.plus
 import net.corda.core.serialization.SerializationContext
 import net.corda.core.serialization.SerializationDefaults
@@ -31,7 +26,7 @@ public fun <T : Any> T.serializeWithScheme(
     return SerializationFactory.defaultFactory.withCurrentContext(serializationContext) { this.serialize() }
 }
 
-public fun <T : Any> toObliviousWitness(item: T, serializersModule: SerializersModule = EmptySerializersModule): String {
-    val bytes = serialize(item, serializersModule = CordaSerializers.module + serializersModule)
-    return bytesToWitness(bytes)
-}
+// public fun <T : Any> toObliviousWitness(item: T, serializersModule: SerializersModule = EmptySerializersModule): String {
+//     val bytes = serialize(item, serializersModule = CordaSerializers.module + serializersModule)
+//     return bytesToWitness(bytes)
+// }
