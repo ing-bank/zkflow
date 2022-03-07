@@ -13,14 +13,21 @@ import net.corda.core.transactions.WireTransaction
 public open class TestDSLMockZKTransactionService(serviceHub: ServiceHub) : TestDSLZKTransactionService,
     MockZKTransactionService(serviceHub) {
 
-    public override fun calculatePublicInput(tx: ZKVerifierTransaction, commandMetadata: ResolvedZKCommandMetadata): PublicInput = calculatePublicInput(serviceHub, tx, commandMetadata)
+    public override fun calculatePublicInput(tx: ZKVerifierTransaction, commandMetadata: ResolvedZKCommandMetadata): PublicInput =
+        calculatePublicInput(serviceHub, tx, commandMetadata)
 
     override fun run(wtx: WireTransaction) {
-        wtx.zkTransactionMetadata().commands.forEach {
-            setup(it)
+        if (wtx.hasPrivateComponents) {
+            wtx.zkTransactionMetadata().commands.forEach {
+                setup(it)
+            }
+            verify(SignedZKVerifierTransaction(prove(wtx)), false)
         }
-        verify(SignedZKVerifierTransaction(prove(wtx)), false)
     }
 
-    public override fun verify(wtx: WireTransaction, mode: VerificationMode): Unit = run(wtx)
+    public override fun verify(wtx: WireTransaction, mode: VerificationMode) {
+        if (wtx.hasPrivateComponents) {
+            run(wtx)
+        }
+    }
 }
