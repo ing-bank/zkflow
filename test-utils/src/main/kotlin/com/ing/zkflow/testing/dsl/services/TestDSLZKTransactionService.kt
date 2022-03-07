@@ -1,9 +1,10 @@
-package com.ing.zkflow.testing.dsl
+package com.ing.zkflow.testing.dsl.services
 
 import com.ing.zkflow.common.transactions.ZKVerifierTransaction
 import com.ing.zkflow.common.transactions.collectUtxoInfos
 import com.ing.zkflow.common.zkp.PublicInput
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
+import com.ing.zkflow.testing.dsl.interfaces.VerificationMode
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.node.ServiceHub
 import net.corda.core.transactions.WireTransaction

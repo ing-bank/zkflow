@@ -2,14 +2,15 @@
 import com.ing.zkflow.common.network.ZKNetworkParameters
 import com.ing.zkflow.common.transactions.ZKTransactionBuilder
 import com.ing.zkflow.common.transactions.hasZKCommandData
-import com.ing.zkflow.testing.dsl.AttachmentResolutionException
-import com.ing.zkflow.testing.dsl.DoubleSpentInputs
-import com.ing.zkflow.testing.dsl.DuplicateOutputLabel
-import com.ing.zkflow.testing.dsl.EnforceVerifyOrFail
-import com.ing.zkflow.testing.dsl.TestDSLZKTransactionService
+import com.ing.zkflow.node.services.ZKWritableVerifierTransactionStorage
 import com.ing.zkflow.testing.dsl.TestZKTransactionDSLInterpreter
-import com.ing.zkflow.testing.dsl.VerificationMode
-import com.ing.zkflow.testing.dsl.ZKLedgerDSLInterpreter
+import com.ing.zkflow.testing.dsl.interfaces.AttachmentResolutionException
+import com.ing.zkflow.testing.dsl.interfaces.DoubleSpentInputs
+import com.ing.zkflow.testing.dsl.interfaces.DuplicateOutputLabel
+import com.ing.zkflow.testing.dsl.interfaces.EnforceVerifyOrFail
+import com.ing.zkflow.testing.dsl.interfaces.VerificationMode
+import com.ing.zkflow.testing.dsl.interfaces.ZKLedgerDSLInterpreter
+import com.ing.zkflow.testing.dsl.services.TestDSLZKTransactionService
 import net.corda.core.contracts.Attachment
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.StateAndRef
@@ -30,21 +31,28 @@ import java.io.InputStream
  *  A ledger interpreter that supports both standard and zk transactions. The appropriate transaction DSL interpreter is called
  *  depending on the type of transaction.
  */
-@Suppress("TooManyFunctions")
+@Suppress("LongParameterList")
 public class TestZKLedgerDSLInterpreter private constructor(
     public val services: ServiceHub,
-    internal val labelToOutputStateAndRefs: HashMap<String, StateAndRef<ContractState>> = HashMap(),
+    private val labelToOutputStateAndRefs: HashMap<String, StateAndRef<ContractState>> = HashMap(),
     private val transactionWithLocations: HashMap<SecureHash, WireTransactionWithLocation> = LinkedHashMap(),
     private val nonVerifiedTransactionWithLocations: HashMap<SecureHash, WireTransactionWithLocation> = HashMap(),
-    public val zkService: TestDSLZKTransactionService,
-    override val zkNetworkParameters: ZKNetworkParameters
+    public override val zkService: TestDSLZKTransactionService,
+    override val zkNetworkParameters: ZKNetworkParameters,
+    override val zkVerifierTransactionStorage: ZKWritableVerifierTransactionStorage
 ) : ZKLedgerDSLInterpreter<TestZKTransactionDSLInterpreter> {
     // We specify [labelToOutputStateAndRefs] just so that Kotlin picks the primary constructor instead of cycling
-    public constructor(services: ServiceHub, zkService: TestDSLZKTransactionService, zkNetworkParameters: ZKNetworkParameters) : this(
+    public constructor(
+        services: ServiceHub,
+        zkService: TestDSLZKTransactionService,
+        zkNetworkParameters: ZKNetworkParameters,
+        zkVerifierTransactionStorage: ZKWritableVerifierTransactionStorage
+    ) : this(
         services,
         labelToOutputStateAndRefs = HashMap(),
         zkService = zkService,
-        zkNetworkParameters = zkNetworkParameters
+        zkNetworkParameters = zkNetworkParameters,
+        zkVerifierTransactionStorage = zkVerifierTransactionStorage
     )
 
     public companion object {
@@ -79,7 +87,8 @@ public class TestZKLedgerDSLInterpreter private constructor(
             transactionWithLocations = HashMap(transactionWithLocations),
             nonVerifiedTransactionWithLocations = HashMap(nonVerifiedTransactionWithLocations),
             zkService = zkService,
-            zkNetworkParameters = zkNetworkParameters
+            zkNetworkParameters = zkNetworkParameters,
+            zkVerifierTransactionStorage = zkVerifierTransactionStorage
         )
 
     internal fun getTransaction(id: SecureHash): SignedTransaction? {

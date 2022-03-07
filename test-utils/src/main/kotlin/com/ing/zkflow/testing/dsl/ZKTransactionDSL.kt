@@ -1,19 +1,13 @@
-@file:Suppress("FunctionName", "FunctionNaming", "FunctionParameterNaming", "LongParameterList", "TooManyFunctions") // Copy of Corda API
-
 package com.ing.zkflow.testing.dsl
 
 import com.ing.zkflow.common.transactions.ZKTransactionBuilder
-import net.corda.core.DoNotImplement
+import com.ing.zkflow.testing.dsl.interfaces.EnforceVerifyOrFail
+import com.ing.zkflow.testing.dsl.interfaces.ZKTransactionDSLInterpreter
 import net.corda.core.contracts.AlwaysAcceptAttachmentConstraint
-import net.corda.core.contracts.Attachment
-import net.corda.core.contracts.AttachmentConstraint
-import net.corda.core.contracts.AutomaticPlaceholderConstraint
 import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.ContractClassName
 import net.corda.core.contracts.ContractState
-import net.corda.core.contracts.StateRef
 import net.corda.core.contracts.TimeWindow
-import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.Party
 import net.corda.core.node.services.AttachmentId
 import net.corda.core.transactions.TransactionBuilder
@@ -23,98 +17,9 @@ import java.time.Duration
 import java.time.Instant
 
 /**
- * This interface defines the bare bone public functionality that a Transaction DSL interpreter should implement.
- * @param <R> The return type of [verifies]/[failsWith] and the like. It is generic so that we have control over whether
- * we want to enforce users to call these methods (see [EnforceVerifyOrFail]) or not.
- */
-@DoNotImplement
-public interface ZKTransactionDSLInterpreter : Verifies, OutputStateLookup {
-    /**
-     * A reference to the enclosing ledger{..}'s interpreter.
-     */
-    public val ledgerInterpreter: ZKLedgerDSLInterpreter<ZKTransactionDSLInterpreter>
-
-    /**
-     * Adds an input reference to the transaction. Note that [verifies] will resolve this reference.
-     * @param stateRef The input [StateRef].
-     */
-    public fun input(stateRef: StateRef)
-
-    /**
-     * Add a reference input state to the transaction. Note that [verifies] will resolve this reference.
-     * @param stateRef The input [StateRef].
-     */
-    public fun reference(stateRef: StateRef)
-
-    /**
-     * Adds an output to the transaction.
-     * @param label An optional label that may be later used to retrieve the output probably in other transactions.
-     * @param notary The associated notary.
-     * @param encumbrance The position of the encumbrance state.
-     * @param attachmentConstraint The attachment constraint
-     * @param contractState The state itself.
-     * @param contractClassName The class name of the contract that verifies this state.
-     */
-    public fun output(
-        contractClassName: ContractClassName,
-        label: String?,
-        notary: Party,
-        encumbrance: Int?,
-        attachmentConstraint: AttachmentConstraint,
-        contractState: ContractState
-    )
-
-    /**
-     * Adds an [Attachment] reference to the transaction.
-     * @param attachmentId The hash of the attachment, possibly returned by [ZKLedgerDSLInterpreter.attachment].
-     */
-    public fun attachment(attachmentId: SecureHash)
-
-    /**
-     * Adds a command to the transaction.
-     * @param signers The signer public keys.
-     * @param commandData The contents of the command.
-     */
-    public fun command(signers: List<PublicKey>, commandData: CommandData)
-
-    /**
-     * Sets the time-window of the transaction.
-     * @param data the [TimeWindow] (validation window).
-     */
-    public fun timeWindow(data: TimeWindow)
-
-    /**
-     * Creates a local scoped copy of the transaction.
-     * @param dsl The transaction DSL to be interpreted using the copy.
-     */
-    public fun _tweak(dsl: ZKTransactionDSLInterpreter.() -> EnforceVerifyOrFail): EnforceVerifyOrFail
-
-    /**
-     * Attaches an attachment containing the named contract to the transaction
-     * @param contractClassName The contract class to attach
-     */
-    public fun _attachment(contractClassName: ContractClassName)
-
-    /**
-     * Attaches an attachment containing the named contract to the transaction
-     * @param contractClassName The contract class to attach
-     * @param attachmentId The attachment
-     */
-    public fun _attachment(contractClassName: ContractClassName, attachmentId: AttachmentId, signers: List<PublicKey>)
-
-    /**
-     * Attaches an attachment containing the named contract to the transaction.
-     * @param contractClassName The contract class to attach.
-     * @param attachmentId The attachment.
-     * @param signers The signers.
-     * @param jarManifestAttributes The JAR manifest file attributes.
-     */
-    public fun _attachment(contractClassName: ContractClassName, attachmentId: AttachmentId, signers: List<PublicKey>, jarManifestAttributes: Map<String, String>)
-}
-
-/**
  * Underlying class for the transaction DSL. Do not instantiate directly, instead use the [transaction] public function.
  * */
+@Suppress("TooManyFunctions")
 public class ZKTransactionDSL<out T : ZKTransactionDSLInterpreter>(private val interpreter: T, private val notary: Party) :
     ZKTransactionDSLInterpreter by interpreter {
     /**
@@ -174,37 +79,37 @@ public class ZKTransactionDSL<out T : ZKTransactionDSLInterpreter>(private val i
      * Adds a labelled output to the transaction.
      */
     public fun output(contractClassName: ContractClassName, label: String, notary: Party, contractState: ContractState): Unit =
-        output(contractClassName, label, notary, null, AutomaticPlaceholderConstraint, contractState)
+        output(contractClassName, label, notary, null, AlwaysAcceptAttachmentConstraint, contractState)
 
     /**
      * Adds a labelled output to the transaction.
      */
     public fun output(contractClassName: ContractClassName, label: String, encumbrance: Int, contractState: ContractState): Unit =
-        output(contractClassName, label, notary, encumbrance, AutomaticPlaceholderConstraint, contractState)
+        output(contractClassName, label, notary, encumbrance, AlwaysAcceptAttachmentConstraint, contractState)
 
     /**
      * Adds a labelled output to the transaction.
      */
     public fun output(contractClassName: ContractClassName, label: String, contractState: ContractState): Unit =
-        output(contractClassName, label, notary, null, AutomaticPlaceholderConstraint, contractState)
+        output(contractClassName, label, notary, null, AlwaysAcceptAttachmentConstraint, contractState)
 
     /**
      * Adds an output to the transaction.
      */
     public fun output(contractClassName: ContractClassName, notary: Party, contractState: ContractState): Unit =
-        output(contractClassName, null, notary, null, AutomaticPlaceholderConstraint, contractState)
+        output(contractClassName, null, notary, null, AlwaysAcceptAttachmentConstraint, contractState)
 
     /**
      * Adds an output to the transaction.
      */
     public fun output(contractClassName: ContractClassName, encumbrance: Int, contractState: ContractState): Unit =
-        output(contractClassName, null, notary, encumbrance, AutomaticPlaceholderConstraint, contractState)
+        output(contractClassName, null, notary, encumbrance, AlwaysAcceptAttachmentConstraint, contractState)
 
     /**
      * Adds an output to the transaction.
      */
     public fun output(contractClassName: ContractClassName, contractState: ContractState): Unit =
-        output(contractClassName, null, notary, null, AutomaticPlaceholderConstraint, contractState)
+        output(contractClassName, null, notary, null, AlwaysAcceptAttachmentConstraint, contractState)
 
     /**
      * Adds a command to the transaction.

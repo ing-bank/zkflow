@@ -2,9 +2,14 @@ package com.ing.zkflow.testing.dsl
 
 import TestZKLedgerDSLInterpreter
 import com.google.common.util.concurrent.ThreadFactoryBuilder
-import com.ing.zkflow.common.contracts.ZKContractState
 import com.ing.zkflow.common.transactions.ZKTransactionBuilder
 import com.ing.zkflow.common.transactions.hasPrivateComponents
+import com.ing.zkflow.testing.dsl.interfaces.DuplicateOutputLabel
+import com.ing.zkflow.testing.dsl.interfaces.EnforceVerifyOrFail
+import com.ing.zkflow.testing.dsl.interfaces.OutputStateLookup
+import com.ing.zkflow.testing.dsl.interfaces.VerificationMode
+import com.ing.zkflow.testing.dsl.interfaces.ZKTransactionDSLInterpreter
+import com.ing.zkflow.testing.dsl.services.TestDSLZKTransactionService
 import net.corda.core.contracts.AttachmentConstraint
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.CommandData
@@ -119,10 +124,6 @@ public data class TestZKTransactionDSLInterpreter private constructor(
             labelToIndexMap = HashMap(labelToIndexMap)
         )
 
-    private fun enforceZKStates(state: ContractState) {
-        require(state is ZKContractState) { "Can only use ZKContractStates as output" }
-    }
-
     internal fun toWireTransaction() = transactionBuilder.toWireTransaction(services)
 
     override fun input(stateRef: StateRef) {
@@ -144,8 +145,7 @@ public data class TestZKTransactionDSLInterpreter private constructor(
         attachmentConstraint: AttachmentConstraint,
         contractState: ContractState
     ) {
-        enforceZKStates(contractState)
-        transactionBuilder.addOutputState(contractState as ZKContractState, contractClassName, notary, encumbrance, attachmentConstraint)
+        transactionBuilder.addOutputState(contractState, contractClassName, notary, encumbrance, attachmentConstraint)
         if (label != null) {
             if (label in labelToIndexMap) {
                 throw DuplicateOutputLabel(label)
