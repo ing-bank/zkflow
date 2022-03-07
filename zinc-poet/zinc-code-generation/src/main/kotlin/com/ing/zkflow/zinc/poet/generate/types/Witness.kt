@@ -51,7 +51,7 @@ class Witness(
     override fun generateZincFile(codeGenerationOptions: CodeGenerationOptions) = zincFile {
         mod { module = CONSTS }
         newLine()
-        (dependencies + standardTypes.getSignerListModule(commandMetadata.numberOfSigners))
+        (dependencies + standardTypes.signerList(commandMetadata))
             .distinctBy { it.id }
             .sortedBy { it.id }
             .forEach { dependency ->

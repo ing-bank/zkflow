@@ -34,7 +34,7 @@ sealed class ZKAttachmentConstraintType private constructor(val kClass: KClass<o
         }
     }
 
-    class HashAttachmentConstraintType(algorithm: KClass<out Annotation> = ZKFlow.DEFAULT_ZKFLOW_HASH_ATTACHMENT_HASHING_ALGORITHM) :
+    class HashAttachmentConstraintType(val algorithm: KClass<out Annotation> = ZKFlow.DEFAULT_ZKFLOW_HASH_ATTACHMENT_HASHING_ALGORITHM) :
         ZKAttachmentConstraintType(HashAttachmentConstraint::class) {
         val digestLength: Int by lazy { getDigestLengthFromAnnotation(algorithm) }
 

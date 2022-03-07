@@ -165,7 +165,7 @@ object AttachmentConstraintSerializerRegistry {
  */
 val KClass<*>.stableId: Int
     get() = qualifiedName.requireNotNull {
-        "'${this}' local class or a class of an anonymous object is not supported"
+        "'$this' local class or a class of an anonymous object is not supported"
     }.hashCode()
 
 fun interface GetAttachmentConstraintSerializer {

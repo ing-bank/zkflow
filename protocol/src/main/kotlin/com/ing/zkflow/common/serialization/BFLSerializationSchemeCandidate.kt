@@ -2,6 +2,9 @@ package com.ing.zkflow.common.serialization
 
 import com.ing.zkflow.common.network.ZKNetworkParameters
 import com.ing.zkflow.common.network.ZKNetworkParametersServiceLoader
+import com.ing.zkflow.common.network.attachmentConstraintSerializer
+import com.ing.zkflow.common.network.notarySerializer
+import com.ing.zkflow.common.network.signerSerializer
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
 import com.ing.zkflow.serialization.infra.CommandDataSerializationMetadata
 import com.ing.zkflow.serialization.infra.NetworkSerializationMetadata
@@ -14,10 +17,7 @@ import com.ing.zkflow.serialization.infra.wrapSerialization
 import com.ing.zkflow.serialization.scheme.BinaryFixedLengthScheme
 import com.ing.zkflow.serialization.scheme.ByteBinaryFixedLengthScheme
 import com.ing.zkflow.serialization.serializer.FixedLengthListSerializer
-import com.ing.zkflow.serialization.serializer.corda.CordaX500NameSerializer
 import com.ing.zkflow.serialization.serializer.corda.HashAlgorithmRegistry
-import com.ing.zkflow.serialization.serializer.corda.PartySerializer
-import com.ing.zkflow.serialization.serializer.corda.PublicKeySerializer
 import com.ing.zkflow.serialization.serializer.corda.SHA256SecureHashSerializationMetadata
 import com.ing.zkflow.serialization.serializer.corda.SHA256SecureHashSerializer
 import com.ing.zkflow.serialization.serializer.corda.StateRefSerializer
@@ -122,7 +122,6 @@ open class BFLSerializationSchemeCandidate : CustomSerializationScheme {
     ): ByteArray {
         @Suppress("UNCHECKED_CAST") // This is a conditional cast.
         val signersList = obj as? List<PublicKey> ?: error("Signers: Expected `List<PublicKey>`, Actual `${obj::class.qualifiedName}`")
-        val participantSignatureSchemeId = zkNetworkParameters.participantSignatureScheme.schemeNumberID
 
         /*
          * Using the actual (non-fixed) signers.size when there is no tx metadata is ok,
@@ -133,7 +132,7 @@ open class BFLSerializationSchemeCandidate : CustomSerializationScheme {
         val numberOfSigners = transactionMetadata?.numberOfSigners ?: signersList.size
         val signersSerializer = FixedLengthListSerializer(
             numberOfSigners,
-            PublicKeySerializer(participantSignatureSchemeId)
+            zkNetworkParameters.signerSerializer
         )
 
         return scheme.encodeToBinary(signersSerializer, signersList).wrapSerialization(
@@ -154,7 +153,7 @@ open class BFLSerializationSchemeCandidate : CustomSerializationScheme {
 
         val signersSerializer = FixedLengthListSerializer(
             metadata.numberOfSigners,
-            PublicKeySerializer(zkNetworkParameters.participantSignatureScheme.schemeNumberID)
+            zkNetworkParameters.signerSerializer
         )
 
         return scheme.decodeFromBinary(signersSerializer, serialization)
@@ -188,19 +187,10 @@ open class BFLSerializationSchemeCandidate : CustomSerializationScheme {
         zkNetworkParameters.attachmentConstraintType.validate(obj.constraint)
         zkNetworkParameters.notaryInfo.validate(obj.notary)
 
-        val notarySignatureSchemeId = zkNetworkParameters.notaryInfo.signatureScheme.schemeNumberID
-        val notarySerializer = PartySerializer(
-            cordaSignatureId = notarySignatureSchemeId,
-            // TODO transactionMetaData may contain specs for CordaX500
-            cordaX500NameSerializer = CordaX500NameSerializer
-        )
-
-        val attachmentConstraintType = zkNetworkParameters.attachmentConstraintType
-        val attachmentConstraintSerializer =
-            AttachmentConstraintSerializerRegistry[attachmentConstraintType.kClass](zkNetworkParameters)
-
         val transactionStateSerializer = TransactionStateSerializer(
-            ContractStateSerializerRegistry[state::class], notarySerializer, attachmentConstraintSerializer
+            ContractStateSerializerRegistry[state::class],
+            zkNetworkParameters.notarySerializer,
+            zkNetworkParameters.attachmentConstraintSerializer
         )
 
         return scheme.encodeToBinary(transactionStateSerializer, obj).wrapSerialization(
@@ -216,17 +206,10 @@ open class BFLSerializationSchemeCandidate : CustomSerializationScheme {
         val (metadata, data) = serializedData.unwrapSerialization(scheme, TransactionStateSerializationMetadata.serializer())
         val serialization = data.toByteArray()
 
-        val notarySignatureSchemeId = zkNetworkParameters.notaryInfo.signatureScheme.schemeNumberID
-        val notarySerializer = PartySerializer(
-            cordaSignatureId = notarySignatureSchemeId, cordaX500NameSerializer = CordaX500NameSerializer
-        )
-        val attachmentConstraintSerializer = AttachmentConstraintSerializerRegistry[zkNetworkParameters.attachmentConstraintType.kClass]
-            .invoke(zkNetworkParameters)
-
         val transactionStateSerializer = TransactionStateSerializer(
             ContractStateSerializerRegistry[metadata.serializerId],
-            notarySerializer,
-            attachmentConstraintSerializer
+            zkNetworkParameters.notarySerializer,
+            zkNetworkParameters.attachmentConstraintSerializer
         )
 
         return scheme.decodeFromBinary(transactionStateSerializer, serialization)
@@ -262,23 +245,11 @@ open class BFLSerializationSchemeCandidate : CustomSerializationScheme {
     }
 
     private fun serializeNotary(obj: Party, zkNetworkParameters: ZKNetworkParameters): ByteArray {
-        val notarySignatureSchemeId = zkNetworkParameters.notaryInfo.signatureScheme.schemeNumberID
-        val serializer = PartySerializer(
-            cordaSignatureId = notarySignatureSchemeId,
-            // TODO transactionMetaData may contain specs for CordaX500
-            cordaX500NameSerializer = CordaX500NameSerializer
-        )
-
-        return scheme.encodeToBinary(serializer, obj)
+        return scheme.encodeToBinary(zkNetworkParameters.notarySerializer, obj)
     }
 
     private fun deserializeNotary(serializedData: ByteArray, zkNetworkParameters: ZKNetworkParameters): Party {
-        val notarySignatureSchemeId = zkNetworkParameters.notaryInfo.signatureScheme.schemeNumberID
-        val notarySerializer = PartySerializer(
-            cordaSignatureId = notarySignatureSchemeId, cordaX500NameSerializer = CordaX500NameSerializer
-        )
-
-        return scheme.decodeFromBinary(notarySerializer, serializedData)
+        return scheme.decodeFromBinary(zkNetworkParameters.notarySerializer, serializedData)
     }
 
     private fun serializeSecureHash(obj: SecureHash): ByteArray {
