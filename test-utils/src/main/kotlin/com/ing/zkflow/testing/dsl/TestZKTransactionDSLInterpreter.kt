@@ -2,7 +2,9 @@ package com.ing.zkflow.testing.dsl
 
 import TestZKLedgerDSLInterpreter
 import com.google.common.util.concurrent.ThreadFactoryBuilder
+import com.ing.zkflow.common.transactions.SignedZKVerifierTransaction
 import com.ing.zkflow.common.transactions.ZKTransactionBuilder
+import com.ing.zkflow.common.transactions.ZKVerifierTransaction
 import com.ing.zkflow.common.transactions.hasPrivateComponents
 import com.ing.zkflow.testing.dsl.interfaces.DuplicateOutputLabel
 import com.ing.zkflow.testing.dsl.interfaces.EnforceVerifyOrFail
@@ -174,12 +176,18 @@ public data class TestZKTransactionDSLInterpreter private constructor(
         val ltx = wtx.toLedgerTransaction(services)
         ltx.verify()
 
-        if (wtx.hasPrivateComponents) {
+        val svtx = if (wtx.hasPrivateComponents) {
+            txb.enforcePrivateInputsAndReferences(ledgerInterpreter.zkVerifierTransactionStorage)
             log.info("Transaction ${wtx.id} has private components: creating and verifying ZKP")
             zkService.verify(wtx, mode)
+        } else {
+            SignedZKVerifierTransaction(ZKVerifierTransaction.fromWireTransaction(wtx, emptyMap()))
         }
-
         log.info("Transaction ${wtx.id} verified")
+
+        log.info("Storing ZKVerifierTransaction ${svtx.id}")
+        ledgerInterpreter.zkVerifierTransactionStorage.addTransaction(svtx)
+
         return EnforceVerifyOrFail.Token
     }
 
