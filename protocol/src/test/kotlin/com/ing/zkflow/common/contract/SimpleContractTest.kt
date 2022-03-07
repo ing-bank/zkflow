@@ -8,7 +8,7 @@ import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.common.zkp.metadata.commandMetadata
 import com.ing.zkflow.serialization.serializer.IntSerializer
 import com.ing.zkflow.serialization.serializer.corda.AnonymousPartySerializer
-import com.ing.zkflow.testing.dsl.VerificationMode
+import com.ing.zkflow.testing.dsl.interfaces.VerificationMode
 import com.ing.zkflow.testing.dsl.zkLedger
 import com.ing.zkflow.util.tryNonFailing
 import kotlinx.serialization.Serializable
@@ -16,11 +16,14 @@ import kotlinx.serialization.Transient
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.Contract
+import net.corda.core.contracts.ContractState
 import net.corda.core.crypto.Crypto
+import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.transactions.LedgerTransaction
 import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.util.Random
 
@@ -31,7 +34,7 @@ class SimpleContractTest {
 
     @Test
     fun `tx with one private command with private input and output`() {
-        val aliceAsset = TestState(alice)
+        val aliceAsset = ZKTestState(alice)
 
         services.zkLedger {
             transaction {
@@ -45,7 +48,7 @@ class SimpleContractTest {
 
     @Test
     fun `tx with one public command`() {
-        val aliceAsset = TestState(alice)
+        val aliceAsset = ZKTestState(alice)
 
         services.zkLedger {
             transaction {
@@ -59,7 +62,7 @@ class SimpleContractTest {
 
     @Test
     fun `consume public state in private command`() {
-        val aliceAsset = TestState(alice)
+        val aliceAsset = ZKTestState(alice)
         val bobAsset = aliceAsset.copy(owner = bob)
 
         val charlie = TestIdentity.fresh("Charlie").party.anonymise()
@@ -80,6 +83,18 @@ class SimpleContractTest {
             }
         }
     }
+
+    @Test
+    @Disabled("Enable and add surrogate for NonAnnotatableTestState once @ZKPSurrogate is implemented")
+    fun `tx with nonannotatable state`() {
+        services.zkLedger {
+            transaction {
+                output(LocalContract.PROGRAM_ID, NonAnnotatableTestState(alice))
+                command(listOf(alice.owningKey, bob.owningKey), LocalContract.CreateNormalState())
+                verifies(VerificationMode.MOCK)
+            }
+        }
+    }
 }
 
 class LocalContract : Contract {
@@ -88,6 +103,9 @@ class LocalContract : Contract {
     }
 
     override fun verify(tx: LedgerTransaction) {}
+
+    @Serializable
+    class CreateNormalState : CommandData
 
     @Serializable
     class MovePublic : CommandData {
@@ -109,10 +127,10 @@ class LocalContract : Contract {
         @Transient
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
             inputs {
-                any(TestState::class) at 0
+                any(ZKTestState::class) at 0
             }
             outputs {
-                private(TestState::class) at 0
+                private(ZKTestState::class) at 0
             }
             numberOfSigners = 2
         }
@@ -129,19 +147,27 @@ class LocalContract : Contract {
         @Transient
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
             inputs {
-                private(TestState::class) at 0
+                private(ZKTestState::class) at 0
             }
             outputs {
-                private(TestState::class) at 0
+                private(ZKTestState::class) at 0
             }
             numberOfSigners = 2
         }
     }
 }
 
+@BelongsToContract(LocalContract::class)
+data class NonAnnotatableTestState(
+    val owner: AbstractParty,
+    val value: Int = Random().nextInt(1000)
+) : ContractState {
+    override val participants: List<AbstractParty> = listOf(owner)
+}
+
 @Serializable
 @BelongsToContract(LocalContract::class)
-data class TestState(
+data class ZKTestState(
     val owner: @Serializable(with = OwnerSerializer::class) AnonymousParty,
     val value: @Serializable(with = IntSerializer::class) Int = Random().nextInt(1000)
 ) : ZKContractState {

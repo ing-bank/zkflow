@@ -17,7 +17,6 @@ import net.corda.core.contracts.ContractClassName
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.PrivacySalt
 import net.corda.core.contracts.ReferencedStateAndRef
-import net.corda.core.contracts.StateAndContract
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.StateRef
 import net.corda.core.contracts.TimeWindow
@@ -114,14 +113,6 @@ class ZKTransactionBuilder(
         TransactionBuilder(notary, window = null),
         zkNetworkParameters = zkNetworkParameters
     )
-
-    init {
-        outputStates().forEach { enforceZKContractStates(it.data) }
-    }
-
-    private fun enforceZKContractStates(state: ContractState) {
-        require(state is ZKContractState) { "Can only use ZKContractStates as output" }
-    }
 
     companion object {
         // Copied from private `TransactionBuilder.defaultLockId`
@@ -272,12 +263,6 @@ class ZKTransactionBuilder(
                 is ReferencedStateAndRef<*> -> {
                     referencesWithTransactionState.add(it.stateAndRef.state)
                 }
-                is TransactionState<*> -> {
-                    enforceZKContractStates(it.data)
-                }
-                is StateAndContract -> {
-                    enforceZKContractStates(it.state)
-                }
             }
         }
         builder.withItems(*items)
@@ -296,12 +281,11 @@ class ZKTransactionBuilder(
     fun addAttachment(attachmentId: AttachmentId) = apply { builder.addAttachment(attachmentId) }
 
     fun addOutputState(state: TransactionState<*>) = apply {
-        enforceZKContractStates(state.data)
         builder.addOutputState(state)
     }
 
     fun addOutputState(
-        state: ZKContractState,
+        state: ContractState,
         contract: ContractClassName = requireNotNullContractClassName(state),
         notary: Party,
         encumbrance: Int? = null,

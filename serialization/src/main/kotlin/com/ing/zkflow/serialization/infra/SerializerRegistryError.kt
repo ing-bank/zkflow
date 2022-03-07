@@ -2,15 +2,19 @@ package com.ing.zkflow.serialization.infra
 
 import kotlin.reflect.KClass
 
-sealed class SerializerMapError(message: String) : IllegalArgumentException(message) {
+sealed class SerializerRegistryError(message: String) : IllegalArgumentException(message) {
     class ClassAlreadyRegistered(klass: KClass<*>, id: Int) :
-        SerializerMapError("Class ${klass.qualifiedName} has already been registered with id $id")
+        SerializerRegistryError("Class ${klass.qualifiedName} has already been registered with id $id")
 
     class IdAlreadyRegistered(id: Int, klass: KClass<*>, serialName: String?) :
-        SerializerMapError("Could not register class ${klass.qualifiedName}: id $id was already registered for $serialName")
+        SerializerRegistryError("Could not register class ${klass.qualifiedName}: id $id was already registered for $serialName")
 
-    class ClassNotRegistered : SerializerMapError {
-        constructor(klass: KClass<*>) : super("No registration for class ${klass.qualifiedName}")
-        constructor(id: Int) : super("No Class registered for id = $id")
+    class ClassNotRegistered : SerializerRegistryError {
+        companion object {
+            const val PLEASE_ANNOTATE_MESSAGE = "Please annotate it with @ZKP or annotate a surrogate with @ZKPSurrogate."
+        }
+
+        constructor(klass: KClass<*>) : super("No registration for class ${klass.qualifiedName}. $PLEASE_ANNOTATE_MESSAGE")
+        constructor(id: Int) : super("No Class registered for id = $id. $PLEASE_ANNOTATE_MESSAGE")
     }
 }
