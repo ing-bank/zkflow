@@ -1,6 +1,6 @@
 package com.example.contract
 
-import com.ing.zkflow.testing.dsl.VerificationMode
+import com.ing.zkflow.testing.dsl.interfaces.VerificationMode
 import com.ing.zkflow.testing.dsl.zkLedger
 import com.ing.zkflow.testing.zkp.ZKNulls
 import net.corda.testing.core.TestIdentity
@@ -9,17 +9,16 @@ import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.Instant
 
-@Disabled("Disabled until some of the serde and poet related stuff is all integrated and functional. Currently, the BFLSerializationScheme can't handle it")
 class MockAssetContractTest {
     @Test
     fun `create and move verify`() {
         val alice = TestIdentity.fresh("Alice").party.anonymise()
-        val bob = ZKNulls.NULL_ANONYMOUS_PARTY
+        val bob = TestIdentity.fresh("Bob").party.anonymise()
         val services = MockServices(listOf("com.example.contract"))
 
         services.zkLedger {
             val createState = MockAssetContract.MockAsset(alice, value = 88)
-            zkTransaction {
+            transaction {
                 input(MockAssetContract.ID, createState)
                 output(MockAssetContract.ID, createState.withNewOwner(bob).ownableState)
                 command(listOf(alice.owningKey, bob.owningKey), MockAssetContract.Move())

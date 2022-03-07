@@ -6,7 +6,12 @@ object ZKNetworkParametersServiceLoader {
     private val orderedParametersList: Map<Int, ZKNetworkParameters> by lazy {
         val parametersList = ArrayList<ZKNetworkParameters>()
         ServiceLoader.load(ZKNetworkParameters::class.java).forEach { parametersList.add(it) }
-        parametersList.sortedBy { it.version }.associateBy { it.version }
+        val sortedParameters = parametersList.sortedBy { it.version }
+        check(sortedParameters.distinctBy { it.version }.size == sortedParameters.size) {
+            val impls = sortedParameters.joinToString(", ") { "${it::class} (version ${it.version})" }
+            "There are multiple implementations of ZKNetworkParameters on the classpath with the same version number. All implementations found: $impls"
+        }
+        sortedParameters.associateBy { it.version }
     }
 
     private val latestVersion: Int by lazy {
