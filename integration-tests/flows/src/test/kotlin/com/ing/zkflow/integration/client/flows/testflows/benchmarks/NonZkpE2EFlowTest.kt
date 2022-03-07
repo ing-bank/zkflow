@@ -2,7 +2,7 @@ package com.ing.zkflow.integration.client.flows.testflows.benchmarks
 
 import com.ing.zkflow.common.zkp.ZKFlow
 import com.ing.zkflow.integration.client.flows.checkVault
-import com.ing.zkflow.node.services.InMemoryZKVerifierTransactionStorage
+import com.ing.zkflow.node.services.InMemoryZKVerifierTransactionStorageCordaService
 import com.ing.zkflow.node.services.ServiceNames.ZK_TX_SERVICE
 import com.ing.zkflow.node.services.ServiceNames.ZK_VERIFIER_TX_STORAGE
 import com.ing.zkflow.testing.zkp.MockZKTransactionCordaService
@@ -38,7 +38,7 @@ class NonZkpE2EFlowTest {
             cordappsForAllNodes = listOf(
                 cordappWithPackages("com.ing.zkflow").withConfig(
                     mapOf(
-                        ZK_VERIFIER_TX_STORAGE to InMemoryZKVerifierTransactionStorage::class.qualifiedName!!,
+                        ZK_VERIFIER_TX_STORAGE to InMemoryZKVerifierTransactionStorageCordaService::class.qualifiedName!!,
                         ZK_TX_SERVICE to MockZKTransactionCordaService::class.qualifiedName!!,
                     )
                 )

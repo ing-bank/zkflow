@@ -19,7 +19,10 @@ import java.util.HashMap
  * A class which provides an implementation of [WritableTransactionStorage] which is used in [MockServices]
  */
 @CordaService
-open class InMemoryZKVerifierTransactionStorage(public val serviceHub: AppServiceHub) : ZKWritableVerifierTransactionStorage,
+class InMemoryZKVerifierTransactionStorageCordaService(@Suppress("UNUSED_PARAMETER") services: AppServiceHub) :
+    InMemoryZKVerifierTransactionStorage()
+
+open class InMemoryZKVerifierTransactionStorage : ZKWritableVerifierTransactionStorage,
     SingletonSerializeAsToken() {
 
     override fun trackTransaction(id: SecureHash): CordaFuture<SignedZKVerifierTransaction> {
