@@ -34,13 +34,13 @@ data class TransactionStateSurrogate<T : ContractState, P : Party, A : Attachmen
     @Serializable(with = Encumbrance::class) val encumbrance: Int? = null,
     val constraint: A,
 ) : Surrogate<TransactionState<T>> {
-    object ContractClassName : FixedLengthASCIIStringSerializer(CLASSNAME_MAX_LENGTH)
-    object Encumbrance : NullableSerializer<Int>(IntSerializer)
-
     override fun toOriginal() = TransactionState(data, contract, notary, encumbrance, constraint)
 
     companion object {
         const val CLASSNAME_MAX_LENGTH = 100
+
+        object ContractClassName : FixedLengthASCIIStringSerializer(CLASSNAME_MAX_LENGTH)
+        object Encumbrance : NullableSerializer<Int>(IntSerializer)
 
         fun <T : ContractState> from(original: TransactionState<T>) = with(original) {
             TransactionStateSurrogate(data, contract, notary, encumbrance, constraint)

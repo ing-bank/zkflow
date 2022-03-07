@@ -3,7 +3,7 @@ package com.ing.zkflow.zinc.poet.generate.types
 import com.ing.zinc.bfl.BflStruct
 import com.ing.zinc.bfl.dsl.StructBuilder.Companion.struct
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
-import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.secureHash
+import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.parametersSecureHash
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.timeWindow
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.INPUTS
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.NOTARY
@@ -35,7 +35,7 @@ class CommandContextFactory(
         if (commandMetadata.timeWindow) {
             field { name = TIME_WINDOW; type = timeWindow }
         }
-        field { name = PARAMETERS; type = secureHash }
+        field { name = PARAMETERS; type = parametersSecureHash }
         field { name = SIGNERS; type = standardTypes.signerList(commandMetadata) }
         isDeserializable = false
     }
