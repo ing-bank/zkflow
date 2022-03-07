@@ -1,6 +1,5 @@
 package com.ing.zkflow.testing.dsl
 
-import TestTransactionDSLInterpreter
 import TestZKLedgerDSLInterpreter
 import com.ing.zkflow.common.network.ZKNetworkParameters
 import com.ing.zkflow.common.serialization.BFLSerializationScheme.Companion.CommandDataSerializerRegistry
@@ -22,8 +21,8 @@ public fun ServiceHub.zkLedger(
     notary: Party = TestIdentity.fresh("ledger notary").party,
     zkService: TestDSLZKTransactionService = TestDSLZincZKTransactionService(this),
     zkNetworkParameters: ZKNetworkParameters = MockZKNetworkParameters(),
-    script: LedgerDSL<TestTransactionDSLInterpreter, TestZKTransactionDSLInterpreter, TestZKLedgerDSLInterpreter>.() -> Unit
-): LedgerDSL<TestTransactionDSLInterpreter, TestZKTransactionDSLInterpreter, TestZKLedgerDSLInterpreter> {
+    script: ZKLedgerDSL<TestZKTransactionDSLInterpreter, TestZKLedgerDSLInterpreter>.() -> Unit
+): ZKLedgerDSL<TestZKTransactionDSLInterpreter, TestZKLedgerDSLInterpreter> {
     val currentParameters = networkParametersService.run {
         lookup(currentHash) ?: throw IllegalStateException("Current network parameters not found, $currentHash")
     }
@@ -42,7 +41,7 @@ public fun ServiceHub.zkLedger(
 
     return createTestSerializationEnv(javaClass.classLoader).asTestContextEnv {
         val interpreter = TestZKLedgerDSLInterpreter(this, zkService, zkNetworkParameters)
-        LedgerDSL(interpreter, notary, zkNetworkParameters).apply {
+        ZKLedgerDSL(interpreter, notary, zkNetworkParameters).apply {
             script()
         }
     }

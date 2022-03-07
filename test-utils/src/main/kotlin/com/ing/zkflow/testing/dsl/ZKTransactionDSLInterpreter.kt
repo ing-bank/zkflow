@@ -2,6 +2,7 @@
 
 package com.ing.zkflow.testing.dsl
 
+import com.ing.zkflow.common.transactions.ZKTransactionBuilder
 import net.corda.core.DoNotImplement
 import net.corda.core.contracts.AlwaysAcceptAttachmentConstraint
 import net.corda.core.contracts.Attachment
@@ -27,11 +28,11 @@ import java.time.Instant
  * we want to enforce users to call these methods (see [EnforceVerifyOrFail]) or not.
  */
 @DoNotImplement
-public interface TransactionDSLInterpreter : Verifies, OutputStateLookup {
+public interface ZKTransactionDSLInterpreter : Verifies, OutputStateLookup {
     /**
      * A reference to the enclosing ledger{..}'s interpreter.
      */
-    public val ledgerInterpreter: LedgerDSLInterpreter<TransactionDSLInterpreter, TransactionDSLInterpreter>
+    public val ledgerInterpreter: ZKLedgerDSLInterpreter<ZKTransactionDSLInterpreter>
 
     /**
      * Adds an input reference to the transaction. Note that [verifies] will resolve this reference.
@@ -65,7 +66,7 @@ public interface TransactionDSLInterpreter : Verifies, OutputStateLookup {
 
     /**
      * Adds an [Attachment] reference to the transaction.
-     * @param attachmentId The hash of the attachment, possibly returned by [LedgerDSLInterpreter.attachment].
+     * @param attachmentId The hash of the attachment, possibly returned by [ZKLedgerDSLInterpreter.attachment].
      */
     public fun attachment(attachmentId: SecureHash)
 
@@ -86,7 +87,7 @@ public interface TransactionDSLInterpreter : Verifies, OutputStateLookup {
      * Creates a local scoped copy of the transaction.
      * @param dsl The transaction DSL to be interpreted using the copy.
      */
-    public fun _tweak(dsl: TransactionDSLInterpreter.() -> EnforceVerifyOrFail): EnforceVerifyOrFail
+    public fun _tweak(dsl: ZKTransactionDSLInterpreter.() -> EnforceVerifyOrFail): EnforceVerifyOrFail
 
     /**
      * Attaches an attachment containing the named contract to the transaction
@@ -114,20 +115,27 @@ public interface TransactionDSLInterpreter : Verifies, OutputStateLookup {
 /**
  * Underlying class for the transaction DSL. Do not instantiate directly, instead use the [transaction] public function.
  * */
-public class TransactionDSL<out T : TransactionDSLInterpreter>(interpreter: T, private val notary: Party) : TransactionDSLInterpreter by interpreter {
+public class ZKTransactionDSL<out T : ZKTransactionDSLInterpreter>(private val interpreter: T, private val notary: Party) :
+    ZKTransactionDSLInterpreter by interpreter {
     /**
      * Looks up the output label and adds the found state as an reference input state.
-     * @param stateLabel The label of the output state specified when calling [TransactionDSLInterpreter.output] and friends.
+     * @param stateLabel The label of the output state specified when calling [ZKTransactionDSLInterpreter.output] and friends.
      */
     public fun reference(stateLabel: String): Unit = reference(retrieveOutputStateAndRef(ContractState::class.java, stateLabel).ref)
 
     /**
-     * Creates an [LedgerDSLInterpreter._unverifiedTransaction] with a single reference input state and adds its
+     * Creates an [ZKLedgerDSLInterpreter._unverifiedTransaction] with a single reference input state and adds its
      * reference as in input to the current transaction.
      * @param state The state to be added.
      */
     public fun reference(contractClassName: ContractClassName, state: ContractState) {
-        val transaction = ledgerInterpreter._unverifiedTransaction(null, TransactionBuilder(notary)) {
+        val transaction = ledgerInterpreter._unverifiedTransaction(
+            null,
+            ZKTransactionBuilder(
+                TransactionBuilder(notary = notary),
+                zkNetworkParameters = interpreter.ledgerInterpreter.zkNetworkParameters
+            )
+        ) {
             output(contractClassName, null, notary, null, AlwaysAcceptAttachmentConstraint, state)
         }
         reference(transaction.outRef<ContractState>(0).ref)
@@ -135,7 +143,7 @@ public class TransactionDSL<out T : TransactionDSLInterpreter>(interpreter: T, p
 
     /**
      * Looks up the output label and adds the found state as an input.
-     * @param stateLabel The label of the output state specified when calling [TransactionDSLInterpreter.output] and friends.
+     * @param stateLabel The label of the output state specified when calling [ZKTransactionDSLInterpreter.output] and friends.
      */
     public fun input(stateLabel: String): Unit = input(retrieveOutputStateAndRef(ContractState::class.java, stateLabel).ref)
 
@@ -145,12 +153,18 @@ public class TransactionDSL<out T : TransactionDSLInterpreter>(interpreter: T, p
     }
 
     /**
-     * Creates an [LedgerDSLInterpreter._unverifiedTransaction] with a single output state and adds its reference as an
+     * Creates an [ZKLedgerDSLInterpreter._unverifiedTransaction] with a single output state and adds its reference as an
      * input to the current transaction.
      * @param state The state to be added.
      */
     public fun input(contractClassName: ContractClassName, state: ContractState) {
-        val transaction = ledgerInterpreter._unverifiedTransaction(null, TransactionBuilder(notary)) {
+        val transaction = ledgerInterpreter._unverifiedTransaction(
+            null,
+            ZKTransactionBuilder(
+                TransactionBuilder(notary = notary),
+                zkNetworkParameters = interpreter.ledgerInterpreter.zkNetworkParameters
+            )
+        ) {
             output(contractClassName, null, notary, null, AlwaysAcceptAttachmentConstraint, state)
         }
         input(transaction.outRef<ContractState>(0).ref)
@@ -207,11 +221,11 @@ public class TransactionDSL<out T : TransactionDSLInterpreter>(interpreter: T, p
         timeWindow(TimeWindow.withTolerance(time, tolerance))
 
     /** Creates a local scoped copy of the transaction. */
-    public fun tweak(dsl: TransactionDSL<TransactionDSLInterpreter>.() -> EnforceVerifyOrFail): EnforceVerifyOrFail =
-        _tweak { TransactionDSL(this, notary).dsl() }
+    public fun tweak(dsl: ZKTransactionDSL<ZKTransactionDSLInterpreter>.() -> EnforceVerifyOrFail): EnforceVerifyOrFail =
+        _tweak { ZKTransactionDSL(this, notary).dsl() }
 
     /**
-     * @see TransactionDSLInterpreter._attachment
+     * @see ZKTransactionDSLInterpreter._attachment
      */
     public fun attachment(contractClassName: ContractClassName): Unit = _attachment(contractClassName)
 

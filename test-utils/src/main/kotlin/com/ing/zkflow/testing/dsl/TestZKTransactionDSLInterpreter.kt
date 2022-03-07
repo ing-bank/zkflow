@@ -4,6 +4,7 @@ import TestZKLedgerDSLInterpreter
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import com.ing.zkflow.common.contracts.ZKContractState
 import com.ing.zkflow.common.transactions.ZKTransactionBuilder
+import com.ing.zkflow.common.transactions.hasPrivateComponents
 import net.corda.core.contracts.AttachmentConstraint
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.CommandData
@@ -40,8 +41,8 @@ import java.util.concurrent.Executors
 import kotlin.reflect.full.primaryConstructor
 
 /**
- * This interpreter builds a zk transaction, and [TransactionDSL.verifies] that the resolved transaction is correct. Note
- * that transactions corresponding to input states are not verified. Use [LedgerDSL.verifies] for that.
+ * This interpreter builds a zk transaction, and [ZKTransactionDSL.verifies] that the resolved transaction is correct. Note
+ * that transactions corresponding to input states are not verified. Use [ZKLedgerDSL.verifies] for that.
  * A `ZKTransactionBuilder` is used to construct
  */
 @Suppress("TooManyFunctions")
@@ -49,7 +50,7 @@ public data class TestZKTransactionDSLInterpreter private constructor(
     override val ledgerInterpreter: TestZKLedgerDSLInterpreter,
     val transactionBuilder: ZKTransactionBuilder,
     internal val labelToIndexMap: HashMap<String, Int>
-) : TransactionDSLInterpreter, OutputStateLookup by ledgerInterpreter {
+) : ZKTransactionDSLInterpreter, OutputStateLookup by ledgerInterpreter {
 
     public constructor(
         ledgerInterpreter: TestZKLedgerDSLInterpreter,
@@ -173,9 +174,12 @@ public data class TestZKTransactionDSLInterpreter private constructor(
         val ltx = wtx.toLedgerTransaction(services)
         ltx.verify()
 
-        log.info("Creating and verifying ZKP for ${wtx.id}")
-        zkService.verify(wtx, mode)
+        if (wtx.hasPrivateComponents) {
+            log.info("Transaction ${wtx.id} has private components: creating and verifying ZKP")
+            zkService.verify(wtx, mode)
+        }
 
+        log.info("Transaction ${wtx.id} verified")
         return EnforceVerifyOrFail.Token
     }
 
@@ -183,7 +187,7 @@ public data class TestZKTransactionDSLInterpreter private constructor(
         transactionBuilder.setTimeWindow(data)
     }
 
-    override fun _tweak(dsl: TransactionDSLInterpreter.() -> EnforceVerifyOrFail): EnforceVerifyOrFail = copy().dsl()
+    override fun _tweak(dsl: ZKTransactionDSLInterpreter.() -> EnforceVerifyOrFail): EnforceVerifyOrFail = copy().dsl()
 
     override fun _attachment(contractClassName: ContractClassName) {
         attachment(

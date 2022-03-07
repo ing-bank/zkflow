@@ -2,6 +2,7 @@ package com.ing.zkflow.testing.dsl
 
 import com.ing.zkflow.common.transactions.SignedZKVerifierTransaction
 import com.ing.zkflow.common.transactions.ZKVerifierTransaction
+import com.ing.zkflow.common.transactions.hasPrivateComponents
 import com.ing.zkflow.common.transactions.zkTransactionMetadata
 import com.ing.zkflow.common.zkp.PublicInput
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata

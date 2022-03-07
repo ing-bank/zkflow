@@ -39,7 +39,7 @@ class BFLSerializationWithDSLTest {
         val aliceAsset = TestState(alice)
 
         services.zkLedger(zkNetworkParameters = zkNetworkParameters) {
-            zkTransaction {
+            transaction {
                 input(LocalContract.PROGRAM_ID, aliceAsset)
                 output(LocalContract.PROGRAM_ID, aliceAsset.copy(owner = bob))
                 command(listOf(alice.owningKey, bob.owningKey), LocalContract.Move())
