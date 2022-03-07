@@ -21,7 +21,7 @@ dependencies {
     kotlinCompilerPluginClasspath("net.corda:corda-core:$cordaVersion")
     kotlinCompilerPluginClasspath(project(":utils"))
     kotlinCompilerPluginClasspath(project(":annotations"))
-    kotlinCompilerPluginClasspath(project(":serialization-candidate"))
+    kotlinCompilerPluginClasspath(project(":serialization"))
 
     val arrowMetaVersion: String by project
     kotlinCompilerPluginClasspath("io.arrow-kt:arrow-meta:$arrowMetaVersion")

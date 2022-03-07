@@ -1,13 +1,13 @@
 package com.ing.zkflow.common.contract
 
-import com.ing.serialization.bfl.annotations.FixedLength
+import com.ing.zkflow.annotations.Size
 import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.contracts.ZKContractState
 import com.ing.zkflow.common.serialization.BFLSerializationScheme
-import com.ing.zkflow.common.serialization.BFLSerializationScheme.Companion.ZkCommandDataSerializerMap
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.common.zkp.metadata.commandMetadata
-import com.ing.zkflow.serialization.bfl.serializers.AnonymousPartySerializer
+import com.ing.zkflow.serialization.serializer.IntSerializer
+import com.ing.zkflow.serialization.serializer.corda.AnonymousPartySerializer
 import com.ing.zkflow.testing.dsl.VerificationMode
 import com.ing.zkflow.testing.dsl.zkLedger
 import com.ing.zkflow.util.tryNonFailing
@@ -15,6 +15,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.Contract
+import net.corda.core.crypto.Crypto
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.transactions.LedgerTransaction
 import net.corda.testing.core.TestIdentity
@@ -53,7 +54,7 @@ class LocalContract : Contract {
     class Move : ZKCommandData {
         init {
             tryNonFailing {
-                ZkCommandDataSerializerMap.register(this::class)
+                BFLSerializationScheme.Companion.CommandDataSerializerRegistry.register(this::class, serializer())
             }
         }
 
@@ -73,15 +74,17 @@ class LocalContract : Contract {
 @Serializable
 @BelongsToContract(LocalContract::class)
 data class TestState(
-    val owner: @Serializable(with = AnonymousPartySerializer::class) AnonymousParty,
-    val value: Int = Random().nextInt(1000)
+    val owner: @Serializable(with = OwnerSerializer::class) AnonymousParty,
+    val value: @Serializable(with = IntSerializer::class) Int = Random().nextInt(1000)
 ) : ZKContractState {
-    @FixedLength([1])
-    override val participants: List<@Serializable(with = AnonymousPartySerializer::class) AnonymousParty> = listOf(owner)
+    private object OwnerSerializer : AnonymousPartySerializer(Crypto.EDDSA_ED25519_SHA512.schemeNumberID)
+
+    @Transient
+    override val participants: @Size(1) List<@Serializable(with = AnonymousPartySerializer::class) AnonymousParty> = listOf(owner)
 
     init {
         tryNonFailing {
-            BFLSerializationScheme.Companion.ZkContractStateSerializerMap.register(this::class)
+            BFLSerializationScheme.Companion.ContractStateSerializerRegistry.register(this::class, serializer())
         }
     }
 }

@@ -517,28 +517,8 @@ internal object Processors {
             buildAttachmentConstraintToSerializingObject<AutomaticHashConstraint, AutomaticHashConstraintSerializer>(),
         AutomaticPlaceholderConstraint::class.qualifiedName!! to
             buildAttachmentConstraintToSerializingObject<AutomaticPlaceholderConstraint, AutomaticPlaceholderConstraintSerializer>(),
-
-        /**
-         * To serialize [HashAttachmentConstraint], a single annotation annotated with [HashSize] must be present.
-         * Otherwise, recurse to [forUserType].
-         */
-        HashAttachmentConstraint::class.qualifiedName!! to ToSerializingObject { contextualOriginal, _ ->
-            contextualOriginal.findHashAlgorithmAndSize()?.let { (algorithm, hashSize) ->
-                TypeSerializingObject.ExplicitType(
-                    contextualOriginal,
-                    HashAttachmentConstraintSerializer::class,
-                    emptyList()
-                ) { _, outer, _ ->
-                    "object $outer: ${HashAttachmentConstraintSerializer::class.qualifiedName}(\"$algorithm\", $hashSize)"
-                }.also {
-                    SerdeLogger.log("Type ${contextualOriginal.ktTypeReference.text} processed successfully")
-                }
-            } ?: run {
-                // SecureHash has no signature specific annotations, recurse to treating it as a generic user type.
-                SerdeLogger.log("Re-cursing to default treatment of ${contextualOriginal.ktTypeReference.text}")
-                forUserType(contextualOriginal)
-            }
-        },
+        HashAttachmentConstraint::class.qualifiedName!! to
+            buildAttachmentConstraintToSerializingObject<HashAttachmentConstraint, HashAttachmentConstraintSerializer>(),
 
         /**
          * To serialize [SignatureAttachmentConstraint], a single annotation annotated with [SignatureSpec] must be present,

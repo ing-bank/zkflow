@@ -1,50 +1,72 @@
 package com.ing.zkflow.integration.contract
 
-import com.ing.zkflow.annotations.ZKP
-import com.ing.zkflow.annotations.corda.EdDSA
 import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.contracts.ZKOwnableState
+import com.ing.zkflow.common.serialization.BFLSerializationScheme
+import com.ing.zkflow.common.serialization.BFLSerializationScheme.Companion.CommandDataSerializerRegistry
 import com.ing.zkflow.common.transactions.zkTransactionMetadata
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.common.zkp.metadata.commandMetadata
-import com.ing.zkflow.integration.contract.TestContractWithZKPAnnotations.Create.Companion.verifyCreate
-import com.ing.zkflow.integration.contract.TestContractWithZKPAnnotations.Move.Companion.verifyMove
-import com.ing.zkflow.integration.contract.TestContractWithZKPAnnotations.MoveBidirectional.Companion.verifyMoveBidirectional
+import com.ing.zkflow.integration.contract.TestContractOld.Create.Companion.verifyCreate
+import com.ing.zkflow.integration.contract.TestContractOld.Move.Companion.verifyMove
+import com.ing.zkflow.integration.contract.TestContractOld.MoveBidirectional.Companion.verifyMoveBidirectional
+import com.ing.zkflow.serialization.serializer.IntSerializer
+import com.ing.zkflow.serialization.serializer.corda.AnonymousPartySerializer
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
+import kotlinx.serialization.Contextual
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.CommandAndState
 import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.CommandWithParties
 import net.corda.core.contracts.Contract
 import net.corda.core.contracts.ContractClassName
+import net.corda.core.crypto.Crypto
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.transactions.LedgerTransaction
 import java.util.Random
 
+/*
+ * TODO: When the new BFLSerializationScheme is in place, this class can be replaced with TestContractWithZKPAnnotations.
+ * TestContractWithZKPAnnotations can then be renamed to TestContract
+ */
 @SuppressFBWarnings("PREDICTABLE_RANDOM", "PATH_TRAVERSAL_IN", justification = "Test code")
-class TestContractWithZKPAnnotations : Contract {
+class TestContractOld : Contract {
     companion object {
         const val PROGRAM_ID: ContractClassName = "com.ing.zkflow.integration.contract.TestContract"
     }
 
-    @BelongsToContract(TestContractWithZKPAnnotations::class)
-    @ZKP
+    @Serializable
+    @BelongsToContract(TestContract::class)
     data class TestState(
-        override val owner: @EdDSA AnonymousParty,
-        val value: Int = Random().nextInt(1000)
+        override val owner: @Serializable(with = OwnerSerializer::class) AnonymousParty,
+        val value: @Serializable(with = IntSerializer::class) Int = Random().nextInt(1000)
     ) : ZKOwnableState {
-        override val participants: List<AnonymousParty> = listOf(owner)
+        private object OwnerSerializer : AnonymousPartySerializer(Crypto.EDDSA_ED25519_SHA512.schemeNumberID)
 
-        override fun withNewOwner(newOwner: AnonymousParty): CommandAndState =
-            CommandAndState(Move(), copy(owner = newOwner))
+        init {
+            BFLSerializationScheme.Companion.ContractStateSerializerRegistry.register(this::class, serializer())
+        }
+
+        @Transient
+        override val participants: List<@Contextual AnonymousParty> = listOf(owner)
+
+        override fun withNewOwner(newOwner: AnonymousParty): CommandAndState = CommandAndState(Move(), copy(owner = newOwner))
     }
 
     // Commands
-    @ZKP
+    @Serializable
     class Create : ZKCommandData {
+
+        @Transient
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
             outputs { private(TestState::class) at 0 }
             numberOfSigners = 1
+        }
+
+        init {
+            CommandDataSerializerRegistry.register(this::class, serializer())
         }
 
         companion object {
@@ -62,13 +84,19 @@ class TestContractWithZKPAnnotations : Contract {
         }
     }
 
-    @ZKP
+    @Serializable
     class CreatePublic : ZKCommandData {
+
+        @Transient
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
             outputs {
                 public(TestState::class) at 0
             }
             numberOfSigners = 1
+        }
+
+        init {
+            CommandDataSerializerRegistry.register(this::class, Create.serializer())
         }
 
         companion object {
@@ -90,20 +118,32 @@ class TestContractWithZKPAnnotations : Contract {
      *
      * This command is only used on [CollectSignaturesFlowTest]. It expects two signatures, but nothing else.
      */
-    @ZKP
+    @Serializable
     class SignOnly : ZKCommandData {
+
+        @Transient
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
             outputs { private(TestState::class) at 0 }
             numberOfSigners = 2
         }
+
+        init {
+            CommandDataSerializerRegistry.register(this::class, Create.serializer())
+        }
     }
 
-    @ZKP
+    @Serializable
     class Move : ZKCommandData {
+
+        @Transient
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
             inputs { any(TestState::class) at 0 }
             outputs { private(TestState::class) at 0 }
             numberOfSigners = 2
+        }
+
+        init {
+            CommandDataSerializerRegistry.register(this::class, Create.serializer())
         }
 
         companion object {
@@ -125,12 +165,18 @@ class TestContractWithZKPAnnotations : Contract {
         }
     }
 
-    @ZKP
+    @Serializable
     class MovePrivateOnly : ZKCommandData {
+
+        @Transient
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
             inputs { private(TestState::class) at 0 }
             outputs { private(TestState::class) at 0 }
             numberOfSigners = 2
+        }
+
+        init {
+            CommandDataSerializerRegistry.register(this::class, Create.serializer())
         }
 
         companion object {
@@ -152,8 +198,10 @@ class TestContractWithZKPAnnotations : Contract {
         }
     }
 
-    @ZKP
+    @Serializable
     class MoveBidirectional : ZKCommandData {
+
+        @Transient
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
             inputs {
                 any(TestState::class) at 0
@@ -166,6 +214,10 @@ class TestContractWithZKPAnnotations : Contract {
             numberOfSigners = 2
         }
 
+        init {
+            CommandDataSerializerRegistry.register(this::class, Create.serializer())
+        }
+
         companion object {
             fun verifyMoveBidirectional(
                 tx: LedgerTransaction,
@@ -175,8 +227,7 @@ class TestContractWithZKPAnnotations : Contract {
                 tx.zkTransactionMetadata().verify(tx)
 
                 // Transaction contents
-                if (tx.inputsOfType<TestState>().sumBy { it.value } != tx.outputsOfType<TestState>()
-                    .sumBy { it.value }
+                if (tx.inputsOfType<TestState>().sumBy { it.value } != tx.outputsOfType<TestState>().sumBy { it.value }
                 ) throw IllegalArgumentException(
                     "Failed requirement: amounts are not conserved for TestState"
                 )

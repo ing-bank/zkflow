@@ -20,11 +20,10 @@ object WhitelistedByZoneAttachmentConstraintSerializer : FixedLengthKSerializerW
 object AutomaticHashConstraintSerializer : FixedLengthKSerializerWithDefault<AutomaticHashConstraint> by ImmutableObjectSerializer(AutomaticHashConstraint)
 object AutomaticPlaceholderConstraintSerializer : FixedLengthKSerializerWithDefault<AutomaticPlaceholderConstraint> by ImmutableObjectSerializer(AutomaticPlaceholderConstraint)
 
-open class HashAttachmentConstraintSerializer(algorithm: String, hashLength: Int) :
-    FixedLengthKSerializerWithDefault<HashAttachmentConstraint> {
-    private val strategy = SecureHashSerializer(algorithm, hashLength)
+object HashAttachmentConstraintSerializer : FixedLengthKSerializerWithDefault<HashAttachmentConstraint> {
+    private val strategy = SHA256SecureHashSerializer // SHA-256 is hardcoded in Corda for attachment ids
     override val default = HashAttachmentConstraint(strategy.default)
-    override val descriptor = buildClassSerialDescriptor("HashAttachmentConstraint$algorithm") {
+    override val descriptor = buildClassSerialDescriptor("HashAttachmentConstraint") {
         element("attachmentId", strategy.descriptor)
     }.toFixedLengthSerialDescriptorOrThrow()
 

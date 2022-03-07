@@ -1,244 +1,281 @@
 package com.ing.zkflow.common.serialization
 
 import com.ing.zkflow.common.network.ZKNetworkParameters
-import com.ing.zkflow.common.serialization.ZKCustomSerializationScheme.Companion.CONTEXT_KEY_TRANSACTION_METADATA
-import com.ing.zkflow.common.serialization.ZKCustomSerializationScheme.Companion.CONTEXT_KEY_ZK_NETWORK_PARAMETERS
+import com.ing.zkflow.common.network.ZKNetworkParametersServiceLoader
+import com.ing.zkflow.common.network.attachmentConstraintSerializer
+import com.ing.zkflow.common.network.notarySerializer
+import com.ing.zkflow.common.network.signerSerializer
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
-import com.ing.zkflow.serialization.SerializerMap
-import com.ing.zkflow.serialization.SerializerMapError
-import com.ing.zkflow.serialization.SerializersModuleRegistry
-import com.ing.zkflow.serialization.ZKContractStateSerializerMapProvider
-import com.ing.zkflow.serialization.ZkCommandDataSerializerMapProvider
-import com.ing.zkflow.serialization.bfl.serializers.PartySerializer
-import com.ing.zkflow.serialization.bfl.serializers.TimeWindowSerializer
-import com.ing.zkflow.serialization.bfl.serializers.TransactionStateSerializer
-import kotlinx.serialization.KSerializer
-import kotlinx.serialization.modules.SerializersModule
-import kotlinx.serialization.modules.contextual
-import kotlinx.serialization.modules.plus
-import kotlinx.serialization.serializer
+import com.ing.zkflow.serialization.infra.CommandDataSerializationMetadata
+import com.ing.zkflow.serialization.infra.NetworkSerializationMetadata
+import com.ing.zkflow.serialization.infra.SecureHashSerializationMetadata
+import com.ing.zkflow.serialization.infra.SignersSerializationMetadata
+import com.ing.zkflow.serialization.infra.TransactionStateSerializationMetadata
+import com.ing.zkflow.serialization.infra.algorithmId
+import com.ing.zkflow.serialization.infra.unwrapSerialization
+import com.ing.zkflow.serialization.infra.wrapSerialization
+import com.ing.zkflow.serialization.scheme.BinaryFixedLengthScheme
+import com.ing.zkflow.serialization.scheme.ByteBinaryFixedLengthScheme
+import com.ing.zkflow.serialization.serializer.FixedLengthListSerializer
+import com.ing.zkflow.serialization.serializer.corda.HashAlgorithmRegistry
+import com.ing.zkflow.serialization.serializer.corda.SHA256SecureHashSerializationMetadata
+import com.ing.zkflow.serialization.serializer.corda.SHA256SecureHashSerializer
+import com.ing.zkflow.serialization.serializer.corda.StateRefSerializer
+import com.ing.zkflow.serialization.serializer.corda.TimeWindowSerializer
+import com.ing.zkflow.serialization.serializer.corda.TransactionStateSerializer
 import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.ContractState
+import net.corda.core.contracts.StateRef
 import net.corda.core.contracts.TimeWindow
 import net.corda.core.contracts.TransactionState
+import net.corda.core.crypto.SecureHash
+import net.corda.core.crypto.SecureHash.Companion.SHA2_256
+import net.corda.core.crypto.algorithm
 import net.corda.core.identity.Party
 import net.corda.core.serialization.CustomSerializationScheme
 import net.corda.core.serialization.SerializationSchemeContext
 import net.corda.core.serialization.internal.CustomSerializationSchemeUtils
+import net.corda.core.serialization.internal.CustomSerializationSchemeUtils.Companion.getSchemeIdIfCustomSerializationMagic
 import net.corda.core.utilities.ByteSequence
 import net.corda.core.utilities.loggerFor
-import java.nio.ByteBuffer
+import net.corda.serialization.internal.CordaSerializationMagic
+import org.slf4j.LoggerFactory
 import java.security.PublicKey
 import java.util.ServiceLoader
-import com.ing.serialization.bfl.api.debugSerialize as obliviousDebugSerialize
-import com.ing.serialization.bfl.api.deserialize as obliviousDeserialize
-import com.ing.serialization.bfl.api.reified.deserialize as informedDeserialize
-import com.ing.serialization.bfl.api.reified.serialize as informedSerialize
-import com.ing.serialization.bfl.api.serialize as obliviousSerialize
 
 open class BFLSerializationScheme : CustomSerializationScheme {
     companion object {
-        const val SCHEME_ID = 602214076
+        const val SCHEME_ID = 713325187
 
-        object ZkContractStateSerializerMap : SerializerMap<ContractState>()
-        object ZkCommandDataSerializerMap : SerializerMap<CommandData>()
+        object ContractStateSerializerRegistry : SerializerRegistry<ContractState>()
+        object CommandDataSerializerRegistry : SerializerRegistry<CommandData>()
 
         init {
-            ServiceLoader.load(ZKContractStateSerializerMapProvider::class.java)
-                .flatMap { it.list() }
-                .forEach { ZkContractStateSerializerMap.register(it.first, it.second) }
+            val log = LoggerFactory.getLogger(this::class.java)
+            log.debug("Populating `${ContractStateSerializerRegistry::class.simpleName}`")
+            ServiceLoader.load(ContractStateSerializerRegistryProvider::class.java).flatMap { it.list() }
+                .also { if (it.isEmpty()) log.debug("No ContractStates registered in ContractStateSerializerRegistry") }
+                .forEach { ContractStateSerializerRegistry.register(it.first, it.second) }
 
-            ServiceLoader.load(ZkCommandDataSerializerMapProvider::class.java)
-                .flatMap { it.list() }
-                .forEach { ZkCommandDataSerializerMap.register(it.first, it.second) }
+            log.debug("Populating `${CommandDataSerializerRegistry::class.simpleName}`")
+            ServiceLoader.load(CommandDataSerializerRegistryProvider::class.java).flatMap { it.list() }
+                .also { if (it.isEmpty()) log.debug("No CommandData registered in CommandDataSerializerRegistry") }
+                .forEach { CommandDataSerializerRegistry.register(it.first, it.second) }
         }
     }
 
-    override fun getSchemeId(): Int {
-        return SCHEME_ID
-    }
+    override fun getSchemeId() = SCHEME_ID
 
     private val logger = loggerFor<BFLSerializationScheme>()
 
-    private val cordaSerdeMagicLength =
-        CustomSerializationSchemeUtils.getCustomSerializationMagicFromSchemeId(SCHEME_ID).size
+    private val scheme: BinaryFixedLengthScheme = ByteBinaryFixedLengthScheme
 
-    private val serializersModule = SerializersModuleRegistry.merged
+    override fun <T : Any> serialize(obj: T, context: SerializationSchemeContext): ByteSequence {
+        logger.trace("Serializing tx component:\t${obj::class}")
+        val zkNetworkParameters = context.zkNetworkParameters ?: error("ZKNetworkParameters must be defined")
 
-    override fun <T : Any> deserialize(
-        bytes: ByteSequence,
-        clazz: Class<T>,
-        context: SerializationSchemeContext
-    ): T {
-        logger.trace("Deserializing tx component:\t$clazz")
-        val serializedData = bytes.bytes.drop(cordaSerdeMagicLength).toByteArray()
-
-        return when {
-            TransactionState::class.java.isAssignableFrom(clazz) -> {
-                val (stateStrategy, message) = ZkContractStateSerializerMap.extractSerializerAndSerializedData(
-                    serializedData
-                )
-
-                @Suppress("UNCHECKED_CAST")
-                informedDeserialize(
-                    message,
-                    TransactionStateSerializer(stateStrategy),
-                    serializersModule = serializersModule
-                ) as T
-            }
-
-            List::class.java.isAssignableFrom(clazz) -> {
-                // This case will be triggered when commands will be reconstructed.
-                // This involves deserialization of the SIGNERS_GROUP to reconstruct commands.
-
-                /*
-                 * Here we read the actual length of the serialized collection from the serialized data
-                 * We use it to give the deserializer the information it requires (for now).
-                 * Once the BFL adds the fixed length info and uses it for this purpose on deserialization under the hood,
-                 * we can remove this argument
-                 */
-                val actualLength = ByteBuffer.wrap(serializedData.copyOfRange(0, Int.SIZE_BYTES)).int
-
-                @Suppress("UNCHECKED_CAST")
-                informedDeserialize<List<PublicKey>>(
-                    serializedData,
-                    serializersModule = serializersModule,
-                    outerFixedLength = intArrayOf(actualLength)
-                ) as T
-            }
-
-            CommandData::class.java.isAssignableFrom(clazz) -> {
-                val (commandStrategy, message) = ZkCommandDataSerializerMap.extractSerializerAndSerializedData(
-                    serializedData
-                )
-
-                @Suppress("UNCHECKED_CAST")
-                obliviousDeserialize(
-                    message,
-                    CommandData::class.java,
-                    commandStrategy,
-                    serializersModule = serializersModule
-                ) as T
-            }
-
-            else -> obliviousDeserialize(
-                serializedData,
-                clazz,
-                serializersModule = serializersModule
+        return ByteSequence.of(
+            when (obj) {
+                is SecureHash -> serializeSecureHash(obj)
+                is TransactionState<*> -> serializeTransactionState(obj, zkNetworkParameters)
+                is CommandData -> serializeCommandData(obj)
+                is TimeWindow -> serializeTimeWindow(obj)
+                is Party -> serializeNotary(obj, zkNetworkParameters)
+                is StateRef -> serializeStateRef(obj)
+                is List<*> -> serializeSignersList(obj, zkNetworkParameters, context.transactionMetadata)
+                else -> error("Don't know how to serialize ${obj::class.qualifiedName}")
+            }.wrapSerialization(
+                scheme,
+                NetworkSerializationMetadata(zkNetworkParameters.version),
+                NetworkSerializationMetadata.serializer()
             )
+        )
+    }
+
+    override fun <T : Any> deserialize(bytes: ByteSequence, clazz: Class<T>, context: SerializationSchemeContext): T {
+        logger.trace("Deserializing tx component:\t$clazz")
+        val wrappedSerializedData = extractValidatedSerializedData(bytes)
+
+        val (metadata, data) = wrappedSerializedData.unwrapSerialization(scheme, NetworkSerializationMetadata.serializer())
+        val serializedData = data.toByteArray()
+
+        val zkNetworkParameters = ZKNetworkParametersServiceLoader.getVersion(metadata.networkParametersVersion)
+            ?: error("ZKNetworkParameters version '${metadata.networkParametersVersion}' not found")
+
+        @Suppress("UNCHECKED_CAST") // If we managed to deserialize it, we know it will match T
+        return when {
+            SecureHash::class.java.isAssignableFrom(clazz) -> deserializeSecureHash(serializedData) as T
+            Party::class.java.isAssignableFrom(clazz) -> deserializeNotary(serializedData, zkNetworkParameters) as T
+            StateRef::class.java.isAssignableFrom(clazz) -> deserializeStateRef(serializedData) as T
+            TimeWindow::class.java.isAssignableFrom(clazz) -> deserializeTimeWindow(serializedData) as T
+            TransactionState::class.java.isAssignableFrom(clazz) -> deserializeTransactionState(serializedData, zkNetworkParameters) as T
+            CommandData::class.java.isAssignableFrom(clazz) -> deserializeCommandData(serializedData) as T
+            List::class.java.isAssignableFrom(clazz) -> deserializeSignersList(serializedData, zkNetworkParameters) as T
+            else -> error("Don't know how to deserialize ${clazz.canonicalName}")
         }
     }
 
-    @Suppress("LongMethod") // TODO: split into smaller functions
-    override fun <T : Any> serialize(obj: T, context: SerializationSchemeContext): ByteSequence {
-        logger.trace("Serializing tx component:\t${obj::class}")
+    private fun serializeSignersList(
+        obj: List<*>,
+        zkNetworkParameters: ZKNetworkParameters,
+        transactionMetadata: ResolvedZKTransactionMetadata?
+    ): ByteArray {
+        @Suppress("UNCHECKED_CAST") // This is a conditional cast.
+        val signersList = obj as? List<PublicKey> ?: error("Signers: Expected `List<PublicKey>`, Actual `${obj::class.qualifiedName}`")
 
-        val transactionMetadata =
-            context.properties[CONTEXT_KEY_TRANSACTION_METADATA] as? ResolvedZKTransactionMetadata
-        val zkNetworkParameters =
-            context.properties[CONTEXT_KEY_ZK_NETWORK_PARAMETERS] as? ZKNetworkParameters
-                ?: error("ZKNetworkParameters must be defined")
+        /*
+         * Using the actual (non-fixed) signers.size when there is no tx metadata is ok,
+         * because that means we are serializing a fully non-zkp transaction.
+         * The serialized signers list of a non-zkp tx will never be used as input to a circuit,
+         * only TransactionStates (outputs) will ever be used as input.
+         */
+        val numberOfSigners = transactionMetadata?.numberOfSigners ?: signersList.size
+        val signersSerializer = FixedLengthListSerializer(
+            numberOfSigners,
+            zkNetworkParameters.signerSerializer
+        )
 
-        val serialization = when (obj) {
-            is TransactionState<*> -> {
-                val state = obj.data
+        return scheme.encodeToBinary(signersSerializer, signersList).wrapSerialization(
+            scheme,
+            SignersSerializationMetadata(
+                numberOfSigners
+            ),
+            SignersSerializationMetadata.serializer()
+        )
+    }
 
-                // Confirm that the TransactionState fields match the zkNetworkParameters
-                zkNetworkParameters.attachmentConstraintType.validate(obj.constraint)
-                zkNetworkParameters.notaryInfo.validate(obj.notary)
+    private fun deserializeSignersList(
+        serializedData: ByteArray,
+        zkNetworkParameters: ZKNetworkParameters
+    ): List<PublicKey> {
+        val (metadata, data) = serializedData.unwrapSerialization(scheme, SignersSerializationMetadata.serializer())
+        val serialization = data.toByteArray()
 
-                // The following cast is OK, its validity is guaranteed by the inner structure of `ContractStateSerializerMap`.
-                // If `[]`-access succeeds, then the cast MUST also succeed.
-                @Suppress("UNCHECKED_CAST")
-                val stateStrategy = ZkContractStateSerializerMap[state::class] as KSerializer<ContractState>
+        val signersSerializer = FixedLengthListSerializer(
+            metadata.numberOfSigners,
+            zkNetworkParameters.signerSerializer
+        )
 
-                val strategy = TransactionStateSerializer(stateStrategy)
+        return scheme.decodeFromBinary(signersSerializer, serialization)
+    }
 
-                val debugSerialization = obliviousDebugSerialize(
-                    obj,
-                    strategy,
-                    serializersModule = serializersModule + SerializersModule { contextual(strategy) }
-                )
-                // Serialization layout is accessible at debugSerialization.second
+    private fun serializeCommandData(obj: CommandData): ByteArray {
+        val commandDataSerializer = CommandDataSerializerRegistry[obj::class]
 
-                /**
-                 * TransactionState is always serialized with BFL, even  in non-ZKP txs, so they can be consumed by ZKP txs
-                 */
-                ZkContractStateSerializerMap.prefixWithIdentifier(
-                    state::class,
-                    debugSerialization.first
-                )
-            }
+        return scheme.encodeToBinary(commandDataSerializer, obj).wrapSerialization(
+            scheme,
+            CommandDataSerializationMetadata(
+                serializerId = CommandDataSerializerRegistry.identify(obj::class)
+            ),
+            CommandDataSerializationMetadata.serializer()
+        )
+    }
 
-            is CommandData -> {
-                // The following cast is OK, its validity is guaranteed by the inner structure of `ContractStateSerializerMap`.
-                // If `[]`-access succeeds, then the cast MUST also succeed.
-                @Suppress("UNCHECKED_CAST")
-                val commandStrategy = try {
-                    ZkCommandDataSerializerMap[obj::class]
-                } catch (e: SerializerMapError.ClassNotRegistered) {
-                    serializersModule.serializer(obj::class.java)
-                } as KSerializer<CommandData>
+    private fun deserializeCommandData(serializedData: ByteArray): CommandData {
+        val (metadata, data) = serializedData.unwrapSerialization(scheme, CommandDataSerializationMetadata.serializer())
+        val serialization = data.toByteArray()
 
-                ZkCommandDataSerializerMap.prefixWithIdentifier(
-                    obj::class,
-                    obliviousSerialize(obj, commandStrategy, serializersModule = serializersModule)
-                )
-            }
+        val commandDataSerializer = CommandDataSerializerRegistry[metadata.serializerId]
 
-            is TimeWindow -> {
-                /* `TimeWindow` is a sealed class with private variant classes.
-                 * Although a serializer is registered for `TimeWindow`, it won't be picked up for top-level variants.
-                 * It is also impossible to register top-level serializers for variants because they are private and
-                 * thus it is impossible to access them to define appropriate serializers.
-                 * Therefore, we cast any variant as a TimeWindow.
-                 */
-                informedSerialize(
-                    obj,
-                    TimeWindowSerializer,
-                    serializersModule = serializersModule
-                )
-            }
+        return scheme.decodeFromBinary(commandDataSerializer, serialization)
+    }
 
-            is List<*> -> {
-                /*
-                 * This case will be triggered when SIGNERS_GROUP will be processed.
-                 * Components of this group are lists of signers of commands.
-                */
-                @Suppress("UNCHECKED_CAST")
-                val signers = obj as? List<PublicKey> ?: error("Signers: Expected List<PublicKey>, actual ${obj::class.simpleName}")
+    private fun serializeTransactionState(obj: TransactionState<*>, zkNetworkParameters: ZKNetworkParameters): ByteArray {
+        val state = obj.data
 
-                /*
-                 * Using the actual (non-fixed) signers.size when there is to tx metadata is ok,
-                 * because that means we are serializing a fully non-zkp transaction.
-                 * The serialized signers list of a non-zkp tx wwill never be used as input to a circuit,
-                 * only TransactionStates (outputs) will ever be used as input.
-                 */
-                val signersFixedLength = transactionMetadata?.numberOfSigners ?: signers.size
+        // Confirm that the TransactionState fields match the zkNetworkParameters
+        zkNetworkParameters.attachmentConstraintType.validate(obj.constraint)
+        zkNetworkParameters.notaryInfo.validate(obj.notary)
 
-                informedSerialize(
-                    signers,
-                    serializersModule = serializersModule,
-                    outerFixedLength = intArrayOf(signersFixedLength)
-                )
-            }
+        val transactionStateSerializer = TransactionStateSerializer(
+            ContractStateSerializerRegistry[state::class],
+            zkNetworkParameters.notarySerializer,
+            zkNetworkParameters.attachmentConstraintSerializer
+        )
 
-            is Party -> {
-                /*
-                 * The Notary component group
-                 */
-                zkNetworkParameters.notaryInfo.validate(obj)
+        return scheme.encodeToBinary(transactionStateSerializer, obj).wrapSerialization(
+            scheme,
+            TransactionStateSerializationMetadata(
+                serializerId = ContractStateSerializerRegistry.identify(state::class),
+            ),
+            TransactionStateSerializationMetadata.serializer()
+        )
+    }
 
-                informedSerialize(
-                    obj,
-                    PartySerializer,
-                    serializersModule = serializersModule
-                )
-            }
+    private fun deserializeTransactionState(serializedData: ByteArray, zkNetworkParameters: ZKNetworkParameters): TransactionState<ContractState> {
+        val (metadata, data) = serializedData.unwrapSerialization(scheme, TransactionStateSerializationMetadata.serializer())
+        val serialization = data.toByteArray()
 
-            else -> obliviousSerialize(obj, serializersModule = serializersModule)
+        val transactionStateSerializer = TransactionStateSerializer(
+            ContractStateSerializerRegistry[metadata.serializerId],
+            zkNetworkParameters.notarySerializer,
+            zkNetworkParameters.attachmentConstraintSerializer
+        )
+
+        return scheme.decodeFromBinary(transactionStateSerializer, serialization)
+    }
+
+    private fun serializeTimeWindow(obj: TimeWindow) = scheme.encodeToBinary(TimeWindowSerializer, obj)
+
+    private fun deserializeTimeWindow(serializedData: ByteArray) =
+        scheme.decodeFromBinary(TimeWindowSerializer, serializedData)
+
+    private fun serializeStateRef(obj: StateRef): ByteArray {
+        val secureHashMetadata = when (val txhash = obj.txhash) {
+            is SecureHash.SHA256 -> SHA256SecureHashSerializationMetadata
+            is SecureHash.HASH -> SecureHashSerializationMetadata(txhash.algorithmId)
         }
 
-        return ByteSequence.of(serialization)
+        val secureHashSerializer = HashAlgorithmRegistry[secureHashMetadata.hashAlgorithmId]
+        val stateRefSerializer = StateRefSerializer(secureHashSerializer)
+
+        return scheme.encodeToBinary(stateRefSerializer, obj).wrapSerialization(
+            scheme, secureHashMetadata, SecureHashSerializationMetadata.serializer()
+        )
+    }
+
+    private fun deserializeStateRef(serializedData: ByteArray): StateRef {
+        val (secureHashMetadata, data) = serializedData.unwrapSerialization(scheme, SecureHashSerializationMetadata.serializer())
+        val serialization = data.toByteArray()
+
+        val secureHashSerializer = HashAlgorithmRegistry[secureHashMetadata.hashAlgorithmId]
+        val stateRefSerializer = StateRefSerializer(secureHashSerializer)
+
+        return scheme.decodeFromBinary(stateRefSerializer, serialization)
+    }
+
+    private fun serializeNotary(obj: Party, zkNetworkParameters: ZKNetworkParameters): ByteArray {
+        return scheme.encodeToBinary(zkNetworkParameters.notarySerializer, obj)
+    }
+
+    private fun deserializeNotary(serializedData: ByteArray, zkNetworkParameters: ZKNetworkParameters): Party {
+        return scheme.decodeFromBinary(zkNetworkParameters.notarySerializer, serializedData)
+    }
+
+    private fun serializeSecureHash(obj: SecureHash): ByteArray {
+        // Either AttachmentId, or NetworkParameters hash. Both are hardcoded to be SHA-256 in Corda.
+        require(obj.algorithm == SHA2_256) {
+            "Serializing Networkparameters hash or AttachmentId: expected hash algorithm $SHA2_256, found ${obj.algorithm}"
+        }
+
+        return scheme.encodeToBinary(SHA256SecureHashSerializer, obj)
+    }
+
+    private fun deserializeSecureHash(serializedData: ByteArray): SecureHash {
+        // Either AttachmentId, or NetworkParameters hash. Both are hardcoded to be SHA-256 in Corda.
+        return scheme.decodeFromBinary(SHA256SecureHashSerializer, serializedData)
+    }
+
+    private fun extractValidatedSerializedData(bytes: ByteSequence): ByteArray {
+        val customSerializationMagicLength by lazy { CustomSerializationSchemeUtils.getCustomSerializationMagicFromSchemeId(SCHEME_ID).size }
+        val foundSerializationMagic = CordaSerializationMagic(bytes.bytes.take(customSerializationMagicLength).toByteArray())
+
+        val schemeIdUsedForSerialization =
+            getSchemeIdIfCustomSerializationMagic(foundSerializationMagic)
+                ?: error("Can't determine Serialization scheme ID used from serialized data. Found following CordaSerializationMagic: '${foundSerializationMagic.bytes}'")
+        require(schemeIdUsedForSerialization == SCHEME_ID) {
+            "Can't deserialize transaction component: it was serialized with scheme $schemeIdUsedForSerialization, but current scheme is $SCHEME_ID"
+        }
+        return bytes.bytes.drop(customSerializationMagicLength).toByteArray()
     }
 }

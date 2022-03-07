@@ -75,8 +75,9 @@ data class ClassWithParty(val party: @EdDSA Party)
 data class ClassWithSecureHash(val hash: @Sha256 SecureHash)
 @ZKP
 data class ClassWithSignatureAttachmentConstraint(val constraint: @EdDSA SignatureAttachmentConstraint)
+
 @ZKP
-data class ClassWithHashAttachmentConstraint(val constraint: @Sha256 HashAttachmentConstraint)
+data class ClassWithHashAttachmentConstraint(val constraint: HashAttachmentConstraint)
 
 val structWithUnit = struct {
     name = "ClassWithClassWithoutFields"
@@ -256,7 +257,7 @@ val structWithHashAttachmentConstraint = struct {
     field {
         name = "constraint"
         type = struct {
-            name = "HashAttachmentConstraintSha256"
+            name = "HashAttachmentConstraint"
             field {
                 name = "attachment_id"
                 type = secureHashSha256

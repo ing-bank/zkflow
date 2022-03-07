@@ -24,7 +24,7 @@ dependencies {
     kotlinCompilerPluginClasspath("net.corda:corda-core:$cordaVersion")
     kotlinCompilerPluginClasspath(project(":utils"))
     kotlinCompilerPluginClasspath(project(":annotations"))
-    kotlinCompilerPluginClasspath(project(":serialization-candidate"))
+    kotlinCompilerPluginClasspath(project(":serialization"))
     kotlinCompilerPluginClasspath("org.jetbrains.kotlinx:kotlinx-serialization-core-jvm:$kotlinxSerializationVersion")
 
     val arrowMetaVersion: String by project
