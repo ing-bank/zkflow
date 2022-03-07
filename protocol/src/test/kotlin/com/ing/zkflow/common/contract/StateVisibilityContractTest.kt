@@ -27,7 +27,7 @@ import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.util.Random
 
-class SimpleContractTest {
+class StateVisibilityContractTest {
     private val services = MockServices(listOf("com.ing.zkflow"))
     private val alice = TestIdentity.fresh("Alice").party.anonymise()
     private val bob = TestIdentity.fresh("Bobby").party.anonymise()

@@ -156,9 +156,7 @@ class ZKTransactionBuilder(
         }
     }
 
-    fun enforcePrivateInputsAndReferences(
-        zkVerifierTransactionStorage: ZKVerifierTransactionStorage
-    ) {
+    fun enforcePrivateInputsAndReferences(zkVerifierTransactionStorage: ZKVerifierTransactionStorage) {
         if (this.hasZKCommandData) {
             val resolvedTransactionMetadata = this.zkTransactionMetadata()
             val privateInputIndexes = resolvedTransactionMetadata.inputs.filter { it.mustBePrivate() }.map { it.index }
@@ -172,8 +170,9 @@ class ZKTransactionBuilder(
     private fun enforcePrivateUtxoForStateRefs(zkVerifierTransactionStorage: ZKVerifierTransactionStorage, stateRefs: List<StateRef>) {
         stateRefs.forEach { stateRef ->
             val tx = zkVerifierTransactionStorage.getTransaction(stateRef.txhash)?.tx
-                ?: error("Transaction not found with ID: ${stateRef.txhash}")
-            require(tx.isPrivateComponent(ComponentGroupEnum.OUTPUTS_GROUP, stateRef.index)) {
+                ?: error("Could not enforce private UTXO for StateRef '$stateRef': ZKVerifierTransaction not found with ID: ${stateRef.txhash}")
+
+            check(tx.isPrivateComponent(ComponentGroupEnum.OUTPUTS_GROUP, stateRef.index)) {
                 "UTXO for StateRef '$stateRef' should be private, but it is public"
             }
         }
