@@ -11,9 +11,15 @@ import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.common.zkp.metadata.commandMetadata
 import com.ing.zkflow.common.zkp.metadata.packageName
 import com.ing.zkflow.crypto.BLAKE2S256
+import com.ing.zkflow.serialization.serializer.FixedLengthListSerializer
+import com.ing.zkflow.serialization.serializer.FixedLengthSetSerializer
+import com.ing.zkflow.serialization.serializer.IntSerializer
+import com.ing.zkflow.serialization.serializer.corda.AnonymousPartySerializer
 import com.ing.zkflow.testing.withCustomSerializationEnv
 import com.ing.zkflow.testing.zkp.MockZKNetworkParameters
 import io.kotest.matchers.shouldBe
+import kotlinx.serialization.Contextual
+import kotlinx.serialization.Serializable
 import net.corda.core.contracts.AlwaysAcceptAttachmentConstraint
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.Contract
@@ -23,6 +29,7 @@ import net.corda.core.contracts.ReferencedStateAndRef
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.StateRef
 import net.corda.core.contracts.TransactionState
+import net.corda.core.crypto.Crypto
 import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.AnonymousParty
@@ -148,7 +155,7 @@ class ZKTransactionOrderingTest {
 
             // compare outputs
             val actualDeserializedOutputs =
-                witness.outputsGroup.flatMap { it.value }.map { it.deserialize<TransactionState<ContractState>>().data }
+                witness.outputsGroup.map { it.serializedData }.map { it.deserialize<TransactionState<ContractState>>().data }
 
             val commandOutputIndices = command.outputs.map { it.index }
             val commandOutputs = wtx.outputStates.filterIndexed { index, _ ->
@@ -163,7 +170,7 @@ class ZKTransactionOrderingTest {
                 commandInputIndices.contains(index)
             }
 
-            witness.serializedInputUtxos.flatMap { it.value }.forEachIndexed { index, bytes ->
+            witness.serializedInputUtxos.map { it.serializedData }.forEachIndexed { index, bytes ->
                 bytes shouldBe commandInputUtxos[index].serializedContents
             }
 
@@ -171,7 +178,7 @@ class ZKTransactionOrderingTest {
             val commandReferenceUtxos = refUtxoInfos.filterIndexed { index, _ ->
                 commandReferenceIndices.contains(index)
             }
-            witness.serializedReferenceUtxos.flatMap { it.value }.forEachIndexed { index, bytes ->
+            witness.serializedReferenceUtxos.map { it.serializedData }.forEachIndexed { index, bytes ->
                 bytes shouldBe commandReferenceUtxos[index].serializedContents
             }
         }
@@ -211,12 +218,16 @@ class LocalContract : Contract {
     override fun verify(tx: LedgerTransaction) {}
 }
 
+object IntSetSerializer : FixedLengthSetSerializer<Int>(3, IntSerializer)
+object ParticipantsSerializer : FixedLengthListSerializer<AnonymousParty>(1, AnonymousPartySerializer(Crypto.EDDSA_ED25519_SHA512.schemeNumberID))
+
 @BelongsToContract(LocalContract::class)
 @Suppress("EqualsWithHashCodeExist")
+@Serializable
 class DummyZKStateA(
-    val value: Int,
-    val set: Set<Int>,
-    override val participants: List<AnonymousParty>
+    @Serializable(with = IntSerializer::class) val value: Int,
+    @Serializable(with = IntSetSerializer::class) val set: Set<Int>,
+    @Serializable(with = ParticipantsSerializer::class) override val participants: List<@Contextual AnonymousParty>
 ) : ZKContractState {
     companion object {
         fun newState(): DummyZKStateA {
@@ -241,10 +252,11 @@ class DummyZKStateA(
 
 @BelongsToContract(LocalContract::class)
 @Suppress("EqualsWithHashCodeExist")
+@Serializable
 class DummyZKStateB(
-    val value: Int,
-    val set: Set<Int>,
-    override val participants: List<AnonymousParty>
+    @Serializable(with = IntSerializer::class) val value: Int,
+    @Serializable(with = IntSetSerializer::class) val set: Set<Int>,
+    @Serializable(with = ParticipantsSerializer::class) override val participants: List<@Contextual AnonymousParty>
 ) : ZKContractState {
     companion object {
         fun newState(): DummyZKStateB {
@@ -268,10 +280,11 @@ class DummyZKStateB(
 }
 
 @BelongsToContract(LocalContract::class)
+@Serializable
 public data class DummyState(
-    val value: Int,
-    val set: Set<Int>,
-    override val participants: List<AbstractParty>
+    @Serializable(with = IntSerializer::class) val value: Int,
+    @Serializable(with = IntSetSerializer::class) val set: Set<Int>,
+    @Serializable(with = ParticipantsSerializer::class) override val participants: List<@Contextual AbstractParty>
 ) : ContractState {
     public companion object {
         public fun any(): DummyState {

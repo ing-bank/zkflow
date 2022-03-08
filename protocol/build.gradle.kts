@@ -32,6 +32,9 @@ dependencies {
     val kotlinxSerializationVersion: String by project
     api("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
 
+    // For zinc name
+    implementation(project(":zinc-poet:zinc-bfl"))
+
     // Corda dependencies.
     val cordaReleaseGroup: String by project
     val cordaVersion: String by project
@@ -51,6 +54,7 @@ dependencies {
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
     kotlinOptions.freeCompilerArgs += "-Xopt-in=kotlin.time.ExperimentalTime"
     kotlinOptions.freeCompilerArgs += "-Xopt-in=kotlinx.serialization.ExperimentalSerializationApi"
+    kotlinOptions.freeCompilerArgs += "-Xopt-in=kotlinx.serialization.InternalSerializationApi"
 }
 
 // TODO: We will have to enable explicitApi soon:

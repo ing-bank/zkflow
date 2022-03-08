@@ -117,11 +117,11 @@ class Witness(
         returnType = id(COMMAND_CONTEXT)
         body = """
                 $COMMAND_CONTEXT {
-                    ${if (commandMetadata.inputs.isNotEmpty()) "$INPUTS: self.$SERIALIZED_INPUT_UTXOS.deserialize()," else "// $INPUTS not present"}
-                    ${if (commandMetadata.outputs.isNotEmpty()) "$OUTPUTS: self.$OUTPUTS.deserialize()," else "// $OUTPUTS not present"}
-                    ${if (commandMetadata.references.isNotEmpty()) "$REFERENCES: self.$SERIALIZED_REFERENCE_UTXOS.deserialize()," else "// $REFERENCES not present"}
+                    ${if (commandMetadata.inputs.isNotEmpty()) "$INPUTS: self.$SERIALIZED_INPUT_UTXOS.deserialize()," else "// $INPUTS not present in transaction"}
+                    ${if (commandMetadata.outputs.isNotEmpty()) "$OUTPUTS: self.$OUTPUTS.deserialize()," else "// $OUTPUTS not present in transaction"}
+                    ${if (commandMetadata.references.isNotEmpty()) "$REFERENCES: self.$SERIALIZED_REFERENCE_UTXOS.deserialize()," else "// $REFERENCES not present in transaction"}
                     $NOTARY: self.deserialize_$NOTARY()[0],
-                    ${if (commandMetadata.timeWindow) "$TIME_WINDOW: self.deserialize_$TIME_WINDOW()[0]," else "// $TIME_WINDOW not present"}
+                    ${if (commandMetadata.timeWindow) "$TIME_WINDOW: self.deserialize_$TIME_WINDOW()[0]," else "// $TIME_WINDOW not present in transaction"}
                     $PARAMETERS: self.deserialize_$PARAMETERS()[0],
                     $SIGNERS: ${standardTypes.signerList(commandMetadata).id}::list_of(self.deserialize_$SIGNERS()),
                 }

@@ -2,9 +2,7 @@ package com.ing.zkflow.common.zkp.metadata
 
 import com.ing.zkflow.common.transactions.ZKTransactionBuilder
 import net.corda.core.contracts.ComponentGroupEnum
-import net.corda.core.contracts.ContractState
 import net.corda.core.transactions.LedgerTransaction
-import kotlin.reflect.KClass
 
 data class ResolvedZKTransactionMetadata(
     val commands: List<ResolvedZKCommandMetadata>
@@ -13,7 +11,7 @@ data class ResolvedZKTransactionMetadata(
         @Suppress("unused") // Will be re-enabled once ZincPoet is used
         private val DEFAULT_CIRCUIT_BUILD_FOLDER_PARENT_PATH = "${System.getProperty("user.dir")}/build/zinc/transactions/"
 
-        const val ERROR_NO_COMMANDS = "There should be at least one commmand in a ZKFlow transaction"
+        const val ERROR_NO_COMMANDS = "There should be at least one command in a ZKFlow transaction"
         const val ERROR_COMMAND_NOT_UNIQUE = "Multiple commands of one type found. All commands in a ZKFLow transaction should be unique"
     }
 
@@ -32,15 +30,6 @@ data class ResolvedZKTransactionMetadata(
     val numberOfSigners: Int by lazy { commands.sumOf { it.numberOfSigners } }
 
     val hasTimeWindow: Boolean = commands.any { it.timeWindow }
-
-    /**
-     * The aggregate list of java class to zinc type for all commands in this transaction.
-     */
-    val javaClass2ZincType: Map<KClass<out ContractState>, ZincType> by lazy {
-        commands.fold(mapOf()) { acc, resolvedZKCommandMetadata ->
-            acc + resolvedZKCommandMetadata.circuit.javaClass2ZincType
-        }
-    }
 
     init {
         require(commands.isNotEmpty()) { ERROR_NO_COMMANDS }
@@ -66,30 +55,6 @@ data class ResolvedZKTransactionMetadata(
              */
             ComponentGroupEnum.OUTPUTS_GROUP.ordinal -> outputs.find { it.index == componentIndex }?.private?.not() ?: true
             else -> true // all other groups have visibility 'Public' by default at the moment, may change in future
-        }
-    }
-
-    /**
-     * If a component is mentioned in any way in the metadata, it should be present in the witness.
-     * Otherwise, it will not be present in the witness.
-     */
-    fun isVisibleInWitness(groupIndex: Int, componentIndex: Int): Boolean {
-        return when (groupIndex) {
-            ComponentGroupEnum.INPUTS_GROUP.ordinal -> inputs.any { it.index == componentIndex } // Here we return UTXO visibility, not StateRef visibility (StateRefs never go to witness)
-            ComponentGroupEnum.REFERENCES_GROUP.ordinal -> references.any { it.index == componentIndex } // Here we return UTXO visibility, not StateRef visibility (StateRefs never go to witness)
-            ComponentGroupEnum.OUTPUTS_GROUP.ordinal -> outputs.any { it.index == componentIndex }
-            else -> false // other groups are not part of the witness for now, may change in the future.
-        }
-    }
-
-    // TODO: can this be deleted?
-    fun isOnlyPrivateUtxoAllowed(groupIndex: Int, componentIndex: Int): Boolean {
-        return when (groupIndex) {
-            ComponentGroupEnum.INPUTS_GROUP.ordinal -> inputs.find { it.index == componentIndex }?.forcePrivate
-                ?: false // We don't care about utxo visibility unless specifically marked with 'forcePrivate'
-            ComponentGroupEnum.REFERENCES_GROUP.ordinal -> references.find { it.index == componentIndex }?.forcePrivate
-                ?: false // We don't care about utxo visibility unless specifically marked with 'forcePrivate'
-            else -> error("Only Inputs and References UTXOs are allowed")
         }
     }
 

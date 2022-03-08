@@ -11,7 +11,7 @@ object WitnessSerializer {
         if (witness.outputsGroup.isNotEmpty())
             putJsonObject("outputs") {
                 witness.outputsGroup.forEach {
-                    put(it.key, JsonArray(it.value.toJsonArray()))
+                    put(it.name, JsonArray(it.serializedData.toUnsignedBitString()))
                 }
             }
         if (witness.commandsGroup.isNotEmpty())
@@ -50,7 +50,7 @@ object WitnessSerializer {
         if (witness.serializedInputUtxos.isNotEmpty()) {
             putJsonObject("serialized_input_utxos") {
                 witness.serializedInputUtxos.forEach {
-                    put(it.key, JsonArray(it.value.toJsonArray()))
+                    put(it.name, JsonArray(it.serializedData.toUnsignedBitString()))
                 }
             }
             put(
@@ -61,7 +61,7 @@ object WitnessSerializer {
         if (witness.serializedReferenceUtxos.isNotEmpty()) {
             putJsonObject("serialized_reference_utxos") {
                 witness.serializedReferenceUtxos.forEach {
-                    put(it.key, JsonArray(it.value.toJsonArray()))
+                    put(it.name, JsonArray(it.serializedData.toUnsignedBitString()))
                 }
             }
             put(

@@ -1,8 +1,8 @@
 package com.ing.zkflow.common.zkp.metadata
 
+import com.ing.zinc.naming.camelToSnakeCase
 import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.zkp.metadata.ZKCircuit.Companion.resolve
-import com.ing.zkflow.util.camelToSnakeCase
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.ContractState
@@ -42,24 +42,6 @@ data class ZKCircuit(
         private val DEFAULT_VERIFICATION_TIMEOUT = 3.seconds
         private val DEFAULT_CIRCUIT_BUILD_FOLDER_PARENT_PATH = "${System.getProperty("user.dir")}/build/zinc/"
 
-        private fun javaClass2ZincType(commandMetadata: ZKCommandMetadata): Map<KClass<out ContractState>, ZincType> {
-            val mapping = mutableListOf<Pair<KClass<out ContractState>, ZincType>>()
-            mapping += commandMetadata.inputs.toZincTypes()
-            mapping += commandMetadata.references.toZincTypes()
-            mapping += commandMetadata.outputs.toZincTypes()
-            return mapping.toMap()
-        }
-
-        private fun List<ZKTypedElement>.toZincTypes() = map { it.type to stateKClassToZincType(it.type) }
-
-        private fun stateKClassToZincType(kClass: KClass<out ContractState>): ZincType {
-            val simpleName = kClass.simpleName ?: error("classes used in transactions must be a named class")
-            return ZincType(
-                simpleName,
-                simpleName.camelToSnakeCase() + ".zn"
-            )
-        }
-
         /**
          * If the circuit information is not provided, set defaults for the circuit information.
          *
@@ -73,7 +55,6 @@ data class ZKCircuit(
         fun ZKCircuit?.resolve(commandMetadata: ZKCommandMetadata): ResolvedZKCircuit {
             if (this == null) return ResolvedZKCircuit(
                 commandKClass = commandMetadata.commandKClass,
-                javaClass2ZincType = javaClass2ZincType(commandMetadata),
                 name = commandMetadata.commandSimpleName.camelToSnakeCase(),
                 buildFolder = File(DEFAULT_CIRCUIT_BUILD_FOLDER_PARENT_PATH + commandMetadata.commandSimpleName.camelToSnakeCase()),
                 buildTimeout = DEFAULT_BUILD_TIMEOUT,
@@ -84,7 +65,6 @@ data class ZKCircuit(
 
             return ResolvedZKCircuit(
                 commandKClass = commandMetadata.commandKClass,
-                javaClass2ZincType = javaClass2ZincType(commandMetadata),
                 name = name ?: commandMetadata.commandSimpleName.camelToSnakeCase(),
                 buildFolder = buildFolder ?: File(DEFAULT_CIRCUIT_BUILD_FOLDER_PARENT_PATH + name),
                 buildTimeout = buildTimeout ?: DEFAULT_BUILD_TIMEOUT,
@@ -96,30 +76,15 @@ data class ZKCircuit(
     }
 }
 
-/**
- * Describes a Zinc type
- *
- * Most likely used in a mapping from Zinc type to Kotlin type, used for Zinc code generation
- */
-data class ZincType(
-    /**
-     * The name of the type as found in (generated) Zinc
-     */
-    val typeName: String,
-    /**
-     * The file where this type is defined
-     */
-    val fileName: String
-)
-
-interface ZKTypedElement {
+interface ZKIndexedTypedElement {
+    val index: Int
     val type: KClass<out ContractState>
 }
 
 /**
  * Describes the inputs and references that should be available inside ZKP circuit and if it should be forced to be private.
  */
-data class ZKReference(override val type: KClass<out ContractState>, val index: Int, internal val forcePrivate: Boolean) : ZKTypedElement {
+data class ZKReference(override val type: KClass<out ContractState>, override val index: Int, internal val forcePrivate: Boolean) : ZKIndexedTypedElement {
     fun mustBePrivate() = forcePrivate
 }
 
@@ -127,8 +92,8 @@ data class ZKReference(override val type: KClass<out ContractState>, val index: 
  * Describes an output ContractState at a certain index in transaction's component list and whether it should be private to the ZKP circuit or also
  * visible in the transaction Merkle tree.
  */
-data class ZKProtectedComponent(override val type: KClass<out ContractState>, val index: Int, internal val private: Boolean) :
-    ZKTypedElement {
+data class ZKProtectedComponent(override val type: KClass<out ContractState>, override val index: Int, internal val private: Boolean) :
+    ZKIndexedTypedElement {
     fun mustBePrivate() = private
 }
 

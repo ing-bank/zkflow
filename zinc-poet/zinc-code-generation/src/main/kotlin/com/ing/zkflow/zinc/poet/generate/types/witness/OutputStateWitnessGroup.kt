@@ -1,6 +1,5 @@
 package com.ing.zkflow.zinc.poet.generate.types.witness
 
-import com.ing.zinc.bfl.BflModule
 import com.ing.zinc.bfl.BflType
 import com.ing.zinc.bfl.generator.WitnessGroupOptions
 import com.ing.zinc.bfl.getSerializedTypeDef
@@ -11,6 +10,7 @@ import com.ing.zinc.poet.ZincMethod.Companion.zincMethod
 import com.ing.zinc.poet.ZincType
 import com.ing.zkflow.zinc.poet.generate.COMPUTE_LEAF_HASHES
 import com.ing.zkflow.zinc.poet.generate.COMPUTE_NONCE
+import com.ing.zkflow.zinc.poet.generate.types.IndexedState
 import com.ing.zkflow.zinc.poet.generate.types.SerializedStateGroup
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.digest
@@ -20,13 +20,13 @@ import net.corda.core.contracts.ComponentGroupEnum
 internal data class OutputStateWitnessGroup(
     override val groupName: String,
     private val baseName: String,
-    private val states: Map<BflModule, Int>,
+    private val states: List<IndexedState>,
     val standardTypes: StandardTypes,
 ) : WitnessGroup {
     private val serializedGroup = SerializedStateGroup(groupName, baseName, standardTypes.toTransactionStates(states))
     internal val deserializedGroup = serializedGroup.deserializedStruct
 
-    private val groupSize: Int = states.entries.sumBy { it.value }
+    private val groupSize: Int = states.size
     override val isPresent: Boolean = groupSize > 0
     override val options: List<WitnessGroupOptions> = standardTypes.toWitnessGroupOptions(groupName, states)
 

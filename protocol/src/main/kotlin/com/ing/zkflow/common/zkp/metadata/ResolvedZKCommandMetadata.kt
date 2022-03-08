@@ -2,6 +2,7 @@ package com.ing.zkflow.common.zkp.metadata
 
 import com.ing.zkflow.common.transactions.ZKTransactionBuilder
 import net.corda.core.contracts.CommandData
+import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.ContractClassName
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.StateAndRef
@@ -19,7 +20,6 @@ data class ResolvedZKCircuit(
      * This is where the circuit elements for this command can be found
      */
     val buildFolder: File,
-    val javaClass2ZincType: Map<KClass<out ContractState>, ZincType>,
     val buildTimeout: Duration,
     val setupTimeout: Duration,
     val provingTimeout: Duration,
@@ -55,7 +55,7 @@ data class ResolvedZKCommandMetadata(
     val privateReferenceTypeGroups = countTypes(references)
     val privateOutputTypeGroups = countTypes(outputs)
 
-    private fun countTypes(components: List<ZKTypedElement>): Map<KClass<out ContractState>, Int> {
+    private fun countTypes(components: List<ZKIndexedTypedElement>): Map<KClass<out ContractState>, Int> {
         val result = mutableMapOf<KClass<out ContractState>, Int>()
 
         components.forEach {
@@ -156,6 +156,19 @@ data class ResolvedZKCommandMetadata(
         expectedTypes.forEachIndexed { index, expected ->
             val actual = actualTypes.getOrElse(index) { error("Expected to find $componentName $expected at index $index, nothing found") }
             require(actual == expected) { "Unexpected $componentName order. Expected '$expected' at index $index, but found '$actual'" }
+        }
+    }
+
+    /**
+     * If a component is mentioned in any way in the metadata, it should be present in the witness.
+     * Otherwise, it will not be present in the witness.
+     */
+    fun isVisibleInWitness(groupIndex: Int, componentIndex: Int): Boolean {
+        return when (groupIndex) {
+            ComponentGroupEnum.INPUTS_GROUP.ordinal -> inputs.any { it.index == componentIndex } // Here we return UTXO visibility, not StateRef visibility (StateRefs never go to witness)
+            ComponentGroupEnum.REFERENCES_GROUP.ordinal -> references.any { it.index == componentIndex } // Here we return UTXO visibility, not StateRef visibility (StateRefs never go to witness)
+            ComponentGroupEnum.OUTPUTS_GROUP.ordinal -> outputs.any { it.index == componentIndex }
+            else -> false // other groups are not part of the witness for now, may change in the future.
         }
     }
 }
