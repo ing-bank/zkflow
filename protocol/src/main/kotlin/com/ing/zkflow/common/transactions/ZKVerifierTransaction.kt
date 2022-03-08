@@ -1,6 +1,5 @@
 package com.ing.zkflow.common.transactions
 
-import com.ing.zkflow.common.transactions.ZKFilteredComponentGroup.Companion.fromComponentGroup
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.crypto.DigestService
 import net.corda.core.crypto.MerkleTree
@@ -101,12 +100,12 @@ class ZKVerifierTransaction internal constructor(
          * Filters the component groups based on visibility data from 'zkTransactionMetadata'
          */
         private fun filterPrivateComponents(wtx: WireTransaction): List<ZKFilteredComponentGroup> {
-
             // Here we don't need to filter anything, we only create FTX to be able to access hashes (they are internal in WTX)
             val ftx = FilteredTransaction.buildFilteredTransaction(wtx) { true }
             val zkTransactionMetadata = wtx.zkTransactionMetadataOrNull()
+
             return wtx.componentGroups.map { componentGroup ->
-                fromComponentGroup(
+                ZKFilteredComponentGroup.fromComponentGroup(
                     componentGroup,
                     ftx.filteredComponentGroups.find { it.groupIndex == componentGroup.groupIndex }!!,
                     zkTransactionMetadata

@@ -4,7 +4,7 @@ package com.ing.zkflow.common.serialization
 
 import com.ing.zkflow.common.network.ZKAttachmentConstraintType
 import com.ing.zkflow.common.network.ZKNetworkParameters
-import com.ing.zkflow.serialization.infra.SerializerMapError
+import com.ing.zkflow.serialization.infra.SerializerRegistryError
 import com.ing.zkflow.serialization.serializer.corda.AlwaysAcceptAttachmentConstraintSerializer
 import com.ing.zkflow.serialization.serializer.corda.AutomaticHashConstraintSerializer
 import com.ing.zkflow.serialization.serializer.corda.AutomaticPlaceholderConstraintSerializer
@@ -58,20 +58,20 @@ abstract class SerializerRegistry<T : Any> {
         log.debug("Registering serializer `$serializer` for `${klass.qualifiedName}`")
 
         val id = klass.stableId
-        obj2Id.put(klass, id)?.let { throw SerializerMapError.ClassAlreadyRegistered(klass, it) }
+        obj2Id.put(klass, id)?.let { throw SerializerRegistryError.ClassAlreadyRegistered(klass, it) }
         objId2Serializer.put(id, serializer)?.let {
-            throw SerializerMapError.IdAlreadyRegistered(id, klass, it.descriptor.serialName)
+            throw SerializerRegistryError.IdAlreadyRegistered(id, klass, it.descriptor.serialName)
         }
     }
 
-    fun identify(klass: KClass<*>): Int = obj2Id[klass] ?: throw SerializerMapError.ClassNotRegistered(klass)
+    fun identify(klass: KClass<*>): Int = obj2Id[klass] ?: throw SerializerRegistryError.ClassNotRegistered(klass)
 
     /**
      * Note that when we retrieve the serializer for class, we don't actually care that it is a serializer for the implementation of T
      * or for T. And we can know for sure that it is a T. This is why we can safely cast to T without the variance annotation on retrieval.
      */
     @Suppress("UNCHECKED_CAST")
-    operator fun get(id: Int): KSerializer<T> = (objId2Serializer[id] ?: throw SerializerMapError.ClassNotRegistered(id)) as KSerializer<T>
+    operator fun get(id: Int): KSerializer<T> = (objId2Serializer[id] ?: throw SerializerRegistryError.ClassNotRegistered(id)) as KSerializer<T>
 
     operator fun get(klass: KClass<out T>): KSerializer<T> = get(identify(klass))
 }
@@ -112,13 +112,13 @@ object AttachmentConstraintSerializerRegistry {
         log.debug("Registering generator for $klass")
 
         val id = klass.stableId
-        obj2Id.put(klass, id)?.let { throw SerializerMapError.ClassAlreadyRegistered(klass, it) }
+        obj2Id.put(klass, id)?.let { throw SerializerRegistryError.ClassAlreadyRegistered(klass, it) }
 
-        objId2Serializer.put(id, generator)?.let { throw SerializerMapError.IdAlreadyRegistered(id, klass, null) }
+        objId2Serializer.put(id, generator)?.let { throw SerializerRegistryError.IdAlreadyRegistered(id, klass, null) }
     }
 
     fun identify(klass: KClass<*>): Int =
-        obj2Id[klass] ?: throw SerializerMapError.ClassNotRegistered(klass)
+        obj2Id[klass] ?: throw SerializerRegistryError.ClassNotRegistered(klass)
 
     /**
      * Note that when we retrieve the serializer for class, we don't actually care that it is a serializer for the implementation of T
@@ -127,7 +127,7 @@ object AttachmentConstraintSerializerRegistry {
     @Suppress("UNCHECKED_CAST")
     operator fun get(id: Int): (networkParameters: ZKNetworkParameters) -> KSerializer<AttachmentConstraint> =
         { networkParameters ->
-            (objId2Serializer[id] ?: throw SerializerMapError.ClassNotRegistered(id)).invoke(networkParameters) as KSerializer<AttachmentConstraint>
+            (objId2Serializer[id] ?: throw SerializerRegistryError.ClassNotRegistered(id)).invoke(networkParameters) as KSerializer<AttachmentConstraint>
         }
 
     operator fun get(attachmentConstraintKClass: KClass<out AttachmentConstraint>): (networkParameters: ZKNetworkParameters) -> KSerializer<AttachmentConstraint> =

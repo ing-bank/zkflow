@@ -1,7 +1,7 @@
 package com.ing.zkflow.integration.client.flows
 
 import com.ing.zkflow.node.services.InMemoryUtxoInfoStorage
-import com.ing.zkflow.node.services.InMemoryZKVerifierTransactionStorage
+import com.ing.zkflow.node.services.InMemoryZKVerifierTransactionStorageCordaService
 import com.ing.zkflow.node.services.ServiceNames.ZK_TX_SERVICE
 import com.ing.zkflow.node.services.ServiceNames.ZK_UTXO_INFO_STORAGE
 import com.ing.zkflow.node.services.ServiceNames.ZK_VERIFIER_TX_STORAGE
@@ -35,7 +35,7 @@ class CollectSignaturesFlowTest {
             cordappsForAllNodes = listOf(
                 cordappWithPackages("com.ing.zkflow").withConfig(
                     mapOf(
-                        ZK_VERIFIER_TX_STORAGE to InMemoryZKVerifierTransactionStorage::class.qualifiedName!!,
+                        ZK_VERIFIER_TX_STORAGE to InMemoryZKVerifierTransactionStorageCordaService::class.qualifiedName!!,
                         ZK_UTXO_INFO_STORAGE to InMemoryUtxoInfoStorage::class.qualifiedName!!,
                         ZK_TX_SERVICE to MockZKTransactionCordaService::class.qualifiedName!!,
                     )

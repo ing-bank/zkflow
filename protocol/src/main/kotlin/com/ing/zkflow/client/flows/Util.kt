@@ -23,9 +23,6 @@ fun ServiceHub.createSignature(zktxId: SecureHash, publicKey: PublicKey): Transa
 }
 
 fun ServiceHub.recordTransactions(notarised: NotarisedTransactionPayload, statesToRecord: StatesToRecord = StatesToRecord.ONLY_RELEVANT) {
-
-    getCordaServiceFromConfig<ZKWritableVerifierTransactionStorage>(ServiceNames.ZK_VERIFIER_TX_STORAGE).addTransaction(
-        notarised.svtx
-    )
+    getCordaServiceFromConfig<ZKWritableVerifierTransactionStorage>(ServiceNames.ZK_VERIFIER_TX_STORAGE).addTransaction(notarised.svtx)
     recordTransactions(statesToRecord, listOf(notarised.stx))
 }

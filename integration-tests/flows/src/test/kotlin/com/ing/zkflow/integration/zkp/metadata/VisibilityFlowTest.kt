@@ -5,7 +5,7 @@ import com.ing.zkflow.integration.client.flows.testflows.CreateFlow
 import com.ing.zkflow.integration.client.flows.testflows.MoveFlow
 import com.ing.zkflow.integration.contract.TestContract
 import com.ing.zkflow.node.services.InMemoryUtxoInfoStorage
-import com.ing.zkflow.node.services.InMemoryZKVerifierTransactionStorage
+import com.ing.zkflow.node.services.InMemoryZKVerifierTransactionStorageCordaService
 import com.ing.zkflow.node.services.ServiceNames.ZK_TX_SERVICE
 import com.ing.zkflow.node.services.ServiceNames.ZK_UTXO_INFO_STORAGE
 import com.ing.zkflow.node.services.ServiceNames.ZK_VERIFIER_TX_STORAGE
@@ -42,7 +42,7 @@ class VisibilityFlowTest {
             cordappsForAllNodes = listOf(
                 cordappWithPackages("com.ing.zkflow").withConfig(
                     mapOf(
-                        ZK_VERIFIER_TX_STORAGE to InMemoryZKVerifierTransactionStorage::class.qualifiedName!!,
+                        ZK_VERIFIER_TX_STORAGE to InMemoryZKVerifierTransactionStorageCordaService::class.qualifiedName!!,
                         ZK_UTXO_INFO_STORAGE to InMemoryUtxoInfoStorage::class.qualifiedName!!,
                         ZK_TX_SERVICE to MockZKTransactionCordaService::class.qualifiedName!!,
                     )
@@ -89,14 +89,13 @@ class VisibilityFlowTest {
         createPrivateStx.tx
 
         // MovePrivateOnly should fail for public asset, work for private asset
-        // TODO @Aleksei: re-enable this check once ZKVerifierTransaction.isPrivateComponent() is implemented properly
-        // try {
-        //     val moveFuture = miniCorpNode.startFlow(MoveFlow(createPublicStx, megaCorp, moveCommand = TestContract.MovePrivateOnly()))
-        //     mockNet.runNetwork()
-        //     moveFuture.getOrThrow()
-        // } catch (fex: IllegalStateException) {
-        //     assert(fex.message!!.contains("should be private, but it is public"))
-        // }
+        try {
+            val moveFuture = miniCorpNode.startFlow(MoveFlow(createPublicStx, megaCorp, moveCommand = TestContract.MovePrivateOnly()))
+            mockNet.runNetwork()
+            moveFuture.getOrThrow()
+        } catch (fex: IllegalStateException) {
+            assert(fex.message!!.contains("should be private, but it is public"))
+        }
 
         val movePrivateOnlyFuture =
             miniCorpNode.startFlow(MoveFlow(createPrivateStx, megaCorp, moveCommand = TestContract.MovePrivateOnly()))

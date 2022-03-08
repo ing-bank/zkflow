@@ -89,7 +89,6 @@ data class ZKFilteredComponentGroup(
     }
 
     companion object {
-
         fun fromComponentGroup(
             componentGroup: ComponentGroup,
             filteredComponentGroup: FilteredComponentGroup,

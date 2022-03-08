@@ -36,6 +36,7 @@ abstract class AbstractZKTransactionService(val serviceHub: ServiceHub) : ZKTran
 
         zkTransactionMetadata.commands.forEach { command ->
             val commandName = command.commandKClass.qualifiedName!!
+            // TODO: Should we add a check here that this command actually requires a proof? What if all its  outputs are 'public', then we wouldn't need a proof?
             if (!proofs.containsKey(commandName)) {
                 val witness = Witness.fromWireTransaction(
                     wtx,
@@ -60,6 +61,7 @@ abstract class AbstractZKTransactionService(val serviceHub: ServiceHub) : ZKTran
 
         // Check there is a proof for each ZKCommand
         vtx.commands.forEach { command ->
+            // Should we add a check here that this command actually requires a proof? What if all its  outputs are 'public', then we wouldn't need a proof?
             if (command.value is ZKCommandData) require(vtx.proofs.containsKey(command.value::class.qualifiedName)) { "Proof is missing for command ${command.value}" }
         }
 

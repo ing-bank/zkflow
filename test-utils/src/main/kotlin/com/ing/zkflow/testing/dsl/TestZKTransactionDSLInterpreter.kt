@@ -2,8 +2,14 @@ package com.ing.zkflow.testing.dsl
 
 import TestZKLedgerDSLInterpreter
 import com.google.common.util.concurrent.ThreadFactoryBuilder
-import com.ing.zkflow.common.contracts.ZKContractState
 import com.ing.zkflow.common.transactions.ZKTransactionBuilder
+import com.ing.zkflow.common.transactions.hasPrivateComponents
+import com.ing.zkflow.testing.dsl.interfaces.DuplicateOutputLabel
+import com.ing.zkflow.testing.dsl.interfaces.EnforceVerifyOrFail
+import com.ing.zkflow.testing.dsl.interfaces.OutputStateLookup
+import com.ing.zkflow.testing.dsl.interfaces.VerificationMode
+import com.ing.zkflow.testing.dsl.interfaces.ZKTransactionDSLInterpreter
+import com.ing.zkflow.testing.dsl.services.TestDSLZKTransactionService
 import net.corda.core.contracts.AttachmentConstraint
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.CommandData
@@ -40,8 +46,8 @@ import java.util.concurrent.Executors
 import kotlin.reflect.full.primaryConstructor
 
 /**
- * This interpreter builds a zk transaction, and [TransactionDSL.verifies] that the resolved transaction is correct. Note
- * that transactions corresponding to input states are not verified. Use [LedgerDSL.verifies] for that.
+ * This interpreter builds a zk transaction, and [ZKTransactionDSL.verifies] that the resolved transaction is correct. Note
+ * that transactions corresponding to input states are not verified. Use [ZKLedgerDSL.verifies] for that.
  * A `ZKTransactionBuilder` is used to construct
  */
 @Suppress("TooManyFunctions")
@@ -49,7 +55,7 @@ public data class TestZKTransactionDSLInterpreter private constructor(
     override val ledgerInterpreter: TestZKLedgerDSLInterpreter,
     val transactionBuilder: ZKTransactionBuilder,
     internal val labelToIndexMap: HashMap<String, Int>
-) : TransactionDSLInterpreter, OutputStateLookup by ledgerInterpreter {
+) : ZKTransactionDSLInterpreter, OutputStateLookup by ledgerInterpreter {
 
     public constructor(
         ledgerInterpreter: TestZKLedgerDSLInterpreter,
@@ -118,10 +124,6 @@ public data class TestZKTransactionDSLInterpreter private constructor(
             labelToIndexMap = HashMap(labelToIndexMap)
         )
 
-    private fun enforceZKStates(state: ContractState) {
-        require(state is ZKContractState) { "Can only use ZKContractStates as output" }
-    }
-
     internal fun toWireTransaction() = transactionBuilder.toWireTransaction(services)
 
     override fun input(stateRef: StateRef) {
@@ -143,8 +145,7 @@ public data class TestZKTransactionDSLInterpreter private constructor(
         attachmentConstraint: AttachmentConstraint,
         contractState: ContractState
     ) {
-        enforceZKStates(contractState)
-        transactionBuilder.addOutputState(contractState as ZKContractState, contractClassName, notary, encumbrance, attachmentConstraint)
+        transactionBuilder.addOutputState(contractState, contractClassName, notary, encumbrance, attachmentConstraint)
         if (label != null) {
             if (label in labelToIndexMap) {
                 throw DuplicateOutputLabel(label)
@@ -173,8 +174,12 @@ public data class TestZKTransactionDSLInterpreter private constructor(
         val ltx = wtx.toLedgerTransaction(services)
         ltx.verify()
 
-        log.info("Creating and verifying ZKP for ${wtx.id}")
-        zkService.verify(wtx, mode)
+        if (wtx.hasPrivateComponents) {
+            txb.enforcePrivateInputsAndReferences(ledgerInterpreter.zkVerifierTransactionStorage)
+            log.info("Transaction ${wtx.id} has private components: creating and verifying ZKP")
+            zkService.verify(wtx, mode)
+        }
+        log.info("Transaction ${wtx.id} verified")
 
         return EnforceVerifyOrFail.Token
     }
@@ -183,7 +188,7 @@ public data class TestZKTransactionDSLInterpreter private constructor(
         transactionBuilder.setTimeWindow(data)
     }
 
-    override fun _tweak(dsl: TransactionDSLInterpreter.() -> EnforceVerifyOrFail): EnforceVerifyOrFail = copy().dsl()
+    override fun _tweak(dsl: ZKTransactionDSLInterpreter.() -> EnforceVerifyOrFail): EnforceVerifyOrFail = copy().dsl()
 
     override fun _attachment(contractClassName: ContractClassName) {
         attachment(

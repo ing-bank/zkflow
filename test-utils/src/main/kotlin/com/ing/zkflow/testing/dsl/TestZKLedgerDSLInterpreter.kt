@@ -1,15 +1,18 @@
 
 import com.ing.zkflow.common.network.ZKNetworkParameters
+import com.ing.zkflow.common.transactions.SignedZKVerifierTransaction
 import com.ing.zkflow.common.transactions.ZKTransactionBuilder
+import com.ing.zkflow.common.transactions.ZKVerifierTransaction
 import com.ing.zkflow.common.transactions.hasZKCommandData
-import com.ing.zkflow.testing.dsl.AttachmentResolutionException
-import com.ing.zkflow.testing.dsl.DoubleSpentInputs
-import com.ing.zkflow.testing.dsl.DuplicateOutputLabel
-import com.ing.zkflow.testing.dsl.EnforceVerifyOrFail
-import com.ing.zkflow.testing.dsl.LedgerDSLInterpreter
-import com.ing.zkflow.testing.dsl.TestDSLZKTransactionService
+import com.ing.zkflow.node.services.ZKWritableVerifierTransactionStorage
 import com.ing.zkflow.testing.dsl.TestZKTransactionDSLInterpreter
-import com.ing.zkflow.testing.dsl.VerificationMode
+import com.ing.zkflow.testing.dsl.interfaces.AttachmentResolutionException
+import com.ing.zkflow.testing.dsl.interfaces.DoubleSpentInputs
+import com.ing.zkflow.testing.dsl.interfaces.DuplicateOutputLabel
+import com.ing.zkflow.testing.dsl.interfaces.EnforceVerifyOrFail
+import com.ing.zkflow.testing.dsl.interfaces.VerificationMode
+import com.ing.zkflow.testing.dsl.interfaces.ZKLedgerDSLInterpreter
+import com.ing.zkflow.testing.dsl.services.TestDSLZKTransactionService
 import net.corda.core.contracts.Attachment
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.StateAndRef
@@ -22,7 +25,6 @@ import net.corda.core.crypto.SecureHash
 import net.corda.core.internal.uncheckedCast
 import net.corda.core.node.ServiceHub
 import net.corda.core.transactions.SignedTransaction
-import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.transactions.WireTransaction
 import net.corda.testing.core.dummyCommand
 import java.io.InputStream
@@ -31,23 +33,28 @@ import java.io.InputStream
  *  A ledger interpreter that supports both standard and zk transactions. The appropriate transaction DSL interpreter is called
  *  depending on the type of transaction.
  */
-@Suppress("TooManyFunctions")
-public data class TestZKLedgerDSLInterpreter private constructor(
-    val services: ServiceHub,
-    internal val labelToOutputStateAndRefs: HashMap<String, StateAndRef<ContractState>> = HashMap(),
+@Suppress("LongParameterList")
+public class TestZKLedgerDSLInterpreter private constructor(
+    public val services: ServiceHub,
+    private val labelToOutputStateAndRefs: HashMap<String, StateAndRef<ContractState>> = HashMap(),
     private val transactionWithLocations: HashMap<SecureHash, WireTransactionWithLocation> = LinkedHashMap(),
     private val nonVerifiedTransactionWithLocations: HashMap<SecureHash, WireTransactionWithLocation> = HashMap(),
-    val zkService: TestDSLZKTransactionService,
-    val zkNetworkParameters: ZKNetworkParameters
-) : LedgerDSLInterpreter<TestTransactionDSLInterpreter, TestZKTransactionDSLInterpreter> {
-    val wireTransactions: List<WireTransaction> get() = transactionWithLocations.values.map { it.transaction }
-
+    public override val zkService: TestDSLZKTransactionService,
+    override val zkNetworkParameters: ZKNetworkParameters,
+    override val zkVerifierTransactionStorage: ZKWritableVerifierTransactionStorage
+) : ZKLedgerDSLInterpreter<TestZKTransactionDSLInterpreter> {
     // We specify [labelToOutputStateAndRefs] just so that Kotlin picks the primary constructor instead of cycling
-    public constructor(services: ServiceHub, zkService: TestDSLZKTransactionService, zkNetworkParameters: ZKNetworkParameters) : this(
+    public constructor(
+        services: ServiceHub,
+        zkService: TestDSLZKTransactionService,
+        zkNetworkParameters: ZKNetworkParameters,
+        zkVerifierTransactionStorage: ZKWritableVerifierTransactionStorage
+    ) : this(
         services,
         labelToOutputStateAndRefs = HashMap(),
         zkService = zkService,
-        zkNetworkParameters = zkNetworkParameters
+        zkNetworkParameters = zkNetworkParameters,
+        zkVerifierTransactionStorage = zkVerifierTransactionStorage
     )
 
     public companion object {
@@ -82,7 +89,8 @@ public data class TestZKLedgerDSLInterpreter private constructor(
             transactionWithLocations = HashMap(transactionWithLocations),
             nonVerifiedTransactionWithLocations = HashMap(nonVerifiedTransactionWithLocations),
             zkService = zkService,
-            zkNetworkParameters = zkNetworkParameters
+            zkNetworkParameters = zkNetworkParameters,
+            zkVerifierTransactionStorage = zkVerifierTransactionStorage
         )
 
     internal fun getTransaction(id: SecureHash): SignedTransaction? {
@@ -104,13 +112,6 @@ public data class TestZKLedgerDSLInterpreter private constructor(
 
     internal fun resolveAttachment(attachmentId: SecureHash): Attachment {
         return services.attachments.openAttachment(attachmentId) ?: throw AttachmentResolutionException(attachmentId)
-    }
-
-    private fun <R> interpretTransactionDsl(
-        transactionBuilder: TransactionBuilder,
-        dsl: TestTransactionDSLInterpreter.() -> R
-    ): TestTransactionDSLInterpreter {
-        return TestTransactionDSLInterpreter(this, transactionBuilder).apply { dsl() }
     }
 
     private fun <R> interpretTransactionDsl(
@@ -159,48 +160,15 @@ public data class TestZKLedgerDSLInterpreter private constructor(
         transactionMap[wireTransaction.id] =
             WireTransactionWithLocation(transactionLabel, wireTransaction, transactionLocation)
 
-        return wireTransaction
-    }
-
-    private fun <R> recordTransactionWithTransactionMap(
-        transactionLabel: String?,
-        transactionBuilder: TransactionBuilder,
-        dsl: TestTransactionDSLInterpreter.() -> R,
-        transactionMap: HashMap<SecureHash, WireTransactionWithLocation> = HashMap(),
-        /** If set to true, will add dummy components to [transactionBuilder] to make it valid. */
-        fillTransaction: Boolean
-    ): WireTransaction {
-        val transactionLocation = getCallerLocation()
-        val transactionInterpreter = interpretTransactionDsl(transactionBuilder, dsl)
-        if (fillTransaction) fillTransaction(transactionBuilder)
-        // Create the WireTransaction
-        val wireTransaction = try {
-            transactionInterpreter.toWireTransaction()
-        } catch (e: IllegalStateException) {
-            throw IllegalStateException("A transaction-DSL block that is part of a test ledger must return a valid transaction.", e)
-        }
-        // Record the output states
-        transactionInterpreter.labelToIndexMap.forEach { label, index ->
-            if (label in labelToOutputStateAndRefs) {
-                throw DuplicateOutputLabel(label)
-            }
-            labelToOutputStateAndRefs[label] = wireTransaction.outRef(index)
-        }
-        transactionMap[wireTransaction.id] =
-            WireTransactionWithLocation(transactionLabel, wireTransaction, transactionLocation)
+        /*
+         * We can use fake/empty proofs here when storing the zkvtx.
+         * This is because we never verify them for old txs in the DSL: we create and verify proofs when creating txs.
+         */
+        zkVerifierTransactionStorage.addTransaction(
+            SignedZKVerifierTransaction(ZKVerifierTransaction.fromWireTransaction(wireTransaction, emptyMap()))
+        )
 
         return wireTransaction
-    }
-
-    /**
-     * This method fills the transaction builder with dummy components to satisfy the base transaction validity rules.
-     *
-     * A common pattern in our tests is using a base transaction and expressing the test cases using [tweak]s.
-     * The base transaction may not be valid, but it still gets recorded to the ledger. This causes a test failure,
-     * even though is not being used for anything afterwards.
-     */
-    private fun fillTransaction(transactionBuilder: TransactionBuilder) {
-        if (transactionBuilder.commands().isEmpty()) transactionBuilder.addCommand(dummyCommand())
     }
 
     /**
@@ -214,13 +182,7 @@ public data class TestZKLedgerDSLInterpreter private constructor(
         if (transactionBuilder.commands().isEmpty()) transactionBuilder.addCommand(dummyCommand())
     }
 
-    override fun _transaction(
-        transactionLabel: String?,
-        transactionBuilder: TransactionBuilder,
-        dsl: TestTransactionDSLInterpreter.() -> EnforceVerifyOrFail
-    ): WireTransaction = recordTransactionWithTransactionMap(transactionLabel, transactionBuilder, dsl, transactionWithLocations, false)
-
-    override fun _zkTransaction(
+    public override fun _transaction(
         transactionLabel: String?,
         transactionBuilder: ZKTransactionBuilder,
         dsl: TestZKTransactionDSLInterpreter.() -> EnforceVerifyOrFail
@@ -228,12 +190,12 @@ public data class TestZKLedgerDSLInterpreter private constructor(
 
     override fun _unverifiedTransaction(
         transactionLabel: String?,
-        transactionBuilder: TransactionBuilder,
-        dsl: TestTransactionDSLInterpreter.() -> Unit
+        transactionBuilder: ZKTransactionBuilder,
+        dsl: TestZKTransactionDSLInterpreter.() -> Unit
     ): WireTransaction =
-        recordTransactionWithTransactionMap(transactionLabel, transactionBuilder, dsl, nonVerifiedTransactionWithLocations, true)
+        recordZKTransactionWithTransactionMap(transactionLabel, transactionBuilder, dsl, nonVerifiedTransactionWithLocations, true)
 
-    override fun _tweak(dsl: LedgerDSLInterpreter<TestTransactionDSLInterpreter, TestZKTransactionDSLInterpreter>.() -> Unit): Unit =
+    override fun _tweak(dsl: ZKLedgerDSLInterpreter<TestZKTransactionDSLInterpreter>.() -> Unit): Unit =
         copy().dsl()
 
     override fun attachment(attachment: InputStream): SecureHash {
@@ -280,6 +242,5 @@ public data class TestZKLedgerDSLInterpreter private constructor(
         }
     }
 
-    val transactionsToVerify: List<WireTransaction> get() = transactionWithLocations.values.map { it.transaction }
-    val transactionsUnverified: List<WireTransaction> get() = nonVerifiedTransactionWithLocations.values.map { it.transaction }
+    private val transactionsUnverified: List<WireTransaction> get() = nonVerifiedTransactionWithLocations.values.map { it.transaction }
 }
