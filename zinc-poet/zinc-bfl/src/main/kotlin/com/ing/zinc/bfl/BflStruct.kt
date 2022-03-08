@@ -124,7 +124,6 @@ open class BflStruct(
         for (module in modulesToImport) {
             add(module.use())
             if (isDeserializable && ((module !is BflStruct) || module.isDeserializable)) {
-                add(module.useSerialized())
                 add(module.useLengthConstant())
             }
             newLine()
@@ -138,8 +137,6 @@ open class BflStruct(
             newLine()
             comment("length: ${fields.fold(0) { acc, field -> acc + field.type.bitSize }} bit(s)")
             add(generateLengthConstant())
-            newLine()
-            add(getSerializedTypeDef())
             newLine()
         }
         struct {

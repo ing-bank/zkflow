@@ -37,7 +37,6 @@ object ZincExecutor {
         add(module.mod())
         newLine()
         add(module.use())
-        add(module.useSerialized())
         newLine()
     }
 

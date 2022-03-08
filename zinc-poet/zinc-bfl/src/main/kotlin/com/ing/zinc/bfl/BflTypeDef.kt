@@ -24,7 +24,6 @@ data class BflTypeDef(
         if (typeDeclaration is BflModule) {
             add(typeDeclaration.mod())
             add(typeDeclaration.use())
-            add(typeDeclaration.useSerialized())
             add(typeDeclaration.useLengthConstant())
             newLine()
             constant {
