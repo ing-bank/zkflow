@@ -335,7 +335,7 @@ subprojects {
 
                 val cores = Runtime.getRuntime().availableProcessors()
                 setForkEvery(100)
-                maxParallelForks = (Runtime.getRuntime().availableProcessors() / 2).takeIf { it > 0 } ?: 1
+                maxParallelForks = (cores / 2).takeIf { it > 0 } ?: 1
                 logger.info("Using $cores cores to run $maxParallelForks test forks.")
 
                 testLogging {
