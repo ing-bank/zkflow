@@ -53,7 +53,8 @@ internal class CircuitGeneratorTest {
         }
 
         val result = logExecutionTime("Running the circuit using `zargo run`") {
-            tempDir.runCommand("zargo run", 600)
+            // This needs a crazy long timeout so it doesn't fail on CI with parallel builds.
+            tempDir.runCommand("zargo run", 800)
         }
 
         result.second shouldBe ""

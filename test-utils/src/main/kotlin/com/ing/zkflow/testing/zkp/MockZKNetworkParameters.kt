@@ -8,7 +8,7 @@ import net.corda.core.crypto.DigestAlgorithm
 import net.corda.core.crypto.SignatureScheme
 
 public data class MockZKNetworkParameters(
-    override val version: Int = 654823092,
+    override val version: Int = Int.MIN_VALUE, // As low as possible, so we never get automatically selected as the latest version by ZKNetworkParametersServiceLoader
     override val participantSignatureScheme: SignatureScheme = ZKFlow.DEFAULT_ZKFLOW_SIGNATURE_SCHEME,
 
     /**
