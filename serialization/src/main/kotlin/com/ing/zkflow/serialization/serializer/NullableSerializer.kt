@@ -14,7 +14,7 @@ abstract class NullableSerializer<T>(valueSerializer: FixedLengthKSerializerWith
     FixedLengthKSerializerWithDefault<T?> {
     @Serializable
     private data class NullableValue<T>(
-        val isNull: Boolean,
+        val hasValue: Boolean,
         val value: T
     )
 
@@ -27,10 +27,10 @@ abstract class NullableSerializer<T>(valueSerializer: FixedLengthKSerializerWith
     )
 
     override fun serialize(encoder: Encoder, value: T?) =
-        encoder.encodeSerializableValue(strategy, NullableValue(value == null, value ?: default))
+        encoder.encodeSerializableValue(strategy, NullableValue(value != null, value ?: default))
 
     override fun deserialize(decoder: Decoder): T? =
         decoder.decodeSerializableValue(strategy).let {
-            if (it.isNull) null else it.value
+            if (it.hasValue) it.value else null
         }
 }
