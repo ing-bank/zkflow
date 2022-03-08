@@ -76,14 +76,15 @@ data class ZKCircuit(
     }
 }
 
-interface ZKTypedElement {
+interface ZKIndexedTypedElement {
+    val index: Int
     val type: KClass<out ContractState>
 }
 
 /**
  * Describes the inputs and references that should be available inside ZKP circuit and if it should be forced to be private.
  */
-data class ZKReference(override val type: KClass<out ContractState>, val index: Int, internal val forcePrivate: Boolean) : ZKTypedElement {
+data class ZKReference(override val type: KClass<out ContractState>, override val index: Int, internal val forcePrivate: Boolean) : ZKIndexedTypedElement {
     fun mustBePrivate() = forcePrivate
 }
 
@@ -91,8 +92,8 @@ data class ZKReference(override val type: KClass<out ContractState>, val index: 
  * Describes an output ContractState at a certain index in transaction's component list and whether it should be private to the ZKP circuit or also
  * visible in the transaction Merkle tree.
  */
-data class ZKProtectedComponent(override val type: KClass<out ContractState>, val index: Int, internal val private: Boolean) :
-    ZKTypedElement {
+data class ZKProtectedComponent(override val type: KClass<out ContractState>, override val index: Int, internal val private: Boolean) :
+    ZKIndexedTypedElement {
     fun mustBePrivate() = private
 }
 

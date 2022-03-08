@@ -1,6 +1,5 @@
 package com.ing.zkflow.zinc.poet.generate.types
 
-import com.ing.zinc.bfl.BflList
 import com.ing.zinc.bfl.BflModule
 import com.ing.zinc.bfl.BflStructField
 import com.ing.zinc.bfl.CONSTS
@@ -8,7 +7,6 @@ import com.ing.zinc.bfl.CORDA_MAGIC_BITS_SIZE
 import com.ing.zinc.bfl.CORDA_MAGIC_BITS_SIZE_CONSTANT
 import com.ing.zinc.bfl.TypeVisitor
 import com.ing.zinc.bfl.dsl.FieldBuilder.Companion.field
-import com.ing.zinc.bfl.dsl.ListBuilder.Companion.list
 import com.ing.zinc.bfl.dsl.StructBuilder.Companion.struct
 import com.ing.zinc.bfl.generator.CodeGenerationOptions
 import com.ing.zinc.bfl.generator.WitnessGroupOptions
@@ -19,7 +17,6 @@ import com.ing.zinc.bfl.toZincId
 import com.ing.zinc.bfl.use
 import com.ing.zinc.bfl.useLengthConstant
 import com.ing.zinc.bfl.useSerialized
-import com.ing.zinc.naming.camelToSnakeCase
 import com.ing.zinc.poet.Indentation.Companion.spaces
 import com.ing.zinc.poet.ZincArray
 import com.ing.zinc.poet.ZincArray.Companion.zincArray
@@ -31,6 +28,7 @@ import com.ing.zinc.poet.ZincPrimitive
 import com.ing.zinc.poet.ZincStruct.Companion.zincStruct
 import com.ing.zinc.poet.indent
 import com.ing.zkflow.util.bitsToByteBoundary
+import com.ing.zkflow.util.requireNotNull
 import com.ing.zkflow.zinc.poet.generate.COMPUTE_LEAF_HASHES
 import com.ing.zkflow.zinc.poet.generate.COMPUTE_NONCE
 import com.ing.zkflow.zinc.poet.generate.COMPUTE_UTXO_HASHES
@@ -42,7 +40,7 @@ import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.privacySa
 data class SerializedStateGroup(
     private val groupName: String,
     private val baseName: String,
-    private val transactionStates: Map<BflModule, Int>,
+    private val transactionStates: List<IndexedState>,
 ) : BflModule {
     private val serializedStructName: String = "Serialized$baseName"
     internal val deserializedStruct = struct {
@@ -51,24 +49,20 @@ data class SerializedStateGroup(
         isDeserializable = false
     }
 
-    private val transactionStateLists: List<BflStructField> = transactionStates.toFieldList()
-    private val groupSize = transactionStates.values.sum()
+    private val groupSize = transactionStates.size
 
     override fun generateZincFile(codeGenerationOptions: CodeGenerationOptions) = zincFile {
         mod { module = CONSTS }
         newLine()
-        transactionStates.forEach { (stateType, _) ->
-            add(stateType.mod())
-            add(stateType.use())
-            add(stateType.useLengthConstant())
-            newLine()
-        }
-        transactionStateLists.forEach {
-            val stateList = it.type as BflModule // Safe cast, because it is generated with transactionStates.toFieldList()
-            add(stateList.mod())
-            add(stateList.use())
-            newLine()
-        }
+        transactionStates
+            .map { it.state }
+            .distinctBy { it.id }
+            .forEach {
+                add(it.mod())
+                add(it.use())
+                add(it.useLengthConstant())
+                newLine()
+            }
         add(deserializedStruct.mod())
         add(deserializedStruct.use())
         newLine()
@@ -93,16 +87,13 @@ data class SerializedStateGroup(
 
     override fun toZincType() = zincStruct {
         name = serializedStructName
-        transactionStates.forEach { (stateType, count) ->
-            val paddingBits = stateType.bitSize.bitsToByteBoundary() - stateType.bitSize
+        transactionStates.forEach {
+            val paddingBits = it.state.bitSize.bitsToByteBoundary() - it.state.bitSize
             field {
-                name = stateTypeFieldName(stateType)
+                name = it.fieldName
                 type = zincArray {
-                    size = count.toString()
-                    elementType = zincArray {
-                        size = getSerializedBitSize(paddingBits, stateType)
-                        elementType = ZincPrimitive.Bool
-                    }
+                    size = getSerializedBitSize(paddingBits, it.state)
+                    elementType = ZincPrimitive.Bool
                 }
             }
         }
@@ -117,49 +108,38 @@ data class SerializedStateGroup(
 
     override fun generateMethods(codeGenerationOptions: CodeGenerationOptions): List<ZincFunction> {
         return listOf(
-            generateDeserializeMethod(),
+            generateDeserializeMethod(codeGenerationOptions),
             generateEmptyMethod(),
             generateEqualsMethod(),
             generateComputeHashes(),
         )
     }
 
-    private fun generateDeserializeMethod() = zincMethod {
+    private fun generateDeserializeMethod(codeGenerationOptions: CodeGenerationOptions) = zincMethod {
         name = "deserialize"
         returnType = deserializedStruct.toZincId()
-        val fieldDeserializations = transactionStateLists.joinToString("\n") {
-            val bflList = it.type as BflList
-            val stateType = bflList.elementType
-            val stateTypeId = stateType.id
-            val deserializeMethodName = "deserialize_from_${groupName}_${stateTypeFieldName(stateType as BflModule)}"
-            val array = "${it.name}_array"
-            val i = "${it.name}_i"
-            """
-                let ${it.name}_var = {
-                    let mut $array: [$stateTypeId; ${bflList.capacity}] = [$stateTypeId::empty(); ${bflList.capacity}];
-                    for $i in (0 as u24)..${bflList.capacity} {
-                        $array[$i] = $stateTypeId::$deserializeMethodName(self.${it.name}[$i], $CORDA_MAGIC_BITS_SIZE_CONSTANT);
-                    }
-                    ${bflList.id}::list_of($array)
-                };
-            """.trimIndent()
-        }
-        val fieldAssignments = transactionStateLists.joinToString(",\n") {
-            "${it.name}: ${it.name}_var"
+        val fieldDeserializations = transactionStates.joinToString("\n") {
+            val stateTypeId = it.state.id
+            val fieldName = it.fieldName
+            val witnessGroupOptions = codeGenerationOptions.witnessGroupOptions.find { witnessGroupOptions ->
+                "${groupName}_$fieldName".startsWith(witnessGroupOptions.name)
+            }.requireNotNull {
+                "Could not select Witness group options in group $groupName for state ${it.state.id}"
+            }
+            val deserializeMethodName = witnessGroupOptions.deserializeMethodName
+            "$fieldName: $stateTypeId::$deserializeMethodName(self.$fieldName, $CORDA_MAGIC_BITS_SIZE_CONSTANT),"
         }
         body = """
-            ${fieldDeserializations.indent(12.spaces)}
-
             ${deserializedStruct.id} {
-                ${fieldAssignments.indent(16.spaces)}
+                ${fieldDeserializations.indent(16.spaces)}
             }
         """.trimIndent()
     }
 
     private fun generateEmptyMethod() = zincFunction {
-        val fieldInitializations = transactionStates.entries.joinToString("\n") { (stateType, count) ->
-            val paddingBits = stateType.bitSize.bitsToByteBoundary() - stateType.bitSize
-            "${stateTypeFieldName(stateType)}: [[false; ${getSerializedBitSize(paddingBits, stateType)}]; $count],"
+        val fieldInitializations = transactionStates.joinToString("\n") {
+            val paddingBits = it.state.bitSize.bitsToByteBoundary() - it.state.bitSize
+            "${it.fieldName}: [false; ${getSerializedBitSize(paddingBits, it.state)}],"
         }
         name = "empty"
         returnType = this@SerializedStateGroup.toZincId()
@@ -171,15 +151,13 @@ data class SerializedStateGroup(
     }
 
     private fun generateEqualsMethod() = zincMethod {
-        val fieldEquals = transactionStates.entries.joinToString(" && ") { (stateType, count) ->
-            val stateFieldName = stateTypeFieldName(stateType)
+        val fieldEquals = transactionStates.joinToString(" && ") {
+            val stateFieldName = it.fieldName
             """
                 {
                     let mut still_equals: bool = true;
-                    for i in 0..$count while still_equals {
-                        for j in 0..${stateType.getLengthConstant()} while still_equals {
-                            still_equals = self.$stateFieldName[i][j + $CORDA_MAGIC_BITS_SIZE_CONSTANT] == other.$stateFieldName[i][j + $CORDA_MAGIC_BITS_SIZE_CONSTANT];
-                        }
+                    for i in 0..${it.state.getLengthConstant()} while still_equals {
+                        still_equals = self.$stateFieldName[i + $CORDA_MAGIC_BITS_SIZE_CONSTANT] == other.$stateFieldName[i + $CORDA_MAGIC_BITS_SIZE_CONSTANT];
                     }
                     still_equals
                 }
@@ -195,17 +173,15 @@ data class SerializedStateGroup(
 
     private fun generateComputeHashes() = zincMethod {
         var groupOffset = 0
-        val serializedDigest = StandardTypes.digest.getSerializedTypeDef().getType() as ZincArray
-        val fieldHashes = transactionStates.entries.fold("") { acc, (stateType, count) ->
+        val serializedDigest = digest.getSerializedTypeDef().getType() as ZincArray
+        val fieldHashes = transactionStates.fold("") { acc, indexedState ->
             val result = """
-                for i in (0 as u32)..$count {
-                    component_leaf_hashes[i + $groupOffset as u32] = blake2s_multi_input(
-                        nonces[i + $groupOffset as u32],
-                        self.${stateTypeFieldName(stateType)}[i],
-                    );
-                }
+                component_leaf_hashes[$groupOffset as u32] = blake2s_multi_input(
+                    nonces[$groupOffset as u32],
+                    self.${indexedState.fieldName},
+                );
             """.trimIndent()
-            groupOffset += count
+            groupOffset += 1
             acc + "\n" + result + "\n"
         }
         name = if (baseName.endsWith("Utxos")) COMPUTE_UTXO_HASHES else COMPUTE_LEAF_HASHES
@@ -229,8 +205,8 @@ data class SerializedStateGroup(
 
     override val id: String = serializedStructName
 
-    override val bitSize: Int = transactionStates.entries.sumBy { (type, count) ->
-        (CORDA_MAGIC_BITS_SIZE + type.bitSize) * count
+    override val bitSize: Int = transactionStates.sumBy {
+        (CORDA_MAGIC_BITS_SIZE + it.state.bitSize)
     }
 
     override fun typeName(): String = id
@@ -250,24 +226,17 @@ data class SerializedStateGroup(
 
     override fun accept(visitor: TypeVisitor) {
         visitor.visitType(deserializedStruct)
-        transactionStateLists.forEach {
-            visitor.visitType(it.type)
+        transactionStates.forEach {
+            visitor.visitType(it.state)
         }
     }
 
     companion object {
-        private fun Map<BflModule, Int>.toFieldList(): List<BflStructField> = map { (stateType, count) ->
+        private fun List<IndexedState>.toFieldList(): List<BflStructField> = map {
             field {
-                name = stateTypeFieldName(stateType)
-                type = list {
-                    capacity = count
-                    elementType = stateType
-                }
+                name = it.fieldName
+                type = it.state
             }
         }
-
-        private fun stateTypeFieldName(stateType: BflModule) = stateType.typeName()
-            .removeSuffix("TransactionState")
-            .camelToSnakeCase()
     }
 }

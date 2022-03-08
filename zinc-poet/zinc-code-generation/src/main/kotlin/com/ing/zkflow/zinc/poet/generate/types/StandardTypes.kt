@@ -1,6 +1,5 @@
 package com.ing.zkflow.zinc.poet.generate.types
 
-import com.ing.zinc.bfl.BflModule
 import com.ing.zinc.bfl.BflPrimitive
 import com.ing.zinc.bfl.BflType
 import com.ing.zinc.bfl.BflTypeDef
@@ -45,17 +44,23 @@ class StandardTypes(
         ZincTypeGenerator.generate(zkNetworkParameters.attachmentConstraintSerializer.descriptor)
     }
 
-    internal fun toWitnessGroupOptions(groupName: String, states: Map<BflModule, Int>): List<WitnessGroupOptions> = states.keys.map {
-        WitnessGroupOptions.cordaWrapped(
-            "${groupName}_${it.id.camelToSnakeCase()}",
-            transactionState(it)
-        )
-    }
+    internal fun toWitnessGroupOptions(groupName: String, states: List<IndexedState>): List<WitnessGroupOptions> = states
+        .map { it.state }
+        .distinctBy { it.id }
+        .map {
+            WitnessGroupOptions.cordaWrapped(
+                "${groupName}_${it.id.camelToSnakeCase()}",
+                transactionState(it)
+            )
+        }
 
-    internal fun toTransactionStates(states: Map<BflModule, Int>): Map<BflModule, Int> =
-        states.map { (stateType, count) ->
-            transactionState(stateType) to count
-        }.toMap()
+    internal fun toTransactionStates(states: List<IndexedState>): List<IndexedState> =
+        states.map {
+            IndexedState(
+                it.index,
+                transactionState(it.state)
+            )
+        }
 
     internal fun transactionState(stateType: BflType) = struct {
         name = "${stateType.id}TransactionState"

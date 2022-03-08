@@ -1,12 +1,12 @@
 package com.ing.zkflow.zinc.poet.generate.types.witness
 
-import com.ing.zinc.bfl.BflModule
 import com.ing.zinc.bfl.dsl.ArrayBuilder.Companion.array
 import com.ing.zinc.bfl.getSerializedTypeDef
 import com.ing.zinc.poet.ZincArray.Companion.zincArray
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
-import com.ing.zkflow.common.zkp.metadata.ZKTypedElement
+import com.ing.zkflow.common.zkp.metadata.ZKIndexedTypedElement
 import com.ing.zkflow.zinc.poet.generate.ZincTypeResolver
+import com.ing.zkflow.zinc.poet.generate.types.IndexedState
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.digest
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.parametersSecureHash
@@ -24,17 +24,15 @@ import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.SERIALIZED_REFE
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.SIGNERS
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.TIME_WINDOW
 import net.corda.core.contracts.ComponentGroupEnum
-import net.corda.core.contracts.ContractState
-import kotlin.reflect.KClass
 
 class WitnessGroupsContainer(
     commandMetadata: ResolvedZKCommandMetadata,
     standardTypes: StandardTypes,
     private val zincTypeResolver: ZincTypeResolver,
 ) {
-    private val inputs = commandMetadata.inputs.toBflModuleMap()
-    private val outputs = commandMetadata.outputs.toBflModuleMap()
-    private val references = commandMetadata.references.toBflModuleMap()
+    private val inputs = commandMetadata.inputs.toIndexedStateList()
+    private val outputs = commandMetadata.outputs.toIndexedStateList()
+    private val references = commandMetadata.references.toIndexedStateList()
 
     private val commandGroup =
         StandardComponentWitnessGroup(COMMANDS, zincTypeResolver.zincTypeOf(commandMetadata.commandKClass), 1, ComponentGroupEnum.COMMANDS_GROUP)
@@ -110,13 +108,8 @@ class WitnessGroupsContainer(
         serializedReferenceUtxos
     ).filter { it.isPresent }
 
-    private fun List<ZKTypedElement>.toBflModuleMap(): Map<BflModule, Int> {
-        return this.fold<ZKTypedElement, MutableMap<KClass<out ContractState>, Int>>(mutableMapOf()) { acc, zkReference: ZKTypedElement ->
-            acc[zkReference.type] = acc[zkReference.type]?.let { it + 1 } ?: 1
-            acc
-        }.mapKeys {
-            zincTypeResolver.zincTypeOf(it.key)
-        }
+    private fun List<ZKIndexedTypedElement>.toIndexedStateList(): List<IndexedState> = map {
+        IndexedState(it.index, zincTypeResolver.zincTypeOf(it.type))
     }
 
     companion object {

@@ -54,7 +54,7 @@ data class ResolvedZKCommandMetadata(
     val privateReferenceTypeGroups = countTypes(references)
     val privateOutputTypeGroups = countTypes(outputs)
 
-    private fun countTypes(components: List<ZKTypedElement>): Map<KClass<out ContractState>, Int> {
+    private fun countTypes(components: List<ZKIndexedTypedElement>): Map<KClass<out ContractState>, Int> {
         val result = mutableMapOf<KClass<out ContractState>, Int>()
 
         components.forEach {
