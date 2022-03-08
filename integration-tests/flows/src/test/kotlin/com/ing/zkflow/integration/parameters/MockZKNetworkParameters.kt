@@ -7,14 +7,13 @@ import com.ing.zkflow.common.zkp.ZKFlow
 import net.corda.core.crypto.DigestAlgorithm
 import net.corda.core.crypto.SignatureScheme
 
-class MockZKNetworkParameters : ZKNetworkParameters {
-    override val version: Int = this.hashCode()
+class MockFLowTestZKNetworkParameters : ZKNetworkParameters {
+    override val version: Int = 12
     override val participantSignatureScheme: SignatureScheme = ZKFlow.DEFAULT_ZKFLOW_SIGNATURE_SCHEME
 
     /**
-     * Here we don't use the preferred SignatureAttachmentConstraint, because HashAttachment place nicer with the
-     * standard constraint logic for transactions built with the TransactionBuilder and DSL. That turns
-     * `AutomaticPlaceholderConstraint` into `HashAttachmentConstraint` in most cases.
+     * Here we don't use the preferred SignatureAttachmentConstraint, because HashAttachmentConstraint is what AutomaticPlaceholderConstraint
+     * resolves to when a WireTransaction is created in the context of a Flow test.
      */
     override val attachmentConstraintType: ZKAttachmentConstraintType =
         ZKAttachmentConstraintType.HashAttachmentConstraintType(ZKFlow.DEFAULT_ZKFLOW_HASH_ATTACHMENT_HASHING_ALGORITHM)
