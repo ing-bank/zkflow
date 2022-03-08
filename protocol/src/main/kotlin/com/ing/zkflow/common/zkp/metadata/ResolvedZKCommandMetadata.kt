@@ -19,7 +19,6 @@ data class ResolvedZKCircuit(
      * This is where the circuit elements for this command can be found
      */
     val buildFolder: File,
-    val javaClass2ZincType: Map<KClass<out ContractState>, ZincType>,
     val buildTimeout: Duration,
     val setupTimeout: Duration,
     val provingTimeout: Duration,

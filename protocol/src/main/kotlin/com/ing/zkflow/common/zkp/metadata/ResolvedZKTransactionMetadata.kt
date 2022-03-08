@@ -2,9 +2,7 @@ package com.ing.zkflow.common.zkp.metadata
 
 import com.ing.zkflow.common.transactions.ZKTransactionBuilder
 import net.corda.core.contracts.ComponentGroupEnum
-import net.corda.core.contracts.ContractState
 import net.corda.core.transactions.LedgerTransaction
-import kotlin.reflect.KClass
 
 data class ResolvedZKTransactionMetadata(
     val commands: List<ResolvedZKCommandMetadata>
@@ -13,7 +11,7 @@ data class ResolvedZKTransactionMetadata(
         @Suppress("unused") // Will be re-enabled once ZincPoet is used
         private val DEFAULT_CIRCUIT_BUILD_FOLDER_PARENT_PATH = "${System.getProperty("user.dir")}/build/zinc/transactions/"
 
-        const val ERROR_NO_COMMANDS = "There should be at least one commmand in a ZKFlow transaction"
+        const val ERROR_NO_COMMANDS = "There should be at least one command in a ZKFlow transaction"
         const val ERROR_COMMAND_NOT_UNIQUE = "Multiple commands of one type found. All commands in a ZKFLow transaction should be unique"
     }
 
@@ -32,15 +30,6 @@ data class ResolvedZKTransactionMetadata(
     val numberOfSigners: Int by lazy { commands.sumOf { it.numberOfSigners } }
 
     val hasTimeWindow: Boolean = commands.any { it.timeWindow }
-
-    /**
-     * The aggregate list of java class to zinc type for all commands in this transaction.
-     */
-    val javaClass2ZincType: Map<KClass<out ContractState>, ZincType> by lazy {
-        commands.fold(mapOf()) { acc, resolvedZKCommandMetadata ->
-            acc + resolvedZKCommandMetadata.circuit.javaClass2ZincType
-        }
-    }
 
     init {
         require(commands.isNotEmpty()) { ERROR_NO_COMMANDS }

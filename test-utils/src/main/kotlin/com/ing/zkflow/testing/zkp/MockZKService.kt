@@ -3,6 +3,7 @@ package com.ing.zkflow.testing.zkp
 import com.ing.zkflow.common.serialization.zinc.json.WitnessSerializer
 import com.ing.zkflow.common.zkp.PublicInput
 import com.ing.zkflow.common.zkp.Witness
+import com.ing.zkflow.common.zkp.WitnessField
 import com.ing.zkflow.common.zkp.ZKService
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.PrivacySalt
@@ -36,7 +37,7 @@ public class MockZKService(private val digestService: DigestService) : ZKService
         /*
          * Rule 1: The recalculated component leaf hashes should match the ones from the instance vtx.
          */
-        verifyLeafHashesForComponentGroup(witness.outputsGroup.flatMap { e -> e.value }, publicInput.outputComponentHashes, witness.privacySalt, ComponentGroupEnum.OUTPUTS_GROUP.ordinal)
+        verifyLeafHashesForComponentGroup(witness.outputsGroup.map { e -> e.serializedData }, publicInput.outputComponentHashes, witness.privacySalt, ComponentGroupEnum.OUTPUTS_GROUP.ordinal)
 
         /*
          * Rule 2: witness input and reference contents hashed with their nonce should equal the matching hash from publicInput.
@@ -74,11 +75,11 @@ public class MockZKService(private val digestService: DigestService) : ZKService
     }
 
     private fun verifyUtxoContents(
-        serializedUtxos: Map<String, List<ByteArray>>,
+        serializedUtxos: List<WitnessField>,
         utxoNonces: List<SecureHash>,
         expectedUtxoHashes: List<SecureHash>
     ) {
-        serializedUtxos.flatMap { e -> e.value }
+        serializedUtxos.map { e -> e.serializedData }
             .forEachIndexed { index, serializedReferenceUtxo ->
                 val nonceFromWitness = utxoNonces.getOrElse(index) {
                     error("Nonce not present in public input for reference $index")

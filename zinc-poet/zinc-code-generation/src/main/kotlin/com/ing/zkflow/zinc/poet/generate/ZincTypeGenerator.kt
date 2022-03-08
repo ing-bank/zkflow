@@ -14,6 +14,7 @@ import com.ing.zinc.bfl.dsl.MapBuilder.Companion.map
 import com.ing.zinc.bfl.dsl.OptionBuilder.Companion.option
 import com.ing.zinc.bfl.dsl.StructBuilder.Companion.struct
 import com.ing.zinc.naming.camelToSnakeCase
+import com.ing.zkflow.common.serialization.zinc.generation.internalTypeName
 import com.ing.zkflow.serialization.FixedLengthType
 import com.ing.zkflow.serialization.serializer.SizeAnnotation
 import kotlinx.serialization.descriptors.SerialDescriptor
@@ -69,7 +70,7 @@ object ZincTypeGenerator {
     private fun createUnsignedInteger(bits: Int) = BflPrimitive.fromIdentifier("u$bits")
 
     private fun createEnum(serialDescriptor: SerialDescriptor) = enum {
-        name = serialDescriptor.typeName
+        name = serialDescriptor.internalTypeName
         for (elementIndex in 0 until serialDescriptor.elementsCount) {
             variant(serialDescriptor.getElementName(elementIndex))
         }
@@ -84,7 +85,7 @@ object ZincTypeGenerator {
         }
         return if (fields.isNotEmpty()) {
             struct {
-                name = descriptor.typeName
+                name = descriptor.internalTypeName
                 addFields(fields)
             }
         } else {
@@ -132,15 +133,6 @@ private fun SerialDescriptor.getIndexOfElementName(name: String): Int {
 
 private fun SerialDescriptor.getElementDescriptorByName(name: String): SerialDescriptor {
     return getElementDescriptor(getIndexOfElementName(name))
-}
-
-private val SerialDescriptor.typeName
-    get() = serialName.split(".").filter {
-        it.startsWithUppercase()
-    }.joinToString("_") { it }
-
-private fun String.startsWithUppercase(): Boolean {
-    return this[0].isUpperCase()
 }
 
 @Suppress("UNCHECKED_CAST")
