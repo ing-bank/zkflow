@@ -7,18 +7,18 @@ trigger:
 pool:
   name: NeoZKP
 
-variables:
-  GRADLE_USER_HOME: $(Pipeline.Workspace)/.gradle
+#variables:
+#  GRADLE_USER_HOME: $(Pipeline.Workspace)/.gradle
 
 steps:
-  - task: Cache@2
-    inputs:
-      key: 'gradle | "$(Agent.OS)" | **/*.gradle.kts | **/gradle.properties'
-      restoreKeys: |
-        gradle | "$(Agent.OS)"
-        gradle
-      path: $(GRADLE_USER_HOME)
-    displayName: Configure gradle caching
+#  - task: Cache@2
+#    inputs:
+#      key: 'gradle | "$(Agent.OS)" | **/*.gradle.kts | **/gradle.properties'
+#      restoreKeys: |
+#        gradle | "$(Agent.OS)"
+#        gradle
+#      path: $(GRADLE_USER_HOME)
+#    displayName: Configure gradle caching
 
   - task: DownloadGitHubRelease@0
     displayName: 'Fetch Zinc from Github'
@@ -58,8 +58,9 @@ steps:
       publishJUnitResults: true
       testResultsFiles: '**/TEST-*.xml'
       # codeCoverageToolOption: JaCoCo # Broken because it expects hardcoded 'build.gradle' instead of 'build.gradle.kts'
-      tasks: 'check test testReport jacocoRootReport'
-      options: '--stacktrace --info --build-cache'
+      tasks: 'clean cleanTest check test testReport jacocoRootReport'
+      # options: '--stacktrace --info --build-cache'
+      options: '--no-build-cache --rerun-tasks --no-daemon --no-parallel --stacktrace --info '
     env:
       GITHUB_USERNAME: $(github.username)
       GITHUB_TOKEN: $(github.token)
@@ -88,8 +89,9 @@ steps:
       jdkArchitectureOption: 'x64'
       publishJUnitResults: true
       testResultsFiles: '**/TEST-*.xml'
-      tasks: 'build'
-      options: '--stacktrace --info --build-cache'
+      tasks: 'clean cleanTest build'
+      # options: '--stacktrace --info --build-cache'
+      options: '--no-build-cache --rerun-tasks --no-daemon --no-parallel --stacktrace --info '
     env:
       GITHUB_USERNAME: $(github.username)
       GITHUB_TOKEN: $(github.token)
