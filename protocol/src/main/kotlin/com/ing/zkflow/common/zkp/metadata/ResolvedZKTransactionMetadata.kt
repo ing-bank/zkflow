@@ -58,30 +58,6 @@ data class ResolvedZKTransactionMetadata(
         }
     }
 
-    /**
-     * If a component is mentioned in any way in the metadata, it should be present in the witness.
-     * Otherwise, it will not be present in the witness.
-     */
-    fun isVisibleInWitness(groupIndex: Int, componentIndex: Int): Boolean {
-        return when (groupIndex) {
-            ComponentGroupEnum.INPUTS_GROUP.ordinal -> inputs.any { it.index == componentIndex } // Here we return UTXO visibility, not StateRef visibility (StateRefs never go to witness)
-            ComponentGroupEnum.REFERENCES_GROUP.ordinal -> references.any { it.index == componentIndex } // Here we return UTXO visibility, not StateRef visibility (StateRefs never go to witness)
-            ComponentGroupEnum.OUTPUTS_GROUP.ordinal -> outputs.any { it.index == componentIndex }
-            else -> false // other groups are not part of the witness for now, may change in the future.
-        }
-    }
-
-    // TODO: can this be deleted?
-    fun isOnlyPrivateUtxoAllowed(groupIndex: Int, componentIndex: Int): Boolean {
-        return when (groupIndex) {
-            ComponentGroupEnum.INPUTS_GROUP.ordinal -> inputs.find { it.index == componentIndex }?.forcePrivate
-                ?: false // We don't care about utxo visibility unless specifically marked with 'forcePrivate'
-            ComponentGroupEnum.REFERENCES_GROUP.ordinal -> references.find { it.index == componentIndex }?.forcePrivate
-                ?: false // We don't care about utxo visibility unless specifically marked with 'forcePrivate'
-            else -> error("Only Inputs and References UTXOs are allowed")
-        }
-    }
-
     private fun mergeComponentVisibility(
         acc: MutableList<ZKProtectedComponent>,
         components: List<ZKProtectedComponent>

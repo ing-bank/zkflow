@@ -3,7 +3,6 @@ package com.ing.zkflow.common.zkp
 import com.ing.zinc.naming.camelToSnakeCase
 import com.ing.zkflow.common.serialization.zinc.generation.zincTypeName
 import com.ing.zkflow.common.transactions.UtxoInfo
-import com.ing.zkflow.common.transactions.zkTransactionMetadata
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.PrivacySalt
@@ -152,13 +151,13 @@ class Witness(
             }
 
             return Witness(
-                outputsGroup = wtx.serializedComponentBytesForOutputGroup(ComponentGroupEnum.OUTPUTS_GROUP, metadata),
-                commandsGroup = wtx.serializedComponentBytesFor(ComponentGroupEnum.COMMANDS_GROUP),
-                attachmentsGroup = wtx.serializedComponentBytesFor(ComponentGroupEnum.ATTACHMENTS_GROUP),
-                notaryGroup = wtx.serializedComponentBytesFor(ComponentGroupEnum.NOTARY_GROUP),
-                timeWindowGroup = wtx.serializedComponentBytesFor(ComponentGroupEnum.TIMEWINDOW_GROUP),
-                signersGroup = wtx.serializedComponentBytesFor(ComponentGroupEnum.SIGNERS_GROUP),
-                parametersGroup = wtx.serializedComponentBytesFor(ComponentGroupEnum.PARAMETERS_GROUP),
+                outputsGroup = wtx.serializedComponentBytesForOutputGroup(metadata),
+                commandsGroup = wtx.serializedComponentBytesFor(ComponentGroupEnum.COMMANDS_GROUP, metadata),
+                attachmentsGroup = wtx.serializedComponentBytesFor(ComponentGroupEnum.ATTACHMENTS_GROUP, metadata),
+                notaryGroup = wtx.serializedComponentBytesFor(ComponentGroupEnum.NOTARY_GROUP, metadata),
+                timeWindowGroup = wtx.serializedComponentBytesFor(ComponentGroupEnum.TIMEWINDOW_GROUP, metadata),
+                signersGroup = wtx.serializedComponentBytesFor(ComponentGroupEnum.SIGNERS_GROUP, metadata),
+                parametersGroup = wtx.serializedComponentBytesFor(ComponentGroupEnum.PARAMETERS_GROUP, metadata),
 
                 privacySalt = wtx.privacySalt,
 
@@ -169,44 +168,34 @@ class Witness(
             )
         }
 
-        private fun TraversableTransaction.serializedComponentBytesFor(groupEnum: ComponentGroupEnum): List<ByteArray> {
-            return componentGroups
-                .singleOrNull { it.groupIndex == groupEnum.ordinal }
-                ?.components
-                // filter private components
-                ?.filterIndexed { index, _ ->
-                    zkTransactionMetadata().isVisibleInWitness(groupEnum.ordinal, index)
-                }?.map { it.copyBytes() }
-                ?: emptyList()
+        private fun TraversableTransaction.serializedComponentBytesFor(
+            groupEnum: ComponentGroupEnum,
+            metadata: ResolvedZKCommandMetadata
+        ): List<ByteArray> {
+            return componentGroups.singleOrNull { it.groupIndex == groupEnum.ordinal }?.components
+                ?.filterIndexed { index, _ -> metadata.isVisibleInWitness(groupEnum.ordinal, index) }
+                ?.map { it.copyBytes() } ?: emptyList()
         }
 
         private fun TraversableTransaction.serializedComponentBytesForOutputGroup(
-            groupEnum: ComponentGroupEnum,
             metadata: ResolvedZKCommandMetadata
         ): List<WitnessField> {
+            val outputsGroupIndex = ComponentGroupEnum.OUTPUTS_GROUP.ordinal
 
-            // TODO: Use isVisibleInWitness function in here.
-
-            val privateOutputIndices = metadata.outputs.map { it.index }
-            val privateOutputs = outputs.filterIndexed { index, _ -> privateOutputIndices.contains(index) }
-
-            val zincTypes = privateOutputs.map {
-                it.data::class.zincTypeName.camelToSnakeCase()
-            }
+            val zincTypes = outputs.filterIndexed { index, _ -> metadata.isVisibleInWitness(outputsGroupIndex, index) }
+                .map { it.data::class.zincTypeName.camelToSnakeCase() }
 
             val serializedStateBytes: List<WitnessField>? =
-                componentGroups.singleOrNull { it.groupIndex == groupEnum.ordinal }?.components
-                    // Filter private outputs
-                    ?.mapIndexedNotNull { index, output ->
-                        if (privateOutputIndices.contains(index)) {
-                            WitnessField("${zincTypes[index]}_$index", output.copyBytes())
+                componentGroups.singleOrNull { it.groupIndex == outputsGroupIndex }?.components
+                    ?.mapIndexedNotNull { index, outputBytes ->
+                        if (metadata.isVisibleInWitness(outputsGroupIndex, index)) {
+                            WitnessField("${zincTypes[index]}_$index", outputBytes.copyBytes())
                         } else {
                             null
                         }
                     }
 
-            return serializedStateBytes
-                ?: emptyList()
+            return serializedStateBytes ?: emptyList()
         }
 
         /**
@@ -216,24 +205,11 @@ class Witness(
             groupEnum: ComponentGroupEnum,
             metadata: ResolvedZKCommandMetadata
         ): List<WitnessField> {
-
-            // TODO: Use isVisibleInWitness function in here.
-
             require(groupEnum == ComponentGroupEnum.INPUTS_GROUP || groupEnum == ComponentGroupEnum.REFERENCES_GROUP) { "Only input and reference groups are valid for UTXO serialization." }
 
-            val privateUTXOIndices: List<Int> = if (groupEnum == ComponentGroupEnum.INPUTS_GROUP) {
-                metadata.inputs.map { it.index }
-            } else {
-                metadata.references.map { it.index }
-            }
-
-            // Filter private UTXOs
             return this.mapIndexedNotNull { index, utxo ->
-                if (privateUTXOIndices.contains(index)) {
-                    WitnessField(
-                        "${utxo.stateClass.zincTypeName.camelToSnakeCase()}_$index",
-                        utxo.serializedContents
-                    )
+                if (metadata.isVisibleInWitness(groupEnum.ordinal, index)) {
+                    WitnessField("${utxo.stateClass.zincTypeName.camelToSnakeCase()}_$index", utxo.serializedContents)
                 } else {
                     null
                 }
@@ -243,6 +219,7 @@ class Witness(
 }
 
 @CordaSerializable
+@Suppress("ArrayInDataClass") // Only used for serialization to Zinc
 data class WitnessField(
     val name: String,
     val serializedData: ByteArray,
