@@ -80,7 +80,7 @@ class ZKVerifierTransactionTest {
             val proofs = mapOf<ZKCommandClassName, Proof>()
             val vtx = ZKVerifierTransaction.fromWireTransaction(wtx, proofs)
 
-            vtx.verify()
+            vtx.verifyMerkleTree()
 
             vtx.outputHashes().size shouldBe 2
             vtx.outputs.size shouldBe 1
@@ -127,7 +127,7 @@ class ZKVerifierTransactionTest {
             val proofs = mapOf<ZKCommandClassName, Proof>()
             val vtx = ZKVerifierTransaction.fromWireTransaction(wtx, proofs)
 
-            vtx.verify()
+            vtx.verifyMerkleTree()
 
             vtx.outputHashes().size shouldBe 4
             vtx.outputs.size shouldBe 3
@@ -170,7 +170,7 @@ class ZKVerifierTransactionTest {
             val proofs = mapOf<ZKCommandClassName, Proof>()
             val vtx = ZKVerifierTransaction.fromWireTransaction(wtx, proofs)
 
-            vtx.verify()
+            vtx.verifyMerkleTree()
 
             vtx.outputHashes().size shouldBe 5
             vtx.outputs.size shouldBe 3

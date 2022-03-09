@@ -43,7 +43,7 @@ class ZKVerifierTransaction internal constructor(
      *
      * Much of this is directly lifted from FilteredTransaction because we can't extend it because its constructors are internal
      */
-    fun verify() {
+    fun verifyMerkleTree() {
         val groupHashes = getGroupHashes()
 
         require(groupHashes.isNotEmpty()) { "At least one component group hash is required" }

@@ -1,9 +1,11 @@
 package com.ing.zkflow.common.zkp
 
 import com.ing.zkflow.common.contracts.ZKCommandData
-import com.ing.zkflow.common.transactions.SignedZKVerifierTransaction
+import com.ing.zkflow.common.transactions.CommandCompatibilityProviderNotFound
+import com.ing.zkflow.common.transactions.ZKLedgerTransaction
 import com.ing.zkflow.common.transactions.ZKVerifierTransaction
 import com.ing.zkflow.common.transactions.collectUtxoInfos
+import com.ing.zkflow.common.transactions.verify
 import com.ing.zkflow.common.transactions.zkTransactionMetadata
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.node.services.ServiceNames
@@ -53,29 +55,39 @@ abstract class AbstractZKTransactionService(val serviceHub: ServiceHub) : ZKTran
 
     abstract override fun zkServiceForCommandMetadata(metadata: ResolvedZKCommandMetadata): ZKService
 
-    override fun verify(svtx: SignedZKVerifierTransaction, checkSufficientSignatures: Boolean) {
-        val vtx = svtx.tx
+    override fun verify(zkltx: ZKLedgerTransaction, checkSufficientSignatures: Boolean) {
+        val vtx = zkltx.svtx.tx
 
         // Check transaction structure first, so we fail fast
-        vtx.verify()
+        vtx.verifyMerkleTree()
 
         // Check there is a proof for each ZKCommand
         vtx.commands.forEach { command ->
-            // Should we add a check here that this command actually requires a proof? What if all its  outputs are 'public', then we wouldn't need a proof?
-            if (command.value is ZKCommandData) require(vtx.proofs.containsKey(command.value::class.qualifiedName)) { "Proof is missing for command ${command.value}" }
-        }
-
-        // Check proofs
-        vtx.proofs.forEach { (commandClassName, proof) ->
-            val command = vtx.commands.single { it.value::class.qualifiedName == commandClassName }.value as ZKCommandData
-            zkServiceForCommandMetadata(command.metadata).verifyTimed(proof, calculatePublicInput(vtx, command.metadata))
+            if (command.value is ZKCommandData) {
+                val zkCommand = (command.value as ZKCommandData)
+                // For ZK Commands we check proofs
+                val proof = vtx.proofs[command.value::class.qualifiedName]
+                require(proof != null) { "Proof is missing for command ${command.value}" }
+                zkServiceForCommandMetadata(zkCommand.metadata).verifyTimed(proof, calculatePublicInput(vtx, zkCommand.metadata))
+                // and verify public components
+                zkCommand.verifyPublicComponents(zkltx)
+            } else {
+                // For non-ZKP command we attempt to verify public components assuming it is implemented, throw error if not
+                try {
+                    command.value.verify(zkltx)
+                } catch (e: CommandCompatibilityProviderNotFound){
+                    // If provider is not found we can try to build and verify normal LedgerTransaction
+                    // at least for transaction without private components and maybe even for partially private - TODO discuss
+                    command.value.verify(zkltx.toLedgerTransaction())
+                }
+            }
         }
 
         // Check signatures
         if (checkSufficientSignatures) {
-            svtx.verifyRequiredSignatures()
+            zkltx.svtx.verifyRequiredSignatures()
         } else {
-            svtx.checkSignaturesAreValid()
+            zkltx.svtx.checkSignaturesAreValid()
         }
     }
 
