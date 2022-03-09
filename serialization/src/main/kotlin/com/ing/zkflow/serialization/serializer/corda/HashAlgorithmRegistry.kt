@@ -1,8 +1,6 @@
 package com.ing.zkflow.serialization.serializer.corda
 
 import com.ing.zkflow.crypto.blake2s256
-import com.ing.zkflow.crypto.pedersen
-import com.ing.zkflow.crypto.zinc
 import net.corda.core.crypto.DigestService
 import org.slf4j.LoggerFactory
 
@@ -13,10 +11,8 @@ object HashAlgorithmRegistry {
     private val algName2DigestLength = mutableMapOf<String, Int>()
 
     init {
-        // Ensures zinc, blake2s256 and pedersen algorithms exist in [DigestAlgorithmFactory] before registering here.
-        register(DigestService.zinc.hashAlgorithm)
+        // Ensures algos exists in [DigestAlgorithmFactory] before registering here.
         register(DigestService.blake2s256.hashAlgorithm)
-        register(DigestService.pedersen.hashAlgorithm)
     }
 
     // hashCode() is stable for Strings in Java, see https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html#hashCode()

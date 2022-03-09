@@ -3,10 +3,9 @@ package com.ing.zkflow.common.zkp
 import com.ing.zkflow.annotations.corda.Sha256
 import com.ing.zkflow.common.network.ZKAttachmentConstraintType
 import com.ing.zkflow.common.serialization.BFLSerializationScheme
-import com.ing.zkflow.crypto.IdentifyingDigestAlgorithm
-import com.ing.zkflow.crypto.ZincDigestAlgorithm
-import net.corda.core.contracts.SignatureAttachmentConstraint
+import com.ing.zkflow.crypto.Blake2s256DigestAlgorithm
 import net.corda.core.crypto.Crypto
+import net.corda.core.crypto.DigestAlgorithm
 import net.corda.core.crypto.SignatureScheme
 
 object ZKFlow {
@@ -15,14 +14,13 @@ object ZKFlow {
     val DEFAULT_ZKFLOW_SIGNATURE_SCHEME = Crypto.EDDSA_ED25519_SHA512
     val DEFAULT_ZKFLOW_NOTARY_SIGNATURE_SCHEME = DEFAULT_ZKFLOW_SIGNATURE_SCHEME
 
-    val DEFAULT_ZKFLOW_CONTRACT_ATTACHMENT_CONSTRAINT = SignatureAttachmentConstraint::class
     val DEFAULT_ZKFLOW_SIGNATURE_ATTACHMENT_CONSTRAINT_SIGNATURE_SCHEME = DEFAULT_ZKFLOW_SIGNATURE_SCHEME
     val DEFAULT_ZKFLOW_CONTRACT_ATTACHMENT_CONSTRAINT_TYPE =
         ZKAttachmentConstraintType.SignatureAttachmentConstraintType(DEFAULT_ZKFLOW_SIGNATURE_ATTACHMENT_CONSTRAINT_SIGNATURE_SCHEME)
 
     val DEFAULT_ZKFLOW_HASH_ATTACHMENT_HASHING_ALGORITHM = Sha256::class
 
-    val DEFAULT_ZKFLOW_DIGEST_IDENTIFIER: IdentifyingDigestAlgorithm = ZincDigestAlgorithm()
+    val DEFAULT_ZKFLOW_DIGEST_IDENTIFIER: DigestAlgorithm = Blake2s256DigestAlgorithm()
 
     const val DEFAULT_SERIALIZATION_SCHEME_ID = BFLSerializationScheme.SCHEME_ID
 

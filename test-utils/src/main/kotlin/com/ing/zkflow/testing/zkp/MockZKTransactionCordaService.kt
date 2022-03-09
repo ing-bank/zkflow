@@ -3,8 +3,8 @@ package com.ing.zkflow.testing.zkp
 import com.ing.zkflow.common.zkp.AbstractZKTransactionService
 import com.ing.zkflow.common.zkp.ZKService
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
-import com.ing.zkflow.crypto.zinc
-import com.ing.zkflow.crypto.zincAlgorithm
+import com.ing.zkflow.crypto.blake2s256
+import com.ing.zkflow.crypto.blake2sAlgorithm
 import net.corda.core.crypto.DigestService
 import net.corda.core.internal.HashAgility
 import net.corda.core.node.AppServiceHub
@@ -18,11 +18,11 @@ public open class MockZKTransactionService(serviceHub: ServiceHub) : AbstractZKT
 
     init {
         // TODO: Check if we can remove this
-        HashAgility.init(zincAlgorithm)
+        HashAgility.init(blake2sAlgorithm)
     }
 
     override fun zkServiceForCommandMetadata(metadata: ResolvedZKCommandMetadata): ZKService =
-        MockZKService(DigestService.zinc)
+        MockZKService(DigestService.blake2s256)
 
     override fun setup(command: ResolvedZKCommandMetadata, force: Boolean) {
         // Do nothing

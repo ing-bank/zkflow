@@ -1,7 +1,6 @@
 package com.ing.zkflow.crypto
 
 import com.ing.zkflow.annotations.corda.HashSize
-import com.ing.zkflow.crypto.Blake2s256DigestAlgorithm.Companion.DIGEST_LENGTH
 import net.corda.core.crypto.DigestAlgorithm
 import net.corda.core.crypto.DigestService
 import net.corda.core.crypto.SecureHash
@@ -21,7 +20,7 @@ class Blake2s256DigestAlgorithm : DigestAlgorithm {
         const val DIGEST_LENGTH = 32
     }
 
-    override val algorithm = "BLAKE2S256"
+    override val algorithm = "BL2S" // Keep this as short as possible, since it is part of serialized data
 
     override val digestLength = DIGEST_LENGTH
 
