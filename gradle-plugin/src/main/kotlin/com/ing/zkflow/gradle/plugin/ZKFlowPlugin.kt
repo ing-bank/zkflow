@@ -59,6 +59,7 @@ class ZKFlowPlugin : Plugin<Project> {
             .dependsOn(COMPILE_KOTLIN) // So the command metadata can be found
             .mustRunAfter(COMPILE_KOTLIN)
 
+        project.tasks.getByPath(COMPILE_KOTLIN).finalizedBy(GENERATE_ZINC_CIRCUITS)
         project.tasks.getByPath(ASSEMBLE).dependsOn(GENERATE_ZINC_CIRCUITS)
     }
 
