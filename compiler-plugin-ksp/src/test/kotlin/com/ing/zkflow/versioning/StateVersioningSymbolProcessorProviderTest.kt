@@ -11,7 +11,7 @@ import com.ing.zkflow.ksp.implementations.ImplementationsProcessor
 import com.ing.zkflow.ksp.implementations.ImplementationsSymbolProcessor
 import com.ing.zkflow.ksp.implementations.ScopedDeclaration
 import com.ing.zkflow.ksp.implementations.ServiceLoaderRegistration
-import com.ing.zkflow.ksp.versioning.SortedStateFamiliesRegistry
+import com.ing.zkflow.ksp.versioning.StateVersionSorting
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import com.tschuchort.compiletesting.symbolProcessorProviders
@@ -43,7 +43,7 @@ class VersionedInterfaceProviderProcessor(val codeGenerator: CodeGenerator) :
         val familyNames =
             declarations.filter { it.classKind == ClassKind.INTERFACE }.map { it.qualifiedName!!.asString() }.toSet()
         val stateDeclarations = declarations.filter { it.classKind == ClassKind.CLASS }
-        val stateFamiliesMap = SortedStateFamiliesRegistry.buildSortedMap(familyNames, stateDeclarations)
+        val stateFamiliesMap = StateVersionSorting.buildSortedMap(familyNames, stateDeclarations)
         val log = stateFamiliesMap.flatMap { (stateName, orderedStateClasses) ->
             orderedStateClasses.map { "$stateName - $it" }
         }.joinToString("\n")
