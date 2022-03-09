@@ -18,6 +18,8 @@ dependencies {
 
     implementation(project(":serialization"))
 
+    implementation(project(":zinc-poet:zinc-code-generation"))
+
     val junit5Version: String by project
     implementation("org.junit.jupiter:junit-jupiter-params:$junit5Version")
 

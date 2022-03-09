@@ -1,5 +1,6 @@
 package com.ing.zkflow.testing.dsl.services
 
+import com.ing.zkflow.common.network.ZKNetworkParameters
 import com.ing.zkflow.common.transactions.SignedZKVerifierTransaction
 import com.ing.zkflow.common.transactions.ZKVerifierTransaction
 import com.ing.zkflow.common.transactions.collectUtxoInfos
@@ -15,8 +16,8 @@ public interface TestDSLZKTransactionService {
     /**
      * Called to execute setup, prove and verify in one go
      */
-    public fun run(wtx: WireTransaction): SignedZKVerifierTransaction
-    public fun verify(wtx: WireTransaction, mode: VerificationMode): SignedZKVerifierTransaction
+    public fun run(wtx: WireTransaction, zkNetworkParameters: ZKNetworkParameters): SignedZKVerifierTransaction
+    public fun verify(wtx: WireTransaction, zkNetworkParameters: ZKNetworkParameters, mode: VerificationMode): SignedZKVerifierTransaction
 
     public fun calculatePublicInput(
         serviceHub: ServiceHub,

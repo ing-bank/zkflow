@@ -221,6 +221,11 @@ open class BFLSerializationScheme : CustomSerializationScheme {
         scheme.decodeFromBinary(TimeWindowSerializer, serializedData)
 
     private fun serializeStateRef(obj: StateRef): ByteArray {
+        /*
+         * Here we still include metadata for the SecureHash, because the stateRef txhash algo is determined by the networkparameters
+         * under which the transaction it points to was created. This could be different from the networkparams under which this
+         * transaction is being created.
+         */
         val secureHashMetadata = when (val txhash = obj.txhash) {
             is SecureHash.SHA256 -> SHA256SecureHashSerializationMetadata
             is SecureHash.HASH -> SecureHashSerializationMetadata(txhash.algorithmId)
