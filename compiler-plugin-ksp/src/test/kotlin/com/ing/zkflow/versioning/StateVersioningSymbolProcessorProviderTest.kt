@@ -6,7 +6,7 @@ import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.processing.SymbolProcessorProvider
 import com.google.devtools.ksp.symbol.ClassKind
-import com.ing.zkflow.common.versioning.VersionedInterface
+import com.ing.zkflow.common.versioning.Versioned
 import com.ing.zkflow.ksp.implementations.ImplementationsProcessor
 import com.ing.zkflow.ksp.implementations.ImplementationsSymbolProcessor
 import com.ing.zkflow.ksp.implementations.ScopedDeclaration
@@ -36,8 +36,8 @@ class VersionedInterfaceProvider : SymbolProcessorProvider {
 }
 
 class VersionedInterfaceProviderProcessor(val codeGenerator: CodeGenerator) :
-    ImplementationsProcessor<VersionedInterface> {
-    override val interfaceClass = VersionedInterface::class
+    ImplementationsProcessor<Versioned> {
+    override val interfaceClass = Versioned::class
     override fun process(implementations: List<ScopedDeclaration>): ServiceLoaderRegistration {
         val declarations = implementations.map { it.declaration }
         val familyNames =
@@ -104,7 +104,7 @@ class StateVersioningSymbolProcessorProviderTest {
             "StateVersions.kt",
             """
                 import com.ing.zkflow.annotations.ZKP
-                import com.ing.zkflow.common.versioning.VersionedInterface
+                import com.ing.zkflow.common.versioning.Versioned
                 /**
                  * Annotation specifying the [body] of a zinc method on the enclosing type.
                  *
@@ -120,7 +120,7 @@ class StateVersioningSymbolProcessorProviderTest {
                 @Target(AnnotationTarget.CONSTRUCTOR)
                 annotation class ZincUpgradeMethod(val body: String)
                 
-                interface MyStateInterface: VersionedInterface
+                interface MyStateInterface: Versioned
                 @ZKP
                 data class MyStateV1(
                     val name: @UTF8(8)  String
