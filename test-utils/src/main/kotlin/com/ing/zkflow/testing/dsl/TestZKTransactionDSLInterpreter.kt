@@ -177,7 +177,7 @@ public data class TestZKTransactionDSLInterpreter private constructor(
         if (wtx.hasPrivateComponents) {
             txb.enforcePrivateInputsAndReferences(ledgerInterpreter.zkVerifierTransactionStorage)
             log.info("Transaction ${wtx.id} has private components: creating and verifying ZKP")
-            zkService.verify(wtx, mode)
+            zkService.verify(wtx, ledgerInterpreter.zkNetworkParameters, mode)
         }
         log.info("Transaction ${wtx.id} verified")
 

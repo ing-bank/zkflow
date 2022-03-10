@@ -211,7 +211,7 @@ public class TestZKLedgerDSLInterpreter private constructor(
                 val ltx = wtx.toLedgerTransaction(services)
                 ltx.verify()
                 if (wtx.hasZKCommandData) {
-                    zkService.verify(wtx, mode)
+                    zkService.verify(wtx, zkNetworkParameters, mode)
                 }
                 val allInputs = wtx.inputs union wtx.references
                 val doubleSpend = allInputs intersect usedInputs

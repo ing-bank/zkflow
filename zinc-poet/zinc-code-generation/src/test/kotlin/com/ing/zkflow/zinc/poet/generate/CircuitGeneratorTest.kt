@@ -1,6 +1,5 @@
 package com.ing.zkflow.zinc.poet.generate
 
-import com.ing.zkflow.common.network.ZKAttachmentConstraintType
 import com.ing.zkflow.testing.zkp.MockZKNetworkParameters
 import com.ing.zkflow.util.runCommand
 import com.ing.zkflow.zinc.poet.generate.types.CommandContextFactory
@@ -29,11 +28,7 @@ import kotlin.time.measureTime
 internal class CircuitGeneratorTest {
     private val zincTypeResolver = ZincTypeGeneratorResolver(ZincTypeGenerator)
 
-    private val standardTypes = StandardTypes(
-        MockZKNetworkParameters(
-            attachmentConstraintType = ZKAttachmentConstraintType.AlwaysAcceptAttachmentConstraintType
-        )
-    )
+    private val standardTypes = StandardTypes(MockZKNetworkParameters())
 
     @ExperimentalTime
     @Test

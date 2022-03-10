@@ -2,10 +2,8 @@ package com.example.contract
 
 import com.ing.zkflow.testing.dsl.interfaces.VerificationMode
 import com.ing.zkflow.testing.dsl.zkLedger
-import com.ing.zkflow.testing.zkp.ZKNulls
 import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.Instant
 
@@ -16,7 +14,7 @@ class MockAssetContractTest {
         val bob = TestIdentity.fresh("Bob").party.anonymise()
         val services = MockServices(listOf("com.example.contract"))
 
-        services.zkLedger {
+        services.zkLedger() {
             val createState = MockAssetContract.MockAsset(alice, value = 88)
             transaction {
                 input(MockAssetContract.ID, createState)

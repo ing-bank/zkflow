@@ -68,7 +68,6 @@ class StandardTypes(
             name = "data"
             type = stateType
         }
-        @Suppress("MagicNumber")
         field {
             name = "contract"
             type = contractClassName

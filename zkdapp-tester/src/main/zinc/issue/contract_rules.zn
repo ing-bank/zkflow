@@ -7,7 +7,7 @@ fn verify(
     let signers = ctx.signers;
     dbg!("[Create] Signers {}", signers);
 
-    let tx_mock_asset = ctx.outputs.mock_asset_contract_mock_asset.get(0 as u32);
+    let tx_mock_asset = ctx.outputs.mock_asset_contract_mock_asset_0;
     dbg!("[Create] TxState_MockAsset {}", tx_mock_asset);
 
     assert!(signers.contains(tx_mock_asset.data.owner.public_key), "[Create] Owner must sign");

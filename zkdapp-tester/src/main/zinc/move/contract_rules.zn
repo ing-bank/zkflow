@@ -4,8 +4,8 @@ use command_context::CommandContext;
 fn verify(
     ctx: CommandContext,
 ) -> () {
-    let input = ctx.inputs.mock_asset_contract_mock_asset.get(0 as u32);
-    let output = ctx.outputs.mock_asset_contract_mock_asset.get(0 as u32);
+    let input = ctx.inputs.mock_asset_contract_mock_asset_0;
+    let output = ctx.outputs.mock_asset_contract_mock_asset_0;
 
     assert!(input.data.value == output.data.value, "[Move] Values of input and output must equal");
     dbg!("[Move] Value of moved value verified");
