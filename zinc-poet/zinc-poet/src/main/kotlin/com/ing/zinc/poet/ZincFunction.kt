@@ -2,6 +2,7 @@ package com.ing.zinc.poet
 
 import com.ing.zinc.poet.Indentation.Companion.spaces
 import com.ing.zinc.poet.ZincComment.Companion.zincComment
+import org.intellij.lang.annotations.Language
 
 interface ZincFunction : ZincFileItem {
     fun getName(): String
@@ -19,6 +20,8 @@ interface ZincFunction : ZincFileItem {
         var name: String? = null
         private val parameters: MutableList<ZincParameter> = mutableListOf()
         var returnType: ZincType? = null
+
+        @Language("Rust")
         var body: String? = null
         var comment: String? = null
 

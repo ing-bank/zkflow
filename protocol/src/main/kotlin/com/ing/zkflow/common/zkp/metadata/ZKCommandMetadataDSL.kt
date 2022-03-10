@@ -4,7 +4,6 @@ import com.ing.zinc.naming.camelToSnakeCase
 import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.zkp.metadata.ZKCircuit.Companion.resolve
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
-import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.ContractState
 import net.corda.core.utilities.hours
 import net.corda.core.utilities.minutes
@@ -170,7 +169,7 @@ class ZKProtectedComponentList : ArrayList<ZKProtectedComponent>() {
  * Components that are not mentioned here are considered Public by default and will be publicly visible.
  */
 @ZKCommandMetadataDSL
-class ZKCommandMetadata(val commandKClass: KClass<out CommandData>) {
+class ZKCommandMetadata(val commandKClass: KClass<out ZKCommandData>) {
     val commandSimpleName: String by lazy { commandKClass.simpleName ?: error("Command classes must be a named class") }
 
     /**
@@ -214,6 +213,6 @@ fun ZKCommandData.commandMetadata(init: ZKCommandMetadata.() -> Unit): ResolvedZ
     return commandMetadata(this::class, init)
 }
 
-fun commandMetadata(commandKClass: KClass<out CommandData>, init: ZKCommandMetadata.() -> Unit): ResolvedZKCommandMetadata {
+fun commandMetadata(commandKClass: KClass<out ZKCommandData>, init: ZKCommandMetadata.() -> Unit): ResolvedZKCommandMetadata {
     return ZKCommandMetadata(commandKClass).apply(init).resolved()
 }

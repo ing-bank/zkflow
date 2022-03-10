@@ -44,7 +44,7 @@ internal class CircuitGeneratorTest {
         )
 
         logExecutionTime("Generating the circuit") {
-            circuitGenerator.generateCircuitFor(MyContract.MyFirstCommand().metadata)
+            circuitGenerator.generateCircuitFor(MyContract.MyFirstCommand())
         }
 
         val result = logExecutionTime("Running the circuit using `zargo run`") {
