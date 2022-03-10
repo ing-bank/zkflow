@@ -1,12 +1,9 @@
 package com.ing.zkflow.zinc.poet.generate.types
 
 import com.ing.zinc.bfl.BflModule
-import com.ing.zinc.bfl.BflStructField
 import com.ing.zinc.bfl.CONSTS
 import com.ing.zinc.bfl.CORDA_MAGIC_BITS_SIZE
-import com.ing.zinc.bfl.CORDA_MAGIC_BITS_SIZE_CONSTANT
 import com.ing.zinc.bfl.TypeVisitor
-import com.ing.zinc.bfl.dsl.FieldBuilder.Companion.field
 import com.ing.zinc.bfl.dsl.StructBuilder.Companion.struct
 import com.ing.zinc.bfl.generator.CodeGenerationOptions
 import com.ing.zinc.bfl.generator.WitnessGroupOptions
@@ -27,7 +24,6 @@ import com.ing.zinc.poet.ZincMethod.Companion.zincMethod
 import com.ing.zinc.poet.ZincPrimitive
 import com.ing.zinc.poet.ZincStruct.Companion.zincStruct
 import com.ing.zinc.poet.indent
-import com.ing.zkflow.util.bitsToByteBoundary
 import com.ing.zkflow.util.requireNotNull
 import com.ing.zkflow.zinc.poet.generate.COMPUTE_LEAF_HASHES
 import com.ing.zkflow.zinc.poet.generate.COMPUTE_NONCE
@@ -45,7 +41,7 @@ data class SerializedStateGroup(
     private val serializedStructName: String = "Serialized$baseName"
     internal val deserializedStruct = struct {
         name = "Deserialized$baseName"
-        addFields(transactionStates.toFieldList())
+        addFields(transactionStates.map(IndexedState::toDeserializedField))
         isDeserializable = false
     }
 
@@ -54,8 +50,7 @@ data class SerializedStateGroup(
     override fun generateZincFile(codeGenerationOptions: CodeGenerationOptions) = zincFile {
         mod { module = CONSTS }
         newLine()
-        transactionStates
-            .map { it.state }
+        (transactionStates.map { it.state } + codeGenerationOptions.witnessGroupOptions.map { it.type })
             .distinctBy { it.id }
             .forEach {
                 add(it.mod())
@@ -88,23 +83,15 @@ data class SerializedStateGroup(
     override fun toZincType() = zincStruct {
         name = serializedStructName
         transactionStates.forEach {
-            val paddingBits = it.state.bitSize.bitsToByteBoundary() - it.state.bitSize
             field {
                 name = it.fieldName
                 type = zincArray {
-                    size = getSerializedBitSize(paddingBits, it.state)
+                    size = it.state.getLengthConstant()
                     elementType = ZincPrimitive.Bool
                 }
             }
         }
     }
-
-    private fun getSerializedBitSize(paddingBits: Int, stateType: BflModule) =
-        if (paddingBits > 0) {
-            "$CORDA_MAGIC_BITS_SIZE_CONSTANT + ${stateType.getLengthConstant()} + $paddingBits as u24"
-        } else {
-            "$CORDA_MAGIC_BITS_SIZE_CONSTANT + ${stateType.getLengthConstant()}"
-        }
 
     override fun generateMethods(codeGenerationOptions: CodeGenerationOptions): List<ZincFunction> {
         return listOf(
@@ -119,15 +106,13 @@ data class SerializedStateGroup(
         name = "deserialize"
         returnType = deserializedStruct.toZincId()
         val fieldDeserializations = transactionStates.joinToString("\n") {
-            val stateTypeId = it.state.id
             val fieldName = it.fieldName
             val witnessGroupOptions = codeGenerationOptions.witnessGroupOptions.find { witnessGroupOptions ->
                 "${groupName}_$fieldName".startsWith(witnessGroupOptions.name)
             }.requireNotNull {
-                "Could not select Witness group options in group $groupName for state ${it.state.id}"
+                "Could not select Witness group options in group $groupName for state ${it.state.id}\n"
             }
-            val deserializeMethodName = witnessGroupOptions.deserializeMethodName
-            "$fieldName: $stateTypeId::$deserializeMethodName(self.$fieldName, $CORDA_MAGIC_BITS_SIZE_CONSTANT),"
+            "$fieldName: ${witnessGroupOptions.generateDeserializeExpr("self.$fieldName")},"
         }
         body = """
             ${deserializedStruct.id} {
@@ -138,8 +123,7 @@ data class SerializedStateGroup(
 
     private fun generateEmptyMethod() = zincFunction {
         val fieldInitializations = transactionStates.joinToString("\n") {
-            val paddingBits = it.state.bitSize.bitsToByteBoundary() - it.state.bitSize
-            "${it.fieldName}: [false; ${getSerializedBitSize(paddingBits, it.state)}],"
+            "${it.fieldName}: [false; ${it.state.getLengthConstant()}],"
         }
         name = "empty"
         returnType = this@SerializedStateGroup.toZincId()
@@ -157,7 +141,7 @@ data class SerializedStateGroup(
                 {
                     let mut still_equals: bool = true;
                     for i in 0..${it.state.getLengthConstant()} while still_equals {
-                        still_equals = self.$stateFieldName[i + $CORDA_MAGIC_BITS_SIZE_CONSTANT] == other.$stateFieldName[i + $CORDA_MAGIC_BITS_SIZE_CONSTANT];
+                        still_equals = self.$stateFieldName[i] == other.$stateFieldName[i];
                     }
                     still_equals
                 }
@@ -228,15 +212,6 @@ data class SerializedStateGroup(
         visitor.visitType(deserializedStruct)
         transactionStates.forEach {
             visitor.visitType(it.state)
-        }
-    }
-
-    companion object {
-        private fun List<IndexedState>.toFieldList(): List<BflStructField> = map {
-            field {
-                name = it.fieldName
-                type = it.state
-            }
         }
     }
 }

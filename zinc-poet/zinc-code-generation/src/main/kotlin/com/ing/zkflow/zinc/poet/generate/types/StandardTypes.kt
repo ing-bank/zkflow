@@ -7,17 +7,21 @@ import com.ing.zinc.bfl.dsl.ArrayBuilder.Companion.array
 import com.ing.zinc.bfl.dsl.EnumBuilder.Companion.enumOf
 import com.ing.zinc.bfl.dsl.ListBuilder.Companion.list
 import com.ing.zinc.bfl.dsl.StructBuilder.Companion.struct
+import com.ing.zinc.bfl.dsl.WrappedStateBuilder.Companion.wrappedState
 import com.ing.zinc.bfl.generator.WitnessGroupOptions
 import com.ing.zinc.naming.camelToSnakeCase
+import com.ing.zinc.naming.snakeToCamelCase
 import com.ing.zkflow.common.network.ZKNetworkParameters
 import com.ing.zkflow.common.network.attachmentConstraintSerializer
 import com.ing.zkflow.common.network.notarySerializer
 import com.ing.zkflow.common.network.signerSerializer
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
+import com.ing.zkflow.serialization.infra.NetworkSerializationMetadata
 import com.ing.zkflow.serialization.serializer.corda.SHA256SecureHashSerializer
 import com.ing.zkflow.serialization.serializer.corda.TimeWindowSerializer
 import com.ing.zkflow.serialization.serializer.corda.TransactionStateSurrogate
 import com.ing.zkflow.zinc.poet.generate.ZincTypeGenerator
+import kotlinx.serialization.descriptors.SerialDescriptor
 import net.corda.core.contracts.ComponentGroupEnum
 
 class StandardTypes(
@@ -44,22 +48,11 @@ class StandardTypes(
         ZincTypeGenerator.generate(zkNetworkParameters.attachmentConstraintSerializer.descriptor)
     }
 
-    internal fun toWitnessGroupOptions(groupName: String, states: List<IndexedState>): List<WitnessGroupOptions> = states
+    internal fun toWitnessGroupOptions(states: List<IndexedState>): List<WitnessGroupOptions> = states
         .map { it.state }
         .distinctBy { it.id }
         .map {
-            WitnessGroupOptions.cordaWrapped(
-                "${groupName}_${it.id.camelToSnakeCase()}",
-                transactionState(it)
-            )
-        }
-
-    internal fun toTransactionStates(states: List<IndexedState>): List<IndexedState> =
-        states.map {
-            IndexedState(
-                it.index,
-                transactionState(it.state)
-            )
+            WitnessGroupOptions(it.id.removeSuffix("WitnessGroup").camelToSnakeCase(), it)
         }
 
     internal fun transactionState(stateType: BflType) = struct {
@@ -123,5 +116,23 @@ class StandardTypes(
             )
         }
         internal val componentGroupEnum = enumOf(ComponentGroupEnum::class)
+
+        private val networkParametersMetadata by lazy {
+            ZincTypeGenerator.generate(NetworkSerializationMetadata.serializer().descriptor)
+        }
+
+        fun wrappedWitnessGroup(
+            groupName: String,
+            stateClass: BflType,
+            vararg metadataDescriptor: SerialDescriptor
+        ) = wrappedState {
+            name = groupName.snakeToCamelCase() + "WitnessGroup"
+            cordaMagic()
+            metadata(networkParametersMetadata)
+            metadataDescriptor.forEach {
+                metadata(ZincTypeGenerator.generate(it))
+            }
+            state(stateClass)
+        }
     }
 }

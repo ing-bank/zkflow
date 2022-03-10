@@ -55,7 +55,7 @@ object ZincExecutor {
 
     private fun BflModule.toCodeGenerationOptions() = CodeGenerationOptions(
         listOf(
-            WitnessGroupOptions("test", this)
+            WitnessGroupOptions.wrapped("test", this)
         )
     )
 
@@ -94,6 +94,26 @@ object ZincExecutor {
                 parameter { name = SERIALIZED; type = witnessGroupOptions.witnessType }
                 returnType = module.toZincId()
                 body = module.deserializeExpr(witnessGroupOptions, "0 as u24", SERIALIZED, SERIALIZED)
+            }
+        }
+    }
+
+    fun Path.generateDeserializeLastFieldCircuit(module: BflWrappedState) {
+        val options = module.toCodeGenerationOptions()
+        generateCircuitBase(module, options)
+        // generate src/main.zn
+        zincSourceFile("main.zn") {
+            mod { this.module = CONSTS }
+            newLine()
+            module.allModules {
+                createImports(this)
+            }
+            function {
+                val witnessGroupOptions = options.witnessGroupOptions.first()
+                name = "main"
+                parameter { name = SERIALIZED; type = witnessGroupOptions.witnessType }
+                returnType = module.lastField.type.toZincType()
+                body = module.deserializeLastFieldExpr(witnessGroupOptions, "0 as u24", SERIALIZED)
             }
         }
     }

@@ -156,7 +156,7 @@ open class BflStruct(
         }
     }
 
-    private fun constructSelf(fieldsGenerator: () -> String): String = if (fields.isEmpty()) {
+    internal fun constructSelf(fieldsGenerator: () -> String): String = if (fields.isEmpty()) {
         "Self"
     } else {
         """

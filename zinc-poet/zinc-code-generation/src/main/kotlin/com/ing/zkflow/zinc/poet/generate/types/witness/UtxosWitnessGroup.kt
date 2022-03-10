@@ -19,13 +19,13 @@ internal data class UtxosWitnessGroup(
     private val noncesVariable: String,
     private val standardTypes: StandardTypes,
 ) : WitnessGroup {
-    private val serializedGroup = SerializedStateGroup(groupName, baseName, standardTypes.toTransactionStates(states))
+    private val serializedGroup = SerializedStateGroup(groupName, baseName, states)
     internal val deserializedGroup = serializedGroup.deserializedStruct
 
     private val groupSize: Int = states.size
     override val isPresent: Boolean = groupSize > 0
-    override val options: List<WitnessGroupOptions> = standardTypes.toWitnessGroupOptions(groupName, states)
-    override val dependencies: List<BflType> = listOf(serializedGroup, deserializedGroup)
+    override val options: List<WitnessGroupOptions> = standardTypes.toWitnessGroupOptions(states)
+    override val dependencies: List<BflType> = options.map { it.type } + listOf(serializedGroup, deserializedGroup)
     override val serializedType: ZincType = serializedGroup.toZincId()
     override val generateHashesMethod = zincMethod {
         comment = "Compute the $groupName leaf hashes."

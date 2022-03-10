@@ -1,9 +1,8 @@
 package com.ing.zkflow.zinc.poet.generate.types.witness
 
-import com.ing.zinc.bfl.BflModule
 import com.ing.zinc.bfl.BflType
+import com.ing.zinc.bfl.BflWrappedState
 import com.ing.zinc.bfl.CONSTS
-import com.ing.zinc.bfl.CORDA_MAGIC_BITS_SIZE_CONSTANT
 import com.ing.zinc.bfl.generator.WitnessGroupOptions
 import com.ing.zinc.bfl.getSerializedTypeDef
 import com.ing.zinc.bfl.toZincId
@@ -23,13 +22,17 @@ import net.corda.core.contracts.ComponentGroupEnum
 
 internal data class StandardComponentWitnessGroup(
     override val groupName: String,
-    val module: BflType,
+    val module: BflWrappedState,
     private val groupSize: Int,
     val componentGroup: ComponentGroupEnum
 ) : WitnessGroup {
     override val isPresent: Boolean = groupSize > 0
-    override val options = listOf(WitnessGroupOptions.cordaWrapped(groupName, module))
-    override val dependencies: List<BflType> = listOfNotNull(module as? BflModule)
+    private val witnessGroupOptions = WitnessGroupOptions(groupName, module)
+    override val options = listOf(witnessGroupOptions)
+    override val dependencies: List<BflType> = listOf(
+        witnessGroupOptions.type,
+        witnessGroupOptions.type.lastField.type
+    )
     override val serializedType: ZincType = zincArray {
         size = groupSize.toString()
         elementType = zincArray {
@@ -40,22 +43,18 @@ internal data class StandardComponentWitnessGroup(
 
     fun generateDeserializeMethod(): ZincFunction? {
         if (groupSize == 0) return null
-        val deserializeExpression = module.deserializeExpr(
-            options[0],
-            offset = CORDA_MAGIC_BITS_SIZE_CONSTANT,
-            variablePrefix = groupName,
-            witnessVariable = "self.$groupName[i]"
-        )
+        val deserializeExpression = options[0].generateDeserializeExpr("self.$groupName[i]")
+        val deserializedType = module.lastField.type
         return zincMethod {
             comment =
                 "Deserialize $groupName from the ${Witness::class.java.simpleName}."
             name = "deserialize_$groupName"
             returnType = zincArray {
-                elementType = module.toZincId()
+                elementType = deserializedType.toZincId()
                 size = "$groupSize"
             }
             body = """
-                let mut ${groupName}_array: [${module.id}; $groupSize] = [${module.defaultExpr()}; $groupSize];
+                let mut ${groupName}_array: [${deserializedType.id}; $groupSize] = [${deserializedType.defaultExpr()}; $groupSize];
                 for i in 0..$groupSize {
                     ${groupName}_array[i] = ${deserializeExpression.indent(20.spaces)};
                 }

@@ -22,14 +22,16 @@ data class BflArray(
     ): String {
         val array = "${variablePrefix}_array"
         val i = "${variablePrefix}_i"
+        val o = "${variablePrefix}_offset"
         val deserializeExpr = elementType.deserializeExpr(
             witnessGroupOptions,
-            offset = "$i * ${elementType.bitSize} as u24 + $offset",
+            offset = "$i * ${elementType.bitSize} as u24 + $o",
             variablePrefix = array,
             witnessVariable = witnessVariable
         )
         return """
             {
+                let $o: u24 = $offset;
                 let mut $array: [${elementType.id}; $arraySize] = [${elementType.defaultExpr()}; $arraySize];
                 for $i in (0 as u24)..$arraySize {
                     $array[$i] = ${deserializeExpr.indent(20.spaces)};

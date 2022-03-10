@@ -1,7 +1,5 @@
 package com.ing.zinc.bfl
 
-import com.ing.zkflow.util.bitsToByteBoundary
-
 class BitWitnessBuilder {
     private val parts: MutableList<WitnessPart> = mutableListOf()
 
@@ -16,12 +14,9 @@ class BitWitnessBuilder {
     }
 
     fun build(): String {
-        val bits = parts.flatMap {
+        return parts.flatMap {
             it.generateBooleanSequence()
-        }
-        val paddingBitCount = bits.size.bitsToByteBoundary() - bits.size
-        val paddingBits = generateSequence { false }.take(paddingBitCount)
-        return (bits + paddingBits).joinToString {
+        }.joinToString {
             it.toString()
         }
     }

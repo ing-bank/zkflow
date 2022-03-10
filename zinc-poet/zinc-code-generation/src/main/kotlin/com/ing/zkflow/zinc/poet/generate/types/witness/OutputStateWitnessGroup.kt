@@ -23,14 +23,13 @@ internal data class OutputStateWitnessGroup(
     private val states: List<IndexedState>,
     val standardTypes: StandardTypes,
 ) : WitnessGroup {
-    private val serializedGroup = SerializedStateGroup(groupName, baseName, standardTypes.toTransactionStates(states))
+    private val serializedGroup = SerializedStateGroup(groupName, baseName, states)
     internal val deserializedGroup = serializedGroup.deserializedStruct
 
     private val groupSize: Int = states.size
     override val isPresent: Boolean = groupSize > 0
-    override val options: List<WitnessGroupOptions> = standardTypes.toWitnessGroupOptions(groupName, states)
-
-    override val dependencies: List<BflType> = listOf(serializedGroup, deserializedGroup)
+    override val options: List<WitnessGroupOptions> = standardTypes.toWitnessGroupOptions(states)
+    override val dependencies: List<BflType> = options.map { it.type } + listOf(serializedGroup, deserializedGroup)
     override val serializedType: ZincType = serializedGroup.toZincId()
     override val generateHashesMethod = zincMethod {
         val serializedDigest = digest.getSerializedTypeDef().getType() as ZincArray

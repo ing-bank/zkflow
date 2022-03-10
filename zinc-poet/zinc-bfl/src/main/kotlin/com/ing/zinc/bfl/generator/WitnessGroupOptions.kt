@@ -1,18 +1,15 @@
 package com.ing.zinc.bfl.generator
 
-import com.ing.zinc.bfl.BflPrimitive
 import com.ing.zinc.bfl.BflType
+import com.ing.zinc.bfl.BflWrappedState
 import com.ing.zinc.bfl.CONSTS
-import com.ing.zinc.bfl.CORDA_MAGIC_BYTES_SIZE
-import com.ing.zinc.bfl.dsl.ArrayBuilder.Companion.array
-import com.ing.zinc.bfl.dsl.StructBuilder.Companion.struct
+import com.ing.zinc.bfl.dsl.WrappedStateBuilder.Companion.wrappedState
 import com.ing.zinc.naming.camelToSnakeCase
 import com.ing.zinc.poet.ZincArray.Companion.zincArray
 import com.ing.zinc.poet.ZincConstant
 import com.ing.zinc.poet.ZincConstant.Companion.zincConstant
 import com.ing.zinc.poet.ZincPrimitive
 import com.ing.zinc.poet.ZincType
-import com.ing.zkflow.util.bitsToByteBoundary
 import java.util.Locale
 
 /**
@@ -21,13 +18,13 @@ import java.util.Locale
  * Contains utilities to aid in generating deserialization methods for this witness group.
  *
  * @property name Name of the witness group. (i.e. inputs, outputs, references, ...)
- * @property type [BflType] describing the type contained in this witness group
+ * @property type [BflWrappedState] describing the type contained in this witness group
  */
 data class WitnessGroupOptions(
     val name: String,
-    private val type: BflType
+    val type: BflWrappedState
 ) {
-    private val sizeInBits: Int = type.bitSize.bitsToByteBoundary()
+    private val sizeInBits: Int = type.bitSize
 
     /**
      * [ZincConstant] for the size of this witness group.
@@ -55,22 +52,21 @@ data class WitnessGroupOptions(
      */
     val deserializeMethodName: String = "deserialize_from_${name.camelToSnakeCase()}"
 
+    /**
+     * Generate an expression with which to deserialize the unwrapped state from the [witnessGroupVariable].
+     */
+    fun generateDeserializeExpr(witnessGroupVariable: String): String = type.deserializeLastFieldExpr(
+        this,
+        offset = "0 as u24",
+        witnessGroupVariable = witnessGroupVariable
+    )
+
     companion object {
-        fun cordaWrapped(groupName: String, stateClass: BflType): WitnessGroupOptions = WitnessGroupOptions(
+        fun wrapped(groupName: String, stateClass: BflType): WitnessGroupOptions = WitnessGroupOptions(
             groupName,
-            struct {
+            wrappedState {
                 name = groupName
-                field {
-                    name = "corda_magic_bits"
-                    type = array {
-                        capacity = CORDA_MAGIC_BYTES_SIZE
-                        elementType = BflPrimitive.I8
-                    }
-                }
-                field {
-                    name = "state_class"
-                    type = stateClass
-                }
+                state(stateClass)
             }
         )
     }

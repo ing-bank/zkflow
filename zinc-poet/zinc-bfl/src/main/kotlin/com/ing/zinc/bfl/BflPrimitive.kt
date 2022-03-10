@@ -48,13 +48,15 @@ enum class BflPrimitive(
         witnessVariable: String
     ): String {
         val bSize = sizeExpr()
-        val bits = "${variablePrefix}_bits"
         val i = "${variablePrefix}_i"
+        val bits = "${variablePrefix}_bits"
+        val o = "${variablePrefix}_offset"
         return """
             {
+                let $o: u24 = $offset;
                 let mut $bits: [bool; $bSize] = [false; $bSize];
                 for $i in (0 as u24)..$bSize {
-                    $bits[$i] = $witnessVariable[$i + $offset];
+                    $bits[$i] = $witnessVariable[$i + $o];
                 }
                 std::convert::${if (isSigned) "from_bits_signed" else "from_bits_unsigned"}($bits)
             }
