@@ -6,12 +6,10 @@ import com.ing.zkflow.common.transactions.SignedZKVerifierTransaction
 import com.ing.zkflow.common.transactions.ZKVerifierTransaction
 import com.ing.zkflow.common.transactions.collectUtxoInfos
 import com.ing.zkflow.common.transactions.commandData
-import com.ing.zkflow.common.transactions.zkTransactionMetadata
 import com.ing.zkflow.common.zkp.PublicInput
 import com.ing.zkflow.common.zkp.Witness
 import com.ing.zkflow.common.zkp.ZincZKTransactionService
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
-import com.ing.zkflow.testing.dsl.interfaces.VerificationMode
 import com.ing.zkflow.zinc.poet.generate.BuildPathProvider
 import com.ing.zkflow.zinc.poet.generate.CircuitGenerator
 import com.ing.zkflow.zinc.poet.generate.ConstsFactory
@@ -21,18 +19,53 @@ import com.ing.zkflow.zinc.poet.generate.ZincTypeGeneratorResolver
 import com.ing.zkflow.zinc.poet.generate.types.CommandContextFactory
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
+import net.corda.core.contracts.ComponentGroupEnum
+import net.corda.core.contracts.StateRef
+import net.corda.core.crypto.DigestService
+import net.corda.core.crypto.SecureHash
 import net.corda.core.internal.deleteRecursively
 import net.corda.core.node.ServiceHub
 import net.corda.core.transactions.WireTransaction
+import net.corda.core.utilities.OpaqueBytes
 import java.nio.file.Files
 import java.nio.file.Path
 
 @SuppressFBWarnings("PATH_TRAVERSAL_IN")
 public class TestDSLZincZKTransactionService(serviceHub: ServiceHub) : TestDSLZKTransactionService, ZincZKTransactionService(serviceHub) {
-    public override fun calculatePublicInput(tx: ZKVerifierTransaction, commandMetadata: ResolvedZKCommandMetadata): PublicInput =
-        calculatePublicInput(serviceHub, tx, commandMetadata)
+    public override fun calculatePublicInput(tx: ZKVerifierTransaction, commandMetadata: ResolvedZKCommandMetadata): PublicInput {
+        // Fetch the UTXO hashes from the svtx's pointed to by the inputs and references.
+        // This confirms that we have a validated backchain stored for them.
+        val privateInputHashes = tx.inputs.filterIndexed { index, _ ->
+            commandMetadata.isVisibleInWitness(ComponentGroupEnum.INPUTS_GROUP.ordinal, index)
+        }.let { getUtxoHashes(it, tx.digestService) }
 
-    override fun run(wtx: WireTransaction, zkNetworkParameters: ZKNetworkParameters): SignedZKVerifierTransaction {
+        val privateReferenceHashes = tx.references.filterIndexed { index, _ ->
+            commandMetadata.isVisibleInWitness(ComponentGroupEnum.REFERENCES_GROUP.ordinal, index)
+        }.let { privateStateRefs -> getUtxoHashes(privateStateRefs, tx.digestService) }
+
+        // Fetch output component hashes for private outputs of the command
+        val privateOutputHashes = tx.outputHashes().filterIndexed { index, _ ->
+            commandMetadata.isVisibleInWitness(ComponentGroupEnum.OUTPUTS_GROUP.ordinal, index)
+        }
+
+        return PublicInput(
+            outputComponentHashes = privateOutputHashes,
+            attachmentComponentHashes = tx.privateComponentHashes(ComponentGroupEnum.ATTACHMENTS_GROUP.ordinal),
+            commandComponentHashes = tx.privateComponentHashes(ComponentGroupEnum.COMMANDS_GROUP.ordinal),
+            notaryComponentHashes = tx.privateComponentHashes(ComponentGroupEnum.NOTARY_GROUP.ordinal),
+            parametersComponentHashes = tx.privateComponentHashes(ComponentGroupEnum.PARAMETERS_GROUP.ordinal),
+            timeWindowComponentHashes = tx.privateComponentHashes(ComponentGroupEnum.TIMEWINDOW_GROUP.ordinal),
+            signersComponentHashes = tx.privateComponentHashes(ComponentGroupEnum.SIGNERS_GROUP.ordinal),
+
+            inputUtxoHashes = privateInputHashes,
+            referenceUtxoHashes = privateReferenceHashes
+        )
+    }
+
+    private fun getUtxoHashes(stateRefs: List<StateRef>, digestService: DigestService): List<SecureHash> =
+        serviceHub.collectUtxoInfos(stateRefs).map { digestService.componentHash(it.nonce, OpaqueBytes(it.serializedContents)) }
+
+    public override fun verify(wtx: WireTransaction, zkNetworkParameters: ZKNetworkParameters): SignedZKVerifierTransaction {
         val proofs = mutableMapOf<String, ByteArray>()
         val vtx = ZKVerifierTransaction.fromWireTransaction(wtx, proofs)
 
@@ -77,32 +110,5 @@ public class TestDSLZincZKTransactionService(serviceHub: ServiceHub) : TestDSLZK
             CryptoUtilsFactory()
         )
         circuitGenerator.generateCircuitFor(command)
-    }
-
-    public override fun verify(
-        wtx: WireTransaction,
-        zkNetworkParameters: ZKNetworkParameters,
-        mode: VerificationMode
-    ): SignedZKVerifierTransaction {
-        return when (mode) {
-            VerificationMode.RUN -> run(wtx, zkNetworkParameters)
-            VerificationMode.PROVE_AND_VERIFY -> {
-                throw UnsupportedOperationException("This is not currently supported on DSL Contract tests")
-                // proveVerify(wtx)
-            }
-            VerificationMode.MOCK -> {
-                TestDSLMockZKTransactionService(serviceHub).run(wtx, zkNetworkParameters)
-            }
-        }
-    }
-
-    @Suppress("unused", "UnusedPrivateMember[s")
-    private fun proveVerify(wtx: WireTransaction): SignedZKVerifierTransaction {
-        wtx.zkTransactionMetadata().commands.forEach {
-            setup(it) // Should be idempotent
-        }
-        val svtx = SignedZKVerifierTransaction(prove(wtx))
-        verify(svtx, false)
-        return svtx
     }
 }

@@ -1,7 +1,6 @@
 package com.ing.zkflow.processors
 
 import com.google.devtools.ksp.processing.CodeGenerator
-import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.common.serialization.ZKDataRegistryProvider
 import com.ing.zkflow.ksp.implementations.ImplementationsProcessor
 import com.ing.zkflow.ksp.implementations.ScopedDeclaration

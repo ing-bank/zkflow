@@ -21,7 +21,7 @@ class MockAssetContractTest {
                 output(MockAssetContract.ID, createState.withNewOwner(bob).ownableState)
                 command(listOf(alice.owningKey, bob.owningKey), MockAssetContract.Move())
                 timeWindow(Instant.now())
-                verifies(VerificationMode.RUN)
+                verifies()
             }
         }
     }

@@ -88,16 +88,16 @@ abstract class AbstractZKTransactionService(val serviceHub: ServiceHub) : ZKTran
     open fun calculatePublicInput(tx: ZKVerifierTransaction, commandMetadata: ResolvedZKCommandMetadata): PublicInput {
         // Fetch the UTXO hashes from the svtx's pointed to by the inputs and references.
         // This confirms that we have a validated backchain stored for them.
-        val privateInputIndices = commandMetadata.inputs.map { it.index }
-        val privateInputHashes = getUtxoHashes(tx.inputs).filterIndexed { index, _ -> privateInputIndices.contains(index) }
+        val privateInputHashes = tx.inputs.filterIndexed { index, _ ->
+            commandMetadata.isVisibleInWitness(ComponentGroupEnum.INPUTS_GROUP.ordinal, index)
+        }.let { getUtxoHashes(it) }
 
-        val privateReferenceIndices = commandMetadata.references.map { it.index }
-        val privateReferenceHashes = getUtxoHashes(tx.references).filterIndexed { index, _ -> privateReferenceIndices.contains(index) }
+        val privateReferenceHashes = tx.references.filterIndexed { index, _ ->
+            commandMetadata.isVisibleInWitness(ComponentGroupEnum.REFERENCES_GROUP.ordinal, index)
+        }.let { privateStateRefs -> getUtxoHashes(privateStateRefs) }
 
-        // Fetch output component hashes for private outputs of the command
-        val privateOutputIndices = commandMetadata.outputs.map { it.index }
         val privateOutputHashes = tx.outputHashes().filterIndexed { index, _ ->
-            privateOutputIndices.contains(index)
+            commandMetadata.isVisibleInWitness(ComponentGroupEnum.OUTPUTS_GROUP.ordinal, index)
         }
 
         return PublicInput(
@@ -116,8 +116,7 @@ abstract class AbstractZKTransactionService(val serviceHub: ServiceHub) : ZKTran
 
     private fun getUtxoHashes(stateRefs: List<StateRef>): List<SecureHash> {
         return stateRefs.map { stateRef ->
-            val prevVtx = vtxStorage.getTransaction(stateRef.txhash)
-                ?: throw ZKTransactionResolutionException(stateRef.txhash)
+            val prevVtx = vtxStorage.getTransaction(stateRef.txhash) ?: throw ZKTransactionResolutionException(stateRef.txhash)
 
             /*
              * To be able to verify that the stateRefs that are used in the transaction are correct, and unchanged from

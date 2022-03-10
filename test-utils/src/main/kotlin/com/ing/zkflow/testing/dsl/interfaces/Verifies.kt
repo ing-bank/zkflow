@@ -11,7 +11,7 @@ public interface Verifies {
      * Verifies the ledger/transaction, throws if the verification fails.
      * @param mode The [VerificationMode] to use for verification.
      */
-    public fun verifies(mode: VerificationMode = VerificationMode.RUN): EnforceVerifyOrFail
+    public fun verifies(): EnforceVerifyOrFail
 
     /**
      * Asserts that verifies() throws.

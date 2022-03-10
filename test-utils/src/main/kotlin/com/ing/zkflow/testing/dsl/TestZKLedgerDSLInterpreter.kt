@@ -1,4 +1,3 @@
-
 import com.ing.zkflow.common.network.ZKNetworkParameters
 import com.ing.zkflow.common.transactions.SignedZKVerifierTransaction
 import com.ing.zkflow.common.transactions.ZKTransactionBuilder
@@ -10,7 +9,6 @@ import com.ing.zkflow.testing.dsl.interfaces.AttachmentResolutionException
 import com.ing.zkflow.testing.dsl.interfaces.DoubleSpentInputs
 import com.ing.zkflow.testing.dsl.interfaces.DuplicateOutputLabel
 import com.ing.zkflow.testing.dsl.interfaces.EnforceVerifyOrFail
-import com.ing.zkflow.testing.dsl.interfaces.VerificationMode
 import com.ing.zkflow.testing.dsl.interfaces.ZKLedgerDSLInterpreter
 import com.ing.zkflow.testing.dsl.services.TestDSLZKTransactionService
 import net.corda.core.contracts.Attachment
@@ -202,7 +200,7 @@ public class TestZKLedgerDSLInterpreter private constructor(
         return services.attachments.importAttachment(attachment, "TestDSL", null)
     }
 
-    override fun verifies(mode: VerificationMode): EnforceVerifyOrFail {
+    override fun verifies(): EnforceVerifyOrFail {
         try {
             val usedInputs = mutableSetOf<StateRef>()
             services.recordTransactions(transactionsUnverified.map { SignedTransaction(it, listOf(NullKeys.NULL_SIGNATURE)) })
@@ -211,7 +209,7 @@ public class TestZKLedgerDSLInterpreter private constructor(
                 val ltx = wtx.toLedgerTransaction(services)
                 ltx.verify()
                 if (wtx.hasZKCommandData) {
-                    zkService.verify(wtx, zkNetworkParameters, mode)
+                    zkService.verify(wtx, zkNetworkParameters)
                 }
                 val allInputs = wtx.inputs union wtx.references
                 val doubleSpend = allInputs intersect usedInputs
