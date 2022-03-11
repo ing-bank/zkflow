@@ -3,7 +3,7 @@ package com.r3.cbdc.annotated.states
 import com.ing.zkflow.Converter
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.annotations.corda.EdDSA
-import com.ing.zkflow.annotations.corda.Sha256
+import com.ing.zkflow.annotations.corda.SHA256
 import com.r3.cbdc.annotated.fixtures.AmountConverter_IssuedTokenType
 import com.r3.cbdc.annotated.fixtures.AmountSurrogate_IssuedTokenType
 import com.r3.cbdc.annotated.types.IssuedTokenType
@@ -28,7 +28,7 @@ data class FungibleToken constructor(
         AmountConverter_IssuedTokenType::class
     ) Amount<IssuedTokenType>,
     override val holder: @EdDSA Party,
-    override val tokenTypeJarHash: @Sha256 SecureHash? = SecureHash.zeroHash
+    override val tokenTypeJarHash: @SHA256 SecureHash? = SecureHash.zeroHash
 ) : AbstractFungibleToken() {
     override fun withNewHolder(newHolder: Party): FungibleToken {
         return FungibleToken(amount, newHolder, tokenTypeJarHash = tokenTypeJarHash)

@@ -41,8 +41,7 @@ data class WrapsAttachmentConstraints(
     object AlwaysAcceptAttachmentConstraint_0 :
         WrappedFixedLengthKSerializerWithDefault<AlwaysAcceptAttachmentConstraint>(AlwaysAcceptAttachmentConstraintSerializer)
 
-    object HashAttachmentConstraint_0 :
-        WrappedFixedLengthKSerializerWithDefault<HashAttachmentConstraint>(HashAttachmentConstraintSerializer)
+    object HashAttachmentConstraint_0 : HashAttachmentConstraintSerializer(com.ing.zkflow.annotations.corda.SHA256DigestAlgorithm::class)
 
     object WhitelistedByZoneAttachmentConstraint_0 :
         WrappedFixedLengthKSerializerWithDefault<WhitelistedByZoneAttachmentConstraint>(WhitelistedByZoneAttachmentConstraintSerializer)
