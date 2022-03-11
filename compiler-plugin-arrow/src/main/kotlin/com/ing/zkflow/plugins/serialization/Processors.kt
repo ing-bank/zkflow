@@ -15,6 +15,7 @@ import com.ing.zkflow.annotations.UTF8Char
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.annotations.corda.Algorithm
 import com.ing.zkflow.annotations.corda.CordaX500NameSpec
+import com.ing.zkflow.annotations.corda.SHA256DigestAlgorithm
 import com.ing.zkflow.annotations.corda.SignatureSpec
 import com.ing.zkflow.plugins.serialization.serializingobject.SerializingObject
 import com.ing.zkflow.plugins.serialization.serializingobject.Tracker
@@ -533,11 +534,23 @@ internal object Processors {
                 }.also {
                     SerdeLogger.log("Type ${contextualOriginal.ktTypeReference.text} processed successfully")
                 }
-            } ?: run {
-                // HashAttachmentConstraint has no signature specific annotations, recurse to treating it as a generic user type.
-                SerdeLogger.log("Re-cursing to default treatment of ${contextualOriginal.ktTypeReference.text}")
-                forUserType(contextualOriginal)
             }
+                // HashAttachmentConstraint has no signature specific annotations, default to SHA256.
+                ?: TypeSerializingObject.ExplicitType(
+                    contextualOriginal,
+                    HashAttachmentConstraintSerializer::class,
+                    emptyList()
+                ) { _, outer, _ ->
+                    "object $outer: ${HashAttachmentConstraintSerializer::class.qualifiedName}(${SHA256DigestAlgorithm::class.qualifiedName}::class)"
+                }.also {
+                    SerdeLogger.log(
+                        """
+                        No hashing algorithm for `${HashAttachmentConstraint::class.qualifiedName}` has been found.
+                        Defaulting to `${SHA256DigestAlgorithm::class.qualifiedName}`.
+                        Type ${contextualOriginal.ktTypeReference.text} processed successfully
+                        """.trimIndent()
+                    )
+                }
         },
 
         /**
