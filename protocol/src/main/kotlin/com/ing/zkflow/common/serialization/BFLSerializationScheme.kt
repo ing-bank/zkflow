@@ -11,15 +11,14 @@ import com.ing.zkflow.serialization.infra.NetworkSerializationMetadata
 import com.ing.zkflow.serialization.infra.SecureHashSerializationMetadata
 import com.ing.zkflow.serialization.infra.SignersSerializationMetadata
 import com.ing.zkflow.serialization.infra.TransactionStateSerializationMetadata
-import com.ing.zkflow.serialization.infra.algorithmId
 import com.ing.zkflow.serialization.infra.unwrapSerialization
 import com.ing.zkflow.serialization.infra.wrapSerialization
 import com.ing.zkflow.serialization.scheme.BinaryFixedLengthScheme
 import com.ing.zkflow.serialization.scheme.ByteBinaryFixedLengthScheme
 import com.ing.zkflow.serialization.serializer.FixedLengthListSerializer
 import com.ing.zkflow.serialization.serializer.corda.HashAlgorithmRegistry
-import com.ing.zkflow.serialization.serializer.corda.SHA256SecureHashSerializationMetadata
 import com.ing.zkflow.serialization.serializer.corda.SHA256SecureHashSerializer
+import com.ing.zkflow.serialization.serializer.corda.SecureHashSerializer
 import com.ing.zkflow.serialization.serializer.corda.StateRefSerializer
 import com.ing.zkflow.serialization.serializer.corda.TimeWindowSerializer
 import com.ing.zkflow.serialization.serializer.corda.TransactionStateSerializer
@@ -31,6 +30,7 @@ import net.corda.core.contracts.TransactionState
 import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.SecureHash.Companion.SHA2_256
 import net.corda.core.crypto.algorithm
+import net.corda.core.crypto.internal.DigestAlgorithmFactory
 import net.corda.core.identity.Party
 import net.corda.core.serialization.CustomSerializationScheme
 import net.corda.core.serialization.SerializationSchemeContext
@@ -221,17 +221,10 @@ open class BFLSerializationScheme : CustomSerializationScheme {
         scheme.decodeFromBinary(TimeWindowSerializer, serializedData)
 
     private fun serializeStateRef(obj: StateRef): ByteArray {
-        /*
-         * Here we still include metadata for the SecureHash, because the stateRef txhash algo is determined by the networkparameters
-         * under which the transaction it points to was created. This could be different from the networkparams under which this
-         * transaction is being created.
-         */
-        val secureHashMetadata = when (val txhash = obj.txhash) {
-            is SecureHash.SHA256 -> SHA256SecureHashSerializationMetadata
-            is SecureHash.HASH -> SecureHashSerializationMetadata(txhash.algorithmId)
-        }
+        val digestAlgorithm = DigestAlgorithmFactory.create(obj.txhash.algorithm)
+        val secureHashMetadata = SecureHashSerializationMetadata(HashAlgorithmRegistry[digestAlgorithm.algorithm])
 
-        val secureHashSerializer = HashAlgorithmRegistry[secureHashMetadata.hashAlgorithmId]
+        val secureHashSerializer = SecureHashSerializer(digestAlgorithm)
         val stateRefSerializer = StateRefSerializer(secureHashSerializer)
 
         return scheme.encodeToBinary(stateRefSerializer, obj).wrapSerialization(
@@ -243,7 +236,8 @@ open class BFLSerializationScheme : CustomSerializationScheme {
         val (secureHashMetadata, data) = serializedData.unwrapSerialization(scheme, SecureHashSerializationMetadata.serializer())
         val serialization = data.toByteArray()
 
-        val secureHashSerializer = HashAlgorithmRegistry[secureHashMetadata.hashAlgorithmId]
+        val algorithm = HashAlgorithmRegistry[secureHashMetadata.hashAlgorithmId]
+        val secureHashSerializer = SecureHashSerializer(DigestAlgorithmFactory.create(algorithm))
         val stateRefSerializer = StateRefSerializer(secureHashSerializer)
 
         return scheme.decodeFromBinary(stateRefSerializer, serialization)
@@ -260,7 +254,7 @@ open class BFLSerializationScheme : CustomSerializationScheme {
     private fun serializeSecureHash(obj: SecureHash): ByteArray {
         // Either AttachmentId, or NetworkParameters hash. Both are hardcoded to be SHA-256 in Corda.
         require(obj.algorithm == SHA2_256) {
-            "Serializing Networkparameters hash or AttachmentId: expected hash algorithm $SHA2_256, found ${obj.algorithm}"
+            "Serializing NetworkParameters hash or AttachmentId: expected hash algorithm $SHA2_256, found ${obj.algorithm}"
         }
 
         return scheme.encodeToBinary(SHA256SecureHashSerializer, obj)
