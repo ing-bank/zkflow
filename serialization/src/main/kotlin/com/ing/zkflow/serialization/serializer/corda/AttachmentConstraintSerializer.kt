@@ -14,15 +14,28 @@ import net.corda.core.contracts.AutomaticPlaceholderConstraint
 import net.corda.core.contracts.HashAttachmentConstraint
 import net.corda.core.contracts.SignatureAttachmentConstraint
 import net.corda.core.contracts.WhitelistedByZoneAttachmentConstraint
+import net.corda.core.crypto.DigestAlgorithm
+import kotlin.reflect.KClass
 
 object AlwaysAcceptAttachmentConstraintSerializer : FixedLengthKSerializerWithDefault<AlwaysAcceptAttachmentConstraint> by ImmutableObjectSerializer(AlwaysAcceptAttachmentConstraint)
 object WhitelistedByZoneAttachmentConstraintSerializer : FixedLengthKSerializerWithDefault<WhitelistedByZoneAttachmentConstraint> by ImmutableObjectSerializer(WhitelistedByZoneAttachmentConstraint)
 object AutomaticHashConstraintSerializer : FixedLengthKSerializerWithDefault<AutomaticHashConstraint> by ImmutableObjectSerializer(AutomaticHashConstraint)
 object AutomaticPlaceholderConstraintSerializer : FixedLengthKSerializerWithDefault<AutomaticPlaceholderConstraint> by ImmutableObjectSerializer(AutomaticPlaceholderConstraint)
 
-object HashAttachmentConstraintSerializer : FixedLengthKSerializerWithDefault<HashAttachmentConstraint> {
-    private val strategy = SHA256SecureHashSerializer // SHA-256 is hardcoded in Corda for attachment ids
+open class HashAttachmentConstraintSerializer(digestAlgorithm: DigestAlgorithm) :
+    FixedLengthKSerializerWithDefault<HashAttachmentConstraint> {
+    constructor(digestAlgorithmKClass: KClass<out DigestAlgorithm>) : this(
+        // Corda requires DigestAlgorithm implementations to have an empty constructor,
+        // see [DigestAlgorithmFactory.CustomAlgorithmFactory].
+        digestAlgorithmKClass
+            .java
+            .asSubclass(DigestAlgorithm::class.java)
+            .getConstructor()
+            .newInstance()
+    )
+    private val strategy = SecureHashSerializer(digestAlgorithm)
     override val default = HashAttachmentConstraint(strategy.default)
+
     override val descriptor = buildClassSerialDescriptor("HashAttachmentConstraint") {
         element("attachmentId", strategy.descriptor)
     }.toFixedLengthSerialDescriptorOrThrow()
