@@ -1,6 +1,5 @@
 package com.ing.zkflow.gradle.plugin
 
-import com.ing.zkflow.gradle.extension.ZKFlowExtension
 import com.ing.zkflow.gradle.task.GenerateZincCircuitsTask
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import org.gradle.api.Plugin
@@ -15,8 +14,6 @@ import java.net.URI
 class ZKFlowPlugin : Plugin<Project> {
     @Suppress("LongMethod")
     override fun apply(project: Project) {
-        val extension = project.extensions.create(ZKFlowExtension.NAME, ZKFlowExtension::class.java, project)
-
         project.repositories.apply {
             // For kotlinx.serialization plugin
             maven { it.url = URI.create("https://plugins.gradle.org/m2/") }
@@ -39,19 +36,19 @@ class ZKFlowPlugin : Plugin<Project> {
 
         project.plugins.withType(JavaPlugin::class.java) {
             // Add the required dependencies to consumer projects
-            project.dependencies.add(IMPLEMENTATION, extension.zkflow("protocol"))
-            project.dependencies.add(IMPLEMENTATION, extension.zkflow("annotations"))
+            project.dependencies.add(IMPLEMENTATION, zkflowArtifact("protocol"))
+            project.dependencies.add(IMPLEMENTATION, zkflowArtifact("annotations"))
             // TODO zinc-code-generation is only needed at compile time, by the gradlePlugin, so compileOnly sounds better...
-            project.dependencies.add(IMPLEMENTATION, extension.zkflow("zinc-code-generation"))
+            project.dependencies.add(IMPLEMENTATION, zkflowArtifact("zinc-code-generation"))
 
             project.pluginManager.apply("org.jetbrains.kotlin.plugin.serialization")
 
             // KSP.
             project.pluginManager.apply("com.google.devtools.ksp")
-            project.dependencies.add("ksp", extension.zkflow("compiler-plugin-ksp"))
+            project.dependencies.add("ksp", zkflowArtifact("compiler-plugin-ksp"))
 
             // Arrow.
-            applyArrowCompilerPlugin(project, extension)
+            applyArrowCompilerPlugin(project)
         }
 
         val generateZincCircuitsTask = project.tasks.create(GENERATE_ZINC_CIRCUITS, GenerateZincCircuitsTask::class.java)
@@ -63,19 +60,16 @@ class ZKFlowPlugin : Plugin<Project> {
         project.tasks.getByPath(ASSEMBLE).dependsOn(GENERATE_ZINC_CIRCUITS)
     }
 
-    private fun applyArrowCompilerPlugin(
-        project: Project,
-        extension: ZKFlowExtension
-    ) {
+    private fun applyArrowCompilerPlugin(project: Project) {
         val arrowCompilerPluginConfiguration: Configuration = project.configurations.create(ARROW_COMPILER_PLUGIN)
-        project.dependencies.add(ARROW_COMPILER_PLUGIN, extension.zkflow("compiler-plugin-arrow"))
-        project.dependencies.add(IMPLEMENTATION, extension.zkflow("serialization"))
+        project.dependencies.add(ARROW_COMPILER_PLUGIN, zkflowArtifact("compiler-plugin-arrow"))
+        project.dependencies.add(IMPLEMENTATION, zkflowArtifact("serialization"))
 
         project
             .tasks
             .filterIsInstance<KotlinCompile<*>>()
             .forEach { task ->
-                task.logger.quiet("[${task.name}] Modifying free compiler arguments to apply compiler-plugin-arrow-${extension.notaryVersion}.jar")
+                task.logger.quiet("[${task.name}] Modifying free compiler arguments to apply compiler-plugin-arrow")
 
                 val toInclude = listOf(
                     Pair(ZKFLOW_GROUP, "utils"),
@@ -120,7 +114,6 @@ class ZKFlowPlugin : Plugin<Project> {
         const val IMPLEMENTATION = "implementation"
         const val GENERATE_ZINC_CIRCUITS = "generateZincCircuits"
         const val ZKFLOW_GROUP = "com.ing.zkflow"
-
-        private fun ZKFlowExtension.zkflow(artifact: String, version: String? = this.notaryVersion) = "$ZKFLOW_GROUP:$artifact:$version"
+        private fun zkflowArtifact(artifact: String, version: String? = "1.0-SNAPSHOT") = "$ZKFLOW_GROUP:$artifact:$version"
     }
 }

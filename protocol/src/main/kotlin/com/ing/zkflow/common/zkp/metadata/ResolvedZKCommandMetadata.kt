@@ -1,7 +1,7 @@
 package com.ing.zkflow.common.zkp.metadata
 
+import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.transactions.ZKTransactionBuilder
-import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.ContractClassName
 import net.corda.core.contracts.ContractState
@@ -13,7 +13,7 @@ import java.time.Duration
 import kotlin.reflect.KClass
 
 data class ResolvedZKCircuit(
-    val commandKClass: KClass<out CommandData>,
+    val commandKClass: KClass<out ZKCommandData>,
     var name: String,
     /**
      * Unless provided, this will be calculated to be `<gradle module>/src/main/zinc/<transaction.name>/commands/<command.name>`
@@ -31,7 +31,7 @@ data class ResolvedZKCommandMetadata(
      * Information on the circuit and related artifacts to be used.
      */
     val circuit: ResolvedZKCircuit,
-    val commandKClass: KClass<out CommandData>,
+    val commandKClass: KClass<out ZKCommandData>,
     val numberOfSigners: Int,
     val inputs: List<ZKReference>,
     val references: List<ZKReference>,

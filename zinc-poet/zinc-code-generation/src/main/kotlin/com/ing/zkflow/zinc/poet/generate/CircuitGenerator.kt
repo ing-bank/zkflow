@@ -1,6 +1,5 @@
 package com.ing.zkflow.zinc.poet.generate
 
-import com.ing.zinc.bfl.BflStruct
 import com.ing.zinc.bfl.allModules
 import com.ing.zinc.bfl.generator.CodeGenerationOptions
 import com.ing.zinc.bfl.generator.ZincGenerator.createZargoToml
@@ -8,14 +7,16 @@ import com.ing.zinc.bfl.generator.ZincGenerator.zincSourceFile
 import com.ing.zinc.bfl.mod
 import com.ing.zinc.bfl.toZincId
 import com.ing.zinc.bfl.use
-import com.ing.zinc.poet.ZincPrimitive
-import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
+import com.ing.zkflow.common.contracts.ZKCommandData
+import com.ing.zkflow.util.ensureDirectory
+import com.ing.zkflow.util.ensureFile
 import com.ing.zkflow.zinc.poet.generate.types.CommandContextFactory
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.componentGroupEnum
 import com.ing.zkflow.zinc.poet.generate.types.Witness
 import com.ing.zkflow.zinc.poet.generate.types.witness.WitnessGroupsContainer
 import net.corda.core.internal.deleteRecursively
+import net.corda.core.internal.writeText
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
 
@@ -28,7 +29,8 @@ class CircuitGenerator(
     private val constsFactory: ConstsFactory,
     private val cryptoUtilsFactory: CryptoUtilsFactory
 ) {
-    fun generateCircuitFor(commandMetadata: ResolvedZKCommandMetadata) {
+    fun generateCircuitFor(zkCommand: ZKCommandData) {
+        val commandMetadata = zkCommand.metadata
         val witnessGroups = WitnessGroupsContainer(
             commandMetadata,
             standardTypes,
@@ -63,39 +65,14 @@ class CircuitGenerator(
 
         constsFactory.generateConsts(buildPath, codeGenerationOptions)
         cryptoUtilsFactory.generateCryptoUtils(buildPath)
-        generateContractRules(buildPath, commandContext)
+        copyContractRules(buildPath, zkCommand.verifyPrivate())
         generateMain(buildPath, witness)
         buildPath.zincSourceFile(componentGroupEnum, codeGenerationOptions)
         logger.info("... done")
     }
 
-    private fun generateContractRules(
-        buildPath: Path,
-        zkCommandContext: BflStruct
-    ) {
-        buildPath.zincSourceFile("contract_rules.zn") {
-            listOf(zkCommandContext)
-                .sortedBy { it.getModuleName() }
-                .forEach { dependency ->
-                    add(dependency.mod())
-                    add(dependency.use())
-                    newLine()
-                }
-            function {
-                comment = "TODO"
-                name = "verify"
-                parameter {
-                    name = "ctx"
-                    type = zkCommandContext.toZincId()
-                }
-                returnType = ZincPrimitive.Unit
-                body = """
-                    // TODO Your assertions go here.
-                    assert!(true != false, "Reality is in an inconsistent state.");
-                """.trimIndent()
-            }
-        }
-    }
+    private fun copyContractRules(buildPath: Path, privateVerifyFunction: String) =
+        buildPath.ensureDirectory("src").ensureFile("contract_rules.zn").writeText(privateVerifyFunction)
 
     private fun generateMain(
         buildPath: Path,
@@ -104,13 +81,11 @@ class CircuitGenerator(
         buildPath.zincSourceFile("main.zn") {
             mod { module = "contract_rules" }
             newLine()
-            listOf(witness, witness.publicInput)
-                .sortedBy { it.getModuleName() }
-                .forEach { dependency ->
-                    add(dependency.mod())
-                    add(dependency.use())
-                    newLine()
-                }
+            listOf(witness, witness.publicInput).sortedBy { it.getModuleName() }.forEach { dependency ->
+                add(dependency.mod())
+                add(dependency.use())
+                newLine()
+            }
             function {
                 name = "main"
                 parameter {
