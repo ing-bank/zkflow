@@ -13,8 +13,9 @@ import com.ing.zkflow.annotations.Size
 import com.ing.zkflow.annotations.UTF8
 import com.ing.zkflow.annotations.UTF8Char
 import com.ing.zkflow.annotations.ZKP
+import com.ing.zkflow.annotations.corda.Algorithm
 import com.ing.zkflow.annotations.corda.CordaX500NameSpec
-import com.ing.zkflow.annotations.corda.HashSize
+import com.ing.zkflow.annotations.corda.SHA256DigestAlgorithm
 import com.ing.zkflow.annotations.corda.SignatureSpec
 import com.ing.zkflow.plugins.serialization.serializingobject.SerializingObject
 import com.ing.zkflow.plugins.serialization.serializingobject.Tracker
@@ -357,17 +358,17 @@ internal object Processors {
         },
 
         /**
-         * To serialize [SecureHash], a single annotation annotated with [HashSize] must be present.
+         * To serialize [SecureHash], a single annotation annotated with [Algorithm] must be present.
          * Otherwise, recurse to [forUserType].
          */
         SecureHash::class.qualifiedName!! to ToSerializingObject { contextualOriginal, _ ->
-            contextualOriginal.findHashAlgorithmAndSize()?.let { (algorithm, hashSize) ->
+            contextualOriginal.findDigestAlgorithm()?.let { algorithm ->
                 TypeSerializingObject.ExplicitType(
                     contextualOriginal,
                     SecureHashSerializer::class,
                     emptyList()
                 ) { _, outer, _ ->
-                    "object $outer: ${SecureHashSerializer::class.qualifiedName}(\"$algorithm\", $hashSize)"
+                    "object $outer: ${SecureHashSerializer::class.qualifiedName}($algorithm)"
                 }.also {
                     SerdeLogger.log("Type ${contextualOriginal.ktTypeReference.text} processed successfully")
                 }
@@ -517,8 +518,40 @@ internal object Processors {
             buildAttachmentConstraintToSerializingObject<AutomaticHashConstraint, AutomaticHashConstraintSerializer>(),
         AutomaticPlaceholderConstraint::class.qualifiedName!! to
             buildAttachmentConstraintToSerializingObject<AutomaticPlaceholderConstraint, AutomaticPlaceholderConstraintSerializer>(),
-        HashAttachmentConstraint::class.qualifiedName!! to
-            buildAttachmentConstraintToSerializingObject<HashAttachmentConstraint, HashAttachmentConstraintSerializer>(),
+
+        /**
+         * To serialize [HashAttachmentConstraint], a single annotation annotated with [Algorithm] must be present.
+         * Otherwise, recurse to [forUserType].
+         */
+        HashAttachmentConstraint::class.qualifiedName!! to ToSerializingObject { contextualOriginal, _ ->
+            contextualOriginal.findDigestAlgorithm()?.let { algorithm ->
+                TypeSerializingObject.ExplicitType(
+                    contextualOriginal,
+                    HashAttachmentConstraintSerializer::class,
+                    emptyList()
+                ) { _, outer, _ ->
+                    "object $outer: ${HashAttachmentConstraintSerializer::class.qualifiedName}($algorithm)"
+                }.also {
+                    SerdeLogger.log("Type ${contextualOriginal.ktTypeReference.text} processed successfully")
+                }
+            }
+                // HashAttachmentConstraint has no signature specific annotations, default to SHA256.
+                ?: TypeSerializingObject.ExplicitType(
+                    contextualOriginal,
+                    HashAttachmentConstraintSerializer::class,
+                    emptyList()
+                ) { _, outer, _ ->
+                    "object $outer: ${HashAttachmentConstraintSerializer::class.qualifiedName}(${SHA256DigestAlgorithm::class.qualifiedName}::class)"
+                }.also {
+                    SerdeLogger.log(
+                        """
+                        No hashing algorithm for `${HashAttachmentConstraint::class.qualifiedName}` has been found.
+                        Defaulting to `${SHA256DigestAlgorithm::class.qualifiedName}`.
+                        Type ${contextualOriginal.ktTypeReference.text} processed successfully
+                        """.trimIndent()
+                    )
+                }
+        },
 
         /**
          * To serialize [SignatureAttachmentConstraint], a single annotation annotated with [SignatureSpec] must be present,
@@ -667,28 +700,41 @@ internal object Processors {
     }
 
     /**
-     * Utility function: Look for a single signature id specification.
+     * Utility function: Look for a single digest algorithm specification.
      */
-    private fun ContextualizedKtTypeReference.findHashAlgorithmAndSize(): Pair<String, Int>? {
-        val metaAnnotations = findMetaAnnotation<HashSize>()
+    private fun ContextualizedKtTypeReference.findDigestAlgorithm(): String? {
+        val metaAnnotations = findMetaAnnotation<Algorithm>()
         return when (metaAnnotations.size) {
             0 -> {
                 // This KtTypeReference has no hash size specific annotations.
                 null
             }
             1 -> {
-                val meta = metaAnnotations.single()
-                val algorithm = meta.root.split(".").last()
+                when (val meta = metaAnnotations.single()) {
+                    is BestEffortResolvedAnnotation.Instruction -> {
+                        val plaintextClass = meta
+                            .annotation
+                            .valueArguments
+                            .single()
+                            .asElement()
 
-                val hashSize = when (meta) {
-                    is BestEffortResolvedAnnotation.Instruction -> meta.annotation.valueArguments.single()
-                        .asElement().text.toInt()
-                    is BestEffortResolvedAnnotation.Compiled<*> -> (meta.annotation as HashSize).size
-                }
-
-                Pair(algorithm, hashSize)
+                        when (val resolved = resolveClass(plaintextClass)) {
+                            is BestEffortResolvedType.FullyQualified -> resolved.fqName.asString()
+                            is BestEffortResolvedType.FullyResolved -> resolved.kClass.qualifiedName
+                            is BestEffortResolvedType.AsIs -> null
+                        }
+                    }
+                    is BestEffortResolvedAnnotation.Compiled<*> -> (meta.annotation as Algorithm)
+                        .digestAlgorithm
+                        .qualifiedName
+                }?.let { "$it::class" }
             }
-            else -> error("HashSize annotations are not repeatable, got [${metaAnnotations.joinToString(separator = ", ") { it.root }}] (size = ${metaAnnotations.size})")
+            else -> error(
+                """
+                ${Algorithm::class.qualifiedName} annotations are not repeatable,
+                got [${metaAnnotations.joinToString(separator = ", ") { it.root }}] (size = ${metaAnnotations.size})
+                """.trimIndent()
+            )
         }
     }
 

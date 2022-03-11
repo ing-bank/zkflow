@@ -2,6 +2,7 @@
 
 package com.r3.cbdc.resolved.states
 
+import com.ing.zkflow.annotations.corda.SHA256DigestAlgorithm
 import com.ing.zkflow.fixedCordaX500Name
 import com.ing.zkflow.serialization.SerializerTest
 import com.ing.zkflow.serialization.engine.SerdeEngine
@@ -50,7 +51,7 @@ data class CBDCToken(
         TokenTypeJarHash_1
     )
 
-    object TokenTypeJarHash_1 : com.ing.zkflow.serialization.serializer.corda.SecureHashSerializer("Sha256", 32)
+    object TokenTypeJarHash_1 : com.ing.zkflow.serialization.serializer.corda.SecureHashSerializer(SHA256DigestAlgorithm::class)
 
     object IssueDate_0 : WrappedFixedLengthKSerializerWithDefault<Instant>(com.ing.zkflow.serialization.serializer.InstantSerializer)
 

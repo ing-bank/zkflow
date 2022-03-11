@@ -1,12 +1,13 @@
 package com.ing.zkflow.common.zkp
 
-import com.ing.zkflow.annotations.corda.Sha256
 import com.ing.zkflow.common.network.ZKAttachmentConstraintType
 import com.ing.zkflow.common.serialization.BFLSerializationScheme
 import com.ing.zkflow.crypto.Blake2s256DigestAlgorithm
 import net.corda.core.crypto.Crypto
 import net.corda.core.crypto.DigestAlgorithm
+import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.SignatureScheme
+import net.corda.core.crypto.internal.DigestAlgorithmFactory
 
 object ZKFlow {
     const val REQUIRED_PLATFORM_VERSION = 10 // Corda 4.8
@@ -18,7 +19,7 @@ object ZKFlow {
     val DEFAULT_ZKFLOW_CONTRACT_ATTACHMENT_CONSTRAINT_TYPE =
         ZKAttachmentConstraintType.SignatureAttachmentConstraintType(DEFAULT_ZKFLOW_SIGNATURE_ATTACHMENT_CONSTRAINT_SIGNATURE_SCHEME)
 
-    val DEFAULT_ZKFLOW_HASH_ATTACHMENT_HASHING_ALGORITHM = Sha256::class
+    val DEFAULT_ZKFLOW_HASH_ATTACHMENT_HASHING_ALGORITHM = DigestAlgorithmFactory.create(SecureHash.SHA2_256)
 
     val DEFAULT_ZKFLOW_DIGEST_IDENTIFIER: DigestAlgorithm = Blake2s256DigestAlgorithm()
 

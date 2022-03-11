@@ -17,7 +17,7 @@ import com.ing.zkflow.annotations.UTF8
 import com.ing.zkflow.annotations.UTF8Char
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.annotations.corda.EdDSA
-import com.ing.zkflow.annotations.corda.Sha256
+import com.ing.zkflow.annotations.corda.SHA256
 import net.corda.core.contracts.HashAttachmentConstraint
 import net.corda.core.contracts.SignatureAttachmentConstraint
 import net.corda.core.crypto.SecureHash
@@ -72,12 +72,12 @@ data class ClassWithAnonymousParty(val party: @EdDSA AnonymousParty)
 @ZKP
 data class ClassWithParty(val party: @EdDSA Party)
 @ZKP
-data class ClassWithSecureHash(val hash: @Sha256 SecureHash)
+data class ClassWithSecureHash(val hash: @SHA256 SecureHash)
 @ZKP
 data class ClassWithSignatureAttachmentConstraint(val constraint: @EdDSA SignatureAttachmentConstraint)
 
 @ZKP
-data class ClassWithHashAttachmentConstraint(val constraint: HashAttachmentConstraint)
+data class ClassWithHashAttachmentConstraint(val constraint: @SHA256 HashAttachmentConstraint)
 
 val structWithUnit = struct {
     name = "ClassWithClassWithoutFields"
@@ -226,7 +226,7 @@ val structWithParty = struct {
     }
 }
 val secureHashSha256 = struct {
-    name = "SecureHashSha256"
+    name = "SecureHashSHA256"
     field {
         name = "bytes"
         type = byteArray(32)

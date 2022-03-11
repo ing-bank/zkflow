@@ -94,7 +94,16 @@ object AttachmentConstraintSerializerRegistry {
 
     init {
         register(AlwaysAcceptAttachmentConstraint::class) { AlwaysAcceptAttachmentConstraintSerializer }
-        register(HashAttachmentConstraint::class) { HashAttachmentConstraintSerializer }
+        register(HashAttachmentConstraint::class) { zkNetworkParameters ->
+            (zkNetworkParameters.attachmentConstraintType as? ZKAttachmentConstraintType.HashAttachmentConstraintType)
+                ?.let { HashAttachmentConstraintSerializer(it.digestAlgorithm) }
+                ?: error(
+                    """
+                    Cannot serialize attachment constraint `${HashAttachmentConstraint::class.qualifiedName}`,
+                    because expected constraint type is ${zkNetworkParameters.attachmentConstraintType::class.qualifiedName} 
+                    """.trimIndent()
+                )
+        }
         register(WhitelistedByZoneAttachmentConstraint::class) { WhitelistedByZoneAttachmentConstraintSerializer }
         register(AutomaticHashConstraint::class) { AutomaticHashConstraintSerializer }
         register(AutomaticPlaceholderConstraint::class) { AutomaticPlaceholderConstraintSerializer }
