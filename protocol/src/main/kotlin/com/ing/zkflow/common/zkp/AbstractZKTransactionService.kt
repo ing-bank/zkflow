@@ -1,11 +1,10 @@
 package com.ing.zkflow.common.zkp
 
 import com.ing.zkflow.common.contracts.ZKCommandData
-import com.ing.zkflow.common.transactions.CommandCompatibilityProviderNotFound
-import com.ing.zkflow.common.transactions.ZKLedgerTransaction
+import com.ing.zkflow.common.transactions.SignedZKVerifierTransaction
 import com.ing.zkflow.common.transactions.ZKVerifierTransaction
 import com.ing.zkflow.common.transactions.collectUtxoInfos
-import com.ing.zkflow.common.transactions.verify
+import com.ing.zkflow.common.transactions.zkToLedgerTransaction
 import com.ing.zkflow.common.transactions.zkTransactionMetadata
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.node.services.ServiceNames
@@ -55,11 +54,14 @@ abstract class AbstractZKTransactionService(val serviceHub: ServiceHub) : ZKTran
 
     abstract override fun zkServiceForCommandMetadata(metadata: ResolvedZKCommandMetadata): ZKService
 
-    override fun verify(zkltx: ZKLedgerTransaction, checkSufficientSignatures: Boolean) {
-        val vtx = zkltx.svtx.tx
+    override fun verify(svtx: SignedZKVerifierTransaction, checkSufficientSignatures: Boolean) {
+        val vtx = svtx.tx
 
         // Check transaction structure first, so we fail fast
         vtx.verifyMerkleTree()
+
+        // Check that all inputs and outputs are checked by either Kotlin or ZKP contract
+        // TODO check inputs and outputs
 
         // Check there is a proof for each ZKCommand
         vtx.commands.forEach { command ->
@@ -69,25 +71,17 @@ abstract class AbstractZKTransactionService(val serviceHub: ServiceHub) : ZKTran
                 val proof = vtx.proofs[command.value::class.qualifiedName]
                 require(proof != null) { "Proof is missing for command ${command.value}" }
                 zkServiceForCommandMetadata(zkCommand.metadata).verifyTimed(proof, calculatePublicInput(vtx, zkCommand.metadata))
-                // and verify public components
-                zkCommand.verifyPublicComponents(zkltx)
-            } else {
-                // For non-ZKP command we attempt to verify public components assuming it is implemented, throw error if not
-                try {
-                    command.value.verify(zkltx)
-                } catch (e: CommandCompatibilityProviderNotFound){
-                    // If provider is not found we can try to build and verify normal LedgerTransaction
-                    // at least for transaction without private components and maybe even for partially private - TODO discuss
-                    command.value.verify(zkltx.toLedgerTransaction())
-                }
             }
         }
 
+        // Do all the normal Corda checks (including contract rules)
+        svtx.tx.zkToLedgerTransaction(serviceHub).verify()
+
         // Check signatures
         if (checkSufficientSignatures) {
-            zkltx.svtx.verifyRequiredSignatures()
+            svtx.verifyRequiredSignatures()
         } else {
-            zkltx.svtx.checkSignaturesAreValid()
+            svtx.checkSignaturesAreValid()
         }
     }
 

@@ -16,6 +16,7 @@ import net.corda.core.contracts.AttachmentResolutionException
 import net.corda.core.contracts.CommandWithParties
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.ContractState
+import net.corda.core.contracts.PrivacySalt
 import net.corda.core.contracts.StateRef
 import net.corda.core.contracts.TransactionResolutionException
 import net.corda.core.contracts.TransactionState
@@ -191,9 +192,7 @@ fun PartialMerkleTree.getComponentHash(componentIndex: Int): SecureHash {
 
 @Throws(AttachmentResolutionException::class, TransactionResolutionException::class)
 @DeleteForDJVM
-// TODO: This function will have to be the one that is called from anywhere we need a LedgerTransaction.
-// Currently in those locations, the 'standard' wtx.toLedgerTransaction is still called.
-fun WireTransaction.zkToLedgerTransaction(
+fun TraversableTransaction.zkToLedgerTransaction(
     services: ServiceHub
 ): LedgerTransaction {
     val resolveIdentity: (PublicKey) -> Party? = { services.identityService.partyFromKey(it) }
@@ -260,7 +259,7 @@ fun WireTransaction.zkToLedgerTransaction(
         id,
         notary,
         timeWindow,
-        privacySalt,
+        PrivacySalt.createFor(id.algorithm), // We don't want to use real PrivacySalt so we create a fake one here
         resolvedNetworkParameters,
         resolvedReferences,
         DigestService(id.algorithm)
