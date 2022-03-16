@@ -6,6 +6,7 @@ import arrow.meta.quotes.classorobject.ClassDeclaration
 import arrow.meta.quotes.scope
 import com.ing.zkflow.SerdeLogger
 import com.ing.zkflow.annotations.ZKP
+import com.ing.zkflow.annotations.ZKPSurrogate
 import com.ing.zkflow.plugins.serialization.serializingobject.SerializingObject
 import kotlinx.serialization.Serializable
 import org.jetbrains.kotlin.lexer.KtTokens
@@ -30,7 +31,7 @@ class ClassRefactory(
         fun verifyAnnotationCorrectness(ktClass: KtClass, short: Boolean = false): Boolean = with(ktClass) {
             SerdeLogger.phase("Validate class") { logger ->
                 logger.log("Considering:\n`$text`", short)
-                val applicability = hasAnnotation<ZKP>() && isCorrectClassTypeForZKPAnnotation()
+                val applicability = (hasAnnotation<ZKP>() || hasAnnotation<ZKPSurrogate>()) && isCorrectClassTypeForZKPAnnotation()
                 logger.log(if (applicability) "ACCEPTED" else "DISMISSED")
                 applicability
             }
@@ -38,11 +39,11 @@ class ClassRefactory(
 
         private fun KtClass.isCorrectClassTypeForZKPAnnotation(): Boolean {
             require(!(isAnnotation() || isInterface())) {
-                "Review class definition `${this.name}`. Classes annotated with ${ZKP::class.simpleName} may not be annotation classes, interfaces or abstract classes"
+                "Review class definition `${this.name}`. Classes annotated with `${ZKP::class.simpleName}` or `${ZKPSurrogate::class.simpleName}` may not be annotation classes, interfaces or abstract classes"
             }
 
             require(typeParameters.isEmpty()) {
-                "Review class definition `${this.name}`. Classes annotated with ${ZKP::class.simpleName} may not contain generics"
+                "Review class definition `${this.name}`. Classes annotated with ${ZKP::class.simpleName} or `${ZKPSurrogate::class.simpleName}` may not contain generics"
             }
 
             return true

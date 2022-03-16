@@ -34,6 +34,7 @@ interface ZKDataRegistryProvider<T : Any> {
     fun list(): List<Pair<KClass<out T>, KSerializer<out T>>>
 }
 
+interface SurrogateSerializerRegistryProvider : ZKDataRegistryProvider<Any>
 interface ContractStateSerializerRegistryProvider : ZKDataRegistryProvider<ContractState>
 interface CommandDataSerializerRegistryProvider : ZKDataRegistryProvider<CommandData>
 
