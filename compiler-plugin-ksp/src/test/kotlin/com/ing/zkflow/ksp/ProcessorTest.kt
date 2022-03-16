@@ -15,8 +15,13 @@ abstract class ProcessorTest {
     protected fun compile(
         kotlinSource: SourceFile,
         outputStream: ByteArrayOutputStream
+    ) = compile(listOf(kotlinSource), outputStream)
+
+    protected fun compile(
+        kotlinSources: List<SourceFile>,
+        outputStream: ByteArrayOutputStream
     ) = KotlinCompilation().apply {
-        sources = listOf(kotlinSource)
+        sources = kotlinSources
 
         symbolProcessorProviders = listOf(ZKFLowSymbolProcessorProvider())
 
@@ -41,5 +46,12 @@ abstract class ProcessorTest {
         @JvmStatic
         protected inline fun <reified T : Any> KotlinCompilation.Result.getMetaInfServicesPath(): Path =
             Paths.get("${outputDirectory.absolutePath}/../ksp/sources/resources/META-INF/services/${T::class.java.canonicalName}")
+
+        @JvmStatic
+        protected fun KotlinCompilation.Result.readGeneratedKotlinFile(packageName: String, className: String): String =
+            Paths
+                .get("${outputDirectory.absolutePath}/../ksp/sources/kotlin/${packageName.replace(".", "/")}/$className.kt")
+                .readText(StandardCharsets.UTF_8)
+                .trim()
     }
 }
