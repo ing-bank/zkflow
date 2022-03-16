@@ -22,21 +22,27 @@ class CommandContextFactory(
         witnessGroupsContainer: WitnessGroupsContainer,
     ): BflStruct = struct {
         name = COMMAND_CONTEXT
-        if (commandMetadata.inputs.isNotEmpty()) {
+        if (witnessGroupsContainer.serializedInputUtxos.isPresent) {
             field { name = INPUTS; type = witnessGroupsContainer.serializedInputUtxos.deserializedGroup }
         }
-        if (commandMetadata.outputs.isNotEmpty()) {
+        if (witnessGroupsContainer.serializedOutputGroup.isPresent) {
             field { name = OUTPUTS; type = witnessGroupsContainer.serializedOutputGroup.deserializedGroup }
         }
-        if (commandMetadata.references.isNotEmpty()) {
+        if (witnessGroupsContainer.serializedReferenceUtxos.isPresent) {
             field { name = REFERENCES; type = witnessGroupsContainer.serializedReferenceUtxos.deserializedGroup }
         }
-        field { name = NOTARY; type = standardTypes.notaryModule }
-        if (commandMetadata.timeWindow) {
+        if (witnessGroupsContainer.notaryGroup.isPresent) {
+            field { name = NOTARY; type = standardTypes.notaryModule }
+        }
+        if (witnessGroupsContainer.timeWindowGroup.isPresent) {
             field { name = TIME_WINDOW; type = timeWindow }
         }
-        field { name = PARAMETERS; type = parametersSecureHash }
-        field { name = SIGNERS; type = standardTypes.signerList(commandMetadata) }
+        if (witnessGroupsContainer.parameterGroup.isPresent) {
+            field { name = PARAMETERS; type = parametersSecureHash }
+        }
+        if (witnessGroupsContainer.signerGroup.isPresent) {
+            field { name = SIGNERS; type = standardTypes.signerList(commandMetadata) }
+        }
         isDeserializable = false
     }
 

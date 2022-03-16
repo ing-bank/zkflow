@@ -30,12 +30,19 @@ import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.TIME_WINDOW
 import net.corda.core.contracts.ComponentGroupEnum
 
 class WitnessGroupsContainer(
-    commandMetadata: ResolvedZKCommandMetadata,
+    private val commandMetadata: ResolvedZKCommandMetadata,
     private val standardTypes: StandardTypes,
     private val zincTypeResolver: ZincTypeResolver,
 ) {
+    private fun whenVisibleInWitness(group: ComponentGroupEnum, maxSize: () -> Int): Int {
+        return if (commandMetadata.isVisibleInWitness(group.ordinal, 0)) {
+            maxSize.invoke()
+        } else {
+            0
+        }
+    }
 
-    private val commandGroup =
+    internal val commandGroup =
         StandardComponentWitnessGroup(
             COMMANDS,
             wrappedWitnessGroup(
@@ -43,35 +50,38 @@ class WitnessGroupsContainer(
                 zincTypeResolver.zincTypeOf(commandMetadata.commandKClass),
                 CommandDataSerializationMetadata.serializer().descriptor
             ),
-            1,
+            whenVisibleInWitness(ComponentGroupEnum.COMMANDS_GROUP) { 1 },
             ComponentGroupEnum.COMMANDS_GROUP
         )
-    private val notaryGroup =
+    internal val notaryGroup =
         StandardComponentWitnessGroup(
             NOTARY,
             wrappedWitnessGroup(NOTARY, standardTypes.notaryModule),
-            1,
+            whenVisibleInWitness(ComponentGroupEnum.NOTARY_GROUP) { 1 },
             ComponentGroupEnum.NOTARY_GROUP
         )
-    private val timeWindowGroup =
+    internal val timeWindowGroup =
         StandardComponentWitnessGroup(
             TIME_WINDOW,
             wrappedWitnessGroup(TIME_WINDOW, timeWindow),
-            if (commandMetadata.timeWindow) 1 else 0,
+            whenVisibleInWitness(ComponentGroupEnum.TIMEWINDOW_GROUP) {
+                if (commandMetadata.timeWindow) 1 else 0
+            },
             ComponentGroupEnum.TIMEWINDOW_GROUP
         )
-    private val signerGroup =
+    internal val signerGroup =
         StandardComponentWitnessGroup(
             SIGNERS,
             wrappedWitnessGroup(SIGNERS, standardTypes.signerModule),
-            commandMetadata.numberOfSigners,
+            // Assumption here is that either all 'numberOfSigners' signers are visible or none.
+            whenVisibleInWitness(ComponentGroupEnum.SIGNERS_GROUP) { commandMetadata.numberOfSigners },
             ComponentGroupEnum.SIGNERS_GROUP
         )
-    private val parameterGroup =
+    internal val parameterGroup =
         StandardComponentWitnessGroup(
             PARAMETERS,
             wrappedWitnessGroup(PARAMETERS, parametersSecureHash),
-            1,
+            whenVisibleInWitness(ComponentGroupEnum.PARAMETERS_GROUP) { 1 },
             ComponentGroupEnum.PARAMETERS_GROUP
         )
 

@@ -41,7 +41,7 @@ object ZincGenerator {
         return zincSourceFile("${module.getModuleName()}.zn", module.generateZincFile(codeGenerationOptions))
     }
 
-    internal fun Path.zincSourceFileIfNotExists(fileName: String, init: ZincFile.Builder.() -> Unit): Path {
+    fun Path.zincSourceFileIfNotExists(fileName: String, init: ZincFile.Builder.() -> Unit): Path {
         val file = ensureDirectory("src")
             .resolve(fileName)
         if (file.notExists()) {

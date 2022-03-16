@@ -5,6 +5,9 @@ import com.ing.zinc.poet.ZincEnum
 import com.ing.zinc.poet.ZincStruct
 import com.ing.zinc.poet.ZincType
 import com.ing.zinc.poet.ZincType.Companion.id
+import com.ing.zkflow.util.BflSized
+import com.ing.zkflow.util.NodeDescriptor
+import com.ing.zkflow.util.Tree
 
 /**
  * Represents a Kotlin type in zinc that can be deserialized from blf-serialized bit array.
@@ -72,6 +75,10 @@ interface BflType {
      * [ZincEnum].
      */
     fun toZincType(): ZincType
+
+    fun toStructureTree(): Tree<BflSized, BflSized>
+
+    fun toNodeDescriptor() = NodeDescriptor(id, bitSize)
 }
 
 /**

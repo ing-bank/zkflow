@@ -133,12 +133,13 @@ val TraversableTransaction.hasZKCommandData get() = commands.any { it.value is Z
 val TraversableTransaction.hasPrivateComponents get() = hasZKCommandData
 val LedgerTransaction.hasZKCommandData get() = commands.any { it.value is ZKCommandData }
 
-val ZKTransactionBuilder.commandMetadata
-    get() = commands().filter { it.value is ZKCommandData }.map { (it.value as ZKCommandData).metadata }
-val TraversableTransaction.commandMetadata
-    get() = commands.filter { it.value is ZKCommandData }.map { (it.value as ZKCommandData).metadata }
-val LedgerTransaction.commandMetadata
-    get() = commands.filter { it.value is ZKCommandData }.map { (it.value as ZKCommandData).metadata }
+val ZKTransactionBuilder.commandData get() = commands().map { it.value }.filterIsInstance<ZKCommandData>()
+val TraversableTransaction.commandData get() = commands.map { it.value }.filterIsInstance<ZKCommandData>()
+val LedgerTransaction.commandData get() = commands.map { it.value }.filterIsInstance<ZKCommandData>()
+
+val ZKTransactionBuilder.commandMetadata get() = commandData.map { it.metadata }
+val TraversableTransaction.commandMetadata get() = commandData.map { it.metadata }
+val LedgerTransaction.commandMetadata get() = commandData.map { it.metadata }
 private const val TX_CONTAINS_NO_COMMANDS_WITH_METADATA = "This transaction does not contain any commands with metadata"
 
 fun TraversableTransaction.zkTransactionMetadata(): ResolvedZKTransactionMetadata =

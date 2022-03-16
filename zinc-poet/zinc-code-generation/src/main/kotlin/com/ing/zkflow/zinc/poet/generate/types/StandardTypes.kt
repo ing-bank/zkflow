@@ -10,7 +10,6 @@ import com.ing.zinc.bfl.dsl.StructBuilder.Companion.struct
 import com.ing.zinc.bfl.dsl.WrappedStateBuilder.Companion.wrappedState
 import com.ing.zinc.bfl.generator.WitnessGroupOptions
 import com.ing.zinc.naming.camelToSnakeCase
-import com.ing.zinc.naming.snakeToCamelCase
 import com.ing.zkflow.common.network.ZKNetworkParameters
 import com.ing.zkflow.common.network.attachmentConstraintSerializer
 import com.ing.zkflow.common.network.notarySerializer
@@ -20,6 +19,7 @@ import com.ing.zkflow.serialization.infra.NetworkSerializationMetadata
 import com.ing.zkflow.serialization.serializer.corda.SHA256SecureHashSerializer
 import com.ing.zkflow.serialization.serializer.corda.TimeWindowSerializer
 import com.ing.zkflow.serialization.serializer.corda.TransactionStateSurrogate
+import com.ing.zkflow.util.snakeToCamelCase
 import com.ing.zkflow.zinc.poet.generate.ZincTypeGenerator
 import kotlinx.serialization.descriptors.SerialDescriptor
 import net.corda.core.contracts.ComponentGroupEnum
@@ -55,7 +55,7 @@ class StandardTypes(
             WitnessGroupOptions(it.id.removeSuffix("WitnessGroup").camelToSnakeCase(), it)
         }
 
-    internal fun transactionState(stateType: BflType) = struct {
+    fun transactionState(stateType: BflType) = struct {
         name = "${stateType.id}TransactionState"
         field {
             name = "data"
@@ -126,7 +126,7 @@ class StandardTypes(
             stateClass: BflType,
             vararg metadataDescriptor: SerialDescriptor
         ) = wrappedState {
-            name = groupName.snakeToCamelCase() + "WitnessGroup"
+            name = groupName.snakeToCamelCase(true) + "WitnessGroup"
             cordaMagic()
             metadata(networkParametersMetadata)
             metadataDescriptor.forEach {

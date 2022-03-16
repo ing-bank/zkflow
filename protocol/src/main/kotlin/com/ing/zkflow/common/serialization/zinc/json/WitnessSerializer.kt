@@ -8,7 +8,7 @@ import kotlinx.serialization.json.putJsonObject
 @Suppress("ComplexMethod", "LongMethod")
 object WitnessSerializer {
     fun fromWitness(witness: Witness): String = buildJsonObject {
-        putJsonObject("input") {
+        putJsonObject("witness") {
             if (witness.outputsGroup.isNotEmpty())
                 putJsonObject("outputs") {
                     witness.outputsGroup.forEach {
@@ -49,26 +49,26 @@ object WitnessSerializer {
             put("privacy_salt", JsonArray(witness.privacySalt.bytes.toUnsignedBitString()))
 
             if (witness.serializedInputUtxos.isNotEmpty()) {
+                put(
+                    "input_nonces",
+                    JsonArray(witness.inputUtxoNonces.toJsonArray())
+                )
                 putJsonObject("serialized_input_utxos") {
                     witness.serializedInputUtxos.forEach {
                         put(it.name, JsonArray(it.serializedData.toUnsignedBitString()))
                     }
                 }
-                put(
-                    "input_nonces",
-                    JsonArray(witness.inputUtxoNonces.toJsonArray())
-                )
             }
             if (witness.serializedReferenceUtxos.isNotEmpty()) {
+                put(
+                    "reference_nonces",
+                    JsonArray(witness.referenceUtxoNonces.toJsonArray())
+                )
                 putJsonObject("serialized_reference_utxos") {
                     witness.serializedReferenceUtxos.forEach {
                         put(it.name, JsonArray(it.serializedData.toUnsignedBitString()))
                     }
                 }
-                put(
-                    "reference_nonces",
-                    JsonArray(witness.referenceUtxoNonces.toJsonArray())
-                )
             }
         }
     }.toString()

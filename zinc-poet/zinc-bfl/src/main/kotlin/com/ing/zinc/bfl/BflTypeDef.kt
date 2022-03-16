@@ -7,6 +7,8 @@ import com.ing.zinc.poet.ZincFile.Companion.zincFile
 import com.ing.zinc.poet.ZincFunction
 import com.ing.zinc.poet.ZincPrimitive
 import com.ing.zinc.poet.ZincTypeDef
+import com.ing.zkflow.util.BflSized
+import com.ing.zkflow.util.Tree
 
 /**
  * [BflTypeDef] is a [BflType] that represents a [BflModule] for type definitions.
@@ -71,5 +73,11 @@ data class BflTypeDef(
     override fun toZincType(): ZincTypeDef = ZincTypeDef.zincTypeDef {
         name = this@BflTypeDef.typeName()
         type = this@BflTypeDef.typeDeclaration.toZincType()
+    }
+
+    override fun toStructureTree(): Tree<BflSized, BflSized> {
+        return Tree.node(toNodeDescriptor()) {
+            addNode(typeDeclaration.toStructureTree())
+        }
     }
 }

@@ -8,6 +8,8 @@ import com.ing.zinc.poet.ZincFile.Companion.zincFile
 import com.ing.zinc.poet.ZincFunction
 import com.ing.zinc.poet.ZincPrimitive
 import com.ing.zinc.poet.ZincType
+import com.ing.zkflow.util.BflSized
+import com.ing.zkflow.util.Tree
 
 @Suppress("TooManyFunctions")
 object BflUnit : BflModule {
@@ -60,4 +62,8 @@ object BflUnit : BflModule {
     }
 
     override fun toString(): String = id
+
+    override fun toStructureTree(): Tree<BflSized, BflSized> {
+        return Tree.leaf(toNodeDescriptor())
+    }
 }

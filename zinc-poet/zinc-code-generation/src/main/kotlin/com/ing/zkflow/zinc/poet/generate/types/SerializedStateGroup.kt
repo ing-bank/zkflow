@@ -2,7 +2,6 @@ package com.ing.zkflow.zinc.poet.generate.types
 
 import com.ing.zinc.bfl.BflModule
 import com.ing.zinc.bfl.CONSTS
-import com.ing.zinc.bfl.CORDA_MAGIC_BITS_SIZE
 import com.ing.zinc.bfl.TypeVisitor
 import com.ing.zinc.bfl.dsl.StructBuilder.Companion.struct
 import com.ing.zinc.bfl.generator.CodeGenerationOptions
@@ -24,6 +23,8 @@ import com.ing.zinc.poet.ZincMethod.Companion.zincMethod
 import com.ing.zinc.poet.ZincPrimitive
 import com.ing.zinc.poet.ZincStruct.Companion.zincStruct
 import com.ing.zinc.poet.indent
+import com.ing.zkflow.util.BflSized
+import com.ing.zkflow.util.Tree
 import com.ing.zkflow.util.requireNotNull
 import com.ing.zkflow.zinc.poet.generate.COMPUTE_LEAF_HASHES
 import com.ing.zkflow.zinc.poet.generate.COMPUTE_NONCE
@@ -190,7 +191,7 @@ data class SerializedStateGroup(
     override val id: String = serializedStructName
 
     override val bitSize: Int = transactionStates.sumBy {
-        (CORDA_MAGIC_BITS_SIZE + it.state.bitSize)
+        it.state.bitSize
     }
 
     override fun typeName(): String = id
@@ -212,6 +213,14 @@ data class SerializedStateGroup(
         visitor.visitType(deserializedStruct)
         transactionStates.forEach {
             visitor.visitType(it.state)
+        }
+    }
+
+    override fun toStructureTree(): Tree<BflSized, BflSized> {
+        return Tree.node(toNodeDescriptor()) {
+            transactionStates.forEach {
+                addNode(it.state.toStructureTree())
+            }
         }
     }
 }

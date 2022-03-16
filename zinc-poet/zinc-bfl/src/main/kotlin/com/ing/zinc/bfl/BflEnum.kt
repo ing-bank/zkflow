@@ -10,6 +10,8 @@ import com.ing.zinc.poet.ZincFunction
 import com.ing.zinc.poet.ZincFunction.Companion.zincFunction
 import com.ing.zinc.poet.ZincPrimitive
 import com.ing.zinc.poet.indent
+import com.ing.zkflow.util.BflSized
+import com.ing.zkflow.util.Tree
 import com.ing.zkflow.util.requireNotEmpty
 
 data class BflEnum(
@@ -107,5 +109,9 @@ data class BflEnum(
             addFunctions(generateMethods(codeGenerationOptions))
             addFunctions(getRegisteredMethods())
         }
+    }
+
+    override fun toStructureTree(): Tree<BflSized, BflSized> {
+        return Tree.leaf(toNodeDescriptor())
     }
 }

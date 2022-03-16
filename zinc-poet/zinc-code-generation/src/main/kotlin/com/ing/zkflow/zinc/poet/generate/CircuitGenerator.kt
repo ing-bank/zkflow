@@ -60,6 +60,10 @@ class CircuitGenerator(
         buildPath.createZargoToml(circuitName, "1.0.0")
 
         sequenceOf(witness, commandContext).allModules {
+            // TODO Make debugging output optional, maybe configurable in [ZKNetworkParameters], or with System Property
+            buildPath.ensureDirectory("structure")
+                .ensureFile("${getModuleName()}.txt")
+                .writeText(toStructureTree().toString())
             buildPath.zincSourceFile(this, codeGenerationOptions)
         }
 
@@ -81,22 +85,24 @@ class CircuitGenerator(
         buildPath.zincSourceFile("main.zn") {
             mod { module = "contract_rules" }
             newLine()
-            listOf(witness, witness.publicInput).sortedBy { it.getModuleName() }.forEach { dependency ->
-                add(dependency.mod())
-                add(dependency.use())
-                newLine()
-            }
+            listOf(witness, witness.publicInput)
+                .sortedBy { it.getModuleName() }
+                .forEach { dependency ->
+                    add(dependency.mod())
+                    add(dependency.use())
+                    newLine()
+                }
             function {
                 name = "main"
                 parameter {
-                    name = "input"
+                    name = "witness"
                     type = witness.toZincId()
                 }
                 returnType = witness.publicInput.toZincId()
                 body = """
-                    let tx = input.deserialize();
+                    let tx = witness.deserialize();
                     contract_rules::verify(tx);
-                    input.generate_hashes()
+                    witness.generate_hashes()
                 """.trimIndent()
             }
         }

@@ -2,6 +2,8 @@ package com.ing.zinc.bfl
 
 import com.ing.zinc.bfl.generator.WitnessGroupOptions
 import com.ing.zinc.poet.ZincPrimitive
+import com.ing.zkflow.util.BflSized
+import com.ing.zkflow.util.Tree
 import java.util.Locale
 
 @Suppress("MagicNumber")
@@ -92,6 +94,10 @@ enum class BflPrimitive(
         I64 -> ZincPrimitive.I64
         I128 -> ZincPrimitive.I128
         Bool -> ZincPrimitive.Bool
+    }
+
+    override fun toStructureTree(): Tree<BflSized, BflSized> {
+        return Tree.leaf(toNodeDescriptor())
     }
 
     companion object {

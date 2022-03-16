@@ -4,6 +4,8 @@ import com.ing.zinc.bfl.generator.WitnessGroupOptions
 import com.ing.zinc.poet.Indentation.Companion.spaces
 import com.ing.zinc.poet.ZincArray.Companion.zincArray
 import com.ing.zinc.poet.indent
+import com.ing.zkflow.util.BflSized
+import com.ing.zkflow.util.Tree
 
 data class BflArray(
     val arraySize: Int,
@@ -72,5 +74,11 @@ data class BflArray(
     override fun toZincType() = zincArray {
         elementType = this@BflArray.elementType.toZincId()
         size = "${this@BflArray.arraySize}"
+    }
+
+    override fun toStructureTree(): Tree<BflSized, BflSized> {
+        return Tree.node(toNodeDescriptor()) {
+            addNode(elementType.toStructureTree())
+        }
     }
 }

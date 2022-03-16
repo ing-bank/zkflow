@@ -3,12 +3,6 @@ package com.ing.zinc.naming
 import com.ing.zinc.bfl.BflPrimitive.Companion.isPrimitiveIdentifier
 import java.util.Locale
 
-fun String.snakeToCamelCase(): String {
-    return split("_", "-").joinToString("") {
-        it[0].toUpperCase() + it.substring(1).toLowerCase()
-    }
-}
-
 /**
  * Convert a camelCase string to snake_case.
  */

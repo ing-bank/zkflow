@@ -20,7 +20,7 @@ internal class FixedLengthCollectionSerializer<T>(
     override val descriptor = FixedLengthSerialDescriptor(
         buildClassSerialDescriptor(fixedLengthType.serialName) {
             element("size", UInt.serializer().descriptor)
-            element("list", ListSerializer(valueSerializer).descriptor)
+            element("values", ListSerializer(valueSerializer).descriptor)
             annotations = listOf(
                 SizeAnnotation(maxSize)
             )

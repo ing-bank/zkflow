@@ -4,13 +4,9 @@ import com.ing.zkflow.testing.zkp.MockZKNetworkParameters
 import com.ing.zkflow.util.runCommand
 import com.ing.zkflow.zinc.poet.generate.types.CommandContextFactory
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes
-import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.COMMANDS
-import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.NOTARY
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.OUTPUTS
-import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.PARAMETERS
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.SERIALIZED_INPUT_UTXOS
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.SERIALIZED_REFERENCE_UTXOS
-import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.SIGNERS
 import com.ing.zkflow.zinc.poet.generate.types.witness.toPublicInputFieldName
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
@@ -56,7 +52,7 @@ internal class CircuitGeneratorTest {
         val publicInput = Json.parseToJsonElement(result.first) as JsonObject
 
         publicInput.keys.shouldContainAll(
-            listOf(OUTPUTS, SERIALIZED_INPUT_UTXOS, SERIALIZED_REFERENCE_UTXOS, COMMANDS, PARAMETERS, SIGNERS, NOTARY)
+            listOf(OUTPUTS, SERIALIZED_INPUT_UTXOS, SERIALIZED_REFERENCE_UTXOS)
                 .map { it.toPublicInputFieldName() }
         )
     }

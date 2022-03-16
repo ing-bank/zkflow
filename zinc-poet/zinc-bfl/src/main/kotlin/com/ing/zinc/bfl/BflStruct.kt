@@ -14,6 +14,10 @@ import com.ing.zinc.poet.ZincPrimitive
 import com.ing.zinc.poet.ZincStruct
 import com.ing.zinc.poet.ZincStruct.Companion.zincStruct
 import com.ing.zinc.poet.indent
+import com.ing.zkflow.util.BflSized
+import com.ing.zkflow.util.NodeDescriptor
+import com.ing.zkflow.util.Tree
+import com.ing.zkflow.util.snakeToCamelCase
 import java.util.Objects
 
 @Suppress("TooManyFunctions")
@@ -302,6 +306,16 @@ open class BflStruct(
             field {
                 name = it.name
                 type = it.type.toZincType()
+            }
+        }
+    }
+
+    override fun toStructureTree(): Tree<BflSized, BflSized> {
+        return Tree.node(toNodeDescriptor()) {
+            fields.forEach {
+                node(NodeDescriptor(it.name.snakeToCamelCase(false), it.type.bitSize)) {
+                    addNode(it.type.toStructureTree())
+                }
             }
         }
     }
