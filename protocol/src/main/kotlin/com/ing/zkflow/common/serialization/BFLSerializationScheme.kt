@@ -22,6 +22,7 @@ import com.ing.zkflow.serialization.serializer.corda.SecureHashSerializer
 import com.ing.zkflow.serialization.serializer.corda.StateRefSerializer
 import com.ing.zkflow.serialization.serializer.corda.TimeWindowSerializer
 import com.ing.zkflow.serialization.serializer.corda.TransactionStateSerializer
+import kotlinx.serialization.KSerializer
 import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.StateRef
@@ -42,6 +43,8 @@ import net.corda.serialization.internal.CordaSerializationMagic
 import org.slf4j.LoggerFactory
 import java.security.PublicKey
 import java.util.ServiceLoader
+import kotlin.reflect.KClass
+import kotlin.reflect.full.isSubclassOf
 
 open class BFLSerializationScheme : CustomSerializationScheme {
     companion object {
@@ -52,6 +55,7 @@ open class BFLSerializationScheme : CustomSerializationScheme {
 
         init {
             val log = LoggerFactory.getLogger(this::class.java)
+
             log.debug("Populating `${ContractStateSerializerRegistry::class.simpleName}`")
             ServiceLoader.load(ContractStateSerializerRegistryProvider::class.java).flatMap { it.list() }
                 .also { if (it.isEmpty()) log.debug("No ContractStates registered in ContractStateSerializerRegistry") }
@@ -61,6 +65,28 @@ open class BFLSerializationScheme : CustomSerializationScheme {
             ServiceLoader.load(CommandDataSerializerRegistryProvider::class.java).flatMap { it.list() }
                 .also { if (it.isEmpty()) log.debug("No CommandData registered in CommandDataSerializerRegistry") }
                 .forEach { CommandDataSerializerRegistry.register(it.first, it.second) }
+
+            log.debug("Parsing all additional surrogate serializers")
+            ServiceLoader.load(SurrogateSerializerRegistryProvider::class.java).flatMap { it.list() }
+                .also { if (it.isEmpty()) log.debug("No additional serializers found") }
+                .forEach { (surrogateForKClass, serializer) ->
+                    @Suppress("UNCHECKED_CAST")
+                    when {
+                        surrogateForKClass.isSubclassOf(ContractState::class) -> {
+                            surrogateForKClass as KClass<ContractState>
+                            serializer as KSerializer<ContractState>
+                            ContractStateSerializerRegistry.register(surrogateForKClass, serializer)
+                        }
+                        surrogateForKClass.isSubclassOf(CommandData::class) -> {
+                            surrogateForKClass as KClass<CommandData>
+                            serializer as KSerializer<CommandData>
+                            CommandDataSerializerRegistry.register(surrogateForKClass, serializer)
+                        }
+                        else -> log.debug(
+                            "Serializer for `$surrogateForKClass` is nether a subclass of `${CommandData::class.qualifiedName}` or ${ContractState::class.qualifiedName}"
+                        )
+                    }
+                }
         }
     }
 

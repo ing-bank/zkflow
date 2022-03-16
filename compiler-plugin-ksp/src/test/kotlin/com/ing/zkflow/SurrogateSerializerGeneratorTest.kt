@@ -1,10 +1,12 @@
 package com.ing.zkflow
 
+import com.ing.zkflow.common.serialization.SurrogateSerializerRegistryProvider
 import com.ing.zkflow.ksp.ProcessorTest
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldStartWith
 import org.junit.jupiter.api.Test
 import java.io.ByteArrayOutputStream
 
@@ -23,11 +25,12 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest() {
 
         val packageName = "com.ing.zkflow.serialization.infra"
         val className = "SomeClassIntSurrogateSurrogateSerializer"
+        val providerClassName = SurrogateSerializerRegistryProvider::class.simpleName!!
 
         result.readGeneratedKotlinFile(packageName, className) shouldBe correctSourceExpectedOutput
 
-        val metaInf = result.getGeneratedMetaInfServices<Surrogate<*>>()
-        metaInf shouldBe "$packageName.$className"
+        val metaInf = result.getGeneratedMetaInfServices<SurrogateSerializerRegistryProvider>()
+        metaInf shouldStartWith "$packageName.$providerClassName"
     }
 
     @Test
