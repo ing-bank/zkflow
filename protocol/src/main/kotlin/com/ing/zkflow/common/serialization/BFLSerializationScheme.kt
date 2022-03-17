@@ -129,8 +129,7 @@ open class BFLSerializationScheme : CustomSerializationScheme {
         logger.trace("Deserializing tx component:\t$clazz")
         val wrappedSerializedData = extractValidatedSerializedData(bytes)
 
-        val (metadata, data) = wrappedSerializedData.unwrapSerialization(scheme, NetworkSerializationMetadata.serializer())
-        val serializedData = data.toByteArray()
+        val (metadata, serializedData) = wrappedSerializedData.unwrapSerialization(scheme, NetworkSerializationMetadata.serializer())
 
         val zkNetworkParameters = ZKNetworkParametersServiceLoader.getVersion(metadata.networkParametersVersion)
             ?: error("ZKNetworkParameters version '${metadata.networkParametersVersion}' not found")
@@ -179,8 +178,7 @@ open class BFLSerializationScheme : CustomSerializationScheme {
         serializedData: ByteArray,
         zkNetworkParameters: ZKNetworkParameters
     ): List<PublicKey> {
-        val (metadata, data) = serializedData.unwrapSerialization(scheme, SignersSerializationMetadata.serializer())
-        val serialization = data.toByteArray()
+        val (metadata, serialization) = serializedData.unwrapSerialization(scheme, SignersSerializationMetadata.serializer())
 
         val signersSerializer = FixedLengthListSerializer(
             metadata.numberOfSigners,
@@ -203,8 +201,7 @@ open class BFLSerializationScheme : CustomSerializationScheme {
     }
 
     private fun deserializeCommandData(serializedData: ByteArray): CommandData {
-        val (metadata, data) = serializedData.unwrapSerialization(scheme, CommandDataSerializationMetadata.serializer())
-        val serialization = data.toByteArray()
+        val (metadata, serialization) = serializedData.unwrapSerialization(scheme, CommandDataSerializationMetadata.serializer())
 
         val commandDataSerializer = CommandDataSerializerRegistry[metadata.serializerId]
 
@@ -229,8 +226,7 @@ open class BFLSerializationScheme : CustomSerializationScheme {
     }
 
     private fun deserializeTransactionState(serializedData: ByteArray, zkNetworkParameters: ZKNetworkParameters): TransactionState<ContractState> {
-        val (metadata, data) = serializedData.unwrapSerialization(scheme, TransactionStateSerializationMetadata.serializer())
-        val serialization = data.toByteArray()
+        val (metadata, serialization) = serializedData.unwrapSerialization(scheme, TransactionStateSerializationMetadata.serializer())
 
         val transactionStateSerializer = getTransactionStateSerializer(zkNetworkParameters, metadata.serializerId)
 
@@ -266,8 +262,7 @@ open class BFLSerializationScheme : CustomSerializationScheme {
     }
 
     private fun deserializeStateRef(serializedData: ByteArray): StateRef {
-        val (secureHashMetadata, data) = serializedData.unwrapSerialization(scheme, SecureHashSerializationMetadata.serializer())
-        val serialization = data.toByteArray()
+        val (secureHashMetadata, serialization) = serializedData.unwrapSerialization(scheme, SecureHashSerializationMetadata.serializer())
 
         val algorithm = HashAlgorithmRegistry[secureHashMetadata.hashAlgorithmId]
         val secureHashSerializer = SecureHashSerializer(DigestAlgorithmFactory.create(algorithm))

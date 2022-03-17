@@ -8,7 +8,7 @@ import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class SerializationWrapper<M : Any, S : List<Byte>>(
+private data class SerializationWrapper<M : Any, S : List<Byte>>(
     val metadata: M,
     val serialization: S
 )
@@ -34,18 +34,22 @@ fun <M : Any> ByteArray.wrapSerialization(scheme: BinaryFixedLengthScheme, metad
 /**
  * Takes serialized data and attempts to deserialize it into a SerializationWrapper.
  */
-fun <M : Any> ByteArray.unwrapSerialization(scheme: BinaryFixedLengthScheme, metadataSerializer: KSerializer<M>): SerializationWrapper<M, List<Byte>> {
+fun <M : Any> ByteArray.unwrapSerialization(scheme: BinaryFixedLengthScheme, metadataSerializer: KSerializer<M>): Pair<M, ByteArray> {
     val metadataByteSize = metadataSerializer
         .descriptor
         .toFixedLengthSerialDescriptorOrThrow()
         .byteSize
 
-    return scheme.decodeFromBinary(
+    val unwrappedData: SerializationWrapper<M, List<Byte>> = scheme.decodeFromBinary(
         SerializationWrapper.serializer(
             metadataSerializer,
             exactLengthListByteDeserializer(size - metadataByteSize)
         ),
         this
+    )
+    return Pair(
+        unwrappedData.metadata,
+        unwrappedData.serialization.toByteArray()
     )
 }
 
@@ -53,6 +57,5 @@ fun <M : Any> ByteArray.unwrapSerialization(scheme: BinaryFixedLengthScheme, met
  * For a given sequence of bytes, this function derives a fixed length serializer which
  * will attempt exhausting the full sequence.
  */
-// TODO Why not make this a ByteArray deserializer instead of a List deserializer?
 private fun exactLengthListByteDeserializer(serializationLength: Int) =
     ExactLengthListSerializer(serializationLength, ByteSerializer)
