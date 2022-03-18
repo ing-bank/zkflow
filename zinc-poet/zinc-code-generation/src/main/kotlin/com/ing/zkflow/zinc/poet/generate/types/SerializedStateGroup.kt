@@ -5,7 +5,7 @@ import com.ing.zinc.bfl.CONSTS
 import com.ing.zinc.bfl.TypeVisitor
 import com.ing.zinc.bfl.dsl.StructBuilder.Companion.struct
 import com.ing.zinc.bfl.generator.CodeGenerationOptions
-import com.ing.zinc.bfl.generator.WitnessGroupOptions
+import com.ing.zinc.bfl.generator.TransactionComponentOptions
 import com.ing.zinc.bfl.getLengthConstant
 import com.ing.zinc.bfl.getSerializedTypeDef
 import com.ing.zinc.bfl.mod
@@ -37,12 +37,12 @@ import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.privacySa
 data class SerializedStateGroup(
     private val groupName: String,
     private val baseName: String,
-    private val transactionStates: List<IndexedState>,
+    private val transactionStates: List<IndexedTransactionComponent>,
 ) : BflModule {
     private val serializedStructName: String = "Serialized$baseName"
     internal val deserializedStruct = struct {
         name = "Deserialized$baseName"
-        addFields(transactionStates.map(IndexedState::toDeserializedField))
+        addFields(transactionStates.map(IndexedTransactionComponent::toDeserializedField))
         isDeserializable = false
     }
 
@@ -51,7 +51,7 @@ data class SerializedStateGroup(
     override fun generateZincFile(codeGenerationOptions: CodeGenerationOptions) = zincFile {
         mod { module = CONSTS }
         newLine()
-        (transactionStates.map { it.state } + codeGenerationOptions.witnessGroupOptions.map { it.type })
+        (transactionStates.map { it.transactionComponent } + codeGenerationOptions.witnessGroupOptions.map { it.type })
             .distinctBy { it.id }
             .forEach {
                 add(it.mod())
@@ -87,7 +87,7 @@ data class SerializedStateGroup(
             field {
                 name = it.fieldName
                 type = zincArray {
-                    size = it.state.getLengthConstant()
+                    size = it.transactionComponent.getLengthConstant()
                     elementType = ZincPrimitive.Bool
                 }
             }
@@ -111,7 +111,10 @@ data class SerializedStateGroup(
             val witnessGroupOptions = codeGenerationOptions.witnessGroupOptions.find { witnessGroupOptions ->
                 "${groupName}_$fieldName".startsWith(witnessGroupOptions.name)
             }.requireNotNull {
-                "Could not select Witness group options in group $groupName for state ${it.state.id}\n"
+                "Could not select Witness group options in group $groupName for state ${it.transactionComponent.id}\n" +
+                    "${groupName}_$fieldName -> " + codeGenerationOptions.witnessGroupOptions.joinToString { options ->
+                    options.name
+                }
             }
             "$fieldName: ${witnessGroupOptions.generateDeserializeExpr("self.$fieldName")},"
         }
@@ -124,7 +127,7 @@ data class SerializedStateGroup(
 
     private fun generateEmptyMethod() = zincFunction {
         val fieldInitializations = transactionStates.joinToString("\n") {
-            "${it.fieldName}: [false; ${it.state.getLengthConstant()}],"
+            "${it.fieldName}: [false; ${it.transactionComponent.getLengthConstant()}],"
         }
         name = "empty"
         returnType = this@SerializedStateGroup.toZincId()
@@ -141,7 +144,7 @@ data class SerializedStateGroup(
             """
                 {
                     let mut still_equals: bool = true;
-                    for i in 0..${it.state.getLengthConstant()} while still_equals {
+                    for i in 0..${it.transactionComponent.getLengthConstant()} while still_equals {
                         still_equals = self.$stateFieldName[i] == other.$stateFieldName[i];
                     }
                     still_equals
@@ -191,13 +194,13 @@ data class SerializedStateGroup(
     override val id: String = serializedStructName
 
     override val bitSize: Int = transactionStates.sumBy {
-        it.state.bitSize
+        it.transactionComponent.bitSize
     }
 
     override fun typeName(): String = id
 
     override fun deserializeExpr(
-        witnessGroupOptions: WitnessGroupOptions,
+        transactionComponentOptions: TransactionComponentOptions,
         offset: String,
         variablePrefix: String,
         witnessVariable: String
@@ -212,14 +215,14 @@ data class SerializedStateGroup(
     override fun accept(visitor: TypeVisitor) {
         visitor.visitType(deserializedStruct)
         transactionStates.forEach {
-            visitor.visitType(it.state)
+            visitor.visitType(it.transactionComponent)
         }
     }
 
     override fun toStructureTree(): Tree<BflSized, BflSized> {
         return Tree.node(toNodeDescriptor()) {
             transactionStates.forEach {
-                addNode(it.state.toStructureTree())
+                addNode(it.transactionComponent.toStructureTree())
             }
         }
     }

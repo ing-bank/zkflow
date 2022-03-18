@@ -1,7 +1,7 @@
 package com.ing.zinc.bfl
 
 import com.ing.zinc.bfl.generator.CodeGenerationOptions
-import com.ing.zinc.bfl.generator.WitnessGroupOptions
+import com.ing.zinc.bfl.generator.TransactionComponentOptions
 import com.ing.zinc.poet.ZincFile
 import com.ing.zinc.poet.ZincFile.Companion.zincFile
 import com.ing.zinc.poet.ZincFunction
@@ -56,11 +56,11 @@ data class BflTypeDef(
     override fun typeName(): String = id
 
     override fun deserializeExpr(
-        witnessGroupOptions: WitnessGroupOptions,
+        transactionComponentOptions: TransactionComponentOptions,
         offset: String,
         variablePrefix: String,
         witnessVariable: String
-    ): String = typeDeclaration.deserializeExpr(witnessGroupOptions, offset, variablePrefix, witnessVariable)
+    ): String = typeDeclaration.deserializeExpr(transactionComponentOptions, offset, variablePrefix, witnessVariable)
 
     override fun defaultExpr(): String = typeDeclaration.defaultExpr()
 

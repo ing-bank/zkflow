@@ -1,7 +1,7 @@
 package com.ing.zkflow.zinc.poet.generate.types.witness
 
 import com.ing.zinc.bfl.BflType
-import com.ing.zinc.bfl.generator.WitnessGroupOptions
+import com.ing.zinc.bfl.generator.TransactionComponentOptions
 import com.ing.zinc.poet.ZincFunction
 import com.ing.zinc.poet.ZincType
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.COMMANDS
@@ -18,7 +18,7 @@ import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.TIME_WINDOW
 /**
  * This interface abstracts some common properties that are used to generate [Witness].
  */
-interface WitnessGroup {
+interface TransactionComponent {
     /**
      * Name to use as variable in the [Witness].
      */
@@ -36,9 +36,9 @@ interface WitnessGroup {
     val isPresent: Boolean
 
     /**
-     * The [WitnessGroupOptions] for this group.
+     * The [TransactionComponentOptions] for this group.
      */
-    val options: List<WitnessGroupOptions>
+    val options: List<TransactionComponentOptions>
 
     /**
      * Dependencies that should be imported into [Witness].

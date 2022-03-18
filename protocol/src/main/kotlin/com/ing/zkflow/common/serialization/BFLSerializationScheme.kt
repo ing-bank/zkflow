@@ -307,15 +307,15 @@ open class BFLSerializationScheme : CustomSerializationScheme {
     }
 
     private fun <T : Any, M : Any> encodeAndWrap(
-        state: T,
-        stateSerializer: KSerializer<T>,
+        txComponent: T,
+        txComponentSerializer: KSerializer<T>,
         metadata: M,
         metadataSerializer: KSerializer<M>
     ): ByteArray {
         // TODO Make debugging output optional, maybe configurable in [ZKNetworkParameters], or with System Property
-        saveSerializationStructureForDebug(state, metadata, metadataSerializer, stateSerializer)
+        saveSerializationStructureForDebug(txComponent, txComponentSerializer, metadata, metadataSerializer)
         return scheme
-            .encodeToBinary(stateSerializer, state)
+            .encodeToBinary(txComponentSerializer, txComponent)
             .wrapSerialization(
                 scheme,
                 metadata,
@@ -332,17 +332,17 @@ open class BFLSerializationScheme : CustomSerializationScheme {
     }
 
     private fun <M : Any, T : Any> saveSerializationStructureForDebug(
-        state: T,
+        txComponent: T,
+        txComponentSerializer: KSerializer<T>,
         metadata: M,
-        metadataSerializer: KSerializer<M>,
-        stateSerializer: KSerializer<T>
+        metadataSerializer: KSerializer<M>
     ) {
         val descriptor =
-            buildClassSerialDescriptor("${state::class.simpleName}${metadata::class.simpleName!!.removeSuffix("SerializationMetadata")}") {
+            buildClassSerialDescriptor("${txComponent::class.simpleName}${metadata::class.simpleName!!.removeSuffix("SerializationMetadata")}") {
                 element("corda-magic", ExactLengthListSerializer(customSerializationMagicLength, ByteSerializer).descriptor)
                 element("network-metadata", NetworkSerializationMetadata.serializer().descriptor)
-                element("metadata", metadataSerializer.descriptor)
-                element("state", stateSerializer.descriptor)
+                element("tx-component-metadata", metadataSerializer.descriptor)
+                element("tx-component", txComponentSerializer.descriptor)
             }
 
         tempDirectory

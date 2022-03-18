@@ -14,7 +14,7 @@ import com.ing.zkflow.zinc.poet.generate.types.CommandContextFactory
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.componentGroupEnum
 import com.ing.zkflow.zinc.poet.generate.types.Witness
-import com.ing.zkflow.zinc.poet.generate.types.witness.WitnessGroupsContainer
+import com.ing.zkflow.zinc.poet.generate.types.witness.TransactionComponentContainer
 import net.corda.core.internal.deleteRecursively
 import net.corda.core.internal.writeText
 import org.slf4j.LoggerFactory
@@ -31,23 +31,23 @@ class CircuitGenerator(
 ) {
     fun generateCircuitFor(zkCommand: ZKCommandData) {
         val commandMetadata = zkCommand.metadata
-        val witnessGroups = WitnessGroupsContainer(
+        val transactionComponents = TransactionComponentContainer(
             commandMetadata,
             standardTypes,
             zincTypeResolver
         )
         val witness = Witness(
-            witnessGroups,
+            transactionComponents,
             commandMetadata,
             standardTypes,
         )
 
         val commandContext = commandContextFactory.createCommandContext(
             commandMetadata,
-            witnessGroups
+            transactionComponents
         )
 
-        val codeGenerationOptions = CodeGenerationOptions(witness.witnessConfigurations)
+        val codeGenerationOptions = CodeGenerationOptions(witness.transactionComponentOptions)
 
         val circuitName = commandMetadata.circuit.name
 

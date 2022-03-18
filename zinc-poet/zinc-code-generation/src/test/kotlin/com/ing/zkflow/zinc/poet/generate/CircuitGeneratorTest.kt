@@ -14,10 +14,9 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.io.TempDir
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.nio.file.Path
+import java.nio.file.Files
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
 
@@ -29,7 +28,9 @@ internal class CircuitGeneratorTest {
     @ExperimentalTime
     @Test
     @Tag("slow")
-    fun `generateCircuitFor should generate a working circuit`(@TempDir tempDir: Path) {
+    // fun `generateCircuitFor should generate a working circuit`(@TempDir tempDir: Path) {
+    fun `generateCircuitFor should generate a working circuit`() {
+        val tempDir = Files.createTempDirectory(this::class.simpleName)
         val circuitGenerator = CircuitGenerator(
             BuildPathProvider.withPath(tempDir),
             CommandContextFactory(standardTypes),

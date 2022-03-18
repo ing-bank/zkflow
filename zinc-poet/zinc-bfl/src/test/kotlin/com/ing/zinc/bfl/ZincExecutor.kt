@@ -1,7 +1,7 @@
 package com.ing.zinc.bfl
 
 import com.ing.zinc.bfl.generator.CodeGenerationOptions
-import com.ing.zinc.bfl.generator.WitnessGroupOptions
+import com.ing.zinc.bfl.generator.TransactionComponentOptions
 import com.ing.zinc.bfl.generator.ZincGenerator.createZargoToml
 import com.ing.zinc.bfl.generator.ZincGenerator.zincSourceFile
 import com.ing.zinc.bfl.generator.ZincGenerator.zincSourceFileIfNotExists
@@ -55,7 +55,7 @@ object ZincExecutor {
 
     private fun BflModule.toCodeGenerationOptions() = CodeGenerationOptions(
         listOf(
-            WitnessGroupOptions.wrapped("test", this)
+            TransactionComponentOptions.wrapped("test", this)
         )
     )
 
@@ -98,7 +98,7 @@ object ZincExecutor {
         }
     }
 
-    fun Path.generateDeserializeLastFieldCircuit(module: BflWrappedState) {
+    fun Path.generateDeserializeWrappedTransactionComponentCircuit(module: BflWrappedTransactionComponent) {
         val options = module.toCodeGenerationOptions()
         generateCircuitBase(module, options)
         // generate src/main.zn

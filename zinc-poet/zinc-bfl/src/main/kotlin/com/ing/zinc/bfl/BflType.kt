@@ -1,6 +1,6 @@
 package com.ing.zinc.bfl
 
-import com.ing.zinc.bfl.generator.WitnessGroupOptions
+import com.ing.zinc.bfl.generator.TransactionComponentOptions
 import com.ing.zinc.poet.ZincEnum
 import com.ing.zinc.poet.ZincStruct
 import com.ing.zinc.poet.ZincType
@@ -37,12 +37,12 @@ interface BflType {
     /**
      * Generate an expression to deserialize this type from a specific witness group.
      *
-     * @param witnessGroupOptions the options for this witness group
+     * @param transactionComponentOptions the options for this witness group
      * @param offset the bit offset in the bit array
      * @param variablePrefix prefix to use for local variables, to avoid name clashes
      */
     fun deserializeExpr(
-        witnessGroupOptions: WitnessGroupOptions,
+        transactionComponentOptions: TransactionComponentOptions,
         offset: String,
         variablePrefix: String,
         witnessVariable: String // = SERIALIZED

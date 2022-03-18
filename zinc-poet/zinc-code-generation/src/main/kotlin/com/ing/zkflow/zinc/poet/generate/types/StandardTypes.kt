@@ -7,8 +7,8 @@ import com.ing.zinc.bfl.dsl.ArrayBuilder.Companion.array
 import com.ing.zinc.bfl.dsl.EnumBuilder.Companion.enumOf
 import com.ing.zinc.bfl.dsl.ListBuilder.Companion.list
 import com.ing.zinc.bfl.dsl.StructBuilder.Companion.struct
-import com.ing.zinc.bfl.dsl.WrappedStateBuilder.Companion.wrappedState
-import com.ing.zinc.bfl.generator.WitnessGroupOptions
+import com.ing.zinc.bfl.dsl.WrappedTransactionComponentBuilder.Companion.wrappedTransactionComponent
+import com.ing.zinc.bfl.generator.TransactionComponentOptions
 import com.ing.zinc.naming.camelToSnakeCase
 import com.ing.zkflow.common.network.ZKNetworkParameters
 import com.ing.zkflow.common.network.attachmentConstraintSerializer
@@ -48,11 +48,12 @@ class StandardTypes(
         ZincTypeGenerator.generate(zkNetworkParameters.attachmentConstraintSerializer.descriptor)
     }
 
-    internal fun toWitnessGroupOptions(states: List<IndexedState>): List<WitnessGroupOptions> = states
-        .map { it.state }
+    internal fun toTransactionComponentOptions(states: List<IndexedTransactionComponent>): List<TransactionComponentOptions> = states
+        .map { it.transactionComponent }
         .distinctBy { it.id }
         .map {
-            WitnessGroupOptions(it.id.removeSuffix("WitnessGroup").camelToSnakeCase(), it)
+            val name = it.id.removeSuffix("TransactionComponent").camelToSnakeCase()
+            TransactionComponentOptions(name, it)
         }
 
     fun transactionState(stateType: BflType) = struct {
@@ -121,18 +122,18 @@ class StandardTypes(
             ZincTypeGenerator.generate(NetworkSerializationMetadata.serializer().descriptor)
         }
 
-        fun wrappedWitnessGroup(
+        fun wrapTxComponent(
             groupName: String,
-            stateClass: BflType,
+            txComponent: BflType,
             vararg metadataDescriptor: SerialDescriptor
-        ) = wrappedState {
-            name = groupName.snakeToCamelCase(true) + "WitnessGroup"
+        ) = wrappedTransactionComponent {
+            name = groupName.snakeToCamelCase(true) + "TransactionComponent"
             cordaMagic()
             metadata(networkParametersMetadata)
             metadataDescriptor.forEach {
                 metadata(ZincTypeGenerator.generate(it))
             }
-            state(stateClass)
+            transactionComponent(txComponent)
         }
     }
 }

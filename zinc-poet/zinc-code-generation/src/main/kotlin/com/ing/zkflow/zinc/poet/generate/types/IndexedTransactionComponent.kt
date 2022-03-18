@@ -1,16 +1,16 @@
 package com.ing.zkflow.zinc.poet.generate.types
 
 import com.ing.zinc.bfl.BflStructField
-import com.ing.zinc.bfl.BflWrappedState
+import com.ing.zinc.bfl.BflWrappedTransactionComponent
 import com.ing.zinc.bfl.dsl.FieldBuilder.Companion.field
 import com.ing.zinc.naming.camelToSnakeCase
 
-data class IndexedState(
+data class IndexedTransactionComponent(
     val index: Int,
-    val state: BflWrappedState,
+    val transactionComponent: BflWrappedTransactionComponent,
 ) {
     val fieldName by lazy {
-        state.lastField.type.typeName()
+        transactionComponent.lastField.type.typeName()
             .removeSuffix("TransactionState")
             .camelToSnakeCase() + "_$index"
     }
@@ -18,7 +18,7 @@ data class IndexedState(
     fun toDeserializedField(): BflStructField {
         return field {
             name = fieldName
-            type = state.lastField.type
+            type = transactionComponent.lastField.type
         }
     }
 }

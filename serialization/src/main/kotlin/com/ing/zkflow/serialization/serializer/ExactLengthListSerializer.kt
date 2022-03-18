@@ -5,6 +5,11 @@ import com.ing.zkflow.serialization.FixedLengthType
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 
+/**
+ * A [FixedLengthKSerializerWithDefault] for [List]s that are known to have exactly [exactSize] elements.
+ * The difference to [FixedLengthListSerializer] is that this serializer will not write [List.size] to the
+ * serialized form, as it is expected to be known.
+ */
 open class ExactLengthListSerializer<T>(
     exactSize: Int,
     valueSerializer: FixedLengthKSerializerWithDefault<T>,

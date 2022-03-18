@@ -12,35 +12,35 @@ import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.PARAMETERS
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.REFERENCES
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.SIGNERS
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.TIME_WINDOW
-import com.ing.zkflow.zinc.poet.generate.types.witness.WitnessGroupsContainer
+import com.ing.zkflow.zinc.poet.generate.types.witness.TransactionComponentContainer
 
 class CommandContextFactory(
     private val standardTypes: StandardTypes,
 ) {
     fun createCommandContext(
         commandMetadata: ResolvedZKCommandMetadata,
-        witnessGroupsContainer: WitnessGroupsContainer,
+        transactionComponents: TransactionComponentContainer,
     ): BflStruct = struct {
         name = COMMAND_CONTEXT
-        if (witnessGroupsContainer.serializedInputUtxos.isPresent) {
-            field { name = INPUTS; type = witnessGroupsContainer.serializedInputUtxos.deserializedGroup }
+        if (transactionComponents.serializedInputUtxos.isPresent) {
+            field { name = INPUTS; type = transactionComponents.serializedInputUtxos.deserializedGroup }
         }
-        if (witnessGroupsContainer.serializedOutputGroup.isPresent) {
-            field { name = OUTPUTS; type = witnessGroupsContainer.serializedOutputGroup.deserializedGroup }
+        if (transactionComponents.serializedOutputGroup.isPresent) {
+            field { name = OUTPUTS; type = transactionComponents.serializedOutputGroup.deserializedGroup }
         }
-        if (witnessGroupsContainer.serializedReferenceUtxos.isPresent) {
-            field { name = REFERENCES; type = witnessGroupsContainer.serializedReferenceUtxos.deserializedGroup }
+        if (transactionComponents.serializedReferenceUtxos.isPresent) {
+            field { name = REFERENCES; type = transactionComponents.serializedReferenceUtxos.deserializedGroup }
         }
-        if (witnessGroupsContainer.notaryGroup.isPresent) {
+        if (transactionComponents.notaryGroup.isPresent) {
             field { name = NOTARY; type = standardTypes.notaryModule }
         }
-        if (witnessGroupsContainer.timeWindowGroup.isPresent) {
+        if (transactionComponents.timeWindowGroup.isPresent) {
             field { name = TIME_WINDOW; type = timeWindow }
         }
-        if (witnessGroupsContainer.parameterGroup.isPresent) {
+        if (transactionComponents.parameterGroup.isPresent) {
             field { name = PARAMETERS; type = parametersSecureHash }
         }
-        if (witnessGroupsContainer.signerGroup.isPresent) {
+        if (transactionComponents.signerGroup.isPresent) {
             field { name = SIGNERS; type = standardTypes.signerList(commandMetadata) }
         }
         isDeserializable = false

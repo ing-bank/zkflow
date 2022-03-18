@@ -1,6 +1,6 @@
 package com.ing.zinc.bfl
 
-import com.ing.zinc.bfl.generator.WitnessGroupOptions
+import com.ing.zinc.bfl.generator.TransactionComponentOptions
 import com.ing.zinc.poet.ZincPrimitive
 import com.ing.zkflow.util.BflSized
 import com.ing.zkflow.util.Tree
@@ -27,7 +27,7 @@ enum class BflPrimitive(
     override fun typeName() = id.capitalize(Locale.getDefault())
 
     override fun deserializeExpr(
-        witnessGroupOptions: WitnessGroupOptions,
+        transactionComponentOptions: TransactionComponentOptions,
         offset: String,
         variablePrefix: String,
         witnessVariable: String

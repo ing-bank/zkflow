@@ -6,5 +6,5 @@ package com.ing.zinc.bfl.generator
  * @property witnessGroupOptions Configurations for the different witness groups.
  */
 data class CodeGenerationOptions(
-    val witnessGroupOptions: List<WitnessGroupOptions>
+    val witnessGroupOptions: List<TransactionComponentOptions>
 )

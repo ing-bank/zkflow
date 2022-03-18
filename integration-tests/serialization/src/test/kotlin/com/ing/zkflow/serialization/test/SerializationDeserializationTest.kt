@@ -6,7 +6,7 @@ import com.ing.zinc.bfl.BflType
 import com.ing.zinc.bfl.SERIALIZED
 import com.ing.zinc.bfl.allModules
 import com.ing.zinc.bfl.generator.CodeGenerationOptions
-import com.ing.zinc.bfl.generator.WitnessGroupOptions
+import com.ing.zinc.bfl.generator.TransactionComponentOptions
 import com.ing.zinc.bfl.generator.ZincGenerator.createZargoToml
 import com.ing.zinc.bfl.generator.ZincGenerator.zincSourceFile
 import com.ing.zinc.bfl.mod
@@ -156,7 +156,7 @@ class SerializationDeserializationTest {
             .ensureFile("witness.json")
             .writeText(witness.toString())
         val bflModule = zincGenerator.zincTypeOf(input::class)
-        val witnessGroupOptions = WitnessGroupOptions.wrapped("test", bflModule)
+        val witnessGroupOptions = TransactionComponentOptions.wrapped("test", bflModule)
         val codeGenerationOptions = CodeGenerationOptions(listOf(witnessGroupOptions))
         zincSourceFile("consts.zn") {
             add(witnessGroupOptions.witnessSizeConstant)

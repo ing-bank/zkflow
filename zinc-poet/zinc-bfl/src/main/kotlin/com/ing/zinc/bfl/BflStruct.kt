@@ -1,7 +1,7 @@
 package com.ing.zinc.bfl
 
 import com.ing.zinc.bfl.generator.CodeGenerationOptions
-import com.ing.zinc.bfl.generator.WitnessGroupOptions
+import com.ing.zinc.bfl.generator.TransactionComponentOptions
 import com.ing.zinc.poet.Indentation.Companion.spaces
 import com.ing.zinc.poet.Indentation.Companion.tabs
 import com.ing.zinc.poet.Self
@@ -70,11 +70,11 @@ open class BflStruct(
     override val bitSize: Int = this.fields.sumOf { it.type.bitSize }
 
     override fun deserializeExpr(
-        witnessGroupOptions: WitnessGroupOptions,
+        transactionComponentOptions: TransactionComponentOptions,
         offset: String,
         variablePrefix: String,
         witnessVariable: String
-    ): String = "$id::${witnessGroupOptions.deserializeMethodName}($witnessVariable, $offset)"
+    ): String = "$id::${transactionComponentOptions.deserializeMethodName}($witnessVariable, $offset)"
 
     override fun defaultExpr(): String = "$id::empty()"
 
@@ -90,7 +90,7 @@ open class BflStruct(
     }
 
     internal open fun generateFieldDeserialization(
-        witnessGroupOptions: WitnessGroupOptions,
+        witnessGroupOptions: TransactionComponentOptions,
         field: FieldWithParentStruct,
         witnessIndex: String,
         witnessVariable: String

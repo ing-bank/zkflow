@@ -4,7 +4,7 @@ import com.ing.zinc.bfl.BflModule
 import com.ing.zinc.bfl.CONSTS
 import com.ing.zinc.bfl.TypeVisitor
 import com.ing.zinc.bfl.generator.CodeGenerationOptions
-import com.ing.zinc.bfl.generator.WitnessGroupOptions
+import com.ing.zinc.bfl.generator.TransactionComponentOptions
 import com.ing.zinc.bfl.mod
 import com.ing.zinc.bfl.toZincId
 import com.ing.zinc.bfl.use
@@ -28,22 +28,22 @@ import com.ing.zkflow.zinc.poet.generate.types.CommandContextFactory.Companion.C
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.componentGroupEnum
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.digest
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.privacySalt
-import com.ing.zkflow.zinc.poet.generate.types.witness.StandardComponentWitnessGroup
-import com.ing.zkflow.zinc.poet.generate.types.witness.WitnessGroup
-import com.ing.zkflow.zinc.poet.generate.types.witness.WitnessGroupsContainer
+import com.ing.zkflow.zinc.poet.generate.types.witness.StandardTransactionComponent
+import com.ing.zkflow.zinc.poet.generate.types.witness.TransactionComponent
+import com.ing.zkflow.zinc.poet.generate.types.witness.TransactionComponentContainer
 
 @Suppress("TooManyFunctions")
 class Witness(
-    private val witnessGroupsContainer: WitnessGroupsContainer,
+    private val txComponentContainer: TransactionComponentContainer,
     private val commandMetadata: ResolvedZKCommandMetadata,
     private val standardTypes: StandardTypes,
 ) : BflModule {
-    private val witnessGroups = witnessGroupsContainer.witnessGroups
+    private val txComponents = txComponentContainer.transactionComponents
 
-    internal val publicInput = PublicInputFactory(witnessGroupsContainer).create()
+    internal val publicInput = PublicInputFactory(txComponentContainer).create()
 
     private val dependencies = (
-        witnessGroups.flatMap { it.dependencies } +
+        txComponents.flatMap { it.dependencies } +
             listOf(componentGroupEnum, digest, publicInput)
         )
         .filterIsInstance<BflModule>()
@@ -58,7 +58,7 @@ class Witness(
         newLine()
         (
             dependencies + listOfNotNull(
-                if (witnessGroupsContainer.signerGroup.isPresent) {
+                if (txComponentContainer.signerGroup.isPresent) {
                     standardTypes.signerList(commandMetadata)
                 } else {
                     null
@@ -102,7 +102,7 @@ class Witness(
 
     override fun toZincType() = zincStruct {
         name = Witness::class.java.simpleName
-        witnessGroups.forEach {
+        txComponents.forEach {
             field {
                 name = it.groupName
                 type = it.serializedType
@@ -110,17 +110,17 @@ class Witness(
         }
     }
 
-    val witnessConfigurations: List<WitnessGroupOptions>
-        get() = witnessGroups.flatMap {
+    val transactionComponentOptions: List<TransactionComponentOptions>
+        get() = txComponents.flatMap {
             it.options
         }
 
-    private fun getStandardComponentWitnessGroups() = witnessGroups
-        .filterIsInstance<StandardComponentWitnessGroup>()
+    private fun getStandardTransactionComponent() = txComponents
+        .filterIsInstance<StandardTransactionComponent>()
 
     override fun generateMethods(codeGenerationOptions: CodeGenerationOptions): List<ZincFunction> =
-        getStandardComponentWitnessGroups().mapNotNull(StandardComponentWitnessGroup::generateDeserializeMethod) +
-            witnessGroups.mapNotNull(WitnessGroup::generateHashesMethod) +
+        getStandardTransactionComponent().mapNotNull(StandardTransactionComponent::generateDeserializeMethod) +
+            txComponents.mapNotNull(TransactionComponent::generateHashesMethod) +
             generateDeserializeMethod() +
             generateGenerateHashesMethod()
 
@@ -130,21 +130,21 @@ class Witness(
         returnType = id(COMMAND_CONTEXT)
         body = """
             $COMMAND_CONTEXT {
-                ${if (witnessGroupsContainer.serializedInputUtxos.isPresent) "$INPUTS: self.$SERIALIZED_INPUT_UTXOS.deserialize()," else "// $INPUTS not present in transaction"}
-                ${if (witnessGroupsContainer.serializedOutputGroup.isPresent) "$OUTPUTS: self.$OUTPUTS.deserialize()," else "// $OUTPUTS not present in transaction"}
-                ${if (witnessGroupsContainer.serializedReferenceUtxos.isPresent) "$REFERENCES: self.$SERIALIZED_REFERENCE_UTXOS.deserialize()," else "// $REFERENCES not present in transaction"}
-                ${if (witnessGroupsContainer.notaryGroup.isPresent) "$NOTARY: self.deserialize_$NOTARY()[0]," else "// $NOTARY is not present in transaction"}
-                ${if (witnessGroupsContainer.timeWindowGroup.isPresent) "$TIME_WINDOW: self.deserialize_$TIME_WINDOW()[0]," else "// $TIME_WINDOW not present in transaction"}
-                ${if (witnessGroupsContainer.parameterGroup.isPresent) "$PARAMETERS: self.deserialize_$PARAMETERS()[0]," else "// $PARAMETERS not present in transaction"}
-                ${if (witnessGroupsContainer.signerGroup.isPresent) "$SIGNERS: ${standardTypes.signerList(commandMetadata).id}::list_of(self.deserialize_$SIGNERS())," else "// $SIGNERS not present in transaction"}
+                ${if (txComponentContainer.serializedInputUtxos.isPresent) "$INPUTS: self.$SERIALIZED_INPUT_UTXOS.deserialize()," else "// $INPUTS not present in transaction"}
+                ${if (txComponentContainer.serializedOutputGroup.isPresent) "$OUTPUTS: self.$OUTPUTS.deserialize()," else "// $OUTPUTS not present in transaction"}
+                ${if (txComponentContainer.serializedReferenceUtxos.isPresent) "$REFERENCES: self.$SERIALIZED_REFERENCE_UTXOS.deserialize()," else "// $REFERENCES not present in transaction"}
+                ${if (txComponentContainer.notaryGroup.isPresent) "$NOTARY: self.deserialize_$NOTARY()[0]," else "// $NOTARY is not present in transaction"}
+                ${if (txComponentContainer.timeWindowGroup.isPresent) "$TIME_WINDOW: self.deserialize_$TIME_WINDOW()[0]," else "// $TIME_WINDOW not present in transaction"}
+                ${if (txComponentContainer.parameterGroup.isPresent) "$PARAMETERS: self.deserialize_$PARAMETERS()[0]," else "// $PARAMETERS not present in transaction"}
+                ${if (txComponentContainer.signerGroup.isPresent) "$SIGNERS: ${standardTypes.signerList(commandMetadata).id}::list_of(self.deserialize_$SIGNERS())," else "// $SIGNERS not present in transaction"}
             }
         """.trimIndent()
     }
 
     private fun generateGenerateHashesMethod() = zincMethod {
-        val hashInitializers = witnessGroups.mapNotNull { witnessGroup ->
-            witnessGroup.generateHashesMethod?.getName()?.let { hashFunctionName ->
-                "${witnessGroup.publicInputFieldName}: self.$hashFunctionName(),"
+        val hashInitializers = txComponents.mapNotNull { transactionComponent ->
+            transactionComponent.generateHashesMethod?.getName()?.let { hashFunctionName ->
+                "${transactionComponent.publicInputFieldName}: self.$hashFunctionName(),"
             }
         }.joinToString("\n") { it }
         name = "generate_hashes"
@@ -164,7 +164,7 @@ class Witness(
     override fun typeName(): String = id
 
     override fun deserializeExpr(
-        witnessGroupOptions: WitnessGroupOptions,
+        transactionComponentOptions: TransactionComponentOptions,
         offset: String,
         variablePrefix: String,
         witnessVariable: String

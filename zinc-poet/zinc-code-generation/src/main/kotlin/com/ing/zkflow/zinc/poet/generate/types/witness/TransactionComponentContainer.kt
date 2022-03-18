@@ -9,13 +9,13 @@ import com.ing.zkflow.common.zkp.metadata.ZKIndexedTypedElement
 import com.ing.zkflow.serialization.infra.CommandDataSerializationMetadata
 import com.ing.zkflow.serialization.infra.TransactionStateSerializationMetadata
 import com.ing.zkflow.zinc.poet.generate.ZincTypeResolver
-import com.ing.zkflow.zinc.poet.generate.types.IndexedState
+import com.ing.zkflow.zinc.poet.generate.types.IndexedTransactionComponent
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.digest
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.parametersSecureHash
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.privacySalt
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.timeWindow
-import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.wrappedWitnessGroup
+import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.wrapTxComponent
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.COMMANDS
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.INPUT_NONCES
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.NOTARY
@@ -29,7 +29,7 @@ import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.SIGNERS
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.TIME_WINDOW
 import net.corda.core.contracts.ComponentGroupEnum
 
-class WitnessGroupsContainer(
+class TransactionComponentContainer(
     private val commandMetadata: ResolvedZKCommandMetadata,
     private val standardTypes: StandardTypes,
     private val zincTypeResolver: ZincTypeResolver,
@@ -43,9 +43,9 @@ class WitnessGroupsContainer(
     }
 
     internal val commandGroup =
-        StandardComponentWitnessGroup(
+        StandardTransactionComponent(
             COMMANDS,
-            wrappedWitnessGroup(
+            wrapTxComponent(
                 COMMANDS,
                 zincTypeResolver.zincTypeOf(commandMetadata.commandKClass),
                 CommandDataSerializationMetadata.serializer().descriptor
@@ -54,41 +54,41 @@ class WitnessGroupsContainer(
             ComponentGroupEnum.COMMANDS_GROUP
         )
     internal val notaryGroup =
-        StandardComponentWitnessGroup(
+        StandardTransactionComponent(
             NOTARY,
-            wrappedWitnessGroup(NOTARY, standardTypes.notaryModule),
+            wrapTxComponent(NOTARY, standardTypes.notaryModule),
             whenVisibleInWitness(ComponentGroupEnum.NOTARY_GROUP) { 1 },
             ComponentGroupEnum.NOTARY_GROUP
         )
     internal val timeWindowGroup =
-        StandardComponentWitnessGroup(
+        StandardTransactionComponent(
             TIME_WINDOW,
-            wrappedWitnessGroup(TIME_WINDOW, timeWindow),
+            wrapTxComponent(TIME_WINDOW, timeWindow),
             whenVisibleInWitness(ComponentGroupEnum.TIMEWINDOW_GROUP) {
                 if (commandMetadata.timeWindow) 1 else 0
             },
             ComponentGroupEnum.TIMEWINDOW_GROUP
         )
     internal val signerGroup =
-        StandardComponentWitnessGroup(
+        StandardTransactionComponent(
             SIGNERS,
-            wrappedWitnessGroup(SIGNERS, standardTypes.signerModule),
+            wrapTxComponent(SIGNERS, standardTypes.signerModule),
             // Assumption here is that either all 'numberOfSigners' signers are visible or none.
             whenVisibleInWitness(ComponentGroupEnum.SIGNERS_GROUP) { commandMetadata.numberOfSigners },
             ComponentGroupEnum.SIGNERS_GROUP
         )
     internal val parameterGroup =
-        StandardComponentWitnessGroup(
+        StandardTransactionComponent(
             PARAMETERS,
-            wrappedWitnessGroup(PARAMETERS, parametersSecureHash),
+            wrapTxComponent(PARAMETERS, parametersSecureHash),
             whenVisibleInWitness(ComponentGroupEnum.PARAMETERS_GROUP) { 1 },
             ComponentGroupEnum.PARAMETERS_GROUP
         )
 
-    private val privacySaltGroup = HashingMetadataWitnessGroup(PRIVACY_SALT, privacySalt, privacySalt.getSerializedTypeDef(), 1)
+    private val privacySaltGroup = HashingMetadataTransactionComponent(PRIVACY_SALT, privacySalt, privacySalt.getSerializedTypeDef(), 1)
 
     private val numberOfInputs = commandMetadata.inputs.size
-    private val inputNoncesGroup = HashingMetadataWitnessGroup(
+    private val inputNoncesGroup = HashingMetadataTransactionComponent(
         INPUT_NONCES,
         arrayOfNonceDigests(numberOfInputs),
         arrayOfSerializedNonceDigests(numberOfInputs),
@@ -96,27 +96,27 @@ class WitnessGroupsContainer(
     )
 
     private val numberOfReferences = commandMetadata.references.size
-    private val referenceNoncesGroup = HashingMetadataWitnessGroup(
+    private val referenceNoncesGroup = HashingMetadataTransactionComponent(
         REFERENCE_NONCES,
         arrayOfNonceDigests(numberOfReferences),
         arrayOfSerializedNonceDigests(numberOfReferences),
         numberOfReferences
     )
 
-    internal val serializedOutputGroup = OutputStateWitnessGroup(
+    internal val serializedOutputGroup = OutputStateTransactionComponent(
         OUTPUTS,
         "OutputGroup",
         commandMetadata.outputs.toIndexedStateList(OUTPUTS),
         standardTypes,
     )
-    internal val serializedInputUtxos = UtxosWitnessGroup(
+    internal val serializedInputUtxos = UtxosTransactionComponent(
         SERIALIZED_INPUT_UTXOS,
         "InputUtxos",
         commandMetadata.inputs.toIndexedStateList(SERIALIZED_INPUT_UTXOS),
         INPUT_NONCES,
         standardTypes,
     )
-    internal val serializedReferenceUtxos = UtxosWitnessGroup(
+    internal val serializedReferenceUtxos = UtxosTransactionComponent(
         SERIALIZED_REFERENCE_UTXOS,
         "ReferenceUtxos",
         commandMetadata.references.toIndexedStateList(SERIALIZED_REFERENCE_UTXOS),
@@ -124,7 +124,7 @@ class WitnessGroupsContainer(
         standardTypes,
     )
 
-    val witnessGroups: List<WitnessGroup> = listOfNotNull(
+    val transactionComponents: List<TransactionComponent> = listOfNotNull(
         serializedOutputGroup,
         commandGroup,
         notaryGroup,
@@ -138,11 +138,11 @@ class WitnessGroupsContainer(
         serializedReferenceUtxos
     ).filter { it.isPresent }
 
-    private fun List<ZKIndexedTypedElement>.toIndexedStateList(groupName: String): List<IndexedState> = map {
+    private fun List<ZKIndexedTypedElement>.toIndexedStateList(groupName: String): List<IndexedTransactionComponent> = map {
         val stateType = zincTypeResolver.zincTypeOf(it.type)
-        IndexedState(
+        IndexedTransactionComponent(
             it.index,
-            wrappedWitnessGroup(
+            wrapTxComponent(
                 "${groupName}_${stateType.id.camelToSnakeCase()}",
                 standardTypes.transactionState(
                     stateType

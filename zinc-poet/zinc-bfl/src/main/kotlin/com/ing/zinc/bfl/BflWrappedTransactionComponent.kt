@@ -1,18 +1,18 @@
 package com.ing.zinc.bfl
 
 import com.ing.zinc.bfl.generator.CodeGenerationOptions
-import com.ing.zinc.bfl.generator.WitnessGroupOptions
+import com.ing.zinc.bfl.generator.TransactionComponentOptions
 import com.ing.zinc.poet.Indentation.Companion.spaces
 import com.ing.zinc.poet.ZincFunction
 import com.ing.zinc.poet.ZincPrimitive
 import com.ing.zinc.poet.indent
 
 /**
- * A [BflWrappedState] is a [BflStruct], where the deserialize method will only return the last field.
+ * A [BflWrappedTransactionComponent] is a [BflStruct], where the deserialize method will only return the last field.
  * The primary use-case for this is fields that are prefixed with Corda magic bytes, and Utxos and Commands,
  * which are also prefixed with an Integer type identifier.
  */
-data class BflWrappedState(
+data class BflWrappedTransactionComponent(
     override val id: String,
     val allFields: List<BflStructField>,
 ) : BflStruct(
@@ -28,7 +28,7 @@ data class BflWrappedState(
     }
 
     override fun deserializeExpr(
-        witnessGroupOptions: WitnessGroupOptions,
+        transactionComponentOptions: TransactionComponentOptions,
         offset: String,
         variablePrefix: String,
         witnessVariable: String
@@ -57,14 +57,14 @@ data class BflWrappedState(
     }
 
     private fun deserializeLastFieldName(
-        witnessGroupOptions: WitnessGroupOptions,
+        witnessGroupOptions: TransactionComponentOptions,
     ) = witnessGroupOptions.deserializeMethodName
         .replace("deserialize_", "deserialize_${fields.last().name}_")
 
     val lastField: FieldWithParentStruct by lazy { fields.last() }
 
     fun deserializeLastFieldExpr(
-        witnessGroupOptions: WitnessGroupOptions,
+        witnessGroupOptions: TransactionComponentOptions,
         offset: String,
         witnessGroupVariable: String
     ): String = "$id::${deserializeLastFieldName(witnessGroupOptions)}($witnessGroupVariable, $offset)"

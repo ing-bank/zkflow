@@ -1,7 +1,7 @@
 package com.ing.zinc.bfl
 
 import com.ing.zinc.bfl.generator.CodeGenerationOptions
-import com.ing.zinc.bfl.generator.WitnessGroupOptions
+import com.ing.zinc.bfl.generator.TransactionComponentOptions
 import com.ing.zinc.poet.Indentation.Companion.spaces
 import com.ing.zinc.poet.Self
 import com.ing.zinc.poet.ZincEnum
@@ -29,11 +29,11 @@ data class BflEnum(
     override fun typeName() = id
 
     override fun deserializeExpr(
-        witnessGroupOptions: WitnessGroupOptions,
+        transactionComponentOptions: TransactionComponentOptions,
         offset: String,
         variablePrefix: String,
         witnessVariable: String
-    ): String = "$id::${witnessGroupOptions.deserializeMethodName}($witnessVariable, $offset)"
+    ): String = "$id::${transactionComponentOptions.deserializeMethodName}($witnessVariable, $offset)"
 
     override fun defaultExpr() = "$id::${variants[0]}"
 
@@ -53,7 +53,7 @@ data class BflEnum(
                 "$index => $id::$variant,"
             }.joinToString("\n") { variant -> variant }
             val deserializeIndex = BflPrimitive.U32.deserializeExpr(
-                witnessGroupOptions = it,
+                transactionComponentOptions = it,
                 offset = OFFSET,
                 variablePrefix = SERIALIZED,
                 witnessVariable = SERIALIZED

@@ -4,13 +4,13 @@ import com.ing.zinc.bfl.BflPrimitive
 import com.ing.zinc.bfl.BflStruct
 import com.ing.zinc.bfl.BflStructField
 import com.ing.zinc.bfl.BflType
-import com.ing.zinc.bfl.BflWrappedState
+import com.ing.zinc.bfl.BflWrappedTransactionComponent
 import com.ing.zinc.bfl.CORDA_MAGIC_BYTES_SIZE
 import com.ing.zinc.bfl.dsl.ArrayBuilder.Companion.array
 import com.ing.zinc.naming.camelToSnakeCase
 
 @BflDslMarker
-class WrappedStateBuilder {
+class WrappedTransactionComponentBuilder {
     var name: String? = null
     private val fields: MutableList<BflStructField> = mutableListOf()
 
@@ -33,10 +33,12 @@ class WrappedStateBuilder {
     }
 
     /**
-     * Add metadata, when a struct, all fields are (recursively) inlined.
+     * Add metadata.
+     * When [type] is a struct, all fields are (recursively) inlined.
+     * This is done to prevent generation of unused structs in the circuit folder.
      */
-    fun metadata(metadataType: BflType) {
-        return metadata(metadataType, metadataType.typeName().camelToSnakeCase())
+    fun metadata(type: BflType) {
+        return metadata(type, type.typeName().camelToSnakeCase())
     }
 
     /**
@@ -57,26 +59,26 @@ class WrappedStateBuilder {
     }
 
     /**
-     * Add state field with [stateType].
-     * In practice this should always be the last field in the [BflWrappedState].
+     * Add transaction component field with [type].
+     * In practice this should always be the last field in the [BflWrappedTransactionComponent].
      */
-    fun state(stateType: BflType) {
+    fun transactionComponent(type: BflType) {
         field {
-            name = getFieldNameFor(stateType)
-            type = stateType
+            name = getFieldNameFor(type)
+            this.type = type
         }
     }
 
-    fun build() = BflWrappedState(
+    fun build() = BflWrappedTransactionComponent(
         requireNotNull(name) { "Struct property id is missing" },
         fields,
     )
 
     companion object {
-        fun wrappedState(init: WrappedStateBuilder.() -> Unit): BflWrappedState = WrappedStateBuilder().apply(init).build()
+        fun wrappedTransactionComponent(init: WrappedTransactionComponentBuilder.() -> Unit): BflWrappedTransactionComponent = WrappedTransactionComponentBuilder().apply(init).build()
 
-        private fun getFieldNameFor(stateType: BflType): String {
-            return stateType.typeName().camelToSnakeCase().let {
+        private fun getFieldNameFor(type: BflType): String {
+            return type.typeName().camelToSnakeCase().let {
                 if (BflPrimitive.isPrimitiveIdentifier(it)) {
                     "${it}_field"
                 } else {

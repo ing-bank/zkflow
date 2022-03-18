@@ -8,6 +8,11 @@ import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 
+/**
+ * A [FixedLengthKSerializerWithDefault] for [List]s that are known to have exactly [exactSize] elements.
+ * The difference to [FixedLengthCollectionSerializer] is that this serializer will not write [List.size] to the
+ * serialized form, as it is expected to be known.
+ */
 internal class ExactLengthCollectionSerializer<T>(
     private val exactSize: Int,
     private val valueSerializer: FixedLengthKSerializerWithDefault<T>,

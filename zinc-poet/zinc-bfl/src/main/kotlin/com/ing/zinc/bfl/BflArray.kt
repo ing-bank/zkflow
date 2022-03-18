@@ -1,6 +1,6 @@
 package com.ing.zinc.bfl
 
-import com.ing.zinc.bfl.generator.WitnessGroupOptions
+import com.ing.zinc.bfl.generator.TransactionComponentOptions
 import com.ing.zinc.poet.Indentation.Companion.spaces
 import com.ing.zinc.poet.ZincArray.Companion.zincArray
 import com.ing.zinc.poet.indent
@@ -17,7 +17,7 @@ data class BflArray(
 
     override fun typeName() = "${elementType.typeName()}Array$arraySize"
     override fun deserializeExpr(
-        witnessGroupOptions: WitnessGroupOptions,
+        transactionComponentOptions: TransactionComponentOptions,
         offset: String,
         variablePrefix: String,
         witnessVariable: String
@@ -26,7 +26,7 @@ data class BflArray(
         val i = "${variablePrefix}_i"
         val o = "${variablePrefix}_offset"
         val deserializeExpr = elementType.deserializeExpr(
-            witnessGroupOptions,
+            transactionComponentOptions,
             offset = "$i * ${elementType.bitSize} as u24 + $o",
             variablePrefix = array,
             witnessVariable = witnessVariable

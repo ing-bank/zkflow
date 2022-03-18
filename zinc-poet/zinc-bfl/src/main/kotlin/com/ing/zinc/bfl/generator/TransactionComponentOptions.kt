@@ -1,9 +1,9 @@
 package com.ing.zinc.bfl.generator
 
 import com.ing.zinc.bfl.BflType
-import com.ing.zinc.bfl.BflWrappedState
+import com.ing.zinc.bfl.BflWrappedTransactionComponent
 import com.ing.zinc.bfl.CONSTS
-import com.ing.zinc.bfl.dsl.WrappedStateBuilder.Companion.wrappedState
+import com.ing.zinc.bfl.dsl.WrappedTransactionComponentBuilder.Companion.wrappedTransactionComponent
 import com.ing.zinc.naming.camelToSnakeCase
 import com.ing.zinc.poet.ZincArray.Companion.zincArray
 import com.ing.zinc.poet.ZincConstant
@@ -18,11 +18,11 @@ import java.util.Locale
  * Contains utilities to aid in generating deserialization methods for this witness group.
  *
  * @property name Name of the witness group. (i.e. inputs, outputs, references, ...)
- * @property type [BflWrappedState] describing the type contained in this witness group
+ * @property type [BflWrappedTransactionComponent] describing the type contained in this witness group
  */
-data class WitnessGroupOptions(
+data class TransactionComponentOptions(
     val name: String,
-    val type: BflWrappedState
+    val type: BflWrappedTransactionComponent
 ) {
     private val sizeInBits: Int = type.bitSize
 
@@ -32,7 +32,7 @@ data class WitnessGroupOptions(
      * This utility value can be used to generate "src/consts.zn"
      */
     val witnessSizeConstant = zincConstant {
-        name = "WITNESS_SIZE_${this@WitnessGroupOptions.name.toUpperCase(Locale.getDefault())}"
+        name = "WITNESS_SIZE_${this@TransactionComponentOptions.name.toUpperCase(Locale.getDefault())}"
         type = ZincPrimitive.U24
         initialization = "$sizeInBits"
     }
@@ -62,11 +62,11 @@ data class WitnessGroupOptions(
     )
 
     companion object {
-        fun wrapped(groupName: String, stateClass: BflType): WitnessGroupOptions = WitnessGroupOptions(
+        fun wrapped(groupName: String, stateClass: BflType): TransactionComponentOptions = TransactionComponentOptions(
             groupName,
-            wrappedState {
+            wrappedTransactionComponent {
                 name = groupName
-                state(stateClass)
+                transactionComponent(stateClass)
             }
         )
     }
