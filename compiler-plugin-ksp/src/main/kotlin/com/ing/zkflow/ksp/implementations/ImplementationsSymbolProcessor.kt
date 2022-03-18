@@ -42,8 +42,13 @@ class ImplementationsSymbolProcessor(
                     .filter { it.interfaceClass == kClass }
                     .map { it.process(implementations) }
                     .forEach {
-                        @Suppress("SpreadOperator")
-                        metaInfServiceRegister.addImplementation(it.providerClass, *it.implementations.toTypedArray())
+                        if (it.implementations.isNotEmpty()) {
+                            @Suppress("SpreadOperator")
+                            metaInfServiceRegister.addImplementation(
+                                it.providerClass,
+                                *it.implementations.toTypedArray()
+                            )
+                        }
                     }
             }
 

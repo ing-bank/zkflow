@@ -1,5 +1,8 @@
 package com.ing.zkflow.annotations
 
+import com.ing.zkflow.ConversionProvider
+import kotlin.reflect.KClass
+
 /**
  * Bound collection size, e.g., List, Map
  */
@@ -32,6 +35,8 @@ annotation class ASCIIChar
  * Designate _entry_ classes for ZKP serializable classes.
  */
 annotation class ZKP
+
+annotation class ZKPSurrogate(val provider: KClass<out ConversionProvider<*, *>>)
 
 /**
  * Select representation of a floating-point type.

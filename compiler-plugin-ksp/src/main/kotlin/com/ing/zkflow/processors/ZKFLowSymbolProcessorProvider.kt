@@ -11,15 +11,17 @@ import com.ing.zkflow.ksp.implementations.ImplementationsSymbolProcessor
 
 class ZKFLowSymbolProcessorProvider : SymbolProcessorProvider {
     override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor {
+        val surrogatesSerializerGenerator = SurrogateSerializerGenerator(environment.codeGenerator)
+
         val zkNetworkParametersProviderProcessor = ZKNetworkParametersProcessor()
 
-        val contractStateRegistryProcessor = ContractStateAndCommandDataSerializerRegistryProcessor(
+        val contractStateRegistryProcessor = SerializerRegistryProcessor(
             ZKContractState::class, // For now only ZKContractState, this may change to ContractState when we have @ZKPSurrogate for toplevel ContractStates
             ContractStateSerializerRegistryProvider::class,
             environment.codeGenerator
         )
 
-        val commandDataRegistryProcessor = ContractStateAndCommandDataSerializerRegistryProcessor(
+        val commandDataRegistryProcessor = SerializerRegistryProcessor(
             ZKCommandData::class, // For now only ZKCommandData, this may change to CommandData when we have @ZKPSurrogate for toplevel CommandData
             CommandDataSerializerRegistryProvider::class,
             environment.codeGenerator
@@ -30,7 +32,8 @@ class ZKFLowSymbolProcessorProvider : SymbolProcessorProvider {
             listOf(
                 contractStateRegistryProcessor,
                 commandDataRegistryProcessor,
-                zkNetworkParametersProviderProcessor
+                zkNetworkParametersProviderProcessor,
+                surrogatesSerializerGenerator,
             )
         )
     }
