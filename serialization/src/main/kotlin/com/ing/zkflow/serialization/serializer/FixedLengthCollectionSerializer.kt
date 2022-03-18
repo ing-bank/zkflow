@@ -3,6 +3,8 @@ package com.ing.zkflow.serialization.serializer
 import com.ing.zkflow.serialization.FixedLengthKSerializerWithDefault
 import com.ing.zkflow.serialization.FixedLengthSerialDescriptor
 import com.ing.zkflow.serialization.FixedLengthType
+import com.ing.zkflow.util.extendTo
+import com.ing.zkflow.util.shrinkTo
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.descriptors.buildClassSerialDescriptor
@@ -37,7 +39,7 @@ internal class FixedLengthCollectionSerializer<T>(
                     }
                 }
             )
-            value.extend(maxSize, valueSerializer.default).forEach {
+            value.extendTo(maxSize, valueSerializer.default).forEach {
                 encodeSerializableValue(valueSerializer, it)
             }
         }
@@ -47,22 +49,8 @@ internal class FixedLengthCollectionSerializer<T>(
             val actualSize = decodeInt()
             (0 until maxSize)
                 .map { decodeSerializableValue(valueSerializer) }
-                .shrink(actualSize)
+                .shrinkTo(actualSize)
         }
-
-    private fun <T> List<T>.extend(newSize: Int, default: T) = when {
-        size < newSize -> List(newSize) { if (it < size) { this[it] } else { default } }
-        size == newSize -> this
-        size > newSize -> error("List size ($size) is greater than $newSize")
-        else -> error("List extend: unreachable")
-    }
-
-    private fun <T> List<T>.shrink(newSize: Int) = when {
-        size < newSize -> error("List size ($size) is smaller than $newSize")
-        size == newSize -> this
-        size > newSize -> this.subList(0, newSize)
-        else -> error("List shrink: unreachable")
-    }
 }
 
 data class SizeAnnotation(val value: Int) : Annotation

@@ -294,8 +294,8 @@ open class BFLSerializationScheme : CustomSerializationScheme {
     }
 
     private val customSerializationMagicLength by lazy { CustomSerializationSchemeUtils.getCustomSerializationMagicFromSchemeId(SCHEME_ID).size }
-    private fun extractValidatedSerializedData(bytes: ByteSequence): ByteArray {
-        val foundSerializationMagic = CordaSerializationMagic(bytes.bytes.take(customSerializationMagicLength).toByteArray())
+    private fun extractValidatedSerializedData(serializedData: ByteSequence): ByteArray {
+        val foundSerializationMagic = CordaSerializationMagic(serializedData.bytes.take(customSerializationMagicLength).toByteArray())
 
         val schemeIdUsedForSerialization =
             getSchemeIdIfCustomSerializationMagic(foundSerializationMagic)
@@ -303,7 +303,7 @@ open class BFLSerializationScheme : CustomSerializationScheme {
         require(schemeIdUsedForSerialization == SCHEME_ID) {
             "Can't deserialize transaction component: it was serialized with scheme $schemeIdUsedForSerialization, but current scheme is $SCHEME_ID"
         }
-        return bytes.bytes.drop(customSerializationMagicLength).toByteArray()
+        return serializedData.bytes.drop(customSerializationMagicLength).toByteArray()
     }
 
     private fun <T : Any, M : Any> encodeAndWrap(
