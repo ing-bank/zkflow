@@ -1,6 +1,7 @@
 package com.ing.zkflow.processors
 
 import com.google.devtools.ksp.processing.CodeGenerator
+import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.common.serialization.ZKDataRegistryProvider
 import com.ing.zkflow.ksp.implementations.ImplementationsProcessor
 import com.ing.zkflow.ksp.implementations.ScopedDeclaration
@@ -31,8 +32,6 @@ class SerializerRegistryProcessor<T : Any>(
     override fun process(implementations: List<ScopedDeclaration>): ServiceLoaderRegistration {
         val uid = Random.nextInt().absoluteValue
         val className = "${interfaceClass.simpleName}SerializerRegistryProvider$uid"
-
-        // TODO enforce presence of ZKP annotations
 
         generateProvider(className, implementations)
 

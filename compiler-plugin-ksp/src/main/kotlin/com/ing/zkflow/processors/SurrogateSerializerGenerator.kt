@@ -95,6 +95,7 @@ class SurrogateSerializerGenerator(private val codeGenerator: CodeGenerator) : I
      *      AmountSurrogate_IssuedTokenType.serializer(),
      *      { AmountConverter_IssuedTokenType.from(it) }
      * )
+     * ```
      */
     private fun generateSurrogateSerializer(surrogate: KSClassDeclaration, zkpSurrogateAnnotation: KSAnnotation): GeneratedSurrogateSerializer {
         val className = "${surrogate.simpleName.asString()}SurrogateSerializer"
