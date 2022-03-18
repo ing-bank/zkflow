@@ -4,6 +4,7 @@ import com.ing.zinc.bfl.BflModule
 import com.ing.zinc.bfl.BflPrimitive
 import com.ing.zinc.bfl.BflType
 import com.ing.zinc.bfl.BflUnit
+import com.ing.zinc.bfl.dsl.ArrayBuilder.Companion.array
 import com.ing.zinc.bfl.dsl.EnumBuilder.Companion.enum
 import com.ing.zinc.bfl.dsl.FieldBuilder.Companion.field
 import com.ing.zinc.bfl.dsl.ListBuilder.Companion.asciiString
@@ -57,6 +58,7 @@ object ZincTypeGenerator {
             FixedLengthType.UINT -> createUnsignedInteger(UInt.SIZE_BITS)
             FixedLengthType.LONG -> createSignedInteger(Long.SIZE_BITS)
             FixedLengthType.ULONG -> createUnsignedInteger(ULong.SIZE_BITS)
+            FixedLengthType.EXACT_LIST -> createArray(descriptor)
             null -> when (descriptor.kind) {
                 SerialKind.ENUM -> createEnum(descriptor)
                 StructureKind.CLASS -> createStruct(descriptor)
@@ -96,8 +98,17 @@ object ZincTypeGenerator {
     private fun createList(descriptor: SerialDescriptor) = list {
         capacity = descriptor.getAnnotation<SizeAnnotation>().value
         elementType = generate(
-            descriptor // See [FixedLengthListSerializer]
-                .getElementDescriptorByName("list") // `List<T>` descriptor
+            descriptor // See [FixedLengthCollectionSerializer]
+                .getElementDescriptorByName("values") // `List<T>` descriptor
+                .getElementDescriptorByName("0")
+        )
+    }
+
+    private fun createArray(descriptor: SerialDescriptor) = array {
+        capacity = descriptor.getAnnotation<SizeAnnotation>().value
+        elementType = generate(
+            descriptor // See [ExactLengthCollectionSerializer]
+                .getElementDescriptorByName("values") // `List<T>` descriptor
                 .getElementDescriptorByName("0")
         )
     }
@@ -106,13 +117,13 @@ object ZincTypeGenerator {
         capacity = descriptor.getAnnotation<SizeAnnotation>().value
         keyType = generate(
             descriptor // See [FixedLengthMapSerializer]
-                .getElementDescriptorByName("list") // `MapEntry<K, V>` descriptor
+                .getElementDescriptorByName("values") // `MapEntry<K, V>` descriptor
                 .getElementDescriptorByName("0")
                 .getElementDescriptorByName("first") // `K` descriptor
         )
         valueType = generate(
             descriptor // See [FixedLengthMapSerializer]
-                .getElementDescriptorByName("list") // `MapEntry<K, V>` descriptor
+                .getElementDescriptorByName("values") // `MapEntry<K, V>` descriptor
                 .getElementDescriptorByName("0")
                 .getElementDescriptorByName("second") // `V` descriptor
         )

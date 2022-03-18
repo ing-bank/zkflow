@@ -12,12 +12,9 @@ fun ByteArray.toUnsignedBitString() = map { byte -> byte.asUnsigned().toBits() }
 fun List<ByteArray>.toJsonArray() = map { JsonArray(it.toUnsignedBitString()) }
 fun List<SecureHash>.toJsonArray() = map { JsonArray(it.bytes.toUnsignedBitString()) }
 
-fun Int.toBits(): List<JsonElement> {
-    val bits = MutableList(Byte.SIZE_BITS) { JsonPrimitive(false) }
-    for (index in 0..Byte.SIZE_BITS) {
-        if ((this.shr(index) and 1) == 1) {
-            bits[Byte.SIZE_BITS - 1 - index] = JsonPrimitive(true)
-        }
+private fun Int.toBits(): List<JsonElement> {
+    return (1..Byte.SIZE_BITS).map {
+        val index = Byte.SIZE_BITS - it
+        JsonPrimitive((this.shr(index) and 1) == 1)
     }
-    return bits
 }

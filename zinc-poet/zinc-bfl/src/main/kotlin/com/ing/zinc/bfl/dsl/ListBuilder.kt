@@ -25,14 +25,14 @@ class ListBuilder {
             capacity = maxSize
             elementType = BflPrimitive.I16
             name = "Utf8String$maxSize"
-            sizeType = BflPrimitive.U16
+            sizeType = BflPrimitive.U32
         }
 
         fun asciiString(maxSize: Int): BflList = list {
             capacity = maxSize
             elementType = BflPrimitive.I8
             name = "AsciiString$maxSize"
-            sizeType = BflPrimitive.U16
+            sizeType = BflPrimitive.U32
         }
 
         fun byteArray(maxSize: Int): BflList = list {

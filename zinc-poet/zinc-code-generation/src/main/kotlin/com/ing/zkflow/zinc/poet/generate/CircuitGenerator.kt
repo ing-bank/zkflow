@@ -14,7 +14,7 @@ import com.ing.zkflow.zinc.poet.generate.types.CommandContextFactory
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.componentGroupEnum
 import com.ing.zkflow.zinc.poet.generate.types.Witness
-import com.ing.zkflow.zinc.poet.generate.types.witness.WitnessGroupsContainer
+import com.ing.zkflow.zinc.poet.generate.types.witness.TransactionComponentContainer
 import net.corda.core.internal.deleteRecursively
 import net.corda.core.internal.writeText
 import org.slf4j.LoggerFactory
@@ -31,23 +31,23 @@ class CircuitGenerator(
 ) {
     fun generateCircuitFor(zkCommand: ZKCommandData) {
         val commandMetadata = zkCommand.metadata
-        val witnessGroups = WitnessGroupsContainer(
+        val transactionComponents = TransactionComponentContainer(
             commandMetadata,
             standardTypes,
             zincTypeResolver
         )
         val witness = Witness(
-            witnessGroups,
+            transactionComponents,
             commandMetadata,
             standardTypes,
         )
 
         val commandContext = commandContextFactory.createCommandContext(
             commandMetadata,
-            witnessGroups
+            transactionComponents
         )
 
-        val codeGenerationOptions = CodeGenerationOptions(witness.witnessConfigurations)
+        val codeGenerationOptions = CodeGenerationOptions(witness.transactionComponentOptions)
 
         val circuitName = commandMetadata.circuit.name
 
@@ -60,6 +60,10 @@ class CircuitGenerator(
         buildPath.createZargoToml(circuitName, "1.0.0")
 
         sequenceOf(witness, commandContext).allModules {
+            // TODO Make debugging output optional, maybe configurable in [ZKNetworkParameters], or with System Property
+            buildPath.ensureDirectory("structure")
+                .ensureFile("${getModuleName()}.txt")
+                .writeText(toStructureTree().toString())
             buildPath.zincSourceFile(this, codeGenerationOptions)
         }
 
@@ -81,22 +85,24 @@ class CircuitGenerator(
         buildPath.zincSourceFile("main.zn") {
             mod { module = "contract_rules" }
             newLine()
-            listOf(witness, witness.publicInput).sortedBy { it.getModuleName() }.forEach { dependency ->
-                add(dependency.mod())
-                add(dependency.use())
-                newLine()
-            }
+            listOf(witness, witness.publicInput)
+                .sortedBy { it.getModuleName() }
+                .forEach { dependency ->
+                    add(dependency.mod())
+                    add(dependency.use())
+                    newLine()
+                }
             function {
                 name = "main"
                 parameter {
-                    name = "input"
+                    name = "witness"
                     type = witness.toZincId()
                 }
                 returnType = witness.publicInput.toZincId()
                 body = """
-                    let tx = input.deserialize();
+                    let tx = witness.deserialize();
                     contract_rules::verify(tx);
-                    input.generate_hashes()
+                    witness.generate_hashes()
                 """.trimIndent()
             }
         }

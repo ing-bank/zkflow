@@ -1,9 +1,11 @@
 package com.ing.zinc.bfl
 
-import com.ing.zinc.bfl.generator.WitnessGroupOptions
+import com.ing.zinc.bfl.generator.TransactionComponentOptions
 import com.ing.zinc.poet.Indentation.Companion.spaces
 import com.ing.zinc.poet.ZincArray.Companion.zincArray
 import com.ing.zinc.poet.indent
+import com.ing.zkflow.util.BflSized
+import com.ing.zkflow.util.Tree
 
 data class BflArray(
     val arraySize: Int,
@@ -15,21 +17,23 @@ data class BflArray(
 
     override fun typeName() = "${elementType.typeName()}Array$arraySize"
     override fun deserializeExpr(
-        witnessGroupOptions: WitnessGroupOptions,
+        transactionComponentOptions: TransactionComponentOptions,
         offset: String,
         variablePrefix: String,
         witnessVariable: String
     ): String {
         val array = "${variablePrefix}_array"
         val i = "${variablePrefix}_i"
+        val o = "${variablePrefix}_offset"
         val deserializeExpr = elementType.deserializeExpr(
-            witnessGroupOptions,
-            offset = "$i * ${elementType.bitSize} as u24 + $offset",
+            transactionComponentOptions,
+            offset = "$i * ${elementType.bitSize} as u24 + $o",
             variablePrefix = array,
             witnessVariable = witnessVariable
         )
         return """
             {
+                let $o: u24 = $offset;
                 let mut $array: [${elementType.id}; $arraySize] = [${elementType.defaultExpr()}; $arraySize];
                 for $i in (0 as u24)..$arraySize {
                     $array[$i] = ${deserializeExpr.indent(20.spaces)};
@@ -70,5 +74,11 @@ data class BflArray(
     override fun toZincType() = zincArray {
         elementType = this@BflArray.elementType.toZincId()
         size = "${this@BflArray.arraySize}"
+    }
+
+    override fun toStructureTree(): Tree<BflSized, BflSized> {
+        return Tree.node(toNodeDescriptor()) {
+            addNode(elementType.toStructureTree())
+        }
     }
 }

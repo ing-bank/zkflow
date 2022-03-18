@@ -56,8 +56,8 @@ class MockAssetContract : Contract {
                     let output = ctx.outputs.mock_asset_contract_mock_asset_0;
                     assert!(input.data.value == output.data.value, "[Move] Values of input and output must equal");
 
-                    let signers = ctx.signers;
-                    assert!(signers.contains(input.data.owner.public_key), "[Move] Owner must sign");
+                    // TODO: signers are never visible as per ResolvedZKCommandMetadata.isVisibleInWitness
+                    // assert!(ctx.signers.contains(input.data.owner.public_key), "[Move] Owner must sign");
                 }
 
             """.trimIndent()
@@ -82,7 +82,8 @@ class MockAssetContract : Contract {
 
                 fn verify(ctx: CommandContext) {
                     let tx_mock_asset = ctx.outputs.mock_asset_contract_mock_asset_0;
-                    assert!(ctx.signers.contains(tx_mock_asset.data.owner.public_key), "[Issue] Owner must sign");
+                    // TODO: signers are never visible as per ResolvedZKCommandMetadata.isVisibleInWitness
+                    // assert!(ctx.signers.contains(tx_mock_asset.data.owner.public_key), "[Issue] Owner must sign");
                 }
             """.trimIndent()
         }

@@ -1,12 +1,14 @@
 package com.ing.zinc.bfl
 
 import com.ing.zinc.bfl.generator.CodeGenerationOptions
-import com.ing.zinc.bfl.generator.WitnessGroupOptions
+import com.ing.zinc.bfl.generator.TransactionComponentOptions
 import com.ing.zinc.poet.ZincFile
 import com.ing.zinc.poet.ZincFile.Companion.zincFile
 import com.ing.zinc.poet.ZincFunction
 import com.ing.zinc.poet.ZincPrimitive
 import com.ing.zinc.poet.ZincTypeDef
+import com.ing.zkflow.util.BflSized
+import com.ing.zkflow.util.Tree
 
 /**
  * [BflTypeDef] is a [BflType] that represents a [BflModule] for type definitions.
@@ -24,7 +26,6 @@ data class BflTypeDef(
         if (typeDeclaration is BflModule) {
             add(typeDeclaration.mod())
             add(typeDeclaration.use())
-            add(typeDeclaration.useSerialized())
             add(typeDeclaration.useLengthConstant())
             newLine()
             constant {
@@ -55,11 +56,11 @@ data class BflTypeDef(
     override fun typeName(): String = id
 
     override fun deserializeExpr(
-        witnessGroupOptions: WitnessGroupOptions,
+        transactionComponentOptions: TransactionComponentOptions,
         offset: String,
         variablePrefix: String,
         witnessVariable: String
-    ): String = typeDeclaration.deserializeExpr(witnessGroupOptions, offset, variablePrefix, witnessVariable)
+    ): String = typeDeclaration.deserializeExpr(transactionComponentOptions, offset, variablePrefix, witnessVariable)
 
     override fun defaultExpr(): String = typeDeclaration.defaultExpr()
 
@@ -72,5 +73,11 @@ data class BflTypeDef(
     override fun toZincType(): ZincTypeDef = ZincTypeDef.zincTypeDef {
         name = this@BflTypeDef.typeName()
         type = this@BflTypeDef.typeDeclaration.toZincType()
+    }
+
+    override fun toStructureTree(): Tree<BflSized, BflSized> {
+        return Tree.node(toNodeDescriptor()) {
+            addNode(typeDeclaration.toStructureTree())
+        }
     }
 }

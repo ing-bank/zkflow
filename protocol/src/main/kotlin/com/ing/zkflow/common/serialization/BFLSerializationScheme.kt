@@ -15,6 +15,8 @@ import com.ing.zkflow.serialization.infra.unwrapSerialization
 import com.ing.zkflow.serialization.infra.wrapSerialization
 import com.ing.zkflow.serialization.scheme.BinaryFixedLengthScheme
 import com.ing.zkflow.serialization.scheme.ByteBinaryFixedLengthScheme
+import com.ing.zkflow.serialization.serializer.ByteSerializer
+import com.ing.zkflow.serialization.serializer.ExactLengthListSerializer
 import com.ing.zkflow.serialization.serializer.FixedLengthListSerializer
 import com.ing.zkflow.serialization.serializer.corda.HashAlgorithmRegistry
 import com.ing.zkflow.serialization.serializer.corda.SHA256SecureHashSerializer
@@ -22,7 +24,10 @@ import com.ing.zkflow.serialization.serializer.corda.SecureHashSerializer
 import com.ing.zkflow.serialization.serializer.corda.StateRefSerializer
 import com.ing.zkflow.serialization.serializer.corda.TimeWindowSerializer
 import com.ing.zkflow.serialization.serializer.corda.TransactionStateSerializer
+import com.ing.zkflow.serialization.toTree
+import com.ing.zkflow.util.ensureFile
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.StateRef
@@ -33,6 +38,7 @@ import net.corda.core.crypto.SecureHash.Companion.SHA2_256
 import net.corda.core.crypto.algorithm
 import net.corda.core.crypto.internal.DigestAlgorithmFactory
 import net.corda.core.identity.Party
+import net.corda.core.internal.writeText
 import net.corda.core.serialization.CustomSerializationScheme
 import net.corda.core.serialization.SerializationSchemeContext
 import net.corda.core.serialization.internal.CustomSerializationSchemeUtils
@@ -41,6 +47,7 @@ import net.corda.core.utilities.ByteSequence
 import net.corda.core.utilities.loggerFor
 import net.corda.serialization.internal.CordaSerializationMagic
 import org.slf4j.LoggerFactory
+import java.nio.file.Files
 import java.security.PublicKey
 import java.util.ServiceLoader
 import kotlin.reflect.KClass
@@ -122,8 +129,7 @@ open class BFLSerializationScheme : CustomSerializationScheme {
         logger.trace("Deserializing tx component:\t$clazz")
         val wrappedSerializedData = extractValidatedSerializedData(bytes)
 
-        val (metadata, data) = wrappedSerializedData.unwrapSerialization(scheme, NetworkSerializationMetadata.serializer())
-        val serializedData = data.toByteArray()
+        val (metadata, serializedData) = wrappedSerializedData.unwrapSerialization(scheme, NetworkSerializationMetadata.serializer())
 
         val zkNetworkParameters = ZKNetworkParametersServiceLoader.getVersion(metadata.networkParametersVersion)
             ?: error("ZKNetworkParameters version '${metadata.networkParametersVersion}' not found")
@@ -161,11 +167,9 @@ open class BFLSerializationScheme : CustomSerializationScheme {
             zkNetworkParameters.signerSerializer
         )
 
-        return scheme.encodeToBinary(signersSerializer, signersList).wrapSerialization(
-            scheme,
-            SignersSerializationMetadata(
-                numberOfSigners
-            ),
+        return encodeAndWrap(
+            signersList, signersSerializer,
+            SignersSerializationMetadata(numberOfSigners),
             SignersSerializationMetadata.serializer()
         )
     }
@@ -174,8 +178,7 @@ open class BFLSerializationScheme : CustomSerializationScheme {
         serializedData: ByteArray,
         zkNetworkParameters: ZKNetworkParameters
     ): List<PublicKey> {
-        val (metadata, data) = serializedData.unwrapSerialization(scheme, SignersSerializationMetadata.serializer())
-        val serialization = data.toByteArray()
+        val (metadata, serialization) = serializedData.unwrapSerialization(scheme, SignersSerializationMetadata.serializer())
 
         val signersSerializer = FixedLengthListSerializer(
             metadata.numberOfSigners,
@@ -188,8 +191,8 @@ open class BFLSerializationScheme : CustomSerializationScheme {
     private fun serializeCommandData(obj: CommandData): ByteArray {
         val commandDataSerializer = CommandDataSerializerRegistry[obj::class]
 
-        return scheme.encodeToBinary(commandDataSerializer, obj).wrapSerialization(
-            scheme,
+        return encodeAndWrap(
+            obj, commandDataSerializer,
             CommandDataSerializationMetadata(
                 serializerId = CommandDataSerializerRegistry.identify(obj::class)
             ),
@@ -198,8 +201,7 @@ open class BFLSerializationScheme : CustomSerializationScheme {
     }
 
     private fun deserializeCommandData(serializedData: ByteArray): CommandData {
-        val (metadata, data) = serializedData.unwrapSerialization(scheme, CommandDataSerializationMetadata.serializer())
-        val serialization = data.toByteArray()
+        val (metadata, serialization) = serializedData.unwrapSerialization(scheme, CommandDataSerializationMetadata.serializer())
 
         val commandDataSerializer = CommandDataSerializerRegistry[metadata.serializerId]
 
@@ -213,33 +215,32 @@ open class BFLSerializationScheme : CustomSerializationScheme {
         zkNetworkParameters.attachmentConstraintType.validate(obj.constraint)
         zkNetworkParameters.notaryInfo.validate(obj.notary)
 
-        val transactionStateSerializer = TransactionStateSerializer(
-            ContractStateSerializerRegistry[state::class],
-            zkNetworkParameters.notarySerializer,
-            zkNetworkParameters.attachmentConstraintSerializer
-        )
+        val stateSerializerId = ContractStateSerializerRegistry.identify(state::class)
+        val transactionStateSerializer = getTransactionStateSerializer(zkNetworkParameters, stateSerializerId)
 
-        return scheme.encodeToBinary(transactionStateSerializer, obj).wrapSerialization(
-            scheme,
-            TransactionStateSerializationMetadata(
-                serializerId = ContractStateSerializerRegistry.identify(state::class),
-            ),
+        return encodeAndWrap(
+            obj, transactionStateSerializer,
+            TransactionStateSerializationMetadata(stateSerializerId),
             TransactionStateSerializationMetadata.serializer()
         )
     }
 
     private fun deserializeTransactionState(serializedData: ByteArray, zkNetworkParameters: ZKNetworkParameters): TransactionState<ContractState> {
-        val (metadata, data) = serializedData.unwrapSerialization(scheme, TransactionStateSerializationMetadata.serializer())
-        val serialization = data.toByteArray()
+        val (metadata, serialization) = serializedData.unwrapSerialization(scheme, TransactionStateSerializationMetadata.serializer())
 
-        val transactionStateSerializer = TransactionStateSerializer(
-            ContractStateSerializerRegistry[metadata.serializerId],
-            zkNetworkParameters.notarySerializer,
-            zkNetworkParameters.attachmentConstraintSerializer
-        )
+        val transactionStateSerializer = getTransactionStateSerializer(zkNetworkParameters, metadata.serializerId)
 
         return scheme.decodeFromBinary(transactionStateSerializer, serialization)
     }
+
+    private fun getTransactionStateSerializer(
+        zkNetworkParameters: ZKNetworkParameters,
+        stateSerializerId: Int
+    ): TransactionStateSerializer<ContractState> = TransactionStateSerializer(
+        ContractStateSerializerRegistry[stateSerializerId],
+        zkNetworkParameters.notarySerializer,
+        zkNetworkParameters.attachmentConstraintSerializer
+    )
 
     private fun serializeTimeWindow(obj: TimeWindow) = scheme.encodeToBinary(TimeWindowSerializer, obj)
 
@@ -253,14 +254,15 @@ open class BFLSerializationScheme : CustomSerializationScheme {
         val secureHashSerializer = SecureHashSerializer(digestAlgorithm)
         val stateRefSerializer = StateRefSerializer(secureHashSerializer)
 
-        return scheme.encodeToBinary(stateRefSerializer, obj).wrapSerialization(
-            scheme, secureHashMetadata, SecureHashSerializationMetadata.serializer()
+        return encodeAndWrap(
+            obj, stateRefSerializer,
+            secureHashMetadata,
+            SecureHashSerializationMetadata.serializer()
         )
     }
 
     private fun deserializeStateRef(serializedData: ByteArray): StateRef {
-        val (secureHashMetadata, data) = serializedData.unwrapSerialization(scheme, SecureHashSerializationMetadata.serializer())
-        val serialization = data.toByteArray()
+        val (secureHashMetadata, serialization) = serializedData.unwrapSerialization(scheme, SecureHashSerializationMetadata.serializer())
 
         val algorithm = HashAlgorithmRegistry[secureHashMetadata.hashAlgorithmId]
         val secureHashSerializer = SecureHashSerializer(DigestAlgorithmFactory.create(algorithm))
@@ -291,9 +293,9 @@ open class BFLSerializationScheme : CustomSerializationScheme {
         return scheme.decodeFromBinary(SHA256SecureHashSerializer, serializedData)
     }
 
-    private fun extractValidatedSerializedData(bytes: ByteSequence): ByteArray {
-        val customSerializationMagicLength by lazy { CustomSerializationSchemeUtils.getCustomSerializationMagicFromSchemeId(SCHEME_ID).size }
-        val foundSerializationMagic = CordaSerializationMagic(bytes.bytes.take(customSerializationMagicLength).toByteArray())
+    private val customSerializationMagicLength by lazy { CustomSerializationSchemeUtils.getCustomSerializationMagicFromSchemeId(SCHEME_ID).size }
+    private fun extractValidatedSerializedData(serializedData: ByteSequence): ByteArray {
+        val foundSerializationMagic = CordaSerializationMagic(serializedData.bytes.take(customSerializationMagicLength).toByteArray())
 
         val schemeIdUsedForSerialization =
             getSchemeIdIfCustomSerializationMagic(foundSerializationMagic)
@@ -301,6 +303,52 @@ open class BFLSerializationScheme : CustomSerializationScheme {
         require(schemeIdUsedForSerialization == SCHEME_ID) {
             "Can't deserialize transaction component: it was serialized with scheme $schemeIdUsedForSerialization, but current scheme is $SCHEME_ID"
         }
-        return bytes.bytes.drop(customSerializationMagicLength).toByteArray()
+        return serializedData.bytes.drop(customSerializationMagicLength).toByteArray()
+    }
+
+    private fun <T : Any, M : Any> encodeAndWrap(
+        txComponent: T,
+        txComponentSerializer: KSerializer<T>,
+        metadata: M,
+        metadataSerializer: KSerializer<M>
+    ): ByteArray {
+        // TODO Make debugging output optional, maybe configurable in [ZKNetworkParameters], or with System Property
+        saveSerializationStructureForDebug(txComponent, txComponentSerializer, metadata, metadataSerializer)
+        return scheme
+            .encodeToBinary(txComponentSerializer, txComponent)
+            .wrapSerialization(
+                scheme,
+                metadata,
+                metadataSerializer
+            )
+    }
+
+    /**
+     * The temporary directory where schema files will be written.
+     * This is a val, so will hold for the whole lifetime of this instance.
+     */
+    private val tempDirectory by lazy {
+        Files.createTempDirectory("zkflow-")
+    }
+
+    private fun <M : Any, T : Any> saveSerializationStructureForDebug(
+        txComponent: T,
+        txComponentSerializer: KSerializer<T>,
+        metadata: M,
+        metadataSerializer: KSerializer<M>
+    ) {
+        val descriptor =
+            buildClassSerialDescriptor("${txComponent::class.simpleName}${metadata::class.simpleName!!.removeSuffix("SerializationMetadata")}") {
+                element("corda-magic", ExactLengthListSerializer(customSerializationMagicLength, ByteSerializer).descriptor)
+                element("network-metadata", NetworkSerializationMetadata.serializer().descriptor)
+                element("tx-component-metadata", metadataSerializer.descriptor)
+                element("tx-component", txComponentSerializer.descriptor)
+            }
+
+        tempDirectory
+            .ensureFile("${descriptor.serialName}.txt")
+            .writeText(
+                toTree(descriptor).toString()
+            )
     }
 }

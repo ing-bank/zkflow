@@ -11,6 +11,7 @@ dependencies {
 
     implementation(project(":annotations"))
     implementation(project(":crypto"))
+    implementation(project(":utils"))
 
     val kotlinxSerializationVersion: String by project
     api("org.jetbrains.kotlinx:kotlinx-serialization-core:$kotlinxSerializationVersion")

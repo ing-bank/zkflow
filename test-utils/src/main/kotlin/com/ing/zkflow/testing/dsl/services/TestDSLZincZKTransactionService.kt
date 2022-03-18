@@ -5,8 +5,8 @@ import com.ing.zkflow.common.network.ZKNetworkParameters
 import com.ing.zkflow.common.transactions.SignedZKVerifierTransaction
 import com.ing.zkflow.common.transactions.ZKVerifierTransaction
 import com.ing.zkflow.common.transactions.collectUtxoInfos
+import com.ing.zkflow.common.transactions.commandData
 import com.ing.zkflow.common.transactions.zkTransactionMetadata
-import com.ing.zkflow.common.transactions.zkTransactionMetadataOrNull
 import com.ing.zkflow.common.zkp.PublicInput
 import com.ing.zkflow.common.zkp.Witness
 import com.ing.zkflow.common.zkp.ZincZKTransactionService
@@ -20,12 +20,14 @@ import com.ing.zkflow.zinc.poet.generate.ZincTypeGenerator
 import com.ing.zkflow.zinc.poet.generate.ZincTypeGeneratorResolver
 import com.ing.zkflow.zinc.poet.generate.types.CommandContextFactory
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import net.corda.core.internal.deleteRecursively
 import net.corda.core.node.ServiceHub
 import net.corda.core.transactions.WireTransaction
+import java.nio.file.Files
 import java.nio.file.Path
-import kotlin.reflect.full.createInstance
 
+@SuppressFBWarnings("PATH_TRAVERSAL_IN")
 public class TestDSLZincZKTransactionService(serviceHub: ServiceHub) : TestDSLZKTransactionService, ZincZKTransactionService(serviceHub) {
     public override fun calculatePublicInput(tx: ZKVerifierTransaction, commandMetadata: ResolvedZKCommandMetadata): PublicInput =
         calculatePublicInput(serviceHub, tx, commandMetadata)
@@ -34,7 +36,17 @@ public class TestDSLZincZKTransactionService(serviceHub: ServiceHub) : TestDSLZK
         val proofs = mutableMapOf<String, ByteArray>()
         val vtx = ZKVerifierTransaction.fromWireTransaction(wtx, proofs)
 
-        wtx.zkTransactionMetadataOrNull()?.commands?.forEach { commandMetadata ->
+        wtx.commandData.forEach { command ->
+            val temporaryCircuitBuildFolder = Files.createTempDirectory(command.metadata.circuit.name)
+
+            val commandMetadata = command.metadata.copy(
+                circuit = command.metadata.circuit.copy(
+                    buildFolder = temporaryCircuitBuildFolder.toFile()
+                )
+            )
+
+            generateTemporaryCircuit(zkNetworkParameters, command, temporaryCircuitBuildFolder)
+
             val witness = Witness.fromWireTransaction(
                 wtx = wtx,
                 inputUtxoInfos = serviceHub.collectUtxoInfos(wtx.inputs),
@@ -42,13 +54,9 @@ public class TestDSLZincZKTransactionService(serviceHub: ServiceHub) : TestDSLZK
                 commandMetadata
             )
 
-            @Suppress("DEPRECATION") // The alternative is not available...
-            val temporaryCircuitBuildFolder = createTempDir().toPath()
-
-            generateTemporaryCircuit(zkNetworkParameters, commandMetadata.commandKClass.createInstance(), temporaryCircuitBuildFolder)
-
             zkServiceForCommandMetadata(commandMetadata).run(witness, calculatePublicInput(vtx, commandMetadata))
 
+            // TODO Don't delete when debugging, do delete otherwise (flag in ZKNetworkParameters, or System Property?)
             temporaryCircuitBuildFolder.deleteRecursively()
         }
         return SignedZKVerifierTransaction(vtx)

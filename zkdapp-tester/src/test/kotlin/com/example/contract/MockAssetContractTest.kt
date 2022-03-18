@@ -14,14 +14,14 @@ class MockAssetContractTest {
         val bob = TestIdentity.fresh("Bob").party.anonymise()
         val services = MockServices(listOf("com.example.contract"))
 
-        services.zkLedger() {
+        services.zkLedger {
             val createState = MockAssetContract.MockAsset(alice, value = 88)
             transaction {
                 input(MockAssetContract.ID, createState)
                 output(MockAssetContract.ID, createState.withNewOwner(bob).ownableState)
                 command(listOf(alice.owningKey, bob.owningKey), MockAssetContract.Move())
                 timeWindow(Instant.now())
-                verifies(VerificationMode.MOCK)
+                verifies(VerificationMode.RUN)
             }
         }
     }

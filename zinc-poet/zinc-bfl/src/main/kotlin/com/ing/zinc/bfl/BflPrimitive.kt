@@ -1,7 +1,9 @@
 package com.ing.zinc.bfl
 
-import com.ing.zinc.bfl.generator.WitnessGroupOptions
+import com.ing.zinc.bfl.generator.TransactionComponentOptions
 import com.ing.zinc.poet.ZincPrimitive
+import com.ing.zkflow.util.BflSized
+import com.ing.zkflow.util.Tree
 import java.util.Locale
 
 @Suppress("MagicNumber")
@@ -25,7 +27,7 @@ enum class BflPrimitive(
     override fun typeName() = id.capitalize(Locale.getDefault())
 
     override fun deserializeExpr(
-        witnessGroupOptions: WitnessGroupOptions,
+        transactionComponentOptions: TransactionComponentOptions,
         offset: String,
         variablePrefix: String,
         witnessVariable: String
@@ -48,13 +50,15 @@ enum class BflPrimitive(
         witnessVariable: String
     ): String {
         val bSize = sizeExpr()
-        val bits = "${variablePrefix}_bits"
         val i = "${variablePrefix}_i"
+        val bits = "${variablePrefix}_bits"
+        val o = "${variablePrefix}_offset"
         return """
             {
+                let $o: u24 = $offset;
                 let mut $bits: [bool; $bSize] = [false; $bSize];
                 for $i in (0 as u24)..$bSize {
-                    $bits[$i] = $witnessVariable[$i + $offset];
+                    $bits[$i] = $witnessVariable[$i + $o];
                 }
                 std::convert::${if (isSigned) "from_bits_signed" else "from_bits_unsigned"}($bits)
             }
@@ -90,6 +94,10 @@ enum class BflPrimitive(
         I64 -> ZincPrimitive.I64
         I128 -> ZincPrimitive.I128
         Bool -> ZincPrimitive.Bool
+    }
+
+    override fun toStructureTree(): Tree<BflSized, BflSized> {
+        return Tree.leaf(toNodeDescriptor())
     }
 
     companion object {

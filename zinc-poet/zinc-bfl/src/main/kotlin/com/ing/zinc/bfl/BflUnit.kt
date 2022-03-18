@@ -1,13 +1,15 @@
 package com.ing.zinc.bfl
 
 import com.ing.zinc.bfl.generator.CodeGenerationOptions
-import com.ing.zinc.bfl.generator.WitnessGroupOptions
+import com.ing.zinc.bfl.generator.TransactionComponentOptions
 import com.ing.zinc.poet.ZincConstant
 import com.ing.zinc.poet.ZincFile
 import com.ing.zinc.poet.ZincFile.Companion.zincFile
 import com.ing.zinc.poet.ZincFunction
 import com.ing.zinc.poet.ZincPrimitive
 import com.ing.zinc.poet.ZincType
+import com.ing.zkflow.util.BflSized
+import com.ing.zkflow.util.Tree
 
 @Suppress("TooManyFunctions")
 object BflUnit : BflModule {
@@ -31,7 +33,7 @@ object BflUnit : BflModule {
     override fun typeName(): String = "Unit"
 
     override fun deserializeExpr(
-        witnessGroupOptions: WitnessGroupOptions,
+        transactionComponentOptions: TransactionComponentOptions,
         offset: String,
         variablePrefix: String,
         witnessVariable: String
@@ -60,4 +62,8 @@ object BflUnit : BflModule {
     }
 
     override fun toString(): String = id
+
+    override fun toStructureTree(): Tree<BflSized, BflSized> {
+        return Tree.leaf(toNodeDescriptor())
+    }
 }

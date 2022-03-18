@@ -1,10 +1,13 @@
 package com.ing.zinc.bfl
 
-import com.ing.zinc.bfl.generator.WitnessGroupOptions
+import com.ing.zinc.bfl.generator.TransactionComponentOptions
 import com.ing.zinc.poet.ZincEnum
 import com.ing.zinc.poet.ZincStruct
 import com.ing.zinc.poet.ZincType
 import com.ing.zinc.poet.ZincType.Companion.id
+import com.ing.zkflow.util.BflSized
+import com.ing.zkflow.util.NodeDescriptor
+import com.ing.zkflow.util.Tree
 
 /**
  * Represents a Kotlin type in zinc that can be deserialized from blf-serialized bit array.
@@ -34,12 +37,12 @@ interface BflType {
     /**
      * Generate an expression to deserialize this type from a specific witness group.
      *
-     * @param witnessGroupOptions the options for this witness group
+     * @param transactionComponentOptions the options for this witness group
      * @param offset the bit offset in the bit array
      * @param variablePrefix prefix to use for local variables, to avoid name clashes
      */
     fun deserializeExpr(
-        witnessGroupOptions: WitnessGroupOptions,
+        transactionComponentOptions: TransactionComponentOptions,
         offset: String,
         variablePrefix: String,
         witnessVariable: String // = SERIALIZED
@@ -72,6 +75,10 @@ interface BflType {
      * [ZincEnum].
      */
     fun toZincType(): ZincType
+
+    fun toStructureTree(): Tree<BflSized, BflSized>
+
+    fun toNodeDescriptor() = NodeDescriptor(id, bitSize)
 }
 
 /**

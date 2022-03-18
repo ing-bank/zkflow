@@ -1,7 +1,7 @@
 package com.ing.zinc.bfl
 
 import com.ing.zinc.bfl.generator.CodeGenerationOptions
-import com.ing.zinc.bfl.generator.WitnessGroupOptions
+import com.ing.zinc.bfl.generator.TransactionComponentOptions
 import com.ing.zinc.bfl.generator.ZincGenerator.createZargoToml
 import com.ing.zinc.bfl.generator.ZincGenerator.zincSourceFile
 import com.ing.zinc.bfl.generator.ZincGenerator.zincSourceFileIfNotExists
@@ -37,7 +37,6 @@ object ZincExecutor {
         add(module.mod())
         newLine()
         add(module.use())
-        add(module.useSerialized())
         newLine()
     }
 
@@ -56,7 +55,7 @@ object ZincExecutor {
 
     private fun BflModule.toCodeGenerationOptions() = CodeGenerationOptions(
         listOf(
-            WitnessGroupOptions("test", this)
+            TransactionComponentOptions.wrapped("test", this)
         )
     )
 
@@ -95,6 +94,26 @@ object ZincExecutor {
                 parameter { name = SERIALIZED; type = witnessGroupOptions.witnessType }
                 returnType = module.toZincId()
                 body = module.deserializeExpr(witnessGroupOptions, "0 as u24", SERIALIZED, SERIALIZED)
+            }
+        }
+    }
+
+    fun Path.generateDeserializeWrappedTransactionComponentCircuit(module: BflWrappedTransactionComponent) {
+        val options = module.toCodeGenerationOptions()
+        generateCircuitBase(module, options)
+        // generate src/main.zn
+        zincSourceFile("main.zn") {
+            mod { this.module = CONSTS }
+            newLine()
+            module.allModules {
+                createImports(this)
+            }
+            function {
+                val witnessGroupOptions = options.witnessGroupOptions.first()
+                name = "main"
+                parameter { name = SERIALIZED; type = witnessGroupOptions.witnessType }
+                returnType = module.lastField.type.toZincType()
+                body = module.deserializeLastFieldExpr(witnessGroupOptions, "0 as u24", SERIALIZED)
             }
         }
     }

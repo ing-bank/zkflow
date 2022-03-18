@@ -2,13 +2,13 @@ package com.ing.zkflow.serialization.infra
 
 import com.ing.zkflow.serialization.scheme.BinaryFixedLengthScheme
 import com.ing.zkflow.serialization.serializer.ByteSerializer
-import com.ing.zkflow.serialization.serializer.FixedLengthListSerializer
+import com.ing.zkflow.serialization.serializer.ExactLengthListSerializer
 import com.ing.zkflow.serialization.toFixedLengthSerialDescriptorOrThrow
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class SerializationWrapper<M : Any, S : List<Byte>>(
+private data class SerializationWrapper<M : Any, S : List<Byte>>(
     val metadata: M,
     val serialization: S
 )
@@ -17,7 +17,7 @@ data class SerializationWrapper<M : Any, S : List<Byte>>(
  * For a given sequence of bytes, this function derives a fixed length serializer fitting the bytes exactly.
  */
 fun ByteArray.exactLengthSerializer() =
-    FixedLengthListSerializer(size, ByteSerializer)
+    ExactLengthListSerializer(size, ByteSerializer)
 
 /**
  * Wrap serialization with metadata and serialize it into a single byte array.
@@ -34,18 +34,22 @@ fun <M : Any> ByteArray.wrapSerialization(scheme: BinaryFixedLengthScheme, metad
 /**
  * Takes serialized data and attempts to deserialize it into a SerializationWrapper.
  */
-fun <M : Any> ByteArray.unwrapSerialization(scheme: BinaryFixedLengthScheme, metadataSerializer: KSerializer<M>): SerializationWrapper<M, List<Byte>> {
+fun <M : Any> ByteArray.unwrapSerialization(scheme: BinaryFixedLengthScheme, metadataSerializer: KSerializer<M>): Pair<M, ByteArray> {
     val metadataByteSize = metadataSerializer
         .descriptor
         .toFixedLengthSerialDescriptorOrThrow()
         .byteSize
 
-    return scheme.decodeFromBinary(
+    val unwrappedData: SerializationWrapper<M, List<Byte>> = scheme.decodeFromBinary(
         SerializationWrapper.serializer(
             metadataSerializer,
             exactLengthListByteDeserializer(size - metadataByteSize)
         ),
         this
+    )
+    return Pair(
+        unwrappedData.metadata,
+        unwrappedData.serialization.toByteArray()
     )
 }
 
@@ -53,7 +57,5 @@ fun <M : Any> ByteArray.unwrapSerialization(scheme: BinaryFixedLengthScheme, met
  * For a given sequence of bytes, this function derives a fixed length serializer which
  * will attempt exhausting the full sequence.
  */
-// TODO Why not make this a ByteArray deserializer instead of a List deserializer?
-// TODO This is a hack, since FixedLengthListSerializer prepends the size, hence the 'serializationLength - Int.SIZE_BYTES'
 private fun exactLengthListByteDeserializer(serializationLength: Int) =
-    FixedLengthListSerializer(serializationLength - Int.SIZE_BYTES, ByteSerializer)
+    ExactLengthListSerializer(serializationLength, ByteSerializer)
