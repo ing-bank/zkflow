@@ -173,20 +173,20 @@ class ComplexBflTest {
             // amount.token.pointer.external_id.has_value
             bits(1)
             // amount.token.pointer.external_id.value.size
-            bytes(0, 2)
+            bytes(0, 0, 0, 2)
             // amount.token.pointer.external_id.value.values
             bytes(0, 97, 0, 97).bytes(*IntArray(96))
             // amount.token.pointer.id
             bytes(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10)
             // amount.token.class_name
             // amount.token.class_name.size
-            bytes(0, 2)
+            bytes(0, 0, 0, 2)
             // amount.token.class_name.values
             bytes(97, 97).bytes(*IntArray(190))
             // amount.token.is_resolved
             bits(1)
             // and the rest
-            bytes(*IntArray(366))
+            bytes(*IntArray(370))
         }
 
         val (stdout, stderr) = tempDir.runCommandAndLogTime("zargo run", 60)

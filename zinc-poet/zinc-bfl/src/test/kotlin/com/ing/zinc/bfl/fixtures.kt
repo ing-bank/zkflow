@@ -6,7 +6,6 @@ import com.ing.zinc.bfl.dsl.ListBuilder.Companion.list
 import com.ing.zinc.bfl.dsl.ListBuilder.Companion.utf8String
 import com.ing.zinc.bfl.dsl.MapBuilder.Companion.map
 import com.ing.zinc.bfl.dsl.OptionBuilder.Companion.option
-import com.ing.zinc.bfl.dsl.PolyBuilder.Companion.poly
 import com.ing.zinc.bfl.dsl.StructBuilder.Companion.struct
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
@@ -42,8 +41,6 @@ sealed class DataInterface {
                 type = BflPrimitive.Bool
             }
         }
-        val polyIntData = poly { innerType = intData }
-        val polyBoolData = poly { innerType = boolData }
     }
 }
 
