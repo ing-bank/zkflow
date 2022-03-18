@@ -58,8 +58,7 @@ object ZincTypeGenerator {
             FixedLengthType.UINT -> createUnsignedInteger(UInt.SIZE_BITS)
             FixedLengthType.LONG -> createSignedInteger(Long.SIZE_BITS)
             FixedLengthType.ULONG -> createUnsignedInteger(ULong.SIZE_BITS)
-            FixedLengthType.EXACT_LIST,
-            FixedLengthType.EXACT_BYTE_ARRAY -> createArray(descriptor)
+            FixedLengthType.EXACT_LIST -> createArray(descriptor)
             null -> when (descriptor.kind) {
                 SerialKind.ENUM -> createEnum(descriptor)
                 StructureKind.CLASS -> createStruct(descriptor)

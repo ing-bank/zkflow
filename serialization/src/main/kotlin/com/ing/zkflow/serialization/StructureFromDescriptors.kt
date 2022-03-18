@@ -57,7 +57,6 @@ fun toTree(descriptor: SerialDescriptor): Tree<BflSized, BflSized> {
                 FixedLengthType.ULONG -> leaf(NodeDescriptor("u64", ULong.SIZE_BITS))
                 FixedLengthType.BOOLEAN -> leaf(NodeDescriptor("bool", Byte.SIZE_BITS))
                 FixedLengthType.EXACT_LIST -> TODO()
-                FixedLengthType.EXACT_BYTE_ARRAY -> TODO()
                 null -> TODO()
             }
         }

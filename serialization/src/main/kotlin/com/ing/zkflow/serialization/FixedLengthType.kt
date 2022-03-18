@@ -1,6 +1,5 @@
 package com.ing.zkflow.serialization
 
-import com.ing.zkflow.serialization.serializer.ExactLengthByteArraySerializer
 import com.ing.zkflow.serialization.serializer.ExactLengthListSerializer
 import com.ing.zkflow.serialization.serializer.FixedLengthByteArraySerializer
 import com.ing.zkflow.serialization.serializer.FixedLengthListSerializer
@@ -14,7 +13,6 @@ enum class FixedLengthType(val serialName: String) {
     LIST(FixedLengthListSerializer::class.qualifiedName!!),
     MAP(FixedLengthMapSerializer::class.qualifiedName!!),
     SET(FixedLengthSetSerializer::class.qualifiedName!!),
-    EXACT_BYTE_ARRAY(ExactLengthByteArraySerializer::class.qualifiedName!!),
     BYTE_ARRAY(FixedLengthByteArraySerializer::class.qualifiedName!!),
     UTF8_STRING(FixedLengthUTF8StringSerializer::class.qualifiedName!!),
     ASCII_STRING(FixedLengthASCIIStringSerializer::class.qualifiedName!!),
