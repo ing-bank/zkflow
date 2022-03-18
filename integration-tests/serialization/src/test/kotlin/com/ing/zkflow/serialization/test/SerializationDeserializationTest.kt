@@ -106,23 +106,12 @@ class SerializationDeserializationTest {
         actual shouldBe listOf(JsonPrimitive("97")).toJsonList(8, JsonPrimitive("0"))
     }
 
-//    @Test
-//    fun `wrapped List of UTF-8 Strings that is serialized and deserialized should equal the original`(@TempDir tempDir: Path) {
-//        val input = WrappedListOfUtf8Strings(listOf("a"))
-//        val inputSerializer = WrappedListOfUtf8Strings.serializer()
-//        val actual = tempDir.serializeAndDeserialize(input, inputSerializer)
-//        actual shouldBe listOf(
-//            listOf(JsonPrimitive("97")).toJsonList(8, JsonPrimitive("0"))
-//        ).toJsonList(8, emptyList<JsonPrimitive>().toJsonList(8, JsonPrimitive("0")))
-//    }
-
     @Test
     fun `wrapped MockAsset that is serialized and deserialized should equal the original`(@TempDir tempDir: Path) {
         val input = WrappedMockAsset(MockAsset(TestIdentity.fresh("alice").party.anonymise()))
         val inputSerializer = WrappedMockAsset.serializer()
-        val actual = tempDir.serializeAndDeserializeInZinc(input, inputSerializer)
-        // actual shouldBe JsonPrimitive("42")
-        println(actual)
+        val actual = tempDir.serializeAndDeserializeInZinc(input, inputSerializer) as JsonObject
+        actual["value"] shouldBe JsonPrimitive("${input.value.value}")
     }
 
     private fun <T : WrappedValue<*>> Path.serializeAndDeserializeInZinc(input: T, inputSerializer: KSerializer<T>): JsonElement {
@@ -259,10 +248,5 @@ class SerializationDeserializationTest {
         data class WrappedMockAsset(
             override val value: MockAsset
         ) : WrappedValue<MockAsset>
-
-//        @ZKP
-//        data class WrappedListOfUtf8Strings(
-//            override val value: @Size(8) List<@UTF8(8) String>
-//        ) : WrappedValue<List<String>>
     }
 }
