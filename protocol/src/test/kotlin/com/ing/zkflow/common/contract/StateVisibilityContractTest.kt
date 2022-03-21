@@ -8,7 +8,6 @@ import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.common.zkp.metadata.commandMetadata
 import com.ing.zkflow.serialization.serializer.IntSerializer
 import com.ing.zkflow.serialization.serializer.corda.AnonymousPartySerializer
-import com.ing.zkflow.testing.dsl.interfaces.VerificationMode.RUN
 import com.ing.zkflow.testing.dsl.zkLedger
 import com.ing.zkflow.util.tryNonFailing
 import kotlinx.serialization.Serializable
@@ -40,15 +39,15 @@ class StateVisibilityContractTest {
             transaction {
                 output(LocalContract.PROGRAM_ID, "Alice's Private Asset", aliceAsset)
                 command(listOf(alice.owningKey), LocalContract.CreatePrivate())
-                verifies(RUN)
+                verifies()
             }
             transaction {
                 input("Alice's Private Asset")
                 output(LocalContract.PROGRAM_ID, bobAsset)
                 command(listOf(alice.owningKey, bob.owningKey), LocalContract.MoveFullyPrivate())
-                verifies(RUN)
+                verifies()
             }
-            verifies(RUN)
+            verifies()
         }
     }
 
@@ -59,7 +58,7 @@ class StateVisibilityContractTest {
                 input(LocalContract.PROGRAM_ID, aliceAsset)
                 output(LocalContract.PROGRAM_ID, bobAsset)
                 command(listOf(alice.owningKey, bob.owningKey), LocalContract.MoveAnyToPrivate())
-                verifies(RUN)
+                verifies()
             }
         }
     }
@@ -71,15 +70,15 @@ class StateVisibilityContractTest {
             transaction {
                 output(LocalContract.PROGRAM_ID, "Alice's Private Asset", aliceAsset)
                 command(listOf(alice.owningKey), LocalContract.CreatePrivate())
-                verifies(RUN)
+                verifies()
             }
             transaction {
                 input("Alice's Private Asset")
                 output(LocalContract.PROGRAM_ID, bobAsset)
                 command(listOf(alice.owningKey, bob.owningKey), LocalContract.MovePrivateToPublic())
-                verifies(RUN)
+                verifies()
             }
-            verifies(RUN)
+            verifies()
         }
     }
 
@@ -89,7 +88,7 @@ class StateVisibilityContractTest {
             transaction {
                 output(LocalContract.PROGRAM_ID, "Alice's Explicitly Public Asset", aliceAsset)
                 command(listOf(alice.owningKey), LocalContract.CreatePublicExplicitly())
-                verifies(RUN)
+                verifies()
             }
             transaction {
                 input("Alice's Explicitly Public Asset")
@@ -120,7 +119,7 @@ class StateVisibilityContractTest {
                 input(LocalContract.PROGRAM_ID, aliceAsset)
                 output(LocalContract.PROGRAM_ID, bobAsset)
                 command(listOf(alice.owningKey, bob.owningKey), LocalContract.MovePublic())
-                verifies(RUN)
+                verifies()
             }
         }
     }
@@ -132,7 +131,7 @@ class StateVisibilityContractTest {
             transaction {
                 output(LocalContract.PROGRAM_ID, NonAnnotatableTestState(alice))
                 command(listOf(alice.owningKey, bob.owningKey), LocalContract.CreateNonAnnotatableTestState())
-                verifies(RUN)
+                verifies()
             }
         }
     }

@@ -7,7 +7,6 @@ import com.ing.zkflow.common.transactions.hasPrivateComponents
 import com.ing.zkflow.testing.dsl.interfaces.DuplicateOutputLabel
 import com.ing.zkflow.testing.dsl.interfaces.EnforceVerifyOrFail
 import com.ing.zkflow.testing.dsl.interfaces.OutputStateLookup
-import com.ing.zkflow.testing.dsl.interfaces.VerificationMode
 import com.ing.zkflow.testing.dsl.interfaces.ZKTransactionDSLInterpreter
 import com.ing.zkflow.testing.dsl.services.TestDSLZKTransactionService
 import net.corda.core.contracts.AttachmentConstraint
@@ -165,7 +164,7 @@ public data class TestZKTransactionDSLInterpreter private constructor(
         transactionBuilder.addCommand(command)
     }
 
-    override fun verifies(mode: VerificationMode): EnforceVerifyOrFail {
+    override fun verifies(): EnforceVerifyOrFail {
         // Verify on a copy of the transaction builder, so if it's then further modified it doesn't error due to
         // the existing signature
         val txb = transactionBuilder.copy()
@@ -177,7 +176,7 @@ public data class TestZKTransactionDSLInterpreter private constructor(
         if (wtx.hasPrivateComponents) {
             txb.enforcePrivateInputsAndReferences(ledgerInterpreter.zkVerifierTransactionStorage)
             log.info("Transaction ${wtx.id} has private components: creating and verifying ZKP")
-            zkService.verify(wtx, ledgerInterpreter.zkNetworkParameters, mode)
+            zkService.verify(wtx, ledgerInterpreter.zkNetworkParameters)
         }
         log.info("Transaction ${wtx.id} verified")
 
