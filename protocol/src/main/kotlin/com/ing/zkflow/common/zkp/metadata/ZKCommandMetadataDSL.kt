@@ -187,6 +187,8 @@ class ZKCommandMetadata(val commandKClass: KClass<out ZKCommandData>) {
     internal val references = ZKReferenceList()
     internal val outputs = ZKProtectedComponentList()
 
+    var command = false
+    var notary = false
     var timeWindow = false
 
     fun circuit(init: ZKCircuit.() -> Unit): ZKCircuit {
@@ -205,7 +207,9 @@ class ZKCommandMetadata(val commandKClass: KClass<out ZKCommandData>) {
         inputs.toList(),
         references.toList(),
         outputs.toList(),
-        timeWindow
+        command,
+        notary,
+        timeWindow,
     )
 }
 

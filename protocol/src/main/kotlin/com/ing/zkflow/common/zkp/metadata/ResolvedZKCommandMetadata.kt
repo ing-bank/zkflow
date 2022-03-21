@@ -7,6 +7,7 @@ import net.corda.core.contracts.ContractClassName
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.TransactionState
+import net.corda.core.crypto.Crypto
 import net.corda.core.transactions.LedgerTransaction
 import java.io.File
 import java.time.Duration
@@ -36,6 +37,8 @@ data class ResolvedZKCommandMetadata(
     val inputs: List<ZKReference>,
     val references: List<ZKReference>,
     val outputs: List<ZKProtectedComponent>,
+    val command: Boolean,
+    val notary: Boolean,
     val timeWindow: Boolean,
 ) {
     val networkParameters = true
@@ -87,7 +90,7 @@ data class ResolvedZKCommandMetadata(
      */
     fun verify(txb: ZKTransactionBuilder) {
         try {
-            // TODO verifyCommandsAndSigners(txb.commands())
+            verifyCommandsAndSigners(txb)
             verifyOutputs(txb.outputStates())
             verifyInputs(txb.inputsWithTransactionState)
             verifyReferences(txb.referencesWithTransactionState)
@@ -98,28 +101,23 @@ data class ResolvedZKCommandMetadata(
         }
     }
 
-// TODO some command may require access to Command components inside circuit, that should be implemented
-//
-//    private fun verifyCommandsAndSigners(unverifiedCommands: List<Command<*>>) {
-//        commands.forEachIndexed { index, expectedCommandMetadata ->
-//            val actualCommand = unverifiedCommands.getOrElse(index) { error("Expected to find a command at index $index, nothing found") }
-//
-//            require(actualCommand.value::class == expectedCommandMetadata.commandKClass) {
-//                "Expected command at index $index to be '${expectedCommandMetadata.commandKClass}', but found '${actualCommand.value::class}'"
-//            }
-//
-//            require(actualCommand.signers.size == expectedCommandMetadata.numberOfSigners) {
-//                "Expected '${expectedCommandMetadata.numberOfSigners} signers for command $actualCommand, but found '${actualCommand.signers.size}'."
-//            }
-//
-//            actualCommand.signers.forEachIndexed { signerIndex, key ->
-//                val actualScheme = Crypto.findSignatureScheme(key)
-//                require(actualScheme == expectedCommandMetadata.zkNetwork.participantSignatureScheme) {
-//                    "Signer $signerIndex of command '${actualCommand.value::class}' should use signature scheme: '${expectedCommandMetadata.zkNetwork.participantSignatureScheme.schemeCodeName}, but found '${actualScheme.schemeCodeName}'"
-//                }
-//            }
-//        }
-//    }
+    private fun verifyCommandsAndSigners(txb: ZKTransactionBuilder) {
+        val unverifiedCommands = txb.commands()
+        val actualCommand = unverifiedCommands.find {
+            it.value::class == commandKClass
+        } ?: error("Transaction does not include a Command with type $commandKClass")
+
+        require(actualCommand.signers.size == numberOfSigners) {
+            "Expected '$numberOfSigners signers for command $actualCommand, but found '${actualCommand.signers.size}'."
+        }
+
+        actualCommand.signers.forEachIndexed { signerIndex, key ->
+            val actualScheme = Crypto.findSignatureScheme(key)
+            require(actualScheme == txb.zkNetworkParameters.participantSignatureScheme) {
+                "Signer $signerIndex of command '${actualCommand.value::class}' should use signature scheme: '${txb.zkNetworkParameters.participantSignatureScheme.schemeCodeName}, but found '${actualScheme.schemeCodeName}'"
+            }
+        }
+    }
 
     class IllegalTransactionStructureException(cause: Throwable) :
         IllegalArgumentException("Transaction does not match expected structure: ${cause.message}", cause)
@@ -168,6 +166,10 @@ data class ResolvedZKCommandMetadata(
             ComponentGroupEnum.INPUTS_GROUP.ordinal -> inputs.any { it.index == componentIndex } // Here we return UTXO visibility, not StateRef visibility (StateRefs never go to witness)
             ComponentGroupEnum.REFERENCES_GROUP.ordinal -> references.any { it.index == componentIndex } // Here we return UTXO visibility, not StateRef visibility (StateRefs never go to witness)
             ComponentGroupEnum.OUTPUTS_GROUP.ordinal -> outputs.any { it.index == componentIndex }
+            ComponentGroupEnum.COMMANDS_GROUP.ordinal -> command
+            ComponentGroupEnum.NOTARY_GROUP.ordinal -> notary
+            ComponentGroupEnum.TIMEWINDOW_GROUP.ordinal -> timeWindow
+            ComponentGroupEnum.SIGNERS_GROUP.ordinal -> numberOfSigners > 0
             else -> false // other groups are not part of the witness for now, may change in the future.
         }
     }

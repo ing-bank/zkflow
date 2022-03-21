@@ -24,6 +24,7 @@ import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
+import java.time.Instant
 import java.util.Random
 
 class StateVisibilityContractTest {
@@ -45,11 +46,14 @@ class StateVisibilityContractTest {
                 input("Alice's Private Asset")
                 output(LocalContract.PROGRAM_ID, bobAsset)
                 command(listOf(alice.owningKey, bob.owningKey), LocalContract.MoveFullyPrivate())
+                timeWindow(Instant.now())
                 verifies()
             }
             verifies()
         }
     }
+
+    // TODO Add tests here for signers and command verification
 
     @Test
     fun `Move any to private`() {
@@ -251,6 +255,9 @@ class LocalContract : Contract {
                 private(ZKTestState::class) at 0
             }
             numberOfSigners = 2
+            timeWindow = true
+            notary = true
+            command = true
         }
     }
 }
