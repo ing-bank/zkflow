@@ -190,6 +190,7 @@ class ZKCommandMetadata(val commandKClass: KClass<out ZKCommandData>) {
     var command = false
     var notary = false
     var timeWindow = false
+    var parameters = false
 
     fun circuit(init: ZKCircuit.() -> Unit): ZKCircuit {
         circuit = ZKCircuit().apply(init)
@@ -210,6 +211,7 @@ class ZKCommandMetadata(val commandKClass: KClass<out ZKCommandData>) {
         command,
         notary,
         timeWindow,
+        parameters,
     )
 }
 

@@ -1,7 +1,10 @@
 package com.ing.zkflow.common.zkp.metadata
 
 import com.ing.zkflow.common.contracts.ZKCommandData
+import com.ing.zkflow.common.network.ZKNetworkParameters
+import com.ing.zkflow.common.network.ZKNetworkParametersServiceLoader
 import com.ing.zkflow.common.transactions.ZKTransactionBuilder
+import net.corda.core.contracts.Command
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.ContractClassName
 import net.corda.core.contracts.ContractState
@@ -40,6 +43,7 @@ data class ResolvedZKCommandMetadata(
     val command: Boolean,
     val notary: Boolean,
     val timeWindow: Boolean,
+    val parameters: Boolean,
 ) {
     val networkParameters = true
     val commandSimpleName: String by lazy { commandKClass.simpleName ?: error("Command classes must be a named class") }
@@ -72,7 +76,8 @@ data class ResolvedZKCommandMetadata(
      */
     fun verify(ltx: LedgerTransaction) {
         try {
-            // TODO verifyCommandsAndSigners(ltx.commands.map { Command(it.value, it.signers) })
+            // TODO this is a hack always using the latest, how to get the actual ZKNetworkParameters here?
+            verifyCommandsAndSigners(ltx.commands.map { Command(it.value, it.signers) }, ZKNetworkParametersServiceLoader.latest)
             verifyOutputs(ltx.outputs)
             verifyInputs(ltx.inputs)
             verifyReferences(ltx.references)
@@ -90,7 +95,7 @@ data class ResolvedZKCommandMetadata(
      */
     fun verify(txb: ZKTransactionBuilder) {
         try {
-            verifyCommandsAndSigners(txb)
+            verifyCommandsAndSigners(txb.commands(), txb.zkNetworkParameters)
             verifyOutputs(txb.outputStates())
             verifyInputs(txb.inputsWithTransactionState)
             verifyReferences(txb.referencesWithTransactionState)
@@ -101,8 +106,7 @@ data class ResolvedZKCommandMetadata(
         }
     }
 
-    private fun verifyCommandsAndSigners(txb: ZKTransactionBuilder) {
-        val unverifiedCommands = txb.commands()
+    private fun verifyCommandsAndSigners(unverifiedCommands: List<Command<*>>, zkNetworkParameters: ZKNetworkParameters) {
         val actualCommand = unverifiedCommands.find {
             it.value::class == commandKClass
         } ?: error("Transaction does not include a Command with type $commandKClass")
@@ -111,10 +115,11 @@ data class ResolvedZKCommandMetadata(
             "Expected '$numberOfSigners signers for command $actualCommand, but found '${actualCommand.signers.size}'."
         }
 
+        val participantSignatureScheme = zkNetworkParameters.participantSignatureScheme
         actualCommand.signers.forEachIndexed { signerIndex, key ->
             val actualScheme = Crypto.findSignatureScheme(key)
-            require(actualScheme == txb.zkNetworkParameters.participantSignatureScheme) {
-                "Signer $signerIndex of command '${actualCommand.value::class}' should use signature scheme: '${txb.zkNetworkParameters.participantSignatureScheme.schemeCodeName}, but found '${actualScheme.schemeCodeName}'"
+            require(actualScheme == participantSignatureScheme) {
+                "Signer $signerIndex of command '${actualCommand.value::class}' should use signature scheme: '${participantSignatureScheme.schemeCodeName}, but found '${actualScheme.schemeCodeName}'"
             }
         }
     }
@@ -170,6 +175,7 @@ data class ResolvedZKCommandMetadata(
             ComponentGroupEnum.NOTARY_GROUP.ordinal -> notary
             ComponentGroupEnum.TIMEWINDOW_GROUP.ordinal -> timeWindow
             ComponentGroupEnum.SIGNERS_GROUP.ordinal -> numberOfSigners > 0
+            ComponentGroupEnum.PARAMETERS_GROUP.ordinal -> parameters
             else -> false // other groups are not part of the witness for now, may change in the future.
         }
     }

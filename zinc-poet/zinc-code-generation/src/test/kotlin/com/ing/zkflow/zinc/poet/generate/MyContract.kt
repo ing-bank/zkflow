@@ -20,7 +20,11 @@ object MyContract : Contract {
             circuit {
                 name = this::class.simpleName!!
             }
-            numberOfSigners = 1
+            numberOfSigners = 2
+            command = true
+            notary = true
+            timeWindow = true
+            parameters = true
             inputs {
                 any(MyState::class) at 0
                 any(MyState::class) at 1

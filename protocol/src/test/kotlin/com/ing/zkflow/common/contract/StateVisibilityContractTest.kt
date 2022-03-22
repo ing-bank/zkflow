@@ -258,6 +258,7 @@ class LocalContract : Contract {
             timeWindow = true
             notary = true
             command = true
+            parameters = true
         }
     }
 }

@@ -65,9 +65,7 @@ class TransactionComponentContainer(
         ArrayTransactionComponent(
             TIME_WINDOW,
             wrapTxComponent(TIME_WINDOW, timeWindow),
-            whenVisibleInWitness(ComponentGroupEnum.TIMEWINDOW_GROUP) {
-                if (commandMetadata.timeWindow) 1 else 0
-            },
+            whenVisibleInWitness(ComponentGroupEnum.TIMEWINDOW_GROUP) { 1 },
             ComponentGroupEnum.TIMEWINDOW_GROUP
         )
     internal val signerGroup =
