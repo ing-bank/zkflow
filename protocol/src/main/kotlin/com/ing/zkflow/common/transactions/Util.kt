@@ -296,7 +296,13 @@ private fun SignedTransaction.zkVerifyRegularTransaction(
     val ltx = zkToLedgerTransaction(services, checkSufficientSignatures)
     // This fails with a weird db access error, so we use ltx.verify
     // services.transactionVerifierService.verify(ltx).getOrThrow()
+
+    // Check contract rules for public components
     ltx.verify()
+
+    // Check contract rules for private components
+    val zkService: ZKTransactionService = services.getCordaServiceFromConfig(ServiceNames.ZK_TX_SERVICE)
+    zkService.run(tx)
 }
 
 fun SignedTransaction.zkToLedgerTransaction(

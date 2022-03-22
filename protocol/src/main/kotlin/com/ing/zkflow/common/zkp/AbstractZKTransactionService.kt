@@ -52,6 +52,22 @@ abstract class AbstractZKTransactionService(val serviceHub: ServiceHub) : ZKTran
         return ZKVerifierTransaction.fromWireTransaction(wtx, proofs)
     }
 
+    override fun run(wtx: WireTransaction) {
+
+        val zkTransactionMetadata = wtx.zkTransactionMetadata()
+        val vtx = ZKVerifierTransaction.fromWireTransaction(wtx, emptyMap()) // create vtx without proofs just to be able to build witness and public input
+
+        zkTransactionMetadata.commands.forEach { command ->
+            val witness = Witness.fromWireTransaction(
+                wtx,
+                serviceHub.collectUtxoInfos(wtx.inputs),
+                serviceHub.collectUtxoInfos(wtx.references),
+                command
+            )
+            zkServiceForCommandMetadata(command).run(witness, calculatePublicInput(vtx, command))
+        }
+    }
+
     abstract override fun zkServiceForCommandMetadata(metadata: ResolvedZKCommandMetadata): ZKService
 
     override fun verify(svtx: SignedZKVerifierTransaction, checkSufficientSignatures: Boolean) {
