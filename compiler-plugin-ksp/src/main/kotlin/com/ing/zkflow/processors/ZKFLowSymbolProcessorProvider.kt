@@ -17,12 +17,14 @@ class ZKFLowSymbolProcessorProvider : SymbolProcessorProvider {
 
         val contractStateRegistryProcessor = SerializerRegistryProcessor(
             ZKContractState::class, // For now only ZKContractState, this may change to ContractState when we have @ZKPSurrogate for toplevel ContractStates
+            emptySet(),
             ContractStateSerializerRegistryProvider::class,
             environment.codeGenerator
         )
 
         val commandDataRegistryProcessor = SerializerRegistryProcessor(
             ZKCommandData::class, // For now only ZKCommandData, this may change to CommandData when we have @ZKPSurrogate for toplevel CommandData
+            emptySet(),
             CommandDataSerializerRegistryProvider::class,
             environment.codeGenerator
         )

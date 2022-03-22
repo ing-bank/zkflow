@@ -13,9 +13,9 @@ import kotlin.reflect.KClass
  * Implementation of [KSAbstractVisitor] that looks for implementations of [interfaceClasses].
  */
 class ImplementationsVisitor(
-    private val interfaceClasses: List<KClass<*>>
-) : KSAbstractVisitor<ScopedDeclaration?, Map<KClass<*>, List<ScopedDeclaration>>>() {
-    override fun defaultVisit(annotated: KSNode, data: ScopedDeclaration?) = emptyMap<KClass<*>, List<ScopedDeclaration>>()
+    private val interfaceClasses: List<Set<KClass<*>>>
+) : KSAbstractVisitor<ScopedDeclaration?, Map<Set<KClass<*>>, List<ScopedDeclaration>>>() {
+    override fun defaultVisit(annotated: KSNode, data: ScopedDeclaration?) = emptyMap<Set<KClass<*>>, List<ScopedDeclaration>>()
 
     override fun visitFile(file: KSFile, data: ScopedDeclaration?) =
         visitDeclarationSequence(file.declarations, data)
@@ -23,21 +23,28 @@ class ImplementationsVisitor(
     override fun visitClassDeclaration(
         classDeclaration: KSClassDeclaration,
         data: ScopedDeclaration?
-    ): Map<KClass<*>, List<ScopedDeclaration>> {
+    ): Map<Set<KClass<*>>, List<ScopedDeclaration>> {
         val scopedDeclaration = ScopedDeclaration(data, classDeclaration)
 
-        val implementations = classDeclaration.getAllSuperTypes().mapNotNull { superType ->
-            interfaceClasses.find { interfaceClass ->
-                interfaceClass.qualifiedName == superType.declaration.qualifiedName?.asString()
-            }?.let {
-                Pair(it, listOf(scopedDeclaration))
-            }
-        }.toMap()
+//        val implementations = classDeclaration.getAllSuperTypes().mapNotNull { superType ->
+//            interfaceClasses.find { interfaceClass ->
+//                interfaceClass.qualifiedName == superType.declaration.qualifiedName?.asString()
+//            }?.let {
+//                Pair(it, listOf(scopedDeclaration))
+//            }
+//        }.toMap()
 
+        val superTypesSet = classDeclaration.getAllSuperTypes().map { it.declaration.qualifiedName?.asString() }.toSet()
+        val match = interfaceClasses.find { interfaceSet -> superTypesSet.containsAll(interfaceSet.map { it.qualifiedName }) }
+        val implementations = if (match != null) {
+            mapOf(match to listOf(scopedDeclaration))
+        } else {
+            emptyMap()
+        }
         return implementations.merge(visitDeclarationSequence(classDeclaration.declarations, scopedDeclaration))
     }
 
-    private fun visitDeclarationSequence(declarations: Sequence<KSDeclaration>, data: ScopedDeclaration?): Map<KClass<*>, List<ScopedDeclaration>> =
+    private fun visitDeclarationSequence(declarations: Sequence<KSDeclaration>, data: ScopedDeclaration?): Map<Set<KClass<*>>, List<ScopedDeclaration>> =
         declarations
             .filterIsInstance<KSClassDeclaration>()
             .fold(emptyMap()) { acc, file -> acc.merge(visitClassDeclaration(file, data)) }

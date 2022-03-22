@@ -1,7 +1,7 @@
 package com.ing.zkflow.processors
 
 import com.google.devtools.ksp.processing.CodeGenerator
-import com.ing.zkflow.common.serialization.ZKDataRegistryProvider
+import com.ing.zkflow.common.serialization.KClassSerializerProvider
 import com.ing.zkflow.ksp.implementations.ImplementationsProcessor
 import com.ing.zkflow.ksp.implementations.ScopedDeclaration
 import com.ing.zkflow.ksp.implementations.ServiceLoaderRegistration
@@ -23,7 +23,8 @@ import kotlin.reflect.KClass
 
 class SerializerRegistryProcessor<T : Any>(
     override val interfaceClass: KClass<T>,
-    private val mapProviderInterface: KClass<out ZKDataRegistryProvider<in T>>,
+    override val additionalInterfaces: Set<KClass<Any>>,
+    private val mapProviderInterface: KClass<out KClassSerializerProvider<in T>>,
     private val codeGenerator: CodeGenerator
 ) : ImplementationsProcessor<T> {
     private val packageName = "com.ing.zkflow.serialization.infra"

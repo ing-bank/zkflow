@@ -23,6 +23,7 @@ import java.io.BufferedOutputStream
 import java.io.ByteArrayOutputStream
 import java.nio.charset.StandardCharsets
 import java.nio.file.Paths
+import kotlin.reflect.KClass
 
 class VersionedInterfaceProvider : SymbolProcessorProvider {
     override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor {
@@ -39,6 +40,7 @@ class VersionedInterfaceProvider : SymbolProcessorProvider {
 class VersionedInterfaceProviderProcessor(val codeGenerator: CodeGenerator) :
     ImplementationsProcessor<Versioned> {
     override val interfaceClass = Versioned::class
+    override val additionalInterfaces: Set<KClass<Any>> = emptySet()
     override fun process(implementations: List<ScopedDeclaration>): ServiceLoaderRegistration {
         val declarations = implementations.map { it.declaration }
         val familyNames =

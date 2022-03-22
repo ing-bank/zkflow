@@ -30,13 +30,18 @@ import kotlin.reflect.KClass
  * At runtime, all such providers will be picked up and injected to
  * [BFLSerializationScheme]
  */
-interface ZKDataRegistryProvider<T : Any> {
+interface KClassSerializerProvider<T : Any> {
     fun list(): List<Pair<KClass<out T>, KSerializer<out T>>>
 }
 
-interface SurrogateSerializerRegistryProvider : ZKDataRegistryProvider<Any>
-interface ContractStateSerializerRegistryProvider : ZKDataRegistryProvider<ContractState>
-interface CommandDataSerializerRegistryProvider : ZKDataRegistryProvider<CommandData>
+
+interface KClassIdProvider<T : Any> {
+    fun list(): List<Pair<KClass<out T>, Int>>
+}
+
+interface ContractStateIdRegistryProvider : KClassIdProvider<ContractState>
+interface ContractStateSerializerRegistryProvider : KClassSerializerProvider<ContractState>
+interface CommandDataSerializerRegistryProvider : KClassSerializerProvider<CommandData>
 
 abstract class SerializerRegistry<T : Any> {
     private val log = LoggerFactory.getLogger(this::class.java)

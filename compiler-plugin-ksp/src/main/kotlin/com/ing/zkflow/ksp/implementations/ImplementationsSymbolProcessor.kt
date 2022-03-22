@@ -22,7 +22,7 @@ class ImplementationsSymbolProcessor(
     private val metaInfServiceRegister = MetaInfServiceRegister(codeGenerator)
 
     private val implementationsVisitor = ImplementationsVisitor(
-        implementationsProcessors.map { it.interfaceClass }.distinct()
+        implementationsProcessors.map { it.allInterfaces }.distinct()
     )
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
@@ -34,12 +34,12 @@ class ImplementationsSymbolProcessor(
         visitedFiles.addAll(newFiles)
 
         newFiles
-            .fold(emptyMap<KClass<*>, List<ScopedDeclaration>>()) { acc, file ->
+            .fold(emptyMap<Set<KClass<*>>, List<ScopedDeclaration>>()) { acc, file ->
                 acc.merge(implementationsVisitor.visitFile(file, null))
             }
-            .forEach { (kClass, implementations) ->
+            .forEach { (kClassSet, implementations) ->
                 implementationsProcessors
-                    .filter { it.interfaceClass == kClass }
+                    .filter { it.allInterfaces == kClassSet }
                     .map { it.process(implementations) }
                     .forEach {
                         if (it.implementations.isNotEmpty()) {
