@@ -187,10 +187,29 @@ class ZKCommandMetadata(val commandKClass: KClass<out ZKCommandData>) {
     internal val references = ZKReferenceList()
     internal val outputs = ZKProtectedComponentList()
 
+    /**
+     * Flag that controls whether to make the command data of this command visible both publicly and privately.
+     * `false` means only publicly, `true` means both publicly and privately.
+     */
     var command = false
+
+    /**
+     * Flag that controls whether to make the notary group visible both publicly and privately.
+     * `false` means only publicly, `true` means both publicly and privately.
+     */
     var notary = false
+
+    /**
+     * Flag that controls whether to make the timeWindow group visible both publicly and privately.
+     * `false` means only publicly, `true` means both publicly and privately.
+     */
     var timeWindow = false
-    var parameters = false
+
+    /**
+     * Flag that controls whether to make the parameters group visible both publicly and privately.
+     * `false` means only publicly, `true` means both publicly and privately.
+     */
+    var networkParameters = false
 
     fun circuit(init: ZKCircuit.() -> Unit): ZKCircuit {
         circuit = ZKCircuit().apply(init)
@@ -211,7 +230,7 @@ class ZKCommandMetadata(val commandKClass: KClass<out ZKCommandData>) {
         command,
         notary,
         timeWindow,
-        parameters,
+        networkParameters,
     )
 }
 

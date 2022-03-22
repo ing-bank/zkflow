@@ -24,7 +24,7 @@ object MyContract : Contract {
             command = true
             notary = true
             timeWindow = true
-            parameters = true
+            networkParameters = true
             inputs {
                 any(MyState::class) at 0
                 any(MyState::class) at 1

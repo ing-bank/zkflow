@@ -76,16 +76,15 @@ class ZKVerifierTransaction internal constructor(
     /**
      * Convenience function to get component hashes, to be used in the public input generation
      */
-    fun getFilteredComponentGroupHashes(
+    fun visibleInWitnessComponentHashes(
         commandMetadata: ResolvedZKCommandMetadata,
         group: ComponentGroupEnum,
     ): List<SecureHash> {
         return filteredComponentGroups
             .find { it.groupIndex == group.ordinal }
             ?.allComponentHashes(digestService)
-            ?.takeIf {
-                commandMetadata.isVisibleInWitness(group.ordinal, 0)
-            } ?: emptyList()
+            ?.filterIndexed { index, _ -> commandMetadata.isVisibleInWitness(group.ordinal, index) }
+            ?: emptyList()
     }
 
     override fun hashCode(): Int = id.hashCode()

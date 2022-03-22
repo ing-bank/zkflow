@@ -102,12 +102,12 @@ abstract class AbstractZKTransactionService(val serviceHub: ServiceHub) : ZKTran
 
         return PublicInput(
             outputComponentHashes = privateOutputHashes,
-            attachmentComponentHashes = tx.getFilteredComponentGroupHashes(commandMetadata, ComponentGroupEnum.ATTACHMENTS_GROUP),
-            commandComponentHashes = tx.getFilteredComponentGroupHashes(commandMetadata, ComponentGroupEnum.COMMANDS_GROUP),
-            notaryComponentHashes = tx.getFilteredComponentGroupHashes(commandMetadata, ComponentGroupEnum.NOTARY_GROUP),
-            parametersComponentHashes = tx.getFilteredComponentGroupHashes(commandMetadata, ComponentGroupEnum.PARAMETERS_GROUP),
-            timeWindowComponentHashes = tx.getFilteredComponentGroupHashes(commandMetadata, ComponentGroupEnum.TIMEWINDOW_GROUP),
-            signersComponentHashes = tx.getFilteredComponentGroupHashes(commandMetadata, ComponentGroupEnum.SIGNERS_GROUP),
+            attachmentComponentHashes = tx.visibleInWitnessComponentHashes(commandMetadata, ComponentGroupEnum.ATTACHMENTS_GROUP),
+            commandComponentHashes = tx.visibleInWitnessComponentHashes(commandMetadata, ComponentGroupEnum.COMMANDS_GROUP),
+            notaryComponentHashes = tx.visibleInWitnessComponentHashes(commandMetadata, ComponentGroupEnum.NOTARY_GROUP),
+            parametersComponentHashes = tx.visibleInWitnessComponentHashes(commandMetadata, ComponentGroupEnum.PARAMETERS_GROUP),
+            timeWindowComponentHashes = tx.visibleInWitnessComponentHashes(commandMetadata, ComponentGroupEnum.TIMEWINDOW_GROUP),
+            signersComponentHashes = tx.visibleInWitnessComponentHashes(commandMetadata, ComponentGroupEnum.SIGNERS_GROUP),
 
             inputUtxoHashes = privateInputHashes,
             referenceUtxoHashes = privateReferenceHashes

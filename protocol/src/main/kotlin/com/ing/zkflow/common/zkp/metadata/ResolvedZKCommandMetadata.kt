@@ -11,10 +11,12 @@ import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.TransactionState
 import net.corda.core.crypto.Crypto
+import net.corda.core.identity.Party
 import net.corda.core.transactions.LedgerTransaction
 import java.io.File
 import java.time.Duration
 import kotlin.reflect.KClass
+import kotlin.reflect.jvm.jvmName
 
 data class ResolvedZKCircuit(
     val commandKClass: KClass<out ZKCommandData>,
@@ -43,9 +45,8 @@ data class ResolvedZKCommandMetadata(
     val command: Boolean,
     val notary: Boolean,
     val timeWindow: Boolean,
-    val parameters: Boolean,
+    val networkParameters: Boolean,
 ) {
-    val networkParameters = true
     val commandSimpleName: String by lazy { commandKClass.simpleName ?: error("Command classes must be a named class") }
     val contractClassNames: List<ContractClassName>
         get() {
@@ -77,12 +78,12 @@ data class ResolvedZKCommandMetadata(
     fun verify(ltx: LedgerTransaction) {
         try {
             // TODO this is a hack always using the latest, how to get the actual ZKNetworkParameters here?
-            verifyCommandsAndSigners(ltx.commands.map { Command(it.value, it.signers) }, ZKNetworkParametersServiceLoader.latest)
+            val zkNetworkParameters = ZKNetworkParametersServiceLoader.latest
+            verifyCommandsAndSigners(ltx.commands.map { Command(it.value, it.signers) }, zkNetworkParameters)
             verifyOutputs(ltx.outputs)
             verifyInputs(ltx.inputs)
             verifyReferences(ltx.references)
-            // TODO verifyNotary(ltx.notary)
-            // TODO verifyParameters(ltx)
+            verifyNotary(ltx.notary, zkNetworkParameters)
         } catch (e: IllegalArgumentException) {
             throw IllegalTransactionStructureException(e)
         }
@@ -99,10 +100,19 @@ data class ResolvedZKCommandMetadata(
             verifyOutputs(txb.outputStates())
             verifyInputs(txb.inputsWithTransactionState)
             verifyReferences(txb.referencesWithTransactionState)
-            // TODO verifyNotary(txb)
-            // TODO verifyParameters(txb)
+            verifyNotary(txb.notary, txb.zkNetworkParameters)
         } catch (e: IllegalArgumentException) {
             throw IllegalTransactionStructureException(e)
+        }
+    }
+
+    private fun verifyNotary(notary: Party?, zkNetworkParameters: ZKNetworkParameters) {
+        notary?.let {
+            val notarySignatureScheme = zkNetworkParameters.notaryInfo.signatureScheme
+            val actualScheme = Crypto.findSignatureScheme(it.owningKey)
+            require(actualScheme == notarySignatureScheme) {
+                "Notary should use signature scheme: '${notarySignatureScheme.schemeCodeName}, but found '${actualScheme.schemeCodeName}'"
+            }
         }
     }
 
@@ -112,7 +122,7 @@ data class ResolvedZKCommandMetadata(
         } ?: error("Transaction does not include a Command with type $commandKClass")
 
         require(actualCommand.signers.size == numberOfSigners) {
-            "Expected '$numberOfSigners signers for command $actualCommand, but found '${actualCommand.signers.size}'."
+            "Expected '$numberOfSigners' signers for command ${actualCommand.value::class.jvmName}, but found '${actualCommand.signers.size}'."
         }
 
         val participantSignatureScheme = zkNetworkParameters.participantSignatureScheme
@@ -175,7 +185,7 @@ data class ResolvedZKCommandMetadata(
             ComponentGroupEnum.NOTARY_GROUP.ordinal -> notary
             ComponentGroupEnum.TIMEWINDOW_GROUP.ordinal -> timeWindow
             ComponentGroupEnum.SIGNERS_GROUP.ordinal -> numberOfSigners > 0
-            ComponentGroupEnum.PARAMETERS_GROUP.ordinal -> parameters
+            ComponentGroupEnum.PARAMETERS_GROUP.ordinal -> networkParameters
             else -> false // other groups are not part of the witness for now, may change in the future.
         }
     }
