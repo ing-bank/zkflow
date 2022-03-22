@@ -35,6 +35,7 @@ import kotlin.reflect.KClass
 
 class SurrogateSerializerGenerator(private val codeGenerator: CodeGenerator) : ImplementationsProcessor<Surrogate<*>> {
     override val interfaceClass = Surrogate::class
+    override val additionalInterfaces: Set<KClass<Any>> = emptySet()
     private val mapProviderInterface = SurrogateSerializerRegistryProvider::class
     private val packageName = Surrogate.GENERATED_SURROGATE_SERIALIZER_PACKAGE_NAME
 

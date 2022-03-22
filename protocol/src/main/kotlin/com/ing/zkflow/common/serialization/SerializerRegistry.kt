@@ -34,10 +34,11 @@ interface KClassSerializerProvider<T : Any> {
     fun list(): List<Pair<KClass<out T>, KSerializer<out T>>>
 }
 
-
 interface KClassIdProvider<T : Any> {
     fun list(): List<Pair<KClass<out T>, Int>>
 }
+
+interface SurrogateSerializerRegistryProvider : KClassSerializerProvider<Any>
 
 interface ContractStateIdRegistryProvider : KClassIdProvider<ContractState>
 interface ContractStateSerializerRegistryProvider : KClassSerializerProvider<ContractState>
