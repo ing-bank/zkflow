@@ -192,6 +192,10 @@ fun PartialMerkleTree.getComponentHash(componentIndex: Int): SecureHash {
 
 @Throws(AttachmentResolutionException::class, TransactionResolutionException::class)
 @DeleteForDJVM
+/**
+ * Attention! Resulting LTX will differ from LTX that would be created from base WireTransaction, because we don't have access
+ * to private UTXOs and outputs. Specifically, this means that component indexes of the outputs/utxos will be different.
+ */
 fun TraversableTransaction.zkToLedgerTransaction(
     services: ServiceHub
 ): LedgerTransaction {
@@ -227,6 +231,7 @@ fun TraversableTransaction.zkToLedgerTransaction(
     }
 
     val serializedResolvedInputs = inputs.map { ref ->
+        // TODO don't fail when resolving components that were private in previous tx
         SerializedStateAndRef(resolveStateRefAsSerialized(ref) ?: throw TransactionResolutionException(ref.txhash), ref)
     }
     val resolvedInputs = serializedResolvedInputs.lazyMapped { star, _ -> star.toStateAndRef() }

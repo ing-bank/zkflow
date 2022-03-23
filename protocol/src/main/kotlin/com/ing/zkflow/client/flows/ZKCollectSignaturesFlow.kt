@@ -110,6 +110,8 @@ class ZKCollectSignaturesFlow @JvmOverloads constructor(
         // The signatures must be valid
         stx.verifySignaturesExcept(notSigned)
         // and the transaction must be valid.
+
+        TODO("use vefifier")
         stx.tx.zkToLedgerTransaction(serviceHub).verify()
 
         // Determine who still needs to sign.

@@ -90,9 +90,6 @@ abstract class AbstractZKTransactionService(val serviceHub: ServiceHub) : ZKTran
             }
         }
 
-        // Do all the normal Corda checks (including contract rules)
-        svtx.tx.zkToLedgerTransaction(serviceHub).verify()
-
         // Check signatures
         if (checkSufficientSignatures) {
             svtx.verifyRequiredSignatures()
