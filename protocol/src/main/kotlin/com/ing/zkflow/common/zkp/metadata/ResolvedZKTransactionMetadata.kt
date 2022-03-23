@@ -2,7 +2,6 @@ package com.ing.zkflow.common.zkp.metadata
 
 import com.ing.zkflow.common.transactions.ZKTransactionBuilder
 import net.corda.core.contracts.ComponentGroupEnum
-import net.corda.core.transactions.LedgerTransaction
 
 data class ResolvedZKTransactionMetadata(
     val commands: List<ResolvedZKCommandMetadata>
@@ -35,10 +34,6 @@ data class ResolvedZKTransactionMetadata(
         require(commands.isNotEmpty()) { ERROR_NO_COMMANDS }
         require(commands.distinctBy { it.commandKClass }.size == commands.size) { ERROR_COMMAND_NOT_UNIQUE }
         // TODO        TODO("TODO: Verify components visibility is aligned among different commands")
-    }
-
-    fun verify(ltx: LedgerTransaction) {
-        commands.forEach { it.verify(ltx) }
     }
 
     fun verify(ltx: ZKTransactionBuilder) {

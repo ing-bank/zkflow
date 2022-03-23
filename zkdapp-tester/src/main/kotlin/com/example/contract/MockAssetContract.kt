@@ -89,6 +89,6 @@ class MockAssetContract : Contract {
     }
 
     override fun verify(tx: LedgerTransaction) {
-        tx.zkTransactionMetadata().verify(tx)
+        // Contract verifications go here
     }
 }

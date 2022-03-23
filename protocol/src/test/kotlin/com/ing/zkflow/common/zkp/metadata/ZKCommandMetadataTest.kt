@@ -3,7 +3,6 @@ package com.ing.zkflow.common.zkp.metadata
 import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.contracts.ZKContractState
 import com.ing.zkflow.common.contracts.ZKOwnableState
-import com.ing.zkflow.common.transactions.zkTransactionMetadata
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import net.corda.core.contracts.BelongsToContract
@@ -147,6 +146,6 @@ class MockAssetContract : Contract {
     }
 
     override fun verify(tx: LedgerTransaction) {
-        tx.zkTransactionMetadata().verify(tx)
+        // Contract verifications go here
     }
 }

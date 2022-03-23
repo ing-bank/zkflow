@@ -2,7 +2,6 @@ package com.ing.zkflow.common.zkp.metadata
 
 import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.network.ZKNetworkParameters
-import com.ing.zkflow.common.network.ZKNetworkParametersServiceLoader
 import com.ing.zkflow.common.transactions.ZKTransactionBuilder
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.ComponentGroupEnum
@@ -12,7 +11,6 @@ import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.TransactionState
 import net.corda.core.crypto.Crypto
 import net.corda.core.identity.Party
-import net.corda.core.transactions.LedgerTransaction
 import java.io.File
 import java.time.Duration
 import kotlin.reflect.KClass
@@ -73,26 +71,7 @@ data class ResolvedZKCommandMetadata(
     }
 
     /**
-     * Verify that the LedgerTransaction matches the expected structure defined in this metadata
-     */
-    fun verify(ltx: LedgerTransaction) {
-        try {
-            // TODO this is a hack always using the latest, how to get the actual ZKNetworkParameters here?
-            val zkNetworkParameters = ZKNetworkParametersServiceLoader.latest
-            verifyCommandsAndSigners(ltx.commands.map { Command(it.value, it.signers) }, zkNetworkParameters)
-            verifyOutputs(ltx.outputs)
-            verifyInputs(ltx.inputs)
-            verifyReferences(ltx.references)
-            verifyNotary(ltx.notary, zkNetworkParameters)
-        } catch (e: IllegalArgumentException) {
-            throw IllegalTransactionStructureException(e)
-        }
-    }
-
-    /**
      * Verify that the ZKTransactionBuilder matches the expected structure defined in this metadata
-     * TODO: See if we can make sure this is always called, perhaps by calling it just before calling contract.verify
-     * Alternatively, we can force users to extend ZKContract, which will do this for them and then delegate to normal verify function
      */
     fun verify(txb: ZKTransactionBuilder) {
         try {
