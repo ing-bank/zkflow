@@ -90,6 +90,13 @@ abstract class AbstractZKTransactionService(val serviceHub: ServiceHub) : ZKTran
     private fun verifyProofs(vtx: ZKVerifierTransaction) {
         // TODO Aleksei: should we add a check here that there is a proof/zkcommandata for each input and output that is in the metadata?
 
+        // Verify the ZKPs for all ZKCommandDatas in this transaction
+        verifyProofs(vtx)
+    }
+
+    private fun verifyProofs(vtx: ZKVerifierTransaction) {
+        // TODO Aleksei: should we add a check here that there is a proof/zkcommandata for each input and output that is in the metadata?
+
         // Check there is a proof for each ZKCommand
         vtx.commands.forEach { command ->
             if (command.value is ZKCommandData) {
