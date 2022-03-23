@@ -23,9 +23,9 @@ import net.corda.testing.node.internal.MockNetworkParametersStorage
 @JvmOverloads
 public fun ServiceHub.zkLedger(
     notary: Party = TestIdentity.fresh("ledger notary").party,
-    zkService: TestDSLZKTransactionService = TestDSLZincZKTransactionService(this),
     zkNetworkParameters: ZKNetworkParameters = MockZKNetworkParameters(),
     zkVerifierTransactionStorage: ZKWritableVerifierTransactionStorage = InMemoryZKVerifierTransactionStorage(),
+    zkService: TestDSLZKTransactionService = TestDSLZincZKTransactionService(this, zkVerifierTransactionStorage),
     script: ZKLedgerDSL<TestZKTransactionDSLInterpreter, TestZKLedgerDSLInterpreter>.() -> Unit
 ): ZKLedgerDSL<TestZKTransactionDSLInterpreter, TestZKLedgerDSLInterpreter> {
     val currentParameters = networkParametersService.run {

@@ -5,7 +5,7 @@ import com.ing.zkflow.client.flows.FetchZKTransactionsFlow
 import com.ing.zkflow.client.flows.ResolveZKTransactionsFlow
 import com.ing.zkflow.common.transactions.SignedZKVerifierTransaction
 import com.ing.zkflow.common.transactions.dependencies
-import com.ing.zkflow.common.zkp.ZKTransactionService
+import com.ing.zkflow.common.transactions.verification.ZKTransactionVerifierService
 import net.corda.core.crypto.SecureHash
 import net.corda.core.flows.FlowLogic
 import net.corda.core.internal.TransactionsResolver
@@ -101,7 +101,6 @@ class ZKTransactionsResolver(private val flow: ResolveZKTransactionsFlow) : Tran
     override fun recordDependencies(usedStatesToRecord: StatesToRecord) {
         val sortedDependencies = checkNotNull(this.sortedDependencies)
         logger.trace { "Recording ${sortedDependencies.size} dependencies for ${flow.txHashes.size} transactions" }
-        val zkService = flow.serviceHub.getCordaServiceFromConfig<ZKTransactionService>(ServiceNames.ZK_TX_SERVICE)
         val transactionStorage = flow.serviceHub.getCordaServiceFromConfig<ZKWritableVerifierTransactionStorage>(ServiceNames.ZK_VERIFIER_TX_STORAGE)
         for (txId in sortedDependencies) {
             // Retrieve and delete the transaction from the unverified store.
@@ -109,7 +108,13 @@ class ZKTransactionsResolver(private val flow: ResolveZKTransactionsFlow) : Tran
                 "Somehow the unverified transaction ($txId) that we stored previously is no longer there."
             }
             if (!isVerified) {
-                zkService.verify(tx, true)
+                val zkTransactionVerifierService = ZKTransactionVerifierService(
+                    flow.serviceHub,
+                    flow.serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_TX_SERVICE)
+                )
+
+                zkTransactionVerifierService.verify(tx, true)
+
                 transactionStorage.addTransaction(tx)
             } else {
                 logger.debug { "No need to record $txId as it's already been verified" }

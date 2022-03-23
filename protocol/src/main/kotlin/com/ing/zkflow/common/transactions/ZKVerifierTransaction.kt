@@ -13,7 +13,7 @@ import java.security.PublicKey
 
 @Suppress("LongParameterList")
 @CordaSerializable
-class ZKVerifierTransaction internal constructor(
+open class ZKVerifierTransaction internal constructor(
     override val id: SecureHash,
     val proofs: Map<ZKCommandClassName, Proof>,
     val filteredComponentGroups: List<ZKFilteredComponentGroup>,
@@ -30,7 +30,7 @@ class ZKVerifierTransaction internal constructor(
             // TODO: prevent notary field from being set if there are no inputs and no time-window.
             @Suppress("ComplexCondition")
             return if (notary != null && (inputs.isNotEmpty() || references.isNotEmpty() || timeWindow != null)) {
-                commandKeys + notary.owningKey
+                commandKeys + notary!!.owningKey
             } else {
                 commandKeys
             }
@@ -94,7 +94,6 @@ class ZKVerifierTransaction internal constructor(
         filteredComponentGroups.find { it.groupIndex == group.ordinal }?.privateComponentHashes?.contains(index) ?: false
 
     companion object {
-
         fun fromWireTransaction(wtx: WireTransaction, proofs: Map<String, ByteArray>): ZKVerifierTransaction {
             return ZKVerifierTransaction(
                 id = wtx.id,
@@ -119,6 +118,20 @@ class ZKVerifierTransaction internal constructor(
                     zkTransactionMetadata
                 )
             }
+        }
+    }
+}
+
+class ZKVerifierTransactionWithoutProofs internal constructor(
+    id: SecureHash,
+    filteredComponentGroups: List<ZKFilteredComponentGroup>,
+    digestService: DigestService
+) : ZKVerifierTransaction(id, emptyMap(), filteredComponentGroups, digestService) {
+
+    companion object {
+        fun fromWireTransaction(wtx: WireTransaction): ZKVerifierTransactionWithoutProofs {
+            val zkvtx = fromWireTransaction(wtx, emptyMap())
+            return ZKVerifierTransactionWithoutProofs(zkvtx.id, zkvtx.filteredComponentGroups, zkvtx.digestService)
         }
     }
 }

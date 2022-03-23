@@ -3,6 +3,7 @@
 package com.ing.zkflow.common.transactions
 
 import com.ing.zkflow.common.contracts.ZKCommandData
+import com.ing.zkflow.common.transactions.verification.ZKTransactionVerifierService
 import com.ing.zkflow.common.zkp.ZKTransactionService
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
 import com.ing.zkflow.node.services.ServiceNames
@@ -298,16 +299,12 @@ private fun SignedTransaction.zkVerifyRegularTransaction(
     services: ServiceHub,
     checkSufficientSignatures: Boolean,
 ) {
-    val ltx = zkToLedgerTransaction(services, checkSufficientSignatures)
-    // This fails with a weird db access error, so we use ltx.verify
-    // services.transactionVerifierService.verify(ltx).getOrThrow()
+    val zkTransactionVerifierService = ZKTransactionVerifierService(
+        services,
+        services.getCordaServiceFromConfig(ServiceNames.ZK_TX_SERVICE)
+    )
 
-    // Check contract rules for public components
-    ltx.verify()
-
-    // Check contract rules for private components
-    val zkService: ZKTransactionService = services.getCordaServiceFromConfig(ServiceNames.ZK_TX_SERVICE)
-    zkService.run(tx)
+    zkTransactionVerifierService.verify(this, checkSufficientSignatures)
 }
 
 fun SignedTransaction.zkToLedgerTransaction(

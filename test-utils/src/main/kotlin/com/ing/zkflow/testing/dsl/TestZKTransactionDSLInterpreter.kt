@@ -114,7 +114,8 @@ public data class TestZKTransactionDSLInterpreter private constructor(
     }
 
     // Hack to reuse the LedgerInterpreter's ZKTransactionService with the local ServiceHub, so transaction resolution will work.
-    private val zkService: TestDSLZKTransactionService = ledgerInterpreter.zkService::class.primaryConstructor!!.call(services)
+    private val zkService: TestDSLZKTransactionService =
+        ledgerInterpreter.zkService::class.primaryConstructor!!.call(services, ledgerInterpreter.zkVerifierTransactionStorage)
 
     private fun copy(): TestZKTransactionDSLInterpreter =
         TestZKTransactionDSLInterpreter(
