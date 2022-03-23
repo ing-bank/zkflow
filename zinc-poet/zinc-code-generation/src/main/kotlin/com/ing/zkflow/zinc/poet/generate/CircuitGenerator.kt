@@ -60,11 +60,15 @@ class CircuitGenerator(
         buildPath.createZargoToml(circuitName, "1.0.0")
 
         sequenceOf(witness, commandContext).allModules {
+            buildPath.zincSourceFile(this, codeGenerationOptions)
+        }
+
+        // Write the structure of the different component groups
+        codeGenerationOptions.witnessGroupOptions.forEach {
             // TODO Make debugging output optional, maybe configurable in [ZKNetworkParameters], or with System Property
             buildPath.ensureDirectory("structure")
-                .ensureFile("${getModuleName()}.txt")
-                .writeText(toStructureTree().toString())
-            buildPath.zincSourceFile(this, codeGenerationOptions)
+                .ensureFile("${it.type.getModuleName()}.txt")
+                .writeText(it.type.toStructureTree().toString())
         }
 
         constsFactory.generateConsts(buildPath, codeGenerationOptions)

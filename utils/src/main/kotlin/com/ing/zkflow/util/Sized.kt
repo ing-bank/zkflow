@@ -13,7 +13,7 @@ data class NodeDescriptor<T : Any>(
     }
 }
 
-val Tree<BflSized, BflSized>.bitSize: Int
+val Tree<out BflSized, out BflSized>.bitSize: Int
     get() = when (this) {
         is Tree.Leaf -> this.value.bitSize
         is Tree.Node -> this.value.bitSize
