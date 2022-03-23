@@ -10,6 +10,8 @@ import com.ing.zkflow.serialization.serializer.IntSerializer
 import com.ing.zkflow.serialization.serializer.corda.AnonymousPartySerializer
 import com.ing.zkflow.testing.dsl.zkLedger
 import com.ing.zkflow.util.tryNonFailing
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.shouldBe
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import net.corda.core.contracts.BelongsToContract
@@ -24,7 +26,9 @@ import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
+import java.time.Instant
 import java.util.Random
+import kotlin.reflect.jvm.jvmName
 
 class StateVisibilityContractTest {
     private val services = MockServices(listOf("com.ing.zkflow"))
@@ -45,10 +49,27 @@ class StateVisibilityContractTest {
                 input("Alice's Private Asset")
                 output(LocalContract.PROGRAM_ID, bobAsset)
                 command(listOf(alice.owningKey, bob.owningKey), LocalContract.MoveFullyPrivate())
+                timeWindow(Instant.now())
                 verifies()
             }
             verifies()
         }
+    }
+
+    @Test
+    fun `Move any to private - fails for invalid number of signers`() {
+        // TODO Even with the `fails with` clause this still throws an exception
+        val ex = shouldThrow<ResolvedZKCommandMetadata.IllegalTransactionStructureException> {
+            services.zkLedger {
+                transaction {
+                    input(LocalContract.PROGRAM_ID, aliceAsset)
+                    output(LocalContract.PROGRAM_ID, bobAsset)
+                    command(listOf(alice.owningKey), LocalContract.MoveAnyToPrivate())
+                    `fails with`("Expected '2' signers for command ${LocalContract.MoveAnyToPrivate::class.jvmName}, but found '1'.")
+                }
+            }
+        }
+        ex.message shouldBe "Transaction does not match expected structure: Expected '2' signers for command ${LocalContract.MoveAnyToPrivate::class.jvmName}, but found '1'."
     }
 
     @Test
@@ -251,6 +272,10 @@ class LocalContract : Contract {
                 private(ZKTestState::class) at 0
             }
             numberOfSigners = 2
+            timeWindow = true
+            notary = true
+            command = true
+            networkParameters = true
         }
     }
 }

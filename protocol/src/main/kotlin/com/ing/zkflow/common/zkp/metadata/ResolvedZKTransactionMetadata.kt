@@ -2,7 +2,6 @@ package com.ing.zkflow.common.zkp.metadata
 
 import com.ing.zkflow.common.transactions.ZKTransactionBuilder
 import net.corda.core.contracts.ComponentGroupEnum
-import net.corda.core.transactions.LedgerTransaction
 
 data class ResolvedZKTransactionMetadata(
     val commands: List<ResolvedZKCommandMetadata>
@@ -21,24 +20,10 @@ data class ResolvedZKTransactionMetadata(
     val outputs =
         commands.fold(mutableListOf<ZKProtectedComponent>()) { acc, command -> mergeComponentVisibility(acc, command.outputs) }
 
-    /**
-     * The total number of signers of all commands added up.
-     *
-     * In theory, they may overlap (be the same PublicKeys), but we can't determine that easily.
-     * Possible future optimization.
-     */
-    val numberOfSigners: Int by lazy { commands.sumOf { it.numberOfSigners } }
-
-    val hasTimeWindow: Boolean = commands.any { it.timeWindow }
-
     init {
         require(commands.isNotEmpty()) { ERROR_NO_COMMANDS }
         require(commands.distinctBy { it.commandKClass }.size == commands.size) { ERROR_COMMAND_NOT_UNIQUE }
         // TODO        TODO("TODO: Verify components visibility is aligned among different commands")
-    }
-
-    fun verify(ltx: LedgerTransaction) {
-        commands.forEach { it.verify(ltx) }
     }
 
     fun verify(ltx: ZKTransactionBuilder) {

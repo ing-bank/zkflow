@@ -7,6 +7,7 @@ import com.ing.zinc.poet.ZincArray.Companion.zincArray
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.common.zkp.metadata.ZKIndexedTypedElement
 import com.ing.zkflow.serialization.infra.CommandDataSerializationMetadata
+import com.ing.zkflow.serialization.infra.SignersSerializationMetadata
 import com.ing.zkflow.serialization.infra.TransactionStateSerializationMetadata
 import com.ing.zkflow.zinc.poet.generate.ZincTypeResolver
 import com.ing.zkflow.zinc.poet.generate.types.IndexedTransactionComponent
@@ -43,7 +44,7 @@ class TransactionComponentContainer(
     }
 
     internal val commandGroup =
-        StandardTransactionComponent(
+        ArrayTransactionComponent(
             COMMANDS,
             wrapTxComponent(
                 COMMANDS,
@@ -54,31 +55,28 @@ class TransactionComponentContainer(
             ComponentGroupEnum.COMMANDS_GROUP
         )
     internal val notaryGroup =
-        StandardTransactionComponent(
+        ArrayTransactionComponent(
             NOTARY,
             wrapTxComponent(NOTARY, standardTypes.notaryModule),
             whenVisibleInWitness(ComponentGroupEnum.NOTARY_GROUP) { 1 },
             ComponentGroupEnum.NOTARY_GROUP
         )
     internal val timeWindowGroup =
-        StandardTransactionComponent(
+        ArrayTransactionComponent(
             TIME_WINDOW,
             wrapTxComponent(TIME_WINDOW, timeWindow),
-            whenVisibleInWitness(ComponentGroupEnum.TIMEWINDOW_GROUP) {
-                if (commandMetadata.timeWindow) 1 else 0
-            },
+            whenVisibleInWitness(ComponentGroupEnum.TIMEWINDOW_GROUP) { 1 },
             ComponentGroupEnum.TIMEWINDOW_GROUP
         )
     internal val signerGroup =
-        StandardTransactionComponent(
+        ArrayTransactionComponent(
             SIGNERS,
-            wrapTxComponent(SIGNERS, standardTypes.signerModule),
-            // Assumption here is that either all 'numberOfSigners' signers are visible or none.
-            whenVisibleInWitness(ComponentGroupEnum.SIGNERS_GROUP) { commandMetadata.numberOfSigners },
+            wrapTxComponent(SIGNERS, standardTypes.signerList(commandMetadata), SignersSerializationMetadata.serializer().descriptor),
+            whenVisibleInWitness(ComponentGroupEnum.SIGNERS_GROUP) { 1 },
             ComponentGroupEnum.SIGNERS_GROUP
         )
     internal val parameterGroup =
-        StandardTransactionComponent(
+        ArrayTransactionComponent(
             PARAMETERS,
             wrapTxComponent(PARAMETERS, parametersSecureHash),
             whenVisibleInWitness(ComponentGroupEnum.PARAMETERS_GROUP) { 1 },

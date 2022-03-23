@@ -4,7 +4,6 @@ import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.annotations.corda.EdDSA
 import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.contracts.ZKOwnableState
-import com.ing.zkflow.common.transactions.zkTransactionMetadata
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.common.zkp.metadata.commandMetadata
 import com.ing.zkflow.integration.contract.TestContract.Create.Companion.verifyCreate
@@ -52,9 +51,6 @@ class TestContract : Contract {
                 tx: LedgerTransaction,
                 command: CommandWithParties<CommandData>
             ) {
-                // Transaction structure
-                tx.zkTransactionMetadata().verify(tx)
-
                 // Transaction contents
                 val output = tx.getOutput(0) as TestState
                 if (output.owner.owningKey !in command.signers) throw IllegalArgumentException("Failed requirement: the output state is owned by the command signer")
@@ -76,9 +72,6 @@ class TestContract : Contract {
                 tx: LedgerTransaction,
                 command: CommandWithParties<CommandData>
             ) {
-                // Transaction structure
-                tx.zkTransactionMetadata().verify(tx)
-
                 // Transaction contents
                 val output = tx.getOutput(0) as TestState
                 if (output.owner.owningKey !in command.signers) throw IllegalArgumentException("Failed requirement: the output state is owned by the command signer")
@@ -111,9 +104,6 @@ class TestContract : Contract {
                 tx: LedgerTransaction,
                 command: CommandWithParties<CommandData>
             ) {
-                // Transaction structure
-                tx.zkTransactionMetadata().verify(tx)
-
                 // Transaction contents
                 val output = tx.getOutput(0) as TestState
                 val input = tx.getInput(0) as TestState
@@ -138,9 +128,6 @@ class TestContract : Contract {
                 tx: LedgerTransaction,
                 command: CommandWithParties<CommandData>
             ) {
-                // Transaction structure
-                tx.zkTransactionMetadata().verify(tx)
-
                 // Transaction contents
                 val output = tx.getOutput(0) as TestState
                 val input = tx.getInput(0) as TestState
@@ -171,9 +158,6 @@ class TestContract : Contract {
                 tx: LedgerTransaction,
                 command: CommandWithParties<CommandData>
             ) {
-                // Transaction structure
-                tx.zkTransactionMetadata().verify(tx)
-
                 // Transaction contents
                 if (tx.inputsOfType<TestState>().sumBy { it.value } != tx.outputsOfType<TestState>()
                     .sumBy { it.value }

@@ -50,12 +50,12 @@ public class TestDSLZincZKTransactionService(serviceHub: ServiceHub) : TestDSLZK
 
         return PublicInput(
             outputComponentHashes = privateOutputHashes,
-            attachmentComponentHashes = tx.privateComponentHashes(ComponentGroupEnum.ATTACHMENTS_GROUP.ordinal),
-            commandComponentHashes = tx.privateComponentHashes(ComponentGroupEnum.COMMANDS_GROUP.ordinal),
-            notaryComponentHashes = tx.privateComponentHashes(ComponentGroupEnum.NOTARY_GROUP.ordinal),
-            parametersComponentHashes = tx.privateComponentHashes(ComponentGroupEnum.PARAMETERS_GROUP.ordinal),
-            timeWindowComponentHashes = tx.privateComponentHashes(ComponentGroupEnum.TIMEWINDOW_GROUP.ordinal),
-            signersComponentHashes = tx.privateComponentHashes(ComponentGroupEnum.SIGNERS_GROUP.ordinal),
+            attachmentComponentHashes = tx.visibleInWitnessComponentHashes(commandMetadata, ComponentGroupEnum.ATTACHMENTS_GROUP),
+            commandComponentHashes = tx.visibleInWitnessComponentHashes(commandMetadata, ComponentGroupEnum.COMMANDS_GROUP),
+            notaryComponentHashes = tx.visibleInWitnessComponentHashes(commandMetadata, ComponentGroupEnum.NOTARY_GROUP),
+            parametersComponentHashes = tx.visibleInWitnessComponentHashes(commandMetadata, ComponentGroupEnum.PARAMETERS_GROUP),
+            timeWindowComponentHashes = tx.visibleInWitnessComponentHashes(commandMetadata, ComponentGroupEnum.TIMEWINDOW_GROUP),
+            signersComponentHashes = tx.visibleInWitnessComponentHashes(commandMetadata, ComponentGroupEnum.SIGNERS_GROUP),
 
             inputUtxoHashes = privateInputHashes,
             referenceUtxoHashes = privateReferenceHashes

@@ -61,7 +61,7 @@ import java.util.UUID
 @Suppress("TooManyFunctions", "LongParameterList", "MemberVisibilityCanBePrivate") // Copy of TransactionBuilder API
 class ZKTransactionBuilder(
     val builder: TransactionBuilder,
-    private val zkNetworkParameters: ZKNetworkParameters? = null,
+    val zkNetworkParameters: ZKNetworkParameters = ZKNetworkParametersServiceLoader.latest,
     // TransactionBuilder does not expose `inputsWithTransactionState` and `referencesWithTransactionState`, which are required for the ordered TransactionBuilder
     // to sort the states by name.
     val inputsWithTransactionState: ArrayList<StateAndRef<ContractState>> = arrayListOf(),
@@ -124,7 +124,6 @@ class ZKTransactionBuilder(
      */
     fun toWireTransaction(services: ServicesForResolution): WireTransaction {
         val resolvedTransactionMetadata = this.verify()
-        val zkNetworkParameters = zkNetworkParameters ?: ZKNetworkParametersServiceLoader.latest
 
         val serializationProperties = mutableMapOf<Any, Any>(
             CONTEXT_KEY_ZK_NETWORK_PARAMETERS to zkNetworkParameters

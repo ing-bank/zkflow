@@ -1,5 +1,6 @@
 package com.ing.zkflow.common.transactions
 
+import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.crypto.DigestService
 import net.corda.core.crypto.MerkleTree
@@ -73,11 +74,18 @@ class ZKVerifierTransaction internal constructor(
         filteredComponentGroups.find { it.groupIndex == ComponentGroupEnum.OUTPUTS_GROUP.ordinal }?.allComponentHashes(digestService) ?: emptyList()
 
     /**
-     * Convenience interface to get private component hashes, to be used in the public input generation
-     * We cannot use lazy val here because delegated properties cannot be transient and we don't want to serialize them
+     * Convenience function to get component hashes, to be used in the public input generation
      */
-    fun privateComponentHashes(groupIndex: Int): List<SecureHash> =
-        filteredComponentGroups.find { it.groupIndex == groupIndex }?.privateComponentHashes?.values?.toList() ?: emptyList()
+    fun visibleInWitnessComponentHashes(
+        commandMetadata: ResolvedZKCommandMetadata,
+        group: ComponentGroupEnum,
+    ): List<SecureHash> {
+        return filteredComponentGroups
+            .find { it.groupIndex == group.ordinal }
+            ?.allComponentHashes(digestService)
+            ?.filterIndexed { index, _ -> commandMetadata.isVisibleInWitness(group.ordinal, index) }
+            ?: emptyList()
+    }
 
     override fun hashCode(): Int = id.hashCode()
     override fun equals(other: Any?) = if (other !is ZKVerifierTransaction) false else (this.id == other.id)

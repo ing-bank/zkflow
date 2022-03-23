@@ -20,7 +20,7 @@ import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.digest
 import com.ing.zkflow.zinc.poet.generate.types.Witness
 import net.corda.core.contracts.ComponentGroupEnum
 
-internal data class StandardTransactionComponent(
+internal data class ArrayTransactionComponent(
     override val groupName: String,
     val txComponent: BflWrappedTransactionComponent,
     private val groupSize: Int,

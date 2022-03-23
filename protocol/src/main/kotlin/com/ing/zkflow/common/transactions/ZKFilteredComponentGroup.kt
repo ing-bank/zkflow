@@ -25,8 +25,8 @@ import net.corda.core.utilities.OpaqueBytes
 data class ZKFilteredComponentGroup(
     override val groupIndex: Int,
     override val components: List<OpaqueBytes>,
-    val nonces: List<SecureHash>,
-    val privateComponentHashes: Map<Int, SecureHash>
+    private val nonces: List<SecureHash>,
+    internal val privateComponentHashes: Map<Int, SecureHash>
 ) : ComponentGroup(groupIndex, components) {
     init {
         check(components.size == nonces.size) { "Size of transaction components and nonces do not match" }

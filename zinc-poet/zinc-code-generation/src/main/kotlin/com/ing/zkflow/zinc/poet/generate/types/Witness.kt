@@ -28,7 +28,7 @@ import com.ing.zkflow.zinc.poet.generate.types.CommandContextFactory.Companion.C
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.componentGroupEnum
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.digest
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.privacySalt
-import com.ing.zkflow.zinc.poet.generate.types.witness.StandardTransactionComponent
+import com.ing.zkflow.zinc.poet.generate.types.witness.ArrayTransactionComponent
 import com.ing.zkflow.zinc.poet.generate.types.witness.TransactionComponent
 import com.ing.zkflow.zinc.poet.generate.types.witness.TransactionComponentContainer
 
@@ -115,11 +115,11 @@ class Witness(
             it.options
         }
 
-    private fun getStandardTransactionComponent() = txComponents
-        .filterIsInstance<StandardTransactionComponent>()
+    private fun getArrayTransactionComponent() = txComponents
+        .filterIsInstance<ArrayTransactionComponent>()
 
     override fun generateMethods(codeGenerationOptions: CodeGenerationOptions): List<ZincFunction> =
-        getStandardTransactionComponent().mapNotNull(StandardTransactionComponent::generateDeserializeMethod) +
+        getArrayTransactionComponent().mapNotNull(ArrayTransactionComponent::generateDeserializeMethod) +
             txComponents.mapNotNull(TransactionComponent::generateHashesMethod) +
             generateDeserializeMethod() +
             generateGenerateHashesMethod()
@@ -136,7 +136,7 @@ class Witness(
                 ${if (txComponentContainer.notaryGroup.isPresent) "$NOTARY: self.deserialize_$NOTARY()[0]," else "// $NOTARY is not present in transaction"}
                 ${if (txComponentContainer.timeWindowGroup.isPresent) "$TIME_WINDOW: self.deserialize_$TIME_WINDOW()[0]," else "// $TIME_WINDOW not present in transaction"}
                 ${if (txComponentContainer.parameterGroup.isPresent) "$PARAMETERS: self.deserialize_$PARAMETERS()[0]," else "// $PARAMETERS not present in transaction"}
-                ${if (txComponentContainer.signerGroup.isPresent) "$SIGNERS: ${standardTypes.signerList(commandMetadata).id}::list_of(self.deserialize_$SIGNERS())," else "// $SIGNERS not present in transaction"}
+                ${if (txComponentContainer.signerGroup.isPresent) "$SIGNERS: self.deserialize_$SIGNERS()[0]," else "// $SIGNERS not present in transaction"}
             }
         """.trimIndent()
     }

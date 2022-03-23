@@ -4,9 +4,7 @@ import java.util.ServiceLoader
 
 object ZKNetworkParametersServiceLoader {
     private val orderedParametersList: Map<Int, ZKNetworkParameters> by lazy {
-        val parametersList = ArrayList<ZKNetworkParameters>()
-        ServiceLoader.load(ZKNetworkParameters::class.java).forEach { parametersList.add(it) }
-        val sortedParameters = parametersList.sortedBy { it.version }
+        val sortedParameters = ServiceLoader.load(ZKNetworkParameters::class.java).sortedBy { it.version }
         check(sortedParameters.distinctBy { it.version }.size == sortedParameters.size) {
             val impls = sortedParameters.joinToString(", ") { "${it::class} (version ${it.version})" }
             "There are multiple implementations of ZKNetworkParameters on the classpath with the same version number. All implementations found: $impls"
