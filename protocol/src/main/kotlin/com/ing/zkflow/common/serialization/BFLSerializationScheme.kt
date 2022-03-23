@@ -5,7 +5,6 @@ import com.ing.zkflow.common.network.ZKNetworkParametersServiceLoader
 import com.ing.zkflow.common.network.attachmentConstraintSerializer
 import com.ing.zkflow.common.network.notarySerializer
 import com.ing.zkflow.common.network.signerSerializer
-import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
 import com.ing.zkflow.serialization.infra.CommandDataSerializationMetadata
 import com.ing.zkflow.serialization.infra.NetworkSerializationMetadata
 import com.ing.zkflow.serialization.infra.SecureHashSerializationMetadata
@@ -115,7 +114,7 @@ open class BFLSerializationScheme : CustomSerializationScheme {
                 is TimeWindow -> serializeTimeWindow(obj)
                 is Party -> serializeNotary(obj, zkNetworkParameters)
                 is StateRef -> serializeStateRef(obj)
-                is List<*> -> serializeSignersList(obj, zkNetworkParameters, context.transactionMetadata)
+                is List<*> -> serializeSignersList(obj, zkNetworkParameters)
                 else -> error("Don't know how to serialize ${obj::class.qualifiedName}")
             }.wrapSerialization(
                 scheme,
@@ -149,19 +148,17 @@ open class BFLSerializationScheme : CustomSerializationScheme {
 
     private fun serializeSignersList(
         obj: List<*>,
-        zkNetworkParameters: ZKNetworkParameters,
-        transactionMetadata: ResolvedZKTransactionMetadata?
+        zkNetworkParameters: ZKNetworkParameters
     ): ByteArray {
         @Suppress("UNCHECKED_CAST") // This is a conditional cast.
         val signersList = obj as? List<PublicKey> ?: error("Signers: Expected `List<PublicKey>`, Actual `${obj::class.qualifiedName}`")
 
         /*
-         * Using the actual (non-fixed) signers.size when there is no tx metadata is ok,
-         * because that means we are serializing a fully non-zkp transaction.
-         * The serialized signers list of a non-zkp tx will never be used as input to a circuit,
-         * only TransactionStates (outputs) will ever be used as input.
+         * Using the actual (non-fixed) signers.size is ok, because we're either serializing a fully
+         * non-zkp transaction or the number of signers is validated to match the command metadata in
+         * com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata.verifyCommandsAndSigners
          */
-        val numberOfSigners = transactionMetadata?.numberOfSigners ?: signersList.size
+        val numberOfSigners = signersList.size
         val signersSerializer = FixedLengthListSerializer(
             numberOfSigners,
             zkNetworkParameters.signerSerializer
