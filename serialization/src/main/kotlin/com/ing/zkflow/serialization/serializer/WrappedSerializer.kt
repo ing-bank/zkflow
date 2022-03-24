@@ -6,7 +6,6 @@ import com.ing.zkflow.serialization.FixedLengthKSerializerWithDefault
 import com.ing.zkflow.serialization.FixedLengthSerialDescriptor
 import com.ing.zkflow.serialization.toFixedLengthSerialDescriptorOrThrow
 import kotlinx.serialization.KSerializer
-import kotlin.reflect.KClass
 
 /**
  * Convenience serializers to circumvent impossibility to extend from objects.
@@ -16,8 +15,8 @@ import kotlin.reflect.KClass
  * object Long_2 : WrappedFixedLengthKSerializerWithDefault<Long>(LongSerializer)
  */
 
-abstract class WrappedFixedLengthKSerializer<T : Any>(strategy: KSerializer<T>, val kClass: KClass<T>) : FixedLengthKSerializer<T>, KSerializer<T> by strategy {
-    override val descriptor = if (kClass.java.isEnum) {
+abstract class WrappedFixedLengthKSerializer<T : Any>(strategy: KSerializer<T>, isEnum: Boolean) : FixedLengthKSerializer<T>, KSerializer<T> by strategy {
+    override val descriptor = if (isEnum) {
         FixedLengthSerialDescriptor(strategy.descriptor, Int.SIZE_BYTES)
     } else {
         strategy.descriptor.toFixedLengthSerialDescriptorOrThrow()
