@@ -2,8 +2,6 @@
 
 package com.ing.zkflow.plugins.serialization
 
-import com.ing.zkflow.Converter
-import com.ing.zkflow.Resolver
 import com.ing.zkflow.SerdeLogger
 import com.ing.zkflow.Surrogate
 import com.ing.zkflow.annotations.ASCII
@@ -359,7 +357,7 @@ internal object Processors {
 
         /**
          * To serialize [SecureHash], a single annotation annotated with [Algorithm] must be present.
-         * Otherwise, recurse to [forUserType].
+         * Otherwise, recurse to [forOtherType].
          */
         SecureHash::class.qualifiedName!! to ToSerializingObject { contextualOriginal, _ ->
             contextualOriginal.findDigestAlgorithm()?.let { algorithm ->
@@ -375,13 +373,13 @@ internal object Processors {
             } ?: run {
                 // SecureHash has no signature specific annotations, recurse to treating it as a generic user type.
                 SerdeLogger.log("Re-cursing to default treatment of ${contextualOriginal.ktTypeReference.text}")
-                forUserType(contextualOriginal)
+                forOtherType(contextualOriginal)
             }
         },
 
         /**
          * To serialize [PublicKey], a single annotation annotated with [SignatureSpec] must be present,
-         * Otherwise, recurse to [forUserType]
+         * Otherwise, recurse to [forOtherType]
          */
         PublicKey::class.qualifiedName!! to ToSerializingObject { contextualOriginal, _ ->
             contextualOriginal.findCordaSignatureId()?.let { cordaSignatureId ->
@@ -397,7 +395,7 @@ internal object Processors {
             } ?: run {
                 // PublicKey has no signature specific annotations, recurse to treating it as a generic user type.
                 SerdeLogger.log("Re-cursing to default treatment of ${contextualOriginal.ktTypeReference.text}")
-                forUserType(contextualOriginal)
+                forOtherType(contextualOriginal)
             }
         },
 
@@ -415,7 +413,7 @@ internal object Processors {
 
         /**
          * To serialize [AnonymousParty], a single annotation annotated with [SignatureSpec] must be present.
-         * Otherwise, recurse to [forUserType].
+         * Otherwise, recurse to [forOtherType].
          */
         AnonymousParty::class.qualifiedName!! to ToSerializingObject { contextualOriginal, _ ->
             contextualOriginal.findCordaSignatureId()?.let { cordaSignatureId ->
@@ -431,7 +429,7 @@ internal object Processors {
             } ?: run {
                 // AnonymousParty has no signature specific annotations, recurse to treating it as a generic user type.
                 SerdeLogger.log("Re-cursing to default treatment of ${contextualOriginal.ktTypeReference.text}")
-                forUserType(contextualOriginal)
+                forOtherType(contextualOriginal)
             }
         },
 
@@ -439,13 +437,13 @@ internal object Processors {
          * To serialize [Party], several annotations may be present:
          * - a single annotation annotated with [SignatureSpec]
          * - zero or one annotation annotated with [CordaX500NameSpec]
-         * Otherwise, recurse to [forUserType].
+         * Otherwise, recurse to [forOtherType].
          */
         Party::class.qualifiedName!! to ToSerializingObject { contextualOriginal, _ ->
             val cordaSignatureId = contextualOriginal.findCordaSignatureId() ?: run {
                 // Party has no signature specific annotations, recurse to treating it as a generic user type.
                 SerdeLogger.log("Re-cursing to default treatment of ${contextualOriginal.ktTypeReference.text}")
-                return@ToSerializingObject forUserType(contextualOriginal)
+                return@ToSerializingObject forOtherType(contextualOriginal)
             }
 
             // Look for CordaX500Name specification:
@@ -521,7 +519,7 @@ internal object Processors {
 
         /**
          * To serialize [HashAttachmentConstraint], a single annotation annotated with [Algorithm] must be present.
-         * Otherwise, recurse to [forUserType].
+         * Otherwise, recurse to [forOtherType].
          */
         HashAttachmentConstraint::class.qualifiedName!! to ToSerializingObject { contextualOriginal, _ ->
             contextualOriginal.findDigestAlgorithm()?.let { algorithm ->
@@ -555,7 +553,7 @@ internal object Processors {
 
         /**
          * To serialize [SignatureAttachmentConstraint], a single annotation annotated with [SignatureSpec] must be present,
-         * Otherwise, recurse to [forUserType]
+         * Otherwise, recurse to [forOtherType]
          */
         SignatureAttachmentConstraint::class.qualifiedName!! to ToSerializingObject { contextualOriginal, _ ->
             contextualOriginal.findCordaSignatureId()?.let { cordaSignatureId ->
@@ -571,7 +569,7 @@ internal object Processors {
             } ?: run {
                 // SignatureAttachmentConstraint has no signature specific annotations, recurse to treating it as a generic user type.
                 SerdeLogger.log("Re-cursing to default treatment of ${contextualOriginal.ktTypeReference.text}")
-                forUserType(contextualOriginal)
+                forOtherType(contextualOriginal)
             }
         },
     )
@@ -590,55 +588,30 @@ internal object Processors {
     }
 
     /**
-     * All types which are not supported natively are treated as user types.
+     * All other types - user types and third party types - must either have surrogates or be ZKP annotated enums.
      */
-    private val userType = ToSerializingObject { contextualOriginal, _ ->
+    private val otherType = ToSerializingObject { contextualOriginal, _ ->
         // Here we process 3rd party classes or own serializable classes.
-        // • To process a 3rd type via a surrogate, minimally com.ing.zkflow.annotations.Converter or com.ing.zkflow.annotations.Resolver must be present.
-        //   At this step, only conversion will be taken into account, respective surrogate will be wrapped into
-        //   a defaulted serializer if required.
-        // • Own classes must be verified to have been annotated with a com.ing.zkflow.annotations.ZKP annotation to be serializable.
+        // Such classes must have an associated serializer.
+        // Currently, we cannot verify whether this is indeed true.
+        // We _naively_ expect that there a relevant serializer has been generated by KSP
+        // located in `Surrogate.generatedSurrogateSerializerPackageName`
+        // named `ClassName${Surrogate.generatedSurrogateSerializerPostfix}`
         with(contextualOriginal) {
-            findAnnotation<Converter<*, *>>()?.let {
-                // Surrogate class is the _second_ type argument.
-                // Conversion provider is the _first_ and _only_ argument.
-                // TODO Ideally surrogate class can be deduced from the conversion provider.
-                val surrogate = ContextualizedKtTypeReference(
-                    it.typeArguments.getOrNull(1)?.typeReference
-                        ?: error("Cannot resolve surrogate type for $it; expected as the second type argument"),
-                    typeResolver
-                )
-                val conversionProvider = it.valueArguments.single() as KtValueArgument
-
-                Pair(surrogate, conversionProvider)
-            }
-                ?: findAnnotation<Resolver<*, *>>()?.let {
-                    val surrogate = ContextualizedKtTypeReference(
-                        it.typeArguments.getOrNull(1)?.typeReference
-                            ?: error("Cannot resolve surrogate type for $it; expected as the second type argument"),
-                        typeResolver
+            // Check whether the type has an associated surrogate.
+            val surrogateSerializerFqName = findSurrogateSerializer()
+            if (surrogateSerializerFqName != null) {
+                return@with TypeSerializingObject.UserType(this) { self, outer ->
+                    """
+                    object $outer: ${WrappedFixedLengthKSerializer::class.qualifiedName}<${self.cleanTypeDeclaration}>(
+                        $surrogateSerializerFqName,
+                        ${self.contextualizedOriginal.rootType.type}::class.java.isEnum
                     )
-                    // it is safe to `!!` because now we're past code validity verification step,
-                    // that is, all function signatures are ensured.
-                    val conversionProvider = it.valueArguments[1]!! as KtValueArgument
-
-                    Pair(surrogate, conversionProvider)
+                    """.trimIndent()
                 }
-        }?.let { (surrogate, conversionProviderClass) ->
-            Pair(surrogate, surrogate.resolveClass(conversionProviderClass))
-        }?.let { (surrogate, conversionProvider) ->
-            // If conversion provider is PRESENT
-            // => serialize the class via a surrogate.
-            TypeSerializingObject.UserType(contextualOriginal) { self, outer ->
-                """
-                object $outer: ${SurrogateSerializer::class.qualifiedName}<${self.cleanTypeDeclaration}, ${surrogate.cleanTypeDeclaration}>(
-                    ${surrogate.cleanTypeDeclaration}.serializer(), { ${conversionProvider.asString()}.from(it) }
-                )
-                """.trimIndent()
             }
-        } ?: run {
-            // If conversion provider is ABSENT
-            // => this class may be own class annotated with com.ing.zkflow.annotations.ZKP, verify this.
+
+            // This class may be own class annotated with com.ing.zkflow.annotations.ZKP, verify this.
             val errorSerializerAbsentFor: (fqName: String) -> Nothing = {
                 error(
                     """
@@ -649,6 +622,7 @@ internal object Processors {
                 )
             }
 
+            // Ensure the class has a ZKP annotation.
             with(contextualOriginal.rootType.bestEffortResolvedType) {
                 when (this) {
                     is BestEffortResolvedType.AsIs -> errorSerializerAbsentFor(simpleName)
@@ -659,9 +633,9 @@ internal object Processors {
 
             TypeSerializingObject.UserType(contextualOriginal) { self, outer ->
                 """
-                    object $outer: ${WrappedFixedLengthKSerializer::class.qualifiedName}<${self.cleanTypeDeclaration}>(
-                        ${self.cleanTypeDeclaration}.serializer(),
-                        ${self.cleanTypeDeclaration}::class
+                object $outer: ${WrappedFixedLengthKSerializer::class.qualifiedName}<${self.cleanTypeDeclaration}>(
+                    ${self.cleanTypeDeclaration}.serializer(),
+                    ${self.contextualizedOriginal.rootType.type}::class.java.isEnum
                     )
                 """.trimIndent()
             }
@@ -674,7 +648,7 @@ internal object Processors {
         native[rootType.type]?.invoke(contextualizedOriginal, children) ?: error("No native processor for `${rootType.type}`")
     }
 
-    fun forUserType(contextualizedOriginal: ContextualizedKtTypeReference) = userType(contextualizedOriginal, emptyList())
+    fun forOtherType(contextualizedOriginal: ContextualizedKtTypeReference) = otherType(contextualizedOriginal, emptyList())
 
     /**
      * Utility function: Look for a single signature id specification.

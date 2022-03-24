@@ -1,7 +1,6 @@
 package com.ing.zkflow.plugins.serialization.serializingobject
 
 import com.ing.zkflow.Default
-import com.ing.zkflow.Resolver
 import com.ing.zkflow.plugins.serialization.ContextualizedKtTypeReference
 import com.ing.zkflow.serialization.FixedLengthKSerializerWithDefault
 import kotlinx.serialization.Contextual
@@ -14,15 +13,12 @@ import kotlin.reflect.full.isSubclassOf
  * (full list is a key set of the `native` field in Processors)
  * and unknown types, such as 3rd party types and user classes.
  */
-sealed class TypeSerializingObject(private val contextualizedOriginal: ContextualizedKtTypeReference) : SerializingObject() {
+sealed class TypeSerializingObject(val contextualizedOriginal: ContextualizedKtTypeReference) : SerializingObject() {
     override fun wrapDefault(): SerializingObject {
         // Inspect annotations to find either @com.ing.zkflow.Default or @com.ing.zkflow.Resolver
         val defaultProvider = with(contextualizedOriginal) {
             annotationSingleArgument<Default<*>>()
-                ?: findAnnotation<Resolver<*, *>>()?.let {
-                    it.valueArguments.getOrNull(0)?.asElement()?.text
-                }
-                ?: error("Element ${ktTypeReference.text} requires either a ${Default::class} or ${Resolver::class} annotation")
+                ?: error("Element ${ktTypeReference.text} requires a ${Default::class} annotation")
         }.replace("::class", "").trim()
 
         return ServiceSerializingObject.WithDefault(this, defaultProvider)
