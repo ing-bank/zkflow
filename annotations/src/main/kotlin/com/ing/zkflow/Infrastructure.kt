@@ -20,17 +20,7 @@ interface ConversionProvider<T : Any, S : Surrogate<T>> {
 }
 
 @Target(AnnotationTarget.TYPE)
-// TODO get rid of S here and com.ing.zkflow.Resolver
-annotation class Converter<T : Any, S : Surrogate<T>>(val provider: KClass<out ConversionProvider<T, out S>>)
-
-/**
- * Conveniently define default provider and resolver.
- */
-@Target(AnnotationTarget.TYPE)
-annotation class Resolver<T : Any, S : Surrogate<T>>(
-    val defaultProvider: KClass<out DefaultProvider<T>>,
-    val converterProvider: KClass<out ConversionProvider<T, out S>>
-)
+annotation class Via<S : Surrogate<*>>
 
 /**
  * Surrogate is a specific representation of a class, such representation should allow for simpler serialization.
@@ -38,4 +28,9 @@ annotation class Resolver<T : Any, S : Surrogate<T>>(
  */
 interface Surrogate<T> {
     fun toOriginal(): T
+
+    companion object {
+        const val GENERATED_SURROGATE_SERIALIZER_PACKAGE_NAME = "com.ing.zkflow.serialization.infra"
+        const val GENERATED_SURROGATE_SERIALIZER_POSTFIX = "SurrogateSerializer"
+    }
 }
