@@ -1,8 +1,8 @@
 package com.ing.zkflow.resolved
 
-import com.ing.zkflow.Converter
 import com.ing.zkflow.PublicKey_EdDSA
 import com.ing.zkflow.PublicKey_EdDSA_Converter
+import com.ing.zkflow.Via
 import com.ing.zkflow.annotations.corda.EcDSA_K1
 import com.ing.zkflow.annotations.corda.EdDSA
 import com.ing.zkflow.serialization.SerializerTest
@@ -23,9 +23,7 @@ import java.security.PublicKey
 data class WrapsPublicKeys(
     @Serializable(with = Eddsa_0::class) val eddsa: @EdDSA @Contextual PublicKey = pkEdDSA,
     @Serializable(with = EcdsaK1_0::class) val ecdsaK1: @EcDSA_K1 @Contextual PublicKey = pkEcDSA_K1,
-    @Serializable(with = PkFullyCustom_0::class) val pkFullyCustom: @Converter<PublicKey, PublicKey_EdDSA>(
-        PublicKey_EdDSA_Converter::class
-    ) @Contextual PublicKey = pkEdDSA
+    @Serializable(with = PkFullyCustom_0::class) val pkFullyCustom: @Via<PublicKey_EdDSA> @Contextual PublicKey = pkEdDSA
 ) {
     companion object {
         private val pkEdDSA: PublicKey = PublicKeySerializer.fixedPublicKey(Crypto.EDDSA_ED25519_SHA512)

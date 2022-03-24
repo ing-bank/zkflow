@@ -3,21 +3,19 @@
 package io.ivno.annotated.fixtures
 
 import com.ing.zkflow.ConversionProvider
-import com.ing.zkflow.Converter
 import com.ing.zkflow.Surrogate
+import com.ing.zkflow.Via
 import com.ing.zkflow.annotations.BigDecimalSize
-import com.ing.zkflow.annotations.ZKP
+import com.ing.zkflow.annotations.ZKPSurrogate
 import io.ivno.annotated.IvnoTokenType
 import io.ivno.annotated.deps.BigDecimalAmount
 import net.corda.core.contracts.LinearPointer
 import java.math.BigDecimal
 
-@ZKP
+@ZKPSurrogate(BigDecimalAmount_LinearPointer_IvnoTokenType_Converter::class)
 data class BigDecimalAmount_LinearPointer_IvnoTokenType(
     val quantity: @BigDecimalSize(10, 10) BigDecimal,
-    val amountType: @Converter<LinearPointer<IvnoTokenType>, LinearPointerSurrogate_IvnoTokenType>(
-        LinearPointerConverter_IvnoTokenType::class
-    ) LinearPointer<IvnoTokenType>
+    val amountType: @Via<LinearPointerSurrogate_IvnoTokenType> LinearPointer<IvnoTokenType>
 ) : Surrogate<BigDecimalAmount<LinearPointer<IvnoTokenType>>> {
     override fun toOriginal() = BigDecimalAmount(quantity, amountType)
 }

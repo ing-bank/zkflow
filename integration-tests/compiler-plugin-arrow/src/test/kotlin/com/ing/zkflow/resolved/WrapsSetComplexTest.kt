@@ -16,7 +16,7 @@ data class WrapsSetComplex(
 ) {
     object Set_0 : com.ing.zkflow.serialization.serializer.FixedLengthSetSerializer<Baz>(5, Set_1)
     object Set_1 : com.ing.zkflow.serialization.serializer.SerializerWithDefault<Baz>(Set_2, Baz.Default.default)
-    object Set_2 : com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializer<Baz>(Baz.serializer(), Baz::class)
+    object Set_2 : com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializer<Baz>(Baz.serializer(), Baz::class.java.isEnum)
 }
 
 // There will also be a resolved version for Baz as below.

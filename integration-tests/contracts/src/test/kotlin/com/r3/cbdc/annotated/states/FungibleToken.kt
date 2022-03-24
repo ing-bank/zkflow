@@ -1,10 +1,9 @@
 package com.r3.cbdc.annotated.states
 
-import com.ing.zkflow.Converter
+import com.ing.zkflow.Via
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.annotations.corda.EdDSA
 import com.ing.zkflow.annotations.corda.SHA256
-import com.r3.cbdc.annotated.fixtures.AmountConverter_IssuedTokenType
 import com.r3.cbdc.annotated.fixtures.AmountSurrogate_IssuedTokenType
 import com.r3.cbdc.annotated.types.IssuedTokenType
 import net.corda.core.contracts.Amount
@@ -24,9 +23,7 @@ import net.corda.core.schemas.QueryableState
 
 @ZKP
 data class FungibleToken constructor(
-    override val amount: @Converter<Amount<IssuedTokenType>, AmountSurrogate_IssuedTokenType>(
-        AmountConverter_IssuedTokenType::class
-    ) Amount<IssuedTokenType>,
+    override val amount: @Via<AmountSurrogate_IssuedTokenType> Amount<IssuedTokenType>,
     override val holder: @EdDSA Party,
     override val tokenTypeJarHash: @SHA256 SecureHash? = SecureHash.zeroHash
 ) : AbstractFungibleToken() {

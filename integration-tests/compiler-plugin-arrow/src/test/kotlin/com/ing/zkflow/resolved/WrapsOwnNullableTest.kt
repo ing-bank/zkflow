@@ -28,7 +28,7 @@ data class WrapsOwnNullable(
     object MyList_3 : FixedLengthListSerializer<Flag?>(2, MyList_4)
     object MyList_4 : NullableSerializer<Flag>(MyList_5)
     object MyList_5 : SerializerWithDefault<Flag>(MyList_6, DefaultFlag.default)
-    object MyList_6 : WrappedFixedLengthKSerializer<Flag>(Flag.serializer(), Flag::class)
+    object MyList_6 : WrappedFixedLengthKSerializer<Flag>(Flag.serializer(), Flag::class.java.isEnum)
 }
 
 // There will also be a resolved version for Flag as below.

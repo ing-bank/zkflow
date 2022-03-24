@@ -3,12 +3,12 @@
 package com.ing.zkflow
 
 import com.ing.zkflow.annotations.Size
-import com.ing.zkflow.annotations.ZKP
+import com.ing.zkflow.annotations.ZKPSurrogate
 import java.security.KeyFactory
 import java.security.PublicKey
 import java.security.spec.X509EncodedKeySpec
 
-@ZKP
+@ZKPSurrogate(PublicKey_EdDSA_Converter::class)
 @Suppress("ArrayInDataClass")
 data class PublicKey_EdDSA(
     val key: @Size(ED_DSA_KEY_LENGTH) ByteArray

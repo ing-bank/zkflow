@@ -5,12 +5,12 @@ package com.r3.cbdc.annotated.fixtures
 import com.ing.zkflow.ConversionProvider
 import com.ing.zkflow.Surrogate
 import com.ing.zkflow.annotations.BigDecimalSize
-import com.ing.zkflow.annotations.ZKP
+import com.ing.zkflow.annotations.ZKPSurrogate
 import com.r3.cbdc.annotated.types.IssuedTokenType
 import net.corda.core.contracts.Amount
 import java.math.BigDecimal
 
-@ZKP
+@ZKPSurrogate(AmountConverter_IssuedTokenType::class)
 data class AmountSurrogate_IssuedTokenType(
     val quantity: Long,
     val displayTokenSize: @BigDecimalSize(10, 10) BigDecimal,

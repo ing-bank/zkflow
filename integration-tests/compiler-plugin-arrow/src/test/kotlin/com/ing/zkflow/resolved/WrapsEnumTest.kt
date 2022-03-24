@@ -16,7 +16,7 @@ data class WrapsEnum(
     @Serializable(with = Option_0::class)
     val option: @Contextual Option = Option.FIRST
 ) {
-    object Option_0 : WrappedFixedLengthKSerializer<Option>(Option.serializer(), Option::class)
+    object Option_0 : WrappedFixedLengthKSerializer<Option>(Option.serializer(), Option::class.java.isEnum)
 }
 
 // There will also be a resolved version for Option as below.

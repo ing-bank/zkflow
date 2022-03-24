@@ -3,6 +3,7 @@ plugins {
     id("java-library")
     kotlin("plugin.serialization")
     jacoco
+    id("com.google.devtools.ksp") version "1.5.31-1.0.0"
 }
 
 // This will prevent conflicts for between the original artifacts and their tests.
@@ -26,6 +27,18 @@ dependencies {
 
     val arrowMetaVersion: String by project
     kotlinCompilerPluginClasspath("io.arrow-kt:arrow-meta:$arrowMetaVersion")
+
+    implementation(project(":compiler-plugin-ksp"))
+    ksp(project(":compiler-plugin-ksp"))
+}
+
+kotlin {
+    sourceSets.main {
+        kotlin.srcDir("build/generated/ksp/main/kotlin")
+    }
+    sourceSets.test {
+        kotlin.srcDir("build/generated/ksp/test/kotlin")
+    }
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {

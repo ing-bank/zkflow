@@ -171,7 +171,7 @@ class ClassRefactory(
             // • Invariant: root.isNullable = false
 
             if (Processors.isUserType(resolvedRootType.type)) {
-                return@phase Processors.forUserType(typeRef)
+                return@phase Processors.forOtherType(typeRef)
             }
 
             // • Strip outer type.
