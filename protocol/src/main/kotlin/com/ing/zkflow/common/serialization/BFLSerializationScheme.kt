@@ -1,5 +1,6 @@
 package com.ing.zkflow.common.serialization
 
+import com.ing.zinc.naming.camelToSnakeCase
 import com.ing.zkflow.common.network.ZKNetworkParameters
 import com.ing.zkflow.common.network.ZKNetworkParametersServiceLoader
 import com.ing.zkflow.common.network.attachmentConstraintSerializer
@@ -325,7 +326,7 @@ open class BFLSerializationScheme : CustomSerializationScheme {
      * This is a val, so will hold for the whole lifetime of this instance.
      */
     private val tempDirectory by lazy {
-        Files.createTempDirectory("zkflow-")
+        Files.createTempDirectory("zkflow-bfl-structure-")
     }
 
     private fun <M : Any, T : Any> saveSerializationStructureForDebug(
@@ -334,18 +335,33 @@ open class BFLSerializationScheme : CustomSerializationScheme {
         metadata: M,
         metadataSerializer: KSerializer<M>
     ) {
-        val descriptor =
-            buildClassSerialDescriptor("${txComponent::class.simpleName}${metadata::class.simpleName!!.removeSuffix("SerializationMetadata")}") {
-                element("corda-magic", ExactLengthListSerializer(customSerializationMagicLength, ByteSerializer).descriptor)
-                element("network-metadata", NetworkSerializationMetadata.serializer().descriptor)
-                element("tx-component-metadata", metadataSerializer.descriptor)
-                element("tx-component", txComponentSerializer.descriptor)
-            }
+        val descriptor = buildClassSerialDescriptor(serialNameFor(txComponent, metadata)) {
+            element("corda-magic", ExactLengthListSerializer(customSerializationMagicLength, ByteSerializer).descriptor)
+            element("network-metadata", NetworkSerializationMetadata.serializer().descriptor)
+            element("tx-component-metadata", metadataSerializer.descriptor)
+            element("tx-component", txComponentSerializer.descriptor)
+        }
 
         tempDirectory
-            .ensureFile("${descriptor.serialName}.txt")
+            .ensureFile("${descriptor.serialName.camelToSnakeCase()}.txt")
             .writeText(
                 toTree(descriptor).toString()
             )
+    }
+
+    private fun <M : Any, T : Any> serialNameFor(txComponent: T, metadata: M): String {
+        val prefix = metadata::class.simpleName!!.removeSuffix("SerializationMetadata")
+        val suffix = when (txComponent) {
+            is TransactionState<*> -> "${txComponent.data::class.simpleName}"
+            is List<*> -> {
+                val size = when (metadata) {
+                    is SignersSerializationMetadata -> metadata.numberOfSigners
+                    else -> error("List is expected to be used for Signers")
+                }
+                "${txComponent::class.simpleName}$size"
+            }
+            else -> "${txComponent::class.simpleName}"
+        }
+        return "$prefix$suffix"
     }
 }

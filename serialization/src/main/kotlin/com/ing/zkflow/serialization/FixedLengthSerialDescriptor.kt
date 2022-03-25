@@ -8,7 +8,7 @@ import kotlinx.serialization.descriptors.elementDescriptors
  * Attach size in bytes to kotlinx's [SerialDescriptor]
  */
 class FixedLengthSerialDescriptor(
-    descriptor: SerialDescriptor,
+    val descriptor: SerialDescriptor,
     val byteSize: Int,
 ) : SerialDescriptor by descriptor
 
