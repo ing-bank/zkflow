@@ -4,12 +4,12 @@ package com.ing.zkflow
 
 import com.ing.zkflow.annotations.ASCII
 import com.ing.zkflow.annotations.Size
-import com.ing.zkflow.annotations.ZKP
+import com.ing.zkflow.annotations.ZKPSurrogate
 import net.corda.core.crypto.Crypto
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
 
-@ZKP
+@ZKPSurrogate(Party_EdDSA_Converter::class)
 @Suppress("ArrayInDataClass")
 data class Party_EdDSA(
     val cordaX500Name: @ASCII(CordaX500NameSurrogate.UPPER_BOUND) String,

@@ -58,7 +58,7 @@ data class IvnoDeposit(
 
     object Reference_1 : com.ing.zkflow.serialization.serializer.string.FixedLengthASCIIStringSerializer(10)
 
-    object Status_0 : com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializer<DepositStatus>(DepositStatus.serializer(), DepositStatus::class)
+    object Status_0 : com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializer<DepositStatus>(DepositStatus.serializer(), DepositStatus::class.java.isEnum)
 
     object Timestamp_0 : WrappedFixedLengthKSerializerWithDefault<Instant>(com.ing.zkflow.serialization.serializer.InstantSerializer)
 

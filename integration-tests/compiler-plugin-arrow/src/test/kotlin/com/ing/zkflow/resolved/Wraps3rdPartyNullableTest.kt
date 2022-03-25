@@ -1,15 +1,12 @@
 package com.ing.zkflow.resolved
 
-import com.ing.zkflow.annotated.ConverterOutOfReach
 import com.ing.zkflow.annotated.DefaultOutOfReach
 import com.ing.zkflow.annotated.OutOfReach
-import com.ing.zkflow.annotated.OutOfReachSurrogate
 import com.ing.zkflow.serialization.SerializerTest
 import com.ing.zkflow.serialization.engine.SerdeEngine
 import com.ing.zkflow.serialization.serializer.FixedLengthListSerializer
 import com.ing.zkflow.serialization.serializer.NullableSerializer
 import com.ing.zkflow.serialization.serializer.SerializerWithDefault
-import com.ing.zkflow.serialization.serializer.SurrogateSerializer
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -30,8 +27,9 @@ data class Wraps3rdPartyNullable(
     object MyList_3 : FixedLengthListSerializer<OutOfReach?>(2, MyList_4)
     object MyList_4 : NullableSerializer<OutOfReach>(MyList_5)
     object MyList_5 : SerializerWithDefault<OutOfReach>(MyList_6, DefaultOutOfReach.default)
-    object MyList_6 : SurrogateSerializer<OutOfReach, OutOfReachSurrogate>(
-        OutOfReachSurrogate.serializer(), { ConverterOutOfReach.from(it) }
+    object MyList_6 : com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializer<com.ing.zkflow.annotated.OutOfReach>(
+        com.ing.zkflow.serialization.infra.OutOfReachSurrogateSurrogateSerializer,
+        com.ing.zkflow.annotated.OutOfReach::class.java.isEnum
     )
 }
 

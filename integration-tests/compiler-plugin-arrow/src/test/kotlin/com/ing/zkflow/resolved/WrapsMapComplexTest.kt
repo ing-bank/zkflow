@@ -22,7 +22,7 @@ data class WrapsMapComplex(
     )
     object Map_0_A_0 : com.ing.zkflow.serialization.serializer.string.FixedLengthUTF8StringSerializer(13)
     object Map_0_B_0 : com.ing.zkflow.serialization.serializer.SerializerWithDefault<Baz>(Map_0_B_1, Baz.Default.default)
-    object Map_0_B_1 : com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializer<Baz>(Baz.serializer(), Baz::class)
+    object Map_0_B_1 : com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializer<Baz>(Baz.serializer(), Baz::class.java.isEnum)
 }
 
 // There will also be a resolved version for Baz as below.

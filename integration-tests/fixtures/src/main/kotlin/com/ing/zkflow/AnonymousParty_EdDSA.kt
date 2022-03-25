@@ -3,12 +3,12 @@
 package com.ing.zkflow
 
 import com.ing.zkflow.annotations.Size
-import com.ing.zkflow.annotations.ZKP
+import com.ing.zkflow.annotations.ZKPSurrogate
 import com.ing.zkflow.testing.zkp.ZKNulls
 import net.corda.core.crypto.Crypto
 import net.corda.core.identity.AnonymousParty
 
-@ZKP
+@ZKPSurrogate(AnonymousParty_EdDSA_Converter::class)
 @Suppress("ArrayInDataClass")
 data class AnonymousParty_EdDSA(
     val encodedEdDSA: @Size(PublicKey_EdDSA.ED_DSA_X509_ENCODING_LENGTH) ByteArray

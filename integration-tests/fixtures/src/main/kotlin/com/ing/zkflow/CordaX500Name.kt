@@ -3,10 +3,10 @@
 package com.ing.zkflow
 
 import com.ing.zkflow.annotations.ASCII
-import com.ing.zkflow.annotations.ZKP
+import com.ing.zkflow.annotations.ZKPSurrogate
 import net.corda.core.identity.CordaX500Name
 
-@ZKP
+@ZKPSurrogate(CordaX500NameConverter::class)
 data class CordaX500NameSurrogate(
     val concat: @ASCII(UPPER_BOUND) String
 ) : Surrogate<CordaX500Name> {

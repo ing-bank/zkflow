@@ -5,12 +5,12 @@ import com.ing.zkflow.ConversionProvider
 import com.ing.zkflow.Default
 import com.ing.zkflow.Surrogate
 import com.ing.zkflow.annotations.ASCII
-import com.ing.zkflow.annotations.ZKP
+import com.ing.zkflow.annotations.ZKPSurrogate
 import com.ing.zkflow.annotations.corda.EdDSA
 import io.ivno.annotated.deps.Network
 import net.corda.core.identity.AnonymousParty
 
-@ZKP
+@ZKPSurrogate(NetworkAnonymousOperatorConverter::class)
 data class NetworkEdDSAAnonymousOperator(
     val value: @ASCII(10) String,
     val operator: @EdDSA @Default<AnonymousParty>(AnonymousParty_EdDSA_DefaultProvider::class) AnonymousParty?
