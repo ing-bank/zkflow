@@ -7,7 +7,10 @@ import com.ing.zkflow.util.Tree.Companion.leaf
 import com.ing.zkflow.util.bitSize
 import kotlinx.serialization.descriptors.SerialDescriptor
 
-fun String.shorten(): String {
+/**
+ * This function removes all lowercase elements from a class name, and replaces dots (.) with underscores (_).
+ */
+internal fun String.shortenClassName(): String {
     return split(".")
         .filter { it[0].isUpperCase() }
         .joinToString("_") { it }
@@ -16,9 +19,9 @@ fun String.shorten(): String {
 val SerialDescriptor.fixedLength: Int?
     get() = annotations.filterIsInstance<SizeAnnotation>().firstOrNull()?.value
 
-fun FixedLengthSerialDescriptor.toNodeDescriptor(capacity: Int?): NodeDescriptor<String> {
+internal fun FixedLengthSerialDescriptor.toNodeDescriptor(capacity: Int?): NodeDescriptor<String> {
     val capacityString = capacity?.let { " (capacity: $it)" } ?: ""
-    val shortSerialName = serialName.shorten()
+    val shortSerialName = serialName.shortenClassName()
     val bitSize = if (shortSerialName == "ArrayList") {
         require(capacity != null) {
             "Capacity MUST be present for ArrayList."
@@ -30,8 +33,10 @@ fun FixedLengthSerialDescriptor.toNodeDescriptor(capacity: Int?): NodeDescriptor
     return NodeDescriptor(shortSerialName + capacityString, bitSize)
 }
 
-fun FixedLengthSerialDescriptor.toStructureTree(parentCapacity: Int?): Tree<NodeDescriptor<String>, NodeDescriptor<String>> {
-    require(!(parentCapacity != null && fixedLength != null))
+internal fun FixedLengthSerialDescriptor.toStructureTree(parentCapacity: Int?): Tree<NodeDescriptor<String>, NodeDescriptor<String>> {
+    require(!(parentCapacity != null && fixedLength != null)) {
+        "Only 1 of parentCapacity or SizeAnnotation is allowed for $serialName"
+    }
     val capacity = parentCapacity ?: fixedLength
     return Tree.node(toNodeDescriptor(capacity)) {
         (0 until elementsCount).map {
@@ -64,12 +69,6 @@ fun toTree(descriptor: SerialDescriptor, parentCapacity: Int? = null): Tree<Node
             descriptor.toFixedLengthSerialDescriptorOrThrow()
         } catch (e: IllegalStateException) {
             return when (FixedLengthType.tryFromSerialName(descriptor.serialName)) {
-                FixedLengthType.LIST -> TODO()
-                FixedLengthType.MAP -> TODO()
-                FixedLengthType.SET -> TODO()
-                FixedLengthType.BYTE_ARRAY -> TODO()
-                FixedLengthType.UTF8_STRING -> TODO()
-                FixedLengthType.ASCII_STRING -> TODO()
                 FixedLengthType.BYTE -> leaf(NodeDescriptor("i8", Byte.SIZE_BITS))
                 FixedLengthType.SHORT -> leaf(NodeDescriptor("i16", Short.SIZE_BITS))
                 FixedLengthType.INT -> leaf(NodeDescriptor("i32", Int.SIZE_BITS))
@@ -79,8 +78,14 @@ fun toTree(descriptor: SerialDescriptor, parentCapacity: Int? = null): Tree<Node
                 FixedLengthType.UINT -> leaf(NodeDescriptor("u32", UInt.SIZE_BITS))
                 FixedLengthType.ULONG -> leaf(NodeDescriptor("u64", ULong.SIZE_BITS))
                 FixedLengthType.BOOLEAN -> leaf(NodeDescriptor("bool", Byte.SIZE_BITS))
-                FixedLengthType.EXACT_LIST -> TODO()
-                null -> TODO()
+                FixedLengthType.LIST,
+                FixedLengthType.MAP,
+                FixedLengthType.SET,
+                FixedLengthType.BYTE_ARRAY,
+                FixedLengthType.UTF8_STRING,
+                FixedLengthType.ASCII_STRING,
+                FixedLengthType.EXACT_LIST -> error("Should have been handled by toFixedLengthSerialDescriptorOrThrow")
+                null -> error("Not supported: '${descriptor.serialName}'")
             }
         }
     }

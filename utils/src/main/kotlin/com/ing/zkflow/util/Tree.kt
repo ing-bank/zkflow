@@ -1,10 +1,41 @@
 package com.ing.zkflow.util
 
-sealed class Tree<NODE, LEAF> {
+/**
+ * Tree data structure where data of a different type can be attached to nodes and leaves.
+ *
+ * The [toString] will pretty print the tree, taking special concern for multi-line strings.
+ *
+ * The following tree:
+ * ```kotlin
+ * val tree = Tree.node<String, String>("root") {
+ *     node("node1") {
+ *         leaf("leaf1")
+ *         leaf("leaf2")
+ *     }
+ *     leaf("leaf3\nwith multiple lines")
+ * }
+ * ```
+ * will generate the following output:
+ * ```
+ * root
+ * ├── node1
+ * │   ├── leaf1
+ * │   └── leaf2
+ * └── ╗ leaf3
+ *     ║ with multiple lines
+ *     ╝
+ * ```
+ */
+sealed interface Tree<NODE, LEAF> {
+    val asNode: Node<NODE, LEAF> get() = throw UnsupportedOperationException()
+    val asLeaf: Leaf<NODE, LEAF> get() = throw UnsupportedOperationException()
+
     data class Node<NODE, LEAF>(
         val value: NODE,
         val children: List<Tree<NODE, LEAF>>,
-    ) : Tree<NODE, LEAF>() {
+    ) : Tree<NODE, LEAF> {
+        override val asNode: Node<NODE, LEAF> = this
+
         private fun recursivePrefix(index: Int): String = if (index == children.size - 1) {
             "    "
         } else {
@@ -32,7 +63,9 @@ sealed class Tree<NODE, LEAF> {
 
     data class Leaf<NODE, LEAF>(
         val value: LEAF,
-    ) : Tree<NODE, LEAF>() {
+    ) : Tree<NODE, LEAF> {
+        override val asLeaf: Leaf<NODE, LEAF> = this
+
         override fun toString(): String = value.toString().multiLineString()
     }
 
@@ -65,4 +98,23 @@ sealed class Tree<NODE, LEAF> {
             this.lineSequence().joinToString("\n║ ", prefix = "╗ ", postfix = "\n╝") { it }
         } else this
     }
+}
+
+/**
+ * Extract value from a [Tree] where nodes and leaves have the same value type.
+ */
+val <T> Tree<T, T>.value: T
+    get() = when (this) {
+        is Tree.Node<T, T> -> value
+        is Tree.Leaf<T, T> -> value
+    }
+
+/**
+ * Returns true _iff_ there is any node or leaf where [predicate] evaluates to true for it's value.
+ */
+fun <T> Tree<T, T>.anyValue(predicate: (T) -> Boolean): Boolean = when (this) {
+    is Tree.Node<T, T> -> this.asNode.children.fold(predicate(this.value)) { acc, child ->
+        acc || predicate(child.value) || child.anyValue(predicate)
+    }
+    is Tree.Leaf<T, T> -> predicate(this.value)
 }
