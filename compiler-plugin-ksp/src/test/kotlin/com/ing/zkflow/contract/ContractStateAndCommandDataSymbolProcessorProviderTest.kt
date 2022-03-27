@@ -4,6 +4,8 @@ import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.serialization.CommandDataSerializerRegistryProvider
 import com.ing.zkflow.common.serialization.ContractStateSerializerRegistryProvider
 import com.ing.zkflow.ksp.ProcessorTest
+import com.ing.zkflow.processors.StableIdVersionedSymbolProcessorProvider
+import com.ing.zkflow.processors.ZKFLowSymbolProcessorProvider
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import io.kotest.matchers.paths.shouldNotExist
@@ -12,7 +14,9 @@ import io.kotest.matchers.string.shouldStartWith
 import org.junit.jupiter.api.Test
 import java.io.ByteArrayOutputStream
 
-internal class ContractStateAndCommandDataSymbolProcessorProviderTest : ProcessorTest() {
+internal class ContractStateAndCommandDataSymbolProcessorProviderTest : ProcessorTest(
+    listOf(ZKFLowSymbolProcessorProvider(), StableIdVersionedSymbolProcessorProvider())
+) {
     @Test
     fun `ZKTransactionProcessor should correctly register commands`() {
         val outputStream = ByteArrayOutputStream()
@@ -76,10 +80,13 @@ internal class ContractStateAndCommandDataSymbolProcessorProviderTest : Processo
                 package com.ing.zkflow.zktransaction
                 
                 import com.ing.zkflow.common.contracts.ZKCommandData
+                import com.ing.zkflow.common.versioning.Versioned
                 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
                 import com.ing.zkflow.common.zkp.metadata.commandMetadata
 
-                class TestCommand: ZKCommandData {
+                interface Cmd: Versioned
+
+                class TestCommand: Cmd, ZKCommandData {
                     
                     @Transient
                     override val metadata: ResolvedZKCommandMetadata = commandMetadata {
@@ -98,9 +105,12 @@ internal class ContractStateAndCommandDataSymbolProcessorProviderTest : Processo
                 import com.ing.zkflow.common.contracts.ZKCommandData
                 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
                 import com.ing.zkflow.common.zkp.metadata.commandMetadata
+                import com.ing.zkflow.common.versioning.Versioned
                 
+                interface Cmd: Versioned
+
                 class Container {
-                    class TestNestedCommand: ZKCommandData {
+                    class TestNestedCommand: Cmd, ZKCommandData {
                         
                         @Transient
                         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
@@ -129,10 +139,13 @@ internal class ContractStateAndCommandDataSymbolProcessorProviderTest : Processo
                 import com.ing.zkflow.common.contracts.ZKOwnableState
                 import net.corda.core.contracts.CommandAndState
                 import net.corda.core.identity.AnonymousParty
+                import com.ing.zkflow.common.versioning.Versioned
                 
+                interface VersionedState: Versioned
+
                 data class TestState(
                     override val owner: AnonymousParty
-                ): ZKOwnableState {
+                ): VersionedState, ZKOwnableState {
                     override fun withNewOwner(newOwner: AnonymousParty): CommandAndState {
                         return CommandAndState(TestCommand(), copy(owner = newOwner))
                     }

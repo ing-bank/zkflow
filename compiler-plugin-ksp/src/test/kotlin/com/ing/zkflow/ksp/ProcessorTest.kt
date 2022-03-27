@@ -1,6 +1,6 @@
 package com.ing.zkflow.ksp
 
-import com.ing.zkflow.processors.ZKFLowSymbolProcessorProvider
+import com.google.devtools.ksp.processing.SymbolProcessorProvider
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import com.tschuchort.compiletesting.symbolProcessorProviders
@@ -11,10 +11,15 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.Path
 import java.nio.file.Paths
 
-abstract class ProcessorTest {
+abstract class ProcessorTest(
+    private val processorProviders: List<SymbolProcessorProvider>
+) {
+
+    constructor(processorProvider: SymbolProcessorProvider) : this(listOf(processorProvider))
+
     protected fun compile(
         kotlinSource: SourceFile,
-        outputStream: ByteArrayOutputStream
+        outputStream: ByteArrayOutputStream,
     ) = compile(listOf(kotlinSource), outputStream)
 
     protected fun compile(
@@ -23,7 +28,7 @@ abstract class ProcessorTest {
     ) = KotlinCompilation().apply {
         sources = kotlinSources
 
-        symbolProcessorProviders = listOf(ZKFLowSymbolProcessorProvider())
+        symbolProcessorProviders = processorProviders
 
         inheritClassPath = true
         messageOutputStream = BufferedOutputStream(outputStream) // see diagnostics in real time

@@ -2,13 +2,14 @@ package com.ing.zkflow.network
 
 import com.ing.zkflow.common.network.ZKNetworkParameters
 import com.ing.zkflow.ksp.ProcessorTest
+import com.ing.zkflow.processors.ZKFLowSymbolProcessorProvider
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 import java.io.ByteArrayOutputStream
 
-internal class ZKNetworkParametersProviderProcessorTest : ProcessorTest() {
+internal class ZKNetworkParametersProviderProcessorTest : ProcessorTest(ZKFLowSymbolProcessorProvider()) {
     @Test
     fun `ZKNetworkParametersProviderProcessor should correctly register stuff`() {
         val outputStream = ByteArrayOutputStream()
