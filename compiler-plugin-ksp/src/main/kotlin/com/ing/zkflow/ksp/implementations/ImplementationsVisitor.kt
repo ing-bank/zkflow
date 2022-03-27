@@ -26,18 +26,14 @@ class ImplementationsVisitor(
     ): Map<Set<KClass<*>>, List<ScopedDeclaration>> {
         val scopedDeclaration = ScopedDeclaration(data, classDeclaration)
 
-//        val implementations = classDeclaration.getAllSuperTypes().mapNotNull { superType ->
-//            interfaceClasses.find { interfaceClass ->
-//                interfaceClass.qualifiedName == superType.declaration.qualifiedName?.asString()
-//            }?.let {
-//                Pair(it, listOf(scopedDeclaration))
-//            }
-//        }.toMap()
-
         val superTypesSet = classDeclaration.getAllSuperTypes().map { it.declaration.qualifiedName?.asString() }.toSet()
-        val match = interfaceClasses.find { interfaceSet -> superTypesSet.containsAll(interfaceSet.map { it.qualifiedName }) }
-        val implementations = if (match != null) {
-            mapOf(match to listOf(scopedDeclaration))
+        val matches = interfaceClasses.filter { interfaceSet -> superTypesSet.containsAll(interfaceSet.map { it.qualifiedName }) }
+
+        val implementations = if (matches.isNotEmpty()) {
+            matches.fold(mutableMapOf<Set<KClass<*>>, List<ScopedDeclaration>>()) { acc, match ->
+                acc[match] = listOf(scopedDeclaration)
+                acc
+            }
         } else {
             emptyMap()
         }
@@ -61,12 +57,23 @@ data class ScopedDeclaration(
         override val qualifiedName: String by lazy {
             parent?.let {
                 "${it.java.qualifiedName}$${declaration.simpleName.asString()}"
-            } ?: "${declaration.packageName.asString()}.${declaration.simpleName.asString()}"
+            } ?: buildQualifiedName(declaration)
         }
     }
 
-    override val qualifiedName: String = parent?.let { "${it.qualifiedName}.${declaration.simpleName.asString()}" }
-        ?: "${declaration.packageName.asString()}.${declaration.simpleName.asString()}"
+    override val qualifiedName: String = parent?.let {
+        "${it.qualifiedName}.${declaration.simpleName.asString()}"
+    } ?: buildQualifiedName(declaration)
+
+    private fun buildQualifiedName(declaration: KSClassDeclaration): String {
+        val packageName = if (declaration.packageName.asString().isNotBlank()) {
+            "${declaration.packageName.asString()}."
+        } else {
+            ""
+        }
+
+        return "$packageName${declaration.simpleName.asString()}"
+    }
 }
 
 interface HasQualifiedName {
