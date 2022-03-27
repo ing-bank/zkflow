@@ -3,17 +3,16 @@ package com.ing.zkflow.ksp.versioning
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 
 object VersionedStateIdGenerator {
-    fun generateIds(sortedFamiliesMap: Map<String, List<KSClassDeclaration>>): Map<KSClassDeclaration, Int> {
-        var stateIdMap = emptyMap<KSClassDeclaration, Int>()
-        sortedFamiliesMap.forEach {
-            stateFamily, declarationsOfThisFamily ->
-            val versionNumbers = IntRange(0, declarationsOfThisFamily.size - 1).toList()
-            val stateIds = versionNumbers.map { generateId(stateFamily, it) }
-            val localIdMap = declarationsOfThisFamily.zip(stateIds).toMap()
-            stateIdMap += localIdMap
-        }
-        return stateIdMap
-    }
+    fun generateIds(sortedFamiliesMap: Map<String, List<KSClassDeclaration>>): Map<KSClassDeclaration, Int> =
+        sortedFamiliesMap
+            .entries
+            .fold(emptyMap()) { acc, (stateFamily, declarationsOfThisFamily) ->
+                val localIdMap = List(declarationsOfThisFamily.size) { it }
+                    .map { version -> generateId(stateFamily, version) }
+                    .zip(declarationsOfThisFamily) { id, declaration -> declaration to id }
+                    .toMap()
+                acc + localIdMap
+            }
 
     private fun generateId(stateFamily: String, versionNumber: Int): Int {
         return (stateFamily + "$versionNumber").hashCode()
