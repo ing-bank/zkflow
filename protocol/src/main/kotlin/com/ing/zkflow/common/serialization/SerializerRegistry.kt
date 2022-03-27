@@ -31,16 +31,11 @@ import kotlin.reflect.KClass
  * [BFLSerializationScheme]
  */
 interface KClassSerializerProvider<T : Any> {
-    fun list(): List<Pair<KClass<out T>, KSerializer<out T>>>
-}
-
-interface KClassIdProvider<T : Any> {
-    fun list(): List<Pair<KClass<out T>, Int>>
+    fun list(): List<Triple<KClass<out T>, Int, KSerializer<out T>>>
 }
 
 interface SurrogateSerializerRegistryProvider : KClassSerializerProvider<Any>
 
-interface ContractStateIdRegistryProvider : KClassIdProvider<ContractState>
 interface ContractStateSerializerRegistryProvider : KClassSerializerProvider<ContractState>
 interface CommandDataSerializerRegistryProvider : KClassSerializerProvider<CommandData>
 
@@ -61,15 +56,18 @@ abstract class SerializerRegistry<T : Any> {
      * or for T. And we can know for sure that it is a T. This is why we can safely cast to T without the variance annotation on retrieval.
      */
     @Synchronized
-    fun register(klass: KClass<out T>, serializer: KSerializer<out T>) {
-        log.debug("Registering serializer `$serializer` for `${klass.qualifiedName}`")
+    fun register(klass: KClass<out T>, id: Int, serializer: KSerializer<out T>) {
+        log.debug("Registering serializer `$serializer` under id `$id` for `${klass.qualifiedName}`")
 
-        val id = klass.stableId
         obj2Id.put(klass, id)?.let { throw SerializerRegistryError.ClassAlreadyRegistered(klass, it) }
         objId2Serializer.put(id, serializer)?.let {
             throw SerializerRegistryError.IdAlreadyRegistered(id, klass, it.descriptor.serialName)
         }
     }
+
+    @Synchronized
+    fun register(klass: KClass<out T>, serializer: KSerializer<out T>) =
+        register(klass, klass.hashCode(), serializer)
 
     fun identify(klass: KClass<*>): Int = obj2Id[klass] ?: throw SerializerRegistryError.ClassNotRegistered(klass)
 

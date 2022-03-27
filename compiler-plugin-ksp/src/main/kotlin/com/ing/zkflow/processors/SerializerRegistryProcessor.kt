@@ -1,9 +1,8 @@
 package com.ing.zkflow.processors
 
 import com.google.devtools.ksp.processing.CodeGenerator
+import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.ing.zkflow.common.serialization.KClassSerializerProvider
-import com.ing.zkflow.ksp.implementations.ImplementationsProcessor
-import com.ing.zkflow.ksp.implementations.ScopedDeclaration
 import com.ing.zkflow.ksp.implementations.ServiceLoaderRegistration
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
@@ -22,14 +21,13 @@ import kotlin.random.Random
 import kotlin.reflect.KClass
 
 class SerializerRegistryProcessor<T : Any>(
-    override val interfaceClass: KClass<T>,
-    override val additionalInterfaces: Set<KClass<Any>>,
+    private val interfaceClass: KClass<T>,
     private val mapProviderInterface: KClass<out KClassSerializerProvider<in T>>,
     private val codeGenerator: CodeGenerator
-) : ImplementationsProcessor<T> {
+) {
     private val packageName = "com.ing.zkflow.serialization.infra"
 
-    override fun process(implementations: List<ScopedDeclaration>): ServiceLoaderRegistration {
+    fun process(implementations: Map<KSClassDeclaration, Int>): ServiceLoaderRegistration {
         val uid = Random.nextInt().absoluteValue
         val className = "${interfaceClass.simpleName}SerializerRegistryProvider$uid"
 
@@ -40,7 +38,7 @@ class SerializerRegistryProcessor<T : Any>(
 
     private fun generateProvider(
         className: String,
-        implementations: List<ScopedDeclaration>
+        implementations: Map<KSClassDeclaration, Int>
     ) {
         FileSpec.builder(packageName, className)
             .addType(
@@ -51,10 +49,11 @@ class SerializerRegistryProcessor<T : Any>(
                             .addModifiers(KModifier.OVERRIDE)
                             .returns(
                                 List::class.asClassName().parameterizedBy(
-                                    Pair::class.asClassName().parameterizedBy(
+                                    Triple::class.asClassName().parameterizedBy(
                                         KClass::class.asClassName().parameterizedBy(
                                             WildcardTypeName.producerOf(interfaceClass)
                                         ),
+                                        Int::class.asClassName(),
                                         KSerializer::class.asClassName().parameterizedBy(
                                             WildcardTypeName.producerOf(interfaceClass)
                                         )
@@ -65,12 +64,13 @@ class SerializerRegistryProcessor<T : Any>(
                                 buildCodeBlock {
                                     add("return listOf(")
                                     withIndent {
-                                        implementations.forEach { impl ->
+                                        implementations.entries.forEach { (impl, version) ->
                                             addStatement(
-                                                "%T(%L::class, %L.serializer()),",
-                                                Pair::class,
-                                                impl.declaration.toClassName(),
-                                                impl.declaration.toClassName(),
+                                                "%T(%L::class, %L, %L.serializer()),",
+                                                Triple::class,
+                                                impl.toClassName(),
+                                                version,
+                                                impl.toClassName(),
                                             )
                                         }
                                     }

@@ -66,28 +66,28 @@ open class BFLSerializationScheme : CustomSerializationScheme {
             log.debug("Populating `${ContractStateSerializerRegistry::class.simpleName}`")
             ServiceLoader.load(ContractStateSerializerRegistryProvider::class.java).flatMap { it.list() }
                 .also { if (it.isEmpty()) log.debug("No ContractStates registered in ContractStateSerializerRegistry") }
-                .forEach { ContractStateSerializerRegistry.register(it.first, it.second) }
+                .forEach { ContractStateSerializerRegistry.register(it.first, it.second, it.third) }
 
             log.debug("Populating `${CommandDataSerializerRegistry::class.simpleName}`")
             ServiceLoader.load(CommandDataSerializerRegistryProvider::class.java).flatMap { it.list() }
                 .also { if (it.isEmpty()) log.debug("No CommandData registered in CommandDataSerializerRegistry") }
-                .forEach { CommandDataSerializerRegistry.register(it.first, it.second) }
+                .forEach { CommandDataSerializerRegistry.register(it.first, it.second, it.third) }
 
             log.debug("Parsing all additional surrogate serializers")
             ServiceLoader.load(SurrogateSerializerRegistryProvider::class.java).flatMap { it.list() }
                 .also { if (it.isEmpty()) log.debug("No additional serializers found") }
-                .forEach { (surrogateForKClass, serializer) ->
+                .forEach { (surrogateForKClass, id, serializer) ->
                     @Suppress("UNCHECKED_CAST")
                     when {
                         surrogateForKClass.isSubclassOf(ContractState::class) -> {
                             surrogateForKClass as KClass<ContractState>
                             serializer as KSerializer<ContractState>
-                            ContractStateSerializerRegistry.register(surrogateForKClass, serializer)
+                            ContractStateSerializerRegistry.register(surrogateForKClass, id, serializer)
                         }
                         surrogateForKClass.isSubclassOf(CommandData::class) -> {
                             surrogateForKClass as KClass<CommandData>
                             serializer as KSerializer<CommandData>
-                            CommandDataSerializerRegistry.register(surrogateForKClass, serializer)
+                            CommandDataSerializerRegistry.register(surrogateForKClass, id, serializer)
                         }
                         else -> log.debug(
                             "Serializer for `$surrogateForKClass` is nether a subclass of `${CommandData::class.qualifiedName}` or ${ContractState::class.qualifiedName}"

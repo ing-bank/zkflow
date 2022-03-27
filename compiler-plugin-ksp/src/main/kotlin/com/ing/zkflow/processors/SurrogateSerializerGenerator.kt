@@ -166,15 +166,16 @@ class SurrogateSerializerGenerator(private val codeGenerator: CodeGenerator) : I
                         //      ```
                         //      which is invalid. Obviously.
                         val template = if (surrogateFor.templated()) {
-                            "%T(\n%L::class,\n%L\n),"
+                            "%T(\n%L::class,\n%L,\n%L\n),"
                         } else {
-                            "/*\n%T(\n%L::class,\n%L\n),*/"
+                            "/*\n%T(\n%L::class,\n%L,\n%L\n),*/"
                         }
 
                         addStatement(
                             template,
-                            Pair::class,
+                            Triple::class,
                             surrogateFor.toTypeName(),
+                            serializerFQName.hashCode(),
                             serializerFQName,
                         )
                     }
@@ -191,10 +192,11 @@ class SurrogateSerializerGenerator(private val codeGenerator: CodeGenerator) : I
                             .addModifiers(KModifier.OVERRIDE)
                             .returns(
                                 List::class.asClassName().parameterizedBy(
-                                    Pair::class.asClassName().parameterizedBy(
+                                    Triple::class.asClassName().parameterizedBy(
                                         KClass::class.asClassName().parameterizedBy(
                                             WildcardTypeName.producerOf(Any::class.asClassName())
                                         ),
+                                        Int::class.asClassName(),
                                         KSerializer::class.asClassName().parameterizedBy(
                                             WildcardTypeName.producerOf(Any::class.asClassName())
                                         )
