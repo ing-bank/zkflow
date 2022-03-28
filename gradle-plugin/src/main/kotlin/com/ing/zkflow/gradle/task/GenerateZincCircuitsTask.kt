@@ -18,10 +18,10 @@ open class GenerateZincCircuitsTask : DefaultTask() {
             val main = javaPlugin.sourceSets.findByName("main") ?: error("Can't find main sourceSet")
 
             it.main = "com.ing.zkflow.zinc.poet.generate.GenerateZincCircuitsKt"
-            // We need to add 'build/generated/ksp/src/main/resources' to the main sourceSet, because otherwise
-            // the generated META-INF/services file is not picked up by the `zincPoet` task.
-            // It would be nicest if KSP already did this, however it doesn't.
-            it.classpath = main.runtimeClasspath + project.files(generatedKspResources)
+            // We must add 'build/generated/ksp/src/main/resources' to the main sourceSet if it exists, because
+            // otherwise the generated META-INF/services file is not picked up by the `generateZincCircuits` task.
+            // It would be the nicest if KSP already did this, however it doesn't.
+            it.classpath = main.runtimeClasspath + project.files(generatedKspResources).filter(File::exists)
         }
     }
 }
