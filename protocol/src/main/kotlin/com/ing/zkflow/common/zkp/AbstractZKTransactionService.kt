@@ -13,9 +13,12 @@ import com.ing.zkflow.node.services.ZKWritableVerifierTransactionStorage
 import com.ing.zkflow.node.services.getCordaServiceFromConfig
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.StateRef
+import net.corda.core.contracts.TransactionResolutionException
 import net.corda.core.crypto.SecureHash
+import net.corda.core.internal.isUploaderTrusted
 import net.corda.core.node.ServiceHub
 import net.corda.core.serialization.SingletonSerializeAsToken
+import net.corda.core.serialization.internal.AttachmentsClassLoader
 import net.corda.core.transactions.TraversableTransaction
 import net.corda.core.transactions.WireTransaction
 
@@ -56,7 +59,13 @@ abstract class AbstractZKTransactionService(val serviceHub: ServiceHub) : ZKTran
 
     override fun verify(wtx: WireTransaction): ZKVerifierTransactionWithoutProofs {
 
-        val zkTransactionMetadata = wtx.zkTransactionMetadata()
+        val hashToResolve = wtx.networkParametersHash ?: serviceHub.networkParametersService.defaultHash
+        val params = serviceHub.networkParametersService.lookup(hashToResolve) ?: throw TransactionResolutionException.UnknownParametersException(wtx.id, hashToResolve)
+        val attachments = wtx.attachments.map { serviceHub.attachments.openAttachment(it) ?: error("Attachment ($it) not found") }
+
+        val classLoader = AttachmentsClassLoader(attachments, params, wtx.id, { it.isUploaderTrusted() }, ClassLoader.getSystemClassLoader())
+
+        val zkTransactionMetadata = wtx.zkTransactionMetadata(classLoader)
         val vtx = ZKVerifierTransactionWithoutProofs.fromWireTransaction(wtx) // create vtx without proofs just to be able to build witness and public input
 
         // Check transaction structure first, so we fail fast

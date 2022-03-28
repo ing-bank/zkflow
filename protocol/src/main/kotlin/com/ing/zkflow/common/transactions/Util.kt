@@ -153,6 +153,22 @@ private const val TX_CONTAINS_NO_COMMANDS_WITH_METADATA = "This transaction does
 fun TraversableTransaction.zkTransactionMetadata(): ResolvedZKTransactionMetadata =
     if (this.hasZKCommandData) ResolvedZKTransactionMetadata(this.commandMetadata) else error(TX_CONTAINS_NO_COMMANDS_WITH_METADATA)
 
+fun TraversableTransaction.zkTransactionMetadata(classLoader: ClassLoader): ResolvedZKTransactionMetadata {
+    if (this.hasZKCommandData) {
+
+        val loadedCommandMetadata = this.commandMetadata.map {
+            try {
+                Class.forName(it.commandKClass.java.name, false, classLoader).asSubclass(ZKCommandData::class.java).newInstance().metadata
+            } catch (e: Exception) {
+                error("Class definition not found in contract attachment for command: ${it.commandKClass.qualifiedName}")
+            }
+        }
+
+        return ResolvedZKTransactionMetadata(loadedCommandMetadata)
+    } else
+        error(TX_CONTAINS_NO_COMMANDS_WITH_METADATA)
+}
+
 fun TraversableTransaction.zkTransactionMetadataOrNull(): ResolvedZKTransactionMetadata? =
     if (this.hasZKCommandData) ResolvedZKTransactionMetadata(this.commandMetadata) else null
 
@@ -348,20 +364,6 @@ private fun SignedTransaction.zkVerifyRegularTransaction(
     )
 
     zkTransactionVerifierService.verify(this, checkSufficientSignatures)
-}
-
-fun SignedTransaction.zkToFilteredLedgerTransaction(
-    services: ServiceHub,
-    checkSufficientSignatures: Boolean = true
-): LedgerTransaction {
-    if (checkSufficientSignatures) {
-        verifyRequiredSignatures() // It internally invokes checkSignaturesAreValid().
-    } else {
-        checkSignaturesAreValid()
-    }
-    // We need parameters check here, because finality flow calls stx.toLedgerTransaction() and then verify.
-    zkResolveAndCheckNetworkParameters(services)
-    return tx.zkToFilteredLedgerTransaction(services)
 }
 
 private fun SignedTransaction.zkResolveAndCheckNetworkParameters(services: ServiceHub) {
