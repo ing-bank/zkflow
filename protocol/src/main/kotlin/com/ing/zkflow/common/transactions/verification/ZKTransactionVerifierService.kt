@@ -3,7 +3,7 @@ package com.ing.zkflow.common.transactions.verification
 import com.ing.zkflow.common.transactions.SignedZKVerifierTransaction
 import com.ing.zkflow.common.transactions.ZKVerifierTransaction
 import com.ing.zkflow.common.transactions.ZKVerifierTransactionWithoutProofs
-import com.ing.zkflow.common.transactions.zkToLedgerTransaction
+import com.ing.zkflow.common.transactions.zkToFilteredLedgerTransaction
 import com.ing.zkflow.common.transactions.zkTransactionMetadataOrNull
 import com.ing.zkflow.common.zkp.ZKTransactionService
 import net.corda.core.contracts.ComponentGroupEnum
@@ -19,13 +19,12 @@ class ZKTransactionVerifierService(
 ) {
     fun verify(svtx: SignedZKVerifierTransaction, checkSufficientSignatures: Boolean) {
         val vtx = svtx.tx
-
         validatePrivateComponents(vtx)
 
         ensureNoUncheckedPrivateOutputs(vtx)
         ensureNoUncheckedPrivateInputs(vtx)
 
-        validatePublicComponents(svtx, checkSufficientSignatures)
+        validatePublicComponents(vtx, checkSufficientSignatures)
     }
 
     fun verify(stx: SignedTransaction, checkSufficientSignatures: Boolean) {
@@ -35,23 +34,17 @@ class ZKTransactionVerifierService(
         ensureNoUncheckedPrivateOutputs(vtx)
         ensureNoUncheckedPrivateInputs(wtx)
 
-        validatePublicComponents(stx, checkSufficientSignatures)
+        validatePublicComponents(vtx, checkSufficientSignatures)
     }
 
     private fun validatePrivateComponents(vtx: ZKVerifierTransaction) = zkTransactionService.verify(vtx)
 
     private fun validatePrivateComponents(wtx: WireTransaction): ZKVerifierTransactionWithoutProofs = zkTransactionService.verify(wtx)
 
-    private fun validatePublicComponents(stx: SignedTransaction, checkSufficientSignatures: Boolean) {
-        val ltx = stx.zkToLedgerTransaction(services, checkSufficientSignatures)
-        // This fails with a weird db access error, so we use ltx.verify
-        // services.transactionVerifierService.verify(ltx).getOrThrow()
-        ltx.verify()
-    }
-
     @Suppress("UNUSED_PARAMETER")
-    private fun validatePublicComponents(stx: SignedZKVerifierTransaction, checkSufficientSignatures: Boolean) {
-        TODO("Aleksei")
+    private fun validatePublicComponents(tx: ZKVerifierTransaction, checkSufficientSignatures: Boolean) {
+        val ltx = tx.zkToFilteredLedgerTransaction(services)
+        ltx.verify()
     }
 
     /*

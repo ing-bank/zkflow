@@ -1,7 +1,6 @@
 package com.ing.zkflow.client.flows
 
 import co.paralleluniverse.fibers.Suspendable
-import com.ing.zkflow.common.transactions.zkToLedgerTransaction
 import com.ing.zkflow.common.transactions.zkVerify
 import net.corda.core.crypto.TransactionSignature
 import net.corda.core.crypto.isFulfilledBy
@@ -111,8 +110,7 @@ class ZKCollectSignaturesFlow @JvmOverloads constructor(
         stx.verifySignaturesExcept(notSigned)
         // and the transaction must be valid.
 
-        TODO("use vefifier")
-        stx.tx.zkToLedgerTransaction(serviceHub).verify()
+        stx.zkVerify(serviceHub, checkSufficientSignatures = false)
 
         // Determine who still needs to sign.
         progressTracker.currentStep = COLLECTING

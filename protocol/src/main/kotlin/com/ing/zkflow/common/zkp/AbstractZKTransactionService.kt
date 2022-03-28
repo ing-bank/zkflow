@@ -4,7 +4,6 @@ import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.transactions.ZKVerifierTransaction
 import com.ing.zkflow.common.transactions.ZKVerifierTransactionWithoutProofs
 import com.ing.zkflow.common.transactions.collectUtxoInfos
-import com.ing.zkflow.common.transactions.zkToLedgerTransaction
 import com.ing.zkflow.common.transactions.zkTransactionMetadata
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.node.services.ServiceNames
@@ -53,11 +52,20 @@ abstract class AbstractZKTransactionService(val serviceHub: ServiceHub) : ZKTran
         return ZKVerifierTransaction.fromWireTransaction(wtx, proofs)
     }
 
-    override fun run(wtx: WireTransaction) {
+    abstract override fun zkServiceForCommandMetadata(metadata: ResolvedZKCommandMetadata): ZKService
+
+    override fun verify(wtx: WireTransaction): ZKVerifierTransactionWithoutProofs {
 
         val zkTransactionMetadata = wtx.zkTransactionMetadata()
-        val vtx = ZKVerifierTransaction.fromWireTransaction(wtx, emptyMap()) // create vtx without proofs just to be able to build witness and public input
+        val vtx = ZKVerifierTransactionWithoutProofs.fromWireTransaction(wtx) // create vtx without proofs just to be able to build witness and public input
 
+        // Check transaction structure first, so we fail fast
+        vtx.verifyMerkleTree()
+
+        // Check that all inputs and outputs are checked by either Kotlin or ZKP contract
+        // TODO check inputs and outputs
+
+        // Verify private components by running ZVM smart contract code per Command
         zkTransactionMetadata.commands.forEach { command ->
             val witness = Witness.fromWireTransaction(
                 wtx,
@@ -67,13 +75,8 @@ abstract class AbstractZKTransactionService(val serviceHub: ServiceHub) : ZKTran
             )
             zkServiceForCommandMetadata(command).run(witness, calculatePublicInput(vtx, command))
         }
-    }
 
-    abstract override fun zkServiceForCommandMetadata(metadata: ResolvedZKCommandMetadata): ZKService
-
-    override fun verify(wtx: WireTransaction): ZKVerifierTransactionWithoutProofs {
-        // TODO: Aleksei add actual 'run' verification logic here
-        return ZKVerifierTransactionWithoutProofs.fromWireTransaction(wtx)
+        return vtx
     }
 
     override fun verify(vtx: ZKVerifierTransaction) {
@@ -82,13 +85,6 @@ abstract class AbstractZKTransactionService(val serviceHub: ServiceHub) : ZKTran
 
         // Check that all inputs and outputs are checked by either Kotlin or ZKP contract
         // TODO check inputs and outputs
-
-        // Verify the ZKPs for all ZKCommandDatas in this transaction
-        verifyProofs(vtx)
-    }
-
-    private fun verifyProofs(vtx: ZKVerifierTransaction) {
-        // TODO Aleksei: should we add a check here that there is a proof/zkcommandata for each input and output that is in the metadata?
 
         // Verify the ZKPs for all ZKCommandDatas in this transaction
         verifyProofs(vtx)

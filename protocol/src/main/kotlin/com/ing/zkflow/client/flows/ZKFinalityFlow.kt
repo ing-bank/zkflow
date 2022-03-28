@@ -4,7 +4,7 @@ import co.paralleluniverse.fibers.Suspendable
 import com.ing.zkflow.common.transactions.NotarisedTransactionPayload
 import com.ing.zkflow.common.transactions.SignedZKVerifierTransaction
 import com.ing.zkflow.common.transactions.prove
-import com.ing.zkflow.common.transactions.zkToLedgerTransaction
+import com.ing.zkflow.common.transactions.resolveStateRef
 import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.isFulfilledBy
 import net.corda.core.flows.FinalityFlow
@@ -17,9 +17,10 @@ import net.corda.core.flows.SignTransactionFlow
 import net.corda.core.flows.UnexpectedFlowEndException
 import net.corda.core.identity.Party
 import net.corda.core.identity.groupAbstractPartyByWellKnownParty
+import net.corda.core.internal.SerializedStateAndRef
 import net.corda.core.node.StatesToRecord
-import net.corda.core.transactions.LedgerTransaction
 import net.corda.core.transactions.SignedTransaction
+import net.corda.core.transactions.TraversableTransaction
 import net.corda.core.utilities.ProgressTracker
 
 /**
@@ -91,11 +92,8 @@ class ZKFinalityFlow private constructor(
         // Then send to the notary if needed, record locally and distribute.
 
         logCommandData()
-        val ledgerTransaction = stx.zkToLedgerTransaction(
-            serviceHub,
-            false
-        )
-        val externalTxParticipants = extractExternalParticipants(ledgerTransaction)
+
+        val externalTxParticipants = extractExternalParticipants(stx.tx)
 
         val sessionParties = sessions.map { it.counterparty }
         val missingRecipients = externalTxParticipants - sessionParties
@@ -168,8 +166,11 @@ class ZKFinalityFlow private constructor(
         return notaryKey?.isFulfilledBy(signers) != true
     }
 
-    private fun extractExternalParticipants(ltx: LedgerTransaction): Set<Party> {
-        val participants = ltx.outputStates.flatMap { it.participants } + ltx.inputStates.flatMap { it.participants }
+    private fun extractExternalParticipants(tx: TraversableTransaction): Set<Party> {
+        val inputStates = tx.inputs.map {
+            SerializedStateAndRef(resolveStateRef(it, serviceHub, true), it).toStateAndRef().state.data
+        }
+        val participants = tx.outputStates.flatMap { it.participants } + inputStates.flatMap { it.participants }
         return groupAbstractPartyByWellKnownParty(serviceHub, participants).keys - serviceHub.myInfo.legalIdentities
     }
 }

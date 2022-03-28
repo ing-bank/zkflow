@@ -157,7 +157,7 @@ class ZKNotaryServiceFlow(
              * that are done on Ledgertransactions
              */
             // Resolve dependencies
-            subFlow(ResolveZKTransactionsFlow(null, svtx.dependencies, otherSideSession))
+            subFlow(ResolveZKTransactionsFlow(svtx.tx, svtx.dependencies, otherSideSession))
 
             // Verify ZKP
             val zkTransactionVerifierService = ZKTransactionVerifierService(serviceHub, zkConfig.zkTransactionService)

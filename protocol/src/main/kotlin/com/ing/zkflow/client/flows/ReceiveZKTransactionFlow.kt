@@ -4,6 +4,7 @@ import co.paralleluniverse.fibers.Suspendable
 import com.ing.zkflow.common.transactions.NotarisedTransactionPayload
 import com.ing.zkflow.common.transactions.SignedZKVerifierTransaction
 import com.ing.zkflow.common.transactions.UtxoInfo
+import com.ing.zkflow.common.transactions.fetchMissingAttachments
 import com.ing.zkflow.common.transactions.zkVerify
 import com.ing.zkflow.common.zkp.ZKTransactionService
 import com.ing.zkflow.node.services.ServiceNames
@@ -64,7 +65,7 @@ open class ZKReceiveNotarisedTransactionPayloadFlow @JvmOverloads constructor(
                 logger.info("Received transaction acknowledgement request from party ${otherSideSession.counterparty}.")
                 checkParameterHash(notarised.stx.networkParametersHash)
 
-                subFlow(ResolveZKTransactionsFlow(notarised.stx, notarised.stx.dependencies, otherSideSession))
+                subFlow(ResolveZKTransactionsFlow(notarised.stx.tx, notarised.stx.dependencies, otherSideSession))
                 logger.info("Transaction dependencies resolution completed.")
 
                 try {
@@ -114,8 +115,11 @@ open class ZKReceiveTransactionProposalFlow constructor(
         return otherSideSession.receive<SignedTransaction>().unwrap {
             checkParameterHash(it.tx.networkParametersHash)
 
-            // Resolve all dependencies
+            // Resolve all utxo dependencies
             subFlow(ZKReceiveUtxoInfoFlow(otherSideSession))
+
+            // Download missing attachments
+            fetchMissingAttachments(it.tx, otherSideSession)
 
             // Verify the transaction. We don't know if we will have all sigs, since this is only a proposal, not final
             it.zkVerify(serviceHub, false)

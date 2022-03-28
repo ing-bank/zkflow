@@ -87,6 +87,25 @@ open class ZKVerifierTransaction internal constructor(
             ?: emptyList()
     }
 
+    /**
+     * Convenience interface to get private component hashes, to be used in the public input generation
+     * We cannot use lazy val here because delegated properties cannot be transient and we don't want to serialize them
+     */
+    fun privateComponentHashes(group: ComponentGroupEnum): List<SecureHash> = privateComponents(group).values.toList()
+
+    /**
+     * Convenience interface to get private component indexes, to be used in the public input generation
+     * We cannot use lazy val here because delegated properties cannot be transient and we don't want to serialize them
+     */
+    fun privateComponentIndexes(group: ComponentGroupEnum): Set<Int> = privateComponents(group).keys
+
+    /**
+     * Convenience interface to get private components, to be used in the public input generation
+     * We cannot use lazy val here because delegated properties cannot be transient and we don't want to serialize them
+     */
+    private fun privateComponents(group: ComponentGroupEnum): Map<Int, SecureHash> =
+        filteredComponentGroups.find { it.groupIndex == group.ordinal }?.privateComponentHashes ?: emptyMap()
+
     override fun hashCode(): Int = id.hashCode()
     override fun equals(other: Any?) = if (other !is ZKVerifierTransaction) false else (this.id == other.id)
 
