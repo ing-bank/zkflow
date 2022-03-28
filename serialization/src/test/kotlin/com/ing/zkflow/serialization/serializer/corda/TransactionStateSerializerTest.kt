@@ -123,7 +123,7 @@ class TransactionStateSerializerTest : SerializerTest {
 //         @Serializable(with = ContractClassName::class)
 //         val contract: String,
 //     ) : Surrogate<T> {
-//         object ContractClassName : FixedLengthASCIIStringSerializer(100)
+//         object ContractClassName : FixedLengthStringSerializer(100)
 //
 //         override fun toOriginal() = data
 //     }

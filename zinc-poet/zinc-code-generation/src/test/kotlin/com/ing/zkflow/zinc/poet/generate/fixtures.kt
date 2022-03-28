@@ -3,17 +3,14 @@ package com.ing.zkflow.zinc.poet.generate
 import com.ing.zinc.bfl.BflPrimitive
 import com.ing.zinc.bfl.BflUnit
 import com.ing.zinc.bfl.dsl.EnumBuilder.Companion.enum
-import com.ing.zinc.bfl.dsl.ListBuilder.Companion.asciiString
 import com.ing.zinc.bfl.dsl.ListBuilder.Companion.byteArray
 import com.ing.zinc.bfl.dsl.ListBuilder.Companion.list
-import com.ing.zinc.bfl.dsl.ListBuilder.Companion.utf8String
+import com.ing.zinc.bfl.dsl.ListBuilder.Companion.string
 import com.ing.zinc.bfl.dsl.MapBuilder.Companion.map
 import com.ing.zinc.bfl.dsl.OptionBuilder.Companion.option
 import com.ing.zinc.bfl.dsl.StructBuilder.Companion.struct
-import com.ing.zkflow.annotations.ASCII
 import com.ing.zkflow.annotations.ASCIIChar
 import com.ing.zkflow.annotations.Size
-import com.ing.zkflow.annotations.UTF8
 import com.ing.zkflow.annotations.UTF8Char
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.annotations.corda.EdDSA
@@ -52,9 +49,7 @@ data class ClassWithAsciiChar(val asciiChar: @ASCIIChar Char)
 @ZKP
 data class ClassWithUtf8Char(val utf8Char: @UTF8Char Char)
 @ZKP
-data class ClassWithAsciiString(val asciiString: @ASCII(8) String)
-@ZKP
-data class ClassWithUtf8String(val utf8String: @UTF8(8) String)
+data class ClassWithString(val string: @Size(8) String)
 @ZKP
 data class ClassWithNullableInt(val nullableInt: Int?)
 @ZKP
@@ -62,7 +57,7 @@ data class ClassWithListOfInt(val list: @Size(8) List<Int>)
 @ZKP
 data class ClassWithSetOfInt(val set: @Size(8) Set<Int>)
 @ZKP
-data class ClassWithMapOfStringToInt(val map: @Size(8) Map<@ASCII(8) String, Int>)
+data class ClassWithMapOfStringToInt(val map: @Size(8) Map<@Size(8) String, Int>)
 @ZKP
 enum class EnumWithNumbers { ONE, TWO, THREE }
 @ZKP
@@ -127,13 +122,9 @@ val structWithUtf8Char = struct {
     name = "ClassWithUtf8Char"
     field { name = "utf_8_char"; type = BflPrimitive.I16 }
 }
-val structWithAsciiString = struct {
-    name = "ClassWithAsciiString"
-    field { name = "ascii_string"; type = asciiString(8) }
-}
-val structWithUtf8String = struct {
-    name = "ClassWithUtf8String"
-    field { name = "utf_8_string"; type = utf8String(8) }
+val structWithString = struct {
+    name = "ClassWithString"
+    field { name = "string"; type = string(8) }
 }
 val structWithNullableInt = struct {
     name = "ClassWithNullableInt"
@@ -162,7 +153,7 @@ val structWithMapOfStringToInt = struct {
         name = "map"
         type = map {
             capacity = 8
-            keyType = asciiString(8)
+            keyType = string(8)
             valueType = BflPrimitive.I32
         }
     }
@@ -210,12 +201,12 @@ val structWithParty = struct {
                 name = "corda_x_500_name"
                 type = struct {
                     name = "CordaX500NameSerializer_CordaX500NameSurrogate"
-                    field { name = "common_name"; type = option { innerType = utf8String(64) } }
-                    field { name = "organisation_unit"; type = option { innerType = utf8String(64) } }
-                    field { name = "organisation"; type = utf8String(128) }
-                    field { name = "locality"; type = utf8String(64) }
-                    field { name = "state"; type = option { innerType = utf8String(64) } }
-                    field { name = "country"; type = utf8String(2) }
+                    field { name = "common_name"; type = option { innerType = string(64) } }
+                    field { name = "organisation_unit"; type = option { innerType = string(64) } }
+                    field { name = "organisation"; type = string(128) }
+                    field { name = "locality"; type = string(64) }
+                    field { name = "state"; type = option { innerType = string(64) } }
+                    field { name = "country"; type = string(2) }
                 }
             }
             field {

@@ -233,7 +233,7 @@ Below is an example of a `Parent` state class that embeds a `Child` class which 
 ```kotlin
 package com.ing.zkflow.common.contracts.recursive
 
-import com.ing.zkflow.UTF8
+import com.ing.zkflow.Size
 import com.ing.zkflow.ZKP
 import com.ing.zkflow.common.contracts.ZKTransactionMetadataCommandData
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
@@ -321,7 +321,7 @@ annotation class ZincUpgradeMethod(val body: String)
 @ZKP
 @Suppress("MagicNumber")
 data class ChildV1(
-    val name: @UTF8(8) String
+    val name: @Size(8) String
 ) : Versioned {
     override val version: Int = 1
     // Note the return type is not [Versioned], but [ChildV2].
@@ -333,7 +333,7 @@ data class ChildV1(
 @Suppress("MagicNumber")
 data class ChildV2(
     val id: Int,
-    val name: @UTF8(8) String
+    val name: @Size(8) String
 ) : Versioned {
     override val version: Int = 2
     @ZincUpgradeMethod("ChildV3::new(self.id, self.name, String32::empty())")
@@ -344,8 +344,8 @@ data class ChildV2(
 @Suppress("MagicNumber")
 data class ChildV3(
     val id: Int,
-    val name: @UTF8(8) String,
-    val description: @UTF8(32) String,
+    val name: @Size(8) String,
+    val description: @Size(32) String,
 ) : LatestVersion {
     override val version: Int = 3
 }

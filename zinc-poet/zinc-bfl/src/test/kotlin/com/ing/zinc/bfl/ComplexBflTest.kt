@@ -4,9 +4,8 @@ import com.ing.zinc.bfl.ZincExecutor.generateDeserializeCircuit
 import com.ing.zinc.bfl.ZincExecutor.generateWitness
 import com.ing.zinc.bfl.ZincExecutor.runCommandAndLogTime
 import com.ing.zinc.bfl.dsl.EnumBuilder.Companion.enum
-import com.ing.zinc.bfl.dsl.ListBuilder.Companion.asciiString
 import com.ing.zinc.bfl.dsl.ListBuilder.Companion.byteArray
-import com.ing.zinc.bfl.dsl.ListBuilder.Companion.utf8String
+import com.ing.zinc.bfl.dsl.ListBuilder.Companion.string
 import com.ing.zinc.bfl.dsl.OptionBuilder.Companion.option
 import com.ing.zinc.bfl.dsl.StructBuilder.Companion.struct
 import com.ing.zkflow.util.requireInstanceOf
@@ -80,7 +79,7 @@ class ComplexBflTest {
         field {
             name = "name"
             type = option {
-                innerType = asciiString(128)
+                innerType = string(128)
             }
         }
         field {
@@ -94,7 +93,7 @@ class ComplexBflTest {
         field {
             name = "external_id"
             type = option {
-                innerType = utf8String(50)
+                innerType = string(100)
             }
         }
         field {
@@ -111,7 +110,7 @@ class ComplexBflTest {
         }
         field {
             name = "class_name"
-            type = asciiString(192)
+            type = string(192)
         }
         field {
             name = "is_resolved"
@@ -175,7 +174,7 @@ class ComplexBflTest {
             // amount.token.pointer.external_id.value.size
             bytes(0, 0, 0, 2)
             // amount.token.pointer.external_id.value.values
-            bytes(0, 97, 0, 97).bytes(*IntArray(96))
+            bytes(97, 97).bytes(*IntArray(98))
             // amount.token.pointer.id
             bytes(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10)
             // amount.token.class_name
@@ -198,6 +197,7 @@ class ComplexBflTest {
         output.pathElement("amount", "quantity") shouldBe JsonPrimitive("12")
         output.pathElement("amount", "display_token_size", "fraction", "size") shouldBe JsonPrimitive("1")
         output.pathElement("amount", "token_type_hash", "size") shouldBe JsonPrimitive("32")
+        output.pathElement("amount", "token", "pointer", "external_id", "has_value") shouldBe JsonPrimitive(true)
         output.pathElement("amount", "token", "is_resolved") shouldBe JsonPrimitive(true)
     }
 }

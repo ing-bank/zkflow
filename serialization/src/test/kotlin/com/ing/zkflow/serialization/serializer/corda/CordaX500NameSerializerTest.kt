@@ -6,7 +6,7 @@ import com.ing.zkflow.serialization.SerializerTest
 import com.ing.zkflow.serialization.engine.SerdeEngine
 import com.ing.zkflow.serialization.serializer.SurrogateSerializer
 import com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializerWithDefault
-import com.ing.zkflow.serialization.serializer.string.FixedLengthASCIIStringSerializer
+import com.ing.zkflow.serialization.serializer.string.FixedLengthStringSerializer
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.Serializable
 import net.corda.core.identity.CordaX500Name
@@ -57,7 +57,7 @@ class CordaX500NameSerializerTest : SerializerTest {
 data class CordaX500NameSurrogate(
     @Serializable(with = Concat_0::class) val concat: String
 ) : Surrogate<CordaX500Name> {
-    object Concat_0 : FixedLengthASCIIStringSerializer(20)
+    object Concat_0 : FixedLengthStringSerializer(20)
 
     override fun toOriginal(): CordaX500Name =
         CordaX500Name.parse(concat)

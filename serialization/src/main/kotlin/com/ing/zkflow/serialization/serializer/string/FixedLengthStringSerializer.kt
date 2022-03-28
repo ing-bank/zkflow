@@ -16,7 +16,7 @@ open class FixedLengthStringSerializer(private val maxLength: Int) : FixedLength
     override fun serialize(encoder: Encoder, value: String) {
         val bytes = value.toByteArray(Charsets.UTF_8)
         if (bytes.size > maxLength) {
-            throw IllegalArgumentException("String `$value` is longer than $maxLength")
+            throw IllegalArgumentException("String `$value` (${bytes.size}) is longer than $maxLength")
         }
         encoder.encodeSerializableValue(strategy, bytes.toList())
     }

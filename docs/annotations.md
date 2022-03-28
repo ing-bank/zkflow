@@ -5,16 +5,14 @@ derive the required serializers enabling the transport.
 
 ## Annotations
 
-| Annotation | Purpose | Requiring types |
-| --- | --- | --- |
-| `Size(val size: Int)` | Fix collection size | `List`, `Map`, `Set` |
-| `UTF8(val length: Int)` | Fix length of an UTF8 string | `String` | 
-| `ASCII(val length: Int)` | Fix length of an ASCII string | `String` | 
-|`BigDecimalSize`| Fix length of integer and fractional parts of a big decimal | `BigDecimal`|
-| `Default<T : Any>(val provider: KClass<out DefaultProvider<T>>)` | Provide a default value for a nullable value ora (shorter than fixed size) collection. | Nullable values `X?`, `List`, `Map`, `Set` | 
-| `Converter<T: Any>(val provider: KClass<out ConversionProvider<T, out Surrogate<T>>>)` | 3rd party classes that cannot be annotated directly will require conversion to/from annotatable surrogates. | 3rd party classes | 
+| Annotation | Purpose | Requiring types                                                                      |
+| --- | --- |--------------------------------------------------------------------------------------|
+| `Size(val size: Int)` | Fix collection size | `List`, `Map`, `Set, String`                                                         |
+|`BigDecimalSize`| Fix length of integer and fractional parts of a big decimal | `BigDecimal`                                                                         |
+| `Default<T : Any>(val provider: KClass<out DefaultProvider<T>>)` | Provide a default value for a nullable value ora (shorter than fixed size) collection. | Nullable values `X?`, `List`, `Map`, `Set`                                           | 
+| `Converter<T: Any>(val provider: KClass<out ConversionProvider<T, out Surrogate<T>>>)` | 3rd party classes that cannot be annotated directly will require conversion to/from annotatable surrogates. | 3rd party classes                                                                    | 
 |<pre>Resolver<T: Any>(<br>    val defaultProvider: KClass<out DefaultProvider<T>>,<br>    val converterProvider: KClass<out ConversionProvider<T, out Surrogate<T>>><br>)</pre>|Convenience annotation combining `Default` and `Converter` | Collections of 3rd party classes, nullable core types and nullable 3rd party classes | 
-|`ZKP`| Designate an entry class for ZKP serialization | Any user class|
+|`ZKP`| Designate an entry class for ZKP serialization | Any user class                                                                       |
 
 These annotations make use of the following interfaces
 

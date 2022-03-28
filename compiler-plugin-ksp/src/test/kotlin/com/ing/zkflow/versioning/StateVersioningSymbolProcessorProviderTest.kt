@@ -124,23 +124,23 @@ class StateVersioningSymbolProcessorProviderTest {
                 interface MyStateInterface: Versioned
                 @ZKP
                 data class MyStateV1(
-                    val name: @UTF8(8)  String
+                    val name: @Size(8)  String
                 ) : MyStateInterface
                 
                 
                 @ZKP
                 data class MyStateV2(
-                    val firstName: @UTF8(8)  String,
-                    val lastName: @UTF(8) String
+                    val firstName: @Size(8)  String,
+                    val lastName: @Size(8) String
                 ) : MyStateInterface {
                     @ZincUpgradeMethod(""${'"'}${'"'}MyState::new(previousState.name,"")""${'"'})
                     constructor(previousState: MyStateV1) : this(previousState.name, "")
                 }
                 
                 data class MyState(
-                    val firstName: @UTF8(8)  String,
-                    val lastName: @UTF(8) String,
-                    val telNr: @UTF(10) String
+                    val firstName: @Size(8)  String,
+                    val lastName: @Size(8) String,
+                    val telNr: @Size(10) String
                 ): MyStateInterface {
                     @ZincUpgradeMethod(""${'"'}${'"'}MyState::new(previousState.firstName,previousState.lastName,"")""${'"'})
                     constructor(previousState: MyStateV2) : this(previousState.firstName, previousState.lastName, "")

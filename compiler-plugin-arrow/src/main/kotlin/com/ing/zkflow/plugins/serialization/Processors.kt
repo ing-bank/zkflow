@@ -4,11 +4,9 @@ package com.ing.zkflow.plugins.serialization
 
 import com.ing.zkflow.SerdeLogger
 import com.ing.zkflow.Surrogate
-import com.ing.zkflow.annotations.ASCII
 import com.ing.zkflow.annotations.ASCIIChar
 import com.ing.zkflow.annotations.BigDecimalSize
 import com.ing.zkflow.annotations.Size
-import com.ing.zkflow.annotations.UTF8
 import com.ing.zkflow.annotations.UTF8Char
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.annotations.corda.Algorithm
@@ -52,9 +50,7 @@ import com.ing.zkflow.serialization.serializer.corda.PublicKeySerializer
 import com.ing.zkflow.serialization.serializer.corda.SecureHashSerializer
 import com.ing.zkflow.serialization.serializer.corda.SignatureAttachmentConstraintSerializer
 import com.ing.zkflow.serialization.serializer.corda.WhitelistedByZoneAttachmentConstraintSerializer
-import com.ing.zkflow.serialization.serializer.string.FixedLengthASCIIStringSerializer
 import com.ing.zkflow.serialization.serializer.string.FixedLengthStringSerializer
-import com.ing.zkflow.serialization.serializer.string.FixedLengthUTF8StringSerializer
 import net.corda.core.contracts.AlwaysAcceptAttachmentConstraint
 import net.corda.core.contracts.AttachmentConstraint
 import net.corda.core.contracts.AutomaticHashConstraint
@@ -205,27 +201,7 @@ internal object Processors {
         },
         //
         String::class.simpleName!! to ToSerializingObject { contextualizedOriginal, _ ->
-            // Require com.ing.zkflow.annotations.ASCII/com.ing.zkflow.annotations.UTF8/com.ing.zkflow.annotations.Size annotation.
-            contextualizedOriginal.annotationSingleArgument<ASCII>()?.let { maxLength ->
-                return@ToSerializingObject TypeSerializingObject.ExplicitType(
-                    contextualizedOriginal,
-                    FixedLengthASCIIStringSerializer::class,
-                    emptyList()
-                ) { _, outer, _ ->
-                    "object $outer: ${FixedLengthASCIIStringSerializer::class.qualifiedName}($maxLength)"
-                }
-            }
-
-            contextualizedOriginal.annotationSingleArgument<UTF8>()?.let { maxLength ->
-                return@ToSerializingObject TypeSerializingObject.ExplicitType(
-                    contextualizedOriginal,
-                    FixedLengthUTF8StringSerializer::class,
-                    emptyList()
-                ) { _, outer, _ ->
-                    "object $outer: ${FixedLengthUTF8StringSerializer::class.qualifiedName}($maxLength)"
-                }
-            }
-
+            // Require com.ing.zkflow.annotations.Size annotation.
             contextualizedOriginal.annotationSingleArgument<Size>()?.let { maxLength ->
                 return@ToSerializingObject TypeSerializingObject.ExplicitType(
                     contextualizedOriginal,
@@ -236,7 +212,7 @@ internal object Processors {
                 }
             }
 
-            error("String `${contextualizedOriginal.ktTypeReference.text}` must be annotated with either ${UTF8::class.simpleName}, ${ASCII::class.simpleName} or ${Size::class.simpleName} annotations")
+            error("String `${contextualizedOriginal.ktTypeReference.text}` must be annotated with ${Size::class.simpleName} annotation")
         },
         //
         //

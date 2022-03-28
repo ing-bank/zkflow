@@ -1,7 +1,7 @@
 package io.ivno.annotated
 
 import com.ing.zkflow.Via
-import com.ing.zkflow.annotations.ASCII
+import com.ing.zkflow.annotations.Size
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.annotations.corda.EdDSA
 import io.ivno.annotated.deps.BigDecimalAmount
@@ -23,10 +23,10 @@ data class IvnoDeposit constructor(
     val tokenIssuingEntity: @EdDSA Party,
     val amount: @Via<BigDecimalAmount_LinearPointer_IvnoTokenType> BigDecimalAmount<LinearPointer<IvnoTokenType>>,
     //
-    val reference: @ASCII(10) String?,
+    val reference: @Size(10) String?,
     val status: DepositStatus,
     val timestamp: Instant,
-    val accountId: @ASCII(10) String,
+    val accountId: @Size(10) String,
     val linearId: @Via<UniqueIdentifierSurrogate> UniqueIdentifier
 )
 
@@ -46,7 +46,7 @@ data class IvnoTokenType(
     val network: @Via<NetworkEdDSAAnonymousOperator> Network,
     val custodian: @EdDSA Party,
     val tokenIssuingEntity: @EdDSA Party,
-    val displayName: @ASCII(10) String,
+    val displayName: @Size(10) String,
     val fractionDigits: Int = 0,
     override val linearId: @Via<UniqueIdentifierSurrogate> UniqueIdentifier = UniqueIdentifier()
 ) : LinearState {

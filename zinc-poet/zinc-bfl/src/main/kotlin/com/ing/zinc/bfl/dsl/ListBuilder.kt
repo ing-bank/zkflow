@@ -21,17 +21,10 @@ class ListBuilder {
     companion object {
         fun list(init: ListBuilder.() -> Unit): BflList = ListBuilder().apply(init).build()
 
-        fun utf8String(maxSize: Int): BflList = list {
-            capacity = maxSize
-            elementType = BflPrimitive.I16
-            name = "Utf8String$maxSize"
-            sizeType = BflPrimitive.U32
-        }
-
-        fun asciiString(maxSize: Int): BflList = list {
+        fun string(maxSize: Int): BflList = list {
             capacity = maxSize
             elementType = BflPrimitive.I8
-            name = "AsciiString$maxSize"
+            name = "String$maxSize"
             sizeType = BflPrimitive.U32
         }
 

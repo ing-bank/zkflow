@@ -4,8 +4,7 @@ import com.ing.zkflow.serialization.serializer.FixedLengthFloatingPointSerialize
 import com.ing.zkflow.serialization.serializer.FixedLengthFloatingPointSerializer.FloatSerializer
 import com.ing.zkflow.serialization.serializer.char.ASCIICharSerializer
 import com.ing.zkflow.serialization.serializer.char.UTF8CharSerializer
-import com.ing.zkflow.serialization.serializer.string.FixedLengthASCIIStringSerializer
-import com.ing.zkflow.serialization.serializer.string.FixedLengthUTF8StringSerializer
+import com.ing.zkflow.serialization.serializer.string.FixedLengthStringSerializer
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.AbstractEncoder
 import kotlinx.serialization.encoding.CompositeEncoder
@@ -85,7 +84,7 @@ internal sealed class BinaryEncoder(
         WILL_NOT_IMPLEMENT("To encode Char, use ${ASCIICharSerializer::class.qualifiedName} or ${UTF8CharSerializer::class.qualifiedName}")
     }
     override fun encodeString(value: String) {
-        WILL_NOT_IMPLEMENT("To encode String, use ${FixedLengthASCIIStringSerializer::class.qualifiedName} or ${FixedLengthUTF8StringSerializer::class.qualifiedName}")
+        WILL_NOT_IMPLEMENT("To encode String, use ${FixedLengthStringSerializer::class.qualifiedName} or ${FixedLengthStringSerializer::class.qualifiedName}")
     }
 
     override fun beginCollection(descriptor: SerialDescriptor, collectionSize: Int): CompositeEncoder {
