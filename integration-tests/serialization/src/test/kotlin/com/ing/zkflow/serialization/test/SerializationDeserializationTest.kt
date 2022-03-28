@@ -107,6 +107,14 @@ class SerializationDeserializationTest {
     }
 
     @Test
+    fun `wrapped string that is serialized and deserialized should equal the original`(@TempDir tempDir: Path) {
+        val input = WrappedString("a")
+        val inputSerializer = WrappedString.serializer()
+        val actual = tempDir.serializeAndDeserializeInZinc(input, inputSerializer)
+        actual shouldBe listOf(JsonPrimitive("97")).toJsonList(8, JsonPrimitive("0"))
+    }
+
+    @Test
     fun `wrapped MockAsset that is serialized and deserialized should equal the original`(@TempDir tempDir: Path) {
         val input = WrappedMockAsset(MockAsset(TestIdentity.fresh("alice").party.anonymise()))
         val inputSerializer = WrappedMockAsset.serializer()
@@ -225,6 +233,11 @@ class SerializationDeserializationTest {
         @ZKP
         data class WrappedAsciiString(
             override val value: @ASCII(8) String
+        ) : WrappedValue<String>
+
+        @ZKP
+        data class WrappedString(
+            override val value: @Size(8) String
         ) : WrappedValue<String>
 
         @ZKP
