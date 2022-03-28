@@ -30,6 +30,7 @@ class StableIdVersionedSymbolProcessorProviderTest : ProcessorTest(StableIdVersi
         private val kotlinFile = SourceFile.kotlin(
             "StateVersions.kt",
             """
+                package com.ing.zkflow.contract
                 import com.ing.zkflow.common.contracts.ZKContractState
                 import com.ing.zkflow.common.versioning.Versioned
 

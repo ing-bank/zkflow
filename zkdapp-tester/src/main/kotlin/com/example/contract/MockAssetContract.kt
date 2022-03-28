@@ -14,26 +14,30 @@ import net.corda.core.identity.AnonymousParty
 import net.corda.core.transactions.LedgerTransaction
 import org.intellij.lang.annotations.Language
 import java.util.Random
+import com.ing.zkflow.common.versioning.Versioned
+
 
 class MockAssetContract : Contract {
     companion object {
         const val ID: ContractClassName = "com.example.contract.MockAssetContract"
     }
 
+    interface  MockAssetInterface: Versioned
     @ZKP
     @BelongsToContract(MockAssetContract::class)
     data class MockAsset(
         override val owner: @EdDSA AnonymousParty,
         val value: Int = Random().nextInt()
-    ) : ZKOwnableState {
+    ) : ZKOwnableState, MockAssetInterface {
         override val participants: List<AnonymousParty> = listOf(owner)
 
         override fun withNewOwner(newOwner: AnonymousParty): CommandAndState =
             CommandAndState(Move(), copy(owner = newOwner))
     }
 
+    interface  MoveInterface: Versioned
     @ZKP
-    class Move : ZKCommandData {
+    class Move : ZKCommandData, MoveInterface {
         override val metadata = commandMetadata {
             numberOfSigners = 2
             inputs {
@@ -63,8 +67,9 @@ class MockAssetContract : Contract {
         }
     }
 
+    interface  IssueInterface: Versioned
     @ZKP
-    class Issue : ZKCommandData {
+    class Issue : ZKCommandData, IssueInterface {
         override val metadata = commandMetadata {
             numberOfSigners = 1
             outputs {

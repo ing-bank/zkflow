@@ -1,5 +1,6 @@
 package com.ing.zkflow.common.transactions
 
+import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.contracts.ZKContractState
 import com.ing.zkflow.common.network.ZKAttachmentConstraintType
@@ -48,6 +49,7 @@ class ZKVerifierTransactionTest {
     }
 
     @BelongsToContract(LocalContract::class)
+    @ZKP
     data class TestState(
         val owner: AnonymousParty,
         val value: Int = Random().nextInt(1000)
