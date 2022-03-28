@@ -49,8 +49,11 @@ object StateVersionSorting {
         stateDeclarations: List<KSClassDeclaration>
     ): Map<String, List<KSClassDeclaration>> {
         val groupedStateDeclarations = stateDeclarations.groupBy {
-            it.superTypes.single { superType -> familyNames.any { familyName -> familyName == "$superType" } }
-                .toString()
+            it.superTypes.single { superType ->
+                familyNames.any { familyName ->
+                    familyName == superType.resolve().declaration.qualifiedName?.asString()
+                }
+            }.toString()
         }
         return groupedStateDeclarations.map { (stateName, declarationsOfThisFamily) ->
             val predecessorMap = declarationsOfThisFamily.associateWith { it.getPredecessor(declarationsOfThisFamily) }
