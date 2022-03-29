@@ -50,8 +50,9 @@ object StateVersionSorting {
     ): Map<String, List<KSClassDeclaration>> {
         val groupedStateDeclarations = stateDeclarations.groupBy {
             it.superTypes.single { superType ->
+                val superTypeName = superType.resolve().declaration.qualifiedName?.asString()
                 familyNames.any { familyName ->
-                    familyName == superType.resolve().declaration.qualifiedName?.asString()
+                    familyName == superTypeName
                 }
             }.toString()
         }
