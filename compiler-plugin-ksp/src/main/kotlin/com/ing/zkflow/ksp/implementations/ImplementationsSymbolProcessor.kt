@@ -22,7 +22,7 @@ class ImplementationsSymbolProcessor(
     private val metaInfServiceRegister = MetaInfServiceRegister(codeGenerator)
 
     private val implementationsVisitor = ImplementationsVisitor(
-        implementationsProcessors.map { it.allInterfaces }.distinct()
+        implementationsProcessors.map { setOf(it.interfaceClass) }
     )
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
@@ -39,7 +39,7 @@ class ImplementationsSymbolProcessor(
             }
             .forEach { (kClassSet, implementations) ->
                 implementationsProcessors
-                    .filter { it.allInterfaces == kClassSet }
+                    .filter { setOf(it.interfaceClass) == kClassSet }
                     .map { it.process(implementations) }
                     .forEach {
                         if (it.implementations.isNotEmpty()) {

@@ -11,6 +11,8 @@ import kotlin.reflect.KClass
 
 /**
  * Implementation of [KSAbstractVisitor] that looks for implementations of [interfaceClasses].
+ * @param interfaceClasses: each element of the list is a set of interfaces to look for. The visitor will look for
+ *  declarations which implement ALL of the interfaces in the set.
  */
 class ImplementationsVisitor(
     private val interfaceClasses: List<Set<KClass<*>>>
