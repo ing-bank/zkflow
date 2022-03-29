@@ -16,12 +16,14 @@ annotation class Size(val size: Int)
 @Target(AnnotationTarget.TYPE)
 annotation class UTF8(val byteSize: Int)
 
-// In a UTF-8 string, each character occupies 2 bytes.
+/**
+ * A Unicode character (codepoint) occupies 2 bytes.
+ */
 @Target(AnnotationTarget.TYPE)
-annotation class UTF8Char
+annotation class UnicodeChar
 
 /**
- * In an ASCII string, each character occupies 1 byte.
+ * An ASCII character occupies 1 byte.
  */
 @Target(AnnotationTarget.TYPE)
 annotation class ASCIIChar

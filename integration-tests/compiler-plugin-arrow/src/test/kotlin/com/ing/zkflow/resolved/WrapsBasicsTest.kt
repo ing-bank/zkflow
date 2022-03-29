@@ -5,7 +5,7 @@ import com.ing.zkflow.serialization.engine.SerdeEngine
 import com.ing.zkflow.serialization.serializer.IntSerializer
 import com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializerWithDefault
 import com.ing.zkflow.serialization.serializer.char.ASCIICharSerializer
-import com.ing.zkflow.serialization.serializer.char.UTF8CharSerializer
+import com.ing.zkflow.serialization.serializer.char.UnicodeCharSerializer
 import com.ing.zkflow.serialization.serializer.string.FixedLengthStringSerializer
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.Contextual
@@ -29,7 +29,7 @@ data class WrapsBasics(
     val string: @Contextual String = "䶖万"
 ) {
     object Char_0 : WrappedFixedLengthKSerializerWithDefault<Char>(ASCIICharSerializer)
-    object Char_1 : WrappedFixedLengthKSerializerWithDefault<Char>(UTF8CharSerializer)
+    object Char_1 : WrappedFixedLengthKSerializerWithDefault<Char>(UnicodeCharSerializer)
     object Int_0 : WrappedFixedLengthKSerializerWithDefault<Int>(IntSerializer)
     object String_0 : FixedLengthStringSerializer(6)
 }

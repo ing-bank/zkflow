@@ -42,7 +42,7 @@ class ZincTypeGeneratorTest {
             Arguments.of(ClassWithLong.serializer().descriptor, structWithLong),
             Arguments.of(ClassWithULong.serializer().descriptor, structWithULong),
             Arguments.of(ClassWithAsciiChar.serializer().descriptor, structWithAsciiChar),
-            Arguments.of(ClassWithUtf8Char.serializer().descriptor, structWithUtf8Char),
+            Arguments.of(ClassWithUnicodeChar.serializer().descriptor, structWithUnicodeChar),
             Arguments.of(ClassWithString.serializer().descriptor, structWithString),
             Arguments.of(ClassWithNullableInt.serializer().descriptor, structWithNullableInt),
             Arguments.of(ClassWithListOfInt.serializer().descriptor, structWithListOfInt),

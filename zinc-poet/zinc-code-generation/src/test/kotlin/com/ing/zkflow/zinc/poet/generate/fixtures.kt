@@ -12,7 +12,7 @@ import com.ing.zinc.bfl.dsl.StructBuilder.Companion.struct
 import com.ing.zkflow.annotations.ASCIIChar
 import com.ing.zkflow.annotations.Size
 import com.ing.zkflow.annotations.UTF8
-import com.ing.zkflow.annotations.UTF8Char
+import com.ing.zkflow.annotations.UnicodeChar
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.annotations.corda.EdDSA
 import com.ing.zkflow.annotations.corda.SHA256
@@ -48,7 +48,7 @@ data class ClassWithULong(val ulong: ULong)
 @ZKP
 data class ClassWithAsciiChar(val asciiChar: @ASCIIChar Char)
 @ZKP
-data class ClassWithUtf8Char(val utf8Char: @UTF8Char Char)
+data class ClassWithUnicodeChar(val unicodeChar: @UnicodeChar Char)
 @ZKP
 data class ClassWithString(val string: @UTF8(8) String)
 @ZKP
@@ -119,9 +119,9 @@ val structWithAsciiChar = struct {
     name = "ClassWithAsciiChar"
     field { name = "ascii_char"; type = BflPrimitive.I8 }
 }
-val structWithUtf8Char = struct {
-    name = "ClassWithUtf8Char"
-    field { name = "utf_8_char"; type = BflPrimitive.I16 }
+val structWithUnicodeChar = struct {
+    name = "ClassWithUnicodeChar"
+    field { name = "unicode_char"; type = BflPrimitive.I16 }
 }
 val structWithString = struct {
     name = "ClassWithString"

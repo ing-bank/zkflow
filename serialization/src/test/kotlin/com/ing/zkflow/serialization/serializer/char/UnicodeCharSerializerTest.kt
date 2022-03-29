@@ -12,20 +12,20 @@ import kotlinx.serialization.Serializable
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 
-class UTF8CharSerializerTest : SerializerTest {
+class UnicodeCharSerializerTest : SerializerTest {
     private val char = '的'
 
     @ParameterizedTest
     @MethodSource("engines")
     fun `UTF char must be serializable`(engine: SerdeEngine) {
-        engine.assertRoundTrip(UTF8CharSerializer, char)
+        engine.assertRoundTrip(UnicodeCharSerializer, char)
     }
 
     @ParameterizedTest
     @MethodSource("engines")
     fun `UTF8 chars must have equal length serialization`(engine: SerdeEngine) {
-        engine.serialize(UTF8CharSerializer, char).size shouldBe
-            engine.serialize(UTF8CharSerializer, 'z').size
+        engine.serialize(UnicodeCharSerializer, char).size shouldBe
+            engine.serialize(UnicodeCharSerializer, 'z').size
     }
 
     @ParameterizedTest
@@ -50,7 +50,7 @@ class UTF8CharSerializerTest : SerializerTest {
 
     @Serializable
     data class ContainsChars(
-        @Serializable(with = UTF8CharSerializer::class)
+        @Serializable(with = UnicodeCharSerializer::class)
         val char: Char = '的',
 
         @Serializable(with = Char_0::class)
@@ -58,7 +58,7 @@ class UTF8CharSerializerTest : SerializerTest {
     ) {
         object Char_0 : FixedLengthListSerializer<Char?>(MAX_SIZE, Char_1)
         object Char_1 : NullableSerializer<Char>(Char_2)
-        object Char_2 : WrappedFixedLengthKSerializerWithDefault<Char>(UTF8CharSerializer)
+        object Char_2 : WrappedFixedLengthKSerializerWithDefault<Char>(UnicodeCharSerializer)
 
         companion object {
             const val MAX_SIZE = 5

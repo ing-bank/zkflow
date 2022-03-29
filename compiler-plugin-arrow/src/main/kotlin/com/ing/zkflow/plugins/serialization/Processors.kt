@@ -8,7 +8,7 @@ import com.ing.zkflow.annotations.ASCIIChar
 import com.ing.zkflow.annotations.BigDecimalSize
 import com.ing.zkflow.annotations.Size
 import com.ing.zkflow.annotations.UTF8
-import com.ing.zkflow.annotations.UTF8Char
+import com.ing.zkflow.annotations.UnicodeChar
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.annotations.corda.Algorithm
 import com.ing.zkflow.annotations.corda.CordaX500NameSpec
@@ -39,7 +39,7 @@ import com.ing.zkflow.serialization.serializer.UUIDSerializer
 import com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializer
 import com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializerWithDefault
 import com.ing.zkflow.serialization.serializer.char.ASCIICharSerializer
-import com.ing.zkflow.serialization.serializer.char.UTF8CharSerializer
+import com.ing.zkflow.serialization.serializer.char.UnicodeCharSerializer
 import com.ing.zkflow.serialization.serializer.corda.AlwaysAcceptAttachmentConstraintSerializer
 import com.ing.zkflow.serialization.serializer.corda.AnonymousPartySerializer
 import com.ing.zkflow.serialization.serializer.corda.AutomaticHashConstraintSerializer
@@ -177,7 +177,7 @@ internal object Processors {
         },
         //
         Char::class.simpleName!! to ToSerializingObject { contextualizedOriginal, _ ->
-            // Require com.ing.zkflow.annotations.ASCIIChar/com.ing.zkflow.annotations.UTF8Char annotation.
+            // Require com.ing.zkflow.annotations.ASCIIChar/com.ing.zkflow.annotations.UnicodeChar annotation.
             contextualizedOriginal.findAnnotation<ASCIIChar>()?.let {
                 return@ToSerializingObject TypeSerializingObject.ExplicitType(
                     contextualizedOriginal,
@@ -188,17 +188,17 @@ internal object Processors {
                 }
             }
 
-            contextualizedOriginal.findAnnotation<UTF8Char>()?.let {
+            contextualizedOriginal.findAnnotation<UnicodeChar>()?.let {
                 return@ToSerializingObject TypeSerializingObject.ExplicitType(
                     contextualizedOriginal,
                     WrappedFixedLengthKSerializerWithDefault::class,
                     emptyList()
                 ) { _, outer, _ ->
-                    "object $outer: ${WrappedFixedLengthKSerializerWithDefault::class.qualifiedName}<${Char::class.simpleName}>(${UTF8CharSerializer::class.qualifiedName})"
+                    "object $outer: ${WrappedFixedLengthKSerializerWithDefault::class.qualifiedName}<${Char::class.simpleName}>(${UnicodeCharSerializer::class.qualifiedName})"
                 }
             }
 
-            error("Char `${contextualizedOriginal.ktTypeReference.text}` must be annotated with either ${UTF8Char::class.simpleName} or ${ASCIIChar::class.simpleName} annotations")
+            error("Char `${contextualizedOriginal.ktTypeReference.text}` must be annotated with either ${UnicodeChar::class.simpleName} or ${ASCIIChar::class.simpleName} annotations")
         },
         //
         String::class.simpleName!! to ToSerializingObject { contextualizedOriginal, _ ->
