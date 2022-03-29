@@ -4,10 +4,17 @@ import com.ing.zkflow.ConversionProvider
 import kotlin.reflect.KClass
 
 /**
- * Bound collection size, e.g., List, Map, String
+ * Bound collection size, e.g., List, Map.
  */
 @Target(AnnotationTarget.TYPE)
 annotation class Size(val size: Int)
+
+/**
+ * Bound UTF-8 string size.
+ * @param byteSize The max number of bytes in the UTF-8 encoded String.
+ */
+@Target(AnnotationTarget.TYPE)
+annotation class UTF8(val byteSize: Int)
 
 // In a UTF-8 string, each character occupies 2 bytes.
 @Target(AnnotationTarget.TYPE)

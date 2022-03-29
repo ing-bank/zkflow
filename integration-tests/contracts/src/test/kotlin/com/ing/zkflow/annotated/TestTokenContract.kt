@@ -1,6 +1,6 @@
 package com.ing.zkflow.annotated
 
-import com.ing.zkflow.annotations.Size
+import com.ing.zkflow.annotations.UTF8
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.annotations.corda.EdDSA
 import com.ing.zkflow.common.contracts.ZKCommandData
@@ -27,7 +27,7 @@ class TestTokenContract : Contract {
         override val owner: @EdDSA AnonymousParty =
             AnonymousParty(PublicKeySerializer.fixedPublicKey(Crypto.EDDSA_ED25519_SHA512)),
         val int: Int = 1877,
-        val string: @Size(10) String = "abc"
+        val string: @UTF8(10) String = "abc"
     ) : ZKOwnableState {
 
         override val participants: List<AnonymousParty> = listOf(owner)

@@ -4,7 +4,7 @@ import com.ing.zkflow.AnonymousParty_EdDSA_DefaultProvider
 import com.ing.zkflow.ConversionProvider
 import com.ing.zkflow.Default
 import com.ing.zkflow.Surrogate
-import com.ing.zkflow.annotations.Size
+import com.ing.zkflow.annotations.UTF8
 import com.ing.zkflow.annotations.ZKPSurrogate
 import com.ing.zkflow.annotations.corda.EdDSA
 import io.ivno.annotated.deps.Network
@@ -12,7 +12,7 @@ import net.corda.core.identity.AnonymousParty
 
 @ZKPSurrogate(NetworkAnonymousOperatorConverter::class)
 data class NetworkEdDSAAnonymousOperator(
-    val value: @Size(10) String,
+    val value: @UTF8(10) String,
     val operator: @EdDSA @Default<AnonymousParty>(AnonymousParty_EdDSA_DefaultProvider::class) AnonymousParty?
 ) : Surrogate<Network> {
     override fun toOriginal() = Network(value, operator)

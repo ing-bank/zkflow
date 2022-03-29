@@ -7,6 +7,7 @@ import com.ing.zkflow.Surrogate
 import com.ing.zkflow.annotations.ASCIIChar
 import com.ing.zkflow.annotations.BigDecimalSize
 import com.ing.zkflow.annotations.Size
+import com.ing.zkflow.annotations.UTF8
 import com.ing.zkflow.annotations.UTF8Char
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.annotations.corda.Algorithm
@@ -201,8 +202,8 @@ internal object Processors {
         },
         //
         String::class.simpleName!! to ToSerializingObject { contextualizedOriginal, _ ->
-            // Require com.ing.zkflow.annotations.Size annotation.
-            contextualizedOriginal.annotationSingleArgument<Size>()?.let { maxLength ->
+            // Require com.ing.zkflow.annotations.UTF8 annotation.
+            contextualizedOriginal.annotationSingleArgument<UTF8>()?.let { maxLength ->
                 return@ToSerializingObject TypeSerializingObject.ExplicitType(
                     contextualizedOriginal,
                     FixedLengthStringSerializer::class,
@@ -212,7 +213,7 @@ internal object Processors {
                 }
             }
 
-            error("String `${contextualizedOriginal.ktTypeReference.text}` must be annotated with ${Size::class.simpleName} annotation")
+            error("String `${contextualizedOriginal.ktTypeReference.text}` must be annotated with ${UTF8::class.simpleName} annotation")
         },
         //
         //

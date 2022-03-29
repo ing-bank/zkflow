@@ -12,6 +12,7 @@ import com.ing.zinc.bfl.generator.ZincGenerator.zincSourceFile
 import com.ing.zinc.bfl.mod
 import com.ing.zinc.bfl.use
 import com.ing.zkflow.annotations.Size
+import com.ing.zkflow.annotations.UTF8
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.annotations.corda.EdDSA
 import com.ing.zkflow.common.contracts.ZKCommandData
@@ -209,7 +210,7 @@ class SerializationDeserializationTest {
 
         @ZKP
         data class WrappedString(
-            override val value: @Size(8) String
+            override val value: @UTF8(8) String
         ) : WrappedValue<String>
 
         @ZKP

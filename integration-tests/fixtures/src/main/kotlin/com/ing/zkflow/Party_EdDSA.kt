@@ -3,6 +3,7 @@
 package com.ing.zkflow
 
 import com.ing.zkflow.annotations.Size
+import com.ing.zkflow.annotations.UTF8
 import com.ing.zkflow.annotations.ZKPSurrogate
 import net.corda.core.crypto.Crypto
 import net.corda.core.identity.CordaX500Name
@@ -11,7 +12,7 @@ import net.corda.core.identity.Party
 @ZKPSurrogate(Party_EdDSA_Converter::class)
 @Suppress("ArrayInDataClass")
 data class Party_EdDSA(
-    val cordaX500Name: @Size(CordaX500NameSurrogate.UPPER_BOUND) String,
+    val cordaX500Name: @UTF8(CordaX500NameSurrogate.UPPER_BOUND) String,
     val encodedEdDSA: @Size(PublicKey_EdDSA.ED_DSA_X509_ENCODING_LENGTH) ByteArray
 ) : Surrogate<Party> {
     override fun toOriginal() = Party(

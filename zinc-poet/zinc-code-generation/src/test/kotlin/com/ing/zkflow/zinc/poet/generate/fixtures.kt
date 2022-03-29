@@ -11,6 +11,7 @@ import com.ing.zinc.bfl.dsl.OptionBuilder.Companion.option
 import com.ing.zinc.bfl.dsl.StructBuilder.Companion.struct
 import com.ing.zkflow.annotations.ASCIIChar
 import com.ing.zkflow.annotations.Size
+import com.ing.zkflow.annotations.UTF8
 import com.ing.zkflow.annotations.UTF8Char
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.annotations.corda.EdDSA
@@ -49,7 +50,7 @@ data class ClassWithAsciiChar(val asciiChar: @ASCIIChar Char)
 @ZKP
 data class ClassWithUtf8Char(val utf8Char: @UTF8Char Char)
 @ZKP
-data class ClassWithString(val string: @Size(8) String)
+data class ClassWithString(val string: @UTF8(8) String)
 @ZKP
 data class ClassWithNullableInt(val nullableInt: Int?)
 @ZKP
@@ -57,7 +58,7 @@ data class ClassWithListOfInt(val list: @Size(8) List<Int>)
 @ZKP
 data class ClassWithSetOfInt(val set: @Size(8) Set<Int>)
 @ZKP
-data class ClassWithMapOfStringToInt(val map: @Size(8) Map<@Size(8) String, Int>)
+data class ClassWithMapOfStringToInt(val map: @Size(8) Map<@UTF8(8) String, Int>)
 @ZKP
 enum class EnumWithNumbers { ONE, TWO, THREE }
 @ZKP

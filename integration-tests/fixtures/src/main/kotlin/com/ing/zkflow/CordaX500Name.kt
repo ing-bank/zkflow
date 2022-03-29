@@ -2,13 +2,13 @@
 
 package com.ing.zkflow
 
-import com.ing.zkflow.annotations.Size
+import com.ing.zkflow.annotations.UTF8
 import com.ing.zkflow.annotations.ZKPSurrogate
 import net.corda.core.identity.CordaX500Name
 
 @ZKPSurrogate(CordaX500NameConverter::class)
 data class CordaX500NameSurrogate(
-    val concat: @Size(UPPER_BOUND) String
+    val concat: @UTF8(UPPER_BOUND) String
 ) : Surrogate<CordaX500Name> {
     override fun toOriginal(): CordaX500Name =
         CordaX500Name.parse(concat)
