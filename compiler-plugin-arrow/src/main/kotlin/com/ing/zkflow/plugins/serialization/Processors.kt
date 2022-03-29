@@ -51,7 +51,7 @@ import com.ing.zkflow.serialization.serializer.corda.PublicKeySerializer
 import com.ing.zkflow.serialization.serializer.corda.SecureHashSerializer
 import com.ing.zkflow.serialization.serializer.corda.SignatureAttachmentConstraintSerializer
 import com.ing.zkflow.serialization.serializer.corda.WhitelistedByZoneAttachmentConstraintSerializer
-import com.ing.zkflow.serialization.serializer.string.FixedLengthStringSerializer
+import com.ing.zkflow.serialization.serializer.string.FixedLengthUtf8StringSerializer
 import net.corda.core.contracts.AlwaysAcceptAttachmentConstraint
 import net.corda.core.contracts.AttachmentConstraint
 import net.corda.core.contracts.AutomaticHashConstraint
@@ -206,10 +206,10 @@ internal object Processors {
             contextualizedOriginal.annotationSingleArgument<UTF8>()?.let { maxLength ->
                 return@ToSerializingObject TypeSerializingObject.ExplicitType(
                     contextualizedOriginal,
-                    FixedLengthStringSerializer::class,
+                    FixedLengthUtf8StringSerializer::class,
                     emptyList()
                 ) { _, outer, _ ->
-                    "object $outer: ${FixedLengthStringSerializer::class.qualifiedName}($maxLength)"
+                    "object $outer: ${FixedLengthUtf8StringSerializer::class.qualifiedName}($maxLength)"
                 }
             }
 

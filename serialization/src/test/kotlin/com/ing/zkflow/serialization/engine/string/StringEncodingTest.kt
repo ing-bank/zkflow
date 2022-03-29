@@ -3,7 +3,7 @@ package com.ing.zkflow.serialization.engine.string
 import com.ing.zkflow.serialization.scheme.BinaryFixedLengthScheme
 import com.ing.zkflow.serialization.scheme.ByteBinaryFixedLengthScheme
 import com.ing.zkflow.serialization.serializer.ByteSerializer
-import com.ing.zkflow.serialization.serializer.string.FixedLengthStringSerializer
+import com.ing.zkflow.serialization.serializer.string.FixedLengthUtf8StringSerializer
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
@@ -13,8 +13,8 @@ class StringEncodingTest {
     @ParameterizedTest
     @MethodSource("data")
     fun `String intermediate representation must be correct`(scheme: BinaryFixedLengthScheme, string: String, expected: ByteArray) {
-        scheme.encodeToBinary(FixedLengthStringSerializer(MAX_LENGTH), string) shouldBe expected
-        scheme.decodeFromBinary(FixedLengthStringSerializer(MAX_LENGTH), expected) shouldBe string
+        scheme.encodeToBinary(FixedLengthUtf8StringSerializer(MAX_LENGTH), string) shouldBe expected
+        scheme.decodeFromBinary(FixedLengthUtf8StringSerializer(MAX_LENGTH), expected) shouldBe string
     }
 
     companion object {

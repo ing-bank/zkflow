@@ -7,16 +7,19 @@ import com.ing.zkflow.serialization.serializer.FixedLengthCollectionSerializer
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 
-open class FixedLengthStringSerializer(private val maxLength: Int) : FixedLengthKSerializerWithDefault<String> {
-    private val strategy = FixedLengthCollectionSerializer(maxLength, ByteSerializer, FixedLengthType.STRING)
+/**
+ * Serializer for [String], using UTF-8 encoding. The UTF-8 encoded byte array is restrained by [maxSize].
+ */
+open class FixedLengthUtf8StringSerializer(private val maxSize: Int) : FixedLengthKSerializerWithDefault<String> {
+    private val strategy = FixedLengthCollectionSerializer(maxSize, ByteSerializer, FixedLengthType.UTF8_STRING)
 
     override val default = ""
     override val descriptor = strategy.descriptor
 
     override fun serialize(encoder: Encoder, value: String) {
         val bytes = value.toByteArray(Charsets.UTF_8)
-        if (bytes.size > maxLength) {
-            throw IllegalArgumentException("String `$value` (${bytes.size}) is longer than $maxLength")
+        if (bytes.size > maxSize) {
+            throw IllegalArgumentException("UTF-8 encoding of String `$value` (${bytes.size}) is longer than $maxSize.")
         }
         encoder.encodeSerializableValue(strategy, bytes.toList())
     }

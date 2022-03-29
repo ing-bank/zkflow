@@ -82,7 +82,7 @@ fun toTree(descriptor: SerialDescriptor, parentCapacity: Int? = null): Tree<Node
                 FixedLengthType.MAP,
                 FixedLengthType.SET,
                 FixedLengthType.BYTE_ARRAY,
-                FixedLengthType.STRING,
+                FixedLengthType.UTF8_STRING,
                 FixedLengthType.EXACT_LIST -> error("Should have been handled by toFixedLengthSerialDescriptorOrThrow")
                 null -> error("Not supported: '${descriptor.serialName}'")
             }

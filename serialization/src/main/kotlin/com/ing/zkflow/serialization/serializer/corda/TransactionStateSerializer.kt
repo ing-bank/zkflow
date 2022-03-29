@@ -4,7 +4,7 @@ import com.ing.zkflow.Surrogate
 import com.ing.zkflow.serialization.serializer.IntSerializer
 import com.ing.zkflow.serialization.serializer.NullableSerializer
 import com.ing.zkflow.serialization.serializer.SurrogateSerializer
-import com.ing.zkflow.serialization.serializer.string.FixedLengthStringSerializer
+import com.ing.zkflow.serialization.serializer.string.FixedLengthUtf8StringSerializer
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import net.corda.core.contracts.AttachmentConstraint
@@ -39,7 +39,7 @@ data class TransactionStateSurrogate<T : ContractState, P : Party, A : Attachmen
     companion object {
         const val CLASSNAME_MAX_LENGTH = 100
 
-        object ContractClassName : FixedLengthStringSerializer(CLASSNAME_MAX_LENGTH)
+        object ContractClassName : FixedLengthUtf8StringSerializer(CLASSNAME_MAX_LENGTH)
         object Encumbrance : NullableSerializer<Int>(IntSerializer)
 
         fun <T : ContractState> from(original: TransactionState<T>) = with(original) {

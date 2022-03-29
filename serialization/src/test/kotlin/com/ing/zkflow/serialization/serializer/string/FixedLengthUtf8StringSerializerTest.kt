@@ -2,15 +2,25 @@ package com.ing.zkflow.serialization.serializer.string
 
 import com.ing.zkflow.serialization.SerializerTest
 import com.ing.zkflow.serialization.engine.SerdeEngine
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.Serializable
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 
-class FixedLengthStringSerializerTest : SerializerTest {
+class FixedLengthUtf8StringSerializerTest : SerializerTest {
     companion object {
         private const val asciiString = "az"
         private const val utf8String = "a的"
+        private const val tooLongString = "This string is way too long."
+    }
+
+    @ParameterizedTest
+    @MethodSource("engines")
+    fun `too long string should fail`(engine: SerdeEngine) {
+        shouldThrow<IllegalArgumentException> {
+            engine.assertRoundTrip(InstanceSerializer, tooLongString)
+        }.message shouldBe "UTF-8 encoding of String `This string is way too long.` (28) is longer than 5."
     }
 
     @ParameterizedTest
@@ -57,5 +67,5 @@ class FixedLengthStringSerializerTest : SerializerTest {
         val innerString: String
     )
 
-    object InstanceSerializer : FixedLengthStringSerializer(5)
+    object InstanceSerializer : FixedLengthUtf8StringSerializer(5)
 }

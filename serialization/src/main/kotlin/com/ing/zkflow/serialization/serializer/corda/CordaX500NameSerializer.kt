@@ -3,7 +3,7 @@ package com.ing.zkflow.serialization.serializer.corda
 import com.ing.zkflow.Surrogate
 import com.ing.zkflow.serialization.FixedLengthKSerializerWithDefault
 import com.ing.zkflow.serialization.serializer.NullableSerializer
-import com.ing.zkflow.serialization.serializer.string.FixedLengthStringSerializer
+import com.ing.zkflow.serialization.serializer.string.FixedLengthUtf8StringSerializer
 import com.ing.zkflow.serialization.toFixedLengthSerialDescriptorOrThrow
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encoding.Decoder
@@ -23,19 +23,19 @@ object CordaX500NameSerializer : FixedLengthKSerializerWithDefault<CordaX500Name
     ) : Surrogate<CordaX500Name> {
 
         object CommonNameSerializer_0 : NullableSerializer<String>(CommonNameSerializer_1)
-        object CommonNameSerializer_1 : FixedLengthStringSerializer(CordaX500Name.MAX_LENGTH_COMMON_NAME)
+        object CommonNameSerializer_1 : FixedLengthUtf8StringSerializer(CordaX500Name.MAX_LENGTH_COMMON_NAME)
 
         object OrganisationUnitSerializer_0 : NullableSerializer<String>(OrganisationUnitSerializer_1)
-        object OrganisationUnitSerializer_1 : FixedLengthStringSerializer(CordaX500Name.MAX_LENGTH_ORGANISATION_UNIT)
+        object OrganisationUnitSerializer_1 : FixedLengthUtf8StringSerializer(CordaX500Name.MAX_LENGTH_ORGANISATION_UNIT)
 
-        object OrganisationSerializer_0 : FixedLengthStringSerializer(CordaX500Name.MAX_LENGTH_ORGANISATION)
+        object OrganisationSerializer_0 : FixedLengthUtf8StringSerializer(CordaX500Name.MAX_LENGTH_ORGANISATION)
 
-        object LocalitySerializer_0 : FixedLengthStringSerializer(CordaX500Name.MAX_LENGTH_LOCALITY)
+        object LocalitySerializer_0 : FixedLengthUtf8StringSerializer(CordaX500Name.MAX_LENGTH_LOCALITY)
 
         object StateSerializer_0 : NullableSerializer<String>(StateSerializer_1)
-        object StateSerializer_1 : FixedLengthStringSerializer(CordaX500Name.MAX_LENGTH_STATE)
+        object StateSerializer_1 : FixedLengthUtf8StringSerializer(CordaX500Name.MAX_LENGTH_STATE)
 
-        object CountrySerializer_0 : FixedLengthStringSerializer(LENGTH_COUNTRY)
+        object CountrySerializer_0 : FixedLengthUtf8StringSerializer(LENGTH_COUNTRY)
 
         override fun toOriginal() =
             CordaX500Name(commonName, organisationUnit, organisation, locality, state, country)

@@ -46,7 +46,7 @@ object ZincTypeGenerator {
             FixedLengthType.LIST -> createList(descriptor)
             FixedLengthType.MAP -> createMap(descriptor)
             FixedLengthType.BYTE_ARRAY -> byteArray(descriptor.getAnnotation<SizeAnnotation>().value)
-            FixedLengthType.STRING -> string(descriptor.getAnnotation<SizeAnnotation>().value)
+            FixedLengthType.UTF8_STRING -> string(descriptor.getAnnotation<SizeAnnotation>().value)
             FixedLengthType.BOOLEAN -> BflPrimitive.Bool
             FixedLengthType.BYTE -> createSignedInteger(Byte.SIZE_BITS)
             FixedLengthType.UBYTE -> createUnsignedInteger(UByte.SIZE_BITS)

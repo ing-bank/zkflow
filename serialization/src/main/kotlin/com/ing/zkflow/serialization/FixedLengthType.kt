@@ -5,7 +5,7 @@ import com.ing.zkflow.serialization.serializer.FixedLengthByteArraySerializer
 import com.ing.zkflow.serialization.serializer.FixedLengthListSerializer
 import com.ing.zkflow.serialization.serializer.FixedLengthMapSerializer
 import com.ing.zkflow.serialization.serializer.FixedLengthSetSerializer
-import com.ing.zkflow.serialization.serializer.string.FixedLengthStringSerializer
+import com.ing.zkflow.serialization.serializer.string.FixedLengthUtf8StringSerializer
 
 enum class FixedLengthType(val serialName: String) {
     EXACT_LIST(ExactLengthListSerializer::class.qualifiedName!!),
@@ -13,7 +13,7 @@ enum class FixedLengthType(val serialName: String) {
     MAP(FixedLengthMapSerializer::class.qualifiedName!!),
     SET(FixedLengthSetSerializer::class.qualifiedName!!),
     BYTE_ARRAY(FixedLengthByteArraySerializer::class.qualifiedName!!),
-    STRING(FixedLengthStringSerializer::class.qualifiedName!!),
+    UTF8_STRING(FixedLengthUtf8StringSerializer::class.qualifiedName!!),
     BYTE(Byte::class.qualifiedName!!),
     SHORT(Short::class.qualifiedName!!),
     INT(Int::class.qualifiedName!!),
