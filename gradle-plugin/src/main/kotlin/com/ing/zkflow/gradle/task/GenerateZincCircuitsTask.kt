@@ -2,13 +2,11 @@ package com.ing.zkflow.gradle.task
 
 import org.gradle.api.DefaultTask
 import org.gradle.api.plugins.JavaPluginConvention
-import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.TaskAction
 import java.io.File
 
 open class GenerateZincCircuitsTask : DefaultTask() {
-    @InputDirectory
-    val generatedKspResources: File = project.buildDir.resolve("generated/ksp/main/resources")
+    private val generatedKspResources: File = project.buildDir.resolve("generated/ksp/main/resources")
 
     @TaskAction
     @Suppress("SpreadOperator")
