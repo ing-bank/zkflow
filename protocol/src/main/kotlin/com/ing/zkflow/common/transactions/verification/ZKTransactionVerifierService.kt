@@ -24,7 +24,9 @@ class ZKTransactionVerifierService(
         ensureNoUncheckedPrivateOutputs(vtx)
         ensureNoUncheckedPrivateInputs(vtx)
 
-        validatePublicComponents(vtx, checkSufficientSignatures)
+        if (checkSufficientSignatures) svtx.verifyRequiredSignatures()
+
+        validatePublicComponents(vtx)
     }
 
     fun verify(stx: SignedTransaction, checkSufficientSignatures: Boolean) {
@@ -34,18 +36,16 @@ class ZKTransactionVerifierService(
         ensureNoUncheckedPrivateOutputs(vtx)
         ensureNoUncheckedPrivateInputs(wtx)
 
-        validatePublicComponents(vtx, checkSufficientSignatures)
+        if (checkSufficientSignatures) stx.verifyRequiredSignatures()
+
+        validatePublicComponents(vtx)
     }
 
     private fun validatePrivateComponents(vtx: ZKVerifierTransaction) = zkTransactionService.verify(vtx)
 
     private fun validatePrivateComponents(wtx: WireTransaction): ZKVerifierTransactionWithoutProofs = zkTransactionService.verify(wtx)
 
-    @Suppress("UNUSED_PARAMETER")
-    private fun validatePublicComponents(tx: ZKVerifierTransaction, checkSufficientSignatures: Boolean) {
-        val ltx = tx.zkToFilteredLedgerTransaction(services)
-        ltx.verify()
-    }
+    private fun validatePublicComponents(tx: ZKVerifierTransaction) = tx.zkToFilteredLedgerTransaction(services).verify()
 
     /*
      * Resolve all inputs: if the UTXOs they point to are private in their creating transaction,

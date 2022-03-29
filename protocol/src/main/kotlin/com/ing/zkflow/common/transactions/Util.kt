@@ -6,6 +6,7 @@ import co.paralleluniverse.fibers.Suspendable
 import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.transactions.verification.ZKTransactionVerifierService
 import com.ing.zkflow.common.zkp.ZKTransactionService
+import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
 import com.ing.zkflow.node.services.ServiceNames
 import com.ing.zkflow.node.services.WritableUtxoInfoStorage
@@ -150,33 +151,33 @@ val TraversableTransaction.commandMetadata get() = commandData.map { it.metadata
 val LedgerTransaction.commandMetadata get() = commandData.map { it.metadata }
 private const val TX_CONTAINS_NO_COMMANDS_WITH_METADATA = "This transaction does not contain any commands with metadata"
 
-fun TraversableTransaction.zkTransactionMetadata(): ResolvedZKTransactionMetadata =
-    if (this.hasZKCommandData) ResolvedZKTransactionMetadata(this.commandMetadata) else error(TX_CONTAINS_NO_COMMANDS_WITH_METADATA)
-
-fun TraversableTransaction.zkTransactionMetadata(classLoader: ClassLoader): ResolvedZKTransactionMetadata {
-    if (this.hasZKCommandData) {
-
-        val loadedCommandMetadata = this.commandMetadata.map {
-            try {
-                Class.forName(it.commandKClass.java.name, false, classLoader).asSubclass(ZKCommandData::class.java).newInstance().metadata
-            } catch (e: Exception) {
-                error("Class definition not found in contract attachment for command: ${it.commandKClass.qualifiedName}")
-            }
+fun zkTransactionMetadata(
+    commandMetadata: List<ResolvedZKCommandMetadata>,
+    classLoader: ClassLoader
+): ResolvedZKTransactionMetadata {
+    assert(commandMetadata.isNotEmpty())
+    val loadedCommandMetadata = commandMetadata.map {
+        try {
+            Class.forName(it.commandKClass.java.name, false, classLoader).asSubclass(ZKCommandData::class.java)
+                .newInstance().metadata
+        } catch (e: Exception) {
+            error("Class definition not found in contract attachment for command: ${it.commandKClass.qualifiedName}")
         }
-
-        return ResolvedZKTransactionMetadata(loadedCommandMetadata)
-    } else
-        error(TX_CONTAINS_NO_COMMANDS_WITH_METADATA)
+    }
+    return ResolvedZKTransactionMetadata(loadedCommandMetadata)
 }
 
-fun TraversableTransaction.zkTransactionMetadataOrNull(): ResolvedZKTransactionMetadata? =
-    if (this.hasZKCommandData) ResolvedZKTransactionMetadata(this.commandMetadata) else null
+fun TraversableTransaction.zkTransactionMetadata(classLoader: ClassLoader = ClassLoader.getSystemClassLoader()): ResolvedZKTransactionMetadata =
+    if (this.hasZKCommandData) zkTransactionMetadata(this.commandMetadata, classLoader) else error(TX_CONTAINS_NO_COMMANDS_WITH_METADATA)
 
-fun LedgerTransaction.zkTransactionMetadata(): ResolvedZKTransactionMetadata =
-    if (this.hasZKCommandData) ResolvedZKTransactionMetadata(this.commandMetadata) else error(TX_CONTAINS_NO_COMMANDS_WITH_METADATA)
+fun TraversableTransaction.zkTransactionMetadataOrNull(classLoader: ClassLoader = ClassLoader.getSystemClassLoader()): ResolvedZKTransactionMetadata? =
+    if (this.hasZKCommandData) zkTransactionMetadata(this.commandMetadata, classLoader) else null
 
-fun ZKTransactionBuilder.zkTransactionMetadata(): ResolvedZKTransactionMetadata =
-    if (this.hasZKCommandData) ResolvedZKTransactionMetadata(this.commandMetadata) else error(TX_CONTAINS_NO_COMMANDS_WITH_METADATA)
+fun LedgerTransaction.zkTransactionMetadata(classLoader: ClassLoader = ClassLoader.getSystemClassLoader()): ResolvedZKTransactionMetadata =
+    if (this.hasZKCommandData) zkTransactionMetadata(this.commandMetadata, classLoader) else error(TX_CONTAINS_NO_COMMANDS_WITH_METADATA)
+
+fun ZKTransactionBuilder.zkTransactionMetadata(classLoader: ClassLoader = ClassLoader.getSystemClassLoader()): ResolvedZKTransactionMetadata =
+    if (this.hasZKCommandData) zkTransactionMetadata(this.commandMetadata, classLoader) else error(TX_CONTAINS_NO_COMMANDS_WITH_METADATA)
 
 fun FilteredTransaction.allComponentNonces(): Map<Int, List<SecureHash>> {
     return filteredComponentGroups.associate { it.groupIndex to it.nonces }
