@@ -2,6 +2,7 @@ package com.ing.zkflow.processors
 
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.ing.zkflow.common.serialization.KClassSerializer
 import com.ing.zkflow.common.serialization.KClassSerializerProvider
 import com.ing.zkflow.ksp.implementations.ServiceLoaderRegistration
 import com.squareup.kotlinpoet.FileSpec
@@ -9,13 +10,11 @@ import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.TypeSpec
-import com.squareup.kotlinpoet.WildcardTypeName
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.buildCodeBlock
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.writeTo
 import com.squareup.kotlinpoet.withIndent
-import kotlinx.serialization.KSerializer
 import kotlin.math.absoluteValue
 import kotlin.random.Random
 import kotlin.reflect.KClass
@@ -49,14 +48,8 @@ class SerializerRegistryProcessor<T : Any>(
                             .addModifiers(KModifier.OVERRIDE)
                             .returns(
                                 List::class.asClassName().parameterizedBy(
-                                    Triple::class.asClassName().parameterizedBy(
-                                        KClass::class.asClassName().parameterizedBy(
-                                            WildcardTypeName.producerOf(interfaceClass)
-                                        ),
-                                        Int::class.asClassName(),
-                                        KSerializer::class.asClassName().parameterizedBy(
-                                            WildcardTypeName.producerOf(interfaceClass)
-                                        )
+                                    KClassSerializer::class.asClassName().parameterizedBy(
+                                        interfaceClass.asClassName()
                                     )
                                 )
                             )
@@ -67,7 +60,7 @@ class SerializerRegistryProcessor<T : Any>(
                                         implementations.entries.forEach { (impl, version) ->
                                             addStatement(
                                                 "%T(%L::class, %L, %L.serializer()),",
-                                                Triple::class,
+                                                KClassSerializer::class,
                                                 impl.toClassName(),
                                                 version,
                                                 impl.toClassName(),

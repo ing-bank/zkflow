@@ -30,8 +30,11 @@ import kotlin.reflect.KClass
  * At runtime, all such providers will be picked up and injected to
  * [BFLSerializationScheme]
  */
+
+data class KClassSerializer<out T : Any>(val klass: KClass<out T>, val id: Int, val serializer: KSerializer<out T>)
+
 interface KClassSerializerProvider<T : Any> {
-    fun list(): List<Triple<KClass<out T>, Int, KSerializer<out T>>>
+    fun list(): List<KClassSerializer<T>>
 }
 
 interface SurrogateSerializerRegistryProvider : KClassSerializerProvider<Any>
@@ -56,7 +59,10 @@ abstract class SerializerRegistry<T : Any> {
      * or for T. And we can know for sure that it is a T. This is why we can safely cast to T without the variance annotation on retrieval.
      */
     @Synchronized
-    fun register(klass: KClass<out T>, id: Int, serializer: KSerializer<out T>) {
+    fun register(klassSerializer: KClassSerializer<T>) {
+        val klass = klassSerializer.klass
+        val serializer = klassSerializer.serializer
+        val id = klassSerializer.id
         log.debug("Registering serializer `$serializer` under id `$id` for `${klass.qualifiedName}`")
 
         obj2Id.put(klass, id)?.let { throw SerializerRegistryError.ClassAlreadyRegistered(klass, it) }
@@ -67,7 +73,7 @@ abstract class SerializerRegistry<T : Any> {
 
     @Synchronized
     fun register(klass: KClass<out T>, serializer: KSerializer<out T>) =
-        register(klass, klass.hashCode(), serializer)
+        register(KClassSerializer<T>(klass, klass.hashCode(), serializer))
 
     fun identify(klass: KClass<*>): Int = obj2Id[klass] ?: throw SerializerRegistryError.ClassNotRegistered(klass)
 
