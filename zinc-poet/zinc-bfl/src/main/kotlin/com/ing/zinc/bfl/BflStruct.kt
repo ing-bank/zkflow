@@ -313,7 +313,7 @@ open class BflStruct(
     override fun toStructureTree(): Tree<BflSized, BflSized> {
         return Tree.node(toNodeDescriptor()) {
             fields.forEach {
-                node(NodeDescriptor(it.name.snakeToCamelCase(false), it.type.bitSize)) {
+                node(NodeDescriptor(it.name.snakeToCamelCase(capitalize = false), it.type.bitSize)) {
                     addNode(it.type.toStructureTree())
                 }
             }

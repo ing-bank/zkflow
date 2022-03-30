@@ -226,7 +226,7 @@ val structWithParty = struct {
     }
 }
 val secureHashSha256 = struct {
-    name = "SecureHashSHA256"
+    name = "SecureHashSha256"
     field {
         name = "bytes"
         type = byteArray(32)

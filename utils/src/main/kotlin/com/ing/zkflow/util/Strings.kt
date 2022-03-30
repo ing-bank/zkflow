@@ -1,7 +1,21 @@
 package com.ing.zkflow.util
 
-fun String.snakeToCamelCase(capitalize: Boolean): String {
-    return split("_", "-").mapIndexed { index, part ->
+/**
+ * Convert a snake_case string to camelCase.
+ *
+ * @param capitalize capitalize the first element in the output
+ */
+fun String.snakeToCamelCase(capitalize: Boolean): String = snakeToCamelCase(capitalize) { listOf(it) }
+
+/**
+ * Convert a snake_case string to camelCase.
+ *
+ * @param capitalize capitalize the first element in the output
+ * @param transform function to apply to the individual elements, allowing to further split each element
+ */
+fun String.snakeToCamelCase(capitalize: Boolean, transform: (String) -> Iterable<String>): String = split("_", "-")
+    .flatMap { transform(it) }
+    .mapIndexed { index, part ->
         if (part.isEmpty()) {
             part
         } else {
@@ -15,5 +29,28 @@ fun String.snakeToCamelCase(capitalize: Boolean): String {
             val tail = part.substring(1).toLowerCase()
             head + tail
         }
-    }.joinToString("") { it }
+    }
+    .joinToString("") { it }
+
+/**
+ * Splits a string into a list of strings, splitting before [markers].
+ * Compared to [String.split], this function does not remove the markers from the result.
+ */
+fun String.splitBefore(vararg markers: String): List<String> {
+    val result = mutableListOf<String>()
+    var currentIndex = 0
+    do {
+        val index = markers
+            .map { marker -> this.indexOf(marker, startIndex = currentIndex + 1) }
+            .filter { it >= currentIndex }
+            .minOrNull()
+        currentIndex = if (index == null) {
+            result.add(this.substring(currentIndex))
+            -1
+        } else {
+            result.add(this.substring(currentIndex, index))
+            index
+        }
+    } while (currentIndex > 0)
+    return result.toList()
 }

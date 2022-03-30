@@ -8,9 +8,24 @@ import kotlinx.serialization.Serializable
 import net.corda.core.crypto.DigestAlgorithm
 import net.corda.core.crypto.SecureHash
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 
 class SecureHashSerializerTest : SerializerTest {
+    companion object {
+        @JvmStatic
+        fun secureHashSerializerNameFixtures() = listOf(
+            Arguments.of(HashAnnotations.Sha256_0, "SecureHashSha256"),
+            Arguments.of(HashAnnotations.FancyHash_0, "SecureHashFancyHash")
+        )
+    }
+
+    @ParameterizedTest
+    @MethodSource("secureHashSerializerNameFixtures")
+    fun `SecureHashSerializer descriptor names should be camelCase`(serializer: SecureHashSerializer, expectedName: String) {
+        serializer.descriptor.serialName shouldBe expectedName
+    }
+
     @ParameterizedTest
     @MethodSource("engines")
     fun `SecureHash must be serializable`(engine: SerdeEngine) {
@@ -40,13 +55,13 @@ class SecureHashSerializerTest : SerializerTest {
         object FancyHash_0 : SecureHashSerializer(FancyHash::class)
 
         companion object {
-            val zero = HashAnnotations(SecureHash.zeroHash, SecureHash.HASH("FancyHash", ByteArray(8) { 0 }))
-            val one = HashAnnotations(SecureHash.allOnesHash, SecureHash.HASH("FancyHash", ByteArray(8) { 1 }))
+            val zero = HashAnnotations(SecureHash.zeroHash, SecureHash.HASH("FANCY_HASH", ByteArray(8) { 0 }))
+            val one = HashAnnotations(SecureHash.allOnesHash, SecureHash.HASH("FANCY_HASH", ByteArray(8) { 1 }))
         }
     }
 
     private class FancyHash : DigestAlgorithm {
-        override val algorithm: String = "FancyHash"
+        override val algorithm: String = "FANCY_HASH"
         override val digestLength: Int = 8
 
         override fun digest(bytes: ByteArray): ByteArray {
@@ -54,8 +69,8 @@ class SecureHashSerializerTest : SerializerTest {
         }
 
         companion object {
-            val zero = SecureHash.HASH("FancyHash", ByteArray(8) { 0 })
-            val one = HashAnnotations(SecureHash.allOnesHash, SecureHash.HASH("FancyHash", ByteArray(8) { 1 }))
+            val zero = SecureHash.HASH("FANCY_HASH", ByteArray(8) { 0 })
+            val one = HashAnnotations(SecureHash.allOnesHash, SecureHash.HASH("FANCY_HASH", ByteArray(8) { 1 }))
         }
     }
 }
