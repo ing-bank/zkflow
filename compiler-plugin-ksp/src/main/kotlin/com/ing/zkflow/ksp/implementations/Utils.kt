@@ -11,7 +11,7 @@ private fun Set<KSFile>.complement(that: Set<KSFile>) =
 // To compute the set of new files, `resolver.getNewFiles()` ought to be used.
 // Unfortunately, this method fails on Mac.
 // To work around this issue the set of new files is computed.
-fun loadNewFiles(resolver: Resolver, visitedFiles: Set<KSFile>): Set<KSFile> {
-    val allFiles = resolver.getAllFiles().toSet()
+fun Resolver.getNewFiles(visitedFiles: Set<KSFile>): Set<KSFile> {
+    val allFiles = getAllFiles().toSet()
     return allFiles.complement(visitedFiles).toSet()
 }

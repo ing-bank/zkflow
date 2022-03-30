@@ -26,7 +26,7 @@ class ImplementationsSymbolProcessor(
     )
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        val newFiles = loadNewFiles(resolver, visitedFiles)
+        val newFiles = resolver.getNewFiles(visitedFiles)
         visitedFiles.addAll(newFiles)
 
         newFiles

@@ -34,7 +34,7 @@ class StableIdVersionedSymbolProcessor(private val environment: SymbolProcessorE
     )
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        val newFiles = loadNewFiles(resolver, visitedFiles)
+        val newFiles = resolver.getNewFiles(visitedFiles)
         visitedFiles.addAll(newFiles)
 
         val implementations = newFiles
