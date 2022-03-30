@@ -34,7 +34,6 @@ abstract class AbstractZKTransactionService(val serviceHub: ServiceHub) : ZKTran
     override fun prove(
         wtx: WireTransaction
     ): ZKVerifierTransaction {
-
         val zkTransactionMetadata = wtx.zkTransactionMetadata()
         val proofs = mutableMapOf<String, ByteArray>()
 
@@ -58,7 +57,6 @@ abstract class AbstractZKTransactionService(val serviceHub: ServiceHub) : ZKTran
     abstract override fun zkServiceForCommandMetadata(metadata: ResolvedZKCommandMetadata): ZKService
 
     override fun verify(wtx: WireTransaction): ZKVerifierTransactionWithoutProofs {
-
         val hashToResolve = wtx.networkParametersHash ?: serviceHub.networkParametersService.defaultHash
         val params = serviceHub.networkParametersService.lookup(hashToResolve) ?: throw TransactionResolutionException.UnknownParametersException(wtx.id, hashToResolve)
         val attachments = wtx.attachments.map { serviceHub.attachments.openAttachment(it) ?: error("Attachment ($it) not found") }
@@ -70,9 +68,6 @@ abstract class AbstractZKTransactionService(val serviceHub: ServiceHub) : ZKTran
 
         // Check transaction structure first, so we fail fast
         vtx.verifyMerkleTree()
-
-        // Check that all inputs and outputs are checked by either Kotlin or ZKP contract
-        // TODO check inputs and outputs
 
         // Verify private components by running ZVM smart contract code per Command
         zkTransactionMetadata.commands.forEach { command ->
@@ -92,16 +87,11 @@ abstract class AbstractZKTransactionService(val serviceHub: ServiceHub) : ZKTran
         // Check transaction structure first, so we fail fast
         vtx.verifyMerkleTree()
 
-        // Check that all inputs and outputs are checked by either Kotlin or ZKP contract
-        // TODO check inputs and outputs
-
         // Verify the ZKPs for all ZKCommandDatas in this transaction
         verifyProofs(vtx)
     }
 
     private fun verifyProofs(vtx: ZKVerifierTransaction) {
-        // TODO Aleksei: should we add a check here that there is a proof/zkcommandata for each input and output that is in the metadata?
-
         // Check there is a proof for each ZKCommand
         vtx.commands.forEach { command ->
             if (command.value is ZKCommandData) {

@@ -58,7 +58,7 @@ class MoveBidirectionalFlow(
         val stx = serviceHub.signInitialTransaction(builder)
 
         // Verify to be sure
-        stx.zkVerify(serviceHub, false)
+        stx.zkVerify(serviceHub, checkSufficientSignatures = false)
 
         // Collect signature from counterparty
         val fullySignedStx = subFlow(ZKCollectSignaturesFlow(stx, listOf(session)))

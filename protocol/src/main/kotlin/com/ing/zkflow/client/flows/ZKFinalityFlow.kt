@@ -168,7 +168,7 @@ class ZKFinalityFlow private constructor(
 
     private fun extractExternalParticipants(tx: TraversableTransaction): Set<Party> {
         val inputStates = tx.inputs.map {
-            SerializedStateAndRef(resolveStateRef(it, serviceHub, true), it).toStateAndRef().state.data
+            SerializedStateAndRef(resolveStateRef(it, serviceHub, includePrivate = true), it).toStateAndRef().state.data
         }
         val participants = tx.outputStates.flatMap { it.participants } + inputStates.flatMap { it.participants }
         return groupAbstractPartyByWellKnownParty(serviceHub, participants).keys - serviceHub.myInfo.legalIdentities

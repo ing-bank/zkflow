@@ -4,6 +4,7 @@ import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.network.ZKNetworkParameters
 import com.ing.zkflow.common.transactions.SignedZKVerifierTransaction
 import com.ing.zkflow.common.transactions.ZKVerifierTransaction
+import com.ing.zkflow.common.transactions.ZKVerifierTransactionWithoutProofs
 import com.ing.zkflow.common.transactions.collectUtxoInfos
 import com.ing.zkflow.common.transactions.commandData
 import com.ing.zkflow.common.zkp.Witness
@@ -34,7 +35,7 @@ public class TestDSLZincZKTransactionService(serviceHub: ServiceHub, zkVerifierT
      * This ensures that DSL tests validate transactions consistently with the real ZKTransactionService used.
      */
     public override fun verify(wtx: WireTransaction, zkNetworkParameters: ZKNetworkParameters): SignedZKVerifierTransaction {
-        val vtx = ZKVerifierTransaction.fromWireTransaction(wtx, emptyMap())
+        val vtx = ZKVerifierTransactionWithoutProofs.fromWireTransaction(wtx)
 
         // Verify the ZKPs for all ZKCommandDatas in this transaction
         verifyProofs(wtx, zkNetworkParameters, vtx)

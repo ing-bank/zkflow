@@ -155,7 +155,7 @@ fun zkTransactionMetadata(
     commandMetadata: List<ResolvedZKCommandMetadata>,
     classLoader: ClassLoader
 ): ResolvedZKTransactionMetadata {
-    assert(commandMetadata.isNotEmpty())
+    require(commandMetadata.isNotEmpty()) { TX_CONTAINS_NO_COMMANDS_WITH_METADATA }
     val loadedCommandMetadata = commandMetadata.map {
         try {
             Class.forName(it.commandKClass.java.name, false, classLoader).asSubclass(ZKCommandData::class.java)
@@ -254,7 +254,11 @@ fun TraversableTransaction.zkToFilteredLedgerTransaction(services: ServiceHub): 
         id,
         notary,
         timeWindow,
-        PrivacySalt.createFor(id.algorithm), // We don't want to use real PrivacySalt so we create a fake one here
+        /**
+         * We cannot use real PrivacySalt because we don't have it in a ZKVerifierTransaction,
+         * but luckily we don't really need it in LTX to verify smart contract rules, so we create a dummy one
+         */
+        PrivacySalt.createFor(id.algorithm),
         resolvedNetworkParameters,
         resolvedReferences,
         DigestService(id.algorithm)
@@ -271,11 +275,17 @@ fun TraversableTransaction.zkToFilteredLedgerTransaction(services: ServiceHub): 
  * if no luck as well - we should only check utxo storage if we want to include private states as well,
  * in most cases in protocol we should avid that so be carefu
  */
-fun resolveStateRef(stateRef: StateRef, services: ServiceHub, includePrivate: Boolean = false): SerializedBytes<TransactionState<ContractState>> {
+fun resolveStateRef(
+    stateRef: StateRef,
+    services: ServiceHub,
+    vtxStorage: ZKWritableVerifierTransactionStorage = services.getCordaServiceFromConfig(ServiceNames.ZK_VERIFIER_TX_STORAGE),
+    utxoInfoStorage: WritableUtxoInfoStorage = services.getCordaServiceFromConfig(ServiceNames.ZK_UTXO_INFO_STORAGE),
+    includePrivate: Boolean = false
+): SerializedBytes<TransactionState<ContractState>> {
 
     // Check ZKVTX storage
     try {
-        val stx = services.getCordaServiceFromConfig<ZKWritableVerifierTransactionStorage>(ServiceNames.ZK_VERIFIER_TX_STORAGE).getTransaction(stateRef.txhash) ?: throw TransactionResolutionException(stateRef.txhash)
+        val stx = vtxStorage.getTransaction(stateRef.txhash) ?: throw TransactionResolutionException(stateRef.txhash)
 
         if (!includePrivate) {
             if (stx.tx.isPrivateComponent(ComponentGroupEnum.OUTPUTS_GROUP, stateRef.index)) throw PrivateUtxoAccess()
@@ -294,7 +304,7 @@ fun resolveStateRef(stateRef: StateRef, services: ServiceHub, includePrivate: Bo
 
     if (includePrivate) {
         // Only check utxo storage if we want to fetch private data
-        return services.getCordaServiceFromConfig<WritableUtxoInfoStorage>(ServiceNames.ZK_UTXO_INFO_STORAGE)
+        return utxoInfoStorage
             .getUtxoInfo(stateRef)?.let { utxoInfo ->
                 SerializedBytes(utxoInfo.serializedContents)
             } ?: throw UtxoNotFound(stateRef)
@@ -345,32 +355,34 @@ val ZKVerifierTransaction.dependencies: Set<SecureHash>
 
 fun SignedTransaction.zkVerify(
     services: ServiceHub,
+    zkService: ZKTransactionService = services.getCordaServiceFromConfig(ServiceNames.ZK_TX_SERVICE),
     checkSufficientSignatures: Boolean = true,
 ) {
     zkResolveAndCheckNetworkParameters(services)
     when (coreTransaction) {
         is NotaryChangeWireTransaction -> TODO("Not supported for now") // Perhaps just proxy to `verify(services, checkSufficientSignatures)`?
         is ContractUpgradeWireTransaction -> TODO("Not supported for now") // Perhaps just proxy to `verify(services, checkSufficientSignatures)`?
-        else -> zkVerifyRegularTransaction(services, checkSufficientSignatures)
+        else -> zkVerifyRegularTransaction(services, zkService, checkSufficientSignatures)
     }
 }
 
 private fun SignedTransaction.zkVerifyRegularTransaction(
     services: ServiceHub,
+    zkService: ZKTransactionService = services.getCordaServiceFromConfig(ServiceNames.ZK_TX_SERVICE),
     checkSufficientSignatures: Boolean,
 ) {
     val zkTransactionVerifierService = ZKTransactionVerifierService(
         services,
-        services.getCordaServiceFromConfig(ServiceNames.ZK_TX_SERVICE)
+        zkService
     )
 
     zkTransactionVerifierService.verify(this, checkSufficientSignatures)
 }
 
-private fun SignedTransaction.zkResolveAndCheckNetworkParameters(services: ServiceHub) {
-    val zkTxStorage: ZKVerifierTransactionStorage =
-        services.getCordaServiceFromConfig(ServiceNames.ZK_VERIFIER_TX_STORAGE)
-
+private fun SignedTransaction.zkResolveAndCheckNetworkParameters(
+    services: ServiceHub,
+    zkTxStorage: ZKVerifierTransactionStorage = services.getCordaServiceFromConfig(ServiceNames.ZK_VERIFIER_TX_STORAGE)
+) {
     val hashOrDefault = networkParametersHash ?: services.networkParametersService.defaultHash
     val txNetworkParameters = services.networkParametersService.lookup(hashOrDefault)
         ?: throw TransactionResolutionException(id)
@@ -391,8 +403,8 @@ private fun SignedTransaction.zkResolveAndCheckNetworkParameters(services: Servi
 }
 
 fun SignedTransaction.prove(
-    services: ServiceHub
+    services: ServiceHub,
+    zkService: ZKTransactionService = services.getCordaServiceFromConfig(ServiceNames.ZK_TX_SERVICE)
 ): SignedZKVerifierTransaction {
-    val zkService: ZKTransactionService = services.getCordaServiceFromConfig(ServiceNames.ZK_TX_SERVICE)
     return SignedZKVerifierTransaction(zkService.prove(tx), sigs)
 }

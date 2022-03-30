@@ -12,7 +12,6 @@ import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TraversableTransaction
 import net.corda.core.transactions.WireTransaction
 
-// TODO @Aleksei: as discussed, please replace with a proper service, with the classloader and everything?
 class ZKTransactionVerifierService(
     private val services: ServiceHub,
     private val zkTransactionService: ZKTransactionService,
@@ -24,7 +23,11 @@ class ZKTransactionVerifierService(
         ensureNoUncheckedPrivateOutputs(vtx)
         ensureNoUncheckedPrivateInputs(vtx)
 
-        if (checkSufficientSignatures) svtx.verifyRequiredSignatures()
+        if (checkSufficientSignatures) {
+            svtx.verifyRequiredSignatures()
+        } else {
+            svtx.checkSignaturesAreValid()
+        }
 
         validatePublicComponents(vtx)
     }
@@ -36,7 +39,11 @@ class ZKTransactionVerifierService(
         ensureNoUncheckedPrivateOutputs(vtx)
         ensureNoUncheckedPrivateInputs(wtx)
 
-        if (checkSufficientSignatures) stx.verifyRequiredSignatures()
+        if (checkSufficientSignatures) {
+            stx.verifyRequiredSignatures()
+        } else {
+            stx.checkSignaturesAreValid()
+        }
 
         validatePublicComponents(vtx)
     }

@@ -69,7 +69,7 @@ open class ZKReceiveNotarisedTransactionPayloadFlow @JvmOverloads constructor(
                 logger.info("Transaction dependencies resolution completed.")
 
                 try {
-                    notarised.verify(serviceHub, checkSufficientSignatures)
+                    notarised.verify(serviceHub, serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_TX_SERVICE), checkSufficientSignatures)
                     notarised
                 } catch (e: Exception) {
                     logger.warn("Transaction verification failed.")
@@ -122,7 +122,7 @@ open class ZKReceiveTransactionProposalFlow constructor(
             fetchMissingAttachments(it.tx, otherSideSession)
 
             // Verify the transaction. We don't know if we will have all sigs, since this is only a proposal, not final
-            it.zkVerify(serviceHub, false)
+            it.zkVerify(serviceHub, checkSufficientSignatures = false)
 
             // Verify that we have a validated backchain stored for this transaction
             serviceHub.getCordaServiceFromConfig<ZKTransactionService>(ServiceNames.ZK_TX_SERVICE)
