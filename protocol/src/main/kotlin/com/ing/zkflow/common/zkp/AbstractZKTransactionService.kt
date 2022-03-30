@@ -1,6 +1,5 @@
 package com.ing.zkflow.common.zkp
 
-import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.transactions.ZKVerifierTransaction
 import com.ing.zkflow.common.transactions.ZKVerifierTransactionWithoutProofs
 import com.ing.zkflow.common.transactions.collectUtxoInfos
@@ -34,7 +33,8 @@ abstract class AbstractZKTransactionService(val serviceHub: ServiceHub) : ZKTran
     override fun prove(
         wtx: WireTransaction
     ): ZKVerifierTransaction {
-        val zkTransactionMetadata = wtx.zkTransactionMetadata()
+        val classLoader = getClassLoaderFromContractAttachment(wtx)
+        val zkTransactionMetadata = wtx.zkTransactionMetadata(classLoader)
         val proofs = mutableMapOf<String, ByteArray>()
 
         zkTransactionMetadata.commands.forEach { command ->
@@ -57,11 +57,7 @@ abstract class AbstractZKTransactionService(val serviceHub: ServiceHub) : ZKTran
     abstract override fun zkServiceForCommandMetadata(metadata: ResolvedZKCommandMetadata): ZKService
 
     override fun verify(wtx: WireTransaction): ZKVerifierTransactionWithoutProofs {
-        val hashToResolve = wtx.networkParametersHash ?: serviceHub.networkParametersService.defaultHash
-        val params = serviceHub.networkParametersService.lookup(hashToResolve) ?: throw TransactionResolutionException.UnknownParametersException(wtx.id, hashToResolve)
-        val attachments = wtx.attachments.map { serviceHub.attachments.openAttachment(it) ?: error("Attachment ($it) not found") }
-
-        val classLoader = AttachmentsClassLoader(attachments, params, wtx.id, { it.isUploaderTrusted() }, ClassLoader.getSystemClassLoader())
+        val classLoader = getClassLoaderFromContractAttachment(wtx)
 
         val zkTransactionMetadata = wtx.zkTransactionMetadata(classLoader)
         val vtx = ZKVerifierTransactionWithoutProofs.fromWireTransaction(wtx) // create vtx without proofs just to be able to build witness and public input
@@ -92,15 +88,13 @@ abstract class AbstractZKTransactionService(val serviceHub: ServiceHub) : ZKTran
     }
 
     private fun verifyProofs(vtx: ZKVerifierTransaction) {
+        val classLoader = getClassLoaderFromContractAttachment(vtx)
         // Check there is a proof for each ZKCommand
-        vtx.commands.forEach { command ->
-            if (command.value is ZKCommandData) {
-                val zkCommand = (command.value as ZKCommandData)
-                // For ZK Commands we check proofs
-                val proof = vtx.proofs[command.value::class.qualifiedName]
-                require(proof != null) { "Proof is missing for command ${command.value}" }
-                zkServiceForCommandMetadata(zkCommand.metadata).verifyTimed(proof, calculatePublicInput(vtx, zkCommand.metadata))
-            }
+        vtx.zkTransactionMetadata(classLoader).commands.forEach { zkCommand ->
+            // For ZK Commands we check proofs
+            val proof = vtx.proofs[zkCommand.commandKClass.qualifiedName]
+            require(proof != null) { "Proof is missing for command ${zkCommand.commandSimpleName}" }
+            zkServiceForCommandMetadata(zkCommand).verifyTimed(proof, calculatePublicInput(vtx, zkCommand))
         }
     }
 
@@ -137,6 +131,14 @@ abstract class AbstractZKTransactionService(val serviceHub: ServiceHub) : ZKTran
             inputUtxoHashes = privateInputHashes,
             referenceUtxoHashes = privateReferenceHashes
         )
+    }
+
+    private fun getClassLoaderFromContractAttachment(tx: TraversableTransaction): ClassLoader {
+        val hashToResolve = tx.networkParametersHash ?: serviceHub.networkParametersService.defaultHash
+        val params = serviceHub.networkParametersService.lookup(hashToResolve) ?: throw TransactionResolutionException.UnknownParametersException(tx.id, hashToResolve)
+        val attachments = tx.attachments.map { serviceHub.attachments.openAttachment(it) ?: error("Attachment ($it) not found") }
+
+        return AttachmentsClassLoader(attachments, params, tx.id, { it.isUploaderTrusted() }, ClassLoader.getSystemClassLoader())
     }
 
     private fun getUtxoHashes(stateRefs: List<StateRef>): List<SecureHash> {
