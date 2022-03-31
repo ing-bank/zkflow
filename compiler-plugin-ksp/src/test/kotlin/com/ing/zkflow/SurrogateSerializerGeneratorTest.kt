@@ -2,6 +2,7 @@ package com.ing.zkflow
 
 import com.ing.zkflow.common.serialization.SurrogateSerializerRegistryProvider
 import com.ing.zkflow.ksp.ProcessorTest
+import com.ing.zkflow.processors.ZKFLowSymbolProcessorProvider
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import io.kotest.matchers.shouldBe
@@ -10,7 +11,7 @@ import io.kotest.matchers.string.shouldStartWith
 import org.junit.jupiter.api.Test
 import java.io.ByteArrayOutputStream
 
-internal class SurrogateSerializerGeneratorTest : ProcessorTest() {
+internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKFLowSymbolProcessorProvider()) {
     @Test
     fun `SurrogateProcessor should correctly register surrogates`() {
         val outputStream = ByteArrayOutputStream()

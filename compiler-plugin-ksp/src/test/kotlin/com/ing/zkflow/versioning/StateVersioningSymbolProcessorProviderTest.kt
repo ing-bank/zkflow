@@ -38,6 +38,7 @@ class VersionedInterfaceProvider : SymbolProcessorProvider {
 class VersionedInterfaceProviderProcessor(val codeGenerator: CodeGenerator) :
     ImplementationsProcessor<Versioned> {
     override val interfaceClass = Versioned::class
+
     override fun process(implementations: List<ScopedDeclaration>): ServiceLoaderRegistration {
         val declarations = implementations.map { it.declaration }
         val familyNames =

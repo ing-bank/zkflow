@@ -11,11 +11,13 @@ import kotlin.reflect.KClass
 
 /**
  * Implementation of [KSAbstractVisitor] that looks for implementations of [interfaceClasses].
+ * @param interfaceClasses: each element of the list is a set of interfaces to look for. The visitor will look for
+ *  declarations which implement ALL of the interfaces in the set.
  */
 class ImplementationsVisitor(
-    private val interfaceClasses: List<KClass<*>>
-) : KSAbstractVisitor<ScopedDeclaration?, Map<KClass<*>, List<ScopedDeclaration>>>() {
-    override fun defaultVisit(annotated: KSNode, data: ScopedDeclaration?) = emptyMap<KClass<*>, List<ScopedDeclaration>>()
+    private val interfaceClasses: List<Set<KClass<*>>>
+) : KSAbstractVisitor<ScopedDeclaration?, Map<Set<KClass<*>>, List<ScopedDeclaration>>>() {
+    override fun defaultVisit(annotated: KSNode, data: ScopedDeclaration?) = emptyMap<Set<KClass<*>>, List<ScopedDeclaration>>()
 
     override fun visitFile(file: KSFile, data: ScopedDeclaration?) =
         visitDeclarationSequence(file.declarations, data)
@@ -23,21 +25,24 @@ class ImplementationsVisitor(
     override fun visitClassDeclaration(
         classDeclaration: KSClassDeclaration,
         data: ScopedDeclaration?
-    ): Map<KClass<*>, List<ScopedDeclaration>> {
+    ): Map<Set<KClass<*>>, List<ScopedDeclaration>> {
         val scopedDeclaration = ScopedDeclaration(data, classDeclaration)
 
-        val implementations = classDeclaration.getAllSuperTypes().mapNotNull { superType ->
-            interfaceClasses.find { interfaceClass ->
-                interfaceClass.qualifiedName == superType.declaration.qualifiedName?.asString()
-            }?.let {
-                Pair(it, listOf(scopedDeclaration))
-            }
-        }.toMap()
+        val superTypesSet = classDeclaration.getAllSuperTypes().map { it.declaration.qualifiedName?.asString() }.toSet()
+        val matches = interfaceClasses.filter { interfaceSet -> superTypesSet.containsAll(interfaceSet.map { it.qualifiedName }) }
 
+        val implementations = if (matches.isNotEmpty()) {
+            matches.fold(mutableMapOf<Set<KClass<*>>, List<ScopedDeclaration>>()) { acc, match ->
+                acc[match] = listOf(scopedDeclaration)
+                acc
+            }
+        } else {
+            emptyMap()
+        }
         return implementations.merge(visitDeclarationSequence(classDeclaration.declarations, scopedDeclaration))
     }
 
-    private fun visitDeclarationSequence(declarations: Sequence<KSDeclaration>, data: ScopedDeclaration?): Map<KClass<*>, List<ScopedDeclaration>> =
+    private fun visitDeclarationSequence(declarations: Sequence<KSDeclaration>, data: ScopedDeclaration?): Map<Set<KClass<*>>, List<ScopedDeclaration>> =
         declarations
             .filterIsInstance<KSClassDeclaration>()
             .fold(emptyMap()) { acc, file -> acc.merge(visitClassDeclaration(file, data)) }
@@ -54,12 +59,23 @@ data class ScopedDeclaration(
         override val qualifiedName: String by lazy {
             parent?.let {
                 "${it.java.qualifiedName}$${declaration.simpleName.asString()}"
-            } ?: "${declaration.packageName.asString()}.${declaration.simpleName.asString()}"
+            } ?: buildQualifiedName(declaration)
         }
     }
 
-    override val qualifiedName: String = parent?.let { "${it.qualifiedName}.${declaration.simpleName.asString()}" }
-        ?: "${declaration.packageName.asString()}.${declaration.simpleName.asString()}"
+    override val qualifiedName: String = parent?.let {
+        "${it.qualifiedName}.${declaration.simpleName.asString()}"
+    } ?: buildQualifiedName(declaration)
+
+    private fun buildQualifiedName(declaration: KSClassDeclaration): String {
+        val packageName = if (declaration.packageName.asString().isNotBlank()) {
+            "${declaration.packageName.asString()}."
+        } else {
+            ""
+        }
+
+        return "$packageName${declaration.simpleName.asString()}"
+    }
 }
 
 interface HasQualifiedName {

@@ -30,13 +30,20 @@ import kotlin.reflect.KClass
  * At runtime, all such providers will be picked up and injected to
  * [BFLSerializationScheme]
  */
-interface ZKDataRegistryProvider<T : Any> {
-    fun list(): List<Pair<KClass<out T>, KSerializer<out T>>>
+data class KClassSerializer<out T : Any>(
+    val klass: KClass<out T>,
+    val id: Int,
+    val serializer: KSerializer<out T>
+)
+
+interface KClassSerializerProvider<T : Any> {
+    fun list(): List<KClassSerializer<T>>
 }
 
-interface SurrogateSerializerRegistryProvider : ZKDataRegistryProvider<Any>
-interface ContractStateSerializerRegistryProvider : ZKDataRegistryProvider<ContractState>
-interface CommandDataSerializerRegistryProvider : ZKDataRegistryProvider<CommandData>
+interface SurrogateSerializerRegistryProvider : KClassSerializerProvider<Any>
+
+interface ContractStateSerializerRegistryProvider : KClassSerializerProvider<ContractState>
+interface CommandDataSerializerRegistryProvider : KClassSerializerProvider<CommandData>
 
 abstract class SerializerRegistry<T : Any> {
     private val log = LoggerFactory.getLogger(this::class.java)
@@ -55,15 +62,21 @@ abstract class SerializerRegistry<T : Any> {
      * or for T. And we can know for sure that it is a T. This is why we can safely cast to T without the variance annotation on retrieval.
      */
     @Synchronized
-    fun register(klass: KClass<out T>, serializer: KSerializer<out T>) {
-        log.debug("Registering serializer `$serializer` for `${klass.qualifiedName}`")
+    fun register(klassSerializer: KClassSerializer<T>) {
+        val klass = klassSerializer.klass
+        val serializer = klassSerializer.serializer
+        val id = klassSerializer.id
+        log.debug("Registering serializer `$serializer` under id `$id` for `${klass.qualifiedName}`")
 
-        val id = klass.stableId
         obj2Id.put(klass, id)?.let { throw SerializerRegistryError.ClassAlreadyRegistered(klass, it) }
         objId2Serializer.put(id, serializer)?.let {
             throw SerializerRegistryError.IdAlreadyRegistered(id, klass, it.descriptor.serialName)
         }
     }
+
+    @Synchronized
+    fun register(klass: KClass<out T>, serializer: KSerializer<out T>) =
+        register(KClassSerializer<T>(klass, klass.hashCode(), serializer))
 
     fun identify(klass: KClass<*>): Int = obj2Id[klass] ?: throw SerializerRegistryError.ClassNotRegistered(klass)
 

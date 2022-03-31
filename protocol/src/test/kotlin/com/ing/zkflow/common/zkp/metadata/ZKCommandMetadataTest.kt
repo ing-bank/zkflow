@@ -1,5 +1,6 @@
 package com.ing.zkflow.common.zkp.metadata
 
+import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.contracts.ZKContractState
 import com.ing.zkflow.common.contracts.ZKOwnableState
@@ -125,6 +126,7 @@ class MockAssetContract : Contract {
     }
 
     @BelongsToContract(MockAssetContract::class)
+    @ZKP
     data class MockAsset(
         override val owner: AnonymousParty,
         val value: Int = Random().nextInt(1000)

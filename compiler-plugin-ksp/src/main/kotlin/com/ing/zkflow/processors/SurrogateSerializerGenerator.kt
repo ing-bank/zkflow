@@ -9,6 +9,7 @@ import com.ing.zkflow.ConversionProvider
 import com.ing.zkflow.Surrogate
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.annotations.ZKPSurrogate
+import com.ing.zkflow.common.serialization.KClassSerializer
 import com.ing.zkflow.common.serialization.SurrogateSerializerRegistryProvider
 import com.ing.zkflow.ksp.implementations.ImplementationsProcessor
 import com.ing.zkflow.ksp.implementations.ScopedDeclaration
@@ -21,17 +22,14 @@ import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
-import com.squareup.kotlinpoet.WildcardTypeName
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.buildCodeBlock
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.toTypeName
 import com.squareup.kotlinpoet.ksp.writeTo
 import com.squareup.kotlinpoet.withIndent
-import kotlinx.serialization.KSerializer
 import kotlin.math.absoluteValue
 import kotlin.random.Random
-import kotlin.reflect.KClass
 
 class SurrogateSerializerGenerator(private val codeGenerator: CodeGenerator) : ImplementationsProcessor<Surrogate<*>> {
     override val interfaceClass = Surrogate::class
@@ -165,15 +163,16 @@ class SurrogateSerializerGenerator(private val codeGenerator: CodeGenerator) : I
                         //      ```
                         //      which is invalid. Obviously.
                         val template = if (surrogateFor.templated()) {
-                            "%T(\n%L::class,\n%L\n),"
+                            "%T(\n%L::class,\n%L,\n%L\n),"
                         } else {
-                            "/*\n%T(\n%L::class,\n%L\n),*/"
+                            "/*\n%T(\n%L::class,\n%L,\n%L\n),*/"
                         }
 
                         addStatement(
                             template,
-                            Pair::class,
+                            KClassSerializer::class,
                             surrogateFor.toTypeName(),
+                            serializerFQName.hashCode(),
                             serializerFQName,
                         )
                     }
@@ -190,13 +189,8 @@ class SurrogateSerializerGenerator(private val codeGenerator: CodeGenerator) : I
                             .addModifiers(KModifier.OVERRIDE)
                             .returns(
                                 List::class.asClassName().parameterizedBy(
-                                    Pair::class.asClassName().parameterizedBy(
-                                        KClass::class.asClassName().parameterizedBy(
-                                            WildcardTypeName.producerOf(Any::class.asClassName())
-                                        ),
-                                        KSerializer::class.asClassName().parameterizedBy(
-                                            WildcardTypeName.producerOf(Any::class.asClassName())
-                                        )
+                                    KClassSerializer::class.asClassName().parameterizedBy(
+                                        Any::class.asClassName()
                                     )
                                 )
                             )
