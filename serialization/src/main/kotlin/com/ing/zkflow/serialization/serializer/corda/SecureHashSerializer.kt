@@ -3,6 +3,7 @@ package com.ing.zkflow.serialization.serializer.corda
 import com.ing.zkflow.serialization.FixedLengthKSerializerWithDefault
 import com.ing.zkflow.serialization.serializer.FixedLengthByteArraySerializer
 import com.ing.zkflow.serialization.toFixedLengthSerialDescriptorOrThrow
+import com.ing.zkflow.util.snakeToCamelCase
 import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
@@ -29,7 +30,7 @@ open class SecureHashSerializer(private val digestAlgorithm: DigestAlgorithm) : 
     /**
      * Remove characters not accepted by Zinc.
      */
-    private val algorithmIdentifier = digestAlgorithm.algorithm.replace("[^A-Za-z0-9_]".toRegex(), "")
+    private val algorithmIdentifier = digestAlgorithm.algorithm.snakeToCamelCase(capitalize = true)
 
     override val descriptor = buildClassSerialDescriptor("SecureHash$algorithmIdentifier") {
         element("bytes", strategy.descriptor)

@@ -3,6 +3,8 @@ package com.ing.zkflow.serialization.serializer.corda
 import com.ing.zkflow.serialization.FixedLengthKSerializerWithDefault
 import com.ing.zkflow.serialization.serializer.FixedLengthByteArraySerializer
 import com.ing.zkflow.serialization.toFixedLengthSerialDescriptorOrThrow
+import com.ing.zkflow.util.snakeToCamelCase
+import com.ing.zkflow.util.splitBefore
 import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
@@ -11,7 +13,6 @@ import net.corda.core.crypto.SignatureScheme
 import java.security.KeyPairGenerator
 import java.security.PublicKey
 import java.security.SecureRandom
-import java.util.Locale
 
 open class PublicKeySerializer(cordaSignatureId: Int) : FixedLengthKSerializerWithDefault<PublicKey> {
     companion object {
@@ -44,12 +45,10 @@ open class PublicKeySerializer(cordaSignatureId: Int) : FixedLengthKSerializerWi
     private val encodedSize = schemeIdSize[cordaSignatureId]
         ?: error("Verify mapping between Corda signature schemes and public key annotations")
     internal val algorithmNameIdentifier = Crypto.findSignatureScheme(cordaSignatureId).schemeCodeName
-        .toLowerCase(Locale.getDefault())
-        .split("_")
-        .joinToString("") {
-            it.replace("rsa", "Rsa")
-                .replace("dsa", "Dsa")
-                .capitalize(Locale.getDefault())
+        .snakeToCamelCase(true) { part ->
+            listOf(part)
+                .flatMap { it.splitBefore("DSA") }
+                .flatMap { it.splitBefore("RSA") }
         }
 
     override val default: PublicKey = fixedPublicKey(cordaSignatureScheme)

@@ -127,7 +127,7 @@ class StandardTypes(
             txComponent: BflType,
             vararg metadataDescriptor: SerialDescriptor
         ) = wrappedTransactionComponent {
-            name = groupName.snakeToCamelCase(true) + "TransactionComponent"
+            name = groupName.snakeToCamelCase(capitalize = true) + "TransactionComponent"
             cordaMagic()
             metadata(networkParametersMetadata)
             metadataDescriptor.forEach {

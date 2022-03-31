@@ -6,10 +6,25 @@ import io.kotest.matchers.shouldBe
 import kotlinx.serialization.Serializable
 import net.corda.core.crypto.Crypto
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import java.security.PublicKey
 
 class PublicKeySerializerTest : SerializerTest {
+    companion object {
+        @JvmStatic
+        fun publicKeySerializerNameFixtures() = listOf(
+            Arguments.of(PublicKeys.EdDsa_0, "PublicKeyEdDsaEd25519Sha512"),
+            Arguments.of(PublicKeys.Rsa_0, "PublicKeyRsaSha256")
+        )
+    }
+
+    @ParameterizedTest
+    @MethodSource("publicKeySerializerNameFixtures")
+    fun `PublicKeySerializer name should be camelCase`(serializer: PublicKeySerializer, exepectedName: String) {
+        serializer.descriptor.serialName shouldBe exepectedName
+    }
+
     @ParameterizedTest
     @MethodSource("engines")
     fun `PublicKey must be serializable`(engine: SerdeEngine) {
