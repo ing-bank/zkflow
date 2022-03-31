@@ -30,8 +30,11 @@ import kotlin.reflect.KClass
  * At runtime, all such providers will be picked up and injected to
  * [BFLSerializationScheme]
  */
-
-data class KClassSerializer<out T : Any>(val klass: KClass<out T>, val id: Int, val serializer: KSerializer<out T>)
+data class KClassSerializer<out T : Any>(
+    val klass: KClass<out T>,
+    val id: Int,
+    val serializer: KSerializer<out T>
+)
 
 interface KClassSerializerProvider<T : Any> {
     fun list(): List<KClassSerializer<T>>
