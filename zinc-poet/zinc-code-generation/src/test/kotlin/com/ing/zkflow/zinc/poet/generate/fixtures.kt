@@ -9,8 +9,11 @@ import com.ing.zinc.bfl.dsl.ListBuilder.Companion.string
 import com.ing.zinc.bfl.dsl.MapBuilder.Companion.map
 import com.ing.zinc.bfl.dsl.OptionBuilder.Companion.option
 import com.ing.zinc.bfl.dsl.StructBuilder.Companion.struct
+import com.ing.zkflow.annotations.ASCII
 import com.ing.zkflow.annotations.ASCIIChar
 import com.ing.zkflow.annotations.Size
+import com.ing.zkflow.annotations.UTF16
+import com.ing.zkflow.annotations.UTF32
 import com.ing.zkflow.annotations.UTF8
 import com.ing.zkflow.annotations.UnicodeChar
 import com.ing.zkflow.annotations.ZKP
@@ -50,7 +53,13 @@ data class ClassWithAsciiChar(val asciiChar: @ASCIIChar Char)
 @ZKP
 data class ClassWithUnicodeChar(val unicodeChar: @UnicodeChar Char)
 @ZKP
-data class ClassWithString(val string: @UTF8(8) String)
+data class ClassWithAsciiString(val string: @ASCII(8) String)
+@ZKP
+data class ClassWithUtf8String(val string: @UTF8(8) String)
+@ZKP
+data class ClassWithUtf16String(val string: @UTF16(8) String)
+@ZKP
+data class ClassWithUtf32String(val string: @UTF32(8) String)
 @ZKP
 data class ClassWithNullableInt(val nullableInt: Int?)
 @ZKP
@@ -123,8 +132,20 @@ val structWithUnicodeChar = struct {
     name = "ClassWithUnicodeChar"
     field { name = "unicode_char"; type = BflPrimitive.I16 }
 }
-val structWithString = struct {
-    name = "ClassWithString"
+val structWithAsciiString = struct {
+    name = "ClassWithAsciiString"
+    field { name = "string"; type = string(8) }
+}
+val structWithUtf8String = struct {
+    name = "ClassWithUtf8String"
+    field { name = "string"; type = string(8) }
+}
+val structWithUtf16String = struct {
+    name = "ClassWithUtf16String"
+    field { name = "string"; type = string(8) }
+}
+val structWithUtf32String = struct {
+    name = "ClassWithUtf32String"
     field { name = "string"; type = string(8) }
 }
 val structWithNullableInt = struct {

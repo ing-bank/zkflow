@@ -21,6 +21,9 @@ class ListBuilder {
     companion object {
         fun list(init: ListBuilder.() -> Unit): BflList = ListBuilder().apply(init).build()
 
+        /**
+         * A string is `just` a ByteArray, regardless of the encoding.
+         */
         fun string(maxSize: Int): BflList = list {
             capacity = maxSize
             elementType = BflPrimitive.I8

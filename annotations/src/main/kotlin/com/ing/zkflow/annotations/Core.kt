@@ -10,11 +10,46 @@ import kotlin.reflect.KClass
 annotation class Size(val size: Int)
 
 /**
- * Bound UTF-8 string size.
+ * Bound size of ASCII encoded String.
+ *
+ * This is a fixed-length encoding scheme where every character occupies 1 byte.
+ *
+ * @param byteSize The max number of bytes in the ASCII encoded String.
+ */
+@Target(AnnotationTarget.TYPE)
+annotation class ASCII(val byteSize: Int)
+
+/**
+ * Bound size of UTF-8 encoded String.
+ *
+ * This is a variable-width encoding scheme where the smallest characters occupy a single byte, and the largest
+ * characters can contain up to 6 bytes.
+ *
  * @param byteSize The max number of bytes in the UTF-8 encoded String.
  */
 @Target(AnnotationTarget.TYPE)
 annotation class UTF8(val byteSize: Int)
+
+/**
+ * Bound size of UTF-16 encoded String.
+ *
+ * This is a variable-width encoding scheme where the smallest characters occupy 2 bytes, and larger characters can
+ * occupy a multiple of 2 bytes.
+ *
+ * @param byteSize The max number of bytes in the UTF-16 encoded String.
+ */
+@Target(AnnotationTarget.TYPE)
+annotation class UTF16(val byteSize: Int)
+
+/**
+ * Bound size of UTF-32 encoded String.
+ *
+ * This is a fixed-length encoding scheme where every character occupies 4 bytes.
+ *
+ * @param byteSize The max number of bytes in the UTF-32 encoded String.
+ */
+@Target(AnnotationTarget.TYPE)
+annotation class UTF32(val byteSize: Int)
 
 /**
  * A Unicode character (codepoint) occupies 2 bytes.

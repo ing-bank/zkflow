@@ -1,6 +1,20 @@
 package com.ing.zkflow.util
 
 /**
+ * Verifies whether [predicate] holds for `this` value, otherwise throws an [IllegalArgumentException].
+ * @receiver Value to verify
+ * @param T Type of value
+ * @param predicate Lambda with predicate on `this` value
+ * @param message Lambda to construct exception message
+ * @return `this` value
+ */
+inline fun <T : Any> T.require(predicate: (T) -> Boolean, message: (T) -> String): T = if (predicate(this)) {
+    this
+} else {
+    throw IllegalArgumentException(message(this))
+}
+
+/**
  * Verifies whether `this` value is not `null`, otherwise throws an [IllegalArgumentException].
  * @receiver Value to verify
  * @param T Type of value

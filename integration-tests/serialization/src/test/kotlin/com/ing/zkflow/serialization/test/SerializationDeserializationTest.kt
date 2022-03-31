@@ -11,7 +11,10 @@ import com.ing.zinc.bfl.generator.ZincGenerator.createZargoToml
 import com.ing.zinc.bfl.generator.ZincGenerator.zincSourceFile
 import com.ing.zinc.bfl.mod
 import com.ing.zinc.bfl.use
+import com.ing.zkflow.annotations.ASCII
 import com.ing.zkflow.annotations.Size
+import com.ing.zkflow.annotations.UTF16
+import com.ing.zkflow.annotations.UTF32
 import com.ing.zkflow.annotations.UTF8
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.annotations.corda.EdDSA
@@ -90,11 +93,35 @@ class SerializationDeserializationTest {
     }
 
     @Test
-    fun `wrapped string that is serialized and deserialized should equal the original`(@TempDir tempDir: Path) {
-        val input = WrappedString("a")
-        val inputSerializer = WrappedString.serializer()
+    fun `wrapped ASCII string that is serialized and deserialized should equal the original`(@TempDir tempDir: Path) {
+        val input = WrappedAsciiString("a")
+        val inputSerializer = WrappedAsciiString.serializer()
         val actual = tempDir.serializeAndDeserializeInZinc(input, inputSerializer)
         actual shouldBe listOf(JsonPrimitive("97")).toJsonList(8, JsonPrimitive("0"))
+    }
+
+    @Test
+    fun `wrapped UTF-8 string that is serialized and deserialized should equal the original`(@TempDir tempDir: Path) {
+        val input = WrappedUtf8String("a")
+        val inputSerializer = WrappedUtf8String.serializer()
+        val actual = tempDir.serializeAndDeserializeInZinc(input, inputSerializer)
+        actual shouldBe listOf(JsonPrimitive("97")).toJsonList(8, JsonPrimitive("0"))
+    }
+
+    @Test
+    fun `wrapped UTF-16 string that is serialized and deserialized should equal the original`(@TempDir tempDir: Path) {
+        val input = WrappedUtf16String("a")
+        val inputSerializer = WrappedUtf16String.serializer()
+        val actual = tempDir.serializeAndDeserializeInZinc(input, inputSerializer)
+        actual shouldBe listOf("-2", "-1", "0", "97").map(::JsonPrimitive).toJsonList(8, JsonPrimitive("0"))
+    }
+
+    @Test
+    fun `wrapped UTF-32 string that is serialized and deserialized should equal the original`(@TempDir tempDir: Path) {
+        val input = WrappedUtf32String("a")
+        val inputSerializer = WrappedUtf32String.serializer()
+        val actual = tempDir.serializeAndDeserializeInZinc(input, inputSerializer)
+        actual shouldBe listOf("0", "0", "0", "97").map(::JsonPrimitive).toJsonList(8, JsonPrimitive("0"))
     }
 
     @Test
@@ -209,8 +236,23 @@ class SerializationDeserializationTest {
         ) : WrappedValue<List<Int>>
 
         @ZKP
-        data class WrappedString(
+        data class WrappedAsciiString(
+            override val value: @ASCII(8) String
+        ) : WrappedValue<String>
+
+        @ZKP
+        data class WrappedUtf8String(
             override val value: @UTF8(8) String
+        ) : WrappedValue<String>
+
+        @ZKP
+        data class WrappedUtf16String(
+            override val value: @UTF16(8) String
+        ) : WrappedValue<String>
+
+        @ZKP
+        data class WrappedUtf32String(
+            override val value: @UTF32(8) String
         ) : WrappedValue<String>
 
         @ZKP

@@ -5,6 +5,9 @@ import com.ing.zkflow.serialization.serializer.FixedLengthByteArraySerializer
 import com.ing.zkflow.serialization.serializer.FixedLengthListSerializer
 import com.ing.zkflow.serialization.serializer.FixedLengthMapSerializer
 import com.ing.zkflow.serialization.serializer.FixedLengthSetSerializer
+import com.ing.zkflow.serialization.serializer.string.FixedLengthAsciiStringSerializer
+import com.ing.zkflow.serialization.serializer.string.FixedLengthUtf16StringSerializer
+import com.ing.zkflow.serialization.serializer.string.FixedLengthUtf32StringSerializer
 import com.ing.zkflow.serialization.serializer.string.FixedLengthUtf8StringSerializer
 
 enum class FixedLengthType(val serialName: String) {
@@ -14,6 +17,9 @@ enum class FixedLengthType(val serialName: String) {
     SET(FixedLengthSetSerializer::class.qualifiedName!!),
     BYTE_ARRAY(FixedLengthByteArraySerializer::class.qualifiedName!!),
     UTF8_STRING(FixedLengthUtf8StringSerializer::class.qualifiedName!!),
+    UTF16_STRING(FixedLengthUtf16StringSerializer::class.qualifiedName!!),
+    UTF32_STRING(FixedLengthUtf32StringSerializer::class.qualifiedName!!),
+    ASCII_STRING(FixedLengthAsciiStringSerializer::class.qualifiedName!!),
     BYTE(Byte::class.qualifiedName!!),
     SHORT(Short::class.qualifiedName!!),
     INT(Int::class.qualifiedName!!),
