@@ -28,6 +28,9 @@ open class AbstractFixedSizeStringSerializer(
     override val descriptor = strategy.descriptor
 
     override fun serialize(encoder: Encoder, value: String) {
+        require(charset.newEncoder().canEncode(value)) {
+            throw IllegalStateException("String `$value` cannot be encoded with ${charset.name()}")
+        }
         val bytes = value.toByteArray(charset)
         if (bytes.size > maxBytes) {
             throw IllegalArgumentException("${charset.name()} encoding of String `$value` (${bytes.size}) is longer than $maxBytes.")
