@@ -25,6 +25,8 @@ class ContextualizedKtTypeReference(
         ktTypeReference.typeElement ?: error("Cannot infer type of: ${ktTypeReference.text}")
     }
 
+    val text: String = ktTypeReference.text
+
     val rootType: ContextualType by lazy {
         with(ktTypeElement) {
             // KtTypeElement does not have annotations attached to the outer type.
