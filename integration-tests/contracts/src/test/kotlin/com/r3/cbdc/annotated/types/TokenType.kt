@@ -1,6 +1,6 @@
 package com.r3.cbdc.annotated.types
 
-import com.ing.zkflow.annotations.ASCII
+import com.ing.zkflow.annotations.UTF8
 import com.ing.zkflow.annotations.ZKP
 import net.corda.core.contracts.TokenizableAssetInfo
 import java.math.BigDecimal
@@ -14,7 +14,7 @@ open class TokenType(
      * contain the linearId of the [EvolvableTokenType] which is pointed to. The linearId can be used to obtain the
      * underlying [EvolvableTokenType] from the vault.
      */
-    open val tokenIdentifier: @ASCII(10) String,
+    open val tokenIdentifier: @UTF8(10) String,
     /**
      * The number of fractional digits allowable for this token type. Specifying "0" will only allow integer amounts of
      * the token type. Specifying "2", allows two decimal places, much like most fiat currencies, and so on...

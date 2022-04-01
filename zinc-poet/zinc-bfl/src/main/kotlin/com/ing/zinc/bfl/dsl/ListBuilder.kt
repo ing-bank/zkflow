@@ -21,18 +21,13 @@ class ListBuilder {
     companion object {
         fun list(init: ListBuilder.() -> Unit): BflList = ListBuilder().apply(init).build()
 
-        fun utf8String(maxSize: Int): BflList = list {
-            capacity = maxSize
-            elementType = BflPrimitive.I16
-            name = "Utf8String$maxSize"
-            sizeType = BflPrimitive.U32
-        }
-
-        fun asciiString(maxSize: Int): BflList = list {
+        /**
+         * A string is `just` a ByteArray, regardless of the encoding.
+         */
+        fun string(maxSize: Int, encodingPrefix: String = "Utf8"): BflList = list {
             capacity = maxSize
             elementType = BflPrimitive.I8
-            name = "AsciiString$maxSize"
-            sizeType = BflPrimitive.U32
+            name = "${encodingPrefix}String$maxSize"
         }
 
         fun byteArray(maxSize: Int): BflList = list {

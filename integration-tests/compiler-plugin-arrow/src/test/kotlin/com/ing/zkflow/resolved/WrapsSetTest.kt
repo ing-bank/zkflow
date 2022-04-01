@@ -14,7 +14,7 @@ data class WrapsSet(
             @kotlinx.serialization.Contextual String> = setOf("test")
 ) {
     object Set_0 : com.ing.zkflow.serialization.serializer.FixedLengthSetSerializer<String>(5, Set_1)
-    object Set_1 : com.ing.zkflow.serialization.serializer.string.FixedLengthASCIIStringSerializer(10)
+    object Set_1 : com.ing.zkflow.serialization.serializer.string.FixedSizeUtf8StringSerializer(10)
 }
 
 class WrapsSetTest : SerializerTest {

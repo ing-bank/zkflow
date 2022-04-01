@@ -3,7 +3,7 @@ package com.ing.zinc.bfl
 import com.ing.zinc.bfl.dsl.ArrayBuilder.Companion.array
 import com.ing.zinc.bfl.dsl.EnumBuilder.Companion.enumOf
 import com.ing.zinc.bfl.dsl.ListBuilder.Companion.list
-import com.ing.zinc.bfl.dsl.ListBuilder.Companion.utf8String
+import com.ing.zinc.bfl.dsl.ListBuilder.Companion.string
 import com.ing.zinc.bfl.dsl.MapBuilder.Companion.map
 import com.ing.zinc.bfl.dsl.OptionBuilder.Companion.option
 import com.ing.zinc.bfl.dsl.StructBuilder.Companion.struct
@@ -118,7 +118,7 @@ internal val listOfStructWithStructField = list {
 internal val mapOfEnumToString = map {
     capacity = 2
     keyType = thingsEnum
-    valueType = utf8String(2)
+    valueType = string(2)
 }
 
 internal val emptyJsonObject = buildJsonObject { }

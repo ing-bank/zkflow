@@ -7,10 +7,9 @@ import com.ing.zinc.bfl.BflUnit
 import com.ing.zinc.bfl.dsl.ArrayBuilder.Companion.array
 import com.ing.zinc.bfl.dsl.EnumBuilder.Companion.enum
 import com.ing.zinc.bfl.dsl.FieldBuilder.Companion.field
-import com.ing.zinc.bfl.dsl.ListBuilder.Companion.asciiString
 import com.ing.zinc.bfl.dsl.ListBuilder.Companion.byteArray
 import com.ing.zinc.bfl.dsl.ListBuilder.Companion.list
-import com.ing.zinc.bfl.dsl.ListBuilder.Companion.utf8String
+import com.ing.zinc.bfl.dsl.ListBuilder.Companion.string
 import com.ing.zinc.bfl.dsl.MapBuilder.Companion.map
 import com.ing.zinc.bfl.dsl.OptionBuilder.Companion.option
 import com.ing.zinc.bfl.dsl.StructBuilder.Companion.struct
@@ -47,8 +46,10 @@ object ZincTypeGenerator {
             FixedLengthType.LIST -> createList(descriptor)
             FixedLengthType.MAP -> createMap(descriptor)
             FixedLengthType.BYTE_ARRAY -> byteArray(descriptor.getAnnotation<SizeAnnotation>().value)
-            FixedLengthType.UTF8_STRING -> utf8String(descriptor.getAnnotation<SizeAnnotation>().value)
-            FixedLengthType.ASCII_STRING -> asciiString(descriptor.getAnnotation<SizeAnnotation>().value)
+            FixedLengthType.ASCII_STRING -> string(descriptor.getAnnotation<SizeAnnotation>().value, "Ascii")
+            FixedLengthType.UTF8_STRING -> string(descriptor.getAnnotation<SizeAnnotation>().value)
+            FixedLengthType.UTF16_STRING -> string(descriptor.getAnnotation<SizeAnnotation>().value, "Utf16")
+            FixedLengthType.UTF32_STRING -> string(descriptor.getAnnotation<SizeAnnotation>().value, "Utf32")
             FixedLengthType.BOOLEAN -> BflPrimitive.Bool
             FixedLengthType.BYTE -> createSignedInteger(Byte.SIZE_BITS)
             FixedLengthType.UBYTE -> createUnsignedInteger(UByte.SIZE_BITS)

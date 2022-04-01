@@ -6,9 +6,9 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 
 /**
- * UTF8 chars are serialized as [Char.SIZE_BYTES] bytes, which is a [Short].
+ * Unicode chars (codepoints) are serialized as [Char.SIZE_BYTES] bytes, which is a [Short].
  */
-object UTF8CharSerializer : FixedLengthKSerializerWithDefault<Char> {
+object UnicodeCharSerializer : FixedLengthKSerializerWithDefault<Char> {
     override val default = '-'
 
     val strategy = ShortSerializer

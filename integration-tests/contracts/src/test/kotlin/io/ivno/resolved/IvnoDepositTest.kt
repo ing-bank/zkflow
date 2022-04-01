@@ -56,13 +56,13 @@ data class IvnoDeposit(
 
     object Reference_0 : com.ing.zkflow.serialization.serializer.NullableSerializer<String>(Reference_1)
 
-    object Reference_1 : com.ing.zkflow.serialization.serializer.string.FixedLengthASCIIStringSerializer(10)
+    object Reference_1 : com.ing.zkflow.serialization.serializer.string.FixedSizeUtf8StringSerializer(10)
 
     object Status_0 : com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializer<DepositStatus>(DepositStatus.serializer(), DepositStatus::class.java.isEnum)
 
     object Timestamp_0 : WrappedFixedLengthKSerializerWithDefault<Instant>(com.ing.zkflow.serialization.serializer.InstantSerializer)
 
-    object AccountId_0 : com.ing.zkflow.serialization.serializer.string.FixedLengthASCIIStringSerializer(10)
+    object AccountId_0 : com.ing.zkflow.serialization.serializer.string.FixedSizeUtf8StringSerializer(10)
 
     object LinearId_0 : com.ing.zkflow.serialization.serializer.SurrogateSerializer<UniqueIdentifier, UniqueIdentifierSurrogate>(
         UniqueIdentifierSurrogate.serializer(), { UniqueIdentifierConverter.from(it) }

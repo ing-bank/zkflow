@@ -7,6 +7,23 @@ import org.junit.jupiter.api.Test
 
 internal class RequiresTest {
     @Test
+    fun `require should return input when true`() {
+        val actual = 3.require({ true }) {
+            "Unexpected"
+        }
+        actual shouldBe 3
+    }
+
+    @Test
+    fun `require should throw IllegalArgumentException when false`() {
+        shouldThrow<IllegalArgumentException> {
+            3.require({ false }) {
+                "Expected"
+            }
+        }.message shouldBe "Expected"
+    }
+
+    @Test
     fun `requireNotEmpty should return input when not empty`() {
         val actual = listOf(1, 2, 3).requireNotEmpty {
             BUMMER

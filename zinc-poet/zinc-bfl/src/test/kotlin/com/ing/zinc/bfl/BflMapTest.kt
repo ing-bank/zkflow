@@ -20,10 +20,10 @@ internal class BflMapTest {
                 0, 0, 0, 2, // Map size: 2
                 0, 0, 0, 0, // Things.NOTHING
                 0, 0, 0, 1, // String size 1
-                0, 97, 0, 0, // "a"
+                97, 0, // "a"
                 0, 0, 0, 1, // Things.SOMETHING
                 0, 0, 0, 2, // String size 2
-                0, 97, 0, 98, // "ab"
+                97, 98, // "ab"
             )
         }
 

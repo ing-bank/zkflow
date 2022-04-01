@@ -25,11 +25,15 @@ val Meta.ClassAnnotator: CliPlugin
                     ClassRefactory.verifyAnnotationCorrectness(element)
                 }
             }) { (ktClass, _) ->
-                SerdeLogger.phase(PROCESSING_UNIT) {
-                    Transform.replace(
-                        replacing = ktClass,
-                        newDeclarations = ClassRefactory(this, ctx).newDeclarations
-                    )
+                try {
+                    SerdeLogger.phase(PROCESSING_UNIT) {
+                        Transform.replace(
+                            replacing = ktClass,
+                            newDeclarations = ClassRefactory(this, ctx).newDeclarations
+                        )
+                    }
+                } catch (e: Exception) {
+                    throw IllegalStateException("Error while processing ${ktClass.nameAsSafeName}: ${e.message}", e)
                 }
             }
         )

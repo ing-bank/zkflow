@@ -8,8 +8,10 @@ import com.ing.zkflow.annotations.ASCII
 import com.ing.zkflow.annotations.ASCIIChar
 import com.ing.zkflow.annotations.BigDecimalSize
 import com.ing.zkflow.annotations.Size
+import com.ing.zkflow.annotations.UTF16
+import com.ing.zkflow.annotations.UTF32
 import com.ing.zkflow.annotations.UTF8
-import com.ing.zkflow.annotations.UTF8Char
+import com.ing.zkflow.annotations.UnicodeChar
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.annotations.corda.Algorithm
 import com.ing.zkflow.annotations.corda.CordaX500NameSpec
@@ -40,7 +42,7 @@ import com.ing.zkflow.serialization.serializer.UUIDSerializer
 import com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializer
 import com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializerWithDefault
 import com.ing.zkflow.serialization.serializer.char.ASCIICharSerializer
-import com.ing.zkflow.serialization.serializer.char.UTF8CharSerializer
+import com.ing.zkflow.serialization.serializer.char.UnicodeCharSerializer
 import com.ing.zkflow.serialization.serializer.corda.AlwaysAcceptAttachmentConstraintSerializer
 import com.ing.zkflow.serialization.serializer.corda.AnonymousPartySerializer
 import com.ing.zkflow.serialization.serializer.corda.AutomaticHashConstraintSerializer
@@ -52,8 +54,10 @@ import com.ing.zkflow.serialization.serializer.corda.PublicKeySerializer
 import com.ing.zkflow.serialization.serializer.corda.SecureHashSerializer
 import com.ing.zkflow.serialization.serializer.corda.SignatureAttachmentConstraintSerializer
 import com.ing.zkflow.serialization.serializer.corda.WhitelistedByZoneAttachmentConstraintSerializer
-import com.ing.zkflow.serialization.serializer.string.FixedLengthASCIIStringSerializer
-import com.ing.zkflow.serialization.serializer.string.FixedLengthUTF8StringSerializer
+import com.ing.zkflow.serialization.serializer.string.FixedSizeAsciiStringSerializer
+import com.ing.zkflow.serialization.serializer.string.FixedSizeUtf16StringSerializer
+import com.ing.zkflow.serialization.serializer.string.FixedSizeUtf32StringSerializer
+import com.ing.zkflow.serialization.serializer.string.FixedSizeUtf8StringSerializer
 import net.corda.core.contracts.AlwaysAcceptAttachmentConstraint
 import net.corda.core.contracts.AttachmentConstraint
 import net.corda.core.contracts.AutomaticHashConstraint
@@ -179,7 +183,7 @@ internal object Processors {
         },
         //
         Char::class.simpleName!! to ToSerializingObject { contextualizedOriginal, _ ->
-            // Require com.ing.zkflow.annotations.ASCIIChar/com.ing.zkflow.annotations.UTF8Char annotation.
+            // Require com.ing.zkflow.annotations.ASCIIChar/com.ing.zkflow.annotations.UnicodeChar annotation.
             contextualizedOriginal.findAnnotation<ASCIIChar>()?.let {
                 return@ToSerializingObject TypeSerializingObject.ExplicitType(
                     contextualizedOriginal,
@@ -190,42 +194,65 @@ internal object Processors {
                 }
             }
 
-            contextualizedOriginal.findAnnotation<UTF8Char>()?.let {
+            contextualizedOriginal.findAnnotation<UnicodeChar>()?.let {
                 return@ToSerializingObject TypeSerializingObject.ExplicitType(
                     contextualizedOriginal,
                     WrappedFixedLengthKSerializerWithDefault::class,
                     emptyList()
                 ) { _, outer, _ ->
-                    "object $outer: ${WrappedFixedLengthKSerializerWithDefault::class.qualifiedName}<${Char::class.simpleName}>(${UTF8CharSerializer::class.qualifiedName})"
+                    "object $outer: ${WrappedFixedLengthKSerializerWithDefault::class.qualifiedName}<${Char::class.simpleName}>(${UnicodeCharSerializer::class.qualifiedName})"
                 }
             }
 
-            error("Char `${contextualizedOriginal.ktTypeReference.text}` must be annotated with either ${UTF8Char::class.simpleName} or ${ASCIIChar::class.simpleName} annotations")
+            error("Char `${contextualizedOriginal.ktTypeReference.text}` must be annotated with either ${UnicodeChar::class.simpleName} or ${ASCIIChar::class.simpleName} annotations")
         },
         //
         String::class.simpleName!! to ToSerializingObject { contextualizedOriginal, _ ->
-            // Require com.ing.zkflow.annotations.ASCII/com.ing.zkflow.annotations.UTF8 annotation.
-            contextualizedOriginal.annotationSingleArgument<ASCII>()?.let { maxLength ->
+            // Handle com.ing.zkflow.annotations.ASCII annotation.
+            contextualizedOriginal.annotationSingleArgument<ASCII>()?.let { maxByteSize ->
                 return@ToSerializingObject TypeSerializingObject.ExplicitType(
                     contextualizedOriginal,
-                    FixedLengthASCIIStringSerializer::class,
+                    FixedSizeAsciiStringSerializer::class,
                     emptyList()
                 ) { _, outer, _ ->
-                    "object $outer: ${FixedLengthASCIIStringSerializer::class.qualifiedName}($maxLength)"
+                    "object $outer: ${FixedSizeAsciiStringSerializer::class.qualifiedName}($maxByteSize)"
                 }
             }
 
-            contextualizedOriginal.annotationSingleArgument<UTF8>()?.let { maxLength ->
+            // Handle com.ing.zkflow.annotations.UTF8 annotation.
+            contextualizedOriginal.annotationSingleArgument<UTF8>()?.let { maxByteSize ->
                 return@ToSerializingObject TypeSerializingObject.ExplicitType(
                     contextualizedOriginal,
-                    FixedLengthUTF8StringSerializer::class,
+                    FixedSizeUtf8StringSerializer::class,
                     emptyList()
                 ) { _, outer, _ ->
-                    "object $outer: ${FixedLengthUTF8StringSerializer::class.qualifiedName}($maxLength)"
+                    "object $outer: ${FixedSizeUtf8StringSerializer::class.qualifiedName}($maxByteSize)"
                 }
             }
 
-            error("String `${contextualizedOriginal.ktTypeReference.text}` must be annotated with either ${UTF8::class.simpleName} or ${ASCII::class.simpleName} annotations")
+            // Handle com.ing.zkflow.annotations.UTF16 annotation.
+            contextualizedOriginal.annotationSingleArgument<UTF16>()?.let { maxByteSize ->
+                return@ToSerializingObject TypeSerializingObject.ExplicitType(
+                    contextualizedOriginal,
+                    FixedSizeUtf16StringSerializer::class,
+                    emptyList()
+                ) { _, outer, _ ->
+                    "object $outer: ${FixedSizeUtf16StringSerializer::class.qualifiedName}($maxByteSize)"
+                }
+            }
+
+            // Handle com.ing.zkflow.annotations.UTF32 annotation.
+            contextualizedOriginal.annotationSingleArgument<UTF32>()?.let { maxByteSize ->
+                return@ToSerializingObject TypeSerializingObject.ExplicitType(
+                    contextualizedOriginal,
+                    FixedSizeUtf32StringSerializer::class,
+                    emptyList()
+                ) { _, outer, _ ->
+                    "object $outer: ${FixedSizeUtf32StringSerializer::class.qualifiedName}($maxByteSize)"
+                }
+            }
+
+            error("String `${contextualizedOriginal.ktTypeReference.text}` must be annotated with ${ASCII::class.simpleName}, ${UTF8::class.simpleName}, ${UTF16::class.simpleName} or ${UTF32::class.simpleName} annotation")
         },
         //
         //
