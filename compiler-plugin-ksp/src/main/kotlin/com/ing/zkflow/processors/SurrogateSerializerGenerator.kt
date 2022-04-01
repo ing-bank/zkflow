@@ -46,7 +46,7 @@ class SurrogateSerializerGenerator(private val codeGenerator: CodeGenerator) : I
         val generatedSerializers = implementations.mapNotNull { impl ->
             // Enforce no generics.
             require(impl.declaration.typeParameters.isEmpty()) {
-                "Surrogate implementers may not contain generics"
+                "Surrogate implementers may not contain generics: `${impl.declaration}`"
             }
 
             // Enforce correctness of ZKP annotation.

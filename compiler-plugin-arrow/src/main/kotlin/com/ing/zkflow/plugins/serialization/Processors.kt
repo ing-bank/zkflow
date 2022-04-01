@@ -184,75 +184,51 @@ internal object Processors {
         //
         Char::class.simpleName!! to ToSerializingObject { contextualizedOriginal, _ ->
             // Require com.ing.zkflow.annotations.ASCIIChar/com.ing.zkflow.annotations.UnicodeChar annotation.
-            contextualizedOriginal.findAnnotation<ASCIIChar>()?.let {
-                return@ToSerializingObject TypeSerializingObject.ExplicitType(
-                    contextualizedOriginal,
-                    WrappedFixedLengthKSerializerWithDefault::class,
-                    emptyList()
-                ) { _, outer, _ ->
-                    "object $outer: ${WrappedFixedLengthKSerializerWithDefault::class.qualifiedName}<${Char::class.simpleName}>(${ASCIICharSerializer::class.qualifiedName})"
-                }
+            val annotations = mapOf(
+                ASCIICharSerializer::class to contextualizedOriginal.findAnnotation<ASCIIChar>(),
+                UnicodeCharSerializer::class to contextualizedOriginal.findAnnotation<UnicodeChar>(),
+            ).filterValues {
+                it != null
             }
 
-            contextualizedOriginal.findAnnotation<UnicodeChar>()?.let {
-                return@ToSerializingObject TypeSerializingObject.ExplicitType(
-                    contextualizedOriginal,
-                    WrappedFixedLengthKSerializerWithDefault::class,
-                    emptyList()
-                ) { _, outer, _ ->
-                    "object $outer: ${WrappedFixedLengthKSerializerWithDefault::class.qualifiedName}<${Char::class.simpleName}>(${UnicodeCharSerializer::class.qualifiedName})"
-                }
+            val serializer = when (annotations.size) {
+                0 -> error("Char `${contextualizedOriginal.ktTypeReference.text}` must be annotated with either `${UnicodeChar::class.simpleName}` or `${ASCIIChar::class.simpleName}` annotations")
+                1 -> annotations.entries.single().key
+                else -> error("Single annotation `${UnicodeChar::class.simpleName}` or `${ASCIIChar::class.simpleName}` for field `${contextualizedOriginal.text}` expected")
             }
 
-            error("Char `${contextualizedOriginal.ktTypeReference.text}` must be annotated with either ${UnicodeChar::class.simpleName} or ${ASCIIChar::class.simpleName} annotations")
+            TypeSerializingObject.ExplicitType(
+                contextualizedOriginal,
+                WrappedFixedLengthKSerializerWithDefault::class,
+                emptyList()
+            ) { _, outer, _ ->
+                "object $outer: ${WrappedFixedLengthKSerializerWithDefault::class.qualifiedName}<${Char::class.simpleName}>(${serializer.qualifiedName})"
+            }
         },
         //
         String::class.simpleName!! to ToSerializingObject { contextualizedOriginal, _ ->
-            // Handle com.ing.zkflow.annotations.ASCII annotation.
-            contextualizedOriginal.annotationSingleArgument<ASCII>()?.let { maxByteSize ->
-                return@ToSerializingObject TypeSerializingObject.ExplicitType(
-                    contextualizedOriginal,
-                    FixedSizeAsciiStringSerializer::class,
-                    emptyList()
-                ) { _, outer, _ ->
-                    "object $outer: ${FixedSizeAsciiStringSerializer::class.qualifiedName}($maxByteSize)"
-                }
+            val annotations = mapOf(
+                FixedSizeAsciiStringSerializer::class to contextualizedOriginal.annotationSingleArgument<ASCII>(),
+                FixedSizeUtf8StringSerializer::class to contextualizedOriginal.annotationSingleArgument<UTF8>(),
+                FixedSizeUtf16StringSerializer::class to contextualizedOriginal.annotationSingleArgument<UTF16>(),
+                FixedSizeUtf32StringSerializer::class to contextualizedOriginal.annotationSingleArgument<UTF32>(),
+            ).filterValues {
+                it != null
             }
 
-            // Handle com.ing.zkflow.annotations.UTF8 annotation.
-            contextualizedOriginal.annotationSingleArgument<UTF8>()?.let { maxByteSize ->
-                return@ToSerializingObject TypeSerializingObject.ExplicitType(
-                    contextualizedOriginal,
-                    FixedSizeUtf8StringSerializer::class,
-                    emptyList()
-                ) { _, outer, _ ->
-                    "object $outer: ${FixedSizeUtf8StringSerializer::class.qualifiedName}($maxByteSize)"
-                }
+            val (serializer, maxByteSize) = when (annotations.size) {
+                0 -> error("String `${contextualizedOriginal.ktTypeReference.text}` must be annotated with ${ASCII::class.simpleName}, ${UTF8::class.simpleName}, ${UTF16::class.simpleName} or ${UTF32::class.simpleName} annotation")
+                1 -> annotations.entries.single()
+                else -> error("Single annotation `${ASCII::class.simpleName}`, `${UTF8::class.simpleName}`, `${UTF16::class.simpleName}` or `${UTF32::class.simpleName}` for field `${contextualizedOriginal.text}` expected")
             }
 
-            // Handle com.ing.zkflow.annotations.UTF16 annotation.
-            contextualizedOriginal.annotationSingleArgument<UTF16>()?.let { maxByteSize ->
-                return@ToSerializingObject TypeSerializingObject.ExplicitType(
-                    contextualizedOriginal,
-                    FixedSizeUtf16StringSerializer::class,
-                    emptyList()
-                ) { _, outer, _ ->
-                    "object $outer: ${FixedSizeUtf16StringSerializer::class.qualifiedName}($maxByteSize)"
-                }
+            TypeSerializingObject.ExplicitType(
+                contextualizedOriginal,
+                serializer,
+                emptyList()
+            ) { _, outer, _ ->
+                "object $outer: ${serializer.qualifiedName}(${maxByteSize!!})"
             }
-
-            // Handle com.ing.zkflow.annotations.UTF32 annotation.
-            contextualizedOriginal.annotationSingleArgument<UTF32>()?.let { maxByteSize ->
-                return@ToSerializingObject TypeSerializingObject.ExplicitType(
-                    contextualizedOriginal,
-                    FixedSizeUtf32StringSerializer::class,
-                    emptyList()
-                ) { _, outer, _ ->
-                    "object $outer: ${FixedSizeUtf32StringSerializer::class.qualifiedName}($maxByteSize)"
-                }
-            }
-
-            error("String `${contextualizedOriginal.ktTypeReference.text}` must be annotated with ${ASCII::class.simpleName}, ${UTF8::class.simpleName}, ${UTF16::class.simpleName} or ${UTF32::class.simpleName} annotation")
         },
         //
         //
@@ -261,7 +237,7 @@ internal object Processors {
         ByteArray::class.simpleName!! to ToSerializingObject { contextualizedOriginal, _ ->
             // Require com.ing.zkflow.annotations.Size annotation.
             val maxSizeArgument = contextualizedOriginal.annotationSingleArgument<Size>()
-                ?: error("Ill-defined type `${contextualizedOriginal.ktTypeReference.text}`. ${ByteArray::class.simpleName} must be annotated with ${Size::class.simpleName}")
+                ?: error("Ill-defined type `${contextualizedOriginal.text}`. ${ByteArray::class.simpleName} must be annotated with ${Size::class.simpleName}")
 
             TypeSerializingObject.ExplicitType(
                 contextualizedOriginal,

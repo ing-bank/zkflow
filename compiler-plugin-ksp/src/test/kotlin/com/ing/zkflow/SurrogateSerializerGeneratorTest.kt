@@ -39,11 +39,6 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKFLowSymbolProc
         val outputStream = ByteArrayOutputStream()
         val result = compile(listOf(sourceWith3PartyClass, incorrectSourceSurrogateMustBeFinal), outputStream)
 
-        // In case of error, show output
-        if (result.exitCode != KotlinCompilation.ExitCode.OK) {
-            reportError(result, outputStream)
-        }
-
         result.exitCode shouldBe KotlinCompilation.ExitCode.COMPILATION_ERROR
         result.messages shouldContain "Surrogate implementers may not contain generics"
     }
