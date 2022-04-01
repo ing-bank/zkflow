@@ -65,16 +65,14 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKFLowSymbolProc
 
                 import com.ing.zkflow.ConversionProvider
                 import com.ing.zkflow.testing.SomeClass
-                import com.ing.zkflow.annotations.Size
                 import com.ing.zkflow.Surrogate
-                import com.ing.zkflow.annotations.Ass
-                import com.ing.zkflow.annotations.UTF8
+                import com.ing.zkflow.annotations.ASCII
                 import com.ing.zkflow.annotations.ZKPSurrogate
                 
                 @ZKPSurrogate(SomeClassConverter::class)
                 data class SomeClassIntSurrogate(
                     val generic: Int,
-                    val string: @UTF8(10) String
+                    val string: @ASCII(10) String
                 ): Surrogate<SomeClass<Int>> {
                     override fun toOriginal(): SomeClass<Int> {
                         TODO("Not yet implemented")

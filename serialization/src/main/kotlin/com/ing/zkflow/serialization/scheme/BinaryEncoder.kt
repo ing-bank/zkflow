@@ -4,10 +4,10 @@ import com.ing.zkflow.serialization.serializer.FixedLengthFloatingPointSerialize
 import com.ing.zkflow.serialization.serializer.FixedLengthFloatingPointSerializer.FloatSerializer
 import com.ing.zkflow.serialization.serializer.char.ASCIICharSerializer
 import com.ing.zkflow.serialization.serializer.char.UnicodeCharSerializer
-import com.ing.zkflow.serialization.serializer.string.FixedLengthAsciiStringSerializer
-import com.ing.zkflow.serialization.serializer.string.FixedLengthUtf16StringSerializer
-import com.ing.zkflow.serialization.serializer.string.FixedLengthUtf32StringSerializer
-import com.ing.zkflow.serialization.serializer.string.FixedLengthUtf8StringSerializer
+import com.ing.zkflow.serialization.serializer.string.FixedSizeAsciiStringSerializer
+import com.ing.zkflow.serialization.serializer.string.FixedSizeUtf16StringSerializer
+import com.ing.zkflow.serialization.serializer.string.FixedSizeUtf32StringSerializer
+import com.ing.zkflow.serialization.serializer.string.FixedSizeUtf8StringSerializer
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.AbstractEncoder
 import kotlinx.serialization.encoding.CompositeEncoder
@@ -87,7 +87,7 @@ internal sealed class BinaryEncoder(
         WILL_NOT_IMPLEMENT("To encode Char, use ${ASCIICharSerializer::class.qualifiedName} or ${UnicodeCharSerializer::class.qualifiedName}")
     }
     override fun encodeString(value: String) {
-        WILL_NOT_IMPLEMENT("To encode String, use ${FixedLengthAsciiStringSerializer::class.qualifiedName}, ${FixedLengthUtf8StringSerializer::class.qualifiedName}, ${FixedLengthUtf16StringSerializer::class.qualifiedName} or ${FixedLengthUtf32StringSerializer::class.qualifiedName}")
+        WILL_NOT_IMPLEMENT("To encode String, use ${FixedSizeAsciiStringSerializer::class.qualifiedName}, ${FixedSizeUtf8StringSerializer::class.qualifiedName}, ${FixedSizeUtf16StringSerializer::class.qualifiedName} or ${FixedSizeUtf32StringSerializer::class.qualifiedName}")
     }
 
     override fun beginCollection(descriptor: SerialDescriptor, collectionSize: Int): CompositeEncoder {

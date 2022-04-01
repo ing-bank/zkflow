@@ -11,7 +11,7 @@ import com.ing.zkflow.serialization.FixedLengthType
  * Where the ASCII table only defines the first slots, i.e. 0-127, ISO-8859-1 defines the additional slots 128-255 as
  * well, so that many accented characters from latin languages are supported as well.
  *
- * Any characters not supported by this charset will be serialized as '?' (ascii code 63).
+ * Any character not supported by this charset will be serialized as '?' (ascii code 63).
  */
-open class FixedLengthAsciiStringSerializer(maxBytes: Int) :
-    AbstractFixedLengthStringSerializer(maxBytes, FixedLengthType.ASCII_STRING, Charsets.ISO_8859_1)
+open class FixedSizeAsciiStringSerializer(maxBytes: Int) :
+    AbstractFixedSizeStringSerializer(maxBytes, FixedLengthType.ASCII_STRING, Charsets.ISO_8859_1)

@@ -24,11 +24,10 @@ class ListBuilder {
         /**
          * A string is `just` a ByteArray, regardless of the encoding.
          */
-        fun string(maxSize: Int): BflList = list {
+        fun string(maxSize: Int, encodingPrefix: String = "Utf8"): BflList = list {
             capacity = maxSize
             elementType = BflPrimitive.I8
-            name = "String$maxSize"
-            sizeType = BflPrimitive.U32
+            name = "${encodingPrefix}String$maxSize"
         }
 
         fun byteArray(maxSize: Int): BflList = list {

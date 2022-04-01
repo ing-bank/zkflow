@@ -7,5 +7,5 @@ import com.ing.zkflow.serialization.FixedLengthType
  *
  * UTF-8 is a variable-width character encoding, meaning that single characters may be encoded in multiple positions.
  */
-open class FixedLengthUtf8StringSerializer(maxBytes: Int) :
-    AbstractFixedLengthStringSerializer(maxBytes, FixedLengthType.UTF8_STRING, Charsets.UTF_8)
+open class FixedSizeUtf8StringSerializer(maxBytes: Int) :
+    AbstractFixedSizeStringSerializer(maxBytes, FixedLengthType.UTF8_STRING, Charsets.UTF_8)

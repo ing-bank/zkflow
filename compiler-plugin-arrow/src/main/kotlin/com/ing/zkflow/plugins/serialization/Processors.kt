@@ -54,10 +54,10 @@ import com.ing.zkflow.serialization.serializer.corda.PublicKeySerializer
 import com.ing.zkflow.serialization.serializer.corda.SecureHashSerializer
 import com.ing.zkflow.serialization.serializer.corda.SignatureAttachmentConstraintSerializer
 import com.ing.zkflow.serialization.serializer.corda.WhitelistedByZoneAttachmentConstraintSerializer
-import com.ing.zkflow.serialization.serializer.string.FixedLengthAsciiStringSerializer
-import com.ing.zkflow.serialization.serializer.string.FixedLengthUtf16StringSerializer
-import com.ing.zkflow.serialization.serializer.string.FixedLengthUtf32StringSerializer
-import com.ing.zkflow.serialization.serializer.string.FixedLengthUtf8StringSerializer
+import com.ing.zkflow.serialization.serializer.string.FixedSizeAsciiStringSerializer
+import com.ing.zkflow.serialization.serializer.string.FixedSizeUtf16StringSerializer
+import com.ing.zkflow.serialization.serializer.string.FixedSizeUtf32StringSerializer
+import com.ing.zkflow.serialization.serializer.string.FixedSizeUtf8StringSerializer
 import net.corda.core.contracts.AlwaysAcceptAttachmentConstraint
 import net.corda.core.contracts.AttachmentConstraint
 import net.corda.core.contracts.AutomaticHashConstraint
@@ -209,46 +209,46 @@ internal object Processors {
         //
         String::class.simpleName!! to ToSerializingObject { contextualizedOriginal, _ ->
             // Handle com.ing.zkflow.annotations.ASCII annotation.
-            contextualizedOriginal.annotationSingleArgument<ASCII>()?.let { maxLength ->
+            contextualizedOriginal.annotationSingleArgument<ASCII>()?.let { maxByteSize ->
                 return@ToSerializingObject TypeSerializingObject.ExplicitType(
                     contextualizedOriginal,
-                    FixedLengthAsciiStringSerializer::class,
+                    FixedSizeAsciiStringSerializer::class,
                     emptyList()
                 ) { _, outer, _ ->
-                    "object $outer: ${FixedLengthAsciiStringSerializer::class.qualifiedName}($maxLength)"
+                    "object $outer: ${FixedSizeAsciiStringSerializer::class.qualifiedName}($maxByteSize)"
                 }
             }
 
             // Handle com.ing.zkflow.annotations.UTF8 annotation.
-            contextualizedOriginal.annotationSingleArgument<UTF8>()?.let { maxLength ->
+            contextualizedOriginal.annotationSingleArgument<UTF8>()?.let { maxByteSize ->
                 return@ToSerializingObject TypeSerializingObject.ExplicitType(
                     contextualizedOriginal,
-                    FixedLengthUtf8StringSerializer::class,
+                    FixedSizeUtf8StringSerializer::class,
                     emptyList()
                 ) { _, outer, _ ->
-                    "object $outer: ${FixedLengthUtf8StringSerializer::class.qualifiedName}($maxLength)"
+                    "object $outer: ${FixedSizeUtf8StringSerializer::class.qualifiedName}($maxByteSize)"
                 }
             }
 
             // Handle com.ing.zkflow.annotations.UTF16 annotation.
-            contextualizedOriginal.annotationSingleArgument<UTF16>()?.let { maxLength ->
+            contextualizedOriginal.annotationSingleArgument<UTF16>()?.let { maxByteSize ->
                 return@ToSerializingObject TypeSerializingObject.ExplicitType(
                     contextualizedOriginal,
-                    FixedLengthUtf16StringSerializer::class,
+                    FixedSizeUtf16StringSerializer::class,
                     emptyList()
                 ) { _, outer, _ ->
-                    "object $outer: ${FixedLengthUtf16StringSerializer::class.qualifiedName}($maxLength)"
+                    "object $outer: ${FixedSizeUtf16StringSerializer::class.qualifiedName}($maxByteSize)"
                 }
             }
 
             // Handle com.ing.zkflow.annotations.UTF32 annotation.
-            contextualizedOriginal.annotationSingleArgument<UTF32>()?.let { maxLength ->
+            contextualizedOriginal.annotationSingleArgument<UTF32>()?.let { maxByteSize ->
                 return@ToSerializingObject TypeSerializingObject.ExplicitType(
                     contextualizedOriginal,
-                    FixedLengthUtf32StringSerializer::class,
+                    FixedSizeUtf32StringSerializer::class,
                     emptyList()
                 ) { _, outer, _ ->
-                    "object $outer: ${FixedLengthUtf32StringSerializer::class.qualifiedName}($maxLength)"
+                    "object $outer: ${FixedSizeUtf32StringSerializer::class.qualifiedName}($maxByteSize)"
                 }
             }
 

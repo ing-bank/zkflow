@@ -8,9 +8,10 @@ import kotlinx.serialization.Serializable
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 
-class FixedLengthAsciiStringSerializerTest : SerializerTest {
+class FixedSizeUtf8StringSerializerTest : SerializerTest {
     companion object {
         private const val asciiString = "az"
+        private const val unicodeString = "a的"
         private const val tooLongString = "This string is way too long."
     }
 
@@ -19,7 +20,7 @@ class FixedLengthAsciiStringSerializerTest : SerializerTest {
     fun `too long string should fail`(engine: SerdeEngine) {
         shouldThrow<IllegalArgumentException> {
             engine.assertRoundTrip(InstanceSerializer, tooLongString)
-        }.message shouldBe "ISO-8859-1 encoding of String `This string is way too long.` (28) is longer than 5."
+        }.message shouldBe "UTF-8 encoding of String `This string is way too long.` (28) is longer than 5."
     }
 
     @ParameterizedTest
@@ -41,11 +42,30 @@ class FixedLengthAsciiStringSerializerTest : SerializerTest {
         engine.assertRoundTrip(ContainsString.serializer(), ContainsString(asciiString))
     }
 
+    @ParameterizedTest
+    @MethodSource("engines")
+    fun `unicode string must be serializable`(engine: SerdeEngine) {
+        engine.assertRoundTrip(InstanceSerializer, unicodeString)
+    }
+
+    @ParameterizedTest
+    @MethodSource("engines")
+    fun `UTF strings must have equal length serialization`(engine: SerdeEngine) {
+        engine.serialize(InstanceSerializer, unicodeString).size shouldBe
+            engine.serialize(InstanceSerializer, unicodeString + "b").size
+    }
+
+    @ParameterizedTest
+    @MethodSource("engines")
+    fun `Class with UTF string must be (de)serializable`(engine: SerdeEngine) {
+        engine.assertRoundTrip(ContainsString.serializer(), ContainsString(unicodeString))
+    }
+
     @Serializable
     data class ContainsString(
         @Serializable(with = InstanceSerializer::class)
         val innerString: String
     )
 
-    object InstanceSerializer : FixedLengthAsciiStringSerializer(5)
+    object InstanceSerializer : FixedSizeUtf8StringSerializer(5)
 }

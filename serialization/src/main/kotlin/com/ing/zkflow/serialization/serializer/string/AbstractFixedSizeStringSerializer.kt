@@ -15,12 +15,12 @@ import java.nio.charset.Charset
  *
  * @param maxBytes The maximum number of bytes allowed in the encoded String.
  * @param fixedLengthType The [FixedLengthType].
- * @param charSet The [Charset] to use when encoding the String.
+ * @param charset The [Charset] to use when encoding the String.
  */
-open class AbstractFixedLengthStringSerializer(
+open class AbstractFixedSizeStringSerializer(
     private val maxBytes: Int,
     fixedLengthType: FixedLengthType,
-    private val charSet: Charset,
+    private val charset: Charset,
 ) : FixedLengthKSerializerWithDefault<String> {
     private val strategy = FixedLengthCollectionSerializer(maxBytes, ByteSerializer, fixedLengthType)
 
@@ -28,15 +28,15 @@ open class AbstractFixedLengthStringSerializer(
     override val descriptor = strategy.descriptor
 
     override fun serialize(encoder: Encoder, value: String) {
-        val bytes = value.toByteArray(charSet)
+        val bytes = value.toByteArray(charset)
         if (bytes.size > maxBytes) {
-            throw IllegalArgumentException("${charSet.name()} encoding of String `$value` (${bytes.size}) is longer than $maxBytes.")
+            throw IllegalArgumentException("${charset.name()} encoding of String `$value` (${bytes.size}) is longer than $maxBytes.")
         }
         encoder.encodeSerializableValue(strategy, bytes.toList())
     }
 
     override fun deserialize(decoder: Decoder): String {
         val bytes = strategy.deserialize(decoder).toByteArray()
-        return String(bytes, charSet)
+        return String(bytes, charset)
     }
 }

@@ -8,8 +8,8 @@ import com.ing.zkflow.util.require
  *
  * UTF-16 is a variable-width character encoding, meaning that single characters may be encoded in multiple positions.
  */
-open class FixedLengthUtf16StringSerializer(maxBytes: Int) :
-    AbstractFixedLengthStringSerializer(
+open class FixedSizeUtf16StringSerializer(maxBytes: Int) :
+    AbstractFixedSizeStringSerializer(
         maxBytes.require({ it % Short.SIZE_BYTES == 0 }) {
             "Maximum number of bytes in a ${Charsets.UTF_16.name()} string must be a multiple of ${Short.SIZE_BYTES}."
         },

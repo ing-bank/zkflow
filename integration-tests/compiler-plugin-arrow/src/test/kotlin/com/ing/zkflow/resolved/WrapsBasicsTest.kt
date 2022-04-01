@@ -6,7 +6,7 @@ import com.ing.zkflow.serialization.serializer.IntSerializer
 import com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializerWithDefault
 import com.ing.zkflow.serialization.serializer.char.ASCIICharSerializer
 import com.ing.zkflow.serialization.serializer.char.UnicodeCharSerializer
-import com.ing.zkflow.serialization.serializer.string.FixedLengthUtf8StringSerializer
+import com.ing.zkflow.serialization.serializer.string.FixedSizeUtf8StringSerializer
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
@@ -31,7 +31,7 @@ data class WrapsBasics(
     object Char_0 : WrappedFixedLengthKSerializerWithDefault<Char>(ASCIICharSerializer)
     object Char_1 : WrappedFixedLengthKSerializerWithDefault<Char>(UnicodeCharSerializer)
     object Int_0 : WrappedFixedLengthKSerializerWithDefault<Int>(IntSerializer)
-    object String_0 : FixedLengthUtf8StringSerializer(6)
+    object String_0 : FixedSizeUtf8StringSerializer(6)
 }
 
 class WrapsBasicsTest : SerializerTest {

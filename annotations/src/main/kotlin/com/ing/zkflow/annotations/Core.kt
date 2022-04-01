@@ -13,6 +13,8 @@ annotation class Size(val size: Int)
  * Bound size of ASCII encoded String.
  *
  * This is a fixed-length encoding scheme where every character occupies 1 byte.
+ * The actual implementation uses ISO-8859-1 or latin-1 encoding, which is sometimes referred to as extended ASCII.
+ * Any character not supported by ISO-8859-1 will be serialized as '?' (ascii code 63).
  *
  * @param byteSize The max number of bytes in the ASCII encoded String.
  */

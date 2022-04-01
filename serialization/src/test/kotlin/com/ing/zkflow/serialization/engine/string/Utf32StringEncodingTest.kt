@@ -3,14 +3,14 @@ package com.ing.zkflow.serialization.engine.string
 import com.ing.zkflow.serialization.scheme.BinaryFixedLengthScheme
 import com.ing.zkflow.serialization.scheme.ByteBinaryFixedLengthScheme
 import com.ing.zkflow.serialization.serializer.ByteSerializer
-import com.ing.zkflow.serialization.serializer.string.FixedLengthUtf32StringSerializer
+import com.ing.zkflow.serialization.serializer.string.FixedSizeUtf32StringSerializer
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 
 class Utf32StringEncodingTest {
-    private val serializer = FixedLengthUtf32StringSerializer(MAX_LENGTH)
+    private val serializer = FixedSizeUtf32StringSerializer(MAX_LENGTH)
 
     @ParameterizedTest
     @MethodSource("data")

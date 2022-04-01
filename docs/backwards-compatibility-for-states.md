@@ -233,7 +233,6 @@ Below is an example of a `Parent` state class that embeds a `Child` class which 
 ```kotlin
 package com.ing.zkflow.common.contracts.recursive
 
-import com.ing.zkflow.Size
 import com.ing.zkflow.UTF8
 import com.ing.zkflow.ZKP
 import com.ing.zkflow.common.contracts.ZKTransactionMetadataCommandData

@@ -5,7 +5,7 @@
 * Don't use `Party` or `AbstractParty` in your states and commands. Use AnonymousParty or some other form of AbstractParty that does not store the CordaX500Name. This is because the CordaX500Name adds up to a lot of bytes, but is not strictly necessary. If you really need to know the CordaX500Name, you can always look it up in your flows. This does mean you will not have access to the CordaX500Name in your contracts.
 * ZonedDateTime: make sure `ZoneId` is a `ZoneOffset` and not a `ZoneRegion`. The former is an Int (offset in seconds), so 4 bytes. The latter is a string of 32 characters (64 bytes in UTF-8) to fit the longest region name. This saves 60 bytes.
 * TBD: allow only ASCII strings: this saves a byte for every character. This can add up *a lot*.
-  * Strings are encoded as UTF-8 byte arrays, and the @Size annotation limits the number of bytes, not the number of code points.
+  * Strings can be encoded as ASCII, UTF-8, UTF-16 or UTF-32 byte arrays, the corresponding annotation limits the number of bytes, not the number of caracters/code points.
 * Surrogates for polymorphic types:
     * Use a different surrogate for each implementation. Don't use one surrogate for all types. This requires it to fit the largest one, meaning that it will always be that size.
     * Use a custom, short `@SerialName` for each surrogate, that is as short as possible, but identifies it uniquely across the system. (TODO: create an annotation scanner for it that checks uniqueness of `@SerialNames`)

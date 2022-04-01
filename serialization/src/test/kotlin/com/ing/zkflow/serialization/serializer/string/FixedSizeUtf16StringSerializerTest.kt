@@ -8,7 +8,7 @@ import kotlinx.serialization.Serializable
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 
-class FixedLengthUtf8StringSerializerTest : SerializerTest {
+class FixedSizeUtf16StringSerializerTest : SerializerTest {
     companion object {
         private const val asciiString = "az"
         private const val unicodeString = "a的"
@@ -20,7 +20,7 @@ class FixedLengthUtf8StringSerializerTest : SerializerTest {
     fun `too long string should fail`(engine: SerdeEngine) {
         shouldThrow<IllegalArgumentException> {
             engine.assertRoundTrip(InstanceSerializer, tooLongString)
-        }.message shouldBe "UTF-8 encoding of String `This string is way too long.` (28) is longer than 5."
+        }.message shouldBe "UTF-16 encoding of String `This string is way too long.` (58) is longer than 8."
     }
 
     @ParameterizedTest
@@ -67,5 +67,5 @@ class FixedLengthUtf8StringSerializerTest : SerializerTest {
         val innerString: String
     )
 
-    object InstanceSerializer : FixedLengthUtf8StringSerializer(5)
+    object InstanceSerializer : FixedSizeUtf16StringSerializer(8)
 }

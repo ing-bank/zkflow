@@ -8,8 +8,8 @@ import com.ing.zkflow.util.require
  *
  * UTF-32 is a fixed-length character encoding, where each character will always be encoded in 32 bits.
  */
-open class FixedLengthUtf32StringSerializer(maxBytes: Int) :
-    AbstractFixedLengthStringSerializer(
+open class FixedSizeUtf32StringSerializer(maxBytes: Int) :
+    AbstractFixedSizeStringSerializer(
         maxBytes.require({ it % Int.SIZE_BYTES == 0 }) {
             "Maximum number of bytes in a ${Charsets.UTF_32.name()} string must be a multiple of ${Int.SIZE_BYTES}."
         },

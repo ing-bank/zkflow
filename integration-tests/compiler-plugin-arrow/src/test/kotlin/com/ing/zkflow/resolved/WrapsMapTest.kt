@@ -18,7 +18,7 @@ data class WrapsMap(
     )
     object Map_0_A_0 : com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializerWithDefault<Int>(com.ing.zkflow.serialization.serializer.IntSerializer)
     object Map_0_B_0 : com.ing.zkflow.serialization.serializer.NullableSerializer<String>(Map_0_B_1)
-    object Map_0_B_1 : com.ing.zkflow.serialization.serializer.string.FixedLengthUtf8StringSerializer(10)
+    object Map_0_B_1 : com.ing.zkflow.serialization.serializer.string.FixedSizeUtf8StringSerializer(10)
 }
 
 class WrapsMapTest : SerializerTest {
