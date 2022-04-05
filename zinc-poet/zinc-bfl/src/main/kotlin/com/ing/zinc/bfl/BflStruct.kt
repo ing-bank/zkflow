@@ -35,6 +35,16 @@ open class BflStruct(
         FieldWithParentStruct(it.name, it.type, this)
     }
 
+    fun copyWithAdditionalFunctionsAndImports(
+        additionalFunctions: List<ZincFunction>,
+        extraImports: List<BflModule>
+    ): BflStruct {
+        require(this::class == BflStruct::class) {
+            "Copy with additional functions is only allowed on ${BflStruct::class.simpleName}"
+        }
+        return BflStruct(id, fields, functions + additionalFunctions, isDeserializable, additionalImports + extraImports)
+    }
+
     override fun typeName() = id
 
     override fun equals(other: Any?) =
@@ -87,6 +97,7 @@ open class BflStruct(
         fields.forEach {
             visitor.visitType(it.type)
         }
+        additionalImports.forEach { visitor.visitType(it) }
     }
 
     internal open fun generateFieldDeserialization(

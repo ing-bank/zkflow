@@ -1,6 +1,11 @@
 package com.ing.zkflow.zinc.poet.generate
 
 import com.ing.zinc.bfl.BflModule
+import com.ing.zinc.bfl.BflStruct
+import com.ing.zinc.poet.Self
+import com.ing.zinc.poet.ZincFunction.Companion.zincFunction
+import com.ing.zinc.poet.ZincType.Companion.id
+import com.ing.zkflow.common.serialization.zinc.generation.zincTypeName
 import com.ing.zkflow.util.requireInstanceOf
 import kotlinx.serialization.serializer
 import org.slf4j.Logger
@@ -13,12 +18,35 @@ class ZincTypeGeneratorResolver(
     private val knownTypesCache: MutableMap<KClass<*>, BflModule> = mutableMapOf()
 
     override fun zincTypeOf(kClass: KClass<*>): BflModule {
-        return knownTypesCache.computeIfAbsent(kClass) {
+        return knownTypesCache.computeIfAbsent(kClass) { it ->
             logger.info("Generating zinc type for $it")
-            zincTypeGenerator.generate(kClass.serializer().descriptor).requireInstanceOf {
+            zincTypeGenerator.generate(kClass.serializer().descriptor).requireInstanceOf<BflModule> {
                 "Expected ${kClass::qualifiedName} to be converted to a ${BflModule::class.qualifiedName}, but got ${it::class.qualifiedName}."
+            }.let { module ->
+                if (module is BflStruct) {
+                    findUpgradeParameters(kClass)?.let { upgradeParameters ->
+                        module.copyWithAdditionalFunctionsAndImports(
+                            listOf(generateUpgradeFunction(upgradeParameters)),
+                            listOf(zincTypeOf(upgradeParameters.originalKClass))
+                        )
+                    } ?: module
+                } else {
+                    module
+                }
             }
         }
+    }
+
+    private fun generateUpgradeFunction(
+        it: UpgradeParameters
+    ) = zincFunction {
+        name = "upgrade_from"
+        returnType = Self
+        parameter {
+            name = it.zincUpgradeParameterName
+            type = id(it.originalKClass.zincTypeName)
+        }
+        body = it.zincUpgradeBody
     }
 
     companion object {
