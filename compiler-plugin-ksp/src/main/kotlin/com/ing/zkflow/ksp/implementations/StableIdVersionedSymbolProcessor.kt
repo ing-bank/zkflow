@@ -18,6 +18,8 @@ import com.ing.zkflow.util.merge
 import kotlin.reflect.KClass
 
 class StableIdVersionedSymbolProcessor(private val environment: SymbolProcessorEnvironment) : SymbolProcessor {
+    private class UnversionedException(message: String) : Exception(message)
+
     private val visitedFiles: MutableSet<KSFile> = mutableSetOf()
     private val metaInfServiceRegister = MetaInfServiceRegister(environment.codeGenerator)
 
@@ -30,7 +32,7 @@ class StableIdVersionedSymbolProcessor(private val environment: SymbolProcessorE
     private val versionedCommandData = setOf(Versioned::class, commandData)
 
     private val implementationsVisitor = ImplementationsVisitor(
-        listOf(versioned, versionedCommandData, versionedContractStates)
+        listOf(versioned, versionedCommandData, versionedContractStates, setOf(contractState), setOf(commandData))
     )
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
@@ -41,6 +43,8 @@ class StableIdVersionedSymbolProcessor(private val environment: SymbolProcessorE
             .fold(emptyMap<Set<KClass<*>>, List<ScopedDeclaration>>()) { acc, file ->
                 acc.merge(implementationsVisitor.visitFile(file, null))
             }
+
+        checkForUnversionedStatesAndCommands(implementations)
 
         // It is true that
         // `implementations[versioned]` shall contain also `versionedContractStates` and `versionedCommandData`.
@@ -66,11 +70,19 @@ class StableIdVersionedSymbolProcessor(private val environment: SymbolProcessorE
         listOf(
             Pair(
                 contractState,
-                SerializerRegistryProcessor(contractState, ContractStateSerializerRegistryProvider::class, environment.codeGenerator)
+                SerializerRegistryProcessor(
+                    contractState,
+                    ContractStateSerializerRegistryProvider::class,
+                    environment.codeGenerator
+                )
             ),
             Pair(
                 commandData,
-                SerializerRegistryProcessor(commandData, CommandDataSerializerRegistryProvider::class, environment.codeGenerator)
+                SerializerRegistryProcessor(
+                    commandData,
+                    CommandDataSerializerRegistryProvider::class,
+                    environment.codeGenerator
+                )
             )
         ).forEach { (interfaceClass, processor) ->
             implementations[versioned + interfaceClass]?.let { impls ->
@@ -93,5 +105,37 @@ class StableIdVersionedSymbolProcessor(private val environment: SymbolProcessorE
         metaInfServiceRegister.emit()
 
         return emptyList()
+    }
+
+    private fun checkForUnversionedStatesAndCommands(implementations: Map<Set<KClass<*>>, List<ScopedDeclaration>>) {
+        val unversionedStates = implementations[setOf(contractState)]?.filter {
+            !(
+                implementations[versionedContractStates]?.contains(it)
+                    ?: true
+                )
+        } ?: emptyList()
+
+        if (unversionedStates.isNotEmpty()) {
+            val unversionedStatesString = unversionedStates.map { it.qualifiedName }.joinToString(", ")
+            throw UnversionedException(
+                "ERROR: Unversioned states found: $unversionedStatesString .\n " +
+                    "Please ensure every contract state and command implements the Versioned interface."
+            )
+        }
+
+        val unversionedCommands = implementations[setOf(commandData)]?.filter {
+            !(
+                implementations[versionedCommandData]?.contains(it)
+                    ?: true
+                )
+        } ?: emptyList()
+
+        if (unversionedCommands.isNotEmpty()) {
+            val unversionedCommandsString = unversionedCommands.map { it.qualifiedName }.joinToString(", ")
+            throw UnversionedException(
+                "ERROR: Unversioned commands found: $unversionedCommandsString .\n " +
+                    "Please ensure every contract state and command implements the Versioned interface."
+            )
+        }
     }
 }
