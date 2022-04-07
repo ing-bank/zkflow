@@ -65,24 +65,7 @@ object MyContract : Contract {
             }
         }
 
-        @Language("Rust")
-        override fun verifyPrivate(): String = """
-            mod command_context;
-            use command_context::CommandContext;
-
-            mod my_state_v_1;
-            use my_state_v_1::MyStateV1;
-
-            mod my_state_v_2;
-            use my_state_v_2::MyStateV2;
-
-            fn verify(ctx: CommandContext) {
-                let input: MyStateV1 = ctx.inputs.my_state_v_1_0.data;
-                let output: MyStateV2 = ctx.outputs.my_state_v_2_0.data;
-
-                assert!(output.equals(MyStateV2::upgrade_from(input)), "[UpgradeMyStateV1ToMyStateV2] Not a valid upgrade from MyStateV1 to MyStateV2.");
-            }
-        """.trimIndent()
+        override fun verifyPrivate(): String = generateUpgradeVerification(metadata).generate()
     }
 }
 
