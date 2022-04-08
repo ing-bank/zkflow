@@ -4,6 +4,7 @@ import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.contracts.ZKOwnableState
 import com.ing.zkflow.common.serialization.BFLSerializationScheme
 import com.ing.zkflow.common.serialization.BFLSerializationScheme.Companion.CommandDataSerializerRegistry
+import com.ing.zkflow.common.versioning.Versioned
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.common.zkp.metadata.commandMetadata
 import com.ing.zkflow.integration.contract.TestContractOld.Create.Companion.verifyCreate
@@ -36,12 +37,13 @@ class TestContractOld : Contract {
         const val PROGRAM_ID: ContractClassName = "com.ing.zkflow.integration.contract.TestContract"
     }
 
+    interface TestStateInterfaceOld : Versioned
     @Serializable
     @BelongsToContract(TestContract::class)
     data class TestState(
         override val owner: @Serializable(with = OwnerSerializer::class) AnonymousParty,
         val value: @Serializable(with = IntSerializer::class) Int = Random().nextInt(1000)
-    ) : ZKOwnableState {
+    ) : ZKOwnableState, TestStateInterfaceOld {
         private object OwnerSerializer : AnonymousPartySerializer(Crypto.EDDSA_ED25519_SHA512.schemeNumberID)
 
         init {
@@ -55,8 +57,9 @@ class TestContractOld : Contract {
     }
 
     // Commands
+    interface CreateInterfaceOld : Versioned
     @Serializable
-    class Create : ZKCommandData {
+    class Create : ZKCommandData, CreateInterfaceOld {
 
         @Transient
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
@@ -80,8 +83,9 @@ class TestContractOld : Contract {
         }
     }
 
+    interface CreatePublicInterfaceOld : Versioned
     @Serializable
-    class CreatePublic : ZKCommandData {
+    class CreatePublic : ZKCommandData, CreatePublicInterfaceOld {
 
         @Transient
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
@@ -111,8 +115,9 @@ class TestContractOld : Contract {
      *
      * This command is only used on [CollectSignaturesFlowTest]. It expects two signatures, but nothing else.
      */
+    interface SignOnlyInterfaceOld : Versioned
     @Serializable
-    class SignOnly : ZKCommandData {
+    class SignOnly : ZKCommandData, SignOnlyInterfaceOld {
 
         @Transient
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
@@ -125,8 +130,9 @@ class TestContractOld : Contract {
         }
     }
 
+    interface MoveInterfaceOld : Versioned
     @Serializable
-    class Move : ZKCommandData {
+    class Move : ZKCommandData, MoveInterfaceOld {
 
         @Transient
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
@@ -155,8 +161,9 @@ class TestContractOld : Contract {
         }
     }
 
+    interface MovePrivateOnlyInterfaceOld : Versioned
     @Serializable
-    class MovePrivateOnly : ZKCommandData {
+    class MovePrivateOnly : ZKCommandData, MovePrivateOnlyInterfaceOld {
 
         @Transient
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
@@ -185,8 +192,9 @@ class TestContractOld : Contract {
         }
     }
 
+    interface MoveBidirectionalInterfaceOld : Versioned
     @Serializable
-    class MoveBidirectional : ZKCommandData {
+    class MoveBidirectional : ZKCommandData, MoveBidirectionalInterfaceOld {
 
         @Transient
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
