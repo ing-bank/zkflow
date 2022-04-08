@@ -107,35 +107,33 @@ class StableIdVersionedSymbolProcessor(private val environment: SymbolProcessorE
         return emptyList()
     }
 
-    private fun checkForUnversionedStatesAndCommands(implementations: Map<Set<KClass<*>>, List<ScopedDeclaration>>) {
-        val unversionedStates = implementations[setOf(contractState)]?.filter {
+    private fun filterUnversionedImplementations(implementations: Map<Set<KClass<*>>, List<ScopedDeclaration>>, typeSet: Set<KClass<*>>, versionedTypeSet: Set<KClass<*>>): List<ScopedDeclaration> {
+        val unversionedImplementations = implementations[typeSet]?.filter {
             !(
-                implementations[versionedContractStates]?.contains(it)
+                implementations[versionedTypeSet]?.contains(it)
                     ?: true
                 )
         } ?: emptyList()
+        return unversionedImplementations
+    }
 
+    private fun reportUnversionedException(unversionedDeclarations: List<ScopedDeclaration>, declarationType: String) {
+        val unversionedDeclarationsString = unversionedDeclarations.joinToString(", ") { it.qualifiedName }
+        throw UnversionedException(
+            "ERROR: Unversioned $declarationType's found: [ $unversionedDeclarationsString ] .\n " +
+                "Please ensure every contract state and command implements the Versioned interface."
+        )
+    }
+
+    private fun checkForUnversionedStatesAndCommands(implementations: Map<Set<KClass<*>>, List<ScopedDeclaration>>) {
+        val unversionedStates = filterUnversionedImplementations(implementations, setOf(contractState), versionedContractStates)
         if (unversionedStates.isNotEmpty()) {
-            val unversionedStatesString = unversionedStates.map { it.qualifiedName }.joinToString(", ")
-            throw UnversionedException(
-                "ERROR: Unversioned states found: $unversionedStatesString .\n " +
-                    "Please ensure every contract state and command implements the Versioned interface."
-            )
+            reportUnversionedException(unversionedStates, "ZKContractState")
         }
 
-        val unversionedCommands = implementations[setOf(commandData)]?.filter {
-            !(
-                implementations[versionedCommandData]?.contains(it)
-                    ?: true
-                )
-        } ?: emptyList()
-
+        val unversionedCommands = filterUnversionedImplementations(implementations, setOf(commandData), versionedCommandData)
         if (unversionedCommands.isNotEmpty()) {
-            val unversionedCommandsString = unversionedCommands.map { it.qualifiedName }.joinToString(", ")
-            throw UnversionedException(
-                "ERROR: Unversioned commands found: $unversionedCommandsString .\n " +
-                    "Please ensure every contract state and command implements the Versioned interface."
-            )
+            reportUnversionedException(unversionedCommands, "ZKCommandData")
         }
     }
 }
