@@ -136,18 +136,18 @@ struct NewState {
     foo: U32List8,  // list of size 8
 }
 
-impl OldState {
-    // To be generated from @ZincUpgradeMethod
-    fn upgrade(self) -> NewState {
+impl NewState {
+    // To be generated from @ZincUpgrade
+    fn upgrade_from(previous_state: OldState) -> Self {
         // resize field foo from 4 td 8.
         let foo = {
             let int_array: [u32; 8] = [0 as u32; 8];
             for i in 0..4 {
-                int_array[i] = self.foo.values[i];
+                int_array[i] = previous_state.foo.values[i];
             }
-            U32List8::new(self.foo.size, int_array);
+            U32List8::new(previous_state.foo.size, int_array);
         };
-        NewState {
+        Self {
             foo: foo,
         }
     }
@@ -158,11 +158,11 @@ Initially we will leave this up to the user, and later we will generate migratio
 same type. In that case the upgrade code could be reduced to: (note the `resizeTo8` method) 
 
 ```rust
-impl OldState {
-    // To be generated from @ZincUpgradeMethod
-    fn upgrade(self) -> NewState {
+impl New {
+    // To be generated from @ZincUpgrade
+    fn upgrade_from(previous_state: OldState) -> Self {
         // resize field foo from 4 to 8.
-        NewState::new(self.foo.resizeTo8())
+        Self::new(previous_state.foo.resizeTo8())
     }
 }
 ```
@@ -190,24 +190,54 @@ definitions](https://docs.r3.com/en/platform/corda/4.8/open-source/upgrading-Cor
 
 ## State versioning: Alternative 1
 
-Versioned classes implement the `Versioned` interface. This interface will hold a `version` identifier, which will be
-used to populate the `SerializerMap`. The serialized form of a `Versioned` class will include the `version` id of the
-class, so that on deserialization the correct deserializer and state version can be selected. Expected is that a `u16`
-is sufficient for this. Next to that it contains some methods to help with converting from older versions to newer
-versions.
+Versioned classes are recognized by their `family`, which is an interface that extends the `Versioned` interface.
+All classes that implement the same interface belong to the same family, and should be able to be ordered. The
+order of the classes in the family is determined by a secondary 'upgrade' constructor that instantiates itself
+from an instance of the previous iteration. From these upgrade constructors a linked list can be build.
+It is an error when multiple classes can be upgraded from the same version, as it makes the list into a tree.
+
+The upgrade constructor MUST be annotated with `@ZincUpgrade` where the corresponding upgrade is described in Zinc code.
 
 As a new class will have to be introduced for every upgrade, we recommend adding a version suffix to the class name,
-i.e. `"${className}V${version}"`. 
+i.e. `"${className}V${version}"`.
 
-ZKFlow will provide tooling to help to manage the version upgrades. In order for these tools to find all related classes,
-they must be located in the same scope. It is recommended for state classes to be located inside the `Contract` scope.
-For every new version of a state class, the latest version will have to be copied and given a new name. After that, the
-required modifications can be made to the latest class, and the upgrade from the previous to the latest version will
-have to be defined in the `upgrade()` method definition. The `upgrade` method MUST be annotated with
-`@ZincUpgradeMethod` where the corresponding upgrade is described in Zinc code.
+```kotlin
+import org.intellij.lang.annotations.Language
 
-Previous state classes MAY NOT be changed, because that could break backwards compatibility, meaning that old states
-cannot be deserialized anymore.
+annotation class ZKP
+annotation class ZincUpgrade(@Language("rust") val body: String)
+
+interface Versioned
+interface AStateI : Versioned // Family A, notice no fields or methods
+interface BStateI : Versioned // Family B
+
+@ZKP
+data class AStateV1(val a1: Int) : AStateI // Family A, first class, notice no upgrade constructor
+
+@ZKP
+data class BStateV1(val b1: Int) : BStateI // Family B, first class
+
+@ZKP
+data class AStateV2(val a1: Int, val a2: Int) : AStateI { // Family A, second class
+    @ZincUpgrade("Self::new(previous_version.a_1, 0 as i32)") // Zinc upgrade method body, variable name is derived from constructor parameter name, also note field name
+    constructor(previousVersion: AStateV1) : this(previousVersion.a1, 0) // upgrade constructor, links A2 -> A1
+}
+
+@ZKP
+data class AStateV3(val a1: Int, val a2: Long) : AStateI { // Family A, third class
+    // constructor(previousVersion: AStateV1): this(...) // FORBIDDEN, A2 already extends A1
+    @ZincUpgrade("Self::new(previous_version.a_1, previous_version.a_2 as i64)")
+    constructor(previousVersion: AStateV2) : this(
+        previousVersion.a1,
+        previousVersion.a2.toLong()
+    ) // upgrade constructor, links A3 -> A2
+}
+```
+
+When introducing a new version in a family, one can copy the latest version and make the necessary modifications.
+The original classes MAY NOT be changed, except for the name in case the latest version doesn't have the
+version in the name. Changing any field or constructors in original classes could break backwards compatibility,
+meaning that old states cannot be deserialized anymore.
 
 ### State classes versus normal classes
 
@@ -216,7 +246,7 @@ certain Contract or Command the latest version of the state class is used, one c
 the latest version of a state class, more specifically the base name. This will make sure that all code that refers to
 that state class is always using the latest version, and doesn't need to be explicitly upgraded.
 
-This practice is strongly adviced against for 'normal' classes that might be updated in the future, as otherwise all
+This practice is strongly advised against for 'normal' classes that might be updated in the future, as otherwise all
 usages of this class will be updated automatically. 
 
 ### Automatic upgrades
@@ -233,121 +263,73 @@ Below is an example of a `Parent` state class that embeds a `Child` class which 
 ```kotlin
 package com.ing.zkflow.common.contracts.recursive
 
-import com.ing.zkflow.UTF8
-import com.ing.zkflow.ZKP
-import com.ing.zkflow.common.contracts.ZKTransactionMetadataCommandData
+import org.intellij.lang.annotations.Language
+import com.ing.zkflow.annotations.UTF8
+import com.ing.zkflow.annotations.ZKP
+import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
-import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
 import com.ing.zkflow.common.zkp.metadata.commandMetadata
-import com.ing.zkflow.common.zkp.metadata.transactionMetadata
-import net.corda.core.contracts.AlwaysAcceptAttachmentConstraint
 import net.corda.core.contracts.Contract
 import net.corda.core.contracts.ContractState
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.transactions.LedgerTransaction
 
 /**
- * Interface that supports upgrading to newer iterations of the same data type.
+ * Interface that marks classes as versioned. This interface should always be applied to classes
+ * using a marker interface, which is an empty interface that extends this interface.
+ *
+ * \`\`\`kotlin
+ * interface Marker : Versioned
+ * data class Marked(...): Marker { ... }
+ * \`\`\`
  */
-interface Versioned {
-    /**
-     * Version number. Will be included in the serialized form. Will be serialized as `u16`. It is recommended to use an
-     * increasing version number, for readability and maintainability.
-     */
-    val version: Int
-
-    /**
-     * Specifies an upgrade to the next version. This means that whenever a new version is introduced, the upgrade must
-     * be described on the previous version.
-     */
-    fun upgrade(): Versioned?
-}
+interface Versioned
 
 /**
- * Convenience interface for the latest version of a class. This will allow users to quickly locate the latest version
- * of a specific type. When introducing another version, the existing [LatestVersion] will have to be replaced with
- * [Versioned], and the upgrade will have to be defined.
- */
-interface LatestVersion : Versioned {
-    override fun upgrade(): Versioned? = null
-}
-
-/**
- * Recursively upgrade to the latest version.
- */
-fun Versioned.toLatestVersion(): Versioned = upgrade()?.toLatestVersion() ?: this
-
-/**
- * Upgrade to a specific [version].
- */
-fun Versioned.upgradeToVersion(version: Int): Versioned? {
-    return if (version == this.version) {
-        this
-    } else {
-        upgrade()?.upgradeToVersion(version)
-    }
-}
-
-/**
- * Upgrade until an instance of [T] is obtained.
- */
-inline fun <reified T : Versioned> Versioned.upgradeTo(): T {
-    // inline fun cannot be recursive, so we iterate
-    var next = upgrade()
-    while (next != null && next !is T) {
-        next = next.upgrade()
-    }
-    return requireNotNull(next) {
-        "Could not upgrade $this to ${T::class}"
-    } as T
-}
-
-/**
- * Annotation specifying the [body] of a zinc method on the enclosing type.
- * The return type of this method is derived from the return type of the [Versioned.upgrade] method. 
- * 
- * ```rust
- * impl MyTypeV1 {
- *     fn upgrade(self) -> MyTypeV2 {
+ * Annotation specifying the [body] of a static zinc method on the enclosing type.
+ * The argument name of this method is derived from the parameter name in the constructor.
+ *
+ * \`\`\`rust
+ * impl MyTypeV2 {
+ *     fn upgrade_from(previous: MyTypeV1) -> Self {
  *         [body]
  *     }
  * }
- * ```
+ * \`\`\`
  */
-@Target(AnnotationTarget.FUNCTION)
-annotation class ZincUpgradeMethod(val body: String)
+@Target(AnnotationTarget.CONSTRUCTOR)
+annotation class ZincUpgrade(@Language("rust")val body: String)
 
 /// Child data class versions
+interface Child : Versioned
+
 @ZKP
 @Suppress("MagicNumber")
 data class ChildV1(
     val name: @UTF8(8) String
-) : Versioned {
-    override val version: Int = 1
-    // Note the return type is not [Versioned], but [ChildV2].
-    @ZincUpgradeMethod("ChildV2::new(0, self.name)")
-    override fun upgrade(): ChildV2 = ChildV2(0, name)
-}
+) : Child
 
 @ZKP
 @Suppress("MagicNumber")
 data class ChildV2(
     val id: Int,
     val name: @UTF8(8) String
-) : Versioned {
-    override val version: Int = 2
-    @ZincUpgradeMethod("ChildV3::new(self.id, self.name, String32::empty())")
-    override fun upgrade(): ChildV3 = ChildV3(id, name, "")
+) : Child {
+    @ZincUpgrade("Self::new(0, previous.name)")
+    constructor(previous: ChildV1): this(0, previous.name)
 }
 
+// Note that this is not a state class, so even though this is the latest version,
+// the version IS included in the name.
 @ZKP
 @Suppress("MagicNumber")
 data class ChildV3(
     val id: Int,
     val name: @UTF8(8) String,
     val description: @UTF8(32) String,
-) : LatestVersion {
-    override val version: Int = 3
+) : Child {
+    @ZincUpgrade("Self::new(previous.id, previous.name, String32::empty())")
+    constructor(previous: ChildV2): this(previous.id, previous.name, "")
 }
 
 /// Example contract
@@ -358,54 +340,42 @@ class MyContract : Contract {
     }
 
     /// Parent state class versions
+    interface ParentI : Versioned
+
     @ZKP
     data class ParentV1(
         val child: ChildV1
-    ) : Versioned, ContractState {
-        override val version: Int = 1
-        @ZincUpgradeMethod("ParentV2::new(self.child.upgrade())")
-        override fun upgrade(): ParentV2 = ParentV2(child.upgradeTo())
+    ) : ParentI, ContractState {
         override val participants: List<AnonymousParty> = emptyList()
     }
 
     @ZKP
     data class ParentV2(
         val child: ChildV2
-    ) : Versioned, ContractState {
-        override val version: Int = 2
-        @ZincUpgradeMethod("Parent::new(self.child.upgrade())")
-        override fun upgrade(): Parent = Parent(child.upgradeTo())
+    ) : ParentI, ContractState {
+        @ZincUpgrade("Self::new(ChildV2::upgrade_from(previous.child))")
+        constructor(previous: ParentV1): this(ChildV2(previous.child))
+
         override val participants: List<AnonymousParty> = emptyList()
     }
 
-    // Note that the version is not included here, because this is the [LatestVersion] of a state class.
+    // Note that the version is not included in the name, because this is the latest version of a state class.
     @ZKP
     data class Parent(
         val child: ChildV3
-    ) : LatestVersion, ContractState {
-        override val version: Int = 3
+    ) : ParentI, ContractState {
+        @ZincUpgrade("Self::new(ChildV3::upgrade_from(previous.child))")
+        constructor(previous: ParentV2): this(ChildV3(previous.child))
+
         override val participants: List<AnonymousParty> = emptyList()
     }
 
-    class Issue : ZKTransactionMetadataCommandData {
-        override val transactionMetadata: ResolvedZKTransactionMetadata by transactionMetadata {
-            network {
-                attachmentConstraintType = AlwaysAcceptAttachmentConstraint::class // to simplify DSL tests
-            }
-            commands {
-                +Issue::class
-            }
-        }
-
+    @ZKP
+    class Issue : ZKCommandData {
         @Transient
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
-            attachmentConstraintType = AlwaysAcceptAttachmentConstraint::class // to simplify DSL tests
-            private = true
-            circuit {
-                name = "issue_parent_state"
-            }
             outputs {
-                1 of Parent::class
+                private(Parent::class) at 0 // here the state class is referred
             }
             numberOfSigners = 1
         }
@@ -420,20 +390,15 @@ class MyContract : Contract {
 Based on the above principles we can create a Kotlin compiler plugin that can generate upgrade commands. And we can
 generate upgrade circuits in zinc code.
 
-- Example upgrade:
+- Example upgrade, notice the zinc verification is included:
 
 ```kotlin
-class UpgradeParentV2ToParent : ZKTransactionMetadataCommandData {
-    override val transactionMetadata by transactionMetadata {
-        commands { +UpgradeParentV2ToParent::class }
-    }
-
+class UpgradeParentV2ToParent : ZKCommandData {
     @Transient
     override val metadata = commandMetadata {
-        private = true
         numberOfSigners = 1
-        inputs { 1 of hello.world.MyContract.ParentV2::class }
-        outputs { 1 of hello.world.MyContract.Parent::class }
+        inputs { private(hello.world.MyContract.ParentV2::class) at 0 }
+        outputs { private(hello.world.MyContract.Parent::class) at 0 }
     }
 
     fun verify(ltx: LedgerTransaction) {
@@ -441,46 +406,40 @@ class UpgradeParentV2ToParent : ZKTransactionMetadataCommandData {
         val output = ltx.outputStates[0] as Versioned
 
         // Structure, i.e. correct version types already enforced by ZKFlow metadata
-        require(output == input.upgrade()) {
-            "Not a valid transition from ParentV2 to Parent"
+        require(output == hello.world.MyContract.Parent(input)) {
+            "Not a valid upgrade from ParentV2 to Parent"
         }
     }
 
-    init {
-        BFLSerializationScheme.ZkCommandDataSerializerMap.register(this::class)
-    }
-}
-```
+    override fun verifyPrivate(): String = """
+        mod command_context;
+        use command_context::CommandContext;
 
-#### Generate Zinc upgrade transaction verification function
+        mod parent_v_2;
+        use parent_v_2::ParentV2;
 
-On the Zinc side ZKFlow will generate an upgrade circuit with the following verification function:
+        mod parent;
+        use parent::Parent;
 
-```rust
-fn verify(ltx: LedgerTransaction) {
-    let input = ltx.inputs.my_state[0].state;
-    let output = ltx.outputs.my_state[0].state;
-    
-    assert!(output.equals(input.upgrade()));
+        fn verify(ctx: CommandContext) {
+            let input: ParentV2 = ctx.inputs.parent_v_2_0.data;
+            let output: Parent = ctx.outputs.parent_0.data;
+
+            assert!(output.equals(Parent::upgrade_from(input)), "Not a valid upgrade from ParentV2 to Parent");
+        }
+    """.trimIndent()
 }
 ```
 
 #### Zinc Upgrade circuit generation
 
 Based on the above principles we can generate zinc circuits for each individual version step. So the programmers do not
-need to write any more zinc than necessary in the `@ZincUpgradeMethod`. From the `@ZincUpgradeMethod`, a method
-`upgrade` is generated on the old version.
+need to write any more zinc than necessary in the `@ZincUpgrade`. From the `@ZincUpgrade`, a static function
+`upgrade_from` is generated on the old version.
 
 ```rust
 struct ParentV2 {
     name: Utf8String3,
-}
-
-impl ParentV2 {
-    // Generated from @ZincUpgradeMethod and update method prototype.
-    fn upgrade(self) -> Parent {
-        Parent::new(0, self.name)
-    } 
 }
 
 struct Parent {
@@ -489,8 +448,10 @@ struct Parent {
 }
 
 impl Parent {
-    // Generated by zinc-poet:bfl
-    fn new(id: i64, name: Utf8String3) -> Self { ... }
+    // Generated from @ZincUpgrade and constructor prototype.
+    fn upgrade_from(previous: ParentV2) -> Self {
+        Self::new(0, previous.name)
+    }
 }
 ```
 

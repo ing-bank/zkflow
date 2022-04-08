@@ -1,5 +1,6 @@
 package com.ing.zkflow.zinc.poet.generate
 
+import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.testing.zkp.MockZKNetworkParameters
 import com.ing.zkflow.util.runCommand
 import com.ing.zkflow.zinc.poet.generate.types.CommandContextFactory
@@ -14,6 +15,7 @@ import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.TIME_WINDOW
 import com.ing.zkflow.zinc.poet.generate.types.witness.toPublicInputFieldName
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import org.junit.jupiter.api.Tag
@@ -33,33 +35,55 @@ internal class CircuitGeneratorTest {
     @ExperimentalTime
     @Test
     @Tag("slow")
-    fun `generateCircuitFor should generate a working circuit`(@TempDir tempDir: Path) {
-        val circuitGenerator = CircuitGenerator(
-            BuildPathProvider.withPath(tempDir),
-            CommandContextFactory(standardTypes),
-            standardTypes,
-            zincTypeResolver,
-            ConstsFactory(),
-            CryptoUtilsFactory()
-        )
+    fun `generateCircuitFor should generate a working circuit for MyFirstCommand`(@TempDir tempDir: Path) {
+        val (stdout, stderr) = generateAndRunCircuit(tempDir, MyContract.MyFirstCommand())
 
-        logExecutionTime("Generating the circuit") {
-            circuitGenerator.generateCircuitFor(MyContract.MyFirstCommand())
-        }
-
-        val result = logExecutionTime("Running the circuit using `zargo run`") {
-            // This needs a crazy long timeout so it doesn't fail on CI with parallel builds.
-            tempDir.runCommand("zargo run", 800)
-        }
-
-        result.second shouldBe ""
-        val publicInput = Json.parseToJsonElement(result.first) as JsonObject
+        stderr shouldBe ""
+        val publicInput = Json.parseToJsonElement(stdout) as JsonObject
 
         publicInput.keys.shouldContainAll(
             listOf(OUTPUTS, SERIALIZED_INPUT_UTXOS, SERIALIZED_REFERENCE_UTXOS, TIME_WINDOW, PARAMETERS, NOTARY, COMMANDS)
                 .map { it.toPublicInputFieldName() }
         )
     }
+
+    @ExperimentalTime
+    @Test
+    @Tag("slow")
+    fun `generateCircuitFor should generate a working circuit for UpgradeMyStateV1ToMyStateV2`(@TempDir tempDir: Path) {
+        val (_, stderr) = generateAndRunCircuit(tempDir, MyContract.UpgradeMyStateV1ToMyStateV2())
+
+        // NOTE that here we know that it works, because the automatically generated witness does not have the right
+        // default value for the count field.
+        stderr shouldContain "[UpgradeMyStateV1ToMyStateV2] Not a valid upgrade from MyStateV1 to MyStateV2."
+    }
+
+    @ExperimentalTime
+    private fun generateAndRunCircuit(
+        tempDir: Path,
+        zkCommand: ZKCommandData
+    ): Pair<String, String> {
+        val circuitGenerator = getCircuitGenerator(tempDir)
+
+        logExecutionTime("Generating the circuit") {
+            circuitGenerator.generateCircuitFor(zkCommand)
+        }
+
+        val result = logExecutionTime("Running the circuit using `zargo run`") {
+            // This needs a crazy long timeout so it doesn't fail on CI with parallel builds.
+            tempDir.runCommand("zargo run", 800)
+        }
+        return result
+    }
+
+    private fun getCircuitGenerator(tempDir: Path) = CircuitGenerator(
+        BuildPathProvider.withPath(tempDir),
+        CommandContextFactory(standardTypes),
+        standardTypes,
+        zincTypeResolver,
+        ConstsFactory(),
+        CryptoUtilsFactory()
+    )
 
     companion object {
         private val logger: Logger = LoggerFactory.getLogger(CircuitGeneratorTest::class.java)
