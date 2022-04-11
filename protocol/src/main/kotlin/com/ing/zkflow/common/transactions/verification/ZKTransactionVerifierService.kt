@@ -80,7 +80,7 @@ class ZKTransactionVerifierService(
         if (actualPrivateInputIndexes.isNotEmpty()) {
             // Collect the indexes of inputs which are relevant to the circuits of this transaction and therefore whose UTXOs are resolved and checked by the circuits
             val circuitRelevantInputIndexes =
-                tx.zkTransactionMetadataOrNull()?.commands?.flatMap { it.inputs.map { input -> input.index } }?.toSet() ?: error(
+                tx.zkTransactionMetadataOrNull(services)?.commands?.flatMap { it.inputs.map { input -> input.index } }?.toSet() ?: error(
                     "There are inputs in the transaction whose UTXOs are private, but no metadata for them. " + "This means the ZKPs don't prove anything about these inputs and they are consumed without verification"
                 )
             require(actualPrivateInputIndexes.all { it in circuitRelevantInputIndexes }) {
@@ -100,7 +100,7 @@ class ZKTransactionVerifierService(
         val actualPrivateOutputIndexes = vtx.privateComponentIndexes(ComponentGroupEnum.OUTPUTS_GROUP)
         if (actualPrivateOutputIndexes.isNotEmpty()) {
             val expectedPrivateOutputIndexes =
-                vtx.zkTransactionMetadataOrNull()?.commands?.flatMap { it.outputs.map { output -> output.index } }?.toSet() ?: error(
+                vtx.zkTransactionMetadataOrNull(services)?.commands?.flatMap { it.outputs.map { output -> output.index } }?.toSet() ?: error(
                     "There are private outputs in the transaction, but no metadata for them. " + "This means the ZKPs don't prove anything about these outputs and they are created without verification"
                 )
             require(actualPrivateOutputIndexes.all { it in expectedPrivateOutputIndexes }) {

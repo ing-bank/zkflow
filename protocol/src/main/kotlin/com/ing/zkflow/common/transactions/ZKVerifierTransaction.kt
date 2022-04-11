@@ -1,10 +1,12 @@
 package com.ing.zkflow.common.transactions
 
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
+import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.crypto.DigestService
 import net.corda.core.crypto.MerkleTree
 import net.corda.core.crypto.SecureHash
+import net.corda.core.node.ServiceHub
 import net.corda.core.serialization.CordaSerializable
 import net.corda.core.transactions.FilteredTransaction
 import net.corda.core.transactions.TraversableTransaction
@@ -113,28 +115,48 @@ open class ZKVerifierTransaction internal constructor(
         filteredComponentGroups.find { it.groupIndex == group.ordinal }?.privateComponentHashes?.contains(index) ?: false
 
     companion object {
+
+        /**
+         * Normally we create VTX from WTX while building new transaction,
+         * in this case we almost always just use system class loader
+         */
         fun fromWireTransaction(wtx: WireTransaction, proofs: Map<String, ByteArray>): ZKVerifierTransaction {
+            val metadata = wtx.zkTransactionMetadataOrNull(ClassLoader.getSystemClassLoader())
+
             return ZKVerifierTransaction(
                 id = wtx.id,
                 proofs = proofs,
                 digestService = wtx.digestService,
-                filteredComponentGroups = filterPrivateComponents(wtx)
+                filteredComponentGroups = filterPrivateComponents(wtx, metadata)
+            )
+        }
+
+        /**
+         * Sometimes we want to use ClassLoader from attachments
+         */
+        fun fromWireTransaction(wtx: WireTransaction, proofs: Map<String, ByteArray>, services: ServiceHub): ZKVerifierTransaction {
+            val metadata = wtx.zkTransactionMetadataOrNull(services)
+
+            return ZKVerifierTransaction(
+                id = wtx.id,
+                proofs = proofs,
+                digestService = wtx.digestService,
+                filteredComponentGroups = filterPrivateComponents(wtx, metadata)
             )
         }
 
         /**
          * Filters the component groups based on visibility data from 'zkTransactionMetadata'
          */
-        private fun filterPrivateComponents(wtx: WireTransaction): List<ZKFilteredComponentGroup> {
+        private fun filterPrivateComponents(wtx: WireTransaction, metadata: ResolvedZKTransactionMetadata?): List<ZKFilteredComponentGroup> {
             // Here we don't need to filter anything, we only create FTX to be able to access hashes (they are internal in WTX)
             val ftx = FilteredTransaction.buildFilteredTransaction(wtx) { true }
-            val zkTransactionMetadata = wtx.zkTransactionMetadataOrNull()
 
             return wtx.componentGroups.map { componentGroup ->
                 ZKFilteredComponentGroup.fromComponentGroup(
                     componentGroup,
                     ftx.filteredComponentGroups.find { it.groupIndex == componentGroup.groupIndex }!!,
-                    zkTransactionMetadata
+                    metadata
                 )
             }
         }

@@ -24,7 +24,6 @@ class ResolveZKTransactionsFlow constructor(
     val otherSide: FlowSession
 ) : FlowLogic<Unit>() {
 
-    @Suppress("MagicNumber")
     @Suspendable
     override fun call() {
         // TODO This error should actually cause the flow to be sent to the flow hospital to be retried
@@ -36,9 +35,7 @@ class ResolveZKTransactionsFlow constructor(
         val batchMode = counterpartyPlatformVersion >= PlatformVersionSwitches.BATCH_DOWNLOAD_COUNTERPARTY_BACKCHAIN
         logger.debug { "ResolveZKTransactionsFlow.call(): Otherside Platform Version = '$counterpartyPlatformVersion': Batch mode = $batchMode" }
 
-        if (initialTx != null) {
-            fetchMissingAttachments(initialTx)
-        }
+        initialTx?. let { fetchMissingAttachments(it, otherSide) }
 
         val resolver = ZKTransactionsResolver(this)
         resolver.downloadDependencies(batchMode)

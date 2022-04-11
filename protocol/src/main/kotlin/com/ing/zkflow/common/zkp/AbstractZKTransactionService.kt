@@ -12,12 +12,9 @@ import com.ing.zkflow.node.services.ZKWritableVerifierTransactionStorage
 import com.ing.zkflow.node.services.getCordaServiceFromConfig
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.StateRef
-import net.corda.core.contracts.TransactionResolutionException
 import net.corda.core.crypto.SecureHash
-import net.corda.core.internal.isUploaderTrusted
 import net.corda.core.node.ServiceHub
 import net.corda.core.serialization.SingletonSerializeAsToken
-import net.corda.core.serialization.internal.AttachmentsClassLoader
 import net.corda.core.transactions.TraversableTransaction
 import net.corda.core.transactions.WireTransaction
 
@@ -33,8 +30,7 @@ abstract class AbstractZKTransactionService(val serviceHub: ServiceHub) : ZKTran
     override fun prove(
         wtx: WireTransaction
     ): ZKVerifierTransaction {
-        val classLoader = getClassLoaderFromContractAttachment(wtx)
-        val zkTransactionMetadata = wtx.zkTransactionMetadata(classLoader)
+        val zkTransactionMetadata = wtx.zkTransactionMetadata(serviceHub)
         val proofs = mutableMapOf<String, ByteArray>()
 
         zkTransactionMetadata.commands.forEach { command ->
@@ -57,9 +53,7 @@ abstract class AbstractZKTransactionService(val serviceHub: ServiceHub) : ZKTran
     abstract override fun zkServiceForCommandMetadata(metadata: ResolvedZKCommandMetadata): ZKService
 
     override fun verify(wtx: WireTransaction): ZKVerifierTransactionWithoutProofs {
-        val classLoader = getClassLoaderFromContractAttachment(wtx)
-
-        val zkTransactionMetadata = wtx.zkTransactionMetadata(classLoader)
+        val zkTransactionMetadata = wtx.zkTransactionMetadata(serviceHub)
         val vtx = ZKVerifierTransactionWithoutProofs.fromWireTransaction(wtx) // create vtx without proofs just to be able to build witness and public input
 
         // Check transaction structure first, so we fail fast
@@ -88,9 +82,8 @@ abstract class AbstractZKTransactionService(val serviceHub: ServiceHub) : ZKTran
     }
 
     private fun verifyProofs(vtx: ZKVerifierTransaction) {
-        val classLoader = getClassLoaderFromContractAttachment(vtx)
         // Check there is a proof for each ZKCommand
-        vtx.zkTransactionMetadata(classLoader).commands.forEach { zkCommand ->
+        vtx.zkTransactionMetadata(serviceHub).commands.forEach { zkCommand ->
             // For ZK Commands we check proofs
             val proof = vtx.proofs[zkCommand.commandKClass.qualifiedName]
             require(proof != null) { "Proof is missing for command ${zkCommand.commandSimpleName}" }
@@ -131,14 +124,6 @@ abstract class AbstractZKTransactionService(val serviceHub: ServiceHub) : ZKTran
             inputUtxoHashes = privateInputHashes,
             referenceUtxoHashes = privateReferenceHashes
         )
-    }
-
-    private fun getClassLoaderFromContractAttachment(tx: TraversableTransaction): ClassLoader {
-        val hashToResolve = tx.networkParametersHash ?: serviceHub.networkParametersService.defaultHash
-        val params = serviceHub.networkParametersService.lookup(hashToResolve) ?: throw TransactionResolutionException.UnknownParametersException(tx.id, hashToResolve)
-        val attachments = tx.attachments.map { serviceHub.attachments.openAttachment(it) ?: error("Attachment ($it) not found") }
-
-        return AttachmentsClassLoader(attachments, params, tx.id, { it.isUploaderTrusted() }, ClassLoader.getSystemClassLoader())
     }
 
     private fun getUtxoHashes(stateRefs: List<StateRef>): List<SecureHash> {

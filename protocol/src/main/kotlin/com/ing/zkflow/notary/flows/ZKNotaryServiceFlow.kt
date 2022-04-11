@@ -114,12 +114,12 @@ class ZKNotaryServiceFlow(
 
     private fun validateNotary(tx: ZKVerifierTransaction) {
         try {
-            tx.notary ?: throw IllegalArgumentException("Transaction does not specify a notary.")
-            checkTxNotaryIsMe(tx.notary!!)
+            val notary = tx.notary ?: throw IllegalArgumentException("Transaction does not specify a notary.")
+            checkTxNotaryIsMe(notary)
             /**
              * Not calling [checkParameterHash] anymore: that same operation is already done by [checkNotaryWhitelisted]
              */
-            checkNotaryWhitelisted(tx.notary!!, tx.networkParametersHash)
+            checkNotaryWhitelisted(notary, tx.networkParametersHash)
         } catch (e: IllegalArgumentException) {
             throw NotaryInternalException(NotaryError.TransactionInvalid(e))
         }
