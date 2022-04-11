@@ -107,33 +107,47 @@ class StableIdVersionedSymbolProcessor(private val environment: SymbolProcessorE
         return emptyList()
     }
 
-    private fun filterUnversionedImplementations(implementations: Map<Set<KClass<*>>, List<ScopedDeclaration>>, typeSet: Set<KClass<*>>, versionedTypeSet: Set<KClass<*>>): List<ScopedDeclaration> {
-        val unversionedImplementations = implementations[typeSet]?.filter {
-            !(
-                implementations[versionedTypeSet]?.contains(it)
-                    ?: true
-                )
-        } ?: emptyList()
-        return unversionedImplementations
-    }
+    /**
+     *  Filter for the unversioned `implementations` of a particular interface set.
+     *  @param implementations: The map that tells you for each set of interfaces, what implementations of this set were
+     *  found.
+     *  @param typeSet: The set of interfaces we are interested in that doesn't include the `Versioned` interface.
+     *  @param versionedTypeSet: The set of interfaces we are interested in that does include the `Versioned` interface.
+     *  @return The difference between `versionedTypeSet` and `typeSet` in `implementations`.
+     */
+    private fun filterUnversionedImplementations(
+        implementations: Map<Set<KClass<*>>, List<ScopedDeclaration>>,
+        typeSet: Set<KClass<*>>,
+        versionedTypeSet: Set<KClass<*>>
+    ): List<ScopedDeclaration> = implementations[typeSet]?.filterNot {
+        implementations[versionedTypeSet]?.contains(it)
+            ?: true
+    } ?: emptyList()
 
-    private fun reportUnversionedException(unversionedDeclarations: List<ScopedDeclaration>, declarationType: String) {
-        val unversionedDeclarationsString = unversionedDeclarations.joinToString(", ") { it.qualifiedName }
-        throw UnversionedException(
-            "ERROR: Unversioned $declarationType's found: [ $unversionedDeclarationsString ] .\n " +
-                "Please ensure every contract state and command implements the Versioned interface."
-        )
+    private fun reportPossibleUnversionedException(unversionedStateDeclarations: List<ScopedDeclaration>, unversionedCommandDeclarations: List<ScopedDeclaration>) {
+        var errorString = ""
+        if (unversionedStateDeclarations.isNotEmpty()) {
+            val unversionedStateDeclarationsString = unversionedStateDeclarations.joinToString(", ") { it.qualifiedName }
+            errorString += "ERROR: Unversioned ${ZKContractState::class.simpleName}'s found: [ $unversionedStateDeclarationsString ] .\n"
+        }
+
+        if (unversionedCommandDeclarations.isNotEmpty()) {
+            val unversionedCommandDeclarationsString = unversionedCommandDeclarations.joinToString(", ") { it.qualifiedName }
+            errorString += "Unversioned ${ZKCommandData::class.simpleName}'s found: [ $unversionedCommandDeclarationsString ] .\n"
+        }
+        if (errorString.isNotEmpty()) {
+            errorString += "Please ensure every ${ZKContractState::class.simpleName} and ${ZKCommandData::class.simpleName} implements the ${Versioned::class.simpleName} interface."
+            throw UnversionedException(
+                errorString
+            )
+        }
     }
 
     private fun checkForUnversionedStatesAndCommands(implementations: Map<Set<KClass<*>>, List<ScopedDeclaration>>) {
-        val unversionedStates = filterUnversionedImplementations(implementations, setOf(contractState), versionedContractStates)
-        if (unversionedStates.isNotEmpty()) {
-            reportUnversionedException(unversionedStates, "ZKContractState")
-        }
-
-        val unversionedCommands = filterUnversionedImplementations(implementations, setOf(commandData), versionedCommandData)
-        if (unversionedCommands.isNotEmpty()) {
-            reportUnversionedException(unversionedCommands, "ZKCommandData")
-        }
+        val unversionedStates =
+            filterUnversionedImplementations(implementations, setOf(contractState), versionedContractStates)
+        val unversionedCommands =
+            filterUnversionedImplementations(implementations, setOf(commandData), versionedCommandData)
+        reportPossibleUnversionedException(unversionedStates, unversionedCommands)
     }
 }
