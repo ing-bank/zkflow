@@ -18,6 +18,8 @@ import com.ing.zkflow.util.merge
 import kotlin.reflect.KClass
 
 class StableIdVersionedSymbolProcessor(private val environment: SymbolProcessorEnvironment) : SymbolProcessor {
+    private class UnversionedException(message: String) : Exception(message)
+
     private val visitedFiles: MutableSet<KSFile> = mutableSetOf()
     private val metaInfServiceRegister = MetaInfServiceRegister(environment.codeGenerator)
 
@@ -30,7 +32,7 @@ class StableIdVersionedSymbolProcessor(private val environment: SymbolProcessorE
     private val versionedCommandData = setOf(Versioned::class, commandData)
 
     private val implementationsVisitor = ImplementationsVisitor(
-        listOf(versioned, versionedCommandData, versionedContractStates)
+        listOf(versioned, versionedCommandData, versionedContractStates, setOf(contractState), setOf(commandData))
     )
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
@@ -41,6 +43,8 @@ class StableIdVersionedSymbolProcessor(private val environment: SymbolProcessorE
             .fold(emptyMap<Set<KClass<*>>, List<ScopedDeclaration>>()) { acc, file ->
                 acc.merge(implementationsVisitor.visitFile(file, null))
             }
+
+        checkForUnversionedStatesAndCommands(implementations)
 
         // It is true that
         // `implementations[versioned]` shall contain also `versionedContractStates` and `versionedCommandData`.
@@ -66,11 +70,19 @@ class StableIdVersionedSymbolProcessor(private val environment: SymbolProcessorE
         listOf(
             Pair(
                 contractState,
-                SerializerRegistryProcessor(contractState, ContractStateSerializerRegistryProvider::class, environment.codeGenerator)
+                SerializerRegistryProcessor(
+                    contractState,
+                    ContractStateSerializerRegistryProvider::class,
+                    environment.codeGenerator
+                )
             ),
             Pair(
                 commandData,
-                SerializerRegistryProcessor(commandData, CommandDataSerializerRegistryProvider::class, environment.codeGenerator)
+                SerializerRegistryProcessor(
+                    commandData,
+                    CommandDataSerializerRegistryProvider::class,
+                    environment.codeGenerator
+                )
             )
         ).forEach { (interfaceClass, processor) ->
             implementations[versioned + interfaceClass]?.let { impls ->
@@ -93,5 +105,49 @@ class StableIdVersionedSymbolProcessor(private val environment: SymbolProcessorE
         metaInfServiceRegister.emit()
 
         return emptyList()
+    }
+
+    /**
+     *  Filter for the unversioned `implementations` of a particular interface set.
+     *  @param implementations: The map that tells you for each set of interfaces, what implementations of this set were
+     *  found.
+     *  @param typeSet: The set of interfaces we are interested in that doesn't include the `Versioned` interface.
+     *  @param versionedTypeSet: The set of interfaces we are interested in that does include the `Versioned` interface.
+     *  @return The difference between `versionedTypeSet` and `typeSet` in `implementations`.
+     */
+    private fun filterUnversionedImplementations(
+        implementations: Map<Set<KClass<*>>, List<ScopedDeclaration>>,
+        typeSet: Set<KClass<*>>,
+        versionedTypeSet: Set<KClass<*>>
+    ): List<ScopedDeclaration> = implementations[typeSet]?.filterNot {
+        implementations[versionedTypeSet]?.contains(it)
+            ?: true
+    } ?: emptyList()
+
+    private fun reportPossibleUnversionedException(unversionedStateDeclarations: List<ScopedDeclaration>, unversionedCommandDeclarations: List<ScopedDeclaration>) {
+        var errorString = ""
+        if (unversionedStateDeclarations.isNotEmpty()) {
+            val unversionedStateDeclarationsString = unversionedStateDeclarations.joinToString(", ") { it.qualifiedName }
+            errorString += "ERROR: Unversioned ${ZKContractState::class.simpleName}'s found: [ $unversionedStateDeclarationsString ] .\n"
+        }
+
+        if (unversionedCommandDeclarations.isNotEmpty()) {
+            val unversionedCommandDeclarationsString = unversionedCommandDeclarations.joinToString(", ") { it.qualifiedName }
+            errorString += "Unversioned ${ZKCommandData::class.simpleName}'s found: [ $unversionedCommandDeclarationsString ] .\n"
+        }
+        if (errorString.isNotEmpty()) {
+            errorString += "Please ensure every ${ZKContractState::class.simpleName} and ${ZKCommandData::class.simpleName} implements the ${Versioned::class.simpleName} interface."
+            throw UnversionedException(
+                errorString
+            )
+        }
+    }
+
+    private fun checkForUnversionedStatesAndCommands(implementations: Map<Set<KClass<*>>, List<ScopedDeclaration>>) {
+        val unversionedStates =
+            filterUnversionedImplementations(implementations, setOf(contractState), versionedContractStates)
+        val unversionedCommands =
+            filterUnversionedImplementations(implementations, setOf(commandData), versionedCommandData)
+        reportPossibleUnversionedException(unversionedStates, unversionedCommands)
     }
 }

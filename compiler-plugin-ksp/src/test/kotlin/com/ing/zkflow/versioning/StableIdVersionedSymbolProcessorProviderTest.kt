@@ -26,12 +26,26 @@ class StableIdVersionedSymbolProcessorProviderTest : ProcessorTest(StableIdVersi
             "com.ing.zkflow.serialization.infra.ZKContractStateSerializerRegistryProvider"
     }
 
+    @Test
+    fun `unversioned states and commands should throw and error`() {
+        val outputStream = ByteArrayOutputStream()
+        val result = compile(unversionedStatesKotlinFile, outputStream)
+
+        // In case of error, show output
+        if (result.exitCode != KotlinCompilation.ExitCode.OK) {
+            reportError(result, outputStream)
+        }
+
+        result.exitCode shouldBe KotlinCompilation.ExitCode.COMPILATION_ERROR
+    }
+
     companion object {
         private val kotlinFile = SourceFile.kotlin(
             "StateVersions.kt",
             """
                 package com.ing.zkflow.contract
                 import com.ing.zkflow.common.contracts.ZKContractState
+                import com.ing.zkflow.common.contracts.ZKCommandData
                 import com.ing.zkflow.common.versioning.Versioned
 
                 interface IZebra: Versioned
@@ -64,6 +78,52 @@ class StableIdVersionedSymbolProcessorProviderTest : ProcessorTest(StableIdVersi
                     override val participants: List<AnonymousParty> = emptyList()
                     constructor(horseV2: HorseV2): this()
                 }
+            """
+        )
+
+        private val unversionedStatesKotlinFile = SourceFile.kotlin(
+            "UnversionedStates.kt",
+            """
+                package com.ing.zkflow.contract
+                import com.ing.zkflow.common.contracts.ZKCommandData
+                import com.ing.zkflow.common.contracts.ZKContractState
+                import com.ing.zkflow.common.versioning.Versioned
+    
+                interface IZebra: Versioned
+                interface IHorse: Versioned
+    
+                class ZebraV1(): ZKContractState, IZebra {
+                    override val participants: List<AnonymousParty> = emptyList()
+                }
+    
+                class ZebraV2(): ZKContractState, IZebra {
+                    override val participants: List<AnonymousParty> = emptyList()
+                    constructor(zebraV1: ZebraV1): this()
+                }
+    
+                class Zebra(): ZKContractState, IZebra {
+                    override val participants: List<AnonymousParty> = emptyList()
+                    constructor(zebraV2: ZebraV2): this()
+                }
+    
+                class HorseV1(): ZKContractState, IHorse {
+                    override val participants: List<AnonymousParty> = emptyList()
+                }
+    
+                class HorseV2(): ZKContractState, IHorse {
+                    override val participants: List<AnonymousParty> = emptyList()
+                    constructor(horseV1: HorseV1): this()
+                }
+    
+                class Horse(): ZKContractState, IHorse {
+                    override val participants: List<AnonymousParty> = emptyList()
+                    constructor(horseV2: HorseV2): this()
+                }
+                
+                class UnversionedHorse(): ZKContractState
+                class UnversionedZebra(): ZKContractState
+
+                class UnversionedCommand() : ZKCommandData
             """
         )
     }
