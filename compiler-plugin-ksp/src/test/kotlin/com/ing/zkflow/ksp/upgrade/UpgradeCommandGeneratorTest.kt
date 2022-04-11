@@ -1,10 +1,9 @@
 package com.ing.zkflow.ksp.upgrade
 
-import com.google.devtools.ksp.processing.KSPLogger
-import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.ing.zkflow.ksp.CodeGeneratorStub
 import com.ing.zkflow.ksp.KSNameStub
+import com.squareup.kotlinpoet.ClassName
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
@@ -12,7 +11,6 @@ import org.junit.jupiter.api.Test
 import java.io.ByteArrayOutputStream
 
 internal class UpgradeCommandGeneratorTest {
-    private val logger = mockk<KSPLogger>()
     private val v1 = mockk<KSClassDeclaration>()
     private val v2 = mockk<KSClassDeclaration>()
     private val v1Name = KSNameStub("com.example.V1")
@@ -28,12 +26,7 @@ internal class UpgradeCommandGeneratorTest {
     }
 
     private fun testSubject(outputStream: ByteArrayOutputStream) = UpgradeCommandGenerator(
-        SymbolProcessorEnvironment(
-            emptyMap(),
-            KotlinVersion.CURRENT,
-            CodeGeneratorStub(outputStream),
-            logger,
-        )
+        CodeGeneratorStub(outputStream),
     )
 
     @Test
@@ -67,7 +60,7 @@ internal class UpgradeCommandGeneratorTest {
                 "Double" to listOf(v1, v2)
             )
         )
-        actual shouldBe listOf("com.example.UpgradeV1ToV2")
+        actual shouldBe listOf(ClassName("com.example", "UpgradeV1ToV2"))
 
         generatedBytes.toString("UTF-8") shouldBe """
             package com.example

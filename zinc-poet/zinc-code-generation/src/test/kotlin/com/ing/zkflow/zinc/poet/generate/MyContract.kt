@@ -46,7 +46,6 @@ object MyContract : Contract {
         }
     }
 
-    // TODO This should at some point be automatically generated
     @ZKP
     class UpgradeMyStateV1ToMyStateV2 : ZKCommandData {
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
