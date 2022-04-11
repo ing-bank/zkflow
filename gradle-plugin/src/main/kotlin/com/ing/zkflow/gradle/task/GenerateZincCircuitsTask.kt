@@ -20,6 +20,8 @@ open class GenerateZincCircuitsTask : DefaultTask() {
             // otherwise the generated META-INF/services file is not picked up by the `generateZincCircuits` task.
             // It would be the nicest if KSP already did this, however it doesn't.
             it.classpath = main.runtimeClasspath + project.files(generatedKspResources).filter(File::exists)
+
+            println("--> Pay attention!!! We're gonna generate some zinc now!")
         }
     }
 }

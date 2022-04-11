@@ -11,7 +11,6 @@ import net.corda.core.contracts.Contract
 import net.corda.core.contracts.ContractState
 import net.corda.core.identity.AbstractParty
 import net.corda.core.transactions.LedgerTransaction
-import org.intellij.lang.annotations.Language
 
 object MyContract : Contract {
     override fun verify(tx: LedgerTransaction) {}

@@ -11,6 +11,7 @@ import com.ing.zkflow.common.serialization.CommandDataSerializerRegistryProvider
 import com.ing.zkflow.common.serialization.ContractStateSerializerRegistryProvider
 import com.ing.zkflow.common.versioning.Versioned
 import com.ing.zkflow.ksp.MetaInfServiceRegister
+import com.ing.zkflow.ksp.upgrade.UpgradeCommandGenerator
 import com.ing.zkflow.ksp.versioning.StateVersionSorting
 import com.ing.zkflow.ksp.versioning.VersionedStateIdGenerator
 import com.ing.zkflow.processors.SerializerRegistryProcessor
@@ -87,6 +88,10 @@ class StableIdVersionedSymbolProcessor(private val environment: SymbolProcessorE
         ).forEach { (interfaceClass, processor) ->
             implementations[versioned + interfaceClass]?.let { impls ->
                 val sorted = StateVersionSorting.buildSortedMap(markers, impls.map { it.declaration })
+
+                UpgradeCommandGenerator(environment).process(sorted).forEach { upgradeCommand ->
+                    metaInfServiceRegister.addImplementation(ZKCommandData::class, upgradeCommand)
+                }
 
                 val sortedWithIds = VersionedStateIdGenerator.generateIds(sorted)
 

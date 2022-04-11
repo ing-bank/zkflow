@@ -199,11 +199,14 @@ subprojects {
 
             // Testing
             val junit5Version: String by project
-            val kotestVersion: String by project
             add("testImplementation", "org.junit.jupiter:junit-jupiter-api:$junit5Version")
             add("testImplementation", "org.junit.jupiter:junit-jupiter-params:$junit5Version")
-            add("testRuntimeOnly", "org.junit.jupiter:junit-jupiter-engine")
+            add("testRuntimeOnly", "org.junit.jupiter:junit-jupiter-engine:$junit5Version")
+            val kotestVersion: String by project
             add("testImplementation", "io.kotest:kotest-assertions-core:$kotestVersion")
+            // Mocking
+            val mockkVersion: String by project
+            add("testImplementation", "io.mockk:mockk:$mockkVersion")
 
             add("spotbugsPlugins", "com.h3xstream.findsecbugs:findsecbugs-plugin:1.11.0")
             add("implementation", "com.github.spotbugs:spotbugs-annotations:4.5.3")
