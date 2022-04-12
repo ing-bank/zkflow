@@ -338,7 +338,7 @@ fun resolveStateRef(
         }
     } catch (e: TransactionResolutionException) { /* This is fine */ }
 
-    // Check "normal" tx storage
+    // Check "normal" tx storage TODO double-check if we still need to search for "normal" tx
     try { return resolveStateRefBinaryComponent(stateRef, services) ?: throw UtxoNotFoundInsideTx(stateRef) } catch (e: TransactionResolutionException) { /* This is fine too */ }
 
     if (includePrivate) {
