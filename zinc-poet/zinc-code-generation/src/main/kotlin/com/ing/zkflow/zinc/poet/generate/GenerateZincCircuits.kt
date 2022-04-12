@@ -5,26 +5,27 @@ import com.ing.zkflow.common.network.ZKNetworkParametersServiceLoader
 import com.ing.zkflow.common.serialization.CommandDataSerializerRegistryProvider
 import com.ing.zkflow.zinc.poet.generate.types.CommandContextFactory
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes
+import net.corda.core.contracts.CommandData
 import java.util.ServiceLoader
+import kotlin.reflect.KClass
+import kotlin.reflect.KFunction
 import kotlin.reflect.full.allSuperclasses
 
-private val zkCommands: List<ZKCommandData> by lazy {
-    ServiceLoader.load(CommandDataSerializerRegistryProvider::class.java)
+fun instantiateZkCommands(commandRegistryProviders: Iterable<CommandDataSerializerRegistryProvider>): List<ZKCommandData> =
+    commandRegistryProviders
         .flatMap { it.list() }
         .map { it.klass }
         .filter { it.allSuperclasses.contains(ZKCommandData::class) }
-        .map {
-            it.constructors.find { constructor ->
-                constructor.parameters.isEmpty()
-            } ?: throw IllegalStateException("There MUST be at least one constructor for ZKCommandData without arguments")
-        }
-        .mapNotNull { it.call() as? ZKCommandData }
-}
+        .mapNotNull { getDefaultConstructor(it).call() as? ZKCommandData }
+
+private fun getDefaultConstructor(it: KClass<out CommandData>): KFunction<CommandData> =
+    it.constructors.find { constructor ->
+        constructor.parameters.isEmpty()
+    } ?: throw IllegalStateException("There MUST be at least one constructor for ZKCommandData without arguments")
 
 fun main() {
-    println("--> I mean, we're gonna try...")
-    zkCommands.forEach {
-        println("--> Trying to generate for ${it.metadata.circuit.name}")
+    val commandDataSerializerRegistryProviders = ServiceLoader.load(CommandDataSerializerRegistryProvider::class.java)
+    instantiateZkCommands(commandDataSerializerRegistryProviders).forEach {
         circuitGenerator.generateCircuitFor(it)
     }
 }
