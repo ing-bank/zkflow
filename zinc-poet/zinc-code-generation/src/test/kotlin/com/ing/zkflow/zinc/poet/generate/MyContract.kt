@@ -67,13 +67,13 @@ object MyContract : Contract {
     }
 }
 
-interface MyStateI : Versioned, ContractState
+interface MyStateI : Versioned
 
 @ZKP
 @BelongsToContract(MyContract::class)
 data class MyStateV1(
     val ageInYears: Int
-) : MyStateI {
+) : MyStateI, ContractState {
     override val participants: List<AbstractParty> = emptyList()
 }
 
@@ -82,7 +82,7 @@ data class MyStateV1(
 data class MyStateV2(
     val ageInYears: Int,
     val count: Int,
-) : MyStateI {
+) : MyStateI, ContractState {
     @ZincUpgrade("Self::new(previous_state.age_in_years, 1 as i32)")
     constructor(previousState: MyStateV1) : this(previousState.ageInYears, 1)
 

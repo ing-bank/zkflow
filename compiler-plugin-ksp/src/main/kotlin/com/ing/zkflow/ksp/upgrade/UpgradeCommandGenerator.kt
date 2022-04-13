@@ -5,6 +5,7 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.ing.zinc.naming.camelToSnakeCase
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.common.contracts.ZKCommandData
+import com.ing.zkflow.common.versioning.Versioned
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
@@ -37,9 +38,15 @@ class UpgradeCommandGenerator(
                     FileSpec.builder(current.packageName.asString(), commandClassName)
                         .addImport("com.ing.zkflow.common.zkp.metadata", "commandMetadata")
                         .addType(
+                            TypeSpec.interfaceBuilder("${commandClassName}I")
+                                .addSuperinterface(Versioned::class)
+                                .build()
+                        )
+                        .addType(
                             TypeSpec.classBuilder(commandClassName)
                                 .addAnnotation(ZKP::class)
                                 .addSuperinterface(ZKCommandData::class)
+                                .addSuperinterface(ClassName.bestGuess("${current.packageName.asString()}.${commandClassName}I"))
                                 .addProperty(
                                     PropertySpec.builder("metadata", ResolvedZKCommandMetadata::class, KModifier.OVERRIDE)
                                         .mutable(false)
