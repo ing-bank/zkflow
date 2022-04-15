@@ -4,6 +4,7 @@ import co.paralleluniverse.fibers.Suspendable
 import com.ing.zkflow.client.flows.ResolveZKTransactionsFlow
 import com.ing.zkflow.common.transactions.ZKVerifierTransaction
 import com.ing.zkflow.common.transactions.dependencies
+import com.ing.zkflow.common.transactions.verification.ZKTransactionVerifierService
 import com.ing.zkflow.common.zkp.ZKFlow
 import com.ing.zkflow.notary.NotaryZKConfig
 import com.ing.zkflow.notary.ZKNotarisationPayload
@@ -28,7 +29,6 @@ import net.corda.core.internal.notary.verifySignature
 import net.corda.core.utilities.unwrap
 import java.time.Duration
 
-// TODO: find out how to inject the ZKConfig
 class ZKNotaryServiceFlow(
     val otherSideSession: FlowSession,
     val service: ZKNotaryService,
@@ -114,12 +114,12 @@ class ZKNotaryServiceFlow(
 
     private fun validateNotary(tx: ZKVerifierTransaction) {
         try {
-            tx.notary ?: throw IllegalArgumentException("Transaction does not specify a notary.")
-            checkTxNotaryIsMe(tx.notary)
+            val notary = tx.notary ?: throw IllegalArgumentException("Transaction does not specify a notary.")
+            checkTxNotaryIsMe(notary)
             /**
              * Not calling [checkParameterHash] anymore: that same operation is already done by [checkNotaryWhitelisted]
              */
-            checkNotaryWhitelisted(tx.notary, tx.networkParametersHash)
+            checkNotaryWhitelisted(notary, tx.networkParametersHash)
         } catch (e: IllegalArgumentException) {
             throw NotaryInternalException(NotaryError.TransactionInvalid(e))
         }
@@ -157,10 +157,12 @@ class ZKNotaryServiceFlow(
              * that are done on Ledgertransactions
              */
             // Resolve dependencies
-            subFlow(ResolveZKTransactionsFlow(null, svtx.dependencies, otherSideSession))
+            subFlow(ResolveZKTransactionsFlow(svtx.tx, svtx.dependencies, otherSideSession))
+
             // Verify ZKP
-            zkConfig.zkTransactionService.verify(svtx, false)
-            // Verify signatures, we cannot do it inside zkService.verify() because it lacks our (notary) signature
+            val zkTransactionVerifierService = ZKTransactionVerifierService(serviceHub, zkConfig.zkTransactionService)
+            zkTransactionVerifierService.verify(svtx, false)
+            // Verify signatures, we cannot do it inside zkTransactionVerifierService.verify because it lacks our (notary) signature
             svtx.verifySignaturesExcept(service.notaryIdentityKey)
         } catch (e: IllegalArgumentException) {
             throw NotaryInternalException(NotaryError.TransactionInvalid(e))

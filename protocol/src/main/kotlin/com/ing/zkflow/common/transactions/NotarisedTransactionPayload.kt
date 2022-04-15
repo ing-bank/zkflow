@@ -1,8 +1,7 @@
 package com.ing.zkflow.common.transactions
 
+import com.ing.zkflow.common.transactions.verification.ZKTransactionVerifierService
 import com.ing.zkflow.common.zkp.ZKTransactionService
-import com.ing.zkflow.node.services.ServiceNames
-import com.ing.zkflow.node.services.getCordaServiceFromConfig
 import net.corda.core.node.ServiceHub
 import net.corda.core.serialization.CordaSerializable
 import net.corda.core.transactions.SignedTransaction
@@ -19,10 +18,15 @@ data class NotarisedTransactionPayload(
 
     fun verify(
         serviceHub: ServiceHub,
+        zkService: ZKTransactionService,
         checkSufficientSignatures: Boolean
     ) {
         // We only need to verify the svtx: because id of stx is identical, it means the stx is also valid.
-        serviceHub.getCordaServiceFromConfig<ZKTransactionService>(ServiceNames.ZK_TX_SERVICE)
-            .verify(svtx, checkSufficientSignatures)
+        val zkTransactionVerifierService = ZKTransactionVerifierService(
+            serviceHub,
+            zkService
+        )
+
+        zkTransactionVerifierService.verify(svtx, checkSufficientSignatures)
     }
 }

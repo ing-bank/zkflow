@@ -7,9 +7,6 @@ import com.ing.zkflow.common.contracts.ZKOwnableState
 import com.ing.zkflow.common.versioning.Versioned
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.common.zkp.metadata.commandMetadata
-import com.ing.zkflow.integration.contract.TestContract.Create.Companion.verifyCreate
-import com.ing.zkflow.integration.contract.TestContract.Move.Companion.verifyMove
-import com.ing.zkflow.integration.contract.TestContract.MoveBidirectional.Companion.verifyMoveBidirectional
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.CommandAndState
@@ -47,17 +44,6 @@ class TestContract : Contract {
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
             outputs { private(TestState::class) at 0 }
             numberOfSigners = 1
-        }
-
-        companion object {
-            fun verifyCreate(
-                tx: LedgerTransaction,
-                command: CommandWithParties<CommandData>
-            ) {
-                // Transaction contents
-                val output = tx.getOutput(0) as TestState
-                if (output.owner.owningKey !in command.signers) throw IllegalArgumentException("Failed requirement: the output state is owned by the command signer")
-            }
         }
     }
 
@@ -104,21 +90,6 @@ class TestContract : Contract {
             outputs { private(TestState::class) at 0 }
             numberOfSigners = 2
         }
-
-        companion object {
-            fun verifyMove(
-                tx: LedgerTransaction,
-                command: CommandWithParties<CommandData>
-            ) {
-                // Transaction contents
-                val output = tx.getOutput(0) as TestState
-                val input = tx.getInput(0) as TestState
-
-                if (input.owner.owningKey !in command.signers) throw IllegalArgumentException("Failed requirement: the input state is owned by a required command signer")
-                if (output.owner.owningKey !in command.signers) throw IllegalArgumentException("Failed requirement: the outputs state is owned by a required command signer")
-                if (input.value != output.value) throw IllegalArgumentException("Failed requirement: the value of the input and out put should be equal")
-            }
-        }
     }
 
     interface MovePrivateOnlyInterface : Versioned
@@ -128,21 +99,6 @@ class TestContract : Contract {
             inputs { private(TestState::class) at 0 }
             outputs { private(TestState::class) at 0 }
             numberOfSigners = 2
-        }
-
-        companion object {
-            fun verify(
-                tx: LedgerTransaction,
-                command: CommandWithParties<CommandData>
-            ) {
-                // Transaction contents
-                val output = tx.getOutput(0) as TestState
-                val input = tx.getInput(0) as TestState
-
-                if (input.owner.owningKey !in command.signers) throw IllegalArgumentException("Failed requirement: the input state is owned by a required command signer")
-                if (output.owner.owningKey !in command.signers) throw IllegalArgumentException("Failed requirement: the outputs state is owned by a required command signer")
-                if (input.value != output.value) throw IllegalArgumentException("Failed requirement: the value of the input and out put should be equal")
-            }
         }
     }
 
@@ -160,32 +116,6 @@ class TestContract : Contract {
             }
             numberOfSigners = 2
         }
-
-        companion object {
-            fun verifyMoveBidirectional(
-                tx: LedgerTransaction,
-                command: CommandWithParties<CommandData>
-            ) {
-                // Transaction contents
-                if (tx.inputsOfType<TestState>().sumBy { it.value } != tx.outputsOfType<TestState>()
-                    .sumBy { it.value }
-                ) throw IllegalArgumentException(
-                    "Failed requirement: amounts are not conserved for TestState"
-                )
-
-                tx.inputStates.forEachIndexed { index, input ->
-                    val output = tx.getOutput(index) as ZKOwnableState
-                    input as ZKOwnableState
-
-                    if (input.owner.owningKey == output.owner.owningKey) throw IllegalArgumentException("Failed requirement: input state $index changes ownership")
-                    if ((tx.outputStates.reversed()[index] as ZKOwnableState).owner.owningKey != input.owner.owningKey) throw IllegalArgumentException(
-                        "Failed requirement: ownership of input $index should swap ownership"
-                    )
-
-                    if (input.owner.owningKey !in command.signers) throw IllegalArgumentException("Failed requirement: input state $index is owned by a required command signer")
-                }
-            }
-        }
     }
 
     override fun verify(tx: LedgerTransaction) {
@@ -193,13 +123,12 @@ class TestContract : Contract {
         val command = tx.commands.first()
 
         when (command.value) {
-            is Create -> verifyCreate(tx, command)
+
+            // Command that have public checks
             is CreatePublic -> CreatePublic.verify(tx, command)
-            is Move -> verifyMove(tx, command)
-            is MovePrivateOnly -> MovePrivateOnly.verify(tx, command)
-            is MoveBidirectional -> verifyMoveBidirectional(tx, command)
-            is SignOnly -> {
-            }
+
+            // command that don't have public checks
+            is Create, is Move, is MovePrivateOnly, is MoveBidirectional, is SignOnly -> {}
             else -> {
                 throw IllegalStateException("No valid command found")
             }

@@ -1,13 +1,13 @@
 package com.ing.zkflow.common.zkp
 
-import com.ing.zkflow.common.contracts.ZKCommandData
-import com.ing.zkflow.common.transactions.SignedZKVerifierTransaction
 import com.ing.zkflow.common.transactions.ZKVerifierTransaction
+import com.ing.zkflow.common.transactions.ZKVerifierTransactionWithoutProofs
 import com.ing.zkflow.common.transactions.collectUtxoInfos
 import com.ing.zkflow.common.transactions.zkTransactionMetadata
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.node.services.ServiceNames
 import com.ing.zkflow.node.services.ZKTransactionResolutionException
+import com.ing.zkflow.node.services.ZKVerifierTransactionStorage
 import com.ing.zkflow.node.services.ZKWritableVerifierTransactionStorage
 import com.ing.zkflow.node.services.getCordaServiceFromConfig
 import net.corda.core.contracts.ComponentGroupEnum
@@ -21,7 +21,7 @@ import net.corda.core.transactions.WireTransaction
 abstract class AbstractZKTransactionService(val serviceHub: ServiceHub) : ZKTransactionService,
     SingletonSerializeAsToken() {
 
-    private val vtxStorage: ZKWritableVerifierTransactionStorage by lazy {
+    override val vtxStorage: ZKVerifierTransactionStorage by lazy {
         serviceHub.getCordaServiceFromConfig(
             ServiceNames.ZK_VERIFIER_TX_STORAGE
         ) as ZKWritableVerifierTransactionStorage
@@ -30,8 +30,7 @@ abstract class AbstractZKTransactionService(val serviceHub: ServiceHub) : ZKTran
     override fun prove(
         wtx: WireTransaction
     ): ZKVerifierTransaction {
-
-        val zkTransactionMetadata = wtx.zkTransactionMetadata()
+        val zkTransactionMetadata = wtx.zkTransactionMetadata(serviceHub)
         val proofs = mutableMapOf<String, ByteArray>()
 
         zkTransactionMetadata.commands.forEach { command ->
@@ -53,29 +52,42 @@ abstract class AbstractZKTransactionService(val serviceHub: ServiceHub) : ZKTran
 
     abstract override fun zkServiceForCommandMetadata(metadata: ResolvedZKCommandMetadata): ZKService
 
-    override fun verify(svtx: SignedZKVerifierTransaction, checkSufficientSignatures: Boolean) {
-        val vtx = svtx.tx
+    override fun verify(wtx: WireTransaction): ZKVerifierTransactionWithoutProofs {
+        val zkTransactionMetadata = wtx.zkTransactionMetadata(serviceHub)
+        val vtx = ZKVerifierTransactionWithoutProofs.fromWireTransaction(wtx) // create vtx without proofs just to be able to build witness and public input
 
         // Check transaction structure first, so we fail fast
-        vtx.verify()
+        vtx.verifyMerkleTree()
 
+        // Verify private components by running ZVM smart contract code per Command
+        zkTransactionMetadata.commands.forEach { command ->
+            val witness = Witness.fromWireTransaction(
+                wtx,
+                serviceHub.collectUtxoInfos(wtx.inputs),
+                serviceHub.collectUtxoInfos(wtx.references),
+                command
+            )
+            zkServiceForCommandMetadata(command).run(witness, calculatePublicInput(vtx, command))
+        }
+
+        return vtx
+    }
+
+    override fun verify(vtx: ZKVerifierTransaction) {
+        // Check transaction structure first, so we fail fast
+        vtx.verifyMerkleTree()
+
+        // Verify the ZKPs for all ZKCommandDatas in this transaction
+        verifyProofs(vtx)
+    }
+
+    private fun verifyProofs(vtx: ZKVerifierTransaction) {
         // Check there is a proof for each ZKCommand
-        vtx.commands.forEach { command ->
-            // Should we add a check here that this command actually requires a proof? What if all its  outputs are 'public', then we wouldn't need a proof?
-            if (command.value is ZKCommandData) require(vtx.proofs.containsKey(command.value::class.qualifiedName)) { "Proof is missing for command ${command.value}" }
-        }
-
-        // Check proofs
-        vtx.proofs.forEach { (commandClassName, proof) ->
-            val command = vtx.commands.single { it.value::class.qualifiedName == commandClassName }.value as ZKCommandData
-            zkServiceForCommandMetadata(command.metadata).verifyTimed(proof, calculatePublicInput(vtx, command.metadata))
-        }
-
-        // Check signatures
-        if (checkSufficientSignatures) {
-            svtx.verifyRequiredSignatures()
-        } else {
-            svtx.checkSignaturesAreValid()
+        vtx.zkTransactionMetadata(serviceHub).commands.forEach { zkCommand ->
+            // For ZK Commands we check proofs
+            val proof = vtx.proofs[zkCommand.commandKClass.qualifiedName]
+            require(proof != null) { "Proof is missing for command ${zkCommand.commandSimpleName}" }
+            zkServiceForCommandMetadata(zkCommand).verifyTimed(proof, calculatePublicInput(vtx, zkCommand))
         }
     }
 
