@@ -1,6 +1,7 @@
 package com.ing.zkflow.ksp.implementations
 
 import com.google.devtools.ksp.processing.CodeGenerator
+import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.symbol.KSAnnotated
@@ -15,6 +16,7 @@ import kotlin.reflect.KClass
  * [ImplementationsProcessor]s.
  */
 class ImplementationsSymbolProcessor(
+    private val logger: KSPLogger,
     codeGenerator: CodeGenerator,
     private val implementationsProcessors: List<ImplementationsProcessor<*>>,
 ) : SymbolProcessor {
@@ -27,6 +29,7 @@ class ImplementationsSymbolProcessor(
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
         val newFiles = resolver.getNewFiles(visitedFiles)
+        logger.info("New Files: ${newFiles.joinToString { it.filePath }}")
         visitedFiles.addAll(newFiles)
 
         newFiles

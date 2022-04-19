@@ -27,6 +27,7 @@ class VersionedInterfaceProvider : SymbolProcessorProvider {
     override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor {
         val versionedInterfaceProviderProcessor = VersionedInterfaceProviderProcessor(environment.codeGenerator)
         return ImplementationsSymbolProcessor(
+            environment.logger,
             environment.codeGenerator,
             listOf(
                 versionedInterfaceProviderProcessor
@@ -35,7 +36,7 @@ class VersionedInterfaceProvider : SymbolProcessorProvider {
     }
 }
 
-class VersionedInterfaceProviderProcessor(val codeGenerator: CodeGenerator) :
+class VersionedInterfaceProviderProcessor(private val codeGenerator: CodeGenerator) :
     ImplementationsProcessor<Versioned> {
     override val interfaceClass = Versioned::class
 

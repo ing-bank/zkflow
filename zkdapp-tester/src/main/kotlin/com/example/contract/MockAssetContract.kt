@@ -5,6 +5,8 @@ import com.ing.zkflow.annotations.corda.EdDSA
 import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.contracts.ZKOwnableState
 import com.ing.zkflow.common.transactions.zkTransactionMetadata
+import com.ing.zkflow.common.versioning.Versioned
+import com.ing.zkflow.common.versioning.ZincUpgrade
 import com.ing.zkflow.common.zkp.metadata.commandMetadata
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.CommandAndState
@@ -14,7 +16,6 @@ import net.corda.core.identity.AnonymousParty
 import net.corda.core.transactions.LedgerTransaction
 import org.intellij.lang.annotations.Language
 import java.util.Random
-import com.ing.zkflow.common.versioning.Versioned
 
 
 class MockAssetContract : Contract {
@@ -23,11 +24,25 @@ class MockAssetContract : Contract {
     }
 
     interface  MockAssetInterface: Versioned
+
     @ZKP
     @BelongsToContract(MockAssetContract::class)
     data class MockAsset(
         override val owner: @EdDSA AnonymousParty,
         val value: Int = Random().nextInt()
+    ) : ZKOwnableState, MockAssetInterface {
+        @ZincUpgrade("Self::new(previous_version.owner, 0 as i32)")
+        constructor(previousVersion: MockAssetV1): this(previousVersion.owner, 0)
+        override val participants: List<AnonymousParty> = listOf(owner)
+
+        override fun withNewOwner(newOwner: AnonymousParty): CommandAndState =
+            CommandAndState(Move(), copy(owner = newOwner))
+    }
+
+    @ZKP
+    @BelongsToContract(MockAssetContract::class)
+    data class MockAssetV1(
+        override val owner: @EdDSA AnonymousParty,
     ) : ZKOwnableState, MockAssetInterface {
         override val participants: List<AnonymousParty> = listOf(owner)
 
