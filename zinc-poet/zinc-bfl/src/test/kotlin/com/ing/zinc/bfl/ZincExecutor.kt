@@ -68,7 +68,7 @@ object ZincExecutor {
         createZargoToml(this::class.simpleName!!)
         // generate consts.zn
         zincSourceFileIfNotExists("$CONSTS.zn") {
-            options.witnessGroupOptions.forEach {
+            options.transactionComponentOptions.forEach {
                 add(it.witnessSizeConstant)
             }
         }
@@ -89,7 +89,7 @@ object ZincExecutor {
                 createImports(this)
             }
             function {
-                val witnessGroupOptions = options.witnessGroupOptions.first()
+                val witnessGroupOptions = options.transactionComponentOptions.first()
                 name = "main"
                 parameter { name = SERIALIZED; type = witnessGroupOptions.witnessType }
                 returnType = module.toZincId()
@@ -109,7 +109,7 @@ object ZincExecutor {
                 createImports(this)
             }
             function {
-                val witnessGroupOptions = options.witnessGroupOptions.first()
+                val witnessGroupOptions = options.transactionComponentOptions.first()
                 name = "main"
                 parameter { name = SERIALIZED; type = witnessGroupOptions.witnessType }
                 returnType = module.lastField.type.toZincType()

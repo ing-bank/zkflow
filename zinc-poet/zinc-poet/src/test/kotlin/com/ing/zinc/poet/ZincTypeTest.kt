@@ -1,6 +1,7 @@
 package com.ing.zinc.poet
 
 import com.ing.zinc.poet.ZincType.Companion.id
+import com.ing.zinc.poet.ZincType.Self
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 

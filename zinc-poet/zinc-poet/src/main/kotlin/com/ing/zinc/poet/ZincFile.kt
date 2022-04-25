@@ -1,9 +1,7 @@
 package com.ing.zinc.poet
 
-interface ZincFile {
+interface ZincFile : ZincGeneratable {
     fun getFileItems(): List<ZincFileItem>
-    // TODO generating a plain string is not the fastest method, maybe use [PrintWriter]?
-    fun generate(): String
 
     @ZincDslMarker
     @Suppress("TooManyFunctions")

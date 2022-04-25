@@ -4,6 +4,7 @@ import com.ing.zinc.bfl.generator.CodeGenerationOptions
 import com.ing.zinc.bfl.generator.TransactionComponentOptions
 import com.ing.zinc.poet.Indentation.Companion.spaces
 import com.ing.zinc.poet.ZincFunction
+import com.ing.zinc.poet.ZincInvokeable
 import com.ing.zinc.poet.ZincPrimitive
 import com.ing.zinc.poet.indent
 
@@ -19,7 +20,7 @@ data class BflWrappedTransactionComponent(
     id,
     allFields,
 ) {
-    override fun generateMethods(codeGenerationOptions: CodeGenerationOptions): List<ZincFunction> {
+    override fun generateMethods(codeGenerationOptions: CodeGenerationOptions): List<ZincInvokeable> {
         return super.generateMethods(codeGenerationOptions) + generateDeserializeLastFieldMethods(codeGenerationOptions)
     }
 
@@ -37,7 +38,7 @@ data class BflWrappedTransactionComponent(
     }
 
     private fun generateDeserializeLastFieldMethods(codeGenerationOptions: CodeGenerationOptions): List<ZincFunction> {
-        return codeGenerationOptions.witnessGroupOptions.map {
+        return codeGenerationOptions.transactionComponentOptions.map {
             val lastField = fields.last()
             val offset = lastField.generateConstant(OFFSET) + " + $OFFSET"
             val lastFieldDeserialization = lastField.type.deserializeExpr(it, offset, lastField.name, SERIALIZED)

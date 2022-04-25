@@ -13,7 +13,7 @@ import com.ing.zinc.bfl.useSerialized
 import com.ing.zinc.naming.camelToSnakeCase
 import com.ing.zinc.poet.Indentation.Companion.spaces
 import com.ing.zinc.poet.ZincFile.Companion.zincFile
-import com.ing.zinc.poet.ZincFunction
+import com.ing.zinc.poet.ZincInvokeable
 import com.ing.zinc.poet.ZincMethod.Companion.zincMethod
 import com.ing.zinc.poet.ZincStruct.Companion.zincStruct
 import com.ing.zinc.poet.ZincType.Companion.id
@@ -96,7 +96,7 @@ class Witness(
         newLine()
         impl {
             name = Witness::class.java.simpleName
-            addFunctions(generateMethods(codeGenerationOptions))
+            addMethods(generateMethods(codeGenerationOptions))
         }
     }
 
@@ -118,7 +118,7 @@ class Witness(
     private fun getArrayTransactionComponent() = txComponents
         .filterIsInstance<ArrayTransactionComponent>()
 
-    override fun generateMethods(codeGenerationOptions: CodeGenerationOptions): List<ZincFunction> =
+    override fun generateMethods(codeGenerationOptions: CodeGenerationOptions): List<ZincInvokeable> =
         getArrayTransactionComponent().mapNotNull(ArrayTransactionComponent::generateDeserializeMethod) +
             txComponents.mapNotNull(TransactionComponent::generateHashesMethod) +
             generateDeserializeMethod() +

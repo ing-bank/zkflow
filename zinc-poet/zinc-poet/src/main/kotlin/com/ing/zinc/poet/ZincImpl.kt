@@ -4,20 +4,15 @@ import com.ing.zinc.poet.Indentation.Companion.spaces
 
 interface ZincImpl : ZincFileItem {
     fun getName(): String
-    fun getMethods(): List<ZincFunction>
+    fun getMethods(): List<ZincInvokeable>
 
     @ZincDslMarker
     class Builder {
         var name: String? = null
-        private val methods: MutableList<ZincFunction> = mutableListOf()
+        private val methods: MutableList<ZincInvokeable> = mutableListOf()
 
         fun addFunction(function: ZincFunction): Builder {
             this.methods.add(function)
-            return this
-        }
-
-        fun addFunctions(functions: Collection<ZincFunction>): Builder {
-            this.methods.addAll(functions)
             return this
         }
 
@@ -31,7 +26,7 @@ interface ZincImpl : ZincFileItem {
             return this
         }
 
-        fun addMethods(methods: Collection<ZincMethod>): Builder {
+        fun addMethods(methods: Collection<ZincInvokeable>): Builder {
             this.methods.addAll(methods)
             return this
         }
@@ -50,10 +45,10 @@ interface ZincImpl : ZincFileItem {
     companion object {
         private data class ImmutableZincImpl(
             private val name: String,
-            private val methods: List<ZincFunction>
+            private val methods: List<ZincInvokeable>
         ) : ZincImpl {
             override fun getName(): String = name
-            override fun getMethods(): List<ZincFunction> = methods
+            override fun getMethods(): List<ZincInvokeable> = methods
             override fun generate(): String {
                 val functions = getMethods().joinToString("\n\n") {
                     it.generate()

@@ -39,7 +39,7 @@ class ConstsFactory {
                 initialization = "$CORDA_MAGIC_BITS_SIZE"
                 comment = "Number of bits in Corda serialization header"
             }
-            codeGenerationOptions.witnessGroupOptions.forEach {
+            codeGenerationOptions.transactionComponentOptions.forEach {
                 add(it.witnessSizeConstant)
             }
         }
