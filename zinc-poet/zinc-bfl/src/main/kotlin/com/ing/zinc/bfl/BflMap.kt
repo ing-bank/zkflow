@@ -2,7 +2,7 @@ package com.ing.zinc.bfl
 
 import com.ing.zinc.bfl.generator.CodeGenerationOptions
 import com.ing.zinc.poet.Indentation.Companion.spaces
-import com.ing.zinc.poet.ZincInvokeable
+import com.ing.zinc.poet.ZincInvocable
 import com.ing.zinc.poet.ZincMethod
 import com.ing.zinc.poet.ZincMethod.Companion.zincMethod
 import com.ing.zinc.poet.indent
@@ -23,7 +23,7 @@ data class BflMap(
             .distinctBy { it.id }
     }
 
-    override fun generateMethods(codeGenerationOptions: CodeGenerationOptions): List<ZincInvokeable> {
+    override fun generateMethods(codeGenerationOptions: CodeGenerationOptions): List<ZincInvocable> {
         return super.generateMethods(codeGenerationOptions) +
             listOf(generateTryGetMethod())
     }

@@ -83,8 +83,8 @@ public class TestDSLZincZKTransactionService(serviceHub: ServiceHub, zkVerifierT
             CommandContextFactory(standardTypes),
             standardTypes,
             ZincTypeGeneratorResolver(ZincTypeGenerator),
-            ConstsFactory(),
-            CryptoUtilsFactory()
+            ConstsFactory,
+            CryptoUtilsFactory
         )
         circuitGenerator.generateCircuitFor(command)
     }

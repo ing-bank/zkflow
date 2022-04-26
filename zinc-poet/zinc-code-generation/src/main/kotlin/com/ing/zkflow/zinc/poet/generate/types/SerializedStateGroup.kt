@@ -18,7 +18,7 @@ import com.ing.zinc.poet.ZincArray
 import com.ing.zinc.poet.ZincArray.Companion.zincArray
 import com.ing.zinc.poet.ZincFile.Companion.zincFile
 import com.ing.zinc.poet.ZincFunction.Companion.zincFunction
-import com.ing.zinc.poet.ZincInvokeable
+import com.ing.zinc.poet.ZincInvocable
 import com.ing.zinc.poet.ZincMethod.Companion.zincMethod
 import com.ing.zinc.poet.ZincPrimitive
 import com.ing.zinc.poet.ZincStruct.Companion.zincStruct
@@ -94,7 +94,7 @@ data class SerializedStateGroup(
         }
     }
 
-    override fun generateMethods(codeGenerationOptions: CodeGenerationOptions): List<ZincInvokeable> {
+    override fun generateMethods(codeGenerationOptions: CodeGenerationOptions): List<ZincInvocable> {
         return listOf(
             generateDeserializeMethod(codeGenerationOptions),
             generateEmptyMethod(),

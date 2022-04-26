@@ -12,7 +12,7 @@ const val BYTE_BITS = "BYTE_BITS"
 const val U32_BYTES = "U32_BYTES"
 const val U32_BITS = "U32_BITS"
 
-class ConstsFactory {
+object ConstsFactory {
     fun generateConsts(
         buildPath: Path,
         codeGenerationOptions: CodeGenerationOptions

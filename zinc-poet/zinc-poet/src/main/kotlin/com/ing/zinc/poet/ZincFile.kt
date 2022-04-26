@@ -1,6 +1,6 @@
 package com.ing.zinc.poet
 
-interface ZincFile : ZincGeneratable {
+interface ZincFile : ZincGenerable {
     fun getFileItems(): List<ZincFileItem>
 
     @ZincDslMarker

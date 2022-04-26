@@ -4,7 +4,7 @@ import com.ing.zinc.bfl.generator.CodeGenerationOptions
 import com.ing.zinc.bfl.generator.TransactionComponentOptions
 import com.ing.zinc.poet.Indentation.Companion.spaces
 import com.ing.zinc.poet.ZincFunction
-import com.ing.zinc.poet.ZincInvokeable
+import com.ing.zinc.poet.ZincInvocable
 import com.ing.zinc.poet.ZincPrimitive
 import com.ing.zinc.poet.indent
 
@@ -20,7 +20,7 @@ data class BflWrappedTransactionComponent(
     id,
     allFields,
 ) {
-    override fun generateMethods(codeGenerationOptions: CodeGenerationOptions): List<ZincInvokeable> {
+    override fun generateMethods(codeGenerationOptions: CodeGenerationOptions): List<ZincInvocable> {
         return super.generateMethods(codeGenerationOptions) + generateDeserializeLastFieldMethods(codeGenerationOptions)
     }
 

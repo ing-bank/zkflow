@@ -7,7 +7,7 @@ import com.ing.zinc.poet.ZincConstant
 import com.ing.zinc.poet.ZincFile.Companion.zincFile
 import com.ing.zinc.poet.ZincFunction
 import com.ing.zinc.poet.ZincFunction.Companion.zincFunction
-import com.ing.zinc.poet.ZincInvokeable
+import com.ing.zinc.poet.ZincInvocable
 import com.ing.zinc.poet.ZincMethod.Companion.zincMethod
 import com.ing.zinc.poet.ZincPrimitive
 import com.ing.zinc.poet.ZincStruct
@@ -24,7 +24,7 @@ import java.util.Objects
 open class BflStruct(
     override val id: String,
     fields: List<BflStructField>,
-    private val functions: List<ZincInvokeable>,
+    private val functions: List<ZincInvocable>,
     val isDeserializable: Boolean,
     private val additionalImports: List<BflModule>
 ) : BflModule {
@@ -111,7 +111,7 @@ open class BflStruct(
         return "let ${field.name}: ${field.type.id} = $deserializedField;"
     }
 
-    override fun generateMethods(codeGenerationOptions: CodeGenerationOptions): List<ZincInvokeable> {
+    override fun generateMethods(codeGenerationOptions: CodeGenerationOptions): List<ZincInvocable> {
         return listOf(
             generateNewMethod(codeGenerationOptions),
             generateEmptyMethod(codeGenerationOptions),

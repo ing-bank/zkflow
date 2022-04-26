@@ -3,7 +3,7 @@ package com.ing.zinc.poet
 /**
  * Represents an item that can be converted to zinc code as a String.
  */
-interface ZincGeneratable {
+interface ZincGenerable {
     /**
      * Convert to string representation.
      */
@@ -49,7 +49,7 @@ interface ZincType {
 /**
  * Abstraction for [ZincFunction] and [ZincMethod].
  */
-interface ZincInvokeable : ZincGeneratable {
+interface ZincInvocable : ZincGenerable {
     fun getName(): String
     fun getParameters(): List<ZincParameter>
     fun getReturnType(): ZincType
@@ -64,7 +64,7 @@ interface ZincInvokeable : ZincGeneratable {
 /**
  * Represent an item that can be rendered into a [ZincFile].
  */
-interface ZincFileItem : ZincGeneratable
+interface ZincFileItem : ZincGenerable
 
 /**
  * Convenience function to fix indentation problems when using [trimIndent] for multi-line strings.

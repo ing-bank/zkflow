@@ -41,7 +41,7 @@ private val circuitGenerator: CircuitGenerator by lazy {
         ),
         standardTypes,
         zincTypeResolver,
-        ConstsFactory(),
-        CryptoUtilsFactory()
+        ConstsFactory,
+        CryptoUtilsFactory
     )
 }

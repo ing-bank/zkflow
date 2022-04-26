@@ -15,7 +15,7 @@ import java.nio.file.Path
 const val CRYPTO_UTILS = "crypto_utils"
 const val COMPUTE_NONCE = "compute_nonce"
 
-class CryptoUtilsFactory {
+object CryptoUtilsFactory {
     fun generateCryptoUtils(
         buildPath: Path,
     ) {

@@ -5,7 +5,7 @@ import com.ing.zinc.bfl.generator.TransactionComponentOptions
 import com.ing.zinc.poet.Indentation.Companion.spaces
 import com.ing.zinc.poet.ZincFunction
 import com.ing.zinc.poet.ZincFunction.Companion.zincFunction
-import com.ing.zinc.poet.ZincInvokeable
+import com.ing.zinc.poet.ZincInvocable
 import com.ing.zinc.poet.ZincMethod
 import com.ing.zinc.poet.ZincMethod.Companion.zincMethod
 import com.ing.zinc.poet.ZincParameter.Companion.zincParameter
@@ -118,7 +118,7 @@ open class BflList(
         }
     }
 
-    override fun generateMethods(codeGenerationOptions: CodeGenerationOptions): List<ZincInvokeable> {
+    override fun generateMethods(codeGenerationOptions: CodeGenerationOptions): List<ZincInvocable> {
         return super.generateMethods(codeGenerationOptions) + listOf(
             generateListOfMethod(codeGenerationOptions),
             generateGetMethod(codeGenerationOptions),
