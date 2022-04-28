@@ -2,9 +2,9 @@ package com.ing.zkflow.zinc.poet.generate
 
 import com.ing.zinc.bfl.BflModule
 import com.ing.zinc.bfl.BflStruct
-import com.ing.zinc.poet.Self
 import com.ing.zinc.poet.ZincFunction.Companion.zincFunction
 import com.ing.zinc.poet.ZincType.Companion.id
+import com.ing.zinc.poet.ZincType.Self
 import com.ing.zkflow.common.serialization.zinc.generation.zincTypeName
 import com.ing.zkflow.util.requireInstanceOf
 import kotlinx.serialization.serializer

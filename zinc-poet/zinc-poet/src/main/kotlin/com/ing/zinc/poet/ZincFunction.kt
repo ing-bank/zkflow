@@ -4,17 +4,7 @@ import com.ing.zinc.poet.Indentation.Companion.spaces
 import com.ing.zinc.poet.ZincComment.Companion.zincComment
 import org.intellij.lang.annotations.Language
 
-interface ZincFunction : ZincFileItem {
-    fun getName(): String
-    fun getParameters(): List<ZincParameter>
-    fun getReturnType(): ZincType
-    fun getBody(): String
-
-    /**
-     * Optional comment to be placed before the function
-     */
-    fun getComment(): ZincComment?
-
+interface ZincFunction : ZincInvocable, ZincFileItem {
     @ZincDslMarker
     class Builder {
         var name: String? = null

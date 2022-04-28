@@ -1,11 +1,11 @@
 package com.ing.zinc.poet
 
 /**
- * [ZincFileItem]s represent zinc code that can be rendered into a [ZincFile].
+ * Represents an item that can be converted to zinc code as a String.
  */
-interface ZincFileItem {
+interface ZincGenerable {
     /**
-     * Render this [ZincFileItem] for inclusion in a [ZincFile].
+     * Convert to string representation.
      */
     fun generate(): String
 }
@@ -36,33 +36,48 @@ interface ZincType {
 
         fun id(id: String) = ZincTypeIdentifier(id)
     }
-}
 
-/**
- * A special [ZincType] that represents the `Self` zinc keyword.
- */
-object Self : ZincType {
-    private const val SELF_REFERENCE = "Self"
-    override fun getId(): String = SELF_REFERENCE
-}
-
-data class Indentation(
-    val spaces: Int
-) {
-    companion object {
-        val Int.spaces: Indentation
-            get() = Indentation(this)
-
-        val Int.tabs: Indentation
-            get() = Indentation(this * 4)
+    /**
+     * A special [ZincType] that represents the `Self` zinc keyword.
+     */
+    object Self : ZincType {
+        private const val SELF_REFERENCE = "Self"
+        override fun getId(): String = SELF_REFERENCE
     }
 }
 
 /**
+ * Abstraction for [ZincFunction] and [ZincMethod].
+ */
+interface ZincInvocable : ZincGenerable {
+    fun getName(): String
+    fun getParameters(): List<ZincParameter>
+    fun getReturnType(): ZincType
+    fun getBody(): String
+
+    /**
+     * Optional comment to be placed before the function
+     */
+    fun getComment(): ZincComment?
+}
+
+/**
+ * Represent an item that can be rendered into a [ZincFile].
+ */
+interface ZincFileItem : ZincGenerable
+
+/**
  * Convenience function to fix indentation problems when using [trimIndent] for multi-line strings.
  */
-fun String.indent(indentation: Indentation): String {
-    return replace("\n", "\n${"".padStart(indentation.spaces)}")
+fun String.indent(indentation: Indentation): String = replace("\n", "\n" + indentation.indent)
+
+data class Indentation(
+    val indent: String
+) {
+    companion object {
+        val Int.spaces: Indentation
+            get() = Indentation(String(CharArray(this) { ' ' }))
+    }
 }
 
 /**

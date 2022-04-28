@@ -2,7 +2,7 @@ package com.ing.zkflow.zinc.poet.generate.types.witness
 
 import com.ing.zinc.bfl.BflType
 import com.ing.zinc.bfl.generator.TransactionComponentOptions
-import com.ing.zinc.poet.ZincFunction
+import com.ing.zinc.poet.ZincMethod
 import com.ing.zinc.poet.ZincType
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.COMMANDS
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.INPUTS
@@ -48,7 +48,7 @@ interface TransactionComponent {
     /**
      * Implementation for the generate_leaf_hashes method.
      */
-    val generateHashesMethod: ZincFunction?
+    val generateHashesMethod: ZincMethod?
 
     val publicInputFieldName: String get() = groupName.toPublicInputFieldName()
 }

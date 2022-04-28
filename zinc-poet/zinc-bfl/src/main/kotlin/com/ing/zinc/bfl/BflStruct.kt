@@ -3,16 +3,16 @@ package com.ing.zinc.bfl
 import com.ing.zinc.bfl.generator.CodeGenerationOptions
 import com.ing.zinc.bfl.generator.TransactionComponentOptions
 import com.ing.zinc.poet.Indentation.Companion.spaces
-import com.ing.zinc.poet.Indentation.Companion.tabs
-import com.ing.zinc.poet.Self
 import com.ing.zinc.poet.ZincConstant
 import com.ing.zinc.poet.ZincFile.Companion.zincFile
 import com.ing.zinc.poet.ZincFunction
 import com.ing.zinc.poet.ZincFunction.Companion.zincFunction
+import com.ing.zinc.poet.ZincInvocable
 import com.ing.zinc.poet.ZincMethod.Companion.zincMethod
 import com.ing.zinc.poet.ZincPrimitive
 import com.ing.zinc.poet.ZincStruct
 import com.ing.zinc.poet.ZincStruct.Companion.zincStruct
+import com.ing.zinc.poet.ZincType.Self
 import com.ing.zinc.poet.indent
 import com.ing.zkflow.util.BflSized
 import com.ing.zkflow.util.NodeDescriptor
@@ -24,7 +24,7 @@ import java.util.Objects
 open class BflStruct(
     override val id: String,
     fields: List<BflStructField>,
-    private val functions: List<ZincFunction>,
+    private val functions: List<ZincInvocable>,
     val isDeserializable: Boolean,
     private val additionalImports: List<BflModule>
 ) : BflModule {
@@ -60,7 +60,7 @@ open class BflStruct(
 
     override fun toString(): String = """
         struct $id {
-            ${fields.joinToString("\n") { "${it.name}: ${it.type}," }.indent(3.tabs)}
+            ${fields.joinToString("\n") { "${it.name}: ${it.type}," }.indent(12.spaces)}
         }
     """.trimIndent()
 
@@ -111,7 +111,7 @@ open class BflStruct(
         return "let ${field.name}: ${field.type.id} = $deserializedField;"
     }
 
-    override fun generateMethods(codeGenerationOptions: CodeGenerationOptions): List<ZincFunction> {
+    override fun generateMethods(codeGenerationOptions: CodeGenerationOptions): List<ZincInvocable> {
         return listOf(
             generateNewMethod(codeGenerationOptions),
             generateEmptyMethod(codeGenerationOptions),
@@ -166,8 +166,8 @@ open class BflStruct(
         newLine()
         impl {
             name = id
-            addFunctions(generateMethods(codeGenerationOptions))
-            addFunctions(getRegisteredMethods())
+            addMethods(generateMethods(codeGenerationOptions))
+            addMethods(getRegisteredMethods())
         }
     }
 
@@ -230,7 +230,7 @@ open class BflStruct(
     }
 
     open fun generateDeserializeMethods(codeGenerationOptions: CodeGenerationOptions): List<ZincFunction> {
-        return codeGenerationOptions.witnessGroupOptions.map {
+        return codeGenerationOptions.transactionComponentOptions.map {
             val fieldDeserializations = fields.fold(Pair("", 0)) { acc: Pair<String, Int>, field ->
                 val implementation = generateFieldDeserialization(it, field, OFFSET, SERIALIZED)
                 Pair(

@@ -9,7 +9,7 @@ import com.ing.zinc.bfl.toZincId
 import com.ing.zinc.poet.Indentation.Companion.spaces
 import com.ing.zinc.poet.ZincArray
 import com.ing.zinc.poet.ZincArray.Companion.zincArray
-import com.ing.zinc.poet.ZincFunction
+import com.ing.zinc.poet.ZincMethod
 import com.ing.zinc.poet.ZincMethod.Companion.zincMethod
 import com.ing.zinc.poet.ZincPrimitive
 import com.ing.zinc.poet.ZincType
@@ -41,7 +41,7 @@ internal data class ArrayTransactionComponent(
         }
     }
 
-    fun generateDeserializeMethod(): ZincFunction? {
+    fun generateDeserializeMethod(): ZincMethod? {
         if (groupSize == 0) return null
         val deserializeExpression = options[0].generateDeserializeExpr("self.$groupName[i]")
         val deserializedType = txComponent.lastField.type
@@ -63,7 +63,7 @@ internal data class ArrayTransactionComponent(
         }
     }
 
-    override val generateHashesMethod: ZincFunction = zincMethod {
+    override val generateHashesMethod: ZincMethod = zincMethod {
         val serializedDigest = digest.getSerializedTypeDef().getType() as ZincArray
         comment = "Compute the $groupName leaf hashes."
         name = "compute_${groupName}_leaf_hashes"

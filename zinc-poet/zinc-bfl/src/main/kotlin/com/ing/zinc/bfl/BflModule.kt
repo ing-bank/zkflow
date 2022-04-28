@@ -5,7 +5,7 @@ import com.ing.zinc.bfl.generator.CodeGenerationOptions
 import com.ing.zinc.naming.camelToSnakeCase
 import com.ing.zinc.poet.ZincArray.Companion.zincArray
 import com.ing.zinc.poet.ZincFile
-import com.ing.zinc.poet.ZincFunction
+import com.ing.zinc.poet.ZincInvocable
 import com.ing.zinc.poet.ZincMod
 import com.ing.zinc.poet.ZincMod.Companion.zincMod
 import com.ing.zinc.poet.ZincPrimitive
@@ -41,10 +41,10 @@ interface BflModule : BflType {
      *
      * NOTE: when overriding this method, include super first.
      */
-    fun generateMethods(codeGenerationOptions: CodeGenerationOptions): List<ZincFunction>
+    fun generateMethods(codeGenerationOptions: CodeGenerationOptions): List<ZincInvocable>
 
     companion object {
-        private val methodsPerModuleRegistry: MutableMap<String, MutableMap<String, ZincFunction>> = mutableMapOf()
+        private val methodsPerModuleRegistry: MutableMap<String, MutableMap<String, ZincInvocable>> = mutableMapOf()
 
         /**
          * Registers a [method] for a module with id [moduleId].
@@ -52,7 +52,7 @@ interface BflModule : BflType {
          * This is an extension mechanism to allow registering methods for [BflModule] instances that are not even
          * created yet, or will be automatically created, e.g. using reflection.
          */
-        fun registerMethod(moduleId: String, method: ZincFunction) {
+        fun registerMethod(moduleId: String, method: ZincInvocable) {
             val methodsRegistry = methodsPerModuleRegistry.getOrPut(moduleId) { mutableMapOf() }
             if (methodsRegistry[method.getName()] != null) {
                 throw IllegalStateException("A method with name ${method.getName()} is already registered for $moduleId.")
@@ -60,7 +60,7 @@ interface BflModule : BflType {
             methodsRegistry[method.getName()] = method
         }
 
-        internal fun getRegisteredMethodsFor(moduleId: String): Collection<ZincFunction> {
+        internal fun getRegisteredMethodsFor(moduleId: String): Collection<ZincInvocable> {
             return methodsPerModuleRegistry.getOrDefault(moduleId, mutableMapOf()).values
         }
     }
@@ -69,7 +69,7 @@ interface BflModule : BflType {
 /**
  * Return a list of additional methods that are registered via [registerMethod].
  */
-internal fun BflModule.getRegisteredMethods(): Collection<ZincFunction> = getRegisteredMethodsFor(id)
+internal fun BflModule.getRegisteredMethods(): Collection<ZincInvocable> = getRegisteredMethodsFor(id)
 
 /**
  * Return a name for a Constant holding the number of bits in the serialized form of this [BflModule].

@@ -81,8 +81,8 @@ internal class CircuitGeneratorTest {
         CommandContextFactory(standardTypes),
         standardTypes,
         zincTypeResolver,
-        ConstsFactory(),
-        CryptoUtilsFactory()
+        ConstsFactory,
+        CryptoUtilsFactory
     )
 
     companion object {

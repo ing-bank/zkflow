@@ -2,7 +2,7 @@ package com.ing.zkflow.zinc.poet.generate.types.witness
 
 import com.ing.zinc.bfl.BflType
 import com.ing.zinc.bfl.generator.TransactionComponentOptions
-import com.ing.zinc.poet.ZincFunction
+import com.ing.zinc.poet.ZincMethod
 import com.ing.zinc.poet.ZincType
 
 /**
@@ -23,5 +23,5 @@ internal data class HashingMetadataTransactionComponent(
     override val isPresent: Boolean = groupSize > 0
     override val options: List<TransactionComponentOptions> = emptyList()
     override val dependencies: List<BflType> = listOf(module)
-    override val generateHashesMethod: ZincFunction? = null
+    override val generateHashesMethod: ZincMethod? = null
 }

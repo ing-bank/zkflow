@@ -25,7 +25,7 @@ internal class ZincImplTest {
         val actual = zincImpl {
             name = "SomeClass"
             addFunction(genFunction(1))
-            addFunctions(listOf(genFunction(2)))
+            addMethods(listOf(genFunction(2)))
             function {
                 name = "function3"
                 returnType = ZincPrimitive.Bool
@@ -56,7 +56,7 @@ internal class ZincImplTest {
         val actual = zincImpl {
             name = "SomeClass"
             addFunction(genFunction(1))
-            addFunctions(listOf(genFunction(2)))
+            addMethods(listOf(genFunction(2)))
             function {
                 name = "function3"
                 returnType = ZincPrimitive.Bool

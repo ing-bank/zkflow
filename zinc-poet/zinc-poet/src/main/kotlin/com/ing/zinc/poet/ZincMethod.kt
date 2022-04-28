@@ -3,7 +3,7 @@ package com.ing.zinc.poet
 import com.ing.zinc.poet.Indentation.Companion.spaces
 import com.ing.zinc.poet.ZincComment.Companion.zincComment
 
-interface ZincMethod : ZincFunction {
+interface ZincMethod : ZincInvocable {
     /**
      * This flag signals whether this method may modify its struct.
      */

@@ -3,8 +3,8 @@ package com.ing.zinc.bfl.generator
 /**
  * Configuration options to customize the generated code.
  *
- * @property witnessGroupOptions Configurations for the different witness groups.
+ * @property transactionComponentOptions Configurations for the different transaction components.
  */
 data class CodeGenerationOptions(
-    val witnessGroupOptions: List<TransactionComponentOptions>
+    val transactionComponentOptions: List<TransactionComponentOptions>
 )

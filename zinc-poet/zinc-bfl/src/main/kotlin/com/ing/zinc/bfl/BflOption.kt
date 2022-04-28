@@ -3,8 +3,9 @@ package com.ing.zinc.bfl
 import com.ing.zinc.bfl.generator.CodeGenerationOptions
 import com.ing.zinc.bfl.generator.TransactionComponentOptions
 import com.ing.zinc.poet.Indentation.Companion.spaces
-import com.ing.zinc.poet.Self
 import com.ing.zinc.poet.ZincFunction
+import com.ing.zinc.poet.ZincInvocable
+import com.ing.zinc.poet.ZincType.Self
 import com.ing.zinc.poet.indent
 
 data class BflOption(val innerType: BflType) : BflStruct(
@@ -46,7 +47,7 @@ data class BflOption(val innerType: BflType) : BflStruct(
         }
     }
 
-    override fun generateMethods(codeGenerationOptions: CodeGenerationOptions): List<ZincFunction> {
+    override fun generateMethods(codeGenerationOptions: CodeGenerationOptions): List<ZincInvocable> {
         return super.generateMethods(codeGenerationOptions) +
             listOf(
                 generateSomeMethod()

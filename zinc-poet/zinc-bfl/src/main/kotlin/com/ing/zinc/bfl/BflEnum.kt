@@ -3,12 +3,12 @@ package com.ing.zinc.bfl
 import com.ing.zinc.bfl.generator.CodeGenerationOptions
 import com.ing.zinc.bfl.generator.TransactionComponentOptions
 import com.ing.zinc.poet.Indentation.Companion.spaces
-import com.ing.zinc.poet.Self
 import com.ing.zinc.poet.ZincEnum
 import com.ing.zinc.poet.ZincFile.Companion.zincFile
 import com.ing.zinc.poet.ZincFunction
 import com.ing.zinc.poet.ZincFunction.Companion.zincFunction
 import com.ing.zinc.poet.ZincPrimitive
+import com.ing.zinc.poet.ZincType.Self
 import com.ing.zinc.poet.indent
 import com.ing.zkflow.util.BflSized
 import com.ing.zkflow.util.Tree
@@ -48,7 +48,7 @@ data class BflEnum(
     }
 
     private fun generateDeserializeMethods(codeGenerationOptions: CodeGenerationOptions): List<ZincFunction> {
-        return codeGenerationOptions.witnessGroupOptions.map {
+        return codeGenerationOptions.transactionComponentOptions.map {
             val variantClauses = variants.mapIndexed { index: Int, variant: String ->
                 "$index => $id::$variant,"
             }.joinToString("\n") { variant -> variant }
@@ -106,8 +106,8 @@ data class BflEnum(
         newLine()
         impl {
             name = id
-            addFunctions(generateMethods(codeGenerationOptions))
-            addFunctions(getRegisteredMethods())
+            addMethods(generateMethods(codeGenerationOptions))
+            addMethods(getRegisteredMethods())
         }
     }
 

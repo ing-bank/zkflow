@@ -12,7 +12,7 @@ const val BYTE_BITS = "BYTE_BITS"
 const val U32_BYTES = "U32_BYTES"
 const val U32_BITS = "U32_BITS"
 
-class ConstsFactory {
+object ConstsFactory {
     fun generateConsts(
         buildPath: Path,
         codeGenerationOptions: CodeGenerationOptions
@@ -39,7 +39,7 @@ class ConstsFactory {
                 initialization = "$CORDA_MAGIC_BITS_SIZE"
                 comment = "Number of bits in Corda serialization header"
             }
-            codeGenerationOptions.witnessGroupOptions.forEach {
+            codeGenerationOptions.transactionComponentOptions.forEach {
                 add(it.witnessSizeConstant)
             }
         }

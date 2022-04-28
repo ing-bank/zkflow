@@ -17,8 +17,8 @@ import com.ing.zinc.poet.Indentation.Companion.spaces
 import com.ing.zinc.poet.ZincArray
 import com.ing.zinc.poet.ZincArray.Companion.zincArray
 import com.ing.zinc.poet.ZincFile.Companion.zincFile
-import com.ing.zinc.poet.ZincFunction
 import com.ing.zinc.poet.ZincFunction.Companion.zincFunction
+import com.ing.zinc.poet.ZincInvocable
 import com.ing.zinc.poet.ZincMethod.Companion.zincMethod
 import com.ing.zinc.poet.ZincPrimitive
 import com.ing.zinc.poet.ZincStruct.Companion.zincStruct
@@ -51,7 +51,7 @@ data class SerializedStateGroup(
     override fun generateZincFile(codeGenerationOptions: CodeGenerationOptions) = zincFile {
         mod { module = CONSTS }
         newLine()
-        (transactionStates.map { it.transactionComponent } + codeGenerationOptions.witnessGroupOptions.map { it.type })
+        (transactionStates.map { it.transactionComponent } + codeGenerationOptions.transactionComponentOptions.map { it.type })
             .distinctBy { it.id }
             .forEach {
                 add(it.mod())
@@ -77,7 +77,7 @@ data class SerializedStateGroup(
         newLine()
         impl {
             name = serializedStructName
-            addFunctions(generateMethods(codeGenerationOptions))
+            addMethods(generateMethods(codeGenerationOptions))
         }
     }
 
@@ -94,7 +94,7 @@ data class SerializedStateGroup(
         }
     }
 
-    override fun generateMethods(codeGenerationOptions: CodeGenerationOptions): List<ZincFunction> {
+    override fun generateMethods(codeGenerationOptions: CodeGenerationOptions): List<ZincInvocable> {
         return listOf(
             generateDeserializeMethod(codeGenerationOptions),
             generateEmptyMethod(),
@@ -108,11 +108,11 @@ data class SerializedStateGroup(
         returnType = deserializedStruct.toZincId()
         val fieldDeserializations = transactionStates.joinToString("\n") {
             val fieldName = it.fieldName
-            val witnessGroupOptions = codeGenerationOptions.witnessGroupOptions.find { witnessGroupOptions ->
+            val witnessGroupOptions = codeGenerationOptions.transactionComponentOptions.find { witnessGroupOptions ->
                 "${groupName}_$fieldName".startsWith(witnessGroupOptions.name)
             }.requireNotNull {
                 "Could not select Witness group options in group $groupName for state ${it.transactionComponent.id}\n" +
-                    "${groupName}_$fieldName -> " + codeGenerationOptions.witnessGroupOptions.joinToString { options ->
+                    "${groupName}_$fieldName -> " + codeGenerationOptions.transactionComponentOptions.joinToString { options ->
                     options.name
                 }
             }
