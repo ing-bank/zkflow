@@ -130,9 +130,28 @@ class StableIdVersionedSymbolProcessor(private val logger: KSPLogger, private va
             interfaceClass: KClass<out Any>,
             implementations: Map<Set<KClass<*>>, List<ScopedDeclaration>>,
             markers: Set<String>
-        ) = implementations[versioned + interfaceClass]?.let { impls ->
-            StateVersionSorting.buildSortedMap(markers, impls.map { it.declaration })
-        } ?: emptyMap()
+        ): Map<String, List<KSClassDeclaration>> {
+            val sortingError: (
+                declarations: List<KSClassDeclaration>,
+                markers: Set<String>
+            ) -> Nothing = {declarations, markers ->
+                error("""
+                Cannot correctly sort versioned classes `${interfaceClass.qualifiedName}`"):
+                Declarations: ${declarations.joinToString(separator = ", ") { "${it.qualifiedName?.asString()}" }}
+                Markers: ${markers.joinToString(separator = ", ")}
+            """.trimIndent()
+                )
+            }
+
+            return implementations[versioned + interfaceClass]?.let { impls ->
+                val declarations = impls.map { it.declaration }
+                try {
+                    StateVersionSorting.buildSortedMap(markers, declarations)
+                } catch (e: Error) {
+                    sortingError(declarations, markers)
+                }
+            } ?: emptyMap()
+        }
 
         internal fun checkForUnversionedStatesAndCommands(implementations: Map<Set<KClass<*>>, List<HasQualifiedName>>) {
             val unversionedStates =

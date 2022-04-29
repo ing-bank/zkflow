@@ -29,7 +29,10 @@ object StateVersionSorting {
         }.map { (current, predecessor) ->
             predecessor to current
         }.toMap()
-        var currentElement = predecessorMap.filterValues { it == null }.keys.single() // first element
+        var currentElement = predecessorMap
+            .filterValues { it == null }
+            .keys
+            .single()
         var successor = successorMap[currentElement]
         while (successor != null) {
             sortedList.add(currentElement)
@@ -58,8 +61,7 @@ object StateVersionSorting {
         }
         return groupedStateDeclarations.map { (stateName, declarationsOfThisFamily) ->
             val predecessorMap = declarationsOfThisFamily.associateWith { it.getPredecessor(declarationsOfThisFamily) }
-            val sortedDeclarations =
-                sortStateDeclarations(predecessorMap) // sort declarations
+            val sortedDeclarations = sortStateDeclarations(predecessorMap) // sort declarations
             stateName to sortedDeclarations
         }.toMap()
     }
