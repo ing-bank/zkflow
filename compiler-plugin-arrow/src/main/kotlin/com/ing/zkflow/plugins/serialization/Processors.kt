@@ -324,8 +324,8 @@ internal object Processors {
         BigDecimal::class.qualifiedName!! to ToSerializingObject { contextualOriginal, _ ->
             // Require com.ing.zkflow.annotations.BigDecimalSize annotation.
             val (integerPart, fractionPart) = contextualOriginal.findAnnotation<BigDecimalSize>()?.run {
-                val integerPart = valueArguments[0].asElement().text.trim().toInt()
-                val fractionPart = valueArguments[1].asElement().text.trim().toInt()
+                val integerPart = valueArguments[0].asElement().text.trim()
+                val fractionPart = valueArguments[1].asElement().text.trim()
                 Pair(integerPart, fractionPart)
             } ?: error("Ill-defined type `${contextualOriginal.ktTypeReference.text}`. ${BigDecimal::class.simpleName} must be annotated with ${BigDecimalSize::class.simpleName}")
 
