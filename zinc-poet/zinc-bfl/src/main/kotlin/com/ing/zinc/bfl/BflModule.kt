@@ -27,7 +27,7 @@ interface BflModule : BflType {
     /**
      * The module name can be used to generate the filename, or module name for `use` statements.
      */
-    fun getModuleName(): String = id.camelToSnakeCase()
+    fun getModuleName(): String = "module_" + id.camelToSnakeCase()
 
     /**
      * Generate a [ZincFile] for this [BflModule].

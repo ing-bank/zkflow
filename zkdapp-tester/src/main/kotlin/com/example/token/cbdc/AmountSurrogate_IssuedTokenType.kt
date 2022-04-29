@@ -1,14 +1,11 @@
 package com.example.token.cbdc
 
-import com.ing.zkflow.annotations.ZKP
-import com.ing.zkflow.annotations.corda.EdDSA
-import net.corda.core.contracts.Amount
 import com.ing.zkflow.ConversionProvider
 import com.ing.zkflow.Surrogate
 import com.ing.zkflow.annotations.BigDecimalSize
 import com.ing.zkflow.annotations.ZKPSurrogate
+import net.corda.core.contracts.Amount
 import java.math.BigDecimal
-
 
 @Suppress("ClassName")
 @ZKPSurrogate(AmountConverter_IssuedTokenType::class)

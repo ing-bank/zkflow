@@ -15,10 +15,17 @@ class CBDCContract : Contract {
         const val ID: ContractClassName = "com.example.contract.CBDCContract"
     }
 
-    interface  MoveInterface: Versioned
+    /*
+     * TODO Needed to change the name, because of conflict with MoveInterface in MockAssetContract,
+     * which resulted in an IllegalStateException in StateVersionSorting.
+     */
+    interface  CbdcMoveInterface: Versioned
     @ZKP
-    class Move : ZKCommandData, MoveInterface {
+    class Move : ZKCommandData, CbdcMoveInterface {
         override val metadata = commandMetadata {
+            circuit {
+                name = "cbdc-move"
+            }
             numberOfSigners = 2
             inputs {
                 any(CBDCToken::class) at 0
@@ -32,8 +39,8 @@ class CBDCContract : Contract {
         @Language("Rust")
         override fun verifyPrivate(): String {
             return """
-                mod command_context;
-                use command_context::CommandContext;
+                mod module_command_context;
+                use module_command_context::CommandContext;
 
                 fn verify(ctx: CommandContext) {
                     let input = ctx.inputs.mock_asset_contract_mock_asset_0;
@@ -47,10 +54,13 @@ class CBDCContract : Contract {
         }
     }
 
-    interface  IssueInterface: Versioned
+    interface  CbdcIssueInterface: Versioned
     @ZKP
-    class Issue : ZKCommandData, IssueInterface {
+    class Issue : ZKCommandData, CbdcIssueInterface {
         override val metadata = commandMetadata {
+            circuit {
+                name = "cbdc-issue"
+            }
             numberOfSigners = 1
             outputs {
                 private(CBDCToken::class) at 0
@@ -61,8 +71,8 @@ class CBDCContract : Contract {
         @Language("Rust")
         override fun verifyPrivate(): String {
             return """
-                mod command_context;
-                use command_context::CommandContext;
+                mod module_command_context;
+                use module_command_context::CommandContext;
 
                 fn verify(ctx: CommandContext) {
                     let tx_mock_asset = ctx.outputs.mock_asset_contract_mock_asset_0;

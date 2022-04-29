@@ -12,8 +12,8 @@ interface ZKCommandData : CommandData {
     @Language("Rust")
     fun verifyPrivate(): String =
         """
-            mod command_context;
-            use command_context::CommandContext;
+            mod module_command_context;
+            use module_command_context::CommandContext;
             
             fn verify(ctx: CommandContext) {
                 assert!(true != false, "Reality is in an inconsistent state.");

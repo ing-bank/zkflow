@@ -23,7 +23,6 @@ object StateVersionSorting {
     private fun sortStateDeclarations(
         predecessorMap: Map<KSClassDeclaration, KSClassDeclaration?>
     ): List<KSClassDeclaration> {
-        val sortedList = mutableListOf<KSClassDeclaration>()
         val successorMap = predecessorMap.filter { (_, predecessor) ->
             predecessor != null
         }.map { (current, predecessor) ->
@@ -32,8 +31,9 @@ object StateVersionSorting {
         var currentElement = predecessorMap
             .filterValues { it == null }
             .keys
-            .single()
+            .singleOrNull() ?: error("Could not find first of: $predecessorMap")
         var successor = successorMap[currentElement]
+        val sortedList = mutableListOf<KSClassDeclaration>()
         while (successor != null) {
             sortedList.add(currentElement)
             currentElement = successor

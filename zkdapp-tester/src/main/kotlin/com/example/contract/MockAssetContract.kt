@@ -66,8 +66,8 @@ class MockAssetContract : Contract {
         @Language("Rust")
         override fun verifyPrivate(): String {
             return """
-                mod command_context;
-                use command_context::CommandContext;
+                mod module_command_context;
+                use module_command_context::CommandContext;
 
                 fn verify(ctx: CommandContext) {
                     let input = ctx.inputs.mock_asset_contract_mock_asset_0;
@@ -95,8 +95,8 @@ class MockAssetContract : Contract {
         @Language("Rust")
         override fun verifyPrivate(): String {
             return """
-                mod command_context;
-                use command_context::CommandContext;
+                mod module_command_context;
+                use module_command_context::CommandContext;
 
                 fn verify(ctx: CommandContext) {
                     let tx_mock_asset = ctx.outputs.mock_asset_contract_mock_asset_0;

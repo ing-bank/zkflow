@@ -36,15 +36,17 @@ class CircuitGenerator(
             standardTypes,
             zincTypeResolver
         )
-        val witness = Witness(
-            transactionComponents,
-            commandMetadata,
-            standardTypes,
-        )
 
         val commandContext = commandContextFactory.createCommandContext(
             commandMetadata,
             transactionComponents
+        )
+
+        val witness = Witness(
+            transactionComponents,
+            commandMetadata,
+            standardTypes,
+            commandContext,
         )
 
         val codeGenerationOptions = CodeGenerationOptions(witness.transactionComponentOptions)
