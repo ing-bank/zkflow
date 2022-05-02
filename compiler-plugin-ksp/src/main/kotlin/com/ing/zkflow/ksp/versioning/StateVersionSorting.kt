@@ -68,14 +68,14 @@ object StateVersionSorting {
             val family = when (families.size) {
                 0 -> error(
                     """
-                        ${stateDeclaration.qualifiedName} is expected to (transitively) implement `${Versioned::class.simpleName}` interface.
+                        ${stateDeclaration.qualifiedName?.asString()} is expected to (transitively) implement `${Versioned::class.simpleName}` interface.
                         Found options are ${familyNames.joinToString(separator = ", ") {"`$it`"}}
                     """.trimIndent()
                 )
                 1 -> families.single()
                 else -> error(
                     """
-                        ${stateDeclaration.qualifiedName} (transitively) implements `${Versioned::class.simpleName}` interface several times
+                        ${stateDeclaration.qualifiedName?.asString()} (transitively) implements `${Versioned::class.simpleName}` interface several times
                         via ${families.joinToString(separator = ", ") {"`$it`"}}
                     """.trimIndent()
                 )
