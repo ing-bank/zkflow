@@ -3,6 +3,7 @@ package com.ing.zkflow.ksp.versioning
 import com.google.devtools.ksp.isConstructor
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
+import com.ing.zkflow.common.versioning.Versioned
 
 object StateVersionSorting {
 
@@ -51,14 +52,38 @@ object StateVersionSorting {
         familyNames: Set<String>,
         stateDeclarations: List<KSClassDeclaration>
     ): Map<String, List<KSClassDeclaration>> {
-        val groupedStateDeclarations = stateDeclarations.groupBy {
-            it.superTypes.single { superType ->
+        // Group by available family names, but also
+        // - keep track of orphaned states,
+        // - require one family per stateDeclaration.
+        // Quadratic complexity.
+        val groupedStateDeclarations = stateDeclarations.groupBy { stateDeclaration ->
+            // Select a family for this `stateDeclaration`.
+
+            val families = stateDeclaration.superTypes.mapNotNull { superType ->
                 val superTypeName = superType.resolve().declaration.qualifiedName?.asString()
-                familyNames.any { familyName ->
-                    familyName == superTypeName
-                }
-            }.toString()
+
+                familyNames.singleOrNull { superTypeName == it }
+            }.toList()
+
+            val family = when (families.size) {
+                0 -> error(
+                    """
+                        ${stateDeclaration.qualifiedName} is expected to (transitively) implement `${Versioned::class.simpleName}` interface.
+                        Found options are ${familyNames.joinToString(separator = ", ") {"`$it`"}}
+                    """.trimIndent()
+                )
+                1 -> families.single()
+                else -> error(
+                    """
+                        ${stateDeclaration.qualifiedName} (transitively) implements `${Versioned::class.simpleName}` interface several times
+                        via ${families.joinToString(separator = ", ") {"`$it`"}}
+                    """.trimIndent()
+                )
+            }
+
+            family
         }
+
         return groupedStateDeclarations.map { (stateName, declarationsOfThisFamily) ->
             val predecessorMap = declarationsOfThisFamily.associateWith { it.getPredecessor(declarationsOfThisFamily) }
             val sortedDeclarations = sortStateDeclarations(predecessorMap) // sort declarations

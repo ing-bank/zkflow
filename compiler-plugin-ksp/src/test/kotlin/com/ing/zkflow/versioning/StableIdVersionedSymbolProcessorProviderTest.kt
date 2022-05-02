@@ -27,6 +27,19 @@ class StableIdVersionedSymbolProcessorProviderTest : ProcessorTest(StableIdVersi
     }
 
     @Test
+    fun `ensure name name clashes are avoided`() {
+        val outputStream = ByteArrayOutputStream()
+        val result = compile(nameClashSource, outputStream)
+
+        // In case of error, show output
+        if (result.exitCode != KotlinCompilation.ExitCode.OK) {
+            reportError(result, outputStream)
+        }
+
+        result.exitCode shouldBe KotlinCompilation.ExitCode.OK
+    }
+
+    @Test
     fun `unversioned states and commands should throw and error`() {
         val outputStream = ByteArrayOutputStream()
         val result = compile(unversionedStatesKotlinFile, outputStream)
@@ -124,6 +137,28 @@ class StableIdVersionedSymbolProcessorProviderTest : ProcessorTest(StableIdVersi
                 class UnversionedZebra(): ZKContractState
 
                 class UnversionedCommand() : ZKCommandData
+            """
+        )
+
+        private val nameClashSource = SourceFile.kotlin(
+            "NameClash.kt",
+            """
+                package com.ing.zkflow.contract
+
+                import com.ing.zkflow.common.versioning.Versioned
+                import com.ing.zkflow.common.contracts.ZKCommandData
+
+                class ContainerA {
+                    interface IIssue: Versioned
+
+                    class Issue: IIssue, ZKCommandData
+                }
+
+                class ContainerB {
+                    interface IIssue: Versioned
+
+                    class Issue: IIssue, ZKCommandData
+                }
             """
         )
     }

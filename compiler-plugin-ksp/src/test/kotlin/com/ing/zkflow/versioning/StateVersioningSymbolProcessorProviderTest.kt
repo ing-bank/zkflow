@@ -139,6 +139,7 @@ class StateVersioningSymbolProcessorProviderTest {
                     constructor(previousState: MyStateV1) : this(previousState.name, "")
                 }
                 
+                @ZKP
                 data class MyState(
                     val firstName: @UTF8(8) String,
                     val lastName: @UTF8(8) String,
