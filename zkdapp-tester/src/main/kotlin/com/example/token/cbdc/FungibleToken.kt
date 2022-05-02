@@ -4,10 +4,12 @@ import com.ing.zkflow.Via
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.annotations.corda.EdDSA
 import com.ing.zkflow.annotations.corda.SHA256
+import com.ing.zkflow.common.contracts.ZKFungibleState
 import com.ing.zkflow.common.versioning.Versioned
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.FungibleState
 import net.corda.core.crypto.SecureHash
+import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.Party
 import net.corda.core.schemas.MappedSchema
 import net.corda.core.schemas.PersistentState
@@ -23,15 +25,15 @@ import net.corda.core.schemas.QueryableState
 @ZKP
 data class FungibleToken constructor(
     override val amount: @Via<AmountSurrogate_IssuedTokenType> Amount<IssuedTokenType>,
-    override val holder: @EdDSA Party,
+    override val holder: @EdDSA AnonymousParty,
     override val tokenTypeJarHash: @SHA256 SecureHash? = SecureHash.zeroHash
-) : AbstractFungibleToken() {
-    override fun withNewHolder(newHolder: Party): FungibleToken {
+) : AbstractFungibleToken(), VersionedFungibleToken {
+    override fun withNewHolder(newHolder: AnonymousParty): FungibleToken {
         return FungibleToken(amount, newHolder, tokenTypeJarHash = tokenTypeJarHash)
     }
 }
 
-abstract class AbstractFungibleToken : FungibleState<IssuedTokenType>, AbstractToken, QueryableState, VersionedToken {
+abstract class AbstractFungibleToken : ZKFungibleState<IssuedTokenType>, AbstractToken, QueryableState {
     //
     override val issuedTokenType: IssuedTokenType get() = amount.token
     //
@@ -42,4 +44,4 @@ abstract class AbstractFungibleToken : FungibleState<IssuedTokenType>, AbstractT
     override fun supportedSchemas() = emptyList<MappedSchema>()
 }
 
-interface VersionedToken: Versioned
+interface VersionedFungibleToken: Versioned

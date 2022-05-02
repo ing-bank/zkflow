@@ -40,11 +40,11 @@ class CBDCContract : Contract {
                 use module_command_context::CommandContext;
 
                 fn verify(ctx: CommandContext) {
-                    let input = ctx.inputs.mock_asset_contract_mock_asset_0;
-                    let output = ctx.outputs.mock_asset_contract_mock_asset_0;
-                    assert!(input.data.value == output.data.value, "[Move] Values of input and output must equal");
+                    let input = ctx.inputs.cbdc_token_0;
+                    let output = ctx.outputs.cbdc_token_0;
+                    assert!(input.data.amount.equals(output.data.amount), "[Move] Amounts of input and output must equal");
 
-                    assert!(ctx.signers.contains(input.data.owner.public_key), "[Move] Owner must sign");
+                    assert!(ctx.signers.contains(input.data.holder.public_key), "[Move] Owner must sign");
                 }
 
             """.trimIndent()
@@ -69,9 +69,9 @@ class CBDCContract : Contract {
                 use module_command_context::CommandContext;
 
                 fn verify(ctx: CommandContext) {
-                    let tx_mock_asset = ctx.outputs.mock_asset_contract_mock_asset_0;
+                    let token = ctx.outputs.cbdc_token_0;
 
-                    assert!(ctx.signers.contains(tx_mock_asset.data.owner.public_key), "[Issue] Owner must sign");
+                    assert!(ctx.signers.contains(token.data.holder.public_key), "[Issue] Owner must sign");
                 }
             """.trimIndent()
         }
