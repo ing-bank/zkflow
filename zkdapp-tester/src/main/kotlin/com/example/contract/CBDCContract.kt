@@ -23,9 +23,6 @@ class CBDCContract : Contract {
     @ZKP
     class Move : ZKCommandData, CbdcMoveInterface {
         override val metadata = commandMetadata {
-            circuit {
-                name = "cbdc-move"
-            }
             numberOfSigners = 2
             inputs {
                 any(CBDCToken::class) at 0
@@ -58,9 +55,6 @@ class CBDCContract : Contract {
     @ZKP
     class Issue : ZKCommandData, CbdcIssueInterface {
         override val metadata = commandMetadata {
-            circuit {
-                name = "cbdc-issue"
-            }
             numberOfSigners = 1
             outputs {
                 private(CBDCToken::class) at 0
