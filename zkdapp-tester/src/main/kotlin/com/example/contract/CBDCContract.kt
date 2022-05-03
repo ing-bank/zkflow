@@ -44,7 +44,10 @@ class CBDCContract : Contract {
                     let output = ctx.outputs.cbdc_token_0;
                     assert!(input.data.amount.equals(output.data.amount), "[Move] Amounts of input and output must equal");
 
+                    assert!(input.data.amount.quantity > 0 as i64, "[Move] Quantity must be positive");
+
                     assert!(ctx.signers.contains(input.data.holder.public_key), "[Move] Owner must sign");
+                    assert!(ctx.signers.contains(output.data.holder.public_key), "[Move] Receiver must sign");
                 }
 
             """.trimIndent()
