@@ -13,7 +13,7 @@ import java.time.Instant
 
 class CBDCContractTest {
     @Test
-    fun `issue and verify`() {
+    fun `issue`() {
         val alice = TestIdentity.fresh("Alice").party.anonymise()
         val services = MockServices(listOf("com.example.contract"))
 
@@ -30,7 +30,7 @@ class CBDCContractTest {
     }
 
     @Test
-    fun `create and move verify`() {
+    fun `issue and move`() {
         val alice = TestIdentity.fresh("Alice").party.anonymise()
         val bob = TestIdentity.fresh("Bob").party.anonymise()
         val services = MockServices(listOf("com.example.contract"))
@@ -42,6 +42,29 @@ class CBDCContractTest {
                 input(CBDCContract.ID, createState)
                 output(CBDCContract.ID, createState.withNewHolder(bob))
                 command(listOf(alice.owningKey, bob.owningKey), CBDCContract.Move())
+                timeWindow(Instant.now())
+                verifies()
+            }
+        }
+    }
+
+    @Test
+    fun `issue and split`() {
+        val alice = TestIdentity.fresh("Alice").party.anonymise()
+        val bob = TestIdentity.fresh("Bob").party.anonymise()
+        val services = MockServices(listOf("com.example.contract"))
+
+        services.zkLedger {
+            val issuedTokenType = IssuedTokenType(alice, TokenType("test-token", 2))
+
+            val unit = CBDCToken(Amount.fromDecimal(BigDecimal.ONE, issuedTokenType), alice)
+            val half = CBDCToken(Amount.fromDecimal(0.5.toBigDecimal(), issuedTokenType), alice)
+
+            transaction {
+                input(CBDCContract.ID, unit)
+                output(CBDCContract.ID, half)
+                output(CBDCContract.ID, half.withNewHolder(bob))
+                command(listOf(alice.owningKey, bob.owningKey), CBDCContract.Split())
                 timeWindow(Instant.now())
                 verifies()
             }

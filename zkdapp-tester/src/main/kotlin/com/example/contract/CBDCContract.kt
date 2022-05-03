@@ -79,6 +79,44 @@ class CBDCContract : Contract {
         }
     }
 
+    interface  SplitInterface: Versioned
+    @ZKP
+    class Split : ZKCommandData, SplitInterface {
+        override val metadata = commandMetadata {
+            numberOfSigners = 2
+            inputs {
+                any(CBDCToken::class) at 0
+            }
+            outputs {
+                private(CBDCToken::class) at 0
+                private(CBDCToken::class) at 1
+            }
+            timeWindow = true
+        }
+
+        @Language("Rust")
+        override fun verifyPrivate(): String {
+            return """
+                mod module_command_context;
+                use module_command_context::CommandContext;
+
+                fn verify(ctx: CommandContext) {
+                    let input = ctx.inputs.cbdc_token_0;
+                    let output_0 = ctx.outputs.cbdc_token_0;
+                    let output_1 = ctx.outputs.cbdc_token_1;
+                    
+                    assert!(input.data.amount.quantity > 0 as i64, "[Split] Quantity must be positive");
+                    assert!(output_0.data.amount.quantity > 0 as i64, "[Split] Quantity must be positive");
+                    assert!(output_1.data.amount.quantity > 0 as i64, "[Split] Quantity must be positive");
+                    
+                    assert!(output_0.data.amount.quantity + output_1.data.amount.quantity == input.data.amount.quantity, "[Split] Amounts of funds must be constant");
+                    
+                    assert!(ctx.signers.contains(input.data.holder.public_key), "[Split] Owner must sign");
+                }
+            """.trimIndent()
+        }
+    }
+
     override fun verify(tx: LedgerTransaction) {
         // Contract verifications go here
     }
