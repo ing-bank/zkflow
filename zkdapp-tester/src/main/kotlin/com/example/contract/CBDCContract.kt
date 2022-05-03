@@ -42,6 +42,7 @@ class CBDCContract : Contract {
                 fn verify(ctx: CommandContext) {
                     let input = ctx.inputs.cbdc_token_0;
                     let output = ctx.outputs.cbdc_token_0;
+                    
                     assert!(input.data.amount.equals(output.data.amount), "[Move] Amounts of input and output must equal");
 
                     assert!(input.data.amount.quantity > 0 as i64, "[Move] Quantity must be positive");
@@ -72,9 +73,11 @@ class CBDCContract : Contract {
                 use module_command_context::CommandContext;
 
                 fn verify(ctx: CommandContext) {
-                    let token = ctx.outputs.cbdc_token_0;
+                    let output = ctx.outputs.cbdc_token_0;
+                    
+                    assert!(output.data.amount.quantity > 0 as i64, "[Issue] Quantity must be positive");
 
-                    assert!(ctx.signers.contains(token.data.holder.public_key), "[Issue] Owner must sign");
+                    assert!(ctx.signers.contains(output.data.holder.public_key), "[Issue] Owner must sign");
                 }
             """.trimIndent()
         }
