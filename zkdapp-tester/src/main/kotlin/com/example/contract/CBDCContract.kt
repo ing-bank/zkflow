@@ -15,13 +15,9 @@ class CBDCContract : Contract {
         const val ID: ContractClassName = "com.example.contract.CBDCContract"
     }
 
-    /*
-     * TODO Needed to change the name, because of conflict with MoveInterface in MockAssetContract,
-     * which resulted in an IllegalStateException in StateVersionSorting.
-     */
-    interface  CbdcMoveInterface: Versioned
+    interface  MoveInterface: Versioned
     @ZKP
-    class Move : ZKCommandData, CbdcMoveInterface {
+    class Move : ZKCommandData, MoveInterface {
         override val metadata = commandMetadata {
             numberOfSigners = 2
             inputs {
@@ -55,9 +51,9 @@ class CBDCContract : Contract {
         }
     }
 
-    interface  CbdcIssueInterface: Versioned
+    interface  IssueInterface: Versioned
     @ZKP
-    class Issue : ZKCommandData, CbdcIssueInterface {
+    class Issue : ZKCommandData, IssueInterface {
         override val metadata = commandMetadata {
             numberOfSigners = 1
             outputs {
