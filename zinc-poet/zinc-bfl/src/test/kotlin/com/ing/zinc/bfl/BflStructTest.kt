@@ -8,9 +8,11 @@ import com.ing.zinc.bfl.ZincExecutor.generateEqualsCircuit
 import com.ing.zinc.bfl.ZincExecutor.generateNewCircuit
 import com.ing.zinc.bfl.ZincExecutor.generateWitness
 import com.ing.zinc.bfl.ZincExecutor.runCommandAndLogTime
+import com.ing.zinc.bfl.dsl.StructBuilder.Companion.struct
 import com.ing.zinc.bfl.generator.ZincGenerator.zincSourceFile
 import com.ing.zinc.poet.ZincMethod.Companion.zincMethod
 import com.ing.zinc.poet.ZincPrimitive
+import com.ing.zkflow.util.bitSize
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.json.JsonPrimitive
 import org.junit.jupiter.api.Test
@@ -235,6 +237,24 @@ internal class BflStructTest {
 
         stderr shouldBe ""
         stdout.parseJson() shouldBe JsonPrimitive(true)
+    }
+
+    @Test
+    fun `toStructureTree should get size and structure correct`() {
+        val testSubject = struct {
+            name = "TestSubject"
+            field {
+                name = "field"
+                type = BflPrimitive.U8
+            }
+        }
+        val actual = testSubject.toStructureTree()
+        actual.bitSize shouldBe 8
+        actual.toString() shouldBe """
+            TestSubject: 8 bits (1 bytes)
+            └── field: 8 bits (1 bytes)
+                └── u8: 8 bits (1 bytes)
+        """.trimIndent()
     }
 
     companion object {

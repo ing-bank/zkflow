@@ -9,6 +9,7 @@ import com.ing.zinc.bfl.ZincExecutor.runCommandAndLogTime
 import com.ing.zinc.bfl.dsl.ListBuilder.Companion.list
 import com.ing.zinc.bfl.generator.ZincGenerator.zincSourceFile
 import com.ing.zinc.poet.ZincPrimitive
+import com.ing.zkflow.util.bitSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import kotlinx.serialization.json.JsonPrimitive
@@ -441,6 +442,24 @@ internal class BflListTest {
 
         stderr shouldContain "No match found for field baz.foo"
         stdout shouldBe ""
+    }
+
+    @Test
+    fun `toStructureTree should get size and structure correctly`() {
+        val testSubject = list {
+            capacity = 3
+            elementType = BflPrimitive.U8
+        }
+        val actual = testSubject.toStructureTree()
+        actual.bitSize shouldBe 24 + 32
+        actual.toString() shouldBe """
+            U8List3: 56 bits (7 bytes)
+            ├── size: 32 bits (4 bytes)
+            │   └── u32: 32 bits (4 bytes)
+            └── values: 24 bits (3 bytes)
+                └── [u8; 3]: 24 bits (3 bytes)
+                    └── u8: 8 bits (1 bytes)
+        """.trimIndent()
     }
 
     private fun Path.generateGetCircuit(module: BflList, index: Int) {

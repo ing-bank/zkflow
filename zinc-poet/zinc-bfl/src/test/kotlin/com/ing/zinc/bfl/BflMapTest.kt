@@ -5,7 +5,9 @@ import com.ing.zinc.bfl.ZincExecutor.generateCircuitBase
 import com.ing.zinc.bfl.ZincExecutor.generateDeserializeCircuit
 import com.ing.zinc.bfl.ZincExecutor.generateWitness
 import com.ing.zinc.bfl.ZincExecutor.runCommandAndLogTime
+import com.ing.zinc.bfl.dsl.MapBuilder.Companion.map
 import com.ing.zinc.bfl.generator.ZincGenerator.zincSourceFile
+import com.ing.zkflow.util.bitSize
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
@@ -72,6 +74,29 @@ internal class BflMapTest {
 
         stderr shouldBe ""
         stdout.parseJson() shouldBe zincJsonOptionOf("".asZincJsonString(2), false)
+    }
+
+    @Test
+    fun `toStructureTree should get size and structure correctly`() {
+        val testSubject = map {
+            capacity = 3
+            keyType = BflPrimitive.U8
+            valueType = BflPrimitive.U8
+        }
+        val actual = testSubject.toStructureTree()
+        actual.bitSize shouldBe (24 * 2) + 32
+        actual.toString() shouldBe """
+            U8ToU8Map3: 80 bits (10 bytes)
+            ├── size: 32 bits (4 bytes)
+            │   └── u32: 32 bits (4 bytes)
+            └── values: 48 bits (6 bytes)
+                └── [U8ToU8MapEntry; 3]: 48 bits (6 bytes)
+                    └── U8ToU8MapEntry: 16 bits (2 bytes)
+                        ├── key: 8 bits (1 bytes)
+                        │   └── u8: 8 bits (1 bytes)
+                        └── value: 8 bits (1 bytes)
+                            └── u8: 8 bits (1 bytes)
+        """.trimIndent()
     }
 
     private fun Path.generateTryGetCircuit(module: BflMap, key: String) {

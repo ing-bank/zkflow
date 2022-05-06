@@ -5,6 +5,7 @@ import com.ing.zinc.bfl.ZincExecutor.generateEmptyCircuit
 import com.ing.zinc.bfl.ZincExecutor.generateEqualsCircuit
 import com.ing.zinc.bfl.ZincExecutor.generateWitness
 import com.ing.zinc.bfl.ZincExecutor.runCommandAndLogTime
+import com.ing.zkflow.util.bitSize
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.json.JsonPrimitive
 import org.junit.jupiter.api.Test
@@ -45,5 +46,15 @@ internal class BflUnitTest {
 
         stderr shouldBe ""
         stdout.parseJson() shouldBe JsonPrimitive(true)
+    }
+
+    @Test
+    fun `toStructureTree should get size and structure correct`() {
+        val testSubject = BflUnit
+        val actual = testSubject.toStructureTree()
+        actual.bitSize shouldBe 0
+        actual.toString() shouldBe """
+            (): 0 bits (0 bytes)
+        """.trimIndent()
     }
 }
