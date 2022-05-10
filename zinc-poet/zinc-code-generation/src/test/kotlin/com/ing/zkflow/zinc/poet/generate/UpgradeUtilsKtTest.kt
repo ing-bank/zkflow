@@ -47,14 +47,14 @@ internal class UpgradeUtilsKtTest {
     fun `generateUpgradeVerification should generate successfully for an upgrade command`() {
         val actual = generateUpgradeVerification(MyContract.UpgradeMyStateV1ToMyStateV2().metadata)
         actual.generate() shouldBe """
-            mod command_context;
-            use command_context::CommandContext;
+            mod module_command_context;
+            use module_command_context::CommandContext;
 
-            mod my_state_v_1;
-            use my_state_v_1::MyStateV1;
+            mod module_my_state_v_1;
+            use module_my_state_v_1::MyStateV1;
 
-            mod my_state_v_2;
-            use my_state_v_2::MyStateV2;
+            mod module_my_state_v_2;
+            use module_my_state_v_2::MyStateV2;
 
             fn verify(
                 ctx: CommandContext,
@@ -86,14 +86,14 @@ internal class UpgradeUtilsKtTest {
             }
         )
         actual.generate() shouldBe """
-            mod command_context;
-            use command_context::CommandContext;
+            mod module_command_context;
+            use module_command_context::CommandContext;
 
-            mod my_state_v_1;
-            use my_state_v_1::MyStateV1;
+            mod module_my_state_v_1;
+            use module_my_state_v_1::MyStateV1;
 
-            mod my_state_v_2;
-            use my_state_v_2::MyStateV2;
+            mod module_my_state_v_2;
+            use module_my_state_v_2::MyStateV2;
 
             fn verify(
                 ctx: CommandContext,

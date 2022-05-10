@@ -3,6 +3,7 @@ package com.ing.zkflow.ksp.versioning
 import com.google.devtools.ksp.isConstructor
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
+import com.ing.zkflow.common.versioning.Versioned
 
 object StateVersionSorting {
 
@@ -23,14 +24,17 @@ object StateVersionSorting {
     private fun sortStateDeclarations(
         predecessorMap: Map<KSClassDeclaration, KSClassDeclaration?>
     ): List<KSClassDeclaration> {
-        val sortedList = mutableListOf<KSClassDeclaration>()
         val successorMap = predecessorMap.filter { (_, predecessor) ->
             predecessor != null
         }.map { (current, predecessor) ->
             predecessor to current
         }.toMap()
-        var currentElement = predecessorMap.filterValues { it == null }.keys.single() // first element
+        var currentElement = predecessorMap
+            .filterValues { it == null }
+            .keys
+            .singleOrNull() ?: error("Could not find first of: $predecessorMap")
         var successor = successorMap[currentElement]
+        val sortedList = mutableListOf<KSClassDeclaration>()
         while (successor != null) {
             sortedList.add(currentElement)
             currentElement = successor
@@ -48,18 +52,41 @@ object StateVersionSorting {
         familyNames: Set<String>,
         stateDeclarations: List<KSClassDeclaration>
     ): Map<String, List<KSClassDeclaration>> {
-        val groupedStateDeclarations = stateDeclarations.groupBy {
-            it.superTypes.single { superType ->
+        // Group by available family names, but also
+        // - keep track of orphaned states,
+        // - require one family per stateDeclaration.
+        // Quadratic complexity.
+        val groupedStateDeclarations = stateDeclarations.groupBy { stateDeclaration ->
+            // Select a family for this `stateDeclaration`.
+
+            val families = stateDeclaration.superTypes.mapNotNull { superType ->
                 val superTypeName = superType.resolve().declaration.qualifiedName?.asString()
-                familyNames.any { familyName ->
-                    familyName == superTypeName
-                }
-            }.toString()
+
+                familyNames.singleOrNull { superTypeName == it }
+            }.toList()
+
+            val family = when (families.size) {
+                0 -> error(
+                    """
+                        ${stateDeclaration.qualifiedName?.asString()} is expected to (transitively) implement `${Versioned::class.simpleName}` interface.
+                        Found options are ${familyNames.joinToString(separator = ", ") {"`$it`"}}
+                    """.trimIndent()
+                )
+                1 -> families.single()
+                else -> error(
+                    """
+                        ${stateDeclaration.qualifiedName?.asString()} (transitively) implements `${Versioned::class.simpleName}` interface several times
+                        via ${families.joinToString(separator = ", ") {"`$it`"}}
+                    """.trimIndent()
+                )
+            }
+
+            family
         }
+
         return groupedStateDeclarations.map { (stateName, declarationsOfThisFamily) ->
             val predecessorMap = declarationsOfThisFamily.associateWith { it.getPredecessor(declarationsOfThisFamily) }
-            val sortedDeclarations =
-                sortStateDeclarations(predecessorMap) // sort declarations
+            val sortedDeclarations = sortStateDeclarations(predecessorMap) // sort declarations
             stateName to sortedDeclarations
         }.toMap()
     }

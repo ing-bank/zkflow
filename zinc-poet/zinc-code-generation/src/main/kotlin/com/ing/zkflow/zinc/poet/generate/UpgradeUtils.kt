@@ -104,7 +104,7 @@ private fun generateUpgradeVerification(
     val upgradedModule = zincTypeResolver.zincTypeOf(upgraded.type)
     return zincFile {
         "CommandContext".let {
-            val moduleName = it.camelToSnakeCase()
+            val moduleName = "module_" + it.camelToSnakeCase()
             mod { module = moduleName }
             use { path = "$moduleName::$it" }
             newLine()

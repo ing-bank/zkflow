@@ -1,5 +1,6 @@
 package com.ing.zkflow.ksp.implementations
 
+import com.google.devtools.ksp.isAbstract
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
@@ -50,7 +51,11 @@ class StableIdVersionedSymbolProcessor(private val logger: KSPLogger, private va
                 acc.merge(implementationsVisitor.visitFile(file, null))
             }
 
-        checkForUnversionedStatesAndCommands(implementations)
+        // Only consider non-abstract declarations
+        val instances = implementations.mapValues { (_, value) ->
+            value.filter { !it.declaration.isAbstract() }
+        }
+        checkForUnversionedStatesAndCommands(instances)
 
         // It is true that
         // `implementations[versioned]` shall contain also `versionedContractStates` and `versionedCommandData`.
@@ -130,19 +135,29 @@ class StableIdVersionedSymbolProcessor(private val logger: KSPLogger, private va
             interfaceClass: KClass<out Any>,
             implementations: Map<Set<KClass<*>>, List<ScopedDeclaration>>,
             markers: Set<String>
-        ) = implementations[versioned + interfaceClass]?.let { impls ->
-            StateVersionSorting.buildSortedMap(markers, impls.map { it.declaration })
-        } ?: emptyMap()
+        ): Map<String, List<KSClassDeclaration>> {
 
-        internal fun checkForUnversionedStatesAndCommands(implementations: Map<Set<KClass<*>>, List<HasQualifiedName>>) {
+            return implementations[versioned + interfaceClass]?.let { impls ->
+                val declarations = impls.map { it.declaration }
+                try {
+                    StateVersionSorting.buildSortedMap(markers, declarations)
+                } catch (e: Error) {
+                    error(
+                        """
+                            Cannot correctly sort versioned classes `${interfaceClass.qualifiedName}`"):
+                            Declarations: ${declarations.joinToString(separator = ", ") { "${it.qualifiedName?.asString()}" }}
+                            Markers: ${markers.joinToString(separator = ", ")}
+                        """.trimIndent()
+                    )
+                }
+            } ?: emptyMap()
+        }
+
+        internal fun checkForUnversionedStatesAndCommands(instances: Map<Set<KClass<*>>, List<HasQualifiedName>>) {
             val unversionedStates =
-                filterUnversionedImplementations(
-                    implementations,
-                    contractStates,
-                    versionedContractStates
-                )
+                filterUnversionedImplementations(instances, contractStates, versionedContractStates)
             val unversionedCommands =
-                filterUnversionedImplementations(implementations, commandData, versionedCommandData)
+                filterUnversionedImplementations(instances, commandData, versionedCommandData)
             reportPossibleUnversionedException(unversionedStates, unversionedCommands)
         }
 

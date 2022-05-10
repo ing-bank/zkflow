@@ -1,6 +1,5 @@
 package com.example.contract
 
-import com.ing.zkflow.testing.dsl.interfaces.VerificationMode
 import com.ing.zkflow.testing.dsl.zkLedger
 import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices

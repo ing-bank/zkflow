@@ -3,6 +3,7 @@ package com.ing.zkflow.common.zkp.metadata
 import com.ing.zinc.naming.camelToSnakeCase
 import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.zkp.metadata.ZKCircuit.Companion.resolve
+import com.ing.zkflow.util.scopedName
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import net.corda.core.contracts.ContractState
 import net.corda.core.utilities.hours
@@ -54,8 +55,8 @@ data class ZKCircuit(
         fun ZKCircuit?.resolve(commandMetadata: ZKCommandMetadata): ResolvedZKCircuit {
             if (this == null) return ResolvedZKCircuit(
                 commandKClass = commandMetadata.commandKClass,
-                name = commandMetadata.commandSimpleName.camelToSnakeCase(),
-                buildFolder = File(DEFAULT_CIRCUIT_BUILD_FOLDER_PARENT_PATH + commandMetadata.commandSimpleName.camelToSnakeCase()),
+                name = commandMetadata.scopedCommandName.camelToSnakeCase(),
+                buildFolder = File(DEFAULT_CIRCUIT_BUILD_FOLDER_PARENT_PATH + commandMetadata.scopedCommandName.camelToSnakeCase()),
                 buildTimeout = DEFAULT_BUILD_TIMEOUT,
                 setupTimeout = DEFAULT_SETUP_TIMEOUT,
                 provingTimeout = DEFAULT_PROVING_TIMEOUT,
@@ -64,7 +65,7 @@ data class ZKCircuit(
 
             return ResolvedZKCircuit(
                 commandKClass = commandMetadata.commandKClass,
-                name = name ?: commandMetadata.commandSimpleName.camelToSnakeCase(),
+                name = name ?: commandMetadata.scopedCommandName.camelToSnakeCase(),
                 buildFolder = buildFolder ?: File(DEFAULT_CIRCUIT_BUILD_FOLDER_PARENT_PATH + name),
                 buildTimeout = buildTimeout ?: DEFAULT_BUILD_TIMEOUT,
                 setupTimeout = setupTimeout ?: DEFAULT_SETUP_TIMEOUT,
@@ -170,7 +171,7 @@ class ZKProtectedComponentList : ArrayList<ZKProtectedComponent>() {
  */
 @ZKCommandMetadataDSL
 class ZKCommandMetadata(val commandKClass: KClass<out ZKCommandData>) {
-    val commandSimpleName: String by lazy { commandKClass.simpleName ?: error("Command classes must be a named class") }
+    val scopedCommandName: String by lazy { commandKClass.scopedName ?: error("Command classes must be a named class") }
 
     /**
      * Information on the circuit and related artifacts to be used.

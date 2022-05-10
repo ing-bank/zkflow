@@ -10,7 +10,6 @@ import com.ing.zinc.bfl.toZincId
 import com.ing.zinc.bfl.use
 import com.ing.zinc.bfl.useLengthConstant
 import com.ing.zinc.bfl.useSerialized
-import com.ing.zinc.naming.camelToSnakeCase
 import com.ing.zinc.poet.Indentation.Companion.spaces
 import com.ing.zinc.poet.ZincFile.Companion.zincFile
 import com.ing.zinc.poet.ZincInvocable
@@ -37,6 +36,7 @@ class Witness(
     private val txComponentContainer: TransactionComponentContainer,
     private val commandMetadata: ResolvedZKCommandMetadata,
     private val standardTypes: StandardTypes,
+    private val commandContext: BflModule,
 ) : BflModule {
     private val txComponents = txComponentContainer.transactionComponents
 
@@ -62,7 +62,8 @@ class Witness(
                     standardTypes.signerList(commandMetadata)
                 } else {
                     null
-                }
+                },
+                commandContext
             )
             )
             .distinctBy { it.id }
@@ -81,13 +82,6 @@ class Witness(
                 }
                 newLine()
             }
-        listOfNotNull(
-            COMMAND_CONTEXT,
-        ).forEach {
-            mod { module = it.camelToSnakeCase() }
-            use { path = "${it.camelToSnakeCase()}::$it" }
-            newLine()
-        }
         mod { module = CRYPTO_UTILS }
         use { path = "$CRYPTO_UTILS::$COMPUTE_NONCE" }
         use { path = "std::crypto::blake2s_multi_input" }
