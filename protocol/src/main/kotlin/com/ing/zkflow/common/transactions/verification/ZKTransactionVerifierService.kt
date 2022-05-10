@@ -32,6 +32,10 @@ class ZKTransactionVerifierService(
         validatePublicComponents(vtx)
     }
 
+    /**
+     * Note that this does not actually verify a proof, because it is a SignedTransaction.
+     * It will run the private ZKP contract logic and the normal contract logic on the transaction to confirm correctness.
+     */
     fun verify(stx: SignedTransaction, checkSufficientSignatures: Boolean) {
         val wtx = stx.tx
         val vtx = validatePrivateComponents(wtx)

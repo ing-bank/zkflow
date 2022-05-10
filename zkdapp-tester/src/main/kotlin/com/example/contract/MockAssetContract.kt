@@ -89,7 +89,6 @@ class MockAssetContract : Contract {
             outputs {
                 private(MockAsset::class) at 0
             }
-            timeWindow = true
         }
 
         @Language("Rust")

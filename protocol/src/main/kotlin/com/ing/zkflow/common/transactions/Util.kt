@@ -405,6 +405,10 @@ fun SignedTransaction.zkVerify(
     }
 }
 
+/**
+ * Note that this does not actually verify a proof, because it is a SignedTransaction.
+ * It will run the private ZKP contract logic and the normal contract logic on the transaction to confirm correctness.
+ */
 private fun SignedTransaction.zkVerifyRegularTransaction(
     services: ServiceHub,
     zkService: ZKTransactionService = services.getCordaServiceFromConfig(ServiceNames.ZK_TX_SERVICE),

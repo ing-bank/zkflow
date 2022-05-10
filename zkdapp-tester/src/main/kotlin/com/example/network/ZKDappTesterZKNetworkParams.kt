@@ -10,7 +10,7 @@ import net.corda.core.crypto.SignatureScheme
 class ZKDappTesterZKNetworkParams : ZKNetworkParameters {
         override val version: Int = 1
         override val participantSignatureScheme: SignatureScheme = ZKFlow.DEFAULT_ZKFLOW_SIGNATURE_SCHEME
-        override val attachmentConstraintType: ZKAttachmentConstraintType = ZKFlow.DEFAULT_ZKFLOW_CONTRACT_ATTACHMENT_CONSTRAINT_TYPE
+        override val attachmentConstraintType: ZKAttachmentConstraintType = ZKAttachmentConstraintType.HashAttachmentConstraintType()
         override val notaryInfo: ZKNotaryInfo = ZKNotaryInfo(ZKFlow.DEFAULT_ZKFLOW_NOTARY_SIGNATURE_SCHEME)
         override val digestAlgorithm: DigestAlgorithm = ZKFlow.DEFAULT_ZKFLOW_DIGEST_IDENTIFIER
         override val serializationSchemeId: Int = ZKFlow.DEFAULT_SERIALIZATION_SCHEME_ID
