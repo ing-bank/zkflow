@@ -3,7 +3,6 @@ package com.example.flow
 import co.paralleluniverse.fibers.Suspendable
 import com.example.contract.MockAssetContract
 import com.ing.zkflow.client.flows.ZKFinalityFlow
-import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.transactions.ZKTransactionBuilder
 import com.ing.zkflow.common.transactions.signInitialTransaction
 import net.corda.core.contracts.Command
@@ -19,7 +18,7 @@ class IssuePrivateFlow(private val value: Int? = null) : FlowLogic<SignedTransac
     override fun call(): SignedTransaction {
         val me = serviceHub.myInfo.legalIdentities.single().anonymise()
         val state = if (value != null) MockAssetContract.MockAsset(me, value) else MockAssetContract.MockAsset(me)
-        val issueCommand = Command(MockAssetContract.Issue(), me.owningKey) //
+        val issueCommand = Command(MockAssetContract.IssuePrivate(), me.owningKey) //
         val stateAndContract = StateAndContract(state, MockAssetContract.ID)
 
         val builder = ZKTransactionBuilder(serviceHub.networkMapCache.notaryIdentities.single())

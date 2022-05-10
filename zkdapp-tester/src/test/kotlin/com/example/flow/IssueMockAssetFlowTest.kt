@@ -70,7 +70,7 @@ class IssueMockAssetFlowTest {
         zkTransactionService = miniCorpNode.services.cordaService(ZincZKTransactionCordaService::class.java)
 
         // DO CIRCUIT SETUP
-        zkTransactionService.setup(MockAssetContract.Issue().metadata, force = true)
+        zkTransactionService.setup(MockAssetContract.IssuePrivate().metadata, force = true)
     }
 
     @AfterAll

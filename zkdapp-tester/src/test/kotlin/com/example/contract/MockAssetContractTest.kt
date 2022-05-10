@@ -16,9 +16,9 @@ class MockAssetContractTest {
         services.zkLedger {
             val createState = MockAssetContract.MockAsset(alice, value = 88)
             transaction {
-                input(MockAssetContract.ID, createState)
+                input(MockAssetContract.ID, createState) // Creates a public UTXO on the ledger with a dummy command
                 output(MockAssetContract.ID, createState.withNewOwner(bob).ownableState)
-                command(listOf(alice.owningKey, bob.owningKey), MockAssetContract.Move())
+                command(listOf(alice.owningKey, bob.owningKey), MockAssetContract.MovePublicToPrivate())
                 timeWindow(Instant.now())
                 verifies()
             }
