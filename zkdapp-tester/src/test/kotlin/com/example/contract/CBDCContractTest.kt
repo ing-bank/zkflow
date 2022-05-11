@@ -22,7 +22,7 @@ class CBDCContractTest {
             val createState = CBDCToken(Amount.fromDecimal(BigDecimal.ONE, issuedTokenType), alice)
             transaction {
                 output(CBDCContract.ID, createState)
-                command(listOf(alice.owningKey), CBDCContract.Issue())
+                command(listOf(alice.owningKey), CBDCContract.IssuePrivate())
                 timeWindow(Instant.now())
                 verifies()
             }

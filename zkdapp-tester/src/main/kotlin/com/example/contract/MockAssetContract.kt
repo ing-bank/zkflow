@@ -101,7 +101,7 @@ class MockAssetContract : Contract {
                 fn verify(ctx: CommandContext) {
                     let tx_mock_asset = ctx.outputs.mock_asset_contract_mock_asset_0;
 
-                    assert!(ctx.signers.contains(tx_mock_asset.data.owner.public_key), "[Issue] Owner must sign");
+                    assert!(ctx.signers.contains(tx_mock_asset.data.owner.public_key), "[IssuePrivate] Owner must sign");
                 }
             """.trimIndent()
         }

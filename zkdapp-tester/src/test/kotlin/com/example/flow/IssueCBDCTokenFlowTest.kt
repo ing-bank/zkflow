@@ -1,6 +1,10 @@
 package com.example.flow
 
+import com.example.contract.CBDCContract
 import com.example.contract.MockAssetContract
+import com.example.token.cbdc.CBDCToken
+import com.example.token.cbdc.IssuedTokenType
+import com.example.token.cbdc.TokenType
 import com.ing.zkflow.common.zkp.ZKFlow
 import com.ing.zkflow.common.zkp.ZincZKTransactionCordaService
 import com.ing.zkflow.node.services.InMemoryUtxoInfoStorage
@@ -10,6 +14,7 @@ import com.ing.zkflow.node.services.ServiceNames.ZK_UTXO_INFO_STORAGE
 import com.ing.zkflow.node.services.ServiceNames.ZK_VERIFIER_TX_STORAGE
 import com.ing.zkflow.notary.ZKNotaryService
 import com.ing.zkflow.testing.checkVault
+import net.corda.core.contracts.Amount
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
 import net.corda.core.node.services.Vault
@@ -24,8 +29,9 @@ import net.corda.testing.node.StartedMockNode
 import net.corda.testing.node.internal.cordappWithPackages
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
+import java.math.BigDecimal
 
-class IssueMockAssetFlowTest {
+class IssueCBDCTokenFlowTest {
     private val mockNet: MockNetwork
     private val notaryNode: StartedMockNode
     private val megaCorpNode: StartedMockNode
@@ -70,7 +76,7 @@ class IssueMockAssetFlowTest {
         zkTransactionService = miniCorpNode.services.cordaService(ZincZKTransactionCordaService::class.java)
 
         // DO CIRCUIT SETUP
-        zkTransactionService.setup(MockAssetContract.IssuePrivate().metadata, force = true)
+        zkTransactionService.setup(CBDCContract.IssuePrivate().metadata, force = true)
     }
 
     @AfterAll
@@ -81,12 +87,13 @@ class IssueMockAssetFlowTest {
 
     @Test
     fun `Test private issuance`() {
-        val issuePrivateMockAssetFlow = IssuePrivateMockAssetFlow()
-        val issuePrivateFuture = miniCorpNode.startFlow(issuePrivateMockAssetFlow)
+        val issuedTokenType = IssuedTokenType(megaCorp.anonymise(), TokenType("test-token", 2))
+        val issuePrivateCBDCTokenFlow = IssuePrivateCBDCTokenFlow(Amount.fromDecimal(BigDecimal.ONE, issuedTokenType), miniCorp.anonymise())
+        val issuePrivateFuture = miniCorpNode.startFlow(issuePrivateCBDCTokenFlow)
         mockNet.runNetwork()
         val privateIssueStx = issuePrivateFuture.getOrThrow()
 
-        val expectedInVault = privateIssueStx.tx.outRef<MockAssetContract.MockAsset>(0)
+        val expectedInVault = privateIssueStx.tx.outRef<CBDCToken>(0)
         checkVault(miniCorpNode, expectedInVault, Vault.StateStatus.UNCONSUMED)
 
         zkTransactionService.verify(zkTransactionService.vtxStorage.getTransaction(privateIssueStx.id)!!.tx)

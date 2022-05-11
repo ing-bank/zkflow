@@ -53,13 +53,13 @@ class CBDCContract : Contract {
 
     interface  IssueInterface: Versioned
     @ZKP
-    class Issue : ZKCommandData, IssueInterface {
+    class IssuePrivate : ZKCommandData, IssueInterface {
         override val metadata = commandMetadata {
             numberOfSigners = 1
             outputs {
                 private(CBDCToken::class) at 0
             }
-            timeWindow = true
+            // TODO why should there be no time window?
         }
 
         @Language("Rust")
@@ -71,9 +71,9 @@ class CBDCContract : Contract {
                 fn verify(ctx: CommandContext) {
                     let output = ctx.outputs.cbdc_token_0;
                     
-                    assert!(output.data.amount.quantity > 0 as i64, "[Issue] Quantity must be positive");
+                    assert!(output.data.amount.quantity > 0 as i64, "[IssuePrivate] Quantity must be positive");
 
-                    assert!(ctx.signers.contains(output.data.holder.public_key), "[Issue] Owner must sign");
+                    assert!(ctx.signers.contains(output.data.holder.public_key), "[IssuePrivate] Owner must sign");
                 }
             """.trimIndent()
         }

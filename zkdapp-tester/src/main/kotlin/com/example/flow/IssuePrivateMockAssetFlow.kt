@@ -12,7 +12,7 @@ import net.corda.core.flows.InitiatingFlow
 import net.corda.core.transactions.SignedTransaction
 
 @InitiatingFlow
-class IssuePrivateFlow(private val value: Int? = null) : FlowLogic<SignedTransaction>() {
+class IssuePrivateMockAssetFlow(private val value: Int? = null) : FlowLogic<SignedTransaction>() {
 
     @Suspendable
     override fun call(): SignedTransaction {
