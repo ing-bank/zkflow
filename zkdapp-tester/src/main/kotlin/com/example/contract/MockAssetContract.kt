@@ -22,36 +22,37 @@ class MockAssetContract : Contract {
         const val ID: ContractClassName = "com.example.contract.MockAssetContract"
     }
 
-    interface  MockAssetInterface: Versioned
+    interface  VersionedMockAsset: Versioned
 
     @ZKP
     @BelongsToContract(MockAssetContract::class)
     data class MockAsset(
         override val owner: @EdDSA AnonymousParty,
         val value: Int = Random().nextInt()
-    ) : ZKOwnableState, MockAssetInterface {
+    ) : VersionedMockAsset, ZKOwnableState {
         @ZincUpgrade("Self::new(previous_version.owner, 0 as i32)")
         constructor(previousVersion: MockAssetV1): this(previousVersion.owner, 0)
+
         override val participants: List<AnonymousParty> = listOf(owner)
 
         override fun withNewOwner(newOwner: AnonymousParty): CommandAndState =
-            CommandAndState(Move(), copy(owner = newOwner))
+            CommandAndState(MovePublicToPrivate(), copy(owner = newOwner))
     }
 
     @ZKP
     @BelongsToContract(MockAssetContract::class)
     data class MockAssetV1(
         override val owner: @EdDSA AnonymousParty,
-    ) : ZKOwnableState, MockAssetInterface {
+    ) : VersionedMockAsset, ZKOwnableState {
         override val participants: List<AnonymousParty> = listOf(owner)
 
         override fun withNewOwner(newOwner: AnonymousParty): CommandAndState =
-            CommandAndState(Move(), copy(owner = newOwner))
+            CommandAndState(MovePublicToPrivate(), copy(owner = newOwner))
     }
 
-    interface  MoveInterface: Versioned
+    interface  VersionedMovePublicToPrivate: Versioned
     @ZKP
-    class Move : ZKCommandData, MoveInterface {
+    class MovePublicToPrivate : VersionedMovePublicToPrivate, ZKCommandData {
         override val metadata = commandMetadata {
             numberOfSigners = 2
             inputs {
@@ -81,15 +82,14 @@ class MockAssetContract : Contract {
         }
     }
 
-    interface  IssueInterface: Versioned
+    interface  VersionedIssuePrivate: Versioned
     @ZKP
-    class Issue : ZKCommandData, IssueInterface {
+    class IssuePrivate : VersionedIssuePrivate, ZKCommandData {
         override val metadata = commandMetadata {
             numberOfSigners = 1
             outputs {
                 private(MockAsset::class) at 0
             }
-            timeWindow = true
         }
 
         @Language("Rust")
@@ -101,13 +101,13 @@ class MockAssetContract : Contract {
                 fn verify(ctx: CommandContext) {
                     let tx_mock_asset = ctx.outputs.mock_asset_contract_mock_asset_0;
 
-                    assert!(ctx.signers.contains(tx_mock_asset.data.owner.public_key), "[Issue] Owner must sign");
+                    assert!(ctx.signers.contains(tx_mock_asset.data.owner.public_key), "[IssuePrivate] Owner must sign");
                 }
             """.trimIndent()
         }
     }
 
     override fun verify(tx: LedgerTransaction) {
-        // Contract verifications go here
+        // Public contract verifications go here. N/A in this case
     }
 }

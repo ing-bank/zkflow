@@ -1,6 +1,8 @@
 plugins {
     kotlin("jvm") version "1.5.31"
     id("com.ing.zkflow.gradle-plugin")
+
+    id("net.corda.plugins.quasar-utils")  version "5.0.12"
     id("net.corda.plugins.cordapp") version "5.0.12"
 }
 

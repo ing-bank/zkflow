@@ -13,6 +13,10 @@ interface ZKTransactionService : SerializeAsToken {
     fun setup(command: ResolvedZKCommandMetadata, force: Boolean = false)
     fun prove(wtx: WireTransaction): ZKVerifierTransaction
     fun verify(vtx: ZKVerifierTransaction)
+
+    /**
+     * This should not be called for actual proof verification, only in situations where we 'run' the circuit for correctness
+     */
     fun verify(wtx: WireTransaction): ZKVerifierTransactionWithoutProofs
     fun validateBackchain(tx: TraversableTransaction)
     fun zkServiceForCommandMetadata(metadata: ResolvedZKCommandMetadata): ZKService
