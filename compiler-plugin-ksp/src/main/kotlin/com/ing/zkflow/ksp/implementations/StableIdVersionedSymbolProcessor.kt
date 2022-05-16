@@ -47,9 +47,11 @@ class StableIdVersionedSymbolProcessor(private val logger: KSPLogger, private va
         visitedFiles.addAll(newFiles)
 
         val implementations: Map<Set<KClass<*>>, List<ScopedDeclaration>> = newFiles
-            .fold(emptyMap()) { acc, file ->
-                acc.merge(implementationsVisitor.visitFile(file, null))
+            .fold(emptyMap<Implementor, List<ScopedDeclaration>>()) { acc, file ->
+                val matches = implementationsVisitor.visitFile(file, null)
+                acc.merge(matches)
             }
+            .mapKeys { (key, _) -> key.superTypes }
 
         // Only consider non-abstract declarations
         val instances = implementations.mapValues { (_, value) ->
@@ -103,8 +105,13 @@ class StableIdVersionedSymbolProcessor(private val logger: KSPLogger, private va
 
         private val implementationsVisitor = ImplementationsVisitor(
             listOf(
-                versioned, versionedCommandData, versionedContractStates,
-                setOf(ZKContractState::class), setOf(ZKCommandData::class)
+                Implementor.isInterface(versioned),
+
+                Implementor.isClassOrObject(contractStates),
+                Implementor.isClassOrObject(versionedContractStates),
+
+                Implementor.isClassOrObject(commandData),
+                Implementor.isClassOrObject(versionedCommandData),
             )
         )
 
@@ -158,6 +165,7 @@ class StableIdVersionedSymbolProcessor(private val logger: KSPLogger, private va
                 filterUnversionedImplementations(instances, contractStates, versionedContractStates)
             val unversionedCommands =
                 filterUnversionedImplementations(instances, commandData, versionedCommandData)
+
             reportPossibleUnversionedException(unversionedStates, unversionedCommands)
         }
 
