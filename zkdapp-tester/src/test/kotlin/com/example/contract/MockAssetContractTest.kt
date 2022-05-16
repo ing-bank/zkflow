@@ -7,12 +7,12 @@ import org.junit.jupiter.api.Test
 import java.time.Instant
 
 class MockAssetContractTest {
+    private val alice = TestIdentity.fresh("Alice").party.anonymise()
+    private val bob = TestIdentity.fresh("Bob").party.anonymise()
+    private val services = MockServices(listOf("com.example.contract"))
+
     @Test
     fun `create and move verify`() {
-        val alice = TestIdentity.fresh("Alice").party.anonymise()
-        val bob = TestIdentity.fresh("Bob").party.anonymise()
-        val services = MockServices(listOf("com.example.contract"))
-
         services.zkLedger {
             val createState = MockAssetContract.MockAsset(alice, value = 88)
             transaction {
@@ -21,6 +21,21 @@ class MockAssetContractTest {
                 command(listOf(alice.owningKey, bob.owningKey), MockAssetContract.MovePublicToPrivate())
                 timeWindow(Instant.now())
                 verifies()
+            }
+        }
+    }
+
+    @Test
+    fun `failed create and move verify - moved amount don't match`() {
+        services.zkLedger {
+            val createState = MockAssetContract.MockAsset(alice, value = 88)
+            val roguesState = MockAssetContract.MockAsset(bob, value = createState.value + 100)
+            transaction {
+                input(MockAssetContract.ID, createState) // Creates a public UTXO on the ledger with a dummy command
+                output(MockAssetContract.ID, roguesState)
+                command(listOf(alice.owningKey, bob.owningKey), MockAssetContract.MovePublicToPrivate())
+                timeWindow(Instant.now())
+                fails()
             }
         }
     }

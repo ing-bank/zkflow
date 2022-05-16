@@ -59,7 +59,6 @@ class CBDCContract : Contract {
             outputs {
                 private(CBDCToken::class) at 0
             }
-            // TODO why should there be no time window?
         }
 
         @Language("Rust")

@@ -23,10 +23,8 @@ class IssuePrivateMockAssetFlow(private val value: Int? = null) : FlowLogic<Sign
 
         val builder = ZKTransactionBuilder(serviceHub.networkMapCache.notaryIdentities.single())
             .withItems(stateAndContract, issueCommand)
-        // builder.enforcePrivateInputsAndReferences(serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_VERIFIER_TX_STORAGE))
 
         val stx = serviceHub.signInitialTransaction(builder)
-        // val fullySignedStx = subFlow(ZKCollectSignaturesFlow(stx, emptyList()))
 
         subFlow(ZKFinalityFlow(stx, listOf()))
 
