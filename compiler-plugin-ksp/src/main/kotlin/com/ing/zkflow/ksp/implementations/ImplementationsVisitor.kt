@@ -11,14 +11,14 @@ import com.ing.zkflow.util.merge
 import kotlin.reflect.KClass
 
 /**
- * Implementation of [KSAbstractVisitor] that looks for implementations of [interfaceClasses].
- * @param interfaceClasses: each element of the list is a set of interfaces to look for. The visitor will look for
- *  declarations which implement ALL of the interfaces in the set.
+ * Implementation of [KSAbstractVisitor] that looks for declarations satisfying [implementationRequirements].
+ * @param implementationRequirements: each element of the list is a requirement on a class kind and implemented/extended interfaces/classes.
+ * The visitor will look for declarations matching the required class kind and which implement ALL of the interfaces/classes specified by a respective instance of [ImplementationRequirement].
  */
 class ImplementationsVisitor(
-    private val implementors: List<Implementor>
-) : KSAbstractVisitor<ScopedDeclaration?, Map<Implementor, List<ScopedDeclaration>>>() {
-    override fun defaultVisit(annotated: KSNode, data: ScopedDeclaration?) = emptyMap<Implementor, List<ScopedDeclaration>>()
+    private val implementationRequirements: List<ImplementationRequirement>
+) : KSAbstractVisitor<ScopedDeclaration?, Map<ImplementationRequirement, List<ScopedDeclaration>>>() {
+    override fun defaultVisit(annotated: KSNode, data: ScopedDeclaration?) = emptyMap<ImplementationRequirement, List<ScopedDeclaration>>()
 
     override fun visitFile(file: KSFile, data: ScopedDeclaration?) =
         visitDeclarationSequence(file.declarations, data)
@@ -26,13 +26,13 @@ class ImplementationsVisitor(
     override fun visitClassDeclaration(
         classDeclaration: KSClassDeclaration,
         data: ScopedDeclaration?
-    ): Map<Implementor, List<ScopedDeclaration>> {
+    ): Map<ImplementationRequirement, List<ScopedDeclaration>> {
         val scopedDeclaration = ScopedDeclaration(data, classDeclaration)
 
         val matches = selectImplementors(classDeclaration)
 
         val implementations = if (matches.isNotEmpty()) {
-            matches.fold(mutableMapOf<Implementor, List<ScopedDeclaration>>()) { acc, match ->
+            matches.fold(mutableMapOf<ImplementationRequirement, List<ScopedDeclaration>>()) { acc, match ->
                 acc[match] = listOf(scopedDeclaration)
                 acc
             }
@@ -43,25 +43,30 @@ class ImplementationsVisitor(
         return implementations.merge(visitDeclarationSequence(classDeclaration.declarations, scopedDeclaration))
     }
 
-    private fun selectImplementors(classDeclaration: KSClassDeclaration): List<Implementor> {
+    /**
+     * Given a [classDeclaration], function selects class declarations of the kind required by [implementationRequirements]
+     * and implementing/extending all of the interface/classes of the respective implementation requirement.
+     */
+    private fun selectImplementors(classDeclaration: KSClassDeclaration): List<ImplementationRequirement> {
         val superTypes = classDeclaration.getAllSuperTypes().map { it.declaration.qualifiedName?.asString() }.toSet()
 
-        return implementors.filter { implementor ->
+        return implementationRequirements.filter { implementationRequirement ->
             // If a requirement on the class kind is set,
             // check if `classDeclaration` is of the right kind.
-            implementor.possibleClassKinds?.let { possibleClassKinds ->
+            implementationRequirement.possibleClassKinds?.let { possibleClassKinds ->
                 if (classDeclaration.classKind !in possibleClassKinds) {
                     return@filter false
                 }
             }
 
-            val requiredTypes = implementor.superTypes.map { it.qualifiedName }
+            // Verify that all required types are implemented by this class declaration.
+            val requiredTypes = implementationRequirement.superTypes.map { it.qualifiedName }
 
             superTypes.containsAll(requiredTypes)
         }
     }
 
-    private fun visitDeclarationSequence(declarations: Sequence<KSDeclaration>, data: ScopedDeclaration?): Map<Implementor, List<ScopedDeclaration>> =
+    private fun visitDeclarationSequence(declarations: Sequence<KSDeclaration>, data: ScopedDeclaration?): Map<ImplementationRequirement, List<ScopedDeclaration>> =
         declarations
             .filterIsInstance<KSClassDeclaration>()
             .fold(emptyMap()) { acc, file -> acc.merge(visitClassDeclaration(file, data)) }
@@ -101,23 +106,23 @@ interface HasQualifiedName {
     val qualifiedName: String
 }
 
-data class Implementor(
+data class ImplementationRequirement(
     /**
      * *ALL* required types to implement or extend from.
      */
     val superTypes: Set<KClass<*>>,
 
     /**
-     * Implementor must be one of `anyClassKind`, if set.
+     * ImplementationRequirement must be one of `anyClassKind`, if set.
      */
     val possibleClassKinds: Set<ClassKind>? = null
 ) {
 
     companion object {
         fun isInterface(superTypes: Set<KClass<*>>) =
-            Implementor(superTypes, setOf(ClassKind.INTERFACE))
+            ImplementationRequirement(superTypes, setOf(ClassKind.INTERFACE))
 
         fun isClassOrObject(superTypes: Set<KClass<*>>) =
-            Implementor(superTypes, setOf(ClassKind.CLASS, ClassKind.OBJECT))
+            ImplementationRequirement(superTypes, setOf(ClassKind.CLASS, ClassKind.OBJECT))
     }
 }

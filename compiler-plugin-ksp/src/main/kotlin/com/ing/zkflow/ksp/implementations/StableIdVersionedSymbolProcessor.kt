@@ -23,6 +23,30 @@ import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.ksp.toClassName
 import kotlin.reflect.KClass
 
+/**
+ * [StableIdVersionedSymbolProcessor] achieves several goals
+ * 1. validates that all states/commands are versioned and reports all unversioned items,
+ * 2. groups and sorts versioned states/commands w.r.t. to markers implementing [Versioned],
+ * 3. registers serializers for states/commands.
+ * 4. generates `upgrade` commands to go from one version of a state/command to the next one.
+ *
+ * for (1) we need (described for [ZKContractState], same applies to [ZKCommandData]):
+ * - [Item 1] collect all classes/objects implementing [ZKContractState]
+ * - [Item 2] collect all classes/objects implementing _both_ [Versioned], [ZKContractState]
+ * => unversioned states = [Item 2] - [Item 1]; if this difference is non-empty, report.
+ *
+ * for (2) we need (described for [ZKContractState], same applies to [ZKCommandData]):
+ * - [Item 1] collect all interfaces extending [ZKContractState]
+ * - [Item 2] collect all classes/objects implementing _both_ [Versioned], [ZKContractState]
+ * => split by Versioned, order [ZKContractState]'s by constructor definitions.
+ *
+ * To summarize, for (1) and (2) we need to collect implementors of
+ * - [Versioned]
+ * - [ZKContractState], [ZKCommandData]
+ * - [Versioned] _and_ [ZKContractState]; [Versioned] _and_ [ZKCommandData]
+ *
+ * This data is collected by [ImplementationsVisitor], next we can proceed to execution of the items (1) to (4) inclusive.
+ */
 class StableIdVersionedSymbolProcessor(private val logger: KSPLogger, private val codeGenerator: CodeGenerator) :
     SymbolProcessor {
     private val visitedFiles: MutableSet<KSFile> = mutableSetOf()
@@ -47,7 +71,7 @@ class StableIdVersionedSymbolProcessor(private val logger: KSPLogger, private va
         visitedFiles.addAll(newFiles)
 
         val implementations: Map<Set<KClass<*>>, List<ScopedDeclaration>> = newFiles
-            .fold(emptyMap<Implementor, List<ScopedDeclaration>>()) { acc, file ->
+            .fold(emptyMap<ImplementationRequirement, List<ScopedDeclaration>>()) { acc, file ->
                 val matches = implementationsVisitor.visitFile(file, null)
                 acc.merge(matches)
             }
@@ -105,13 +129,13 @@ class StableIdVersionedSymbolProcessor(private val logger: KSPLogger, private va
 
         private val implementationsVisitor = ImplementationsVisitor(
             listOf(
-                Implementor.isInterface(versioned),
+                ImplementationRequirement.isInterface(versioned),
 
-                Implementor.isClassOrObject(contractStates),
-                Implementor.isClassOrObject(versionedContractStates),
+                ImplementationRequirement.isClassOrObject(contractStates),
+                ImplementationRequirement.isClassOrObject(versionedContractStates),
 
-                Implementor.isClassOrObject(commandData),
-                Implementor.isClassOrObject(versionedCommandData),
+                ImplementationRequirement.isClassOrObject(commandData),
+                ImplementationRequirement.isClassOrObject(versionedCommandData),
             )
         )
 
