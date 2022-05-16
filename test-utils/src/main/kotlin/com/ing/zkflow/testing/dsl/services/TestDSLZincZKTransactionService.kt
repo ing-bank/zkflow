@@ -65,10 +65,12 @@ public class TestDSLZincZKTransactionService(serviceHub: ServiceHub, zkVerifierT
                 commandMetadata
             )
 
-            zkServiceForCommandMetadata(commandMetadata).run(witness, calculatePublicInput(vtx, commandMetadata))
-
-            // TODO Don't delete when debugging, do delete otherwise (flag in ZKNetworkParameters, or System Property?)
-            temporaryCircuitBuildFolder.deleteRecursively()
+            try {
+                zkServiceForCommandMetadata(commandMetadata).run(witness, calculatePublicInput(vtx, commandMetadata))
+            } finally {
+                // TODO Don't delete when debugging, do delete otherwise (flag in ZKNetworkParameters, or System Property?)
+                temporaryCircuitBuildFolder.deleteRecursively()
+            }
         }
     }
 
