@@ -61,19 +61,19 @@ class StableIdVersionedSymbolProcessorProviderTest : ProcessorTest(StableIdVersi
                 import com.ing.zkflow.common.contracts.ZKCommandData
                 import com.ing.zkflow.common.versioning.Versioned
 
-                interface IZebra: Versioned
+                interface IZebra: Versioned, ZKContractState
                 interface IHorse: Versioned
 
-                class ZebraV1(): ZKContractState, IZebra {
+                class ZebraV1(): IZebra {
                     override val participants: List<AnonymousParty> = emptyList()
                 }
 
-                class ZebraV2(): ZKContractState, IZebra {
+                class ZebraV2(): IZebra {
                     override val participants: List<AnonymousParty> = emptyList()
                     constructor(zebraV1: ZebraV1): this()
                 }
 
-                class Zebra(): ZKContractState, IZebra {
+                class Zebra(): IZebra {
                     override val participants: List<AnonymousParty> = emptyList()
                     constructor(zebraV2: ZebraV2): this()
                 }

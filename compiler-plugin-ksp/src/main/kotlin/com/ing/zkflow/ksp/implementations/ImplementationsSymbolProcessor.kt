@@ -8,7 +8,6 @@ import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSFile
 import com.ing.zkflow.ksp.MetaInfServiceRegister
 import com.ing.zkflow.util.merge
-import kotlin.reflect.KClass
 
 /**
  * A [SymbolProcessor] for [ImplementationsProcessor]s.
@@ -24,7 +23,7 @@ class ImplementationsSymbolProcessor(
     private val metaInfServiceRegister = MetaInfServiceRegister(codeGenerator)
 
     private val implementationsVisitor = ImplementationsVisitor(
-        implementationsProcessors.map { setOf(it.interfaceClass) }
+        implementationsProcessors.map { ImplementationRequirement(setOf(it.interfaceClass)) }
     )
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
@@ -33,12 +32,12 @@ class ImplementationsSymbolProcessor(
         visitedFiles.addAll(newFiles)
 
         newFiles
-            .fold(emptyMap<Set<KClass<*>>, List<ScopedDeclaration>>()) { acc, file ->
+            .fold(emptyMap<ImplementationRequirement, List<ScopedDeclaration>>()) { acc, file ->
                 acc.merge(implementationsVisitor.visitFile(file, null))
             }
-            .forEach { (kClassSet, implementations) ->
+            .forEach { (implementor, implementations) ->
                 implementationsProcessors
-                    .filter { setOf(it.interfaceClass) == kClassSet }
+                    .filter { setOf(it.interfaceClass) == implementor.superTypes }
                     .map { it.process(implementations) }
                     .forEach {
                         if (it.implementations.isNotEmpty()) {
