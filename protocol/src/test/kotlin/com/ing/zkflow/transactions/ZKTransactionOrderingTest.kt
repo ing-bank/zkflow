@@ -1,9 +1,11 @@
 package com.ing.zkflow.transactions
 
+import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.contracts.ZKContractState
 import com.ing.zkflow.common.transactions.UtxoInfo
 import com.ing.zkflow.common.transactions.ZKTransactionBuilder
+import com.ing.zkflow.common.versioning.Versioned
 import com.ing.zkflow.common.zkp.Witness
 import com.ing.zkflow.common.zkp.ZKFlow
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
@@ -190,7 +192,8 @@ class LocalContract : Contract {
         const val PROGRAM_ID = "com.ing.zkflow.transactions.LocalContract"
     }
 
-    class Create : ZKCommandData {
+    @ZKP
+    class Create : ZKCommandData, Versioned {
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
             numberOfSigners = 1
             outputs {
@@ -224,11 +227,12 @@ object ParticipantsSerializer : FixedLengthListSerializer<AnonymousParty>(1, Ano
 @BelongsToContract(LocalContract::class)
 @Suppress("EqualsWithHashCodeExist")
 @Serializable
+@ZKP
 class DummyZKStateA(
     @Serializable(with = IntSerializer::class) val value: Int,
     @Serializable(with = IntSetSerializer::class) val set: Set<Int>,
     @Serializable(with = ParticipantsSerializer::class) override val participants: List<@Contextual AnonymousParty>
-) : ZKContractState {
+) : ZKContractState, Versioned {
     companion object {
         fun newState(): DummyZKStateA {
             val alice = TestIdentity.fresh("Alice")
@@ -253,11 +257,12 @@ class DummyZKStateA(
 @BelongsToContract(LocalContract::class)
 @Suppress("EqualsWithHashCodeExist")
 @Serializable
+@ZKP
 class DummyZKStateB(
     @Serializable(with = IntSerializer::class) val value: Int,
     @Serializable(with = IntSetSerializer::class) val set: Set<Int>,
     @Serializable(with = ParticipantsSerializer::class) override val participants: List<@Contextual AnonymousParty>
-) : ZKContractState {
+) : ZKContractState, Versioned {
     companion object {
         fun newState(): DummyZKStateB {
             val alice = TestIdentity.fresh("Alice")
@@ -281,11 +286,12 @@ class DummyZKStateB(
 
 @BelongsToContract(LocalContract::class)
 @Serializable
+@ZKP
 public data class DummyState(
     @Serializable(with = IntSerializer::class) val value: Int,
     @Serializable(with = IntSetSerializer::class) val set: Set<Int>,
     @Serializable(with = ParticipantsSerializer::class) override val participants: List<@Contextual AbstractParty>
-) : ContractState {
+) : ContractState, Versioned {
     public companion object {
         public fun any(): DummyState {
             val alice = TestIdentity.fresh("Alice")
