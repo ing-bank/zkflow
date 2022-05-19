@@ -1,8 +1,8 @@
-package com.example.token.cbdc
+package com.example.token.sdk
 
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.annotations.corda.EdDSA
-import net.corda.core.identity.AnonymousParty
+import net.corda.core.identity.Party
 
 // Open classes may be extended provided no values are overridden.
 // Otherwise, serialization breaks.
@@ -10,6 +10,6 @@ import net.corda.core.identity.AnonymousParty
 
 @ZKP
 data class IssuedTokenType(
-    val issuer: @EdDSA AnonymousParty,
+    val issuer: @EdDSA Party,
     val tokenType: TokenType
 ) : TokenType(tokenType.tokenIdentifier, tokenType.fractionDigits)

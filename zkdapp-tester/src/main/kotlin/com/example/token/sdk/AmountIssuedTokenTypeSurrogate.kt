@@ -1,4 +1,4 @@
-package com.example.token.cbdc
+package com.example.token.sdk
 
 import com.ing.zkflow.ConversionProvider
 import com.ing.zkflow.Surrogate
@@ -7,9 +7,8 @@ import com.ing.zkflow.annotations.ZKPSurrogate
 import net.corda.core.contracts.Amount
 import java.math.BigDecimal
 
-@Suppress("ClassName")
-@ZKPSurrogate(AmountConverter_IssuedTokenType::class)
-data class AmountSurrogate_IssuedTokenType(
+@ZKPSurrogate(AmountIssuedTokenTypeConverter::class)
+data class AmountIssuedTokenTypeSurrogate(
     val quantity: Long,
     val displayTokenSize: @BigDecimalSize(INT_PRECISION, FRAC_PRECISION) BigDecimal,
     val token: IssuedTokenType
@@ -22,11 +21,7 @@ data class AmountSurrogate_IssuedTokenType(
     override fun toOriginal(): Amount<IssuedTokenType> = Amount(quantity, displayTokenSize, token)
 }
 
-@Suppress("ClassName")
-object AmountConverter_IssuedTokenType : ConversionProvider<
-    Amount<IssuedTokenType>,
-    AmountSurrogate_IssuedTokenType
-    > {
+object AmountIssuedTokenTypeConverter : ConversionProvider<Amount<IssuedTokenType>, AmountIssuedTokenTypeSurrogate> {
     override fun from(original: Amount<IssuedTokenType>) =
-        AmountSurrogate_IssuedTokenType(original.quantity, original.displayTokenSize, original.token)
+        AmountIssuedTokenTypeSurrogate(original.quantity, original.displayTokenSize, original.token)
 }

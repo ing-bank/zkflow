@@ -1,7 +1,6 @@
-package com.example.token.cbdc
+package com.example.token.sdk
 
 import com.ing.zkflow.common.contracts.ZKContractState
-import net.corda.core.contracts.ContractState
 import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.AnonymousParty
@@ -30,7 +29,7 @@ interface AbstractToken : ZKContractState {
     val issuedTokenType: IssuedTokenType
 
     /** The issuer [Party]. */
-    val issuer: AnonymousParty get() = issuedTokenType.issuer
+    val issuer: Party get() = issuedTokenType.issuer
 
     /** For creating a copy of an existing [AbstractToken] with a new holder. */
     fun withNewHolder(newHolder: AnonymousParty): AbstractToken

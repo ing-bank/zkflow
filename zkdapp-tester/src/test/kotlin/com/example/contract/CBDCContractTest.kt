@@ -1,29 +1,27 @@
 package com.example.contract
 
-import com.example.token.cbdc.CBDCToken
-import com.example.token.cbdc.IssuedTokenType
-import com.example.token.cbdc.TokenType
+import com.example.token.cbdc.digitalEuro
 import com.ing.zkflow.testing.dsl.zkLedger
-import net.corda.core.contracts.Amount
 import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
 import org.junit.jupiter.api.Test
-import java.math.BigDecimal
 import java.time.Instant
 
 class CBDCContractTest {
-    private val alice = TestIdentity.fresh("Alice").party.anonymise()
     private val services = MockServices(listOf("com.example.contract"))
+
+    private val ecb = TestIdentity.fresh("ECB").party
+    private val alice = TestIdentity.fresh("Alice").party.anonymise()
     private val bob = TestIdentity.fresh("Bob").party.anonymise()
 
+    private val alicesEuro = digitalEuro(1.00, issuer = ecb, holder = alice)
+
     @Test
-    fun `issue`() {
+    fun `Issue one EUR to Alice`() {
         services.zkLedger {
-            val issuedTokenType = IssuedTokenType(alice, TokenType("test-token", 2))
-            val createState = CBDCToken(Amount.fromDecimal(BigDecimal.ONE, issuedTokenType), alice)
             transaction {
-                output(CBDCContract.ID, createState)
-                command(listOf(alice.owningKey), CBDCContract.IssuePrivate())
+                output(CBDCContract.ID, alicesEuro)
+                command(listOf(ecb.owningKey), CBDCContract.IssuePrivate())
                 timeWindow(Instant.now())
                 verifies()
             }
@@ -31,12 +29,10 @@ class CBDCContractTest {
     }
 
     @Test
-    fun `failed issue - wrong signer`() {
+    fun `Issue one EUR to Alice - wrong signer`() {
         services.zkLedger {
-            val issuedTokenType = IssuedTokenType(alice, TokenType("test-token", 2))
-            val createState = CBDCToken(Amount.fromDecimal(BigDecimal.ONE, issuedTokenType), alice)
             transaction {
-                output(CBDCContract.ID, createState)
+                output(CBDCContract.ID, alicesEuro)
                 command(listOf(bob.owningKey), CBDCContract.IssuePrivate())
                 timeWindow(Instant.now())
                 fails()
@@ -45,14 +41,12 @@ class CBDCContractTest {
     }
 
     @Test
-    fun `issue and move`() {
+    fun `Issue to Alice and move to Bob`() {
         services.zkLedger {
-            val issuedTokenType = IssuedTokenType(alice, TokenType("test-token", 2))
-            val createState = CBDCToken(Amount.fromDecimal(BigDecimal.ONE, issuedTokenType), alice)
             transaction {
-                input(CBDCContract.ID, createState)
-                output(CBDCContract.ID, createState.withNewHolder(bob))
-                command(listOf(alice.owningKey, bob.owningKey), CBDCContract.Move())
+                input(CBDCContract.ID, alicesEuro)
+                output(CBDCContract.ID, alicesEuro.withNewHolder(bob))
+                command(listOf(alice.owningKey), CBDCContract.Move())
                 timeWindow(Instant.now())
                 verifies()
             }
@@ -62,16 +56,13 @@ class CBDCContractTest {
     @Test
     fun `issue and split`() {
         services.zkLedger {
-            val issuedTokenType = IssuedTokenType(alice, TokenType("test-token", 2))
-
-            val unit = CBDCToken(Amount.fromDecimal(BigDecimal.ONE, issuedTokenType), alice)
-            val half = CBDCToken(Amount.fromDecimal(0.5.toBigDecimal(), issuedTokenType), alice)
+            val half = alicesEuro.copy(alicesEuro.amount.splitEvenly(2).first())
 
             transaction {
-                input(CBDCContract.ID, unit)
+                input(CBDCContract.ID, alicesEuro)
                 output(CBDCContract.ID, half)
                 output(CBDCContract.ID, half.withNewHolder(bob))
-                command(listOf(alice.owningKey, bob.owningKey), CBDCContract.Split())
+                command(listOf(alice.owningKey), CBDCContract.Split())
                 timeWindow(Instant.now())
                 verifies()
             }
