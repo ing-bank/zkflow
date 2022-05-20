@@ -2,6 +2,7 @@ package com.ing.zkflow.zinc.poet.generate
 
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.common.contracts.ZKCommandData
+import com.ing.zkflow.common.contracts.ZKUpgradeCommandData
 import com.ing.zkflow.common.versioning.Versioned
 import com.ing.zkflow.common.versioning.ZincUpgrade
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
@@ -16,7 +17,7 @@ object MyContract : Contract {
     override fun verify(tx: LedgerTransaction) {}
 
     @ZKP
-    class MyFirstCommand : ZKCommandData {
+    class MyFirstCommand : ZKCommandData, Versioned {
 
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
             circuit {
@@ -47,7 +48,7 @@ object MyContract : Contract {
     }
 
     @ZKP
-    class UpgradeMyStateV1ToMyStateV2 : ZKCommandData {
+    class UpgradeMyStateV1ToMyStateV2 : ZKUpgradeCommandData {
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
             circuit {
                 name = this::class.simpleName!!
@@ -67,13 +68,13 @@ object MyContract : Contract {
     }
 }
 
-interface MyStateI : Versioned
+interface VersionedMyState : Versioned, ContractState
 
 @ZKP
 @BelongsToContract(MyContract::class)
 data class MyStateV1(
     val ageInYears: Int
-) : MyStateI, ContractState {
+) : VersionedMyState {
     override val participants: List<AbstractParty> = emptyList()
 }
 
@@ -82,17 +83,19 @@ data class MyStateV1(
 data class MyStateV2(
     val ageInYears: Int,
     val count: Int,
-) : MyStateI, ContractState {
+) : VersionedMyState {
     @ZincUpgrade("Self::new(previous_state.age_in_years, 1 as i32)")
     constructor(previousState: MyStateV1) : this(previousState.ageInYears, 1)
 
     override val participants: List<AbstractParty> = emptyList()
 }
 
+interface VersionedMyOtherState : Versioned, ContractState
+
 @ZKP
 @BelongsToContract(MyContract::class)
 data class MyOtherState(
     val ageInYears: Int
-) : ContractState {
+) : VersionedMyOtherState {
     override val participants: List<AbstractParty> = emptyList()
 }

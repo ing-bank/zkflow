@@ -12,7 +12,7 @@ import java.io.ByteArrayOutputStream
 
 class StableIdVersionedSymbolProcessorProviderTest : ProcessorTest(StableIdVersionedSymbolProcessorProvider()) {
     @Test
-    fun `Stable id's must be generated for all Versioned ZKContractState's`() {
+    fun `Stable id's must be generated for all Versioned ZKContractStates`() {
         val outputStream = ByteArrayOutputStream()
         val result = compile(kotlinFile, outputStream)
 
