@@ -182,6 +182,26 @@ internal object Processors {
             }
         },
         //
+        Float::class.simpleName!! to ToSerializingObject { contextualizedOriginal, _ ->
+            TypeSerializingObject.ExplicitType(
+                contextualizedOriginal,
+                WrappedFixedLengthKSerializerWithDefault::class,
+                emptyList()
+            ) { _, outer, _ ->
+                "object $outer: ${WrappedFixedLengthKSerializerWithDefault::class.qualifiedName}<${Float::class.simpleName}>(${FixedLengthFloatingPointSerializer.FloatSerializer::class.qualifiedName})"
+            }
+        },
+        //
+        Double::class.simpleName!! to ToSerializingObject { contextualizedOriginal, _ ->
+            TypeSerializingObject.ExplicitType(
+                contextualizedOriginal,
+                WrappedFixedLengthKSerializerWithDefault::class,
+                emptyList()
+            ) { _, outer, _ ->
+                "object $outer: ${WrappedFixedLengthKSerializerWithDefault::class.qualifiedName}<${Double::class.simpleName}>(${FixedLengthFloatingPointSerializer.DoubleSerializer::class.qualifiedName})"
+            }
+        },
+        //
         Char::class.simpleName!! to ToSerializingObject { contextualizedOriginal, _ ->
             // Require com.ing.zkflow.annotations.ASCIIChar/com.ing.zkflow.annotations.UnicodeChar annotation.
             val annotations = mapOf(

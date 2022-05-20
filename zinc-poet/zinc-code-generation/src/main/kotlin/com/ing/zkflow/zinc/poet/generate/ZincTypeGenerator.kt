@@ -1,12 +1,12 @@
 package com.ing.zkflow.zinc.poet.generate
 
+import com.ing.zinc.bfl.BflBigDecimal
 import com.ing.zinc.bfl.BflModule
 import com.ing.zinc.bfl.BflPrimitive
 import com.ing.zinc.bfl.BflType
 import com.ing.zinc.bfl.BflUnit
 import com.ing.zinc.bfl.dsl.ArrayBuilder.Companion.array
 import com.ing.zinc.bfl.dsl.EnumBuilder.Companion.enum
-import com.ing.zinc.bfl.dsl.FieldBuilder.Companion.field
 import com.ing.zinc.bfl.dsl.ListBuilder.Companion.byteArray
 import com.ing.zinc.bfl.dsl.ListBuilder.Companion.list
 import com.ing.zinc.bfl.dsl.ListBuilder.Companion.string
@@ -16,6 +16,7 @@ import com.ing.zinc.bfl.dsl.StructBuilder.Companion.struct
 import com.ing.zinc.naming.camelToSnakeCase
 import com.ing.zkflow.common.serialization.zinc.generation.internalTypeName
 import com.ing.zkflow.serialization.FixedLengthType
+import com.ing.zkflow.serialization.serializer.BigDecimalSizeAnnotation
 import com.ing.zkflow.serialization.serializer.SizeAnnotation
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.SerialKind
@@ -79,17 +80,23 @@ object ZincTypeGenerator {
         }
     }
 
-    private fun createStruct(descriptor: SerialDescriptor): BflModule {
-        val fields = (0 until descriptor.elementsCount).mapNotNull { elementIndex ->
-            field {
-                name = descriptor.getElementName(elementIndex).camelToSnakeCase()
-                type = generate(descriptor.getElementDescriptor(elementIndex))
-            }
-        }
-        return if (fields.isNotEmpty()) {
+    private fun createStruct(descriptor: SerialDescriptor): BflModule = if (
+        descriptor.serialName == "Float" ||
+        descriptor.serialName == "Double" ||
+        descriptor.serialName.startsWith("BigDecimal_")
+    ) {
+        val annotation = descriptor.getAnnotation<BigDecimalSizeAnnotation>()
+        BflBigDecimal(annotation.integerSize, annotation.fractionSize, descriptor.serialName)
+    } else {
+        if (descriptor.elementsCount > 0) {
             struct {
                 name = descriptor.internalTypeName
-                addFields(fields)
+                (0 until descriptor.elementsCount).mapNotNull { elementIndex ->
+                    field {
+                        name = descriptor.getElementName(elementIndex).camelToSnakeCase()
+                        type = generate(descriptor.getElementDescriptor(elementIndex))
+                    }
+                }
             }
         } else {
             BflUnit
