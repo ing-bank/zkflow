@@ -5,6 +5,7 @@ import com.ing.zkflow.ksp.implementations.StableIdVersionedSymbolProcessor.Compa
 import com.ing.zkflow.ksp.implementations.StableIdVersionedSymbolProcessor.Companion.commandData
 import com.ing.zkflow.ksp.implementations.StableIdVersionedSymbolProcessor.Companion.contractStates
 import com.ing.zkflow.ksp.implementations.StableIdVersionedSymbolProcessor.Companion.extractMarkers
+import com.ing.zkflow.ksp.implementations.StableIdVersionedSymbolProcessor.Companion.noVersioningRequiredCommandData
 import com.ing.zkflow.ksp.implementations.StableIdVersionedSymbolProcessor.Companion.reportPossibleUnversionedException
 import com.ing.zkflow.ksp.implementations.StableIdVersionedSymbolProcessor.Companion.versioned
 import com.ing.zkflow.ksp.implementations.StableIdVersionedSymbolProcessor.Companion.versionedCommandData
@@ -100,13 +101,14 @@ class StableIdVersionedSymbolProcessorTest {
     }
 
     @Test
-    fun `checkForUnversionedStatesAndCommands should do stuff`() {
+    fun `checkForUnversionedStatesAndCommands be successful if there are no unversioned classes`() {
         val implementations = mapOf(
             versioned to listOf(a, b, c, d, e),
             versionedContractStates to listOf(b, d),
             versionedCommandData to listOf(c, e),
             contractStates to listOf(b, d),
-            commandData to listOf(c, e),
+            commandData to listOf(c, e, f),
+            noVersioningRequiredCommandData to listOf(f),
         )
         checkForUnversionedStatesAndCommands(implementations)
     }
@@ -118,7 +120,8 @@ class StableIdVersionedSymbolProcessorTest {
             versionedContractStates to listOf(b),
             versionedCommandData to listOf(c),
             contractStates to listOf(b, d),
-            commandData to listOf(c, e),
+            commandData to listOf(c, e, f),
+            noVersioningRequiredCommandData to listOf(f),
         )
         shouldThrow<UnversionedException> {
             checkForUnversionedStatesAndCommands(implementations)
@@ -139,5 +142,6 @@ class StableIdVersionedSymbolProcessorTest {
         private val c = MyFqn("C")
         private val d = MyFqn("D")
         private val e = MyFqn("E")
+        private val f = MyFqn("F")
     }
 }

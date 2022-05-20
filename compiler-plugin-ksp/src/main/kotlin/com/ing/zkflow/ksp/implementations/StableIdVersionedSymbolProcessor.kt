@@ -10,6 +10,7 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSFile
 import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.contracts.ZKContractState
+import com.ing.zkflow.common.contracts.ZKUpgradeCommandData
 import com.ing.zkflow.common.serialization.CommandDataSerializerRegistryProvider
 import com.ing.zkflow.common.serialization.ContractStateSerializerRegistryProvider
 import com.ing.zkflow.common.versioning.Versioned
@@ -126,6 +127,7 @@ class StableIdVersionedSymbolProcessor(private val logger: KSPLogger, private va
         internal val versionedCommandData = setOf(Versioned::class, ZKCommandData::class)
         internal val contractStates = setOf(ZKContractState::class)
         internal val commandData = setOf(ZKCommandData::class)
+        internal val noVersioningRequiredCommandData = setOf(ZKUpgradeCommandData::class)
 
         private val implementationsVisitor = ImplementationsVisitor(
             listOf(
@@ -136,6 +138,7 @@ class StableIdVersionedSymbolProcessor(private val logger: KSPLogger, private va
 
                 ImplementationRequirement.isClassOrObject(commandData),
                 ImplementationRequirement.isClassOrObject(versionedCommandData),
+                ImplementationRequirement.isClassOrObject(noVersioningRequiredCommandData),
             )
         )
 
@@ -186,9 +189,9 @@ class StableIdVersionedSymbolProcessor(private val logger: KSPLogger, private va
 
         internal fun checkForUnversionedStatesAndCommands(instances: Map<Set<KClass<*>>, List<HasQualifiedName>>) {
             val unversionedStates =
-                filterUnversionedImplementations(instances, contractStates, versionedContractStates)
+                filterUnversionedImplementations(instances, contractStates, versionedContractStates, emptySet())
             val unversionedCommands =
-                filterUnversionedImplementations(instances, commandData, versionedCommandData)
+                filterUnversionedImplementations(instances, commandData, versionedCommandData, noVersioningRequiredCommandData)
 
             reportPossibleUnversionedException(unversionedStates, unversionedCommands)
         }
@@ -198,15 +201,17 @@ class StableIdVersionedSymbolProcessor(private val logger: KSPLogger, private va
          *  @param implementations: The map that tells you for each set of interfaces, what implementations of this set were
          *  found.
          *  @param typeSet: The set of interfaces we are interested in that doesn't include the `Versioned` interface.
-         *  @param versionedTypeSet: The set of interfaces we are interested in that does include the `Versioned` interface.
+         *  @param versionedTypeSet: The set of interfaces we are interested in that does include the `Versioned` interface or is otherwise not required to be versioned.
+         *  @param noVersionRequiredTypeSet: The set of interfaces we are interested in that are explicitly not required to be versioned.
          *  @return The difference between `versionedTypeSet` and `typeSet` in `implementations`.
          */
         private fun filterUnversionedImplementations(
             implementations: Map<Set<KClass<*>>, List<HasQualifiedName>>,
             typeSet: Set<KClass<*>>,
-            versionedTypeSet: Set<KClass<*>>
+            versionedTypeSet: Set<KClass<*>>,
+            noVersionRequiredTypeSet: Set<KClass<*>>
         ): Set<String> =
-            implementations[typeSet].toQualifiedNameSet() - implementations[versionedTypeSet].toQualifiedNameSet()
+            implementations[typeSet].toQualifiedNameSet() - (implementations[versionedTypeSet].toQualifiedNameSet() + implementations[noVersionRequiredTypeSet].toQualifiedNameSet())
 
         internal fun reportPossibleUnversionedException(
             unversionedStateDeclarations: Set<String>,

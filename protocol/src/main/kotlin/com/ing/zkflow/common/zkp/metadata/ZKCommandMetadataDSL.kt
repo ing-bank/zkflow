@@ -1,7 +1,10 @@
 package com.ing.zkflow.common.zkp.metadata
 
 import com.ing.zinc.naming.camelToSnakeCase
+import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.common.contracts.ZKCommandData
+import com.ing.zkflow.common.contracts.ZKUpgradeCommandData
+import com.ing.zkflow.common.versioning.Versioned
 import com.ing.zkflow.common.zkp.metadata.ZKCircuit.Companion.resolve
 import com.ing.zkflow.util.scopedName
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
@@ -12,6 +15,8 @@ import net.corda.core.utilities.seconds
 import java.io.File
 import java.time.Duration
 import kotlin.reflect.KClass
+import kotlin.reflect.full.hasAnnotation
+import kotlin.reflect.full.isSubclassOf
 
 @DslMarker
 annotation class ZKCommandMetadataDSL
@@ -84,7 +89,13 @@ interface ZKIndexedTypedElement {
 /**
  * Describes the inputs and references that should be available inside ZKP circuit and if it should be forced to be private.
  */
-data class ZKReference(override val type: KClass<out ContractState>, override val index: Int, internal val forcePrivate: Boolean) : ZKIndexedTypedElement {
+data class ZKReference(override val type: KClass<out ContractState>, override val index: Int, internal val forcePrivate: Boolean) :
+    ZKIndexedTypedElement {
+    init {
+        require(type.isSubclassOf(Versioned::class)) { "Input or reference types must implement `Versioned`" }
+        require(type.hasAnnotation<ZKP>()) { "Input or reference types must be annotated with `@ZKP`" }
+    }
+
     fun mustBePrivate() = forcePrivate
 }
 
@@ -94,6 +105,10 @@ data class ZKReference(override val type: KClass<out ContractState>, override va
  */
 data class ZKProtectedComponent(override val type: KClass<out ContractState>, override val index: Int, internal val private: Boolean) :
     ZKIndexedTypedElement {
+    init {
+        require(type.isSubclassOf(Versioned::class)) { "Input or reference types must implement `Versioned`" }
+        require(type.hasAnnotation<ZKP>()) { "Input or reference types must be annotated with `@ZKP`" }
+    }
     fun mustBePrivate() = private
 }
 
@@ -171,6 +186,12 @@ class ZKProtectedComponentList : ArrayList<ZKProtectedComponent>() {
  */
 @ZKCommandMetadataDSL
 class ZKCommandMetadata(val commandKClass: KClass<out ZKCommandData>) {
+    init {
+        if (!commandKClass.isSubclassOf(ZKUpgradeCommandData::class)) {
+            require(commandKClass.isSubclassOf(Versioned::class)) { "Commands must implement `Versioned`" }
+        }
+        require(commandKClass.hasAnnotation<ZKP>()) { "Commands must be annotated with `@ZKP`" }
+    }
     val scopedCommandName: String by lazy { commandKClass.scopedName ?: error("Command classes must be a named class") }
 
     /**

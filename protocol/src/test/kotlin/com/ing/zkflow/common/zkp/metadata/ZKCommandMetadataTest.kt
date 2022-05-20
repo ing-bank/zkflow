@@ -4,6 +4,7 @@ import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.contracts.ZKContractState
 import com.ing.zkflow.common.contracts.ZKOwnableState
+import com.ing.zkflow.common.versioning.Versioned
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import net.corda.core.contracts.BelongsToContract
@@ -20,7 +21,7 @@ class ZKCommandMetadataTest {
 
     @Test
     fun `ZKCommandMetadata DSL happy flow works`() {
-        val cmd = object : ZKCommandData {
+        val cmd = @ZKP object : ZKCommandData, Versioned {
             override val metadata = commandMetadata {
                 circuit { name = "foo" }
 
@@ -46,7 +47,7 @@ class ZKCommandMetadataTest {
     fun `ZKCommandMetadata DSL rejects duplicate indexes`() {
 
         assertThrows<IllegalStateException> {
-            object : ZKCommandData {
+            @ZKP object : ZKCommandData, Versioned {
                 override val metadata = commandMetadata {
                     circuit { name = "foo" }
 
@@ -61,7 +62,7 @@ class ZKCommandMetadataTest {
         }
 
         assertThrows<IllegalStateException> {
-            object : ZKCommandData {
+            @ZKP object : ZKCommandData, Versioned {
                 override val metadata = commandMetadata {
                     circuit { name = "foo" }
 
@@ -76,7 +77,7 @@ class ZKCommandMetadataTest {
         }
 
         assertThrows<IllegalStateException> {
-            object : ZKCommandData {
+            @ZKP object : ZKCommandData, Versioned {
                 override val metadata = commandMetadata {
                     circuit { name = "foo" }
 
@@ -97,24 +98,14 @@ class MockAuditContract : Contract {
         const val ID: ContractClassName = "com.ing.zkflow.common.zkp.metadata.MockAuditContract"
     }
 
+    interface VersionedApproval : Versioned, ZKContractState
+
     @BelongsToContract(MockAuditContract::class)
+    @ZKP
     data class Approval(
         val approver: AnonymousParty
-    ) : ZKContractState {
+    ) : VersionedApproval {
         override val participants: List<AnonymousParty> = listOf(approver)
-    }
-
-    /**
-     * Audit records are not private, and therefore have no associated circuit.
-     * If this command is used in a ZKFlow transaction, ZKFlow will still require
-     * command metadata, so it can determine total component group/witness size.
-     */
-    class Approve : ZKCommandData {
-        override val metadata = commandMetadata {
-            numberOfSigners = 1
-            outputs { private(Approval::class) at 0 }
-            timeWindow = true
-        }
     }
 
     override fun verify(tx: LedgerTransaction) {}
@@ -125,19 +116,22 @@ class MockAssetContract : Contract {
         const val ID: ContractClassName = "com.ing.zkflow.common.zkp.metadata.MockAssetContract"
     }
 
+    interface VersionedMockAsset : Versioned, ZKOwnableState
+
     @BelongsToContract(MockAssetContract::class)
     @ZKP
     data class MockAsset(
         override val owner: AnonymousParty,
         val value: Int = Random().nextInt(1000)
-    ) : ZKOwnableState {
+    ) : VersionedMockAsset {
         override val participants: List<AnonymousParty> = listOf(owner)
 
         override fun withNewOwner(newOwner: AnonymousParty): CommandAndState =
             CommandAndState(Move(), copy(owner = newOwner))
     }
 
-    class Move : ZKCommandData {
+    interface VersionedMove : Versioned, ZKCommandData
+    class Move : VersionedMove {
         override val metadata = commandMetadata {
             numberOfSigners = 2
             inputs { any(MockAsset::class) at 0 }
@@ -147,7 +141,5 @@ class MockAssetContract : Contract {
         }
     }
 
-    override fun verify(tx: LedgerTransaction) {
-        // Contract verifications go here
-    }
+    override fun verify(tx: LedgerTransaction) {}
 }

@@ -66,16 +66,13 @@ internal class UpgradeCommandGeneratorTest {
             package com.example
             
             import com.ing.zkflow.annotations.ZKP
-            import com.ing.zkflow.common.contracts.ZKCommandData
-            import com.ing.zkflow.common.versioning.Versioned
+            import com.ing.zkflow.common.contracts.ZKUpgradeCommandData
             import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
             import com.ing.zkflow.common.zkp.metadata.commandMetadata
             import kotlin.String
             
-            public interface UpgradeV1ToV2I : Versioned
-
             @ZKP
-            public class UpgradeV1ToV2 : ZKCommandData, UpgradeV1ToV2I {
+            public class UpgradeV1ToV2 : ZKUpgradeCommandData {
               public override val metadata: ResolvedZKCommandMetadata = commandMetadata {
                       circuit {
                           name = "upgrade_v_1_to_v_2"

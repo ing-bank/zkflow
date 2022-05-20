@@ -4,6 +4,7 @@ import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.contracts.ZKContractState
 import com.ing.zkflow.common.network.ZKAttachmentConstraintType
+import com.ing.zkflow.common.versioning.Versioned
 import com.ing.zkflow.common.zkp.ZKFlow
 import com.ing.zkflow.common.zkp.ZKFlow.DEFAULT_ZKFLOW_HASH_ATTACHMENT_HASHING_ALGORITHM
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
@@ -53,14 +54,15 @@ class ZKVerifierTransactionTest {
     data class TestState(
         val owner: AnonymousParty,
         val value: Int = Random().nextInt(1000)
-    ) : ZKContractState {
+    ) : ZKContractState, Versioned {
         override val participants: List<AnonymousParty> = listOf(owner)
     }
 
     @Test
     fun testFilterOutputs1() {
         withTestSerializationEnvIfNotSet {
-            class TestZKCommand : ZKCommandData {
+            @ZKP
+            class TestZKCommand : ZKCommandData, Versioned {
                 override val metadata: ResolvedZKCommandMetadata = commandMetadata {
                     outputs {
                         private(TestState::class) at 1
@@ -103,7 +105,8 @@ class ZKVerifierTransactionTest {
     @Test
     fun testFilterOutputs2() {
         withTestSerializationEnvIfNotSet {
-            class TestZKCommand : ZKCommandData {
+            @ZKP
+            class TestZKCommand : ZKCommandData, Versioned {
                 override val metadata: ResolvedZKCommandMetadata = commandMetadata {
                     outputs {
                         private(TestState::class) at 0
@@ -142,7 +145,8 @@ class ZKVerifierTransactionTest {
     @Test
     fun testFilterOutputs3() {
         withTestSerializationEnvIfNotSet {
-            class TestZKCommand : ZKCommandData {
+            @ZKP
+            class TestZKCommand : ZKCommandData, Versioned {
                 override val metadata: ResolvedZKCommandMetadata = commandMetadata {
                     outputs {
                         private(TestState::class) at 2

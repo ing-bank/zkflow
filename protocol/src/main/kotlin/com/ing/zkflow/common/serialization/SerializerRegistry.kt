@@ -32,6 +32,13 @@ import kotlin.reflect.KClass
  */
 data class KClassSerializer<out T : Any>(
     val klass: KClass<out T>,
+    /**
+     * This id is a unique and stable identifier for the `klass` property and its `serializer`.
+     * The relation between `id` and `klass` is used by the BFL serialization scheme as a short identifier to put in the serialized payload
+     * to reduce the size of the serialized payload.
+     *
+     * On deserialization, the id is then used to look up the correct `klass` and `serializer`.
+     */
     val id: Int,
     val serializer: KSerializer<out T>
 )

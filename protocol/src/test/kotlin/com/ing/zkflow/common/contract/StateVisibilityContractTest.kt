@@ -1,9 +1,11 @@
 package com.ing.zkflow.common.contract
 
 import com.ing.zkflow.annotations.Size
+import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.contracts.ZKContractState
 import com.ing.zkflow.common.serialization.BFLSerializationScheme
+import com.ing.zkflow.common.versioning.Versioned
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.common.zkp.metadata.commandMetadata
 import com.ing.zkflow.serialization.serializer.IntSerializer
@@ -24,7 +26,6 @@ import net.corda.core.identity.AnonymousParty
 import net.corda.core.transactions.LedgerTransaction
 import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.Instant
 import java.util.Random
@@ -144,20 +145,14 @@ class StateVisibilityContractTest {
             }
         }
     }
-
-    @Test
-    @Disabled("Enable and add surrogate for NonAnnotatableTestState once @ZKPSurrogate is implemented")
-    fun `tx with nonannotatable state`() {
-        services.zkLedger {
-            transaction {
-                output(LocalContract.PROGRAM_ID, NonAnnotatableTestState(alice))
-                command(listOf(alice.owningKey, bob.owningKey), LocalContract.CreateNonAnnotatableTestState())
-                verifies()
-            }
-        }
-    }
 }
 
+/**
+ * Note that in addition to the @ZKP annotation, the classes and properties below need to be annotated with @Serializable.
+ * This is because the ZKFlow annotation processors are not configured to run on the `protocol` module and therefore no @Serializable annotations are generated.
+ * Because contract tests run with the custom BFL serializer, @Serializable annotations are required.
+ * Tests that need these annotations to be generated from @ZKP annotations should be moved to the `integrations-tests` module.
+ */
 class LocalContract : Contract {
     companion object {
         const val PROGRAM_ID = "com.ing.zkflow.common.contract.LocalContract"
@@ -166,25 +161,8 @@ class LocalContract : Contract {
     override fun verify(tx: LedgerTransaction) {}
 
     @Serializable
-    class CreateNonAnnotatableTestState : CommandData {
-        init {
-            tryNonFailing {
-                BFLSerializationScheme.Companion.CommandDataSerializerRegistry.register(this::class, serializer())
-            }
-        }
-    }
-
-    @Serializable
-    class CreatePublicImplicitly : CommandData {
-        init {
-            tryNonFailing {
-                BFLSerializationScheme.Companion.CommandDataSerializerRegistry.register(this::class, serializer())
-            }
-        }
-    }
-
-    @Serializable
-    class CreatePublicExplicitly : ZKCommandData {
+    @ZKP
+    class CreatePublicExplicitly : ZKCommandData, Versioned {
         init {
             tryNonFailing {
                 BFLSerializationScheme.Companion.CommandDataSerializerRegistry.register(this::class, serializer())
@@ -201,7 +179,8 @@ class LocalContract : Contract {
     }
 
     @Serializable
-    class CreatePrivate : ZKCommandData {
+    @ZKP
+    class CreatePrivate : ZKCommandData, Versioned {
         init {
             tryNonFailing {
                 BFLSerializationScheme.Companion.CommandDataSerializerRegistry.register(this::class, serializer())
@@ -218,6 +197,7 @@ class LocalContract : Contract {
     }
 
     @Serializable
+    @ZKP
     class MovePublic : CommandData {
         init {
             tryNonFailing {
@@ -227,7 +207,8 @@ class LocalContract : Contract {
     }
 
     @Serializable
-    class MoveAnyToPrivate : ZKCommandData {
+    @ZKP
+    class MoveAnyToPrivate : ZKCommandData, Versioned {
         init {
             tryNonFailing {
                 BFLSerializationScheme.Companion.CommandDataSerializerRegistry.register(this::class, serializer())
@@ -247,7 +228,8 @@ class LocalContract : Contract {
     }
 
     @Serializable
-    class MovePrivateToPublic : CommandData {
+    @ZKP
+    class MovePrivateToPublic : CommandData, Versioned {
         init {
             tryNonFailing {
                 BFLSerializationScheme.Companion.CommandDataSerializerRegistry.register(this::class, serializer())
@@ -256,7 +238,8 @@ class LocalContract : Contract {
     }
 
     @Serializable
-    class MoveFullyPrivate : ZKCommandData {
+    @ZKP
+    class MoveFullyPrivate : ZKCommandData, Versioned {
         init {
             tryNonFailing {
                 BFLSerializationScheme.Companion.CommandDataSerializerRegistry.register(this::class, serializer())
@@ -289,11 +272,12 @@ data class NonAnnotatableTestState(
 }
 
 @Serializable
+@ZKP
 @BelongsToContract(LocalContract::class)
 data class ZKTestState(
     val owner: @Serializable(with = OwnerSerializer::class) AnonymousParty,
     val value: @Serializable(with = IntSerializer::class) Int = Random().nextInt(1000)
-) : ZKContractState {
+) : ZKContractState, Versioned {
     private object OwnerSerializer : AnonymousPartySerializer(Crypto.EDDSA_ED25519_SHA512.schemeNumberID)
 
     @Transient
