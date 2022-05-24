@@ -34,8 +34,8 @@ fail_all_if_failed \
   "./gradlew $clean check test testReport jacocoRootReport --stacktrace"
 
 fail_all_if_failed \
-  "zkdapp-tester - Build with Gradle" \
+  "sample-zkdapp - Build with Gradle" \
   "./gradlew $clean build --stacktrace --info" \
-  "zkdapp-tester"
+  "sample-zkdapp"
 
 echo -e "\n${GREEN}BUILD SUCCESSFUL\nFeel free to push your code${NC}"
