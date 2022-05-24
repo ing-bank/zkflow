@@ -7,8 +7,9 @@ import com.ing.zinc.bfl.dsl.ListBuilder.Companion.string
 import com.ing.zinc.bfl.dsl.MapBuilder.Companion.map
 import com.ing.zinc.bfl.dsl.OptionBuilder.Companion.option
 import com.ing.zinc.bfl.dsl.StructBuilder.Companion.struct
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonElement
+import com.ing.zkflow.zinc.types.asZincJsonObjectList
+import com.ing.zkflow.zinc.types.asZincJsonString
+import com.ing.zkflow.zinc.types.jsonArrayOf
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.buildJsonArray
@@ -150,79 +151,7 @@ internal val testDataLargerListOfStructs = listOf(
 internal val testDataEmptyListOfStructWithStructs = emptyList<JsonObject>()
     .asZincJsonObjectList(2, structStructJson(false, 0))
 
-// JSON utilities
-fun String.parseJson(): JsonElement = Json.parseToJsonElement(this)
-
-fun String.asZincJsonString(size: Int): JsonObject = buildJsonObject {
-    require(size >= this@asZincJsonString.length) { "String does not fit in given size" }
-    put("size", "${this@asZincJsonString.length}")
-    put(
-        "values",
-        buildJsonArray {
-            codePoints().forEach {
-                add("$it")
-            }
-            (this@asZincJsonString.length until size).forEach { _ ->
-                add("0")
-            }
-        }
-    )
-}
-
-fun zincJsonOptionOf(jsonObject: JsonElement, isPresent: Boolean = true): JsonObject = buildJsonObject {
-    put("has_value", isPresent)
-    put("value", jsonObject)
-}
-
-fun Collection<JsonElement>.asZincJsonObjectList(size: Int, emptyValue: JsonElement): JsonObject = buildJsonObject {
-    require(size >= this@asZincJsonObjectList.size) { "Collection does not fit in given size" }
-    put("size", "${this@asZincJsonObjectList.size}")
-    put(
-        "values",
-        buildJsonArray {
-            forEach {
-                add(it)
-            }
-            (this@asZincJsonObjectList.size until size).forEach { _ ->
-                add(emptyValue)
-            }
-        }
-    )
-}
-
-fun Collection<Number>.asZincJsonNumberList(size: Int, paddingValue: Int = 0): JsonObject = buildJsonObject {
-    require(size >= this@asZincJsonNumberList.size) { "Collection does not fit in given size" }
-    put("size", "${this@asZincJsonNumberList.size}")
-    put(
-        "values",
-        buildJsonArray {
-            forEach {
-                add("$it")
-            }
-            (this@asZincJsonNumberList.size until size).forEach { _ ->
-                add("$paddingValue")
-            }
-        }
-    )
-}
-
-fun Collection<Boolean>.asZincJsonBooleanList(size: Int, paddingValue: Boolean = false): JsonObject = buildJsonObject {
-    require(size >= this@asZincJsonBooleanList.size) { "Collection does not fit in given size" }
-    put("size", "${this@asZincJsonBooleanList.size}")
-    put(
-        "values",
-        buildJsonArray {
-            forEach {
-                add(it)
-            }
-            (this@asZincJsonBooleanList.size until size).forEach { _ ->
-                add(paddingValue)
-            }
-        }
-    )
-}
-
-fun Map<Things, String>.asZincJsonMap(size: Int): JsonObject = buildJsonObject {
+public fun Map<Things, String>.asZincJsonMap(size: Int): JsonObject = buildJsonObject {
     require(size >= this@asZincJsonMap.size) { "Map does not fit in given size" }
     put("size", "${this@asZincJsonMap.size}")
     put(
@@ -246,18 +175,6 @@ fun Map<Things, String>.asZincJsonMap(size: Int): JsonObject = buildJsonObject {
             }
         }
     )
-}
-
-fun jsonArrayOf(vararg numbers: Number) = buildJsonArray {
-    numbers.forEach {
-        add("$it")
-    }
-}
-
-fun jsonArrayOf(vararg bools: Boolean) = buildJsonArray {
-    bools.forEach {
-        add(it)
-    }
 }
 
 fun primitiveStructJson(bar: Boolean, foo: Long) = buildJsonObject {

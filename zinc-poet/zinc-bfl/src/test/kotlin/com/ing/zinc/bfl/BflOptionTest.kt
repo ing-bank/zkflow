@@ -7,6 +7,8 @@ import com.ing.zinc.bfl.ZincExecutor.generateEqualsCircuit
 import com.ing.zinc.bfl.ZincExecutor.generateWitness
 import com.ing.zinc.bfl.ZincExecutor.runCommandAndLogTime
 import com.ing.zinc.bfl.generator.ZincGenerator.zincSourceFile
+import com.ing.zkflow.zinc.types.parseJson
+import com.ing.zkflow.zinc.types.zincJsonOptionOf
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.put

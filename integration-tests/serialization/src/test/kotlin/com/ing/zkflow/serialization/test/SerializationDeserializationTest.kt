@@ -12,6 +12,7 @@ import com.ing.zinc.bfl.generator.ZincGenerator.zincSourceFile
 import com.ing.zinc.bfl.mod
 import com.ing.zinc.bfl.use
 import com.ing.zkflow.annotations.ASCII
+import com.ing.zkflow.annotations.BigDecimalSize
 import com.ing.zkflow.annotations.Size
 import com.ing.zkflow.annotations.UTF16
 import com.ing.zkflow.annotations.UTF32
@@ -45,6 +46,7 @@ import net.corda.core.internal.writeText
 import net.corda.testing.core.TestIdentity
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
+import java.math.BigDecimal
 import java.nio.file.Path
 import java.util.Random
 
@@ -132,6 +134,45 @@ class SerializationDeserializationTest {
         actual["value"] shouldBe JsonPrimitive("${input.value.value}")
     }
 
+    @Test
+    fun `wrapped Float that is serialized and deserialized should equal the original`(@TempDir tempDir: Path) {
+        val input = WrappedFloat(123450.07f)
+        val inputSerializer = WrappedFloat.serializer()
+        val actual = tempDir.serializeAndDeserializeInZinc(input, inputSerializer) as JsonObject
+        actual shouldBe buildJsonObject {
+            put("kind", JsonPrimitive("1"))
+            put("sign", JsonPrimitive("1"))
+            put("integer", listOf(0, 5, 4, 3, 2, 1).map { JsonPrimitive(it.toString()) }.toJsonList(39, JsonPrimitive("0")))
+            put("fraction", listOf(0, 7).map { JsonPrimitive(it.toString()) }.toJsonList(46, JsonPrimitive("0")))
+        }
+    }
+
+    @Test
+    fun `wrapped Double that is serialized and deserialized should equal the original`(@TempDir tempDir: Path) {
+        val input = WrappedDouble(123450.06789)
+        val inputSerializer = WrappedDouble.serializer()
+        val actual = tempDir.serializeAndDeserializeInZinc(input, inputSerializer) as JsonObject
+        actual shouldBe buildJsonObject {
+            put("kind", JsonPrimitive("2"))
+            put("sign", JsonPrimitive("1"))
+            put("integer", listOf(0, 5, 4, 3, 2, 1).map { JsonPrimitive(it.toString()) }.toJsonList(309, JsonPrimitive("0")))
+            put("fraction", listOf(0, 6, 7, 8, 9).map { JsonPrimitive(it.toString()) }.toJsonList(325, JsonPrimitive("0")))
+        }
+    }
+
+    @Test
+    fun `wrapped BigDecimal that is serialized and deserialized should equal the original`(@TempDir tempDir: Path) {
+        val input = WrappedBigDecimal(BigDecimal("0123450.06789"))
+        val inputSerializer = WrappedBigDecimal.serializer()
+        val actual = tempDir.serializeAndDeserializeInZinc(input, inputSerializer) as JsonObject
+        actual shouldBe buildJsonObject {
+            put("kind", JsonPrimitive("3"))
+            put("sign", JsonPrimitive("1"))
+            put("integer", listOf(0, 5, 4, 3, 2, 1).map { JsonPrimitive(it.toString()) }.toJsonList(20, JsonPrimitive("0")))
+            put("fraction", listOf(0, 6, 7, 8, 9).map { JsonPrimitive(it.toString()) }.toJsonList(6, JsonPrimitive("0")))
+        }
+    }
+
     private fun <T : WrappedValue<*>> Path.serializeAndDeserializeInZinc(input: T, inputSerializer: KSerializer<T>): JsonElement {
         val serializedInput = scheme.encodeToBinary(inputSerializer, input)
 
@@ -191,9 +232,7 @@ class SerializationDeserializationTest {
                     type = witnessGroupOptions.witnessType
                 }
                 returnType = bflModule.typeOfSingleStructField().toZincType()
-                body = """
-                            ${bflModule.deserializeExpr(witnessGroupOptions, "0 as u24", SERIALIZED, WITNESS)}.value
-                """.trimIndent()
+                body = "${bflModule.deserializeExpr(witnessGroupOptions, "0 as u24", SERIALIZED, WITNESS)}.value"
             }
         }
         return bflModule
@@ -276,5 +315,20 @@ class SerializationDeserializationTest {
         data class WrappedMockAsset(
             override val value: MockAsset
         ) : WrappedValue<MockAsset>
+
+        @ZKP
+        data class WrappedBigDecimal(
+            override val value: @BigDecimalSize(20, 6) BigDecimal
+        ) : WrappedValue<BigDecimal>
+
+        @ZKP
+        data class WrappedFloat(
+            override val value: Float
+        ) : WrappedValue<Float>
+
+        @ZKP
+        data class WrappedDouble(
+            override val value: Double
+        ) : WrappedValue<Double>
     }
 }

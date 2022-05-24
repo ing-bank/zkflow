@@ -41,6 +41,8 @@ class ZincTypeGeneratorTest {
             Arguments.of(ClassWithUInt.serializer().descriptor, structWithUInt),
             Arguments.of(ClassWithLong.serializer().descriptor, structWithLong),
             Arguments.of(ClassWithULong.serializer().descriptor, structWithULong),
+            Arguments.of(ClassWithFloat.serializer().descriptor, structWithFloat),
+            Arguments.of(ClassWithDouble.serializer().descriptor, structWithDouble),
             Arguments.of(ClassWithAsciiChar.serializer().descriptor, structWithAsciiChar),
             Arguments.of(ClassWithUnicodeChar.serializer().descriptor, structWithUnicodeChar),
             Arguments.of(ClassWithAsciiString.serializer().descriptor, structWithAsciiString),

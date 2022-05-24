@@ -10,6 +10,10 @@ import com.ing.zinc.bfl.dsl.ListBuilder.Companion.list
 import com.ing.zinc.bfl.generator.ZincGenerator.zincSourceFile
 import com.ing.zinc.poet.ZincPrimitive
 import com.ing.zkflow.util.bitSize
+import com.ing.zkflow.zinc.types.asZincJsonBooleanList
+import com.ing.zkflow.zinc.types.asZincJsonNumberList
+import com.ing.zkflow.zinc.types.asZincJsonObjectList
+import com.ing.zkflow.zinc.types.parseJson
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import kotlinx.serialization.json.JsonPrimitive

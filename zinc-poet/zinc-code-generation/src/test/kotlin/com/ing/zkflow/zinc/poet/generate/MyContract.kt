@@ -95,7 +95,8 @@ interface VersionedMyOtherState : Versioned, ContractState
 @ZKP
 @BelongsToContract(MyContract::class)
 data class MyOtherState(
-    val ageInYears: Int
+    val ageInYears: Int,
+    val amount: Float,
 ) : VersionedMyOtherState {
     override val participants: List<AbstractParty> = emptyList()
 }

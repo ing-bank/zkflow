@@ -5,6 +5,7 @@ import com.ing.zinc.bfl.ZincExecutor.generateWitness
 import com.ing.zinc.bfl.ZincExecutor.runCommandAndLogTime
 import com.ing.zinc.bfl.dsl.StructBuilder.Companion.struct
 import com.ing.zinc.bfl.dsl.WrappedTransactionComponentBuilder.Companion.wrappedTransactionComponent
+import com.ing.zkflow.zinc.types.parseJson
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.json.JsonPrimitive
 import org.junit.jupiter.api.Test

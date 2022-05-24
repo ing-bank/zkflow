@@ -11,6 +11,7 @@ dependencies {
 
     val kotlinxSerializationVersion: String by project
     testImplementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
+    testImplementation(project(":test-utils"))
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {

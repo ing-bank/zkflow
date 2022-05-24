@@ -191,7 +191,7 @@ struct Bar {
 }
 ```
 
-The above methods will be generated for each `FIELD` in (`y`, `x_a`).
+The above methods will be generated for each `FIELD` in (`y`, `x`, `x_a`).
 
 ### Adding more functions
 
@@ -200,7 +200,7 @@ extension method. For example:
 
 ```kotlin
 BflModule.registerMethod(
-    "StructWithArrayFields",
+    moduleId = "StructWithArrayFields",
     zincMethod {
         name = "foo"
         returnType = ZincPrimitive.Bool
