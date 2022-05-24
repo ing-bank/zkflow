@@ -1,7 +1,7 @@
 package com.example.flow
 
 import co.paralleluniverse.fibers.Suspendable
-import com.example.contract.CBDCContract
+import com.example.contract.cbdc.CBDCContract
 import com.example.token.cbdc.CBDCToken
 import com.ing.zkflow.client.flows.ZKFinalityFlow
 import com.ing.zkflow.client.flows.ZKReceiveFinalityFlow

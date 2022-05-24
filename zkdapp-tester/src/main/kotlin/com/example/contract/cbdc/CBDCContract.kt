@@ -1,4 +1,4 @@
-package com.example.contract
+package com.example.contract.cbdc
 
 import com.example.token.cbdc.CBDCToken
 import com.ing.zkflow.annotations.ZKP
@@ -12,7 +12,7 @@ import org.intellij.lang.annotations.Language
 
 class CBDCContract : Contract {
     companion object {
-        const val ID: ContractClassName = "com.example.contract.CBDCContract"
+        val ID: ContractClassName = this::class.java.enclosingClass.canonicalName
     }
 
     interface  VersionedMoveCommand: Versioned, ZKCommandData

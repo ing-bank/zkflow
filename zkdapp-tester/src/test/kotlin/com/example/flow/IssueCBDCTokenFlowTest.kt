@@ -1,6 +1,6 @@
 package com.example.flow
 
-import com.example.contract.CBDCContract
+import com.example.contract.cbdc.CBDCContract
 import com.example.token.cbdc.CBDCToken
 import com.example.token.cbdc.digitalEuro
 import com.ing.zkflow.common.zkp.ZKFlow

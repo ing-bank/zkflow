@@ -1,4 +1,4 @@
-package com.example.contract
+package com.example.contract.cbdc
 
 import com.example.token.cbdc.digitalEuro
 import com.ing.zkflow.testing.dsl.zkLedger

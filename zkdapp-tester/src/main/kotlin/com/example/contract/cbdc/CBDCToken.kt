@@ -1,6 +1,6 @@
 package com.example.token.cbdc
 
-import com.example.contract.CBDCContract
+import com.example.contract.cbdc.CBDCContract
 import com.example.token.sdk.AbstractFungibleToken
 import com.example.token.sdk.AmountIssuedTokenTypeSurrogate
 import com.example.token.sdk.IssuedTokenType
