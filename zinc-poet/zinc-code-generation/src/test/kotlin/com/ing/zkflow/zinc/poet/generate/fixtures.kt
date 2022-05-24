@@ -2,6 +2,7 @@ package com.ing.zkflow.zinc.poet.generate
 
 import com.ing.zinc.bfl.BflPrimitive
 import com.ing.zinc.bfl.BflUnit
+import com.ing.zinc.bfl.dsl.BigDecimalBuilder.Companion.bigDecimal
 import com.ing.zinc.bfl.dsl.EnumBuilder.Companion.enum
 import com.ing.zinc.bfl.dsl.ListBuilder.Companion.byteArray
 import com.ing.zinc.bfl.dsl.ListBuilder.Companion.list
@@ -19,6 +20,7 @@ import com.ing.zkflow.annotations.UnicodeChar
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.annotations.corda.EdDSA
 import com.ing.zkflow.annotations.corda.SHA256
+import com.ing.zkflow.serialization.serializer.FixedLengthFloatingPointSerializer
 import net.corda.core.contracts.HashAttachmentConstraint
 import net.corda.core.contracts.SignatureAttachmentConstraint
 import net.corda.core.crypto.SecureHash
@@ -48,6 +50,10 @@ data class ClassWithUInt(val uint: UInt)
 data class ClassWithLong(val long: Long)
 @ZKP
 data class ClassWithULong(val ulong: ULong)
+@ZKP
+data class ClassWithFloat(val float: Float)
+@ZKP
+data class ClassWithDouble(val double: Double)
 @ZKP
 data class ClassWithAsciiChar(val asciiChar: @ASCIIChar Char)
 @ZKP
@@ -123,6 +129,28 @@ val structWithLong = struct {
 val structWithULong = struct {
     name = "ClassWithULong"
     field { name = "ulong"; type = BflPrimitive.U64 }
+}
+val structWithFloat = struct {
+    name = "ClassWithFloat"
+    field {
+        name = "float"
+        type = bigDecimal {
+            integerSize = FixedLengthFloatingPointSerializer.FLOAT_INTEGER_PART_MAX_PRECISION
+            fractionSize = FixedLengthFloatingPointSerializer.FLOAT_FRACTION_PART_MAX_PRECISION
+            name = FixedLengthFloatingPointSerializer.FLOAT
+        }
+    }
+}
+val structWithDouble = struct {
+    name = "ClassWithDouble"
+    field {
+        name = "double"
+        type = bigDecimal {
+            integerSize = FixedLengthFloatingPointSerializer.DOUBLE_INTEGER_PART_MAX_PRECISION
+            fractionSize = FixedLengthFloatingPointSerializer.DOUBLE_FRACTION_PART_MAX_PRECISION
+            name = FixedLengthFloatingPointSerializer.DOUBLE
+        }
+    }
 }
 val structWithAsciiChar = struct {
     name = "ClassWithAsciiChar"

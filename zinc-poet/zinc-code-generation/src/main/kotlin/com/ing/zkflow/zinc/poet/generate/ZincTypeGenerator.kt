@@ -6,6 +6,7 @@ import com.ing.zinc.bfl.BflPrimitive
 import com.ing.zinc.bfl.BflType
 import com.ing.zinc.bfl.BflUnit
 import com.ing.zinc.bfl.dsl.ArrayBuilder.Companion.array
+import com.ing.zinc.bfl.dsl.BigDecimalBuilder.Companion.bigDecimal
 import com.ing.zinc.bfl.dsl.EnumBuilder.Companion.enum
 import com.ing.zinc.bfl.dsl.ListBuilder.Companion.byteArray
 import com.ing.zinc.bfl.dsl.ListBuilder.Companion.list
@@ -17,6 +18,7 @@ import com.ing.zinc.naming.camelToSnakeCase
 import com.ing.zkflow.common.serialization.zinc.generation.internalTypeName
 import com.ing.zkflow.serialization.FixedLengthType
 import com.ing.zkflow.serialization.serializer.BigDecimalSizeAnnotation
+import com.ing.zkflow.serialization.serializer.FixedLengthFloatingPointSerializer
 import com.ing.zkflow.serialization.serializer.SizeAnnotation
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.SerialKind
@@ -63,7 +65,7 @@ object ZincTypeGenerator {
             FixedLengthType.EXACT_LIST -> createArray(descriptor)
             null -> when (descriptor.kind) {
                 SerialKind.ENUM -> createEnum(descriptor)
-                StructureKind.CLASS -> createStruct(descriptor)
+                StructureKind.CLASS -> createClass(descriptor)
                 else -> throw IllegalArgumentException("No handler found for ${descriptor.kind}: ${descriptor.serialName}.")
             }
         }
@@ -80,26 +82,35 @@ object ZincTypeGenerator {
         }
     }
 
-    private fun createStruct(descriptor: SerialDescriptor): BflModule = if (
-        descriptor.serialName == "Float" ||
-        descriptor.serialName == "Double" ||
-        descriptor.serialName.startsWith("BigDecimal_")
-    ) {
-        val annotation = descriptor.getAnnotation<BigDecimalSizeAnnotation>()
-        BflBigDecimal(annotation.integerSize, annotation.fractionSize, descriptor.serialName)
+    private fun createClass(descriptor: SerialDescriptor): BflModule = if (descriptor.isBigDecimalDescriptor()) {
+        createBigDecimal(descriptor)
+    } else if (descriptor.elementsCount > 0) {
+        createStruct(descriptor)
     } else {
-        if (descriptor.elementsCount > 0) {
-            struct {
-                name = descriptor.internalTypeName
-                (0 until descriptor.elementsCount).mapNotNull { elementIndex ->
-                    field {
-                        name = descriptor.getElementName(elementIndex).camelToSnakeCase()
-                        type = generate(descriptor.getElementDescriptor(elementIndex))
-                    }
-                }
+        BflUnit
+    }
+
+    private fun SerialDescriptor.isBigDecimalDescriptor(): Boolean =
+        serialName == FixedLengthFloatingPointSerializer.FLOAT ||
+            serialName == FixedLengthFloatingPointSerializer.DOUBLE ||
+            serialName.startsWith(FixedLengthFloatingPointSerializer.BIG_DECIMAL_PREFIX)
+
+    private fun createStruct(descriptor: SerialDescriptor) = struct {
+        name = descriptor.internalTypeName
+        (0 until descriptor.elementsCount).mapNotNull { elementIndex ->
+            field {
+                name = descriptor.getElementName(elementIndex).camelToSnakeCase()
+                type = generate(descriptor.getElementDescriptor(elementIndex))
             }
-        } else {
-            BflUnit
+        }
+    }
+
+    private fun createBigDecimal(descriptor: SerialDescriptor): BflBigDecimal {
+        val annotation = descriptor.getAnnotation<BigDecimalSizeAnnotation>()
+        return bigDecimal {
+            integerSize = annotation.integerSize
+            fractionSize = annotation.fractionSize
+            name = descriptor.serialName
         }
     }
 
@@ -142,11 +153,13 @@ private fun SerialDescriptor.getIndexOfElementName(name: String): Int {
     return (0 until elementsCount).find {
         getElementName(it) == name
     } ?: throw IllegalArgumentException(
-        "Element with name `$name` not found in ${elementNames.joinToString(
+        "Element with name `$name` not found in ${
+        elementNames.joinToString(
             prefix = "[",
             separator = ", ",
             postfix = "]"
-        ) { it }}"
+        ) { it }
+        }"
     )
 }
 
@@ -155,7 +168,8 @@ private fun SerialDescriptor.getElementDescriptorByName(name: String): SerialDes
 }
 
 @Suppress("UNCHECKED_CAST")
-private inline fun <reified T : Annotation> SerialDescriptor.findAnnotation(): T? = annotations.singleOrNull { it is T } as T?
+private inline fun <reified T : Annotation> SerialDescriptor.findAnnotation(): T? =
+    annotations.singleOrNull { it is T } as T?
 
 private inline fun <reified T : Annotation> SerialDescriptor.getAnnotation(): T = requireNotNull(findAnnotation()) {
     "Annotation ${T::class} not found on $serialName"

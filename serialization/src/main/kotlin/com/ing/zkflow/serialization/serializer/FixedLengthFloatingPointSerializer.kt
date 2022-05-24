@@ -8,7 +8,7 @@ import kotlinx.serialization.encoding.Encoder
 import java.math.BigDecimal
 
 /**
- * [FixedLengthFloatingPointSerializer] is used to serialize [Float], [Double] and [BigDecimal] types.
+ * A [FixedLengthKSerializerWithDefault] for [Float], [Double] and [BigDecimal] types.
  * The serialized structure is modelled after the [BigDecimal] java type.
  *
  * The encoded representation of a [BigDecimal] is a byte stream with the next elements in the following order:
@@ -71,7 +71,7 @@ import java.math.BigDecimal
  *
  * [1]: https://zinc.zksync.io/ "Zinc"
  */
-sealed class FixedLengthFloatingPointSerializer<T : Any> (
+sealed class FixedLengthFloatingPointSerializer<T : Any> private constructor(
     integerPrecision: Int,
     fractionPrecision: Int,
     kind: FloatingKind,
@@ -99,9 +99,9 @@ sealed class FixedLengthFloatingPointSerializer<T : Any> (
     }
 
     private val serialName = when (kind) {
-        FloatingKind.FLOAT -> "Float"
-        FloatingKind.DOUBLE -> "Double"
-        FloatingKind.BIG_DECIMAL -> "BigDecimal_${integerPrecision}_$fractionPrecision"
+        FloatingKind.FLOAT -> FLOAT
+        FloatingKind.DOUBLE -> DOUBLE
+        FloatingKind.BIG_DECIMAL -> "$BIG_DECIMAL_PREFIX${integerPrecision}_$fractionPrecision"
     }
 
     override val descriptor =
@@ -178,6 +178,10 @@ sealed class FixedLengthFloatingPointSerializer<T : Any> (
 
         const val FLOAT_INTEGER_PART_MAX_PRECISION = 39
         const val FLOAT_FRACTION_PART_MAX_PRECISION = 46
+
+        const val FLOAT = "Float"
+        const val DOUBLE = "Double"
+        const val BIG_DECIMAL_PREFIX = "BigDecimal_"
     }
 
     // Variants.

@@ -7,8 +7,9 @@ import com.ing.zinc.poet.ZincInvocable
 import com.ing.zinc.poet.ZincMethod.Companion.zincMethod
 import com.ing.zinc.poet.ZincPrimitive
 import com.ing.zinc.poet.indent
+import java.util.Objects
 
-data class BflBigDecimal(
+class BflBigDecimal(
     val integerSize: Int,
     val fractionSize: Int,
     val overrideName: String? = null
@@ -38,6 +39,13 @@ data class BflBigDecimal(
             elementType = BflPrimitive.U8
         }
     }
+
+    override fun equals(other: Any?): Boolean = when (other) {
+        is BflBigDecimal -> integerSize == other.integerSize && fractionSize == other.fractionSize && overrideName == other.overrideName
+        else -> false
+    }
+
+    override fun hashCode(): Int = Objects.hash(integerSize, fractionSize, overrideName)
 
     private fun reversedIndex(sizeExpression: String) = "$sizeExpression as u32 - i - 1 as u32"
 
