@@ -1,6 +1,8 @@
 package com.example.flow
 
-import com.example.contract.MockAssetContract
+import com.example.contract.cbdc.CBDCContract
+import com.example.token.cbdc.CBDCToken
+import com.example.token.cbdc.digitalEuro
 import com.ing.zkflow.common.zkp.ZKFlow
 import com.ing.zkflow.common.zkp.ZincZKTransactionCordaService
 import com.ing.zkflow.node.services.InMemoryUtxoInfoStorage
@@ -10,6 +12,7 @@ import com.ing.zkflow.node.services.ServiceNames.ZK_UTXO_INFO_STORAGE
 import com.ing.zkflow.node.services.ServiceNames.ZK_VERIFIER_TX_STORAGE
 import com.ing.zkflow.notary.ZKNotaryService
 import com.ing.zkflow.testing.checkVault
+import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
 import net.corda.core.node.services.Vault
@@ -25,16 +28,15 @@ import net.corda.testing.node.internal.cordappWithPackages
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 
-class IssueMockAssetFlowTest {
+class IssueCBDCTokenFlowTest {
     private val mockNet: MockNetwork
     private val notaryNode: StartedMockNode
-    private val megaCorpNode: StartedMockNode
-    private val miniCorpNode: StartedMockNode
-    private val thirdPartyNode: StartedMockNode
-    private val megaCorp: Party
-    private val miniCorp: Party
-    private val thirdParty: Party
+    private val issuerNode: StartedMockNode
+    private val aliceNode: StartedMockNode
+    private val issuer: Party
+    private val alice: AnonymousParty
     private val notary: Party
+
     private val zkTransactionService: ZincZKTransactionCordaService
 
     init {
@@ -59,18 +61,18 @@ class IssueMockAssetFlowTest {
         )
         mockNet = MockNetwork(mockNetworkParameters)
         notaryNode = mockNet.notaryNodes.first()
-        megaCorpNode = mockNet.createPartyNode(CordaX500Name("MegaCorp", "London", "GB"))
-        miniCorpNode = mockNet.createPartyNode(CordaX500Name("MiniCorp", "London", "GB"))
-        thirdPartyNode = mockNet.createPartyNode(CordaX500Name("ThirdParty", "London", "GB"))
+        issuerNode = mockNet.createPartyNode(CordaX500Name("Issuer", "London", "GB"))
+        aliceNode = mockNet.createPartyNode(CordaX500Name("Alice", "London", "GB"))
         notary = notaryNode.info.singleIdentity()
-        megaCorp = megaCorpNode.info.singleIdentity()
-        miniCorp = miniCorpNode.info.singleIdentity()
-        thirdParty = thirdPartyNode.info.singleIdentity()
+        issuer = issuerNode.info.singleIdentity()
+        alice = aliceNode.info.singleIdentity().anonymise()
 
-        zkTransactionService = miniCorpNode.services.cordaService(ZincZKTransactionCordaService::class.java)
+        aliceNode.registerInitiatedFlow(IssuePrivateCBDCTokenFlowFlowHandler::class.java)
+
+        zkTransactionService = aliceNode.services.cordaService(ZincZKTransactionCordaService::class.java)
 
         // DO CIRCUIT SETUP
-        zkTransactionService.setup(MockAssetContract.IssuePrivate().metadata, force = true)
+        zkTransactionService.setup(CBDCContract.IssuePrivate().metadata, force = true)
     }
 
     @AfterAll
@@ -81,13 +83,13 @@ class IssueMockAssetFlowTest {
 
     @Test
     fun `Test private issuance`() {
-        val issuePrivateMockAssetFlow = IssuePrivateMockAssetFlow()
-        val issuePrivateFuture = miniCorpNode.startFlow(issuePrivateMockAssetFlow)
+        val issuePrivateCBDCTokenFlow = IssuePrivateCBDCTokenFlow(digitalEuro(1.00, issuer = issuer, holder = alice))
+        val issuePrivateFuture = issuerNode.startFlow(issuePrivateCBDCTokenFlow)
         mockNet.runNetwork()
         val privateIssueStx = issuePrivateFuture.getOrThrow()
 
-        val expectedInVault = privateIssueStx.tx.outRef<MockAssetContract.MockAsset>(0)
-        checkVault(miniCorpNode, expectedInVault, Vault.StateStatus.UNCONSUMED)
+        val expectedInVault = privateIssueStx.tx.outRef<CBDCToken>(0)
+        checkVault(aliceNode, expectedInVault, Vault.StateStatus.UNCONSUMED)
 
         zkTransactionService.verify(zkTransactionService.vtxStorage.getTransaction(privateIssueStx.id)!!.tx)
     }

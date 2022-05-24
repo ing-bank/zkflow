@@ -1,39 +1,48 @@
 package com.example.flow
 
 import co.paralleluniverse.fibers.Suspendable
-import com.example.contract.CBDCContract
+import com.example.contract.cbdc.CBDCContract
 import com.example.token.cbdc.CBDCToken
-import com.example.token.cbdc.IssuedTokenType
 import com.ing.zkflow.client.flows.ZKFinalityFlow
+import com.ing.zkflow.client.flows.ZKReceiveFinalityFlow
 import com.ing.zkflow.common.transactions.ZKTransactionBuilder
 import com.ing.zkflow.common.transactions.signInitialTransaction
-import net.corda.core.contracts.Amount
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.StateAndContract
 import net.corda.core.flows.FlowLogic
+import net.corda.core.flows.FlowSession
+import net.corda.core.flows.InitiatedBy
 import net.corda.core.flows.InitiatingFlow
-import net.corda.core.identity.AnonymousParty
 import net.corda.core.transactions.SignedTransaction
 
 @InitiatingFlow
 class IssuePrivateCBDCTokenFlow(
-    private val value: Amount<IssuedTokenType>,
-    private val holder: AnonymousParty,
+    private val token: CBDCToken,
     ) : FlowLogic<SignedTransaction>() {
 
     @Suspendable
     override fun call(): SignedTransaction {
-        val state = CBDCToken(value, holder)
-        val issueCommand = Command(CBDCContract.IssuePrivate(), holder.owningKey) //
-        val stateAndContract = StateAndContract(state, CBDCContract.ID)
+        val issueCommand = Command(CBDCContract.IssuePrivate(), token.issuer.owningKey) //
+        val stateAndContract = StateAndContract(token, CBDCContract.ID)
 
         val builder = ZKTransactionBuilder(serviceHub.networkMapCache.notaryIdentities.single())
             .withItems(stateAndContract, issueCommand)
 
         val stx = serviceHub.signInitialTransaction(builder)
 
-        subFlow(ZKFinalityFlow(stx, listOf()))
+        subFlow(ZKFinalityFlow(stx, listOf(initiateFlow(token.holder))))
 
         return stx
+    }
+
+}
+
+@InitiatedBy(IssuePrivateCBDCTokenFlow::class)
+class IssuePrivateCBDCTokenFlowFlowHandler(private val otherSession: FlowSession) : FlowLogic<Unit>() {
+    @Suspendable
+    override fun call() {
+        if (!serviceHub.myInfo.isLegalIdentity(otherSession.counterparty)) {
+            subFlow(ZKReceiveFinalityFlow(otherSession))
+        }
     }
 }

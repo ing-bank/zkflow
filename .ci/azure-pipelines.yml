@@ -80,7 +80,7 @@ steps:
   - task: Gradle@2
     displayName: 'ZKDapp Tester build'
     inputs:
-      workingDirectory: 'zkdapp-tester'
+      workingDirectory: 'sample-zkdapp'
       gradleWrapperFile: 'gradlew'
       gradleOptions: '-Xmx3072m'
       javaHomeOption: 'JDKVersion'

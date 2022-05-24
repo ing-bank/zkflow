@@ -1,4 +1,4 @@
-package com.example.contract
+package com.example.contract.cbdc
 
 import com.example.token.cbdc.CBDCToken
 import com.ing.zkflow.annotations.ZKP
@@ -12,14 +12,15 @@ import org.intellij.lang.annotations.Language
 
 class CBDCContract : Contract {
     companion object {
-        const val ID: ContractClassName = "com.example.contract.CBDCContract"
+        val ID: ContractClassName = this::class.java.enclosingClass.canonicalName
     }
 
-    interface  MoveInterface: Versioned
+    interface  VersionedMoveCommand: Versioned, ZKCommandData
+
     @ZKP
-    class Move : ZKCommandData, MoveInterface {
+    class Move : VersionedMoveCommand {
         override val metadata = commandMetadata {
-            numberOfSigners = 2
+            numberOfSigners = 1
             inputs {
                 any(CBDCToken::class) at 0
             }
@@ -43,17 +44,16 @@ class CBDCContract : Contract {
 
                     assert!(input.data.amount.quantity > 0 as i64, "[Move] Quantity must be positive");
 
-                    assert!(ctx.signers.contains(input.data.holder.public_key), "[Move] Owner must sign");
-                    assert!(ctx.signers.contains(output.data.holder.public_key), "[Move] Receiver must sign");
+                    assert!(ctx.signers.contains(input.data.holder.public_key), "[Move] Input holder must sign");
                 }
 
             """.trimIndent()
         }
     }
 
-    interface  IssueInterface: Versioned
+    interface  VersionedIssuePrivateCommand: Versioned, ZKCommandData
     @ZKP
-    class IssuePrivate : ZKCommandData, IssueInterface {
+    class IssuePrivate : VersionedIssuePrivateCommand {
         override val metadata = commandMetadata {
             numberOfSigners = 1
             outputs {
@@ -72,17 +72,17 @@ class CBDCContract : Contract {
                     
                     assert!(output.data.amount.quantity > 0 as i64, "[IssuePrivate] Quantity must be positive");
 
-                    assert!(ctx.signers.contains(output.data.holder.public_key), "[IssuePrivate] Owner must sign");
+                    assert!(ctx.signers.contains(output.data.amount.token.issuer.public_key), "[IssuePrivate] Issuer must sign");
                 }
             """.trimIndent()
         }
     }
 
-    interface  SplitInterface: Versioned
+    interface  VersionedSplitCommand: Versioned, ZKCommandData
     @ZKP
-    class Split : ZKCommandData, SplitInterface {
+    class Split : VersionedSplitCommand {
         override val metadata = commandMetadata {
-            numberOfSigners = 2
+            numberOfSigners = 1
             inputs {
                 any(CBDCToken::class) at 0
             }
@@ -104,13 +104,13 @@ class CBDCContract : Contract {
                     let output_0 = ctx.outputs.cbdc_token_0;
                     let output_1 = ctx.outputs.cbdc_token_1;
                     
-                    assert!(input.data.amount.quantity > 0 as i64, "[Split] Quantity must be positive");
-                    assert!(output_0.data.amount.quantity > 0 as i64, "[Split] Quantity must be positive");
-                    assert!(output_1.data.amount.quantity > 0 as i64, "[Split] Quantity must be positive");
+                    assert!(input.data.amount.quantity > 0 as i64, "[Split] Input quantity must be positive");
+                    assert!(output_0.data.amount.quantity > 0 as i64, "[Split] Output 0 quantity must be positive");
+                    assert!(output_1.data.amount.quantity > 0 as i64, "[Split] Output 1 quantity must be positive");
                     
                     assert!(output_0.data.amount.quantity + output_1.data.amount.quantity == input.data.amount.quantity, "[Split] Amounts of funds must be constant");
                     
-                    assert!(ctx.signers.contains(input.data.holder.public_key), "[Split] Owner must sign");
+                    assert!(ctx.signers.contains(input.data.holder.public_key), "[Split] Input holder must sign");
                 }
             """.trimIndent()
         }
