@@ -14,80 +14,93 @@ import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.ksp.writeTo
-import net.corda.core.internal.writeText
-import java.nio.file.Files
+import java.util.Locale
 
+/**
+ * Generates version upgrade commands for families of state or command classes.
+ * Upgrades are generated in steps, one at a time.
+ * For each upgrade a public (any) and a private upgrade command is generated. There are no private-to-public or
+ * any-to-private upgrade commands, because the only goal here is to make sure that states are converted to the
+ * right version.
+ */
 class UpgradeCommandGenerator(
     private val codeGenerator: CodeGenerator
 ) {
     @Suppress("LongMethod")
     fun process(families: Map<String, List<KSClassDeclaration>>): List<ClassName> {
-        Files.createTempFile("families-", "-cosy").writeText(
-            families.entries.joinToString("\n") { (familyName, members) ->
-                "$familyName : ${members.joinToString { it.qualifiedName?.asString() ?: "${it.packageName.asString()}.${it.simpleName.asString()}" }}"
-            }
-        )
-
         return families.entries.flatMap { (_, members) ->
             var previousVersion: KSClassDeclaration? = null
-            members.mapNotNull { current ->
-                val generatedUpgradeCommand = previousVersion?.let { previous ->
-                    val commandClassName = "Upgrade${previous.simpleName.asString()}To${current.simpleName.asString()}"
-                    val qualifiedClassName = ClassName(current.packageName.asString(), commandClassName)
-                    FileSpec.builder(current.packageName.asString(), commandClassName)
-                        .addImport("com.ing.zkflow.common.zkp.metadata", "commandMetadata")
-                        .addType(
-                            TypeSpec.classBuilder(commandClassName)
-                                .addAnnotation(ZKP::class)
-                                .addSuperinterface(ZKUpgradeCommandData::class)
-                                .addProperty(
-                                    PropertySpec.builder("metadata", ResolvedZKCommandMetadata::class, KModifier.OVERRIDE)
-                                        .mutable(false)
-                                        .initializer(
-                                            CodeBlock.of(
-                                                """
-                                                    commandMetadata {
-                                                        circuit {
-                                                            name = "%3L"
-                                                        }
-                                                        numberOfSigners = 1
-                                                        command = true
-                                                        notary = true
-                                                        inputs {
-                                                            private(%1L::class) at 0
-                                                        }
-                                                        outputs {
-                                                            private(%2L::class) at 0
-                                                        }
-                                                    }                                                    
-                                                """.trimIndent(),
-                                                previous.qualifiedName?.asString(),
-                                                current.qualifiedName?.asString(),
-                                                commandClassName.camelToSnakeCase()
-                                            )
-                                        )
-                                        .build()
-                                )
-                                .addFunction(
-                                    FunSpec.builder("verifyPrivate")
-                                        .addModifiers(KModifier.OVERRIDE)
-                                        .returns(String::class)
-                                        .addCode(
-                                            CodeBlock.of(
-                                                "return com.ing.zkflow.zinc.poet.generate.generateUpgradeVerification(metadata).generate()"
-                                            )
-                                        )
-                                        .build()
-                                )
-                                .build()
-                        )
-                        .build()
-                        .writeTo(codeGenerator = codeGenerator, aggregating = false)
-                    qualifiedClassName
+            members.flatMap { current ->
+                previousVersion?.let { previous ->
+                    listOf(
+                        generateUpgradeCommand(previous, current, isPrivate = true),
+                        generateUpgradeCommand(previous, current, isPrivate = false),
+                    )
                 }
-                previousVersion = current
-                generatedUpgradeCommand
+                    .orEmpty()
+                    .also { previousVersion = current }
             }
         }
+    }
+
+    private fun generateUpgradeCommand(
+        previous: KSClassDeclaration,
+        current: KSClassDeclaration,
+        isPrivate: Boolean
+    ): ClassName {
+        val publicOrPrivateOutput = if (isPrivate) "private" else "public"
+        val publicOrAnyInput = if (isPrivate) "private" else "any"
+        val commandClassName =
+            "Upgrade${publicOrAnyInput.capitalize(Locale.getDefault())}${previous.simpleName.asString()}To${publicOrPrivateOutput.capitalize(Locale.getDefault())}${current.simpleName.asString()}"
+        FileSpec.builder(current.packageName.asString(), commandClassName)
+            .addImport("com.ing.zkflow.common.zkp.metadata", "commandMetadata")
+            .addType(
+                TypeSpec.classBuilder(commandClassName)
+                    .addAnnotation(ZKP::class)
+                    .addSuperinterface(ZKUpgradeCommandData::class)
+                    .addProperty(
+                        PropertySpec.builder("metadata", ResolvedZKCommandMetadata::class, KModifier.OVERRIDE)
+                            .mutable(false)
+                            .initializer(
+                                CodeBlock.of(
+                                    """
+                                        commandMetadata {
+                                            circuit {
+                                                name = "%3L"
+                                            }
+                                            numberOfSigners = 1
+                                            command = true
+                                            notary = true
+                                            inputs {
+                                                $publicOrAnyInput(%1L::class) at 0
+                                            }
+                                            outputs {
+                                                $publicOrPrivateOutput(%2L::class) at 0
+                                            }
+                                        }
+                                    """.trimIndent(),
+                                    previous.qualifiedName?.asString(),
+                                    current.qualifiedName?.asString(),
+                                    commandClassName.camelToSnakeCase()
+                                )
+                            )
+                            .build()
+                    )
+                    .addFunction(
+                        FunSpec.builder("verifyPrivate")
+                            .addModifiers(KModifier.OVERRIDE)
+                            .returns(String::class)
+                            .addCode(
+                                CodeBlock.of(
+                                    "return com.ing.zkflow.zinc.poet.generate.generateUpgradeVerification(metadata).generate()"
+                                )
+                            )
+                            .build()
+                    )
+                    .build()
+            )
+            .build()
+            .writeTo(codeGenerator = codeGenerator, aggregating = false)
+        return ClassName(current.packageName.asString(), commandClassName)
     }
 }

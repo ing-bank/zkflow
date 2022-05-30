@@ -52,6 +52,7 @@ internal class UpgradeCommandGeneratorTest {
     }
 
     @Test
+    @Suppress("LongMethod")
     fun `process family with two members should generate upgrade`() {
         val generatedBytes = ByteArrayOutputStream()
         val testSubject = testSubject(generatedBytes)
@@ -60,7 +61,10 @@ internal class UpgradeCommandGeneratorTest {
                 "Double" to listOf(v1, v2)
             )
         )
-        actual shouldBe listOf(ClassName("com.example", "UpgradeV1ToV2"))
+        actual shouldBe listOf(
+            ClassName("com.example", "UpgradePrivateV1ToPrivateV2"),
+            ClassName("com.example", "UpgradeAnyV1ToPublicV2"),
+        )
 
         generatedBytes.toString("UTF-8") shouldBe """
             package com.example
@@ -72,10 +76,10 @@ internal class UpgradeCommandGeneratorTest {
             import kotlin.String
             
             @ZKP
-            public class UpgradeV1ToV2 : ZKUpgradeCommandData {
+            public class UpgradePrivateV1ToPrivateV2 : ZKUpgradeCommandData {
               public override val metadata: ResolvedZKCommandMetadata = commandMetadata {
                       circuit {
-                          name = "upgrade_v_1_to_v_2"
+                          name = "upgrade_private_v_1_to_private_v_2"
                       }
                       numberOfSigners = 1
                       command = true
@@ -86,12 +90,40 @@ internal class UpgradeCommandGeneratorTest {
                       outputs {
                           private(com.example.V2::class) at 0
                       }
-                  }                                                    
+                  }
             
               public override fun verifyPrivate(): String =
                   com.ing.zkflow.zinc.poet.generate.generateUpgradeVerification(metadata).generate()
             }
+            package com.example
             
+            import com.ing.zkflow.annotations.ZKP
+            import com.ing.zkflow.common.contracts.ZKUpgradeCommandData
+            import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
+            import com.ing.zkflow.common.zkp.metadata.commandMetadata
+            import kotlin.String
+            
+            @ZKP
+            public class UpgradeAnyV1ToPublicV2 : ZKUpgradeCommandData {
+              public override val metadata: ResolvedZKCommandMetadata = commandMetadata {
+                      circuit {
+                          name = "upgrade_any_v_1_to_public_v_2"
+                      }
+                      numberOfSigners = 1
+                      command = true
+                      notary = true
+                      inputs {
+                          any(com.example.V1::class) at 0
+                      }
+                      outputs {
+                          public(com.example.V2::class) at 0
+                      }
+                  }
+            
+              public override fun verifyPrivate(): String =
+                  com.ing.zkflow.zinc.poet.generate.generateUpgradeVerification(metadata).generate()
+            }
+	
         """.trimIndent()
     }
 }
