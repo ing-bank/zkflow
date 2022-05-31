@@ -25,7 +25,7 @@ class BestEffortTypeResolver(ktFile: KtFile) {
      * - class with `simpleName` is a compiled class in this module,
      * - class is present in this module but has not been compiled yet, and thus has been indexed,
      * - class is imported from a different module (thus not indexed), but is not compiled yet
-     *  if none succeeds, return [AsIs]
+     *  if none succeeds, class must exist in the current package, otherwise the Kotlin compiler would have not progressed to plugin invocations,
      */
     fun resolve(simpleName: String): BestEffortResolvedType {
         val import = imports?.accept(TypeResolverVisitor, simpleName)
@@ -57,7 +57,10 @@ class BestEffortTypeResolver(ktFile: KtFile) {
         }
 
         // Else:
-        return BestEffortResolvedType.AsIs(simpleName)
+        return BestEffortResolvedType.FullyQualified(
+            FqName.fromSegments(packageFqName.asString().split(".") + simpleName),
+            listOf()
+        )
     }
 }
 

@@ -41,7 +41,12 @@ class ContextualizedKtTypeReference(
                     // Drop the last `?` if present.
                     val simpleName = if (isNullable) it.substring(0, it.lastIndex) else it
 
-                    ContextualType(typeResolver.resolve(simpleName), isNullable)
+                    if (Processors.isKotlinNativeType(simpleName)) {
+                        // Short-cut type resolution for Kotlin native types such as Int, String, List, etc.
+                        ContextualType(BestEffortResolvedType.AsIs(simpleName), isNullable)
+                    } else {
+                        ContextualType(typeResolver.resolve(simpleName), isNullable)
+                    }
                 }
         }
     }

@@ -665,6 +665,8 @@ internal object Processors {
         }
     }
 
+    fun isKotlinNativeType(type: String) = standardTypes.keys.contains(type) || genericCollections.keys.contains(type)
+
     fun isUserType(type: String) = !native.keys.contains(type)
 
     fun forNativeType(contextualizedOriginal: ContextualizedKtTypeReference, children: List<SerializingObject>) = with(contextualizedOriginal) {
