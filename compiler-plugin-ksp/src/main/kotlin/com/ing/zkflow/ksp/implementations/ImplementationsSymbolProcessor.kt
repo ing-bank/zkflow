@@ -28,7 +28,7 @@ class ImplementationsSymbolProcessor(
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
         val newFiles = resolver.getNewFiles(visitedFiles)
-        logger.info("New Files: ${newFiles.joinToString { it.filePath }}")
+        logger.info("[${this::class.simpleName}]\nNew Files:\n${newFiles.joinToString("\n") { it.filePath }}")
         visitedFiles.addAll(newFiles)
 
         newFiles

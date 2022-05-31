@@ -29,7 +29,7 @@ class BestEffortTypeResolver(ktFile: KtFile) {
      */
     fun resolve(simpleName: String): BestEffortResolvedType {
         val import = imports?.accept(TypeResolverVisitor, simpleName)
-        SerdeLogger.log("Imports: ${imports?.text}\nSuitable import: $import")
+        SerdeLogger.log("Imports:\n${imports?.text}\nSuitable import: $import")
 
         // Case: imported class is a compiled class in some module.
         import?.let { fqName ->
