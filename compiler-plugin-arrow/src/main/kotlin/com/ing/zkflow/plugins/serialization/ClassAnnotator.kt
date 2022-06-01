@@ -29,7 +29,7 @@ val Meta.ClassAnnotator: CliPlugin
                     SerdeLogger.phase(PROCESSING_UNIT) {
                         Transform.replace(
                             replacing = ktClass,
-                            newDeclarations = ClassRefactory(this, ctx).newDeclarations
+                            newDeclaration = ClassRefactory(this, ctx).newDeclaration
                         )
                     }
                 } catch (e: Exception) {
