@@ -64,17 +64,17 @@ open class BFLSerializationScheme : CustomSerializationScheme {
             val log = LoggerFactory.getLogger(this::class.java)
 
             log.debug("Populating `${ContractStateSerializerRegistry::class.simpleName}`")
-            ServiceLoader.load(ContractStateSerializerRegistryProvider::class.java).flatMap { it.list() }
+            ServiceLoader.load(ContractStateSerializerRegistryProvider::class.java).map { it.get() }
                 .also { if (it.isEmpty()) log.debug("No ContractStates registered in ContractStateSerializerRegistry") }
                 .forEach { ContractStateSerializerRegistry.register(it) }
 
             log.debug("Populating `${CommandDataSerializerRegistry::class.simpleName}`")
-            ServiceLoader.load(CommandDataSerializerRegistryProvider::class.java).flatMap { it.list() }
+            ServiceLoader.load(CommandDataSerializerRegistryProvider::class.java).map { it.get() }
                 .also { if (it.isEmpty()) log.debug("No CommandData registered in CommandDataSerializerRegistry") }
                 .forEach { CommandDataSerializerRegistry.register(it) }
 
             log.debug("Parsing all additional surrogate serializers")
-            ServiceLoader.load(SurrogateSerializerRegistryProvider::class.java).flatMap { it.list() }
+            ServiceLoader.load(SurrogateSerializerRegistryProvider::class.java).map { it.get() }
                 .also { if (it.isEmpty()) log.debug("No additional serializers found") }
                 .forEach { (surrogateForKClass, id, serializer) ->
                     @Suppress("UNCHECKED_CAST")

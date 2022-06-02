@@ -13,8 +13,7 @@ import kotlin.reflect.full.allSuperclasses
 
 fun instantiateZkCommands(commandRegistryProviders: Iterable<CommandDataSerializerRegistryProvider>): List<ZKCommandData> =
     commandRegistryProviders
-        .flatMap { it.list() }
-        .map { it.klass }
+        .map { it.get().klass }
         .filter { it.allSuperclasses.contains(ZKCommandData::class) }
         .mapNotNull { getDefaultConstructor(it).call() as? ZKCommandData }
 

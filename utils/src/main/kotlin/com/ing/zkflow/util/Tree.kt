@@ -109,6 +109,17 @@ val <T> Tree<T, T>.value: T
         is Tree.Leaf<T, T> -> value
     }
 
+fun <T> Tree<T, T>.toStringTree(format: T.() -> String): Tree<String, String> {
+    return when (this) {
+        is Tree.Node<T, T> -> Tree.node(format(this.value)) {
+            children.forEach {
+                addNode(it.toStringTree(format))
+            }
+        }
+        is Tree.Leaf<T, T> -> Tree.leaf(format(this.value))
+    }
+}
+
 /**
  * Returns true _iff_ there is any node or leaf where [predicate] evaluates to true for it's value.
  */

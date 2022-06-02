@@ -19,9 +19,9 @@ import com.ing.zkflow.ksp.upgrade.UpgradeCommandGenerator
 import com.ing.zkflow.ksp.versioning.StateVersionSorting
 import com.ing.zkflow.ksp.versioning.VersionedStateIdGenerator
 import com.ing.zkflow.processors.SerializerRegistryProcessor
+import com.ing.zkflow.processors.SerializerRegistryProcessor.GeneratedSerializer
+import com.ing.zkflow.processors.SerializerRegistryProcessor.GeneratedSerializer.Companion.toImplementationClass
 import com.ing.zkflow.util.merge
-import com.squareup.kotlinpoet.ClassName
-import com.squareup.kotlinpoet.ksp.toClassName
 import kotlin.reflect.KClass
 
 /**
@@ -97,9 +97,9 @@ class StableIdVersionedSymbolProcessor(private val logger: KSPLogger, private va
         val sortedCommandFamilies = buildSortedMap(ZKCommandData::class, implementations, markers)
 
         // Generate upgrade commands for states and commands
-        val upgradeCommands: Map<ClassName, Int> = listOf(sortedStateFamilies, sortedCommandFamilies)
+        val upgradeCommands: Map<GeneratedSerializer, Int> = listOf(sortedStateFamilies, sortedCommandFamilies)
             .flatMap { UpgradeCommandGenerator(codeGenerator).process(it) }
-            .associateWith { it.canonicalName.hashCode() }
+            .associateWith { it.className.canonicalName.hashCode() }
 
         sortedStateFamilies.generateIdsAndProcessWith(stateRegistryProcessor)
             .registerToServiceLoader()
@@ -157,11 +157,11 @@ class StableIdVersionedSymbolProcessor(private val logger: KSPLogger, private va
 
         private fun Map<String, List<KSClassDeclaration>>.generateIdsAndProcessWith(
             processor: SerializerRegistryProcessor<out Any>,
-            additionalClasses: Map<ClassName, Int> = emptyMap()
+            additionalClasses: Map<GeneratedSerializer, Int> = emptyMap()
         ): ServiceLoaderRegistration {
             val sortedWithIds = VersionedStateIdGenerator
                 .generateIds(this)
-                .mapKeys { (classDecl, _) -> classDecl.toClassName() }
+                .mapKeys { it.key.toImplementationClass() }
             return processor.process(sortedWithIds + additionalClasses)
         }
 

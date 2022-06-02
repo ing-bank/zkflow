@@ -10,7 +10,6 @@ import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import io.kotest.matchers.paths.shouldNotExist
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldStartWith
 import org.junit.jupiter.api.Test
 import java.io.ByteArrayOutputStream
 
@@ -28,7 +27,7 @@ internal class ContractStateAndCommandDataSymbolProcessorProviderTest : Processo
         }
 
         result.exitCode shouldBe KotlinCompilation.ExitCode.OK
-        result.getGeneratedMetaInfServices<CommandDataSerializerRegistryProvider>() shouldStartWith "com.ing.zkflow.serialization.infra.ZKCommandDataSerializerRegistryProvider"
+        result.getGeneratedMetaInfServices<CommandDataSerializerRegistryProvider>() shouldBe "com.ing.zkflow.zktransaction.TestCommandSerializerProvider"
     }
 
     @Test
@@ -42,7 +41,7 @@ internal class ContractStateAndCommandDataSymbolProcessorProviderTest : Processo
         }
 
         result.exitCode shouldBe KotlinCompilation.ExitCode.OK
-        result.getGeneratedMetaInfServices<CommandDataSerializerRegistryProvider>() shouldStartWith "com.ing.zkflow.serialization.infra.ZKCommandDataSerializerRegistryProvider"
+        result.getGeneratedMetaInfServices<CommandDataSerializerRegistryProvider>() shouldBe "com.ing.zkflow.zktransaction.ContainerTestNestedCommandSerializerProvider"
     }
 
     @Test
@@ -70,7 +69,7 @@ internal class ContractStateAndCommandDataSymbolProcessorProviderTest : Processo
         }
 
         result.exitCode shouldBe KotlinCompilation.ExitCode.OK
-        result.getGeneratedMetaInfServices<ContractStateSerializerRegistryProvider>() shouldStartWith "com.ing.zkflow.serialization.infra.ZKContractStateSerializerRegistryProvider"
+        result.getGeneratedMetaInfServices<ContractStateSerializerRegistryProvider>() shouldBe "com.ing.zkflow.zktransaction.TestStateSerializerProvider"
     }
 
     companion object {

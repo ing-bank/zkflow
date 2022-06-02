@@ -1,12 +1,14 @@
 package com.ing.zkflow.processors
 
 import com.google.devtools.ksp.processing.CodeGenerator
+import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.Variance
 import com.ing.zkflow.ConversionProvider
 import com.ing.zkflow.Surrogate
+import com.ing.zkflow.Surrogate.Companion.GENERATED_SERIALIZER_PROVIDER_POSTFIX
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.annotations.ZKPSurrogate
 import com.ing.zkflow.common.serialization.KClassSerializer
@@ -15,6 +17,8 @@ import com.ing.zkflow.ksp.implementations.ImplementationsProcessor
 import com.ing.zkflow.ksp.implementations.ScopedDeclaration
 import com.ing.zkflow.ksp.implementations.ServiceLoaderRegistration
 import com.ing.zkflow.serialization.serializer.SurrogateSerializer
+import com.ing.zkflow.util.guard
+import com.ing.zkflow.util.ifOrNull
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
@@ -27,14 +31,10 @@ import com.squareup.kotlinpoet.buildCodeBlock
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.toTypeName
 import com.squareup.kotlinpoet.ksp.writeTo
-import com.squareup.kotlinpoet.withIndent
-import kotlin.math.absoluteValue
-import kotlin.random.Random
 
-class SurrogateSerializerGenerator(private val codeGenerator: CodeGenerator) : ImplementationsProcessor<Surrogate<*>> {
+class SurrogateSerializerGenerator(private val logger: KSPLogger, private val codeGenerator: CodeGenerator) : ImplementationsProcessor<Surrogate<*>> {
     override val interfaceClass = Surrogate::class
     private val mapProviderInterface = SurrogateSerializerRegistryProvider::class
-    private val packageName = Surrogate.GENERATED_SURROGATE_SERIALIZER_PACKAGE_NAME
 
     override fun process(implementations: List<ScopedDeclaration>): ServiceLoaderRegistration {
         // Requirements:
@@ -43,7 +43,7 @@ class SurrogateSerializerGenerator(private val codeGenerator: CodeGenerator) : I
         // - (b) or with @ZKPSurrogate, in this case generate a serializer and registration.
 
         // Generate surrogate serializers for all surrogates.
-        val generatedSerializers = implementations.mapNotNull { impl ->
+        val generatedProviders = implementations.mapNotNull { impl ->
             // Enforce no generics.
             require(impl.declaration.typeParameters.isEmpty()) {
                 "Surrogate implementers may not contain generics: `${impl.declaration}`"
@@ -54,22 +54,10 @@ class SurrogateSerializerGenerator(private val codeGenerator: CodeGenerator) : I
             // thus return null to evaluate the next implementation.
             impl.declaration.singleAnnotation<ZKP>()?.let { return@mapNotNull null }
 
-            // ZKPSurrogate annotation.
-            val zkpSurrogateAnnotation = impl.declaration.singleAnnotation<ZKPSurrogate>() ?: error(
-                """
-                Surrogate class `${impl.declaration.qualifiedName}` must be annotated with
-                either `${ZKP::class.qualifiedName}` or `${ZKPSurrogate::class.qualifiedName}`
-                """.trimIndent()
-            )
-
-            generateSurrogateSerializer(impl.declaration, zkpSurrogateAnnotation)
+            generateProvider(impl.declaration)
         }
 
-        val uid = Random.nextInt().absoluteValue
-        val className = "${interfaceClass.simpleName}SerializerRegistryProvider$uid"
-        generateProvider(className, generatedSerializers)
-
-        return ServiceLoaderRegistration(mapProviderInterface, listOf("$packageName.$className"))
+        return ServiceLoaderRegistration(mapProviderInterface, generatedProviders)
     }
 
     private inline fun <reified T : Any> KSClassDeclaration.singleAnnotation(): KSAnnotation? {
@@ -101,10 +89,47 @@ class SurrogateSerializerGenerator(private val codeGenerator: CodeGenerator) : I
      * )
      * ```
      */
-    private fun generateSurrogateSerializer(surrogate: KSClassDeclaration, zkpSurrogateAnnotation: KSAnnotation): GeneratedSurrogateSerializer {
-        val className = "${surrogate.simpleName.asString()}${Surrogate.GENERATED_SURROGATE_SERIALIZER_POSTFIX}"
+    private fun generateSurrogateSerializer(
+        surrogate: KSClassDeclaration,
+    ): TypeSpec {
+        // ZKPSurrogate annotation.
+        val zkpSurrogateAnnotation = surrogate.singleAnnotation<ZKPSurrogate>() ?: error(
+            """
+                Surrogate class `${surrogate.qualifiedName}` must be annotated with
+                either `${ZKP::class.qualifiedName}` or `${ZKPSurrogate::class.qualifiedName}`
+            """.trimIndent()
+        )
 
-        val surrogateArgument = surrogate.superTypes.single {
+        val surrogateName = surrogate.asType(emptyList()).toTypeName()
+        val converter = getSurrogateConverter(zkpSurrogateAnnotation)
+
+        return TypeSpec.objectBuilder(surrogate.surrogateSerializerClassName)
+            .superclass(
+                SurrogateSerializer::class
+                    .asClassName()
+                    .parameterizedBy(surrogate.surrogateOriginalType.toTypeName(), surrogateName)
+            )
+            .addSuperclassConstructorParameter(
+                CodeBlock.of("%L.serializer(), { %L.from(it) }", surrogate, converter)
+            )
+            .build()
+    }
+
+    private val KSClassDeclaration.surrogateSerializerClassName: String get() =
+        "${simpleName.asString()}${Surrogate.GENERATED_SURROGATE_SERIALIZER_POSTFIX}"
+
+    private fun getSurrogateConverter(zkpSurrogateAnnotation: KSAnnotation): TypeName {
+        val zkpSurrogateArgument = zkpSurrogateAnnotation
+            .arguments
+            .single()
+            .value as? KSType
+
+        return zkpSurrogateArgument?.toTypeName()
+            ?: error("Argument to `${ZKPSurrogate::class.qualifiedName}` must be a `KClass<${ConversionProvider::class.qualifiedName}>`")
+    }
+
+    private val KSClassDeclaration.surrogateOriginalType: RecursiveKSType get() {
+        val surrogateArgument = superTypes.single {
             it.resolve().declaration.qualifiedName!!.asString() == Surrogate::class.qualifiedName
         }.resolve().arguments.single()
 
@@ -116,97 +141,74 @@ class SurrogateSerializerGenerator(private val codeGenerator: CodeGenerator) : I
         require(surrogateFor != null) {
             "Cannot resolve `${surrogateArgument.toTypeName()}`"
         }
-
-        val surrogateName = surrogate.asType(emptyList()).toTypeName()
-
-        val zkpSurrogateArgument = zkpSurrogateAnnotation
-            .arguments
-            .single()
-            .value as? KSType
-
-        val converter = zkpSurrogateArgument?.toTypeName()
-            ?: error("Argument to `${ZKPSurrogate::class.qualifiedName}` must be a `KClass<${ConversionProvider::class.qualifiedName}>`")
-
-        FileSpec.builder(packageName, className)
-            .addType(
-                TypeSpec.objectBuilder(className)
-                    .superclass(
-                        SurrogateSerializer::class
-                            .asClassName()
-                            .parameterizedBy(surrogateFor.toTypeName(), surrogateName)
-                    )
-                    .addSuperclassConstructorParameter(
-                        CodeBlock.of("%L.serializer(), { %L.from(it) }", surrogate, converter)
-                    )
-                    .build()
-            )
-            .build()
-            .writeTo(codeGenerator = codeGenerator, aggregating = false)
-
-        return GeneratedSurrogateSerializer(surrogateFor, className)
+        return surrogateFor
     }
 
     private fun generateProvider(
-        className: String,
-        generatedSurrogateSerializers: List<GeneratedSurrogateSerializer>
-    ) {
-        val registration = buildCodeBlock {
-            add("return listOf(\n")
-            withIndent {
-                generatedSurrogateSerializers
-                    .forEach { (surrogateFor, serializerFQName) ->
-                        // TODO We can now only register serializers for types that have no generics,
-                        //      otherwise we shall, e.g., get
-                        //      ```
-                        //      Pair(net.corda.core.contracts.Amount<com.r3.cbdc.annotated.types.IssuedTokenType>::class,
-                        //          com.ing.zkflow.serialization.infra.AmountSurrogate_IssuedTokenTypeSurrogateSerializer)
-                        //      ```
-                        //      which is invalid. Obviously.
-                        val template = if (surrogateFor.templated()) {
-                            "%T(\n%L::class,\n%L,\n%L\n),"
-                        } else {
-                            "/*\n%T(\n%L::class,\n%L,\n%L\n),*/"
-                        }
-
-                        addStatement(
-                            template,
-                            KClassSerializer::class,
-                            surrogateFor.toTypeName(),
-                            serializerFQName.hashCode(),
-                            serializerFQName,
-                        )
-                    }
-            }
-            add("\n)")
+        surrogate: KSClassDeclaration,
+    ): String? {
+        // TODO We can now only register serializers for types that have no generics,
+        //      otherwise we shall, e.g., get
+        //      ```
+        //      Pair(net.corda.core.contracts.Amount<com.r3.cbdc.annotated.types.IssuedTokenType>::class,
+        //          com.ing.zkflow.serialization.infra.AmountSurrogate_IssuedTokenTypeSurrogateSerializer)
+        //      ```
+        //      which is invalid. Obviously.
+        val template = if (surrogate.surrogateOriginalType.templated()) {
+            "return %T(\n%L::class,\n%L,\n%L\n)"
+        } else {
+            logger.info("Not registering a serializer for ${surrogate.surrogateOriginalType}")
+            // "return /*\n%T(\n%L::class,\n%L,\n%L\n)*/"
+            null
         }
 
+        val packageName = surrogate.packageName.asString()
+        val className = surrogate.simpleName.asString() + GENERATED_SERIALIZER_PROVIDER_POSTFIX
         FileSpec.builder(packageName, className)
-            .addType(
-                TypeSpec.classBuilder(className)
-                    .addSuperinterface(mapProviderInterface)
-                    .addFunction(
-                        FunSpec.builder("list")
-                            .addModifiers(KModifier.OVERRIDE)
-                            .returns(
-                                List::class.asClassName().parameterizedBy(
-                                    KClassSerializer::class.asClassName().parameterizedBy(
-                                        Any::class.asClassName()
-                                    )
-                                )
-                            )
-                            .addCode(registration)
-                            .build()
+            .addType(generateSurrogateSerializer(surrogate))
+            .guard(template != null) {
+                addType(generateSerializerProvider(template!!, surrogate, className))
+            }
+            .build()
+            .writeTo(
+                codeGenerator = codeGenerator,
+                aggregating = false,
+                originatingKSFiles = listOfNotNull(surrogate.containingFile)
+            )
+        return ifOrNull(template != null) { "$packageName.$className" }
+    }
+
+    private fun generateSerializerProvider(
+        template: String,
+        surrogate: KSClassDeclaration,
+        className: String,
+    ): TypeSpec {
+        val packageName = surrogate.packageName.asString()
+        val registration = buildCodeBlock {
+            addStatement(
+                template,
+                KClassSerializer::class,
+                surrogate.surrogateOriginalType.toTypeName(),
+                surrogate.surrogateSerializerClassName.hashCode(),
+                "$packageName.${surrogate.surrogateSerializerClassName}",
+            )
+        }
+
+        return TypeSpec.classBuilder(className)
+            .addSuperinterface(mapProviderInterface)
+            .addFunction(
+                FunSpec.builder("get")
+                    .addModifiers(KModifier.OVERRIDE)
+                    .returns(
+                        KClassSerializer::class.asClassName().parameterizedBy(
+                            Any::class.asClassName()
+                        )
                     )
+                    .addCode(registration)
                     .build()
             )
             .build()
-            .writeTo(codeGenerator = codeGenerator, aggregating = false)
     }
-
-    private data class GeneratedSurrogateSerializer(
-        val surrogateFor: RecursiveKSType,
-        val serializerFQName: String
-    )
 
     private data class RecursiveKSType(
         val ksClass: KSType,

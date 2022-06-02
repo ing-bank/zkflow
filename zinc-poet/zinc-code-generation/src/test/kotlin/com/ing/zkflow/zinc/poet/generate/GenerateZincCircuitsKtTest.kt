@@ -24,9 +24,8 @@ internal class GenerateZincCircuitsKtTest {
     @Test
     fun `instantiateZkCommands should correctly instantiate MyZkCommand`() {
         val mockRegistry = mockk<CommandDataSerializerRegistryProvider>()
-        every { mockRegistry.list() } returns listOf(
-            KClassSerializer(MyZkCommand::class, 1, MyZkCommand.serializer())
-        )
+        every { mockRegistry.get() } returns KClassSerializer(MyZkCommand::class, 1, MyZkCommand.serializer())
+
         val actual = instantiateZkCommands(listOf(mockRegistry))
         actual shouldContain MyZkCommand()
     }
@@ -34,9 +33,8 @@ internal class GenerateZincCircuitsKtTest {
     @Test
     fun `instantiateZkCommands should ignore CommandData that are not ZKCommandData`() {
         val mockRegistry = mockk<CommandDataSerializerRegistryProvider>()
-        every { mockRegistry.list() } returns listOf(
-            KClassSerializer(MyCommand::class, 1, MyCommand.serializer())
-        )
+        every { mockRegistry.get() } returns KClassSerializer(MyCommand::class, 1, MyCommand.serializer())
+
         val actual = instantiateZkCommands(listOf(mockRegistry))
         actual shouldBe emptyList()
     }
