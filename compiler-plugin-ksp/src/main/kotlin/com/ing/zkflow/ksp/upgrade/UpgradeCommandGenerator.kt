@@ -6,6 +6,7 @@ import com.ing.zinc.naming.camelToSnakeCase
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.common.contracts.ZKUpgradeCommandData
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
+import com.ing.zkflow.processors.SerializerRegistryProcessor.GeneratedSerializer
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
@@ -27,7 +28,7 @@ class UpgradeCommandGenerator(
     private val codeGenerator: CodeGenerator
 ) {
     @Suppress("LongMethod")
-    fun process(families: Map<String, List<KSClassDeclaration>>): List<ClassName> {
+    fun process(families: Map<String, List<KSClassDeclaration>>): List<GeneratedSerializer> {
         return families.entries.flatMap { (_, members) ->
             var previousVersion: KSClassDeclaration? = null
             members.flatMap { current ->
@@ -43,11 +44,12 @@ class UpgradeCommandGenerator(
         }
     }
 
+    @Suppress("LongMethod")
     private fun generateUpgradeCommand(
         previous: KSClassDeclaration,
         current: KSClassDeclaration,
         isPrivate: Boolean
-    ): ClassName {
+    ): GeneratedSerializer {
         val publicOrPrivateOutput = if (isPrivate) "private" else "public"
         val publicOrAnyInput = if (isPrivate) "private" else "any"
         val commandClassName =
@@ -100,7 +102,20 @@ class UpgradeCommandGenerator(
                     .build()
             )
             .build()
-            .writeTo(codeGenerator = codeGenerator, aggregating = false)
-        return ClassName(current.packageName.asString(), commandClassName)
+            .writeTo(
+                codeGenerator = codeGenerator,
+                aggregating = false,
+                originatingKSFiles = listOfNotNull(
+                    previous.containingFile,
+                    current.containingFile,
+                ),
+            )
+        return GeneratedSerializer(
+            ClassName(current.packageName.asString(), commandClassName),
+            listOfNotNull(
+                previous.containingFile,
+                current.containingFile,
+            )
+        )
     }
 }

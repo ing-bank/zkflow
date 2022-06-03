@@ -6,7 +6,6 @@ import com.ing.zkflow.processors.StableIdVersionedSymbolProcessorProvider
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldStartWith
 import org.junit.jupiter.api.Test
 import java.io.ByteArrayOutputStream
 
@@ -22,8 +21,15 @@ class StableIdVersionedSymbolProcessorProviderTest : ProcessorTest(StableIdVersi
         }
 
         result.exitCode shouldBe KotlinCompilation.ExitCode.OK
-        result.getGeneratedMetaInfServices<ContractStateSerializerRegistryProvider>() shouldStartWith
-            "com.ing.zkflow.serialization.infra.ZKContractStateSerializerRegistryProvider"
+        result.getGeneratedMetaInfServices<ContractStateSerializerRegistryProvider>() shouldBe
+            """
+                com.ing.zkflow.contract.ZebraV1SerializerProvider
+                com.ing.zkflow.contract.ZebraV2SerializerProvider
+                com.ing.zkflow.contract.ZebraSerializerProvider
+                com.ing.zkflow.contract.HorseV1SerializerProvider
+                com.ing.zkflow.contract.HorseV2SerializerProvider
+                com.ing.zkflow.contract.HorseSerializerProvider
+            """.trimIndent()
     }
 
     @Test

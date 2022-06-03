@@ -30,7 +30,7 @@ interface Surrogate<T> {
     fun toOriginal(): T
 
     companion object {
-        const val GENERATED_SURROGATE_SERIALIZER_PACKAGE_NAME = "com.ing.zkflow.serialization.infra"
         const val GENERATED_SURROGATE_SERIALIZER_POSTFIX = "SurrogateSerializer"
+        const val GENERATED_SERIALIZER_PROVIDER_POSTFIX = "SerializerProvider"
     }
 }

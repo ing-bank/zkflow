@@ -1,6 +1,8 @@
 package com.ing.zkflow.processors
 
 import com.google.devtools.ksp.processing.CodeGenerator
+import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSFile
 import com.ing.zkflow.common.serialization.KClassSerializer
 import com.ing.zkflow.common.serialization.KClassSerializerProvider
 import com.ing.zkflow.ksp.implementations.ServiceLoaderRegistration
@@ -12,10 +14,8 @@ import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.buildCodeBlock
+import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.writeTo
-import com.squareup.kotlinpoet.withIndent
-import kotlin.math.absoluteValue
-import kotlin.random.Random
 import kotlin.reflect.KClass
 
 class SerializerRegistryProcessor<T : Any>(
@@ -23,50 +23,41 @@ class SerializerRegistryProcessor<T : Any>(
     private val mapProviderInterface: KClass<out KClassSerializerProvider<in T>>,
     private val codeGenerator: CodeGenerator
 ) {
-    private val packageName = "com.ing.zkflow.serialization.infra"
 
-    fun process(implementations: Map<ClassName, Int>): ServiceLoaderRegistration {
-        val uid = Random.nextInt().absoluteValue
-        val className = "${interfaceClass.simpleName}SerializerRegistryProvider$uid"
-
-        generateProvider(className, implementations)
-
-        return ServiceLoaderRegistration(mapProviderInterface, listOf("$packageName.$className"))
+    fun process(implementations: Map<GeneratedSerializer, Int>): ServiceLoaderRegistration {
+        val mapProviderClasses = implementations.entries
+            .map { (implementationClass, implementationId) ->
+                generateProvider(implementationClass, implementationId)
+            }
+        return ServiceLoaderRegistration(mapProviderInterface, mapProviderClasses)
     }
 
     private fun generateProvider(
-        className: String,
-        implementations: Map<ClassName, Int>
-    ) {
-        FileSpec.builder(packageName, className)
+        generatedSerializer: GeneratedSerializer,
+        implementationId: Int,
+    ): String {
+        val className = "${generatedSerializer.className.simpleNames.joinToString("") { it }}SerializerProvider"
+        FileSpec.builder(generatedSerializer.className.packageName, className)
             .addType(
                 TypeSpec.classBuilder(className)
                     .addSuperinterface(mapProviderInterface)
                     .addFunction(
-                        FunSpec.builder("list")
+                        FunSpec.builder("get")
                             .addModifiers(KModifier.OVERRIDE)
                             .returns(
-                                List::class.asClassName().parameterizedBy(
-                                    KClassSerializer::class.asClassName().parameterizedBy(
-                                        interfaceClass.asClassName()
-                                    )
+                                KClassSerializer::class.asClassName().parameterizedBy(
+                                    interfaceClass.asClassName()
                                 )
                             )
                             .addCode(
                                 buildCodeBlock {
-                                    add("return listOf(")
-                                    withIndent {
-                                        implementations.entries.forEach { (implClass, version) ->
-                                            addStatement(
-                                                "%T(%L::class, %L, %L.serializer()),",
-                                                KClassSerializer::class,
-                                                implClass,
-                                                version,
-                                                implClass,
-                                            )
-                                        }
-                                    }
-                                    add(")")
+                                    addStatement(
+                                        "return %T(%L::class, %L, %L.serializer())",
+                                        KClassSerializer::class,
+                                        generatedSerializer.className,
+                                        implementationId,
+                                        generatedSerializer.className,
+                                    )
                                 }
                             )
                             .build()
@@ -74,6 +65,23 @@ class SerializerRegistryProcessor<T : Any>(
                     .build()
             )
             .build()
-            .writeTo(codeGenerator = codeGenerator, aggregating = false)
+            .writeTo(
+                codeGenerator = codeGenerator,
+                aggregating = false,
+                originatingKSFiles = generatedSerializer.sourceFiles
+            )
+        return "${generatedSerializer.className.packageName}.$className"
+    }
+
+    data class GeneratedSerializer(
+        val className: ClassName,
+        val sourceFiles: List<KSFile> = emptyList()
+    ) {
+        constructor(className: ClassName, sourceFile: KSFile?) : this(className, listOfNotNull(sourceFile))
+
+        companion object {
+            fun KSClassDeclaration.toImplementationClass(): GeneratedSerializer =
+                GeneratedSerializer(toClassName(), containingFile)
+        }
     }
 }

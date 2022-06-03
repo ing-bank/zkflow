@@ -2,6 +2,7 @@ package com.ing.zkflow.resolved
 
 import com.ing.zkflow.annotated.DefaultOutOfReach
 import com.ing.zkflow.annotated.OutOfReach
+import com.ing.zkflow.annotated.OutOfReachSurrogateSurrogateSerializer
 import com.ing.zkflow.serialization.SerializerTest
 import com.ing.zkflow.serialization.engine.SerdeEngine
 import com.ing.zkflow.serialization.serializer.FixedLengthListSerializer
@@ -28,7 +29,7 @@ data class Wraps3rdPartyNullable(
     object MyList_4 : NullableSerializer<OutOfReach>(MyList_5)
     object MyList_5 : SerializerWithDefault<OutOfReach>(MyList_6, DefaultOutOfReach.default)
     object MyList_6 : com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializer<com.ing.zkflow.annotated.OutOfReach>(
-        com.ing.zkflow.serialization.infra.OutOfReachSurrogateSurrogateSerializer,
+        OutOfReachSurrogateSurrogateSerializer,
         com.ing.zkflow.annotated.OutOfReach::class.java.isEnum
     )
 }

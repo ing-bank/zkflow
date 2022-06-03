@@ -44,7 +44,7 @@ data class KClassSerializer<out T : Any>(
 )
 
 interface KClassSerializerProvider<T : Any> {
-    fun list(): List<KClassSerializer<T>>
+    fun get(): KClassSerializer<T>
 }
 
 interface SurrogateSerializerRegistryProvider : KClassSerializerProvider<Any>
