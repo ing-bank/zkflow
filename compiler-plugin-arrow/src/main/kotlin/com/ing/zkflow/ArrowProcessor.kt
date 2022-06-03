@@ -4,7 +4,6 @@ import arrow.meta.CliPlugin
 import arrow.meta.Meta
 import arrow.meta.phases.CompilerContext
 import com.ing.zkflow.plugins.serialization.ClassAnnotator
-import com.ing.zkflow.plugins.serialization.PropertyAnnotator
 import com.ing.zkflow.plugins.serialization.UserClassesIndexer
 import com.ing.zkflow.util.FileLogger
 import org.jetbrains.kotlin.name.FqName
@@ -14,12 +13,6 @@ class ArrowProcessor : Meta {
     override fun intercept(ctx: CompilerContext): List<CliPlugin> {
         return listOf(
             UserClassesIndexer,
-            //
-            // IMPORTANT
-            // PropertyAnnotator must be called first to add @kotlinx.serialization.Transient annotations/
-            //
-            PropertyAnnotator,
-            //
             ClassAnnotator,
         )
     }
