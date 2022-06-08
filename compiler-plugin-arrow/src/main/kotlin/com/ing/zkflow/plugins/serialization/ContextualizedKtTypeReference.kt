@@ -139,7 +139,7 @@ class ContextualizedKtTypeReference(
      * named "SurrogateClassName[Surrogate.GENERATED_SURROGATE_SERIALIZER_POSTFIX]"
      */
     fun findSurrogateSerializer(): FqName? {
-        SerdeLogger.log("Looking for a surrogate specification for `${ktTypeElement.text}`")
+        SerdeLogger.log("Looking for a surrogate specification for `${rootType.type}`")
 
         return ktTypeReference.findAnnotation<Via<*>>()?.let {
             val surrogate = it.typeArguments.single()
@@ -158,6 +158,8 @@ class ContextualizedKtTypeReference(
             SerdeLogger.log("[Expected] Surrogate serializer: `$surrogateSerializerFqName`")
 
             surrogateSerializerFqName
+        }.also { fqName ->
+            SerdeLogger.log(fqName?.let { "Surrogate is found: `$it`" } ?: "No surrogate is found")
         }
     }
 

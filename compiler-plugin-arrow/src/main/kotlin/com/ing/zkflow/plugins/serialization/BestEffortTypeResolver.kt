@@ -20,12 +20,19 @@ class BestEffortTypeResolver(ktFile: KtFile) {
     }
 
     /**
-     * Attempt to resolve class name using the following strategies:
-     * - imported class is a compiled class in some module,
-     * - class with `simpleName` is a compiled class in this module,
-     * - class is present in this module but has not been compiled yet, and thus has been indexed,
-     * - class is imported from a different module (thus not indexed), but is not compiled yet
-     *  if none succeeds, class must exist in the current package, otherwise the Kotlin compiler would have not progressed to plugin invocations,
+     * Attempt to resolve class name using the following strategies.
+     * Each consequent attempt delivers less informative results.
+     * 1. imported class is a compiled class in some module,
+     *
+     * If class is not imported, it only makes sense that class with `simpleName` exists in the same package
+     * possibly as a subclass of another class, e.g, com.company.Base.Companion.Child,
+     * otherwise the Kotlin compiler would have not progressed to plugin invocations,
+     * That is, its `className` is `packageFqName` + {possible inclusion} + `simpleName`.
+     *
+     * 2. class with `simpleName` under `packageFqName` is a compiled class in this module,
+     * 3. class with `simpleName` under `packageFqName` is present in this module but has not been compiled yet, and might have been indexed,
+     * 4. class with `simpleName` under `packageFqName` is imported from a different module (thus not indexed), but is not compiled yet
+     * 5. if none succeeds, return `AsIs(simpleName)` with no additional information.
      */
     fun resolve(simpleName: String): BestEffortResolvedType {
         val import = imports?.accept(TypeResolverVisitor, simpleName)
@@ -39,15 +46,15 @@ class BestEffortTypeResolver(ktFile: KtFile) {
             } catch (_: ClassNotFoundException) { }
         }
 
-        // Case: class with `simpleName` is a compiled class in this package.
+        // Case: class with `className` is a compiled class in this package.
         try {
             val kClass = Class.forName("$packageFqName.$simpleName").kotlin
             return BestEffortResolvedType.FullyResolved(kClass)
         } catch (_: ClassNotFoundException) { }
 
         // Case: class is present in this module but has not been compiled yet,
-        //       and thus has been indexed.
-        SerdeIndex[simpleName]?.let {
+        //       and thus might have been indexed.
+        SerdeIndex.get(simpleName, "$packageFqName")?.let {
             return BestEffortResolvedType.FullyQualified(it.fqName, it.annotations)
         }
 
@@ -57,10 +64,7 @@ class BestEffortTypeResolver(ktFile: KtFile) {
         }
 
         // Else:
-        return BestEffortResolvedType.FullyQualified(
-            FqName.fromSegments(packageFqName.asString().split(".") + simpleName),
-            listOf()
-        )
+        return BestEffortResolvedType.AsIs(simpleName)
     }
 }
 
