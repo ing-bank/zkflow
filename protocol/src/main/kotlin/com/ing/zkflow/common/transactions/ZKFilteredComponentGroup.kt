@@ -35,11 +35,16 @@ data class ZKFilteredComponentGroup(
         }
     }
 
+    private val groupSize = components.size + privateComponentHashes.size
+
     @Transient
     private var _merkleTree: MerkleTree? = null
 
     @Transient
     private var _allComponentHashes: List<SecureHash>? = null
+
+    @Transient
+    private var _publicComponents: Map<Int, OpaqueBytes>? = null
 
     fun merkleTree(digestService: DigestService): MerkleTree {
         if (_merkleTree == null) {
@@ -51,6 +56,32 @@ data class ZKFilteredComponentGroup(
         }
         return _merkleTree!!
     }
+
+    /**
+     * Get the public components with their real indexes in the original WireTransaction.
+     * This map's entries are in the order in which the components appear in the transaction, meaning that
+     * the indexes of the map entries can be used to match them with the visible components in the ZKVerifierTransaction:
+     */
+    fun publicComponents(): Map<Int, OpaqueBytes> {
+        if (_publicComponents == null) {
+            synchronized(this) {
+                if (_publicComponents == null) {
+                    _publicComponents = calculatePublicComponents()
+                }
+            }
+        }
+        return _publicComponents!!
+    }
+
+    private fun publicComponentIndexes(): List<Int> {
+        val usedPrivateIndexes = List(groupSize) { privateComponentHashes.containsKey(it) }
+        return usedPrivateIndexes.mapIndexedNotNull { index, isPrivate -> if (!isPrivate) index else null }
+    }
+
+    private fun calculatePublicComponents(): Map<Int, OpaqueBytes> =
+        publicComponentIndexes().foldIndexed(mapOf()) { publicComponentIndex, publicComponents, publicIndex ->
+            publicComponents + (publicIndex to components[publicComponentIndex])
+        }
 
     fun allComponentHashes(digestService: DigestService): List<SecureHash> {
         if (_allComponentHashes == null) {
@@ -68,8 +99,7 @@ data class ZKFilteredComponentGroup(
     }
 
     private fun calculateComponentHashes(digestService: DigestService): List<SecureHash> {
-
-        val allComponentHashes = arrayOfNulls<SecureHash?>(components.size + privateComponentHashes.size).toMutableList()
+        val allComponentHashes = arrayOfNulls<SecureHash?>(groupSize).toMutableList()
 
         // Put private components' hashes
         privateComponentHashes.entries.forEach { (index, hash) ->
