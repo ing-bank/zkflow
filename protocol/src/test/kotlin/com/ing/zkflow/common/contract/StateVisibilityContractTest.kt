@@ -14,10 +14,12 @@ import com.ing.zkflow.testing.dsl.zkLedger
 import com.ing.zkflow.util.tryNonFailing
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.CommandData
+import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.Contract
 import net.corda.core.contracts.ContractState
 import net.corda.core.crypto.Crypto
@@ -85,7 +87,6 @@ class StateVisibilityContractTest {
         }
     }
 
-    // TODO: make sure that a tx like this does not create Proofs. It doesn't need them?
     @Test
     fun `Move private to public`() {
         services.zkLedger {
@@ -94,13 +95,20 @@ class StateVisibilityContractTest {
                 command(listOf(alice.owningKey), LocalContract.CreatePrivate())
                 verifies()
             }
-            transaction {
+            val wtx = transaction {
                 input("Alice's Private Asset")
                 output(LocalContract.PROGRAM_ID, bobAsset)
                 command(listOf(alice.owningKey, bob.owningKey), LocalContract.MovePrivateToPublic())
+                timeWindow(Instant.now())
                 verifies()
             }
+
             verifies()
+
+            // Confirm tht the output is indeed in the list of public outputs of the MovePrivateToPublic transaction
+            val publicOutputSerializedBytes =
+                this.zkVerifierTransactionStorage.getTransaction(wtx.id)?.tx?.publicComponents(ComponentGroupEnum.OUTPUTS_GROUP)?.get(0)
+            publicOutputSerializedBytes shouldNotBe null
         }
     }
 
@@ -116,7 +124,7 @@ class StateVisibilityContractTest {
                 input("Alice's Explicitly Public Asset")
                 output(LocalContract.PROGRAM_ID, bobAsset)
                 command(listOf(alice.owningKey, bob.owningKey), LocalContract.MoveFullyPrivate())
-                val alicesPublicAssetRef = retrieveOutputStateAndRef(ContractState::class.java, "Alice's Explicitly Public Asset").ref
+                val alicesPublicAssetRef = retrieveOutputStateAndRef(ZKContractState::class.java, "Alice's Explicitly Public Asset").ref
                 `fails with`("UTXO for StateRef '$alicesPublicAssetRef' should be private, but it is public")
             }
         }
@@ -229,11 +237,26 @@ class LocalContract : Contract {
 
     @Serializable
     @ZKP
-    class MovePrivateToPublic : CommandData, Versioned {
+    class MovePrivateToPublic : ZKCommandData, Versioned {
         init {
             tryNonFailing {
                 BFLSerializationScheme.Companion.CommandDataSerializerRegistry.register(this::class, serializer())
             }
+        }
+
+        @Transient
+        override val metadata: ResolvedZKCommandMetadata = commandMetadata {
+            inputs {
+                private(ZKTestState::class) at 0
+            }
+            outputs {
+                public(ZKTestState::class) at 0
+            }
+            numberOfSigners = 2
+            timeWindow = true
+            notary = true
+            command = true
+            networkParameters = true
         }
     }
 

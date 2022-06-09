@@ -11,11 +11,14 @@ import net.corda.core.node.ServiceHub
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TraversableTransaction
 import net.corda.core.transactions.WireTransaction
+import net.corda.core.utilities.loggerFor
 
 class ZKTransactionVerifierService(
     private val services: ServiceHub,
     private val zkTransactionService: ZKTransactionService,
 ) {
+    private val log = loggerFor<ZKTransactionVerifierService>()
+
     fun verify(svtx: SignedZKVerifierTransaction, checkSufficientSignatures: Boolean) {
         val vtx = svtx.tx
         validatePrivateComponents(vtx)
@@ -56,7 +59,10 @@ class ZKTransactionVerifierService(
 
     private fun validatePrivateComponents(wtx: WireTransaction): ZKVerifierTransactionWithoutProofs = zkTransactionService.verify(wtx)
 
-    private fun validatePublicComponents(tx: ZKVerifierTransaction) = tx.zkToFilteredLedgerTransaction(services).verify()
+    private fun validatePublicComponents(tx: ZKVerifierTransaction) {
+        log.info("Validating public parts of transaction")
+        tx.zkToFilteredLedgerTransaction(services, zkTransactionService.vtxStorage).verify()
+    }
 
     /*
      * Resolve all inputs: if the UTXOs they point to are private in their creating transaction,

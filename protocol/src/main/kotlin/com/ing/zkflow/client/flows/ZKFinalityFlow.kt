@@ -5,7 +5,9 @@ import com.ing.zkflow.common.transactions.NotarisedTransactionPayload
 import com.ing.zkflow.common.transactions.PrivateNotarisedTransactionPayload
 import com.ing.zkflow.common.transactions.SignedZKVerifierTransaction
 import com.ing.zkflow.common.transactions.prove
-import com.ing.zkflow.common.transactions.resolveStateRef
+import com.ing.zkflow.common.transactions.resolvePublicOrPrivateStateRef
+import com.ing.zkflow.node.services.ServiceNames
+import com.ing.zkflow.node.services.getCordaServiceFromConfig
 import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.isFulfilledBy
 import net.corda.core.flows.FinalityFlow
@@ -194,7 +196,15 @@ class ZKFinalityFlow private constructor(
 
     private fun extractExternalParticipants(tx: TraversableTransaction): Set<Party> {
         val inputStates = tx.inputs.map {
-            SerializedStateAndRef(resolveStateRef(it, serviceHub, includePrivate = true), it).toStateAndRef().state.data
+            SerializedStateAndRef(
+                resolvePublicOrPrivateStateRef(
+                    it,
+                    serviceHub,
+                    serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_VERIFIER_TX_STORAGE),
+                    serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_UTXO_INFO_STORAGE)
+                ),
+                it
+            ).toStateAndRef().state.data
         }
         val participants = tx.outputStates.flatMap { it.participants } + inputStates.flatMap { it.participants }
         return groupAbstractPartyByWellKnownParty(serviceHub, participants).keys - serviceHub.myInfo.legalIdentities
