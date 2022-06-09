@@ -1,6 +1,6 @@
 package com.ing.zkflow.common.zkp
 
-import com.ing.zkflow.common.util.includedLastModified
+import com.ing.zkflow.util.includedLastModified
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import net.corda.core.utilities.loggerFor
 import java.io.File

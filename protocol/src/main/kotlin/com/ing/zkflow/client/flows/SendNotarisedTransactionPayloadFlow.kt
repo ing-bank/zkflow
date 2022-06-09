@@ -29,7 +29,7 @@ import net.corda.core.utilities.unwrap
  * the right point in the conversation to receive the sent transaction and perform the resolution back-and-forth required
  * to check the dependencies and download any missing attachments.
  *
- * @param otherSide the target party.
+ * @param otherSideSession the target party's session.
  * @param stx the [SignedTransaction] being sent to the [otherSideSession].
  */
 open class ZKSendTransactionProposal(private val otherSideSession: FlowSession, private val stx: SignedTransaction) :
@@ -43,6 +43,9 @@ open class ZKSendTransactionProposal(private val otherSideSession: FlowSession, 
     }
 }
 
+/**
+ * Receivers should call [ZKReceiveNotarisedTransactionPayloadFlow] subflow at the right point in the conversation.
+ */
 open class SendNotarisedTransactionPayloadFlow(otherSide: FlowSession, notarised: NotarisedTransactionPayload) :
     ZKDataVendingFlow(otherSide, notarised)
 
@@ -70,7 +73,7 @@ class ZKSendStateAndRefFlow(
     }
 }
 
-open class ZKDataVendingFlow(val otherSideSession: FlowSession, val payload: Any) : FlowLogic<Void?>() {
+open class ZKDataVendingFlow(private val otherSideSession: FlowSession, private val payload: Any) : FlowLogic<Void?>() {
 
     @Suspendable
     protected open fun sendPayloadAndReceiveDataRequest(otherSideSession: FlowSession, payload: Any) =
@@ -101,12 +104,7 @@ open class ZKDataVendingFlow(val otherSideSession: FlowSession, val payload: Any
         // Once a transaction has been requested, it will be removed from the authorised list. This means that it is a protocol violation to request a transaction twice.
         val authorisedTransactions = when (payload) {
             is ZKNotarisationPayload -> TransactionAuthorisationFilter().addAuthorised(getInputTransactions(payload.transaction.tx))
-            is NotarisedTransactionPayload -> TransactionAuthorisationFilter().addAuthorised(
-                getInputTransactions(
-                    payload.stx.tx
-                )
-            )
-
+            is NotarisedTransactionPayload -> TransactionAuthorisationFilter().addAuthorised(getInputTransactions(payload.svtx.tx))
             is RetrieveAnyTransactionPayload -> TransactionAuthorisationFilter(acceptAll = true)
             is List<*> -> TransactionAuthorisationFilter().addAuthorised(
                 payload.flatMap { payloadItem ->

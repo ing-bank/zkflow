@@ -1,4 +1,4 @@
-package com.ing.zkflow.common.util
+package com.ing.zkflow.util
 
 import java.io.File
 import kotlin.math.max

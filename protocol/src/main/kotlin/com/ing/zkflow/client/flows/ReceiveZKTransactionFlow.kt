@@ -4,6 +4,7 @@ import co.paralleluniverse.fibers.Suspendable
 import com.ing.zkflow.common.transactions.NotarisedTransactionPayload
 import com.ing.zkflow.common.transactions.SignedZKVerifierTransaction
 import com.ing.zkflow.common.transactions.UtxoInfo
+import com.ing.zkflow.common.transactions.dependencies
 import com.ing.zkflow.common.transactions.fetchMissingAttachments
 import com.ing.zkflow.common.transactions.zkVerify
 import com.ing.zkflow.common.zkp.ZKTransactionService
@@ -18,7 +19,6 @@ import net.corda.core.contracts.TransactionVerificationException
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
 import net.corda.core.internal.checkParameterHash
-import net.corda.core.internal.dependencies
 import net.corda.core.node.StatesToRecord
 import net.corda.core.serialization.deserialize
 import net.corda.core.transactions.SignedTransaction
@@ -43,7 +43,7 @@ open class ZKReceiveNotarisedTransactionPayloadFlow @JvmOverloads constructor(
     private val otherSideSession: FlowSession,
     private val checkSufficientSignatures: Boolean = true,
     private val statesToRecord: StatesToRecord = StatesToRecord.ONLY_RELEVANT
-) : FlowLogic<SignedTransaction>() {
+) : FlowLogic<SignedZKVerifierTransaction>() {
 
     @Suppress("LongMethod", "ComplexMethod")
     @Suspendable
@@ -53,7 +53,7 @@ open class ZKReceiveNotarisedTransactionPayloadFlow @JvmOverloads constructor(
         TransactionResolutionException::class,
         TransactionVerificationException::class
     )
-    override fun call(): SignedTransaction {
+    override fun call(): SignedZKVerifierTransaction {
         if (checkSufficientSignatures) {
             logger.trace { "Receiving a transaction from ${otherSideSession.counterparty}" }
         } else {
@@ -61,15 +61,18 @@ open class ZKReceiveNotarisedTransactionPayloadFlow @JvmOverloads constructor(
         }
         val notarised = otherSideSession.receive<NotarisedTransactionPayload>()
             .unwrap { notarised ->
-
                 logger.info("Received transaction acknowledgement request from party ${otherSideSession.counterparty}.")
-                checkParameterHash(notarised.stx.networkParametersHash)
+                checkParameterHash(notarised.svtx.tx.networkParametersHash)
 
-                subFlow(ResolveZKTransactionsFlow(notarised.stx.tx, notarised.stx.dependencies, otherSideSession))
+                subFlow(ResolveZKTransactionsFlow(notarised.svtx.tx, notarised.svtx.dependencies, otherSideSession))
                 logger.info("Transaction dependencies resolution completed.")
 
                 try {
-                    notarised.verify(serviceHub, serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_TX_SERVICE), checkSufficientSignatures)
+                    notarised.verify(
+                        serviceHub,
+                        serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_TX_SERVICE),
+                        checkSufficientSignatures
+                    )
                     notarised
                 } catch (e: Exception) {
                     logger.warn("Transaction verification failed.")
@@ -84,7 +87,7 @@ open class ZKReceiveNotarisedTransactionPayloadFlow @JvmOverloads constructor(
             serviceHub.recordTransactions(notarised, statesToRecord)
             logger.info("Successfully recorded received transaction locally.")
         }
-        return notarised.stx
+        return notarised.svtx
     }
 
     /**
