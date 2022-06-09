@@ -32,6 +32,7 @@ data class FungibleToken constructor(
 }
 
 abstract class AbstractFungibleToken : ZKFungibleState<IssuedTokenType>, AbstractToken, QueryableState {
+    abstract override fun withNewHolder(newHolder: AnonymousParty): AbstractFungibleToken
     //
     override val issuedTokenType: IssuedTokenType get() = amount.token
     //
