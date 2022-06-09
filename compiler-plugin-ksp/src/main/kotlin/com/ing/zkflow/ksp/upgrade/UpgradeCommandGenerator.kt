@@ -5,6 +5,7 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.ing.zinc.naming.camelToSnakeCase
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.common.contracts.ZKUpgradeCommandData
+import com.ing.zkflow.common.versioning.generateUpgradeCommandClassName
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.ksp.versioning.VersionedCommandIdGenerator
 import com.ing.zkflow.processors.SerializerProviderGenerator.SerializableClassWithSourceFiles
@@ -16,7 +17,6 @@ import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.ksp.writeTo
-import java.util.Locale
 
 /**
  * Generates version upgrade commands for version groups of ContractState classes.
@@ -59,13 +59,10 @@ class UpgradeCommandGenerator(
     ): SerializableClassWithSourceFiles {
         val publicOrPrivateOutput = if (isPrivate) "private" else "public"
         val publicOrAnyInput = if (isPrivate) "private" else "any"
-        val commandClassName =
-            "Upgrade${publicOrAnyInput.capitalize(Locale.getDefault())}${previous.simpleName.asString()}To${
-            publicOrPrivateOutput.capitalize(
-                Locale.getDefault()
-            )
-            }${current.simpleName.asString()}"
-        FileSpec.builder(current.packageName.asString(), commandClassName)
+        val commandClassName = generateUpgradeCommandClassName(previous, current, isPrivate)
+        val commandPackageName = generateUpgradeCommandPackageName(current)
+
+        FileSpec.builder(commandPackageName, commandClassName)
             .addImport("com.ing.zkflow.common.zkp.metadata", "commandMetadata")
             .addType(
                 TypeSpec.classBuilder(commandClassName)
@@ -122,11 +119,19 @@ class UpgradeCommandGenerator(
                 ),
             )
         return SerializableClassWithSourceFiles(
-            ClassName(current.packageName.asString(), commandClassName),
+            ClassName(generateUpgradeCommandPackageName(current), commandClassName),
             listOfNotNull(
                 previous.containingFile,
                 current.containingFile,
             )
         )
     }
+
+    private fun generateUpgradeCommandPackageName(current: KSClassDeclaration) = current.packageName.asString()
+
+    private fun generateUpgradeCommandClassName(
+        previous: KSClassDeclaration,
+        current: KSClassDeclaration,
+        isPrivate: Boolean
+    ) = generateUpgradeCommandClassName(previous.simpleName.asString(), current.simpleName.asString(), isPrivate)
 }

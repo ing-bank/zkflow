@@ -138,6 +138,9 @@ open class ZKVerifierTransaction internal constructor(
     override fun hashCode(): Int = id.hashCode()
     override fun equals(other: Any?) = if (other !is ZKVerifierTransaction) false else (this.id == other.id)
 
+    /**
+     * Returns true if a component is private in this transaction
+     */
     fun isPrivateComponent(group: ComponentGroupEnum, index: Int): Boolean =
         filteredComponentGroups.find { it.groupIndex == group.ordinal }?.privateComponentHashes?.contains(index) ?: false
 

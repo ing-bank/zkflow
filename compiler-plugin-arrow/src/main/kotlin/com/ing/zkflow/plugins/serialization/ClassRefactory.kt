@@ -2,8 +2,6 @@ package com.ing.zkflow.plugins.serialization
 
 import arrow.meta.phases.CompilerContext
 import arrow.meta.quotes.classorobject.ClassDeclaration
-import arrow.meta.quotes.element.ClassBody
-import arrow.meta.quotes.orEmpty
 import com.ing.zkflow.SerdeLogger
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.annotations.ZKPSurrogate
@@ -113,7 +111,7 @@ class ClassRefactory(
             //
             // The `buildBody` function is designed after `arrow.meta.quotes.element.ClassBody.identity`
 
-            val classBody = buildBody(classDeclaration.body)
+            val classBody = buildBody(classDeclaration)
 
             with(ctx) {
                 // BUG Simply printing out $`@annotations` in the new declaration is not reliable, prints only the first annotation.
@@ -208,11 +206,11 @@ class ClassRefactory(
     }
 
     @Suppress("UnusedPrivateMember")
-    private fun buildBody(body: ClassBody): String = with(body) {
+    private fun buildBody(classDeclaration: ClassDeclaration): String = with(classDeclaration.body) {
         SerdeLogger.phase("Re-building class body") { logger ->
             if (properties.isEmpty()) {
                 logger.log("Body has no properties. Returning it as is.")
-                "$body"
+                "$this"
             } else {
                 // else rebuild the class
                 logger.log("Body has properties. Annotating as Transient if applicable")
@@ -255,6 +253,9 @@ class ClassRefactory(
                     $companionObjects
                 
                     $functions
+                    
+                    // Hack until Arrow is replace with KSP
+                    ${classDeclaration.secondaryConstructor}
                     """
                     .trimIndent()
                     .also { logger.log("Updated class body:\n$it") }

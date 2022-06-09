@@ -108,9 +108,16 @@ private fun generateUpgradeVerification(
             returnType = ZincPrimitive.Unit
             body = """
                 let input: ${originalModule.typeName()} = ctx.inputs.${originalModule.typeName().camelToSnakeCase()}_${original.index}.data;
-                let output: ${upgradedModule.typeName()} = ctx.outputs.${upgradedModule.typeName().camelToSnakeCase()}_${upgraded.index}.data;
+                let output: ${upgradedModule.typeName()} = ctx.outputs.${
+            upgradedModule.typeName().camelToSnakeCase()
+            }_${upgraded.index}.data;
 
                 assert!(output.equals(${upgradedModule.typeName()}::upgrade_from(input)), "[$commandName] Not a valid upgrade from ${originalModule.typeName()} to ${upgradedModule.typeName()}.");
+                
+                // TODO: This must always check that input participants are signers, but currently participants is not 
+                // part of the constructor on the kotlin side and therefore not part of the witness and thus the input's Zinc struct. 
+                // Should we enforce participants to be always in the constructor? Only for upgrades? Probably not. 
+                // But how then to check that the required signers actually signed?
             """.trimIndent()
         }
     }

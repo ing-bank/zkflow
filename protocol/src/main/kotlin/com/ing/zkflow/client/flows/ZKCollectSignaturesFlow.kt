@@ -20,6 +20,9 @@ import net.corda.core.utilities.unwrap
 import java.security.PublicKey
 
 /**
+ * Note that this flow discloses all transaction contents to the signers, including that of any inputs that were the result
+ * of a private transaction between other network participants.
+ *
  * The [CollectSignaturesFlow] is used to automate the collection of counterparty signatures for a given transaction.
  *
  * You would typically use this flow after you have built a transaction with the TransactionBuilder and signed it with

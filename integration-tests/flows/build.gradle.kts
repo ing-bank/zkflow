@@ -6,7 +6,7 @@ plugins {
 }
 
 // This will prevent conflicts for between the original artifacts and their tests.
-group = "$group.integration"
+// group = "$group.integration"
 
 repositories {
     maven("https://software.r3.com/artifactory/corda")
@@ -16,6 +16,7 @@ repositories {
 dependencies {
     testImplementation(project(":test-utils"))
     testImplementation(project(":protocol"))
+    testImplementation(project(":zinc-poet:zinc-code-generation"))
 
     val cordaVersion: String by project
     kotlinCompilerPluginClasspath("net.corda:corda-core:$cordaVersion")
@@ -42,8 +43,8 @@ kotlin {
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
     // Generated class files are not recreated upon changes in compiler-plugin-arrow, therefor we always clean the
     // build, to enforce rebuild of classes with the updated compiler plugin.
-    dependsOn("clean", ":compiler-plugin-arrow:assemble")
-    mustRunAfter("clean", ":compiler-plugin-arrow:assemble")
+    dependsOn += "clean"
+    dependsOn += ":compiler-plugin-arrow:jar"
 
     kotlinOptions {
         // IR backend is needed for Unsigned integer types support for kotlin 1.4, in $rootDir/build.gradle.kts:185 we
