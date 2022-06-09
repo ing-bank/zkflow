@@ -37,7 +37,6 @@ import net.corda.core.transactions.WireTransaction
 import java.security.PublicKey
 import java.time.Duration
 import java.time.Instant
-import java.util.UUID
 
 /**
  * The main reason for this ZKTransactionBuilder to exist, is to ensure that the user always uses the
@@ -202,12 +201,7 @@ class ZKTransactionBuilder private constructor(
             builder.notary = value
         }
 
-    var lockId: UUID
-        get() = builder.lockId
-        set(value) {
-            builder.lockId = value
-        }
-
+    @Suppress("ComplexMethod") // Copy of Corda TransactionBuilder
     fun withItems(vararg items: Any) = apply {
         items.forEach {
             when (it) {

@@ -2,7 +2,6 @@ package com.ing.zkflow.testing.dsl.services
 
 import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.network.ZKNetworkParameters
-import com.ing.zkflow.common.transactions.SignedZKVerifierTransaction
 import com.ing.zkflow.common.transactions.ZKVerifierTransaction
 import com.ing.zkflow.common.transactions.ZKVerifierTransactionWithoutProofs
 import com.ing.zkflow.common.transactions.collectUtxoInfos
@@ -26,26 +25,30 @@ import java.nio.file.Files
 import java.nio.file.Path
 
 @SuppressFBWarnings("PATH_TRAVERSAL_IN")
-public class TestDSLZincZKTransactionService(serviceHub: ServiceHub, zkVerifierTransactionStorage: ZKWritableVerifierTransactionStorage) :
-    TestDSLZKTransactionService, ZincZKTransactionService(serviceHub) {
+public class TestDSLZincZKTransactionService(
+    serviceHub: ServiceHub,
+    zkVerifierTransactionStorage: ZKWritableVerifierTransactionStorage,
+    private val zkNetworkParameters: ZKNetworkParameters
+) : ZincZKTransactionService(serviceHub) {
     override val vtxStorage: ZKWritableVerifierTransactionStorage = zkVerifierTransactionStorage
 
     /**
      * This verification function should do all the same checks as `AbstractZKTransactionService.verify(svtx: SignedZKVerifierTransaction, checkSufficientSignatures: Boolean)`.
      * This ensures that DSL tests validate transactions consistently with the real ZKTransactionService used.
      */
-    public override fun verify(wtx: WireTransaction, zkNetworkParameters: ZKNetworkParameters): SignedZKVerifierTransaction {
+    public override fun verify(wtx: WireTransaction): ZKVerifierTransactionWithoutProofs {
         val vtx = ZKVerifierTransactionWithoutProofs.fromWireTransaction(wtx)
+        // Check transaction structure first, so we fail fast
+        vtx.verifyMerkleTree()
 
         // Verify the ZKPs for all ZKCommandDatas in this transaction
-        verifyProofs(wtx, zkNetworkParameters, vtx)
+        verifyProofs(wtx, vtx)
 
-        return SignedZKVerifierTransaction(vtx)
+        return vtx
     }
 
     private fun verifyProofs(
         wtx: WireTransaction,
-        zkNetworkParameters: ZKNetworkParameters,
         vtx: ZKVerifierTransaction
     ) {
         wtx.zkCommandData.forEach { command ->

@@ -1,8 +1,10 @@
+
 import com.ing.zkflow.common.network.ZKNetworkParameters
 import com.ing.zkflow.common.transactions.SignedZKVerifierTransaction
 import com.ing.zkflow.common.transactions.ZKTransactionBuilder
 import com.ing.zkflow.common.transactions.ZKVerifierTransaction
-import com.ing.zkflow.common.transactions.hasZKCommandData
+import com.ing.zkflow.common.transactions.zkVerify
+import com.ing.zkflow.common.zkp.ZKTransactionService
 import com.ing.zkflow.node.services.ZKWritableVerifierTransactionStorage
 import com.ing.zkflow.testing.dsl.TestZKTransactionDSLInterpreter
 import com.ing.zkflow.testing.dsl.interfaces.AttachmentResolutionException
@@ -10,7 +12,6 @@ import com.ing.zkflow.testing.dsl.interfaces.DoubleSpentInputs
 import com.ing.zkflow.testing.dsl.interfaces.DuplicateOutputLabel
 import com.ing.zkflow.testing.dsl.interfaces.EnforceVerifyOrFail
 import com.ing.zkflow.testing.dsl.interfaces.ZKLedgerDSLInterpreter
-import com.ing.zkflow.testing.dsl.services.TestDSLZKTransactionService
 import net.corda.core.contracts.Attachment
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.StateAndRef
@@ -18,8 +19,11 @@ import net.corda.core.contracts.StateRef
 import net.corda.core.contracts.TransactionResolutionException
 import net.corda.core.contracts.TransactionState
 import net.corda.core.contracts.TransactionVerificationException
+import net.corda.core.crypto.Crypto
 import net.corda.core.crypto.NullKeys
 import net.corda.core.crypto.SecureHash
+import net.corda.core.crypto.SignableData
+import net.corda.core.crypto.SignatureMetadata
 import net.corda.core.internal.uncheckedCast
 import net.corda.core.node.ServiceHub
 import net.corda.core.transactions.SignedTransaction
@@ -37,14 +41,14 @@ public class TestZKLedgerDSLInterpreter private constructor(
     private val labelToOutputStateAndRefs: HashMap<String, StateAndRef<ContractState>> = HashMap(),
     private val transactionWithLocations: HashMap<SecureHash, WireTransactionWithLocation> = LinkedHashMap(),
     private val nonVerifiedTransactionWithLocations: HashMap<SecureHash, WireTransactionWithLocation> = HashMap(),
-    public override val zkService: TestDSLZKTransactionService,
+    public override val zkService: ZKTransactionService,
     override val zkNetworkParameters: ZKNetworkParameters,
     override val zkVerifierTransactionStorage: ZKWritableVerifierTransactionStorage
 ) : ZKLedgerDSLInterpreter<TestZKTransactionDSLInterpreter> {
     // We specify [labelToOutputStateAndRefs] just so that Kotlin picks the primary constructor instead of cycling
     public constructor(
         services: ServiceHub,
-        zkService: TestDSLZKTransactionService,
+        zkService: ZKTransactionService,
         zkNetworkParameters: ZKNetworkParameters,
         zkVerifierTransactionStorage: ZKWritableVerifierTransactionStorage
     ) : this(
@@ -206,11 +210,9 @@ public class TestZKLedgerDSLInterpreter private constructor(
             services.recordTransactions(transactionsUnverified.map { SignedTransaction(it, listOf(NullKeys.NULL_SIGNATURE)) })
             for ((_, value) in transactionWithLocations) {
                 val wtx = value.transaction
-                val ltx = wtx.toLedgerTransaction(services)
-                ltx.verify()
-                if (wtx.hasZKCommandData) {
-                    zkService.verify(wtx, zkNetworkParameters)
-                }
+                val stx = services.signInitialTransaction(wtx)
+                stx.zkVerify(services, zkService, zkVerifierTransactionStorage, checkSufficientSignatures = false)
+
                 val allInputs = wtx.inputs union wtx.references
                 val doubleSpend = allInputs intersect usedInputs
                 if (!doubleSpend.isEmpty()) {
@@ -241,4 +243,12 @@ public class TestZKLedgerDSLInterpreter private constructor(
     }
 
     private val transactionsUnverified: List<WireTransaction> get() = nonVerifiedTransactionWithLocations.values.map { it.transaction }
+}
+
+private fun ServiceHub.signInitialTransaction(wtx: WireTransaction): SignedTransaction {
+    val pubKey = this.myInfo.legalIdentitiesAndCerts.first().owningKey
+    val signatureMetadata = SignatureMetadata(myInfo.platformVersion, Crypto.findSignatureScheme(pubKey).schemeNumberID)
+    val signableData = SignableData(wtx.id, signatureMetadata)
+    val sig = keyManagementService.sign(signableData, pubKey)
+    return SignedTransaction(wtx, listOf(sig))
 }

@@ -127,8 +127,15 @@ public class ZKTransactionDSL<out T : ZKTransactionDSLInterpreter>(private val i
      */
     public fun attachment(contractClassName: ContractClassName): Unit = _attachment(contractClassName)
 
-    public fun attachment(contractClassName: ContractClassName, attachmentId: AttachmentId, signers: List<PublicKey>, jarManifestAttributes: Map<String, String> = emptyMap()): Unit = _attachment(contractClassName, attachmentId, signers, jarManifestAttributes)
-    public fun attachment(contractClassName: ContractClassName, attachmentId: AttachmentId): Unit = _attachment(contractClassName, attachmentId, emptyList())
+    public fun attachment(
+        contractClassName: ContractClassName,
+        attachmentId: AttachmentId,
+        signers: List<PublicKey>,
+        jarManifestAttributes: Map<String, String> = emptyMap()
+    ): Unit = _attachment(contractClassName, attachmentId, signers, jarManifestAttributes)
+
+    public fun attachment(contractClassName: ContractClassName, attachmentId: AttachmentId): Unit =
+        _attachment(contractClassName, attachmentId, emptyList())
 
     public fun attachments(vararg contractClassNames: ContractClassName): Unit = contractClassNames.forEach { attachment(it) }
 }
