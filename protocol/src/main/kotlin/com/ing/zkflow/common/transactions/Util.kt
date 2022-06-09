@@ -144,13 +144,13 @@ val TraversableTransaction.hasZKCommandData get() = commands.any { it.value is Z
 val TraversableTransaction.hasPrivateComponents get() = hasZKCommandData
 val LedgerTransaction.hasZKCommandData get() = commands.any { it.value is ZKCommandData }
 
-val ZKTransactionBuilder.commandData get() = commands().map { it.value }.filterIsInstance<ZKCommandData>()
-val TraversableTransaction.commandData get() = commands.map { it.value }.filterIsInstance<ZKCommandData>()
-val LedgerTransaction.commandData get() = commands.map { it.value }.filterIsInstance<ZKCommandData>()
+val ZKTransactionBuilder.zkCommandData get() = commands().map { it.value }.filterIsInstance<ZKCommandData>()
+val TraversableTransaction.zkCommandData get() = commands.map { it.value }.filterIsInstance<ZKCommandData>()
+val LedgerTransaction.zkCommandData get() = commands.map { it.value }.filterIsInstance<ZKCommandData>()
 
-val ZKTransactionBuilder.commandMetadata get() = commandData.map { it.metadata }
-val TraversableTransaction.commandMetadata get() = commandData.map { it.metadata }
-val LedgerTransaction.commandMetadata get() = commandData.map { it.metadata }
+val ZKTransactionBuilder.commandMetadata get() = zkCommandData.map { it.metadata }
+val TraversableTransaction.commandMetadata get() = zkCommandData.map { it.metadata }
+val LedgerTransaction.commandMetadata get() = zkCommandData.map { it.metadata }
 
 private const val TX_CONTAINS_NO_COMMANDS_WITH_METADATA = "This transaction does not contain any commands with metadata"
 private const val NETWORKS_PARAMS_MISSING = "NetworkParameters not found"
@@ -175,9 +175,18 @@ fun getClassLoaderFromContractAttachment(tx: TraversableTransaction, serviceHub:
     return getClassLoaderFromContractAttachment(tx.id, tx.attachments, tx.networkParametersHash, serviceHub)
 }
 
-fun getClassLoaderFromContractAttachment(txId: SecureHash, attachmentIds: List<SecureHash>, networkParametersHash: SecureHash?, serviceHub: ServiceHub): ClassLoader {
+fun getClassLoaderFromContractAttachment(
+    txId: SecureHash,
+    attachmentIds: List<SecureHash>,
+    networkParametersHash: SecureHash?,
+    serviceHub: ServiceHub
+): ClassLoader {
     val hashToResolve = networkParametersHash ?: serviceHub.networkParametersService.defaultHash
-    val params = serviceHub.networkParametersService.lookup(hashToResolve) ?: throw TransactionResolutionException.UnknownParametersException(SecureHash.zeroHash, hashToResolve)
+    val params =
+        serviceHub.networkParametersService.lookup(hashToResolve) ?: throw TransactionResolutionException.UnknownParametersException(
+            SecureHash.zeroHash,
+            hashToResolve
+        )
     val attachments = attachmentIds.map { serviceHub.attachments.openAttachment(it) ?: error("Attachment ($it) not found") }
 
     return getClassLoaderFromContractAttachment(txId, attachments, params)
@@ -188,20 +197,31 @@ fun getClassLoaderFromContractAttachment(txId: SecureHash, attachments: List<Att
 }
 
 fun TraversableTransaction.zkTransactionMetadata(serviceHub: ServiceHub): ResolvedZKTransactionMetadata =
-    if (this.hasZKCommandData) zkTransactionMetadata(this.commandMetadata, getClassLoaderFromContractAttachment(this, serviceHub)) else error(TX_CONTAINS_NO_COMMANDS_WITH_METADATA)
+    if (this.hasZKCommandData) zkTransactionMetadata(
+        this.commandMetadata,
+        getClassLoaderFromContractAttachment(this, serviceHub)
+    ) else error(TX_CONTAINS_NO_COMMANDS_WITH_METADATA)
 
 fun TraversableTransaction.zkTransactionMetadataOrNull(serviceHub: ServiceHub): ResolvedZKTransactionMetadata? =
     if (this.hasZKCommandData) zkTransactionMetadata(this.commandMetadata, getClassLoaderFromContractAttachment(this, serviceHub)) else null
 
 fun LedgerTransaction.zkTransactionMetadata(): ResolvedZKTransactionMetadata =
-    if (this.hasZKCommandData) zkTransactionMetadata(this.commandMetadata, getClassLoaderFromContractAttachment(id, attachments, networkParameters ?: error(NETWORKS_PARAMS_MISSING))) else error(TX_CONTAINS_NO_COMMANDS_WITH_METADATA)
+    if (this.hasZKCommandData) zkTransactionMetadata(
+        this.commandMetadata,
+        getClassLoaderFromContractAttachment(id, attachments, networkParameters ?: error(NETWORKS_PARAMS_MISSING))
+    ) else error(TX_CONTAINS_NO_COMMANDS_WITH_METADATA)
 
 fun ZKTransactionBuilder.zkTransactionMetadata(serviceHub: ServiceHub): ResolvedZKTransactionMetadata {
     return if (this.hasZKCommandData) {
         zkTransactionMetadata(
             this.commandMetadata,
             // Random SHA looks a bit weird here, but it is not really used inside ClassLoader creation, so it's not worth to build WireTx here just because of this id
-            getClassLoaderFromContractAttachment(SecureHash.randomSHA256(), attachments(), serviceHub.networkParametersService.currentHash, serviceHub)
+            getClassLoaderFromContractAttachment(
+                SecureHash.randomSHA256(),
+                attachments(),
+                serviceHub.networkParametersService.currentHash,
+                serviceHub
+            )
         )
     } else error(TX_CONTAINS_NO_COMMANDS_WITH_METADATA)
 }

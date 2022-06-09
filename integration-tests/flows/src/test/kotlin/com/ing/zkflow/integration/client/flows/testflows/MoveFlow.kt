@@ -25,7 +25,7 @@ import net.corda.core.transactions.SignedTransaction
 class MoveFlow(
     private val createStx: SignedTransaction,
     private val newOwner: Party,
-    private val moveCommand: ZKCommandData = TestContract.Move()
+    private val moveCommand: ZKCommandData = TestContract.MoveAnyToPrivate()
 ) : FlowLogic<SignedTransaction>() {
 
     @Suspendable

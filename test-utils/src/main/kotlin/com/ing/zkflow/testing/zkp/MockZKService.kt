@@ -1,6 +1,5 @@
 package com.ing.zkflow.testing.zkp
 
-import com.ing.zkflow.common.serialization.zinc.json.WitnessSerializer
 import com.ing.zkflow.common.zkp.PublicInput
 import com.ing.zkflow.common.zkp.Witness
 import com.ing.zkflow.common.zkp.WitnessField
@@ -14,30 +13,39 @@ import net.corda.core.serialization.serialize
 import net.corda.core.utilities.OpaqueBytes
 import net.corda.core.utilities.loggerFor
 
+/**
+ * IMPORTANT NOTE: This mock service DOES NOT check smart contract rules, only fixed platform rules guaranteeing the backchain integrity.
+ * This mock service should only be used to test backchain integrity, for example in the context of flow tests
+ * where the confirmation of the contract rules is already covered by the contract tests.
+ */
 @Suppress("EXPERIMENTAL_API_USAGE", "DuplicatedCode")
 public class MockZKService(private val digestService: DigestService) : ZKService {
     private val log = loggerFor<MockZKService>()
 
     /**
-     * This mock version simply returns the serialized witness, so that we can use it in `verify()`
+     * This mock version simply returns the Corda-serialized witness, so that we can use it in `verify()`
      * to do all the verifications
      */
     override fun prove(witness: Witness): ByteArray {
-        log.debug("Witness size: ${witness.size()}, of which padding bytes: ${witness.size { it == 0.toByte() }}") // Assumes BFL zero-byte padding
-        val witnessJson = WitnessSerializer.fromWitness(witness)
-        log.trace("Witness JSON: $witnessJson")
-
+        log.info("Proving")
         return witness.serialize().bytes
     }
 
     override fun verify(proof: ByteArray, publicInput: PublicInput) {
+        log.info("Verifying proof")
+
         // This assumes that the proof (for testing only) is simply a serialized witness.
         val witness = proof.deserialize<Witness>()
 
         /*
          * Rule 1: The recalculated component leaf hashes should match the ones from the instance vtx.
          */
-        verifyLeafHashesForComponentGroup(witness.outputsGroup.map { e -> e.serializedData }, publicInput.outputComponentHashes, witness.privacySalt, ComponentGroupEnum.OUTPUTS_GROUP.ordinal)
+        verifyLeafHashesForComponentGroup(
+            witness.outputsGroup.map { e -> e.serializedData },
+            publicInput.outputComponentHashes,
+            witness.privacySalt,
+            ComponentGroupEnum.OUTPUTS_GROUP.ordinal
+        )
 
         /*
          * Rule 2: witness input and reference contents hashed with their nonce should equal the matching hash from publicInput.
@@ -48,9 +56,11 @@ public class MockZKService(private val digestService: DigestService) : ZKService
 
         /*
          * Rule 3: The contract rules should verify
+         *
+         * IMPORTANT NOTE: This mock service DOES NOT check smart contract rules, only fixed platform rules guaranteeing the backchain integrity.
+         * This mock service should only be used to test backchain integrity, for example in the context of flow tests
+         * where the confirmation of the contract rules is already covered by the contract tests.
          */
-        // TODO: Contract verification is temporarily disabled since verification requires constructing a ledger transaction with (almost) full list of components.
-        // It should be re-implemented wrt the new visibility rules.
     }
 
     private fun verifyLeafHashesForComponentGroup(serializedComponents: List<ByteArray>, expectedComponentHashes: List<SecureHash>, privacySalt: PrivacySalt, groupIndex: Int) {

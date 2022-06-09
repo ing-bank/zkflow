@@ -82,7 +82,7 @@ class VisibilityFlowTest {
         mockNet.runNetwork()
         val createPublicStx = createPublicFuture.getOrThrow()
 
-        val createPrivateFlow = CreateFlow(createCommand = TestContract.Create()) // this command creates private output
+        val createPrivateFlow = CreateFlow(createCommand = TestContract.CreatePrivate()) // this command creates private output
         val createPrivateFuture = miniCorpNode.startFlow(createPrivateFlow)
         mockNet.runNetwork()
         val createPrivateStx = createPrivateFuture.getOrThrow()
@@ -102,13 +102,13 @@ class VisibilityFlowTest {
         mockNet.runNetwork()
         val movePrivateStx = movePrivateOnlyFuture.getOrThrow()
 
-        // Move should work for both
+        // MoveAnyToPrivate should work for both
 
-        val movePrivateFuture = miniCorpNode.startFlow(MoveFlow(movePrivateStx, megaCorp, moveCommand = TestContract.Move()))
+        val movePrivateFuture = miniCorpNode.startFlow(MoveFlow(movePrivateStx, megaCorp, moveCommand = TestContract.MoveAnyToPrivate()))
         mockNet.runNetwork()
         movePrivateFuture.getOrThrow()
 
-        val movePublicFuture = miniCorpNode.startFlow(MoveFlow(createPublicStx, megaCorp, moveCommand = TestContract.Move()))
+        val movePublicFuture = miniCorpNode.startFlow(MoveFlow(createPublicStx, megaCorp, moveCommand = TestContract.MoveAnyToPrivate()))
         mockNet.runNetwork()
         movePublicFuture.getOrThrow()
     }

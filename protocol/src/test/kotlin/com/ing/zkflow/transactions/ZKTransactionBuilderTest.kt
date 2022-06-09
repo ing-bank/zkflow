@@ -10,7 +10,11 @@ class ZKTransactionBuilderTest {
     fun `Public API of ZKTransactionBuilder equals TransactionBuilder`() {
         ZKTransactionBuilder::class.shouldHaveSamePublicApiAs(
             TransactionBuilder::class,
-            listOf("addOutputState")
+            listOf(
+                // "addOutputState",
+                "lockId", // Not clear what it is used for
+                "<init>" // constructors may be different
+            )
         )
     }
 }

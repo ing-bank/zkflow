@@ -95,18 +95,19 @@ class ZKTransactionVerifierService(
         }
     }
 
-    /*
+    /**
      * Check outputs: if they are hidden in the filteredcomponentsgroup, i.e. the actual transaction,
      * they should be mentioned one of the command metadata. That ensures that their contents are part of the witness and therefore
      * validated by the ZKP circuit.
-    */
+     */
     private fun ensureNoUncheckedPrivateOutputs(vtx: ZKVerifierTransaction) {
         val actualPrivateOutputIndexes = vtx.privateComponentIndexes(ComponentGroupEnum.OUTPUTS_GROUP)
         if (actualPrivateOutputIndexes.isNotEmpty()) {
             val expectedPrivateOutputIndexes =
-                vtx.zkTransactionMetadataOrNull(services)?.commands?.flatMap { it.outputs.map { output -> output.index } }?.toSet() ?: error(
-                    "There are private outputs in the transaction, but no metadata for them. " + "This means the ZKPs don't prove anything about these outputs and they are created without verification"
-                )
+                vtx.zkTransactionMetadataOrNull(services)?.commands?.flatMap { it.outputs.map { output -> output.index } }?.toSet()
+                    ?: error(
+                        "There are private outputs in the transaction, but no metadata for them. " + "This means the ZKPs don't prove anything about these outputs and they are created without verification"
+                    )
             require(actualPrivateOutputIndexes.all { it in expectedPrivateOutputIndexes }) {
                 "There are private outputs that are not mentioned in the metadata. " +
                     "This means the ZKPs don't prove anything about these outputs!" +

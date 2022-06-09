@@ -18,7 +18,7 @@ class NonZkpCreateFlow : FlowLogic<SignedTransaction>() {
     override fun call(): SignedTransaction {
         val me = serviceHub.myInfo.legalIdentities.single().anonymise()
         val state = TestContract.TestState(me)
-        val issueCommand = Command(TestContract.Create(), me.owningKey) //
+        val issueCommand = Command(TestContract.CreatePrivate(), me.owningKey) //
         val stateAndContract = StateAndContract(state, TestContract.PROGRAM_ID)
 
         val builder = TransactionBuilder(serviceHub.networkMapCache.notaryIdentities.single())

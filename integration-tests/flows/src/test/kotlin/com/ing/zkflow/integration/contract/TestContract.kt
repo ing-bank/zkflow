@@ -24,32 +24,35 @@ class TestContract : Contract {
         const val PROGRAM_ID: ContractClassName = "com.ing.zkflow.integration.contract.TestContract"
     }
 
-    interface TestStateInterface : Versioned
+    interface VersionedTestState : Versioned, ZKOwnableState
+
     @BelongsToContract(TestContract::class)
     @ZKP
     data class TestState(
         override val owner: @EdDSA AnonymousParty,
         val value: Int = Random().nextInt(1000)
-    ) : ZKOwnableState, TestStateInterface {
+    ) : VersionedTestState {
         override val participants: List<AnonymousParty> = listOf(owner)
 
         override fun withNewOwner(newOwner: AnonymousParty): CommandAndState =
-            CommandAndState(Move(), copy(owner = newOwner))
+            CommandAndState(MoveAnyToPrivate(), copy(owner = newOwner))
     }
 
     // Commands
-    interface CreateInterface : Versioned
+    interface VersionedCreateCommandData : Versioned, ZKCommandData
+
     @ZKP
-    class Create : ZKCommandData, CreateInterface {
+    class CreatePrivate : VersionedCreateCommandData {
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
             outputs { private(TestState::class) at 0 }
             numberOfSigners = 1
         }
     }
 
-    interface CreatePublicInterface : Versioned
+    interface CreatePublicCommandData : Versioned, ZKCommandData
+
     @ZKP
-    class CreatePublic : ZKCommandData, CreatePublicInterface {
+    class CreatePublic : CreatePublicCommandData {
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
             outputs {
                 public(TestState::class) at 0
@@ -73,18 +76,20 @@ class TestContract : Contract {
      *
      * This command is only used on [CollectSignaturesFlowTest]. It expects two signatures, but nothing else.
      */
-    interface SignOnlyInterface : Versioned
+    interface SignOnlyCommandData : Versioned, ZKCommandData
+
     @ZKP
-    class SignOnly : ZKCommandData, SignOnlyInterface {
+    class SignOnly : SignOnlyCommandData {
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
             outputs { private(TestState::class) at 0 }
             numberOfSigners = 2
         }
     }
 
-    interface MoveInterface : Versioned
+    interface MoveAnyToPrivateCommandData : Versioned, ZKCommandData
+
     @ZKP
-    class Move : ZKCommandData, MoveInterface {
+    class MoveAnyToPrivate : MoveAnyToPrivateCommandData {
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
             inputs { any(TestState::class) at 0 }
             outputs { private(TestState::class) at 0 }
@@ -92,9 +97,10 @@ class TestContract : Contract {
         }
     }
 
-    interface MovePrivateOnlyInterface : Versioned
+    interface MovePrivateOnlyCommandData : Versioned, ZKCommandData
+
     @ZKP
-    class MovePrivateOnly : ZKCommandData, MovePrivateOnlyInterface {
+    class MovePrivateOnly : MovePrivateOnlyCommandData {
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
             inputs { private(TestState::class) at 0 }
             outputs { private(TestState::class) at 0 }
@@ -102,9 +108,10 @@ class TestContract : Contract {
         }
     }
 
-    interface MoveBidirectionalInterface : Versioned
+    interface MoveBidirectionalCommandData : Versioned, ZKCommandData
+
     @ZKP
-    class MoveBidirectional : ZKCommandData, MoveBidirectionalInterface {
+    class MoveBidirectional : MoveBidirectionalCommandData {
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
             inputs {
                 any(TestState::class) at 0
@@ -128,7 +135,7 @@ class TestContract : Contract {
             is CreatePublic -> CreatePublic.verify(tx, command)
 
             // command that don't have public checks
-            is Create, is Move, is MovePrivateOnly, is MoveBidirectional, is SignOnly -> {}
+            is CreatePrivate, is MoveAnyToPrivate, is MovePrivateOnly, is MoveBidirectional, is SignOnly -> {}
             else -> {
                 throw IllegalStateException("No valid command found")
             }

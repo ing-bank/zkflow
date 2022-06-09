@@ -6,7 +6,7 @@ import com.ing.zkflow.common.transactions.SignedZKVerifierTransaction
 import com.ing.zkflow.common.transactions.ZKVerifierTransaction
 import com.ing.zkflow.common.transactions.ZKVerifierTransactionWithoutProofs
 import com.ing.zkflow.common.transactions.collectUtxoInfos
-import com.ing.zkflow.common.transactions.commandData
+import com.ing.zkflow.common.transactions.zkCommandData
 import com.ing.zkflow.common.zkp.Witness
 import com.ing.zkflow.common.zkp.ZincZKTransactionService
 import com.ing.zkflow.node.services.ZKWritableVerifierTransactionStorage
@@ -48,7 +48,7 @@ public class TestDSLZincZKTransactionService(serviceHub: ServiceHub, zkVerifierT
         zkNetworkParameters: ZKNetworkParameters,
         vtx: ZKVerifierTransaction
     ) {
-        wtx.commandData.forEach { command ->
+        wtx.zkCommandData.forEach { command ->
             val temporaryCircuitBuildFolder = Files.createTempDirectory(command.metadata.circuit.name)
 
             val commandMetadata = command.metadata.copy(

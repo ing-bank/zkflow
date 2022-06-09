@@ -16,7 +16,8 @@ import net.corda.core.flows.InitiatingFlow
 import net.corda.core.transactions.SignedTransaction
 
 @InitiatingFlow
-class CreateFlow(private val value: Int? = null, private val createCommand: ZKCommandData = TestContract.Create()) : FlowLogic<SignedTransaction>() {
+class CreateFlow(private val value: Int? = null, private val createCommand: ZKCommandData = TestContract.CreatePrivate()) :
+    FlowLogic<SignedTransaction>() {
 
     @Suspendable
     override fun call(): SignedTransaction {
@@ -33,7 +34,7 @@ class CreateFlow(private val value: Int? = null, private val createCommand: ZKCo
         val stx = serviceHub.signInitialTransaction(builder)
         val fullySignedStx = subFlow(ZKCollectSignaturesFlow(stx, emptyList()))
 
-        subFlow(ZKFinalityFlow(fullySignedStx, listOf()))
+        subFlow(ZKFinalityFlow(fullySignedStx, privateSessions = listOf()))
 
         return stx
     }

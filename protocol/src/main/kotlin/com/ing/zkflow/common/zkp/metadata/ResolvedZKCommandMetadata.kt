@@ -144,7 +144,7 @@ data class ResolvedZKCommandMetadata(
     }
 
     private fun matchTypes(componentName: String, expectedTypes: List<KClass<*>>, actualTypes: List<KClass<*>>) {
-        require(expectedTypes.size == actualTypes.size) { "Expected types size (${expectedTypes.size}) has different length than actual size (${actualTypes.size})" }
+        require(expectedTypes.size == actualTypes.size) { "Expected ${expectedTypes.size} ${componentName}s, found ${actualTypes.size}." }
         expectedTypes.forEachIndexed { index, expected ->
             val actual = actualTypes.getOrElse(index) { error("Expected to find $componentName $expected at index $index, nothing found") }
             require(actual == expected) { "Unexpected $componentName order. Expected '$expected' at index $index, but found '$actual'" }
