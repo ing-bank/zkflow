@@ -68,7 +68,7 @@ class StableIdVersionedSymbolProcessor(private val logger: KSPLogger, private va
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
         val newFiles = resolver.getNewFiles(visitedFiles)
-        logger.info("New Files: ${newFiles.joinToString { it.filePath }}")
+        logger.info("${this::class.simpleName} New Files:\n${newFiles.joinToString("\n") { it.filePath }}")
         visitedFiles.addAll(newFiles)
 
         val implementations: Map<Set<KClass<*>>, List<ScopedDeclaration>> = newFiles

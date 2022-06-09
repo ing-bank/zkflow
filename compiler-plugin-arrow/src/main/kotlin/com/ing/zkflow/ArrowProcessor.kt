@@ -35,9 +35,33 @@ internal object SerdeIndex {
         }
     }
 
-    operator fun get(simpleName: String): UserClass? = index.entries
-        .find { it.key.shortName().toString() == simpleName }
-        ?.let { UserClass(it.key, it.value) }
+    fun get(simpleName: String, packageName: String): UserClass? {
+        val candidates = index.entries
+            .filter { it.key.shortName().toString() == simpleName }
+
+        return when (candidates.size) {
+            0 -> null
+            1 -> with(candidates.single()) {
+                UserClass(key, value)
+            }
+            else -> {
+                val single = candidates.singleOrNull {
+                    it.key.toString().startsWith(packageName)
+                }
+
+                if (single == null) {
+                    val err = candidates.joinToString(
+                        prefix = "Cannot disambiguate between:\n",
+                        separator = "/n"
+                    ) { "${it.key}" }
+                    SerdeLogger.log(err)
+                    error(err)
+                } else {
+                    UserClass(single.key, single.value)
+                }
+            }
+        }
+    }
 
     override fun toString(): String =
         index.entries.joinToString(separator = "\n") { entry ->

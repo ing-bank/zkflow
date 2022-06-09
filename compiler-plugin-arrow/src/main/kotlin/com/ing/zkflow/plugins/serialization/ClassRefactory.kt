@@ -184,7 +184,7 @@ class ClassRefactory(
                 if (ignoreNullability) it.stripNullability() else it
             }
 
-            logger.log("Root type has been resolved to `${resolvedRootType.type}`")
+            logger.log("Root type has been resolved to `${resolvedRootType.bestEffortResolvedType}`")
             // • Strip nullability.
             if (resolvedRootType.isNullable) {
                 return@phase buildSerializingObject(this, ignoreNullability = true, depth + 1).wrapNull()

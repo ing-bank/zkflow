@@ -21,6 +21,8 @@ val Meta.UserClassesIndexer: CliPlugin
                     SerdeLogger.phase(PROCESSING_UNIT) {
                         if (element.fqName != null) {
                             SerdeIndex.register(element.fqName!!, element.annotationEntries)
+                        } else {
+                            it.log("Class without an fqName:\n${element.text}")
                         }
 
                         false

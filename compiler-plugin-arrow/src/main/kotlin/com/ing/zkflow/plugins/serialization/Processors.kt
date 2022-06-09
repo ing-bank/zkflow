@@ -645,8 +645,9 @@ internal object Processors {
                 )
             }
 
+            SerdeLogger.log("Looking for a ${ZKP::class.simpleName} annotation for `${rootType.type}`")
             // Ensure the class has a ZKP annotation.
-            with(contextualOriginal.rootType.bestEffortResolvedType) {
+            with(rootType.bestEffortResolvedType) {
                 when (this) {
                     is BestEffortResolvedType.AsIs -> errorSerializerAbsentFor(simpleName)
                     is BestEffortResolvedType.FullyQualified -> findAnnotation<ZKP>() ?: errorSerializerAbsentFor("$fqName")
@@ -664,6 +665,8 @@ internal object Processors {
             }
         }
     }
+
+    fun isKotlinNativeType(type: String) = standardTypes.keys.contains(type) || genericCollections.keys.contains(type)
 
     fun isUserType(type: String) = !native.keys.contains(type)
 

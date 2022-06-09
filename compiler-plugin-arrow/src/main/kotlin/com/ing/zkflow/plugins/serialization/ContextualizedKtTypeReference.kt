@@ -41,7 +41,12 @@ class ContextualizedKtTypeReference(
                     // Drop the last `?` if present.
                     val simpleName = if (isNullable) it.substring(0, it.lastIndex) else it
 
-                    ContextualType(typeResolver.resolve(simpleName), isNullable)
+                    if (Processors.isKotlinNativeType(simpleName)) {
+                        // Short-cut type resolution for Kotlin native types such as Int, String, List, etc.
+                        ContextualType(BestEffortResolvedType.AsIs(simpleName), isNullable)
+                    } else {
+                        ContextualType(typeResolver.resolve(simpleName), isNullable)
+                    }
                 }
         }
     }
@@ -134,7 +139,7 @@ class ContextualizedKtTypeReference(
      * named "SurrogateClassName[Surrogate.GENERATED_SURROGATE_SERIALIZER_POSTFIX]"
      */
     fun findSurrogateSerializer(): FqName? {
-        SerdeLogger.log("Looking for a surrogate specification for `${ktTypeElement.text}`")
+        SerdeLogger.log("Looking for a surrogate specification for `${rootType.type}`")
 
         return ktTypeReference.findAnnotation<Via<*>>()?.let {
             val surrogate = it.typeArguments.single()
@@ -153,6 +158,8 @@ class ContextualizedKtTypeReference(
             SerdeLogger.log("[Expected] Surrogate serializer: `$surrogateSerializerFqName`")
 
             surrogateSerializerFqName
+        }.also { fqName ->
+            SerdeLogger.log(fqName?.let { "Surrogate is found: `$it`" } ?: "No surrogate is found")
         }
     }
 
