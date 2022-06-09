@@ -1,7 +1,6 @@
 package com.ing.zkflow.common.transactions
 
 import co.paralleluniverse.strands.Strand
-import com.ing.zkflow.common.contracts.ZKContractState
 import com.ing.zkflow.common.network.ZKNetworkParameters
 import com.ing.zkflow.common.network.ZKNetworkParametersServiceLoader
 import com.ing.zkflow.common.serialization.ZKCustomSerializationScheme.Companion.CONTEXT_KEY_TRANSACTION_METADATA
@@ -59,7 +58,7 @@ import java.util.UUID
  * ```
  */
 @Suppress("TooManyFunctions", "LongParameterList", "MemberVisibilityCanBePrivate") // Copy of TransactionBuilder API
-class ZKTransactionBuilder(
+class ZKTransactionBuilder private constructor(
     val builder: TransactionBuilder,
     val zkNetworkParameters: ZKNetworkParameters = ZKNetworkParametersServiceLoader.latest,
     // TransactionBuilder does not expose `inputsWithTransactionState` and `referencesWithTransactionState`, which are required for the ordered TransactionBuilder
@@ -70,54 +69,11 @@ class ZKTransactionBuilder(
     val privacySalt: PrivacySalt = PrivacySalt(),
     val serviceHub: ServiceHub? = (Strand.currentStrand() as? FlowStateMachine<*>)?.serviceHub
 ) {
-
-    constructor(
-        notary: Party? = null,
-        lockId: UUID = defaultLockId(),
-        inputs: MutableList<StateRef> = arrayListOf(),
-        attachments: MutableList<AttachmentId> = arrayListOf(),
-        outputs: MutableList<TransactionState<ContractState>> = arrayListOf(),
-        commands: MutableList<Command<*>> = arrayListOf(),
-        window: TimeWindow? = null,
-        privacySalt: PrivacySalt = PrivacySalt(),
-        references: MutableList<StateRef> = arrayListOf(),
-        serviceHub: ServiceHub? = (Strand.currentStrand() as? FlowStateMachine<*>)?.serviceHub
-    ) : this(
-        TransactionBuilder(
-            notary,
-            lockId,
-            inputs,
-            attachments,
-            outputs,
-            commands,
-            window,
-            privacySalt,
-            references,
-            serviceHub
-        )
-    )
-
-    constructor(
-        notary: Party? = null,
-        lockId: UUID = defaultLockId(),
-        inputs: MutableList<StateRef> = arrayListOf(),
-        attachments: MutableList<AttachmentId> = arrayListOf(),
-        outputs: MutableList<TransactionState<ContractState>> = arrayListOf(),
-        commands: MutableList<Command<*>> = arrayListOf(),
-        window: TimeWindow? = null,
-        privacySalt: PrivacySalt = PrivacySalt()
-    ) : this(notary, lockId, inputs, attachments, outputs, commands, window, privacySalt, arrayListOf())
-
-    constructor(notary: Party) : this(notary, window = null)
+    constructor(notary: Party) : this(TransactionBuilder(notary))
     constructor(notary: Party, zkNetworkParameters: ZKNetworkParameters) : this(
-        TransactionBuilder(notary, window = null),
+        TransactionBuilder(notary),
         zkNetworkParameters = zkNetworkParameters
     )
-
-    companion object {
-        // Copied from private `TransactionBuilder.defaultLockId`
-        private fun defaultLockId() = (Strand.currentStrand() as? FlowStateMachine<*>)?.id?.uuid ?: UUID.randomUUID()
-    }
 
     /**
      * Duplicated so that `toWireTransaction()` always uses the serialization settings
@@ -299,14 +255,14 @@ class ZKTransactionBuilder(
     }
 
     fun addOutputState(
-        state: ZKContractState,
+        state: ContractState,
         contract: ContractClassName = requireNotNullContractClassName(state),
         constraint: AttachmentConstraint = AutomaticPlaceholderConstraint
     ) = apply {
         builder.addOutputState(state, contract, constraint)
     }
 
-    fun addOutputState(state: ZKContractState, constraint: AttachmentConstraint) =
+    fun addOutputState(state: ContractState, constraint: AttachmentConstraint) =
         apply {
             builder.addOutputState(state, constraint)
         }

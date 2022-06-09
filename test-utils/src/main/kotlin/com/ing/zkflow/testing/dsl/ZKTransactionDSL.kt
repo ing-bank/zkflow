@@ -10,7 +10,6 @@ import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.TimeWindow
 import net.corda.core.identity.Party
 import net.corda.core.node.services.AttachmentId
-import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.utilities.seconds
 import java.security.PublicKey
 import java.time.Duration
@@ -36,10 +35,7 @@ public class ZKTransactionDSL<out T : ZKTransactionDSLInterpreter>(private val i
     public fun reference(contractClassName: ContractClassName, state: ContractState) {
         val transaction = ledgerInterpreter._unverifiedTransaction(
             null,
-            ZKTransactionBuilder(
-                TransactionBuilder(notary = notary),
-                zkNetworkParameters = interpreter.ledgerInterpreter.zkNetworkParameters
-            )
+            ZKTransactionBuilder(notary, interpreter.ledgerInterpreter.zkNetworkParameters)
         ) {
             output(contractClassName, null, notary, null, AlwaysAcceptAttachmentConstraint, state)
         }
@@ -65,10 +61,7 @@ public class ZKTransactionDSL<out T : ZKTransactionDSLInterpreter>(private val i
     public fun input(contractClassName: ContractClassName, state: ContractState) {
         val transaction = ledgerInterpreter._unverifiedTransaction(
             null,
-            ZKTransactionBuilder(
-                TransactionBuilder(notary = notary),
-                zkNetworkParameters = interpreter.ledgerInterpreter.zkNetworkParameters
-            )
+            ZKTransactionBuilder(notary, interpreter.ledgerInterpreter.zkNetworkParameters)
         ) {
             output(contractClassName, null, notary, null, AlwaysAcceptAttachmentConstraint, state)
         }

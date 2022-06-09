@@ -9,7 +9,6 @@ import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.identity.Party
 import net.corda.core.internal.uncheckedCast
-import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.transactions.WireTransaction
 
 /**
@@ -30,10 +29,7 @@ public class ZKLedgerDSL<out T : ZKTransactionDSLInterpreter, out L : ZKLedgerDS
     @JvmOverloads
     public fun transaction(
         label: String? = null,
-        transactionBuilder: ZKTransactionBuilder = ZKTransactionBuilder(
-            TransactionBuilder(notary = notary),
-            zkNetworkParameters = zkNetworkParameters
-        ),
+        transactionBuilder: ZKTransactionBuilder = ZKTransactionBuilder(notary, zkNetworkParameters),
         dsl: ZKTransactionDSL<ZKTransactionDSLInterpreter>.() -> EnforceVerifyOrFail
     ): WireTransaction =
         _transaction(label, transactionBuilder) { ZKTransactionDSL(this, notary).dsl() }
@@ -44,10 +40,7 @@ public class ZKLedgerDSL<out T : ZKTransactionDSLInterpreter, out L : ZKLedgerDS
     @JvmOverloads
     public fun unverifiedTransaction(
         label: String? = null,
-        transactionBuilder: ZKTransactionBuilder = ZKTransactionBuilder(
-            TransactionBuilder(notary = notary),
-            zkNetworkParameters = zkNetworkParameters
-        ),
+        transactionBuilder: ZKTransactionBuilder = ZKTransactionBuilder(notary, zkNetworkParameters),
         dsl: ZKTransactionDSL<ZKTransactionDSLInterpreter>.() -> Unit
     ): WireTransaction =
         _unverifiedTransaction(label, transactionBuilder) { ZKTransactionDSL(this, notary).dsl() }
