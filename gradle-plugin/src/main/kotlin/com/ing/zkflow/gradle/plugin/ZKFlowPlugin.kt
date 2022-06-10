@@ -17,27 +17,15 @@ class ZKFlowPlugin : Plugin<Project> {
         project.repositories.apply {
             // For kotlinx.serialization plugin
             maven { it.url = URI.create("https://plugins.gradle.org/m2/") }
-
             // For arrow
             maven { it.url = URI.create("https://oss.sonatype.org/content/repositories/snapshots/") }
             // For Arrow to enable bespoke treatment of the Corda classes.
             maven { it.url = URI.create("https://software.r3.com/artifactory/corda") }
-
-            // For BFL
-            maven {
-                it.name = "BinaryFixedLengthSerializationRepo"
-                it.url = URI.create("https://maven.pkg.github.com/ingzkp/kotlinx-serialization-bfl")
-                it.credentials { credentials ->
-                    credentials.username = System.getenv("GITHUB_USERNAME")
-                    credentials.password = System.getenv("GITHUB_TOKEN")
-                }
-            }
         }
 
         project.plugins.withType(JavaPlugin::class.java) {
             // Add the required dependencies to consumer projects
             project.dependencies.add(IMPLEMENTATION, zkflowArtifact("protocol"))
-            project.dependencies.add(IMPLEMENTATION, zkflowArtifact("annotations"))
             // TODO zinc-code-generation is only needed at compile time, by the gradlePlugin, so compileOnly sounds better...
             project.dependencies.add(IMPLEMENTATION, zkflowArtifact("zinc-code-generation"))
 
