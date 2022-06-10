@@ -211,6 +211,12 @@ fun LedgerTransaction.zkTransactionMetadata(): ResolvedZKTransactionMetadata =
         getClassLoaderFromContractAttachment(id, attachments, networkParameters ?: error(NETWORKS_PARAMS_MISSING))
     ) else error(TX_CONTAINS_NO_COMMANDS_WITH_METADATA)
 
+fun LedgerTransaction.zkTransactionMetadataOrNull(): ResolvedZKTransactionMetadata? =
+    if (this.hasZKCommandData) zkTransactionMetadata(
+        this.commandMetadata,
+        getClassLoaderFromContractAttachment(id, attachments, networkParameters ?: error(NETWORKS_PARAMS_MISSING))
+    ) else null
+
 fun ZKTransactionBuilder.zkTransactionMetadata(serviceHub: ServiceHub): ResolvedZKTransactionMetadata {
     return if (this.hasZKCommandData) {
         zkTransactionMetadata(
@@ -360,9 +366,9 @@ fun resolvePublicStateRef(
  * - First, we check the [ZKVerifierTransactionStorage] to see if we can find it in there as a public state. The state may be there if
  * we received it as a public part of a zkvtx that is part of a chain we are participant to, or if we are an observer.
  * - Next, we check the normal Corda transaction storage. This contains full public and private transaction data. The state may be found
- * there if we were a direct participant to a transaction.
+ * there if we were a direct participant to a private transaction.
  * - Finally, if we do not have it in normal storage, we may have it in [UtxoInfoStorage]. This would be the case when we were not part
- * of the orignal transaction that created it, but our counterparty sent it to us separately with its backchain.
+ * of the original transaction that created it, but our counterparty revealed it to us by sending it to us separately with its backchain.
  */
 fun resolvePublicOrPrivateStateRef(
     stateRef: StateRef,
@@ -400,7 +406,7 @@ class UtxoNotFoundInsideTx(stateRef: StateRef) :
 
 class UtxoInfoNotFound(stateRef: StateRef) : TransactionResolutionException(stateRef.txhash, "UtxoInfo not found for state ref $stateRef")
 class PrivateUtxoAccess(stateRef: StateRef) :
-    TransactionResolutionException(stateRef.txhash, "Not allwed to access private component at index ${stateRef.index} in public context")
+    TransactionResolutionException(stateRef.txhash, "Not allowed to access private component at index ${stateRef.index} in public context")
 
 /**
  * Fetches the set of attachments required to verify the given transaction. If these are not already present, they will be fetched from

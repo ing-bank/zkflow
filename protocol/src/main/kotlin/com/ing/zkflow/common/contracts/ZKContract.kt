@@ -1,19 +1,30 @@
 package com.ing.zkflow.common.contracts
 
 import com.ing.zkflow.common.transactions.verification.ZKTransactionVerifierService
-import com.ing.zkflow.common.transactions.zkTransactionMetadata
+import com.ing.zkflow.common.transactions.zkTransactionMetadataOrNull
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
 import net.corda.core.KeepForDJVM
 import net.corda.core.contracts.BelongsToContract
+import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.Contract
 import net.corda.core.contracts.ContractState
-import net.corda.core.contracts.StateAndRef
-import net.corda.core.contracts.TransactionState
 import net.corda.core.serialization.CordaSerializable
 import net.corda.core.transactions.LedgerTransaction
 import kotlin.reflect.KClass
 import kotlin.reflect.full.isSubclassOf
 
+/**
+ * Please note that even though [ZKContract] extends [Contract], Corda still requires users to implement both interfaces directly.
+ * If that is not done, the contract attachments will not be correctly resolved when building WireTransactions.
+ * See also this check in Corda's AttachmentWithContext class:
+ *
+ * ```
+ * require(contract in contractAttachment.allContracts) {
+ *     "This AttachmentWithContext was not initialised properly. " +
+ *     "Please ensure all Corda contracts extending existing Corda contracts also implement the Contract base class."
+ * }
+ * ```
+ */
 @KeepForDJVM
 @CordaSerializable
 interface ZKContract : Contract {
@@ -28,30 +39,22 @@ interface ZKContract : Contract {
      */
     override fun verify(tx: LedgerTransaction) {
         val filteredLedgerTransaction = tx.ensureFilteredLedgerTransaction()
-
+        val metadata = filteredLedgerTransaction.zkTransactionMetadataOrNull()
         /*
          * By default, there should be no 'public only' outputs belonging to this contract in this transaction.
          * They should all be mentioned in the metadata, and therefore checked by the ZKP contract logic.
          * If they are not mentioned there, they should either not exist, or be checked here (in that case, override this function).
          */
-        val publicOutputs = filteredLedgerTransaction.publicOnlyOutputsBelongingToZKContract(this::class)
-        require(publicOutputs.isEmpty()) { "There should be no additional 'public only' outputs in the transaction for contract ${this::class}, found ${publicOutputs.size}" }
+        val publicOutputs = filteredLedgerTransaction.outputStates.publicOnlyStatesBelongingToZKContract(this::class, metadata)
+        require(publicOutputs.isEmpty()) { "There should be no additional 'public only' outputs in the transaction for contract ${this::class}, found $publicOutputs" }
 
         /*
          * By default, there should be no 'public only' inputs belonging to this contract in this transaction.
          * They should all be mentioned in the metadata, and therefore checked by the ZKP contract logic.
          * If they are not mentioned there, they should either not exist, or be checked here (in that case, override this function).
          */
-        val publicInputs = filteredLedgerTransaction.publicOnlyInputsBelongingToZKContract(this::class)
-        require(publicInputs.isEmpty()) { "There should be no additional 'public only' inputs in the transaction for contract ${this::class}, found ${publicInputs.size}" }
-
-        /*
-         * By default, there should be no 'public only' inputs belonging to this contract in this transaction.
-         * They should all be mentioned in the metadata, and therefore checked by the ZKP contract logic.
-         * If they are not mentioned there, they should either not exist, or be checked here (in that case, override this function).
-         */
-        val publicReferences = filteredLedgerTransaction.publicOnlyReferencesBelongingToZKContract(this::class)
-        require(publicReferences.isEmpty()) { "There should be no additional 'public only' inputs in the transaction for contract ${this::class}, found ${publicReferences.size}" }
+        val publicInputs = filteredLedgerTransaction.inputStates.publicOnlyStatesBelongingToZKContract(this::class, metadata)
+        require(publicInputs.isEmpty()) { "There should be no additional 'public only' inputs in the transaction for contract ${this::class}, found $publicInputs" }
     }
 }
 
@@ -61,77 +64,59 @@ interface ZKContract : Contract {
  * 'Public Only' components are not checked by the ZKP circuit and therefore should either not exist,
  * or have a check rule in the public verification function.
  */
-private fun LedgerTransaction.ensureFilteredLedgerTransaction(): LedgerTransaction {
-    /**
-     * Returns the outputs that are ONLY public, i.e. not mentioned in any metadata for this transaction.
-     * Note that this should only be called on a non-filtered LedgerTransaction. For filtered LedgerTransactions the indexes of the components will be wrong.
-     */
-    fun LedgerTransaction.publicOnlyOutputs(metadata: ResolvedZKTransactionMetadata): List<TransactionState<ContractState>> =
-        outputs.mapIndexedNotNull { index, transactionState -> if (metadata.outputs.any { it.index == index }) null else transactionState }
+private fun LedgerTransaction.ensureFilteredLedgerTransaction(): LedgerTransaction =
+    if (inFilteredContext()) this else filter(zkTransactionMetadataOrNull())
 
-    /**
-     * Returns the inputs that are ONLY public, i.e. not mentioned in any metadata for this transaction.
-     * Note that this should only be called on a non-filtered LedgerTransaction. For filtered LedgerTransactions the indexes of the components will be wrong.
-     */
-    fun LedgerTransaction.publicOnlyInputs(metadata: ResolvedZKTransactionMetadata): List<StateAndRef<ContractState>> =
-        inputs.mapIndexedNotNull { index, stateAndRef -> if (metadata.inputs.any { it.index == index }) null else stateAndRef }
+// Filters out components that should not be publicly visible according to the metadata.
+fun LedgerTransaction.filter(metadata: ResolvedZKTransactionMetadata?): LedgerTransaction {
+    if (metadata == null) return this
 
-    /**
-     * Returns the references that are ONLY public, i.e. not mentioned in any metadata for this transaction.
-     * Note that this should only be called on a non-filtered LedgerTransaction. For filtered LedgerTransactions the indexes of the components will be wrong.
-     */
-    fun LedgerTransaction.publicOnlyReferences(metadata: ResolvedZKTransactionMetadata): List<StateAndRef<ContractState>> =
-        references.mapIndexedNotNull { index, stateAndRef -> if (metadata.references.any { it.index == index }) null else stateAndRef }
+    fun <T> List<T>.filterComponents(metadata: ResolvedZKTransactionMetadata, group: ComponentGroupEnum) =
+        mapIndexedNotNull { index, component ->
+            if (metadata.shouldBeVisibleInFilteredComponentGroup(group.ordinal, index)) component else null
+        }
 
-    return if (inFilteredContext()) {
-        this
-    } else {
-        val metadata = zkTransactionMetadata()
+    return LedgerTransaction.createForSandbox(
+        inputs = inputs.filterComponents(metadata, ComponentGroupEnum.INPUTS_GROUP),
+        references = references.filterComponents(metadata, ComponentGroupEnum.REFERENCES_GROUP),
+        outputs = outputs.filterComponents(metadata, ComponentGroupEnum.OUTPUTS_GROUP),
+        commands = commands.filterComponents(metadata, ComponentGroupEnum.COMMANDS_GROUP),
+        attachments = attachments.filterComponents(metadata, ComponentGroupEnum.ATTACHMENTS_GROUP),
+        timeWindow = listOf(timeWindow).filterComponents(metadata, ComponentGroupEnum.TIMEWINDOW_GROUP).firstOrNull(),
+        notary = listOf(notary).filterComponents(metadata, ComponentGroupEnum.NOTARY_GROUP).firstOrNull(),
 
-        @Suppress("DEPRECATION")
-        (
-            LedgerTransaction.createForSandbox(
-                // Any input that is mentioned in the metadata is safely coveredy by ZKP contract logic and can therefore be filtered out.
-                inputs = publicOnlyInputs(metadata),
-                // Any reference that is mentioned in the metadata is safely coveredy by ZKP contract logic and can therefore be filtered out.
-                references = publicOnlyReferences(metadata),
-                // Any output that is mentioned in the metadata is safely coveredy by ZKP contract logic and can therefore be filtered out.
-                outputs = publicOnlyOutputs(metadata),
-                commands = commands,
-                attachments = attachments,
-                id = id,
-                timeWindow = timeWindow,
-                notary = notary,
-                privacySalt = privacySalt,
-                digestService = digestService,
+        id = id,
+        privacySalt = privacySalt,
+        digestService = digestService,
 
-            /*
-                 * According to LedgerTransaction, This is nullable only for backwards compatibility for serialized transactions.
-                 * In reality this field will always be set when on the normal codepaths
-                 */
-                networkParameters = networkParameters!!
-            )
-            )
-    }
+        /*
+         * According to LedgerTransaction, This is nullable only for backwards compatibility for serialized transactions.
+         * In reality this field will always be set when on the normal codepaths.
+         * Additionally, ZKVerifierTransaction.zkToFilteredLedgerTransaction does not filter this, so we simply assign
+         */
+        networkParameters = networkParameters!!
+
+    )
 }
 
 /**
  * If contract verification is called from ZKTransactionVerifierService, we know the ltx was created from a ZKVerifierTransaction
  * and is therefore filtered.
  */
-private fun inFilteredContext(): Boolean =
-    Exception().stackTrace.any { it.className == ZKTransactionVerifierService::class.qualifiedName }
+private fun inFilteredContext(): Boolean = Exception().stackTrace.any { it.className == ZKTransactionVerifierService::class.qualifiedName }
 
-private fun LedgerTransaction.publicOnlyOutputsBelongingToZKContract(contractClass: KClass<out ZKContract>): List<TransactionState<ContractState>> {
-    return outputs.filter { it.data.contractClass.isSubclassOf(contractClass) }
-}
-
-private fun LedgerTransaction.publicOnlyInputsBelongingToZKContract(contractClass: KClass<out ZKContract>): List<StateAndRef<ContractState>> {
-    return inputs.filter { it.state.data.contractClass.isSubclassOf(contractClass) }
-}
-
-private fun LedgerTransaction.publicOnlyReferencesBelongingToZKContract(contractClass: KClass<out ZKContract>): List<StateAndRef<ContractState>> {
-    return references.filter { it.state.data.contractClass.isSubclassOf(contractClass) }
+private fun <T : ContractState> List<T>.publicOnlyStatesBelongingToZKContract(
+    contractClass: KClass<out ZKContract>,
+    metadata: ResolvedZKTransactionMetadata?
+): List<T> {
+    // First we filter the 'public only' components
+    val publicOnly = if (metadata == null) {
+        this
+    } else {
+        this.mapIndexedNotNull { index, component -> if (metadata.outputs.any { it.index == index }) null else component }
+    }
+    // Next we filter only the ones belonging to this contract. We don't care about the others.
+    return publicOnly.filter { it.contractClass.isSubclassOf(contractClass) }
 }
 
 private val ContractState.contractClass: KClass<out Contract>

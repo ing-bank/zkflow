@@ -8,7 +8,6 @@ import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.node.services.ServiceNames
 import com.ing.zkflow.node.services.ZKTransactionResolutionException
 import com.ing.zkflow.node.services.ZKVerifierTransactionStorage
-import com.ing.zkflow.node.services.ZKWritableVerifierTransactionStorage
 import com.ing.zkflow.node.services.getCordaServiceFromConfig
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.StateRef
@@ -24,7 +23,7 @@ abstract class AbstractZKTransactionService(val serviceHub: ServiceHub) : ZKTran
     override val vtxStorage: ZKVerifierTransactionStorage by lazy {
         serviceHub.getCordaServiceFromConfig(
             ServiceNames.ZK_VERIFIER_TX_STORAGE
-        ) as ZKWritableVerifierTransactionStorage
+        )
     }
 
     override fun prove(
@@ -54,7 +53,8 @@ abstract class AbstractZKTransactionService(val serviceHub: ServiceHub) : ZKTran
 
     override fun verify(wtx: WireTransaction): ZKVerifierTransactionWithoutProofs {
         val zkTransactionMetadata = wtx.zkTransactionMetadata(serviceHub)
-        val vtx = ZKVerifierTransactionWithoutProofs.fromWireTransaction(wtx) // create vtx without proofs just to be able to build witness and public input
+        val vtx =
+            ZKVerifierTransactionWithoutProofs.fromWireTransaction(wtx) // create vtx without proofs just to be able to build witness and public input
 
         // Check transaction structure first, so we fail fast
         vtx.verifyMerkleTree()
@@ -62,9 +62,7 @@ abstract class AbstractZKTransactionService(val serviceHub: ServiceHub) : ZKTran
         // Verify private components by running ZVM smart contract code per Command
         zkTransactionMetadata.commands.forEach { command ->
             val witness = Witness.fromWireTransaction(
-                wtx,
-                serviceHub.collectUtxoInfos(wtx.inputs),
-                serviceHub.collectUtxoInfos(wtx.references),
+                wtx, serviceHub.collectUtxoInfos(wtx.inputs), serviceHub.collectUtxoInfos(wtx.references),
                 command
             )
             zkServiceForCommandMetadata(command).run(witness, calculatePublicInput(vtx, command))

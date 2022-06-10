@@ -115,13 +115,28 @@ public data class TestZKTransactionDSLInterpreter private constructor(
     }
 
     // Hack to reuse the LedgerInterpreter's ZKTransactionService with the local ServiceHub, so transaction resolution will work.
-    private val zkService: ZKTransactionService =
-        ledgerInterpreter.zkService::class.primaryConstructor?.call(
-            services,
-            ledgerInterpreter.zkVerifierTransactionStorage,
-            ledgerInterpreter.zkNetworkParameters
-        )
-            ?: error("Primary constructor not found")
+    // This makes assumptions about what the constructors of implementations of ZKTransactionService look like.
+    private val zkService: ZKTransactionService
+        get() {
+            // Best effort try to construct it
+            val constructor = ledgerInterpreter.zkService::class.primaryConstructor ?: error("Primary constructor not found")
+
+            return when (constructor.parameters.size) {
+                2 -> constructor.call(
+                    services,
+                    ledgerInterpreter.zkVerifierTransactionStorage,
+                )
+                3 -> constructor.call(
+                    services,
+                    ledgerInterpreter.zkVerifierTransactionStorage,
+                    ledgerInterpreter.zkNetworkParameters
+                )
+                else -> error(
+                    "Don't know how to construct ${ledgerInterpreter.zkService}. " +
+                        "Supported constructors have 2 or 3 parameters: Always ServiceHub and ZKVerifierTransactionStorage, possibly ZKNetworkParameters."
+                )
+            }
+        }
 
     private fun copy(): TestZKTransactionDSLInterpreter =
         TestZKTransactionDSLInterpreter(
