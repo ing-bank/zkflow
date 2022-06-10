@@ -5,6 +5,7 @@ import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.contracts.ZKContract
 import com.ing.zkflow.common.contracts.ZKContractState
+import com.ing.zkflow.common.contracts.renderIllegalPublicOnlyStatesError
 import com.ing.zkflow.common.serialization.BFLSerializationScheme
 import com.ing.zkflow.common.versioning.Versioned
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
@@ -56,6 +57,7 @@ class StateVisibilityContractTest {
         }
     }
 
+    // TODO: add similar test for inputs
     @Test
     fun `Additional unchecked public only outputs of different types are not allowed`() {
         services.zkLedger(zkService = zkTransactionService, zkVerifierTransactionStorage = zkVerifierTransactionStorage) {
@@ -68,8 +70,31 @@ class StateVisibilityContractTest {
                 output(LocalZKContract.PROGRAM_ID, "Alice's other Public some other state", SomeOtherZKState(value = 4))
                 output(LocalNormalContract.PROGRAM_ID, LocalNormalContract.NormalTestState(bob, 5))
                 tweak {
-                    output(LocalZKContract.PROGRAM_ID, "Alice's unchecked Public some other state", SomeOtherZKState(value = 6))
-                    `fails with`("There should be no additional 'public only' outputs")
+                    val state = SomeOtherZKState(value = 6)
+                    output(LocalZKContract.PROGRAM_ID, "Alice's unchecked Public some other state", state)
+                    `fails with`(
+                        renderIllegalPublicOnlyStatesError("output", LocalZKContract::class, mapOf(state::class to listOf(state)))
+                    )
+                }
+                tweak {
+                    val state = aliceAsset.copy(value = 6)
+                    output(LocalZKContract.PROGRAM_ID, "Alice's unchecked Public some other state", state)
+                    `fails with`(
+                        renderIllegalPublicOnlyStatesError("output", LocalZKContract::class, mapOf(state::class to listOf(state)))
+                    )
+                }
+                tweak {
+                    val state = SomeOtherZKState(value = 6)
+                    val state2 = aliceAsset.copy(value = 7)
+                    output(LocalZKContract.PROGRAM_ID, "Alice's unchecked Public some other state", state)
+                    output(LocalZKContract.PROGRAM_ID, "Alice's unchecked Public Asset", state2)
+                    `fails with`(
+                        renderIllegalPublicOnlyStatesError(
+                            "output",
+                            LocalZKContract::class,
+                            mapOf(state::class to listOf(state), state2::class to listOf(state2))
+                        )
+                    )
                 }
                 verifies()
             }

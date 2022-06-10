@@ -47,7 +47,7 @@ interface ZKContract : Contract {
          * If they are not mentioned there, they should either not exist, or be checked here (in that case, override this function).
          */
         val publicOutputs = filteredLedgerTransaction.outputStates.publicOnlyStatesBelongingToZKContract(this::class, metadata?.outputs)
-        require(publicOutputs.isEmpty()) { "There should be no additional 'public only' outputs in the transaction for contract ${this::class}, found $publicOutputs" }
+        require(publicOutputs.isEmpty()) { renderIllegalPublicOnlyStatesError("output", this::class, publicOutputs) }
 
         /*
          * By default, there should be no 'public only' inputs belonging to this contract in this transaction.
@@ -55,8 +55,21 @@ interface ZKContract : Contract {
          * If they are not mentioned there, they should either not exist, or be checked here (in that case, override this function).
          */
         val publicInputs = filteredLedgerTransaction.inputStates.publicOnlyStatesBelongingToZKContract(this::class, metadata?.inputs)
-        require(publicInputs.isEmpty()) { "There should be no additional 'public only' inputs in the transaction for contract ${this::class}, found $publicInputs" }
+        require(publicInputs.isEmpty()) {
+            require(publicInputs.isEmpty()) { renderIllegalPublicOnlyStatesError("input", this::class, publicInputs) }
+        }
     }
+}
+
+fun renderIllegalPublicOnlyStatesError(
+    type: String,
+    contractClass: KClass<out ZKContract>,
+    groupedStates: Map<KClass<out ContractState>, List<ContractState>>
+): String {
+    return "There should be no additional 'public only' ${type}s in the transaction for contract $contractClass, found: \n" +
+        groupedStates.entries.joinToString("\n") { (stateKClass, states) ->
+            "For $stateKClass: $states"
+        }
 }
 
 /**
@@ -109,15 +122,26 @@ private fun inFilteredContext(): Boolean = Exception().stackTrace.any { it.class
 private fun <T : ContractState> List<T>.publicOnlyStatesBelongingToZKContract(
     contractClass: KClass<out ZKContract>,
     metadata: MutableList<out ZKIndexedTypedElement>?
-): List<T> {
-    // First we filter the 'public only' components
+): Map<KClass<out ContractState>, List<T>> {
     return if (metadata == null) {
-        this
+        this.groupBy { it::class }
     } else {
         val publicMetadataForThisContract =
-            metadata.sortedBy { it.index }.filter { it.type.contractClass == contractClass && it.isPubliclyVisible() }
-        val publicStatesForThisContract = this.filter { it.contractClass.isSubclassOf(contractClass) }
-        publicStatesForThisContract.drop(publicMetadataForThisContract.size)
+            metadata.sortedBy { it.type.java.name }.filter { it.type.contractClass == contractClass && it.isPubliclyVisible() }
+                .groupBy { it.type }
+                .map { it.key to it.value.size }.toMap()
+        val publicStatesForThisContract =
+            this.sortedBy { it::class.java.name }.filter { it.contractClass.isSubclassOf(contractClass) }.groupBy { it::class }
+        publicStatesForThisContract.entries.fold(emptyMap()) { acc, (stateKClass, states) ->
+            val expectedAmountForStateClass = publicMetadataForThisContract[stateKClass] ?: 0
+            val publicOnlyStates = states.drop(expectedAmountForStateClass)
+
+            if (publicOnlyStates.isNotEmpty()) {
+                acc + (stateKClass to publicOnlyStates)
+            } else {
+                acc
+            }
+        }
     }
 }
 
