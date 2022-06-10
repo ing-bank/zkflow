@@ -32,8 +32,9 @@ import net.corda.testing.core.dummyCommand
 import java.io.InputStream
 
 /**
- *  A ledger interpreter that supports both standard and zk transactions. The appropriate transaction DSL interpreter is called
- *  depending on the type of transaction.
+ * Set up a ledger context. Please note that if you change one of the zkService or zkVerifierTransactionStorage parameters, you
+ * should also change the other: zkService should always use ZKVerifierTransactionStorage from the zkVerifierTransactionStorage parameter.
+ * If it uses another one, there will be transaction resolution errors.
  */
 @Suppress("LongParameterList")
 public class TestZKLedgerDSLInterpreter private constructor(

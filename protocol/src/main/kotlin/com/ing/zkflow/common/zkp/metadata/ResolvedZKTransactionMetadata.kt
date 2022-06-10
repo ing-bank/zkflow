@@ -38,7 +38,7 @@ data class ResolvedZKTransactionMetadata(
              * - private == false: visible
              * - not mentioned at all: visible
              */
-            ComponentGroupEnum.OUTPUTS_GROUP.ordinal -> outputs.find { it.index == componentIndex }?.private?.not() ?: true
+            ComponentGroupEnum.OUTPUTS_GROUP.ordinal -> outputs.find { it.index == componentIndex }?.mustBePrivate()?.not() ?: true
             else -> true // all other groups have visibility 'Public' by default at the moment, may change in future
         }
     }

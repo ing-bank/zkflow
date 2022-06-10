@@ -84,6 +84,8 @@ data class ZKCircuit(
 interface ZKIndexedTypedElement {
     val index: Int
     val type: KClass<out ContractState>
+    fun mustBePrivate(): Boolean
+    fun isPubliclyVisible() = !mustBePrivate()
 }
 
 /**
@@ -96,7 +98,7 @@ data class ZKReference(override val type: KClass<out ContractState>, override va
         require(type.hasAnnotation<ZKP>()) { "Input or reference types must be annotated with `@ZKP`" }
     }
 
-    fun mustBePrivate() = forcePrivate
+    override fun mustBePrivate() = forcePrivate
 }
 
 /**
@@ -109,7 +111,8 @@ data class ZKProtectedComponent(override val type: KClass<out ContractState>, ov
         require(type.isSubclassOf(Versioned::class)) { "Input or reference types must implement `Versioned`" }
         require(type.hasAnnotation<ZKP>()) { "Input or reference types must be annotated with `@ZKP`" }
     }
-    fun mustBePrivate() = private
+
+    override fun mustBePrivate() = private
 }
 
 /**

@@ -25,10 +25,9 @@ import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.Contract
-import net.corda.core.contracts.ContractState
 import net.corda.core.crypto.Crypto
-import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.AnonymousParty
+import net.corda.core.transactions.LedgerTransaction
 import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
 import org.junit.jupiter.api.Test
@@ -46,6 +45,50 @@ class StateVisibilityContractTest {
     private val zkTransactionService = TestDSLMockZKTransactionService(services, zkVerifierTransactionStorage)
 
     @Test
+    fun `Additional unchecked public only outputs are not allowed`() {
+        services.zkLedger(zkService = zkTransactionService, zkVerifierTransactionStorage = zkVerifierTransactionStorage) {
+            transaction {
+                output(LocalZKContract.PROGRAM_ID, "Alice's Private Asset", aliceAsset)
+                output(LocalZKContract.PROGRAM_ID, "Alice's unchecked Public Asset", aliceAsset.copy(value = 99))
+                command(listOf(alice.owningKey), LocalZKContract.CreatePrivate())
+                `fails with`("There should be no additional 'public only' outputs")
+            }
+        }
+    }
+
+    @Test
+    fun `Additional unchecked public only outputs of different types are not allowed`() {
+        services.zkLedger(zkService = zkTransactionService, zkVerifierTransactionStorage = zkVerifierTransactionStorage) {
+            transaction {
+                command(listOf(alice.owningKey), LocalZKContract.CreateMultiplePublicAndPrivate())
+                output(LocalZKContract.PROGRAM_ID, "Alice's Private Asset", aliceAsset)
+                output(LocalZKContract.PROGRAM_ID, "Alice's Private some other state", SomeOtherZKState(1))
+                output(LocalZKContract.PROGRAM_ID, "Alice's Public Asset", aliceAsset.copy(value = 2))
+                output(LocalZKContract.PROGRAM_ID, "Alice's Public some other state", SomeOtherZKState(value = 3))
+                output(LocalZKContract.PROGRAM_ID, "Alice's other Public some other state", SomeOtherZKState(value = 4))
+                output(LocalNormalContract.PROGRAM_ID, LocalNormalContract.NormalTestState(bob, 5))
+                tweak {
+                    output(LocalZKContract.PROGRAM_ID, "Alice's unchecked Public some other state", SomeOtherZKState(value = 6))
+                    `fails with`("There should be no additional 'public only' outputs")
+                }
+                verifies()
+            }
+        }
+    }
+
+    @Test
+    fun `Additional unchecked public only inputs are not allowed`() {
+        services.zkLedger(zkService = zkTransactionService, zkVerifierTransactionStorage = zkVerifierTransactionStorage) {
+            transaction {
+                input(LocalZKContract.PROGRAM_ID, bobAsset)
+                output(LocalZKContract.PROGRAM_ID, "Alice's Private Asset", aliceAsset)
+                command(listOf(alice.owningKey), LocalZKContract.CreatePrivate())
+                `fails with`("There should be no additional 'public only' inputs")
+            }
+        }
+    }
+
+    @Test
     fun `Move private to private`() {
         services.zkLedger(zkService = zkTransactionService, zkVerifierTransactionStorage = zkVerifierTransactionStorage) {
             // services.zkLedger {
@@ -61,7 +104,6 @@ class StateVisibilityContractTest {
                 timeWindow(Instant.now())
                 verifies()
             }
-            verifies()
         }
     }
 
@@ -89,11 +131,15 @@ class StateVisibilityContractTest {
                 output(LocalZKContract.PROGRAM_ID, bobAsset.copy(value = 2))
                 output(LocalZKContract.PROGRAM_ID, bobAsset.copy(value = 1)) // the public one
                 command(listOf(alice.owningKey, bob.owningKey), LocalZKContract.SplitAnyToPrivateAndPublic())
+                tweak {
+                    output(LocalZKContract.PROGRAM_ID, bobAsset.copy(value = 99))
+                    `fails with`("There should be no additional 'public only' outputs")
+                }
                 verifies()
             }
             // Confirm that the output is indeed in the list of public outputs of the MovePrivateToPublic transaction
             val publicOutputSerializedBytes =
-                this.zkVerifierTransactionStorage.getTransaction(wtx.id)?.tx?.publicComponents(ComponentGroupEnum.OUTPUTS_GROUP)?.get(0)
+                this.zkVerifierTransactionStorage.getTransaction(wtx.id)?.tx?.publicComponents(ComponentGroupEnum.OUTPUTS_GROUP)?.get(1)
             publicOutputSerializedBytes shouldNotBe null
         }
     }
@@ -125,8 +171,6 @@ class StateVisibilityContractTest {
                 timeWindow(Instant.now())
                 verifies()
             }
-
-            verifies()
 
             // Confirm tht the output is indeed in the list of public outputs of the MovePrivateToPublic transaction
             val publicOutputSerializedBytes =
@@ -167,11 +211,12 @@ class StateVisibilityContractTest {
 
     @Test
     fun `tx with one non-zkp public command`() {
+        val alicesNormalAsset = LocalNormalContract.NormalTestState(alice)
         services.zkLedger(zkService = zkTransactionService, zkVerifierTransactionStorage = zkVerifierTransactionStorage) {
             transaction {
-                input(LocalZKContract.PROGRAM_ID, aliceAsset)
-                output(LocalZKContract.PROGRAM_ID, bobAsset)
-                command(listOf(alice.owningKey, bob.owningKey), LocalZKContract.MovePublic())
+                input(LocalNormalContract.PROGRAM_ID, alicesNormalAsset)
+                output(LocalNormalContract.PROGRAM_ID, alicesNormalAsset.copy(owner = bob))
+                command(listOf(alice.owningKey, bob.owningKey), LocalNormalContract.MovePublic())
                 verifies()
             }
         }
@@ -184,6 +229,44 @@ class StateVisibilityContractTest {
  * Because contract tests run with the custom BFL serializer, @Serializable annotations are required.
  * Tests that need these annotations to be generated from @ZKP annotations should be moved to the `integrations-tests` module.
  */
+class LocalNormalContract : Contract {
+    companion object {
+        const val PROGRAM_ID = "com.ing.zkflow.common.contract.LocalNormalContract"
+    }
+
+    @Serializable
+    @ZKP
+    @BelongsToContract(LocalNormalContract::class)
+    data class NormalTestState(
+        val owner: @Serializable(with = OwnerSerializer::class) AnonymousParty,
+        val value: @Serializable(with = IntSerializer::class) Int = Random().nextInt(1000)
+    ) : ZKContractState, Versioned {
+        private object OwnerSerializer : AnonymousPartySerializer(Crypto.EDDSA_ED25519_SHA512.schemeNumberID)
+
+        @Transient
+        override val participants: @Size(1) List<@Serializable(with = AnonymousPartySerializer::class) AnonymousParty> = listOf(owner)
+
+        init {
+            tryNonFailing {
+                BFLSerializationScheme.Companion.ContractStateSerializerRegistry.register(this::class, serializer())
+            }
+        }
+    }
+
+    @Serializable
+    @ZKP
+    class MovePublic : CommandData {
+        init {
+            tryNonFailing {
+                BFLSerializationScheme.Companion.CommandDataSerializerRegistry.register(this::class, serializer())
+            }
+        }
+    }
+
+    override fun verify(tx: LedgerTransaction) {
+    }
+}
+
 class LocalZKContract : ZKContract, Contract {
     companion object {
         const val PROGRAM_ID = "com.ing.zkflow.common.contract.LocalZKContract"
@@ -209,6 +292,28 @@ class LocalZKContract : ZKContract, Contract {
 
     @Serializable
     @ZKP
+    class CreateMultiplePublicAndPrivate : ZKCommandData, Versioned {
+        init {
+            tryNonFailing {
+                BFLSerializationScheme.Companion.CommandDataSerializerRegistry.register(this::class, serializer())
+            }
+        }
+
+        @Transient
+        override val metadata: ResolvedZKCommandMetadata = commandMetadata {
+            outputs {
+                private(ZKTestState::class) at 0
+                private(SomeOtherZKState::class) at 1
+                public(ZKTestState::class) at 2
+                public(SomeOtherZKState::class) at 3
+                public(SomeOtherZKState::class) at 4
+            }
+            numberOfSigners = 1
+        }
+    }
+
+    @Serializable
+    @ZKP
     class CreatePrivate : ZKCommandData, Versioned {
         init {
             tryNonFailing {
@@ -222,16 +327,6 @@ class LocalZKContract : ZKContract, Contract {
                 private(ZKTestState::class) at 0
             }
             numberOfSigners = 1
-        }
-    }
-
-    @Serializable
-    @ZKP
-    class MovePublic : CommandData {
-        init {
-            tryNonFailing {
-                BFLSerializationScheme.Companion.CommandDataSerializerRegistry.register(this::class, serializer())
-            }
         }
     }
 
@@ -329,12 +424,20 @@ class LocalZKContract : ZKContract, Contract {
     }
 }
 
+@Serializable
+@ZKP
 @BelongsToContract(LocalZKContract::class)
-data class NonAnnotatableTestState(
-    val owner: AbstractParty,
-    val value: Int = Random().nextInt(1000)
-) : ContractState {
-    override val participants: List<AbstractParty> = listOf(owner)
+data class SomeOtherZKState(
+    val value: @Serializable(with = IntSerializer::class) Int = Random().nextInt(1000)
+) : ZKContractState, Versioned {
+    @Transient
+    override val participants: @Size(1) List<@Serializable(with = AnonymousPartySerializer::class) AnonymousParty> = emptyList()
+
+    init {
+        tryNonFailing {
+            BFLSerializationScheme.Companion.ContractStateSerializerRegistry.register(this::class, serializer())
+        }
+    }
 }
 
 @Serializable

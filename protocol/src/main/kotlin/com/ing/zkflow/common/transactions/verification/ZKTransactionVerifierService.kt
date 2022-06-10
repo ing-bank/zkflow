@@ -3,12 +3,14 @@ package com.ing.zkflow.common.transactions.verification
 import com.ing.zkflow.common.transactions.SignedZKVerifierTransaction
 import com.ing.zkflow.common.transactions.ZKVerifierTransaction
 import com.ing.zkflow.common.transactions.ZKVerifierTransactionWithoutProofs
+import com.ing.zkflow.common.transactions.hasZKCommandData
 import com.ing.zkflow.common.transactions.zkToFilteredLedgerTransaction
 import com.ing.zkflow.common.transactions.zkTransactionMetadataOrNull
 import com.ing.zkflow.common.zkp.ZKTransactionService
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.node.ServiceHub
 import net.corda.core.transactions.SignedTransaction
+import net.corda.core.transactions.TransactionWithSignatures
 import net.corda.core.transactions.TraversableTransaction
 import net.corda.core.transactions.WireTransaction
 import net.corda.core.utilities.loggerFor
@@ -20,17 +22,13 @@ class ZKTransactionVerifierService(
     private val log = loggerFor<ZKTransactionVerifierService>()
 
     fun verify(svtx: SignedZKVerifierTransaction, checkSufficientSignatures: Boolean) {
+        validateSignatures(svtx, checkSufficientSignatures)
+
         val vtx = svtx.tx
         validatePrivateComponents(vtx)
 
         ensureNoUncheckedPrivateOutputs(vtx)
         ensureNoUncheckedPrivateInputs(vtx)
-
-        if (checkSufficientSignatures) {
-            svtx.verifyRequiredSignatures()
-        } else {
-            svtx.checkSignaturesAreValid()
-        }
 
         validatePublicComponents(vtx)
     }
@@ -40,19 +38,24 @@ class ZKTransactionVerifierService(
      * It will run the private ZKP contract logic and the normal contract logic on the transaction to confirm correctness.
      */
     fun verify(stx: SignedTransaction, checkSufficientSignatures: Boolean) {
+        validateSignatures(stx, checkSufficientSignatures)
+
         val wtx = stx.tx
-        val vtx = validatePrivateComponents(wtx)
 
-        ensureNoUncheckedPrivateOutputs(vtx)
-        ensureNoUncheckedPrivateInputs(wtx)
-
-        if (checkSufficientSignatures) {
-            stx.verifyRequiredSignatures()
+        val vtx = if (wtx.hasZKCommandData) {
+            validatePrivateComponents(wtx)
         } else {
-            stx.checkSignaturesAreValid()
+            ZKVerifierTransactionWithoutProofs.fromWireTransaction(wtx) // create vtx without proofs just to be able to build witness and public input
         }
 
+        ensureNoUncheckedPrivateOutputs(vtx)
+        ensureNoUncheckedPrivateInputs(vtx)
+
         validatePublicComponents(vtx)
+    }
+
+    private fun validateSignatures(tx: TransactionWithSignatures, checkSufficientSignatures: Boolean) {
+        if (checkSufficientSignatures) tx.verifyRequiredSignatures() else tx.checkSignaturesAreValid()
     }
 
     private fun validatePrivateComponents(vtx: ZKVerifierTransaction) = zkTransactionService.verify(vtx)
@@ -91,7 +94,9 @@ class ZKTransactionVerifierService(
             // Collect the indexes of inputs which are relevant to the circuits of this transaction and therefore whose UTXOs are resolved and checked by the circuits
             val circuitRelevantInputIndexes =
                 tx.zkTransactionMetadataOrNull(services)?.commands?.flatMap { it.inputs.map { input -> input.index } }?.toSet() ?: error(
-                    "There are inputs in the transaction whose UTXOs are private, but no metadata for them. " + "This means the ZKPs don't prove anything about these inputs and they are consumed without verification"
+                    "There are inputs in the transaction whose UTXOs are private, but no metadata for them. " +
+                        "This means the ZKPs don't prove anything about these inputs and they are consumed without verification!"
+
                 )
             require(actualPrivateInputIndexes.all { it in circuitRelevantInputIndexes }) {
                 "There are private inputs that are not mentioned in the metadata. " +

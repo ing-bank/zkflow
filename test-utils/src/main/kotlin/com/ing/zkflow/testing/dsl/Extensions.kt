@@ -20,6 +20,11 @@ import net.corda.testing.core.DummyCommandData
 import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.internal.MockNetworkParametersStorage
 
+/**
+ * Set up a ledger context. Please note that if you change one of the zkService or zkVerifierTransactionStorage parameters, you
+ * should also change the other: zkService should always use ZKVerifierTransactionStorage from the zkVerifierTransactionStorage parameter.
+ * If it uses another one, there will be transaction resolution errors.
+ */
 @JvmOverloads
 public fun ServiceHub.zkLedger(
     notary: Party = TestIdentity.fresh("ledger notary").party,

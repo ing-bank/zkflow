@@ -3,6 +3,7 @@ package com.ing.zkflow.common.contracts
 import com.ing.zkflow.common.transactions.verification.ZKTransactionVerifierService
 import com.ing.zkflow.common.transactions.zkTransactionMetadataOrNull
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
+import com.ing.zkflow.common.zkp.metadata.ZKIndexedTypedElement
 import net.corda.core.KeepForDJVM
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.ComponentGroupEnum
@@ -45,7 +46,7 @@ interface ZKContract : Contract {
          * They should all be mentioned in the metadata, and therefore checked by the ZKP contract logic.
          * If they are not mentioned there, they should either not exist, or be checked here (in that case, override this function).
          */
-        val publicOutputs = filteredLedgerTransaction.outputStates.publicOnlyStatesBelongingToZKContract(this::class, metadata)
+        val publicOutputs = filteredLedgerTransaction.outputStates.publicOnlyStatesBelongingToZKContract(this::class, metadata?.outputs)
         require(publicOutputs.isEmpty()) { "There should be no additional 'public only' outputs in the transaction for contract ${this::class}, found $publicOutputs" }
 
         /*
@@ -53,7 +54,7 @@ interface ZKContract : Contract {
          * They should all be mentioned in the metadata, and therefore checked by the ZKP contract logic.
          * If they are not mentioned there, they should either not exist, or be checked here (in that case, override this function).
          */
-        val publicInputs = filteredLedgerTransaction.inputStates.publicOnlyStatesBelongingToZKContract(this::class, metadata)
+        val publicInputs = filteredLedgerTransaction.inputStates.publicOnlyStatesBelongingToZKContract(this::class, metadata?.inputs)
         require(publicInputs.isEmpty()) { "There should be no additional 'public only' inputs in the transaction for contract ${this::class}, found $publicInputs" }
     }
 }
@@ -101,33 +102,37 @@ fun LedgerTransaction.filter(metadata: ResolvedZKTransactionMetadata?): LedgerTr
 
 /**
  * If contract verification is called from ZKTransactionVerifierService, we know the ltx was created from a ZKVerifierTransaction
- * and is therefore filtered.
+ * (which is itself filtered by nature) and is therefore already filtered.
  */
 private fun inFilteredContext(): Boolean = Exception().stackTrace.any { it.className == ZKTransactionVerifierService::class.qualifiedName }
 
 private fun <T : ContractState> List<T>.publicOnlyStatesBelongingToZKContract(
     contractClass: KClass<out ZKContract>,
-    metadata: ResolvedZKTransactionMetadata?
+    metadata: MutableList<out ZKIndexedTypedElement>?
 ): List<T> {
     // First we filter the 'public only' components
-    val publicOnly = if (metadata == null) {
+    return if (metadata == null) {
         this
     } else {
-        this.mapIndexedNotNull { index, component -> if (metadata.outputs.any { it.index == index }) null else component }
+        val publicMetadataForThisContract =
+            metadata.sortedBy { it.index }.filter { it.type.contractClass == contractClass && it.isPubliclyVisible() }
+        val publicStatesForThisContract = this.filter { it.contractClass.isSubclassOf(contractClass) }
+        publicStatesForThisContract.drop(publicMetadataForThisContract.size)
     }
-    // Next we filter only the ones belonging to this contract. We don't care about the others.
-    return publicOnly.filter { it.contractClass.isSubclassOf(contractClass) }
 }
 
-private val ContractState.contractClass: KClass<out Contract>
+private val KClass<out ContractState>.contractClass: KClass<out Contract>
     get() {
-        val annotation = javaClass.getAnnotation(BelongsToContract::class.java)
+        val annotation = java.getAnnotation(BelongsToContract::class.java)
         if (annotation != null) {
             return annotation.value
         }
-        val enclosingClass = javaClass.enclosingClass
+        val enclosingClass = java.enclosingClass
         @Suppress("UNCHECKED_CAST")
         if (Contract::class.java.isAssignableFrom(enclosingClass)) return enclosingClass.kotlin as KClass<out Contract>
 
-        error("Could not determine contract class for $this. Either annotate it with @BelongsToContract or nest itinside a Contract class.")
+        error("Could not determine contract class for $this. Either annotate it with @BelongsToContract or nest it inside a Contract class.")
     }
+
+private val ContractState.contractClass: KClass<out Contract>
+    get() = this::class.contractClass
