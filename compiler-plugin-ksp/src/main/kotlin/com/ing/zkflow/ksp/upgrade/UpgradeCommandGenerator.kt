@@ -18,29 +18,34 @@ import com.squareup.kotlinpoet.ksp.writeTo
 import java.util.Locale
 
 /**
- * Generates version upgrade commands for families of state or command classes.
+ * Generates version upgrade commands for version groups of ContractState classes.
  * Upgrades are generated in steps, one at a time.
  * For each upgrade a public (any) and a private upgrade command is generated. There are no private-to-public or
  * any-to-private upgrade commands, because the only goal here is to make sure that states are converted to the
  * right version.
+ *
+ * Assumes that the members of a family are already sorted.
  */
 class UpgradeCommandGenerator(
     private val codeGenerator: CodeGenerator
 ) {
-    @Suppress("LongMethod")
-    fun process(families: Map<String, List<KSClassDeclaration>>): List<GeneratedSerializer> {
-        return families.entries.flatMap { (_, members) ->
-            var previousVersion: KSClassDeclaration? = null
-            members.flatMap { current ->
-                previousVersion?.let { previous ->
-                    listOf(
-                        generateUpgradeCommand(previous, current, isPrivate = true),
-                        generateUpgradeCommand(previous, current, isPrivate = false),
-                    )
-                }
-                    .orEmpty()
-                    .also { previousVersion = current }
+    /**
+     * Assumes version groups to be already sorted with StateVersionSorting.sortByConstructors
+     */
+    fun processVersionGroups(groups: Collection<List<KSClassDeclaration>>): List<GeneratedSerializer> =
+        groups.flatMap { members -> processVersionGroup(members) }
+
+    private fun processVersionGroup(members: List<KSClassDeclaration>): List<GeneratedSerializer> {
+        var previousVersion: KSClassDeclaration? = null
+        return members.flatMap { current ->
+            previousVersion?.let { previous ->
+                listOf(
+                    generateUpgradeCommand(previous, current, isPrivate = true),
+                    generateUpgradeCommand(previous, current, isPrivate = false),
+                )
             }
+                .orEmpty()
+                .also { previousVersion = current }
         }
     }
 

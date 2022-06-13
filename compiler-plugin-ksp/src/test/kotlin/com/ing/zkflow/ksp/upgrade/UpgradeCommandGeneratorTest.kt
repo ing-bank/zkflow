@@ -38,22 +38,14 @@ internal class UpgradeCommandGeneratorTest {
     @Test
     fun `process empty family should return empty list`() {
         val testSubject = testSubject(ByteArrayOutputStream())
-        val actual = testSubject.process(
-            mapOf(
-                "Imaginary" to emptyList()
-            )
-        )
+        val actual = testSubject.processVersionGroups(listOf(emptyList()))
         actual shouldBe emptyList()
     }
 
     @Test
     fun `process family with single member should return empty list`() {
         val testSubject = testSubject(ByteArrayOutputStream())
-        val actual = testSubject.process(
-            mapOf(
-                "Single" to listOf(v1)
-            )
-        )
+        val actual = testSubject.processVersionGroups(listOf(listOf(v1)))
         actual shouldBe emptyList()
     }
 
@@ -62,11 +54,7 @@ internal class UpgradeCommandGeneratorTest {
     fun `process family with two members should generate upgrade`() {
         val generatedBytes = ByteArrayOutputStream()
         val testSubject = testSubject(generatedBytes)
-        val actual = testSubject.process(
-            mapOf(
-                "Double" to listOf(v1, v2)
-            )
-        )
+        val actual = testSubject.processVersionGroups(listOf(listOf(v1, v2)))
         actual shouldBe listOf(
             GeneratedSerializer(
                 ClassName("com.example", "UpgradePrivateV1ToPrivateV2"),

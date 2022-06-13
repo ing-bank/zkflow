@@ -4,9 +4,11 @@ import com.ing.zkflow.Via
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.annotations.corda.EdDSA
 import com.ing.zkflow.annotations.corda.SHA256
+import com.ing.zkflow.common.versioning.Versioned
 import com.r3.cbdc.annotated.fixtures.AmountSurrogate_IssuedTokenType
 import com.r3.cbdc.annotated.types.IssuedTokenType
 import net.corda.core.contracts.Amount
+import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.FungibleState
 import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.Party
@@ -21,12 +23,14 @@ import net.corda.core.schemas.QueryableState
 // Such decomposition is required to circumvent the kotlinx.serialization limitation, see
 // https://github.com/Kotlin/kotlinx.serialization/issues/1792
 
+interface VersionedFungibleToken : Versioned, ContractState
+
 @ZKP
 data class FungibleToken constructor(
     override val amount: @Via<AmountSurrogate_IssuedTokenType> Amount<IssuedTokenType>,
     override val holder: @EdDSA Party,
     override val tokenTypeJarHash: @SHA256 SecureHash? = SecureHash.zeroHash
-) : AbstractFungibleToken() {
+) : AbstractFungibleToken(), VersionedFungibleToken {
     override fun withNewHolder(newHolder: Party): FungibleToken {
         return FungibleToken(amount, newHolder, tokenTypeJarHash = tokenTypeJarHash)
     }

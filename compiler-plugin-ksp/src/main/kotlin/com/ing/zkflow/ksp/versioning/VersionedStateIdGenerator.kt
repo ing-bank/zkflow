@@ -2,8 +2,12 @@ package com.ing.zkflow.ksp.versioning
 
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 
+/**
+ * Assumes that the version groups are correctly sorted by [StateVersionSorting].
+ */
 object VersionedStateIdGenerator {
-    fun generateIds(sortedFamiliesMap: Map<String, List<KSClassDeclaration>>): Map<KSClassDeclaration, Int> =
+    @JvmName("generateIds1")
+    fun generateIds(sortedFamiliesMap: Map<KSClassDeclaration, List<KSClassDeclaration>>): Map<KSClassDeclaration, Int> =
         sortedFamiliesMap
             .entries
             .fold(emptyMap()) { acc, (stateFamily, declarationsOfThisFamily) ->
@@ -13,7 +17,7 @@ object VersionedStateIdGenerator {
                 acc + localIdMap
             }
 
-    private fun generateId(stateFamily: String, versionNumber: Int): Int {
-        return (stateFamily + "$versionNumber").hashCode()
+    private fun generateId(stateFamily: KSClassDeclaration, versionNumber: Int): Int {
+        return (stateFamily.qualifiedName?.asString() + "$versionNumber").hashCode()
     }
 }
