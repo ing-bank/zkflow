@@ -3,10 +3,10 @@ package com.ing.zkflow.testing.dsl
 import TestZKLedgerDSLInterpreter
 import com.ing.zkflow.common.network.ZKNetworkParameters
 import com.ing.zkflow.common.serialization.BFLSerializationScheme.Companion.CommandDataSerializerRegistry
+import com.ing.zkflow.common.zkp.ZKTransactionService
 import com.ing.zkflow.node.services.InMemoryZKVerifierTransactionStorage
 import com.ing.zkflow.node.services.ZKWritableVerifierTransactionStorage
 import com.ing.zkflow.serialization.serializer.corda.DummyCommandDataSerializer
-import com.ing.zkflow.testing.dsl.services.TestDSLZKTransactionService
 import com.ing.zkflow.testing.dsl.services.TestDSLZincZKTransactionService
 import com.ing.zkflow.testing.zkp.MockZKNetworkParameters
 import com.ing.zkflow.util.tryNonFailing
@@ -20,12 +20,17 @@ import net.corda.testing.core.DummyCommandData
 import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.internal.MockNetworkParametersStorage
 
+/**
+ * Set up a ledger context. Please note that if you change one of the zkService or zkVerifierTransactionStorage parameters, you
+ * should also change the other: zkService should always use ZKVerifierTransactionStorage from the zkVerifierTransactionStorage parameter.
+ * If it uses another one, there will be transaction resolution errors.
+ */
 @JvmOverloads
 public fun ServiceHub.zkLedger(
     notary: Party = TestIdentity.fresh("ledger notary").party,
     zkNetworkParameters: ZKNetworkParameters = MockZKNetworkParameters(),
     zkVerifierTransactionStorage: ZKWritableVerifierTransactionStorage = InMemoryZKVerifierTransactionStorage(),
-    zkService: TestDSLZKTransactionService = TestDSLZincZKTransactionService(this, zkVerifierTransactionStorage),
+    zkService: ZKTransactionService = TestDSLZincZKTransactionService(this, zkVerifierTransactionStorage, zkNetworkParameters),
     script: ZKLedgerDSL<TestZKTransactionDSLInterpreter, TestZKLedgerDSLInterpreter>.() -> Unit
 ): ZKLedgerDSL<TestZKTransactionDSLInterpreter, TestZKLedgerDSLInterpreter> {
     val currentParameters = networkParametersService.run {

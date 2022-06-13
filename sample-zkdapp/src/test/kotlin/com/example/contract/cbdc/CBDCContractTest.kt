@@ -1,6 +1,9 @@
 package com.example.contract.cbdc
 
-import com.example.token.cbdc.digitalEuro
+import com.example.contract.cbdc.commands.IssuePrivate
+import com.example.contract.cbdc.commands.MovePrivate
+import com.example.contract.cbdc.commands.RedeemPrivate
+import com.example.contract.cbdc.commands.SplitPrivate
 import com.ing.zkflow.testing.dsl.zkLedger
 import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
@@ -21,21 +24,13 @@ class CBDCContractTest {
         services.zkLedger {
             transaction {
                 output(CBDCContract.ID, alicesEuro)
-                command(listOf(ecb.owningKey), CBDCContract.IssuePrivate())
                 timeWindow(Instant.now())
+                tweak {
+                    command(listOf(bob.owningKey), IssuePrivate()) // wrong signer
+                    fails()
+                }
+                command(listOf(ecb.owningKey), IssuePrivate())
                 verifies()
-            }
-        }
-    }
-
-    @Test
-    fun `Issue one EUR to Alice - wrong signer`() {
-        services.zkLedger {
-            transaction {
-                output(CBDCContract.ID, alicesEuro)
-                command(listOf(bob.owningKey), CBDCContract.IssuePrivate())
-                timeWindow(Instant.now())
-                fails()
             }
         }
     }
@@ -43,11 +38,26 @@ class CBDCContractTest {
     @Test
     fun `Issue to Alice and move to Bob`() {
         services.zkLedger {
-            transaction {
-                input(CBDCContract.ID, alicesEuro)
-                output(CBDCContract.ID, alicesEuro.withNewHolder(bob))
-                command(listOf(alice.owningKey), CBDCContract.Move())
+            val issueTx = transaction {
+                output(CBDCContract.ID, alicesEuro)
+                command(listOf(ecb.owningKey), IssuePrivate())
                 timeWindow(Instant.now())
+                verifies()
+            }
+            transaction {
+                input(issueTx.outRef<CBDCToken>(0).ref)
+                command(listOf(alice.owningKey), MovePrivate())
+                timeWindow(Instant.now())
+                tweak {
+                    output(CBDCContract.ID, alicesEuro.withNewHolder(bob, 0.9))
+                    `fails with`("Amounts of input and output must equal")
+                }
+                tweak {
+                    output(CBDCContract.ID, alicesEuro.withNewHolder(bob))
+                    output(CBDCContract.ID, alicesEuro.withNewHolder(bob))
+                    `fails with`("There should be no additional 'public only' outputs")
+                }
+                output(CBDCContract.ID, alicesEuro.withNewHolder(bob))
                 verifies()
             }
         }
@@ -56,14 +66,48 @@ class CBDCContractTest {
     @Test
     fun `issue and split`() {
         services.zkLedger {
+            val issueTx = transaction {
+                output(CBDCContract.ID, alicesEuro)
+                command(listOf(ecb.owningKey), IssuePrivate())
+                timeWindow(Instant.now())
+                verifies()
+            }
             val half = alicesEuro.copy(alicesEuro.amount.splitEvenly(2).first())
 
             transaction {
-                input(CBDCContract.ID, alicesEuro)
-                output(CBDCContract.ID, half)
-                output(CBDCContract.ID, half.withNewHolder(bob))
-                command(listOf(alice.owningKey), CBDCContract.Split())
+                input(issueTx.outRef<CBDCToken>(0).ref)
+                output(CBDCContract.ID, half) // change to self
+                command(listOf(alice.owningKey), SplitPrivate())
                 timeWindow(Instant.now())
+                tweak {
+                    output(CBDCContract.ID, half.withNewHolder(bob, 0.1)) // amount total not conserved
+                    `fails with`("Amounts of funds must be constant")
+                }
+                output(CBDCContract.ID, half.withNewHolder(bob))
+                verifies()
+            }
+        }
+    }
+
+    @Test
+    fun `issue and redeem`() {
+        services.zkLedger {
+            val issueTx = transaction {
+                output(CBDCContract.ID, alicesEuro)
+                command(listOf(ecb.owningKey), IssuePrivate())
+                timeWindow(Instant.now())
+                verifies()
+            }
+            val half = alicesEuro.copy(alicesEuro.amount.splitEvenly(2).first())
+
+            transaction {
+                input(issueTx.outRef<CBDCToken>(0).ref)
+                command(listOf(alice.owningKey, ecb.owningKey), RedeemPrivate())
+                timeWindow(Instant.now())
+                tweak {
+                    output(CBDCContract.ID, half.withNewHolder(bob, 0.1))
+                    `fails with`("There should be no additional 'public only' outputs")
+                }
                 verifies()
             }
         }

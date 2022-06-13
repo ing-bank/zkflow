@@ -11,6 +11,7 @@ import net.corda.core.serialization.CordaSerializable
 import net.corda.core.transactions.FilteredTransaction
 import net.corda.core.transactions.TraversableTransaction
 import net.corda.core.transactions.WireTransaction
+import net.corda.core.utilities.OpaqueBytes
 import java.security.PublicKey
 
 @Suppress("LongParameterList")
@@ -107,6 +108,32 @@ open class ZKVerifierTransaction internal constructor(
      */
     private fun privateComponents(group: ComponentGroupEnum): Map<Int, SecureHash> =
         filteredComponentGroups.find { it.groupIndex == group.ordinal }?.privateComponentHashes ?: emptyMap()
+
+    /**
+     * Returns a map of the public components with their original indexes in the original WireTransaction.
+     * This map's entries are in the order in which the components appear in the transaction, meaning that
+     * the indexes of the map entries can be used to match them with the visible components in the ZKVerifierTransaction.
+     * See [publicComponentIndexesToOriginalWtxIndexes].
+     */
+    fun publicComponents(group: ComponentGroupEnum): Map<Int, OpaqueBytes> =
+        filteredComponentGroups.find { it.groupIndex == group.ordinal }?.publicComponents() ?: emptyMap()
+
+    /**
+     * A map between the component's current index in the [ZKVerifierTransaction] after filtering of the private components,
+     * and its original index in the [WireTransaction] that this [ZKVerifierTransaction] was built from.
+     */
+    fun publicComponentIndexesToOriginalWtxIndexes(group: ComponentGroupEnum): Map<Int, Int> =
+        publicComponents(group).entries
+            .mapIndexed { publicComponentIndex, (originalWtxIndex, _) -> publicComponentIndex to originalWtxIndex }
+            .toMap()
+
+    /**
+     * Given the current index in the [ZKVerifierTransaction] after filtering of the private components,
+     * returns its original index in the [WireTransaction] that this [ZKVerifierTransaction] was built from.
+     */
+    fun publicComponentIndexToOriginalWtxIndex(group: ComponentGroupEnum, componentIndex: Int): Int =
+        publicComponentIndexesToOriginalWtxIndexes(group)[componentIndex]
+            ?: error("No component at index $componentIndex in group $group")
 
     override fun hashCode(): Int = id.hashCode()
     override fun equals(other: Any?) = if (other !is ZKVerifierTransaction) false else (this.id == other.id)

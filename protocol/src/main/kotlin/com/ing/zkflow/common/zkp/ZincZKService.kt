@@ -150,7 +150,13 @@ class ZincZKService(
             assertOutputEqualsExpected(publicDataFile.readText(), expectedOutput)
             return result
         } catch (e: Exception) {
-            throw ZKRunException("Failed to run circuit. Cause: $e\n")
+            val assertionErrorIdentifier = "[ERROR   zvm] runtime error: assertion error: "
+            if (e.message?.contains(assertionErrorIdentifier) == true) {
+                val assertionError = e.message?.substringAfter(assertionErrorIdentifier)?.substringBefore("[ERROR zargo]")
+                throw ZKRunException("ZKP assertion failed: $assertionError\n")
+            } else {
+                throw ZKRunException("Failed to run circuit. Cause: $e\n")
+            }
         } finally {
             witnessFile.delete()
             publicDataFile.delete()
@@ -201,6 +207,7 @@ class ZincZKService(
     }
 
     override fun prove(witness: Witness): ByteArray {
+        log.info("Proving")
         log.debug("Witness size: ${witness.size()}, of which padding bytes: ${witness.size { it == 0.toByte() }}") // Assumes BFL zero-byte padding
 
         val witnessJson = WitnessSerializer.fromWitness(witness)
@@ -232,6 +239,7 @@ class ZincZKService(
     }
 
     override fun verify(proof: ByteArray, publicInput: PublicInput) {
+        log.info("Verifying proof")
         val publicInputJson = PublicInputSerializer.fromPublicInput(publicInput)
         return verify(proof, publicInputJson)
     }

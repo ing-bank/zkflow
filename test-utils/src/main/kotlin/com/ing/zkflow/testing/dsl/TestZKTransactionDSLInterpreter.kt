@@ -3,12 +3,13 @@ package com.ing.zkflow.testing.dsl
 import TestZKLedgerDSLInterpreter
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import com.ing.zkflow.common.transactions.ZKTransactionBuilder
-import com.ing.zkflow.common.transactions.hasPrivateComponents
+import com.ing.zkflow.common.transactions.signInitialTransaction
+import com.ing.zkflow.common.transactions.zkVerify
+import com.ing.zkflow.common.zkp.ZKTransactionService
 import com.ing.zkflow.testing.dsl.interfaces.DuplicateOutputLabel
 import com.ing.zkflow.testing.dsl.interfaces.EnforceVerifyOrFail
 import com.ing.zkflow.testing.dsl.interfaces.OutputStateLookup
 import com.ing.zkflow.testing.dsl.interfaces.ZKTransactionDSLInterpreter
-import com.ing.zkflow.testing.dsl.services.TestDSLZKTransactionService
 import net.corda.core.contracts.AttachmentConstraint
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.CommandData
@@ -114,8 +115,28 @@ public data class TestZKTransactionDSLInterpreter private constructor(
     }
 
     // Hack to reuse the LedgerInterpreter's ZKTransactionService with the local ServiceHub, so transaction resolution will work.
-    private val zkService: TestDSLZKTransactionService =
-        ledgerInterpreter.zkService::class.primaryConstructor?.call(services, ledgerInterpreter.zkVerifierTransactionStorage) ?: error("Primary constructor not found")
+    // This makes assumptions about what the constructors of implementations of ZKTransactionService look like.
+    private val zkService: ZKTransactionService
+        get() {
+            // Best effort try to construct it
+            val constructor = ledgerInterpreter.zkService::class.primaryConstructor ?: error("Primary constructor not found")
+
+            return when (constructor.parameters.size) {
+                2 -> constructor.call(
+                    services,
+                    ledgerInterpreter.zkVerifierTransactionStorage,
+                )
+                3 -> constructor.call(
+                    services,
+                    ledgerInterpreter.zkVerifierTransactionStorage,
+                    ledgerInterpreter.zkNetworkParameters
+                )
+                else -> error(
+                    "Don't know how to construct ${ledgerInterpreter.zkService}. " +
+                        "Supported constructors have 2 or 3 parameters: Always ServiceHub and ZKVerifierTransactionStorage, possibly ZKNetworkParameters."
+                )
+            }
+        }
 
     private fun copy(): TestZKTransactionDSLInterpreter =
         TestZKTransactionDSLInterpreter(
@@ -169,17 +190,12 @@ public data class TestZKTransactionDSLInterpreter private constructor(
         // Verify on a copy of the transaction builder, so if it's then further modified it doesn't error due to
         // the existing signature
         val txb = transactionBuilder.copy()
-        val wtx = txb.toWireTransaction(services)
+        txb.enforcePrivateInputsAndReferences(ledgerInterpreter.zkVerifierTransactionStorage)
 
-        val ltx = wtx.toLedgerTransaction(services)
-        ltx.verify()
+        val stx = services.signInitialTransaction(txb)
+        stx.zkVerify(services, zkService, ledgerInterpreter.zkVerifierTransactionStorage, checkSufficientSignatures = false)
 
-        if (wtx.hasPrivateComponents) {
-            txb.enforcePrivateInputsAndReferences(ledgerInterpreter.zkVerifierTransactionStorage)
-            log.info("Transaction ${wtx.id} has private components: creating and verifying ZKP")
-            zkService.verify(wtx, ledgerInterpreter.zkNetworkParameters)
-        }
-        log.info("Transaction ${wtx.id} verified")
+        log.info("Transaction ${stx.id} verified")
 
         return EnforceVerifyOrFail.Token
     }

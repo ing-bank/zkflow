@@ -1,6 +1,8 @@
 package com.ing.zkflow.client.flows
 
 import com.ing.zkflow.common.transactions.NotarisedTransactionPayload
+import com.ing.zkflow.common.transactions.PrivateNotarisedTransactionPayload
+import com.ing.zkflow.common.transactions.PublicNotarisedTransactionPayload
 import com.ing.zkflow.node.services.ServiceNames
 import com.ing.zkflow.node.services.ZKWritableVerifierTransactionStorage
 import com.ing.zkflow.node.services.getCordaServiceFromConfig
@@ -24,5 +26,15 @@ fun ServiceHub.createSignature(zktxId: SecureHash, publicKey: PublicKey): Transa
 
 fun ServiceHub.recordTransactions(notarised: NotarisedTransactionPayload, statesToRecord: StatesToRecord = StatesToRecord.ONLY_RELEVANT) {
     getCordaServiceFromConfig<ZKWritableVerifierTransactionStorage>(ServiceNames.ZK_VERIFIER_TX_STORAGE).addTransaction(notarised.svtx)
-    recordTransactions(statesToRecord, listOf(notarised.stx))
+    when (notarised) {
+        is PrivateNotarisedTransactionPayload -> {
+            recordTransactions(statesToRecord, listOf(notarised.stx))
+        }
+        is PublicNotarisedTransactionPayload -> {
+            // If we only have the public data, we build a fake SignedTransaction for storage.
+            // This way, the publicly visible outputs of this transaction are stored in the vault.
+            // Unfortunately, this is impossible for now because the Vault storage logic switches on an expected `WireTransaction`.
+            // recordTransactions(statesToRecord, listOf(SignedTransaction(notarised.svtx.tx, notarised.svtx.sigs)))
+        }
+    }
 }

@@ -9,9 +9,9 @@ import com.ing.zkflow.common.zkp.ZKTransactionService
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
 import com.ing.zkflow.node.services.ServiceNames
+import com.ing.zkflow.node.services.UtxoInfoStorage
 import com.ing.zkflow.node.services.WritableUtxoInfoStorage
 import com.ing.zkflow.node.services.ZKVerifierTransactionStorage
-import com.ing.zkflow.node.services.ZKWritableVerifierTransactionStorage
 import com.ing.zkflow.node.services.getCordaServiceFromConfig
 import net.corda.core.DeleteForDJVM
 import net.corda.core.contracts.Attachment
@@ -144,13 +144,13 @@ val TraversableTransaction.hasZKCommandData get() = commands.any { it.value is Z
 val TraversableTransaction.hasPrivateComponents get() = hasZKCommandData
 val LedgerTransaction.hasZKCommandData get() = commands.any { it.value is ZKCommandData }
 
-val ZKTransactionBuilder.commandData get() = commands().map { it.value }.filterIsInstance<ZKCommandData>()
-val TraversableTransaction.commandData get() = commands.map { it.value }.filterIsInstance<ZKCommandData>()
-val LedgerTransaction.commandData get() = commands.map { it.value }.filterIsInstance<ZKCommandData>()
+val ZKTransactionBuilder.zkCommandData get() = commands().map { it.value }.filterIsInstance<ZKCommandData>()
+val TraversableTransaction.zkCommandData get() = commands.map { it.value }.filterIsInstance<ZKCommandData>()
+val LedgerTransaction.zkCommandData get() = commands.map { it.value }.filterIsInstance<ZKCommandData>()
 
-val ZKTransactionBuilder.commandMetadata get() = commandData.map { it.metadata }
-val TraversableTransaction.commandMetadata get() = commandData.map { it.metadata }
-val LedgerTransaction.commandMetadata get() = commandData.map { it.metadata }
+val ZKTransactionBuilder.commandMetadata get() = zkCommandData.map { it.metadata }
+val TraversableTransaction.commandMetadata get() = zkCommandData.map { it.metadata }
+val LedgerTransaction.commandMetadata get() = zkCommandData.map { it.metadata }
 
 private const val TX_CONTAINS_NO_COMMANDS_WITH_METADATA = "This transaction does not contain any commands with metadata"
 private const val NETWORKS_PARAMS_MISSING = "NetworkParameters not found"
@@ -175,9 +175,18 @@ fun getClassLoaderFromContractAttachment(tx: TraversableTransaction, serviceHub:
     return getClassLoaderFromContractAttachment(tx.id, tx.attachments, tx.networkParametersHash, serviceHub)
 }
 
-fun getClassLoaderFromContractAttachment(txId: SecureHash, attachmentIds: List<SecureHash>, networkParametersHash: SecureHash?, serviceHub: ServiceHub): ClassLoader {
+fun getClassLoaderFromContractAttachment(
+    txId: SecureHash,
+    attachmentIds: List<SecureHash>,
+    networkParametersHash: SecureHash?,
+    serviceHub: ServiceHub
+): ClassLoader {
     val hashToResolve = networkParametersHash ?: serviceHub.networkParametersService.defaultHash
-    val params = serviceHub.networkParametersService.lookup(hashToResolve) ?: throw TransactionResolutionException.UnknownParametersException(SecureHash.zeroHash, hashToResolve)
+    val params =
+        serviceHub.networkParametersService.lookup(hashToResolve) ?: throw TransactionResolutionException.UnknownParametersException(
+            SecureHash.zeroHash,
+            hashToResolve
+        )
     val attachments = attachmentIds.map { serviceHub.attachments.openAttachment(it) ?: error("Attachment ($it) not found") }
 
     return getClassLoaderFromContractAttachment(txId, attachments, params)
@@ -188,20 +197,37 @@ fun getClassLoaderFromContractAttachment(txId: SecureHash, attachments: List<Att
 }
 
 fun TraversableTransaction.zkTransactionMetadata(serviceHub: ServiceHub): ResolvedZKTransactionMetadata =
-    if (this.hasZKCommandData) zkTransactionMetadata(this.commandMetadata, getClassLoaderFromContractAttachment(this, serviceHub)) else error(TX_CONTAINS_NO_COMMANDS_WITH_METADATA)
+    if (this.hasZKCommandData) zkTransactionMetadata(
+        this.commandMetadata,
+        getClassLoaderFromContractAttachment(this, serviceHub)
+    ) else error(TX_CONTAINS_NO_COMMANDS_WITH_METADATA)
 
 fun TraversableTransaction.zkTransactionMetadataOrNull(serviceHub: ServiceHub): ResolvedZKTransactionMetadata? =
     if (this.hasZKCommandData) zkTransactionMetadata(this.commandMetadata, getClassLoaderFromContractAttachment(this, serviceHub)) else null
 
 fun LedgerTransaction.zkTransactionMetadata(): ResolvedZKTransactionMetadata =
-    if (this.hasZKCommandData) zkTransactionMetadata(this.commandMetadata, getClassLoaderFromContractAttachment(id, attachments, networkParameters ?: error(NETWORKS_PARAMS_MISSING))) else error(TX_CONTAINS_NO_COMMANDS_WITH_METADATA)
+    if (this.hasZKCommandData) zkTransactionMetadata(
+        this.commandMetadata,
+        getClassLoaderFromContractAttachment(id, attachments, networkParameters ?: error(NETWORKS_PARAMS_MISSING))
+    ) else error(TX_CONTAINS_NO_COMMANDS_WITH_METADATA)
+
+fun LedgerTransaction.zkTransactionMetadataOrNull(): ResolvedZKTransactionMetadata? =
+    if (this.hasZKCommandData) zkTransactionMetadata(
+        this.commandMetadata,
+        getClassLoaderFromContractAttachment(id, attachments, networkParameters ?: error(NETWORKS_PARAMS_MISSING))
+    ) else null
 
 fun ZKTransactionBuilder.zkTransactionMetadata(serviceHub: ServiceHub): ResolvedZKTransactionMetadata {
     return if (this.hasZKCommandData) {
         zkTransactionMetadata(
             this.commandMetadata,
             // Random SHA looks a bit weird here, but it is not really used inside ClassLoader creation, so it's not worth to build WireTx here just because of this id
-            getClassLoaderFromContractAttachment(SecureHash.randomSHA256(), attachments(), serviceHub.networkParametersService.currentHash, serviceHub)
+            getClassLoaderFromContractAttachment(
+                SecureHash.randomSHA256(),
+                attachments(),
+                serviceHub.networkParametersService.currentHash,
+                serviceHub
+            )
         )
     } else error(TX_CONTAINS_NO_COMMANDS_WITH_METADATA)
 }
@@ -253,13 +279,20 @@ fun PartialMerkleTree.getComponentHash(componentIndex: Int): SecureHash {
     return node.hash
 }
 
-@Throws(AttachmentResolutionException::class, TransactionResolutionException::class)
-@DeleteForDJVM
 /**
+ * Turns a ZKVerifierTransaction into a filtered LedgerTransaction.
+ * This LedgerTransaction will only contain the publicly visible components of the ZKVerifierTransaction.
+ * This LedgerTransaction can be used to validate the public components of the transaction.
+ *
  * Attention! Resulting LTX will differ from LTX that would be created from base WireTransaction, because we don't have access
  * to private UTXOs and components. Specifically, this means that component indexes of the outputs/utxos will be different.
  */
-fun TraversableTransaction.zkToFilteredLedgerTransaction(services: ServiceHub): LedgerTransaction {
+@Throws(AttachmentResolutionException::class, TransactionResolutionException::class)
+@DeleteForDJVM
+fun ZKVerifierTransaction.zkToFilteredLedgerTransaction(
+    services: ServiceHub,
+    vtxStorage: ZKVerifierTransactionStorage,
+): LedgerTransaction {
     val resolveIdentity: (PublicKey) -> Party? = { services.identityService.partyFromKey(it) }
     val resolveAttachment: (SecureHash) -> Attachment? = { services.attachments.openAttachment(it) }
     val resolveParameters: (SecureHash?) -> NetworkParameters? = {
@@ -267,8 +300,10 @@ fun TraversableTransaction.zkToFilteredLedgerTransaction(services: ServiceHub): 
         services.networkParametersService.lookup(hashToResolve)
     }
 
-    val resolvedInputs = inputs.mapNotNull { ref -> resolveStateRefOrNull(ref, services) }.lazyMapped { star, _ -> star.toStateAndRef() }
-    val resolvedReferences = references.mapNotNull { ref -> resolveStateRefOrNull(ref, services) }.lazyMapped { star, _ -> star.toStateAndRef() }
+    val resolvedInputs =
+        inputs.mapNotNull { ref -> resolvePublicStateRefOrNull(ref, vtxStorage) }.lazyMapped { star, _ -> star.toStateAndRef() }
+    val resolvedReferences =
+        references.mapNotNull { ref -> resolvePublicStateRefOrNull(ref, vtxStorage) }.lazyMapped { star, _ -> star.toStateAndRef() }
 
     // Look up public keys to authenticated identities.
     val authenticatedCommands = commands.lazyMapped { cmd, _ ->
@@ -285,7 +320,7 @@ fun TraversableTransaction.zkToFilteredLedgerTransaction(services: ServiceHub): 
             networkParametersHash!!
         )
 
-    val ltx = LedgerTransaction.createForSandbox(
+    return LedgerTransaction.createForSandbox(
         resolvedInputs,
         outputs,
         authenticatedCommands,
@@ -305,67 +340,73 @@ fun TraversableTransaction.zkToFilteredLedgerTransaction(services: ServiceHub): 
 
     // Normally here transaction size is checked but in ZKP flow we don't really care because all our txs are fixed-size
     // checkTransactionSize(ltx, resolvedNetworkParameters.maxTransactionSize, serializedResolvedInputs, serializedResolvedReferences)
-
-    return ltx
 }
 
 /**
- * First look into ZKVTX storage, if it doesn't help - look up in "normal" tx storage,
- * if no luck as well - we should only check utxo storage if we want to include private states as well,
- * in most cases in protocol we should avid that so be carefu
+ * Try to find a state in ZKVerifierTransactionStorage
+ * This will only return public states. If a private component is accessed, an exception is thrown.
  */
-fun resolveStateRef(
+fun resolvePublicStateRef(
     stateRef: StateRef,
-    services: ServiceHub,
-    vtxStorage: ZKWritableVerifierTransactionStorage = services.getCordaServiceFromConfig(ServiceNames.ZK_VERIFIER_TX_STORAGE),
-    utxoInfoStorage: WritableUtxoInfoStorage = services.getCordaServiceFromConfig(ServiceNames.ZK_UTXO_INFO_STORAGE),
-    includePrivate: Boolean = false
+    vtxStorage: ZKVerifierTransactionStorage,
 ): SerializedBytes<TransactionState<ContractState>> {
+    val svtx = vtxStorage.getTransaction(stateRef.txhash) ?: throw TransactionResolutionException(stateRef.txhash)
+    if (svtx.tx.isPrivateComponent(ComponentGroupEnum.OUTPUTS_GROUP, stateRef.index)) throw PrivateUtxoAccess(stateRef)
 
-    // Check ZKVTX storage
-    try {
-        val stx = vtxStorage.getTransaction(stateRef.txhash) ?: throw TransactionResolutionException(stateRef.txhash)
+    @Suppress("UNCHECKED_CAST")
+    return svtx.tx.componentGroups
+        .firstOrNull { it.groupIndex == ComponentGroupEnum.OUTPUTS_GROUP.ordinal }
+        ?.components
+        ?.get(stateRef.index) as? SerializedBytes<TransactionState<ContractState>>
+        ?: throw UtxoNotFoundInsideTx(stateRef)
+}
 
-        if (!includePrivate) {
-            if (stx.tx.isPrivateComponent(ComponentGroupEnum.OUTPUTS_GROUP, stateRef.index)) throw PrivateUtxoAccess()
-
-            @Suppress("UNCHECKED_CAST")
-            return stx.tx.componentGroups
-                .firstOrNull { it.groupIndex == ComponentGroupEnum.OUTPUTS_GROUP.ordinal }
-                ?.components
-                ?.get(stateRef.index) as? SerializedBytes<TransactionState<ContractState>>
-                ?: throw UtxoNotFoundInsideTx(stateRef)
+/**
+ * Resolve a public or private state. Different from [resolvePublicStateRef], this will not fail on accessing private state data.
+ * - First, we check the [ZKVerifierTransactionStorage] to see if we can find it in there as a public state. The state may be there if
+ * we received it as a public part of a zkvtx that is part of a chain we are participant to, or if we are an observer.
+ * - Next, we check the normal Corda transaction storage. This contains full public and private transaction data. The state may be found
+ * there if we were a direct participant to a private transaction.
+ * - Finally, if we do not have it in normal storage, we may have it in [UtxoInfoStorage]. This would be the case when we were not part
+ * of the original transaction that created it, but our counterparty revealed it to us by sending it to us separately with its backchain.
+ */
+fun resolvePublicOrPrivateStateRef(
+    stateRef: StateRef,
+    serviceHub: ServiceHub,
+    vtxStorage: ZKVerifierTransactionStorage,
+    utxoInfoStorage: UtxoInfoStorage,
+): SerializedBytes<TransactionState<ContractState>> {
+    return try {
+        resolvePublicStateRef(stateRef, vtxStorage)
+    } catch (e: TransactionResolutionException) { /* Move on to searching normal transaction storage */
+        try {
+            return resolveStateRefBinaryComponent(stateRef, serviceHub) ?: throw UtxoNotFoundInsideTx(stateRef)
+        } catch (e: TransactionResolutionException) { /* Move on to searching UtxoInfo storage */
+            utxoInfoStorage.getUtxoInfo(stateRef)
+                ?.let { utxoInfo -> SerializedBytes(utxoInfo.serializedContents) }
+                ?: throw UtxoInfoNotFound(stateRef)
         }
-    } catch (e: TransactionResolutionException) { /* This is fine */ }
-
-    // Check "normal" tx storage TODO double-check if we still need to search for "normal" tx
-    try { return resolveStateRefBinaryComponent(stateRef, services) ?: throw UtxoNotFoundInsideTx(stateRef) } catch (e: TransactionResolutionException) { /* This is fine too */ }
-
-    if (includePrivate) {
-        // Only check utxo storage if we want to fetch private data
-        return utxoInfoStorage
-            .getUtxoInfo(stateRef)?.let { utxoInfo ->
-                SerializedBytes(utxoInfo.serializedContents)
-            } ?: throw UtxoNotFound(stateRef)
-    } else throw PublicUtxoNotFound(stateRef)
+    }
 }
 
 /**
  * Here we don't fail in case of private utxos - we just return null
  */
-fun resolveStateRefOrNull(stateRef: StateRef, services: ServiceHub): SerializedStateAndRef? {
+fun resolvePublicStateRefOrNull(stateRef: StateRef, vtxStorage: ZKVerifierTransactionStorage): SerializedStateAndRef? {
     val state = try {
-        resolveStateRef(stateRef, services)
+        resolvePublicStateRef(stateRef, vtxStorage)
     } catch (ex: PrivateUtxoAccess) {
         null
     }
     return if (state != null) SerializedStateAndRef(state, stateRef) else null
 }
 
-class PublicUtxoNotFound(stateRef: StateRef) : Exception("Output not found for state ref $stateRef")
-class UtxoNotFoundInsideTx(stateRef: StateRef) : Exception("Output not found for state ref $stateRef")
-class UtxoNotFound(stateRef: StateRef) : Exception("Output not found for state ref $stateRef")
-class PrivateUtxoAccess : Exception()
+class UtxoNotFoundInsideTx(stateRef: StateRef) :
+    TransactionResolutionException(stateRef.txhash, "Output not found at index ${stateRef.index} in transaction with id ${stateRef.txhash}")
+
+class UtxoInfoNotFound(stateRef: StateRef) : TransactionResolutionException(stateRef.txhash, "UtxoInfo not found for state ref $stateRef")
+class PrivateUtxoAccess(stateRef: StateRef) :
+    TransactionResolutionException(stateRef.txhash, "Not allowed to access private component at index ${stateRef.index} in public context")
 
 /**
  * Fetches the set of attachments required to verify the given transaction. If these are not already present, they will be fetched from
@@ -395,9 +436,10 @@ val ZKVerifierTransaction.dependencies: Set<SecureHash>
 fun SignedTransaction.zkVerify(
     services: ServiceHub,
     zkService: ZKTransactionService = services.getCordaServiceFromConfig(ServiceNames.ZK_TX_SERVICE),
+    zkTxStorage: ZKVerifierTransactionStorage = services.getCordaServiceFromConfig(ServiceNames.ZK_VERIFIER_TX_STORAGE),
     checkSufficientSignatures: Boolean = true,
 ) {
-    zkResolveAndCheckNetworkParameters(services)
+    zkResolveAndCheckNetworkParameters(services, zkTxStorage)
     when (coreTransaction) {
         is NotaryChangeWireTransaction -> TODO("Not supported for now") // Perhaps just proxy to `verify(services, checkSufficientSignatures)`?
         is ContractUpgradeWireTransaction -> TODO("Not supported for now") // Perhaps just proxy to `verify(services, checkSufficientSignatures)`?
@@ -411,7 +453,7 @@ fun SignedTransaction.zkVerify(
  */
 private fun SignedTransaction.zkVerifyRegularTransaction(
     services: ServiceHub,
-    zkService: ZKTransactionService = services.getCordaServiceFromConfig(ServiceNames.ZK_TX_SERVICE),
+    zkService: ZKTransactionService,
     checkSufficientSignatures: Boolean,
 ) {
     val zkTransactionVerifierService = ZKTransactionVerifierService(
@@ -424,7 +466,7 @@ private fun SignedTransaction.zkVerifyRegularTransaction(
 
 private fun SignedTransaction.zkResolveAndCheckNetworkParameters(
     services: ServiceHub,
-    zkTxStorage: ZKVerifierTransactionStorage = services.getCordaServiceFromConfig(ServiceNames.ZK_VERIFIER_TX_STORAGE)
+    zkTxStorage: ZKVerifierTransactionStorage,
 ) {
     val hashOrDefault = networkParametersHash ?: services.networkParametersService.defaultHash
     val txNetworkParameters = services.networkParametersService.lookup(hashOrDefault)

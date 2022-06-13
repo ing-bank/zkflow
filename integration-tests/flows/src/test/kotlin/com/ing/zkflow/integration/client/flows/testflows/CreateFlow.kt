@@ -1,7 +1,6 @@
 package com.ing.zkflow.integration.client.flows.testflows
 
 import co.paralleluniverse.fibers.Suspendable
-import com.ing.zkflow.client.flows.ZKCollectSignaturesFlow
 import com.ing.zkflow.client.flows.ZKFinalityFlow
 import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.transactions.ZKTransactionBuilder
@@ -16,7 +15,8 @@ import net.corda.core.flows.InitiatingFlow
 import net.corda.core.transactions.SignedTransaction
 
 @InitiatingFlow
-class CreateFlow(private val value: Int? = null, private val createCommand: ZKCommandData = TestContract.Create()) : FlowLogic<SignedTransaction>() {
+class CreateFlow(private val value: Int? = null, private val createCommand: ZKCommandData = TestContract.CreatePrivate()) :
+    FlowLogic<SignedTransaction>() {
 
     @Suspendable
     override fun call(): SignedTransaction {
@@ -31,9 +31,8 @@ class CreateFlow(private val value: Int? = null, private val createCommand: ZKCo
         builder.enforcePrivateInputsAndReferences(serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_VERIFIER_TX_STORAGE))
 
         val stx = serviceHub.signInitialTransaction(builder)
-        val fullySignedStx = subFlow(ZKCollectSignaturesFlow(stx, emptyList()))
 
-        subFlow(ZKFinalityFlow(fullySignedStx, listOf()))
+        subFlow(ZKFinalityFlow(stx, privateSessions = listOf()))
 
         return stx
     }

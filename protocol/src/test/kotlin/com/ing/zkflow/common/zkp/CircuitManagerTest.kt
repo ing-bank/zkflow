@@ -1,6 +1,6 @@
 package com.ing.zkflow.common.zkp
 
-import com.ing.zkflow.common.util.includedLastModified
+import com.ing.zkflow.util.includedLastModified
 import org.junit.jupiter.api.Test
 import java.io.File
 import kotlin.test.assertEquals

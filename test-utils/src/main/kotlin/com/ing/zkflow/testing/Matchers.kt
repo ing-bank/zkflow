@@ -8,9 +8,10 @@ import kotlin.reflect.full.memberFunctions
 import kotlin.reflect.full.memberProperties
 
 @Suppress("ComplexMethod")
-public fun KClass<*>.shouldHaveSamePublicApiAs(expected: KClass<*>, changed: List<String>) {
-    val actualMemberFunctions = this.memberFunctions.filter { it.visibility == KVisibility.PUBLIC && it.name !in changed }
-    val expectedMemberFunctions = expected.memberFunctions.filter { it.visibility == KVisibility.PUBLIC && it.name !in changed }
+public fun KClass<*>.shouldHaveSamePublicApiAs(expected: KClass<*>, allowedToBeDifferent: List<String>) {
+    val actualMemberFunctions = this.memberFunctions.filter { it.visibility == KVisibility.PUBLIC && it.name !in allowedToBeDifferent }
+    val expectedMemberFunctions =
+        expected.memberFunctions.filter { it.visibility == KVisibility.PUBLIC && it.name !in allowedToBeDifferent }
 
     expectedMemberFunctions.forEach { expectedFunction ->
         actualMemberFunctions.singleOrNull {
@@ -20,8 +21,9 @@ public fun KClass<*>.shouldHaveSamePublicApiAs(expected: KClass<*>, changed: Lis
         } ?: error("Public function $expectedFunction not present on $this")
     }
 
-    val actualMemberProperties = this.memberProperties.filter { it.visibility == KVisibility.PUBLIC }
-    val expectedMemberProperties = expected.memberProperties.filter { it.visibility == KVisibility.PUBLIC }
+    val actualMemberProperties = this.memberProperties.filter { it.visibility == KVisibility.PUBLIC && it.name !in allowedToBeDifferent }
+    val expectedMemberProperties =
+        expected.memberProperties.filter { it.visibility == KVisibility.PUBLIC && it.name !in allowedToBeDifferent }
 
     expectedMemberProperties.forEach { expectedProperty ->
         actualMemberProperties.singleOrNull {
@@ -31,8 +33,8 @@ public fun KClass<*>.shouldHaveSamePublicApiAs(expected: KClass<*>, changed: Lis
         } ?: error("Public property $expectedProperty not present on $this")
     }
 
-    val actualConstructors = this.constructors.filter { it.visibility == KVisibility.PUBLIC }
-    val expectedConstructors = expected.constructors.filter { it.visibility == KVisibility.PUBLIC }
+    val actualConstructors = this.constructors.filter { it.visibility == KVisibility.PUBLIC && it.name !in allowedToBeDifferent }
+    val expectedConstructors = expected.constructors.filter { it.visibility == KVisibility.PUBLIC && it.name !in allowedToBeDifferent }
 
     expectedConstructors.forEach { expectedConstructor ->
         actualConstructors.singleOrNull {

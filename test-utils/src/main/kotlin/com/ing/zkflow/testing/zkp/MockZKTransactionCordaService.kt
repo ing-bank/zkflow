@@ -15,7 +15,6 @@ import net.corda.core.node.services.CordaService
 public open class MockZKTransactionCordaService(serviceHub: AppServiceHub) : MockZKTransactionService(serviceHub)
 
 public open class MockZKTransactionService(serviceHub: ServiceHub) : AbstractZKTransactionService(serviceHub) {
-
     init {
         // TODO: Check if we can remove this
         HashAgility.init(blake2sAlgorithm)

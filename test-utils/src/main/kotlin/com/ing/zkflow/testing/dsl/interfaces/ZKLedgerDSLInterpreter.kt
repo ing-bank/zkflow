@@ -2,8 +2,8 @@ package com.ing.zkflow.testing.dsl.interfaces
 
 import com.ing.zkflow.common.network.ZKNetworkParameters
 import com.ing.zkflow.common.transactions.ZKTransactionBuilder
+import com.ing.zkflow.common.zkp.ZKTransactionService
 import com.ing.zkflow.node.services.ZKWritableVerifierTransactionStorage
-import com.ing.zkflow.testing.dsl.services.TestDSLZKTransactionService
 import net.corda.core.DoNotImplement
 import net.corda.core.crypto.SecureHash
 import net.corda.core.transactions.WireTransaction
@@ -17,7 +17,7 @@ import java.io.InputStream
 @DoNotImplement
 @Suppress("FunctionNaming", "FunctionName") // Copy of Corda API
 public interface ZKLedgerDSLInterpreter<out T : ZKTransactionDSLInterpreter> : Verifies, OutputStateLookup {
-    public val zkService: TestDSLZKTransactionService
+    public val zkService: ZKTransactionService
     public val zkNetworkParameters: ZKNetworkParameters
     public val zkVerifierTransactionStorage: ZKWritableVerifierTransactionStorage
 

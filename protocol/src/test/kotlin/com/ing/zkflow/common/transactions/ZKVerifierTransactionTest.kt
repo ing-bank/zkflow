@@ -179,11 +179,22 @@ class ZKVerifierTransactionTest {
             vtx.outputHashes().size shouldBe 5
             vtx.outputs.size shouldBe 3
 
-            vtx.outputs.map { it.data } shouldContain publicOutput0
-            vtx.outputs.map { it.data } shouldContain publicOutput1
-            vtx.outputs.map { it.data } shouldContain publicOutput3
-            vtx.outputs.map { it.data } shouldNotContain privateOutput2
-            vtx.outputs.map { it.data } shouldNotContain privateOutput4
+            vtx.outputStates shouldContain publicOutput0
+            vtx.outputStates shouldContain publicOutput1
+            vtx.outputStates shouldContain publicOutput3
+            vtx.outputStates shouldNotContain privateOutput2
+            vtx.outputStates shouldNotContain privateOutput4
+
+            val publicComponents = vtx.publicComponents(ComponentGroupEnum.OUTPUTS_GROUP)
+            publicComponents.size shouldBe 3
+            publicComponents.entries.forEachIndexed { index, componentWithIndex ->
+                val serializedPublicComponent = componentWithIndex.value
+                // Confirm that the public component entries as found in the vtx appear in the vtx outputs in the same order
+                serializedPublicComponent shouldBe vtx.componentGroups.single { it.groupIndex == ComponentGroupEnum.OUTPUTS_GROUP.ordinal }.components[index]
+
+                // Confirm that the public components as found in the vtx are actually in that same index in the original wtx
+                serializedPublicComponent shouldBe wtx.componentGroups.single { it.groupIndex == ComponentGroupEnum.OUTPUTS_GROUP.ordinal }.components[componentWithIndex.key]
+            }
         }
     }
 }

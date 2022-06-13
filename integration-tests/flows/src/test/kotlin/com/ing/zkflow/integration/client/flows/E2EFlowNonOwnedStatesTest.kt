@@ -10,6 +10,8 @@ import com.ing.zkflow.node.services.ServiceNames.ZK_TX_SERVICE
 import com.ing.zkflow.node.services.ServiceNames.ZK_UTXO_INFO_STORAGE
 import com.ing.zkflow.node.services.ServiceNames.ZK_VERIFIER_TX_STORAGE
 import com.ing.zkflow.notary.ZKNotaryService
+import com.ing.zkflow.testing.checkIsPresentInVault
+import com.ing.zkflow.testing.checkIsPrivatelyPresentInZKStorage
 import com.ing.zkflow.testing.zkp.MockZKTransactionCordaService
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
@@ -80,6 +82,9 @@ class E2EFlowNonOwnedStatesTest {
         // Initiator creates a state they want to trade
         val createStxMiniCorpNode = createNewState(miniCorpNode)
         val miniCorpStateAndRef = createStxMiniCorpNode.coreTransaction.outRef<TestContract.TestState>(0)
+
+        miniCorpNode.checkIsPrivatelyPresentInZKStorage(miniCorpStateAndRef)
+        miniCorpNode.checkIsPresentInVault(miniCorpStateAndRef, Vault.StateStatus.UNCONSUMED)
 
         // Start the trade. We expect counterparty to trade a state of identical value
         val moveFuture = miniCorpNode.startFlow(

@@ -26,7 +26,7 @@ class TestNotarisationFlow(val signers: List<Party> = emptyList()) : FlowLogic<S
 
         val me = serviceHub.myInfo.legalIdentities.single().anonymise()
         val state = TestContract.TestState(me)
-        val issueCommand = Command(TestContract.Create(), (signers + me).map { it.owningKey }) //
+        val issueCommand = Command(TestContract.CreatePrivate(), (signers + me).map { it.owningKey }) //
         val stateAndContract = StateAndContract(state, TestContract.PROGRAM_ID)
 
         val builder = ZKTransactionBuilder(serviceHub.networkMapCache.notaryIdentities.single())
