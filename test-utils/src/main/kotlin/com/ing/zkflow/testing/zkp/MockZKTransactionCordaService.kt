@@ -5,8 +5,6 @@ import com.ing.zkflow.common.zkp.ZKService
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.crypto.blake2s256
 import com.ing.zkflow.crypto.blake2sAlgorithm
-import com.ing.zkflow.node.services.InMemoryZKVerifierTransactionStorage
-import com.ing.zkflow.node.services.ZKVerifierTransactionStorage
 import net.corda.core.crypto.DigestService
 import net.corda.core.internal.HashAgility
 import net.corda.core.node.AppServiceHub
@@ -17,8 +15,6 @@ import net.corda.core.node.services.CordaService
 public open class MockZKTransactionCordaService(serviceHub: AppServiceHub) : MockZKTransactionService(serviceHub)
 
 public open class MockZKTransactionService(serviceHub: ServiceHub) : AbstractZKTransactionService(serviceHub) {
-    override val vtxStorage: ZKVerifierTransactionStorage = InMemoryZKVerifierTransactionStorage()
-
     init {
         // TODO: Check if we can remove this
         HashAgility.init(blake2sAlgorithm)

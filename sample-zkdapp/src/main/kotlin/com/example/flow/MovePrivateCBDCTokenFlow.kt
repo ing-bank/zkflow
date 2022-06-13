@@ -9,6 +9,7 @@ import com.ing.zkflow.client.flows.ZKFinalityFlow
 import com.ing.zkflow.client.flows.ZKReceiveFinalityFlow
 import com.ing.zkflow.common.transactions.ZKTransactionBuilder
 import com.ing.zkflow.common.transactions.signInitialTransaction
+import com.ing.zkflow.common.transactions.zkVerify
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
@@ -59,6 +60,8 @@ class MovePrivateCBDCTokenFlow(
         }
 
         val stx = serviceHub.signInitialTransaction(builder)
+
+        stx.zkVerify(serviceHub, checkSufficientSignatures = false)
 
         subFlow(
             ZKFinalityFlow(

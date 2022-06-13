@@ -453,7 +453,7 @@ fun SignedTransaction.zkVerify(
  */
 private fun SignedTransaction.zkVerifyRegularTransaction(
     services: ServiceHub,
-    zkService: ZKTransactionService = services.getCordaServiceFromConfig(ServiceNames.ZK_TX_SERVICE),
+    zkService: ZKTransactionService,
     checkSufficientSignatures: Boolean,
 ) {
     val zkTransactionVerifierService = ZKTransactionVerifierService(
@@ -466,7 +466,7 @@ private fun SignedTransaction.zkVerifyRegularTransaction(
 
 private fun SignedTransaction.zkResolveAndCheckNetworkParameters(
     services: ServiceHub,
-    zkTxStorage: ZKVerifierTransactionStorage = services.getCordaServiceFromConfig(ServiceNames.ZK_VERIFIER_TX_STORAGE)
+    zkTxStorage: ZKVerifierTransactionStorage,
 ) {
     val hashOrDefault = networkParametersHash ?: services.networkParametersService.defaultHash
     val txNetworkParameters = services.networkParametersService.lookup(hashOrDefault)

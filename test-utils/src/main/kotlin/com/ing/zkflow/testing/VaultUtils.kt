@@ -6,6 +6,7 @@ import com.ing.zkflow.node.services.ZKVerifierTransactionStorage
 import com.ing.zkflow.node.services.getCordaServiceFromConfig
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.internal.indexOfOrThrow
 import net.corda.core.node.services.Vault
@@ -51,7 +52,7 @@ public fun StartedMockNode.checkNotPresentInZKStorage(
     }
 }
 
-public fun StartedMockNode.checkIsPresentInZKStorage(
+public fun StartedMockNode.checkIsPubliclyPresentInZKStorage(
     stateAndRef: StateAndRef<*>,
 ) {
     val storage = services.getCordaServiceFromConfig<ZKVerifierTransactionStorage>(ServiceNames.ZK_VERIFIER_TX_STORAGE)
@@ -61,4 +62,13 @@ public fun StartedMockNode.checkIsPresentInZKStorage(
     val state = tx.tx.getOutput(tx.tx.outputStates.indexOfOrThrow(stateAndRef.state.data))
 
     state shouldBe stateAndRef.state.data
+}
+
+public fun StartedMockNode.checkIsPrivatelyPresentInZKStorage(
+    stateAndRef: StateAndRef<*>,
+) {
+    val storage = services.getCordaServiceFromConfig<ZKVerifierTransactionStorage>(ServiceNames.ZK_VERIFIER_TX_STORAGE)
+    val tx = storage.getTransaction(stateAndRef.ref.txhash) ?: throw ZKTransactionResolutionException(stateAndRef.ref.txhash)
+
+    tx.tx.isPrivateComponent(ComponentGroupEnum.OUTPUTS_GROUP, stateAndRef.ref.index)
 }

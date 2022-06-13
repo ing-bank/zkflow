@@ -16,7 +16,7 @@ import com.ing.zkflow.node.services.ServiceNames.ZK_VERIFIER_TX_STORAGE
 import com.ing.zkflow.node.services.getCordaServiceFromConfig
 import com.ing.zkflow.notary.ZKNotaryService
 import com.ing.zkflow.testing.checkIsPresentInVault
-import com.ing.zkflow.testing.checkIsPresentInZKStorage
+import com.ing.zkflow.testing.checkIsPubliclyPresentInZKStorage
 import com.ing.zkflow.testing.checkNotPresentInVault
 import com.ing.zkflow.testing.checkNotPresentInZKStorage
 import com.ing.zkflow.testing.zkp.MockZKTransactionCordaService
@@ -150,7 +150,7 @@ class PrivateCBDCTokenFlowTest {
         aliceNode.checkIsPresentInVault(alicesIssuedToken, Vault.StateStatus.CONSUMED)
         bobNode.checkIsPresentInVault(bobsMovedToken, Vault.StateStatus.UNCONSUMED)
         auditorNode.checkNotPresentInVault(bobsMovedToken)
-        auditorNode.checkIsPresentInZKStorage(moveAuditRecord)
+        auditorNode.checkIsPubliclyPresentInZKStorage(moveAuditRecord)
         auditorNode.checkNotPresentInZKStorage(bobsMovedToken)
 
         // Bob moves a fraction of the private token to Alice privately and keeps the change.
@@ -176,7 +176,7 @@ class PrivateCBDCTokenFlowTest {
         bobNode.checkIsPresentInVault(bobsChangeToken, Vault.StateStatus.UNCONSUMED)
         auditorNode.checkNotPresentInVault(alicesFractionalToken)
         auditorNode.checkNotPresentInVault(bobsChangeToken)
-        auditorNode.checkIsPresentInZKStorage(splitAuditRecord)
+        auditorNode.checkIsPubliclyPresentInZKStorage(splitAuditRecord)
         auditorNode.checkNotPresentInZKStorage(alicesFractionalToken)
         auditorNode.checkNotPresentInZKStorage(bobsChangeToken)
 
