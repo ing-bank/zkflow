@@ -2,6 +2,8 @@ package com.ing.zkflow.ksp
 
 import com.google.devtools.ksp.getAllSuperTypes
 import com.google.devtools.ksp.symbol.ClassKind
+import com.google.devtools.ksp.symbol.KSAnnotated
+import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import kotlin.reflect.KClass
 
@@ -41,3 +43,9 @@ fun KSClassDeclaration.implementsInterfaceDirectly(interfaceClass: KSClassDeclar
     getAllDirectlyImplementedInterfaces().any {
         it.qualifiedName?.asString() == interfaceClass.qualifiedName?.asString()
     }
+
+fun KSAnnotated.getAnnotationsByType(annotationKClass: KClass<out Annotation>): Sequence<KSAnnotation> {
+    return this.annotations.filter {
+        it.shortName.getShortName() == annotationKClass.simpleName && it.annotationType.resolve().declaration.qualifiedName?.asString() == annotationKClass.qualifiedName
+    }
+}

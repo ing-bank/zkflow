@@ -17,15 +17,15 @@ class BFLSerializationRegistrationTest {
     }
 }
 
-data class My3rdPartyClass(val i: Int) : ContractState {
-    override val participants = emptyList<AnonymousParty>()
-}
-
 @ZKPSurrogate(MyConverter::class)
 data class My3rdPartyClassSurrogate(
     val i: Int
 ) : Surrogate<My3rdPartyClass> {
     override fun toOriginal() = My3rdPartyClass(i)
+}
+
+data class My3rdPartyClass(val i: Int) : ContractState {
+    override val participants = emptyList<AnonymousParty>()
 }
 
 object MyConverter : ConversionProvider<My3rdPartyClass, My3rdPartyClassSurrogate> {

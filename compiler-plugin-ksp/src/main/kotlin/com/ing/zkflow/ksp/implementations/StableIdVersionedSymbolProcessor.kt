@@ -10,6 +10,8 @@ import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSFile
+import com.google.devtools.ksp.symbol.KSFunctionDeclaration
+import com.google.devtools.ksp.symbol.KSType
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.annotations.ZKPSurrogate
 import com.ing.zkflow.common.serialization.CommandDataSerializerRegistryProvider
@@ -17,6 +19,7 @@ import com.ing.zkflow.common.serialization.ContractStateSerializerRegistryProvid
 import com.ing.zkflow.common.versioning.Versioned
 import com.ing.zkflow.ksp.MetaInfServiceRegister
 import com.ing.zkflow.ksp.getAllImplementedInterfaces
+import com.ing.zkflow.ksp.getAnnotationsByType
 import com.ing.zkflow.ksp.implementsInterface
 import com.ing.zkflow.ksp.implementsInterfaceDirectly
 import com.ing.zkflow.ksp.upgrade.UpgradeCommandGenerator
@@ -45,21 +48,31 @@ import kotlin.reflect.KClass
  *
  * To achieve this, [StableIdVersionedSymbolProcessor] does the following:
  * 0. collect all versioned classes. These are classes annotated with either @ZKP or @ZKPSurrogate.
- *    Note that we require ContractState and CommandData to be annotated always. This is so that we at least guarantee top-level transaction
- *    components to be versioned. For lower level classes, we can't enforce this, since we don't know which ones will be part of a top-level
- *    ContractState or CommandData. Also, BFL serialization will fail anyway if a non-annotated class is used as a property type within a ContractState
- *    or CommandData.
+ *    Note that we require ContractState and CommandData to be annotated always, unless a surrogate is defined for it (i.e. another
+ *    class has a @ZKPSurrogate annotation for it), or it is manually marked as @Serializable for testing purposes.
+ *    This is so that we at least guarantee top-level transaction components to be versioned. For lower level classes, we can't enforce this,
+ *    since we don't know which ones will be part of a top-level ContractState or CommandData. Also, BFL serialization will fail anyway
+ *    if a non-annotated class is used as a property type within a ContractState or CommandData.
  * 1. groups versioned classes within their version marker group, identified by a marker interface.
  * 2. validates that all classes annotated with @ZKP belong to a version marker group.
- * 3. sorts versioned classes within their version marker group according to their constructors. Will fail if there are classes within a
- *    group that are not part of the version chain.
+ * 3. sorts versioned classes within their version marker group according to their ugprade constructors. Will fail if there are classes within a
+ *    group that are not part of the version chain or if there are circular upgrade paths
  * 4. generates `upgrade` commands to go from one version of a ContractState to the next one.
  * 5. registers serializers in the registry for states/commands so that they can be serialized by a stable id instead
  *    of fqn by BFLSerializationScheme.
+ *
+ *
+ *  Some invariants:
+ *  - ContractState and CommandData must be annotated with either @ZKP or @ZKPSurrogate,
  */
 class StableIdVersionedSymbolProcessor(private val logger: KSPLogger, private val codeGenerator: CodeGenerator) :
     SymbolProcessor {
     private val visitedFiles: MutableSet<KSFile> = mutableSetOf()
+
+    /**
+     * Map of classes to their surrogates
+     */
+    private val surrogatesCache: MutableMap<KSClassDeclaration, KSClassDeclaration> = mutableMapOf()
 
     private val metaInfServiceRegister = MetaInfServiceRegister(codeGenerator)
 
@@ -79,35 +92,37 @@ class StableIdVersionedSymbolProcessor(private val logger: KSPLogger, private va
     override fun process(resolver: Resolver): List<KSAnnotated> {
         val newFiles = getNewFiles(resolver)
 
-        ensureZKPAnnotated(newFiles, ContractState::class)
-        ensureZKPAnnotated(newFiles, CommandData::class)
+        populateSurrogatesCache(resolver)
+
+        // 0. collect all versioned classes.
+        ensureZKPAnnotatedOrSurrogateExists(newFiles, ContractState::class)
+        ensureZKPAnnotatedOrSurrogateExists(newFiles, CommandData::class)
 
         val zkpAnnotated: Sequence<KSClassDeclaration> = findClassesOrObjectsAnnotatedWithZKP(resolver)
         val versionMarkerInterfaces: List<KSClassDeclaration> = findVersionMarkerInterfaces(newFiles)
 
-        // 2. groups and sorts versioned classes w.r.t. to markers implementing [Versioned],
+        // 1. groups versioned classes within their version marker group, identified by a marker interface.
         val (unversioned, markerGroups) = groupByMarkerInterface(zkpAnnotated, versionMarkerInterfaces)
 
-        // 1. validates that all classes annotated with @ZKP are versioned and reports all unversioned items,
+        // 2. validates that all classes annotated with @ZKP belong to a version marker group
         requireImplementsMarker(unversioned)
 
-        // 2. groups and sorts versioned classes w.r.t. to markers implementing [Versioned],
+        // 3. sorts versioned classes within their version marker group according to their constructors.
         val sortedMarkerGroups = StateVersionSorting.sortByConstructors(logger, markerGroups)
 
         val contractStateGroups = filterMembersImplementInterface(sortedMarkerGroups, ContractState::class)
 
-        // 4. generates `upgrade` commands to go from one version of a state to the next one.
-        // This is only done for ContractStates: they are the only top-level components re-used in new transactions
+        // 4. generates `upgrade` commands to go from one version of a ContractState to the next one
         val upgradeCommands: Map<SerializerRegistryProcessor.GeneratedSerializer, Int> =
             UpgradeCommandGenerator(codeGenerator)
                 .processVersionGroups(contractStateGroups.values)
                 .associateWith { it.className.canonicalName.hashCode() }
 
-        // 3. registers serializers in the registry for states/commands so that they can be serialized with a short stable id
-        // instead of a much longer fqn by BFLSerializationScheme.
-        // SO ONLY STATES AND COMMANDS, since they are the only ones that are top-level from BFLSerializationScheme perspective.
-        // For the rest, Arrow Meta will generate @Serializable(with) annotations and add inline serializers,
-        // assuming the surrogate serializers were generated by KSP. This means they are automatically serializable without registration.
+        // 5. registers serializers in the registry for states/commands
+        // Note that this happens only for ContractState and CommandData, since they are the only ones that are top-level
+        // from BFLSerializationScheme perspective.
+        // For the rest, Arrow Meta will generate @Serializable(with) annotations and add inline serializers
+        // This means they are automatically serializable without registration.
         contractStateGroups
             .generateIdsAndProcessWith(stateRegistryProcessor)
             .registerToServiceLoader()
@@ -135,13 +150,20 @@ class StableIdVersionedSymbolProcessor(private val logger: KSPLogger, private va
         }
     }
 
-    private fun ensureZKPAnnotated(newFiles: Set<KSFile>, kClass: KClass<*>) {
+    private fun ensureZKPAnnotatedOrSurrogateExists(newFiles: Set<KSFile>, kClass: KClass<*>) {
         val implementors = findImplementors(newFiles, kClass)
             .filter { (it.classKind == ClassKind.CLASS || it.classKind == ClassKind.OBJECT) && !it.isAbstract() }
 
         implementors.forEach {
-            require(it.isAnnotationPresent(ZKP::class) || it.isAnnotationPresent(ZKPSurrogate::class)) {
-                "${it.qualifiedName?.asString()} is a ${kClass.simpleName} and must therefore be annotated with either @${ZKP::class.simpleName} or @${ZKPSurrogate::class.simpleName}"
+            require(
+                it.isAnnotationPresent(ZKP::class) ||
+                    it.isAnnotationPresent(ZKPSurrogate::class) ||
+                    hasSurrogate(it) ||
+                    // If it has a @Serializable annotation, it is manually set as a serializable class, which implies that is a class that exists for testing purposes.
+                    // This should never happen for user classes
+                    it.isAnnotationPresent(kotlinx.serialization.Serializable::class)
+            ) {
+                "${it.qualifiedName?.asString()} is a ${kClass.simpleName} and must therefore be annotated with either @${ZKP::class.simpleName} or @${ZKPSurrogate::class.simpleName}, or a surrogate must exist for it."
             }
         }
     }
@@ -191,7 +213,8 @@ class StableIdVersionedSymbolProcessor(private val logger: KSPLogger, private va
 
     private fun requireImplementsMarker(unversioned: List<KSClassDeclaration>) {
         if (unversioned.isNotEmpty()) {
-            // TODO: now purposely only checks for ContractState and CommandData for backwards compat. Remove later to enforce versioned on any @ZKP* annotated.
+            // Currently, purposely only checks for ContractState and CommandData for backwards compat.
+            // Perhaps remove later to enforce versioned on any @ZKP* annotated.
             val requiredToBeVersioned = unversioned.filter { it ->
                 it.getAllImplementedInterfaces().any {
                     it.qualifiedName?.asString() == ContractState::class.qualifiedName ||
@@ -234,10 +257,27 @@ class StableIdVersionedSymbolProcessor(private val logger: KSPLogger, private va
     }
 
     private fun findClassesOrObjectsAnnotatedWithZKP(resolver: Resolver): Sequence<KSClassDeclaration> {
-        val zkpAnnotated = resolver.findClassesOrObjectsWithAnnotation("com.ing.zkflow.annotations.ZKP")
-        val zkpSurrogateAnnotated = resolver.findClassesOrObjectsWithAnnotation("com.ing.zkflow.annotations.ZKPSurrogate")
+        val zkpAnnotated = resolver.findClassesOrObjectsWithAnnotation(ZKP::class.qualifiedName!!)
+        val zkpSurrogateAnnotated = resolver.findClassesOrObjectsWithAnnotation(ZKPSurrogate::class.qualifiedName!!)
 
         return zkpAnnotated + zkpSurrogateAnnotated
+    }
+
+    private fun hasSurrogate(clazz: KSClassDeclaration): Boolean = surrogatesCache.contains(clazz)
+
+    private fun populateSurrogatesCache(resolver: Resolver) {
+        resolver.findClassesOrObjectsWithAnnotation(ZKPSurrogate::class.qualifiedName!!).forEach { surrogate ->
+            surrogate.getAnnotationsByType(ZKPSurrogate::class).firstOrNull()?.let { surrogateAnnotation ->
+                val conversionProvider = (surrogateAnnotation.arguments[0].value as KSType).declaration as KSClassDeclaration
+                val fromFunction = conversionProvider.declarations
+                    .filterIsInstance<KSFunctionDeclaration>()
+                    .filter { it.simpleName.asString() == "from" }
+                    .single()
+                val surrogateFor = fromFunction.parameters.single().type.resolve().declaration as KSClassDeclaration
+                logger.info("Found surrogate: $surrogate for: $surrogateFor")
+                surrogatesCache[surrogateFor] = surrogate
+            }
+        }
     }
 
     private fun Resolver.findClassesOrObjectsWithAnnotation(annotationName: String): Sequence<KSClassDeclaration> {
@@ -251,18 +291,6 @@ class StableIdVersionedSymbolProcessor(private val logger: KSPLogger, private va
         return findImplementors(newFiles, Versioned::class).filter { it.classKind == ClassKind.INTERFACE }
             .also { ensureMarkersDirectlyImplementVersioned(it) }
     }
-//     val versionedRequirement = ImplementationRequirement.isInterface(superTypes = setOf(Versioned::class))
-//     val implementationsVisitor = ImplementationsVisitor(implementationRequirements = listOf(versionedRequirement))
-//     val versionMarkerInterfaces: List<KSClassDeclaration> =
-//         newFiles.fold(emptyMap<ImplementationRequirement, List<ScopedDeclaration>>()) { acc, file ->
-//             val matches = implementationsVisitor.visitFile(file, null)
-//             acc.merge(matches)
-//         }
-//             .getOrDefault(versionedRequirement, emptyList())
-//             .map { it.declaration }
-//     logger.warn("Implementors of : $versionMarkerInterfaces")
-//     return versionMarkerInterfaces
-// }
 
     private fun findImplementors(newFiles: Set<KSFile>, implementedInterface: KClass<*>): List<KSClassDeclaration> {
         val versionedRequirement = ImplementationRequirement(superTypes = setOf(implementedInterface))
