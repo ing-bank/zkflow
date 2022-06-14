@@ -14,8 +14,7 @@ import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.annotations.ZKPSurrogate
-import com.ing.zkflow.common.serialization.CommandDataSerializerRegistryProvider
-import com.ing.zkflow.common.serialization.ContractStateSerializerRegistryProvider
+import com.ing.zkflow.common.serialization.SerializerRegistryProvider
 import com.ing.zkflow.common.versioning.Versioned
 import com.ing.zkflow.ksp.MetaInfServiceRegister
 import com.ing.zkflow.ksp.getAllImplementedInterfaces
@@ -76,16 +75,10 @@ class StableIdVersionedSymbolProcessor(private val logger: KSPLogger, private va
 
     private val metaInfServiceRegister = MetaInfServiceRegister(codeGenerator)
 
-    private val stateRegistryProcessor =
+    private val serializerRegistryProcessor =
         SerializerRegistryProcessor(
-            ContractState::class,
-            ContractStateSerializerRegistryProvider::class,
-            codeGenerator
-        )
-    private val commandRegistryProcessor =
-        SerializerRegistryProcessor(
-            CommandData::class,
-            CommandDataSerializerRegistryProvider::class,
+            Any::class,
+            SerializerRegistryProvider::class,
             codeGenerator
         )
 
@@ -123,13 +116,9 @@ class StableIdVersionedSymbolProcessor(private val logger: KSPLogger, private va
         // from BFLSerializationScheme perspective.
         // For the rest, Arrow Meta will generate @Serializable(with) annotations and add inline serializers
         // This means they are automatically serializable without registration.
-        contractStateGroups
-            .generateIdsAndProcessWith(stateRegistryProcessor)
-            .registerToServiceLoader()
-
         val commandFamilies = filterMembersImplementInterface(sortedMarkerGroups, CommandData::class)
-        commandFamilies
-            .generateIdsAndProcessWith(commandRegistryProcessor, additionalClasses = upgradeCommands)
+        (commandFamilies + contractStateGroups)
+            .generateIdsAndProcessWith(serializerRegistryProcessor, additionalClasses = upgradeCommands)
             .registerToServiceLoader()
 
         metaInfServiceRegister.emit()

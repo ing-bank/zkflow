@@ -17,8 +17,6 @@ import net.corda.core.contracts.AlwaysAcceptAttachmentConstraint
 import net.corda.core.contracts.AttachmentConstraint
 import net.corda.core.contracts.AutomaticHashConstraint
 import net.corda.core.contracts.AutomaticPlaceholderConstraint
-import net.corda.core.contracts.CommandData
-import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.HashAttachmentConstraint
 import net.corda.core.contracts.SignatureAttachmentConstraint
 import net.corda.core.contracts.WhitelistedByZoneAttachmentConstraint
@@ -47,10 +45,9 @@ interface KClassSerializerProvider<T : Any> {
     fun get(): KClassSerializer<T>
 }
 
-interface SurrogateSerializerRegistryProvider : KClassSerializerProvider<Any>
+interface SerializerRegistryProvider : KClassSerializerProvider<Any>
 
-interface ContractStateSerializerRegistryProvider : KClassSerializerProvider<ContractState>
-interface CommandDataSerializerRegistryProvider : KClassSerializerProvider<CommandData>
+interface SurrogateSerializerRegistryProvider : KClassSerializerProvider<Any>
 
 abstract class SerializerRegistry<T : Any> {
     private val log = LoggerFactory.getLogger(this::class.java)

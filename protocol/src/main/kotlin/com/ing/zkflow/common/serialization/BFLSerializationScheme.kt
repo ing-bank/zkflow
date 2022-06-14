@@ -63,15 +63,27 @@ open class BFLSerializationScheme : CustomSerializationScheme {
         init {
             val log = LoggerFactory.getLogger(this::class.java)
 
-            log.debug("Populating `${ContractStateSerializerRegistry::class.simpleName}`")
-            ServiceLoader.load(ContractStateSerializerRegistryProvider::class.java).map { it.get() }
-                .also { if (it.isEmpty()) log.debug("No ContractStates registered in ContractStateSerializerRegistry") }
-                .forEach { ContractStateSerializerRegistry.register(it) }
-
-            log.debug("Populating `${CommandDataSerializerRegistry::class.simpleName}`")
-            ServiceLoader.load(CommandDataSerializerRegistryProvider::class.java).map { it.get() }
-                .also { if (it.isEmpty()) log.debug("No CommandData registered in CommandDataSerializerRegistry") }
-                .forEach { CommandDataSerializerRegistry.register(it) }
+            log.debug("Parsing all serializers")
+            ServiceLoader.load(SerializerRegistryProvider::class.java).map { it.get() }
+                .also { if (it.isEmpty()) log.debug("No serializers found") }
+                .forEach { (forKClass, id, serializer) ->
+                    @Suppress("UNCHECKED_CAST")
+                    when {
+                        forKClass.isSubclassOf(ContractState::class) -> {
+                            forKClass as KClass<ContractState>
+                            serializer as KSerializer<ContractState>
+                            ContractStateSerializerRegistry.register(KClassSerializer<ContractState>(forKClass, id, serializer))
+                        }
+                        forKClass.isSubclassOf(CommandData::class) -> {
+                            forKClass as KClass<CommandData>
+                            serializer as KSerializer<CommandData>
+                            CommandDataSerializerRegistry.register(KClassSerializer<CommandData>(forKClass, id, serializer))
+                        }
+                        else -> log.debug(
+                            "Serializer for `$forKClass` is neither a subclass of `${CommandData::class.qualifiedName}` or ${ContractState::class.qualifiedName}"
+                        )
+                    }
+                }
 
             log.debug("Parsing all additional surrogate serializers")
             ServiceLoader.load(SurrogateSerializerRegistryProvider::class.java).map { it.get() }

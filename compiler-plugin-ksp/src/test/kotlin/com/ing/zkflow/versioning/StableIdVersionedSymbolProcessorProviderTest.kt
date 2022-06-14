@@ -1,6 +1,6 @@
 package com.ing.zkflow.versioning
 
-import com.ing.zkflow.common.serialization.ContractStateSerializerRegistryProvider
+import com.ing.zkflow.common.serialization.SerializerRegistryProvider
 import com.ing.zkflow.ksp.ProcessorTest
 import com.ing.zkflow.processors.StableIdVersionedSymbolProcessorProvider
 import com.tschuchort.compiletesting.KotlinCompilation
@@ -16,21 +16,19 @@ class StableIdVersionedSymbolProcessorProviderTest : ProcessorTest(StableIdVersi
         val outputStream = ByteArrayOutputStream()
         val result = compile(kotlinFile, outputStream)
 
-        // In case of error, show output
         if (result.exitCode != KotlinCompilation.ExitCode.OK) {
             reportError(result, outputStream)
         }
 
         result.exitCode shouldBe KotlinCompilation.ExitCode.OK
-        result.getGeneratedMetaInfServices<ContractStateSerializerRegistryProvider>() shouldBe
-            """
+        result.getGeneratedMetaInfServices<SerializerRegistryProvider>() shouldContain """
                 com.ing.zkflow.contract.ZebraV1SerializerProvider
                 com.ing.zkflow.contract.ZebraV2SerializerProvider
                 com.ing.zkflow.contract.ZebraSerializerProvider
                 com.ing.zkflow.contract.HorseV1SerializerProvider
                 com.ing.zkflow.contract.HorseV2SerializerProvider
                 com.ing.zkflow.contract.HorseSerializerProvider
-            """.trimIndent()
+        """.trimIndent()
     }
 
     @Test
@@ -38,7 +36,6 @@ class StableIdVersionedSymbolProcessorProviderTest : ProcessorTest(StableIdVersi
         val outputStream = ByteArrayOutputStream()
         val result = compile(nameClashSource, outputStream)
 
-        // In case of error, show output
         if (result.exitCode != KotlinCompilation.ExitCode.OK) {
             reportError(result, outputStream)
         }
@@ -51,7 +48,6 @@ class StableIdVersionedSymbolProcessorProviderTest : ProcessorTest(StableIdVersi
         val outputStream = ByteArrayOutputStream()
         val result = compile(memberImplementsGroupIndirectly, outputStream)
 
-        // In case of error, show output
         if (result.exitCode != KotlinCompilation.ExitCode.OK) {
             reportError(result, outputStream)
         }
@@ -79,7 +75,6 @@ class StableIdVersionedSymbolProcessorProviderTest : ProcessorTest(StableIdVersi
         val outputStream = ByteArrayOutputStream()
         val result = compile(unannotatedCommandData, outputStream)
 
-        // In case of error, show output
         if (result.exitCode != KotlinCompilation.ExitCode.OK) {
             reportError(result, outputStream)
         }
@@ -93,7 +88,6 @@ class StableIdVersionedSymbolProcessorProviderTest : ProcessorTest(StableIdVersi
         val outputStream = ByteArrayOutputStream()
         val result = compile(unannotatedContractState, outputStream)
 
-        // In case of error, show output
         if (result.exitCode != KotlinCompilation.ExitCode.OK) {
             reportError(result, outputStream)
         }
@@ -107,7 +101,6 @@ class StableIdVersionedSymbolProcessorProviderTest : ProcessorTest(StableIdVersi
         val outputStream = ByteArrayOutputStream()
         val result = compile(unversionedStatesKotlinFile, outputStream)
 
-        // In case of error, show output
         if (result.exitCode != KotlinCompilation.ExitCode.OK) {
             reportError(result, outputStream)
         }

@@ -2,8 +2,8 @@ package com.ing.zkflow.zinc.poet.generate
 
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.common.contracts.ZKCommandData
-import com.ing.zkflow.common.serialization.CommandDataSerializerRegistryProvider
 import com.ing.zkflow.common.serialization.KClassSerializer
+import com.ing.zkflow.common.serialization.SerializerRegistryProvider
 import com.ing.zkflow.common.versioning.Versioned
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.common.zkp.metadata.commandMetadata
@@ -23,7 +23,7 @@ internal class GenerateZincCircuitsKtTest {
 
     @Test
     fun `instantiateZkCommands should correctly instantiate MyZkCommand`() {
-        val mockRegistry = mockk<CommandDataSerializerRegistryProvider>()
+        val mockRegistry = mockk<SerializerRegistryProvider>()
         every { mockRegistry.get() } returns KClassSerializer(MyZkCommand::class, 1, MyZkCommand.serializer())
 
         val actual = instantiateZkCommands(listOf(mockRegistry))
@@ -32,7 +32,7 @@ internal class GenerateZincCircuitsKtTest {
 
     @Test
     fun `instantiateZkCommands should ignore CommandData that are not ZKCommandData`() {
-        val mockRegistry = mockk<CommandDataSerializerRegistryProvider>()
+        val mockRegistry = mockk<SerializerRegistryProvider>()
         every { mockRegistry.get() } returns KClassSerializer(MyCommand::class, 1, MyCommand.serializer())
 
         val actual = instantiateZkCommands(listOf(mockRegistry))

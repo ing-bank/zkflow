@@ -1,8 +1,7 @@
 package com.ing.zkflow.contract
 
 import com.ing.zkflow.common.contracts.ZKCommandData
-import com.ing.zkflow.common.serialization.CommandDataSerializerRegistryProvider
-import com.ing.zkflow.common.serialization.ContractStateSerializerRegistryProvider
+import com.ing.zkflow.common.serialization.SerializerRegistryProvider
 import com.ing.zkflow.ksp.ProcessorTest
 import com.ing.zkflow.processors.StableIdVersionedSymbolProcessorProvider
 import com.tschuchort.compiletesting.KotlinCompilation
@@ -26,7 +25,7 @@ internal class ContractStateAndCommandDataSymbolProcessorProviderTest : Processo
         }
 
         result.exitCode shouldBe KotlinCompilation.ExitCode.OK
-        result.getGeneratedMetaInfServices<CommandDataSerializerRegistryProvider>() shouldBe "com.ing.zkflow.zktransaction.TestCommandSerializerProvider"
+        result.getGeneratedMetaInfServices<SerializerRegistryProvider>() shouldBe "com.ing.zkflow.zktransaction.TestCommandSerializerProvider"
     }
 
     @Test
@@ -40,7 +39,7 @@ internal class ContractStateAndCommandDataSymbolProcessorProviderTest : Processo
         }
 
         result.exitCode shouldBe KotlinCompilation.ExitCode.OK
-        result.getGeneratedMetaInfServices<CommandDataSerializerRegistryProvider>() shouldBe "com.ing.zkflow.zktransaction.ContainerTestNestedCommandSerializerProvider"
+        result.getGeneratedMetaInfServices<SerializerRegistryProvider>() shouldBe "com.ing.zkflow.zktransaction.ContainerTestNestedCommandSerializerProvider"
     }
 
     @Test
@@ -68,7 +67,7 @@ internal class ContractStateAndCommandDataSymbolProcessorProviderTest : Processo
         }
 
         result.exitCode shouldBe KotlinCompilation.ExitCode.OK
-        result.getGeneratedMetaInfServices<ContractStateSerializerRegistryProvider>() shouldBe "com.ing.zkflow.zktransaction.TestStateSerializerProvider"
+        result.getGeneratedMetaInfServices<SerializerRegistryProvider>() shouldBe "com.ing.zkflow.zktransaction.TestStateSerializerProvider"
     }
 
     companion object {
