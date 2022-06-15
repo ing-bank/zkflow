@@ -14,6 +14,7 @@ import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.annotations.ZKPSurrogate
+import com.ing.zkflow.common.contracts.ZKUpgradeCommandData
 import com.ing.zkflow.common.serialization.SerializerRegistryProvider
 import com.ing.zkflow.common.versioning.Versioned
 import com.ing.zkflow.ksp.MetaInfServiceRegister
@@ -87,10 +88,11 @@ class StableIdVersionedSymbolProcessor(private val logger: KSPLogger, private va
 
         populateSurrogatesCache(resolver)
 
-        // 0. collect all versioned classes.
+        // Ensure that all relevant classes have a ZKP annotation or are covered by a surrogate
         ensureZKPAnnotatedOrSurrogateExists(newFiles, ContractState::class)
         ensureZKPAnnotatedOrSurrogateExists(newFiles, CommandData::class)
 
+        // 0. collect all classes that should be versioned, i.e. all ZKP-annotated classes
         val zkpAnnotated: Sequence<KSClassDeclaration> = findClassesOrObjectsAnnotatedWithZKP(resolver)
         val versionMarkerInterfaces: List<KSClassDeclaration> = findVersionMarkerInterfaces(newFiles)
 
@@ -249,7 +251,9 @@ class StableIdVersionedSymbolProcessor(private val logger: KSPLogger, private va
         val zkpAnnotated = resolver.findClassesOrObjectsWithAnnotation(ZKP::class.qualifiedName!!)
         val zkpSurrogateAnnotated = resolver.findClassesOrObjectsWithAnnotation(ZKPSurrogate::class.qualifiedName!!)
 
-        return zkpAnnotated + zkpSurrogateAnnotated
+        // We ignore classes implementing ZKUpgradeCommandData: they are the result of previous code generation runs
+        // and should not be processed again.
+        return (zkpAnnotated + zkpSurrogateAnnotated).filterNot { it.implementsInterface(ZKUpgradeCommandData::class) }
     }
 
     private fun hasSurrogate(clazz: KSClassDeclaration): Boolean = surrogatesCache.contains(clazz)

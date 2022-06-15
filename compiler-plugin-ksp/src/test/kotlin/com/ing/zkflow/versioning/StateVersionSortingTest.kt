@@ -39,6 +39,19 @@ class StateVersionSortingTest : ProcessorTest(StableIdVersionedSymbolProcessorPr
     }
 
     @Test
+    fun `upgrade commands don't need a version marker interface`() {
+        val outputStream = ByteArrayOutputStream()
+        val result = compile(upgradeCommandsWithoutVersionMarker, outputStream)
+
+        // In case of error, show output
+        if (result.exitCode != KotlinCompilation.ExitCode.OK) {
+            reportError(result, outputStream)
+        }
+
+        result.exitCode shouldBe KotlinCompilation.ExitCode.OK
+    }
+
+    @Test
     fun `there must be exactly one group member without an upgrade constructor`() {
         val outputStream = ByteArrayOutputStream()
         val result = compile(missingUpgradeConstructors, outputStream)
@@ -107,6 +120,43 @@ class StateVersionSortingTest : ProcessorTest(StableIdVersionedSymbolProcessorPr
                 }
             """
         )
+
+        private val upgradeCommandsWithoutVersionMarker = SourceFile.kotlin(
+            "UpgradeCommandsWithoutVersionMarker.kt",
+            """
+                package com.ing.zkflow.contract
+
+                import com.ing.zkflow.annotations.ZKP
+                import com.ing.zkflow.common.contracts.ZKUpgradeCommandData
+                import com.ing.zkflow.common.versioning.Versioned
+                import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
+
+                interface VersionedZebra: Versioned
+
+                @ZKP
+                class ZebraV1ToZebraV2: ZKUpgradeCommandData {
+                    override val metadata: ResolvedZKCommandMetadata = commandMetadata {
+                        inputs { private(ZebraV1::class) at 0 }
+                        outputs { private(ZebraV2::class) at 0 }
+                        numberOfSigners = 1
+                    }
+                }
+
+                @ZKP
+                class ZebraV1(): IZebra
+
+                @ZKP
+                class ZebraV2(): IZebra {
+                    constructor(zebraV1: ZebraV1): this()
+                }
+
+                @ZKP
+                class Zebra(): IZebra {
+                    constructor(zebraV2: ZebraV2): this()
+                }
+            """
+        )
+
         private val missingUpgradeConstructors = SourceFile.kotlin(
             "MissingUpgradeConstructors.kt",
             """
