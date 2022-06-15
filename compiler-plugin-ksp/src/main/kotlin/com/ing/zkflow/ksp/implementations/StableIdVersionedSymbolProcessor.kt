@@ -15,7 +15,6 @@ import com.google.devtools.ksp.symbol.KSType
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.annotations.ZKPSurrogate
 import com.ing.zkflow.common.contracts.ZKUpgradeCommandData
-import com.ing.zkflow.common.serialization.SerializerRegistryProvider
 import com.ing.zkflow.common.versioning.Versioned
 import com.ing.zkflow.ksp.MetaInfServiceRegister
 import com.ing.zkflow.ksp.getAllImplementedInterfaces
@@ -76,12 +75,7 @@ class StableIdVersionedSymbolProcessor(private val logger: KSPLogger, private va
 
     private val metaInfServiceRegister = MetaInfServiceRegister(codeGenerator)
 
-    private val serializerRegistryProcessor =
-        SerializerRegistryProcessor(
-            Any::class,
-            SerializerRegistryProvider::class,
-            codeGenerator
-        )
+    private val serializerRegistryProcessor = SerializerRegistryProcessor(codeGenerator)
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
         val newFiles = getNewFiles(resolver)
@@ -183,7 +177,7 @@ class StableIdVersionedSymbolProcessor(private val logger: KSPLogger, private va
     }
 
     private fun Map<KSClassDeclaration, List<KSClassDeclaration>>.generateIdsAndProcessWith(
-        processor: SerializerRegistryProcessor<out Any>,
+        processor: SerializerRegistryProcessor,
         additionalClasses: Map<SerializerRegistryProcessor.GeneratedSerializer, Int> = emptyMap()
     ): ServiceLoaderRegistration {
         val sortedWithIds = VersionedStateIdGenerator

@@ -27,6 +27,9 @@ import kotlin.reflect.KClass
  * Interface to allow registration of serializers through providers.
  * At runtime, all such providers will be picked up and injected to
  * [BFLSerializationScheme]
+ *
+ * To make sure that the `serializer` matches the `klass`,
+ * the type parameter for `klass` and `serializer` must be the same type.
  */
 data class KClassSerializer<out T : Any>(
     val klass: KClass<out T>,
@@ -41,13 +44,14 @@ data class KClassSerializer<out T : Any>(
     val serializer: KSerializer<out T>
 )
 
-interface KClassSerializerProvider<T : Any> {
-    fun get(): KClassSerializer<T>
+interface KClassSerializerProvider {
+    fun get(): KClassSerializer<*>
 }
 
-interface SerializerRegistryProvider : KClassSerializerProvider<Any>
-
-interface SurrogateSerializerRegistryProvider : KClassSerializerProvider<Any>
+// This separate interface exists only because the KSP compiler plugin is now set up in such a way that we can't populate the generic
+// KClassSerializerProvider in one go for normal serializers and surrogates.
+// This may change later, in which case these interfaces may be removed.
+interface SurrogateSerializerRegistryProvider : KClassSerializerProvider
 
 abstract class SerializerRegistry<T : Any> {
     private val log = LoggerFactory.getLogger(this::class.java)

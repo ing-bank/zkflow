@@ -1,6 +1,6 @@
 package com.ing.zkflow.versioning
 
-import com.ing.zkflow.common.serialization.SerializerRegistryProvider
+import com.ing.zkflow.common.serialization.KClassSerializerProvider
 import com.ing.zkflow.ksp.ProcessorTest
 import com.ing.zkflow.processors.StableIdVersionedSymbolProcessorProvider
 import com.tschuchort.compiletesting.KotlinCompilation
@@ -21,7 +21,7 @@ class StableIdVersionedSymbolProcessorProviderTest : ProcessorTest(StableIdVersi
         }
 
         result.exitCode shouldBe KotlinCompilation.ExitCode.OK
-        result.getGeneratedMetaInfServices<SerializerRegistryProvider>() shouldContain """
+        result.getGeneratedMetaInfServices<KClassSerializerProvider>() shouldContain """
                 com.ing.zkflow.contract.ZebraV1SerializerProvider
                 com.ing.zkflow.contract.ZebraV2SerializerProvider
                 com.ing.zkflow.contract.ZebraSerializerProvider
@@ -125,7 +125,7 @@ class StableIdVersionedSymbolProcessorProviderTest : ProcessorTest(StableIdVersi
                 interface IHorse: Versioned
 
                 @ZKP
-                class ZebraV1(): IZebra {
+                class ZebraV1: IZebra {
                     override val participants: List<AnonymousParty> = emptyList()
                 }
 
@@ -142,7 +142,7 @@ class StableIdVersionedSymbolProcessorProviderTest : ProcessorTest(StableIdVersi
                 }
 
                 @ZKP
-                class HorseV1(): ZKContractState, IHorse {
+                class HorseV1: ZKContractState, IHorse {
                     override val participants: List<AnonymousParty> = emptyList()
                 }
 

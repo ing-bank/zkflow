@@ -2,21 +2,21 @@ package com.ing.zkflow.zinc.poet.generate
 
 import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.network.ZKNetworkParametersServiceLoader
-import com.ing.zkflow.common.serialization.SerializerRegistryProvider
+import com.ing.zkflow.common.serialization.KClassSerializerProvider
 import com.ing.zkflow.zinc.poet.generate.types.CommandContextFactory
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes
 import net.corda.core.internal.objectOrNewInstance
 import java.util.ServiceLoader
 import kotlin.reflect.full.isSubclassOf
 
-fun instantiateZkCommands(commandRegistryProviders: Iterable<SerializerRegistryProvider>): List<ZKCommandData> =
+fun instantiateZkCommands(commandRegistryProviders: Iterable<KClassSerializerProvider>): List<ZKCommandData> =
     commandRegistryProviders
         .map { it.get().klass }
         .filter { it.isSubclassOf(ZKCommandData::class) }
         .map { it.objectOrNewInstance() as ZKCommandData }
 
 fun main() {
-    val commandDataSerializerRegistryProviders = ServiceLoader.load(SerializerRegistryProvider::class.java)
+    val commandDataSerializerRegistryProviders = ServiceLoader.load(KClassSerializerProvider::class.java)
     instantiateZkCommands(commandDataSerializerRegistryProviders).forEach {
         circuitGenerator.generateCircuitFor(it)
     }

@@ -11,25 +11,21 @@ import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import com.squareup.kotlinpoet.STAR
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.buildCodeBlock
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.writeTo
-import kotlin.reflect.KClass
 
-class SerializerRegistryProcessor<T : Any>(
-    private val interfaceClass: KClass<T>,
-    private val mapProviderInterface: KClass<out KClassSerializerProvider<in T>>,
-    private val codeGenerator: CodeGenerator
-) {
+class SerializerRegistryProcessor(private val codeGenerator: CodeGenerator) {
 
     fun process(implementations: Map<GeneratedSerializer, Int>): ServiceLoaderRegistration {
         val mapProviderClasses = implementations.entries
             .map { (implementationClass, implementationId) ->
                 generateProvider(implementationClass, implementationId)
             }
-        return ServiceLoaderRegistration(mapProviderInterface, mapProviderClasses)
+        return ServiceLoaderRegistration(KClassSerializerProvider::class, mapProviderClasses)
     }
 
     private fun generateProvider(
@@ -40,15 +36,11 @@ class SerializerRegistryProcessor<T : Any>(
         FileSpec.builder(generatedSerializer.className.packageName, className)
             .addType(
                 TypeSpec.classBuilder(className)
-                    .addSuperinterface(mapProviderInterface)
+                    .addSuperinterface(KClassSerializerProvider::class)
                     .addFunction(
                         FunSpec.builder("get")
                             .addModifiers(KModifier.OVERRIDE)
-                            .returns(
-                                KClassSerializer::class.asClassName().parameterizedBy(
-                                    interfaceClass.asClassName()
-                                )
-                            )
+                            .returns(KClassSerializer::class.asClassName().parameterizedBy(STAR))
                             .addCode(
                                 buildCodeBlock {
                                     addStatement(

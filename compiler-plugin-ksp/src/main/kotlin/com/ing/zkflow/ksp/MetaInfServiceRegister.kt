@@ -21,10 +21,10 @@ class MetaInfServiceRegister(private val codeGenerator: CodeGenerator) {
         if (dirty) {
             services.entries.forEach { (kClass, implementations) ->
                 codeGenerator.createNewFile(
-                    Dependencies(false),
-                    "META-INF/services",
-                    kClass.packageName,
-                    kClass.simpleName!!
+                    dependencies = Dependencies(false),
+                    packageName = "META-INF/services",
+                    fileName = kClass.packageName,
+                    extensionName = kClass.simpleName!!
                 ).appendText(
                     implementations.joinToString("\n") { it }
                 )
