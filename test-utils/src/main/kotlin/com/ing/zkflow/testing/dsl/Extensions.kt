@@ -2,7 +2,7 @@ package com.ing.zkflow.testing.dsl
 
 import TestZKLedgerDSLInterpreter
 import com.ing.zkflow.common.network.ZKNetworkParameters
-import com.ing.zkflow.common.serialization.BFLSerializationScheme.Companion.CommandDataSerializerRegistry
+import com.ing.zkflow.common.serialization.CommandDataSerializerRegistry
 import com.ing.zkflow.common.zkp.ZKTransactionService
 import com.ing.zkflow.node.services.InMemoryZKVerifierTransactionStorage
 import com.ing.zkflow.node.services.ZKWritableVerifierTransactionStorage

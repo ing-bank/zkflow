@@ -17,10 +17,13 @@ import net.corda.core.contracts.AlwaysAcceptAttachmentConstraint
 import net.corda.core.contracts.AttachmentConstraint
 import net.corda.core.contracts.AutomaticHashConstraint
 import net.corda.core.contracts.AutomaticPlaceholderConstraint
+import net.corda.core.contracts.CommandData
+import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.HashAttachmentConstraint
 import net.corda.core.contracts.SignatureAttachmentConstraint
 import net.corda.core.contracts.WhitelistedByZoneAttachmentConstraint
 import org.slf4j.LoggerFactory
+import java.util.ServiceLoader
 import kotlin.reflect.KClass
 
 /**
@@ -58,6 +61,20 @@ abstract class SerializerRegistry<T : Any> {
     private val obj2Id = mutableMapOf<KClass<out T>, Int>()
     private val objId2Serializer = mutableMapOf<Int, KSerializer<out T>>()
 
+    init {
+        log.debug("Adding available serializers to ${this::class}")
+        getAllKClassSerializerProviders().map { it.get() }
+            .also { if (it.isEmpty()) log.debug("No serializers found") }
+            .forEach { (forKClass, id, serializer) ->
+                @Suppress("UNCHECKED_CAST")
+                if (forKClass as? KClass<T> != null) {
+                    log.debug("Registering serializer for $forKClass")
+                    serializer as KSerializer<T>
+                    register(KClassSerializer(forKClass, id, serializer))
+                }
+            }
+    }
+
     /**
      * Register a class and associated serializer
      *
@@ -93,10 +110,22 @@ abstract class SerializerRegistry<T : Any> {
      * or for T. And we can know for sure that it is a T. This is why we can safely cast to T without the variance annotation on retrieval.
      */
     @Suppress("UNCHECKED_CAST")
-    operator fun get(id: Int): KSerializer<T> = (objId2Serializer[id] ?: throw SerializerRegistryError.ClassNotRegistered(id)) as KSerializer<T>
+    operator fun get(id: Int): KSerializer<T> =
+        (objId2Serializer[id] ?: throw SerializerRegistryError.ClassNotRegistered(id)) as KSerializer<T>
 
     operator fun get(klass: KClass<out T>): KSerializer<T> = get(identify(klass))
 }
+
+/**
+ * Returns a lazy, cached list of all KClassSerializerProviders found through the ServiceLoader.
+ * This is lazy and cached because the iterators returned by `ServiceLoader.load()` are lazy and cached.
+ */
+fun getAllKClassSerializerProviders(): List<KClassSerializerProvider> =
+    (ServiceLoader.load(KClassSerializerProvider::class.java) +
+        ServiceLoader.load(SurrogateSerializerRegistryProvider::class.java))
+
+object ContractStateSerializerRegistry : SerializerRegistry<ContractState>()
+object CommandDataSerializerRegistry : SerializerRegistry<CommandData>()
 
 /**
  * Register a class and associated serializer

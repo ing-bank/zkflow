@@ -46,48 +46,12 @@ import net.corda.core.serialization.internal.CustomSerializationSchemeUtils.Comp
 import net.corda.core.utilities.ByteSequence
 import net.corda.core.utilities.loggerFor
 import net.corda.serialization.internal.CordaSerializationMagic
-import org.slf4j.LoggerFactory
 import java.nio.file.Files
 import java.security.PublicKey
-import java.util.ServiceLoader
-import kotlin.reflect.KClass
-import kotlin.reflect.full.isSubclassOf
 
 open class BFLSerializationScheme : CustomSerializationScheme {
     companion object {
         const val SCHEME_ID = 713325187
-
-        object ContractStateSerializerRegistry : SerializerRegistry<ContractState>()
-        object CommandDataSerializerRegistry : SerializerRegistry<CommandData>()
-
-        init {
-            val log = LoggerFactory.getLogger(this::class.java)
-
-            log.debug("Adding available serializers to the SerializerRegistries")
-            (
-                ServiceLoader.load(KClassSerializerProvider::class.java).map { it.get() } +
-                    ServiceLoader.load(SurrogateSerializerRegistryProvider::class.java).map { it.get() }
-                )
-                .also { if (it.isEmpty()) log.debug("No serializers found") }
-                .forEach { (forKClass, id, serializer) ->
-                    @Suppress("UNCHECKED_CAST")
-                    when {
-                        forKClass.isSubclassOf(ContractState::class) -> {
-                            forKClass as KClass<ContractState>
-                            serializer as KSerializer<ContractState>
-                            ContractStateSerializerRegistry.register(KClassSerializer<ContractState>(forKClass, id, serializer))
-                        }
-                        forKClass.isSubclassOf(CommandData::class) -> {
-                            forKClass as KClass<CommandData>
-                            serializer as KSerializer<CommandData>
-                            CommandDataSerializerRegistry.register(KClassSerializer<CommandData>(forKClass, id, serializer))
-                        }
-                        else -> log.debug(
-                            "Serializer for `$forKClass` is neither a subclass of `${CommandData::class.qualifiedName}` or ${ContractState::class.qualifiedName}"
-                        )
-                    }
-                }
-        }
     }
 
     override fun getSchemeId() = SCHEME_ID

@@ -2,7 +2,7 @@ package com.ing.zkflow
 
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.annotations.ZKPSurrogate
-import com.ing.zkflow.common.serialization.BFLSerializationScheme
+import com.ing.zkflow.common.serialization.ContractStateSerializerRegistry
 import com.ing.zkflow.common.versioning.Versioned
 import net.corda.core.contracts.ContractState
 import net.corda.core.identity.AbstractParty
@@ -12,12 +12,9 @@ import org.junit.Test
 class BFLSerializationRegistrationTest {
     @Test
     fun `Classes annotated with ZKPSurrogate must be registered`() {
-        // Scheme must be instantiated, otherwise its companion object won't be computed.
-        BFLSerializationScheme()
-
         // Successfully accessing the registration means that the serializer has been registered.
-        BFLSerializationScheme.Companion.ContractStateSerializerRegistry[My3rdPartyClass::class]
-        BFLSerializationScheme.Companion.ContractStateSerializerRegistry[MyState::class]
+        ContractStateSerializerRegistry[My3rdPartyClass::class]
+        ContractStateSerializerRegistry[MyState::class]
     }
 }
 

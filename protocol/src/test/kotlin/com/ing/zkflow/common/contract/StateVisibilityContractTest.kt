@@ -6,7 +6,8 @@ import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.contracts.ZKContract
 import com.ing.zkflow.common.contracts.ZKContractState
 import com.ing.zkflow.common.contracts.renderIllegalPublicOnlyStatesError
-import com.ing.zkflow.common.serialization.BFLSerializationScheme
+import com.ing.zkflow.common.serialization.CommandDataSerializerRegistry
+import com.ing.zkflow.common.serialization.ContractStateSerializerRegistry
 import com.ing.zkflow.common.versioning.Versioned
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.common.zkp.metadata.commandMetadata
@@ -273,7 +274,7 @@ class LocalNormalContract : Contract {
 
         init {
             tryNonFailing {
-                BFLSerializationScheme.Companion.ContractStateSerializerRegistry.register(this::class, serializer())
+                ContractStateSerializerRegistry.register(this::class, serializer())
             }
         }
     }
@@ -283,7 +284,7 @@ class LocalNormalContract : Contract {
     class MovePublic : CommandData {
         init {
             tryNonFailing {
-                BFLSerializationScheme.Companion.CommandDataSerializerRegistry.register(this::class, serializer())
+                CommandDataSerializerRegistry.register(this::class, serializer())
             }
         }
     }
@@ -302,7 +303,7 @@ class LocalZKContract : ZKContract, Contract {
     class CreatePublicExplicitly : ZKCommandData, Versioned {
         init {
             tryNonFailing {
-                BFLSerializationScheme.Companion.CommandDataSerializerRegistry.register(this::class, serializer())
+                CommandDataSerializerRegistry.register(this::class, serializer())
             }
         }
 
@@ -320,7 +321,7 @@ class LocalZKContract : ZKContract, Contract {
     class CreateMultiplePublicAndPrivate : ZKCommandData, Versioned {
         init {
             tryNonFailing {
-                BFLSerializationScheme.Companion.CommandDataSerializerRegistry.register(this::class, serializer())
+                CommandDataSerializerRegistry.register(this::class, serializer())
             }
         }
 
@@ -342,7 +343,7 @@ class LocalZKContract : ZKContract, Contract {
     class CreatePrivate : ZKCommandData, Versioned {
         init {
             tryNonFailing {
-                BFLSerializationScheme.Companion.CommandDataSerializerRegistry.register(this::class, serializer())
+                CommandDataSerializerRegistry.register(this::class, serializer())
             }
         }
 
@@ -360,7 +361,7 @@ class LocalZKContract : ZKContract, Contract {
     class SplitAnyToPrivateAndPublic : ZKCommandData, Versioned {
         init {
             tryNonFailing {
-                BFLSerializationScheme.Companion.CommandDataSerializerRegistry.register(this::class, serializer())
+                CommandDataSerializerRegistry.register(this::class, serializer())
             }
         }
 
@@ -382,7 +383,7 @@ class LocalZKContract : ZKContract, Contract {
     class MoveAnyToPrivate : ZKCommandData, Versioned {
         init {
             tryNonFailing {
-                BFLSerializationScheme.Companion.CommandDataSerializerRegistry.register(this::class, serializer())
+                CommandDataSerializerRegistry.register(this::class, serializer())
             }
         }
 
@@ -403,7 +404,7 @@ class LocalZKContract : ZKContract, Contract {
     class MovePrivateToPublic : ZKCommandData, Versioned {
         init {
             tryNonFailing {
-                BFLSerializationScheme.Companion.CommandDataSerializerRegistry.register(this::class, serializer())
+                CommandDataSerializerRegistry.register(this::class, serializer())
             }
         }
 
@@ -428,7 +429,7 @@ class LocalZKContract : ZKContract, Contract {
     class MoveFullyPrivate : ZKCommandData, Versioned {
         init {
             tryNonFailing {
-                BFLSerializationScheme.Companion.CommandDataSerializerRegistry.register(this::class, serializer())
+                CommandDataSerializerRegistry.register(this::class, serializer())
             }
         }
 
@@ -460,7 +461,7 @@ data class SomeOtherZKState(
 
     init {
         tryNonFailing {
-            BFLSerializationScheme.Companion.ContractStateSerializerRegistry.register(this::class, serializer())
+            ContractStateSerializerRegistry.register(this::class, serializer())
         }
     }
 }
@@ -479,7 +480,7 @@ data class ZKTestState(
 
     init {
         tryNonFailing {
-            BFLSerializationScheme.Companion.ContractStateSerializerRegistry.register(this::class, serializer())
+            ContractStateSerializerRegistry.register(this::class, serializer())
         }
     }
 }
