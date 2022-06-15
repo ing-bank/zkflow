@@ -3,7 +3,6 @@ package com.ing.zkflow.integration.contract
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.annotations.corda.EdDSA
 import com.ing.zkflow.common.contracts.ZKCommandData
-import com.ing.zkflow.common.contracts.ZKOwnableState
 import com.ing.zkflow.common.versioning.Versioned
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.common.zkp.metadata.commandMetadata
@@ -14,6 +13,8 @@ import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.CommandWithParties
 import net.corda.core.contracts.Contract
 import net.corda.core.contracts.ContractClassName
+import net.corda.core.contracts.OwnableState
+import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.transactions.LedgerTransaction
 import java.util.Random
@@ -24,7 +25,7 @@ class TestContract : Contract {
         const val PROGRAM_ID: ContractClassName = "com.ing.zkflow.integration.contract.TestContract"
     }
 
-    interface VersionedTestState : Versioned, ZKOwnableState
+    interface VersionedTestState : Versioned, OwnableState
 
     @BelongsToContract(TestContract::class)
     @ZKP
@@ -34,8 +35,10 @@ class TestContract : Contract {
     ) : VersionedTestState {
         override val participants: List<AnonymousParty> = listOf(owner)
 
-        override fun withNewOwner(newOwner: AnonymousParty): CommandAndState =
-            CommandAndState(MoveAnyToPrivate(), copy(owner = newOwner))
+        override fun withNewOwner(newOwner: AbstractParty): CommandAndState {
+            require(newOwner is AnonymousParty)
+            return CommandAndState(MoveAnyToPrivate(), copy(owner = newOwner))
+        }
     }
 
     // Commands

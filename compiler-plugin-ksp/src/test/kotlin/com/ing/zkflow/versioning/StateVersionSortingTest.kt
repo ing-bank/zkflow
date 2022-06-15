@@ -21,7 +21,7 @@ class StateVersionSortingTest : ProcessorTest(StableIdVersionedSymbolProcessorPr
         }
 
         result.exitCode shouldBe KotlinCompilation.ExitCode.OK
-        result.messages.shouldContain("Sorted version group IZebra: ZebraV1, ZebraV2, Zebra")
+        result.messages shouldContain "Sorted version group IZebra: ZebraV1, ZebraV2, Zebra"
     }
 
     @Test
@@ -29,13 +29,8 @@ class StateVersionSortingTest : ProcessorTest(StableIdVersionedSymbolProcessorPr
         val outputStream = ByteArrayOutputStream()
         val result = compile(tooManyUpgradeConstructors, outputStream)
 
-        // In case of error, show output
-        if (result.exitCode != KotlinCompilation.ExitCode.OK) {
-            reportError(result, outputStream)
-        }
-
         result.exitCode shouldBe KotlinCompilation.ExitCode.COMPILATION_ERROR
-        result.messages.shouldContain("ZebraV2 should have exactly one upgrade constructor. Found 2.")
+        result.messages shouldContain "ZebraV2 should have exactly one upgrade constructor. Found 2."
     }
 
     @Test
@@ -56,11 +51,6 @@ class StateVersionSortingTest : ProcessorTest(StableIdVersionedSymbolProcessorPr
         val outputStream = ByteArrayOutputStream()
         val result = compile(missingUpgradeConstructors, outputStream)
 
-        // In case of error, show output
-        if (result.exitCode != KotlinCompilation.ExitCode.OK) {
-            reportError(result, outputStream)
-        }
-
         result.exitCode shouldBe KotlinCompilation.ExitCode.COMPILATION_ERROR
         result.messages.shouldContain(
             "In version groups, there must be exactly one version group member without a constructor " +
@@ -72,11 +62,6 @@ class StateVersionSortingTest : ProcessorTest(StableIdVersionedSymbolProcessorPr
     fun `members of version groups should not have circular upgrade routes`() {
         val outputStream = ByteArrayOutputStream()
         val result = compile(circularUpgradeConstructors, outputStream)
-
-        // In case of error, show output
-        if (result.exitCode != KotlinCompilation.ExitCode.OK) {
-            reportError(result, outputStream)
-        }
 
         result.exitCode shouldBe KotlinCompilation.ExitCode.COMPILATION_ERROR
         result.messages.shouldContain(
@@ -187,10 +172,10 @@ class StateVersionSortingTest : ProcessorTest(StableIdVersionedSymbolProcessorPr
 
                 import com.ing.zkflow.annotations.ZKP
                 import com.ing.zkflow.common.contracts.ZKCommandData
-                import com.ing.zkflow.common.contracts.ZKContractState
                 import com.ing.zkflow.common.versioning.Versioned
+                import net.corda.core.contracts.ContractState
 
-                interface IZebra: Versioned, ZKContractState
+                interface IZebra: Versioned, ContractState
 
                 @ZKP
                 class ZebraV1(): IZebra {
@@ -218,10 +203,10 @@ class StateVersionSortingTest : ProcessorTest(StableIdVersionedSymbolProcessorPr
 
                 import com.ing.zkflow.annotations.ZKP
                 import com.ing.zkflow.common.contracts.ZKCommandData
-                import com.ing.zkflow.common.contracts.ZKContractState
+                import net.corda.core.contracts.ContractState
                 import com.ing.zkflow.common.versioning.Versioned
 
-                interface IZebra: Versioned, ZKContractState
+                interface IZebra: Versioned, ContractState
 
                 @ZKP
                 class ZebraV1(): IZebra {

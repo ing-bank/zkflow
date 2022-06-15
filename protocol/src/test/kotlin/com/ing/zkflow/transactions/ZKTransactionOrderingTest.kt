@@ -2,7 +2,6 @@ package com.ing.zkflow.transactions
 
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.common.contracts.ZKCommandData
-import com.ing.zkflow.common.contracts.ZKContractState
 import com.ing.zkflow.common.transactions.UtxoInfo
 import com.ing.zkflow.common.transactions.ZKTransactionBuilder
 import com.ing.zkflow.common.versioning.Versioned
@@ -55,7 +54,7 @@ import kotlin.test.assertTrue
  * from the WireTransaction.
  */
 class ZKTransactionOrderingTest {
-    private val outputs = mutableListOf<ZKContractState>()
+    private val outputs = mutableListOf<ContractState>()
     private val inputs = mutableListOf<StateAndRef<ContractState>>()
     private val inputUtxoInfos = mutableListOf<UtxoInfo>()
     private val refs = mutableListOf<ReferencedStateAndRef<ContractState>>()
@@ -232,7 +231,7 @@ class DummyZKStateA(
     @Serializable(with = IntSerializer::class) val value: Int,
     @Serializable(with = IntSetSerializer::class) val set: Set<Int>,
     @Serializable(with = ParticipantsSerializer::class) override val participants: List<@Contextual AnonymousParty>
-) : ZKContractState, Versioned {
+) : ContractState, Versioned {
     companion object {
         fun newState(): DummyZKStateA {
             val alice = TestIdentity.fresh("Alice")
@@ -262,7 +261,7 @@ class DummyZKStateB(
     @Serializable(with = IntSerializer::class) val value: Int,
     @Serializable(with = IntSetSerializer::class) val set: Set<Int>,
     @Serializable(with = ParticipantsSerializer::class) override val participants: List<@Contextual AnonymousParty>
-) : ZKContractState, Versioned {
+) : ContractState, Versioned {
     companion object {
         fun newState(): DummyZKStateB {
             val alice = TestIdentity.fresh("Alice")

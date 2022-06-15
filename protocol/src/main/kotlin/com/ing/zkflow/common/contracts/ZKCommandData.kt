@@ -1,9 +1,7 @@
 package com.ing.zkflow.common.contracts
 
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
-import net.corda.core.contracts.Command
 import net.corda.core.contracts.CommandData
-import net.corda.core.contracts.CommandWithParties
 import org.intellij.lang.annotations.Language
 
 /**
@@ -17,19 +15,20 @@ interface ZKUpgradeCommandData : ZKCommandData
 interface ZKCommandData : CommandData {
     val metadata: ResolvedZKCommandMetadata
 
+    /**
+     * This function is the verification function for the private transaction components as described in the metadata.
+     * It returns a string of valid Zinc code.
+     *
+     * To determine which types are available in the CommandContext (which contains all secret transaction components) for this command,
+     * you can inspect the directory that describes the structure of what is sent to Zinc: `build/zinc/<command_name_in_camel_case>/structure`.
+     */
     @Language("Rust")
-    fun verifyPrivate(): String =
-        """
+    fun verifyPrivate(): String = """
             mod module_command_context;
             use module_command_context::CommandContext;
             
             fn verify(ctx: CommandContext) {
                 assert!(true != false, "Reality is in an inconsistent state.");
             } 
-        """.trimIndent()
-}
-
-fun <T : CommandData> CommandWithParties<T>.toZKCommand(): Command<ZKCommandData> {
-    require(value is ZKCommandData) { "CommandData must implement ZKCommandData" }
-    return Command(value as ZKCommandData, signers)
+    """.trimIndent()
 }

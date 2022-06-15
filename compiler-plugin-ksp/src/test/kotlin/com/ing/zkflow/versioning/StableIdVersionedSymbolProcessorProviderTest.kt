@@ -12,7 +12,7 @@ import java.io.ByteArrayOutputStream
 
 class StableIdVersionedSymbolProcessorProviderTest : ProcessorTest(StableIdVersionedSymbolProcessorProvider()) {
     @Test
-    fun `Stable id's must be generated for all Versioned ZKContractStates`() {
+    fun `Stable id's must be generated for all Versioned ContractStates`() {
         val outputStream = ByteArrayOutputStream()
         val result = compile(kotlinFile, outputStream)
 
@@ -117,11 +117,11 @@ class StableIdVersionedSymbolProcessorProviderTest : ProcessorTest(StableIdVersi
                 package com.ing.zkflow.contract
 
                 import com.ing.zkflow.annotations.ZKP
-                import com.ing.zkflow.common.contracts.ZKContractState
                 import com.ing.zkflow.common.contracts.ZKCommandData
                 import com.ing.zkflow.common.versioning.Versioned
+                import net.corda.core.contracts.ContractState
 
-                interface IZebra: Versioned, ZKContractState
+                interface IZebra: Versioned, ContractState
                 interface IHorse: Versioned
 
                 @ZKP
@@ -142,18 +142,18 @@ class StableIdVersionedSymbolProcessorProviderTest : ProcessorTest(StableIdVersi
                 }
 
                 @ZKP
-                class HorseV1: ZKContractState, IHorse {
+                class HorseV1: ContractState, IHorse {
                     override val participants: List<AnonymousParty> = emptyList()
                 }
 
                 @ZKP
-                class HorseV2(): ZKContractState, IHorse {
+                class HorseV2(): ContractState, IHorse {
                     override val participants: List<AnonymousParty> = emptyList()
                     constructor(horseV1: HorseV1): this()
                 }
 
                 @ZKP
-                class Horse(): ZKContractState, IHorse {
+                class Horse(): ContractState, IHorse {
                     override val participants: List<AnonymousParty> = emptyList()
                     constructor(horseV2: HorseV2): this()
                 }
@@ -206,9 +206,9 @@ class StableIdVersionedSymbolProcessorProviderTest : ProcessorTest(StableIdVersi
             """
                 package com.ing.zkflow.contract
 
-                import com.ing.zkflow.common.contracts.ZKContractState
+                import net.corda.core.contracts.ContractState
     
-                class ZebraV1(): ZKContractState {
+                class ZebraV1(): ContractState {
                     override val participants: List<AnonymousParty> = emptyList()
                 }
             """
@@ -221,50 +221,50 @@ class StableIdVersionedSymbolProcessorProviderTest : ProcessorTest(StableIdVersi
 
                 import com.ing.zkflow.annotations.ZKP
                 import com.ing.zkflow.common.contracts.ZKCommandData
-                import com.ing.zkflow.common.contracts.ZKContractState
+                import net.corda.core.contracts.ContractState
                 import com.ing.zkflow.common.versioning.Versioned
     
                 interface IZebra: Versioned
                 interface IHorse: Versioned
     
                 @ZKP
-                class ZebraV1(): ZKContractState, IZebra {
+                class ZebraV1(): ContractState, IZebra {
                     override val participants: List<AnonymousParty> = emptyList()
                 }
     
                 @ZKP
-                class ZebraV2(): ZKContractState, IZebra {
+                class ZebraV2(): ContractState, IZebra {
                     override val participants: List<AnonymousParty> = emptyList()
                     constructor(zebraV1: ZebraV1): this()
                 }
     
                 @ZKP
-                class Zebra(): ZKContractState, IZebra {
+                class Zebra(): ContractState, IZebra {
                     override val participants: List<AnonymousParty> = emptyList()
                     constructor(zebraV2: ZebraV2): this()
                 }
     
                 @ZKP
-                class HorseV1(): ZKContractState, IHorse {
+                class HorseV1(): ContractState, IHorse {
                     override val participants: List<AnonymousParty> = emptyList()
                 }
     
                 @ZKP
-                class HorseV2(): ZKContractState, IHorse {
+                class HorseV2(): ContractState, IHorse {
                     override val participants: List<AnonymousParty> = emptyList()
                     constructor(horseV1: HorseV1): this()
                 }
     
                 @ZKP
-                class Horse(): ZKContractState, IHorse {
+                class Horse(): ContractState, IHorse {
                     override val participants: List<AnonymousParty> = emptyList()
                     constructor(horseV2: HorseV2): this()
                 }
                 
                 @ZKP
-                class UnversionedHorse(): ZKContractState
+                class UnversionedHorse(): ContractState
                 @ZKP
-                class UnversionedZebra(): ZKContractState
+                class UnversionedZebra(): ContractState
 
                 @ZKP
                 class UnversionedCommand() : ZKCommandData
