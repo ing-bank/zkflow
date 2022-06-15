@@ -1,8 +1,11 @@
 package com.ing.zkflow
 
+import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.annotations.ZKPSurrogate
 import com.ing.zkflow.common.serialization.BFLSerializationScheme
+import com.ing.zkflow.common.versioning.Versioned
 import net.corda.core.contracts.ContractState
+import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.AnonymousParty
 import org.junit.Test
 
@@ -14,6 +17,7 @@ class BFLSerializationRegistrationTest {
 
         // Successfully accessing the registration means that the serializer has been registered.
         BFLSerializationScheme.Companion.ContractStateSerializerRegistry[My3rdPartyClass::class]
+        BFLSerializationScheme.Companion.ContractStateSerializerRegistry[MyState::class]
     }
 }
 
@@ -30,4 +34,11 @@ data class My3rdPartyClass(val i: Int) : ContractState {
 
 object MyConverter : ConversionProvider<My3rdPartyClass, My3rdPartyClassSurrogate> {
     override fun from(original: My3rdPartyClass) = My3rdPartyClassSurrogate(original.i)
+}
+
+interface VersionedMyState : Versioned
+
+@ZKP
+data class MyState(val i: Int) : ContractState, VersionedMyState {
+    override val participants: List<AbstractParty> = emptyList()
 }

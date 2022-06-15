@@ -88,7 +88,7 @@ class StableIdVersionedSymbolProcessor(private val logger: KSPLogger, private va
 
         // 0. collect all classes that should be versioned, i.e. all ZKP-annotated classes
         val zkpAnnotated: Sequence<KSClassDeclaration> = findClassesOrObjectsAnnotatedWithZKP(resolver)
-        val versionMarkerInterfaces: List<KSClassDeclaration> = findVersionMarkerInterfaces(newFiles)
+        val versionMarkerInterfaces: Sequence<KSClassDeclaration> = findVersionMarkerInterfaces(newFiles)
 
         // 1. groups versioned classes within their version marker group, identified by a marker interface.
         val (unversioned, markerGroups) = groupByMarkerInterface(zkpAnnotated, versionMarkerInterfaces)
@@ -125,30 +125,28 @@ class StableIdVersionedSymbolProcessor(private val logger: KSPLogger, private va
     /**
      * All marker interfaces must directly extend [Versioned], not through any other interface.
      */
-    private fun ensureMarkersDirectlyImplementVersioned(versionMarkerInterfaces: List<KSClassDeclaration>) {
+    private fun ensureMarkersDirectlyImplementVersioned(versionMarkerInterfaces: Sequence<KSClassDeclaration>) {
         versionMarkerInterfaces.forEach {
             require(it.implementsInterfaceDirectly(Versioned::class)) {
-                "$it is an interface that extends a version marker interface. This is not allowed. " +
-                    "Version marker interfaces should only ever be implemented by @ZKP or @ZKPSurrogate annotated classes or objects. " +
-                    "If it is meant to be a version marker itself it must implement ${Versioned::class} directly. It does it indirectly. "
+                "$it is an interface that extends a version marker interface. This is not allowed. " + "Version marker interfaces should only ever be implemented by @ZKP or @ZKPSurrogate annotated classes or objects. " + "If it is meant to be a version marker itself it must implement ${Versioned::class} directly. It does it indirectly. "
             }
         }
     }
 
-    private fun ensureZKPAnnotatedOrSurrogateExists(newFiles: Set<KSFile>, kClass: KClass<*>) {
-        val implementors = findImplementors(newFiles, kClass)
-            .filter { (it.classKind == ClassKind.CLASS || it.classKind == ClassKind.OBJECT) && !it.isAbstract() }
+    private fun ensureZKPAnnotatedOrSurrogateExists(newFiles: Set<KSFile>, interfaceKClass: KClass<*>) {
+        val implementors = findImplementors(
+            newFiles,
+            interfaceKClass
+        ).filter { (it.classKind == ClassKind.CLASS || it.classKind == ClassKind.OBJECT) && !it.isAbstract() }
 
         implementors.forEach {
             require(
-                it.isAnnotationPresent(ZKP::class) ||
-                    it.isAnnotationPresent(ZKPSurrogate::class) ||
-                    hasSurrogate(it) ||
+                it.isAnnotationPresent(ZKP::class) || it.isAnnotationPresent(ZKPSurrogate::class) || it.hasSurrogate() ||
                     // If it has a @Serializable annotation, it is manually set as a serializable class, which implies that is a class that exists for testing purposes.
                     // This should never happen for user classes
                     it.isAnnotationPresent(kotlinx.serialization.Serializable::class)
             ) {
-                "${it.qualifiedName?.asString()} is a ${kClass.simpleName} and must therefore be annotated with either @${ZKP::class.simpleName} or @${ZKPSurrogate::class.simpleName}, or a surrogate must exist for it."
+                "${it.qualifiedName?.asString()} is a ${interfaceKClass.simpleName} and must therefore be annotated with either @${ZKP::class.simpleName} or @${ZKPSurrogate::class.simpleName}, or a surrogate must exist for it."
             }
         }
     }
@@ -164,16 +162,13 @@ class StableIdVersionedSymbolProcessor(private val logger: KSPLogger, private va
         sortedMarkerGroups: Map<KSClassDeclaration, List<KSClassDeclaration>>,
         interfaceClass: KClass<*>
     ): Map<KSClassDeclaration, List<KSClassDeclaration>> {
-        val contractStateFamilies = sortedMarkerGroups.mapNotNull { (group, implementors) ->
-            if (group.implementsInterface(interfaceClass)) {
-                group to implementors
-            } else if (implementors.any { it.implementsInterface(interfaceClass) }) {
-                group to implementors.filter { it.implementsInterface(interfaceClass) }
-            } else {
-                null
-            }
+        val contractStateGroups = sortedMarkerGroups.mapNotNull { (group, members) ->
+            if (group.implementsInterface(interfaceClass)) return@mapNotNull (group to members)
+
+            val implementors = members.filter { it.implementsInterface(interfaceClass) }
+            return@mapNotNull if (implementors.isNotEmpty()) group to implementors else null
         }.toMap()
-        return contractStateFamilies
+        return contractStateGroups
     }
 
     private fun Map<KSClassDeclaration, List<KSClassDeclaration>>.generateIdsAndProcessWith(
@@ -221,7 +216,7 @@ class StableIdVersionedSymbolProcessor(private val logger: KSPLogger, private va
      */
     private fun groupByMarkerInterface(
         zkpAnnotated: Sequence<KSClassDeclaration>,
-        versionMarkerInterfaces: List<KSClassDeclaration>
+        versionMarkerInterfaces: Sequence<KSClassDeclaration>
     ): Pair<List<KSClassDeclaration>, Map<KSClassDeclaration, List<KSClassDeclaration>>> {
         val groups = zkpAnnotated.map { annotatedClass ->
             annotatedClass.getAllImplementedInterfaces().singleOrNull { it in versionMarkerInterfaces } to annotatedClass
@@ -242,55 +237,55 @@ class StableIdVersionedSymbolProcessor(private val logger: KSPLogger, private va
     }
 
     private fun findClassesOrObjectsAnnotatedWithZKP(resolver: Resolver): Sequence<KSClassDeclaration> {
-        val zkpAnnotated = resolver.findClassesOrObjectsWithAnnotation(ZKP::class.qualifiedName!!)
-        val zkpSurrogateAnnotated = resolver.findClassesOrObjectsWithAnnotation(ZKPSurrogate::class.qualifiedName!!)
+        val zkpAnnotated = resolver.findClassesOrObjectsWithAnnotation(ZKP::class)
+        val zkpSurrogateAnnotated = resolver.findClassesOrObjectsWithAnnotation(ZKPSurrogate::class)
 
         // We ignore classes implementing ZKUpgradeCommandData: they are the result of previous code generation runs
         // and should not be processed again.
         return (zkpAnnotated + zkpSurrogateAnnotated).filterNot { it.implementsInterface(ZKUpgradeCommandData::class) }
     }
 
-    private fun hasSurrogate(clazz: KSClassDeclaration): Boolean = surrogatesCache.contains(clazz)
+    private fun KSClassDeclaration.hasSurrogate(): Boolean = surrogatesCache.contains(this)
 
     private fun populateSurrogatesCache(resolver: Resolver) {
-        resolver.findClassesOrObjectsWithAnnotation(ZKPSurrogate::class.qualifiedName!!).forEach { surrogate ->
-            surrogate.getAnnotationsByType(ZKPSurrogate::class).firstOrNull()?.let { surrogateAnnotation ->
-                val conversionProvider = (surrogateAnnotation.arguments[0].value as KSType).declaration as KSClassDeclaration
-                val fromFunction = conversionProvider.declarations
-                    .filterIsInstance<KSFunctionDeclaration>()
-                    .filter { it.simpleName.asString() == "from" }
-                    .single()
-                val surrogateFor = fromFunction.parameters.single().type.resolve().declaration as KSClassDeclaration
-                logger.info("Found surrogate: $surrogate for: $surrogateFor")
-                surrogatesCache[surrogateFor] = surrogate
-            }
+        resolver.findClassesOrObjectsWithAnnotation(ZKPSurrogate::class).forEach { surrogate ->
+            val surrogateAnnotation = surrogate.getAnnotationsByType(ZKPSurrogate::class).single()
+            val conversionProvider = (surrogateAnnotation.arguments[0].value as KSType).declaration as KSClassDeclaration
+            val fromFunction = conversionProvider.declarations
+                .filterIsInstance<KSFunctionDeclaration>()
+                .filter { it.simpleName.asString() == "from" }
+                .single()
+            val surrogateFor = fromFunction.parameters.single().type.resolve().declaration as KSClassDeclaration
+            logger.info("Found surrogate: $surrogate for: $surrogateFor")
+            surrogatesCache[surrogateFor] = surrogate
         }
     }
 
-    private fun Resolver.findClassesOrObjectsWithAnnotation(annotationName: String): Sequence<KSClassDeclaration> {
-        val symbols = getSymbolsWithAnnotation(annotationName).filterIsInstance<KSClassDeclaration>()
-            .filter { it.classKind in listOf(ClassKind.CLASS, ClassKind.OBJECT) }
+    private fun Resolver.findClassesOrObjectsWithAnnotation(annotationKClass: KClass<out Annotation>): Sequence<KSClassDeclaration> {
+        val annotationName = annotationKClass.qualifiedName!!
+        val symbols = getSymbolsWithAnnotation(annotationName).filterIsInstance<KSClassDeclaration>().filterNonAbstractClassesOrObjects()
         logger.info("Annotated with $annotationName: ${symbols.joinToString(", ")}")
         return symbols
     }
 
-    private fun findVersionMarkerInterfaces(newFiles: Set<KSFile>): List<KSClassDeclaration> {
+    private fun Sequence<KSClassDeclaration>.filterNonAbstractClassesOrObjects(): Sequence<KSClassDeclaration> =
+        filter { it.classKind in listOf(ClassKind.CLASS, ClassKind.OBJECT) && !it.isAbstract() }
+
+    private fun findVersionMarkerInterfaces(newFiles: Set<KSFile>): Sequence<KSClassDeclaration> {
         return findImplementors(newFiles, Versioned::class).filter { it.classKind == ClassKind.INTERFACE }
             .also { ensureMarkersDirectlyImplementVersioned(it) }
     }
 
-    private fun findImplementors(newFiles: Set<KSFile>, implementedInterface: KClass<*>): List<KSClassDeclaration> {
+    private fun findImplementors(newFiles: Set<KSFile>, implementedInterface: KClass<*>): Sequence<KSClassDeclaration> {
         val versionedRequirement = ImplementationRequirement(superTypes = setOf(implementedInterface))
         val implementationsVisitor = ImplementationsVisitor(implementationRequirements = listOf(versionedRequirement))
         val implementors: List<KSClassDeclaration> =
             newFiles.fold(emptyMap<ImplementationRequirement, List<ScopedDeclaration>>()) { acc, file ->
                 val matches = implementationsVisitor.visitFile(file, null)
                 acc.merge(matches)
-            }
-                .getOrDefault(versionedRequirement, emptyList())
-                .map { it.declaration }
+            }.getOrDefault(versionedRequirement, emptyList()).map { it.declaration }
         logger.info("Implementors of $implementedInterface: $implementors")
-        return implementors
+        return implementors.asSequence()
     }
 
     private fun getNewFiles(resolver: Resolver): Set<KSFile> {

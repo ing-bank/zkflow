@@ -21,7 +21,7 @@ object StateVersionSorting {
         groupInterface: KSClassDeclaration,
         members: List<KSClassDeclaration>
     ): Pair<KSClassDeclaration, List<KSClassDeclaration>> {
-        val predecessorMap = members.associateWith { it.getPredecessorV2(groupInterface) }
+        val predecessorMap = members.associateWith { it.getPredecessor(groupInterface) }
 
         ensureOnlyOneWithoutPredecessor(predecessorMap)
         ensureNoCircularUpgradeRoutes(predecessorMap)
@@ -50,7 +50,7 @@ object StateVersionSorting {
         }
     }
 
-    private fun KSClassDeclaration.getPredecessorV2(
+    private fun KSClassDeclaration.getPredecessor(
         groupInterface: KSClassDeclaration,
     ): KSClassDeclaration? {
         val constructors = declarations.filterIsInstance<KSFunctionDeclaration>()

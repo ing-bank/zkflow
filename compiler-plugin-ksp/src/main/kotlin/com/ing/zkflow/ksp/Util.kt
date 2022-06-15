@@ -11,12 +11,17 @@ private val implementedInterfacesCache: MutableMap<KSClassDeclaration, Sequence<
 private val implementedDirectInterfacesCache: MutableMap<KSClassDeclaration, Sequence<KSClassDeclaration>> = mutableMapOf()
 
 fun KSClassDeclaration.getAllImplementedInterfaces(): Sequence<KSClassDeclaration> = implementedInterfacesCache.getOrPut(this) {
-    getAllSuperTypes().map { it.declaration }.filterIsInstance<KSClassDeclaration>().filter { it.classKind == ClassKind.INTERFACE }
+    getAllSuperTypes()
+        .map { it.declaration }
+        .filterIsInstance<KSClassDeclaration>()
+        .filter { it.classKind == ClassKind.INTERFACE }
 }
 
 fun KSClassDeclaration.getAllDirectlyImplementedInterfaces(): Sequence<KSClassDeclaration> =
     implementedDirectInterfacesCache.getOrPut(this) {
-        superTypes.map { it.resolve().declaration }.filterIsInstance<KSClassDeclaration>()
+        superTypes
+            .map { it.resolve().declaration }
+            .filterIsInstance<KSClassDeclaration>()
             .filter { it.classKind == ClassKind.INTERFACE }
     }
 
@@ -46,6 +51,7 @@ fun KSClassDeclaration.implementsInterfaceDirectly(interfaceClass: KSClassDeclar
 
 fun KSAnnotated.getAnnotationsByType(annotationKClass: KClass<out Annotation>): Sequence<KSAnnotation> {
     return this.annotations.filter {
-        it.shortName.getShortName() == annotationKClass.simpleName && it.annotationType.resolve().declaration.qualifiedName?.asString() == annotationKClass.qualifiedName
+        it.shortName.getShortName() == annotationKClass.simpleName &&
+            it.annotationType.resolve().declaration.qualifiedName?.asString() == annotationKClass.qualifiedName
     }
 }
