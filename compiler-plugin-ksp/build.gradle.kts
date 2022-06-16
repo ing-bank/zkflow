@@ -25,6 +25,7 @@ dependencies {
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
     kotlinOptions {
         freeCompilerArgs += "-Xopt-in=com.squareup.kotlinpoet.ksp.KotlinPoetKspPreview"
+        freeCompilerArgs += "-Xopt-in=com.google.devtools.ksp.KspExperimental"
     }
 }
 

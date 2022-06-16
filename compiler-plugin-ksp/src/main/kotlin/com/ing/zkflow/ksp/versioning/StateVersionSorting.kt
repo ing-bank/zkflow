@@ -1,27 +1,80 @@
 package com.ing.zkflow.ksp.versioning
 
 import com.google.devtools.ksp.isConstructor
+import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
-import com.ing.zkflow.common.versioning.Versioned
+import com.ing.zkflow.ksp.implementsInterfaceDirectly
 
 object StateVersionSorting {
+    fun sortByConstructors(
+        logger: KSPLogger,
+        markerGroups: Map<KSClassDeclaration, List<KSClassDeclaration>>
+    ): Map<KSClassDeclaration, List<KSClassDeclaration>> {
+        return markerGroups.map { (groupInterface, members) ->
+            sortByConstructors(logger, groupInterface, members)
+        }.toMap()
+    }
 
-    private fun KSClassDeclaration.getPredecessor(declarationsOfThisFamily: List<KSClassDeclaration>): KSClassDeclaration? {
-        val constructorParameterTypes = declarations.filterIsInstance<KSFunctionDeclaration>()
+    private fun sortByConstructors(
+        logger: KSPLogger,
+        groupInterface: KSClassDeclaration,
+        members: List<KSClassDeclaration>
+    ): Pair<KSClassDeclaration, List<KSClassDeclaration>> {
+        val predecessorMap = members.associateWith { it.getPredecessor(groupInterface) }
+
+        ensureOnlyOneWithoutPredecessor(predecessorMap)
+        ensureNoCircularUpgradeRoutes(predecessorMap)
+
+        val sortedDeclarations = sortDeclarations(predecessorMap)
+        logger.info("Sorted version group $groupInterface: ${sortedDeclarations.joinToString(", ")}")
+        return groupInterface to sortedDeclarations
+    }
+
+    private fun ensureNoCircularUpgradeRoutes(predecessorMap: Map<KSClassDeclaration, KSClassDeclaration?>) {
+        val predecessors = predecessorMap.values.mapNotNull { it }
+        val duplicates = predecessors.groupBy({ it }) { 1 }.mapValues { it.value.sum() }.filterValues { it > 1 }
+        require(duplicates.isEmpty()) {
+            "Each version group members should be constructable from a unique previous version. " +
+                "Found multiple that are upgradable from the following previous versions: ${duplicates.keys.joinToString(", ")}"
+        }
+    }
+
+    private fun ensureOnlyOneWithoutPredecessor(predecessorMap: Map<KSClassDeclaration, KSClassDeclaration?>) {
+        val membersWithoutPredecessor = predecessorMap.filter { it.value == null }
+        require(membersWithoutPredecessor.size == 1) {
+            "In version groups, there must be exactly one version group member without a constructor for a previous version. " +
+                "Found ${membersWithoutPredecessor.size} without constructor: ${
+                membersWithoutPredecessor.keys.joinToString(", ")
+                }."
+        }
+    }
+
+    private fun KSClassDeclaration.getPredecessor(
+        groupInterface: KSClassDeclaration,
+    ): KSClassDeclaration? {
+        val constructors = declarations.filterIsInstance<KSFunctionDeclaration>()
             .filter { it.isConstructor() }
-            .flatMap { _constructor -> _constructor.parameters.map { it.type.toString() } }
-        val declarationNamesSet = declarationsOfThisFamily.map { "$it" }.toSet()
-        val referredParameterType = constructorParameterTypes.filter { typeName ->
-            typeName != "$this" && typeName in declarationNamesSet
-        }.singleOrNull()
-        return declarationsOfThisFamily.singleOrNull { "$it" == referredParameterType }
+
+        val upgradeConstructors = constructors.filter {
+            it.parameters.size == 1 &&
+                it.parameters.single().type.resolve().declaration is KSClassDeclaration &&
+                (it.parameters.single().type.resolve().declaration as KSClassDeclaration).implementsInterfaceDirectly(groupInterface)
+        }
+        val upgradeConstructorCount = upgradeConstructors.count()
+        if (upgradeConstructorCount == 0) return null
+
+        val upgradeConstructor =
+            upgradeConstructors.singleOrNull()
+                ?: error("$this should have exactly one upgrade constructor. Found $upgradeConstructorCount.")
+
+        return upgradeConstructor.parameters.single().type.resolve().declaration as KSClassDeclaration
     }
 
     /**
      * Sort the declarations according to the order induced by the `predecessorMap` . Time complexity: O(n).
      */
-    private fun sortStateDeclarations(
+    private fun sortDeclarations(
         predecessorMap: Map<KSClassDeclaration, KSClassDeclaration?>
     ): List<KSClassDeclaration> {
         val successorMap = predecessorMap.filter { (_, predecessor) ->
@@ -42,52 +95,5 @@ object StateVersionSorting {
         }
         sortedList.add(currentElement) // the last element doesn't have a successor
         return sortedList
-    }
-
-    /**
-     *  Sort the class declarations based on the implicit version order defined by their constructors that upgrade
-     *  from previous versions.
-     */
-    public fun buildSortedMap(
-        familyNames: Set<String>,
-        stateDeclarations: List<KSClassDeclaration>
-    ): Map<String, List<KSClassDeclaration>> {
-        // Group by available family names, but also
-        // - keep track of orphaned states,
-        // - require one family per stateDeclaration.
-        // Quadratic complexity.
-        val groupedStateDeclarations = stateDeclarations.groupBy { stateDeclaration ->
-            // Select a family for this `stateDeclaration`.
-
-            val families = stateDeclaration.superTypes.mapNotNull { superType ->
-                val superTypeName = superType.resolve().declaration.qualifiedName?.asString()
-
-                familyNames.singleOrNull { superTypeName == it }
-            }.toList()
-
-            val family = when (families.size) {
-                0 -> error(
-                    """
-                        ${stateDeclaration.qualifiedName?.asString()} is expected to (transitively) implement `${Versioned::class.simpleName}` interface.
-                        Found options are ${familyNames.joinToString(separator = ", ") {"`$it`"}}
-                    """.trimIndent()
-                )
-                1 -> families.single()
-                else -> error(
-                    """
-                        ${stateDeclaration.qualifiedName?.asString()} (transitively) implements `${Versioned::class.simpleName}` interface several times
-                        via ${families.joinToString(separator = ", ") {"`$it`"}}
-                    """.trimIndent()
-                )
-            }
-
-            family
-        }
-
-        return groupedStateDeclarations.map { (stateName, declarationsOfThisFamily) ->
-            val predecessorMap = declarationsOfThisFamily.associateWith { it.getPredecessor(declarationsOfThisFamily) }
-            val sortedDeclarations = sortStateDeclarations(predecessorMap) // sort declarations
-            stateName to sortedDeclarations
-        }.toMap()
     }
 }

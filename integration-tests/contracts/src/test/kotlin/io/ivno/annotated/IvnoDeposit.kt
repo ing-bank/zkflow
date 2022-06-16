@@ -4,11 +4,13 @@ import com.ing.zkflow.Via
 import com.ing.zkflow.annotations.UTF8
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.annotations.corda.EdDSA
+import com.ing.zkflow.common.versioning.Versioned
 import io.ivno.annotated.deps.BigDecimalAmount
 import io.ivno.annotated.deps.Network
 import io.ivno.annotated.fixtures.BigDecimalAmount_LinearPointer_IvnoTokenType
 import io.ivno.annotated.fixtures.NetworkEdDSAAnonymousOperator
 import io.ivno.annotated.fixtures.UniqueIdentifierSurrogate
+import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.LinearPointer
 import net.corda.core.contracts.LinearState
 import net.corda.core.contracts.UniqueIdentifier
@@ -41,6 +43,8 @@ enum class DepositStatus {
     PAYMENT_REJECTED,
 }
 
+interface VersionedIvnotokenType : Versioned, ContractState
+
 @ZKP
 data class IvnoTokenType(
     val network: @Via<NetworkEdDSAAnonymousOperator> Network,
@@ -49,6 +53,6 @@ data class IvnoTokenType(
     val displayName: @UTF8(10) String,
     val fractionDigits: Int = 0,
     override val linearId: @Via<UniqueIdentifierSurrogate> UniqueIdentifier = UniqueIdentifier()
-) : LinearState {
+) : LinearState, VersionedIvnotokenType {
     override val participants: List<AbstractParty> = setOf(tokenIssuingEntity, custodian).toList()
 }

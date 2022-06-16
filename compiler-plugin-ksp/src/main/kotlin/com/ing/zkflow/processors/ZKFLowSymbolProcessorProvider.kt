@@ -9,8 +9,8 @@ import com.ing.zkflow.ksp.implementations.ImplementationsSymbolProcessor
 class ZKFLowSymbolProcessorProvider : SymbolProcessorProvider {
     override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor {
         val codeGenerator = LoggingCodeGenerator(environment)
-        val surrogatesSerializerGenerator = SurrogateSerializerGenerator(environment.logger, codeGenerator)
 
+        val surrogatesSerializerGenerator = SurrogateSerializerGenerator(environment.logger, codeGenerator)
         val zkNetworkParametersProviderProcessor = ZKNetworkParametersProcessor()
 
         return ImplementationsSymbolProcessor(

@@ -1,11 +1,9 @@
 package com.ing.zkflow.contract
 
 import com.ing.zkflow.common.contracts.ZKCommandData
-import com.ing.zkflow.common.serialization.CommandDataSerializerRegistryProvider
-import com.ing.zkflow.common.serialization.ContractStateSerializerRegistryProvider
+import com.ing.zkflow.common.serialization.KClassSerializerProvider
 import com.ing.zkflow.ksp.ProcessorTest
 import com.ing.zkflow.processors.StableIdVersionedSymbolProcessorProvider
-import com.ing.zkflow.processors.ZKFLowSymbolProcessorProvider
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import io.kotest.matchers.paths.shouldNotExist
@@ -14,7 +12,7 @@ import org.junit.jupiter.api.Test
 import java.io.ByteArrayOutputStream
 
 internal class ContractStateAndCommandDataSymbolProcessorProviderTest : ProcessorTest(
-    listOf(ZKFLowSymbolProcessorProvider(), StableIdVersionedSymbolProcessorProvider())
+    listOf(StableIdVersionedSymbolProcessorProvider())
 ) {
     @Test
     fun `ZKTransactionProcessor should correctly register commands`() {
@@ -27,7 +25,7 @@ internal class ContractStateAndCommandDataSymbolProcessorProviderTest : Processo
         }
 
         result.exitCode shouldBe KotlinCompilation.ExitCode.OK
-        result.getGeneratedMetaInfServices<CommandDataSerializerRegistryProvider>() shouldBe "com.ing.zkflow.zktransaction.TestCommandSerializerProvider"
+        result.getGeneratedMetaInfServices<KClassSerializerProvider>() shouldBe "com.ing.zkflow.zktransaction.TestCommandSerializerProvider"
     }
 
     @Test
@@ -41,7 +39,7 @@ internal class ContractStateAndCommandDataSymbolProcessorProviderTest : Processo
         }
 
         result.exitCode shouldBe KotlinCompilation.ExitCode.OK
-        result.getGeneratedMetaInfServices<CommandDataSerializerRegistryProvider>() shouldBe "com.ing.zkflow.zktransaction.ContainerTestNestedCommandSerializerProvider"
+        result.getGeneratedMetaInfServices<KClassSerializerProvider>() shouldBe "com.ing.zkflow.zktransaction.ContainerTestNestedCommandSerializerProvider"
     }
 
     @Test
@@ -69,7 +67,7 @@ internal class ContractStateAndCommandDataSymbolProcessorProviderTest : Processo
         }
 
         result.exitCode shouldBe KotlinCompilation.ExitCode.OK
-        result.getGeneratedMetaInfServices<ContractStateSerializerRegistryProvider>() shouldBe "com.ing.zkflow.zktransaction.TestStateSerializerProvider"
+        result.getGeneratedMetaInfServices<KClassSerializerProvider>() shouldBe "com.ing.zkflow.zktransaction.TestStateSerializerProvider"
     }
 
     companion object {
@@ -78,6 +76,7 @@ internal class ContractStateAndCommandDataSymbolProcessorProviderTest : Processo
             """
                 package com.ing.zkflow.zktransaction
                 
+                import com.ing.zkflow.annotations.ZKP
                 import com.ing.zkflow.common.contracts.ZKCommandData
                 import com.ing.zkflow.common.versioning.Versioned
                 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
@@ -85,6 +84,7 @@ internal class ContractStateAndCommandDataSymbolProcessorProviderTest : Processo
 
                 interface Cmd: Versioned
 
+                @ZKP
                 class TestCommand: Cmd, ZKCommandData {
                     
                     @Transient
@@ -101,6 +101,7 @@ internal class ContractStateAndCommandDataSymbolProcessorProviderTest : Processo
             """
                 package com.ing.zkflow.zktransaction
                 
+                import com.ing.zkflow.annotations.ZKP
                 import com.ing.zkflow.common.contracts.ZKCommandData
                 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
                 import com.ing.zkflow.common.zkp.metadata.commandMetadata
@@ -109,6 +110,7 @@ internal class ContractStateAndCommandDataSymbolProcessorProviderTest : Processo
                 interface Cmd: Versioned
 
                 class Container {
+                    @ZKP
                     class TestNestedCommand: Cmd, ZKCommandData {
                         
                         @Transient
@@ -135,6 +137,7 @@ internal class ContractStateAndCommandDataSymbolProcessorProviderTest : Processo
             """
                 package com.ing.zkflow.zktransaction
                 
+                import com.ing.zkflow.annotations.ZKP
                 import com.ing.zkflow.common.contracts.ZKOwnableState
                 import net.corda.core.contracts.CommandAndState
                 import net.corda.core.identity.AnonymousParty
@@ -142,6 +145,7 @@ internal class ContractStateAndCommandDataSymbolProcessorProviderTest : Processo
                 
                 interface VersionedState: Versioned
 
+                @ZKP
                 data class TestState(
                     override val owner: AnonymousParty
                 ): VersionedState, ZKOwnableState {
