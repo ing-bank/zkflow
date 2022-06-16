@@ -3,7 +3,6 @@ package com.ing.zkflow.common.transactions
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.contracts.ZKContract
-import com.ing.zkflow.common.contracts.ZKContractState
 import com.ing.zkflow.common.contracts.filter
 import com.ing.zkflow.common.network.ZKAttachmentConstraintType
 import com.ing.zkflow.common.versioning.Versioned
@@ -21,6 +20,7 @@ import io.kotest.matchers.shouldBe
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.Contract
+import net.corda.core.contracts.ContractState
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.transactions.BaseTransaction
 import net.corda.testing.common.internal.testNetworkParameters
@@ -55,7 +55,7 @@ class FilteredLedgerTransactionTest {
     data class TestState(
         val owner: AnonymousParty,
         val value: Int = Random().nextInt(1000)
-    ) : ZKContractState, Versioned {
+    ) : ContractState, Versioned {
         override val participants: List<AnonymousParty> = listOf(owner)
     }
 

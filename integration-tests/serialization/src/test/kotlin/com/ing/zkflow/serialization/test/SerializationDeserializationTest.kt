@@ -20,7 +20,6 @@ import com.ing.zkflow.annotations.UTF8
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.annotations.corda.EdDSA
 import com.ing.zkflow.common.contracts.ZKCommandData
-import com.ing.zkflow.common.contracts.ZKOwnableState
 import com.ing.zkflow.common.serialization.zinc.json.toUnsignedBitString
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.serialization.scheme.BinaryFixedLengthScheme
@@ -41,6 +40,8 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import net.corda.core.contracts.CommandAndState
+import net.corda.core.contracts.OwnableState
+import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.internal.writeText
 import net.corda.testing.core.TestIdentity
@@ -304,11 +305,13 @@ class SerializationDeserializationTest {
         data class MockAsset(
             override val owner: @EdDSA AnonymousParty,
             val value: Int = Random().nextInt()
-        ) : ZKOwnableState {
+        ) : OwnableState {
             override val participants: List<AnonymousParty> = listOf(owner)
 
-            override fun withNewOwner(newOwner: AnonymousParty): CommandAndState =
-                CommandAndState(Move(), copy(owner = newOwner))
+            override fun withNewOwner(newOwner: AbstractParty): CommandAndState {
+                require(newOwner is AnonymousParty)
+                return CommandAndState(Move(), copy(owner = newOwner))
+            }
         }
 
         @ZKP

@@ -4,7 +4,6 @@ import com.ing.zkflow.annotations.Size
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.contracts.ZKContract
-import com.ing.zkflow.common.contracts.ZKContractState
 import com.ing.zkflow.common.contracts.renderIllegalPublicOnlyStatesError
 import com.ing.zkflow.common.serialization.CommandDataSerializerRegistry
 import com.ing.zkflow.common.serialization.ContractStateSerializerRegistry
@@ -27,6 +26,7 @@ import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.Contract
+import net.corda.core.contracts.ContractState
 import net.corda.core.crypto.Crypto
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.transactions.LedgerTransaction
@@ -217,7 +217,7 @@ class StateVisibilityContractTest {
                 input("Alice's Explicitly Public Asset")
                 output(LocalZKContract.PROGRAM_ID, bobAsset)
                 command(listOf(alice.owningKey, bob.owningKey), LocalZKContract.MoveFullyPrivate())
-                val alicesPublicAssetRef = retrieveOutputStateAndRef(ZKContractState::class.java, "Alice's Explicitly Public Asset").ref
+                val alicesPublicAssetRef = retrieveOutputStateAndRef(ContractState::class.java, "Alice's Explicitly Public Asset").ref
                 `fails with`("UTXO for StateRef '$alicesPublicAssetRef' should be private, but it is public")
             }
         }
@@ -266,7 +266,7 @@ class LocalNormalContract : Contract {
     data class NormalTestState(
         val owner: @Serializable(with = OwnerSerializer::class) AnonymousParty,
         val value: @Serializable(with = IntSerializer::class) Int = Random().nextInt(1000)
-    ) : ZKContractState, Versioned {
+    ) : ContractState, Versioned {
         private object OwnerSerializer : AnonymousPartySerializer(Crypto.EDDSA_ED25519_SHA512.schemeNumberID)
 
         @Transient
@@ -455,7 +455,7 @@ class LocalZKContract : ZKContract, Contract {
 @BelongsToContract(LocalZKContract::class)
 data class SomeOtherZKState(
     val value: @Serializable(with = IntSerializer::class) Int = Random().nextInt(1000)
-) : ZKContractState, Versioned {
+) : ContractState, Versioned {
     @Transient
     override val participants: @Size(1) List<@Serializable(with = AnonymousPartySerializer::class) AnonymousParty> = emptyList()
 
@@ -472,7 +472,7 @@ data class SomeOtherZKState(
 data class ZKTestState(
     val owner: @Serializable(with = OwnerSerializer::class) AnonymousParty,
     val value: @Serializable(with = IntSerializer::class) Int = Random().nextInt(1000)
-) : ZKContractState, Versioned {
+) : ContractState, Versioned {
     private object OwnerSerializer : AnonymousPartySerializer(Crypto.EDDSA_ED25519_SHA512.schemeNumberID)
 
     @Transient

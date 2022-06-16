@@ -2,8 +2,6 @@ package com.ing.zkflow.common.zkp.metadata
 
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.common.contracts.ZKCommandData
-import com.ing.zkflow.common.contracts.ZKContractState
-import com.ing.zkflow.common.contracts.ZKOwnableState
 import com.ing.zkflow.common.versioning.Versioned
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
@@ -11,6 +9,9 @@ import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.CommandAndState
 import net.corda.core.contracts.Contract
 import net.corda.core.contracts.ContractClassName
+import net.corda.core.contracts.ContractState
+import net.corda.core.contracts.OwnableState
+import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.transactions.LedgerTransaction
 import org.junit.jupiter.api.Test
@@ -98,7 +99,7 @@ class MockAuditContract : Contract {
         const val ID: ContractClassName = "com.ing.zkflow.common.zkp.metadata.MockAuditContract"
     }
 
-    interface VersionedApproval : Versioned, ZKContractState
+    interface VersionedApproval : Versioned, ContractState
 
     @BelongsToContract(MockAuditContract::class)
     @ZKP
@@ -116,7 +117,7 @@ class MockAssetContract : Contract {
         const val ID: ContractClassName = "com.ing.zkflow.common.zkp.metadata.MockAssetContract"
     }
 
-    interface VersionedMockAsset : Versioned, ZKOwnableState
+    interface VersionedMockAsset : Versioned, OwnableState
 
     @BelongsToContract(MockAssetContract::class)
     @ZKP
@@ -126,8 +127,10 @@ class MockAssetContract : Contract {
     ) : VersionedMockAsset {
         override val participants: List<AnonymousParty> = listOf(owner)
 
-        override fun withNewOwner(newOwner: AnonymousParty): CommandAndState =
-            CommandAndState(Move(), copy(owner = newOwner))
+        override fun withNewOwner(newOwner: AbstractParty): CommandAndState {
+            require(newOwner is AnonymousParty)
+            return CommandAndState(Move(), copy(owner = newOwner))
+        }
     }
 
     interface VersionedMove : Versioned, ZKCommandData

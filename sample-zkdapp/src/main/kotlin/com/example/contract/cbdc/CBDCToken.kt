@@ -8,10 +8,10 @@ import com.ing.zkflow.Via
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.annotations.corda.EdDSA
 import com.ing.zkflow.annotations.corda.SHA256
-import com.ing.zkflow.common.contracts.ZKContractState
 import com.ing.zkflow.common.versioning.Versioned
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.BelongsToContract
+import net.corda.core.contracts.ContractState
 import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.Party
@@ -23,7 +23,7 @@ fun digitalEuro(amount: Double, issuer: Party, holder: AnonymousParty) = digital
 fun digitalEuro(amount: BigDecimal, issuer: Party, holder: AnonymousParty) =
     CBDCToken(Amount.fromDecimal(amount, digitalEuroTokenType(issuer)), holder = holder)
 
-interface VersionedCBDCToken : Versioned, ZKContractState
+interface VersionedCBDCToken : Versioned, ContractState
 
 @BelongsToContract(CBDCContract::class)
 @ZKP

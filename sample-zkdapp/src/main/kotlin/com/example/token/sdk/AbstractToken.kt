@@ -1,13 +1,13 @@
 package com.example.token.sdk
 
-import com.ing.zkflow.common.contracts.ZKContractState
+import net.corda.core.contracts.ContractState
 import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.Party
 
 /** Contains common token properties and functionality. */
-interface AbstractToken : ZKContractState {
+interface AbstractToken : ContractState {
     /** The [AbstractParty] which is currently holding (some amount of) tokens. */
     val holder: AnonymousParty
 
@@ -20,7 +20,7 @@ interface AbstractToken : ZKContractState {
      * future, as there are some issues with how the participants list interacts with other Corda features, for example
      * notary change transactions and contract upgrade transactions.
      */
-    override val participants: List<AnonymousParty> get() = listOf(holder)
+    override val participants: List<AbstractParty> get() = listOf(holder)
 
     /** The [TokenType] this [AbstractToken] is in respect of. */
     val tokenType: TokenType get() = issuedTokenType.tokenType

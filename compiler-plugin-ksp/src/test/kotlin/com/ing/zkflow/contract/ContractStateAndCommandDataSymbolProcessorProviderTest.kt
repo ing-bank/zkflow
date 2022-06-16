@@ -57,9 +57,9 @@ internal class ContractStateAndCommandDataSymbolProcessorProviderTest : Processo
     }
 
     @Test
-    fun `ZKTransactionProcessor should correctly detect ZKContractState classes`() {
+    fun `ZKTransactionProcessor should correctly detect ContractState classes`() {
         val outputStream = ByteArrayOutputStream()
-        val result = compile(kotlinFileWithZKContractStateClass, outputStream)
+        val result = compile(kotlinFileWithContractStateClass, outputStream)
 
         // In case of error, show output
         if (result.exitCode != KotlinCompilation.ExitCode.OK) {
@@ -132,24 +132,26 @@ internal class ContractStateAndCommandDataSymbolProcessorProviderTest : Processo
             """
         )
 
-        private val kotlinFileWithZKContractStateClass = SourceFile.kotlin(
+        private val kotlinFileWithContractStateClass = SourceFile.kotlin(
             "TestState.kt",
             """
                 package com.ing.zkflow.zktransaction
                 
                 import com.ing.zkflow.annotations.ZKP
-                import com.ing.zkflow.common.contracts.ZKOwnableState
                 import net.corda.core.contracts.CommandAndState
-                import net.corda.core.identity.AnonymousParty
+                import net.corda.core.identity.AbstractParty
                 import com.ing.zkflow.common.versioning.Versioned
+                import net.corda.core.contracts.OwnableState
+                import net.corda.core.identity.AnonymousParty
                 
                 interface VersionedState: Versioned
 
                 @ZKP
                 data class TestState(
                     override val owner: AnonymousParty
-                ): VersionedState, ZKOwnableState {
-                    override fun withNewOwner(newOwner: AnonymousParty): CommandAndState {
+                ): VersionedState, OwnableState {
+                    override fun withNewOwner(newOwner: AbstractParty): CommandAndState {
+                        require(newOwner is AnonymousParty)
                         return CommandAndState(TestCommand(), copy(owner = newOwner))
                     }
             
