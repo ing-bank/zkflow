@@ -54,7 +54,7 @@ import kotlin.reflect.KClass
  *    if a non-annotated class is used as a property type within a ContractState or CommandData.
  * 1. groups versioned classes within their version marker group, identified by a marker interface.
  * 2. validates that all classes annotated with @ZKP belong to a version marker group.
- * 3. sorts versioned classes within their version marker group according to their ugprade constructors. Will fail if there are classes within a
+ * 3. sorts versioned classes within their version marker group according to their upgrade constructors. Will fail if there are classes within a
  *    group that are not part of the version chain or if there are circular upgrade paths
  * 4. generates `upgrade` commands to go from one version of a ContractState to the next one.
  * 5. registers serializers in the registry for states/commands so that they can be serialized by a stable id instead
@@ -133,11 +133,15 @@ class StableIdVersionedSymbolProcessor(private val logger: KSPLogger, private va
         }
     }
 
+    /**
+     * For all types in `newFiles` that implement `interfaceKClass`, ensure  that they have
+     * either a `@ZKP` annotation or a `@ZKPSurrogate` annotation or there is a surrogate defined for them.
+     */
     private fun ensureZKPAnnotatedOrSurrogateExists(newFiles: Set<KSFile>, interfaceKClass: KClass<*>) {
         val implementors = findImplementors(
             newFiles,
             interfaceKClass
-        ).filter { (it.classKind == ClassKind.CLASS || it.classKind == ClassKind.OBJECT) && !it.isAbstract() }
+        ).filterNonAbstractClassesOrObjects()
 
         implementors.forEach {
             require(
