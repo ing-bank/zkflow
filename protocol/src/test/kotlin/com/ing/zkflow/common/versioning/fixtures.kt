@@ -1,6 +1,7 @@
 package com.ing.zkflow.common.versioning
 
 import com.ing.zkflow.common.serialization.SerializerRegistry
+import com.ing.zkflow.serialization.register
 import kotlinx.serialization.Serializable
 import net.corda.core.contracts.ContractState
 import net.corda.core.identity.AbstractParty

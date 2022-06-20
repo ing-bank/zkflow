@@ -6,6 +6,7 @@ import com.ing.zkflow.common.serialization.CommandDataSerializerRegistry
 import com.ing.zkflow.common.zkp.ZKTransactionService
 import com.ing.zkflow.node.services.InMemoryZKVerifierTransactionStorage
 import com.ing.zkflow.node.services.ZKWritableVerifierTransactionStorage
+import com.ing.zkflow.serialization.register
 import com.ing.zkflow.serialization.serializer.corda.DummyCommandDataSerializer
 import com.ing.zkflow.testing.dsl.services.TestDSLZincZKTransactionService
 import com.ing.zkflow.testing.zkp.MockZKNetworkParameters

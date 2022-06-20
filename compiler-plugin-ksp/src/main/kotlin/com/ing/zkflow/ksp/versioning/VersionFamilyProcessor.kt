@@ -17,11 +17,18 @@ import com.squareup.kotlinpoet.ksp.writeTo
 import net.corda.core.internal.packageName
 import kotlin.reflect.KClass
 
+/**
+ * Generates instances of [VersionFamilyProvider] for sorted states.
+ * The states should be sorted in ascending mode, so that the oldest state is at index 0.
+ */
 class VersionFamilyProcessor(
     private val codeGenerator: CodeGenerator,
 ) {
     private val versionFamilyProviderKClass: KClass<VersionFamilyProvider> = VersionFamilyProvider::class
 
+    /**
+     * @param sortedFamilies Map of sorted families according to [StateVersionSorting.sortByConstructors].
+     */
     fun registerFamilies(sortedFamilies: Map<KSClassDeclaration, List<KSClassDeclaration>>): ServiceLoaderRegistration {
         val familyProviders = sortedFamilies.entries
             .map { (familyName, members) ->
@@ -31,9 +38,10 @@ class VersionFamilyProcessor(
         return ServiceLoaderRegistration(versionFamilyProviderKClass, familyProviders)
     }
 
-    private fun registerFamily(familyClassName: ClassName, members: List<KSClassDeclaration>): String {
-        val memberClassNames = members.map(KSClassDeclaration::toClassName)
-        val familyProviderClassName = familyClassName.simpleNames.joinToString(separator = "", postfix = "FamilyProvider") { it }
+    private fun registerFamily(familyClassName: ClassName, sortedMembers: List<KSClassDeclaration>): String {
+        val memberClassNames = sortedMembers.map(KSClassDeclaration::toClassName)
+        val familyProviderClassName = familyClassName.simpleNames
+            .joinToString(separator = "", postfix = "FamilyProvider") { it }
         FileSpec.builder(familyClassName.packageName, familyProviderClassName)
             .addImport(VersionFamily::class.packageName, "${VersionFamily::class.simpleName}")
             .addType(

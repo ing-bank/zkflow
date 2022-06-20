@@ -99,10 +99,6 @@ abstract class SerializerRegistry<T : Any> {
         }
     }
 
-    @Synchronized
-    fun register(klass: KClass<out T>, serializer: KSerializer<out T>) =
-        register(KClassSerializer<T>(klass, klass.java.canonicalName.hashCode(), serializer))
-
     fun identify(klass: KClass<*>): Int = obj2Id[klass] ?: throw SerializerRegistryError.ClassNotRegistered(klass)
 
     /**
@@ -115,7 +111,8 @@ abstract class SerializerRegistry<T : Any> {
 
     operator fun get(klass: KClass<out T>): KSerializer<T> = get(identify(klass))
 
-    fun tryGetKClass(id: Int): KClass<out T> = objId2Serializer[id]?.klass ?: throw SerializerRegistryError.ClassNotRegistered(id)
+    fun getKClass(id: Int): KClass<out T> = objId2Serializer[id]?.klass
+        ?: throw SerializerRegistryError.ClassNotRegistered(id)
 }
 
 /**

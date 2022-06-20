@@ -17,7 +17,7 @@ internal class VersionFamilyRegistryTest {
 
     @Test
     fun `getIdOfLatest should return the correct Id`() {
-        testFamilyRegistry.getIdOfLatest(TestStateV1::class) shouldBe TestStateV3::class.java.canonicalName.hashCode()
+        testFamilyRegistry.getIdOfLatest(TestStateV1::class) shouldBe TestStateV3::class.hashCode()
     }
 
     @Test
