@@ -11,9 +11,11 @@ object VersionedStateIdGenerator {
         sortedFamiliesMap
             .entries
             .fold(emptyMap()) { acc, (stateFamily, declarationsOfThisFamily) ->
-                val localIdMap = declarationsOfThisFamily.mapIndexed { index, ksClassDeclaration ->
-                    ksClassDeclaration to generateId(stateFamily, index)
-                }.toMap()
+                val localIdMap = declarationsOfThisFamily
+                    .mapIndexed { index, ksClassDeclaration ->
+                        ksClassDeclaration to generateId(stateFamily, index)
+                    }
+                    .toMap()
                 acc + localIdMap
             }
 

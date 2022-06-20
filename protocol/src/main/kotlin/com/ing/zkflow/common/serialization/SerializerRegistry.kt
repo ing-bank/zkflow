@@ -59,7 +59,7 @@ interface SurrogateSerializerRegistryProvider : KClassSerializerProvider
 abstract class SerializerRegistry<T : Any> {
     private val log = LoggerFactory.getLogger(this::class.java)
     private val obj2Id = mutableMapOf<KClass<out T>, Int>()
-    private val objId2Serializer = mutableMapOf<Int, KSerializer<out T>>()
+    private val objId2Serializer = mutableMapOf<Int, KClassSerializer<T>>()
 
     init {
         log.debug("Adding available serializers to ${this::class}")
@@ -94,14 +94,10 @@ abstract class SerializerRegistry<T : Any> {
         log.debug("Registering serializer `$serializer` under id `$id` for `${klass.qualifiedName}`")
 
         obj2Id.put(klass, id)?.let { throw SerializerRegistryError.ClassAlreadyRegistered(klass, it) }
-        objId2Serializer.put(id, serializer)?.let {
-            throw SerializerRegistryError.IdAlreadyRegistered(id, klass, it.descriptor.serialName)
+        objId2Serializer.put(id, klassSerializer)?.let {
+            throw SerializerRegistryError.IdAlreadyRegistered(id, klass, serializer.descriptor.serialName)
         }
     }
-
-    @Synchronized
-    fun register(klass: KClass<out T>, serializer: KSerializer<out T>) =
-        register(KClassSerializer<T>(klass, klass.hashCode(), serializer))
 
     fun identify(klass: KClass<*>): Int = obj2Id[klass] ?: throw SerializerRegistryError.ClassNotRegistered(klass)
 
@@ -111,9 +107,12 @@ abstract class SerializerRegistry<T : Any> {
      */
     @Suppress("UNCHECKED_CAST")
     operator fun get(id: Int): KSerializer<T> =
-        (objId2Serializer[id] ?: throw SerializerRegistryError.ClassNotRegistered(id)) as KSerializer<T>
+        (objId2Serializer[id]?.serializer ?: throw SerializerRegistryError.ClassNotRegistered(id)) as KSerializer<T>
 
     operator fun get(klass: KClass<out T>): KSerializer<T> = get(identify(klass))
+
+    fun getKClass(id: Int): KClass<out T> = objId2Serializer[id]?.klass
+        ?: throw SerializerRegistryError.ClassNotRegistered(id)
 }
 
 /**
@@ -121,8 +120,8 @@ abstract class SerializerRegistry<T : Any> {
  * This is lazy and cached because the iterators returned by `ServiceLoader.load()` are lazy and cached.
  */
 fun getAllKClassSerializerProviders(): List<KClassSerializerProvider> =
-    (ServiceLoader.load(KClassSerializerProvider::class.java) +
-        ServiceLoader.load(SurrogateSerializerRegistryProvider::class.java))
+    ServiceLoader.load(KClassSerializerProvider::class.java) +
+        ServiceLoader.load(SurrogateSerializerRegistryProvider::class.java)
 
 object ContractStateSerializerRegistry : SerializerRegistry<ContractState>()
 object CommandDataSerializerRegistry : SerializerRegistry<CommandData>()

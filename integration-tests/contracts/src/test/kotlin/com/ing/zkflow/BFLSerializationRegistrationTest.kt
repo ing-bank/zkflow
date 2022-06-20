@@ -4,6 +4,7 @@ import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.annotations.ZKPSurrogate
 import com.ing.zkflow.common.serialization.ContractStateSerializerRegistry
 import com.ing.zkflow.common.versioning.Versioned
+import io.kotest.matchers.shouldBe
 import net.corda.core.contracts.ContractState
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.AnonymousParty
@@ -11,10 +12,16 @@ import org.junit.Test
 
 class BFLSerializationRegistrationTest {
     @Test
-    fun `Classes annotated with ZKPSurrogate must be registered`() {
+    fun `Classes annotated with ZKP or ZKPSurrogate must be registered`() {
         // Successfully accessing the registration means that the serializer has been registered.
         ContractStateSerializerRegistry[My3rdPartyClass::class]
         ContractStateSerializerRegistry[MyState::class]
+    }
+
+    @Test
+    fun `Classes annotated with ZKP should be discoverable by their id`() {
+        ContractStateSerializerRegistry["${VersionedMyState::class.qualifiedName}0".hashCode()] shouldBe
+            ContractStateSerializerRegistry[MyState::class]
     }
 }
 

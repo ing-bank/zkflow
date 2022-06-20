@@ -23,6 +23,7 @@ import com.ing.zkflow.ksp.implementsInterface
 import com.ing.zkflow.ksp.implementsInterfaceDirectly
 import com.ing.zkflow.ksp.upgrade.UpgradeCommandGenerator
 import com.ing.zkflow.ksp.versioning.StateVersionSorting
+import com.ing.zkflow.ksp.versioning.VersionFamilyProcessor
 import com.ing.zkflow.ksp.versioning.VersionedStateIdGenerator
 import com.ing.zkflow.processors.SerializerRegistryProcessor
 import com.ing.zkflow.processors.SerializerRegistryProcessor.GeneratedSerializer.Companion.toImplementationClass
@@ -59,7 +60,8 @@ import kotlin.reflect.KClass
  * 4. generates `upgrade` commands to go from one version of a ContractState to the next one.
  * 5. registers serializers in the registry for states/commands so that they can be serialized by a stable id instead
  *    of fqn by BFLSerializationScheme.
- *
+ * 6. registers state families in the version family registry for states, so that this information is available at
+ *    runtime
  *
  *  Some invariants:
  *  - ContractState and CommandData must be annotated with either @ZKP or @ZKPSurrogate,
@@ -76,6 +78,8 @@ class StableIdVersionedSymbolProcessor(private val logger: KSPLogger, private va
     private val metaInfServiceRegister = MetaInfServiceRegister(codeGenerator)
 
     private val serializerRegistryProcessor = SerializerRegistryProcessor(codeGenerator)
+    private val upgradeCommandGenerator = UpgradeCommandGenerator(codeGenerator)
+    private val versionFamilyProcessor = VersionFamilyProcessor(codeGenerator)
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
         val newFiles = getNewFiles(resolver)
@@ -103,7 +107,7 @@ class StableIdVersionedSymbolProcessor(private val logger: KSPLogger, private va
 
         // 4. generates `upgrade` commands to go from one version of a ContractState to the next one
         val upgradeCommands: Map<SerializerRegistryProcessor.GeneratedSerializer, Int> =
-            UpgradeCommandGenerator(codeGenerator)
+            upgradeCommandGenerator
                 .processVersionGroups(contractStateGroups.values)
                 .associateWith { it.className.canonicalName.hashCode() }
 
@@ -115,6 +119,10 @@ class StableIdVersionedSymbolProcessor(private val logger: KSPLogger, private va
         val commandFamilies = filterMembersImplementInterface(sortedMarkerGroups, CommandData::class)
         (commandFamilies + contractStateGroups)
             .generateIdsAndProcessWith(serializerRegistryProcessor, additionalClasses = upgradeCommands)
+            .registerToServiceLoader()
+
+        // 6. registers sorted ContractState families
+        versionFamilyProcessor.registerFamilies(contractStateGroups)
             .registerToServiceLoader()
 
         metaInfServiceRegister.emit()
