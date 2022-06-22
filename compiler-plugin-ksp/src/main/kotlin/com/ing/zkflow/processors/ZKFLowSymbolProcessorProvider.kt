@@ -15,9 +15,7 @@ class ZKFLowSymbolProcessorProvider : SymbolProcessorProvider {
         return ImplementationsSymbolProcessor(
             environment.logger,
             codeGenerator,
-            listOf(
-                zkNetworkParametersProviderProcessor,
-            )
+            listOf(zkNetworkParametersProviderProcessor)
         )
     }
 }

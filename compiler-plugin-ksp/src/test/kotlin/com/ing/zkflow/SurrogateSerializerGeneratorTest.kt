@@ -2,21 +2,19 @@ package com.ing.zkflow
 
 import com.ing.zkflow.ksp.ProcessorTest
 import com.ing.zkflow.processors.ZKPAnnotatedProcessorProvider
-import com.ing.zkflow.util.map
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import io.kotest.matchers.shouldBe
-import io.mockk.InternalPlatformDsl.toStr
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import java.io.ByteArrayOutputStream
 
-@TestInstance(TestInstance.Lifecycle.PER_METHOD)
 internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProcessorProvider()) {
-    @Test
-    fun `SurrogateProcessor should correctly register surrogates`() {
+    @ParameterizedTest
+    @MethodSource("testCases")
+    fun `surrogates for basic types container must be produced`(testCase: TestCase) {
         val outputStream = ByteArrayOutputStream()
-        val result = compile(listOf(sourceWith3PartyClass, correctSource), outputStream)
+        val result = compile(testCase.source, outputStream)
 
         // In case of error, show output
         if (result.exitCode != KotlinCompilation.ExitCode.OK) {
@@ -25,123 +23,69 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
 
         result.exitCode shouldBe KotlinCompilation.ExitCode.OK
 
-        println(result.getMetaInfServicesFolder().listRecursively()!!.map { it.fileName.toStr() })
-
-        result.readGeneratedKotlinFile(packageName, generatedSurrogateSerializerClassName) shouldBe correctSourceExpectedOutput
+        result.readGeneratedKotlinFile(packageName, testCase.expectedSurrogateName) shouldBe testCase.expected
     }
 
-    @Test
-    fun `SurrogateProcessor should correctly register surrogates with concrete generics`() {
-        val outputStream = ByteArrayOutputStream()
-        val result = compile(listOf(sourceWith3PartyClassAndGenerics, correctSourceWithGenerics), outputStream)
-
-        // In case of error, show output
-        if (result.exitCode != KotlinCompilation.ExitCode.OK) {
-            reportError(result, outputStream)
-        }
-
-        result.exitCode shouldBe KotlinCompilation.ExitCode.OK
-
-        println(result.getMetaInfServicesFolder().listRecursively()!!.map { it.fileName.toStr() })
-
-        result.readGeneratedKotlinFile(packageName, generatedSurrogateSerializerClassName) shouldBe correctSourceExpectedOutputWithGenerics
+    data class TestCase(
+        val source: List<SourceFile>,
+        val expectedSurrogateName: String,
+        val expected: String,
+    ) {
+        constructor(source: SourceFile, expectedSurrogateName: String, expected: String) :
+            this(listOf(source), expectedSurrogateName, expected)
     }
 
     companion object {
         const val packageName = "com.ing.zkflow.testing"
-        const val generatedSurrogateSerializerClassName = "SomeClassIntSurrogateSurrogateSerializer"
 
-        private val sourceWith3PartyClass = SourceFile.kotlin(
-            "SomeClass.kt",
-            """
-                package com.ing.zkflow.testing
-
-                data class SomeClass(val integer: Int, val string: String)
-            """.trimIndent()
-        )
-
-        private val correctSource = SourceFile.kotlin(
-            "SomeClassIntSurrogate.kt",
-            """
-                package com.ing.zkflow.testing
-
-                import com.ing.zkflow.ConversionProvider
-                import com.ing.zkflow.testing.SomeClass
-                import com.ing.zkflow.Surrogate
-                import com.ing.zkflow.annotations.ASCII
-                import com.ing.zkflow.annotations.ZKPSurrogate
-                
-                @ZKPSurrogate(SomeClassConverter::class)
-                data class SomeClassIntSurrogate(
-                    val integer: Int,
-                    val string: @ASCII(10) String
-                ): Surrogate<SomeClass> {
-                    override fun toOriginal(): SomeClass {
-                        TODO("Not yet implemented")
+        @JvmStatic
+        fun testCases(): List<TestCase> = listOf(
+            TestCase(
+                source = SourceFile.kotlin(
+                    "BasicTypesContainer.kt",
+                    """
+                        package $packageName
+             
+                        import com.ing.zkflow.annotations.ZKP
+    
+                        @ZKP
+                        data class BasicTypesContainer(
+                            val int: Int,
+                            val nullableInt: Int?
+                        )                       
+                    """.trimIndent()
+                ),
+                expectedSurrogateName = "BasicTypesContainerKotlinxSurrogate",
+                expected = """
+                    package $packageName
+    
+                    import com.ing.zkflow.Surrogate
+                    import com.ing.zkflow.serialization.serializer.IntSerializer
+                    import com.ing.zkflow.serialization.serializer.NullableSerializer
+                    import com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializerWithDefault
+                    import kotlin.Int
+                    import kotlin.Suppress
+                    import kotlinx.serialization.Contextual
+                    import kotlinx.serialization.Serializable
+                    
+                    @Serializable
+                    @Suppress("ClassName")
+                    public data class BasicTypesContainerKotlinxSurrogate(
+                      @Serializable(with = Int_0::class)
+                      public val int: @Contextual Int,
+                      @Serializable(with = NullableInt_0::class)
+                      public val nullableInt: @Contextual Int?
+                    ) : Surrogate<BasicTypesContainer> {
+                      public override fun toOriginal(): BasicTypesContainer = BasicTypesContainer(int, nullableInt)
+                    
+                      private object Int_0 : WrappedFixedLengthKSerializerWithDefault<Int>(IntSerializer)
+                    
+                      private object NullableInt_0 : NullableSerializer<Int>(NullableInt_1)
+                    
+                      private object NullableInt_1 : WrappedFixedLengthKSerializerWithDefault<Int>(IntSerializer)
                     }
-                }
-
-                object SomeClassConverter: ConversionProvider<SomeClass, SomeClassIntSurrogate> {
-                    override fun from(original: SomeClass) = SomeClassIntSurrogate(original.integer, original.string)
-                }
-            """
+                """.trimIndent()
+            )
         )
-
-        private val correctSourceExpectedOutput = """
-            package com.ing.zkflow.testing
-            
-            import com.ing.zkflow.serialization.serializer.SurrogateSerializer
-
-            public object SomeClassIntSurrogateSurrogateSerializer :
-                SurrogateSerializer<SomeClass, SomeClassIntSurrogate>(SomeClassIntSurrogate.serializer(), {
-                com.ing.zkflow.testing.SomeClassConverter.from(it) })
-        """.trimIndent()
-
-        private val sourceWith3PartyClassAndGenerics = SourceFile.kotlin(
-            "SomeClass.kt",
-            """
-                package com.ing.zkflow.testing
-
-                data class SomeClass<T: Any>(val generic: T, val string: String)
-            """.trimIndent()
-        )
-
-        private val correctSourceWithGenerics = SourceFile.kotlin(
-            "SomeClassIntSurrogate.kt",
-            """
-                package com.ing.zkflow.testing
-
-                import com.ing.zkflow.ConversionProvider
-                import com.ing.zkflow.testing.SomeClass
-                import com.ing.zkflow.Surrogate
-                import com.ing.zkflow.annotations.ASCII
-                import com.ing.zkflow.annotations.ZKPSurrogate
-                
-                @ZKPSurrogate(SomeClassConverter::class)
-                data class SomeClassIntSurrogate(
-                    val generic: Int,
-                    val string: @ASCII(10) String
-                ): Surrogate<SomeClass<Int>> {
-                    override fun toOriginal(): SomeClass<Int> {
-                        TODO("Not yet implemented")
-                    }
-                }
-
-                object SomeClassConverter: ConversionProvider<SomeClass<Int>, SomeClassIntSurrogate> {
-                    override fun from(original: SomeClass<Int>) = SomeClassIntSurrogate(original.generic, original.string)
-                }
-            """
-        )
-
-        private val correctSourceExpectedOutputWithGenerics = """
-            package com.ing.zkflow.testing
-
-            import com.ing.zkflow.serialization.serializer.SurrogateSerializer
-            import kotlin.Int
-
-            public object SomeClassIntSurrogateSurrogateSerializer :
-                SurrogateSerializer<SomeClass<Int>, SomeClassIntSurrogate>(SomeClassIntSurrogate.serializer(), {
-                com.ing.zkflow.testing.SomeClassConverter.from(it) })
-        """.trimIndent()
     }
 }

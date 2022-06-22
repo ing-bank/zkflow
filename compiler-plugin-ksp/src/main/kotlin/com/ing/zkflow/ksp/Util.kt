@@ -18,6 +18,7 @@ import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.toTypeName
+import com.google.devtools.ksp.symbol.KSValueArgument
 import kotlin.reflect.KClass
 
 private val implementedInterfacesCache: MutableMap<KSClassDeclaration, Sequence<KSClassDeclaration>> = mutableMapOf()
@@ -172,4 +173,8 @@ fun Resolver.findClassesOrObjectsWithAnnotation(annotationKClass: KClass<out Ann
     return getSymbolsWithAnnotation(annotationKClass.qualifiedName!!)
         .filterIsInstance<KSClassDeclaration>()
         .filterConcreteClassesOrObjects()
+}
+
+fun KSAnnotated.getSingleArgumentOfSingleAnnotationByType(annotationKClass: KClass<out Annotation>): KSValueArgument {
+    return this.getAnnotationsByType(annotationKClass).single().arguments.single()
 }
