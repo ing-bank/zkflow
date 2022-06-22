@@ -2,7 +2,8 @@ package com.ing.zkflow.ksp.versioning
 
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.ing.zkflow.ksp.implementsInterface
-import com.ing.zkflow.processors.SerializerRegistryProcessor
+import com.ing.zkflow.processors.SerializerProviderGenerator
+import com.ing.zkflow.processors.SerializerProviderGenerator.SerializableClassWithSourceFiles.Companion.toGeneratedSerializer
 import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.ContractState
 
@@ -10,7 +11,7 @@ import net.corda.core.contracts.ContractState
  * Assumes that the version groups are correctly sorted by [VersionSorting].
  */
 object VersionedStateIdGenerator {
-    fun generateIds(sortedStateMap: Map<KSClassDeclaration, List<KSClassDeclaration>>): Map<KSClassDeclaration, Int> =
+    fun generateIds(sortedStateMap: Map<KSClassDeclaration, List<KSClassDeclaration>>): Map<SerializerProviderGenerator.SerializableClassWithSourceFiles, Int> =
         sortedStateMap
             .entries
             .fold(emptyMap()) { acc, (stateFamily, declarationsOfThisFamily) ->
@@ -19,7 +20,7 @@ object VersionedStateIdGenerator {
                         require(ksClassDeclaration.implementsInterface(ContractState::class)) {
                             "$this can only generate ids for ${ContractState::class.simpleName}"
                         }
-                        ksClassDeclaration to generateId(stateFamily, index)
+                        ksClassDeclaration.toGeneratedSerializer() to generateId(stateFamily, index)
                     }
                     .toMap()
                 acc + localIdMap
@@ -31,15 +32,15 @@ object VersionedStateIdGenerator {
 }
 
 object VersionedCommandIdGenerator {
-    fun generateIds(commands: List<KSClassDeclaration>): Map<KSClassDeclaration, Int> =
+    fun generateIds(commands: Sequence<KSClassDeclaration>): Map<SerializerProviderGenerator.SerializableClassWithSourceFiles, Int> =
         commands.fold(emptyMap()) { acc, declaration ->
             require(declaration.implementsInterface(CommandData::class)) {
                 "$this can only generate ids for ${CommandData::class.simpleName}"
             }
-            acc + (declaration to generateId(declaration))
+            acc + (declaration.toGeneratedSerializer() to generateId(declaration))
         }
 
-    fun generateId(serializer: SerializerRegistryProcessor.GeneratedSerializer): Int {
+    fun generateId(serializer: SerializerProviderGenerator.SerializableClassWithSourceFiles): Int {
         val qualifiedName = serializer.className.canonicalName
         return generateId(qualifiedName)
     }

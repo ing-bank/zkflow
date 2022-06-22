@@ -1,2 +1,2 @@
 com.ing.zkflow.processors.ZKFLowSymbolProcessorProvider
-com.ing.zkflow.processors.StableIdVersionedSymbolProcessorProvider
+com.ing.zkflow.processors.ZKPAnnotatedProcessorProvider

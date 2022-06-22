@@ -4,7 +4,6 @@ package com.ing.zkflow.ksp.implementations
 
 import com.google.devtools.ksp.getAllSuperTypes
 import com.google.devtools.ksp.getVisibility
-import com.google.devtools.ksp.isAbstract
 import com.google.devtools.ksp.isAnnotationPresent
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.KSBuiltIns
@@ -20,6 +19,7 @@ import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSTypeReference
 import com.google.devtools.ksp.symbol.KSValueParameter
 import com.google.devtools.ksp.symbol.Visibility
+import com.ing.zkflow.Surrogate
 import com.ing.zkflow.Via
 import com.ing.zkflow.annotations.ASCII
 import com.ing.zkflow.annotations.ASCIIChar
@@ -39,17 +39,19 @@ import com.ing.zkflow.annotations.corda.RSA
 import com.ing.zkflow.annotations.corda.Sphincs
 import com.ing.zkflow.common.versioning.VersionedContractStateGroup
 import com.ing.zkflow.ksp.MetaInfServiceRegister
+import com.ing.zkflow.ksp.filterConcreteClassesOrObjects
 import com.ing.zkflow.ksp.getAllImplementedInterfaces
 import com.ing.zkflow.ksp.getAnnotationsByType
+import com.ing.zkflow.ksp.getSurrogateTargetClass
 import com.ing.zkflow.ksp.implementsInterface
 import com.ing.zkflow.ksp.implementsInterfaceDirectly
 import com.ing.zkflow.ksp.upgrade.UpgradeCommandGenerator
-import com.ing.zkflow.ksp.versioning.VersionFamilyProcessor
+import com.ing.zkflow.ksp.versioning.VersionFamilyGenerator
 import com.ing.zkflow.ksp.versioning.VersionSorting
 import com.ing.zkflow.ksp.versioning.VersionedCommandIdGenerator
 import com.ing.zkflow.ksp.versioning.VersionedStateIdGenerator
-import com.ing.zkflow.processors.SerializerRegistryProcessor
-import com.ing.zkflow.processors.SerializerRegistryProcessor.GeneratedSerializer.Companion.toGeneratedSerializer
+import com.ing.zkflow.processors.SerializerProviderGenerator
+import com.ing.zkflow.processors.SurrogateSerializerGenerator
 import com.ing.zkflow.util.merge
 import net.corda.core.contracts.AlwaysAcceptAttachmentConstraint
 import net.corda.core.contracts.AutomaticHashConstraint
@@ -96,15 +98,16 @@ import kotlin.reflect.KClass
  *   that takes `MyContractStateV1` as its single parameter. When all classes withing a version group have these constructors, this processor
  *   can determine an order within that group.
  */
-class ZKPAnnotatedProcessor(private val logger: KSPLogger, private val codeGenerator: CodeGenerator) : SymbolProcessor {
+class ZKPAnnotatedProcessor(private val logger: KSPLogger, codeGenerator: CodeGenerator) : SymbolProcessor {
     private val visitedFiles: MutableSet<KSFile> = mutableSetOf()
     private var builtinTypes: KSBuiltIns? = null
 
     private val metaInfServiceRegister = MetaInfServiceRegister(codeGenerator)
 
-    private val serializerRegistryProcessor = SerializerRegistryProcessor(codeGenerator)
+    private val serializerProviderGenerator = SerializerProviderGenerator(codeGenerator)
     private val upgradeCommandGenerator = UpgradeCommandGenerator(codeGenerator)
-    private val versionFamilyProcessor = VersionFamilyProcessor(codeGenerator)
+    private val versionFamilyGenerator = VersionFamilyGenerator(codeGenerator)
+    private val surrogateSerializerGenerator = SurrogateSerializerGenerator(codeGenerator)
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
         val newFiles = getNewFiles(resolver)
@@ -112,13 +115,11 @@ class ZKPAnnotatedProcessor(private val logger: KSPLogger, private val codeGener
         builtinTypes = resolver.builtIns
 
         val zkpAnnotated = resolver.findClassesOrObjectsWithAnnotation(ZKP::class)
-        val zkpSurrogateAnnotated = resolver.findClassesOrObjectsWithAnnotation(ZKPSurrogate::class)
+        val surrogates = getAllSurrogates(resolver)
 
-        requireNoTopLevelSurrogates(zkpSurrogateAnnotated)
+        requireNoTopLevelSurrogates(surrogates)
 
-        val allZkpAnnotated = zkpAnnotated + zkpSurrogateAnnotated
-
-        allZkpAnnotated.forEach {
+        (zkpAnnotated + surrogates).forEach {
             // For now, objects are not allowed because the ZKFlow Arrow plugin currently does not support objects.
             // When Arrow is replaced with KSP, this check should be removed.
             // Associated task: https://dev.azure.com/INGNeo/ING%20Neo%20-%20ZKFlow/_workitems/edit/21489
@@ -132,26 +133,32 @@ class ZKPAnnotatedProcessor(private val logger: KSPLogger, private val codeGener
 
         val contractStateGroups = getSortedContractStateVersionGroups(newFiles, zkpAnnotated)
 
-        val upgradeCommands = upgradeCommandGenerator.processVersionGroups(contractStateGroups.values)
+        val commands = VersionedCommandIdGenerator.generateIds(zkpAnnotated.filter { it.implementsInterface(CommandData::class) })
+        val states = VersionedStateIdGenerator.generateIds(contractStateGroups)
+        val upgradeCommands = upgradeCommandGenerator.generateUpgradeCommands(contractStateGroups.values)
 
-        val states = VersionedStateIdGenerator
-            .generateIds(contractStateGroups)
-            .mapKeys { it.key.toGeneratedSerializer() }
-
-        val commands = VersionedCommandIdGenerator
-            .generateIds(zkpAnnotated.filter { it.implementsInterface(CommandData::class) }.toList())
-            .mapKeys { it.key.toGeneratedSerializer() }
-
-        serializerRegistryProcessor
-            .process(states + commands + upgradeCommands)
-            .registerToServiceLoader()
-
-        versionFamilyProcessor.registerFamilies(contractStateGroups)
-            .registerToServiceLoader()
+        versionFamilyGenerator.generateFamilies(contractStateGroups).registerToServiceLoader()
+        surrogateSerializerGenerator.generateSurrogateSerializers(surrogates)
+        serializerProviderGenerator.generateProviders(states + commands + upgradeCommands).registerToServiceLoader()
 
         metaInfServiceRegister.emit()
 
         return emptyList()
+    }
+
+    /**
+     * Surrogates are classes that are annotated with @ZKPSurrogate *and* implement [Surrogate].
+     * Classes with only the annotation cause an error, classes only implementing the interface will be ignored.
+     */
+    private fun getAllSurrogates(resolver: Resolver): Sequence<KSClassDeclaration> {
+        val annotated = resolver.findClassesOrObjectsWithAnnotation(ZKPSurrogate::class)
+        val implementing = annotated.filter { it.implementsInterface(Surrogate::class) }
+
+        require(annotated.count() == implementing.count()) {
+            "All @${ZKPSurrogate::class.simpleName}-annotated classes should implement the ${Surrogate::class.simpleName} interface. " +
+                "The following do not: ${(annotated - implementing).map { it.qualifiedName?.asString() }.joinToString(", ")}"
+        }
+        return implementing
     }
 
     private fun getSortedContractStateVersionGroups(
@@ -236,7 +243,7 @@ class ZKPAnnotatedProcessor(private val logger: KSPLogger, private val codeGener
      */
     private fun KSClassDeclaration.requireNoGenerics() {
         require(typeParameters.isEmpty()) {
-            "classes annotated with @${ZKP::class.simpleName} or @${ZKPSurrogate::class.simpleName} may not have type parameters: `$this`. " +
+            "Classes annotated with @${ZKP::class.simpleName} or @${ZKPSurrogate::class.simpleName} may not have type parameters. `$this` has parameters: ${typeParameters.map { it.simpleName.asString() }} " +
                 "This may be supported in the future."
         }
     }
@@ -337,10 +344,9 @@ class ZKPAnnotatedProcessor(private val logger: KSPLogger, private val codeGener
             val surrogate =
                 viaAnnotation.annotationType.element?.typeArguments?.singleOrNull()?.type?.resolve()?.declaration as? KSClassDeclaration
                     ?: error(
-                        "Type ${this.resolve().declaration.qualifiedName?.asString()} is not serializable. " +
-                            "@${Via::class.simpleName} annotation must have a single type argument."
+                        "Type ${this.resolve().declaration.qualifiedName?.asString()} is not serializable. " + "@${Via::class.simpleName} annotation must have a single type argument."
                     )
-            val surrogateTarget = surrogate.getSurrogateTarget()
+            val surrogateTarget = surrogate.getSurrogateTargetClass()
             require(this.resolve().declaration == surrogateTarget) {
                 "Type ${this.resolve().declaration.qualifiedName?.asString()} is not serializable. " +
                     "Target '$surrogateTarget' of surrogate `$surrogate` set with @${Via::class.simpleName} annotation must match $this."
@@ -534,21 +540,11 @@ class ZKPAnnotatedProcessor(private val logger: KSPLogger, private val codeGener
             surrogate.requireSurrogateNotImplements(ContractState::class)
             surrogate.requireSurrogateNotImplements(CommandData::class)
 
-            val surrogateTarget = surrogate.getSurrogateTarget()
+            val surrogateTarget = surrogate.getSurrogateTargetClass()
 
             surrogateTarget.requireSurrogateTargetNotImplements(surrogate, ContractState::class)
             surrogateTarget.requireSurrogateTargetNotImplements(surrogate, CommandData::class)
         }
-    }
-
-    private fun KSClassDeclaration.getSurrogateTarget(): KSClassDeclaration {
-        val surrogateAnnotation = getAnnotationsByType(ZKPSurrogate::class).single()
-        val conversionProvider = (surrogateAnnotation.arguments[0].value as KSType).declaration as KSClassDeclaration
-        val fromFunction = conversionProvider.declarations
-            .filterIsInstance<KSFunctionDeclaration>()
-            .filter { it.simpleName.asString() == "from" }
-            .single()
-        return fromFunction.parameters.single().type.resolve().declaration as KSClassDeclaration
     }
 
     private fun KSClassDeclaration.requireSurrogateNotImplements(interfaceKClass: KClass<*>) {
@@ -571,9 +567,6 @@ class ZKPAnnotatedProcessor(private val logger: KSPLogger, private val codeGener
             .filterIsInstance<KSClassDeclaration>()
             .filterConcreteClassesOrObjects()
     }
-
-    private fun Sequence<KSClassDeclaration>.filterConcreteClassesOrObjects(): Sequence<KSClassDeclaration> =
-        filter { it.classKind in listOf(ClassKind.CLASS, ClassKind.OBJECT) && !it.isAbstract() }
 
     private fun findVersionMarkerInterfaces(newFiles: Set<KSFile>): Sequence<KSClassDeclaration> {
         return findImplementors(newFiles, VersionedContractStateGroup::class).filter { it.classKind == ClassKind.INTERFACE }

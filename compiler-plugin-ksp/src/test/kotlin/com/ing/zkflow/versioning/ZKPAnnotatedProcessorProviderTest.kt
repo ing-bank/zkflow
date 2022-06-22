@@ -2,7 +2,7 @@ package com.ing.zkflow.versioning
 
 import com.ing.zkflow.common.serialization.KClassSerializerProvider
 import com.ing.zkflow.ksp.ProcessorTest
-import com.ing.zkflow.processors.StableIdVersionedSymbolProcessorProvider
+import com.ing.zkflow.processors.ZKPAnnotatedProcessorProvider
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import io.kotest.matchers.shouldBe
@@ -10,7 +10,7 @@ import io.kotest.matchers.string.shouldContain
 import org.junit.jupiter.api.Test
 import java.io.ByteArrayOutputStream
 
-class ZKPAnnotatedProcessorProviderTest : ProcessorTest(StableIdVersionedSymbolProcessorProvider()) {
+class ZKPAnnotatedProcessorProviderTest : ProcessorTest(ZKPAnnotatedProcessorProvider()) {
     @Test
     fun `Stable id's must be generated for all VersionedContractStateGroup ContractStates`() {
         val outputStream = ByteArrayOutputStream()
