@@ -2,7 +2,7 @@ package com.example.contract.cbdc
 
 import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.contracts.ZKContract
-import com.ing.zkflow.common.versioning.Versioned
+import com.ing.zkflow.common.versioning.VersionedContractStateGroup
 import net.corda.core.contracts.Contract
 import net.corda.core.contracts.ContractClassName
 import net.corda.core.contracts.ContractState
@@ -14,10 +14,5 @@ class CBDCContract : ZKContract, Contract {
     companion object {
         val ID: ContractClassName = this::class.java.enclosingClass.canonicalName
     }
-
-    interface VersionedIssuePrivateCommand : Versioned, ZKCommandData
-    interface VersionedMovePrivateCommand : Versioned, ZKCommandData
-    interface VersionedSplitPrivateCommand : Versioned, ZKCommandData
-    interface VersionedRedeemPrivateCommand : Versioned, ZKCommandData
 }
 

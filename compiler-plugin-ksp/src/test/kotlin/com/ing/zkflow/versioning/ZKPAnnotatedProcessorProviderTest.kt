@@ -10,9 +10,9 @@ import io.kotest.matchers.string.shouldContain
 import org.junit.jupiter.api.Test
 import java.io.ByteArrayOutputStream
 
-class StableIdVersionedSymbolProcessorProviderTest : ProcessorTest(StableIdVersionedSymbolProcessorProvider()) {
+class ZKPAnnotatedProcessorProviderTest : ProcessorTest(StableIdVersionedSymbolProcessorProvider()) {
     @Test
-    fun `Stable id's must be generated for all Versioned ContractStates`() {
+    fun `Stable id's must be generated for all VersionedContractStateGroup ContractStates`() {
         val outputStream = ByteArrayOutputStream()
         val result = compile(kotlinFile, outputStream)
 
@@ -52,12 +52,12 @@ class StableIdVersionedSymbolProcessorProviderTest : ProcessorTest(StableIdVersi
             reportError(result, outputStream)
         }
 
-        result.exitCode shouldBe KotlinCompilation.ExitCode.COMPILATION_ERROR
         result.messages shouldContain "must implement version group"
+        result.exitCode shouldBe KotlinCompilation.ExitCode.COMPILATION_ERROR
     }
 
     @Test
-    fun `marker interfaces should extend Versioned directly`() {
+    fun `marker interfaces should extend VersionedContractStateGroup directly`() {
         val outputStream = ByteArrayOutputStream()
         val result = compile(indirectMarkerInterface, outputStream)
 
@@ -71,32 +71,6 @@ class StableIdVersionedSymbolProcessorProviderTest : ProcessorTest(StableIdVersi
     }
 
     @Test
-    fun `commands without @ZKP annotation are not allowed`() {
-        val outputStream = ByteArrayOutputStream()
-        val result = compile(unannotatedCommandData, outputStream)
-
-        if (result.exitCode != KotlinCompilation.ExitCode.OK) {
-            reportError(result, outputStream)
-        }
-
-        result.exitCode shouldBe KotlinCompilation.ExitCode.COMPILATION_ERROR
-        result.messages shouldContain "ZebraCommand is a CommandData and must therefore be annotated with either @ZKP or @ZKPSurrogate"
-    }
-
-    @Test
-    fun `contract states without @ZKP annotation are not allowed`() {
-        val outputStream = ByteArrayOutputStream()
-        val result = compile(unannotatedContractState, outputStream)
-
-        if (result.exitCode != KotlinCompilation.ExitCode.OK) {
-            reportError(result, outputStream)
-        }
-
-        result.exitCode shouldBe KotlinCompilation.ExitCode.COMPILATION_ERROR
-        result.messages shouldContain "ZebraV1 is a ContractState and must therefore be annotated with either @ZKP or @ZKPSurrogate"
-    }
-
-    @Test
     fun `unversioned states and commands should throw and error`() {
         val outputStream = ByteArrayOutputStream()
         val result = compile(unversionedStatesKotlinFile, outputStream)
@@ -106,8 +80,10 @@ class StableIdVersionedSymbolProcessorProviderTest : ProcessorTest(StableIdVersi
         }
 
         result.exitCode shouldBe KotlinCompilation.ExitCode.COMPILATION_ERROR
-        result.messages shouldContain "All types annotated with @ZKP or @ZKPSurrogate must implement a version marker interface. " +
-            "The following do not: UnversionedHorse, UnversionedZebra, UnversionedCommand"
+        result.messages.shouldContain(
+            "All ContractStates annotated with @ZKP or @ZKPSurrogate " +
+                "must implement a version marker interface. The following do not: UnversionedHorse, UnversionedZebra"
+        )
     }
 
     companion object {
@@ -118,11 +94,11 @@ class StableIdVersionedSymbolProcessorProviderTest : ProcessorTest(StableIdVersi
 
                 import com.ing.zkflow.annotations.ZKP
                 import com.ing.zkflow.common.contracts.ZKCommandData
-                import com.ing.zkflow.common.versioning.Versioned
+                import com.ing.zkflow.common.versioning.VersionedContractStateGroup
                 import net.corda.core.contracts.ContractState
 
-                interface IZebra: Versioned, ContractState
-                interface IHorse: Versioned
+                interface IZebra: VersionedContractStateGroup, ContractState
+                interface IHorse: VersionedContractStateGroup
 
                 @ZKP
                 class ZebraV1: IZebra {
@@ -166,9 +142,10 @@ class StableIdVersionedSymbolProcessorProviderTest : ProcessorTest(StableIdVersi
                 package com.ing.zkflow.contract
 
                 import com.ing.zkflow.annotations.ZKP
-                import com.ing.zkflow.common.versioning.Versioned
+                import com.ing.zkflow.common.versioning.VersionedContractStateGroup
+                import net.corda.core.contracts.ContractState
 
-                interface VersionGroup: Versioned
+                interface VersionGroup: VersionedContractStateGroup, ContractState
 
                 abstract class Indirection: VersionGroup
 
@@ -182,35 +159,10 @@ class StableIdVersionedSymbolProcessorProviderTest : ProcessorTest(StableIdVersi
             """
                 package com.ing.zkflow.contract
 
-                import com.ing.zkflow.common.versioning.Versioned
+                import com.ing.zkflow.common.versioning.VersionedContractStateGroup
 
-                interface AnimalVersionGroup: Versioned
+                interface AnimalVersionGroup: VersionedContractStateGroup
                 interface Horse: AnimalVersionGroup
-            """
-        )
-
-        private val unannotatedCommandData = SourceFile.kotlin(
-            "UnannotatedCommandData.kt",
-            """
-                package com.ing.zkflow.contract
-
-                import net.corda.core.contracts.CommandData
-    
-                class ZebraCommand(): CommandData {
-                }
-            """
-        )
-
-        private val unannotatedContractState = SourceFile.kotlin(
-            "UnannotatedContractState.kt",
-            """
-                package com.ing.zkflow.contract
-
-                import net.corda.core.contracts.ContractState
-    
-                class ZebraV1(): ContractState {
-                    override val participants: List<AnonymousParty> = emptyList()
-                }
             """
         )
 
@@ -222,10 +174,10 @@ class StableIdVersionedSymbolProcessorProviderTest : ProcessorTest(StableIdVersi
                 import com.ing.zkflow.annotations.ZKP
                 import com.ing.zkflow.common.contracts.ZKCommandData
                 import net.corda.core.contracts.ContractState
-                import com.ing.zkflow.common.versioning.Versioned
+                import com.ing.zkflow.common.versioning.VersionedContractStateGroup
     
-                interface IZebra: Versioned
-                interface IHorse: Versioned
+                interface IZebra: VersionedContractStateGroup
+                interface IHorse: VersionedContractStateGroup
     
                 @ZKP
                 class ZebraV1(): ContractState, IZebra {
@@ -277,18 +229,18 @@ class StableIdVersionedSymbolProcessorProviderTest : ProcessorTest(StableIdVersi
                 package com.ing.zkflow.contract
 
                 import com.ing.zkflow.annotations.ZKP
-                import com.ing.zkflow.common.versioning.Versioned
+                import com.ing.zkflow.common.versioning.VersionedContractStateGroup
                 import com.ing.zkflow.common.contracts.ZKCommandData
 
                 class ContainerA {
-                    interface IIssue: Versioned
+                    interface IIssue: VersionedContractStateGroup
 
                     @ZKP
                     class Issue: IIssue, ZKCommandData
                 }
 
                 class ContainerB {
-                    interface IIssue: Versioned, ZKCommandData
+                    interface IIssue: VersionedContractStateGroup, ZKCommandData
 
                     @ZKP
                     class Issue: IIssue 

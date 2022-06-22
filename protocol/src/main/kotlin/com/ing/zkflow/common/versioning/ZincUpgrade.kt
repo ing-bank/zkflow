@@ -7,7 +7,7 @@ import org.intellij.lang.annotations.Language
  * The argument name of this method is derived from the parameter name in the constructor.
  *
  * ```kotlin
- * interface MyType : Versioned
+ * interface MyType : VersionedContractStateGroup
  * @ZKP data class MyTypeV1(val a: Int) : MyType
  * @ZKP data class MyTypeV2(val a: Int, val b: Int) : MyType {
  *     @ZincUpgrade("Self::new(previous_version.a, 0 as i32)")

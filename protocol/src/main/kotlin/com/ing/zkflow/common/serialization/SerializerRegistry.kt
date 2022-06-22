@@ -120,6 +120,7 @@ abstract class SerializerRegistry<T : Any> {
  * This is lazy and cached because the iterators returned by `ServiceLoader.load()` are lazy and cached.
  */
 fun getAllKClassSerializerProviders(): List<KClassSerializerProvider> =
+
     ServiceLoader.load(KClassSerializerProvider::class.java) +
         ServiceLoader.load(SurrogateSerializerRegistryProvider::class.java)
 

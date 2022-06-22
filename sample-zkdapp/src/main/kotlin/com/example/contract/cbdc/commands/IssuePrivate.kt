@@ -1,13 +1,13 @@
 package com.example.contract.cbdc.commands
 
-import com.example.contract.cbdc.CBDCContract
 import com.example.contract.cbdc.CBDCToken
 import com.ing.zkflow.annotations.ZKP
+import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.zkp.metadata.commandMetadata
 import org.intellij.lang.annotations.Language
 
 @ZKP
-class IssuePrivate : CBDCContract.VersionedIssuePrivateCommand {
+class IssuePrivate : ZKCommandData {
     override val metadata = commandMetadata {
         numberOfSigners = 1
         outputs {

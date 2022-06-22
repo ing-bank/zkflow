@@ -11,7 +11,7 @@ abstract class EvolvableTokenType : LinearState {
      * The [Party]s which create and maintain this token [EvolvableTokenType]. It probably _is_ the issuer of the token
      * but may not necessarily be. For example, a reference data maintainer may create an [EvolvableTokenType] for
      * some stock, keep all the details up-to-date, and distribute the updates. This [EvolvableTokenType], can
-     * then be used by many issuers to create [FungibleToken]s (depository receipts) for the stock in question. Also
+     * then be used by many issuers to create [FungibleTokenV1]s (depository receipts) for the stock in question. Also
      * the actual stock issuer (if they had a Corda node on the network) could use the same stock token to issue ledger
      * native stock.
      */

@@ -2,7 +2,7 @@ package com.ing.zkflow.common.zkp.metadata
 
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.common.contracts.ZKCommandData
-import com.ing.zkflow.common.versioning.Versioned
+import com.ing.zkflow.common.versioning.VersionedContractStateGroup
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import net.corda.core.contracts.BelongsToContract
@@ -22,7 +22,7 @@ class ZKCommandMetadataTest {
 
     @Test
     fun `ZKCommandMetadata DSL happy flow works`() {
-        val cmd = @ZKP object : ZKCommandData, Versioned {
+        val cmd = @ZKP object : ZKCommandData {
             override val metadata = commandMetadata {
                 circuit { name = "foo" }
 
@@ -48,7 +48,7 @@ class ZKCommandMetadataTest {
     fun `ZKCommandMetadata DSL rejects duplicate indexes`() {
 
         assertThrows<IllegalStateException> {
-            @ZKP object : ZKCommandData, Versioned {
+            @ZKP object : ZKCommandData {
                 override val metadata = commandMetadata {
                     circuit { name = "foo" }
 
@@ -63,7 +63,7 @@ class ZKCommandMetadataTest {
         }
 
         assertThrows<IllegalStateException> {
-            @ZKP object : ZKCommandData, Versioned {
+            @ZKP object : ZKCommandData {
                 override val metadata = commandMetadata {
                     circuit { name = "foo" }
 
@@ -78,7 +78,7 @@ class ZKCommandMetadataTest {
         }
 
         assertThrows<IllegalStateException> {
-            @ZKP object : ZKCommandData, Versioned {
+            @ZKP object : ZKCommandData {
                 override val metadata = commandMetadata {
                     circuit { name = "foo" }
 
@@ -99,7 +99,7 @@ class MockAuditContract : Contract {
         const val ID: ContractClassName = "com.ing.zkflow.common.zkp.metadata.MockAuditContract"
     }
 
-    interface VersionedApproval : Versioned, ContractState
+    interface VersionedApproval : VersionedContractStateGroup, ContractState
 
     @BelongsToContract(MockAuditContract::class)
     @ZKP
@@ -117,7 +117,7 @@ class MockAssetContract : Contract {
         const val ID: ContractClassName = "com.ing.zkflow.common.zkp.metadata.MockAssetContract"
     }
 
-    interface VersionedMockAsset : Versioned, OwnableState
+    interface VersionedMockAsset : VersionedContractStateGroup, OwnableState
 
     @BelongsToContract(MockAssetContract::class)
     @ZKP
@@ -133,8 +133,7 @@ class MockAssetContract : Contract {
         }
     }
 
-    interface VersionedMove : Versioned, ZKCommandData
-    class Move : VersionedMove {
+    class Move : ZKCommandData {
         override val metadata = commandMetadata {
             numberOfSigners = 2
             inputs { any(MockAsset::class) at 0 }

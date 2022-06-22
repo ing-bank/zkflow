@@ -3,7 +3,7 @@ package com.ing.zkflow.zinc.poet.generate
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.contracts.ZKUpgradeCommandData
-import com.ing.zkflow.common.versioning.Versioned
+import com.ing.zkflow.common.versioning.VersionedContractStateGroup
 import com.ing.zkflow.common.versioning.ZincUpgrade
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.common.zkp.metadata.commandMetadata
@@ -17,7 +17,7 @@ object MyContract : Contract {
     override fun verify(tx: LedgerTransaction) {}
 
     @ZKP
-    class MyFirstCommand : ZKCommandData, Versioned {
+    class MyFirstCommand : ZKCommandData {
 
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
             circuit {
@@ -68,7 +68,7 @@ object MyContract : Contract {
     }
 }
 
-interface VersionedMyState : Versioned, ContractState
+interface VersionedMyState : VersionedContractStateGroup, ContractState
 
 @ZKP
 @BelongsToContract(MyContract::class)
@@ -90,7 +90,7 @@ data class MyStateV2(
     override val participants: List<AbstractParty> = emptyList()
 }
 
-interface VersionedMyOtherState : Versioned, ContractState
+interface VersionedMyOtherState : VersionedContractStateGroup, ContractState
 
 @ZKP
 @BelongsToContract(MyContract::class)

@@ -207,9 +207,9 @@ import org.intellij.lang.annotations.Language
 annotation class ZKP
 annotation class ZincUpgrade(@Language("rust") val body: String)
 
-interface Versioned
-interface AStateI : Versioned // Family A, notice no fields or methods
-interface BStateI : Versioned // Family B
+interface VersionedContractStateGroup
+interface AStateI : VersionedContractStateGroup // Family A, notice no fields or methods
+interface BStateI : VersionedContractStateGroup // Family B
 
 @ZKP
 data class AStateV1(val a1: Int) : AStateI // Family A, first class, notice no upgrade constructor
@@ -279,11 +279,11 @@ import net.corda.core.transactions.LedgerTransaction
  * using a marker interface, which is an empty interface that extends this interface.
  *
  * \`\`\`kotlin
- * interface Marker : Versioned
+ * interface Marker : VersionedContractStateGroup
  * data class Marked(...): Marker { ... }
  * \`\`\`
  */
-interface Versioned
+interface VersionedContractStateGroup
 
 /**
  * Annotation specifying the [body] of a static zinc method on the enclosing type.
@@ -301,7 +301,7 @@ interface Versioned
 annotation class ZincUpgrade(@Language("rust")val body: String)
 
 /// Child data class versions
-interface Child : Versioned
+interface Child : VersionedContractStateGroup
 
 @ZKP
 @Suppress("MagicNumber")
@@ -340,7 +340,7 @@ class MyContract : Contract {
     }
 
     /// Parent state class versions
-    interface ParentI : Versioned
+    interface ParentI : VersionedContractStateGroup
 
     @ZKP
     data class ParentV1(
@@ -402,8 +402,8 @@ class UpgradeParentV2ToParent : ZKCommandData {
     }
 
     fun verify(ltx: LedgerTransaction) {
-        val input = ltx.inputStates[0] as Versioned
-        val output = ltx.outputStates[0] as Versioned
+        val input = ltx.inputStates[0] as VersionedContractStateGroup
+        val output = ltx.outputStates[0] as VersionedContractStateGroup
 
         // Structure, i.e. correct version types already enforced by ZKFlow metadata
         require(output == hello.world.MyContract.Parent(input)) {
@@ -469,7 +469,7 @@ future.
 
 Must haves:
 
-- [ ] [protocol] Implement `Versioned` interface for versions in the same scope.
+- [ ] [protocol] Implement `VersionedContractStateGroup` interface for versions in the same scope.
 - [ ] [zinc-poet] Generate circuits for upgrade commands.
   - [ ] [zinc-poet] Include content of `@ZincUpgradeMethod` in zinc code.
 - [ ] Create compiler plugin that generates upgrade commands.

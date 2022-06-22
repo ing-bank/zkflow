@@ -9,7 +9,7 @@ import io.kotest.matchers.string.shouldContain
 import org.junit.jupiter.api.Test
 import java.io.ByteArrayOutputStream
 
-class StateVersionSortingTest : ProcessorTest(StableIdVersionedSymbolProcessorProvider()) {
+class VersionSortingTest : ProcessorTest(StableIdVersionedSymbolProcessorProvider()) {
     @Test
     fun `Version groups must be sorted correctly`() {
         val outputStream = ByteArrayOutputStream()
@@ -77,9 +77,10 @@ class StateVersionSortingTest : ProcessorTest(StableIdVersionedSymbolProcessorPr
                 package com.ing.zkflow.contract
 
                 import com.ing.zkflow.annotations.ZKP
-                import com.ing.zkflow.common.versioning.Versioned
+                import com.ing.zkflow.common.versioning.VersionedContractStateGroup
+                import net.corda.core.contracts.ContractState
 
-                interface VersionedZebra: Versioned
+                interface VersionedZebra: VersionedContractStateGroup, ContractState
 
                 @ZKP
                 class ZebraV1(): VersionedZebra
@@ -113,10 +114,10 @@ class StateVersionSortingTest : ProcessorTest(StableIdVersionedSymbolProcessorPr
 
                 import com.ing.zkflow.annotations.ZKP
                 import com.ing.zkflow.common.contracts.ZKUpgradeCommandData
-                import com.ing.zkflow.common.versioning.Versioned
+                import com.ing.zkflow.common.versioning.VersionedContractStateGroup
                 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 
-                interface VersionedZebra: Versioned
+                interface VersionedZebra: VersionedContractStateGroup
 
                 @ZKP
                 class ZebraV1ToZebraV2: ZKUpgradeCommandData {
@@ -148,9 +149,10 @@ class StateVersionSortingTest : ProcessorTest(StableIdVersionedSymbolProcessorPr
                 package com.ing.zkflow.contract
 
                 import com.ing.zkflow.annotations.ZKP
-                import com.ing.zkflow.common.versioning.Versioned
+                import com.ing.zkflow.common.versioning.VersionedContractStateGroup
+                import net.corda.core.contracts.ContractState
 
-                interface IZebra: Versioned
+                interface IZebra: VersionedContractStateGroup, ContractState
 
                 @ZKP
                 class ZebraV1(): IZebra
@@ -172,10 +174,10 @@ class StateVersionSortingTest : ProcessorTest(StableIdVersionedSymbolProcessorPr
 
                 import com.ing.zkflow.annotations.ZKP
                 import com.ing.zkflow.common.contracts.ZKCommandData
-                import com.ing.zkflow.common.versioning.Versioned
+                import com.ing.zkflow.common.versioning.VersionedContractStateGroup
                 import net.corda.core.contracts.ContractState
 
-                interface IZebra: Versioned, ContractState
+                interface IZebra: VersionedContractStateGroup, ContractState
 
                 @ZKP
                 class ZebraV1(): IZebra {
@@ -204,9 +206,9 @@ class StateVersionSortingTest : ProcessorTest(StableIdVersionedSymbolProcessorPr
                 import com.ing.zkflow.annotations.ZKP
                 import com.ing.zkflow.common.contracts.ZKCommandData
                 import net.corda.core.contracts.ContractState
-                import com.ing.zkflow.common.versioning.Versioned
+                import com.ing.zkflow.common.versioning.VersionedContractStateGroup
 
-                interface IZebra: Versioned, ContractState
+                interface IZebra: VersionedContractStateGroup, ContractState
 
                 @ZKP
                 class ZebraV1(): IZebra {

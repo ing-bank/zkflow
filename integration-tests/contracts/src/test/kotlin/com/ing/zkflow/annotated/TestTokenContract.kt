@@ -4,7 +4,7 @@ import com.ing.zkflow.annotations.UTF8
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.annotations.corda.EdDSA
 import com.ing.zkflow.common.contracts.ZKCommandData
-import com.ing.zkflow.common.versioning.Versioned
+import com.ing.zkflow.common.versioning.VersionedContractStateGroup
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.serialization.serializer.corda.PublicKeySerializer
 import net.corda.core.contracts.BelongsToContract
@@ -22,38 +22,34 @@ class TestTokenContract : Contract {
         const val PROGRAM_ID: ContractClassName = "TestTokenContract"
     }
 
-    interface TestTokenStateI : Versioned
+    interface TestTokenStateI : VersionedContractStateGroup
 
     @ZKP
     @BelongsToContract(TestTokenContract::class)
     @Suppress("MagicNumber")
     data class TestTokenState(
-        override val owner: @EdDSA AnonymousParty =
-            AnonymousParty(PublicKeySerializer.fixedPublicKey(Crypto.EDDSA_ED25519_SHA512)),
+        val myOwner: @EdDSA AnonymousParty = AnonymousParty(PublicKeySerializer.fixedPublicKey(Crypto.EDDSA_ED25519_SHA512)),
         val int: Int = 1877,
         val string: @UTF8(10) String = "abc"
     ) : OwnableState, TestTokenStateI {
+        override val owner: AbstractParty = myOwner
 
-        override val participants: List<AnonymousParty> = listOf(owner)
+        override val participants: List<AbstractParty> = listOf(owner)
 
         override fun withNewOwner(newOwner: AbstractParty): CommandAndState {
             TODO("Not yet implemented")
         }
     }
 
-    interface CreateCommand : Versioned
-
     // Commands
     @ZKP
-    class Create : ZKCommandData, CreateCommand {
+    class Create : ZKCommandData {
         override val metadata: ResolvedZKCommandMetadata
             get() = TODO("Not yet implemented")
     }
 
-    interface MoveCommand : Versioned
-
     @ZKP
-    class Move : ZKCommandData, MoveCommand {
+    class Move : ZKCommandData {
         override val metadata: ResolvedZKCommandMetadata
             get() = TODO("Not yet implemented")
     }

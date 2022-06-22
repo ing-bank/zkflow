@@ -78,11 +78,11 @@ internal class ContractStateAndCommandDataSymbolProcessorProviderTest : Processo
                 
                 import com.ing.zkflow.annotations.ZKP
                 import com.ing.zkflow.common.contracts.ZKCommandData
-                import com.ing.zkflow.common.versioning.Versioned
+                import com.ing.zkflow.common.versioning.VersionedContractStateGroup
                 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
                 import com.ing.zkflow.common.zkp.metadata.commandMetadata
 
-                interface Cmd: Versioned
+                interface Cmd: VersionedContractStateGroup
 
                 @ZKP
                 class TestCommand: Cmd, ZKCommandData {
@@ -105,13 +105,10 @@ internal class ContractStateAndCommandDataSymbolProcessorProviderTest : Processo
                 import com.ing.zkflow.common.contracts.ZKCommandData
                 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
                 import com.ing.zkflow.common.zkp.metadata.commandMetadata
-                import com.ing.zkflow.common.versioning.Versioned
                 
-                interface Cmd: Versioned
-
                 class Container {
                     @ZKP
-                    class TestNestedCommand: Cmd, ZKCommandData {
+                    class TestNestedCommand: ZKCommandData {
                         
                         @Transient
                         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
@@ -138,17 +135,18 @@ internal class ContractStateAndCommandDataSymbolProcessorProviderTest : Processo
                 package com.ing.zkflow.zktransaction
                 
                 import com.ing.zkflow.annotations.ZKP
+                import com.ing.zkflow.annotations.corda.EdDSA
                 import net.corda.core.contracts.CommandAndState
                 import net.corda.core.identity.AbstractParty
-                import com.ing.zkflow.common.versioning.Versioned
+                import com.ing.zkflow.common.versioning.VersionedContractStateGroup
                 import net.corda.core.contracts.OwnableState
                 import net.corda.core.identity.AnonymousParty
                 
-                interface VersionedState: Versioned
+                interface VersionedState: VersionedContractStateGroup
 
                 @ZKP
                 data class TestState(
-                    override val owner: AnonymousParty
+                    override val owner: @EdDSA AnonymousParty
                 ): VersionedState, OwnableState {
                     override fun withNewOwner(newOwner: AbstractParty): CommandAndState {
                         require(newOwner is AnonymousParty)

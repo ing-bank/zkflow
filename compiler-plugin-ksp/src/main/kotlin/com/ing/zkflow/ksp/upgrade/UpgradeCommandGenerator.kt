@@ -6,6 +6,7 @@ import com.ing.zinc.naming.camelToSnakeCase
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.common.contracts.ZKUpgradeCommandData
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
+import com.ing.zkflow.ksp.versioning.VersionedCommandIdGenerator
 import com.ing.zkflow.processors.SerializerRegistryProcessor.GeneratedSerializer
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
@@ -32,8 +33,9 @@ class UpgradeCommandGenerator(
     /**
      * Assumes version groups to be already sorted with StateVersionSorting.sortByConstructors
      */
-    fun processVersionGroups(groups: Collection<List<KSClassDeclaration>>): List<GeneratedSerializer> =
+    fun processVersionGroups(groups: Collection<List<KSClassDeclaration>>): Map<GeneratedSerializer, Int> =
         groups.flatMap { members -> processVersionGroup(members) }
+            .associateWith { VersionedCommandIdGenerator.generateId(it) }
 
     private fun processVersionGroup(members: List<KSClassDeclaration>): List<GeneratedSerializer> {
         var previousVersion: KSClassDeclaration? = null

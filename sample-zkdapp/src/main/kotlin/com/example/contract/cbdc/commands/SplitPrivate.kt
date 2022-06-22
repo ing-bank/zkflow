@@ -1,14 +1,13 @@
 package com.example.contract.cbdc.commands
 
-import com.example.contract.cbdc.CBDCContract
 import com.example.contract.cbdc.CBDCToken
 import com.ing.zkflow.annotations.ZKP
+import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.zkp.metadata.commandMetadata
 import org.intellij.lang.annotations.Language
 
-
 @ZKP
-class SplitPrivate : CBDCContract.VersionedSplitPrivateCommand {
+class SplitPrivate : ZKCommandData {
     override val metadata = commandMetadata {
         numberOfSigners = 1
         inputs {
@@ -38,7 +37,7 @@ class SplitPrivate : CBDCContract.VersionedSplitPrivateCommand {
                 
                 assert!(output_0.data.amount.quantity + output_1.data.amount.quantity == input.data.amount.quantity, "[Split] Amounts of funds must be constant");
                 
-                assert!(ctx.signers.contains(input.data.holder.public_key), "[Split] Input holder must sign");
+                assert!(ctx.signers.contains(input.data.owner.public_key), "[Split] Input holder must sign");
             }
         """.trimIndent()
     }

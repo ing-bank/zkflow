@@ -3,7 +3,7 @@ package com.ing.zkflow.common.transactions
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.network.ZKAttachmentConstraintType
-import com.ing.zkflow.common.versioning.Versioned
+import com.ing.zkflow.common.versioning.VersionedContractStateGroup
 import com.ing.zkflow.common.zkp.ZKFlow
 import com.ing.zkflow.common.zkp.ZKFlow.DEFAULT_ZKFLOW_HASH_ATTACHMENT_HASHING_ALGORITHM
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
@@ -54,7 +54,7 @@ class ZKVerifierTransactionTest {
     data class TestState(
         val owner: AnonymousParty,
         val value: Int = Random().nextInt(1000)
-    ) : ContractState, Versioned {
+    ) : ContractState, VersionedContractStateGroup {
         override val participants: List<AnonymousParty> = listOf(owner)
     }
 
@@ -62,7 +62,7 @@ class ZKVerifierTransactionTest {
     fun testFilterOutputs1() {
         withTestSerializationEnvIfNotSet {
             @ZKP
-            class TestZKCommand : ZKCommandData, Versioned {
+            class TestZKCommand : ZKCommandData {
                 override val metadata: ResolvedZKCommandMetadata = commandMetadata {
                     outputs {
                         private(TestState::class) at 1
@@ -106,7 +106,7 @@ class ZKVerifierTransactionTest {
     fun testFilterOutputs2() {
         withTestSerializationEnvIfNotSet {
             @ZKP
-            class TestZKCommand : ZKCommandData, Versioned {
+            class TestZKCommand : ZKCommandData {
                 override val metadata: ResolvedZKCommandMetadata = commandMetadata {
                     outputs {
                         private(TestState::class) at 0
@@ -146,7 +146,7 @@ class ZKVerifierTransactionTest {
     fun testFilterOutputs3() {
         withTestSerializationEnvIfNotSet {
             @ZKP
-            class TestZKCommand : ZKCommandData, Versioned {
+            class TestZKCommand : ZKCommandData {
                 override val metadata: ResolvedZKCommandMetadata = commandMetadata {
                     outputs {
                         private(TestState::class) at 2

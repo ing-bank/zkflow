@@ -30,7 +30,7 @@ class NonZkpMoveFlow(
         val me = serviceHub.myInfo.legalIdentities.single()
         val stateAndRef = createStx.coreTransaction.outRef<TestContract.TestState>(0)
         val command = Command(TestContract.MoveAnyToPrivate(), listOf(newOwner, me).map { it.owningKey })
-        val stateAndContract = StateAndContract(stateAndRef.state.data.copy(owner = newOwner.anonymise()), TestContract.PROGRAM_ID)
+        val stateAndContract = StateAndContract(stateAndRef.state.data.copy(holder = newOwner.anonymise()), TestContract.PROGRAM_ID)
 
         val builder = TransactionBuilder(serviceHub.networkMapCache.notaryIdentities.single())
         builder.withItems(stateAndRef, stateAndContract, command)

@@ -48,10 +48,16 @@ class MoveBidirectionalFlow(
         // Now we create the transaction
         val me = serviceHub.myInfo.legalIdentities.single().anonymise()
         val command = Command(TestContract.MoveBidirectional(), listOf(counterParty, me).map { it.owningKey })
-        val myOutput = StateAndContract(myInput.state.data.copy(owner = counterParty.anonymise()), TestContract.PROGRAM_ID)
-        val theirOutput = StateAndContract(theirInput.state.data.copy(owner = me), TestContract.PROGRAM_ID)
+        val myOutput = StateAndContract(myInput.state.data.copy(holder = counterParty.anonymise()), TestContract.PROGRAM_ID)
+        val theirOutput = StateAndContract(theirInput.state.data.copy(holder = me), TestContract.PROGRAM_ID)
 
-        val builder = ZKTransactionBuilder(serviceHub.networkMapCache.notaryIdentities.single()).withItems(myInput, theirInput, myOutput, theirOutput, command)
+        val builder = ZKTransactionBuilder(serviceHub.networkMapCache.notaryIdentities.single()).withItems(
+            myInput,
+            theirInput,
+            myOutput,
+            theirOutput,
+            command
+        )
         builder.enforcePrivateInputsAndReferences(serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_VERIFIER_TX_STORAGE))
 
         // Transaction creator signs transaction.

@@ -72,7 +72,7 @@ class SerializerRegistryProcessor(private val codeGenerator: CodeGenerator) {
         constructor(className: ClassName, sourceFile: KSFile?) : this(className, listOfNotNull(sourceFile))
 
         companion object {
-            fun KSClassDeclaration.toImplementationClass(): GeneratedSerializer =
+            fun KSClassDeclaration.toGeneratedSerializer(): GeneratedSerializer =
                 GeneratedSerializer(toClassName(), containingFile)
         }
     }

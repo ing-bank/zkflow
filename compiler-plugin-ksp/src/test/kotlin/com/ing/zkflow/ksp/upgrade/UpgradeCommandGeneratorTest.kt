@@ -4,6 +4,7 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSFile
 import com.ing.zkflow.ksp.CodeGeneratorStub
 import com.ing.zkflow.ksp.KSNameStub
+import com.ing.zkflow.ksp.versioning.VersionedCommandIdGenerator
 import com.ing.zkflow.processors.SerializerRegistryProcessor.GeneratedSerializer
 import com.squareup.kotlinpoet.ClassName
 import io.kotest.matchers.shouldBe
@@ -39,14 +40,14 @@ internal class UpgradeCommandGeneratorTest {
     fun `process empty family should return empty list`() {
         val testSubject = testSubject(ByteArrayOutputStream())
         val actual = testSubject.processVersionGroups(listOf(emptyList()))
-        actual shouldBe emptyList()
+        actual shouldBe emptyMap()
     }
 
     @Test
     fun `process family with single member should return empty list`() {
         val testSubject = testSubject(ByteArrayOutputStream())
         val actual = testSubject.processVersionGroups(listOf(listOf(v1)))
-        actual shouldBe emptyList()
+        actual shouldBe emptyMap()
     }
 
     @Test
@@ -64,7 +65,7 @@ internal class UpgradeCommandGeneratorTest {
                 ClassName("com.example", "UpgradeAnyV1ToPublicV2"),
                 listOf(v1File, v2File),
             )
-        )
+        ).associateWith { VersionedCommandIdGenerator.generateId(it) }
 
         generatedBytes.toString("UTF-8") shouldBe """
             package com.example

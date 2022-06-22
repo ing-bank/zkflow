@@ -15,7 +15,7 @@ import kotlin.reflect.KClass
  * @param members The sorted classes of all family members, in ascending order
  */
 data class VersionFamily(
-    val familyClass: KClass<out Versioned>,
+    val familyClass: KClass<out VersionedContractStateGroup>,
     val members: List<KClass<out ContractState>>,
 ) {
     val latest: KClass<out ContractState> by lazy {
@@ -83,7 +83,7 @@ open class VersionFamilyRegistry(
             .toMap()
     }
 
-    operator fun get(familyKClass: KClass<out Versioned>): VersionFamily = familyClassToFamily[familyKClass]
+    operator fun get(familyKClass: KClass<out VersionedContractStateGroup>): VersionFamily = familyClassToFamily[familyKClass]
         ?: error("Not a family $familyKClass")
 
     fun familyOf(relativeKClass: KClass<out ContractState>): VersionFamily = relativeClassToFamily[relativeKClass]

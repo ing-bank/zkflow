@@ -4,7 +4,7 @@ import com.ing.zkflow.Via
 import com.ing.zkflow.annotations.UTF8
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.annotations.corda.EdDSA
-import com.ing.zkflow.common.versioning.Versioned
+import com.ing.zkflow.common.versioning.VersionedContractStateGroup
 import io.ivno.annotated.deps.BigDecimalAmount
 import io.ivno.annotated.deps.Network
 import io.ivno.annotated.fixtures.BigDecimalAmount_LinearPointer_IvnoTokenType
@@ -18,13 +18,36 @@ import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
 import java.time.Instant
 
+// @ZKP
+// data class Foo(val foo: A<@Via<BSurrogate> B<C<Int>>, C<@ASCII(10) String>>)
+//
+// @ZKP
+// data class A<out T : B<*>, U : Any>(val foo: T, val bar: U) {
+// }
+//
+// data class B<T : Any>(val foo: T)
+//
+// @ZKP
+// data class C<T : Any>(val foo: T)
+//
+// @ZKPSurrogate(BConverter::class)
+// data class BSurrogate(
+//     val foo: C<Int>
+// ) : Surrogate<B<C<Int>>> {
+//     override fun toOriginal() = B(foo)
+// }
+//
+// object BConverter : ConversionProvider<B<C<Int>>, BSurrogate> {
+//     override fun from(original: B<C<Int>>) =
+//         BSurrogate(original.foo)
+// }
+
 @ZKP
 data class IvnoDeposit constructor(
     val depositor: @EdDSA Party,
     val custodian: @EdDSA Party,
     val tokenIssuingEntity: @EdDSA Party,
     val amount: @Via<BigDecimalAmount_LinearPointer_IvnoTokenType> BigDecimalAmount<LinearPointer<IvnoTokenType>>,
-    //
     val reference: @UTF8(10) String?,
     val status: DepositStatus,
     val timestamp: Instant,
@@ -43,7 +66,7 @@ enum class DepositStatus {
     PAYMENT_REJECTED,
 }
 
-interface VersionedIvnotokenType : Versioned, ContractState
+interface VersionedIvnotokenType : VersionedContractStateGroup, ContractState
 
 @ZKP
 data class IvnoTokenType(
@@ -52,7 +75,8 @@ data class IvnoTokenType(
     val tokenIssuingEntity: @EdDSA Party,
     val displayName: @UTF8(10) String,
     val fractionDigits: Int = 0,
-    override val linearId: @Via<UniqueIdentifierSurrogate> UniqueIdentifier = UniqueIdentifier()
+    val uniqueId: @Via<UniqueIdentifierSurrogate> UniqueIdentifier = UniqueIdentifier(),
 ) : LinearState, VersionedIvnotokenType {
+    override val linearId = uniqueId
     override val participants: List<AbstractParty> = setOf(tokenIssuingEntity, custodian).toList()
 }
