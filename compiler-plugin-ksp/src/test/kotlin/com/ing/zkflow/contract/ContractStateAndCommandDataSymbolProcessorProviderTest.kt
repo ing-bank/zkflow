@@ -9,11 +9,11 @@ import com.tschuchort.compiletesting.SourceFile
 import io.kotest.matchers.paths.shouldNotExist
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 import java.io.ByteArrayOutputStream
 
-internal class ContractStateAndCommandDataSymbolProcessorProviderTest : ProcessorTest(
-    listOf(ZKPAnnotatedProcessorProvider())
-) {
+@TestInstance(TestInstance.Lifecycle.PER_METHOD)
+internal class ContractStateAndCommandDataSymbolProcessorProviderTest : ProcessorTest(listOf(ZKPAnnotatedProcessorProvider())) {
     @Test
     fun `ZKTransactionProcessor should correctly register commands`() {
         val outputStream = ByteArrayOutputStream()
@@ -78,16 +78,11 @@ internal class ContractStateAndCommandDataSymbolProcessorProviderTest : Processo
                 
                 import com.ing.zkflow.annotations.ZKP
                 import com.ing.zkflow.common.contracts.ZKCommandData
-                import com.ing.zkflow.common.versioning.VersionedContractStateGroup
                 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
                 import com.ing.zkflow.common.zkp.metadata.commandMetadata
 
-                interface Cmd: VersionedContractStateGroup
-
                 @ZKP
-                class TestCommand: Cmd, ZKCommandData {
-                    
-                    @Transient
+                class TestCommand: ZKCommandData {
                     override val metadata: ResolvedZKCommandMetadata = commandMetadata {
                         circuit { name = "TestCommand" }
                         numberOfSigners = 1
@@ -110,7 +105,6 @@ internal class ContractStateAndCommandDataSymbolProcessorProviderTest : Processo
                     @ZKP
                     class TestNestedCommand: ZKCommandData {
                         
-                        @Transient
                         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
                             circuit { name = "TestNestedCommand" }
                             numberOfSigners = 1

@@ -42,7 +42,7 @@ steps:
     inputs:
       workingDirectory: ''
       gradleWrapperFile: 'gradlew'
-      gradleOptions: '-Xmx3072m'
+      gradleOptions: '-Xmx8192m'
       javaHomeOption: 'JDKVersion'
       jdkVersionOption: '1.8'
       jdkArchitectureOption: 'x64'
@@ -73,7 +73,7 @@ steps:
     inputs:
       workingDirectory: 'sample-zkdapp'
       gradleWrapperFile: 'gradlew'
-      gradleOptions: '-Xmx3072m'
+      gradleOptions: '-Xmx8192m'
       javaHomeOption: 'JDKVersion'
       jdkVersionOption: '1.8'
       jdkArchitectureOption: 'x64'

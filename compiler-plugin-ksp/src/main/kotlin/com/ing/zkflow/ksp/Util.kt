@@ -4,6 +4,7 @@ package com.ing.zkflow.ksp
 
 import com.google.devtools.ksp.getAllSuperTypes
 import com.google.devtools.ksp.isAbstract
+import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSAnnotation
@@ -151,3 +152,24 @@ fun KSClassDeclaration.getSurrogateTargetType(): KSType {
 
 fun Sequence<KSClassDeclaration>.filterConcreteClassesOrObjects(): Sequence<KSClassDeclaration> =
     filter { it.classKind in listOf(ClassKind.CLASS, ClassKind.OBJECT) && !it.isAbstract() }
+
+/**
+ * Surrogates are classes that are annotated with @ZKPSurrogate *and* implement [Surrogate].
+ * Classes with only the annotation cause an error, classes only implementing the interface will be ignored.
+ */
+fun Resolver.getAllSurrogates(): Sequence<KSClassDeclaration> {
+    val annotated = this.findClassesOrObjectsWithAnnotation(ZKPSurrogate::class)
+    val implementing = annotated.filter { it.implementsInterface(Surrogate::class) }
+
+    require(annotated.count() == implementing.count()) {
+        "All @${ZKPSurrogate::class.simpleName}-annotated classes should implement the ${Surrogate::class.simpleName} interface. " +
+            "The following do not: ${(annotated - implementing).map { it.qualifiedName?.asString() }.joinToString(", ")}"
+    }
+    return implementing
+}
+
+fun Resolver.findClassesOrObjectsWithAnnotation(annotationKClass: KClass<out Annotation>): Sequence<KSClassDeclaration> {
+    return getSymbolsWithAnnotation(annotationKClass.qualifiedName!!)
+        .filterIsInstance<KSClassDeclaration>()
+        .filterConcreteClassesOrObjects()
+}

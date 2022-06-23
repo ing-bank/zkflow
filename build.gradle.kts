@@ -341,6 +341,8 @@ subprojects {
                 maxParallelForks = (cores / 2).takeIf { it > 0 } ?: 1
                 logger.info("Using $cores cores to run $maxParallelForks test forks.")
 
+                maxHeapSize = "8192m"
+
                 testLogging {
                     events("passed", "skipped", "failed")
                     showStandardStreams = true

@@ -1,12 +1,11 @@
 @file:Suppress("DEPRECATION") // We need to support AutomaticHashConstraint
 
-package com.ing.zkflow.ksp.implementations
+package com.ing.zkflow.processors
 
 import com.google.devtools.ksp.getAllSuperTypes
 import com.google.devtools.ksp.getDeclaredProperties
 import com.google.devtools.ksp.getVisibility
 import com.google.devtools.ksp.isAnnotationPresent
-import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.KSBuiltIns
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
@@ -15,13 +14,11 @@ import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
-import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSTypeReference
 import com.google.devtools.ksp.symbol.KSValueParameter
 import com.google.devtools.ksp.symbol.Visibility
-import com.ing.zkflow.Surrogate
 import com.ing.zkflow.Via
 import com.ing.zkflow.annotations.ASCII
 import com.ing.zkflow.annotations.ASCIIChar
@@ -40,21 +37,11 @@ import com.ing.zkflow.annotations.corda.EdDSA
 import com.ing.zkflow.annotations.corda.RSA
 import com.ing.zkflow.annotations.corda.Sphincs
 import com.ing.zkflow.common.versioning.VersionedContractStateGroup
-import com.ing.zkflow.ksp.MetaInfServiceRegister
-import com.ing.zkflow.ksp.filterConcreteClassesOrObjects
-import com.ing.zkflow.ksp.getAllImplementedInterfaces
+import com.ing.zkflow.ksp.findClassesOrObjectsWithAnnotation
+import com.ing.zkflow.ksp.getAllSurrogates
 import com.ing.zkflow.ksp.getAnnotationsByType
 import com.ing.zkflow.ksp.getSurrogateTargetClass
 import com.ing.zkflow.ksp.implementsInterface
-import com.ing.zkflow.ksp.implementsInterfaceDirectly
-import com.ing.zkflow.ksp.upgrade.UpgradeCommandGenerator
-import com.ing.zkflow.ksp.versioning.VersionFamilyGenerator
-import com.ing.zkflow.ksp.versioning.VersionSorting
-import com.ing.zkflow.ksp.versioning.VersionedCommandIdGenerator
-import com.ing.zkflow.ksp.versioning.VersionedStateIdGenerator
-import com.ing.zkflow.processors.SerializerProviderGenerator
-import com.ing.zkflow.processors.SurrogateSerializerGenerator
-import com.ing.zkflow.util.merge
 import net.corda.core.contracts.AlwaysAcceptAttachmentConstraint
 import net.corda.core.contracts.AutomaticHashConstraint
 import net.corda.core.contracts.AutomaticPlaceholderConstraint
@@ -100,24 +87,14 @@ import kotlin.reflect.KClass
  *   that takes `MyContractStateV1` as its single parameter. When all classes withing a version group have these constructors, this processor
  *   can determine an order within that group.
  */
-class ZKPAnnotatedProcessor(private val logger: KSPLogger, codeGenerator: CodeGenerator) : SymbolProcessor {
-    private val visitedFiles: MutableSet<KSFile> = mutableSetOf()
+class ZKPAnnotatedValidator(@Suppress("unused") private val logger: KSPLogger) : SymbolProcessor {
     private var builtinTypes: KSBuiltIns? = null
 
-    private val metaInfServiceRegister = MetaInfServiceRegister(codeGenerator)
-
-    private val serializerProviderGenerator = SerializerProviderGenerator(codeGenerator)
-    private val upgradeCommandGenerator = UpgradeCommandGenerator(codeGenerator)
-    private val versionFamilyGenerator = VersionFamilyGenerator(codeGenerator)
-    private val surrogateSerializerGenerator = SurrogateSerializerGenerator(codeGenerator)
-
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        val newFiles = getNewFiles(resolver)
-
         builtinTypes = resolver.builtIns
 
         val zkpAnnotated = resolver.findClassesOrObjectsWithAnnotation(ZKP::class)
-        val surrogates = getAllSurrogates(resolver)
+        val surrogates = resolver.getAllSurrogates()
 
         requireNoTopLevelSurrogates(surrogates)
 
@@ -133,45 +110,7 @@ class ZKPAnnotatedProcessor(private val logger: KSPLogger, codeGenerator: CodeGe
             it.requireParentValsSafelyUsedInPrimaryConstructor()
         }
 
-        val contractStateGroups = getSortedContractStateVersionGroups(newFiles, zkpAnnotated)
-
-        val commands = VersionedCommandIdGenerator.generateIds(zkpAnnotated.filter { it.implementsInterface(CommandData::class) })
-        val states = VersionedStateIdGenerator.generateIds(contractStateGroups)
-        val upgradeCommands = upgradeCommandGenerator.generateUpgradeCommands(contractStateGroups.values)
-
-        versionFamilyGenerator.generateFamilies(contractStateGroups).registerToServiceLoader()
-        surrogateSerializerGenerator.generateSurrogateSerializers(surrogates)
-        serializerProviderGenerator.generateProviders(states + commands + upgradeCommands).registerToServiceLoader()
-
-        metaInfServiceRegister.emit()
-
         return emptyList()
-    }
-
-    /**
-     * Surrogates are classes that are annotated with @ZKPSurrogate *and* implement [Surrogate].
-     * Classes with only the annotation cause an error, classes only implementing the interface will be ignored.
-     */
-    private fun getAllSurrogates(resolver: Resolver): Sequence<KSClassDeclaration> {
-        val annotated = resolver.findClassesOrObjectsWithAnnotation(ZKPSurrogate::class)
-        val implementing = annotated.filter { it.implementsInterface(Surrogate::class) }
-
-        require(annotated.count() == implementing.count()) {
-            "All @${ZKPSurrogate::class.simpleName}-annotated classes should implement the ${Surrogate::class.simpleName} interface. " +
-                "The following do not: ${(annotated - implementing).map { it.qualifiedName?.asString() }.joinToString(", ")}"
-        }
-        return implementing
-    }
-
-    private fun getSortedContractStateVersionGroups(
-        newFiles: Set<KSFile>,
-        zkpAnnotated: Sequence<KSClassDeclaration>
-    ): Map<KSClassDeclaration, List<KSClassDeclaration>> {
-        val versionMarkerInterfaces: Sequence<KSClassDeclaration> = findVersionMarkerInterfaces(newFiles)
-        val states = zkpAnnotated.filter { it.implementsInterface(ContractState::class) }
-        val (unversioned, versionGroups) = groupByMarkerInterface(states, versionMarkerInterfaces)
-        requireAllContractStatesVersioned(unversioned)
-        return VersionSorting.sortByConstructors(logger, versionGroups)
     }
 
     private fun KSClassDeclaration.requireNotAnObject() {
@@ -245,17 +184,6 @@ class ZKPAnnotatedProcessor(private val logger: KSPLogger, codeGenerator: CodeGe
         require(typeParameters.isEmpty()) {
             "Classes annotated with @${ZKP::class.simpleName} or @${ZKPSurrogate::class.simpleName} may not have type parameters. `$this` has parameters: ${typeParameters.map { it.simpleName.asString() }} " +
                 "This may be supported in the future."
-        }
-    }
-
-    /**
-     * All marker interfaces must directly extend [VersionedContractStateGroup], not through any other interface.
-     */
-    private fun ensureMarkersDirectlyImplementVersioned(versionMarkerInterfaces: Sequence<KSClassDeclaration>) {
-        versionMarkerInterfaces.forEach {
-            require(it.implementsInterfaceDirectly(VersionedContractStateGroup::class)) {
-                "$it is an interface that extends a version marker interface. This is not allowed. " + "Version marker interfaces should only ever be implemented by @ZKP or @ZKPSurrogate annotated classes or objects. " + "If it is meant to be a version marker itself it must implement ${VersionedContractStateGroup::class} directly. It does it indirectly. "
-            }
         }
     }
 
@@ -472,64 +400,6 @@ class ZKPAnnotatedProcessor(private val logger: KSPLogger, codeGenerator: CodeGe
      */
     private fun KSType.matches(that: KSType): Boolean = isAssignableFrom(that) || this.declaration == that.declaration
 
-    private fun ServiceLoaderRegistration.registerToServiceLoader() {
-        if (implementations.isNotEmpty()) {
-            @Suppress("SpreadOperator")
-            metaInfServiceRegister.addImplementation(
-                providerClass,
-                *implementations.toTypedArray()
-            )
-        }
-    }
-
-    private fun requireAllContractStatesVersioned(unversioned: List<KSClassDeclaration>) {
-        if (unversioned.isNotEmpty()) {
-            // Only ContractState is required to belong to a version group: it is required to be able to generate upgrade commands for them
-            // This is not required for other types.
-            val requiredToBeVersioned = unversioned.filter { it ->
-                it.getAllImplementedInterfaces().any {
-                    it.qualifiedName?.asString() == ContractState::class.qualifiedName
-                }
-            }
-            if (requiredToBeVersioned.isNotEmpty()) {
-                throw UnversionedException(
-                    "All ${ContractState::class.simpleName}s annotated with @ZKP or @ZKPSurrogate must implement a version marker interface. " +
-                        "The following do not: ${requiredToBeVersioned.joinToString(", ")}"
-                )
-            }
-        }
-    }
-
-    /**
-     * Returns a pair where, the first component is the list of zkpAnnotated that implements no marker interface,
-     * and the second component is are the zkpAnnotated grouped by versionMarkerInterfaces.
-     */
-    private fun groupByMarkerInterface(
-        zkpAnnotated: Sequence<KSClassDeclaration>,
-        versionMarkerInterfaces: Sequence<KSClassDeclaration>
-    ): Pair<List<KSClassDeclaration>, Map<KSClassDeclaration, List<KSClassDeclaration>>> {
-        val groups = zkpAnnotated.map { annotatedClass ->
-            annotatedClass.getAllImplementedInterfaces().singleOrNull { it in versionMarkerInterfaces } to annotatedClass
-        }.groupBy { it.first }.mapValues { it.value.map { it.second } }
-
-        val unversioned = groups[null] ?: emptyList()
-        val versionedGroups = groups.mapNotNull { if (it.key == null) null else it.key!! to it.value }.toMap()
-        versionedGroups.forEach { ensureGroupMembersDirectlyImplementGroupMarker(it.key, it.value) }
-        return unversioned to versionedGroups
-    }
-
-    /**
-     * Rule: all members of a version group must *directly* implement the version group marker interface,
-     * not through another layer of indirection.
-     */
-    private fun ensureGroupMembersDirectlyImplementGroupMarker(group: KSClassDeclaration, members: List<KSClassDeclaration>) {
-        members.forEach {
-            require(it.implementsInterfaceDirectly(group)) {
-                "$it must implement version group $group directly, but does it indirectly"
-            }
-        }
-    }
-
     /**
      * Surrogates should not be or target so-called top-level classes in Corda. Those are the transaction components that go directly in
      * a transaction and that a user can create: [ContractState] and [CommandData].
@@ -566,41 +436,10 @@ class ZKPAnnotatedProcessor(private val logger: KSPLogger, codeGenerator: CodeGe
         }
     }
 
-    private fun Resolver.findClassesOrObjectsWithAnnotation(annotationKClass: KClass<out Annotation>): Sequence<KSClassDeclaration> {
-        return getSymbolsWithAnnotation(annotationKClass.qualifiedName!!)
-            .filterIsInstance<KSClassDeclaration>()
-            .filterConcreteClassesOrObjects()
-    }
-
-    private fun findVersionMarkerInterfaces(newFiles: Set<KSFile>): Sequence<KSClassDeclaration> {
-        return findImplementors(newFiles, VersionedContractStateGroup::class).filter { it.classKind == ClassKind.INTERFACE }
-            .also { ensureMarkersDirectlyImplementVersioned(it) }
-    }
-
-    private fun findImplementors(newFiles: Set<KSFile>, implementedInterface: KClass<*>): Sequence<KSClassDeclaration> {
-        val versionedRequirement = ImplementationRequirement(superTypes = setOf(implementedInterface))
-        val implementationsVisitor = ImplementationsVisitor(implementationRequirements = listOf(versionedRequirement))
-        val implementors: List<KSClassDeclaration> =
-            newFiles.fold(emptyMap<ImplementationRequirement, List<ScopedDeclaration>>()) { acc, file ->
-                val matches = implementationsVisitor.visitFile(file, null)
-                acc.merge(matches)
-            }.getOrDefault(versionedRequirement, emptyList()).map { it.declaration }
-        return implementors.asSequence()
-    }
-
-    private fun getNewFiles(resolver: Resolver): Set<KSFile> {
-        val newFiles = resolver.getNewFiles(visitedFiles)
-        logger.info("${this::class.simpleName} New Files:\n${newFiles.joinToString("\n") { it.filePath }}")
-        visitedFiles.addAll(newFiles)
-        return newFiles
-    }
-
     private fun getBuiltinTypes(): KSBuiltIns {
         return builtinTypes ?: error(
             "`builtinTypes` should have been initialized in `fun process(resolver: Resolver)` " +
                 "by calling `builtinTypes = resolver.builtIns`"
         )
     }
-
-    private class UnversionedException(message: String) : Exception(message)
 }
