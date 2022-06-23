@@ -18,30 +18,6 @@ import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
 import java.time.Instant
 
-// @ZKP
-// data class Foo(val foo: A<@Via<BSurrogate> B<C<Int>>, C<@ASCII(10) String>>)
-//
-// @ZKP
-// data class A<out T : B<*>, U : Any>(val foo: T, val bar: U) {
-// }
-//
-// data class B<T : Any>(val foo: T)
-//
-// @ZKP
-// data class C<T : Any>(val foo: T)
-//
-// @ZKPSurrogate(BConverter::class)
-// data class BSurrogate(
-//     val foo: C<Int>
-// ) : Surrogate<B<C<Int>>> {
-//     override fun toOriginal() = B(foo)
-// }
-//
-// object BConverter : ConversionProvider<B<C<Int>>, BSurrogate> {
-//     override fun from(original: B<C<Int>>) =
-//         BSurrogate(original.foo)
-// }
-
 @ZKP
 data class IvnoDeposit constructor(
     val depositor: @EdDSA Party,

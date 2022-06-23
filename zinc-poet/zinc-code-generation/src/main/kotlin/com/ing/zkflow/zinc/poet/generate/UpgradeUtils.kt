@@ -123,9 +123,7 @@ private fun generateUpgradeVerification(
             returnType = ZincPrimitive.Unit
             body = """
                 let input: ${originalModule.typeName()} = ctx.inputs.${originalModule.typeName().camelToSnakeCase()}_${original.index}.data;
-                let output: ${upgradedModule.typeName()} = ctx.outputs.${
-            upgradedModule.typeName().camelToSnakeCase()
-            }_${upgraded.index}.data;
+                let output: ${upgradedModule.typeName()} = ctx.outputs.${upgradedModule.typeName().camelToSnakeCase()}_${upgraded.index}.data;
 
                 assert!(output.equals(${upgradedModule.typeName()}::upgrade_from(input)), "[$commandName] Not a valid upgrade from ${originalModule.typeName()} to ${upgradedModule.typeName()}.");
             """.trimIndent()
