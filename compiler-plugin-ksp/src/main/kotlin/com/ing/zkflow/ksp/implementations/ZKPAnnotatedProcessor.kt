@@ -3,6 +3,7 @@
 package com.ing.zkflow.ksp.implementations
 
 import com.google.devtools.ksp.getAllSuperTypes
+import com.google.devtools.ksp.getDeclaredProperties
 import com.google.devtools.ksp.getVisibility
 import com.google.devtools.ksp.isAnnotationPresent
 import com.google.devtools.ksp.processing.CodeGenerator
@@ -12,6 +13,7 @@ import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSAnnotated
+import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
@@ -198,27 +200,25 @@ class ZKPAnnotatedProcessor(private val logger: KSPLogger, codeGenerator: CodeGe
     }
 
     private fun KSClassDeclaration.requirePublic() {
-        val nonPublic = listOf(Visibility.PRIVATE, Visibility.PROTECTED, Visibility.INTERNAL)
-        require(getVisibility() !in nonPublic) {
+        require(getVisibility() == Visibility.PUBLIC) {
             "Classes annotated with @${ZKP::class.simpleName} or @${ZKPSurrogate::class.simpleName} " +
                 "must be public. ${this.qualifiedName?.asString()} is ${getVisibility()}."
         }
     }
 
-    private fun KSClassDeclaration.requirePublicParameter(it: KSValueParameter) {
-        val nonPublic = listOf(Visibility.PRIVATE, Visibility.PROTECTED, Visibility.INTERNAL)
-        val visibility =
-            it.type.resolve().declaration.getVisibility()
-        require(visibility !in nonPublic) {
+    private fun KSClassDeclaration.requirePublicParameter(parameter: KSValueParameter) {
+        val matchingProperty = this.getDeclaredProperties().single { it.simpleName == parameter.name }
+        val visibility = matchingProperty.getVisibility()
+        require(visibility == Visibility.PUBLIC) {
             "All primary constructor parameters of classes annotated with @${ZKP::class.simpleName} or @${ZKPSurrogate::class.simpleName} " +
-                "must be public. Parameter $it of ${this.qualifiedName?.asString()} is $visibility."
+                "must be public. Parameter $parameter of ${this.qualifiedName?.asString()} is not."
         }
     }
 
     private fun KSClassDeclaration.requireValVarParameter(it: KSValueParameter) {
         require(it.isVal || it.isVar) {
             "All primary constructor parameters of classes annotated with @${ZKP::class.simpleName} or @${ZKPSurrogate::class.simpleName} " +
-                "must be a val or var. Parameter $it of ${this.qualifiedName?.asString()} is not."
+                "must be a val or var. Parameter '$it' of ${this.qualifiedName?.asString()} is not."
         }
     }
 
@@ -284,9 +284,9 @@ class ZKPAnnotatedProcessor(private val logger: KSPLogger, codeGenerator: CodeGe
         // We allow direct usage of properties of certain core Corda classes, such as ContractState, OwnableState, etc.
         // These classes are considered stable unless the Corda platform version changes. ZKFlow is tied to a specific Corda platform version.
         if (parent.isConsideredStableCoreClass()) return
-        val interfaceProperties = parent.getAllProperties().map { it.simpleName }
+        val parentProperties = parent.getAllProperties().map { it.simpleName }
         val unsafeParams = implementor.primaryConstructor?.parameters?.filter {
-            it.name in interfaceProperties &&
+            it.name in parentProperties &&
                 !(it.type.isAnnotationPresent(Via::class) || it.type.resolve().declaration.isAnnotationPresent(ZKP::class))
         } ?: emptyList()
 
@@ -295,7 +295,7 @@ class ZKPAnnotatedProcessor(private val logger: KSPLogger, codeGenerator: CodeGe
             "Properties defined in parent $parent were unsafely overridden in primary constructor of ${implementor.qualifiedName?.asString()}: $paramNames. " +
                 "There are three options to resolve this: 1) move them to the body of $implementor, " +
                 "2) annotate the property type with @${Via::class.simpleName} or " +
-                "3) annotate the the type itself where it is declared with @${ZKP::class.simpleName}"
+                "3) annotate the declaration of the type itself with @${ZKP::class.simpleName}"
         }
     }
 
@@ -338,18 +338,15 @@ class ZKPAnnotatedProcessor(private val logger: KSPLogger, codeGenerator: CodeGe
     private fun KSTypeReference.requireSerializable() {
         // As soon as we encounter a @Via annotation, we stop checking all type arguments after that:
         // A @Via annotation implies that its surrogate covers the full type it applies to, including any type arguments.
+        // TODO: should type checking of surrogate from @Via and of actual type it applies to be recursive?
         val viaAnnotation = getAnnotationsByType(Via::class).firstOrNull()
         if (viaAnnotation != null) {
-            // TODO: should type checking of surrogate from @Via and of actual type it applies to be recursive?
-            val surrogate =
-                viaAnnotation.annotationType.element?.typeArguments?.singleOrNull()?.type?.resolve()?.declaration as? KSClassDeclaration
-                    ?: error(
-                        "Type ${this.resolve().declaration.qualifiedName?.asString()} is not serializable. " + "@${Via::class.simpleName} annotation must have a single type argument."
-                    )
+            val surrogate = viaAnnotation.getSurrogateFromViaAnnotation()
             val surrogateTarget = surrogate.getSurrogateTargetClass()
+
             require(this.resolve().declaration == surrogateTarget) {
                 "Type ${this.resolve().declaration.qualifiedName?.asString()} is not serializable. " +
-                    "Target '$surrogateTarget' of surrogate `$surrogate` set with @${Via::class.simpleName} annotation must match $this."
+                    "Target type of surrogate `$surrogate` set with @${Via::class.simpleName}  annotation must be $this, but is '$surrogateTarget'."
             }
             return
         }
@@ -366,6 +363,14 @@ class ZKPAnnotatedProcessor(private val logger: KSPLogger, codeGenerator: CodeGe
                     "or ensure that the declaration of $this is annotated with @${ZKP::class.simpleName}."
             )
         }
+    }
+
+    private fun KSAnnotation.getSurrogateFromViaAnnotation(): KSClassDeclaration {
+        require(annotationType.resolve().declaration.qualifiedName?.asString() == Via::class.qualifiedName) {
+            "Can't get Surrogate from $this, it is not a @${Via::class.simpleName} annotation."
+        }
+        return annotationType.element?.typeArguments?.singleOrNull()?.type?.resolve()?.declaration as? KSClassDeclaration
+            ?: error("@${Via::class.simpleName} annotation's argument is not a class.")
     }
 
     private fun KSTypeReference.isZKFlowSupportedCoreClass(): Boolean {
@@ -550,15 +555,14 @@ class ZKPAnnotatedProcessor(private val logger: KSPLogger, codeGenerator: CodeGe
     private fun KSClassDeclaration.requireSurrogateNotImplements(interfaceKClass: KClass<*>) {
         require(!implementsInterface(interfaceKClass)) {
             "${qualifiedName?.asString()} is a ${interfaceKClass.simpleName} and should not be annotated with " +
-                "@{${ZKPSurrogate::class.simpleName}. Annotate it with @${ZKP::class.simpleName} instead."
+                "@${ZKPSurrogate::class.simpleName}. Annotate it with @${ZKP::class.simpleName} instead."
         }
     }
 
     private fun KSClassDeclaration.requireSurrogateTargetNotImplements(surrogate: KSClassDeclaration, interfaceKClass: KClass<*>) {
         require(!implementsInterface(interfaceKClass)) {
             "Surrogate target ${qualifiedName?.asString()} of surrogate ${surrogate.qualifiedName?.asString()} is a " +
-                "${interfaceKClass.simpleName}. Surrogates should not target ${interfaceKClass.simpleName}s. Consider wrapping the target " +
-                "in a @${ZKP::class.simpleName}-annotated class as a property that is annotated with @${Via::class.simpleName}"
+                "${interfaceKClass.simpleName}. Surrogates should not target ${interfaceKClass.simpleName}s."
         }
     }
 
