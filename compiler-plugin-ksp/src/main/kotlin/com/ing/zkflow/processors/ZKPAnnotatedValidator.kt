@@ -36,7 +36,6 @@ import com.ing.zkflow.annotations.corda.EcDSA_R1
 import com.ing.zkflow.annotations.corda.EdDSA
 import com.ing.zkflow.annotations.corda.RSA
 import com.ing.zkflow.annotations.corda.Sphincs
-import com.ing.zkflow.common.versioning.VersionedContractStateGroup
 import com.ing.zkflow.ksp.findClassesOrObjectsWithAnnotation
 import com.ing.zkflow.ksp.getAllSurrogates
 import com.ing.zkflow.ksp.getAnnotationsByType
@@ -65,7 +64,6 @@ import kotlin.reflect.KClass
 
 /**
  * This processor validates all classes in the CorDapp that are annotated with either @ZKP or @ZKPSurrogate.
- * It also generates some serialization logic for them, so that the fixed-length BFLSerializationScheme knows how to handle them.
  *
  * A strong assumption behind all logic in this processor is that for @ZKP or @ZKPSurrogate annotated classes, the properties of their
  * primary constructor are stable: i.e. they will not change ever again once they have been 'deployed'. They can change during development,
@@ -74,18 +72,6 @@ import kotlin.reflect.KClass
  * This 'versioning' is left in the hands of the user for normal types. They can simply create new types when they need them.
  * ZKFLow will enforce that types never change after deployment. This ensures that when a user introduces a new version for a type that is
  * used in another user type, and they want to use it, they will also have to introduce a new type for that using type.
- *
- * There is special treatment for implementors of [ContractState]. This is because [ContractState]s are the only top-level transaction
- * components in a Corda transaction that are reused across transactions. Since this happens often, ZKFLow offers a convencience feature to
- * easily use old states in new transactions: it generates upgrade commands from old to newer. In order to do that, the 'versioning' of
- * states is more formalized than for other types. They are required:
- * - to implement a so-called versioning 'marker' interface that identifies a version family/group.  Such a version group identifies a group
- *   of classes that are considered one type that can be upgraded to newer versions within that group. Such a marker interface
- *   is itself required to extend from [VersionedContractStateGroup]. Both these relations are required to be direct, i.e. direct supertypes, not through
- *   other parents. Example: `MyContractStateV1` and `MyContractStateV2` implement `interface VersionedMyContractState: VersionedContractStateGroup, ContractState`.
- * - to have additional secondary constructors that make clear an order within such a version group. Example: `MyContractStateV2` will have a constructor that
- *   that takes `MyContractStateV1` as its single parameter. When all classes withing a version group have these constructors, this processor
- *   can determine an order within that group.
  */
 class ZKPAnnotatedValidator(@Suppress("unused") private val logger: KSPLogger) : SymbolProcessor {
     private var builtinTypes: KSBuiltIns? = null
@@ -250,16 +236,10 @@ class ZKPAnnotatedValidator(@Suppress("unused") private val logger: KSPLogger) :
         }
     }
 
-    private fun KSTypeReference.renderRecursively(): String {
-        var render = this.toString()
-        val typeArgs = element?.typeArguments ?: emptyList()
-        if (typeArgs.isNotEmpty()) {
-            render += "<"
-            render += typeArgs.map { it.type?.renderRecursively() }.joinToString(", ")
-            render += ">"
-        }
-        return render
-    }
+    private fun KSTypeReference.renderRecursively(): String =
+        this.toString() + element?.typeArguments.orEmpty().joinToString(separator = ", ") {
+            it.type?.renderRecursively().orEmpty()
+        }.let { if (it.isNotBlank()) "<$it>" else "" }
 
     private fun KSValueParameter.requireDirectlySerializable() = type.requireSerializable()
 

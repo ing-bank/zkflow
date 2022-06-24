@@ -34,8 +34,8 @@ import net.corda.core.contracts.ContractState
 import kotlin.reflect.KClass
 
 /**
- * This processor validates all classes in the CorDapp that are annotated with either @ZKP or @ZKPSurrogate.
- * It also generates some serialization logic for them, so that the fixed-length BFLSerializationScheme knows how to handle them.
+ * This processor generates serialization logic for all classes in the CorDapp that are annotated with either @ZKP or @ZKPSurrogate,
+ * so that the fixed-length BFLSerializationScheme knows how to handle them.
  *
  * A strong assumption behind all logic in this processor is that for @ZKP or @ZKPSurrogate annotated classes, the properties of their
  * primary constructor are stable: i.e. they will not change ever again once they have been 'deployed'. They can change during development,
@@ -44,6 +44,9 @@ import kotlin.reflect.KClass
  * This 'versioning' is left in the hands of the user for normal types. They can simply create new types when they need them.
  * ZKFLow will enforce that types never change after deployment. This ensures that when a user introduces a new version for a type that is
  * used in another user type, and they want to use it, they will also have to introduce a new type for that using type.
+ *
+ * Another strong assumption this processor makes is that all checks from [ZKPAnnotatedValidator] were executed and successful. This
+ * processor does only limited validation itself.
  *
  * There is special treatment for implementors of [ContractState]. This is because [ContractState]s are the only top-level transaction
  * components in a Corda transaction that are reused across transactions. Since this happens often, ZKFLow offers a convencience feature to
@@ -71,17 +74,17 @@ class ZKPAnnotatedProcessor(private val logger: KSPLogger, codeGenerator: CodeGe
         val newFiles = getNewFiles(resolver)
 
         val zkpAnnotated = resolver.findClassesOrObjectsWithAnnotation(ZKP::class)
-        val surrogates = resolver.getAllSurrogates()
-
         val contractStateGroups = getSortedContractStateVersionGroups(newFiles, zkpAnnotated)
+        val commands = zkpAnnotated.filter { it.implementsInterface(CommandData::class) }
 
-        val commands = VersionedCommandIdGenerator.generateIds(zkpAnnotated.filter { it.implementsInterface(CommandData::class) })
-        val states = VersionedStateIdGenerator.generateIds(contractStateGroups)
-        val upgradeCommands = upgradeCommandGenerator.generateUpgradeCommands(contractStateGroups.values)
+        val commandsWithIds = VersionedCommandIdGenerator.generateIds(commands)
+        val statesWithIds = VersionedStateIdGenerator.generateIds(contractStateGroups)
+        val upgradeCommandsWithIds = upgradeCommandGenerator.generateUpgradeCommands(contractStateGroups.values)
 
-        versionFamilyGenerator.generateFamilies(contractStateGroups).registerToServiceLoader()
+        val surrogates = resolver.getAllSurrogates()
         surrogateSerializerGenerator.generateSurrogateSerializers(surrogates)
-        serializerProviderGenerator.generateProviders(states + commands + upgradeCommands).registerToServiceLoader()
+        versionFamilyGenerator.generateFamilies(contractStateGroups).registerToServiceLoader()
+        serializerProviderGenerator.generateProviders(statesWithIds + commandsWithIds + upgradeCommandsWithIds).registerToServiceLoader()
 
         metaInfServiceRegister.emit()
 
