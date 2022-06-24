@@ -31,8 +31,8 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
         val expectedSurrogateName: String,
         val expected: String,
     ) {
-        constructor(source: SourceFile, expectedSurrogateName: String, expected: String) :
-            this(listOf(source), expectedSurrogateName, expected)
+        constructor(source: SourceFile, expectedSerializationLocation: String, expected: String) :
+            this(listOf(source), expectedSerializationLocation, expected)
     }
 
     companion object {
@@ -55,13 +55,14 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                         )                       
                     """.trimIndent()
                 ),
-                expectedSurrogateName = "BasicTypesContainerKotlinxSurrogate",
+                expectedSerializationLocation = "BasicTypesContainer" + Surrogate.GENERATED_SERIALIZATION_FUNCTIONALITY_LOCATION_POSTFIX,
                 expected = """
                     package $packageName
     
                     import com.ing.zkflow.Surrogate
                     import com.ing.zkflow.serialization.serializer.IntSerializer
                     import com.ing.zkflow.serialization.serializer.NullableSerializer
+                    import com.ing.zkflow.serialization.serializer.SurrogateSerializer
                     import com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializerWithDefault
                     import kotlin.Int
                     import kotlin.Suppress
@@ -84,6 +85,10 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                     
                       private object NullableInt_1 : WrappedFixedLengthKSerializerWithDefault<Int>(IntSerializer)
                     }
+                    
+                    public object BasicTypesContainerKotlinxSurrogateSerializer :
+                        SurrogateSerializer<BasicTypesContainer, BasicTypesContainerKotlinxSurrogate>(BasicTypesContainerKotlinxSurrogate.serializer(),
+                        { BasicTypesContainerKotlinxSurrogate(int, nullableInt) })
                 """.trimIndent()
             )
         )

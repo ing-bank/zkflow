@@ -31,6 +31,8 @@ interface Surrogate<T> {
 
     companion object {
         const val GENERATED_SURROGATE_POSTFIX = "KotlinxSurrogate"
-        const val GENERATED_SURROGATE_SERIALIZER_POSTFIX = "SurrogateSerializer"
+        const val GENERATED_SURROGATE_SERIALIZER_POSTFIX = "Serializer"
+        const val GENERATED_SERIALIZATION_FUNCTIONALITY_LOCATION_POSTFIX = "SerializationFunctionality"
+        const val GENERATED_SERIALIZER_PROVIDER_POSTFIX = "SerializerProvider"
     }
 }
