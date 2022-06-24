@@ -82,7 +82,10 @@ class ZKPAnnotatedProcessor(private val logger: KSPLogger, codeGenerator: CodeGe
         val upgradeCommandsWithIds = upgradeCommandGenerator.generateUpgradeCommands(contractStateGroups.values)
 
         val surrogates = resolver.getAllSurrogates()
-        surrogateSerializerGenerator.generateSurrogateSerializers(surrogates)
+
+        surrogateSerializerGenerator.processZKPAnnotated(zkpAnnotated)
+        surrogateSerializerGenerator.processZKPSurrogateAnnotated(surrogates)
+
         versionFamilyGenerator.generateFamilies(contractStateGroups).registerToServiceLoader()
         serializerProviderGenerator.generateProviders(statesWithIds + commandsWithIds + upgradeCommandsWithIds).registerToServiceLoader()
 

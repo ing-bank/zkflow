@@ -7,7 +7,12 @@ import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSValueParameter
 import com.ing.zkflow.Surrogate
 import com.ing.zkflow.annotations.Size
-import com.ing.zkflow.ksp.getSingleArgumentOfSingleAnnotationByType
+import com.ing.zkflow.annotations.ZKPSurrogate
+import com.ing.zkflow.ksp.getSerializationFunctionalityLocation
+import com.ing.zkflow.ksp.getSingleArgumentOfNonRepeatableAnnotationByType
+import com.ing.zkflow.ksp.getSurrogateClassName
+import com.ing.zkflow.ksp.getSurrogateSerializerClassName
+import com.ing.zkflow.ksp.getSurrogateTargetClass
 import com.ing.zkflow.serialization.serializer.FixedLengthMapSerializer
 import com.ing.zkflow.serialization.serializer.IntSerializer
 import com.ing.zkflow.serialization.serializer.NullableSerializer
@@ -39,13 +44,24 @@ class SurrogateSerializerGenerator(private val codeGenerator: CodeGenerator) {
      * All fallable operations (`!!`, casts, single, etc.) are expected to be successful,
      * as the preconditions are verified elsewhere.
      */
-    // fun processZKPSurrogateAnnotated(annotated: Sequence<KSClassDeclaration>) {
-    // annotated.forEach {
-    //     val surrogate = generateSurrogate(it)
-    //     val converterClassName = (it.getAnnotationsByType(ZKPSurrogate::class).single().arguments.single().value as KSType).toClassName()
-    //     generateSerializer(surrogate, converterClassName)
-    // }
-    // }
+    fun processZKPSurrogateAnnotated(annotated: Sequence<KSClassDeclaration>) {
+        annotated.forEach { representation ->
+            val declaration = representation.getSurrogateTargetClass()
+            val converterClassName = (
+                (representation as KSAnnotated)
+                    .getSingleArgumentOfNonRepeatableAnnotationByType(ZKPSurrogate::class)
+                    .value as KSType
+                ).toClassName()
+
+            val typeSpecs = SerializationFunctionalityGenerationTask.Indirect(declaration, representation, converterClassName).execute()
+
+            emit(
+                location = declaration.getSerializationFunctionalityLocation(),
+                typeSpecs = typeSpecs,
+                dependencies = listOf(representation)
+            )
+        }
+    }
 
     /**
      * Generates:
@@ -58,48 +74,108 @@ class SurrogateSerializerGenerator(private val codeGenerator: CodeGenerator) {
      */
     fun processZKPAnnotated(annotated: Sequence<KSClassDeclaration>) {
         annotated.forEach { declaration ->
-            val surrogateClassName = getSurrogateClassName(declaration)
-            val surrogate = generateSurrogateFromDeclaration(declaration, surrogateClassName)
+            val typeSpecs = SerializationFunctionalityGenerationTask.Direct(declaration).execute()
 
-            val surrogateSerializerClassName = getSurrogateSerializerClassName(declaration)
-            val surrogateSerializer = generateSurrogateSerializer(declaration, surrogateClassName, surrogateSerializerClassName)
-
-            val serializationFunctionalityLocation = getSerializationFunctionalityLocation(declaration)
-            FileSpec
-                .builder(
-                    serializationFunctionalityLocation.packageName,
-                    serializationFunctionalityLocation.simpleName
-                )
-                .addType(surrogate)
-                .addType(surrogateSerializer)
-                .build()
-                .writeTo(
-                    codeGenerator = codeGenerator,
-                    aggregating = false,
-                    originatingKSFiles = listOfNotNull(declaration.containingFile)
-                )
+            emit(
+                location = declaration.getSerializationFunctionalityLocation(),
+                typeSpecs = typeSpecs,
+                dependencies = listOf(declaration)
+            )
         }
     }
 
-    // TODO more input is required
-    // private fun generateConverter(declaration: KSClassDeclaration): ClassName {
-    //     TODO("Not yet implemented")
-    // }
-
     /**
-     * It must be ensured that all constructor parameters of [declaration] are also fields (val/var).
-     * All inner fields must be constructable from them.
-     * Constructor parameters/fields are mapped to the surrogate.
+     * Write out given [typeSpecs] at given [location].
      */
-    private fun generateSurrogateFromDeclaration(declaration: KSClassDeclaration, surrogateClassName: ClassName): TypeSpec {
+    private fun emit(location: ClassName, typeSpecs: List<TypeSpec>, dependencies: List<KSClassDeclaration>) {
+        val fileSpecBuilder = FileSpec.builder(location.packageName, location.simpleName)
+
+        typeSpecs.forEach { fileSpecBuilder.addType(it) }
+
+        fileSpecBuilder
+            .build()
+            .writeTo(
+                codeGenerator = codeGenerator,
+                aggregating = false,
+                originatingKSFiles = dependencies.mapNotNull { it.containingFile }
+            )
+    }
+}
+
+private sealed class SerializationFunctionalityGenerationTask(
+    val declaration: KSClassDeclaration
+) {
+    class Direct(declaration: KSClassDeclaration) : SerializationFunctionalityGenerationTask(declaration) {
+        override val representation = declaration
+        override fun declarationToSurrogateConstructor(surrogateClassName: ClassName): CodeBlock {
+            val parameters = representation.primaryConstructor!!
+                .parameters
+                .joinToString(separator = ", ") { parameter ->
+                    val name = parameter.name?.asString() ?: error("Cannot get a name of $parameter")
+                    "$name = it.$name"
+                }
+
+            return CodeBlock.of("{ %T(%L) }", surrogateClassName, parameters)
+        }
+
+        override fun surrogateToDeclarationTemplate(): String =
+            "return %T(%L)"
+    }
+
+    class Indirect(
+        declaration: KSClassDeclaration,
+        override val representation: KSClassDeclaration,
+        val declarationToRepresentationConverter: ClassName,
+    ) : SerializationFunctionalityGenerationTask(declaration) {
+        override fun declarationToSurrogateConstructor(surrogateClassName: ClassName): CodeBlock {
+            val intermediate = "representation"
+
+            val parameters = representation.primaryConstructor!!
+                .parameters
+                .joinToString(separator = ", ") { parameter ->
+                    val name = parameter.name?.asString() ?: error("Cannot get a name of $parameter")
+                    "$name = $intermediate.$name"
+                }
+
+            return CodeBlock.builder()
+                .beginControlFlow("")
+                .indent()
+                .indent()
+                .addStatement("val $intermediate = %T.from(it)", declarationToRepresentationConverter)
+                .addStatement("%T(%L)", surrogateClassName, parameters)
+                .endControlFlow()
+                .unindent()
+                .build()
+        }
+
+        override fun surrogateToDeclarationTemplate(): String =
+            "return %T(%L).toOriginal()"
+    }
+
+    abstract val representation: KSClassDeclaration
+    abstract fun declarationToSurrogateConstructor(surrogateClassName: ClassName): CodeBlock
+    abstract fun surrogateToDeclarationTemplate(): String
+
+    fun execute(): List<TypeSpec> {
+        val surrogateClassName = declaration.getSurrogateClassName()
+        val surrogate = generateSurrogate(surrogateClassName)
+
+        val surrogateSerializerClassName = declaration.getSurrogateSerializerClassName()
+        val surrogateSerializer = generateSurrogateSerializer(surrogateClassName, surrogateSerializerClassName)
+
+        return listOf(surrogate, surrogateSerializer)
+    }
+
+    private fun generateSurrogate(surrogateClassName: ClassName): TypeSpec {
         val surrogateBuilder = TypeSpec.classBuilder(surrogateClassName)
-            .addModifiers(KModifier.DATA)
-            .addAnnotation(Serializable::class)
             .addAnnotation(
                 AnnotationSpec.builder(Suppress::class)
                     .addMember("\"ClassName\"")
                     .build()
             )
+            .addAnnotation(Serializable::class)
+            .addModifiers(KModifier.PRIVATE)
+            .addModifiers(KModifier.DATA)
             .addSuperinterface(
                 Surrogate::class
                     .asClassName()
@@ -112,7 +188,7 @@ class SurrogateSerializerGenerator(private val codeGenerator: CodeGenerator) {
 
         val parameters = mutableListOf<String>()
 
-        declaration.primaryConstructor!!.parameters.forEach { parameter ->
+        representation.primaryConstructor!!.parameters.forEach { parameter ->
             val name = parameter.name?.asString() ?: error("Cannot get a name of $parameter")
             parameters += name
 
@@ -134,38 +210,25 @@ class SurrogateSerializerGenerator(private val codeGenerator: CodeGenerator) {
         }
 
         return surrogateBuilder
-            .primaryConstructor(
-                primaryConstructorBuilder.build()
-            )
+            .primaryConstructor(primaryConstructorBuilder.build())
             .addFunction(
                 FunSpec.builder("toOriginal")
                     .addModifiers(KModifier.OVERRIDE)
                     .returns(declaration.toClassName())
-                    .addStatement("return %T(%L)", declaration.toClassName(), parameters.joinToString(separator = ", "))
+                    .addStatement(
+                        surrogateToDeclarationTemplate(),
+                        representation.toClassName(),
+                        parameters.joinToString(separator = ", ")
+                    )
                     .build()
             )
             .build()
     }
 
-    /**
-     * Creates a surrogate serializer [SurrogateSerializer] named [surrogateSerializerClassName] for [declaration] via [surrogateClassName].
-     *
-     * It is expected that a surrogate can be constructed from the original by merely invoking
-     * the surrogate primary constructor with constructor parameters of the original.
-     * The original is required to be a data class (ensured elsewhere) and thus all constructor params are also fields (val/var).
-     *
-     * Final output shall look as follows:
-     *
-     * ```kotlin
-     * object [surrogateSerializerClassName]: SurrogateSerializer<[declaration], [surrogateClassName]>(
-     *     [surrogateClassName].serializer(), { [surrogateClassName](...) }
-     * ```
-     */
-    private fun generateSurrogateSerializer(declaration: KSClassDeclaration, surrogateClassName: ClassName, surrogateSerializerClassName: ClassName): TypeSpec {
-        val parameters = declaration.primaryConstructor!!.parameters.map { parameter ->
-            parameter.name?.asString() ?: error("Cannot get a name of $parameter")
-        }
-
+    private fun generateSurrogateSerializer(
+        surrogateClassName: ClassName,
+        surrogateSerializerClassName: ClassName
+    ): TypeSpec {
         return TypeSpec.objectBuilder(surrogateSerializerClassName)
             .superclass(
                 SurrogateSerializer::class
@@ -173,30 +236,9 @@ class SurrogateSerializerGenerator(private val codeGenerator: CodeGenerator) {
                     .parameterizedBy(declaration.toClassName(), surrogateClassName)
             )
             .addSuperclassConstructorParameter(CodeBlock.of("%T.serializer()", surrogateClassName))
-            .addSuperclassConstructorParameter(CodeBlock.of("{ %T(%L) }", surrogateClassName, parameters.joinToString(separator = ", ")))
+            .addSuperclassConstructorParameter(declarationToSurrogateConstructor(surrogateClassName))
             .build()
     }
-
-    private fun getSurrogateClassName(declaration: KSClassDeclaration): ClassName =
-        ClassName(
-            declaration.packageName.asString(),
-            declaration.simpleName.asString() + Surrogate.GENERATED_SURROGATE_POSTFIX
-        )
-
-    private fun getSurrogateSerializerClassName(declaration: KSClassDeclaration): ClassName =
-        ClassName(
-            declaration.packageName.asString(),
-            declaration.simpleName.asString() +
-                Surrogate.GENERATED_SURROGATE_POSTFIX +
-                Surrogate.GENERATED_SURROGATE_SERIALIZER_POSTFIX
-        )
-
-    private fun getSerializationFunctionalityLocation(declaration: KSClassDeclaration): ClassName =
-        ClassName(
-            declaration.packageName.asString(),
-            declaration.simpleName.asString() +
-                Surrogate.GENERATED_SERIALIZATION_FUNCTIONALITY_LOCATION_POSTFIX
-        )
 }
 
 private sealed class SerializingHierarchy(
@@ -311,7 +353,7 @@ private fun KSType.getSerializingHierarchy(tracker: Tracker, mustHaveDefault: Bo
         }
 
         Map::class.qualifiedName -> {
-            val maxSize = (this as KSAnnotated).getSingleArgumentOfSingleAnnotationByType(Size::class)
+            val maxSize = (this as KSAnnotated).getSingleArgumentOfNonRepeatableAnnotationByType(Size::class)
 
             val keyType = this.arguments[0].type?.resolve() ?: error("Cannot resolve a type argument of Map")
             val keySerializingObject = keyType.getSerializingHierarchy(tracker.literal(0), mustHaveDefault = true)
