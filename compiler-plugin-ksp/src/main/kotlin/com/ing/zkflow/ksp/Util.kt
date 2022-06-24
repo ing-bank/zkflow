@@ -15,6 +15,7 @@ import com.google.devtools.ksp.symbol.Variance
 import com.ing.zkflow.ConversionProvider
 import com.ing.zkflow.Surrogate
 import com.ing.zkflow.annotations.ZKPSurrogate
+import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.ksp.toClassName
@@ -175,6 +176,27 @@ fun Resolver.findClassesOrObjectsWithAnnotation(annotationKClass: KClass<out Ann
         .filterConcreteClassesOrObjects()
 }
 
-fun KSAnnotated.getSingleArgumentOfSingleAnnotationByType(annotationKClass: KClass<out Annotation>): KSValueArgument {
+fun KSAnnotated.getSingleArgumentOfNonRepeatableAnnotationByType(annotationKClass: KClass<out Annotation>): KSValueArgument {
     return this.getAnnotationsByType(annotationKClass).single().arguments.single()
 }
+
+fun KSClassDeclaration.getSurrogateClassName(): ClassName =
+    ClassName(
+        packageName.asString(),
+        simpleName.asString() + Surrogate.GENERATED_SURROGATE_POSTFIX
+    )
+
+fun KSClassDeclaration.getSurrogateSerializerClassName(): ClassName =
+    ClassName(
+        packageName.asString(),
+        simpleName.asString() +
+            Surrogate.GENERATED_SURROGATE_POSTFIX +
+            Surrogate.GENERATED_SURROGATE_SERIALIZER_POSTFIX
+    )
+
+fun KSClassDeclaration.getSerializationFunctionalityLocation(): ClassName =
+    ClassName(
+        packageName.asString(),
+        simpleName.asString() +
+            Surrogate.GENERATED_SERIALIZATION_FUNCTIONALITY_LOCATION_POSTFIX
+    )
