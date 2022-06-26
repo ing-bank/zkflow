@@ -46,9 +46,9 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                     "BasicTypesContainer.kt",
                     """
                         package $packageName
-
+                        
                         import com.ing.zkflow.annotations.ZKP
-
+                        
                         @ZKP
                         data class BasicTypesContainer(
                             val int: Int,
@@ -72,7 +72,7 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
 
                     @Suppress("ClassName")
                     @Serializable
-                    private data class BasicTypesContainerKotlinxSurrogate(
+                    public data class BasicTypesContainerKotlinxSurrogate(
                       @Serializable(with = Int_0::class)
                       public val int: @Contextual Int,
                       @Serializable(with = NullableInt_0::class)
@@ -90,6 +90,69 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                     public object BasicTypesContainerKotlinxSurrogateSerializer :
                         SurrogateSerializer<BasicTypesContainer, BasicTypesContainerKotlinxSurrogate>(BasicTypesContainerKotlinxSurrogate.serializer(),
                         { BasicTypesContainerKotlinxSurrogate(int = it.int, nullableInt = it.nullableInt) })
+                """.trimIndent()
+            ),
+
+            TestCase(
+                source = SourceFile.kotlin(
+                    "CollectionsOfBasicNullableTypesContainer.kt",
+                    """
+                        package $packageName
+                        
+                        import com.ing.zkflow.annotations.ZKP
+                        import com.ing.zkflow.annotations.Size
+                        
+                        @ZKP
+                        data class CollectionsOfBasicNullableTypesContainer(
+                            val myList: @Size(5) List<@Size(5) Map<Int, Int?>?>?,
+                        )
+                    """.trimIndent()
+                ),
+                expectedSerializationLocation = "CollectionsOfBasicNullableTypesContainer" + Surrogate.GENERATED_SERIALIZATION_FUNCTIONALITY_LOCATION_POSTFIX,
+                expected = """
+                    package $packageName
+                    
+                    import com.ing.zkflow.Surrogate
+                    import com.ing.zkflow.serialization.serializer.FixedLengthListSerializer
+                    import com.ing.zkflow.serialization.serializer.FixedLengthMapSerializer
+                    import com.ing.zkflow.serialization.serializer.IntSerializer
+                    import com.ing.zkflow.serialization.serializer.NullableSerializer
+                    import com.ing.zkflow.serialization.serializer.SurrogateSerializer
+                    import com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializerWithDefault
+                    import kotlin.Int
+                    import kotlin.Suppress
+                    import kotlin.collections.List
+                    import kotlin.collections.Map
+                    import kotlinx.serialization.Contextual
+                    import kotlinx.serialization.Serializable
+                    
+                    @Suppress("ClassName")
+                    @Serializable
+                    public data class CollectionsOfBasicNullableTypesContainerKotlinxSurrogate(
+                      @Serializable(with = MyList_0::class)
+                      public val myList: @Contextual List<@Contextual Map<@Contextual Int, @Contextual Int?>?>?
+                    ) : Surrogate<CollectionsOfBasicNullableTypesContainer> {
+                      public override fun toOriginal(): CollectionsOfBasicNullableTypesContainer =
+                          CollectionsOfBasicNullableTypesContainer(myList)
+                    
+                      private object MyList_0 : NullableSerializer<List<Map<Int, Int?>?>>(MyList_1)
+                    
+                      private object MyList_1 : FixedLengthListSerializer<Map<Int, Int?>?>(5, MyList_2)
+                    
+                      private object MyList_2 : NullableSerializer<Map<Int, Int?>>(MyList_3)
+                    
+                      private object MyList_3 : FixedLengthMapSerializer<Int, Int?>(5, MyList_3_A_0, MyList_3_B_0)
+                    
+                      private object MyList_3_A_0 : WrappedFixedLengthKSerializerWithDefault<Int>(IntSerializer)
+                    
+                      private object MyList_3_B_0 : NullableSerializer<Int>(MyList_3_B_1)
+                    
+                      private object MyList_3_B_1 : WrappedFixedLengthKSerializerWithDefault<Int>(IntSerializer)
+                    }
+                    
+                    public object CollectionsOfBasicNullableTypesContainerKotlinxSurrogateSerializer :
+                        SurrogateSerializer<CollectionsOfBasicNullableTypesContainer, CollectionsOfBasicNullableTypesContainerKotlinxSurrogate>(CollectionsOfBasicNullableTypesContainerKotlinxSurrogate.serializer(),
+                        { CollectionsOfBasicNullableTypesContainerKotlinxSurrogate(myList = it.myList) })
                 """.trimIndent()
             ),
 
@@ -133,7 +196,7 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                 
                 @Suppress("ClassName")
                 @Serializable
-                private data class OutOfReachKotlinxSurrogate(
+                public data class OutOfReachKotlinxSurrogate(
                   @Serializable(with = Int_0::class)
                   public val int: @Contextual Int
                 ) : Surrogate<OutOfReach> {
