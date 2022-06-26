@@ -1,4 +1,4 @@
-package com.ing.zkflow.processors
+package com.ing.zkflow.processors.serialization
 
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.symbol.KSClassDeclaration

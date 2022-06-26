@@ -5,7 +5,7 @@ import com.google.devtools.ksp.symbol.KSFile
 import com.ing.zkflow.ksp.CodeGeneratorStub
 import com.ing.zkflow.ksp.KSNameStub
 import com.ing.zkflow.ksp.versioning.VersionedCommandIdGenerator
-import com.ing.zkflow.processors.SerializerProviderGenerator.SerializableClassWithSourceFiles
+import com.ing.zkflow.processors.serialization.SerializerProviderGenerator.SerializableClassWithSourceFiles
 import com.squareup.kotlinpoet.ClassName
 import io.kotest.matchers.shouldBe
 import io.mockk.every

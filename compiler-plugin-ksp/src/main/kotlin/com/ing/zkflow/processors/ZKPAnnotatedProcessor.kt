@@ -28,6 +28,8 @@ import com.ing.zkflow.ksp.versioning.VersionFamilyGenerator
 import com.ing.zkflow.ksp.versioning.VersionSorting
 import com.ing.zkflow.ksp.versioning.VersionedCommandIdGenerator
 import com.ing.zkflow.ksp.versioning.VersionedStateIdGenerator
+import com.ing.zkflow.processors.serialization.SerializerProviderGenerator
+import com.ing.zkflow.processors.serialization.SurrogateSerializerGenerator
 import com.ing.zkflow.util.merge
 import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.ContractState

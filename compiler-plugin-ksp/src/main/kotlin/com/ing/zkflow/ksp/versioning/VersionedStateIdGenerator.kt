@@ -2,8 +2,8 @@ package com.ing.zkflow.ksp.versioning
 
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.ing.zkflow.ksp.implementsInterface
-import com.ing.zkflow.processors.SerializerProviderGenerator
-import com.ing.zkflow.processors.SerializerProviderGenerator.SerializableClassWithSourceFiles.Companion.toGeneratedSerializer
+import com.ing.zkflow.processors.serialization.SerializerProviderGenerator
+import com.ing.zkflow.processors.serialization.SerializerProviderGenerator.SerializableClassWithSourceFiles.Companion.toGeneratedSerializer
 import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.ContractState
 
