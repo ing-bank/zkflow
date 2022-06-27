@@ -135,7 +135,7 @@ class ZKPAnnotatedProcessor(private val logger: KSPLogger, codeGenerator: CodeGe
             if (requiredToBeVersioned.isNotEmpty()) {
                 throw UnversionedException(
                     "All ${ContractState::class.simpleName}s annotated with @ZKP or @ZKPSurrogate must implement a version marker interface. " +
-                        "The following do not: ${requiredToBeVersioned.joinToString(", ")}"
+                        "The following do not: ${requiredToBeVersioned.joinToString(", ") { it.qualifiedName?.asString().orEmpty() }}"
                 )
             }
         }

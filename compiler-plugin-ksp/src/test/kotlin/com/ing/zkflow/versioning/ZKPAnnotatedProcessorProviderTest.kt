@@ -63,14 +63,11 @@ class ZKPAnnotatedProcessorProviderTest : ProcessorTest(ZKPAnnotatedProcessorPro
         val outputStream = ByteArrayOutputStream()
         val result = compile(unversionedStatesKotlinFile, outputStream)
 
-        if (result.exitCode != KotlinCompilation.ExitCode.OK) {
-            reportError(result, outputStream)
-        }
-
         result.exitCode shouldBe KotlinCompilation.ExitCode.COMPILATION_ERROR
         result.messages.shouldContain(
             "All ContractStates annotated with @ZKP or @ZKPSurrogate " +
-                "must implement a version marker interface. The following do not: UnversionedHorse, UnversionedZebra"
+                "must implement a version marker interface. The following do not: " +
+                "com.ing.zkflow.contract.UnversionedHorse, com.ing.zkflow.contract.UnversionedZebra"
         )
     }
 

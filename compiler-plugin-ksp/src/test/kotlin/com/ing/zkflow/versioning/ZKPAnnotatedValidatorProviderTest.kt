@@ -26,6 +26,30 @@ class ZKPAnnotatedValidatorProviderTest : ProcessorTest(ZKPAnnotatedValidatorPro
     }
 
     @Test
+    fun `ZKStable annotation may not be on concrete classes`() {
+        val outputStream = ByteArrayOutputStream()
+        val result = compile(
+            SourceFile.kotlin(
+                "Invalid.kt",
+                """
+                package com.ing.zkflow.contract
+
+                import com.ing.zkflow.annotations.ZKPStable
+
+                @ZKPStable
+                class MyType(
+                    val foo: Int
+                )
+            """
+            ),
+            outputStream
+        )
+
+        result.messages shouldContain "should be an interface or abstract class"
+        result.exitCode shouldBe KotlinCompilation.ExitCode.COMPILATION_ERROR
+    }
+
+    @Test
     fun `Surrogates may not be CommandData`() {
         val outputStream = ByteArrayOutputStream()
         val result = compile(
@@ -291,6 +315,40 @@ class ZKPAnnotatedValidatorProviderTest : ProcessorTest(ZKPAnnotatedValidatorPro
 
         result.messages shouldContain "All primary constructor parameters of classes annotated with @ZKP or @ZKPSurrogate must be public"
         result.exitCode shouldBe KotlinCompilation.ExitCode.COMPILATION_ERROR
+    }
+
+    @Test
+    fun `parent vals from stable parent are allowed in primary constructor of ZKP-annotated types`() {
+        val outputStream = ByteArrayOutputStream()
+        val result = compile(
+            SourceFile.kotlin(
+                "Stable.kt",
+                """
+                package com.ing.zkflow.contract
+
+                import com.ing.zkflow.annotations.ZKP
+                import com.ing.zkflow.annotations.ZKPStable
+
+                @ZKPStable
+                interface Foo<T: Any> {
+                    val foo: T
+                }
+
+                @ZKP
+                class MyType(
+                    override val foo: Int
+                ) : Foo<Int> 
+
+            """
+            ),
+            outputStream
+        )
+
+        if (result.exitCode != KotlinCompilation.ExitCode.OK) {
+            reportError(result, outputStream)
+        }
+
+        result.exitCode shouldBe KotlinCompilation.ExitCode.OK
     }
 
     @Test

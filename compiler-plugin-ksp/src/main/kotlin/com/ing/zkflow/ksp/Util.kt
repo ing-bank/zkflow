@@ -151,7 +151,7 @@ fun KSClassDeclaration.getSurrogateTargetType(): KSType {
 }
 
 fun Sequence<KSClassDeclaration>.filterConcreteClassesOrObjects(): Sequence<KSClassDeclaration> =
-    filter { it.classKind in listOf(ClassKind.CLASS, ClassKind.OBJECT) && !it.isAbstract() }
+    filter { it.classKind in listOf(ClassKind.ENUM_CLASS, ClassKind.CLASS, ClassKind.OBJECT) && !it.isAbstract() }
 
 /**
  * Surrogates are classes that are annotated with @ZKPSurrogate *and* implement [Surrogate].

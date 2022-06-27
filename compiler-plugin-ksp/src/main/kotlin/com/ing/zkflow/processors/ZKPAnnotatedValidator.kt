@@ -5,6 +5,7 @@ package com.ing.zkflow.processors
 import com.google.devtools.ksp.getAllSuperTypes
 import com.google.devtools.ksp.getDeclaredProperties
 import com.google.devtools.ksp.getVisibility
+import com.google.devtools.ksp.isAbstract
 import com.google.devtools.ksp.isAnnotationPresent
 import com.google.devtools.ksp.processing.KSBuiltIns
 import com.google.devtools.ksp.processing.KSPLogger
@@ -14,6 +15,7 @@ import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSTypeReference
@@ -29,6 +31,7 @@ import com.ing.zkflow.annotations.UTF32
 import com.ing.zkflow.annotations.UTF8
 import com.ing.zkflow.annotations.UnicodeChar
 import com.ing.zkflow.annotations.ZKP
+import com.ing.zkflow.annotations.ZKPStable
 import com.ing.zkflow.annotations.ZKPSurrogate
 import com.ing.zkflow.annotations.corda.Algorithm
 import com.ing.zkflow.annotations.corda.EcDSA_K1
@@ -83,6 +86,7 @@ class ZKPAnnotatedValidator(@Suppress("unused") private val logger: KSPLogger) :
         val surrogates = resolver.getAllSurrogates()
 
         requireNoTopLevelSurrogates(surrogates)
+        requireNoConcreteZKPStableAnnotated(resolver)
 
         (zkpAnnotated + surrogates).forEach {
             // For now, objects are not allowed because the ZKFlow Arrow plugin currently does not support objects.
@@ -97,6 +101,14 @@ class ZKPAnnotatedValidator(@Suppress("unused") private val logger: KSPLogger) :
         }
 
         return emptyList()
+    }
+
+    private fun requireNoConcreteZKPStableAnnotated(resolver: Resolver) {
+        resolver.findClassesOrObjectsWithAnnotation(ZKPStable::class).forEach {
+            require(it.isAbstract()) {
+                "Types annotated with @${ZKPStable::class.simpleName} should be an interface or abstract class. ${it.qualifiedName?.asString()} is: ${it.classKind.name}"
+            }
+        }
     }
 
     private fun KSClassDeclaration.requireNotAnObject() {
@@ -192,16 +204,14 @@ class ZKPAnnotatedValidator(@Suppress("unused") private val logger: KSPLogger) :
      *
      * Don't allow parent vals to be used in the constructor, unless there is a level of indirection:
      * - the val is annotated with @Via
-     * - the val type itself is annotated with @ZKP
+     * - the parent type is considered 'stable'. This is true for types annotated with @ZKPStable or @ZKP.
      */
     private fun requireParentValsNotUsedInPrimaryConstructor(implementor: KSClassDeclaration, parent: KSClassDeclaration) {
-        // We allow direct usage of properties of certain core Corda classes, such as ContractState, OwnableState, etc.
-        // These classes are considered stable unless the Corda platform version changes. ZKFlow is tied to a specific Corda platform version.
-        if (parent.isConsideredStableCoreClass()) return
-        val parentProperties = parent.getAllProperties().map { it.simpleName }
+        if (parent.isConsideredStableParentClass()) return
+
+        val parentProperties = parent.getDeclaredProperties().map { it.simpleName }
         val unsafeParams = implementor.primaryConstructor?.parameters?.filter {
-            it.name in parentProperties &&
-                !(it.type.isAnnotationPresent(Via::class) || it.type.resolve().declaration.isAnnotationPresent(ZKP::class))
+            it.name in parentProperties && !it.type.isAnnotationPresent(Via::class)
         } ?: emptyList()
 
         require(unsafeParams.isEmpty()) {
@@ -209,19 +219,33 @@ class ZKPAnnotatedValidator(@Suppress("unused") private val logger: KSPLogger) :
             "Properties defined in parent $parent were unsafely overridden in primary constructor of ${implementor.qualifiedName?.asString()}: $paramNames. " +
                 "There are three options to resolve this: 1) move them to the body of $implementor, " +
                 "2) annotate the property type with @${Via::class.simpleName} or " +
-                "3) annotate the declaration of the type itself with @${ZKP::class.simpleName}"
+                "3) ensure that the parent is considered 'stable', i.e. is annotated with @${ZKP::class.simpleName}, @${ZKPStable::class.simpleName} or  @${ZKPSurrogate::class.simpleName}"
         }
     }
 
     /**
-     * We allow direct usage of properties of certain core Corda classes, such as ContractState, OwnableState, etc.
-     * These classes are considered stable unless the Corda platform version changes. ZKFlow is tied to a specific Corda platform version.
+     * We allow direct usage of properties of certain parent classes only if they are:
+     * - stable core Corda classes, such as ContractState, OwnableState, etc.
+     * - annotated with @ZKPStable or @ZKP.
+     *
+     * These classes are considered stable, i.e. never changing.
+     * For Corda classes this is true unless the Corda platform version changes.
+     * ZKFlow is already tied to a specific Corda platform version.
      */
-    private fun KSClassDeclaration.isConsideredStableCoreClass(): Boolean {
-        return this.qualifiedName?.asString() in listOf(
+    private fun KSDeclaration.isConsideredStableParentClass(): Boolean {
+        return this.isZKPStable() || this.qualifiedName?.asString() in listOf(
             ContractState::class.qualifiedName,
             OwnableState::class.qualifiedName
         )
+    }
+
+    /**
+     * True for any class that is annotated with ZKPStable (or indirectly annotated through ZKP or ZKPSurrogate).
+     */
+    private fun KSAnnotated.isZKPStable(): Boolean {
+        return this.isAnnotationPresent(ZKPStable::class) ||
+            this.isAnnotationPresent(ZKP::class) ||
+            this.isAnnotationPresent(ZKPSurrogate::class)
     }
 
     private fun KSClassDeclaration.requireConstructorParamsSerializable() {
