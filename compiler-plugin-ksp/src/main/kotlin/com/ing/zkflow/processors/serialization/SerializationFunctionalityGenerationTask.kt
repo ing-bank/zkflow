@@ -114,7 +114,7 @@ internal sealed class SerializationFunctionalityGenerationTask(
                     PropertySpec.builder(name, serializingHierarchy.declaration)
                         .addAnnotation(
                             AnnotationSpec.builder(Serializable::class)
-                                .addMember("with = %N::class", serializingHierarchy.serializingObject)
+                                .addMember("with = %N::class", serializingHierarchy.definition)
                                 .build()
                         )
                         .initializer(name)

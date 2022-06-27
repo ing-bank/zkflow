@@ -1,12 +1,23 @@
 package com.ing.zkflow.processors.serialization
 
+import com.google.devtools.ksp.isAnnotationPresent
+import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSType
+import com.ing.zkflow.Default
+import com.ing.zkflow.Via
 import com.ing.zkflow.annotations.Size
+import com.ing.zkflow.annotations.ZKP
+import com.ing.zkflow.ksp.getNonRepeatableAnnotationByType
 import com.ing.zkflow.ksp.getSingleArgumentOfNonRepeatableAnnotationByType
+import com.ing.zkflow.ksp.getSurrogateFromViaAnnotation
+import com.ing.zkflow.ksp.getSurrogateSerializerClassName
+import com.ing.zkflow.ksp.getSurrogateTargetClass
 import com.ing.zkflow.serialization.serializer.FixedLengthListSerializer
 import com.ing.zkflow.serialization.serializer.FixedLengthMapSerializer
 import com.ing.zkflow.serialization.serializer.IntSerializer
 import com.ing.zkflow.serialization.serializer.NullableSerializer
+import com.ing.zkflow.serialization.serializer.SerializerWithDefault
+import com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializer
 import com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializerWithDefault
 import com.ing.zkflow.tracking.Tracker
 import com.squareup.kotlinpoet.CodeBlock
@@ -16,12 +27,12 @@ import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.ksp.toClassName
 
-@Suppress("LongMethod")
+@Suppress("LongMethod", "ComplexMethod")
 internal fun KSType.getSerializingHierarchy(tracker: Tracker, ignoreNullability: Boolean = false, mustHaveDefault: Boolean = false): SerializingHierarchy {
     if (this.isMarkedNullable && !ignoreNullability) {
         // this.makeNotNullable effectively removes annotations, that is, one can see them in the debugger, but they are inaccessible.
         val inner = this.getSerializingHierarchy(tracker.next(), ignoreNullability = true, mustHaveDefault = true)
-        require(inner is SerializingHierarchy.OfType) { "Type $declaration cannot be marked as nullable twice" }
+        require(inner !is SerializingHierarchy.OfNullable) { "Type $declaration cannot be marked as nullable twice" }
 
         val typeSpec = TypeSpec.objectBuilder("$tracker")
             .addModifiers(KModifier.PRIVATE)
@@ -30,7 +41,7 @@ internal fun KSType.getSerializingHierarchy(tracker: Tracker, ignoreNullability:
                     .asClassName()
                     .parameterizedBy(inner.type)
             )
-            .addSuperclassConstructorParameter(CodeBlock.of("%N", inner.serializingObject))
+            .addSuperclassConstructorParameter(CodeBlock.of("%N", inner.definition))
             .build()
 
         return SerializingHierarchy.OfNullable(inner, typeSpec)
@@ -39,33 +50,11 @@ internal fun KSType.getSerializingHierarchy(tracker: Tracker, ignoreNullability:
     // Invariant:
     // Nullability has been stripped by now.
 
-    // TODO this treatment must be done only for types whuch serializers have no default.
-    //  Because we know all the serializers, we can look for defaults only in a very specific cases
-    // if (mustHaveDefault) {
-    //     val defaultProvider = (this as KSAnnotated).getSingleArgumentOfSingleAnnotationByType(Default::class)
-    //         .toString()
-    //         .dropLast("::class".length)
-    //
-    //     val inner = this.getSerializingObject(tracker.next(), mustHaveDefault = false)
-    //
-    //     val typeSpec = TypeSpec.objectBuilder("$tracker")
-    //         .addModifiers(KModifier.PRIVATE)
-    //         .superclass(
-    //             SerializerWithDefault::class
-    //                 .asClassName()
-    //                 .parameterizedBy(inner.type)
-    //         )
-    //         .addSuperclassConstructorParameter(CodeBlock.of("%N, %L.default", inner.serializingObject, defaultProvider))
-    //         .build()
-    //
-    //     return SerializingHierarchy.OfType(this.toClassName(), listOf(inner), typeSpec)
-    // }
-
     val fqName = this.declaration.qualifiedName?.asString() ?: error("Cannot determine a fully qualified name of $declaration")
 
     return when (fqName) {
         Int::class.qualifiedName -> {
-            val typeSpec = TypeSpec.objectBuilder("$tracker")
+            val serializingObject = TypeSpec.objectBuilder("$tracker")
                 .addModifiers(KModifier.PRIVATE)
                 .superclass(
                     WrappedFixedLengthKSerializerWithDefault::class
@@ -75,7 +64,7 @@ internal fun KSType.getSerializingHierarchy(tracker: Tracker, ignoreNullability:
                 .addSuperclassConstructorParameter("%T", IntSerializer::class)
                 .build()
 
-            SerializingHierarchy.OfType(this.toClassName(), listOf(), typeSpec)
+            SerializingHierarchy.OfType(this.toClassName(), emptyList(), serializingObject)
         }
 
         List::class.qualifiedName -> {
@@ -84,7 +73,7 @@ internal fun KSType.getSerializingHierarchy(tracker: Tracker, ignoreNullability:
             val innerType = this.arguments[0].type?.resolve() ?: error("Cannot resolve a type argument of $declaration")
             val innerSerializingObject = innerType.getSerializingHierarchy(tracker.next(), mustHaveDefault = true)
 
-            val typeSpec = TypeSpec.objectBuilder("$tracker")
+            val serializingObject = TypeSpec.objectBuilder("$tracker")
                 .addModifiers(KModifier.PRIVATE)
                 .superclass(
                     FixedLengthListSerializer::class
@@ -92,14 +81,14 @@ internal fun KSType.getSerializingHierarchy(tracker: Tracker, ignoreNullability:
                         .parameterizedBy(innerSerializingObject.type)
                 )
                 .addSuperclassConstructorParameter(
-                    CodeBlock.of("%L, %N", maxSize, innerSerializingObject.serializingObject)
+                    CodeBlock.of("%L, %N", maxSize, innerSerializingObject.definition)
                 )
                 .build()
 
             SerializingHierarchy.OfType(
                 this.toClassName(),
                 listOf(innerSerializingObject),
-                typeSpec
+                serializingObject
             )
         }
 
@@ -112,7 +101,7 @@ internal fun KSType.getSerializingHierarchy(tracker: Tracker, ignoreNullability:
             val valueType = this.arguments[1].type?.resolve() ?: error("Cannot resolve a type argument of $declaration")
             val valueSerializingObject = valueType.getSerializingHierarchy(tracker.literal(1).numeric(), mustHaveDefault = true)
 
-            val typeSpec = TypeSpec.objectBuilder("$tracker")
+            val serializingObject = TypeSpec.objectBuilder("$tracker")
                 .addModifiers(KModifier.PRIVATE)
                 .superclass(
                     FixedLengthMapSerializer::class
@@ -122,17 +111,141 @@ internal fun KSType.getSerializingHierarchy(tracker: Tracker, ignoreNullability:
                     // .copy(annotations = annotations.map { .. })
                 )
                 .addSuperclassConstructorParameter(
-                    CodeBlock.of("%L, %N, %N", maxSize, keySerializingObject.serializingObject, valueSerializingObject.serializingObject)
+                    CodeBlock.of("%L, %N, %N", maxSize, keySerializingObject.definition, valueSerializingObject.definition)
                 )
                 .build()
 
             SerializingHierarchy.OfType(
                 this.toClassName(),
                 listOf(keySerializingObject, valueSerializingObject),
-                typeSpec
+                serializingObject
             )
         }
 
-        else -> TODO("Unsupported type:  $fqName; ${if (mustHaveDefault) "Default value is required" else "Default value is NOT required"}")
+        else -> {
+            // User type.
+            // User type is serializable if
+            // - this type is owned
+            // - this type is a third-party class with a specified surrogate
+            //
+            // - Possibly must have a @Default annotation.
+
+            // If `this` must have default, then extra level of indirection is required, therefore
+            // surrogate serializer must take the next tracker, i.e.
+            // (** Previous recursion level **)    (***********************   Current recursion level    ************************)
+            //      NullableSerializers         ->  WrappedKSerializerWithDefault(tracker) -> SurrogateSerializer(tracker.next())
+            //                                      ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+            val nextTracker = if (mustHaveDefault) tracker.next() else tracker
+
+            val serializingObject = this.trySerializeAsOwnClass(nextTracker) ?: this.trySerializeAs3rdPartyClass(nextTracker) ?: error("")
+
+            if (mustHaveDefault) {
+                val defaultProvider = this.getSingleArgumentOfNonRepeatableAnnotationByType(Default::class) as KSType
+
+                val serializingObjectWithDefault = TypeSpec.objectBuilder("$tracker")
+                    .addModifiers(KModifier.PRIVATE)
+                    .superclass(
+                        SerializerWithDefault::class
+                            .asClassName()
+                            .parameterizedBy(serializingObject.type)
+                    )
+                    .addSuperclassConstructorParameter(CodeBlock.of("%N, %T.default", serializingObject.definition, defaultProvider.toClassName()))
+                    .build()
+
+                SerializingHierarchy.Placeholder(
+                    serializingObject,
+                    serializingObjectWithDefault
+                )
+            } else {
+                serializingObject
+            }
+        }
     }
+}
+
+/**
+ * Attempt to build a serializing object for the type as if this type is owned,
+ * i.e., annotated with @ZKP at its declaration
+ * ```
+ * @ZKP
+ * class MyClass()
+ *
+ * @ZKP
+ * class MyOtherClass(
+ *     val myClass: MyClass
+ * )
+ *     ```
+ */
+internal fun KSType.trySerializeAsOwnClass(tracker: Tracker): SerializingHierarchy.OfType? {
+    if (!this.declaration.isAnnotationPresent(ZKP::class)) {
+        return null
+    }
+    val surrogate = (this.declaration as KSClassDeclaration)
+    val surrogateSerializer = surrogate.getSurrogateSerializerClassName()
+
+    val serializingObject = TypeSpec.objectBuilder("$tracker")
+        .addModifiers(KModifier.PRIVATE)
+        .superclass(
+            WrappedFixedLengthKSerializer::class
+                .asClassName()
+                .parameterizedBy(surrogate.toClassName())
+        )
+        .addSuperclassConstructorParameter(
+            CodeBlock.of("%T, %T::class.java.isEnum", surrogateSerializer, surrogate.toClassName())
+        )
+        .build()
+
+    return SerializingHierarchy.OfType(
+        this.toClassName(),
+        emptyList(),
+        serializingObject
+    )
+}
+
+/**
+ * Attempt to build a serializing object for the type as if this type is a third-party class with a specified surrogate
+ * ```
+ * class Class3rdParty()
+ *
+ * @ZKPSurrogate(ConverterFormClass3rdPartToMySurrogateOfClass3rdParty::class)
+ * class MySurrogateOfClass3rdParty(): Surrogate<Class3rdParty> { .. }
+ *
+ * @ZKP
+ * class MyClass(
+ *     val class3rdParty: Via<MySurrogateOfClass3rdParty::class> Class3rdParty
+ *     )
+ * ```
+ */
+internal fun KSType.trySerializeAs3rdPartyClass(tracker: Tracker): SerializingHierarchy.OfType? {
+    // Be extra cautious to not enforce order in which the type's serializability is evaluated and return null
+    // if @Via annotation is not found.
+    // i.e., first, as own class, then as 3rd party class vs first, as 3rd party class, then as own class.
+
+    val viaAnnotation = try {
+        this.getNonRepeatableAnnotationByType(Via::class)
+    } catch (e: Exception) {
+        return null
+    }
+
+    val surrogate = viaAnnotation.getSurrogateFromViaAnnotation()
+    val target = surrogate.getSurrogateTargetClass()
+    val surrogateSerializer = target.getSurrogateSerializerClassName()
+
+    val serializingObject = TypeSpec.objectBuilder("$tracker")
+        .addModifiers(KModifier.PRIVATE)
+        .superclass(
+            WrappedFixedLengthKSerializer::class
+                .asClassName()
+                .parameterizedBy(target.toClassName())
+        )
+        .addSuperclassConstructorParameter(
+            CodeBlock.of("%T, %T::class.java.isEnum", surrogateSerializer, surrogate.toClassName())
+        )
+        .build()
+
+    return SerializingHierarchy.OfType(
+        this.toClassName(),
+        emptyList(),
+        serializingObject
+    )
 }

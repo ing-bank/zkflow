@@ -26,7 +26,7 @@ private fun KSType.exhibitFunnyBehavior() {
 }
 
 internal sealed class SerializingHierarchy(
-    val serializingObject: TypeSpec
+    val definition: TypeSpec
 ) {
     class OfType(
         private val rootType: ClassName,
@@ -56,7 +56,7 @@ internal sealed class SerializingHierarchy(
     }
 
     class OfNullable(
-        val inner: OfType,
+        val inner: SerializingHierarchy,
         serializingObject: TypeSpec
     ) : SerializingHierarchy(serializingObject) {
         override val declaration: TypeName
@@ -65,13 +65,24 @@ internal sealed class SerializingHierarchy(
             get() = inner.type.copy(nullable = true)
     }
 
+    class Placeholder(
+        val inner: SerializingHierarchy,
+        serializingObject: TypeSpec
+    ) : SerializingHierarchy(serializingObject) {
+        override val declaration: TypeName
+            get() = inner.declaration
+        override val type: TypeName
+            get() = inner.type
+    }
+
     abstract val declaration: TypeName
     abstract val type: TypeName
     fun addTypesTo(container: TypeSpec.Builder) {
-        container.addType(serializingObject)
+        container.addType(definition)
         when (this) {
             is OfType -> inner.forEach { it.addTypesTo(container) }
             is OfNullable -> inner.addTypesTo(container)
+            is Placeholder -> inner.addTypesTo(container)
         }
     }
 }

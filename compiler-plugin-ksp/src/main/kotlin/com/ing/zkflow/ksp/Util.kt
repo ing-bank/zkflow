@@ -12,6 +12,7 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.ing.zkflow.Surrogate
 import com.ing.zkflow.annotations.ZKPSurrogate
+import com.ing.zkflow.Via
 import com.squareup.kotlinpoet.ClassName
 import kotlin.reflect.KClass
 
@@ -120,6 +121,14 @@ fun KSType.getSingleArgumentOfNonRepeatableAnnotationByType(annotationKClass: KC
         .value
 }
 
+fun KSType.getNonRepeatableAnnotationByType(annotationKClass: KClass<out Annotation>): KSAnnotation {
+    return annotations
+        .single {
+            it.shortName.getShortName() == annotationKClass.simpleName &&
+                it.annotationType.resolve().declaration.qualifiedName?.asString() == annotationKClass.qualifiedName
+        }
+}
+
 fun KSClassDeclaration.getSurrogateClassName(): ClassName =
     ClassName(
         packageName.asString(),
@@ -140,3 +149,11 @@ fun KSClassDeclaration.getSerializationFunctionalityLocation(): ClassName =
         simpleName.asString() +
             Surrogate.GENERATED_SERIALIZATION_FUNCTIONALITY_LOCATION_POSTFIX
     )
+
+fun KSAnnotation.getSurrogateFromViaAnnotation(): KSClassDeclaration {
+    require(annotationType.resolve().declaration.qualifiedName?.asString() == Via::class.qualifiedName) {
+        "Can't get Surrogate from $this, it is not a @${Via::class.simpleName} annotation."
+    }
+    return annotationType.element?.typeArguments?.singleOrNull()?.type?.resolve()?.declaration as? KSClassDeclaration
+        ?: error("@${Via::class.simpleName} annotation's argument is not a class.")
+}
