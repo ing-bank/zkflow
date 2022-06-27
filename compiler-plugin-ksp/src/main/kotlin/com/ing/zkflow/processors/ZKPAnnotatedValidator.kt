@@ -106,7 +106,8 @@ class ZKPAnnotatedValidator(@Suppress("unused") private val logger: KSPLogger) :
     private fun requireNoConcreteZKPStableAnnotated(resolver: Resolver) {
         resolver.findClassesOrObjectsWithAnnotation(ZKPStable::class).forEach {
             require(it.isAbstract()) {
-                "Types annotated with @${ZKPStable::class.simpleName} should be an interface or abstract class. ${it.qualifiedName?.asString()} is: ${it.classKind.name}"
+                "Types annotated with @${ZKPStable::class.simpleName} should be an interface or abstract class. " +
+                    "${it.qualifiedName?.asString()} is: ${it.classKind.name}"
             }
         }
     }
@@ -115,7 +116,8 @@ class ZKPAnnotatedValidator(@Suppress("unused") private val logger: KSPLogger) :
         require(this.classKind != ClassKind.OBJECT) {
             "${this.qualifiedName?.asString()} is an object. " +
                 "For now, objects annotated with @${ZKP::class.simpleName} or @${ZKPSurrogate::class.simpleName} are not allowed. " +
-                "This is because the ZKFlow Arrow plugin currently does not support objects. When Arrow is replaced with KSP, this check should be removed."
+                "This is because the ZKFlow Arrow plugin currently does not support objects. When Arrow is replaced with KSP, " +
+                "this check should be removed."
         }
     }
 
@@ -180,8 +182,8 @@ class ZKPAnnotatedValidator(@Suppress("unused") private val logger: KSPLogger) :
      */
     private fun KSClassDeclaration.requireNoGenerics() {
         require(typeParameters.isEmpty()) {
-            "Classes annotated with @${ZKP::class.simpleName} or @${ZKPSurrogate::class.simpleName} may not have type parameters. `$this` has parameters: ${typeParameters.map { it.simpleName.asString() }} " +
-                "This may be supported in the future."
+            "Classes annotated with @${ZKP::class.simpleName} or @${ZKPSurrogate::class.simpleName} may not have type parameters. " +
+                "`${this.qualifiedName?.asString()}` has parameters: ${typeParameters.map { it.simpleName.asString() }}."
         }
     }
 
