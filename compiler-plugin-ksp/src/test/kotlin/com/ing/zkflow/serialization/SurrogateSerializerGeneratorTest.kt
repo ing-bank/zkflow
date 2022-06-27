@@ -1,5 +1,6 @@
-package com.ing.zkflow
+package com.ing.zkflow.serialization
 
+import com.ing.zkflow.Surrogate
 import com.ing.zkflow.ksp.ProcessorTest
 import com.ing.zkflow.processors.ZKPAnnotatedProcessorProvider
 import com.tschuchort.compiletesting.KotlinCompilation

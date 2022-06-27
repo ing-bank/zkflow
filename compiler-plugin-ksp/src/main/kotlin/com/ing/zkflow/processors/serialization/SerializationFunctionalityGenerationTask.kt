@@ -4,6 +4,7 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.ing.zkflow.Surrogate
 import com.ing.zkflow.ksp.getSurrogateClassName
 import com.ing.zkflow.ksp.getSurrogateSerializerClassName
+import com.ing.zkflow.processors.serialization.hierarchy.getSerializingHierarchy
 import com.ing.zkflow.serialization.serializer.SurrogateSerializer
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName

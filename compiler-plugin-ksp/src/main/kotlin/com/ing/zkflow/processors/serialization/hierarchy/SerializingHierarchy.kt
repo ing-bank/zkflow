@@ -1,7 +1,12 @@
-package com.ing.zkflow.processors.serialization
+package com.ing.zkflow.processors.serialization.hierarchy
 
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSValueParameter
+import com.ing.zkflow.processors.serialization.hierarchy.types.asInt
+import com.ing.zkflow.processors.serialization.hierarchy.types.asList
+import com.ing.zkflow.processors.serialization.hierarchy.types.asMap
+import com.ing.zkflow.processors.serialization.hierarchy.types.asNullable
+import com.ing.zkflow.processors.serialization.hierarchy.types.asUserType
 import com.ing.zkflow.tracking.Tracker
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
@@ -84,5 +89,25 @@ internal sealed class SerializingHierarchy(
             is OfNullable -> inner.addTypesTo(container)
             is Placeholder -> inner.addTypesTo(container)
         }
+    }
+}
+
+@Suppress("LongMethod", "ComplexMethod")
+internal fun KSType.getSerializingHierarchy(tracker: Tracker, ignoreNullability: Boolean = false, mustHaveDefault: Boolean = false): SerializingHierarchy {
+    if (this.isMarkedNullable && !ignoreNullability) {
+        return this.asNullable(tracker)
+    }
+
+    // Invariant:
+    // Nullability has been stripped by now.
+
+    val fqName = this.declaration.qualifiedName?.asString() ?: error("Cannot determine a fully qualified name of $declaration")
+
+    return when (fqName) {
+        Int::class.qualifiedName -> this.asInt(tracker)
+        List::class.qualifiedName -> this.asList(tracker)
+        Map::class.qualifiedName -> this.asMap(tracker)
+        //
+        else -> this.asUserType(tracker, mustHaveDefault)
     }
 }
