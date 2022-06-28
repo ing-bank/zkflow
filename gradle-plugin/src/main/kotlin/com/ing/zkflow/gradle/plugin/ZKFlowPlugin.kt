@@ -1,5 +1,6 @@
 package com.ing.zkflow.gradle.plugin
 
+import com.ing.zkflow.gradle.task.GenerateBflStructureTask
 import com.ing.zkflow.gradle.task.GenerateZincCircuitsTask
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import org.gradle.api.Plugin
@@ -39,13 +40,24 @@ class ZKFlowPlugin : Plugin<Project> {
             applyArrowCompilerPlugin(project)
         }
 
-        val generateZincCircuitsTask = project.tasks.create(GENERATE_ZINC_CIRCUITS, GenerateZincCircuitsTask::class.java)
+        val generateZincCircuitsTask = project.tasks.create(
+            GENERATE_ZINC_CIRCUITS,
+            GenerateZincCircuitsTask::class.java
+        )
         generateZincCircuitsTask
             .dependsOn(COMPILE_KOTLIN) // So the command metadata can be found
             .mustRunAfter(COMPILE_KOTLIN)
 
         project.tasks.getByPath(COMPILE_KOTLIN).finalizedBy(GENERATE_ZINC_CIRCUITS)
         project.tasks.getByPath(ASSEMBLE).dependsOn(GENERATE_ZINC_CIRCUITS)
+
+        val generateBflStructureTask = project.tasks.create(
+            "generateBflStructure",
+            GenerateBflStructureTask::class.java
+        )
+        generateBflStructureTask
+            .dependsOn(COMPILE_KOTLIN)
+            .mustRunAfter(COMPILE_KOTLIN)
     }
 
     private fun applyArrowCompilerPlugin(project: Project) {

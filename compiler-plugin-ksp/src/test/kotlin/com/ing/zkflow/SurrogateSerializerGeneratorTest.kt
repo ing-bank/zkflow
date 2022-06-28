@@ -2,7 +2,7 @@ package com.ing.zkflow
 
 import com.ing.zkflow.ksp.ProcessorTest
 import com.ing.zkflow.processors.ZKPAnnotatedProcessorProvider
-import com.ing.zkflow.util.toStringTree
+import com.ing.zkflow.util.map
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import io.kotest.matchers.shouldBe
@@ -25,7 +25,7 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
 
         result.exitCode shouldBe KotlinCompilation.ExitCode.OK
 
-        println(result.getMetaInfServicesFolder().listRecursively()!!.toStringTree { fileName.toStr() })
+        println(result.getMetaInfServicesFolder().listRecursively()!!.map { it.fileName.toStr() })
 
         result.readGeneratedKotlinFile(packageName, generatedSurrogateSerializerClassName) shouldBe correctSourceExpectedOutput
     }
@@ -42,7 +42,7 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
 
         result.exitCode shouldBe KotlinCompilation.ExitCode.OK
 
-        println(result.getMetaInfServicesFolder().listRecursively()!!.toStringTree { fileName.toStr() })
+        println(result.getMetaInfServicesFolder().listRecursively()!!.map { it.fileName.toStr() })
 
         result.readGeneratedKotlinFile(packageName, generatedSurrogateSerializerClassName) shouldBe correctSourceExpectedOutputWithGenerics
     }

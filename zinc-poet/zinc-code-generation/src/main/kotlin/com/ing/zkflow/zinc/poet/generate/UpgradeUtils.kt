@@ -11,6 +11,7 @@ import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.common.zkp.metadata.ZKProtectedComponent
 import com.ing.zkflow.common.zkp.metadata.ZKReference
 import com.ing.zkflow.util.require
+import com.ing.zkflow.util.tryGetKClass
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 import kotlin.reflect.full.findAnnotation
@@ -56,22 +57,6 @@ private fun KFunction<Any>.tryGetFirstArgumentKClass(): KClass<out Any>? = try {
     "${parameters[0].type}".tryGetKClass()
 } catch (e: ClassNotFoundException) {
     null
-}
-
-private fun String.tryGetKClass(): KClass<out Any>? = classNamePermutations().mapNotNull {
-    try {
-        Class.forName(it).kotlin
-    } catch (e: ClassNotFoundException) {
-        null
-    }
-}.singleOrNull()
-
-private fun String.classNamePermutations(): List<String> = split(".").fold(emptyList()) { acc, part ->
-    if (acc.isEmpty()) {
-        listOf(part)
-    } else {
-        acc.map { "$it.$part" } + acc.map { "$it\$$part" }
-    }
 }
 
 /**

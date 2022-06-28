@@ -109,14 +109,14 @@ val <T> Tree<T, T>.value: T
         is Tree.Leaf<T, T> -> value
     }
 
-fun <T> Tree<T, T>.toStringTree(format: T.() -> String): Tree<String, String> {
+fun <T, R> Tree<T, T>.map(transform: (T) -> R): Tree<R, R> {
     return when (this) {
-        is Tree.Node<T, T> -> Tree.node(format(this.value)) {
+        is Tree.Node<T, T> -> Tree.node(transform(this.value)) {
             children.forEach {
-                addNode(it.toStringTree(format))
+                addNode(it.map(transform))
             }
         }
-        is Tree.Leaf<T, T> -> Tree.leaf(format(this.value))
+        is Tree.Leaf<T, T> -> Tree.leaf(transform(this.value))
     }
 }
 
