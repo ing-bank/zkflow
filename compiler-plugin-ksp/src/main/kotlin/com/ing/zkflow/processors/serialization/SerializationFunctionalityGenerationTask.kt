@@ -1,11 +1,14 @@
 package com.ing.zkflow.processors.serialization
 
+import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.ing.zkflow.Surrogate
 import com.ing.zkflow.ksp.getSurrogateClassName
 import com.ing.zkflow.ksp.getSurrogateSerializerClassName
 import com.ing.zkflow.processors.serialization.hierarchy.getSerializingHierarchy
+import com.ing.zkflow.serialization.serializer.IntSerializer
 import com.ing.zkflow.serialization.serializer.SurrogateSerializer
+import com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializerWithDefault
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
@@ -24,12 +27,16 @@ internal sealed class SerializationFunctionalityGenerationTask(
     class Direct(declaration: KSClassDeclaration) : SerializationFunctionalityGenerationTask(declaration) {
         override val representation = declaration
         override fun declarationToSurrogateConstructor(surrogateClassName: ClassName): CodeBlock {
-            val parameters = representation.primaryConstructor!!
-                .parameters
-                .joinToString(separator = ", ") { parameter ->
-                    val name = parameter.name?.asString() ?: error("Cannot get a name of $parameter")
-                    "$name = it.$name"
-                }
+            val parameters = if (isEnum()) {
+                "ordinal = it.ordinal"
+            } else {
+                representation.primaryConstructor!!
+                    .parameters
+                    .joinToString(separator = ", ") { parameter ->
+                        val name = parameter.name?.asString() ?: error("Cannot get a name of $parameter")
+                        "$name = it.$name"
+                    }
+            }
 
             return CodeBlock.of("{ %T(%L) }", surrogateClassName, parameters)
         }
@@ -90,7 +97,6 @@ internal sealed class SerializationFunctionalityGenerationTask(
                     .build()
             )
             .addAnnotation(Serializable::class)
-            .addModifiers(KModifier.DATA)
             .addSuperinterface(
                 Surrogate::class
                     .asClassName()
@@ -99,6 +105,54 @@ internal sealed class SerializationFunctionalityGenerationTask(
                     )
             )
 
+        return if (isEnum()) {
+            generateSurrogateForEnum(surrogateBuilder)
+        } else {
+            generateSurrogateForClass(surrogateBuilder)
+        }
+    }
+
+    private fun generateSurrogateForEnum(surrogateBuilder: TypeSpec.Builder): TypeSpec {
+        val name = "ordinal"
+
+        val propertySerializer = TypeSpec.objectBuilder("${name.capitalize()}_0")
+            .addModifiers(KModifier.PRIVATE)
+            .superclass(
+                WrappedFixedLengthKSerializerWithDefault::class
+                    .asClassName()
+                    .parameterizedBy(Int::class.asClassName())
+            )
+            .addSuperclassConstructorParameter("%T", IntSerializer::class)
+            .build()
+
+        return surrogateBuilder
+            .primaryConstructor(
+                FunSpec.constructorBuilder()
+                    .addParameter(name, Int::class)
+                    .build()
+            )
+            .addProperty(
+                PropertySpec.builder(name, Int::class)
+                    .addAnnotation(
+                        AnnotationSpec.builder(Serializable::class)
+                            .addMember("with = %N::class", propertySerializer)
+                            .build()
+                    )
+                    .initializer(name)
+                    .build()
+            )
+            .addType(propertySerializer)
+            .addFunction(
+                FunSpec.builder("toOriginal")
+                    .addModifiers(KModifier.OVERRIDE)
+                    .returns(declaration.toClassName())
+                    .addStatement("return %T.values().first { it.$name == $name }", declaration.toClassName())
+                    .build()
+            )
+            .build()
+    }
+
+    private fun generateSurrogateForClass(surrogateBuilder: TypeSpec.Builder): TypeSpec {
         val primaryConstructorBuilder = FunSpec.constructorBuilder()
 
         val parameters = mutableListOf<String>()
@@ -154,4 +208,6 @@ internal sealed class SerializationFunctionalityGenerationTask(
             .addSuperclassConstructorParameter(declarationToSurrogateConstructor(surrogateClassName))
             .build()
     }
+
+    internal fun isEnum() = declaration.classKind == ClassKind.ENUM_CLASS
 }

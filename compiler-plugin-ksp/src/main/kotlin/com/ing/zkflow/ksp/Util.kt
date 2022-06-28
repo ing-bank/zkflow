@@ -84,7 +84,7 @@ fun KSClassDeclaration.getSurrogateTargetType(): KSType {
 }
 
 fun Sequence<KSClassDeclaration>.filterConcreteClassesOrObjects(): Sequence<KSClassDeclaration> =
-    filter { it.classKind in listOf(ClassKind.ENUM_CLASS, ClassKind.CLASS, ClassKind.OBJECT) && !it.isAbstract() }
+    filter { it.classKind in listOf(ClassKind.ENUM_CLASS, ClassKind.CLASS, ClassKind.OBJECT, ClassKind.ENUM_CLASS) && !it.isAbstract() }
 
 /**
  * Surrogates are classes that are annotated with @ZKPSurrogate *and* implement [Surrogate].
@@ -111,14 +111,15 @@ fun KSAnnotated.getSingleArgumentOfNonRepeatableAnnotationByType(annotationKClas
     return this.getAnnotationsByType(annotationKClass).single().arguments.single().value
 }
 
-fun KSType.getSingleArgumentOfNonRepeatableAnnotationByType(annotationKClass: KClass<out Annotation>): Any? {
+fun KSType.getSingleArgumentOfNonRepeatableAnnotationByType(annotationKClass: KClass<out Annotation>): Any {
     return annotations
         .single {
             it.shortName.getShortName() == annotationKClass.simpleName &&
                 it.annotationType.resolve().declaration.qualifiedName?.asString() == annotationKClass.qualifiedName
-        }.arguments
+        }
+        .arguments
         .single()
-        .value
+        .value!!
 }
 
 fun KSType.getNonRepeatableAnnotationByType(annotationKClass: KClass<out Annotation>): KSAnnotation {
@@ -138,9 +139,7 @@ fun KSClassDeclaration.getSurrogateClassName(): ClassName =
 fun KSClassDeclaration.getSurrogateSerializerClassName(): ClassName =
     ClassName(
         packageName.asString(),
-        simpleName.asString() +
-            Surrogate.GENERATED_SURROGATE_POSTFIX +
-            Surrogate.GENERATED_SURROGATE_SERIALIZER_POSTFIX
+        simpleName.asString() + Surrogate.GENERATED_SURROGATE_SERIALIZER_POSTFIX
     )
 
 fun KSClassDeclaration.getSerializationFunctionalityLocation(): ClassName =

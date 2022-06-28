@@ -2,11 +2,25 @@ package com.ing.zkflow.processors.serialization.hierarchy
 
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSValueParameter
-import com.ing.zkflow.processors.serialization.hierarchy.types.asInt
+import com.ing.zkflow.processors.serialization.hierarchy.types.asBasic
+import com.ing.zkflow.processors.serialization.hierarchy.types.asBigDecimal
+import com.ing.zkflow.processors.serialization.hierarchy.types.asChar
 import com.ing.zkflow.processors.serialization.hierarchy.types.asList
 import com.ing.zkflow.processors.serialization.hierarchy.types.asMap
 import com.ing.zkflow.processors.serialization.hierarchy.types.asNullable
+import com.ing.zkflow.processors.serialization.hierarchy.types.asSet
+import com.ing.zkflow.processors.serialization.hierarchy.types.asString
 import com.ing.zkflow.processors.serialization.hierarchy.types.asUserType
+import com.ing.zkflow.serialization.serializer.BooleanSerializer
+import com.ing.zkflow.serialization.serializer.ByteSerializer
+import com.ing.zkflow.serialization.serializer.FixedLengthFloatingPointSerializer
+import com.ing.zkflow.serialization.serializer.IntSerializer
+import com.ing.zkflow.serialization.serializer.LongSerializer
+import com.ing.zkflow.serialization.serializer.ShortSerializer
+import com.ing.zkflow.serialization.serializer.UByteSerializer
+import com.ing.zkflow.serialization.serializer.UIntSerializer
+import com.ing.zkflow.serialization.serializer.ULongSerializer
+import com.ing.zkflow.serialization.serializer.UShortSerializer
 import com.ing.zkflow.tracking.Tracker
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
@@ -14,6 +28,7 @@ import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
 import kotlinx.serialization.Contextual
+import java.math.BigDecimal
 
 internal fun KSValueParameter.getSerializingHierarchy(): SerializingHierarchy {
     val name = name?.asString() ?: error("Cannot get a name of $this")
@@ -104,10 +119,28 @@ internal fun KSType.getSerializingHierarchy(tracker: Tracker, ignoreNullability:
     val fqName = this.declaration.qualifiedName?.asString() ?: error("Cannot determine a fully qualified name of $declaration")
 
     return when (fqName) {
-        Int::class.qualifiedName -> this.asInt(tracker)
-        List::class.qualifiedName -> this.asList(tracker)
-        Map::class.qualifiedName -> this.asMap(tracker)
+        // Basic types.
+        Boolean::class.qualifiedName -> asBasic(tracker, BooleanSerializer::class)
+        Byte::class.qualifiedName -> asBasic(tracker, ByteSerializer::class)
+        UByte::class.qualifiedName -> asBasic(tracker, UByteSerializer::class)
+        Short::class.qualifiedName -> asBasic(tracker, ShortSerializer::class)
+        UShort::class.qualifiedName -> asBasic(tracker, UShortSerializer::class)
+        Int::class.qualifiedName -> asBasic(tracker, IntSerializer::class)
+        UInt::class.qualifiedName -> asBasic(tracker, UIntSerializer::class)
+        Long::class.qualifiedName -> asBasic(tracker, LongSerializer::class)
+        ULong::class.qualifiedName -> asBasic(tracker, ULongSerializer::class)
+        Float::class.qualifiedName -> asBasic(tracker, FixedLengthFloatingPointSerializer.FloatSerializer::class)
+        Double::class.qualifiedName -> asBasic(tracker, FixedLengthFloatingPointSerializer.DoubleSerializer::class)
+        Char::class.qualifiedName -> asChar(tracker)
+        String::class.qualifiedName -> asString(tracker)
+        BigDecimal::class.qualifiedName -> asBigDecimal(tracker)
         //
-        else -> this.asUserType(tracker, mustHaveDefault)
+        // Generic collections.
+        List::class.qualifiedName -> asList(tracker)
+        Map::class.qualifiedName -> asMap(tracker)
+        Set::class.qualifiedName -> asSet(tracker)
+
+        //
+        else -> asUserType(tracker, mustHaveDefault)
     }
 }
