@@ -10,6 +10,11 @@ import java.nio.file.Paths
 import java.util.ServiceLoader
 import kotlin.reflect.full.isSubclassOf
 
+private val json = Json {
+    prettyPrint = true
+    prettyPrintIndent = "  "
+}
+
 fun main() {
     val commandDataSerializerRegistryProviders = ServiceLoader.load(KClassSerializerProvider::class.java)
     val structureTypes = commandDataSerializerRegistryProviders
@@ -19,6 +24,6 @@ fun main() {
         .flatMap { BflStructureGenerator.generate(it.serializer().descriptor).toFlattenedClassStructure() }
         .distinct()
         .toList()
-    val jsonString = Json.encodeToString(ListSerializer(BflStructureType.serializer()), structureTypes)
+    val jsonString = json.encodeToString(ListSerializer(BflStructureType.serializer()), structureTypes)
     Paths.get("src/bfl/structure.json").writeText(jsonString)
 }

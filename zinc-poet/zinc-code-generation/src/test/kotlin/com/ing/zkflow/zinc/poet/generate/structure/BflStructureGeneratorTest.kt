@@ -33,16 +33,13 @@ import com.ing.zkflow.zinc.poet.generate.ClassWithoutFields
 import com.ing.zkflow.zinc.poet.generate.EnumWithNumbers
 import com.ing.zkflow.zinc.poet.generate.VersionedState
 import io.kotest.matchers.collections.shouldContainExactly
-import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.json.Json
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 
 internal class BflStructureGeneratorTest {
-
     @ParameterizedTest
     @MethodSource("fixturesProvider")
     fun `Generated zinc types should match expected types`(
@@ -50,14 +47,11 @@ internal class BflStructureGeneratorTest {
         expected: List<BflStructureType>
     ) {
         val actual = BflStructureGenerator.generate(descriptor).toFlattenedClassStructure().distinct().toList()
-        println("-> ${jsonFormat.encodeToString(ListSerializer(BflStructureType.serializer()), actual)}")
         actual shouldContainExactly expected
     }
 
     companion object {
-        private val jsonFormat = Json { prettyPrint = true }
-
-        inline fun <reified T> wrappedStructure(
+        private inline fun <reified T> wrappedStructure(
             familyClassName: String? = null,
             field: BflStructureField? = null
         ): BflStructureClass = BflStructureClass(
