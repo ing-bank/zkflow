@@ -94,6 +94,7 @@ data class BflStructureNullable(
 data class BflStructureClass(
     val className: String,
     val familyClassName: String?,
+    val serializationId: Int?,
     override val byteSize: Int,
     val fields: List<BflStructureField>,
 ) : BflStructureType() {

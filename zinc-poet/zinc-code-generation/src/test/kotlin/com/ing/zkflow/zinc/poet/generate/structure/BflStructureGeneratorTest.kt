@@ -57,6 +57,7 @@ internal class BflStructureGeneratorTest {
         ): BflStructureClass = BflStructureClass(
             className = "${T::class.qualifiedName}",
             familyClassName = familyClassName,
+            serializationId = null,
             byteSize = field?.fieldType?.byteSize ?: 0,
             fields = field?.let { listOf(it) } ?: emptyList()
         )
@@ -169,20 +170,20 @@ internal class BflStructureGeneratorTest {
             field = BflStructureField("constraint", BflStructureClassRef("HashAttachmentConstraint", 36))
         )
         private val anonymousPartyEdDsaEd25519Sha512 = BflStructureClass(
-            "AnonymousPartyEdDsaEd25519Sha512", null, 48,
+            "AnonymousPartyEdDsaEd25519Sha512", null, null, 48,
             listOf(
                 BflStructureField("publicKey", BflStructureClassRef("PublicKeyEdDsaEd25519Sha512", 48))
             )
         )
         private val partyEdDsaEd25519Sha256 = BflStructureClass(
-            "PartyEdDsaEd25519Sha512", null, 461,
+            "PartyEdDsaEd25519Sha512", null, null, 461,
             listOf(
                 BflStructureField("cordaX500Name", BflStructureClassRef("com.ing.zkflow.serialization.serializer.corda.CordaX500NameSerializer.CordaX500NameSurrogate", 413)),
                 BflStructureField("publicKey", BflStructureClassRef("PublicKeyEdDsaEd25519Sha512", 48))
             )
         )
         private val publicKeyEdDsaEd25519Sha512 = BflStructureClass(
-            "PublicKeyEdDsaEd25519Sha512", null, 48,
+            "PublicKeyEdDsaEd25519Sha512", null, null, 48,
             listOf(
                 BflStructureField(
                     "bytes",
@@ -193,7 +194,7 @@ internal class BflStructureGeneratorTest {
             )
         )
         private val secureHashSha256 = BflStructureClass(
-            "SecureHashSha256", null, 36,
+            "SecureHashSha256", null, null, 36,
             listOf(
                 BflStructureField(
                     "bytes",
@@ -204,7 +205,7 @@ internal class BflStructureGeneratorTest {
             )
         )
         private val signatureAttachmentConstraintEdDsaEd25519Sha512 = BflStructureClass(
-            "SignatureAttachmentConstraintEdDsaEd25519Sha512", null, 48,
+            "SignatureAttachmentConstraintEdDsaEd25519Sha512", null, null, 48,
             listOf(
                 BflStructureField(
                     "key", BflStructureClassRef("PublicKeyEdDsaEd25519Sha512", 48)
@@ -212,14 +213,14 @@ internal class BflStructureGeneratorTest {
             )
         )
         private val hashAttachmentConstraint = BflStructureClass(
-            "HashAttachmentConstraint", null, 36,
+            "HashAttachmentConstraint", null, null, 36,
             listOf(
                 BflStructureField("attachmentId", BflStructureClassRef("SecureHashSha256", 36))
             )
         )
         private val cordaX500NameSurrogate = BflStructureClass(
             "com.ing.zkflow.serialization.serializer.corda.CordaX500NameSerializer.CordaX500NameSurrogate",
-            null,
+            null, null,
             413,
             listOf(
                 BflStructureField("commonName", BflStructureNullable(69, BflStructureString(68, 64, "Utf8"))),

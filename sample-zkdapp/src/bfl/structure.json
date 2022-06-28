@@ -3,6 +3,7 @@
     "type": "CLASS",
     "className": "com.example.contract.audit.AuditContract.AuditRecord",
     "familyClassName": "com.example.contract.audit.AuditContract.VersionedAuditRecord",
+    "serializationId": 546669180,
     "byteSize": 507,
     "fields": [
       {
@@ -36,6 +37,7 @@
     "type": "CLASS",
     "className": "PartyEdDsaEd25519Sha512",
     "familyClassName": null,
+    "serializationId": null,
     "byteSize": 461,
     "fields": [
       {
@@ -60,6 +62,7 @@
     "type": "CLASS",
     "className": "com.ing.zkflow.serialization.serializer.corda.CordaX500NameSerializer.CordaX500NameSurrogate",
     "familyClassName": null,
+    "serializationId": null,
     "byteSize": 413,
     "fields": [
       {
@@ -134,6 +137,7 @@
     "type": "CLASS",
     "className": "PublicKeyEdDsaEd25519Sha512",
     "familyClassName": null,
+    "serializationId": null,
     "byteSize": 48,
     "fields": [
       {
@@ -155,6 +159,7 @@
     "type": "CLASS",
     "className": "com.ing.zkflow.serialization.serializer.InstantSerializer.Surrogate",
     "familyClassName": null,
+    "serializationId": null,
     "byteSize": 12,
     "fields": [
       {
@@ -179,6 +184,7 @@
     "type": "CLASS",
     "className": "com.example.contract.cbdc.CBDCToken",
     "familyClassName": "com.example.contract.cbdc.VersionedCBDCToken",
+    "serializationId": 976199559,
     "byteSize": 583,
     "fields": [
       {
@@ -203,6 +209,7 @@
     "type": "CLASS",
     "className": "com.example.token.sdk.AmountIssuedTokenTypeSurrogate",
     "familyClassName": null,
+    "serializationId": null,
     "byteSize": 535,
     "fields": [
       {
@@ -237,6 +244,7 @@
     "type": "CLASS",
     "className": "com.example.token.sdk.IssuedTokenType",
     "familyClassName": null,
+    "serializationId": null,
     "byteSize": 497,
     "fields": [
       {
@@ -278,6 +286,7 @@
     "type": "CLASS",
     "className": "com.example.token.sdk.TokenType",
     "familyClassName": null,
+    "serializationId": null,
     "byteSize": 18,
     "fields": [
       {
@@ -303,6 +312,7 @@
     "type": "CLASS",
     "className": "AnonymousPartyEdDsaEd25519Sha512",
     "familyClassName": null,
+    "serializationId": null,
     "byteSize": 48,
     "fields": [
       {

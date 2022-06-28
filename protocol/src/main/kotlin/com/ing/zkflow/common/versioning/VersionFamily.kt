@@ -85,7 +85,7 @@ open class VersionFamilyRegistry(
     operator fun get(familyKClass: KClass<out VersionedContractStateGroup>): VersionFamily =
         familyClassToFamily[familyKClass] ?: error("Not a family $familyKClass")
 
-    fun familyOf(relativeKClass: KClass<out Any>): VersionFamily = relativeClassToFamily[relativeKClass]
+    fun familyOf(relativeKClass: KClass<out ContractState>): VersionFamily = relativeClassToFamily[relativeKClass]
         ?: error("Not a family member $relativeKClass")
 
     fun getIdOfLatest(klass: KClass<out ContractState>): Int = serializerRegistry.identify(familyOf(klass).latest)

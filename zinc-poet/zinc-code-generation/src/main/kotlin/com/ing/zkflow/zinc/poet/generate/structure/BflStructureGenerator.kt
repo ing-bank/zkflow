@@ -1,5 +1,6 @@
 package com.ing.zkflow.zinc.poet.generate.structure
 
+import com.ing.zkflow.common.serialization.ContractStateSerializerRegistry
 import com.ing.zkflow.common.serialization.zinc.generation.internalTypeName
 import com.ing.zkflow.common.versioning.ContractStateVersionFamilyRegistry
 import com.ing.zkflow.serialization.FixedLengthSerialDescriptor
@@ -14,6 +15,7 @@ import com.ing.zkflow.zinc.poet.generate.getElementDescriptorByName
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.SerialKind
 import kotlinx.serialization.descriptors.StructureKind
+import net.corda.core.contracts.ContractState
 
 object BflStructureGenerator {
     fun generate(descriptor: SerialDescriptor): BflStructureType {
@@ -95,6 +97,7 @@ object BflStructureGenerator {
         return BflStructureClass(
             className = fixedLengthSerialDescriptor.serialName,
             familyClassName = tryGetFamilyClassName(fixedLengthSerialDescriptor),
+            serializationId = tryGetSerializationId(fixedLengthSerialDescriptor),
             byteSize = fixedLengthSerialDescriptor.byteSize,
             fields = fixedLengthSerialDescriptor.elements().map { (elementName, elementDescriptor) ->
                 BflStructureField(
@@ -107,11 +110,21 @@ object BflStructureGenerator {
 
     private fun tryGetFamilyClassName(fixedLengthSerialDescriptor: FixedLengthSerialDescriptor): String? =
         try {
-            fixedLengthSerialDescriptor.serialName.tryGetKClass()
+            fixedLengthSerialDescriptor.serialName.tryGetKClass<ContractState>()
                 ?.let { klass ->
                     ContractStateVersionFamilyRegistry
                         .familyOf(klass)
                         .familyClass.qualifiedName!!
+                }
+        } catch (e: Exception) {
+            null
+        }
+
+    private fun tryGetSerializationId(fixedLengthSerialDescriptor: FixedLengthSerialDescriptor): Int? =
+        try {
+            fixedLengthSerialDescriptor.serialName.tryGetKClass<ContractState>()
+                ?.let { klass ->
+                    ContractStateSerializerRegistry.identify(klass)
                 }
         } catch (e: Exception) {
             null

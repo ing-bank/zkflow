@@ -30,13 +30,13 @@ class ClassesTest {
 
     @Test
     fun `tryGetKClass should work correctly for normal classes`() {
-        "com.ing.zkflow.util.ClassesTest".tryGetKClass() shouldBe ClassesTest::class
+        "com.ing.zkflow.util.ClassesTest".tryGetKClass<Any>() shouldBe ClassesTest::class
         ClassesTest::class.jvmName shouldBe "com.ing.zkflow.util.ClassesTest"
     }
 
     @Test
     fun `tryGetKClass should work correctly for nested classes`() {
-        "com.ing.zkflow.util.ClassesTest.Nested".tryGetKClass() shouldBe Nested::class
+        "com.ing.zkflow.util.ClassesTest.Nested".tryGetKClass<Any>() shouldBe Nested::class
         Nested::class.jvmName shouldBe "com.ing.zkflow.util.ClassesTest\$Nested"
     }
 }

@@ -19,11 +19,12 @@ val <T : Any> KClass<T>.scopedName: String? get() =
 /**
  * Try to get a [KClass] for this string, return null if it fails.
  */
-fun String.tryGetKClass(): KClass<out Any>? = jvmClassNamePermutations()
+@Suppress("UNCHECKED_CAST")
+fun <T : Any> String.tryGetKClass(): KClass<out T>? = jvmClassNamePermutations()
     .asSequence()
     .mapNotNull {
         try {
-            Class.forName(it).kotlin
+            Class.forName(it).kotlin as KClass<out T>
         } catch (e: ClassNotFoundException) {
             null
         }
