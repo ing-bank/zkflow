@@ -4,7 +4,6 @@ import com.ing.zkflow.serialization.serializer.FixedLengthListSerializer
 import com.ing.zkflow.serialization.serializer.IntSerializer
 import com.ing.zkflow.serialization.serializer.SizeAnnotation
 import com.ing.zkflow.util.anyValue
-import com.ing.zkflow.util.bitSize
 import com.ing.zkflow.util.value
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
@@ -43,7 +42,7 @@ internal class StructureFromDescriptorsKtTest {
     fun `toNodeDescriptor should shorten the serialName and calculate bitSize from descriptors byteSize`() {
         val descriptor = FixedLengthSerialDescriptor(serialDescriptorWithSizeAnnotation, 12)
         val actual = descriptor.toNodeDescriptor(null)
-        actual.description shouldBe "Foo"
+        actual.name shouldBe "Foo"
         actual.bitSize shouldBe 12 * Byte.SIZE_BITS
     }
 
@@ -51,7 +50,7 @@ internal class StructureFromDescriptorsKtTest {
     fun `toNodeDescriptor should include capacity in the name when present`() {
         val descriptor = FixedLengthSerialDescriptor(serialDescriptorWithSizeAnnotation, 12)
         val actual = descriptor.toNodeDescriptor(3)
-        actual.description shouldBe "Foo (capacity: 3)"
+        actual.name shouldBe "Foo (capacity: 3)"
         actual.bitSize shouldBe 12 * Byte.SIZE_BITS
     }
 
@@ -59,7 +58,7 @@ internal class StructureFromDescriptorsKtTest {
     fun `toNodeDescriptor should apply capacity to the bitSize for ArrayList`() {
         val descriptor = FixedLengthSerialDescriptor(serialDescriptorForArrayList, 12)
         val actual = descriptor.toNodeDescriptor(3)
-        actual.description shouldBe "ArrayList (capacity: 3)"
+        actual.name shouldBe "ArrayList (capacity: 3)"
         actual.bitSize shouldBe 12 * Byte.SIZE_BITS * 3
     }
 
@@ -102,7 +101,7 @@ internal class StructureFromDescriptorsKtTest {
         // Show that descriptor contains element with name "0"
         descriptor.containsElementWithName("0") shouldBe true
         // Assert that actual does not contain a node with "0"
-        actual.anyValue { it.description.startsWith("0") } shouldBe false
+        actual.anyValue { it.name.startsWith("0") } shouldBe false
     }
 
     @Test
@@ -112,7 +111,7 @@ internal class StructureFromDescriptorsKtTest {
         }
         val descriptor = serialDescriptor.toFixedLengthSerialDescriptorOrThrow()
         val actual = descriptor.toStructureTree(3)
-        actual.anyValue { it.description.startsWith("Int (capacity: 3)") } shouldBe true
+        actual.anyValue { it.name.startsWith("Int (capacity: 3)") } shouldBe true
     }
 
     @ParameterizedTest

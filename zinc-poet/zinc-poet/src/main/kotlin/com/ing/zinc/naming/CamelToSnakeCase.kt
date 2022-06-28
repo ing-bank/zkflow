@@ -1,6 +1,6 @@
 package com.ing.zinc.naming
 
-import com.ing.zinc.bfl.BflPrimitive.Companion.isPrimitiveIdentifier
+import com.ing.zinc.poet.ZincPrimitive.Companion.isPrimitiveIdentifier
 import java.util.Locale
 
 /**

@@ -105,18 +105,18 @@ sealed interface Tree<NODE, LEAF> {
  */
 val <T> Tree<T, T>.value: T
     get() = when (this) {
-        is Tree.Node<T, T> -> value
         is Tree.Leaf<T, T> -> value
+        is Tree.Node<T, T> -> value
     }
 
 fun <T, R> Tree<T, T>.map(transform: (T) -> R): Tree<R, R> {
     return when (this) {
+        is Tree.Leaf<T, T> -> Tree.leaf(transform(this.value))
         is Tree.Node<T, T> -> Tree.node(transform(this.value)) {
             children.forEach {
                 addNode(it.map(transform))
             }
         }
-        is Tree.Leaf<T, T> -> Tree.leaf(transform(this.value))
     }
 }
 
@@ -124,8 +124,8 @@ fun <T, R> Tree<T, T>.map(transform: (T) -> R): Tree<R, R> {
  * Returns true _iff_ there is any node or leaf where [predicate] evaluates to true for it's value.
  */
 fun <T> Tree<T, T>.anyValue(predicate: (T) -> Boolean): Boolean = when (this) {
-    is Tree.Node<T, T> -> this.asNode.children.fold(predicate(this.value)) { acc, child ->
+    is Tree.Leaf<T, T> -> predicate(value)
+    is Tree.Node<T, T> -> this.asNode.children.fold(predicate(value)) { acc, child ->
         acc || predicate(child.value) || child.anyValue(predicate)
     }
-    is Tree.Leaf<T, T> -> predicate(this.value)
 }

@@ -17,7 +17,6 @@ import com.ing.zinc.poet.indent
 import com.ing.zkflow.util.BflSized
 import com.ing.zkflow.util.NodeDescriptor
 import com.ing.zkflow.util.Tree
-import com.ing.zkflow.util.snakeToCamelCase
 import java.util.Objects
 
 @Suppress("TooManyFunctions")
@@ -324,7 +323,7 @@ open class BflStruct(
     override fun toStructureTree(): Tree<BflSized, BflSized> {
         return Tree.node(toNodeDescriptor()) {
             fields.forEach {
-                node(NodeDescriptor(it.name.snakeToCamelCase(capitalize = false), it.type.bitSize)) {
+                node(NodeDescriptor(it.name, it.type.bitSize)) {
                     addNode(it.type.toStructureTree())
                 }
             }

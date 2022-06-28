@@ -293,10 +293,10 @@ open class BFLSerializationScheme : CustomSerializationScheme {
         metadataSerializer: KSerializer<M>
     ) {
         val descriptor = buildClassSerialDescriptor(serialNameFor(txComponent, metadata)) {
-            element("corda-magic", ExactLengthListSerializer(customSerializationMagicLength, ByteSerializer).descriptor)
-            element("network-metadata", NetworkSerializationMetadata.serializer().descriptor)
-            element("tx-component-metadata", metadataSerializer.descriptor)
-            element("tx-component", txComponentSerializer.descriptor)
+            element("cordaMagic", ExactLengthListSerializer(customSerializationMagicLength, ByteSerializer).descriptor)
+            element("networkMetadata", NetworkSerializationMetadata.serializer().descriptor)
+            element("txComponentMetadata", metadataSerializer.descriptor)
+            element("txComponent", txComponentSerializer.descriptor)
         }
 
         tempDirectory

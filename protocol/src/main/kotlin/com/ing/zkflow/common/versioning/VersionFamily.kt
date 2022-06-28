@@ -68,7 +68,6 @@ open class VersionFamilyRegistry(
     private val retriever: VersionFamiliesRetriever,
     private val serializerRegistry: SerializerRegistry<ContractState>,
 ) {
-
     private val familyClassToFamily: Map<KClass<*>, VersionFamily> by lazy {
         retriever.families.associateBy { it.familyClass }
     }
