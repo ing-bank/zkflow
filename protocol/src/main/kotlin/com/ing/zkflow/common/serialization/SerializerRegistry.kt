@@ -51,11 +51,6 @@ interface KClassSerializerProvider {
     fun get(): KClassSerializer<*>
 }
 
-// This separate interface exists only because the KSP compiler plugin is now set up in such a way that we can't populate the generic
-// KClassSerializerProvider in one go for normal serializers and surrogates.
-// This may change later, in which case these interfaces may be removed.
-interface SurrogateSerializerRegistryProvider : KClassSerializerProvider
-
 abstract class SerializerRegistry<T : Any> {
     private val log = LoggerFactory.getLogger(this::class.java)
     private val obj2Id = mutableMapOf<KClass<out T>, Int>()
@@ -116,12 +111,10 @@ abstract class SerializerRegistry<T : Any> {
 }
 
 /**
- * Returns a lazy, cached list of all KClassSerializerProviders found through the ServiceLoader.
- * This is lazy and cached because the iterators returned by `ServiceLoader.load()` are lazy and cached.
+ * Returns a list of all KClassSerializerProviders found through the ServiceLoader.
  */
 fun getAllKClassSerializerProviders(): List<KClassSerializerProvider> =
-    ServiceLoader.load(KClassSerializerProvider::class.java) +
-        ServiceLoader.load(SurrogateSerializerRegistryProvider::class.java)
+    ServiceLoader.load(KClassSerializerProvider::class.java).toList()
 
 object ContractStateSerializerRegistry : SerializerRegistry<ContractState>()
 object CommandDataSerializerRegistry : SerializerRegistry<CommandData>()

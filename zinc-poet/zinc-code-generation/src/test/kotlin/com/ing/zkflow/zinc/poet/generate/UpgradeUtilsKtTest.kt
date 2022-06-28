@@ -1,13 +1,13 @@
 package com.ing.zkflow.zinc.poet.generate
 
-import com.ing.zkflow.common.versioning.Versioned
+import com.ing.zkflow.common.versioning.VersionedContractStateGroup
 import com.ing.zkflow.common.versioning.ZincUpgrade
 import com.ing.zkflow.common.zkp.metadata.commandMetadata
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
-interface Family : Versioned
+interface Family : VersionedContractStateGroup
 data class Original(val a: Int) : Family
 data class Upgraded(val a: Int, val b: Int) : Family {
     @ZincUpgrade("Self::new(previous.a, 0 as i32)")
@@ -171,7 +171,7 @@ internal class UpgradeUtilsKtTest {
     }
 
     companion object {
-        interface EncapsulatedFamily : Versioned
+        interface EncapsulatedFamily : VersionedContractStateGroup
         data class EncapsulatedOriginal(val a: Int) : EncapsulatedFamily
         data class EncapsulatedUpgraded(val a: Int, val b: Int) : EncapsulatedFamily {
             @ZincUpgrade("Self::new(previous.a, 0 as i32)")

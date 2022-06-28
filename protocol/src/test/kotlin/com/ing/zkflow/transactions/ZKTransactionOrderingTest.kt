@@ -4,7 +4,7 @@ import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.transactions.UtxoInfo
 import com.ing.zkflow.common.transactions.ZKTransactionBuilder
-import com.ing.zkflow.common.versioning.Versioned
+import com.ing.zkflow.common.versioning.VersionedContractStateGroup
 import com.ing.zkflow.common.zkp.Witness
 import com.ing.zkflow.common.zkp.ZKFlow
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
@@ -192,7 +192,7 @@ class LocalContract : Contract {
     }
 
     @ZKP
-    class Create : ZKCommandData, Versioned {
+    class Create : ZKCommandData {
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
             numberOfSigners = 1
             outputs {
@@ -231,7 +231,7 @@ class DummyZKStateA(
     @Serializable(with = IntSerializer::class) val value: Int,
     @Serializable(with = IntSetSerializer::class) val set: Set<Int>,
     @Serializable(with = ParticipantsSerializer::class) override val participants: List<@Contextual AnonymousParty>
-) : ContractState, Versioned {
+) : ContractState, VersionedContractStateGroup {
     companion object {
         fun newState(): DummyZKStateA {
             val alice = TestIdentity.fresh("Alice")
@@ -261,7 +261,7 @@ class DummyZKStateB(
     @Serializable(with = IntSerializer::class) val value: Int,
     @Serializable(with = IntSetSerializer::class) val set: Set<Int>,
     @Serializable(with = ParticipantsSerializer::class) override val participants: List<@Contextual AnonymousParty>
-) : ContractState, Versioned {
+) : ContractState, VersionedContractStateGroup {
     companion object {
         fun newState(): DummyZKStateB {
             val alice = TestIdentity.fresh("Alice")
@@ -290,7 +290,7 @@ public data class DummyState(
     @Serializable(with = IntSerializer::class) val value: Int,
     @Serializable(with = IntSetSerializer::class) val set: Set<Int>,
     @Serializable(with = ParticipantsSerializer::class) override val participants: List<@Contextual AbstractParty>
-) : ContractState, Versioned {
+) : ContractState, VersionedContractStateGroup {
     public companion object {
         public fun any(): DummyState {
             val alice = TestIdentity.fresh("Alice")

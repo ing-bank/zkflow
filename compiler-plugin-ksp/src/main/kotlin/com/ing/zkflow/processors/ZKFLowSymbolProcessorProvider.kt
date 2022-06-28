@@ -10,7 +10,6 @@ class ZKFLowSymbolProcessorProvider : SymbolProcessorProvider {
     override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor {
         val codeGenerator = LoggingCodeGenerator(environment)
 
-        val surrogatesSerializerGenerator = SurrogateSerializerGenerator(environment.logger, codeGenerator)
         val zkNetworkParametersProviderProcessor = ZKNetworkParametersProcessor()
 
         return ImplementationsSymbolProcessor(
@@ -18,7 +17,6 @@ class ZKFLowSymbolProcessorProvider : SymbolProcessorProvider {
             codeGenerator,
             listOf(
                 zkNetworkParametersProviderProcessor,
-                surrogatesSerializerGenerator,
             )
         )
     }

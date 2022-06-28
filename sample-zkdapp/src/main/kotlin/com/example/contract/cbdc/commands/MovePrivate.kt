@@ -1,15 +1,13 @@
 package com.example.contract.cbdc.commands
 
-import com.example.contract.cbdc.CBDCContract
 import com.example.contract.cbdc.CBDCToken
 import com.ing.zkflow.annotations.ZKP
+import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.zkp.metadata.commandMetadata
 import org.intellij.lang.annotations.Language
 
-typealias MovePrivateWithChange = SplitPrivate
-
 @ZKP
-class MovePrivate : CBDCContract.VersionedMovePrivateCommand {
+class MovePrivate : ZKCommandData {
     override val metadata = commandMetadata {
         numberOfSigners = 1
         inputs {
@@ -37,7 +35,7 @@ class MovePrivate : CBDCContract.VersionedMovePrivateCommand {
 
                     assert!(input.data.amount.quantity > 0 as i64, "[MovePrivate] Quantity must be positive");
 
-                    assert!(ctx.signers.contains(input.data.holder.public_key), "[MovePrivate] Input holder must sign");
+                    assert!(ctx.signers.contains(input.data.owner.public_key), "[MovePrivate] Input holder must sign");
                 }
 
             """.trimIndent()

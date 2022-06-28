@@ -6,7 +6,7 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.ing.zkflow.ksp.implementsInterfaceDirectly
 
-object StateVersionSorting {
+object VersionSorting {
     fun sortByConstructors(
         logger: KSPLogger,
         markerGroups: Map<KSClassDeclaration, List<KSClassDeclaration>>

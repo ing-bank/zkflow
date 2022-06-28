@@ -14,7 +14,7 @@ interface AbstractToken : ContractState {
 
     /**
      * The default participant is the current [holder]. However, this can be overridden if required. The standard
-     * [FungibleToken] and [NonFungibleToken] states assume that the [holder] is the only participant but they can be
+     * [FungibleTokenV1] and [NonFungibleToken] states assume that the [holder] is the only participant but they can be
      * sub-classed so an observers list or "CC" list can be added.
      *
      * It is likely that this approach will need to be revisited at the Corda core level, at some point in the near
@@ -33,7 +33,7 @@ interface AbstractToken : ContractState {
     val issuer: Party get() = issuedTokenType.issuer
 
     /** For creating a copy of an existing [AbstractToken] with a new holder. */
-    fun withNewHolder(newHolder: Party): AbstractToken
+    fun withNewHolder(newHolder: AbstractParty): AbstractToken
 
     /** The hash of a CorDapp JAR which implements the [TokenType] specified by the type parameter [T]. */
     val tokenTypeJarHash: SecureHash?

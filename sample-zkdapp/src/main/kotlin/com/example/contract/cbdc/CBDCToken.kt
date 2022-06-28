@@ -8,7 +8,7 @@ import com.ing.zkflow.Via
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.annotations.corda.EdDSA
 import com.ing.zkflow.annotations.corda.SHA256
-import com.ing.zkflow.common.versioning.Versioned
+import com.ing.zkflow.common.versioning.VersionedContractStateGroup
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.ContractState
@@ -21,35 +21,36 @@ val EUR = TokenType("EUR", 2)
 fun digitalEuroTokenType(issuer: Party) = IssuedTokenType(issuer, EUR)
 fun digitalEuro(amount: Double, issuer: Party, holder: AnonymousParty) = digitalEuro(BigDecimal(amount), issuer, holder)
 fun digitalEuro(amount: BigDecimal, issuer: Party, holder: AnonymousParty) =
-    CBDCToken(Amount.fromDecimal(amount, digitalEuroTokenType(issuer)), holder = holder)
+    CBDCToken(Amount.fromDecimal(amount, digitalEuroTokenType(issuer)), owner = holder)
 
-interface VersionedCBDCToken : Versioned, ContractState
+interface VersionedCBDCToken : VersionedContractStateGroup, ContractState
 
 @BelongsToContract(CBDCContract::class)
 @ZKP
 data class CBDCToken(
     override val amount: @Via<AmountIssuedTokenTypeSurrogate> Amount<IssuedTokenType>,
-    override val holder: @EdDSA AnonymousParty,
-    override val tokenTypeJarHash: @SHA256 SecureHash? = SecureHash.zeroHash
-) : AbstractFungibleToken(),
-    VersionedCBDCToken { // , ReissuableState<CBDCToken> // this is commented out for simplification, it is just an interface with no fields.
+    val owner: @EdDSA AnonymousParty
+) : AbstractFungibleToken(), VersionedCBDCToken {
+    override val holder = owner
+    override val tokenTypeJarHash: SecureHash = SecureHash.zeroHash
+
     override fun withNewHolder(newHolder: AnonymousParty): CBDCToken {
-        return CBDCToken(amount, newHolder, tokenTypeJarHash)
+        return CBDCToken(amount, newHolder)
     }
 
     fun withNewHolder(newHolder: AnonymousParty, amount: Double): CBDCToken {
         val decimalAmount = BigDecimal(amount)
         require(decimalAmount <= this.amount.toDecimal()) { "Can't increase amount when assigning a new holder" }
-        return CBDCToken(Amount.fromDecimal(decimalAmount, this.amount.token), newHolder, tokenTypeJarHash)
+        return CBDCToken(Amount.fromDecimal(decimalAmount, this.amount.token), newHolder)
     }
 
     fun withNewHolder(newHolder: AnonymousParty, amount: BigDecimal): CBDCToken {
         require(amount <= this.amount.toDecimal()) { "Can't increase amount when assigning a new holder" }
-        return CBDCToken(Amount.fromDecimal(amount, this.amount.token), newHolder, tokenTypeJarHash)
+        return CBDCToken(Amount.fromDecimal(amount, this.amount.token), newHolder)
     }
 
     fun withNewHolder(newHolder: AnonymousParty, amount: Amount<IssuedTokenType>): CBDCToken {
         require(amount <= this.amount) { "Can't increase amount when assigning a new holder" }
-        return CBDCToken(amount, newHolder, tokenTypeJarHash)
+        return CBDCToken(amount, newHolder)
     }
 }

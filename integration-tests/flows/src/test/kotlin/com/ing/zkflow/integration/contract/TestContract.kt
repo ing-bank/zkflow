@@ -3,7 +3,7 @@ package com.ing.zkflow.integration.contract
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.annotations.corda.EdDSA
 import com.ing.zkflow.common.contracts.ZKCommandData
-import com.ing.zkflow.common.versioning.Versioned
+import com.ing.zkflow.common.versioning.VersionedContractStateGroup
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.common.zkp.metadata.commandMetadata
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
@@ -25,37 +25,33 @@ class TestContract : Contract {
         const val PROGRAM_ID: ContractClassName = "com.ing.zkflow.integration.contract.TestContract"
     }
 
-    interface VersionedTestState : Versioned, OwnableState
+    interface VersionedTestState : VersionedContractStateGroup, OwnableState
 
     @BelongsToContract(TestContract::class)
     @ZKP
     data class TestState(
-        override val owner: @EdDSA AnonymousParty,
+        val holder: @EdDSA AnonymousParty,
         val value: Int = Random().nextInt(1000)
     ) : VersionedTestState {
-        override val participants: List<AnonymousParty> = listOf(owner)
+        override val owner: AbstractParty = holder
+        override val participants: List<AbstractParty> = listOf(owner)
 
         override fun withNewOwner(newOwner: AbstractParty): CommandAndState {
             require(newOwner is AnonymousParty)
-            return CommandAndState(MoveAnyToPrivate(), copy(owner = newOwner))
+            return CommandAndState(MoveAnyToPrivate(), copy(holder = newOwner))
         }
     }
 
-    // Commands
-    interface VersionedCreateCommandData : Versioned, ZKCommandData
-
     @ZKP
-    class CreatePrivate : VersionedCreateCommandData {
+    class CreatePrivate : ZKCommandData {
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
             outputs { private(TestState::class) at 0 }
             numberOfSigners = 1
         }
     }
 
-    interface CreatePublicCommandData : Versioned, ZKCommandData
-
     @ZKP
-    class CreatePublic : CreatePublicCommandData {
+    class CreatePublic : ZKCommandData {
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
             outputs {
                 public(TestState::class) at 0
@@ -79,20 +75,16 @@ class TestContract : Contract {
      *
      * This command is only used on [CollectSignaturesFlowTest]. It expects two signatures, but nothing else.
      */
-    interface SignOnlyCommandData : Versioned, ZKCommandData
-
     @ZKP
-    class SignOnly : SignOnlyCommandData {
+    class SignOnly : ZKCommandData {
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
             outputs { private(TestState::class) at 0 }
             numberOfSigners = 2
         }
     }
 
-    interface MoveAnyToPrivateCommandData : Versioned, ZKCommandData
-
     @ZKP
-    class MoveAnyToPrivate : MoveAnyToPrivateCommandData {
+    class MoveAnyToPrivate : ZKCommandData {
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
             inputs { any(TestState::class) at 0 }
             outputs { private(TestState::class) at 0 }
@@ -100,10 +92,8 @@ class TestContract : Contract {
         }
     }
 
-    interface MovePrivateOnlyCommandData : Versioned, ZKCommandData
-
     @ZKP
-    class MovePrivateOnly : MovePrivateOnlyCommandData {
+    class MovePrivateOnly : ZKCommandData {
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
             inputs { private(TestState::class) at 0 }
             outputs { private(TestState::class) at 0 }
@@ -111,10 +101,8 @@ class TestContract : Contract {
         }
     }
 
-    interface MoveBidirectionalCommandData : Versioned, ZKCommandData
-
     @ZKP
-    class MoveBidirectional : MoveBidirectionalCommandData {
+    class MoveBidirectional : ZKCommandData {
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
             inputs {
                 any(TestState::class) at 0

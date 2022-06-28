@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 import net.corda.core.contracts.ContractState
 import net.corda.core.identity.AbstractParty
 
-interface TestFamily : Versioned
+interface TestFamily : VersionedContractStateGroup
 
 data class UnknownState(
     val value: Int

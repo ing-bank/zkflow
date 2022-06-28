@@ -21,24 +21,22 @@ import kotlin.reflect.KClass
  * Generates instances of [VersionFamilyProvider] for sorted states.
  * The states should be sorted in ascending mode, so that the oldest state is at index 0.
  */
-class VersionFamilyProcessor(
-    private val codeGenerator: CodeGenerator,
-) {
+class VersionFamilyGenerator(private val codeGenerator: CodeGenerator) {
     private val versionFamilyProviderKClass: KClass<VersionFamilyProvider> = VersionFamilyProvider::class
 
     /**
      * @param sortedFamilies Map of sorted families according to [StateVersionSorting.sortByConstructors].
      */
-    fun registerFamilies(sortedFamilies: Map<KSClassDeclaration, List<KSClassDeclaration>>): ServiceLoaderRegistration {
+    fun generateFamilies(sortedFamilies: Map<KSClassDeclaration, List<KSClassDeclaration>>): ServiceLoaderRegistration {
         val familyProviders = sortedFamilies.entries
             .map { (familyName, members) ->
-                registerFamily(familyName.toClassName(), members)
+                generateFamily(familyName.toClassName(), members)
             }
 
         return ServiceLoaderRegistration(versionFamilyProviderKClass, familyProviders)
     }
 
-    private fun registerFamily(familyClassName: ClassName, sortedMembers: List<KSClassDeclaration>): String {
+    private fun generateFamily(familyClassName: ClassName, sortedMembers: List<KSClassDeclaration>): String {
         val memberClassNames = sortedMembers.map(KSClassDeclaration::toClassName)
         val familyProviderClassName = familyClassName.simpleNames
             .joinToString(separator = "", postfix = "FamilyProvider") { it }

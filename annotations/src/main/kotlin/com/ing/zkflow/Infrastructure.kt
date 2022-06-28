@@ -31,6 +31,5 @@ interface Surrogate<T> {
 
     companion object {
         const val GENERATED_SURROGATE_SERIALIZER_POSTFIX = "SurrogateSerializer"
-        const val GENERATED_SERIALIZER_PROVIDER_POSTFIX = "SerializerProvider"
     }
 }

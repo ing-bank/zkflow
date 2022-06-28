@@ -4,7 +4,7 @@ import com.ing.zkflow.Via
 import com.ing.zkflow.annotations.UTF8
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.annotations.corda.EdDSA
-import com.ing.zkflow.common.versioning.Versioned
+import com.ing.zkflow.common.versioning.VersionedContractStateGroup
 import io.ivno.annotated.deps.BigDecimalAmount
 import io.ivno.annotated.deps.Network
 import io.ivno.annotated.fixtures.BigDecimalAmount_LinearPointer_IvnoTokenType
@@ -24,7 +24,6 @@ data class IvnoDeposit constructor(
     val custodian: @EdDSA Party,
     val tokenIssuingEntity: @EdDSA Party,
     val amount: @Via<BigDecimalAmount_LinearPointer_IvnoTokenType> BigDecimalAmount<LinearPointer<IvnoTokenType>>,
-    //
     val reference: @UTF8(10) String?,
     val status: DepositStatus,
     val timestamp: Instant,
@@ -43,7 +42,7 @@ enum class DepositStatus {
     PAYMENT_REJECTED,
 }
 
-interface VersionedIvnotokenType : Versioned, ContractState
+interface VersionedIvnotokenType : VersionedContractStateGroup, ContractState
 
 @ZKP
 data class IvnoTokenType(
@@ -52,7 +51,8 @@ data class IvnoTokenType(
     val tokenIssuingEntity: @EdDSA Party,
     val displayName: @UTF8(10) String,
     val fractionDigits: Int = 0,
-    override val linearId: @Via<UniqueIdentifierSurrogate> UniqueIdentifier = UniqueIdentifier()
+    val uniqueId: @Via<UniqueIdentifierSurrogate> UniqueIdentifier = UniqueIdentifier(),
 ) : LinearState, VersionedIvnotokenType {
+    override val linearId = uniqueId
     override val participants: List<AbstractParty> = setOf(tokenIssuingEntity, custodian).toList()
 }

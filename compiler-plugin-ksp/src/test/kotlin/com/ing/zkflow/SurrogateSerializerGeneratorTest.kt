@@ -1,19 +1,18 @@
 package com.ing.zkflow
 
-import com.ing.zkflow.common.serialization.SurrogateSerializerRegistryProvider
 import com.ing.zkflow.ksp.ProcessorTest
-import com.ing.zkflow.processors.ZKFLowSymbolProcessorProvider
+import com.ing.zkflow.processors.ZKPAnnotatedProcessorProvider
 import com.ing.zkflow.util.toStringTree
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
-import io.kotest.matchers.paths.shouldNotExist
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldContain
 import io.mockk.InternalPlatformDsl.toStr
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 import java.io.ByteArrayOutputStream
 
-internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKFLowSymbolProcessorProvider()) {
+@TestInstance(TestInstance.Lifecycle.PER_METHOD)
+internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProcessorProvider()) {
     @Test
     fun `SurrogateProcessor should correctly register surrogates`() {
         val outputStream = ByteArrayOutputStream()
@@ -28,12 +27,11 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKFLowSymbolProc
 
         println(result.getMetaInfServicesFolder().listRecursively()!!.toStringTree { fileName.toStr() })
 
-        result.getGeneratedMetaInfServices<SurrogateSerializerRegistryProvider>() shouldBe "$packageName.$serializerProviderClassname"
-        result.readGeneratedKotlinFile(packageName, serializerProviderClassname) shouldBe correctSourceExpectedOutput
+        result.readGeneratedKotlinFile(packageName, generatedSurrogateSerializerClassName) shouldBe correctSourceExpectedOutput
     }
 
     @Test
-    fun `SurrogateProcessor should correctly register surrogates with generics`() {
+    fun `SurrogateProcessor should correctly register surrogates with concrete generics`() {
         val outputStream = ByteArrayOutputStream()
         val result = compile(listOf(sourceWith3PartyClassAndGenerics, correctSourceWithGenerics), outputStream)
 
@@ -46,22 +44,12 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKFLowSymbolProc
 
         println(result.getMetaInfServicesFolder().listRecursively()!!.toStringTree { fileName.toStr() })
 
-        result.getMetaInfServicesPath<SurrogateSerializerRegistryProvider>().shouldNotExist()
-        result.readGeneratedKotlinFile(packageName, serializerProviderClassname) shouldBe correctSourceExpectedOutputWithGenerics
-    }
-
-    @Test
-    fun `SurrogateProcessor should fail surrogates with generics`() {
-        val outputStream = ByteArrayOutputStream()
-        val result = compile(listOf(sourceWith3PartyClassAndGenerics, incorrectSourceSurrogateMustBeFinal), outputStream)
-
-        result.exitCode shouldBe KotlinCompilation.ExitCode.COMPILATION_ERROR
-        result.messages shouldContain "Surrogate implementers may not contain generics"
+        result.readGeneratedKotlinFile(packageName, generatedSurrogateSerializerClassName) shouldBe correctSourceExpectedOutputWithGenerics
     }
 
     companion object {
         const val packageName = "com.ing.zkflow.testing"
-        const val serializerProviderClassname = "SomeClassIntSurrogateSerializerProvider"
+        const val generatedSurrogateSerializerClassName = "SomeClassIntSurrogateSurrogateSerializer"
 
         private val sourceWith3PartyClass = SourceFile.kotlin(
             "SomeClass.kt",
@@ -102,22 +90,11 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKFLowSymbolProc
         private val correctSourceExpectedOutput = """
             package com.ing.zkflow.testing
             
-            import com.ing.zkflow.common.serialization.KClassSerializer
-            import com.ing.zkflow.common.serialization.SurrogateSerializerRegistryProvider
             import com.ing.zkflow.serialization.serializer.SurrogateSerializer
-            import kotlin.Any
 
             public object SomeClassIntSurrogateSurrogateSerializer :
                 SurrogateSerializer<SomeClass, SomeClassIntSurrogate>(SomeClassIntSurrogate.serializer(), {
                 com.ing.zkflow.testing.SomeClassConverter.from(it) })
-
-            public class SomeClassIntSurrogateSerializerProvider : SurrogateSerializerRegistryProvider {
-              public override fun `get`(): KClassSerializer<Any> = KClassSerializer(
-              com.ing.zkflow.testing.SomeClass::class,
-              199659197,
-              com.ing.zkflow.testing.SomeClassIntSurrogateSurrogateSerializer
-              )
-            }
         """.trimIndent()
 
         private val sourceWith3PartyClassAndGenerics = SourceFile.kotlin(
@@ -166,28 +143,5 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKFLowSymbolProc
                 SurrogateSerializer<SomeClass<Int>, SomeClassIntSurrogate>(SomeClassIntSurrogate.serializer(), {
                 com.ing.zkflow.testing.SomeClassConverter.from(it) })
         """.trimIndent()
-
-        private val incorrectSourceSurrogateMustBeFinal = SourceFile.kotlin(
-            "SomeClassGenericSurrogate.kt",
-            """
-                package com.ing.zkflow.testing
-
-                import com.ing.zkflow.testing.SomeClass
-                import com.ing.zkflow.annotations.Size
-                import com.ing.zkflow.Surrogate
-                import com.ing.zkflow.annotations.UTF8
-                import com.ing.zkflow.annotations.ZKP
-
-                @ZKP
-                data class SomeClassGenericSurrogate<T>(
-                    val generic: T,
-                    val string: @UTF8(10) String
-                ): Surrogate<SomeClass<T>> {
-                    override fun toOriginal(): String {
-                        TODO("Not yet implemented")
-                    }
-                }
-            """
-        )
     }
 }

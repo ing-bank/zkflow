@@ -4,7 +4,8 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSFile
 import com.ing.zkflow.ksp.CodeGeneratorStub
 import com.ing.zkflow.ksp.KSNameStub
-import com.ing.zkflow.processors.SerializerRegistryProcessor.GeneratedSerializer
+import com.ing.zkflow.ksp.versioning.VersionedCommandIdGenerator
+import com.ing.zkflow.processors.SerializerProviderGenerator.SerializableClassWithSourceFiles
 import com.squareup.kotlinpoet.ClassName
 import io.kotest.matchers.shouldBe
 import io.mockk.every
@@ -38,15 +39,15 @@ internal class UpgradeCommandGeneratorTest {
     @Test
     fun `process empty family should return empty list`() {
         val testSubject = testSubject(ByteArrayOutputStream())
-        val actual = testSubject.processVersionGroups(listOf(emptyList()))
-        actual shouldBe emptyList()
+        val actual = testSubject.generateUpgradeCommands(listOf(emptyList()))
+        actual shouldBe emptyMap()
     }
 
     @Test
     fun `process family with single member should return empty list`() {
         val testSubject = testSubject(ByteArrayOutputStream())
-        val actual = testSubject.processVersionGroups(listOf(listOf(v1)))
-        actual shouldBe emptyList()
+        val actual = testSubject.generateUpgradeCommands(listOf(listOf(v1)))
+        actual shouldBe emptyMap()
     }
 
     @Test
@@ -54,17 +55,17 @@ internal class UpgradeCommandGeneratorTest {
     fun `process family with two members should generate upgrade`() {
         val generatedBytes = ByteArrayOutputStream()
         val testSubject = testSubject(generatedBytes)
-        val actual = testSubject.processVersionGroups(listOf(listOf(v1, v2)))
+        val actual = testSubject.generateUpgradeCommands(listOf(listOf(v1, v2)))
         actual shouldBe listOf(
-            GeneratedSerializer(
+            SerializableClassWithSourceFiles(
                 ClassName("com.example", "UpgradePrivateV1ToPrivateV2"),
                 listOf(v1File, v2File),
             ),
-            GeneratedSerializer(
+            SerializableClassWithSourceFiles(
                 ClassName("com.example", "UpgradeAnyV1ToPublicV2"),
                 listOf(v1File, v2File),
             )
-        )
+        ).associateWith { VersionedCommandIdGenerator.generateId(it) }
 
         generatedBytes.toString("UTF-8") shouldBe """
             package com.example

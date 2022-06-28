@@ -11,7 +11,7 @@ import net.corda.core.contracts.Amount
 import java.math.BigDecimal
 
 @ZKPSurrogate(AmountConverter_IssuedTokenType::class)
-data class AmountSurrogate_IssuedTokenType(
+data class AmountSurrogate_IssuedTokenTypeV1(
     val quantity: Long,
     val displayTokenSize: @BigDecimalSize(10, 10) BigDecimal,
     val token: IssuedTokenType
@@ -21,8 +21,8 @@ data class AmountSurrogate_IssuedTokenType(
 
 object AmountConverter_IssuedTokenType : ConversionProvider<
         Amount<IssuedTokenType>,
-        AmountSurrogate_IssuedTokenType
+        AmountSurrogate_IssuedTokenTypeV1
         > {
     override fun from(original: Amount<IssuedTokenType>) =
-        AmountSurrogate_IssuedTokenType(original.quantity, original.displayTokenSize, original.token)
+        AmountSurrogate_IssuedTokenTypeV1(original.quantity, original.displayTokenSize, original.token)
 }

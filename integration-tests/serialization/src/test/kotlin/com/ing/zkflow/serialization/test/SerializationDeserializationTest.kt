@@ -18,9 +18,11 @@ import com.ing.zkflow.annotations.UTF16
 import com.ing.zkflow.annotations.UTF32
 import com.ing.zkflow.annotations.UTF8
 import com.ing.zkflow.annotations.ZKP
+import com.ing.zkflow.annotations.ZKPStable
 import com.ing.zkflow.annotations.corda.EdDSA
 import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.serialization.zinc.json.toUnsignedBitString
+import com.ing.zkflow.common.versioning.VersionedContractStateGroup
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.serialization.scheme.BinaryFixedLengthScheme
 import com.ing.zkflow.serialization.scheme.ByteBinaryFixedLengthScheme
@@ -246,6 +248,7 @@ class SerializationDeserializationTest {
             return (this as BflStruct).fields.single().type
         }
 
+        @ZKPStable
         interface WrappedValue<T> {
             val value: T
         }
@@ -301,11 +304,13 @@ class SerializationDeserializationTest {
                 get() = TODO("Not yet implemented")
         }
 
+        interface VersionedMockAsset : VersionedContractStateGroup, OwnableState
+
         @ZKP
         data class MockAsset(
             override val owner: @EdDSA AnonymousParty,
             val value: Int = Random().nextInt()
-        ) : OwnableState {
+        ) : VersionedMockAsset {
             override val participants: List<AnonymousParty> = listOf(owner)
 
             override fun withNewOwner(newOwner: AbstractParty): CommandAndState {

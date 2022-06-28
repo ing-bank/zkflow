@@ -3,7 +3,7 @@ package com.example.contract.audit
 import com.ing.zkflow.annotations.ASCII
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.annotations.corda.EdDSA
-import com.ing.zkflow.common.versioning.Versioned
+import com.ing.zkflow.common.versioning.VersionedContractStateGroup
 import net.corda.core.contracts.Contract
 import net.corda.core.contracts.ContractClassName
 import net.corda.core.contracts.ContractState
@@ -18,7 +18,7 @@ class AuditContract : Contract {
         val ID: ContractClassName = this::class.java.enclosingClass.canonicalName
     }
 
-    interface VersionedAuditRecord : ContractState, Versioned
+    interface VersionedAuditRecord : ContractState, VersionedContractStateGroup
 
     @ZKP
     data class AuditRecord(

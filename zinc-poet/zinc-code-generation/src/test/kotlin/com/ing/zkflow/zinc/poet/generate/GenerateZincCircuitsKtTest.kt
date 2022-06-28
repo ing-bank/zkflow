@@ -4,7 +4,6 @@ import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.serialization.KClassSerializer
 import com.ing.zkflow.common.serialization.KClassSerializerProvider
-import com.ing.zkflow.common.versioning.Versioned
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.common.zkp.metadata.commandMetadata
 import io.kotest.matchers.collections.shouldContain
@@ -41,7 +40,7 @@ internal class GenerateZincCircuitsKtTest {
 }
 
 @ZKP
-class MyZkCommand : ZKCommandData, Versioned {
+class MyZkCommand : ZKCommandData {
     override val metadata: ResolvedZKCommandMetadata = commandMetadata { }
 
     override fun hashCode(): Int {

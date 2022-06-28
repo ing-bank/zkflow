@@ -6,7 +6,8 @@ import com.ing.zinc.naming.camelToSnakeCase
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.common.contracts.ZKUpgradeCommandData
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
-import com.ing.zkflow.processors.SerializerRegistryProcessor.GeneratedSerializer
+import com.ing.zkflow.ksp.versioning.VersionedCommandIdGenerator
+import com.ing.zkflow.processors.SerializerProviderGenerator.SerializableClassWithSourceFiles
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
@@ -32,10 +33,11 @@ class UpgradeCommandGenerator(
     /**
      * Assumes version groups to be already sorted with StateVersionSorting.sortByConstructors
      */
-    fun processVersionGroups(groups: Collection<List<KSClassDeclaration>>): List<GeneratedSerializer> =
-        groups.flatMap { members -> processVersionGroup(members) }
+    fun generateUpgradeCommands(versionGroups: Collection<List<KSClassDeclaration>>): Map<SerializableClassWithSourceFiles, Int> =
+        versionGroups.flatMap { members -> processVersionGroup(members) }
+            .associateWith { VersionedCommandIdGenerator.generateId(it) }
 
-    private fun processVersionGroup(members: List<KSClassDeclaration>): List<GeneratedSerializer> {
+    private fun processVersionGroup(members: List<KSClassDeclaration>): List<SerializableClassWithSourceFiles> {
         var previousVersion: KSClassDeclaration? = null
         return members.flatMap { current ->
             previousVersion?.let { previous ->
@@ -54,11 +56,15 @@ class UpgradeCommandGenerator(
         previous: KSClassDeclaration,
         current: KSClassDeclaration,
         isPrivate: Boolean
-    ): GeneratedSerializer {
+    ): SerializableClassWithSourceFiles {
         val publicOrPrivateOutput = if (isPrivate) "private" else "public"
         val publicOrAnyInput = if (isPrivate) "private" else "any"
         val commandClassName =
-            "Upgrade${publicOrAnyInput.capitalize(Locale.getDefault())}${previous.simpleName.asString()}To${publicOrPrivateOutput.capitalize(Locale.getDefault())}${current.simpleName.asString()}"
+            "Upgrade${publicOrAnyInput.capitalize(Locale.getDefault())}${previous.simpleName.asString()}To${
+            publicOrPrivateOutput.capitalize(
+                Locale.getDefault()
+            )
+            }${current.simpleName.asString()}"
         FileSpec.builder(current.packageName.asString(), commandClassName)
             .addImport("com.ing.zkflow.common.zkp.metadata", "commandMetadata")
             .addType(
@@ -115,7 +121,7 @@ class UpgradeCommandGenerator(
                     current.containingFile,
                 ),
             )
-        return GeneratedSerializer(
+        return SerializableClassWithSourceFiles(
             ClassName(current.packageName.asString(), commandClassName),
             listOfNotNull(
                 previous.containingFile,

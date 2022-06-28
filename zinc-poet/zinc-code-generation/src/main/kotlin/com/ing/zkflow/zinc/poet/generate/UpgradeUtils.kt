@@ -5,7 +5,7 @@ import com.ing.zinc.poet.ZincFile
 import com.ing.zinc.poet.ZincFile.Companion.zincFile
 import com.ing.zinc.poet.ZincPrimitive
 import com.ing.zinc.poet.ZincType.Companion.id
-import com.ing.zkflow.common.versioning.Versioned
+import com.ing.zkflow.common.versioning.VersionedContractStateGroup
 import com.ing.zkflow.common.versioning.ZincUpgrade
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.common.zkp.metadata.ZKProtectedComponent
@@ -13,13 +13,13 @@ import com.ing.zkflow.common.zkp.metadata.ZKReference
 import com.ing.zkflow.util.require
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
-import kotlin.reflect.full.allSuperclasses
 import kotlin.reflect.full.findAnnotation
+import kotlin.reflect.full.superclasses
 
-fun KClass<*>.isVersioned(): Boolean = allSuperclasses.contains(Versioned::class)
+fun KClass<*>.isVersioned(): Boolean = tryFindFamilyKClass() != null
 
-fun KClass<*>.tryFindFamilyKClass(): KClass<out Any>? = allSuperclasses.singleOrNull {
-    it.isVersioned()
+fun KClass<*>.tryFindFamilyKClass(): KClass<out Any>? = superclasses.singleOrNull {
+    it.superclasses.contains(VersionedContractStateGroup::class)
 }
 
 data class UpgradeParameters(

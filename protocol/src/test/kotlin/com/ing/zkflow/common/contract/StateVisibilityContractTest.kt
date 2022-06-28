@@ -7,7 +7,7 @@ import com.ing.zkflow.common.contracts.ZKContract
 import com.ing.zkflow.common.contracts.renderIllegalPublicOnlyStatesError
 import com.ing.zkflow.common.serialization.CommandDataSerializerRegistry
 import com.ing.zkflow.common.serialization.ContractStateSerializerRegistry
-import com.ing.zkflow.common.versioning.Versioned
+import com.ing.zkflow.common.versioning.VersionedContractStateGroup
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.common.zkp.metadata.commandMetadata
 import com.ing.zkflow.node.services.InMemoryZKVerifierTransactionStorage
@@ -267,7 +267,7 @@ class LocalNormalContract : Contract {
     data class NormalTestState(
         val owner: @Serializable(with = OwnerSerializer::class) AnonymousParty,
         val value: @Serializable(with = IntSerializer::class) Int = Random().nextInt(1000)
-    ) : ContractState, Versioned {
+    ) : ContractState, VersionedContractStateGroup {
         private object OwnerSerializer : AnonymousPartySerializer(Crypto.EDDSA_ED25519_SHA512.schemeNumberID)
 
         @Transient
@@ -301,7 +301,7 @@ class LocalZKContract : ZKContract, Contract {
 
     @Serializable
     @ZKP
-    class CreatePublicExplicitly : ZKCommandData, Versioned {
+    class CreatePublicExplicitly : ZKCommandData {
         init {
             tryNonFailing {
                 CommandDataSerializerRegistry.register(this::class, serializer())
@@ -319,7 +319,7 @@ class LocalZKContract : ZKContract, Contract {
 
     @Serializable
     @ZKP
-    class CreateMultiplePublicAndPrivate : ZKCommandData, Versioned {
+    class CreateMultiplePublicAndPrivate : ZKCommandData {
         init {
             tryNonFailing {
                 CommandDataSerializerRegistry.register(this::class, serializer())
@@ -341,7 +341,7 @@ class LocalZKContract : ZKContract, Contract {
 
     @Serializable
     @ZKP
-    class CreatePrivate : ZKCommandData, Versioned {
+    class CreatePrivate : ZKCommandData {
         init {
             tryNonFailing {
                 CommandDataSerializerRegistry.register(this::class, serializer())
@@ -359,7 +359,7 @@ class LocalZKContract : ZKContract, Contract {
 
     @Serializable
     @ZKP
-    class SplitAnyToPrivateAndPublic : ZKCommandData, Versioned {
+    class SplitAnyToPrivateAndPublic : ZKCommandData {
         init {
             tryNonFailing {
                 CommandDataSerializerRegistry.register(this::class, serializer())
@@ -381,7 +381,7 @@ class LocalZKContract : ZKContract, Contract {
 
     @Serializable
     @ZKP
-    class MoveAnyToPrivate : ZKCommandData, Versioned {
+    class MoveAnyToPrivate : ZKCommandData {
         init {
             tryNonFailing {
                 CommandDataSerializerRegistry.register(this::class, serializer())
@@ -402,7 +402,7 @@ class LocalZKContract : ZKContract, Contract {
 
     @Serializable
     @ZKP
-    class MovePrivateToPublic : ZKCommandData, Versioned {
+    class MovePrivateToPublic : ZKCommandData {
         init {
             tryNonFailing {
                 CommandDataSerializerRegistry.register(this::class, serializer())
@@ -427,7 +427,7 @@ class LocalZKContract : ZKContract, Contract {
 
     @Serializable
     @ZKP
-    class MoveFullyPrivate : ZKCommandData, Versioned {
+    class MoveFullyPrivate : ZKCommandData {
         init {
             tryNonFailing {
                 CommandDataSerializerRegistry.register(this::class, serializer())
@@ -456,7 +456,7 @@ class LocalZKContract : ZKContract, Contract {
 @BelongsToContract(LocalZKContract::class)
 data class SomeOtherZKState(
     val value: @Serializable(with = IntSerializer::class) Int = Random().nextInt(1000)
-) : ContractState, Versioned {
+) : ContractState, VersionedContractStateGroup {
     @Transient
     override val participants: @Size(1) List<@Serializable(with = AnonymousPartySerializer::class) AnonymousParty> = emptyList()
 
@@ -473,7 +473,7 @@ data class SomeOtherZKState(
 data class ZKTestState(
     val owner: @Serializable(with = OwnerSerializer::class) AnonymousParty,
     val value: @Serializable(with = IntSerializer::class) Int = Random().nextInt(1000)
-) : ContractState, Versioned {
+) : ContractState, VersionedContractStateGroup {
     private object OwnerSerializer : AnonymousPartySerializer(Crypto.EDDSA_ED25519_SHA512.schemeNumberID)
 
     @Transient
