@@ -34,11 +34,7 @@ import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.annotations.ZKPStable
 import com.ing.zkflow.annotations.ZKPSurrogate
 import com.ing.zkflow.annotations.corda.Algorithm
-import com.ing.zkflow.annotations.corda.EcDSA_K1
-import com.ing.zkflow.annotations.corda.EcDSA_R1
-import com.ing.zkflow.annotations.corda.EdDSA
-import com.ing.zkflow.annotations.corda.RSA
-import com.ing.zkflow.annotations.corda.Sphincs
+import com.ing.zkflow.annotations.corda.SignatureSpec
 import com.ing.zkflow.ksp.findClassesOrObjectsWithAnnotation
 import com.ing.zkflow.ksp.getAllSurrogates
 import com.ing.zkflow.ksp.getAnnotationsByType
@@ -309,20 +305,16 @@ class ZKPAnnotatedValidator(@Suppress("unused") private val logger: KSPLogger) :
 
     private fun KSTypeReference.isZKFlowSupportedCoreClass(): Boolean {
         return when (val qualifiedName = this.resolve().declaration.qualifiedName?.asString()) {
+            SignatureAttachmentConstraint::class.qualifiedName,
             PublicKey::class.qualifiedName,
             AnonymousParty::class.qualifiedName,
             Party::class.qualifiedName -> {
-                require(
-                    isAnnotationPresent(EdDSA::class) ||
-                        isAnnotationPresent(Sphincs::class) ||
-                        isAnnotationPresent(EcDSA_R1::class) ||
-                        isAnnotationPresent(EcDSA_K1::class) ||
-                        isAnnotationPresent(RSA::class)
-                ) {
+                require(annotations.any { it.annotationType.resolve().declaration.isAnnotationPresent(SignatureSpec::class) }) {
                     "Missing algorithm annotation on $qualifiedName."
                 }
                 true
             }
+            HashAttachmentConstraint::class.qualifiedName,
             SecureHash::class.qualifiedName -> {
                 require(annotations.any { it.annotationType.resolve().declaration.isAnnotationPresent(Algorithm::class) }) {
                     "Missing algorithm annotation on $qualifiedName."
@@ -342,7 +334,6 @@ class ZKPAnnotatedValidator(@Suppress("unused") private val logger: KSPLogger) :
                 }
                 true
             }
-            HashAttachmentConstraint::class.qualifiedName, SignatureAttachmentConstraint::class.qualifiedName,
             AlwaysAcceptAttachmentConstraint::class.qualifiedName, WhitelistedByZoneAttachmentConstraint::class.qualifiedName,
             AutomaticHashConstraint::class.qualifiedName, AutomaticPlaceholderConstraint::class.qualifiedName -> true
             CordaX500Name::class.qualifiedName, Instant::class.qualifiedName,
