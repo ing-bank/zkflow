@@ -39,23 +39,23 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 
-internal class BflStructureGeneratorTest {
+internal class ZkpStructureGeneratorTest {
     @ParameterizedTest
     @MethodSource("fixturesProvider")
     fun `Generated zinc types should match expected types`(
         descriptor: SerialDescriptor,
-        expected: List<BflStructureType>
+        expected: List<ZkpStructureType>
     ) {
-        val actual = BflStructureGenerator.generate(descriptor).toFlattenedClassStructure().distinct().toList()
+        val actual = ZkpStructureGenerator.generate(descriptor).toFlattenedClassStructure().distinct().toList()
         actual shouldContainExactly expected
     }
 
     companion object {
         private inline fun <reified T> wrappedStructure(
             familyClassName: String? = null,
-            field: BflStructureField? = null
-        ): BflStructureClass = BflStructureClass(
-            className = "${T::class.qualifiedName}",
+            field: ZkpStructureField? = null
+        ): ZkpStructureClass = ZkpStructureClass(
+            serialName = "${T::class.qualifiedName}",
             familyClassName = familyClassName,
             serializationId = null,
             byteSize = field?.fieldType?.byteSize ?: 0,
@@ -63,172 +63,172 @@ internal class BflStructureGeneratorTest {
         )
 
         private val wrappedVersionedStructure = wrappedStructure<VersionedState>(
-            field = BflStructureField("state", BflStructurePrimitive("kotlin.Int", 4))
+            field = ZkpStructureField("state", ZkpStructurePrimitive("kotlin.Int", 4))
         )
         private val wrappedUnitStructure = wrappedStructure<ClassWithClassWithoutFields>(
-            field = BflStructureField("c", BflStructureUnit)
+            field = ZkpStructureField("c", ZkpStructureUnit)
         )
         private val wrappedBoolStructure = wrappedStructure<ClassWithBoolean>(
-            field = BflStructureField("boolean", BflStructurePrimitive("kotlin.Boolean", Byte.SIZE_BYTES))
+            field = ZkpStructureField("boolean", ZkpStructurePrimitive("kotlin.Boolean", Byte.SIZE_BYTES))
         )
         private val wrappedByteStructure = wrappedStructure<ClassWithByte>(
-            field = BflStructureField("byte", BflStructurePrimitive("kotlin.Byte", Byte.SIZE_BYTES))
+            field = ZkpStructureField("byte", ZkpStructurePrimitive("kotlin.Byte", Byte.SIZE_BYTES))
         )
         private val wrappedUByteStructure = wrappedStructure<ClassWithUByte>(
-            field = BflStructureField("ubyte", BflStructurePrimitive("kotlin.UByte", UByte.SIZE_BYTES))
+            field = ZkpStructureField("ubyte", ZkpStructurePrimitive("kotlin.UByte", UByte.SIZE_BYTES))
         )
         private val wrappedShortStructure = wrappedStructure<ClassWithShort>(
-            field = BflStructureField("short", BflStructurePrimitive("kotlin.Short", Short.SIZE_BYTES))
+            field = ZkpStructureField("short", ZkpStructurePrimitive("kotlin.Short", Short.SIZE_BYTES))
         )
         private val wrappedUShortStructure = wrappedStructure<ClassWithUShort>(
-            field = BflStructureField("ushort", BflStructurePrimitive("kotlin.UShort", UShort.SIZE_BYTES))
+            field = ZkpStructureField("ushort", ZkpStructurePrimitive("kotlin.UShort", UShort.SIZE_BYTES))
         )
         private val wrappedIntStructure = wrappedStructure<ClassWithInt>(
-            field = BflStructureField("int", BflStructurePrimitive("kotlin.Int", Int.SIZE_BYTES))
+            field = ZkpStructureField("int", ZkpStructurePrimitive("kotlin.Int", Int.SIZE_BYTES))
         )
         private val wrappedUIntStructure = wrappedStructure<ClassWithUInt>(
-            field = BflStructureField("uint", BflStructurePrimitive("kotlin.UInt", UInt.SIZE_BYTES))
+            field = ZkpStructureField("uint", ZkpStructurePrimitive("kotlin.UInt", UInt.SIZE_BYTES))
         )
         private val wrappedLongStructure = wrappedStructure<ClassWithLong>(
-            field = BflStructureField("long", BflStructurePrimitive("kotlin.Long", Long.SIZE_BYTES))
+            field = ZkpStructureField("long", ZkpStructurePrimitive("kotlin.Long", Long.SIZE_BYTES))
         )
         private val wrappedULongStructure = wrappedStructure<ClassWithULong>(
-            field = BflStructureField("ulong", BflStructurePrimitive("kotlin.ULong", ULong.SIZE_BYTES))
+            field = ZkpStructureField("ulong", ZkpStructurePrimitive("kotlin.ULong", ULong.SIZE_BYTES))
         )
         private val wrappedFloatStructure = wrappedStructure<ClassWithFloat>(
-            field = BflStructureField("float", BflStructureBigDecimal(95, "Float", 39, 46))
+            field = ZkpStructureField("float", ZkpStructureBigDecimal(95, "Float", 39, 46))
         )
         private val wrappedDoubleStructure = wrappedStructure<ClassWithDouble>(
-            field = BflStructureField("double", BflStructureBigDecimal(644, "Double", 309, 325))
+            field = ZkpStructureField("double", ZkpStructureBigDecimal(644, "Double", 309, 325))
         )
         private val wrappedAsciiCharStructure = wrappedStructure<ClassWithAsciiChar>(
-            field = BflStructureField("asciiChar", BflStructurePrimitive("kotlin.Byte", Byte.SIZE_BYTES))
+            field = ZkpStructureField("asciiChar", ZkpStructurePrimitive("kotlin.Byte", Byte.SIZE_BYTES))
         )
         private val wrappedUnicodeCharStructure = wrappedStructure<ClassWithUnicodeChar>(
-            field = BflStructureField("unicodeChar", BflStructurePrimitive("kotlin.Short", Short.SIZE_BYTES))
+            field = ZkpStructureField("unicodeChar", ZkpStructurePrimitive("kotlin.Short", Short.SIZE_BYTES))
         )
         private val wrappedAsciiStringStructure = wrappedStructure<ClassWithAsciiString>(
-            field = BflStructureField("string", BflStructureString(12, 8, "Ascii"))
+            field = ZkpStructureField("string", ZkpStructureString(12, 8, "Ascii"))
         )
         private val wrappedUtf8StringStructure = wrappedStructure<ClassWithUtf8String>(
-            field = BflStructureField("string", BflStructureString(12, 8, "Utf8"))
+            field = ZkpStructureField("string", ZkpStructureString(12, 8, "Utf8"))
         )
         private val wrappedUtf16StringStructure = wrappedStructure<ClassWithUtf16String>(
-            field = BflStructureField("string", BflStructureString(12, 8, "Utf16"))
+            field = ZkpStructureField("string", ZkpStructureString(12, 8, "Utf16"))
         )
         private val wrappedUtf32StringStructure = wrappedStructure<ClassWithUtf32String>(
-            field = BflStructureField("string", BflStructureString(12, 8, "Utf32"))
+            field = ZkpStructureField("string", ZkpStructureString(12, 8, "Utf32"))
         )
         private val wrappedNullableIntStructure = wrappedStructure<ClassWithNullableInt>(
-            field = BflStructureField(
+            field = ZkpStructureField(
                 "nullableInt",
-                BflStructureNullable(5, BflStructurePrimitive("kotlin.Int", Int.SIZE_BYTES))
+                ZkpStructureNullable(5, ZkpStructurePrimitive("kotlin.Int", Int.SIZE_BYTES))
             )
         )
         private val wrappedListOfIntStructure = wrappedStructure<ClassWithListOfInt>(
-            field = BflStructureField(
+            field = ZkpStructureField(
                 "list",
-                BflStructureList(36, 8, BflStructurePrimitive("kotlin.Int", Int.SIZE_BYTES))
+                ZkpStructureList(36, 8, ZkpStructurePrimitive("kotlin.Int", Int.SIZE_BYTES))
             )
         )
         private val wrappedSetOfIntStructure = wrappedStructure<ClassWithSetOfInt>(
-            field = BflStructureField(
+            field = ZkpStructureField(
                 "set",
-                BflStructureList(36, 8, BflStructurePrimitive("kotlin.Int", Int.SIZE_BYTES))
+                ZkpStructureList(36, 8, ZkpStructurePrimitive("kotlin.Int", Int.SIZE_BYTES))
             )
         )
         private val wrappedMapOfStringIntStructure = wrappedStructure<ClassWithMapOfStringToInt>(
-            field = BflStructureField(
+            field = ZkpStructureField(
                 "map",
-                BflStructureMap(
+                ZkpStructureMap(
                     132,
                     8,
-                    BflStructureString(12, 8, "Utf8"),
-                    BflStructurePrimitive("kotlin.Int", Int.SIZE_BYTES),
+                    ZkpStructureString(12, 8, "Utf8"),
+                    ZkpStructurePrimitive("kotlin.Int", Int.SIZE_BYTES),
                 )
             )
         )
         private val wrappedEnumStructure = wrappedStructure<ClassWithEnum>(
-            field = BflStructureField("enum", BflStructureEnum("EnumWithNumbers"))
+            field = ZkpStructureField("enum", ZkpStructureEnum("EnumWithNumbers"))
         )
         private val wrappedPublicKeyStructure = wrappedStructure<ClassWithPublicKey>(
-            field = BflStructureField("pk", BflStructureClassRef("PublicKeyEdDsaEd25519Sha512", 48))
+            field = ZkpStructureField("pk", ZkpStructureClassRef("PublicKeyEdDsaEd25519Sha512", 48))
         )
         private val wrappedAnonymousPartyStructure = wrappedStructure<ClassWithAnonymousParty>(
-            field = BflStructureField("party", BflStructureClassRef("AnonymousPartyEdDsaEd25519Sha512", 48))
+            field = ZkpStructureField("party", ZkpStructureClassRef("AnonymousPartyEdDsaEd25519Sha512", 48))
         )
         private val wrappedPartyStructure = wrappedStructure<ClassWithParty>(
-            field = BflStructureField("party", BflStructureClassRef("PartyEdDsaEd25519Sha512", 461))
+            field = ZkpStructureField("party", ZkpStructureClassRef("PartyEdDsaEd25519Sha512", 461))
         )
         private val wrappedSecureHash = wrappedStructure<ClassWithSecureHash>(
-            field = BflStructureField("hash", BflStructureClassRef("SecureHashSha256", 36))
+            field = ZkpStructureField("hash", ZkpStructureClassRef("SecureHashSha256", 36))
         )
         private val wrappedSignatureAttachmentConstraint = wrappedStructure<ClassWithSignatureAttachmentConstraint>(
-            field = BflStructureField("constraint", BflStructureClassRef("SignatureAttachmentConstraintEdDsaEd25519Sha512", 48))
+            field = ZkpStructureField("constraint", ZkpStructureClassRef("SignatureAttachmentConstraintEdDsaEd25519Sha512", 48))
         )
         private val wrappedHashAttachmentConstraint = wrappedStructure<ClassWithHashAttachmentConstraint>(
-            field = BflStructureField("constraint", BflStructureClassRef("HashAttachmentConstraint", 36))
+            field = ZkpStructureField("constraint", ZkpStructureClassRef("HashAttachmentConstraint", 36))
         )
-        private val anonymousPartyEdDsaEd25519Sha512 = BflStructureClass(
+        private val anonymousPartyEdDsaEd25519Sha512 = ZkpStructureClass(
             "AnonymousPartyEdDsaEd25519Sha512", null, null, 48,
             listOf(
-                BflStructureField("publicKey", BflStructureClassRef("PublicKeyEdDsaEd25519Sha512", 48))
+                ZkpStructureField("publicKey", ZkpStructureClassRef("PublicKeyEdDsaEd25519Sha512", 48))
             )
         )
-        private val partyEdDsaEd25519Sha256 = BflStructureClass(
+        private val partyEdDsaEd25519Sha256 = ZkpStructureClass(
             "PartyEdDsaEd25519Sha512", null, null, 461,
             listOf(
-                BflStructureField("cordaX500Name", BflStructureClassRef("com.ing.zkflow.serialization.serializer.corda.CordaX500NameSerializer.CordaX500NameSurrogate", 413)),
-                BflStructureField("publicKey", BflStructureClassRef("PublicKeyEdDsaEd25519Sha512", 48))
+                ZkpStructureField("cordaX500Name", ZkpStructureClassRef("com.ing.zkflow.serialization.serializer.corda.CordaX500NameSerializer.CordaX500NameSurrogate", 413)),
+                ZkpStructureField("publicKey", ZkpStructureClassRef("PublicKeyEdDsaEd25519Sha512", 48))
             )
         )
-        private val publicKeyEdDsaEd25519Sha512 = BflStructureClass(
+        private val publicKeyEdDsaEd25519Sha512 = ZkpStructureClass(
             "PublicKeyEdDsaEd25519Sha512", null, null, 48,
             listOf(
-                BflStructureField(
+                ZkpStructureField(
                     "bytes",
-                    BflStructureArray(
-                        48, 44, BflStructurePrimitive("kotlin.Byte", 1)
+                    ZkpStructureArray(
+                        48, 44, ZkpStructurePrimitive("kotlin.Byte", 1)
                     )
                 )
             )
         )
-        private val secureHashSha256 = BflStructureClass(
+        private val secureHashSha256 = ZkpStructureClass(
             "SecureHashSha256", null, null, 36,
             listOf(
-                BflStructureField(
+                ZkpStructureField(
                     "bytes",
-                    BflStructureArray(
-                        36, 32, BflStructurePrimitive("kotlin.Byte", 1)
+                    ZkpStructureArray(
+                        36, 32, ZkpStructurePrimitive("kotlin.Byte", 1)
                     )
                 )
             )
         )
-        private val signatureAttachmentConstraintEdDsaEd25519Sha512 = BflStructureClass(
+        private val signatureAttachmentConstraintEdDsaEd25519Sha512 = ZkpStructureClass(
             "SignatureAttachmentConstraintEdDsaEd25519Sha512", null, null, 48,
             listOf(
-                BflStructureField(
-                    "key", BflStructureClassRef("PublicKeyEdDsaEd25519Sha512", 48)
+                ZkpStructureField(
+                    "key", ZkpStructureClassRef("PublicKeyEdDsaEd25519Sha512", 48)
                 )
             )
         )
-        private val hashAttachmentConstraint = BflStructureClass(
+        private val hashAttachmentConstraint = ZkpStructureClass(
             "HashAttachmentConstraint", null, null, 36,
             listOf(
-                BflStructureField("attachmentId", BflStructureClassRef("SecureHashSha256", 36))
+                ZkpStructureField("attachmentId", ZkpStructureClassRef("SecureHashSha256", 36))
             )
         )
-        private val cordaX500NameSurrogate = BflStructureClass(
+        private val cordaX500NameSurrogate = ZkpStructureClass(
             "com.ing.zkflow.serialization.serializer.corda.CordaX500NameSerializer.CordaX500NameSurrogate",
             null, null,
             413,
             listOf(
-                BflStructureField("commonName", BflStructureNullable(69, BflStructureString(68, 64, "Utf8"))),
-                BflStructureField("organisationUnit", BflStructureNullable(69, BflStructureString(68, 64, "Utf8"))),
-                BflStructureField("organisation", BflStructureString(132, 128, "Utf8")),
-                BflStructureField("locality", BflStructureString(68, 64, "Utf8")),
-                BflStructureField("state", BflStructureNullable(69, BflStructureString(68, 64, "Utf8"))),
-                BflStructureField("country", BflStructureString(6, 2, "Utf8")),
+                ZkpStructureField("commonName", ZkpStructureNullable(69, ZkpStructureString(68, 64, "Utf8"))),
+                ZkpStructureField("organisationUnit", ZkpStructureNullable(69, ZkpStructureString(68, 64, "Utf8"))),
+                ZkpStructureField("organisation", ZkpStructureString(132, 128, "Utf8")),
+                ZkpStructureField("locality", ZkpStructureString(68, 64, "Utf8")),
+                ZkpStructureField("state", ZkpStructureNullable(69, ZkpStructureString(68, 64, "Utf8"))),
+                ZkpStructureField("country", ZkpStructureString(6, 2, "Utf8")),
             )
         )
 
@@ -237,91 +237,91 @@ internal class BflStructureGeneratorTest {
         fun fixturesProvider(): List<Arguments> {
             return listOf(
                 Arguments.of(VersionedState.serializer().descriptor, listOf(wrappedVersionedStructure)),
-                Arguments.of(ClassWithoutFields.serializer().descriptor, emptyList<BflStructureType>()),
+                Arguments.of(ClassWithoutFields.serializer().descriptor, emptyList<ZkpStructureType>()),
                 Arguments.of(
                     ClassWithClassWithoutFields.serializer().descriptor,
-                    listOf<BflStructureType>(wrappedUnitStructure)
+                    listOf<ZkpStructureType>(wrappedUnitStructure)
                 ),
-                Arguments.of(ClassWithBoolean.serializer().descriptor, listOf<BflStructureType>(wrappedBoolStructure)),
-                Arguments.of(ClassWithByte.serializer().descriptor, listOf<BflStructureType>(wrappedByteStructure)),
-                Arguments.of(ClassWithUByte.serializer().descriptor, listOf<BflStructureType>(wrappedUByteStructure)),
-                Arguments.of(ClassWithShort.serializer().descriptor, listOf<BflStructureType>(wrappedShortStructure)),
-                Arguments.of(ClassWithUShort.serializer().descriptor, listOf<BflStructureType>(wrappedUShortStructure)),
-                Arguments.of(ClassWithInt.serializer().descriptor, listOf<BflStructureType>(wrappedIntStructure)),
-                Arguments.of(ClassWithUInt.serializer().descriptor, listOf<BflStructureType>(wrappedUIntStructure)),
-                Arguments.of(ClassWithLong.serializer().descriptor, listOf<BflStructureType>(wrappedLongStructure)),
-                Arguments.of(ClassWithULong.serializer().descriptor, listOf<BflStructureType>(wrappedULongStructure)),
-                Arguments.of(ClassWithFloat.serializer().descriptor, listOf<BflStructureType>(wrappedFloatStructure)),
-                Arguments.of(ClassWithDouble.serializer().descriptor, listOf<BflStructureType>(wrappedDoubleStructure)),
+                Arguments.of(ClassWithBoolean.serializer().descriptor, listOf<ZkpStructureType>(wrappedBoolStructure)),
+                Arguments.of(ClassWithByte.serializer().descriptor, listOf<ZkpStructureType>(wrappedByteStructure)),
+                Arguments.of(ClassWithUByte.serializer().descriptor, listOf<ZkpStructureType>(wrappedUByteStructure)),
+                Arguments.of(ClassWithShort.serializer().descriptor, listOf<ZkpStructureType>(wrappedShortStructure)),
+                Arguments.of(ClassWithUShort.serializer().descriptor, listOf<ZkpStructureType>(wrappedUShortStructure)),
+                Arguments.of(ClassWithInt.serializer().descriptor, listOf<ZkpStructureType>(wrappedIntStructure)),
+                Arguments.of(ClassWithUInt.serializer().descriptor, listOf<ZkpStructureType>(wrappedUIntStructure)),
+                Arguments.of(ClassWithLong.serializer().descriptor, listOf<ZkpStructureType>(wrappedLongStructure)),
+                Arguments.of(ClassWithULong.serializer().descriptor, listOf<ZkpStructureType>(wrappedULongStructure)),
+                Arguments.of(ClassWithFloat.serializer().descriptor, listOf<ZkpStructureType>(wrappedFloatStructure)),
+                Arguments.of(ClassWithDouble.serializer().descriptor, listOf<ZkpStructureType>(wrappedDoubleStructure)),
                 Arguments.of(
                     ClassWithAsciiChar.serializer().descriptor,
-                    listOf<BflStructureType>(wrappedAsciiCharStructure)
+                    listOf<ZkpStructureType>(wrappedAsciiCharStructure)
                 ),
                 Arguments.of(
                     ClassWithUnicodeChar.serializer().descriptor,
-                    listOf<BflStructureType>(wrappedUnicodeCharStructure)
+                    listOf<ZkpStructureType>(wrappedUnicodeCharStructure)
                 ),
                 Arguments.of(
                     ClassWithAsciiString.serializer().descriptor,
-                    listOf<BflStructureType>(wrappedAsciiStringStructure)
+                    listOf<ZkpStructureType>(wrappedAsciiStringStructure)
                 ),
                 Arguments.of(
                     ClassWithUtf8String.serializer().descriptor,
-                    listOf<BflStructureType>(wrappedUtf8StringStructure)
+                    listOf<ZkpStructureType>(wrappedUtf8StringStructure)
                 ),
                 Arguments.of(
                     ClassWithUtf16String.serializer().descriptor,
-                    listOf<BflStructureType>(wrappedUtf16StringStructure)
+                    listOf<ZkpStructureType>(wrappedUtf16StringStructure)
                 ),
                 Arguments.of(
                     ClassWithUtf32String.serializer().descriptor,
-                    listOf<BflStructureType>(wrappedUtf32StringStructure)
+                    listOf<ZkpStructureType>(wrappedUtf32StringStructure)
                 ),
                 Arguments.of(
                     ClassWithNullableInt.serializer().descriptor,
-                    listOf<BflStructureType>(wrappedNullableIntStructure)
+                    listOf<ZkpStructureType>(wrappedNullableIntStructure)
                 ),
                 Arguments.of(
                     ClassWithListOfInt.serializer().descriptor,
-                    listOf<BflStructureType>(wrappedListOfIntStructure)
+                    listOf<ZkpStructureType>(wrappedListOfIntStructure)
                 ),
                 Arguments.of(
                     ClassWithSetOfInt.serializer().descriptor,
-                    listOf<BflStructureType>(wrappedSetOfIntStructure)
+                    listOf<ZkpStructureType>(wrappedSetOfIntStructure)
                 ),
                 Arguments.of(
                     ClassWithMapOfStringToInt.serializer().descriptor,
-                    listOf<BflStructureType>(wrappedMapOfStringIntStructure)
+                    listOf<ZkpStructureType>(wrappedMapOfStringIntStructure)
                 ),
-                Arguments.of(EnumWithNumbers.serializer().descriptor, listOf<BflStructureType>()),
-                Arguments.of(ClassWithEnum.serializer().descriptor, listOf<BflStructureType>(wrappedEnumStructure)),
+                Arguments.of(EnumWithNumbers.serializer().descriptor, listOf<ZkpStructureType>()),
+                Arguments.of(ClassWithEnum.serializer().descriptor, listOf<ZkpStructureType>(wrappedEnumStructure)),
                 Arguments.of(
                     ClassWithPublicKey.serializer().descriptor,
-                    listOf<BflStructureType>(
+                    listOf<ZkpStructureType>(
                         wrappedPublicKeyStructure, publicKeyEdDsaEd25519Sha512
                     )
                 ),
                 Arguments.of(
                     ClassWithAnonymousParty.serializer().descriptor,
-                    listOf<BflStructureType>(
+                    listOf<ZkpStructureType>(
                         wrappedAnonymousPartyStructure, anonymousPartyEdDsaEd25519Sha512, publicKeyEdDsaEd25519Sha512
                     )
                 ),
                 Arguments.of(
                     ClassWithParty.serializer().descriptor,
-                    listOf<BflStructureType>(
+                    listOf<ZkpStructureType>(
                         wrappedPartyStructure, partyEdDsaEd25519Sha256, cordaX500NameSurrogate, publicKeyEdDsaEd25519Sha512
                     )
                 ),
                 Arguments.of(
                     ClassWithSecureHash.serializer().descriptor,
-                    listOf<BflStructureType>(
+                    listOf<ZkpStructureType>(
                         wrappedSecureHash, secureHashSha256
                     )
                 ),
                 Arguments.of(
                     ClassWithSignatureAttachmentConstraint.serializer().descriptor,
-                    listOf<BflStructureType>(
+                    listOf<ZkpStructureType>(
                         wrappedSignatureAttachmentConstraint,
                         signatureAttachmentConstraintEdDsaEd25519Sha512,
                         publicKeyEdDsaEd25519Sha512
@@ -329,7 +329,7 @@ internal class BflStructureGeneratorTest {
                 ),
                 Arguments.of(
                     ClassWithHashAttachmentConstraint.serializer().descriptor,
-                    listOf<BflStructureType>(
+                    listOf<ZkpStructureType>(
                         wrappedHashAttachmentConstraint,
                         hashAttachmentConstraint,
                         secureHashSha256

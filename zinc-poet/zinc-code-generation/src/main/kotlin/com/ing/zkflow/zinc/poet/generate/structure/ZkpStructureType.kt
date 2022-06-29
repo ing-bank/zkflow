@@ -7,27 +7,27 @@ import kotlinx.serialization.Serializable
  * Base class for the BFL structure in JSON format.
  */
 @Serializable
-sealed class BflStructureType {
+sealed class ZkpStructureType {
     /**
-     * Number of bytes needed to serialize this [BflStructureType].
+     * Number of bytes needed to serialize this [ZkpStructureType].
      */
     abstract val byteSize: Int
 
     /**
-     * Returns a sequence of all nested [BflStructureType]s.
+     * Returns a sequence of all nested [ZkpStructureType]s.
      */
-    open fun flatten(): Sequence<BflStructureType> = sequenceOf(this)
+    open fun flatten(): Sequence<ZkpStructureType> = sequenceOf(this)
 
     /**
-     * Recursively apply [transform] to all [BflStructureType].
+     * Recursively apply [transform] to all [ZkpStructureType].
      */
-    open fun rewrite(transform: (BflStructureType) -> BflStructureType): BflStructureType = transform(this)
+    open fun rewrite(transform: (ZkpStructureType) -> ZkpStructureType): ZkpStructureType = transform(this)
 
     /**
-     * Flatten this [BflStructureType] and replace all inner classes by references.
+     * Flatten this [ZkpStructureType] and replace all inner classes by references.
      */
     fun toFlattenedClassStructure() = flatten()
-        .filterIsInstance<BflStructureClass>()
+        .filterIsInstance<ZkpStructureClass>()
         .map {
             it.rewrite { structureType ->
                 replaceInnerClassesByReferences(structureType)
@@ -37,9 +37,9 @@ sealed class BflStructureType {
     /**
      * Replace inner classes by references, so that top-level classes remain classes.
      */
-    private fun replaceInnerClassesByReferences(structureType: BflStructureType) =
+    private fun replaceInnerClassesByReferences(structureType: ZkpStructureType) =
         when (structureType) {
-            is BflStructureClass -> structureType.copy(
+            is ZkpStructureClass -> structureType.copy(
                 fields = structureType.fields.map { field ->
                     field.copy(
                         fieldType = field.fieldType.replaceAllClassesByReferences()
@@ -50,36 +50,36 @@ sealed class BflStructureType {
         }
 
     /**
-     * Recursively replaces all [BflStructureClass] by [BflStructureClassRef].
+     * Recursively replaces all [ZkpStructureClass] by [ZkpStructureClassRef].
      */
-    private fun replaceAllClassesByReferences(): BflStructureType = rewrite {
+    private fun replaceAllClassesByReferences(): ZkpStructureType = rewrite {
         when (it) {
-            is BflStructureClass -> it.ref()
+            is ZkpStructureClass -> it.ref()
             else -> it
         }
     }
 }
 
 /**
- * BFL Structure for fields in [BflStructureClass].
+ * BFL Structure for fields in [ZkpStructureClass].
  */
 @Serializable
-data class BflStructureField(
+data class ZkpStructureField(
     val fieldName: String,
-    val fieldType: BflStructureType,
+    val fieldType: ZkpStructureType,
 )
 
 /**
- * [BflStructureType] for nullable types.
+ * [ZkpStructureType] for nullable types.
  */
 @Serializable
 @SerialName("NULLABLE")
-data class BflStructureNullable(
+data class ZkpStructureNullable(
     override val byteSize: Int,
-    val innerType: BflStructureType,
-) : BflStructureType() {
-    override fun flatten(): Sequence<BflStructureType> = super.flatten() + innerType.flatten()
-    override fun rewrite(transform: (BflStructureType) -> BflStructureType): BflStructureType = transform(
+    val innerType: ZkpStructureType,
+) : ZkpStructureType() {
+    override fun flatten(): Sequence<ZkpStructureType> = super.flatten() + innerType.flatten()
+    override fun rewrite(transform: (ZkpStructureType) -> ZkpStructureType): ZkpStructureType = transform(
         copy(
             innerType = innerType.rewrite(transform)
         )
@@ -87,27 +87,27 @@ data class BflStructureNullable(
 }
 
 /**
- * [BflStructureType] for classes with one or multiple fields.
+ * [ZkpStructureType] for classes with one or multiple fields.
  */
 @Serializable
 @SerialName("CLASS")
-data class BflStructureClass(
-    val className: String,
+data class ZkpStructureClass(
+    val serialName: String,
     val familyClassName: String?,
     val serializationId: Int?,
     override val byteSize: Int,
-    val fields: List<BflStructureField>,
-) : BflStructureType() {
+    val fields: List<ZkpStructureField>,
+) : ZkpStructureType() {
     init {
         require(byteSize == fields.sumOf { it.fieldType.byteSize }) {
             "Sum of all the fields (${fields.sumOf { it.fieldType.byteSize }}) MUST equal $byteSize"
         }
     }
 
-    override fun flatten(): Sequence<BflStructureType> = super.flatten() +
+    override fun flatten(): Sequence<ZkpStructureType> = super.flatten() +
         fields.asSequence().flatMap { it.fieldType.flatten() }.distinct()
 
-    override fun rewrite(transform: (BflStructureType) -> BflStructureType): BflStructureType {
+    override fun rewrite(transform: (ZkpStructureType) -> ZkpStructureType): ZkpStructureType {
         return transform(
             copy(
                 fields = fields.map {
@@ -119,32 +119,32 @@ data class BflStructureClass(
         )
     }
 
-    internal fun ref(): BflStructureClassRef = BflStructureClassRef(className, byteSize)
+    internal fun ref(): ZkpStructureClassRef = ZkpStructureClassRef(serialName, byteSize)
 }
 
 @Serializable
 @SerialName("CLASS_REF")
-data class BflStructureClassRef(
+data class ZkpStructureClassRef(
     val className: String,
     override val byteSize: Int,
-) : BflStructureType()
+) : ZkpStructureType()
 
 @Serializable
 @SerialName("PRIMITIVE")
-data class BflStructurePrimitive(
+data class ZkpStructurePrimitive(
     val className: String,
     override val byteSize: Int,
-) : BflStructureType()
+) : ZkpStructureType()
 
 @Serializable
 @SerialName("LIST")
-data class BflStructureList(
+data class ZkpStructureList(
     override val byteSize: Int,
     val capacity: Int,
-    val elementType: BflStructureType,
-) : BflStructureType() {
-    override fun flatten(): Sequence<BflStructureType> = super.flatten() + elementType.flatten()
-    override fun rewrite(transform: (BflStructureType) -> BflStructureType): BflStructureType {
+    val elementType: ZkpStructureType,
+) : ZkpStructureType() {
+    override fun flatten(): Sequence<ZkpStructureType> = super.flatten() + elementType.flatten()
+    override fun rewrite(transform: (ZkpStructureType) -> ZkpStructureType): ZkpStructureType {
         return transform(
             copy(
                 elementType = elementType.rewrite(transform)
@@ -155,13 +155,13 @@ data class BflStructureList(
 
 @Serializable
 @SerialName("ARRAY")
-data class BflStructureArray(
+data class ZkpStructureArray(
     override val byteSize: Int,
     val capacity: Int,
-    val elementType: BflStructureType,
-) : BflStructureType() {
-    override fun flatten(): Sequence<BflStructureType> = super.flatten() + elementType.flatten()
-    override fun rewrite(transform: (BflStructureType) -> BflStructureType): BflStructureType {
+    val elementType: ZkpStructureType,
+) : ZkpStructureType() {
+    override fun flatten(): Sequence<ZkpStructureType> = super.flatten() + elementType.flatten()
+    override fun rewrite(transform: (ZkpStructureType) -> ZkpStructureType): ZkpStructureType {
         return transform(
             copy(
                 elementType = elementType.rewrite(transform),
@@ -172,14 +172,14 @@ data class BflStructureArray(
 
 @Serializable
 @SerialName("MAP")
-data class BflStructureMap(
+data class ZkpStructureMap(
     override val byteSize: Int,
     val capacity: Int,
-    val keyType: BflStructureType,
-    val valueType: BflStructureType,
-) : BflStructureType() {
-    override fun flatten(): Sequence<BflStructureType> = super.flatten() + keyType.flatten() + valueType.flatten()
-    override fun rewrite(transform: (BflStructureType) -> BflStructureType): BflStructureType {
+    val keyType: ZkpStructureType,
+    val valueType: ZkpStructureType,
+) : ZkpStructureType() {
+    override fun flatten(): Sequence<ZkpStructureType> = super.flatten() + keyType.flatten() + valueType.flatten()
+    override fun rewrite(transform: (ZkpStructureType) -> ZkpStructureType): ZkpStructureType {
         return transform(
             copy(
                 keyType = keyType.rewrite(transform),
@@ -191,31 +191,31 @@ data class BflStructureMap(
 
 @Serializable
 @SerialName("STRING")
-data class BflStructureString(
+data class ZkpStructureString(
     override val byteSize: Int,
     val capacity: Int,
     val encoding: String,
-) : BflStructureType()
+) : ZkpStructureType()
 
 @Serializable
 @SerialName("ENUM")
-data class BflStructureEnum(
+data class ZkpStructureEnum(
     val className: String,
-) : BflStructureType() {
+) : ZkpStructureType() {
     override val byteSize: Int = Int.SIZE_BYTES
 }
 
 @Serializable
 @SerialName("UNIT")
-object BflStructureUnit : BflStructureType() {
+object ZkpStructureUnit : ZkpStructureType() {
     override val byteSize: Int = 0
 }
 
 @Serializable
 @SerialName("BIG_DECIMAL")
-data class BflStructureBigDecimal(
+data class ZkpStructureBigDecimal(
     override val byteSize: Int,
     val kind: String,
     val integerSize: Int,
     val fractionSize: Int,
-) : BflStructureType()
+) : ZkpStructureType()

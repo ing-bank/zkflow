@@ -1,7 +1,8 @@
 package com.ing.zkflow.gradle.plugin
 
-import com.ing.zkflow.gradle.task.GenerateBflStructureTask
 import com.ing.zkflow.gradle.task.GenerateZincCircuitsTask
+import com.ing.zkflow.gradle.task.GenerateZkpStructureTask
+import com.ing.zkflow.zinc.poet.generate.structure.GENERATE_ZKP_STRUCTURE
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -51,11 +52,11 @@ class ZKFlowPlugin : Plugin<Project> {
         project.tasks.getByPath(COMPILE_KOTLIN).finalizedBy(GENERATE_ZINC_CIRCUITS)
         project.tasks.getByPath(ASSEMBLE).dependsOn(GENERATE_ZINC_CIRCUITS)
 
-        val generateBflStructureTask = project.tasks.create(
-            "generateBflStructure",
-            GenerateBflStructureTask::class.java
+        val generateZkpStructureTask = project.tasks.create(
+            GENERATE_ZKP_STRUCTURE,
+            GenerateZkpStructureTask::class.java
         )
-        generateBflStructureTask
+        generateZkpStructureTask
             .dependsOn(COMPILE_KOTLIN)
             .mustRunAfter(COMPILE_KOTLIN)
     }

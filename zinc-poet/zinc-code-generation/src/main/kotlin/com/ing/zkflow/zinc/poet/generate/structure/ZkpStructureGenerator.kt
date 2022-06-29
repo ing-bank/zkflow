@@ -17,8 +17,8 @@ import kotlinx.serialization.descriptors.SerialKind
 import kotlinx.serialization.descriptors.StructureKind
 import net.corda.core.contracts.ContractState
 
-object BflStructureGenerator {
-    fun generate(descriptor: SerialDescriptor): BflStructureType {
+object ZkpStructureGenerator {
+    fun generate(descriptor: SerialDescriptor): ZkpStructureType {
         /**
          * We handle nullability as soon as possible, so that we can use our special [option]
          */
@@ -27,7 +27,7 @@ object BflStructureGenerator {
                 descriptor // see [NullableSerializer]
                     .getElementDescriptorByName("value") // `T` descriptor
             )
-            BflStructureNullable(
+            ZkpStructureNullable(
                 byteSize = innerType.byteSize + 1,
                 innerType = innerType,
             )
@@ -37,7 +37,7 @@ object BflStructureGenerator {
     }
 
     @Suppress("ComplexMethod")
-    private fun generateBflType(descriptor: SerialDescriptor): BflStructureType {
+    private fun generateBflType(descriptor: SerialDescriptor): ZkpStructureType {
         return when (FixedLengthType.tryFromSerialName(descriptor.serialName)) {
             FixedLengthType.SET,
             FixedLengthType.LIST -> createList(descriptor)
@@ -47,15 +47,15 @@ object BflStructureGenerator {
             FixedLengthType.UTF8_STRING -> createString(descriptor, "Utf8")
             FixedLengthType.UTF16_STRING -> createString(descriptor, "Utf16")
             FixedLengthType.UTF32_STRING -> createString(descriptor, "Utf32")
-            FixedLengthType.BOOLEAN -> BflStructurePrimitive(Boolean::class.qualifiedName!!, Byte.SIZE_BYTES)
-            FixedLengthType.BYTE -> BflStructurePrimitive(Byte::class.qualifiedName!!, Byte.SIZE_BYTES)
-            FixedLengthType.UBYTE -> BflStructurePrimitive(UByte::class.qualifiedName!!, UByte.SIZE_BYTES)
-            FixedLengthType.SHORT -> BflStructurePrimitive(Short::class.qualifiedName!!, Short.SIZE_BYTES)
-            FixedLengthType.USHORT -> BflStructurePrimitive(UShort::class.qualifiedName!!, UShort.SIZE_BYTES)
-            FixedLengthType.INT -> BflStructurePrimitive(Int::class.qualifiedName!!, Int.SIZE_BYTES)
-            FixedLengthType.UINT -> BflStructurePrimitive(UInt::class.qualifiedName!!, UInt.SIZE_BYTES)
-            FixedLengthType.LONG -> BflStructurePrimitive(Long::class.qualifiedName!!, Long.SIZE_BYTES)
-            FixedLengthType.ULONG -> BflStructurePrimitive(ULong::class.qualifiedName!!, ULong.SIZE_BYTES)
+            FixedLengthType.BOOLEAN -> ZkpStructurePrimitive(Boolean::class.qualifiedName!!, Byte.SIZE_BYTES)
+            FixedLengthType.BYTE -> ZkpStructurePrimitive(Byte::class.qualifiedName!!, Byte.SIZE_BYTES)
+            FixedLengthType.UBYTE -> ZkpStructurePrimitive(UByte::class.qualifiedName!!, UByte.SIZE_BYTES)
+            FixedLengthType.SHORT -> ZkpStructurePrimitive(Short::class.qualifiedName!!, Short.SIZE_BYTES)
+            FixedLengthType.USHORT -> ZkpStructurePrimitive(UShort::class.qualifiedName!!, UShort.SIZE_BYTES)
+            FixedLengthType.INT -> ZkpStructurePrimitive(Int::class.qualifiedName!!, Int.SIZE_BYTES)
+            FixedLengthType.UINT -> ZkpStructurePrimitive(UInt::class.qualifiedName!!, UInt.SIZE_BYTES)
+            FixedLengthType.LONG -> ZkpStructurePrimitive(Long::class.qualifiedName!!, Long.SIZE_BYTES)
+            FixedLengthType.ULONG -> ZkpStructurePrimitive(ULong::class.qualifiedName!!, ULong.SIZE_BYTES)
             FixedLengthType.EXACT_LIST -> createArray(descriptor)
             null -> when (descriptor.kind) {
                 SerialKind.ENUM -> createEnum(descriptor)
@@ -65,16 +65,16 @@ object BflStructureGenerator {
         }
     }
 
-    private fun createEnum(serialDescriptor: SerialDescriptor): BflStructureType =
-        BflStructureEnum(serialDescriptor.internalTypeName)
+    private fun createEnum(serialDescriptor: SerialDescriptor): ZkpStructureType =
+        ZkpStructureEnum(serialDescriptor.internalTypeName)
 
-    private fun createClass(descriptor: SerialDescriptor): BflStructureType {
+    private fun createClass(descriptor: SerialDescriptor): ZkpStructureType {
         return if (descriptor.isBigDecimalDescriptor()) {
             createBigDecimal(descriptor)
         } else if (descriptor.elementsCount > 0) {
             createStruct(descriptor)
         } else {
-            BflStructureUnit
+            ZkpStructureUnit
         }
     }
 
@@ -92,15 +92,15 @@ object BflStructureGenerator {
         }
 
     @Suppress("unchecked")
-    private fun createStruct(descriptor: SerialDescriptor): BflStructureType {
+    private fun createStruct(descriptor: SerialDescriptor): ZkpStructureType {
         val fixedLengthSerialDescriptor: FixedLengthSerialDescriptor = descriptor.toFixedLengthSerialDescriptorOrThrow()
-        return BflStructureClass(
-            className = fixedLengthSerialDescriptor.serialName,
+        return ZkpStructureClass(
+            serialName = fixedLengthSerialDescriptor.serialName,
             familyClassName = tryGetFamilyClassName(fixedLengthSerialDescriptor),
             serializationId = tryGetSerializationId(fixedLengthSerialDescriptor),
             byteSize = fixedLengthSerialDescriptor.byteSize,
             fields = fixedLengthSerialDescriptor.elements().map { (elementName, elementDescriptor) ->
-                BflStructureField(
+                ZkpStructureField(
                     fieldName = elementName,
                     fieldType = generate(elementDescriptor)
                 )
@@ -130,10 +130,10 @@ object BflStructureGenerator {
             null
         }
 
-    private fun createBigDecimal(descriptor: SerialDescriptor): BflStructureBigDecimal {
+    private fun createBigDecimal(descriptor: SerialDescriptor): ZkpStructureBigDecimal {
         val fixedLengthSerialDescriptor: FixedLengthSerialDescriptor = descriptor.toFixedLengthSerialDescriptorOrThrow()
         val annotation = descriptor.getAnnotation<BigDecimalSizeAnnotation>()
-        return BflStructureBigDecimal(
+        return ZkpStructureBigDecimal(
             byteSize = fixedLengthSerialDescriptor.byteSize,
             kind = fixedLengthSerialDescriptor.serialName,
             integerSize = annotation.integerSize,
@@ -141,9 +141,9 @@ object BflStructureGenerator {
         )
     }
 
-    private fun createList(descriptor: SerialDescriptor): BflStructureList {
+    private fun createList(descriptor: SerialDescriptor): ZkpStructureList {
         val fixedLengthSerialDescriptor: FixedLengthSerialDescriptor = descriptor.toFixedLengthSerialDescriptorOrThrow()
-        return BflStructureList(
+        return ZkpStructureList(
             byteSize = fixedLengthSerialDescriptor.byteSize,
             capacity = descriptor.getAnnotation<SizeAnnotation>().value,
             elementType = generate(
@@ -154,9 +154,9 @@ object BflStructureGenerator {
         )
     }
 
-    private fun createArray(descriptor: SerialDescriptor): BflStructureType {
+    private fun createArray(descriptor: SerialDescriptor): ZkpStructureType {
         val fixedLengthSerialDescriptor: FixedLengthSerialDescriptor = descriptor.toFixedLengthSerialDescriptorOrThrow()
-        return BflStructureArray(
+        return ZkpStructureArray(
             byteSize = fixedLengthSerialDescriptor.byteSize,
             capacity = fixedLengthSerialDescriptor.getAnnotation<SizeAnnotation>().value,
             elementType = generate(
@@ -167,18 +167,18 @@ object BflStructureGenerator {
         )
     }
 
-    private fun createString(descriptor: SerialDescriptor, encoding: String): BflStructureType {
+    private fun createString(descriptor: SerialDescriptor, encoding: String): ZkpStructureType {
         val fixedLengthSerialDescriptor: FixedLengthSerialDescriptor = descriptor.toFixedLengthSerialDescriptorOrThrow()
-        return BflStructureString(
+        return ZkpStructureString(
             byteSize = fixedLengthSerialDescriptor.byteSize,
             capacity = fixedLengthSerialDescriptor.getAnnotation<SizeAnnotation>().value,
             encoding = encoding
         )
     }
 
-    private fun createMap(descriptor: SerialDescriptor): BflStructureType {
+    private fun createMap(descriptor: SerialDescriptor): ZkpStructureType {
         val fixedLengthSerialDescriptor: FixedLengthSerialDescriptor = descriptor.toFixedLengthSerialDescriptorOrThrow()
-        return BflStructureMap(
+        return ZkpStructureMap(
             byteSize = fixedLengthSerialDescriptor.byteSize,
             capacity = fixedLengthSerialDescriptor.getAnnotation<SizeAnnotation>().value,
             keyType = generate(
