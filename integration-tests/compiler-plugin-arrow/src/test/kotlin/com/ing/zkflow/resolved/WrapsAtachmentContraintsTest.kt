@@ -30,7 +30,6 @@ import org.junit.jupiter.params.provider.MethodSource
 @Serializable
 data class WrapsAttachmentConstraints(
     @Serializable(with = AlwaysAcceptAttachmentConstraint_0::class) val alwaysAcceptAttachmentConstraint: @Contextual AlwaysAcceptAttachmentConstraint = AlwaysAcceptAttachmentConstraint,
-    @Serializable(with = HashAttachmentConstraint_0::class) val hashAttachmentConstraint: @Contextual HashAttachmentConstraint = HashAttachmentConstraint(SecureHash.zeroHash),
     @Serializable(with = HashAttachmentConstraintSHA256Explicit_0::class) val hashAttachmentConstraintSHA256Explicit: @Contextual HashAttachmentConstraint = HashAttachmentConstraint(SecureHash.zeroHash),
     @Serializable(with = WhitelistedByZoneAttachmentConstraint_0::class) val whitelistedByZoneAttachmentConstraint: @Contextual WhitelistedByZoneAttachmentConstraint = WhitelistedByZoneAttachmentConstraint,
     @Serializable(with = AutomaticHashConstraint_0::class) val automaticHashConstraint: @Contextual AutomaticHashConstraint = AutomaticHashConstraint,
@@ -42,7 +41,6 @@ data class WrapsAttachmentConstraints(
     object AlwaysAcceptAttachmentConstraint_0 :
         WrappedFixedLengthKSerializerWithDefault<AlwaysAcceptAttachmentConstraint>(AlwaysAcceptAttachmentConstraintSerializer)
 
-    object HashAttachmentConstraint_0 : HashAttachmentConstraintSerializer(com.ing.zkflow.annotations.corda.SHA256DigestAlgorithm::class)
     object HashAttachmentConstraintSHA256Explicit_0 : HashAttachmentConstraintSerializer(com.ing.zkflow.annotations.corda.SHA256DigestAlgorithm::class)
 
     object WhitelistedByZoneAttachmentConstraint_0 :

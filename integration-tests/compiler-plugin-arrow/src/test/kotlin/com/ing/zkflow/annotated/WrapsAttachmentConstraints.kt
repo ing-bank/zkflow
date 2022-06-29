@@ -18,7 +18,6 @@ import net.corda.core.crypto.SecureHash
 @ZKP
 data class WrapsAttachmentConstraints(
     val alwaysAcceptAttachmentConstraint: AlwaysAcceptAttachmentConstraint = AlwaysAcceptAttachmentConstraint,
-    val hashAttachmentConstraint: HashAttachmentConstraint = HashAttachmentConstraint(SecureHash.zeroHash),
     val hashAttachmentConstraintSHA256Explicit: @SHA256 HashAttachmentConstraint = HashAttachmentConstraint(SecureHash.zeroHash),
     val whitelistedByZoneAttachmentConstraint: WhitelistedByZoneAttachmentConstraint = WhitelistedByZoneAttachmentConstraint,
     val automaticHashConstraint: AutomaticHashConstraint = AutomaticHashConstraint,
