@@ -1,7 +1,8 @@
 package com.ing.zkflow.common.versioning
 
-import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import org.junit.jupiter.api.Test
 
 internal class VersionFamilyRegistryTest {
@@ -16,14 +17,16 @@ internal class VersionFamilyRegistryTest {
     }
 
     @Test
-    fun `getIdOfLatest should return the correct Id`() {
-        testFamilyRegistry.getIdOfLatest(TestStateV1::class) shouldBe TestStateV3::class.hashCode()
+    fun `unknown family member should fail`() {
+        shouldThrowExactly<java.lang.IllegalStateException> {
+            testFamilyRegistry.familyOf(UnknownState::class)
+        }.also { it.message shouldContain "Not registered as family member" }
     }
 
     @Test
-    fun `getIdOfLAtest for unknown class should raise ClassNotRegistered`() {
-        shouldThrow<IllegalStateException> {
-            testFamilyRegistry.getIdOfLatest(UnknownState::class)
-        }.message shouldBe "Not a family member class com.ing.zkflow.common.versioning.UnknownState"
+    fun `unknown family should fail`() {
+        shouldThrowExactly<java.lang.IllegalStateException> {
+            testFamilyRegistry[UnregisteredFamily::class]
+        }.also { it.message shouldContain "Not registered as family" }
     }
 }
