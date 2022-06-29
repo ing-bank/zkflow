@@ -482,3 +482,21 @@ Could haves:
 
 - [ ] Implement `UpgradeToLatestFlow` to combine more consecutive version steps in a single transaction
 - [ ] Run upgrade commands for stored states async in the background when idle
+
+# JSON Structure
+
+The `ZKFlowPlugin` gradle plugin contains several tasks that help prevent developers to make changes to existing
+classes.
+
+The plugin uses `kotlinx.serialization` to generate the JSON file. The class definitions on which this JSON file is
+generated can be found in `ZkpStructureType.kt`.
+
+## generateZkpStructure
+
+The `generateZkpStructure` task collects all contract state classes and writes the structure in JSON format to a file
+`src/main/zkp/structure.json`. This file SHOULD be committed to version control, so that the ZKFlowPlugin can detect
+any changes to existing classes.
+
+The `generateZkpStructure` task is implemented in `GenerateZkpStructureTask.kt`. This task is a thin wrapper that
+executes a separate java process so that all (generated) classes and service loader files can be loaded. The main plugin
+business logic is implemented in `GenerateZkpStructure.kt`.

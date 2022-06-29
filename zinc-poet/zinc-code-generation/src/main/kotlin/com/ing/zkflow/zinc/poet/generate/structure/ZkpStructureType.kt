@@ -1,3 +1,6 @@
+/**
+ * This file contains all classes corresponding to the `src/main/zkp/structure.json` file.
+ */
 package com.ing.zkflow.zinc.poet.generate.structure
 
 import kotlinx.serialization.SerialName
@@ -60,18 +63,12 @@ sealed class ZkpStructureType {
     }
 }
 
-/**
- * BFL Structure for fields in [ZkpStructureClass].
- */
 @Serializable
 data class ZkpStructureField(
     val fieldName: String,
     val fieldType: ZkpStructureType,
 )
 
-/**
- * [ZkpStructureType] for nullable types.
- */
 @Serializable
 @SerialName("NULLABLE")
 data class ZkpStructureNullable(
@@ -86,9 +83,6 @@ data class ZkpStructureNullable(
     )
 }
 
-/**
- * [ZkpStructureType] for classes with one or multiple fields.
- */
 @Serializable
 @SerialName("CLASS")
 data class ZkpStructureClass(
@@ -122,6 +116,10 @@ data class ZkpStructureClass(
     internal fun ref(): ZkpStructureClassRef = ZkpStructureClassRef(serialName, byteSize)
 }
 
+/**
+ * [ZkpStructureType] for class references.
+ * Class references are used to avoid duplicates in the final `src/main/zkp/structure.json` file.
+ */
 @Serializable
 @SerialName("CLASS_REF")
 data class ZkpStructureClassRef(
