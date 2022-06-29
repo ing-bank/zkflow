@@ -65,8 +65,12 @@ internal class ZkpStructureGeneratorTest {
         private val wrappedVersionedStructure = wrappedStructure<VersionedState>(
             field = ZkpStructureField("state", ZkpStructurePrimitive("kotlin.Int", 4))
         )
-        private val wrappedUnitStructure = wrappedStructure<ClassWithClassWithoutFields>(
-            field = ZkpStructureField("c", ZkpStructureUnit)
+        private val wrappedEmptyClass = wrappedStructure<ClassWithoutFields>()
+        private val wrappedUnitStructure = ZkpStructureClass(
+            "${ClassWithClassWithoutFields::class.qualifiedName}", null, null, 0,
+            listOf(
+                ZkpStructureField("c", wrappedEmptyClass.ref()),
+            )
         )
         private val wrappedBoolStructure = wrappedStructure<ClassWithBoolean>(
             field = ZkpStructureField("boolean", ZkpStructurePrimitive("kotlin.Boolean", Byte.SIZE_BYTES))
@@ -149,7 +153,7 @@ internal class ZkpStructureGeneratorTest {
             )
         )
         private val wrappedEnumStructure = wrappedStructure<ClassWithEnum>(
-            field = ZkpStructureField("enum", ZkpStructureEnum("EnumWithNumbers"))
+            field = ZkpStructureField("enum", ZkpStructureEnum("${EnumWithNumbers::class.qualifiedName}"))
         )
         private val wrappedPublicKeyStructure = wrappedStructure<ClassWithPublicKey>(
             field = ZkpStructureField("pk", ZkpStructureClassRef("PublicKeyEdDsaEd25519Sha512", 48))
@@ -237,10 +241,10 @@ internal class ZkpStructureGeneratorTest {
         fun fixturesProvider(): List<Arguments> {
             return listOf(
                 Arguments.of(VersionedState.serializer().descriptor, listOf(wrappedVersionedStructure)),
-                Arguments.of(ClassWithoutFields.serializer().descriptor, emptyList<ZkpStructureType>()),
+                Arguments.of(ClassWithoutFields.serializer().descriptor, listOf(wrappedEmptyClass)),
                 Arguments.of(
                     ClassWithClassWithoutFields.serializer().descriptor,
-                    listOf<ZkpStructureType>(wrappedUnitStructure)
+                    listOf<ZkpStructureType>(wrappedUnitStructure, wrappedEmptyClass)
                 ),
                 Arguments.of(ClassWithBoolean.serializer().descriptor, listOf<ZkpStructureType>(wrappedBoolStructure)),
                 Arguments.of(ClassWithByte.serializer().descriptor, listOf<ZkpStructureType>(wrappedByteStructure)),

@@ -123,7 +123,7 @@ data class ZkpStructureClass(
 @Serializable
 @SerialName("CLASS_REF")
 data class ZkpStructureClassRef(
-    val className: String,
+    val serialName: String,
     override val byteSize: Int,
 ) : ZkpStructureType()
 
@@ -198,22 +198,16 @@ data class ZkpStructureString(
 @Serializable
 @SerialName("ENUM")
 data class ZkpStructureEnum(
-    val className: String,
+    val serialName: String,
 ) : ZkpStructureType() {
     override val byteSize: Int = Int.SIZE_BYTES
-}
-
-@Serializable
-@SerialName("UNIT")
-object ZkpStructureUnit : ZkpStructureType() {
-    override val byteSize: Int = 0
 }
 
 @Serializable
 @SerialName("BIG_DECIMAL")
 data class ZkpStructureBigDecimal(
     override val byteSize: Int,
-    val kind: String,
+    val serialName: String,
     val integerSize: Int,
     val fractionSize: Int,
 ) : ZkpStructureType()

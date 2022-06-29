@@ -1,7 +1,6 @@
 package com.ing.zkflow.zinc.poet.generate.structure
 
 import com.ing.zkflow.common.serialization.ContractStateSerializerRegistry
-import com.ing.zkflow.common.serialization.zinc.generation.internalTypeName
 import com.ing.zkflow.common.versioning.ContractStateVersionFamilyRegistry
 import com.ing.zkflow.serialization.FixedLengthSerialDescriptor
 import com.ing.zkflow.serialization.FixedLengthType
@@ -66,15 +65,13 @@ object ZkpStructureGenerator {
     }
 
     private fun createEnum(serialDescriptor: SerialDescriptor): ZkpStructureType =
-        ZkpStructureEnum(serialDescriptor.internalTypeName)
+        ZkpStructureEnum(serialDescriptor.serialName)
 
     private fun createClass(descriptor: SerialDescriptor): ZkpStructureType {
         return if (descriptor.isBigDecimalDescriptor()) {
             createBigDecimal(descriptor)
-        } else if (descriptor.elementsCount > 0) {
-            createStruct(descriptor)
         } else {
-            ZkpStructureUnit
+            createStruct(descriptor)
         }
     }
 
@@ -135,7 +132,7 @@ object ZkpStructureGenerator {
         val annotation = descriptor.getAnnotation<BigDecimalSizeAnnotation>()
         return ZkpStructureBigDecimal(
             byteSize = fixedLengthSerialDescriptor.byteSize,
-            kind = fixedLengthSerialDescriptor.serialName,
+            serialName = fixedLengthSerialDescriptor.serialName,
             integerSize = annotation.integerSize,
             fractionSize = annotation.fractionSize,
         )
