@@ -20,14 +20,22 @@ import com.ing.zkflow.annotations.UnicodeChar
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.annotations.corda.EdDSA
 import com.ing.zkflow.annotations.corda.SHA256
+import com.ing.zkflow.common.versioning.VersionedContractStateGroup
 import com.ing.zkflow.serialization.serializer.FixedLengthFloatingPointSerializer
+import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.HashAttachmentConstraint
 import net.corda.core.contracts.SignatureAttachmentConstraint
 import net.corda.core.crypto.SecureHash
+import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.Party
 import java.security.PublicKey
 
+interface MyFamilyMarker : VersionedContractStateGroup, ContractState
+@ZKP
+class VersionedState(val state: Int) : MyFamilyMarker {
+    override val participants: List<AbstractParty> = emptyList()
+}
 @ZKP
 class ClassWithoutFields
 @ZKP
@@ -76,6 +84,8 @@ data class ClassWithSetOfInt(val set: @Size(8) Set<Int>)
 data class ClassWithMapOfStringToInt(val map: @Size(8) Map<@UTF8(8) String, Int>)
 @ZKP
 enum class EnumWithNumbers { ONE, TWO, THREE }
+@ZKP
+data class ClassWithEnum(val enum: EnumWithNumbers)
 @ZKP
 data class ClassWithPublicKey(val pk: @EdDSA PublicKey)
 @ZKP

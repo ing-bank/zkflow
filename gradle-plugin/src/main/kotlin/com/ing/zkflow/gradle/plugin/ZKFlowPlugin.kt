@@ -1,6 +1,8 @@
 package com.ing.zkflow.gradle.plugin
 
 import com.ing.zkflow.gradle.task.GenerateZincCircuitsTask
+import com.ing.zkflow.gradle.task.GenerateZkpStructureTask
+import com.ing.zkflow.zinc.poet.generate.structure.GENERATE_ZKP_STRUCTURE
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -39,13 +41,24 @@ class ZKFlowPlugin : Plugin<Project> {
             applyArrowCompilerPlugin(project)
         }
 
-        val generateZincCircuitsTask = project.tasks.create(GENERATE_ZINC_CIRCUITS, GenerateZincCircuitsTask::class.java)
+        val generateZincCircuitsTask = project.tasks.create(
+            GENERATE_ZINC_CIRCUITS,
+            GenerateZincCircuitsTask::class.java
+        )
         generateZincCircuitsTask
             .dependsOn(COMPILE_KOTLIN) // So the command metadata can be found
             .mustRunAfter(COMPILE_KOTLIN)
 
         project.tasks.getByPath(COMPILE_KOTLIN).finalizedBy(GENERATE_ZINC_CIRCUITS)
         project.tasks.getByPath(ASSEMBLE).dependsOn(GENERATE_ZINC_CIRCUITS)
+
+        val generateZkpStructureTask = project.tasks.create(
+            GENERATE_ZKP_STRUCTURE,
+            GenerateZkpStructureTask::class.java
+        )
+        generateZkpStructureTask
+            .dependsOn(COMPILE_KOTLIN)
+            .mustRunAfter(COMPILE_KOTLIN)
     }
 
     private fun applyArrowCompilerPlugin(project: Project) {

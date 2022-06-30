@@ -18,7 +18,7 @@ class ZincTypeGeneratorResolver(
     private val knownTypesCache: MutableMap<KClass<*>, BflModule> = mutableMapOf()
 
     override fun zincTypeOf(kClass: KClass<*>): BflModule {
-        return knownTypesCache.computeIfAbsent(kClass) { it ->
+        return knownTypesCache.computeIfAbsent(kClass) {
             logger.info("Generating zinc type for $it")
             zincTypeGenerator.generate(kClass.serializer().descriptor).requireInstanceOf<BflModule> {
                 "Expected ${kClass::qualifiedName} to be converted to a ${BflModule::class.qualifiedName}, but got ${it::class.qualifiedName}."

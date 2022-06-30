@@ -68,7 +68,6 @@ open class VersionFamilyRegistry(
     private val retriever: VersionFamiliesRetriever,
     private val serializerRegistry: SerializerRegistry<ContractState>,
 ) {
-
     private val familyClassToFamily: Map<KClass<*>, VersionFamily> by lazy {
         retriever.families.associateBy { it.familyClass }
     }
@@ -83,8 +82,8 @@ open class VersionFamilyRegistry(
             .toMap()
     }
 
-    operator fun get(familyKClass: KClass<out VersionedContractStateGroup>): VersionFamily = familyClassToFamily[familyKClass]
-        ?: error("Not a family $familyKClass")
+    operator fun get(familyKClass: KClass<out VersionedContractStateGroup>): VersionFamily =
+        familyClassToFamily[familyKClass] ?: error("Not a family $familyKClass")
 
     fun familyOf(relativeKClass: KClass<out ContractState>): VersionFamily = relativeClassToFamily[relativeKClass]
         ?: error("Not a family member $relativeKClass")

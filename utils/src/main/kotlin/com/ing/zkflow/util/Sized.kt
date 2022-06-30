@@ -5,11 +5,11 @@ interface BflSized {
 }
 
 data class NodeDescriptor<T : Any>(
-    val description: T,
+    val name: T,
     override val bitSize: Int
 ) : BflSized {
     override fun toString(): String {
-        return "$description: $bitSize bits (${bitSize / Byte.SIZE_BITS} bytes)"
+        return "$name: $bitSize bits (${bitSize / Byte.SIZE_BITS} bytes)"
     }
 }
 

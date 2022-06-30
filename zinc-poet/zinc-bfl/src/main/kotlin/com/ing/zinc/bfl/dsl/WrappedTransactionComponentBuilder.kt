@@ -8,6 +8,7 @@ import com.ing.zinc.bfl.BflWrappedTransactionComponent
 import com.ing.zinc.bfl.CORDA_MAGIC_BYTES_SIZE
 import com.ing.zinc.bfl.dsl.ArrayBuilder.Companion.array
 import com.ing.zinc.naming.camelToSnakeCase
+import com.ing.zinc.poet.ZincPrimitive
 
 @BflDslMarker
 class WrappedTransactionComponentBuilder {
@@ -79,7 +80,7 @@ class WrappedTransactionComponentBuilder {
 
         private fun getFieldNameFor(type: BflType): String {
             return type.typeName().camelToSnakeCase().let {
-                if (BflPrimitive.isPrimitiveIdentifier(it)) {
+                if (ZincPrimitive.isPrimitiveIdentifier(it)) {
                     "${it}_field"
                 } else {
                     it

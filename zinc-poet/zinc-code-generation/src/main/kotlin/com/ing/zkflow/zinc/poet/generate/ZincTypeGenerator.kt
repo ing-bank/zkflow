@@ -90,7 +90,7 @@ object ZincTypeGenerator {
         BflUnit
     }
 
-    private fun SerialDescriptor.isBigDecimalDescriptor(): Boolean =
+    internal fun SerialDescriptor.isBigDecimalDescriptor(): Boolean =
         serialName == FixedLengthFloatingPointSerializer.FLOAT ||
             serialName == FixedLengthFloatingPointSerializer.DOUBLE ||
             serialName.startsWith(FixedLengthFloatingPointSerializer.BIG_DECIMAL_PREFIX)
@@ -149,7 +149,7 @@ object ZincTypeGenerator {
     }
 }
 
-private fun SerialDescriptor.getIndexOfElementName(name: String): Int {
+internal fun SerialDescriptor.getIndexOfElementName(name: String): Int {
     return (0 until elementsCount).find {
         getElementName(it) == name
     } ?: throw IllegalArgumentException(
@@ -163,14 +163,14 @@ private fun SerialDescriptor.getIndexOfElementName(name: String): Int {
     )
 }
 
-private fun SerialDescriptor.getElementDescriptorByName(name: String): SerialDescriptor {
+internal fun SerialDescriptor.getElementDescriptorByName(name: String): SerialDescriptor {
     return getElementDescriptor(getIndexOfElementName(name))
 }
 
 @Suppress("UNCHECKED_CAST")
-private inline fun <reified T : Annotation> SerialDescriptor.findAnnotation(): T? =
+internal inline fun <reified T : Annotation> SerialDescriptor.findAnnotation(): T? =
     annotations.singleOrNull { it is T } as T?
 
-private inline fun <reified T : Annotation> SerialDescriptor.getAnnotation(): T = requireNotNull(findAnnotation()) {
+internal inline fun <reified T : Annotation> SerialDescriptor.getAnnotation(): T = requireNotNull(findAnnotation()) {
     "Annotation ${T::class} not found on $serialName"
 }

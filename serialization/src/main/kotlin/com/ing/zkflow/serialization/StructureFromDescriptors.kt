@@ -1,5 +1,6 @@
 package com.ing.zkflow.serialization
 
+import com.ing.zinc.naming.camelToSnakeCase
 import com.ing.zkflow.serialization.serializer.SizeAnnotation
 import com.ing.zkflow.util.NodeDescriptor
 import com.ing.zkflow.util.Tree
@@ -40,7 +41,7 @@ internal fun FixedLengthSerialDescriptor.toStructureTree(parentCapacity: Int?): 
     val capacity = parentCapacity ?: fixedLength
     return Tree.node(toNodeDescriptor(capacity)) {
         (0 until elementsCount).map {
-            val elementName = getElementName(it)
+            val elementName = getElementName(it).camelToSnakeCase()
             val subTree = if (elementName == "values") {
                 toTree(getElementDescriptor(it), capacity)
             } else {

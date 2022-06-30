@@ -23,4 +23,10 @@ enum class ZincPrimitive : ZincType {
             else -> name.toLowerCase(Locale.getDefault())
         }
     }
+
+    companion object {
+        private fun tryFromIdentifier(identifier: String): ZincPrimitive? = values().find { it.getId() == identifier }
+
+        fun isPrimitiveIdentifier(identifier: String): Boolean = tryFromIdentifier(identifier) != null
+    }
 }
