@@ -4,6 +4,7 @@ import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.annotations.corda.EdDSA
 import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.versioning.VersionedContractStateGroup
+import com.ing.zkflow.common.versioning.ZincUpgrade
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.common.zkp.metadata.commandMetadata
 import net.corda.core.contracts.BelongsToContract
@@ -32,6 +33,14 @@ data class MyStateV2(
 ) : VersionedMyState {
     override val participants: List<AbstractParty> = listOf(holder)
 
+    @ZincUpgrade(
+        upgrade = """
+            Self::new(previous.holder, previous.value as i64)
+        """,
+        additionalChecks = """
+             assert!(ctx.signers.contains(input.data.holder.public_key), "Input owner must sign");
+        """
+    )
     constructor(previous: MyStateV1) : this(previous.holder, previous.value.toLong())
 }
 

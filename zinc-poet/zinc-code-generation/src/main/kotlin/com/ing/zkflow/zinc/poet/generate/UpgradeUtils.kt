@@ -11,10 +11,12 @@ import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.common.zkp.metadata.ZKProtectedComponent
 import com.ing.zkflow.common.zkp.metadata.ZKReference
 import com.ing.zkflow.util.require
+import com.ing.zkflow.util.requireNotNull
 import com.ing.zkflow.util.tryGetKClass
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 import kotlin.reflect.full.findAnnotation
+import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.full.superclasses
 
 fun KClass<*>.isVersioned(): Boolean = tryFindFamilyKClass() != null
@@ -28,6 +30,18 @@ data class UpgradeParameters(
     val zincUpgradeBody: String,
     val zincUpgradeParameterName: String,
 )
+
+fun findAdditionalChecks(stateKClass: KClass<out Any>): String = if (stateKClass.isVersioned()) {
+    stateKClass.constructors
+        .singleOrNull {
+            it.parameters.size == 1 &&
+                (it.parameters.single().type.classifier as KClass<*>).isSubclassOf(stateKClass.tryFindFamilyKClass()!!)
+        }
+        .requireNotNull { "No upgrade constructor found on $stateKClass." }
+        .getZincUpgradeAdditionalChecks()
+} else {
+    ""
+}
 
 fun findUpgradeParameters(stateKClass: KClass<out Any>): UpgradeParameters? = if (stateKClass.isVersioned()) {
     stateKClass.constructors
@@ -62,8 +76,11 @@ private fun KFunction<Any>.tryGetFirstArgumentKClass(): KClass<out Any>? = try {
 /**
  * This function requires that the [ZincUpgrade] annotation exists and throws an [IllegalStateException] if it doesn't.
  */
-private fun KFunction<Any>.getZincUpgradeBody(): String = this.findAnnotation<ZincUpgrade>()?.body
+private fun KFunction<Any>.getZincUpgradeBody(): String = this.findAnnotation<ZincUpgrade>()?.upgrade
     ?: throw IllegalStateException("Upgrade constructor MUST be annotated with ${ZincUpgrade::class.simpleName}")
+
+private fun KFunction<Any>.getZincUpgradeAdditionalChecks(): String = this.findAnnotation<ZincUpgrade>()?.additionalChecks?.trimIndent()
+    ?: throw IllegalStateException("Upgrade constructor '$this' MUST be annotated with ${ZincUpgrade::class.simpleName}")
 
 fun generateUpgradeVerification(metadata: ResolvedZKCommandMetadata): ZincFile {
     metadata.inputs.require({ it.size == 1 }) {
@@ -87,6 +104,7 @@ private fun generateUpgradeVerification(
     val zincTypeResolver = ZincTypeGeneratorResolver(ZincTypeGenerator)
     val originalModule = zincTypeResolver.zincTypeOf(original.type)
     val upgradedModule = zincTypeResolver.zincTypeOf(upgraded.type)
+    val additionalChecks = findAdditionalChecks(upgraded.type)
     return zincFile {
         "CommandContext".let {
             val moduleName = "module_" + it.camelToSnakeCase()
@@ -118,6 +136,7 @@ private fun generateUpgradeVerification(
                 // part of the constructor on the kotlin side and therefore not part of the witness and thus the input's Zinc struct. 
                 // Should we enforce participants to be always in the constructor? Only for upgrades? Probably not. 
                 // But how then to check that the required signers actually signed?
+                $additionalChecks
             """.trimIndent()
         }
     }
