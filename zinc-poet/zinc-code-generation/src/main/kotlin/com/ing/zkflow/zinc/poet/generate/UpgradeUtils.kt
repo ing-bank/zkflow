@@ -131,9 +131,6 @@ private fun generateUpgradeVerification(
             }_${upgraded.index}.data;
 
                 assert!(output.equals(${upgradedModule.typeName()}::upgrade_from(input)), "[$commandName] Not a valid upgrade from ${originalModule.typeName()} to ${upgradedModule.typeName()}.");
-                
-                // Additional checks set by user through @ZincUpgrade annotation.
-                // User should ensure that the checks refer only to properties that are part of the witness.
                 $additionalChecks
             """.trimIndent()
         }
