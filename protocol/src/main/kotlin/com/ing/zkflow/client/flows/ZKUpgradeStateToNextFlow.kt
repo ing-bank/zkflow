@@ -5,20 +5,15 @@ import com.ing.zkflow.common.transactions.ZKTransactionBuilder
 import com.ing.zkflow.common.transactions.signInitialTransaction
 import com.ing.zkflow.common.versioning.ContractStateVersionFamilyRegistry
 import com.ing.zkflow.common.versioning.VersionedContractStateGroup
-import com.ing.zkflow.common.versioning.generateUpgradeCommandClassName
 import com.ing.zkflow.node.services.ServiceNames
 import com.ing.zkflow.node.services.ZKVerifierTransactionStorage
 import com.ing.zkflow.node.services.getCordaServiceFromConfig
 import com.ing.zkflow.util.requireNotNull
-import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.InitiatingFlow
-import net.corda.core.internal.objectOrNewInstance
-import net.corda.core.internal.packageName
-import kotlin.reflect.KClass
 
 @InitiatingFlow
 class ZKUpgradeStateToNextFlow(
@@ -77,18 +72,5 @@ class ZKUpgradeStateToNextFlow(
         subFlow(ZKFinalityFlow(fullySignedTx, publicSessions = emptyList(), privateSessions = participantSessions))
 
         return stx.tx.outRef(0)
-    }
-
-    @Suspendable
-    private fun getUpgradeCommand(
-        currentInput: KClass<out ContractState>,
-        nextVersionKClass: KClass<out ContractState>,
-        isPrivate: Boolean
-    ): CommandData {
-        val upgradeCommandName = generateUpgradeCommandClassName(currentInput, nextVersionKClass, isPrivate)
-        val upgradeCommandPackage = currentInput.packageName
-        val upgradeCommandFqn = "$upgradeCommandPackage.$upgradeCommandName"
-        return Class.forName(upgradeCommandFqn).kotlin.objectOrNewInstance() as? CommandData
-            ?: error("Upgrade command '$upgradeCommandFqn' is not a CommandData")
     }
 }

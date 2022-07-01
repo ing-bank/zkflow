@@ -1,7 +1,7 @@
 package com.ing.zkflow.integration.client.flows.upgrade
 
 import com.ing.zkflow.client.flows.ZKUpgradeStateFlow
-import com.ing.zkflow.common.contracts.ZKCommandData
+import com.ing.zkflow.client.flows.getUpgradeCommand
 import com.ing.zkflow.common.versioning.ContractStateVersionFamilyRegistry
 import com.ing.zkflow.common.zkp.ZKFlow
 import com.ing.zkflow.common.zkp.ZKTransactionService
@@ -18,7 +18,6 @@ import com.ing.zkflow.zinc.poet.generate.DefaultCircuitGenerator
 import io.kotest.matchers.shouldBe
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
-import net.corda.core.internal.objectOrNewInstance
 import net.corda.core.node.services.Vault
 import net.corda.core.utilities.getOrThrow
 import net.corda.testing.common.internal.testNetworkParameters
@@ -44,9 +43,7 @@ class UpgradeStateFlowTest {
     private val notary: Party
 
     private val zkTransactionService: ZKTransactionService
-    private val upgradeCommandInstance =
-        Class.forName("com.ing.zkflow.integration.client.flows.upgrade.UpgradePrivateMyStateV1ToPrivateMyStateV2")
-            .kotlin.objectOrNewInstance() as ZKCommandData
+    private val upgradeCommandInstance = getUpgradeCommand(MyStateV1::class, MyStateV2::class, isPrivate = true)
     private val createCommandInstance = CreateV1()
 
     init {
