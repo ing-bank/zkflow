@@ -4,11 +4,11 @@ import com.ing.zkflow.zinc.poet.generate.structure.ZKP_STRUCTURE_JSON
 import org.gradle.api.DefaultTask
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.tasks.InputDirectory
-import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.TaskAction
 import java.io.File
 
-open class GenerateZkpStructureTask : DefaultTask() {
+open class VerifyZkpStructureTask : DefaultTask() {
     // NOTE: Must be public for the @InputDirectory to be recognized
     @InputDirectory
     @Suppress("unused")
@@ -19,7 +19,7 @@ open class GenerateZkpStructureTask : DefaultTask() {
     val generatedKspResources: File = project.buildDir.resolve("generated/ksp/main/resources")
 
     // NOTE: Must be public for the @OutputDirectory to be recognized
-    @OutputFile
+    @InputFile
     val generatedStructure: File = project.projectDir.resolve(ZKP_STRUCTURE_JSON)
 
     @TaskAction
@@ -29,7 +29,7 @@ open class GenerateZkpStructureTask : DefaultTask() {
             val javaPlugin = project.convention.getPlugin(JavaPluginConvention::class.java)
             val main = javaPlugin.sourceSets.findByName("main") ?: error("Can't find main sourceSet")
 
-            it.main = "com.ing.zkflow.zinc.poet.generate.structure.GenerateZkpStructureKt"
+            it.main = "com.ing.zkflow.zinc.poet.generate.structure.VerifyZkpStructureKt"
             it.classpath = main.runtimeClasspath + project.files(generatedKspResources).filter(File::exists)
         }
     }
