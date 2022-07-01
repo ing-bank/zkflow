@@ -80,10 +80,10 @@ internal sealed class SerializationFunctionalityGenerationTask(
     abstract fun surrogateToDeclarationTemplate(): String
 
     fun execute(): List<TypeSpec> {
-        val surrogateClassName = declaration.getSurrogateClassName()
+        val surrogateClassName = representation.getSurrogateClassName()
         val surrogate = generateSurrogate(surrogateClassName)
 
-        val surrogateSerializerClassName = declaration.getSurrogateSerializerClassName()
+        val surrogateSerializerClassName = representation.getSurrogateSerializerClassName()
         val surrogateSerializer = generateSurrogateSerializer(surrogateClassName, surrogateSerializerClassName)
 
         return listOf(surrogate, surrogateSerializer)
@@ -91,11 +91,6 @@ internal sealed class SerializationFunctionalityGenerationTask(
 
     private fun generateSurrogate(surrogateClassName: ClassName): TypeSpec {
         val surrogateBuilder = TypeSpec.classBuilder(surrogateClassName)
-            .addAnnotation(
-                AnnotationSpec.builder(Suppress::class)
-                    .addMember("\"ClassName\"")
-                    .build()
-            )
             .addAnnotation(Serializable::class)
             .addSuperinterface(
                 Surrogate::class

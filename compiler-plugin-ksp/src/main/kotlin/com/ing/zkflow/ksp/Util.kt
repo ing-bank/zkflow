@@ -13,6 +13,8 @@ import com.google.devtools.ksp.symbol.KSType
 import com.ing.zkflow.Surrogate
 import com.ing.zkflow.annotations.ZKPSurrogate
 import com.ing.zkflow.Via
+import com.ing.zkflow.annotations.corda.Algorithm
+import com.ing.zkflow.annotations.corda.SignatureSpec
 import com.squareup.kotlinpoet.ClassName
 import kotlin.reflect.KClass
 
@@ -130,21 +132,82 @@ fun KSType.getNonRepeatableAnnotationByType(annotationKClass: KClass<out Annotat
         }
 }
 
+fun KSType.isAnnotationPresent(annotationKClass: KClass<out Annotation>): Boolean {
+    return try {
+        getNonRepeatableAnnotationByType(annotationKClass)
+        true
+    } catch (_: Exception) {
+        false
+    }
+}
+
+fun KSType.getCordaSignatureId(): Int {
+    return getSingleMetaAnnotationByType(SignatureSpec::class)
+        .arguments
+        .single()
+        .value!!
+        .toString()
+        .toInt()
+}
+
+fun KSType.getDigestAlgorithm(): KSType {
+    return getSingleMetaAnnotationByType(Algorithm::class)
+        .arguments
+        .single()
+        .value!! as KSType
+}
+
+/**
+ * Inspects every annotation (let's call it) `A` of a [KSType] and selects
+ * an [annotationKClass] of `A`, e.g., in the following piece
+ *
+ * ```
+ * val value: @A @B Int
+ *
+ * @[annotationKClass]
+ * annotation class A
+ *
+ * annotation class B
+ * ```
+ *
+ * @[annotationKClass] will be selected.
+ */
+fun KSType.getSingleMetaAnnotationByType(annotationKClass: KClass<out Annotation>): KSAnnotation {
+    return annotations.mapNotNull {
+        try {
+            it.annotationType.resolve().declaration.getAnnotationsByType(annotationKClass).single()
+        } catch (_: Exception) {
+            null
+        }
+    }.single()
+}
+
+// TODO This will generate clashing names in some cases, e.g.,
+//  class A0 {
+//      @ZKP
+//      class B()
+//  }
+//  class A1 {
+//      @ZKP
+//      class B()
+//  }
+//  think how to deal with it elegantly without introducing mambo-jumbo in the names
 fun KSClassDeclaration.getSurrogateClassName(): ClassName =
     ClassName(
-        packageName.asString(),
-        simpleName.asString() + Surrogate.GENERATED_SURROGATE_POSTFIX
+        listOf(packageName.asString(), "generated").joinToString(separator = "."),
+        simpleName.asString() +
+            Surrogate.GENERATED_SURROGATE_POSTFIX
     )
 
 fun KSClassDeclaration.getSurrogateSerializerClassName(): ClassName =
     ClassName(
-        packageName.asString(),
+        listOf(packageName.asString(), "generated").joinToString(separator = "."),
         simpleName.asString() + Surrogate.GENERATED_SURROGATE_SERIALIZER_POSTFIX
     )
 
 fun KSClassDeclaration.getSerializationFunctionalityLocation(): ClassName =
     ClassName(
-        packageName.asString(),
+        listOf(packageName.asString(), "generated").joinToString(separator = "."),
         simpleName.asString() +
             Surrogate.GENERATED_SERIALIZATION_FUNCTIONALITY_LOCATION_POSTFIX
     )

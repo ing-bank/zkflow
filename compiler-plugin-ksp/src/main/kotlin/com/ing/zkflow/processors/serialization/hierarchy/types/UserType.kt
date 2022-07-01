@@ -32,14 +32,14 @@ import com.squareup.kotlinpoet.ksp.toClassName
  * If `this` must have default, then extra level of indirection is required, therefore
  * surrogate serializer must take the next tracker, i.e.
  * (** Previous recursion level **)    (***********************   Current recursion level    ************************)
- *      NullableSerializers         ->  WrappedKSerializerWithDefault(tracker) -> SurrogateSerializer(tracker.next())
+ *      NullableSerializer          ->  WrappedKSerializerWithDefault(tracker) -> SurrogateSerializer(tracker.next())
  *                                      ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
  */
 internal fun KSType.asUserType(tracker: Tracker, mustHaveDefault: Boolean): SerializingHierarchy {
 
     val nextTracker = if (mustHaveDefault) tracker.next() else tracker
 
-    val serializingObject = this.trySerializeAsOwnClass(nextTracker) ?: this.trySerializeAs3rdPartyClass(nextTracker) ?: error("")
+    val serializingHierarchy = this.trySerializeAsOwnClass(nextTracker) ?: this.trySerializeAs3rdPartyClass(nextTracker) ?: error("")
 
     return if (mustHaveDefault) {
         val defaultProvider = this.getSingleArgumentOfNonRepeatableAnnotationByType(Default::class) as KSType
@@ -49,17 +49,17 @@ internal fun KSType.asUserType(tracker: Tracker, mustHaveDefault: Boolean): Seri
             .superclass(
                 SerializerWithDefault::class
                     .asClassName()
-                    .parameterizedBy(serializingObject.type)
+                    .parameterizedBy(serializingHierarchy.type)
             )
-            .addSuperclassConstructorParameter(CodeBlock.of("%N, %T.default", serializingObject.definition, defaultProvider.toClassName()))
+            .addSuperclassConstructorParameter(CodeBlock.of("%N, %T.default", serializingHierarchy.definition, defaultProvider.toClassName()))
             .build()
 
-        SerializingHierarchy.Placeholder(
-            serializingObject,
+        SerializingHierarchy.OfDefaultable(
+            serializingHierarchy,
             serializingObjectWithDefault
         )
     } else {
-        serializingObject
+        serializingHierarchy
     }
 }
 
@@ -129,7 +129,7 @@ private fun KSType.trySerializeAs3rdPartyClass(tracker: Tracker): SerializingHie
 
     val surrogate = viaAnnotation.getSurrogateFromViaAnnotation()
     val target = surrogate.getSurrogateTargetClass()
-    val surrogateSerializer = target.getSurrogateSerializerClassName()
+    val surrogateSerializer = surrogate.getSurrogateSerializerClassName()
 
     val serializingObject = TypeSpec.objectBuilder("$tracker")
         .addModifiers(KModifier.PRIVATE)

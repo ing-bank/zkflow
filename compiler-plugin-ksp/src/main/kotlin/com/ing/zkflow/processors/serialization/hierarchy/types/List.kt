@@ -18,23 +18,23 @@ internal fun KSType.asList(tracker: Tracker): SerializingHierarchy {
     val maxSize = this.getSingleArgumentOfNonRepeatableAnnotationByType(Size::class)
 
     val innerType = this.arguments[0].type?.resolve() ?: error("Cannot resolve a type argument of $declaration")
-    val innerSerializingObject = innerType.getSerializingHierarchy(tracker.next(), mustHaveDefault = true)
+    val innerSerializingHierarchy = innerType.getSerializingHierarchy(tracker.next(), mustHaveDefault = true)
 
     val serializingObject = TypeSpec.objectBuilder("$tracker")
         .addModifiers(KModifier.PRIVATE)
         .superclass(
             FixedLengthListSerializer::class
                 .asClassName()
-                .parameterizedBy(innerSerializingObject.type)
+                .parameterizedBy(innerSerializingHierarchy.type)
         )
         .addSuperclassConstructorParameter(
-            CodeBlock.of("%L, %N", maxSize, innerSerializingObject.definition)
+            CodeBlock.of("%L, %N", maxSize, innerSerializingHierarchy.definition)
         )
         .build()
 
     return SerializingHierarchy.OfType(
         this.toClassName(),
-        listOf(innerSerializingObject),
+        listOf(innerSerializingHierarchy),
         serializingObject
     )
 }

@@ -7,6 +7,7 @@ import com.ing.zkflow.annotations.ZKPSurrogate
 import com.ing.zkflow.ksp.getSerializationFunctionalityLocation
 import com.ing.zkflow.ksp.getSingleArgumentOfNonRepeatableAnnotationByType
 import com.ing.zkflow.ksp.getSurrogateTargetClass
+import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.TypeSpec
@@ -35,7 +36,7 @@ class SurrogateSerializerGenerator(private val codeGenerator: CodeGenerator) {
             ).execute()
 
             emit(
-                location = declaration.getSerializationFunctionalityLocation(),
+                location = representation.getSerializationFunctionalityLocation(),
                 typeSpecs = typeSpecs,
                 dependencies = listOf(representation)
             )
@@ -68,6 +69,12 @@ class SurrogateSerializerGenerator(private val codeGenerator: CodeGenerator) {
      */
     private fun emit(location: ClassName, typeSpecs: List<TypeSpec>, dependencies: List<KSClassDeclaration>) {
         val fileSpecBuilder = FileSpec.builder(location.packageName, location.simpleName)
+            .addAnnotation(
+                AnnotationSpec.builder(Suppress::class)
+                    .addMember("\"ClassName\"")
+                    .addMember("\"DEPRECATION\"")
+                    .build()
+            )
 
         typeSpecs.forEach { fileSpecBuilder.addType(it) }
 

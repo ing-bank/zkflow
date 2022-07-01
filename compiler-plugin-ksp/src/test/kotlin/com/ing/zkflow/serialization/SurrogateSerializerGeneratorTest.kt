@@ -24,7 +24,7 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
 
         result.exitCode shouldBe KotlinCompilation.ExitCode.OK
 
-        result.readGeneratedKotlinFile(packageName, testCase.expectedSurrogateName) shouldBe testCase.expected
+        result.readGeneratedKotlinFile("$packageName.generated", testCase.expectedSurrogateName) shouldBe testCase.expected
     }
 
     data class TestCase(
@@ -59,13 +59,14 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                 ),
                 expectedSerializationLocation = "BasicTypesContainer" + Surrogate.GENERATED_SERIALIZATION_FUNCTIONALITY_LOCATION_POSTFIX,
                 expected = """
-                    package $packageName
+                    package $packageName.generated
 
                     import com.ing.zkflow.Surrogate
                     import com.ing.zkflow.serialization.serializer.IntSerializer
                     import com.ing.zkflow.serialization.serializer.NullableSerializer
                     import com.ing.zkflow.serialization.serializer.SurrogateSerializer
                     import com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializerWithDefault
+                    import $packageName.BasicTypesContainer
                     import kotlin.Int
                     import kotlin.Suppress
                     import kotlinx.serialization.Contextual
@@ -111,7 +112,7 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                 ),
                 expectedSerializationLocation = "CollectionsOfBasicNullableTypesContainer" + Surrogate.GENERATED_SERIALIZATION_FUNCTIONALITY_LOCATION_POSTFIX,
                 expected = """
-                    package $packageName
+                    package $packageName.generated
 
                     import com.ing.zkflow.Surrogate
                     import com.ing.zkflow.serialization.serializer.FixedLengthListSerializer
@@ -120,6 +121,7 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                     import com.ing.zkflow.serialization.serializer.NullableSerializer
                     import com.ing.zkflow.serialization.serializer.SurrogateSerializer
                     import com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializerWithDefault
+                    import $packageName.CollectionsOfBasicNullableTypesContainer
                     import kotlin.Int
                     import kotlin.Suppress
                     import kotlin.collections.List
@@ -182,14 +184,17 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
 
                     """.trimIndent()
                 ),
-                expectedSerializationLocation = "OutOfReach" + Surrogate.GENERATED_SERIALIZATION_FUNCTIONALITY_LOCATION_POSTFIX,
+                expectedSerializationLocation = "OutOfReachSurrogate" + Surrogate.GENERATED_SERIALIZATION_FUNCTIONALITY_LOCATION_POSTFIX,
                 expected = """
-                package com.ing.zkflow.testing
+                package $packageName.generated
 
                 import com.ing.zkflow.Surrogate
                 import com.ing.zkflow.serialization.serializer.IntSerializer
                 import com.ing.zkflow.serialization.serializer.SurrogateSerializer
                 import com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializerWithDefault
+                import com.ing.zkflow.testing.ConverterOutOfReach
+                import com.ing.zkflow.testing.OutOfReach
+                import com.ing.zkflow.testing.OutOfReachSurrogate
                 import kotlin.Int
                 import kotlin.Suppress
                 import kotlinx.serialization.Contextual
@@ -235,11 +240,13 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                 ),
                 expectedSerializationLocation = "ZkpInsideZkp" + Surrogate.GENERATED_SERIALIZATION_FUNCTIONALITY_LOCATION_POSTFIX,
                 expected = """
-                    package $packageName
+                    package $packageName.generated
 
                     import com.ing.zkflow.Surrogate
                     import com.ing.zkflow.serialization.serializer.SurrogateSerializer
                     import com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializer
+                    import com.ing.zkflow.testing.MyClass
+                    import com.ing.zkflow.testing.ZkpInsideZkp
                     import kotlin.Suppress
                     import kotlinx.serialization.Contextual
                     import kotlinx.serialization.Serializable
@@ -267,7 +274,7 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                     "ZkpSurrogateInsideZkp.kt",
                     """
                         package $packageName
-                        
+
                         import com.ing.zkflow.Default
                         import com.ing.zkflow.annotations.ZKP
                         import com.ing.zkflow.annotations.ZKPSurrogate
@@ -275,40 +282,44 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                         import com.ing.zkflow.DefaultProvider
                         import com.ing.zkflow.ConversionProvider
                         import com.ing.zkflow.Surrogate
-                        
-                        
+
+
                         @ZKP
                         data class ZkpSurrogateInsideZkp(
                             val myClass: @Via<OutOfReachSurrogate> @Default<OutOfReach>(DefaultOutOfReach::class) OutOfReach?,
                         )
-                        
+
                         @ZKPSurrogate(ConverterOutOfReach::class)
                         class OutOfReachSurrogate(
                             val int: Int
                         ) : Surrogate<OutOfReach> {
                             override fun toOriginal() = OutOfReach(int)
                         }
-                        
+
                         object ConverterOutOfReach : ConversionProvider<OutOfReach, OutOfReachSurrogate> {
                             override fun from(original: OutOfReach) = OutOfReachSurrogate(original.int)
                         }
-                        
+
                         object DefaultOutOfReach : DefaultProvider<OutOfReach> {
                             override val default = OutOfReach(5)
                         }
-                        
+
                         data class OutOfReach(val int: Int)
                     """.trimIndent()
                 ),
                 expectedSerializationLocation = "ZkpSurrogateInsideZkp" + Surrogate.GENERATED_SERIALIZATION_FUNCTIONALITY_LOCATION_POSTFIX,
                 expected = """
-                    package $packageName
+                    package $packageName.generated
 
                     import com.ing.zkflow.Surrogate
                     import com.ing.zkflow.serialization.serializer.NullableSerializer
                     import com.ing.zkflow.serialization.serializer.SerializerWithDefault
                     import com.ing.zkflow.serialization.serializer.SurrogateSerializer
                     import com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializer
+                    import com.ing.zkflow.testing.DefaultOutOfReach
+                    import com.ing.zkflow.testing.OutOfReach
+                    import com.ing.zkflow.testing.OutOfReachSurrogate
+                    import com.ing.zkflow.testing.ZkpSurrogateInsideZkp
                     import kotlin.Suppress
                     import kotlinx.serialization.Contextual
                     import kotlinx.serialization.Serializable
@@ -325,7 +336,8 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
 
                       private object MyClass_1 : SerializerWithDefault<OutOfReach>(MyClass_2, DefaultOutOfReach.default)
 
-                      private object MyClass_2 : WrappedFixedLengthKSerializer<OutOfReach>(OutOfReachSerializer,
+                      private object MyClass_2 :
+                          WrappedFixedLengthKSerializer<OutOfReach>(OutOfReachSurrogateSerializer,
                           OutOfReachSurrogate::class.java.isEnum)
                     }
 
@@ -340,11 +352,11 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                     "Option.kt",
                     """
                         package $packageName
-                        
+
                         import com.ing.zkflow.annotations.ZKP
-                        
+
                         @ZKP
-                        enum class Option {                        
+                        enum class Option {
                             FIRST,
                             SECOND
                         }
@@ -352,16 +364,17 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                 ),
                 expectedSerializationLocation = "Option" + Surrogate.GENERATED_SERIALIZATION_FUNCTIONALITY_LOCATION_POSTFIX,
                 expected = """
-                    package $packageName
+                    package $packageName.generated
 
                     import com.ing.zkflow.Surrogate
                     import com.ing.zkflow.serialization.serializer.IntSerializer
                     import com.ing.zkflow.serialization.serializer.SurrogateSerializer
                     import com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializerWithDefault
+                    import com.ing.zkflow.testing.Option
                     import kotlin.Int
                     import kotlin.Suppress
                     import kotlinx.serialization.Serializable
-                    
+
                     @Suppress("ClassName")
                     @Serializable
                     public class OptionKotlinxSurrogate(
@@ -369,13 +382,216 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                       public val ordinal: Int
                     ) : Surrogate<Option> {
                       public override fun toOriginal(): Option = Option.values().first { it.ordinal == ordinal }
-                    
+
                       private object Ordinal_0 : WrappedFixedLengthKSerializerWithDefault<Int>(IntSerializer)
                     }
-                    
+
                     public object OptionSerializer :
                         SurrogateSerializer<Option, OptionKotlinxSurrogate>(OptionKotlinxSurrogate.serializer(), {
                         OptionKotlinxSurrogate(ordinal = it.ordinal) })
+                """.trimIndent()
+            ),
+
+            TestCase(
+                source = SourceFile.kotlin(
+                    "Parties.kt",
+                    """
+                    @file:Suppress("ClassName", "ArrayInDataClass")
+                    package $packageName
+                    
+                    import com.ing.zkflow.annotations.Size
+                    import com.ing.zkflow.annotations.UTF8
+                    import com.ing.zkflow.annotations.ZKP
+                    import com.ing.zkflow.annotations.ZKPSurrogate
+                    import com.ing.zkflow.annotations.corda.CordaX500NameSpec
+                    import com.ing.zkflow.annotations.corda.EdDSA
+                    import com.ing.zkflow.Via
+                    import com.ing.zkflow.serialization.serializer.corda.PublicKeySerializer
+                    import com.ing.zkflow.testing.zkp.ZKNulls
+                    import net.corda.core.crypto.Crypto
+                    import net.corda.core.identity.AnonymousParty
+                    import net.corda.core.identity.CordaX500Name
+                    import net.corda.core.identity.Party
+                    import java.security.PublicKey
+                    import com.ing.zkflow.Surrogate
+                    
+                    @ZKP
+                    data class Parties(
+                        val anonymousParty: @EdDSA AnonymousParty = someAnonymous,
+                        val anonymousPartyFullyCustom: @Via<AnonymousParty_EdDSA> AnonymousParty = someAnonymous,
+                    
+                        val party: @EdDSA Party = someParty,
+                        val partyCX500Custom: @EdDSA @CordaX500NameSpec<CordaX500NameSurrogate>(CordaX500NameConverter::class) Party = someParty,
+                        val partyFullyCustom: @Via<Party_EdDSA> Party = someParty,
+                    ) {
+                        companion object {
+                            private val pk: PublicKey = PublicKeySerializer.fixedPublicKey(Crypto.EDDSA_ED25519_SHA512)
+                            val someAnonymous = AnonymousParty(pk)
+                            val someParty = Party(CordaX500Name(organisation = "IN", locality = "AMS", country = "NL"), pk)
+                        }
+                    }
+
+                    @ZKPSurrogate(PublicKey_EdDSA_Converter::class)
+                    data class PublicKey_EdDSA(
+                        val key: @Size(ED_DSA_KEY_LENGTH) ByteArray
+                    ) : Surrogate<PublicKey> {
+                        override fun toOriginal(): PublicKey =
+                            KeyFactory
+                                .getInstance("EdDSA")
+                                .generatePublic(X509EncodedKeySpec(algorithmIdentifier + key))
+                    
+                        companion object {
+                            /**
+                             * This is a hack to directly specify algorithm identifier to make the encoding agree with X509 specification.
+                             * Specs can be found in [X509EncodedKeySpec] (/java/security/spec/X509EncodedKeySpec.java).
+                             * This way direct construction is avoided, because it does not seem straightforward.
+                             * Encoding construction can be found in net.i2p.crypto.eddsa.EdDSAPublicKey.getEncoded.
+                             */
+                            val algorithmIdentifier = byteArrayOf(48, 42, 48, 5, 6, 3, 43, 101, 112, 3, 33, 0)
+                    
+                            const val ED_DSA_KEY_LENGTH = 32
+                    
+                            const val ED_DSA_X509_ENCODING_LENGTH = 44
+                        }
+                    }
+                    
+                    // There is an explanation to this converter in regular code, see `PublicKey_EdDSA_Converter`.
+                    object PublicKey_EdDSA_Converter : ConversionProvider<PublicKey, PublicKey_EdDSA> {
+                        override fun from(original: PublicKey): PublicKey_EdDSA {                           
+                            val key = original.encoded.copyOfRange(
+                                PublicKey_EdDSA.ED_DSA_X509_ENCODING_LENGTH - PublicKey_EdDSA.ED_DSA_KEY_LENGTH,
+                                PublicKey_EdDSA.ED_DSA_X509_ENCODING_LENGTH
+                            )                           
+                            return PublicKey_EdDSA(key)
+                        }
+                    }
+
+                    @ZKPSurrogate(Party_EdDSA_Converter::class)
+                    data class Party_EdDSA(
+                        val cordaX500Name: @UTF8(CordaX500NameSurrogate.UPPER_BOUND) String,
+                        val encodedEdDSA: @Size(PublicKey_EdDSA.ED_DSA_X509_ENCODING_LENGTH) ByteArray
+                    ) : Surrogate<Party> {
+                        override fun toOriginal() = Party(
+                            CordaX500Name.parse(cordaX500Name),
+                            Crypto.decodePublicKey(Crypto.EDDSA_ED25519_SHA512, encodedEdDSA)
+                        )
+                    }
+                    
+                    object Party_EdDSA_Converter : ConversionProvider<Party, Party_EdDSA> {
+                        override fun from(original: Party): Party_EdDSA {
+                            require(original.owningKey.algorithm == "EdDSA") {
+                                "This converter only accepts parties with EdDSA keys"
+                            }
+                    
+                            return Party_EdDSA(
+                                original.name.toString(),
+                                original.owningKey.encoded
+                            )
+                        }
+                    }
+                    
+                    @ZKPSurrogate(AnonymousParty_EdDSA_Converter::class)
+                    data class AnonymousParty_EdDSA(
+                        val encodedEdDSA: @Size(PublicKey_EdDSA.ED_DSA_X509_ENCODING_LENGTH) ByteArray
+                    ) : Surrogate<AnonymousParty> {
+                        override fun toOriginal() = AnonymousParty(
+                            Crypto.decodePublicKey(Crypto.EDDSA_ED25519_SHA512, encodedEdDSA)
+                        )
+                    }                    
+                    
+                    object AnonymousParty_EdDSA_Converter : ConversionProvider<AnonymousParty, AnonymousParty_EdDSA> {
+                        override fun from(original: AnonymousParty): AnonymousParty_EdDSA {
+                            require(original.owningKey.algorithm == "EdDSA") {
+                                "This converter only accepts parties with EdDSA keys"
+                            }
+                    
+                            return AnonymousParty_EdDSA(original.owningKey.encoded)
+                        }
+                    }
+
+                    @ZKPSurrogate(CordaX500NameConverter::class)
+                    data class CordaX500NameSurrogate(
+                        val concat: @UTF8(UPPER_BOUND) String
+                    ) : Surrogate<CordaX500Name> {
+                        override fun toOriginal(): CordaX500Name =
+                            CordaX500Name.parse(concat)
+                    
+                        companion object {
+                            const val UPPER_BOUND = 50
+                        }
+                    }
+                    
+                    object CordaX500NameConverter : ConversionProvider<CordaX500Name, CordaX500NameSurrogate> {
+                        override fun from(original: CordaX500Name): CordaX500NameSurrogate =
+                            CordaX500NameSurrogate(original.toString())
+                    }
+                    """.trimIndent()
+                ),
+                expectedSerializationLocation = "Parties" + Surrogate.GENERATED_SERIALIZATION_FUNCTIONALITY_LOCATION_POSTFIX,
+                expected = """
+                    package $packageName.generated
+                    
+                    import com.ing.zkflow.Surrogate
+                    import com.ing.zkflow.serialization.serializer.SerializerWithDefault
+                    import com.ing.zkflow.serialization.serializer.SurrogateSerializer
+                    import com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializer
+                    import com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializerWithDefault
+                    import com.ing.zkflow.serialization.serializer.corda.AnonymousPartySerializer
+                    import com.ing.zkflow.serialization.serializer.corda.CordaX500NameSerializer
+                    import com.ing.zkflow.serialization.serializer.corda.PartySerializer
+                    import com.ing.zkflow.testing.AnonymousParty_EdDSA
+                    import com.ing.zkflow.testing.Parties
+                    import com.ing.zkflow.testing.Party_EdDSA
+                    import kotlin.Suppress
+                    import kotlinx.serialization.Contextual
+                    import kotlinx.serialization.Serializable
+                    import net.corda.core.identity.AnonymousParty
+                    import net.corda.core.identity.CordaX500Name
+                    import net.corda.core.identity.Party
+                    
+                    @Suppress("ClassName")
+                    @Serializable
+                    public class PartiesKotlinxSurrogate(
+                      @Serializable(with = AnonymousParty_0::class)
+                      public val anonymousParty: @Contextual AnonymousParty,
+                      @Serializable(with = AnonymousPartyFullyCustom_0::class)
+                      public val anonymousPartyFullyCustom: @Contextual AnonymousParty,
+                      @Serializable(with = Party_0::class)
+                      public val party: @Contextual Party,
+                      @Serializable(with = PartyCX500Custom_0::class)
+                      public val partyCX500Custom: @Contextual Party,
+                      @Serializable(with = PartyFullyCustom_0::class)
+                      public val partyFullyCustom: @Contextual Party
+                    ) : Surrogate<Parties> {
+                      public override fun toOriginal(): Parties = Parties(anonymousParty, anonymousPartyFullyCustom,
+                          party, partyCX500Custom, partyFullyCustom)
+                    
+                      private object AnonymousParty_0 : AnonymousPartySerializer(4)
+                    
+                      private object AnonymousPartyFullyCustom_0 :
+                          WrappedFixedLengthKSerializer<AnonymousParty>(AnonymousParty_EdDSASerializer,
+                          AnonymousParty_EdDSA::class.java.isEnum)
+                    
+                      private object Party_0 : PartySerializer(4, Party_1)
+                    
+                      private object Party_1 :
+                          WrappedFixedLengthKSerializerWithDefault<CordaX500Name>(CordaX500NameSerializer)
+                    
+                      private object PartyCX500Custom_0 : PartySerializer(4, PartyCX500Custom_1)
+                    
+                      private object PartyCX500Custom_1 :
+                          SerializerWithDefault<CordaX500Name>(CordaX500NameSurrogateSerializer,
+                          CordaX500NameSerializer.default)
+                    
+                      private object PartyFullyCustom_0 : WrappedFixedLengthKSerializer<Party>(Party_EdDSASerializer,
+                          Party_EdDSA::class.java.isEnum)
+                    }
+                    
+                    public object PartiesSerializer :
+                        SurrogateSerializer<Parties, PartiesKotlinxSurrogate>(PartiesKotlinxSurrogate.serializer(), {
+                        PartiesKotlinxSurrogate(anonymousParty = it.anonymousParty, anonymousPartyFullyCustom =
+                        it.anonymousPartyFullyCustom, party = it.party, partyCX500Custom = it.partyCX500Custom,
+                        partyFullyCustom = it.partyFullyCustom) })
                 """.trimIndent()
             ),
         )

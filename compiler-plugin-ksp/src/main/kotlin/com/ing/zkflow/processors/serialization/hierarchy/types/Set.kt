@@ -5,7 +5,7 @@ import com.ing.zkflow.annotations.Size
 import com.ing.zkflow.ksp.getSingleArgumentOfNonRepeatableAnnotationByType
 import com.ing.zkflow.processors.serialization.hierarchy.SerializingHierarchy
 import com.ing.zkflow.processors.serialization.hierarchy.getSerializingHierarchy
-import com.ing.zkflow.serialization.serializer.FixedLengthMapSerializer
+import com.ing.zkflow.serialization.serializer.FixedLengthSetSerializer
 import com.ing.zkflow.tracking.Tracker
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.KModifier
@@ -14,32 +14,27 @@ import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.ksp.toClassName
 
-internal fun KSType.asMap(tracker: Tracker): SerializingHierarchy {
+internal fun KSType.asSet(tracker: Tracker): SerializingHierarchy {
     val maxSize = this.getSingleArgumentOfNonRepeatableAnnotationByType(Size::class)
 
-    val keyType = this.arguments[0].type?.resolve() ?: error("Cannot resolve a type argument of $declaration")
-    val keySerializingHierarchy = keyType.getSerializingHierarchy(tracker.literal(0).numeric(), mustHaveDefault = true)
-
-    val valueType = this.arguments[1].type?.resolve() ?: error("Cannot resolve a type argument of $declaration")
-    val valueSerializingHierarchy = valueType.getSerializingHierarchy(tracker.literal(1).numeric(), mustHaveDefault = true)
+    val innerType = this.arguments[0].type?.resolve() ?: error("Cannot resolve a type argument of $declaration")
+    val innerSerializingObject = innerType.getSerializingHierarchy(tracker.next(), mustHaveDefault = true)
 
     val serializingObject = TypeSpec.objectBuilder("$tracker")
         .addModifiers(KModifier.PRIVATE)
         .superclass(
-            FixedLengthMapSerializer::class
+            FixedLengthSetSerializer::class
                 .asClassName()
-                .parameterizedBy(keySerializingHierarchy.type, valueSerializingHierarchy.type)
-            // TODO: Possible to copy annotations, but difficult and unclear why we would need that.
-            // .copy(annotations = annotations.map { .. })
+                .parameterizedBy(innerSerializingObject.type)
         )
         .addSuperclassConstructorParameter(
-            CodeBlock.of("%L, %N, %N", maxSize, keySerializingHierarchy.definition, valueSerializingHierarchy.definition)
+            CodeBlock.of("%L, %N", maxSize, innerSerializingObject.definition)
         )
         .build()
 
     return SerializingHierarchy.OfType(
         this.toClassName(),
-        listOf(keySerializingHierarchy, valueSerializingHierarchy),
+        listOf(innerSerializingObject),
         serializingObject
     )
 }
