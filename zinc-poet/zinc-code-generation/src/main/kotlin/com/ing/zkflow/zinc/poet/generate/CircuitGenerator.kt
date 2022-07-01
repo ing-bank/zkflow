@@ -21,7 +21,7 @@ import org.slf4j.LoggerFactory
 import java.nio.file.Path
 
 @Suppress("LongParameterList")
-class CircuitGenerator(
+open class CircuitGenerator(
     private val buildPathProvider: BuildPathProvider,
     private val commandContextFactory: CommandContextFactory,
     private val standardTypes: StandardTypes,

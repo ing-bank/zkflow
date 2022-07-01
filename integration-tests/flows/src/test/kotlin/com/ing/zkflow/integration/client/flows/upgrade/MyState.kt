@@ -38,7 +38,7 @@ data class MyStateV2(
             Self::new(previous.holder, previous.value as i64)
         """,
         additionalChecks = """
-             assert!(ctx.signers.contains(input.data.holder.public_key), "Input owner must sign");
+             assert!(ctx.signers.contains(input.holder.public_key), "Input owner must sign");
         """
     )
     constructor(previous: MyStateV1) : this(previous.holder, previous.value.toLong())

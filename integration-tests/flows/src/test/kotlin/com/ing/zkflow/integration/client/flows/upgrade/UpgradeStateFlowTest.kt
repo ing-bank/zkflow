@@ -1,19 +1,24 @@
 package com.ing.zkflow.integration.client.flows.upgrade
 
 import com.ing.zkflow.client.flows.ZKUpgradeStateFlow
+import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.versioning.ContractStateVersionFamilyRegistry
 import com.ing.zkflow.common.zkp.ZKFlow
+import com.ing.zkflow.common.zkp.ZKTransactionService
+import com.ing.zkflow.common.zkp.ZincZKTransactionCordaService
 import com.ing.zkflow.node.services.InMemoryUtxoInfoStorage
 import com.ing.zkflow.node.services.InMemoryZKVerifierTransactionStorageCordaService
 import com.ing.zkflow.node.services.ServiceNames.ZK_TX_SERVICE
 import com.ing.zkflow.node.services.ServiceNames.ZK_UTXO_INFO_STORAGE
 import com.ing.zkflow.node.services.ServiceNames.ZK_VERIFIER_TX_STORAGE
+import com.ing.zkflow.node.services.getCordaServiceFromConfig
 import com.ing.zkflow.notary.ZKNotaryService
 import com.ing.zkflow.testing.checkIsPresentInVault
-import com.ing.zkflow.testing.zkp.MockZKTransactionCordaService
+import com.ing.zkflow.zinc.poet.generate.DefaultCircuitGenerator
 import io.kotest.matchers.shouldBe
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
+import net.corda.core.internal.objectOrNewInstance
 import net.corda.core.node.services.Vault
 import net.corda.core.utilities.getOrThrow
 import net.corda.testing.common.internal.testNetworkParameters
@@ -38,6 +43,12 @@ class UpgradeStateFlowTest {
     private val thirdParty: Party
     private val notary: Party
 
+    private val zkTransactionService: ZKTransactionService
+    private val upgradeCommandInstance =
+        Class.forName("com.ing.zkflow.integration.client.flows.upgrade.UpgradePrivateMyStateV1ToPrivateMyStateV2")
+            .kotlin.objectOrNewInstance() as ZKCommandData
+    private val createCommandInstance = CreateV1()
+
     init {
         val mockNetworkParameters = MockNetworkParameters(
             cordappsForAllNodes = listOf(
@@ -45,8 +56,8 @@ class UpgradeStateFlowTest {
                     mapOf(
                         ZK_VERIFIER_TX_STORAGE to InMemoryZKVerifierTransactionStorageCordaService::class.qualifiedName!!,
                         ZK_UTXO_INFO_STORAGE to InMemoryUtxoInfoStorage::class.qualifiedName!!,
-                        ZK_TX_SERVICE to MockZKTransactionCordaService::class.qualifiedName!!,
-                        // ZK_TX_SERVICE to ZincZKTransactionCordaService::class.qualifiedName!!,
+                        // ZK_TX_SERVICE to MockZKTransactionCordaService::class.qualifiedName!!,
+                        ZK_TX_SERVICE to ZincZKTransactionCordaService::class.qualifiedName!!,
                     )
                 )
             ),
@@ -68,6 +79,19 @@ class UpgradeStateFlowTest {
         megaCorp = megaCorpNode.info.singleIdentity()
         miniCorp = miniCorpNode.info.singleIdentity()
         thirdParty = thirdPartyNode.info.singleIdentity()
+
+        DefaultCircuitGenerator.generateCircuitFor(createCommandInstance)
+        DefaultCircuitGenerator.generateCircuitFor(upgradeCommandInstance)
+
+        // Because we are running in the context of a flow test, where all mock nodes share the same filesystem,
+        // we only have to do setup once for all mock nodes to save time.
+        // The other mock nodes will be able to access the circuit artifacts.
+        zkTransactionService = miniCorpNode.services.getCordaServiceFromConfig(ZK_TX_SERVICE)
+
+        // Do circuit setup. Outside of tests, this would be done as part of CorDapp deployment
+        // and the artifacts would be distributed with the CorDapp.
+        zkTransactionService.setup(createCommandInstance.metadata)
+        zkTransactionService.setup(upgradeCommandInstance.metadata)
     }
 
     @AfterAll
@@ -77,10 +101,10 @@ class UpgradeStateFlowTest {
     }
 
     @Test
-    fun `End2End test with ZKP notary`() {
+    fun `Upgrade MyStateV1 to version 2`() {
         val createFlow = CreateFlow(
             MyStateV1(miniCorp.anonymise()),
-            CreateV1()
+            createCommandInstance
         )
 
         val createFuture = miniCorpNode.startFlow(createFlow)

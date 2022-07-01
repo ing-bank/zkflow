@@ -132,10 +132,8 @@ private fun generateUpgradeVerification(
 
                 assert!(output.equals(${upgradedModule.typeName()}::upgrade_from(input)), "[$commandName] Not a valid upgrade from ${originalModule.typeName()} to ${upgradedModule.typeName()}.");
                 
-                // TODO: This must always check that input participants are signers, but currently participants is not 
-                // part of the constructor on the kotlin side and therefore not part of the witness and thus the input's Zinc struct. 
-                // Should we enforce participants to be always in the constructor? Only for upgrades? Probably not. 
-                // But how then to check that the required signers actually signed?
+                // Additional checks set by user through @ZincUpgrade annotation.
+                // User should ensure that the checks refer only to properties that are part of the witness.
                 $additionalChecks
             """.trimIndent()
         }
