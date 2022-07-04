@@ -190,7 +190,6 @@ public data class TestZKTransactionDSLInterpreter private constructor(
         // Verify on a copy of the transaction builder, so if it's then further modified it doesn't error due to
         // the existing signature
         val txb = transactionBuilder.copy()
-        txb.enforcePrivateInputsAndReferences(ledgerInterpreter.zkVerifierTransactionStorage)
 
         val stx = services.signInitialTransaction(txb)
         stx.zkVerify(services, zkService, ledgerInterpreter.zkVerifierTransactionStorage, checkSufficientSignatures = false)
