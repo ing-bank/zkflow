@@ -48,6 +48,15 @@ class TestContract : Contract {
             outputs { private(TestState::class) at 0 }
             numberOfSigners = 1
         }
+
+        override fun verifyPrivate(): String = """
+            mod module_command_context;
+            use module_command_context::CommandContext;
+            
+            fn verify(ctx: CommandContext) {
+                // TODO
+            }
+        """.trimIndent()
     }
 
     @ZKP
@@ -58,6 +67,15 @@ class TestContract : Contract {
             }
             numberOfSigners = 1
         }
+
+        override fun verifyPrivate(): String = """
+            mod module_command_context;
+            use module_command_context::CommandContext;
+            
+            fn verify(ctx: CommandContext) {
+                // TODO
+            }
+        """.trimIndent()
 
         companion object {
             fun verify(
@@ -81,6 +99,15 @@ class TestContract : Contract {
             outputs { private(TestState::class) at 0 }
             numberOfSigners = 2
         }
+
+        override fun verifyPrivate(): String = """
+            mod module_command_context;
+            use module_command_context::CommandContext;
+            
+            fn verify(ctx: CommandContext) {
+                // TODO
+            }
+        """.trimIndent()
     }
 
     @ZKP
@@ -90,6 +117,15 @@ class TestContract : Contract {
             outputs { private(TestState::class) at 0 }
             numberOfSigners = 2
         }
+
+        override fun verifyPrivate(): String = """
+            mod module_command_context;
+            use module_command_context::CommandContext;
+            
+            fn verify(ctx: CommandContext) {
+                // TODO
+            }
+        """.trimIndent()
     }
 
     @ZKP
@@ -99,6 +135,15 @@ class TestContract : Contract {
             outputs { private(TestState::class) at 0 }
             numberOfSigners = 2
         }
+
+        override fun verifyPrivate(): String = """
+            mod module_command_context;
+            use module_command_context::CommandContext;
+            
+            fn verify(ctx: CommandContext) {
+                // TODO
+            }
+        """.trimIndent()
     }
 
     @ZKP
@@ -114,6 +159,15 @@ class TestContract : Contract {
             }
             numberOfSigners = 2
         }
+
+        override fun verifyPrivate(): String = """
+            mod module_command_context;
+            use module_command_context::CommandContext;
+            
+            fn verify(ctx: CommandContext) {
+                // TODO
+            }
+        """.trimIndent()
     }
 
     override fun verify(tx: LedgerTransaction) {

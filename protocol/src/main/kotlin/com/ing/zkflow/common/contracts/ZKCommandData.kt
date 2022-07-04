@@ -23,12 +23,5 @@ interface ZKCommandData : CommandData {
      * you can inspect the directory that describes the structure of what is sent to Zinc: `build/zinc/<command_name_in_camel_case>/structure`.
      */
     @Language("Rust")
-    fun verifyPrivate(): String = """
-            mod module_command_context;
-            use module_command_context::CommandContext;
-            
-            fn verify(ctx: CommandContext) {
-                assert!(true != false, "Reality is in an inconsistent state.");
-            } 
-    """.trimIndent()
+    fun verifyPrivate(): String
 }

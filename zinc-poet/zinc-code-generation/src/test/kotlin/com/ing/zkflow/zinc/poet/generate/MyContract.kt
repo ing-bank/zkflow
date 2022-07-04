@@ -18,7 +18,6 @@ object MyContract : Contract {
 
     @ZKP
     class MyFirstCommand : ZKCommandData {
-
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
             circuit {
                 name = this::class.simpleName!!
@@ -45,6 +44,15 @@ object MyContract : Contract {
                 any(MyStateV2::class) at 3
             }
         }
+
+        override fun verifyPrivate(): String = """
+            mod module_command_context;
+            use module_command_context::CommandContext;
+            
+            fn verify(ctx: CommandContext) {
+                // TODO
+            }
+        """.trimIndent()
     }
 
     @ZKP

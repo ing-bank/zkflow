@@ -69,6 +69,15 @@ class ZKVerifierTransactionTest {
                     }
                     numberOfSigners = 1
                 }
+
+                override fun verifyPrivate(): String = """
+                    mod module_command_context;
+                    use module_command_context::CommandContext;
+                    
+                    fn verify(ctx: CommandContext) {
+                        // TODO
+                    }
+                """.trimIndent()
             }
 
             val publicOutput = TestState(alice, 0)
@@ -113,6 +122,15 @@ class ZKVerifierTransactionTest {
                     }
                     numberOfSigners = 1
                 }
+
+                override fun verifyPrivate(): String = """
+                    mod module_command_context;
+                    use module_command_context::CommandContext;
+                    
+                    fn verify(ctx: CommandContext) {
+                        // TODO
+                    }
+                """.trimIndent()
             }
 
             val privateOutput = TestState(alice, 0)
@@ -155,6 +173,15 @@ class ZKVerifierTransactionTest {
                     }
                     numberOfSigners = 1
                 }
+
+                override fun verifyPrivate(): String = """
+                    mod module_command_context;
+                    use module_command_context::CommandContext;
+                    
+                    fn verify(ctx: CommandContext) {
+                        // TODO
+                    }
+                """.trimIndent()
             }
 
             val publicOutput0 = TestState(alice, 0)
