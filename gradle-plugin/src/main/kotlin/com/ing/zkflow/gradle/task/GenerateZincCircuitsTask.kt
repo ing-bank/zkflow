@@ -1,6 +1,7 @@
 package com.ing.zkflow.gradle.task
 
 import org.gradle.api.DefaultTask
+import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.OutputDirectory
@@ -12,7 +13,7 @@ open class GenerateZincCircuitsTask : DefaultTask() {
     // TODO: Should also be triggered when any of the dependencies change
     @InputDirectory
     @Suppress("unused")
-    val sourceInputs = project.fileTree("src")
+    val sourceInputs: ConfigurableFileTree = project.fileTree("src")
 
     // NOTE: Must be public for the @OutputDirectory to be recognized
     @OutputDirectory
