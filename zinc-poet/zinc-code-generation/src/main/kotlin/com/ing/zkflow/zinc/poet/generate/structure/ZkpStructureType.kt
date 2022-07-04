@@ -26,6 +26,8 @@ sealed class ZkpStructureType {
      */
     open fun rewrite(transform: (ZkpStructureType) -> ZkpStructureType): ZkpStructureType = transform(this)
 
+    abstract fun describe(): String
+
     /**
      * Flatten this [ZkpStructureType] and replace all inner classes by references.
      */
@@ -81,6 +83,8 @@ data class ZkpStructureNullable(
             innerType = innerType.rewrite(transform)
         )
     )
+
+    override fun describe(): String = "nullable ${innerType.describe()}"
 }
 
 @Serializable
@@ -113,6 +117,23 @@ data class ZkpStructureClass(
         )
     }
 
+    override fun describe(): String = "class $serialName (id: $serializationId)"
+
+    /**
+     * When a [ZkpStructureClass] has a [serializationId], then the [serialName] may be changed.
+     * This happens for top-level contract states, to make sure that the command always uses the latest version.
+     */
+    fun isNotChanged(newClass: ZkpStructureClass): Boolean =
+        (
+            (serializationId == null && serialName == newClass.serialName) ||
+                serializationId == newClass.serializationId
+            ) &&
+            familyClassName == newClass.familyClassName &&
+            byteSize == newClass.byteSize &&
+            fields == newClass.fields
+
+    fun isChanged(newClass: ZkpStructureClass): Boolean = !isNotChanged(newClass)
+
     internal fun ref(): ZkpStructureClassRef = ZkpStructureClassRef(serialName, byteSize)
 }
 
@@ -125,14 +146,18 @@ data class ZkpStructureClass(
 data class ZkpStructureClassRef(
     val serialName: String,
     override val byteSize: Int,
-) : ZkpStructureType()
+) : ZkpStructureType() {
+    override fun describe(): String = "class reference $serialName"
+}
 
 @Serializable
 @SerialName("PRIMITIVE")
 data class ZkpStructurePrimitive(
     val className: String,
     override val byteSize: Int,
-) : ZkpStructureType()
+) : ZkpStructureType() {
+    override fun describe(): String = className
+}
 
 @Serializable
 @SerialName("LIST")
@@ -149,6 +174,8 @@ data class ZkpStructureList(
             )
         )
     }
+
+    override fun describe(): String = "list($capacity) of ${elementType.describe()}"
 }
 
 @Serializable
@@ -166,6 +193,8 @@ data class ZkpStructureArray(
             )
         )
     }
+
+    override fun describe(): String = "array($capacity) of ${elementType.describe()}"
 }
 
 @Serializable
@@ -185,6 +214,8 @@ data class ZkpStructureMap(
             )
         )
     }
+
+    override fun describe(): String = "map($capacity) from ${keyType.describe()} to ${valueType.describe()}"
 }
 
 @Serializable
@@ -193,7 +224,9 @@ data class ZkpStructureString(
     override val byteSize: Int,
     val capacity: Int,
     val encoding: String,
-) : ZkpStructureType()
+) : ZkpStructureType() {
+    override fun describe(): String = "$encoding string($capacity)"
+}
 
 @Serializable
 @SerialName("ENUM")
@@ -201,6 +234,7 @@ data class ZkpStructureEnum(
     val serialName: String,
 ) : ZkpStructureType() {
     override val byteSize: Int = Int.SIZE_BYTES
+    override fun describe(): String = serialName
 }
 
 @Serializable
@@ -210,4 +244,6 @@ data class ZkpStructureBigDecimal(
     val serialName: String,
     val integerSize: Int,
     val fractionSize: Int,
-) : ZkpStructureType()
+) : ZkpStructureType() {
+    override fun describe(): String = serialName
+}

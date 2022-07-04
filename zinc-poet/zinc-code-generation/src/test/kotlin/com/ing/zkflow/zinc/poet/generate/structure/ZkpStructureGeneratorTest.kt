@@ -168,7 +168,10 @@ internal class ZkpStructureGeneratorTest {
             field = ZkpStructureField("hash", ZkpStructureClassRef("SecureHashSha256", 36))
         )
         private val wrappedSignatureAttachmentConstraint = wrappedStructure<ClassWithSignatureAttachmentConstraint>(
-            field = ZkpStructureField("constraint", ZkpStructureClassRef("SignatureAttachmentConstraintEdDsaEd25519Sha512", 48))
+            field = ZkpStructureField(
+                "constraint",
+                ZkpStructureClassRef("SignatureAttachmentConstraintEdDsaEd25519Sha512", 48)
+            )
         )
         private val wrappedHashAttachmentConstraint = wrappedStructure<ClassWithHashAttachmentConstraint>(
             field = ZkpStructureField("constraint", ZkpStructureClassRef("HashAttachmentConstraint", 36))
@@ -182,7 +185,13 @@ internal class ZkpStructureGeneratorTest {
         private val partyEdDsaEd25519Sha256 = ZkpStructureClass(
             "PartyEdDsaEd25519Sha512", null, null, 461,
             listOf(
-                ZkpStructureField("cordaX500Name", ZkpStructureClassRef("com.ing.zkflow.serialization.serializer.corda.CordaX500NameSerializer.CordaX500NameSurrogate", 413)),
+                ZkpStructureField(
+                    "cordaX500Name",
+                    ZkpStructureClassRef(
+                        "com.ing.zkflow.serialization.serializer.corda.CordaX500NameSerializer.CordaX500NameSurrogate",
+                        413
+                    )
+                ),
                 ZkpStructureField("publicKey", ZkpStructureClassRef("PublicKeyEdDsaEd25519Sha512", 48))
             )
         )
@@ -258,8 +267,7 @@ internal class ZkpStructureGeneratorTest {
                 Arguments.of(ClassWithFloat.serializer().descriptor, listOf<ZkpStructureType>(wrappedFloatStructure)),
                 Arguments.of(ClassWithDouble.serializer().descriptor, listOf<ZkpStructureType>(wrappedDoubleStructure)),
                 Arguments.of(
-                    ClassWithAsciiChar.serializer().descriptor,
-                    listOf<ZkpStructureType>(wrappedAsciiCharStructure)
+                    ClassWithAsciiChar.serializer().descriptor, listOf<ZkpStructureType>(wrappedAsciiCharStructure)
                 ),
                 Arguments.of(
                     ClassWithUnicodeChar.serializer().descriptor,
@@ -314,7 +322,10 @@ internal class ZkpStructureGeneratorTest {
                 Arguments.of(
                     ClassWithParty.serializer().descriptor,
                     listOf<ZkpStructureType>(
-                        wrappedPartyStructure, partyEdDsaEd25519Sha256, cordaX500NameSurrogate, publicKeyEdDsaEd25519Sha512
+                        wrappedPartyStructure,
+                        partyEdDsaEd25519Sha256,
+                        cordaX500NameSurrogate,
+                        publicKeyEdDsaEd25519Sha512
                     )
                 ),
                 Arguments.of(
