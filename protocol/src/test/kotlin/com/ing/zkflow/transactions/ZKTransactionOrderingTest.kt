@@ -194,6 +194,7 @@ class LocalContract : Contract {
     @ZKP
     class Create : ZKCommandData {
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
+            notary = true
             numberOfSigners = 1
             outputs {
                 private(DummyZKStateA::class) at 0

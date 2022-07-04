@@ -395,6 +395,7 @@ class LocalZKContract : ZKContract, Contract {
 
         @Transient
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
+            notary = true
             inputs {
                 any(ZKTestState::class) at 0
             }
@@ -433,6 +434,7 @@ class LocalZKContract : ZKContract, Contract {
                 private(ZKTestState::class) at 0
             }
             numberOfSigners = 2
+            notary = true
         }
 
         override fun verifyPrivate(): String = """

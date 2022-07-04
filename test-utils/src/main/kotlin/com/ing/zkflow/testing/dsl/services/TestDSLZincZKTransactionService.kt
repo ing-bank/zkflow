@@ -18,7 +18,6 @@ import com.ing.zkflow.zinc.poet.generate.ZincTypeGeneratorResolver
 import com.ing.zkflow.zinc.poet.generate.types.CommandContextFactory
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
-import net.corda.core.internal.deleteRecursively
 import net.corda.core.node.ServiceHub
 import net.corda.core.transactions.WireTransaction
 import java.nio.file.Files
@@ -72,7 +71,7 @@ public class TestDSLZincZKTransactionService(
                 zkServiceForCommandMetadata(commandMetadata).run(witness, calculatePublicInput(vtx, commandMetadata))
             } finally {
                 // TODO Don't delete when debugging, do delete otherwise (flag in ZKNetworkParameters, or System Property?)
-                temporaryCircuitBuildFolder.deleteRecursively()
+                // temporaryCircuitBuildFolder.deleteRecursively()
             }
         }
     }

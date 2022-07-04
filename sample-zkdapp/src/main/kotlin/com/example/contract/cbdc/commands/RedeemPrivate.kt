@@ -10,6 +10,7 @@ import org.intellij.lang.annotations.Language
 class RedeemPrivate : ZKCommandData {
     override val metadata = commandMetadata {
         numberOfSigners = 2
+        notary = true
         inputs {
             private(CBDCToken::class) at 0
         }

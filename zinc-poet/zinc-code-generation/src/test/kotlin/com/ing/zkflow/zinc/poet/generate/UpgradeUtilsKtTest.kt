@@ -126,6 +126,7 @@ internal class UpgradeUtilsKtTest {
             generateUpgradeVerification(
                 MyContract.UpgradeMyStateV1ToMyStateV2().commandMetadata {
                     numberOfSigners = 1
+                    notary = true
                     inputs {
                         private(MyStateV1::class) at 0
                         private(MyStateV1::class) at 1
@@ -158,6 +159,7 @@ internal class UpgradeUtilsKtTest {
             generateUpgradeVerification(
                 MyContract.UpgradeMyStateV1ToMyStateV2().commandMetadata {
                     numberOfSigners = 1
+                    notary = true
                     inputs {
                         private(MyStateV1::class) at 0
                     }
@@ -175,6 +177,7 @@ internal class UpgradeUtilsKtTest {
         shouldThrow<IllegalArgumentException> {
             generateUpgradeVerification(
                 MyContract.UpgradeMyStateV1ToMyStateV2().commandMetadata {
+                    notary = true
                     numberOfSigners = 1
                     inputs {
                         private(MyStateV1::class) at 0

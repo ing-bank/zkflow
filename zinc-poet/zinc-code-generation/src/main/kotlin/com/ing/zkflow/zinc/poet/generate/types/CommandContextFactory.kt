@@ -2,6 +2,8 @@ package com.ing.zkflow.zinc.poet.generate.types
 
 import com.ing.zinc.bfl.BflStruct
 import com.ing.zinc.bfl.dsl.StructBuilder.Companion.struct
+import com.ing.zinc.poet.ZincMethod
+import com.ing.zinc.poet.ZincPrimitive
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.parametersSecureHash
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.timeWindow
@@ -44,6 +46,30 @@ class CommandContextFactory(
             field { name = SIGNERS; type = standardTypes.signerList(commandMetadata) }
         }
         isDeserializable = false
+        addFunction(generateCheckNoNotaryChangeMethod(transactionComponents))
+    }
+
+    // TransactionVerifierServiceInternal.checkNoNotaryChange()
+    private fun generateCheckNoNotaryChangeMethod(transactionComponents: TransactionComponentContainer) = ZincMethod.zincMethod {
+        name = "check_no_notary_change"
+        returnType = ZincPrimitive.Unit
+        body = with(transactionComponents) {
+            if (notaryGroup.isPresent && (serializedInputUtxos.isPresent || serializedReferenceUtxos.isPresent)
+            ) {
+                val outputs = if (serializedOutputGroup.isPresent) {
+                    serializedOutputGroup.deserializedGroup.fields.fold("") { acc, output ->
+                        acc + "assert!(self.outputs.${output.name}.notary.equals(self.notary), \"Found unexpected notary change in transaction. Check that output notaries match transaction notary.\");\n"
+                    }
+                } else {
+                    ""
+                }
+                """
+                    $outputs
+                """.trimIndent()
+            } else {
+                "// $NOTARY not present in transaction"
+            }
+        }
     }
 
     companion object {

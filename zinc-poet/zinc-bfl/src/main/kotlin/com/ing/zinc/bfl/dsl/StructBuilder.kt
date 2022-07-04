@@ -34,7 +34,7 @@ class StructBuilder {
         functions.add(method)
     }
 
-    fun addFunction(function: ZincFunction) {
+    fun addFunction(function: ZincInvocable) {
         functions.add(function)
     }
 
