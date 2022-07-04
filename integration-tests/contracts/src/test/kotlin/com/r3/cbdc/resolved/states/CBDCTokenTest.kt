@@ -6,10 +6,10 @@ import com.ing.zkflow.annotations.corda.SHA256DigestAlgorithm
 import com.ing.zkflow.fixedCordaX500Name
 import com.ing.zkflow.serialization.SerializerTest
 import com.ing.zkflow.serialization.engine.SerdeEngine
+import com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializer
 import com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializerWithDefault
 import com.ing.zkflow.testing.zkp.ZKNulls.fixedKeyPair
-import com.r3.cbdc.annotated.fixtures.AmountConverter_IssuedTokenType
-import com.r3.cbdc.annotated.fixtures.AmountSurrogate_IssuedTokenTypeV1
+import com.r3.cbdc.annotated.fixtures.AmountSurrogate_IssuedTokenTypeV1_Serializer
 import com.r3.cbdc.annotated.states.AbstractFungibleToken
 import com.r3.cbdc.annotated.types.IssuedTokenType
 import com.r3.cbdc.annotated.types.TokenType
@@ -22,7 +22,6 @@ import net.corda.core.crypto.Crypto
 import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.AnonymousParty
-import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -52,15 +51,13 @@ data class CBDCToken(
         return CBDCToken(amount, newHolder)
     }
 
-    object Amount_0 :
-        com.ing.zkflow.serialization.serializer.SurrogateSerializer<Amount<IssuedTokenType>, AmountSurrogate_IssuedTokenTypeV1>(
-            AmountSurrogate_IssuedTokenTypeV1.serializer(),
-            { AmountConverter_IssuedTokenType.from(it) }
-        )
+    object Amount_0 : WrappedFixedLengthKSerializer<Amount<IssuedTokenType>>(AmountSurrogate_IssuedTokenTypeV1_Serializer, Amount::class.java.isEnum)
+    // com.ing.zkflow.serialization.serializer.SurrogateSerializer<Amount<IssuedTokenType>, AmountSurrogate_IssuedTokenTypeV1>(
+    //     AmountSurrogate_IssuedTokenTypeV1_Serializer,
+    //     { AmountConverter_IssuedTokenType.from(it) }
+    // )
 
     object Holder_0 : com.ing.zkflow.serialization.serializer.corda.AnonymousPartySerializer(4)
-    object Holder_1 :
-        WrappedFixedLengthKSerializerWithDefault<CordaX500Name>(com.ing.zkflow.serialization.serializer.corda.CordaX500NameSerializer)
 
     object TokenTypeJarHash_1 : com.ing.zkflow.serialization.serializer.corda.SecureHashSerializer(SHA256DigestAlgorithm::class)
 
@@ -98,13 +95,13 @@ class CBDCTokenTest : SerializerTest {
     @ParameterizedTest
     @MethodSource("engines")
     fun `CBDCToken makes a round trip`(engine: SerdeEngine) {
-        engine.assertRoundTrip(com.r3.cbdc.annotated.states.CBDCToken.serializer(), cbdcToken)
+        engine.assertRoundTrip(com.r3.cbdc.annotated.states.CBDCToken_Serializer, cbdcToken)
     }
 
     @ParameterizedTest
     @MethodSource("engines")
     fun `CBDCToken generated and manual serializations must coincide`(engine: SerdeEngine) {
-        engine.serialize(com.r3.cbdc.annotated.states.CBDCToken.serializer(), cbdcToken) shouldBe
+        engine.serialize(com.r3.cbdc.annotated.states.CBDCToken_Serializer, cbdcToken) shouldBe
             engine.serialize(CBDCToken.serializer(), resolvedCBDCToken)
     }
 }

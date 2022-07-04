@@ -5,15 +5,19 @@ package io.ivno.resolved
 import com.ing.zkflow.fixedCordaX500Name
 import com.ing.zkflow.serialization.SerializerTest
 import com.ing.zkflow.serialization.engine.SerdeEngine
+import com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializer
 import com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializerWithDefault
+import com.ing.zkflow.serialization.serializer.corda.CordaX500NameSerializer
+import com.ing.zkflow.serialization.serializer.corda.PartySerializer
+import com.ing.zkflow.serialization.serializer.string.FixedSizeUtf8StringSerializer
 import com.ing.zkflow.testing.zkp.ZKNulls.fixedKeyPair
 import io.ivno.annotated.DepositStatus
+import io.ivno.annotated.DepositStatus_Serializer
+import io.ivno.annotated.IvnoDeposit_Serializer
 import io.ivno.annotated.IvnoTokenType
 import io.ivno.annotated.deps.BigDecimalAmount
-import io.ivno.annotated.fixtures.BigDecimalAmount_LinearPointer_IvnoTokenType
-import io.ivno.annotated.fixtures.BigDecimalAmount_LinearPointer_IvnoTokenType_Converter
-import io.ivno.annotated.fixtures.UniqueIdentifierConverter
-import io.ivno.annotated.fixtures.UniqueIdentifierSurrogate
+import io.ivno.annotated.fixtures.BigDecimalAmount_LinearPointer_IvnoTokenType_Serializer
+import io.ivno.annotated.fixtures.UniqueIdentifierSurrogate_Serializer
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
@@ -40,33 +44,28 @@ data class IvnoDeposit(
     @Serializable(with = AccountId_0::class) val accountId: @Contextual String,
     @Serializable(with = LinearId_0::class) val linearId: @Contextual UniqueIdentifier
 ) {
-    object Depositor_0 : com.ing.zkflow.serialization.serializer.corda.PartySerializer(4, Depositor_1)
-    object Depositor_1 : WrappedFixedLengthKSerializerWithDefault<CordaX500Name>(com.ing.zkflow.serialization.serializer.corda.CordaX500NameSerializer)
+    object Depositor_0 : PartySerializer(4, Depositor_1)
+    object Depositor_1 : WrappedFixedLengthKSerializerWithDefault<CordaX500Name>(CordaX500NameSerializer)
 
-    object Custodian_0 : com.ing.zkflow.serialization.serializer.corda.PartySerializer(4, Custodian_1)
-    object Custodian_1 : WrappedFixedLengthKSerializerWithDefault<CordaX500Name>(com.ing.zkflow.serialization.serializer.corda.CordaX500NameSerializer)
+    object Custodian_0 : PartySerializer(4, Custodian_1)
+    object Custodian_1 : WrappedFixedLengthKSerializerWithDefault<CordaX500Name>(CordaX500NameSerializer)
 
-    object TokenIssuingEntity_0 : com.ing.zkflow.serialization.serializer.corda.PartySerializer(4, TokenIssuingEntity_1)
-    object TokenIssuingEntity_1 : WrappedFixedLengthKSerializerWithDefault<CordaX500Name>(com.ing.zkflow.serialization.serializer.corda.CordaX500NameSerializer)
+    object TokenIssuingEntity_0 : PartySerializer(4, TokenIssuingEntity_1)
+    object TokenIssuingEntity_1 : WrappedFixedLengthKSerializerWithDefault<CordaX500Name>(CordaX500NameSerializer)
 
-    object Amount_0 : com.ing.zkflow.serialization.serializer.SurrogateSerializer<BigDecimalAmount<LinearPointer<IvnoTokenType>>, BigDecimalAmount_LinearPointer_IvnoTokenType>(
-        BigDecimalAmount_LinearPointer_IvnoTokenType.serializer(),
-        { BigDecimalAmount_LinearPointer_IvnoTokenType_Converter.from(it) }
-    )
+    object Amount_0 : WrappedFixedLengthKSerializer<BigDecimalAmount<LinearPointer<IvnoTokenType>>>(BigDecimalAmount_LinearPointer_IvnoTokenType_Serializer, BigDecimalAmount::class.java.isEnum)
 
     object Reference_0 : com.ing.zkflow.serialization.serializer.NullableSerializer<String>(Reference_1)
 
-    object Reference_1 : com.ing.zkflow.serialization.serializer.string.FixedSizeUtf8StringSerializer(10)
+    object Reference_1 : FixedSizeUtf8StringSerializer(10)
 
-    object Status_0 : com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializer<DepositStatus>(DepositStatus.serializer(), DepositStatus::class.java.isEnum)
+    object Status_0 : WrappedFixedLengthKSerializer<DepositStatus>(DepositStatus_Serializer, DepositStatus::class.java.isEnum)
 
     object Timestamp_0 : WrappedFixedLengthKSerializerWithDefault<Instant>(com.ing.zkflow.serialization.serializer.InstantSerializer)
 
-    object AccountId_0 : com.ing.zkflow.serialization.serializer.string.FixedSizeUtf8StringSerializer(10)
+    object AccountId_0 : FixedSizeUtf8StringSerializer(10)
 
-    object LinearId_0 : com.ing.zkflow.serialization.serializer.SurrogateSerializer<UniqueIdentifier, UniqueIdentifierSurrogate>(
-        UniqueIdentifierSurrogate.serializer(), { UniqueIdentifierConverter.from(it) }
-    )
+    object LinearId_0 : WrappedFixedLengthKSerializer<UniqueIdentifier>(UniqueIdentifierSurrogate_Serializer, UniqueIdentifier::class.java.isEnum)
 }
 
 class IvnoDepositTest : SerializerTest {
@@ -105,13 +104,13 @@ class IvnoDepositTest : SerializerTest {
     @ParameterizedTest
     @MethodSource("engines")
     fun `IvnoDeposit makes a round trip`(engine: SerdeEngine) {
-        engine.assertRoundTrip(io.ivno.annotated.IvnoDeposit.serializer(), deposit)
+        engine.assertRoundTrip(IvnoDeposit_Serializer, deposit)
     }
 
     @ParameterizedTest
     @MethodSource("engines")
     fun `IvnoDeposit generated and manual serializations must coincide`(engine: SerdeEngine) {
-        engine.serialize(io.ivno.annotated.IvnoDeposit.serializer(), deposit) shouldBe
+        engine.serialize(IvnoDeposit_Serializer, deposit) shouldBe
             engine.serialize(IvnoDeposit.serializer(), resolvedDeposit)
     }
 }
