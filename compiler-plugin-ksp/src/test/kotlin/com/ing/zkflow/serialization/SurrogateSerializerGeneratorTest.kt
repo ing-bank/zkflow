@@ -59,6 +59,11 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                 ),
                 expectedSerializationLocation = "BasicTypesContainer" + Surrogate.GENERATED_SERIALIZATION_FUNCTIONALITY_LOCATION_POSTFIX,
                 expected = """
+                    @file:Suppress(
+                      "ClassName",
+                      "DEPRECATION"
+                    )
+                    
                     package $packageName.generated
 
                     import com.ing.zkflow.Surrogate
@@ -72,7 +77,6 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                     import kotlinx.serialization.Contextual
                     import kotlinx.serialization.Serializable
 
-                    @Suppress("ClassName")
                     @Serializable
                     public class BasicTypesContainerKotlinxSurrogate(
                       @Serializable(with = Int_0::class)
@@ -112,6 +116,11 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                 ),
                 expectedSerializationLocation = "CollectionsOfBasicNullableTypesContainer" + Surrogate.GENERATED_SERIALIZATION_FUNCTIONALITY_LOCATION_POSTFIX,
                 expected = """
+                    @file:Suppress(
+                      "ClassName",
+                      "DEPRECATION"
+                    )
+                    
                     package $packageName.generated
 
                     import com.ing.zkflow.Surrogate
@@ -129,7 +138,6 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                     import kotlinx.serialization.Contextual
                     import kotlinx.serialization.Serializable
 
-                    @Suppress("ClassName")
                     @Serializable
                     public class CollectionsOfBasicNullableTypesContainerKotlinxSurrogate(
                       @Serializable(with = MyList_0::class)
@@ -186,6 +194,11 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                 ),
                 expectedSerializationLocation = "OutOfReachSurrogate" + Surrogate.GENERATED_SERIALIZATION_FUNCTIONALITY_LOCATION_POSTFIX,
                 expected = """
+                @file:Suppress(
+                  "ClassName",
+                  "DEPRECATION"
+                )
+                
                 package $packageName.generated
 
                 import com.ing.zkflow.Surrogate
@@ -200,9 +213,8 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                 import kotlinx.serialization.Contextual
                 import kotlinx.serialization.Serializable
 
-                @Suppress("ClassName")
                 @Serializable
-                public class OutOfReachKotlinxSurrogate(
+                public class OutOfReachSurrogateKotlinxSurrogate(
                   @Serializable(with = Int_0::class)
                   public val int: @Contextual Int
                 ) : Surrogate<OutOfReach> {
@@ -211,11 +223,11 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                   private object Int_0 : WrappedFixedLengthKSerializerWithDefault<Int>(IntSerializer)
                 }
 
-                public object OutOfReachSerializer :
-                    SurrogateSerializer<OutOfReach, OutOfReachKotlinxSurrogate>(OutOfReachKotlinxSurrogate.serializer(),
+                public object OutOfReachSurrogateSerializer :
+                    SurrogateSerializer<OutOfReach, OutOfReachSurrogateKotlinxSurrogate>(OutOfReachSurrogateKotlinxSurrogate.serializer(),
                      {
                       val representation = ConverterOutOfReach.from(it)
-                      OutOfReachKotlinxSurrogate(int = representation.int)
+                      OutOfReachSurrogateKotlinxSurrogate(int = representation.int)
                     }
                   )
                 """.trimIndent()
@@ -240,6 +252,11 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                 ),
                 expectedSerializationLocation = "ZkpInsideZkp" + Surrogate.GENERATED_SERIALIZATION_FUNCTIONALITY_LOCATION_POSTFIX,
                 expected = """
+                    @file:Suppress(
+                      "ClassName",
+                      "DEPRECATION"
+                    )
+
                     package $packageName.generated
 
                     import com.ing.zkflow.Surrogate
@@ -251,7 +268,6 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                     import kotlinx.serialization.Contextual
                     import kotlinx.serialization.Serializable
 
-                    @Suppress("ClassName")
                     @Serializable
                     public class ZkpInsideZkpKotlinxSurrogate(
                       @Serializable(with = MyClass_0::class)
@@ -309,6 +325,11 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                 ),
                 expectedSerializationLocation = "ZkpSurrogateInsideZkp" + Surrogate.GENERATED_SERIALIZATION_FUNCTIONALITY_LOCATION_POSTFIX,
                 expected = """
+                    @file:Suppress(
+                      "ClassName",
+                      "DEPRECATION"
+                    )
+                    
                     package $packageName.generated
 
                     import com.ing.zkflow.Surrogate
@@ -324,7 +345,6 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                     import kotlinx.serialization.Contextual
                     import kotlinx.serialization.Serializable
 
-                    @Suppress("ClassName")
                     @Serializable
                     public class ZkpSurrogateInsideZkpKotlinxSurrogate(
                       @Serializable(with = MyClass_0::class)
@@ -364,6 +384,11 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                 ),
                 expectedSerializationLocation = "Option" + Surrogate.GENERATED_SERIALIZATION_FUNCTIONALITY_LOCATION_POSTFIX,
                 expected = """
+                    @file:Suppress(
+                      "ClassName",
+                      "DEPRECATION"
+                    )
+                    
                     package $packageName.generated
 
                     import com.ing.zkflow.Surrogate
@@ -375,7 +400,6 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                     import kotlin.Suppress
                     import kotlinx.serialization.Serializable
 
-                    @Suppress("ClassName")
                     @Serializable
                     public class OptionKotlinxSurrogate(
                       @Serializable(with = Ordinal_0::class)
@@ -529,6 +553,11 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                 ),
                 expectedSerializationLocation = "Parties" + Surrogate.GENERATED_SERIALIZATION_FUNCTIONALITY_LOCATION_POSTFIX,
                 expected = """
+                    @file:Suppress(
+                      "ClassName",
+                      "DEPRECATION"
+                    )
+                    
                     package $packageName.generated
                     
                     import com.ing.zkflow.Surrogate
@@ -549,7 +578,6 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                     import net.corda.core.identity.CordaX500Name
                     import net.corda.core.identity.Party
                     
-                    @Suppress("ClassName")
                     @Serializable
                     public class PartiesKotlinxSurrogate(
                       @Serializable(with = AnonymousParty_0::class)
