@@ -215,6 +215,15 @@ class LocalContract : Contract {
                 any(DummyZKStateA::class) at 4
             }
         }
+
+        override fun verifyPrivate(): String = """
+            mod module_command_context;
+            use module_command_context::CommandContext;
+            
+            fn verify(ctx: CommandContext) {
+                // TODO
+            }
+        """.trimIndent()
     }
 
     override fun verify(tx: LedgerTransaction) {}

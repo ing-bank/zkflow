@@ -17,18 +17,26 @@ interface ZKCommandData : CommandData {
 
     /**
      * This function is the verification function for the private transaction components as described in the metadata.
-     * It returns a string of valid Zinc code.
+     * It returns a string of valid Zinc code. It should contain a `verify` function with the following prototype:
+     *
+     * ```
+     * mod module_command_context;
+     * use module_command_context::CommandContext;
+     *
+     * fn verify(ctx: CommandContext) {
+     *     // Verifications go here.
+     * }
+     * ```
      *
      * To determine which types are available in the CommandContext (which contains all secret transaction components) for this command,
-     * you can inspect the directory that describes the structure of what is sent to Zinc: `build/zinc/<command_name_in_camel_case>/structure`.
+     * you can inspect the generated source directory at: `build/zinc/<command_name_in_camel_case>/src` and the directory that describes the structure of the transaction component: `build/zinc/<command_name_in_camel_case>/structure`.
+     * In the source directory look for the file `module_command_context.zn`, this file contains the zinc code for the CommandContext parameter.
+     * In the structure directory you can find tree views of the separate transaction components in the Witness.
+     * For example:
+     * - module_outputs_<state_type_in_camel_case>_transaction_component.txt
+     * - module_serialized_input_utxos_<state_type_in_camel_case>_transaction_component.txt
+     * - module_serialized_reference_utxos_<state_type_in_camel_case>_transaction_component.txt
      */
     @Language("Rust")
-    fun verifyPrivate(): String = """
-            mod module_command_context;
-            use module_command_context::CommandContext;
-            
-            fn verify(ctx: CommandContext) {
-                assert!(true != false, "Reality is in an inconsistent state.");
-            } 
-    """.trimIndent()
+    fun verifyPrivate(): String
 }

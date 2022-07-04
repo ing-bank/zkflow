@@ -43,6 +43,15 @@ internal class GenerateZincCircuitsKtTest {
 class MyZkCommand : ZKCommandData {
     override val metadata: ResolvedZKCommandMetadata = commandMetadata { }
 
+    override fun verifyPrivate(): String = """
+        mod module_command_context;
+        use module_command_context::CommandContext;
+        
+        fn verify(ctx: CommandContext) {
+            // TODO
+        }
+    """.trimIndent()
+
     override fun hashCode(): Int {
         return metadata.hashCode()
     }

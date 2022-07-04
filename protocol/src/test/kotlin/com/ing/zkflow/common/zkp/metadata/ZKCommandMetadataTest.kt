@@ -33,6 +33,15 @@ class ZKCommandMetadataTest {
                     any(MockAssetContract.MockAsset::class) at 1
                 }
             }
+
+            override fun verifyPrivate(): String = """
+                mod module_command_context;
+                use module_command_context::CommandContext;
+                
+                fn verify(ctx: CommandContext) {
+                    // TODO
+                }
+            """.trimIndent()
         }
 
         cmd.metadata.shouldBeInstanceOf<ResolvedZKCommandMetadata>()
@@ -59,6 +68,15 @@ class ZKCommandMetadataTest {
                         any(MockAssetContract.MockAsset::class) at 1
                     }
                 }
+
+                override fun verifyPrivate(): String = """
+                    mod module_command_context;
+                    use module_command_context::CommandContext;
+                    
+                    fn verify(ctx: CommandContext) {
+                        // TODO
+                    }
+                """.trimIndent()
             }
         }
 
@@ -74,6 +92,15 @@ class ZKCommandMetadataTest {
                         any(MockAssetContract.MockAsset::class) at 0
                     }
                 }
+
+                override fun verifyPrivate(): String = """
+                    mod module_command_context;
+                    use module_command_context::CommandContext;
+                    
+                    fn verify(ctx: CommandContext) {
+                        // TODO
+                    }
+                """.trimIndent()
             }
         }
 
@@ -89,6 +116,15 @@ class ZKCommandMetadataTest {
                         private(MockAssetContract.MockAsset::class) at 21
                     }
                 }
+
+                override fun verifyPrivate(): String = """
+                    mod module_command_context;
+                    use module_command_context::CommandContext;
+                    
+                    fn verify(ctx: CommandContext) {
+                        // TODO
+                    }
+                """.trimIndent()
             }
         }
     }
@@ -141,6 +177,15 @@ class MockAssetContract : Contract {
             references { any(MockAuditContract.Approval::class) at 0 }
             timeWindow = true
         }
+
+        override fun verifyPrivate(): String = """
+            mod module_command_context;
+            use module_command_context::CommandContext;
+            
+            fn verify(ctx: CommandContext) {
+                // TODO
+            }
+        """.trimIndent()
     }
 
     override fun verify(tx: LedgerTransaction) {}

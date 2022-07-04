@@ -46,12 +46,30 @@ class TestTokenContract : Contract {
     class Create : ZKCommandData {
         override val metadata: ResolvedZKCommandMetadata
             get() = TODO("Not yet implemented")
+
+        override fun verifyPrivate(): String = """
+            mod module_command_context;
+            use module_command_context::CommandContext;
+            
+            fn verify(ctx: CommandContext) {
+                // TODO
+            }
+        """.trimIndent()
     }
 
     @ZKP
     class Move : ZKCommandData {
         override val metadata: ResolvedZKCommandMetadata
             get() = TODO("Not yet implemented")
+
+        override fun verifyPrivate(): String = """
+            mod module_command_context;
+            use module_command_context::CommandContext;
+            
+            fn verify(ctx: CommandContext) {
+                // TODO
+            }
+        """.trimIndent()
     }
 
     override fun verify(tx: LedgerTransaction) = Unit

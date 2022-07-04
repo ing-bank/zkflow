@@ -302,6 +302,15 @@ class SerializationDeserializationTest {
         class Move : ZKCommandData {
             override val metadata: ResolvedZKCommandMetadata
                 get() = TODO("Not yet implemented")
+
+            override fun verifyPrivate(): String = """
+                mod module_command_context;
+                use module_command_context::CommandContext;
+                
+                fn verify(ctx: CommandContext) {
+                    // TODO
+                }
+            """.trimIndent()
         }
 
         interface VersionedMockAsset : VersionedContractStateGroup, OwnableState

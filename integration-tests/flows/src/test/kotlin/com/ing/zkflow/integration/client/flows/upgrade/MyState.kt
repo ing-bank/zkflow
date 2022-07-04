@@ -51,6 +51,15 @@ class CreateV1 : ZKCommandData {
         outputs { private(MyStateV1::class) at 0 }
         numberOfSigners = 1
     }
+
+    override fun verifyPrivate(): String = """
+            mod module_command_context;
+            use module_command_context::CommandContext;
+            
+            fn verify(ctx: CommandContext) {
+                // TODO
+            }
+    """.trimIndent()
 }
 
 // COMMANDS FOR V2
@@ -60,4 +69,13 @@ class CreateV2 : ZKCommandData {
         outputs { private(MyStateV2::class) at 0 }
         numberOfSigners = 1
     }
+
+    override fun verifyPrivate(): String = """
+            mod module_command_context;
+            use module_command_context::CommandContext;
+            
+            fn verify(ctx: CommandContext) {
+                // TODO
+            }
+    """.trimIndent()
 }
