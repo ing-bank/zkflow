@@ -3,7 +3,6 @@ package com.ing.zkflow.serialization
 import com.ing.zkflow.annotations.BigDecimalSize
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.serialization.engine.SerdeEngine
-import com.ing.zkflow.serialization.generated.MyBigDecimalSerializer
 import com.ing.zkflow.serialization.serializer.FixedLengthFloatingPointSerializer
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.Contextual
@@ -33,7 +32,7 @@ class BigDecimalTest : SerializerTest {
     @ParameterizedTest
     @MethodSource("engines")
     fun `MyBigDecimal makes a round trip`(engine: SerdeEngine) {
-        engine.assertRoundTrip(MyBigDecimalSerializer, MyBigDecimal())
+        engine.assertRoundTrip(BigDecimalTest_MyBigDecimal_Serializer, MyBigDecimal())
     }
 
     @ParameterizedTest
@@ -43,6 +42,6 @@ class BigDecimalTest : SerializerTest {
             BigDecimalResolved.serializer(),
             BigDecimalResolved()
         ) shouldBe
-            engine.serialize(MyBigDecimalSerializer, MyBigDecimal())
+            engine.serialize(BigDecimalTest_MyBigDecimal_Serializer, MyBigDecimal())
     }
 }

@@ -4,7 +4,6 @@ import com.ing.zkflow.annotations.Size
 import com.ing.zkflow.annotations.UTF8
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.serialization.engine.SerdeEngine
-import com.ing.zkflow.serialization.generated.MySetSerializer
 import com.ing.zkflow.serialization.serializer.FixedLengthSetSerializer
 import com.ing.zkflow.serialization.serializer.string.FixedSizeUtf8StringSerializer
 import io.kotest.matchers.shouldBe
@@ -34,7 +33,7 @@ class SetTest : SerializerTest {
     @ParameterizedTest
     @MethodSource("engines")
     fun `MySet makes a round trip`(engine: SerdeEngine) {
-        engine.assertRoundTrip(MySetSerializer, MySet())
+        engine.assertRoundTrip(SetTest_MySet_Serializer, MySet())
     }
 
     @ParameterizedTest
@@ -44,6 +43,6 @@ class SetTest : SerializerTest {
             MySetResolved.serializer(),
             MySetResolved()
         ) shouldBe
-            engine.serialize(MySetSerializer, MySet())
+            engine.serialize(SetTest_MySet_Serializer, MySet())
     }
 }

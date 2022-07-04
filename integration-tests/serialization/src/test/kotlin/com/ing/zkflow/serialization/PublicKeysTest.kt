@@ -1,13 +1,12 @@
 package com.ing.zkflow.serialization
 
 import com.ing.zkflow.PublicKey_EdDSA
+import com.ing.zkflow.PublicKey_EdDSA_Serializer
 import com.ing.zkflow.Via
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.annotations.corda.EcDSA_K1
 import com.ing.zkflow.annotations.corda.EdDSA
-import com.ing.zkflow.generated.PublicKey_EdDSASerializer
 import com.ing.zkflow.serialization.engine.SerdeEngine
-import com.ing.zkflow.serialization.generated.PublicKeysSerializer
 import com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializer
 import com.ing.zkflow.serialization.serializer.corda.PublicKeySerializer
 import io.kotest.matchers.shouldBe
@@ -49,7 +48,7 @@ class PublicKeysTest : SerializerTest {
         object Eddsa_0 : PublicKeySerializer(4)
         object EcdsaK1_0 : PublicKeySerializer(2)
         object PkFullyCustom_0 : WrappedFixedLengthKSerializer<PublicKey>(
-            PublicKey_EdDSASerializer,
+            PublicKey_EdDSA_Serializer,
             PublicKey_EdDSA::class.java.isEnum
         )
     }
@@ -58,7 +57,7 @@ class PublicKeysTest : SerializerTest {
     @ParameterizedTest
     @MethodSource("engines")
     fun `PublicKeys makes a round trip`(engine: SerdeEngine) {
-        engine.assertRoundTrip(PublicKeysSerializer, PublicKeys())
+        engine.assertRoundTrip(PublicKeysTest_PublicKeys_Serializer, PublicKeys())
     }
 
     @ParameterizedTest
@@ -68,6 +67,6 @@ class PublicKeysTest : SerializerTest {
             PublicKeysResolved.serializer(),
             PublicKeysResolved()
         ) shouldBe
-            engine.serialize(PublicKeysSerializer, PublicKeys())
+            engine.serialize(PublicKeysTest_PublicKeys_Serializer, PublicKeys())
     }
 }

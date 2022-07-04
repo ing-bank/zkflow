@@ -1,4 +1,4 @@
-package com.ing.zkflow.serialization.test
+package com.ing.zkflow.serialization.zinc
 
 import com.ing.zinc.bfl.BflModule
 import com.ing.zinc.bfl.BflStruct
@@ -60,7 +60,7 @@ class SerializationDeserializationTest {
     @Test
     fun `wrapped Byte that is serialized and deserialized should equal the original`(@TempDir tempDir: Path) {
         val input = WrappedByte(42)
-        val inputSerializer = WrappedByte.serializer()
+        val inputSerializer = SerializationDeserializationTestCompanion_WrappedByte_Serializer
         val actual = tempDir.serializeAndDeserializeInZinc(input, inputSerializer)
         actual shouldBe JsonPrimitive("42")
     }
@@ -68,7 +68,7 @@ class SerializationDeserializationTest {
     @Test
     fun `wrapped Short that is serialized and deserialized should equal the original`(@TempDir tempDir: Path) {
         val input = WrappedShort(42)
-        val inputSerializer = WrappedShort.serializer()
+        val inputSerializer = SerializationDeserializationTestCompanion_WrappedShort_Serializer
         val actual = tempDir.serializeAndDeserializeInZinc(input, inputSerializer)
         actual shouldBe JsonPrimitive("42")
     }
@@ -76,7 +76,7 @@ class SerializationDeserializationTest {
     @Test
     fun `wrapped Int that is serialized and deserialized should equal the original`(@TempDir tempDir: Path) {
         val input = WrappedInt(42)
-        val inputSerializer = WrappedInt.serializer()
+        val inputSerializer = SerializationDeserializationTestCompanion_WrappedInt_Serializer
         val actual = tempDir.serializeAndDeserializeInZinc(input, inputSerializer)
         actual shouldBe JsonPrimitive("42")
     }
@@ -84,7 +84,7 @@ class SerializationDeserializationTest {
     @Test
     fun `wrapped Long that is serialized and deserialized should equal the original`(@TempDir tempDir: Path) {
         val input = WrappedLong(42)
-        val inputSerializer = WrappedLong.serializer()
+        val inputSerializer = SerializationDeserializationTestCompanion_WrappedLong_Serializer
         val actual = tempDir.serializeAndDeserializeInZinc(input, inputSerializer)
         actual shouldBe JsonPrimitive("42")
     }
@@ -92,7 +92,7 @@ class SerializationDeserializationTest {
     @Test
     fun `wrapped List of Ints that is serialized and deserialized should equal the original`(@TempDir tempDir: Path) {
         val input = WrappedListOfInts(listOf(42))
-        val inputSerializer = WrappedListOfInts.serializer()
+        val inputSerializer = SerializationDeserializationTestCompanion_WrappedListOfInts_Serializer
         val actual = tempDir.serializeAndDeserializeInZinc(input, inputSerializer)
         actual shouldBe listOf(JsonPrimitive("42")).toJsonList(8, JsonPrimitive("0"))
     }
@@ -100,7 +100,7 @@ class SerializationDeserializationTest {
     @Test
     fun `wrapped ASCII string that is serialized and deserialized should equal the original`(@TempDir tempDir: Path) {
         val input = WrappedAsciiString("a")
-        val inputSerializer = WrappedAsciiString.serializer()
+        val inputSerializer = SerializationDeserializationTestCompanion_WrappedAsciiString_Serializer
         val actual = tempDir.serializeAndDeserializeInZinc(input, inputSerializer)
         actual shouldBe listOf(JsonPrimitive("97")).toJsonList(8, JsonPrimitive("0"))
     }
@@ -108,7 +108,7 @@ class SerializationDeserializationTest {
     @Test
     fun `wrapped UTF-8 string that is serialized and deserialized should equal the original`(@TempDir tempDir: Path) {
         val input = WrappedUtf8String("a")
-        val inputSerializer = WrappedUtf8String.serializer()
+        val inputSerializer = SerializationDeserializationTestCompanion_WrappedUtf8String_Serializer
         val actual = tempDir.serializeAndDeserializeInZinc(input, inputSerializer)
         actual shouldBe listOf(JsonPrimitive("97")).toJsonList(8, JsonPrimitive("0"))
     }
@@ -116,7 +116,7 @@ class SerializationDeserializationTest {
     @Test
     fun `wrapped UTF-16 string that is serialized and deserialized should equal the original`(@TempDir tempDir: Path) {
         val input = WrappedUtf16String("a")
-        val inputSerializer = WrappedUtf16String.serializer()
+        val inputSerializer = SerializationDeserializationTestCompanion_WrappedUtf16String_Serializer
         val actual = tempDir.serializeAndDeserializeInZinc(input, inputSerializer)
         actual shouldBe listOf("-2", "-1", "0", "97").map(::JsonPrimitive).toJsonList(8, JsonPrimitive("0"))
     }
@@ -124,7 +124,7 @@ class SerializationDeserializationTest {
     @Test
     fun `wrapped UTF-32 string that is serialized and deserialized should equal the original`(@TempDir tempDir: Path) {
         val input = WrappedUtf32String("a")
-        val inputSerializer = WrappedUtf32String.serializer()
+        val inputSerializer = SerializationDeserializationTestCompanion_WrappedUtf32String_Serializer
         val actual = tempDir.serializeAndDeserializeInZinc(input, inputSerializer)
         actual shouldBe listOf("0", "0", "0", "97").map(::JsonPrimitive).toJsonList(8, JsonPrimitive("0"))
     }
@@ -132,7 +132,7 @@ class SerializationDeserializationTest {
     @Test
     fun `wrapped MockAsset that is serialized and deserialized should equal the original`(@TempDir tempDir: Path) {
         val input = WrappedMockAsset(MockAsset(TestIdentity.fresh("alice").party.anonymise()))
-        val inputSerializer = WrappedMockAsset.serializer()
+        val inputSerializer = SerializationDeserializationTestCompanion_WrappedMockAsset_Serializer
         val actual = tempDir.serializeAndDeserializeInZinc(input, inputSerializer) as JsonObject
         actual["value"] shouldBe JsonPrimitive("${input.value.value}")
     }
@@ -140,7 +140,7 @@ class SerializationDeserializationTest {
     @Test
     fun `wrapped Float that is serialized and deserialized should equal the original`(@TempDir tempDir: Path) {
         val input = WrappedFloat(123450.07f)
-        val inputSerializer = WrappedFloat.serializer()
+        val inputSerializer = SerializationDeserializationTestCompanion_WrappedFloat_Serializer
         val actual = tempDir.serializeAndDeserializeInZinc(input, inputSerializer) as JsonObject
         actual shouldBe buildJsonObject {
             put("kind", JsonPrimitive("1"))
@@ -153,7 +153,7 @@ class SerializationDeserializationTest {
     @Test
     fun `wrapped Double that is serialized and deserialized should equal the original`(@TempDir tempDir: Path) {
         val input = WrappedDouble(123450.06789)
-        val inputSerializer = WrappedDouble.serializer()
+        val inputSerializer = SerializationDeserializationTestCompanion_WrappedDouble_Serializer
         val actual = tempDir.serializeAndDeserializeInZinc(input, inputSerializer) as JsonObject
         actual shouldBe buildJsonObject {
             put("kind", JsonPrimitive("2"))
@@ -166,7 +166,7 @@ class SerializationDeserializationTest {
     @Test
     fun `wrapped BigDecimal that is serialized and deserialized should equal the original`(@TempDir tempDir: Path) {
         val input = WrappedBigDecimal(BigDecimal("0123450.06789"))
-        val inputSerializer = WrappedBigDecimal.serializer()
+        val inputSerializer = SerializationDeserializationTestCompanion_WrappedBigDecimal_Serializer
         val actual = tempDir.serializeAndDeserializeInZinc(input, inputSerializer) as JsonObject
         actual shouldBe buildJsonObject {
             put("kind", JsonPrimitive("3"))

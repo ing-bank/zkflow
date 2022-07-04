@@ -17,6 +17,7 @@ import com.ing.zkflow.annotations.ZKPSurrogate
 import com.ing.zkflow.annotations.corda.Algorithm
 import com.ing.zkflow.annotations.corda.SignatureSpec
 import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.ksp.toClassName
 import kotlin.reflect.KClass
 
 private val implementedInterfacesCache: MutableMap<KSClassDeclaration, Sequence<KSClassDeclaration>> = mutableMapOf()
@@ -163,36 +164,39 @@ fun KSTypeReference.getSingleMetaAnnotationByType(annotationKClass: KClass<out A
     }.single()
 }
 
-// TODO This will generate clashing names in some cases, e.g.,
-//  class A0 {
-//      @ZKP
-//      class B()
-//  }
-//  class A1 {
-//      @ZKP
-//      class B()
-//  }
-//  think how to deal with it elegantly without introducing mambo-jumbo in the names
 fun KSClassDeclaration.getSurrogateClassName(): ClassName {
-    return ClassName(
-        listOf(packageName.asString(), "generated").joinToString(separator = "."),
-        simpleName.asString() +
-            Surrogate.GENERATED_SURROGATE_POSTFIX
-    )
+    return toClassName().buildFullyDistinguishableClassName(Surrogate.GENERATED_SURROGATE_POSTFIX)
 }
 
-fun KSClassDeclaration.getSurrogateSerializerClassName(): ClassName =
-    ClassName(
-        listOf(packageName.asString(), "generated").joinToString(separator = "."),
-        simpleName.asString() + Surrogate.GENERATED_SURROGATE_SERIALIZER_POSTFIX
-    )
+fun KSClassDeclaration.getSurrogateSerializerClassName(): ClassName {
+    return toClassName().buildFullyDistinguishableClassName(Surrogate.GENERATED_SURROGATE_SERIALIZER_POSTFIX)
+}
 
-fun KSClassDeclaration.getSerializationFunctionalityLocation(): ClassName =
-    ClassName(
-        listOf(packageName.asString(), "generated").joinToString(separator = "."),
-        simpleName.asString() +
-            Surrogate.GENERATED_SERIALIZATION_FUNCTIONALITY_LOCATION_POSTFIX
+fun KSClassDeclaration.getSerializationFunctionalityLocation(): ClassName {
+    return toClassName().buildFullyDistinguishableClassName(Surrogate.GENERATED_SERIALIZATION_FUNCTIONALITY_LOCATION_POSTFIX)
+}
+
+fun ClassName.buildFullyDistinguishableClassName(postfix: String): ClassName {
+    var prefixes = emptyList<String>()
+    var className = this
+    var container = className.enclosingClassName()
+    while (container != null) {
+        prefixes = listOf(container.simpleName) + prefixes
+        className = container
+        container = className.enclosingClassName()
+    }
+
+    return ClassName(
+        packageName,
+        listOf(
+            prefixes.joinToString(separator = "") { it.capitalize() },
+            simpleName,
+            postfix
+        )
+            .filter { it.isNotBlank() }
+            .joinToString(separator = "_")
     )
+}
 
 fun KSAnnotation.getSurrogateFromViaAnnotation(): KSClassDeclaration {
     require(annotationType.resolve().declaration.qualifiedName?.asString() == Via::class.qualifiedName) {

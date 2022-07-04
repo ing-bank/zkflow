@@ -118,7 +118,7 @@ class UpgradeCommandGenerator(
                     current.containingFile,
                 ),
             )
-        return SerializableClassWithSourceFiles(
+        return SerializableClassWithSourceFiles.Generated(
             ClassName(generateUpgradeCommandPackageName(current), commandClassName),
             listOfNotNull(
                 previous.containingFile,

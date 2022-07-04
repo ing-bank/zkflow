@@ -5,8 +5,6 @@ import com.ing.zkflow.DefaultProvider
 import com.ing.zkflow.annotations.Size
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.serialization.engine.SerdeEngine
-import com.ing.zkflow.serialization.generated.Baz0Serializer
-import com.ing.zkflow.serialization.generated.ComplexSetSerializer
 import com.ing.zkflow.serialization.serializer.FixedLengthSetSerializer
 import com.ing.zkflow.serialization.serializer.SerializerWithDefault
 import com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializer
@@ -20,17 +18,15 @@ class ComplexSetTest : SerializerTest {
     // Setup
     @ZKP
     data class ComplexSet(
-        val set: @Size(5) Set<@Default<Baz0>(Baz0.Default::class) Baz0> = setOf(Baz0(0))
+        val set: @Size(5) Set<@Default<Baz>(Baz.Default::class) Baz> = setOf(Baz(0))
     )
 
-    // TODO naming is related to the problem outlined in
-    //  fun KSClassDeclaration.getSurrogateClassName()
     @ZKP
-    data class Baz0(
+    data class Baz(
         val id: Int
     ) {
-        object Default : DefaultProvider<Baz0> {
-            override val default: Baz0 = Baz0(0)
+        object Default : DefaultProvider<Baz> {
+            override val default: Baz = Baz(0)
         }
     }
 
@@ -38,18 +34,18 @@ class ComplexSetTest : SerializerTest {
     @Suppress("ClassName")
     @Serializable
     data class ComplexSetResolved(
-        @Serializable(with = Set_0::class) val set: @Contextual Set<@Contextual Baz0> = setOf(Baz0(0))
+        @Serializable(with = Set_0::class) val set: @Contextual Set<@Contextual Baz> = setOf(Baz(0))
     ) {
-        object Set_0 : FixedLengthSetSerializer<Baz0>(5, Set_1)
-        object Set_1 : SerializerWithDefault<Baz0>(Set_2, Baz0.Default.default)
-        object Set_2 : WrappedFixedLengthKSerializer<Baz0>(Baz0Serializer, Baz0::class.java.isEnum)
+        object Set_0 : FixedLengthSetSerializer<Baz>(5, Set_1)
+        object Set_1 : SerializerWithDefault<Baz>(Set_2, Baz.Default.default)
+        object Set_2 : WrappedFixedLengthKSerializer<Baz>(ComplexSetTest_Baz_Serializer, Baz::class.java.isEnum)
     }
 
     // Tests
     @ParameterizedTest
     @MethodSource("engines")
     fun `ComplexSet makes a round trip`(engine: SerdeEngine) {
-        engine.assertRoundTrip(ComplexSetSerializer, ComplexSet())
+        engine.assertRoundTrip(ComplexSetTest_ComplexSet_Serializer, ComplexSet())
     }
 
     @ParameterizedTest
@@ -59,6 +55,6 @@ class ComplexSetTest : SerializerTest {
             ComplexSetResolved.serializer(),
             ComplexSetResolved()
         ) shouldBe
-            engine.serialize(ComplexSetSerializer, ComplexSet())
+            engine.serialize(ComplexSetTest_ComplexSet_Serializer, ComplexSet())
     }
 }

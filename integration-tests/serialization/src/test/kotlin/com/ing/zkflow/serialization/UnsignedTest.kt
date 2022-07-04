@@ -2,7 +2,6 @@ package com.ing.zkflow.serialization
 
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.serialization.engine.SerdeEngine
-import com.ing.zkflow.serialization.generated.UnsignedSerializer
 import com.ing.zkflow.serialization.serializer.ByteSerializer
 import com.ing.zkflow.serialization.serializer.IntSerializer
 import com.ing.zkflow.serialization.serializer.LongSerializer
@@ -68,7 +67,7 @@ class UnsignedTest : SerializerTest {
     @ParameterizedTest
     @MethodSource("engines")
     fun `Unsigned makes a round trip`(engine: SerdeEngine) {
-        engine.assertRoundTrip(UnsignedSerializer, Unsigned())
+        engine.assertRoundTrip(UnsignedTest_Unsigned_Serializer, Unsigned())
     }
 
     @ParameterizedTest
@@ -78,6 +77,6 @@ class UnsignedTest : SerializerTest {
             UnsignedResolved.serializer(),
             UnsignedResolved()
         ) shouldBe
-            engine.serialize(UnsignedSerializer, Unsigned())
+            engine.serialize(UnsignedTest_Unsigned_Serializer, Unsigned())
     }
 }

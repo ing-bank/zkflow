@@ -6,8 +6,6 @@ import com.ing.zkflow.annotations.Size
 import com.ing.zkflow.annotations.UTF8
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.serialization.engine.SerdeEngine
-import com.ing.zkflow.serialization.generated.BazSerializer
-import com.ing.zkflow.serialization.generated.MapComplexSerializer
 import com.ing.zkflow.serialization.serializer.FixedLengthMapSerializer
 import com.ing.zkflow.serialization.serializer.SerializerWithDefault
 import com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializer
@@ -47,14 +45,14 @@ class MapComplexTest : SerializerTest {
         )
         object Map_0_A_0 : FixedSizeUtf8StringSerializer(13)
         object Map_0_B_0 : SerializerWithDefault<Baz>(Map_0_B_1, Baz.Default.default)
-        object Map_0_B_1 : WrappedFixedLengthKSerializer<Baz>(BazSerializer, Baz::class.java.isEnum)
+        object Map_0_B_1 : WrappedFixedLengthKSerializer<Baz>(MapComplexTest_Baz_Serializer, Baz::class.java.isEnum)
     }
 
     // Tests
     @ParameterizedTest
     @MethodSource("engines")
     fun `MapComplex makes a round trip`(engine: SerdeEngine) {
-        engine.assertRoundTrip(MapComplexSerializer, MapComplex())
+        engine.assertRoundTrip(MapComplexTest_MapComplex_Serializer, MapComplex())
     }
 
     @ParameterizedTest
@@ -64,6 +62,6 @@ class MapComplexTest : SerializerTest {
             MapComplexResolved.serializer(),
             MapComplexResolved()
         ) shouldBe
-            engine.serialize(MapComplexSerializer, MapComplex())
+            engine.serialize(MapComplexTest_MapComplex_Serializer, MapComplex())
     }
 }

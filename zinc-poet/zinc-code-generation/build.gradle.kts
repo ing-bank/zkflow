@@ -10,6 +10,7 @@ dependencies {
     implementation(project(":utils"))
     api(project(":zinc-poet:zinc-bfl"))
     implementation(project(":protocol"))
+    implementation(project(":compiler-plugin-ksp"))
 
     val kotlinxSerializationVersion: String by project
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:$kotlinxSerializationVersion")
@@ -20,6 +21,9 @@ dependencies {
     kotlinCompilerPluginClasspath(project(":utils"))
     kotlinCompilerPluginClasspath(project(":annotations"))
     kotlinCompilerPluginClasspath(project(":serialization"))
+
+    val kotlinPoetVersion: String by project
+    implementation("com.squareup:kotlinpoet:$kotlinPoetVersion")
 
     val arrowMetaVersion: String by project
     kotlinCompilerPluginClasspath("io.arrow-kt:arrow-meta:$arrowMetaVersion")

@@ -3,7 +3,6 @@ package com.ing.zkflow.serialization
 import com.ing.zkflow.annotations.Size
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.serialization.engine.SerdeEngine
-import com.ing.zkflow.serialization.generated.ManyNullablesSerializer
 import com.ing.zkflow.serialization.serializer.FixedLengthListSerializer
 import com.ing.zkflow.serialization.serializer.IntSerializer
 import com.ing.zkflow.serialization.serializer.NullableSerializer
@@ -42,7 +41,7 @@ class ManyNullablesTest : SerializerTest {
     @ParameterizedTest
     @MethodSource("engines")
     fun `ManyNullables makes a round trip`(engine: SerdeEngine) {
-        engine.assertRoundTrip(ManyNullablesSerializer, ManyNullables())
+        engine.assertRoundTrip(ManyNullablesTest_ManyNullables_Serializer, ManyNullables())
     }
 
     @ParameterizedTest
@@ -52,6 +51,6 @@ class ManyNullablesTest : SerializerTest {
             ManyNullablesResolved.serializer(),
             ManyNullablesResolved()
         ) shouldBe
-            engine.serialize(ManyNullablesSerializer, ManyNullables())
+            engine.serialize(ManyNullablesTest_ManyNullables_Serializer, ManyNullables())
     }
 }

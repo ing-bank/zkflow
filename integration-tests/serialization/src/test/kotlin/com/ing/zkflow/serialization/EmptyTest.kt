@@ -2,7 +2,6 @@ package com.ing.zkflow.serialization
 
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.serialization.engine.SerdeEngine
-import com.ing.zkflow.serialization.generated.EmptySerializer
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.Serializable
 import org.junit.jupiter.params.ParameterizedTest
@@ -35,7 +34,7 @@ class EmptyTest : SerializerTest {
     @ParameterizedTest
     @MethodSource("engines")
     fun `Empty makes a round trip`(engine: SerdeEngine) {
-        engine.assertRoundTrip(EmptySerializer, Empty())
+        engine.assertRoundTrip(EmptyTest_Empty_Serializer, Empty())
     }
 
     @ParameterizedTest
@@ -45,6 +44,6 @@ class EmptyTest : SerializerTest {
             EmptyResolved.serializer(),
             EmptyResolved()
         ) shouldBe
-            engine.serialize(EmptySerializer, Empty())
+            engine.serialize(EmptyTest_Empty_Serializer, Empty())
     }
 }

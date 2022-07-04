@@ -1,4 +1,4 @@
-package com.ing.zkflow.serialization.test
+package com.ing.zkflow.serialization.zinc
 
 import com.ing.zinc.bfl.BflModule
 import com.ing.zinc.bfl.allModules
@@ -124,8 +124,8 @@ class SerializedBigDecimalTest {
         left: WrappedBigDecimal,
         right: WrappedBigDecimal
     ): JsonObject = buildJsonObject {
-        put("left", JsonArray(scheme.encodeToBinary(WrappedBigDecimal.serializer(), left).toUnsignedBitString()))
-        put("right", JsonArray(scheme.encodeToBinary(WrappedBigDecimal.serializer(), right).toUnsignedBitString()))
+        put("left", JsonArray(scheme.encodeToBinary(SerializedBigDecimalTestCompanion_WrappedBigDecimal_Serializer, left).toUnsignedBitString()))
+        put("right", JsonArray(scheme.encodeToBinary(SerializedBigDecimalTestCompanion_WrappedBigDecimal_Serializer, right).toUnsignedBitString()))
     }
 
     private fun Path.runOperation(

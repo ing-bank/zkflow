@@ -5,6 +5,7 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSFile
 import com.ing.zkflow.common.serialization.KClassSerializer
 import com.ing.zkflow.common.serialization.KClassSerializerProvider
+import com.ing.zkflow.ksp.getSurrogateSerializerClassName
 import com.ing.zkflow.ksp.implementations.ServiceLoaderRegistration
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FileSpec
@@ -32,17 +33,23 @@ class SerializerProviderGenerator(private val codeGenerator: CodeGenerator) {
         implementationId: Int,
     ): String {
         val className = "${serializableClassWithSourceFiles.className.simpleNames.joinToString("") { it }}SerializerProvider"
+
         FileSpec.builder(serializableClassWithSourceFiles.className.packageName, className).addType(
             TypeSpec.classBuilder(className).addSuperinterface(KClassSerializerProvider::class).addFunction(
                 FunSpec.builder("get").addModifiers(KModifier.OVERRIDE)
                     .returns(KClassSerializer::class.asClassName().parameterizedBy(STAR)).addCode(
                         buildCodeBlock {
+                            val serializerClassName = when (serializableClassWithSourceFiles) {
+                                is SerializableClassWithSourceFiles.Existing -> serializableClassWithSourceFiles.declaration.getSurrogateSerializerClassName()
+                                is SerializableClassWithSourceFiles.Generated -> className
+                            }
+
                             addStatement(
-                                "return %T(%L::class, %L, %L.serializer())",
+                                "return %T(%T::class, %L, %T)",
                                 KClassSerializer::class,
                                 serializableClassWithSourceFiles.className,
                                 implementationId,
-                                serializableClassWithSourceFiles.className,
+                                serializerClassName,
                             )
                         }
                     )
@@ -58,15 +65,21 @@ class SerializerProviderGenerator(private val codeGenerator: CodeGenerator) {
         return "${serializableClassWithSourceFiles.className.packageName}.$className"
     }
 
-    data class SerializableClassWithSourceFiles(
-        val className: ClassName,
+    sealed class SerializableClassWithSourceFiles(
         val sourceFiles: List<KSFile> = emptyList()
     ) {
-        constructor(className: ClassName, sourceFile: KSFile?) : this(className, listOfNotNull(sourceFile))
+        class Generated(override val className: ClassName, sourceFiles: List<KSFile>) : SerializableClassWithSourceFiles(sourceFiles)
+
+        class Existing(val declaration: KSClassDeclaration, sourceFiles: List<KSFile>) : SerializableClassWithSourceFiles(sourceFiles) {
+            override val className: ClassName
+                get() = declaration.toClassName()
+        }
+
+        abstract val className: ClassName
 
         companion object {
             fun KSClassDeclaration.toGeneratedSerializer(): SerializableClassWithSourceFiles =
-                SerializableClassWithSourceFiles(toClassName(), containingFile)
+                Existing(this, listOfNotNull(containingFile))
         }
     }
 }

@@ -9,8 +9,6 @@ import com.ing.zkflow.annotations.Size
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.annotations.ZKPSurrogate
 import com.ing.zkflow.serialization.engine.SerdeEngine
-import com.ing.zkflow.serialization.generated.OutOfReachSurrogateSerializer
-import com.ing.zkflow.serialization.generated.ThirdPartyNullableSerializer
 import com.ing.zkflow.serialization.serializer.FixedLengthListSerializer
 import com.ing.zkflow.serialization.serializer.NullableSerializer
 import com.ing.zkflow.serialization.serializer.SerializerWithDefault
@@ -57,7 +55,7 @@ class ThirdPartyNullableTest : SerializerTest {
         object MyList_4 : NullableSerializer<OutOfReach>(MyList_5)
         object MyList_5 : SerializerWithDefault<OutOfReach>(MyList_6, DefaultOutOfReach.default)
         object MyList_6 : WrappedFixedLengthKSerializer<OutOfReach>(
-            OutOfReachSurrogateSerializer,
+            ThirdPartyNullableTest_OutOfReachSurrogate_Serializer,
             OutOfReach::class.java.isEnum
         )
     }
@@ -66,7 +64,7 @@ class ThirdPartyNullableTest : SerializerTest {
     @ParameterizedTest
     @MethodSource("engines")
     fun `ThirdPartyNullable makes a round trip`(engine: SerdeEngine) {
-        engine.assertRoundTrip(ThirdPartyNullableSerializer, ThirdPartyNullable())
+        engine.assertRoundTrip(ThirdPartyNullableTest_ThirdPartyNullable_Serializer, ThirdPartyNullable())
     }
 
     @ParameterizedTest
@@ -76,6 +74,6 @@ class ThirdPartyNullableTest : SerializerTest {
             ThirdPartyNullableResolved.serializer(),
             ThirdPartyNullableResolved()
         ) shouldBe
-            engine.serialize(ThirdPartyNullableSerializer, ThirdPartyNullable())
+            engine.serialize(ThirdPartyNullableTest_ThirdPartyNullable_Serializer, ThirdPartyNullable())
     }
 }

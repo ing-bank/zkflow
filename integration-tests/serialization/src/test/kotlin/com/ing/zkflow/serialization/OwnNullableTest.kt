@@ -5,8 +5,6 @@ import com.ing.zkflow.DefaultProvider
 import com.ing.zkflow.annotations.Size
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.serialization.engine.SerdeEngine
-import com.ing.zkflow.serialization.generated.FlagSerializer
-import com.ing.zkflow.serialization.generated.OwnNullableSerializer
 import com.ing.zkflow.serialization.serializer.FixedLengthListSerializer
 import com.ing.zkflow.serialization.serializer.NullableSerializer
 import com.ing.zkflow.serialization.serializer.SerializerWithDefault
@@ -44,14 +42,14 @@ class OwnNullableTest : SerializerTest {
         object MyList_3 : FixedLengthListSerializer<Flag?>(2, MyList_4)
         object MyList_4 : NullableSerializer<Flag>(MyList_5)
         object MyList_5 : SerializerWithDefault<Flag>(MyList_6, DefaultFlag.default)
-        object MyList_6 : WrappedFixedLengthKSerializer<Flag>(FlagSerializer, Flag::class.java.isEnum)
+        object MyList_6 : WrappedFixedLengthKSerializer<Flag>(OwnNullableTest_Flag_Serializer, Flag::class.java.isEnum)
     }
 
     // Tests
     @ParameterizedTest
     @MethodSource("engines")
     fun `OwnNullable makes a round trip`(engine: SerdeEngine) {
-        engine.assertRoundTrip(OwnNullableSerializer, OwnNullable())
+        engine.assertRoundTrip(OwnNullableTest_OwnNullable_Serializer, OwnNullable())
     }
 
     @ParameterizedTest
@@ -61,6 +59,6 @@ class OwnNullableTest : SerializerTest {
             OwnNullableResolved.serializer(),
             OwnNullableResolved()
         ) shouldBe
-            engine.serialize(OwnNullableSerializer, OwnNullable())
+            engine.serialize(OwnNullableTest_OwnNullable_Serializer, OwnNullable())
     }
 }

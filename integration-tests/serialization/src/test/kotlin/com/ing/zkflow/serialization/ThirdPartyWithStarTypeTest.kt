@@ -9,8 +9,6 @@ import com.ing.zkflow.annotations.Size
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.annotations.ZKPSurrogate
 import com.ing.zkflow.serialization.engine.SerdeEngine
-import com.ing.zkflow.serialization.generated.OutOfReachStarSurrogateSerializer
-import com.ing.zkflow.serialization.generated.ThirdPartyWithStarTypeSerializer
 import com.ing.zkflow.serialization.serializer.FixedLengthListSerializer
 import com.ing.zkflow.serialization.serializer.NullableSerializer
 import com.ing.zkflow.serialization.serializer.SerializerWithDefault
@@ -61,7 +59,7 @@ class ThirdPartyWithStarTypeTest : SerializerTest {
         object MyList_4 : NullableSerializer<OutOfReachStar>(MyList_5)
         object MyList_5 : SerializerWithDefault<OutOfReachStar>(MyList_6, DefaultOutOfReachStar.default)
         object MyList_6 : WrappedFixedLengthKSerializer<OutOfReachStar>(
-            OutOfReachStarSurrogateSerializer,
+            ThirdPartyWithStarTypeTest_OutOfReachStarSurrogate_Serializer,
             OutOfReachStar::class.java.isEnum
         )
     }
@@ -70,7 +68,7 @@ class ThirdPartyWithStarTypeTest : SerializerTest {
     @ParameterizedTest
     @MethodSource("engines")
     fun `ThirdPartyWithStarType makes a round trip`(engine: SerdeEngine) {
-        engine.assertRoundTrip(ThirdPartyWithStarTypeSerializer, ThirdPartyWithStarType())
+        engine.assertRoundTrip(ThirdPartyWithStarTypeTest_ThirdPartyWithStarType_Serializer, ThirdPartyWithStarType())
     }
 
     @ParameterizedTest
@@ -80,6 +78,6 @@ class ThirdPartyWithStarTypeTest : SerializerTest {
             ThirdPartyWithStarTypeResolved.serializer(),
             ThirdPartyWithStarTypeResolved()
         ) shouldBe
-            engine.serialize(ThirdPartyWithStarTypeSerializer, ThirdPartyWithStarType())
+            engine.serialize(ThirdPartyWithStarTypeTest_ThirdPartyWithStarType_Serializer, ThirdPartyWithStarType())
     }
 }

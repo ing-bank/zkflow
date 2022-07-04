@@ -4,7 +4,6 @@ import com.ing.zkflow.annotations.Size
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.annotations.corda.EdDSA
 import com.ing.zkflow.serialization.engine.SerdeEngine
-import com.ing.zkflow.serialization.generated.ListOfPartiesSerializer
 import com.ing.zkflow.serialization.serializer.FixedLengthListSerializer
 import com.ing.zkflow.serialization.serializer.corda.AnonymousPartySerializer
 import com.ing.zkflow.serialization.serializer.corda.PublicKeySerializer
@@ -34,7 +33,9 @@ class ListOfPartiesTest : SerializerTest {
     @Suppress("ClassName", "UnusedPrivateMember")
     @Serializable
     data class ListOfPartiesResolved constructor (
-        @Serializable(with = AnonymousParties_0::class) val anonymousParties: @Contextual List<@Contextual AnonymousParty> = listOf(ListOfParties.someAnonymous),
+        @Serializable(with = AnonymousParties_0::class) val anonymousParties: @Contextual List<@Contextual AnonymousParty> = listOf(
+            ListOfParties.someAnonymous
+        ),
     ) {
         object AnonymousParties_0 : FixedLengthListSerializer<AnonymousParty>(3, AnonymousParties_1)
         object AnonymousParties_1 : AnonymousPartySerializer(4)
@@ -44,7 +45,7 @@ class ListOfPartiesTest : SerializerTest {
     @ParameterizedTest
     @MethodSource("engines")
     fun `ListOfParties makes a round trip`(engine: SerdeEngine) {
-        engine.assertRoundTrip(ListOfPartiesSerializer, ListOfParties())
+        engine.assertRoundTrip(ListOfPartiesTest_ListOfParties_Serializer, ListOfParties())
     }
 
     @ParameterizedTest
@@ -54,6 +55,6 @@ class ListOfPartiesTest : SerializerTest {
             ListOfPartiesResolved.serializer(),
             ListOfPartiesResolved()
         ) shouldBe
-            engine.serialize(ListOfPartiesSerializer, ListOfParties())
+            engine.serialize(ListOfPartiesTest_ListOfParties_Serializer, ListOfParties())
     }
 }

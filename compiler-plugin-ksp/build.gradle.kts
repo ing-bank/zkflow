@@ -8,7 +8,7 @@ plugins {
 
 dependencies {
     implementation(project(":protocol"))
-    implementation(project(":zinc-poet:zinc-code-generation"))
+    implementation(project(":zinc-poet:zinc-poet"))
     implementation(kotlin("stdlib"))
 
     val kspVersion: String by project

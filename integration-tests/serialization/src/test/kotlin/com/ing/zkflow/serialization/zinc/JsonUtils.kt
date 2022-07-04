@@ -1,4 +1,4 @@
-package com.ing.zkflow.serialization.test
+package com.ing.zkflow.serialization.zinc
 
 import com.ing.zkflow.util.extendTo
 import kotlinx.serialization.json.JsonArray

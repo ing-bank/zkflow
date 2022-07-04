@@ -1,18 +1,17 @@
 package com.ing.zkflow.serialization
 
 import com.ing.zkflow.AnonymousParty_EdDSA
+import com.ing.zkflow.AnonymousParty_EdDSA_Serializer
 import com.ing.zkflow.CordaX500NameConverter
 import com.ing.zkflow.CordaX500NameSurrogate
+import com.ing.zkflow.CordaX500NameSurrogate_Serializer
 import com.ing.zkflow.Party_EdDSA
+import com.ing.zkflow.Party_EdDSA_Serializer
 import com.ing.zkflow.Via
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.annotations.corda.CordaX500NameSpec
 import com.ing.zkflow.annotations.corda.EdDSA
-import com.ing.zkflow.generated.AnonymousParty_EdDSASerializer
-import com.ing.zkflow.generated.CordaX500NameSurrogateSerializer
-import com.ing.zkflow.generated.Party_EdDSASerializer
 import com.ing.zkflow.serialization.engine.SerdeEngine
-import com.ing.zkflow.serialization.generated.PartiesSerializer
 import com.ing.zkflow.serialization.serializer.SerializerWithDefault
 import com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializer
 import com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializerWithDefault
@@ -68,7 +67,7 @@ class PartiesTest : SerializerTest {
 
         object AnonymousParty_0 : AnonymousPartySerializer(4)
         object AnonymousPartyFullyCustom_0 : WrappedFixedLengthKSerializer<AnonymousParty>(
-            AnonymousParty_EdDSASerializer,
+            AnonymousParty_EdDSA_Serializer,
             AnonymousParty_EdDSA::class.java.isEnum
         )
 
@@ -77,12 +76,12 @@ class PartiesTest : SerializerTest {
 
         object PartyCX500Custom_0 : PartySerializer(4, PartyCX500Custom_1)
         object PartyCX500Custom_1 : SerializerWithDefault<CordaX500Name>(
-            CordaX500NameSurrogateSerializer,
+            CordaX500NameSurrogate_Serializer,
             CordaX500NameSerializer.default
         )
 
         object PartyFullyCustom_0 : WrappedFixedLengthKSerializer<Party>(
-            Party_EdDSASerializer,
+            Party_EdDSA_Serializer,
             Party_EdDSA::class.java.isEnum
         )
     }
@@ -91,7 +90,7 @@ class PartiesTest : SerializerTest {
     @ParameterizedTest
     @MethodSource("engines")
     fun `Parties makes a round trip`(engine: SerdeEngine) {
-        engine.assertRoundTrip(PartiesSerializer, Parties())
+        engine.assertRoundTrip(PartiesTest_Parties_Serializer, Parties())
     }
 
     @ParameterizedTest
@@ -101,6 +100,6 @@ class PartiesTest : SerializerTest {
             PartiesResolved.serializer(),
             PartiesResolved()
         ) shouldBe
-            engine.serialize(PartiesSerializer, Parties())
+            engine.serialize(PartiesTest_Parties_Serializer, Parties())
     }
 }

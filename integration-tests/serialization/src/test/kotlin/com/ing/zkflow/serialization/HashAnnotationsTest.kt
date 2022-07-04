@@ -5,7 +5,6 @@ import com.ing.zkflow.annotations.corda.Algorithm
 import com.ing.zkflow.annotations.corda.SHA256
 import com.ing.zkflow.annotations.corda.SHA256DigestAlgorithm
 import com.ing.zkflow.serialization.engine.SerdeEngine
-import com.ing.zkflow.serialization.generated.HashAnnotationsSerializer
 import com.ing.zkflow.serialization.serializer.corda.SecureHashSerializer
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.Contextual
@@ -59,7 +58,7 @@ class HashAnnotationsTest : SerializerTest {
     @ParameterizedTest
     @MethodSource("engines")
     fun `HashAnnotations makes a round trip`(engine: SerdeEngine) {
-        engine.assertRoundTrip(HashAnnotationsSerializer, HashAnnotations())
+        engine.assertRoundTrip(HashAnnotationsTest_HashAnnotations_Serializer, HashAnnotations())
     }
 
     @ParameterizedTest
@@ -69,6 +68,6 @@ class HashAnnotationsTest : SerializerTest {
             HashAnnotationsResolved.serializer(),
             HashAnnotationsResolved()
         ) shouldBe
-            engine.serialize(HashAnnotationsSerializer, HashAnnotations())
+            engine.serialize(HashAnnotationsTest_HashAnnotations_Serializer, HashAnnotations())
     }
 }

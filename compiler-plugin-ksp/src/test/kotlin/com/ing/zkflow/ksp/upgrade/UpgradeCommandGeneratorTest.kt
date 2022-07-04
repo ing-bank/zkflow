@@ -57,11 +57,11 @@ internal class UpgradeCommandGeneratorTest {
         val testSubject = testSubject(generatedBytes)
         val actual = testSubject.generateUpgradeCommands(listOf(listOf(v1, v2)))
         actual shouldBe listOf(
-            SerializableClassWithSourceFiles(
+            SerializableClassWithSourceFiles.Generated(
                 ClassName("com.example", "UpgradePrivateV1ToPrivateV2"),
                 listOf(v1File, v2File),
             ),
-            SerializableClassWithSourceFiles(
+            SerializableClassWithSourceFiles.Generated(
                 ClassName("com.example", "UpgradeAnyV1ToPublicV2"),
                 listOf(v1File, v2File),
             )

@@ -5,7 +5,6 @@ import com.ing.zkflow.annotations.UTF8
 import com.ing.zkflow.annotations.UnicodeChar
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.serialization.engine.SerdeEngine
-import com.ing.zkflow.serialization.generated.BasicsSerializer
 import com.ing.zkflow.serialization.serializer.IntSerializer
 import com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializerWithDefault
 import com.ing.zkflow.serialization.serializer.char.ASCIICharSerializer
@@ -53,7 +52,7 @@ class BasicsTest : SerializerTest {
     @ParameterizedTest
     @MethodSource("engines")
     fun `Basics makes a round trip`(engine: SerdeEngine) {
-        engine.assertRoundTrip(BasicsSerializer, Basics())
+        engine.assertRoundTrip(BasicsTest_Basics_Serializer, Basics())
     }
 
     @ParameterizedTest
@@ -63,6 +62,6 @@ class BasicsTest : SerializerTest {
             BasicsResolved.serializer(),
             BasicsResolved()
         ) shouldBe
-            engine.serialize(BasicsSerializer, Basics())
+            engine.serialize(BasicsTest_Basics_Serializer, Basics())
     }
 }

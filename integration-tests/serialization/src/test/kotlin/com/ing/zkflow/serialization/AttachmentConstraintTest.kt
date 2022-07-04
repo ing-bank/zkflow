@@ -7,7 +7,6 @@ import com.ing.zkflow.annotations.corda.EdDSA
 import com.ing.zkflow.annotations.corda.SHA256
 import com.ing.zkflow.annotations.corda.SHA256DigestAlgorithm
 import com.ing.zkflow.serialization.engine.SerdeEngine
-import com.ing.zkflow.serialization.generated.AttachmentConstraintsSerializer
 import com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializerWithDefault
 import com.ing.zkflow.serialization.serializer.corda.AlwaysAcceptAttachmentConstraintSerializer
 import com.ing.zkflow.serialization.serializer.corda.AutomaticHashConstraintSerializer
@@ -81,7 +80,7 @@ class AttachmentConstraintTest : SerializerTest {
     @ParameterizedTest
     @MethodSource("engines")
     fun `AttachmentConstraints makes a round trip`(engine: SerdeEngine) {
-        engine.assertRoundTrip(AttachmentConstraintsSerializer, AttachmentConstraints())
+        engine.assertRoundTrip(AttachmentConstraintTest_AttachmentConstraints_Serializer, AttachmentConstraints())
     }
 
     @ParameterizedTest
@@ -91,6 +90,6 @@ class AttachmentConstraintTest : SerializerTest {
             AttachmentConstraintsResolved.serializer(),
             AttachmentConstraintsResolved()
         ) shouldBe
-            engine.serialize(AttachmentConstraintsSerializer, AttachmentConstraints())
+            engine.serialize(AttachmentConstraintTest_AttachmentConstraints_Serializer, AttachmentConstraints())
     }
 }

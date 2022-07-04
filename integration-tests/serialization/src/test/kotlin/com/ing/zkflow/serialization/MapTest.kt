@@ -4,7 +4,6 @@ import com.ing.zkflow.annotations.Size
 import com.ing.zkflow.annotations.UTF8
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.serialization.engine.SerdeEngine
-import com.ing.zkflow.serialization.generated.MyMapSerializer
 import com.ing.zkflow.serialization.serializer.FixedLengthMapSerializer
 import com.ing.zkflow.serialization.serializer.IntSerializer
 import com.ing.zkflow.serialization.serializer.NullableSerializer
@@ -41,7 +40,7 @@ class MapTest : SerializerTest {
     @ParameterizedTest
     @MethodSource("engines")
     fun `MyMap makes a round trip`(engine: SerdeEngine) {
-        engine.assertRoundTrip(MyMapSerializer, MyMap())
+        engine.assertRoundTrip(MapTest_MyMap_Serializer, MyMap())
     }
 
     @ParameterizedTest
@@ -51,6 +50,6 @@ class MapTest : SerializerTest {
             MyMapResolved.serializer(),
             MyMapResolved()
         ) shouldBe
-            engine.serialize(MyMapSerializer, MyMap())
+            engine.serialize(MapTest_MyMap_Serializer, MyMap())
     }
 }

@@ -2,8 +2,6 @@ package com.ing.zkflow.serialization
 
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.serialization.engine.SerdeEngine
-import com.ing.zkflow.serialization.generated.EnumSerializer
-import com.ing.zkflow.serialization.generated.OptionSerializer
 import com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializer
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.Contextual
@@ -29,14 +27,14 @@ class EnumTest : SerializerTest {
         @Serializable(with = Option_0::class)
         val option: @Contextual Option = Option.FIRST
     ) {
-        object Option_0 : WrappedFixedLengthKSerializer<Option>(OptionSerializer, Option::class.java.isEnum)
+        object Option_0 : WrappedFixedLengthKSerializer<Option>(EnumTest_Option_Serializer, Option::class.java.isEnum)
     }
 
     // Tests
     @ParameterizedTest
     @MethodSource("engines")
     fun `Enum makes a round trip`(engine: SerdeEngine) {
-        engine.assertRoundTrip(EnumSerializer, Enum())
+        engine.assertRoundTrip(EnumTest_Enum_Serializer, Enum())
     }
 
     @ParameterizedTest
@@ -46,6 +44,6 @@ class EnumTest : SerializerTest {
             EnumResolved.serializer(),
             EnumResolved()
         ) shouldBe
-            engine.serialize(EnumSerializer, Enum())
+            engine.serialize(EnumTest_Enum_Serializer, Enum())
     }
 }
