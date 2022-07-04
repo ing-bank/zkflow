@@ -6,18 +6,15 @@ import com.ing.zkflow.common.network.ZKNetworkParametersServiceLoader
 import com.ing.zkflow.common.serialization.ZKCustomSerializationScheme.Companion.CONTEXT_KEY_TRANSACTION_METADATA
 import com.ing.zkflow.common.serialization.ZKCustomSerializationScheme.Companion.CONTEXT_KEY_ZK_NETWORK_PARAMETERS
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
-import com.ing.zkflow.node.services.ZKVerifierTransactionStorage
 import net.corda.core.contracts.AttachmentConstraint
 import net.corda.core.contracts.AutomaticPlaceholderConstraint
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.CommandData
-import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.ContractClassName
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.PrivacySalt
 import net.corda.core.contracts.ReferencedStateAndRef
 import net.corda.core.contracts.StateAndRef
-import net.corda.core.contracts.StateRef
 import net.corda.core.contracts.TimeWindow
 import net.corda.core.contracts.TransactionState
 import net.corda.core.crypto.Crypto
@@ -107,28 +104,6 @@ class ZKTransactionBuilder private constructor(
             resolvedTransactionMetadata
         } else {
             null
-        }
-    }
-
-    fun enforcePrivateInputsAndReferences(zkVerifierTransactionStorage: ZKVerifierTransactionStorage) {
-        if (this.hasZKCommandData) {
-            val resolvedTransactionMetadata = this.zkTransactionMetadata()
-            val privateInputIndexes = resolvedTransactionMetadata.inputs.filter { it.mustBePrivate() }.map { it.index }
-            val privateReferenceIndexes = (resolvedTransactionMetadata.references).filter { it.mustBePrivate() }.map { it.index }
-
-            enforcePrivateUtxoForStateRefs(zkVerifierTransactionStorage, inputStates().filter { it.index in privateInputIndexes })
-            enforcePrivateUtxoForStateRefs(zkVerifierTransactionStorage, referenceStates().filter { it.index in privateReferenceIndexes })
-        }
-    }
-
-    private fun enforcePrivateUtxoForStateRefs(zkVerifierTransactionStorage: ZKVerifierTransactionStorage, stateRefs: List<StateRef>) {
-        stateRefs.forEach { stateRef ->
-            val tx = zkVerifierTransactionStorage.getTransaction(stateRef.txhash)?.tx
-                ?: error("Could not enforce private UTXO for StateRef '$stateRef': ZKVerifierTransaction not found with ID: ${stateRef.txhash}")
-
-            check(tx.isPrivateComponent(ComponentGroupEnum.OUTPUTS_GROUP, stateRef.index)) {
-                "UTXO for StateRef '$stateRef' should be private, but it is public"
-            }
         }
     }
 

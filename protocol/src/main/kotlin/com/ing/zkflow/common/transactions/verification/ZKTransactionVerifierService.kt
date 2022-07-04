@@ -5,9 +5,11 @@ import com.ing.zkflow.common.transactions.ZKVerifierTransaction
 import com.ing.zkflow.common.transactions.ZKVerifierTransactionWithoutProofs
 import com.ing.zkflow.common.transactions.hasZKCommandData
 import com.ing.zkflow.common.transactions.zkToFilteredLedgerTransaction
+import com.ing.zkflow.common.transactions.zkTransactionMetadata
 import com.ing.zkflow.common.transactions.zkTransactionMetadataOrNull
 import com.ing.zkflow.common.zkp.ZKTransactionService
 import net.corda.core.contracts.ComponentGroupEnum
+import net.corda.core.contracts.StateRef
 import net.corda.core.node.ServiceHub
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionWithSignatures
@@ -27,6 +29,7 @@ class ZKTransactionVerifierService(
         val vtx = svtx.tx
         validatePrivateComponents(vtx)
 
+        enforcePrivateInputsAndReferences(vtx)
         ensureNoUncheckedPrivateOutputs(vtx)
         ensureNoUncheckedPrivateInputs(vtx)
 
@@ -48,6 +51,7 @@ class ZKTransactionVerifierService(
             ZKVerifierTransactionWithoutProofs.fromWireTransaction(wtx) // create vtx without proofs just to be able to build witness and public input
         }
 
+        enforcePrivateInputsAndReferences(vtx)
         ensureNoUncheckedPrivateOutputs(vtx)
         ensureNoUncheckedPrivateInputs(vtx)
 
@@ -65,6 +69,28 @@ class ZKTransactionVerifierService(
     private fun validatePublicComponents(tx: ZKVerifierTransaction) {
         log.info("Validating public parts of transaction")
         tx.zkToFilteredLedgerTransaction(services, zkTransactionService.vtxStorage).verify()
+    }
+
+    fun enforcePrivateInputsAndReferences(tx: TraversableTransaction) {
+        if (tx.hasZKCommandData) {
+            val resolvedTransactionMetadata = tx.zkTransactionMetadata(services)
+            val privateInputIndexes = resolvedTransactionMetadata.inputs.filter { it.mustBePrivate() }.map { it.index }
+            val privateReferenceIndexes = (resolvedTransactionMetadata.references).filter { it.mustBePrivate() }.map { it.index }
+
+            enforcePrivateUtxoForStateRefs(tx.inputs.filter { it.index in privateInputIndexes })
+            enforcePrivateUtxoForStateRefs(tx.references.filter { it.index in privateReferenceIndexes })
+        }
+    }
+
+    private fun enforcePrivateUtxoForStateRefs(stateRefs: List<StateRef>) {
+        stateRefs.forEach { stateRef ->
+            val tx = zkTransactionService.vtxStorage.getTransaction(stateRef.txhash)?.tx
+                ?: error("Could not enforce private UTXO for StateRef '$stateRef': ZKVerifierTransaction not found with ID: ${stateRef.txhash}")
+
+            check(tx.isPrivateComponent(ComponentGroupEnum.OUTPUTS_GROUP, stateRef.index)) {
+                "UTXO for StateRef '$stateRef' should be private, but it is public"
+            }
+        }
     }
 
     /*
