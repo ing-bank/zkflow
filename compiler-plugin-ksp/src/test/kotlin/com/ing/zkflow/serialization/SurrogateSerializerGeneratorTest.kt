@@ -1,3 +1,4 @@
+@file:Suppress("LongMethod", "LargeClass")
 package com.ing.zkflow.serialization
 
 import com.ing.zkflow.Surrogate
@@ -40,7 +41,6 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
         const val packageName = "com.ing.zkflow.testing"
 
         @JvmStatic
-        @Suppress("LongMethod")
         fun testCases(): List<TestCase> = listOf(
             TestCase(
                 source = SourceFile.kotlin(
@@ -84,14 +84,14 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                       public val nullableInt: @Contextual Int?
                     ) : Surrogate<BasicTypesContainer> {
                       public override fun toOriginal(): BasicTypesContainer = BasicTypesContainer(int, nullableInt)
-                    
+
                       private object Int_0 : WrappedFixedLengthKSerializerWithDefault<Int>(IntSerializer)
-                    
+
                       private object NullableInt_0 : NullableSerializer<Int>(NullableInt_1)
-                    
+
                       private object NullableInt_1 : WrappedFixedLengthKSerializerWithDefault<Int>(IntSerializer)
                     }
-                    
+
                     public object BasicTypesContainer_Serializer :
                         SurrogateSerializer<BasicTypesContainer, BasicTypesContainer_KotlinxSurrogate>(BasicTypesContainer_KotlinxSurrogate.serializer(),
                         { BasicTypesContainer_KotlinxSurrogate(int = it.int, nullableInt = it.nullableInt) })
@@ -135,7 +135,7 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                     import kotlin.collections.Map
                     import kotlinx.serialization.Contextual
                     import kotlinx.serialization.Serializable
-                    
+
                     @Serializable
                     public class CollectionsOfBasicNullableTypesContainer_KotlinxSurrogate(
                       @Serializable(with = MyList_0::class)
@@ -143,22 +143,22 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                     ) : Surrogate<CollectionsOfBasicNullableTypesContainer> {
                       public override fun toOriginal(): CollectionsOfBasicNullableTypesContainer =
                           CollectionsOfBasicNullableTypesContainer(myList)
-                    
+
                       private object MyList_0 : NullableSerializer<List<Map<Int, Int?>?>>(MyList_1)
-                    
+
                       private object MyList_1 : FixedLengthListSerializer<Map<Int, Int?>?>(5, MyList_2)
-                    
+
                       private object MyList_2 : NullableSerializer<Map<Int, Int?>>(MyList_3)
-                    
+
                       private object MyList_3 : FixedLengthMapSerializer<Int, Int?>(5, MyList_3_A_0, MyList_3_B_0)
-                    
+
                       private object MyList_3_A_0 : WrappedFixedLengthKSerializerWithDefault<Int>(IntSerializer)
-                    
+
                       private object MyList_3_B_0 : NullableSerializer<Int>(MyList_3_B_1)
-                    
+
                       private object MyList_3_B_1 : WrappedFixedLengthKSerializerWithDefault<Int>(IntSerializer)
                     }
-                    
+
                     public object CollectionsOfBasicNullableTypesContainer_Serializer :
                         SurrogateSerializer<CollectionsOfBasicNullableTypesContainer, CollectionsOfBasicNullableTypesContainer_KotlinxSurrogate>(CollectionsOfBasicNullableTypesContainer_KotlinxSurrogate.serializer(),
                         { CollectionsOfBasicNullableTypesContainer_KotlinxSurrogate(myList = it.myList) })
@@ -207,17 +207,17 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                 import kotlin.Suppress
                 import kotlinx.serialization.Contextual
                 import kotlinx.serialization.Serializable
-                
+
                 @Serializable
                 public class OutOfReachSurrogate_KotlinxSurrogate(
                   @Serializable(with = Int_0::class)
                   public val int: @Contextual Int
                 ) : Surrogate<OutOfReach> {
                   public override fun toOriginal(): OutOfReach = OutOfReachSurrogate(int).toOriginal()
-                
+
                   private object Int_0 : WrappedFixedLengthKSerializerWithDefault<Int>(IntSerializer)
                 }
-                
+
                 public object OutOfReachSurrogate_Serializer :
                     SurrogateSerializer<OutOfReach, OutOfReachSurrogate_KotlinxSurrogate>(OutOfReachSurrogate_KotlinxSurrogate.serializer(),
                      {
@@ -260,18 +260,18 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                     import kotlin.Suppress
                     import kotlinx.serialization.Contextual
                     import kotlinx.serialization.Serializable
-                    
+
                     @Serializable
                     public class ZkpInsideZkp_KotlinxSurrogate(
                       @Serializable(with = MyClass_0::class)
                       public val myClass: @Contextual MyClass
                     ) : Surrogate<ZkpInsideZkp> {
                       public override fun toOriginal(): ZkpInsideZkp = ZkpInsideZkp(myClass)
-                    
+
                       private object MyClass_0 : WrappedFixedLengthKSerializer<MyClass>(MyClass_Serializer,
                           MyClass::class.java.isEnum)
                     }
-                    
+
                     public object ZkpInsideZkp_Serializer :
                         SurrogateSerializer<ZkpInsideZkp, ZkpInsideZkp_KotlinxSurrogate>(ZkpInsideZkp_KotlinxSurrogate.serializer(),
                         { ZkpInsideZkp_KotlinxSurrogate(myClass = it.myClass) })
@@ -333,23 +333,23 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                     import kotlin.Suppress
                     import kotlinx.serialization.Contextual
                     import kotlinx.serialization.Serializable
-                    
+
                     @Serializable
                     public class ZkpSurrogateInsideZkp_KotlinxSurrogate(
                       @Serializable(with = MyClass_0::class)
                       public val myClass: @Contextual OutOfReach?
                     ) : Surrogate<ZkpSurrogateInsideZkp> {
                       public override fun toOriginal(): ZkpSurrogateInsideZkp = ZkpSurrogateInsideZkp(myClass)
-                    
+
                       private object MyClass_0 : NullableSerializer<OutOfReach>(MyClass_1)
-                    
+
                       private object MyClass_1 : SerializerWithDefault<OutOfReach>(MyClass_2, DefaultOutOfReach.default)
-                    
+
                       private object MyClass_2 :
                           WrappedFixedLengthKSerializer<OutOfReach>(OutOfReachSurrogate_Serializer,
                           OutOfReachSurrogate::class.java.isEnum)
                     }
-                    
+
                     public object ZkpSurrogateInsideZkp_Serializer :
                         SurrogateSerializer<ZkpSurrogateInsideZkp, ZkpSurrogateInsideZkp_KotlinxSurrogate>(ZkpSurrogateInsideZkp_KotlinxSurrogate.serializer(),
                         { ZkpSurrogateInsideZkp_KotlinxSurrogate(myClass = it.myClass) })
@@ -387,17 +387,17 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                     import kotlin.Int
                     import kotlin.Suppress
                     import kotlinx.serialization.Serializable
-                    
+
                     @Serializable
                     public class Option_KotlinxSurrogate(
                       @Serializable(with = Ordinal_0::class)
                       public val ordinal: Int
                     ) : Surrogate<Option> {
                       public override fun toOriginal(): Option = Option.values().first { it.ordinal == ordinal }
-                    
+
                       private object Ordinal_0 : WrappedFixedLengthKSerializerWithDefault<Int>(IntSerializer)
                     }
-                    
+
                     public object Option_Serializer :
                         SurrogateSerializer<Option, Option_KotlinxSurrogate>(Option_KotlinxSurrogate.serializer(), {
                         Option_KotlinxSurrogate(ordinal = it.ordinal) })
@@ -607,6 +607,146 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                         partyFullyCustom = it.partyFullyCustom) })
                 """.trimIndent()
             ),
+
+            TestCase(
+                source = SourceFile.kotlin(
+                    "B.kt",
+                    """
+                        package $packageName
+
+                        import com.ing.zkflow.annotations.ZKP
+                        import com.ing.zkflow.annotations.ZKPSurrogate
+                        import com.ing.zkflow.Surrogate
+                        import com.ing.zkflow.ConversionProvider
+                        import com.ing.zkflow.Via
+
+                        @ZKPSurrogate(A2B::class)
+                        class B(
+                            val t: @UselessAnnotation Int?
+                        ): Surrogate<A<Int?>> {
+                            override fun toOriginal(): A<Int?> = A(t)
+                        }
+
+                        object A2B : ConversionProvider<A<Int?>, B> {
+                            override fun from(original: A<Int?>): B {
+                                return B(original.t)
+                            }
+                        }
+
+                        class A<T>(val t: T)
+
+                        @Target(AnnotationTarget.TYPE)
+                        annotation class UselessAnnotation
+
+                    """.trimIndent()
+                ),
+                expectedSerializationLocation = "B_${Surrogate.GENERATED_SERIALIZATION_FUNCTIONALITY_LOCATION_POSTFIX}",
+                expected = """
+                    @file:Suppress(
+                      "ClassName",
+                      "DEPRECATION"
+                    )
+
+                    package $packageName
+
+                    import com.ing.zkflow.Surrogate
+                    import com.ing.zkflow.serialization.serializer.IntSerializer
+                    import com.ing.zkflow.serialization.serializer.NullableSerializer
+                    import com.ing.zkflow.serialization.serializer.SurrogateSerializer
+                    import com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializerWithDefault
+                    import kotlin.Int
+                    import kotlin.Suppress
+                    import kotlinx.serialization.Contextual
+                    import kotlinx.serialization.Serializable
+
+                    @Serializable
+                    public class B_KotlinxSurrogate(
+                      @Serializable(with = T_0::class)
+                      public val t: @Contextual Int?
+                    ) : Surrogate<A<Int?>> {
+                      public override fun toOriginal(): A<Int?> = B(t).toOriginal()
+
+                      private object T_0 : NullableSerializer<Int>(T_1)
+
+                      private object T_1 : WrappedFixedLengthKSerializerWithDefault<Int>(IntSerializer)
+                    }
+
+                    public object B_Serializer :
+                        SurrogateSerializer<A<Int?>, B_KotlinxSurrogate>(B_KotlinxSurrogate.serializer(),  {
+                          val representation = A2B.from(it)
+                          B_KotlinxSurrogate(t = representation.t)
+                        }
+                      )
+                """.trimIndent()
+            ),
+            TestCase(
+                source = SourceFile.kotlin(
+                    "ParametrizedTypeContainer.kt",
+                    """
+                        package $packageName
+                        
+                        import com.ing.zkflow.ConversionProvider
+                        import com.ing.zkflow.Surrogate
+                        import com.ing.zkflow.Via
+                        import com.ing.zkflow.annotations.ZKP
+                        import com.ing.zkflow.annotations.ZKPSurrogate
+
+                        @ZKP
+                        data class ParameterizedTypeContainer(
+                            val b: @Via<B> @UselessAnnotation A<@UselessAnnotation Int?> = A(1)
+                        )
+                    
+                        @ZKPSurrogate(A2B::class)
+                        class B(
+                            val t: Int?
+                        ): Surrogate<A<Int?>> {
+                            override fun toOriginal(): A<Int?> = A(t)
+                        }
+                    
+                        object A2B : ConversionProvider<A<Int?>, B> {
+                            override fun from(original: A<Int?>): B {
+                                return B(original.t)
+                            }
+                        }
+                    
+                        class A<T>(val t: T)
+                    
+                        @Target(AnnotationTarget.TYPE)
+                        annotation class UselessAnnotation
+                    """.trimIndent()
+                ),
+                expectedSerializationLocation = "ParameterizedTypeContainer_${Surrogate.GENERATED_SERIALIZATION_FUNCTIONALITY_LOCATION_POSTFIX}",
+                expected = """
+                        @file:Suppress(
+                          "ClassName",
+                          "DEPRECATION"
+                        )
+
+                        package $packageName
+
+                        import com.ing.zkflow.Surrogate
+                        import com.ing.zkflow.serialization.serializer.SurrogateSerializer
+                        import com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializer
+                        import kotlin.Int
+                        import kotlin.Suppress
+                        import kotlinx.serialization.Contextual
+                        import kotlinx.serialization.Serializable
+
+                        @Serializable
+                        public class ParameterizedTypeContainer_KotlinxSurrogate(
+                          @Serializable(with = B_0::class)
+                          public val b: @Contextual A<@Contextual Int?>
+                        ) : Surrogate<ParameterizedTypeContainer> {
+                          public override fun toOriginal(): ParameterizedTypeContainer = ParameterizedTypeContainer(b)
+                        
+                          private object B_0 : WrappedFixedLengthKSerializer<A<Int?>>(B_Serializer, B::class.java.isEnum)
+                        }
+                        
+                        public object ParameterizedTypeContainer_Serializer :
+                            SurrogateSerializer<ParameterizedTypeContainer, ParameterizedTypeContainer_KotlinxSurrogate>(ParameterizedTypeContainer_KotlinxSurrogate.serializer(),
+                            { ParameterizedTypeContainer_KotlinxSurrogate(b = it.b) })
+                """.trimIndent()
+            )
         )
     }
 }

@@ -5,6 +5,9 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.ing.zkflow.Surrogate
 import com.ing.zkflow.ksp.getSurrogateClassName
 import com.ing.zkflow.ksp.getSurrogateSerializerClassName
+import com.ing.zkflow.ksp.getSurrogateTargetType
+import com.ing.zkflow.ksp.toCleanTypeName
+import com.ing.zkflow.ksp.toContextualTypeName
 import com.ing.zkflow.processors.serialization.hierarchy.getSerializingHierarchy
 import com.ing.zkflow.serialization.serializer.IntSerializer
 import com.ing.zkflow.serialization.serializer.SurrogateSerializer
@@ -16,13 +19,14 @@ import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
+import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.ksp.toClassName
 import kotlinx.serialization.Serializable
 
 internal sealed class SerializationFunctionalityGenerationTask(
-    private val declaration: KSClassDeclaration
+    internal val declaration: KSClassDeclaration
 ) {
     class Direct(declaration: KSClassDeclaration) : SerializationFunctionalityGenerationTask(declaration) {
         override val representation = declaration
@@ -43,6 +47,11 @@ internal sealed class SerializationFunctionalityGenerationTask(
 
         override fun surrogateToDeclarationTemplate(): String =
             "return %T(%L)"
+
+        // ZKP-annotated classes may not have type parameters,
+        // so it is safe to return declaration as a class name without inspecting deeper levels.
+        override val surrogateTarget: TypeName
+            get() = declaration.toClassName()
     }
 
     class Indirect(
@@ -73,9 +82,13 @@ internal sealed class SerializationFunctionalityGenerationTask(
 
         override fun surrogateToDeclarationTemplate(): String =
             "return %T(%L).toOriginal()"
+
+        override val surrogateTarget: TypeName
+            get() = representation.getSurrogateTargetType().toCleanTypeName()
     }
 
     abstract val representation: KSClassDeclaration
+    abstract val surrogateTarget: TypeName
     abstract fun declarationToSurrogateConstructor(surrogateClassName: ClassName): CodeBlock
     abstract fun surrogateToDeclarationTemplate(): String
 
@@ -95,9 +108,7 @@ internal sealed class SerializationFunctionalityGenerationTask(
             .addSuperinterface(
                 Surrogate::class
                     .asClassName()
-                    .parameterizedBy(
-                        declaration.toClassName()
-                    )
+                    .parameterizedBy(surrogateTarget)
             )
 
         return if (isEnum()) {
@@ -157,11 +168,12 @@ internal sealed class SerializationFunctionalityGenerationTask(
             parameters += name
 
             val serializingHierarchy = parameter.getSerializingHierarchy()
+            val declaration = parameter.type.resolve().toContextualTypeName()
 
-            primaryConstructorBuilder.addParameter(name, serializingHierarchy.declaration)
+            primaryConstructorBuilder.addParameter(name, declaration)
             surrogateBuilder
                 .addProperty(
-                    PropertySpec.builder(name, serializingHierarchy.declaration)
+                    PropertySpec.builder(name, declaration)
                         .addAnnotation(
                             AnnotationSpec.builder(Serializable::class)
                                 .addMember("with = %N::class", serializingHierarchy.definition)
@@ -178,7 +190,7 @@ internal sealed class SerializationFunctionalityGenerationTask(
             .addFunction(
                 FunSpec.builder("toOriginal")
                     .addModifiers(KModifier.OVERRIDE)
-                    .returns(declaration.toClassName())
+                    .returns(surrogateTarget)
                     .addStatement(
                         surrogateToDeclarationTemplate(),
                         representation.toClassName(),
@@ -197,7 +209,7 @@ internal sealed class SerializationFunctionalityGenerationTask(
             .superclass(
                 SurrogateSerializer::class
                     .asClassName()
-                    .parameterizedBy(declaration.toClassName(), surrogateClassName)
+                    .parameterizedBy(surrogateTarget, surrogateClassName)
             )
             .addSuperclassConstructorParameter(CodeBlock.of("%T.serializer()", surrogateClassName))
             .addSuperclassConstructorParameter(declarationToSurrogateConstructor(surrogateClassName))

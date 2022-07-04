@@ -16,8 +16,13 @@ import com.ing.zkflow.Via
 import com.ing.zkflow.annotations.ZKPSurrogate
 import com.ing.zkflow.annotations.corda.Algorithm
 import com.ing.zkflow.annotations.corda.SignatureSpec
+import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import com.squareup.kotlinpoet.TypeName
+import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.ksp.toClassName
+import kotlinx.serialization.Contextual
 import kotlin.reflect.KClass
 
 private val implementedInterfacesCache: MutableMap<KSClassDeclaration, Sequence<KSClassDeclaration>> = mutableMapOf()
@@ -204,4 +209,33 @@ fun KSAnnotation.getSurrogateFromViaAnnotation(): KSClassDeclaration {
     }
     return annotationType.element?.typeArguments?.singleOrNull()?.type?.resolve()?.declaration as? KSClassDeclaration
         ?: error("@${Via::class.simpleName} annotation's argument is not a class.")
+}
+
+fun KSType.toContextualTypeName() =
+    toTypeNameWithAnnotation(listOf(Contextual::class))
+
+fun KSType.toCleanTypeName() =
+    toTypeNameWithAnnotation(emptyList())
+
+private fun KSType.toTypeNameWithAnnotation(annotations: List<KClass<out Annotation>>): TypeName {
+    if (arguments.isEmpty()) {
+        return toClassName()
+            .copy(
+                annotations = annotations.map {
+                    AnnotationSpec.builder(it.asClassName()).build()
+                },
+                nullable = isMarkedNullable
+            )
+    }
+
+    val typeArguments = arguments.map { it.type!!.resolve().toTypeNameWithAnnotation(annotations) }
+
+    return toClassName()
+        .parameterizedBy(typeArguments)
+        .copy(
+            annotations = annotations.map {
+                AnnotationSpec.builder(it.asClassName()).build()
+            },
+            nullable = isMarkedNullable
+        )
 }

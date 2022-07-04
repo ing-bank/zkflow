@@ -41,7 +41,7 @@ class SerializerProviderGenerator(private val codeGenerator: CodeGenerator) {
                         buildCodeBlock {
                             val serializerClassName = when (serializableClassWithSourceFiles) {
                                 is SerializableClassWithSourceFiles.Existing -> serializableClassWithSourceFiles.declaration.getSurrogateSerializerClassName()
-                                is SerializableClassWithSourceFiles.Generated -> className
+                                is SerializableClassWithSourceFiles.Generated -> serializableClassWithSourceFiles.className
                             }
 
                             addStatement(

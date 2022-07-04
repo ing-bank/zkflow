@@ -11,7 +11,7 @@ import com.ing.zkflow.ksp.getNonRepeatableAnnotationByType
 import com.ing.zkflow.ksp.getSingleArgumentOfNonRepeatableAnnotationByType
 import com.ing.zkflow.ksp.getSurrogateFromViaAnnotation
 import com.ing.zkflow.ksp.getSurrogateSerializerClassName
-import com.ing.zkflow.ksp.getSurrogateTargetClass
+import com.ing.zkflow.ksp.getSurrogateTargetType
 import com.ing.zkflow.processors.serialization.hierarchy.SerializingHierarchy
 import com.ing.zkflow.serialization.serializer.SerializerWithDefault
 import com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializer
@@ -22,6 +22,7 @@ import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.ksp.toClassName
+import com.squareup.kotlinpoet.ksp.toTypeName
 
 /** Process type as a user type.
  * User type is serializable if
@@ -132,7 +133,7 @@ private fun KSTypeReference.trySerializeAs3rdPartyClass(tracker: Tracker): Seria
     }
 
     val surrogate = viaAnnotation.getSurrogateFromViaAnnotation()
-    val target = surrogate.getSurrogateTargetClass()
+    val target = surrogate.getSurrogateTargetType()
     val surrogateSerializer = surrogate.getSurrogateSerializerClassName()
 
     val serializingObject = TypeSpec.objectBuilder("$tracker")
@@ -140,7 +141,7 @@ private fun KSTypeReference.trySerializeAs3rdPartyClass(tracker: Tracker): Seria
         .superclass(
             WrappedFixedLengthKSerializer::class
                 .asClassName()
-                .parameterizedBy(target.toClassName())
+                .parameterizedBy(target.toTypeName())
         )
         .addSuperclassConstructorParameter(
             CodeBlock.of("%T, %T::class.java.isEnum", surrogateSerializer, surrogate.toClassName())
