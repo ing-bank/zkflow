@@ -3,6 +3,7 @@ package com.ing.zkflow.processors.serialization.hierarchy.types
 import com.google.devtools.ksp.isAnnotationPresent
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSType
+import com.google.devtools.ksp.symbol.KSTypeReference
 import com.ing.zkflow.Default
 import com.ing.zkflow.Via
 import com.ing.zkflow.annotations.ZKP
@@ -35,7 +36,7 @@ import com.squareup.kotlinpoet.ksp.toClassName
  *      NullableSerializer          ->  WrappedKSerializerWithDefault(tracker) -> SurrogateSerializer(tracker.next())
  *                                      ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
  */
-internal fun KSType.asUserType(tracker: Tracker, mustHaveDefault: Boolean): SerializingHierarchy {
+internal fun KSTypeReference.asUserType(tracker: Tracker, mustHaveDefault: Boolean): SerializingHierarchy {
 
     val nextTracker = if (mustHaveDefault) tracker.next() else tracker
 
@@ -76,11 +77,13 @@ internal fun KSType.asUserType(tracker: Tracker, mustHaveDefault: Boolean): Seri
  * )
  *     ```
  */
-private fun KSType.trySerializeAsOwnClass(tracker: Tracker): SerializingHierarchy.OfType? {
-    if (!this.declaration.isAnnotationPresent(ZKP::class)) {
+private fun KSTypeReference.trySerializeAsOwnClass(tracker: Tracker): SerializingHierarchy.OfType? {
+    val type = resolve()
+
+    if (!type.declaration.isAnnotationPresent(ZKP::class)) {
         return null
     }
-    val surrogate = (this.declaration as KSClassDeclaration)
+    val surrogate = (type.declaration as KSClassDeclaration)
     val surrogateSerializer = surrogate.getSurrogateSerializerClassName()
 
     val serializingObject = TypeSpec.objectBuilder("$tracker")
@@ -96,7 +99,7 @@ private fun KSType.trySerializeAsOwnClass(tracker: Tracker): SerializingHierarch
         .build()
 
     return SerializingHierarchy.OfType(
-        this.toClassName(),
+        type.toClassName(),
         emptyList(),
         serializingObject
     )
@@ -116,13 +119,14 @@ private fun KSType.trySerializeAsOwnClass(tracker: Tracker): SerializingHierarch
  *     )
  * ```
  */
-private fun KSType.trySerializeAs3rdPartyClass(tracker: Tracker): SerializingHierarchy.OfType? {
+private fun KSTypeReference.trySerializeAs3rdPartyClass(tracker: Tracker): SerializingHierarchy.OfType? {
+    val type = resolve()
+
     // Be extra cautious to not enforce order in which the type's serializability is evaluated and return null
     // if @Via annotation is not found.
     // i.e., first, as own class, then as 3rd party class vs first, as 3rd party class, then as own class.
-
     val viaAnnotation = try {
-        this.getNonRepeatableAnnotationByType(Via::class)
+        getNonRepeatableAnnotationByType(Via::class)
     } catch (e: Exception) {
         return null
     }
@@ -144,7 +148,7 @@ private fun KSType.trySerializeAs3rdPartyClass(tracker: Tracker): SerializingHie
         .build()
 
     return SerializingHierarchy.OfType(
-        this.toClassName(),
+        type.toClassName(),
         emptyList(),
         serializingObject
     )

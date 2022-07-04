@@ -1,6 +1,6 @@
 package com.ing.zkflow.processors.serialization.hierarchy.types
 
-import com.google.devtools.ksp.symbol.KSType
+import com.google.devtools.ksp.symbol.KSTypeReference
 import com.ing.zkflow.annotations.ASCII
 import com.ing.zkflow.annotations.UTF16
 import com.ing.zkflow.annotations.UTF32
@@ -16,7 +16,9 @@ import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.ksp.toClassName
 
-internal fun KSType.asString(tracker: Tracker): SerializingHierarchy {
+internal fun KSTypeReference.asString(tracker: Tracker): SerializingHierarchy {
+    val type = resolve()
+
     val serializingObjectBuilder = TypeSpec.objectBuilder("$tracker")
         .addModifiers(KModifier.PRIVATE)
 
@@ -42,5 +44,5 @@ internal fun KSType.asString(tracker: Tracker): SerializingHierarchy {
         break
     }
 
-    return SerializingHierarchy.OfType(this.toClassName(), emptyList(), serializingObjectBuilder.build())
+    return SerializingHierarchy.OfType(type.toClassName(), emptyList(), serializingObjectBuilder.build())
 }

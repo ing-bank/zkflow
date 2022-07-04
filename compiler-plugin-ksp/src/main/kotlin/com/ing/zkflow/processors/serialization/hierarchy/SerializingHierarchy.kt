@@ -3,13 +3,12 @@
 package com.ing.zkflow.processors.serialization.hierarchy
 
 import com.google.devtools.ksp.isAnnotationPresent
-import com.google.devtools.ksp.symbol.KSType
+import com.google.devtools.ksp.symbol.KSTypeReference
 import com.google.devtools.ksp.symbol.KSValueParameter
 import com.ing.zkflow.Via
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.ksp.getCordaSignatureId
 import com.ing.zkflow.ksp.getDigestAlgorithm
-import com.ing.zkflow.ksp.isAnnotationPresent
 import com.ing.zkflow.processors.serialization.hierarchy.types.asBasic
 import com.ing.zkflow.processors.serialization.hierarchy.types.asBigDecimal
 import com.ing.zkflow.processors.serialization.hierarchy.types.asByteArray
@@ -68,17 +67,7 @@ import java.util.UUID
 
 internal fun KSValueParameter.getSerializingHierarchy(): SerializingHierarchy {
     val name = name?.asString() ?: error("Cannot get a name of $this")
-    this.type.resolve().exhibitFunnyBehavior()
-    return this.type.resolve().getSerializingHierarchy(Tracker(name.capitalize()))
-}
-
-private fun KSType.exhibitFunnyBehavior() {
-    val a = this.annotations.toList()
-    val thisNotNullable = this.makeNotNullable()
-    val b = thisNotNullable.annotations.toList()
-    if (a != b) {
-        println("Is this expected??? I did not expect this")
-    }
+    return type.getSerializingHierarchy(Tracker(name.capitalize()))
 }
 
 internal sealed class SerializingHierarchy(
@@ -105,33 +94,9 @@ internal sealed class SerializingHierarchy(
                 } else {
                     rootType.copy(annotations = annotations)
                 }
-
-                // return if (inner.isEmpty()) {
-                //     rootType.copy(annotations = annotations)
-                // } else {
-                //     val parametrization = inner.mapNotNull {
-                //         if (it is OfType && !it.isParameterizing) { return@mapNotNull null }
-                //         it.declaration
-                //     }
-                //
-                //     if (parametrization.isNotEmpty()) {
-                //         rootType
-                //             .parameterizedBy(parametrization)
-                //             .copy(annotations = annotations)
-                //     } else {
-                //         rootType.copy(annotations = annotations)
-                //     }
-                // }
             }
 
         override val type: TypeName
-            // get() = if (inner.isEmpty()) {
-            //     rootType.copy(annotations = emptyList())
-            // } else {
-            //     rootType
-            //         .parameterizedBy(inner.map { it.type })
-            //         .copy(annotations = emptyList())
-            // }
             get() {
                 val parametrization = inner.mapNotNull {
                     if (it is OfType && !it.isParameterizing) { return@mapNotNull null }
@@ -181,20 +146,22 @@ internal sealed class SerializingHierarchy(
 }
 
 @Suppress("LongMethod", "ComplexMethod")
-internal fun KSType.getSerializingHierarchy(tracker: Tracker, ignoreNullability: Boolean = false, mustHaveDefault: Boolean = false): SerializingHierarchy {
-    if (this.isMarkedNullable && !ignoreNullability) {
-        return this.asNullable(tracker)
+internal fun KSTypeReference.getSerializingHierarchy(tracker: Tracker, ignoreNullability: Boolean = false, mustHaveDefault: Boolean = false): SerializingHierarchy {
+    val type = resolve()
+
+    if (type.isMarkedNullable && !ignoreNullability) {
+        return asNullable(tracker)
     }
 
     // Invariant:
     // Nullability has been stripped by now.
 
-    val fqName = this.declaration.qualifiedName?.asString() ?: error("Cannot determine a fully qualified name of $declaration")
+    val fqName = type.declaration.qualifiedName?.asString() ?: error("Cannot determine a fully qualified name of ${type.declaration}")
 
     // TODO
     //   matching for basic types as in  KSTypeReference.isZKFlowSupportedPrimitive()
 
-    return if (this.declaration.isAnnotationPresent(ZKP::class) || this.isAnnotationPresent(Via::class)) {
+    return if (type.declaration.isAnnotationPresent(ZKP::class) || isAnnotationPresent(Via::class)) {
         asUserType(tracker, mustHaveDefault)
     } else {
         when (fqName) {
@@ -216,15 +183,15 @@ internal fun KSType.getSerializingHierarchy(tracker: Tracker, ignoreNullability:
             Instant::class.qualifiedName -> asBasic(tracker, InstantSerializer::class)
             UUID::class.qualifiedName -> asBasic(tracker, UUIDSerializer::class)
             SecureHash::class.qualifiedName -> {
-                val digestAlgorithm = this.getDigestAlgorithm().toClassName()
+                val digestAlgorithm = getDigestAlgorithm().toClassName()
                 asWithDigestAlgorithm(tracker, SecureHashSerializer::class, digestAlgorithm)
             }
             PublicKey::class.qualifiedName -> {
-                val cordaSignatureId = this.getCordaSignatureId()
+                val cordaSignatureId = getCordaSignatureId()
                 asWithCordaSignatureId(tracker, PublicKeySerializer::class, cordaSignatureId)
             }
             AnonymousParty::class.qualifiedName -> {
-                val cordaSignatureId = this.getCordaSignatureId()
+                val cordaSignatureId = getCordaSignatureId()
                 asWithCordaSignatureId(tracker, AnonymousPartySerializer::class, cordaSignatureId)
             }
             Party::class.qualifiedName -> asParty(tracker)
@@ -242,11 +209,11 @@ internal fun KSType.getSerializingHierarchy(tracker: Tracker, ignoreNullability:
                 AutomaticPlaceholderConstraintSerializer::class
             )
             HashAttachmentConstraint::class.qualifiedName -> {
-                val digestAlgorithm = this.getDigestAlgorithm().toClassName()
+                val digestAlgorithm = getDigestAlgorithm().toClassName()
                 asWithDigestAlgorithm(tracker, HashAttachmentConstraintSerializer::class, digestAlgorithm)
             }
             SignatureAttachmentConstraint::class.qualifiedName -> {
-                val cordaSignatureId = this.getCordaSignatureId()
+                val cordaSignatureId = getCordaSignatureId()
                 asWithCordaSignatureId(tracker, SignatureAttachmentConstraintSerializer::class, cordaSignatureId)
             }
             // Specialized collection.
@@ -257,7 +224,7 @@ internal fun KSType.getSerializingHierarchy(tracker: Tracker, ignoreNullability:
             Map::class.qualifiedName -> asMap(tracker)
             Set::class.qualifiedName -> asSet(tracker)
             //
-            else -> TODO("Type ${this.declaration} must be appropriately annotated")
+            else -> TODO("Type ${type.declaration} must be appropriately annotated")
         }
     }
 }

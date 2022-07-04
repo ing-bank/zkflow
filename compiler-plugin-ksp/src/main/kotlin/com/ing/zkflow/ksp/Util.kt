@@ -10,9 +10,10 @@ import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSType
+import com.google.devtools.ksp.symbol.KSTypeReference
 import com.ing.zkflow.Surrogate
-import com.ing.zkflow.annotations.ZKPSurrogate
 import com.ing.zkflow.Via
+import com.ing.zkflow.annotations.ZKPSurrogate
 import com.ing.zkflow.annotations.corda.Algorithm
 import com.ing.zkflow.annotations.corda.SignatureSpec
 import com.squareup.kotlinpoet.ClassName
@@ -109,22 +110,11 @@ fun Resolver.findClassesOrObjectsWithAnnotation(annotationKClass: KClass<out Ann
         .filterConcreteClassesOrObjects()
 }
 
-fun KSAnnotated.getSingleArgumentOfNonRepeatableAnnotationByType(annotationKClass: KClass<out Annotation>): Any? {
-    return this.getAnnotationsByType(annotationKClass).single().arguments.single().value
+fun KSAnnotated.getSingleArgumentOfNonRepeatableAnnotationByType(annotationKClass: KClass<out Annotation>): Any {
+    return this.getAnnotationsByType(annotationKClass).single().arguments.single().value!!
 }
 
-fun KSType.getSingleArgumentOfNonRepeatableAnnotationByType(annotationKClass: KClass<out Annotation>): Any {
-    return annotations
-        .single {
-            it.shortName.getShortName() == annotationKClass.simpleName &&
-                it.annotationType.resolve().declaration.qualifiedName?.asString() == annotationKClass.qualifiedName
-        }
-        .arguments
-        .single()
-        .value!!
-}
-
-fun KSType.getNonRepeatableAnnotationByType(annotationKClass: KClass<out Annotation>): KSAnnotation {
+fun KSTypeReference.getNonRepeatableAnnotationByType(annotationKClass: KClass<out Annotation>): KSAnnotation {
     return annotations
         .single {
             it.shortName.getShortName() == annotationKClass.simpleName &&
@@ -132,16 +122,7 @@ fun KSType.getNonRepeatableAnnotationByType(annotationKClass: KClass<out Annotat
         }
 }
 
-fun KSType.isAnnotationPresent(annotationKClass: KClass<out Annotation>): Boolean {
-    return try {
-        getNonRepeatableAnnotationByType(annotationKClass)
-        true
-    } catch (_: Exception) {
-        false
-    }
-}
-
-fun KSType.getCordaSignatureId(): Int {
+fun KSTypeReference.getCordaSignatureId(): Int {
     return getSingleMetaAnnotationByType(SignatureSpec::class)
         .arguments
         .single()
@@ -150,7 +131,7 @@ fun KSType.getCordaSignatureId(): Int {
         .toInt()
 }
 
-fun KSType.getDigestAlgorithm(): KSType {
+fun KSTypeReference.getDigestAlgorithm(): KSType {
     return getSingleMetaAnnotationByType(Algorithm::class)
         .arguments
         .single()
@@ -172,7 +153,7 @@ fun KSType.getDigestAlgorithm(): KSType {
  *
  * @[annotationKClass] will be selected.
  */
-fun KSType.getSingleMetaAnnotationByType(annotationKClass: KClass<out Annotation>): KSAnnotation {
+fun KSTypeReference.getSingleMetaAnnotationByType(annotationKClass: KClass<out Annotation>): KSAnnotation {
     return annotations.mapNotNull {
         try {
             it.annotationType.resolve().declaration.getAnnotationsByType(annotationKClass).single()
@@ -192,12 +173,13 @@ fun KSType.getSingleMetaAnnotationByType(annotationKClass: KClass<out Annotation
 //      class B()
 //  }
 //  think how to deal with it elegantly without introducing mambo-jumbo in the names
-fun KSClassDeclaration.getSurrogateClassName(): ClassName =
-    ClassName(
+fun KSClassDeclaration.getSurrogateClassName(): ClassName {
+    return ClassName(
         listOf(packageName.asString(), "generated").joinToString(separator = "."),
         simpleName.asString() +
             Surrogate.GENERATED_SURROGATE_POSTFIX
     )
+}
 
 fun KSClassDeclaration.getSurrogateSerializerClassName(): ClassName =
     ClassName(

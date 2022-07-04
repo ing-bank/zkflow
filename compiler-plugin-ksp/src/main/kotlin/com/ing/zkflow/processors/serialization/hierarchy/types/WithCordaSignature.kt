@@ -1,6 +1,6 @@
 package com.ing.zkflow.processors.serialization.hierarchy.types
 
-import com.google.devtools.ksp.symbol.KSType
+import com.google.devtools.ksp.symbol.KSTypeReference
 import com.ing.zkflow.processors.serialization.hierarchy.SerializingHierarchy
 import com.ing.zkflow.tracking.Tracker
 import com.squareup.kotlinpoet.CodeBlock
@@ -11,7 +11,9 @@ import com.squareup.kotlinpoet.ksp.toClassName
 import kotlinx.serialization.KSerializer
 import kotlin.reflect.KClass
 
-internal fun KSType.asWithCordaSignatureId(tracker: Tracker, strategy: KClass<out KSerializer<*>>, signatureId: Int): SerializingHierarchy {
+internal fun KSTypeReference.asWithCordaSignatureId(tracker: Tracker, strategy: KClass<out KSerializer<*>>, signatureId: Int): SerializingHierarchy {
+    val type = resolve()
+
     val serializingObject = TypeSpec.objectBuilder("$tracker")
         .addModifiers(KModifier.PRIVATE)
         .superclass(strategy.asClassName())
@@ -21,7 +23,7 @@ internal fun KSType.asWithCordaSignatureId(tracker: Tracker, strategy: KClass<ou
         .build()
 
     return SerializingHierarchy.OfType(
-        this.toClassName(),
+        type.toClassName(),
         emptyList(),
         serializingObject
     )

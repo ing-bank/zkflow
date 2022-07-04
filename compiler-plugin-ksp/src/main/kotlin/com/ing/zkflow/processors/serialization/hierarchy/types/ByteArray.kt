@@ -1,6 +1,6 @@
 package com.ing.zkflow.processors.serialization.hierarchy.types
 
-import com.google.devtools.ksp.symbol.KSType
+import com.google.devtools.ksp.symbol.KSTypeReference
 import com.ing.zkflow.annotations.Size
 import com.ing.zkflow.ksp.getSingleArgumentOfNonRepeatableAnnotationByType
 import com.ing.zkflow.processors.serialization.hierarchy.SerializingHierarchy
@@ -12,8 +12,10 @@ import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.ksp.toClassName
 
-internal fun KSType.asByteArray(tracker: Tracker): SerializingHierarchy {
-    val maxSize = this.getSingleArgumentOfNonRepeatableAnnotationByType(Size::class)
+internal fun KSTypeReference.asByteArray(tracker: Tracker): SerializingHierarchy {
+    val type = resolve()
+
+    val maxSize = getSingleArgumentOfNonRepeatableAnnotationByType(Size::class)
 
     val serializingObject = TypeSpec.objectBuilder("$tracker")
         .addModifiers(KModifier.PRIVATE)
@@ -22,7 +24,7 @@ internal fun KSType.asByteArray(tracker: Tracker): SerializingHierarchy {
         .build()
 
     return SerializingHierarchy.OfType(
-        this.toClassName(),
+        type.toClassName(),
         emptyList(),
         serializingObject
     )

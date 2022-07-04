@@ -1,13 +1,13 @@
 package com.ing.zkflow.processors.serialization.hierarchy.types
 
+import com.google.devtools.ksp.isAnnotationPresent
 import com.google.devtools.ksp.symbol.KSClassDeclaration
-import com.google.devtools.ksp.symbol.KSType
+import com.google.devtools.ksp.symbol.KSTypeReference
 import com.ing.zkflow.annotations.corda.CordaX500NameSpec
 import com.ing.zkflow.annotations.corda.SignatureSpec
 import com.ing.zkflow.ksp.getNonRepeatableAnnotationByType
 import com.ing.zkflow.ksp.getSingleMetaAnnotationByType
 import com.ing.zkflow.ksp.getSurrogateSerializerClassName
-import com.ing.zkflow.ksp.isAnnotationPresent
 import com.ing.zkflow.processors.serialization.hierarchy.SerializingHierarchy
 import com.ing.zkflow.serialization.serializer.SerializerWithDefault
 import com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializerWithDefault
@@ -23,17 +23,18 @@ import com.squareup.kotlinpoet.ksp.toClassName
 import net.corda.core.identity.CordaX500Name
 
 @Suppress("LongMethod")
-internal fun KSType.asParty(tracker: Tracker): SerializingHierarchy {
-    val cordaSignatureId = this.getSingleMetaAnnotationByType(SignatureSpec::class)
+internal fun KSTypeReference.asParty(tracker: Tracker): SerializingHierarchy {
+    val type = resolve()
+
+    val cordaSignatureId = getSingleMetaAnnotationByType(SignatureSpec::class)
         .arguments
         .single()
         .value!!
         .toString()
         .toInt()
 
-    val cordaX500NameSerializingHierarchy = if (this.isAnnotationPresent(CordaX500NameSpec::class)) {
-        val cordaX500NameSurrogate = this
-            .getNonRepeatableAnnotationByType(CordaX500NameSpec::class)
+    val cordaX500NameSerializingHierarchy = if (isAnnotationPresent(CordaX500NameSpec::class)) {
+        val cordaX500NameSurrogate = getNonRepeatableAnnotationByType(CordaX500NameSpec::class)
             .annotationType
             .resolve()
             .arguments
@@ -91,7 +92,7 @@ internal fun KSType.asParty(tracker: Tracker): SerializingHierarchy {
         .build()
 
     return SerializingHierarchy.OfType(
-        this.toClassName(),
+        type.toClassName(),
         listOf(cordaX500NameSerializingHierarchy),
         partySerializingObject
     )

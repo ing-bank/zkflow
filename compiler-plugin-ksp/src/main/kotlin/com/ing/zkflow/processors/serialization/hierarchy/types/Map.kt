@@ -1,6 +1,6 @@
 package com.ing.zkflow.processors.serialization.hierarchy.types
 
-import com.google.devtools.ksp.symbol.KSType
+import com.google.devtools.ksp.symbol.KSTypeReference
 import com.ing.zkflow.annotations.Size
 import com.ing.zkflow.ksp.getSingleArgumentOfNonRepeatableAnnotationByType
 import com.ing.zkflow.processors.serialization.hierarchy.SerializingHierarchy
@@ -14,13 +14,15 @@ import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.ksp.toClassName
 
-internal fun KSType.asMap(tracker: Tracker): SerializingHierarchy {
-    val maxSize = this.getSingleArgumentOfNonRepeatableAnnotationByType(Size::class)
+internal fun KSTypeReference.asMap(tracker: Tracker): SerializingHierarchy {
+    val type = resolve()
 
-    val keyType = this.arguments[0].type?.resolve() ?: error("Cannot resolve a type argument of $declaration")
+    val maxSize = getSingleArgumentOfNonRepeatableAnnotationByType(Size::class)
+
+    val keyType = type.arguments[0].type ?: error("Cannot resolve a type argument of ${type.declaration}")
     val keySerializingHierarchy = keyType.getSerializingHierarchy(tracker.literal(0).numeric(), mustHaveDefault = true)
 
-    val valueType = this.arguments[1].type?.resolve() ?: error("Cannot resolve a type argument of $declaration")
+    val valueType = type.arguments[1].type ?: error("Cannot resolve a type argument of ${type.declaration}")
     val valueSerializingHierarchy = valueType.getSerializingHierarchy(tracker.literal(1).numeric(), mustHaveDefault = true)
 
     val serializingObject = TypeSpec.objectBuilder("$tracker")
@@ -38,7 +40,7 @@ internal fun KSType.asMap(tracker: Tracker): SerializingHierarchy {
         .build()
 
     return SerializingHierarchy.OfType(
-        this.toClassName(),
+        type.toClassName(),
         listOf(keySerializingHierarchy, valueSerializingHierarchy),
         serializingObject
     )

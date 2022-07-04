@@ -63,7 +63,7 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                       "ClassName",
                       "DEPRECATION"
                     )
-                    
+
                     package $packageName.generated
 
                     import com.ing.zkflow.Surrogate
@@ -120,7 +120,7 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                       "ClassName",
                       "DEPRECATION"
                     )
-                    
+
                     package $packageName.generated
 
                     import com.ing.zkflow.Surrogate
@@ -198,7 +198,7 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                   "ClassName",
                   "DEPRECATION"
                 )
-                
+
                 package $packageName.generated
 
                 import com.ing.zkflow.Surrogate
@@ -329,7 +329,7 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                       "ClassName",
                       "DEPRECATION"
                     )
-                    
+
                     package $packageName.generated
 
                     import com.ing.zkflow.Surrogate
@@ -388,7 +388,7 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                       "ClassName",
                       "DEPRECATION"
                     )
-                    
+
                     package $packageName.generated
 
                     import com.ing.zkflow.Surrogate
@@ -422,7 +422,7 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                     """
                     @file:Suppress("ClassName", "ArrayInDataClass")
                     package $packageName
-                    
+
                     import com.ing.zkflow.annotations.Size
                     import com.ing.zkflow.annotations.UTF8
                     import com.ing.zkflow.annotations.ZKP
@@ -438,12 +438,12 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                     import net.corda.core.identity.Party
                     import java.security.PublicKey
                     import com.ing.zkflow.Surrogate
-                    
+
                     @ZKP
                     data class Parties(
                         val anonymousParty: @EdDSA AnonymousParty = someAnonymous,
                         val anonymousPartyFullyCustom: @Via<AnonymousParty_EdDSA> AnonymousParty = someAnonymous,
-                    
+
                         val party: @EdDSA Party = someParty,
                         val partyCX500Custom: @EdDSA @CordaX500NameSpec<CordaX500NameSurrogate>(CordaX500NameConverter::class) Party = someParty,
                         val partyFullyCustom: @Via<Party_EdDSA> Party = someParty,
@@ -463,7 +463,7 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                             KeyFactory
                                 .getInstance("EdDSA")
                                 .generatePublic(X509EncodedKeySpec(algorithmIdentifier + key))
-                    
+
                         companion object {
                             /**
                              * This is a hack to directly specify algorithm identifier to make the encoding agree with X509 specification.
@@ -472,20 +472,20 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                              * Encoding construction can be found in net.i2p.crypto.eddsa.EdDSAPublicKey.getEncoded.
                              */
                             val algorithmIdentifier = byteArrayOf(48, 42, 48, 5, 6, 3, 43, 101, 112, 3, 33, 0)
-                    
+
                             const val ED_DSA_KEY_LENGTH = 32
-                    
+
                             const val ED_DSA_X509_ENCODING_LENGTH = 44
                         }
                     }
-                    
+
                     // There is an explanation to this converter in regular code, see `PublicKey_EdDSA_Converter`.
                     object PublicKey_EdDSA_Converter : ConversionProvider<PublicKey, PublicKey_EdDSA> {
-                        override fun from(original: PublicKey): PublicKey_EdDSA {                           
+                        override fun from(original: PublicKey): PublicKey_EdDSA {
                             val key = original.encoded.copyOfRange(
                                 PublicKey_EdDSA.ED_DSA_X509_ENCODING_LENGTH - PublicKey_EdDSA.ED_DSA_KEY_LENGTH,
                                 PublicKey_EdDSA.ED_DSA_X509_ENCODING_LENGTH
-                            )                           
+                            )
                             return PublicKey_EdDSA(key)
                         }
                     }
@@ -500,20 +500,20 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                             Crypto.decodePublicKey(Crypto.EDDSA_ED25519_SHA512, encodedEdDSA)
                         )
                     }
-                    
+
                     object Party_EdDSA_Converter : ConversionProvider<Party, Party_EdDSA> {
                         override fun from(original: Party): Party_EdDSA {
                             require(original.owningKey.algorithm == "EdDSA") {
                                 "This converter only accepts parties with EdDSA keys"
                             }
-                    
+
                             return Party_EdDSA(
                                 original.name.toString(),
                                 original.owningKey.encoded
                             )
                         }
                     }
-                    
+
                     @ZKPSurrogate(AnonymousParty_EdDSA_Converter::class)
                     data class AnonymousParty_EdDSA(
                         val encodedEdDSA: @Size(PublicKey_EdDSA.ED_DSA_X509_ENCODING_LENGTH) ByteArray
@@ -521,14 +521,14 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                         override fun toOriginal() = AnonymousParty(
                             Crypto.decodePublicKey(Crypto.EDDSA_ED25519_SHA512, encodedEdDSA)
                         )
-                    }                    
-                    
+                    }
+
                     object AnonymousParty_EdDSA_Converter : ConversionProvider<AnonymousParty, AnonymousParty_EdDSA> {
                         override fun from(original: AnonymousParty): AnonymousParty_EdDSA {
                             require(original.owningKey.algorithm == "EdDSA") {
                                 "This converter only accepts parties with EdDSA keys"
                             }
-                    
+
                             return AnonymousParty_EdDSA(original.owningKey.encoded)
                         }
                     }
@@ -539,12 +539,12 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                     ) : Surrogate<CordaX500Name> {
                         override fun toOriginal(): CordaX500Name =
                             CordaX500Name.parse(concat)
-                    
+
                         companion object {
                             const val UPPER_BOUND = 50
                         }
                     }
-                    
+
                     object CordaX500NameConverter : ConversionProvider<CordaX500Name, CordaX500NameSurrogate> {
                         override fun from(original: CordaX500Name): CordaX500NameSurrogate =
                             CordaX500NameSurrogate(original.toString())
@@ -557,9 +557,9 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                       "ClassName",
                       "DEPRECATION"
                     )
-                    
+
                     package $packageName.generated
-                    
+
                     import com.ing.zkflow.Surrogate
                     import com.ing.zkflow.serialization.serializer.SerializerWithDefault
                     import com.ing.zkflow.serialization.serializer.SurrogateSerializer
@@ -577,7 +577,7 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                     import net.corda.core.identity.AnonymousParty
                     import net.corda.core.identity.CordaX500Name
                     import net.corda.core.identity.Party
-                    
+
                     @Serializable
                     public class PartiesKotlinxSurrogate(
                       @Serializable(with = AnonymousParty_0::class)
@@ -593,28 +593,28 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                     ) : Surrogate<Parties> {
                       public override fun toOriginal(): Parties = Parties(anonymousParty, anonymousPartyFullyCustom,
                           party, partyCX500Custom, partyFullyCustom)
-                    
+
                       private object AnonymousParty_0 : AnonymousPartySerializer(4)
-                    
+
                       private object AnonymousPartyFullyCustom_0 :
                           WrappedFixedLengthKSerializer<AnonymousParty>(AnonymousParty_EdDSASerializer,
                           AnonymousParty_EdDSA::class.java.isEnum)
-                    
+
                       private object Party_0 : PartySerializer(4, Party_1)
-                    
+
                       private object Party_1 :
                           WrappedFixedLengthKSerializerWithDefault<CordaX500Name>(CordaX500NameSerializer)
-                    
+
                       private object PartyCX500Custom_0 : PartySerializer(4, PartyCX500Custom_1)
-                    
+
                       private object PartyCX500Custom_1 :
                           SerializerWithDefault<CordaX500Name>(CordaX500NameSurrogateSerializer,
                           CordaX500NameSerializer.default)
-                    
+
                       private object PartyFullyCustom_0 : WrappedFixedLengthKSerializer<Party>(Party_EdDSASerializer,
                           Party_EdDSA::class.java.isEnum)
                     }
-                    
+
                     public object PartiesSerializer :
                         SurrogateSerializer<Parties, PartiesKotlinxSurrogate>(PartiesKotlinxSurrogate.serializer(), {
                         PartiesKotlinxSurrogate(anonymousParty = it.anonymousParty, anonymousPartyFullyCustom =
