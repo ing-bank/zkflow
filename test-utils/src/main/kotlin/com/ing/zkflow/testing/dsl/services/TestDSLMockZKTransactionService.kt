@@ -16,7 +16,9 @@ public open class TestDSLMockZKTransactionService(
 ) : AbstractZKTransactionService(serviceHub) {
     override val vtxStorage: ZKVerifierTransactionStorage = zkVerifierTransactionStorage
 
-    override fun zkServiceForCommandMetadata(metadata: ResolvedZKCommandMetadata): ZKService = MockZKService(DigestService.blake2s256)
+    override fun zkServiceForCommandMetadata(metadata: ResolvedZKCommandMetadata): ZKService = MockZKService(
+        DigestService.blake2s256
+    )
 
     override fun setup(command: ResolvedZKCommandMetadata, force: Boolean) {
         // Do nothing

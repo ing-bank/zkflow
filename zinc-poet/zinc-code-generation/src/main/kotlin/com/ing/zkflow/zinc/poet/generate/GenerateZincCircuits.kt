@@ -16,24 +16,20 @@ fun instantiateZkCommands(commandRegistryProviders: Iterable<KClassSerializerPro
         .map { it.objectOrNewInstance() as ZKCommandData }
 
 fun main() {
-    val commandDataSerializerRegistryProviders = ServiceLoader.load(KClassSerializerProvider::class.java)
-    instantiateZkCommands(commandDataSerializerRegistryProviders).forEach {
-        circuitGenerator.generateCircuitFor(it)
+    instantiateZkCommands(ServiceLoader.load(KClassSerializerProvider::class.java)).forEach {
+        DefaultCircuitGenerator.generateCircuitFor(it)
     }
 }
 
-private val circuitGenerator: CircuitGenerator by lazy {
-    val zincTypeResolver = ZincTypeGeneratorResolver(ZincTypeGenerator)
-    val zkNetworkParameters = ZKNetworkParametersServiceLoader.latest
-    val standardTypes = StandardTypes(zkNetworkParameters)
-    CircuitGenerator(
-        BuildPathProvider.Default,
-        CommandContextFactory(
-            standardTypes
-        ),
-        standardTypes,
-        zincTypeResolver,
-        ConstsFactory,
-        CryptoUtilsFactory
-    )
-}
+private val zincTypeResolver = ZincTypeGeneratorResolver(ZincTypeGenerator)
+private val zkNetworkParameters = ZKNetworkParametersServiceLoader.latest
+private val standardTypes = StandardTypes(zkNetworkParameters)
+
+object DefaultCircuitGenerator : CircuitGenerator(
+    BuildPathProvider.Default,
+    CommandContextFactory(standardTypes),
+    standardTypes,
+    zincTypeResolver,
+    ConstsFactory,
+    CryptoUtilsFactory
+)

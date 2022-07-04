@@ -10,11 +10,23 @@ import org.junit.jupiter.api.Test
 interface Family : VersionedContractStateGroup
 data class Original(val a: Int) : Family
 data class Upgraded(val a: Int, val b: Int) : Family {
-    @ZincUpgrade("Self::new(previous.a, 0 as i32)")
+    @ZincUpgrade(
+        upgrade = "Self::new(previous.a, 0 as i32)",
+        additionalChecks = """
+            assert!(output.b == 0 as i32, "b must be 0");
+        """
+    )
     constructor(previous: Original) : this(previous.a, 0)
 }
 
 internal class UpgradeUtilsKtTest {
+    @Test
+    fun `findAdditionalChecks for upgraded should return additional checks`() {
+        findAdditionalChecks(Upgraded::class) shouldBe """
+            assert!(output.b == 0 as i32, "b must be 0");
+        """.trimIndent()
+    }
+
     @Test
     fun `findUpgradeParameters for upgraded should return UpgradeParameters for Upgraded class`() {
         val actual = findUpgradeParameters(Upgraded::class)
@@ -63,6 +75,7 @@ internal class UpgradeUtilsKtTest {
                 let output: MyStateV2 = ctx.outputs.my_state_v_2_0.data;
                 
                 assert!(output.equals(MyStateV2::upgrade_from(input)), "[UpgradeMyStateV1ToMyStateV2] Not a valid upgrade from MyStateV1 to MyStateV2.");
+                assert!(output.count == 1 as i32, "Output count must be 1");
             }
         """.trimIndent()
     }
@@ -102,6 +115,7 @@ internal class UpgradeUtilsKtTest {
                 let output: MyStateV2 = ctx.outputs.my_state_v_2_3.data;
                 
                 assert!(output.equals(MyStateV2::upgrade_from(input)), "[UpgradeMyStateV1ToMyStateV2] Not a valid upgrade from MyStateV1 to MyStateV2.");
+                assert!(output.count == 1 as i32, "Output count must be 1");
             }
         """.trimIndent()
     }

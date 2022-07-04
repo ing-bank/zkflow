@@ -84,7 +84,12 @@ data class MyStateV2(
     val ageInYears: Int,
     val count: Int,
 ) : VersionedMyState {
-    @ZincUpgrade("Self::new(previous_state.age_in_years, 1 as i32)")
+    @ZincUpgrade(
+        upgrade = "Self::new(previous_state.age_in_years, 1 as i32)",
+        additionalChecks = """
+            assert!(output.count == 1 as i32, "Output count must be 1");
+        """
+    )
     constructor(previousState: MyStateV1) : this(previousState.ageInYears, 1)
 
     override val participants: List<AbstractParty> = emptyList()

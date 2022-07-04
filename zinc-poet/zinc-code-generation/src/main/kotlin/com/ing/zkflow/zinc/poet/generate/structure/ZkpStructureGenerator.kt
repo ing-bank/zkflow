@@ -8,6 +8,7 @@ import com.ing.zkflow.serialization.serializer.BigDecimalSizeAnnotation
 import com.ing.zkflow.serialization.serializer.FixedLengthFloatingPointSerializer
 import com.ing.zkflow.serialization.serializer.SizeAnnotation
 import com.ing.zkflow.serialization.toFixedLengthSerialDescriptorOrThrow
+import com.ing.zkflow.util.requireNotNull
 import com.ing.zkflow.util.tryGetKClass
 import com.ing.zkflow.zinc.poet.generate.getAnnotation
 import com.ing.zkflow.zinc.poet.generate.getElementDescriptorByName
@@ -111,7 +112,9 @@ object ZkpStructureGenerator {
                 ?.let { klass ->
                     ContractStateVersionFamilyRegistry
                         .familyOf(klass)
-                        .familyClass.qualifiedName!!
+                        .requireNotNull { "Could not find Version family for $klass." }
+                        .familyClass
+                        .qualifiedName
                 }
         } catch (e: Exception) {
             null

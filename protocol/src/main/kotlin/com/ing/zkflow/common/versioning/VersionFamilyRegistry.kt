@@ -4,6 +4,8 @@ import net.corda.core.contracts.ContractState
 import java.util.ServiceLoader
 import kotlin.reflect.KClass
 
+fun ContractState.isVersion(version: Int) = ContractStateVersionFamilyRegistry.versionOf(this::class) == version
+
 /**
  * Main API to access the [VersionFamilyRegistry], where the list of [VersionFamily] is read from the [ServiceLoader].
  */
@@ -22,12 +24,10 @@ open class VersionFamilyRegistry(
         retriever.families.associateBy { it.familyClass }
     }
 
-    operator fun get(familyKClass: KClass<out VersionedContractStateGroup>): VersionFamily = familyClassToFamily[familyKClass]
-        ?: error("Not registered as family: $familyKClass")
+    operator fun get(familyKClass: KClass<out VersionedContractStateGroup>): VersionFamily? = familyClassToFamily[familyKClass]
 
-    fun familyOf(memberKClass: KClass<out ContractState>): VersionFamily =
-        retriever.families.singleOrNull { it.hasMember(memberKClass) }
-            ?: error("Not registered as family member: $memberKClass")
+    fun familyOf(memberKClass: KClass<out ContractState>): VersionFamily? = retriever.families.singleOrNull { it.hasMember(memberKClass) }
+    fun versionOf(memberKClass: KClass<out ContractState>): Int? = familyOf(memberKClass)?.versionOf(memberKClass)
 }
 
 /**

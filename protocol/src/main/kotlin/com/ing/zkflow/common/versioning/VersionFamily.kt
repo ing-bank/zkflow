@@ -35,15 +35,5 @@ data class VersionFamily(
         return version
     }
 
-    fun next(current: KClass<out ContractState>): KClass<out ContractState>? {
-        val nextIndex = members.lastIndexOf(current) + 1
-        require(nextIndex > 0) {
-            "${current.qualifiedName} is not a member of $this"
-        }
-        return if (nextIndex == members.size) {
-            null
-        } else {
-            members[nextIndex]
-        }
-    }
+    fun next(current: KClass<out ContractState>): KClass<out ContractState>? = members.getOrNull(members.lastIndexOf(current) + 1)
 }

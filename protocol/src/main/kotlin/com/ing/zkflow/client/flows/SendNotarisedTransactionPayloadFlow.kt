@@ -32,6 +32,8 @@ import net.corda.core.utilities.unwrap
  * @param otherSideSession the target party's session.
  * @param stx the [SignedTransaction] being sent to the [otherSideSession].
  */
+// TODO: to prevent unnecessary data leakage, this should probably send a SignedZKVerifierTransaction instead, and possibly the
+// inputs and outputs that this party is a participant to.
 open class ZKSendTransactionProposal(private val otherSideSession: FlowSession, private val stx: SignedTransaction) :
     FlowLogic<Void?>() {
     @Suspendable
