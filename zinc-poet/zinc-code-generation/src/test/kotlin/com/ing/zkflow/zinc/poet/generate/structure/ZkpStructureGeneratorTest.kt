@@ -60,8 +60,6 @@ import com.ing.zkflow.zinc.poet.generate.ClassWithUtf8String
 import com.ing.zkflow.zinc.poet.generate.ClassWithUtf8String_Serializer
 import com.ing.zkflow.zinc.poet.generate.ClassWithoutFields
 import com.ing.zkflow.zinc.poet.generate.ClassWithoutFields_Serializer
-import com.ing.zkflow.zinc.poet.generate.EnumWithNumbers
-import com.ing.zkflow.zinc.poet.generate.EnumWithNumbers_Serializer
 import com.ing.zkflow.zinc.poet.generate.VersionedState
 import com.ing.zkflow.zinc.poet.generate.VersionedState_Serializer
 import io.kotest.matchers.collections.shouldContainExactly
@@ -86,7 +84,7 @@ internal class ZkpStructureGeneratorTest {
             familyClassName: String? = null,
             field: ZkpStructureField? = null
         ): ZkpStructureClass = ZkpStructureClass(
-            serialName = "${T::class.qualifiedName}",
+            serialName = "${T::class.getSerialDescriptor().internalTypeName}",
             familyClassName = familyClassName,
             serializationId = null,
             byteSize = field?.fieldType?.byteSize ?: 0,
@@ -98,7 +96,7 @@ internal class ZkpStructureGeneratorTest {
         )
         private val wrappedEmptyClass = wrappedStructure<ClassWithoutFields>()
         private val wrappedUnitStructure = ZkpStructureClass(
-            "${ClassWithClassWithoutFields::class.qualifiedName}", null, null, 0,
+            "${ClassWithClassWithoutFields::class.simpleName}", null, null, 0,
             listOf(
                 ZkpStructureField("c", wrappedEmptyClass.ref()),
             )
@@ -213,7 +211,13 @@ internal class ZkpStructureGeneratorTest {
         private val partyEdDsaEd25519Sha256 = ZkpStructureClass(
             "PartyEdDsaEd25519Sha512", null, null, 461,
             listOf(
-                ZkpStructureField("cordaX500Name", ZkpStructureClassRef("com.ing.zkflow.serialization.serializer.corda.CordaX500NameSerializer.CordaX500NameSurrogate", 413)),
+                ZkpStructureField(
+                    "cordaX500Name",
+                    ZkpStructureClassRef(
+                        CordaX500NameSerializer.CordaX500NameSurrogate::class.getSerialDescriptor().internalTypeName,
+                        413
+                    )
+                ),
                 ZkpStructureField("publicKey", ZkpStructureClassRef("PublicKeyEdDsaEd25519Sha512", 48))
             )
         )
@@ -254,7 +258,7 @@ internal class ZkpStructureGeneratorTest {
             )
         )
         private val cordaX500NameSurrogate = ZkpStructureClass(
-            "com.ing.zkflow.serialization.serializer.corda.CordaX500NameSerializer.CordaX500NameSurrogate",
+            CordaX500NameSerializer.CordaX500NameSurrogate::class.getSerialDescriptor().internalTypeName,
             null, null,
             413,
             listOf(

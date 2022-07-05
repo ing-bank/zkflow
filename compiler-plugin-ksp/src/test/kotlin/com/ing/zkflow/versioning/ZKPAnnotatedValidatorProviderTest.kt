@@ -241,7 +241,7 @@ class ZKPAnnotatedValidatorProviderTest : ProcessorTest(ZKPAnnotatedValidatorPro
             outputStream
         )
 
-        result.messages shouldContain "Target type of surrogate `StringSurrogate` set with @Via  annotation must be Int, but is 'String'"
+        result.messages shouldContain "Target type of surrogate `StringSurrogate` set with @Via annotation must be Int, but is 'String'"
         result.exitCode shouldBe KotlinCompilation.ExitCode.COMPILATION_ERROR
     }
 

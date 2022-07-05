@@ -68,7 +68,19 @@ class SerializerProviderGenerator(private val codeGenerator: CodeGenerator) {
     sealed class SerializableClassWithSourceFiles(
         val sourceFiles: List<KSFile> = emptyList()
     ) {
-        class Generated(override val className: ClassName, sourceFiles: List<KSFile>) : SerializableClassWithSourceFiles(sourceFiles)
+        class Generated(override val className: ClassName, sourceFiles: List<KSFile>) : SerializableClassWithSourceFiles(sourceFiles) {
+            override fun equals(other: Any?): Boolean {
+                if (other !is SerializableClassWithSourceFiles) {
+                    return false
+                }
+
+                return className == other.className && sourceFiles == other.sourceFiles
+            }
+
+            override fun hashCode(): Int {
+                return className.hashCode()
+            }
+        }
 
         class Existing(val declaration: KSClassDeclaration, sourceFiles: List<KSFile>) : SerializableClassWithSourceFiles(sourceFiles) {
             override val className: ClassName

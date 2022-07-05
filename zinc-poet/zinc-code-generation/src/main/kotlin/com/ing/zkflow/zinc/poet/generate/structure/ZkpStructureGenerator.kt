@@ -1,6 +1,7 @@
 package com.ing.zkflow.zinc.poet.generate.structure
 
 import com.ing.zkflow.common.serialization.ContractStateSerializerRegistry
+import com.ing.zkflow.common.serialization.zinc.generation.internalTypeName
 import com.ing.zkflow.common.versioning.ContractStateVersionFamilyRegistry
 import com.ing.zkflow.serialization.FixedLengthSerialDescriptor
 import com.ing.zkflow.serialization.FixedLengthType
@@ -93,7 +94,7 @@ object ZkpStructureGenerator {
     private fun createStruct(descriptor: SerialDescriptor): ZkpStructureType {
         val fixedLengthSerialDescriptor: FixedLengthSerialDescriptor = descriptor.toFixedLengthSerialDescriptorOrThrow()
         return ZkpStructureClass(
-            serialName = fixedLengthSerialDescriptor.serialName,
+            serialName = fixedLengthSerialDescriptor.internalTypeName,
             familyClassName = tryGetFamilyClassName(fixedLengthSerialDescriptor),
             serializationId = tryGetSerializationId(fixedLengthSerialDescriptor),
             byteSize = fixedLengthSerialDescriptor.byteSize,

@@ -40,19 +40,29 @@ private fun String.startsWithUppercase(): Boolean {
     return this[0].isUpperCase()
 }
 
+/**
+ * Gets a serial descriptor given a KClass.
+ * - attempt to get a serial descriptor as if the class was directly @Serializable
+ * - attempt to get a serial descriptor as if a serializable surrogate was generated.
+ * - fail
+ */
 fun KClass<*>.getSerialDescriptor(): SerialDescriptor {
-    val fqName = asClassName()
-        .buildFullyDistinguishableClassName(Surrogate.GENERATED_SURROGATE_SERIALIZER_POSTFIX)
-        .canonicalName
+    return try {
+        this.serializer().descriptor
+    } catch (_: Exception) {
+        val fqName = asClassName()
+            .buildFullyDistinguishableClassName(Surrogate.GENERATED_SURROGATE_SERIALIZER_POSTFIX)
+            .canonicalName
 
-    val serializer = Class.forName(fqName)
-        .kotlin
-        .objectOrNewInstance() as KSerializer<*>
+        val serializer = Class.forName(fqName)
+            .kotlin
+            .objectOrNewInstance() as KSerializer<*>
 
-    return serializer.descriptor
+        serializer.descriptor
+    }
 }
 
-fun ClassName.buildFullyDistinguishableClassName(postfix: String): ClassName {
+fun ClassName.buildFullyDistinguishableClassName(vararg postfixes: String): ClassName {
     var prefixes = emptyList<String>()
     var className = this
     var container = className.enclosingClassName()
@@ -62,13 +72,14 @@ fun ClassName.buildFullyDistinguishableClassName(postfix: String): ClassName {
         container = className.enclosingClassName()
     }
 
+    val nameComponents = listOf(
+        prefixes.joinToString(separator = "") { it.capitalize() },
+        simpleName,
+    ) + postfixes
+
     return ClassName(
         packageName,
-        listOf(
-            prefixes.joinToString(separator = "") { it.capitalize() },
-            simpleName,
-            postfix
-        )
+        nameComponents
             .filter { it.isNotBlank() }
             .joinToString(separator = "_")
     )
