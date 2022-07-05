@@ -8,7 +8,7 @@ See the `sample-zkdapp` for an example on how a CorDapp can be adapted to work w
 Features:
 
 - Fully private transactions: all states in a transaction are hidden
-- Selectively hide states: mix hidden and public states in one transaction. Separate contract verification logic for hidden and public states
+- Partially private transactions: mix hidden and public states in one transaction. Separate contract verification logic for hidden and public states
 - Reveal transactions: a new transaction that makes a private state publicly visible moving forward. Previous versions of the state in its backchain remain hidden.
 - Hide transactions: a new transaction that makes a public state hidden moving forward. Previous versions of the state in its backchain remain public.
 
