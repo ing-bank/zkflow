@@ -24,9 +24,6 @@ dependencies {
     kotlinCompilerPluginClasspath(project(":annotations"))
     kotlinCompilerPluginClasspath(project(":serialization"))
 
-    val arrowMetaVersion: String by project
-    kotlinCompilerPluginClasspath("io.arrow-kt:arrow-meta:$arrowMetaVersion")
-
     implementation(project(":compiler-plugin-ksp"))
     ksp(project(":compiler-plugin-ksp"))
 }

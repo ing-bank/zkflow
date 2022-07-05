@@ -8,9 +8,7 @@ import com.ing.zkflow.zinc.poet.generate.structure.VERIFY_ZKP_STRUCTURE
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.artifacts.Configuration
 import org.gradle.api.plugins.JavaPlugin
-import org.jetbrains.kotlin.gradle.dsl.KotlinCompile
 import java.net.URI
 
 @Suppress("unused")
@@ -21,11 +19,9 @@ class ZKFlowPlugin : Plugin<Project> {
         project.repositories.apply {
             // For kotlinx.serialization plugin
             maven { it.url = URI.create("https://plugins.gradle.org/m2/") }
-            // For arrow
-            maven { it.url = URI.create("https://oss.sonatype.org/content/repositories/snapshots/") }
-            // For Arrow to enable bespoke treatment of the Corda classes.
-            maven { it.url = URI.create("https://software.r3.com/artifactory/corda") }
         }
+
+        // TODO perhaps source sets must be added
 
         project.plugins.withType(JavaPlugin::class.java) {
             // Add the required dependencies to consumer projects
@@ -38,9 +34,6 @@ class ZKFlowPlugin : Plugin<Project> {
             // KSP.
             project.pluginManager.apply("com.google.devtools.ksp")
             project.dependencies.add("ksp", zkflowArtifact("compiler-plugin-ksp"))
-
-            // Arrow.
-            applyArrowCompilerPlugin(project)
         }
 
         val generateZincCircuitsTask = project.tasks.create(
@@ -72,55 +65,7 @@ class ZKFlowPlugin : Plugin<Project> {
         project.tasks.getByPath(ASSEMBLE).dependsOn(GENERATE_ZINC_CIRCUITS)
     }
 
-    private fun applyArrowCompilerPlugin(project: Project) {
-        val arrowCompilerPluginConfiguration: Configuration = project.configurations.create(ARROW_COMPILER_PLUGIN)
-        project.dependencies.add(ARROW_COMPILER_PLUGIN, zkflowArtifact("compiler-plugin-arrow"))
-        project.dependencies.add(IMPLEMENTATION, zkflowArtifact("serialization"))
-
-        project
-            .tasks
-            .filterIsInstance<KotlinCompile<*>>()
-            .forEach { task ->
-                task.logger.quiet("[${task.name}] Modifying free compiler arguments to apply compiler-plugin-arrow")
-
-                val toInclude = listOf(
-                    Pair(ZKFLOW_GROUP, "utils"),
-                    Pair(ZKFLOW_GROUP, "annotations"),
-                    Pair(ZKFLOW_GROUP, "serialization"),
-                    Pair("org.jetbrains.kotlinx", "kotlinx-serialization-core-jvm"),
-                    Pair("io.arrow-kt", "arrow-meta"),
-                )
-
-                val resolvedArtifacts = arrowCompilerPluginConfiguration.resolvedConfiguration.resolvedArtifacts
-
-                resolvedArtifacts.filter { artifact ->
-                    toInclude.any {
-                        artifact.moduleVersion.id.group == it.first && artifact.moduleVersion.id.name == it.second
-                    }
-                }.forEach {
-                    task.logger.quiet("[${task.name}] Adding dependency: ${it.id.displayName}")
-                    project.dependencies.add("kotlinCompilerPluginClasspath", project.files(it.file.toURI()))
-                }
-
-                val compilerPluginArrow =
-                    resolvedArtifacts.single { artifact ->
-                        artifact.moduleVersion.id.group == ZKFLOW_GROUP && artifact.moduleVersion.id.name == "compiler-plugin-arrow"
-                    }
-
-                task.kotlinOptions.freeCompilerArgs += listOf("-Xplugin=${compilerPluginArrow.file.absolutePath}")
-
-                task.logger.quiet(
-                    "[${task.name}] Arrow compiler plugin application:${
-                    task.kotlinOptions.freeCompilerArgs
-                        .joinToString(separator = "\n\t") { it }
-                        .let { if (it.isNotBlank()) "\n\t$it" else it }
-                    }"
-                )
-            }
-    }
-
     companion object {
-        const val ARROW_COMPILER_PLUGIN = "arrowCompilerPlugin"
         const val ASSEMBLE = "assemble"
         const val COMPILE_KOTLIN = "compileKotlin"
         const val IMPLEMENTATION = "implementation"

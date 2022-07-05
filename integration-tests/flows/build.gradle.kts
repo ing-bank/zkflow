@@ -24,9 +24,6 @@ dependencies {
     kotlinCompilerPluginClasspath(project(":annotations"))
     kotlinCompilerPluginClasspath(project(":serialization"))
 
-    val arrowMetaVersion: String by project
-    kotlinCompilerPluginClasspath("io.arrow-kt:arrow-meta:$arrowMetaVersion")
-
     implementation(project(":compiler-plugin-ksp"))
     ksp(project(":compiler-plugin-ksp"))
 }
@@ -69,7 +66,6 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
         // explicitly enforce 1.4.
         useIR = true
         jvmTarget = "1.8"
-        freeCompilerArgs += "-Xplugin=$rootDir/compiler-plugin-arrow/build/libs/compiler-plugin-arrow-$version.jar"
         freeCompilerArgs += "-Xopt-in=kotlin.ExperimentalUnsignedTypes"
     }
 }
