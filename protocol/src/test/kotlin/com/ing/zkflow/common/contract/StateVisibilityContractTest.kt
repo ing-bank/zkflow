@@ -359,6 +359,34 @@ class LocalZKContract : ZKContract, Contract {
 
     @Serializable
     @ZKP
+    class CreatePrivateEncumbered : ZKCommandData {
+        init {
+            tryNonFailing {
+                CommandDataSerializerRegistry.register(this::class, serializer())
+            }
+        }
+
+        @Transient
+        override val metadata: ResolvedZKCommandMetadata = commandMetadata {
+            outputs {
+                private(ZKTestState::class) at 0
+                private(SomeOtherZKState::class) at 1
+            }
+            numberOfSigners = 1
+        }
+
+        override fun verifyPrivate(): String = """
+            mod module_command_context;
+            use module_command_context::CommandContext;
+            
+            fn verify(ctx: CommandContext) {
+                // TODO
+            }
+        """.trimIndent()
+    }
+
+    @Serializable
+    @ZKP
     class CreatePrivate : ZKCommandData {
         init {
             tryNonFailing {
@@ -404,6 +432,38 @@ class LocalZKContract : ZKContract, Contract {
                 public(ZKTestState::class) at 1
             }
             numberOfSigners = 2
+        }
+
+        override fun verifyPrivate(): String = """
+            mod module_command_context;
+            use module_command_context::CommandContext;
+            
+            fn verify(ctx: CommandContext) {
+                // TODO
+            }
+        """.trimIndent()
+    }
+
+    @Serializable
+    @ZKP
+    class UnencumberPrivate : ZKCommandData {
+        init {
+            tryNonFailing {
+                CommandDataSerializerRegistry.register(this::class, serializer())
+            }
+        }
+
+        @Transient
+        override val metadata: ResolvedZKCommandMetadata = commandMetadata {
+            inputs {
+                private(ZKTestState::class) at 0
+                private(SomeOtherZKState::class) at 1
+            }
+            outputs {
+                private(ZKTestState::class) at 0
+            }
+            numberOfSigners = 1
+            notary = true
         }
 
         override fun verifyPrivate(): String = """

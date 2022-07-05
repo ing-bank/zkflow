@@ -7,6 +7,7 @@ import com.ing.zinc.poet.ZincArray.Companion.zincArray
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.common.zkp.metadata.ZKIndexedTypedElement
 import com.ing.zkflow.serialization.infra.CommandDataSerializationMetadata
+import com.ing.zkflow.serialization.infra.SecureHashSerializationMetadata
 import com.ing.zkflow.serialization.infra.SignersSerializationMetadata
 import com.ing.zkflow.serialization.infra.TransactionStateSerializationMetadata
 import com.ing.zkflow.zinc.poet.generate.ZincTypeResolver
@@ -19,6 +20,7 @@ import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.timeWindo
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.wrapTxComponent
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.COMMANDS
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.INPUT_NONCES
+import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.INPUT_STATEREFS
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.NOTARY
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.OUTPUTS
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.PARAMETERS
@@ -86,6 +88,14 @@ class TransactionComponentContainer(
     private val privacySaltGroup = HashingMetadataTransactionComponent(PRIVACY_SALT, privacySalt, privacySalt.getSerializedTypeDef(), 1)
 
     private val numberOfInputs = commandMetadata.inputs.size
+
+    internal val inputStateRefsGroup = NonHashedArrayTransactionComponent(
+        INPUT_STATEREFS,
+        wrapTxComponent(INPUT_STATEREFS, standardTypes.stateRef, SecureHashSerializationMetadata.serializer().descriptor),
+        whenVisibleInWitness(ComponentGroupEnum.INPUTS_GROUP) { numberOfInputs },
+        ComponentGroupEnum.INPUTS_GROUP
+    )
+
     private val inputNoncesGroup = HashingMetadataTransactionComponent(
         INPUT_NONCES,
         arrayOfNonceDigests(numberOfInputs),
@@ -130,6 +140,7 @@ class TransactionComponentContainer(
         signerGroup,
         parameterGroup,
         privacySaltGroup,
+        inputStateRefsGroup,
         inputNoncesGroup,
         referenceNoncesGroup,
         serializedInputUtxos,

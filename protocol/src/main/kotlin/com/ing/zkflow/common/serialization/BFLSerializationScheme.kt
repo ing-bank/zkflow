@@ -47,6 +47,7 @@ import net.corda.core.utilities.ByteSequence
 import net.corda.core.utilities.loggerFor
 import net.corda.serialization.internal.CordaSerializationMagic
 import java.nio.file.Files
+import java.nio.file.Path
 import java.security.PublicKey
 
 open class BFLSerializationScheme : CustomSerializationScheme {
@@ -301,6 +302,7 @@ open class BFLSerializationScheme : CustomSerializationScheme {
 
         tempDirectory
             .ensureFile("${descriptor.serialName.camelToSnakeCase()}.txt")
+            .log { "Wrote runtime BFL structure file to ${it.toAbsolutePath()}." }
             .writeText(
                 toTree(descriptor).toString()
             )
@@ -320,5 +322,10 @@ open class BFLSerializationScheme : CustomSerializationScheme {
             else -> "${txComponent::class.simpleName}"
         }
         return "$prefix$suffix"
+    }
+
+    private fun Path.log(message: (Path) -> String): Path {
+        logger.info(message(this))
+        return this
     }
 }

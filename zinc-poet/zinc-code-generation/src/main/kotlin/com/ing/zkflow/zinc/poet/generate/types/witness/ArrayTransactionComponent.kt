@@ -20,14 +20,14 @@ import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.digest
 import com.ing.zkflow.zinc.poet.generate.types.Witness
 import net.corda.core.contracts.ComponentGroupEnum
 
-internal data class ArrayTransactionComponent(
+internal open class ArrayTransactionComponent(
     override val groupName: String,
     val txComponent: BflWrappedTransactionComponent,
     private val groupSize: Int,
     val componentGroup: ComponentGroupEnum
 ) : TransactionComponent {
     override val isPresent: Boolean = groupSize > 0
-    private val witnessGroupOptions = TransactionComponentOptions(groupName, txComponent)
+    protected val witnessGroupOptions = TransactionComponentOptions(groupName, txComponent)
     override val options = listOf(witnessGroupOptions)
     override val dependencies: List<BflType> = listOf(
         witnessGroupOptions.type,

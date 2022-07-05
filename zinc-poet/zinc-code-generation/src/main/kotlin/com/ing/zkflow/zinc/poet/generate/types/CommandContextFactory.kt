@@ -1,6 +1,7 @@
 package com.ing.zkflow.zinc.poet.generate.types
 
 import com.ing.zinc.bfl.BflStruct
+import com.ing.zinc.bfl.dsl.ArrayBuilder.Companion.array
 import com.ing.zinc.bfl.dsl.StructBuilder.Companion.struct
 import com.ing.zinc.poet.ZincMethod
 import com.ing.zinc.poet.ZincPrimitive
@@ -8,6 +9,7 @@ import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.parametersSecureHash
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes.Companion.timeWindow
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.INPUTS
+import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.INPUT_STATEREFS
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.NOTARY
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.OUTPUTS
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.PARAMETERS
@@ -24,6 +26,14 @@ class CommandContextFactory(
         transactionComponents: TransactionComponentContainer,
     ): BflStruct = struct {
         name = COMMAND_CONTEXT
+        if (transactionComponents.inputStateRefsGroup.isPresent) {
+            field {
+                name = INPUT_STATEREFS; type = array {
+                    capacity = commandMetadata.inputs.size
+                    elementType = standardTypes.stateRef
+                }
+            } // standardTypes.stateRefList(commandMetadata) }
+        }
         if (transactionComponents.serializedInputUtxos.isPresent) {
             field { name = INPUTS; type = transactionComponents.serializedInputUtxos.deserializedGroup }
         }
@@ -53,12 +63,13 @@ class CommandContextFactory(
          * - checkEncumbrancesValid()
          * - validateStatesAgainstContract() // THis may be irrelevant: if they don't belong to this circuit, Zinc will not understand them.
          *
-         * TODO: Confirm that users will not need to check contract attachments for private transaction components:
          * Currently, users will have a verification key for each command in their CorDapp loaded by the node, also for all historical
          * commands. This is ensured, since command classes can never change in ZKFlow. If they do, a new one must be introduced, which
          * also results in a new circuit for it, including keys.
          * This means that as long as the CorDapps the user has deployed on the node are trusted, they have all verification keys
-         * for the commands that they know. This does not need to be retrieved from the transaction attachments.
+         * for the commands that they know. This but does not need to be retrieved from the transaction attachments. This means
+         * that it is not required to check that a trusted attachment with a contract is present in the tx for a state. So no checks on
+         * contract attachments are done for private states.
          * For the verification of the public parts of a ZKFlow transaction, all normal checks will be done by Corda as usual, including these.
          * - val contractAttachmentsByContract = getUniqueContractAttachmentsByContract()
          * - verifyConstraints(contractAttachmentsByContract)
@@ -73,17 +84,78 @@ class CommandContextFactory(
          * - checkNotaryWhitelisted(ltx)
          */
         addFunction(generateCheckNoNotaryChangeMethod(transactionComponents))
+        addFunction(generateCheckEncumbrancesValidMethod(transactionComponents))
     }
 
-    // TransactionVerifierServiceInternal.checkNoNotaryChange()
+    /**
+     * [net.corda.core.internal.Verifier.checkEncumbrancesValid]
+     */
+    private fun generateCheckEncumbrancesValidMethod(transactionComponents: TransactionComponentContainer) = ZincMethod.zincMethod {
+        name = "check_encumbrances_valid"
+        returnType = ZincPrimitive.Unit
+        body = with(transactionComponents) {
+            val inputsCheck = if (serializedInputUtxos.isPresent) {
+                serializedInputUtxos.deserializedGroup.fields.foldIndexed("") { encumberedInputIndex, inputsCheck, inputField ->
+                    // val encumbranceStateExists = ltx.inputs.any {
+                    //     it.ref.txhash == ref.txhash && it.ref.index == state.encumbrance
+                    // }
+                    inputsCheck + """
+                       if self.inputs.${inputField.name}.encumbrance.has_value {
+                           let encumbranceStateExists: bool = ${serializedInputUtxos.deserializedGroup.fields.foldIndexed(listOf<String>()) { otherInputindex, encumbranceExistsCheck, _ ->
+                        if (otherInputindex == encumberedInputIndex) {
+                            encumbranceExistsCheck
+                        } else {
+                            encumbranceExistsCheck + (
+                                "(self.input_staterefs[$otherInputindex].txhash.equals(self.input_staterefs[$encumberedInputIndex].txhash) && " +
+                                    "self.input_staterefs[$otherInputindex].index == self.inputs.${inputField.name}.encumbrance.value)"
+                                )
+                        }
+                    }.joinToString(" || \n").ifEmpty { "false; // There is only one input and it is encumbered, so no other encumbering states exist in the transaction. " } };
+                           assert!(encumbranceStateExists, "Missing required encumbrance in inputs for ${inputField.name}.");
+                       };
+                    """.trimIndent() + "\n"
+                }
+            } else {
+                "// No inputs present"
+            }
+
+            /**
+             * TODO: add the outputs check
+             * // Check that in the outputs,
+             * // a) an encumbered state does not refer to itself as the encumbrance
+             * // b) the number of outputs can contain the encumbrance
+             * // c) the bi-directionality (full cycle) property is satisfied
+             * // d) encumbered output states are assigned to the same notary.
+             * val statesAndEncumbrance = ltx.outputs
+             *     .withIndex()
+             *     .filter { it.value.encumbrance != null }
+             *     .map { Pair(it.index, it.value.encumbrance!!) }
+             *
+             * if (statesAndEncumbrance.isNotEmpty()) {
+             *     checkBidirectionalOutputEncumbrances(statesAndEncumbrance)
+             *     checkNotariesOutputEncumbrance(statesAndEncumbrance)
+             * }
+             */
+            val outputsCheck = ""
+
+            """
+               $inputsCheck 
+               $outputsCheck
+            """.trimIndent()
+        }
+    }
+
+    /**
+     * [net.corda.core.internal.Verifier.checkNoNotaryChange]
+     */
     private fun generateCheckNoNotaryChangeMethod(transactionComponents: TransactionComponentContainer) = ZincMethod.zincMethod {
         name = "check_no_notary_change"
         returnType = ZincPrimitive.Unit
         body = with(transactionComponents) {
             if (notaryGroup.isPresent && (serializedInputUtxos.isPresent || serializedReferenceUtxos.isPresent)) {
                 if (serializedOutputGroup.isPresent) {
-                    serializedOutputGroup.deserializedGroup.fields.fold("") { acc, output ->
-                        acc + "assert!(self.outputs.${output.name}.notary.equals(self.notary), \"Found unexpected notary change in transaction. Check that output notaries match transaction notary.\");\n"
+                    serializedOutputGroup.deserializedGroup.fields.fold("") { acc, outputField ->
+                        acc + "assert!(self.outputs.${outputField.name}.notary.equals(self.notary), \"Found unexpected notary change in transaction. Check that output notaries match transaction notary.\");\n"
                     }
                 } else {
                     ""

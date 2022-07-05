@@ -58,11 +58,8 @@ class Witness(
         newLine()
         (
             dependencies + listOfNotNull(
-                if (txComponentContainer.signerGroup.isPresent) {
-                    standardTypes.signerList(commandMetadata)
-                } else {
-                    null
-                },
+                // if (txComponentContainer.inputStateRefsGroup.isPresent) standardTypes.stateRefList(commandMetadata) else null,
+                if (txComponentContainer.signerGroup.isPresent) standardTypes.signerList(commandMetadata) else null,
                 commandContext
             )
             )
@@ -124,6 +121,7 @@ class Witness(
         returnType = id(COMMAND_CONTEXT)
         body = """
             $COMMAND_CONTEXT {
+                ${if (txComponentContainer.inputStateRefsGroup.isPresent) "$INPUT_STATEREFS: self.deserialize_$INPUT_STATEREFS()," else "// $INPUT_STATEREFS not present in transaction"}
                 ${if (txComponentContainer.serializedInputUtxos.isPresent) "$INPUTS: self.$SERIALIZED_INPUT_UTXOS.deserialize()," else "// $INPUTS not present in transaction"}
                 ${if (txComponentContainer.serializedOutputGroup.isPresent) "$OUTPUTS: self.$OUTPUTS.deserialize()," else "// $OUTPUTS not present in transaction"}
                 ${if (txComponentContainer.serializedReferenceUtxos.isPresent) "$REFERENCES: self.$SERIALIZED_REFERENCE_UTXOS.deserialize()," else "// $REFERENCES not present in transaction"}
@@ -200,5 +198,6 @@ class Witness(
         internal const val REFERENCE_NONCES = "reference_nonces"
         internal const val SERIALIZED_INPUT_UTXOS = "serialized_input_utxos"
         internal const val SERIALIZED_REFERENCE_UTXOS = "serialized_reference_utxos"
+        internal const val INPUT_STATEREFS = "input_staterefs"
     }
 }

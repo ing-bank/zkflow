@@ -48,6 +48,13 @@ object WitnessSerializer {
 
             put("privacy_salt", JsonArray(witness.privacySalt.bytes.toUnsignedBitString()))
 
+            if (witness.inputsGroup.isNotEmpty()) {
+                put(
+                    "input_staterefs",
+                    JsonArray(witness.inputsGroup.toJsonArray())
+                )
+            }
+
             if (witness.serializedInputUtxos.isNotEmpty()) {
                 put(
                     "input_nonces",

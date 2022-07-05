@@ -48,5 +48,7 @@ data class PublicInput(
     /**
      * Leaf hash [SecureHash] of the UTXO pointed to by the reference at index [Int]
      */
-    val referenceUtxoHashes: List<SecureHash>
+    val referenceUtxoHashes: List<SecureHash>,
+
+    val inputStateRefs: List<ByteArray>
 )

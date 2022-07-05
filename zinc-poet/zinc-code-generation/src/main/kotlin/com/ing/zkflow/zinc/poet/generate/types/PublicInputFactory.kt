@@ -5,6 +5,7 @@ import com.ing.zinc.bfl.dsl.ArrayBuilder.Companion.array
 import com.ing.zinc.bfl.dsl.StructBuilder.Companion.struct
 import com.ing.zinc.bfl.getSerializedBflTypeDef
 import com.ing.zinc.poet.ZincArray
+import com.ing.zkflow.zinc.poet.generate.types.witness.NonHashedArrayTransactionComponent
 import com.ing.zkflow.zinc.poet.generate.types.witness.TransactionComponentContainer
 
 const val PUBLIC_INPUT = "PublicInput"
@@ -20,9 +21,16 @@ class PublicInputFactory(
                     val groupSize = (it.getReturnType() as ZincArray).getSize()
                     field {
                         name = transactionComponent.publicInputFieldName
-                        type = array {
-                            capacity = groupSize.toInt()
-                            elementType = StandardTypes.digest.getSerializedBflTypeDef()
+                        type = if (transactionComponent is NonHashedArrayTransactionComponent) {
+                            array {
+                                capacity = groupSize.toInt()
+                                elementType = transactionComponent.txComponent.getSerializedBflTypeDef()
+                            }
+                        } else {
+                            array {
+                                capacity = groupSize.toInt()
+                                elementType = StandardTypes.digest.getSerializedBflTypeDef()
+                            }
                         }
                     }
                 }

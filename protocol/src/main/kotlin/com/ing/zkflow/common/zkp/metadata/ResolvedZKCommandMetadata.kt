@@ -167,7 +167,7 @@ data class ResolvedZKCommandMetadata(
      */
     fun isVisibleInWitness(groupIndex: Int, componentIndex: Int): Boolean {
         return when (groupIndex) {
-            ComponentGroupEnum.INPUTS_GROUP.ordinal -> inputs.any { it.index == componentIndex } // Here we return UTXO visibility, not StateRef visibility (StateRefs never go to witness)
+            ComponentGroupEnum.INPUTS_GROUP.ordinal -> inputs.any { it.index == componentIndex } // This applies to both UTXO visibility and StateRef visibility.
             ComponentGroupEnum.REFERENCES_GROUP.ordinal -> references.any { it.index == componentIndex } // Here we return UTXO visibility, not StateRef visibility (StateRefs never go to witness)
             ComponentGroupEnum.OUTPUTS_GROUP.ordinal -> outputs.any { it.index == componentIndex }
             ComponentGroupEnum.COMMANDS_GROUP.ordinal -> command

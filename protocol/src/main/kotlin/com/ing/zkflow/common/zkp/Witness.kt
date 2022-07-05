@@ -84,6 +84,8 @@ class Witness(
      */
     val privacySalt: PrivacySalt,
 
+    val inputsGroup: List<ByteArray>,
+
     /**
      * The serialized UTXOs (TransactionState<T: ContractState>) pointed to by the serialized stateRefs of the inputsGroup parameter.
      *
@@ -127,6 +129,7 @@ class Witness(
             signersGroup.run(paddedByteListSize) +
             parametersGroup.run(paddedByteListSize) +
             privacySalt.size +
+            inputsGroup.run(paddedByteListSize) +
             serializedInputUtxos.run(paddedPairListSize) +
             serializedReferenceUtxos.run(paddedPairListSize) +
             inputUtxoNonces.run(paddedHashListSize) +
@@ -161,20 +164,12 @@ class Witness(
 
                 privacySalt = wtx.privacySalt,
 
+                inputsGroup = wtx.serializedComponentBytesFor(ComponentGroupEnum.INPUTS_GROUP, metadata),
                 serializedInputUtxos = orderedInputUtxoInfos.serializedBytesForUTXO(ComponentGroupEnum.INPUTS_GROUP, metadata),
                 serializedReferenceUtxos = orderedReferenceUtxoInfos.serializedBytesForUTXO(ComponentGroupEnum.REFERENCES_GROUP, metadata),
                 inputUtxoNonces = orderedInputUtxoInfos.map { it.nonce },
                 referenceUtxoNonces = orderedReferenceUtxoInfos.map { it.nonce }
             )
-        }
-
-        private fun TraversableTransaction.serializedComponentBytesFor(
-            groupEnum: ComponentGroupEnum,
-            metadata: ResolvedZKCommandMetadata
-        ): List<ByteArray> {
-            return componentGroups.singleOrNull { it.groupIndex == groupEnum.ordinal }?.components
-                ?.filterIndexed { index, _ -> metadata.isVisibleInWitness(groupEnum.ordinal, index) }
-                ?.map { it.copyBytes() } ?: emptyList()
         }
 
         private fun TraversableTransaction.serializedComponentBytesForOutputGroup(

@@ -110,6 +110,7 @@ open class CircuitGenerator(
                     contract_rules::verify(tx);
 
                     tx.check_no_notary_change();
+                    tx.check_encumbrances_valid();
                     
                     witness.generate_hashes()
                 """.trimIndent()

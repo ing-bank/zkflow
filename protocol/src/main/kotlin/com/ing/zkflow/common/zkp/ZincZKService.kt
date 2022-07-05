@@ -151,9 +151,13 @@ class ZincZKService(
             return result
         } catch (e: Exception) {
             val assertionErrorIdentifier = "[ERROR   zvm] runtime error: assertion error: "
+            val jsonErrorIdentifier = "[ERROR   zvm] invalid json structure: "
             if (e.message?.contains(assertionErrorIdentifier) == true) {
                 val assertionError = e.message?.substringAfter(assertionErrorIdentifier)?.substringBefore("[ERROR zargo]")
                 throw ZKRunException("ZKP assertion failed: $assertionError\n")
+            } else if (e.message?.contains(jsonErrorIdentifier) == true) {
+                val jsonError = e.message?.substringAfter(jsonErrorIdentifier)?.substringBefore("at witness")
+                throw ZKRunException("Invalid witness contents: $jsonError\n")
             } else {
                 throw ZKRunException("Failed to run circuit. Cause: $e\n")
             }
