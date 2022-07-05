@@ -1,46 +1,38 @@
 # Contract rules verification
 
 This document discusses the design for contract rule verification.
-The work in this document depends on the idea that zinc sources for types can be generated, see POC branch: feature/zinc-source-generator.
 
-Ideally the user wouldn't need to write contract rule verification code in zinc. However at the moment it seems a bit too far away to be
-able to offer that. So as an alternative we can make writing contract rule verification code as accessible and friendly as possible.
+Ideally the user wouldn't need to write contract rule verification code in zinc. However at the moment it seems a bit too far away to be able to offer that. So as an alternative we can make writing contract rule verification code as accessible and friendly as possible.
 
-This document proposes the following strategies to make writing contract rules easier.
+This document outlines the following strategies to make writing contract rules easier.
 
-- Deserialize the whole `Witness` to a `LedgerTransaction` that is as close as possible to the corda `LedgerTransaction`.
+- Deserialize the whole `Witness` to a `CommandContext` that is as close as possible to the corda `LedgerTransaction`.
 - Generating common convenience methods on collections (List, Map) for easier access to (nested) data fields and verifications.
-    - in generated zinc code
-    - using zinc compiler extensions/gadgets
-- Updating zinc, to allow method invocations on variables, i.e. `id.equals(other_id)` instead of `UniqueIdentifier::equals(id, other_id)`.
-    - Consists of backporting 2 commits from zinc 0.2.x to ING-0.1.5
+  - in generated zinc code
+  - using zinc compiler extensions/gadgets
 
 ## Assumptions
 
 This section lists all the assumptions this document depends on.
 
-1. The impact of deserializing everything instead of just what's used in the contract rules is negligible in terms of the performance of zinc prove/verify.
-2. Having many unused functions in the zinc sources does not impact the performance of zinc setup/run/prove/verify.
-3. AttachmentConstraint is determined on circuit/network level, it cannot change per state.
-4. A single PublicKey algorithm is used for the whole circuit/network, except for the notary.
-5. All commands are TypeOnlyCommandData, so have no data/contents.
-6. Parties are not resolved for commands in a LedgerTransaction, see CommandWithParties deprecation annotation. So only PublicKeys are resolved.
-7. Ordering of inputs\_group and inputs\_utxos and reference\_group and reference\_utxos is the same, so inputs and references can be wrapped into a StateAndRef structure deterministically.
-8. Notary is always a full Party.
-9. Gadgets perform better than corresponding zinc code. (To be confirmed...)
-10. Zinc code exists for AttestationPointer.isPointingTo(StateRef)
+1. AttachmentConstraint is determined on circuit/network level, it cannot change per state.
+2. A single PublicKey algorithm is used for the whole circuit/network, except for the notary.
+3. Parties are not resolved for commands in a LedgerTransaction, see CommandWithParties deprecation annotation. So only PublicKeys are resolved.
+4. Ordering of inputs\_group and inputs\_utxos and reference\_group and reference\_utxos is the same, so inputs and references can be wrapped into a StateAndRef structure deterministically.
+5. Notary is always a full Party.
+6. Zinc code exists for AttestationPointer.isPointingTo(StateRef)
 
-## Deserialize the whole `ZKLedgerTransaction`
+## Deserialize the whole `Witness`
 
-- Parse the `WireTransaction`, or `Witness` to `LedgerTransaction`
-    - resolving all references to `StateAndRef`
-    - parsing commands and signers, and put them together again to `CommandWithSigners` or `CommandWithSignerKeys`
+- Parse the `Witness` to `LedgerTransaction`
+  - resolving all `StateRefs` to `StateAndRef`
+  - parsing commands and signers, and put them together again to `CommandWithSigners` or `CommandWithSignerKeys`
 
 ### Assumptions
 
 1. The impact of deserializing everything instead of just what's used in the contract rules is negligible
 
-## Utility functions to ease writing `contract_rules.zn`
+## Utility functions to ease writing `verifyPrivate`
 
 Make it more easy to write `contract_rules.zn`, by adding the following methods on collections:
 
@@ -110,87 +102,6 @@ impl BList8 {
 
 1. Having many unused functions in the zinc sources does not impact the performance of zinc setup/run/prove/verify.
 
-### Feasibility
-
-To assess the feasibility of these methods, most of these have been prototyped on the `feature/zinc-source-generator` branch.
-
-## Zinc improvements, self-references
-
-Zinc 0.2.x contains two commits that, amongst other features, add self-references, or method style invocation to zinc.
-
-- https://github.com/matter-labs/zinc/commit/3e15a974cedb571dc7d0c01def15c1e0186fd8a6
-- https://github.com/matter-labs/zinc/commit/416df8d188eab6b7806f4e99a1c36f18673ae6dc
-
-These commits cannot be backported as is, but should be used for inspiration.
-The goal is to allow methods to be invoked directly on variables as receiver parameter, so for example:
-
-```rust
-// old
-struct Foo {
-    bar: u32,
-}
-
-impl Foo {
-    fn new(bar: u32) -> Self {
-        Foo { bar: bar }
-    }
-
-    fn baz(foo: Foo, foo_bar: u32) -> u32 {
-        foo.bar + foo_bar
-    }
-}
-
-let foo = Foo::new(3);
-assert!(
-    Foo::baz(foo, 5 as u32) == 8
-);
-```
-
-
-```rust
-// new
-struct Foo {
-    bar: u32,
-}
-
-impl Foo {
-    fn new(bar: u32) -> Self {
-        Foo { bar: bar }
-    }
-
-    fn baz(self, foo_bar: u32) -> u32 {
-        self.bar + foo_bar
-    }
-}
-
-let foo = Foo::new(3);
-assert!(
-    foo.baz(5 as u32) == 8
-);
-```
-
-### Impacted files
-
-The table below contains a list of files that, in all likelyhood, need to be updated. There may be more, but this list is a good starting point.
-
-| file                                                        | impact                           |
-|-------------------------------------------------------------|----------------------------------|
-| vscode/syntaxes/zn.tmLanguage.json                          | Add self                         |
-| zinc-book/src/appendix/A-grammar-lexical.md                 | Add self                         |
-| zinc-book/src/appendix/B-grammar-syntax.md                  | Update fn_statement, add call    |
-| zinc-book/src/appendix/C-keywords.md                        | Update reserved keywords         |
-| zinc-compiler/src/lexical/token/lexeme/keyword.rs           | SelfLowercase no longer reserved |
-| zinc-compiler/src/syntax/parser/statement/fn.rs             | Update fn statement              |
-| zinc-compiler/src/syntax/parser/expression/terminal/list.rs | Update function arguments        |
-| zinc-compiler/src/syntax/tree/pattern\_binding/mod.rs       | Add self as pattern              |
-| zinc-compiler/src/syntax/tree/statement/fn/mod.rs           | Function/Method definition       |
-| zinc-compiler/src/semantic/scope/tests.rs                   | Add self and Self tests          |
-| zinc-compiler/src/generator/expression/operand/list/mod.rs  | Add self parameter               |
-
-### Task and Concerns
-
-- Getting it to work, AKA. the happy flow
-- Error handling and reporting
 
 # Circuit Generation
 
@@ -207,7 +118,7 @@ The entrypoint to create all the code for a circuit is `CircuitMetadata`. The `C
 
 ## CircuitMetadata
 
-The example below proposes the data that is needed for full circuit generation. This is described in kotlin DSL format.
+The example below describes the data that is needed for full circuit generation. This is described in kotlin DSL format.
 
 ```kotlin
 import io.ivno.collateraltoken.contract.Deposit
@@ -219,56 +130,16 @@ import net.corda.core.contracts.SignatureAttachmentConstraint
 import net.i2p.crypto.eddsa.EdDSAPublicKey
 
 val circuit = circuitMetadata {
-    circuit {
-        name = "deposit-advance"
-        attachmentConstraintType = SignatureAttachmentConstraint::class
-        publicKeyType = EdDSAPublicKey::class
-    }
-    userAttachments(0) // Contract attachment are added automatically and calculated based on the number of contracts in the transaction, in this case 4.
-    //  userAttachments { // NOTE: re-evaluate when adding support for serialization of attachment contents.
-    //      <KClass> to <size>
-    //  }
-    inputs {
-        Deposit::class to 1
-    }
-    //    addInputGroup {
-    //        kClass = Deposit::class
-    //        stateGroupSize = 1
-    //    }
-    outputs {
-        Membership::class to 1
-    }
-    //    addOutputGroup {
-    //        kClass = Membership::class
-    //        stateGroupSize = 1
-    //    }
-    references { // NOTE: The assumption here is that there is no additional metadata needed per referenceType.
-         Membership::class to 3,
-         MembershipAttestation::class to 3,
-         IvnoTokenType::class to 1
-    }
-    //      referenceType {
-    //        type = Membership::class
-    //        size = 3
-    //      }
-    //      referenceType {
-    //        type = MembershipAttestation::class
-    //        size = 3
-    //      }
-    //      referenceType {
-    //        type = IvnoTokenType::class
-    //        size = 1
-    //      }
-    commands {
-        command(DepositContract.Advance::class) {
-            numberOfSigners = 2
-        }
-    }
-    notary {
-        publicKeyType = EdDSAPublicKey::class
-    }
-    timewindow() // NOTE: present when called, otherwise absent
-    // networkParameters: Always present from corda 4 onwards.
+  inputs {
+    Deposit::class at 1
+  }
+  outputs {
+    Membership::class at 1
+  }
+  references {
+    MembershipAttestation::class at 3
+  }
+  // See metadata DSL for more options
 }
 ```
 

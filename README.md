@@ -1,9 +1,14 @@
 [![Build Status](https://dev.azure.com/NeoZKP/zkflow/_apis/build/status/ZKFLow%20PRs%20and%20mergest%20to%20master?branchName=master)](https://dev.azure.com/NeoZKP/zkflow/_build/latest?definitionId=1&branchName=master)
 
-ZKFlow is a software library. Corda CorDapps can use it as a dependency so that they can create private transactions on Corda.
-ZKFlow enables users to make some or all states in a transaction private. Private states will not be present in the backchain, nor will they be disclosed to the notary. Instead, they are replaced by Zero Knowledge proofs that guarantee validity of those hidden states. Direct counterparties to a transaction do have access to all its private contents, so that they know what transaction they are signing.
+ZKFlow is a software library that enables Corda CorDapps to create private transactions on Corda.
 
-See the `sample-zkdapp` for an example on how a CorDapp can be adapted to work with ZKFlow. ZKFlow is currently targeting Corda 4.8 or higher, but not yet the completely redesigned Corda 5.
+ZKFlow enables CorDapp builders to make some or all states in a transaction private. Private states will not be present in the backchain, nor will they be disclosed to the notary. Instead, they are replaced by Zero Knowledge proofs that guarantee validity of those hidden states. Direct counterparties to a transaction do have access to all its private contents, so that they know what transaction they are signing.
+
+For details about the ZKFLow protocol, please read the [ZKFLow white paper](docs/ZKFlow_whitepaper.pdf).
+
+To see an example of how a CorDapp can be adapted to work with ZKFlow, please have a look at the `sample-zkdapp` in this repository.
+
+ZKFlow is currently targeting Corda 4.8 or higher, but not yet the completely redesigned Corda 5.
 
 Features:
 
@@ -12,12 +17,11 @@ Features:
 - Reveal transactions: a new transaction that makes a private state publicly visible moving forward. Previous versions of the state in its backchain remain hidden.
 - Hide transactions: a new transaction that makes a public state hidden moving forward. Previous versions of the state in its backchain remain public.
 
-To learn more about ZKFlow internals, there is a `docs` directory in this repo. It contains technical documentation in Markdown and PDF format. There is also plenty of documentation throughout the code itself, explaining logic or rationale. Finally, the many test cases will also explain a lot about expected behaviour.
+To learn more about ZKFlow internals, there is a [docs](docs) directory in this repo. In addition to the [ZKFLow white paper](docs/ZKFlow_whitepaper.pdf), it contains technical documentation in Markdown and PDF format. There is also plenty of documentation throughout the code itself, explaining logic or rationale. Finally, the many test cases will also explain a lot about expected behaviour.
 
 ## Testing ZKFlow with the sample CorDapp or with your own CorDapp
 
-The ZKFlow jar is currently not deployed to one of the Maven/Gradle repositories. This means it can not be used directly by CorDapps.
-Instead, run the tests for ZKFlow and the `sample-zkdapp` to see it in action.
+The ZKFlow jars are currently not deployed to one of the Maven/Gradle repositories. This means it can not be used directly by CorDapps. Instead, run the tests for ZKFlow and the `sample-zkdapp` to see it in action.
 
 Please make sure you have satisfied all [prerequisites](#prerequisites) before you execute the following:
 
