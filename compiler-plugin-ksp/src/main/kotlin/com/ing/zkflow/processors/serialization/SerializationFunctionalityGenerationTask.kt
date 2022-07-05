@@ -25,6 +25,18 @@ import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.ksp.toClassName
 import kotlinx.serialization.Serializable
 
+/**
+ * Class generating serializing functionality, i.e., a kotlinx [Surrogate] and [SurrogateSerializer]
+ * for any given [KSClassDeclaration].
+ *
+ * There are two cases:
+ * - Direct serialization. Class -> Kotlinx Surrogate -> Serialization
+ * - Indirect serialization. Class -> ZKPSurrogate -> Kotlinx Surrogate -> Serialization
+ *
+ *
+ * In either case, the generated [SurrogateSerializer] allows to serialize an instance of a class directly,
+ * and to deserialize the serialization representation (bits or bytes) in to an instance of respective class.
+ */
 internal sealed class SerializationFunctionalityGenerationTask(
     internal val declaration: KSClassDeclaration
 ) {
@@ -92,6 +104,9 @@ internal sealed class SerializationFunctionalityGenerationTask(
     abstract fun declarationToSurrogateConstructor(surrogateClassName: ClassName): CodeBlock
     abstract fun surrogateToDeclarationTemplate(): String
 
+    /**
+     * Builds up a surrogate and surrogate serializer for the task.
+     */
     fun execute(): List<TypeSpec> {
         val surrogateClassName = representation.getSurrogateClassName(isEnum())
         val surrogate = generateSurrogate(surrogateClassName)

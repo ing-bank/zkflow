@@ -44,13 +44,11 @@ import com.ing.zkflow.serialization.serializer.corda.SecureHashSerializer
 import com.ing.zkflow.serialization.serializer.corda.SignatureAttachmentConstraintSerializer
 import com.ing.zkflow.serialization.serializer.corda.WhitelistedByZoneAttachmentConstraintSerializer
 import com.ing.zkflow.tracking.Tracker
-import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.ksp.toClassName
-import kotlinx.serialization.Contextual
 import net.corda.core.contracts.AlwaysAcceptAttachmentConstraint
 import net.corda.core.contracts.AutomaticHashConstraint
 import net.corda.core.contracts.AutomaticPlaceholderConstraint
@@ -65,11 +63,27 @@ import java.security.PublicKey
 import java.time.Instant
 import java.util.UUID
 
+/**
+ * This function is expected to be called on constructor parameters.
+ *
+ * Any given parameter of certain type requires for its serialization a hierarchical sequence of
+ * serializers. Such serializers are represented by Kotlin-poet's primitive [TypeSpec].
+ * E.g., for a parameter
+ *      myList: @Size(5) List<Int>
+ * a sequence of [TypeSpec]'s
+ *      object MyList_0: FixedLengthListSerializer(4, My_List_1)
+ *      object MyList_1: WrappedFixedLengthSerializer<Int>(IntSerializer)
+ * will be generated.
+ */
 internal fun KSValueParameter.getSerializingHierarchy(): SerializingHierarchy {
     val name = name?.asString() ?: error("Cannot get a name of $this")
     return type.getSerializingHierarchy(Tracker(name.capitalize()))
 }
 
+/**
+ * [SerializingHierarchy] holds information allowing to build up a collection
+ * of serializers for a given type, re-build up the type dropping the annotations.
+ */
 internal sealed class SerializingHierarchy(
     val definition: TypeSpec
 ) {
@@ -79,23 +93,6 @@ internal sealed class SerializingHierarchy(
         serializingObject: TypeSpec,
         private val isParameterizing: Boolean = true
     ) : SerializingHierarchy(serializingObject) {
-        override val declaration: TypeName
-            get() {
-                val annotations = listOf(AnnotationSpec.builder(Contextual::class).build())
-                val parametrization = inner.mapNotNull {
-                    if (it is OfType && !it.isParameterizing) { return@mapNotNull null }
-                    it.declaration
-                }
-
-                return if (parametrization.isNotEmpty()) {
-                    rootType
-                        .parameterizedBy(parametrization)
-                        .copy(annotations = annotations)
-                } else {
-                    rootType.copy(annotations = annotations)
-                }
-            }
-
         override val type: TypeName
             get() {
                 val parametrization = inner.mapNotNull {
@@ -117,8 +114,6 @@ internal sealed class SerializingHierarchy(
         val inner: SerializingHierarchy,
         serializingObject: TypeSpec
     ) : SerializingHierarchy(serializingObject) {
-        override val declaration: TypeName
-            get() = inner.declaration.copy(nullable = true)
         override val type: TypeName
             get() = inner.type.copy(nullable = true)
     }
@@ -127,14 +122,12 @@ internal sealed class SerializingHierarchy(
         val inner: SerializingHierarchy,
         serializingObject: TypeSpec
     ) : SerializingHierarchy(serializingObject) {
-        override val declaration: TypeName
-            get() = inner.declaration
         override val type: TypeName
             get() = inner.type
     }
 
-    abstract val declaration: TypeName
     abstract val type: TypeName
+
     fun addTypesTo(container: TypeSpec.Builder) {
         container.addType(definition)
         when (this) {

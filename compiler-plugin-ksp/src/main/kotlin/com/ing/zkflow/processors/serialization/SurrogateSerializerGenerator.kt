@@ -16,12 +16,7 @@ import com.squareup.kotlinpoet.ksp.writeTo
 
 class SurrogateSerializerGenerator(private val codeGenerator: CodeGenerator) {
     /**
-     * Generates:
-     * - a kotlinx surrogate and,
-     * - an appropriate serializer using converter defined in the accompanying ZKPSurrogate annotation.
-     *
-     * All fallable operations (`!!`, casts, single, etc.) are expected to be successful,
-     * as the preconditions are verified elsewhere.
+     * Generates (indirect) serializing functionality for any of [annotated] via a respective ZKP-surrogate.
      */
     fun processZKPSurrogateAnnotated(annotated: Sequence<KSClassDeclaration>) {
         annotated.forEach { representation ->
@@ -44,13 +39,7 @@ class SurrogateSerializerGenerator(private val codeGenerator: CodeGenerator) {
     }
 
     /**
-     * Generates:
-     * - a kotlinx surrogate,
-     * - a converter from an instance of a class to the surrogate
-     * - an appropriate serializer using the above converter.
-     *
-     * All fallable operations (`!!`, casts, single, getting an annotation that must be present, etc.) are expected to be successful,
-     * as the preconditions are verified elsewhere.
+     * Generates (direct) serializing functionality for any of [annotated].
      */
     fun processZKPAnnotated(annotated: Sequence<KSClassDeclaration>) {
         annotated.forEach { declaration ->

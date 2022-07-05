@@ -31,8 +31,6 @@ internal fun KSTypeReference.asMap(tracker: Tracker): SerializingHierarchy {
             FixedLengthMapSerializer::class
                 .asClassName()
                 .parameterizedBy(keySerializingHierarchy.type, valueSerializingHierarchy.type)
-            // TODO: Possible to copy annotations, but difficult and unclear why we would need that.
-            // .copy(annotations = annotations.map { .. })
         )
         .addSuperclassConstructorParameter(
             CodeBlock.of("%L, %N, %N", maxSize, keySerializingHierarchy.definition, valueSerializingHierarchy.definition)

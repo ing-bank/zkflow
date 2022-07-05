@@ -199,12 +199,21 @@ fun KSAnnotation.getSurrogateFromViaAnnotation(): KSClassDeclaration {
         ?: error("@${Via::class.simpleName} annotation's argument is not a class.")
 }
 
+/**
+ * Prepends every type with @[Contextual] annotation.
+ */
 fun KSType.toContextualTypeName() =
     toTypeNameWithAnnotation(listOf(Contextual::class))
 
+/**
+ * Removes all annotations from the type declaration.
+ */
 fun KSType.toCleanTypeName() =
     toTypeNameWithAnnotation(emptyList())
 
+/**
+ * Recursively walks the type tree and attaches ALL given annotations on ALL levels.
+ */
 private fun KSType.toTypeNameWithAnnotation(annotations: List<KClass<out Annotation>>): TypeName {
     if (arguments.isEmpty()) {
         return toClassName()
