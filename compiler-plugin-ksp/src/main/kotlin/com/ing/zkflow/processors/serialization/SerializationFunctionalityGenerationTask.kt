@@ -93,7 +93,7 @@ internal sealed class SerializationFunctionalityGenerationTask(
     abstract fun surrogateToDeclarationTemplate(): String
 
     fun execute(): List<TypeSpec> {
-        val surrogateClassName = representation.getSurrogateClassName()
+        val surrogateClassName = representation.getSurrogateClassName(isEnum())
         val surrogate = generateSurrogate(surrogateClassName)
 
         val surrogateSerializerClassName = representation.getSurrogateSerializerClassName()
@@ -121,6 +121,8 @@ internal sealed class SerializationFunctionalityGenerationTask(
     private fun generateSurrogateForEnum(surrogateBuilder: TypeSpec.Builder): TypeSpec {
         val name = "ordinal"
 
+        // Hardcode the name of the serializing object without creating a Tracker for a single use.
+        // thus `${name.capitalize()}_0`
         val propertySerializer = TypeSpec.objectBuilder("${name.capitalize()}_0")
             .addModifiers(KModifier.PRIVATE)
             .superclass(

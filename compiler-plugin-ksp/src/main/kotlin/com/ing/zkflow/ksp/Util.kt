@@ -170,8 +170,17 @@ fun KSTypeReference.getSingleMetaAnnotationByType(annotationKClass: KClass<out A
     }.single()
 }
 
-fun KSClassDeclaration.getSurrogateClassName(): ClassName {
-    return toClassName().buildFullyDistinguishableClassName(Surrogate.GENERATED_SURROGATE_POSTFIX)
+fun KSClassDeclaration.getSurrogateClassName(isEnum: Boolean): ClassName {
+    return if (isEnum) {
+        toClassName().buildFullyDistinguishableClassName(
+            Surrogate.GENERATED_SURROGATE_POSTFIX,
+            Surrogate.GENERATED_SURROGATE_ENUM_POSTFIX
+        )
+    } else {
+        toClassName().buildFullyDistinguishableClassName(
+            Surrogate.GENERATED_SURROGATE_POSTFIX
+        )
+    }
 }
 
 fun KSClassDeclaration.getSurrogateSerializerClassName(): ClassName {

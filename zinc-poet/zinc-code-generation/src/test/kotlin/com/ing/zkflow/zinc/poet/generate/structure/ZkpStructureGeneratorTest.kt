@@ -1,5 +1,8 @@
 package com.ing.zkflow.zinc.poet.generate.structure
 
+import com.ing.zkflow.common.serialization.zinc.generation.getSerialDescriptor
+import com.ing.zkflow.common.serialization.zinc.generation.internalTypeName
+import com.ing.zkflow.serialization.serializer.corda.CordaX500NameSerializer
 import com.ing.zkflow.zinc.poet.generate.ClassWithAnonymousParty
 import com.ing.zkflow.zinc.poet.generate.ClassWithAnonymousParty_Serializer
 import com.ing.zkflow.zinc.poet.generate.ClassWithAsciiChar
@@ -14,8 +17,6 @@ import com.ing.zkflow.zinc.poet.generate.ClassWithClassWithoutFields
 import com.ing.zkflow.zinc.poet.generate.ClassWithClassWithoutFields_Serializer
 import com.ing.zkflow.zinc.poet.generate.ClassWithDouble
 import com.ing.zkflow.zinc.poet.generate.ClassWithDouble_Serializer
-import com.ing.zkflow.zinc.poet.generate.ClassWithEnum
-import com.ing.zkflow.zinc.poet.generate.ClassWithEnum_Serializer
 import com.ing.zkflow.zinc.poet.generate.ClassWithFloat
 import com.ing.zkflow.zinc.poet.generate.ClassWithFloat_Serializer
 import com.ing.zkflow.zinc.poet.generate.ClassWithHashAttachmentConstraint
@@ -181,9 +182,9 @@ internal class ZkpStructureGeneratorTest {
                 )
             )
         )
-        private val wrappedEnumStructure = wrappedStructure<ClassWithEnum>(
-            field = ZkpStructureField("enum", ZkpStructureEnum("${EnumWithNumbers::class.qualifiedName}"))
-        )
+        // private val wrappedEnumStructure = wrappedStructure<ClassWithEnum>(
+        //     field = ZkpStructureField("enum", ZkpStructureEnum("${EnumWithNumbers::class.simpleName}"))
+        // )
         private val wrappedPublicKeyStructure = wrappedStructure<ClassWithPublicKey>(
             field = ZkpStructureField("pk", ZkpStructureClassRef("PublicKeyEdDsaEd25519Sha512", 48))
         )
@@ -332,8 +333,8 @@ internal class ZkpStructureGeneratorTest {
                     ClassWithMapOfStringToInt_Serializer.descriptor,
                     listOf<ZkpStructureType>(wrappedMapOfStringIntStructure)
                 ),
-                Arguments.of(EnumWithNumbers_Serializer.descriptor, listOf<ZkpStructureType>()),
-                Arguments.of(ClassWithEnum_Serializer.descriptor, listOf<ZkpStructureType>(wrappedEnumStructure)),
+                // Arguments.of(EnumWithNumbers_Serializer.descriptor, listOf<ZkpStructureType>()),
+                // Arguments.of(ClassWithEnum_Serializer.descriptor, listOf<ZkpStructureType>(wrappedEnumStructure)),
                 Arguments.of(
                     ClassWithPublicKey_Serializer.descriptor,
                     listOf<ZkpStructureType>(

@@ -30,7 +30,8 @@ val SerialDescriptor.zincTypeName: String
 
 val SerialDescriptor.internalTypeName
     get() = serialName
-        .replace(Surrogate.GENERATED_SURROGATE_POSTFIX, "")
+        .replace("_${Surrogate.GENERATED_SURROGATE_POSTFIX}", "")
+        .replace("_${Surrogate.GENERATED_SURROGATE_ENUM_POSTFIX}", "")
         .split(".")
         .filter {
             it.startsWithUppercase()

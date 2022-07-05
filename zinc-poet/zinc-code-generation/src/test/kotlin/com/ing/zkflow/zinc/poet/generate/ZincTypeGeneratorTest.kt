@@ -53,7 +53,7 @@ class ZincTypeGeneratorTest {
             Arguments.of(ClassWithListOfInt_Serializer.descriptor, structWithListOfInt),
             Arguments.of(ClassWithSetOfInt_Serializer.descriptor, structWithSetOfInt),
             Arguments.of(ClassWithMapOfStringToInt_Serializer.descriptor, structWithMapOfStringToInt),
-            Arguments.of(EnumWithNumbers_Serializer.descriptor, enumWithNumbers),
+            // Arguments.of(EnumWithNumbers_Serializer.descriptor, enumWithNumbers),
             Arguments.of(ClassWithPublicKey_Serializer.descriptor, structWithPublicKey),
             Arguments.of(ClassWithAnonymousParty_Serializer.descriptor, structWithAnonymousParty),
             Arguments.of(ClassWithParty_Serializer.descriptor, structWithParty),
