@@ -73,7 +73,6 @@ class CommandContextFactory(
          * - checkNotaryWhitelisted(ltx)
          */
         addFunction(generateCheckNoNotaryChangeMethod(transactionComponents))
-
     }
 
     // TransactionVerifierServiceInternal.checkNoNotaryChange()
