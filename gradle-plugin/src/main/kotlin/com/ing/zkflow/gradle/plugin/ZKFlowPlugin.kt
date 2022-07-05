@@ -21,8 +21,6 @@ class ZKFlowPlugin : Plugin<Project> {
             maven { it.url = URI.create("https://plugins.gradle.org/m2/") }
         }
 
-        // TODO perhaps source sets must be added
-
         project.plugins.withType(JavaPlugin::class.java) {
             // Add the required dependencies to consumer projects
             project.dependencies.add(IMPLEMENTATION, zkflowArtifact("protocol"))

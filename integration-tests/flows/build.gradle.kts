@@ -28,24 +28,6 @@ dependencies {
     ksp(project(":compiler-plugin-ksp"))
 }
 
-// project.tasks.getByPath("compileKotlin").finalizedBy("generateZincCircuits")
-// project.tasks.getByPath("compileTestKotlin").finalizedBy("generateZincCircuits")
-// project.tasks.getByPath("assemble").dependsOn("generateZincCircuits")
-// task("generateZincCircuits") {
-//     doLast {
-//         project.javaexec {
-//             val javaPlugin = project.convention.getPlugin(JavaPluginConvention::class.java)
-//             val test = javaPlugin.sourceSets.findByName("test") ?: error("Can't find main sourceSet")
-//             main = "com.ing.zkflow.zinc.poet.generate.GenerateZincCircuitsKt"
-//
-//             // We must add 'build/generated/ksp/src/main/resources' to the main sourceSet if it exists, because
-//             // otherwise the generated META-INF/services file is not picked up by the `generateZincCircuits` task.
-//             // It would be the nicest if KSP already did this, however it doesn't.
-//             classpath = test.runtimeClasspath + project.files(project.buildDir.resolve("generated/ksp/test/resources")).filter(File::exists)
-//         }
-//     }
-// }
-
 kotlin {
     sourceSets.main {
         kotlin.srcDir("build/generated/ksp/main/kotlin")
@@ -59,7 +41,6 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
     // Generated class files are not recreated upon changes in compiler-plugin-arrow, therefor we always clean the
     // build, to enforce rebuild of classes with the updated compiler plugin.
     dependsOn += "clean"
-    dependsOn += ":compiler-plugin-arrow:jar"
 
     kotlinOptions {
         // IR backend is needed for Unsigned integer types support for kotlin 1.4, in $rootDir/build.gradle.kts:185 we
