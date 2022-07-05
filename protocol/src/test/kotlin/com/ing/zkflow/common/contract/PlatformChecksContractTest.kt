@@ -7,7 +7,7 @@ import net.corda.testing.node.MockServices
 import org.junit.jupiter.api.Test
 
 /**
- * This test confirms that relevant checks from net.corda.core.internal.Verififier.verify() are implemented in the generated Zinc code
+ * This test confirms that relevant checks from [net.corda.core.internal.Verifier.verify] are implemented in the generated Zinc code
  */
 class PlatformChecksContractTest {
     private val services = MockServices(listOf("com.ing.zkflow"))
