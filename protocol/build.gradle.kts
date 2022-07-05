@@ -35,6 +35,12 @@ dependencies {
     // For zinc name
     implementation(project(":zinc-poet:zinc-bfl"))
 
+    // To be able to generate correct names for serializers. -->
+    // TODO very likely it can be avoided. Used to speed up the process.
+    val kotlinPoetVersion: String by project
+    implementation("com.squareup:kotlinpoet:$kotlinPoetVersion")
+    // <--
+
     // Corda dependencies.
     val cordaReleaseGroup: String by project
     val cordaVersion: String by project

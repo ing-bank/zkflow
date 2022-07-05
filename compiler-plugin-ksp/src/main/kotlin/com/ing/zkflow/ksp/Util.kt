@@ -16,6 +16,7 @@ import com.ing.zkflow.Via
 import com.ing.zkflow.annotations.ZKPSurrogate
 import com.ing.zkflow.annotations.corda.Algorithm
 import com.ing.zkflow.annotations.corda.SignatureSpec
+import com.ing.zkflow.common.serialization.zinc.generation.buildFullyDistinguishableClassName
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
@@ -179,28 +180,6 @@ fun KSClassDeclaration.getSurrogateSerializerClassName(): ClassName {
 
 fun KSClassDeclaration.getSerializationFunctionalityLocation(): ClassName {
     return toClassName().buildFullyDistinguishableClassName(Surrogate.GENERATED_SERIALIZATION_FUNCTIONALITY_LOCATION_POSTFIX)
-}
-
-fun ClassName.buildFullyDistinguishableClassName(postfix: String): ClassName {
-    var prefixes = emptyList<String>()
-    var className = this
-    var container = className.enclosingClassName()
-    while (container != null) {
-        prefixes = listOf(container.simpleName) + prefixes
-        className = container
-        container = className.enclosingClassName()
-    }
-
-    return ClassName(
-        packageName,
-        listOf(
-            prefixes.joinToString(separator = "") { it.capitalize() },
-            simpleName,
-            postfix
-        )
-            .filter { it.isNotBlank() }
-            .joinToString(separator = "_")
-    )
 }
 
 fun KSAnnotation.getSurrogateFromViaAnnotation(): KSClassDeclaration {
