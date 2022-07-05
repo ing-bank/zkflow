@@ -77,7 +77,7 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                     import kotlinx.serialization.Serializable
 
                     @Serializable
-                    public class BasicTypesContainer_KotlinxSurrogate(
+                    public class BasicTypesContainer_${Surrogate.GENERATED_SURROGATE_POSTFIX}(
                       @Serializable(with = Int_0::class)
                       public val int: @Contextual Int,
                       @Serializable(with = NullableInt_0::class)
@@ -93,8 +93,8 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                     }
 
                     public object BasicTypesContainer_Serializer :
-                        SurrogateSerializer<BasicTypesContainer, BasicTypesContainer_KotlinxSurrogate>(BasicTypesContainer_KotlinxSurrogate.serializer(),
-                        { BasicTypesContainer_KotlinxSurrogate(int = it.int, nullableInt = it.nullableInt) })
+                        SurrogateSerializer<BasicTypesContainer, BasicTypesContainer_${Surrogate.GENERATED_SURROGATE_POSTFIX}>(BasicTypesContainer_${Surrogate.GENERATED_SURROGATE_POSTFIX}.serializer(),
+                        { BasicTypesContainer_${Surrogate.GENERATED_SURROGATE_POSTFIX}(int = it.int, nullableInt = it.nullableInt) })
                 """.trimIndent()
             ),
 
@@ -137,7 +137,7 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                     import kotlinx.serialization.Serializable
 
                     @Serializable
-                    public class CollectionsOfBasicNullableTypesContainer_KotlinxSurrogate(
+                    public class CollectionsOfBasicNullableTypesContainer_${Surrogate.GENERATED_SURROGATE_POSTFIX}(
                       @Serializable(with = MyList_0::class)
                       public val myList: @Contextual List<@Contextual Map<@Contextual Int, @Contextual Int?>?>?
                     ) : Surrogate<CollectionsOfBasicNullableTypesContainer> {
@@ -160,8 +160,8 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                     }
 
                     public object CollectionsOfBasicNullableTypesContainer_Serializer :
-                        SurrogateSerializer<CollectionsOfBasicNullableTypesContainer, CollectionsOfBasicNullableTypesContainer_KotlinxSurrogate>(CollectionsOfBasicNullableTypesContainer_KotlinxSurrogate.serializer(),
-                        { CollectionsOfBasicNullableTypesContainer_KotlinxSurrogate(myList = it.myList) })
+                        SurrogateSerializer<CollectionsOfBasicNullableTypesContainer, CollectionsOfBasicNullableTypesContainer_${Surrogate.GENERATED_SURROGATE_POSTFIX}>(CollectionsOfBasicNullableTypesContainer_${Surrogate.GENERATED_SURROGATE_POSTFIX}.serializer(),
+                        { CollectionsOfBasicNullableTypesContainer_${Surrogate.GENERATED_SURROGATE_POSTFIX}(myList = it.myList) })
                 """.trimIndent()
             ),
 
@@ -209,7 +209,7 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                 import kotlinx.serialization.Serializable
 
                 @Serializable
-                public class OutOfReachSurrogate_KotlinxSurrogate(
+                public class OutOfReachSurrogate_${Surrogate.GENERATED_SURROGATE_POSTFIX}(
                   @Serializable(with = Int_0::class)
                   public val int: @Contextual Int
                 ) : Surrogate<OutOfReach> {
@@ -219,10 +219,10 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                 }
 
                 public object OutOfReachSurrogate_Serializer :
-                    SurrogateSerializer<OutOfReach, OutOfReachSurrogate_KotlinxSurrogate>(OutOfReachSurrogate_KotlinxSurrogate.serializer(),
+                    SurrogateSerializer<OutOfReach, OutOfReachSurrogate_${Surrogate.GENERATED_SURROGATE_POSTFIX}>(OutOfReachSurrogate_${Surrogate.GENERATED_SURROGATE_POSTFIX}.serializer(),
                      {
                       val representation = ConverterOutOfReach.from(it)
-                      OutOfReachSurrogate_KotlinxSurrogate(int = representation.int)
+                      OutOfReachSurrogate_${Surrogate.GENERATED_SURROGATE_POSTFIX}(int = representation.int)
                     }
                   )
                 """.trimIndent()
@@ -262,7 +262,7 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                     import kotlinx.serialization.Serializable
 
                     @Serializable
-                    public class ZkpInsideZkp_KotlinxSurrogate(
+                    public class ZkpInsideZkp_${Surrogate.GENERATED_SURROGATE_POSTFIX}(
                       @Serializable(with = MyClass_0::class)
                       public val myClass: @Contextual MyClass
                     ) : Surrogate<ZkpInsideZkp> {
@@ -273,8 +273,8 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                     }
 
                     public object ZkpInsideZkp_Serializer :
-                        SurrogateSerializer<ZkpInsideZkp, ZkpInsideZkp_KotlinxSurrogate>(ZkpInsideZkp_KotlinxSurrogate.serializer(),
-                        { ZkpInsideZkp_KotlinxSurrogate(myClass = it.myClass) })
+                        SurrogateSerializer<ZkpInsideZkp, ZkpInsideZkp_${Surrogate.GENERATED_SURROGATE_POSTFIX}>(ZkpInsideZkp_${Surrogate.GENERATED_SURROGATE_POSTFIX}.serializer(),
+                        { ZkpInsideZkp_${Surrogate.GENERATED_SURROGATE_POSTFIX}(myClass = it.myClass) })
                 """.trimIndent()
             ),
 
@@ -335,7 +335,7 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                     import kotlinx.serialization.Serializable
 
                     @Serializable
-                    public class ZkpSurrogateInsideZkp_KotlinxSurrogate(
+                    public class ZkpSurrogateInsideZkp_${Surrogate.GENERATED_SURROGATE_POSTFIX}(
                       @Serializable(with = MyClass_0::class)
                       public val myClass: @Contextual OutOfReach?
                     ) : Surrogate<ZkpSurrogateInsideZkp> {
@@ -351,8 +351,8 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                     }
 
                     public object ZkpSurrogateInsideZkp_Serializer :
-                        SurrogateSerializer<ZkpSurrogateInsideZkp, ZkpSurrogateInsideZkp_KotlinxSurrogate>(ZkpSurrogateInsideZkp_KotlinxSurrogate.serializer(),
-                        { ZkpSurrogateInsideZkp_KotlinxSurrogate(myClass = it.myClass) })
+                        SurrogateSerializer<ZkpSurrogateInsideZkp, ZkpSurrogateInsideZkp_${Surrogate.GENERATED_SURROGATE_POSTFIX}>(ZkpSurrogateInsideZkp_${Surrogate.GENERATED_SURROGATE_POSTFIX}.serializer(),
+                        { ZkpSurrogateInsideZkp_${Surrogate.GENERATED_SURROGATE_POSTFIX}(myClass = it.myClass) })
                 """.trimIndent()
             ),
 
@@ -389,7 +389,7 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                     import kotlinx.serialization.Serializable
 
                     @Serializable
-                    public class Option_KotlinxSurrogate(
+                    public class Option_${Surrogate.GENERATED_SURROGATE_POSTFIX}_${Surrogate.GENERATED_SURROGATE_ENUM_POSTFIX}(
                       @Serializable(with = Ordinal_0::class)
                       public val ordinal: Int
                     ) : Surrogate<Option> {
@@ -399,8 +399,8 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                     }
 
                     public object Option_Serializer :
-                        SurrogateSerializer<Option, Option_KotlinxSurrogate>(Option_KotlinxSurrogate.serializer(), {
-                        Option_KotlinxSurrogate(ordinal = it.ordinal) })
+                        SurrogateSerializer<Option, Option_${Surrogate.GENERATED_SURROGATE_POSTFIX}_${Surrogate.GENERATED_SURROGATE_ENUM_POSTFIX}>(Option_${Surrogate.GENERATED_SURROGATE_POSTFIX}_${Surrogate.GENERATED_SURROGATE_ENUM_POSTFIX}.serializer(),
+                        { Option_${Surrogate.GENERATED_SURROGATE_POSTFIX}_${Surrogate.GENERATED_SURROGATE_ENUM_POSTFIX}(ordinal = it.ordinal) })
                 """.trimIndent()
             ),
 
@@ -564,7 +564,7 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                     import net.corda.core.identity.Party
 
                     @Serializable
-                    public class Parties_KotlinxSurrogate(
+                    public class Parties_${Surrogate.GENERATED_SURROGATE_POSTFIX}(
                       @Serializable(with = AnonymousParty_0::class)
                       public val anonymousParty: @Contextual AnonymousParty,
                       @Serializable(with = AnonymousPartyFullyCustom_0::class)
@@ -601,8 +601,8 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                     }
 
                     public object Parties_Serializer :
-                        SurrogateSerializer<Parties, Parties_KotlinxSurrogate>(Parties_KotlinxSurrogate.serializer(), {
-                        Parties_KotlinxSurrogate(anonymousParty = it.anonymousParty, anonymousPartyFullyCustom =
+                        SurrogateSerializer<Parties, Parties_${Surrogate.GENERATED_SURROGATE_POSTFIX}>(Parties_${Surrogate.GENERATED_SURROGATE_POSTFIX}.serializer(), {
+                        Parties_${Surrogate.GENERATED_SURROGATE_POSTFIX}(anonymousParty = it.anonymousParty, anonymousPartyFullyCustom =
                         it.anonymousPartyFullyCustom, party = it.party, partyCX500Custom = it.partyCX500Custom,
                         partyFullyCustom = it.partyFullyCustom) })
                 """.trimIndent()
@@ -660,7 +660,7 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                     import kotlinx.serialization.Serializable
 
                     @Serializable
-                    public class B_KotlinxSurrogate(
+                    public class B_${Surrogate.GENERATED_SURROGATE_POSTFIX}(
                       @Serializable(with = T_0::class)
                       public val t: @Contextual Int?
                     ) : Surrogate<A<Int?>> {
@@ -672,9 +672,9 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                     }
 
                     public object B_Serializer :
-                        SurrogateSerializer<A<Int?>, B_KotlinxSurrogate>(B_KotlinxSurrogate.serializer(),  {
+                        SurrogateSerializer<A<Int?>, B_${Surrogate.GENERATED_SURROGATE_POSTFIX}>(B_${Surrogate.GENERATED_SURROGATE_POSTFIX}.serializer(),  {
                           val representation = A2B.from(it)
-                          B_KotlinxSurrogate(t = representation.t)
+                          B_${Surrogate.GENERATED_SURROGATE_POSTFIX}(t = representation.t)
                         }
                       )
                 """.trimIndent()
@@ -733,7 +733,7 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                         import kotlinx.serialization.Serializable
 
                         @Serializable
-                        public class ParameterizedTypeContainer_KotlinxSurrogate(
+                        public class ParameterizedTypeContainer_${Surrogate.GENERATED_SURROGATE_POSTFIX}(
                           @Serializable(with = B_0::class)
                           public val b: @Contextual A<@Contextual Int?>
                         ) : Surrogate<ParameterizedTypeContainer> {
@@ -743,8 +743,8 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                         }
                         
                         public object ParameterizedTypeContainer_Serializer :
-                            SurrogateSerializer<ParameterizedTypeContainer, ParameterizedTypeContainer_KotlinxSurrogate>(ParameterizedTypeContainer_KotlinxSurrogate.serializer(),
-                            { ParameterizedTypeContainer_KotlinxSurrogate(b = it.b) })
+                            SurrogateSerializer<ParameterizedTypeContainer, ParameterizedTypeContainer_${Surrogate.GENERATED_SURROGATE_POSTFIX}>(ParameterizedTypeContainer_${Surrogate.GENERATED_SURROGATE_POSTFIX}.serializer(),
+                            { ParameterizedTypeContainer_${Surrogate.GENERATED_SURROGATE_POSTFIX}(b = it.b) })
                 """.trimIndent()
             )
         )
