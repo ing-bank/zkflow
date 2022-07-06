@@ -67,12 +67,7 @@ public class TestDSLZincZKTransactionService(
                 commandMetadata
             )
 
-            try {
-                zkServiceForCommandMetadata(commandMetadata).run(witness, calculatePublicInput(vtx, commandMetadata))
-            } finally {
-                // TODO Don't delete when debugging, do delete otherwise (flag in ZKNetworkParameters, or System Property?)
-                // temporaryCircuitBuildFolder.deleteRecursively()
-            }
+            zkServiceForCommandMetadata(commandMetadata).run(witness, calculatePublicInput(vtx, commandMetadata))
         }
     }
 

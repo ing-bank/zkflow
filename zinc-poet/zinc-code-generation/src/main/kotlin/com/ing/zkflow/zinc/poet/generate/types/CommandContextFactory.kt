@@ -80,18 +80,14 @@ class CommandContextFactory(
         name = "check_no_notary_change"
         returnType = ZincPrimitive.Unit
         body = with(transactionComponents) {
-            if (notaryGroup.isPresent && (serializedInputUtxos.isPresent || serializedReferenceUtxos.isPresent)
-            ) {
-                val outputs = if (serializedOutputGroup.isPresent) {
+            if (notaryGroup.isPresent && (serializedInputUtxos.isPresent || serializedReferenceUtxos.isPresent)) {
+                if (serializedOutputGroup.isPresent) {
                     serializedOutputGroup.deserializedGroup.fields.fold("") { acc, output ->
                         acc + "assert!(self.outputs.${output.name}.notary.equals(self.notary), \"Found unexpected notary change in transaction. Check that output notaries match transaction notary.\");\n"
                     }
                 } else {
                     ""
                 }
-                """
-                    $outputs
-                """.trimIndent()
             } else {
                 "// $NOTARY not present in transaction"
             }
