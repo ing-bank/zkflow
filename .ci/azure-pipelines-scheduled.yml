@@ -10,24 +10,24 @@ schedules:
 pool:
   name: NeoZKP
 
-    # This should be amended to download from Azure artifacts once that is set up for the Zinc repo.
-    #  - task: DownloadGitHubRelease@0
-    #    displayName: 'Fetch Zinc from Github'
-    #    inputs:
-    #      connection: 'Github Public Repo Access'
-    #      userRepository: 'ingzkp/zinc'
-    #      defaultVersionType: 'latest'
-    #      itemPattern: 'zinc-linux.tar.gz'
-    #      downloadPath: '$(System.ArtifactsDirectory)'
+  # This should be amended to download from Azure artifacts once that is set up for the Zinc repo.
+  #  - task: DownloadGitHubRelease@0
+  #    displayName: 'Fetch Zinc from Github'
+  #    inputs:
+  #      connection: 'Github Public Repo Access'
+  #      userRepository: 'ingzkp/zinc'
+  #      defaultVersionType: 'latest'
+  #      itemPattern: 'zinc-linux.tar.gz'
+  #      downloadPath: '$(System.ArtifactsDirectory)'
 
-    - task: Bash@3
-      displayName: 'Install Zinc in PATH'
-      inputs:
-        targetType: 'inline'
-        script: |
-          mkdir $(Pipeline.Workspace)/
-          tar xvzf $(Build.SourcesDirectory)/.ci/lib/zinc-linux.tar.gz --directory $(Pipeline.Workspace)
-          echo "##vso[task.prependpath]$(Pipeline.Workspace)/zinc-linux/"
+  - task: Bash@3
+    displayName: 'Install Zinc in PATH'
+    inputs:
+      targetType: 'inline'
+      script: |
+        mkdir $(Pipeline.Workspace)/
+        tar xvzf $(Build.SourcesDirectory)/.ci/lib/zinc-linux.tar.gz --directory $(Pipeline.Workspace)
+        echo "##vso[task.prependpath]$(Pipeline.Workspace)/zinc-linux/"
         
   - task: Bash@3
     displayName: 'Confirm Zinc in PATH'
