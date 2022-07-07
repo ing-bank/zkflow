@@ -6,6 +6,7 @@ import com.ing.zinc.poet.ZincMethod
 import com.ing.zinc.poet.ZincType
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.COMMANDS
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.INPUTS
+import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.INPUT_STATEREFS
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.NOTARY
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.OUTPUTS
 import com.ing.zkflow.zinc.poet.generate.types.Witness.Companion.PARAMETERS
@@ -67,4 +68,5 @@ private val publicInputFieldNameMap: Map<String, String> = mapOf(
     SIGNERS to "signers_hashes",
     SERIALIZED_INPUT_UTXOS to "input_utxo_hashes",
     SERIALIZED_REFERENCE_UTXOS to "reference_utxo_hashes",
+    INPUT_STATEREFS to "input_staterefs"
 )

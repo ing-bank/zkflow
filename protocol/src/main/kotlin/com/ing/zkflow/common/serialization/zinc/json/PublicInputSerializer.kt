@@ -51,5 +51,10 @@ object PublicInputSerializer {
                 "reference_utxo_hashes",
                 JsonArray(publicInput.referenceUtxoHashes.toJsonArray())
             )
+        if (publicInput.inputStateRefs.isNotEmpty())
+            put(
+                "input_staterefs",
+                JsonArray(publicInput.inputStateRefs.toJsonArray())
+            )
     }.toString()
 }

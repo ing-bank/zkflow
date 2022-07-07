@@ -14,6 +14,7 @@ import com.ing.zkflow.common.network.ZKNetworkParameters
 import com.ing.zkflow.common.network.attachmentConstraintSerializer
 import com.ing.zkflow.common.network.notarySerializer
 import com.ing.zkflow.common.network.signerSerializer
+import com.ing.zkflow.common.network.stateRefSerializer
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.serialization.infra.NetworkSerializationMetadata
 import com.ing.zkflow.serialization.serializer.corda.SHA256SecureHashSerializer
@@ -27,6 +28,11 @@ import net.corda.core.contracts.ComponentGroupEnum
 class StandardTypes(
     private val zkNetworkParameters: ZKNetworkParameters
 ) {
+    internal val stateRef by lazy {
+        ZincTypeGenerator.generate(
+            zkNetworkParameters.stateRefSerializer.descriptor
+        )
+    }
     val notaryModule by lazy {
         ZincTypeGenerator.generate(
             zkNetworkParameters.notarySerializer.descriptor
@@ -89,7 +95,7 @@ class StandardTypes(
         internal val digest = BflTypeDef(
             "Digest",
             array {
-                capacity = 32 // TODO size depends on the used hashing algorithm
+                capacity = 32 // TODO size depends on the used hashing algorithm as specified in active ZKNetworkParameters
                 elementType = BflPrimitive.I8
             }
         )

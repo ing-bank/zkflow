@@ -120,7 +120,9 @@ abstract class AbstractZKTransactionService(val serviceHub: ServiceHub) : ZKTran
             signersComponentHashes = tx.visibleInWitnessComponentHashes(commandMetadata, ComponentGroupEnum.SIGNERS_GROUP),
 
             inputUtxoHashes = privateInputHashes,
-            referenceUtxoHashes = privateReferenceHashes
+            referenceUtxoHashes = privateReferenceHashes,
+            inputStateRefs = tx.serializedComponentBytesFor(ComponentGroupEnum.INPUTS_GROUP, commandMetadata)
+
         )
     }
 
