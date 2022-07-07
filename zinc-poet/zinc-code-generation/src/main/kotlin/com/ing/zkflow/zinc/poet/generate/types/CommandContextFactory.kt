@@ -106,8 +106,8 @@ class CommandContextFactory(
                             encumbranceExistsCheck
                         } else {
                             encumbranceExistsCheck + (
-                                "(self.input_staterefs[$otherInputindex].txhash.equals(self.input_staterefs[$encumberedInputIndex].txhash) && " +
-                                    "self.input_staterefs[$otherInputindex].index == self.inputs.${inputField.name}.encumbrance.value)"
+                                "(self.input_stateref_components[$otherInputindex].txhash.equals(self.input_stateref_components[$encumberedInputIndex].txhash) && " +
+                                    "self.input_stateref_components[$otherInputindex].index == self.inputs.${inputField.name}.encumbrance.value)"
                                 )
                         }
                     }.joinToString(" || \n").ifEmpty { "false; // There is only one input and it is encumbered, so no other encumbering states exist in the transaction. " } };

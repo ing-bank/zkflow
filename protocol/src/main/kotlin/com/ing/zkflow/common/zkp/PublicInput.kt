@@ -6,9 +6,19 @@ import net.corda.core.serialization.CordaSerializable
 @CordaSerializable
 data class PublicInput(
     /**
-     * Leaf hash [SecureHash] of output components
+     * Leaf hash [SecureHash] of outputs
      */
     val outputComponentHashes: List<SecureHash>,
+
+    /**
+     * Leaf hash [SecureHash] of the UTXO pointed to by the input StateRefs at index [Int]
+     */
+    val inputUtxoHashes: List<SecureHash>,
+
+    /**
+     * Leaf hash [SecureHash] of the UTXO pointed to by the reference StateRefs at index [Int]
+     */
+    val referenceUtxoHashes: List<SecureHash>,
 
     /**
      * Leaf hash [SecureHash] of attachment components
@@ -16,39 +26,32 @@ data class PublicInput(
     val attachmentComponentHashes: List<SecureHash>,
 
     /**
-     * Leaf hash [SecureHash] of command components
+     * Serialized form of the commandComponents, so no the leaf hashes
      */
-    val commandComponentHashes: List<SecureHash>,
+    val commandComponents: List<ByteArray>,
 
     /**
-     * Leaf hash [SecureHash] of notary components
+     * Serialized form of the notaryComponents, so no the leaf hashes
      */
-    val notaryComponentHashes: List<SecureHash>,
+    val notaryComponents: List<ByteArray>,
 
     /**
-     * Leaf hash [SecureHash] of parameters components
+     * Serialized form of the parametersComponents, so no the leaf hashes
      */
-    val parametersComponentHashes: List<SecureHash>,
+    val parametersComponents: List<ByteArray>,
 
     /**
-     * Leaf hash [SecureHash] of timewindow components
+     * Serialized form of the timeWindowComponents, so no the leaf hashes
      */
-    val timeWindowComponentHashes: List<SecureHash>,
+    val timeWindowComponents: List<ByteArray>,
 
     /**
-     * Leaf hash [SecureHash] of signer components
+     * Serialized form of the signersComponents, so no the leaf hashes
      */
-    val signersComponentHashes: List<SecureHash>,
+    val signersComponents: List<ByteArray>,
 
     /**
-     * Leaf hash [SecureHash] of the UTXO pointed to by the input at index [Int]
+     * Serialized form of the inputStateRefs, so no the leaf hashes
      */
-    val inputUtxoHashes: List<SecureHash>,
-
-    /**
-     * Leaf hash [SecureHash] of the UTXO pointed to by the reference at index [Int]
-     */
-    val referenceUtxoHashes: List<SecureHash>,
-
-    val inputStateRefs: List<ByteArray>
+    val inputStateRefs: List<ByteArray>,
 )
