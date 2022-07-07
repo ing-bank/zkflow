@@ -85,8 +85,7 @@ class ZKPAnnotatedValidator(@Suppress("unused") private val logger: KSPLogger) :
         requireNoConcreteZKPStableAnnotated(resolver)
 
         (zkpAnnotated + surrogates).forEach {
-            // For now, objects are not allowed because the ZKFlow Arrow plugin currently does not support objects.
-            // When Arrow is replaced with KSP, this check should be removed.
+            // For now, objects are not supported.
             // Associated task: https://dev.azure.com/INGNeo/ING%20Neo%20-%20ZKFlow/_workitems/edit/21489
             it.requireNotAnObject()
 
@@ -111,9 +110,7 @@ class ZKPAnnotatedValidator(@Suppress("unused") private val logger: KSPLogger) :
     private fun KSClassDeclaration.requireNotAnObject() {
         require(this.classKind != ClassKind.OBJECT) {
             "${this.qualifiedName?.asString()} is an object. " +
-                "For now, objects annotated with @${ZKP::class.simpleName} or @${ZKPSurrogate::class.simpleName} are not allowed. " +
-                "This is because the ZKFlow Arrow plugin currently does not support objects. When Arrow is replaced with KSP, " +
-                "this check should be removed."
+                "For now, objects annotated with @${ZKP::class.simpleName} or @${ZKPSurrogate::class.simpleName} are not supported. Please use a class with an empty primary constructor instead."
         }
     }
 
