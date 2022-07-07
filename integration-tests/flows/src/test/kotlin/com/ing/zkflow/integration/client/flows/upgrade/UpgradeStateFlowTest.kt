@@ -30,6 +30,7 @@ import net.corda.testing.node.StartedMockNode
 import net.corda.testing.node.internal.cordappWithPackages
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
+import org.slf4j.LoggerFactory
 
 class UpgradeStateFlowTest {
     private val mockNet: MockNetwork
@@ -45,6 +46,8 @@ class UpgradeStateFlowTest {
     private val zkTransactionService: ZKTransactionService
     private val upgradeCommandInstance = getUpgradeCommand(MyStateV1::class, MyStateV2::class, isPrivate = true)
     private val createCommandInstance = CreateV1()
+
+    private val log = LoggerFactory.getLogger(this::class.java)
 
     init {
         val mockNetworkParameters = MockNetworkParameters(
@@ -77,18 +80,20 @@ class UpgradeStateFlowTest {
         miniCorp = miniCorpNode.info.singleIdentity()
         thirdParty = thirdPartyNode.info.singleIdentity()
 
-        DefaultCircuitGenerator.generateCircuitFor(createCommandInstance)
-        DefaultCircuitGenerator.generateCircuitFor(upgradeCommandInstance)
-
         // Because we are running in the context of a flow test, where all mock nodes share the same filesystem,
         // we only have to do setup once for all mock nodes to save time.
         // The other mock nodes will be able to access the circuit artifacts.
         zkTransactionService = miniCorpNode.services.getCordaServiceFromConfig(ZK_TX_SERVICE)
 
-        // Do circuit setup. Outside of tests, this would be done as part of CorDapp deployment
-        // and the artifacts would be distributed with the CorDapp.
-        zkTransactionService.setup(createCommandInstance.metadata)
-        zkTransactionService.setup(upgradeCommandInstance.metadata)
+        listOf(createCommandInstance, upgradeCommandInstance).forEach {
+            log.info("Generating circuit for $it.")
+            DefaultCircuitGenerator.generateCircuitFor(it)
+
+            // Do circuit setup. Outside of tests, this would be done as part of CorDapp deployment
+            // and the artifacts would be distributed with the CorDapp.
+            log.info("Running setup for $it.")
+            zkTransactionService.setup(it.metadata, force = true)
+        }
     }
 
     @AfterAll

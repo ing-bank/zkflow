@@ -4,6 +4,7 @@ import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.versioning.VersionedContractStateGroup
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.types.shouldBeInstanceOf
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.CommandAndState
@@ -26,6 +27,7 @@ class ZKCommandMetadataTest {
             override val metadata = commandMetadata {
                 circuit { name = "foo" }
 
+                notary = true
                 numberOfSigners = 2
 
                 inputs {
@@ -54,6 +56,33 @@ class ZKCommandMetadataTest {
     }
 
     @Test
+    fun `ZKCommandMetadata enforces notary if required`() {
+
+        assertThrows<IllegalArgumentException> {
+            @ZKP object : ZKCommandData {
+                override val metadata = commandMetadata {
+                    circuit { name = "foo" }
+
+                    numberOfSigners = 1
+
+                    inputs {
+                        any(MockAssetContract.MockAsset::class) at 2
+                    }
+                }
+
+                override fun verifyPrivate(): String = """
+                    mod module_command_context;
+                    use module_command_context::CommandContext;
+                    
+                    fn verify(ctx: CommandContext) {
+                        // TODO
+                    }
+                """.trimIndent()
+            }
+        }.also { it.message shouldContain "has inputs, references or a timewindow, and therefore needs a notary" }
+    }
+
+    @Test
     fun `ZKCommandMetadata DSL rejects duplicate indexes`() {
 
         assertThrows<IllegalStateException> {
@@ -63,6 +92,7 @@ class ZKCommandMetadataTest {
 
                     numberOfSigners = 2
 
+                    notary = true
                     inputs {
                         any(MockAuditContract.Approval::class) at 1
                         any(MockAssetContract.MockAsset::class) at 1
@@ -172,6 +202,7 @@ class MockAssetContract : Contract {
     class Move : ZKCommandData {
         override val metadata = commandMetadata {
             numberOfSigners = 2
+            notary = true
             inputs { any(MockAsset::class) at 0 }
             outputs { private(MockAsset::class) at 0 }
             references { any(MockAuditContract.Approval::class) at 0 }

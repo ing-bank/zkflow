@@ -9,12 +9,11 @@ End user CorDapps that want to do ZKP transactions:
 * depend on the ZKP CorDapp, which will provide all ZK code they need. This includes ZK-variants for core flows, custom serialization logic, custom hash functions, ZKP proving/verifying services, etc. In essence this is only platform code and not used for contract verification on the JVM: like for Corda itself we assume nodes run versions of the ZKP CorDapp that produce compatible transactions. As far as we can see, this means no ZKP code needs to be distributed as part of transaction attachments.
 * use a ZKTransactionBuilder to create WireTransactions. This is mostly to make sure the stucture and content of transactions are fixed size.
 * call ZKP flows from their flows: ZKFinalityFlow instead of FinalityFlow, etc. These flows:
-    * Create ZKProofs for txs they want to have verified. This is done by calling an external tool (Zinc, Rust).
-    * Store ZKProofs for each SignedTransaction in a custom transaction storage (extension).
-    * When verifying a transaction, the linked ZKProof is also verified by using Zinc. (This is done outside the sandbox, all other verification on FilteredTransactions will happen in Corda/JVM as normal)
-* need to make some minor adjustments to their states and contracts for ZKP compatibility.
+  * Create ZKProofs for txs they want to have verified. This is done by calling an external tool (Zinc, Rust).
+  * Store ZKProofs for each SignedTransaction in a custom transaction storage (extension).
+  * When verifying a transaction, the linked ZKProof is also verified by using Zinc. (This is done outside the sandbox, all other verification on FilteredTransactions will happen in Corda/JVM as normal)
+* need to make adjustments to their states and contracts for ZKP compatibility.
 * send their signed transactions to a ZKP Notary for notarisation.
-* TBD: Network Parameters define: Merkle leaf hash algo and serialization factory.
 
 ## Simplified sequence of events for ZKP transaction finality. 
 

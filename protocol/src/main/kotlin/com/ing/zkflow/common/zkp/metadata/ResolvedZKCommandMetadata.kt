@@ -61,6 +61,10 @@ data class ResolvedZKCommandMetadata(
     val privateReferenceTypeGroups = countTypes(references)
     val privateOutputTypeGroups = countTypes(outputs)
 
+    init {
+        enforceNotaryIfRequired()
+    }
+
     private fun countTypes(components: List<ZKIndexedTypedElement>): Map<KClass<out ContractState>, Int> {
         val result = mutableMapOf<KClass<out ContractState>, Int>()
 
@@ -82,6 +86,12 @@ data class ResolvedZKCommandMetadata(
             verifyNotary(txb.notary, txb.zkNetworkParameters)
         } catch (e: IllegalArgumentException) {
             throw IllegalTransactionStructureException(e)
+        }
+    }
+
+    private fun enforceNotaryIfRequired() {
+        if (inputs.isNotEmpty() || references.isNotEmpty() || timeWindow) {
+            require(this.notary) { "Metadata for command ${this.command}  has inputs, references or a timewindow, and therefore needs a notary. Notary not found." }
         }
     }
 

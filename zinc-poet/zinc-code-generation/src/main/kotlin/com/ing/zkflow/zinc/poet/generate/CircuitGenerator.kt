@@ -108,6 +108,9 @@ open class CircuitGenerator(
                 body = """
                     let tx = witness.deserialize();
                     contract_rules::verify(tx);
+
+                    tx.check_no_notary_change();
+                    
                     witness.generate_hashes()
                 """.trimIndent()
             }

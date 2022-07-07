@@ -113,6 +113,7 @@ class TestContract : Contract {
     @ZKP
     class MoveAnyToPrivate : ZKCommandData {
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
+            notary = true
             inputs { any(TestState::class) at 0 }
             outputs { private(TestState::class) at 0 }
             numberOfSigners = 2
@@ -131,6 +132,7 @@ class TestContract : Contract {
     @ZKP
     class MovePrivateOnly : ZKCommandData {
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
+            notary = true
             inputs { private(TestState::class) at 0 }
             outputs { private(TestState::class) at 0 }
             numberOfSigners = 2
@@ -149,6 +151,7 @@ class TestContract : Contract {
     @ZKP
     class MoveBidirectional : ZKCommandData {
         override val metadata: ResolvedZKCommandMetadata = commandMetadata {
+            notary = true
             inputs {
                 any(TestState::class) at 0
                 any(TestState::class) at 1

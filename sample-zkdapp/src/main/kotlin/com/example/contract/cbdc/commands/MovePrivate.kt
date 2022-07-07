@@ -10,6 +10,7 @@ import org.intellij.lang.annotations.Language
 class MovePrivate : ZKCommandData {
     override val metadata = commandMetadata {
         numberOfSigners = 1
+        notary = true
         inputs {
             private(CBDCToken::class) at 0
         }

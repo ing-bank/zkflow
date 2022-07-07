@@ -12,15 +12,6 @@ buildscript {
             maven("https://software.r3.com/artifactory/corda")
             maven("https://plugins.gradle.org/m2/")
             maven("https://oss.sonatype.org/content/repositories/snapshots/") // for arrow-meta
-
-            maven {
-                name = "BinaryFixedLengthSerializationRepo"
-                url = uri("https://maven.pkg.github.com/ingzkp/kotlinx-serialization-bfl")
-                credentials {
-                    username = System.getenv("GITHUB_USERNAME")
-                    password = System.getenv("GITHUB_TOKEN")
-                }
-            }
         }
     }
 
@@ -350,11 +341,6 @@ subprojects {
 
                 // Individual projects should not report, we aggregate all results for all projects
                 reports.html.isEnabled = false
-
-                val mockZKP = System.getProperty("MockZKP")
-                if (mockZKP != null) {
-                    systemProperty("MockZKP", true)
-                }
 
                 // Set the default log4j config file for tests
                 systemProperty("log4j.configurationFile", "${project.buildDir}/resources/test/log4j2.xml")
