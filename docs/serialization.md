@@ -40,9 +40,7 @@ libraries:
    3. the expected type of nullable fields,
    4. default values for the cases above.
    
-3. [Arrow Meta](arrow-meta) for processing ZKFlow annotations.
-
-4. [Kotlin Symbol Processing API](ksp-api), or KSP for short, for registering the generated serializers for a subsequent
+3. [Kotlin Symbol Processing API](ksp-api), or KSP for short, for processing ZKP annotations and for registering the generated serializers for a subsequent
 use in a custom serialization scheme.
 
 #### Kotlinx serialization
@@ -70,12 +68,10 @@ but it can be used together with `Default` making it much more powerful in conve
 `Surrogate` interface is intended to be used as a specific representation of a class allow for simpler serialization,
 its definition also requires conversion implementation to the original class.
 
-#### Arrow Meta
-Arrow Meta has been selected for **in-place** processing of ZKP annotations, i.e., rewriting the user code to generate
-appropriate infrastructure and `Serializable` annotations employing that infrastructure for further processing by the
-Kotlinx serialization engine.
-
 #### Kotlin Symbol Processing API
+KSP has been selected for **in-place** processing of ZKP annotations, i.e., rewriting the user code to generate
+appropriate infrastructure and `Serializable` annotations employing that infrastructure for further processing by the Kotlinx serialization engine.
+
 We may distinguish several kinds of serializers: 
 * *constant*, serializer is known at compile-time, applies to any instance of a class and always produces a constant size
 serialization, e.g., serializer for any `Int` will always produce a 4-bytes serialization. 
@@ -115,5 +111,4 @@ are loaded with `ServiceLoader` and stored in appropriate registries,
 [pluggable_serializers]: https://docs.r3.com/en/platform/corda/4.8/open-source/cordapp-custom-serializers.html
 [custom_serde]: https://docs.r3.com/en/api-ref/corda/4.8/open-source/kotlin/corda/net.corda.core.serialization/-custom-serialization-scheme/deserialize.html
 [kotlinx-serde]: https://github.com/Kotlin/kotlinx.serialization
-[arrow-meta]: https://github.com/arrow-kt/arrow-meta
 [ksp-api]: https://github.com/google/ksp
