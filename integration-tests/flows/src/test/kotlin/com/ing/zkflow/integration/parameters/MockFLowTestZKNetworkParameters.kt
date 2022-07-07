@@ -7,6 +7,8 @@ import com.ing.zkflow.common.network.ZKNotaryInfo
 import com.ing.zkflow.common.zkp.ZKFlow
 import net.corda.core.crypto.DigestAlgorithm
 import net.corda.core.crypto.SignatureScheme
+import java.nio.file.Files
+import java.nio.file.Paths
 
 class MockFLowTestZKNetworkParameters : ZKNetworkParameters {
     override val version: Int = 12
@@ -21,7 +23,8 @@ class MockFLowTestZKNetworkParameters : ZKNetworkParameters {
     override val notaryInfo: ZKNotaryInfo = ZKNotaryInfo(ZKFlow.DEFAULT_ZKFLOW_NOTARY_SIGNATURE_SCHEME)
     override val digestAlgorithm: DigestAlgorithm = ZKFlow.DEFAULT_ZKFLOW_DIGEST_IDENTIFIER
     override val serializationSchemeId: Int = ZKFlow.DEFAULT_SERIALIZATION_SCHEME_ID
-    override val debugSettings: DebugSettings = DebugSettings(
-        dumpSerializationStructure = false
-    )
+    override val debugSettings: DebugSettings = object : DebugSettings {
+        override val dumpSerializationStructure = true
+        override fun debugDirectory() = Paths.get("build/debug-structure").also { Files.createDirectories(it) }
+    }
 }

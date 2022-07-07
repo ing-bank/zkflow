@@ -46,7 +46,6 @@ import net.corda.core.serialization.internal.CustomSerializationSchemeUtils.Comp
 import net.corda.core.utilities.ByteSequence
 import net.corda.core.utilities.loggerFor
 import net.corda.serialization.internal.CordaSerializationMagic
-import java.nio.file.Files
 import java.nio.file.Path
 import java.security.PublicKey
 
@@ -279,14 +278,6 @@ open class BFLSerializationScheme : CustomSerializationScheme {
             )
     }
 
-    /**
-     * The temporary directory where schema files will be written.
-     * This is a val, so will hold for the whole lifetime of this instance.
-     */
-    private val tempDirectory by lazy {
-        Files.createTempDirectory("zkflow-bfl-structure-")
-    }
-
     private fun <M : Any, T : Any> ZKNetworkParameters.saveSerializationStructureForDebug(
         txComponent: T,
         txComponentSerializer: KSerializer<T>,
@@ -304,7 +295,7 @@ open class BFLSerializationScheme : CustomSerializationScheme {
                 element("txComponent", txComponentSerializer.descriptor)
             }
 
-            tempDirectory
+            debugSettings.debugDirectory()
                 .ensureFile("${descriptor.serialName.camelToSnakeCase()}.txt")
                 .log { "Wrote runtime BFL structure file to ${it.toAbsolutePath()}." }
                 .writeText(

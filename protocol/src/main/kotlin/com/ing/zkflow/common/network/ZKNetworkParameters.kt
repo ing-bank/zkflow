@@ -8,6 +8,7 @@ import com.ing.zkflow.serialization.serializer.corda.SecureHashSerializer
 import com.ing.zkflow.serialization.serializer.corda.StateRefSerializer
 import net.corda.core.crypto.DigestAlgorithm
 import net.corda.core.crypto.SignatureScheme
+import java.nio.file.Path
 
 interface ZKNetworkParameters {
     /**
@@ -49,13 +50,18 @@ interface ZKNetworkParameters {
 /**
  * Settings related to generating debug information.
  */
-data class DebugSettings(
+interface DebugSettings {
     /**
      * Flag controlling whether the serialization structure at runtime should be dumped into a file.
      * Note that this will be done for every serialization action, which might negatively impact performance.
      */
     val dumpSerializationStructure: Boolean
-)
+
+    /**
+     * The directory where debug information will be stored.
+     */
+    fun debugDirectory(): Path
+}
 
 val ZKNetworkParameters.notarySerializer
     get() = PartySerializer(
