@@ -72,7 +72,7 @@ internal sealed class SerializationFunctionalityGenerationTask(
         private val declarationToRepresentationConverter: ClassName,
     ) : SerializationFunctionalityGenerationTask(declaration) {
         override fun declarationToSurrogateConstructor(surrogateClassName: ClassName): CodeBlock {
-            val intermediate = "representation"
+            val intermediate = "zkpSurrogate"
 
             val parameters = representation.primaryConstructor!!
                 .parameters

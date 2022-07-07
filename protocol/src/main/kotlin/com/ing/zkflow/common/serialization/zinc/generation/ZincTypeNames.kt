@@ -30,8 +30,8 @@ val SerialDescriptor.zincTypeName: String
 
 val SerialDescriptor.internalTypeName
     get() = serialName
-        .replace("_${Surrogate.GENERATED_SURROGATE_POSTFIX}", "")
-        .replace("_${Surrogate.GENERATED_SURROGATE_ENUM_POSTFIX}", "")
+        .replace(Surrogate.GENERATED_SURROGATE_POSTFIX, "")
+        .replace(Surrogate.GENERATED_SURROGATE_ENUM_POSTFIX, "")
         .split(".")
         .filter {
             it.startsWithUppercase()
@@ -82,6 +82,6 @@ fun ClassName.buildFullyDistinguishableClassName(vararg postfixes: String): Clas
         packageName,
         nameComponents
             .filter { it.isNotBlank() }
-            .joinToString(separator = "_")
+            .joinToString(separator = "")
     )
 }

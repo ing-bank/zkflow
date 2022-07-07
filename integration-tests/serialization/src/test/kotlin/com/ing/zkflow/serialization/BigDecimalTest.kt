@@ -32,7 +32,7 @@ class BigDecimalTest : SerializerTest {
     @ParameterizedTest
     @MethodSource("engines")
     fun `MyBigDecimal makes a round trip`(engine: SerdeEngine) {
-        engine.assertRoundTrip(BigDecimalTest_MyBigDecimal_Serializer, MyBigDecimal())
+        engine.assertRoundTrip(BigDecimalTestMyBigDecimalSerializer, MyBigDecimal())
     }
 
     @ParameterizedTest
@@ -42,6 +42,6 @@ class BigDecimalTest : SerializerTest {
             BigDecimalResolved.serializer(),
             BigDecimalResolved()
         ) shouldBe
-            engine.serialize(BigDecimalTest_MyBigDecimal_Serializer, MyBigDecimal())
+            engine.serialize(BigDecimalTestMyBigDecimalSerializer, MyBigDecimal())
     }
 }

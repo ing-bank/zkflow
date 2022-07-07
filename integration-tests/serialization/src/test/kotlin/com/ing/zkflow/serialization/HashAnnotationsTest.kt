@@ -58,7 +58,7 @@ class HashAnnotationsTest : SerializerTest {
     @ParameterizedTest
     @MethodSource("engines")
     fun `HashAnnotations makes a round trip`(engine: SerdeEngine) {
-        engine.assertRoundTrip(HashAnnotationsTest_HashAnnotations_Serializer, HashAnnotations())
+        engine.assertRoundTrip(HashAnnotationsTestHashAnnotationsSerializer, HashAnnotations())
     }
 
     @ParameterizedTest
@@ -68,6 +68,6 @@ class HashAnnotationsTest : SerializerTest {
             HashAnnotationsResolved.serializer(),
             HashAnnotationsResolved()
         ) shouldBe
-            engine.serialize(HashAnnotationsTest_HashAnnotations_Serializer, HashAnnotations())
+            engine.serialize(HashAnnotationsTestHashAnnotationsSerializer, HashAnnotations())
     }
 }

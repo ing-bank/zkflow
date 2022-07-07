@@ -37,6 +37,7 @@ dependencies {
 
     // To be able to generate correct names for serializers. -->
     // TODO very likely it can be avoided. Used to speed up the process.
+    //   Required in ZincTypeNames.kt:53 for KClass<*>.asClassName()
     val kotlinPoetVersion: String by project
     implementation("com.squareup:kotlinpoet:$kotlinPoetVersion")
     // <--

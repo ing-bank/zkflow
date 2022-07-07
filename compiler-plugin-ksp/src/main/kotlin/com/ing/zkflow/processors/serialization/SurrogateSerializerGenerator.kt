@@ -4,8 +4,8 @@ import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.ing.zkflow.annotations.ZKPSurrogate
-import com.ing.zkflow.ksp.getSerializationFunctionalityLocation
-import com.ing.zkflow.ksp.getSingleArgumentOfNonRepeatableAnnotationByType
+import com.ing.zkflow.ksp.getSingleArgumentOfSingleAnnotationByType
+import com.ing.zkflow.ksp.getSurrogateSerializerClassName
 import com.ing.zkflow.ksp.getSurrogateTargetClass
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
@@ -22,7 +22,7 @@ class SurrogateSerializerGenerator(private val codeGenerator: CodeGenerator) {
         annotated.forEach { representation ->
             val declaration = representation.getSurrogateTargetClass()
             val converterClassName =
-                (representation.getSingleArgumentOfNonRepeatableAnnotationByType(ZKPSurrogate::class) as KSType).toClassName()
+                (representation.getSingleArgumentOfSingleAnnotationByType(ZKPSurrogate::class) as KSType).toClassName()
 
             val typeSpecs = SerializationFunctionalityGenerationTask.Indirect(
                 declaration,
@@ -31,7 +31,7 @@ class SurrogateSerializerGenerator(private val codeGenerator: CodeGenerator) {
             ).execute()
 
             emit(
-                location = representation.getSerializationFunctionalityLocation(),
+                location = representation.getSurrogateSerializerClassName(),
                 typeSpecs = typeSpecs,
                 dependencies = listOf(representation)
             )
@@ -46,7 +46,7 @@ class SurrogateSerializerGenerator(private val codeGenerator: CodeGenerator) {
             val typeSpecs = SerializationFunctionalityGenerationTask.Direct(declaration).execute()
 
             emit(
-                location = declaration.getSerializationFunctionalityLocation(),
+                location = declaration.getSurrogateSerializerClassName(),
                 typeSpecs = typeSpecs,
                 dependencies = listOf(declaration)
             )
@@ -60,7 +60,6 @@ class SurrogateSerializerGenerator(private val codeGenerator: CodeGenerator) {
         val fileSpecBuilder = FileSpec.builder(location.packageName, location.simpleName)
             .addAnnotation(
                 AnnotationSpec.builder(Suppress::class)
-                    .addMember("\"ClassName\"")
                     .addMember("\"DEPRECATION\"")
                     .build()
             )

@@ -3,7 +3,7 @@ package com.ing.zkflow.ksp.versioning
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.ing.zkflow.ksp.implementsInterface
 import com.ing.zkflow.processors.serialization.SerializerProviderGenerator
-import com.ing.zkflow.processors.serialization.SerializerProviderGenerator.SerializableClassWithSourceFiles.Companion.toGeneratedSerializer
+import com.ing.zkflow.processors.serialization.SerializerProviderGenerator.SerializableClassWithSourceFiles.Companion.toExistingSerializer
 import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.ContractState
 
@@ -20,7 +20,7 @@ object VersionedStateIdGenerator {
                         require(ksClassDeclaration.implementsInterface(ContractState::class)) {
                             "$this can only generate ids for ${ContractState::class.simpleName}"
                         }
-                        ksClassDeclaration.toGeneratedSerializer() to generateId(stateFamily, index)
+                        ksClassDeclaration.toExistingSerializer() to generateId(stateFamily, index)
                     }
                     .toMap()
                 acc + localIdMap
@@ -37,7 +37,7 @@ object VersionedCommandIdGenerator {
             require(declaration.implementsInterface(CommandData::class)) {
                 "$this can only generate ids for ${CommandData::class.simpleName}"
             }
-            acc + (declaration.toGeneratedSerializer() to generateId(declaration))
+            acc + (declaration.toExistingSerializer() to generateId(declaration))
         }
 
     fun generateId(serializer: SerializerProviderGenerator.SerializableClassWithSourceFiles): Int {

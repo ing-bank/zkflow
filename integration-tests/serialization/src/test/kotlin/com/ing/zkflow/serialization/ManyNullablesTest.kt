@@ -41,7 +41,7 @@ class ManyNullablesTest : SerializerTest {
     @ParameterizedTest
     @MethodSource("engines")
     fun `ManyNullables makes a round trip`(engine: SerdeEngine) {
-        engine.assertRoundTrip(ManyNullablesTest_ManyNullables_Serializer, ManyNullables())
+        engine.assertRoundTrip(ManyNullablesTestManyNullablesSerializer, ManyNullables())
     }
 
     @ParameterizedTest
@@ -51,6 +51,6 @@ class ManyNullablesTest : SerializerTest {
             ManyNullablesResolved.serializer(),
             ManyNullablesResolved()
         ) shouldBe
-            engine.serialize(ManyNullablesTest_ManyNullables_Serializer, ManyNullables())
+            engine.serialize(ManyNullablesTestManyNullablesSerializer, ManyNullables())
     }
 }

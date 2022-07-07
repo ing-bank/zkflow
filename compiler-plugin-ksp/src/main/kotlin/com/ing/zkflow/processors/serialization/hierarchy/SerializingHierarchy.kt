@@ -71,7 +71,7 @@ import java.util.UUID
  * E.g., for a parameter
  *      myList: @Size(5) List<Int>
  * a sequence of [TypeSpec]'s
- *      object MyList_0: FixedLengthListSerializer(4, My_List_1)
+ *      object MyList_0: FixedLengthListSerializer(5, My_List_1)
  *      object MyList_1: WrappedFixedLengthSerializer<Int>(IntSerializer)
  * will be generated.
  */
@@ -82,7 +82,7 @@ internal fun KSValueParameter.getSerializingHierarchy(): SerializingHierarchy {
 
 /**
  * [SerializingHierarchy] holds information allowing to build up a collection
- * of serializers for a given type, re-build up the type dropping the annotations.
+ * of serializers for a given type.
  */
 internal sealed class SerializingHierarchy(
     val definition: TypeSpec

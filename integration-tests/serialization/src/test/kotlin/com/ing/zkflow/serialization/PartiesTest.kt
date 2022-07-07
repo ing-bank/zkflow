@@ -1,12 +1,12 @@
 package com.ing.zkflow.serialization
 
 import com.ing.zkflow.AnonymousParty_EdDSA
-import com.ing.zkflow.AnonymousParty_EdDSA_Serializer
+import com.ing.zkflow.AnonymousParty_EdDSASerializer
 import com.ing.zkflow.CordaX500NameConverter
 import com.ing.zkflow.CordaX500NameSurrogate
-import com.ing.zkflow.CordaX500NameSurrogate_Serializer
+import com.ing.zkflow.CordaX500NameSurrogateSerializer
 import com.ing.zkflow.Party_EdDSA
-import com.ing.zkflow.Party_EdDSA_Serializer
+import com.ing.zkflow.Party_EdDSASerializer
 import com.ing.zkflow.Via
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.annotations.corda.CordaX500NameSpec
@@ -67,7 +67,7 @@ class PartiesTest : SerializerTest {
 
         object AnonymousParty_0 : AnonymousPartySerializer(4)
         object AnonymousPartyFullyCustom_0 : WrappedFixedLengthKSerializer<AnonymousParty>(
-            AnonymousParty_EdDSA_Serializer,
+            AnonymousParty_EdDSASerializer,
             AnonymousParty_EdDSA::class.java.isEnum
         )
 
@@ -76,12 +76,12 @@ class PartiesTest : SerializerTest {
 
         object PartyCX500Custom_0 : PartySerializer(4, PartyCX500Custom_1)
         object PartyCX500Custom_1 : SerializerWithDefault<CordaX500Name>(
-            CordaX500NameSurrogate_Serializer,
+            CordaX500NameSurrogateSerializer,
             CordaX500NameSerializer.default
         )
 
         object PartyFullyCustom_0 : WrappedFixedLengthKSerializer<Party>(
-            Party_EdDSA_Serializer,
+            Party_EdDSASerializer,
             Party_EdDSA::class.java.isEnum
         )
     }
@@ -90,7 +90,7 @@ class PartiesTest : SerializerTest {
     @ParameterizedTest
     @MethodSource("engines")
     fun `Parties makes a round trip`(engine: SerdeEngine) {
-        engine.assertRoundTrip(PartiesTest_Parties_Serializer, Parties())
+        engine.assertRoundTrip(PartiesTestPartiesSerializer, Parties())
     }
 
     @ParameterizedTest
@@ -100,6 +100,6 @@ class PartiesTest : SerializerTest {
             PartiesResolved.serializer(),
             PartiesResolved()
         ) shouldBe
-            engine.serialize(PartiesTest_Parties_Serializer, Parties())
+            engine.serialize(PartiesTestPartiesSerializer, Parties())
     }
 }

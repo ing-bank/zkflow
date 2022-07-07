@@ -57,12 +57,9 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                         )
                     """.trimIndent()
                 ),
-                expectedSerializationLocation = "BasicTypesContainer_${Surrogate.GENERATED_SERIALIZATION_FUNCTIONALITY_LOCATION_POSTFIX}",
+                expectedSerializationLocation = "BasicTypesContainer${Surrogate.GENERATED_SURROGATE_SERIALIZER_POSTFIX}",
                 expected = """
-                    @file:Suppress(
-                      "ClassName",
-                      "DEPRECATION"
-                    )
+                    @file:Suppress("DEPRECATION")
 
                     package $packageName
 
@@ -77,7 +74,7 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                     import kotlinx.serialization.Serializable
 
                     @Serializable
-                    public class BasicTypesContainer_${Surrogate.GENERATED_SURROGATE_POSTFIX}(
+                    public class BasicTypesContainer${Surrogate.GENERATED_SURROGATE_POSTFIX}(
                       @Serializable(with = Int_0::class)
                       public val int: @Contextual Int,
                       @Serializable(with = NullableInt_0::class)
@@ -92,9 +89,9 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                       private object NullableInt_1 : WrappedFixedLengthKSerializerWithDefault<Int>(IntSerializer)
                     }
 
-                    public object BasicTypesContainer_Serializer :
-                        SurrogateSerializer<BasicTypesContainer, BasicTypesContainer_${Surrogate.GENERATED_SURROGATE_POSTFIX}>(BasicTypesContainer_${Surrogate.GENERATED_SURROGATE_POSTFIX}.serializer(),
-                        { BasicTypesContainer_${Surrogate.GENERATED_SURROGATE_POSTFIX}(int = it.int, nullableInt = it.nullableInt) })
+                    public object BasicTypesContainer${Surrogate.GENERATED_SURROGATE_SERIALIZER_POSTFIX} :
+                        SurrogateSerializer<BasicTypesContainer, BasicTypesContainer${Surrogate.GENERATED_SURROGATE_POSTFIX}>(BasicTypesContainer${Surrogate.GENERATED_SURROGATE_POSTFIX}.serializer(),
+                        { BasicTypesContainer${Surrogate.GENERATED_SURROGATE_POSTFIX}(int = it.int, nullableInt = it.nullableInt) })
                 """.trimIndent()
             ),
 
@@ -113,12 +110,9 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                         )
                     """.trimIndent()
                 ),
-                expectedSerializationLocation = "CollectionsOfBasicNullableTypesContainer_${Surrogate.GENERATED_SERIALIZATION_FUNCTIONALITY_LOCATION_POSTFIX}",
+                expectedSerializationLocation = "CollectionsOfBasicNullableTypesContainer${Surrogate.GENERATED_SURROGATE_SERIALIZER_POSTFIX}",
                 expected = """
-                    @file:Suppress(
-                      "ClassName",
-                      "DEPRECATION"
-                    )
+                    @file:Suppress("DEPRECATION")
 
                     package $packageName
 
@@ -137,7 +131,7 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                     import kotlinx.serialization.Serializable
 
                     @Serializable
-                    public class CollectionsOfBasicNullableTypesContainer_${Surrogate.GENERATED_SURROGATE_POSTFIX}(
+                    public class CollectionsOfBasicNullableTypesContainer${Surrogate.GENERATED_SURROGATE_POSTFIX}(
                       @Serializable(with = MyList_0::class)
                       public val myList: @Contextual List<@Contextual Map<@Contextual Int, @Contextual Int?>?>?
                     ) : Surrogate<CollectionsOfBasicNullableTypesContainer> {
@@ -159,9 +153,9 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                       private object MyList_3_B_1 : WrappedFixedLengthKSerializerWithDefault<Int>(IntSerializer)
                     }
 
-                    public object CollectionsOfBasicNullableTypesContainer_Serializer :
-                        SurrogateSerializer<CollectionsOfBasicNullableTypesContainer, CollectionsOfBasicNullableTypesContainer_${Surrogate.GENERATED_SURROGATE_POSTFIX}>(CollectionsOfBasicNullableTypesContainer_${Surrogate.GENERATED_SURROGATE_POSTFIX}.serializer(),
-                        { CollectionsOfBasicNullableTypesContainer_${Surrogate.GENERATED_SURROGATE_POSTFIX}(myList = it.myList) })
+                    public object CollectionsOfBasicNullableTypesContainer${Surrogate.GENERATED_SURROGATE_SERIALIZER_POSTFIX} :
+                        SurrogateSerializer<CollectionsOfBasicNullableTypesContainer, CollectionsOfBasicNullableTypesContainer${Surrogate.GENERATED_SURROGATE_POSTFIX}>(CollectionsOfBasicNullableTypesContainer${Surrogate.GENERATED_SURROGATE_POSTFIX}.serializer(),
+                        { CollectionsOfBasicNullableTypesContainer${Surrogate.GENERATED_SURROGATE_POSTFIX}(myList = it.myList) })
                 """.trimIndent()
             ),
 
@@ -190,12 +184,9 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
 
                     """.trimIndent()
                 ),
-                expectedSerializationLocation = "OutOfReachSurrogate_${Surrogate.GENERATED_SERIALIZATION_FUNCTIONALITY_LOCATION_POSTFIX}",
+                expectedSerializationLocation = "OutOfReachSurrogate${Surrogate.GENERATED_SURROGATE_SERIALIZER_POSTFIX}",
                 expected = """
-                @file:Suppress(
-                  "ClassName",
-                  "DEPRECATION"
-                )
+                @file:Suppress("DEPRECATION")
 
                 package $packageName
 
@@ -209,7 +200,7 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                 import kotlinx.serialization.Serializable
 
                 @Serializable
-                public class OutOfReachSurrogate_${Surrogate.GENERATED_SURROGATE_POSTFIX}(
+                public class OutOfReachSurrogate${Surrogate.GENERATED_SURROGATE_POSTFIX}(
                   @Serializable(with = Int_0::class)
                   public val int: @Contextual Int
                 ) : Surrogate<OutOfReach> {
@@ -218,11 +209,11 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                   private object Int_0 : WrappedFixedLengthKSerializerWithDefault<Int>(IntSerializer)
                 }
 
-                public object OutOfReachSurrogate_Serializer :
-                    SurrogateSerializer<OutOfReach, OutOfReachSurrogate_${Surrogate.GENERATED_SURROGATE_POSTFIX}>(OutOfReachSurrogate_${Surrogate.GENERATED_SURROGATE_POSTFIX}.serializer(),
+                public object OutOfReachSurrogate${Surrogate.GENERATED_SURROGATE_SERIALIZER_POSTFIX} :
+                    SurrogateSerializer<OutOfReach, OutOfReachSurrogate${Surrogate.GENERATED_SURROGATE_POSTFIX}>(OutOfReachSurrogate${Surrogate.GENERATED_SURROGATE_POSTFIX}.serializer(),
                      {
-                      val representation = ConverterOutOfReach.from(it)
-                      OutOfReachSurrogate_${Surrogate.GENERATED_SURROGATE_POSTFIX}(int = representation.int)
+                      val zkpSurrogate = ConverterOutOfReach.from(it)
+                      OutOfReachSurrogate${Surrogate.GENERATED_SURROGATE_POSTFIX}(int = zkpSurrogate.int)
                     }
                   )
                 """.trimIndent()
@@ -245,12 +236,9 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                         class MyClass(val int: Int)
                     """.trimIndent()
                 ),
-                expectedSerializationLocation = "ZkpInsideZkp_${Surrogate.GENERATED_SERIALIZATION_FUNCTIONALITY_LOCATION_POSTFIX}",
+                expectedSerializationLocation = "ZkpInsideZkp${Surrogate.GENERATED_SURROGATE_SERIALIZER_POSTFIX}",
                 expected = """
-                    @file:Suppress(
-                      "ClassName",
-                      "DEPRECATION"
-                    )
+                    @file:Suppress("DEPRECATION")
 
                     package $packageName
 
@@ -262,19 +250,19 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                     import kotlinx.serialization.Serializable
 
                     @Serializable
-                    public class ZkpInsideZkp_${Surrogate.GENERATED_SURROGATE_POSTFIX}(
+                    public class ZkpInsideZkp${Surrogate.GENERATED_SURROGATE_POSTFIX}(
                       @Serializable(with = MyClass_0::class)
                       public val myClass: @Contextual MyClass
                     ) : Surrogate<ZkpInsideZkp> {
                       public override fun toOriginal(): ZkpInsideZkp = ZkpInsideZkp(myClass)
 
-                      private object MyClass_0 : WrappedFixedLengthKSerializer<MyClass>(MyClass_Serializer,
+                      private object MyClass_0 : WrappedFixedLengthKSerializer<MyClass>(MyClass${Surrogate.GENERATED_SURROGATE_SERIALIZER_POSTFIX},
                           MyClass::class.java.isEnum)
                     }
 
-                    public object ZkpInsideZkp_Serializer :
-                        SurrogateSerializer<ZkpInsideZkp, ZkpInsideZkp_${Surrogate.GENERATED_SURROGATE_POSTFIX}>(ZkpInsideZkp_${Surrogate.GENERATED_SURROGATE_POSTFIX}.serializer(),
-                        { ZkpInsideZkp_${Surrogate.GENERATED_SURROGATE_POSTFIX}(myClass = it.myClass) })
+                    public object ZkpInsideZkp${Surrogate.GENERATED_SURROGATE_SERIALIZER_POSTFIX} :
+                        SurrogateSerializer<ZkpInsideZkp, ZkpInsideZkp${Surrogate.GENERATED_SURROGATE_POSTFIX}>(ZkpInsideZkp${Surrogate.GENERATED_SURROGATE_POSTFIX}.serializer(),
+                        { ZkpInsideZkp${Surrogate.GENERATED_SURROGATE_POSTFIX}(myClass = it.myClass) })
                 """.trimIndent()
             ),
 
@@ -316,12 +304,9 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                         data class OutOfReach(val int: Int)
                     """.trimIndent()
                 ),
-                expectedSerializationLocation = "ZkpSurrogateInsideZkp_${Surrogate.GENERATED_SERIALIZATION_FUNCTIONALITY_LOCATION_POSTFIX}",
+                expectedSerializationLocation = "ZkpSurrogateInsideZkp${Surrogate.GENERATED_SURROGATE_SERIALIZER_POSTFIX}",
                 expected = """
-                    @file:Suppress(
-                      "ClassName",
-                      "DEPRECATION"
-                    )
+                    @file:Suppress("DEPRECATION")
 
                     package $packageName
 
@@ -335,7 +320,7 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                     import kotlinx.serialization.Serializable
 
                     @Serializable
-                    public class ZkpSurrogateInsideZkp_${Surrogate.GENERATED_SURROGATE_POSTFIX}(
+                    public class ZkpSurrogateInsideZkp${Surrogate.GENERATED_SURROGATE_POSTFIX}(
                       @Serializable(with = MyClass_0::class)
                       public val myClass: @Contextual OutOfReach?
                     ) : Surrogate<ZkpSurrogateInsideZkp> {
@@ -346,13 +331,13 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                       private object MyClass_1 : SerializerWithDefault<OutOfReach>(MyClass_2, DefaultOutOfReach.default)
 
                       private object MyClass_2 :
-                          WrappedFixedLengthKSerializer<OutOfReach>(OutOfReachSurrogate_Serializer,
+                          WrappedFixedLengthKSerializer<OutOfReach>(OutOfReachSurrogate${Surrogate.GENERATED_SURROGATE_SERIALIZER_POSTFIX},
                           OutOfReachSurrogate::class.java.isEnum)
                     }
 
-                    public object ZkpSurrogateInsideZkp_Serializer :
-                        SurrogateSerializer<ZkpSurrogateInsideZkp, ZkpSurrogateInsideZkp_${Surrogate.GENERATED_SURROGATE_POSTFIX}>(ZkpSurrogateInsideZkp_${Surrogate.GENERATED_SURROGATE_POSTFIX}.serializer(),
-                        { ZkpSurrogateInsideZkp_${Surrogate.GENERATED_SURROGATE_POSTFIX}(myClass = it.myClass) })
+                    public object ZkpSurrogateInsideZkp${Surrogate.GENERATED_SURROGATE_SERIALIZER_POSTFIX} :
+                        SurrogateSerializer<ZkpSurrogateInsideZkp, ZkpSurrogateInsideZkp${Surrogate.GENERATED_SURROGATE_POSTFIX}>(ZkpSurrogateInsideZkp${Surrogate.GENERATED_SURROGATE_POSTFIX}.serializer(),
+                        { ZkpSurrogateInsideZkp${Surrogate.GENERATED_SURROGATE_POSTFIX}(myClass = it.myClass) })
                 """.trimIndent()
             ),
 
@@ -371,12 +356,9 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                         }
                     """.trimIndent()
                 ),
-                expectedSerializationLocation = "Option_${Surrogate.GENERATED_SERIALIZATION_FUNCTIONALITY_LOCATION_POSTFIX}",
+                expectedSerializationLocation = "Option${Surrogate.GENERATED_SURROGATE_SERIALIZER_POSTFIX}",
                 expected = """
-                    @file:Suppress(
-                      "ClassName",
-                      "DEPRECATION"
-                    )
+                    @file:Suppress("DEPRECATION")
 
                     package $packageName
 
@@ -389,7 +371,7 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                     import kotlinx.serialization.Serializable
 
                     @Serializable
-                    public class Option_${Surrogate.GENERATED_SURROGATE_POSTFIX}_${Surrogate.GENERATED_SURROGATE_ENUM_POSTFIX}(
+                    public class Option${Surrogate.GENERATED_SURROGATE_POSTFIX}${Surrogate.GENERATED_SURROGATE_ENUM_POSTFIX}(
                       @Serializable(with = Ordinal_0::class)
                       public val ordinal: Int
                     ) : Surrogate<Option> {
@@ -398,9 +380,9 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                       private object Ordinal_0 : WrappedFixedLengthKSerializerWithDefault<Int>(IntSerializer)
                     }
 
-                    public object Option_Serializer :
-                        SurrogateSerializer<Option, Option_${Surrogate.GENERATED_SURROGATE_POSTFIX}_${Surrogate.GENERATED_SURROGATE_ENUM_POSTFIX}>(Option_${Surrogate.GENERATED_SURROGATE_POSTFIX}_${Surrogate.GENERATED_SURROGATE_ENUM_POSTFIX}.serializer(),
-                        { Option_${Surrogate.GENERATED_SURROGATE_POSTFIX}_${Surrogate.GENERATED_SURROGATE_ENUM_POSTFIX}(ordinal = it.ordinal) })
+                    public object Option${Surrogate.GENERATED_SURROGATE_SERIALIZER_POSTFIX} :
+                        SurrogateSerializer<Option, Option${Surrogate.GENERATED_SURROGATE_POSTFIX}${Surrogate.GENERATED_SURROGATE_ENUM_POSTFIX}>(Option${Surrogate.GENERATED_SURROGATE_POSTFIX}${Surrogate.GENERATED_SURROGATE_ENUM_POSTFIX}.serializer(),
+                        { Option${Surrogate.GENERATED_SURROGATE_POSTFIX}${Surrogate.GENERATED_SURROGATE_ENUM_POSTFIX}(ordinal = it.ordinal) })
                 """.trimIndent()
             ),
 
@@ -539,12 +521,9 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                     }
                     """.trimIndent()
                 ),
-                expectedSerializationLocation = "Parties_${Surrogate.GENERATED_SERIALIZATION_FUNCTIONALITY_LOCATION_POSTFIX}",
+                expectedSerializationLocation = "Parties${Surrogate.GENERATED_SURROGATE_SERIALIZER_POSTFIX}",
                 expected = """
-                    @file:Suppress(
-                      "ClassName",
-                      "DEPRECATION"
-                    )
+                    @file:Suppress("DEPRECATION")
 
                     package $packageName
 
@@ -564,7 +543,7 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                     import net.corda.core.identity.Party
 
                     @Serializable
-                    public class Parties_${Surrogate.GENERATED_SURROGATE_POSTFIX}(
+                    public class Parties${Surrogate.GENERATED_SURROGATE_POSTFIX}(
                       @Serializable(with = AnonymousParty_0::class)
                       public val anonymousParty: @Contextual AnonymousParty,
                       @Serializable(with = AnonymousPartyFullyCustom_0::class)
@@ -582,7 +561,7 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                       private object AnonymousParty_0 : AnonymousPartySerializer(4)
 
                       private object AnonymousPartyFullyCustom_0 :
-                          WrappedFixedLengthKSerializer<AnonymousParty>(AnonymousParty_EdDSA_Serializer,
+                          WrappedFixedLengthKSerializer<AnonymousParty>(AnonymousParty_EdDSA${Surrogate.GENERATED_SURROGATE_SERIALIZER_POSTFIX},
                           AnonymousParty_EdDSA::class.java.isEnum)
 
                       private object Party_0 : PartySerializer(4, Party_1)
@@ -593,16 +572,16 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                       private object PartyCX500Custom_0 : PartySerializer(4, PartyCX500Custom_1)
 
                       private object PartyCX500Custom_1 :
-                          SerializerWithDefault<CordaX500Name>(CordaX500NameSurrogate_Serializer,
+                          SerializerWithDefault<CordaX500Name>(CordaX500NameSurrogate${Surrogate.GENERATED_SURROGATE_SERIALIZER_POSTFIX},
                           CordaX500NameSerializer.default)
 
-                      private object PartyFullyCustom_0 : WrappedFixedLengthKSerializer<Party>(Party_EdDSA_Serializer,
+                      private object PartyFullyCustom_0 : WrappedFixedLengthKSerializer<Party>(Party_EdDSA${Surrogate.GENERATED_SURROGATE_SERIALIZER_POSTFIX},
                           Party_EdDSA::class.java.isEnum)
                     }
 
-                    public object Parties_Serializer :
-                        SurrogateSerializer<Parties, Parties_${Surrogate.GENERATED_SURROGATE_POSTFIX}>(Parties_${Surrogate.GENERATED_SURROGATE_POSTFIX}.serializer(), {
-                        Parties_${Surrogate.GENERATED_SURROGATE_POSTFIX}(anonymousParty = it.anonymousParty, anonymousPartyFullyCustom =
+                    public object Parties${Surrogate.GENERATED_SURROGATE_SERIALIZER_POSTFIX} :
+                        SurrogateSerializer<Parties, Parties${Surrogate.GENERATED_SURROGATE_POSTFIX}>(Parties${Surrogate.GENERATED_SURROGATE_POSTFIX}.serializer(), {
+                        Parties${Surrogate.GENERATED_SURROGATE_POSTFIX}(anonymousParty = it.anonymousParty, anonymousPartyFullyCustom =
                         it.anonymousPartyFullyCustom, party = it.party, partyCX500Custom = it.partyCX500Custom,
                         partyFullyCustom = it.partyFullyCustom) })
                 """.trimIndent()
@@ -640,12 +619,9 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
 
                     """.trimIndent()
                 ),
-                expectedSerializationLocation = "B_${Surrogate.GENERATED_SERIALIZATION_FUNCTIONALITY_LOCATION_POSTFIX}",
+                expectedSerializationLocation = "B${Surrogate.GENERATED_SURROGATE_SERIALIZER_POSTFIX}",
                 expected = """
-                    @file:Suppress(
-                      "ClassName",
-                      "DEPRECATION"
-                    )
+                    @file:Suppress("DEPRECATION")
 
                     package $packageName
 
@@ -660,7 +636,7 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                     import kotlinx.serialization.Serializable
 
                     @Serializable
-                    public class B_${Surrogate.GENERATED_SURROGATE_POSTFIX}(
+                    public class B${Surrogate.GENERATED_SURROGATE_POSTFIX}(
                       @Serializable(with = T_0::class)
                       public val t: @Contextual Int?
                     ) : Surrogate<A<Int?>> {
@@ -671,10 +647,10 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                       private object T_1 : WrappedFixedLengthKSerializerWithDefault<Int>(IntSerializer)
                     }
 
-                    public object B_Serializer :
-                        SurrogateSerializer<A<Int?>, B_${Surrogate.GENERATED_SURROGATE_POSTFIX}>(B_${Surrogate.GENERATED_SURROGATE_POSTFIX}.serializer(),  {
-                          val representation = A2B.from(it)
-                          B_${Surrogate.GENERATED_SURROGATE_POSTFIX}(t = representation.t)
+                    public object B${Surrogate.GENERATED_SURROGATE_SERIALIZER_POSTFIX} :
+                        SurrogateSerializer<A<Int?>, B${Surrogate.GENERATED_SURROGATE_POSTFIX}>(B${Surrogate.GENERATED_SURROGATE_POSTFIX}.serializer(),  {
+                          val zkpSurrogate = A2B.from(it)
+                          B${Surrogate.GENERATED_SURROGATE_POSTFIX}(t = zkpSurrogate.t)
                         }
                       )
                 """.trimIndent()
@@ -715,12 +691,9 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                         annotation class UselessAnnotation
                     """.trimIndent()
                 ),
-                expectedSerializationLocation = "ParameterizedTypeContainer_${Surrogate.GENERATED_SERIALIZATION_FUNCTIONALITY_LOCATION_POSTFIX}",
+                expectedSerializationLocation = "ParameterizedTypeContainer${Surrogate.GENERATED_SURROGATE_SERIALIZER_POSTFIX}",
                 expected = """
-                        @file:Suppress(
-                          "ClassName",
-                          "DEPRECATION"
-                        )
+                        @file:Suppress("DEPRECATION")
 
                         package $packageName
 
@@ -733,18 +706,18 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                         import kotlinx.serialization.Serializable
 
                         @Serializable
-                        public class ParameterizedTypeContainer_${Surrogate.GENERATED_SURROGATE_POSTFIX}(
+                        public class ParameterizedTypeContainer${Surrogate.GENERATED_SURROGATE_POSTFIX}(
                           @Serializable(with = B_0::class)
                           public val b: @Contextual A<@Contextual Int?>
                         ) : Surrogate<ParameterizedTypeContainer> {
                           public override fun toOriginal(): ParameterizedTypeContainer = ParameterizedTypeContainer(b)
                         
-                          private object B_0 : WrappedFixedLengthKSerializer<A<Int?>>(B_Serializer, B::class.java.isEnum)
+                          private object B_0 : WrappedFixedLengthKSerializer<A<Int?>>(BSerializer, B::class.java.isEnum)
                         }
                         
-                        public object ParameterizedTypeContainer_Serializer :
-                            SurrogateSerializer<ParameterizedTypeContainer, ParameterizedTypeContainer_${Surrogate.GENERATED_SURROGATE_POSTFIX}>(ParameterizedTypeContainer_${Surrogate.GENERATED_SURROGATE_POSTFIX}.serializer(),
-                            { ParameterizedTypeContainer_${Surrogate.GENERATED_SURROGATE_POSTFIX}(b = it.b) })
+                        public object ParameterizedTypeContainer${Surrogate.GENERATED_SURROGATE_SERIALIZER_POSTFIX} :
+                            SurrogateSerializer<ParameterizedTypeContainer, ParameterizedTypeContainer${Surrogate.GENERATED_SURROGATE_POSTFIX}>(ParameterizedTypeContainer${Surrogate.GENERATED_SURROGATE_POSTFIX}.serializer(),
+                            { ParameterizedTypeContainer${Surrogate.GENERATED_SURROGATE_POSTFIX}(b = it.b) })
                 """.trimIndent()
             )
         )

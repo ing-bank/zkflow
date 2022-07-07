@@ -2,7 +2,7 @@ package com.ing.zkflow.processors.serialization.hierarchy.types
 
 import com.google.devtools.ksp.symbol.KSTypeReference
 import com.ing.zkflow.annotations.Size
-import com.ing.zkflow.ksp.getSingleArgumentOfNonRepeatableAnnotationByType
+import com.ing.zkflow.ksp.getSingleArgumentOfSingleAnnotationByType
 import com.ing.zkflow.processors.serialization.hierarchy.SerializingHierarchy
 import com.ing.zkflow.processors.serialization.hierarchy.getSerializingHierarchy
 import com.ing.zkflow.serialization.serializer.FixedLengthMapSerializer
@@ -17,7 +17,7 @@ import com.squareup.kotlinpoet.ksp.toClassName
 internal fun KSTypeReference.asMap(tracker: Tracker): SerializingHierarchy {
     val type = resolve()
 
-    val maxSize = getSingleArgumentOfNonRepeatableAnnotationByType(Size::class)
+    val maxSize = getSingleArgumentOfSingleAnnotationByType(Size::class)
 
     val keyType = type.arguments[0].type ?: error("Cannot resolve a type argument of ${type.declaration}")
     val keySerializingHierarchy = keyType.getSerializingHierarchy(tracker.literal(0).numeric(), mustHaveDefault = true)

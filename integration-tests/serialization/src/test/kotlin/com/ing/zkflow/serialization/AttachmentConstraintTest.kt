@@ -80,7 +80,7 @@ class AttachmentConstraintTest : SerializerTest {
     @ParameterizedTest
     @MethodSource("engines")
     fun `AttachmentConstraints makes a round trip`(engine: SerdeEngine) {
-        engine.assertRoundTrip(AttachmentConstraintTest_AttachmentConstraints_Serializer, AttachmentConstraints())
+        engine.assertRoundTrip(AttachmentConstraintTestAttachmentConstraintsSerializer, AttachmentConstraints())
     }
 
     @ParameterizedTest
@@ -90,6 +90,6 @@ class AttachmentConstraintTest : SerializerTest {
             AttachmentConstraintsResolved.serializer(),
             AttachmentConstraintsResolved()
         ) shouldBe
-            engine.serialize(AttachmentConstraintTest_AttachmentConstraints_Serializer, AttachmentConstraints())
+            engine.serialize(AttachmentConstraintTestAttachmentConstraintsSerializer, AttachmentConstraints())
     }
 }

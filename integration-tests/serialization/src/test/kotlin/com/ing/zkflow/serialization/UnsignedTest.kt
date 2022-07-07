@@ -67,7 +67,7 @@ class UnsignedTest : SerializerTest {
     @ParameterizedTest
     @MethodSource("engines")
     fun `Unsigned makes a round trip`(engine: SerdeEngine) {
-        engine.assertRoundTrip(UnsignedTest_Unsigned_Serializer, Unsigned())
+        engine.assertRoundTrip(UnsignedTestUnsignedSerializer, Unsigned())
     }
 
     @ParameterizedTest
@@ -77,6 +77,6 @@ class UnsignedTest : SerializerTest {
             UnsignedResolved.serializer(),
             UnsignedResolved()
         ) shouldBe
-            engine.serialize(UnsignedTest_Unsigned_Serializer, Unsigned())
+            engine.serialize(UnsignedTestUnsignedSerializer, Unsigned())
     }
 }

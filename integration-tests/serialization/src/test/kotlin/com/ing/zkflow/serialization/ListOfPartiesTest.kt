@@ -45,7 +45,7 @@ class ListOfPartiesTest : SerializerTest {
     @ParameterizedTest
     @MethodSource("engines")
     fun `ListOfParties makes a round trip`(engine: SerdeEngine) {
-        engine.assertRoundTrip(ListOfPartiesTest_ListOfParties_Serializer, ListOfParties())
+        engine.assertRoundTrip(ListOfPartiesTestListOfPartiesSerializer, ListOfParties())
     }
 
     @ParameterizedTest
@@ -55,6 +55,6 @@ class ListOfPartiesTest : SerializerTest {
             ListOfPartiesResolved.serializer(),
             ListOfPartiesResolved()
         ) shouldBe
-            engine.serialize(ListOfPartiesTest_ListOfParties_Serializer, ListOfParties())
+            engine.serialize(ListOfPartiesTestListOfPartiesSerializer, ListOfParties())
     }
 }

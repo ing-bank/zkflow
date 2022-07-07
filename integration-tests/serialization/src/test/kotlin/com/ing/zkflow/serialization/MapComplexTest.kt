@@ -45,14 +45,14 @@ class MapComplexTest : SerializerTest {
         )
         object Map_0_A_0 : FixedSizeUtf8StringSerializer(13)
         object Map_0_B_0 : SerializerWithDefault<Baz>(Map_0_B_1, Baz.Default.default)
-        object Map_0_B_1 : WrappedFixedLengthKSerializer<Baz>(MapComplexTest_Baz_Serializer, Baz::class.java.isEnum)
+        object Map_0_B_1 : WrappedFixedLengthKSerializer<Baz>(MapComplexTestBazSerializer, Baz::class.java.isEnum)
     }
 
     // Tests
     @ParameterizedTest
     @MethodSource("engines")
     fun `MapComplex makes a round trip`(engine: SerdeEngine) {
-        engine.assertRoundTrip(MapComplexTest_MapComplex_Serializer, MapComplex())
+        engine.assertRoundTrip(MapComplexTestMapComplexSerializer, MapComplex())
     }
 
     @ParameterizedTest
@@ -62,6 +62,6 @@ class MapComplexTest : SerializerTest {
             MapComplexResolved.serializer(),
             MapComplexResolved()
         ) shouldBe
-            engine.serialize(MapComplexTest_MapComplex_Serializer, MapComplex())
+            engine.serialize(MapComplexTestMapComplexSerializer, MapComplex())
     }
 }

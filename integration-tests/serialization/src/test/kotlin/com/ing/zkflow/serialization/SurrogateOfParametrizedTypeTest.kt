@@ -40,7 +40,7 @@ class SurrogateOfParametrizedTypeTest : SerializerTest {
     @MethodSource("engines")
     fun `ParametrizedTypeContainer makes a round trip`(engine: SerdeEngine) {
         engine.assertRoundTrip(
-            SurrogateOfParametrizedTypeTest_ParametrizedTypeContainer_Serializer,
+            SurrogateOfParametrizedTypeTestParametrizedTypeContainerSerializer,
             ParametrizedTypeContainer(),
             false
         ) { value, de -> value.b.t shouldBe de.b.t }

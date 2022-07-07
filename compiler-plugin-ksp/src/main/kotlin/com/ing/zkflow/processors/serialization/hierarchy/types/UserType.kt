@@ -8,7 +8,7 @@ import com.ing.zkflow.Default
 import com.ing.zkflow.Via
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.ksp.getNonRepeatableAnnotationByType
-import com.ing.zkflow.ksp.getSingleArgumentOfNonRepeatableAnnotationByType
+import com.ing.zkflow.ksp.getSingleArgumentOfSingleAnnotationByType
 import com.ing.zkflow.ksp.getSurrogateFromViaAnnotation
 import com.ing.zkflow.ksp.getSurrogateSerializerClassName
 import com.ing.zkflow.ksp.getSurrogateTargetType
@@ -44,7 +44,7 @@ internal fun KSTypeReference.asUserType(tracker: Tracker, mustHaveDefault: Boole
     val serializingHierarchy = this.trySerializeAsOwnClass(nextTracker) ?: this.trySerializeAs3rdPartyClass(nextTracker) ?: error("")
 
     return if (mustHaveDefault) {
-        val defaultProvider = this.getSingleArgumentOfNonRepeatableAnnotationByType(Default::class) as KSType
+        val defaultProvider = this.getSingleArgumentOfSingleAnnotationByType(Default::class) as KSType
 
         val serializingObjectWithDefault = TypeSpec.objectBuilder("$tracker")
             .addModifiers(KModifier.PRIVATE)

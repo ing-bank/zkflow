@@ -33,7 +33,7 @@ class SetTest : SerializerTest {
     @ParameterizedTest
     @MethodSource("engines")
     fun `MySet makes a round trip`(engine: SerdeEngine) {
-        engine.assertRoundTrip(SetTest_MySet_Serializer, MySet())
+        engine.assertRoundTrip(SetTestMySetSerializer, MySet())
     }
 
     @ParameterizedTest
@@ -43,6 +43,6 @@ class SetTest : SerializerTest {
             MySetResolved.serializer(),
             MySetResolved()
         ) shouldBe
-            engine.serialize(SetTest_MySet_Serializer, MySet())
+            engine.serialize(SetTestMySetSerializer, MySet())
     }
 }

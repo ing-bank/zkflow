@@ -34,7 +34,7 @@ class EmptyTest : SerializerTest {
     @ParameterizedTest
     @MethodSource("engines")
     fun `Empty makes a round trip`(engine: SerdeEngine) {
-        engine.assertRoundTrip(EmptyTest_Empty_Serializer, Empty())
+        engine.assertRoundTrip(EmptyTestEmptySerializer, Empty())
     }
 
     @ParameterizedTest
@@ -44,6 +44,6 @@ class EmptyTest : SerializerTest {
             EmptyResolved.serializer(),
             EmptyResolved()
         ) shouldBe
-            engine.serialize(EmptyTest_Empty_Serializer, Empty())
+            engine.serialize(EmptyTestEmptySerializer, Empty())
     }
 }

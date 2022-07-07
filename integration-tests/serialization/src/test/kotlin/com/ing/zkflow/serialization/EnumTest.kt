@@ -27,14 +27,14 @@ class EnumTest : SerializerTest {
         @Serializable(with = Option_0::class)
         val option: @Contextual Option = Option.FIRST
     ) {
-        object Option_0 : WrappedFixedLengthKSerializer<Option>(EnumTest_Option_Serializer, Option::class.java.isEnum)
+        object Option_0 : WrappedFixedLengthKSerializer<Option>(EnumTestOptionSerializer, Option::class.java.isEnum)
     }
 
     // Tests
     @ParameterizedTest
     @MethodSource("engines")
     fun `Enum makes a round trip`(engine: SerdeEngine) {
-        engine.assertRoundTrip(EnumTest_Enum_Serializer, Enum())
+        engine.assertRoundTrip(EnumTestEnumSerializer, Enum())
     }
 
     @ParameterizedTest
@@ -44,6 +44,6 @@ class EnumTest : SerializerTest {
             EnumResolved.serializer(),
             EnumResolved()
         ) shouldBe
-            engine.serialize(EnumTest_Enum_Serializer, Enum())
+            engine.serialize(EnumTestEnumSerializer, Enum())
     }
 }

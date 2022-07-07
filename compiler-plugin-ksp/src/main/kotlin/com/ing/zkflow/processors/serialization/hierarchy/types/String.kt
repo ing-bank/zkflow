@@ -5,7 +5,7 @@ import com.ing.zkflow.annotations.ASCII
 import com.ing.zkflow.annotations.UTF16
 import com.ing.zkflow.annotations.UTF32
 import com.ing.zkflow.annotations.UTF8
-import com.ing.zkflow.ksp.getSingleArgumentOfNonRepeatableAnnotationByType
+import com.ing.zkflow.ksp.getSingleArgumentOfSingleAnnotationByType
 import com.ing.zkflow.processors.serialization.hierarchy.SerializingHierarchy
 import com.ing.zkflow.serialization.serializer.string.FixedSizeAsciiStringSerializer
 import com.ing.zkflow.serialization.serializer.string.FixedSizeUtf16StringSerializer
@@ -32,7 +32,7 @@ internal fun KSTypeReference.asString(tracker: Tracker): SerializingHierarchy {
     // It is ensured elsewhere that one of these annotations is present.
     for ((annotation, serializer) in possibleCases) {
         val size = try {
-            this.getSingleArgumentOfNonRepeatableAnnotationByType(annotation)
+            this.getSingleArgumentOfSingleAnnotationByType(annotation)
         } catch (_: Exception) {
             continue
         }

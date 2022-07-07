@@ -94,7 +94,7 @@ fun KSClassDeclaration.getSurrogateTargetType(): KSType {
 }
 
 fun Sequence<KSClassDeclaration>.filterConcreteClassesOrObjects(): Sequence<KSClassDeclaration> =
-    filter { it.classKind in listOf(ClassKind.ENUM_CLASS, ClassKind.CLASS, ClassKind.OBJECT, ClassKind.ENUM_CLASS) && !it.isAbstract() }
+    filter { it.classKind in listOf(ClassKind.ENUM_CLASS, ClassKind.CLASS, ClassKind.OBJECT) && !it.isAbstract() }
 
 /**
  * Surrogates are classes that are annotated with @ZKPSurrogate *and* implement [Surrogate].
@@ -117,7 +117,7 @@ fun Resolver.findClassesOrObjectsWithAnnotation(annotationKClass: KClass<out Ann
         .filterConcreteClassesOrObjects()
 }
 
-fun KSAnnotated.getSingleArgumentOfNonRepeatableAnnotationByType(annotationKClass: KClass<out Annotation>): Any {
+fun KSAnnotated.getSingleArgumentOfSingleAnnotationByType(annotationKClass: KClass<out Annotation>): Any {
     return this.getAnnotationsByType(annotationKClass).single().arguments.single().value!!
 }
 
@@ -185,10 +185,6 @@ fun KSClassDeclaration.getSurrogateClassName(isEnum: Boolean): ClassName {
 
 fun KSClassDeclaration.getSurrogateSerializerClassName(): ClassName {
     return toClassName().buildFullyDistinguishableClassName(Surrogate.GENERATED_SURROGATE_SERIALIZER_POSTFIX)
-}
-
-fun KSClassDeclaration.getSerializationFunctionalityLocation(): ClassName {
-    return toClassName().buildFullyDistinguishableClassName(Surrogate.GENERATED_SERIALIZATION_FUNCTIONALITY_LOCATION_POSTFIX)
 }
 
 fun KSAnnotation.getSurrogateFromViaAnnotation(): KSClassDeclaration {

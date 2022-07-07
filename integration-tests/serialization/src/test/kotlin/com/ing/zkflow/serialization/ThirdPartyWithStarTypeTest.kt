@@ -59,7 +59,7 @@ class ThirdPartyWithStarTypeTest : SerializerTest {
         object MyList_4 : NullableSerializer<OutOfReachStar>(MyList_5)
         object MyList_5 : SerializerWithDefault<OutOfReachStar>(MyList_6, DefaultOutOfReachStar.default)
         object MyList_6 : WrappedFixedLengthKSerializer<OutOfReachStar>(
-            ThirdPartyWithStarTypeTest_OutOfReachStarSurrogate_Serializer,
+            ThirdPartyWithStarTypeTestOutOfReachStarSurrogateSerializer,
             OutOfReachStar::class.java.isEnum
         )
     }
@@ -68,7 +68,7 @@ class ThirdPartyWithStarTypeTest : SerializerTest {
     @ParameterizedTest
     @MethodSource("engines")
     fun `ThirdPartyWithStarType makes a round trip`(engine: SerdeEngine) {
-        engine.assertRoundTrip(ThirdPartyWithStarTypeTest_ThirdPartyWithStarType_Serializer, ThirdPartyWithStarType())
+        engine.assertRoundTrip(ThirdPartyWithStarTypeTestThirdPartyWithStarTypeSerializer, ThirdPartyWithStarType())
     }
 
     @ParameterizedTest
@@ -78,6 +78,6 @@ class ThirdPartyWithStarTypeTest : SerializerTest {
             ThirdPartyWithStarTypeResolved.serializer(),
             ThirdPartyWithStarTypeResolved()
         ) shouldBe
-            engine.serialize(ThirdPartyWithStarTypeTest_ThirdPartyWithStarType_Serializer, ThirdPartyWithStarType())
+            engine.serialize(ThirdPartyWithStarTypeTestThirdPartyWithStarTypeSerializer, ThirdPartyWithStarType())
     }
 }

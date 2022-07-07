@@ -124,8 +124,8 @@ class SerializedBigDecimalTest {
         left: WrappedBigDecimal,
         right: WrappedBigDecimal
     ): JsonObject = buildJsonObject {
-        put("left", JsonArray(scheme.encodeToBinary(SerializedBigDecimalTestCompanion_WrappedBigDecimal_Serializer, left).toUnsignedBitString()))
-        put("right", JsonArray(scheme.encodeToBinary(SerializedBigDecimalTestCompanion_WrappedBigDecimal_Serializer, right).toUnsignedBitString()))
+        put("left", JsonArray(scheme.encodeToBinary(SerializedBigDecimalTestCompanionWrappedBigDecimalSerializer, left).toUnsignedBitString()))
+        put("right", JsonArray(scheme.encodeToBinary(SerializedBigDecimalTestCompanionWrappedBigDecimalSerializer, right).toUnsignedBitString()))
     }
 
     private fun Path.runOperation(

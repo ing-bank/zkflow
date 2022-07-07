@@ -97,7 +97,7 @@ object ZkpStructureGenerator {
         val originalClass = tryGetOriginalFromSurrogateClass(fixedLengthSerialDescriptor.serialName)
         return ZkpStructureClass(
             serialName = originalClass?.let { "${it.qualifiedName}" }
-                ?: fixedLengthSerialDescriptor.serialName.removeSuffix("_${Surrogate.GENERATED_SURROGATE_POSTFIX}"),
+                ?: fixedLengthSerialDescriptor.serialName.removeSuffix(Surrogate.GENERATED_SURROGATE_POSTFIX),
             familyClassName = originalClass?.let { tryGetFamilyClassName(it) },
             serializationId = originalClass?.let { tryGetSerializationId(it) },
             byteSize = fixedLengthSerialDescriptor.byteSize,

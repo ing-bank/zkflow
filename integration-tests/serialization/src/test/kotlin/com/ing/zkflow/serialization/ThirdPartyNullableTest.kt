@@ -55,7 +55,7 @@ class ThirdPartyNullableTest : SerializerTest {
         object MyList_4 : NullableSerializer<OutOfReach>(MyList_5)
         object MyList_5 : SerializerWithDefault<OutOfReach>(MyList_6, DefaultOutOfReach.default)
         object MyList_6 : WrappedFixedLengthKSerializer<OutOfReach>(
-            ThirdPartyNullableTest_OutOfReachSurrogate_Serializer,
+            ThirdPartyNullableTestOutOfReachSurrogateSerializer,
             OutOfReach::class.java.isEnum
         )
     }
@@ -64,7 +64,7 @@ class ThirdPartyNullableTest : SerializerTest {
     @ParameterizedTest
     @MethodSource("engines")
     fun `ThirdPartyNullable makes a round trip`(engine: SerdeEngine) {
-        engine.assertRoundTrip(ThirdPartyNullableTest_ThirdPartyNullable_Serializer, ThirdPartyNullable())
+        engine.assertRoundTrip(ThirdPartyNullableTestThirdPartyNullableSerializer, ThirdPartyNullable())
     }
 
     @ParameterizedTest
@@ -74,6 +74,6 @@ class ThirdPartyNullableTest : SerializerTest {
             ThirdPartyNullableResolved.serializer(),
             ThirdPartyNullableResolved()
         ) shouldBe
-            engine.serialize(ThirdPartyNullableTest_ThirdPartyNullable_Serializer, ThirdPartyNullable())
+            engine.serialize(ThirdPartyNullableTestThirdPartyNullableSerializer, ThirdPartyNullable())
     }
 }

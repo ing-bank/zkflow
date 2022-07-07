@@ -33,7 +33,7 @@ class NestedEmptyTest : SerializerTest {
         val nested: Empty = Empty()
     ) {
         object Nested_0 : WrappedFixedLengthKSerializer<Empty>(
-            NestedEmptyTest_Empty_Serializer,
+            NestedEmptyTestEmptySerializer,
             Empty::class.java.isEnum
         )
     }
@@ -42,7 +42,7 @@ class NestedEmptyTest : SerializerTest {
     @ParameterizedTest
     @MethodSource("engines")
     fun `NestedEmpty makes a round trip`(engine: SerdeEngine) {
-        engine.assertRoundTrip(NestedEmptyTest_NestedEmpty_Serializer, NestedEmpty())
+        engine.assertRoundTrip(NestedEmptyTestNestedEmptySerializer, NestedEmpty())
     }
 
     @ParameterizedTest
@@ -52,6 +52,6 @@ class NestedEmptyTest : SerializerTest {
             NestedEmptyResolved.serializer(),
             NestedEmptyResolved()
         ) shouldBe
-            engine.serialize(NestedEmptyTest_NestedEmpty_Serializer, NestedEmpty())
+            engine.serialize(NestedEmptyTestNestedEmptySerializer, NestedEmpty())
     }
 }

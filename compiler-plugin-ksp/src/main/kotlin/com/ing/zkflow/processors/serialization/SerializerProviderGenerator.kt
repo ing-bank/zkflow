@@ -3,6 +3,7 @@ package com.ing.zkflow.processors.serialization
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSFile
+import com.ing.zkflow.Surrogate
 import com.ing.zkflow.common.serialization.KClassSerializer
 import com.ing.zkflow.common.serialization.KClassSerializerProvider
 import com.ing.zkflow.ksp.getSurrogateSerializerClassName
@@ -32,7 +33,7 @@ class SerializerProviderGenerator(private val codeGenerator: CodeGenerator) {
         serializableClassWithSourceFiles: SerializableClassWithSourceFiles,
         implementationId: Int,
     ): String {
-        val className = "${serializableClassWithSourceFiles.className.simpleNames.joinToString("") { it }}SerializerProvider"
+        val className = "${serializableClassWithSourceFiles.className.simpleNames.joinToString("") { it }}${Surrogate.GENERATED_SERIALIZER_PROVIDER_POSTFIX}"
 
         FileSpec.builder(serializableClassWithSourceFiles.className.packageName, className).addType(
             TypeSpec.classBuilder(className).addSuperinterface(KClassSerializerProvider::class).addFunction(
@@ -90,7 +91,7 @@ class SerializerProviderGenerator(private val codeGenerator: CodeGenerator) {
         abstract val className: ClassName
 
         companion object {
-            fun KSClassDeclaration.toGeneratedSerializer(): SerializableClassWithSourceFiles =
+            fun KSClassDeclaration.toExistingSerializer(): SerializableClassWithSourceFiles =
                 Existing(this, listOfNotNull(containingFile))
         }
     }

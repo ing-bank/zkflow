@@ -52,7 +52,7 @@ class BasicsTest : SerializerTest {
     @ParameterizedTest
     @MethodSource("engines")
     fun `Basics makes a round trip`(engine: SerdeEngine) {
-        engine.assertRoundTrip(BasicsTest_Basics_Serializer, Basics())
+        engine.assertRoundTrip(BasicsTestBasicsSerializer, Basics())
     }
 
     @ParameterizedTest
@@ -62,6 +62,6 @@ class BasicsTest : SerializerTest {
             BasicsResolved.serializer(),
             BasicsResolved()
         ) shouldBe
-            engine.serialize(BasicsTest_Basics_Serializer, Basics())
+            engine.serialize(BasicsTestBasicsSerializer, Basics())
     }
 }

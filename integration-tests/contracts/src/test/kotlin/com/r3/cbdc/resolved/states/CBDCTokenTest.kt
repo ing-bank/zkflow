@@ -2,15 +2,17 @@
 
 package com.r3.cbdc.resolved.states
 
-import com.ing.zkflow.annotations.corda.SHA256DigestAlgorithm
 import com.ing.zkflow.fixedCordaX500Name
 import com.ing.zkflow.serialization.SerializerTest
 import com.ing.zkflow.serialization.engine.SerdeEngine
+import com.ing.zkflow.serialization.serializer.InstantSerializer
+import com.ing.zkflow.serialization.serializer.IntSerializer
 import com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializer
 import com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializerWithDefault
 import com.ing.zkflow.testing.zkp.ZKNulls.fixedKeyPair
-import com.r3.cbdc.annotated.fixtures.AmountSurrogate_IssuedTokenTypeV1_Serializer
+import com.r3.cbdc.annotated.fixtures.AmountSurrogate_IssuedTokenTypeV1Serializer
 import com.r3.cbdc.annotated.states.AbstractFungibleToken
+import com.r3.cbdc.annotated.states.CBDCTokenSerializer
 import com.r3.cbdc.annotated.types.IssuedTokenType
 import com.r3.cbdc.annotated.types.TokenType
 import io.kotest.matchers.shouldBe
@@ -51,22 +53,16 @@ data class CBDCToken(
         return CBDCToken(amount, newHolder)
     }
 
-    object Amount_0 : WrappedFixedLengthKSerializer<Amount<IssuedTokenType>>(AmountSurrogate_IssuedTokenTypeV1_Serializer, Amount::class.java.isEnum)
-    // com.ing.zkflow.serialization.serializer.SurrogateSerializer<Amount<IssuedTokenType>, AmountSurrogate_IssuedTokenTypeV1>(
-    //     AmountSurrogate_IssuedTokenTypeV1_Serializer,
-    //     { AmountConverter_IssuedTokenType.from(it) }
-    // )
+    object Amount_0 : WrappedFixedLengthKSerializer<Amount<IssuedTokenType>>(AmountSurrogate_IssuedTokenTypeV1Serializer, Amount::class.java.isEnum)
 
     object Holder_0 : com.ing.zkflow.serialization.serializer.corda.AnonymousPartySerializer(4)
 
-    object TokenTypeJarHash_1 : com.ing.zkflow.serialization.serializer.corda.SecureHashSerializer(SHA256DigestAlgorithm::class)
-
-    object IssueDate_0 : WrappedFixedLengthKSerializerWithDefault<Instant>(com.ing.zkflow.serialization.serializer.InstantSerializer)
+    object IssueDate_0 : WrappedFixedLengthKSerializerWithDefault<Instant>(InstantSerializer)
 
     object LastInterestAccrualDate_0 :
-        WrappedFixedLengthKSerializerWithDefault<Instant>(com.ing.zkflow.serialization.serializer.InstantSerializer)
+        WrappedFixedLengthKSerializerWithDefault<Instant>(InstantSerializer)
 
-    object UsageCount_0 : WrappedFixedLengthKSerializerWithDefault<Int>(com.ing.zkflow.serialization.serializer.IntSerializer)
+    object UsageCount_0 : WrappedFixedLengthKSerializerWithDefault<Int>(IntSerializer)
 }
 
 class CBDCTokenTest : SerializerTest {
@@ -95,13 +91,13 @@ class CBDCTokenTest : SerializerTest {
     @ParameterizedTest
     @MethodSource("engines")
     fun `CBDCToken makes a round trip`(engine: SerdeEngine) {
-        engine.assertRoundTrip(com.r3.cbdc.annotated.states.CBDCToken_Serializer, cbdcToken)
+        engine.assertRoundTrip(CBDCTokenSerializer, cbdcToken)
     }
 
     @ParameterizedTest
     @MethodSource("engines")
     fun `CBDCToken generated and manual serializations must coincide`(engine: SerdeEngine) {
-        engine.serialize(com.r3.cbdc.annotated.states.CBDCToken_Serializer, cbdcToken) shouldBe
+        engine.serialize(CBDCTokenSerializer, cbdcToken) shouldBe
             engine.serialize(CBDCToken.serializer(), resolvedCBDCToken)
     }
 }

@@ -38,14 +38,14 @@ class ComplexSetTest : SerializerTest {
     ) {
         object Set_0 : FixedLengthSetSerializer<Baz>(5, Set_1)
         object Set_1 : SerializerWithDefault<Baz>(Set_2, Baz.Default.default)
-        object Set_2 : WrappedFixedLengthKSerializer<Baz>(ComplexSetTest_Baz_Serializer, Baz::class.java.isEnum)
+        object Set_2 : WrappedFixedLengthKSerializer<Baz>(ComplexSetTestBazSerializer, Baz::class.java.isEnum)
     }
 
     // Tests
     @ParameterizedTest
     @MethodSource("engines")
     fun `ComplexSet makes a round trip`(engine: SerdeEngine) {
-        engine.assertRoundTrip(ComplexSetTest_ComplexSet_Serializer, ComplexSet())
+        engine.assertRoundTrip(ComplexSetTestComplexSetSerializer, ComplexSet())
     }
 
     @ParameterizedTest
@@ -55,6 +55,6 @@ class ComplexSetTest : SerializerTest {
             ComplexSetResolved.serializer(),
             ComplexSetResolved()
         ) shouldBe
-            engine.serialize(ComplexSetTest_ComplexSet_Serializer, ComplexSet())
+            engine.serialize(ComplexSetTestComplexSetSerializer, ComplexSet())
     }
 }

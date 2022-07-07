@@ -40,7 +40,7 @@ class MapTest : SerializerTest {
     @ParameterizedTest
     @MethodSource("engines")
     fun `MyMap makes a round trip`(engine: SerdeEngine) {
-        engine.assertRoundTrip(MapTest_MyMap_Serializer, MyMap())
+        engine.assertRoundTrip(MapTestMyMapSerializer, MyMap())
     }
 
     @ParameterizedTest
@@ -50,6 +50,6 @@ class MapTest : SerializerTest {
             MyMapResolved.serializer(),
             MyMapResolved()
         ) shouldBe
-            engine.serialize(MapTest_MyMap_Serializer, MyMap())
+            engine.serialize(MapTestMyMapSerializer, MyMap())
     }
 }
