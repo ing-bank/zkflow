@@ -46,7 +46,7 @@ class TransactionComponentContainer(
     }
 
     internal val commandGroup =
-        ArrayTransactionComponent(
+        NonHashedArrayTransactionComponent(
             COMMANDS,
             wrapTxComponent(
                 COMMANDS,
@@ -57,28 +57,28 @@ class TransactionComponentContainer(
             ComponentGroupEnum.COMMANDS_GROUP
         )
     internal val notaryGroup =
-        ArrayTransactionComponent(
+        NonHashedArrayTransactionComponent(
             NOTARY,
             wrapTxComponent(NOTARY, standardTypes.notaryModule),
             whenVisibleInWitness(ComponentGroupEnum.NOTARY_GROUP) { 1 },
             ComponentGroupEnum.NOTARY_GROUP
         )
     internal val timeWindowGroup =
-        ArrayTransactionComponent(
+        NonHashedArrayTransactionComponent(
             TIME_WINDOW,
             wrapTxComponent(TIME_WINDOW, timeWindow),
             whenVisibleInWitness(ComponentGroupEnum.TIMEWINDOW_GROUP) { 1 },
             ComponentGroupEnum.TIMEWINDOW_GROUP
         )
     internal val signerGroup =
-        ArrayTransactionComponent(
+        NonHashedArrayTransactionComponent(
             SIGNERS,
             wrapTxComponent(SIGNERS, standardTypes.signerList(commandMetadata), SignersSerializationMetadata.serializer().descriptor),
             whenVisibleInWitness(ComponentGroupEnum.SIGNERS_GROUP) { 1 },
             ComponentGroupEnum.SIGNERS_GROUP
         )
     internal val parameterGroup =
-        ArrayTransactionComponent(
+        NonHashedArrayTransactionComponent(
             PARAMETERS,
             wrapTxComponent(PARAMETERS, parametersSecureHash),
             whenVisibleInWitness(ComponentGroupEnum.PARAMETERS_GROUP) { 1 },

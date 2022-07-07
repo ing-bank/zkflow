@@ -198,6 +198,6 @@ class Witness(
         internal const val REFERENCE_NONCES = "reference_nonces"
         internal const val SERIALIZED_INPUT_UTXOS = "serialized_input_utxos"
         internal const val SERIALIZED_REFERENCE_UTXOS = "serialized_reference_utxos"
-        internal const val INPUT_STATEREFS = "input_staterefs"
+        internal const val INPUT_STATEREFS = "input_stateref_components"
     }
 }

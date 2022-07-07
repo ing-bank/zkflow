@@ -50,7 +50,7 @@ object WitnessSerializer {
 
             if (witness.inputsGroup.isNotEmpty()) {
                 put(
-                    "input_staterefs",
+                    "input_stateref_components",
                     JsonArray(witness.inputsGroup.toJsonArray())
                 )
             }

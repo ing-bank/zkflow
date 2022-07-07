@@ -61,12 +61,12 @@ private val publicInputFieldNameMap: Map<String, String> = mapOf(
     INPUTS to "input_hashes",
     OUTPUTS to "output_hashes",
     REFERENCES to "reference_hashes",
-    COMMANDS to "command_hashes",
-    NOTARY to "notary_hashes",
-    PARAMETERS to "parameters_hashes",
-    TIME_WINDOW to "time_window_hashes",
-    SIGNERS to "signers_hashes",
+    COMMANDS to "command_components",
+    NOTARY to "notary_components",
+    PARAMETERS to "parameters_components",
+    TIME_WINDOW to "time_window_components",
+    SIGNERS to "signers_components",
     SERIALIZED_INPUT_UTXOS to "input_utxo_hashes",
     SERIALIZED_REFERENCE_UTXOS to "reference_utxo_hashes",
-    INPUT_STATEREFS to "input_staterefs"
+    INPUT_STATEREFS to "input_stateref_components"
 )

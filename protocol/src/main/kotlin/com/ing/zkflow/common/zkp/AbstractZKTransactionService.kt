@@ -112,15 +112,15 @@ abstract class AbstractZKTransactionService(val serviceHub: ServiceHub) : ZKTran
 
         return PublicInput(
             outputComponentHashes = privateOutputHashes,
-            attachmentComponentHashes = tx.visibleInWitnessComponentHashes(commandMetadata, ComponentGroupEnum.ATTACHMENTS_GROUP),
-            commandComponentHashes = tx.visibleInWitnessComponentHashes(commandMetadata, ComponentGroupEnum.COMMANDS_GROUP),
-            notaryComponentHashes = tx.visibleInWitnessComponentHashes(commandMetadata, ComponentGroupEnum.NOTARY_GROUP),
-            parametersComponentHashes = tx.visibleInWitnessComponentHashes(commandMetadata, ComponentGroupEnum.PARAMETERS_GROUP),
-            timeWindowComponentHashes = tx.visibleInWitnessComponentHashes(commandMetadata, ComponentGroupEnum.TIMEWINDOW_GROUP),
-            signersComponentHashes = tx.visibleInWitnessComponentHashes(commandMetadata, ComponentGroupEnum.SIGNERS_GROUP),
-
             inputUtxoHashes = privateInputHashes,
             referenceUtxoHashes = privateReferenceHashes,
+            attachmentComponentHashes = tx.visibleInWitnessComponentHashes(commandMetadata, ComponentGroupEnum.ATTACHMENTS_GROUP),
+
+            commandComponents = tx.serializedComponentBytesFor(ComponentGroupEnum.COMMANDS_GROUP, commandMetadata),
+            notaryComponents = tx.serializedComponentBytesFor(ComponentGroupEnum.NOTARY_GROUP, commandMetadata),
+            parametersComponents = tx.serializedComponentBytesFor(ComponentGroupEnum.PARAMETERS_GROUP, commandMetadata),
+            timeWindowComponents = tx.serializedComponentBytesFor(ComponentGroupEnum.TIMEWINDOW_GROUP, commandMetadata),
+            signersComponents = tx.serializedComponentBytesFor(ComponentGroupEnum.SIGNERS_GROUP, commandMetadata),
             inputStateRefs = tx.serializedComponentBytesFor(ComponentGroupEnum.INPUTS_GROUP, commandMetadata)
 
         )

@@ -84,6 +84,9 @@ class Witness(
      */
     val privacySalt: PrivacySalt,
 
+    /**
+     * These are the input StateRefs in serialized form
+     */
     val inputsGroup: List<ByteArray>,
 
     /**
