@@ -1,5 +1,6 @@
 package com.example.network
 
+import com.ing.zkflow.common.network.DebugSettings
 import com.ing.zkflow.common.network.ZKAttachmentConstraintType
 import com.ing.zkflow.common.network.ZKNetworkParameters
 import com.ing.zkflow.common.network.ZKNotaryInfo
@@ -14,4 +15,7 @@ class SampleZKDappZKNetworkParams : ZKNetworkParameters {
         override val notaryInfo: ZKNotaryInfo = ZKNotaryInfo(ZKFlow.DEFAULT_ZKFLOW_NOTARY_SIGNATURE_SCHEME)
         override val digestAlgorithm: DigestAlgorithm = ZKFlow.DEFAULT_ZKFLOW_DIGEST_IDENTIFIER
         override val serializationSchemeId: Int = ZKFlow.DEFAULT_SERIALIZATION_SCHEME_ID
+        override val debugSettings: DebugSettings = DebugSettings(
+                dumpSerializationStructure = false
+        )
 }

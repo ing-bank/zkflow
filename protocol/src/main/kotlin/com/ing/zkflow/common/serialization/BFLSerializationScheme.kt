@@ -69,10 +69,10 @@ open class BFLSerializationScheme : CustomSerializationScheme {
             when (obj) {
                 is SecureHash -> serializeSecureHash(obj)
                 is TransactionState<*> -> serializeTransactionState(obj, zkNetworkParameters)
-                is CommandData -> serializeCommandData(obj)
+                is CommandData -> serializeCommandData(obj, zkNetworkParameters)
                 is TimeWindow -> serializeTimeWindow(obj)
                 is Party -> serializeNotary(obj, zkNetworkParameters)
-                is StateRef -> serializeStateRef(obj)
+                is StateRef -> serializeStateRef(obj, zkNetworkParameters)
                 is List<*> -> serializeSignersList(obj, zkNetworkParameters)
                 else -> error("Don't know how to serialize ${obj::class.qualifiedName}")
             }.wrapSerialization(
@@ -123,7 +123,7 @@ open class BFLSerializationScheme : CustomSerializationScheme {
             zkNetworkParameters.signerSerializer
         )
 
-        return encodeAndWrap(
+        return zkNetworkParameters.encodeAndWrap(
             signersList, signersSerializer,
             SignersSerializationMetadata(numberOfSigners),
             SignersSerializationMetadata.serializer()
@@ -144,10 +144,10 @@ open class BFLSerializationScheme : CustomSerializationScheme {
         return scheme.decodeFromBinary(signersSerializer, serialization)
     }
 
-    private fun serializeCommandData(obj: CommandData): ByteArray {
+    private fun serializeCommandData(obj: CommandData, zkNetworkParameters: ZKNetworkParameters): ByteArray {
         val commandDataSerializer = CommandDataSerializerRegistry[obj::class]
 
-        return encodeAndWrap(
+        return zkNetworkParameters.encodeAndWrap(
             obj, commandDataSerializer,
             CommandDataSerializationMetadata(
                 serializerId = CommandDataSerializerRegistry.identify(obj::class)
@@ -174,7 +174,7 @@ open class BFLSerializationScheme : CustomSerializationScheme {
         val stateSerializerId = ContractStateSerializerRegistry.identify(state::class)
         val transactionStateSerializer = getTransactionStateSerializer(zkNetworkParameters, stateSerializerId)
 
-        return encodeAndWrap(
+        return zkNetworkParameters.encodeAndWrap(
             obj, transactionStateSerializer,
             TransactionStateSerializationMetadata(stateSerializerId),
             TransactionStateSerializationMetadata.serializer()
@@ -203,14 +203,14 @@ open class BFLSerializationScheme : CustomSerializationScheme {
     private fun deserializeTimeWindow(serializedData: ByteArray) =
         scheme.decodeFromBinary(TimeWindowSerializer, serializedData)
 
-    private fun serializeStateRef(obj: StateRef): ByteArray {
+    private fun serializeStateRef(obj: StateRef, zkNetworkParameters: ZKNetworkParameters): ByteArray {
         val digestAlgorithm = DigestAlgorithmFactory.create(obj.txhash.algorithm)
         val secureHashMetadata = SecureHashSerializationMetadata(HashAlgorithmRegistry[digestAlgorithm.algorithm])
 
         val secureHashSerializer = SecureHashSerializer(digestAlgorithm)
         val stateRefSerializer = StateRefSerializer(secureHashSerializer)
 
-        return encodeAndWrap(
+        return zkNetworkParameters.encodeAndWrap(
             obj, stateRefSerializer,
             secureHashMetadata,
             SecureHashSerializationMetadata.serializer()
@@ -262,7 +262,7 @@ open class BFLSerializationScheme : CustomSerializationScheme {
         return serializedData.bytes.drop(customSerializationMagicLength).toByteArray()
     }
 
-    private fun <T : Any, M : Any> encodeAndWrap(
+    private fun <T : Any, M : Any> ZKNetworkParameters.encodeAndWrap(
         txComponent: T,
         txComponentSerializer: KSerializer<T>,
         metadata: M,
@@ -287,25 +287,30 @@ open class BFLSerializationScheme : CustomSerializationScheme {
         Files.createTempDirectory("zkflow-bfl-structure-")
     }
 
-    private fun <M : Any, T : Any> saveSerializationStructureForDebug(
+    private fun <M : Any, T : Any> ZKNetworkParameters.saveSerializationStructureForDebug(
         txComponent: T,
         txComponentSerializer: KSerializer<T>,
         metadata: M,
         metadataSerializer: KSerializer<M>
     ) {
-        val descriptor = buildClassSerialDescriptor(serialNameFor(txComponent, metadata)) {
-            element("cordaMagic", ExactLengthListSerializer(customSerializationMagicLength, ByteSerializer).descriptor)
-            element("networkMetadata", NetworkSerializationMetadata.serializer().descriptor)
-            element("txComponentMetadata", metadataSerializer.descriptor)
-            element("txComponent", txComponentSerializer.descriptor)
-        }
+        if (debugSettings.dumpSerializationStructure) {
+            val descriptor = buildClassSerialDescriptor(serialNameFor(txComponent, metadata)) {
+                element(
+                    "cordaMagic",
+                    ExactLengthListSerializer(customSerializationMagicLength, ByteSerializer).descriptor
+                )
+                element("networkMetadata", NetworkSerializationMetadata.serializer().descriptor)
+                element("txComponentMetadata", metadataSerializer.descriptor)
+                element("txComponent", txComponentSerializer.descriptor)
+            }
 
-        tempDirectory
-            .ensureFile("${descriptor.serialName.camelToSnakeCase()}.txt")
-            .log { "Wrote runtime BFL structure file to ${it.toAbsolutePath()}." }
-            .writeText(
-                toTree(descriptor).toString()
-            )
+            tempDirectory
+                .ensureFile("${descriptor.serialName.camelToSnakeCase()}.txt")
+                .log { "Wrote runtime BFL structure file to ${it.toAbsolutePath()}." }
+                .writeText(
+                    toTree(descriptor).toString()
+                )
+        }
     }
 
     private fun <M : Any, T : Any> serialNameFor(txComponent: T, metadata: M): String {

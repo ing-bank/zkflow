@@ -39,7 +39,23 @@ interface ZKNetworkParameters {
      * The serialization scheme to use for transaction component serialization.
      */
     val serializationSchemeId: Int
+
+    /**
+     * These settings control generation of debug information.
+     */
+    val debugSettings: DebugSettings
 }
+
+/**
+ * Settings related to generating debug information.
+ */
+data class DebugSettings(
+    /**
+     * Flag controlling whether the serialization structure at runtime should be dumped into a file.
+     * Note that this will be done for every serialization action, which might negatively impact performance.
+     */
+    val dumpSerializationStructure: Boolean
+)
 
 val ZKNetworkParameters.notarySerializer
     get() = PartySerializer(
