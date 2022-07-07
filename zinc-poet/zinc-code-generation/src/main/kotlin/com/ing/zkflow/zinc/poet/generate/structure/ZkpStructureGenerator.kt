@@ -1,7 +1,7 @@
 package com.ing.zkflow.zinc.poet.generate.structure
 
+import com.ing.zkflow.Surrogate
 import com.ing.zkflow.common.serialization.ContractStateSerializerRegistry
-import com.ing.zkflow.common.serialization.zinc.generation.internalTypeName
 import com.ing.zkflow.common.versioning.ContractStateVersionFamilyRegistry
 import com.ing.zkflow.serialization.FixedLengthSerialDescriptor
 import com.ing.zkflow.serialization.FixedLengthType
@@ -17,6 +17,7 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.SerialKind
 import kotlinx.serialization.descriptors.StructureKind
 import net.corda.core.contracts.ContractState
+import kotlin.reflect.KClass
 
 object ZkpStructureGenerator {
     fun generate(descriptor: SerialDescriptor): ZkpStructureType {
@@ -93,10 +94,12 @@ object ZkpStructureGenerator {
     @Suppress("unchecked")
     private fun createStruct(descriptor: SerialDescriptor): ZkpStructureType {
         val fixedLengthSerialDescriptor: FixedLengthSerialDescriptor = descriptor.toFixedLengthSerialDescriptorOrThrow()
+        val originalClass = tryGetOriginalFromSurrogateClass(fixedLengthSerialDescriptor.serialName)
         return ZkpStructureClass(
-            serialName = fixedLengthSerialDescriptor.internalTypeName,
-            familyClassName = tryGetFamilyClassName(fixedLengthSerialDescriptor),
-            serializationId = tryGetSerializationId(fixedLengthSerialDescriptor),
+            serialName = originalClass?.let { "${it.qualifiedName}" }
+                ?: fixedLengthSerialDescriptor.serialName.removeSuffix("_${Surrogate.GENERATED_SURROGATE_POSTFIX}"),
+            familyClassName = originalClass?.let { tryGetFamilyClassName(it) },
+            serializationId = originalClass?.let { tryGetSerializationId(it) },
             byteSize = fixedLengthSerialDescriptor.byteSize,
             fields = fixedLengthSerialDescriptor.elements().map { (elementName, elementDescriptor) ->
                 ZkpStructureField(
@@ -107,26 +110,31 @@ object ZkpStructureGenerator {
         )
     }
 
-    private fun tryGetFamilyClassName(fixedLengthSerialDescriptor: FixedLengthSerialDescriptor): String? =
+    private fun tryGetOriginalFromSurrogateClass(surrogateClassname: String): KClass<out ContractState>? {
+        return surrogateClassname.tryGetKClass<Surrogate<*>>()
+            ?.supertypes
+            ?.singleOrNull { "$it".contains("Surrogate") }
+            ?.arguments
+            ?.get(0)
+            ?.type
+            ?.let { "$it".tryGetKClass<ContractState>() }
+    }
+
+    private fun tryGetFamilyClassName(originalClass: KClass<out ContractState>): String? =
         try {
-            fixedLengthSerialDescriptor.serialName.tryGetKClass<ContractState>()
-                ?.let { klass ->
-                    ContractStateVersionFamilyRegistry
-                        .familyOf(klass)
-                        .requireNotNull { "Could not find Version family for $klass." }
-                        .familyClass
-                        .qualifiedName
-                }
+            ContractStateVersionFamilyRegistry
+                .familyOf(originalClass)
+                .requireNotNull { "Could not find Version family for $originalClass." }
+                .familyClass
+                .qualifiedName
         } catch (e: Exception) {
             null
         }
 
-    private fun tryGetSerializationId(fixedLengthSerialDescriptor: FixedLengthSerialDescriptor): Int? =
+    private fun tryGetSerializationId(originalClass: KClass<out ContractState>): Int? =
         try {
-            fixedLengthSerialDescriptor.serialName.tryGetKClass<ContractState>()
-                ?.let { klass ->
-                    ContractStateSerializerRegistry.identify(klass)
-                }
+            ContractStateSerializerRegistry
+                .identify(originalClass)
         } catch (e: Exception) {
             null
         }

@@ -2,7 +2,9 @@ package com.ing.zkflow.gradle.plugin
 
 import com.ing.zkflow.gradle.task.GenerateZincCircuitsTask
 import com.ing.zkflow.gradle.task.GenerateZkpStructureTask
+import com.ing.zkflow.gradle.task.VerifyZkpStructureTask
 import com.ing.zkflow.zinc.poet.generate.structure.GENERATE_ZKP_STRUCTURE
+import com.ing.zkflow.zinc.poet.generate.structure.VERIFY_ZKP_STRUCTURE
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -40,24 +42,24 @@ class ZKFlowPlugin : Plugin<Project> {
             .dependsOn(COMPILE_KOTLIN) // So the command metadata can be found
             .mustRunAfter(COMPILE_KOTLIN)
 
-        // val verifyZkpStructureTask = project.tasks.create(
-        //     VERIFY_ZKP_STRUCTURE,
-        //     VerifyZkpStructureTask::class.java
-        // )
-        // verifyZkpStructureTask
-        //     .dependsOn(COMPILE_KOTLIN)
-        //     .mustRunAfter(COMPILE_KOTLIN)
+        val verifyZkpStructureTask = project.tasks.create(
+            VERIFY_ZKP_STRUCTURE,
+            VerifyZkpStructureTask::class.java
+        )
+        verifyZkpStructureTask
+            .dependsOn(COMPILE_KOTLIN)
+            .mustRunAfter(COMPILE_KOTLIN)
 
         val generateZkpStructureTask = project.tasks.create(
             GENERATE_ZKP_STRUCTURE,
             GenerateZkpStructureTask::class.java
         )
-        // generateZkpStructureTask
-        //     .dependsOn(VERIFY_ZKP_STRUCTURE)
-        //     .mustRunAfter(VERIFY_ZKP_STRUCTURE)
+        generateZkpStructureTask
+            .dependsOn(VERIFY_ZKP_STRUCTURE)
+            .mustRunAfter(VERIFY_ZKP_STRUCTURE)
 
         project.tasks.getByPath(COMPILE_KOTLIN) // .finalizedBy(VERIFY_ZKP_STRUCTURE)
-        // project.tasks.getByPath(VERIFY_ZKP_STRUCTURE).finalizedBy(GENERATE_ZINC_CIRCUITS)
+        project.tasks.getByPath(VERIFY_ZKP_STRUCTURE).finalizedBy(GENERATE_ZINC_CIRCUITS)
         project.tasks.getByPath(ASSEMBLE).dependsOn(GENERATE_ZINC_CIRCUITS)
     }
 

@@ -1,11 +1,9 @@
 package com.ing.zkflow.gradle.task
 
-import com.ing.zkflow.zinc.poet.generate.structure.ZKP_STRUCTURE_JSON
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.tasks.InputDirectory
-import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.TaskAction
 import java.io.File
 
@@ -18,11 +16,6 @@ open class VerifyZkpStructureTask : DefaultTask() {
     // NOTE: Must be public for the @InputDirectory to be recognized
     @InputDirectory
     val generatedKspResources: File = project.buildDir.resolve("generated/ksp/main/resources")
-
-    // NOTE: Must be public for the @InputFile to be recognized
-    @InputFile
-    @Suppress("unused") // Specify structure.json as input to gradle
-    val generatedStructure: File = project.projectDir.resolve(ZKP_STRUCTURE_JSON)
 
     @TaskAction
     @Suppress("SpreadOperator")

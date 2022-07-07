@@ -46,7 +46,7 @@
           "fieldName": "cordaX500Name",
           "fieldType": {
             "type": "CLASS_REF",
-            "serialName": "com.ing.zkflow.serialization.serializer.corda.CordaX500NameSerializer.CordaX500NameSurrogate",
+            "serialName": "net.corda.core.identity.CordaX500Name",
             "byteSize": 413
           }
         },
@@ -62,7 +62,7 @@
     },
     {
       "type": "CLASS",
-      "serialName": "com.ing.zkflow.serialization.serializer.corda.CordaX500NameSerializer.CordaX500NameSurrogate",
+      "serialName": "net.corda.core.identity.CordaX500Name",
       "familyClassName": null,
       "serializationId": null,
       "byteSize": 413,
@@ -187,14 +187,14 @@
       "serialName": "com.example.contract.cbdc.CBDCToken",
       "familyClassName": "com.example.contract.cbdc.VersionedCBDCToken",
       "serializationId": 976199559,
-      "byteSize": 583,
+      "byteSize": 565,
       "fields": [
         {
           "fieldName": "amount",
           "fieldType": {
             "type": "CLASS_REF",
             "serialName": "com.example.token.sdk.AmountIssuedTokenTypeSurrogate",
-            "byteSize": 535
+            "byteSize": 517
           }
         },
         {
@@ -212,7 +212,7 @@
       "serialName": "com.example.token.sdk.AmountIssuedTokenTypeSurrogate",
       "familyClassName": null,
       "serializationId": null,
-      "byteSize": 535,
+      "byteSize": 517,
       "fields": [
         {
           "fieldName": "quantity",
@@ -237,7 +237,7 @@
           "fieldType": {
             "type": "CLASS_REF",
             "serialName": "com.example.token.sdk.IssuedTokenType",
-            "byteSize": 497
+            "byteSize": 479
           }
         }
       ]
@@ -247,25 +247,8 @@
       "serialName": "com.example.token.sdk.IssuedTokenType",
       "familyClassName": null,
       "serializationId": null,
-      "byteSize": 497,
+      "byteSize": 479,
       "fields": [
-        {
-          "fieldName": "tokenIdentifier",
-          "fieldType": {
-            "type": "STRING",
-            "byteSize": 14,
-            "capacity": 10,
-            "encoding": "Utf8"
-          }
-        },
-        {
-          "fieldName": "fractionDigits",
-          "fieldType": {
-            "type": "PRIMITIVE",
-            "className": "kotlin.Int",
-            "byteSize": 4
-          }
-        },
         {
           "fieldName": "issuer",
           "fieldType": {

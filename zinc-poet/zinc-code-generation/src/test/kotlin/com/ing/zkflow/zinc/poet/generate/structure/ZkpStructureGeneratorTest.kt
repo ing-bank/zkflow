@@ -1,8 +1,7 @@
 package com.ing.zkflow.zinc.poet.generate.structure
 
+import com.ing.zkflow.Surrogate
 import com.ing.zkflow.common.serialization.zinc.generation.getSerialDescriptor
-import com.ing.zkflow.common.serialization.zinc.generation.internalTypeName
-import com.ing.zkflow.serialization.serializer.corda.CordaX500NameSerializer
 import com.ing.zkflow.zinc.poet.generate.ClassWithAnonymousParty
 import com.ing.zkflow.zinc.poet.generate.ClassWithAnonymousParty_Serializer
 import com.ing.zkflow.zinc.poet.generate.ClassWithAsciiChar
@@ -61,10 +60,12 @@ import com.ing.zkflow.zinc.poet.generate.ClassWithUtf8String
 import com.ing.zkflow.zinc.poet.generate.ClassWithUtf8String_Serializer
 import com.ing.zkflow.zinc.poet.generate.ClassWithoutFields
 import com.ing.zkflow.zinc.poet.generate.ClassWithoutFields_Serializer
+import com.ing.zkflow.zinc.poet.generate.MyFamilyMarker
 import com.ing.zkflow.zinc.poet.generate.VersionedState
 import com.ing.zkflow.zinc.poet.generate.VersionedState_Serializer
 import io.kotest.matchers.collections.shouldContainExactly
 import kotlinx.serialization.descriptors.SerialDescriptor
+import net.corda.core.identity.CordaX500Name
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
@@ -83,21 +84,24 @@ internal class ZkpStructureGeneratorTest {
     companion object {
         private inline fun <reified T> wrappedStructure(
             familyClassName: String? = null,
-            field: ZkpStructureField? = null
+            field: ZkpStructureField? = null,
+            serializationId: Int? = null,
         ): ZkpStructureClass = ZkpStructureClass(
-            serialName = "${T::class.getSerialDescriptor().internalTypeName}",
+            serialName = T::class.getSerialDescriptor().serialName.removeSuffix("_" + Surrogate.GENERATED_SURROGATE_POSTFIX),
             familyClassName = familyClassName,
-            serializationId = null,
+            serializationId = serializationId,
             byteSize = field?.fieldType?.byteSize ?: 0,
             fields = field?.let { listOf(it) } ?: emptyList()
         )
 
         private val wrappedVersionedStructure = wrappedStructure<VersionedState>(
-            field = ZkpStructureField("state", ZkpStructurePrimitive("kotlin.Int", 4))
+            familyClassName = "${MyFamilyMarker::class.qualifiedName}",
+            serializationId = 1860209081,
+            field = ZkpStructureField("state", ZkpStructurePrimitive("kotlin.Int", 4)),
         )
         private val wrappedEmptyClass = wrappedStructure<ClassWithoutFields>()
         private val wrappedUnitStructure = ZkpStructureClass(
-            "${ClassWithClassWithoutFields::class.simpleName}", null, null, 0,
+            "${ClassWithClassWithoutFields::class.qualifiedName}", null, null, 0,
             listOf(
                 ZkpStructureField("c", wrappedEmptyClass.ref()),
             )
@@ -215,7 +219,7 @@ internal class ZkpStructureGeneratorTest {
                 ZkpStructureField(
                     "cordaX500Name",
                     ZkpStructureClassRef(
-                        CordaX500NameSerializer.CordaX500NameSurrogate::class.getSerialDescriptor().internalTypeName,
+                        "${CordaX500Name::class.qualifiedName}",
                         413
                     )
                 ),
@@ -259,7 +263,7 @@ internal class ZkpStructureGeneratorTest {
             )
         )
         private val cordaX500NameSurrogate = ZkpStructureClass(
-            CordaX500NameSerializer.CordaX500NameSurrogate::class.getSerialDescriptor().internalTypeName,
+            "${CordaX500Name::class.qualifiedName}",
             null, null,
             413,
             listOf(
