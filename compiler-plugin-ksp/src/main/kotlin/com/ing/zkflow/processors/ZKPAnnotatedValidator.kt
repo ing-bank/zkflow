@@ -13,7 +13,6 @@ import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSAnnotated
-import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
@@ -38,6 +37,7 @@ import com.ing.zkflow.annotations.corda.SignatureSpec
 import com.ing.zkflow.ksp.findClassesOrObjectsWithAnnotation
 import com.ing.zkflow.ksp.getAllSurrogates
 import com.ing.zkflow.ksp.getAnnotationsByType
+import com.ing.zkflow.ksp.getSurrogateFromViaAnnotation
 import com.ing.zkflow.ksp.getSurrogateTargetClass
 import com.ing.zkflow.ksp.implementsInterface
 import net.corda.core.contracts.AlwaysAcceptAttachmentConstraint
@@ -276,7 +276,7 @@ class ZKPAnnotatedValidator(@Suppress("unused") private val logger: KSPLogger) :
 
             require(this.resolve().declaration == surrogateTarget) {
                 "Type ${this.resolve().declaration.qualifiedName?.asString()} is not serializable. " +
-                    "Target type of surrogate `$surrogate` set with @${Via::class.simpleName}  annotation must be $this, but is '$surrogateTarget'."
+                    "Target type of surrogate `$surrogate` set with @${Via::class.simpleName} annotation must be $this, but is '$surrogateTarget'."
             }
             return
         }
@@ -293,14 +293,6 @@ class ZKPAnnotatedValidator(@Suppress("unused") private val logger: KSPLogger) :
                     "or ensure that the declaration of $this is annotated with @${ZKP::class.simpleName}."
             )
         }
-    }
-
-    private fun KSAnnotation.getSurrogateFromViaAnnotation(): KSClassDeclaration {
-        require(annotationType.resolve().declaration.qualifiedName?.asString() == Via::class.qualifiedName) {
-            "Can't get Surrogate from $this, it is not a @${Via::class.simpleName} annotation."
-        }
-        return annotationType.element?.typeArguments?.singleOrNull()?.type?.resolve()?.declaration as? KSClassDeclaration
-            ?: error("@${Via::class.simpleName} annotation's argument is not a class.")
     }
 
     private fun KSTypeReference.isZKFlowSupportedCoreClass(): Boolean {

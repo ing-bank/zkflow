@@ -24,7 +24,7 @@ fun <T : Any> String.tryGetKClass(): KClass<out T>? = jvmClassNamePermutations()
     .asSequence()
     .mapNotNull {
         try {
-            Class.forName(it).kotlin as KClass<out T>
+            Class.forName(it).kotlin as? KClass<out T>
         } catch (e: ClassNotFoundException) {
             null
         }

@@ -30,6 +30,9 @@ interface Surrogate<T> {
     fun toOriginal(): T
 
     companion object {
-        const val GENERATED_SURROGATE_SERIALIZER_POSTFIX = "SurrogateSerializer"
+        const val GENERATED_SURROGATE_POSTFIX = "KotlinxSurrogate"
+        const val GENERATED_SURROGATE_ENUM_POSTFIX = "RepresentEnum"
+        const val GENERATED_SURROGATE_SERIALIZER_POSTFIX = "Serializer"
+        const val GENERATED_SERIALIZER_PROVIDER_POSTFIX = "SerializerProvider"
     }
 }

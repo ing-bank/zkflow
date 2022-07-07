@@ -1,6 +1,8 @@
 package com.ing.zkflow.resolved
 
 import com.ing.zkflow.annotated.TestTokenContract
+import com.ing.zkflow.annotated.TestTokenContractCreateSerializer
+import com.ing.zkflow.annotated.TestTokenContractTestTokenStateSerializer
 import com.ing.zkflow.serialization.SerializerTest
 import com.ing.zkflow.serialization.engine.SerdeEngine
 import org.junit.jupiter.params.ParameterizedTest
@@ -11,7 +13,7 @@ class TestTokenContractTest : SerializerTest {
     @MethodSource("engines")
     fun `TestTokenState must make a round trip`(engine: SerdeEngine) {
         engine.assertRoundTrip(
-            TestTokenContract.TestTokenState.serializer(),
+            TestTokenContractTestTokenStateSerializer,
             TestTokenContract.TestTokenState()
         )
     }
@@ -20,7 +22,7 @@ class TestTokenContractTest : SerializerTest {
     @MethodSource("engines")
     fun `~Create~ command must make a round trip`(engine: SerdeEngine) {
         engine.assertRoundTrip(
-            TestTokenContract.Create.serializer(),
+            TestTokenContractCreateSerializer,
             TestTokenContract.Create(),
             shouldPrint = true
         ) { _, _ ->

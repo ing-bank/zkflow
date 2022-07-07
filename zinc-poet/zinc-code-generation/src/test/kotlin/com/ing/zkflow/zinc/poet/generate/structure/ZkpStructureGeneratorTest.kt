@@ -1,40 +1,71 @@
 package com.ing.zkflow.zinc.poet.generate.structure
 
+import com.ing.zkflow.Surrogate
+import com.ing.zkflow.common.serialization.zinc.generation.getSerialDescriptor
 import com.ing.zkflow.zinc.poet.generate.ClassWithAnonymousParty
+import com.ing.zkflow.zinc.poet.generate.ClassWithAnonymousPartySerializer
 import com.ing.zkflow.zinc.poet.generate.ClassWithAsciiChar
+import com.ing.zkflow.zinc.poet.generate.ClassWithAsciiCharSerializer
 import com.ing.zkflow.zinc.poet.generate.ClassWithAsciiString
+import com.ing.zkflow.zinc.poet.generate.ClassWithAsciiStringSerializer
 import com.ing.zkflow.zinc.poet.generate.ClassWithBoolean
+import com.ing.zkflow.zinc.poet.generate.ClassWithBooleanSerializer
 import com.ing.zkflow.zinc.poet.generate.ClassWithByte
+import com.ing.zkflow.zinc.poet.generate.ClassWithByteSerializer
 import com.ing.zkflow.zinc.poet.generate.ClassWithClassWithoutFields
+import com.ing.zkflow.zinc.poet.generate.ClassWithClassWithoutFieldsSerializer
 import com.ing.zkflow.zinc.poet.generate.ClassWithDouble
-import com.ing.zkflow.zinc.poet.generate.ClassWithEnum
+import com.ing.zkflow.zinc.poet.generate.ClassWithDoubleSerializer
 import com.ing.zkflow.zinc.poet.generate.ClassWithFloat
+import com.ing.zkflow.zinc.poet.generate.ClassWithFloatSerializer
 import com.ing.zkflow.zinc.poet.generate.ClassWithHashAttachmentConstraint
+import com.ing.zkflow.zinc.poet.generate.ClassWithHashAttachmentConstraintSerializer
 import com.ing.zkflow.zinc.poet.generate.ClassWithInt
+import com.ing.zkflow.zinc.poet.generate.ClassWithIntSerializer
 import com.ing.zkflow.zinc.poet.generate.ClassWithListOfInt
+import com.ing.zkflow.zinc.poet.generate.ClassWithListOfIntSerializer
 import com.ing.zkflow.zinc.poet.generate.ClassWithLong
+import com.ing.zkflow.zinc.poet.generate.ClassWithLongSerializer
 import com.ing.zkflow.zinc.poet.generate.ClassWithMapOfStringToInt
+import com.ing.zkflow.zinc.poet.generate.ClassWithMapOfStringToIntSerializer
 import com.ing.zkflow.zinc.poet.generate.ClassWithNullableInt
+import com.ing.zkflow.zinc.poet.generate.ClassWithNullableIntSerializer
 import com.ing.zkflow.zinc.poet.generate.ClassWithParty
+import com.ing.zkflow.zinc.poet.generate.ClassWithPartySerializer
 import com.ing.zkflow.zinc.poet.generate.ClassWithPublicKey
+import com.ing.zkflow.zinc.poet.generate.ClassWithPublicKeySerializer
 import com.ing.zkflow.zinc.poet.generate.ClassWithSecureHash
+import com.ing.zkflow.zinc.poet.generate.ClassWithSecureHashSerializer
 import com.ing.zkflow.zinc.poet.generate.ClassWithSetOfInt
+import com.ing.zkflow.zinc.poet.generate.ClassWithSetOfIntSerializer
 import com.ing.zkflow.zinc.poet.generate.ClassWithShort
+import com.ing.zkflow.zinc.poet.generate.ClassWithShortSerializer
 import com.ing.zkflow.zinc.poet.generate.ClassWithSignatureAttachmentConstraint
+import com.ing.zkflow.zinc.poet.generate.ClassWithSignatureAttachmentConstraintSerializer
 import com.ing.zkflow.zinc.poet.generate.ClassWithUByte
+import com.ing.zkflow.zinc.poet.generate.ClassWithUByteSerializer
 import com.ing.zkflow.zinc.poet.generate.ClassWithUInt
+import com.ing.zkflow.zinc.poet.generate.ClassWithUIntSerializer
 import com.ing.zkflow.zinc.poet.generate.ClassWithULong
+import com.ing.zkflow.zinc.poet.generate.ClassWithULongSerializer
 import com.ing.zkflow.zinc.poet.generate.ClassWithUShort
+import com.ing.zkflow.zinc.poet.generate.ClassWithUShortSerializer
 import com.ing.zkflow.zinc.poet.generate.ClassWithUnicodeChar
+import com.ing.zkflow.zinc.poet.generate.ClassWithUnicodeCharSerializer
 import com.ing.zkflow.zinc.poet.generate.ClassWithUtf16String
+import com.ing.zkflow.zinc.poet.generate.ClassWithUtf16StringSerializer
 import com.ing.zkflow.zinc.poet.generate.ClassWithUtf32String
+import com.ing.zkflow.zinc.poet.generate.ClassWithUtf32StringSerializer
 import com.ing.zkflow.zinc.poet.generate.ClassWithUtf8String
+import com.ing.zkflow.zinc.poet.generate.ClassWithUtf8StringSerializer
 import com.ing.zkflow.zinc.poet.generate.ClassWithoutFields
-import com.ing.zkflow.zinc.poet.generate.EnumWithNumbers
+import com.ing.zkflow.zinc.poet.generate.ClassWithoutFieldsSerializer
+import com.ing.zkflow.zinc.poet.generate.MyFamilyMarker
 import com.ing.zkflow.zinc.poet.generate.VersionedState
+import com.ing.zkflow.zinc.poet.generate.VersionedStateSerializer
 import io.kotest.matchers.collections.shouldContainExactly
-import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.descriptors.SerialDescriptor
+import net.corda.core.identity.CordaX500Name
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
@@ -53,17 +84,20 @@ internal class ZkpStructureGeneratorTest {
     companion object {
         private inline fun <reified T> wrappedStructure(
             familyClassName: String? = null,
-            field: ZkpStructureField? = null
+            field: ZkpStructureField? = null,
+            serializationId: Int? = null,
         ): ZkpStructureClass = ZkpStructureClass(
-            serialName = "${T::class.qualifiedName}",
+            serialName = T::class.getSerialDescriptor().serialName.removeSuffix(Surrogate.GENERATED_SURROGATE_POSTFIX),
             familyClassName = familyClassName,
-            serializationId = null,
+            serializationId = serializationId,
             byteSize = field?.fieldType?.byteSize ?: 0,
             fields = field?.let { listOf(it) } ?: emptyList()
         )
 
         private val wrappedVersionedStructure = wrappedStructure<VersionedState>(
-            field = ZkpStructureField("state", ZkpStructurePrimitive("kotlin.Int", 4))
+            familyClassName = "${MyFamilyMarker::class.qualifiedName}",
+            serializationId = 1860209081,
+            field = ZkpStructureField("state", ZkpStructurePrimitive("kotlin.Int", 4)),
         )
         private val wrappedEmptyClass = wrappedStructure<ClassWithoutFields>()
         private val wrappedUnitStructure = ZkpStructureClass(
@@ -152,9 +186,9 @@ internal class ZkpStructureGeneratorTest {
                 )
             )
         )
-        private val wrappedEnumStructure = wrappedStructure<ClassWithEnum>(
-            field = ZkpStructureField("enum", ZkpStructureEnum("${EnumWithNumbers::class.qualifiedName}"))
-        )
+        // private val wrappedEnumStructure = wrappedStructure<ClassWithEnum>(
+        //     field = ZkpStructureField("enum", ZkpStructureEnum("${EnumWithNumbers::class.simpleName}"))
+        // )
         private val wrappedPublicKeyStructure = wrappedStructure<ClassWithPublicKey>(
             field = ZkpStructureField("pk", ZkpStructureClassRef("PublicKeyEdDsaEd25519Sha512", 48))
         )
@@ -168,10 +202,7 @@ internal class ZkpStructureGeneratorTest {
             field = ZkpStructureField("hash", ZkpStructureClassRef("SecureHashSha256", 36))
         )
         private val wrappedSignatureAttachmentConstraint = wrappedStructure<ClassWithSignatureAttachmentConstraint>(
-            field = ZkpStructureField(
-                "constraint",
-                ZkpStructureClassRef("SignatureAttachmentConstraintEdDsaEd25519Sha512", 48)
-            )
+            field = ZkpStructureField("constraint", ZkpStructureClassRef("SignatureAttachmentConstraintEdDsaEd25519Sha512", 48))
         )
         private val wrappedHashAttachmentConstraint = wrappedStructure<ClassWithHashAttachmentConstraint>(
             field = ZkpStructureField("constraint", ZkpStructureClassRef("HashAttachmentConstraint", 36))
@@ -188,7 +219,7 @@ internal class ZkpStructureGeneratorTest {
                 ZkpStructureField(
                     "cordaX500Name",
                     ZkpStructureClassRef(
-                        "com.ing.zkflow.serialization.serializer.corda.CordaX500NameSerializer.CordaX500NameSurrogate",
+                        "${CordaX500Name::class.qualifiedName}",
                         413
                     )
                 ),
@@ -232,7 +263,7 @@ internal class ZkpStructureGeneratorTest {
             )
         )
         private val cordaX500NameSurrogate = ZkpStructureClass(
-            "com.ing.zkflow.serialization.serializer.corda.CordaX500NameSerializer.CordaX500NameSurrogate",
+            "${CordaX500Name::class.qualifiedName}",
             null, null,
             413,
             listOf(
@@ -249,93 +280,91 @@ internal class ZkpStructureGeneratorTest {
         @Suppress("LongMethod")
         fun fixturesProvider(): List<Arguments> {
             return listOf(
-                Arguments.of(VersionedState.serializer().descriptor, listOf(wrappedVersionedStructure)),
-                Arguments.of(ClassWithoutFields.serializer().descriptor, listOf(wrappedEmptyClass)),
+                Arguments.of(VersionedStateSerializer.descriptor, listOf(wrappedVersionedStructure)),
+                Arguments.of(ClassWithoutFieldsSerializer.descriptor, listOf(wrappedEmptyClass)),
                 Arguments.of(
-                    ClassWithClassWithoutFields.serializer().descriptor,
+                    ClassWithClassWithoutFieldsSerializer.descriptor,
                     listOf<ZkpStructureType>(wrappedUnitStructure, wrappedEmptyClass)
                 ),
-                Arguments.of(ClassWithBoolean.serializer().descriptor, listOf<ZkpStructureType>(wrappedBoolStructure)),
-                Arguments.of(ClassWithByte.serializer().descriptor, listOf<ZkpStructureType>(wrappedByteStructure)),
-                Arguments.of(ClassWithUByte.serializer().descriptor, listOf<ZkpStructureType>(wrappedUByteStructure)),
-                Arguments.of(ClassWithShort.serializer().descriptor, listOf<ZkpStructureType>(wrappedShortStructure)),
-                Arguments.of(ClassWithUShort.serializer().descriptor, listOf<ZkpStructureType>(wrappedUShortStructure)),
-                Arguments.of(ClassWithInt.serializer().descriptor, listOf<ZkpStructureType>(wrappedIntStructure)),
-                Arguments.of(ClassWithUInt.serializer().descriptor, listOf<ZkpStructureType>(wrappedUIntStructure)),
-                Arguments.of(ClassWithLong.serializer().descriptor, listOf<ZkpStructureType>(wrappedLongStructure)),
-                Arguments.of(ClassWithULong.serializer().descriptor, listOf<ZkpStructureType>(wrappedULongStructure)),
-                Arguments.of(ClassWithFloat.serializer().descriptor, listOf<ZkpStructureType>(wrappedFloatStructure)),
-                Arguments.of(ClassWithDouble.serializer().descriptor, listOf<ZkpStructureType>(wrappedDoubleStructure)),
+                Arguments.of(ClassWithBooleanSerializer.descriptor, listOf<ZkpStructureType>(wrappedBoolStructure)),
+                Arguments.of(ClassWithByteSerializer.descriptor, listOf<ZkpStructureType>(wrappedByteStructure)),
+                Arguments.of(ClassWithUByteSerializer.descriptor, listOf<ZkpStructureType>(wrappedUByteStructure)),
+                Arguments.of(ClassWithShortSerializer.descriptor, listOf<ZkpStructureType>(wrappedShortStructure)),
+                Arguments.of(ClassWithUShortSerializer.descriptor, listOf<ZkpStructureType>(wrappedUShortStructure)),
+                Arguments.of(ClassWithIntSerializer.descriptor, listOf<ZkpStructureType>(wrappedIntStructure)),
+                Arguments.of(ClassWithUIntSerializer.descriptor, listOf<ZkpStructureType>(wrappedUIntStructure)),
+                Arguments.of(ClassWithLongSerializer.descriptor, listOf<ZkpStructureType>(wrappedLongStructure)),
+                Arguments.of(ClassWithULongSerializer.descriptor, listOf<ZkpStructureType>(wrappedULongStructure)),
+                Arguments.of(ClassWithFloatSerializer.descriptor, listOf<ZkpStructureType>(wrappedFloatStructure)),
+                Arguments.of(ClassWithDoubleSerializer.descriptor, listOf<ZkpStructureType>(wrappedDoubleStructure)),
                 Arguments.of(
-                    ClassWithAsciiChar.serializer().descriptor, listOf<ZkpStructureType>(wrappedAsciiCharStructure)
+                    ClassWithAsciiCharSerializer.descriptor,
+                    listOf<ZkpStructureType>(wrappedAsciiCharStructure)
                 ),
                 Arguments.of(
-                    ClassWithUnicodeChar.serializer().descriptor,
+                    ClassWithUnicodeCharSerializer.descriptor,
                     listOf<ZkpStructureType>(wrappedUnicodeCharStructure)
                 ),
                 Arguments.of(
-                    ClassWithAsciiString.serializer().descriptor,
+                    ClassWithAsciiStringSerializer.descriptor,
                     listOf<ZkpStructureType>(wrappedAsciiStringStructure)
                 ),
                 Arguments.of(
-                    ClassWithUtf8String.serializer().descriptor,
+                    ClassWithUtf8StringSerializer.descriptor,
                     listOf<ZkpStructureType>(wrappedUtf8StringStructure)
                 ),
                 Arguments.of(
-                    ClassWithUtf16String.serializer().descriptor,
+                    ClassWithUtf16StringSerializer.descriptor,
                     listOf<ZkpStructureType>(wrappedUtf16StringStructure)
                 ),
                 Arguments.of(
-                    ClassWithUtf32String.serializer().descriptor,
+                    ClassWithUtf32StringSerializer.descriptor,
                     listOf<ZkpStructureType>(wrappedUtf32StringStructure)
                 ),
                 Arguments.of(
-                    ClassWithNullableInt.serializer().descriptor,
+                    ClassWithNullableIntSerializer.descriptor,
                     listOf<ZkpStructureType>(wrappedNullableIntStructure)
                 ),
                 Arguments.of(
-                    ClassWithListOfInt.serializer().descriptor,
+                    ClassWithListOfIntSerializer.descriptor,
                     listOf<ZkpStructureType>(wrappedListOfIntStructure)
                 ),
                 Arguments.of(
-                    ClassWithSetOfInt.serializer().descriptor,
+                    ClassWithSetOfIntSerializer.descriptor,
                     listOf<ZkpStructureType>(wrappedSetOfIntStructure)
                 ),
                 Arguments.of(
-                    ClassWithMapOfStringToInt.serializer().descriptor,
+                    ClassWithMapOfStringToIntSerializer.descriptor,
                     listOf<ZkpStructureType>(wrappedMapOfStringIntStructure)
                 ),
-                Arguments.of(EnumWithNumbers.serializer().descriptor, listOf<ZkpStructureType>()),
-                Arguments.of(ClassWithEnum.serializer().descriptor, listOf<ZkpStructureType>(wrappedEnumStructure)),
+                // Arguments.of(EnumWithNumbersSerializer.descriptor, listOf<ZkpStructureType>()),
+                // Arguments.of(ClassWithEnumSerializer.descriptor, listOf<ZkpStructureType>(wrappedEnumStructure)),
                 Arguments.of(
-                    ClassWithPublicKey.serializer().descriptor,
+                    ClassWithPublicKeySerializer.descriptor,
                     listOf<ZkpStructureType>(
                         wrappedPublicKeyStructure, publicKeyEdDsaEd25519Sha512
                     )
                 ),
                 Arguments.of(
-                    ClassWithAnonymousParty.serializer().descriptor,
+                    ClassWithAnonymousPartySerializer.descriptor,
                     listOf<ZkpStructureType>(
                         wrappedAnonymousPartyStructure, anonymousPartyEdDsaEd25519Sha512, publicKeyEdDsaEd25519Sha512
                     )
                 ),
                 Arguments.of(
-                    ClassWithParty.serializer().descriptor,
+                    ClassWithPartySerializer.descriptor,
                     listOf<ZkpStructureType>(
-                        wrappedPartyStructure,
-                        partyEdDsaEd25519Sha256,
-                        cordaX500NameSurrogate,
-                        publicKeyEdDsaEd25519Sha512
+                        wrappedPartyStructure, partyEdDsaEd25519Sha256, cordaX500NameSurrogate, publicKeyEdDsaEd25519Sha512
                     )
                 ),
                 Arguments.of(
-                    ClassWithSecureHash.serializer().descriptor,
+                    ClassWithSecureHashSerializer.descriptor,
                     listOf<ZkpStructureType>(
                         wrappedSecureHash, secureHashSha256
                     )
                 ),
                 Arguments.of(
-                    ClassWithSignatureAttachmentConstraint.serializer().descriptor,
+                    ClassWithSignatureAttachmentConstraintSerializer.descriptor,
                     listOf<ZkpStructureType>(
                         wrappedSignatureAttachmentConstraint,
                         signatureAttachmentConstraintEdDsaEd25519Sha512,
@@ -343,7 +372,7 @@ internal class ZkpStructureGeneratorTest {
                     )
                 ),
                 Arguments.of(
-                    ClassWithHashAttachmentConstraint.serializer().descriptor,
+                    ClassWithHashAttachmentConstraintSerializer.descriptor,
                     listOf<ZkpStructureType>(
                         wrappedHashAttachmentConstraint,
                         hashAttachmentConstraint,

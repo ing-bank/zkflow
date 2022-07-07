@@ -3,6 +3,7 @@ package com.ing.zkflow.zinc.poet.generate.structure
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.annotations.ZKPSurrogate
 import com.ing.zkflow.common.serialization.KClassSerializerProvider
+import com.ing.zkflow.common.serialization.zinc.generation.getSerialDescriptor
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -27,7 +28,7 @@ fun generateZkpStructure(): ZkpStructure {
     val structureTypes = kClassSerializerProviders
         .asSequence()
         .map { it.get().klass }
-        .flatMap { ZkpStructureGenerator.generate(it.serializer().descriptor).toFlattenedClassStructure() }
+        .flatMap { ZkpStructureGenerator.generate(it.getSerialDescriptor()).toFlattenedClassStructure() }
         .distinct()
         .toList()
     return ZkpStructure(

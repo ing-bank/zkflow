@@ -4,12 +4,14 @@ plugins {
     kotlin("plugin.serialization")
     id("maven-publish")
     jacoco
+    id("com.google.devtools.ksp") version "1.5.31-1.0.0"
 }
 
 dependencies {
     implementation(project(":utils"))
     api(project(":zinc-poet:zinc-bfl"))
     implementation(project(":protocol"))
+    implementation(project(":compiler-plugin-ksp"))
 
     val kotlinxSerializationVersion: String by project
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:$kotlinxSerializationVersion")
@@ -21,19 +23,26 @@ dependencies {
     kotlinCompilerPluginClasspath(project(":annotations"))
     kotlinCompilerPluginClasspath(project(":serialization"))
 
-    val arrowMetaVersion: String by project
-    kotlinCompilerPluginClasspath("io.arrow-kt:arrow-meta:$arrowMetaVersion")
+    implementation(project(":compiler-plugin-ksp"))
+    ksp(project(":compiler-plugin-ksp"))
 
     testImplementation(project(":test-utils"))
 }
 
+kotlin {
+    sourceSets.main {
+        kotlin.srcDir("build/generated/ksp/main/kotlin")
+    }
+    sourceSets.test {
+        kotlin.srcDir("build/generated/ksp/test/kotlin")
+    }
+}
+
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
     dependsOn += "clean"
-    dependsOn += ":compiler-plugin-arrow:jar"
     kotlinOptions {
         useIR = true
         jvmTarget = "1.8"
-        freeCompilerArgs += "-Xplugin=$rootDir/compiler-plugin-arrow/build/libs/compiler-plugin-arrow-$version.jar"
         freeCompilerArgs += "-Xopt-in=kotlinx.serialization.ExperimentalSerializationApi"
         freeCompilerArgs += "-Xopt-in=kotlinx.serialization.InternalSerializationApi"
         freeCompilerArgs += "-Xopt-in=kotlin.ExperimentalUnsignedTypes"

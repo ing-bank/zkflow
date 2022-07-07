@@ -8,7 +8,7 @@ import com.ing.zkflow.common.contracts.ZKUpgradeCommandData
 import com.ing.zkflow.common.versioning.generateUpgradeCommandClassName
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.ksp.versioning.VersionedCommandIdGenerator
-import com.ing.zkflow.processors.SerializerProviderGenerator.SerializableClassWithSourceFiles
+import com.ing.zkflow.processors.serialization.SerializerProviderGenerator.SerializableClassWithSourceFiles
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
@@ -118,7 +118,7 @@ class UpgradeCommandGenerator(
                     current.containingFile,
                 ),
             )
-        return SerializableClassWithSourceFiles(
+        return SerializableClassWithSourceFiles.Generated(
             ClassName(generateUpgradeCommandPackageName(current), commandClassName),
             listOfNotNull(
                 previous.containingFile,

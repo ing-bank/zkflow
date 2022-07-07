@@ -28,6 +28,8 @@ import com.ing.zkflow.ksp.versioning.VersionFamilyGenerator
 import com.ing.zkflow.ksp.versioning.VersionSorting
 import com.ing.zkflow.ksp.versioning.VersionedCommandIdGenerator
 import com.ing.zkflow.ksp.versioning.VersionedStateIdGenerator
+import com.ing.zkflow.processors.serialization.SerializerProviderGenerator
+import com.ing.zkflow.processors.serialization.SurrogateSerializerGenerator
 import com.ing.zkflow.util.merge
 import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.ContractState
@@ -82,7 +84,10 @@ class ZKPAnnotatedProcessor(private val logger: KSPLogger, codeGenerator: CodeGe
         val upgradeCommandsWithIds = upgradeCommandGenerator.generateUpgradeCommands(contractStateGroups.values)
 
         val surrogates = resolver.getAllSurrogates()
-        surrogateSerializerGenerator.generateSurrogateSerializers(surrogates)
+
+        surrogateSerializerGenerator.processZKPAnnotated(zkpAnnotated)
+        surrogateSerializerGenerator.processZKPSurrogateAnnotated(surrogates)
+
         versionFamilyGenerator.generateFamilies(contractStateGroups).registerToServiceLoader()
         serializerProviderGenerator.generateProviders(statesWithIds + commandsWithIds + upgradeCommandsWithIds).registerToServiceLoader()
 

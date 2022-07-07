@@ -13,7 +13,7 @@ import net.corda.core.identity.CordaX500Name
 object CordaX500NameSerializer : FixedLengthKSerializerWithDefault<CordaX500Name> {
     @Suppress("ArrayInDataClass", "ClassName")
     @Serializable
-    private data class CordaX500NameSurrogate(
+    data class CordaX500NameSurrogate(
         @Serializable(with = CommonNameSerializer_0::class) val commonName: String?,
         @Serializable(with = OrganisationUnitSerializer_0::class) val organisationUnit: String?,
         @Serializable(with = OrganisationSerializer_0::class) val organisation: String,

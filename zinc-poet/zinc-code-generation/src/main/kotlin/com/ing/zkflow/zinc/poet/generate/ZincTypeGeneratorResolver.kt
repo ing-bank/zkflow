@@ -5,9 +5,9 @@ import com.ing.zinc.bfl.BflStruct
 import com.ing.zinc.poet.ZincFunction.Companion.zincFunction
 import com.ing.zinc.poet.ZincType.Companion.id
 import com.ing.zinc.poet.ZincType.Self
+import com.ing.zkflow.common.serialization.zinc.generation.getSerialDescriptor
 import com.ing.zkflow.common.serialization.zinc.generation.zincTypeName
 import com.ing.zkflow.util.requireInstanceOf
-import kotlinx.serialization.serializer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import kotlin.reflect.KClass
@@ -20,7 +20,8 @@ class ZincTypeGeneratorResolver(
     override fun zincTypeOf(kClass: KClass<*>): BflModule {
         return knownTypesCache.computeIfAbsent(kClass) {
             logger.info("Generating zinc type for $it")
-            zincTypeGenerator.generate(kClass.serializer().descriptor).requireInstanceOf<BflModule> {
+
+            zincTypeGenerator.generate(kClass.getSerialDescriptor()).requireInstanceOf<BflModule> {
                 "Expected ${kClass::qualifiedName} to be converted to a ${BflModule::class.qualifiedName}, but got ${it::class.qualifiedName}."
             }.let { module ->
                 if (module is BflStruct) {
