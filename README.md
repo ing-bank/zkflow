@@ -59,18 +59,21 @@ On Mac, that is very easy to install and manage with [SDKMAN](https://sdkman.io/
 
 ### Zinc
 
-You need to install our fork of Zinc from the [Github](https://github.com/ingzkp/zinc/releases). Ask your teammates, which one you need. If you use Linux, just download already built binaries, but on macOS you need to build them yourself.
-
-Please make sure you have a recent version of Rust installed before installing Zinc.
+You need to build and install our fork of Zinc from the [Github](https://dev.azure.com/INGNeo/ING%20Neo%20-%20ZKFlow/_git/zinc).  
+Please make sure you have a recent version of Rust installed before building Zinc.
 
 ```bash
-$ git clone git@github.com:ingzkp/zinc.git
+$ git clone https://dev.azure.com/INGNeo/ING%20Neo%20-%20ZKFlow/_git/zinc
 $ cd zinc
 $ git checkout ing-fork
 $ cargo b --release
 ```
 
-Built binaries will be stored in `./target/release`. Move the `zargo`, `znc` and `zvm` binaries to a directory you prefer and add it to your systems PATH. `/usr/local/bin` has been know to work. Then you can delete sources.
+Built binaries will be stored in `./target/release`. Move the `zargo`, `znc` and `zvm` binaries to a directory you prefer and add it to your systems PATH. `/usr/local/bin` has been known to work. Then you can delete sources.
+
+#### Zinc on Azure Pipelines
+
+If you make changes to Zinc and create a new tag, please ensure that the [copy of the binaries](./.ci/lib/zinc-linux.tar.gz) in for Azure Pipelines is updated to be that version. Please note that these binaries should be compiled on/for linux, so they can run on the Azure Pipelines agents.
 
 ### Gradle
 
