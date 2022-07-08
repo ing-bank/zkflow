@@ -415,7 +415,7 @@ internal class SurrogateSerializerGeneratorTest : ProcessorTest(ZKPAnnotatedProc
                         val anonymousPartyFullyCustom: @Via<AnonymousParty_EdDSA> AnonymousParty = someAnonymous,
 
                         val party: @EdDSA Party = someParty,
-                        val partyCX500Custom: @EdDSA @CordaX500NameSpec<CordaX500NameSurrogate>(CordaX500NameConverter::class) Party = someParty,
+                        val partyCX500Custom: @EdDSA @CordaX500NameSpec<CordaX500NameSurrogate> Party = someParty,
                         val partyFullyCustom: @Via<Party_EdDSA> Party = someParty,
                     ) {
                         companion object {
