@@ -107,6 +107,11 @@ and registered with META-INF/services,
 are loaded with `ServiceLoader` and stored in appropriate registries,
 * these registries are queried for serializers during serialization of `TransactionState` and `CommandData`.
 
+#### Limitations
+Although Kotlinx serialization enables serialization of enum classes and objects, we currently do not support them.
+The main reason is that ann appropriate translation mechanism between the Kotlin enums/objects and Zinc enums/objects
+is currently absent. Implementation of such a translation is feasible but is left out scope due to time constraints.
+
 [serde48]: https://docs.r3.com/en/platform/corda/4.8/enterprise/serialization.html
 [pluggable_serializers]: https://docs.r3.com/en/platform/corda/4.8/open-source/cordapp-custom-serializers.html
 [custom_serde]: https://docs.r3.com/en/api-ref/corda/4.8/open-source/kotlin/corda/net.corda.core.serialization/-custom-serialization-scheme/deserialize.html
