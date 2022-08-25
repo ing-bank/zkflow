@@ -7,9 +7,6 @@ schedules:
     include:
     - master
     
-pool:
-  name: NeoZKP
-
 steps:
   # This should be amended to download from Azure artifacts once that is set up for the Zinc repo.
   #  - task: DownloadGitHubRelease@0
