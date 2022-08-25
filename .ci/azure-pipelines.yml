@@ -4,9 +4,6 @@ trigger:
       - master
         #      - feature/* # Already covered by branch validation rules on master
 
-pool:
-  name: NeoZKP
-
 variables:
   GRADLE_USER_HOME: $(Pipeline.Workspace)/.gradle
 
