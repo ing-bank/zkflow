@@ -181,7 +181,6 @@ subprojects {
             apply("com.diffplug.spotless")
             apply("idea")
             apply("com.github.spotbugs")
-            apply("com.github.jk1.dependency-license-report")
         }
 
         // Load the necessary dependencies
@@ -207,16 +206,21 @@ subprojects {
             add("testCompileOnly", "com.github.spotbugs:spotbugs-annotations:4.5.3")
         }
 
-        configure<LicenseReportExtension> {
-            renderers = arrayOf<ReportRenderer>(
-                com.github.jk1.license.render.InventoryHtmlReportRenderer(),
-                com.github.jk1.license.render.InventoryReportRenderer()
-            )
-            filters = arrayOf<DependencyFilter>(
-                com.github.jk1.license.filter.ExcludeTransitiveDependenciesFilter()
-            )
-            allowedLicensesFile = rootProject.projectDir.resolve("config/allowed-licenses.json")
-            excludeGroups = arrayOf("com.ing.zkflow")
+        if (!subproject.path.startsWith(":integration-tests")) {
+            plugins.apply {
+                apply("com.github.jk1.dependency-license-report")
+            }
+            configure<LicenseReportExtension> {
+                renderers = arrayOf<ReportRenderer>(
+                    com.github.jk1.license.render.InventoryHtmlReportRenderer(),
+                    com.github.jk1.license.render.InventoryReportRenderer()
+                )
+                filters = arrayOf<DependencyFilter>(
+                    com.github.jk1.license.filter.LicenseBundleNormalizer(),
+                    com.github.jk1.license.filter.ExcludeTransitiveDependenciesFilter()
+                )
+                allowedLicensesFile = rootProject.projectDir.resolve("config/allowed-licenses.json")
+            }
         }
 
         configure<com.github.spotbugs.snom.SpotBugsExtension> {

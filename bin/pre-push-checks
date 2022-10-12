@@ -26,7 +26,7 @@ function fail_all_if_failed() {
   fi
 }
 
-clean="clean cleanTest --no-build-cache"
+clean="clean cleanTest --no-build-cache --no-daemon"
 if [ "$1" == "--noclean" ]; then clean=""; fi
 
 fail_all_if_failed \
