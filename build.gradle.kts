@@ -1,3 +1,6 @@
+import com.github.jk1.license.LicenseReportExtension
+import com.github.jk1.license.filter.DependencyFilter
+import com.github.jk1.license.render.ReportRenderer
 import java.io.ByteArrayOutputStream
 
 buildscript {
@@ -7,10 +10,10 @@ buildscript {
             google()
             mavenCentral()
             jcenter()
-            maven("https://jitpack.io")
             maven("https://repo.gradle.org/gradle/libs-releases")
             maven("https://software.r3.com/artifactory/corda")
             maven("https://plugins.gradle.org/m2/")
+            maven("https://jitpack.io")
         }
     }
 
@@ -26,6 +29,7 @@ plugins {
     id("org.owasp.dependencycheck") version "6.1.1"
     jacoco
     id("com.github.spotbugs") version "4.8.0" apply false
+    id("com.github.jk1.dependency-license-report") apply false
 }
 
 repositories {
@@ -168,7 +172,7 @@ subprojects {
     val repos: groovy.lang.Closure<RepositoryHandler> by rootProject.extra
     repositories(repos)
 
-    val subproject = this
+    val subproject: Project = this
 
     // If a subproject has the Java plugin loaded, we set the test config on it.
     plugins.withType(JavaPlugin::class.java) {
@@ -177,7 +181,7 @@ subprojects {
             apply("com.diffplug.spotless")
             apply("idea")
             apply("com.github.spotbugs")
-
+            apply("com.github.jk1.dependency-license-report")
         }
 
         // Load the necessary dependencies
@@ -199,7 +203,20 @@ subprojects {
             add("testImplementation", "io.mockk:mockk:$mockkVersion")
 
             add("spotbugsPlugins", "com.h3xstream.findsecbugs:findsecbugs-plugin:1.11.0")
-            add("implementation", "com.github.spotbugs:spotbugs-annotations:4.5.3")
+            add("compileOnly", "com.github.spotbugs:spotbugs-annotations:4.5.3")
+            add("testCompileOnly", "com.github.spotbugs:spotbugs-annotations:4.5.3")
+        }
+
+        configure<LicenseReportExtension> {
+            renderers = arrayOf<ReportRenderer>(
+                com.github.jk1.license.render.InventoryHtmlReportRenderer(),
+                com.github.jk1.license.render.InventoryReportRenderer()
+            )
+            filters = arrayOf<DependencyFilter>(
+                com.github.jk1.license.filter.ExcludeTransitiveDependenciesFilter()
+            )
+            allowedLicensesFile = rootProject.projectDir.resolve("config/allowed-licenses.json")
+            excludeGroups = arrayOf("com.ing.zkflow")
         }
 
         configure<com.github.spotbugs.snom.SpotBugsExtension> {

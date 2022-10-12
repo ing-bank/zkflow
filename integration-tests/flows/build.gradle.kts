@@ -1,6 +1,6 @@
 plugins {
     kotlin("jvm")
-    id("net.corda.plugins.quasar-utils")
+    id("net.corda.plugins.quasar-utils") version "5.0.12"
     kotlin("plugin.serialization")
     id("com.google.devtools.ksp") version "1.5.31-1.0.0"
 }

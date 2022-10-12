@@ -1,0 +1,44 @@
+{
+  "allowedLicenses": [
+    {
+      "moduleLicense": "The Apache License, Version 2.0"
+    },
+    {
+      "moduleLicense": "The Apache Software License, Version 2.0"
+    },
+    {
+      "moduleLicense": "Apache-2.0"
+    },
+    {
+      "moduleLicense": "Apache License, Version 2.0"
+    },
+    {
+      "moduleLicense": "Eclipse Public License - v 1.0"
+    },
+    {
+      "actualLicense": "Apache 2.0",
+      "moduleLicense": null,
+      "moduleName": "com.ing.dlt:zkkrypto"
+    },
+    {
+      "actualLicense": "Apache 2.0",
+      "moduleLicense": null,
+      "moduleName": "com.google.devtools.ksp:com.google.devtools.ksp.gradle.plugin"
+    },
+    {
+      "actualLicense": "Apache 2.0",
+      "moduleLicense": null,
+      "moduleName": "org.jetbrains.kotlin.plugin.serialization:org.jetbrains.kotlin.plugin.serialization.gradle.plugin"
+    },
+    {
+      "actualLicense": "Apache 2.0",
+      "moduleLicense": null,
+      "moduleName": "org.jetbrains.kotlinx:kotlinx-serialization-json"
+    },
+    {
+      "actualLicense": "Apache 2.0",
+      "moduleLicense": null,
+      "moduleName": "org.jetbrains.kotlinx:kotlinx-serialization-core"
+    }
+  ]
+}
