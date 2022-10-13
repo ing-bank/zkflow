@@ -26,12 +26,12 @@ function fail_all_if_failed() {
   fi
 }
 
-clean="clean cleanTest --no-build-cache"
+clean="clean cleanTest --no-build-cache --no-daemon"
 if [ "$1" == "--noclean" ]; then clean=""; fi
 
 fail_all_if_failed \
   "Build with Gradle" \
-  "./gradlew $clean check test testReport jacocoRootReport --stacktrace"
+  "./gradlew $clean check test testReport jacocoRootReport checkLicense --stacktrace"
 
 fail_all_if_failed \
   "sample-zkdapp - Build with Gradle" \

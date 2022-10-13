@@ -20,9 +20,6 @@ dependencies {
 
     implementation(project(":zinc-poet:zinc-code-generation"))
 
-    val junit5Version: String by project
-    implementation("org.junit.jupiter:junit-jupiter-params:$junit5Version")
-
     val kotestVersion: String by project
     implementation("io.kotest:kotest-assertions-core:$kotestVersion")
 }

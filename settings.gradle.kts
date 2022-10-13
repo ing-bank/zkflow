@@ -17,7 +17,9 @@ pluginManagement {
 
         val cordaGradlePluginsVersion: String by settings
         id("net.corda.plugins.cordapp") version cordaGradlePluginsVersion apply false
-        id("net.corda.plugins.quasar-utils") version cordaGradlePluginsVersion apply false
+
+        val licenseReportVersion: String by settings
+        id("com.github.jk1.dependency-license-report") version licenseReportVersion apply false
     }
 
     repositories { // Only for these plugins. Repos for other dependencies should be defined in build.gradle.kts

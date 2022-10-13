@@ -2,7 +2,6 @@ plugins {
     kotlin("jvm")
     id("idea")
     id("net.corda.plugins.cordapp")
-    id("net.corda.plugins.quasar-utils")
     id("maven-publish")
     id("java-library")
     kotlin("plugin.serialization")
