@@ -24,7 +24,9 @@ class ZKFlowPlugin : Plugin<Project> {
         project.plugins.withType(JavaPlugin::class.java) {
             // Add the required dependencies to consumer projects
             project.dependencies.add(IMPLEMENTATION, zkflowArtifact("protocol"))
-            // TODO zinc-code-generation is only needed at compile time, by the gradlePlugin, so compileOnly sounds better...
+
+            // zinc-code-generation is only needed at gradle build time, just after compileKotlin,
+            // by the tasks in this gradlePlugin that generate the zkp circuits
             project.dependencies.add(IMPLEMENTATION, zkflowArtifact("zinc-code-generation"))
 
             project.pluginManager.apply("org.jetbrains.kotlin.plugin.serialization")
@@ -61,6 +63,7 @@ class ZKFlowPlugin : Plugin<Project> {
         project.tasks.getByPath(COMPILE_KOTLIN) // .finalizedBy(VERIFY_ZKP_STRUCTURE)
         project.tasks.getByPath(VERIFY_ZKP_STRUCTURE).finalizedBy(GENERATE_ZINC_CIRCUITS)
         project.tasks.getByPath(ASSEMBLE).dependsOn(GENERATE_ZINC_CIRCUITS)
+        project.tasks.getByPath(COMPILE_KOTLIN).finalizedBy(GENERATE_ZINC_CIRCUITS)
     }
 
     companion object {

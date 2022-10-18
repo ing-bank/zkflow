@@ -1,6 +1,6 @@
 package com.ing.zinc.bfl
 
-import com.ing.zinc.naming.camelToSnakeCase
+import com.ing.zinc.naming.camelToZincSnakeCase
 import java.util.Locale
 
 interface BflStructField {
@@ -22,7 +22,7 @@ data class FieldWithParentStruct(
      * Generate a constant for this field with the given [suffix].
      */
     fun generateConstant(suffix: String): String {
-        val typeName = struct.id.camelToSnakeCase()
+        val typeName = struct.id.camelToZincSnakeCase()
         return "${typeName}_${name}_$suffix".toUpperCase(Locale.getDefault())
     }
 

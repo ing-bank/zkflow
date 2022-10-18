@@ -18,7 +18,16 @@ dependencies {
     testImplementation(project(":protocol"))
     testImplementation(project(":zinc-poet:zinc-code-generation"))
 
+    // We expect Corda to be on the class path for any CorDapp that uses ZKFlow.
     val cordaVersion: String by project
+    val cordaReleaseGroup: String by project
+    compileOnly("$cordaReleaseGroup:corda-core:$cordaVersion")
+    testImplementation("$cordaReleaseGroup:corda-core:$cordaVersion")
+    testImplementation("$cordaReleaseGroup:corda-test-utils:$cordaVersion")
+    testImplementation("$cordaReleaseGroup:corda-node-driver:$cordaVersion")
+
+    // Normally, on real CorDapps, all the below deps would be set by the ZKFlow gradle plugin.
+    // In the case of integration tests, we do it by hand.
     kotlinCompilerPluginClasspath("net.corda:corda-core:$cordaVersion")
     kotlinCompilerPluginClasspath(project(":utils"))
     kotlinCompilerPluginClasspath(project(":annotations"))

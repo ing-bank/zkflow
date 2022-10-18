@@ -1,6 +1,6 @@
 package com.ing.zkflow.zinc.poet.generate
 
-import com.ing.zinc.naming.camelToSnakeCase
+import com.ing.zinc.naming.camelToZincSnakeCase
 import com.ing.zinc.poet.ZincFile
 import com.ing.zinc.poet.ZincFile.Companion.zincFile
 import com.ing.zinc.poet.ZincPrimitive
@@ -60,7 +60,7 @@ private fun KFunction<Any>.tryGetUpgradeParameters(upgradedKClass: KClass<out An
             UpgradeParameters(
                 originalKClass,
                 getZincUpgradeBody(),
-                this.parameters[0].name?.camelToSnakeCase() ?: "previous"
+                this.parameters[0].name?.camelToZincSnakeCase() ?: "previous"
             )
         } else {
             null
@@ -107,7 +107,7 @@ private fun generateUpgradeVerification(
     val additionalChecks = findAdditionalChecks(upgraded.type)
     return zincFile {
         "CommandContext".let {
-            val moduleName = "module_" + it.camelToSnakeCase()
+            val moduleName = "module_" + it.camelToZincSnakeCase()
             mod { module = moduleName }
             use { path = "$moduleName::$it" }
             newLine()
@@ -125,9 +125,9 @@ private fun generateUpgradeVerification(
             }
             returnType = ZincPrimitive.Unit
             body = """
-                let input: ${originalModule.typeName()} = ctx.inputs.${originalModule.typeName().camelToSnakeCase()}_${original.index}.data;
+                let input: ${originalModule.typeName()} = ctx.inputs.${originalModule.typeName().camelToZincSnakeCase()}_${original.index}.data;
                 let output: ${upgradedModule.typeName()} = ctx.outputs.${
-            upgradedModule.typeName().camelToSnakeCase()
+            upgradedModule.typeName().camelToZincSnakeCase()
             }_${upgraded.index}.data;
 
                 assert!(output.equals(${upgradedModule.typeName()}::upgrade_from(input)), "[$commandName] Not a valid upgrade from ${originalModule.typeName()} to ${upgradedModule.typeName()}.");

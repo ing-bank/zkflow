@@ -1,9 +1,9 @@
 package com.ing.zkflow.notary
 
 import co.paralleluniverse.fibers.Suspendable
+import com.ing.zkflow.common.node.services.ServiceNames
+import com.ing.zkflow.common.node.services.getCordaServiceFromConfig
 import com.ing.zkflow.common.zkp.ZKFlow
-import com.ing.zkflow.node.services.ServiceNames
-import com.ing.zkflow.node.services.getCordaServiceFromConfig
 import com.ing.zkflow.notary.flows.ZKNotaryServiceFlow
 import net.corda.core.contracts.StateRef
 import net.corda.core.contracts.TimeWindow

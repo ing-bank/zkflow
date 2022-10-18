@@ -1,16 +1,17 @@
 package com.ing.zkflow.client.flows
 
 import co.paralleluniverse.fibers.Suspendable
+import com.ing.zkflow.common.flows.ResolveZKTransactionsFlow
+import com.ing.zkflow.common.node.services.ServiceNames
+import com.ing.zkflow.common.node.services.WritableUtxoInfoStorage
+import com.ing.zkflow.common.node.services.getCordaServiceFromConfig
 import com.ing.zkflow.common.transactions.NotarisedTransactionPayload
 import com.ing.zkflow.common.transactions.SignedZKVerifierTransaction
 import com.ing.zkflow.common.transactions.UtxoInfo
 import com.ing.zkflow.common.transactions.dependencies
 import com.ing.zkflow.common.transactions.fetchMissingAttachments
-import com.ing.zkflow.common.transactions.zkVerify
+import com.ing.zkflow.common.transactions.verification.zkVerify
 import com.ing.zkflow.common.zkp.ZKTransactionService
-import com.ing.zkflow.node.services.ServiceNames
-import com.ing.zkflow.node.services.WritableUtxoInfoStorage
-import com.ing.zkflow.node.services.getCordaServiceFromConfig
 import net.corda.core.contracts.AttachmentResolutionException
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.StateAndRef

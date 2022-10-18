@@ -9,7 +9,7 @@ import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import io.kotest.matchers.shouldBe
 import net.corda.core.contracts.ContractState
 import net.corda.core.identity.AbstractParty
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class BFLSerializationRegistrationTest {
     @Test

@@ -1,7 +1,7 @@
 package com.ing.zkflow.notary.flows
 
 import co.paralleluniverse.fibers.Suspendable
-import com.ing.zkflow.client.flows.ResolveZKTransactionsFlow
+import com.ing.zkflow.common.flows.ResolveZKTransactionsFlow
 import com.ing.zkflow.common.transactions.ZKVerifierTransaction
 import com.ing.zkflow.common.transactions.dependencies
 import com.ing.zkflow.common.transactions.verification.ZKTransactionVerifierService

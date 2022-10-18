@@ -7,9 +7,16 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":protocol"))
+    implementation(project(":utils"))
+    implementation(project(":common"))
+    implementation(project(":annotations"))
+    implementation(project(":serialization"))
     implementation(project(":zinc-poet:zinc-poet"))
     implementation(kotlin("stdlib"))
+
+    val cordaVersion: String by project
+    compileOnly("net.corda:corda-core:$cordaVersion")
+    testImplementation("net.corda:corda-core:$cordaVersion")
 
     val kspVersion: String by project
     implementation("com.google.devtools.ksp:symbol-processing-api:$kspVersion")

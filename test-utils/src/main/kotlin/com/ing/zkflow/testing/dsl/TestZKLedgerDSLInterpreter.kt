@@ -1,11 +1,11 @@
 
 import com.ing.zkflow.common.network.ZKNetworkParameters
+import com.ing.zkflow.common.node.services.ZKWritableVerifierTransactionStorage
 import com.ing.zkflow.common.transactions.SignedZKVerifierTransaction
 import com.ing.zkflow.common.transactions.ZKTransactionBuilder
 import com.ing.zkflow.common.transactions.ZKVerifierTransaction
-import com.ing.zkflow.common.transactions.zkVerify
+import com.ing.zkflow.common.transactions.verification.zkVerify
 import com.ing.zkflow.common.zkp.ZKTransactionService
-import com.ing.zkflow.node.services.ZKWritableVerifierTransactionStorage
 import com.ing.zkflow.testing.dsl.TestZKTransactionDSLInterpreter
 import com.ing.zkflow.testing.dsl.interfaces.AttachmentResolutionException
 import com.ing.zkflow.testing.dsl.interfaces.DoubleSpentInputs

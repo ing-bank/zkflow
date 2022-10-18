@@ -4,16 +4,18 @@ import com.example.contract.audit.AuditContract
 import com.example.contract.cbdc.CBDCToken
 import com.example.contract.cbdc.commands.IssuePrivate
 import com.example.contract.cbdc.commands.MovePrivate
+import com.example.contract.cbdc.commands.RedeemPrivate
 import com.example.contract.cbdc.commands.SplitPrivate
 import com.example.contract.cbdc.digitalEuro
+import com.ing.zkflow.common.node.services.InMemoryZKVerifierTransactionStorageCordaService
+import com.ing.zkflow.common.node.services.ServiceNames.ZK_TX_SERVICE
+import com.ing.zkflow.common.node.services.ServiceNames.ZK_UTXO_INFO_STORAGE
+import com.ing.zkflow.common.node.services.ServiceNames.ZK_VERIFIER_TX_STORAGE
 import com.ing.zkflow.common.zkp.ZKFlow
 import com.ing.zkflow.common.zkp.ZKTransactionService
-import com.ing.zkflow.node.services.InMemoryUtxoInfoStorage
-import com.ing.zkflow.node.services.InMemoryZKVerifierTransactionStorageCordaService
-import com.ing.zkflow.node.services.ServiceNames.ZK_TX_SERVICE
-import com.ing.zkflow.node.services.ServiceNames.ZK_UTXO_INFO_STORAGE
-import com.ing.zkflow.node.services.ServiceNames.ZK_VERIFIER_TX_STORAGE
-import com.ing.zkflow.node.services.getCordaServiceFromConfig
+import com.ing.zkflow.common.node.services.InMemoryUtxoInfoStorage
+import com.ing.zkflow.common.node.services.getCordaServiceFromConfig
+import com.ing.zkflow.common.zkp.zinc.ZincZKTransactionCordaService
 import com.ing.zkflow.notary.ZKNotaryService
 import com.ing.zkflow.testing.checkIsPresentInVault
 import com.ing.zkflow.testing.checkIsPubliclyPresentInZKStorage
@@ -104,6 +106,7 @@ class PrivateCBDCTokenFlowTest {
         zkTransactionService.setup(IssuePrivate().metadata)
         zkTransactionService.setup(MovePrivate().metadata)
         zkTransactionService.setup(SplitPrivate().metadata)
+        zkTransactionService.setup(RedeemPrivate().metadata)
     }
 
     @AfterAll

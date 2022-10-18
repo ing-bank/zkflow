@@ -2,13 +2,13 @@ package com.ing.zkflow.ksp.upgrade
 
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.symbol.KSClassDeclaration
-import com.ing.zinc.naming.camelToSnakeCase
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.common.contracts.ZKUpgradeCommandData
 import com.ing.zkflow.common.versioning.generateUpgradeCommandClassName
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.ksp.versioning.VersionedCommandIdGenerator
 import com.ing.zkflow.processors.serialization.SerializerProviderGenerator.SerializableClassWithSourceFiles
+import com.ing.zkflow.util.camelToSnakeCase
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec

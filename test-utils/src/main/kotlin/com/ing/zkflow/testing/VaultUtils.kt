@@ -1,9 +1,9 @@
 package com.ing.zkflow.testing
 
-import com.ing.zkflow.node.services.ServiceNames
-import com.ing.zkflow.node.services.ZKTransactionResolutionException
-import com.ing.zkflow.node.services.ZKVerifierTransactionStorage
-import com.ing.zkflow.node.services.getCordaServiceFromConfig
+import com.ing.zkflow.common.node.services.ServiceNames
+import com.ing.zkflow.common.node.services.ZKTransactionResolutionException
+import com.ing.zkflow.common.node.services.ZKVerifierTransactionStorage
+import com.ing.zkflow.common.node.services.getCordaServiceFromConfig
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import net.corda.core.contracts.ComponentGroupEnum

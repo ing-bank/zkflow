@@ -3,13 +3,13 @@ package com.ing.zkflow.integration.client.flows
 import co.paralleluniverse.fibers.Suspendable
 import com.ing.zkflow.client.flows.ZKCollectSignaturesFlow
 import com.ing.zkflow.client.flows.ZKSignTransactionFlow
+import com.ing.zkflow.common.node.services.ServiceNames
+import com.ing.zkflow.common.node.services.getCordaServiceFromConfig
 import com.ing.zkflow.common.transactions.SignedZKVerifierTransaction
 import com.ing.zkflow.common.transactions.ZKTransactionBuilder
 import com.ing.zkflow.common.transactions.signInitialTransaction
 import com.ing.zkflow.common.zkp.ZKTransactionService
 import com.ing.zkflow.integration.contract.TestContract
-import com.ing.zkflow.node.services.ServiceNames
-import com.ing.zkflow.node.services.getCordaServiceFromConfig
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.StateAndContract
 import net.corda.core.contracts.requireThat

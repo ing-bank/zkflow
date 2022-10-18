@@ -20,6 +20,9 @@ pluginManagement {
 
         val licenseReportVersion: String by settings
         id("com.github.jk1.dependency-license-report") version licenseReportVersion apply false
+
+        val shadowPluginVersion: String by settings
+        id("com.github.johnrengelman.shadow") version shadowPluginVersion apply false
     }
 
     repositories { // Only for these plugins. Repos for other dependencies should be defined in build.gradle.kts
@@ -32,6 +35,7 @@ pluginManagement {
 }
 
 include("utils")
+include("common")
 include("crypto")
 include("protocol")
 include("gradle-plugin")

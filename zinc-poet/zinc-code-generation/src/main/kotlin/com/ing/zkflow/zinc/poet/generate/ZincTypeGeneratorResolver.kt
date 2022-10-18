@@ -5,8 +5,8 @@ import com.ing.zinc.bfl.BflStruct
 import com.ing.zinc.poet.ZincFunction.Companion.zincFunction
 import com.ing.zinc.poet.ZincType.Companion.id
 import com.ing.zinc.poet.ZincType.Self
-import com.ing.zkflow.common.serialization.zinc.generation.getSerialDescriptor
-import com.ing.zkflow.common.serialization.zinc.generation.zincTypeName
+import com.ing.zkflow.serialization.getSerialDescriptor
+import com.ing.zkflow.serialization.zincTypeName
 import com.ing.zkflow.util.requireInstanceOf
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory

@@ -1,9 +1,9 @@
 package com.ing.zkflow.testing.dsl.interfaces
 
 import com.ing.zkflow.common.network.ZKNetworkParameters
+import com.ing.zkflow.common.node.services.ZKWritableVerifierTransactionStorage
 import com.ing.zkflow.common.transactions.ZKTransactionBuilder
 import com.ing.zkflow.common.zkp.ZKTransactionService
-import com.ing.zkflow.node.services.ZKWritableVerifierTransactionStorage
 import net.corda.core.DoNotImplement
 import net.corda.core.crypto.SecureHash
 import net.corda.core.transactions.WireTransaction

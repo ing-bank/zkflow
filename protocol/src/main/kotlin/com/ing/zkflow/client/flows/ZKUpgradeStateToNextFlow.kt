@@ -1,13 +1,13 @@
 package com.ing.zkflow.client.flows
 
 import co.paralleluniverse.fibers.Suspendable
+import com.ing.zkflow.common.node.services.ServiceNames
+import com.ing.zkflow.common.node.services.ZKVerifierTransactionStorage
+import com.ing.zkflow.common.node.services.getCordaServiceFromConfig
 import com.ing.zkflow.common.transactions.ZKTransactionBuilder
 import com.ing.zkflow.common.transactions.signInitialTransaction
 import com.ing.zkflow.common.versioning.ContractStateVersionFamilyRegistry
 import com.ing.zkflow.common.versioning.VersionedContractStateGroup
-import com.ing.zkflow.node.services.ServiceNames
-import com.ing.zkflow.node.services.ZKVerifierTransactionStorage
-import com.ing.zkflow.node.services.getCordaServiceFromConfig
 import com.ing.zkflow.util.requireNotNull
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.contracts.ContractState

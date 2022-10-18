@@ -17,9 +17,12 @@ dependencies {
     implementation(project(":test-utils"))
     implementation(project(":protocol"))
 
+    // We expect Corda to be on the class path for any CorDapp that uses ZKFlow.
     val cordaVersion: String by project
     compileOnly("net.corda:corda-core:$cordaVersion")
 
+    // Normally, on real CorDapps, all the below deps would be set by the ZKFlow gradle plugin.
+    // In the case of integration tests, we do it by hand.
     val kotlinxSerializationVersion: String by project
     kotlinCompilerPluginClasspath("net.corda:corda-core:$cordaVersion")
     kotlinCompilerPluginClasspath(project(":utils"))

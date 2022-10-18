@@ -16,7 +16,7 @@ import com.ing.zkflow.Via
 import com.ing.zkflow.annotations.ZKPSurrogate
 import com.ing.zkflow.annotations.corda.Algorithm
 import com.ing.zkflow.annotations.corda.SignatureSpec
-import com.ing.zkflow.common.serialization.zinc.generation.buildFullyDistinguishableClassName
+import com.ing.zkflow.util.buildFullyDistinguishableClassName
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy

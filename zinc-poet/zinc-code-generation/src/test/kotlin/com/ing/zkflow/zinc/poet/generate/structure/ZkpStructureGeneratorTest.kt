@@ -1,7 +1,7 @@
 package com.ing.zkflow.zinc.poet.generate.structure
 
 import com.ing.zkflow.Surrogate
-import com.ing.zkflow.common.serialization.zinc.generation.getSerialDescriptor
+import com.ing.zkflow.serialization.getSerialDescriptor
 import com.ing.zkflow.zinc.poet.generate.ClassWithAnonymousParty
 import com.ing.zkflow.zinc.poet.generate.ClassWithAnonymousPartySerializer
 import com.ing.zkflow.zinc.poet.generate.ClassWithAsciiChar

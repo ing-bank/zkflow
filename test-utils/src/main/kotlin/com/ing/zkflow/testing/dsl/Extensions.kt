@@ -2,12 +2,12 @@ package com.ing.zkflow.testing.dsl
 
 import TestZKLedgerDSLInterpreter
 import com.ing.zkflow.common.network.ZKNetworkParameters
+import com.ing.zkflow.common.node.services.InMemoryZKVerifierTransactionStorage
+import com.ing.zkflow.common.node.services.ZKWritableVerifierTransactionStorage
 import com.ing.zkflow.common.serialization.CommandDataSerializerRegistry
 import com.ing.zkflow.common.zkp.ZKTransactionService
-import com.ing.zkflow.node.services.InMemoryZKVerifierTransactionStorage
-import com.ing.zkflow.node.services.ZKWritableVerifierTransactionStorage
+import com.ing.zkflow.serialization.DummyCommandDataSerializer
 import com.ing.zkflow.serialization.register
-import com.ing.zkflow.serialization.serializer.corda.DummyCommandDataSerializer
 import com.ing.zkflow.testing.dsl.services.TestDSLZincZKTransactionService
 import com.ing.zkflow.testing.zkp.MockZKNetworkParameters
 import com.ing.zkflow.util.tryNonFailing

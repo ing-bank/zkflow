@@ -1,6 +1,6 @@
 package com.ing.zkflow.testing
 
-import com.ing.zkflow.common.zkp.ZincZKService
+import com.ing.zkflow.common.zkp.zinc.ZincZKService
 import com.ing.zkflow.testing.zkp.ZKNulls.fixedKeyPair
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.add

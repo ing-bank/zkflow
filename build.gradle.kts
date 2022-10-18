@@ -342,6 +342,11 @@ subprojects {
                 // This makes the JAR's SHA-256 hash repeatable.
                 isPreserveFileTimestamps = false
                 isReproducibleFileOrder = true
+                exclude("**/module-info.class")
+                exclude("README.txt")
+                exclude("LICENSE")
+                exclude("LICENSE-junit.txt")
+                exclude("log4j2-test.xml")
             }
 
             withType<Test> {

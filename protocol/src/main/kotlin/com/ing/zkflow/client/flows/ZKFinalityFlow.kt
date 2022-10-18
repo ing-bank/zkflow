@@ -1,13 +1,13 @@
 package com.ing.zkflow.client.flows
 
 import co.paralleluniverse.fibers.Suspendable
+import com.ing.zkflow.common.node.services.ServiceNames
+import com.ing.zkflow.common.node.services.getCordaServiceFromConfig
 import com.ing.zkflow.common.transactions.NotarisedTransactionPayload
 import com.ing.zkflow.common.transactions.PrivateNotarisedTransactionPayload
 import com.ing.zkflow.common.transactions.SignedZKVerifierTransaction
-import com.ing.zkflow.common.transactions.prove
 import com.ing.zkflow.common.transactions.resolvePublicOrPrivateStateRef
-import com.ing.zkflow.node.services.ServiceNames
-import com.ing.zkflow.node.services.getCordaServiceFromConfig
+import com.ing.zkflow.common.transactions.verification.prove
 import net.corda.core.crypto.SecureHash
 import net.corda.core.crypto.isFulfilledBy
 import net.corda.core.flows.FinalityFlow

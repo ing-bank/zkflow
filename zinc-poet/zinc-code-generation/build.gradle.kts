@@ -10,14 +10,18 @@ plugins {
 dependencies {
     implementation(project(":utils"))
     api(project(":zinc-poet:zinc-bfl"))
-    implementation(project(":protocol"))
-    implementation(project(":compiler-plugin-ksp"))
+    implementation(project(":common"))
+    implementation(project(":serialization"))
+    implementation(project(":annotations"))
 
     val kotlinxSerializationVersion: String by project
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:$kotlinxSerializationVersion")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
 
     val cordaVersion: String by project
+    compileOnly("net.corda:corda-core:$cordaVersion")
+    testImplementation("net.corda:corda-core:$cordaVersion")
+
     kotlinCompilerPluginClasspath("net.corda:corda-core:$cordaVersion")
     kotlinCompilerPluginClasspath(project(":utils"))
     kotlinCompilerPluginClasspath(project(":annotations"))

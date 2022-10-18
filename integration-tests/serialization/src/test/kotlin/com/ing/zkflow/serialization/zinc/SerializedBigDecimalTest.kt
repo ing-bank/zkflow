@@ -14,7 +14,7 @@ import com.ing.zinc.poet.ZincType
 import com.ing.zinc.poet.indent
 import com.ing.zkflow.annotations.BigDecimalSize
 import com.ing.zkflow.annotations.ZKP
-import com.ing.zkflow.common.serialization.zinc.json.toUnsignedBitString
+import com.ing.zkflow.common.zkp.zinc.serialization.json.toUnsignedBitString
 import com.ing.zkflow.serialization.scheme.BinaryFixedLengthScheme
 import com.ing.zkflow.serialization.scheme.ByteBinaryFixedLengthScheme
 import com.ing.zkflow.util.ensureDirectory

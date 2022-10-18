@@ -7,7 +7,7 @@ import com.ing.zinc.bfl.BflType
 import com.ing.zinc.bfl.BflWrappedTransactionComponent
 import com.ing.zinc.bfl.CORDA_MAGIC_BYTES_SIZE
 import com.ing.zinc.bfl.dsl.ArrayBuilder.Companion.array
-import com.ing.zinc.naming.camelToSnakeCase
+import com.ing.zinc.naming.camelToZincSnakeCase
 import com.ing.zinc.poet.ZincPrimitive
 
 @BflDslMarker
@@ -39,7 +39,7 @@ class WrappedTransactionComponentBuilder {
      * This is done to prevent generation of unused structs in the circuit folder.
      */
     fun metadata(type: BflType) {
-        return metadata(type, type.typeName().camelToSnakeCase())
+        return metadata(type, type.typeName().camelToZincSnakeCase())
     }
 
     /**
@@ -79,7 +79,7 @@ class WrappedTransactionComponentBuilder {
         fun wrappedTransactionComponent(init: WrappedTransactionComponentBuilder.() -> Unit): BflWrappedTransactionComponent = WrappedTransactionComponentBuilder().apply(init).build()
 
         private fun getFieldNameFor(type: BflType): String {
-            return type.typeName().camelToSnakeCase().let {
+            return type.typeName().camelToZincSnakeCase().let {
                 if (ZincPrimitive.isPrimitiveIdentifier(it)) {
                     "${it}_field"
                 } else {

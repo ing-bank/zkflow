@@ -1,10 +1,10 @@
 package com.ing.zkflow.integration.client.flows
 
-import com.ing.zkflow.node.services.InMemoryUtxoInfoStorage
-import com.ing.zkflow.node.services.InMemoryZKVerifierTransactionStorageCordaService
-import com.ing.zkflow.node.services.ServiceNames.ZK_TX_SERVICE
-import com.ing.zkflow.node.services.ServiceNames.ZK_UTXO_INFO_STORAGE
-import com.ing.zkflow.node.services.ServiceNames.ZK_VERIFIER_TX_STORAGE
+import com.ing.zkflow.common.node.services.InMemoryUtxoInfoStorage
+import com.ing.zkflow.common.node.services.InMemoryZKVerifierTransactionStorageCordaService
+import com.ing.zkflow.common.node.services.ServiceNames.ZK_TX_SERVICE
+import com.ing.zkflow.common.node.services.ServiceNames.ZK_UTXO_INFO_STORAGE
+import com.ing.zkflow.common.node.services.ServiceNames.ZK_VERIFIER_TX_STORAGE
 import com.ing.zkflow.testing.zkp.MockZKTransactionCordaService
 import io.kotest.matchers.shouldBe
 import net.corda.core.identity.CordaX500Name

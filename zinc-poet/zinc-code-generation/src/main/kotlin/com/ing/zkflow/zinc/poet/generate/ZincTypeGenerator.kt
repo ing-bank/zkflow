@@ -14,9 +14,9 @@ import com.ing.zinc.bfl.dsl.ListBuilder.Companion.string
 import com.ing.zinc.bfl.dsl.MapBuilder.Companion.map
 import com.ing.zinc.bfl.dsl.OptionBuilder.Companion.option
 import com.ing.zinc.bfl.dsl.StructBuilder.Companion.struct
-import com.ing.zinc.naming.camelToSnakeCase
-import com.ing.zkflow.common.serialization.zinc.generation.internalTypeName
+import com.ing.zinc.naming.camelToZincSnakeCase
 import com.ing.zkflow.serialization.FixedLengthType
+import com.ing.zkflow.serialization.internalTypeName
 import com.ing.zkflow.serialization.serializer.BigDecimalSizeAnnotation
 import com.ing.zkflow.serialization.serializer.FixedLengthFloatingPointSerializer
 import com.ing.zkflow.serialization.serializer.SizeAnnotation
@@ -99,7 +99,7 @@ object ZincTypeGenerator {
         name = descriptor.internalTypeName
         (0 until descriptor.elementsCount).mapNotNull { elementIndex ->
             field {
-                name = descriptor.getElementName(elementIndex).camelToSnakeCase()
+                name = descriptor.getElementName(elementIndex).camelToZincSnakeCase()
                 type = generate(descriptor.getElementDescriptor(elementIndex))
             }
         }
