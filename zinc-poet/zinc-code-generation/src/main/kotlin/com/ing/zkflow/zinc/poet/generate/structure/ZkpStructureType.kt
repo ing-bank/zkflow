@@ -97,8 +97,8 @@ data class ZkpStructureClass(
     val fields: List<ZkpStructureField>,
 ) : ZkpStructureType() {
     init {
-        require(byteSize == fields.sumOf { it.fieldType.byteSize }) {
-            "Sum of all the fields (${fields.sumOf { it.fieldType.byteSize }}) MUST equal $byteSize"
+        require(byteSize == fields.sumBy { it.fieldType.byteSize }) {
+            "Sum of all the fields (${fields.sumBy { it.fieldType.byteSize }}) MUST equal $byteSize"
         }
     }
 

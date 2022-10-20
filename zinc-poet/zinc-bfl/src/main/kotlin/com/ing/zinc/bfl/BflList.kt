@@ -19,7 +19,7 @@ open class BflList(
     open val capacity: Int,
     val elementType: BflType,
     id: String,
-    val sizeType: BflPrimitive = BflPrimitive.U32
+    val sizeType: BflPrimitive = BflPrimitive.I32
 ) : BflStruct(
     id,
     listOf(
@@ -54,7 +54,7 @@ open class BflList(
                 when (it) {
                     is BflArray -> listOf(it.elementType)
                     else -> listOf(it)
-                }
+                }.asSequence()
             }
             .distinctBy { it.id }
             .filterIsInstance<BflModule>()

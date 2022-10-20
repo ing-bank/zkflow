@@ -327,7 +327,6 @@ class ZKPAnnotatedValidator(@Suppress("unused") private val logger: KSPLogger) :
             AutomaticHashConstraint::class.qualifiedName, AutomaticPlaceholderConstraint::class.qualifiedName -> true
             CordaX500Name::class.qualifiedName, Instant::class.qualifiedName,
             StateRef::class.qualifiedName, TimeWindow::class.qualifiedName, UUID::class.qualifiedName -> true
-            UByte::class.qualifiedName, UInt::class.qualifiedName, ULong::class.qualifiedName, UShort::class.qualifiedName -> true
             else -> false
         }
     }

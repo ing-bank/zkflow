@@ -20,8 +20,8 @@ import org.apache.activemq.artemis.api.core.ActiveMQSecurityException
 import java.time.Duration
 import kotlin.concurrent.thread
 
-class ZkdappTesterRpcClient(nodeUrlAndPort: String, val user: String, val password: String) {
-    private val log = loggerFor<ZkdappTesterRpcClient>()
+class SampleZKDappRPCClient(nodeUrlAndPort: String, val user: String, val password: String) {
+    private val log = loggerFor<SampleZKDappRPCClient>()
 
     private val nodeAddress = parse(nodeUrlAndPort)
 
@@ -136,24 +136,4 @@ class ZkdappTesterRpcClient(nodeUrlAndPort: String, val user: String, val passwo
         }
         error(errorMessage)
     }
-
-//    // This function is a wrapper to run proxy.vaultQueryBy with exception handling
-//    private inline fun <reified T : ContractState> proxyVaultQueryBy(
-//        proxy: CordaRPCOps,
-//        criteria: QueryCriteria = QueryCriteria.VaultQueryCriteria(),
-//        paging: PageSpecification = PageSpecification(),
-//        sorting: Sort = Sort(emptySet())
-//    ): Vault.Page<T> {
-//        try {
-//            return proxy.vaultQueryBy(criteria, paging, sorting)
-//        } catch (e: Exception) {
-//            when (e) {
-//                is RPCException, is ActiveMQSecurityException -> {
-//                    performRPCReconnect()
-//                    throw IllegalStateException("RPCClient is connection lost. Trying to reconnect")
-//                }
-//                else -> throw e
-//            }
-//        }
-//    }
 }

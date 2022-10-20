@@ -5,6 +5,7 @@ import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.Party
+import net.corda.core.serialization.CordaSerializable
 
 /** Contains common token properties and functionality. */
 interface AbstractToken : ContractState {

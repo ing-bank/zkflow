@@ -49,7 +49,6 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
         jvmTarget = "1.8"
         freeCompilerArgs += "-Xopt-in=kotlinx.serialization.ExperimentalSerializationApi"
         freeCompilerArgs += "-Xopt-in=kotlinx.serialization.InternalSerializationApi"
-        freeCompilerArgs += "-Xopt-in=kotlin.ExperimentalUnsignedTypes"
     }
 }
 

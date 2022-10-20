@@ -5,7 +5,7 @@ buildscript {
 }
 
 plugins {
-    kotlin("jvm") version "1.5.31"
+    kotlin("jvm") version "1.3.72"
     id("com.ing.zkflow.gradle-plugin") version "1.0-SNAPSHOT"
 
     id("net.corda.plugins.quasar-utils")  version "5.0.12"
@@ -31,6 +31,9 @@ cordapp {
     signing {
         enabled(false)
     }
+    sealing {
+        enabled(false)
+    }
 }
 
 repositories {
@@ -47,7 +50,7 @@ dependencies {
     // that is not enough?
     compile("com.ing.zkflow:protocol:1.0-SNAPSHOT")
 
-    val kotlinVersion = "1.5.31"
+    val kotlinVersion = "1.3.72"
     implementation("org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlinVersion")
@@ -55,7 +58,10 @@ dependencies {
 
     // TODO: Find a way to set this from the ZKFlowPlugin with correct version
     val kotlinxSerializationVersion = "1.3.1"
+    compile("org.jetbrains.kotlinx:kotlinx-serialization-core:$kotlinxSerializationVersion")
+    compile("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:$kotlinxSerializationVersion")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core-jvm:$kotlinxSerializationVersion")
     kotlinCompilerPluginClasspath("org.jetbrains.kotlinx:kotlinx-serialization-core:$kotlinxSerializationVersion")
 
     val cordaReleaseGroup = "net.corda"
@@ -76,24 +82,12 @@ dependencies {
     testImplementation("com.ing.zkflow:test-utils:1.0-SNAPSHOT")
 }
 
-// val publishZKFlow = tasks.register("publishZKFlow") {
-//     this.doFirst {
-//         exec {
-//             workingDir = projectDir.resolve("..")
-//             executable = "./gradlew"
-//             args = listOf("publishToMavenLocal", "--info")
-//         }
-//     }
-// }
-//
-// tasks.compileKotlin {
-//     dependsOn(publishZKFlow)
-// }
-//
-// tasks.compileTestKotlin {
-//     dependsOn(publishZKFlow)
-// }
-
+// TODO: Should this be done by the ZKFLow plugin?
+sourceSets {
+    main {
+        resources.srcDir(projectDir.resolve("build/zinc"))
+    }
+}
 
 tasks.test {
     useJUnitPlatform()
@@ -140,30 +134,18 @@ tasks.jar {
     exclude("log4j2-test.xml")
 }
 
-// apply(plugin = "net.corda.plugins.cordapp")
-// apply(plugin = "net.corda.plugins.cordformation")
-// apply(plugin = "net.corda.plugins.quasar-utils")
-//
-//Task to deploy the nodes in order to bootstrap a network
 tasks.register<net.corda.plugins.Cordform>("deployNodes") {
     dependsOn("jar")
 
-    /* This property will load the CorDapps to each of the node by default, including the Notary. You can find them
-     * in the cordapps folder of the node at build/nodes/Notary/cordapps. However, the notary doesn't really understand
-     * the notion of cordapps. In production, Notary does not need cordapps as well. This is just a short cut to load
-     * the Corda network bootstrapper.
-     */
     nodeDefaults{
         projectCordapp{
             deploy = true
-            config(project.file("app-config-mock.conf"))
+            config(projectDir.resolve("config/app-config-rpc-test.conf"))
         }
-        runSchemaMigration = true //This configuration is for any CorDapps with custom schema, We will leave this as true to avoid
-        //problems for developers who are not familiar with Corda. If you are not using custom schemas, you can change
-        //it to false for quicker project compiling time.
+        runSchemaMigration = true
     }
     node {
-        name("O=Zknotary,L=London,C=GB")
+        name("O=ZKNotary,L=London,C=GB")
         notary = mapOf(Pair("validating", false))
         p2pPort(10001)
         rpcSettings {
@@ -172,7 +154,7 @@ tasks.register<net.corda.plugins.Cordform>("deployNodes") {
         }
     }
     node {
-        name("O=Zk1,L=London,C=GB")
+        name("O=Issuer,L=Amsterdam,C=NL")
         p2pPort(10101)
         rpcSettings {
             address("localhost:10102")
@@ -180,22 +162,4 @@ tasks.register<net.corda.plugins.Cordform>("deployNodes") {
         }
         rpcUsers = listOf(mapOf( Pair("user", "user1"), Pair("password", "test"), Pair("permissions", listOf("ALL"))))
     }
-//    node {
-//        name("O=Zk2,L=New York,C=US")
-//        p2pPort(10201)
-//        rpcSettings {
-//            address("localhost:10202")
-//            adminAddress("localhost:10203")
-//        }
-//        rpcUsers = listOf(mapOf( Pair("user", "user1"), Pair("password", "test"), Pair("permissions", listOf("ALL"))))
-//    }
-//    node {
-//        name("O=Zk3,L=New York,C=US")
-//        p2pPort(10301)
-//        rpcSettings {
-//            address("localhost:10302")
-//            adminAddress("localhost:10303")
-//        }
-//        rpcUsers = listOf(mapOf( Pair("user", "user1"), Pair("password", "test"), Pair("permissions", listOf("ALL"))))
-//    }
 }

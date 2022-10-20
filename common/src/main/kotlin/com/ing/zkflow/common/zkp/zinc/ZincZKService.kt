@@ -8,6 +8,9 @@ import com.ing.zkflow.common.zkp.ZKService
 import com.ing.zkflow.common.zkp.ZKVerificationException
 import com.ing.zkflow.common.zkp.zinc.serialization.json.PublicInputSerializer
 import com.ing.zkflow.common.zkp.zinc.serialization.json.WitnessSerializer
+import com.ing.zkflow.util.measureTime
+import com.ing.zkflow.util.measureTimedValue
+import com.ing.zkflow.util.toSecondsWithNanosString
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import kotlinx.serialization.json.Json
 import net.corda.core.utilities.loggerFor
@@ -18,8 +21,6 @@ import java.io.File.createTempFile
 import java.io.IOException
 import java.time.Duration
 import java.util.concurrent.TimeUnit
-import kotlin.time.measureTime
-import kotlin.time.measureTimedValue
 
 @Suppress("TooManyFunctions")
 @SuppressFBWarnings(
@@ -198,14 +199,14 @@ class ZincZKService(
         val time = measureTime {
             this.setup()
         }
-        log.debug("[setup] $time")
+        log.debug("[setup] ${time.toSecondsWithNanosString()}")
     }
 
     fun proveTimed(witnessJson: String, log: Logger = loggerForMyCaller): ByteArray {
         val timedValue = measureTimedValue {
             this.prove(witnessJson)
         }
-        log.debug("[prove] ${timedValue.duration}")
+        log.debug("[prove] ${timedValue.duration.toSecondsWithNanosString()}")
         return timedValue.value
     }
 
@@ -213,7 +214,8 @@ class ZincZKService(
         val time = measureTime {
             this.verify(proof, publicInputJson)
         }
-        log.debug("[verify] $time")
+
+        log.debug("[verify] ${time.toSecondsWithNanosString()}")
     }
 
     override fun prove(witness: Witness): ByteArray {

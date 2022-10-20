@@ -459,7 +459,7 @@ internal class BflListTest {
         actual.toString() shouldBe """
             U8List3: 56 bits (7 bytes)
             ├── size: 32 bits (4 bytes)
-            │   └── u32: 32 bits (4 bytes)
+            │   └── i32: 32 bits (4 bytes)
             └── values: 24 bits (3 bytes)
                 └── [u8; 3]: 24 bits (3 bytes)
                     └── u8: 8 bits (1 bytes)

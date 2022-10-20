@@ -49,6 +49,5 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
         // explicitly enforce 1.4.
         useIR = true
         jvmTarget = "1.8"
-        freeCompilerArgs += "-Xopt-in=kotlin.ExperimentalUnsignedTypes"
     }
 }

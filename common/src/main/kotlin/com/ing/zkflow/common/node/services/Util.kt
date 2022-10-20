@@ -16,7 +16,7 @@ fun <T : SerializeAsToken> ServiceHub.getCordaServiceFromConfig(configKey: Strin
     val serviceClassName = this.getAppContext().config.getString(configKey)
 
     @Suppress("UNCHECKED_CAST")
-    val clazz = Class.forName(serviceClassName) as Class<T>
+    val clazz = Class.forName(serviceClassName, true, getAppContext().classLoader) as Class<T>
 
     return this.cordaService(clazz)
 }

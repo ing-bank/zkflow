@@ -74,10 +74,6 @@ fun toTree(descriptor: SerialDescriptor, parentCapacity: Int? = null): Tree<Node
                 FixedLengthType.SHORT -> leaf(NodeDescriptor("i16", Short.SIZE_BITS))
                 FixedLengthType.INT -> leaf(NodeDescriptor("i32", Int.SIZE_BITS))
                 FixedLengthType.LONG -> leaf(NodeDescriptor("i64", Long.SIZE_BITS))
-                FixedLengthType.UBYTE -> leaf(NodeDescriptor("u8", UByte.SIZE_BITS))
-                FixedLengthType.USHORT -> leaf(NodeDescriptor("u16", UShort.SIZE_BITS))
-                FixedLengthType.UINT -> leaf(NodeDescriptor("u32", UInt.SIZE_BITS))
-                FixedLengthType.ULONG -> leaf(NodeDescriptor("u64", ULong.SIZE_BITS))
                 FixedLengthType.BOOLEAN -> leaf(NodeDescriptor("bool", Byte.SIZE_BITS))
                 FixedLengthType.LIST,
                 FixedLengthType.MAP,

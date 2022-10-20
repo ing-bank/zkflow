@@ -3,6 +3,7 @@ package com.ing.zinc.naming
 import com.ing.zinc.poet.ZincPrimitive
 import com.ing.zkflow.util.Part
 import com.ing.zkflow.util.camelToSnakeCase
+import com.ing.zkflow.util.removeLast
 import java.util.Locale
 
 /**

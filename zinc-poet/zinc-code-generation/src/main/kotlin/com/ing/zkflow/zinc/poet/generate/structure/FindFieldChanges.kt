@@ -1,5 +1,7 @@
 package com.ing.zkflow.zinc.poet.generate.structure
 
+import com.ing.zkflow.util.minByOrNull
+
 /**
  * Compares two lists of fields, and returns the smallest number of [FieldChange]s between the lists.
  * This recursive algorithm has a complexity of O(3"n).

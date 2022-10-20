@@ -13,8 +13,7 @@ import java.nio.file.Files
 class SampleZKDappZKNetworkParams : ZKNetworkParameters {
     override val version: Int = 1
     override val participantSignatureScheme: SignatureScheme = ZKFlow.DEFAULT_ZKFLOW_SIGNATURE_SCHEME
-    override val attachmentConstraintType: ZKAttachmentConstraintType =
-        ZKAttachmentConstraintType.HashAttachmentConstraintType()
+    override val attachmentConstraintType: ZKAttachmentConstraintType = ZKAttachmentConstraintType.HashAttachmentConstraintType()
     override val notaryInfo: ZKNotaryInfo = ZKNotaryInfo(ZKFlow.DEFAULT_ZKFLOW_NOTARY_SIGNATURE_SCHEME)
     override val digestAlgorithm: DigestAlgorithm = ZKFlow.DEFAULT_ZKFLOW_DIGEST_IDENTIFIER
     override val serializationSchemeId: Int = BFLSerializationScheme.SCHEME_ID

@@ -34,7 +34,7 @@ class FixedLengthMapSerializerTest : SerializerTest {
     @ParameterizedTest
     @MethodSource("engines")
     fun `Sizes for Map(Int, Short) must match`(engine: BFLEngine) {
-        val expectedBytesSize = (UIntSerializer.descriptor.byteSize + MAX_SIZE * (Int.SIZE_BYTES + Short.SIZE_BYTES))
+        val expectedBytesSize = (IntSerializer.descriptor.byteSize + MAX_SIZE * (Int.SIZE_BYTES + Short.SIZE_BYTES))
 
         InstanceSerializer.descriptor.byteSize shouldBe expectedBytesSize
         engine.serialize(InstanceSerializer, map).size shouldBe expectedBytesSize * engine.bytesScaler

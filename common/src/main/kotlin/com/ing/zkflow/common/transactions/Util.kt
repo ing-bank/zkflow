@@ -11,6 +11,7 @@ import com.ing.zkflow.common.node.services.ZKVerifierTransactionStorage
 import com.ing.zkflow.common.node.services.getCordaServiceFromConfig
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
+import com.ing.zkflow.util.appendLine
 import net.corda.core.DeleteForDJVM
 import net.corda.core.contracts.Attachment
 import net.corda.core.contracts.AttachmentConstraint
@@ -189,13 +190,21 @@ fun getClassLoaderFromContractAttachment(
         )
     val attachments = attachmentIds.map { serviceHub.attachments.openAttachment(it) ?: error("Attachment ($it) not found") }
 
-    return getClassLoaderFromContractAttachment(txId, attachments, params)
+    return getClassLoaderFromContractAttachment(txId, attachments, params, serviceHub)
 }
 
 fun getClassLoaderFromContractAttachment(txId: SecureHash, attachments: List<Attachment>, params: NetworkParameters): ClassLoader {
     return AttachmentsClassLoader(attachments, params, txId, { it.isUploaderTrusted() }, ClassLoader.getSystemClassLoader())
 }
 
+fun getClassLoaderFromContractAttachment(
+    txId: SecureHash,
+    attachments: List<Attachment>,
+    params: NetworkParameters,
+    serviceHub: ServiceHub
+): ClassLoader {
+    return AttachmentsClassLoader(attachments, params, txId, { it.isUploaderTrusted() }, serviceHub.getAppContext().classLoader)
+}
 fun TraversableTransaction.zkTransactionMetadata(serviceHub: ServiceHub): ResolvedZKTransactionMetadata =
     if (this.hasZKCommandData) zkTransactionMetadata(
         this.commandMetadata,
@@ -241,7 +250,7 @@ fun TraversableTransaction.zkTransactionMetadataOrNull(classLoader: ClassLoader)
 fun LedgerTransaction.zkTransactionMetadata(classLoader: ClassLoader): ResolvedZKTransactionMetadata =
     if (this.hasZKCommandData) zkTransactionMetadata(this.commandMetadata, classLoader) else error(TX_CONTAINS_NO_COMMANDS_WITH_METADATA)
 
-fun ZKTransactionBuilder.zkTransactionMetadata(classLoader: ClassLoader = ClassLoader.getSystemClassLoader()): ResolvedZKTransactionMetadata =
+fun ZKTransactionBuilder.zkTransactionMetadata(classLoader: ClassLoader = this.javaClass.classLoader): ResolvedZKTransactionMetadata =
     if (this.hasZKCommandData) zkTransactionMetadata(this.commandMetadata, classLoader) else error(TX_CONTAINS_NO_COMMANDS_WITH_METADATA)
 
 fun FilteredTransaction.allComponentNonces(): Map<Int, List<SecureHash>> {

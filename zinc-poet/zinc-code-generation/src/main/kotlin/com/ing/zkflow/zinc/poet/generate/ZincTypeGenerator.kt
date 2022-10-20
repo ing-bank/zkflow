@@ -55,13 +55,9 @@ object ZincTypeGenerator {
             FixedLengthType.UTF32_STRING -> string(descriptor.getAnnotation<SizeAnnotation>().value, "Utf32")
             FixedLengthType.BOOLEAN -> BflPrimitive.Bool
             FixedLengthType.BYTE -> createSignedInteger(Byte.SIZE_BITS)
-            FixedLengthType.UBYTE -> createUnsignedInteger(UByte.SIZE_BITS)
             FixedLengthType.SHORT -> createSignedInteger(Short.SIZE_BITS)
-            FixedLengthType.USHORT -> createUnsignedInteger(UShort.SIZE_BITS)
             FixedLengthType.INT -> createSignedInteger(Int.SIZE_BITS)
-            FixedLengthType.UINT -> createUnsignedInteger(UInt.SIZE_BITS)
             FixedLengthType.LONG -> createSignedInteger(Long.SIZE_BITS)
-            FixedLengthType.ULONG -> createUnsignedInteger(ULong.SIZE_BITS)
             FixedLengthType.EXACT_LIST -> createArray(descriptor)
             null -> when (descriptor.kind) {
                 SerialKind.ENUM -> createEnum(descriptor)
@@ -72,8 +68,6 @@ object ZincTypeGenerator {
     }
 
     private fun createSignedInteger(bits: Int) = BflPrimitive.fromIdentifier("i$bits")
-
-    private fun createUnsignedInteger(bits: Int) = BflPrimitive.fromIdentifier("u$bits")
 
     private fun createEnum(serialDescriptor: SerialDescriptor) = enum {
         name = serialDescriptor.internalTypeName

@@ -1,9 +1,10 @@
 package com.ing.zkflow.common.zkp
 
+import com.ing.zkflow.util.measureTime
+import com.ing.zkflow.util.measureTimedValue
+import com.ing.zkflow.util.toSecondsWithNanosString
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import kotlin.time.measureTime
-import kotlin.time.measureTimedValue
 
 interface ZKService {
     fun prove(witness: Witness): ByteArray
@@ -19,7 +20,7 @@ interface ZKService {
         val timedValue = measureTimedValue {
             this.prove(witness)
         }
-        log.debug("[prove] ${timedValue.duration}")
+        log.debug("[prove] ${timedValue.duration.toSecondsWithNanosString()}")
         return timedValue.value
     }
 
@@ -27,7 +28,7 @@ interface ZKService {
         val time = measureTime {
             this.verify(proof, publicInput)
         }
-        log.debug("[verify] $time")
+        log.debug("[verify] ${time.toSecondsWithNanosString()}")
     }
 
     /**

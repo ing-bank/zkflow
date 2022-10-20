@@ -4,7 +4,6 @@ import com.ing.zinc.bfl.generator.TransactionComponentOptions
 import com.ing.zinc.poet.ZincPrimitive
 import com.ing.zkflow.util.BflSized
 import com.ing.zkflow.util.Tree
-import java.util.Locale
 
 @Suppress("MagicNumber")
 enum class BflPrimitive(
@@ -24,7 +23,7 @@ enum class BflPrimitive(
     I128("i128", 128),
     Bool("bool", 8);
 
-    override fun typeName() = id.capitalize(Locale.getDefault())
+    override fun typeName() = id.capitalize()
 
     override fun deserializeExpr(
         transactionComponentOptions: TransactionComponentOptions,

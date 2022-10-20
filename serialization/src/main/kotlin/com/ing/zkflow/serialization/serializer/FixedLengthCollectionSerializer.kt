@@ -21,13 +21,13 @@ internal class FixedLengthCollectionSerializer<T>(
 
     override val descriptor = FixedLengthSerialDescriptor(
         buildClassSerialDescriptor(fixedLengthType.serialName) {
-            element("size", UInt.serializer().descriptor)
+            element("size", Int.serializer().descriptor)
             element("values", ListSerializer(valueSerializer).descriptor)
             annotations = listOf(
                 SizeAnnotation(maxSize)
             )
         },
-        UIntSerializer.descriptor.byteSize + maxSize * valueSerializer.descriptor.byteSize
+        IntSerializer.descriptor.byteSize + maxSize * valueSerializer.descriptor.byteSize
     )
 
     override fun serialize(encoder: Encoder, value: List<T>) =

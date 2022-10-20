@@ -91,7 +91,7 @@ internal class BflMapTest {
         actual.toString() shouldBe """
             U8ToU8Map3: 80 bits (10 bytes)
             ├── size: 32 bits (4 bytes)
-            │   └── u32: 32 bits (4 bytes)
+            │   └── i32: 32 bits (4 bytes)
             └── values: 48 bits (6 bytes)
                 └── [U8ToU8MapEntry; 3]: 48 bits (6 bytes)
                     └── U8ToU8MapEntry: 16 bits (2 bytes)

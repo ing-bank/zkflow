@@ -22,6 +22,7 @@ import com.ing.zkflow.testing.checkIsPubliclyPresentInZKStorage
 import com.ing.zkflow.testing.checkNotPresentInVault
 import com.ing.zkflow.testing.checkNotPresentInZKStorage
 import com.ing.zkflow.testing.zkp.MockZKTransactionCordaService
+// import com.ing.zkflow.testing.zkp.MockZKTransactionCordaService
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
@@ -62,8 +63,8 @@ class PrivateCBDCTokenFlowTest {
                     mapOf(
                         ZK_VERIFIER_TX_STORAGE to InMemoryZKVerifierTransactionStorageCordaService::class.qualifiedName!!,
                         ZK_UTXO_INFO_STORAGE to InMemoryUtxoInfoStorage::class.qualifiedName!!,
-                        // ZK_TX_SERVICE to ZincZKTransactionCordaService::class.qualifiedName!!,
-                        ZK_TX_SERVICE to MockZKTransactionCordaService::class.qualifiedName!!,
+                        ZK_TX_SERVICE to ZincZKTransactionCordaService::class.qualifiedName!!,
+                        // ZK_TX_SERVICE to MockZKTransactionCordaService::class.qualifiedName!!,
                     )
                 )
             ),

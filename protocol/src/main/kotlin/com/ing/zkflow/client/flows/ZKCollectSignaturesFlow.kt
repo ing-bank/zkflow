@@ -137,7 +137,7 @@ class ZKCollectSignaturesFlow @JvmOverloads constructor(
         val anonymousPartyToSessionMap: Map<AnonymousParty, List<FlowSession>> = anonymousSessions
             .groupBy { (it.destination as AnonymousParty) }
 
-        // check that there is at most one session for each not well known party
+        // check that there is at most one session for each not well known part
         for (entry in anonymousPartyToSessionMap) {
             require(entry.value.size == 1) {
                 "There are multiple sessions initiated for Anonymous Party ${entry.key.owningKey.toStringShort()}"

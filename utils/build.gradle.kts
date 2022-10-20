@@ -13,6 +13,10 @@ kotlin {
     // explicitApi = org.jetbrains.kotlin.gradle.dsl.ExplicitApiMode.Strict
 }
 
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+    kotlinOptions.freeCompilerArgs += "-Xallow-kotlin-package"
+}
+
 publishing {
     publications {
         create<MavenPublication>("zkUtil") {

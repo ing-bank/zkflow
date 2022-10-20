@@ -36,16 +36,11 @@ dependencies {
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
-    kotlinOptions.freeCompilerArgs += "-Xopt-in=kotlin.time.ExperimentalTime"
     kotlinOptions.freeCompilerArgs += "-Xopt-in=kotlinx.serialization.ExperimentalSerializationApi"
     kotlinOptions.freeCompilerArgs += "-Xopt-in=kotlinx.serialization.InternalSerializationApi"
 }
 
 tasks.shadowJar {
-    manifest {
-        val kotlinxSerializationVersion: String by project
-        attributes(mapOf("Specification-Version" to kotlinxSerializationVersion), "kotlinx/serialization")
-    }
     dependencies {
         exclude(dependency("org.jetbrains.kotlin:.*"))
         exclude(dependency("org.jetbrains.kotlinx:kotlinx-serialization.*"))

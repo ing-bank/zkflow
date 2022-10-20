@@ -5,6 +5,7 @@ import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.versioning.VersionedContractStateGroup
 import com.ing.zkflow.common.zkp.metadata.ZKCircuit.Companion.resolve
 import com.ing.zkflow.util.camelToSnakeCase
+import com.ing.zkflow.util.hasAnnotation
 import com.ing.zkflow.util.scopedName
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import net.corda.core.contracts.ContractState
@@ -14,7 +15,6 @@ import net.corda.core.utilities.seconds
 import java.io.File
 import java.time.Duration
 import kotlin.reflect.KClass
-import kotlin.reflect.full.hasAnnotation
 import kotlin.reflect.full.isSubclassOf
 
 @DslMarker

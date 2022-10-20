@@ -1,5 +1,6 @@
 package com.ing.zkflow.common.network
 
+import com.ing.zkflow.util.maxOrNull
 import java.util.ServiceLoader
 
 object ZKNetworkParametersServiceLoader {

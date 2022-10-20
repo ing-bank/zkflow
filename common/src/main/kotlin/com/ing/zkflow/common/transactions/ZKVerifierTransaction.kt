@@ -2,6 +2,7 @@ package com.ing.zkflow.common.transactions
 
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKTransactionMetadata
+import com.ing.zkflow.util.maxOf
 import net.corda.core.contracts.ComponentGroupEnum
 import net.corda.core.crypto.DigestService
 import net.corda.core.crypto.MerkleTree

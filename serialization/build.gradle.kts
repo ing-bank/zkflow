@@ -27,7 +27,6 @@ dependencies {
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
     kotlinOptions {
         freeCompilerArgs += "-Xopt-in=kotlinx.serialization.ExperimentalSerializationApi"
-        freeCompilerArgs += "-Xopt-in=kotlin.ExperimentalUnsignedTypes"
         freeCompilerArgs += "-Xopt-in=kotlinx.serialization.InternalSerializationApi"
     }
 }

@@ -8,12 +8,14 @@ import com.ing.zkflow.client.flows.ZKFinalityFlow
 import com.ing.zkflow.client.flows.ZKReceiveFinalityFlow
 import com.ing.zkflow.common.transactions.ZKTransactionBuilder
 import com.ing.zkflow.common.transactions.signInitialTransaction
+import net.corda.core.contracts.AlwaysAcceptAttachmentConstraint
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.StateAndContract
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
 import net.corda.core.flows.InitiatedBy
 import net.corda.core.flows.InitiatingFlow
+import net.corda.core.flows.StartableByRPC
 import net.corda.core.transactions.SignedTransaction
 
 /**
@@ -25,6 +27,8 @@ import net.corda.core.transactions.SignedTransaction
  * The token is issued to the holder specified in the [CBDCToken].
  * The holder will receive the token correctly in their vault if they have registered the [IssuePrivateCBDCTokenFlowFlowHandler].
  */
+
+@StartableByRPC
 @InitiatingFlow
 class IssuePrivateCBDCTokenFlow(
     private val token: CBDCToken,
@@ -32,11 +36,11 @@ class IssuePrivateCBDCTokenFlow(
 
     @Suspendable
     override fun call(): SignedTransaction {
-        val issueCommand = Command(IssuePrivate(), token.issuer.owningKey) //
+        val issueCommand = Command(IssuePrivate(), token.issuer.owningKey)
         val stateAndContract = StateAndContract(token, CBDCContract.ID)
 
         val builder = ZKTransactionBuilder(serviceHub.networkMapCache.notaryIdentities.single())
-            .withItems(stateAndContract, issueCommand)
+            .withItems(issueCommand, stateAndContract)
 
         val stx = serviceHub.signInitialTransaction(builder)
 
