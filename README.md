@@ -71,9 +71,11 @@ $ cargo b --release
 
 Built binaries will be stored in `./target/release`. Move the `zargo`, `znc` and `zvm` binaries to a directory you prefer and add it to your systems PATH. `/usr/local/bin` has been known to work. Then you can delete sources.
 
-#### Zinc on Azure Pipelines
+#### Zinc on internal Azure Pipelines
 
-If you make changes to Zinc and create a new tag, please ensure that the [copy of the binaries](./.ci/lib/zinc-linux.tar.gz) in for Azure Pipelines is updated to be that version. Please note that these binaries should be compiled on/for linux, so they can run on the Azure Pipelines agents.
+If you make changes to Zinc and create a new tag, please ensure that the [copy of the binaries](./.ci/lib/zinc-linux.tar.gz) in for Azure Pipelines is updated to be that version. Please note that these binaries should be compiled on/for linux, so they can run on the Azure Pipelines agents. 
+
+For GitHub Actions, this is not required, as that build automatically downloads and installs the correct Zinc binaries.
 
 ### Gradle
 
