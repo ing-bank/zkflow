@@ -1,12 +1,5 @@
 *.dSYM
 .vscode
-**/proving_material
-**/verification_material
-**/prover_verifier_shared
-**/notary/bin/*
-**/workflows/bin/*
-#**/block_stores/**/LOCK
-**/libpv*.so
 
 **/.idea/*
 *.iml
@@ -80,6 +73,7 @@ fabric.properties
 *.ear
 *.zip
 *.tar.gz
+!zinc-linux.tar.gz
 *.rar
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
