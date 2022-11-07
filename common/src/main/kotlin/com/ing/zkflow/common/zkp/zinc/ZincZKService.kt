@@ -10,7 +10,6 @@ import com.ing.zkflow.common.zkp.zinc.serialization.json.PublicInputSerializer
 import com.ing.zkflow.common.zkp.zinc.serialization.json.WitnessSerializer
 import com.ing.zkflow.util.measureTime
 import com.ing.zkflow.util.measureTimedValue
-import com.ing.zkflow.util.toSecondsWithNanosString
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import kotlinx.serialization.json.Json
 import net.corda.core.utilities.loggerFor
@@ -199,14 +198,14 @@ class ZincZKService(
         val time = measureTime {
             this.setup()
         }
-        log.debug("[setup] ${time.toSecondsWithNanosString()}")
+        log.debug("[setup] $time")
     }
 
     fun proveTimed(witnessJson: String, log: Logger = loggerForMyCaller): ByteArray {
         val timedValue = measureTimedValue {
             this.prove(witnessJson)
         }
-        log.debug("[prove] ${timedValue.duration.toSecondsWithNanosString()}")
+        log.debug("[prove] ${timedValue.duration}")
         return timedValue.value
     }
 
@@ -215,7 +214,7 @@ class ZincZKService(
             this.verify(proof, publicInputJson)
         }
 
-        log.debug("[verify] ${time.toSecondsWithNanosString()}")
+        log.debug("[verify] $time")
     }
 
     override fun prove(witness: Witness): ByteArray {
