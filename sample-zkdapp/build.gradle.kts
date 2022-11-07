@@ -152,6 +152,7 @@ tasks.register<net.corda.plugins.Cordform>("deployNodes") {
             address("localhost:10002")
             adminAddress("localhost:10003")
         }
+
     }
     node {
         name("O=Issuer,L=Amsterdam,C=NL")
