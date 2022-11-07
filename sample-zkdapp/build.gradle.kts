@@ -90,7 +90,9 @@ sourceSets {
 }
 
 tasks.test {
-    useJUnitPlatform()
+    useJUnitPlatform {
+        excludeTags("rpc")
+    }
 
     testLogging {
         events("passed", "skipped", "failed")
@@ -112,6 +114,17 @@ tasks.test {
         "java.util.logging.config.file",
         "${project.buildDir}/resources/test/logging-test.properties"
     )
+}
+
+tasks.register<Test>("rpcTest") {
+    useJUnitPlatform {
+        includeTags("rpc")
+    }
+
+    testLogging {
+        events("passed", "skipped", "failed")
+        showStandardStreams = true
+    }
 }
 
 val testConfigResourcesDir = "${rootProject.rootDir}/config/test"

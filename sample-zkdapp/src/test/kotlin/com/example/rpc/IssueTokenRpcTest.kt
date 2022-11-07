@@ -3,10 +3,11 @@ package com.example.rpc
 import com.example.contract.cbdc.digitalEuro
 import net.corda.testing.core.TestIdentity
 import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 
 @Suppress("UnusedPrivateMember")
-@Disabled("Deployed nodes currently have no access to circuit artifacts. This needs to be implemented as part of CorDapp jar publication step. This will prevent deployed nodes from creating and verifying proofs")
+@Tag("rpc")
 class IssueTokenRpcTest {
 
     private val user = "user1"
@@ -19,7 +20,6 @@ class IssueTokenRpcTest {
     }
 
     @Test
-    @Disabled("Deployed nodes currently have no access to circuit artifacts. This needs to be implemented as part of CorDapp jar publication step. This will prevent deployed nodes from creating and verifying proofs")
     fun `Issue a single token`() {
         issuer.create(digitalEuro(1.0, issuer.party(), TestIdentity.fresh("SomeHolder").party.anonymise()))
     }
