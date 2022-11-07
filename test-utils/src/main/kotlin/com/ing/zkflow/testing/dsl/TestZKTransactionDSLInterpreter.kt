@@ -4,7 +4,7 @@ import TestZKLedgerDSLInterpreter
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import com.ing.zkflow.common.transactions.ZKTransactionBuilder
 import com.ing.zkflow.common.transactions.signInitialTransaction
-import com.ing.zkflow.common.transactions.zkVerify
+import com.ing.zkflow.common.transactions.verification.zkVerify
 import com.ing.zkflow.common.zkp.ZKTransactionService
 import com.ing.zkflow.testing.dsl.interfaces.DuplicateOutputLabel
 import com.ing.zkflow.testing.dsl.interfaces.EnforceVerifyOrFail

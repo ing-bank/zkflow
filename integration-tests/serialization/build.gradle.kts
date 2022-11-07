@@ -14,15 +14,23 @@ repositories {
 }
 
 dependencies {
-    implementation(project(":test-utils"))
-    implementation(project(":protocol"))
-    implementation(project(":integration-tests:fixtures"))
-    implementation(project(":zinc-poet:zinc-code-generation"))
-
-    val cordaVersion: String by project
-    compileOnly("net.corda:corda-core:$cordaVersion")
+    testImplementation(project(":test-utils"))
+    testImplementation(project(":protocol"))
+    testImplementation(project(":integration-tests:fixtures"))
+    testImplementation(project(":zinc-poet:zinc-code-generation"))
 
     val kotlinxSerializationVersion: String by project
+    testImplementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
+
+    // We expect Corda to be on the class path for any CorDapp that uses ZKFlow.
+    val cordaVersion: String by project
+    val cordaReleaseGroup: String by project
+    compileOnly("$cordaReleaseGroup:corda-core:$cordaVersion")
+    testImplementation("$cordaReleaseGroup:corda-core:$cordaVersion")
+    testImplementation("$cordaReleaseGroup:corda-test-utils:$cordaVersion")
+
+    // Normally, on real CorDapps, all the below deps would be set by the ZKFlow gradle plugin.
+    // In the case of integration tests, we do it by hand.
     kotlinCompilerPluginClasspath("net.corda:corda-core:$cordaVersion")
     kotlinCompilerPluginClasspath(project(":utils"))
     kotlinCompilerPluginClasspath(project(":annotations"))
@@ -48,6 +56,5 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
         // explicitly enforce 1.4.
         useIR = true
         jvmTarget = "1.8"
-        freeCompilerArgs += "-Xopt-in=kotlin.ExperimentalUnsignedTypes"
     }
 }

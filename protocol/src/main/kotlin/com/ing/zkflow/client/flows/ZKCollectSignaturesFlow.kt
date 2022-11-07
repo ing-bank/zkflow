@@ -1,7 +1,7 @@
 package com.ing.zkflow.client.flows
 
 import co.paralleluniverse.fibers.Suspendable
-import com.ing.zkflow.common.transactions.zkVerify
+import com.ing.zkflow.common.transactions.verification.zkVerify
 import net.corda.core.crypto.TransactionSignature
 import net.corda.core.crypto.isFulfilledBy
 import net.corda.core.crypto.toStringShort
@@ -137,7 +137,7 @@ class ZKCollectSignaturesFlow @JvmOverloads constructor(
         val anonymousPartyToSessionMap: Map<AnonymousParty, List<FlowSession>> = anonymousSessions
             .groupBy { (it.destination as AnonymousParty) }
 
-        // check that there is at most one session for each not well known party
+        // check that there is at most one session for each not well known part
         for (entry in anonymousPartyToSessionMap) {
             require(entry.value.size == 1) {
                 "There are multiple sessions initiated for Anonymous Party ${entry.key.owningKey.toStringShort()}"

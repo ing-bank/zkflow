@@ -9,13 +9,13 @@ import com.ing.zinc.poet.ZincFile
 import com.ing.zinc.poet.ZincPrimitive
 import com.ing.zkflow.util.ensureDirectory
 import com.ing.zkflow.util.ensureFile
+import com.ing.zkflow.util.measureTimedValue
 import com.ing.zkflow.util.runCommand
 import kotlinx.serialization.json.JsonObjectBuilder
 import kotlinx.serialization.json.buildJsonObject
 import java.nio.file.Path
 import java.util.logging.Logger
 import kotlin.io.path.writeText
-import kotlin.time.measureTime
 
 object ZincExecutor {
     private fun Path.generateWitness(content: String) {
@@ -41,14 +41,12 @@ object ZincExecutor {
     }
 
     fun Path.runCommandAndLogTime(command: String, timeoutInSeconds: Long = 5): Pair<String, String> {
-        val output: Pair<String, String>
-
-        val time = measureTime {
-            output = this.runCommand(command, timeoutInSeconds)
+        val timedValue = measureTimedValue {
+            this.runCommand(command, timeoutInSeconds)
         }
-        log.info("[$command] took $time")
+        log.info("[$command] took ${timedValue.duration}")
 
-        return output
+        return timedValue.value
     }
 
     private val log = Logger.getLogger(ZincExecutor::class.qualifiedName)

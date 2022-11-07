@@ -11,8 +11,8 @@ import com.ing.zkflow.client.flows.ZKSignTransactionFlow
 import com.ing.zkflow.common.transactions.ZKTransactionBuilder
 import com.ing.zkflow.common.transactions.resolvePublicOrPrivateStateRef
 import com.ing.zkflow.common.transactions.signInitialTransaction
-import com.ing.zkflow.node.services.ServiceNames
-import com.ing.zkflow.node.services.getCordaServiceFromConfig
+import com.ing.zkflow.common.node.services.ServiceNames
+import com.ing.zkflow.common.node.services.getCordaServiceFromConfig
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.StateAndContract
 import net.corda.core.contracts.StateAndRef

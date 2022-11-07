@@ -3,12 +3,14 @@ package com.example.token.sdk
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.annotations.corda.EdDSA
 import net.corda.core.identity.Party
+import net.corda.core.serialization.CordaSerializable
 
 // Open classes may be extended provided no values are overridden.
 // Otherwise, serialization breaks.
 // see, https://github.com/Kotlin/kotlinx.serialization/issues/1792
 
 @ZKP
+@CordaSerializable
 data class IssuedTokenType(
     val issuer: @EdDSA Party,
     val tokenType: TokenType

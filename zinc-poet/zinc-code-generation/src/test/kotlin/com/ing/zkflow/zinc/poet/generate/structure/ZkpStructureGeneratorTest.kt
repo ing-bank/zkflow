@@ -1,7 +1,7 @@
 package com.ing.zkflow.zinc.poet.generate.structure
 
 import com.ing.zkflow.Surrogate
-import com.ing.zkflow.common.serialization.zinc.generation.getSerialDescriptor
+import com.ing.zkflow.serialization.getSerialDescriptor
 import com.ing.zkflow.zinc.poet.generate.ClassWithAnonymousParty
 import com.ing.zkflow.zinc.poet.generate.ClassWithAnonymousPartySerializer
 import com.ing.zkflow.zinc.poet.generate.ClassWithAsciiChar
@@ -42,14 +42,6 @@ import com.ing.zkflow.zinc.poet.generate.ClassWithShort
 import com.ing.zkflow.zinc.poet.generate.ClassWithShortSerializer
 import com.ing.zkflow.zinc.poet.generate.ClassWithSignatureAttachmentConstraint
 import com.ing.zkflow.zinc.poet.generate.ClassWithSignatureAttachmentConstraintSerializer
-import com.ing.zkflow.zinc.poet.generate.ClassWithUByte
-import com.ing.zkflow.zinc.poet.generate.ClassWithUByteSerializer
-import com.ing.zkflow.zinc.poet.generate.ClassWithUInt
-import com.ing.zkflow.zinc.poet.generate.ClassWithUIntSerializer
-import com.ing.zkflow.zinc.poet.generate.ClassWithULong
-import com.ing.zkflow.zinc.poet.generate.ClassWithULongSerializer
-import com.ing.zkflow.zinc.poet.generate.ClassWithUShort
-import com.ing.zkflow.zinc.poet.generate.ClassWithUShortSerializer
 import com.ing.zkflow.zinc.poet.generate.ClassWithUnicodeChar
 import com.ing.zkflow.zinc.poet.generate.ClassWithUnicodeCharSerializer
 import com.ing.zkflow.zinc.poet.generate.ClassWithUtf16String
@@ -112,26 +104,14 @@ internal class ZkpStructureGeneratorTest {
         private val wrappedByteStructure = wrappedStructure<ClassWithByte>(
             field = ZkpStructureField("byte", ZkpStructurePrimitive("kotlin.Byte", Byte.SIZE_BYTES))
         )
-        private val wrappedUByteStructure = wrappedStructure<ClassWithUByte>(
-            field = ZkpStructureField("ubyte", ZkpStructurePrimitive("kotlin.UByte", UByte.SIZE_BYTES))
-        )
         private val wrappedShortStructure = wrappedStructure<ClassWithShort>(
             field = ZkpStructureField("short", ZkpStructurePrimitive("kotlin.Short", Short.SIZE_BYTES))
-        )
-        private val wrappedUShortStructure = wrappedStructure<ClassWithUShort>(
-            field = ZkpStructureField("ushort", ZkpStructurePrimitive("kotlin.UShort", UShort.SIZE_BYTES))
         )
         private val wrappedIntStructure = wrappedStructure<ClassWithInt>(
             field = ZkpStructureField("int", ZkpStructurePrimitive("kotlin.Int", Int.SIZE_BYTES))
         )
-        private val wrappedUIntStructure = wrappedStructure<ClassWithUInt>(
-            field = ZkpStructureField("uint", ZkpStructurePrimitive("kotlin.UInt", UInt.SIZE_BYTES))
-        )
         private val wrappedLongStructure = wrappedStructure<ClassWithLong>(
             field = ZkpStructureField("long", ZkpStructurePrimitive("kotlin.Long", Long.SIZE_BYTES))
-        )
-        private val wrappedULongStructure = wrappedStructure<ClassWithULong>(
-            field = ZkpStructureField("ulong", ZkpStructurePrimitive("kotlin.ULong", ULong.SIZE_BYTES))
         )
         private val wrappedFloatStructure = wrappedStructure<ClassWithFloat>(
             field = ZkpStructureField("float", ZkpStructureBigDecimal(95, "Float", 39, 46))
@@ -288,13 +268,9 @@ internal class ZkpStructureGeneratorTest {
                 ),
                 Arguments.of(ClassWithBooleanSerializer.descriptor, listOf<ZkpStructureType>(wrappedBoolStructure)),
                 Arguments.of(ClassWithByteSerializer.descriptor, listOf<ZkpStructureType>(wrappedByteStructure)),
-                Arguments.of(ClassWithUByteSerializer.descriptor, listOf<ZkpStructureType>(wrappedUByteStructure)),
                 Arguments.of(ClassWithShortSerializer.descriptor, listOf<ZkpStructureType>(wrappedShortStructure)),
-                Arguments.of(ClassWithUShortSerializer.descriptor, listOf<ZkpStructureType>(wrappedUShortStructure)),
                 Arguments.of(ClassWithIntSerializer.descriptor, listOf<ZkpStructureType>(wrappedIntStructure)),
-                Arguments.of(ClassWithUIntSerializer.descriptor, listOf<ZkpStructureType>(wrappedUIntStructure)),
                 Arguments.of(ClassWithLongSerializer.descriptor, listOf<ZkpStructureType>(wrappedLongStructure)),
-                Arguments.of(ClassWithULongSerializer.descriptor, listOf<ZkpStructureType>(wrappedULongStructure)),
                 Arguments.of(ClassWithFloatSerializer.descriptor, listOf<ZkpStructureType>(wrappedFloatStructure)),
                 Arguments.of(ClassWithDoubleSerializer.descriptor, listOf<ZkpStructureType>(wrappedDoubleStructure)),
                 Arguments.of(

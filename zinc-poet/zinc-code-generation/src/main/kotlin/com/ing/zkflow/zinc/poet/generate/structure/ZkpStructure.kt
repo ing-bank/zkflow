@@ -3,11 +3,10 @@ package com.ing.zkflow.zinc.poet.generate.structure
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.annotations.ZKPSurrogate
 import com.ing.zkflow.common.serialization.KClassSerializerProvider
-import com.ing.zkflow.common.serialization.zinc.generation.getSerialDescriptor
+import com.ing.zkflow.serialization.getSerialDescriptor
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.serializer
 import net.corda.core.internal.readText
 import net.corda.core.internal.writeText
 import java.nio.file.Path

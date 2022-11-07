@@ -27,11 +27,16 @@ function fail_all_if_failed() {
 }
 
 clean="clean cleanTest --no-build-cache --no-daemon"
-if [ "$1" == "--noclean" ]; then clean=""; fi
+if [ "$1" == "--noclean" ]; then
+  clean="";
+else
+  # we also remove any published version of zkflow, since we want to ensure we run against the latest version
+  rm -rf ~/.m2/repository/com/ing/zkflow
+fi
 
 fail_all_if_failed \
   "Build with Gradle" \
-  "./gradlew $clean check test testReport jacocoRootReport checkLicense spotBugsMain --stacktrace"
+  "./gradlew $clean check test testReport jacocoRootReport checkLicense spotBugsMain publishToMavenLocal --stacktrace"
 
 fail_all_if_failed \
   "sample-zkdapp - Build with Gradle" \

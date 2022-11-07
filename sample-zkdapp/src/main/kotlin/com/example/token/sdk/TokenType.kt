@@ -3,9 +3,11 @@ package com.example.token.sdk
 import com.ing.zkflow.annotations.UTF8
 import com.ing.zkflow.annotations.ZKP
 import net.corda.core.contracts.TokenizableAssetInfo
+import net.corda.core.serialization.CordaSerializable
 import java.math.BigDecimal
 
 @ZKP
+@CordaSerializable
 open class TokenType(
     /**
      * All [TokenType]s must have a [tokenIdentifier], which is typically a 3-4 character, upper case alphabetic string.

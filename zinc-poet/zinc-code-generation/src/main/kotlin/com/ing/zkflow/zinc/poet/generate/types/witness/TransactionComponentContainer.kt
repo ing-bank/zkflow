@@ -2,7 +2,7 @@ package com.ing.zkflow.zinc.poet.generate.types.witness
 
 import com.ing.zinc.bfl.dsl.ArrayBuilder.Companion.array
 import com.ing.zinc.bfl.getSerializedTypeDef
-import com.ing.zinc.naming.camelToSnakeCase
+import com.ing.zinc.naming.camelToZincSnakeCase
 import com.ing.zinc.poet.ZincArray.Companion.zincArray
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.common.zkp.metadata.ZKIndexedTypedElement
@@ -152,7 +152,7 @@ class TransactionComponentContainer(
         IndexedTransactionComponent(
             it.index,
             wrapTxComponent(
-                "${groupName}_${stateType.id.camelToSnakeCase()}",
+                "${groupName}_${stateType.id.camelToZincSnakeCase()}",
                 standardTypes.transactionState(
                     stateType
                 ),

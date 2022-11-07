@@ -14,9 +14,9 @@ import com.ing.zinc.bfl.dsl.ListBuilder.Companion.string
 import com.ing.zinc.bfl.dsl.MapBuilder.Companion.map
 import com.ing.zinc.bfl.dsl.OptionBuilder.Companion.option
 import com.ing.zinc.bfl.dsl.StructBuilder.Companion.struct
-import com.ing.zinc.naming.camelToSnakeCase
-import com.ing.zkflow.common.serialization.zinc.generation.internalTypeName
+import com.ing.zinc.naming.camelToZincSnakeCase
 import com.ing.zkflow.serialization.FixedLengthType
+import com.ing.zkflow.serialization.internalTypeName
 import com.ing.zkflow.serialization.serializer.BigDecimalSizeAnnotation
 import com.ing.zkflow.serialization.serializer.FixedLengthFloatingPointSerializer
 import com.ing.zkflow.serialization.serializer.SizeAnnotation
@@ -55,13 +55,9 @@ object ZincTypeGenerator {
             FixedLengthType.UTF32_STRING -> string(descriptor.getAnnotation<SizeAnnotation>().value, "Utf32")
             FixedLengthType.BOOLEAN -> BflPrimitive.Bool
             FixedLengthType.BYTE -> createSignedInteger(Byte.SIZE_BITS)
-            FixedLengthType.UBYTE -> createUnsignedInteger(UByte.SIZE_BITS)
             FixedLengthType.SHORT -> createSignedInteger(Short.SIZE_BITS)
-            FixedLengthType.USHORT -> createUnsignedInteger(UShort.SIZE_BITS)
             FixedLengthType.INT -> createSignedInteger(Int.SIZE_BITS)
-            FixedLengthType.UINT -> createUnsignedInteger(UInt.SIZE_BITS)
             FixedLengthType.LONG -> createSignedInteger(Long.SIZE_BITS)
-            FixedLengthType.ULONG -> createUnsignedInteger(ULong.SIZE_BITS)
             FixedLengthType.EXACT_LIST -> createArray(descriptor)
             null -> when (descriptor.kind) {
                 SerialKind.ENUM -> createEnum(descriptor)
@@ -72,8 +68,6 @@ object ZincTypeGenerator {
     }
 
     private fun createSignedInteger(bits: Int) = BflPrimitive.fromIdentifier("i$bits")
-
-    private fun createUnsignedInteger(bits: Int) = BflPrimitive.fromIdentifier("u$bits")
 
     private fun createEnum(serialDescriptor: SerialDescriptor) = enum {
         name = serialDescriptor.internalTypeName
@@ -99,7 +93,7 @@ object ZincTypeGenerator {
         name = descriptor.internalTypeName
         (0 until descriptor.elementsCount).mapNotNull { elementIndex ->
             field {
-                name = descriptor.getElementName(elementIndex).camelToSnakeCase()
+                name = descriptor.getElementName(elementIndex).camelToZincSnakeCase()
                 type = generate(descriptor.getElementDescriptor(elementIndex))
             }
         }

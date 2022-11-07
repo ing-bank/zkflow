@@ -4,6 +4,7 @@ import com.ing.zinc.bfl.BflList
 import com.ing.zinc.bfl.BflPrimitive
 import com.ing.zinc.bfl.BflType
 
+@Suppress("MemberVisibilityCanBePrivate")
 @BflDslMarker
 class ListBuilder {
     var capacity: Int? = null
@@ -15,7 +16,7 @@ class ListBuilder {
         requireNotNull(capacity) { "List property capacity is missing" },
         requireNotNull(elementType) { "List property elementType is missing" },
         name ?: "${elementType!!.typeName()}List$capacity",
-        sizeType ?: BflPrimitive.U32
+        sizeType ?: BflPrimitive.I32
     )
 
     companion object {

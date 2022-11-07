@@ -328,13 +328,13 @@ subprojects {
             withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
                 kotlinOptions {
                     languageVersion = "1.5"
-                    apiVersion = "1.4"
+                    apiVersion = "1.3"
                     jvmTarget = "1.8"
                     javaParameters = true   // Useful for reflection.
                     freeCompilerArgs = listOf(
                         "-Xjvm-default=compatibility"
                     )
-                    allWarningsAsErrors = true
+                    // allWarningsAsErrors = true
                 }
             }
 
@@ -342,6 +342,11 @@ subprojects {
                 // This makes the JAR's SHA-256 hash repeatable.
                 isPreserveFileTimestamps = false
                 isReproducibleFileOrder = true
+                exclude("**/module-info.class")
+                exclude("README.txt")
+                exclude("LICENSE")
+                exclude("LICENSE-junit.txt")
+                exclude("log4j2-test.xml")
             }
 
             withType<Test> {

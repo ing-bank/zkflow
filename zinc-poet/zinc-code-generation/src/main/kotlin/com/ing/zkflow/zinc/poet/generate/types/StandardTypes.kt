@@ -9,7 +9,7 @@ import com.ing.zinc.bfl.dsl.ListBuilder.Companion.list
 import com.ing.zinc.bfl.dsl.StructBuilder.Companion.struct
 import com.ing.zinc.bfl.dsl.WrappedTransactionComponentBuilder.Companion.wrappedTransactionComponent
 import com.ing.zinc.bfl.generator.TransactionComponentOptions
-import com.ing.zinc.naming.camelToSnakeCase
+import com.ing.zinc.naming.camelToZincSnakeCase
 import com.ing.zkflow.common.network.ZKNetworkParameters
 import com.ing.zkflow.common.network.attachmentConstraintSerializer
 import com.ing.zkflow.common.network.notarySerializer
@@ -58,7 +58,7 @@ class StandardTypes(
         .map { it.transactionComponent }
         .distinctBy { it.id }
         .map {
-            val name = it.id.removeSuffix("TransactionComponent").camelToSnakeCase()
+            val name = it.id.removeSuffix("TransactionComponent").camelToZincSnakeCase()
             TransactionComponentOptions(name, it)
         }
 

@@ -15,6 +15,7 @@ import net.corda.core.contracts.ContractState
 import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.Party
+import net.corda.core.serialization.CordaSerializable
 import java.math.BigDecimal
 
 val EUR = TokenType("EUR", 2)
@@ -25,6 +26,7 @@ fun digitalEuro(amount: BigDecimal, issuer: Party, holder: AnonymousParty) =
 
 interface VersionedCBDCToken : VersionedContractStateGroup, ContractState
 
+@CordaSerializable
 @BelongsToContract(CBDCContract::class)
 @ZKP
 data class CBDCToken(

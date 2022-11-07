@@ -71,12 +71,12 @@ open class BflStruct(
     private fun getFieldTypesToImport() = fields.asSequence()
         .flatMap {
             when (val type = it.type) {
-                is BflArray -> listOf(type.elementType)
-                else -> listOf(type)
+                is BflArray -> sequenceOf(type.elementType)
+                else -> sequenceOf(type)
             }
         }
 
-    override val bitSize: Int = this.fields.sumOf { it.type.bitSize }
+    override val bitSize: Int = this.fields.sumBy { it.type.bitSize }
 
     override fun deserializeExpr(
         transactionComponentOptions: TransactionComponentOptions,

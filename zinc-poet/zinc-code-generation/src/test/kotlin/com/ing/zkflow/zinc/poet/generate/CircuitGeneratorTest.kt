@@ -2,6 +2,7 @@ package com.ing.zkflow.zinc.poet.generate
 
 import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.testing.zkp.MockZKNetworkParameters
+import com.ing.zkflow.util.measureTimedValue
 import com.ing.zkflow.util.runCommand
 import com.ing.zkflow.zinc.poet.generate.types.CommandContextFactory
 import com.ing.zkflow.zinc.poet.generate.types.StandardTypes
@@ -24,15 +25,12 @@ import org.junit.jupiter.api.io.TempDir
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
-import kotlin.time.ExperimentalTime
-import kotlin.time.measureTime
 
 internal class CircuitGeneratorTest {
     private val zincTypeResolver = ZincTypeGeneratorResolver(ZincTypeGenerator)
 
     private val standardTypes = StandardTypes(MockZKNetworkParameters())
 
-    @ExperimentalTime
     @Test
     @Tag("slow")
     fun `generateCircuitFor should generate a working circuit for MyFirstCommand`(@TempDir tempDir: Path) {
@@ -47,7 +45,6 @@ internal class CircuitGeneratorTest {
         )
     }
 
-    @ExperimentalTime
     @Test
     @Tag("slow")
     fun `generateCircuitFor should generate a working circuit for UpgradeMyStateV1ToMyStateV2`(@TempDir tempDir: Path) {
@@ -58,7 +55,6 @@ internal class CircuitGeneratorTest {
         stderr shouldContain "[UpgradeMyStateV1ToMyStateV2] Not a valid upgrade from MyStateV1 to MyStateV2."
     }
 
-    @ExperimentalTime
     private fun generateAndRunCircuit(
         tempDir: Path,
         zkCommand: ZKCommandData
@@ -70,7 +66,7 @@ internal class CircuitGeneratorTest {
         }
 
         val result = logExecutionTime("Running the circuit using `zargo run`") {
-            // This needs a crazy long timeout so it doesn't fail on CI with parallel builds.
+            // This needs a crazy long timeout, so it doesn't fail on CI with parallel builds.
             tempDir.runCommand("zargo run", 800)
         }
         return result
@@ -88,15 +84,13 @@ internal class CircuitGeneratorTest {
     companion object {
         private val logger: Logger = LoggerFactory.getLogger(CircuitGeneratorTest::class.java)
 
-        @ExperimentalTime
         private fun <T> logExecutionTime(message: String, block: () -> T): T {
             logger.info("Started: $message")
-            val out: T
-            val time = measureTime {
-                out = block()
+            val timedValue = measureTimedValue {
+                block()
             }
-            logger.info("Finished: $message in $time")
-            return out
+            logger.info("Finished: $message in ${timedValue.duration}")
+            return timedValue.value
         }
     }
 }

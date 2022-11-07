@@ -6,9 +6,6 @@ plugins {
 }
 
 dependencies {
-    testImplementation(kotlin("test-junit5"))
-    testImplementation(project(":test-utils"))
-
     implementation(project(":annotations"))
     implementation(project(":crypto"))
     implementation(project(":utils"))
@@ -18,14 +15,19 @@ dependencies {
     api("org.jetbrains.kotlinx:kotlinx-serialization-core:$kotlinxSerializationVersion")
 
     val cordaVersion: String by project
-    compileOnly("net.corda:corda-test-utils:$cordaVersion")
-    compileOnly("net.corda:corda-core:$cordaVersion")
+    val cordaReleaseGroup: String by project
+    compileOnly("$cordaReleaseGroup:corda-core:$cordaVersion")
+
+    testImplementation(kotlin("test-junit5"))
+    testImplementation(project(":test-utils"))
+    testImplementation("$cordaReleaseGroup:corda-test-utils:$cordaVersion")
+    testImplementation("$cordaReleaseGroup:corda-core:$cordaVersion")
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
     kotlinOptions {
         freeCompilerArgs += "-Xopt-in=kotlinx.serialization.ExperimentalSerializationApi"
-        freeCompilerArgs += "-Xopt-in=kotlin.ExperimentalUnsignedTypes"
+        freeCompilerArgs += "-Xopt-in=kotlinx.serialization.InternalSerializationApi"
     }
 }
 

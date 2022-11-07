@@ -2,6 +2,7 @@ package com.example.token.sdk
 
 import net.corda.core.contracts.FungibleState
 import net.corda.core.identity.AnonymousParty
+import net.corda.core.serialization.CordaSerializable
 
 // Decomposition replaces the relation: `CBDCToken is FungibleToken`
 // with

@@ -1,6 +1,7 @@
 package com.ing.zkflow.util
 
 import kotlin.reflect.KClass
+import kotlin.reflect.full.createInstance
 
 /**
  * Construct a scoped name, including all elements from the qualified name that start with an uppercase character.
@@ -49,3 +50,8 @@ internal fun String.jvmClassNamePermutations(): List<String> = split(".").revers
             acc.map { "$part.$it" } + acc.map { "$part\$$it" }
         }
     }
+
+/** creates a new instance if not a Kotlin object */
+fun <T : Any> KClass<T>.objectOrNewInstance(): T {
+    return this.objectInstance ?: this.createInstance()
+}

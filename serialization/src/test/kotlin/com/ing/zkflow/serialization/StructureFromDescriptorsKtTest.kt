@@ -126,7 +126,7 @@ internal class StructureFromDescriptorsKtTest {
         actual.toString() shouldBe """
             FixedLengthListSerializer (capacity: 8): 288 bits (36 bytes)
             ├── size: 32 bits (4 bytes)
-            │   └── u32: 32 bits (4 bytes)
+            │   └── i32: 32 bits (4 bytes)
             └── values: 256 bits (32 bytes)
                 └── ArrayList (capacity: 8): 256 bits (32 bytes)
                     └── Int: 32 bits (4 bytes)
@@ -140,10 +140,6 @@ internal class StructureFromDescriptorsKtTest {
             Arguments.of(Short.serializer().descriptor, "i16: 16 bits (2 bytes)"),
             Arguments.of(Int.serializer().descriptor, "i32: 32 bits (4 bytes)"),
             Arguments.of(Long.serializer().descriptor, "i64: 64 bits (8 bytes)"),
-            Arguments.of(UByte.serializer().descriptor, "u8: 8 bits (1 bytes)"),
-            Arguments.of(UShort.serializer().descriptor, "u16: 16 bits (2 bytes)"),
-            Arguments.of(UInt.serializer().descriptor, "u32: 32 bits (4 bytes)"),
-            Arguments.of(ULong.serializer().descriptor, "u64: 64 bits (8 bytes)"),
             Arguments.of(Boolean.serializer().descriptor, "bool: 8 bits (1 bytes)"),
         )
 

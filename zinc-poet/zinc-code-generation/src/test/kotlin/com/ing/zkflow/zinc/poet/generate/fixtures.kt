@@ -45,19 +45,11 @@ data class ClassWithBoolean(val boolean: Boolean)
 @ZKP
 data class ClassWithByte(val byte: Byte)
 @ZKP
-data class ClassWithUByte(val ubyte: UByte)
-@ZKP
 data class ClassWithShort(val short: Short)
-@ZKP
-data class ClassWithUShort(val ushort: UShort)
 @ZKP
 data class ClassWithInt(val int: Int)
 @ZKP
-data class ClassWithUInt(val uint: UInt)
-@ZKP
 data class ClassWithLong(val long: Long)
-@ZKP
-data class ClassWithULong(val ulong: ULong)
 @ZKP
 data class ClassWithFloat(val float: Float)
 @ZKP

@@ -2,7 +2,7 @@ package com.ing.zinc.bfl
 
 import com.ing.zinc.bfl.BflModule.Companion.getRegisteredMethodsFor
 import com.ing.zinc.bfl.generator.CodeGenerationOptions
-import com.ing.zinc.naming.camelToSnakeCase
+import com.ing.zinc.naming.camelToZincSnakeCase
 import com.ing.zinc.poet.ZincArray.Companion.zincArray
 import com.ing.zinc.poet.ZincFile
 import com.ing.zinc.poet.ZincInvocable
@@ -27,7 +27,7 @@ interface BflModule : BflType {
     /**
      * The module name can be used to generate the filename, or module name for `use` statements.
      */
-    fun getModuleName(): String = "module_" + id.camelToSnakeCase()
+    fun getModuleName(): String = "module_" + id.camelToZincSnakeCase()
 
     /**
      * Generate a [ZincFile] for this [BflModule].
@@ -74,7 +74,7 @@ internal fun BflModule.getRegisteredMethods(): Collection<ZincInvocable> = getRe
 /**
  * Return a name for a Constant holding the number of bits in the serialized form of this [BflModule].
  */
-fun BflModule.getLengthConstant(): String = "${typeName().camelToSnakeCase().toUpperCase(Locale.getDefault())}_LENGTH"
+fun BflModule.getLengthConstant(): String = "${typeName().camelToZincSnakeCase().toUpperCase(Locale.getDefault())}_LENGTH"
 
 /**
  * The type definition for the serialized form of this [BflModule].

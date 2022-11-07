@@ -2,13 +2,13 @@ package com.ing.zkflow.testing.dsl.services
 
 import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.network.ZKNetworkParameters
+import com.ing.zkflow.common.node.services.ZKWritableVerifierTransactionStorage
 import com.ing.zkflow.common.transactions.ZKVerifierTransaction
 import com.ing.zkflow.common.transactions.ZKVerifierTransactionWithoutProofs
 import com.ing.zkflow.common.transactions.collectUtxoInfos
 import com.ing.zkflow.common.transactions.zkCommandData
 import com.ing.zkflow.common.zkp.Witness
-import com.ing.zkflow.common.zkp.ZincZKTransactionService
-import com.ing.zkflow.node.services.ZKWritableVerifierTransactionStorage
+import com.ing.zkflow.common.zkp.zinc.ZincZKTransactionService
 import com.ing.zkflow.zinc.poet.generate.BuildPathProvider
 import com.ing.zkflow.zinc.poet.generate.CircuitGenerator
 import com.ing.zkflow.zinc.poet.generate.ConstsFactory

@@ -34,7 +34,7 @@ class FixedLengthListSerializerTest : SerializerTest {
     @ParameterizedTest
     @MethodSource("engines")
     fun `Sizes for List(Int) must match`(engine: BFLEngine) {
-        val expectedBytesSize = (UIntSerializer.descriptor.byteSize + MAX_SIZE * Int.SIZE_BYTES)
+        val expectedBytesSize = (IntSerializer.descriptor.byteSize + MAX_SIZE * Int.SIZE_BYTES)
 
         InstanceSerializer.descriptor.byteSize shouldBe expectedBytesSize
         engine.serialize(InstanceSerializer, list).size shouldBe expectedBytesSize * engine.bytesScaler

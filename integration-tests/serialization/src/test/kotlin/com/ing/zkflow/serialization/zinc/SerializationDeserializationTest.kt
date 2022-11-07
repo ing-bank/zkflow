@@ -21,9 +21,9 @@ import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.annotations.ZKPStable
 import com.ing.zkflow.annotations.corda.EdDSA
 import com.ing.zkflow.common.contracts.ZKCommandData
-import com.ing.zkflow.common.serialization.zinc.json.toUnsignedBitString
 import com.ing.zkflow.common.versioning.VersionedContractStateGroup
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
+import com.ing.zkflow.common.zkp.zinc.serialization.json.toUnsignedBitString
 import com.ing.zkflow.serialization.scheme.BinaryFixedLengthScheme
 import com.ing.zkflow.serialization.scheme.ByteBinaryFixedLengthScheme
 import com.ing.zkflow.serialization.toTree

@@ -7,9 +7,16 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":protocol"))
+    implementation(project(":utils"))
+    implementation(project(":common"))
+    implementation(project(":annotations"))
+    implementation(project(":serialization"))
     implementation(project(":zinc-poet:zinc-poet"))
     implementation(kotlin("stdlib"))
+
+    val cordaVersion: String by project
+    compileOnly("net.corda:corda-core:$cordaVersion")
+    testImplementation("net.corda:corda-core:$cordaVersion")
 
     val kspVersion: String by project
     implementation("com.google.devtools.ksp:symbol-processing-api:$kspVersion")
@@ -26,7 +33,6 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
     kotlinOptions {
         freeCompilerArgs += "-Xopt-in=com.squareup.kotlinpoet.ksp.KotlinPoetKspPreview"
         freeCompilerArgs += "-Xopt-in=com.google.devtools.ksp.KspExperimental"
-        freeCompilerArgs += "-Xopt-in=kotlin.ExperimentalUnsignedTypes"
     }
 }
 

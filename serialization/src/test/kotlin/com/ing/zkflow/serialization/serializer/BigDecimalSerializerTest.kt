@@ -36,7 +36,7 @@ class BigDecimalSerializerTest : SerializerTest {
     fun `Sizes for BigDecimals must match`(engine: BFLEngine) {
         // integer, fractional parts are serialized as bytes arrays with max size PRECISION,
         // additionally, `kind` and `sign` of the big integer are serialized.
-        val expectedBytesSize = Byte.SIZE_BYTES + Byte.SIZE_BYTES + 2 * (UIntSerializer.descriptor.byteSize + PRECISION * Byte.SIZE_BYTES)
+        val expectedBytesSize = Byte.SIZE_BYTES + Byte.SIZE_BYTES + 2 * (IntSerializer.descriptor.byteSize + PRECISION * Byte.SIZE_BYTES)
 
         InstanceSerializer.descriptor.byteSize shouldBe expectedBytesSize
         engine.serialize(InstanceSerializer, BigDecimal.ONE).size shouldBe expectedBytesSize * engine.bytesScaler

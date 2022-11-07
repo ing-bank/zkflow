@@ -4,7 +4,7 @@ import com.ing.zinc.bfl.BflType
 import com.ing.zinc.bfl.BflWrappedTransactionComponent
 import com.ing.zinc.bfl.CONSTS
 import com.ing.zinc.bfl.dsl.WrappedTransactionComponentBuilder.Companion.wrappedTransactionComponent
-import com.ing.zinc.naming.camelToSnakeCase
+import com.ing.zinc.naming.camelToZincSnakeCase
 import com.ing.zinc.poet.ZincArray.Companion.zincArray
 import com.ing.zinc.poet.ZincConstant
 import com.ing.zinc.poet.ZincConstant.Companion.zincConstant
@@ -50,7 +50,7 @@ data class TransactionComponentOptions(
     /**
      * Name of the deserialize method for this witness group.
      */
-    val deserializeMethodName: String = "deserialize_from_${name.camelToSnakeCase()}"
+    val deserializeMethodName: String = "deserialize_from_${name.camelToZincSnakeCase()}"
 
     /**
      * Generate an expression with which to deserialize the unwrapped state from the [witnessGroupVariable].

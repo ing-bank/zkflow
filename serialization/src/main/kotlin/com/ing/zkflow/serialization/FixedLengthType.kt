@@ -24,10 +24,6 @@ enum class FixedLengthType(val serialName: String) {
     SHORT(Short::class.qualifiedName!!),
     INT(Int::class.qualifiedName!!),
     LONG(Long::class.qualifiedName!!),
-    UBYTE(UByte::class.qualifiedName!!),
-    USHORT(UShort::class.qualifiedName!!),
-    UINT(UInt::class.qualifiedName!!),
-    ULONG(ULong::class.qualifiedName!!),
     BOOLEAN(Boolean::class.qualifiedName!!),
     ;
 

@@ -51,13 +51,9 @@ object ZkpStructureGenerator {
             FixedLengthType.UTF32_STRING -> createString(descriptor, "Utf32")
             FixedLengthType.BOOLEAN -> ZkpStructurePrimitive(Boolean::class.qualifiedName!!, Byte.SIZE_BYTES)
             FixedLengthType.BYTE -> ZkpStructurePrimitive(Byte::class.qualifiedName!!, Byte.SIZE_BYTES)
-            FixedLengthType.UBYTE -> ZkpStructurePrimitive(UByte::class.qualifiedName!!, UByte.SIZE_BYTES)
             FixedLengthType.SHORT -> ZkpStructurePrimitive(Short::class.qualifiedName!!, Short.SIZE_BYTES)
-            FixedLengthType.USHORT -> ZkpStructurePrimitive(UShort::class.qualifiedName!!, UShort.SIZE_BYTES)
             FixedLengthType.INT -> ZkpStructurePrimitive(Int::class.qualifiedName!!, Int.SIZE_BYTES)
-            FixedLengthType.UINT -> ZkpStructurePrimitive(UInt::class.qualifiedName!!, UInt.SIZE_BYTES)
             FixedLengthType.LONG -> ZkpStructurePrimitive(Long::class.qualifiedName!!, Long.SIZE_BYTES)
-            FixedLengthType.ULONG -> ZkpStructurePrimitive(ULong::class.qualifiedName!!, ULong.SIZE_BYTES)
             FixedLengthType.EXACT_LIST -> createArray(descriptor)
             null -> when (descriptor.kind) {
                 SerialKind.ENUM -> createEnum(descriptor)

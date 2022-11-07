@@ -1,7 +1,7 @@
 package com.ing.zkflow.notary
 
+import com.ing.zkflow.common.node.services.ZKWritableVerifierTransactionStorage
 import com.ing.zkflow.common.zkp.ZKTransactionService
-import com.ing.zkflow.node.services.ZKWritableVerifierTransactionStorage
 
 /**
  * TODO investigate:

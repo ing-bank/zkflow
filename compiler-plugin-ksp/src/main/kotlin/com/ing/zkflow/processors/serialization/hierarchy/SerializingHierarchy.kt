@@ -29,10 +29,6 @@ import com.ing.zkflow.serialization.serializer.InstantSerializer
 import com.ing.zkflow.serialization.serializer.IntSerializer
 import com.ing.zkflow.serialization.serializer.LongSerializer
 import com.ing.zkflow.serialization.serializer.ShortSerializer
-import com.ing.zkflow.serialization.serializer.UByteSerializer
-import com.ing.zkflow.serialization.serializer.UIntSerializer
-import com.ing.zkflow.serialization.serializer.ULongSerializer
-import com.ing.zkflow.serialization.serializer.UShortSerializer
 import com.ing.zkflow.serialization.serializer.UUIDSerializer
 import com.ing.zkflow.serialization.serializer.corda.AlwaysAcceptAttachmentConstraintSerializer
 import com.ing.zkflow.serialization.serializer.corda.AnonymousPartySerializer
@@ -161,13 +157,9 @@ internal fun KSTypeReference.getSerializingHierarchy(tracker: Tracker, ignoreNul
             // Types.
             Boolean::class.qualifiedName -> asBasic(tracker, BooleanSerializer::class)
             Byte::class.qualifiedName -> asBasic(tracker, ByteSerializer::class)
-            UByte::class.qualifiedName -> asBasic(tracker, UByteSerializer::class)
             Short::class.qualifiedName -> asBasic(tracker, ShortSerializer::class)
-            UShort::class.qualifiedName -> asBasic(tracker, UShortSerializer::class)
             Int::class.qualifiedName -> asBasic(tracker, IntSerializer::class)
-            UInt::class.qualifiedName -> asBasic(tracker, UIntSerializer::class)
             Long::class.qualifiedName -> asBasic(tracker, LongSerializer::class)
-            ULong::class.qualifiedName -> asBasic(tracker, ULongSerializer::class)
             Float::class.qualifiedName -> asBasic(tracker, FixedLengthFloatingPointSerializer.FloatSerializer::class)
             Double::class.qualifiedName -> asBasic(tracker, FixedLengthFloatingPointSerializer.DoubleSerializer::class)
             Char::class.qualifiedName -> asChar(tracker)

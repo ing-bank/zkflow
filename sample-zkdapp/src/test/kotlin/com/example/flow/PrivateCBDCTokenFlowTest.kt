@@ -4,22 +4,25 @@ import com.example.contract.audit.AuditContract
 import com.example.contract.cbdc.CBDCToken
 import com.example.contract.cbdc.commands.IssuePrivate
 import com.example.contract.cbdc.commands.MovePrivate
+import com.example.contract.cbdc.commands.RedeemPrivate
 import com.example.contract.cbdc.commands.SplitPrivate
 import com.example.contract.cbdc.digitalEuro
+import com.ing.zkflow.common.node.services.InMemoryZKVerifierTransactionStorageCordaService
+import com.ing.zkflow.common.node.services.ServiceNames.ZK_TX_SERVICE
+import com.ing.zkflow.common.node.services.ServiceNames.ZK_UTXO_INFO_STORAGE
+import com.ing.zkflow.common.node.services.ServiceNames.ZK_VERIFIER_TX_STORAGE
 import com.ing.zkflow.common.zkp.ZKFlow
 import com.ing.zkflow.common.zkp.ZKTransactionService
-import com.ing.zkflow.node.services.InMemoryUtxoInfoStorage
-import com.ing.zkflow.node.services.InMemoryZKVerifierTransactionStorageCordaService
-import com.ing.zkflow.node.services.ServiceNames.ZK_TX_SERVICE
-import com.ing.zkflow.node.services.ServiceNames.ZK_UTXO_INFO_STORAGE
-import com.ing.zkflow.node.services.ServiceNames.ZK_VERIFIER_TX_STORAGE
-import com.ing.zkflow.node.services.getCordaServiceFromConfig
+import com.ing.zkflow.common.node.services.InMemoryUtxoInfoStorage
+import com.ing.zkflow.common.node.services.getCordaServiceFromConfig
+import com.ing.zkflow.common.zkp.zinc.ZincZKTransactionCordaService
 import com.ing.zkflow.notary.ZKNotaryService
 import com.ing.zkflow.testing.checkIsPresentInVault
 import com.ing.zkflow.testing.checkIsPubliclyPresentInZKStorage
 import com.ing.zkflow.testing.checkNotPresentInVault
 import com.ing.zkflow.testing.checkNotPresentInZKStorage
 import com.ing.zkflow.testing.zkp.MockZKTransactionCordaService
+// import com.ing.zkflow.testing.zkp.MockZKTransactionCordaService
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
@@ -60,8 +63,8 @@ class PrivateCBDCTokenFlowTest {
                     mapOf(
                         ZK_VERIFIER_TX_STORAGE to InMemoryZKVerifierTransactionStorageCordaService::class.qualifiedName!!,
                         ZK_UTXO_INFO_STORAGE to InMemoryUtxoInfoStorage::class.qualifiedName!!,
-                        // ZK_TX_SERVICE to ZincZKTransactionCordaService::class.qualifiedName!!,
-                        ZK_TX_SERVICE to MockZKTransactionCordaService::class.qualifiedName!!,
+                        ZK_TX_SERVICE to ZincZKTransactionCordaService::class.qualifiedName!!,
+                        // ZK_TX_SERVICE to MockZKTransactionCordaService::class.qualifiedName!!,
                     )
                 )
             ),
@@ -104,6 +107,7 @@ class PrivateCBDCTokenFlowTest {
         zkTransactionService.setup(IssuePrivate().metadata)
         zkTransactionService.setup(MovePrivate().metadata)
         zkTransactionService.setup(SplitPrivate().metadata)
+        zkTransactionService.setup(RedeemPrivate().metadata)
     }
 
     @AfterAll

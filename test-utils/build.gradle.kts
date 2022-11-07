@@ -11,13 +11,16 @@ dependencies {
     // We explicitly don't provide the protocol as part of our JAR: users of test-utils should have the protocol on their class path already
     compileOnly(project(":protocol"))
 
+    val kotlinxSerializationVersion: String by project
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
+
     val cordaReleaseGroup: String by project
     val cordaVersion: String by project
-    api("$cordaReleaseGroup:corda-test-utils:$cordaVersion")
-    api("$cordaReleaseGroup:corda-node-driver:$cordaVersion")
+    // TODO: can this be compile only with a runtime check? Should only cause issues when running tests when not present
+    compileOnly("$cordaReleaseGroup:corda-test-utils:$cordaVersion")
+    compileOnly("$cordaReleaseGroup:corda-node-driver:$cordaVersion")
 
     implementation(project(":serialization"))
-
     implementation(project(":zinc-poet:zinc-code-generation"))
 
     val kotestVersion: String by project
@@ -25,7 +28,6 @@ dependencies {
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
-    kotlinOptions.freeCompilerArgs += "-Xopt-in=kotlin.time.ExperimentalTime"
     kotlinOptions.freeCompilerArgs += "-Xopt-in=kotlinx.serialization.ExperimentalSerializationApi"
 }
 
