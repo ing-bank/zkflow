@@ -53,28 +53,10 @@ tasks.withType<AbstractArchiveTask> {
     isReproducibleFileOrder = true
 }
 
-// TODO: We will have to enable explicitApi soon:
-// https://kotlinlang.org/docs/reference/whatsnew14.html#explicit-api-mode-for-library-authors
-// kotlin {
-//     explicitApi = Strict
-// }
-// TODO: Introduce kotlin/binary-compatibility-validator: https://github.com/Kotlin/binary-compatibility-validator
-
 publishing {
     publications {
         create<MavenPublication>("zkFlow") {
             project.shadow.component(this)
-        }
-    }
-
-    repositories {
-        maven {
-            name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/ingzkp/zkflow")
-            credentials {
-                username = System.getenv("GITHUB_USERNAME")
-                password = System.getenv("GITHUB_TOKEN")
-            }
         }
     }
 }
