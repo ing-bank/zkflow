@@ -63,8 +63,8 @@ class PrivateCBDCTokenFlowTest {
                     mapOf(
                         ZK_VERIFIER_TX_STORAGE to InMemoryZKVerifierTransactionStorageCordaService::class.qualifiedName!!,
                         ZK_UTXO_INFO_STORAGE to InMemoryUtxoInfoStorage::class.qualifiedName!!,
-                        ZK_TX_SERVICE to ZincZKTransactionCordaService::class.qualifiedName!!,
-                        // ZK_TX_SERVICE to MockZKTransactionCordaService::class.qualifiedName!!,
+                        // ZK_TX_SERVICE to ZincZKTransactionCordaService::class.qualifiedName!!,
+                        ZK_TX_SERVICE to MockZKTransactionCordaService::class.qualifiedName!!,
                     )
                 )
             ),
