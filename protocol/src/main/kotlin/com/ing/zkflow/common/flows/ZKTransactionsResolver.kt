@@ -1,3 +1,13 @@
+/*
+ * Source attribution:
+ *
+ * The classes in this file are strongly based on their original non-ZKP counterpart (i.e. without the 'ZK' prefix in the class name) from Corda
+ * itself, as defined in the package net.corda.core.flows (https://github.com/corda/corda).
+ *
+ * Ideally ZKFlow could have extended the Corda classes to add the ZKP resolution only, and leave the rest of the behaviour intact.
+ * Unfortunately, Corda's core classes were not implemented with extension in mind, and it was not possible to create this resolver without copying most
+ * of the original.
+ */
 package com.ing.zkflow.common.flows
 
 import co.paralleluniverse.fibers.Suspendable

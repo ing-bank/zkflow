@@ -1,3 +1,13 @@
+/*
+ * Source attribution:
+ *
+ * Some flows in this file are strongly based on their original non-ZKP counterpart (i.e. without the 'ZK' prefix in the class name) from Corda
+ * itself, as defined in the package net.corda.core.flows (https://github.com/corda/corda).
+ *
+ * Ideally ZKFlow could have extended the Corda flows to add the ZKP checks only, and leave the rest of the behaviour intact.
+ * Unfortunately, Corda's flows were not implemented with extension in mind, and it was not possible to create this flow without copying most
+ * of the original flow.
+ */
 package com.ing.zkflow.client.flows
 
 import co.paralleluniverse.fibers.Suspendable
@@ -23,23 +33,6 @@ import net.corda.core.utilities.UntrustworthyData
 import net.corda.core.utilities.debug
 import net.corda.core.utilities.trace
 import net.corda.core.utilities.unwrap
-
-/**
- * An abstract flow for fetching typed data from a remote peer.
- *
- * Given a set of hashes (IDs), either loads them from local disk or asks the remote peer to provide them.
- *
- * A malicious response in which the data provided by the remote peer does not hash to the requested hash results in
- * [DownloadedVsRequestedDataMismatch] being thrown. If the remote peer doesn't have an entry, it results in a
- * [HashNotFound] exception being thrown.
- *
- * By default this class does not insert data into any local database, if you want to do that after missing items were
- * fetched then override [maybeWriteToDisk]. You *must* override [load]. If the wire type is not the same as the
- * ultimate type, you must also override [convert].
- *
- * @param T The ultimate type of the data being fetched.
- * @param W The wire type of the data being fetched, for when it isn't the same as the ultimate type.
- */
 
 sealed class FetchZKDataFlow<T : NamedByHash, in W : Any>(
     protected val requests: Set<SecureHash>,

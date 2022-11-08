@@ -1,3 +1,13 @@
+/*
+ * Source attribution:
+ *
+ * Some flows in this file are strongly based on their original non-ZKP counterpart (i.e. without the 'ZK' prefix in the class name) from Corda
+ * itself, as defined in the package net.corda.core.flows (https://github.com/corda/corda).
+ *
+ * Ideally ZKFlow could have extended the Corda flows to add the ZKP checks only, and leave the rest of the behaviour intact.
+ * Unfortunately, Corda's flows were not implemented with extension in mind, and it was not possible to create this flow without copying most
+ * of the original flow.
+ */
 package com.ing.zkflow.client.flows
 
 import co.paralleluniverse.fibers.Suspendable
@@ -25,26 +35,6 @@ import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TraversableTransaction
 import net.corda.core.utilities.ProgressTracker
 
-/**
- * Verifies the given transaction, then sends it to the named notary. If the notary agrees that the transaction
- * is acceptable then it is from that point onwards committed to the ledger, and will be written through to the
- * vault. Additionally it will be distributed to the parties reflected in the participants list of the states.
- *
- * The transaction is expected to have already been resolved: if its dependencies are not available in local
- * storage, verification will fail. It must have signatures from all necessary parties other than the notary.
- *
- * A list of [FlowSession]s is required for each non-local participant of the transaction. These participants will receive
- * the final notarised transaction by calling [ZKReceiveFinalityFlow] in their counterpart com.ing.zkflow.flows. Sessions with non-participants
- * can also be included, but they must specify [StatesToRecord.ALL_VISIBLE] for statesToRecord if they wish to record the
- * contract states into their vaults.
- *
- * The flow returns the same transaction but with the additional signatures from the notary.
- *
- * NOTE: This is an inlined flow but for backwards compatibility is annotated with [InitiatingFlow].
- */
-// To maintain backwards compatibility with the old API, FinalityFlow can act both as an initiating flow and as an inlined flow.
-// This is only possible because a flow is only truly initiating when the first call to initiateFlow is made (where the
-// presence of @InitiatingFlow is checked). So the new API is inlined simply because that code path doesn't call initiateFlow.
 @InitiatingFlow
 class ZKFinalityFlow private constructor(
     val stx: SignedTransaction,
