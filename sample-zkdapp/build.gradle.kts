@@ -46,35 +46,14 @@ repositories {
 }
 
 dependencies {
-    // TODO: Find a way to set this correclty from the ZKFlowPlugin. Already doing it there for 'implementation', but apparently
-    // that is not enough?
-    compile("com.ing.zkflow:protocol:1.0-SNAPSHOT")
+    val corda_release_version: String by project
+    cordaCompile("net.corda:corda-core:$corda_release_version")
+    cordaRuntime("net.corda:corda:$corda_release_version")
+    cordaCompile("net.corda:corda-node:$corda_release_version")
+    cordaCompile("net.corda:corda-jackson:$corda_release_version")
 
-    val kotlinVersion = "1.3.72"
-    implementation("org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion")
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlinVersion")
-    implementation("org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
-
-    // TODO: Find a way to set this from the ZKFlowPlugin with correct version
-    val kotlinxSerializationVersion = "1.3.1"
-    compile("org.jetbrains.kotlinx:kotlinx-serialization-core:$kotlinxSerializationVersion")
-    compile("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:$kotlinxSerializationVersion")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core-jvm:$kotlinxSerializationVersion")
-    kotlinCompilerPluginClasspath("org.jetbrains.kotlinx:kotlinx-serialization-core:$kotlinxSerializationVersion")
-
-    val cordaReleaseGroup = "net.corda"
-    val cordaVersion = "4.8.5"
-    cordaCompile("$cordaReleaseGroup:corda-core:$cordaVersion")
-    cordaRuntime("$cordaReleaseGroup:corda:$cordaVersion")
-    cordaCompile("$cordaReleaseGroup:corda-node:$cordaVersion")
-    cordaCompile("$cordaReleaseGroup:corda-jackson:$cordaVersion")
-
-    kotlinCompilerPluginClasspath("net.corda:corda-core:$cordaVersion")
-
-    testImplementation("$cordaReleaseGroup:corda-node-driver:$cordaVersion")
-    testImplementation("$cordaReleaseGroup:corda-test-utils:$cordaVersion")
+    testImplementation("net.corda:corda-node-driver:$corda_release_version")
+    testImplementation("net.corda:corda-test-utils:$corda_release_version")
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.1")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.8.1")
@@ -82,57 +61,15 @@ dependencies {
     testImplementation("com.ing.zkflow:test-utils:1.0-SNAPSHOT")
 }
 
-// TODO: Should this be done by the ZKFLow plugin?
-sourceSets {
-    main {
-        resources.srcDir(projectDir.resolve("build/zinc"))
-    }
-}
-
 tasks.test {
     useJUnitPlatform {
         excludeTags("rpc")
     }
-
-    testLogging {
-        events("passed", "skipped", "failed")
-        showStandardStreams = true
-    }
-
-    // Set the default log4j config file for tests
-    systemProperty("log4j.configurationFile", "${project.buildDir}/resources/test/log4j2.xml")
-
-    // Allow setting a custom log4j config file
-    val logConfigPath = System.getProperty("log4j.configurationFile")
-    if (logConfigPath != null) {
-        systemProperty("log4j.configurationFile", logConfigPath)
-    }
-
-    // This file determines for the standard java.util.logging how and what is logged to the console
-    // This is to configure logging that does not go through slf4j/log4j, like JUnit platform logging.
-    systemProperty(
-        "java.util.logging.config.file",
-        "${project.buildDir}/resources/test/logging-test.properties"
-    )
 }
 
 tasks.register<Test>("rpcTest") {
     useJUnitPlatform {
         includeTags("rpc")
-    }
-
-    testLogging {
-        events("passed", "skipped", "failed")
-        showStandardStreams = true
-    }
-}
-
-val testConfigResourcesDir = "${rootProject.rootDir}/config/test"
-sourceSets {
-    test {
-        resources {
-            srcDir(testConfigResourcesDir)
-        }
     }
 }
 
