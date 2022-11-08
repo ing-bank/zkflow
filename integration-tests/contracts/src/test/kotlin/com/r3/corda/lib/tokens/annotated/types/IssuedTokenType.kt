@@ -1,4 +1,4 @@
-package com.r3.cbdc.annotated.types
+package com.r3.corda.lib.tokens.annotated.types
 
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.annotations.corda.EdDSA

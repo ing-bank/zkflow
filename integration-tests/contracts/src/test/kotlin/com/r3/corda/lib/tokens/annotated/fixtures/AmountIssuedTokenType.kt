@@ -1,12 +1,12 @@
 @file:Suppress("ClassName")
 
-package com.r3.cbdc.annotated.fixtures
+package com.r3.corda.lib.tokens.annotated.fixtures
 
 import com.ing.zkflow.ConversionProvider
 import com.ing.zkflow.Surrogate
 import com.ing.zkflow.annotations.BigDecimalSize
 import com.ing.zkflow.annotations.ZKPSurrogate
-import com.r3.cbdc.annotated.types.IssuedTokenType
+import com.r3.corda.lib.tokens.annotated.types.IssuedTokenType
 import net.corda.core.contracts.Amount
 import java.math.BigDecimal
 

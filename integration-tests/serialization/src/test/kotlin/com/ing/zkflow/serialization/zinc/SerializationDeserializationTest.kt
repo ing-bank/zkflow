@@ -27,6 +27,7 @@ import com.ing.zkflow.common.zkp.zinc.serialization.json.toUnsignedBitString
 import com.ing.zkflow.serialization.scheme.BinaryFixedLengthScheme
 import com.ing.zkflow.serialization.scheme.ByteBinaryFixedLengthScheme
 import com.ing.zkflow.serialization.toTree
+import com.ing.zkflow.util.STUB_FOR_TESTING
 import com.ing.zkflow.util.bitSize
 import com.ing.zkflow.util.ensureDirectory
 import com.ing.zkflow.util.ensureFile
@@ -301,7 +302,7 @@ class SerializationDeserializationTest {
         @ZKP
         class Move : ZKCommandData {
             override val metadata: ResolvedZKCommandMetadata
-                get() = TODO("Not yet implemented")
+                get() = STUB_FOR_TESTING()
 
             override fun verifyPrivate(): String = """
                 mod module_command_context;

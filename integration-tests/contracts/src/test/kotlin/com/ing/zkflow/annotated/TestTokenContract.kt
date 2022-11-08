@@ -7,6 +7,7 @@ import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.versioning.VersionedContractStateGroup
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.serialization.serializer.corda.PublicKeySerializer
+import com.ing.zkflow.util.STUB_FOR_TESTING
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.CommandAndState
 import net.corda.core.contracts.Contract
@@ -37,7 +38,7 @@ class TestTokenContract : Contract {
         override val participants: List<AbstractParty> = listOf(owner)
 
         override fun withNewOwner(newOwner: AbstractParty): CommandAndState {
-            TODO("Not yet implemented")
+            STUB_FOR_TESTING()
         }
     }
 
@@ -45,7 +46,7 @@ class TestTokenContract : Contract {
     @ZKP
     class Create : ZKCommandData {
         override val metadata: ResolvedZKCommandMetadata
-            get() = TODO("Not yet implemented")
+            get() = STUB_FOR_TESTING()
 
         override fun verifyPrivate(): String = """
             mod module_command_context;
@@ -60,7 +61,7 @@ class TestTokenContract : Contract {
     @ZKP
     class Move : ZKCommandData {
         override val metadata: ResolvedZKCommandMetadata
-            get() = TODO("Not yet implemented")
+            get() = STUB_FOR_TESTING()
 
         override fun verifyPrivate(): String = """
             mod module_command_context;

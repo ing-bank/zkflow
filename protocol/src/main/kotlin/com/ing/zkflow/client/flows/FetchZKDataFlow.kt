@@ -92,19 +92,10 @@ sealed class FetchZKDataFlow<T : NamedByHash, in W : Any>(
             logger.trace { "FetchDataFlow.call(): loadWhatWeHave(): From disk size = ${fromDisk.size}, To-fetch size = ${toFetch.size}" }
             logger.debug { "Requesting ${toFetch.size} dependency(s) for verification from ${otherSideSession.counterparty.name}" }
 
-            // TODO: Support "large message" response streaming so response sizes are not limited by RAM.
-            // We can then switch to requesting items in large batches to minimise the latency penalty.
-            // This is blocked by bugs ARTEMIS-1278 and ARTEMIS-1279. For now we limit attachments and txns to 10mb each
-            // and don't request items in batch, which is a performance loss, but works around the issue. We have
-            // configured Artemis to not fragment messages up to 10mb so we can send 10mb messages without problems.
-            // Above that, we start losing authentication data on the message fragments and take exceptions in the
-            // network layer.
             val maybeItems = ArrayList<W>()
             if (toFetch.size == 1) {
                 val hash = toFetch.single()
-                // We skip the validation here (with unwrap { it }) because we will do it below in validateFetchResponse.
-                // The only thing checked is the object type.
-                // TODO We need to page here after large messages will work.
+                // We skip the validation here (with unwrap { it }) because we will do it below in validateFetchResponse. // The only thing checked is the object type.
                 logger.trace { "[Single fetch]: otherSideSession.sendAndReceive($hash): Fetch type: ${dataType.name}" }
                 // should only pass single item dataType below.
                 maybeItems += otherSideSession.sendAndReceive<List<W>>(Request.Data(NonEmptySet.of(hash), dataType)).unwrap { it }

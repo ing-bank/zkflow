@@ -32,11 +32,6 @@ import java.util.concurrent.CompletableFuture
 open class ZKNotaryService(final override val services: ServiceHubInternal, override val notaryIdentityKey: PublicKey) :
     NotaryService() {
 
-    /**
-     * TODO: Perhaps we can use [AppendOnlyPersistentMap] for persistence of the inputs and outputs?
-     * Or perhaps not, because it caches everything by default? That would be a too long list.
-     * Have a look at how the cache works.
-     */
     val uniquenessProvider = PersistentUniquenessProvider(
         services.clock,
         services.database,
@@ -51,13 +46,6 @@ open class ZKNotaryService(final override val services: ServiceHubInternal, over
      */
     fun getEstimatedWaitTime(numStates: Int): Duration = uniquenessProvider.getEta(numStates)
 
-    /**
-     * TODO
-     * - Why do we let the UniquenessProvider sign tx? Why not just let that return an
-     * sign the tx in the ZKNotaryServiceFlow?
-     * - Revisit this later and check if we need the TransactionSignature wrapper at all.
-     * And if we do, do we need the SignatureMetadata to contain a meaningful schemeNumberID?
-     */
     fun signTransaction(txId: SecureHash): TransactionSignature {
 
         val signatureMetadata = SignatureMetadata(services.myInfo.platformVersion, Crypto.findSignatureScheme(notaryIdentityKey).schemeNumberID)
@@ -114,8 +102,6 @@ open class ZKNotaryService(final override val services: ServiceHubInternal, over
     ) : FlowExternalAsyncOperation<UniquenessProvider.Result> {
 
         override fun execute(deduplicationId: String): CompletableFuture<UniquenessProvider.Result> {
-            // TODO: call our own custom PersistentUniquenessProvider, that unfortunately does NOT implement that interface,
-            // because it can't handle ZKStateRefs and outputs
             return service.uniquenessProvider.commit(inputs, txId, caller, requestSignature, timeWindow, references).toCompletableFuture()
         }
     }

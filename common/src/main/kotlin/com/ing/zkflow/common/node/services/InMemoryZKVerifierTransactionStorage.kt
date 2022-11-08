@@ -13,7 +13,6 @@ import rx.Observable
 import rx.subjects.PublishSubject
 
 /**
- * TODO this should go to test sources once we have non-mock implementation
  * A class which provides an implementation of [WritableTransactionStorage] which is used in [MockServices]
  */
 @CordaService

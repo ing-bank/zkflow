@@ -19,6 +19,7 @@ import com.ing.zinc.poet.ZincType.Companion.id
 import com.ing.zinc.poet.indent
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
 import com.ing.zkflow.util.BflSized
+import com.ing.zkflow.util.FEATURE_MISSING
 import com.ing.zkflow.util.NodeDescriptor
 import com.ing.zkflow.util.Tree
 import com.ing.zkflow.zinc.poet.generate.COMPUTE_NONCE
@@ -151,7 +152,7 @@ class Witness(
     override val id: String = Witness::class.java.simpleName
 
     override val bitSize: Int
-        get() = TODO("Not yet implemented")
+        get() = FEATURE_MISSING("Not yet implemented")
 
     override fun typeName(): String = id
 

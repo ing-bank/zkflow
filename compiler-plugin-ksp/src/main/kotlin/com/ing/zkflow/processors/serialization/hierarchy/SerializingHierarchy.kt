@@ -147,9 +147,6 @@ internal fun KSTypeReference.getSerializingHierarchy(tracker: Tracker, ignoreNul
 
     val fqName = type.declaration.qualifiedName?.asString() ?: error("Cannot determine a fully qualified name of ${type.declaration}")
 
-    // TODO
-    //   matching for basic types as in  KSTypeReference.isZKFlowSupportedPrimitive()
-
     return if (type.declaration.isAnnotationPresent(ZKP::class) || isAnnotationPresent(Via::class)) {
         asUserType(tracker, mustHaveDefault)
     } else {
@@ -209,7 +206,7 @@ internal fun KSTypeReference.getSerializingHierarchy(tracker: Tracker, ignoreNul
             Map::class.qualifiedName -> asMap(tracker)
             Set::class.qualifiedName -> asSet(tracker)
             //
-            else -> TODO("Type ${type.declaration} must be appropriately annotated")
+            else -> throw IllegalStateException("Type ${type.declaration} must be appropriately annotated")
         }
     }
 }

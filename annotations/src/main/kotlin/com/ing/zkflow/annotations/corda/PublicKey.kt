@@ -56,5 +56,3 @@ annotation class EdDSA
  * Corresponds to [Crypto.SPHINCS256_SHA256]
  */
 annotation class Sphincs
-
-// TODO: what to do with [Crypto.COMPOSITE_KEY]

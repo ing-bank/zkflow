@@ -265,7 +265,6 @@ class ZKPAnnotatedValidator(@Suppress("unused") private val logger: KSPLogger) :
     private fun KSTypeReference.requireSerializable() {
         // As soon as we encounter a @Via annotation, we stop checking all type arguments after that:
         // A @Via annotation implies that its surrogate covers the full type it applies to, including any type arguments.
-        // TODO: should type checking of surrogate from @Via and of actual type it applies to be recursive?
         val viaAnnotation = getAnnotationsByType(Via::class).firstOrNull()
         if (viaAnnotation != null) {
             val surrogate = viaAnnotation.getSurrogateFromViaAnnotation()

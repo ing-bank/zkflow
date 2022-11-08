@@ -1,7 +1,7 @@
-package com.r3.cbdc.annotated.states
+package com.r3.corda.lib.tokens.annotated.states
 
-import com.r3.cbdc.annotated.types.IssuedTokenType
-import com.r3.cbdc.annotated.types.TokenType
+import com.r3.corda.lib.tokens.annotated.types.IssuedTokenType
+import com.r3.corda.lib.tokens.annotated.types.TokenType
 import net.corda.core.contracts.ContractState
 import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.AbstractParty

@@ -106,10 +106,14 @@ open class ZKNotaryFlow(
     }
 
     /**
-     * Currently we cannot check if notary is ZK-validating so we use dummy check
+     * This will return true if the notary is a normal notary. Without changes to Corda it is not possible to determine more information
+     * about a notary.
+     *
+     * If the notary is not actually a ZKNotary, this will still cause a notarisation error a bit later in the notarisation process.
+     * This is acceptable because it is 1) still runtime, and 2) does not introduce any security issue.s
+     *
      */
     private fun isZKValidating(notaryParty: Party): Boolean {
-        // TODO invent smart way of checking if notary is ZK validating
         return serviceHub.networkMapCache.isNotary(notaryParty)
     }
 
@@ -118,7 +122,6 @@ open class ZKNotaryFlow(
      * same transaction.
      */
     private fun generateRequestSignature(): NotarisationRequestSignature {
-        // TODO: This is not required any more once our AMQP serialization supports turning off object referencing.
         val notarisationRequest =
             NotarisationRequest(svtx.tx.inputs.map { it.copy(txhash = it.txhash) }, svtx.id)
         return notarisationRequest.generateSignature(serviceHub)

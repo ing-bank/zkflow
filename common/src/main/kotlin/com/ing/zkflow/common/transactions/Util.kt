@@ -424,7 +424,6 @@ class PrivateUtxoAccess(stateRef: StateRef) :
  * @param transaction The transaction to fetch attachments for
  * @return True if any attachments were fetched from a remote peer, false otherwise
  */
-// TODO: This could be done in parallel with other fetches for extra speed.
 @Suspendable
 fun FlowLogic<*>.fetchMissingAttachments(tx: CoreTransaction, otherSide: FlowSession): Boolean {
     val attachmentIds = when (tx) {

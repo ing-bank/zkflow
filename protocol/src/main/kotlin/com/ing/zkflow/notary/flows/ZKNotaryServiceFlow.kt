@@ -46,7 +46,7 @@ class ZKNotaryServiceFlow(
     private val zkConfig: NotaryZKConfig
 ) : FlowLogic<Void?>(), IdempotentFlow {
     companion object {
-        // TODO: Determine an appropriate limit and also enforce in the network parameters and the transaction builder.
+        // TODO: Determine an appropriate limit and also enforce in the ZKNetworkParameters and the transaction builder.
         private const val MAX_ALLOWED_STATES_IN_TX = 10_000
     }
 
@@ -87,7 +87,6 @@ class ZKNotaryServiceFlow(
         }
 
         if (commitStatus is UniquenessProvider.Result.Success) {
-            // TODO: Why do we let the UniquenessProvider sign tx? Why not just let that return and sign the tx here?
             sendSignedResponse(tx.id, commitStatus.signature)
         } else {
             val error =
@@ -115,7 +114,6 @@ class ZKNotaryServiceFlow(
 
     private fun validateTransactionSize(tx: ZKVerifierTransaction) {
         try {
-            // TODO: should this include outputs?
             checkMaxStateCount(tx.inputs + tx.references)
         } catch (e: IllegalArgumentException) {
             throw NotaryInternalException(NotaryError.TransactionInvalid(e))
@@ -162,10 +160,6 @@ class ZKNotaryServiceFlow(
         val svtx = requestPayload.transaction
 
         try {
-            /**
-             * TODO Check if we need to do some more checks from [TransactionVerifierServiceInternal]
-             * that are done on Ledgertransactions
-             */
             // Resolve dependencies
             subFlow(ResolveZKTransactionsFlow(svtx.tx, svtx.dependencies, otherSideSession))
 

@@ -1,12 +1,12 @@
-package com.r3.cbdc.annotated.states
+package com.r3.corda.lib.tokens.annotated.states
 
 import com.ing.zkflow.Via
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.annotations.corda.EdDSA
 import com.ing.zkflow.annotations.corda.SHA256
 import com.ing.zkflow.common.versioning.VersionedContractStateGroup
-import com.r3.cbdc.annotated.fixtures.AmountSurrogate_IssuedTokenTypeV1
-import com.r3.cbdc.annotated.types.IssuedTokenType
+import com.r3.corda.lib.tokens.annotated.fixtures.AmountSurrogate_IssuedTokenTypeV1
+import com.r3.corda.lib.tokens.annotated.types.IssuedTokenType
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.ContractState
 import net.corda.core.crypto.SecureHash

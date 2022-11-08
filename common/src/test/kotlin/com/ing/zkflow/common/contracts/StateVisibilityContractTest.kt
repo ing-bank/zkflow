@@ -134,7 +134,7 @@ class StateVisibilityContractTest {
 
     @Test
     fun `Move any to private - fails for invalid number of signers`() {
-        // TODO Even with the `fails with` clause this still throws an exception
+        // Even with the `fails with` clause this still throws an exception
         val ex = shouldThrow<ResolvedZKCommandMetadata.IllegalTransactionStructureException> {
             services.zkLedger(zkService = zkTransactionService, zkVerifierTransactionStorage = zkVerifierTransactionStorage) {
                 transaction {

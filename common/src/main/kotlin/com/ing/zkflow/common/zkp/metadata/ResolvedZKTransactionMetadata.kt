@@ -23,7 +23,6 @@ data class ResolvedZKTransactionMetadata(
     init {
         require(commands.isNotEmpty()) { ERROR_NO_COMMANDS }
         require(commands.distinctBy { it.commandKClass }.size == commands.size) { ERROR_COMMAND_NOT_UNIQUE }
-        // TODO        TODO("TODO: Verify components visibility is aligned among different commands")
     }
 
     fun verify(ltx: ZKTransactionBuilder) {

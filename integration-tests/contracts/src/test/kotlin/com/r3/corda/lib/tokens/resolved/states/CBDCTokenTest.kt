@@ -1,6 +1,6 @@
 @file:Suppress("ClassName")
 
-package com.r3.cbdc.resolved.states
+package com.r3.corda.lib.tokens.resolved.states
 
 import com.ing.zkflow.fixedCordaX500Name
 import com.ing.zkflow.serialization.SerializerTest
@@ -10,11 +10,11 @@ import com.ing.zkflow.serialization.serializer.IntSerializer
 import com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializer
 import com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializerWithDefault
 import com.ing.zkflow.testing.zkp.ZKNulls.fixedKeyPair
-import com.r3.cbdc.annotated.fixtures.AmountSurrogate_IssuedTokenTypeV1Serializer
-import com.r3.cbdc.annotated.states.AbstractFungibleToken
-import com.r3.cbdc.annotated.states.CBDCTokenSerializer
-import com.r3.cbdc.annotated.types.IssuedTokenType
-import com.r3.cbdc.annotated.types.TokenType
+import com.r3.corda.lib.tokens.annotated.fixtures.AmountSurrogate_IssuedTokenTypeV1Serializer
+import com.r3.corda.lib.tokens.annotated.states.AbstractFungibleToken
+import com.r3.corda.lib.tokens.annotated.states.CBDCTokenSerializer
+import com.r3.corda.lib.tokens.annotated.types.IssuedTokenType
+import com.r3.corda.lib.tokens.annotated.types.TokenType
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
@@ -70,7 +70,7 @@ class CBDCTokenTest : SerializerTest {
 
     private val party = Party(fixedCordaX500Name, publicKey)
 
-    private val cbdcToken = com.r3.cbdc.annotated.states.CBDCToken(
+    private val cbdcToken = com.r3.corda.lib.tokens.annotated.states.CBDCToken(
         myAmount = Amount(
             100,
             IssuedTokenType(
