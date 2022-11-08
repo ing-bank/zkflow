@@ -1,3 +1,13 @@
+/*
+ * Source attribution:
+ *
+ * Some flows in this file are strongly based on their original non-ZKP counterpart (i.e. without the 'ZK' prefix in the class name) from Corda
+ * itself, as defined in the package net.corda.core.flows (https://github.com/corda/corda).
+ *
+ * Ideally ZKFlow could have extended the Corda flows to add the ZKP checks only, and leave the rest of the behaviour intact.
+ * Unfortunately, Corda's flows were not implemented with extension in mind, and it was not possible to create this flow without copying most
+ * of the original flow.
+ */
 package com.ing.zkflow.client.flows
 
 import co.paralleluniverse.fibers.Suspendable
@@ -12,66 +22,15 @@ import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.Party
 import net.corda.core.identity.groupPublicKeysByWellKnownParty
-import net.corda.core.node.ServiceHub
 import net.corda.core.transactions.SignedTransaction
-import net.corda.core.transactions.WireTransaction
 import net.corda.core.utilities.ProgressTracker
 import net.corda.core.utilities.unwrap
 import java.security.PublicKey
 
-/**
+/*
  * Note that this flow discloses all transaction contents to the signers, including that of any inputs that were the result
  * of a private transaction between other network participants.
- *
- * The [CollectSignaturesFlow] is used to automate the collection of counterparty signatures for a given transaction.
- *
- * You would typically use this flow after you have built a transaction with the TransactionBuilder and signed it with
- * your key pair. If there are additional signatures to collect then they can be collected using this flow. Signatures
- * are collected based upon the [WireTransaction.requiredSigningKeys] property which contains the union of all the PublicKeys
- * listed in the transaction's commands as well as a notary's public key, if required. This flow returns a
- * [SignedTransaction] which can then be passed to the [FinalityFlow] for notarisation. The other side of this flow is
- * the [SignTransactionFlow].
- *
- * **WARNING**: This flow ONLY works with [ServiceHub.legalIdentityKey]s and WILL break if used with randomly generated
- * keys by the [ServiceHub.keyManagementService].
- *
- * Usage:
- *
- * - Call the [CollectSignaturesFlow] flow as a [subFlow] and pass it a [SignedTransaction] which has at least been
- *   signed by the transaction creator (and possibly an oracle, if required)
- * - The flow expects that the calling node has signed the provided transaction, if not the flow will fail
- * - The flow will also fail if:
- *   1. The provided transaction is invalid
- *   2. Any of the required signing parties cannot be found in the [ServiceHub.networkMapCache] of the initiator
- *   3. If the wrong key has been used by a counterparty to sign the transaction
- *   4. The counterparty rejects the provided transaction
- * - The flow will return a [SignedTransaction] with all the counterparty signatures (but not the notary's!)
- * - If the provided transaction has already been signed by all counterparties then this flow simply returns the
- *   provided transaction without contacting any counterparties
- * - Call the [FinalityFlow] with the return value of this flow
- *
- * Example - issuing a multi-lateral agreement which requires N signatures:
- *
- *     val builder = TransactionBuilder(notaryRef)
- *     val issueCommand = Command(Agreement.Commands.Issue(), state.participants)
- *
- *     builder.withItems(state, issueCommand)
- *     builder.toWireTransaction().toLedgerTransaction(serviceHub).verify()
- *
- *     // Transaction creator signs transaction.
- *     val ptx = serviceHub.signInitialTransaction(builder)
- *
- *     // Call to CollectSignaturesFlow.
- *     // The returned signed transaction will have all signatures appended apart from the notary's.
- *     val stx = subFlow(CollectSignaturesFlow(ptx))
- *
- * @param stx Plaintext transaction that we use to carry data and check contract rules
- * @param vtx Transaction to collect the remaining signatures for
- * @param sessionsToCollectFrom A session for every party we need to collect a signature from.  Must be an exact match.
- * @param myOptionalKeys set of keys in the transaction which are owned by this node. This includes keys used on commands, not
- * just in the states. If null, the default well known identity of the node is used.
  */
-// TODO: AbstractStateReplacementFlow needs updating to use this flow.
 class ZKCollectSignaturesFlow @JvmOverloads constructor(
     val stx: SignedTransaction,
     val sessionsToCollectFrom: Collection<FlowSession>,

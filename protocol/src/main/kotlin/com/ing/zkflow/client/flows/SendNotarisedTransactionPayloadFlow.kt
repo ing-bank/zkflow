@@ -1,3 +1,13 @@
+/*
+ * Source attribution:
+ *
+ * Some flows in this file are strongly based on their original non-ZKP counterpart (i.e. without the 'ZK' prefix in the class name) from Corda
+ * itself, as defined in the package net.corda.core.flows (https://github.com/corda/corda).
+ *
+ * Ideally ZKFlow could have extended the Corda flows to add the ZKP checks only, and leave the rest of the behaviour intact.
+ * Unfortunately, Corda's flows were not implemented with extension in mind, and it was not possible to create this flow without copying most
+ * of the original flow.
+ */
 package com.ing.zkflow.client.flows
 
 import co.paralleluniverse.fibers.Suspendable
