@@ -1,8 +1,14 @@
 package com.ing.zkflow.client.flows
 
 import co.paralleluniverse.fibers.Suspendable
+import com.ing.zkflow.common.network.ZKNetworkParametersServiceLoader
+import com.ing.zkflow.common.node.services.ServiceNames
+import com.ing.zkflow.common.node.services.getCordaServiceFromConfig
 import com.ing.zkflow.common.transactions.SignedZKVerifierTransaction
+import com.ing.zkflow.common.transactions.resolvePublicOrPrivateStateRef
 import com.ing.zkflow.notary.ZKNotarisationPayload
+import net.corda.core.contracts.StateAndRef
+import net.corda.core.contracts.StateRef
 import net.corda.core.crypto.TransactionSignature
 import net.corda.core.flows.FlowSession
 import net.corda.core.flows.NotarisationPayload
@@ -15,6 +21,7 @@ import net.corda.core.flows.NotaryFlow
 import net.corda.core.flows.SendTransactionFlow
 import net.corda.core.identity.Party
 import net.corda.core.internal.FlowIORequest
+import net.corda.core.internal.SerializedStateAndRef
 import net.corda.core.internal.checkPayloadIs
 import net.corda.core.internal.notary.generateSignature
 import net.corda.core.internal.notary.validateSignatures
@@ -42,11 +49,25 @@ open class ZKNotaryFlow(
     protected fun checkZKVerifierTransaction(): Party {
         val notaryParty = svtx.tx.notary ?: throw IllegalStateException("Transaction does not specify a Notary")
         check(serviceHub.networkMapCache.isNotary(notaryParty)) { "$notaryParty is not a notary on the network" }
-//      TODO check if states belong to this notary somehow (given that we don't have states' contents)
-//        check(serviceHub.loadStates(svtx.tx.inputs.toSet() + svtx.tx.references.toSet()).all { it.state.notary == notaryParty }) {
-//            "Input states and reference input states must have the same Notary"
-//        }
+        ZKNetworkParametersServiceLoader.latest.notaryInfo.validate(notaryParty)
+        check(fetchStates(svtx.tx.inputs.toSet() + svtx.tx.references.toSet()).all { it.state.notary == notaryParty }) {
+            "Input states and reference input states must have the same Notary"
+        }
         return notaryParty
+    }
+
+    private fun fetchStates(states: Set<StateRef>): Set<StateAndRef<*>> {
+        return states.map {
+            SerializedStateAndRef(
+                resolvePublicOrPrivateStateRef(
+                    it,
+                    serviceHub,
+                    serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_VERIFIER_TX_STORAGE),
+                    serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_UTXO_INFO_STORAGE)
+                ),
+                it
+            ).toStateAndRef()
+        }.toSet()
     }
 
     /** Notarises the transaction with the [notaryParty], obtains the notary's signature(s). */
