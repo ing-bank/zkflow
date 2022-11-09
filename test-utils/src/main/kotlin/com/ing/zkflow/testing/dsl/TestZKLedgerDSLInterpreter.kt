@@ -1,3 +1,14 @@
+/*
+ * Source attribution:
+ *
+ * The classes for the ZKFlow test DSL are strongly based on their original non-ZKP counterpart from Corda
+ * itself, as defined in the package net.corda.testing.dsl (https://github.com/corda/corda).
+ *
+ * Ideally ZKFlow could have extended the Corda test DSL to add the ZKP-related parts only, and leave the rest of the behaviour intact.
+ * Unfortunately, Corda's test DSL is hard to extend, and it was not possible to add this behaviour without copying most
+ * of the original.
+ */
+package com.ing.zkflow.testing.dsl
 
 import com.ing.zkflow.common.network.ZKNetworkParameters
 import com.ing.zkflow.common.node.services.ZKWritableVerifierTransactionStorage
@@ -6,7 +17,6 @@ import com.ing.zkflow.common.transactions.ZKTransactionBuilder
 import com.ing.zkflow.common.transactions.ZKVerifierTransaction
 import com.ing.zkflow.common.transactions.verification.zkVerify
 import com.ing.zkflow.common.zkp.ZKTransactionService
-import com.ing.zkflow.testing.dsl.TestZKTransactionDSLInterpreter
 import com.ing.zkflow.testing.dsl.interfaces.AttachmentResolutionException
 import com.ing.zkflow.testing.dsl.interfaces.DoubleSpentInputs
 import com.ing.zkflow.testing.dsl.interfaces.DuplicateOutputLabel

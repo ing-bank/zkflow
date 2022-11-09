@@ -1,3 +1,13 @@
+/*
+ * Source attribution:
+ *
+ * The classes for the ZKFlow test DSL are strongly based on their original non-ZKP counterpart from Corda
+ * itself, as defined in the package net.corda.testing.dsl (https://github.com/corda/corda).
+ *
+ * Ideally ZKFlow could have extended the Corda test DSL to add the ZKP-related parts only, and leave the rest of the behaviour intact.
+ * Unfortunately, Corda's test DSL is hard to extend, and it was not possible to add this behaviour without copying most
+ * of the original.
+ */
 package com.ing.zkflow.testing.dsl.interfaces
 
 import net.corda.core.DoNotImplement
