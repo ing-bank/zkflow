@@ -68,12 +68,14 @@ This project requires Java 8. To be consistent with our CI, it is advisable to u
 On Mac, that is very easy to install and manage with [SDKMAN](https://sdkman.io/).
 
 ### Zinc
+Zinc is the ZKP toolchain used under the hood by ZKFlow. It is created by [Matter Labs](https://matter-labs.io/).
+Zinc was forked for ZKFlow to enable a few new features.
 
-You need to build and install our fork of Zinc from the [Github](https://dev.azure.com/INGNeo/ING%20Neo%20-%20ZKFlow/_git/zinc).  
+You need to build and install the ZKFlow fork of Zinc from [Github](https://github.com/mvdbos/zinc).  
 Please make sure you have a recent version of Rust installed before building Zinc.
 
 ```bash
-$ git clone https://dev.azure.com/INGNeo/ING%20Neo%20-%20ZKFlow/_git/zinc
+$ git clone https://github.com/mvdbos/zinc
 $ cd zinc
 $ git checkout ing-fork
 $ cargo b --release
@@ -84,3 +86,7 @@ Built binaries will be stored in `./target/release`. Move the `zargo`, `znc` and
 ## Contributing to ZKFlow
 
 If you want to make changes to ZKFlow, great! We welcome pull requests at any time. If you decide to create a PR, please keep the [contributing guidelines](CONTRIBUTING.md) in mind.
+
+## License
+
+[MIT](./LICENSE)
