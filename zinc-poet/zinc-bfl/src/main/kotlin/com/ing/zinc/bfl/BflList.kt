@@ -196,9 +196,6 @@ open class BflList(
         """.trimIndent()
     }
 
-    /**
-     * TODO the add method does not work when the value isn't returned, so not really mutable?
-     */
     private fun generateAddMethod() = zincMethod {
         mutable = true
         name = "add"

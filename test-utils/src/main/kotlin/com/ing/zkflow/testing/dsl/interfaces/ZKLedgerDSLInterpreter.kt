@@ -9,11 +9,6 @@ import net.corda.core.crypto.SecureHash
 import net.corda.core.transactions.WireTransaction
 import java.io.InputStream
 
-/**
- * This interface defines the bare bone public functionality that a Ledger DSL interpreter should implement.
- *
- * TODO (Kotlin 1.1): Use type synonyms to make the type params less unwieldy
- */
 @DoNotImplement
 @Suppress("FunctionNaming", "FunctionName") // Copy of Corda API
 public interface ZKLedgerDSLInterpreter<out T : ZKTransactionDSLInterpreter> : Verifies, OutputStateLookup {

@@ -11,31 +11,6 @@ import net.corda.core.serialization.CordaSerializable
 import net.corda.core.transactions.TraversableTransaction
 import net.corda.core.transactions.WireTransaction
 
-/**
- * The witness, which is what we serialize for Zinc, contains the following items:
- *
- * - Already serialized & sized componentgroups, e.g. groups of bytearrays of the WireTransaction.
- * - Already serialized & sized TransactionState<T: ContractState> class instances for all UTXOs (outputs of the previous transaction) pointed to by the inputs and reference StateRefs serialized inside the inputs and references component groups of the WireTransaction.
- * - The nonces bytes for the UTXOs pointed to by the input and reference StateRefs. (TODO: currently unsized because hashes are serialized and sized by nature. Or should this be serialized & sized also?)
- *
- * Then in Zinc, the following happens respectively:
- *
- * - We recalculate the Merkle root using the sized & serialized bytearrays of the componentgroups as is. The Merkle root is compared with the expected Merkle root from the public input, which would fail proof verification if not matching.
- * - The sized & serialized UTXOs from the witness are hashed together with the respective nonces from the witness to get the Merkle tree hashes
- *   for the UTXOs pointed to by the staterefs from the inputs and references component groups from the witness.
- *   These are compared with the UTXO hashes from the public input. If they match, this proves that the contract rules have been applied on the
- *   contents of inputs and references that are unchanged since they were created in the preceding transactions.
- *   Next, the UTXOs are deserialized into the expected TransactionState<T> structs and used, together with the transaction struct from
- *   from step 1 for contract rule verification.
- * - Next, the components are deserialized into the expected transaction structs used for contract rule validation. Rule violation fails proof generation.
- *
- * Please validate these assumptions:
- *
- * The only data type sent to Zinc via JSON are byte arrays?
- * On the Kotlin side, serialization and deserialization sizes and unsizes respectively, invisibly for the user.
- * On the Zinc side, we never serialize. On deserialization, unsizing does not happen.
- */
-
 @CordaSerializable
 @Suppress("LongParameterList")
 class Witness(

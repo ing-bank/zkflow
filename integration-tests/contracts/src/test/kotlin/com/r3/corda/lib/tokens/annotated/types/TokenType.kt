@@ -1,4 +1,4 @@
-package com.r3.cbdc.annotated.types
+package com.r3.corda.lib.tokens.annotated.types
 
 import com.ing.zkflow.annotations.UTF8
 import com.ing.zkflow.annotations.ZKP
@@ -7,13 +7,6 @@ import java.math.BigDecimal
 
 @ZKP
 open class TokenType(
-    /**
-     * All [TokenType]s must have a [tokenIdentifier], which is typically a 3-4 character, upper case alphabetic string.
-     * The [tokenIdentifier] is used in conjunction with the [tokenClass] to create an instance of a [TokenType], for
-     * example: (FiatCurrency, GBP), (DigitalCurrency, BTC), or (Stock, GOOG). For [TokenPointer]s this property will
-     * contain the linearId of the [EvolvableTokenType] which is pointed to. The linearId can be used to obtain the
-     * underlying [EvolvableTokenType] from the vault.
-     */
     open val tokenIdentifier: @UTF8(10) String,
     /**
      * The number of fractional digits allowable for this token type. Specifying "0" will only allow integer amounts of

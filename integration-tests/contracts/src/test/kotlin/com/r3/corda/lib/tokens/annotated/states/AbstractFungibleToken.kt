@@ -1,6 +1,6 @@
-package com.r3.cbdc.annotated.states
+package com.r3.corda.lib.tokens.annotated.states
 
-import com.r3.cbdc.annotated.types.IssuedTokenType
+import com.r3.corda.lib.tokens.annotated.types.IssuedTokenType
 import net.corda.core.contracts.FungibleState
 
 // Decomposition replaces the relation: `CBDCToken is FungibleToken`

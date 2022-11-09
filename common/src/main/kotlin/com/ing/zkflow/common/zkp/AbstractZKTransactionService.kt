@@ -34,7 +34,6 @@ abstract class AbstractZKTransactionService(val serviceHub: ServiceHub) : ZKTran
 
         zkTransactionMetadata.commands.forEach { command ->
             val commandName = command.commandKClass.qualifiedName!!
-            // TODO: Should we add a check here that this command actually requires a proof? What if all its  outputs are 'public', then we wouldn't need a proof?
             if (!proofs.containsKey(commandName)) {
                 val witness = Witness.fromWireTransaction(
                     wtx,

@@ -1,5 +1,6 @@
 package com.ing.zkflow.common.versioning
 
+import com.ing.zkflow.util.STUB_FOR_TESTING
 import kotlinx.serialization.Serializable
 import net.corda.core.contracts.ContractState
 import net.corda.core.identity.AbstractParty
@@ -11,7 +12,7 @@ data class UnknownState(
     val value: Int
 ) : ContractState {
     override val participants: List<AbstractParty>
-        get() = TODO("Not yet implemented")
+        get() = STUB_FOR_TESTING()
 }
 
 @Serializable
@@ -19,7 +20,7 @@ data class TestStateV1(
     val value: Int
 ) : TestFamily, ContractState {
     override val participants: List<AbstractParty>
-        get() = TODO("Not yet implemented")
+        get() = STUB_FOR_TESTING()
 }
 
 @Serializable
@@ -28,7 +29,7 @@ data class TestStateV2(
 ) : TestFamily, ContractState {
     constructor(previous: TestStateV1) : this(previous.value)
     override val participants: List<AbstractParty>
-        get() = TODO("Not yet implemented")
+        get() = STUB_FOR_TESTING()
 }
 
 @Serializable
@@ -37,7 +38,7 @@ data class TestStateV3(
 ) : TestFamily, ContractState {
     constructor(previous: TestStateV2) : this(previous.value)
     override val participants: List<AbstractParty>
-        get() = TODO("Not yet implemented")
+        get() = STUB_FOR_TESTING()
 }
 
 val testFamily = VersionFamily(

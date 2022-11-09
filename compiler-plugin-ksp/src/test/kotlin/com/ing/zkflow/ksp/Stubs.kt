@@ -22,7 +22,7 @@ data class CodeGeneratorStub(private val outputStream: ByteArrayOutputStream) : 
     override val generatedFile: Collection<File> = emptyList()
 
     override fun associate(sources: List<KSFile>, packageName: String, fileName: String, extensionName: String) {
-        TODO("Not yet implemented")
+        // NOOP
     }
 
     override fun createNewFile(

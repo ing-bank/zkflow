@@ -16,7 +16,6 @@ public open class MockZKTransactionCordaService(serviceHub: AppServiceHub) : Moc
 
 public open class MockZKTransactionService(serviceHub: ServiceHub) : AbstractZKTransactionService(serviceHub) {
     init {
-        // TODO: Check if we can remove this
         HashAgility.init(blake2sAlgorithm)
     }
 

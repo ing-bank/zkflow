@@ -3,6 +3,7 @@ package com.ing.zkflow.serialization.serializer.corda
 import com.ing.zkflow.annotations.corda.SHA256DigestAlgorithm
 import com.ing.zkflow.serialization.SerializerTest
 import com.ing.zkflow.serialization.engine.SerdeEngine
+import com.ing.zkflow.util.STUB_FOR_TESTING
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.Serializable
 import net.corda.core.crypto.DigestAlgorithm
@@ -65,7 +66,7 @@ class SecureHashSerializerTest : SerializerTest {
         override val digestLength: Int = 8
 
         override fun digest(bytes: ByteArray): ByteArray {
-            TODO("Will not implement")
+            STUB_FOR_TESTING()
         }
 
         companion object {

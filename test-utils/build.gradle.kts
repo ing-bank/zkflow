@@ -16,7 +16,6 @@ dependencies {
 
     val cordaReleaseGroup: String by project
     val cordaVersion: String by project
-    // TODO: can this be compile only with a runtime check? Should only cause issues when running tests when not present
     compileOnly("$cordaReleaseGroup:corda-test-utils:$cordaVersion")
     compileOnly("$cordaReleaseGroup:corda-node-driver:$cordaVersion")
 

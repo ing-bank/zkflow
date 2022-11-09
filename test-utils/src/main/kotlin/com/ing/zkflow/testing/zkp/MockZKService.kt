@@ -66,7 +66,7 @@ public class MockZKService(private val digestService: DigestService) : ZKService
     private fun verifyLeafHashesForComponentGroup(serializedComponents: List<ByteArray>, expectedComponentHashes: List<SecureHash>, privacySalt: PrivacySalt, groupIndex: Int) {
         serializedComponents.forEachIndexed { index, serializedComponent ->
             val calculatedNonceFromWitness =
-                serializedComponent.let { digestService.computeNonce(privacySalt, groupIndex, index) } // TODO
+                serializedComponent.let { digestService.computeNonce(privacySalt, groupIndex, index) }
 
             val leafHashFromPublicInput = serializedComponent.let {
                 expectedComponentHashes.getOrElse(index) {

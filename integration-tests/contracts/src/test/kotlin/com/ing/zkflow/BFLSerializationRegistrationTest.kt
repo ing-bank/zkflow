@@ -6,6 +6,7 @@ import com.ing.zkflow.common.serialization.CommandDataSerializerRegistry
 import com.ing.zkflow.common.serialization.ContractStateSerializerRegistry
 import com.ing.zkflow.common.versioning.VersionedContractStateGroup
 import com.ing.zkflow.common.zkp.metadata.ResolvedZKCommandMetadata
+import com.ing.zkflow.util.STUB_FOR_TESTING
 import io.kotest.matchers.shouldBe
 import net.corda.core.contracts.ContractState
 import net.corda.core.identity.AbstractParty
@@ -36,7 +37,7 @@ data class MyState(val i: Int) : ContractState, VersionedMyState {
 @ZKP
 class MyCommand : ZKCommandData {
     override val metadata: ResolvedZKCommandMetadata
-        get() = TODO("Not yet implemented")
+        get() = STUB_FOR_TESTING()
 
     override fun verifyPrivate(): String = """
         mod module_command_context;

@@ -50,8 +50,6 @@ class ZKCollectSignaturesFlow @JvmOverloads constructor(
 
         @JvmStatic
         fun tracker() = ProgressTracker(COLLECTING, VERIFYING)
-
-        // TODO: Make the progress tracker adapt to the number of counterparties to collect from.
     }
 
     @Suppress("LongMethod")
@@ -274,7 +272,6 @@ abstract class ZKSignTransactionFlow @JvmOverloads constructor(
         // means we only have to check we own that one key, rather than matching all keys in the transaction against all
         // keys we own.
         val signingKeys = otherSideSession.receive<List<PublicKey>>().unwrap { keys ->
-            // TODO: We should have a faster way of verifying we own a single key
             serviceHub.keyManagementService.filterMyKeys(keys)
         }
         progressTracker.currentStep = VERIFYING

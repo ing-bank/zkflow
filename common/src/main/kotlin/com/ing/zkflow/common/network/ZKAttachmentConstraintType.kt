@@ -39,8 +39,6 @@ sealed class ZKAttachmentConstraintType private constructor(val kClass: KClass<o
 
         override fun validate(attachmentConstraint: AttachmentConstraint) {
             attachmentConstraint.requireInstanceOf<HashAttachmentConstraint>().also {
-                // TODO: to discus: should HashAttachmentConstraintType contain a real required SecureHash algorithm?
-                // Then we can compare actual required algo. Now we only can compare that the runtime length matches the network expected length
                 require(it.attachmentId.size == digestAlgorithm.digestLength) { "Expected a digest of size ${digestAlgorithm.digestLength}, found ${it.attachmentId.size}" }
             }
         }

@@ -36,22 +36,6 @@ internal class ZKTransactionsResolver(private val flow: ResolveZKTransactionsFlo
         logger.debug { "Downloading dependencies for transactions ${flow.txHashes}" }
         val transactionStorage = flow.serviceHub.getCordaServiceFromConfig<ZKWritableVerifierTransactionStorage>(ServiceNames.ZK_VERIFIER_TX_STORAGE)
 
-        // Maintain a work queue of all hashes to load/download, initialised with our starting set. Then do a breadth
-        // first traversal across the dependency graph.
-        //
-        // TODO: This approach has two problems. Analyze and resolve them:
-        //
-        // (1) This flow leaks private data. If you download a transaction and then do NOT request a
-        // dependency, it means you already have it, which in turn means you must have been involved with it before
-        // somehow, either in the tx itself or in any following spend of it. If there were no following spends, then
-        // your peer knows for sure that you were involved ... this is bad! The only obvious ways to fix this are
-        // something like onion routing of requests, secure hardware, or both.
-        //
-        // (2) If the identity service changes the assumed identity of one of the public keys, it's possible
-        // that the "tx in db is valid" invariant is violated if one of the contracts checks the identity! Should
-        // the db contain the identities that were resolved when the transaction was first checked, or should we
-        // accept this kind of change is possible? Most likely solution is for identity data to be an attachment.
-
         val nextRequests = LinkedHashSet<SecureHash>(flow.txHashes) // Keep things unique but ordered, for unit test stability.
         val topologicalSort = TopologicalSort()
         logger.debug { "DbTransactionsResolver.downloadDependencies(batchMode=$batchMode)" }
@@ -80,10 +64,6 @@ internal class ZKTransactionsResolver(private val flow: ResolveZKTransactionsFlo
                 // Do not keep in memory as this bloats the checkpoint. Write each item to the database.
                 transactionStorage.addUnverifiedTransaction(downloaded)
 
-                /*
-                 * TODO: As in ResolveZKTransactionsFlow, removed the fetching of missing network params without side effects for now.
-                 * Validate and put back if required.
-                 */
                 // The write locks are only released over a suspend, so need to keep track of whether the flow has been suspended to ensure
                 // that locks are not held beyond each while loop iteration (as doing this would result in a deadlock due to claiming locks
                 // in the wrong order)

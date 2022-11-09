@@ -63,8 +63,8 @@ class PrivateCBDCTokenFlowTest {
                     mapOf(
                         ZK_VERIFIER_TX_STORAGE to InMemoryZKVerifierTransactionStorageCordaService::class.qualifiedName!!,
                         ZK_UTXO_INFO_STORAGE to InMemoryUtxoInfoStorage::class.qualifiedName!!,
-                        // ZK_TX_SERVICE to ZincZKTransactionCordaService::class.qualifiedName!!,
-                        ZK_TX_SERVICE to MockZKTransactionCordaService::class.qualifiedName!!,
+                        ZK_TX_SERVICE to ZincZKTransactionCordaService::class.qualifiedName!!,
+                        // ZK_TX_SERVICE to MockZKTransactionCordaService::class.qualifiedName!!,
                     )
                 )
             ),
@@ -115,14 +115,6 @@ class PrivateCBDCTokenFlowTest {
         mockNet.stopNodes()
         System.setProperty("net.corda.node.dbtransactionsresolver.InMemoryResolutionLimit", "0")
     }
-
-    /*
-     * TODO: Issue a V1 token, then move it, then upgrade it to V2, then redeem it
-     */
-
-    /*
-     * TODO: Exchange UtxoInfo for an unknown private state exchange
-     */
 
     @Test
     fun `Test private Issue, Move, Split and Redeem`() {

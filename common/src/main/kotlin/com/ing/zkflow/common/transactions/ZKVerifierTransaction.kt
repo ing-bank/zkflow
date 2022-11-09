@@ -31,7 +31,6 @@ open class ZKVerifierTransaction internal constructor(
     val requiredSigningKeys: Set<PublicKey>
         get() {
             val commandKeys = commands.flatMap { it.signers }.toSet()
-            // TODO: prevent notary field from being set if there are no inputs and no time-window.
             @Suppress("ComplexCondition")
             return if (notary != null && (inputs.isNotEmpty() || references.isNotEmpty() || timeWindow != null)) {
                 commandKeys + notary!!.owningKey

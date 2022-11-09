@@ -10,7 +10,6 @@ import java.io.File
 
 open class GenerateZincCircuitsTask : DefaultTask() {
     // NOTE: Must be public for the @InputDirectory to be recognized
-    // TODO: Should also be triggered when any of the dependencies change
     @InputDirectory
     @Suppress("unused")
     val sourceInputs: ConfigurableFileTree = project.fileTree("src")
