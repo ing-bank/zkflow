@@ -19,35 +19,47 @@ Features:
 
 To learn more about ZKFlow internals, there is a [docs](docs) directory in this repo. In addition to the [ZKFLow white paper](docs/ZKFlow_whitepaper.pdf), it contains technical documentation in Markdown and PDF format. There is also plenty of documentation throughout the code itself, explaining logic or rationale. Finally, the many test cases will also explain a lot about expected behaviour.
 
-## Testing ZKFlow with the sample CorDapp or with your own CorDapp
+## Running the sample ZKDapp
 
-The ZKFlow jars are currently not deployed to one of the Maven/Gradle repositories. This means it can not be used directly by CorDapps. Instead, run the tests for ZKFlow and the `sample-zkdapp` to see it in action.
+The sample ZKDapp demonstrates how a basic token contract can be adapted to work with ZKFlow. The contract tests and flow tests show the expected behaviour.
 
 Please make sure you have satisfied all [prerequisites](#prerequisites) before you execute the following:
 
 ```bash
-$ cd sample-zkdapp
+$ cd zkflow/sample-zkdapp
 $ ./gradlew test
 ```
 
-If you want to test ZKFlow with your own CorDapp, please do the following:
+## Running your own CorDapp with ZKFlow
 
-* Copy you CorDapp to the zkflow project, similar to `sample-zkdapp`
-* Add `includeBuild("..")` to your `settings.gradle`. This will give your CorDapp access to undeployed ZKFlow artifacts
-* Enable the ZKFlow Gradle plugin on your CorDapp in your `build.gradle.kts`. Note that it needs no version because of `includeBuild("..")`:
+> [i] This assumes you use the Kotlin DSL for your Gradle build files. If you do not, change accordingly for the Groovy DSL. The changes should be identical except for syntax.
+
+The ZKFlow jars are currently not deployed to one of the public Maven/Gradle repositories. If you want to test ZKFlow with your own CorDapp, please make the following changes to your build file:
+
+* Make sure that ZKFlow is published to your local Maven repository by running `./gradlew publishToMavenLocal` in the ZKFlow directory. 
+* Add the `mavenLocal()` repository to your repositories for Gradle plugins (probably in the `pluginManagement` block in your `settings.gradle.kts`) and to your repositories for normal Gradle dependencies in your `build.gradle.kts`. 
+* Enable the ZKFlow Gradle plugin on your CorDapp in your `build.gradle.kts`.
 
      ```kotlin
      plugins {
-        id("com.ing.zkflow.gradle-plugin")
+        id("com.ing.zkflow.gradle-plugin") version "1.0-SNAPSHOT"
      }
      ```
 * To be able to use ZKFlow's contract test DSL and other convenience functions, add `testImplementation("com.ing.zkflow:test-utils:1.0-SNAPSHOT")` to your `dependencies` block in `build.gradle.kts`.
-* Finally, adapt your contracts, states, commands, contract tests and flow tests to work with ZKFlow. You can inspect `sample-zkdapp` to see how you can make those adaptations. Please note that some significant changes to your state class definitions may be required.
+ 
+Not you are ready to adapt your contracts, states, commands, contract tests and flow tests to work with ZKFlow. You can inspect `sample-zkdapp` to see how you can make those adaptations. Please note that some significant changes to your state class definitions may be required.
+
+Not recommended, but feel free to run it immediately as-is and let ZKFlow tell you what should be added to your classes.
+
+## Troubleshooting the sample ZKDapp or your own ZKDapp
+
+Build issues:
+- `java.lang.IllegalArgumentException: Cannot find circuit manifest`: This should not happen during normal development flow, but it can be solved by running `./gradlew generateZincCircuits --rerun-tasks` in your ZKDapp. 
 
 ## Running ZKFlow tests
 
 If you want to make changes to ZKFlow itself, you need to be able to run its tests.
-This is as simple as running `./gradlew test` in the ZKFlow root directlty. It will run all tests, including integration tests.
+This is as simple as running `./gradlew test` in the ZKFlow root directly. It will run all tests, including integration tests.
 Please make sure you have satisfied all [prerequisites](#prerequisites) before running the tests.
 
 ## Prerequisites for running ZKFlow
@@ -70,26 +82,6 @@ $ cargo b --release
 ```
 
 Built binaries will be stored in `./target/release`. Move the `zargo`, `znc` and `zvm` binaries to a directory you prefer and add it to your systems PATH. `/usr/local/bin` has been known to work. Then you can delete sources.
-
-#### Zinc on internal Azure Pipelines
-
-If you make changes to Zinc and create a new tag, please ensure that the [copy of the binaries](./.ci/lib/zinc-linux.tar.gz) in for Azure Pipelines is updated to be that version. Please note that these binaries should be compiled on/for linux, so they can run on the Azure Pipelines agents. 
-
-For GitHub Actions, this is not required, as that build automatically downloads and installs the correct Zinc binaries.
-
-### Gradle
-
-Typically, Gradle does not require any specific changes, but you might encounter the following error during the build (path can be different):
-
-```bash
-Caused by: java.io.IOException: Cannot run program "zargo" (in directory "/Users/mq23re/Developer/zk-notary/prover/circuits/create"): error=2, No such file or directory
-```
-
-To fix it, run the command below from the project directory. It will stop daemon, thus it will clear cache, which can help to resolve the issue.
-
-```bash
-./gradlew --stop
-```
 
 ## Contributing to ZKFlow
 

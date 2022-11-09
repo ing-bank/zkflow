@@ -47,7 +47,7 @@ steps:
       publishJUnitResults: true
       testResultsFiles: '**/TEST-*.xml'
       # codeCoverageToolOption: JaCoCo # Broken because it expects hardcoded 'build.gradle' instead of 'build.gradle.kts'
-      tasks: 'clean cleanTest check test testReport jacocoRootReport checkLicense'
+      tasks: 'clean cleanTest check test testReport jacocoRootReport checkLicense spotBugsMain'
       options: '--no-build-cache --rerun-tasks --no-daemon --no-parallel'
     env:
       GITHUB_USERNAME: $(github.username)
