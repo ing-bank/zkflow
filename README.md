@@ -1,6 +1,4 @@
-[![Build Status](https://dev.azure.com/NeoZKP/zkflow/_apis/build/status/ZKFLow%20PRs%20and%20mergest%20to%20master?branchName=master)](https://dev.azure.com/NeoZKP/zkflow/_build/latest?definitionId=1&branchName=master)
-
-ZKFlow is a software library that enables Corda CorDapps to create private transactions on Corda.
+The ZKFlow consensus protocol enables private transactions on Corda using ZKP.
 
 ZKFlow enables CorDapp builders to make some or all states in a transaction private. Private states will not be present in the backchain, nor will they be disclosed to the notary. Instead, they are replaced by Zero Knowledge proofs that guarantee validity of those hidden states. Direct counterparties to a transaction do have access to all its private contents, so that they know what transaction they are signing.
 
