@@ -69,7 +69,7 @@ import kotlin.reflect.KClass
  * but never after deployment and usage in production. If they did, it would break deserialization of serialized classses.
  * If a change is required that would change the properties of the primary constructor, users should create a new version of that type.
  * This 'versioning' is left in the hands of the user for normal types. They can simply create new types when they need them.
- * ZKFLow will enforce that types never change after deployment. This ensures that when a user introduces a new version for a type that is
+ * ZKFlow will enforce that types never change after deployment. This ensures that when a user introduces a new version for a type that is
  * used in another user type, and they want to use it, they will also have to introduce a new type for that using type.
  */
 class ZKPAnnotatedValidator(@Suppress("unused") private val logger: KSPLogger) : SymbolProcessor {

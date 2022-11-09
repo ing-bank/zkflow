@@ -76,7 +76,7 @@ annotation class ASCIIChar
  * as simple as possible.
  *
  * Note that @ZKP-annotated classes are considered stable and can never change after they have been deployed.
- * If you have to make changes, you will need to introduce a new type, as ZKFLow will
+ * If you have to make changes, you will need to introduce a new type, as ZKFlow will
  * prohibit you from making changes after first deployment of the class.
  */
 @Target(AnnotationTarget.CLASS)
@@ -86,7 +86,7 @@ annotation class ZKP
  * Use this annotation on a class that implements Surrogate<*>.
  *
  * Note that @ZKPSurrogate-annotated classes are considered stable and can never change after they have been deployed.
- * If you have to make changes, you will need to introduce a new type, as ZKFLow will
+ * If you have to make changes, you will need to introduce a new type, as ZKFlow will
  * prohibit you from making changes after first deployment of the class.
  */
 @Target(AnnotationTarget.CLASS)
@@ -106,7 +106,7 @@ annotation class ZKPSurrogate(val provider: KClass<out ConversionProvider<*, *>>
  * ZKFlow is already tied to a specific Corda platform version.
  *
  * Note that @ZKPStable-annotated classes are considered stable and can never change after they have been deployed.
- * If you have to make changes, you will need to introduce a new type, as ZKFLow will
+ * If you have to make changes, you will need to introduce a new type, as ZKFlow will
  * prohibit you from making changes after first deployment of the class.
  */
 @Target(AnnotationTarget.CLASS)

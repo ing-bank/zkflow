@@ -24,7 +24,7 @@ annotation class ZKCommandMetadataDSL
  * This class describes the circuit associated  with this command.
  *
  * It contains information about locations, artifacts, etc., so that
- * ZKFLow knows how to use it.
+ * ZKFlow knows how to use it.
  */
 @ZKCommandMetadataDSL
 data class ZKCircuit(
@@ -189,7 +189,7 @@ class ZKCommandMetadata(val commandKClass: KClass<out ZKCommandData>) {
     /**
      * Information on the circuit and related artifacts to be used.
      *
-     * If the command is marked private, but this is null, ZKFLow will
+     * If the command is marked private, but this is null, ZKFlow will
      * try to find the circuit based on some default rules. If that fails,
      * an error is thrown.
      */
