@@ -2,9 +2,9 @@ package com.example.flow
 
 import co.paralleluniverse.fibers.Suspendable
 import com.example.contract.audit.AuditContract
-import com.example.contract.cbdc.CBDCContract
-import com.example.contract.cbdc.CBDCToken
-import com.example.contract.cbdc.commands.SplitPrivate
+import com.example.contract.token.ExampleTokenContract
+import com.example.contract.token.ExampleToken
+import com.example.contract.token.commands.SplitPrivate
 import com.ing.zkflow.client.flows.ZKFinalityFlow
 import com.ing.zkflow.client.flows.ZKReceiveFinalityFlow
 import com.ing.zkflow.common.transactions.ZKTransactionBuilder
@@ -23,13 +23,13 @@ import net.corda.core.utilities.seconds
 import java.time.Instant
 
 /**
- * Use this flow to move a [CBDCToken] privately.
+ * Use this flow to move a [ExampleToken] privately.
  * Only the current holder and the new holder will be aware of the token's existence,
  * and only the new holder will be able to see its private contents in its vault.
  *
  * This flow should be called by the current holder.
- * The token is moved to the holder specified in the output [CBDCToken].
- * The holder will receive the token correctly in their vault if they have registered the [MovePrivateCBDCTokenFlowFlowHandler].
+ * The token is moved to the holder specified in the output [ExampleToken].
+ * The holder will receive the token correctly in their vault if they have registered the [MovePrivateExampleTokenFlowFlowHandler].
  *
  * Optionally, an auditor can be set on this move transaction.
  * In that case, an [AuditContract.AuditRecord] will be added to the transaction as a publicly visible output.
@@ -40,7 +40,7 @@ import java.time.Instant
 typealias OwnerWithQuantity = Pair<AnonymousParty, Double>
 typealias SplitInfo = Pair<OwnerWithQuantity, OwnerWithQuantity>
 
-private fun SplitInfo.split(token: CBDCToken): Pair<CBDCToken, CBDCToken> =
+private fun SplitInfo.split(token: ExampleToken): Pair<ExampleToken, ExampleToken> =
     token.withNewHolder(first.first, first.second) to token.withNewHolder(second.first, second.second)
 
 private fun SplitInfo.toParties() = toList().map { it.first }
@@ -49,8 +49,8 @@ fun List<AbstractParty>.withoutOwnIdentities(serviceHub: ServiceHub): List<Abstr
     filterNot { serviceHub.myInfo.isLegalIdentity(serviceHub.identityService.requireWellKnownPartyFromAnonymous(it)) }
 
 @InitiatingFlow
-class SplitPrivateCBDCTokenFlow(
-    private val token: StateAndRef<CBDCToken>,
+class SplitPrivateExampleTokenFlow(
+    private val token: StateAndRef<ExampleToken>,
     private val splitInfo: SplitInfo,
     private val auditor: Party?
 ) : FlowLogic<SignedTransaction>() {
@@ -62,8 +62,8 @@ class SplitPrivateCBDCTokenFlow(
 
         val builder = ZKTransactionBuilder(serviceHub.networkMapCache.notaryIdentities.single())
             .addInputState(token)
-            .addOutputState(split1, CBDCContract.ID)
-            .addOutputState(split2, CBDCContract.ID)
+            .addOutputState(split1, ExampleTokenContract.ID)
+            .addOutputState(split2, ExampleTokenContract.ID)
             .addCommand(SplitPrivate(), inputState.holder.owningKey)
             .setTimeWindow(Instant.now(), 100.seconds)
 
@@ -89,8 +89,8 @@ class SplitPrivateCBDCTokenFlow(
     }
 }
 
-@InitiatedBy(SplitPrivateCBDCTokenFlow::class)
-class SplitPrivateCBDCTokenFlowFlowHandler(private val otherSession: FlowSession) : FlowLogic<Unit>() {
+@InitiatedBy(SplitPrivateExampleTokenFlow::class)
+class SplitPrivateExampleTokenFlowFlowHandler(private val otherSession: FlowSession) : FlowLogic<Unit>() {
     @Suspendable
     override fun call() {
         if (!serviceHub.myInfo.isLegalIdentity(otherSession.counterparty)) {

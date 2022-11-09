@@ -1,6 +1,6 @@
-package com.example.contract.cbdc.commands
+package com.example.contract.token.commands
 
-import com.example.contract.cbdc.CBDCToken
+import com.example.contract.token.ExampleToken
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.zkp.metadata.commandMetadata
@@ -12,11 +12,11 @@ class SplitPrivate : ZKCommandData {
         numberOfSigners = 1
         notary = true
         inputs {
-            private(CBDCToken::class) at 0
+            private(ExampleToken::class) at 0
         }
         outputs {
-            private(CBDCToken::class) at 0
-            private(CBDCToken::class) at 1
+            private(ExampleToken::class) at 0
+            private(ExampleToken::class) at 1
         }
         timeWindow = true
     }
@@ -28,9 +28,9 @@ class SplitPrivate : ZKCommandData {
             use module_command_context::CommandContext;
 
             fn verify(ctx: CommandContext) {
-                let input = ctx.inputs.cbdc_token_0;
-                let output_0 = ctx.outputs.cbdc_token_0;
-                let output_1 = ctx.outputs.cbdc_token_1;
+                let input = ctx.inputs.example_token_0;
+                let output_0 = ctx.outputs.example_token_0;
+                let output_1 = ctx.outputs.example_token_1;
                 
                 assert!(input.data.amount.quantity > 0 as i64, "[Split] Input quantity must be positive");
                 assert!(output_0.data.amount.quantity > 0 as i64, "[Split] Output 0 quantity must be positive");

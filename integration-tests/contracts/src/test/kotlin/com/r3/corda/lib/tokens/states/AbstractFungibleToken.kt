@@ -1,11 +1,11 @@
-package com.r3.corda.lib.tokens.annotated.states
+package com.r3.corda.lib.tokens.states
 
-import com.r3.corda.lib.tokens.annotated.types.IssuedTokenType
+import com.r3.corda.lib.tokens.types.IssuedTokenType
 import net.corda.core.contracts.FungibleState
 
-// Decomposition replaces the relation: `CBDCToken is FungibleToken`
+// Decomposition replaces the relation: `ExampleToken is FungibleToken`
 // with
-// `CBDCToken     is AbstractFungibleToken` and
+// `ExampleToken     is AbstractFungibleToken` and
 // `FungibleToken is AbstractFungibleToken`
 // Such decomposition is required to circumvent the kotlinx.serialization limitation, see
 // https://github.com/Kotlin/kotlinx.serialization/issues/1792

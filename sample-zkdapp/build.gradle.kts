@@ -28,13 +28,11 @@ cordapp {
     contract {
         name("Example contracts")
         vendor("Example Org")
-        licence("Apache license, version 2.0")
         versionId(1)
     }
     workflow {
         name("Example workflows")
         vendor("Example Org")
-        licence("Apache license, version 2.0")
         versionId(1)
     }
     signing {

@@ -1,9 +1,8 @@
 package com.example.flow
 
 import co.paralleluniverse.fibers.Suspendable
-import com.example.contract.cbdc.CBDCContract
-import com.example.contract.cbdc.CBDCToken
-import com.example.contract.cbdc.commands.RedeemPrivate
+import com.example.contract.token.ExampleToken
+import com.example.contract.token.commands.RedeemPrivate
 import com.ing.zkflow.client.flows.ZKCollectSignaturesFlow
 import com.ing.zkflow.client.flows.ZKFinalityFlow
 import com.ing.zkflow.client.flows.ZKReceiveFinalityFlow
@@ -14,9 +13,7 @@ import com.ing.zkflow.common.transactions.signInitialTransaction
 import com.ing.zkflow.common.node.services.ServiceNames
 import com.ing.zkflow.common.node.services.getCordaServiceFromConfig
 import net.corda.core.contracts.Command
-import net.corda.core.contracts.StateAndContract
 import net.corda.core.contracts.StateAndRef
-import net.corda.core.contracts.requireThat
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
 import net.corda.core.flows.InitiatedBy
@@ -25,14 +22,14 @@ import net.corda.core.internal.SerializedStateAndRef
 import net.corda.core.transactions.SignedTransaction
 
 /**
- * Use this flow to redeem a [CBDCToken] privately.
+ * Use this flow to redeem a [ExampleToken] privately.
  * Only the issuer and the holder will be aware of the token's redemption.
  *
  * This flow should be called by the holder.
  */
 @InitiatingFlow
-class RedeemPrivateCBDCTokenFlow(
-    private val stateAndRef: StateAndRef<CBDCToken>,
+class RedeemPrivateExampleTokenFlow(
+    private val stateAndRef: StateAndRef<ExampleToken>,
 ) : FlowLogic<SignedTransaction>() {
 
     @Suspendable
@@ -53,8 +50,8 @@ class RedeemPrivateCBDCTokenFlow(
     }
 }
 
-@InitiatedBy(RedeemPrivateCBDCTokenFlow::class)
-class RedeemPrivateCBDCTokenFlowFlowHandler(private val otherSession: FlowSession) : FlowLogic<Unit>() {
+@InitiatedBy(RedeemPrivateExampleTokenFlow::class)
+class RedeemPrivateExampleTokenFlowFlowHandler(private val otherSession: FlowSession) : FlowLogic<Unit>() {
     @Suspendable
     override fun call() {
         if (!serviceHub.myInfo.isLegalIdentity(otherSession.counterparty)) {
@@ -71,7 +68,7 @@ class RedeemPrivateCBDCTokenFlowFlowHandler(private val otherSession: FlowSessio
                             serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_VERIFIER_TX_STORAGE),
                             serviceHub.getCordaServiceFromConfig(ServiceNames.ZK_UTXO_INFO_STORAGE)
                         ), redeemedStateRef
-                    ).toStateAndRef().state.data as? CBDCToken ?: error("Expected a CBDCToken as input")
+                    ).toStateAndRef().state.data as? ExampleToken ?: error("Expected a ExampleToken as input")
                     require(serviceHub.myInfo.isLegalIdentity(redeemed.issuer)) { "We did not issue this token. Issuer: ${redeemed.issuer}" }
                 }
             }

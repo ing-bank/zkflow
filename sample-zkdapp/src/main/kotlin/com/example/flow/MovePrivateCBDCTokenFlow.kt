@@ -2,9 +2,9 @@ package com.example.flow
 
 import co.paralleluniverse.fibers.Suspendable
 import com.example.contract.audit.AuditContract
-import com.example.contract.cbdc.CBDCContract
-import com.example.contract.cbdc.commands.MovePrivate
-import com.example.contract.cbdc.CBDCToken
+import com.example.contract.token.ExampleTokenContract
+import com.example.contract.token.commands.MovePrivate
+import com.example.contract.token.ExampleToken
 import com.ing.zkflow.client.flows.ZKFinalityFlow
 import com.ing.zkflow.client.flows.ZKReceiveFinalityFlow
 import com.ing.zkflow.common.transactions.ZKTransactionBuilder
@@ -22,13 +22,13 @@ import net.corda.core.utilities.seconds
 import java.time.Instant
 
 /**
- * Use this flow to move a [CBDCToken] privately.
+ * Use this flow to move a [ExampleToken] privately.
  * Only the current holder and the new holder will be aware of the token's existence,
  * and only the new holder will be able to see its private contents in its vault.
  *
  * This flow should be called by the current holder.
- * The token is moved to the holder specified in the output [CBDCToken].
- * The holder will receive the token correctly in their vault if they have registered the [MovePrivateCBDCTokenFlowFlowHandler].
+ * The token is moved to the holder specified in the output [ExampleToken].
+ * The holder will receive the token correctly in their vault if they have registered the [MovePrivateExampleTokenFlowFlowHandler].
  *
  * Optionally, an auditor can be set on this move transaction.
  * In that case, an [AuditContract.AuditRecord] will be added to the transaction as a publicly visible output.
@@ -37,8 +37,8 @@ import java.time.Instant
  * visible components of the transaction.
  */
 @InitiatingFlow
-class MovePrivateCBDCTokenFlow(
-    private val token: StateAndRef<CBDCToken>,
+class MovePrivateExampleTokenFlow(
+    private val token: StateAndRef<ExampleToken>,
     private val newHolder: AnonymousParty,
     private val auditor: Party?
 ) : FlowLogic<SignedTransaction>() {
@@ -49,7 +49,7 @@ class MovePrivateCBDCTokenFlow(
 
         val builder = ZKTransactionBuilder(serviceHub.networkMapCache.notaryIdentities.single())
             .addInputState(token)
-            .addOutputState(inputState.withNewHolder(newHolder), CBDCContract.ID)
+            .addOutputState(inputState.withNewHolder(newHolder), ExampleTokenContract.ID)
             .addCommand(MovePrivate(), inputState.holder.owningKey)
             .setTimeWindow(Instant.now(), 100.seconds)
 
@@ -77,8 +77,8 @@ class MovePrivateCBDCTokenFlow(
     }
 }
 
-@InitiatedBy(MovePrivateCBDCTokenFlow::class)
-class MovePrivateCBDCTokenFlowFlowHandler(private val otherSession: FlowSession) : FlowLogic<Unit>() {
+@InitiatedBy(MovePrivateExampleTokenFlow::class)
+class MovePrivateExampleTokenFlowFlowHandler(private val otherSession: FlowSession) : FlowLogic<Unit>() {
     @Suspendable
     override fun call() {
         if (!serviceHub.myInfo.isLegalIdentity(otherSession.counterparty)) {

@@ -184,8 +184,8 @@
     },
     {
       "type": "CLASS",
-      "serialName": "com.example.contract.cbdc.CBDCToken",
-      "familyClassName": "com.example.contract.cbdc.VersionedCBDCToken",
+      "serialName": "com.example.contract.cbdc.ExampleToken",
+      "familyClassName": "com.example.contract.cbdc.VersionedExampleToken",
       "serializationId": 976199559,
       "byteSize": 565,
       "fields": [

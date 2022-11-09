@@ -1,6 +1,6 @@
-package com.example.contract.cbdc.commands
+package com.example.contract.token.commands
 
-import com.example.contract.cbdc.CBDCToken
+import com.example.contract.token.ExampleToken
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.zkp.metadata.commandMetadata
@@ -12,10 +12,10 @@ class MovePrivate : ZKCommandData {
         numberOfSigners = 1
         notary = true
         inputs {
-            private(CBDCToken::class) at 0
+            private(ExampleToken::class) at 0
         }
         outputs {
-            private(CBDCToken::class) at 0
+            private(ExampleToken::class) at 0
         }
         timeWindow = true
     }
@@ -28,8 +28,8 @@ class MovePrivate : ZKCommandData {
 
                 fn verify(ctx: CommandContext) {
                     // Checks on structure are enforced by the transaction metadata. So no need to check here.
-                    let input = ctx.inputs.cbdc_token_0;
-                    let output = ctx.outputs.cbdc_token_0;
+                    let input = ctx.inputs.example_token_0;
+                    let output = ctx.outputs.example_token_0;
                     
                     // This also ensures equality of token type and other properties of the amount.
                     assert!(input.data.amount.equals(output.data.amount), "[MovePrivate] Amounts of input and output must equal");

@@ -1,12 +1,12 @@
 package com.example.flow
 
 import com.example.contract.audit.AuditContract
-import com.example.contract.cbdc.CBDCToken
-import com.example.contract.cbdc.commands.IssuePrivate
-import com.example.contract.cbdc.commands.MovePrivate
-import com.example.contract.cbdc.commands.RedeemPrivate
-import com.example.contract.cbdc.commands.SplitPrivate
-import com.example.contract.cbdc.digitalEuro
+import com.example.contract.token.ExampleToken
+import com.example.contract.token.commands.IssuePrivate
+import com.example.contract.token.commands.MovePrivate
+import com.example.contract.token.commands.RedeemPrivate
+import com.example.contract.token.commands.SplitPrivate
+import com.example.contract.token.digitalEuro
 import com.ing.zkflow.common.node.services.InMemoryZKVerifierTransactionStorageCordaService
 import com.ing.zkflow.common.node.services.ServiceNames.ZK_TX_SERVICE
 import com.ing.zkflow.common.node.services.ServiceNames.ZK_UTXO_INFO_STORAGE
@@ -21,7 +21,6 @@ import com.ing.zkflow.testing.checkIsPresentInVault
 import com.ing.zkflow.testing.checkIsPubliclyPresentInZKStorage
 import com.ing.zkflow.testing.checkNotPresentInVault
 import com.ing.zkflow.testing.checkNotPresentInZKStorage
-import com.ing.zkflow.testing.zkp.MockZKTransactionCordaService
 // import com.ing.zkflow.testing.zkp.MockZKTransactionCordaService
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.CordaX500Name
@@ -39,7 +38,7 @@ import net.corda.testing.node.internal.cordappWithPackages
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 
-class PrivateCBDCTokenFlowTest {
+class PrivateExampleTokenFlowTest {
     private val mockNet: MockNetwork
 
     private val notaryNode: StartedMockNode
@@ -90,12 +89,12 @@ class PrivateCBDCTokenFlowTest {
         auditor = auditorNode.info.singleIdentity()
         bob = bobNode.info.singleIdentity().anonymise()
 
-        aliceNode.registerInitiatedFlow(IssuePrivateCBDCTokenFlowFlowHandler::class.java)
-        aliceNode.registerInitiatedFlow(SplitPrivateCBDCTokenFlowFlowHandler::class.java)
-        bobNode.registerInitiatedFlow(MovePrivateCBDCTokenFlowFlowHandler::class.java)
-        bobNode.registerInitiatedFlow(SplitPrivateCBDCTokenFlowFlowHandler::class.java)
-        auditorNode.registerInitiatedFlow(MovePrivateCBDCTokenFlowFlowHandler::class.java)
-        auditorNode.registerInitiatedFlow(SplitPrivateCBDCTokenFlowFlowHandler::class.java)
+        aliceNode.registerInitiatedFlow(IssuePrivateExampleTokenFlowFlowHandler::class.java)
+        aliceNode.registerInitiatedFlow(SplitPrivateExampleTokenFlowFlowHandler::class.java)
+        bobNode.registerInitiatedFlow(MovePrivateExampleTokenFlowFlowHandler::class.java)
+        bobNode.registerInitiatedFlow(SplitPrivateExampleTokenFlowFlowHandler::class.java)
+        auditorNode.registerInitiatedFlow(MovePrivateExampleTokenFlowFlowHandler::class.java)
+        auditorNode.registerInitiatedFlow(SplitPrivateExampleTokenFlowFlowHandler::class.java)
 
         // Because we are running in the context of a flow test, where all mock nodes share the same filesystem,
         // we only have to do setup once for all mock nodes to save time.
@@ -118,20 +117,20 @@ class PrivateCBDCTokenFlowTest {
 
     @Test
     fun `Test private Issue, Move, Split and Redeem`() {
-        // Issuer issues a private CBDCToken to Alice
-        val issuePrivateCBDCTokenFlow = IssuePrivateCBDCTokenFlow(digitalEuro(1.00, issuer = issuer, holder = alice))
-        val issuePrivateFuture = issuerNode.startFlow(issuePrivateCBDCTokenFlow)
+        // Issuer issues a private ExampleToken to Alice
+        val issuePrivateExampleTokenFlow = IssuePrivateExampleTokenFlow(digitalEuro(1.00, issuer = issuer, holder = alice))
+        val issuePrivateFuture = issuerNode.startFlow(issuePrivateExampleTokenFlow)
         mockNet.runNetwork()
         val privateIssueStx = issuePrivateFuture.getOrThrow()
 
         // Confirm that Alice received the private token and can access it.
-        val alicesIssuedToken = privateIssueStx.tx.outRef<CBDCToken>(0)
+        val alicesIssuedToken = privateIssueStx.tx.outRef<ExampleToken>(0)
         aliceNode.checkIsPresentInVault(alicesIssuedToken, Vault.StateStatus.UNCONSUMED)
 
         // Alice moves the private token to Bob privately. It stays private.
         // Auditor receives the public contents of this transaction, but not the private
-        val movePrivateCBDCTokenFlow = MovePrivateCBDCTokenFlow(alicesIssuedToken, bob, auditor)
-        val movePrivateFuture = aliceNode.startFlow(movePrivateCBDCTokenFlow)
+        val movePrivateExampleTokenFlow = MovePrivateExampleTokenFlow(alicesIssuedToken, bob, auditor)
+        val movePrivateFuture = aliceNode.startFlow(movePrivateExampleTokenFlow)
         mockNet.runNetwork()
         val privatemoveStx = movePrivateFuture.getOrThrow()
 
@@ -141,7 +140,7 @@ class PrivateCBDCTokenFlowTest {
          * - Bob received the token, and it is unconsumed.
          * - The auditor received the public contents of this transaction, but not the private
          */
-        val bobsMovedToken = privatemoveStx.tx.outRef<CBDCToken>(0)
+        val bobsMovedToken = privatemoveStx.tx.outRef<ExampleToken>(0)
         val moveAuditRecord = privatemoveStx.tx.outRef<AuditContract.AuditRecord>(1)
         aliceNode.checkIsPresentInVault(alicesIssuedToken, Vault.StateStatus.CONSUMED)
         bobNode.checkIsPresentInVault(bobsMovedToken, Vault.StateStatus.UNCONSUMED)
@@ -151,9 +150,9 @@ class PrivateCBDCTokenFlowTest {
 
         // Bob moves a fraction of the private token to Alice privately and keeps the change.
         // Auditor receives the public contents of this transaction, but not the private
-        val splitPrivateCBDCTokenFlow =
-            SplitPrivateCBDCTokenFlow(bobsMovedToken, SplitInfo(OwnerWithQuantity(alice, 0.33), OwnerWithQuantity(bob, 0.67)), auditor)
-        val splitPrivateFuture = bobNode.startFlow(splitPrivateCBDCTokenFlow)
+        val splitPrivateExampleTokenFlow =
+            SplitPrivateExampleTokenFlow(bobsMovedToken, SplitInfo(OwnerWithQuantity(alice, 0.33), OwnerWithQuantity(bob, 0.67)), auditor)
+        val splitPrivateFuture = bobNode.startFlow(splitPrivateExampleTokenFlow)
         mockNet.runNetwork()
         val privatesplitStx = splitPrivateFuture.getOrThrow()
 
@@ -164,8 +163,8 @@ class PrivateCBDCTokenFlowTest {
          * - Bob received the change of the token, and it is unconsumed.
          * - The auditor received the public contents of this transaction, i.e. the audit record, but not the private contents.
          */
-        val alicesFractionalToken = privatesplitStx.tx.outRef<CBDCToken>(0)
-        val bobsChangeToken = privatesplitStx.tx.outRef<CBDCToken>(1)
+        val alicesFractionalToken = privatesplitStx.tx.outRef<ExampleToken>(0)
+        val bobsChangeToken = privatesplitStx.tx.outRef<ExampleToken>(1)
         val splitAuditRecord = privatesplitStx.tx.outRef<AuditContract.AuditRecord>(2)
         bobNode.checkIsPresentInVault(bobsMovedToken, Vault.StateStatus.CONSUMED)
         aliceNode.checkIsPresentInVault(alicesFractionalToken, Vault.StateStatus.UNCONSUMED)
@@ -177,8 +176,8 @@ class PrivateCBDCTokenFlowTest {
         auditorNode.checkNotPresentInZKStorage(bobsChangeToken)
 
         // Bob redeems his change with the issuer
-        val redeemCBDCTokenFlow = RedeemPrivateCBDCTokenFlow(bobsChangeToken)
-        val redeemFuture = bobNode.startFlow(redeemCBDCTokenFlow)
+        val redeemExampleTokenFlow = RedeemPrivateExampleTokenFlow(bobsChangeToken)
+        val redeemFuture = bobNode.startFlow(redeemExampleTokenFlow)
         mockNet.runNetwork()
         redeemFuture.getOrThrow()
 
