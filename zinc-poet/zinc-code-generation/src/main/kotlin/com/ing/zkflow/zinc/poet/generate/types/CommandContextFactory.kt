@@ -61,13 +61,12 @@ class CommandContextFactory(
          * All relevant checks on (private) data from [net.corda.core.internal.Verifier.verify]:
          * - checkNoNotaryChange()
          * - checkEncumbrancesValid()
-         * - validateStatesAgainstContract() // THis may be irrelevant: if they don't belong to this circuit, Zinc will not understand them.
          *
          * Currently, users will have a verification key for each command in their CorDapp loaded by the node, also for all historical
          * commands. This is ensured, since command classes can never change in ZKFlow. If they do, a new one must be introduced, which
          * also results in a new circuit for it, including keys.
          * This means that as long as the CorDapps the user has deployed on the node are trusted, they have all verification keys
-         * for the commands that they know. This but does not need to be retrieved from the transaction attachments. This means
+         * for the commands that they know. They do not need to be retrieved from the transaction attachments. This means
          * that it is not required to check that a trusted attachment with a contract is present in the tx for a state. So no checks on
          * contract attachments are done for private states.
          * For the verification of the public parts of a ZKFlow transaction, all normal checks will be done by Corda as usual, including these.
@@ -82,6 +81,9 @@ class CommandContextFactory(
          * - com.ing.zkflow.common.transactions.verification.ZKTransactionVerifierService.validatePublicComponents
          * - checkTransactionWithTimeWindowIsNotarised()
          * - checkNotaryWhitelisted(ltx)
+         *
+         * Finally, validateStatesAgainstContract() is irrelevant: if states don't belong to this circuit, it will not be able deserialize
+         * the witness and will always fail.
          */
         addFunction(generateCheckNoNotaryChangeMethod(transactionComponents))
         addFunction(generateCheckEncumbrancesValidMethod(transactionComponents))
@@ -120,7 +122,7 @@ class CommandContextFactory(
             }
 
             /**
-             * TODO: add the outputs check
+             * MISSING CHECK: add the outputs check
              * // Check that in the outputs,
              * // a) an encumbered state does not refer to itself as the encumbrance
              * // b) the number of outputs can contain the encumbrance

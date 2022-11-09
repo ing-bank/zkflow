@@ -95,7 +95,7 @@ class StandardTypes(
         internal val digest = BflTypeDef(
             "Digest",
             array {
-                capacity = 32 // TODO size depends on the used hashing algorithm as specified in active ZKNetworkParameters
+                capacity = 32
                 elementType = BflPrimitive.I8
             }
         )

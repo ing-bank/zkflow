@@ -67,7 +67,6 @@ open class CircuitGenerator(
 
         // Write the structure of the different component groups
         codeGenerationOptions.transactionComponentOptions.forEach {
-            // TODO Make debugging output optional, maybe configurable in [ZKNetworkParameters], or with System Property
             buildPath.ensureDirectory("structure")
                 .ensureFile("${it.type.getModuleName()}.txt")
                 .writeText(it.type.toStructureTree().toString())

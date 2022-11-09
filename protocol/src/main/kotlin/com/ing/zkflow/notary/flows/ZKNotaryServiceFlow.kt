@@ -46,7 +46,6 @@ class ZKNotaryServiceFlow(
     private val zkConfig: NotaryZKConfig
 ) : FlowLogic<Void?>(), IdempotentFlow {
     companion object {
-        // TODO: Determine an appropriate limit and also enforce in the ZKNetworkParameters and the transaction builder.
         private const val MAX_ALLOWED_STATES_IN_TX = 10_000
     }
 
