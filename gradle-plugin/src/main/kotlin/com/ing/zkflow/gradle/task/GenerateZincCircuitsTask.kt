@@ -14,9 +14,14 @@ open class GenerateZincCircuitsTask : DefaultTask() {
     @Suppress("unused")
     val sourceInputs: ConfigurableFileTree = project.fileTree("src")
 
+    // NOTE: Must be public for the @InputDirectory to be recognized
+    @InputDirectory
+    val generatedKspResources: File = project.buildDir.resolve("generated/ksp/main/resources")
+
     // NOTE: Must be public for the @OutputDirectory to be recognized
     @OutputDirectory
-    val generatedKspResources: File = project.buildDir.resolve("generated/ksp/main/resources")
+    @Suppress("unused")
+    val generatedZincSources: File = project.buildDir.resolve("zinc")
 
     @TaskAction
     @Suppress("SpreadOperator")
