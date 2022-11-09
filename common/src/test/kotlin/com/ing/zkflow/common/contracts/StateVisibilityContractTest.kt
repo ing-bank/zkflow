@@ -57,7 +57,6 @@ class StateVisibilityContractTest {
         }
     }
 
-    // TODO: add similar test for inputs
     @Test
     fun `Additional unchecked public only outputs of different types are not allowed`() {
         services.zkLedger(zkService = zkTransactionService, zkVerifierTransactionStorage = zkVerifierTransactionStorage) {
