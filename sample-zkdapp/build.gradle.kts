@@ -1,4 +1,13 @@
 buildscript {
+    // Please note that this is only required because the ZKFlow artifacts are currently not published to a public maven repository.
+    // For that reason, we always ensure that the latest version of ZKFlow is published locally before running the CorDapp build.
+    println("ENSURING LATEST ZKFLOW IS PUBLISHED TO LOCAL MAVEN REPOSITORY...")
+    exec {
+        workingDir = projectDir.parentFile
+        executable = "./gradlew"
+        args("publishToMavenLocal")
+    }
+
     extra.apply{
         set("corda_release_version", "4.8.5")
     }
@@ -114,3 +123,14 @@ tasks.register<net.corda.plugins.Cordform>("deployNodes") {
         rpcUsers = listOf(mapOf( Pair("user", "user1"), Pair("password", "test"), Pair("permissions", listOf("ALL"))))
     }
 }
+
+// tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>() {
+//     doFirst {
+//         println("ENSURING LATEST ZKFLOW IS PUBLISHED TO LOCAL MAVEN REPOSITORY...")
+//         exec {
+//             workingDir = projectDir.parentFile
+//             executable = "./gradlew"
+//             args("publishToMavenLocal")
+//         }
+//     }
+// }

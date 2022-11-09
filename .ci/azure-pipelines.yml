@@ -55,7 +55,7 @@ steps:
       jdkArchitectureOption: 'x64'
       publishJUnitResults: true
       testResultsFiles: '**/TEST-*.xml'
-      tasks: 'clean cleanTest check test testReport jacocoRootReport checkLicense'
+      tasks: 'clean cleanTest check test testReport jacocoRootReport checkLicense spotBugsMain'
       # options: '--stacktrace --info --build-cache'
       options: '--no-build-cache --rerun-tasks --no-daemon --no-parallel --stacktrace --info '
     env:
