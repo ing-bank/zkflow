@@ -1,3 +1,3 @@
-com.ing.zkflow.processors.ZKFLowSymbolProcessorProvider
+com.ing.zkflow.processors.ZKFlowSymbolProcessorProvider
 com.ing.zkflow.processors.ZKPAnnotatedProcessorProvider
 com.ing.zkflow.processors.ZKPAnnotatedValidatorProvider

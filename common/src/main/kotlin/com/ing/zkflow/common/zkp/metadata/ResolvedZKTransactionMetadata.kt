@@ -11,7 +11,7 @@ data class ResolvedZKTransactionMetadata(
         private val DEFAULT_CIRCUIT_BUILD_FOLDER_PARENT_PATH = "${System.getProperty("user.dir")}/build/zinc/transactions/"
 
         const val ERROR_NO_COMMANDS = "There should be at least one command in a ZKFlow transaction"
-        const val ERROR_COMMAND_NOT_UNIQUE = "Multiple commands of one type found. All commands in a ZKFLow transaction should be unique"
+        const val ERROR_COMMAND_NOT_UNIQUE = "Multiple commands of one type found. All commands in a ZKFlow transaction should be unique"
     }
 
     val inputs = commands.fold(mutableListOf<ZKReference>()) { acc, command -> mergeUtxoVisibility(acc, command.inputs) }

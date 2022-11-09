@@ -44,14 +44,14 @@ import kotlin.reflect.KClass
  * but never after deployment and usage in production. If they did, it would break deserialization of serialized classses.
  * If a change is required that would change the properties of the primary constructor, users should create a new version of that type.
  * This 'versioning' is left in the hands of the user for normal types. They can simply create new types when they need them.
- * ZKFLow will enforce that types never change after deployment. This ensures that when a user introduces a new version for a type that is
+ * ZKFlow will enforce that types never change after deployment. This ensures that when a user introduces a new version for a type that is
  * used in another user type, and they want to use it, they will also have to introduce a new type for that using type.
  *
  * Another strong assumption this processor makes is that all checks from [ZKPAnnotatedValidator] were executed and successful. This
  * processor does only limited validation itself.
  *
  * There is special treatment for implementors of [ContractState]. This is because [ContractState]s are the only top-level transaction
- * components in a Corda transaction that are reused across transactions. Since this happens often, ZKFLow offers a convencience feature to
+ * components in a Corda transaction that are reused across transactions. Since this happens often, ZKFlow offers a convencience feature to
  * easily use old states in new transactions: it generates upgrade commands from old to newer. In order to do that, the 'versioning' of
  * states is more formalized than for other types. They are required:
  * - to implement a so-called versioning 'marker' interface that identifies a version family/group.  Such a version group identifies a group
