@@ -1,7 +1,7 @@
 package com.example.rpc
 
-import com.example.flow.IssuePrivateCBDCTokenFlow
-import com.example.contract.cbdc.CBDCToken
+import com.example.flow.IssuePrivateExampleTokenFlow
+import com.example.contract.token.ExampleToken
 import net.corda.client.rpc.CordaRPCClient
 import net.corda.client.rpc.CordaRPCClientConfiguration
 import net.corda.client.rpc.CordaRPCConnection
@@ -40,8 +40,8 @@ class SampleZKDappRPCClient(nodeUrlAndPort: String, val user: String, val passwo
         }
     }
 
-    fun create(token: CBDCToken): SignedTransaction {
-        val flowHandle = proxyStartFlowDynamic(proxy, IssuePrivateCBDCTokenFlow::class.java, token)
+    fun create(token: ExampleToken): SignedTransaction {
+        val flowHandle = proxyStartFlowDynamic(proxy, IssuePrivateExampleTokenFlow::class.java, token)
         return flowHandle.returnValue.getOrThrow(timeout)
     }
 

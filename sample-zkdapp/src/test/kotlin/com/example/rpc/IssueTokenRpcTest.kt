@@ -1,8 +1,7 @@
 package com.example.rpc
 
-import com.example.contract.cbdc.digitalEuro
+import com.example.contract.token.digitalEuro
 import net.corda.testing.core.TestIdentity
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 

@@ -1,6 +1,6 @@
-package com.example.contract.cbdc.commands
+package com.example.contract.token.commands
 
-import com.example.contract.cbdc.CBDCToken
+import com.example.contract.token.ExampleToken
 import com.ing.zkflow.annotations.ZKP
 import com.ing.zkflow.common.contracts.ZKCommandData
 import com.ing.zkflow.common.zkp.metadata.commandMetadata
@@ -12,7 +12,7 @@ class RedeemPrivate : ZKCommandData {
         numberOfSigners = 2
         notary = true
         inputs {
-            private(CBDCToken::class) at 0
+            private(ExampleToken::class) at 0
         }
     }
 
@@ -23,7 +23,7 @@ class RedeemPrivate : ZKCommandData {
             use module_command_context::CommandContext;
 
             fn verify(ctx: CommandContext) {
-                let input = ctx.inputs.cbdc_token_0;
+                let input = ctx.inputs.example_token_0;
 
                 assert!(ctx.signers.contains(input.data.amount.token.issuer.public_key), "[RedeemPrivate] Issuer must sign");
                 assert!(ctx.signers.contains(input.data.owner.public_key), "[RedeemPrivate] Holder must sign");

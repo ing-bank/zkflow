@@ -1,7 +1,9 @@
 @file:Suppress("ClassName")
 
-package com.r3.corda.lib.tokens.resolved.states
+package com.ing.zkflow.resolved
 
+import com.ing.zkflow.annotated.AmountSurrogate_IssuedTokenTypeV1Serializer
+import com.ing.zkflow.annotated.ExampleTokenSerializer
 import com.ing.zkflow.fixedCordaX500Name
 import com.ing.zkflow.serialization.SerializerTest
 import com.ing.zkflow.serialization.engine.SerdeEngine
@@ -10,11 +12,9 @@ import com.ing.zkflow.serialization.serializer.IntSerializer
 import com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializer
 import com.ing.zkflow.serialization.serializer.WrappedFixedLengthKSerializerWithDefault
 import com.ing.zkflow.testing.zkp.ZKNulls.fixedKeyPair
-import com.r3.corda.lib.tokens.annotated.fixtures.AmountSurrogate_IssuedTokenTypeV1Serializer
-import com.r3.corda.lib.tokens.annotated.states.AbstractFungibleToken
-import com.r3.corda.lib.tokens.annotated.states.CBDCTokenSerializer
-import com.r3.corda.lib.tokens.annotated.types.IssuedTokenType
-import com.r3.corda.lib.tokens.annotated.types.TokenType
+import com.r3.corda.lib.tokens.states.AbstractFungibleToken
+import com.r3.corda.lib.tokens.types.IssuedTokenType
+import com.r3.corda.lib.tokens.types.TokenType
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
@@ -31,7 +31,7 @@ import java.security.PublicKey
 import java.time.Instant
 
 @Serializable
-data class CBDCToken(
+data class ExampleToken(
     @Serializable(with = Amount_0::class) val myAmount: @Contextual Amount<@Contextual IssuedTokenType>,
     @Serializable(with = Holder_0::class) val owner: @Contextual AnonymousParty,
     @Serializable(with = IssueDate_0::class) val issueDate: @Contextual Instant = Instant.now(),
@@ -50,7 +50,7 @@ data class CBDCToken(
 
     override fun withNewHolder(newHolder: AbstractParty): AbstractFungibleToken {
         require(newHolder is AnonymousParty)
-        return CBDCToken(amount, newHolder)
+        return ExampleToken(amount, newHolder)
     }
 
     object Amount_0 : WrappedFixedLengthKSerializer<Amount<IssuedTokenType>>(AmountSurrogate_IssuedTokenTypeV1Serializer, Amount::class.java.isEnum)
@@ -65,12 +65,12 @@ data class CBDCToken(
     object UsageCount_0 : WrappedFixedLengthKSerializerWithDefault<Int>(IntSerializer)
 }
 
-class CBDCTokenTest : SerializerTest {
+class ExampleTokenTest : SerializerTest {
     private val publicKey: PublicKey = fixedKeyPair(Crypto.EDDSA_ED25519_SHA512).public
 
     private val party = Party(fixedCordaX500Name, publicKey)
 
-    private val cbdcToken = com.r3.corda.lib.tokens.annotated.states.CBDCToken(
+    private val exampleToken = com.ing.zkflow.annotated.ExampleToken(
         myAmount = Amount(
             100,
             IssuedTokenType(
@@ -84,20 +84,20 @@ class CBDCTokenTest : SerializerTest {
         owner = party.anonymise(),
     )
 
-    private val resolvedCBDCToken = with(cbdcToken) {
-        CBDCToken(amount, owner, issueDate, lastInterestAccrualDate, usageCount)
+    private val resolvedExampleToken = with(exampleToken) {
+        ExampleToken(amount, owner, issueDate, lastInterestAccrualDate, usageCount)
     }
 
     @ParameterizedTest
     @MethodSource("engines")
-    fun `CBDCToken makes a round trip`(engine: SerdeEngine) {
-        engine.assertRoundTrip(CBDCTokenSerializer, cbdcToken)
+    fun `ExampleToken makes a round trip`(engine: SerdeEngine) {
+        engine.assertRoundTrip(ExampleTokenSerializer, exampleToken)
     }
 
     @ParameterizedTest
     @MethodSource("engines")
-    fun `CBDCToken generated and manual serializations must coincide`(engine: SerdeEngine) {
-        engine.serialize(CBDCTokenSerializer, cbdcToken) shouldBe
-            engine.serialize(CBDCToken.serializer(), resolvedCBDCToken)
+    fun `ExampleToken generated and manual serializations must coincide`(engine: SerdeEngine) {
+        engine.serialize(ExampleTokenSerializer, exampleToken) shouldBe
+            engine.serialize(ExampleToken.serializer(), resolvedExampleToken)
     }
 }

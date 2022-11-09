@@ -1,4 +1,4 @@
-package com.r3.corda.lib.tokens.annotated.types
+package com.r3.corda.lib.tokens.types
 
 import com.ing.zkflow.annotations.UTF8
 import com.ing.zkflow.annotations.ZKP

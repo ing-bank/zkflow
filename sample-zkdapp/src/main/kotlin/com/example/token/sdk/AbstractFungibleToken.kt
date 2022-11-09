@@ -4,9 +4,9 @@ import net.corda.core.contracts.FungibleState
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.serialization.CordaSerializable
 
-// Decomposition replaces the relation: `CBDCToken is FungibleToken`
+// Decomposition replaces the relation: `ExampleToken is FungibleToken`
 // with
-// `CBDCToken     is AbstractFungibleToken` and
+// `ExampleToken     is AbstractFungibleToken` and
 // `FungibleToken is AbstractFungibleToken`
 // Such decomposition is required to circumvent the kotlinx.serialization limitation, see
 // https://github.com/Kotlin/kotlinx.serialization/issues/1792
