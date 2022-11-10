@@ -39,15 +39,28 @@ import net.corda.core.transactions.SignedTransaction
 import net.corda.core.utilities.UntrustworthyData
 import net.corda.core.utilities.unwrap
 
+/*
+ * Must extend NotaryFlow.Client *only* because NotaryService.initiatingFlows does not support registering flows that are not a NotaryFlow.Client.
+ * Otherwise, no methods of the parent are called.
+ *
+ * Unfortunately, this means ZKNotaryFlow constructor requires an otherwise uselss stx parameter.
+ * Fortunately, we always have one at the call site.
+ */
 open class ZKNotaryFlow(
-    stx: SignedTransaction,
+    stx: SignedTransaction, // Required only for NotaryFlow.Client construction
     private val svtx: SignedZKVerifierTransaction
 ) : NotaryFlow.Client(stx) {
+
+    override val isTimeoutEnabled: Boolean
+        get() {
+            val notaryParty = svtx.tx.notary ?: throw IllegalStateException("Transaction does not specify a Notary")
+            return serviceHub.networkMapCache.getNodesByLegalIdentityKey(notaryParty.owningKey).size > 1
+        }
 
     @Suspendable
     @Throws(NotaryException::class)
     override fun call(): List<TransactionSignature> {
-        val notaryParty = checkZKVerifierTransaction()
+        val notaryParty = checkValidNotary()
         val response = zkNotarise(notaryParty)
         return validateNotaryResponse(response, notaryParty)
     }
@@ -56,7 +69,7 @@ open class ZKNotaryFlow(
      * Checks that the transaction specifies a valid notary
      */
     @Suspendable
-    protected fun checkZKVerifierTransaction(): Party {
+    protected fun checkValidNotary(): Party {
         val notaryParty = svtx.tx.notary ?: throw IllegalStateException("Transaction does not specify a Notary")
         check(serviceHub.networkMapCache.isNotary(notaryParty)) { "$notaryParty is not a notary on the network" }
         ZKNetworkParametersServiceLoader.latest.notaryInfo.validate(notaryParty)
@@ -80,8 +93,6 @@ open class ZKNotaryFlow(
         }.toSet()
     }
 
-    /** Notarises the transaction with the [notaryParty], obtains the notary's signature(s). */
-    @Throws(NotaryException::class)
     @Suspendable
     protected fun zkNotarise(notaryParty: Party): UntrustworthyData<NotarisationResponse> {
         val session = initiateFlow(notaryParty)

@@ -160,7 +160,7 @@ sealed class FetchZKDataFlow<T : NamedByHash, in W : Any>(
                 throw DownloadedVsRequestedSizeMismatch(requests.size, response.size)
             }
 
-            if (logger.isTraceEnabled()) {
+            if (logger.isTraceEnabled) {
                 logger.trace { "Request size = ${requests.size}" }
                 for ((reqInd, req) in requests.withIndex()) {
                     logger.trace { "Requested[$reqInd] = '$req'" }
@@ -168,7 +168,7 @@ sealed class FetchZKDataFlow<T : NamedByHash, in W : Any>(
             }
 
             val answers = response.map { convert(it) }
-            if (logger.isTraceEnabled()) {
+            if (logger.isTraceEnabled) {
                 logger.trace { "Answers size = ${answers.size}" }
                 for ((respInd, item) in answers.withIndex()) {
                     if (item is MaybeSerializedSignedZKVerifierTransaction) {

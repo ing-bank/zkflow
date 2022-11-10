@@ -1,0 +1,76 @@
+@startuml
+title Simplified sequence of events for ZKFlow's private transaction finality.
+skinparam backgroundColor white
+
+Init as "Initiator" -> Init: stx = ZKTransactionBuilder.toSignedTransaction()
+group ZKCollectSignaturesFlow
+    Init -> ctp as "Counterparty": stx
+    note right
+        Items in <font color=red><b>bold red</b></font> are different from standard Corda
+    end note
+    ctp -> ctp: <font color=red><b>ZKResolveTransactionsFlow(stx)</b></font>
+    note left
+        The ZKResolveTransactionsFlow
+        does *not* collect and verify
+        a backchain of SignedTransactions
+        with all components visible.
+
+        Instead, it collects and verifies a backchain
+        of SignedZKVerifierTransactions with ZKPs.
+        The ZKPs of the private transactions, when verified,
+        prove that its private components are valid and part
+        of the transaction.
+    end note
+    ctp -> ctp: <font color=red><b>stx.verify()</b></font>
+    note left
+        Counterparties confirm that the stx
+        is valid for both the private ZKP smart contract
+        and the public smart contract.
+    end note
+    ctp -> ctp: sig = stx.sign()
+    ctp -> Init: sig
+    Init -> Init: fullySignedTx = SignedTransaction + TransactionSignature
+end
+
+group ZKFinalityFlow
+    Init -> Init: <font color=red><b>svtx = ZKTransactionService.prove(fullySignedTx)</b></font>
+    note right
+        Creates SignedZKVerifierTransaction:
+        * Contains ZKP, proving validity of private components
+        * Private components filtered out of Merkle tree based on command metadata
+           and replaced by their hash
+        * Same transaction id (Merkle root) preserved as fullySignedTx,
+           proving link between the two
+        * Hashes of private components are part of public input for proof verification,
+           proving link between svtx and the ZKP
+    end note
+    group ZKNotaryFlow
+        Init -> notary as "Notary":  send(ZKNotarisationPayload(svtx))
+        group ZKNotaryServiceFlow
+            notary -> notary: <font color=red><b>ZKResolveTransactionsFlow(svtx)</b></font>
+            notary -> notary: <font color=red><b>svtx.verify()</b></font>
+            note left
+                Backchain validation is identical to ZKCollectSignaturesFlow,
+                but unlike counterparties, who receive all private contents,
+                the notary only receives the private filtered svtx to verify,
+                so will not see any private contents. Instead, they verify
+                a ZKP for the transaction's private contents, identical to
+                backchain validation.
+            end note
+            notary -> notary: <font color=red><b>verify(proof)</b></font>
+            notary -> Init: NotarySig
+        end
+    end
+    Init -> Init: notarisedStx = fullySignedTx + notarySig
+    Init -> Init: notarisedSvtx = svtx + notarySig
+    Init -> Init: serviceHub.recordTransactions(svtx, notarisedStx)
+    Init -> ctp: broadcast(notarisedSvtx, notarisedStx)
+    note right
+        Directly participating counterparties receive both
+        the private, filtered notarisedSvtx and the unfiltered notarisedStx,
+        since they already know all contents of the transaction and signed it.
+        Other recipients of the transaction only receive the private, filtered
+        notarisedSvtx. The caller of ZKFinalityFlow controls this.
+    end note
+end
+@enduml

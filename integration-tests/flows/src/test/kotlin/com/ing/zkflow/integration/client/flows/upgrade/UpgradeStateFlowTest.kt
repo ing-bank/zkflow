@@ -11,9 +11,9 @@ import com.ing.zkflow.common.node.services.getCordaServiceFromConfig
 import com.ing.zkflow.common.versioning.ContractStateVersionFamilyRegistry
 import com.ing.zkflow.common.zkp.ZKFlow
 import com.ing.zkflow.common.zkp.ZKTransactionService
-import com.ing.zkflow.common.zkp.zinc.ZincZKTransactionCordaService
 import com.ing.zkflow.notary.ZKNotaryService
 import com.ing.zkflow.testing.checkIsPresentInVault
+import com.ing.zkflow.testing.zkp.MockZKTransactionCordaService
 import com.ing.zkflow.zinc.poet.generate.DefaultCircuitGenerator
 import io.kotest.matchers.shouldBe
 import net.corda.core.identity.CordaX500Name
@@ -56,8 +56,8 @@ class UpgradeStateFlowTest {
                     mapOf(
                         ZK_VERIFIER_TX_STORAGE to InMemoryZKVerifierTransactionStorageCordaService::class.qualifiedName!!,
                         ZK_UTXO_INFO_STORAGE to InMemoryUtxoInfoStorage::class.qualifiedName!!,
-                        // ZK_TX_SERVICE to MockZKTransactionCordaService::class.qualifiedName!!,
-                        ZK_TX_SERVICE to ZincZKTransactionCordaService::class.qualifiedName!!,
+                        ZK_TX_SERVICE to MockZKTransactionCordaService::class.qualifiedName!!,
+                        // ZK_TX_SERVICE to ZincZKTransactionCordaService::class.qualifiedName!!,
                     )
                 )
             ),

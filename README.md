@@ -1,3 +1,6 @@
+The ZKFlow Protocol
+===================
+
 The ZKFlow consensus protocol enables private transactions on Corda using Zero Knowledge Proofs.
 
 ZKFlow enables CorDapp builders to make some or all states in a transaction private. 
@@ -18,14 +21,55 @@ Features:
 - Hide transactions: a new transaction that makes a public state hidden moving forward. Previous versions of the state in its backchain remain public.
 - drop-in ZK replacements for core Corda consensus flows
 - a ZKP-aware notary
+- ZKP-aware smart contract test DSL
 
-To learn more about ZKFlow internals, there is a [docs](docs) directory in this repo. In addition to the [ZKFlow white paper](docs/ZKFlow_whitepaper.pdf), it contains technical documentation in Markdown and PDF format. There is also plenty of documentation throughout the code itself, explaining logic or rationale. Finally, the many test cases will also explain a lot about expected behaviour.
+To learn more about ZKFlow internals, there is a [docs](docs) directory in this repo. In addition to the [ZKFlow white paper](docs/ZKFlow_whitepaper.pdf), it contains design documentation in Markdown and PDF format. There is also plenty of documentation throughout the code itself, explaining logic or rationale. Finally, the many test cases will also explain a lot about expected behaviour.
 
 ZKFlow is currently targeting Corda 4.8 or higher, it does not support the upcoming Corda 5.
 
 ## Running the sample ZKDapp
 
 The sample ZKDapp demonstrates how a basic token contract can be adapted to work with ZKFlow. The contract tests and flow tests show the expected behaviour.
+
+```kotlin
+/*
+ * Any state class you want to use in a ZKFlow transaction should be annotated with @ZKP. 
+ * This ensures it is picked up by ZKFlow compiler plugin and code generation.
+ * 
+ * In addition, ZKFlow also needs to know how to serialize and generate a ZKP circuit for all types 
+ * used in  @ZKP-annotated class. Some core Corda and Java/Kotlin types are supported out of
+ * the box, but you will always need to provide information about custom types.
+ */
+@ZKP 
+data class ExampleToken(
+    // Both Amount and IssuedTokenType are third party classes
+    override val amount: @Via<AmountIssuedTokenTypeSurrogate> Amount<IssuedTokenType>,
+    val owner: @EdDSA AnonymousParty
+) : AbstractFungibleToken(), VersionedExampleToken {
+    override val holder = owner
+    override val tokenTypeJarHash: SecureHash = SecureHash.zeroHash
+
+    override fun withNewHolder(newHolder: AnonymousParty): ExampleToken {
+        return ExampleToken(amount, newHolder)
+    }
+
+    fun withNewHolder(newHolder: AnonymousParty, amount: Double): ExampleToken {
+        val decimalAmount = BigDecimal(amount)
+        require(decimalAmount <= this.amount.toDecimal()) { "Can't increase amount when assigning a new holder" }
+        return ExampleToken(Amount.fromDecimal(decimalAmount, this.amount.token), newHolder)
+    }
+
+    fun withNewHolder(newHolder: AnonymousParty, amount: BigDecimal): ExampleToken {
+        require(amount <= this.amount.toDecimal()) { "Can't increase amount when assigning a new holder" }
+        return ExampleToken(Amount.fromDecimal(amount, this.amount.token), newHolder)
+    }
+
+    fun withNewHolder(newHolder: AnonymousParty, amount: Amount<IssuedTokenType>): ExampleToken {
+        require(amount <= this.amount) { "Can't increase amount when assigning a new holder" }
+        return ExampleToken(amount, newHolder)
+    }
+}
+```
 
 Please make sure you have satisfied all [prerequisites](#Prerequisites for running ZKFlow) before you execute the following:
 
@@ -51,14 +95,11 @@ The ZKFlow jars are currently not deployed to one of the public Maven/Gradle rep
      ```
 * To be able to use ZKFlow's contract test DSL and other convenience functions, add `testImplementation("com.ing.zkflow:test-utils:1.0-SNAPSHOT")` to your `dependencies` block in `build.gradle.kts`.
  
-Not you are ready to adapt your contracts, states, commands, contract tests and flow tests to work with ZKFlow. You can inspect `sample-zkdapp` to see how you can make those adaptations. Please note that some significant changes to your state class definitions may be required.
-
-Not recommended, but feel free to run it immediately as-is and let ZKFlow tell you what should be added to your classes.
+Now you are ready to adapt your contracts, states, commands, contract tests and flow tests to work with ZKFlow. See the [Getting Started](./docs/getting-started.md) for guidance. 
 
 ## Troubleshooting the sample ZKDapp or your own ZKDapp
 
-Build issues:
-- `java.lang.IllegalArgumentException: Cannot find circuit manifest`: This should not happen during normal development flow, but it can be solved by running `./gradlew generateZincCircuits --rerun-tasks` in your ZKDapp. 
+See [Troubleshooting](./docs/troubleshooting.md).
 
 ## Running ZKFlow tests
 

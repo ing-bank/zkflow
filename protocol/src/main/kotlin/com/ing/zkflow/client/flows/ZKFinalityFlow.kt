@@ -153,17 +153,17 @@ class ZKFinalityFlow private constructor(
 
     @Suspendable
     private fun notariseAndRecord(): PrivateNotarisedTransactionPayload {
-        // Create proof and vtx
-        val vtx = stx.prove(serviceHub)
+        // Create proof and svtx
+        val svtx = stx.prove(serviceHub)
 
-        val notarisedSvtx = if (needsNotarySignature(vtx)) {
+        val notarisedSvtx = if (needsNotarySignature(svtx)) {
             progressTracker.currentStep =
                 NOTARISING
-            val notarySignatures = subFlow(ZKNotaryFlow(stx, vtx))
-            vtx + notarySignatures
+            val notarySignatures = subFlow(ZKNotaryFlow(stx, svtx))
+            svtx + notarySignatures
         } else {
             logger.info("No need to notarise this transaction.")
-            vtx
+            svtx
         }
         logger.info("Recording transaction locally.")
         val notarised = PrivateNotarisedTransactionPayload(notarisedSvtx, SignedTransaction(stx.tx, notarisedSvtx.sigs))
@@ -172,15 +172,15 @@ class ZKFinalityFlow private constructor(
         return notarised
     }
 
-    private fun needsNotarySignature(stx: SignedZKVerifierTransaction): Boolean {
-        val wtx = stx.tx
+    private fun needsNotarySignature(svtx: SignedZKVerifierTransaction): Boolean {
+        val wtx = svtx.tx
         val needsNotarisation = wtx.inputs.isNotEmpty() || wtx.references.isNotEmpty() || wtx.timeWindow != null
-        return needsNotarisation && hasNoNotarySignature(stx)
+        return needsNotarisation && hasNoNotarySignature(svtx)
     }
 
-    private fun hasNoNotarySignature(stx: SignedZKVerifierTransaction): Boolean {
-        val notaryKey = stx.tx.notary?.owningKey
-        val signers = stx.sigs.asSequence().map { it.by }.toSet()
+    private fun hasNoNotarySignature(svtx: SignedZKVerifierTransaction): Boolean {
+        val notaryKey = svtx.tx.notary?.owningKey
+        val signers = svtx.sigs.asSequence().map { it.by }.toSet()
         return notaryKey?.isFulfilledBy(signers) != true
     }
 

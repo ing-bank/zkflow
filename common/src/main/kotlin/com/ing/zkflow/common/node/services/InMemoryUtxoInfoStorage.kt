@@ -7,7 +7,7 @@ import net.corda.core.node.services.CordaService
 import net.corda.core.serialization.SingletonSerializeAsToken
 
 @CordaService
-class InMemoryUtxoInfoStorage(public val serviceHub: AppServiceHub) : WritableUtxoInfoStorage, SingletonSerializeAsToken() {
+class InMemoryUtxoInfoStorage(val serviceHub: AppServiceHub) : WritableUtxoInfoStorage, SingletonSerializeAsToken() {
     private val utxoInfos = mutableMapOf<StateRef, UtxoInfo>()
 
     override fun addUtxoInfo(utxoInfo: UtxoInfo): Boolean {

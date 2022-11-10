@@ -151,7 +151,7 @@ internal val testDataLargerListOfStructs = listOf(
 internal val testDataEmptyListOfStructWithStructs = emptyList<JsonObject>()
     .asZincJsonObjectList(2, structStructJson(false, 0))
 
-public fun Map<Things, String>.asZincJsonMap(size: Int): JsonObject = buildJsonObject {
+fun Map<Things, String>.asZincJsonMap(size: Int): JsonObject = buildJsonObject {
     require(size >= this@asZincJsonMap.size) { "Map does not fit in given size" }
     put("size", "${this@asZincJsonMap.size}")
     put(

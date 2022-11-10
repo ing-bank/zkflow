@@ -31,3 +31,4 @@
           .writeText(it.type.toStructureTree().toString())
   }
   ```
+- Fix `ZKNotary.isZKValidating()` to correctly determine if a notary is actually zkvalidating.
