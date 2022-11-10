@@ -1,4 +1,4 @@
-The ZKFlow consensus protocol enables private transactions on Corda.
+The ZKFlow consensus protocol enables private transactions on Corda using Zero Knowledge Proofs.
 
 ZKFlow enables CorDapp builders to make some or all states in a transaction private. 
 Private states will not be present in the backchain, nor will they be disclosed to the notary. 
