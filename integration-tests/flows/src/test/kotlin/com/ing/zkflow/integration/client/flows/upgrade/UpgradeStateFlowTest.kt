@@ -15,6 +15,7 @@ import com.ing.zkflow.notary.ZKNotaryService
 import com.ing.zkflow.testing.checkIsPresentInVault
 import com.ing.zkflow.testing.zkp.MockZKTransactionCordaService
 import com.ing.zkflow.zinc.poet.generate.DefaultCircuitGenerator
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
@@ -115,7 +116,7 @@ class UpgradeStateFlowTest {
         val oldState = createStx.tx.outRef<VersionedMyState>(0)
         miniCorpNode.checkIsPresentInVault(oldState, Vault.StateStatus.UNCONSUMED)
 
-        val upgradeFlow = ZKUpgradeStateFlow(oldState, 2)
+        val upgradeFlow = ZKUpgradeStateFlow(oldState, MyStateV2::class)
         val upgradeFuture = miniCorpNode.startFlow(upgradeFlow)
         mockNet.runNetwork()
         val upgradedState = upgradeFuture.getOrThrow()
@@ -123,5 +124,11 @@ class UpgradeStateFlowTest {
         miniCorpNode.checkIsPresentInVault(oldState, Vault.StateStatus.CONSUMED)
         miniCorpNode.checkIsPresentInVault(upgradedState, Vault.StateStatus.UNCONSUMED)
         ContractStateVersionFamilyRegistry.versionOf(upgradedState.state.data::class) shouldBe 2
+
+        shouldThrow<IllegalArgumentException> {
+            val invalidFuture = miniCorpNode.startFlow(ZKUpgradeStateFlow(upgradedState, MyStateV1::class))
+            mockNet.runNetwork()
+            invalidFuture.getOrThrow()
+        }.also { it.message?.contains("It is not a higher version") }
     }
 }

@@ -32,3 +32,4 @@
   }
   ```
 - Fix `ZKNotary.isZKValidating()` to correctly determine if a notary is actually zkvalidating.
+- State version negotiation between counterparties.
