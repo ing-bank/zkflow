@@ -77,7 +77,7 @@ private fun KFunction<Any>.tryGetFirstArgumentKClass(): KClass<out Any>? = try {
  * This function requires that the [ZincUpgrade] annotation exists and throws an [IllegalStateException] if it doesn't.
  */
 private fun KFunction<Any>.getZincUpgradeBody(): String = this.findAnnotation<ZincUpgrade>()?.upgrade
-    ?: throw IllegalStateException("Upgrade constructor MUST be annotated with ${ZincUpgrade::class.simpleName}")
+    ?: throw IllegalStateException("Upgrade constructor `$this` MUST be annotated with ${ZincUpgrade::class.simpleName}")
 
 private fun KFunction<Any>.getZincUpgradeAdditionalChecks(): String = this.findAnnotation<ZincUpgrade>()?.additionalChecks?.trimIndent()
     ?: throw IllegalStateException("Upgrade constructor '$this' MUST be annotated with ${ZincUpgrade::class.simpleName}")

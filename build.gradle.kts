@@ -206,6 +206,11 @@ subprojects {
             add("testCompileOnly", "com.github.spotbugs:spotbugs-annotations:4.5.3")
         }
 
+        subproject.java {
+            withSourcesJar()
+            withJavadocJar()
+        }
+
         if (!subproject.path.startsWith(":integration-tests")) {
             plugins.apply {
                 apply("com.github.jk1.dependency-license-report")

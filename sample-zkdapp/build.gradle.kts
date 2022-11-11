@@ -3,6 +3,8 @@ buildscript {
     // For that reason, we always ensure that the latest version of ZKFlow is published locally before running the CorDapp build.
     println("ENSURING LATEST ZKFLOW IS PUBLISHED TO LOCAL MAVEN REPOSITORY...")
     exec {
+        // If this complains about not finding Java, please ensure JAVA_HOME env var is set in the context you run Gradle in.
+        // For example, using IntelliJ on Mac with bash, it will be picked up if set in ~/.bash_profile.
         workingDir = projectDir.parentFile
         executable = "./gradlew"
         args("publishToMavenLocal")
