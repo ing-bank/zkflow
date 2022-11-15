@@ -62,7 +62,10 @@ class PrivateExampleTokenFlowTest {
                     mapOf(
                         ZK_VERIFIER_TX_STORAGE to InMemoryZKVerifierTransactionStorageCordaService::class.qualifiedName!!,
                         ZK_UTXO_INFO_STORAGE to InMemoryUtxoInfoStorage::class.qualifiedName!!,
+                        // Uncomment this to run with the real circuit
                         ZK_TX_SERVICE to ZincZKTransactionCordaService::class.qualifiedName!!,
+                        // Uncomment this to run with a mock circuit. Note that this does not test smart contract logic. So only
+                        // Use this when testing flow logic and the contract is already tested elsewhere.
                         // ZK_TX_SERVICE to MockZKTransactionCordaService::class.qualifiedName!!,
                     )
                 )

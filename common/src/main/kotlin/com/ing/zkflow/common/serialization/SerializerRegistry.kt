@@ -32,13 +32,13 @@ abstract class SerializerRegistry<T : Any> {
     private val objId2Serializer = mutableMapOf<Int, KClassSerializer<T>>()
 
     init {
-        log.debug("Adding available serializers to ${this::class}")
+        log.trace("Adding available serializers to ${this::class}")
         getAllKClassSerializerProviders().map { it.get() }
             .also { if (it.isEmpty()) log.debug("No serializers found") }
             .forEach { (forKClass, id, serializer) ->
                 @Suppress("UNCHECKED_CAST")
                 if (forKClass as? KClass<T> != null) {
-                    log.debug("Registering serializer for $forKClass")
+                    log.trace("Registering serializer for $forKClass")
                     serializer as KSerializer<T>
                     register(KClassSerializer(forKClass, id, serializer))
                 }
@@ -61,7 +61,7 @@ abstract class SerializerRegistry<T : Any> {
         val klass = klassSerializer.klass
         val serializer = klassSerializer.serializer
         val id = klassSerializer.id
-        log.debug("Registering serializer `$serializer` under id `$id` for `${klass.qualifiedName}`")
+        log.trace("Registering serializer `$serializer` under id `$id` for `${klass.qualifiedName}`")
 
         obj2Id.put(klass, id)?.let { throw SerializerRegistryError.ClassAlreadyRegistered(klass, it) }
         objId2Serializer.put(id, klassSerializer)?.let {

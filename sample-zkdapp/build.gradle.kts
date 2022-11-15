@@ -124,13 +124,23 @@ tasks.register<net.corda.plugins.Cordform>("deployNodes") {
     }
 }
 
-// tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>() {
-//     doFirst {
-//         println("ENSURING LATEST ZKFLOW IS PUBLISHED TO LOCAL MAVEN REPOSITORY...")
-//         exec {
-//             workingDir = projectDir.parentFile
-//             executable = "./gradlew"
-//             args("publishToMavenLocal")
-//         }
-//     }
-// }
+// Add logging config to resources
+sourceSets {
+    test {
+        resources {
+            srcDir("${rootProject.rootDir}/config/logging/test")
+        }
+    }
+}
+
+// Prevent Corda & JUnit from spamming the test log. Show debug logging for ZKFlow
+tasks.withType<Test> {
+    // Set the default log4j config file for tests
+    systemProperty("log4j.configurationFile", "${project.buildDir}/resources/test/log4j2.xml")
+
+    // This file determines for the standard java.util.logging how and what is logged to the console
+    // This is to configure logging that does not go through slf4j/log4j, like JUnit platform logging.
+    systemProperty(
+        "java.util.logging.config.file", "${project.buildDir}/resources/test/logging-test.properties"
+    )
+}

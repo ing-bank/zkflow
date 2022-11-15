@@ -230,11 +230,6 @@ subprojects {
             @Suppress("UnstableApiUsage")
             withJavadocJar()
         }
-        // configure<JavaPluginExtension> {
-        //     withSourcesJar()
-        //     withJavadocJar()
-        //
-        // }
 
         configure<com.github.spotbugs.snom.SpotBugsExtension> {
             toolVersion.set("4.5.3")
