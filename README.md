@@ -31,25 +31,8 @@ ZKFlow is currently targeting Corda 4.8 or higher, it does not support the upcom
 
 ## Running the sample ZKDapp
 
-The sample ZKDapp demonstrates how a basic token contract can be adapted to work with ZKFlow. The contract tests and flow tests show the expected behaviour.
-
-```kotlin
-/*
- * Any state class you want to use in a ZKFlow transaction should be annotated with @ZKP. 
- * This ensures it is picked up by ZKFlow compiler plugin and code generation.
- * 
- * In addition, ZKFlow also needs to know how to serialize and generate a ZKP circuit for all types 
- * used in  @ZKP-annotated class. Some core Corda and Java/Kotlin types are supported out of
- * the box, but you will always need to provide information about custom types.
- */
-@ZKP 
-data class ExampleToken(
-    override val amount: @Via<AmountIssuedTokenTypeSurrogate> Amount<IssuedTokenType>,
-    val owner: @EdDSA AnonymousParty
-) : AbstractFungibleToken(), VersionedExampleToken {
-    // [..] 
-}
-```
+The sample ZKDapp demonstrates how a basic token contract can be adapted to work with ZKFlow. The contract tests and flow tests show the expected behaviour, i.e they behave as you would expect from normal Corda.
+Please see [ExampleToken.kt](./sample-zkdapp/src/main/kotlin/com/example/contract/token/ExampleToken.kt) for details on how to adapt a state class. It is documented extensively.
 
 Please make sure you have satisfied all [prerequisites](#Prerequisites for running ZKFlow) before you execute the following:
 
@@ -75,7 +58,8 @@ The ZKFlow jars are currently not deployed to one of the public Maven/Gradle rep
      ```
 * To be able to use ZKFlow's contract test DSL and other convenience functions, add `testImplementation("com.ing.zkflow:test-utils:1.0-SNAPSHOT")` to your `dependencies` block in `build.gradle.kts`.
  
-Now you are ready to adapt your contracts, states, commands, contract tests and flow tests to work with ZKFlow. See the [Getting Started](./docs/getting-started.md) for guidance. 
+Now you are ready to adapt your contracts, states, commands, contract tests and flow tests to work with ZKFlow. 
+Please see [ExampleToken.kt](./sample-zkdapp/src/main/kotlin/com/example/contract/token/ExampleToken.kt) for guidance on how to adapt a state class. It is documented extensively.
 
 ## Troubleshooting the sample ZKDapp or your own ZKDapp
 
