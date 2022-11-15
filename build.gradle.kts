@@ -206,10 +206,6 @@ subprojects {
             add("testCompileOnly", "com.github.spotbugs:spotbugs-annotations:4.5.3")
         }
 
-        subproject.java {
-            withSourcesJar()
-            withJavadocJar()
-        }
 
         if (!subproject.path.startsWith(":integration-tests")) {
             plugins.apply {
@@ -227,6 +223,18 @@ subprojects {
                 allowedLicensesFile = rootProject.projectDir.resolve("config/allowed-licenses.json")
             }
         }
+
+        subproject.java {
+            @Suppress("UnstableApiUsage")
+            withSourcesJar()
+            @Suppress("UnstableApiUsage")
+            withJavadocJar()
+        }
+        // configure<JavaPluginExtension> {
+        //     withSourcesJar()
+        //     withJavadocJar()
+        //
+        // }
 
         configure<com.github.spotbugs.snom.SpotBugsExtension> {
             toolVersion.set("4.5.3")
