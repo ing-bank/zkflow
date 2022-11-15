@@ -18,14 +18,15 @@ import net.corda.core.identity.Party
 import net.corda.core.serialization.CordaSerializable
 import org.intellij.lang.annotations.Language
 import java.math.BigDecimal
+import java.util.UUID
 
 val EUR = TokenType("EUR", 2)
 fun digitalEuroTokenType(issuer: Party) = IssuedTokenType(issuer, EUR)
 fun digitalEuro(amount: Double, issuer: Party, holder: AnonymousParty) = digitalEuro(BigDecimal(amount), issuer, holder)
 fun digitalEuro(amount: BigDecimal, issuer: Party, holder: AnonymousParty) =
-    ExampleToken(EUR.tokenIdentifier, Amount.fromDecimal(amount, digitalEuroTokenType(issuer)), owner = holder)
+    ExampleToken(EUR.tokenIdentifier, TokenDescriptor("Digital EUR", UUID.randomUUID()), Amount.fromDecimal(amount, digitalEuroTokenType(issuer)), owner = holder)
 
-const val TOKEN_CODE_SIZE = 3;
+const val TOKEN_CODE_SIZE = 3
 
 /*
  * All states are required to implement an interface that extends VersionedContractStateGroup.
@@ -39,14 +40,16 @@ interface VersionedExampleToken : VersionedContractStateGroup, ContractState
  * to the ZKP proving and operations.
  *
  * ZKFlow also needs to know how to serialize all types
- * used in  @ZKP-annotated classes. A limited set of  core Corda and Java/Kotlin types are supported out of
+ * used within @ZKP-annotated classes. A limited set of  core Corda and Java/Kotlin types are supported out of
  * the box, but you will always need to provide information about custom types.
  *
  * There are two ways to provide this information to ZKFlow:
- * 1) Directly annotate a custom type with @ZKP and with all its composed types also annotated.
- * 2) If you can't annotate a custom type, for example because it is provided by one of your dependencies,
- *    you can provide the class name of a surrogate with a @Via annotation. You can then annotate this
- *    surrogate as normal.
+ * 1) Directly annotate the declaration of a custom type with @ZKP and with all its composed types also annotated.
+ * 2) If you can't annotate the declaration of a custom type, for example because it is provided by one of your dependencies,
+ *    you can provide the class name of a surrogate with a @Via annotation on the type of the property. You can then annotate this
+ *    surrogate class as normal.
+ *
+ * There are examples of both options in this token class.
  */
 @CordaSerializable
 @BelongsToContract(ExampleTokenContract::class)
@@ -58,17 +61,35 @@ data class ExampleToken(
      * can be guaranteed to always have the same length, so that the non-turing complete ZKP toolchain can handle it.
      *
      * ZKFlow will also need to know the size of the collection's elements, so that it can calculate the total fixed size
-     * of a fixed-length collection. This is done as described above, by annotation types with information from which
+     * of a fixed-length collection. This is done as described above, by annotating types with information from which
      * ZKFlow can determine their size.
      *
-     * For convenience, ZKFlow understands a bit more about certain core types. This is true for String.
+     * For convenience, ZKFlow understands a bit more about certain core types. This is true for String for example.
      * ZKFlow already knows what Strings can contain and will need to be told whether the String contains
-     * ASCII or UTF-8 chars. Alternative would have been to as the user for max length in bytes, but we
+     * ASCII or UTF-8 chars and how many of those there can be at most.
+     * Alternative would have been to ask the user for max length in bytes, but we
      * deemed this hard to reason about and not very developer-friendly.
      *
      * In case of String, ZKFlow offers two annotations: @UTF8 and @ASCII.
      */
     val code: @ASCII(TOKEN_CODE_SIZE) String,
+
+    /*
+     * This is an example of a custom type introduced by us. It is not supported by ZKFlow out of the box,
+     * so it needs to be annotated. We can use it here as-is, because we own it, and
+     * we could therefore annotate its declaration with @ZKP. See the declaration for details.
+     *
+     * > IMPORTANT NOTE: while using nested custom types like this to create hierarchies is
+     * > supported by ZKFlow, it can cause maintainability challenges in the context of ZKFlow's state versioning.
+     * > It is recommended to flatten hierarchies as much as possible.
+     * >
+     * > For example, making a change to `TokenDescriptor` requires a new version of it. In order not to break existing
+     * > `ExampleToken` versions that refer to it, they will have to point to the old version. A new version of `ExampleToken`
+     * > will have to be created to use the new version of `TokenDescriptor`. This error-prone and hard to maintain: changes cascade
+     * > quite easily when using deeper hierarchies, and it is hard to keep track of what needs a new version. Flattening hierarchies
+     * > where possible makes these changes more explicit and easier to manage.
+     */
+    val descriptor: TokenDescriptor,
 
     /*
      * Both Amount and IssueTokenType are custom types and not supported by ZKFlow out of the box,
@@ -79,11 +100,13 @@ data class ExampleToken(
     override val amount: @Via<AmountIssuedTokenTypeSurrogate> Amount<IssuedTokenType>,
 
     /*
-     * AnonymousParty is a supported type, we only need to tell ZKFlow which key algo is used.
+     * `AnonymousParty` is a supported core type, we only need to tell ZKFlow which key algo is used.
      *
-     * Note that ZKFlow does not support AbstractParty. This is because ZKFlow needs to know the
-     * size of a type at all times. For this reason ZKFlow favors programming to implementations
-     * instead of to interfaces. See the document about fixed length and
+     * > IMPORTANT NOTE: ZKFlow does not support `AbstractParty` (or any abstract type for that matter).
+     * > This is because ZKFlow needs to know the size of a type at compile time at all times and we can't determine this
+     * > for types that may have different implementations at runtime.
+     * > For this reason ZKFlow favors programming to implementations  instead of to interfaces.
+     * > Note that generics are supported, as long as the declared type used is concrete. See field amount above for an example.
      */
     val owner: @EdDSA AnonymousParty
 ) : AbstractFungibleToken(), VersionedExampleToken {
@@ -106,34 +129,45 @@ data class ExampleToken(
     @ZincUpgrade(
         // This is the circuit code that should behave identical to the constructor below: it should construct Self from the
         // previous version of this class. Fields will be identical to the Kotlin fields, except in snake case instead of camel case.
-        // To help you determine which fields from Kotlin are mapped to which fields in the ZKP circuit, you can check two files that
+        // To help you determine which fields from Kotlin are mapped to which fields in the ZKP circuit, you can check the following files that
         // are generated by ZKFlow:
         // - The generated ZKP circuit sources for any command that uses this state. These are created during kotlin compilation.
-        //    In this case, have a look at the `IssuePrivate` command in `build/zinc/issue_private/structure/module_outputs_example_token_transaction_component.txt`
-        // - `src/main/zkp/structure.json`. This file is generated by calling `./gradlew generateZkpStructure`.
-
+        //    In this case, have a look at the `IssuePrivate` command in `build/zinc/issue_private/` or any of the other commands that use
+        //    this state. In those directories, you can find the following:
+        //    - `structure/module_outputs_example_token_transaction_component.txt`. Describes the structure of this transaction component.
+        //      Types and fields should match 1:1 with the generated kotlin structure mentioned below.
+        //    - `src/module_example_token.zn`: the generated Zinc source for this state class. Naming is always: `module_<<state_class_to_snake_case>>.zn`
+        //      Within this file you can find what other generated Zinc types are called and they can be found in the same way in the same directory.
+        // - `src/main/zkp/structure.json`. This file is generated by calling `./gradlew generateZkpStructure`. This describes the Kotlin
+        //   structure of all components that can be found in a transaction.
         upgrade = """
-           Self::new(previous.amount.token.token_type.token_identifier, previous.amount, previous.owner);
+            Self::new(
+                // Not present in previous version, using empty string. Note that the type to use can be found in generated Zinc files.
+                AsciiString3::empty(), 
+                // Not present in previous version, using empty token descriptor. Note that the type to use can be found in generated Zinc files.
+                TokenDescriptor::empty(), 
+                previous.amount, 
+                previous.owner
+            )
         """,
+
         // This is an additional check we might want to do as part of the smart contract that is generated for the upgrade transaction.
         // By default, upgrade smart contracts do nothing in addition to checking that the upgrade succeeds.
         // In this case, we want to ensure that a token can only be upgraded if the current owner agrees and signs the upgrade transaction.
-        additionalChecks = """
-            assert!(ctx.signers.contains(input.owner.public_key), "Token owner must sign");
-        """
+        additionalChecks = """assert!(ctx.signers.contains(input.owner.public_key), "Token owner must sign");"""
     )
-    constructor(previous: ExampleTokenV1): this(previous.amount.token.tokenIdentifier, previous.amount, previous.owner)
+    constructor(previous: ExampleTokenV1): this("", TokenDescriptor("", UUID(0, 0)), previous.amount, previous.owner)
 
     override val holder = owner
 
     override fun withNewHolder(newHolder: AnonymousParty): ExampleToken {
-        return ExampleToken(code, amount, newHolder)
+        return ExampleToken(code, descriptor, amount, newHolder)
     }
 
     fun withNewHolder(newHolder: AnonymousParty, amount: Double): ExampleToken {
         val decimalAmount = BigDecimal(amount)
         require(decimalAmount <= this.amount.toDecimal()) { "Can't increase amount when assigning a new holder" }
-        return ExampleToken(code, Amount.fromDecimal(decimalAmount, this.amount.token), newHolder)
+        return ExampleToken(code, descriptor, Amount.fromDecimal(decimalAmount, this.amount.token), newHolder)
     }
 }
 

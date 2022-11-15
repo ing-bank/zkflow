@@ -52,4 +52,6 @@ import org.intellij.lang.annotations.Language
  */
 @Target(AnnotationTarget.CONSTRUCTOR)
 annotation class ZincUpgrade(
-    @Language("Rust") val upgrade: String, @Language("Rust") val additionalChecks: String = "")
+    @Language("Rust") val upgrade: String,
+    @Language("Rust") val additionalChecks: String = ""
+)

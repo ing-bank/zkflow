@@ -5,8 +5,8 @@ The ZKFlow consensus protocol enables private transactions on Corda using Zero K
 
 ZKFlow enables CorDapp builders to make some or all states in a transaction private. 
 Private states will not be present in the backchain, nor will they be disclosed to the notary. 
+Instead, private states are replaced a Zero Knowledge proof that guarantees validity of those hidden states according to the smart contract.
 
-Instead, private states are replaced by Zero Knowledge proofs that guarantee validity of those hidden states according to the smart contract.
 Direct participants to a transaction will always have access to all its private contents, so that they know what transaction they are signing.
 Future owners of a state will never see the private contents of previous transactions, unless another participant actively discloses them.
 
@@ -27,6 +27,8 @@ To learn more about ZKFlow internals, there is a [docs](docs) directory in this 
 
 ZKFlow is currently targeting Corda 4.8 or higher, it does not support the upcoming Corda 5.
 
+# Getting Started
+
 ## Running the sample ZKDapp
 
 The sample ZKDapp demonstrates how a basic token contract can be adapted to work with ZKFlow. The contract tests and flow tests show the expected behaviour.
@@ -42,32 +44,10 @@ The sample ZKDapp demonstrates how a basic token contract can be adapted to work
  */
 @ZKP 
 data class ExampleToken(
-    // Both Amount and IssuedTokenType are third party classes
     override val amount: @Via<AmountIssuedTokenTypeSurrogate> Amount<IssuedTokenType>,
     val owner: @EdDSA AnonymousParty
 ) : AbstractFungibleToken(), VersionedExampleToken {
-    override val holder = owner
-    override val tokenTypeJarHash: SecureHash = SecureHash.zeroHash
-
-    override fun withNewHolder(newHolder: AnonymousParty): ExampleToken {
-        return ExampleToken(amount, newHolder)
-    }
-
-    fun withNewHolder(newHolder: AnonymousParty, amount: Double): ExampleToken {
-        val decimalAmount = BigDecimal(amount)
-        require(decimalAmount <= this.amount.toDecimal()) { "Can't increase amount when assigning a new holder" }
-        return ExampleToken(Amount.fromDecimal(decimalAmount, this.amount.token), newHolder)
-    }
-
-    fun withNewHolder(newHolder: AnonymousParty, amount: BigDecimal): ExampleToken {
-        require(amount <= this.amount.toDecimal()) { "Can't increase amount when assigning a new holder" }
-        return ExampleToken(Amount.fromDecimal(amount, this.amount.token), newHolder)
-    }
-
-    fun withNewHolder(newHolder: AnonymousParty, amount: Amount<IssuedTokenType>): ExampleToken {
-        require(amount <= this.amount) { "Can't increase amount when assigning a new holder" }
-        return ExampleToken(amount, newHolder)
-    }
+    // [..] 
 }
 ```
 

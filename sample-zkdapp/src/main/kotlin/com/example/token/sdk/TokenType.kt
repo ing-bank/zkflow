@@ -15,7 +15,6 @@ import net.corda.core.contracts.TokenizableAssetInfo
 import net.corda.core.serialization.CordaSerializable
 import java.math.BigDecimal
 
-@ZKP
 @CordaSerializable
 open class TokenType(
     /**

@@ -25,7 +25,7 @@ class RedeemPrivate : ZKCommandData {
             fn verify(ctx: CommandContext) {
                 let input = ctx.inputs.example_token_0;
 
-                assert!(ctx.signers.contains(input.data.amount.token.issuer.public_key), "[RedeemPrivate] Issuer must sign");
+                assert!(ctx.signers.contains(input.data.amount.issuer.public_key), "[RedeemPrivate] Issuer must sign");
                 assert!(ctx.signers.contains(input.data.owner.public_key), "[RedeemPrivate] Holder must sign");
             }
         """.trimIndent()

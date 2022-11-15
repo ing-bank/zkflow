@@ -33,3 +33,4 @@
   ```
 - Fix `ZKNotary.isZKValidating()` to correctly determine if a notary is actually zkvalidating.
 - State version negotiation between counterparties.
+- Currently, `generateZincStructure` is not called automatically as part of CorDapp publication logic. So no checking is done on breaking changes to states. Enable this as part of publication, and enable `verifyZincStructure` as part of compilation. This will ensure no breaking changes can compile. Also have to decide on usable way to determine when versions are 'published' (e.g. actually used in deployment?) and can't be changed anymore.
