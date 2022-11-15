@@ -136,7 +136,7 @@ object AttachmentConstraintSerializerRegistry {
 
     @Synchronized
     private fun register(klass: KClass<out AttachmentConstraint>, generator: GetAttachmentConstraintSerializer) {
-        log.debug("Registering generator for $klass")
+        log.trace("Registering generator for $klass")
 
         val id = klass.stableId
         obj2Id.put(klass, id)?.let { throw SerializerRegistryError.ClassAlreadyRegistered(klass, it) }

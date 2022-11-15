@@ -113,9 +113,9 @@ data class ZKProtectedComponent(override val type: KClass<out ContractState>, ov
  * When building a [WireTransaction], this information is used to determine whether it
  * should be enforced that for each [StateRef], its UTXO was private in the transaction that created it.
  * For each StateRef there are three options:
- * - private: the UTXO will NOT be allowed to be public in the transaction that created it.
- * - any: the UTXO WILL be allowed to be public in the transaction that created it.
- * - not mentioned at all: the UTXO WILL be allowed to be public in the transaction that created it.
+ * - private: the UTXO MUST NOT be public in the transaction that created it.
+ * - any: the UTXO MAY be public in the transaction that created it.
+ * - not mentioned at all: the UTXO MAY be public in the transaction that created it.
  *
  * When building a [ZKVerifierTransaction], this information is used to determine which UTXOs
  * should be present in the witness. For each UTXO there are three options:
@@ -127,13 +127,13 @@ data class ZKProtectedComponent(override val type: KClass<out ContractState>, ov
 class ZKReferenceList : ArrayList<ZKReference>() {
     /**
      * The UTXO for a `private` reference is present in the witness.
-     * That UTXO will NOT be allowed to be public in the transaction that created it.
+     * That UTXO MUST NOT be allowed to be public in the transaction that created it.
      */
     fun private(type: KClass<out ContractState>): Pair<KClass<out ContractState>, Boolean> = type to true
 
     /**
      * The UTXO for an `any` reference is present in the witness.
-     * That UTXO WILL be allowed to be public in the transaction that created it.
+     * That UTXO MAY be public in the transaction that created it.
      */
     fun any(type: KClass<out ContractState>): Pair<KClass<out ContractState>, Boolean> = type to false
 
@@ -146,20 +146,13 @@ class ZKReferenceList : ArrayList<ZKReference>() {
 }
 
 /**
- * A list of input or references UTXOs that this ZKCommand needs to have access to.
+ * A list of outputs that this transaction creates.
  *
- * When building a [WireTransaction], this information is used to determine whether it
- * should be enforced that for each relevant [StateRef], its UTXO was private in the transaction that created it.
- * For each reference there are three options:
- * - private: the UTXO will NOT be allowed to be public in the transaction that created it.
- * - any: the UTXO WILL be allowed to be public in the transaction that created it.
- * - not mentioned at all: the UTXO WILL be allowed to be public in the transaction that created it.
- *
- * When building a [ZKVerifierTransaction], this information is used to determine which UTXOs
- * should be present in the witness. For each reference there are three options:
- * - private: the UTXO is: present in the witness
- * - any: the UTXO is present in the witness
- * - not mentioned at all: the UTXO is NOT present in the witness
+ * When building a [ZKVerifierTransaction], this information is used to determine if the output
+ * should be filtered out of the transaction's Merkle tree and if it should be part of the witness.
+ * - private: the output MUST be filtered out of the Merkle tree. The output is part of the witness.
+ * - public: the UTXO MUST NOT be filtered out of the Merkle tree. The output is part of the witness.
+ * - not mentioned at all: the UTXO MUST NOT be filtered out of the Merkle tree. The UTXO is NOT present in the witness
  */
 @ZKCommandMetadataDSL
 class ZKProtectedComponentList : ArrayList<ZKProtectedComponent>() {
