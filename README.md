@@ -12,6 +12,8 @@ Future owners of a state will never see the private contents of previous transac
 
 For details about the ZKFlow protocol, please read the [ZKFlow white paper](docs/ZKFlow_whitepaper.pdf).
 
+As ZKP toolchain, ZKFlow uses a fork of Zinc by Matterlabs. The proving system is Groth16. 
+
 ## Features
 - Fully private transactions: all states in a transaction are hidden
 - Partially private transactions: mix hidden and public states in one transaction. Separate contract verification logic for hidden and public states
@@ -23,7 +25,8 @@ For details about the ZKFlow protocol, please read the [ZKFlow white paper](docs
   - drop-in ZK replacements for core Corda consensus flows
 - ZKFlow currently targets Corda 4.8+, not the upcoming Corda 5
 
-To see an example of how a CorDapp can be adapted to work with ZKFlow, please have a look at the [sample ZKDapp](./sample-zkdapp) in this repository. Good starting points with ample documentation are: 
+## Sample ZKDapp
+To see an example of how a CorDapp can be adapted to ZKDapp (i.e. a ZKFlow CorDapp), please have a look at the [sample ZKDapp](./sample-zkdapp) in this repository. Good starting points with ample documentation are: 
 - The example token: [ExampleToken.kt](./sample-zkdapp/src/main/kotlin/com/example/contract/token/ExampleToken.kt).
 - an example command: [MovePrivate.kt](./sample-zkdapp/src/main/kotlin/com/example/contract/token/commands/MovePrivate.kt)
 - The example contract: [ExampleTokenContract.kt](./sample-zkdapp/src/main/kotlin/com/example/contract/token/ExampleTokenContract.kt)
@@ -48,18 +51,33 @@ For the [sample ZKDapp](./sample-zkdapp), that amounts to the following, indicat
 | RedeemPrivate | 1951 bytes   | ~250MB      | ~23s         |
 ------------------------------------------------------------
 ```
-
 Note that proof verification is very cheap and constant time, regardless of witness size. In this case ~50 milliseconds.
 This is important, because, unlike proving, verification happens often, for instance during backchain validation and during finality.
 
 ### What affects performance most?
-The majority of computation time is not due to smart contract logic, but mostly due to the size of the witness and the deserialization of the transaction components inside it.
+The majority of computation time is not due to smart contract logic, but mostly due to the size of the witness and the hash algorithm used inside the ciruit. 
 
+#### Hash function
+This is one of the most expensive operations in our circuit, because almost all witness components need to be hashed. It constitutes up to ~70% of proving time.
+
+Originally, Corda uses SHA-256d (hash twice) for leaves of the transaction Merkle tree. The double hashing was added because SHA-256 is not resistant to length extension attacks. We chose not to use SHA-256 for two reasons: 1) it does not perform well in a ZKP context, and 2) the double hashing is to be avoided for such an expensive operation.
+We considered Pedersen Hash (PH) and other more ZKP-friendly algorithms, but did not feel we could use them for the leaves of the Merkle tree for various reasons. See a [full analysis of the risks of using PH for leaves](./docs/Pedersen_Hash_Security_Analysis_for_ZKFlow.pdf) elsewhere in this repo. Other more modern ZKP-friendly algorithms were considered, but not mature enough at the time. For these reasons we chose Blake2s256. It is mature, and it is resistant to length extension attacks, removing the need for double hashing witness components inside the circuit. Future work should definitely be focused on replacing this with a more ZKP-friendly algorithm. This could reduce the number of constraints in the circuit enormously, and therefore proving time.
+
+#### Deserialization
+After hashing, deserialization of Corda transaction components is second most expensive operation. It constitutes up to 30% of proving time. 
+
+Our benchmarks showed a trade-off between hashing and deserialization. The hashing gadgets require input to be in bits. To provide the input in bits, we had two options:
+- Serialize witness components in bytes and then convert to bits inside the circuit for hashing. Deserialization of bytes is a lot faster than deserialization of bits, but the hashing becomes much more expensive because first converting bytes to bits turned out to be very expensive.
+- Serialize witness components in bits. Provide as-is to hash gadget. Deserialize directly from bits without additional loops. This combination was much faster, even though the witness size is 8 times larger.
+
+Even so, deserialization is still one of the more expensive operations.
+
+#### Witness size
 The witness contains all transaction components that are private, or that are required to do the verification.
-Unfortunately, even if your state class is tiny, and you do only an issuance (i.e. only one state in the transaction), the witness
-is still fairly big. This is because for a transaction to be considered valid in Corda, there are more rules than only the smart contract rules that need to be verified. Some of those platform rules require additional transaction components in addition to your state classes.
-One example is the notary transaction component. This will always be in the witness and its size alone is ~500 bytes, which is significant. This is because a notary is hardcoded to be a `Party` in Corda, and this contains a `CordaX500Name`. To reliably make that class fixed length without creating runtime isssues, ZKFlow sets `CordaX500Name`'s fixed field sizes to those specified in that class.
-
+Unfortunately, even if your private state class is tiny, and you do only an issuance (i.e. only one state in the transaction), the witness
+will still be fairly big. This is because for a transaction to be considered valid in Corda, there are more rules than only the smart contract rules that need to be verified. Some of those platform rules require additional transaction components in addition to your state classes.
+One example is the notary transaction component. This will always be in the witness and its size alone is ~500 bytes, which is significant. This is because a notary is hardcoded to be a `Party` in Corda, and this contains a `CordaX500Name`. To reliably make that class fixed length without creating runtime issues, ZKFlow sets `CordaX500Name`'s fixed field sizes to those specified in that class.
+Future work could be aimed at further reducing the scope of what the circuit proves, to possibly only the valid transition of some contents of the state classes instead of large parts of the entire transaction. This would remove the need for many of those components to be present, resulting in a big speedup. 
 
 # Getting Started
 
@@ -69,16 +87,7 @@ One example is the notary transaction component. This will always be in the witn
 
 ## Running the sample ZKDapp
 
-The sample ZKDapp demonstrates how a basic token contract can be adapted to work with ZKFlow. The contract tests and flow tests show the expected behaviour, i.e they behave as you would expect from normal Corda.
-To see an example of how a CorDapp can be adapted to work with ZKFlow, please have a look at the [sample ZKDapp](./sample-zkdapp) in this repository. Good starting points with ample documentation are:
-- The example token: [ExampleToken.kt](./sample-zkdapp/src/main/kotlin/com/example/contract/token/ExampleToken.kt).
-- an example command: [MovePrivate.kt](./sample-zkdapp/src/main/kotlin/com/example/contract/token/commands/MovePrivate.kt)
-- The example contract: [ExampleTokenContract.kt](./sample-zkdapp/src/main/kotlin/com/example/contract/token/ExampleTokenContract.kt)
-
-To see how those are used in real flows, see [PrivateExampleTokenFlowTest.kt](./sample-zkdapp/src/test/kotlin/com/example/flow/PrivateExampleTokenFlowTest.kt) and the flows it uses. 
-To see some of the invariants that ZKFlow enforces, see [ExampleContractTest.kt](./sample-zkdapp/src/test/kotlin/com/example/contract/token/ExampleContractTest.kt)
-
-Please make sure you have satisfied all [prerequisites](#Prerequisites for running ZKFlow) before you execute the following:
+Please make sure you have satisfied all [prerequisites](#prerequisites-for-running-zkflow) before you execute the following:
 
 ```bash
 $ cd zkflow/sample-zkdapp
@@ -114,19 +123,11 @@ To see how those are used in real flows, see [PrivateExampleTokenFlowTest.kt](./
 To see some of the invariants that ZKFlow enforces, see [ExampleContractTest.kt](./sample-zkdapp/src/test/kotlin/com/example/contract/token/ExampleContractTest.kt)
 
 ## Troubleshooting the sample ZKDapp or your own ZKDapp
-
 See [Troubleshooting](./docs/troubleshooting.md).
-
-## Running ZKFlow tests
-
-If you want to make changes to ZKFlow itself, you need to be able to run its tests.
-This is as simple as running `./gradlew test` in the ZKFlow root directly. It will run all tests, including integration tests.
-Please make sure you have satisfied all [prerequisites](#Prerequisites for running ZKFlow) before running the tests.
 
 ## Prerequisites for running ZKFlow
 
 ### Java version
-
 This project requires Java 8. To be consistent with our CI, it is advisable to use Zulu OpenJDK 8uxxx
 On Mac, that is very easy to install and manage with [SDKMAN](https://sdkman.io/).
 
@@ -137,6 +138,9 @@ Zinc was forked for ZKFlow to enable a few new features.
 You need to build and install the ZKFlow fork of Zinc from [Github](https://github.com/mvdbos/zinc).  
 Please make sure you have a recent version of Rust installed before building Zinc.
 
+Alternatively, is you use a debian-based linux, you could try downloading the binaries from the [releases](https://github.com/mvdbos/zinc/releases) of our fork.
+
+Build:
 ```bash
 $ git clone https://github.com/mvdbos/zinc
 $ cd zinc
@@ -146,14 +150,17 @@ $ cargo b --release
 
 Built binaries will be stored in `./target/release`. Move the `zargo`, `znc` and `zvm` binaries to a directory you prefer and add it to your systems PATH. `/usr/local/bin` has been known to work. Then you can delete sources.
 
-## Contributing to ZKFlow
+## Running ZKFlow tests
 
+If you want to make changes to ZKFlow itself, you need to be able to run its tests.
+This is as simple as running `./gradlew test` in the ZKFlow root directly. It will run all tests, including integration tests.
+Please make sure you have satisfied all [prerequisites](#prerequisites-for-running-zkflow) before running the tests.
+
+## Contributing to ZKFlow
 If you want to make changes to ZKFlow, great! We welcome pull requests at any time. If you decide to create a PR, please keep the [contributing guidelines](CONTRIBUTING.md) in mind.
 
 ## Reporting issues
-
 If you found a bug or security issue, feel free to open an issue her on GitHub. 
 
 ## License
-
 [MIT](./LICENSE)
