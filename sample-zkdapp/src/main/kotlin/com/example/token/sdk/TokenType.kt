@@ -1,3 +1,12 @@
+/**
+ * Source attribution:
+ *
+ * This class was adapted from the Corda Tokens SDK (https://github.com/corda/token-sdk),
+ * to simplify somewhat and use them in tests as a representative example
+ * of what we want to be able to support in ZKFlow.
+ *
+ * They are not part of the ZKFlow distribution, since they are part of a sample application only.
+ */
 package com.example.token.sdk
 
 import com.ing.zkflow.annotations.UTF8
@@ -6,7 +15,6 @@ import net.corda.core.contracts.TokenizableAssetInfo
 import net.corda.core.serialization.CordaSerializable
 import java.math.BigDecimal
 
-@ZKP
 @CordaSerializable
 open class TokenType(
     /**

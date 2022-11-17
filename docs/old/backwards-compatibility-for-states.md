@@ -10,7 +10,8 @@ make changes to states and contracts in two ways:
 - **Explicit upgrade**: Upgrade contracts via a special *contract upgrade transaction*, requires all participants of a
   state to sign it using the contract upgrade flows.
 
-In ZKFlow **Implicit upgrades** are used.
+In ZKFlow **Implicit upgrades** are used for contracts, so the Corda's `ContractUpgradeTransaction` can't be used.
+For states, we introduce explicit upgrade transactions. 
 
 Current versions of the software should still be able to deserialize historical states from storage, for example in
 order to reuse in new transactions. This document describes how we can support backwards compatibility in `ZKFlow`.
@@ -26,14 +27,25 @@ There are a couple of limitations/requirements that come from the current toolse
 
 - Zinc only supports fixed size arrays.
 
-  Because the version determines what the serialized state looks like, `ZKTransactions` can only be exchanged between
-  nodes running the same version of the CorDapp.
+  Because a state version determines what the serialized state looks like, states of a certain version  can only be exchanged between
+  nodes that have that version of the state on their classpath (i.e. run a version of the CorDapp that contains that state version)
 
 - Zinc does not allow array indices to be derived from the witness.
 - Kotlinx-serialization only supports the primary constructor.
 
   This is important because Corda uses multiple constructors to support upgrades to state classes. So due to our
   choice of kotlinx-serialization we have to use multiple implementations/classes for different state versions.
+  
+> [!] To be very explicit about the impact of these limitations: 
+> 
+> 1) Whenever you want to make a change to a state class
+> that is already persisted on the production-ledger, you will need to introduce a new version of that state. Any 
+> change to an existing state class after that means ZKFlow will not be able to deserialize that transaction from 
+> the ledger anymore. 
+> 
+> 2) Introducing a new version of a state means: copying the state with a new class name (convention is with a V[1-x] suffix) and make 
+> changes to that new name only. ZKFlow has tools available to confirm that you did not make any inadvertent changes to already
+> deployed state versions.
 
 ## Guidelines
 
@@ -46,11 +58,7 @@ The design discussed in this document is based on the following guidelines and c
   
   This means that an upgrade from version 1 to 3 consists of 2 transactions: (1->2), (2->3). 
 
-  - This might lead to larger chains, so alternatively the upgrades are combined into a single transaction: (1->3).
-
-    This is more complicated, and leads to an exponential number of upgrade commands. For those reasons this is
-    initially out of scope.
-
+  - This might lead to larger chains, so alternatively the upgrades are combined into a single transaction: (1->3) (Not implemented for yet).
 - In order to support deserialization of historical states, and upgrading them to the current versions, historical
   versions of the state classes must be available on the classpath.
 - The current version of contracts is always defined in terms of current versions of the state classes involved.
@@ -59,9 +67,9 @@ The design discussed in this document is based on the following guidelines and c
 - States with a historical version will have to be upgraded in (a) separate
   upgrade transaction(s) before they can be used in a new transaction.
 - All versions of a state class MUST be located in the same scope (i.e. the Contract), so that historical versions of
-  state classes can be easily detected, f.e. by compiler plugins, annotation processors or reflection.
+  state classes can be easily detected by ZKFlow's compiler plugins, annotation processors and reflection.
 
-Upgrading process: TODO is this relevant in this document?
+## Upgrading process
 
 - Upgraded nodes only need the latest version of contracts, but do need old states, to be able to deserialize old states
   from storage.

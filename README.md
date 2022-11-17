@@ -1,31 +1,82 @@
-The ZKFlow consensus protocol enables private transactions on Corda using Zero Knowledge Proofs.
+The ZKFlow Protocol
+===================
 
-ZKFlow enables CorDapp builders to make some or all states in a transaction private. 
+The ZKFlow consensus protocol enables private transactions on Corda for arbitrary smart contracts using Zero Knowledge Proofs.
+
+ZKFlow enables CorDapp builders to make some or all states in a transaction private.
 Private states will not be present in the backchain, nor will they be disclosed to the notary. 
+Instead, private states are replaced a Zero Knowledge proof that guarantees validity of those hidden states according to the smart contract.
 
-Instead, private states are replaced by Zero Knowledge proofs that guarantee validity of those hidden states according to the smart contract.
 Direct participants to a transaction will always have access to all its private contents, so that they know what transaction they are signing.
 Future owners of a state will never see the private contents of previous transactions, unless another participant actively discloses them.
 
 For details about the ZKFlow protocol, please read the [ZKFlow white paper](docs/ZKFlow_whitepaper.pdf).
 
-To see an example of how a CorDapp can be adapted to work with ZKFlow, please have a look at the [sample ZKDapp](./sample-zkdapp) in this repository.
-
-Features:
+## Features
 - Fully private transactions: all states in a transaction are hidden
 - Partially private transactions: mix hidden and public states in one transaction. Separate contract verification logic for hidden and public states
 - Reveal transactions: a new transaction that makes a private state publicly visible moving forward. Previous versions of the state in its backchain remain hidden.
 - Hide transactions: a new transaction that makes a public state hidden moving forward. Previous versions of the state in its backchain remain public.
-- drop-in ZK replacements for core Corda consensus flows
 - a ZKP-aware notary
+- Seamless usage: 
+  - ZKP-aware smart contract test DSL
+  - drop-in ZK replacements for core Corda consensus flows
+- ZKFlow currently targets Corda 4.8+, not the upcoming Corda 5
 
-To learn more about ZKFlow internals, there is a [docs](docs) directory in this repo. In addition to the [ZKFlow white paper](docs/ZKFlow_whitepaper.pdf), it contains technical documentation in Markdown and PDF format. There is also plenty of documentation throughout the code itself, explaining logic or rationale. Finally, the many test cases will also explain a lot about expected behaviour.
+To see an example of how a CorDapp can be adapted to work with ZKFlow, please have a look at the [sample ZKDapp](./sample-zkdapp) in this repository. Good starting points with ample documentation are: 
+- The example token: [ExampleToken.kt](./sample-zkdapp/src/main/kotlin/com/example/contract/token/ExampleToken.kt).
+- an example command: [MovePrivate.kt](./sample-zkdapp/src/main/kotlin/com/example/contract/token/commands/MovePrivate.kt)
+- The example contract: [ExampleTokenContract.kt](./sample-zkdapp/src/main/kotlin/com/example/contract/token/ExampleTokenContract.kt)
 
-ZKFlow is currently targeting Corda 4.8 or higher, it does not support the upcoming Corda 5.
+To see how those are used in real flows, see [PrivateExampleTokenFlowTest.kt](./sample-zkdapp/src/test/kotlin/com/example/flow/PrivateExampleTokenFlowTest.kt) and the flows it uses.
+To see some of the invariants that ZKFlow enforces, see [ExampleContractTest.kt](./sample-zkdapp/src/test/kotlin/com/example/contract/token/ExampleContractTest.kt)
+
+## Performance
+By nature, the setup phase of ZKP circuits and creating proofs is not a fast operation. This means that ZKFlow is perhaps not best suited to use cases where a transactions are created with a very high frequency. That said, proving time has been show to be reasonable for many use cases.
+
+On a 2.6Ghz 6-core Intel i7, proving takes ~0.012 seconds per byte of witness size (the secret input). This scales linearly.
+Memory usage also scales linearly with witness size and is roughly equal to the size of the proving key for that command's circuit.
+
+For the [sample ZKDapp](./sample-zkdapp), that amounts to the following, indicative, numbers: 
+```
+------------------------------------------------------------
+| Command       | Witness size | Proving mem | Proving time |
+------------------------------------------------------------
+| IssuePrivate  | 1344 bytes   | ~250MB      | ~23s         |
+| MovePrivate   | 3185 bytes   | ~500MB      | ~38s         |
+| SplitPrivate  | 4430 bytes   | ~800MB      | ~53s         |
+| RedeemPrivate | 1951 bytes   | ~250MB      | ~23s         |
+------------------------------------------------------------
+```
+
+Note that proof verification is very cheap and constant time, regardless of witness size. In this case ~50 milliseconds.
+This is important, because, unlike proving, verification happens often, for instance during backchain validation and during finality.
+
+### What affects performance most?
+The majority of computation time is not due to smart contract logic, but mostly due to the size of the witness and the deserialization of the transaction components inside it.
+
+The witness contains all transaction components that are private, or that are required to do the verification.
+Unfortunately, even if your state class is tiny, and you do only an issuance (i.e. only one state in the transaction), the witness
+is still fairly big. This is because for a transaction to be considered valid in Corda, there are more rules than only the smart contract rules that need to be verified. Some of those platform rules require additional transaction components in addition to your state classes.
+One example is the notary transaction component. This will always be in the witness and its size alone is ~500 bytes, which is significant. This is because a notary is hardcoded to be a `Party` in Corda, and this contains a `CordaX500Name`. To reliably make that class fixed length without creating runtime isssues, ZKFlow sets `CordaX500Name`'s fixed field sizes to those specified in that class.
+
+
+# Getting Started
+
+> [!] **DISCLAIMER: Please note that ZKFlow in its current state should *NOT* be used in production, nor to transfer ownership of real assets.**
+>
+>Even though the protocol has been peer reviewed, the security of the implementation has not yet been reviewed by a third party. Additionally, There are features related to deployment and ZKP artifact distribution that are not present in this repository but that are important to guarantee secure and correct usage.
 
 ## Running the sample ZKDapp
 
-The sample ZKDapp demonstrates how a basic token contract can be adapted to work with ZKFlow. The contract tests and flow tests show the expected behaviour.
+The sample ZKDapp demonstrates how a basic token contract can be adapted to work with ZKFlow. The contract tests and flow tests show the expected behaviour, i.e they behave as you would expect from normal Corda.
+To see an example of how a CorDapp can be adapted to work with ZKFlow, please have a look at the [sample ZKDapp](./sample-zkdapp) in this repository. Good starting points with ample documentation are:
+- The example token: [ExampleToken.kt](./sample-zkdapp/src/main/kotlin/com/example/contract/token/ExampleToken.kt).
+- an example command: [MovePrivate.kt](./sample-zkdapp/src/main/kotlin/com/example/contract/token/commands/MovePrivate.kt)
+- The example contract: [ExampleTokenContract.kt](./sample-zkdapp/src/main/kotlin/com/example/contract/token/ExampleTokenContract.kt)
+
+To see how those are used in real flows, see [PrivateExampleTokenFlowTest.kt](./sample-zkdapp/src/test/kotlin/com/example/flow/PrivateExampleTokenFlowTest.kt) and the flows it uses. 
+To see some of the invariants that ZKFlow enforces, see [ExampleContractTest.kt](./sample-zkdapp/src/test/kotlin/com/example/contract/token/ExampleContractTest.kt)
 
 Please make sure you have satisfied all [prerequisites](#Prerequisites for running ZKFlow) before you execute the following:
 
@@ -33,6 +84,8 @@ Please make sure you have satisfied all [prerequisites](#Prerequisites for runni
 $ cd zkflow/sample-zkdapp
 $ ./gradlew test
 ```
+
+Please note that running these tests can take a long time. Contract tests are slowish because they simulate ZKP proving and verifying using the real ZKP circuit, but especially the flow tests are slow: they use the real ZKP circuit and will do the trusted setup every time changes are made to the private smart contract. This can take minutes. Of course, in a non-test situation, this setup would be done only once. 
 
 ## Running your own CorDapp with ZKFlow
 
@@ -51,14 +104,18 @@ The ZKFlow jars are currently not deployed to one of the public Maven/Gradle rep
      ```
 * To be able to use ZKFlow's contract test DSL and other convenience functions, add `testImplementation("com.ing.zkflow:test-utils:1.0-SNAPSHOT")` to your `dependencies` block in `build.gradle.kts`.
  
-Not you are ready to adapt your contracts, states, commands, contract tests and flow tests to work with ZKFlow. You can inspect `sample-zkdapp` to see how you can make those adaptations. Please note that some significant changes to your state class definitions may be required.
+Now you are ready to adapt your contracts, states, commands, contract tests and flow tests to work with ZKFlow.
+To see an example of how a CorDapp can be adapted to work with ZKFlow, please have a look at the [sample ZKDapp](./sample-zkdapp) in this repository. Good starting points with ample documentation are:
+- The example token: [ExampleToken.kt](./sample-zkdapp/src/main/kotlin/com/example/contract/token/ExampleToken.kt).
+- an example command: [MovePrivate.kt](./sample-zkdapp/src/main/kotlin/com/example/contract/token/commands/MovePrivate.kt)
+- The example contract: [ExampleTokenContract.kt](./sample-zkdapp/src/main/kotlin/com/example/contract/token/ExampleTokenContract.kt)
 
-Not recommended, but feel free to run it immediately as-is and let ZKFlow tell you what should be added to your classes.
+To see how those are used in real flows, see [PrivateExampleTokenFlowTest.kt](./sample-zkdapp/src/test/kotlin/com/example/flow/PrivateExampleTokenFlowTest.kt) and the flows it uses.
+To see some of the invariants that ZKFlow enforces, see [ExampleContractTest.kt](./sample-zkdapp/src/test/kotlin/com/example/contract/token/ExampleContractTest.kt)
 
 ## Troubleshooting the sample ZKDapp or your own ZKDapp
 
-Build issues:
-- `java.lang.IllegalArgumentException: Cannot find circuit manifest`: This should not happen during normal development flow, but it can be solved by running `./gradlew generateZincCircuits --rerun-tasks` in your ZKDapp. 
+See [Troubleshooting](./docs/troubleshooting.md).
 
 ## Running ZKFlow tests
 
@@ -92,6 +149,10 @@ Built binaries will be stored in `./target/release`. Move the `zargo`, `znc` and
 ## Contributing to ZKFlow
 
 If you want to make changes to ZKFlow, great! We welcome pull requests at any time. If you decide to create a PR, please keep the [contributing guidelines](CONTRIBUTING.md) in mind.
+
+## Reporting issues
+
+If you found a bug or security issue, feel free to open an issue her on GitHub. 
 
 ## License
 

@@ -212,7 +212,7 @@ BflModule.registerMethod(
 ### Generating structure tree
 
 For debugging purposes, the structure of a type can be generated using the `BflType.toStructureTree` method. There is
-also a gradle plugin that will write the structure of classes in a JSON format, see [JSON Structure](backwards-compatibility-for-states#json-structure).
+also a gradle plugin that will write the structure of classes in a JSON format, see [JSON Structure](backwards-compatibility-for-states.md#json-structure).
 
 ```kotlin
 val a = struct {

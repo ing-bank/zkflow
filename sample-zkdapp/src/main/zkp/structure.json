@@ -184,16 +184,16 @@
     },
     {
       "type": "CLASS",
-      "serialName": "com.example.contract.cbdc.ExampleToken",
-      "familyClassName": "com.example.contract.cbdc.VersionedExampleToken",
-      "serializationId": 976199559,
+      "serialName": "com.example.contract.token.ExampleTokenV1",
+      "familyClassName": "com.example.contract.token.VersionedExampleToken",
+      "serializationId": -353233654,
       "byteSize": 565,
       "fields": [
         {
           "fieldName": "amount",
           "fieldType": {
             "type": "CLASS_REF",
-            "serialName": "com.example.token.sdk.AmountIssuedTokenTypeSurrogate",
+            "serialName": "com.example.contract.token.AmountIssuedTokenTypeSurrogate",
             "byteSize": 517
           }
         },
@@ -209,7 +209,7 @@
     },
     {
       "type": "CLASS",
-      "serialName": "com.example.token.sdk.AmountIssuedTokenTypeSurrogate",
+      "serialName": "com.example.contract.token.AmountIssuedTokenTypeSurrogate",
       "familyClassName": null,
       "serializationId": null,
       "byteSize": 517,
@@ -312,36 +312,88 @@
     },
     {
       "type": "CLASS",
-      "serialName": "com.example.contract.cbdc.commands.IssuePrivate",
+      "serialName": "com.example.contract.token.ExampleToken",
+      "familyClassName": "com.example.contract.token.VersionedExampleToken",
+      "serializationId": -353233653,
+      "byteSize": 572,
+      "fields": [
+        {
+          "fieldName": "code",
+          "fieldType": {
+            "type": "STRING",
+            "byteSize": 7,
+            "capacity": 3,
+            "encoding": "Ascii"
+          }
+        },
+        {
+          "fieldName": "amount",
+          "fieldType": {
+            "type": "CLASS_REF",
+            "serialName": "com.example.contract.token.AmountIssuedTokenTypeSurrogate",
+            "byteSize": 517
+          }
+        },
+        {
+          "fieldName": "owner",
+          "fieldType": {
+            "type": "CLASS_REF",
+            "serialName": "AnonymousPartyEdDsaEd25519Sha512",
+            "byteSize": 48
+          }
+        }
+      ]
+    },
+    {
+      "type": "CLASS",
+      "serialName": "com.example.contract.token.commands.IssuePrivate",
       "familyClassName": null,
-      "serializationId": -1523369397,
+      "serializationId": 1894273136,
       "byteSize": 0,
       "fields": [
       ]
     },
     {
       "type": "CLASS",
-      "serialName": "com.example.contract.cbdc.commands.MovePrivate",
+      "serialName": "com.example.contract.token.commands.MovePrivate",
       "familyClassName": null,
-      "serializationId": 66791537,
+      "serializationId": 1978153388,
       "byteSize": 0,
       "fields": [
       ]
     },
     {
       "type": "CLASS",
-      "serialName": "com.example.contract.cbdc.commands.RedeemPrivate",
+      "serialName": "com.example.contract.token.commands.RedeemPrivate",
       "familyClassName": null,
-      "serializationId": -961110906,
+      "serializationId": 1906592513,
       "byteSize": 0,
       "fields": [
       ]
     },
     {
       "type": "CLASS",
-      "serialName": "com.example.contract.cbdc.commands.SplitPrivate",
+      "serialName": "com.example.contract.token.commands.SplitPrivate",
       "familyClassName": null,
-      "serializationId": -1469059862,
+      "serializationId": 1948582671,
+      "byteSize": 0,
+      "fields": [
+      ]
+    },
+    {
+      "type": "CLASS",
+      "serialName": "com.example.contract.token.UpgradePrivateExampleTokenV1ToPrivateExampleToken",
+      "familyClassName": null,
+      "serializationId": -780294970,
+      "byteSize": 0,
+      "fields": [
+      ]
+    },
+    {
+      "type": "CLASS",
+      "serialName": "com.example.contract.token.UpgradeAnyExampleTokenV1ToPublicExampleToken",
+      "familyClassName": null,
+      "serializationId": 1777740909,
       "byteSize": 0,
       "fields": [
       ]

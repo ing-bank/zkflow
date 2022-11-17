@@ -72,7 +72,7 @@ class ExampleContractTest {
                 timeWindow(Instant.now())
                 verifies()
             }
-            val half = alicesEuro.copy(alicesEuro.amount.splitEvenly(2).first())
+            val half = alicesEuro.copy(amount = alicesEuro.amount.splitEvenly(2).first())
 
             transaction {
                 input(issueTx.outRef<ExampleToken>(0).ref)
@@ -98,7 +98,7 @@ class ExampleContractTest {
                 timeWindow(Instant.now())
                 verifies()
             }
-            val half = alicesEuro.copy(alicesEuro.amount.splitEvenly(2).first())
+            val half = alicesEuro.copy(amount = alicesEuro.amount.splitEvenly(2).first())
 
             transaction {
                 input(issueTx.outRef<ExampleToken>(0).ref)

@@ -296,13 +296,13 @@ class DummyZKStateB(
 @BelongsToContract(LocalContract::class)
 @Serializable
 @ZKP
-public data class DummyState(
+data class DummyState(
     @Serializable(with = IntSerializer::class) val value: Int,
     @Serializable(with = IntSetSerializer::class) val set: Set<Int>,
     @Serializable(with = ParticipantsSerializer::class) override val participants: List<@Contextual AbstractParty>
 ) : ContractState, VersionedContractStateGroup {
-    public companion object {
-        public fun any(): DummyState {
+    companion object {
+        fun any(): DummyState {
             val alice = TestIdentity.fresh("Alice")
             return DummyState(
                 Random.nextInt(),
@@ -311,7 +311,7 @@ public data class DummyState(
             )
         }
 
-        public fun newTxState(): TransactionState<DummyState> {
+        fun newTxState(): TransactionState<DummyState> {
             val notary = TestIdentity.fresh("Notary")
 
             return TransactionState(
@@ -322,7 +322,7 @@ public data class DummyState(
             )
         }
 
-        public fun newTxState(notary: Party): TransactionState<DummyState> {
+        fun newTxState(notary: Party): TransactionState<DummyState> {
             return TransactionState(
                 data = any(),
                 notary = notary,
@@ -331,7 +331,7 @@ public data class DummyState(
             )
         }
 
-        public fun newStateAndRef(notary: Party): StateAndRef<DummyState> {
+        fun newStateAndRef(notary: Party): StateAndRef<DummyState> {
             return StateAndRef(newTxState(notary), StateRef(SecureHash.randomSHA256(), Random.nextInt(4)))
         }
     }

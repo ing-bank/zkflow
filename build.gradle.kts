@@ -206,6 +206,7 @@ subprojects {
             add("testCompileOnly", "com.github.spotbugs:spotbugs-annotations:4.5.3")
         }
 
+
         if (!subproject.path.startsWith(":integration-tests")) {
             plugins.apply {
                 apply("com.github.jk1.dependency-license-report")
@@ -221,6 +222,13 @@ subprojects {
                 )
                 allowedLicensesFile = rootProject.projectDir.resolve("config/allowed-licenses.json")
             }
+        }
+
+        subproject.java {
+            @Suppress("UnstableApiUsage")
+            withSourcesJar()
+            @Suppress("UnstableApiUsage")
+            withJavadocJar()
         }
 
         configure<com.github.spotbugs.snom.SpotBugsExtension> {

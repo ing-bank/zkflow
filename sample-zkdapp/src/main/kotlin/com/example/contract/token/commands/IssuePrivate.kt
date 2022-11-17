@@ -27,7 +27,7 @@ class IssuePrivate : ZKCommandData {
                 
                 assert!(output.data.amount.quantity > 0 as i64, "[IssuePrivate] Quantity must be positive");
 
-                assert!(ctx.signers.contains(output.data.amount.token.issuer.public_key), "[IssuePrivate] Issuer must sign");
+                assert!(ctx.signers.contains(output.data.amount.issuer.public_key), "[IssuePrivate] Issuer must sign");
             }
         """.trimIndent()
     }

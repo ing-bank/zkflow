@@ -1,0 +1,7 @@
+## Troubleshooting the sample ZKDapp or your own ZKDapp
+
+Build issues:
+- `java.lang.IllegalArgumentException: Cannot find circuit manifest`: This should not happen during normal development flow, but it can be solved by running `./gradlew generateZincCircuits --rerun-tasks` in your ZKDapp.
+
+Unexpected transaction validation errors:
+- `java.lang.IllegalArgumentException: There should be no additional 'public only' inputs in the transaction for contract class com.example.contract.cbdc.CBDCContract`. This could be a valid error, indicating that you have not built the transaction to match the metadata for the commands in the transaction. But if the 'error' is logged, but does not actually cause a failure, and the stacktrace contains `TransactionBuilder.addMissingDependency()`, this is caused by an extra validation step that is executed by Corda, before ZKFlow has a chance to correctly set up the transaction. It means that the LedgerTransaction being verified indeed contains all transaction components, also the hidden ones. Later, ZKFlow correctly builds a filtered LedgerTransaction, and this should not occur. If it does, then it is a valid error. This error is not something we can avoid, but fortunately it results only in log pollution.

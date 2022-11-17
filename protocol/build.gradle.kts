@@ -56,7 +56,7 @@ tasks.withType<AbstractArchiveTask> {
 publishing {
     publications {
         create<MavenPublication>("zkFlow") {
-            project.shadow.component(this)
+            setArtifacts(listOf(tasks.shadowJar, tasks.sourcesJar, tasks.javadocJar))
         }
     }
 }

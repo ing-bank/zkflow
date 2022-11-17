@@ -47,6 +47,6 @@ inline fun <reified T : Any> Any.requireInstanceOf(message: (Any) -> String) = i
     throw IllegalArgumentException(message(this))
 }
 
-inline fun <reified T : Any> Any.requireInstanceOf() = requireInstanceOf<T>() {
+inline fun <reified T : Any> Any.requireInstanceOf() = requireInstanceOf<T> {
     "Expected a ${T::class.qualifiedName}, but got a ${it::class.qualifiedName} instead."
 }
