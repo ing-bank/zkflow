@@ -1,0 +1,35 @@
+# This is a dummy build, that runs when non-code is changed, so that required status checks still are successful.
+# See: https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/defining-the-mergeability-of-pull-requests/troubleshooting-required-status-checks#handling-skipped-but-required-checks
+# It essentially does the opposite of the normal on-push.yml, and is always successful.
+
+# The name MUST be identical to the on-push.yml build for this to work.
+name: PRs and merges to master
+
+on:
+  push:
+    branches: [ master, main ]
+    paths:
+      - 'docs/**'
+      - '*.md'
+      - 'LICENSE'
+      - 'TRADEMARK'
+      - 'CONTRIBUTORS'
+      - '.ci/**'
+      - '.gitignore'
+  pull_request:
+    branches: [ master, main ]
+    paths:
+      - 'docs/**'
+      - '*.md'
+      - 'LICENSE'
+      - 'TRADEMARK'
+      - 'CONTRIBUTORS'
+      - '.ci/**'
+      - '.gitignore'
+
+jobs:
+  # The job name MUST be identical to the job in on-push.yml build for this to work.
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - run: 'echo "No build required"'
