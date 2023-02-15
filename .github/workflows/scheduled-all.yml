@@ -5,8 +5,8 @@ env:
 
 on:
   schedule:
-    # Run nightly at 04:00, so we don't use up our run hours too fast
-    - cron: '0 4 * * *'
+    # Run Monday and Wednesday at 04:00, so we don't use up our run hours too fast
+    - cron: '0 4 * * 1,3'
   workflow_dispatch:
 
 jobs:
