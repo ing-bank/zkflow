@@ -6,8 +6,24 @@ env:
 on:
   push:
     branches: [ master, main ]
+    paths-ignore:
+      - 'docs/**'
+      - '*.md'
+      - 'LICENSE'
+      - 'TRADEMARK'
+      - 'CONTRIBUTORS'
+      - '.ci/**'
+      - '.gitignore'
   pull_request:
     branches: [ master, main ]
+    paths-ignore:
+      - 'docs/**'
+      - '*.md'
+      - 'LICENSE'
+      - 'TRADEMARK'
+      - 'CONTRIBUTORS'
+      - '.ci/**'
+      - '.gitignore'
 
 jobs:
   tests:
