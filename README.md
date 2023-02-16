@@ -13,6 +13,8 @@ For details about the ZKFlow protocol, please read the [ZKFlow white paper](docs
 
 As ZKP toolchain, ZKFlow uses a [fork](https://github.com/mvdbos/zinc) of Zinc by Matter Labs. The proving system is Groth16. 
 
+Note that ZKFlow is not a fork of Corda and that it does not make any changes to Corda classes. It is an alternative consensus mechanism for Corda, delivered as a Gradle plugin for your CorDapps.
+
 > [!] **DISCLAIMER: Please note that ZKFlow should *NOT* be used in production, nor to transfer ownership of real assets.**
 >
 >Even though the protocol has been peer reviewed, the security of the implementation has not yet been reviewed by a third party. Additionally, There are features related to deployment and ZKP artifact distribution that are not present in this repository but that are important to guarantee secure and correct usage.
