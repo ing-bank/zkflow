@@ -26,7 +26,7 @@ plugins {
     kotlin("jvm") apply false
     id("com.diffplug.spotless") apply false
     id("io.gitlab.arturbosch.detekt")
-    id("org.owasp.dependencycheck") version "6.1.1"
+    id("org.owasp.dependencycheck") version "8.1.0"
     jacoco
     id("com.github.spotbugs") version "4.8.0" apply false
     id("com.github.jk1.dependency-license-report") apply false
