@@ -30,17 +30,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Set up JDK 8.0.232
-        uses: actions/setup-java@v1
+        uses: actions/setup-java@v2
         with:
+          distribution: zulu
           java-version: 8.0.232
           java-package: jdk
 
       # Build cache
       - name: Cache Gradle Cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/.gradle/caches
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle.kts') }}-${{ hashFiles('**/gradle.properties') }}
@@ -49,7 +50,7 @@ jobs:
             ${{ runner.os }}-gradle-
 
       - name: Cache gradle wrapper
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/.gradle/wrapper
           key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
@@ -85,21 +86,21 @@ jobs:
 
       - name: Upload JUnit test report
         if: always()
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: Junit Test Report
           path: build/reports/tests/test
 
       - name: Upload JaCoCo report
         if: always()
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: JaCoCo Report
           path: build/reports/jacoco/aggregate/html
 
       - name: Upload detekt report
         if: always()
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: Detekt Report
           path: build/reports/detekt
