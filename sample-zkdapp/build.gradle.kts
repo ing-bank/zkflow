@@ -49,7 +49,9 @@ repositories {
     mavenLocal()
     google()
     maven("https://jitpack.io")
-    maven("https://software.r3.com/artifactory/corda")
+    maven("https://download.corda.net/maven/corda-releases")
+    maven("https://download.corda.net/maven/corda-dependencies")
+    maven("https://download.corda.net/maven/corda")
     maven("https://repo.gradle.org/gradle/libs-releases")
     mavenCentral()
 }
